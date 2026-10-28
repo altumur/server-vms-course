@@ -21,12 +21,13 @@ from v7 import gorun, regex, schema, stack  # noqa: E402
 
 ROOT = HERE.parents[3]
 HAVE_GO = os.path.exists(gorun.BIN)
-try:                                             # стенд В7 (requirements.txt); вне него тесты CEL пропускаются
-    import cel_expr_python  # noqa: F401
-    HAVE_CEL = True
-except ImportError:
-    HAVE_CEL = False
-NEED_CEL = unittest.skipUnless(HAVE_CEL, "нет cel-expr-python (стенд В7: v7/requirements.txt)")
+# Окружение навыка одно (scripts/requirements.txt): без cel-expr-python модуль падает с именем, а не пропускает
+# тесты CEL (повторное ревью Claude Н-1).
+import cel_expr_python  # noqa: F401,E402
+
+
+def NEED_CEL(f):
+    return f
 # Генератор «диалект → стандарт» после перехода — за меткой (ADR-0092 п. 12): его ловушки — только на курсе с диалектом.
 NEED_DIALECT = unittest.skipUnless((ROOT / "Platform/02-installer/spec/02.1-installer.form.yaml").is_file(),
                                    "форма диалекта снята переходом на В7 (эталон — метка dialect-reference-dc94d0fd1)")

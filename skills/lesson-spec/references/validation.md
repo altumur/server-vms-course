@@ -5,25 +5,27 @@
 [чеклист](review-checklist.md); этот файл описывает только границы инструмента.
 
 ```sh
-# все уроки в курсе: Platform/
-uv run --no-project --with pyyaml --with openapi-spec-validator --with markdown-it-py \
-  --with jsonschema --with ruamel.yaml --with regress python \
-  skills/lesson-spec/scripts/check_spec.py Platform/0*-*/0*.md
-# выгрузка cammeta-specs: --root — её корень, уроки — её пути, реестр — того же коммита курса
+# окружение — одно, закреплённое с хешами: skills/lesson-spec/scripts/requirements.txt (стек В7 и пакеты check_spec)
+ENV="uv run --no-project --python 3.12 --with-requirements skills/lesson-spec/scripts/requirements.txt"
+# все уроки курса (Platform/lessons.tsv) — без аргументов; итог не зависит от маски оболочки
+$ENV python skills/lesson-spec/scripts/check_spec.py [--strict-coverage]
+# выгрузка cammeta-specs: --root — её корень, реестр — того же коммита курса
 S=/Users/murat/w2c/cammeta-specs
-uv run … python skills/lesson-spec/scripts/check_spec.py --root $S \
-  --exceptions <(git show "$(cat $S/COURSE_COMMIT)":skills/lesson-spec/exceptions.tsv) $S/Platform/0*-*/0*.md
+$ENV python skills/lesson-spec/scripts/check_spec.py --root $S \
+  --exceptions <(git show "$(cat $S/COURSE_COMMIT)":skills/lesson-spec/exceptions.tsv)
 ```
 
 `--root` — корень раскладки (по умолчанию текущий каталог), `--exceptions` — реестр (по умолчанию
 `exceptions.tsv` навыка). Для выгрузки реестр берётся того же коммита курса, что её `COURSE_COMMIT`:
-строка реестра для файла, которого в выгрузке ещё нет, даёт «stale exception». В окружении с `PyYAML`,
-`openapi-spec-validator`, `markdown-it-py`, `jsonschema`, `ruamel.yaml` и `regress` можно запускать `python3`
-напрямую. Последние три нужны [схеме формы](#схема-формы-манифеста-adr-0085) (ADR-0085); после перехода главы P/02.1 на источник формы её нет ни у
-одной главы, в выгрузке — тоже, и там они не используются.
+строка реестра для файла, которого в выгрузке ещё нет, даёт «stale exception». Без аргументов проверяются все
+уроки `Platform/lessons.tsv`, у которых есть лекция; аргументы — отдельные уроки (частичный прогон: число
+исключений у него своё). Окружение сверяется с `scripts/requirements.txt` первым делом: пакет не установлен или
+не той версии — ошибка `environment: <пакет> …, pinned …` с командой установки, а не пропуск проверки; итог
+одного дерева в любом окружении — один. `regress` — для [схемы формы](#схема-формы-манифеста-adr-0085) (ADR-0085):
+пары ADR-0085 нет ни у одной главы курса, но её проверку держат тесты скрипта.
 
 **Урок модуля «Платформа»** (`Platform/`, ADR-0083) — тот же вызов с путём лекции:
-`check_spec.py Platform/01-store/01-store.md` (все — `Platform/0*-*/0*.md`). Нормы — по главам `spec/NN.K-<процесс>.norms.md` (id `P/NN.K-MM`;
+`check_spec.py Platform/01-store/01-store.md` (все — без аргументов). Нормы — по главам `spec/NN.K-<процесс>.norms.md` (id `P/NN.K-MM`;
 у урока без глав — `spec/NN-<процесс>.norms.md`, id `P/NN-MM`); каждая глава проверяется как урок: Н0–Н5, чеклист,
 «Данные», своя приёмка `acceptance/K/` (набор таблиц — ниже). Одна инструкция `spec/NN-<процесс>.README.md`
 и один OpenAPI на урок. Счёты лекции и инструкции — суммы по главам. Ключ реестра — `P/NN`, значение
@@ -55,8 +57,8 @@ id чеклиста — ошибка (строка статуса уходит �
   строкой `EXCEPTION` с причиной.
 - Код 1 и строка `FAIL` — найдены дефекты или неподдержанный формат. Неполная проверка даёт `FAIL`, а не `PASS`.
 - Код 1 и `Missing dependency…` без строки `FAIL` — нет зависимости; это не пропуск успешной проверки.
-- Код 1, `FAIL` и ошибка `form schema check needs jsonschema, ruamel.yaml and regress … run: uv run …` — у урока есть
-  схема формы, а её зависимостей нет; проверка не пропускается.
+- Код 1, `FAIL` и ошибка `environment: …` — окружение не то, что закреплено в `scripts/requirements.txt`: пакета нет
+  или версия иная; проверка не пропускается, результат прочих проверок в таком окружении не засчитывается.
 - Код 2 — неверные аргументы командной строки.
 
 ## Реестр исключений
@@ -306,7 +308,9 @@ schema: {$ref: '../../05-resource/spec/05-resource.api.openapi.yaml#/components/
 Изменение скрипта проверяется его тестами на испорченных копиях документов:
 
 ```sh
-uv run --no-project --with pyyaml --with openapi-spec-validator --with markdown-it-py \
-  --with jsonschema --with ruamel.yaml --with regress python -m unittest discover \
-  -s skills/lesson-spec/scripts -p 'test_*.py'
+uv run --no-project --python 3.12 --with-requirements skills/lesson-spec/scripts/requirements.txt \
+  python -m unittest discover -s skills/lesson-spec/scripts -p 'test_*.py'
 ```
+
+Без стека В7 тесты не пропускаются, а падают с именем пакета. Пропуск законен только у тестов диалекта на курсе без
+файлов диалекта (после пакета п. 2) и у тестов Go без собранного `v7check` — их причина печатается.
