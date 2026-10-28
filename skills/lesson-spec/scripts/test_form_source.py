@@ -253,6 +253,8 @@ class TextLayerTests(unittest.TestCase):
     def test_course_corpus_text_refusals_hold(self):
         # Прежние отказы корпуса P/02.1 не сдвинулись: вердикт и класс text — как в таблицах приёмки.
         course = Path(__file__).resolve().parents[3]
+        if not (course / "Platform/02-installer/spec/02.1-installer.form.yaml").is_file():
+            self.skipTest("форма диалекта P/02.1 снята переходом на В7 (эталон — метка dialect-reference-dc94d0fd1)")
         spec, corpus = course / "Platform/02-installer/spec", course / "Platform/02-installer/acceptance/1"
         loader = Loader(*(spec / f"02.1-installer.{name}" for name in ("form.yaml", "references.tsv", "scalars.tsv")))
         rows = lambda name: [l.split("\t") for l in (corpus / name).read_text().splitlines()   # noqa: E731

@@ -32,16 +32,17 @@ TREE = None
 
 
 def setUpModule():
-    """Копия Platform/, VMS/ и манифестов курса с пакетом перехода — одна на модуль."""
+    """Копия Platform/, VMS/ и манифестов курса с пакетом перехода (если курс ещё на диалекте) — одна на модуль."""
     global TREE
     if not HAVE_STACK:
         return
     TREE = Path(tempfile.mkdtemp(prefix="v7-tree-"))
     for d in ("Platform", "VMS", "Source/tests/testdata"):
         shutil.copytree(ROOT / d, TREE / d, ignore=shutil.ignore_patterns("__pycache__", ".DS_Store"))
-    from v7 import transition
-    with contextlib.redirect_stdout(io.StringIO()):
-        transition.main(["--root", str(TREE)])
+    if (TREE / "Platform/02-installer/spec/02.1-installer.form.yaml").is_file():     # курс ещё на диалекте
+        from v7 import transition
+        with contextlib.redirect_stdout(io.StringIO()):
+            transition.main(["--root", str(TREE)])
 
 
 def tearDownModule():

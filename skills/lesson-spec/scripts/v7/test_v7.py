@@ -28,6 +28,9 @@ try:                                             # стенд В7 (requirements.
 except ImportError:
     HAVE_CEL = False
 NEED_CEL = unittest.skipUnless(HAVE_CEL, "нет cel-expr-python (стенд В7: v7/requirements.txt)")
+# Генератор «диалект → стандарт» после перехода — за меткой (ADR-0092 п. 12): его ловушки — только на курсе с диалектом.
+NEED_DIALECT = unittest.skipUnless((ROOT / "Platform/02-installer/spec/02.1-installer.form.yaml").is_file(),
+                                   "форма диалекта снята переходом на В7 (эталон — метка dialect-reference-dc94d0fd1)")
 
 
 def paths(validator, instance):
@@ -56,6 +59,7 @@ class TestRegex(unittest.TestCase):
                 self.assertNotEqual(inside, outside, (p, s))
 
 
+@NEED_DIALECT
 class TestTraps(unittest.TestCase):
     """Ловушки поручения (шаг 5)."""
 

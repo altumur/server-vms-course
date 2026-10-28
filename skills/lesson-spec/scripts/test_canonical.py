@@ -15,6 +15,8 @@ from form_source.vectors import (ACCEPTANCE, CORPUS, NORMS, SOURCE, VECTORS, Cha
 
 COURSE = Path(__file__).resolve().parents[3]
 SUFFIXES = (".form.yaml", ".references.tsv", ".scalars.tsv")
+if not Path(str(COURSE / SOURCE) + ".form.yaml").is_file():     # курс на стандартных файлах В7: диалект — за меткой
+    raise unittest.SkipTest("форма диалекта P/02.1 снята переходом на В7 (эталон — метка dialect-reference-dc94d0fd1)")
 BASE = ("name: probe\nunit:\n  rows: things\n  id: numeric\n  fields:\n%s\nplacement:\n  capacity: {default: 1}\n"
         "worker:\n  exec: /usr/lib/probe/worker\n%s")          # worker обязателен (ADR-0091 доп. (4), (5))
 FIELDS = "    label: {}\n    login: {}\n    pass_secret: {bound_to: login}\n    pic: {type: blob}\n    server: {}"
