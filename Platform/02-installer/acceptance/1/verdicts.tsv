@@ -563,7 +563,7 @@ c8_options_enum_text_canonical	refused
 c8_int_4301_digits	refused
 c8_word_hash_space	ok
 c9_seq_dash_dash	refused
-c9_flow_lone_dash_ok	ok
+c9_flow_lone_dash_ok	refused
 c9_word_hash_inside_ok	ok
 c9_xclass_number_overflow	refused
 c9_is_not_null	refused

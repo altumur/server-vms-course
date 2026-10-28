@@ -90,7 +90,6 @@ corpus-c8_ref25_table_field_schema_depth_32_ok	Platform/02-installer/acceptance/
 corpus-c8_ref26_table_schema_depth_32_ok	Platform/02-installer/acceptance/1/cases/c8_ref26_table_schema_depth_32_ok.subsystem.yaml	expect/corpus-c8_ref26_table_schema_depth_32_ok.json	принятый случай корпуса 2.1
 corpus-c8_ref47_unplaced_about_not_id	Platform/02-installer/acceptance/1/cases/c8_ref47_unplaced_about_not_id.subsystem.yaml	expect/corpus-c8_ref47_unplaced_about_not_id.json	принятый случай корпуса 2.1
 corpus-c8_word_hash_space	Platform/02-installer/acceptance/1/cases/c8_word_hash_space.subsystem.yaml	expect/corpus-c8_word_hash_space.json	принятый случай корпуса 2.1
-corpus-c9_flow_lone_dash_ok	Platform/02-installer/acceptance/1/cases/c9_flow_lone_dash_ok.subsystem.yaml	expect/corpus-c9_flow_lone_dash_ok.json	принятый случай корпуса 2.1
 corpus-c9_word_hash_inside_ok	Platform/02-installer/acceptance/1/cases/c9_word_hash_inside_ok.subsystem.yaml	expect/corpus-c9_word_hash_inside_ok.json	принятый случай корпуса 2.1
 corpus-delete_after_with_about	Platform/02-installer/acceptance/1/cases/delete_after_with_about.subsystem.yaml	expect/corpus-delete_after_with_about.json	принятый случай корпуса 2.1
 corpus-display_fields_status_field	Platform/02-installer/acceptance/1/cases/display_fields_status_field.subsystem.yaml	expect/corpus-display_fields_status_field.json	принятый случай корпуса 2.1

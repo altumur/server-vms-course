@@ -288,6 +288,15 @@ class TestYaml(unittest.TestCase):
                 textv7.load_text_map(data)
             self.assertEqual(thin_rules.rule_of(cm.exception), rule, tid)
 
+    def test_flow_dash(self):
+        """V7-FLOW-DASH-01 (26-е правило): одиночный `-` простым скаляром в потоке — отказ text на обоих языках, раньше
+        корня (G5U8, YJV2); `"-"`, `-x` в потоке и `-` в блоке — не правило."""
+        for d in (b"a: [-, x]\n", b"a: [-]\n", b"a: {b: [x, -]}\n", b"- [-, -]\n", b"[-]\n"):
+            self.assertEqual(set(self.both(d)), {"refused:flow-dash"}, d)
+        for d in (b'a: ["-", x]\n', b"a: [-x, x]\n", b"a:\n  - -\n"):
+            self.assertEqual(set(self.both(d)), {"ok"}, d)
+        self.suite_layer1((("G5U8", "flow-dash"), ("YJV2", "flow-dash")))
+
     def test_d21_ruamel_directives(self):
         """D21 (PY-RY-03): директива после содержимого принята; `%YAML 1.3`, `...` в конце — падение разбора; слой 1 —
         directive и doc-end по байтам."""

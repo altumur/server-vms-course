@@ -207,6 +207,7 @@ class Builder:
         e = self.next()
         if name(e) == "StreamEndEvent":
             raise TextRefused("root", 1, "empty file")
+        self.flow_dash()
         e = self.peek()
         if name(e) != "MappingStartEvent" or e.flow_style or e.start_mark.column != 0:
             raise TextRefused("root", e.start_mark.line + 1, "the root is a block mapping from column 1")
@@ -214,6 +215,20 @@ class Builder:
         if name(self.next()) != "DocumentEndEvent" or name(self.next()) != "StreamEndEvent":
             raise TextRefused("document", 0, "more than one document")
         return tree, self.numbers, self.empties, self.linemap
+
+    def flow_dash(self):
+        """26-е правило (V7-FLOW-DASH-01, сужение YAML 1.2.2): одиночный `-` простым скаляром в потоке (`[-, a]`, `[-]`,
+        `{name: -}`) — отказ text; ruamel и yaml.v3 читают его словом. Проход по событиям до проверки корня — правило
+        первым и на G5U8, YJV2."""
+        flow = 0
+        for x in self.ev:
+            nm = type(x).__name__
+            if nm in ("MappingStartEvent", "SequenceStartEvent") and (flow or x.flow_style):
+                flow += 1
+            elif nm in ("MappingEndEvent", "SequenceEndEvent") and flow:
+                flow -= 1
+            elif nm == "ScalarEvent" and flow and x.style is None and x.value == "-":
+                self.refuse("flow-dash", x, "lone `-` in a flow collection (V7-FLOW-DASH-01)")
 
     def refuse(self, rule, e, msg, path=None):
         raise TextRefused(rule, e.start_mark.line + 1, msg, path)
