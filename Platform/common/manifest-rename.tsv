@@ -34,7 +34,7 @@ from: "spec"	from: "manifest"	слово источника значения в 
 spec (в текстах и исключениях check_spec и навыка lesson-spec)	manifest	строки проверок и навыка	skills/ («Архитектор»)	—
 # Дополнено при переходе (ADR-0086 доп. (2)): имена со spec в значении манифеста, найденные при переходе вне строк выше.
 spec put, spec show (короткие формы)	manifest put, manifest show	команда установщика в тексте и ops каталога	P/02.3 Н3, P/02.4	Platform/02-installer; catalog.tsv (ops admin(manifest put …)); id-map.tsv
-spec (поле строки вида {form, rev, sha256, spec})	manifest	поле строки platform/manifest/<sub>/canonical/<форма>; указатель /spec → /manifest	P/02.2 Н1.2	P/02.3 Н3; data/canonical-row.schema.json; приёмка P/02 гл. 2 (puts.tsv; вес строки 83 → 87 + длина вида); векторы canonical; form_source (canonical.py, vectors.py); id-map.tsv
+spec (поле строки вида {form, rev, sha256, spec})	manifest	поле строки platform/manifest/<sub>/canonical/<форма>; указатель /spec → /manifest	P/02.2 Н1.2	P/02.3 Н3; data/canonical-row.schema.json; приёмка P/02 гл. 2 (puts.tsv; вес строки 83 → 87 + длина вида); векторы canonical; навык lesson-spec; id-map.tsv
 data/spec-row.*, data/spec-rev.*	data/manifest-row.*, data/manifest-rev.*	файлы семей данных	Platform/02-installer/data	catalog.tsv (колонка schema)
 spec (значение колонки schema)	manifest	значение колонки schema каталога данных	Platform/common/data/catalog.tsv	check_spec; exceptions.tsv
 SpecNoRoot	ManifestNoRoot	схема OpenAPI ответа двери /manifest консоли домена	P/10 Н1.7 (10-domain-console.api.openapi.yaml)	—

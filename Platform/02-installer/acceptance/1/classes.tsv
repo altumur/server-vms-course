@@ -198,7 +198,7 @@ c2_metrics_histogram_no_buckets	form
 c2_metrics_values_not_label	form
 c2_metrics_values_with_count	form
 c2_metrics_name_underscore	form
-# Набор Б ADR-0092 (пакет перехода на В7): случаи t*, f*, r* — v7/out/setb/cases.tsv
+# Набор Б ADR-0092 (пакет перехода на В7): случаи t*, f*, r* — набор Б навыка lesson-spec
 c2_flow_seq_pair	form
 c3_tab_block_ok	text
 c3_tab_quoted_ok	text

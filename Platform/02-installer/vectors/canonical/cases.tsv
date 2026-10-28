@@ -1,6 +1,6 @@
 # Векторы canonical главы P/02.2 (P/02.2-07): байты манифеста → байты `manifest` канонического вида (без обёртки, Р13).
 # Строка: case<TAB>input<TAB>expect<TAB>note; input — путь манифеста от корня раскладки, expect — expect/<case>.json.
-# Строки corpus-*, course-* и все ожидания строит построитель (python -m v7.vectors); правила — README.
+# Строки corpus-*, course-* и все ожидания строит построитель навыка lesson-spec; правила — README.
 case	input	expect	note
 example-sections	Platform/02-installer/vectors/canonical/inputs/sections.subsystem.yaml	expect/example-sections.json	отсутствующий раздел без умолчания (`requests`) отсутствует; отсутствующие разделы с умолчанием (`display`, `lease`) — их умолчания (Н1.1 defaults)
 example-nested-key	Platform/02-installer/vectors/canonical/inputs/nested-key.subsystem.yaml	expect/example-nested-key.json	отсутствующий вложенный ключ внутри присутствующего родителя: `placement` без `headroom`, `weight`, `rebalance`; поле без `type` — `string`; `display` без `units_count`, `events` (Н1.1 defaults)
