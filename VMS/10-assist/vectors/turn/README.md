@@ -15,7 +15,8 @@ cancel_on_tool: имя инструмента — сброс панели, по�
 context:        окно строки модели (умолчание 16384); prompt_tokens — usage каждого ответа модели
 model:          ответы шагов по порядку — {ok: true, message, usage} (состояние done двери: message как есть),
                 {ok: false, lost: true} (410/404), {ok: false, why, reason} (failed и прочие исходы шага, V/10.3 Н1.3)
-expect:         outcome (plan | refusal | unfinished | cancelled), why и reason у unfinished и refusal, plan_rows у плана
+expect:         outcome (plan | refusal | unfinished | cancelled), why и reason у unfinished и refusal, rule — вид правила у
+                предела после отвергнутых версий (V/10.3 Н1.5), plan_rows у плана
                 (unit, revision, changes {field, from, to}, because — свидетели отбора по условиям: [{field, witnesses,
                 values}] или null у named; V/10.5 Н1.7),
                 texts — тексты хода, steps — число шагов, step_messages — сообщения каждого шага: role,

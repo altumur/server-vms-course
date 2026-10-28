@@ -1234,6 +1234,7 @@
    "outcome": "unfinished",
    "why": "limit",
    "reason": "edits[0]: mode is one of [\"plain\",\"loud\"], but to = \"loudest\"",
+   "rule": "form",
    "texts": [
     "Switch tally Gate-1 to \"loud\" mode."
    ],
@@ -10618,6 +10619,44 @@
       "content": "x"
      }
     ],
+    [
+     {
+      "role": "system",
+      "content": "# w2c console configuration assistant\n\nYou are the assistant of a w2c cluster admin. The admin writes a request; you find the units and propose\n**a plan of edit"
+     },
+     {
+      "role": "user",
+      "content": "## Cluster overview\nA snapshot of the console doors (list_subsystems, get_manifest of every subsystem, the admin's rights):\n```json\n{\"subsystems\":[{\"sub\":\"tests"
+     },
+     {
+      "role": "user",
+      "content": "x"
+     }
+    ]
+   ]
+  }
+ },
+ {
+  "id": "turn-door-cancelled",
+  "rule": "V/10.3 Н1.3, Н1.5 шаг cancelled у двери (не по отмене страницы) — «ход не завершён»",
+  "console": "stand3",
+  "text": "x",
+  "model": [
+   {
+    "ok": false,
+    "why": "cancelled",
+    "reason": "disabled"
+   }
+  ],
+  "expect": {
+   "outcome": "unfinished",
+   "why": "cancelled",
+   "reason": "disabled",
+   "texts": [
+    "x"
+   ],
+   "steps": 1,
+   "step_messages": [
     [
      {
       "role": "system",

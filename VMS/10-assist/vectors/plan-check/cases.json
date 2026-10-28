@@ -3391,6 +3391,68 @@
   ]
  },
  {
+  "id": "tools-list-max-5000",
+  "console": "stand3",
+  "rule": "V/10.4 Н1.2 LIST_MAX: 5000 строк читаются",
+  "source": "lesson",
+  "texts": [
+   "x"
+  ],
+  "bulk": {
+   "testsub2": 5000
+  },
+  "calls": [
+   {
+    "name": "find_units",
+    "args": {
+     "sub": "testsub2",
+     "where": [
+      {
+       "field": "mode",
+       "op": "eq",
+       "value": "loud"
+      }
+     ],
+     "fields": [
+      "mode"
+     ]
+    },
+    "content": "{\"sub\":\"testsub2\",\"count\":4,\"shown\":4,\"units\":[{\"unit\":\"testsub2/Gate-2\",\"mode\":\"loud\",\"about.labels\":[\"east\",\"floor3\"]},{\"unit\":\"testsub2/Office-2\",\"mode\":\"loud\",\"about.labels\":[\"west\",\"floor3\"]},{\"unit\":\"testsub2/Store-2\",\"mode\":\"loud\",\"about.labels\":[\"east\",\"floor2\"]},{\"unit\":\"testsub2/Yard-1\",\"mode\":\"loud\",\"about.labels\":[\"north\"],\"can_edit\":false}],\"can_edit_note\":\"can_edit: false — the admin has no edit right on this unit: leave it out of the plan, tell the admin in summary\",\"query\":{\"sub\":\"testsub2\",\"where\":[{\"field\":\"mode\",\"op\":\"eq\",\"value\":\"loud\"}]}}"
+   }
+  ]
+ },
+ {
+  "id": "tools-list-max-5001",
+  "console": "stand3",
+  "rule": "V/10.4 Н1.2 LIST_MAX: 5001 строка — ошибка, не усечённый отбор",
+  "source": "lesson",
+  "texts": [
+   "x"
+  ],
+  "bulk": {
+   "testsub2": 5001
+  },
+  "calls": [
+   {
+    "name": "find_units",
+    "args": {
+     "sub": "testsub2",
+     "where": [
+      {
+       "field": "mode",
+       "op": "eq",
+       "value": "loud"
+      }
+     ],
+     "fields": [
+      "mode"
+     ]
+    },
+    "content": "error: testsub2: more than 5000 units — too many to check here; refuse and say so"
+   }
+  ]
+ },
+ {
   "id": "pilot-R01",
   "console": "stand3",
   "rule": "переигровка основы пилота: loop R01 (plan)",
