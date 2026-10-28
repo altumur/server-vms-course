@@ -20,3 +20,15 @@ components:
           type: string
         error:
           const: denied
+    Unavailable:
+      type: object
+      required: [error]
+      additionalProperties: false
+      description: 'Правило «Нечитаемая строка» раздела «Отказы сторожевой»: строка домена, которую проверка доступа читает для
+        этой сессии, есть, но не читается — 503 `{error: unavailable, detail?}`; detail — по стороне (у консоли кластера
+        обязателен, P/06.5 Н4 ConsoleRefusal); у дверей процесса domain (P/08) и консоли домена (P/10) со сторожевой'
+      properties:
+        error:
+          const: unavailable
+        detail:
+          type: string
