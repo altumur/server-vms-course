@@ -76,7 +76,10 @@ paths:
         '404':
           $ref: '#/components/responses/RefusedPlain'
         '409':
-          description: rebase, same_sent_at или not_ready (договор приёма отчёта); deposed смещённого держателя с записью нового (P/08.8 Н1.6; добавлено М11/10)
+          description: 'rebase, same_sent_at или not_ready (договор приёма отчёта); deposed смещённого держателя с записью нового
+            (P/08.8 Н1.6; добавлено М11/10); запись первого key держателя (P/08.3 Н3 «держатель в списке» шаг 2) нарушила бы
+            every_entry — {error: refused, detail: "the entry of <член> would exceed 820 bytes"} без reason, метки нет
+            (P/08.10 Н1.5; C08-MEMBER-409-ENTRY-01)'
           content:
             application/json:
               schema:
@@ -88,6 +91,14 @@ paths:
                           error: {const: refused}
                           reason: {enum: [rebase, same_sent_at, not_ready]}
                         required: [reason, detail]
+                  - unevaluatedProperties: false
+                    allOf:
+                      - $ref: '#/components/schemas/Refusal'
+                      - properties:
+                          error: {const: refused}
+                          detail: {type: string, minLength: 1}
+                        required: [detail]
+                        not: {required: [reason]}
                   - $ref: '#/components/schemas/Deposed'
         '413':
           description: 'Тело больше BODY_LIMIT или целое поколение больше BODY_LIMIT — {error: "whole too large"} (P/08.10 Н1.5; добавлено М11/12)'
