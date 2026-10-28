@@ -330,7 +330,7 @@ paths:
         type: string
         minLength: 1
         maxLength: 64
-        pattern: ^[A-Za-z_][A-Za-z0-9_]*(?![\s\S])
+        pattern: "^(?:[A-Za-z_][A-Za-z0-9_]*)$"
         description: Имя существующего unit blob-поля; непредставимый манифест отвергается загрузчиком по Н1.5.
     put:
       summary: Записать байты blob и затем ссылку строки
@@ -1268,7 +1268,7 @@ paths:
       required: true
       schema:
         type: string
-        pattern: ^[0-9a-f]{16}(?![\s\S])
+        pattern: "^(?:[0-9a-f]{16})$"
     delete:
       summary: 'Консоль: снять учёт человека'
       responses:
@@ -3350,9 +3350,9 @@ paths:
           стадии B 6–7).
         schema:
           type: string
-          pattern: ^(?:[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}(?:,[A-Za-z0-9][A-Za-z0-9_.:-]{0,63})*)?$
+          pattern: "^(?:(?:[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}(?:,[A-Za-z0-9][A-Za-z0-9_.:-]{0,63})*)?)$"
           not:
-            pattern: '[^A-Za-z0-9_.:,\-]'
+            pattern: "^(?:[\\s\\S]*[^A-Za-z0-9_.:,\\-][\\s\\S]*)$"
     put:
       summary: Write cluster-wide server labels
       responses:
@@ -3435,9 +3435,9 @@ paths:
           стадии B 6–7).
         schema:
           type: string
-          pattern: ^(?:[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}(?:,[A-Za-z0-9][A-Za-z0-9_.:-]{0,63})*)?$
+          pattern: "^(?:(?:[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}(?:,[A-Za-z0-9][A-Za-z0-9_.:-]{0,63})*)?)$"
           not:
-            pattern: '[^A-Za-z0-9_.:,\-]'
+            pattern: "^(?:[\\s\\S]*[^A-Za-z0-9_.:,\\-][\\s\\S]*)$"
       responses:
         '200':
           description: Probe effective or proposed labels, without writing; HEAD не содержит тела
@@ -3726,7 +3726,7 @@ paths:
         required: true
         schema:
           type: string
-          pattern: ^[1-9][0-9]*(?![\s\S])
+          pattern: "^(?:[1-9][0-9]*)$"
     head:
       summary: 'HEAD: Наблюдаемая схема и возможности сборок'
       responses:
@@ -3782,13 +3782,13 @@ paths:
       required: true
       schema:
         type: string
-        pattern: ^[a-z][a-z0-9_-]{0,31}$
+        pattern: "^(?:[a-z][a-z0-9_-]{0,31})$"
     - name: book
       in: path
       required: true
       schema:
         type: string
-        pattern: ^[a-z0-9][a-z0-9_-]*$
+        pattern: "^(?:[a-z0-9][a-z0-9_-]*)$"
     get:
       summary: Книга этого члена
       responses:
@@ -4283,7 +4283,7 @@ paths:
       required: true
       schema:
         type: string
-        pattern: ^[a-z][a-z0-9_-]{0,31}$
+        pattern: "^(?:[a-z][a-z0-9_-]{0,31})$"
     - name: unit
       in: query
       required: false
@@ -4682,7 +4682,7 @@ components:
       description: Условие правки по revision строки (Н3 «править», «удалить»); не равен — 412, не целое — 400.
       schema:
         type: string
-        pattern: ^[1-9][0-9]*$
+        pattern: "^(?:[1-9][0-9]*)$"
     Rows:
       name: rows
       in: path
@@ -4691,7 +4691,7 @@ components:
       schema:
         type: string
         minLength: 1
-        pattern: ^[^/]+$
+        pattern: "^(?:[^/]+)$"
     AtSub:
       name: sub
       in: path
@@ -4699,7 +4699,7 @@ components:
       description: Манифест каталога этой консоли (глава 6.7 Н1.6 routes).
       schema:
         type: string
-        pattern: ^[a-z][a-z0-9_-]{0,31}$
+        pattern: "^(?:[a-z][a-z0-9_-]{0,31})$"
   schemas:
     ManifestView:
       type: object
@@ -4717,10 +4717,10 @@ components:
           type: string
           minLength: 1
           maxLength: 32
-          pattern: ^[a-z]
+          pattern: "^(?:[a-z][\\s\\S]*)$"
           not:
             anyOf:
-            - pattern: '[^a-z0-9_-]'
+            - pattern: "^(?:[\\s\\S]*[^a-z0-9_-][\\s\\S]*)$"
             - enum:
               - platform
               - domain
@@ -4749,7 +4749,7 @@ components:
         id:
           type: string
           not:
-            pattern: _secret(?![\s\S])
+            pattern: "^(?:[\\s\\S]*_secret)$"
           description: numeric либо имя несекретного строкового поля единицы по Н1.4.
         fields:
           type: array
@@ -4764,7 +4764,7 @@ components:
           properties:
             sub:
               type: string
-              pattern: ^[a-z][a-z0-9_-]{0,31}(?![\s\S])
+              pattern: "^(?:[a-z][a-z0-9_-]{0,31})$"
             field:
               type: string
         display:
@@ -5082,14 +5082,14 @@ components:
         - enum:
           - .
           - ..
-        - pattern: '[/\\|",\u0000-\u001F\u007F-\u009F\u2028\u2029]'
+        - pattern: "^(?:[\\s\\S]*[/\\\\|\",\u0000-\u001F\u007F-\u009F\u2028\u2029][\\s\\S]*)$"
       description: 'Общие запреты обеих форм Н1.3: пустота, точные . и .., разделители и управляющие знаки. numeric дополнительно
         требует десятичное целое от 1; named — значение поля; Nd вне ASCII проверяются отдельно по Unicode-категории.'
     WorkerName:
       type: string
-      pattern: ^[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*$
+      pattern: "^(?:[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)$"
       not:
-        pattern: '[^a-z0-9-]'
+        pattern: "^(?:[\\s\\S]*[^a-z0-9-][\\s\\S]*)$"
       description: 'Имя слота по P/03.2 Н1.4: prefix из 1–8 строчных латинских букв и непустой суффикс из строчных латинских
         букв/цифр с одиночными дефисами между частями. Совпадение prefix с slot.prefix выбранного манифеста проверяется отдельно.'
     Server:
@@ -5097,7 +5097,7 @@ components:
       type: string
       minLength: 1
       maxLength: 253
-      pattern: ^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$
+      pattern: "^(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)$"
     Policy:
       type: object
       required:
@@ -5200,9 +5200,9 @@ components:
       type: string
       minLength: 1
       maxLength: 64
-      pattern: ^[A-Za-z0-9]
+      pattern: "^(?:[A-Za-z0-9][\\s\\S]*)$"
       not:
-        pattern: '[^A-Za-z0-9_.:-]'
+        pattern: "^(?:[\\s\\S]*[^A-Za-z0-9_.:-][\\s\\S]*)$"
     ErrorOnly:
       type: object
       required:
@@ -5824,24 +5824,24 @@ components:
           type: array
           items:
             type: string
-            pattern: ^[^/]+/[^/]+(?![\s\S])
+            pattern: "^(?:[^/]+/[^/]+)$"
             description: <sub>/<имя слота> (P/05 Н1.4).
         running:
           type: array
           items:
             type: string
-            pattern: ^[^/]+/[^/]+(?![\s\S])
+            pattern: "^(?:[^/]+/[^/]+)$"
             description: <sub>/<имя слота> (P/05 Н1.4).
         unknown:
           type: array
           items:
             type: string
-            pattern: ^[^/]+/[^/]+(?![\s\S])
+            pattern: "^(?:[^/]+/[^/]+)$"
             description: <sub>/<имя слота> (P/05 Н1.4).
         instances:
           type: object
           propertyNames:
-            pattern: ^[^/]+/[^/]+(?![\s\S])
+            pattern: "^(?:[^/]+/[^/]+)$"
           additionalProperties:
             type: string
             minLength: 1
@@ -5955,12 +5955,12 @@ components:
       - const: ''
     SubsystemUnitRef:
       type: string
-      pattern: ^[a-z][a-z0-9_-]{0,31}/[^/]+$
+      pattern: "^(?:[a-z][a-z0-9_-]{0,31}/[^/]+)$"
       not:
         anyOf:
-        - pattern: ^(platform|domain|console|audit|spec|manifest|session|mounts|healthz|metrics|servers|resources|where|unplaceable|policy|drain|schema|events|marks|requests|asked|api)/
-        - pattern: ^[^/]+/\.{1,2}$
-        - pattern: '[\\|",\u0000-\u001F\u007F-\u009F\u2028\u2029]'
+        - pattern: "^(?:(platform|domain|console|audit|spec|manifest|session|mounts|healthz|metrics|servers|resources|where|unplaceable|policy|drain|schema|events|marks|requests|asked|api)/[\\s\\S]*)$"
+        - pattern: "^(?:[^/]+/\\.{1,2})$"
+        - pattern: "^(?:[\\s\\S]*[\\\\|\",\u0000-\u001F\u007F-\u009F\u2028\u2029][\\s\\S]*)$"
     DrainStarted:
       type: object
       required:
@@ -6123,7 +6123,7 @@ components:
       not:
         anyOf:
         - const: ..
-        - pattern: /
+        - pattern: "^(?:[\\s\\S]*/[\\s\\S]*)$"
       description: Один непустой сегмент, кроме '..', не больше 200 UTF-8-байт (Н3). maxLength считает символы и не заменяет
         отдельную проверку байтов. Предел полного ключа с префиксом проверяется отдельно по P/01.1 Н1; определённый отказ
         хранилища badkey преобразуется по главе 6.1 Н3–Н4.
@@ -6175,7 +6175,7 @@ components:
           additionalProperties: true
           description: Действующие состояния единицы по unit.state (P/06.1 Н2 «Состояние в ответе»; ADR-0091 п. 3); значение — по схеме unit.state.<имя>.
       patternProperties:
-        _secret$:
+        "^(?:[\\s\\S]*_secret)$":
           type: string
           enum:
           - ''
@@ -6387,7 +6387,7 @@ components:
         - enum:
           - .
           - ..
-        - pattern: '[/\\"''\u0000-\u001F\u007F-\u009F\u2028\u2029]'
+        - pattern: "^(?:[\\s\\S]*[/\\\\\"'\u0000-\u001F\u007F-\u009F\u2028\u2029][\\s\\S]*)$"
     TextError:
       type: object
       required:
@@ -6451,7 +6451,7 @@ components:
             $ref: '#/components/schemas/ConsoleEventRow'
         state:
           type: string
-          pattern: ^live(?:; [^;\r\n]+ (?:unreachable|from mirror))*(?![\s\S])
+          pattern: "^(?:live(?:; [^;\u000D\u000A]+ (?:unreachable|from mirror))*)$"
         truncated:
           description: Сумма локальных truncated плюс пропуски общей обрезки после дедупликации кандидатов; копии могут
             учитываться по нескольким источникам, это не точное число разных пропущенных событий.
@@ -6470,7 +6470,7 @@ components:
           type: object
           additionalProperties:
             type: string
-            pattern: ^(?:did not answer|silent|said .+)(?![\s\S])
+            pattern: "^(?:did not answer|silent|said [^\u000A\u000D\u2028\u2029]+)$"
         withheld:
           description: Единицы, чьи метки неизвестны (строка единицы нечитаема или её чтение не подтверждено) и чьи строки
             поэтому скрыты от гранта по меткам; только вызывающему с грантом view по меткам; без повторов, по возрастанию
@@ -6552,7 +6552,7 @@ components:
           $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/Sha256
         ended_at:
           type: string
-          pattern: ^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?(?![\s\S])
+          pattern: "^(?:-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)$"
           description: Конечное число секунд, записанное текстом строки хранилища; числовой диапазон проверяется отдельно.
         instance:
           type: string
@@ -6564,11 +6564,11 @@ components:
           $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/UnitRef
         at:
           type: string
-          pattern: ^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?(?![\s\S])
+          pattern: "^(?:-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)$"
           description: Конечное число секунд, записанное текстом строки хранилища; числовой диапазон проверяется отдельно.
         valid_until:
           type: string
-          pattern: ^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?(?![\s\S])
+          pattern: "^(?:-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)$"
           description: Конечное число секунд, записанное текстом строки хранилища; числовой диапазон проверяется отдельно.
         outcome:
           enum:
@@ -6617,7 +6617,7 @@ components:
           $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/Sha256
         ended_at:
           type: string
-          pattern: ^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?(?![\s\S])
+          pattern: "^(?:-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)$"
           description: Конечное число секунд, записанное текстом строки хранилища; числовой диапазон проверяется отдельно.
         instance:
           type: string
@@ -6629,11 +6629,11 @@ components:
           $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/UnitRef
         at:
           type: string
-          pattern: ^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?(?![\s\S])
+          pattern: "^(?:-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)$"
           description: Конечное число секунд, записанное текстом строки хранилища; числовой диапазон проверяется отдельно.
         valid_until:
           type: string
-          pattern: ^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?(?![\s\S])
+          pattern: "^(?:-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)$"
           description: Конечное число секунд, записанное текстом строки хранилища; числовой диапазон проверяется отдельно.
         outcome:
           const: unknown
@@ -6660,7 +6660,7 @@ components:
           $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/Sha256
         ended_at:
           type: string
-          pattern: ^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?(?![\s\S])
+          pattern: "^(?:-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)$"
           description: Конечное число секунд, записанное текстом строки хранилища; числовой диапазон проверяется отдельно.
         outcome:
           enum:
@@ -6770,7 +6770,7 @@ components:
             $ref: '#/components/schemas/ProcessBuild'
           propertyNames:
             type: string
-            pattern: ^[^/]+/[^/]+(?![\s\S])
+            pattern: "^(?:[^/]+/[^/]+)$"
     SchemaRaised:
       type: object
       required:
@@ -6807,7 +6807,7 @@ components:
       - type: object
         propertyNames:
           not:
-            pattern: _secret(?![\s\S])
+            pattern: "^(?:[\\s\\S]*_secret)$"
         additionalProperties:
           $ref: '#/components/schemas/SecretFreeValue'
     TableRowName:
@@ -6818,7 +6818,7 @@ components:
         - enum:
           - .
           - ..
-        - pattern: /
+        - pattern: "^(?:[\\s\\S]*/[\\s\\S]*)$"
       description: 'Имя строки таблицы — глава 6.1 Н1.6 (`<sub>/<t>/<имя>`) и Н3 «таблица — записать строку» шаг 1: имя из
         key не пусто, без `/`, не `.` и не `..`; грамматика id единицы (Н1.3, UnitId) к нему не применяется (разбор ревью
         стадии B 6–7, № 1). Предел — полный ключ хранилища (P/01.1).'
@@ -6848,7 +6848,7 @@ components:
           description: Штамп stamp — стенные секунды первой записи строки (Н1.6).
       propertyNames:
         not:
-          pattern: _secret(?![\s\S])
+          pattern: "^(?:[\\s\\S]*_secret)$"
       additionalProperties:
         $ref: '#/components/schemas/SecretFreeValue'
       description: Поля объявленной таблицы и stamp проверяются по её манифесту; секретные поля исключены на любой глубине.
@@ -6926,7 +6926,7 @@ components:
           - type: 'null'
       propertyNames:
         not:
-          pattern: _secret(?![\s\S])
+          pattern: "^(?:[\\s\\S]*_secret)$"
       additionalProperties:
         $ref: '#/components/schemas/SecretFreeValue'
       description: Форма шарда снимка <sub>/snapshot/<воркер> — владелец P/04 (data/snapshot.schema.json, Н1.3а); консоль
@@ -6965,7 +6965,7 @@ components:
       - properties:
           detail:
             type: string
-            pattern: takes GET, POST and DELETE of one row(?![\s\S])
+            pattern: "^(?:[\\s\\S]*takes GET, POST and DELETE of one row)$"
           error:
             const: method
     DomainRefusal:

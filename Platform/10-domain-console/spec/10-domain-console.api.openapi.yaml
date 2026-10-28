@@ -1629,7 +1629,7 @@ paths:
       description: Имя члена по грамматике главы 8.3 Н1.1 или domain.
       schema:
         type: string
-        pattern: '^[a-z0-9-]{1,64}$'
+        pattern: "^(?:[a-z0-9-]{1,64})$"
     put:
       operationId: passGrantsPut
       summary: 'Передача процессу domain: Записать строку грантов кластера целиком (Н1.3, Н3) (OpenAPI P/08, operationId grantsPut)'
@@ -1805,7 +1805,7 @@ paths:
       required: true
       schema:
         type: string
-        pattern: '^[a-z0-9-]{1,64}$'
+        pattern: "^(?:[a-z0-9-]{1,64})$"
     put:
       operationId: passBreakGlassSet
       summary: 'Передача процессу domain: Задать аварийный пароль кластера (Н1.6) (OpenAPI P/08, operationId breakGlassSet)'
