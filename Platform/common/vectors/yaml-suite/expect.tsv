@@ -213,7 +213,7 @@ FRK4	ok	refused	root
 FTA2	ok	refused	root
 FUP4	ok	refused	root
 G4RS	ok	refused	value-char
-G5U8	error	refused	root
+G5U8	error	refused	flow-dash
 G7JE	error	refused	parser
 G992	ok	refused	root
 G9HC	error	refused	parser
@@ -390,7 +390,7 @@ Y79Y/008	error	refused	tab
 Y79Y/009	error	refused	tab
 Y79Y/010	ok	refused	tab
 YD5X	ok	refused	root
-YJV2	error	refused	root
+YJV2	error	refused	flow-dash
 Z67P	ok	refused	rare-95
 Z9M4	ok	refused	directive
 ZCZ6	error	refused	parser

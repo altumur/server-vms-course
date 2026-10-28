@@ -568,6 +568,23 @@ func jsonString(s string) string {
 	return b.String()
 }
 
+// flowDash — 26-е правило (V7-FLOW-DASH-01, сужение YAML 1.2.2): одиночный `-` простым скаляром в потоке ([-, a], [-],
+// {name: -}) — отказ text; до проверки корня, в порядке документа (как у Python — G5U8, YJV2).
+func flowDash(n *yaml.Node, inFlow bool) *textRefused {
+	if n.Kind == yaml.MappingNode || n.Kind == yaml.SequenceNode {
+		inFlow = inFlow || n.Style&yaml.FlowStyle != 0
+	}
+	if inFlow && n.Kind == yaml.ScalarNode && n.Style&(quoted|yaml.LiteralStyle|yaml.FoldedStyle) == 0 && n.Value == "-" {
+		return &textRefused{"flow-dash", n.Line, "lone `-` in a flow collection (V7-FLOW-DASH-01)", nil}
+	}
+	for _, c := range n.Content {
+		if e := flowDash(c, inFlow); e != nil {
+			return e
+		}
+	}
+	return nil
+}
+
 // loadText — байты манифеста → (дерево JSON в порядке автора, numbers, empties) или отказ text.
 func loadText(data []byte) (string, [][2]any, [][]any, *textRefused) {
 	text, lines, e := checkBytes(data)
@@ -582,6 +599,9 @@ func loadText(data []byte) (string, [][2]any, [][]any, *textRefused) {
 		return "", nil, nil, &textRefused{"root", 1, "empty file", nil}
 	}
 	root := doc.Content[0]
+	if e := flowDash(root, false); e != nil {
+		return "", nil, nil, e
+	}
 	if root.Kind != yaml.MappingNode || root.Style&yaml.FlowStyle != 0 || root.Column != 1 {
 		return "", nil, nil, &textRefused{"root", root.Line, "the root is a block mapping from column 1", nil}
 	}

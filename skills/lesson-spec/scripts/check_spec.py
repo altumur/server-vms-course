@@ -1847,6 +1847,58 @@ class Check:
                                      "the «Архитектор»), not a question in the outcome or the norm")
         self.stats["stub_scanned_files"] += len(files)
 
+    # Слова x-* (V7-LAYERS-ROOT-HASH-01): таблица layers.tsv несёт ровно слова со слоем LAYERS § 3 (кроме слов схемы вида
+    # и строки связей), её построитель — v7.schema.LAYER_WORDS; слово x-* схемы вне § 3 — ошибка.
+    def layer_words(self):
+        if not self.v7:
+            return
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from v7 import schema as v7schema
+        layers = self.root / "Platform/common/LAYERS.md"
+        words, inside = {}, False
+        for line in layers.read_text(encoding="utf-8").split("\n"):
+            if line.startswith("## "):
+                inside = line.startswith("## 3.")
+            cells = [c.strip() for c in line.strip().strip("|").split("|")] if inside and line.startswith("| `x-") else []
+            for w in re.findall(r"`(x-[a-z-]+)`", cells[0] if cells else ""):
+                words[w] = cells[1]
+        if not words:
+            self.error(layers, "§ 3: no table of the x-* words")
+            return
+        for w, layer in sorted(words.items()):
+            if layer == "—" and w not in v7schema.NOT_IN_TABLE:
+                self.error(layers, f"§ 3: {w} has no layer, but the skill puts it into layers.tsv")
+            elif layer != "—" and w not in v7schema.NOT_IN_TABLE and v7schema.LAYER_WORDS.get(w) != layer:
+                self.error(layers, f"§ 3: {w} — layer {layer}, the skill's layers.tsv says "
+                                   f"{v7schema.LAYER_WORDS.get(w, 'nothing')}")
+        for w in sorted(set(v7schema.LAYER_WORDS) | v7schema.NOT_IN_TABLE):
+            if w not in words:
+                self.error(layers, f"§ 3: no row for {w} (the skill knows it)")
+
+        def keys(x, out):
+            if isinstance(x, dict):
+                for k, v in x.items():
+                    if k.startswith("x-"):
+                        out.add(k)
+                    if k in ("properties", "patternProperties", "$defs") and isinstance(v, dict):
+                        for vv in v.values():
+                            keys(vv, out)
+                    elif k not in ("enum", "const", "default", "examples") and not k.startswith("x-"):
+                        keys(v, out)
+            elif isinstance(x, list):
+                for v in x:
+                    keys(v, out)
+            return out
+        platform = self.root / "Platform"
+        for path in sorted(platform.glob("*/data/*.schema.json")) + sorted(platform.glob("*/spec/*.schema.json")):
+            try:
+                found = keys(json.loads(path.read_text(encoding="utf-8")), set())
+            except ValueError:
+                continue                                 # the schema check names it
+            for w in sorted(found - set(words)):
+                self.error(path, f"{w} is not a word of LAYERS.md § 3")
+        self.stats["layer_words"] = len(words)
+
     # Перечень дефектов закреплённых версий библиотек для реализаций (Platform/common/versions/DEFECTS.md, ADR-0092 п. 9):
     # id — дефекты библиотек v7/DEFECTS.tsv навыка (не эталона), у каждой записи — существующая строка вектора или «страж».
     LIBRARY_DEFECTS = Path("Platform/common/versions/DEFECTS.md")
@@ -2487,6 +2539,7 @@ def main():
     check.common_contracts()
     check.stub_text()
     check.library_defects()
+    check.layer_words()
     for error in check.errors:
         print("ERROR", error)
     for line in check.excepted:

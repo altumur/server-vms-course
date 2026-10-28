@@ -1,8 +1,10 @@
 place	layer	word	value
+/$defs/common.book_row/additionalProperties/properties/entries/items/properties/value	2, 6	x-opaque	true
 /$defs/common.book_row/additionalProperties	3	x-codec	["object"]
 /$defs/common.book_row/additionalProperties	3	x-encoding	"json"
 /$defs/common.book_row/properties/	3	x-codec	["object"]
 /$defs/common.book_row/properties/	3	x-encoding	"json"
+/$defs/common.domain_backup_doc/properties/objects	2, 6	x-opaque	true
 /$defs/common.domain_members_doc	3	x-encoding	"jcs"
 /$defs/common.domain_outcome/properties/status	3	x-integer	true
 /$defs/common.domain_outcome	3	x-encoding	"json"

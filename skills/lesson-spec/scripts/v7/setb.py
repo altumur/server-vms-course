@@ -191,8 +191,19 @@ def value_rows():
     return out
 
 
+# Решения «Архитектора» после перехода (набор Б пополняется, ADR-0092 доп. (1)): строки, которых набор А эталона не
+# порождает — эталон по метке их уже не пересчитывает (формы диалекта сняты). (id, old, new, basis, check).
+FLOW_DASH = ("V7-FLOW-DASH-01 (решение «Архитектора» 2026-10-28, журнал main da8787d20): одиночный `-` простым скаляром "
+             "в потоке — отказ text, 26-е правило тонкой проверки (сужение YAML 1.2.2; G5U8, YJV2); прежде Т16 — слово")
+AFTER = [
+    ("corpus/c9_flow_lone_dash_ok", "ok", "refused:text", FLOW_DASH, "стек В7"),
+    ("classes/c9_flow_lone_dash_ok", "— (строки нет; эталон: ok)", "text — добавить", FLOW_DASH, "стек В7"),
+    ("canonical/corpus-c9_flow_lone_dash_ok", "вектор", "строки нет: вход отказан", FLOW_DASH, "стек В7"),
+]
+
+
 def main():
-    rows = deltas() + yts_rows() + value_rows()
+    rows = deltas() + yts_rows() + value_rows() + AFTER
     d = HERE / "out" / "setb"
     head = "id\told\tnew\tbasis\tcheck\tstatus\n"
     (d / "deltas.tsv").write_text(head + "".join("\t".join(x + (STATUS,)) + "\n" for x in rows), encoding="utf-8")
