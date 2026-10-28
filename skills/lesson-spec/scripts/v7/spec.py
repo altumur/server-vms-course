@@ -11,7 +11,9 @@ from pathlib import Path
 from v7 import regex
 
 CATALOG = Path("Platform/common/data/catalog.tsv")
-SCHEMA_PATH = re.compile(r"([0-9]{2})-[a-z][a-z-]*/data/([^/]+)\.schema\.json")
+# Колонка schema каталога: `<путь>.schema.json` или `<путь>.schema.json#<слово>` — одна схема у нескольких семей, исходы
+# каждой — `<схема>.<слово>.outcomes.tsv` рядом (V7-DOMAIN-SLOT-PULSE-SCHEMA-01).
+SCHEMA_PATH = re.compile(r"(([0-9]{2})-[a-z][a-z-]*/data/([^/#]+)\.schema\.json)(?:#([a-z][a-z0-9-]*))?")
 OUTCOME_HEADER = ["path", "reader", "outcome", "priority", "unit", "norm"]
 # Читатель строки исходов (решение владельца 2026-10-28): роль по грамматике `readers` каталога; у пути "" — строка на
 # каждого читателя семьи, `*` нельзя; у полей `*` — все читатели. Читатели семьи — `readers` ∪ писатели с `cas`/`guard`.
@@ -39,7 +41,12 @@ def read_catalog(root):
 
 
 def is_v7_family(row):
-    return row.get("schema", "").endswith(".schema.json")
+    return re.search(r"\.schema\.json(?:#[^/]*)?$", row.get("schema", "")) is not None
+
+
+def schema_file(cell):
+    """Файл схемы колонки schema каталога (без `#<слово>`)."""
+    return cell.split("#", 1)[0]
 
 
 # ---------------------------------------------------------------- схема: самодостаточность, места
@@ -255,13 +262,14 @@ def load_family(root, row):
     """Строка каталога со схемой `.schema.json` → (row, путь схемы, схема, путь исходов, [исход])."""
     m = SCHEMA_PATH.fullmatch(row["schema"])
     if not m:
-        raise SpecError("catalog %s: schema %s is not NN-<процесс>/data/<имя>.schema.json" % (row["key"], row["schema"]))
+        raise SpecError("catalog %s: schema %s is not NN-<процесс>/data/<имя>.schema.json[#<слово> [a-z][a-z0-9-]*]"
+                        % (row["key"], row["schema"]))
     if row["kind"] not in KINDS:
         raise SpecError("catalog %s: a schema is only for row, JSON object and JSON file" % row["key"])
-    if not re.fullmatch(r"P/%s(\.(?:0|[1-9][0-9]?))?" % m.group(1), row["owner"]):
+    if not re.fullmatch(r"P/%s(\.(?:0|[1-9][0-9]?))?" % m.group(2), row["owner"]):
         raise SpecError("catalog %s: schema %s is not in the lesson of its owner %s" % (row["key"], row["schema"],
                                                                                    row["owner"]))
-    path = Path(root) / "Platform" / row["schema"]
+    path = Path(root) / "Platform" / m.group(1)
     if not path.is_file():
         raise SpecError("catalog %s: schema %s is not a file" % (row["key"], row["schema"]))
     try:
@@ -273,7 +281,7 @@ def load_family(root, row):
     from v7 import schema as gen
     if not layers.is_file() or layers.read_text(encoding="utf-8") != gen.layer_table(doc):
         raise SpecError("%s: is not the table of the x-* words of %s (rebuild: python -m v7.layers Platform/%s)"
-                        % (layers.name, path.name, row["schema"]))
+                        % (layers.name, path.name, m.group(1)))
     root_s = Places(doc).resolve(doc)
     if row["kind"] == "row" and not any("properties" in s for s in root_s):
         raise SpecError("%s: the root of a row schema is an object of properties (items)" % path.name)
@@ -282,7 +290,7 @@ def load_family(root, row):
     name = path.name[:-len(".schema.json")]
     if row["kind"] != "file" and name.endswith("." + row["kind"]):
         name = name[:-len(row["kind"]) - 1]
-    outcomes_path = path.with_name(name + ".outcomes.tsv")
+    outcomes_path = path.with_name(name + ("." + m.group(4) if m.group(4) else "") + ".outcomes.tsv")
     return row, path, doc, outcomes_path, load_outcomes(outcomes_path, doc)
 
 
@@ -830,7 +838,7 @@ def families_check(root, norms, text, prefix, catalog):
         try:
             built.append(load_family(root, r))
         except (SpecError, OSError) as exc:
-            errors.append((Path(root) / "Platform" / r["schema"], "families: %s" % exc))
+            errors.append((Path(root) / "Platform" / schema_file(r["schema"]), "families: %s" % exc))
             continue
         stats["family_schemas"] += 1
         stats["family_outcomes"] += len(built[-1][4])

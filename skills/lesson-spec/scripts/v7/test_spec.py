@@ -561,6 +561,45 @@ class TestTree(unittest.TestCase):
         self.assertTrue(any("probe.api.openapi.yaml" in ln for ln in bad), out[-2000:])
         self.assertEqual(len(bad), 2, bad)
 
+    def test_schema_word(self):
+        """V7-DOMAIN-SLOT-PULSE-SCHEMA-01: `<схема>.schema.json#<слово>` — та же схема, исходы `<схема>.<слово>.outcomes.tsv`;
+        нет файла исходов слова — красное; слово не по грамматике — красное; читатели строки — по своему файлу."""
+        sys.path.insert(0, str(HERE.parent))
+        import check_spec
+        root = self.copy()
+        cat = root / spec.CATALOG
+        lines = cat.read_text(encoding="utf-8").split("\n")
+        i = next(i for i, ln in enumerate(lines) if ln.startswith("<sub>/slots/<имя>\t"))
+        lines.insert(i + 1, lines[i].replace("<sub>/slots/<имя>", "<sub>/probe/<имя>", 1)
+                     .replace("03-worker/data/slots.schema.json", "03-worker/data/slots.schema.json#probe"))
+        cat.write_text("\n".join(lines), encoding="utf-8")
+        row = next(r for r in spec.read_catalog(root) if r["key"] == "<sub>/probe/<имя>")
+        self.assertTrue(spec.is_v7_family(row))
+        with self.assertRaisesRegex(spec.SpecError, "slots.probe.outcomes.tsv: no outcomes file"):
+            spec.load_family(root, row)
+        data = root / "Platform/03-worker/data"
+        shutil.copy(data / "slots.outcomes.tsv", data / "slots.probe.outcomes.tsv")
+        _, path, _, outcomes_path, _ = spec.load_family(root, row)
+        self.assertEqual((path.name, outcomes_path.name), ("slots.schema.json", "slots.probe.outcomes.tsv"))
+        check_spec.family_place(row, True)
+        with self.assertRaises(ValueError):
+            check_spec.family_place(dict(row, schema=row["schema"].replace("#probe", "#Probe")), True)
+        with self.assertRaises(spec.SpecError):
+            spec.load_family(root, dict(row, schema=row["schema"].replace("#probe", "#Probe")))
+        # читатели строки — по её файлу: лишний читатель в файле слова — красное у этого файла
+        o = data / "slots.probe.outcomes.tsv"
+        whole = next(ln for ln in o.read_text(encoding="utf-8").split("\n") if ln.startswith("\t"))
+        o.write_text(o.read_text(encoding="utf-8").rstrip("\n") + "\n\tresource" + whole[len("\t") +
+                     len(whole.split("\t")[1]):] + "\n", encoding="utf-8")
+        check = check_spec.Check(root, None, False)
+        with contextlib.redirect_stdout(io.StringIO()):
+            check.lesson((root / "Platform/03-worker/03-worker.md").resolve())
+            check.outcome_readers()
+        errors = [str(e) for e in check.errors]
+        self.assertTrue(any("slots.probe.outcomes.tsv" in e and "resource is not a reader" in e for e in errors),
+                        errors[:5])
+        self.assertFalse(any("slots.outcomes.tsv" in e and "resource" in e for e in errors), errors[:5])
+
     def test_stub_text(self):
         """Заготовка «вопрос «Архитектору»» / «исход не назван нормой» в исходах и нормах — красное; «прежде — вопрос
         «Архитектору»» — история, не заготовка."""

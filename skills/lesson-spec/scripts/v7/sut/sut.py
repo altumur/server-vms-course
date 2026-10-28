@@ -130,6 +130,9 @@ class Dialect:
 
     def family(self, key, kind, mode, roles, text):
         k = (key, kind)
+        if k not in self.catalog:                           # семья после метки: эталону судить нечего
+            return {"verdict": "absent", "paths": [], "outcome": [], "why": "%s (%s) is not in the catalog of %s"
+                    % (key, kind, TAG)}
         if k not in self.fams:
             f = self.fam.load_family(self.root, self.catalog[k], self.common)
             self.fams[k] = (f, {m: self.fam.Judge(f.form, m) for m in ("writer", "reader")})
@@ -387,10 +390,12 @@ def cmd_selftest(be, a):
     report = {}
 
     def tally(name, rid, ok, verdict=None):
-        t = report.setdefault(name, {"rows": 0, "ok": 0, "delta": 0, "defect": 0, "not_delta": []})
+        t = report.setdefault(name, {"rows": 0, "ok": 0, "delta": 0, "defect": 0, "new": 0, "not_delta": []})
         t["rows"] += 1
         if ok:
             t["ok"] += 1
+        elif verdict == "absent":                        # семья после метки (нет в каталоге эталона)
+            t["new"] += 1
         elif isinstance(verdict, str):                   # известный дефект эталона (DEFECTS.tsv), не дельта Б
             t["defect"] += 1
         elif verdict:
@@ -455,6 +460,9 @@ def cmd_selftest(be, a):
                 parse = ast.literal_eval if i.startswith("family-read/") else json.loads
                 return (m.group(1) == got["verdict"] and sorted(parse(m.group(2))) == sorted(got["paths"])
                         and parse(m.group(3)) == outs)
+            if got["verdict"] == "absent":
+                tally("family-read", r["case"], False, "absent")
+                continue
             tally("family-read", r["case"], ok, not ok and dialect_matches(
                 be, known, ["family-read/%s|%s|%s|%s" % (r["family"], r["kind"], r["mode"], r["note"]),
                             "case/" + r["note"]], same_family))
@@ -466,8 +474,9 @@ def cmd_selftest(be, a):
             tally("yaml-suite", r["id"], got["layer1"] == r["layer1"], got["layer1"] != r["layer1"] and dialect_matches(
                 be, known, ["yaml-suite/" + r["id"]], lambda i, old: old == word))
     for name, t in report.items():
-        print("%-16s rows %5d  ok %5d  delta-Б %4d  defect %3d  NOT delta %4d %s" % (
-            name, t["rows"], t["ok"], t["delta"], t["defect"], len(t["not_delta"]), " ".join(t["not_delta"][:8])))
+        print("%-16s rows %5d  ok %5d  delta-Б %4d  defect %3d  new %3d  NOT delta %4d %s" % (
+            name, t["rows"], t["ok"], t["delta"], t["defect"], t["new"], len(t["not_delta"]),
+            " ".join(t["not_delta"][:8])))
     if a.json:
         Path(a.json).write_text(json.dumps(report, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     return 1 if any(t["not_delta"] for t in report.values()) else 0

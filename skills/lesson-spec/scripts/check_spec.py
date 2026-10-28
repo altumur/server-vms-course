@@ -299,11 +299,11 @@ def family_place(row, v7=False):
     """A catalog schema is NN-<процесс>/data/<семья>.form.yaml (on В7 — .schema.json) of the owner lesson, for row, JSON
     object and JSON file only (ADR-0088 п. 1, доп. (1) Р2; file — ADR-0083 доп. (11), JSON content is checked when the
     family builds); the same rule as form_source.families.schema_place, without the text layer."""
-    suffix = r"\.schema\.json" if v7 else r"\.form\.yaml"
-    match = re.fullmatch(r"([0-9]{2})-[a-z][a-z-]*/data/[^/]+" + suffix, row["schema"])
+    suffix = r"\.schema\.json(?:#[a-z][a-z0-9-]*)?" if v7 else r"\.form\.yaml"   # #<слово>: V7-DOMAIN-SLOT-PULSE-SCHEMA-01
+    match = re.fullmatch(r"([0-9]{2})-[a-z][a-z-]*/data/[^/#]+" + suffix, row["schema"])
     if not match:
-        raise ValueError(f"schema {row['schema']} is not NN-<процесс>/data/<семья>{suffix.replace(chr(92), '')} "
-                         f"(ADR-0088 п. 1)")
+        raise ValueError(f"schema {row['schema']} is not NN-<процесс>/data/<семья>"
+                         f"{'.schema.json[#<слово>]' if v7 else '.form.yaml'} (ADR-0088 п. 1)")
     if row["kind"] not in {"row", "object", "file"}:
         raise ValueError("a schema is only for row, JSON object and JSON file (ADR-0088 доп. (1) Р2, ADR-0083 доп. (11))")
     if not re.fullmatch(rf"P/{match.group(1)}(\.(?:0|[1-9][0-9]?))?", row["owner"]):
@@ -818,7 +818,7 @@ class Check:
                     if not named & MANIFEST_FORMS or row["kind"] not in {"row", "object"}:
                         raise ValueError(f"schema manifest is for a row or object whose key names one of "
                                          f"{', '.join(sorted(MANIFEST_FORMS))} (<manifest:…>)")
-                elif row["schema"] != "-" and not (self.root / "Platform" / row["schema"]).is_file():
+                elif row["schema"] != "-" and not (self.root / "Platform" / row["schema"].split("#", 1)[0]).is_file():
                     raise ValueError(f"schema {row['schema']} is not a file under Platform/")
                 elif row["schema"] != "-":
                     family_place(row, self.v7)
@@ -1788,7 +1788,7 @@ class Check:
         if not self.v7 or self.catalog is None:
             return
         try:
-            from v7.spec import SpecError, load_family, reading_roles
+            from v7.spec import SpecError, is_v7_family, load_family, reading_roles
         except ImportError:
             return                                   # the families check has named the missing stack
         star = {k: set(v) for k, v in self.star_readers.items()}
@@ -1808,7 +1808,7 @@ class Check:
                 star.setdefault(k, set()).update(v)
         everyone = True
         for row in self.catalog.values():
-            if not row["schema"].endswith(".schema.json"):
+            if not is_v7_family(row):
                 continue
             want = reading_roles(row, star.get(row["key"], set()) if everyone else None)
             if want is None:
