@@ -1,7 +1,9 @@
 // Вызовы модуля для страницы (P/07 Н1.5; ADR-0091 доп. (22), (24), (25), (27)): PlatformConsole.features, обещание
 // pc.ready — после mount и первого прочитанного /manifest, при 401 — после входа; select(ref, {tab}) — вкладка по id из
 // addTab, нет такой — карточка без смены вкладки; card.closed {ref} — при смене выбора, снятии выбора, уходе со страницы,
-// и у карточки оболочки (её ref как есть). Версия модуля — 1.
+// и у карточки оболочки (её ref как есть); api(method, path, body, {ifMatch}) — If-Match у PUT и DELETE строки единицы
+// /<rows>/<id>, 412 — throw {status: 412, body как есть, retry: false}, иное — отказ вызова до запроса (ADR-0091 доп. (28),
+// (29); features "api.if-match"). Версия модуля — 1.
 const fs=require("fs"),path=require("path"),{JSDOM}=require("jsdom");
 const PAGE=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
@@ -15,7 +17,7 @@ function boot(state){
     w.matchMedia=()=>({matches:false,addListener(){},removeListener(){},addEventListener(){},removeEventListener(){}});
     w.requestAnimationFrame=cb=>setTimeout(cb,0);
     Object.defineProperty(w,"innerWidth",{value:1600,configurable:true});
-    w.__log=[];
+    w.__log=[];w.__ifm=[];
     const answer=(status,body)=>Promise.resolve({ok:status<300,status,headers:{get:()=>"application/json"},
       json:()=>Promise.resolve(body),text:()=>Promise.resolve(JSON.stringify(body)),clone(){return this}});
     w.fetch=(url,init)=>{
@@ -27,6 +29,8 @@ function boot(state){
       if(state.login)return answer(401,{error:"denied",detail:"who are you"});
       if(p==="/manifest")return answer(200,MANIFEST);
       if(p==="/things")return answer(200,{configured:[{id:1,name:"one"},{id:2,name:"two"}],rows:[]});
+      if(p==="/things/1"&&(method==="PUT"||method==="DELETE")){const im=init&&init.headers&&init.headers["If-Match"];w.__ifm.push(method+" "+im);
+        return im==="4"?answer(412,{error:"revision moved",revision:5}):answer(200,{id:1,revision:6});}
       return answer(404,{error:"not found"});
     };
   }});
@@ -81,6 +85,27 @@ const settled=(p,ms)=>Promise.race([p.then(()=>true),sleep(ms).then(()=>false)])
     f.requestSubmit();
     out.readyAfterLogin=await settled(pc.ready,2000);
     out.manifestReadAfterLogin=w.__log.filter(x=>x==="GET /manifest").length>=2;
+    w.close();
+  }
+  // 3. ifMatch: If-Match у PUT и DELETE строки единицы, 412 без повтора, отказы до запроса
+  {
+    const w=boot({login:false});w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
+    await sleep(50);const pc=w.platformConsole;await settled(pc.ready,2000);
+    out.featuresIfMatch=w.PlatformConsole.features.includes("api.if-match");
+    const fails=async(...a)=>{try{await pc.api(...a);return null;}catch(e){return e;}};
+    out.putIfMatch=(await fails("PUT","/things/1",{name:"x"},{ifMatch:5}))===null&&w.__ifm.includes("PUT 5");
+    out.deleteIfMatch=(await fails("DELETE","/things/1",undefined,{ifMatch:5}))===null&&w.__ifm.includes("DELETE 5");
+    const nPut=w.__log.filter(x=>x==="PUT /things/1").length;
+    const e412=await fails("PUT","/things/1",{name:"y"},{ifMatch:4});
+    out.precondition412=!!e412&&e412.status===412&&e412.retry===false&&JSON.stringify(e412.body)===JSON.stringify({error:"revision moved",revision:5})
+      &&w.__log.filter(x=>x==="PUT /things/1").length===nPut+1;
+    await fails("PUT","/things/1",{name:"z"});
+    out.noIfMatchWithoutOpts=w.__ifm[w.__ifm.length-1]==="PUT undefined";
+    const before=w.__log.length;
+    const refused=[await fails("POST","/things",{name:"n"},{ifMatch:1}),await fails("PUT","/shelves/a",{},{ifMatch:1}),
+      await fails("PUT","/things/1",{},{ifMatch:1,headers:{x:1}}),await fails("PUT","/things/1",{},{ifMatch:1.5}),
+      await fails("DELETE","/things/1",undefined,{ifMatch:0})];
+    out.refusedBeforeRequest=refused.every(e=>!!e)&&w.__log.length===before;
     w.close();
   }
   out.errors=errs;out.noErrors=!errs.length;
