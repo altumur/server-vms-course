@@ -69,6 +69,27 @@ unit:
         events:   {type: integer, minimum: 0}
         waiting_since: {type: number}           # when something first went missing (the wait runs from here, V/05.4)
         fetch_since:   {type: number}           # when backfill was first asked for
+# The words of the console and of the assistant (V/10.4 Н1.4): labels the admin's text names a field by.
+display:
+  unit: задача скана
+  units: задачи скана
+  units_count: задач скана
+  fields:
+    name: Имя задачи
+    cam: Камера
+    rec: Запись
+    kind: Модель
+    params: Параметры
+    mask: Маска
+    mask_from: Маска из
+    alarms: Тревожные события
+    from: С
+    to: По
+    labels: Метки серверов
+  field_help:
+    rec: запись, которую сканирует задача
+    from: начало отрезка записи
+    to: конец отрезка записи
 placement:
   capacity:   {from: capacity, default: 2}      # scans a worker will carry at once — its OWN number, in its OWN
                                                  # heartbeat. This is why a scan is a subsystem and not a flag on a

@@ -381,6 +381,20 @@ display:
   unit: запись
   units: записи
   units_count: записей
+  fields:
+    name: Имя записи
+    cam: Камера
+    ref: Имя в домене
+    stream: Поток
+    retention_days: Хранить, дней
+    enabled: Включена
+    labels: Метки серверов
+    home: Том
+    until: Действует до
+    min_depth_days: Глубина не меньше, дней
+    when: Когда писать
+  options:
+    when: {always: всегда, offline: когда основная не пишется}
   field_help:
     cam: камера, которую пишет запись
     stream: "поток камеры, который пишет запись; пусто — основной"

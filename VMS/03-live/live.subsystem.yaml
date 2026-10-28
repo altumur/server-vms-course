@@ -73,3 +73,10 @@ display:
   unit: живой поток
   units: живые потоки
   units_count: живых потоков
+  fields:
+    cam: Камера
+    labels: Метки шлюзов
+    grace: Держать после зрителя, с
+  field_help:
+    labels: "где смотрят: public-address — снаружи сети"
+    grace: сколько секунд шлюз держит поток после последнего зрителя

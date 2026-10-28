@@ -56,6 +56,29 @@ unit:
         through:  {type: number}                 # media seconds watched through
         events:   {type: integer, minimum: 0}
         overrun:  {type: number, minimum: 0}     # seconds the device's ring erased before the watch got there
+# The words of the console and of the assistant (V/10.4 Н1.4): labels the admin's text names a field by.
+display:
+  unit: обход архива камеры
+  units: обходы архива камер
+  units_count: обходов архива камер
+  fields:
+    name: Имя обхода
+    cam: Камера
+    kind: Модель
+    params: Параметры
+    mask: Маска
+    alarms: Тревожные события
+    start: Начало обхода
+    keep: Сохранять найденное
+    rec: Запись для найденного
+    pre: Секунд до
+    post: Секунд после
+    join: Склеивать ближе, с
+    enabled: Включён
+    labels: Метки серверов
+  field_help:
+    start: "now — с этого момента, earliest — с самого раннего в архиве камеры"
+    keep: "none — не сохранять, hits — сохранять минуты вокруг находок"
 placement:
   capacity:   {from: capacity, default: 2}      # watches per worker — its own number, in its own heartbeat
   headroom:   {from: headroom}

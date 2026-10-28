@@ -509,6 +509,8 @@ display:
     live: Живой поток
     priority: Приоритет
     labels: Метки достижимости
+    alarms: Тревожные события
+    kind: Вид устройства
   options:
     live:
       always: Держать всегда

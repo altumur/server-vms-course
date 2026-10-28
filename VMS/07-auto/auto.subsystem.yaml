@@ -130,6 +130,20 @@ unit:
       properties:
         through:   {type: number}
         held_from: {type: number}
+# The words of the console and of the assistant (V/10.4 Н1.4): labels the admin's text names a field by.
+display:
+  unit: сценарий
+  units: сценарии
+  units_count: сценариев
+  fields:
+    name: Имя сценария
+    when: Когда
+    within: В пределах, с
+    then: Что сделать
+    rate_per_minute: Не чаще, в минуту
+    valid_for: Годен, с
+    enabled: Включён
+    labels: Метки серверов
 placement:
   # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
   # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB
