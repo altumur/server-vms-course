@@ -44,6 +44,27 @@ unit:
     # process's timer dies with the process. Past it the controller unplaces the row and the worker stops the
     # model (`placement.ends`, P/04 Н1.3); a row a scenario made is deleted, one an operator made stays.
     until:     {type: float,  default: 0}          # unix seconds; 0 — never
+# The words of the console and of the assistant (V/10.4 Н1.4): labels the admin's text names a field by.
+display:
+  unit: детектор
+  units: детекторы
+  units_count: детекторов
+  fields:
+    name: Имя детектора
+    cam: Камера
+    stream: Поток
+    kind: Модель
+    params: Параметры
+    mask: Маска
+    mask_from: Маска из
+    enabled: Включён
+    labels: Метки серверов
+    alarms: Тревожные события
+    until: Действует до
+  field_help:
+    stream: "поток камеры для модели; пусто — основной"
+    kind: "модель: motion, linecross, lpr…"
+    alarms: какие виды событий детектора — тревоги
 placement:
   capacity:   {from: capacity, default: 8}        # streams per worker — its own number, from its heartbeat
   headroom:   {from: headroom}

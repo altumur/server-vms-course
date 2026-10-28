@@ -2538,7 +2538,7 @@
       }
      ]
     },
-    "content": "{\"valid\":true,\"diff\":[\"rec/vhod  retention_days: 30 → 14   (Вход)\",\"rec/vhod-backup  retention_days: 7 → 14   (Вход)\"],\"note\":\"the plan is shown to the admin; the admin applies it with the Apply button (written through the console doors with CAS on revision)\"}"
+    "content": "{\"valid\":true,\"diff\":[\"rec/vhod  retention_days «Хранить, дней»: 30 → 14   (Вход)\",\"rec/vhod-backup  retention_days «Хранить, дней»: 7 → 14   (Вход)\"],\"note\":\"the plan is shown to the admin; the admin applies it with the Apply button (written through the console doors with CAS on revision)\"}"
    }
   ]
  },
@@ -2582,9 +2582,9 @@
   ]
  },
  {
-  "id": "vms-off-not-named",
+  "id": "vms-off-named",
   "console": "vms",
-  "rule": "V/10.5 Н1.4 п. 6 «выключи» не называет поле «Включена» без слов операторов (пробел замера 7)",
+  "rule": "V/10.5 Н1.4 пп. 4, 6 «выключи» называет «Включена» словами операторов words.json, значение — полярностью",
   "source": "lesson",
   "texts": [
    "Выключи камеру Вход"
@@ -2613,7 +2613,7 @@
       }
      ]
     },
-    "content": "{\"valid\":false,\"errors\":[\"field enabled (\\\"Включена\\\") is not named in the admin's request — edit only what the admin named; if the needed field does not exist, refuse and explain; to confirm it, ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
+    "content": "{\"valid\":true,\"diff\":[\"cam/1  enabled «Включена»: true → false   (Вход)\"],\"note\":\"the plan is shown to the admin; the admin applies it with the Apply button (written through the console doors with CAS on revision)\"}"
    }
   ]
  },
@@ -2645,7 +2645,7 @@
       }
      ]
     },
-    "content": "{\"valid\":true,\"diff\":[\"rec/parking  enabled: false → true   (parking)\"],\"note\":\"the plan is shown to the admin; the admin applies it with the Apply button (written through the console doors with CAS on revision)\"}"
+    "content": "{\"valid\":true,\"diff\":[\"rec/parking  enabled «Включена»: false → true   (parking)\"],\"note\":\"the plan is shown to the admin; the admin applies it with the Apply button (written through the console doors with CAS on revision)\"}"
    }
   ]
  },
@@ -2762,7 +2762,7 @@
    {
     "name": "list_subsystems",
     "args": {},
-    "content": "{\"subsystems\":[{\"sub\":\"cam\",\"rows\":\"cameras\",\"id_field\":\"numeric\",\"unit_word\":\"камера\",\"units_word\":\"камеры\",\"section\":\"Оборудование\",\"about\":\"each unit (\\\"камера\\\") belongs to a unit of cam (\\\"камера\\\") via field main; that unit's fields in find_units are about.<field>\"}]}"
+    "content": "{\"subsystems\":[{\"sub\":\"cam\",\"rows\":\"cameras\",\"id_field\":\"numeric\",\"unit_word\":\"камера\",\"units_word\":\"камеры\",\"section\":\"Оборудование\",\"words\":\"камера, камеры, камер, camera, cameras\",\"about\":\"each unit (\\\"камера\\\") belongs to a unit of cam (\\\"камера\\\") via field main; that unit's fields in find_units are about.<field>\"}]}"
    },
    {
     "name": "find_units",
@@ -2795,6 +2795,85 @@
      ]
     },
     "content": "{\"valid\":false,\"errors\":[\"edits[0]: subsystem rec is outside the assistant's scope (this page: cam) — refuse: not in scope, not a lack of rights\",\"selection: subsystem rec is outside the assistant's scope (this page: cam) — refuse: not in scope, not a lack of rights\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
+   }
+  ]
+ },
+ {
+  "id": "vms-wrong-field",
+  "console": "vms",
+  "rule": "V/10.5 Н1.4 п. 6 подмена поля: «выключи» не называет «Живой поток»",
+  "source": "lesson",
+  "texts": [
+   "Выключи камеру Вход"
+  ],
+  "calls": [
+   {
+    "name": "propose_plan",
+    "args": {
+     "summary": "s",
+     "selection": {
+      "where": [
+       {
+        "field": "name",
+        "op": "eq",
+        "value": "Вход"
+       }
+      ],
+      "edit_sub": "cam"
+     },
+     "edits": [
+      {
+       "unit": "cam/1",
+       "field": "live",
+       "to": "on-demand",
+       "why": "Вход"
+      }
+     ]
+    },
+    "content": "{\"valid\":false,\"errors\":[\"cam/1: value \\\"on-demand\\\" of field live is not named in the admin's request — do not choose it yourself; ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\",\"field live (\\\"Живой поток живой поток: держать всегда или по требованию живое, live Держать всегда По требованию всегда, always по требованию, on demand\\\") is not named in the admin's request — edit only what the admin named; if the needed field does not exist, refuse and explain; to confirm it, ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
+   }
+  ]
+ },
+ {
+  "id": "vms-passes-days",
+  "console": "vms",
+  "rule": "V/10.5 Н5 нарушено, но проходит: «дней» называет и retention_days, и min_depth_days",
+  "violates": "админ просил хранить 14 дней, план ставит глубину не меньше 14 дней — оба поля названы словом «дней»",
+  "source": "lesson",
+  "texts": [
+   "Храни записи камеры Вход 14 дней"
+  ],
+  "calls": [
+   {
+    "name": "propose_plan",
+    "args": {
+     "summary": "s",
+     "selection": {
+      "where": [
+       {
+        "field": "about.name",
+        "op": "eq",
+        "value": "Вход"
+       }
+      ],
+      "edit_sub": "rec"
+     },
+     "edits": [
+      {
+       "unit": "rec/vhod",
+       "field": "min_depth_days",
+       "to": 14,
+       "why": "Вход"
+      },
+      {
+       "unit": "rec/vhod-backup",
+       "field": "min_depth_days",
+       "to": 14,
+       "why": "Вход"
+      }
+     ]
+    },
+    "content": "{\"valid\":true,\"diff\":[\"rec/vhod  min_depth_days «Глубина не меньше, дней»: 0 → 14   (Вход)\",\"rec/vhod-backup  min_depth_days «Глубина не меньше, дней»: 0 → 14   (Вход)\"],\"note\":\"the plan is shown to the admin; the admin applies it with the Apply button (written through the console doors with CAS on revision)\"}"
    }
   ]
  },
