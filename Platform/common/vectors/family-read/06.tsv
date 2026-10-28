@@ -1049,6 +1049,8 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 06-a09_max_bytes.reader	platform/drain	platform/drain	row	reader	["<s>controller", "console"]	{"server":"ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé","at":"1"}	refused	["/server"]	{"<s>controller": [""], "console": [""]}	a09_max_bytes.reader
 06-a10_not_pattern.writer	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	writer	["console"]	{"rids":"free-","by":"a","at":"1"}	refused	["/rids/0"]	[]	a10_not_pattern.writer
 06-a10_not_pattern.reader	<sub>/asked/<sha16(имя)>	testsub/asked/0123456789abcdef	row	reader	["console"]	{"rids":"free-","by":"a","at":"1"}	refused	["/rids/0"]	{"console": [""]}	a10_not_pattern.reader
+06-p0001	platform/servers/<сервер>	platform/servers/srv-a	row	writer	["console"]	{"labels":"A,A,A"}	refused	["/labels/1", "/labels/2"]	[]	labels: three equal items (uniqueItems: each item equal to an earlier one)
+06-p0002	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A,A,A"}	refused	["/labels/1", "/labels/2"]	{"<s>controller": [""], "console": [""]}	labels: three equal items (uniqueItems: each item equal to an earlier one)
 06-k0001	<sub>/policy	/policy	row	writer	["console"]	{"servers":"shared"}	refused	[""]	[]	key: <sub> ""
 06-k0002	<sub>/policy	/policy	row	reader	["<s>controller", "console"]	{"servers":"shared"}	refused	[""]	{"<s>controller": [""], "console": [""]}	key: <sub> ""
 06-k0003	platform/servers/<сервер>	platform/servers/	row	writer	["console"]	{"labels":"A"}	refused	[""]	[]	key: <сервер> ""
