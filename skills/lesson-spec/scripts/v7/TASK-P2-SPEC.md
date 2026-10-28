@@ -28,8 +28,8 @@ uv run --no-project --python 3.12 --with pyyaml --with openapi-spec-validator --
 | 1 | стандартные файлы на места: `02-installer/spec/02.1-installer.{schema.json,relations.json,layers.tsv}`, `02.2-installer.view.schema.json`; `NN-*/data/<семья>.{schema.json,layers.tsv}` (100 семей); `common/data/common.schema.json` (справочно, не норма); строка связей 18 — `"x-implied-by": [16, 17]` | 2.1, 2.3.6 |
 | 2 | `common/data/catalog.tsv`, колонка `schema` → `….schema.json`; семьи `events` — по своему файлу (7 файлов: схема, слои, исходы — копии `events.*`) | 2.1 |
 | 3 | снимаются файлы диалекта: 94 `*.form.yaml` семей, `common.form.yaml`, `02.1-installer.form.yaml`, `02.1-installer.references.tsv`, `common/DIALECT.md` (99 файлов; всё — за меткой) | 2.1 |
-| 4 | корпус `02-installer/acceptance/1/` по дельтам набора Б: в 72 файла дописан `worker:` (п. 7); `verdicts.tsv`, `classes.tsv` — правки на местах (класс — слой: `text`, `form`, `relations`), 39 новых случаев в конце под своим комментарием; `diagnostics.tsv` — без строк случаев, ставших `ok`. Итог: 680 случаев (141 ok, 539 refused) | 2.3 |
-| 5 | векторы `02-installer/vectors/canonical/` заново: 157 строк (−6, +18, +10 новых принятых) | 2.4 |
+| 4 | корпус `02-installer/acceptance/1/` по дельтам набора Б: в 72 файла дописан `worker:` (п. 7); `verdicts.tsv`, `classes.tsv` — правки на местах (класс — слой: `text`, `form`, `relations`), 41 новый случай в конце под своим комментарием (среди них `t33`, `t33b` — висячая запятая в потоке, п. 2.1 ниже); `diagnostics.tsv` — без строк случаев, ставших `ok`. Итог: 682 случая (143 ok, 539 refused) | 2.3 |
+| 5 | векторы `02-installer/vectors/canonical/` заново: 159 строк (−6, +18, +12 новых принятых) | 2.4 |
 | 6 | пакет `common/vectors/family-read/`: README и `01.tsv`–`06.tsv` (4739 строк) | 2.5 |
 | 7 | разделы норм между маркерами: «Форма» P/02.1, «Форма канонического вида» P/02.2, «Семьи данных» 23 глав | 1.2 |
 | 8 | `outcomes.tsv` всех семей — столбец `reader` (заготовка, п. 3 ниже): строка пустого пути — по читателю, 229 строк | 2.7 |
@@ -55,7 +55,7 @@ uv run --no-project --python 3.12 --with pyyaml --with openapi-spec-validator --
   - `05-resource.norms.md` → `../data/presence-lock.form.yaml`;
   - `06.1-console.norms.md` → `../../03-worker/data/heartbeats.form.yaml`;
   - `08.6-domain.norms.md`, `09.1-agent.norms.md` → `../../common/data/common.form.yaml`;
-- число случаев 641 (119 ok, 522 refused) → 680 (141 ok, 539 refused): в `02.1-installer.norms.md`,
+- число случаев 641 (119 ok, 522 refused) → 682 (143 ok, 539 refused): в `02.1-installer.norms.md`,
   `02-installer.README.md` и `acceptance/1/README.md`.
 
 Ещё 184 строки в 75 файлах упоминают диалект без ссылки — `check_spec` их не ловит. Найти:
@@ -69,7 +69,13 @@ uv run --no-project --python 3.12 --with pyyaml --with openapi-spec-validator --
 
 Тексты норм по плану п. 2.2:
 1. **P/02.1 Н1.1** — «подмножество YAML 1.2.2»:
-   - снять 11 отклонений (ADR-0092 п. 3; список — `v7/out/setb/deltas.tsv`, основания `п. 3`);
+   - снять 11 отклонений (ADR-0092 п. 3; список — `v7/out/setb/deltas.tsv`, основания `п. 3`) и 12-е — висячую
+     запятую в потоке (решение «Архитектора» 2026-10-28 по ADR-0092 доп. (1); yaml-test-suite UDR7): `[a, b, ]` = `[a, b]`,
+     `{k: v, }` = `{k: v}` — не отказ (случаи Б `t33_flow_trailing_comma_ok`, `t33b_flow_map_trailing_comma_ok`). В
+     строке 61 норм — «пустой элемент потока (`[a,,b]`, `[a,]`)»: снять `[a,]`. Пустой элемент в середине (`[a,,b]`, `[,a]`,
+     `[ , ]`) YAML 1.2.2 отказывает — оба парсера (ruamel, go.yaml.in/yaml/v3) отказывают сами; норму держит
+     `c4_flow_empty_item` (`[name,, start]`, класс `text`) — слова о `[a,,b]` оставить. Тонкого правила нет (список доп.
+     (2) закрыт);
    - TAB вне комментария — отказ, `\<TAB>` в двойных кавычках — экранирование, допустимо (п. 4);
    - `{k:}` — отказ (п. 4);
    - правила тонкой проверки — по `v7/out/setb/thin-rules.tsv`, колонки `check`, `where`, `basis`; `doc-start-content` и
@@ -83,7 +89,7 @@ uv run --no-project --python 3.12 --with pyyaml --with openapi-spec-validator --
 5. **P/02.1 Н5 и README приёмки 1**:
    - пути и строки отказа — подсказка (ADR-0092 п. 5): строги только вердикт и код выхода;
    - `diagnostics.tsv` — подсказка, раннер пишет её в отчёт без провала;
-   - абзац о 39 новых случаях набора Б (их строки в `verdicts.tsv` под комментарием «Набор Б ADR-0092»).
+   - абзац о 41 новом случае набора Б (их строки в `verdicts.tsv` под комментарием «Набор Б ADR-0092»).
 6. **P/02.2 Н1.1** — проекция: умолчания — аннотация `default` схемы, `ordered` — `x-ordered`; схема вида —
    `02.2-installer.view.schema.json`; построитель — `v7/sections.py` и `python -m v7.vectors` (вместо
    `form_source/build_canonical.py`; README векторов canonical — то же).
@@ -105,7 +111,7 @@ uv run --no-project --python 3.12 --with pyyaml --with openapi-spec-validator --
    `DIALECT.md` снимает шаг 3 (решение «Архитектора» 2026-10-28): он за меткой `dialect-reference-dc94d0fd1`, в выгрузку
    не идёт; ссылки на него в текстах — на `LAYERS.md`.
 9. **`acceptance/1/corrections.tsv`** — строка пакета: дата, `cases/*`, «переход на В7: п. 7 `worker:`, дельты набора Б
-   ADR-0092, 39 новых случаев», `all`.
+   ADR-0092, 41 новый случай», `all`.
 
 ADR (пометки заменённых пунктов ADR-0087, 0088, 0089; ADR-0092 п. 6 — «197 строк `classes.tsv`») — дело
 «Архитектора», не этого пакета.
