@@ -1,12 +1,17 @@
 """Генератор В7 (ADR-0092 п. 12): диалект → JSON Schema 2020-12 + CEL + таблицы своих слоёв, детерминированно.
 
     python -m v7.build [--root КУРС] [--out КАТАЛОГ]      (из skills/lesson-spec/scripts)
+    python -m v7.build --root ДЕРЕВО --place                 (пакет перехода, PLAN-TRANSITION п. 1.1)
 
 Выход (по умолчанию scripts/v7/out/, не Platform/: нормой стандартные файлы станут только при переходе):
 - `02.1-installer.schema.json`, `02.1-installer.layers.tsv` — форма манифеста P/02.1;
 - `02.1-installer.relations.json` — среда CEL и строки `references.tsv` выражениями CEL;
 - `families/<NN-процесс>/<семья>.schema.json`, `.layers.tsv` — схемы семей каталога (99 семей, файлы схем — по одному);
+- `common.schema.json` — определения `common.form.yaml` справочно (не норма: схемы несут копии в своих `$defs`);
 - `MANIFEST.tsv` — sha256 каждого файла выхода.
+`--place` пишет те же файлы на места в `Platform/` дерева (рядом с файлом диалекта того же базового имени; решение
+«Архитектора» 2026-10-27): манифест — `02-installer/spec/`, семьи — `NN-<процесс>/data/`, `common.schema.json` —
+`common/data/`; `MANIFEST.tsv` не пишется. Каждая схема самодостаточна: `$ref` только внутри файла (`#/…`).
 """
 import argparse
 import hashlib
@@ -80,7 +85,35 @@ def all_families(root):
     return out
 
 
+def common_schema(root):
+    """Все определения `common.form.yaml` словами стандарта (справочно): `$defs.common.<имя>`, без корня."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        stub = Path(d) / "common.form.yaml"
+        stub.write_text("dialect: data-form/1\nroot: {type: object, opaque: true}\n", encoding="utf-8")
+        form = load_form(stub, fam.load_common(root / fam.COMMON))
+    s = schema.Gen(form, data=True).schema()
+    return {"$schema": s["$schema"], "title": "common definitions of the data family schemas (reference, not a norm)",
+            "$defs": {k: v for k, v in s["$defs"].items() if k.startswith("common.")}}
+
+
+def placed(rel):
+    """Путь файла выхода → место в дереве курса (`--place`); None — файл туда не идёт."""
+    if rel == "MANIFEST.tsv":
+        return None
+    if rel.startswith("02.1-installer."):
+        return "Platform/02-installer/spec/" + rel
+    if rel == "common.schema.json":
+        return "Platform/common/data/" + rel
+    proc, name = rel[len("families/"):].split("/")
+    return "Platform/%s/data/%s" % (proc, name)
+
+
 def write(out, rel, text, sums):
+    if getattr(out, "place", False):
+        rel = placed(rel)
+        if rel is None:
+            return
     p = out / rel
     p.parent.mkdir(parents=True, exist_ok=True)
     data = text.encode("utf-8")
@@ -88,8 +121,14 @@ def write(out, rel, text, sums):
     sums.append((rel, hashlib.sha256(data).hexdigest()))
 
 
-def build(root, out):
-    root, out = Path(root), Path(out)
+class Placed(type(Path())):
+    """Корень дерева с пометкой `--place`: write() кладёт файлы на места (placed)."""
+    place = True
+
+
+def build(root, out, place=False):
+    root = Path(root)
+    out = Placed(root) if place else Path(out)
     sums = []
     form, s = manifest_schema(root)
     write(out, "02.1-installer.schema.json", schema.dumps(s), sums)
@@ -108,6 +147,7 @@ def build(root, out):
         seen[rel] = text
         write(out, rel, text, sums)
         write(out, rel.replace(".schema.json", ".layers.tsv"), schema.layer_table(fs), sums)
+    write(out, "common.schema.json", schema.dumps(common_schema(root)), sums)
     write(out, "MANIFEST.tsv", "".join("%s\t%s\n" % x for x in sorted(sums)), [])
     return sums
 
@@ -116,9 +156,10 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default=str(HERE.parents[3]))
     ap.add_argument("--out", default=str(HERE / "out"))
+    ap.add_argument("--place", action="store_true", help="на места в Platform/ дерева --root (не в --out)")
     a = ap.parse_args(argv)
-    sums = build(a.root, a.out)
-    print("%d files → %s" % (len(sums), a.out))
+    sums = build(a.root, a.out, a.place)
+    print("%d files → %s" % (len(sums), "Platform/ of " + a.root if a.place else a.out))
 
 
 if __name__ == "__main__":
