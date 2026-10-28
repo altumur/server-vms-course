@@ -17,7 +17,7 @@ spec/06.7-console.norms.md           нормы главы 6.7 — поздни�
 spec/06-console.api.openapi.yaml     двери (один контракт урока)
 spec/06-console.README.md            инструкция реализации
 lifecycle.md                         флаги, окружение, коды выхода, юниты
-data/<семья>.form.yaml, .outcomes.tsv  схемы семей (диалект ADR-0087; ADR-0088): next-id, sweep (6.1); requests, asked,
+data/<семья>.schema.json, .outcomes.tsv схемы семей (JSON Schema, ADR-0092; ADR-0088): next-id, sweep (6.1); requests, asked,
                                      commands (6.4); door-signer, door-keys (6.5); policy, server-labels, drain,
                                      decommission, schema (6.6)
 vectors/<алгоритм>/                  векторы: fault, values-by-type (6.1); secret-in, log-mask (6.2, в common/vectors); rid, requests-body,

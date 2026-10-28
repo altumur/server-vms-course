@@ -12,8 +12,8 @@
 (`ledger`), `holds`, константы жнеца, двери консоли, подача `POST /<sub>/requests` и проход жнеца — в нормах владельца
 (P/06.4 Н1.5, Н2, Н3); константы держателя — P/03.6 Н1.5; форма ключей `requests` в манифесте и отказы их загрузки —
 [P/02.1](../../02-installer/spec/02.1-installer.norms.md) Н1.4, Н4. Форма строк — семьи владельца
-[`requests`](../../06-console/data/requests.form.yaml) (`<sub>/requests/<rid>`) и
-[`commands`](../../06-console/data/commands.form.yaml) (`objects/<sub>/commands/<rid>`) с таблицами исходов рядом
+[`requests`](../../06-console/data/requests.schema.json) (`<sub>/requests/<rid>`) и
+[`commands`](../../06-console/data/commands.schema.json) (`objects/<sub>/commands/<rid>`) с таблицами исходов рядом
 ([каталог](../data/catalog.tsv)). Ссылка «P/0N[.K] НM» — норма урока или главы модуля.
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
@@ -22,15 +22,15 @@
 
 Файлы, по которым работает договор (аудит раскладки, В-50–В-54, Б-17; решение «Архитектора» 2026-10-25):
 
-- строка просьбы `<sub>/requests/<rid>` — семья `requests`: `Platform/06-console/data/requests.form.yaml`,
+- строка просьбы `<sub>/requests/<rid>` — семья `requests`: `Platform/06-console/data/requests.schema.json`,
   `Platform/06-console/data/requests.outcomes.tsv`; метка `objects/<sub>/commands/<rid>` — семья `commands`:
-  `Platform/06-console/data/commands.form.yaml`, `Platform/06-console/data/commands.outcomes.tsv`;
-- просьба ресурса `<sub>/requests/free-<server>-<volume>` — семья `free-ask`: `Platform/05-resource/data/free-ask.form.yaml`,
+  `Platform/06-console/data/commands.schema.json`, `Platform/06-console/data/commands.outcomes.tsv`;
+- просьба ресурса `<sub>/requests/free-<server>-<volume>` — семья `free-ask`: `Platform/05-resource/data/free-ask.schema.json`,
   `Platform/05-resource/data/free-ask.outcomes.tsv`;
-- учёт человека `<sub>/asked/<sha16(имя)>` — семья `asked`: `Platform/06-console/data/asked.form.yaml`, `Platform/06-console/data/asked.outcomes.tsv`;
-- `fetched` пульса держателя — семья `heartbeats`: `Platform/03-worker/data/heartbeats.form.yaml`,
+- учёт человека `<sub>/asked/<sha16(имя)>` — семья `asked`: `Platform/06-console/data/asked.schema.json`, `Platform/06-console/data/asked.outcomes.tsv`;
+- `fetched` пульса держателя — семья `heartbeats`: `Platform/03-worker/data/heartbeats.schema.json`,
   `Platform/03-worker/data/heartbeats.outcomes.tsv`;
-- ключи `requests` манифеста — `Platform/02-installer/spec/02.1-installer.form.yaml` (ключ `requests`);
+- ключи `requests` манифеста — `Platform/02-installer/spec/02.1-installer.schema.json` (ключ `requests`);
 - дверь `POST /{sub}/requests` (ответ `queued`, `AnsweredMark`, 400 `RequestError`, 409) — `Platform/06-console/spec/06-console.api.openapi.yaml`.
 
 ## Просьба
@@ -75,7 +75,7 @@ rid:        непустой, ≤ 200 байт UTF-8; без / \ " ' и знак
             # байта; байт литерала — полю перед ним): free- в unit старше длины в to (векторы rid template.tsv; решение
             # «Архитектора» 2026-10-27); повтор того же входа даёт тот же отказ: это объявленное сужение области id единицы
             # для просьб по шаблону
-manifest:                                    # requests: (форма — `Platform/02-installer/spec/02.1-installer.form.yaml`, ключ requests)
+manifest:                                    # requests: (форма — `Platform/02-installer/spec/02.1-installer.schema.json`, ключ requests)
   schema:      JSON Schema тела
   valid_for:   секунд до срока; обязателен без free
   most_valid:  потолок valid_for; обязателен с valid_for; ≥ valid_for
@@ -86,7 +86,7 @@ manifest:                                    # requests: (форма — `Platfo
                Возраст строки — now − её at (stamp, стенные часы), если at есть и читается; иначе местный монотонный возраст первого
                наблюдения этой версии строки консолью; перезапуск начинает его заново: неизвестный возраст не считается
                истёкшим (журнал cammeta-go, урок 8 № 6). У дозаписи без fetched один ttl не разрешает снять строку/непустой учёт: автоматическое завершение по возрасту вне этого профиля
-  key:         шаблон rid (форма — `Platform/02-installer/spec/02.1-installer.form.yaml` requests.key; P/02.1 Н1.4): {поле} только строка, {поле:int} только конечное binary64-число |x|≤2^53−1 с усечением к нулю; *_secret запрещён как источник
+  key:         шаблон rid (форма — `Platform/02-installer/spec/02.1-installer.schema.json` requests.key; P/02.1 Н1.4): {поле} только строка, {поле:int} только конечное binary64-число |x|≤2^53−1 с усечением к нулю; *_secret запрещён как источник
   outcome:     mark (умолчание) | fetched — чем держатель сообщает итог (ADR-0054 доп. 2026-10-17); mark — метка begun/исхода (обычный профиль);
                fetched — дозапись: только слово fetched в пульсе, метки нет, кроме gone к отсутствующей единице (раздел «Состояния…»);
                fetched без key — отказ загрузки P/02.1 Н1.4
@@ -216,7 +216,7 @@ rid (разбор ревью стадии B 6–7, № 37).
 Перенесено из [P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.1 `said_id` и P/03.6 «Решает реализация» п. 1 (пределы)
 без изменения поведения: имя просьбы в `fetched` пульса пишет воркер-держатель (P/03.6 Н3 «взгляд держателя»), читает жнец
 консоли (P/06.4 Н3 «жнец» `clear`) (аудит раскладки А-24, Б-02, решение «Архитектора» 2026-10-25). Поле `fetched` пульса — форма P/03.4 Н1.1
-(`Platform/03-worker/data/heartbeats.form.yaml`, исходы `Platform/03-worker/data/heartbeats.outcomes.tsv`).
+(`Platform/03-worker/data/heartbeats.schema.json`, исходы `Platform/03-worker/data/heartbeats.outcomes.tsv`).
 
 ```yaml
 fetched:     <SaidID(rid) через запятую, без пробелов> — просьбы, исход которых держатель сообщил; поля нет или пусто —

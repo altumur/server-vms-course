@@ -32,18 +32,18 @@ P/06.3 Н1.5; отказы сторожевой — раздел «Отказы 
 - двери: консоль кластера — `Platform/06-console/spec/06-console.api.openapi.yaml`; консоль домена (`/session`, `/domain/*`) —
   `Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml`; процесс `domain` (`POST /api/login`, предел попыток) —
   `Platform/08-domain/spec/08-domain.api.openapi.yaml`;
-- набор ключей `domain/keys` (`on`, «ключи есть», `unreadable`) — семья `keys`: `Platform/08-domain/data/keys.form.yaml`,
+- набор ключей `domain/keys` (`on`, «ключи есть», `unreadable`) — семья `keys`: `Platform/08-domain/data/keys.schema.json`,
   `Platform/08-domain/data/keys.outcomes.tsv`;
-- гранты: копия `domain/grants` у консоли кластера — `Platform/09-agent/data/grants.form.yaml`,
-  `Platform/09-agent/data/grants.outcomes.tsv`; `domain/grants/domain` у консоли домена — `Platform/08-domain/data/grants.form.yaml`,
+- гранты: копия `domain/grants` у консоли кластера — `Platform/09-agent/data/grants.schema.json`,
+  `Platform/09-agent/data/grants.outcomes.tsv`; `domain/grants/domain` у консоли домена — `Platform/08-domain/data/grants.schema.json`,
   `Platform/08-domain/data/grants.outcomes.tsv`;
-- аварийная учётка `domain/break-glass/<кластер>` — `Platform/08-domain/data/break-glass.form.yaml`,
+- аварийная учётка `domain/break-glass/<кластер>` — `Platform/08-domain/data/break-glass.schema.json`,
   `Platform/08-domain/data/break-glass.outcomes.tsv`;
-- пульс воркера (`door.pass` — живому воркеру с дверью, воркеру на домене — по пульсу) — `Platform/03-worker/data/heartbeats.form.yaml`,
+- пульс воркера (`door.pass` — живому воркеру с дверью, воркеру на домене — по пульсу) — `Platform/03-worker/data/heartbeats.schema.json`,
   `Platform/03-worker/data/heartbeats.outcomes.tsv`;
-- следы домена (нужен только факт наличия строки): `domain/member` — `Platform/09-agent/data/member.form.yaml`,
-  `Platform/09-agent/data/member.outcomes.tsv`; `domain/root` — `Platform/08-domain/data/root.form.yaml`,
-  `Platform/08-domain/data/root.outcomes.tsv`; `domain/revoked` — `Platform/08-domain/data/revoked.form.yaml`,
+- следы домена (нужен только факт наличия строки): `domain/member` — `Platform/09-agent/data/member.schema.json`,
+  `Platform/09-agent/data/member.outcomes.tsv`; `domain/root` — `Platform/08-domain/data/root.schema.json`,
+  `Platform/08-domain/data/root.outcomes.tsv`; `domain/revoked` — `Platform/08-domain/data/revoked.schema.json`,
   `Platform/08-domain/data/revoked.outcomes.tsv`.
 
 ## Сторожевая
@@ -75,7 +75,7 @@ gate:
     4. отладочная личность (ADR-0050): задан W2C_DEBUG_PERSON=<имя>, запрос без предъявленного токена в любом виде
        (ни Authorization, ни куки w2c_token; GP-G03), адрес TCP-соединения
        127.0.0.1 или ::1 (заголовки адреса не читаются) → этот человек со своими grants из domain/grants; критерий
-       выключения — строка domain/disabled (форма Platform/08-domain/data/disabled.form.yaml (исходы — `Platform/08-domain/data/disabled.outcomes.tsv`), исходы disabled.outcomes.tsv;
+       выключения — строка domain/disabled (форма Platform/08-domain/data/disabled.schema.json (исходы — `Platform/08-domain/data/disabled.outcomes.tsv`), исходы disabled.outcomes.tsv;
        тот же вход disabled, что у функции may шаг 2): имя в ней — как без входа; строка есть, но не читается — как без
        входа (проверить нечем); строки нет — выключенных нет; domain/users консоль не читает: личность без строк в
        domain/grants — сессия grants: [], каждая проверка no_grant; строка domain/grants есть, но не читается —
@@ -279,7 +279,7 @@ loopback:  «петля — operator» — только состояние open 
 ## Права по телу
 
 Из P/06.3 Н1.5 (ключи `rights:` манифеста — граница прав людей), P/06.7 Н1.9 и P/10 Н1.5 (`body_unit`, `session`), P/08.4 Н1.5
-(строка `domain`) без изменения поведения (догадка стадии C GP-G05, решение «Архитектора» 2026-10-23). Форма ключей — `Platform/02-installer/spec/02.1-installer.form.yaml` (`rights`; [форма](../../02-installer/spec/02.1-installer.form.yaml), P/02.1).
+(строка `domain`) без изменения поведения (догадка стадии C GP-G05, решение «Архитектора» 2026-10-23). Форма ключей — `Platform/02-installer/spec/02.1-installer.schema.json` (`rights`; [форма](../../02-installer/spec/02.1-installer.schema.json), P/02.1).
 
 | Ключ | Смысл |
 |---|---|

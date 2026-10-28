@@ -1,4 +1,4 @@
-# Чтение пульса воркера <sub>/heartbeats/<имя> по форме и исходам семьи (договор наблюдения «Форма»; Platform/03-worker/data/heartbeats.form.yaml,
+# Чтение пульса воркера <sub>/heartbeats/<имя> по форме и исходам семьи (договор наблюдения «Форма»; Platform/03-worker/data/heartbeats.schema.json,
 # heartbeats.outcomes.tsv; C08-HEARTBEAT-READER-99-VECTORS). Строка: case<TAB>key<TAB>object<TAB>expect<TAB>note.
 case	key	object	expect	note
 base	testsub/heartbeats/w-1	{"worker":"w-1","ts":100,"status":[{"id":"c1","phase":"running","epoch":1,"revision":1,"observed_revision":1}],"server":"srv-a","instance":"box-a:1:aaaaaa"}	{"rows":{"skip":[]},"others":"readable","fields":[]}	пульс по форме — читаем всеми, элементов к пропуску нет

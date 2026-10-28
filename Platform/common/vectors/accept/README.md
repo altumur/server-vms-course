@@ -56,7 +56,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 - `accept-48`…`accept-50` (ACC-G01-COUNTER-31-01) — `n` — целое платформы: `9007199254740991` — по форме;
   `9007199254740992`, `1e20` — не по форме, отчёт принят;
 - `accept-52`…`accept-55` (ACC-FORM172, ACC-TIME172; пробел покрытия, нормы прежние) — форма метки на входе: `sign_failures`
-  {} — не по форме (`member-reported.form.yaml` и OpenAPI: хотя бы одно имя), `@exit 2`; `received_at` строкой канона
+  {} — не по форме (`member-reported.schema.json` и OpenAPI: хотя бы одно имя), `@exit 2`; `received_at` строкой канона
   P/01.1 Н0 (`"1700000000.5"`) — читается, вывод как у `accept-09`; отрицательное и с экспонентой — не по форме, `@exit 2`.
 
 Взято ли поле `sign_failures` в метку, показывает поле `sign_failures` вывода `generation` и `heard` с `refresh: true`

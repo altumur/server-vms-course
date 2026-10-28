@@ -12,8 +12,8 @@
 отказ `forbidden`) и разбор ревью стадии B 6–7 (№ 10 — целое `expires`, № 12 — строгая проверка Ed25519); реализации
 сверяются по векторам `door-token` (разбор ревью стадии B 6–7, № 11). Когда и кому консоль выдаёт токен (по `view` на единицу, TTL 120 с, журнал `door.issued`, поле `door`
 ответа), подписант `door/signer` и его конверт — в нормах владельца (P/06.5 Н3, семья
-[`door-signer`](../../06-console/data/door-signer.form.yaml)); форма строки ключей — семья владельца
-[`door-keys`](../../06-console/data/door-keys.form.yaml) с таблицей исходов рядом. JCS — RFC 8785 (ADR-0072; векторы
+[`door-signer`](../../06-console/data/door-signer.schema.json)); форма строки ключей — семья владельца
+[`door-keys`](../../06-console/data/door-keys.schema.json) с таблицей исходов рядом. JCS — RFC 8785 (ADR-0072; векторы
 [`jcs`](../../01-store/vectors/jcs/README.md) урока P/01).
 
 Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
@@ -22,11 +22,11 @@
 
 Файлы, по которым работает договор (аудит раскладки, В-15–В-17; решение «Архитектора» 2026-10-25):
 
-- подписант `door/signer` — семья `door-signer`: `Platform/06-console/data/door-signer.form.yaml`,
+- подписант `door/signer` — семья `door-signer`: `Platform/06-console/data/door-signer.schema.json`,
   `Platform/06-console/data/door-signer.outcomes.tsv`;
-- строка ключей `door/keys` — семья `door-keys`: `Platform/06-console/data/door-keys.form.yaml`,
+- строка ключей `door/keys` — семья `door-keys`: `Platform/06-console/data/door-keys.schema.json`,
   `Platform/06-console/data/door-keys.outcomes.tsv`;
-- пульс держателя (`instance` для `claims.holder`) — семья `heartbeats`: `Platform/03-worker/data/heartbeats.form.yaml`,
+- пульс держателя (`instance` для `claims.holder`) — семья `heartbeats`: `Platform/03-worker/data/heartbeats.schema.json`,
   `Platform/03-worker/data/heartbeats.outcomes.tsv`;
 - выдача токена в ответах `/where/{id}` и `/where/{table}/{place}` (поле `door`) —
   `Platform/06-console/spec/06-console.api.openapi.yaml`.
@@ -75,7 +75,7 @@ door/keys:  {<kid>: <64 строчных hex открытого ключа>} —
 дробное или большее `expires`, повтор в `routes` — отказ 403 `{"error": "forbidden"}`, даже при верной подписи (решение «Архитектора» 2026-10-20, Kimi SB67-01).
 Элемент `routes` — сегмент по грамматике `name` `[a-z][a-z0-9_-]{0,31}`, без «/» ([P/02.1](../../02-installer/spec/02.1-installer.norms.md)
 Н1 «Форма», `door.routes`); `read/x` или `Read` — отказ (решение «Архитектора» 2026-10-20). Целое JSON — только запись без точки
-и порядка, как целый знак писателя в [диалекте](../DIALECT.md) (`whole: true`): `1792454520.0` и `1.79245452E9` в байтах
+и порядка, как целый знак писателя семей ([слои В7](../LAYERS.md) § 3, `x-whole`): `1792454520.0` и `1.79245452E9` в байтах
 claims — отказ, хотя значение целое (решение «Архитектора» 2026-10-20).
 Текст claims проверяющий читает по I-JSON (RFC 7493): байты — строгий UTF-8 (неверная последовательность — отказ, не
 замена на U+FFFD); имя поля дважды — отказ, не «последнее значение»; имена сравниваются байт в байт (`User` — не `user`:

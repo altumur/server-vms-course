@@ -16,8 +16,8 @@
 
 ## Форма
 
-Строка `<sub>/slots/<имя>` — семья `slots`: форма `Platform/03-worker/data/slots.form.yaml`, исходы
-`Platform/03-worker/data/slots.outcomes.tsv` ([форма](../../03-worker/data/slots.form.yaml),
+Строка `<sub>/slots/<имя>` — семья `slots`: форма `Platform/03-worker/data/slots.schema.json`, исходы
+`Platform/03-worker/data/slots.outcomes.tsv` ([форма](../../03-worker/data/slots.schema.json),
 [исходы](../../03-worker/data/slots.outcomes.tsv)); поля `holder`, `until`, `released`, `gen`, `server` — там и в P/03.2
 Н1.4.
 

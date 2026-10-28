@@ -39,7 +39,7 @@
 client:       клиент двери другого кластера по https:// знает член назначения и принимает сервер, когда peer = ok:
               консоль члена — имя из CLUSTERS; консоль кластера держателя и подписант — держатель; ретранслятор —
               RELAY_MEMBER; отпечатки — Entry.ca члена назначения в domain/member-list этого кластера (форма копии —
-              Platform/09-agent/data/member-list.form.yaml (исходы — `Platform/09-agent/data/member-list.outcomes.tsv`), исходы — member-list.outcomes.tsv; C04-DEP-OBS-HEARTBEAT-01)
+              Platform/09-agent/data/member-list.schema.json (исходы — `Platform/09-agent/data/member-list.outcomes.tsv`), исходы — member-list.outcomes.tsv; C04-DEP-OBS-HEARTBEAT-01)
 first:        DOMAIN_CA=<отпечаток> рядом с DOMAIN_URL, RELAY_CA=<отпечаток> рядом с RELAY_URL — действует, только пока
               запись члена назначения не называет ca; ни записи, ни отпечатка — отказ foreign_ca: доверия при первом
               контакте нет; RELAY_URL на https:// без RELAY_MEMBER — агент не стартует, код выхода 2 — отказ настройки

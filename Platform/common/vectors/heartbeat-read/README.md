@@ -1,10 +1,10 @@
 # Векторы: чтение пульса ресурса и воркера по форме семьи
 
 Владелец — [договор наблюдения](../../contracts/observation.md) «Форма», «Состояние ресурса» (догадка стадии C
-C04-DEP-OBS-HEARTBEAT-01, решение «Архитектора» 2026-10-25). Форма — `Platform/05-resource/data/resource-heartbeat.form.yaml`,
+C04-DEP-OBS-HEARTBEAT-01, решение «Архитектора» 2026-10-25). Форма — `Platform/05-resource/data/resource-heartbeat.schema.json`,
 исходы — `Platform/05-resource/data/resource-heartbeat.outcomes.tsv` (семья `platform/resources/<server>/heartbeat` урока
 P/05). Участники — наблюдатели `resource_state`: контроллер и консоль. Байты пишет «Спецификация»; ожидания получены судьёй
-схем семей навыка (режим читателя, DIALECT § 8–9), не кодом реализаций.
+схем семей навыка (режим читателя, LAYERS.md §§ 6–7), не кодом реализаций.
 
 ## `cases.tsv`
 
@@ -23,7 +23,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 ## `worker.tsv`
 
-Чтение пульса воркера `<sub>/heartbeats/<имя>` по форме `Platform/03-worker/data/heartbeats.form.yaml` и исходам
+Чтение пульса воркера `<sub>/heartbeats/<имя>` по форме `Platform/03-worker/data/heartbeats.schema.json` и исходам
 `Platform/03-worker/data/heartbeats.outcomes.tsv` (урок P/03.4 Н1.1; C08-HEARTBEAT-READER-99-VECTORS, решение «Архитектора» 2026-10-26). Читатели — консоль (`GET /{rows}`, `/servers`,
 `/metrics`, `/where`, door.pass, `/schema`), контроллер, дренаж, теневой отчёт домена. Те же правила файла; поля `case`,
 `key` (ключ объекта), `object`, `expect`, `note`.

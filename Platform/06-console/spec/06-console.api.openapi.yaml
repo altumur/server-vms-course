@@ -6897,7 +6897,7 @@ components:
           pattern: _secret(?![\s\S])
       additionalProperties:
         $ref: '#/components/schemas/SecretFreeValue'
-      description: Форма шарда снимка <sub>/snapshot/<воркер> — владелец P/04 (data/snapshot.form.yaml, Н1.3а); консоль
+      description: Форма шарда снимка <sub>/snapshot/<воркер> — владелец P/04 (data/snapshot.schema.json, Н1.3а); консоль
         её читает для возраста снимка и счёта испорченных шардов (глава 6.5, P/06.5-11). Путём не отдаётся. Дополнительные
         поля — ровно snapshot по манифесту, без blob/секретов/авторского server; server здесь вычисляется платформой. Адреса
         маскированы.
@@ -6922,7 +6922,7 @@ components:
         type: array
         items:
           $ref: '#/components/schemas/SnapshotUnit'
-      description: Форма шарда снимка <sub>/snapshot/<воркер> — владелец P/04 (data/snapshot.form.yaml, Н1.3а); консоль
+      description: Форма шарда снимка <sub>/snapshot/<воркер> — владелец P/04 (data/snapshot.schema.json, Н1.3а); консоль
         её читает для возраста снимка и счёта испорченных шардов (глава 6.5, P/06.5-11). Путём не отдаётся. Четвёртое свойство
         — имя rows из манифеста; cluster/worker/ts как rows отвергаются загрузчиком. Отдельный шард, без транзакции нескольких
         шардов.

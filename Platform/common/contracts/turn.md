@@ -17,9 +17,9 @@
 
 ## Форма
 
-Строка очереди контроллера — семья `placement-turn`: форма `Platform/04-controller/data/placement-turn.form.yaml`, исходы
+Строка очереди контроллера — семья `placement-turn`: форма `Platform/04-controller/data/placement-turn.schema.json`, исходы
 `Platform/04-controller/data/placement-turn.outcomes.tsv`; строка очереди процесса `domain` — семья `signer-turn`:
-`Platform/08-domain/data/signer-turn.form.yaml`, `Platform/08-domain/data/signer-turn.outcomes.tsv`. Операции `cas` и
+`Platform/08-domain/data/signer-turn.schema.json`, `Platform/08-domain/data/signer-turn.outcomes.tsv`. Операции `cas` и
 `guard` — [договор клиента хранилища](store-client.md).
 
 ## Сроки

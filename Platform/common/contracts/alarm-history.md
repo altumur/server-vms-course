@@ -13,8 +13,8 @@
 
 ## Форма
 
-Объект `domain/alarm-history/<член>` — семья `alarm-history`: форма `Platform/08-domain/data/alarm-history.form.yaml`,
-исходы `Platform/08-domain/data/alarm-history.outcomes.tsv` ([форма](../../08-domain/data/alarm-history.form.yaml),
+Объект `domain/alarm-history/<член>` — семья `alarm-history`: форма `Platform/08-domain/data/alarm-history.schema.json`,
+исходы `Platform/08-domain/data/alarm-history.outcomes.tsv` ([форма](../../08-domain/data/alarm-history.schema.json),
 [исходы](../../08-domain/data/alarm-history.outcomes.tsv)). Строка истории — строка страницы тревог члена, как принята:
 `t` — на часах домена (раздел «Часы домена»), `t_src` — `t` строки, как пришло, по часам члена. Времена — канон P/01.1 Н0
 «Время в строке» (`Platform/common/data/codec.tsv`, строка `time`): писатель — не больше трёх знаков дроби.

@@ -3,7 +3,7 @@
 Общий договор модуля «Платформа» (ADR-0083 доп. (5), доп. (13): надгробие пишут и читают несколько процессов — договор, а
 не копии в главах; догадка стадии C C06-BLOB-GC-33-01 / IF-OBJECT-TOMBSTONE63-PEERS-01, решение «Архитектора» 2026-10-25).
 Владелец — урок [P/05](../../05-resource/spec/05-resource.norms.md) (Н1.1 «Надгробия»; семья `.gone/<ключ>` —
-[каталог](../data/catalog.tsv), форма — [`gone.form.yaml`](../../05-resource/data/gone.form.yaml), исходы —
+[каталог](../data/catalog.tsv), форма — [`gone.schema.json`](../../05-resource/data/gone.schema.json), исходы —
 [`gone.outcomes.tsv`](../../05-resource/data/gone.outcomes.tsv)). Участники — консоль: пишет надгробие на завершении окна
 уборки тел ([P/06.1](../../06-console/spec/06.1-console.norms.md) Н3 «уборка тел»); ресурс: роняет копии по надгробиям
 соседа, дописывает подтверждения и снимает надгробие (P/05 Н1.1 «Тела у ресурса», «Надгробия»).
@@ -24,9 +24,9 @@ garbled:   нечитаемое надгробие (gone.outcomes.tsv, объе�
            удаливший подтверждений не дописывает и надгробие не снимает
 ```
 
-Файлы: надгробие — `Platform/05-resource/data/gone.form.yaml`, `Platform/05-resource/data/gone.outcomes.tsv`; строки дверей
-и запросов вывода (раздел «Соседи») — `Platform/05-resource/data/doors.form.yaml`, `Platform/05-resource/data/doors.outcomes.tsv`,
-`Platform/06-console/data/decommission.form.yaml`, `Platform/06-console/data/decommission.outcomes.tsv`; дверь объектов —
+Файлы: надгробие — `Platform/05-resource/data/gone.schema.json`, `Platform/05-resource/data/gone.outcomes.tsv`; строки дверей
+и запросов вывода (раздел «Соседи») — `Platform/05-resource/data/doors.schema.json`, `Platform/05-resource/data/doors.outcomes.tsv`,
+`Platform/06-console/data/decommission.schema.json`, `Platform/06-console/data/decommission.outcomes.tsv`; дверь объектов —
 GET копии (404 — подтверждение), листинг `prefix=.gone/`, 409 «удалено позже» — контракт
 `Platform/05-resource/spec/05-resource.api.openapi.yaml` (аудит раскладки, В-60; решение «Архитектора» 2026-10-25).
 

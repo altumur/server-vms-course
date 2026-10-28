@@ -25,11 +25,11 @@ SB810-07); `keys` — принятый набор ([договор набора 
 
 ## Форма
 
-Виды документа: закрытый набор резервной копии — `Platform/08-domain/data/backups.form.yaml`, `Platform/08-domain/data/backups.outcomes.tsv`; `Platform/09-agent/data/backup.form.yaml`, `Platform/09-agent/data/backup.outcomes.tsv`; общий документ — `Platform/08-domain/data/shared-docs.form.yaml`, `Platform/08-domain/data/shared-docs.outcomes.tsv`; `Platform/09-agent/data/shared-copy.form.yaml`, `Platform/09-agent/data/shared-copy.outcomes.tsv`; доверенный набор `keys` — `Platform/08-domain/data/keys.form.yaml`, `Platform/08-domain/data/keys.outcomes.tsv`. Времена — `Platform/common/data/codec.tsv`, строка `time` (аудит раскладки, В-46…В-48, Б-27; решение «Архитектора» 2026-10-25).
+Виды документа: закрытый набор резервной копии — `Platform/08-domain/data/backups.schema.json`, `Platform/08-domain/data/backups.outcomes.tsv`; `Platform/09-agent/data/backup.schema.json`, `Platform/09-agent/data/backup.outcomes.tsv`; общий документ — `Platform/08-domain/data/shared-docs.schema.json`, `Platform/08-domain/data/shared-docs.outcomes.tsv`; `Platform/09-agent/data/shared-copy.schema.json`, `Platform/09-agent/data/shared-copy.outcomes.tsv`; доверенный набор `keys` — `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`. Времена — `Platform/common/data/codec.tsv`, строка `time` (аудит раскладки, В-46…В-48, Б-27; решение «Архитектора» 2026-10-25).
 
 ## Запись срока `domain/holder`
 
-Из М11/10 Н1.1 (форма семьи — `Platform/08-domain/data/holder.form.yaml` (исходы — `Platform/08-domain/data/holder.outcomes.tsv`), `holder.outcomes.tsv`; C04-DEP-OBS-HEARTBEAT-01 — файлы данных, названные договором, в чтении `common`, ADR-0083 доп. (32) п. 1):
+Из М11/10 Н1.1 (форма семьи — `Platform/08-domain/data/holder.schema.json` (исходы — `Platform/08-domain/data/holder.outcomes.tsv`), `holder.outcomes.tsv`; C04-DEP-OBS-HEARTBEAT-01 — файлы данных, названные договором, в чтении `common`, ADR-0083 доп. (32) п. 1):
 
 ```yaml
 domain/holder:   {doc: <текст JCS документа>}       # у держателя — пишет процесс domain (claim); у члена — агент (Н3 «следовать»)
@@ -98,7 +98,7 @@ member_name:  имя члена — CLUSTER его установки: 1–64 з
 
 Предел вложенности JSON — 64, одно число на платформу (глубина JSON тела двери консоли, P/06.1 Н1.4): строка `row` и
 текст `doc` разбираются каждый со своим пределом; уровень — объект или массив (скаляр — 0, пустой объект или массив — 1,
-как `depth` DIALECT § 6); глубже 64 — `not_a_record` (шаг 1), у доверенного `keys` — вход не по форме, выход 2 (догадка стадии C REC-G02, решение «Архитектора» 2026-10-23).
+как `depth` связей, [слои В7](../LAYERS.md) § 5); глубже 64 — `not_a_record` (шаг 1), у доверенного `keys` — вход не по форме, выход 2 (догадка стадии C REC-G02, решение «Архитектора» 2026-10-23).
 
 ```
 1. row не {doc: <текст>}, doc не JSON-объект закрытого набора одного из видов `виды`; виды этого урока — запись срока

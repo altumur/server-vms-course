@@ -16,10 +16,10 @@ P/06.1 и [P/06.2](../../06-console/spec/06.2-console.norms.md), что дела
 
 ## Форма
 
-Строка единицы — по манифесту каталога (`unit.fields`; форма манифеста — `Platform/02-installer/spec/02.1-installer.form.yaml`,
-[форма](../../02-installer/spec/02.1-installer.form.yaml)) и разделу «Строка единицы» ниже. Строка состояния единицы
-`<sub>/state/<имя>/<id>` (раздел «Состояние единицы») — форма `Platform/03-worker/data/state.form.yaml`, исходы
-`Platform/03-worker/data/state.outcomes.tsv` ([форма](../../03-worker/data/state.form.yaml),
+Строка единицы — по манифесту каталога (`unit.fields`; форма манифеста — `Platform/02-installer/spec/02.1-installer.schema.json`,
+[форма](../../02-installer/spec/02.1-installer.schema.json)) и разделу «Строка единицы» ниже. Строка состояния единицы
+`<sub>/state/<имя>/<id>` (раздел «Состояние единицы») — форма `Platform/03-worker/data/state.schema.json`, исходы
+`Platform/03-worker/data/state.outcomes.tsv` ([форма](../../03-worker/data/state.schema.json),
 [исходы](../../03-worker/data/state.outcomes.tsv); C149-STATE-SUPPORT-01, решение «Архитектора» 2026-10-26).
 
 ## Строка единицы
@@ -103,7 +103,7 @@ delete:      строку с made удаляют (воркер адресата 
 
 Перенесено из [P/03.6](../../03-worker/spec/03.6-worker.norms.md) Н1.7 (`acts`, `unreadable`) без изменения поведения:
 правило «состояние действует» читают держатель единицы (P/03.6), контроллер (P/04 Н1.3 `retire_when`, Н1.3а `state`) и консоль
-(P/06.1 Н2 «Состояние в ответе») (аудит раскладки А-05, решение «Архитектора» 2026-10-25). Форма строки состояния — `Platform/03-worker/data/state.form.yaml`, исходы — `Platform/03-worker/data/state.outcomes.tsv`
+(P/06.1 Н2 «Состояние в ответе») (аудит раскладки А-05, решение «Архитектора» 2026-10-25). Форма строки состояния — `Platform/03-worker/data/state.schema.json`, исходы — `Platform/03-worker/data/state.outcomes.tsv`
 (P/03.6 Н1.7; C149-STATE-SUPPORT-01, решение «Архитектора» 2026-10-26).
 
 ```yaml
@@ -169,7 +169,7 @@ C06-ROWCHECK-TABLE-33-01, решение «Архитектора» 2026-10-23).
 `9007199254740992` у `int` — `not_number` (такое число читает клиент JSON любого языка). Число `-0` хранится как `0`
 (JCS, ADR-0072).
 Значение json-поля — любое значение JSON; его `schema` — JSON Schema 2020-12 по определению `jsonSchemaLite`
-`Platform/02-installer/spec/02.1-installer.form.yaml` ([форма манифеста](../../02-installer/spec/02.1-installer.form.yaml); перечень ключевых слов и глубина — там; аудит раскладки, Б-06; разбор ревью стадии A 6–7,
+`Platform/02-installer/spec/02.1-installer.schema.json` ([форма манифеста](../../02-installer/spec/02.1-installer.schema.json); перечень ключевых слов и глубина — там; аудит раскладки, Б-06; разбор ревью стадии A 6–7,
 № 11); схема с иным ключевым словом — отказ загрузки `refused:value` (P/02.1), поэтому все реализации проверяют одно и то же.
 Пустой элемент допустим у обычного list, но не у меток размещения по [азбуке меток](labels.md).
 

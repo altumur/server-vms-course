@@ -57,7 +57,7 @@ rotation:     ca.next.pem рядом — следующий центр, кото
 
 ## Форма
 
-`Entry.ca` — поле записи члена `domain/members`: `Platform/08-domain/data/members.form.yaml`, `Platform/08-domain/data/members.outcomes.tsv`; поля `tls_ca`, `tls_ca_certs` публикации `POST /api/member` — `Platform/08-domain/spec/08-domain.api.openapi.yaml`, `Platform/09-agent/spec/09-agent.api.openapi.yaml` (аудит раскладки, В-55, В-56; решение «Архитектора» 2026-10-25). Класс `role`: строка `domain/members/<член>/ca-certs` — `Platform/08-domain/data/member-ca-certs.form.yaml`, `Platform/08-domain/data/member-ca-certs.outcomes.tsv`; отказ двери роли — схема `RoleRefusal` `Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml` (C10-SDK-ROLE83, решение «Архитектора» 2026-10-25).
+`Entry.ca` — поле записи члена `domain/members`: `Platform/08-domain/data/members.schema.json`, `Platform/08-domain/data/members.outcomes.tsv`; поля `tls_ca`, `tls_ca_certs` публикации `POST /api/member` — `Platform/08-domain/spec/08-domain.api.openapi.yaml`, `Platform/09-agent/spec/09-agent.api.openapi.yaml` (аудит раскладки, В-55, В-56; решение «Архитектора» 2026-10-25). Класс `role`: строка `domain/members/<член>/ca-certs` — `Platform/08-domain/data/member-ca-certs.schema.json`, `Platform/08-domain/data/member-ca-certs.outcomes.tsv`; отказ двери роли — схема `RoleRefusal` `Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml` (C10-SDK-ROLE83, решение «Архитектора» 2026-10-25).
 
 ## Комплект кластера, роли домена, центр между кластерами
 
@@ -90,7 +90,7 @@ tls_ca_certs: поле публикации рядом с tls_ca: [<PEM>…] —
               публикации закрыта: держатель прежней сборки отчёт с полем отвергает — реализации переходят одновременно
 Entry.ca:     поле записи члена в domain/members и в копии domain/member-list члена: [<отпечаток>…], 1–2, по возрастанию, без
               повторов; нет — отпечатков нет; пишет держатель (P/08.3 Н1.6 on_accept, admin); форма копии у члена —
-              Platform/09-agent/data/member-list.form.yaml (исходы — `Platform/09-agent/data/member-list.outcomes.tsv`), member-list.outcomes.tsv (C04-DEP-OBS-HEARTBEAT-01)
+              Platform/09-agent/data/member-list.schema.json (исходы — `Platform/09-agent/data/member-list.outcomes.tsv`), member-list.outcomes.tsv (C04-DEP-OBS-HEARTBEAT-01)
 ```
 
 ## Клиент двери своего кластера

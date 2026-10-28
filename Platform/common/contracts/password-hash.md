@@ -21,7 +21,7 @@ secret:   в строке хранилища поле *_secret запечата�
 
 ## Форма
 
-`pwhash_secret` — поле строк человека и аварийной учётки: `Platform/08-domain/data/users.form.yaml`, `Platform/08-domain/data/users.outcomes.tsv`; `Platform/08-domain/data/break-glass.form.yaml`, `Platform/08-domain/data/break-glass.outcomes.tsv` (аудит раскладки, В-41; решение «Архитектора» 2026-10-25).
+`pwhash_secret` — поле строк человека и аварийной учётки: `Platform/08-domain/data/users.schema.json`, `Platform/08-domain/data/users.outcomes.tsv`; `Platform/08-domain/data/break-glass.schema.json`, `Platform/08-domain/data/break-glass.outcomes.tsv` (аудит раскладки, В-41; решение «Архитектора» 2026-10-25).
 
 ## Векторы
 

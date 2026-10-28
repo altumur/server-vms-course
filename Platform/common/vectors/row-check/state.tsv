@@ -1,4 +1,4 @@
-# Состояние единицы (договор проверки строки «Состояние единицы» acts, unreadable; форма state.form.yaml судьёй семьи в режиме
+# Состояние единицы (договор проверки строки «Состояние единицы» acts, unreadable; форма state.schema.json судьёй семьи в режиме
 # читателя, value — по схеме unit.state.<имя> манифеста testsub2; STATE169-VECTORS-01). Форма — README.
 case	name	unit	state	expect	note
 acts	"result"	{"born":"0123456789abcdef0123456789abcdef","revision":"3"}	{"born":"0123456789abcdef0123456789abcdef","revision":"3","epoch":"2","value":"{\"state\":\"done\"}"}	{"acts":true,"unreadable":false,"value":{"state":"done"}}	живая строка, born и revision равны, value по схеме — действует

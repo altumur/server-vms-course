@@ -2,7 +2,8 @@
 
 Владелец — [договор журнала событий](../../contracts/event-journal.md): `bucket` `torn`, форма `line` и «Имена файлов в
 общих деревьях» (догадки стадии C EJ-G03, EJ-G04, EJ-G06, EJ-G07, EJ-L03, EJ-L06, решение «Архитектора» 2026-10-23); форма строки — семья events
-P/05 (`05-resource/data/events.form.yaml`). Участники — писатели и читатели
+P/05 (`05-resource/data/events-*.schema.json`: `events-unit`, `events-unit-alarms`, `events-audit`,
+`events-audit-alarms`, `events-console`, `events-console-alarms`, `events-mirror`). Участники — писатели и читатели
 деревьев событий и объектов: воркер, консоль, контроллер, ресурс ([P/05](../../../05-resource/spec/05-resource.norms.md)
 Н1.1, Н1.2, Н1.4). Байты пишет «Спецификация».
 

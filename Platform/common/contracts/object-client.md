@@ -20,8 +20,8 @@ P/05, P/05 — ссылкой сюда.
 `GET /v1/objects` (`ObjectListing`), `GET /v1/objects/{key}` (байты, заголовки `X-Written`, `X-Server`, `X-Missing`),
 отказы `ResourceError`, `ResourceDenied`. Надгробия `.gone/<ключ>` — [договор надгробий](tombstone.md). Строка двери
 `platform/doors/<сервер>` (адрес двери чтения при голом `cluster://`, раздел «Адрес» `door`) — форма
-`Platform/05-resource/data/doors.form.yaml`, исходы `Platform/05-resource/data/doors.outcomes.tsv`
-([форма](../../05-resource/data/doors.form.yaml), [исходы](../../05-resource/data/doors.outcomes.tsv); P/05 Н1.4 `door_row`).
+`Platform/05-resource/data/doors.schema.json`, исходы `Platform/05-resource/data/doors.outcomes.tsv`
+([форма](../../05-resource/data/doors.schema.json), [исходы](../../05-resource/data/doors.outcomes.tsv); P/05 Н1.4 `door_row`).
 
 ## Адрес
 

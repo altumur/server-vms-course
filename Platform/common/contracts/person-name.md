@@ -14,8 +14,8 @@
 
 ## Форма
 
-Строка человека `domain/users/<имя>` — семья `users`: форма `Platform/08-domain/data/users.form.yaml`, исходы
-`Platform/08-domain/data/users.outcomes.tsv` ([форма](../../08-domain/data/users.form.yaml),
+Строка человека `domain/users/<имя>` — семья `users`: форма `Platform/08-domain/data/users.schema.json`, исходы
+`Platform/08-domain/data/users.outcomes.tsv` ([форма](../../08-domain/data/users.schema.json),
 [исходы](../../08-domain/data/users.outcomes.tsv)).
 
 ## Пробельные

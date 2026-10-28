@@ -25,7 +25,7 @@ root_key:        вход функции — ровно 64 ASCII-знака hex,
 
 ## Форма
 
-Установщик пишет ключ в `domain/signer.backup_key_secret`: `Platform/08-domain/data/signer.form.yaml`, `Platform/08-domain/data/signer.outcomes.tsv` (аудит раскладки, В-09; решение «Архитектора» 2026-10-25).
+Установщик пишет ключ в `domain/signer.backup_key_secret`: `Platform/08-domain/data/signer.schema.json`, `Platform/08-domain/data/signer.outcomes.tsv` (аудит раскладки, В-09; решение «Архитектора» 2026-10-25).
 
 ## Векторы
 

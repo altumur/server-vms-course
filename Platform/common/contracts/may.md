@@ -26,7 +26,7 @@ P/08.4 Н1.3; метки — [договор азбуки меток](labels.md)
 
 ## Форма
 
-Входы функции: `grants` — копия `domain/grants` члена и `domain/grants/domain` у консоли домена и процесса `domain` — `Platform/09-agent/data/grants.form.yaml`, `Platform/09-agent/data/grants.outcomes.tsv`; `Platform/08-domain/data/grants.form.yaml`, `Platform/08-domain/data/grants.outcomes.tsv`; `disabled` — строка `domain/disabled`: `Platform/08-domain/data/disabled.form.yaml`, `Platform/08-domain/data/disabled.outcomes.tsv` (аудит раскладки, В-36, В-37; решение «Архитектора» 2026-10-25).
+Входы функции: `grants` — копия `domain/grants` члена и `domain/grants/domain` у консоли домена и процесса `domain` — `Platform/09-agent/data/grants.schema.json`, `Platform/09-agent/data/grants.outcomes.tsv`; `Platform/08-domain/data/grants.schema.json`, `Platform/08-domain/data/grants.outcomes.tsv`; `disabled` — строка `domain/disabled`: `Platform/08-domain/data/disabled.schema.json`, `Platform/08-domain/data/disabled.outcomes.tsv` (аудит раскладки, В-36, В-37; решение «Архитектора» 2026-10-25).
 
 ## Функция `may`
 
@@ -61,7 +61,7 @@ output:    {result: allow} | {result: deny, reason: disabled | stale | no_grant}
 
 ```yaml
 GRANT_LIFETIME: 86400   # с — шаг 4: копия члена старше as_of + GRANT_LIFETIME не даёт прав
-lines_in:       функция получает только строки lines по форме P/08.4 Н1.3 (файлы семьи — Platform/09-agent/data/grants.form.yaml,
+lines_in:       функция получает только строки lines по форме P/08.4 Н1.3 (файлы семьи — Platform/09-agent/data/grants.schema.json,
                 grants.outcomes.tsv; C04-DEP-OBS-HEARTBEAT-01): нечитаемую строку отбрасывает вызывающий до
                 вызова — пропуск с диагностикой у двери члена над копией из ответа держателя (P/08.4 Н1.3 unreadable;
                 копия — P/09.1 Н1.4 member_copy, holder_copy); строка не по форме во входе функции — вход не по форме, код

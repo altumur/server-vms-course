@@ -52,7 +52,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 ## `state.tsv`
 
-Состояние единицы — договор проверки строки «Состояние единицы» (`acts`, `unreadable`); форма строки — [`state.form.yaml`](../../../03-worker/data/state.form.yaml), исходы — [`state.outcomes.tsv`](../../../03-worker/data/state.outcomes.tsv)
+Состояние единицы — договор проверки строки «Состояние единицы» (`acts`, `unreadable`); форма строки — [`state.schema.json`](../../../03-worker/data/state.schema.json), исходы — [`state.outcomes.tsv`](../../../03-worker/data/state.outcomes.tsv)
 (STATE169-VECTORS-01, решение «Архитектора» 2026-10-27). UTF-8, LF, поля через TAB; строки с `#` и пустые пропускаются;
 первая строка без `#` — заголовок `case<TAB>name<TAB>unit<TAB>state<TAB>expect<TAB>note`.
 

@@ -1,5 +1,5 @@
 # Таблица скаляров P/02.1 Н1.1 (scalars): простой скаляр → вид; первая совпавшая строка сверху.
-# В кавычках и блочный скаляр — всегда строка (Н1.1 string). Диалект — Platform/common/DIALECT.md § 7.
+# В кавычках и блочный скаляр — всегда строка (Н1.1 string). Слои — Platform/common/LAYERS.md § 8.
 kind	pattern	norm
 null	null|Null|NULL|~|	Н1.1 scalars null; пустое значение — отдельно (сказанный ключ без значения, Н1.2а)
 true	[tT][rR][uU][eE]	Н1.1 scalars bool: в любом регистре

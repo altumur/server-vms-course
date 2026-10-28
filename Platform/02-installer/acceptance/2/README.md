@@ -41,7 +41,7 @@
 3. `rev` строки `platform/manifest/<name>` — с `<rev>`, как в главе 2.3 (дверь хранилища `GET /v1/get?key=…`, поле `rev` в
    `items`; `-` — `items: null`);
 4. метку `platform/manifest/<name>/rev`: её `rev` — тот же `<rev>`, `sha256` — `sha256` строки; `-` — метки нет;
-5. строку вида `platform/manifest/<name>/canonical/1` (`items` по кодеку [семьи `canonical-row`](../../data/canonical-row.form.yaml)):
+5. строку вида `platform/manifest/<name>/canonical/1` (`items` по кодеку [семьи `canonical-row`](../../data/canonical-row.schema.json)):
    `form` — `"1"`, `rev` — `<rev>`, `sha256` — `sha256` строки, `manifest` — байты `expect/<canonical>.json` вектора байт в
    байт; лишние поля не сравниваются; `canonical` = `-` — строки вида нет.
 

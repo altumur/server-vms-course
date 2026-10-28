@@ -24,7 +24,7 @@ spec/08.10-domain.norms.md            нормы главы 8.10 — очере�
 spec/08-domain.api.openapi.yaml       двери (один контракт урока)
 spec/08-domain.README.md              инструкция реализации
 lifecycle.md                          флаги, окружение, коды выхода, юниты
-data/<семья>.form.yaml, .outcomes.tsv схемы семей (диалект ADR-0087; ADR-0088): view, shadow (8.1); keys, root, signer,
+data/<семья>.schema.json, .outcomes.tsv схемы семей (JSON Schema, ADR-0092; ADR-0088): view, shadow (8.1); keys, root, signer,
                                       signer-pending, book-seal, revoked (8.2); members, member-report,
                                       member-report-delta, member-reported, member-ca-certs, topology (8.3); users,
                                       deleting, disabled, grants, break-glass (8.4); book, names-index (8.5); placement,
