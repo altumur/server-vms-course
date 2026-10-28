@@ -41,11 +41,11 @@ scenario	step	request	expect
 07-request-gone	1	console POST /counters {"name": "c1", "start": 1}	201
 07-request-gone	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201
 07-request-gone	3	console2 POST /tallies {"name": "t2", "of": "c1"}	201
-07-request-gone	4	console POST /testsub2/requests {"unit": "t1", "add": 1}	202 {"queued": "$r1"}
-07-request-gone	5	console POST /testsub2/requests {"unit": "t1", "add": 2}	202
-07-request-gone	6	console POST /testsub2/requests {"unit": "t1", "add": 3}	202
-07-request-gone	7	console POST /testsub2/requests {"unit": "t2", "add": 1}	429
+07-request-gone	4	console POST /testsub2/requests {"unit": "t1", "from": 0, "to": 1}	202 {"queued": "$r1"}
+07-request-gone	5	console POST /testsub2/requests {"unit": "t1", "from": 1, "to": 2}	202
+07-request-gone	6	console POST /testsub2/requests {"unit": "t1", "from": 2, "to": 3}	202
+07-request-gone	7	console POST /testsub2/requests {"unit": "t2", "from": 0, "to": 1}	429
 07-request-gone	8	console2 DELETE /tallies/t1	200 {"deleted": "t1"}
 07-request-gone	9	@until 60 store GET /v1/get?key=objects/testsub2/commands/$r1	200 {"items": {"outcome": "gone", "ended_by": "reaper", "unit": "t1"}}
 07-request-gone	10	@until 90 store GET /v1/get?key=testsub2/requests/$r1	200 {"items": null}
-07-request-gone	11	@until 90 console POST /testsub2/requests {"unit": "t2", "add": 1}	202
+07-request-gone	11	@until 90 console POST /testsub2/requests {"unit": "t2", "from": 0, "to": 1}	202
