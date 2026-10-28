@@ -86,6 +86,13 @@ class TestPortable(unittest.TestCase):
             self.assertEqual(bool(regex.search(pat, val)), ok, (pat, val))
             self.assertEqual(stack.validator_for({"type": "string", "pattern": pat}).is_valid(val), ok, (pat, val))
 
+    def test_pattern_names_full_match(self):
+        """Ревью Kimi М-3: имя по `patternProperties` — полное совпадение (`\\Z`), ключ с хвостовым `\\n` — не место."""
+        doc = {"type": "object", "patternProperties": {"^(?:a)$": {"type": "string"}}, "additionalProperties": False}
+        pl = spec.Places(doc)
+        self.assertTrue(pl.place("/a"))
+        self.assertFalse(pl.place("/a\n"))
+
     def test_relations_format_and_paths(self):
         """Ревью Codex RВ7-02: формат файла связей, класс и путь строки — место формы (как у диалекта)."""
         doc = json.loads((HERE / "out/02.1-installer.schema.json").read_text(encoding="utf-8"))
@@ -366,6 +373,7 @@ class TestTree(unittest.TestCase):
             for lesson in sorted((root / "Platform").glob("0*-*/0*.md")):
                 check.lesson(lesson.resolve())
             check.outcome_readers()
+            check.family_read()                                  # как main(): пакет — раз на прогон (Kimi М-4)
         mine = [str(e) for e in check.errors if "slots.outcomes.tsv" in str(e)]
         self.assertTrue(any("no outcome of the whole row" in e for e in mine), mine)
         self.assertTrue(any("admin is not a reader" in e for e in mine), mine)
@@ -398,8 +406,12 @@ class TestTree(unittest.TestCase):
             return out
 
         def git(*args):
-            return subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True, check=True,
-                                  text=True).stdout
+            try:
+                return subprocess.run(["git", "-C", str(ROOT), *args], capture_output=True, check=True,
+                                      text=True).stdout
+            except (OSError, subprocess.CalledProcessError) as exc:      # дерево без .git или без метки (Kimi М-2)
+                self.fail("тесту нужна метка %s в git курса (git -C %s %s): %s" % (
+                    tag, ROOT, " ".join(args), getattr(exc, "stderr", "") or exc))
         files = [f for f in git("ls-tree", "-r", "--name-only", tag, "Platform").split() if f.endswith(".norms.md")]
         diff, n = [], 0
         for f in files:
@@ -431,7 +443,13 @@ class TestTree(unittest.TestCase):
                                    "P/02\timplied\t99:nowhere\tлишнее"]) + "\n", encoding="utf-8")
         check = check_spec.Check(root, reg, False)
         with contextlib.redirect_stdout(io.StringIO()):
+            check.lesson((root / "Platform/03-worker/03-worker.md").resolve())     # прогон без главы 02
+            check.family_read()
+        self.assertTrue(any("P/08 family-read 08.tsv" in x for x in check.excepted))   # пакет — и без 02 (Kimi М-4)
+        check = check_spec.Check(root, reg, False)
+        with contextlib.redirect_stdout(io.StringIO()):
             check.lesson((root / "Platform/02-installer/02-installer.md").resolve())
+            check.family_read()
         errors = "\n".join(map(str, check.errors))
         self.assertIn("stale exception family-read P/03 03.tsv", errors)
         self.assertIn("stale exception implied P/02 99:nowhere", errors)
@@ -442,8 +460,24 @@ class TestTree(unittest.TestCase):
         check = check_spec.Check(root, None, False)
         with contextlib.redirect_stdout(io.StringIO()):
             check.lesson((root / "Platform/02-installer/02-installer.md").resolve())
+            check.family_read()
         missing = [e for e in map(str, check.errors) if "family-read: no table" in e]
         self.assertGreaterEqual(len(missing), 6)
+
+    def test_main_lessons_and_broken_schema(self):
+        """Ревью Kimi М-1: строка lessons.tsv без файла урока — красное с именем; М-5: схема 02.1 сломана — ошибка её,
+        без шума «stale exception implied»."""
+        import subprocess
+        root = self.copy()
+        (root / "Platform/07-console-module/07-console-module.md").unlink()
+        (root / "Platform/02-installer/spec/02.1-installer.schema.json").write_text("{not json", encoding="utf-8")
+        reg = root / "exceptions.tsv"
+        reg.write_text("P/02\timplied\t18:tables.$t.fields.name\tрешение\n", encoding="utf-8")
+        out = subprocess.run([sys.executable, "-B", str(HERE.parent / "check_spec.py"), "--root", str(root),
+                              "--exceptions", str(reg)], capture_output=True, text=True).stdout
+        self.assertIn("has no file Platform/07-console-module/07-console-module.md", out)
+        self.assertIn("02.1-installer.schema.json", out)
+        self.assertNotIn("stale exception implied", out)
 
     def test_sections_idempotent(self):
         from v7 import sections
