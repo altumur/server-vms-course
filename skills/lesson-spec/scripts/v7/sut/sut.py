@@ -236,7 +236,7 @@ def native(package, request, be, specs):
                                                                           []).encode("utf-8")
         return 0, b, b""
     if package == "common/family-read":
-        roles = [x for x in cells["who"].split(", ") if x] if cells["mode"] == "reader" else []
+        roles = json.loads(cells["who"]) if cells["mode"] == "reader" else []
         out = be.family(cells["family"], cells["kind"], cells["mode"], roles, cells["text"])
         return 0, json.dumps(out, ensure_ascii=False, sort_keys=True).encode("utf-8"), b""
     if package == "common/yaml-suite":
@@ -313,7 +313,7 @@ def cmd_selftest(be, a):
     fr = specs / "Platform/common/vectors/family-read"
     for t in sorted(fr.glob("[0-9][0-9].tsv")):
         for r in tsv(t):
-            roles = [x for x in r["who"].split(", ") if x] if r["mode"] == "reader" else []
+            roles = json.loads(r["who"]) if r["mode"] == "reader" else []
             got = be.family(r["family"], r["kind"], r["mode"], roles, r["text"])
             ok = (got["verdict"] == r["verdict"] and sorted(got["paths"]) == sorted(json.loads(r["paths"]))
                   and got["outcome"] == json.loads(r["outcome"]))

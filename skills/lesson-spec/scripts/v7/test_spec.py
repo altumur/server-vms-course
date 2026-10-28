@@ -142,7 +142,7 @@ class TestTree(unittest.TestCase):
     def test_manifest_clean(self):
         errors, stats = self.manifest(TREE)
         self.assertEqual(errors, [])
-        self.assertEqual(stats["form_cases"], 682)
+        self.assertEqual(stats["form_cases"], 684)
         self.assertGreaterEqual(stats["form_rows_held"], 120)
 
     def test_strict_coverage_implied(self):
@@ -229,6 +229,7 @@ class TestTree(unittest.TestCase):
         self.assertEqual(ch.errors, [])
         self.assertEqual(ch.stats["canonical_vectors"], 159)
         self.assertEqual(ch.stats["canonical_mutants_killed"], ch.stats["canonical_mutants"])
+        self.assertEqual(ch.stats["canonical_mutants"], 62)              # и default у корня определения (Б-1)
         root = self.copy()
         e = sorted((root / vectors.VECTORS / "expect").glob("corpus-*.json"))[0]
         e.write_bytes(e.read_bytes().replace(b"}", b" }", 1))
@@ -268,6 +269,47 @@ class TestTree(unittest.TestCase):
         mine = [str(e) for e in check.errors if "slots.outcomes.tsv" in str(e)]
         self.assertTrue(any("no outcome of the whole row" in e for e in mine), mine)
         self.assertTrue(any("admin is not a reader" in e for e in mine), mine)
+
+    @unittest.skipUnless((ROOT / "Platform/02-installer/spec/02.1-installer.form.yaml").is_file(),
+                         "нужны разделы диалекта курса (до пакета п. 2)")
+    def test_sections_keep_dialect_meaning(self):
+        """Ревью Claude Б-1, Б-2: у каждой строки таблиц разделов диалекта непустые «Урок», «Смысл» и умолчание есть и
+        в В7 — пометки места, а нет у места — у цели ссылки; теряется только «класс отказа …» (класс — слой, п. 6)."""
+        import re
+        marks = [(section.FORM_BEGIN, section.FORM_END), (section.FAMILIES_BEGIN, section.FAMILIES_END),
+                 (view.BEGIN, view.END)]
+
+        def rows(text):
+            out, head = {}, ""
+            for b, e in marks:
+                if b not in text:
+                    continue
+                for ln in text[text.index(b):text.index(e)].split("\n"):
+                    if ln.startswith("#### ") or ln.startswith("**`"):
+                        head = ln
+                    cells = [c.strip() for c in re.split(r"(?<!\\)\|", ln)[1:-1]]
+                    if ln.startswith("| `") and len(cells) == 5:
+                        out[(b, head if b == section.FAMILIES_BEGIN else "", cells[0])] = cells
+            return out
+        lost, n = [], 0
+        for p in sorted((ROOT / "Platform").glob("*/spec/*.norms.md")):
+            a = rows(p.read_text(encoding="utf-8"))
+            if not a:
+                continue
+            b = rows((TREE / p.relative_to(ROOT)).read_text(encoding="utf-8"))
+            for k, v in a.items():
+                w = b.get(k)
+                if w is None:
+                    continue
+                n += 1
+                if "умолчание" in v[2] and "умолчание" not in w[2]:
+                    lost.append(("need", p.name, k[2]))
+                if v[3] and not w[3]:
+                    lost.append(("owner", p.name, k[2]))
+                if v[4] and not w[4] and not v[4].startswith("класс отказа"):
+                    lost.append(("desc", p.name, k[2]))
+        self.assertGreater(n, 1500)
+        self.assertEqual(lost, [])
 
     def test_sections_idempotent(self):
         from v7 import sections

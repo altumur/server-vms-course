@@ -325,13 +325,13 @@ def who_of(row, mode):
     """«Кто исполняет» по каталогу: писатель — роли операций `ops`, читатель — `readers`."""
     s = re.sub(r"\([^()]*\)", "", row["ops"] if mode == "writer" else row["readers"])
     if mode != "writer":
-        return s
+        return [r for r in s.split(", ") if r]
     out = []
     for part in s.split("; "):
         for r in part.partition("=")[2].split(", "):
             if r and r not in out:
                 out.append(r)
-    return ", ".join(out)
+    return out
 
 
 def family_read(root, catalog, judge=True):
@@ -383,9 +383,14 @@ def family_read(root, catalog, judge=True):
             if mode not in ("writer", "reader"):
                 errors.append((where, "line %d: mode is writer or reader" % no))
                 continue
-            want = who_of(row, mode) if mode == "writer" else ", ".join(family_readers(root, row, fams))
-            if who != want:
-                errors.append((where, "line %d: who — by the catalog and the outcomes (%s)" % (no, want)))
+            want = who_of(row, mode) if mode == "writer" else family_readers(root, row, fams)
+            try:
+                got_who = _json.loads(who)
+            except ValueError:
+                got_who = None
+            if got_who != want:
+                errors.append((where, "line %d: who — JSON array of roles by the catalog and the outcomes (%s)"
+                               % (no, _json.dumps(want, ensure_ascii=False))))
                 continue
             try:
                 ps, outs = _json.loads(paths), _json.loads(outcome)
@@ -470,11 +475,12 @@ def judge_row(root, row, kind, mode, text, paths, outs, cache):
 
 # ---------------------------------------------------------------- корпус P/02.1 и связи (форма манифеста)
 
-def manifest_check(root, norms, text, base, acceptance, verdicts, classes, manifests, strict=False):
+def manifest_check(root, norms, text, base, acceptance, verdicts, classes, manifests, strict=False, implied=None):
     """Глава со стандартными файлами формы манифеста: файлы годны, раздел «Форма» между маркерами — построенный,
     корпус — вердикт и класс (слой) строго, пути `diagnostics.tsv` — сведение (ADR-0092 п. 5), манифесты курса
     принимаются, строки связей держат случаи (строка — единственная причина отказа хоть одного случая; строго — со
-    strict). → (ошибки [(путь, сообщение)], счёты)."""
+    strict). implied — номера строк (текстом), чью пометку `x-implied-by` разрешает реестр исключений (вид `implied`);
+    None — без реестра (тесты). → (ошибки [(путь, сообщение)], счёты; `implied_marked` — номера помеченных строк)."""
     from v7 import schema as gen
     from v7 import section, stack, textv7
     errors, stats = [], {"form_cases": 0, "form_manifests": 0, "form_rows": 0, "form_rows_held": 0,
@@ -564,24 +570,35 @@ def manifest_check(root, norms, text, base, acceptance, verdicts, classes, manif
     stats["form_rows"] = len(rel["rows"])
     stats["form_rows_held"] = len({r["no"] for r in rel["rows"]} & held)
     nos = {r["no"] for r in rel["rows"]}
+    marked = set()
     for r in rel["rows"]:
-        implied = r.get("x-implied-by")
-        if implied is None:
+        by = r.get("x-implied-by")
+        if by is None:
             continue
-        if not (isinstance(implied, list) and implied and all(i in nos and i != r["no"] for i in implied)):
-            errors.append((files[".relations.json"], "row %d: x-implied-by names other rows of the file" % r["no"]))
+        marked.add(str(r["no"]))
+        where = files[".relations.json"]
+        if not (isinstance(by, list) and by and all(i in nos and i != r["no"] for i in by)):
+            errors.append((where, "row %d: x-implied-by names other rows of the file" % r["no"]))
             continue
-        group = {r["no"], *implied}
+        if implied is not None and str(r["no"]) not in implied:
+            errors.append((where, "row %d: x-implied-by without the exception implied of the registry (a decision of "
+                                  "the «Архитектор»)" % r["no"]))
+        group = {r["no"], *by}
         # групповая мутация (решение «Архитектора» 2026-10-28): снятие строки вместе с теми, из которых она следует,
         # меняет вердикт случая, а строка одна при снятых тех этот вердикт держит — случай, где сработали только строки
-        # группы и среди них она
+        # группы и среди них она; и импликация по корпусу (ревью Claude С-4): где сработала строка, сработала и строка
+        # пометки. Красное и без --strict-coverage.
         if any(r["no"] in f and f <= group for f in fired_sets):
             stats["form_rows_implied"] = stats.get("form_rows_implied", 0) + 1
             held.add(r["no"])
-        elif strict:
-            errors.append((files[".relations.json"], "row %d: x-implied-by %s — no corpus case where only rows of the "
-                                                     "group fire and this row among them (the group mutation)"
-                           % (r["no"], implied)))
+        else:
+            errors.append((where, "row %d: x-implied-by %s — no corpus case where only rows of the group fire and this "
+                                  "row among them (the group mutation)" % (r["no"], by)))
+        alone = [f for f in fired_sets if r["no"] in f and not f & set(by)]
+        if alone:
+            errors.append((where, "row %d: x-implied-by %s — %d corpus case(s) fire this row without any row it is "
+                                  "implied by" % (r["no"], by, len(alone))))
+    stats["implied_marked"] = marked
     if strict:
         for r in rel["rows"]:
             if r["no"] not in held and r.get("x-implied-by") is None:
