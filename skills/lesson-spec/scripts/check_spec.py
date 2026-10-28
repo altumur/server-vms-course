@@ -273,7 +273,9 @@ def pointer(document, ref):
 # Files a desktop leaves in any directory; never part of a lesson (not tracked by git).
 IGNORED = {".DS_Store"}
 EXCEPTION_KINDS = {"no-openapi", "scenarios-format", "acceptance-entry", "no-acceptance", "no-schema",
-                   "data-paragraph"}
+                   "data-paragraph", "family-read", "implied"}
+# Виды, которые читает только режим В7 (стандартные файлы): их устаревание он и называет, не уборка урока.
+V7_EXCEPTIONS = {"family-read", "implied"}
 # Classes of a loader refusal (М10/2 Н4): `refused:<class>`. On the standard files of В7 the class is the layer of the
 # refusal (ADR-0092 п. 6).
 REFUSAL_CLASSES = {"text", "key", "value", "reference", "name", "catalogue"}
@@ -1742,13 +1744,22 @@ class Check:
         manifests = [*(self.root / VMS_DIR).glob("[0-9][0-9]-*/*.subsystem.yaml"),
                      *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
         try:
+            implied = {value for (lesson, kind, value) in self.registry if kind == "implied"}
             errors, stats = manifest_check(self.root, norms, text, base, acceptance, verdicts, classes, manifests,
-                                           self.strict_coverage)
+                                           self.strict_coverage, implied)
         except ImportError as exc:
             self.error(norms, f"the standard files need the В7 stack, missing: {exc}; run: {V7_INSTALL}")
             return
         for where, message in errors:
             self.error(where, message)
+        for value in sorted(stats.pop("implied_marked", set())):
+            key = next((k for (k, kind, v) in self.registry if kind == "implied" and v == value), None)
+            if key is not None:
+                self.except_(base, key, "implied", value)
+        for (key, kind, value) in sorted(self.registry):
+            if kind == "implied" and (key, kind, value) not in self.used:
+                self.used.add((key, kind, value))
+                self.error(base, f"stale exception implied {key} {value}: no relation row {value} with x-implied-by")
         self.stats.update(stats)
 
     # Completeness of the unreadable outcomes (решение владельца 2026-10-28, PLAN-TRANSITION п. 1.3): each family of
@@ -1791,6 +1802,10 @@ class Check:
             except (SpecError, OSError):
                 continue                             # the families check names it
             named = {o.reader for o in outcomes if o.path == ""}
+            for o in outcomes:                      # строка поля: роль — `*` или читатель семьи (ревью Claude С-3)
+                if o.path and o.reader != "*" and o.reader not in want:
+                    self.error(path, f"outcomes: {o.path} names {o.reader}, not a reader of {row['key']} by the catalog "
+                                     f"(readers ∪ cas/guard) and not *")
             for role in sorted(want - named):
                 self.error(path, f"outcomes: no outcome of the whole row (empty path) for the reader {role} of "
                                  f"{row['key']} (readers ∪ cas/guard of the catalog; решение владельца 2026-10-28)")
@@ -1804,8 +1819,9 @@ class Check:
         if self.catalog is None:
             return
         try:
-            from v7.spec import family_read, read_catalog
-            errors, stats = family_read(self.root, read_catalog(self.root))     # строки каталога как в файле (ops — текст)
+            from v7.spec import FAMILY_READ, family_read, is_v7_family, read_catalog
+            catalog = read_catalog(self.root)                   # строки каталога как в файле (ops — текст)
+            errors, stats = family_read(self.root, catalog)
         except ImportError as exc:
             self.error(self.root / "Platform/common/vectors", f"family-read needs the В7 stack, missing: {exc}; run: {V7_INSTALL}")
             return
@@ -1813,6 +1829,21 @@ class Check:
             self.error(self.root / where, message)
         for name, value in stats.items():
             self.stats[name] = value
+        # Таблица на каждого урока-владельца семей со схемой (ревью Claude С-1); отложенная — исключение family-read
+        # (урок P/NN, значение NN.tsv); таблица есть, а исключение осталось — устарело.
+        package = self.root / FAMILY_READ
+        for lesson in sorted({row["owner"][2:4] for row in catalog if is_v7_family(row)}):
+            key, name = f"P/{lesson}", f"{lesson}.tsv"
+            have = (package / name).is_file()
+            if self.exception(key, "family-read", name) is not None:
+                if have:
+                    self.used.add((key, "family-read", name))
+                    self.error(package / name, f"stale exception family-read {key} {name}: the table is there")
+                else:
+                    self.except_(package, key, "family-read", name)
+            elif not have:
+                self.error(package, f"family-read: no table {name} for the families of {key} (one table per owner "
+                                    f"lesson; deferred — the exception family-read {key} {name})")
 
     # The data families of ADR-0088 that a chapter owns by the catalog (owner = the chapter, schema named): each schema
     # builds from the dialect (data-form/1 with common.form.yaml), its outcomes.tsv is in form and names places of the
@@ -2011,7 +2042,8 @@ class Check:
 
     def stale(self, key, where):
         # no-schema rows belong to the catalog, not to a lesson: catalog_lessons() names the stale ones.
-        for row in sorted(r for r in self.registry if r[0] == key and r not in self.used and r[1] != "no-schema"):
+        for row in sorted(r for r in self.registry if r[0] == key and r not in self.used
+                          and r[1] != "no-schema" and r[1] not in V7_EXCEPTIONS):
             self.error(where, f"stale exception {row[1]} {row[2]}: this lesson does not need it")
 
     def lesson(self, lesson):
