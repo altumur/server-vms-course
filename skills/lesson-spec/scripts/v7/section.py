@@ -517,7 +517,9 @@ def build_form_section(schema_doc, relations_doc, scalars):
     rows_sc, limits = scalars
     out += ["#### Таблица скаляров (Н1.1)", "", "Простой скаляр — по первой совпавшей строке сверху; в кавычках и "
             "блочный — строка.", "", "| Вид | Образец (целиком) |", "|---|---|"]
-    out += ["| %s | `%s` |" % (k, cell(p) if p else "") for k, p in rows_sc]
+    for k, p in rows_sc:                         # textv7.load_scalars даёт скомпилированные выражения: в норме — шаблон
+        pat = p.pattern if hasattr(p, "pattern") else p
+        out.append("| %s | `%s` |" % (k, cell(pat) if pat else ""))
     out += ["", "Пределы: целое по модулю не больше %d; дробное по модулю не больше %r; вне пределов и nonfinite — "
             "отказ формы на пути значения." % (limits["int_max"], limits["float_max"]), ""]
     out += ["#### Связи (Н1.4)", "", "Только при чистой форме (Н3). Строка — выражение CEL файла связей; отказ — "
