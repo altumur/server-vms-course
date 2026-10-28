@@ -16,6 +16,7 @@
 | `02.1-installer.scalars.tsv` | таблица простых скаляров манифеста (P/02.1 Н1.1) | рядом с формой манифеста |
 | `common/data/codec.tsv` | кодек строк хранилища: логический тип → запись в `items` и в JSON (слой 3) | `Platform/common/data/` |
 | `<семья>.outcomes.tsv` | исходы нечитаемой строки или объекта по читателям (§ 7) | рядом со схемой семьи |
+| `common/versions/` | закреплённые версии библиотек стандарта и парсеров YAML: [README](versions/README.md), `go.mod`, `go.sum`, `requirements.txt` (ADR-0092 п. 9) | `Platform/common/versions/` |
 | `common/data/common.schema.json` | общие определения схем семей — справочно, не норма: каждая схема семьи самодостаточна | `Platform/common/data/` |
 
 Файлы `*.tsv` — таблицы: UTF-8 без BOM, перевод строки LF, TAB — разделитель колонок, строка с `#` — комментарий, первая
