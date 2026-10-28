@@ -1,0 +1,297 @@
+[
+ {
+  "name": "list_subsystems",
+  "description": "The cluster's subsystems: name (sub), what their units are called, how they relate, tables.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {}
+  }
+ },
+ {
+  "name": "get_manifest",
+  "description": "A subsystem's manifest: the unit's fields (type, required, enum options and their labels, fixed, secret), field labels and the console form. Call it before writing a plan.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "sub": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "sub"
+   ]
+  }
+ },
+ {
+  "name": "get_schema",
+  "description": "The console's /schema door: schema versions of the cluster's data and processes.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {}
+  }
+ },
+ {
+  "name": "find_units",
+  "description": "Find a subsystem's units by conditions (all conditions are AND). No conditions — all units. Returns unit \"<sub>/<name>\", revision and fields.\nA where condition is {field, op, value}; all conditions are AND. Kinds:\neq — the field equals the value (scalar): {\"field\": \"zone\", \"op\": \"eq\", \"value\": \"z9\"}\nne — not equal: {\"field\": \"state\", \"op\": \"ne\", \"value\": \"closed\"}\nin — one of a list of values: {\"field\": \"shelf\", \"op\": \"in\", \"value\": [\"x1\", \"x2\"]}\nnot_in — none of the list\ncontains — a LIST field (labels, tags, flags) contains the element: {\"field\": \"labels\", \"op\": \"contains\", \"value\": \"blue\"}; eq on a list field with a string never matches\nnot_contains — the list field does not contain the element\ngt / gte / lt / lte — number greater / not less / less / not greater: {\"field\": \"weight\", \"op\": \"gt\", \"value\": 2}\nexists / missing — the field is set / not set, no value: {\"field\": \"feed\", \"op\": \"exists\"}\nA field of the related unit is about.<field>: {\"field\": \"about.labels\", \"op\": \"contains\", \"value\": \"blue\"}",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "sub": {
+     "type": "string"
+    },
+    "where": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "field": {
+        "type": "string",
+        "description": "a field of the unit, or about.<field> of the related unit"
+       },
+       "op": {
+        "type": "string",
+        "enum": [
+         "eq",
+         "ne",
+         "in",
+         "not_in",
+         "contains",
+         "not_contains",
+         "gt",
+         "gte",
+         "lt",
+         "lte",
+         "exists",
+         "missing"
+        ]
+       },
+       "value": {
+        "type": [
+         "integer",
+         "number",
+         "string",
+         "boolean",
+         "array",
+         "object",
+         "null"
+        ],
+        "description": "the value; a list for in/not_in"
+       }
+      },
+      "required": [
+       "field"
+      ]
+     }
+    },
+    "fields": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "which fields to return (all if omitted); about.<field> — the value of that field of the related unit (e.g. its counter's step)"
+    }
+   },
+   "required": [
+    "sub"
+   ]
+  }
+ },
+ {
+  "name": "field_values",
+  "description": "Which values of a field occur among a subsystem's units (labels, zones, shelves, modes) and how many; about.<field> — values of a field of the related unit. Map the admin's words (\"northern\", \"top floor\") to these values.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "sub": {
+     "type": "string"
+    },
+    "field": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "sub",
+    "field"
+   ]
+  }
+ },
+ {
+  "name": "list_table",
+  "description": "Rows of a subsystem's table (e.g. rec's volumes). Read only.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "sub": {
+     "type": "string"
+    },
+    "table": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "sub",
+    "table"
+   ]
+  }
+ },
+ {
+  "name": "propose_plan",
+  "description": "Propose a plan of edits to the admin. Writes nothing: the plan is checked against the unit's form and the session's rights; the admin sees the diff and applies it. Each edit: unit \"<sub>/<name>\", field, from (current value), to (new value), why (which field or label put the unit in the plan).",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "summary": {
+     "type": "string"
+    },
+    "selection": {
+     "type": "object",
+     "description": "what the admin said. Who is selected: named — names from the request, or where — the condition from the request, in subsystem select_sub (default = edit_sub). Who is edited: edit_sub — the subsystem whose field the request changes. fields — {field: the admin's word for it} — optional: the field is checked against the request text. The check computes the selection itself and compares it with the edits. Neither named nor where — that is a question, not a plan.",
+     "properties": {
+      "named": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "where": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "field": {
+          "type": "string",
+          "description": "a field of the unit, or about.<field> of the related unit"
+         },
+         "op": {
+          "type": "string",
+          "enum": [
+           "eq",
+           "ne",
+           "in",
+           "not_in",
+           "contains",
+           "not_contains",
+           "gt",
+           "gte",
+           "lt",
+           "lte",
+           "exists",
+           "missing"
+          ]
+         },
+         "value": {
+          "type": [
+           "integer",
+           "number",
+           "string",
+           "boolean",
+           "array",
+           "object",
+           "null"
+          ],
+          "description": "the value; a list for in/not_in"
+         }
+        },
+        "required": [
+         "field"
+        ]
+       }
+      },
+      "select_sub": {
+       "type": "string"
+      },
+      "edit_sub": {
+       "type": "string"
+      },
+      "fields": {
+       "type": "object",
+       "additionalProperties": {
+        "type": "string"
+       }
+      }
+     },
+     "required": []
+    },
+    "edits": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "unit": {
+        "type": "string"
+       },
+       "field": {
+        "type": "string"
+       },
+       "from": {
+        "type": [
+         "integer",
+         "number",
+         "string",
+         "boolean",
+         "array",
+         "object",
+         "null"
+        ]
+       },
+       "to": {
+        "type": [
+         "integer",
+         "number",
+         "string",
+         "boolean",
+         "array",
+         "object",
+         "null"
+        ]
+       },
+       "why": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "unit",
+       "field",
+       "to",
+       "why"
+      ]
+     }
+    }
+   },
+   "required": [
+    "selection",
+    "edits"
+   ]
+  }
+ },
+ {
+  "name": "ask_admin",
+  "description": "Ask the admin one short question when the request does not name the unit, the field or the value. The admin's answer comes back as the result.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "question": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "question"
+   ]
+  }
+ },
+ {
+  "name": "refuse",
+  "description": "Answer the admin without a plan: the request cannot be done (no such field or option, the field is fixed, no rights, an action outside the console) or there are no such units. reason — briefly why. The turn ends.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "reason": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "reason"
+   ]
+  }
+ }
+]

@@ -1,0 +1,11 @@
+{
+ "_note": "Locale data of the plan check and of the loop (V/10.4 Н1.4, V/10.5 Н1.2, Н1.5): words of the operators beyond the display of the manifests. English — as measured by the pilot; Russian — not measured (V/10 README, gaps of measurement). Data, not code: a new locale adds strings here.",
+ "list_verbs": "add, append, put, remove, delete, drop, take off, strip, clear, empty, replace, swap, instead, set, assign, give, attach, detach, untag, добавь, добавить, допиши, убери, убрать, удали, удалить, сними, снять, очисти, очистить, замени, заменить, вместо, поставь, поставить, назначь, назначить, присвой, присвоить",
+ "rights": "прав|доступ|right|permission|access|allowed",
+ "not_found": "\\bnot\\s+found\\b|\\bno\\s+such\\b|\\bdo(?:es)?\\s*n[o']t\\s+exist|\\bno\\b[^.;]*\\bfound\\b|\\bне\\s+найден|\\bнет\\s+таких",
+ "all": "\\b(?:all|every|each)\\b|\\bвсе|\\bкажд",
+ "labels": {},
+ "fields": {},
+ "options": {},
+ "units": {}
+}
