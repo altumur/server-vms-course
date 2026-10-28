@@ -407,11 +407,12 @@
     C.timeoutMs = 20000;
     const remembers = (method, path) => method === "POST" && st.subs.some(s => path === s.base + "/" + s.manifest.rows);
     const failure = (msg, r, d) => { const e = new Error(msg); e.status = r ? r.status : undefined; e.body = d; return e; };
-    async function send(method, path, body, key) {
+    async function send(method, path, body, key, ifMatch) {
       const text = body === undefined ? undefined : JSON.stringify(body);
       const hd = {};
       if (text !== undefined) hd["Content-Type"] = "application/json";
       if (key) hd["Idempotency-Key"] = key;
+      if (ifMatch !== undefined) hd["If-Match"] = String(ifMatch);
       const again = remembers(method, path), write = method !== "GET" && method !== "HEAD";
       for (let i = 0; ; i++) {
         let r = null, d = null, lost = "";
@@ -425,6 +426,8 @@
         const inFlight = !!r && r.status === 409 && /in.?flight/i.test(String(said || ""));
         if (r && r.status < 500 && !inFlight) {
           if (r.status === 401) showLogin(said || "");
+          // 412: the unit's revision moved under the page's ifMatch — its body as is, never repeated (ADR-0091 доп. (28), (29))
+          if (r.status === 412) { const e = failure(said || "412", r, d); e.retry = false; throw e; }
           if (!r.ok) throw failure(said || String(r.status), r, d);
           return d;
         }
@@ -443,7 +446,26 @@
         await sleep(Number.isFinite(after) && after >= 0 ? after * 1000 : C.retryWaits[i]);
       }
     }
-    C.api = (method, path, body) => send(method, path, body, method === "POST" || method === "PUT" ? newKey() : "");
+    // opts.ifMatch (integer ≥ 1) — If-Match on PUT and DELETE of a unit's row /<rows>/<id> only: other doors do not read
+    // it and would write without CAS; any other method, path, field of opts or value is refused before a request
+    // (P/07 Н1.5 api; ADR-0091 доп. (28), (29)).
+    const unitRowPath = path => st.subs.some(s => { const p = s.base + "/" + s.manifest.rows + "/"; return path.startsWith(p) && path.length > p.length && !path.slice(p.length).includes("/"); });
+    C.api = (method, path, body, opts) => {
+      let ifMatch;
+      if (opts !== undefined) {
+        const no = why => { const e = failure("api: " + why); e.retry = false; return Promise.reject(e); };
+        if (opts === null || typeof opts !== "object" || Array.isArray(opts)) return no("opts is an object");
+        const extra = Object.keys(opts).filter(k => k !== "ifMatch");
+        if (extra.length) return no("opts has no " + extra.join(", "));
+        if ("ifMatch" in opts) {
+          if (!Number.isSafeInteger(opts.ifMatch) || opts.ifMatch < 1) return no("ifMatch is a whole revision ≥ 1");
+          if (method !== "PUT" && method !== "DELETE") return no("ifMatch is for PUT and DELETE only");
+          if (!unitRowPath(path)) return no("ifMatch is for a unit's row /<rows>/<id> only");
+          ifMatch = opts.ifMatch;
+        }
+      }
+      return send(method, path, body, method === "POST" || method === "PUT" ? newKey() : "", ifMatch);
+    };
     // a read refused for who is asking says why (the door's detail: a debug entry no grant names, an expired token) under
     // the sign-in, not only «sign in»
     const getJSON = async path => { const r = await fetch(path); if (r.status === 401) { let why = ""; try { const d = await r.clone().json(); why = d.detail || d.error || ""; } catch (e) { /* no body */ } showLogin(why); } if (!r.ok) throw new Error(path + ": " + r.status); return r.json(); };
@@ -2381,6 +2403,6 @@
   }
 
   // features: what this version 1 gives beyond its first calls — a page asks before it uses them (P/07 Н1.5 features;
-  // ADR-0091 доп. (25) п. 1). No string — no such capability.
-  window.PlatformConsole = { version: VERSION, features: Object.freeze(["select.tab", "card.closed"]), mount };
+  // ADR-0091 доп. (25) п. 1). No string — no such capability. "api.if-match" — api(…, {ifMatch}) (ADR-0091 доп. (28), (29)).
+  window.PlatformConsole = { version: VERSION, features: Object.freeze(["select.tab", "card.closed", "api.if-match"]), mount };
 })();
