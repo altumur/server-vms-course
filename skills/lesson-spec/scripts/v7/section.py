@@ -133,6 +133,22 @@ class SchemaSection:
                 stack += x
         return False
 
+    _MISSING = object()
+
+    def note(self, s, k, default=None):
+        """Пометка места (`description`, `default`, `x-default-text`, `x-owner`): своя, иначе у цели ссылки — по цепочке
+        `$ref` (как пометка позиции диалекта: генератор кладёт пометки определения на определение)."""
+        seen = set()
+        while isinstance(s, dict):
+            if k in s:
+                return s[k]
+            n = ref_name(s)
+            if n is None or n not in self.defs or n in seen:
+                return default
+            seen.add(n)
+            s = self.defs[n]
+        return default
+
     def deref(self, s, stack=()):
         n = ref_name(s)
         while n is not None and n in self.defs and n not in stack:
@@ -240,10 +256,12 @@ class SchemaSection:
     def need(self, parent, k, s):
         req = parent is not None and k in parent.get("required", [])
         out = "обязателен" if req else "необязателен"
-        if isinstance(s, dict) and "default" in s:
-            out += "; умолчание %s" % code(s["default"])
-        if isinstance(s, dict) and "x-default-text" in s:
-            out += "; умолчание словами: %s" % s["x-default-text"]
+        d = self.note(s, "default", self._MISSING)
+        if d is not self._MISSING:
+            out += "; умолчание %s" % code(d)
+        dt = self.note(s, "x-default-text")
+        if dt:
+            out += "; умолчание словами: %s" % dt
         return out
 
     # ---- условия и действия правил
@@ -331,8 +349,8 @@ class SchemaSection:
 
     # ---- строки таблицы и правила
     def walk(self, path, parent, k, s, rows, rules, stack=()):
-        owner = s.get("x-owner", "") if isinstance(s, dict) else ""
-        desc = s.get("description", "") if isinstance(s, dict) else ""
+        owner = self.note(s, "x-owner", "")
+        desc = self.note(s, "description", "")
         rows.append((path, self.kind(s), self.need(parent, k, s), owner, desc))
         n = ref_name(s) if isinstance(s, dict) else None
         if n is not None and (n in self.own or n in stack):
@@ -359,7 +377,20 @@ class SchemaSection:
             self.walk("%s.%s" % (path, key(k)) if path else key(k), t, k, c, rows, rules, stack)
         ap = t.get("additionalProperties")
         if isinstance(ap, dict) or ap is True:
+            at = len(rows)
             self.walk("%s.<имя>" % path, None, None, ap if isinstance(ap, dict) else {}, rows, rules, stack)
+            if self.family:                      # строка значения имён несёт и имя (как раздел семей диалекта, №22)
+                names = t.get("propertyNames")
+                if isinstance(names, dict) and set(names) == {"anyOf"}:
+                    names = names["anyOf"][1]
+                p_, kind, need, owner, desc = rows[at]
+                name = self.kind(names) if names is not None else "строка"
+                if not path and name != "строка":
+                    kind = "имя — %s; значение — %s" % (name, kind)
+                note = names.get("description") if isinstance(names, dict) else None   # своё, не определения
+                if note:
+                    desc = "имя: %s; %s" % (note, desc) if desc else "имя: %s" % note
+                rows[at] = (p_, kind, need, owner, desc)
             for pat, ps in (t.get("patternProperties") or {}).items():
                 name = ("имя не целиком `%s`" % bare(ps["x-complement-of"]) if "x-complement-of" in ps
                         else "имя целиком `%s`" % bare(pat))

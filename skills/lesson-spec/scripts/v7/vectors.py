@@ -189,7 +189,9 @@ def mutants(doc):
     def rec(x, path):
         if isinstance(x, dict):
             for k in ("default", "x-ordered"):
-                if k in x and (k != "default" or (len(path) >= 2 and path[-2] == "properties")):
+                # `default` — у любого места схемы (и у корня определения, `$defs/fieldType`), кроме ключа `default` в
+                # карте `properties` (там это имя ключа, не умолчание)
+                if k in x and (k != "default" or not (path and path[-1] == "properties")):
                     m = copy.deepcopy(doc)
                     at = m
                     for s in path:
