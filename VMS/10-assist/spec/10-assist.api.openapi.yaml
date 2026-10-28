@@ -125,8 +125,8 @@ components:
   schemas:
     StepId:
       type: string
-      description: "<instance держателя>.<128 случайных бит, 32 строчных hex>; в экземпляре может быть точка — разбор по последней"
-      pattern: "^.+\\.[0-9a-f]{32}$"
+      description: "<instance держателя>.<128 случайных бит, 32 строчных hex>; экземпляр — печатные знаки ASCII без пробела, в нём может быть точка — разбор по последней"
+      pattern: "^(?:[!-~]+\\.[0-9a-f]{32})$"
       examples: ["srv.a:1:abcdef.00000000000000000000000000000000"]
     ToolCall:
       type: object
@@ -197,7 +197,7 @@ components:
         tool_choice: {enum: [auto, required, none]}
         reasoning_effort: {enum: [low, medium, high]}
         max_tokens: {type: integer, minimum: 1}
-        turn: {type: string, pattern: "^[0-9a-f]{32}$", description: "ход страницы (V/10.2 Н1.2, Н1.4)"}
+        turn: {type: string, pattern: "^(?:[0-9a-f]{32})$", description: "ход страницы (V/10.2 Н1.2, Н1.4)"}
     StepState:
       description: состояние шага по ветвям (V/10.2 Н1.3)
       type: object

@@ -62,7 +62,7 @@ paths:
           in: path
           required: true
           description: sid из Location ответа на оффер
-          schema: {type: string, pattern: "^[0-9a-f]{32}$"}
+          schema: {type: string, pattern: "^(?:[0-9a-f]{32})$"}
       responses:
         "204":
           description: сессия закрыта
