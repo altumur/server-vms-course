@@ -73,7 +73,7 @@ components:
       in: path
       required: true
       description: id камеры (V/01.1 Н1.1)
-      schema: {type: string, pattern: "^[0-9]+$"}
+      schema: {type: string, pattern: "^(?:[0-9]+)$"}
     From:
       name: from
       in: query

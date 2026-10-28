@@ -41,7 +41,7 @@ paths:
           in: query
           required: false
           description: только этот поток записи — `<epoch>` или `<epoch>/backfill`; без параметра — по правилу «один момент — одна эпоха»
-          schema: {type: string, pattern: "^[0-9]+(/backfill)?$"}
+          schema: {type: string, pattern: "^(?:[0-9]+(/backfill)?)$"}
       responses:
         "200":
           description: записи SMPL подряд (договор obsd); HTTP/1.1 — chunked; пусто — без тела; обрыв после первого байта — без последнего куска
@@ -85,12 +85,12 @@ paths:
           in: path
           required: true
           description: "e<эпоха>; e0 — копия удержания или (.device) архив устройства"
-          schema: {type: string, pattern: "^e[0-9]+$"}
+          schema: {type: string, pattern: "^(?:e[0-9]+)$"}
         - name: piece
           in: path
           required: true
           description: "<fromMs>-<toMs>.mp4 | .backfill.mp4 | .device.mp4 (только e0)"
-          schema: {type: string, pattern: "^[0-9]+-[0-9]+(\\.backfill|\\.device)?\\.mp4$"}
+          schema: {type: string, pattern: "^(?:[0-9]+-[0-9]+(\\.backfill|\\.device)?\\.mp4)$"}
       responses:
         "200":
           description: fMP4 (ftyp, moov, фрагменты moof+mdat); HTTP/1.1 — chunked
