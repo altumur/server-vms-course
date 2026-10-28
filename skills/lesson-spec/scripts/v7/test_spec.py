@@ -373,7 +373,7 @@ class TestTree(unittest.TestCase):
         from v7 import transition
         rows = [ln.split("\t") for p in sorted((TREE / spec.FAMILY_READ).glob("*.tsv"))
                 for ln in p.read_text(encoding="utf-8").split("\n")[1:] if ln]
-        keyed = [r for r in rows if r[-1].startswith("key: ")]
+        keyed = [r for r in rows if r[-1].startswith("catalog key: ")]
         self.assertTrue(keyed and all(r[7] == "refused" and r[8] == '[""]' for r in keyed))
         self.assertTrue(all(r[2] != r[1] or "<" not in r[1] for r in rows))
         with_ph = {(r[1], r[3]) for r in rows if "<" in r[1]}
@@ -413,6 +413,7 @@ class TestTree(unittest.TestCase):
         lines.append(field.split("\t")[0] + "\tresource\t" + "\t".join(field.split("\t")[2:]))   # С-3: не читатель
         p.write_text("\n".join(lines), encoding="utf-8")
         (root / spec.FAMILY_READ / "03.tsv").unlink()                                       # С-1: нет таблицы урока
+        (root / spec.FAMILY_READ / "08.tsv").unlink()                  # и таблицы урока, которую реестр не откладывает
         check = check_spec.Check(root, None, False)
         with contextlib.redirect_stdout(io.StringIO()):
             for lesson in sorted((root / "Platform").glob("0*-*/0*.md")):
