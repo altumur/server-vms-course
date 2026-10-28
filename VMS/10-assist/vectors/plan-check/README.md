@@ -16,12 +16,16 @@
 
 ## Консоль (`<имя>.console.json`)
 
+Охват, корень и манифесты ядро берёт у страницы (модуль: `manifest(name)`; V/10.4 Н0, Н1.2): охват — подсистемы консоли
+(или `subs` случая), корень — `mounts.root`, манифест — `manifests[<sub>]`; «в охвате ли» — есть ли подсистема в
+консоли.
+
 ```yaml
-mounts:     ответ GET /mounts — {root, mounts: {<sub>: ManifestView}}
-manifests:  {<sub>: ManifestView} — GET /manifest у корня, GET /<sub>/manifest у прочей
+mounts:     {root, mounts: {<sub>: ManifestView}} — корень и подсистемы консоли
+manifests:  {<sub>: ManifestView} — копии модуля
 rows:       {<sub>: [элемент configured]} — GET /<rows> у корня, GET /<sub>/<rows> у прочей: {rows: [], configured: …}
 tables:     {<sub>: {<table>: [строка]}} — GET /<table> у корня, GET /<sub>/<table>: {<table>: […]}
-session:    ответ GET /session
+session:    сессия модуля — для may() заглушки (страница её не читает)
 schema:     ответ GET /schema
 ```
 
@@ -46,6 +50,7 @@ texts:     тексты хода (V/10.3 Н0): просьба, затем отв
 secrets:   номера секретов, введённых в ходе (V/10.6 Н1.3); нет — секретов нет
 session:   поля, которые заменяют session консоли (гранты, аварийная сессия)
 fail:      {<путь>: <статус>} — эти чтения консоли отвечают статусом с {error: "unavailable", detail: "test"}
+subs:      охват — подсистемы страницы, если не все подсистемы консоли
 calls:     [{name, args, content}] — вызовы по порядку в одном ходе; content — ожидаемый content результата (V/10.4 Н1.3)
 ```
 

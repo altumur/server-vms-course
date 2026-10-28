@@ -993,7 +993,7 @@
       }
      ]
     },
-    "content": "{\"valid\":false,\"errors\":[\"edits[0]: anna has no right to edit testsub2/Yard-1\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
+    "content": "{\"valid\":false,\"errors\":[\"edits[0]: the admin has no right to edit testsub2/Yard-1\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
    }
   ]
  },
@@ -2744,6 +2744,57 @@
      "reason": "Камера потока неизменяема — правка невозможна"
     },
     "content": "{\"reason\":\"Камера потока неизменяема — правка невозможна\"}"
+   }
+  ]
+ },
+ {
+  "id": "vms-out-of-scope",
+  "console": "vms",
+  "rule": "V/10.4 Н0, Н1.5 охват — подсистемы страницы (ADR-0093 доп. (5))",
+  "source": "lesson",
+  "texts": [
+   "Храни записи камеры Вход 14 дней"
+  ],
+  "subs": [
+   "cam"
+  ],
+  "calls": [
+   {
+    "name": "list_subsystems",
+    "args": {},
+    "content": "{\"subsystems\":[{\"sub\":\"cam\",\"rows\":\"cameras\",\"id_field\":\"numeric\",\"unit_word\":\"камера\",\"units_word\":\"камеры\",\"section\":\"Оборудование\",\"about\":\"each unit (\\\"камера\\\") belongs to a unit of cam (\\\"камера\\\") via field main; that unit's fields in find_units are about.<field>\"}]}"
+   },
+   {
+    "name": "find_units",
+    "args": {
+     "sub": "rec"
+    },
+    "content": "error: subsystem rec is outside the assistant's scope (this page: cam) — refuse: not in scope, not a lack of rights"
+   },
+   {
+    "name": "propose_plan",
+    "args": {
+     "summary": "s",
+     "selection": {
+      "where": [
+       {
+        "field": "about.name",
+        "op": "eq",
+        "value": "Вход"
+       }
+      ],
+      "edit_sub": "rec"
+     },
+     "edits": [
+      {
+       "unit": "rec/vhod",
+       "field": "retention_days",
+       "to": 14,
+       "why": "Вход"
+      }
+     ]
+    },
+    "content": "{\"valid\":false,\"errors\":[\"edits[0]: subsystem rec is outside the assistant's scope (this page: cam) — refuse: not in scope, not a lack of rights\",\"selection: subsystem rec is outside the assistant's scope (this page: cam) — refuse: not in scope, not a lack of rights\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
    }
   ]
  },

@@ -1,0 +1,729 @@
+[
+ {
+  "id": "apply-ok",
+  "rule": "V/10.6 Н1.1, Н1.4 строка — один PUT с ifMatch; секрет — только в теле",
+  "console": "stand3",
+  "plan": [
+   {
+    "unit": "testsub2/Gate-1",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "mode",
+      "from": "plain",
+      "to": "loud"
+     },
+     {
+      "field": "step",
+      "from": 1,
+      "to": 5
+     }
+    ]
+   },
+   {
+    "unit": "testsub2/Office-2",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "feed_secret",
+      "from": "***",
+      "to": {
+       "secret": 1
+      }
+     }
+    ]
+   }
+  ],
+  "secrets": {
+   "1": "<secret 1>"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": {
+     "revision": 2
+    }
+   },
+   {
+    "status": 200,
+    "body": {
+     "revision": 2
+    }
+   }
+  ],
+  "expect": {
+   "sent": [
+    {
+     "method": "PUT",
+     "path": "/tallies/Gate-1",
+     "body": {
+      "mode": "loud",
+      "step": 5
+     },
+     "ifMatch": 1
+    },
+    {
+     "method": "PUT",
+     "path": "/tallies/Office-2",
+     "body": {
+      "feed_secret": "<secret 1>"
+     },
+     "ifMatch": 1
+    }
+   ],
+   "outcomes": {
+    "testsub2/Gate-1": {
+     "outcome": "applied",
+     "revision": 2
+    },
+    "testsub2/Office-2": {
+     "outcome": "applied",
+     "revision": 2
+    }
+   }
+  }
+ },
+ {
+  "id": "apply-moved",
+  "rule": "V/10.6 Н1.4 412 — moved, повтора нет",
+  "console": "stand3",
+  "plan": [
+   {
+    "unit": "testsub2/Gate-1",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "mode",
+      "from": "plain",
+      "to": "loud"
+     },
+     {
+      "field": "step",
+      "from": 1,
+      "to": 5
+     }
+    ]
+   },
+   {
+    "unit": "testsub2/Office-2",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "feed_secret",
+      "from": "***",
+      "to": {
+       "secret": 1
+      }
+     }
+    ]
+   }
+  ],
+  "secrets": {
+   "1": "<secret 1>"
+  },
+  "responses": [
+   {
+    "status": 412,
+    "body": {
+     "error": "revision moved",
+     "revision": 5
+    }
+   },
+   {
+    "status": 200,
+    "body": {
+     "revision": 2
+    }
+   }
+  ],
+  "expect": {
+   "sent": [
+    {
+     "method": "PUT",
+     "path": "/tallies/Gate-1",
+     "body": {
+      "mode": "loud",
+      "step": 5
+     },
+     "ifMatch": 1
+    },
+    {
+     "method": "PUT",
+     "path": "/tallies/Office-2",
+     "body": {
+      "feed_secret": "<secret 1>"
+     },
+     "ifMatch": 1
+    }
+   ],
+   "outcomes": {
+    "testsub2/Gate-1": {
+     "outcome": "moved"
+    },
+    "testsub2/Office-2": {
+     "outcome": "applied",
+     "revision": 2
+    }
+   }
+  }
+ },
+ {
+  "id": "apply-refused",
+  "rule": "V/10.6 Н1.4 отказ двери — refused со словами",
+  "console": "stand3",
+  "plan": [
+   {
+    "unit": "testsub2/Gate-1",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "mode",
+      "from": "plain",
+      "to": "loud"
+     },
+     {
+      "field": "step",
+      "from": 1,
+      "to": 5
+     }
+    ]
+   },
+   {
+    "unit": "testsub2/Office-2",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "feed_secret",
+      "from": "***",
+      "to": {
+       "secret": 1
+      }
+     }
+    ]
+   }
+  ],
+  "secrets": {
+   "1": "<secret 1>"
+  },
+  "responses": [
+   {
+    "status": 409,
+    "body": {
+     "error": "conflict",
+     "detail": "x",
+     "fault": "must_match"
+    }
+   },
+   {
+    "status": 400,
+    "body": {
+     "error": "bad_body",
+     "detail": "must be given anew"
+    }
+   }
+  ],
+  "expect": {
+   "sent": [
+    {
+     "method": "PUT",
+     "path": "/tallies/Gate-1",
+     "body": {
+      "mode": "loud",
+      "step": 5
+     },
+     "ifMatch": 1
+    },
+    {
+     "method": "PUT",
+     "path": "/tallies/Office-2",
+     "body": {
+      "feed_secret": "<secret 1>"
+     },
+     "ifMatch": 1
+    }
+   ],
+   "outcomes": {
+    "testsub2/Gate-1": {
+     "outcome": "refused",
+     "words": "conflict · x · must_match"
+    },
+    "testsub2/Office-2": {
+     "outcome": "refused",
+     "words": "bad_body · must be given anew"
+    }
+   }
+  }
+ },
+ {
+  "id": "apply-401",
+  "rule": "V/10.6 Н1.4 401 — прочие skipped",
+  "console": "stand3",
+  "plan": [
+   {
+    "unit": "testsub2/Gate-1",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "mode",
+      "from": "plain",
+      "to": "loud"
+     },
+     {
+      "field": "step",
+      "from": 1,
+      "to": 5
+     }
+    ]
+   },
+   {
+    "unit": "testsub2/Office-2",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "feed_secret",
+      "from": "***",
+      "to": {
+       "secret": 1
+      }
+     }
+    ]
+   }
+  ],
+  "secrets": {
+   "1": "<secret 1>"
+  },
+  "responses": [
+   {
+    "status": 401,
+    "body": {
+     "error": "unauthenticated"
+    }
+   }
+  ],
+  "expect": {
+   "sent": [
+    {
+     "method": "PUT",
+     "path": "/tallies/Gate-1",
+     "body": {
+      "mode": "loud",
+      "step": 5
+     },
+     "ifMatch": 1
+    }
+   ],
+   "outcomes": {
+    "testsub2/Gate-1": {
+     "outcome": "refused",
+     "words": "not signed in"
+    },
+    "testsub2/Office-2": {
+     "outcome": "skipped"
+    }
+   }
+  }
+ },
+ {
+  "id": "apply-unknown-pending",
+  "rule": "V/10.6 Н1.4 неизвестный исход, revision та же — pending",
+  "console": "stand3",
+  "plan": [
+   {
+    "unit": "testsub2/Gate-1",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "mode",
+      "from": "plain",
+      "to": "loud"
+     },
+     {
+      "field": "step",
+      "from": 1,
+      "to": 5
+     }
+    ]
+   },
+   {
+    "unit": "testsub2/Office-2",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "feed_secret",
+      "from": "***",
+      "to": {
+       "secret": 1
+      }
+     }
+    ]
+   }
+  ],
+  "secrets": {
+   "1": "<secret 1>"
+  },
+  "responses": [
+   {
+    "status": 0
+   },
+   {
+    "status": 0
+   }
+  ],
+  "read": {
+   "Gate-1": {
+    "revision": 1
+   },
+   "Office-2": {
+    "revision": 1
+   }
+  },
+  "expect": {
+   "sent": [
+    {
+     "method": "PUT",
+     "path": "/tallies/Gate-1",
+     "body": {
+      "mode": "loud",
+      "step": 5
+     },
+     "ifMatch": 1
+    },
+    {
+     "method": "PUT",
+     "path": "/tallies/Office-2",
+     "body": {
+      "feed_secret": "<secret 1>"
+     },
+     "ifMatch": 1
+    }
+   ],
+   "outcomes": {
+    "testsub2/Gate-1": {
+     "outcome": "pending"
+    },
+    "testsub2/Office-2": {
+     "outcome": "pending"
+    }
+   }
+  }
+ },
+ {
+  "id": "apply-unknown-applied",
+  "rule": "V/10.6 Н1.4 revision + 1 и поля = to, без секрета — applied; с секретом — unknown",
+  "console": "stand3",
+  "plan": [
+   {
+    "unit": "testsub2/Gate-1",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "mode",
+      "from": "plain",
+      "to": "loud"
+     },
+     {
+      "field": "step",
+      "from": 1,
+      "to": 5
+     }
+    ]
+   },
+   {
+    "unit": "testsub2/Office-2",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "feed_secret",
+      "from": "***",
+      "to": {
+       "secret": 1
+      }
+     }
+    ]
+   }
+  ],
+  "secrets": {
+   "1": "<secret 1>"
+  },
+  "responses": [
+   {
+    "status": 503,
+    "body": {
+     "error": "unavailable"
+    }
+   },
+   {
+    "status": 503,
+    "body": {
+     "error": "unavailable"
+    }
+   }
+  ],
+  "read": {
+   "Gate-1": {
+    "revision": 2,
+    "mode": "loud",
+    "step": 5
+   },
+   "Office-2": {
+    "revision": 2,
+    "feed_secret": "***"
+   }
+  },
+  "expect": {
+   "sent": [
+    {
+     "method": "PUT",
+     "path": "/tallies/Gate-1",
+     "body": {
+      "mode": "loud",
+      "step": 5
+     },
+     "ifMatch": 1
+    },
+    {
+     "method": "PUT",
+     "path": "/tallies/Office-2",
+     "body": {
+      "feed_secret": "<secret 1>"
+     },
+     "ifMatch": 1
+    }
+   ],
+   "outcomes": {
+    "testsub2/Gate-1": {
+     "outcome": "applied",
+     "revision": 2
+    },
+    "testsub2/Office-2": {
+     "outcome": "unknown"
+    }
+   }
+  }
+ },
+ {
+  "id": "apply-unknown-other",
+  "rule": "V/10.6 Н1.4 иная revision, поля не те, строки нет — unknown",
+  "console": "stand3",
+  "plan": [
+   {
+    "unit": "testsub2/Gate-1",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "mode",
+      "from": "plain",
+      "to": "loud"
+     },
+     {
+      "field": "step",
+      "from": 1,
+      "to": 5
+     }
+    ]
+   },
+   {
+    "unit": "testsub2/Office-2",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "feed_secret",
+      "from": "***",
+      "to": {
+       "secret": 1
+      }
+     }
+    ]
+   }
+  ],
+  "secrets": {
+   "1": "<secret 1>"
+  },
+  "responses": [
+   {
+    "status": 0
+   },
+   {
+    "status": 0
+   }
+  ],
+  "read": {
+   "Gate-1": {
+    "revision": 2,
+    "mode": "plain"
+   },
+   "Office-2": null
+  },
+  "expect": {
+   "sent": [
+    {
+     "method": "PUT",
+     "path": "/tallies/Gate-1",
+     "body": {
+      "mode": "loud",
+      "step": 5
+     },
+     "ifMatch": 1
+    },
+    {
+     "method": "PUT",
+     "path": "/tallies/Office-2",
+     "body": {
+      "feed_secret": "<secret 1>"
+     },
+     "ifMatch": 1
+    }
+   ],
+   "outcomes": {
+    "testsub2/Gate-1": {
+     "outcome": "unknown"
+    },
+    "testsub2/Office-2": {
+     "outcome": "unknown"
+    }
+   }
+  }
+ },
+ {
+  "id": "apply-retry",
+  "rule": "V/10.6 Н1.4 «Повторить» — только pending и skipped с прежним ifMatch; 412 у повтора — чтение",
+  "console": "stand3",
+  "plan": [
+   {
+    "unit": "testsub2/Gate-1",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "mode",
+      "from": "plain",
+      "to": "loud"
+     },
+     {
+      "field": "step",
+      "from": 1,
+      "to": 5
+     }
+    ]
+   },
+   {
+    "unit": "testsub2/Office-2",
+    "revision": 1,
+    "changes": [
+     {
+      "field": "feed_secret",
+      "from": "***",
+      "to": {
+       "secret": 1
+      }
+     }
+    ]
+   }
+  ],
+  "secrets": {
+   "1": "<secret 1>"
+  },
+  "responses": [
+   {
+    "status": 0
+   },
+   {
+    "status": 0
+   }
+  ],
+  "read": {
+   "Gate-1": {
+    "revision": 1
+   },
+   "Office-2": {
+    "revision": 1
+   }
+  },
+  "expect": {
+   "sent": [
+    {
+     "method": "PUT",
+     "path": "/tallies/Gate-1",
+     "body": {
+      "mode": "loud",
+      "step": 5
+     },
+     "ifMatch": 1
+    },
+    {
+     "method": "PUT",
+     "path": "/tallies/Office-2",
+     "body": {
+      "feed_secret": "<secret 1>"
+     },
+     "ifMatch": 1
+    }
+   ],
+   "outcomes": {
+    "testsub2/Gate-1": {
+     "outcome": "pending"
+    },
+    "testsub2/Office-2": {
+     "outcome": "pending"
+    }
+   }
+  },
+  "again": {
+   "responses": [
+    {
+     "status": 412,
+     "body": {
+      "error": "revision moved",
+      "revision": 2
+     }
+    },
+    {
+     "status": 200,
+     "body": {
+      "revision": 2
+     }
+    }
+   ],
+   "read": {
+    "Gate-1": {
+     "revision": 2,
+     "mode": "loud",
+     "step": 5
+    },
+    "Office-2": {
+     "revision": 1
+    }
+   },
+   "expect": {
+    "sent": [
+     {
+      "method": "PUT",
+      "path": "/tallies/Gate-1",
+      "body": {
+       "mode": "loud",
+       "step": 5
+      },
+      "ifMatch": 1
+     },
+     {
+      "method": "PUT",
+      "path": "/tallies/Office-2",
+      "body": {
+       "feed_secret": "<secret 1>"
+      },
+      "ifMatch": 1
+     }
+    ],
+    "outcomes": {
+     "testsub2/Gate-1": {
+      "outcome": "applied",
+      "revision": 2
+     },
+     "testsub2/Office-2": {
+      "outcome": "applied",
+      "revision": 2
+     }
+    }
+   }
+  }
+ }
+]
