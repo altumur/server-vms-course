@@ -1,4 +1,4 @@
-# Исходы нечитаемой строки <sub>/alarms_retention (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Исходы нечитаемой строки <sub>/alarms_retention (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
-path	outcome	priority	unit	norm
-	срок «не известно»: ресурс ничего не убирает в зависимом дереве, причина в пульсе, retention_garbled для неверного days; умолчание не подставляется (отсутствующая строка даёт умолчание, ошибка чтения — нет)	0	строка	P/05 Н1.3 retention, Н3 retain, Н4
+path	reader	outcome	priority	unit	norm
+	resource	срок «не известно»: ресурс ничего не убирает в зависимом дереве, причина в пульсе, retention_garbled для неверного days; умолчание не подставляется (отсутствующая строка даёт умолчание, ошибка чтения — нет)	0	строка	P/05 Н1.3 retention, Н3 retain, Н4
