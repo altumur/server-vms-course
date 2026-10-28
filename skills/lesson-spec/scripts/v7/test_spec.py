@@ -600,6 +600,38 @@ class TestTree(unittest.TestCase):
                         errors[:5])
         self.assertFalse(any("slots.outcomes.tsv" in e and "resource" in e for e in errors), errors[:5])
 
+    def test_library_defects(self):
+        """Перечень дефектов библиотек (Platform/common/versions/DEFECTS.md): черновик навыка — без строки только D3;
+        несуществующая строка вектора — красное; запись, которой нет в перечне, — красное; LAYERS называет файл, а его
+        нет — красное."""
+        sys.path.insert(0, str(HERE.parent))
+        import check_spec
+        root = self.copy()
+        target = root / check_spec.Check.LIBRARY_DEFECTS
+        shutil.copy(HERE / "DEFECTS-LIB.md", target)
+
+        def errors():
+            check = check_spec.Check(root, None, False)
+            with contextlib.redirect_stdout(io.StringIO()):
+                check.library_defects()
+            return [str(e) for e in check.errors], check.stats
+        got, stats = errors()
+        self.assertEqual(len(got), 1, got)
+        self.assertIn("D3 has no vector row", got[0])
+        self.assertEqual(stats["library_defects"], 18)
+        text = target.read_text(encoding="utf-8")
+        target.write_text(text.replace("`yaml-suite:SU5Z`", "`yaml-suite:NOPE`").replace(
+            "\n| D18 ", "\n| D99 "), encoding="utf-8")
+        got, _ = errors()
+        self.assertTrue(any("no vector row yaml-suite:NOPE" in e for e in got), got)
+        self.assertTrue(any("D99 is not a library defect" in e for e in got), got)
+        self.assertTrue(any("D18 (" in e and "is not in the list" in e for e in got), got)
+        target.unlink()
+        layers = root / "Platform/common/LAYERS.md"
+        layers.write_text(layers.read_text(encoding="utf-8") + "\n[перечень](versions/DEFECTS.md)\n", encoding="utf-8")
+        got, _ = errors()
+        self.assertTrue(any("no file: LAYERS.md names" in e for e in got), got)
+
     def test_stub_text(self):
         """Заготовка «вопрос «Архитектору»» / «исход не назван нормой» в исходах и нормах — красное; «прежде — вопрос
         «Архитектору»» — история, не заготовка."""

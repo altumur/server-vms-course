@@ -1847,6 +1847,71 @@ class Check:
                                      "the «Архитектор»), not a question in the outcome or the norm")
         self.stats["stub_scanned_files"] += len(files)
 
+    # Перечень дефектов закреплённых версий библиотек для реализаций (Platform/common/versions/DEFECTS.md, ADR-0092 п. 9):
+    # id — дефекты библиотек v7/DEFECTS.tsv навыка (не эталона), у каждой записи — существующая строка вектора или «страж».
+    LIBRARY_DEFECTS = Path("Platform/common/versions/DEFECTS.md")
+    VECTOR_REF = re.compile(r"(family-read|yaml-suite|corpus|canonical):(\S+)")
+
+    def library_defects(self):
+        if not self.v7:
+            return
+        path = Path(os.path.normpath(self.root / self.LIBRARY_DEFECTS))
+        layers = self.root / "Platform/common/LAYERS.md"
+        if not path.is_file():
+            if layers.is_file() and "versions/DEFECTS.md" in layers.read_text(encoding="utf-8"):
+                self.error(path, "no file: LAYERS.md names the list of library defects")
+            return
+        skill = {}
+        for line in (Path(__file__).resolve().parent / "v7/DEFECTS.tsv").read_text(encoding="utf-8").split("\n"):
+            cols = line.split("\t")
+            if re.fullmatch(r"D[0-9]+", cols[0]) and not cols[1].startswith("эталон"):
+                skill[cols[0]] = cols[1]
+        vectors = self.vector_rows()
+        head, seen = None, []
+        for no, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
+            if not line.startswith("|"):
+                head = None if not seen else head
+                continue
+            cells = [c.strip() for c in re.split(r"(?<!\\)\|", line.strip())[1:-1]]
+            if head is None:
+                head = cells if "id" in cells and "Вектор" in cells else None
+                continue
+            if set(line.replace("|", "").strip()) <= set("-: "):
+                continue
+            r = dict(zip(head, cells))
+            did, cell = r.get("id", ""), r.get("Вектор", "")
+            seen.append(did)
+            if did not in skill:
+                self.error(path, f"line {no}: {did} is not a library defect of v7/DEFECTS.tsv of the skill")
+            refs = self.VECTOR_REF.findall(cell)
+            if not refs and not cell.startswith("страж"):
+                self.error(path, f"line {no}: {did} has no vector row (family-read:<case>, yaml-suite:<id>, "
+                                 f"corpus:<случай>, canonical:<case>) and is not «страж»")
+            for kind, ref in refs:
+                ref = ref.strip("`,")
+                if ref not in vectors[kind]:
+                    self.error(path, f"line {no}: {did}: no vector row {kind}:{ref}")
+            self.stats["library_defects"] += 1
+            self.stats["library_defect_vectors"] += len(refs)
+        for did in sorted(set(skill) - set(seen), key=lambda d: int(d[1:])):
+            self.error(path, f"{did} ({skill[did]}) of v7/DEFECTS.tsv is not in the list")
+
+    def vector_rows(self):
+        """Имена строк векторов: family-read — case, yaml-suite — id, corpus — случай verdicts.tsv P/02.1, canonical — case."""
+        platform = self.root / "Platform"
+        out = {"family-read": set(), "yaml-suite": set(), "corpus": set(), "canonical": set()}
+
+        def first(path):
+            if not path.is_file():
+                return []
+            return [ln.split("\t")[0] for ln in path.read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("#")]
+        for t in sorted((platform / "common/vectors/family-read").glob("[0-9][0-9].tsv")):
+            out["family-read"].update(first(t)[1:])
+        out["yaml-suite"].update(first(platform / "common/vectors/yaml-suite/expect.tsv")[1:])
+        out["corpus"].update(first(platform / "02-installer/acceptance/1/verdicts.tsv"))
+        out["canonical"].update(first(platform / "02-installer/vectors/canonical/cases.tsv"))
+        return out
+
     # Common contracts (V7-OPENAPI-PATTERN-LOOKAHEAD-01): every Platform/common/contracts/*.yaml is read and checked once
     # per run, also when no lesson refers to it.
     def common_contracts(self):
@@ -2421,6 +2486,7 @@ def main():
     check.family_read()
     check.common_contracts()
     check.stub_text()
+    check.library_defects()
     for error in check.errors:
         print("ERROR", error)
     for line in check.excepted:
