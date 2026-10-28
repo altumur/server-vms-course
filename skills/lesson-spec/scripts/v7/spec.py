@@ -508,7 +508,11 @@ def family_read(root, catalog, judge=True):
             if mode not in ("writer", "reader"):
                 errors.append((where, "line %d: mode is writer or reader" % no))
                 continue
-            want = who_of(row, mode) if mode == "writer" else family_readers(root, row, fams)
+            try:
+                want = who_of(row, mode) if mode == "writer" else family_readers(root, row, fams)
+            except SpecError as exc:                 # называет families; строка пакета без читателей не судится
+                errors.append((where, "line %d: the family does not load: %s" % (no, exc)))
+                continue
             try:
                 got_who = _json.loads(who)
             except ValueError:
@@ -534,7 +538,10 @@ def family_read(root, catalog, judge=True):
                 continue
             stats["family_read_rows"] += 1
             if judge and templates is not None and (key, kind) in templates:
-                why = judge_row(root, row, kind, mode, text, ps, outs, fams, templates[(key, kind)], concrete)
+                try:
+                    why = judge_row(root, row, kind, mode, text, ps, outs, fams, templates[(key, kind)], concrete)
+                except SpecError as exc:             # схема или исходы семьи негодны: называет families, не падать
+                    why = "the family does not load: %s" % exc
                 if why:
                     errors.append((where, "line %d (%s): %s" % (no, case, why)))
         for k, row in sorted(by_key.items()):

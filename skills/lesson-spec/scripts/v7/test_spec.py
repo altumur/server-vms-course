@@ -632,6 +632,34 @@ class TestTree(unittest.TestCase):
         got, _ = errors()
         self.assertTrue(any("no file: LAYERS.md names" in e for e in got), got)
 
+    def test_layer_words(self):
+        """V7-LAYERS-ROOT-HASH-01: layers.tsv — все и только слова со слоем LAYERS § 3, корень — пустой указатель; корень
+        «#» — таблица не та; слово x-* вне § 3 — красное; слой в § 3 не как у навыка — красное."""
+        sys.path.insert(0, str(HERE.parent))
+        import check_spec
+        root = self.copy()
+        lt = root / "Platform/05-resource/data/presence-lock.layers.tsv"
+        rows = lt.read_text(encoding="utf-8").split("\n")
+        self.assertTrue(any(r.startswith("\t3\tx-file\t") for r in rows))
+        lt.write_text("\n".join("#" + r if r.startswith("\t") else r for r in rows), encoding="utf-8")
+        row = next(r for r in spec.read_catalog(root) if r["schema"].endswith("presence-lock.schema.json"))
+        with self.assertRaisesRegex(spec.SpecError, "is not the table of the x-\\* words"):
+            spec.load_family(root, row)
+        sch = root / "Platform/05-resource/data/presence-lock.schema.json"
+        doc = json.loads(sch.read_text(encoding="utf-8"))
+        doc["x-probe"] = 1
+        sch.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+        layers = root / "Platform/common/LAYERS.md"
+        layers.write_text(layers.read_text(encoding="utf-8").replace("| `x-opaque` | 2, 6 |", "| `x-opaque` | 2 |"),
+                          encoding="utf-8")
+        check = check_spec.Check(root, None, False)
+        with contextlib.redirect_stdout(io.StringIO()):
+            check.layer_words()
+        errors = [str(e) for e in check.errors]
+        self.assertTrue(any("x-probe is not a word of LAYERS.md § 3" in e for e in errors), errors)
+        self.assertTrue(any("x-opaque — layer 2, the skill's layers.tsv says 2, 6" in e for e in errors), errors)
+        self.assertEqual(len(errors), 2, errors)
+
     def test_stub_text(self):
         """Заготовка «вопрос «Архитектору»» / «исход не назван нормой» в исходах и нормах — красное; «прежде — вопрос
         «Архитектору»» — история, не заготовка."""
