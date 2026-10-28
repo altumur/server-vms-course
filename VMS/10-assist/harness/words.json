@@ -6,6 +6,7 @@
   "false": "turn off, switch off, disable, disabled, deactivate, false, выключи, выключить, выключено, выключены, выключен, отключи, отключить, запрети, turn it off, switch it off, выключена, выключите, отключите, отключена",
   "clear": "clear, unset, reset, remove the value, убери значение, очисти, сбрось, сбросить"
  },
+ "endings": "s, es, и, ы",
  "stop": "the, and, for, with, from, that, this, these, those, its, their, all, every, each, any, some, please, then, also, only, все, всех, всем, для, при, что, как, или, это, эти, этот, эта, его, её, ее, их, где, там, тут, под, над, без, кроме, только, также, пожалуйста, чтобы, если",
  "rights": "\\bправ(?:а|ами|о|ом)?\\b|нет\\s+прав|недостаточно\\s+прав|\\bдоступ|\\b(?:no|without)\\s+(?:the\\s+)?(?:right|permission|access)|\\bnot\\s+permitted\\b|\\b(?:do|does|did)\\s*n[o']?t\\s+have\\s+(?:the\\s+)?(?:\\w+\\s+)?(?:rights?|permissions?|access)\\b|\\b(?:lacks?|insufficient|missing)\\s+(?:\\w+\\s+)?(?:rights?|permissions?|access)\\b|\\bno\\s+(?:\\w+\\s+)?(?:rights?|permissions?)\\b|\\b(?:permission|access)\\s+denied\\b|\\bnot\\s+(?:allowed|authori[sz]ed|permitted)\\s+to\\s+(?:edit|change|modify|write)\\b|нет\\s+разрешени|\\bбез\\s+прав\\b|не\\s+имеет\\s+прав",
  "not_found": "\\bnot\\s+found\\b|\\bno\\s+such\\b|\\bdo(?:es)?\\s*n[o']t\\s+exist|\\bno\\b[^.;]*\\bfound\\b|\\bне\\s+найден|\\bне\\s+нашел|\\bне\\s+существует|\\bнет\\s+таких|\\bтаких\\b[^.;]*\\bнет\\b",
