@@ -1,4 +1,4 @@
 # Исходы нечитаемой строки domain/stranded (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
 path	reader	outcome	priority	unit	norm
-	domain	строка целиком нечитаема: процесс domain — `POST /domain/stranded/apply` (элемент ищется в items) — 503 unavailable, ничего не применено; поле вида term.stranded (Н1.3) — без поля; консоль домена — запись без поля; агент — не применяет; журнал (аудит раскладки, Г-40; правило DF-OUTCOMES-109, решение «Архитектора» 2026-10-25)	0	строка	P/08.8 Н1.6 stranded, apply; Н1.3 stranded
+	domain	строка целиком нечитаема: `POST /domain/stranded/apply` (элемент ищется в items) — 503 unavailable, ничего не применено; поле вида term.stranded (Н1.3) — без поля; журнал (аудит раскладки, Г-40; правило DF-OUTCOMES-109, решение «Архитектора» 2026-10-25)	0	строка	P/08.8 Н1.6 stranded, apply; Н1.3 stranded
