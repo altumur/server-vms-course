@@ -1,0 +1,23 @@
+place	layer	word	value
+/$defs/display/properties/tree/properties/columns/items/properties/width	2	x-integer-place	true
+/$defs/domain/properties/books	А	x-class	"value"
+/$defs/domain/properties/names	А	x-class	"reference"
+/$defs/domain/properties/shared	А	x-class	"value"
+/$defs/domain/properties/tokens	А	x-class	"value"
+/$defs/placement/properties/capacity/properties/default	2	x-integer-place	true
+/$defs/placement/properties/retire_when/properties/delete_after	2	x-integer-place	true
+/$defs/placement/properties/unplaced/properties/delete_after	2	x-integer-place	true
+/$defs/placement/properties/weight/properties/default	2	x-integer-place	true
+/$defs/requests/properties/per_person	2	x-integer-place	true
+/$defs/table/properties/fields/patternProperties/^(?:[\s\S]{0,6}|[\s\S]*(?:[^_][\s\S]{6}|_[^s][\s\S]{5}|_s[^e][\s\S]{4}|_se[^c][\s\S]{3}|_sec[^r][\s\S]{2}|_secr[^e][\s\S]|_secre[^t]))$	п. 12	x-complement-of	"^(?:[\\s\\S]*_secret)$"
+/$defs/table/properties/fields	6	x-ordered	true
+/$defs/tableField/allOf/3/then/properties/default	2	x-integer-place	true
+/$defs/unitField/allOf/7/then/properties/default	2	x-integer-place	true
+/$defs/unitField/allOf/16/then/properties/inherit	2	x-integer-place	true
+/$defs/unitFields/patternProperties/^(?:[\s\S]{0,6}|[\s\S]*(?:[^_][\s\S]{6}|_[^s][\s\S]{5}|_s[^e][\s\S]{4}|_se[^c][\s\S]{3}|_sec[^r][\s\S]{2}|_secr[^e][\s\S]|_secre[^t]))$	п. 12	x-complement-of	"^(?:[\\s\\S]*_secret)$"
+/$defs/unitFields/patternProperties/^(?:|[^A-Za-z_][\s\S]*|[A-Za-z_][A-Za-z0-9_]{0,63}[^A-Za-z0-9_][\s\S]*|[A-Za-z_][A-Za-z0-9_]{63}[\s\S]+)$	п. 12	x-complement-of	"^(?:[A-Za-z_][A-Za-z0-9_]{0,63})$"
+/$defs/unitFields	6	x-ordered	true
+/properties/lease/properties/unconfirmed_max/allOf/1/then	2	x-integer-place	true
+/properties/name	А	x-class	"name"
+/properties/parts/additionalProperties/properties/stop_timeout	2	x-integer-place	true
+/properties/worker/properties/stop_timeout	2	x-integer-place	true
