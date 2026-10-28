@@ -17,8 +17,7 @@ sys.path.insert(0, str(HERE.parent))
 
 import jsonschema  # noqa: E402
 
-from form_source import families as fam  # noqa: E402
-from v7 import build, gorun, regex, schema, stack  # noqa: E402
+from v7 import gorun, regex, schema, stack  # noqa: E402
 
 ROOT = HERE.parents[3]
 HAVE_GO = os.path.exists(gorun.BIN)
@@ -59,116 +58,15 @@ class TestRegex(unittest.TestCase):
                 self.assertNotEqual(inside, outside, (p, s))
 
 
-@NEED_DIALECT
 class TestTraps(unittest.TestCase):
-    """Ловушки поручения (шаг 5)."""
+    """Ловушки поручения (шаг 5). Ловушки стека В7 на стандартных файлах — v7/test_spec.py TestStack (ревью Claude С-2);
+    здесь — только слой 1 эталона диалекта."""
 
-    @classmethod
-    def setUpClass(cls):
-        cls.fams = {(r["key"], r["kind"]): (r, f, s) for r, f, s in build.all_families(ROOT)}
-        cls.man = json.loads((HERE / "out/02.1-installer.schema.json").read_text(encoding="utf-8"))
-
-    def family(self, key, kind):
-        r, f, s = self.fams[(key, kind)]
-        return f, s
-
-    def test_empty_key_beside_names_pattern(self):
-        """Ключ "" в properties рядом с names.key pattern '.+': propertyNames с исключением "" (ревью Gemini 4.2)."""
-        hits = [(k, s) for k, (r, f, s) in self.fams.items()
-                if '"": ' in json.dumps(s.get("$defs", {}).get("common.book_row", {}))]
-        self.assertTrue(hits, "семья с common.book_row")
-        book = self.fams[hits[0][0]][2]["$defs"]["common.book_row"]
-        self.assertEqual(book["propertyNames"]["anyOf"][0], {"enum": [""]})
-        v = stack.validator_for(dict(book, **{"$defs": self.fams[hits[0][0]][2]["$defs"]}))
-        rec = stack.py_records(v, {"": "x"})
-        self.assertFalse([r for r in rec if r[1] == "propertyNames"], rec)
-        bare = dict(book, propertyNames=book["propertyNames"]["anyOf"][1])
-        rec = stack.py_records(stack.validator_for(dict(bare, **{"$defs": self.fams[hits[0][0]][2]["$defs"]})),
-                               {"": "x"})
-        self.assertTrue([r for r in rec if r[1] == "propertyNames"], "без исключения ключ \"\" отказан")
-
-    def test_trailing_newline_full_match(self):
-        """$ в pattern у Python совпадает перед хвостовым \\n — у стека В7 полный матч (слой 5)."""
-        s = {"type": "string", "pattern": regex.anchored("[a-z][a-z0-9_-]{0,31}")}
-        self.assertTrue(jsonschema.Draft202012Validator(s).is_valid("w-1\n"))      # дефект без слоя
-        self.assertFalse(stack.validator_for(s).is_valid("w-1\n"))
-        self.assertTrue(stack.validator_for(s).is_valid("w-1"))
-
-    @NEED_CEL
-    def test_trailing_newline_manifest(self):
-        m = stack.Manifest(self.man, json.loads((HERE / "out/02.1-installer.relations.json").read_text("utf-8")))
-        base = (ROOT / "Platform/02-installer/acceptance/1/cases/r38_unit_minimal.subsystem.yaml").read_bytes()
-        self.assertEqual(m.judge(base)["verdict"], "ok")
-        bad = base.replace(b"worker: {exec: /usr/lib/probe/worker}", b'worker: {exec: "/usr/lib/probe/worker\\n"}')
-        self.assertNotEqual(bad, base)
-        self.assertEqual(m.judge(bad)["verdict"], "refused")
-
-    def test_outcomes_unit(self):
-        """unit исходов (DIALECT § 9): отказ ниже строки с единицей `поле`/`элемент` делает нечитаемым только её место."""
-        O = fam.Outcome
-        rows = [O(1, "", "строка нечитаема", 2, "строка", "n"), O(2, "/a", "поле a пропущено", 1, "поле", "n"),
-                O(3, "/b", "b — строка целиком", 3, "строка", "n")]
-        self.assertEqual([o.no for o in fam.outcomes_for(rows, ["/a/x"])], [2])
-        self.assertEqual([o.no for o in fam.outcomes_for(rows, ["/b/x"])], [1])
-        self.assertEqual([o.no for o in fam.outcomes_for(rows, ["/a/x", "/c"])], [2])
-        self.assertEqual(fam.outcomes_for(rows, []), [])
-
-    def test_negative_integer_bound(self):
-        """Граница целого манифеста (п. 8): −9007199254740992 — отказ, −9007199254740991 — принято (схема), у каждого
-        целого места без своей границы ниже."""
-        found = []
-
-        def rec(x):
-            if isinstance(x, dict):
-                if x.get("x-integer-place"):
-                    found.append(x)
-                for v in x.values():
-                    rec(v)
-            elif isinstance(x, list):
-                for v in x:
-                    rec(v)
-        rec(self.man)
-        self.assertGreater(len(found), 10)
-        for x in found:
-            self.assertGreaterEqual(x["minimum"], -9007199254740991)
-            self.assertLessEqual(x["maximum"], 9007199254740991)
-        free = [x for x in found if x["minimum"] == -9007199254740991]
-        self.assertTrue(free)
-        v = stack.validator_for(dict(free[0], **{"$defs": self.man["$defs"]}))
-        self.assertFalse(v.is_valid(-9007199254740992))
-        self.assertTrue(v.is_valid(-9007199254740991))
-        self.assertTrue(v.is_valid(4.0))                      # п. 8: целое по значению
-
+    @NEED_DIALECT
     def test_negative_integer_bound_text(self):
         from form_source.source import textlayer
         _, nums, _ = textlayer.load_text(b"a: -9007199254740992\nb: -9007199254740991\n")
         self.assertEqual([p for p, _ in nums], [["a"]])
-
-    def test_1e400(self):
-        """1e400: число JSON вне binary64 — не по грамматике json (codec.tsv): отказ на своём месте. У эталона читатель
-        принимает его в месте number, писатель jcs падает (дефекты эталона, строки Б)."""
-        n = 0
-        for (key, kind), (r, f, s) in self.fams.items():
-            if kind != "object":
-                continue
-            for mode in ("reader", "writer"):
-                got = stack.Family(s, kind).judge('{"zz_1e400": 1e400}', mode)
-                self.assertEqual(got["verdict"], "refused")
-                self.assertIn("/zz_1e400", got["paths"], (key, got))
-                n += 1
-        self.assertGreater(n, 30)
-
-    def test_null_root(self):
-        """JSON null вместо объекта семьи — отказ на корне (у эталона на aee6716ea — принят; дефект эталона, Б)."""
-        n = 0
-        for (key, kind), (r, f, s) in self.fams.items():
-            if kind != "object":
-                continue
-            for mode in ("reader", "writer"):
-                got = stack.Family(s, kind).judge("null", mode)
-                self.assertEqual((got["verdict"], got["paths"]), ("refused", [""]), (key, mode))
-                n += 1
-        self.assertGreater(n, 30)
 
 
 class TestDefects(unittest.TestCase):
