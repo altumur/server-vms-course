@@ -528,10 +528,11 @@ def build_families_section(norms, root, families):
         out += sec.root_body(head=None)
         out += sec.writer_body()
         out += sec.defs_body(head=None)
-        out += ["Исходы %s:" % UNREADABLE[row["kind"]], "",
-                "| Путь отказа | Исход | Приоритет | Единица | Норма |", "|---|---|---|---|---|"]
+        out += ["Исходы %s (читатель — роль; `*` — все читатели семьи):" % UNREADABLE[row["kind"]], "",
+                "| Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |", "|---|---|---|---|---|---|"]
         for o in outcomes:
-            out.append("| %s | %s | %d | %s | %s |" % ("`%s`" % cell(o.path) if o.path else "%s целиком" % KIND_WORD[row["kind"]],
-                                                   cell(o.outcome), o.priority, o.unit, cell(o.norm)))
+            out.append("| %s | %s | %s | %d | %s | %s |" % (
+                "`%s`" % cell(o.path) if o.path else "%s целиком" % KIND_WORD[row["kind"]],
+                "`%s`" % o.reader if o.reader != "*" else "*", cell(o.outcome), o.priority, o.unit, cell(o.norm)))
         out.append("")
     return "\n".join(out)

@@ -5,7 +5,8 @@
 
 По порядку (дерево — с диалектом; повтор на уже переведённом дереве — отказ):
 1. стандартные файлы на места (`v7.build --place`): схемы, связи, таблицы слоёв, схема вида, `common.schema.json`;
-2. каталог: колонка `schema` — `….schema.json` того же базового имени;
+2. каталог: колонка `schema` — `….schema.json` того же базового имени; одна схема на семью: семьи `events` (7 семей
+   на `events.form.yaml`) — по своему файлу EVENTS (схема, слои, исходы — копии; решение «Архитектора» 2026-10-28);
 3. файлы диалекта снимаются: `*.form.yaml` (формы семей, `common.form.yaml`, форма манифеста), `references.tsv`;
 4. корпус P/02.1 по `v7/out/setb/deltas.tsv` и `cases.tsv`: файлы без `worker:` дополняются (п. 7), `verdicts.tsv` и
    `classes.tsv` — по дельтам, новые случаи Б без пометки `dup` (кроме `p3_*`: это входы корпуса после п. 7);
@@ -14,6 +15,10 @@
    `v7/out/seta/family-read.jsonl`, у строк `1e400` — исход по Б; случаи семей Б `a*`);
 7. разделы норм между маркерами (`v7.sections`): «Форма» P/02.1, «Семьи данных» глав-владельцев, «Форма канонического
    вида» P/02.2.
+8. `outcomes.tsv` — столбец `reader` (решение владельца 2026-10-28): строка пустого пути — на каждого читателя семьи
+   (`readers` каталога, у `*` — роли уроков, чей абзац «Данные» читает ключ, ∪ участники `cas` и `guard`), строки
+   полей — `*`. Это заготовка: проза исхода скопирована каждому читателю — делить её по читателям и называть пробелы
+   «Спецификации» руками (PLAN-TRANSITION п. 2.7).
 Тексты норм (Н1.1, Н3–Н5, LAYERS.md вместо DIALECT.md, ссылки на файлы диалекта) — правка «Спецификации», не здесь.
 """
 import argparse
@@ -35,6 +40,17 @@ SETA = HERE / "out" / "seta"
 WORKER = b"worker: {exec: /usr/lib/probe/worker}\n"
 P7_SKIP = {"empty_document", "a91_worker_missing"}
 HEADER = ["case", "family", "kind", "mode", "who", "text", "verdict", "paths", "outcome", "note"]
+# Семьи событий (P/05) — один файл схемы и исходов на семью: ключ каталога → базовое имя (предложение; решает
+# «Спецификация»).
+EVENTS = {
+    "<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl": "events-unit",
+    "<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl": "events-unit-alarms",
+    "<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl": "events-audit",
+    "<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl": "events-audit-alarms",
+    "<корень событий>/console/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl": "events-console",
+    "<корень событий>/console.alarms/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl": "events-console-alarms",
+    "<корень событий>/.mirror/<server>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl": "events-mirror",
+}
 
 
 def tsv(path):
@@ -77,9 +93,21 @@ def catalog(root):
             continue
         k = header.index("schema")
         if cols[k].endswith(".form.yaml"):
-            cols[k] = cols[k][:-len(".form.yaml")] + ".schema.json"
+            base = cols[k][:-len(".form.yaml")]
+            name = EVENTS.get(cols[0])
+            if name is not None:
+                d = root / "Platform" / base.rsplit("/", 1)[0]
+                old = base.rsplit("/", 1)[1]
+                for suffix in (".schema.json", ".layers.tsv", ".outcomes.tsv"):
+                    (d / (name + suffix)).write_bytes((d / (old + suffix)).read_bytes())
+                base = base.rsplit("/", 1)[0] + "/" + name
+            cols[k] = base + ".schema.json"
             lines[i] = "\t".join(cols)
     p.write_text("\n".join(lines), encoding="utf-8")
+    for d in sorted((root / "Platform").glob("*/data")):
+        for suffix in (".schema.json", ".layers.tsv", ".outcomes.tsv"):
+            if (d / ("events" + suffix)).exists() and (d / "events-unit.schema.json").exists():
+                (d / ("events" + suffix)).unlink()
 
 
 def drop_dialect(root):
@@ -158,6 +186,48 @@ def edit(path, values, note):
     Path(path).write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+# ---------------------------------------------------------------- 8: читатели в outcomes.tsv
+
+def star_readers(root):
+    """Роли уроков, чей абзац «Данные» читает ключ (readers `*`), и разобранные строки каталога — проходом check_spec."""
+    import contextlib
+    import io
+    sys.path.insert(0, str(HERE.parent))
+    import check_spec
+    check = check_spec.Check(root, None, False)
+    with contextlib.redirect_stdout(io.StringIO()):
+        for lesson in sorted((root / "Platform").glob("[0-9][0-9]-*/[0-9][0-9]-*.md")):
+            if any((lesson.parent / "spec").glob("*.norms.md")):
+                check.lesson(lesson.resolve())
+    return check.star_readers, dict(check.catalog)        # (key, kind) → строка
+
+
+def outcome_readers(root):
+    """Заготовка столбца `reader`: строки пустого пути — по читателю (проза копируется), прочие — `*`."""
+    star, rows = star_readers(root)
+    n = 0
+    for (key, _kind), row in rows.items():
+        if not row["schema"].endswith(".schema.json"):
+            continue
+        roles = spec.reading_roles(row, star.get(key, set()))
+        p = root / "Platform" / row["schema"].replace(".schema.json", ".outcomes.tsv")
+        out = []
+        for ln in p.read_text(encoding="utf-8").split("\n"):
+            if not ln or ln.startswith("#"):
+                out.append(ln.replace("Строка: path<TAB>outcome", "Строка: path<TAB>reader<TAB>outcome"))
+                continue
+            path, rest = ln.split("\t", 1)
+            if ln.startswith("path\t"):
+                out.append("path\treader\t" + rest)
+            elif path == "":
+                out += ["\t".join([path, r, rest]) for r in sorted(roles)]
+                n += len(roles)
+            else:
+                out.append("\t".join([path, "*", rest]))
+        p.write_text("\n".join(out), encoding="utf-8")
+    return n
+
+
 # ---------------------------------------------------------------- 6: пакет family-read
 
 README = """# Векторы family-read (ADR-0087 доп. (9) п. 2; ADR-0092 Confirmation, набор А и Б)
@@ -169,11 +239,13 @@ README = """# Векторы family-read (ADR-0087 доп. (9) п. 2; ADR-0092 C
 
 Таблица `NN.tsv` — семьи урока-владельца NN (колонка `owner` каталога). Строка:
 `case<TAB>family<TAB>kind<TAB>mode<TAB>who<TAB>text<TAB>verdict<TAB>paths<TAB>outcome<TAB>note`:
-- `who` — кто исполняет по каталогу: у `writer` — роли операций (`ops`), у `reader` — читатели (`readers`, `*` — все);
+- `who` — кто исполняет: у `writer` — роли операций каталога (`ops`), у `reader` — читатели семьи (строки пустого пути
+  `<семья>.outcomes.tsv`: `readers` каталога ∪ участники `cas` и `guard`);
 - `text` — у `row` — JSON-объект полей `items` (значения — строки, как записаны в хранилище); у `object` и `file` —
   текст значения как есть;
-- `verdict` — `ok` или `refused`; `paths` — JSON-массив путей отказа (порядок не важен); `outcome` — JSON-массив путей
-  строк `<семья>.outcomes.tsv`, чей исход действует (пустой путь — строка целиком; у писателя — `[]`);
+- `verdict` — `ok` или `refused`; `paths` — JSON-массив путей отказа (порядок не важен); `outcome` — у писателя `[]`,
+  у читателя — JSON-объект «роль → массив путей строк `<семья>.outcomes.tsv`, чей исход у этой роли действует»
+  (пустой путь — строка целиком);
 - `note` — мутация набора А (`base` — экземпляр без мутации) или id случая набора Б.
 
 Ожидания — эталон диалекта (метка `dialect-reference-dc94d0fd1`) с дельтами набора Б ADR-0092 (`1e400` — число вне
@@ -184,8 +256,18 @@ binary64: отказ места, писатель не падает). Ранне
 """
 
 
+def whom(root, row, mode, outcomes, cache):
+    """who и исход строки пакета: писатель — роли операций, исход []; читатель — читатели исходов семьи, исход — тот же
+    набор путей строк исходов у каждого (заготовка: строки пустого пути — копии по читателям)."""
+    if mode == "writer":
+        return spec.who_of(row, mode), []
+    roles = spec.family_readers(root, row, cache)
+    return ", ".join(roles), {r: outcomes for r in roles}
+
+
 def family_read(root, lessons):
-    cat = {r["key"]: r for r in spec.read_catalog(root)}
+    cat = {(r["key"], r["kind"]): r for r in spec.read_catalog(root)}
+    fams = {}
     fixes = {}
     for r in tsv(SETB / "deltas.tsv"):
         if r[0].startswith("family-read/"):
@@ -201,8 +283,8 @@ def family_read(root, lessons):
         if fix is not None:
             m = re.fullmatch(r"(\w+) (\[.*?\]) (\[.*\])", fix)      # setb.py пишет списки по repr Python
             verdict, paths, outcomes = m.group(1), ast.literal_eval(m.group(2)), ast.literal_eval(m.group(3))
-        row = cat[x["family"]]
-        who = spec.who_of(row, x["mode"])
+        row = cat[(x["family"], x["kind"])]
+        who, outcomes = whom(root, row, x["mode"], outcomes, fams)
         tables.setdefault(x["lesson"], []).append(
             ["%s-%04d" % (x["lesson"], len(tables.get(x["lesson"], [])) + 1), x["family"], x["kind"], x["mode"], who,
              x["text"], verdict, json.dumps(paths, ensure_ascii=False), json.dumps(outcomes, ensure_ascii=False), x["why"]])
@@ -211,14 +293,16 @@ def family_read(root, lessons):
             continue
         _, fam, mode = r[1].split("|")
         src = json.loads((SETB / "cases" / (r[0] + ".json")).read_text(encoding="utf-8"))
+        kind = src["kind"]
         lesson = src["schema"][:2]
         if lesson not in lessons:
             continue
         m = re.fullmatch(r"(\w+) (\[.*?\]) (\[.*\])", r[2])
-        row = cat[fam]
-        who = spec.who_of(row, mode)
+        row = cat[(fam, kind)]
+        who, outs = whom(root, row, mode, json.loads(m.group(3)), fams)
         tables.setdefault(lesson, []).append(
-            ["%s-%s" % (lesson, r[0]), fam, row["kind"], mode, who, src["text"], m.group(1), m.group(2), m.group(3), r[0]])
+            ["%s-%s" % (lesson, r[0]), fam, row["kind"], mode, who, src["text"], m.group(1), m.group(2),
+             json.dumps(outs, ensure_ascii=False), r[0]])
     d = root / FAMILY_READ
     d.mkdir(parents=True, exist_ok=True)
     (d / "README.md").write_text(README, encoding="utf-8")
@@ -243,6 +327,7 @@ def main(argv=None):
     print("corpus: worker appended %d, cases added %d" % corpus(root))
     from v7 import vectors
     print("canonical vectors:", vectors.generate(root))
+    print("outcomes: rows of the whole row by reader:", outcome_readers(root))
     print("family-read:", family_read(root, set(a.lessons.split(","))))
     from v7 import sections
     for norms in sorted((root / "Platform").glob("*/spec/*.norms.md")):

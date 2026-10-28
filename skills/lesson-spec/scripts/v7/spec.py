@@ -10,7 +10,11 @@ from pathlib import Path
 
 CATALOG = Path("Platform/common/data/catalog.tsv")
 SCHEMA_PATH = re.compile(r"([0-9]{2})-[a-z][a-z-]*/data/([^/]+)\.schema\.json")
-OUTCOME_HEADER = ["path", "outcome", "priority", "unit", "norm"]
+OUTCOME_HEADER = ["path", "reader", "outcome", "priority", "unit", "norm"]
+# Читатель строки исходов (решение владельца 2026-10-28): роль по грамматике `readers` каталога; у пути "" — строка на
+# каждого читателя семьи, `*` нельзя; у полей `*` — все читатели. Читатели семьи — `readers` ∪ писатели с `cas`/`guard`.
+READER = re.compile(r"(?:console|resource|domainagent|domainconsole|domain|admin|configstore-door|"
+                    r"<s>(?:controller|worker|domain)|proc:[0-9]{2}-[a-z][a-z-]*)")
 UNITS = ("строка", "поле", "элемент")
 KINDS = ("row", "object", "file")
 
@@ -159,8 +163,9 @@ class Outcome:
     """Строка исходов: wild — {номер сегмента `*`: ключи `properties` того места}: `*` — любое имя автора, кроме них,
     или любой элемент списка."""
 
-    def __init__(self, path, outcome, priority, unit, norm, wild=None):
-        self.path, self.outcome, self.priority, self.unit, self.norm = path, outcome, priority, unit, norm
+    def __init__(self, path, reader, outcome, priority, unit, norm, wild=None):
+        self.path, self.reader, self.outcome, self.priority, self.unit, self.norm = (path, reader, outcome, priority,
+                                                                                     unit, norm)
         self.segs, self.wild = unpointer(path) if path else [], wild or {}
 
     def covers(self, q):
@@ -173,10 +178,13 @@ class Outcome:
         return all(qs[i] not in self.wild[i] if i in self.wild else qs[i] == s for i, s in enumerate(self.segs))
 
 
-def outcomes_for(outcomes, paths):
-    """Исходы набора путей отказа: у каждого пути — строки, чей путь его префикс; если глубже всех из них строка с
-    единицей `поле` или `элемент`, действует только она (и равные ей по глубине), иначе — все; из строк всех путей
-    действуют строки с наименьшим приоритетом (в порядке файла). Нет отказа — нет исхода."""
+def outcomes_for(outcomes, paths, reader=None):
+    """Исходы набора путей отказа у читателя reader (строки с его ролью и `*`; None — все строки): у каждого пути —
+    строки, чей путь его префикс; если глубже всех из них строка с единицей `поле` или `элемент`, действует только она
+    (и равные ей по глубине), иначе — все; из строк всех путей действуют строки с наименьшим приоритетом (в порядке
+    файла). Нет отказа — нет исхода."""
+    if reader is not None:
+        outcomes = [o for o in outcomes if o.reader in (reader, "*")]
     keep = set()
     for q in paths:
         cov = [o for o in outcomes if o.covers(q)]
@@ -191,7 +199,8 @@ def outcomes_for(outcomes, paths):
 
 
 def load_outcomes(path, doc):
-    """`<семья>.outcomes.tsv` → [Outcome]: путь — место схемы, пустой путь есть."""
+    """`<семья>.outcomes.tsv` → [Outcome]: путь — место схемы, (путь, читатель) не повторяется, у пустого пути читатель
+    — роль (не `*`), пустой путь есть."""
     name = Path(path).name
     if not Path(path).is_file():
         raise SpecError("%s: no outcomes file next to the schema (ADR-0088 доп. (2) С11)" % name)
@@ -200,10 +209,13 @@ def load_outcomes(path, doc):
     if first is None or first.split("\t") != OUTCOME_HEADER:
         raise SpecError("%s: header must be %s" % (name, "<TAB>".join(OUTCOME_HEADER)))
     places, out, seen = Places(doc), [], set()
-    for no, (p, outcome, priority, unit, norm) in tsv_rows(path, 5, OUTCOME_HEADER):
-        if p in seen:
-            raise SpecError("%s:%d: path %r repeated" % (name, no, p))
-        seen.add(p)
+    for no, (p, reader, outcome, priority, unit, norm) in tsv_rows(path, 6, OUTCOME_HEADER):
+        if (p, reader) in seen:
+            raise SpecError("%s:%d: path %r with reader %r repeated" % (name, no, p, reader))
+        seen.add((p, reader))
+        if not (READER.fullmatch(reader) or (reader == "*" and p)):
+            raise SpecError("%s:%d: reader is a role of the catalog grammar%s" % (
+                name, no, "; the whole row (empty path) is named for each reader, not *" if not p else " or *"))
         wild = {}
         if p and (not p.startswith("/") or places.place(p, wild) is None):
             raise SpecError("%s:%d: path %r is not a place of the schema%s" % (
@@ -214,8 +226,8 @@ def load_outcomes(path, doc):
             raise SpecError("%s:%d: unit is one of %s" % (name, no, ", ".join(UNITS)))
         if not outcome.strip() or not norm.strip():
             raise SpecError("%s:%d: outcome and norm must be said" % (name, no))
-        out.append(Outcome(p, outcome, int(priority), unit, norm, wild))
-    if "" not in seen:
+        out.append(Outcome(p, reader, outcome, int(priority), unit, norm, wild))
+    if not any(p == "" for p, _ in seen):
         raise SpecError("%s: no outcome for the whole row or object (empty path; ADR-0088 доп. (1) Р7)" % name)
     return out
 
@@ -335,7 +347,7 @@ def family_read(root, catalog, judge=True):
     stats["family_read"] = "present"
     if not (d / "README.md").is_file():
         errors.append((FAMILY_READ, "family-read: the package needs README.md (the format)"))
-    by_key = {r["key"]: r for r in catalog if is_v7_family(r)}
+    by_key = {(r["key"], r["kind"]): r for r in catalog if is_v7_family(r)}       # ключ каталога — пара (key, kind)
     fams = {}
     for p in sorted(d.iterdir()):
         if p.name in ("README.md", ".DS_Store"):
@@ -361,35 +373,71 @@ def family_read(root, catalog, judge=True):
             if case in seen or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", case):
                 errors.append((where, "line %d: case %r is not unique or not [A-Za-z0-9][A-Za-z0-9_.-]*" % (no, case)))
             seen.add(case)
-            row = by_key.get(key)
-            if row is None or row["kind"] != kind:
+            row = by_key.get((key, kind))
+            if row is None:
                 errors.append((where, "line %d: %s (%s) is not a family of the catalog with a schema" % (no, key, kind)))
                 continue
             if row["owner"][2:4] != lesson:
                 errors.append((where, "line %d: %s belongs to the table of %s" % (no, key, row["owner"][2:4])))
-            covered.add(key)
-            if mode not in ("writer", "reader") or who != who_of(row, mode):
-                errors.append((where, "line %d: mode is writer or reader, who — by the catalog (%s)"
-                               % (no, who_of(row, mode) if mode in ("writer", "reader") else "-")))
+            covered.add((key, kind))
+            if mode not in ("writer", "reader"):
+                errors.append((where, "line %d: mode is writer or reader" % no))
+                continue
+            want = who_of(row, mode) if mode == "writer" else ", ".join(family_readers(root, row, fams))
+            if who != want:
+                errors.append((where, "line %d: who — by the catalog and the outcomes (%s)" % (no, want)))
                 continue
             try:
                 ps, outs = _json.loads(paths), _json.loads(outcome)
             except ValueError:
                 errors.append((where, "line %d: paths and outcome are JSON arrays" % no))
                 continue
-            if verdict not in ("ok", "refused") or not isinstance(ps, list) or not isinstance(outs, list) \
-                    or (verdict == "ok") != (not ps) or (mode == "writer" and outs):
-                errors.append((where, "line %d: verdict ok has no paths, refused has; a writer has no outcome" % no))
+            if verdict not in ("ok", "refused") or not isinstance(ps, list) \
+                    or (verdict == "ok") != (not ps) or (mode == "writer" and outs != []) \
+                    or (mode == "reader" and not (isinstance(outs, dict)
+                                                  and all(isinstance(v, list) for v in outs.values()))):
+                errors.append((where, "line %d: verdict ok has no paths, refused has; a writer has outcome [], a reader "
+                                      "— {role: [paths of outcome rows]}" % no))
                 continue
             stats["family_read_rows"] += 1
             if judge:
                 why = judge_row(root, row, kind, mode, text, ps, outs, fams)
                 if why:
                     errors.append((where, "line %d (%s): %s" % (no, case, why)))
-        for key, row in sorted(by_key.items()):
-            if row["owner"][2:4] == lesson and key not in covered:
-                errors.append((FAMILY_READ / p.name, "family-read: no row reads the family %s" % key))
+        for k, row in sorted(by_key.items()):
+            if row["owner"][2:4] == lesson and k not in covered:
+                errors.append((FAMILY_READ / p.name, "family-read: no row reads the family %s (%s)" % k))
     return errors, stats
+
+
+def readers_of(outcomes):
+    """Читатели, названные строками пустого пути, в порядке файла."""
+    out = []
+    for o in outcomes:
+        if o.path == "" and o.reader not in out:
+            out.append(o.reader)
+    return out
+
+
+def family_readers(root, row, cache):
+    k = (row["key"], row["kind"])
+    if k not in cache:
+        from v7 import stack
+        _, _, doc, _, outcomes = load_family(root, row)
+        cache[k] = (stack.Family(doc, row["kind"]), outcomes)
+    return readers_of(cache[k][1])
+
+
+def reading_roles(row, star=None):
+    """Читатели семьи по каталогу (решение владельца 2026-10-28): `readers` (у `*` — star: роли глав, чей абзац
+    «Данные» читает ключ) ∪ роли операций `cas` и `guard` (они читают строку перед записью). row — строка каталога
+    check_spec (`reader_roles`, `ops` разобраны). → множество ролей или None (`*` без star)."""
+    roles = set(row["reader_roles"]) if row["reader_roles"] is not None else (set(star) if star is not None else None)
+    if roles is None:
+        return None
+    for op in ("cas", "guard"):
+        roles |= set(row["ops"].get(op, ()))
+    return roles
 
 
 def judge_row(root, row, kind, mode, text, paths, outs, cache):
@@ -397,10 +445,11 @@ def judge_row(root, row, kind, mode, text, paths, outs, cache):
     import json as _json
 
     from v7 import stack
-    if row["key"] not in cache:
+    k = (row["key"], row["kind"])
+    if k not in cache:
         _, _, doc, _, outcomes = load_family(root, row)
-        cache[row["key"]] = (stack.Family(doc, kind), outcomes)
-    fam, outcomes = cache[row["key"]]
+        cache[k] = (stack.Family(doc, kind), outcomes)
+    fam, outcomes = cache[k]
     if kind == "row":
         try:
             value = _json.loads(text)
@@ -411,7 +460,8 @@ def judge_row(root, row, kind, mode, text, paths, outs, cache):
     else:
         value = text
     v = fam.judge(value, mode)
-    got = [o.path for o in outcomes_for(outcomes, v["paths"])] if mode == "reader" else []
+    got = ({r: [o.path for o in outcomes_for(outcomes, v["paths"], r)] for r in readers_of(outcomes)}
+           if mode == "reader" else [])
     if v["verdict"] != ("refused" if paths else "ok") or sorted(v["paths"]) != sorted(paths) or got != outs:
         return "expected %s %s %s, the V7 stack gives %s %s %s" % ("refused" if paths else "ok", paths, outs,
                                                                 v["verdict"], v["paths"], got)

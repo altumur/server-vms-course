@@ -640,6 +640,8 @@ class Check:
         self.loading = []                            # contracts being checked: a cross-file $ref back is a cycle
         self.cross_refs = set()                      # positions of cross-file $ref counted once per run
         self.v7 = (self.root / MANIFEST_SCHEMA_V7).is_file()
+        self.star_readers = {}                       # ключ каталога → роли, чьи нормы его читают (readers `*`)
+        self.lessons_seen = set()
         if exceptions is not None:
             self.load_exceptions(exceptions)
         if (self.root / CATALOG).exists():
@@ -1749,6 +1751,54 @@ class Check:
             self.error(where, message)
         self.stats.update(stats)
 
+    # Completeness of the unreadable outcomes (решение владельца 2026-10-28, PLAN-TRANSITION п. 1.3): each family of
+    # the catalog with a schema names the outcome «the whole row is unreadable» (empty path) for each of its readers —
+    # readers ∪ the participants of cas and guard (they read the row before writing); readers `*` — the roles of the
+    # lessons whose «Данные» read the key (all Platform lessons in the run, else skipped and counted). A role there
+    # without being a reader is red too.
+    def outcome_readers(self):
+        if not self.v7 or self.catalog is None:
+            return
+        try:
+            from v7.spec import SpecError, load_family, reading_roles
+        except ImportError:
+            return                                   # the families check has named the missing stack
+        star = {k: set(v) for k, v in self.star_readers.items()}
+        rows = [row for _, row in self.lessons_table()[1]
+                if row.get("lesson") not in self.lessons_seen
+                and any((self.root / "Platform" / row.get("dir", "-") / "spec").glob("*.norms.md"))]
+        if rows:                                     # уроки вне прогона: их «Данные» — вспомогательным проходом, без ошибок
+            import contextlib
+            import io
+            aux = Check(self.root, None, False)
+            with contextlib.redirect_stdout(io.StringIO()):
+                for row in rows:
+                    lesson = self.root / "Platform" / row["dir"] / (row["dir"] + ".md")
+                    if lesson.is_file():
+                        aux.lesson(lesson)
+            for k, v in aux.star_readers.items():
+                star.setdefault(k, set()).update(v)
+        everyone = True
+        for row in self.catalog.values():
+            if not row["schema"].endswith(".schema.json"):
+                continue
+            want = reading_roles(row, star.get(row["key"], set()) if everyone else None)
+            if want is None:
+                self.stats["outcome_readers_skipped"] += 1
+                continue
+            try:
+                _, _, _, path, outcomes = load_family(self.root, row)
+            except (SpecError, OSError):
+                continue                             # the families check names it
+            named = {o.reader for o in outcomes if o.path == ""}
+            for role in sorted(want - named):
+                self.error(path, f"outcomes: no outcome of the whole row (empty path) for the reader {role} of "
+                                 f"{row['key']} (readers ∪ cas/guard of the catalog; решение владельца 2026-10-28)")
+            for role in sorted(named - want):
+                self.error(path, f"outcomes: {role} is not a reader of {row['key']} by the catalog (readers ∪ "
+                                 f"cas/guard)")
+            self.stats["outcome_readers"] += len(want)
+
     # Package family-read (ADR-0087 доп. (9) п. 2): form, catalog and the outcome of every row on the В7 stack.
     def family_read(self):
         if self.catalog is None:
@@ -2169,6 +2219,12 @@ class Check:
                 self.error(lesson, f"«Данные»: no chapter owns {missing}, the catalog gives it to {key}")
         if not vms:
             self.data_roles(lesson, key, number, saids)
+            named = {r for r in self.lesson_roles(number) if not r.startswith("proc:")}
+            reader = named or self.lesson_roles(number)  # роль процесса; `proc:<каталог>` — только у урока без неё
+            for _, said in saids:                   # читатели `*` по нормам: роли процесса урока, чей «Данные» читает
+                for k in said["читает"]:
+                    self.star_readers.setdefault(k, set()).update(reader)
+            self.lessons_seen.add(number)
         else:
             self.stats["vms_lessons_checked"] += 1
         # The lecture and the instruction count the whole lesson: sums over the chapters.
@@ -2259,6 +2315,7 @@ def main():
         check.lesson((check.root / name).resolve())
     check.vms_module()
     check.vms_frozen()
+    check.outcome_readers()
     for error in check.errors:
         print("ERROR", error)
     for line in check.excepted:
