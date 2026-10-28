@@ -3,7 +3,7 @@
 # Дефекты эталона по метке (library — «эталон диалекта»): правка нормы после метки, у эталона старое поведение; SUT
 # `dialect` засчитывает такую строку как «defect» по сверке sut.REFERENCE_DEFECTS (не дельта набора Б).
 id	library	version	defect	workaround	test
-D1	jsonschema (Python)	4.26.0	`pattern` — `re.search`: `$` совпадает и перед последним `\n` (`"w\n"` проходит `^(?:w)$`)	слой 5: `$` → `\Z` в валидаторе V7 (regex.python_full)	TestDefects.test_d1_dollar_before_newline
+D1	jsonschema (Python)	4.26.0	`pattern` — `re.search` (линия Python PY-JS-01): частичное совпадение; `$` совпадает и перед последним `\n` (`"w\n"` проходит `^(?:w)$`); `\d`, `\w` — классы Unicode (`١` — цифра); `.` не берёт `\n`	слой 5: полное совпадение, `$` → `\Z` в валидаторе V7 (regex.python_full); переносимое подмножество (check_spec, ревью Codex RВ7-01): `^(?:…)$`, без `\d \w \D \W` и `.` (`[\s\S]`)	TestDefects.test_d1_dollar_before_newline
 D2	jsonschema (Python)	4.26.0	`patternProperties` — тот же `re.search` для имён (`"a_secret\n"` под `^(?:[\s\S]*_secret)$`)	слой 5: своё слово `patternProperties` с `\Z`	TestDefects.test_d2_pattern_properties
 D3	jsonschema (Python)	4.26.0	ошибка схемы `false` под `properties` теряет имя ключа в пути (`descend` выходит раньше, чем добавит путь)	перевод: «ключа быть не должно» — `{"not": {}}` вместо `false`	TestDefects.test_d3_false_schema_path
 D4	cel-expr-python	0.1.3	перегрузка своей функции с параметром `dyn` при исполнении не совпадает ни с одним значением («No matching overloads found : depth(map)»)	перегрузка на каждый конкретный тип (map, list, string, int, double, bool, null)	TestDefects.test_d4_dyn_overload

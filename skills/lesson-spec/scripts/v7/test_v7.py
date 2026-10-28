@@ -77,6 +77,11 @@ class TestDefects(unittest.TestCase):
         s = {"pattern": "^(?:w)$"}
         self.assertTrue(jsonschema.Draft202012Validator(s).is_valid("w\n"))
         self.assertFalse(stack.validator_for(s).is_valid("w\n"))
+        # PY-JS-01: \d — класс Unicode, `.` без \n; обход — переносимое подмножество их не пускает (check_spec)
+        self.assertTrue(jsonschema.Draft202012Validator({"pattern": "^(?:\\d)$"}).is_valid("\u0661"))
+        self.assertFalse(jsonschema.Draft202012Validator({"pattern": "^(?:.)$"}).is_valid("\n"))
+        self.assertTrue(regex.check("^(?:\\d)$") and regex.check("^(?:.)$"))
+        self.assertIsNone(regex.check("^(?:[0-9][\\s\\S])$"))
 
     def test_d2_pattern_properties(self):
         s = {"patternProperties": {"^(?:[\\s\\S]*_secret)$": {"type": "string"}}}
