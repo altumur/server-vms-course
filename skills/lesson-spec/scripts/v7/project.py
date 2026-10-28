@@ -47,36 +47,37 @@ def unit_fields(t):
     return fs if isinstance(fs, dict) else {}
 
 
-def sugar(t):
-    """P/02.2-02: `tables` списком имён, `bound_to` одним именем, `in` элемента `secret_in` одним словом."""
-    if isinstance(t, dict) and isinstance(t.get("tables"), list):
+def sugar(t, skip=()):
+    """P/02.2-02: `tables` списком имён, `bound_to` одним именем, `in` элемента `secret_in` одним словом. skip — имена
+    шагов, которых не делать (проба мутаций)."""
+    if "tables" not in skip and isinstance(t, dict) and isinstance(t.get("tables"), list):
         t["tables"] = {x: {} for x in t["tables"]}
     for f in fields(t):
-        if isinstance(f.get("bound_to"), str):
+        if "bound_to" not in skip and isinstance(f.get("bound_to"), str):
             f["bound_to"] = [f["bound_to"]]
     for e in secret_items(t):
-        if isinstance(e.get("in"), str):
+        if "in" not in skip and isinstance(e.get("in"), str):
             e["in"] = [e["in"]]
 
 
-def computed(t):
+def computed(t, skip=()):
     """P/02.2-03, П1–П5."""
-    if "snapshot" not in t:                                       # П1
+    if "П1" not in skip and "snapshot" not in t:                  # П1
         t["snapshot"] = [k for k, f in unit_fields(t).items()
                          if not k.endswith("_secret") and k != "server"
                          and not (isinstance(f, dict) and f.get("type") == "blob")]
-    if isinstance(t.get("tables"), dict):                         # П2
+    if "П2" not in skip and isinstance(t.get("tables"), dict):    # П2
         for k, tbl in t["tables"].items():
             if isinstance(tbl, dict):
                 j = tbl.setdefault("journal", {})
                 j.setdefault("written", k + ".written")
                 j.setdefault("deleted", k + ".deleted")
     d = t.get("display")                                          # П3
-    if isinstance(d, dict) and "form" not in d:
+    if "П3" not in skip and isinstance(d, dict) and "form" not in d:
         d["form"] = [{"fields": list(unit_fields(t))}]
-    for f in fields(t):                                           # П4
+    for f in fields(t) if "П4" not in skip else ():               # П4
         f.setdefault("default", None)
-    for e in secret_items(t):                                     # П5
+    for e in secret_items(t) if "П5" not in skip else ():         # П5
         if "regex" in e:
             e.setdefault("decoded", True)
 
@@ -109,11 +110,11 @@ def project(sch, tree, ordered=True):
     return rec(sch.doc, tree)
 
 
-def canonical(sch, tree):
+def canonical(sch, tree, skip=()):
     t = copy.deepcopy(tree)
-    sugar(t)
+    sugar(t, skip)
     t = project(sch, t, ordered=False)
-    computed(t)
+    computed(t, skip)
     return project(sch, t)
 
 

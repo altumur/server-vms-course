@@ -274,8 +274,15 @@ def pointer(document, ref):
 IGNORED = {".DS_Store"}
 EXCEPTION_KINDS = {"no-openapi", "scenarios-format", "acceptance-entry", "no-acceptance", "no-schema",
                    "data-paragraph"}
-# Classes of a loader refusal (М10/2 Н4): `refused:<class>`.
+# Classes of a loader refusal (М10/2 Н4): `refused:<class>`. On the standard files of В7 the class is the layer of the
+# refusal (ADR-0092 п. 6).
 REFUSAL_CLASSES = {"text", "key", "value", "reference", "name", "catalogue"}
+REFUSAL_CLASSES_V7 = {"text", "form", "relations", "catalogue"}
+# The standard files of В7 (ADR-0092; PLAN-TRANSITION п. 1): the form of the manifest in JSON Schema. Their presence
+# switches the form, family and canonical checks from the dialect (form_source) to the В7 stack (v7/).
+MANIFEST_SCHEMA_V7 = Path("Platform/02-installer/spec/02.1-installer.schema.json")
+V7_INSTALL = ("python3.12 -m venv … && pip install --require-hashes -r skills/lesson-spec/scripts/v7/requirements.txt "
+              "(jsonschema, cel-expr-python, ruamel.yaml)")
 
 
 # Data family sections (ADR-0088): markers in the norms of the owning chapter, common definitions of the schemas.
@@ -283,13 +290,15 @@ FAMILIES_BEGIN, FAMILIES_END = "<!-- families:begin -->", "<!-- families:end -->
 FAMILIES_COMMON = Path("Platform/common/data/common.form.yaml")
 
 
-def family_place(row):
-    """A catalog schema is NN-<процесс>/data/<семья>.form.yaml of the owner lesson, for row, JSON object and JSON file
-    only (ADR-0088 п. 1, доп. (1) Р2; file — ADR-0083 доп. (11), JSON content is checked when the family builds); the same
-    rule as form_source.families.schema_place, without the text layer."""
-    match = re.fullmatch(r"([0-9]{2})-[a-z][a-z-]*/data/[^/]+\.form\.yaml", row["schema"])
+def family_place(row, v7=False):
+    """A catalog schema is NN-<процесс>/data/<семья>.form.yaml (on В7 — .schema.json) of the owner lesson, for row, JSON
+    object and JSON file only (ADR-0088 п. 1, доп. (1) Р2; file — ADR-0083 доп. (11), JSON content is checked when the
+    family builds); the same rule as form_source.families.schema_place, without the text layer."""
+    suffix = r"\.schema\.json" if v7 else r"\.form\.yaml"
+    match = re.fullmatch(r"([0-9]{2})-[a-z][a-z-]*/data/[^/]+" + suffix, row["schema"])
     if not match:
-        raise ValueError(f"schema {row['schema']} is not NN-<процесс>/data/<семья>.form.yaml (ADR-0088 п. 1)")
+        raise ValueError(f"schema {row['schema']} is not NN-<процесс>/data/<семья>{suffix.replace(chr(92), '')} "
+                         f"(ADR-0088 п. 1)")
     if row["kind"] not in {"row", "object", "file"}:
         raise ValueError("a schema is only for row, JSON object and JSON file (ADR-0088 доп. (1) Р2, ADR-0083 доп. (11))")
     if not re.fullmatch(rf"P/{match.group(1)}(\.(?:0|[1-9][0-9]?))?", row["owner"]):
@@ -630,6 +639,7 @@ class Check:
         self.contracts = {}                          # OpenAPI file → (document or None, checked without errors)
         self.loading = []                            # contracts being checked: a cross-file $ref back is a cycle
         self.cross_refs = set()                      # positions of cross-file $ref counted once per run
+        self.v7 = (self.root / MANIFEST_SCHEMA_V7).is_file()
         if exceptions is not None:
             self.load_exceptions(exceptions)
         if (self.root / CATALOG).exists():
@@ -804,7 +814,7 @@ class Check:
                 elif row["schema"] != "-" and not (self.root / "Platform" / row["schema"]).is_file():
                     raise ValueError(f"schema {row['schema']} is not a file under Platform/")
                 elif row["schema"] != "-":
-                    family_place(row)
+                    family_place(row, self.v7)
                 norm = re.match(LESSON, row["norm"])
                 if not norm or self.lesson_norms(norm.group(0)) is None:
                     raise ValueError("norm names an existing lesson")
@@ -835,6 +845,8 @@ class Check:
     # `when` as a key path of the manifest form source: segments go by the keys of mappings, under `names` any segment.
     # Returns the predicate (key path → exists); a missing or broken source refuses every path.
     def manifest_key(self, path, words):
+        if self.v7:
+            return self.manifest_key_v7(path, words)
         source = self.root / MANIFEST_FORM
         form = None
         if source.is_file():
@@ -853,6 +865,24 @@ class Check:
             if form.node_at(word.split(".")) not in (None, ANY):
                 self.error(path, f"derived when word {word} is also a key path of {MANIFEST_FORM}")
         return lambda key: form.node_at(key.split(".")) not in (None, ANY)
+
+    # `when` on В7: a key path is a place of the manifest schema (v7.spec.Places).
+    def manifest_key_v7(self, path, words):
+        if str(SCRIPTS) not in sys.path:
+            sys.path.insert(0, str(SCRIPTS))
+        try:
+            from v7.spec import Places
+            places = Places(json.loads((self.root / MANIFEST_SCHEMA_V7).read_text(encoding="utf-8")))
+        except (ImportError, OSError, ValueError) as exc:
+            self.error(self.root / MANIFEST_SCHEMA_V7, f"when needs the manifest schema: {exc}")
+            return lambda key: False
+
+        def has(key):
+            return bool(places.place("/" + "/".join(s.replace("~", "~0").replace("/", "~1") for s in key.split("."))))
+        for word in sorted(words):
+            if has(word):
+                self.error(path, f"derived when word {word} is also a key path of {MANIFEST_SCHEMA_V7}")
+        return has
 
     # Paragraph «Данные» in Н1 of a lesson against the catalog: what the lesson owns, writes and reads.
     def data_paragraph(self, path, text, prefix, lesson=None):
@@ -1545,9 +1575,10 @@ class Check:
 
     def classes(self, path, verdicts):
         seen = {}
+        allowed = REFUSAL_CLASSES_V7 if self.v7 else REFUSAL_CLASSES
         for line, (case, kind) in self.tsv(path, 2):
-            if case in seen or verdicts.get(case) != "refused" or kind not in REFUSAL_CLASSES:
-                self.error(path, f"line {line}: class case must be unique, have refused verdict and a class of {sorted(REFUSAL_CLASSES)}")
+            if case in seen or verdicts.get(case) != "refused" or kind not in allowed:
+                self.error(path, f"line {line}: class case must be unique, have refused verdict and a class of {sorted(allowed)}")
             seen[case] = kind
         if not seen:
             self.error(path, "empty classes table")
@@ -1694,6 +1725,45 @@ class Check:
                 if row.no not in held:
                     self.error(references, f"line {row.no}: no corpus case has this row as its sole cause (ADR-0087 доп. (1) Р10)")
 
+    # The standard files of В7 next to the chapter norms (ADR-0092; PLAN-TRANSITION п. 1.3): the schema, relations and
+    # layers are sound, the section «Форма» between the markers is the built one, the corpus goes through the В7 loader
+    # (verdict and class — the layer — strictly; diagnostics.tsv paths are a hint, ADR-0092 п. 5), every course manifest
+    # loads, the relation rows are held by corpus cases (strict with --strict-coverage).
+    def form_v7(self, norms, text, base, acceptance, verdicts, classes):
+        if str(SCRIPTS) not in sys.path:
+            sys.path.insert(0, str(SCRIPTS))
+        try:
+            from v7.spec import manifest_check
+        except ImportError as exc:
+            self.error(norms, f"the standard files need the В7 stack, missing: {exc}; run: {V7_INSTALL}")
+            return
+        manifests = [*(self.root / VMS_DIR).glob("[0-9][0-9]-*/*.subsystem.yaml"),
+                     *(self.root / "Source" / "tests" / "testdata").glob("*.subsystem.yaml")]
+        try:
+            errors, stats = manifest_check(self.root, norms, text, base, acceptance, verdicts, classes, manifests,
+                                           self.strict_coverage)
+        except ImportError as exc:
+            self.error(norms, f"the standard files need the В7 stack, missing: {exc}; run: {V7_INSTALL}")
+            return
+        for where, message in errors:
+            self.error(where, message)
+        self.stats.update(stats)
+
+    # Package family-read (ADR-0087 доп. (9) п. 2): form, catalog and the outcome of every row on the В7 stack.
+    def family_read(self):
+        if self.catalog is None:
+            return
+        try:
+            from v7.spec import family_read, read_catalog
+            errors, stats = family_read(self.root, read_catalog(self.root))     # строки каталога как в файле (ops — текст)
+        except ImportError as exc:
+            self.error(self.root / "Platform/common/vectors", f"family-read needs the В7 stack, missing: {exc}; run: {V7_INSTALL}")
+            return
+        for where, message in errors:
+            self.error(self.root / where, message)
+        for name, value in stats.items():
+            self.stats[name] = value
+
     # The data families of ADR-0088 that a chapter owns by the catalog (owner = the chapter, schema named): each schema
     # builds from the dialect (data-form/1 with common.form.yaml), its outcomes.tsv is in form and names places of the
     # schema; if the norms hold the markers, the section between them is the built one byte for byte. Without markers
@@ -1702,6 +1772,19 @@ class Check:
         self.stats["families_with_section"] += 0
         self.stats["families_without_section"] += 0
         if self.catalog is None:
+            return
+        if self.v7:
+            if str(SCRIPTS) not in sys.path:
+                sys.path.insert(0, str(SCRIPTS))
+            try:
+                from v7.spec import families_check
+            except ImportError as exc:
+                self.error(norms, f"families on В7 need the В7 stack, missing: {exc}; run: {V7_INSTALL}")
+                return
+            errors, stats = families_check(self.root, norms, text, prefix, list(self.catalog.values()))
+            for where, message in errors:
+                self.error(where, message)
+            self.stats.update(stats)
             return
         rows = [row for row in self.catalog.values() if row["owner"] == prefix and row["schema"] not in ("-", "manifest")]
         lines = text.split("\n") if text is not None else []
@@ -1763,8 +1846,13 @@ class Check:
     def canonical_chapter(self):
         if str(SCRIPTS) not in sys.path:
             sys.path.insert(0, str(SCRIPTS))
+        if self.v7:
+            self.family_read()
         try:
-            from form_source.vectors import Chapter, present
+            if self.v7:
+                from v7.vectors import Chapter, present
+            else:
+                from form_source.vectors import Chapter, present
         except ImportError as exc:
             self.error(self.root / "Platform/02-installer", f"canonical check needs ruamel.yaml (text layer Н1.1), missing: {exc}; run: {SCHEMA_INSTALL}")
             return
@@ -2046,7 +2134,12 @@ class Check:
             base = norms.name[:-len(".norms.md")]
             schema, schema_refs = spec / f"{base}.schema.yaml", spec / f"{base}.references.tsv"
             source = spec / f"{base}.form.yaml"
-            if source.exists():
+            if (spec / f"{base}.schema.json").exists():
+                if source.exists() or schema.exists():
+                    self.error(spec / f"{base}.schema.json", "a chapter has either the standard files of В7 or the "
+                                                             "dialect form source, not both (ADR-0092)")
+                self.form_v7(norms, text, spec / base, where, verdicts, classes)
+            elif source.exists():
                 if schema.exists():
                     self.error(schema, "a chapter has either the ADR-0085 pair or the ADR-0087 form source, not both")
                 self.form_source(norms, text, source, schema_refs, spec / f"{base}.scalars.tsv", where, verdicts,

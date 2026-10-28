@@ -1,0 +1,255 @@
+"""Пакет перехода на В7 — данные (PLAN-TRANSITION п. 2): применить к дереву курса то, что «Спецификация» переносит
+байтами, кроме текстов норм. Для её ветки и для пробы `check_spec` в режиме В7 на копии дерева.
+
+    python -m v7.transition --root ДЕРЕВО [--lessons 01,02,03,04,05,06]      (из skills/lesson-spec/scripts)
+
+По порядку (дерево — с диалектом; повтор на уже переведённом дереве — отказ):
+1. стандартные файлы на места (`v7.build --place`): схемы, связи, таблицы слоёв, схема вида, `common.schema.json`;
+2. каталог: колонка `schema` — `….schema.json` того же базового имени;
+3. файлы диалекта снимаются: `*.form.yaml` (формы семей, `common.form.yaml`, форма манифеста), `references.tsv`;
+4. корпус P/02.1 по `v7/out/setb/deltas.tsv` и `cases.tsv`: файлы без `worker:` дополняются (п. 7), `verdicts.tsv` и
+   `classes.tsv` — по дельтам, новые случаи Б без пометки `dup` (кроме `p3_*`: это входы корпуса после п. 7);
+5. векторы `canonical` заново (`v7.vectors`);
+6. пакет `Platform/common/vectors/family-read/`: README и таблица на урок-владельца из уроков `--lessons` (набор А,
+   `v7/out/seta/family-read.jsonl`, у строк `1e400` — исход по Б; случаи семей Б `a*`);
+7. разделы норм между маркерами (`v7.sections`): «Форма» P/02.1, «Семьи данных» глав-владельцев, «Форма канонического
+   вида» P/02.2.
+Тексты норм (Н1.1, Н3–Н5, LAYERS.md вместо DIALECT.md, ссылки на файлы диалекта) — правка «Спецификации», не здесь.
+"""
+import argparse
+import ast
+import json
+import re
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent))
+
+from v7 import spec  # noqa: E402
+
+CORPUS = Path("Platform/02-installer/acceptance/1")
+FAMILY_READ = Path("Platform/common/vectors/family-read")
+SETB = HERE / "out" / "setb"
+SETA = HERE / "out" / "seta"
+WORKER = b"worker: {exec: /usr/lib/probe/worker}\n"
+P7_SKIP = {"empty_document", "a91_worker_missing"}
+HEADER = ["case", "family", "kind", "mode", "who", "text", "verdict", "paths", "outcome", "note"]
+
+
+def tsv(path):
+    return [ln.split("\t") for ln in Path(path).read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("#")]
+
+
+def write_tsv(path, lead, header, rows):
+    """header None — таблица без строки заголовка (заголовок — в комментарии шапки, как у verdicts.tsv корпуса)."""
+    text = "".join(x + "\n" for x in lead) + ("\t".join(header) + "\n" if header else "")
+    text += "".join("\t".join(r) + "\n" for r in rows)
+    Path(path).write_text(text, encoding="utf-8")
+
+
+def lead_of(path):
+    out = []
+    for ln in Path(path).read_text(encoding="utf-8").split("\n"):
+        if not ln.startswith("#"):
+            break
+        out.append(ln)
+    return out
+
+
+# ---------------------------------------------------------------- 1–3: стандартные файлы, каталог, диалект
+
+def standard_files(root):
+    from v7 import build
+    build.build(root, None, place=True)
+
+
+def catalog(root):
+    p = root / spec.CATALOG
+    lines = p.read_text(encoding="utf-8").split("\n")
+    header = None
+    for i, ln in enumerate(lines):
+        if not ln or ln.startswith("#"):
+            continue
+        cols = ln.split("\t")
+        if header is None:
+            header = cols
+            continue
+        k = header.index("schema")
+        if cols[k].endswith(".form.yaml"):
+            cols[k] = cols[k][:-len(".form.yaml")] + ".schema.json"
+            lines[i] = "\t".join(cols)
+    p.write_text("\n".join(lines), encoding="utf-8")
+
+
+def drop_dialect(root):
+    gone = sorted((root / "Platform").glob("*/data/*.form.yaml")) + [
+        root / "Platform/common/data/common.form.yaml", root / "Platform/02-installer/spec/02.1-installer.form.yaml",
+        root / "Platform/02-installer/spec/02.1-installer.references.tsv"]
+    for p in gone:
+        if p.exists():
+            p.unlink()
+    return len(gone)
+
+
+# ---------------------------------------------------------------- 4: корпус P/02.1
+
+def corpus(root):
+    cases = root / CORPUS / "cases"
+    n7 = 0
+    for p in sorted(cases.glob("*.subsystem.yaml")):
+        case = p.name[:-len(".subsystem.yaml")]
+        data = p.read_bytes()
+        if case in P7_SKIP or re.search(rb"(?m)^worker\s*:", data):
+            continue
+        p.write_bytes(data + (b"" if data.endswith(b"\n") or not data else b"\n") + WORKER)
+        n7 += 1
+    verdicts = {r[0]: r[1] for r in tsv(root / CORPUS / "verdicts.tsv")}
+    classes = {r[0]: r[1] for r in tsv(root / CORPUS / "classes.tsv")}
+    for r in tsv(SETB / "deltas.tsv"):
+        rid, new = r[0], r[2]
+        if rid.startswith("corpus/"):
+            case = rid[len("corpus/"):]
+            verdicts[case] = "ok" if new == "ok" else "refused"
+            if new != "ok":
+                classes[case] = new.split(":", 1)[1]
+        elif rid.startswith("classes/"):
+            case = rid[len("classes/"):]
+            if new.startswith("строка снимается"):
+                classes.pop(case, None)
+            else:
+                classes[case] = new.split(" ")[0]
+    added = []
+    for r in tsv(SETB / "cases.tsv"):
+        cid, where, expect, dup = r[0], r[1], r[2], r[7]
+        if where != "corpus" or dup or cid.startswith("p3_") or cid == "id":
+            continue
+        (cases / (cid + ".subsystem.yaml")).write_bytes((SETB / "cases" / (cid + ".subsystem.yaml")).read_bytes())
+        verdicts[cid] = "ok" if expect == "ok" else "refused"
+        if expect != "ok":
+            classes[cid] = expect.split(":", 1)[1]
+        added.append(cid)
+    note = "# Набор Б ADR-0092 (пакет перехода на В7): случаи t*, f*, r* — v7/out/setb/cases.tsv"
+    edit(root / CORPUS / "verdicts.tsv", verdicts, note)
+    edit(root / CORPUS / "classes.tsv", classes, note)
+    diag = root / CORPUS / "diagnostics.tsv"           # подсказка (п. 5): строки только у отказанных случаев
+    edit(diag, {r[0]: "\t".join(r[1:]) for r in tsv(diag) if verdicts.get(r[0]) == "refused"}, None)
+    added = len(added)
+    return n7, added
+
+
+def edit(path, values, note):
+    """Таблица case<TAB>…: строки — на своих местах (значение — из values, нет в values — строка снимается), комментарии
+    как были; ключи values без строки — в конец под строкой note."""
+    lines, seen = [], set()
+    for ln in Path(path).read_text(encoding="utf-8").split("\n"):
+        if not ln or ln.startswith("#"):
+            lines.append(ln)
+            continue
+        case = ln.split("\t", 1)[0]
+        seen.add(case)
+        if case in values:
+            lines.append(case + "\t" + values[case])
+    while lines and lines[-1] == "":
+        lines.pop()
+    more = [k for k in values if k not in seen]
+    if more:
+        lines += [note] + [k + "\t" + values[k] for k in more]
+    Path(path).write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+# ---------------------------------------------------------------- 6: пакет family-read
+
+README = """# Векторы family-read (ADR-0087 доп. (9) п. 2; ADR-0092 Confirmation, набор А и Б)
+
+Чтение семьи данных каталога (`Platform/common/data/catalog.tsv`) общей библиотекой реализации: вход — семья (`key`,
+`kind`), режим `writer` или `reader`, текст экземпляра; исход — вердикт, пути отказа (JSON Pointer), исход
+`<семья>.outcomes.tsv` (только у читателя). Схема семьи — колонка `schema` каталога (JSON Schema 2020-12), слои — слова
+`x-*` схемы и `codec.tsv`.
+
+Таблица `NN.tsv` — семьи урока-владельца NN (колонка `owner` каталога). Строка:
+`case<TAB>family<TAB>kind<TAB>mode<TAB>who<TAB>text<TAB>verdict<TAB>paths<TAB>outcome<TAB>note`:
+- `who` — кто исполняет по каталогу: у `writer` — роли операций (`ops`), у `reader` — читатели (`readers`, `*` — все);
+- `text` — у `row` — JSON-объект полей `items` (значения — строки, как записаны в хранилище); у `object` и `file` —
+  текст значения как есть;
+- `verdict` — `ok` или `refused`; `paths` — JSON-массив путей отказа (порядок не важен); `outcome` — JSON-массив путей
+  строк `<семья>.outcomes.tsv`, чей исход действует (пустой путь — строка целиком; у писателя — `[]`);
+- `note` — мутация набора А (`base` — экземпляр без мутации) или id случая набора Б.
+
+Ожидания — эталон диалекта (метка `dialect-reference-dc94d0fd1`) с дельтами набора Б ADR-0092 (`1e400` — число вне
+binary64: отказ места, писатель не падает). Раннер сравнивает вердикт, множество путей и исходы.
+
+Порядок перебора отображений (D18): у Go перебор `map` случаен — выражение и проверка не должны зависеть от порядка
+ключей (уникальность и `prefix_free` — без номеров элементов); набор на Go гоняют не один раз.
+"""
+
+
+def family_read(root, lessons):
+    cat = {r["key"]: r for r in spec.read_catalog(root)}
+    fixes = {}
+    for r in tsv(SETB / "deltas.tsv"):
+        if r[0].startswith("family-read/"):
+            fixes[r[0][len("family-read/"):]] = r[2]
+    tables = {}
+    for i, ln in enumerate((SETA / "family-read.jsonl").read_text(encoding="utf-8").splitlines()):
+        x = json.loads(ln)
+        if x["lesson"] not in lessons:
+            continue
+        ref = x["ref"]
+        verdict, paths, outcomes = ref["verdict"], ref["paths"], ref["outcomes"]
+        fix = fixes.get("%s|%s|%s|%s" % (x["family"], x["kind"], x["mode"], x["why"]))
+        if fix is not None:
+            m = re.fullmatch(r"(\w+) (\[.*?\]) (\[.*\])", fix)      # setb.py пишет списки по repr Python
+            verdict, paths, outcomes = m.group(1), ast.literal_eval(m.group(2)), ast.literal_eval(m.group(3))
+        row = cat[x["family"]]
+        who = spec.who_of(row, x["mode"])
+        tables.setdefault(x["lesson"], []).append(
+            ["%s-%04d" % (x["lesson"], len(tables.get(x["lesson"], [])) + 1), x["family"], x["kind"], x["mode"], who,
+             x["text"], verdict, json.dumps(paths, ensure_ascii=False), json.dumps(outcomes, ensure_ascii=False), x["why"]])
+    for r in tsv(SETB / "cases.tsv"):
+        if not r[1].startswith("family-read|"):
+            continue
+        _, fam, mode = r[1].split("|")
+        src = json.loads((SETB / "cases" / (r[0] + ".json")).read_text(encoding="utf-8"))
+        lesson = src["schema"][:2]
+        if lesson not in lessons:
+            continue
+        m = re.fullmatch(r"(\w+) (\[.*?\]) (\[.*\])", r[2])
+        row = cat[fam]
+        who = spec.who_of(row, mode)
+        tables.setdefault(lesson, []).append(
+            ["%s-%s" % (lesson, r[0]), fam, row["kind"], mode, who, src["text"], m.group(1), m.group(2), m.group(3), r[0]])
+    d = root / FAMILY_READ
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "README.md").write_text(README, encoding="utf-8")
+    for lesson, rows in sorted(tables.items()):
+        write_tsv(d / ("%s.tsv" % lesson), [], HEADER, rows)
+    return {k: len(v) for k, v in sorted(tables.items())}
+
+
+# ---------------------------------------------------------------- всё
+
+def main(argv=None):
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--root", required=True)
+    ap.add_argument("--lessons", default="01,02,03,04,05,06")
+    a = ap.parse_args(argv)
+    root = Path(a.root).resolve()
+    if not (root / "Platform/02-installer/spec/02.1-installer.form.yaml").is_file():
+        sys.exit("the tree has no dialect form of P/02.1: already moved?")
+    standard_files(root)
+    catalog(root)
+    print("dialect files removed:", drop_dialect(root))
+    print("corpus: worker appended %d, cases added %d" % corpus(root))
+    from v7 import vectors
+    print("canonical vectors:", vectors.generate(root))
+    print("family-read:", family_read(root, set(a.lessons.split(","))))
+    from v7 import sections
+    for norms in sorted((root / "Platform").glob("*/spec/*.norms.md")):
+        text = norms.read_text(encoding="utf-8")
+        if any(b in text for b, _ in sections.MARKERS.values()):
+            print("sections %s: %s" % (norms.relative_to(root), ", ".join(sections.rewrite(norms, root))))
+
+
+if __name__ == "__main__":
+    main()

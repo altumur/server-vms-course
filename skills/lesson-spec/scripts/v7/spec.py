@@ -155,8 +155,43 @@ def tsv_rows(path, width, header):
     return out
 
 
+class Outcome:
+    """Строка исходов: wild — {номер сегмента `*`: ключи `properties` того места}: `*` — любое имя автора, кроме них,
+    или любой элемент списка."""
+
+    def __init__(self, path, outcome, priority, unit, norm, wild=None):
+        self.path, self.outcome, self.priority, self.unit, self.norm = path, outcome, priority, unit, norm
+        self.segs, self.wild = unpointer(path) if path else [], wild or {}
+
+    def covers(self, q):
+        """Путь исхода — префикс пути отказа q (JSON Pointer); `*` совпадает с одним сегментом своего места."""
+        if not self.path:
+            return True
+        qs = unpointer(q) if q.startswith("/") else None
+        if qs is None or len(qs) < len(self.segs):
+            return False
+        return all(qs[i] not in self.wild[i] if i in self.wild else qs[i] == s for i, s in enumerate(self.segs))
+
+
+def outcomes_for(outcomes, paths):
+    """Исходы набора путей отказа: у каждого пути — строки, чей путь его префикс; если глубже всех из них строка с
+    единицей `поле` или `элемент`, действует только она (и равные ей по глубине), иначе — все; из строк всех путей
+    действуют строки с наименьшим приоритетом (в порядке файла). Нет отказа — нет исхода."""
+    keep = set()
+    for q in paths:
+        cov = [o for o in outcomes if o.covers(q)]
+        deep = max((len(o.segs) for o in cov), default=0)
+        top = [o for o in cov if len(o.segs) == deep]
+        keep.update(id(o) for o in (top if any(o.unit != "строка" for o in top) else cov))
+    hit = [o for o in outcomes if id(o) in keep]
+    if not paths or not hit:
+        return []
+    low = min(o.priority for o in hit)
+    return [o for o in hit if o.priority == low]
+
+
 def load_outcomes(path, doc):
-    """`<семья>.outcomes.tsv` → [(path, outcome, priority, unit, norm)]: путь — место схемы, пустой путь есть."""
+    """`<семья>.outcomes.tsv` → [Outcome]: путь — место схемы, пустой путь есть."""
     name = Path(path).name
     if not Path(path).is_file():
         raise SpecError("%s: no outcomes file next to the schema (ADR-0088 доп. (2) С11)" % name)
@@ -169,7 +204,8 @@ def load_outcomes(path, doc):
         if p in seen:
             raise SpecError("%s:%d: path %r repeated" % (name, no, p))
         seen.add(p)
-        if p and (not p.startswith("/") or places.place(p) is None):
+        wild = {}
+        if p and (not p.startswith("/") or places.place(p, wild) is None):
             raise SpecError("%s:%d: path %r is not a place of the schema%s" % (
                 name, no, p, " (segment * only at names or items)" if "*" in p.split("/") else ""))
         if not re.fullmatch(r"0|[1-9][0-9]*", priority):
@@ -178,7 +214,7 @@ def load_outcomes(path, doc):
             raise SpecError("%s:%d: unit is one of %s" % (name, no, ", ".join(UNITS)))
         if not outcome.strip() or not norm.strip():
             raise SpecError("%s:%d: outcome and norm must be said" % (name, no))
-        out.append((p, outcome, int(priority), unit, norm))
+        out.append(Outcome(p, outcome, int(priority), unit, norm, wild))
     if "" not in seen:
         raise SpecError("%s: no outcome for the whole row or object (empty path; ADR-0088 доп. (1) Р7)" % name)
     return out
@@ -265,3 +301,265 @@ def unportable(doc):
         if why:
             bad.append("pattern at %s: %s" % (where or "#", why))
     return bad
+
+
+# ---------------------------------------------------------------- пакет family-read
+
+FAMILY_READ = Path("Platform/common/vectors/family-read")
+FR_HEADER = ["case", "family", "kind", "mode", "who", "text", "verdict", "paths", "outcome", "note"]
+
+
+def who_of(row, mode):
+    """«Кто исполняет» по каталогу: писатель — роли операций `ops`, читатель — `readers`."""
+    s = re.sub(r"\([^()]*\)", "", row["ops"] if mode == "writer" else row["readers"])
+    if mode != "writer":
+        return s
+    out = []
+    for part in s.split("; "):
+        for r in part.partition("=")[2].split(", "):
+            if r and r not in out:
+                out.append(r)
+    return ", ".join(out)
+
+
+def family_read(root, catalog, judge=True):
+    """Проверка пакета: README, таблица `NN.tsv` на урок-владельца, строка по форме, семья и `who` — по каталогу, каждая
+    семья урока — в своей таблице; judge — исход строки равен исходу стека В7 (Python). → (ошибки [(путь, сообщение)],
+    счёты)."""
+    import json as _json
+    errors, stats = [], {"family_read_rows": 0, "family_read_tables": 0}
+    d = Path(root) / FAMILY_READ
+    if not d.is_dir():
+        stats["family_read"] = "absent"
+        return errors, stats
+    stats["family_read"] = "present"
+    if not (d / "README.md").is_file():
+        errors.append((FAMILY_READ, "family-read: the package needs README.md (the format)"))
+    by_key = {r["key"]: r for r in catalog if is_v7_family(r)}
+    fams = {}
+    for p in sorted(d.iterdir()):
+        if p.name in ("README.md", ".DS_Store"):
+            continue
+        m = re.fullmatch(r"([0-9]{2})\.tsv", p.name)
+        if not m:
+            errors.append((FAMILY_READ / p.name, "family-read: only README.md and NN.tsv (one table per owner lesson)"))
+            continue
+        lesson = m.group(1)
+        stats["family_read_tables"] += 1
+        lines = [ln for ln in p.read_text(encoding="utf-8").split("\n") if ln]
+        if not lines or lines[0].split("\t") != FR_HEADER:
+            errors.append((FAMILY_READ / p.name, "family-read: header must be %s" % "<TAB>".join(FR_HEADER)))
+            continue
+        seen, covered = set(), set()
+        for no, ln in enumerate(lines[1:], 2):
+            where = FAMILY_READ / p.name
+            cols = ln.split("\t")
+            if len(cols) != len(FR_HEADER):
+                errors.append((where, "line %d: expected %d TSV columns" % (no, len(FR_HEADER))))
+                continue
+            case, key, kind, mode, who, text, verdict, paths, outcome, _note = cols
+            if case in seen or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", case):
+                errors.append((where, "line %d: case %r is not unique or not [A-Za-z0-9][A-Za-z0-9_.-]*" % (no, case)))
+            seen.add(case)
+            row = by_key.get(key)
+            if row is None or row["kind"] != kind:
+                errors.append((where, "line %d: %s (%s) is not a family of the catalog with a schema" % (no, key, kind)))
+                continue
+            if row["owner"][2:4] != lesson:
+                errors.append((where, "line %d: %s belongs to the table of %s" % (no, key, row["owner"][2:4])))
+            covered.add(key)
+            if mode not in ("writer", "reader") or who != who_of(row, mode):
+                errors.append((where, "line %d: mode is writer or reader, who — by the catalog (%s)"
+                               % (no, who_of(row, mode) if mode in ("writer", "reader") else "-")))
+                continue
+            try:
+                ps, outs = _json.loads(paths), _json.loads(outcome)
+            except ValueError:
+                errors.append((where, "line %d: paths and outcome are JSON arrays" % no))
+                continue
+            if verdict not in ("ok", "refused") or not isinstance(ps, list) or not isinstance(outs, list) \
+                    or (verdict == "ok") != (not ps) or (mode == "writer" and outs):
+                errors.append((where, "line %d: verdict ok has no paths, refused has; a writer has no outcome" % no))
+                continue
+            stats["family_read_rows"] += 1
+            if judge:
+                why = judge_row(root, row, kind, mode, text, ps, outs, fams)
+                if why:
+                    errors.append((where, "line %d (%s): %s" % (no, case, why)))
+        for key, row in sorted(by_key.items()):
+            if row["owner"][2:4] == lesson and key not in covered:
+                errors.append((FAMILY_READ / p.name, "family-read: no row reads the family %s" % key))
+    return errors, stats
+
+
+def judge_row(root, row, kind, mode, text, paths, outs, cache):
+    """Исход строки на стеке В7 (Python) против ожидания; → причина расхождения или None."""
+    import json as _json
+
+    from v7 import stack
+    if row["key"] not in cache:
+        _, _, doc, _, outcomes = load_family(root, row)
+        cache[row["key"]] = (stack.Family(doc, kind), outcomes)
+    fam, outcomes = cache[row["key"]]
+    if kind == "row":
+        try:
+            value = _json.loads(text)
+        except ValueError:
+            value = text
+    elif kind == "file":
+        value = text.encode("utf-8")
+    else:
+        value = text
+    v = fam.judge(value, mode)
+    got = [o.path for o in outcomes_for(outcomes, v["paths"])] if mode == "reader" else []
+    if v["verdict"] != ("refused" if paths else "ok") or sorted(v["paths"]) != sorted(paths) or got != outs:
+        return "expected %s %s %s, the V7 stack gives %s %s %s" % ("refused" if paths else "ok", paths, outs,
+                                                                v["verdict"], v["paths"], got)
+    return None
+
+
+# ---------------------------------------------------------------- корпус P/02.1 и связи (форма манифеста)
+
+def manifest_check(root, norms, text, base, acceptance, verdicts, classes, manifests, strict=False):
+    """Глава со стандартными файлами формы манифеста: файлы годны, раздел «Форма» между маркерами — построенный,
+    корпус — вердикт и класс (слой) строго, пути `diagnostics.tsv` — сведение (ADR-0092 п. 5), манифесты курса
+    принимаются, строки связей держат случаи (строка — единственная причина отказа хоть одного случая; строго — со
+    strict). → (ошибки [(путь, сообщение)], счёты)."""
+    from v7 import schema as gen
+    from v7 import section, stack, textv7
+    errors, stats = [], {"form_cases": 0, "form_manifests": 0, "form_rows": 0, "form_rows_held": 0,
+                         "form_diagnostics_differ": 0}
+    base = Path(base)
+    files = {s: Path(str(base) + s) for s in (".schema.json", ".relations.json", ".scalars.tsv", ".layers.tsv")}
+    for s, p in files.items():
+        if not p.is_file():
+            errors.append((p, "standard files of the form: %s is missing (ADR-0092)" % p.name))
+    if errors:
+        return errors, stats
+    try:
+        sch = json.loads(files[".schema.json"].read_text(encoding="utf-8"))
+        rel = json.loads(files[".relations.json"].read_text(encoding="utf-8"))
+        check_schema(sch, files[".schema.json"].name)
+    except (ValueError, SpecError) as exc:
+        return [(files[".schema.json"], "form: %s" % exc)], stats
+    if files[".layers.tsv"].read_text(encoding="utf-8") != gen.layer_table(sch):
+        errors.append((files[".layers.tsv"], "is not the table of the x-* words of the schema (rebuild: cd "
+                                             "skills/lesson-spec/scripts && python -m v7.layers %s)"
+                       % files[".schema.json"].relative_to(root)))
+    if rel.get("untranslated") or not isinstance(rel.get("rows"), list):
+        errors.append((files[".relations.json"], "relations: rows of CEL expressions, nothing untranslated"))
+        return errors, stats
+    nos = [r.get("no") for r in rel["rows"]]
+    if len(set(nos)) != len(nos) or any(type(n) is not int for n in nos):
+        errors.append((files[".relations.json"], "relations: row numbers `no` are unique integers"))
+    textv7.use_scalars(files[".scalars.tsv"])
+    try:
+        loader = stack.Manifest(sch, rel)
+    except Exception as exc:                                # noqa: BLE001 — выражение CEL не строится
+        return errors + [(files[".relations.json"], "relations: %s" % exc)], stats
+    if text is not None:
+        lines = text.split("\n")
+        b = [i for i, ln in enumerate(lines) if ln == section.FORM_BEGIN]
+        e = [i for i, ln in enumerate(lines) if ln == section.FORM_END]
+        if len(b) != 1 or len(e) != 1 or e[0] < b[0]:
+            errors.append((norms, "form: the norms hold the built section once, between %s and %s"
+                           % (section.FORM_BEGIN, section.FORM_END)))
+        else:
+            said = "\n".join(lines[b[0] + 1:e[0]]) + "\n"
+            built = section.build_form_section(sch, rel, textv7.load_scalars(files[".scalars.tsv"]))
+            if said != built:
+                old, new = said.splitlines(), built.splitlines()
+                at = next((i for i, (x, y) in enumerate(zip(old, new)) if x != y), min(len(old), len(new)))
+                errors.append((norms, "form: the section differs from the built one at its line %d (rebuild: python "
+                                      "skills/lesson-spec/scripts/v7/sections.py %s)" % (at + 1, norms.relative_to(root))))
+    if verdicts is None:
+        errors.append((files[".schema.json"], "form without verdicts.tsv: nothing to check it against"))
+        return errors, stats
+    diagnostics = {}
+    if (acceptance / "diagnostics.tsv").is_file():
+        for ln in (acceptance / "diagnostics.tsv").read_text(encoding="utf-8").split("\n"):
+            cols = ln.split("\t")
+            if len(cols) == 3 and not ln.startswith("#") and cols[0] != "case":
+                try:
+                    diagnostics[cols[0]] = json.loads(cols[1])
+                except ValueError:
+                    pass
+    held = set()
+    for case, expected in sorted(verdicts.items()):
+        path = acceptance / "cases" / ("%s.subsystem.yaml" % case)
+        try:
+            got = loader.judge(path.read_bytes())
+        except OSError:
+            continue
+        except Exception as exc:                            # noqa: BLE001
+            errors.append((path, "form: loader failed: %r" % exc))
+            continue
+        stats["form_cases"] += 1
+        why = "layer %s, paths %s" % (got["layer"], json.dumps(got["paths"], ensure_ascii=False)[:200])
+        if got["verdict"] != expected:
+            errors.append((path, "form: verdict expected %s, got %s (%s)" % (expected, got["verdict"], why)))
+        elif case in classes and got["layer"] != classes[case]:
+            errors.append((path, "form: class expected %s, got %s (%s)" % (classes[case], got["layer"], why)))
+        elif case in diagnostics and sorted(map(json.dumps, diagnostics[case])) != sorted(map(json.dumps, got["paths"])):
+            stats["form_diagnostics_differ"] += 1             # подсказка, не норма (ADR-0092 п. 5)
+        if got.get("layer") == "relations" and len(got.get("rows", [])) == 1:
+            held.add(got["rows"][0])
+    for path in sorted(manifests):
+        got = loader.judge(path.read_bytes())
+        if got["verdict"] != "ok":
+            errors.append((path, "form: course manifest refused %s (paths %s)" % (got["layer"], got["paths"])))
+        stats["form_manifests"] += 1
+    stats["form_rows"] = len(rel["rows"])
+    stats["form_rows_held"] = len({r["no"] for r in rel["rows"]} & held)
+    if strict:
+        for r in rel["rows"]:
+            if r["no"] not in held:
+                errors.append((files[".relations.json"], "row %d: no corpus case has this row as its sole cause "
+                                                         "(ADR-0087 доп. (1) Р10)" % r["no"]))
+    return errors, stats
+
+
+def families_check(root, norms, text, prefix, catalog):
+    """Семьи главы-владельца со схемами `.schema.json`: схема, слои и исходы годны; раздел между маркерами —
+    построенный. → (ошибки, счёты)."""
+    from v7 import section
+    errors, stats = [], {"family_schemas": 0, "family_outcomes": 0, "families_with_section": 0,
+                         "families_without_section": 0}
+    rows = [r for r in catalog if r["owner"] == prefix and is_v7_family(r)]
+    lines = text.split("\n") if text is not None else []
+    marks = section.FAMILIES_BEGIN, section.FAMILIES_END
+    if not rows and not any(ln in marks for ln in lines):
+        return errors, stats
+    built = []
+    for r in rows:
+        try:
+            built.append(load_family(root, r))
+        except (SpecError, OSError) as exc:
+            errors.append((Path(root) / "Platform" / r["schema"], "families: %s" % exc))
+            continue
+        stats["family_schemas"] += 1
+        stats["family_outcomes"] += len(built[-1][4])
+    if text is None:
+        return errors, stats
+    b = [i for i, ln in enumerate(lines) if ln == marks[0]]
+    e = [i for i, ln in enumerate(lines) if ln == marks[1]]
+    if not b and not e:
+        stats["families_without_section"] += len(rows)
+        return errors, stats
+    if len(b) != 1 or len(e) != 1 or e[0] < b[0]:
+        return errors + [(norms, "families: the norms hold the built section once, between %s and %s" % marks)], stats
+    if not rows:
+        return errors + [(norms, "families: section markers, but the catalog gives this chapter no family with a "
+                                 "schema")], stats
+    if len(built) != len(rows):
+        return errors, stats
+    said = "\n".join(lines[b[0] + 1:e[0]]) + "\n"
+    new = section.build_families_section(Path(norms).resolve(), Path(root).resolve(), built)
+    if said != new:
+        o, n = said.splitlines(), new.splitlines()
+        at = next((i for i, (x, y) in enumerate(zip(o, n)) if x != y), min(len(o), len(n)))
+        errors.append((norms, "families: the section differs from the built one at its line %d (rebuild: python "
+                              "skills/lesson-spec/scripts/v7/sections.py %s)" % (at + 1, Path(norms).relative_to(root))))
+    else:
+        stats["families_with_section"] += len(rows)
+    return errors, stats

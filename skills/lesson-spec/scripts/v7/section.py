@@ -24,7 +24,7 @@ TYPE_WORD = {"string": "строка", "integer": "целое", "number": "чи�
 
 def code(x):
     if isinstance(x, str):
-        return '`""`' if x == "" else "`%s`" % x
+        return '`""`' if x == "" else "`%s`" % shown(x)
     return "`%s`" % json.dumps(x, ensure_ascii=False)
 
 
@@ -73,9 +73,15 @@ def rules_of(s):
     return [e for e in s.get("allOf", [])[_chain(s):] if isinstance(e, dict) and "if" in e]
 
 
+def shown(s):
+    """Текст значения в норме: непечатный знак (управляющий, формат, разделитель строк, суррогат) — `\\u{HHHH}`
+    (запись ECMA-262 `u`; в схеме — сам знак)."""
+    return "".join(c if c == " " or c.isprintable() else "\\u{%04X}" % ord(c) for c in s)
+
+
 def bare(p):
-    """`^(?:x)$` → x: выражение без якорей перевода (в тексте — «целиком»)."""
-    return p[4:-2] if p.startswith("^(?:") and p.endswith(")$") else p
+    """`^(?:x)$` → x: выражение без якорей перевода (в тексте — «целиком»), знаки — shown."""
+    return shown(p[4:-2] if p.startswith("^(?:") and p.endswith(")$") else p)
 
 
 class SchemaSection:
@@ -143,9 +149,11 @@ class SchemaSection:
             return "значения нет"
         n = ref_name(s)
         if n is not None:
-            if n in self.own:
-                return "по определению `%s`" % n
-            return self.kind(self.defs[n])
+            own = {k: v for k, v in s.items() if k not in ("$ref", "description", "default", "x-owner",
+                                                            "x-default-text", "x-step", "x-default", "x-class")}
+            base = "по определению `%s`" % n if n in self.own else self.kind(self.defs[n])
+            more = self.kind(dict(own, type=[])) if own else ""
+            return base + ("; " + more if more and more != "любое значение" else "")
         vs = variants(s)
         if vs is not None:
             return " или ".join("(%s)" % self.kind(v) for v in vs)
@@ -156,7 +164,7 @@ class SchemaSection:
             parts.append("время (P/01.1 Н0 «Время в строке»)")
             ts = [t for t in ts if t not in ("number", "string")]
         parts += [self.type_word(s, t) for t in ts]
-        if not parts and "enum" not in s and "anyOf" not in s:
+        if not parts and "enum" not in s and "anyOf" not in s and "type" not in s:
             parts.append("любое значение")
         if "anyOf" in s and not ts:
             parts.append(" или ".join("(%s)" % self.kind(x) for x in s["anyOf"]))
@@ -498,8 +506,7 @@ CODEC = Path("Platform/common/data/codec.tsv")
 
 
 def build_families_section(norms, root, families):
-    """families — [(строка каталога, путь схемы, документ схемы, путь исходов, [исход])]; исход — (path, outcome,
-    priority, unit, norm)."""
+    """families — [(строка каталога, путь схемы, документ схемы, путь исходов, [spec.Outcome])]."""
     lk = lambda t: link(norms, root, t)   # noqa: E731
     files = any(row["kind"] == "file" for row, *_ in families)
     out = ["### Семьи данных (построены из стандартных файлов)", "",
@@ -523,8 +530,8 @@ def build_families_section(norms, root, families):
         out += sec.defs_body(head=None)
         out += ["Исходы %s:" % UNREADABLE[row["kind"]], "",
                 "| Путь отказа | Исход | Приоритет | Единица | Норма |", "|---|---|---|---|---|"]
-        for p, outcome, priority, unit, norm in outcomes:
-            out.append("| %s | %s | %d | %s | %s |" % ("`%s`" % cell(p) if p else "%s целиком" % KIND_WORD[row["kind"]],
-                                                   cell(outcome), priority, unit, cell(norm)))
+        for o in outcomes:
+            out.append("| %s | %s | %d | %s | %s |" % ("`%s`" % cell(o.path) if o.path else "%s целиком" % KIND_WORD[row["kind"]],
+                                                   cell(o.outcome), o.priority, o.unit, cell(o.norm)))
         out.append("")
     return "\n".join(out)
