@@ -62,6 +62,8 @@ t29_block_header_comment	corpus	refused:text	refused:text	refused:text	refused:t
 t30_block_leading	corpus	refused:text	refused:text	refused:text	refused:text	да		начальные пустые строки глубже первой строки блочного скаляра (D15: go.yaml.in/yaml/v3 принимает, S98Z)	ревью Claude круг 2 Н-3
 t31_last_line_spaces_ok	corpus	ok	ok	ok	ok	да		обход D16: LF в конец текста без LF; значение по YAML 1.2.2 `counter\n \n` (без обхода оба парсера — `counter\n `); значение display.unit = 'counter\n \n' проверено	ревью Claude круг 2 Н-1, Н-3
 t32_trailing_spaces_ok	corpus	ok	ok	ok	ok	да		строка пробелов в конце без LF — не отказ (правило last-spaces снято)	ревью Claude круг 2 Н-1
+t33_flow_trailing_comma_ok	corpus	ok	refused:text	ok	ok	да		YAML 1.2.2, решение «Архитектора» по ADR-0092 доп. (1) 2026-10-28: висячая запятая в потоке (`[a, b, ]` = `[a, b]`) — 12-е снятое отклонение п. 3 (эталон: «empty flow item (trailing comma)»; yaml-test-suite UDR7); значение heartbeat.strings = ['alpha', 'beta'] проверено	самопроверка SUT п. 3.4
+t33b_flow_map_trailing_comma_ok	corpus	ok	refused:text	ok	ok	да		то же у потокового отображения (`{k: v, }` = `{k: v}`); пустой элемент в середине `[a,,b]` — отказ парсера YAML 1.2.2 (c4_flow_empty_item)	самопроверка SUT п. 3.4
 p3_c5_key_question_mark	corpus	ok	refused:text	ok	ok	да		п. 3 (YAML 1.2.2 читает) и п. 7 (дополнен `worker:`): отказа нет (Б-1, Kimi Н1)	корпус c5_key_question_mark
 p3_c5_value_question_mark	corpus	ok	refused:text	ok	ok	да		п. 3 (YAML 1.2.2 читает) и п. 7 (дополнен `worker:`): отказа нет (Б-1, Kimi Н1)	корпус c5_value_question_mark
 p3_c5_value_next_line_flow	corpus	ok	refused:text	ok	ok	да		п. 3 (YAML 1.2.2 читает) и п. 7 (дополнен `worker:`): отказа нет (Б-1, Kimi Н1)	корпус c5_value_next_line_flow

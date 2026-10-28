@@ -113,10 +113,18 @@ MANIFEST += [
      "ревью Claude круг 2 Н-1, Н-3", ""),
     ("t32_trailing_spaces_ok", BASE + "  ", "ok", "строка пробелов в конце без LF — не отказ (правило last-spaces снято)",
      "ревью Claude круг 2 Н-1", ""),
+    ("t33_flow_trailing_comma_ok", BASE + "heartbeat:\n  strings: [alpha, beta, ]\n", "ok",
+     "YAML 1.2.2, решение «Архитектора» по ADR-0092 доп. (1) 2026-10-28: висячая запятая в потоке (`[a, b, ]` = `[a, b]`) — "
+     "12-е снятое отклонение п. 3 (эталон: «empty flow item (trailing comma)»; yaml-test-suite UDR7)",
+     "самопроверка SUT п. 3.4", ""),
+    ("t33b_flow_map_trailing_comma_ok", BASE + "display: {unit: counter, }\n", "ok",
+     "то же у потокового отображения (`{k: v, }` = `{k: v}`); пустой элемент в середине `[a,,b]` — отказ парсера "
+     "YAML 1.2.2 (c4_flow_empty_item)", "самопроверка SUT п. 3.4", ""),
 ]
 # Значение дерева загрузчика (Python и Go) на пути — там, где случай проверяет и значение.
 VALUES = {"t27_escape_tab_ok": (["display", "unit"], "a\tb"),
-          "t31_last_line_spaces_ok": (["display", "unit"], "counter\n \n")}
+          "t31_last_line_spaces_ok": (["display", "unit"], "counter\n \n"),
+          "t33_flow_trailing_comma_ok": (["heartbeat", "strings"], ["alpha", "beta"])}
 
 P3_OK = ["c5_key_question_mark", "c5_value_question_mark", "c5_value_next_line_flow", "c5_value_next_line_plain",
          "c5_value_next_line_quoted", "c7_seq_dash_scalar_below", "c7_word_continuation_comment", "c8_word_hash_space"]
