@@ -205,6 +205,7 @@ c3_tab_quoted_ok	text
 c4_block_tab_content_ok	text
 c5_key_long_1025_ok	text
 c5_unit_minus_word_ok	text
+c9_flow_lone_dash_ok	text
 c9_flow_lone_dash_spaced	text
 t01_flow_multiline	text
 t02_quoted_multiline	text

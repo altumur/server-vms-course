@@ -344,7 +344,7 @@ class TestTree(unittest.TestCase):
         from v7 import vectors
         ch = vectors.Chapter(TREE, strict=True).run()
         self.assertEqual(ch.errors, [])
-        self.assertEqual(ch.stats["canonical_vectors"], 160)
+        self.assertEqual(ch.stats["canonical_vectors"], 159)
         self.assertEqual(ch.stats["canonical_mutants_killed"], ch.stats["canonical_mutants"])
         self.assertEqual(ch.stats["canonical_mutants"], 62)              # и default у корня определения (Б-1)
         root = self.copy()
@@ -618,19 +618,47 @@ class TestTree(unittest.TestCase):
         got, stats = errors()
         self.assertEqual(len(got), 1, got)
         self.assertIn("D3 has no vector row", got[0])
-        self.assertEqual(stats["library_defects"], 18)
+        self.assertEqual(stats["library_defects"], 20)
         text = target.read_text(encoding="utf-8")
         target.write_text(text.replace("`yaml-suite:SU5Z`", "`yaml-suite:NOPE`").replace(
-            "\n| D18 ", "\n| D99 "), encoding="utf-8")
+            "\n| D21 ", "\n| D99 "), encoding="utf-8")
         got, _ = errors()
         self.assertTrue(any("no vector row yaml-suite:NOPE" in e for e in got), got)
         self.assertTrue(any("D99 is not a library defect" in e for e in got), got)
-        self.assertTrue(any("D18 (" in e and "is not in the list" in e for e in got), got)
+        self.assertTrue(any("D21 (" in e and "is not in the list" in e for e in got), got)
         target.unlink()
         layers = root / "Platform/common/LAYERS.md"
         layers.write_text(layers.read_text(encoding="utf-8") + "\n[перечень](versions/DEFECTS.md)\n", encoding="utf-8")
         got, _ = errors()
         self.assertTrue(any("no file: LAYERS.md names" in e for e in got), got)
+
+    def test_layer_words(self):
+        """V7-LAYERS-ROOT-HASH-01: layers.tsv — все и только слова со слоем LAYERS § 3, корень — пустой указатель; корень
+        «#» — таблица не та; слово x-* вне § 3 — красное; слой в § 3 не как у навыка — красное."""
+        sys.path.insert(0, str(HERE.parent))
+        import check_spec
+        root = self.copy()
+        lt = root / "Platform/05-resource/data/presence-lock.layers.tsv"
+        rows = lt.read_text(encoding="utf-8").split("\n")
+        self.assertTrue(any(r.startswith("\t3\tx-file\t") for r in rows))
+        lt.write_text("\n".join("#" + r if r.startswith("\t") else r for r in rows), encoding="utf-8")
+        row = next(r for r in spec.read_catalog(root) if r["schema"].endswith("presence-lock.schema.json"))
+        with self.assertRaisesRegex(spec.SpecError, "is not the table of the x-\\* words"):
+            spec.load_family(root, row)
+        sch = root / "Platform/05-resource/data/presence-lock.schema.json"
+        doc = json.loads(sch.read_text(encoding="utf-8"))
+        doc["x-probe"] = 1
+        sch.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+        layers = root / "Platform/common/LAYERS.md"
+        layers.write_text(layers.read_text(encoding="utf-8").replace("| `x-opaque` | 2, 6 |", "| `x-opaque` | 2 |"),
+                          encoding="utf-8")
+        check = check_spec.Check(root, None, False)
+        with contextlib.redirect_stdout(io.StringIO()):
+            check.layer_words()
+        errors = [str(e) for e in check.errors]
+        self.assertTrue(any("x-probe is not a word of LAYERS.md § 3" in e for e in errors), errors)
+        self.assertTrue(any("x-opaque — layer 2, the skill's layers.tsv says 2, 6" in e for e in errors), errors)
+        self.assertEqual(len(errors), 2, errors)
 
     def test_stub_text(self):
         """Заготовка «вопрос «Архитектору»» / «исход не назван нормой» в исходах и нормах — красное; «прежде — вопрос

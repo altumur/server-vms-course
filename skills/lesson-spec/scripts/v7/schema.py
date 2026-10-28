@@ -17,8 +17,8 @@
 - `opaque` — объект без проверки ключей; `any` и узел без `type` — без `type`;
 - `default` — аннотация `default` (статическое умолчание; проекция — слой 6).
 
-Пометки слоёв (их исполняет каждая реализация, таблица — layers.tsv рядом со схемой):
-- `x-class` — класс отказа диалекта (только для сверки с эталоном набора А; нормой класс — по слою, п. 6);
+Пометки слоёв (их исполняет каждая реализация, таблица — layers.tsv рядом со схемой, LAYER_WORDS):
+- `x-class` — класс отказа диалекта (только для сверки с эталоном набора А; нормой класс — по слою, п. 6; в таблице нет);
 - `x-ordered` — проекция канонического вида (слой 6);
 - `x-integer-place` — целое место манифеста: приведение `4.0` → `4` (слой 2);
 - семьи (слой 3): `x-time` (время Н0, запись писателя или читателя), `x-whole` (целый знак и у читателя), `x-integer`
@@ -373,21 +373,27 @@ def dumps(schema):
 
 # ---------------------------------------------------------------- таблица слоёв
 
+# Слова таблицы layers.tsv и их слой — как в LAYERS § 3 (check_spec сверяет): каждая пометка, которую исполняет
+# реализация (V7-LAYERS-ROOT-HASH-01). Не несёт: справочные `x-owner`, `x-default-text`, `x-class` (слоя нет); слова
+# схемы вида `x-step`, `x-default`, `x-unique-by` (у схемы вида таблицы нет); `x-implied-by` — пометка строки связей.
 LAYER_WORDS = {
     "x-integer-place": "2", "x-time": "3", "x-whole": "3", "x-integer": "3", "x-max-bytes": "3", "x-max-names": "3",
-    "x-encoding": "3", "x-codec": "3", "x-ordered": "6", "x-complement-of": "п. 12", "x-class": "А",
+    "x-encoding": "3", "x-codec": "3", "x-file": "3", "x-opaque": "2, 6", "x-ordered": "6", "x-complement-of": "5",
 }
+# Слова LAYERS § 3, которых таблица не несёт (см. выше).
+NOT_IN_TABLE = {"x-owner", "x-default-text", "x-class", "x-step", "x-default", "x-unique-by", "x-implied-by"}
 
 
 def layer_table(schema):
-    """Строки `place<TAB>layer<TAB>word<TAB>value`: каждая пометка `x-*` схемы по месту в схеме (JSON Pointer)."""
+    """Строки `place<TAB>layer<TAB>word<TAB>value`: каждая пометка `x-*` из LAYER_WORDS по месту в схеме (JSON Pointer;
+    корень — пустой указатель, не `#`: строка с `#` у таблиц — комментарий, LAYERS § 1)."""
     rows = []
 
     def rec(s, p):
         if isinstance(s, dict):
             for k in sorted(s):
                 if k in LAYER_WORDS:
-                    rows.append((ptr(p) or "#", LAYER_WORDS[k], k, json.dumps(s[k], ensure_ascii=False)))
+                    rows.append((ptr(p), LAYER_WORDS[k], k, json.dumps(s[k], ensure_ascii=False)))
                 rec(s[k], p + [k])
         elif isinstance(s, list):
             for i, x in enumerate(s):
