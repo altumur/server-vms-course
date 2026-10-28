@@ -683,11 +683,12 @@ paths:
           description: как у GET, без тела
   /domain/shared:
     get:
-      summary: Документ, доставка и объявленное (Н1.2е)
+      summary: Документ, доставка и объявленное (Н1.2е; вида нет — 404 no domain here, вид, указатель или документ не читается — 503 unavailable)
       description: Отвечает консоль домена сама (P/10-14); PUT — передача процессу.
       responses:
         '200':
-          description: '{doc, delivery, declared}'
+          description: '{doc, delivery, declared}; вид без поля shared — delivery = before P/08.9 Н1.6 по виду (term 0, rev 0;
+            C10-SHARED-EMPTY-DELIVERY-01)'
           content:
             application/json:
               schema:
@@ -695,7 +696,10 @@ paths:
         '400': *id001
         '401': *id002
         '403': *id003
-        '503': *id004
+        '404':
+          $ref: '#/components/responses/NoDomain'
+        '503':
+          $ref: '#/components/responses/ReadUnavailable'
     head:
       summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2; договор пересылки «Двери домена»)'
       responses:
@@ -706,6 +710,8 @@ paths:
         '401':
           description: как у GET, без тела
         '403':
+          description: как у GET, без тела
+        '404':
           description: как у GET, без тела
         '503':
           description: как у GET, без тела
@@ -2259,7 +2265,7 @@ components:
             $ref: '#/components/schemas/GateOrRole403'
     ReadUnavailable:
       description: 'Дверь чтения консоли домена: строка, которой она отвечает (вид, тень, domain/members, domain/topology,
-        domain/placement, запись назначения), есть, но не читается — 503 {error: "unavailable"}, не 404 и не «строки нет» (В7
+        domain/placement, запись назначения, указатель domain/shared и его документ), есть, но не читается — 503 {error: "unavailable"}, не 404 и не «строки нет» (В7
         п. 3, решение «Архитектора» 2026-10-28, П1; строки 42, 43, 50, 54 списка); сторожевая shut — договор сторожевой и
         передачи shut'
       content:
