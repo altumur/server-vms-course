@@ -167,7 +167,7 @@ paths:
           $ref: '#/components/responses/DeposedAgent'
         '413':
           $ref: '#/components/responses/Refused'
-        '503': {$ref: '#/components/responses/Standby'}
+        '503': {$ref: '#/components/responses/StandbyOrUnavailable'}
   /api/tokens/{member}/{sub}/{kind}:
     description: 'Глава 8.7 (08.7-domain.norms.md) Н1.3, Н2, Н3 «выдать»; местная дверь агента — договор местной двери токенов (P/09.1 Н1.6; OpenAPI урока 9, тег local-door).'
     parameters:
@@ -1176,7 +1176,7 @@ components:
       description: 'standby процесса domain (P/08.10 Н1.7) или unavailable — строка, без которой дверь не отвечает, есть, но не
         читается: у дверей со сторожевой — строка проверки доступа (P/08.4 Н1.5; правило «Нечитаемая строка» договора
         сторожевой и передачи); /api/login — строка человека (P/08.4 Н1.2 check); /api/tokens — топология (P/08.7 Н3
-        «выдать» шаг 4а); /api/carry — список членов, метка, набор, отзывы (P/08.3 Н3 «принять»); форма Unavailable договора'
+        «выдать» шаг 4а); /api/carry — список членов, метка, набор, отзывы (P/08.3 Н3 «принять»); /api/relay — строки пакета (P/08.3 Н3 «держатель на POST /api/relay» шаг 0); форма Unavailable договора'
       content:
         application/json:
           schema:
