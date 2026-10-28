@@ -540,6 +540,27 @@ class TestTree(unittest.TestCase):
         self.assertIn("02.1-installer.schema.json", out)
         self.assertNotIn("stale exception implied", out)
 
+    def test_openapi_patterns_portable(self):
+        """V7-OPENAPI-PATTERN-LOOKAHEAD-01: `pattern` OpenAPI урока и общего контракта — в подмножестве LAYERS § 3;
+        просмотр в контракте урока — красное; общий контракт проверяется и без ссылки на него."""
+        import subprocess
+        root = self.copy()
+        api = root / "Platform/01-store/spec/01-store.api.openapi.yaml"
+        text = api.read_text(encoding="utf-8")
+        self.assertIn('pattern: "^(?:(?:0|[1-9][0-9]{0,19}))$"', text)
+        api.write_text(text.replace('pattern: "^(?:(?:0|[1-9][0-9]{0,19}))$"',
+                                    "pattern: '^(?:0|[1-9][0-9]{0,19})(?![\\s\\S])'", 1), encoding="utf-8")
+        (root / "Platform/common/contracts/probe.api.openapi.yaml").write_text(
+            "openapi: 3.1.0\ninfo: {title: probe, version: '1'}\ncomponents:\n  schemas:\n"
+            "    S: {type: string, pattern: '^(?:\\d+)$'}\n", encoding="utf-8")
+        out = subprocess.run([sys.executable, "-B", str(HERE.parent / "check_spec.py"), "--root", str(root),
+                              "--exceptions", str(ROOT / "skills/lesson-spec/exceptions.tsv")],
+                             capture_output=True, text=True).stdout
+        bad = [ln for ln in out.split("\n") if "OpenAPI: pattern at" in ln]
+        self.assertTrue(any("01-store.api.openapi.yaml" in ln for ln in bad), out[-2000:])
+        self.assertTrue(any("probe.api.openapi.yaml" in ln for ln in bad), out[-2000:])
+        self.assertEqual(len(bad), 2, bad)
+
     def test_sections_idempotent(self):
         from v7 import sections
         root = self.copy()

@@ -1232,6 +1232,8 @@ class Check:
             for pointer in unstated_openness(doc):
                 self.error(path, f"OpenAPI: object schema {pointer} does not say its openness "
                                  "(additionalProperties, or unevaluatedProperties on a composite)")
+            if self.v7:                              # V7-OPENAPI-PATTERN-LOOKAHEAD-01: подмножество LAYERS § 3
+                self.portable_patterns(path, doc)
         except Exception as exc:
             self.error(path, f"OpenAPI: {exc}")
         finally:
@@ -1239,6 +1241,15 @@ class Check:
         clean = len(self.errors) == errors
         self.contracts[path] = (self.contracts[path][0], clean)
         return clean
+
+    def portable_patterns(self, path, doc):
+        """`pattern` и ключи `patternProperties` контракта — в переносимом подмножестве (ADR-0092 п. 14, LAYERS § 3):
+        полное совпадение `^(?:…)$`, без просмотров, обратных ссылок, `.` и `\\d \\w`; как у схем семей и манифеста."""
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from v7 import spec as v7spec
+        for why in v7spec.unportable(doc):
+            self.error(path, f"OpenAPI: {why}")
+        self.stats["openapi_patterns"] += len(v7spec.patterns(doc))
 
     # A cross-file $ref between Platform contracts (decision on the lesson 6 transfer plan, В7): a relative
     # <path>.openapi.yaml#<JSON Pointer> inside Platform/, to the contract of a lesson with a smaller number or to a
@@ -1821,6 +1832,14 @@ class Check:
             self.stats["outcome_readers"] += len(want)
 
     # Package family-read (ADR-0087 доп. (9) п. 2): form, catalog and the outcome of every row on the В7 stack.
+    # Common contracts (V7-OPENAPI-PATTERN-LOOKAHEAD-01): every Platform/common/contracts/*.yaml is read and checked once
+    # per run, also when no lesson refers to it.
+    def common_contracts(self):
+        if not self.v7:
+            return
+        for path in sorted(Path(os.path.normpath(self.root / "Platform/common/contracts")).glob("*.yaml")):
+            self.contract(path)
+
     def family_read(self):
         # Once per run from main(), whatever lessons are named (ревью Kimi М-4): the package is the catalog's, not 02's.
         if not self.v7 or self.catalog is None:
@@ -2385,6 +2404,7 @@ def main():
     check.vms_frozen()
     check.outcome_readers()
     check.family_read()
+    check.common_contracts()
     for error in check.errors:
         print("ERROR", error)
     for line in check.excepted:
