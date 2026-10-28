@@ -18,7 +18,8 @@
 7. разделы норм между маркерами (`v7.sections`): «Форма» P/02.1, «Семьи данных» глав-владельцев, «Форма канонического
    вида» P/02.2;
 9. пакет `Platform/common/vectors/yaml-suite/`: README, `LICENSE` (MIT), `inputs/<id>.yaml` и `expect.tsv` — исход
-   слоя 1 по каждому тесту yaml-test-suite закреплённой версии (набор — на стенде, v7.yts.SUITE);
+   слоя 1 по каждому тесту yaml-test-suite закреплённой версии (`--yts`, по умолчанию v7.yts.SUITE; набор сверяется
+   с закреплённым — число файлов, тестов и sha256 содержимого — до первой правки дерева, иначе отказ с ненулевым кодом);
 8. `outcomes.tsv` — столбец `reader` (решение владельца 2026-10-28): строка пустого пути — на каждого читателя семьи
    (`readers` каталога, у `*` — роли уроков, чей абзац «Данные» читает ключ, ∪ участники `cas` и `guard`), строки
    полей — `*`. Это заготовка: проза исхода скопирована каждому читателю — делить её по читателям и называть пробелы
@@ -228,13 +229,43 @@ YAML_README = """# Векторы yaml-suite: слой 1 на yaml-test-suite (A
 """
 
 
-def yaml_suite(root):
-    """expect.tsv по всем тестам набора закреплённой версии (стенд: v7.yts.SUITE); без набора на стенде — пропуск."""
+# Закреплённый набор yaml-test-suite (ревью Codex RВ7-03): архив тега data-2022-01-17 (sha256 — README пакета,
+# VERSIONS.md), распакованный каталог — по содержимому: sha256 строк «путь\0sha256 файла\n» всех файлов по порядку пути.
+YTS_FILES = 1887
+YTS_TESTS = 402
+YTS_DIGEST = "e11b60dbdba6ba9f3a2a9f41b0fbc1c4efdcb7a0aafcf5aa250d56200143e8a5"
+
+
+def suite_digest(suite):
+    """(число файлов, sha256 содержимого) каталога набора."""
+    import hashlib
+    files = sorted(p for p in Path(suite).rglob("*") if p.is_file() and p.name != ".DS_Store")
+    h = hashlib.sha256()
+    for f in files:
+        h.update(f.relative_to(suite).as_posix().encode("utf-8") + b"\0" +
+                 hashlib.sha256(f.read_bytes()).hexdigest().encode("ascii") + b"\n")
+    return len(files), h.hexdigest()
+
+
+def check_suite(suite):
+    """Набор — ровно закреплённый: есть, полон, тот же по содержимому; иначе — отказ до первой правки дерева."""
+    from v7 import yts
+    suite = Path(suite)
+    if not suite.is_dir():
+        sys.exit("yaml-test-suite %s is missing: unpack the archive of tag data-2022-01-17 (v7/VERSIONS.md) and pass "
+                 "--yts DIR" % suite)
+    n, digest = suite_digest(suite)
+    tests = sum(1 for _ in yts.tests(suite))
+    if (n, tests, digest) != (YTS_FILES, YTS_TESTS, YTS_DIGEST):
+        sys.exit("yaml-test-suite %s is not the pinned one: %d files, %d tests, sha256 %s (want %d, %d, %s)"
+                 % (suite, n, tests, digest, YTS_FILES, YTS_TESTS, YTS_DIGEST))
+
+
+def yaml_suite(root, suite):
+    """expect.tsv по всем тестам закреплённого набора (проверен check_suite до правок дерева)."""
     from v7 import textv7, thin_rules, yts
-    if not yts.SUITE.is_dir():
-        return None
     rows = []
-    for tid, d in yts.tests(yts.SUITE):
+    for tid, d in yts.tests(Path(suite)):
         try:
             textv7.load_text_map((d / "in.yaml").read_bytes())
             got, rule = "ok", "-"
@@ -245,7 +276,7 @@ def yaml_suite(root):
     out.mkdir(parents=True, exist_ok=True)
     (out / "README.md").write_text(YAML_README, encoding="utf-8")
     (out / "LICENSE").write_bytes((HERE / "out" / "yts" / "LICENSE").read_bytes())
-    for tid, d in yts.tests(yts.SUITE):
+    for tid, d in yts.tests(Path(suite)):
         dst = out / "inputs" / (tid + ".yaml")
         dst.parent.mkdir(parents=True, exist_ok=True)
         dst.write_bytes((d / "in.yaml").read_bytes())
@@ -387,10 +418,13 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", required=True)
     ap.add_argument("--lessons", default="01,02,03,04,05,06")
+    from v7 import yts
+    ap.add_argument("--yts", default=str(yts.SUITE), help="распакованный yaml-test-suite data-2022-01-17 (закреплён)")
     a = ap.parse_args(argv)
     root = Path(a.root).resolve()
     if not (root / "Platform/02-installer/spec/02.1-installer.form.yaml").is_file():
         sys.exit("the tree has no dialect form of P/02.1: already moved?")
+    check_suite(a.yts)                                   # все входы — до первой правки дерева
     standard_files(root)
     implied(root)
     catalog(root)
@@ -400,7 +434,7 @@ def main(argv=None):
     print("canonical vectors:", vectors.generate(root))
     print("outcomes: rows of the whole row by reader:", outcome_readers(root))
     print("family-read:", family_read(root, set(a.lessons.split(","))))
-    print("yaml-suite:", yaml_suite(root))
+    print("yaml-suite:", yaml_suite(root, a.yts))
     from v7 import sections
     for norms in sorted((root / "Platform").glob("*/spec/*.norms.md")):
         text = norms.read_text(encoding="utf-8")

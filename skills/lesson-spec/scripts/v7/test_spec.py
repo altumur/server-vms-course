@@ -72,8 +72,56 @@ class TestPortable(unittest.TestCase):
 
     def test_unportable_patterns(self):
         for p in ["a", "^(?:a.b)$", "^(?:\\s)$", "^(?:(?=a))$", "^(?:(?<n>a))$", "^(?:\\1)$", "^(?:a{2)$",
-                  "^(?:[[:alpha:]])$", "^(?:a]b)$", "^(?:\\u0041)$", "^(?:a$b)$", "^(?:[]a])$", "^(?:\\-)$"]:
+                  "^(?:[[:alpha:]])$", "^(?:a]b)$", "^(?:\\u0041)$", "^(?:a$b)$", "^(?:[]a])$", "^(?:\\-)$",
+                  "^(?:\\d)$", "^(?:\\w)$", "^(?:\\D)$", "^(?:\\W)$", "^(?:[\\d])$", "^(?:[^\\W_])$", "^(?:[a\\s])$"]:
             self.assertIsNotNone(regex.check(p), p)
+
+    def test_unicode_controls(self):
+        """Ревью Codex RВ7-01: у ECMA-262 `u` и RE2 сокращения ASCII; Python исполняет их ASCII-смыслом (re.ASCII), так
+        что Unicode-цифра и Unicode-буква им не подходят, а дополнения их берут."""
+        from v7 import stack
+        for pat, val, ok in [("^(?:\\d)$", "\u0661", False), ("^(?:\\w)$", "я", False), ("^(?:\\D)$", "\u0661", True),
+                             ("^(?:\\W)$", "я", True), ("^(?:\\d)$", "7", True), ("^(?:[\\s\\S]+)$", "я\u0661\u2028", True),
+                             ("^(?:[^a-z])$", "я", True), ("^(?:[a-z])$", "я", False)]:
+            self.assertEqual(bool(regex.search(pat, val)), ok, (pat, val))
+            self.assertEqual(stack.validator_for({"type": "string", "pattern": pat}).is_valid(val), ok, (pat, val))
+
+    def test_relations_format_and_paths(self):
+        """Ревью Codex RВ7-02: формат файла связей, класс и путь строки — место формы (как у диалекта)."""
+        doc = json.loads((HERE / "out/02.1-installer.schema.json").read_text(encoding="utf-8"))
+        rel = json.loads((HERE / "out/02.1-installer.relations.json").read_text(encoding="utf-8"))
+        self.assertEqual(spec.relations_errors(rel, doc), [])
+        self.assertEqual(spec.row_place("metrics[$i].where.{}"), "/metrics/*/where/*")
+        self.assertEqual(spec.row_place("tables.$t.fields.name"), "/tables/*/fields/name")
+        bad = json.loads(json.dumps(rel))
+        bad["rows"][0]["path"] = "no_such_manifest_key"
+        bad["rows"][1]["class"] = "not_a_class"
+        bad["rows"][2]["extra"] = 1
+        bad["rows"][3]["norm"] = ""
+        why = "\n".join(spec.relations_errors(bad, doc))
+        for want in ("no_such_manifest_key is not a place of the form", "class 'not_a_class'", "unknown ['extra']",
+                     "norm of the wrong type or empty"):
+            self.assertIn(want, why)
+        self.assertTrue(spec.relations_errors(dict(rel, untranslated=[{"no": 1}]), doc))
+
+    def test_transition_needs_the_pinned_suite(self):
+        """Ревью Codex RВ7-03: набора нет или он иной — отказ с ненулевым кодом до первой правки дерева."""
+        from v7 import transition
+        d = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, d, True)
+        (d / "Platform/02-installer/spec").mkdir(parents=True)
+        form = d / "Platform/02-installer/spec/02.1-installer.form.yaml"
+        form.write_text("dialect: m10-form/1\n", encoding="utf-8")
+        with self.assertRaises(SystemExit) as cm:
+            transition.main(["--root", str(d), "--yts", str(d / "no-suite")])
+        self.assertIn("is missing", str(cm.exception.code))
+        (d / "suite/T1").mkdir(parents=True)
+        (d / "suite/T1/in.yaml").write_text("a: 1\n", encoding="utf-8")
+        with self.assertRaises(SystemExit) as cm:
+            transition.main(["--root", str(d), "--yts", str(d / "suite")])
+        self.assertIn("is not the pinned one", str(cm.exception.code))
+        self.assertEqual(sorted(p.relative_to(d / "Platform").as_posix() for p in (d / "Platform").rglob("*")),
+                         ["02-installer", "02-installer/spec", "02-installer/spec/02.1-installer.form.yaml"])
 
 
 class TestSchemaPlaces(unittest.TestCase):
