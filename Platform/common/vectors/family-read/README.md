@@ -6,7 +6,10 @@
 `x-*` схемы и `codec.tsv`.
 
 Таблица `NN.tsv` — семьи урока-владельца NN (колонка `owner` каталога). Строка:
-`case<TAB>family<TAB>kind<TAB>mode<TAB>who<TAB>text<TAB>verdict<TAB>paths<TAB>outcome<TAB>note`:
+`case<TAB>family<TAB>key<TAB>kind<TAB>mode<TAB>who<TAB>text<TAB>verdict<TAB>paths<TAB>outcome<TAB>note`:
+- `family` — шаблон колонки `key` каталога; `key` — конкретный ключ строки: литералы шаблона — точно, плейсхолдер — по
+  грамматике таблицы плейсхолдеров `Platform/common/data/README.md`; ключ не по шаблону — `refused`, путь `""` (строка
+  целиком, значение не судится; не `/key` — это путь поля `key` семей P/08), исход — строки пустого пути;
 - `who` — кто исполняет, JSON-массив ролей: у `writer` — роли операций каталога (`ops`), у `reader` — читатели семьи
   (строки пустого пути `<семья>.outcomes.tsv`: `readers` каталога ∪ участники `cas` и `guard`), в порядке файла;
 - `text` — у `row` — JSON-объект полей `items` (значения — строки, как записаны в хранилище); у `object` и `file` —
