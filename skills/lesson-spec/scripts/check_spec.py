@@ -18,13 +18,17 @@ from urllib.parse import unquote, urlsplit
 SCRIPTS = Path(__file__).resolve().parent
 EXCEPTIONS = SCRIPTS.parent / "exceptions.tsv"
 # Form schema next to the norm (ADR-0085): spec/<lesson>.schema.yaml and .references.tsv, run by manifest_schema/run.py.
-SCHEMA_INSTALL = ("uv run --no-project --with pyyaml --with openapi-spec-validator --with markdown-it-py "
-                  "--with jsonschema --with ruamel.yaml --with regress python skills/lesson-spec/scripts/check_spec.py …")
+# One environment for check_spec (both modes), the skill tests, the В7 stack and the SUT: pinned with hashes.
+REQUIREMENTS = Path(__file__).resolve().parent / "requirements.txt"
+SCHEMA_INSTALL = ("uv run --no-project --python 3.12 --with-requirements skills/lesson-spec/scripts/requirements.txt "
+                  "python skills/lesson-spec/scripts/check_spec.py")
 
 
 def arguments():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("lessons", nargs="+", help="module/NN-slug.md; only the new shared-spec layout")
+    parser.add_argument("lessons", nargs="*",
+                        help="module/NN-slug.md; only the new shared-spec layout; none — every Platform lesson of "
+                             "Platform/lessons.tsv (one result for one tree, whatever the shell globs)")
     parser.add_argument("--root", type=Path, default=Path.cwd(), help="repository root, default cwd")
     parser.add_argument("--exceptions", type=Path, default=EXCEPTIONS,
                         help="registry of allowed deviations, default the skill's exceptions.tsv")
@@ -283,8 +287,7 @@ REFUSAL_CLASSES_V7 = {"text", "form", "relations", "catalogue"}
 # The standard files of В7 (ADR-0092; PLAN-TRANSITION п. 1): the form of the manifest in JSON Schema. Their presence
 # switches the form, family and canonical checks from the dialect (form_source) to the В7 stack (v7/).
 MANIFEST_SCHEMA_V7 = Path("Platform/02-installer/spec/02.1-installer.schema.json")
-V7_INSTALL = ("python3.12 -m venv … && pip install --require-hashes -r skills/lesson-spec/scripts/v7/requirements.txt "
-              "(jsonschema, cel-expr-python, ruamel.yaml)")
+V7_INSTALL = SCHEMA_INSTALL
 
 
 # Data family sections (ADR-0088): markers in the norms of the owning chapter, common definitions of the schemas.
@@ -2340,10 +2343,35 @@ class Check:
                 self.error(path, "Source/vms/ is frozen since the VMS start: the bytes changed (ADR-0090 доп. (7) п. 4)")
             self.stats["vms_frozen"] += 1
 
+def environment():
+    """Pins of REQUIREMENTS against the installed distributions: [(package, installed or None, pinned)] that differ. The
+    result of the check must not depend on the environment: a missing or other version is an error, never a skip."""
+    from importlib import metadata
+    norm = lambda name: re.sub(r"[-_.]+", "-", name).lower()   # noqa: E731
+    out = []
+    for line in REQUIREMENTS.read_text(encoding="utf-8").splitlines():
+        m = re.match(r"([A-Za-z0-9][A-Za-z0-9._-]*)==([^\s;]+)", line)
+        if not m:
+            continue
+        try:
+            got = metadata.version(norm(m.group(1)))
+        except metadata.PackageNotFoundError:
+            got = None
+        if got != m.group(2):
+            out.append((m.group(1), got, m.group(2)))
+    return out
+
+
 def main():
     args = arguments().parse_args()
     check = Check(args.root, args.exceptions, args.strict_coverage)
-    for name in args.lessons:
+    for name, got, want in environment():
+        check.error(REQUIREMENTS, f"environment: {name} {got or 'is missing'}, pinned {want}; run: {SCHEMA_INSTALL}")
+    names = args.lessons or [f"Platform/{row['dir']}/{row['dir']}.md" for _, row in check.lessons_table()[1]
+                             if row.get("dir") and (check.root / "Platform" / row["dir"] / f"{row['dir']}.md").is_file()]
+    if not names:
+        check.error(check.root / LESSONS, "no lessons: name them or keep Platform/lessons.tsv")
+    for name in names:
         check.lesson((check.root / name).resolve())
     check.vms_module()
     check.vms_frozen()
