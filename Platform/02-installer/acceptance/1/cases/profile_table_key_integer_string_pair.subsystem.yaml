@@ -76,3 +76,4 @@ tables:
         type: string
       '1':
         type: string
+worker: {exec: /usr/lib/probe/worker}

@@ -1,1 +1,2 @@
 {name: probe}
+worker: {exec: /usr/lib/probe/worker}

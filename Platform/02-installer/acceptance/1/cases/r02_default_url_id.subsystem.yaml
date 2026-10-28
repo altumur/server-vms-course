@@ -1,0 +1,9 @@
+name: probe
+unit:
+  rows: things
+  id: name
+  fields:
+    name: {type: string}
+    x: {type: url, default: "{id}"}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
