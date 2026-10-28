@@ -103,7 +103,7 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 01-0102	platform/configstore-doors/<id>	platform/configstore-doors/t1	row	reader	["configstore-door"]	{"seen_at":"a,,b"}	refused	["/seen_at"]	{"configstore-door": [""]}	item seen_at: record 'a,,b'
 01-0103	platform/configstore-doors/<id>	platform/configstore-doors/t1	row	writer	["configstore-door"]	{"seen_at":" 1"}	refused	["/seen_at"]	[]	item seen_at: record ' 1'
 01-0104	platform/configstore-doors/<id>	platform/configstore-doors/t1	row	reader	["configstore-door"]	{"seen_at":" 1"}	refused	["/seen_at"]	{"configstore-door": [""]}	item seen_at: record ' 1'
-01-k0001	platform/epoch_floor	platform/epoch_floorx	row	writer	["proc:01-store"]	{"floor":"1","generation_at":"1"}	refused	[""]	[]	key: literal
-01-k0002	platform/epoch_floor	platform/epoch_floorx	row	reader	["<s>worker"]	{"floor":"1","generation_at":"1"}	refused	[""]	{"<s>worker": [""]}	key: literal
-01-k0003	platform/configstore-doors/<id>	platform/configstore-doors/	row	writer	["configstore-door"]	{"seen_at":"1"}	refused	[""]	[]	key: <id> ""
-01-k0004	platform/configstore-doors/<id>	platform/configstore-doors/	row	reader	["configstore-door"]	{"seen_at":"1"}	refused	[""]	{"configstore-door": [""]}	key: <id> ""
+01-k0001	platform/epoch_floor	platform/epoch_floorx	row	writer	["proc:01-store"]	{"floor":"1","generation_at":"1"}	refused	[""]	[]	catalog key: literal
+01-k0002	platform/epoch_floor	platform/epoch_floorx	row	reader	["<s>worker"]	{"floor":"1","generation_at":"1"}	refused	[""]	{"<s>worker": [""]}	catalog key: literal
+01-k0003	platform/configstore-doors/<id>	platform/configstore-doors/	row	writer	["configstore-door"]	{"seen_at":"1"}	refused	[""]	[]	catalog key: <id> ""
+01-k0004	platform/configstore-doors/<id>	platform/configstore-doors/	row	reader	["configstore-door"]	{"seen_at":"1"}	refused	[""]	{"configstore-door": [""]}	catalog key: <id> ""

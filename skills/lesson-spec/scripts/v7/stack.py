@@ -361,6 +361,12 @@ def collect(v, out):
     return out
 
 
+# Расширения CEL файла связей (LAYERS § 5). cel-expr-python 0.1.3: модуля two-var-comprehensions в
+# cel_expr_python.ext нет — расширение включается по имени в конфигурации окружения; имя, которого библиотека не знает,
+# принимается молча (D24, PY-CEL-02) — поэтому имена сверяются с этим перечнем.
+CEL_EXTENSIONS = ("strings", "two-var-comprehensions")
+
+
 class PyCel:
     """Строки связей на cel-expr-python: run(tree) → [(номер строки, путь)]."""
 
@@ -368,6 +374,10 @@ class PyCel:
         from cel_expr_python import cel
         self.celmod = cel
         ext = rel["env"]["extensions"]
+        unknown = [e["name"] for e in ext if e["name"] not in CEL_EXTENSIONS]
+        if unknown:
+            raise ValueError("relations env: unknown CEL extension %s (known: %s)" % (", ".join(unknown),
+                                                                                    ", ".join(CEL_EXTENSIONS)))
         yaml = "name: relations\n" + ("extensions:\n" + "".join("  - name: %s\n" % e["name"] for e in ext) if ext else "")
         cfg = cel.NewEnvConfigFromYaml(yaml)
         T = cel.Type

@@ -3,6 +3,8 @@
 
     python -m v7.transition --root ДЕРЕВО [--lessons 01,02,03,04,05,06]      (из skills/lesson-spec/scripts)
     python -m v7.transition --root ДЕРЕВО --keys          (дерево В7: столбец key пакета family-read, шаг 6)
+    python -m v7.transition --root ДЕРЕВО --add-row BASE TEXT NOTE   (дерево В7: строки family-read по образцу, исход — стек)
+    python -m v7.transition --root ДЕРЕВО --tables 08,09  (дерево В7: недостающие таблицы family-read, исход — стек)
 
 По порядку (дерево — с диалектом; повтор на уже переведённом дереве — отказ):
 1. стандартные файлы на места (`v7.build --place`): схемы, связи, таблицы слоёв, схема вида, `common.schema.json`;
@@ -16,7 +18,7 @@
 5. векторы `canonical` заново (`v7.vectors`);
 6. пакет `Platform/common/vectors/family-read/`: README и таблица на урок-владельца из уроков `--lessons` (набор А,
    `v7/out/seta/family-read.jsonl`, у строк `1e400` — исход по Б; случаи семей Б `a*`); столбец `key` — пример по
-   шаблону каталога (таблица плейсхолдеров `Platform/common/data/README.md`), строки `key: …` — ключ не по шаблону;
+   шаблону каталога (таблица плейсхолдеров `Platform/common/data/README.md`), строки `catalog key: …` — ключ не по шаблону;
    на дереве В7 — только это, на месте: `--keys` (V7-FAMILY-KEY-PLACEHOLDER-01);
 7. разделы норм между маркерами (`v7.sections`): «Форма» P/02.1, «Семьи данных» глав-владельцев, «Форма канонического
    вида» P/02.2;
@@ -350,7 +352,9 @@ README = """# Векторы family-read (ADR-0087 доп. (9) п. 2; ADR-0092 C
 - `verdict` — `ok` или `refused`; `paths` — JSON-массив путей отказа (порядок не важен); `outcome` — у писателя `[]`,
   у читателя — JSON-объект «роль → массив путей строк `<семья>.outcomes.tsv`, чей исход у этой роли действует»
   (пустой путь — строка целиком);
-- `note` — мутация набора А (`base` — экземпляр без мутации) или id случая набора Б.
+- `note` — мутация набора А (`base` — экземпляр без мутации; `<путь>: <мутация>`, в том числе поля `key` семей P/08),
+  id случая набора Б, `catalog key: <плейсхолдер> "<подстановка>"` или `catalog key: literal` — ключ не по шаблону, `add: …` —
+  строка, добавленная вне набора А (место отказа, дефект библиотеки).
 
 Ответ реализации на строку — JSON `{"verdict", "paths", "outcome"}`: строго сравниваются вердикт, множество путей и
 исход (у читателя — по каждой роли `who`); `note` и `case` — имена строки.
@@ -429,7 +433,61 @@ def family_read(root, lessons):
     return {k: len(v) for k, v in sorted(tables.items())}
 
 
-KEY_NOTE = "key: "
+def family_read_tables(root, lessons):
+    """Таблицы family-read уроков lessons на дереве В7 (README пакета — текст «Спецификации», не трогается): входы —
+    набор А (`family-read.jsonl`) и случаи семей Б, вердикт и пути — эталон с дельтами Б (как шаг 6), исход у читателя —
+    стек В7 по нынешним `outcomes.tsv` (столбец reader; копии исхода эталона без читателя устарели); столбец key — пример
+    по шаблону, строки «catalog key: …». Таблица урока, которая уже есть, — отказ. → {урок: строк}."""
+    d = root / FAMILY_READ
+    for lesson in lessons:
+        if (d / ("%s.tsv" % lesson)).exists():
+            sys.exit("family-read: %s.tsv is there; this builds a missing table only" % lesson)
+    cat = {(r["key"], r["kind"]): r for r in spec.read_catalog(root)}
+    templates = templates_of(root)
+    fixes = {r[0][len("family-read/"):]: r[2] for r in tsv(SETB / "deltas.tsv") if r[0].startswith("family-read/")}
+    fams, tables = {}, {}
+
+    def outcome(row, mode, paths):
+        who = json.loads(whom(root, row, mode, [], fams)[0])
+        if mode == "writer":
+            return json.dumps(who, ensure_ascii=False), []
+        outs = fams[(row["key"], row["kind"])][1]
+        return json.dumps(who, ensure_ascii=False), {r: [o.path for o in spec.outcomes_for(outs, paths, r)] for r in who}
+
+    def add(lesson, case, fam, kind, mode, text, verdict, paths, note):
+        row = cat[(fam, kind)]
+        who, outs = outcome(row, mode, paths)
+        tables.setdefault(lesson, []).append(
+            [case, fam, templates[(fam, kind)].example(), kind, mode, who, text, verdict,
+             json.dumps(paths, ensure_ascii=False), json.dumps(outs, ensure_ascii=False), note])
+    for ln in (SETA / "family-read.jsonl").read_text(encoding="utf-8").splitlines():
+        x = json.loads(ln)
+        if x["lesson"] not in lessons:
+            continue
+        verdict, paths = x["ref"]["verdict"], x["ref"]["paths"]
+        fix = fixes.get("%s|%s|%s|%s" % (x["family"], x["kind"], x["mode"], x["why"]))
+        if fix is not None:
+            m = re.fullmatch(r"(\w+) (\[.*?\]) (\[.*\])", fix)
+            verdict, paths = m.group(1), ast.literal_eval(m.group(2))
+        add(x["lesson"], "%s-%04d" % (x["lesson"], len(tables.get(x["lesson"], [])) + 1), x["family"], x["kind"],
+            x["mode"], x["text"], verdict, paths, x["why"])
+    for r in tsv(SETB / "cases.tsv"):
+        if not r[1].startswith("family-read|"):
+            continue
+        _, fam, mode = r[1].split("|")
+        src = json.loads((SETB / "cases" / (r[0] + ".json")).read_text(encoding="utf-8"))
+        lesson = src["schema"][:2]
+        if lesson in lessons:
+            m = re.fullmatch(r"(\w+) (\[.*?\]) (\[.*\])", r[2])
+            add(lesson, "%s-%s" % (lesson, r[0]), fam, src["kind"], mode, src["text"], m.group(1),
+                json.loads(m.group(2)), r[0])
+    for lesson, rows in sorted(tables.items()):
+        rows += key_rows(root, cat, templates, rows, fams)
+        write_tsv(d / ("%s.tsv" % lesson), [], HEADER, rows)
+    return {k: len(v) for k, v in sorted(tables.items())}
+
+
+KEY_NOTE = "catalog key: "            # не «key: »: так начинаются мутации поля key семей P/08 (набор А)
 
 
 def key_rows(root, cat, templates, rows, fams):
@@ -456,9 +514,51 @@ def key_rows(root, cat, templates, rows, fams):
     return out
 
 
+ADD_NOTE = "add: "
+
+
+def add_rows(root, base, text, note):
+    """Строки family-read по образцу base (case): та же семья и ключ, текст text, у писателя и у читателя (строки семьи
+    в обоих режимах, как у образца) — вердикт, пути и исход — стек В7 (spec.judge_family, outcomes_for по ролям who).
+    case — `<NN>-x<NNNN>`, note — `add: <note>`; есть строка семьи с той же note — ничего не добавляется. → [case]."""
+    d = root / FAMILY_READ
+    cat = {(r["key"], r["kind"]): r for r in spec.read_catalog(root)}
+    templates = templates_of(root)
+    for p in sorted(d.glob("[0-9][0-9].tsv")):
+        lines = tsv(p)
+        rows = lines[1:]
+        src = next((r for r in rows if r[0] == base), None)
+        if src is None:
+            continue
+        fam, key, kind = src[1], src[2], src[3]
+        if any(r[1] == fam and r[-1] == ADD_NOTE + note for r in rows):
+            return []
+        from v7 import stack
+        _, _, doc, _, outcomes = spec.load_family(root, cat[(fam, kind)])
+        family = stack.Family(doc, kind)
+        made = []
+        for mode in ("writer", "reader"):
+            like = next((r for r in rows if r[1] == fam and r[3] == kind and r[4] == mode), None)
+            if like is None:
+                continue
+            who = json.loads(like[5])
+            v = spec.judge_family(family, templates[(fam, kind)], key, kind, text, mode)
+            outs = ({r: [o.path for o in spec.outcomes_for(outcomes, v["paths"], r)] for r in who}
+                    if mode == "reader" else [])
+            n = 1 + sum(1 for r in rows if r[0].startswith(p.stem + "-x"))
+            case = "%s-x%04d" % (p.stem, n)
+            rows.append([case, fam, key, kind, mode, like[5], text, v["verdict"],
+                         json.dumps(v["paths"], ensure_ascii=False), json.dumps(outs, ensure_ascii=False),
+                         ADD_NOTE + note])
+            made.append(case)
+        write_tsv(p, [], HEADER, rows)
+        return made
+    sys.exit("family-read: no row %s" % base)
+
+
 def family_keys(root):
     """Пакет family-read на месте (данные «Спецификации»): столбец `key` после `family` — пример по шаблону каталога
-    (таблица плейсхолдеров README каталога); строки `key: …` — заново. Повтор — те же байты. → {урок: строк ключа}."""
+    (таблица плейсхолдеров README каталога); строки `catalog key: …` — заново. Повтор — те же байты. → {урок: строк ключа}."""
     cat = {(r["key"], r["kind"]): r for r in spec.read_catalog(root)}
     templates = templates_of(root)
     d = root / FAMILY_READ
@@ -488,10 +588,19 @@ def main(argv=None):
     from v7 import yts
     ap.add_argument("--yts", default=str(yts.SUITE), help="распакованный yaml-test-suite data-2022-01-17 (закреплён)")
     ap.add_argument("--keys", action="store_true", help="только столбец key пакета family-read на месте (дерево В7)")
+    ap.add_argument("--tables", help="недостающие таблицы family-read уроков (через запятую) на дереве В7")
+    ap.add_argument("--add-row", nargs=3, metavar=("BASE", "TEXT", "NOTE"),
+                    help="строки family-read по образцу BASE: текст TEXT, заметка NOTE, исход — стек В7 (дерево В7)")
     a = ap.parse_args(argv)
     root = Path(a.root).resolve()
     if a.keys:
         print("family-read key rows:", family_keys(root))
+        return
+    if a.tables:
+        print("family-read tables:", family_read_tables(root, set(a.tables.split(","))))
+        return
+    if a.add_row:
+        print("family-read rows:", add_rows(root, *a.add_row))
         return
     if not (root / "Platform/02-installer/spec/02.1-installer.form.yaml").is_file():
         sys.exit("the tree has no dialect form of P/02.1: already moved?")

@@ -1053,33 +1053,33 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 06-p0002	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A,A,A"}	refused	["/labels/1", "/labels/2"]	{"<s>controller": [""], "console": [""]}	labels: three equal items (uniqueItems: each item equal to an earlier one)
 06-p0003	objects/<sub>/commands/<rid>	objects/testsub/commands/r-0123456789abcdef	row	writer	["<s>worker,console", "<s>worker"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a","outcome":"performed","ended_at":"1","error":"x"}	refused	["/error"]	[]	error: forbidden by outcome performed (schema false under then — place of the key, D3)
 06-p0004	objects/<sub>/commands/<rid>	objects/testsub/commands/r-0123456789abcdef	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a","outcome":"performed","ended_at":"1","error":"x"}	refused	["/error"]	{"<s>worker": [""], "console": [""]}	error: forbidden by outcome performed (schema false under then — place of the key, D3)
-06-k0001	<sub>/policy	/policy	row	writer	["console"]	{"servers":"shared"}	refused	[""]	[]	key: <sub> ""
-06-k0002	<sub>/policy	/policy	row	reader	["<s>controller", "console"]	{"servers":"shared"}	refused	[""]	{"<s>controller": [""], "console": [""]}	key: <sub> ""
-06-k0003	platform/servers/<сервер>	platform/servers/	row	writer	["console"]	{"labels":"A"}	refused	[""]	[]	key: <сервер> ""
-06-k0004	platform/servers/<сервер>	platform/servers/	row	reader	["<s>controller", "console"]	{"labels":"A"}	refused	[""]	{"<s>controller": [""], "console": [""]}	key: <сервер> ""
-06-k0005	platform/drain	platform/drainx	row	writer	["console"]	{"server":"","at":"1"}	refused	[""]	[]	key: literal
-06-k0006	platform/drain	platform/drainx	row	reader	["<s>controller", "console"]	{"server":"","at":"1"}	refused	[""]	{"<s>controller": [""], "console": [""]}	key: literal
-06-k0007	platform/decommission/<сервер>	platform/decommission/	row	writer	["console"]	{"by":"a","at":"1","why":"a"}	refused	[""]	[]	key: <сервер> ""
-06-k0008	platform/decommission/<сервер>	platform/decommission/	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a"}	refused	[""]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	key: <сервер> ""
-06-k0009	door/signer	door/signerx	row	writer	["console", "console,admin"]	{"kid":"a","seed_secret":"a"}	refused	[""]	[]	key: literal
-06-k0010	door/signer	door/signerx	row	reader	["admin", "console"]	{"kid":"a","seed_secret":"a"}	refused	[""]	{"admin": [""], "console": [""]}	key: literal
-06-k0011	door/keys	door/keysx	row	writer	["console"]	{}	refused	[""]	[]	key: literal
-06-k0012	door/keys	door/keysx	row	reader	["<s>worker", "console"]	{}	refused	[""]	{"<s>worker": [""], "console": [""]}	key: literal
-06-k0013	<sub>/next_id	/next_id	row	writer	["console"]	{"n":"1"}	refused	[""]	[]	key: <sub> ""
-06-k0014	<sub>/next_id	/next_id	row	reader	["console"]	{"n":"1"}	refused	[""]	{"console": [""]}	key: <sub> ""
-06-k0015	<sub>/requests/<rid>	/requests/r-0123456789abcdef	row	writer	["console,<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	[]	key: <sub> ""
-06-k0016	<sub>/requests/<rid>	testsub/requests/	row	writer	["console,<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	[]	key: <rid> ""
-06-k0017	<sub>/requests/<rid>	/requests/r-0123456789abcdef	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	{"<s>worker": [""], "console": [""]}	key: <sub> ""
-06-k0018	<sub>/requests/<rid>	testsub/requests/	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	{"<s>worker": [""], "console": [""]}	key: <rid> ""
-06-k0019	<sub>/asked/<sha16(имя)>	/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	[]	key: <sub> ""
-06-k0020	<sub>/asked/<sha16(имя)>	testsub/asked/	row	writer	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	[]	key: <sha16(имя)> ""
-06-k0021	<sub>/asked/<sha16(имя)>	/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	{"console": [""]}	key: <sub> ""
-06-k0022	<sub>/asked/<sha16(имя)>	testsub/asked/	row	reader	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	{"console": [""]}	key: <sha16(имя)> ""
-06-k0023	objects/<sub>/commands/<rid>	objects//commands/r-0123456789abcdef	row	writer	["<s>worker,console", "<s>worker"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	[]	key: <sub> ""
-06-k0024	objects/<sub>/commands/<rid>	objects/testsub/commands/	row	writer	["<s>worker,console", "<s>worker"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	[]	key: <rid> ""
-06-k0025	objects/<sub>/commands/<rid>	objects//commands/r-0123456789abcdef	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	{"<s>worker": [""], "console": [""]}	key: <sub> ""
-06-k0026	objects/<sub>/commands/<rid>	objects/testsub/commands/	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	{"<s>worker": [""], "console": [""]}	key: <rid> ""
-06-k0027	platform/schema	platform/schemax	row	writer	["console"]	{"version":"1","at":"1"}	refused	[""]	[]	key: literal
-06-k0028	platform/schema	platform/schemax	row	reader	["<s>controller", "<s>domain", "<s>worker", "console", "domainconsole", "resource"]	{"version":"1","at":"1"}	refused	[""]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""], "domainconsole": [""], "resource": [""]}	key: literal
-06-k0029	<sub>/sweep	/sweep	row	writer	["console"]	{"digests":"sha256-0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	[]	key: <sub> ""
-06-k0030	<sub>/sweep	/sweep	row	reader	["console"]	{"digests":"sha256-0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	{"console": [""]}	key: <sub> ""
+06-k0001	<sub>/policy	/policy	row	writer	["console"]	{"servers":"shared"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0002	<sub>/policy	/policy	row	reader	["<s>controller", "console"]	{"servers":"shared"}	refused	[""]	{"<s>controller": [""], "console": [""]}	catalog key: <sub> ""
+06-k0003	platform/servers/<сервер>	platform/servers/	row	writer	["console"]	{"labels":"A"}	refused	[""]	[]	catalog key: <сервер> ""
+06-k0004	platform/servers/<сервер>	platform/servers/	row	reader	["<s>controller", "console"]	{"labels":"A"}	refused	[""]	{"<s>controller": [""], "console": [""]}	catalog key: <сервер> ""
+06-k0005	platform/drain	platform/drainx	row	writer	["console"]	{"server":"","at":"1"}	refused	[""]	[]	catalog key: literal
+06-k0006	platform/drain	platform/drainx	row	reader	["<s>controller", "console"]	{"server":"","at":"1"}	refused	[""]	{"<s>controller": [""], "console": [""]}	catalog key: literal
+06-k0007	platform/decommission/<сервер>	platform/decommission/	row	writer	["console"]	{"by":"a","at":"1","why":"a"}	refused	[""]	[]	catalog key: <сервер> ""
+06-k0008	platform/decommission/<сервер>	platform/decommission/	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a"}	refused	[""]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	catalog key: <сервер> ""
+06-k0009	door/signer	door/signerx	row	writer	["console", "console,admin"]	{"kid":"a","seed_secret":"a"}	refused	[""]	[]	catalog key: literal
+06-k0010	door/signer	door/signerx	row	reader	["admin", "console"]	{"kid":"a","seed_secret":"a"}	refused	[""]	{"admin": [""], "console": [""]}	catalog key: literal
+06-k0011	door/keys	door/keysx	row	writer	["console"]	{}	refused	[""]	[]	catalog key: literal
+06-k0012	door/keys	door/keysx	row	reader	["<s>worker", "console"]	{}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: literal
+06-k0013	<sub>/next_id	/next_id	row	writer	["console"]	{"n":"1"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0014	<sub>/next_id	/next_id	row	reader	["console"]	{"n":"1"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
+06-k0015	<sub>/requests/<rid>	/requests/r-0123456789abcdef	row	writer	["console,<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0016	<sub>/requests/<rid>	testsub/requests/	row	writer	["console,<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	[]	catalog key: <rid> ""
+06-k0017	<sub>/requests/<rid>	/requests/r-0123456789abcdef	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: <sub> ""
+06-k0018	<sub>/requests/<rid>	testsub/requests/	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: <rid> ""
+06-k0019	<sub>/asked/<sha16(имя)>	/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0020	<sub>/asked/<sha16(имя)>	testsub/asked/	row	writer	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	[]	catalog key: <sha16(имя)> ""
+06-k0021	<sub>/asked/<sha16(имя)>	/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
+06-k0022	<sub>/asked/<sha16(имя)>	testsub/asked/	row	reader	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	{"console": [""]}	catalog key: <sha16(имя)> ""
+06-k0023	objects/<sub>/commands/<rid>	objects//commands/r-0123456789abcdef	row	writer	["<s>worker,console", "<s>worker"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0024	objects/<sub>/commands/<rid>	objects/testsub/commands/	row	writer	["<s>worker,console", "<s>worker"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	[]	catalog key: <rid> ""
+06-k0025	objects/<sub>/commands/<rid>	objects//commands/r-0123456789abcdef	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: <sub> ""
+06-k0026	objects/<sub>/commands/<rid>	objects/testsub/commands/	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: <rid> ""
+06-k0027	platform/schema	platform/schemax	row	writer	["console"]	{"version":"1","at":"1"}	refused	[""]	[]	catalog key: literal
+06-k0028	platform/schema	platform/schemax	row	reader	["<s>controller", "<s>domain", "<s>worker", "console", "domainconsole", "resource"]	{"version":"1","at":"1"}	refused	[""]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""], "domainconsole": [""], "resource": [""]}	catalog key: literal
+06-k0029	<sub>/sweep	/sweep	row	writer	["console"]	{"digests":"sha256-0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0030	<sub>/sweep	/sweep	row	reader	["console"]	{"digests":"sha256-0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
