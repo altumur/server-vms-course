@@ -118,7 +118,7 @@ TLS, порт (решение «Архитектора» 2026-10-25, C10-START83
 
 | Дверь | Успех | Отказы |
 |---|---|---|
-| GET `/domain/placement` | 200 `{rev, records: {"<sub>/<ref>": Placement}}` | строка `domain/placement` (счётчик `rev`) есть, но не читается — 503 `{error: "unavailable"}` (В7 п. 3, решение «Архитектора» 2026-10-28, по предложению; строка 43 списка); 401/403 — Н1.5 |
+| GET `/domain/placement` | 200 `{rev, records: {"<sub>/<ref>": Placement}}`; строки `domain/placement` нет — `rev` 0 (счётчика ещё нет, [P/08.6](../../08-domain/spec/08.6-domain.norms.md) Н1.2 `absent`), `records` — как всегда (C10-PLACEMENT-ABSENT-01) | строка `domain/placement` (счётчик `rev`) есть, но не читается — 503 `{error: "unavailable"}` (В7 п. 3, решение «Архитектора» 2026-10-28, по предложению; строка 43 списка); 401/403 — Н1.5 |
 | GET `/domain/placement/<sub>/<ref>` | 200 Placement | 404 нет записи; запись есть, но не читается — 503 `{error: "unavailable"}`, не 404 (В7 п. 3, решение «Архитектора» 2026-10-28, по предложению; строка 42 списка); 404 нет манифеста или без `domain.ref` |
 
 Форма `Placement` и счётчик — [глава 8.6](../../08-domain/spec/08.6-domain.norms.md) Н1.1; правки назначений консоль
