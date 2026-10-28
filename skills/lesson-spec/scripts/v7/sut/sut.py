@@ -197,7 +197,8 @@ def cmd_load_adapter(be, a):
         p = Path(line.rstrip("\n"))
         try:
             verdict, cls, paths, lines = be.load(p.read_bytes())
-            out = {"verdict": verdict, "text": "" if verdict == "ok" else refusal_text(be, p.name, cls, paths, lines)}
+            out = {"verdict": verdict, "text": "" if verdict == "ok" else "crash: %s" % p.name if verdict == "crash"
+                   else refusal_text(be, p.name, cls, paths, lines)}
         except Exception as exc:                            # noqa: BLE001
             out = {"verdict": "crash", "text": "%s: %s" % (type(exc).__name__, exc)}
         sys.stdout.write(json.dumps(out, ensure_ascii=False) + "\n")
