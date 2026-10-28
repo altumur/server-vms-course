@@ -1304,7 +1304,7 @@ components:
       description: 'P/08.10 Н1.7 standby: каждая дверь ждущего процесса — до чтения тела'
       properties:
         error: {const: standby}
-        detail: {type: string, minLength: 1, description: 'the domain process of this cluster is <экземпляр>'}
+        detail: {type: string, minLength: 1, description: 'the domain process of this cluster is <экземпляр> — экземпляр ответившего ждущего процесса, не держатель очереди (P/08.10 Н1.7 standby)'}
     FrozenBody:
       type: object
       required: [error, detail]
