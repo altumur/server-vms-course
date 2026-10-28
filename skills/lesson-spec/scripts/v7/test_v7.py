@@ -160,6 +160,69 @@ class TestDefects(unittest.TestCase):
             go.close()
 
 
+    @NEED_CEL
+    def test_d24_two_var_by_name(self):
+        """D24 (PY-CEL-02): two-var-comprehensions — только по имени в конфигурации окружения (модуля в ext нет); без
+        него transformList не собирается; несуществующее имя принимается молча — PyCel сверяет имена со своим перечнем."""
+        from cel_expr_python import cel
+
+        def env(names):
+            y = "name: r\n" + ("extensions:\n" + "".join("  - name: %s\n" % n for n in names) if names else "")
+            return cel.NewEnv(config=cel.NewEnvConfigFromYaml(y), variables={"doc": cel.Type.DYN})
+        expr = "[1, 2].transformList(i, v, v * 2)"
+        self.assertFalse(hasattr(getattr(cel, "ext", None), "two_var_comprehensions"))
+        with self.assertRaises(Exception):
+            env([]).compile(expr)
+        self.assertEqual(env(["two-var-comprehensions"]).compile(expr).eval(data={"doc": {}}).plain_value(), [2, 4])
+        env(["no-such-extension"])                                           # дефект: принято молча
+        with self.assertRaisesRegex(ValueError, "unknown CEL extension no-such-extension"):
+            stack.PyCel({"env": {"extensions": [{"name": "no-such-extension"}]}, "rows": []})
+
+    def test_d22_json_loads(self):
+        """D22 (PY-JSON-01): json CPython 3.12 — `1e400` → inf, NaN/Infinity приняты, повтор ключа — последний; стек
+        (strict_json: parse_float/parse_int — лексема, parse_constant и повтор — отказ) отказывает."""
+        self.assertEqual(json.loads("1e400"), float("inf"))
+        self.assertTrue(json.loads("NaN") != json.loads("NaN") and json.loads("Infinity") == float("inf"))
+        self.assertEqual(json.loads('{"a": 1, "a": 2}'), {"a": 2})
+        for t in ("NaN", "Infinity", "-Infinity", '{"a": 1, "a": 2}'):
+            with self.assertRaises(stack.Bad, msg=t):
+                stack.strict_json(t)
+        with self.assertRaises(stack.Bad):
+            stack.strict_json("1e400", finite=True)
+        self.assertEqual(stack.strict_json("1e0").lex, "1e0")                 # точная лексема, не 1.0
+
+    def test_d23_jsonschema_places(self):
+        """D23 (PY-JS-02): jsonschema 4.26.0 — место `required`, `additionalProperties: false`, `uniqueItems` —
+        объект или список; стек (слой 4, LAYERS § 6) — недостающее поле, лишний ключ, элемент, равный более раннему."""
+        s = {"type": "object", "required": ["a"], "additionalProperties": False,
+             "properties": {"b": {"type": "array", "uniqueItems": True}}}
+        inst = {"b": [1, 1], "x": 0}
+        raw = sorted("/" + "/".join(map(str, e.absolute_path)) for e in jsonschema.Draft202012Validator(s).iter_errors(inst))
+        self.assertEqual(raw, ["/", "/", "/b"])                              # дефект: родитель и список
+        self.assertEqual(stack.Family(s, "object").judge(inst)["paths"], ["/a", "/b/1", "/x"])
+
+    def test_d25_ruamel_rt_overlap(self):
+        """D25 (PY-RY-08): ruamel typ=rt — NotImplementedError «overlap in comment» на P94K (suite ok); стек разбирает
+        typ=safe — вход принят."""
+        from ruamel.yaml import YAML
+        from v7 import textv7
+        data = (ROOT / "Platform/common/vectors/yaml-suite/inputs/P94K.yaml").read_bytes()
+        with self.assertRaises(NotImplementedError):
+            YAML(typ="rt").load(data.decode())
+        YAML(typ="safe", pure=True).load(data.decode())
+        textv7.load_text_map(data)
+
+    @NEED_CEL
+    def test_d18_python_map_order(self):
+        """D18 и у cel-expr-python (cel-cpp, PY-CEL-03): порядок перебора отображения меняется от процесса к процессу."""
+        import subprocess
+        code = ("from cel_expr_python import cel;"
+                "e = cel.NewEnv(variables={'doc': cel.Type.DYN});"
+                "print(e.compile('{\"z\": 1, \"a\": 2, \"m\": 3}.map(k, k)').eval(data={'doc': {}}).plain_value())")
+        orders = {subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True).stdout
+                  for _ in range(8)}
+        self.assertGreater(len(orders), 1, orders)
+
     def test_d19_dialect_p1_states(self):
         """D19 — дефект эталона по метке: П1 без `state.<имя>` (ADR-0091 п. 3; V7-P022-SNAPSHOT-STATE-01). Эталон метки
         (form_source и форма P/02.1 из `git archive`) даёт `snapshot` без состояний, стек В7 — с ними, кроме `cursor`;

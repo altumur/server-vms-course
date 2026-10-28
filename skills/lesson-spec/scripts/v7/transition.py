@@ -3,6 +3,7 @@
 
     python -m v7.transition --root ДЕРЕВО [--lessons 01,02,03,04,05,06]      (из skills/lesson-spec/scripts)
     python -m v7.transition --root ДЕРЕВО --keys          (дерево В7: столбец key пакета family-read, шаг 6)
+    python -m v7.transition --root ДЕРЕВО --add-row BASE TEXT NOTE   (дерево В7: строки family-read по образцу, исход — стек)
 
 По порядку (дерево — с диалектом; повтор на уже переведённом дереве — отказ):
 1. стандартные файлы на места (`v7.build --place`): схемы, связи, таблицы слоёв, схема вида, `common.schema.json`;
@@ -456,6 +457,48 @@ def key_rows(root, cat, templates, rows, fams):
     return out
 
 
+ADD_NOTE = "add: "
+
+
+def add_rows(root, base, text, note):
+    """Строки family-read по образцу base (case): та же семья и ключ, текст text, у писателя и у читателя (строки семьи
+    в обоих режимах, как у образца) — вердикт, пути и исход — стек В7 (spec.judge_family, outcomes_for по ролям who).
+    case — `<NN>-x<NNNN>`, note — `add: <note>`; есть строка семьи с той же note — ничего не добавляется. → [case]."""
+    d = root / FAMILY_READ
+    cat = {(r["key"], r["kind"]): r for r in spec.read_catalog(root)}
+    templates = templates_of(root)
+    for p in sorted(d.glob("[0-9][0-9].tsv")):
+        lines = tsv(p)
+        rows = lines[1:]
+        src = next((r for r in rows if r[0] == base), None)
+        if src is None:
+            continue
+        fam, key, kind = src[1], src[2], src[3]
+        if any(r[1] == fam and r[-1] == ADD_NOTE + note for r in rows):
+            return []
+        from v7 import stack
+        _, _, doc, _, outcomes = spec.load_family(root, cat[(fam, kind)])
+        family = stack.Family(doc, kind)
+        made = []
+        for mode in ("writer", "reader"):
+            like = next((r for r in rows if r[1] == fam and r[3] == kind and r[4] == mode), None)
+            if like is None:
+                continue
+            who = json.loads(like[5])
+            v = spec.judge_family(family, templates[(fam, kind)], key, kind, text, mode)
+            outs = ({r: [o.path for o in spec.outcomes_for(outcomes, v["paths"], r)] for r in who}
+                    if mode == "reader" else [])
+            n = 1 + sum(1 for r in rows if r[0].startswith(p.stem + "-x"))
+            case = "%s-x%04d" % (p.stem, n)
+            rows.append([case, fam, key, kind, mode, like[5], text, v["verdict"],
+                         json.dumps(v["paths"], ensure_ascii=False), json.dumps(outs, ensure_ascii=False),
+                         ADD_NOTE + note])
+            made.append(case)
+        write_tsv(p, [], HEADER, rows)
+        return made
+    sys.exit("family-read: no row %s" % base)
+
+
 def family_keys(root):
     """Пакет family-read на месте (данные «Спецификации»): столбец `key` после `family` — пример по шаблону каталога
     (таблица плейсхолдеров README каталога); строки `key: …` — заново. Повтор — те же байты. → {урок: строк ключа}."""
@@ -488,10 +531,15 @@ def main(argv=None):
     from v7 import yts
     ap.add_argument("--yts", default=str(yts.SUITE), help="распакованный yaml-test-suite data-2022-01-17 (закреплён)")
     ap.add_argument("--keys", action="store_true", help="только столбец key пакета family-read на месте (дерево В7)")
+    ap.add_argument("--add-row", nargs=3, metavar=("BASE", "TEXT", "NOTE"),
+                    help="строки family-read по образцу BASE: текст TEXT, заметка NOTE, исход — стек В7 (дерево В7)")
     a = ap.parse_args(argv)
     root = Path(a.root).resolve()
     if a.keys:
         print("family-read key rows:", family_keys(root))
+        return
+    if a.add_row:
+        print("family-read rows:", add_rows(root, *a.add_row))
         return
     if not (root / "Platform/02-installer/spec/02.1-installer.form.yaml").is_file():
         sys.exit("the tree has no dialect form of P/02.1: already moved?")
