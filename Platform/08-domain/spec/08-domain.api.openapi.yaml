@@ -1670,21 +1670,19 @@ components:
       properties:
         relayed:
           type: object
-          propertyNames: {$ref: '#/components/schemas/MemberName'}
+          description: 'Имена — по MemberName у писателя (ретранслятор P/09.2); держатель имя не по грамматике отказывает в
+            refused[<имя как пришло>], пакет живёт (P/08.3 Н3 «держатель на POST /api/relay» шаг 2, H1) — поэтому схема
+            пакета имён не судит (C08-RELAY-BATCH-FORM-01)'
           additionalProperties:
             type: object
             additionalProperties: true
             description: 'Публикация (Publication; целое или изменение против rev этой дороги). Открыт намеренно: публикация не по форме — refused[член], не отказ пакета (P/08.3 Н3 «держатель на POST /api/relay» шаг 2).'
         knocks:
           type: object
-          propertyNames: {$ref: '#/components/schemas/MemberName'}
-          additionalProperties:
-            type: object
-            required: [publication, signature]
-            additionalProperties: false
-            properties:
-              publication: {type: string, maxLength: 262144}
-              signature: {type: string}
+          description: 'Стук писатель (ретранслятор P/09.2 Н1.4 knocks) пишет так: имя — MemberName, значение — {publication:
+            строка ≤ 256 KiB, signature: строка}, без иных полей; стук не по этой форме держатель пропускает без записи,
+            пакет живёт (P/08.3 Н3 шаг 3, H2) — поэтому схема пакета стуков не судит (C08-RELAY-BATCH-FORM-01)'
+          additionalProperties: true
     RelayAnswer:
       type: object
       required: [relay_for, relayed, refused, keys]
