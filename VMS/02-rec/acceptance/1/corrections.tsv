@@ -1,2 +1,3 @@
 date	sample	fix	languages
 2026-10-29	1/scenarios.tsv: 01-create	url тома — file://{data}/subsystems/rec/obsd/volumes/1 вместо буквального /data/platform: на стенде PLATFORM_DIR — {data} экземпляра (общий README приёмки VMS «Стенд VMS»); вопрос stand-0106 при движке S1 (раннер)	all
+2026-10-29	1/scenarios.tsv: 03-home, шаги 2, 4	у home снят must_match: запись на карте другой камеры — 201 (страж — регистратор карты, V/02.6 Н1.7), тома нет — 201 (ссылка цели не требует, размещение не ставит); прежде 409 must_match отказывал и любой записи на томе без поля cam (local, network, backup, incidents); разбор ревью V/02, вопрос 1 и строки 1, 2 (Codex R01, Claude Б-1, С-1)	all

@@ -370,9 +370,11 @@ async function loadTimeline(id){
     if(!w.door){if(w.status!==404)missing.add(place||rec.id);else if(place&&w.missing)missing.add(w.missing);return null}
     try{const r=await doorFetch(where,`/timeline/${encodeURIComponent(rec.id)}?from=${from}&to=${to}`);
       if(!r||!r.ok){missing.add(place||rec.id);return null}
-      const m=r.headers.get("X-Unreachable");if(m)missing.add(m);
-      const u=r.headers.get("X-Unavailable");if(u)u.split(",").map(x=>x.trim()).filter(Boolean).forEach(x=>missing.add(x));   // volumes of it nobody holds
-      return await r.json()}
+      // the door names what it could not reach in the body (V/02.5 Н1.2): recorders `unreachable`, volumes of it nobody
+      // holds `unavailable` (<volume>@<server>); a bare array — the earlier form, until the course tests take the new one
+      const d=await r.json();if(Array.isArray(d))return d;
+      for(const x of[...(d&&d.unreachable||[]),...(d&&d.unavailable||[])])if(typeof x==="string"&&x)missing.add(x);
+      return d&&Array.isArray(d.spans)?d.spans:[]}
     catch(e){missing.add(place||rec.id);return null}
   };
   // the recordings' own doors first (theirs win a twin), then the volumes'

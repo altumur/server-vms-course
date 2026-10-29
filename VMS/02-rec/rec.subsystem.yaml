@@ -2,7 +2,8 @@
 #
 # A unit is ONE RECORDING of one camera, named by the operator: `rec/recordings/<name>`. The recorder worker
 # (`recworker`) subscribes to the camera's fan-out from whichever VMS worker holds it
-# (the `live_url` in the VMS heartbeat — never a second connection to the camera), takes `rec/epoch/<name>`,
+# (`live_shm` or `live_url` in its heartbeat, or the ingest from another server — never a second connection to the
+# camera), takes `rec/epoch/<name>`,
 # and writes footage into the volume it holds, as the stream `<name>/e<epoch>`, through the host's `obsd`.
 # The worker that holds the camera may be anywhere; the recorder must be where disks are — `requires:
 # resource` — and one per VOLUME (`servers: distinct` over `place_by: volume`): a second recorder on the
@@ -53,15 +54,18 @@ lease: {unconfirmed_max: forever}
 # book (where a camera of another cluster comes from), the book of primaries (a backup decides by it), the book of
 # the centre's ingests per relay (`upstream`, written by the centre's first recorder), the assignments naming this
 # cluster, the topology (relay, star, centre) and the asks a relay carries up (V/07). Here a worker reads what its spec
-# names.
-worker: {exec: /usr/lib/rec/worker, reads: [cam/heartbeats/, det/units/, domain/cam/sources, domain/rec/primaries, domain/rec/upstream, domain/placed/rec/, domain/member-list, domain/member-topology, domain/auto/asks], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 40}   # requests: a camera's pusher files cam/requests/rec.ask-<id> as the recorder (V/02.9 Н1.2)
+# names. A book is a member's copy by its exact name; the domain-holder cluster has no copy and reads its own row
+# `domain/<sub>/<book>/<CLUSTER>` — the rights generator grants that one row (P/02.5 Н1.4); only the copy is declared.
+worker: {exec: /usr/lib/rec/worker, reads: [cam/heartbeats/, det/units/, domain/cam/sources, domain/rec/primaries, domain/rec/upstream, domain/placed/rec/, domain/member-list, domain/member-topology, domain/topology, domain/view, domain/auto/asks], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 40}   # requests: a camera's pusher files cam/requests/rec.ask-<id> as the recorder (V/02.9 Н1.2)
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
 about: {sub: cam, field: cam}
 # The archive's engine: a part of rec with its own service (V/02.2; ADR-0091 п. 5) — one daemon per server, its socket a
 # share of the part (the recorders of the server are let in by the part's group); its protocol — spec/02-rec.obsd.contract.md.
-parts: {obsd: {exec: "/usr/local/bin/obsd --socket /run/vms-rec-obsd/obsd.sock", volumes: true, stop_timeout: 60}}
+# Its path is `OBSD_SOCKET` of the subsystem file (default /run/vms-rec-obsd/obsd.sock, V/02.2 Н1.3), not an argument here:
+# a stand gives each instance its own.
+parts: {obsd: {exec: "/usr/local/bin/obsd", volumes: true, stop_timeout: 60}}
 shares: {obsd: {kind: socket, part: obsd}}
 unit:
   rows: recordings                   # rec/recordings/<name>
@@ -82,9 +86,9 @@ unit:
     labels:         {type: list}                     # where it may run: a recorder whose server has these labels
     # the VOLUME whose archive holds it — the operator's answer to "where does this footage live" (a storage tier, say).
     # A card in a camera holds that camera's recordings and no other's: the volume row says whose card it is (`cam`),
-    # and the platform refuses a recording of another camera homed on it (`must_match`; the review's sixth pass, major —
-    # it was a hook of the subsystem until the boundary's step 6).
-    home:           {type: string, ref: rec/volumes, must_match: {cam: cam}}
+    # and the card's recorder writes no other camera (V/02.6 Н1.7, `reason`). No `must_match` here: a volume of any
+    # other kind has no `cam`, and the platform's check would refuse every recording homed on it (the V/02 review, q. 1).
+    home:           {type: string, ref: rec/volumes}
     # WHEN THIS RECORDING STOPS BEING ONE, in unix seconds; 0 — never, which is every recording an
     # operator creates by hand. A scenario asks for ten minutes of a camera, and ten minutes is not a
     # setting on the row: it is an END. The controller unplaces it when the time comes and deletes a row made by
@@ -98,10 +102,10 @@ unit:
     # THE FLOOR OF THIS RECORDING, in days; 0 — none. `retention_days` is a ceiling: nothing older is shown.
     # Nothing said how much must BE there, and a recording promised thirty days on a volume that holds four
     # looked healthy. When the volume's ring has closed and the recording holds less than this, the recorder
-    # raises the alarm `archive.shallow` (М10B Lesson 18). It does not stop the ring: a larger quota, or fewer
+    # raises the alarm `archive.shallow` (V/02.5). It does not stop the ring: a larger quota, or fewer
     # recordings on the volume, is the answer.
     min_depth_days: {type: float,  default: 0}
-    when:           {type: string, default: "always", enum: [always, offline]}  # a BACKUP recording (home on a backup or edge volume, V/02.6 Н1.4): `always`, or `offline` — only while the primary should be written and is not (Lesson 26)
+    when:           {type: string, default: "always", enum: [always, offline]}  # a BACKUP recording (home on a backup or edge volume, V/02.6 Н1.4): `always`, or `offline` — only while no primary that should be written is (V/02.6 Н1.4)
 placement:
   # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
   # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB
@@ -116,7 +120,7 @@ placement:
   # anybody reads them.
   # And the resource's heartbeat is the second witness that a SERVER is gone: the controller moves the recordings
   # of a slot that lapsed only when the resource of its server is silent too (one silence is a crash, two are the
-  # server — М11 Lesson 4); without `requires` that move never happens, and the recordings of a box that lost its
+  # server — P/04 Н3); without `requires` that move never happens, and the recordings of a box that lost its
   # power wait for it for ever. What the review saw — a five-minute pass whose pulse died on a blinking store, a
   # silent resource, recordings moved off a sound server — was the pulse, and the pulse is mended
   # (a failure caught per beat, a monotonic clock, a limit on no progress).
@@ -133,10 +137,10 @@ placement:
   grows:      true                                   # recorders by order (P/04 Н3 «нехватка()»): a volume nobody holds asks for one; no spares (ADR-0084)
   ends:       {field: until, never: 0}               # a recording's end (ADR-0091 п. 2; V/02.1 Н1.3)
   # No `near`. A recorder does not follow a camera around: it is the one thing here that CANNOT move, being
-  # pinned to disks (`requires: resource` above), and a fan-out can be read from any server over RTSP. So
-  # the recording names the disk and the camera comes to it — `near: rec` in `cam.subsystem.yaml`. The pair
-  # ends up on one server either way and the recorder reads shared memory; what changes is which of the two
-  # decides, and it has to be the one with the disks.
+  # pinned to disks (`requires: resource` above). A fan-out is read three ways: shared memory and the loopback RTSP
+  # on the camera holder's own server, and from another server only through the ingest (V/02.4 Н1.1, V/02.9) — the
+  # holder's RTSP listens on the loopback. So the recording names the disk and the camera comes to it — `near: rec`
+  # in `cam.subsystem.yaml`; what changes is which of the two decides, and it has to be the one with the disks.
   #
   # `home` is a preference, never a filter: a recording whose home is down is written elsewhere, which is
   # the whole reason the home may be down. It is MAINTAINED, unlike a bare affinity — placing prefers a
@@ -145,7 +149,7 @@ placement:
   # a procedure. The filters (`labels-subset`, `spread_by`, `requires: resource`) still win: this only
   # orders what is already eligible. With no home, the pick is the disk with the most room.
   home:       home                                   # the row's field naming the volume whose archive holds it
-  # …and a FILTER where the volume is a standby (`affinity`; М10B Lesson 26 — it was a hook of the subsystem
+  # …and a FILTER where the volume is a standby (`affinity`; V/02.6 Н1.1 — it was a hook of the subsystem
   # until the boundary's step 6). A recording homed on an enabled backup or edge volume goes there or nowhere, and
   # nothing else goes there: a primary moved onto the backup while its server rebooted is ONE copy where the operator
   # paid for two, and a backup moved off it is no copy at all. A volume row that says `admits: false` — an incidents
@@ -254,7 +258,7 @@ door:
     - {name: ingest, role: [recworker, liveworker, detworker], domain: [stream, poll, upstream, ask]}
 # A REQUEST of this subsystem (the boundary's step 6: it was `POST /backfill`, the VMS's route on the console): a person
 # asks for a stretch of a recording to be fetched from the camera's device into the archive — `POST /rec/requests
-# {unit: rec/<recording>, from, to}`, named by its range (the same range again is the same request), at most seven of
+# {unit: <recording>, from, to}`, named by its range (the same range again is the same request), at most seven of
 # one person's unanswered at once (counted by CAS; one counts for a minute after it was filed, row or no row, and never
 # past a day — `requests.ttl`, the platform's). What only the recorder can judge — a range longer than a day, shorter than a
 # second, in the future, older than the recording shows — it refuses, in its heartbeat.
@@ -266,8 +270,8 @@ requests:
     type: object
     required: [unit, from, to]
     additionalProperties: false
-    # lost: a span a recorder said it lost on the way in, filed by the console's pass — worked as a
-    # known loss whatever its length, by whoever holds the recording then
+    # lost: a span a recorder said it lost on the way in, filed by the console's pass — accepted and worked as any
+    # request, by whoever holds the recording then; the limit of a day holds for it too (V/02.8 Н1.4)
     properties: {unit: {type: string}, from: {type: number}, to: {type: number}, lost: {type: boolean}}
   key: "{unit}-{from:int}-{to:int}"
   per_person: 7
@@ -322,7 +326,8 @@ metrics:
   - {name: volume_shrink_pending, from: heartbeat.quota_note, agg: flag, default: 0}
   - {name: archive_away_seconds, from: heartbeat.archive_away_since, agg: age, default: 0}
   - {name: archive_failure, from: heartbeat.archive_failure, agg: label, label: kind}
-  - {name: writer, from: heartbeat.writer.state, agg: label, label: state, values: [ok, stalled, losing], default: ok}
+  # No default: a recorder that has said nothing of its writer has no series (V/02.4 Н1.6 — every recorder counts).
+  - {name: writer, from: heartbeat.writer.state, agg: label, label: state, values: [ok, stalled, losing]}
   # Per recording: how long since it last took anything from its source (feedback BI); what the engine refused of its
   # samples, by answer (the third pass); how deep it goes and whether its ring closed inside the floor (feedback BM);
   # and how long it has gone on under an epoch the store has not confirmed.
@@ -360,9 +365,11 @@ metrics:
   - {name: camera_clock_shift_seconds, from: heartbeat.stream.clock_shift_s, default: 0}
   - {name: camera_clock_unplaceable_seconds_total, from: heartbeat.stream.unplaceable_s, default: 0, type: counter}
   - {name: card_live_skipped_seconds_total, from: heartbeat.card.live_skipped_s, default: 0, type: counter}
-  # card.state is a closed set, the same words on both sides: opening, recording, failing, stalled, failed, unavailable (an
-  # accident: a card that would not open or refused), none (no card by the camera's own setting — no accident)
-  - {name: card_state, from: heartbeat.card.state, agg: label, label: state, values: [opening, recording, failing, stalled, failed, unavailable, none], default: recording}
+  # `card` is a top field of the card recorder's heartbeat — one card place per worker, like `volume` (V/02.6 Н1.7);
+  # card.state is the norm's closed set of six: opening, recording, failing, stalled, unavailable (an accident: a card
+  # that would not open or refused), none (no card by the camera's own setting — no accident). No default: no word —
+  # no series, never «recording».
+  - {name: card_state, from: heartbeat.card.state, agg: label, label: state, values: [opening, recording, failing, stalled, unavailable, none]}
 # What a page shows under a server: the volumes whose `server` names it (the boundary's step 6; it was the recorder's
 # heartbeat field `archive`, read by the platform's `/servers`).
 servers:

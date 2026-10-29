@@ -1,2 +1,3 @@
 date	sample	fix	languages
 2026-10-29	5/scenarios.tsv: 01-door	url тома — file://{data}/subsystems/rec/obsd/volumes/1 вместо буквального /data/platform: на стенде PLATFORM_DIR — {data} экземпляра (общий README приёмки VMS «Стенд VMS»); вопрос stand-0106 при движке S1 (раннер)	all
+2026-10-29	5/scenarios.tsv: 01-door, шаги 8–11	слова отказа — точно (404 no such path вместо @any); новые шаги: /spans/door/ — 404 (путь байт в байт, Н2), POST на маршрут GET — 405 method not allowed (путь → метод раньше допуска), /timeline без токена — 403 forbidden (маршрут token на петле открыт); разбор ревью V/02, строки 9 (Codex R08), 15 (Codex R13, Claude С-9)	all

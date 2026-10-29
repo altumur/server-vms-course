@@ -1,15 +1,25 @@
 openapi: 3.1.0
 info:
-  title: V/02 — дверь архива регистратора
+  title: V/02 — дверь архива и приёмник регистратора
   version: 1.0.0
   description: |
     HTTP-контракт двери архива регистратора `recworker` — глава V/02.5 урока «Запись» модуля VMS. Канон —
-    [нормы главы 5](02.5-rec.norms.md); файл их выражает и не добавляет требований. Процессам — `/spans`,
-    `/samples` (сертификат роли `recworker`, `detjobworker`; без комплекта — петля); странице — `/timeline`,
-    `/segment`, `/keeps` (токен двери консоли, договор токена двери). Иной метод — 405, иной путь — 404.
+    [нормы главы 5](02.5-rec.norms.md); файл их выражает и не добавляет требований. Класс `mixed` договора
+    сертификата роли (Н2): процессам — `/spans`, `/samples` (сертификат роли `recworker`, `detjobworker`; слова класса
+    `role`); странице — `/timeline`, `/segment`, `/keeps` (токен двери консоли, договор токена двери; нет или неверен —
+    403 `forbidden`). Разбор запроса — P/01.1 Н2.1 с отступлениями Н2; порядок: путь (404) → метод (405) → допуск
+    (401, 403) → query (400) → тома нет (503). Цепочка, отвергнутая TLS, — отказ рукопожатия без HTTP-ответа (в
+    контракте не выражается). CORS — `cors` договора сертификата роли (Н1.8), в контракте не выражается.
+    Приёмник `/ingest/*` — глава V/02.9 Н2 (маршрут `ingest` манифеста: роли процессов или токены домена; кадр, тела
+    обращений и отказы — там же); местный стык одного сервера — «Решает реализация» и в контракт не входит.
 servers:
+  - url: https://{server}:{port}
+    description: с комплектом роли recworker — адрес SERVER_NAME (V/02.5 Н1.7; P/03.4 Н1.7 kit); сертификат клиента запрашивается необязательно
+    variables:
+      server: {default: "srv-a"}
+      port: {default: "0"}
   - url: http://127.0.0.1:{port}
-    description: без комплекта сертификатов — только петля (P/02.4 Н1.6)
+    description: без комплекта сертификатов — только петля; работают только маршруты `token`, процессные — 401 no_role (V/02.5 Н2)
     variables:
       port: {default: "0"}
 paths:
@@ -20,6 +30,7 @@ paths:
         - $ref: "#/components/parameters/Unit"
         - $ref: "#/components/parameters/FromS"
         - $ref: "#/components/parameters/ToS"
+      security: [{roleCertificate: []}]
       responses:
         "200":
           description: спаны, подрезанные потолком (Н1.2)
@@ -27,8 +38,10 @@ paths:
             application/json:
               schema: {$ref: "#/components/schemas/Spans"}
         "400": {$ref: "#/components/responses/Refusal"}
-        "403": {$ref: "#/components/responses/Refusal"}
+        "401": {$ref: "#/components/responses/NoRole"}
+        "403": {$ref: "#/components/responses/RoleRefusal"}
         "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
         "503": {$ref: "#/components/responses/Refusal"}
   /samples/{unit}:
     get:
@@ -40,8 +53,9 @@ paths:
         - name: stream
           in: query
           required: false
-          description: только этот поток записи — `<epoch>` или `<epoch>/backfill`; без параметра — по правилу «один момент — одна эпоха»
+          description: только этот поток записи, отсечённого тоже — `<epoch>` или `<epoch>/backfill`; без параметра — по правилу «один момент — одна эпоха» (Н1.3)
           schema: {type: string, pattern: "^(?:[0-9]+(/backfill)?)$"}
+      security: [{roleCertificate: []}]
       responses:
         "200":
           description: записи SMPL подряд (договор obsd); HTTP/1.1 — chunked; пусто — без тела; обрыв после первого байта — без последнего куска
@@ -49,8 +63,10 @@ paths:
             application/octet-stream:
               schema: {type: string, format: binary}
         "400": {$ref: "#/components/responses/Refusal"}
-        "403": {$ref: "#/components/responses/Refusal"}
+        "401": {$ref: "#/components/responses/NoRole"}
+        "403": {$ref: "#/components/responses/RoleRefusal"}
         "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
         "503": {$ref: "#/components/responses/Refusal"}
   /timeline/{recording}:
     get:
@@ -62,19 +78,15 @@ paths:
         - $ref: "#/components/parameters/ToS"
       responses:
         "200":
-          description: спаны по (start_ms, epoch)
-          headers:
-            X-Unreachable: {schema: {type: string}, description: "регистраторы, чья дверь не ответила или ответила неполно"}
-            X-Unavailable: {schema: {type: string}, description: "<том>@<сервер> томов этой записи без живого держателя"}
+          description: спаны по (start_ms, epoch) и недоступное — в теле (Н1.5)
           content:
             application/json:
-              schema:
-                type: array
-                items: {$ref: "#/components/schemas/TimelineSpan"}
+              schema: {$ref: "#/components/schemas/Timeline"}
         "400": {$ref: "#/components/responses/Refusal"}
         "403": {$ref: "#/components/responses/Refusal"}
         "404": {$ref: "#/components/responses/Refusal"}
         "405": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
   /segment/{recording}/{epoch}/{piece}:
     get:
       summary: Кусок fMP4 (Н1.6)
@@ -93,9 +105,7 @@ paths:
           schema: {type: string, pattern: "^(?:[0-9]+-[0-9]+(\\.backfill|\\.device)?\\.mp4)$"}
       responses:
         "200":
-          description: fMP4 (ftyp, moov, фрагменты moof+mdat); HTTP/1.1 — chunked
-          headers:
-            X-Unreachable: {schema: {type: string}}
+          description: fMP4 (ftyp, moov, фрагменты moof+mdat); HTTP/1.1 — chunked; дверь, отпавшая до первого байта, — кусок без её кадров (неполнота — по /timeline)
           content:
             video/mp4:
               schema: {type: string, format: binary}
@@ -121,16 +131,159 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/KeepVerify"}
+        "400": {$ref: "#/components/responses/Refusal"}
         "403": {$ref: "#/components/responses/Refusal"}
         "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
         "409": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+  /ingest/poll:
+    post:
+      summary: Опрос приёмника (V/02.9 Н1.3, Н2) — recworker; токены домена stream, poll, upstream
+      security: [{roleCertificate: []}, {domainToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/PollRequest"}
+      responses:
+        "200":
+          description: ответ обращения (V/02.9 Н2)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/PollAnswer"}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "401": {$ref: "#/components/responses/NoRole"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
+        "413": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+  /ingest/subscribe:
+    post:
+      summary: Подписка на поток камеры (V/02.9 Н2) — liveworker, detworker, recworker
+      security: [{roleCertificate: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/SubscribeRequest"}
+      responses:
+        "200":
+          description: ответ обращения (V/02.9 Н2)
+          content:
+            application/x-ndjson:
+              schema: {$ref: "#/components/schemas/Frame"}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "401": {$ref: "#/components/responses/NoRole"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
+        "413": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+  /ingest/push:
+    post:
+      summary: Толчок кадров (V/02.9 Н2) — recworker; токены домена stream, upstream
+      security: [{roleCertificate: []}, {domainToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/PushRequest"}
+      responses:
+        "200":
+          description: ответ обращения (V/02.9 Н2)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/PushAnswer"}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "401": {$ref: "#/components/responses/NoRole"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
+        "413": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+  /ingest/upload:
+    post:
+      summary: Выгрузка диапазона кусками (V/02.9 Н1.7, Н2) — токены домена stream, upstream
+      security: [{domainToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/UploadRequest"}
+      responses:
+        "200":
+          description: ответ обращения (V/02.9 Н2)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/UploadAnswer"}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "401": {$ref: "#/components/responses/NoRole"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
+        "413": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+  /ingest/pull:
+    post:
+      summary: Забор пачки (V/02.9 Н1.8, Н2) — токен домена upstream
+      security: [{domainToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/PullRequest"}
+      responses:
+        "200":
+          description: ответ обращения (V/02.9 Н2)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/PullAnswer"}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "401": {$ref: "#/components/responses/NoRole"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
+        "413": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
+  /ingest/asks:
+    post:
+      summary: Просьба к камере (V/02.9 Н2, V/07.5 Н1.4) — токен домена ask
+      security: [{domainToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/AskRequest"}
+      responses:
+        "200":
+          description: ответ обращения (V/02.9 Н2)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/AskAnswer"}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "401": {$ref: "#/components/responses/NoRole"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
+        "413": {$ref: "#/components/responses/Refusal"}
         "503": {$ref: "#/components/responses/Refusal"}
 components:
   securitySchemes:
+    roleCertificate:
+      type: mutualTLS
+      description: |
+        сертификат роли клиента (класс `mixed`, маршруты `role` договора сертификата роли): допущены recworker,
+        detjobworker; набор доверия — ca.pem, ca.next.pem своего кластера (V/02.5 Н2)
     doorToken:
       type: http
       scheme: bearer
       description: токен двери консоли (договор токена двери); также ?t=
+    domainToken:
+      type: http
+      scheme: bearer
+      description: токен домена вида stream, poll, upstream или ask (P/08.7; маршрут ingest манифеста, домены — его domain)
   parameters:
     Unit:
       name: unit
@@ -152,13 +305,13 @@ components:
       name: from
       in: query
       required: false
-      description: секунды Unix, конечное число
+      description: секунды Unix — запись числа JSON, конечная, один раз (Н2); без параметра — 0
       schema: {type: number}
     ToS:
       name: to
       in: query
       required: false
-      description: секунды Unix, конечное число
+      description: секунды Unix — запись числа JSON, конечная, один раз, не меньше from (Н2); без параметра — часы двери + 86400
       schema: {type: number}
   responses:
     Refusal:
@@ -176,7 +329,48 @@ components:
             properties:
               error: {type: string}
               detail: {type: string}
+    NoRole:
+      description: |
+        процессный маршрут: сертификата клиента нет (с комплектом) или комплекта нет (петля) — 401 no_role (V/02.5 Н2)
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            additionalProperties: false
+            properties:
+              error: {const: no_role}
+              detail: {type: string}
+    RoleRefusal:
+      description: |
+        процессный маршрут после рукопожатия: роли в SAN не ровно одна — no_role; роль не из допущенных — wrong_role;
+        подпись листа или центра вне sig, серийник в revoked — bad_chain (класс `role`; V/02.5 Н2)
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            additionalProperties: false
+            properties:
+              error: {enum: [no_role, wrong_role, bad_chain]}
+              detail: {type: string}
   schemas:
+    Timeline:
+      type: object
+      required: [spans, unreachable, unavailable]
+      additionalProperties: false
+      properties:
+        spans:
+          type: array
+          items: {$ref: "#/components/schemas/TimelineSpan"}
+        unreachable:
+          type: array
+          description: имена слотов регистраторов, чья дверь не ответила или ответила неполно
+          items: {type: string}
+        unavailable:
+          type: array
+          description: "<том>@<сервер> томов этой записи без живого держателя"
+          items: {type: string}
     Spans:
       type: object
       required: [unit, spans, current_epoch, held_since, now]
@@ -230,3 +424,161 @@ components:
         source: {enum: [backfill, device]}
         fenced: {type: boolean}
         yields: {type: boolean}
+    Frame:
+      type: object
+      additionalProperties: true
+      description: кадр (V/02.9 Н2); у подписки — строка application/x-ndjson на кадр
+      required: [t, key, sample]
+      properties:
+        t: {type: number, description: секунды по часам отправителя}
+        key: {type: boolean}
+        sample: {type: string, contentEncoding: base64}
+    Frames:
+      type: array
+      items: {$ref: "#/components/schemas/Frame"}
+    PollRequest:
+      type: object
+      additionalProperties: true
+      required: [version, camera_now]
+      properties:
+        cam: {type: string}
+        ref: {type: string}
+        version: {type: integer}
+        camera_now: {type: number}
+        rtt: {type: number}
+        outcomes:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            required: [ask, outcome]
+            properties:
+              ask: {type: string}
+              outcome: {type: string}
+    PollAnswer:
+      type: object
+      additionalProperties: false
+      required: [version, streams]
+      properties:
+        version: {type: integer}
+        streams:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [stream, push]
+            properties:
+              stream: {type: string}
+              push: {type: boolean}
+              have: {type: number}
+        range:
+          type: object
+          additionalProperties: false
+          required: [rid, from, to, recording, piece]
+          properties:
+            rid: {type: string}
+            from: {type: number}
+            to: {type: number}
+            recording: {type: string}
+            piece: {type: integer}
+        asks:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [ask, action, deadline]
+            properties:
+              ask: {type: string}
+              action: {type: string}
+              n: {type: [integer, string]}
+              port: {type: [integer, string]}
+              deadline: {type: number}
+        uncovered: {const: true}
+    SubscribeRequest:
+      type: object
+      additionalProperties: true
+      required: [cam]
+      properties:
+        cam: {type: string}
+        stream: {type: string}
+    PushRequest:
+      type: object
+      additionalProperties: true
+      required: [frames]
+      properties:
+        cam: {type: string}
+        ref: {type: string}
+        stream: {type: string}
+        camera_now: {type: number}
+        frames: {$ref: "#/components/schemas/Frames"}
+    PushAnswer:
+      type: object
+      additionalProperties: false
+      properties:
+        have: {type: number}
+    UploadRequest:
+      unevaluatedProperties: true
+      oneOf:
+        - type: object
+          additionalProperties: true
+          required: [ref, rid, seq, more, frames]
+          properties:
+            ref: {type: string}
+            rid: {type: string}
+            seq: {type: integer}
+            more: {type: boolean}
+            frames: {$ref: "#/components/schemas/Frames"}
+        - type: object
+          additionalProperties: true
+          required: [ref, rid, seq, refused]
+          properties:
+            ref: {type: string}
+            rid: {type: string}
+            seq: {type: integer}
+            refused: {type: string}
+    UploadAnswer:
+      type: object
+      additionalProperties: false
+      required: [wanted]
+      properties:
+        wanted: {type: boolean}
+        again: {const: true}
+    PullRequest:
+      type: object
+      additionalProperties: true
+      required: [ref]
+      properties:
+        ref: {type: string}
+        last:
+          type: object
+          additionalProperties: true
+          required: [boot, n]
+          properties:
+            boot: {type: string}
+            n: {type: integer}
+    PullAnswer:
+      type: object
+      additionalProperties: false
+      required: [boot, n, frames]
+      properties:
+        boot: {type: string}
+        n: {type: integer}
+        frames: {$ref: "#/components/schemas/Frames"}
+    AskRequest:
+      type: object
+      additionalProperties: true
+      required: [ref, action, deadline, camera_now]
+      properties:
+        ref: {type: string}
+        action: {type: string}
+        n: {type: [integer, string]}
+        port: {type: [integer, string]}
+        deadline: {type: number}
+        camera_now: {type: number}
+    AskAnswer:
+      type: object
+      additionalProperties: false
+      required: [ask]
+      properties:
+        ask: {type: string}
+        outcome: {type: string, description: "performed | refused: <почему> | expired — когда известен"}
