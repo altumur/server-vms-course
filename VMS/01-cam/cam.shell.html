@@ -371,8 +371,8 @@ async function loadTimeline(id){
     try{const r=await doorFetch(where,`/timeline/${encodeURIComponent(rec.id)}?from=${from}&to=${to}`);
       if(!r||!r.ok){missing.add(place||rec.id);return null}
       // the door names what it could not reach in the body (V/02.5 Н1.2): recorders `unreachable`, volumes of it nobody
-      // holds `unavailable` (<volume>@<server>); a bare array — the earlier form, until the course tests take the new one
-      const d=await r.json();if(Array.isArray(d))return d;
+      // holds `unavailable` (<volume>@<server>)
+      const d=await r.json();
       for(const x of[...(d&&d.unreachable||[]),...(d&&d.unavailable||[])])if(typeof x==="string"&&x)missing.add(x);
       return d&&Array.isArray(d.spans)?d.spans:[]}
     catch(e){missing.add(place||rec.id);return null}
