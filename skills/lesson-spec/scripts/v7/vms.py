@@ -71,21 +71,27 @@ def subsystems(root):
     return out
 
 
-def template_re(key):
-    """Ключ каталога платформы → regex экземпляра: плейсхолдер — он сам или литерал (группа на каждый)."""
+def template_re(key, table=None):
+    """Ключ каталога платформы → regex экземпляра: плейсхолдер — он сам или литерал по его грамматике из таблицы
+    плейсхолдеров каталога (`<sub>` — `[a-z][a-z0-9_-]{0,31}`, не `cam.alarms`; нет в таблице — сегмент без `/`);
+    группа на каждый."""
+    def lit(p):
+        g = (table or {}).get(p, (None,))[0]
+        return g[1:-1] if g and g.startswith("^") and g.endswith("$") else "[^/<>]+"
     parts = re.split(r"(<[^<>]+>)", key)
-    return re.compile("".join("(%s|[^/<>]+)" % re.escape(p) if p.startswith("<") else re.escape(p) for p in parts)), \
-        [p for p in parts if p.startswith("<")]
+    return re.compile("".join("(%s|%s)" % (re.escape(p), lit(p)) if p.startswith("<") else re.escape(p)
+                              for p in parts)), [p for p in parts if p.startswith("<")]
 
 
-def platform_row(vrow, catalog, sub):
-    """Строка каталога платформы со схемой, чей ключ покрывает ключ строки VMS (тот же kind): ровно одна; `<sub>` —
-    литерал подсистемы урока владельца. → строка или SpecError."""
+def platform_row(vrow, catalog, sub, table=None):
+    """Строка каталога платформы со схемой, чей ключ покрывает ключ строки VMS (тот же kind): ровно одна; литерал
+    плейсхолдера — по его грамматике (table — таблица плейсхолдеров каталога), `<sub>` — подсистема урока владельца.
+    → строка или SpecError."""
     hits = []
     for r in catalog:
         if r["kind"] != vrow["kind"] or not spec.is_v7_family(r) or r["schema"].startswith("VMS/"):
             continue
-        rx, names = template_re(r["key"])
+        rx, names = template_re(r["key"], table)
         m = rx.fullmatch(vrow["key"])
         if m:
             hits.append((r, dict(zip(names, m.groups()))))
@@ -153,7 +159,7 @@ class Judge:
 
     def __init__(self, root, vrow, catalog, sub):
         self.vrow = vrow
-        self.prow = platform_row(vrow, catalog, sub)
+        self.prow = platform_row(vrow, catalog, sub, spec.placeholder_table(root)[0])
         _, _, self.pdoc, _, _ = spec.load_family(root, self.prow)
         _, _, self.vdoc, self.outcomes_path, self.outcomes = spec.load_family(root, vrow)
         self.platform = stack.Family(self.pdoc, self.prow["kind"])
@@ -228,11 +234,59 @@ def merged(places, s):
     return out
 
 
+def sample_of(pat, more):
+    """Строка, которую берёт выражение `pattern` (разбор re: литерал, класс — первый знак, повтор — max(минимум, more)
+    раз в пределах максимума, ветвь — первая, якорь — ничего); None — выражение вне этих слов."""
+    from re import _constants as C, _parser
+    cat = {C.CATEGORY_DIGIT: "1", C.CATEGORY_WORD: "a", C.CATEGORY_SPACE: " ", C.CATEGORY_NOT_DIGIT: "a",
+           C.CATEGORY_NOT_WORD: "-", C.CATEGORY_NOT_SPACE: "a"}
+
+    def first(items):
+        neg = any(op is C.NEGATE for op, _ in items)
+        if neg:
+            bad = {chr(a) for op, a in items if op is C.LITERAL}
+            bad |= {chr(c) for op, a in items if op is C.RANGE for c in range(a[0], a[1] + 1)}
+            return next(c for c in "a1x-_." if c not in bad and not any(op is C.CATEGORY for op, _ in items))
+        got = [chr(a) if op is C.LITERAL else chr(a[0]) if op is C.RANGE else cat[a] for op, a in items
+               if op in (C.LITERAL, C.RANGE, C.CATEGORY)]
+        return next((c for c in got if c.isalnum()), got[0])           # IndexError — класс вне этих слов
+
+    def walk(seq):
+        out = ""
+        for op, a in seq:
+            if op is C.LITERAL:
+                out += chr(a)
+            elif op is C.NOT_LITERAL:
+                out += "a" if chr(a) != "a" else "b"
+            elif op is C.ANY:
+                out += "a"
+            elif op is C.IN:
+                out += first(a)
+            elif op in (C.MAX_REPEAT, C.MIN_REPEAT, C.POSSESSIVE_REPEAT):
+                lo, hi, item = a
+                out += walk(item) * min(max(lo, more), hi)
+            elif op is C.SUBPATTERN:
+                out += walk(a[-1])
+            elif op is C.ATOMIC_GROUP:
+                out += walk(a)
+            elif op is C.BRANCH:
+                out += walk(a[1][0])
+            elif op is C.AT:
+                pass
+            else:
+                raise KeyError
+        return out
+    try:
+        return walk(_parser.parse(pat))
+    except (KeyError, IndexError, StopIteration, re.error, TypeError):
+        return None
+
+
 def sample_string(m):
     """Строка по `pattern`/`minLength`/`enum` места или None."""
     pat = m.get("pattern")
-    lead = re.match(r"\^\(\?:([^\\\[\](){}*+?|^$.]*)", pat or "")
-    for c in ([lead.group(1) + "x", lead.group(1) + "1"] if lead else []) + ["x", "a1", "1x1", "x-1"]:
+    made = [c for c in (sample_of(pat, n) for n in (0, 1, m.get("minLength", 0))) if c is not None] if pat else []
+    for c in made + ["x", "a1", "1x1", "x-1"]:
         if len(c) >= m.get("minLength", 0) and (pat is None or regex.search(pat, c)):
             return c
     return None
