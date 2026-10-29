@@ -1,6 +1,6 @@
 # Профиль возможностей стенда VMS для тестов API consolem (V/11.6 Н1.2): одна строка на операцию контракта
 # consolem.openapi.json @7683f542. profile: in — тесты операции гоняются; out — операция отвечает 404 NO_ROUTE, тест
-# вне профиля (тест самого NO_ROUTE — в профиле); stand — только на стенде (/test/*). Читает драйвер стенда; при новой
+# вне профиля (тест самого NO_ROUTE — в профиле); stand — только на стенде (/test/reset, /test/clock). Читает драйвер стенда; при новой
 # версии контракта таблица сверяется (V/11.2). Набор продукта — one-domain, часы — --clock real (ответ consolem, ADR-0094
 # доп. (4)). Строки in — список capabilities.operations в GET /reference (V/11.2 Н1.5): объявление и таблица сверяются,
 # расхождение — исправление таблицы, не молчаливая замена. «Автоматизация» (тег automation) не объявляется: доп. (7).
@@ -40,7 +40,7 @@ n	method	path	profile	why
 33	GET	/volumes	in	переводится (V/11.2)
 34	GET	/volumes/{volumeId}	in	переводится (V/11.2)
 35	PATCH	/volumes/{volumeId}	in	переводится (V/11.2)
-36	DELETE	/volumes/{volumeId}	in	переводится, профилем продукта не объявляется (V/11.2)
+36	DELETE	/volumes/{volumeId}	in	переводится: том вместе с записями на нём одним пакетом (V/11.2, V/11.4 Н1.2)
 37	POST	/volumes/{volumeId}/format	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 38	POST	/operations	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 39	GET	/operations/{operationId}	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
@@ -88,9 +88,9 @@ n	method	path	profile	why
 81	GET	/licenses	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 82	GET	/journal	in	переводится (V/11.2)
 83	GET	/stream	in	переводится (V/11.2)
-84	POST	/test/reset	stand	только на стенде: TEST_SUPPORT=1 и петля (V/11.6 Н1.3)
-85	POST	/test/clock	stand	только на стенде: TEST_SUPPORT=1 и петля (V/11.6 Н1.3)
-86	POST	/test/events	stand	только на стенде: TEST_SUPPORT=1 и петля (V/11.6 Н1.3)
+84	POST	/test/reset	stand	только на стенде: TEST_SUPPORT=1 и отметка петли консоли (V/11.6 Н1.3); test.reset не шлётся
+85	POST	/test/clock	stand	только на стенде: TEST_SUPPORT=1 и отметка петли консоли (V/11.6 Н1.3)
+86	POST	/test/events	out	404 NO_ROUTE: связь и сбой камеры — пульс держателя cam, дверью не подделать; тест вне профиля (V/11.6 Н1.3)
 87	POST	/objects/delete	in	переводится (V/11.2)
 88	POST	/access/apply	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 89	POST	/access/catalogs/{catalogId}/sync	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля

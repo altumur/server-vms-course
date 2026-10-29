@@ -4,20 +4,21 @@
 # with a ticket for that one request, and the worker calls the console back with the ticket, only on the doors this
 # manifest lists (ADR-0094 B1).
 #
-# A unit is a backend instance — `backend/instances/<name>` — placed by labels next to `live` (ADR-0094 доп. (6) п. 3):
-# the console passes a person's request to a live worker of backend with a door (the pass rule of the gate contract), and
-# the worker calls back over TLS with the certificate of role `backend`; the ticket is bound to the leaf of the instance
-# it was passed to (доп. (6) пп. 1, 2). The role socket — only the profile without a kit (a stand, the loopback;
-# доп. (6) п. 4). One row is enough; a second is a reserve for a move (V/11.1 Н1.2).
+# A unit is a backend instance — `backend/instances/<name>` — placed by labels next to `live` (ADR-0094 доп. (6) п. 3),
+# at most one on a server (B1; the review of V/11, question 8): the console passes a person's request to a live worker
+# of backend with a door (the pass rule of the gate contract), and the worker calls back over TLS with the certificate of
+# role `backend`; the ticket is bound to the leaf of role backend of the addressee instance's server (доп. (6) пп. 1, 2).
+# The role socket — only the profile without a kit (a stand, the loopback; доп. (6) п. 4). One row is enough; a second
+# is a reserve for a move (V/11.1 Н1.2).
 name: backend
 # The slot a worker of this subsystem makes, `b-<n>`, and the variable naming the one it is started under beside
 # `WORKER_NAME` (`runtime.slot`).
 slot: {prefix: b, name_env: BACKEND_NAME}
 # Reads, writes and asks nothing of anybody by itself: what it needs it reads through the console with the ticket of the
 # request it serves (V/11.1 Н1.3). No state outside the platform's store: the memory of repeats of a group
-# `idempotencyKey` is always there, in its own rows backend/idem/<h> read and written through the console with
-# the ticket (V/11.4 Н1.4, ADR-0094 доп. (3) п. 4). A table key with `/` is not in the table grammar of P/02.1 — the rows
-# are declared below as intent, not keys.
+# `idempotencyKey` is always there, in its own table `repeats` (below) read and written through the console's door of
+# tables with the ticket (V/11.4 Н1.4; the review of V/11, question 3). The family `<sub>/idem/` is the console's own
+# memory of `Idempotency-Key` (P/06.1): backend does not touch it.
 worker: {exec: /usr/lib/backend/worker, stop_timeout: 20}
 unit:
   rows: instances                    # backend/instances/<name>
@@ -31,6 +32,8 @@ unit:
 placement:
   # By labels next to `live` (ADR-0094 доп. (6) п. 3; B8 `placement.home strict` is not needed for backend): a worker
   # carries one instance; short of a worker on a label set, the controller orders one on a server with these labels.
+  # At most one worker of a role with a callback on a server (B1, the review of V/11, question 8): the ticket is bound to
+  # the leaf of the server, and two instances on one server would share it. Declared by the norm B1, not a key today.
   capacity:   {from: capacity, default: 1}
   constraint: labels-subset          # an instance's labels ⊆ the labels of its worker's server
   tie_break:  most-free-capacity
@@ -41,32 +44,43 @@ snapshot: [labels, enabled]
 # browser calls `/backend/api/<contract path>`, the worker gets `/api/<contract path>` (the mount prefix is not passed)
 # and answers any path under it, a path the contract has not with 404 NO_ROUTE; the static files (B7) are
 # `/backend/<file>` outside `api/`, so the two spaces do not meet. The second kind of pass
-# (ADR-0094 B1: a ticket instead of the person's `Authorization`, the callback list, streaming routes, a wait per route)
-# is a future platform norm — its declaration is below as a comment, not keys: today's loader does not know them.
+# (ADR-0094 B1: a ticket instead of the person's `Authorization`, the callback list, routes by a path prefix, the form of
+# the console's own refusals, the loopback mark) is a future platform norm — its declaration is below as a comment, not
+# keys: today's loader does not know them.
 door:
   pass: [api]
 # B1 (норма платформы B — после Go GREEN 01–10, ADR-0094 «Порядок» п. 1), declared intent, not loaded today:
 #   pass_kind: ticket                       # the console passes a ticket, never the person's Authorization
 #   callback: tls                           # the callback — TLS with the leaf of role backend of the addressee instance
 #                                           # (доп. (6) пп. 1, 2); another leaf — 401; the role socket — no kit only
+#   # routes by a path prefix under the subsystem, the longest wins (B1; the review of V/11, question 7)
 #   stream: [api/stream]                    # streaming: no 5 s / 4 MiB limit; a stream's ticket — reads and /changes only
-#   wait: {api/objects: 30, api/devices: 30}   # a composite write waits longer than PASS_WAIT; the ceiling — the norm
-#   headers: to the worker Content-Type, Idempotency-Key, If-Match, Last-Event-ID; to the client Content-Type, ETag
+#   wait: {api/objects/delete: 30, api/devices: 30}   # a group write waits longer than PASS_WAIT; the ceiling — the norm
+#   refusals: problem                       # the console's own refusals on api — application/problem+json (question 5):
+#     401: UNAUTHORIZED, 403: PERMISSION_DENIED, 404: NO_ROUTE, 413: VALIDATION_FAILED
+#     502, 503, 504: the contract has no code for them — a request to the product (V/11.2 Н1.3)
+#   loopback: the console adds `X-W2C-Loopback: 1` when its TCP client is the loopback and drops one that came in
+#     (question 4); backend runs /test/* only with it and TEST_SUPPORT=1 (V/11.2 Н1.4)
+#   headers: to the worker Content-Type, Idempotency-Key, If-Match, Last-Event-ID, X-W2C-Loopback; to the client
+#     Content-Type, ETag
 #   types: application/json, application/problem+json, text/event-stream, no body (204, 304); else 502 (доп. (3) пп. 2, 3)
 #   calls:                                  # the closed list of doors the worker may call back with a ticket
 #     - cam/cameras, cam/devices            # rows and tables of cam (V/01.1)
 #     - rec/recordings, rec/volumes         # rows and tables of rec (V/02.1)
 #     - det/units                           # rows of det (V/04.1)
-#     - the batch write of a unit's rows and its parts (B9, ADR-0094 доп. (9) п. 2): a device is one batch —
-#       written rows with cas, the device's other rows as guards; all or nothing (V/11.4 Н1.2)
+#     - the batch write of a unit's rows and its parts (B9, ADR-0094 доп. (9) п. 2): a device is one batch — the row
+#       cam always written (the lock of the device), written rows with cas, the device's other rows as guards, the
+#       counter cam/next_id when a camera is made, the row of backend/repeats of the group step; all or nothing
+#       (V/11.4 Н1.2, Н1.4)
 #     - cam/policy, rec/policy, det/policy  # common settings of these subsystems and their snapshots
 #                                           # (ADR-0094 доп. (2) п. 6); platform settings (/schema, /drain, labels) — no
 #     - changes                             # the change feed (B2)
 #     - GET manifest, GET servers, GET events, GET session   # reads; /session — «who am I» only
-#     - backend/idem/                       # its own memory of repeats of a group key (ADR-0094 доп. (3) п. 4)
+#     - backend/repeats                     # its own table: the memory of repeats of a group key (V/11.4 Н1.4)
 #   # not: /where, writes of /session, grants, people, keys, break-glass, /operations; nor auto — the automation of
 #   # consolem is not declared on the first step (ADR-0094 доп. (7)), its operations answer 404 NO_ROUTE
-# B7 (ADR-0094 доп. (1); норма платформы B — после Go GREEN 01–10), declared intent, not loaded today: the console serves
+# B7 (ADR-0094 доп. (1); норма платформы B — после Go GREEN 01–10), declared intent, not loaded today (the plan's key is
+# `console.files: [<path>…]`; the installer checks the SHA-256 of each, the manifest row keeps them): the console serves
 # the WebUI of consolem as static files next to this manifest, `/backend/<file>`, byte for byte; no file of the set is
 # named under `api/` — that is the space of the API (ADR-0094 доп. (8) п. 2). It serves backend.shell.html at /backend/
 # because this manifest declares it (доп. (3) п. 8), a page of its own (no frame of another page, no sandbox), with the
@@ -75,26 +89,50 @@ door:
 # The bytes are not in the course: the deployment package places them from consolem @7683f542 next to the manifest and
 # checks each SHA-256 (V/11.1 Н1.4, V/09.3). The set until the product's build under the CSP: the files the frame
 # backend.shell.html loads — the words and the styles with their @import and the font:
-#   static:
-#     - {file: assets/i18n-en.js, sha256: 50a6aa1daafa48a38b338ad88f499220f3fe98238e883883ddeaa2f12b4322ad}
-#     - {file: assets/one-psim/bridge.css, sha256: 098866f82a8e1af620ebde7efd9c6a7e38de6eaccd95e75548c1c345c35f66b7}
-#     - {file: assets/one-psim/fonts/InterVariable.woff2, sha256: 693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3}
-#     - {file: assets/one-psim/native.css, sha256: dcb5175ed5d4a67f32dcf2ce61819bb9a66c62583246f689bc728fd501ac77ef}
-#     - {file: assets/one-psim/one-psim.css, sha256: a164777147b917ff0e44dc4a2c35376cb9248c9f8975f99560296844afb61c59}
+#   console:
+#     files: [assets/i18n-en.js, assets/one-psim/bridge.css, assets/one-psim/fonts/InterVariable.woff2,
+#             assets/one-psim/native.css, assets/one-psim/one-psim.css]
+#   SHA-256 of each (the lesson's README): 50a6aa1d… i18n-en.js, 098866f8… bridge.css, 693b77d4… InterVariable.woff2,
+#   dcb5175e… native.css, a1647771… one-psim.css
 # The set — SHA-256 71b362ac879c7fabf83847040cb2c48ede3de0d467064ac0de3362333aaad94b. The entry page is not a static
 # file: it is this subsystem's shell, backend.shell.html. With the product's build under the CSP (their answer 73e1721,
 # «in work») a new pin takes the set from the build's MANIFEST.json, `[{name, type, purpose, size, sha256}]`, sha256 in
 # hex, names constant: its index.html becomes the bytes of backend.shell.html, pinned by SHA-256 like the other files
 # (доп. (8) пп. 3, 5).
-# The memory of repeats (ADR-0094 доп. (3) п. 4), declared intent, not loaded today (a key `<user>/<key>` has a `/`):
-#   rows backend/idem/<h>: {user, key, body: <fingerprint of the whole body>, result?: <outcome of the group>, until: <s>}
-#   h = sha256 hex of user bytes, a zero byte and the external key; the row keeps user and key and is compared on lookup
-#   «started» (no result) before the first step; the result after the last; the time to live — that of the console's POST.
+# The memory of repeats of a group `idempotencyKey` (V/11.4 Н1.4; the review of V/11, question 3): a row per group,
+# key h = SHA-256 hex of the bytes of the person (`user` of the ticket), a zero byte and the external key. Made with
+# cas "" as «started» before the snapshot; each step's outcome lands in it in the step's own batch (B9). The form of the
+# row is this table's fields (the platform's family of tables has the schema `manifest`, P/06.1 Н1.6): a row the console
+# reads not by them is unreadable — backend answers 503 and runs nothing (V/11.4 Н1.4). Its lifetime — `delete_after` of
+# the table by the store's time, the platform's reaper (not a key of the table grammar today: a point for the norm B).
+tables:
+  repeats:
+    key: h
+    fields:
+      h:        {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of user, 0, key
+      user:     {type: string, required: true, schema: {minLength: 1}}   # the person of the ticket; compared on lookup
+      idem_key: {type: string, required: true, schema: {minLength: 1}}   # the external idempotencyKey as given
+      op:       {type: string, required: true, enum: [createDevices, updateDevices, deleteObjects]}
+      body:     {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of the body's bytes
+      state:    {type: string, required: true, enum: [started, done]}
+      # the steps' outcomes by the index of `items` (V/11.4 Н1.4)
+      steps:
+        type: json
+        default: []
+        schema:
+          type: array
+          items:
+            type: object
+            required: [index, outcome]
+            additionalProperties: false
+            properties:
+              index:   {type: integer, minimum: 0}
+              outcome: {enum: [done, failed]}
+              id:      {type: string, minLength: 1}      # the id of the step's record
+              code:    {type: string, minLength: 1}      # the contract's code of a failed step
+              field:   {type: string, minLength: 1}
 metrics:
   - {name: instances_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
-  # Calls the worker passed on, by how they ended (translated, no_route, refused), and the repeats its memory answered.
-  - {name: calls_total, from: "heartbeat.calls.<outcome>", agg: sum, type: counter}
-  - {name: repeats_total, from: heartbeat.repeats, agg: sum, type: counter}
 console:
   running: instances_running         # backend_instances_running
 # What a page calls a unit of it (the product's words, one spec on both sides).
