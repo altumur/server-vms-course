@@ -2135,7 +2135,7 @@ function assistDraw(){
     <textarea class="as-text" rows="3" placeholder="${A.ask?"Ответьте словами — назовите поле и значение; «да» ничего не называет":"Что сделать? Например: включи запись камер третьего этажа"}"${A.busy?" disabled":""}></textarea>
     <div class="vrow"><button class="btn" data-act="send"${A.busy?" disabled":""}>${A.ask?"Ответить":"Отправить"}</button>
       <button class="btn" data-act="secret"${A.busy?" disabled":""}>Пароль…</button>
-      ${A.busy||A.ask?`<button class="btn" data-act="cancel">Отменить ход</button>`:""}<button class="btn" data-act="new">Новый ход</button></div>
+      ${A.busy||A.ask||A.applying?`<button class="btn" data-act="cancel">Отменить ход</button>`:""}<button class="btn" data-act="new">Новый ход</button></div>
     <div class="as-secrets"></div>`);
   wire(h,{send:assistSend,cancel:assistCancel,new:assistNew,apply:()=>assistApply(false),again:()=>assistApply(true),rebuild:assistRebuild,model:el=>{A.model=el.value},
     secret:()=>{const box=h.querySelector(".as-secrets"),n=A.secrets.size+box.children.length+1;
