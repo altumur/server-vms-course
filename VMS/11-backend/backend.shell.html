@@ -1,0 +1,27 @@
+<!doctype html>
+<!-- The configurator's page: the SHELL of the subsystem `backend` (V/11.1 Н1.4; ADR-0094 A3, доп. (1), доп. (2) п. 5).
+     Our canon, beside backend.subsystem.yaml, like the shells of the other VMS subsystems. It is not the product's
+     index.html: that page carries the WebUI application as an inline script and handlers in attributes, and the
+     console's Content-Security-Policy (P/06.5 Н1.1 `page`) runs only this origin's files and the page's own scripts by
+     their hashes, with no handler in an attribute. This shell therefore carries no script of its own and no handler.
+     What it loads are the static files of `backend` the console serves by the manifest's list (B7): the product's styles,
+     font and words of consolem @9dc16881 (bytes not in the course; SHA-256 of each — README of the lesson).
+     The application itself is a file the product has yet to give (its inline script moved to a file, its handlers to
+     addEventListener) — a request to the product (owner). Until then the page is the frame without the application.
+     How the console serves the shell of the mounted subsystem `backend` (today only the root's shell is served) is an open
+     point of the lesson (README). -->
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Конфигуратор</title>
+<!-- The product's styles: bridge.css imports native.css and one-psim.css; the font is under one-psim/fonts. -->
+<link rel="stylesheet" href="/backend/assets/one-psim/bridge.css">
+<!-- The product's words of the interface (English), a file of the set. -->
+<script src="/backend/assets/i18n-en.js"></script>
+</head>
+<body>
+<!-- The application's root: the product's WebUI mounts here once it is a file of the set (request to the product). -->
+<div id="app"></div>
+</body>
+</html>
