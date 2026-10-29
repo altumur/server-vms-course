@@ -1,0 +1,1 @@
+{"worker": "w-1", "ts": 1760000000, "status": [{"id": "c5a", "phase": "running", "epoch": 1, "revision": 1, "observed_revision": 1}, {"id": "c5b", "phase": "waiting", "epoch": 1, "revision": 1, "observed_revision": 1}], "server": "srv-a", "instance": "acc:1:0a0b0c", "capacity": 4, "pending_writes": 0}

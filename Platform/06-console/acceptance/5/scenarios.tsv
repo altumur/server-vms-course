@@ -38,6 +38,8 @@ scenario	step	request	expect
 05-metrics	4	GET /metrics	200 ~testsub_counters_running
 05-metrics	5	GET /metrics	200 ~w2c_resources_live
 05-metrics	6	GET /testsub/metrics	200 ~testsub_failovers_unmeasured ~testsub_audit_failures ~testsub_garbled_rows ~testsub_idempotency_store_failures ~testsub_requests_ledger_garbled
+05-metrics	7	@put object testsub/heartbeats/w-1 inputs/hb-w-1-running-waiting.json	ok
+05-metrics	8	@until 10 GET /metrics	200 ~testsub_counters_running 1
 06-refusals	1	GET /nosuch	404 {"error": "no such path"}
 06-refusals	2	PATCH /counters	405 {"error": "method"}
 06-refusals	3	GET /counters/c4/x	404 {"detail": "~names one unit", "error": "no such path"}
