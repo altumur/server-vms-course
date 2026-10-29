@@ -40,8 +40,9 @@ scenario	step	request	expect
 12-sigkill-presence	7	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
 12-sigkill-presence	8	@sigkill w-1	ok
 12-sigkill-presence	9	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": ["testsub/w-2"]}
-12-sigkill-presence	10	@until 60 store GET /v1/get?key=testsub/placement/c12	200 {"items": {"worker": "w-2"}}
-12-sigkill-presence	11	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-1": {"fate": "move", "why": "~gone"}}}
+12-sigkill-presence	10	@until 60 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-1": {"fate": "move", "why": "~gone"}}}
+12-sigkill-presence	11	@until 60 store GET /v1/get?key=testsub/placement/c12	200 {"items": {"worker": "w-2"}}
+12-sigkill-presence	12	@until 30 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "true"}}
 13-capture-taking	1	@start resource	ok
 13-capture-taking	2	@start controller	ok
 13-capture-taking	3	@start worker w-1	ok
