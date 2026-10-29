@@ -1,1 +1,4 @@
 date	sample	fix	languages
+2026-10-29	2/scenarios.tsv: 01-hold, шаг 3	live_shm ждётся в каталоге доли стенда — ~shm://{shm}/ (SHM_DIR файла подсистемы, общий README приёмки VMS «Доля кадров на стенде»), не буквальный /run/vms-cam-shm машины приёмки; разбор ревью V/01 стр. 5, 18, вопросы 2, 3 (Codex R05, Claude С-1, С-2)	all
+2026-10-29	2/scenarios.tsv: 01-hold, шаг 11	kind io — фаза held и нет обоих адресов раздачи (live_url, live_shm) — прежде фаза не сверялась; разбор ревью V/01 стр. 4, вопрос 1 (Claude С-5)	all
+2026-10-29	2/README.md: Подготовка	файл подсистемы cam задан стендом: MEDIA_DIR={data}/subsystems/cam/media и SHM_DIR через W2C_SUB_ENV, как велит общий README приёмки VMS (прежде «не задан» — держатель искал бы door.mp4 в /data/platform); разбор ревью V/01 стр. 19 (Claude С-3)	all

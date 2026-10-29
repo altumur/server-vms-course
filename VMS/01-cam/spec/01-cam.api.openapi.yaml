@@ -5,13 +5,22 @@ info:
   description: |
     HTTP-контракт двери держателя `camworker` — главы V/01.5 урока «Камера» модуля VMS. Канон —
     [нормы главы 5](01.5-cam.norms.md); этот файл их выражает и не добавляет требований: порядок отказов,
-    пределы, куски и бюджет — Н1.5, Н3; личность клиента — Н2 (сертификат роли, класс `role`;
-    без комплекта — только петля). Только `GET`; иной метод — 405, иной путь — 404 `no such path`.
+    пределы, куски и бюджет — Н1.5, Н3; личность клиента и разбор запроса — Н2 (сертификат роли, класс `role`
+    договора сертификата роли; без комплекта — только петля, маршруты — 401 `no_role`). Только `GET`; иной метод на
+    маршруте — 405, иной путь — 404 `no such path`. Порядок: путь → метод → допуск → query (Н2). Цепочка, отвергнутая
+    TLS, — отказ рукопожатия без HTTP-ответа (в контракте не выражается).
 servers:
+  - url: https://{server}:{port}
+    description: с комплектом роли camworker — адрес SERVER_NAME (V/01.5 Н1.2; P/03.4 Н1.7 kit); сертификат клиента обязателен
+    variables:
+      server: {default: "srv-a"}
+      port: {default: "0"}
   - url: http://127.0.0.1:{port}
-    description: без комплекта сертификатов — только петля (P/02.4 Н1.6 address.process)
+    description: без комплекта сертификатов — только петля; маршруты отвечают 401 no_role (V/01.5 Н1.2, Н2)
     variables:
       port: {default: "0"}
+security:
+  - roleCertificate: []
 paths:
   /devices:
     get:
@@ -24,6 +33,10 @@ paths:
               schema:
                 type: array
                 items: {$ref: "#/components/schemas/Device"}
+        "401": {$ref: "#/components/responses/NoRole"}
+        "403": {$ref: "#/components/responses/RoleRefusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
   /recordings/{id}:
     get:
       summary: Перечень кусков архива устройства по камере (V/01.5 Н1.3, Н3)
@@ -45,7 +58,10 @@ paths:
                     type: array
                     items: {$ref: "#/components/schemas/Span"}
         "400": {$ref: "#/components/responses/Refusal"}
+        "401": {$ref: "#/components/responses/NoRole"}
+        "403": {$ref: "#/components/responses/RoleRefusal"}
         "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
         "501": {$ref: "#/components/responses/Refusal"}
         "503": {$ref: "#/components/responses/Refusal"}
   /playback/{id}:
@@ -64,9 +80,18 @@ paths:
             video/mp4:
               schema: {type: string, format: binary}
         "400": {$ref: "#/components/responses/Refusal"}
+        "401": {$ref: "#/components/responses/NoRole"}
+        "403": {$ref: "#/components/responses/RoleRefusal"}
         "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
         "503": {$ref: "#/components/responses/Refusal"}
 components:
+  securitySchemes:
+    roleCertificate:
+      type: mutualTLS
+      description: |
+        сертификат роли клиента (класс `role` договора сертификата роли): допущены recworker, detjobworker,
+        detedgeworker; набор доверия — ca.pem, ca.next.pem своего кластера (V/01.5 Н2)
   parameters:
     Id:
       name: id
@@ -78,13 +103,17 @@ components:
       name: from
       in: query
       required: false
-      description: секунды Unix, включительно; без параметра — от начала архива
+      description: |
+        секунды Unix, включительно, запись числа JSON, конечное; без параметра — от начала архива; повтор, пустое
+        значение, иная запись, from > to — 400 bad range (V/01.5 Н2)
       schema: {type: number}
     To:
       name: to
       in: query
       required: false
-      description: секунды Unix, не включительно; без параметра — до конца архива
+      description: |
+        секунды Unix, не включительно, запись числа JSON, конечное; без параметра — до конца архива; повтор, пустое
+        значение, иная запись, from > to — 400 bad range (V/01.5 Н2)
       schema: {type: number}
   responses:
     Refusal:
@@ -101,6 +130,31 @@ components:
             additionalProperties: false
             properties:
               error: {type: string}
+              detail: {type: string}
+    NoRole:
+      description: |
+        сертификата клиента нет (с комплектом) или комплекта нет (петля) — 401 no_role (V/01.5 Н2)
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            additionalProperties: false
+            properties:
+              error: {const: no_role}
+              detail: {type: string}
+    RoleRefusal:
+      description: |
+        после рукопожатия: роль не из допущенных — wrong_role; роли в SAN не ровно одна — no_role; подпись листа
+        или центра вне sig — bad_chain (класс `role` договора сертификата роли; V/01.5 Н2)
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            additionalProperties: false
+            properties:
+              error: {enum: [no_role, wrong_role, bad_chain]}
               detail: {type: string}
   schemas:
     Span:

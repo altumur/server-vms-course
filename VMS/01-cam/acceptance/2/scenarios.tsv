@@ -2,7 +2,7 @@ scenario	step	request	expect
 # Приёмка V/01.2: держатель камеры (хранилище, консоль cam, контроллер cam, ресурс и держатель на srv-a). Формат — README.
 01-hold	1	@start worker cam w-srv-a-1 on srv-a	ok
 01-hold	2	POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
-01-hold	3	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "running", "live_url": "~rtsp://127.0.0.1:", "live_shm": "~shm:///run/vms-cam-shm/"}]}
+01-hold	3	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "running", "live_url": "~rtsp://127.0.0.1:", "live_shm": "~shm://{shm}/"}]}
 01-hold	4	PUT /cameras/$c1 {"enabled": false}	200 {"enabled": false}
 01-hold	5	@until 30 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "pending", "live_url": "@absent"}]}
 01-hold	6	PUT /cameras/$c1 {"enabled": true}	200 {"enabled": true}
@@ -10,4 +10,4 @@ scenario	step	request	expect
 01-hold	8	PUT /cameras/$c1 {"live": "on-demand"}	200 {"live": "on-demand"}
 01-hold	9	@until 30 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "held", "live_url": "@absent", "live_shm": "@absent"}]}
 01-hold	10	PUT /cameras/$c1 {"live": "always", "kind": "io"}	200 {"kind": "io"}
-01-hold	11	@until 30 GET /cameras	200 {"rows": [{"id": "$c1", "kind": "io", "live_url": "@absent"}]}
+01-hold	11	@until 30 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "held", "kind": "io", "live_url": "@absent", "live_shm": "@absent"}]}

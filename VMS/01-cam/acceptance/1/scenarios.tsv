@@ -1,13 +1,16 @@
 scenario	step	request	expect
 # Приёмка V/01.1: камера — единица (дверь единиц консоли cam, манифест VMS/01-cam/cam.subsystem.yaml). Формат — README.
-01-create	1	POST /cameras {"source": "driverpack://file/door.mp4"}	201 {"id": "$c1", "name": "~cam", "enabled": true, "priority": 100, "live": "always", "kind": "video", "labels": [], "folders": [], "revision": 1}
-01-create	2	GET /cameras	200 {"configured": [{"id": "$c1", "source": "driverpack://file/door.mp4", "cred_secret": ""}]}
-02-numeric	1	POST /cameras {"id": 7, "source": "driverpack://file/a.mp4"}	400 {"error": "@any"}
+01-create	1	POST /cameras {"source": "driverpack://file/door.mp4"}	201 {"id": "1", "name": "cam1", "enabled": true, "priority": 100, "live": "always", "kind": "video", "labels": [], "folders": [], "revision": 1}
+01-create	2	GET /cameras	200 {"configured": [{"id": "1", "name": "cam1", "source": "driverpack://file/door.mp4", "cred_secret": ""}]}
+01-create	3	POST /cameras {"source": "driverpack://file/second.mp4"}	201 {"id": "2", "name": "cam2"}
+01-create	4	PUT /cameras/2 {"priority": 50}	200 {"id": "2", "name": "cam2", "priority": 50}
+02-numeric	1	POST /cameras {"id": 7, "source": "driverpack://file/a.mp4"}	400 {"error": "~id"}
 02-numeric	2	POST /cameras {"name": "gate", "source": "driverpack://file/b.mp4"}	201 {"id": "$c2", "name": "gate"}
-02-numeric	3	POST /cameras {"source": "driverpack://file/c.mp4", "live": "sometimes"}	400 {"error": "@any"}
+02-numeric	3	POST /cameras {"source": "driverpack://file/c.mp4", "live": "sometimes"}	400 {"error": "@any", "fault": "@absent"}
 03-one-channel	1	POST /cameras {"source": "rtsp://10.0.0.7:554/ch/1"}	201 {"id": "$c3"}
-03-one-channel	2	POST /cameras {"source": "RTSP://10.0.0.7/ch/1"}	409 {"error": "conflict", "fault": "unique"}
+03-one-channel	2	POST /cameras {"source": "RTSP://10.0.0.7:554/ch/1"}	409 {"error": "conflict", "fault": "unique"}
 03-one-channel	3	POST /cameras {"source": "rtsp://10.0.0.7:554/ch/2"}	201 {"id": "@any"}
+03-one-channel	4	POST /cameras {"source": "rtsp://10.0.0.7/ch/1"}	201 {"id": "@any", "source": "rtsp://10.0.0.7/ch/1"}
 04-credentials	1	POST /cameras {"source": "rtsp://admin:hunter2@10.0.0.8/ch/1"}	400 {"fault": "bad_url", "error": "~cred_secret ~cred_username"}
 04-credentials	2	POST /cameras {"source": "rtsp://10.0.0.8/ch/1?usr=admin&pwd=hunter2"}	400 {"fault": "bad_url", "error": "~cred_secret"}
 04-credentials	3	POST /cameras {"source": "driverpack://acme/admin:hunter2@10.0.0.9/ch/1"}	400 {"fault": "bad_url", "error": "~cred_secret"}
@@ -32,3 +35,6 @@ scenario	step	request	expect
 09-delete-camera	4	PUT /cameras/$s {"profile": "детекция"}	200 {"main": "$m", "profile": "детекция"}
 09-delete-camera	5	POST /cameras {"source": "rtsp://10.0.0.21/ch/3", "main": "$m"}	201 {"main": "$m"}
 09-delete-camera	6	DELETE /cameras/$s	200 {"deleted": "$s"}
+10-kind	1	POST /cameras {"source": "rtsp://10.0.0.30/ch/1", "kind": "thermal"}	400 {"error": "@any", "fault": "@absent"}
+10-kind	2	POST /cameras {"source": "rtsp://10.0.0.30/ch/1", "kind": "io"}	201 {"id": "@any", "kind": "io"}
+10-kind	3	POST /cameras {"source": "rtsp://10.0.0.31/ch/1", "kind": "video"}	201 {"id": "@any", "kind": "video"}
