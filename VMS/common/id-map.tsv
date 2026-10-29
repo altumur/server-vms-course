@@ -169,7 +169,7 @@ old	new	chapter	subject	note
 М10B/21 ш.2, 7	V/05.3-04	5.3	события: дерево detjob, of, медийное t, класс по alarms, без подавления, earlier-run	
 М10B/21 ш.6	V/05.3-05	5.3	итог done / partial / failed по stalled, один раз под стражем эпохи	P/03.6 Н1.7
 М10B/21 ш.2	V/05.4-01	5.4	фазы задачи: queued/running/waiting/following/fetching/unsupported/failed, reason; done — итог	
-М10B/21 ш.2	V/05.4-02	5.4	ждать пропущенное: никто — без срока, missing, накопленный waited, WAIT_MAX, partial двух видов, scan.partial до итога	файл ожидания → курсор
+М10B/21 ш.2	V/05.4-02	5.4	ждать: никто — без срока, missing, waited копят и unsupported, и дыра без перечня, WAIT_MAX, partial двух видов, scan.partial до итога	файл ожидания → курсор
 М10B/21 ш.9	V/05.4-03	5.4	following: written_through, 2 лага VISIBLE_LAG_SECONDS, интервал в будущем	
 М10B/21 ш.8; М10B/23 ш.2	V/05.4-04	5.4	просьба дозаписи: дыра после «видно с», перечень устройства, кусками ≤ суток, fetching до WAIT_MAX	подача воркером (P/03.6 Н1.5)
 М10B/21 ш.2	V/05.4-05	5.4	пульс задачи и ряды jobs_running, filings_total	
