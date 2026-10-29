@@ -124,6 +124,14 @@ class TestPortable(unittest.TestCase):
             self.assertIn(want, why)
         self.assertTrue(spec.relations_errors(dict(rel, untranslated=[{"no": 1}]), doc))
 
+    def test_who_of(self):
+        """Роли по каталогу: скобки — вложенные, разделители — без пробелов и с пробелами (дефект who "a,b")."""
+        row = {"ops": "create=domain(при (первом) входе, cas \"\"),domainagent(a(b(c)));cas=admin ;guard= domain , w2cctl",
+               "readers": "console(глава (6.2)),domain ,  agent"}
+        self.assertEqual(spec.who_of(row, "writer"), ["domain", "domainagent", "admin", "w2cctl"])
+        self.assertEqual(spec.who_of(row, "reader"), ["console", "domain", "agent"])
+        self.assertEqual(spec.who_of({"ops": "create=a(x), b; cas=b(y)"}, "writer"), ["a", "b"])
+
     def test_transition_needs_the_pinned_suite(self):
         """Ревью Codex RВ7-03: набора нет или он иной — отказ с ненулевым кодом до первой правки дерева."""
         from v7 import transition

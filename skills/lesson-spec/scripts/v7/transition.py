@@ -3,6 +3,7 @@
 
     python -m v7.transition --root ДЕРЕВО [--lessons 01,02,03,04,05,06]      (из skills/lesson-spec/scripts)
     python -m v7.transition --root ДЕРЕВО --keys          (дерево В7: столбец key пакета family-read, шаг 6)
+    python -m v7.transition --root ДЕРЕВО --who           (дерево В7: столбец who пакета family-read заново по каталогу)
     python -m v7.transition --root ДЕРЕВО --add-row BASE TEXT NOTE   (дерево В7: строки family-read по образцу, исход — стек)
     python -m v7.transition --root ДЕРЕВО --tables 08,09  (дерево В7: недостающие таблицы family-read, исход — стек)
 
@@ -579,6 +580,29 @@ def family_keys(root):
     return done
 
 
+def family_who(root):
+    """Пакет family-read на месте: столбец `who` — заново по каталогу и исходам (`whom`), остальные байты строк те же.
+    → {урок: изменённых строк}."""
+    cat = {(r["key"], r["kind"]): r for r in spec.read_catalog(root)}
+    fams, done = {}, {}
+    for p in sorted((root / FAMILY_READ).glob("[0-9][0-9].tsv")):
+        lines = p.read_text(encoding="utf-8").split("\n")
+        if lines[0].split("\t") != HEADER:
+            sys.exit("%s: the header is not %s" % (p, "<TAB>".join(HEADER)))
+        i, n = HEADER.index("who"), 0
+        for no, ln in enumerate(lines[1:], 1):
+            if not ln:
+                continue
+            cols = ln.split("\t")
+            who = whom(root, cat[(cols[1], cols[3])], cols[4], [], fams)[0]
+            if cols[i] != who:
+                cols[i], n = who, n + 1
+                lines[no] = "\t".join(cols)
+        p.write_text("\n".join(lines), encoding="utf-8")
+        done[p.stem] = n
+    return done
+
+
 # ---------------------------------------------------------------- всё
 
 def main(argv=None):
@@ -588,6 +612,7 @@ def main(argv=None):
     from v7 import yts
     ap.add_argument("--yts", default=str(yts.SUITE), help="распакованный yaml-test-suite data-2022-01-17 (закреплён)")
     ap.add_argument("--keys", action="store_true", help="только столбец key пакета family-read на месте (дерево В7)")
+    ap.add_argument("--who", action="store_true", help="только столбец who пакета family-read на месте (дерево В7)")
     ap.add_argument("--tables", help="недостающие таблицы family-read уроков (через запятую) на дереве В7")
     ap.add_argument("--add-row", nargs=3, metavar=("BASE", "TEXT", "NOTE"),
                     help="строки family-read по образцу BASE: текст TEXT, заметка NOTE, исход — стек В7 (дерево В7)")
@@ -595,6 +620,9 @@ def main(argv=None):
     root = Path(a.root).resolve()
     if a.keys:
         print("family-read key rows:", family_keys(root))
+        return
+    if a.who:
+        print("family-read who rows changed:", family_who(root))
         return
     if a.tables:
         print("family-read tables:", family_read_tables(root, set(a.tables.split(","))))
