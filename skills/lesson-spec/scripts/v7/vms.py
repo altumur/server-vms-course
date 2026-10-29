@@ -566,7 +566,8 @@ def cases(root, j):
 
 
 def build_tables(root):
-    """Пакет family-read VMS заново: README и `NN.tsv` на урок владельца. → {урок: строк}."""
+    """Пакет family-read VMS заново: `NN.tsv` на урок владельца (README — заготовка, если его нет; есть — не трогается).
+    → {урок: строк}."""
     errors, judges = check_rows(root)
     if errors:
         sys.exit("VMS catalog:\n  " + "\n  ".join("%s: %s" % e for e in errors))
@@ -575,7 +576,8 @@ def build_tables(root):
         sys.exit("VMS catalog keys:\n  " + "\n  ".join(why))
     d = Path(root) / FAMILY_READ
     d.mkdir(parents=True, exist_ok=True)
-    (d / "README.md").write_text(README, encoding="utf-8")
+    if not (d / "README.md").is_file():                 # README — текст «Спецификации VMS»: только заготовка нового пакета
+        (d / "README.md").write_text(README, encoding="utf-8")
     tables = {}
     for k, j in judges.items():
         lesson = j.vrow["owner"][2:4]

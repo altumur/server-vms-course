@@ -692,7 +692,11 @@ class TestTree(unittest.TestCase):
             c.vms_families()
             return c, [e for e in c.errors if "VMS/" in e]
         cat.write_text(head + "\t".join(row) + "\n", encoding="utf-8")
+        readme = root / vms.FAMILY_READ / "README.md"
+        readme.parent.mkdir(parents=True, exist_ok=True)
+        readme.write_text("# свой текст\n\n## Кто исполняет и провод\n", encoding="utf-8")
         built = vms.build_tables(root)
+        self.assertEqual(readme.read_text(encoding="utf-8"), "# свой текст\n\n## Кто исполняет и провод\n")
         self.assertGreater(built["01"], 10)
         c, errors = run()
         self.assertEqual(errors, [])
