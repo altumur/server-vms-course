@@ -40,6 +40,12 @@
 - **Семьи данных** `data/*.schema.json` (JSON Schema 2020-12) с `*.layers.tsv` и `*.outcomes.tsv` — строка камеры, строка
   `devices`, тело просьбы `cam`, вклад в книгу `sources`, слова пульса `cam` — по образцу `Platform/*/data/` (слои —
   `Platform/common/LAYERS.md`, ADR-0092).
+  Строка камеры, строка `devices` и тело просьбы выражает манифест (P/02.1) — своих семей у них нет. Своё содержимое в
+  открытых местах семей платформы — [`data/`](data/): слова пульса `cam-heartbeat-words` (место — корень пульса, пустой указатель),
+  `value` элемента книги `sources-entry` и решение `licence-decision` (место `/*/entries/*/value`) — форма, слои, исходы по
+  читателям; строки — в каталоге VMS [`../common/data/catalog.tsv`](../common/data/catalog.tsv) (колонка `place`; решение
+  «Архитектора» А). Вклад `cam/sources/<слот>` — форма манифеста (P/03.7), семьёй VMS не судится. Векторы семей строит
+  построитель `family-read` (`VMS/common/vectors/family-read/01.tsv`), вручную их нет.
 
 ## Запросы урока (опись § 6) — история перевода
 

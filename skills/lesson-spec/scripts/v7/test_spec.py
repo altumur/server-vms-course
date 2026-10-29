@@ -661,6 +661,65 @@ class TestTree(unittest.TestCase):
         self.assertTrue(any("slots.outcomes.tsv" in e and "вопрос «Архитектору»" in e for e in errors), errors)
         self.assertTrue(any("03.1-worker.norms.md" in e and "исход не назван нормой" in e for e in errors), errors)
 
+    def test_vms_families(self):
+        """Семьи VMS в открытых местах семей платформы (запрос VMS, вариант А): строка каталога VMS — экземпляр ключа
+        семьи платформы, место открыто, роли подсистем VMS в readers и исходах; векторы строит v7.vms, судит check_spec;
+        каждая порча краснеет."""
+        import check_spec
+        from v7 import schema as gen, vms
+        root = self.copy()
+        data = root / "VMS/01-cam/data"
+        data.mkdir(exist_ok=True)
+        doc = {"$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object", "properties": {
+            "probe_n": {"type": "integer", "minimum": 0, "x-integer": True},
+            "status": {"type": "array", "items": {"type": "object", "properties": {
+                "probe_s": {"type": "string", "enum": ["a", "b"]}}}}}}
+        (data / "probe.schema.json").write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
+        (data / "probe.layers.tsv").write_text(gen.layer_table(doc), encoding="utf-8")
+        (data / "probe.outcomes.tsv").write_text(
+            "path\treader\toutcome\tpriority\tunit\tnorm\n"
+            "\tliveworker\tпульс не читается\t1\tстрока\tV/01.2 Н1.4\n"
+            "/status\t*\tэлемент не читается\t1\tэлемент\tV/01.2 Н1.4\n", encoding="utf-8")
+        cat = root / vms.CATALOG
+        head = "\t".join(vms.FIELDS) + "\n"
+        row = ["cam/heartbeats/<имя>", "object", "V/01.2", "put=camworker(свой пульс)", "liveworker", "-", "1",
+               "VMS/01-cam/data/probe.schema.json", "V/01.2 Н1.4", ""]
+
+        def run(r=row):
+            cat.write_text(head + "\t".join(r) + "\n", encoding="utf-8")
+            c = check_spec.Check(root, None, False)
+            c.vms_module()
+            c.vms_families()
+            return c, [e for e in c.errors if "VMS/" in e]
+        cat.write_text(head + "\t".join(row) + "\n", encoding="utf-8")
+        built = vms.build_tables(root)
+        self.assertGreater(built["01"], 10)
+        c, errors = run()
+        self.assertEqual(errors, [])
+        self.assertEqual((c.stats["vms_families"], c.stats["vms_family_read_rows"]), (1, built["01"]))
+        norms = next((root / "VMS/01-cam/spec").glob("01.2-*.norms.md"))
+        c.families(norms, norms.read_text(encoding="utf-8"), "V/01.2")
+        self.assertEqual(c.stats["family_schemas"], 1)
+        table = root / vms.FAMILY_READ / "01.tsv"
+        lines = table.read_text(encoding="utf-8").split("\n")
+        self.assertTrue(any("/probe_n x-integer" in ln and "\trefused\t" in ln for ln in lines))
+        for bad, want in (
+                (dict(enumerate(row)) | {0: "rec/heartbeats/<имя>"}, "<sub> of <sub>/heartbeats/<имя> is rec, not cam"),
+                (dict(enumerate(row)) | {9: "/stood_in"}, "is closed"),
+                (dict(enumerate(row)) | {4: "liveworker, recworker"}, "no outcome of the whole value (empty path) for "
+                                                                     "the reader recworker"),
+                (dict(enumerate(row)) | {4: "nosuchworker"}, "readers: expected role")):
+            _, errors = run([bad[i] for i in range(len(row))])
+            self.assertTrue(any(want in e for e in errors), (want, errors))
+        i = next(i for i, ln in enumerate(lines) if "/probe_n x-integer" in ln and "\twriter\t" in ln)
+        table.write_text("\n".join(lines[:i] + [lines[i].replace("\trefused\t", "\tok\t", 1)] + lines[i + 1:]),
+                         encoding="utf-8")
+        _, errors = run()
+        self.assertTrue(any("line %d: the V7 stack gives refused" % (i + 1) in e for e in errors), errors)
+        table.unlink()
+        _, errors = run()
+        self.assertTrue(any("no table 01.tsv" in e for e in errors), errors)
+
     def test_sections_idempotent(self):
         from v7 import sections
         root = self.copy()

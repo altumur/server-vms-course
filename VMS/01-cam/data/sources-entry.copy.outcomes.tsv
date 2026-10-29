@@ -1,0 +1,4 @@
+# Исходы нечитаемого value элемента книги источников: копия у члена `domain/cam/sources`, схема `sources-entry.schema.json#copy` (V/01.6 Н1.2); путь — от value. Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+path	reader	outcome	priority	unit	norm
+	recworker	value элемента камеры не по форме: не прочитан, а не отсутствует — запись waiting, reason словами книги («not in the source book …»), прочие элементы книги идут	1	элемент	V/02.9 Н1.2, Н4
+	domainagent	value не судит: элементы копии — как получены от держателя (P/09.1 Н1.4 member_row)	1	элемент	P/09.1 Н1.4

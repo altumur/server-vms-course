@@ -1,0 +1,4 @@
+place	layer	word	value
+/properties/as_of	3	x-time	true
+/properties/units	3	x-integer	true
+/properties/until	3	x-time	true
