@@ -79,8 +79,8 @@ rule:    "*" — true; unit:<s>/<i> = ref — true по имени, строку
 Без стенда: функция реализации получает вход (колонка `input`) и даёт вывод; `expect` — подмножество полей вывода или
 `@exit 2` (вход не по форме [P/08.4](../../../08-domain/spec/08.4-domain.norms.md) Н5 `exit`: строки `grants` — доверенный вход, строка не по форме — 2, не пропуск). Время —
 входом `now`, не часами процесса. Кто исполняет: `cases.tsv` — сторожевые консоли кластера (`06-console`) и домена
-(`10-domain-console`) и процесс `domain` (`08-domain`); `covers.tsv` — только `06-console` и `10-domain-console` (команда
-`covers` общего README приёмки) (ACC-VECTORS-CONNECT-02, решение «Архитектора» 2026-10-26).
+(`10-domain-console`) и процесс `domain` (`08-domain`); `covers.tsv` — только `06-console` и `10-domain-console` (запись `vectors` `common/may` или прежняя команда
+`covers` общего README приёмки; хватает одной — ACC-VECTORS-COVERS-STAND-01) (ACC-VECTORS-CONNECT-02, решение «Архитектора» 2026-10-26).
 
 ## Единицы
 
