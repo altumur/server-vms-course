@@ -53,10 +53,11 @@ lease: {unconfirmed_max: forever}
 # What a recorder reads outside its subsystem's rows: the domain's books its agent carried home (V/02.9) — the source
 # book (where a camera of another cluster comes from), the book of primaries (a backup decides by it), the book of
 # the centre's ingests per relay (`upstream`, written by the centre's first recorder), the assignments naming this
-# cluster, the topology (relay, star, centre) and the asks a relay carries up (V/07). Here a worker reads what its spec
+# cluster, the topology (relay, star, centre). The asks a relay carries up it sees on its own ingest (V/07.5 Н1.5), not in
+# the book `domain/auto/asks`. Here a worker reads what its spec
 # names. A book is a member's copy by its exact name; the domain-holder cluster has no copy and reads its own row
 # `domain/<sub>/<book>/<CLUSTER>` — the rights generator grants that one row (P/02.5 Н1.4); only the copy is declared.
-worker: {exec: /usr/lib/rec/worker, reads: [cam/heartbeats/, det/units/, domain/cam/sources, domain/rec/primaries, domain/rec/upstream, domain/placed/rec/, domain/member-list, domain/member-topology, domain/topology, domain/view, domain/auto/asks], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 40}   # requests: a camera's pusher files cam/requests/rec.ask-<id> as the recorder (V/02.9 Н1.2)
+worker: {exec: /usr/lib/rec/worker, reads: [cam/heartbeats/, det/units/, domain/cam/sources, domain/rec/primaries, domain/rec/upstream, domain/placed/rec/, domain/member-list, domain/member-topology, domain/topology, domain/view], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 40}   # requests: a camera's pusher files cam/requests/rec.ask-<id> as the recorder (V/02.9 Н1.2)
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
