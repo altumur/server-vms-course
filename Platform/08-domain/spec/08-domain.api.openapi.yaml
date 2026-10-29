@@ -1018,13 +1018,14 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [term, rev, to, stranded]
+                required: [term, rev, to]
                 additionalProperties: false
                 properties:
                   term: {type: integer, minimum: 2}
                   rev: {type: integer, minimum: 1}
                   to: {$ref: '#/components/schemas/MemberName'}
                   stranded:
+                    description: 'Н1.6 stranded; поля нет — сбор не удался, расхождения неизвестны; [] — расхождений нет (C08-HANDOVER-STRANDED-UNKNOWN-01).'
                     type: array
                     items: {$ref: '#/components/schemas/StrandedItem'}
         '400': {$ref: '#/components/responses/Refused'}
