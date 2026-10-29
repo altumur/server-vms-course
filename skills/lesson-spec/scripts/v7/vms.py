@@ -359,6 +359,7 @@ def mutations(places, s, v, path=()):
 
 
 DEL = object()
+BASE = object()                                           # строка основы ветки, без мутации
 
 
 def setat(v, path, x):
@@ -427,42 +428,81 @@ def plain_first(text):
     return not all(re.fullmatch(r"[a-z0-9_-]*", k) for k in (v if isinstance(v, dict) else {}))
 
 
+def condition(s):
+    """Условие ветки `if` → {поле: значение} по `const`/`enum` его `properties` (и его `allOf`); None — условие не из
+    таких слов (`not`, `anyOf` …), основу под него построитель не подбирает."""
+    out = {}
+    for x in [s] + [e for e in s.get("allOf", []) if isinstance(e, dict)]:
+        if set(x) - {"type", "required", "properties", "allOf", "description"}:
+            return None
+        for name, ps in (x.get("properties") or {}).items():
+            if not isinstance(ps, dict) or set(ps) - {"const", "enum", "type", "description"}:
+                return None
+            if "const" in ps:
+                out[name] = ps["const"]
+            elif "enum" in ps:
+                out[name] = ps["enum"][0]
+    return out
+
+
+def views(doc):
+    """Ветки схемы VMS: [(условие, схема ветки)] — у каждой ветки `allOf: [{if, then}]` верха своя основа (условие
+    подставлено в значение места) и мутации полей её `then`; без веток — [({}, doc)]."""
+    alls = [e for e in doc.get("allOf", []) if isinstance(e, dict)]
+    branches = [(condition(e["if"]), e["then"]) for e in alls if isinstance(e.get("if"), dict)
+                and isinstance(e.get("then"), dict)]
+    branches = [(c, t) for c, t in branches if c is not None]
+    if not branches:
+        return [({}, doc)]
+    rest = [e for e in alls if "if" not in e]
+    return [(c, dict({w: x for w, x in doc.items() if w != "allOf"}, allOf=rest + [t])) for c, t in branches]
+
+
 def cases(root, j):
-    """Строки таблицы семьи VMS: основа (рамка платформы с значением места по схеме VMS) и мутации места, в режимах
-    writer и reader. → [(mode, text, verdict, paths, rel, note)]; SpecError — основы нет."""
+    """Строки таблицы семьи VMS: на каждую ветку схемы (views) основа — рамка платформы с значением места по схеме VMS
+    (условие ветки подставлено) — и мутации места, в режимах writer и reader. → [(mode, text, verdict, paths, rel,
+    note)]; SpecError — основы ветки нет."""
     places = spec.Places(j.vdoc)
-    base = None
-    for t in sorted(frames(root, j.prow), key=plain_first):
-        v, enc = decode_text(j.prow["kind"], t)
-        ats = sorted(instances(v, j.segs), key=lambda a: not all(re.fullmatch(r"[a-z0-9_-]+|[0-9]+", str(s)) for s in a))
-        if not ats:
-            continue
-        at = ats[0]
-        x = repair(places, j.family, fill(places, j.vdoc, copy.deepcopy(get(v, at))))
-        if x is None:
-            continue
-        v = setat(v, at, x)
-        text = encode_text(j.pdoc, j.prow["kind"], v, enc)
-        if all(j.judge(text, mode)["verdict"] == "ok" for mode in ("writer", "reader")):
-            base = (v, enc, at)
-            break
-    if base is None:
-        raise spec.SpecError("%s %s: no ok row of %s in the Platform family-read holds the place, or the value built by "
-                             "the VMS schema is refused there" % (j.vrow["key"], j.vrow["place"] or "/", j.prow["key"]))
-    v, enc, at = base
-    out = []
-    for mode in ("writer", "reader"):
-        out.append((mode, encode_text(j.pdoc, j.prow["kind"], v, enc), "base"))
-    muts = [((), "null", None)] + mutations(places, j.vdoc, get(v, at))
-    seen = set()
-    for rel, what, x in muts:
-        w = setat(copy.deepcopy(v), list(at) + list(rel), x)
-        text = encode_text(j.pdoc, j.prow["kind"], w, enc)
-        note = "%s %s" % (stack.pointer(rel) or "/", what)
-        for mode in ("writer", "reader"):
-            if (mode, text) not in seen:
-                seen.add((mode, text))
-                out.append((mode, text, note))
+    out, seen = [], set()
+    for cond, view in views(j.vdoc):
+        say = " ".join("%s=%s" % (k, json.dumps(x, ensure_ascii=False) if not isinstance(x, str) else x)
+                       for k, x in cond.items())
+        base = None
+        for t in sorted(frames(root, j.prow), key=plain_first):
+            v, enc = decode_text(j.prow["kind"], t)
+            ats = sorted(instances(v, j.segs),
+                         key=lambda a: not all(re.fullmatch(r"[a-z0-9_-]+|[0-9]+", str(s)) for s in a))
+            if not ats:
+                continue
+            at = ats[0]
+            x = copy.deepcopy(get(v, at))
+            if cond and not isinstance(x, dict):
+                continue
+            if cond:
+                x.update(copy.deepcopy(cond))
+            x = repair(places, j.family, fill(places, view, x))
+            if x is None or any(x.get(k) != c for k, c in cond.items()):
+                continue
+            v = setat(v, at, x)
+            text = encode_text(j.pdoc, j.prow["kind"], v, enc)
+            if all(j.judge(text, mode)["verdict"] == "ok" for mode in ("writer", "reader")):
+                base = (v, enc, at)
+                break
+        if base is None:
+            raise spec.SpecError("%s %s%s: no ok row of %s in the Platform family-read holds the place, or the value "
+                                 "built by the VMS schema is refused there" % (
+                                     j.vrow["key"], j.vrow["place"] or "/", " (%s)" % say if say else "",
+                                     j.prow["key"]))
+        v, enc, at = base
+        muts = [((), "base", BASE), ((), "null", None)] + mutations(places, view, get(v, at))
+        for rel, what, x in muts:
+            w = v if x is BASE else setat(copy.deepcopy(v), list(at) + list(rel), x)
+            text = encode_text(j.pdoc, j.prow["kind"], w, enc)
+            note = what if x is BASE else "%s %s" % (stack.pointer(rel) or "/", what)
+            for mode in ("writer", "reader"):
+                if (mode, text) not in seen:
+                    seen.add((mode, text))
+                    out.append((mode, text, "%s %s" % (say, note) if say else note))
     rows = []
     for mode, text, note in out:
         r = j.judge(text, mode)
