@@ -20,6 +20,9 @@ console-silent-stop	{"want": "1", "running": [2, 3], "console": "silent"}	{"star
 reconcile-stale	{"want": "3", "running": [], "reconcile_age": "61"}	{"start": [], "stop": []}	сверка старше 60 с (rules 2)
 reconcile-never	{"want": "3", "running": [], "reconcile_age": "-1"}	{"start": [], "stop": []}	−1 — сверки не было (rules 2)
 reconcile-sixty	{"want": "3", "running": [], "reconcile_age": "60"}	{"start": [2, 3], "stop": []}	60 — ещё не старше (rules 2)
+reconcile-fraction-over	{"want": "3", "running": [], "reconcile_age": "60.5"}	{"start": [], "stop": []}	60.5 — дробь по форме значения ряда, старше 60 (rules 2; C02-RECONCILE-AGE-FORM-01)
+reconcile-fraction-under	{"want": "3", "running": [], "reconcile_age": "0.5"}	{"start": [2, 3], "stop": []}	0.5 — дробь по форме значения ряда, не старше (rules 2; C02-RECONCILE-AGE-FORM-01)
+reconcile-exponent	{"want": "3", "running": [], "reconcile_age": "1e1"}	{"start": [], "stop": []}	1e1 — не каноническая запись значения ряда (P/06.5 Н3: 10), не по форме (rules 2; C02-RECONCILE-AGE-FORM-01)
 memory-no-file	{"want": "3", "running": [], "memory": null}	{"start": [], "stop": []}	нет roles/<роль>.env — роль пропуск (rules 4)
 memory-zero-divisor	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "8192", "WORKER_MEMORY_MB": "0", "CAPACITY": "4"}}	{"start": [], "stop": []}	делитель ноль — пропуск (rules 4)
 memory-negative	{"want": "3", "running": [], "memory": {"HOST_MEMORY_MB": "-8192", "WORKER_MEMORY_MB": "1024", "CAPACITY": "4"}}	{"start": [], "stop": []}	бюджет не положительный — пропуск
