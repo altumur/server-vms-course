@@ -1,16 +1,17 @@
 <!doctype html>
-<!-- The configurator's page: the SHELL of the subsystem `backend` (V/11.1 Н1.4; ADR-0094 A3, доп. (1), доп. (2) п. 5).
+<!-- The configurator's page: the SHELL of the subsystem `backend` (V/11.1 Н1.4; ADR-0094 A3, доп. (1), доп. (8)).
      Our canon, beside backend.subsystem.yaml, like the shells of the other VMS subsystems. It is not the product's
      entry page index_api_server.html: at consolem @7683f542 that page still carries the WebUI application as an inline
      script and handlers in attributes, and the console's Content-Security-Policy (P/06.5 Н1.1 `page`) runs only this
      origin's files and the page's own scripts by their hashes, with no handler in an attribute. This shell therefore
      carries no script of its own and no handler. What it loads are the static files of `backend` the console serves by
      the manifest's list (B7): the product's styles, font and words of consolem @7683f542 (bytes not in the course;
-     SHA-256 of each — README of the lesson). The application itself is a file the product has yet to give (its inline
-     script moved to a file, its handlers to addEventListener) — the product's request 2026-10-29 «webui-csp», no answer
-     at the pinned commit. Until then the page is the frame without the application; the API scripts of the set are not
-     loaded here. How the console serves the shell of the mounted subsystem `backend` (today only the root's shell is
-     served) is an open point of the lesson (README). -->
+     SHA-256 of each — README of the lesson; these five files are the whole set). The application itself is a file the
+     product has yet to give (its inline script moved to a file, its handlers to addEventListener) — the product's
+     request 2026-10-29 «webui-csp», their answer 73e1721 «in work». Until then the page is the frame without the
+     application. With the product's build under the CSP its index.html becomes these bytes, pinned by SHA-256 (ADR-0094
+     доп. (8) п. 3); the application calls the API at /backend/api/ (доп. (8) п. 2). The console serves this shell at
+     /backend/ as a page of its own, with exactly the minimum CSP of P/06.5 Н1.1 `page` (доп. (8) пп. 1, 4). -->
 <html lang="ru" data-theme="dark">
 <head>
 <meta charset="utf-8">
