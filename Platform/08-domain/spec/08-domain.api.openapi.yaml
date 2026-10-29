@@ -935,9 +935,11 @@ paths:
   /domain/move:
     description: 'Глава 8.8 Н1.8, Н2; процессу цели передаёт консоль кластера (пересылка подписанту) — X-W2C-Client процесс здесь
       не читает; личность и грант admin кластера-цели проверяет консоль кластера (OpenAPI урока 6 POST /domain/move;
-      глава P/06.7).'
+      глава P/06.7) и передаёт доказанное имя заголовком X-W2C-User (by журнала domain.moved; C08-MOVED-BY-01).'
     post:
       operationId: move
+      parameters:
+        - {$ref: '#/components/parameters/XW2CUser'}
       summary: Аварийный перенос сюда по файлу восстановления (Н1.8)
       requestBody:
         required: true
@@ -1108,6 +1110,16 @@ components:
         Адрес TCP-пира клиента: ставит консоль домена при передаче правки процессу domain; процесс читает его только на
         соединении роли domainconsole, на прочих — не читает (P/08.0 Н1.8; Platform/common/contracts/forwarding.md
         «Адрес клиента»; разбор ревью стадии A 8–10, № 23).
+      schema: {type: string, minLength: 1}
+    XW2CUser:
+      name: X-W2C-User
+      in: header
+      required: false
+      description: >-
+        Имя, доказанное сторожевой консоли кластера (у аварийного входа — имя сессии): ставит консоль кластера при
+        пересылке POST /domain/move подписанту (P/06.7 Н1.8); процесс читает его только на соединении консоли своего
+        кластера (сертификат клиента роли console), на прочих — не читает; пришедший снаружи консоль снимает. by журнала
+        domain.moved (P/08.8 Н1.8; C08-MOVED-BY-01).
       schema: {type: string, minLength: 1}
     Member:
       name: member
