@@ -1,12 +1,12 @@
 scenario	step	request	expect
 # Приёмка V/04.1: детектор — единица (дверь единиц консоли det; манифесты cam, det, auto). Формат — README.
-01-create	1	POST /units {"name": "7-linecross", "cam": "7", "kind": "linecross", "params": "x1=0,y1=100,x2=640,y2=100"}	201 {"id": "7-linecross", "labels": ["gpu"], "alarms": ["linecross", "lpr"], "until": 0, "enabled": true}
+01-create	1	POST /units {"name": "7-linecross", "cam": "7", "kind": "linecross", "params": "x1=0,y1=100,x2=640,y2=100"}	201 {"id": "7-linecross", "labels": ["gpu"], "alarms": ["linecross", "lpr"], "until": 0, "enabled": true, "revision": 1}
 01-create	2	POST /units {"name": "7-x", "cam": "7"}	400 {"error": "@any"}
 01-create	3	PUT /units/7-linecross {"cam": "8"}	400 {"error": "~cam is fixed"}
 01-create	4	POST /units {"name": "auto-7-motion", "cam": "7", "kind": "motion"}	400 {"error": "~made by auto"}
 02-mask	1	PUT /units/7-linecross {"mask": "not-a-digest"}	400 {"error": "~takes a digest"}
-02-mask	2	PUT /units/7-linecross/mask @raw mask-bytes	200 {"mask": "~sha256-", "bytes": 10}
-02-mask	3	GET /units	200 {"configured": [{"name": "7-linecross", "mask": "~sha256-"}]}
+02-mask	2	PUT /units/7-linecross/mask @raw mask-bytes	200 {"mask": "~sha256-", "bytes": 10, "revision": 2}
+02-mask	3	GET /units	200 {"configured": [{"name": "7-linecross", "mask": "~sha256-", "revision": 2}]}
 03-stream	1	console2 POST /cameras {"name": "Вход", "source": "rtsp://10.0.0.40/ch/1"}	201 {"id": "$m"}
 03-stream	2	console2 POST /cameras {"source": "rtsp://10.0.0.40/ch/2", "main": "$m", "profile": "детекция"}	201 {"id": "$s"}
 03-stream	3	console2 POST /cameras {"name": "Двор", "source": "rtsp://10.0.0.41/ch/1"}	201 {"id": "$o"}
