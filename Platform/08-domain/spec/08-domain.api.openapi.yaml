@@ -1950,18 +1950,17 @@ components:
       type: object
       required: [cluster]
       additionalProperties: false
-      description: Тело PUT /domain/placement/{sub}/{ref} (P/08.6 Н1.1, Н2).
+      description: 'Тело PUT /domain/placement/{sub}/{ref} (P/08.6 Н1.1, Н2). Схема судит внешнюю форму (400); имя не члена, в
+        том числе не по грамматике MemberName, — 409 по Н2 (C08-PLACEMENT-NAME-409-01).'
       properties:
-        cluster: {$ref: '#/components/schemas/MemberName'}
+        cluster: {type: string, minLength: 1, description: 'член (MemberName); не член — 409'}
         origin:
-          description: 'член-владелец источника; "" — снять источник (Н1.1; прогон 41 R41-10)'
-          oneOf:
-            - {$ref: '#/components/schemas/MemberName'}
-            - {const: ''}
+          type: string
+          description: 'член-владелец источника; "" — снять источник (Н1.1; прогон 41 R41-10); непустое не член — 409'
         copies:
           type: array
           uniqueItems: true
-          items: {$ref: '#/components/schemas/MemberName'}
+          items: {type: string, description: 'член (MemberName); не член — 409'}
         reason: {type: string}
     CarryPlacement:
       type: object
