@@ -794,6 +794,20 @@ properties:
         result = self.registry([("М12A_Example/01", "acceptance-entry", "README.md", "supported anyway")])
         self.assertTrue(any("supported without it" in e for e in result.errors), result.errors)
 
+    def test_key_names_a_writing_step_of_its_scenario(self):
+        # ACC-06-KEY-SHIFT-01: «@start resource» inserted as step 1 left «@key(1)» pointing at a step without a key.
+        head = "scenario\tstep\trequest\texpect\n"
+        bad = head + "01-a\t1\t@start resource\tok\n01-a\t2\tPOST /tallies {}\t201\n01-a\t3\t@key(1) POST /tallies {}\t201\n"
+        self.scenarios.write_text(bad)
+        result = self.registry([("М12A_Example/01", "scenarios-format", "own", "README")])
+        self.assertTrue(any("@key(1) names step 1" in e for e in result.errors), result.errors)
+        self.scenarios.write_text(bad.replace("@key(1)", "@key(2)"))
+        result = self.registry([("М12A_Example/01", "scenarios-format", "own", "README")])
+        self.assertFalse(any("@key(" in e for e in result.errors), result.errors)
+        self.scenarios.write_text(head + "01-a\t1\t@key(4) POST /tallies {}\t201\n")
+        result = self.registry([("М12A_Example/01", "scenarios-format", "own", "README")])
+        self.assertTrue(any("@key(4) names step 4" in e for e in result.errors), result.errors)
+
     def test_own_format_keeps_structure_errors(self):
         self.scenarios.write_text("scenario\tstep\trequest\texpect\n01-a\t1\t@start x\tok\n01-a\t3\t@stop x\tok\n")
         result = self.registry([("М12A_Example/01", "scenarios-format", "own", "README")])

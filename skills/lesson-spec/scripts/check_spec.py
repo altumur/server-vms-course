@@ -1466,15 +1466,24 @@ class Check:
     def scenarios(self, path, own=False, forms=None):
         steps = Counter()
         silenced = 0
+        requests, keys = {}, []
         for line, (scenario, step, request, expect) in self.tsv(path, 4, SCENARIO_HEADER):
             steps[scenario] += 1
             if not scenario or step != str(steps[scenario]):
                 self.error(path, f"line {line}: invalid scenario/step sequence")
+            requests[(scenario, step)] = request
+            keys += [(line, scenario, n) for n in re.findall(r"@key\((\d+)\)", request)]
             before = len(self.errors)
             self.scenario_form(path, line, request, expect, forms)
             if own:
                 silenced += len(self.errors) - before
                 del self.errors[before:]
+        # `@key(N)` repeats the key bytes of step N of the same scenario: that step exists and carries a writing
+        # request (ACC-06-KEY-SHIFT-01, решение «Архитектора» 2026-10-29: a step inserted before it shifts the number).
+        for line, scenario, n in keys:
+            target = requests.get((scenario, n))
+            if target is None or not re.search(r"(?<!\S)(?:POST|PUT|DELETE) /", target):
+                self.error(path, f"line {line}: @key({n}) names step {n} of scenario {scenario}, which has no POST, PUT or DELETE")
         self.stats["scenarios"] += len(steps)
         self.stats["steps"] += sum(steps.values())
         if not steps:
