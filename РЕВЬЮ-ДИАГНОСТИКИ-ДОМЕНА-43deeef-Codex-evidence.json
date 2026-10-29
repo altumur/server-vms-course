@@ -1,0 +1,15 @@
+{
+  "manifest_files": 6632,
+  "tests": 100,
+  "failures": 0,
+  "errors": 0,
+  "poll_prefix_absent": true,
+  "raw_judge_object_unchanged": true,
+  "late_base64_absent": true,
+  "wrapped_log_b64_absent": false,
+  "spaced_log_hex_absent": false,
+  "author_scanner_passed": true,
+  "wrapped_log_unchanged": true,
+  "decoded_b64_length": 207,
+  "decoded_hex_length": 207
+}
