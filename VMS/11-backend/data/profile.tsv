@@ -1,0 +1,69 @@
+# Профиль возможностей стенда VMS для тестов API consolem (V/11.6 Н1.2): одна строка на операцию контракта
+# consolem.openapi.json @9dc16881. profile: in — тесты операции гоняются; out — операция отвечает 404 NO_ROUTE, тест
+# вне профиля (тест самого NO_ROUTE — в профиле); stand — только на стенде (/test/*). Читает драйвер стенда; при новой
+# версии контракта таблица сверяется (V/11.2). Набор продукта — one-domain, часы — --clock real (ответ consolem, ADR-0094
+# доп. (4)); объявление возможностей продукт отдаёт в GET /reference — с ним таблица сверяется, не заменяется молча.
+n	method	path	profile	why
+1	GET	/me	in	переводится (V/11.2)
+2	GET	/reference	in	переводится (V/11.2)
+3	GET	/domains	in	переводится (V/11.2)
+4	POST	/domains	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+5	GET	/domains/{domainId}	in	переводится (V/11.2)
+6	PATCH	/domains/{domainId}	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+7	DELETE	/domains/{domainId}	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+8	GET	/servers	in	переводится (V/11.2)
+9	POST	/servers	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+10	POST	/servers/probe	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+11	POST	/servers/assign	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+12	GET	/servers/{serverId}	in	переводится (V/11.2)
+13	PATCH	/servers/{serverId}	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+14	GET	/devices	in	переводится (V/11.2)
+15	POST	/devices	in	переводится (V/11.2)
+16	POST	/devices/update	in	переводится (V/11.2)
+17	POST	/devices/probe	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+18	GET	/devices/{deviceId}	in	переводится (V/11.2)
+19	PATCH	/devices/{deviceId}	in	переводится (V/11.2)
+20	DELETE	/devices/{deviceId}	in	переводится (V/11.2)
+21	GET	/folders	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+22	POST	/folders	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+23	GET	/folders/{folderId}	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+24	PATCH	/folders/{folderId}	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+25	DELETE	/folders/{folderId}	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+26	GET	/archives	in	переводится (V/11.2)
+27	POST	/archives	in	переводится (V/11.2)
+28	POST	/archives/check	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+29	GET	/archives/{archiveId}	in	переводится (V/11.2)
+30	PATCH	/archives/{archiveId}	in	переводится (V/11.2)
+31	DELETE	/archives/{archiveId}	in	переводится (V/11.2)
+32	POST	/archives/{archiveId}/volumes	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+33	GET	/volumes	in	переводится (V/11.2)
+34	GET	/volumes/{volumeId}	in	переводится (V/11.2)
+35	PATCH	/volumes/{volumeId}	in	переводится (V/11.2)
+36	DELETE	/volumes/{volumeId}	in	переводится (V/11.2)
+37	POST	/volumes/{volumeId}/format	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+38	POST	/operations	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+39	GET	/operations/{operationId}	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+40	POST	/operations/{operationId}/pause	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+41	POST	/operations/{operationId}/resume	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+42	POST	/operations/{operationId}/cancel	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+43	POST	/operations/{operationId}/retry-failed	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+44	POST	/operations/{operationId}/revert	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+45	GET	/domains/{domainId}/discovery	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+46	POST	/domains/{domainId}/discovery	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+47	DELETE	/domains/{domainId}/discovery	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+48	GET	/rules	in	переводится (V/11.2)
+49	GET	/rules/{ruleId}	in	переводится (V/11.2)
+50	PUT	/rules/{ruleId}	in	переводится (V/11.2)
+51	GET	/rules/{ruleId}/fires	in	переводится (V/11.2)
+52	GET	/access	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+53	GET	/settings	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+54	PATCH	/settings	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+55	GET	/licenses	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+56	GET	/journal	in	переводится (V/11.2)
+57	GET	/stream	in	переводится (V/11.2)
+58	POST	/test/reset	stand	только на стенде: TEST_SUPPORT=1 и петля (V/11.6 Н1.3)
+59	POST	/test/clock	stand	только на стенде: TEST_SUPPORT=1 и петля (V/11.6 Н1.3)
+60	POST	/test/events	stand	только на стенде: TEST_SUPPORT=1 и петля (V/11.6 Н1.3)
+61	POST	/objects/delete	in	переводится (V/11.2)
+62	POST	/access/apply	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+63	POST	/access/catalogs/{catalogId}/sync	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
