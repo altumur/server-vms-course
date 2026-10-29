@@ -5007,6 +5007,16 @@
           "armed": {
             "type": "boolean",
             "description": "Камера на охране (только чтение: меняют действия правил)"
+          },
+          "overlayDelayMs": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Титры источника событий: задержка показа, мс"
+          },
+          "overlayDurationSec": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Титры источника событий: сколько держать на экране, с"
           }
         },
         "additionalProperties": false,
@@ -8175,6 +8185,30 @@
                 "type": "null"
               }
             ]
+          },
+          "overlayDelayMs": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Титры источника событий: задержка показа, мс"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "overlayDurationSec": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Титры источника событий: сколько держать на экране, с"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "description": "Изменение устройства (JSON Merge Patch, RFC 7396): переданные поля заменяются, null убирает поле"
@@ -9460,6 +9494,16 @@
             "items": {
               "$ref": "#/components/schemas/EventWord"
             }
+          },
+          "overlayDelayMs": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Титры источника событий: задержка показа, мс"
+          },
+          "overlayDurationSec": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Титры источника событий: сколько держать на экране, с"
           }
         },
         "description": "Новое устройство вместе с дочерними. Домен и родителя задаёт запрос (DevicesCreateRequest), id выдаёт сервер"
@@ -11432,7 +11476,8 @@
                   "kind": {
                     "type": "string",
                     "enum": [
-                      "maintenanceWindow"
+                      "maintenanceWindow",
+                      "rule"
                     ]
                   },
                   "id": {
@@ -11450,7 +11495,7 @@
                 "type": "null"
               }
             ],
-            "description": "Расписание окна обслуживания: удаляется вместе с окном"
+            "description": "Чьё это расписание: окна обслуживания или правила («Задать только здесь…» в условии «Время»). Удаляется вместе с владельцем, если больше нигде не используется"
           },
           "builtin": {
             "type": "boolean",
@@ -11687,7 +11732,8 @@
                   "kind": {
                     "type": "string",
                     "enum": [
-                      "maintenanceWindow"
+                      "maintenanceWindow",
+                      "rule"
                     ]
                   },
                   "id": {
@@ -11705,7 +11751,7 @@
                 "type": "null"
               }
             ],
-            "description": "Расписание окна обслуживания: удаляется вместе с окном"
+            "description": "Чьё это расписание: окна обслуживания или правила («Задать только здесь…» в условии «Время»). Удаляется вместе с владельцем, если больше нигде не используется"
           }
         },
         "additionalProperties": false,

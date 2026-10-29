@@ -83,24 +83,20 @@ door:
 #   # consolem is not declared on the first step (ADR-0094 доп. (7)), its operations answer 404 NO_ROUTE
 # B7 (ADR-0094 доп. (1); норма платформы B — после Go GREEN 01–10), declared intent, not loaded today (the plan's key is
 # `console.files: [<path>…]`; the installer checks the SHA-256 of each, the manifest row keeps them): the console serves
-# the WebUI of consolem as static files next to this manifest, `/backend/<file>`, byte for byte; no file of the set is
-# named under `api/` — that is the space of the API (ADR-0094 доп. (8) п. 2). It serves backend.shell.html at /backend/
-# because this manifest declares it (доп. (3) п. 8), a page of its own (no frame of another page, no sandbox), with the
-# Content-Security-Policy that is exactly the minimum of P/06.5 Н1.1 `page` — `script-src 'self' 'sha256-…';
-# object-src 'none'; base-uri 'none'`, not stricter: inline styles and `data:` images stay allowed (доп. (8) пп. 1, 4).
-# The bytes are not in the course: the deployment package places them from consolem @7683f542 next to the manifest and
-# checks each SHA-256 (V/11.1 Н1.4, V/09.3). The set until the product's build under the CSP: the files the frame
-# backend.shell.html loads — the words and the styles with their @import and the font:
+# the WebUI of consolem as static files next to this manifest, `/backend/<file>`, byte for byte, by the name without the
+# query (the shell links `<file>?v=<12 hex>`); no file of the set is named under `api/` — that is the space of the API
+# (ADR-0094 доп. (8) п. 2). It serves backend.shell.html at /backend/ because this manifest declares it (доп. (3) п. 8),
+# a page of its own (no frame of another page, no sandbox), with the Content-Security-Policy that is exactly the minimum
+# of P/06.5 Н1.1 `page` — the shell has no inline script, so `script-src 'self'; object-src 'none'; base-uri 'none'`,
+# not stricter: inline styles and `data:` images stay allowed (доп. (8) пп. 1, 4).
+# The build: consolem @ef7175b, `tools/build_webui.py` (reproducible), its MANIFEST.json; its index.html is
+# backend.shell.html (SHA-256 caa73ca5…), the rest is the set (V/11.1 Н1.4). The deployment package builds it from the
+# pinned commit and places it next to the manifest (V/09.3):
 #   console:
-#     files: [assets/i18n-en.js, assets/one-psim/bridge.css, assets/one-psim/fonts/InterVariable.woff2,
-#             assets/one-psim/native.css, assets/one-psim/one-psim.css]
-#   SHA-256 of each (the lesson's README): 50a6aa1d… i18n-en.js, 098866f8… bridge.css, 693b77d4… InterVariable.woff2,
-#   dcb5175e… native.css, a1647771… one-psim.css
-# The set — SHA-256 71b362ac879c7fabf83847040cb2c48ede3de0d467064ac0de3362333aaad94b. The entry page is not a static
-# file: it is this subsystem's shell, backend.shell.html. With the product's build under the CSP (their answer 73e1721,
-# «in work») a new pin takes the set from the build's MANIFEST.json, `[{name, type, purpose, size, sha256}]`, sha256 in
-# hex, names constant: its index.html becomes the bytes of backend.shell.html, pinned by SHA-256 like the other files
-# (доп. (8) пп. 3, 5).
+#     files: [app.css, app.js, client.js, fonts/InterVariable.woff2, i18n-en.js, openapi.js]
+#   SHA-256 of each (the lesson's README): 0d9c0fc7… app.css, 621743b8… app.js, 51da0e97… client.js,
+#   693b77d4… fonts/InterVariable.woff2, bde5b214… i18n-en.js, 06f709a4… openapi.js
+# The set — SHA-256 fbcb074080610e08bd3534b5de6d35246609a6696dec813410f8c9dc07d20142.
 # The memory of repeats of a group `idempotencyKey` (V/11.4 Н1.4; the review of V/11, question 3): a row per group,
 # key h = SHA-256 hex of the bytes of the person (`user` of the ticket), a zero byte and the external key. Made with
 # cas "" as «started» before the snapshot; each step's outcome lands in it in the step's own batch (B9). The form of the
