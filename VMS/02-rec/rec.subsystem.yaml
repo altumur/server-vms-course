@@ -321,19 +321,21 @@ metrics:
   # What each recorder says of itself (feedback BG): its recordings by phase; a volume that would not open; a pin to a
   # volume another holds (the eighth pass); how long the archive has been away; why it stopped taking samples; its writer.
   - {name: recordings, from: status.phase, agg: count}
-  - {name: volume_error, from: heartbeat.volume_error, agg: flag, default: 0}
+  - {name: volume_error, from: heartbeat.volume_error, agg: flag, default: 0, live: true}
   - {name: volume_wait, from: heartbeat.volume_wait, agg: flag, default: 0}
   # A smaller quota declared without `shrink_confirmed`: the ring keeps its size until the operator's second word, and
   # the recorder says why (`quota_note`; the review's fourth pass — the console's volumes view said it until step 6).
   - {name: volume_shrink_pending, from: heartbeat.quota_note, agg: flag, default: 0}
-  - {name: archive_away_seconds, from: heartbeat.archive_away_since, agg: age, default: 0}
-  - {name: archive_failure, from: heartbeat.archive_failure, agg: label, label: kind}
+  - {name: archive_away_seconds, from: heartbeat.archive_away_since, agg: age, default: 0, live: true}
+  - {name: archive_failure, from: heartbeat.archive_failure, agg: label, label: kind, live: true}
   # No default: a recorder that has said nothing of its writer has no series (V/02.4 Н1.6 — every recorder counts).
-  - {name: writer, from: heartbeat.writer.state, agg: label, label: state, values: [ok, stalled, losing]}
+# The rows about the recording NOW (writer, volume_error, archive_failure, archive_away_seconds, last_frame_age_seconds) are
+# `live: true`: a gone recorder's last pulse does not stay in them (V/02.4 Н1.8; P/06.5 Н3 «Ряды манифеста»).
+  - {name: writer, from: heartbeat.writer.state, agg: label, label: state, values: [ok, stalled, losing], live: true}
   # Per recording: how long since it last took anything from its source (feedback BI); what the engine refused of its
   # samples, by answer (the third pass); how deep it goes and whether its ring closed inside the floor (feedback BM);
   # and how long it has gone on under an epoch the store has not confirmed.
-  - {name: last_frame_age_seconds, from: status.last_frame_at, agg: age}
+  - {name: last_frame_age_seconds, from: status.last_frame_at, agg: age, live: true}
   - {name: samples_refused_total, from: "status.samples_refused.<status>", type: counter}
   - {name: archive_depth_days, from: status.depth_days}
   - {name: archive_shallow, from: status.shallow, agg: flag, when: depth_days}
