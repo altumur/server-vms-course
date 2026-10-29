@@ -16,8 +16,8 @@ b.FIX["/session"]={open:true};
 b.FIX["/manifest"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}],display:{kinds:{"io.input":"вход устройства",silent:"камера молчит"}}};
 b.FIX["/cameras"]={configured:[{id:1,name:"ворота"}],rows:[]};
 b.FIX["/servers"]={servers:{},policy:{}};
-b.FIX["/auto/scenarios"]={configured:[{id:"door",name:"door",enabled:true,when:JSON.stringify([{sub:"cam",kind:"io.input",unit:"12",match:{port:"1"}}]),then:JSON.stringify([{sub:"cam",action:"output",unit:"12",port:"2"}]),within:0},
-  {id:"bad",name:"bad",enabled:true,when:[{sub:"cam",kind:"silent"}],then:[{sub:"rec",action:"record",cam:"9",minutes:"10"}]}],
+b.FIX["/auto/scenarios"]={configured:[{id:"door",name:"door",enabled:true,when:JSON.stringify([{sub:"cam",kind:"io.input",unit:"12",match:{port:1}}]),then:JSON.stringify([{sub:"cam",action:"output",unit:"12",port:2}]),within:0},
+  {id:"bad",name:"bad",enabled:true,when:[{sub:"cam",kind:"silent"}],then:[{sub:"rec",action:"record",cam:"9",minutes:10}]}],
   rows:[{id:"door",worker:"a-1",phase:"running"},{id:"bad",worker:"a-1",phase:"refused",why:"no camera 9",unfit:["no camera 9"]}]};
 b.FIX["/events"]={events:[{t:now-60,subsystem:"auto",kind:"fired",unit:"auto/door",actions:1}],state:"live"};
 (async()=>{
@@ -35,7 +35,7 @@ const pick=id=>host().querySelector(`[data-act="pick"][data-id="${id}"]`).click(
 pick("bad");await b.ready(60);
 out.refusalShown=/Вычислитель отказал: no camera 9/.test(host().textContent);
 pick("door");await b.ready(150);
-out.whenRead=[...host().querySelectorAll('[data-act="tf"]')].map(x=>x.value).join("|")==="cam|io.input|12|port=1";
+out.whenRead=[...host().querySelectorAll('[data-act="tf"]')].map(x=>x.value).join("|")==='cam|io.input|12|{"port":1}';   // уточнения — объект JSON (V/08, разбор ревью)
 out.kindsFromManifest=[...host().querySelectorAll("#auto-kinds option")].map(o=>o.value+"="+o.textContent).join(",")==="io.input=вход устройства,silent=камера молчит";
 out.lastFired=/Последние срабатывания/.test(host().textContent)&&[...host().querySelectorAll("table td")].pop().textContent==="1";
 // без det в консоли — действий детекторов нет
@@ -45,7 +45,7 @@ out.noDetWithoutDet=acts().join(",")==="Щёлкнуть реле,Встать �
 const port=[...host().querySelectorAll('[data-act="af"]')].find(x=>x.dataset.f==="port");port.value="3";port.dispatchEvent(new w.Event("change"));await b.ready(30);
 let n=w.__calls.length;host().querySelector('[data-act="save"]').click();await b.ready(150);
 let c=call(n,"PUT","/auto/scenarios/door");
-out.editPut=!!c&&!("name" in c.body)&&c.body.then[0].port==="3"&&c.body.when[0].match.port==="1"&&!!c.key;
+out.editPut=!!c&&!("name" in c.body)&&c.body.then[0].port===3&&c.body.when[0].match.port===1&&!!c.key;   // числа по типу схемы then (V/08)
 // новый: пустое поле действия — отказ до отправки, теми же словами
 host().querySelector('[data-act="new"]').click();await b.ready(40);
 const nm=host().querySelector('[data-act="rf"][data-f="name"]');nm.value="night";nm.dispatchEvent(new w.Event("change"));await b.ready(30);
@@ -56,7 +56,7 @@ const ak=host().querySelector('[data-act="akind"]');ak.value="2";ak.dispatchEven
 for(const [f,v] of [["cam","1"],["minutes","5"]]){const x=[...host().querySelectorAll('[data-act="af"]')].find(y=>y.dataset.f===f);x.value=v;x.dispatchEvent(new w.Event("change"));await b.ready(20)}
 n=w.__calls.length;host().querySelector('[data-act="save"]').click();await b.ready(150);
 c=call(n,"POST","/auto/scenarios");
-out.newPost=!!c&&c.body.name==="night"&&c.body.when[0].sub==="cam"&&c.body.when[0].kind==="io.input"&&JSON.stringify(c.body.then)==='[{"sub":"rec","action":"record","cam":"1","minutes":"5"}]';
+out.newPost=!!c&&c.body.name==="night"&&c.body.when[0].sub==="cam"&&c.body.when[0].kind==="io.input"&&c.body.then.length===1&&c.body.then[0].sub==="rec"&&c.body.then[0].action==="record"&&String(c.body.then[0].cam)==="1"&&c.body.then[0].minutes===5;   // minutes — number схемы; cam — [string, integer]
 pick("door");await b.ready(60);
 n=w.__calls.length;host().querySelector('[data-act="del"]').click();await b.ready(150);
 out.deleteAsksFirst=asked.some(q=>/Удалить сценарий «door»/.test(q))&&!!call(n,"DELETE","/auto/scenarios/door");
@@ -64,7 +64,7 @@ out.noInlineHandlers=!host().querySelector("[onclick],[onchange],[oninput]");
 out.errors=errs;
 b.report(out,["errors"]);
 // с det в консоли — и действия детекторов
-b.FIX["/det/manifest"]={name:"det"};
+b.FIX["/mounts"]={root:"cam",mounts:{det:{name:"det"}}};b.FIX["/det/manifest"]={name:"det"};   // det — по /mounts (V/08, разбор ревью)
 const w2=b.boot();await b.ready(700);await w2.platformConsole.ready;
 w2.document.querySelector('.pc-rail [data-s="rules"]').click();await b.ready(200);
 w2.document.querySelector('.auto-rules [data-act="pick"][data-id="door"]').click();await b.ready(60);
