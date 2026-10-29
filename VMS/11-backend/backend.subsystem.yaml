@@ -4,37 +4,38 @@
 # with a ticket for that one request, and the worker calls the console back with the ticket, only on the doors this
 # manifest lists (ADR-0094 B1).
 #
-# A unit is the backend of one server — `backend/instances/<server>` — on every server whose console serves the WebUI,
-# placed on that server only: while the transport between the console and the worker is the role socket of the worker
-# on the console's server, a backend elsewhere could not be reached (V/11.1 Н1.2). After the mTLS window «console →
-# worker» (ADR-0075) — placement by labels next to `live`, by a new decision.
+# A unit is a backend instance — `backend/instances/<name>` — placed by labels next to `live` (ADR-0094 доп. (6) п. 3):
+# the console passes a person's request to a live worker of backend with a door (the pass rule of the gate contract), and
+# the worker calls back over TLS with the certificate of role `backend`; the ticket is bound to the leaf of the instance
+# it was passed to (доп. (6) пп. 1, 2). The role socket — only the profile without a kit (a stand, the loopback;
+# доп. (6) п. 4). One row is enough; a second is a reserve for a move (V/11.1 Н1.2).
 name: backend
 # The slot a worker of this subsystem makes, `b-<n>`, and the variable naming the one it is started under beside
 # `WORKER_NAME` (`runtime.slot`).
 slot: {prefix: b, name_env: BACKEND_NAME}
 # Reads, writes and asks nothing of anybody by itself: what it needs it reads through the console with the ticket of the
 # request it serves (V/11.1 Н1.3). No state outside the platform's store: the memory of repeats of a group
-# `idempotencyKey` is always there, in its own rows backend/idem/<user>/<key> read and written through the console with
+# `idempotencyKey` is always there, in its own rows backend/idem/<h> read and written through the console with
 # the ticket (V/11.4 Н1.4, ADR-0094 доп. (3) п. 4). A table key with `/` is not in the table grammar of P/02.1 — the rows
 # are declared below as intent, not keys.
 worker: {exec: /usr/lib/backend/worker, stop_timeout: 20}
 unit:
-  rows: instances                    # backend/instances/<server>
-  id: name                           # the name of the server it serves: "srv-a"
+  rows: instances                    # backend/instances/<name>
+  id: name                           # the operator's name of the instance: "main"
   fields:
-    name:      {type: string, required: true}
+    name:      {type: string, required: true, fixed: true}
+    # Where it may stand: labels of the servers, as for the gateways of `live` ("public-address" for a WebUI from outside).
+    labels:    {type: list}
     # Off: the worker answers nothing; the console's pass to it fails (503 «no worker of backend with a door is heard»).
     enabled:   {type: bool,   default: true}
 placement:
-  # One per server: a worker carries one row and the controller never orders a second worker on a server (no `grows`).
+  # By labels next to `live` (ADR-0094 доп. (6) п. 3; B8 `placement.home strict` is not needed for backend): a worker
+  # carries one instance; short of a worker on a label set, the controller orders one on a server with these labels.
   capacity:   {from: capacity, default: 1}
-  # Its own server: the row's name is the server it serves (V/11.1 Н1.2). Today `home` is a preference of the platform
-  # (P/04 Н1.3), not a filter. B8 (ADR-0094 доп. (2) п. 1; норма платформы B — после Go GREEN 01–10), declared intent,
-  # not loaded today:
-  #   home: {field: name, strict: true}     # only on the server the field names, else unplaced with a reason
-  home: name
+  constraint: labels-subset          # an instance's labels ⊆ the labels of its worker's server
   tie_break:  most-free-capacity
-snapshot: [enabled]
+  grows:      true
+snapshot: [labels, enabled]
 # The pass (P/06.5 Н1.8): a console route `/backend/<segment>/…` whose first segment is listed goes to a live worker of
 # backend with a door. The segments are the first segments of the contract's paths (V/11.2). The second kind of pass
 # (ADR-0094 B1: a ticket instead of the person's `Authorization`, the callback list, streaming routes, a wait per route)
@@ -43,6 +44,8 @@ door:
   pass: [me, reference, domains, servers, devices, folders, archives, volumes, operations, rules, access, settings, licenses, journal, stream, test, objects]
 # B1 (норма платформы B — после Go GREEN 01–10, ADR-0094 «Порядок» п. 1), declared intent, not loaded today:
 #   pass_kind: ticket                       # the console passes a ticket, never the person's Authorization
+#   callback: tls                           # the callback — TLS with the leaf of role backend of the addressee instance
+#                                           # (доп. (6) пп. 1, 2); another leaf — 401; the role socket — no kit only
 #   stream: [stream]                        # streaming: no 5 s / 4 MiB limit; the ticket of a stream — reads and /changes only
 #   wait: {objects: 30, devices: 30}        # a composite write waits longer than PASS_WAIT; the ceiling — the norm
 #   headers: to the worker Content-Type, Idempotency-Key, If-Match, Last-Event-ID; to the client Content-Type, ETag
@@ -75,7 +78,8 @@ door:
 # index.html is not used. The set without it, with the png and svg pictures (ADR-0094 доп. (4) п. 2) — SHA-256
 # 0084f8637e3dbfd72742008e47ca8dc071c02770d6069825fcb77f06c91c5658.
 # The memory of repeats (ADR-0094 доп. (3) п. 4), declared intent, not loaded today (a key `<user>/<key>` has a `/`):
-#   rows backend/idem/<user>/<key>: {body: <fingerprint of the whole body>, result?: <outcome of the group>, until: <s>}
+#   rows backend/idem/<h>: {user, key, body: <fingerprint of the whole body>, result?: <outcome of the group>, until: <s>}
+#   h = sha256 hex of user bytes, a zero byte and the external key; the row keeps user and key and is compared on lookup
 #   «started» (no result) before the first step; the result after the last; the time to live — that of the console's POST.
 metrics:
   - {name: instances_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
@@ -92,5 +96,6 @@ display:
   section: Конфигуратор
   general: Бэкенд
   fields:
-    name: сервер
+    name: имя
+    labels: метки серверов
     enabled: включён
