@@ -8,6 +8,8 @@ scenario	step	request	expect
 01-create	6	POST /streams {"cam": "nope"}	201 {"id": "nope", "grace": 30}
 01-create	7	POST /streams {"labels": []}	400 {"error": "@any"}
 01-create	8	POST /streams {"cam": "$c1", "stream": "$c1"}	400 {"error": "@any"}
+01-create	9	POST /streams {"cam": "nope2", "grace": 5}	400 {"error": "@any"}
+01-create	10	POST /streams {"cam": "nope3", "grace": 3601}	400 {"error": "@any"}
 02-two-viewers	1	@domain m1	ok
 02-two-viewers	2	member m1 console2 POST /cameras {"name": "Вход", "source": "driverpack://file/door.mp4"}	201 {"id": "$a"}
 02-two-viewers	3	member m1 console2 POST /cameras {"name": "Двор", "source": "driverpack://file/yard.mp4"}	201 {"id": "$b"}
@@ -18,7 +20,8 @@ scenario	step	request	expect
 02-two-viewers	8	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:cam/1"}]}
 02-two-viewers	9	member m1 console POST /streams {"cam": "$b"}	403 {"error": "denied"}
 02-two-viewers	10	member m1 console POST /streams {"cam": "$a"}	201 {"id": "$a"}
-02-two-viewers	11	@person bob bob-password-1	ok
-02-two-viewers	12	@until 30 member m1 console GET /session	200 {"user": "bob"}
-02-two-viewers	13	member m1 console POST /streams {"cam": "$b"}	201 {"id": "$b", "cam": "$b"}
-02-two-viewers	14	member m1 console POST /streams {"cam": "$a"}	403 {"error": "denied"}
+02-two-viewers	11	member m1 console PUT /streams/$a {"grace": 60}	403 {"error": "denied"}
+02-two-viewers	12	@person bob bob-password-1	ok
+02-two-viewers	13	@until 30 member m1 console GET /session	200 {"user": "bob"}
+02-two-viewers	14	member m1 console POST /streams {"cam": "$b"}	201 {"id": "$b", "cam": "$b"}
+02-two-viewers	15	member m1 console POST /streams {"cam": "$a"}	403 {"error": "denied"}

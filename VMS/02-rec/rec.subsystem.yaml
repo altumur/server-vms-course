@@ -64,8 +64,10 @@ about: {sub: cam, field: cam}
 # The archive's engine: a part of rec with its own service (V/02.2; ADR-0091 п. 5) — one daemon per server, its socket a
 # share of the part (the recorders of the server are let in by the part's group); its protocol — spec/02-rec.obsd.contract.md.
 # Its path is `OBSD_SOCKET` of the subsystem file (default /run/vms-rec-obsd/obsd.sock, V/02.2 Н1.3), not an argument here:
-# a stand gives each instance its own.
-parts: {obsd: {exec: "/usr/local/bin/obsd", volumes: true, stop_timeout: 60}}
+# a stand gives each instance its own. The engine reads no file and the part's unit passes only W2C_SUB_ENV (P/02.4 Н1.1)
+# — the part's exec is a VMS wrapper: it reads the subsystem file and starts /usr/local/bin/obsd with the file's OBSD_* keys
+# in its environment (the socket always, with its default).
+parts: {obsd: {exec: "/usr/lib/rec/obsd-part", volumes: true, stop_timeout: 60}}
 shares: {obsd: {kind: socket, part: obsd}}
 unit:
   rows: recordings                   # rec/recordings/<name>

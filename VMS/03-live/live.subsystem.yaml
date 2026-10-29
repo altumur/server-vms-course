@@ -14,6 +14,10 @@ slot: {prefix: g, name_env: LIVE_NAME}
 # `rec/heartbeats/` — another subsystem's heartbeats are read by declaration).
 # The gateway deletes a fan-out a grace period after its last viewer (`worker.deletes`, М10/2 Н1.2а, ADR-0067 доп.
 # 2026-10-17): it never writes a unit row — `unit.rows` in `worker.writes` is refused by the loader.
+# The accounts book (V/03.6): a member reads the copy `domain/live/stream-accounts`; the domain-holder cluster has no copy
+# and reads its own row `domain/live/stream-accounts/<CLUSTER>` — the rights generator grants that one row, read and as
+# a secret reader (P/02.5 Н1.4, by the installer's CLUSTER). Only the copy is named here, never a prefix: the prefix holds
+# every member's delivery, sealed by the holder's ring.
 worker: {exec: /usr/lib/live/worker, writes: [accounts], deletes: [streams], reads: [cam/heartbeats/, rec/heartbeats/, domain/live/stream-accounts, domain/member-list]}
 # Cluster-owned accounts are served only by the gateway, never by generic table CRUD.
 tables: [accounts]
@@ -24,7 +28,7 @@ unit:
   fields:
     cam:       {type: string, required: true, fixed: true}   # the VMS camera id, as the row's name and its `about`
     labels:    {type: list}                     # where the viewers are: "public-address" for outside the LAN
-    grace:     {type: int, default: 30}         # seconds a gateway keeps the subscription after the last viewer
+    grace:     {type: int, default: 30, schema: {minimum: 10, maximum: 3600}}   # seconds a gateway keeps the subscription after the last WHEP viewer; ≥ 10 s — the page's reconnect pause (V/03.1 Н1.1)
 placement:
   # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
   # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB
@@ -33,7 +37,7 @@ placement:
   headroom:   {from: headroom}                  # what the autoscaler moves N on: viewers it could still take
   constraint: labels-subset                     # a stream's labels ⊆ the gateway's server's labels
   tie_break:  most-free-capacity
-  grows:      true                              # short on a label set, the controller orders one more gateway on a server (`live_workers_wanted{server}`)
+  grows:      true                              # short on a label set, the controller orders one more gateway on a server (`workers_wanted{server}`); by waiting fan-outs, not by viewers of a full one (V/03.1 Н1.3)
   rebalance:  {dead_band: 0.10}
   unplaced:   {delete_after: 30}                 # a stream nobody holds for 30 s goes — no gateway carries its labels, or none is left; its controller deletes it (ADR-0067)
 # Not a moment past its lease's end: a gateway writes nothing that carries an epoch — it holds a camera's stream and
@@ -67,7 +71,7 @@ door:
 metrics:
   - {name: streams_live, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:
-  running: streams_live                # live_streams_live: fan-outs with a subscription up
+  running: streams_live                # live_streams_live: fan-outs with a subscription set up (its source found; opened at the first viewer)
 # What a page calls a unit of it (the product's words, one spec on both sides).
 display:
   unit: живой поток
