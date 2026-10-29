@@ -1628,7 +1628,7 @@ class VmsModuleTests(unittest.TestCase):
             "# lesson\tdir\ttitle\tsubsystem\tstatus\n01\t01-cam\tКамера\tcam\tне переведён\n"
             "09\t09-deploy\tРазвёртывание\t-\tне переведён\n", encoding="utf-8")
         (self.root / "VMS/common/data/catalog.tsv").write_text(
-            "key\tkind\towner\tops\treaders\twhen\tversion\tschema\tnorm\n", encoding="utf-8")
+            "key\tkind\towner\tops\treaders\twhen\tversion\tschema\tnorm\tplace\n", encoding="utf-8")
         (self.root / "VMS/common/id-map.tsv").write_text("old\tnew\tchapter\tsubject\tnote\n", encoding="utf-8")
         (self.root / "Source/vms").mkdir(parents=True)
         (self.root / "Source/vms/a.py").write_bytes(b"x = 1\n")
