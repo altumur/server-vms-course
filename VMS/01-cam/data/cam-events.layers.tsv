@@ -1,0 +1,4 @@
+place	layer	word	value
+/allOf/0/then/properties/port	3	x-integer	true
+/allOf/1/then/properties/depth	3	x-integer	true
+/allOf/1/then/properties/dropped	3	x-integer	true

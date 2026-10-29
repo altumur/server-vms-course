@@ -37,6 +37,14 @@
   `rec/volumes/*`, `rec/keeps/*`, места `rec/holds/<том>`, объекты `rec/used/*`, `rec/sealed/*`, `rec/taken/*`,
   `rec/ingest/clock/*`, `rec/ingest/up/*` (`objects`), просьбы `rec/requests/*`, вклады в книги `rec/primaries/*`,
   `rec/upstream/*`, `rec/polls/*`, отчёт `rec/polled/<приёмник>`.
+- **Семьи данных** — своё содержимое в открытых местах семей платформы, которое читают другие процессы и манифест не
+  выражает, — [`data/`](data/): слова пульса `rec-heartbeat-words` (`ingest`, `url`, `volume`, `written_through`
+  элемента записи; место — корень пульса, пустой указатель), `value` элементов книг `primaries-entry`, `polls-entry`,
+  `upstream-entry` (место `/*/entries/*/value`; `#copy` — копия у члена, `#member` — строка члена у держателя домена) —
+  форма, слои, исходы по читателям; строки — в каталоге VMS [`../common/data/catalog.tsv`](../common/data/catalog.tsv)
+  (колонка `place`). Объекты `rec/ingest/*`, `rec/sealed/*`, `rec/used/*`, `rec/taken/*` (`objects` манифеста) и вклады
+  `rec/<книга>/<слот>` — форма манифеста, семьёй VMS не судятся; свидетель `rec/polled/<слот>` читает консоль домена по
+  объявлению `witness` (P/10 Н1.8). Векторы — построитель `family-read` (`VMS/common/vectors/family-read/02.tsv`).
 - **Двери:** дверь архива регистратора (`/spans`, `/samples` — процессы, класс `role`; `/timeline`, `/segment`, `/keeps` —
   страница, токен двери) — OpenAPI урока `spec/02-rec.api.openapi.yaml`; дверь приёмника (опрос, толчок, `/ask`) — глава 9;
   протокол `obsd` — сокет части (не HTTP), глава 2.

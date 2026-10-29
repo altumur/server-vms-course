@@ -32,6 +32,9 @@ NVR) — всегда, без конца. Видео не копируется: 
   `detedge/<watch>/e<эпоха>/`, тревоги — `detedge.alarms/…`.
 - **Двери:** своей HTTP-двери нет — строки дверью консоли (P/06.1), чтение — двери держателя `/recordings`, `/playback`
   (V/01.5, лист роли `detedgeworker`); OpenAPI урока нет — строка реестра `V/06 no-openapi` (запросом с главой V/06.1).
+- **Семьи данных:** поля строк событий обхода — [`data/detedge-events`](data/) (`tick` — `pass`; `detedge.overrun`,
+  `detedge.rewound` — `from`, `to`; место — корень строки семьи событий платформы, деревья `detedge` и `detedge.alarms`;
+  читают консоль и сценарии `auto`), строка — в каталоге VMS [`../common/data/catalog.tsv`](../common/data/catalog.tsv).
 
 ## Решения для плана (приняты «Архитектором» 2026-10-23)
 

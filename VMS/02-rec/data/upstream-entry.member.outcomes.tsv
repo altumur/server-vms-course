@@ -1,0 +1,3 @@
+# Исходы нечитаемого value элемента книги передатчика: строка `domain/rec/upstream/<член>` у держателя домена, схема `upstream-entry.schema.json#member` (V/02.9 Н1.8); путь — от value. Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+path	reader	outcome	priority	unit	norm
+	recworker	элемент на свой кластер не по форме: не прочитан, а не отсутствует — передатчик держит последние прочитанные адреса и режим; прочитанных нет — передатчика нет, reason «upstream book entry unreadable»	1	элемент	V/02.9 Н1.8

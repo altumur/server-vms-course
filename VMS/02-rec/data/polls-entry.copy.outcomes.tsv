@@ -1,0 +1,4 @@
+# Исходы нечитаемого value элемента книги опроса: копия у члена `domain/rec/polls`, схема `polls-entry.schema.json#copy` (V/02.9 Н1.7); путь — от value. Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+path	reader	outcome	priority	unit	norm
+	camworker	элемент опроса не по форме: не прочитан, а не отсутствует — камера держит опрос по последним прочитанным urls; прочитанных нет — опроса нет, журнал	1	элемент	V/01.6 Н1.3
+	domainagent	value не судит: элементы копии — как получены от держателя (P/09.1 Н1.4 member_row)	1	элемент	P/09.1 Н1.4

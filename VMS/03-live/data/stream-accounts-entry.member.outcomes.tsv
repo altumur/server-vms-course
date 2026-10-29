@@ -1,0 +1,3 @@
+# Исходы нечитаемого value элемента книги учёток: строка `domain/live/stream-accounts/<член>` своего кластера у держателя домена, схема `stream-accounts-entry.schema.json#member` (V/03.6 Н1.4); путь — от value; секретов исходы не раскрывают. Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+path	reader	outcome	priority	unit	norm
+	liveworker	элемент учётки не по форме или конверт пароля не открылся: не прочитан, а не отсутствует — элемент, прочитанный последним с запуска; такого нет — учётка не играет; журнал без значений, прочие элементы идут	1	элемент	V/03.6 Н1.4, Н4

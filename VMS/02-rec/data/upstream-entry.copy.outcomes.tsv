@@ -1,0 +1,4 @@
+# Исходы нечитаемого value элемента книги передатчика: копия у члена `domain/rec/upstream`, схема `upstream-entry.schema.json#copy` (V/02.9 Н1.8); путь — от value. Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+path	reader	outcome	priority	unit	norm
+	recworker	элемент на свой кластер не по форме: не прочитан, а не отсутствует — передатчик держит последние прочитанные адреса и режим; прочитанных нет — передатчика нет, reason «upstream book entry unreadable»	1	элемент	V/02.9 Н1.8
+	domainagent	value не судит: элементы копии — как получены от держателя (P/09.1 Н1.4 member_row)	1	элемент	P/09.1 Н1.4

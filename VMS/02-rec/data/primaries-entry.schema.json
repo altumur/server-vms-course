@@ -1,0 +1,85 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "description": "value элемента книги domain/rec/primaries (копия у члена, #copy) и domain/rec/primaries/<член> (у держателя домена, #member), V/02.9 Н1.6; поля «пусто, ложь, нет» отсутствуют, кроме running",
+ "type": "object",
+ "properties": {
+  "ref": {
+   "type": "string",
+   "minLength": 1
+  },
+  "to": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "string",
+    "minLength": 1
+   }
+  },
+  "recording": {
+   "type": "string",
+   "minLength": 1
+  },
+  "running": {
+   "type": "boolean"
+  },
+  "role": {
+   "enum": [
+    "primary",
+    "backup"
+   ]
+  },
+  "when": {
+   "const": "offline"
+  },
+  "coverage": {
+   "type": "array",
+   "prefixItems": [
+    {
+     "type": "number"
+    },
+    {
+     "type": "number"
+    }
+   ],
+   "minItems": 2,
+   "maxItems": 2
+  },
+  "retention_days": {
+   "type": "number",
+   "minimum": 0
+  },
+  "home": {
+   "type": "string",
+   "minLength": 1
+  },
+  "ingest": {
+   "type": "array",
+   "items": {
+    "type": "string",
+    "pattern": "^(?:http://[\\s\\S]+|https://[\\s\\S]+)$"
+   }
+  },
+  "push": {
+   "const": true
+  },
+  "since": {
+   "type": "number",
+   "x-time": true
+  },
+  "as_of": {
+   "type": "number",
+   "x-time": true
+  }
+ },
+ "required": [
+  "ref",
+  "to",
+  "recording",
+  "running",
+  "role",
+  "retention_days",
+  "ingest",
+  "as_of"
+ ],
+ "additionalProperties": false
+}

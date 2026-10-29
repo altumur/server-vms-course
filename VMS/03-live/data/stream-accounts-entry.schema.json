@@ -1,0 +1,37 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "description": "value элемента книги учёток RTSP domain/live/stream-accounts (копия у члена) и domain/live/stream-accounts/<член> (у держателя домена), V/03.6 Н1.3: учётка {name, to, disabled, password_secret}; пароль — только конверт кольца (enc:v2, договор запечатывания), открытого текста в книге нет",
+ "type": "object",
+ "properties": {
+  "name": {
+   "description": "имя учётки — грамматика имени человека домена (P/08.4 Н1.1 name), ключ книги (key: name)",
+   "type": "string",
+   "minLength": 1
+  },
+  "to": {
+   "description": "получатели — члены domain/member-list (V/03.6 Н1.3)",
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "string",
+    "minLength": 1
+   }
+  },
+  "disabled": {
+   "description": "отключённая не играет (V/03.6 Н1.1)",
+   "type": "boolean"
+  },
+  "password_secret": {
+   "description": "конверт enc:v2:<kid>:<nonce>:<ct> кольца держателя (строка члена) или члена (копия); открывает только читатель-секрет (V/03.6 Н1.1, договор запечатывания)",
+   "type": "string",
+   "pattern": "^(?:enc:v2:[\\s\\S]+)$"
+  }
+ },
+ "required": [
+  "name",
+  "to",
+  "disabled",
+  "password_secret"
+ ],
+ "additionalProperties": false
+}
