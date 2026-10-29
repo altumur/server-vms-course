@@ -486,12 +486,13 @@ components:
           items:
             type: object
             additionalProperties: false
-            required: [ask, action, deadline]
+            required: [ask, action, firing, deadline]
             properties:
               ask: {type: string}
               action: {type: string}
-              n: {type: [integer, string]}
-              port: {type: [integer, string]}
+              n: {type: integer, minimum: 1}
+              port: {type: integer, minimum: 1}
+              firing: {type: string, pattern: "^(?:[0-9a-f]{32})$"}
               deadline: {type: number}
         uncovered: {const: true}
     SubscribeRequest:
@@ -567,12 +568,13 @@ components:
     AskRequest:
       type: object
       additionalProperties: true
-      required: [ref, action, deadline, camera_now]
+      required: [ref, action, firing, deadline, camera_now]
       properties:
         ref: {type: string}
         action: {type: string}
-        n: {type: [integer, string]}
-        port: {type: [integer, string]}
+        n: {type: integer, minimum: 1}
+        port: {type: integer, minimum: 1}
+        firing: {type: string, pattern: "^(?:[0-9a-f]{32})$", description: ключ сработки (V/07.5 Н1.4)}
         deadline: {type: number}
         camera_now: {type: number}
     AskAnswer:

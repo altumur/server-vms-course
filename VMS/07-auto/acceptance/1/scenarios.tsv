@@ -1,8 +1,30 @@
 scenario	step	request	expect
 # Приёмка V/07.1: сценарий — единица и язык (дверь единиц консоли auto). Формат — README.
-01-create	1	POST /scenarios {"name": "door-on-badge", "when": [{"sub": "cam", "kind": "io.input", "unit": "12", "match": {"port": "1", "value": "closed"}}], "then": [{"sub": "cam", "action": "output", "unit": "12", "port": "2", "pulse_ms": 500}]}	201 {"id": "door-on-badge", "within": 0, "rate_per_minute": 6, "valid_for": 30, "enabled": true}
+01-create	1	POST /scenarios {"name": "door-on-badge", "when": [{"sub": "cam", "kind": "io.input", "unit": "12", "match": {"port": 1, "value": "closed"}}], "then": [{"sub": "cam", "action": "output", "unit": "12", "port": 2, "pulse_ms": 500}]}	201 {"id": "door-on-badge", "within": 0, "rate_per_minute": 6, "valid_for": 30, "enabled": true}
 01-create	2	POST /scenarios {"name": "s2", "when": [], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "@any"}
 01-create	3	POST /scenarios {"name": "s3", "when": [{"sub": "det", "kind": "motion", "extra": 1}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "@any"}
 01-create	4	POST /scenarios {"name": "s4", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "reboot", "unit": "7"}]}	400 {"error": "@any"}
-01-create	5	POST /scenarios {"name": "s5", "when": [{"sub": "det", "kind": "motion"}], "within": 4000, "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "@any"}
-01-create	6	POST /scenarios {"name": "s6", "when": [{"sub": "det", "kind": "motion"}], "valid_for": 3, "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "@any"}
+01-create	5	POST /scenarios {"name": "s5", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "within": 4000}	400 {"error": "@any"}
+01-create	6	POST /scenarios {"name": "s6", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "valid_for": 3}	400 {"error": "@any"}
+01-create	7	POST /scenarios {"name": "f-preset", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	201 {"id": "f-preset"}
+01-create	8	POST /scenarios {"name": "f-record", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "rec", "action": "record", "cam": "7", "minutes": 5}]}	201 {"id": "f-record"}
+01-create	9	POST /scenarios {"name": "f-detect", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "det", "action": "detect", "cam": "7", "kind": "motion", "minutes": 5}]}	201 {"id": "f-detect"}
+01-create	10	POST /scenarios {"name": "f-scan", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "det", "action": "scan", "cam": "7", "kind": "motion", "before": 30, "after": 30}]}	201 {"id": "f-scan"}
+01-create	11	POST /scenarios {"name": "m-output", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "output", "unit": "12"}]}	400 {"error": "@any"}
+01-create	12	POST /scenarios {"name": "x-output", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "output", "unit": "12", "port": 2, "n": 1}]}	400 {"error": "@any"}
+01-create	13	POST /scenarios {"name": "m-preset", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7"}]}	400 {"error": "@any"}
+01-create	14	POST /scenarios {"name": "x-preset", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3, "port": 1}]}	400 {"error": "@any"}
+01-create	15	POST /scenarios {"name": "m-record", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "rec", "action": "record", "cam": "7"}]}	400 {"error": "@any"}
+01-create	16	POST /scenarios {"name": "x-record", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "rec", "action": "record", "cam": "7", "minutes": 5, "kind": "motion"}]}	400 {"error": "@any"}
+01-create	17	POST /scenarios {"name": "m-detect", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "det", "action": "detect", "cam": "7", "minutes": 5}]}	400 {"error": "@any"}
+01-create	18	POST /scenarios {"name": "x-detect", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "det", "action": "detect", "cam": "7", "kind": "motion", "minutes": 5, "before": 1}]}	400 {"error": "@any"}
+01-create	19	POST /scenarios {"name": "m-scan", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "det", "action": "scan", "cam": "7"}]}	400 {"error": "@any"}
+01-create	20	POST /scenarios {"name": "x-scan", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "det", "action": "scan", "cam": "7", "kind": "motion", "minutes": 5}]}	400 {"error": "@any"}
+01-create	21	POST /scenarios {"name": "five-when", "when": [{"sub": "det", "kind": "motion"}, {"sub": "det", "kind": "motion"}, {"sub": "det", "kind": "motion"}, {"sub": "det", "kind": "motion"}, {"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "@any"}
+01-create	22	POST /scenarios {"name": "five-then", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}, {"sub": "cam", "action": "preset", "unit": "7", "n": 3}, {"sub": "cam", "action": "preset", "unit": "7", "n": 3}, {"sub": "cam", "action": "preset", "unit": "7", "n": 3}, {"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "@any"}
+01-create	23	POST /scenarios {"name": "rate-601", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "rate_per_minute": 601}	400 {"error": "@any"}
+01-create	24	POST /scenarios {"name": "rate-0", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "rate_per_minute": 0}	201 {"id": "rate-0", "rate_per_minute": 6}
+01-create	25	POST /scenarios {"name": "valid-0", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "valid_for": 0}	201 {"id": "valid-0", "valid_for": 30}
+01-create	26	POST /scenarios {"name": "valid-9", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "valid_for": 9}	400 {"error": "@any"}
+01-create	27	POST /scenarios {"name": "minutes-str", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "rec", "action": "record", "cam": "7", "minutes": "5"}]}	400 {"error": "@any"}
+01-create	28	POST /scenarios {"name": "port-str", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "output", "unit": "12", "port": "2"}]}	400 {"error": "@any"}
