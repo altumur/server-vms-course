@@ -23,15 +23,16 @@ Device(type=camera)	hasPassword	cam/cameras	cred_secret	read	true — секре
 Device(type=camera)	subtype=io	cam/cameras	kind=io	both	kind video — без subtype
 Device(type=camera)	serverId	rec/recordings	where записи	read	сервер выводится из держателя основной записи (V/02.1)
 Device(type=camera)	archiveId	rec/recordings	home	both	том основной записи камеры
-Device(type=camera)	recordMode	rec/recordings	наличие и enabled основной записи	both	none — записи нет; always — запись есть и enabled; motion, sched, replica — глава 4
+Device(type=camera)	recordMode	rec/recordings	состав записей камеры	both	none — основной записи нет; always — основная есть и enabled; motion — запись по событию (паузы); sched — расписание: until записи или сценарий auto; replica — резервная запись (том с ролью резерва) (ADR-0094 доп. (2) п. 3)
 Device(type=camera)	extraArchives	rec/recordings	прочие записи камеры	both	резервные записи (when, home)
 Device(type=camera)	recordDetectorIds	—	—	none	запись по детектору — глава 4 (открытый вопрос)
 Device(type=camera)	stream	cam/cameras	main	both	поток камеры (V/01.1 Н1.1а)
 Device(type=camera)	online, fault	cam/heartbeats	phase, device_state	read	слова пульса держателя (V/01.2 Н1.4)
 Device(type=camera)	vendor, model, firmware, mac	cam/devices	device, identity	read	строка устройства (V/01.4 Н1.4)
 Device(type=camera)	lat, lon, azimuth, videoChannel, streamProfile, codec, res, fps, bitrate	—	—	none	у камеры нет
-Device(type=camera)	version	—	—	none	версия сборной камеры — несколько строк; вопрос продукту (ADR-0094 Consequences)
+Device(type=camera)	version	cam/cameras + rec/recordings + det/units	наибольший индекс хранилища частей и их надгробий	read	ADR-0094 доп. (2) п. 4; индекс — ETag строки по B4 (после Go GREEN 01–10); до ответа продукта
 Device(type=det)	—	det/units	—	both	детектор камеры (V/04.1)
+Device(type=det)	version	det/units	индекс хранилища строки	read	ETag строки по B4 (после Go GREEN 01–10); If-Match сверяет его (V/11.4)
 Device(type=det)	parentId	det/units	cam	both	камера детектора
 Device(type=det)	name	det/units	name	both	
 Device(type=det)	enabled	det/units	enabled	both	
@@ -41,6 +42,7 @@ Device(type=det)	builtin	—	—	none	детектор устройства ≈ 
 Device(type=mic|spk|sensor|relay|storage|ipsrv|channel|eventsrc|acfa*|export|email|sms)	—	—	—	none	таких устройств нет: создание — 422 VALIDATION_FAILED, field type
 Folder	—	—	—	none	папки как записи — ADR-0094 C; у камеры — поле-список folders
 Archive	—	rec/volumes	—	both	хранилище = один том (строка таблицы rec/volumes)
+Archive	version	rec/volumes	индекс хранилища строки	read	ETag строки по B4 (после Go GREEN 01–10); If-Match сверяет его (V/11.4)
 Archive	id, name	rec/volumes	name	both	
 Archive	kind	rec/volumes	kind	both	local ↔ local; remote ↔ network; cloud ↔ network со схемой бакета (V/02.1)
 Archive	serverId	rec/volumes	server	both	
@@ -48,11 +50,13 @@ Archive	retentionDays	rec/recordings	retention_days	read	срок у запис�
 Archive	encrypted	—	—	none	шифрования тома нет
 Archive	storage, provider	rec/volumes	url (схема)	read	block — file://, object — бакет
 Volume	—	rec/volumes	—	both	том = то же хранилище
+Volume	version	rec/volumes	индекс хранилища строки	read	ETag строки по B4 (после Go GREEN 01–10); If-Match сверяет его (V/11.4)
 Volume	sizeBytes	rec/volumes	quota_bytes	both	
 Volume	usedPercent, state, online	rec/heartbeats	volume, volume_error	read	слова пульса регистратора (V/02.4)
 Volume	login, hasPassword, keyId, hasSecret	rec/volumes	access_key, access_secret	both	секрет не отдаётся
 Volume	disk, mode, dir, file, bucket, region, path, host, port, proto, endpoint, style	rec/volumes	url	both	части адреса url тома
 Rule	—	auto/scenarios	—	both	правило = сценарий (V/07.1)
+Rule	version	auto/scenarios	индекс хранилища строки	read	ETag строки по B4 (после Go GREEN 01–10); If-Match сверяет его (V/11.4)
 Rule	name	auto/scenarios	name	both	
 Rule	enabled	auto/scenarios	enabled	both	
 Rule	ratePerMinute	auto/scenarios	rate_per_minute	both	
