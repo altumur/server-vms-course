@@ -23,12 +23,13 @@ Device(type=camera)	hasPassword	cam/cameras	cred_secret	read	true — секре
 Device(type=camera)	subtype=io	cam/cameras	kind=io	both	kind video — без subtype
 Device(type=camera)	serverId	rec/recordings	where записи	read	сервер выводится из держателя основной записи (V/02.1)
 Device(type=camera)	archiveId	rec/recordings	home	both	том основной записи камеры
-Device(type=camera)	recordMode	rec/recordings	состав записей камеры	both	none — основной записи нет; always — основная есть и enabled; motion — запись по событию (паузы); sched — расписание: until записи или сценарий auto; replica — резервная запись (том с ролью резерва) (ADR-0094 доп. (2) п. 3)
+Device(type=camera)	recordMode	rec/recordings	состав записей камеры	both	none — основной записи нет; always — основная есть и enabled; motion — запись по событию (паузы); sched — расписание: until записи (сценарий auto — с «Автоматизацией», не объявлена: ADR-0094 доп. (7)); replica — резервная запись (том с ролью резерва) (ADR-0094 доп. (2) п. 3)
 Device(type=camera)	extraArchives	rec/recordings	прочие записи камеры	both	резервные записи (when, home)
 Device(type=camera)	recordDetectorIds	—	—	none	запись по детектору — глава 4 (открытый вопрос)
 Device(type=camera)	stream	cam/cameras	main	both	поток камеры (V/01.1 Н1.1а)
 Device(type=camera)	online, fault	cam/heartbeats	phase, device_state	read	слова пульса держателя (V/01.2 Н1.4)
 Device(type=camera)	vendor, model, firmware, mac	cam/devices	device, identity	read	строка устройства (V/01.4 Н1.4)
+Device(type=camera)	disabledByRuleId, disabledByRuleAt, armed	—	—	none	не объявляется: «Автоматизация» не объявлена (ADR-0094 доп. (7)); поля необязательны — в ответе их нет; armed — только чтение
 Device(type=camera)	lat, lon, azimuth, videoChannel, streamProfile, codec, res, fps, bitrate	—	—	none	у камеры нет
 Device(type=camera)	version	cam/cameras + rec/recordings + det/units	склейка c<cam>.r<rec…>.d<det…> индексов хранилища частей и надгробий (V/11.4 Н1.1)	read	ADR-0094 доп. (4) п. 1; индекс — ETag строки по B4 (после Go GREEN 01–10); до ответа продукта
 Device(type=det)	—	det/units	—	both	детектор камеры (V/04.1)
@@ -39,7 +40,8 @@ Device(type=det)	enabled	det/units	enabled	both
 Device(type=det)	detectorKind	det/units	kind	both	motion, linecross — реестр воркера (V/04.2); abandoned, disappeared, crowd — нет в реестре, kind как записан
 Device(type=det)	sensitivity	det/units	params	both	params — строка как у владельца (V/04.1)
 Device(type=det)	builtin	—	—	none	детектор устройства ≈ detedge — не переводится сейчас
-Device(type=mic|spk|sensor|relay|storage|ipsrv|channel|eventsrc|acfa*|export|email|sms)	—	—	—	none	таких устройств нет: создание — 422 VALIDATION_FAILED, field type
+Device(type=det)	disabledByRuleId, disabledByRuleAt, armed	—	—	none	как у камеры: не объявляется, в ответе полей нет
+Device(type=mic|spk|sensor|relay|storage|ipsrv|channel|eventsrc|acfa*|export|email|sms)	—	—	—	none	таких устройств нет (deviceTypes — camera, det): создание — 422 NOT_SUPPORTED, field type
 Folder	—	—	—	none	папки как записи — ADR-0094 C; у камеры — поле-список folders
 Archive	—	rec/volumes	—	both	хранилище = один том (строка таблицы rec/volumes)
 Archive	version	rec/volumes	индекс хранилища строки	read	ETag строки по B4 (после Go GREEN 01–10); If-Match сверяет его (V/11.4)
@@ -47,7 +49,7 @@ Archive	id, name	rec/volumes	name	both
 Archive	kind	rec/volumes	kind	both	local ↔ local; remote ↔ network; cloud ↔ network со схемой бакета (V/02.1)
 Archive	serverId	rec/volumes	server	both	
 Archive	retentionDays	rec/recordings	retention_days	read	срок у записи, не у хранилища: наибольший у записей тома
-Archive	encrypted	—	—	none	шифрования тома нет
+Archive	encrypted	—	—	none	шифрования тома нет (features без archiveEncryption): encrypted true — 422 NOT_SUPPORTED
 Archive	storage, provider	rec/volumes	url (схема)	read	block — file://, object — бакет
 Volume	—	rec/volumes	—	both	том = то же хранилище
 Volume	version	rec/volumes	индекс хранилища строки	read	ETag строки по B4 (после Go GREEN 01–10); If-Match сверяет его (V/11.4)
@@ -55,19 +57,14 @@ Volume	sizeBytes	rec/volumes	quota_bytes	both
 Volume	usedPercent, state, online	rec/heartbeats	volume, volume_error	read	слова пульса регистратора (V/02.4)
 Volume	login, hasPassword, keyId, hasSecret	rec/volumes	access_key, access_secret	both	секрет не отдаётся
 Volume	disk, mode, dir, file, bucket, region, path, host, port, proto, endpoint, style	rec/volumes	url	both	части адреса url тома
-Rule	—	auto/scenarios	—	both	правило = сценарий (V/07.1)
-Rule	version	auto/scenarios	индекс хранилища строки	read	ETag строки по B4 (после Go GREEN 01–10); If-Match сверяет его (V/11.4)
-Rule	name	auto/scenarios	name	both	
-Rule	enabled	auto/scenarios	enabled	both	
-Rule	ratePerMinute	auto/scenarios	rate_per_minute	both	
-Rule	windowSec	auto/scenarios	within	both	
-Rule	triggers	auto/scenarios	when	both	перевод триггеров — глава 4
-Rule	actions	auto/scenarios	then	both	перевод действий — глава 4
-RuleFire	—	GET /events	события auto сценария	read	
+Rule, RuleFire, RuleVersion, Schedule, DayGroup, Modes, ObjectMode, MaintenanceWindow	—	—	—	none	«Автоматизация» не объявляется (ADR-0094 доп. (7)): операции — 404 NO_ROUTE (V/11.2); отображение — вторая очередь C
 JournalEvent	—	GET /events	—	read	category audit ↔ журнал audit/console; alarm ↔ класс alarm; info ↔ прочее
 Me	userId, login, name	GET /session	user	read	кто я
 Me	serverTime, timezone	GET /session	server_time, timezone	read	норма платформы B6 — после Go GREEN 01–10
 Reference	—	GET /manifest	перечисления полей	read	модели — таблица cam/devices
+Reference	capabilities	backend	объявление возможностей	read	operations — «переводится» V/11.2; deviceTypes — camera, det; features — пусто (V/11.2 Н1.5)
+Reference	ruleTriggers, ruleActions, ruleConditions, ruleControls	—	—	none	пустые списки: «Автоматизация» не объявлена (ADR-0094 доп. (7))
+Reference	layouts, monitors	—	—	none	пустые списки: раскладок клиента и видеостены нет
 Settings	—	—	—	none	вне перечня обратного вызова (V/11.1 Н1.5)
 License	—	—	—	none	лицензий consolem нет
 Access	—	—	—	none	роли, группы, каталоги — ADR-0094 C

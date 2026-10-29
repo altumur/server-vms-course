@@ -41,7 +41,7 @@ snapshot: [labels, enabled]
 # (ADR-0094 B1: a ticket instead of the person's `Authorization`, the callback list, streaming routes, a wait per route)
 # is a future platform norm — its declaration is below as a comment, not keys: today's loader does not know them.
 door:
-  pass: [me, reference, domains, servers, devices, folders, archives, volumes, operations, rules, access, settings, licenses, journal, stream, test, objects]
+  pass: [me, reference, domains, servers, devices, folders, archives, volumes, operations, rules, schedules, day-groups, modes, maintenance-windows, access, settings, licenses, journal, stream, test, objects]
 # B1 (норма платформы B — после Go GREEN 01–10, ADR-0094 «Порядок» п. 1), declared intent, not loaded today:
 #   pass_kind: ticket                       # the console passes a ticket, never the person's Authorization
 #   callback: tls                           # the callback — TLS with the leaf of role backend of the addressee instance
@@ -54,29 +54,34 @@ door:
 #     - cam/cameras, cam/devices            # rows and tables of cam (V/01.1)
 #     - rec/recordings, rec/volumes         # rows and tables of rec (V/02.1)
 #     - det/units                           # rows of det (V/04.1)
-#     - auto/scenarios                      # rows of auto (V/07.1)
-#     - cam/policy, rec/policy, det/policy, auto/policy   # common settings of these subsystems and their snapshots
+#     - cam/policy, rec/policy, det/policy  # common settings of these subsystems and their snapshots
 #                                           # (ADR-0094 доп. (2) п. 6); platform settings (/schema, /drain, labels) — no
 #     - changes                             # the change feed (B2)
 #     - GET manifest, GET servers, GET events, GET session   # reads; /session — «who am I» only
 #     - backend/idem/                       # its own memory of repeats of a group key (ADR-0094 доп. (3) п. 4)
-#   # not: /where, writes of /session, grants, people, keys, break-glass, /operations
+#   # not: /where, writes of /session, grants, people, keys, break-glass, /operations; nor auto — the automation of
+#   # consolem is not declared on the first step (ADR-0094 доп. (7)), its operations answer 404 NO_ROUTE
 # B7 (ADR-0094 доп. (1); норма платформы B — после Go GREEN 01–10), declared intent, not loaded today: the console serves
 # the WebUI of consolem as static files next to this manifest, `/backend/<file>`, byte for byte, `script-src 'self'`;
 # it serves backend.shell.html at /backend/ because this manifest declares it (ADR-0094 доп. (3) п. 8).
-# The bytes are not in the course: the deployment package places them from consolem @9dc16881 next to the manifest and
-# checks each SHA-256 (V/11.1 Н1.4, V/09.3).
+# The bytes are not in the course: the deployment package places them from consolem @7683f542 next to the manifest and
+# checks each SHA-256 (V/11.1 Н1.4, V/09.3). The set: the files other than html that the product's entry page
+# index_api_server.html refers to, transitively (scripts, styles with their @import, the font); no png or svg is named.
 #   static:
+#     - {file: api/client.js, sha256: c30f74747e480ce092f687781f6f2e5e5282ee5b840a314f877acf5a7a8123a5}
+#     - {file: api/contract.js, sha256: a4b75368f48e87230f928628bf44d5b664d160a8e7452b8d91ee3fa917749c62}
+#     - {file: api/fixture.js, sha256: a9c3e34112122678c9a669715ab2dce59062999f1bfa654b6ff151475019af8d}
+#     - {file: api/openapi.js, sha256: 636aab47d6e1e0547a96cbc28c35c1d05ef9a2da796e03ae729c0fac9584e499}
+#     - {file: api/rule-engine.js, sha256: c40868c261215b4c3bb5756b5d885124c80b2c9e522223ce9e487d670e95bdc8}
+#     - {file: api/server.js, sha256: bb6036ac37c2bfd8184ee78abb59b01dd0f661d09a3ffae16fe7fd3d70cfc520}
 #     - {file: assets/i18n-en.js, sha256: 50a6aa1daafa48a38b338ad88f499220f3fe98238e883883ddeaa2f12b4322ad}
-#     - {file: assets/logo-configurator.png, sha256: 3b5fdf2a3993f67c45fa3eb81293260da9b11e89d0dfea70bfcba6943bafb4fe}
 #     - {file: assets/one-psim/bridge.css, sha256: 098866f82a8e1af620ebde7efd9c6a7e38de6eaccd95e75548c1c345c35f66b7}
+#     - {file: assets/one-psim/fonts/InterVariable.woff2, sha256: 693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3}
 #     - {file: assets/one-psim/native.css, sha256: dcb5175ed5d4a67f32dcf2ce61819bb9a66c62583246f689bc728fd501ac77ef}
 #     - {file: assets/one-psim/one-psim.css, sha256: a164777147b917ff0e44dc4a2c35376cb9248c9f8975f99560296844afb61c59}
-#     - {file: assets/one-psim/one-sign.svg, sha256: 2427d5751f448d249feef734dd723e27956c252e69fefac370caac1b4c3b9f97}
-#     - {file: assets/one-psim/fonts/InterVariable.woff2, sha256: 693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3}
 # The entry page is not a static file: it is this subsystem's own shell, backend.shell.html (V/11.1 Н1.4); the product's
-# index.html is not used. The set without it, with the png and svg pictures (ADR-0094 доп. (4) п. 2) — SHA-256
-# 0084f8637e3dbfd72742008e47ca8dc071c02770d6069825fcb77f06c91c5658.
+# index_api_server.html is not used (its application is still an inline script). The set — SHA-256
+# 27a4450c0c0779d125dcd7a04fc3c0289773cca8491ea46a4fd38ba45025c705.
 # The memory of repeats (ADR-0094 доп. (3) п. 4), declared intent, not loaded today (a key `<user>/<key>` has a `/`):
 #   rows backend/idem/<h>: {user, key, body: <fingerprint of the whole body>, result?: <outcome of the group>, until: <s>}
 #   h = sha256 hex of user bytes, a zero byte and the external key; the row keeps user and key and is compared on lookup
