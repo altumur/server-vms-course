@@ -1,1 +1,2 @@
 date	sample	fix	languages
+2026-10-29	1/scenarios.tsv: 01-create шаг 1, 02-mask шаги 2, 3	ревизия в ожиданиях: создание — revision 1, загрузка тела маски — revision 2 (полная Unit двери байтов, P/06.1 Н2), та же 2 в configured; разбор ревью V/04, строка 6 (Codex V04-05, Claude М-6)	all

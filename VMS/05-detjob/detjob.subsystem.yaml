@@ -35,9 +35,10 @@ unit:
     kind:    {type: string, required: true}      # which model: motion | linecross | lpr | tick | … — the detectors' registry
     params:  {type: string}                      # the model's settings, opaque to the platform — and SMALL
     mask:    {type: blob}                        # sha256-<hex>; the bytes are in the object store (P/06.1 Н1.5)
-    # An order's mask: the detector's body by reference, `det/<id>@sha256-<hex>` — only on a row an order made; the
-    # worker reads the body by its digest when it starts (ADR-0091 п. 1).
-    mask_from: {type: string}
+    # WHOSE mask: the id of a detector of the same camera (an order names the detector it scans for, V/02.8, V/07.4). The
+    # row's own non-empty `mask` wins; else the mask of that detector's row when the model starts; no such row — the job
+    # fails. A reference keeps no body alive (P/06.1 sweep counts only blob fields), so the job names the ROW (V/05.3 Н1.3).
+    mask_of: {type: string, ref: det/units, must_match: {cam: cam}}
     alarms:  {type: list,   default: ["linecross", "lpr"]}   # which event kinds are ALARMS — the detector's field, copied by the orders
     from:    {type: float,  required: true}      # unix seconds, inclusive — MEDIA time, not the time the job was made
     to:      {type: float,  required: true}      # unix seconds, exclusive
@@ -81,7 +82,7 @@ display:
     kind: Модель
     params: Параметры
     mask: Маска
-    mask_from: Маска из
+    mask_of: Маска детектора
     alarms: Тревожные события
     from: С
     to: По

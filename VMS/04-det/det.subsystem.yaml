@@ -15,19 +15,23 @@ unit:
   id: name                           # "<cam>-<kind>", the operator's name for the pair
   fields:
     name:      {type: string, required: true}
-    cam:       {type: string, required: true, fixed: true}   # the VMS camera id whose stream the model runs on
+    cam:       {type: string, required: true, fixed: true}   # the camera whose stream the model runs on: <id>, or
+                                                             # ref:<ref> — another cluster's, its main stream only
     # WHICH STREAM of the camera goes into the model (V/01.1 Н1.1а; the owner's decision 2026-10-26): another stream's id;
     # empty — the camera's main stream. The user's choice; the door checks it is this camera's stream, the worker again.
     stream:    {type: string, ref: cam/cameras, must_match: {main: cam}}
     kind:      {type: string, required: true}      # which model: motion | linecross | lpr | …
-    params:    {type: string}                      # the model's settings, opaque to the platform — and SMALL
+    params:    {type: string}                      # the model's settings, opaque to the platform; bounded by the row limit
     # The one thing about a detector that does not fit in a row. A polygon mask is a few hundred bytes and
     # belongs in `params`; a per-pixel one is 345 KB and belongs here — the row keeps the digest, the bytes
     # go to `det/blobs/<digest>` in the object store, and the platform never looks inside either. Changing
     # it changes the digest, which changes the row, which moves `revision`, which is what makes the worker
     # pick it up (P/06.1 Н1.5).
     mask:      {type: blob}                        # sha256-<hex>; the bytes are in the object store
-    mask_from: {type: string}                      # an order's mask: the operator's detector's body by reference, det/<id>@sha256-<hex> (V/07.4)
+    # WHOSE mask: the id of a detector of the same camera (an `auto` order names the operator's, V/07.4). Its own non-empty
+    # `mask` wins; else the mask of that detector's row when the model starts; no such row — `failed`. A reference keeps
+    # no body alive (P/06.1 sweep counts only blob fields), so the order names the ROW, never a digest (V/04.1 Н1.1).
+    mask_of:   {type: string, ref: det/units, must_match: {cam: cam}}
     enabled:   {type: bool,   default: true}
     labels:    {type: list,   default: ["gpu"]}    # where it may run: a worker whose server has these labels
     # Which of this detector's event kinds are ALARMS: written down with fsync, kept in a tree of their own for
@@ -56,7 +60,7 @@ display:
     kind: Модель
     params: Параметры
     mask: Маска
-    mask_from: Маска из
+    mask_of: Маска детектора
     enabled: Включён
     labels: Метки серверов
     alarms: Тревожные события
@@ -66,7 +70,8 @@ display:
     kind: "модель: motion, linecross, lpr…"
     alarms: какие виды событий детектора — тревоги
 placement:
-  capacity:   {from: capacity, default: 8}        # streams per worker — its own number, from its heartbeat
+  capacity:   {from: capacity, default: 8}        # streams per worker — its own number, from its heartbeat; no unit_mb or
+                                                  # base_mb: GPU memory of models is the implementation's, no ADR-0070 check
   headroom:   {from: headroom}
   constraint: labels-subset
   requires:   resource                          # a detector writes its events into the resource on its own server

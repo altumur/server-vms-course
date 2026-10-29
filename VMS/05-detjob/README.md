@@ -17,7 +17,7 @@
 
 | Глава | Что нормирует | Прежние шаги | Платформа |
 |---|---|---|---|
-| V/05.1 | Задача — единица, которая кончается: поля (`cam`, `rec` — запись этой камеры, `kind`, `params`, `mask`, `mask_from`, `alarms`, `from`/`to` — медийное время, `labels`), кто заводит (оператор; заказы `rec` и `auto` — `made`), повторный прогон — новая строка; размещение (`capacity` 2, `near {sub: rec, by: rec}`, без `home`); итог `unit.state.result` и `retire_when {state: result, …, delete_after: 259200}`; снимок | М10B/21 «Зачем», шаги 1, 3–6 (ссылкой), 9; М10B/22 (ссылкой) | P/02.1; договор row-check (`fixed`, `ref`, `must_match`); договор gate-and-pass (`reach`); P/03.6 Н1.6, Н1.7; P/04 Н1.3, Н1.3а |
+| V/05.1 | Задача — единица, которая кончается: поля (`cam`, `rec` — запись этой камеры, `kind`, `params`, `mask`, `mask_of`, `alarms`, `from`/`to` — медийное время, `labels`), кто заводит (оператор; заказы `rec` и `auto` — `made`), повторный прогон — новая строка; размещение (`capacity` 2, `near {sub: rec, by: rec}`, без `home`); итог `unit.state.result` и `retire_when {state: result, …, delete_after: 259200}`; снимок | М10B/21 «Зачем», шаги 1, 3–6 (ссылкой), 9; М10B/22 (ссылкой) | P/02.1; договор row-check (`fixed`, `ref`, `must_match`); договор gate-and-pass (`reach`); P/03.6 Н1.6, Н1.7; P/04 Н1.3, Н1.3а |
 | V/05.2 | Чтение интервала: `/spans` у каждой живой двери архива, `silent`/`unread`/`garbled`, «никто не ответил» ≠ «записи нет», план по правилу эпохи (V/02.5 Н1.3), `/samples` со `stream` у двери, назвавшей спан, подводка от ключевого кадра, `covered`, `written_through` | М10B/20 шаги 1, 4, 5, 8; М10B/21 шаг 2 (чтение) | V/02.5 Н1.2–Н1.4, Н2; P/03.4 Н1.1; договор сертификата роли |
 | V/05.3 | Работа бюджетом, прогресс, события, итог: `STRETCHES_PER_PASS`, `queued`, курсор `unit.state.cursor` (вместо файла), остаток по времени и записи, модель реестра `det` (учебная `tick` — в медийном времени), события в `detjob/<job>/e<n>` с медийным `t`, класс по `alarms`, `earlier-run`; итог `result` | М10B/20 шаги 6–7; М10B/21 шаги 2, 6, 7 | P/03.6 Н1.2, Н1.7; P/05 Н1.2; P/06.4 Н1.2; V/04.2 Н1.2, V/04.3 |
 | V/05.4 | Ждать, следовать, просить; пульс: `waiting` и `WAIT_MAX` (`partial`, `scan.partial`), `following` и `VISIBLE_LAG_SECONDS`, `fetching` — минуты есть у устройства (перечень двери держателя), просьба дозаписи `rec/requests` подачей воркером; потолок видимости — дыра, не просьба; пульс и ряд; приёмка | М10B/21 шаги 2, 8, 9; М10B/23 шаг 2 | P/03.6 Н1.5; V/02.8 Н1.4; V/01.5; P/03.4 Н1.1 |
@@ -75,7 +75,7 @@
 
 ## Правки манифеста при переводе
 
-`detjob`: снять поля `state`, `ended`; добавить `mask_from`, `alarms`; `unit.state: {result: …, cursor: …}`; `retire_when:
+`detjob`: снять поля `state`, `ended`; добавить `mask_of` (было `mask_from`, снято ревью V/04–V/05), `alarms`; `unit.state: {result: …, cursor: …}`; `retire_when:
 {state: result, field: end, in: [done, failed], delete_after: 259200}`; `snapshot: [name, cam, kind, state.result]`;
 `worker: {exec, reads: [rec/heartbeats/, rec/volumes/, rec/recordings/, cam/heartbeats/, det/blobs/], requests: [rec]}`;
 комментарии — без кода свидетеля и уборщика консоли, `/timeline` → `/spans`. `rec` (V/02.8 Н1.5): копируемые поля + `alarms`.
