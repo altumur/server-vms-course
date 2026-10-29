@@ -1,0 +1,20 @@
+{
+  "manifest_files": 5930,
+  "tests": 54,
+  "failures": 0,
+  "errors": 0,
+  "original_closed": true,
+  "raw_judge_object_unchanged": true,
+  "poll_success": true,
+  "poll_prefix_absent": false,
+  "polls": [
+    {
+      "t": 0.02,
+      "code": 200,
+      "ok": true,
+      "view": "{\"detail\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxfixture-private-credential-ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss…"
+    }
+  ],
+  "late_base64_absent": false,
+  "late_response_b64_present": true
+}
