@@ -46,7 +46,7 @@ const f0=w.fetch;w.fetch=(u,i)=>{const s=String(u),auth=((i||{}).headers||{}).Au
   if(s.startsWith("/rec/where/disks/gone?"))return J(404,{worker:null,place:"gone",server:"box-c",door:null,unreachable:"gone@box-c"},{"X-Unreachable":"gone@box-c"});
   if(s.startsWith("/rec/where/"))return J(404,{error:"no such place"});
   const host=s.match(/^https?:\/\/[^/]+/);
-  if(host&&/\/timeline\//.test(s)){if(door403&&host[0]==="http://box-a:9001"){door403--;return J(403,{error:"forbidden"})}if(door401&&host[0]==="http://box-a:9001"){door401--;return J(401,{error:"door",reason:"expired"})}return J(200,TL[host[0]]||[])}
+  if(host&&/\/timeline\//.test(s)){if(door403&&host[0]==="http://box-a:9001"){door403--;return J(403,{error:"forbidden"})}if(door401&&host[0]==="http://box-a:9001"){door401--;return J(401,{error:"door",reason:"expired"})}return J(200,{spans:TL[host[0]]||[],unreachable:[],unavailable:[]})}
   if(s==="/live/where/1"){liveTokens++;return J(200,{door:{url:"http://gw-1:9002",token:"L"+liveTokens,expires:Date.now()/1000+120,routes:["whep"]}})}
   if(s==="http://gw-1:9002/whep/1"){whep.push(auth);if(live404){live404--;return J(404,{error:"no such stream"})}if(live403){live403--;return J(403,{error:"forbidden"})}return J(201,"v=0",{Location:"/whep/session/s1"})}
   // раздача — камеры (V/03.1): where по камере; поток — на двери шлюза ?stream= (V/03.3 Н1.2); первый offer — 404 «stream refused»
