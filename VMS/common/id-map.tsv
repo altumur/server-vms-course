@@ -132,7 +132,7 @@ old	new	chapter	subject	note
 М10B/13 ш.6	V/03.4-03	3.4	без перекодирования: H.264 и H.265 как от источника	H.265 проводится (решение плана 3)
 М10B/13 ш.6	V/03.4-04	3.4	записка о кодеке в пульсе	
 М10B/13 ш.4	V/03.5-01	3.5	отсрочка и удаление строки по cas (worker.deletes); без источника — так же; cas не прошёл — повтор	worker.writes → deletes (ADR-0067)
-М10B/13 ш.5	V/03.5-02	3.5	уборка сессий: ушедшие, CONNECT_SECONDS 30, swept	
+М10B/13 ш.5	V/03.5-02	3.5	уборка сессий: ушедшие, CONNECT_SECONDS 30 без соединения подряд, swept	
 М10B/13 ш.2, 4	V/03.5-03	3.5	пульс: capacity, headroom, sessions, subscriptions, resets, swept, codec; элемент раздачи phase/why/viewers/source	waiting/refused — элемент status[]
 М10B/13 ш.1	V/03.5-04	3.5	ряд streams_live и console.running	
 М10B/13 ш.8; М12A/03	V/03.5-05	3.5	остановка, перезапуск без состояния, арифметика отказов	
