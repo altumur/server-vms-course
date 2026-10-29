@@ -1,0 +1,44 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "description": "решение лицензии члена — value элемента строки переносимой книги domain/cam/licence/<член> (V/01.7 Н1.2 «книга»)",
+ "type": "object",
+ "properties": {
+  "state": {
+   "type": "string",
+   "enum": [
+    "valid",
+    "grace",
+    "degraded",
+    "invalid"
+   ]
+  },
+  "units": {
+   "type": "integer",
+   "minimum": 0,
+   "x-integer": true
+  },
+  "as_of": {
+   "type": "number",
+   "x-time": true
+  },
+  "until": {
+   "type": "number",
+   "x-time": true
+  },
+  "licensed": {
+   "type": "array",
+   "uniqueItems": true,
+   "items": {
+    "type": "string",
+    "minLength": 1
+   }
+  }
+ },
+ "required": [
+  "state",
+  "units",
+  "as_of",
+  "licensed"
+ ],
+ "additionalProperties": false
+}
