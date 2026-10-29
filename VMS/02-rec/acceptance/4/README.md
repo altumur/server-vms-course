@@ -7,7 +7,7 @@ VMS](../../../common/acceptance/README.md) (выгрузка `e0b19be`).
 
 Стенд VMS с манифестами `cam` и `rec`: консоль — `CONSOLE_ROOT=rec` (дверь `console` — `/recordings`, `/volumes`),
 `cam` смонтирован (`console2` — `/cam/…`); контроллеры `cam` и `rec`, ресурс `srv-a`. Часть `obsd` запущена на `srv-a`
-(движок V/02.2 Н1.4: ObjectStorage с патчами 01–07); точка `/data/platform/subsystems/rec/obsd/volumes/1` — каталог
+(движок V/02.2 Н1.4: ObjectStorage с патчами 01–07); точка `{data}/subsystems/rec/obsd/volumes/1` — каталог
 пользователя части. Держатель камеры и регистратор — `@start worker` командой «Стенда» реализаций `cam` и `rec`. Медиа —
 `door.mp4` (общий README VMS). Один сценарий на чистом экземпляре.
 

@@ -1,1 +1,2 @@
 date	sample	fix	languages
+2026-10-29	1/scenarios.tsv: 01-create	url тома — file://{data}/subsystems/rec/obsd/volumes/1 вместо буквального /data/platform: на стенде PLATFORM_DIR — {data} экземпляра (общий README приёмки VMS «Стенд VMS»); вопрос stand-0106 при движке S1 (раннер)	all

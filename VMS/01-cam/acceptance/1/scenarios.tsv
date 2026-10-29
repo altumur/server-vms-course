@@ -12,8 +12,9 @@ scenario	step	request	expect
 04-credentials	2	POST /cameras {"source": "rtsp://10.0.0.8/ch/1?usr=admin&pwd=hunter2"}	400 {"fault": "bad_url", "error": "~cred_secret"}
 04-credentials	3	POST /cameras {"source": "driverpack://acme/admin:hunter2@10.0.0.9/ch/1"}	400 {"fault": "bad_url", "error": "~cred_secret"}
 04-credentials	4	POST /cameras {"source": "rtsp://10.0.0.8/ch/1", "cred_username": "admin", "cred_secret": "hunter2"}	201 {"id": "$c4", "cred_secret": "***"}
-05-bound	1	PUT /cameras/$c4 {"source": "rtsp://10.0.0.8/ch/3"}	400 {"error": "~source changed ~cred_secret must be given anew"}
-05-bound	2	PUT /cameras/$c4 {"source": "rtsp://10.0.0.8/ch/3", "cred_secret": "hunter3"}	200 {"source": "rtsp://10.0.0.8/ch/3"}
+05-bound	1	POST /cameras {"source": "rtsp://10.0.0.8/ch/1", "cred_username": "admin", "cred_secret": "hunter2"}	201 {"id": "$c5", "cred_secret": "***"}
+05-bound	2	PUT /cameras/$c5 {"source": "rtsp://10.0.0.8/ch/3"}	400 {"error": "~source changed ~cred_secret must be given anew"}
+05-bound	3	PUT /cameras/$c5 {"source": "rtsp://10.0.0.8/ch/3", "cred_secret": "hunter3"}	200 {"source": "rtsp://10.0.0.8/ch/3"}
 06-schemes	1	POST /cameras {"source": "ftp://10.0.0.10/cam"}	400 {"fault": "bad_url"}
 06-schemes	2	POST /cameras {"source": "ipint://10.0.0.11/ch#1"}	201 {"id": "@any", "source": "ipint://10.0.0.11/ch#1"}
 07-devices	1	GET /devices	200 {"devices": []}
