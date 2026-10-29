@@ -4,6 +4,8 @@
 
 Вердикт: оба P2 прошлого чтения закрыты. Одна находка P2 в очистке кодированных логов; CLEAN не выдан.
 
+После третьего чтения ведущая изменила границу серии: собственные файлы раннера (А) сохраняют только метаданные и безопасные поля, без сырых тел и их обратимых кодировок; в процессных логах реализации (Б) требуется только точная замена известных значений, без декодирования. Находка ниже относится к прежней гарантии и больше не блокирует часть Б новой границы. Четвёртое чтение и CLEAN требуют нового пакета с этой границей, README и проверками; вершина `43deeef` по новой границе не принята.
+
 ## P2 — кодированный payload после метки в логе остаётся обратимым
 
 Место: [diagnostic_secrets.py:99](/Users/murat/w2c/cammeta-diff/acceptance-server/review-domain-diagnostics-43deeef/check-input/runner/runner/diagnostic_secrets.py:99), файловый путь — [diagnostic_secrets.py:188](/Users/murat/w2c/cammeta-diff/acceptance-server/review-domain-diagnostics-43deeef/check-input/runner/runner/diagnostic_secrets.py:188).
