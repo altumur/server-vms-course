@@ -57,6 +57,8 @@ door:
 #     - cam/cameras, cam/devices            # rows and tables of cam (V/01.1)
 #     - rec/recordings, rec/volumes         # rows and tables of rec (V/02.1)
 #     - det/units                           # rows of det (V/04.1)
+#     - the batch write of a unit's rows and its parts (B9, ADR-0094 доп. (9) п. 2): a device is one batch —
+#       written rows with cas, the device's other rows as guards; all or nothing (V/11.4 Н1.2)
 #     - cam/policy, rec/policy, det/policy  # common settings of these subsystems and their snapshots
 #                                           # (ADR-0094 доп. (2) п. 6); platform settings (/schema, /drain, labels) — no
 #     - changes                             # the change feed (B2)
