@@ -7,3 +7,4 @@ scenario	step	request	expect
 01-door	5	holder w-srv-a-1 GET /devices/	404 {"error": "no such path"}
 01-door	6	holder w-srv-a-1 GET /nosuch	404 {"error": "no such path"}
 01-door	7	holder w-srv-a-1 POST /devices	405 {"error": "method not allowed"}
+01-door	8	holder w-srv-a-1 POST /devices/	404 {"error": "no such path"}

@@ -195,7 +195,7 @@ old	new	chapter	subject	note
 М10B/25 ш.8	V/07.1-04	7.1	права: cluster_rows, names по when и then	P/06.3 Н1.5 → договор gate-and-pass
 М10B/25 ш.1	V/07.1-05	7.1	размещение (capacity 50, requires resource, servers shared, grows), аренда off, снимок	
 М10B/25 ш.10; М10B/11 ш.6	V/07.2-01	7.2	желания: тройки (sub, kind, unit) включённых сценариев	
-М10B/25 ш.5	V/07.2-02	7.2	чтение слитого журнала: тройки, SETTLE 5, truncated; обход до выгрузки доп. (20)	worker.events — после нормы
+М10B/25 ш.5	V/07.2-02	7.2	чтение слитого журнала: тройки, JOURNAL_SETTLE 5, truncated; обход до выгрузки доп. (20)	worker.events — после нормы
 М10B/25 ш.5	V/07.2-03	7.2	сработка: завершающее событие, партнёры в окне within, строгое сравнение, без сводок и fenced	
 М10B/25 ш.6	V/07.2-04	7.2	курсор unit.state.cursor: сначала подать, полное окно, holding, COLD_START 300, первое взятие	файл курсора снят
 М10B/25 ш.10	V/07.2-05	7.2	долгий опрос /events/wait: ранний проход по touched, пауза при ошибке, LONG_POLL	свёртка wants снята
