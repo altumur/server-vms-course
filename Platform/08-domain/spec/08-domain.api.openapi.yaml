@@ -1967,7 +1967,7 @@ components:
       type: object
       required: [rev, records]
       additionalProperties: false
-      description: 'Поле placement ответа держателя (P/08.6 Н1.2): назначения, которые называют этого члена; при rev 0 поля нет.'
+      description: 'Поле placement ответа держателя (P/08.6 Н1.2): назначения, которые называют этого члена; при rev 0, нечитаемом или неподтверждённом в этом владении счётчике (Н3) поля нет.'
       properties:
         rev: {type: integer, minimum: 1}
         records:
