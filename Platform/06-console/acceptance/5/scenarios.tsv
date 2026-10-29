@@ -24,13 +24,14 @@ scenario	step	request	expect
 03-snapshot	3	console POST /counters {"name": "s1", "start": 4, "labels": ["a"]}	201
 03-snapshot	4	@until 20 resource GET /v1/objects/testsub/snapshot/unplaced?scope=local	200 {"cluster": "@any", "worker": null, "ts": "@time", "counters": [{"id": "s1", "revision": 1, "name": "s1", "start": 4, "worker": null}]}
 03-snapshot	5	console GET /metrics	200 ~testsub_snapshot_age_seconds
-04-servers-where	1	GET /servers	200 {"policy": {"servers": "shared"}, "servers": {}}
-04-servers-where	2	GET /unplaceable	200 []
-04-servers-where	3	POST /counters {"name": "c4", "start": 1}	201
-04-servers-where	4	GET /where/c4	404 {"reason": "@any"}
-04-servers-where	5	GET /where/no/such	404 {"detail": "@any", "error": "@any"}
-04-servers-where	6	GET /resources	200 {}
-04-servers-where	7	GET /where/a,b	400 {"detail": "@any", "error": "badkey"}
+04-servers-where	1	@start resource	ok
+04-servers-where	2	@until 20 GET /servers	200 {"policy": {"servers": "shared"}, "servers": {"srv-a": "@any"}}
+04-servers-where	3	GET /unplaceable	200 []
+04-servers-where	4	POST /counters {"name": "c4", "start": 1}	201
+04-servers-where	5	GET /where/c4	404 {"reason": "@any"}
+04-servers-where	6	GET /where/no/such	404 {"detail": "@any", "error": "@any"}
+04-servers-where	7	GET /resources	200 {"srv-a": "@any"}
+04-servers-where	8	GET /where/a,b	400 {"detail": "@any", "error": "badkey"}
 05-metrics	1	@start resource	ok
 05-metrics	2	GET /metrics	200 ~testsub_workers_live 0
 05-metrics	3	GET /metrics	200 ~testsub_units_unplaced

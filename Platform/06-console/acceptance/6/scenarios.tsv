@@ -59,13 +59,13 @@ scenario	step	request	expect
 09-drain-unreadable-pulse	8	console POST /drain?server=srv-a	2xx
 09-drain-unreadable-pulse	9	console GET /drain	200 {"draining": "srv-a", "safe": false, "would_strand": {"testsub": ["d9"]}, "subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
 09-drain-unreadable-pulse	10	console DELETE /drain	2xx
-10-drain-strand	1	console POST /counters {"name": "d1", "start": 1}	201
-10-drain-strand	2	console POST /drain?server=srv-a	2xx
-10-drain-strand	3	console GET /drain	200 {"draining": "srv-a", "safe": true, "would_strand": {"testsub": ["d1"]}, "subsystems": {"testsub": {"draining": "srv-a", "units": 0, "pending_writes": 0, "safe": true}}}
-10-drain-strand	4	console POST /drain?server=srv-b	409
-10-drain-strand	5	console DELETE /drain	2xx
-10-drain-strand	6	console GET /drain	200 {"draining": "", "safe": true, "would_strand": {"testsub": ["d1"]}, "subsystems": {"testsub": {"draining": "", "units": 0, "pending_writes": 0, "safe": true}}}
-10-drain-strand	7	@start resource	ok
+10-drain-strand	1	@start resource	ok
+10-drain-strand	2	console POST /counters {"name": "d1", "start": 1}	201
+10-drain-strand	3	console POST /drain?server=srv-a	2xx
+10-drain-strand	4	console GET /drain	200 {"draining": "srv-a", "safe": true, "would_strand": {"testsub": ["d1"]}, "subsystems": {"testsub": {"draining": "srv-a", "units": 0, "pending_writes": 0, "safe": true}}}
+10-drain-strand	5	console POST /drain?server=srv-b	409
+10-drain-strand	6	console DELETE /drain	2xx
+10-drain-strand	7	console GET /drain	200 {"draining": "", "safe": true, "would_strand": {"testsub": ["d1"]}, "subsystems": {"testsub": {"draining": "", "units": 0, "pending_writes": 0, "safe": true}}}
 10-drain-strand	8	@until 20 console GET /events?kind=drain.started	200 {"events": [{"kind": "drain.started", "server": "srv-a"}]}
 10-drain-strand	9	console GET /events?kind=drain.ended	200 {"events": [{"kind": "drain.ended", "server": "srv-a"}]}
 10-drain-strand	10	console GET /events?kind=drain.cleared	200 {"events": []}
