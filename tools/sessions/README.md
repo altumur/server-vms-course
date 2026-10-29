@@ -29,6 +29,7 @@ tools/sessions/registry.sh get runner      # handle для orca terminal send
 |---|---|
 | `launch-go-lessons.sh [NN…]` | окна сессий уроков Go по `prompts/go-lesson.tpl` |
 | `launch-acc.sh [slug…]` | окна сессий приёмки по `prompts/acc-stand.tpl` |
+| `launch-py-lessons.sh NN:LESSON:PROCESS…` | окна сессий уроков Python В7 по шаблону ведущей `cammeta-c-python-v7/tools/sessions/python-lesson.tpl`, волнами по 3–4 |
 | `launch-codex.sh <имя> <заголовок> <worktree> <cwd> <промпт>` | одно окно Codex |
 | `relaunch-codex.sh <имя> <session_id> <заголовок> <worktree> <cwd> [текст]` | закрыть окно и продолжить тот же разговор Codex |
 | `render.sh <шаблон> КЛЮЧ=значение…` | шаблон → промпт; `{{имя}}` — handle из реестра |
