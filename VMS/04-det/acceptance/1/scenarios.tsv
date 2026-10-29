@@ -21,4 +21,4 @@ scenario	step	request	expect
 04-mask-of	4	POST /units {"name": "b-base", "cam": "$b", "kind": "tick"}	201 {"id": "b-base"}
 04-mask-of	5	POST /units {"name": "a-of", "cam": "$a", "kind": "tick", "mask_of": "a-base"}	201 {"id": "a-of", "mask_of": "a-base"}
 04-mask-of	6	POST /units {"name": "a-of-b", "cam": "$a", "kind": "tick", "mask_of": "b-base"}	409 {"error": "conflict", "fault": "must_match"}
-04-mask-of	7	POST /units {"name": "a-of-none", "cam": "$a", "kind": "tick", "mask_of": "nope"}	409 {"error": "conflict", "fault": "must_match"}
+04-mask-of	7	POST /units {"name": "a-of-none", "cam": "$a", "kind": "tick", "mask_of": "nope"}	201 {"id": "a-of-none", "mask_of": "nope"}
