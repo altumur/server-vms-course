@@ -4,7 +4,7 @@ date: 2026-10-28
 author: «Спецификация VMS» (урок V/10 `assist`, глава V/10.6; ADR-0093 доп. (1) п. 10)
 blocks: 10-assist — да, глава V/10.6 (применение плана с CAS); обхода нет (ниже)
 export: cammeta-specs 9272581 (курс 9a317a387)
-status: открыт
+status: решён — ADR-0091 доп. (28), (29): P/07 Н1.5 `api(…, {ifMatch})`, `features: api.if-match` (выгрузка `35582ba`)
 ---
 
 # Запрос: `If-Match` у записи страницы через модуль консоли — `api(method, path, body, {ifMatch})`

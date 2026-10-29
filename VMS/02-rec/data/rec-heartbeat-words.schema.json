@@ -9,12 +9,12 @@
   },
   "url": {
    "type": "string",
-   "pattern": "^(?:http://[\\s\\S]+|https://[\\s\\S]+)$",
+   "pattern": "^(?:https?://[\\s\\S]+)$",
    "description": "адрес двери архива (V/02.5 Н1.7)"
   },
   "ingest": {
    "type": "string",
-   "pattern": "^(?:http://[\\s\\S]+|https://[\\s\\S]+)$",
+   "pattern": "^(?:https?://[\\s\\S]+)$",
    "description": "адрес приёмника регистратора (V/02.9 Н1.4, Н1.10)"
   },
   "status": {

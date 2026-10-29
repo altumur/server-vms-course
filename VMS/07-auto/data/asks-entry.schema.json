@@ -33,7 +33,7 @@
    "type": "array",
    "items": {
     "type": "string",
-    "pattern": "^(?:http://[\\s\\S]*|https://[\\s\\S]*)$"
+    "pattern": "^(?:https?://[\\s\\S]*)$"
    },
    "description": "ingest регистраторов своего кластера, услышанных за 30 с, по имени слота"
   },

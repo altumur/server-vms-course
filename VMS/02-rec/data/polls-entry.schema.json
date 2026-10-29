@@ -20,7 +20,7 @@
    "minItems": 1,
    "items": {
     "type": "string",
-    "pattern": "^(?:http://[\\s\\S]+|https://[\\s\\S]+)$"
+    "pattern": "^(?:https?://[\\s\\S]+)$"
    }
   },
   "as_of": {
