@@ -115,3 +115,8 @@ scenario	step	request	expect
 18-relay-not-member	1	@install domain	ok
 18-relay-not-member	2	@start domain	ok
 18-relay-not-member	3	signer POST /api/relay/m9 {"relayed": {}}	404
+19-members-source	1	@domain	ok
+19-members-source	2	@on hold @sigterm domain	ok
+19-members-source	3	@on hold @put object domain/view inputs/view-member-list-ghost.json	ok
+19-members-source	4	holder GET /domain	200 {"as_of": 1760000000, "member_list": {"members": {"ghost": {"how": "admitted"}}}}
+19-members-source	5	holder GET /domain/members	200 {"members": {"hold": {"how": "holder"}, "m1": {"how": "admitted"}, "m2": {"how": "admitted"}, "ghost": "@absent"}, "knocking": []}
