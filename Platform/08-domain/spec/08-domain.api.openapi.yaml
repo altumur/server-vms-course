@@ -1710,7 +1710,7 @@ components:
         placement: {$ref: '#/components/schemas/CarryPlacement'}
         pending:
           type: array
-          description: P/08.6 Н1.4 — ждущие правки этого члена по seq.
+          description: 'P/08.6 Н1.4 — ждущие правки этого члена по seq; [] — ждущих нет; поля нет — строка не прочиталась (C09-PENDING-ABSENT-01).'
           items: {$ref: '#/components/schemas/KeptEdit'}
         shared: {$ref: '#/components/schemas/CarryShared'}
         backup: {$ref: '#/components/schemas/CarryBackup'}
