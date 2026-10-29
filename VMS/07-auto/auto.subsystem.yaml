@@ -52,7 +52,7 @@ unit:
           properties:
             sub:   {type: string, minLength: 1}
             kind:  {type: string, minLength: 1}
-            unit:  {type: [string, integer]}
+            unit:  {type: [string, integer], maximum: 9007199254740991}
             match: {type: object}
     # The correlation window, in seconds. That two triggers need it and one refuses it is the evaluator's to say (a
     # scenario's two fields together); how large it may be is the schema's.
@@ -74,19 +74,24 @@ unit:
             - properties:
                 sub: {const: cam}
                 action: {const: output}
-                unit: {type: [string, integer]}
-                port: {type: integer, minimum: 1}         # ports count from 1 (V/01.4 Н1.1)
-                state: {type: [string, integer], maxLength: 32}
-                pulse_ms: {type: integer, minimum: 0}
+                # integers no wider than the owner's request schema (cam: up to 2^53−1; the review of V/07, Kimi 1)
+                unit: {type: [string, integer], maximum: 9007199254740991}
+                port: {type: integer, minimum: 1, maximum: 9007199254740991}         # ports count from 1 (V/01.4 Н1.1)
+                state: {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
+                pulse_ms: {type: integer, minimum: 0, maximum: 9007199254740991}
               required: [unit, port]
               additionalProperties: false
-            - properties: {sub: {const: cam}, action: {const: preset}, unit: {type: [string, integer]}, n: {type: integer, minimum: 1}}
+            - properties:
+                sub: {const: cam}
+                action: {const: preset}
+                unit: {type: [string, integer], maximum: 9007199254740991}
+                n: {type: integer, minimum: 1, maximum: 9007199254740991}
               required: [unit, n]
               additionalProperties: false
             - properties:
                 sub: {const: rec}
                 action: {const: record}
-                cam: {type: [string, integer]}
+                cam: {type: [string, integer], maximum: 9007199254740991}
                 minutes: {type: number, minimum: 1, maximum: 1440}
                 archive: {type: string}
               required: [cam, minutes]
@@ -94,7 +99,7 @@ unit:
             - properties:
                 sub: {const: det}
                 action: {const: detect}
-                cam: {type: [string, integer]}
+                cam: {type: [string, integer], maximum: 9007199254740991}
                 kind: {type: string}
                 minutes: {type: number, minimum: 1, maximum: 1440}
                 params: {type: string}   # as the owner has it (det, detjob: string; V/08 review, question 4)
@@ -103,7 +108,7 @@ unit:
             - properties:
                 sub: {const: det}
                 action: {const: scan}
-                cam: {type: [string, integer]}
+                cam: {type: [string, integer], maximum: 9007199254740991}
                 kind: {type: string}
                 before: {type: number, minimum: 0, maximum: 3600}
                 after: {type: number, minimum: 0, maximum: 3600}
@@ -200,6 +205,8 @@ metrics:
   - {name: woken_total, from: heartbeat.woken, type: counter}
   - {name: early_passes_total, from: heartbeat.early_passes, type: counter}
   - {name: wait_errors_total, from: heartbeat.wait_errors, type: counter}
+  # wishes whose part is outside the grammar of `want` (P/05 Н1.6): left out of the wait, woken by the periodic pass
+  - {name: want_skipped, from: heartbeat.want_skipped}
 
 console:
   running: scenarios_running         # auto_scenarios_running: scenarios an evaluator is actually watching
@@ -241,7 +248,7 @@ domain:
                   properties:
                     camera:    {type: string, minLength: 1}
                     action:    {const: preset}
-                    n:         {type: integer, minimum: 1}
+                    n:         {type: integer, minimum: 1, maximum: 9007199254740991}
                     valid_for: {type: integer, minimum: 10, maximum: 600}
                 - type: object
                   required: [camera, action, port]
@@ -249,7 +256,7 @@ domain:
                   properties:
                     camera:    {type: string, minLength: 1}
                     action:    {const: output}
-                    port:      {type: integer, minimum: 1}
+                    port:      {type: integer, minimum: 1, maximum: 9007199254740991}
                     valid_for: {type: integer, minimum: 10, maximum: 600}
             rate_per_minute: {type: integer, minimum: 0, maximum: 600}
             enabled:         {type: boolean}
