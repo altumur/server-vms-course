@@ -71,8 +71,8 @@ j-array	json	both	[1,"a",null]	"[1,\"a\",null]"	null внутри значени
 j-null	json	write	null	@absent	json: null — элемента нет (Н1.2 absent)
 j-absent	json	read	@unset	@absent	элемента нет — в ответе поля нет (Н2)
 bl-empty	blob	both	""	""	пустая форма blob; при создании — только ""
-bl-digest	blob	both	"sha256-57a256c65db5af18f8a04c7a42df26c3009dd01381fbaaaec7b432fc30d4c8d0"	"sha256-57a256c65db5af18f8a04c7a42df26c3009dd01381fbaaaec7b432fc30d4c8d0"	дайджест байтов hello-blob (сц. 15 шаг 3); в строку его вводит только дверь байтов (Н2)
-bl-not-digest	blob	write	"not-a-digest"	@refuse	не дайджест; сц. 15 шаг 1
+bl-digest	blob	both	"sha256-57a256c65db5af18f8a04c7a42df26c3009dd01381fbaaaec7b432fc30d4c8d0"	"sha256-57a256c65db5af18f8a04c7a42df26c3009dd01381fbaaaec7b432fc30d4c8d0"	дайджест байтов hello-blob (сц. 15 шаг 4); в строку его вводит только дверь байтов (Н2)
+bl-not-digest	blob	write	"not-a-digest"	@refuse	не дайджест; сц. 15 шаг 2
 sec-empty	secret	both	""	""	пустой секрет остаётся пустым (Н2)
 sec-value	secret	write	"s3cret"	@sealed	непустой секрет хранится конвертом enc:v2 (договор запечатывания)
 sec-read	secret	read	"***"	@sealed	клиент значения не получает: маска (глава 6.2 Н1.1)

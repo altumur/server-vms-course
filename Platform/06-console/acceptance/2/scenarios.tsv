@@ -37,7 +37,8 @@ scenario	step	request	expect
 04-password-in-address	12	console POST /tallies {"name": "t4c", "of": "c1", "feed": "https://hub.ex'ample/d?token=hunter2"}	400 {"fault": "bad_url", "error": "!contains hunter2"}
 04-password-in-address	13	console POST /tallies {"name": "t4c", "of": "c1", "feed": "https://hub.example/d?via=https://admin:hunter2@x/y"}	400 {"fault": "bad_url", "error": "!contains feed_user"}
 04-password-in-address	14	console POST /tallies {"name": "t4c", "of": "c1", "feed": "https://hub.example/d?who=a%26pwd%3Dhunter2"}	400 {"fault": "bad_url", "error": "!contains feed_user"}
-05-tables	1	console GET /tallies	200 {"configured": [{"id": "t1", "feed_secret": "***"}, {"id": "t2", "feed_secret": "***"}, {"id": "t3", "feed_secret": "***"}, {"id": "t4", "feed_secret": ""}]}
+05-tables	1	@start resource	ok
+05-tables	2	console GET /tallies	200 {"configured": [{"id": "t1", "feed_secret": "***"}, {"id": "t2", "feed_secret": "***"}, {"id": "t3", "feed_secret": "***"}, {"id": "t4", "feed_secret": ""}]}
 06-readers	1	@as testsubworker store GET /v1/get?key=testsub2/tallies/t1	403
 07-nested-replace	1	console POST /tallies {"name": "t7", "of": "c1", "feed": "https://hub.example/g", "rule": {"cams": [{"n": "A", "pw_secret": "pa7"}, {"n": "B", "pw_secret": "pb7"}]}}	201 {"rule": {"cams": [{"n": "A", "pw_secret": "***"}, {"n": "B", "pw_secret": "***"}]}}
 07-nested-replace	2	store GET /v1/get?key=testsub2/tallies/t7	200 {"items": {"rule": "~enc:v2:"}}
@@ -48,6 +49,7 @@ scenario	step	request	expect
 08-feed-anew	1	console POST /tallies {"name": "t8", "of": "c1", "feed": "https://hub.example/h"}	201 {"feed_secret": ""}
 08-feed-anew	2	console PUT /tallies/t8 {"feed": "https://hub.example/h2"}	400 {"error": "~must be given anew"}
 08-feed-anew	3	console PUT /tallies/t8 {"feed": "https://hub.example/h2", "feed_secret": "s8"}	200 {"feed_secret": "***"}
-09-unreadable-row-start	1	@as console store POST /v1/write {"id":"a7","op":"put","key":"testsub2/tallies/t9","items":{"name":"t9","of":"c1","rule":"{bad"}}	200
-09-unreadable-row-start	2	@restart console	ok
-09-unreadable-row-start	3	console GET /tallies	200
+09-unreadable-row-start	1	@start resource	ok
+09-unreadable-row-start	2	@as console store POST /v1/write {"id":"a7","op":"put","key":"testsub2/tallies/t9","items":{"name":"t9","of":"c1","rule":"{bad"}}	200
+09-unreadable-row-start	3	@restart console	ok
+09-unreadable-row-start	4	console GET /tallies	200

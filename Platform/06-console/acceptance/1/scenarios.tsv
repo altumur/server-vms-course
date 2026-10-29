@@ -87,18 +87,19 @@ scenario	step	request	expect
 14-if-match	8	GET /counters	200 {"configured": [{"id": "m14", "start": 2, "revision": 2}]}
 14-if-match	9	@header If-Match: 1 DELETE /counters/m14	412 {"error": "revision moved", "revision": 2}
 14-if-match	10	@header If-Match: 2 DELETE /counters/m14	200 {"deleted": "m14"}
-15-blob	1	console2 POST /tallies {"name": "t1", "of": "c1", "mask": "not-a-digest"}	400 {"error": "~takes a digest"}
-15-blob	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1, "mask": ""}
-15-blob	3	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "~sha256-", "bytes": 10, "revision": 2}
-15-blob	4	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"mask": "$d", "revision": "2"}}
-15-blob	5	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "$d", "revision": 3}
-15-blob	6	console2 PUT /tallies/t1/nosuch @raw x	404 {"error": "no such blob field"}
-15-blob	7	console2 PUT /tallies/nosuch/mask @raw x	404 {"error": "no such unit"}
-15-blob	8	console2 PUT /tallies/t1 {"mask": "sha256-0000000000000000000000000000000000000000000000000000000000000000"}	400
-15-blob	9	console2 PUT /tallies/t1 {"mask": "$d"}	200 {"mask": "$d"}
-15-blob	10	console2 GET /tallies/t1/mask	405
-15-blob	11	console2 DELETE /tallies/t1/mask	405
-15-blob	12	console2 @header If-Match: 999 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "$d"}
+15-blob	1	@start resource	ok
+15-blob	2	console2 POST /tallies {"name": "t1", "of": "c1", "mask": "not-a-digest"}	400 {"error": "~takes a digest"}
+15-blob	3	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1, "mask": ""}
+15-blob	4	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "~sha256-", "bytes": 10, "revision": 2}
+15-blob	5	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"mask": "$d", "revision": "2"}}
+15-blob	6	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "$d", "revision": 3}
+15-blob	7	console2 PUT /tallies/t1/nosuch @raw x	404 {"error": "no such blob field"}
+15-blob	8	console2 PUT /tallies/nosuch/mask @raw x	404 {"error": "no such unit"}
+15-blob	9	console2 PUT /tallies/t1 {"mask": "sha256-0000000000000000000000000000000000000000000000000000000000000000"}	400
+15-blob	10	console2 PUT /tallies/t1 {"mask": "$d"}	200 {"mask": "$d"}
+15-blob	11	console2 GET /tallies/t1/mask	405
+15-blob	12	console2 DELETE /tallies/t1/mask	405
+15-blob	13	console2 @header If-Match: 999 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "$d"}
 16-ceilings	1	console2 POST /tallies {"name": "t5", "of": "c1", "rule": "@big(4100)"}	400 {"fault": "too_long", "error": "~the ceiling is 4000"}
 16-ceilings	2	console2 POST /tallies {"name": "t5", "of": "c1", "rule": "@big(3000)"}	201
 16-ceilings	3	console2 POST /tallies {"name": "t6", "of": "c1", "tags": ["@big(1100000)"]}	413 {"detail": "~this door takes at most"}
