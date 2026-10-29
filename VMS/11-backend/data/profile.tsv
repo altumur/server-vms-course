@@ -1,8 +1,9 @@
 # Профиль возможностей стенда VMS для тестов API consolem (V/11.6 Н1.2): одна строка на операцию контракта
-# consolem.openapi.json @9dc16881. profile: in — тесты операции гоняются; out — операция отвечает 404 NO_ROUTE, тест
+# consolem.openapi.json @7683f542. profile: in — тесты операции гоняются; out — операция отвечает 404 NO_ROUTE, тест
 # вне профиля (тест самого NO_ROUTE — в профиле); stand — только на стенде (/test/*). Читает драйвер стенда; при новой
 # версии контракта таблица сверяется (V/11.2). Набор продукта — one-domain, часы — --clock real (ответ consolem, ADR-0094
-# доп. (4)); объявление возможностей продукт отдаёт в GET /reference — с ним таблица сверяется, не заменяется молча.
+# доп. (4)). Строки in — список capabilities.operations в GET /reference (V/11.2 Н1.5): объявление и таблица сверяются,
+# расхождение — исправление таблицы, не молчаливая замена. «Автоматизация» (тег automation) не объявляется: доп. (7).
 n	method	path	profile	why
 1	GET	/me	in	переводится (V/11.2)
 2	GET	/reference	in	переводится (V/11.2)
@@ -51,19 +52,45 @@ n	method	path	profile	why
 45	GET	/domains/{domainId}/discovery	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 46	POST	/domains/{domainId}/discovery	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 47	DELETE	/domains/{domainId}/discovery	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-48	GET	/rules	in	переводится (V/11.2)
-49	GET	/rules/{ruleId}	in	переводится (V/11.2)
-50	PUT	/rules/{ruleId}	in	переводится (V/11.2)
-51	GET	/rules/{ruleId}/fires	in	переводится (V/11.2)
-52	GET	/access	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-53	GET	/settings	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-54	PATCH	/settings	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-55	GET	/licenses	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-56	GET	/journal	in	переводится (V/11.2)
-57	GET	/stream	in	переводится (V/11.2)
-58	POST	/test/reset	stand	только на стенде: TEST_SUPPORT=1 и петля (V/11.6 Н1.3)
-59	POST	/test/clock	stand	только на стенде: TEST_SUPPORT=1 и петля (V/11.6 Н1.3)
-60	POST	/test/events	stand	только на стенде: TEST_SUPPORT=1 и петля (V/11.6 Н1.3)
-61	POST	/objects/delete	in	переводится (V/11.2)
-62	POST	/access/apply	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-63	POST	/access/catalogs/{catalogId}/sync	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+48	GET	/rules	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+49	POST	/rules	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+50	GET	/rules/{ruleId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+51	PUT	/rules/{ruleId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+52	GET	/rules/{ruleId}/fires	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+53	POST	/rules/update	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+54	POST	/rules/reorder	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+55	POST	/rules/test	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+56	POST	/rules/{ruleId}/run	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+57	GET	/rules/{ruleId}/versions	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+58	POST	/rules/{ruleId}/fires/{fireId}/retry	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+59	GET	/schedules	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+60	POST	/schedules	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+61	GET	/schedules/{scheduleId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+62	PUT	/schedules/{scheduleId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+63	DELETE	/schedules/{scheduleId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+64	GET	/day-groups	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+65	POST	/day-groups	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+66	GET	/day-groups/{dayGroupId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+67	PUT	/day-groups/{dayGroupId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+68	DELETE	/day-groups/{dayGroupId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+69	GET	/modes	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+70	PUT	/modes	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+71	GET	/modes/current	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+72	POST	/modes/current	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+73	GET	/maintenance-windows	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+74	POST	/maintenance-windows	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+75	GET	/maintenance-windows/{windowId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+76	PUT	/maintenance-windows/{windowId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+77	DELETE	/maintenance-windows/{windowId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+78	GET	/access	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+79	GET	/settings	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+80	PATCH	/settings	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+81	GET	/licenses	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+82	GET	/journal	in	переводится (V/11.2)
+83	GET	/stream	in	переводится (V/11.2)
+84	POST	/test/reset	stand	только на стенде: TEST_SUPPORT=1 и петля (V/11.6 Н1.3)
+85	POST	/test/clock	stand	только на стенде: TEST_SUPPORT=1 и петля (V/11.6 Н1.3)
+86	POST	/test/events	stand	только на стенде: TEST_SUPPORT=1 и петля (V/11.6 Н1.3)
+87	POST	/objects/delete	in	переводится (V/11.2)
+88	POST	/access/apply	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+89	POST	/access/catalogs/{catalogId}/sync	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля

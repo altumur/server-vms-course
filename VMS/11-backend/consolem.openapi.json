@@ -3,7 +3,7 @@
   "info": {
     "title": "Конфигуратор — API",
     "version": "0.1.0",
-    "description": "Контракт конфигуратора: всё, что интерфейс читает и меняет. Источник истины: встроенный сервер прототипа (api/server.js) и бэкенд отвечают по нему. Договорённости — api/README.md: версии записей (ETag / If-Match, 428, 412), ошибки application/problem+json с машинным code, групповые операции с частичным успехом и idempotencyKey, поток событий SSE. Операции с тегом test-support есть только на тестовом стенде.",
+    "description": "Контракт конфигуратора: всё, что интерфейс читает и меняет. Источник истины: встроенный сервер прототипа (api/server.js) и бэкенд отвечают по нему. Договорённости — api/README.md: версии записей (ETag / If-Match, 428, 412), ошибки application/problem+json с машинным code, групповые операции с частичным успехом и idempotencyKey, поток событий SSE. Система может поддерживать не весь контракт: что она умеет — GET /reference → capabilities; остальные операции отвечают 404 NO_ROUTE, неподдержанные виды устройств и настройки — 422 NOT_SUPPORTED. Операции с тегом test-support есть только на тестовом стенде.",
     "license": {
       "name": "Внутренний документ",
       "identifier": "LicenseRef-Internal"
@@ -127,7 +127,8 @@
           "default": {
             "$ref": "#/components/responses/Problem"
           }
-        }
+        },
+        "description": "Справочники и возможности системы (capabilities): какие операции, виды устройств и необязательные настройки она поддерживает. Интерфейс читает их при старте"
       }
     },
     "/domains": {
@@ -280,7 +281,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "Версия записи из ETag: \"3\". Нет — 428, не совпала — 412",
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
             "schema": {
               "type": "string"
             }
@@ -356,7 +357,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "Версия записи из ETag: \"3\". Нет — 428, не совпала — 412",
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
             "schema": {
               "type": "string"
             }
@@ -646,7 +647,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "Версия записи из ETag: \"3\". Нет — 428, не совпала — 412",
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
             "schema": {
               "type": "string"
             }
@@ -923,7 +924,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "Версия записи из ETag: \"3\". Нет — 428, не совпала — 412",
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
             "schema": {
               "type": "string"
             }
@@ -996,7 +997,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "Версия записи из ETag: \"3\". Нет — 428, не совпала — 412",
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
             "schema": {
               "type": "string"
             }
@@ -1174,7 +1175,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "Версия записи из ETag: \"3\". Нет — 428, не совпала — 412",
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
             "schema": {
               "type": "string"
             }
@@ -1246,7 +1247,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "Версия записи из ETag: \"3\". Нет — 428, не совпала — 412",
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
             "schema": {
               "type": "string"
             }
@@ -1462,7 +1463,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "Версия записи из ETag: \"3\". Нет — 428, не совпала — 412",
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
             "schema": {
               "type": "string"
             }
@@ -1535,7 +1536,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "Версия записи из ETag: \"3\". Нет — 428, не совпала — 412",
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
             "schema": {
               "type": "string"
             }
@@ -1729,7 +1730,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "Версия записи из ETag: \"3\". Нет — 428, не совпала — 412",
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
             "schema": {
               "type": "string"
             }
@@ -1804,7 +1805,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "Версия записи из ETag: \"3\". Нет — 428, не совпала — 412",
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
             "schema": {
               "type": "string"
             }
@@ -2360,6 +2361,49 @@
             "$ref": "#/components/responses/Problem"
           }
         }
+      },
+      "post": {
+        "operationId": "createRule",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Новое правило",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuleCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rule"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
       }
     },
     "/rules/{ruleId}": {
@@ -2427,7 +2471,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "Версия записи из ETag: \"3\". Нет — 428, не совпала — 412",
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
             "schema": {
               "type": "string"
             }
@@ -2477,7 +2521,8 @@
           "default": {
             "$ref": "#/components/responses/Problem"
           }
-        }
+        },
+        "description": "Содержимое правила целиком. Сервер пишет версию истории; historyNote — пометка «восстановлена версия», «отмена». Приглушение и порядок — /rules/update и /rules/reorder"
       }
     },
     "/rules/{ruleId}/fires": {
@@ -2531,6 +2576,1242 @@
             }
           }
         ]
+      }
+    },
+    "/rules/update": {
+      "post": {
+        "operationId": "updateRules",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Состояние и приглушение нескольких правил",
+        "description": "Работает / Только журнал / Выключено, «Приглушить до…» — для выборки сразу. Частичный успех; повтор с тем же idempotencyKey ничего не выполняет снова",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RulesUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RulesUpdateResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/rules/reorder": {
+      "post": {
+        "operationId": "reorderRules",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Порядок правил на одно событие",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RulesReorderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Rule"
+                      }
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "412": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/rules/test": {
+      "post": {
+        "operationId": "testRule",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Пробный запуск правила",
+        "description": "Проверка правила (в том числе неприменённого черновика) на выбранных событиях и времени: условия, шаги по устройствам, исход ветвлений. Ничего не выполняет; log — записать в журнал запусков",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuleTestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleFire"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/rules/{ruleId}/run": {
+      "post": {
+        "operationId": "runRule",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Запустить правило сейчас",
+        "description": "Действия выполняются на устройствах (у «Только журнал» — только запись). Приглушение и окна обслуживания запуск вручную не останавливают",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuleRunRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleFire"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/rules/{ruleId}/versions": {
+      "get": {
+        "operationId": "listRuleVersions",
+        "tags": [
+          "automation"
+        ],
+        "summary": "История версий правила",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RuleVersion"
+                      }
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/rules/{ruleId}/fires/{fireId}/retry": {
+      "post": {
+        "operationId": "retryRuleFire",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Повторить невыполненные шаги запуска",
+        "description": "Ещё раз выполняются только отказавшие шаги — такими, какими они были в том запуске",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "fireId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuleRetryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleFire"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/schedules": {
+      "get": {
+        "operationId": "listSchedules",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Schedule: список",
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Schedule"
+                      }
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createSchedule",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Schedule: создать",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Schedule"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/schedules/{scheduleId}": {
+      "get": {
+        "operationId": "getSchedule",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Schedule: одна запись",
+        "parameters": [
+          {
+            "name": "scheduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Schedule"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "put": {
+        "operationId": "putSchedule",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Schedule: сохранить целиком",
+        "parameters": [
+          {
+            "name": "scheduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Schedule"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "412": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "428": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteSchedule",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Schedule: удалить",
+        "description": "После отсчёта «Отменить» в интерфейсе. Где использовалось: режим объекта — только вручную, условие «Время» правила и окно обслуживания — «Никогда». Встроенные — 409 BUILTIN",
+        "parameters": [
+          {
+            "name": "scheduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Готово"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "412": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "428": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/day-groups": {
+      "get": {
+        "operationId": "listDayGroups",
+        "tags": [
+          "automation"
+        ],
+        "summary": "DayGroup: список",
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DayGroup"
+                      }
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createDayGroup",
+        "tags": [
+          "automation"
+        ],
+        "summary": "DayGroup: создать",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DayGroupWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayGroup"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/day-groups/{dayGroupId}": {
+      "get": {
+        "operationId": "getDayGroup",
+        "tags": [
+          "automation"
+        ],
+        "summary": "DayGroup: одна запись",
+        "parameters": [
+          {
+            "name": "dayGroupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayGroup"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "put": {
+        "operationId": "putDayGroup",
+        "tags": [
+          "automation"
+        ],
+        "summary": "DayGroup: сохранить целиком",
+        "parameters": [
+          {
+            "name": "dayGroupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DayGroupWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayGroup"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "412": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "428": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteDayGroup",
+        "tags": [
+          "automation"
+        ],
+        "summary": "DayGroup: удалить",
+        "description": "Из расписаний пропадают особые дни этой группы",
+        "parameters": [
+          {
+            "name": "dayGroupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Готово"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "412": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "428": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/modes": {
+      "get": {
+        "operationId": "getModes",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Режимы объекта",
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Modes"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "put": {
+        "operationId": "putModes",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Режимы объекта целиком",
+        "description": "Удалённый режим уходит из условий «Режим объекта» правил; режим «иначе» — на другой; включённый вручную — снимается",
+        "parameters": [
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModesWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Modes"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "412": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "428": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/modes/current": {
+      "get": {
+        "operationId": "getModeCurrent",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Текущий режим объекта",
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModeCurrent"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "setModeCurrent",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Включить режим вручную или вернуться к расписаниям",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModeCurrentWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModeCurrent"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/maintenance-windows": {
+      "get": {
+        "operationId": "listMaintenanceWindows",
+        "tags": [
+          "automation"
+        ],
+        "summary": "MaintenanceWindow: список",
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MaintenanceWindow"
+                      }
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createMaintenanceWindow",
+        "tags": [
+          "automation"
+        ],
+        "summary": "MaintenanceWindow: создать",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaintenanceWindowCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceWindowCreated"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/maintenance-windows/{windowId}": {
+      "get": {
+        "operationId": "getMaintenanceWindow",
+        "tags": [
+          "automation"
+        ],
+        "summary": "MaintenanceWindow: одна запись",
+        "parameters": [
+          {
+            "name": "windowId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceWindow"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "put": {
+        "operationId": "putMaintenanceWindow",
+        "tags": [
+          "automation"
+        ],
+        "summary": "MaintenanceWindow: сохранить целиком",
+        "parameters": [
+          {
+            "name": "windowId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaintenanceWindowWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceWindow"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "412": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "428": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteMaintenanceWindow",
+        "tags": [
+          "automation"
+        ],
+        "summary": "MaintenanceWindow: удалить",
+        "description": "Вместе со своим расписанием, если оно больше нигде не используется",
+        "parameters": [
+          {
+            "name": "windowId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Готово"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "412": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "428": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
       }
     },
     "/access": {
@@ -2607,7 +3888,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "Версия записи из ETag: \"3\". Нет — 428, не совпала — 412",
+            "description": "Версия записи из ETag как есть: \"v3k\". Нет — 428, не совпала — 412",
             "schema": {
               "type": "string"
             }
@@ -2818,7 +4099,7 @@
             "$ref": "#/components/responses/Problem"
           }
         },
-        "description": "Только на тестовом стенде. Загружает api/fixtures/demo.json (с fixturePatch, если задан), сдвигает времена набора на «сейчас − capturedAt», по умолчанию останавливает часы.",
+        "description": "Только на тестовом стенде. Загружает набор fixture (с fixturePatch, если задан), сдвигает времена набора на «сейчас − capturedAt», по умолчанию останавливает часы. Стенд может уметь не все наборы и не уметь останавливать часы: тогда 404 NOT_FOUND и 422 VALIDATION_FAILED, а тесты запускают с подходящим набором и ?clock=real",
         "requestBody": {
           "required": true,
           "content": {
@@ -2970,7 +4251,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "Версия снимка прав из ETag: \"3\". Нет — 428, не совпала — 412",
+            "description": "Версия снимка прав из ETag как есть. Нет — 428, не совпала — 412",
             "schema": {
               "type": "string"
             }
@@ -3090,7 +4371,7 @@
     },
     "headers": {
       "ETag": {
-        "description": "Версия записи в кавычках: \"3\". Возвращается в If-Match при изменении",
+        "description": "Версия записи в кавычках: \"v3k\". Непрозрачна: только сравнение на равенство. Возвращается в If-Match при изменении",
         "schema": {
           "type": "string"
         }
@@ -3194,9 +4475,9 @@
             "type": "boolean"
           },
           "version": {
-            "type": "integer",
-            "description": "Версия записи: растёт на 1 с каждым изменением; уходит в ETag",
-            "minimum": 1
+            "type": "string",
+            "pattern": "^[!#-~]+$",
+            "description": "Версия записи — непрозрачная метка: клиент сравнивает её только на равенство и возвращает в If-Match, не разбирая и не упорядочивая. Уходит в ETag (в кавычках). Сервер обязан: менять её при любом изменении того, что видно в записи (в том числе любой из частей, из которых запись собрана); никогда не возвращать прежнее значение той же записи; не менять её без изменений (чтение, связь, нагрузка). Символы — печатные ASCII без пробела и кавычек"
           }
         },
         "additionalProperties": false,
@@ -3339,9 +4620,9 @@
             }
           },
           "version": {
-            "type": "integer",
-            "description": "Версия записи: растёт на 1 с каждым изменением; уходит в ETag",
-            "minimum": 1
+            "type": "string",
+            "pattern": "^[!#-~]+$",
+            "description": "Версия записи — непрозрачная метка: клиент сравнивает её только на равенство и возвращает в If-Match, не разбирая и не упорядочивая. Уходит в ETag (в кавычках). Сервер обязан: менять её при любом изменении того, что видно в записи (в том числе любой из частей, из которых запись собрана); никогда не возвращать прежнее значение той же записи; не менять её без изменений (чтение, связь, нагрузка). Символы — печатные ASCII без пробела и кавычек"
           },
           "netmask": {
             "type": "string",
@@ -3437,26 +4718,7 @@
             "format": "uuid"
           },
           "type": {
-            "type": "string",
-            "enum": [
-              "camera",
-              "ipsrv",
-              "channel",
-              "mic",
-              "spk",
-              "sensor",
-              "relay",
-              "storage",
-              "det",
-              "eventsrc",
-              "acfa",
-              "acfa_sensor",
-              "acfa_lock",
-              "acfa_fence",
-              "export",
-              "email",
-              "sms"
-            ]
+            "$ref": "#/components/schemas/DeviceType"
           },
           "subtype": {
             "type": "string",
@@ -3533,10 +4795,6 @@
               "conn",
               "drv"
             ]
-          },
-          "disabledByRule": {
-            "type": "boolean",
-            "description": "Выключено правилом автоматизации"
           },
           "licenseExceeded": {
             "type": "boolean"
@@ -3722,13 +4980,33 @@
             "type": "integer"
           },
           "version": {
-            "type": "integer",
-            "description": "Версия записи: растёт на 1 с каждым изменением; уходит в ETag",
-            "minimum": 1
+            "type": "string",
+            "pattern": "^[!#-~]+$",
+            "description": "Версия записи — непрозрачная метка: клиент сравнивает её только на равенство и возвращает в If-Match, не разбирая и не упорядочивая. Уходит в ETag (в кавычках). Сервер обязан: менять её при любом изменении того, что видно в записи (в том числе любой из частей, из которых запись собрана); никогда не возвращать прежнее значение той же записи; не менять её без изменений (чтение, связь, нагрузка). Символы — печатные ASCII без пробела и кавычек"
           },
           "rtspUrl": {
             "type": "string",
             "description": "Адрес видеопотока, если он задан вручную"
+          },
+          "disabledByRuleId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Выключено правилом автоматизации («Выключить камеру на время»): каким"
+          },
+          "disabledByRuleAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "С какого момента камера выключена правилом"
+          },
+          "armed": {
+            "type": "boolean",
+            "description": "Камера на охране (только чтение: меняют действия правил)"
           }
         },
         "additionalProperties": false,
@@ -3774,9 +5052,9 @@
             }
           },
           "version": {
-            "type": "integer",
-            "description": "Версия записи: растёт на 1 с каждым изменением; уходит в ETag",
-            "minimum": 1
+            "type": "string",
+            "pattern": "^[!#-~]+$",
+            "description": "Версия записи — непрозрачная метка: клиент сравнивает её только на равенство и возвращает в If-Match, не разбирая и не упорядочивая. Уходит в ETag (в кавычках). Сервер обязан: менять её при любом изменении того, что видно в записи (в том числе любой из частей, из которых запись собрана); никогда не возвращать прежнее значение той же записи; не менять её без изменений (чтение, связь, нагрузка). Символы — печатные ASCII без пробела и кавычек"
           }
         },
         "additionalProperties": false,
@@ -3847,9 +5125,9 @@
             "format": "uuid"
           },
           "version": {
-            "type": "integer",
-            "description": "Версия записи: растёт на 1 с каждым изменением; уходит в ETag",
-            "minimum": 1
+            "type": "string",
+            "pattern": "^[!#-~]+$",
+            "description": "Версия записи — непрозрачная метка: клиент сравнивает её только на равенство и возвращает в If-Match, не разбирая и не упорядочивая. Уходит в ETag (в кавычках). Сервер обязан: менять её при любом изменении того, что видно в записи (в том числе любой из частей, из которых запись собрана); никогда не возвращать прежнее значение той же записи; не менять её без изменений (чтение, связь, нагрузка). Символы — печатные ASCII без пробела и кавычек"
           }
         },
         "additionalProperties": false,
@@ -3971,9 +5249,9 @@
             "type": "string"
           },
           "version": {
-            "type": "integer",
-            "description": "Версия записи: растёт на 1 с каждым изменением; уходит в ETag",
-            "minimum": 1
+            "type": "string",
+            "pattern": "^[!#-~]+$",
+            "description": "Версия записи — непрозрачная метка: клиент сравнивает её только на равенство и возвращает в If-Match, не разбирая и не упорядочивая. Уходит в ETag (в кавычках). Сервер обязан: менять её при любом изменении того, что видно в записи (в том числе любой из частей, из которых запись собрана); никогда не возвращать прежнее значение той же записи; не менять её без изменений (чтение, связь, нагрузка). Символы — печатные ASCII без пробела и кавычек"
           }
         },
         "additionalProperties": false,
@@ -3995,15 +5273,21 @@
         "properties": {
           "source": {
             "type": "string",
-            "description": "Подсистема: det, vms, rec"
+            "description": "Подсистема из справочника ruleTriggers: det, vms, rec"
           },
           "kind": {
             "type": "string",
             "description": "Вид события из справочника ruleTriggers"
           },
-          "unit": {
-            "type": "string",
-            "description": "Устройство — текстом, как его ввёл администратор"
+          "target": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RuleTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "match": {
             "type": "object",
@@ -4023,49 +5307,131 @@
         "required": [
           "source",
           "kind",
-          "unit"
-        ]
+          "target",
+          "match"
+        ],
+        "description": "Событие, по которому запускается правило"
       },
       "RuleAction": {
         "type": "object",
         "properties": {
           "source": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "vms",
+              "rec",
+              "alarm",
+              "client",
+              "ntf",
+              "net",
+              "rule"
+            ]
           },
           "action": {
             "type": "string",
             "description": "Вид действия из справочника ruleActions"
           },
-          "unit": {
+          "target": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RuleTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "preset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "duration": {
+            "type": "string",
+            "enum": [
+              "min",
+              "event"
+            ],
+            "description": "record: на minutes минут или пока идёт событие (+ afterSec)"
+          },
+          "minutes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "afterSec": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "archive": {
             "type": "string"
           },
-          "camera": {
+          "priority": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "high"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "description": "Шаблон: {камера}, {устройство}, {событие}, {время}, {правило}"
+          },
+          "layoutId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "monitorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "to": {
+            "type": "string",
+            "description": "email: адрес"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "chat": {
             "type": "string"
           },
           "port": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 0
           },
           "state": {
             "type": "string"
           },
           "pulseMs": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 0
           },
-          "preset": {
-            "type": "integer"
+          "method": {
+            "type": "string",
+            "enum": [
+              "GET",
+              "POST"
+            ]
           },
-          "minutes": {
-            "type": "integer"
-          },
-          "archive": {
+          "url": {
             "type": "string"
+          },
+          "ruleId": {
+            "type": "string",
+            "format": "uuid"
           }
         },
         "additionalProperties": false,
         "required": [
           "source",
           "action"
-        ]
+        ],
+        "description": "Действие правила. Поля — по виду действия (справочник ruleActions)"
       },
       "Rule": {
         "type": "object",
@@ -4078,18 +5444,92 @@
             "type": "string"
           },
           "enabled": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Работает (true) или выключено"
+          },
+          "logOnly": {
+            "type": "boolean",
+            "description": "«Только журнал»: правило запускается и пишет в журнал, что сделало бы, но действий не выполняет"
+          },
+          "logOnlySince": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          },
+          "start": {
+            "type": "string",
+            "enum": [
+              "event",
+              "schedule",
+              "manual"
+            ],
+            "description": "Как запускается: по событию, по расписанию, вручную"
+          },
+          "runMode": {
+            "type": "string",
+            "enum": [
+              "always",
+              "manual"
+            ],
+            "description": "manual — запускать только вручную (кнопка оператора, «Запустить»)"
+          },
+          "operatorMenu": {
+            "type": "boolean",
+            "description": "Кнопка в меню оператора"
           },
           "ratePerMinute": {
             "type": "integer",
-            "description": "Не чаще N срабатываний в минуту",
             "minimum": 1,
-            "maximum": 600
+            "maximum": 600,
+            "description": "Не чаще N запусков в минуту"
           },
           "windowSec": {
             "type": "integer",
-            "description": "Окно, в которое должны прийти все события; 0 — одно событие",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Окно, в которое должны прийти все события; 0 — одно событие"
+          },
+          "runAt": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "days": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 7
+                    },
+                    "description": "Дни недели, 1 — понедельник"
+                  },
+                  "time": {
+                    "type": "string",
+                    "pattern": "^([01][0-9]|2[0-4]):[0-5][0-9]$",
+                    "description": "Время суток ЧЧ:ММ в часовом поясе системы"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "days",
+                  "time"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "start=schedule: когда запускать"
+          },
+          "repeat": {
+            "type": "string",
+            "enum": [
+              "skip",
+              "restart",
+              "queue"
+            ],
+            "description": "Новое событие, пока идёт прежний запуск"
           },
           "triggers": {
             "type": "array",
@@ -4097,16 +5537,77 @@
               "$ref": "#/components/schemas/RuleTrigger"
             }
           },
-          "actions": {
+          "conditions": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/RuleAction"
+              "$ref": "#/components/schemas/RuleCondition"
             }
           },
-          "version": {
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleStep"
+            }
+          },
+          "owner": {
+            "type": "string",
+            "description": "Логин ответственного"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "serverId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "runAsRoleId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Выполнять с правами роли; null — от имени системы"
+          },
+          "allowChain": {
+            "type": "boolean",
+            "description": "Разрешить запуск этого правила другими правилами («Запустить правило»)"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "changedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "changedBy": {
+            "type": "string"
+          },
+          "mute": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RuleMute"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Приглушено: в этот срок действия по событию и расписанию не выполняются. Истечение срока запись не меняет"
+          },
+          "order": {
             "type": "integer",
-            "description": "Версия записи: растёт на 1 с каждым изменением; уходит в ETag",
-            "minimum": 1
+            "description": "Порядок среди правил на одно событие: меньше — раньше"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^[!#-~]+$",
+            "description": "Версия записи — непрозрачная метка: клиент сравнивает её только на равенство и возвращает в If-Match, не разбирая и не упорядочивая. Уходит в ETag (в кавычках). Сервер обязан: менять её при любом изменении того, что видно в записи (в том числе любой из частей, из которых запись собрана); никогда не возвращать прежнее значение той же записи; не менять её без изменений (чтение, связь, нагрузка). Символы — печатные ASCII без пробела и кавычек"
           }
         },
         "additionalProperties": false,
@@ -4114,13 +5615,32 @@
           "id",
           "name",
           "enabled",
+          "logOnly",
+          "logOnlySince",
+          "start",
+          "runMode",
+          "operatorMenu",
           "ratePerMinute",
           "windowSec",
+          "runAt",
+          "repeat",
           "triggers",
-          "actions",
+          "conditions",
+          "steps",
+          "owner",
+          "purpose",
+          "serverId",
+          "runAsRoleId",
+          "allowChain",
+          "createdAt",
+          "createdBy",
+          "changedAt",
+          "changedBy",
+          "mute",
+          "order",
           "version"
         ],
-        "description": "Правило автоматизации: события → действия"
+        "description": "Правило автоматизации: события → условия → шаги"
       },
       "RuleFire": {
         "type": "object",
@@ -4130,18 +5650,212 @@
             "format": "uuid"
           },
           "ruleId": {
-            "type": "string",
-            "format": "uuid"
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Правило; null — пробный запуск несохранённого черновика"
           },
           "at": {
             "type": "string",
             "format": "date-time"
           },
-          "event": {
-            "type": "string"
+          "by": {
+            "type": "string",
+            "enum": [
+              "event",
+              "sched",
+              "manual",
+              "test"
+            ],
+            "description": "Что запустило: событие, расписание, «Запустить» (и повтор), пробный запуск"
+          },
+          "logOnly": {
+            "type": "boolean"
+          },
+          "sourceDeviceIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Устройства из событий — для целей fromEvent"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "match": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "deviceId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "kind",
+                "match",
+                "deviceId",
+                "at"
+              ]
+            }
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "ok": {
+                  "type": "boolean"
+                },
+                "reason": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RuleMessage"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "params",
+                "ok",
+                "reason"
+              ]
+            }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "description": "Путь шага в steps правила: «0», «2.no.1»; пусто — шаги запущенного правила"
+                },
+                "deviceId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "action": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RuleAction"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "Действие, как оно было в правиле в момент запуска"
+                },
+                "label": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RuleMessage"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "Подпись шага хода выполнения, уровня эскалации, ветки"
+                },
+                "control": {
+                  "type": "boolean"
+                },
+                "skip": {
+                  "type": "boolean"
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "ok",
+                    "fail",
+                    "skip",
+                    "would"
+                  ]
+                },
+                "reason": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RuleMessage"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "note": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RuleMessage"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "depth": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "deviceId",
+                "action",
+                "label",
+                "control",
+                "skip",
+                "state",
+                "reason",
+                "note",
+                "depth"
+              ]
+            }
           },
           "result": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "ok",
+              "part",
+              "fail",
+              "skip",
+              "watch"
+            ]
           }
         },
         "additionalProperties": false,
@@ -4149,10 +5863,15 @@
           "id",
           "ruleId",
           "at",
-          "event",
+          "by",
+          "logOnly",
+          "sourceDeviceIds",
+          "events",
+          "checks",
+          "steps",
           "result"
         ],
-        "description": "Срабатывание правила"
+        "description": "Запуск правила с трассой: события, проверки, шаги по устройствам. Тексты — кодами"
       },
       "DiscoveryCandidate": {
         "type": "object",
@@ -4867,9 +6586,9 @@
         "type": "object",
         "properties": {
           "version": {
-            "type": "integer",
-            "description": "Версия записи: растёт на 1 с каждым изменением; уходит в ETag",
-            "minimum": 1
+            "type": "string",
+            "pattern": "^[!#-~]+$",
+            "description": "Версия записи — непрозрачная метка: клиент сравнивает её только на равенство и возвращает в If-Match, не разбирая и не упорядочивая. Уходит в ETag (в кавычках). Сервер обязан: менять её при любом изменении того, что видно в записи (в том числе любой из частей, из которых запись собрана); никогда не возвращать прежнее значение той же записи; не менять её без изменений (чтение, связь, нагрузка). Символы — печатные ASCII без пробела и кавычек"
           },
           "roles": {
             "type": "array",
@@ -4924,9 +6643,9 @@
         "type": "object",
         "properties": {
           "version": {
-            "type": "integer",
-            "description": "Версия записи: растёт на 1 с каждым изменением; уходит в ETag",
-            "minimum": 1
+            "type": "string",
+            "pattern": "^[!#-~]+$",
+            "description": "Версия записи — непрозрачная метка: клиент сравнивает её только на равенство и возвращает в If-Match, не разбирая и не упорядочивая. Уходит в ETag (в кавычках). Сервер обязан: менять её при любом изменении того, что видно в записи (в том числе любой из частей, из которых запись собрана); никогда не возвращать прежнее значение той же записи; не менять её без изменений (чтение, связь, нагрузка). Символы — печатные ASCII без пробела и кавычек"
           },
           "values": {
             "type": "object",
@@ -5255,13 +6974,20 @@
                       "id"
                     ]
                   }
+                },
+                "deviceTypes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 }
               },
               "additionalProperties": false,
               "required": [
                 "source",
                 "action",
-                "fields"
+                "fields",
+                "deviceTypes"
               ]
             }
           },
@@ -5454,6 +7180,95 @@
               "ipScanMax",
               "defaultServerPort"
             ]
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/Capabilities"
+          },
+          "ruleConditions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "deviceTypes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "deviceTypes"
+              ]
+            }
+          },
+          "ruleControls": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "control": {
+                  "type": "string"
+                },
+                "branches": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "control",
+                "branches"
+              ]
+            }
+          },
+          "layouts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "name"
+              ]
+            },
+            "description": "Раскладки клиента — для «Открыть раскладку»"
+          },
+          "monitors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "name"
+              ]
+            },
+            "description": "Мониторы видеостены — для «Показать на видеостене»"
           }
         },
         "additionalProperties": false,
@@ -5474,8 +7289,83 @@
           "ruleTriggers",
           "ruleActions",
           "access",
-          "limits"
+          "limits",
+          "capabilities",
+          "ruleConditions",
+          "ruleControls",
+          "layouts",
+          "monitors"
         ]
+      },
+      "DeviceType": {
+        "type": "string",
+        "enum": [
+          "camera",
+          "ipsrv",
+          "channel",
+          "mic",
+          "spk",
+          "sensor",
+          "relay",
+          "storage",
+          "det",
+          "eventsrc",
+          "acfa",
+          "acfa_sensor",
+          "acfa_lock",
+          "acfa_fence",
+          "export",
+          "email",
+          "sms"
+        ],
+        "description": "Вид устройства"
+      },
+      "Feature": {
+        "type": "string",
+        "enum": [
+          "serverRoles",
+          "serverNetwork",
+          "archiveEncryption"
+        ],
+        "description": "Необязательная возможность системы: без неё поле есть в записи, но менять его нельзя (422 NOT_SUPPORTED)",
+        "x-enum-descriptions": {
+          "serverRoles": "Роль сервера (role в ServerPatch): основной, узел, резервный",
+          "serverNetwork": "Сетевые настройки сервера (netmask, gateway, dns в ServerPatch)",
+          "archiveEncryption": "Шифрование хранилища (encrypted: true в ArchiveCreate и ArchivePatch)"
+        }
+      },
+      "Capabilities": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operations",
+          "deviceTypes",
+          "features"
+        ],
+        "description": "Что умеет эта система. Контракт один для всех систем, но система может поддерживать его часть: интерфейс прячет неподдержанное, тесты API его пропускают, покрытие считается по объявленному. Объявленное обязано работать по контракту целиком",
+        "properties": {
+          "operations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "operationId операций контракта, которые система выполняет. Остальные отвечают 404 NO_ROUTE. getMe, getReference и stream есть всегда; служебные операции стенда (test-support) сюда не входят"
+          },
+          "deviceTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeviceType"
+            },
+            "description": "Виды устройств, которые есть в системе. Создать устройство другого вида — 422 NOT_SUPPORTED (в групповых — по строке)"
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Feature"
+            },
+            "description": "Необязательные возможности, которые есть. Незнакомый код клиент пропускает"
+          }
+        }
       },
       "StreamMessage": {
         "type": "object",
@@ -5527,7 +7417,13 @@
               "access",
               "settings",
               "operation",
-              "discovery"
+              "discovery",
+              "ruleFire",
+              "schedule",
+              "dayGroup",
+              "modes",
+              "objectMode",
+              "maintenanceWindow"
             ]
           },
           "entityId": {
@@ -5536,7 +7432,8 @@
             "format": "uuid"
           },
           "version": {
-            "type": "integer"
+            "type": "string",
+            "description": "Новая версия записи — сравнивать на равенство с известной"
           },
           "payload": {
             "type": "object",
@@ -5559,8 +7456,10 @@
           "fixture": {
             "type": "string",
             "enum": [
-              "demo"
-            ]
+              "demo",
+              "one-domain"
+            ],
+            "description": "Набор: demo — эталонный, весь контракт (api/fixtures/demo.json); one-domain — профиль «один домен, камеры и детекторы, хранилища, правила, пользователи» (api/fixtures/one-domain.json). Стенд, который не умеет набор, отвечает 404 NOT_FOUND"
           },
           "fixturePatch": {
             "type": "object",
@@ -5570,7 +7469,7 @@
           },
           "freezeClock": {
             "type": "boolean",
-            "description": "Остановить часы (по умолчанию): время в тестах идёт только по /test/clock"
+            "description": "Остановить часы (по умолчанию): время в тестах идёт только по /test/clock. false — часы идут по-настоящему; стенд, который не умеет их останавливать, принимает только false"
           },
           "actAs": {
             "type": "string",
@@ -6349,8 +8248,9 @@
           "expectedVersions": {
             "type": "object",
             "additionalProperties": {
-              "type": "integer",
-              "minimum": 1
+              "type": "string",
+              "pattern": "^[!#-~]+$",
+              "description": "Версия, полученная от сервера (ETag) — как есть"
             },
             "description": "Версии объектов, по которым построен план: id → version. Не совпала хоть одна — 412, ничего не выполняется"
           }
@@ -6397,7 +8297,7 @@
             "description": "Почему шаг не выполнен"
           },
           "version": {
-            "type": "integer",
+            "type": "string",
             "description": "Версия объекта после шага"
           },
           "createdId": {
@@ -6516,13 +8416,17 @@
           "DOMAIN_NOT_EMPTY",
           "DISK_TAKEN",
           "CONNECTION_FAILED",
-          "PARENT_MISMATCH"
+          "PARENT_MISMATCH",
+          "NOT_SUPPORTED",
+          "RULE_INVALID",
+          "BUILTIN",
+          "NOT_RUNNABLE"
         ],
         "description": "Машинный код ошибки: интерфейс показывает свой текст по коду",
         "x-enum-descriptions": {
           "UNAUTHORIZED": "Нет сессии администратора (401)",
           "NOT_FOUND": "Записи нет или она не видна текущему администратору (404)",
-          "NO_ROUTE": "Такой операции нет в контракте (404)",
+          "NO_ROUTE": "Такой операции нет в контракте или система её не поддерживает — её нет в capabilities.operations (404)",
           "PERMISSION_DENIED": "Нет права на операцию (403). Встроенный сервер права администратора не проверяет — см. api/BACKEND.md",
           "PRECONDITION_REQUIRED": "Изменение без заголовка If-Match (428)",
           "VERSION_MISMATCH": "Запись изменилась с момента чтения: в теле — актуальная (412)",
@@ -6545,7 +8449,11 @@
           "DOMAIN_NOT_EMPTY": "В домене есть серверы, папки или устройства, а куда их перенести, не указано (422)",
           "DISK_TAKEN": "Диск уже занят: раздел другого хранилища или том этого хранилища (409)",
           "CONNECTION_FAILED": "Не удалось подключиться к NAS или бакету: адрес, учётная запись, бакет",
-          "PARENT_MISMATCH": "Родитель — в другом домене или такого вида дочерних у него не бывает (422)"
+          "PARENT_MISMATCH": "Родитель — в другом домене или такого вида дочерних у него не бывает (422)",
+          "NOT_SUPPORTED": "Система этого не поддерживает: вид устройства или настройка вне GET /reference → capabilities (422; в групповых — по объекту)",
+          "RULE_INVALID": "Включённое правило с ошибкой не сохраняется: что не так — в params.issue (422)",
+          "BUILTIN": "Встроенное («Всегда», «Никогда», системный режим) не правится и не удаляется (409)",
+          "NOT_RUNNABLE": "Правило сейчас нельзя запустить: выключено, с ошибкой или только по событию — в params.reason (409)"
         }
       },
       "ServerPatch": {
@@ -6803,8 +8711,9 @@
                   "format": "uuid"
                 },
                 "version": {
-                  "type": "integer",
-                  "minimum": 1
+                  "type": "string",
+                  "pattern": "^[!#-~]+$",
+                  "description": "Версия, полученная от сервера (ETag) — как есть"
                 },
                 "domainId": {
                   "type": "string",
@@ -7533,26 +9442,7 @@
             "type": "string"
           },
           "type": {
-            "type": "string",
-            "enum": [
-              "camera",
-              "ipsrv",
-              "channel",
-              "mic",
-              "spk",
-              "sensor",
-              "relay",
-              "storage",
-              "det",
-              "eventsrc",
-              "acfa",
-              "acfa_sensor",
-              "acfa_lock",
-              "acfa_fence",
-              "export",
-              "email",
-              "sms"
-            ]
+            "$ref": "#/components/schemas/DeviceType"
           },
           "vendor": {
             "type": "string"
@@ -7727,8 +9617,9 @@
                   "format": "uuid"
                 },
                 "version": {
-                  "type": "integer",
-                  "minimum": 1
+                  "type": "string",
+                  "pattern": "^[!#-~]+$",
+                  "description": "Версия, полученная от сервера (ETag) — как есть"
                 },
                 "set": {
                   "$ref": "#/components/schemas/DevicePatch"
@@ -7822,7 +9713,7 @@
           "idempotencyKey",
           "items"
         ],
-        "description": "Удалить выбранное одним запросом: устройства (с дочерними), папки (с подпапками), хранилища (с томами), тома. Вид объекта сервер узнаёт по id",
+        "description": "Удалить выбранное одним запросом: устройства (с дочерними), папки (с подпапками), хранилища (с томами), тома, правила. Вид объекта сервер узнаёт по id",
         "properties": {
           "idempotencyKey": {
             "type": "string",
@@ -7844,8 +9735,9 @@
                   "format": "uuid"
                 },
                 "version": {
-                  "type": "integer",
-                  "minimum": 1
+                  "type": "string",
+                  "pattern": "^[!#-~]+$",
+                  "description": "Версия, полученная от сервера (ETag) — как есть"
                 }
               }
             }
@@ -7891,33 +9783,97 @@
       },
       "RuleWrite": {
         "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "name",
-          "enabled",
-          "ratePerMinute",
-          "windowSec",
-          "triggers",
-          "actions"
-        ],
-        "description": "Правило целиком: события и действия — списки по порядку, поэтому правило заменяется целиком. Смысловые проверки (хотя бы одно событие и действие, окно у двух событий) интерфейс показывает подсказкой: незаконченное правило сохраняется, как в макете",
         "properties": {
           "name": {
             "type": "string"
           },
           "enabled": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Работает (true) или выключено"
+          },
+          "logOnly": {
+            "type": "boolean",
+            "description": "«Только журнал»: правило запускается и пишет в журнал, что сделало бы, но действий не выполняет"
+          },
+          "logOnlySince": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          },
+          "start": {
+            "type": "string",
+            "enum": [
+              "event",
+              "schedule",
+              "manual"
+            ],
+            "description": "Как запускается: по событию, по расписанию, вручную"
+          },
+          "runMode": {
+            "type": "string",
+            "enum": [
+              "always",
+              "manual"
+            ],
+            "description": "manual — запускать только вручную (кнопка оператора, «Запустить»)"
+          },
+          "operatorMenu": {
+            "type": "boolean",
+            "description": "Кнопка в меню оператора"
           },
           "ratePerMinute": {
             "type": "integer",
-            "description": "Не чаще N срабатываний в минуту",
             "minimum": 1,
-            "maximum": 600
+            "maximum": 600,
+            "description": "Не чаще N запусков в минуту"
           },
           "windowSec": {
             "type": "integer",
-            "description": "Окно, в которое должны прийти все события; 0 — одно событие",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Окно, в которое должны прийти все события; 0 — одно событие"
+          },
+          "runAt": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "days": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 7
+                    },
+                    "description": "Дни недели, 1 — понедельник"
+                  },
+                  "time": {
+                    "type": "string",
+                    "pattern": "^([01][0-9]|2[0-4]):[0-5][0-9]$",
+                    "description": "Время суток ЧЧ:ММ в часовом поясе системы"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "days",
+                  "time"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "start=schedule: когда запускать"
+          },
+          "repeat": {
+            "type": "string",
+            "enum": [
+              "skip",
+              "restart",
+              "queue"
+            ],
+            "description": "Новое событие, пока идёт прежний запуск"
           },
           "triggers": {
             "type": "array",
@@ -7925,13 +9881,88 @@
               "$ref": "#/components/schemas/RuleTrigger"
             }
           },
-          "actions": {
+          "conditions": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/RuleAction"
+              "$ref": "#/components/schemas/RuleCondition"
             }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleStep"
+            }
+          },
+          "owner": {
+            "type": "string",
+            "description": "Логин ответственного"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "serverId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "runAsRoleId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Выполнять с правами роли; null — от имени системы"
+          },
+          "allowChain": {
+            "type": "boolean",
+            "description": "Разрешить запуск этого правила другими правилами («Запустить правило»)"
+          },
+          "historyNote": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "restore",
+                  "undo"
+                ]
+              },
+              "params": {
+                "type": "object"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "code"
+            ],
+            "description": "Пометка версии истории: restore — восстановлена версия params.number, undo — отмена изменения"
           }
-        }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "enabled",
+          "logOnly",
+          "logOnlySince",
+          "start",
+          "runMode",
+          "operatorMenu",
+          "ratePerMinute",
+          "windowSec",
+          "runAt",
+          "repeat",
+          "triggers",
+          "conditions",
+          "steps",
+          "owner",
+          "purpose",
+          "serverId",
+          "runAsRoleId",
+          "allowChain"
+        ],
+        "description": "Правило целиком: шаги — дерево по порядку, поэтому правило заменяется целиком. Включённое правило с ошибкой не сохраняется — 422 RULE_INVALID"
       },
       "SettingsPatch": {
         "type": "object",
@@ -8199,6 +10230,1912 @@
             "description": "Одна группа каталога; null — каталог целиком"
           }
         }
+      },
+      "RuleTarget": {
+        "type": "object",
+        "properties": {
+          "include": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "device",
+                    "folder",
+                    "server",
+                    "domain"
+                  ]
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "id"
+              ]
+            },
+            "description": "Устройства и области: папка, сервер (устройства, которые он ведёт), домен"
+          },
+          "exclude": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Устройства, исключённые из областей include"
+          },
+          "gone": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Удалённые устройства и области — по имени, как их видел администратор. Ставит сервер при удалении объекта; правило с ними — ошибка"
+          },
+          "fromEvent": {
+            "type": "boolean",
+            "description": "Устройство из события, которое запустило правило"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "include",
+          "exclude",
+          "gone",
+          "fromEvent"
+        ],
+        "description": "Цель события, условия или действия правила. Пустая цель (не выбрано) — null"
+      },
+      "RuleCondition": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "time",
+              "mode",
+              "armed",
+              "recording",
+              "online"
+            ],
+            "description": "Справочник ruleConditions"
+          },
+          "scheduleId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "time: расписание, в которое должно попасть «сейчас»"
+          },
+          "modeIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "mode: режимы объекта, в которых правило выполняется"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RuleTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "value": {
+            "type": "boolean",
+            "description": "armed: на охране (true) или снята (false)"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "kind"
+        ],
+        "description": "Условие «При условии»: проверяется в момент запуска"
+      },
+      "RuleWait": {
+        "type": "object",
+        "properties": {
+          "control": {
+            "type": "string",
+            "enum": [
+              "wait"
+            ]
+          },
+          "sec": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "control",
+          "sec"
+        ],
+        "description": "Ждать sec секунд"
+      },
+      "RuleWaitEvent": {
+        "type": "object",
+        "properties": {
+          "control": {
+            "type": "string",
+            "enum": [
+              "waitEvent"
+            ]
+          },
+          "event": {
+            "$ref": "#/components/schemas/RuleTrigger"
+          },
+          "sec": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "yes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleStep"
+            }
+          },
+          "no": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleStep"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "control",
+          "event",
+          "sec",
+          "yes",
+          "no"
+        ],
+        "description": "Ждать событие до sec секунд: yes — если пришло, no — если нет"
+      },
+      "RuleAsk": {
+        "type": "object",
+        "properties": {
+          "control": {
+            "type": "string",
+            "enum": [
+              "ask"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "roleId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "sec": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "default": {
+            "type": "string",
+            "enum": [
+              "yes",
+              "no"
+            ],
+            "description": "Как считать, если за sec нет ответа"
+          },
+          "yes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleStep"
+            }
+          },
+          "no": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleStep"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "control",
+          "text",
+          "roleId",
+          "sec",
+          "default",
+          "yes",
+          "no"
+        ],
+        "description": "Спросить оператора роли roleId"
+      },
+      "RuleEscalate": {
+        "type": "object",
+        "properties": {
+          "control": {
+            "type": "string",
+            "enum": [
+              "escalate"
+            ]
+          },
+          "levels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "roleId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "via": {
+                  "type": "string",
+                  "enum": [
+                    "client",
+                    "tg",
+                    "email"
+                  ]
+                },
+                "waitMin": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "roleId",
+                "via",
+                "waitMin"
+              ]
+            }
+          },
+          "stop": {
+            "type": "string",
+            "enum": [
+              "ack",
+              "reset"
+            ],
+            "description": "Остановить, когда тревогу квитируют или когда закончится событие"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "control",
+          "levels",
+          "stop"
+        ],
+        "description": "Уведомлять роли по очереди, пока не квитируют"
+      },
+      "RuleStep": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/RuleAction"
+          },
+          {
+            "$ref": "#/components/schemas/RuleWait"
+          },
+          {
+            "$ref": "#/components/schemas/RuleWaitEvent"
+          },
+          {
+            "$ref": "#/components/schemas/RuleAsk"
+          },
+          {
+            "$ref": "#/components/schemas/RuleEscalate"
+          }
+        ],
+        "description": "Шаг «Тогда»: действие (action) или шаг хода выполнения (control)"
+      },
+      "RuleContent": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Работает (true) или выключено"
+          },
+          "logOnly": {
+            "type": "boolean",
+            "description": "«Только журнал»: правило запускается и пишет в журнал, что сделало бы, но действий не выполняет"
+          },
+          "logOnlySince": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          },
+          "start": {
+            "type": "string",
+            "enum": [
+              "event",
+              "schedule",
+              "manual"
+            ],
+            "description": "Как запускается: по событию, по расписанию, вручную"
+          },
+          "runMode": {
+            "type": "string",
+            "enum": [
+              "always",
+              "manual"
+            ],
+            "description": "manual — запускать только вручную (кнопка оператора, «Запустить»)"
+          },
+          "operatorMenu": {
+            "type": "boolean",
+            "description": "Кнопка в меню оператора"
+          },
+          "ratePerMinute": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600,
+            "description": "Не чаще N запусков в минуту"
+          },
+          "windowSec": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Окно, в которое должны прийти все события; 0 — одно событие"
+          },
+          "runAt": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "days": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 7
+                    },
+                    "description": "Дни недели, 1 — понедельник"
+                  },
+                  "time": {
+                    "type": "string",
+                    "pattern": "^([01][0-9]|2[0-4]):[0-5][0-9]$",
+                    "description": "Время суток ЧЧ:ММ в часовом поясе системы"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "days",
+                  "time"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "start=schedule: когда запускать"
+          },
+          "repeat": {
+            "type": "string",
+            "enum": [
+              "skip",
+              "restart",
+              "queue"
+            ],
+            "description": "Новое событие, пока идёт прежний запуск"
+          },
+          "triggers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleTrigger"
+            }
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleCondition"
+            }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleStep"
+            }
+          },
+          "owner": {
+            "type": "string",
+            "description": "Логин ответственного"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "serverId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "runAsRoleId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Выполнять с правами роли; null — от имени системы"
+          },
+          "allowChain": {
+            "type": "boolean",
+            "description": "Разрешить запуск этого правила другими правилами («Запустить правило»)"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "enabled",
+          "logOnly",
+          "logOnlySince",
+          "start",
+          "runMode",
+          "operatorMenu",
+          "ratePerMinute",
+          "windowSec",
+          "runAt",
+          "repeat",
+          "triggers",
+          "conditions",
+          "steps",
+          "owner",
+          "purpose",
+          "serverId",
+          "runAsRoleId",
+          "allowChain"
+        ],
+        "description": "Содержимое правила: то, что правит администратор и что хранят версии истории"
+      },
+      "RuleMute": {
+        "type": "object",
+        "properties": {
+          "since": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "until": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "by": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "since",
+          "until",
+          "by",
+          "reason"
+        ]
+      },
+      "RuleCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Работает (true) или выключено"
+          },
+          "logOnly": {
+            "type": "boolean",
+            "description": "«Только журнал»: правило запускается и пишет в журнал, что сделало бы, но действий не выполняет"
+          },
+          "logOnlySince": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          },
+          "start": {
+            "type": "string",
+            "enum": [
+              "event",
+              "schedule",
+              "manual"
+            ],
+            "description": "Как запускается: по событию, по расписанию, вручную"
+          },
+          "runMode": {
+            "type": "string",
+            "enum": [
+              "always",
+              "manual"
+            ],
+            "description": "manual — запускать только вручную (кнопка оператора, «Запустить»)"
+          },
+          "operatorMenu": {
+            "type": "boolean",
+            "description": "Кнопка в меню оператора"
+          },
+          "ratePerMinute": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 600,
+            "description": "Не чаще N запусков в минуту"
+          },
+          "windowSec": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Окно, в которое должны прийти все события; 0 — одно событие"
+          },
+          "runAt": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "days": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 7
+                    },
+                    "description": "Дни недели, 1 — понедельник"
+                  },
+                  "time": {
+                    "type": "string",
+                    "pattern": "^([01][0-9]|2[0-4]):[0-5][0-9]$",
+                    "description": "Время суток ЧЧ:ММ в часовом поясе системы"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "days",
+                  "time"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "start=schedule: когда запускать"
+          },
+          "repeat": {
+            "type": "string",
+            "enum": [
+              "skip",
+              "restart",
+              "queue"
+            ],
+            "description": "Новое событие, пока идёт прежний запуск"
+          },
+          "triggers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleTrigger"
+            }
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleCondition"
+            }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleStep"
+            }
+          },
+          "owner": {
+            "type": "string",
+            "description": "Логин ответственного"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "serverId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "runAsRoleId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Выполнять с правами роли; null — от имени системы"
+          },
+          "allowChain": {
+            "type": "boolean",
+            "description": "Разрешить запуск этого правила другими правилами («Запустить правило»)"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "enabled",
+          "logOnly",
+          "logOnlySince",
+          "start",
+          "runMode",
+          "operatorMenu",
+          "ratePerMinute",
+          "windowSec",
+          "runAt",
+          "repeat",
+          "triggers",
+          "conditions",
+          "steps",
+          "owner",
+          "purpose",
+          "serverId",
+          "runAsRoleId",
+          "allowChain"
+        ],
+        "description": "Новое правило: id, автор, время и порядок (в конец) выдаёт сервер"
+      },
+      "RuleMessage": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "params"
+        ],
+        "description": "Сообщение кодом: подпись по коду и параметрам собирает интерфейс (api/README.md, «Тексты»)"
+      },
+      "RuleVersion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ruleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "by": {
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RuleMessage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rule": {
+            "$ref": "#/components/schemas/RuleContent"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "ruleId",
+          "number",
+          "at",
+          "by",
+          "note",
+          "rule"
+        ],
+        "description": "Версия истории правила: что было после изменения"
+      },
+      "RulesUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 8
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ruleId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "version": {
+                  "type": "string",
+                  "pattern": "^[!#-~]+$",
+                  "description": "Версия записи — непрозрачная метка: клиент сравнивает её только на равенство и возвращает в If-Match, не разбирая и не упорядочивая. Уходит в ETag (в кавычках). Сервер обязан: менять её при любом изменении того, что видно в записи (в том числе любой из частей, из которых запись собрана); никогда не возвращать прежнее значение той же записи; не менять её без изменений (чтение, связь, нагрузка). Символы — печатные ASCII без пробела и кавычек"
+                },
+                "set": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "logOnly": {
+                      "type": "boolean"
+                    },
+                    "mute": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "until": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "reason": {
+                              "type": "string"
+                            }
+                          },
+                          "additionalProperties": false,
+                          "required": [
+                            "until",
+                            "reason"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "historyNote": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "restore",
+                        "undo"
+                      ]
+                    },
+                    "params": {
+                      "type": "object"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "code"
+                  ],
+                  "description": "Пометка версии истории за смену состояния: undo — отмена (params.number — какую версию убрать)"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "ruleId",
+                "version",
+                "set"
+              ]
+            },
+            "minItems": 1
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "idempotencyKey",
+          "items"
+        ],
+        "description": "Состояние или приглушение нескольких правил сразу: частичный успех"
+      },
+      "RulesUpdateResult": {
+        "type": "object",
+        "properties": {
+          "done": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rule"
+            }
+          },
+          "failed": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ruleId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "code": {
+                  "$ref": "#/components/schemas/ProblemCode"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "ruleId",
+                "code"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "done",
+          "failed"
+        ]
+      },
+      "RulesReorderRequest": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ruleId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "version": {
+                  "type": "string",
+                  "pattern": "^[!#-~]+$",
+                  "description": "Версия записи — непрозрачная метка: клиент сравнивает её только на равенство и возвращает в If-Match, не разбирая и не упорядочивая. Уходит в ETag (в кавычках). Сервер обязан: менять её при любом изменении того, что видно в записи (в том числе любой из частей, из которых запись собрана); никогда не возвращать прежнее значение той же записи; не менять её без изменений (чтение, связь, нагрузка). Символы — печатные ASCII без пробела и кавычек"
+                },
+                "order": {
+                  "type": "integer"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "ruleId",
+                "version",
+                "order"
+              ]
+            },
+            "minItems": 1
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "items"
+        ],
+        "description": "Новый порядок правил: всё или ничего (412, если хоть одна версия не та)"
+      },
+      "RuleRunRequest": {
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 8
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "idempotencyKey"
+        ]
+      },
+      "RuleTestRequest": {
+        "type": "object",
+        "properties": {
+          "ruleId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "rule": {
+            "$ref": "#/components/schemas/RuleContent"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "match": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "deviceId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "kind",
+                "match",
+                "deviceId"
+              ]
+            }
+          },
+          "at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "branches": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Исход шагов хода выполнения по пути: «2» → «no», «ack:2»"
+          },
+          "log": {
+            "type": "boolean",
+            "description": "Записать проверку в журнал запусков правила ruleId"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "ruleId",
+          "rule",
+          "events",
+          "at",
+          "branches",
+          "log"
+        ],
+        "description": "Пробный запуск: ничего не выполняет, возвращает трассу. Правило — как в черновике"
+      },
+      "RuleRetryRequest": {
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 8
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "idempotencyKey"
+        ]
+      },
+      "Schedule": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "always",
+              "never",
+              "week",
+              "cycle",
+              "dates",
+              "astro"
+            ]
+          },
+          "week": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^([01][0-9]|2[0-4]):[0-5][0-9]$",
+                  "description": "Время суток ЧЧ:ММ в часовом поясе системы"
+                },
+                "minItems": 2
+              },
+              "description": "Интервалы [с, до] за сутки; «до» раньше «с» — через полночь"
+            },
+            "minItems": 7,
+            "description": "По дням недели, с понедельника"
+          },
+          "overrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "dayGroupId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "mode": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "full",
+                    "same",
+                    "custom"
+                  ]
+                },
+                "dow": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 7
+                },
+                "intervals": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^([01][0-9]|2[0-4]):[0-5][0-9]$",
+                      "description": "Время суток ЧЧ:ММ в часовом поясе системы"
+                    },
+                    "minItems": 2
+                  },
+                  "description": "Интервалы [с, до] за сутки; «до» раньше «с» — через полночь"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "dayGroupId",
+                "mode"
+              ]
+            },
+            "description": "Особые дни: в даты группы — ничего, весь день, как в день недели dow или свои интервалы"
+          },
+          "valid": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$"
+              },
+              "to": {
+                "type": "string",
+                "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "to"
+            ],
+            "description": "Срок действия; пусто — без ограничения"
+          },
+          "cycle": {
+            "type": "object",
+            "properties": {
+              "length": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "start": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              },
+              "days": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^([01][0-9]|2[0-4]):[0-5][0-9]$",
+                      "description": "Время суток ЧЧ:ММ в часовом поясе системы"
+                    },
+                    "minItems": 2
+                  },
+                  "description": "Интервалы [с, до] за сутки; «до» раньше «с» — через полночь"
+                }
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "length",
+              "start",
+              "days"
+            ]
+          },
+          "dates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+                },
+                "intervals": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^([01][0-9]|2[0-4]):[0-5][0-9]$",
+                      "description": "Время суток ЧЧ:ММ в часовом поясе системы"
+                    },
+                    "minItems": 2
+                  },
+                  "description": "Интервалы [с, до] за сутки; «до» раньше «с» — через полночь"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "date",
+                "intervals"
+              ]
+            }
+          },
+          "astro": {
+            "type": "object",
+            "properties": {
+              "window": {
+                "type": "string",
+                "enum": [
+                  "day",
+                  "night"
+                ]
+              },
+              "offsetStartMin": {
+                "type": "integer"
+              },
+              "offsetEndMin": {
+                "type": "integer"
+              },
+              "lat": {
+                "type": "number"
+              },
+              "lon": {
+                "type": "number"
+              },
+              "utcOffsetHours": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "window",
+              "offsetStartMin",
+              "offsetEndMin",
+              "lat",
+              "lon",
+              "utcOffsetHours"
+            ]
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "maintenanceWindow"
+                    ]
+                  },
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "id"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Расписание окна обслуживания: удаляется вместе с окном"
+          },
+          "builtin": {
+            "type": "boolean",
+            "description": "«Всегда», «Никогда»: не правятся и не удаляются"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^[!#-~]+$",
+            "description": "Версия записи — непрозрачная метка: клиент сравнивает её только на равенство и возвращает в If-Match, не разбирая и не упорядочивая. Уходит в ETag (в кавычках). Сервер обязан: менять её при любом изменении того, что видно в записи (в том числе любой из частей, из которых запись собрана); никогда не возвращать прежнее значение той же записи; не менять её без изменений (чтение, связь, нагрузка). Символы — печатные ASCII без пробела и кавычек"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "week",
+          "overrides",
+          "valid",
+          "cycle",
+          "dates",
+          "astro",
+          "owner",
+          "builtin",
+          "version"
+        ],
+        "description": "Расписание из библиотеки «Расписания»"
+      },
+      "ScheduleWrite": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "always",
+              "never",
+              "week",
+              "cycle",
+              "dates",
+              "astro"
+            ]
+          },
+          "week": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^([01][0-9]|2[0-4]):[0-5][0-9]$",
+                  "description": "Время суток ЧЧ:ММ в часовом поясе системы"
+                },
+                "minItems": 2
+              },
+              "description": "Интервалы [с, до] за сутки; «до» раньше «с» — через полночь"
+            },
+            "minItems": 7,
+            "description": "По дням недели, с понедельника"
+          },
+          "overrides": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "dayGroupId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "mode": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "full",
+                    "same",
+                    "custom"
+                  ]
+                },
+                "dow": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 7
+                },
+                "intervals": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^([01][0-9]|2[0-4]):[0-5][0-9]$",
+                      "description": "Время суток ЧЧ:ММ в часовом поясе системы"
+                    },
+                    "minItems": 2
+                  },
+                  "description": "Интервалы [с, до] за сутки; «до» раньше «с» — через полночь"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "dayGroupId",
+                "mode"
+              ]
+            },
+            "description": "Особые дни: в даты группы — ничего, весь день, как в день недели dow или свои интервалы"
+          },
+          "valid": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$"
+              },
+              "to": {
+                "type": "string",
+                "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "to"
+            ],
+            "description": "Срок действия; пусто — без ограничения"
+          },
+          "cycle": {
+            "type": "object",
+            "properties": {
+              "length": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "start": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              },
+              "days": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^([01][0-9]|2[0-4]):[0-5][0-9]$",
+                      "description": "Время суток ЧЧ:ММ в часовом поясе системы"
+                    },
+                    "minItems": 2
+                  },
+                  "description": "Интервалы [с, до] за сутки; «до» раньше «с» — через полночь"
+                }
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "length",
+              "start",
+              "days"
+            ]
+          },
+          "dates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+                },
+                "intervals": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^([01][0-9]|2[0-4]):[0-5][0-9]$",
+                      "description": "Время суток ЧЧ:ММ в часовом поясе системы"
+                    },
+                    "minItems": 2
+                  },
+                  "description": "Интервалы [с, до] за сутки; «до» раньше «с» — через полночь"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "date",
+                "intervals"
+              ]
+            }
+          },
+          "astro": {
+            "type": "object",
+            "properties": {
+              "window": {
+                "type": "string",
+                "enum": [
+                  "day",
+                  "night"
+                ]
+              },
+              "offsetStartMin": {
+                "type": "integer"
+              },
+              "offsetEndMin": {
+                "type": "integer"
+              },
+              "lat": {
+                "type": "number"
+              },
+              "lon": {
+                "type": "number"
+              },
+              "utcOffsetHours": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "window",
+              "offsetStartMin",
+              "offsetEndMin",
+              "lat",
+              "lon",
+              "utcOffsetHours"
+            ]
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "maintenanceWindow"
+                    ]
+                  },
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "id"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Расписание окна обслуживания: удаляется вместе с окном"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "kind",
+          "week",
+          "overrides",
+          "valid",
+          "cycle",
+          "dates",
+          "astro",
+          "owner"
+        ],
+        "description": "Расписание целиком"
+      },
+      "DayGroup": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "range",
+                    "ord"
+                  ]
+                },
+                "from": {
+                  "type": "string",
+                  "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$"
+                },
+                "to": {
+                  "type": "string",
+                  "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$"
+                },
+                "yearly": {
+                  "type": "boolean"
+                },
+                "nth": {
+                  "type": [
+                    "string",
+                    "integer"
+                  ],
+                  "description": "ord: 1–5 или last"
+                },
+                "dow": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 7
+                },
+                "month": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 12
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "type"
+              ]
+            }
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^[!#-~]+$",
+            "description": "Версия записи — непрозрачная метка: клиент сравнивает её только на равенство и возвращает в If-Match, не разбирая и не упорядочивая. Уходит в ETag (в кавычках). Сервер обязан: менять её при любом изменении того, что видно в записи (в том числе любой из частей, из которых запись собрана); никогда не возвращать прежнее значение той же записи; не менять её без изменений (чтение, связь, нагрузка). Символы — печатные ASCII без пробела и кавычек"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "rules",
+          "version"
+        ],
+        "description": "Группа особых дней: праздники, санитарные дни"
+      },
+      "DayGroupWrite": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "range",
+                    "ord"
+                  ]
+                },
+                "from": {
+                  "type": "string",
+                  "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$"
+                },
+                "to": {
+                  "type": "string",
+                  "pattern": "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$"
+                },
+                "yearly": {
+                  "type": "boolean"
+                },
+                "nth": {
+                  "type": [
+                    "string",
+                    "integer"
+                  ],
+                  "description": "ord: 1–5 или last"
+                },
+                "dow": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 7
+                },
+                "month": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 12
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "type"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "rules"
+        ]
+      },
+      "ObjectMode": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "scheduleId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "system": {
+            "type": "string",
+            "enum": [
+              "service",
+              "night",
+              "weekend",
+              "work",
+              ""
+            ],
+            "description": "Системный режим (не удаляется): его код; пусто — свой режим"
+          },
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "scheduleId",
+          "system",
+          "color"
+        ]
+      },
+      "Modes": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObjectMode"
+            }
+          },
+          "otherwise": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^[!#-~]+$",
+            "description": "Версия записи — непрозрачная метка: клиент сравнивает её только на равенство и возвращает в If-Match, не разбирая и не упорядочивая. Уходит в ETag (в кавычках). Сервер обязан: менять её при любом изменении того, что видно в записи (в том числе любой из частей, из которых запись собрана); никогда не возвращать прежнее значение той же записи; не менять её без изменений (чтение, связь, нагрузка). Символы — печатные ASCII без пробела и кавычек"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "otherwise",
+          "version"
+        ],
+        "description": "Режимы объекта: по расписаниям, а когда ни одно не действует — otherwise. Версия одна на весь список"
+      },
+      "ModesWrite": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObjectMode"
+            }
+          },
+          "otherwise": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "otherwise"
+        ],
+        "description": "Режимы целиком. id нового режима задаёт клиент (UUID)"
+      },
+      "ModeCurrent": {
+        "type": "object",
+        "properties": {
+          "modeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "manual": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "until": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "until"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Включён вручную: до until (до следующей смены по расписанию) или до отмены (null)"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "modeId",
+          "manual"
+        ],
+        "description": "Текущий режим объекта. Считает сервер; течение времени версией не считается — её здесь нет"
+      },
+      "ModeCurrentWrite": {
+        "type": "object",
+        "properties": {
+          "modeId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "until": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "modeId",
+          "until"
+        ],
+        "description": "Включить режим вручную; modeId null — вернуться к расписаниям"
+      },
+      "MaintenanceWindow": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "scheduleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ruleIds": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Правила окна; null — все"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^[!#-~]+$",
+            "description": "Версия записи — непрозрачная метка: клиент сравнивает её только на равенство и возвращает в If-Match, не разбирая и не упорядочивая. Уходит в ETag (в кавычках). Сервер обязан: менять её при любом изменении того, что видно в записи (в том числе любой из частей, из которых запись собрана); никогда не возвращать прежнее значение той же записи; не менять её без изменений (чтение, связь, нагрузка). Символы — печатные ASCII без пробела и кавычек"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "scheduleId",
+          "ruleIds",
+          "enabled",
+          "version"
+        ],
+        "description": "Окно обслуживания: в его расписание правила не выполняют действий"
+      },
+      "MaintenanceWindowWrite": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "scheduleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ruleIds": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Правила окна; null — все"
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "scheduleId",
+          "ruleIds",
+          "enabled"
+        ]
+      },
+      "MaintenanceWindowCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "ruleIds": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Правила окна; null — все"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/ScheduleWrite"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "ruleIds",
+          "enabled",
+          "schedule"
+        ],
+        "description": "Новое окно вместе со своим расписанием"
+      },
+      "MaintenanceWindowCreated": {
+        "type": "object",
+        "properties": {
+          "window": {
+            "$ref": "#/components/schemas/MaintenanceWindow"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/Schedule"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "window",
+          "schedule"
+        ]
       }
     }
   }
