@@ -1304,7 +1304,8 @@ components:
       required: [error, holder]
       additionalProperties: false
       description: 'Отказ смещённого держателя (P/08.8 Н1.6 refusal; добавлено М11/10): на отчёт агента — без detail, на правку и
-        вход людей — с detail «<n> held the domain at term N; <h> holds it at term M — edits go there»'
+        вход людей — с detail «<n> held the domain at term N; <h> holds it at term M — edits go there», при неизвестном
+        своём сроке — «<n> held the domain at an earlier term; <h> holds it at term M — edits go there» (P/08.8 Н1.6; C08-DEPOSED-DETAIL-N-01)'
       properties:
         error: {const: deposed}
         detail: {type: string}
