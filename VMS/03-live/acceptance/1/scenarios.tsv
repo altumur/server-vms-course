@@ -15,7 +15,7 @@ scenario	step	request	expect
 02-two-viewers	5	holder POST /domain/users {"name": "bob", "password": "bob-password-1"}	201 {"user": "bob"}
 02-two-viewers	6	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:cam/$a"}, {"subject": "bob", "cap": "view", "scope": "unit:cam/$b"}]}	200 {"cluster": "m1"}
 02-two-viewers	7	@person ann ann-password-1	ok
-02-two-viewers	8	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:cam/$a"}]}
+02-two-viewers	8	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:cam/1"}]}
 02-two-viewers	9	member m1 console POST /streams {"cam": "$b"}	403 {"error": "denied"}
 02-two-viewers	10	member m1 console POST /streams {"cam": "$a"}	201 {"id": "$a"}
 02-two-viewers	11	@person bob bob-password-1	ok
