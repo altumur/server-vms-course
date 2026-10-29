@@ -155,7 +155,7 @@ old	new	chapter	subject	note
 М10B/14 ш.6; М10B/14 «Результат»	V/04.4-01	4.4	пульс: events, events_refused, элемент phase/reason/events/via	запас — платформа
 М10B/14 ш.6	V/04.4-02	4.4	ряд units_running и console.running	
 М10B/14 ш.3	V/04.4-03	4.4	остановка: модели, источник, сброс подавления, слот	P/03.3, P/03.4 Н3
-М10B/21 ш.1, 9	V/05.1-01	5.1	поля задачи: cam, rec этой камеры (must_match), mask_of, alarms, медийный интервал; без state/ended	state/ended сняты (ADR-0091 п. 3)
+М10B/21 ш.1, 9	V/05.1-01	5.1	поля задачи: cam, rec этой камеры (must_match), mask_of, alarms, медийный интервал; без state/ended; правила держателя (to ≤ from, записи нет — failed)	state/ended сняты (ADR-0091 п. 3)
 М10B/21 ш.1; М10B/22	V/05.1-02	5.1	кто заводит: оператор (повторный прогон — новая строка), заказы rec-…, auto-…	расширение по пересечению снято
 М10B/21 ш.3–6	V/05.1-03	5.1	итог unit.state.result, действует по born/revision; retire_when с delete_after (заказ удаляется, ручная — нет)	уборщик консоли снят
 М10B/21 ш.1	V/05.1-04	5.1	размещение: capacity 2, near {sub: rec, by: rec}, без home и grows; снимок state.result	
@@ -165,11 +165,11 @@ old	new	chapter	subject	note
 М10B/20 ш.5, 8	V/05.2-04	5.2	covered, written_through, asked	
 М10B/21 ш.2	V/05.3-01	5.3	бюджет прохода: 4 отрезка, модели в пределах capacity, queued	
 М10B/20 ш.6–7	V/05.3-02	5.3	курсор unit.state.cursor: после строк, 10 с, чужая revision не применяется; остаток по времени	файл прогресса снят
-М10B/21 ш.2	V/05.3-03	5.3	модель: реестр det, маска телом и ссылкой, tick в медийном времени	
+М10B/21 ш.2	V/05.3-03	5.3	модель: реестр det, маска — свой mask или mask_of, tick по сетке интервала	
 М10B/21 ш.2, 7	V/05.3-04	5.3	события: дерево detjob, of, медийное t, класс по alarms, без подавления, earlier-run	
 М10B/21 ш.6	V/05.3-05	5.3	итог done / partial / failed по stalled, один раз под стражем эпохи	P/03.6 Н1.7
 М10B/21 ш.2	V/05.4-01	5.4	фазы задачи: queued/running/waiting/following/fetching/unsupported/failed, reason; done — итог	
-М10B/21 ш.2	V/05.4-02	5.4	ждать пропущенное: никто — без срока, missing, waiting_since, WAIT_MAX, partial, scan.partial	файл ожидания → курсор
+М10B/21 ш.2	V/05.4-02	5.4	ждать пропущенное: никто — без срока, missing, накопленный waited, WAIT_MAX, partial двух видов, scan.partial до итога	файл ожидания → курсор
 М10B/21 ш.9	V/05.4-03	5.4	following: written_through, 2 лага VISIBLE_LAG_SECONDS, интервал в будущем	
 М10B/21 ш.8; М10B/23 ш.2	V/05.4-04	5.4	просьба дозаписи: дыра после «видно с», перечень устройства, кусками ≤ суток, fetching до WAIT_MAX	подача воркером (P/03.6 Н1.5)
 М10B/21 ш.2	V/05.4-05	5.4	пульс задачи и ряды jobs_running, filings_total	
