@@ -74,7 +74,7 @@
 | сборка книги: функция `assemble` | [`08-domain/vectors/assemble/`](../../08-domain/vectors/assemble/README.md) | P/08.5 | [P/08.5](../../08-domain/spec/08.5-domain.norms.md) Н1.3, Н3 |
 | выдача токена воркера: функция `issue` | [`08-domain/vectors/issue/`](../../08-domain/vectors/issue/README.md) | P/08.7 | [P/08.7](../../08-domain/spec/08.7-domain.norms.md) Н3 |
 | следование: функция `follow` | [`09-agent/vectors/follow/`](../../09-agent/vectors/follow/README.md) | P/09.1 | [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н3 «следовать» |
-| значение при чтении: функция `resolve` | [`06-console/vectors/resolve/`](../../06-console/vectors/resolve/README.md) (12 строк; 11 из М11/11 сц. 03) | P/06.7 | [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.14, Н3 `resolve` |
+| значение при чтении: функция `resolve` | [`06-console/vectors/resolve/`](../../06-console/vectors/resolve/README.md) (14 строк; 11 из М11/11 сц. 03) | P/06.7 | [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.14, Н3 `resolve` |
 | список тревог: функция `alarms` | [`10-domain-console/vectors/alarms/`](../../10-domain-console/vectors/alarms/README.md) (16 строк; 15 из М11/11 сц. 04) | P/10 | [P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.8, Н3 `alarms` |
 | нехватка набора меток и заказ по серверам (`в пути`, `per`, кандидаты, раздача) | [`04-controller/vectors/order/`](../../04-controller/vectors/order/) | P/04 | P/04 Н3 «нехватка(), заказать()»; ADR-0084 доп. (1)–(3) |
 | жертва сокращения | [`04-controller/vectors/shrink-victim/`](../../04-controller/vectors/shrink-victim/) | P/04 | P/04 Н3 «сократить()», Р4, Р22 |
