@@ -1,8 +1,9 @@
 scenario	step	request	expect
 # Приёмка P/06.6: двери управления консоли testsub (root) и testsub2; сц. 01–07 без префикса двери — консоль. Перенесено из М10/04 (сц. 01–07), М10/10 (01 → 08-schema, 02 → 10-drain-strand, 09, 12) и М10/11 (03 → 11-schema-processes) (стадия B). Формат и директивы — README.
-01-unplaced	1	POST /counters {"name": "u1", "start": 1}	201 {"id": "u1", "worker": null}
-01-unplaced	2	GET /where/u1	404
-01-unplaced	3	GET /where/	404
+01-unplaced	1	@start resource	ok
+01-unplaced	2	POST /counters {"name": "u1", "start": 1}	201 {"id": "u1", "worker": null}
+01-unplaced	3	GET /where/u1	404
+01-unplaced	4	GET /where/	404
 02-unplaceable	1	GET /unplaceable	200 [{"id": "u1", "workers_live": 0}]
 02-unplaceable	2	@until 20 GET /unplaceable	200 [{"id": "u1", "why": "$why"}]
 02-unplaceable	3	GET /where/u1	404 {"reason": "$why"}
@@ -42,11 +43,12 @@ scenario	step	request	expect
 07-drain-units	6	POST /drain?server=srv-a	2xx
 07-drain-units	7	GET /drain	200 {"draining": "srv-a", "safe": false, "subsystems": {"testsub": {"units": 2, "safe": false}}}
 07-drain-units	8	DELETE /drain	2xx
-08-schema	1	console GET /schema	200 {"version": 1, "understood": 1, "can_raise_to": 1, "builds": "@any"}
-08-schema	2	console PUT /schema?version=abc	400 {"error": "~a whole number from 1"}
-08-schema	3	console PUT /schema?version=0	400 {"error": "~a whole number from 1"}
-08-schema	4	console PUT /schema?version=1	200 {"version": 1}
-08-schema	5	console PUT /schema?version=99999999999999999999999	409
+08-schema	1	@start resource	ok
+08-schema	2	console GET /schema	200 {"version": 1, "understood": 1, "can_raise_to": 1, "builds": "@any"}
+08-schema	3	console PUT /schema?version=abc	400 {"error": "~a whole number from 1"}
+08-schema	4	console PUT /schema?version=0	400 {"error": "~a whole number from 1"}
+08-schema	5	console PUT /schema?version=1	200 {"version": 1}
+08-schema	6	console PUT /schema?version=99999999999999999999999	409
 09-drain-unreadable-pulse	1	@start resource	ok
 09-drain-unreadable-pulse	2	@as testsubworker store POST /v1/write {"op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"false","gen":"1","server":"srv-a"},"cas":""}	200
 09-drain-unreadable-pulse	3	@put object testsub/heartbeats/w-1 inputs/hb-w-1-no-status.json	ok
@@ -70,29 +72,30 @@ scenario	step	request	expect
 11-schema-processes	1	@start resource	ok
 11-schema-processes	2	@start controller	ok
 11-schema-processes	3	@until 30 console GET /schema	200 {"version": 1, "understood": 1, "can_raise_to": 1, "processes": {"resource/srv-a": {"schema": 1, "build": "@any", "live": true}}}
-12-pulse-number-forms	1	@as testsubworker store POST /v1/write {"op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"false","gen":"1","server":"srv-a"},"cas":""}	200
-12-pulse-number-forms	2	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-0.json	ok
-12-pulse-number-forms	3	console POST /drain?server=srv-a	2xx
-12-pulse-number-forms	4	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": true, "pending_writes": 0}}}
-12-pulse-number-forms	5	@until 10 console GET /schema	200 {"processes": {"testsub/w-1": {"schema": 1, "build": "dev"}}}
-12-pulse-number-forms	6	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-missing.json	ok
-12-pulse-number-forms	7	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
-12-pulse-number-forms	8	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-0.json	ok
-12-pulse-number-forms	9	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": true, "pending_writes": 0}}}
-12-pulse-number-forms	10	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-fraction.json	ok
-12-pulse-number-forms	11	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
-12-pulse-number-forms	12	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-0.json	ok
-12-pulse-number-forms	13	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": true, "pending_writes": 0}}}
-12-pulse-number-forms	14	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-minus-zero.json	ok
-12-pulse-number-forms	15	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
-12-pulse-number-forms	16	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-0.json	ok
-12-pulse-number-forms	17	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": true, "pending_writes": 0}}}
-12-pulse-number-forms	18	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-2p63.json	ok
-12-pulse-number-forms	19	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
-12-pulse-number-forms	20	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-0.json	ok
-12-pulse-number-forms	21	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": true, "pending_writes": 0}}}
-12-pulse-number-forms	22	@put object testsub/heartbeats/w-1 inputs/hb-w-1-schema-fraction.json	ok
-12-pulse-number-forms	23	@until 10 console GET /schema	200 {"can_raise_to": 0, "processes": {"testsub/w-1": {"schema": null}}}
-12-pulse-number-forms	24	@put object testsub/heartbeats/w-1 inputs/hb-w-1-build-number.json	ok
-12-pulse-number-forms	25	@until 10 console GET /schema	200 {"processes": {"testsub/w-1": {"schema": 1, "build": null}}}
-12-pulse-number-forms	26	console DELETE /drain	2xx
+12-pulse-number-forms	1	@start resource	ok
+12-pulse-number-forms	2	@as testsubworker store POST /v1/write {"op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"false","gen":"1","server":"srv-a"},"cas":""}	200
+12-pulse-number-forms	3	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-0.json	ok
+12-pulse-number-forms	4	console POST /drain?server=srv-a	2xx
+12-pulse-number-forms	5	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": true, "pending_writes": 0}}}
+12-pulse-number-forms	6	@until 10 console GET /schema	200 {"processes": {"testsub/w-1": {"schema": 1, "build": "dev"}}}
+12-pulse-number-forms	7	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-missing.json	ok
+12-pulse-number-forms	8	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
+12-pulse-number-forms	9	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-0.json	ok
+12-pulse-number-forms	10	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": true, "pending_writes": 0}}}
+12-pulse-number-forms	11	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-fraction.json	ok
+12-pulse-number-forms	12	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
+12-pulse-number-forms	13	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-0.json	ok
+12-pulse-number-forms	14	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": true, "pending_writes": 0}}}
+12-pulse-number-forms	15	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-minus-zero.json	ok
+12-pulse-number-forms	16	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
+12-pulse-number-forms	17	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-0.json	ok
+12-pulse-number-forms	18	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": true, "pending_writes": 0}}}
+12-pulse-number-forms	19	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-2p63.json	ok
+12-pulse-number-forms	20	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": false, "pending_unsaid": ["w-1"]}}}
+12-pulse-number-forms	21	@put object testsub/heartbeats/w-1 inputs/hb-w-1-pending-0.json	ok
+12-pulse-number-forms	22	@until 10 console GET /drain	200 {"subsystems": {"testsub": {"safe": true, "pending_writes": 0}}}
+12-pulse-number-forms	23	@put object testsub/heartbeats/w-1 inputs/hb-w-1-schema-fraction.json	ok
+12-pulse-number-forms	24	@until 10 console GET /schema	200 {"can_raise_to": 0, "processes": {"testsub/w-1": {"schema": null}}}
+12-pulse-number-forms	25	@put object testsub/heartbeats/w-1 inputs/hb-w-1-build-number.json	ok
+12-pulse-number-forms	26	@until 10 console GET /schema	200 {"processes": {"testsub/w-1": {"schema": 1, "build": null}}}
+12-pulse-number-forms	27	console DELETE /drain	2xx

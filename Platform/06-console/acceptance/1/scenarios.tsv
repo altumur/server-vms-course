@@ -6,13 +6,14 @@ scenario	step	request	expect
 01-create	4	@nokey POST /counters {"name": "c1x", "start": 5}	400 {"error": "~Idempotency-Key"}
 02-exists	1	POST /counters {"name": "c2"}	201 {"id": "c2", "start": 0}
 02-exists	2	POST /counters {"name": "c2"}	409 {"error": "exists"}
-03-update	1	POST /counters {"name": "c3", "start": 1}	201 {"revision": 1}
-03-update	2	PUT /counters/c3 {"start": 7}	200 {"id": "c3", "start": 7, "revision": 2}
-03-update	3	PUT /counters/c3 {"labels": ["a", "b"]}	200 {"start": 7, "labels": ["a", "b"], "revision": 3}
-03-update	4	PUT /counters/c3 {"start": 7}	200 {"revision": 4}
-03-update	5	PUT /counters/c3 {"name": "x"}	400 {"error": "~is fixed"}
-03-update	6	PUT /counters/c3 {"start": null}	400
-03-update	7	GET /counters	200 {"configured": [{"id": "c3", "start": 7, "revision": 4}]}
+03-update	1	@start resource	ok
+03-update	2	POST /counters {"name": "c3", "start": 1}	201 {"revision": 1}
+03-update	3	PUT /counters/c3 {"start": 7}	200 {"id": "c3", "start": 7, "revision": 2}
+03-update	4	PUT /counters/c3 {"labels": ["a", "b"]}	200 {"start": 7, "labels": ["a", "b"], "revision": 3}
+03-update	5	PUT /counters/c3 {"start": 7}	200 {"revision": 4}
+03-update	6	PUT /counters/c3 {"name": "x"}	400 {"error": "~is fixed"}
+03-update	7	PUT /counters/c3 {"start": null}	400
+03-update	8	GET /counters	200 {"configured": [{"id": "c3", "start": 7, "revision": 4}]}
 04-platform-fields	1	POST /counters {"name": "c4", "worker": "w-1"}	400 {"error": "~may not set"}
 04-platform-fields	2	POST /counters {"name": "c4", "revision": 5, "nosuch": 1}	400 {"error": "~may not set"}
 04-platform-fields	3	POST /counters {"name": "c4", "nosuch": 1}	400 {"error": "~unknown field"}
@@ -76,15 +77,16 @@ scenario	step	request	expect
 13-idempotency-key-limits	9	POST /counters {"name": "k4"}	201 {"id": "k4", "revision": 1}
 13-idempotency-key-limits	10	POST /counters {"name": "k5"}	201 {"id": "k5", "revision": 1}
 13-idempotency-key-limits	11	@header Idempotency-Key: d1 @header Idempotency-Key: d1 POST /counters {"name": "k7"}	400
-14-if-match	1	POST /counters {"name": "m14", "start": 1}	201 {"revision": 1}
-14-if-match	2	@header If-Match: 1 PUT /counters/m14 {"start": 2}	200 {"start": 2, "revision": 2}
-14-if-match	3	@header If-Match: 1 PUT /counters/m14 {"start": 3}	412 {"error": "revision moved", "revision": 2}
-14-if-match	4	@header If-Match: 01 PUT /counters/m14 {"start": 3}	400
-14-if-match	5	@header If-Match: two PUT /counters/m14 {"start": 3}	400
-14-if-match	6	@header If-Match: 2 @header If-Match: 2 PUT /counters/m14 {"start": 3}	400
-14-if-match	7	GET /counters	200 {"configured": [{"id": "m14", "start": 2, "revision": 2}]}
-14-if-match	8	@header If-Match: 1 DELETE /counters/m14	412 {"error": "revision moved", "revision": 2}
-14-if-match	9	@header If-Match: 2 DELETE /counters/m14	200 {"deleted": "m14"}
+14-if-match	1	@start resource	ok
+14-if-match	2	POST /counters {"name": "m14", "start": 1}	201 {"revision": 1}
+14-if-match	3	@header If-Match: 1 PUT /counters/m14 {"start": 2}	200 {"start": 2, "revision": 2}
+14-if-match	4	@header If-Match: 1 PUT /counters/m14 {"start": 3}	412 {"error": "revision moved", "revision": 2}
+14-if-match	5	@header If-Match: 01 PUT /counters/m14 {"start": 3}	400
+14-if-match	6	@header If-Match: two PUT /counters/m14 {"start": 3}	400
+14-if-match	7	@header If-Match: 2 @header If-Match: 2 PUT /counters/m14 {"start": 3}	400
+14-if-match	8	GET /counters	200 {"configured": [{"id": "m14", "start": 2, "revision": 2}]}
+14-if-match	9	@header If-Match: 1 DELETE /counters/m14	412 {"error": "revision moved", "revision": 2}
+14-if-match	10	@header If-Match: 2 DELETE /counters/m14	200 {"deleted": "m14"}
 15-blob	1	console2 POST /tallies {"name": "t1", "of": "c1", "mask": "not-a-digest"}	400 {"error": "~takes a digest"}
 15-blob	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1, "mask": ""}
 15-blob	3	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "~sha256-", "bytes": 10, "revision": 2}
@@ -114,11 +116,12 @@ scenario	step	request	expect
 17-tables	10	@start resource	ok
 17-tables	11	@until 20 console GET /events?kind=shelf.declared	200 {"events": [{"kind": "shelf.declared", "sub": "testsub2", "target": "shelves/sh1", "was": false}]}
 17-tables	12	console GET /events?kind=shelf.withdrawn	200 {"events": [{"kind": "shelf.withdrawn", "sub": "testsub2", "target": "shelves/sh1"}]}
-18-table-ref	1	console2 POST /shelves {"name": "sh7", "zone": "z1"}	201
-18-table-ref	2	console2 POST /tallies {"name": "t7", "of": "c1", "shelf": "sh7", "zone": "z1"}	201 {"shelf": "sh7"}
-18-table-ref	3	console2 POST /shelves {"name": "sh7", "zone": "z2"}	409 {"fault": "must_match"}
-18-table-ref	4	console2 DELETE /shelves/sh7	200 {"deleted": "sh7"}
-18-table-ref	5	console2 GET /tallies	200 {"configured": [{"id": "t7", "shelf": "sh7", "zone": "z1"}]}
+18-table-ref	1	@start resource	ok
+18-table-ref	2	console2 POST /shelves {"name": "sh7", "zone": "z1"}	201
+18-table-ref	3	console2 POST /tallies {"name": "t7", "of": "c1", "shelf": "sh7", "zone": "z1"}	201 {"shelf": "sh7"}
+18-table-ref	4	console2 POST /shelves {"name": "sh7", "zone": "z2"}	409 {"fault": "must_match"}
+18-table-ref	5	console2 DELETE /shelves/sh7	200 {"deleted": "sh7"}
+18-table-ref	6	console2 GET /tallies	200 {"configured": [{"id": "t7", "shelf": "sh7", "zone": "z1"}]}
 19-table-feed	1	console2 POST /shelves {"name": "sh8", "zone": "z1", "feed": "https://h.example/a"}	201 {"row": {"feed": "https://h.example/a"}}
 19-table-feed	2	console2 POST /shelves {"name": "sh8", "zone": "z1", "feed": "https://h.example/b"}	400 {"error": "~must be given anew"}
 19-table-feed	3	console2 POST /shelves {"name": "sh8", "zone": "z1", "feed": "https://h.example/b", "feed_secret": ""}	400 {"error": "~must be given anew"}
@@ -133,21 +136,22 @@ scenario	step	request	expect
 19-table-feed	12	console2 GET /shelves/shx	200 {"name": "shx", "garbled": true}
 19-table-feed	13	console2 POST /shelves {"name": "sh10", "zone": "z1", "over": "shx"}	409 {"fault": "garbled"}
 # 20-made (ADR-0091 пп. 1, 3): префикс заказчика testsub — отказ двери; строка заказа (подготовлена мимо писателя) — поля key неизменяемы, made и born сохраняет правка, made клиент не задаёт; состояние действует по born и revision; born у строки двери; удаление ставит made.gone
-20-made	1	console2 POST /tallies {"name": "testsub-c1", "of": "c1"}	400 {"error": "~are made by testsub"}
-20-made	2	store GET /v1/get?key=testsub2/tallies/testsub-c1	200 {"items": null}
-20-made	3	@as console store POST /v1/write {"id":"e3","op":"put","key":"testsub2/tallies/testsub-c2","items":{"id":"testsub-c2","revision":"1","name":"testsub-c2","of":"c2","born":"0123456789abcdef0123456789abcdef","made":"{\"at\":1000000000,\"by\":\"testsub\",\"keep\":1000000720}"},"cas":""}	200
-20-made	4	console2 PUT /tallies/testsub-c2 {"of": "c3"}	400 {"error": "~is fixed"}
-20-made	5	console2 PUT /tallies/testsub-c2 {"made": {"by": "testsub2"}}	400
-20-made	6	console2 PUT /tallies/testsub-c2 {"zone": "z1"}	200 {"zone": "z1", "revision": 2, "made": {"by": "testsub", "at": 1000000000, "keep": 1000000720}}
-20-made	7	store GET /v1/get?key=testsub2/tallies/testsub-c2	200 {"items": {"born": "0123456789abcdef0123456789abcdef", "made": "{\"at\":1000000000,\"by\":\"testsub\",\"keep\":1000000720}", "revision": "2"}}
-20-made	8	@as testsub2worker store POST /v1/write {"id":"e8","op":"put","key":"testsub2/state/result/testsub-c2","items":{"born":"0123456789abcdef0123456789abcdef","revision":"1","epoch":"1","value":"{\"state\":\"open\"}"},"cas":""}	200 {"index": "$s"}
-20-made	9	console2 GET /tallies	200 {"configured": [{"name": "testsub-c2", "state": "@absent"}]}
-20-made	10	@as testsub2worker store POST /v1/write {"id":"e10","op":"put","key":"testsub2/state/result/testsub-c2","items":{"born":"0123456789abcdef0123456789abcdef","revision":"2","epoch":"1","value":"{\"state\":\"open\"}"},"cas":"$s"}	200
-20-made	11	console2 GET /tallies	200 {"configured": [{"name": "testsub-c2", "state": {"result": {"state": "open"}}}]}
-20-made	12	console2 POST /tallies {"name": "t2", "of": "c2"}	201 {"revision": 1}
-20-made	13	store GET /v1/get?key=testsub2/tallies/t2	200 {"items": {"born": "~", "made": "@absent"}}
-20-made	14	console2 DELETE /tallies/testsub-c2	200 {"deleted": "testsub-c2"}
-20-made	15	store GET /v1/get?key=testsub2/tallies/testsub-c2	200 {"items": {"deleted": "true", "born": "0123456789abcdef0123456789abcdef", "made": "~\"gone\":"}}
+20-made	1	@start resource	ok
+20-made	2	console2 POST /tallies {"name": "testsub-c1", "of": "c1"}	400 {"error": "~are made by testsub"}
+20-made	3	store GET /v1/get?key=testsub2/tallies/testsub-c1	200 {"items": null}
+20-made	4	@as console store POST /v1/write {"id":"e3","op":"put","key":"testsub2/tallies/testsub-c2","items":{"id":"testsub-c2","revision":"1","name":"testsub-c2","of":"c2","born":"0123456789abcdef0123456789abcdef","made":"{\"at\":1000000000,\"by\":\"testsub\",\"keep\":1000000720}"},"cas":""}	200
+20-made	5	console2 PUT /tallies/testsub-c2 {"of": "c3"}	400 {"error": "~is fixed"}
+20-made	6	console2 PUT /tallies/testsub-c2 {"made": {"by": "testsub2"}}	400
+20-made	7	console2 PUT /tallies/testsub-c2 {"zone": "z1"}	200 {"zone": "z1", "revision": 2, "made": {"by": "testsub", "at": 1000000000, "keep": 1000000720}}
+20-made	8	store GET /v1/get?key=testsub2/tallies/testsub-c2	200 {"items": {"born": "0123456789abcdef0123456789abcdef", "made": "{\"at\":1000000000,\"by\":\"testsub\",\"keep\":1000000720}", "revision": "2"}}
+20-made	9	@as testsub2worker store POST /v1/write {"id":"e8","op":"put","key":"testsub2/state/result/testsub-c2","items":{"born":"0123456789abcdef0123456789abcdef","revision":"1","epoch":"1","value":"{\"state\":\"open\"}"},"cas":""}	200 {"index": "$s"}
+20-made	10	console2 GET /tallies	200 {"configured": [{"name": "testsub-c2", "state": "@absent"}]}
+20-made	11	@as testsub2worker store POST /v1/write {"id":"e10","op":"put","key":"testsub2/state/result/testsub-c2","items":{"born":"0123456789abcdef0123456789abcdef","revision":"2","epoch":"1","value":"{\"state\":\"open\"}"},"cas":"$s"}	200
+20-made	12	console2 GET /tallies	200 {"configured": [{"name": "testsub-c2", "state": {"result": {"state": "open"}}}]}
+20-made	13	console2 POST /tallies {"name": "t2", "of": "c2"}	201 {"revision": 1}
+20-made	14	store GET /v1/get?key=testsub2/tallies/t2	200 {"items": {"born": "~", "made": "@absent"}}
+20-made	15	console2 DELETE /tallies/testsub-c2	200 {"deleted": "testsub-c2"}
+20-made	16	store GET /v1/get?key=testsub2/tallies/testsub-c2	200 {"items": {"deleted": "true", "born": "0123456789abcdef0123456789abcdef", "made": "~\"gone\":"}}
 21-worker-table-delete	1	@as testsub2worker store POST /v1/write {"id":"e1","op":"put","key":"testsub2/gauges/g1","items":{"name":"g1","level":"3"},"cas":""}	200
 21-worker-table-delete	2	console2 GET /gauges/g1	200 {"name": "g1", "level": 3}
 21-worker-table-delete	3	console2 POST /gauges {"name": "g2"}	403
