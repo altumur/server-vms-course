@@ -1,4 +1,4 @@
-# Исходы нечитаемого элемента вклада cam/sources/<слот> и value элемента книги domain/cam/sources (V/01.6 Н1.2). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Исходы нечитаемого value элемента книги domain/cam/sources (копия у члена) и domain/cam/sources/<член> (у держателя домена), V/01.6 Н1.2; путь — от value. Вклад cam/sources/<слот> — форма манифеста (P/03.7), здесь не судится. Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
-	domain	вход книги не по форме: весь вклад кластера снят, в missing — bad_contribution	1	строка	V/01.6 Н4; P/08.5 Н1.3
-	recworker	элемент камеры не по форме: запись waiting, reason словами книги («not in the source book …»)	1	строка	V/02.9 Н1.2, Н4
+	recworker	value элемента камеры не по форме: не прочитан, а не отсутствует — запись waiting, reason словами книги («not in the source book …»), прочие элементы книги идут	1	элемент	V/02.9 Н1.2, Н4
+	domainagent	value не судит: элементы копии — как получены от держателя (P/09.1 Н1.4 member_row)	1	элемент	P/09.1 Н1.4

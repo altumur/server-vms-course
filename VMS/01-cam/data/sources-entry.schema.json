@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "элемент вклада cam/sources/<слот> и value элемента книги domain/cam/sources (V/01.6 Н1.2): размещённая камера или камера опроса; поля без значения опускаются, \"\" и null не бывает",
+ "description": "value элемента книги domain/cam/sources (копия у члена) и domain/cam/sources/<член> (у держателя домена), V/01.6 Н1.2: размещённая камера или камера опроса; поля без значения опускаются, \"\" и null не бывает",
  "type": "object",
  "properties": {
   "ref": {
