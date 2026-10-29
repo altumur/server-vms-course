@@ -13,8 +13,10 @@ name: backend
 # `WORKER_NAME` (`runtime.slot`).
 slot: {prefix: b, name_env: BACKEND_NAME}
 # Reads, writes and asks nothing of anybody by itself: what it needs it reads through the console with the ticket of the
-# request it serves (V/11.1 Н1.3). Its only state is the memory of repeats of a group `idempotencyKey` (V/11.4, until
-# the platform's B3).
+# request it serves (V/11.1 Н1.3). No state outside the platform's store: the memory of repeats of a group
+# `idempotencyKey` is always there, in its own rows backend/idem/<user>/<key> read and written through the console with
+# the ticket (V/11.4 Н1.4, ADR-0094 доп. (3) п. 4). A table key with `/` is not in the table grammar of P/02.1 — the rows
+# are declared below as intent, not keys.
 worker: {exec: /usr/lib/backend/worker, stop_timeout: 20}
 unit:
   rows: instances                    # backend/instances/<server>
@@ -43,6 +45,8 @@ door:
 #   pass_kind: ticket                       # the console passes a ticket, never the person's Authorization
 #   stream: [stream]                        # streaming: no 5 s / 4 MiB limit; the ticket of a stream — reads and /changes only
 #   wait: {objects: 30, devices: 30}        # a composite write waits longer than PASS_WAIT; the ceiling — the norm
+#   headers: to the worker Content-Type, Idempotency-Key, If-Match, Last-Event-ID; to the client Content-Type, ETag
+#   types: application/json, application/problem+json, text/event-stream, no body (204, 304); else 502 (доп. (3) пп. 2, 3)
 #   calls:                                  # the closed list of doors the worker may call back with a ticket
 #     - cam/cameras, cam/devices            # rows and tables of cam (V/01.1)
 #     - rec/recordings, rec/volumes         # rows and tables of rec (V/02.1)
@@ -52,19 +56,27 @@ door:
 #                                           # (ADR-0094 доп. (2) п. 6); platform settings (/schema, /drain, labels) — no
 #     - changes                             # the change feed (B2)
 #     - GET manifest, GET servers, GET events, GET session   # reads; /session — «who am I» only
+#     - backend/idem/                       # its own memory of repeats of a group key (ADR-0094 доп. (3) п. 4)
 #   # not: /where, writes of /session, grants, people, keys, break-glass, /operations
 # B7 (ADR-0094 доп. (1); норма платформы B — после Go GREEN 01–10), declared intent, not loaded today: the console serves
-# the WebUI of consolem as static files next to this manifest, `/backend/<file>`, byte for byte, `script-src 'self'`.
+# the WebUI of consolem as static files next to this manifest, `/backend/<file>`, byte for byte, `script-src 'self'`;
+# it serves backend.shell.html at /backend/ because this manifest declares it (ADR-0094 доп. (3) п. 8).
 # The bytes are not in the course: the deployment package places them from consolem @9dc16881 next to the manifest and
 # checks each SHA-256 (V/11.1 Н1.4, V/09.3).
 #   static:
 #     - {file: assets/i18n-en.js, sha256: 50a6aa1daafa48a38b338ad88f499220f3fe98238e883883ddeaa2f12b4322ad}
+#     - {file: assets/logo-configurator.png, sha256: 3b5fdf2a3993f67c45fa3eb81293260da9b11e89d0dfea70bfcba6943bafb4fe}
 #     - {file: assets/one-psim/bridge.css, sha256: 098866f82a8e1af620ebde7efd9c6a7e38de6eaccd95e75548c1c345c35f66b7}
 #     - {file: assets/one-psim/native.css, sha256: dcb5175ed5d4a67f32dcf2ce61819bb9a66c62583246f689bc728fd501ac77ef}
 #     - {file: assets/one-psim/one-psim.css, sha256: a164777147b917ff0e44dc4a2c35376cb9248c9f8975f99560296844afb61c59}
+#     - {file: assets/one-psim/one-sign.svg, sha256: 2427d5751f448d249feef734dd723e27956c252e69fefac370caac1b4c3b9f97}
 #     - {file: assets/one-psim/fonts/InterVariable.woff2, sha256: 693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3}
 # The entry page is not a static file: it is this subsystem's own shell, backend.shell.html (V/11.1 Н1.4); the product's
-# index.html is not used. The set without it — SHA-256 71b362ac879c7fabf83847040cb2c48ede3de0d467064ac0de3362333aaad94b.
+# index.html is not used. The set without it, with the png and svg pictures (ADR-0094 доп. (4) п. 2) — SHA-256
+# 0084f8637e3dbfd72742008e47ca8dc071c02770d6069825fcb77f06c91c5658.
+# The memory of repeats (ADR-0094 доп. (3) п. 4), declared intent, not loaded today (a key `<user>/<key>` has a `/`):
+#   rows backend/idem/<user>/<key>: {body: <fingerprint of the whole body>, result?: <outcome of the group>, until: <s>}
+#   «started» (no result) before the first step; the result after the last; the time to live — that of the console's POST.
 metrics:
   - {name: instances_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
   # Calls the worker passed on, by how they ended (translated, no_route, refused), and the repeats its memory answered.
