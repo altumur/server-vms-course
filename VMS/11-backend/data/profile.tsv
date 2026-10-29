@@ -40,7 +40,7 @@ n	method	path	profile	why
 33	GET	/volumes	in	переводится (V/11.2)
 34	GET	/volumes/{volumeId}	in	переводится (V/11.2)
 35	PATCH	/volumes/{volumeId}	in	переводится (V/11.2)
-36	DELETE	/volumes/{volumeId}	in	переводится (V/11.2)
+36	DELETE	/volumes/{volumeId}	in	переводится, профилем продукта не объявляется (V/11.2)
 37	POST	/volumes/{volumeId}/format	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 38	POST	/operations	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 39	GET	/operations/{operationId}	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
