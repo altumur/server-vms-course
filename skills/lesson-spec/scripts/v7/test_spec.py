@@ -739,10 +739,18 @@ class TestTree(unittest.TestCase):
             "path\treader\toutcome\tpriority\tunit\tnorm\n"
             "\tautoworker\tсобытие не читается\t1\tстрока\tV/01.2 Н1.4\n", encoding="utf-8")
         cat = root / vms.CATALOG
-        cat.write_text("\t".join(vms.FIELDS) + "\n" + "\t".join([
-            "<корень событий>/cam/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl", "file", "V/01.2",
-            "append=camworker", "autoworker", "-", "1", "VMS/01-cam/data/probe-io.schema.json", "V/01.2 Н1.4", ""]) + "\n",
-            encoding="utf-8")
+        rows = [[k, "file", "V/01.2", "append=camworker", "autoworker", "-", "1",
+                 "VMS/01-cam/data/probe-io.schema.json", "V/01.2 Н1.4", ""] for k in (
+            "<корень событий>/cam/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl",
+            "<корень событий>/cam.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl")]
+        cat.write_text("".join("\t".join(r) + "\n" for r in [vms.FIELDS] + rows), encoding="utf-8")
+        # Дерево тревог: `cam.alarms` — не литерал `<sub>` (грамматика `[a-z][a-z0-9_-]{0,31}`), семья — `<sub>.alarms`.
+        _, judges = vms.check_rows(root)
+        self.assertEqual(sorted(j.prow["key"] for j in judges.values()), [
+            "<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl",
+            "<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl"])
+        self.assertEqual(vms.sample_string({"pattern": "^(?:https?://[\\s\\S]*)$"}), "http://")
+        self.assertEqual(vms.sample_string({"pattern": "^(?:\\d{4}-[a-z]{2,})$", "minLength": 8}), "1111-aaaaaaaa")
         vms.build_tables(root)
         rows = [ln.split("\t") for ln in (root / vms.FAMILY_READ / "01.tsv").read_text(encoding="utf-8").split("\n")[1:]
                 if ln]
