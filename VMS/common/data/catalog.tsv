@@ -7,7 +7,7 @@
 # (VMS/common/vectors/family-read/NN.tsv), вручную не пишутся.
 key	kind	owner	ops	readers	when	version	schema	norm	place
 cam/heartbeats/<имя>	object	V/01.2	put=camworker(свой пульс, P/03.4 Н1.1)	recworker, detworker, liveworker	-	1	VMS/01-cam/data/cam-heartbeat-words.schema.json	V/01.2 Н1.4	
-domain/cam/sources	row	V/01.6	cas=domainagent(копия у члена, P/09.1 Н1.4)	recworker	domain.books	1	VMS/01-cam/data/sources-entry.schema.json	V/01.6 Н1.2	/*/entries/*/value
-domain/cam/sources/<член>	row	V/01.6	put=domain(собираемая книга, P/08.5 Н1.3)	recworker	domain.books	1	VMS/01-cam/data/sources-entry.schema.json	V/01.6 Н1.2	/*/entries/*/value
-domain/cam/licence	row	V/01.7	cas=domainagent(копия у члена, P/09.1 Н1.4)	camworker	domain.books	1	VMS/01-cam/data/licence-decision.schema.json	V/01.7 Н1.2, Н1.3	/*/entries/*/value
-domain/cam/licence/<член>	row	V/01.7	put=camdomain(переносимая книга, P/03.7 Н1.6)	camworker, camdomain	domain.books	1	VMS/01-cam/data/licence-decision.schema.json	V/01.7 Н1.2, Н1.3	/*/entries/*/value
+domain/cam/sources	row	V/01.6	cas=domainagent(копия у члена, P/09.1 Н1.4)	recworker	domain.books	1	VMS/01-cam/data/sources-entry.schema.json#copy	V/01.6 Н1.2	/*/entries/*/value
+domain/cam/sources/<член>	row	V/01.6	put=domain(собираемая книга, P/08.5 Н1.3)	recworker	domain.books	1	VMS/01-cam/data/sources-entry.schema.json#member	V/01.6 Н1.2	/*/entries/*/value
+domain/cam/licence	row	V/01.7	cas=domainagent(копия у члена, P/09.1 Н1.4)	camworker	domain.books	1	VMS/01-cam/data/licence-decision.schema.json#copy	V/01.7 Н1.2, Н1.3	/*/entries/*/value
+domain/cam/licence/<член>	row	V/01.7	put=camdomain(переносимая книга, P/03.7 Н1.6)	camworker, camdomain	domain.books	1	VMS/01-cam/data/licence-decision.schema.json#member	V/01.7 Н1.2, Н1.3	/*/entries/*/value
