@@ -15,3 +15,10 @@ scenario	step	request	expect
 03-stream	6	POST /units {"name": "m-tick", "cam": "$m", "kind": "tick", "stream": "$m"}	409 {"error": "conflict", "fault": "must_match"}
 03-stream	7	PUT /units/s-tick {"stream": ""}	200 {"cam": "$m", "stream": ""}
 03-stream	8	PUT /units/s-tick {"stream": "$s"}	200 {"stream": "$s"}
+04-mask-of	1	console2 POST /cameras {"name": "Склад", "source": "rtsp://10.0.0.42/ch/1"}	201 {"id": "$a"}
+04-mask-of	2	console2 POST /cameras {"name": "Ворота", "source": "rtsp://10.0.0.43/ch/1"}	201 {"id": "$b"}
+04-mask-of	3	POST /units {"name": "a-base", "cam": "$a", "kind": "tick"}	201 {"id": "a-base"}
+04-mask-of	4	POST /units {"name": "b-base", "cam": "$b", "kind": "tick"}	201 {"id": "b-base"}
+04-mask-of	5	POST /units {"name": "a-of", "cam": "$a", "kind": "tick", "mask_of": "a-base"}	201 {"id": "a-of", "mask_of": "a-base"}
+04-mask-of	6	POST /units {"name": "a-of-b", "cam": "$a", "kind": "tick", "mask_of": "b-base"}	409 {"error": "conflict", "fault": "must_match"}
+04-mask-of	7	POST /units {"name": "a-of-none", "cam": "$a", "kind": "tick", "mask_of": "nope"}	201 {"id": "a-of-none", "mask_of": "nope"}
