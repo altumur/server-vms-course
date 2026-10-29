@@ -150,6 +150,9 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const $=q=>document.querySelector(q);
 const card=(title,body,act="")=>`<div class="card"><div class="ch">${title}${act}</div><div class="cb">${body}</div></div>`;
 const fldRo=(label,value)=>`<div><label>${esc(label)}</label><input type="text" value="${esc(value??"")}" readonly disabled></div>`;
+// The words of a refusal (P/07 Н1.5: `api` throws {status, body, retry}): the body's detail or error, else the status;
+// `message` — only an error of the network, which has no status.
+const words=e=>e&&e.status?String((e.body&&(e.body.detail||e.body.error))||e.status):String(e&&e.message||e);
 const getJSON=async path=>{const r=await fetch(path);if(!r.ok)throw new Error(path+": "+r.status);return r.json()};
 // A click (a change, for a field) on the page's own markup is wired here, never in an attribute: the console's CSP
 // runs no inline handler. `data-act` names the handler; the element and its dataset are what it gets.
@@ -186,23 +189,28 @@ function suggestStream(cam,big){
 }
 const recsOfCam=id=>(UNITS.rec||[]).filter(r=>String(r.cam)===String(id));
 // C2 observations shown by the receiving console: provenance and declared show fields only.
-let PRIMARIES=null,PLACEMENTS=null,assignmentHost=null;
+// A recording in the domain is the pair (cluster, id): an id is unique in its cluster only. «Ours» — by the member's
+// name, this cluster's being `cluster` of GET /api/held (P/06.7 Н1.12).
+let PRIMARIES=null,PLACEMENTS=null,SELF="",assignmentHost=null;
 pc.on("refresh",async d=>{
   if(!(d&&"domain" in d))return;
   const get=async path=>{try{const r=await fetch(path);return r.ok?await r.json():null}catch(e){return null}};
-  [PRIMARIES,PLACEMENTS]=await Promise.all([get("/domain/rec/books/primaries"),get("/domain/placement")]);
+  let held;[PRIMARIES,PLACEMENTS,held]=await Promise.all([get("/domain/rec/books/primaries"),get("/domain/placement"),get("/api/held")]);
+  SELF=held&&typeof held.cluster==="string"?held.cluster:SELF;
   if(assignmentHost&&assignmentHost.isConnected)renderAssignments(assignmentHost);
 });
 function farRecsOfCam(id){
   const c=camById(id),ref=c&&c.ref,p=ref&&PRIMARIES&&PRIMARIES[ref],marker=PRIMARIES&&PRIMARIES[""];
   if(!p||!marker||!Array.isArray(marker.missing)||!Array.isArray(p.entries)||!Array.isArray(p.missing))return[];
-  const own=new Set(recsOfCam(id).map(r=>String(r.id))),out=[],seen=new Set();
+  // this cluster's name not read (no /api/held answer): ours are known by this cluster's own recording ids, as before
+  const own=SELF?null:new Set(recsOfCam(id).map(r=>String(r.id))),out=[],seen=new Set();
   for(const e of p.entries){
     if(!e||typeof e.member!=="string"||!e.member||typeof e.item!=="string"||!e.item||
-       typeof e.recording!=="string"||!e.recording||!["primary","backup","card"].includes(e.role)||
+       typeof e.recording!=="string"||!e.recording||!["primary","backup"].includes(e.role)||
        typeof e.running!=="boolean"||p.missing.includes(e.member))continue;
-    const key=e.member+"|"+e.recording;if(own.has(e.recording)||seen.has(key))continue;seen.add(key);
-    out.push({id:e.recording,cluster:e.member,home:"",backup:e.role!=="primary",cam:String(id)});
+    // ours are this cluster's own rows (recsOfCam); another member's are unique by (member, recording)
+    const key=e.member+"|"+e.recording;if((SELF?e.member===SELF:own.has(e.recording))||seen.has(key))continue;seen.add(key);
+    out.push({id:e.recording,cluster:e.member,home:typeof e.home==="string"?e.home:"",backup:e.role!=="primary",cam:String(id)});
   }
   return out;
 }
@@ -274,8 +282,10 @@ const evKindRu=e=>(pc.display(e.subsystem).kinds||{})[e.kind]||SUBS.map(n=>(pc.d
 // of its gateway (/live/where/<camera>). A door is {url, token, expires}: Bearer for fetch and WHEP, ?t= for the
 // player; asked again before its token runs out, and once at once on a 403 (the door token contract; 401 is no_role).
 const DOORS={};
+// `gen` — the choice the work was started for (an object chosen anew, the tab drawn anew): what was started for an
+// earlier one is not published (V/08.3 Н1.2 п. 5); `tl` — the same for a timeline asked again (another window).
 const V={spans:[],events:[],queue:[],evfilter:"",live:null,connecting:false,lo:0,hi:0,note:"",evstate:"",
-         truncated:false,cam:null};
+         truncated:false,cam:null,gen:0,tl:0,retry:null,net:"local"};
 const VOL_BACKUP="backup";
 // a backup recording is one homed on a backup volume or on a camera's card (V/02.1 `when`, V/02.6)
 const BACKUP_KINDS=[VOL_BACKUP,"edge"];
@@ -312,7 +322,8 @@ function piecesFrom(i,t){
 }
 function setCap(text){const el=$("#playing");if(el)el.textContent=text}
 // An event stands on the timeline where it HAPPENED (`occurred`), not where it was written (`t`).
-function evAt(e){return e.occurred||e.t}
+// One time per event everywhere — `occurred` when the field is there, else `t` (V/08.2 Н1.3).
+function evAt(e){return e&&"occurred" in e?e.occurred:e.t}
 function evLate(e){return e.occurred&&e.t-e.occurred>2?` записано в ${fmtT(e.t)} · `:""}
 
 // ── core: COPY WITH A CHECK — the product's page (main), function by function, each checked against it ──────────
@@ -343,7 +354,7 @@ function yieldCut(spans){
   return[...solid,...spans.filter(s=>s.yields).flatMap(s=>holes(s.start,s.end).map(([a,b])=>({...s,start:a,end:b})))];
 }
 async function loadTimeline(id){
-  const [from,to]=winRange();
+  const [from,to]=winRange(),tl=++V.tl;
   // The camera's footage is its recordings' — each through its own recorder's door, and through the door of every
   // volume it may have lain on (a recording moves; what it left behind stays on the old volume, read where it lies).
   // The raw ranges {start_ms, end_ms, epoch, source, yields} are merged without twins by (recording, start, end,
@@ -384,6 +395,7 @@ async function loadTimeline(id){
   for(const rec of recs)for(const name of rec.cluster?(rec.home&&!refused.has(rec.cluster)?[rec.home]:[]):places.map(v=>v.name))
     asks.push((async()=>{const where=placeWhere(rec,T||"volumes",name);take(rec,where,await ask(rec,where,name))})());
   await Promise.all(asks);
+  if(tl!==V.tl)return;                     // a later ask (another camera, another window) owns the timeline now
   // Лента строится по дверям; недоступное названо: его архив не утрачен, а лента без него неполная — это
   // единственный сбой, который оператор иначе не увидел бы.
   const unr=[...missing];
@@ -393,10 +405,11 @@ async function loadTimeline(id){
   V.spans=yieldCut(spans).sort((a,b)=>a.start-b.start);
   V.cam=id;
   await fetchEvents(id,from,to);
+  if(tl!==V.tl)return;
   const now=Date.now()/1000;
   const fin=winKey==="all";
-  V.lo=fin?Math.min(...V.spans.map(s=>s.start),...V.events.map(e=>e.t),now-3600):from;
-  V.hi=fin?Math.max(...V.spans.map(s=>s.end),...V.events.map(e=>e.t),now):to;
+  V.lo=fin?Math.min(...V.spans.map(s=>s.start),...V.events.map(evAt),now-3600):from;
+  V.hi=fin?Math.max(...V.spans.map(s=>s.end),...V.events.map(evAt),now):to;
   drawTimeline();
 }
 async function segmentURL(s,p){
@@ -404,7 +417,9 @@ async function segmentURL(s,p){
   return `${d.url}/segment/${encodeURIComponent(s.recording)}/e${s.epoch}/${Math.round(p.start*1000)}-${Math.round(p.end*1000)}${s.source?"."+s.source:""}.mp4?t=${encodeURIComponent(d.token)}`;
 }
 function play(i){V.queue=piecesFrom(i,0);playNext()}
+function dropRetry(){if(V.retry){clearTimeout(V.retry);V.retry=null}}
 async function playNext(){
+  dropRetry();
   if(!V.queue.length)return;
   stopLive(true);
   const p=V.queue.shift(),s=V.spans[p.i];
@@ -414,10 +429,14 @@ async function playNext(){
     (s.backupOnly?" · из резервного архива":"")+(s.source==="backfill"?" · дозаписано из резервного":"");
   const v=$("#player");v.srcObject=null;v.crossOrigin="anonymous";
   v.src=await segmentURL(s,p);
-  // A piece the door would not give (busy — `Retry-After: 5`, V/02.5 Н1.6 — or refused): said, and the same piece asked
-  // again once after five seconds; then the queue goes on.
-  v.onerror=()=>{if(p.again){setCap("кусок не отдан дверью — дальше");playNext();return}
-    p.again=true;setCap("дверь архива занята или отказала — повтор через 5 с");setTimeout(()=>{V.queue.unshift(p);playNext()},5000)};
+  // A piece the door would not give: the media element sees no status and no header (busy — 503 with five seconds,
+  // V/02.5 Н1.6 — and a refused token look the same), so the same piece is asked once more after five seconds with a
+  // door asked anew (`where` again: a new token too); then the queue goes on (V/08.3 Н1.1).
+  const gen=V.gen;
+  v.onerror=()=>{if(gen!==V.gen)return;if(p.again){setCap("кусок не отдан дверью — дальше");playNext();return}
+    p.again=true;setCap("дверь архива занята или отказала — повтор через 5 с");
+    V.retry=setTimeout(async()=>{V.retry=null;if(gen!==V.gen)return;await doorOf(s.where,true);if(gen!==V.gen)return;
+      V.queue.unshift(p);playNext()},5000)};
   if(p.off)v.addEventListener("loadedmetadata",()=>{v.currentTime=p.off},{once:true});
   v.play().catch(()=>{});
 }
@@ -449,32 +468,49 @@ async function negotiateLive(id){
   const u=camById(id),cam=cameraOf(id);
   let sid=camMain(u)?String(id):String((u&&u.full)||"");if(sid===cam)sid="";
   const q=sid?"?stream="+encodeURIComponent(sid):"";
-  // The first viewer makes the fan-out (POST /live/streams {cam}; «exists» — somebody watches already), then the offer
-  // goes to its gateway's door: 404 «not yet» (the pass has not made the stream's subscription), 503 (full, busy), 500
-  // (answer failed) — again after `Retry-After` or 1.5 s, up to 8 times (V/03.3 Н4); 404 «stream refused» — said, not
-  // repeated; 403 — where again, once.
-  try{await window.platformConsole.api("POST","/live/streams",{cam})}
-  catch(e){if(!(e.status===409&&e.body&&e.body.error==="exists")){setCap("живое отклонено: "+e.message);pc.close();return}}
+  // The first viewer makes the fan-out (POST /live/streams {cam, labels}): the network it watches from is the viewer's
+  // choice on the tab — «извне» asks a gateway with a public address (`public-address`, V/03.1 Н1.2), the local network
+  // none. «exists» — somebody watches already: the fan-out's labels are read from its row; made for the other network —
+  // said, and one with `edit` may move it (PUT {labels}: the move cuts the sessions). Then the offer goes to its gateway's
+  // door: 404 «not yet» (the pass has not made the stream's subscription), 503 (full, busy), 500 (answer failed) — again
+  // after 1.5 s, the first offer and up to 8 more (the gateway's Retry-After is not seen by the page: `cors`), then «the
+  // gateway did not take the stream»; 404 «stream refused» — said, not repeated; 403 — where again, once.
+  const gen=V.gen,PC=window.platformConsole,api=(...a)=>PC.api(...a),want=V.net==="outside"?["public-address"]:[];
+  try{await api("POST","/live/streams",want.length?{cam,labels:want}:{cam})}   // local: no labels (the field has no default)
+  catch(e){
+    if(!(e.status===409&&e.body&&e.body.error==="exists")){setCap("живое отклонено: "+words(e));pc.close();return}
+    let row=null;try{const d=await api("GET","/live/streams");row=((d&&d.configured)||[]).find(x=>String(x.id)===cam)||null}catch(x){}
+    const has=row&&Array.isArray(row.labels)?row.labels.includes("public-address"):null;
+    if(has!==null&&has!==want.includes("public-address")){
+      if(!(PC.may("edit","unit:live/"+cam)&&await PC.dialog("Раздачу создали для другой сети — переразместить? Зрители переподключатся.",[],"Переразместить"))){
+        setCap("раздачу создали для другой сети");pc.close();return}
+      try{await api("PUT","/live/streams/"+encodeURIComponent(cam),{labels:want})}catch(x){setCap("живое отклонено: "+words(x));pc.close();return}
+    }
+  }
+  if(gen!==V.gen){pc.close();return}
   const where="/live/where/"+encodeURIComponent(cam);
-  let r=null,tries=0;
+  let r=null,tries=0,spent=false;
   for(;;){
     try{r=await doorFetch(where,`/whep/${encodeURIComponent(cam)}${q}`,{method:"POST",headers:{"Content-Type":"application/sdp"},body:pc.localDescription.sdp})}
     catch(e){r=null}
     if(r&&r.status===404){let d={};try{d=await r.clone().json()}catch(e){}if(d.error==="stream refused")break}
     if(r&&![404,500,503].includes(r.status))break;
-    if(++tries>8)break;
+    if(++tries>8){spent=true;break}
     setCap(`живое: ждём шлюз… (${tries})`);
-    const ra=r?Number(r.headers.get("Retry-After")):NaN;
-    await new Promise(res=>setTimeout(res,ra>0?ra*1000:1500));
+    await new Promise(res=>setTimeout(res,1500));
+    if(gen!==V.gen){pc.close();return}
   }
-  if(!r){setCap("живое: шлюз не взял поток");pc.close();return}
+  if(!r||spent){setCap("живое: шлюз не взял поток");pc.close();return}
   if(r.status!==201){
     let d={};try{d=await r.json()}catch(e){}
     setCap("живое отклонено: "+(d.detail||d.error||r.status));
     pc.close();return;
   }
-  await pc.setRemoteDescription({type:"answer",sdp:await r.text()});
   const session=r.headers.get("Location")||"";
+  // the choice changed while the offer was under way: the late session is hung up, not shown
+  if(gen!==V.gen){if(session)doorFetch(where,"/"+session.replace(/^https?:\/\/[^/]+/,"").replace(/^\/+/,""),{method:"DELETE"}).catch(()=>{});
+    pc.close();return}
+  await pc.setRemoteDescription({type:"answer",sdp:await r.text()});
   V.live={pc,session,where,since:Date.now()/1000-30,seen:new Set(),timer:null};
   [...($("#timeline")?.children||[])].forEach(el=>el.classList.remove("playing"));
   let via="";
@@ -483,7 +519,8 @@ async function negotiateLive(id){
   const btn=$("#liveBtn");if(btn){btn.textContent="Остановить";btn.classList.add("on")}
   const feed=$("#livefeed");
   if(feed){feed.style.display="block";feed.innerHTML='<small class="sub">события, пока вы смотрите — что видят подсистемы на этом объекте</small>'}
-  V.live.timer=setInterval(()=>pollLive(id),3000);pollLive(id);
+  // the feed asks the camera's events, as the timeline does — what is common is the stream's camera's (V/08.1 Н1.5)
+  V.live.timer=setInterval(()=>pollLive(cam),3000);pollLive(cam);
 }
 function stopLive(keepUi){
   if(!V.live)return;
@@ -503,6 +540,7 @@ function stopLive(keepUi){
 function videoCardHtml(c){
   return card("Просмотр",`<div class="vid"><video id="player" controls playsinline></video></div>
     <div class="vrow"><button type="button" class="btn s ${V.live?"on":""}" id="liveBtn" data-act="live">${V.live?"Остановить":"Живое видео"}</button>
+      <select data-act="net" style="width:auto" title="Откуда вы смотрите: раздачу извне ставят на шлюз с публичным адресом"><option value="local"${V.net==="local"?" selected":""}>из локальной сети</option><option value="outside"${V.net==="outside"?" selected":""}>извне</option></select>
       <span class="sub" id="playing" style="flex:1;min-width:120px">${esc(V.live?"живое":"выберите фрагмент на шкале")}</span><span class="sub" id="tlnote"></span></div>
     <div id="livefeed" class="livefeed" style="display:${V.live?"block":"none"}"></div>`,
     `<span class="sub" style="font-weight:400">${esc(c.liveUrl||"")}</span>`)
@@ -570,7 +608,7 @@ function drawDeviceLine(){
 async function pinBackup(){
   const rs=deviceRanges(),to=primariesOf(V.cam);let ok=0,why="";
   for(const rec of to)for(const r of rs){
-    try{await pc.api("POST","/rec/requests",{unit:rec.id,from:Math.floor(r.start),to:Math.ceil(r.end)});ok++}catch(e){why=e.message||String(e)}
+    try{await pc.api("POST","/rec/requests",{unit:rec.id,from:Math.floor(r.start),to:Math.ceil(r.end)});ok++}catch(e){why=words(e)}
   }
   pc.toast(ok?`Заявок на дозапись: ${ok}. Регистратор заберёт их из резервного архива.`:`Не получилось: ${why}`);
 }
@@ -606,7 +644,10 @@ function drawEvents(){
   });
   const ul=$("#events");
   if(ul){
-    ul.innerHTML=(V.truncated?`<li class="sub">окно обрезано: показан его конец</li>`:"")+([...shown].reverse().slice(0,200).map(e=>{
+    // the last 200 by the event's time, newest first, a tie by `id` (as `cut` of the merge contract) — the answer comes in
+    // class groups (alarms, then observations), so its order is not the time's (V/08.2 Н1.3)
+    const byTime=(a,b)=>evAt(b)-evAt(a)||(String(a.id)<String(b.id)?-1:String(a.id)>String(b.id)?1:0);
+    ul.innerHTML=(V.truncated?`<li class="sub">окно обрезано: показан его конец</li>`:"")+([...shown].sort(byTime).slice(0,200).map(e=>{
       const extra=Object.entries(e).filter(([k])=>!["subsystem","unit","of","epoch","t","kind","server","bucket","fenced","epoch_is","class","occurred"].includes(k))
         .map(([k,v])=>`${k}=${typeof v==="object"?JSON.stringify(v):v}`).join(" ");
       const note=evKindRu(e)!==e.kind?evNoteRu(e):"";
@@ -618,8 +659,11 @@ function drawEvents(){
   }
   if(ul)ul.querySelectorAll("li[data-t]").forEach(li=>{li.onclick=()=>seek(+li.dataset.t)});
 }
+// A jump to a moment (an event, a mark) takes an unfenced span over it; a fenced one only when none other covers it (its
+// frames are a twin, not damage — V/08.3 Н1.1). «Chosen itself» is only a click on the span.
 function seek(t){
-  const i=V.spans.findIndex(s=>s.media&&s.start<=t&&t<s.end);
+  let i=V.spans.findIndex(s=>s.media&&!s.fenced&&s.start<=t&&t<s.end);
+  if(i<0)i=V.spans.findIndex(s=>s.media&&s.start<=t&&t<s.end);
   if(i<0){setCap(`${fmtT(t)} · в этот момент не записывалось`);return}
   V.queue=piecesFrom(i,t);playNext();
 }
@@ -629,7 +673,7 @@ async function addMark(e,id){
   if(!note)return false;
   try{await pc.api("POST","/marks",{unit:"cam/"+id,note});e.target.reset();pc.toast("Отметка записана");
     setTimeout(()=>{if(pc.selected()==="unit:cam/"+id)loadTimeline(id)},3500)}
-  catch(err){pc.toast("Отказано: "+err.message)}
+  catch(err){pc.toast("Отказано: "+words(err))}
   return false;
 }
 // ── Живое видео через WHEP ───────────────────────────────────────────────────────────────────────────────────────
@@ -663,8 +707,8 @@ async function pollLive(id){
   try{const r=await fetch(`/events?from=${V.live.since}&to=1e12&unit=${encodeURIComponent("cam/"+id)}`);if(!r.ok)return;d=await r.json()}catch(e){return}
   if(!V.live)return;                       // the viewer hung up while it was asked
   const feed=$("#livefeed");if(!feed)return;
-  (d.events||[]).sort((a,b)=>a.t-b.t).forEach(e=>{
-    const k=`${e.server}|${e.bucket}|${e.t}|${e.kind}`;
+  (d.events||[]).sort((a,b)=>evAt(a)-evAt(b)).forEach(e=>{
+    const k=String(e.id);                  // the line's id: unique, copies drop by it (the event journal contract)
     if(V.live.seen.has(k))return;
     V.live.seen.add(k);
     const el=document.createElement("div");el.className="ev";
@@ -679,16 +723,16 @@ pc.addTab("unit",{id:"vid",label:"Видео",
   busy:()=>playingNow(),
   render:(host,ref,obj)=>{
     if(!isCam(ref))return;
-    stopLive(true);
+    stopLive(true);V.gen++;dropRetry();V.net="local";
     // live — the stream chosen (a stream's own, the camera's full-screen one); the timeline, events and keeps — the camera's
     const id=camOf(ref),cam=cameraOf(id);
     host.innerHTML=videoCardHtml({id:cam,liveUrl:(obj&&obj.live_url)||""});
-    wire(host,{live:()=>toggleLive(id),win:el=>setWin(el.dataset.win,cam),evfilter:el=>{V.evfilter=el.value;drawEvents()},keepShown:()=>keepShown(cam)});
+    wire(host,{live:()=>toggleLive(id),net:el=>{V.net=el.value==="outside"?"outside":"local"},win:el=>setWin(el.dataset.win,cam),evfilter:el=>{V.evfilter=el.value;drawEvents()},keepShown:()=>keepShown(cam)});
     host.querySelector("#markForm").onsubmit=e=>addMark(e,cam);
     host.querySelector("#player").onended=()=>playNext();
     loadTimeline(cam);
   }});
-pc.on("select",()=>stopLive());
+pc.on("select",()=>{V.gen++;dropRetry();stopLive()});
 window.addEventListener("beforeunload",()=>stopLive(true));
 
 // ── «Потоки»: the camera's streams, and which of them a grid and a full screen show ───────────────────────────────
@@ -705,7 +749,7 @@ function streamsCardHtml(cam){
   return card("Потоки камеры",body,`<button type="button" class="btn s" data-act="addStream">＋ Поток</button>`);
 }
 async function camWrite(cam,body,said){
-  try{await pc.api("PUT","/cam/cameras/"+encodeURIComponent(cam),body);pc.toast(said)}catch(e){pc.toast("Отказано: "+e.message)}
+  try{await pc.api("PUT","/cam/cameras/"+encodeURIComponent(cam),body);pc.toast(said)}catch(e){pc.toast("Отказано: "+words(e))}
 }
 async function addStream(cam){
   const v=await pc.dialog("Новый поток: "+camName(cam),[
@@ -716,7 +760,7 @@ async function addStream(cam){
   if(!v)return;
   if(!v.source){pc.toast("Нужен адрес потока");return}
   const body={main:String(cam),profile:v.profile||"поток",source:v.source,...(v.cred_username?{cred_username:v.cred_username}:{}),...(v.cred_secret?{cred_secret:v.cred_secret}:{})};
-  try{await pc.api("POST","/cam/cameras",body);pc.toast("Поток создан")}catch(e){pc.toast("Отказано: "+e.message)}
+  try{await pc.api("POST","/cam/cameras",body);pc.toast("Поток создан")}catch(e){pc.toast("Отказано: "+words(e))}
 }
 pc.addTab("unit",{id:"streams",label:"Потоки",
   render:(host,ref)=>{
@@ -897,11 +941,11 @@ async function reloadRec(){
 // A switch is an ACTION, not a field of a draft: pressed — written (as on the volume and the scenario).
 async function recWrite(id,body,said){
   try{await pc.api("PUT","/rec/recordings/"+encodeURIComponent(id),body);await reloadRec();pc.toast(said)}
-  catch(e){pc.toast("Отказано: "+e.message)}
+  catch(e){pc.toast("Отказано: "+words(e))}
 }
 function delRec(id){
   if(!pc.confirm(`Удалить запись «${id}»?`,"Видео, которое уже записано, остаётся в томе до истечения срока хранения."))return;
-  (async()=>{try{await pc.api("DELETE","/rec/recordings/"+encodeURIComponent(id));await reloadRec();pc.toast("Запись удалена")}catch(e){pc.toast("Отказано: "+e.message)}})();
+  (async()=>{try{await pc.api("DELETE","/rec/recordings/"+encodeURIComponent(id));await reloadRec();pc.toast("Запись удалена")}catch(e){pc.toast("Отказано: "+words(e))}})();
 }
 function toLocalInput(t){const d=new Date(t*1000),z=n=>String(n).padStart(2,"0");
   return`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`}
@@ -919,13 +963,13 @@ async function openKeep(cam,from,to){
   // the camera's recordings as they are now: one deleted later still has its minutes copied (V/02.7 Н1.1)
   const rl=camRecs(cam).map(r=>r.id);
   try{await pc.api("POST","/rec/keeps",{cam:String(cam),from:Math.floor(f),to:Math.ceil(t),...(v.note.trim()?{note:v.note.trim()}:{}),...(rl.length?{recordings:rl}:{})});await reloadRec();pc.toast("Отрезок удержан")}
-  catch(e){pc.toast("Отказано: "+e.message)}
+  catch(e){pc.toast("Отказано: "+words(e))}
 }
 function keepShown(cam){const now=Date.now()/1000,w=WINDOWS.find(x=>x[0]===winKey);openKeep(cam,w&&w[2]?now-w[2]:V.lo||now-3600,now)}
 function liftKeep(name){
   const k=keeps.find(x=>x.name===name);
   if(!pc.confirm("Снять удержание?",(k?`${fmtDayTime(k.from)} — ${fmtDayTime(k.to)}. `:"")+"Отрезок снова подчиняется сроку хранения записи."))return;
-  (async()=>{try{await pc.api("DELETE","/rec/keeps/"+encodeURIComponent(name));await reloadRec();pc.toast("Удержание снято")}catch(e){pc.toast("Отказано: "+e.message)}})();
+  (async()=>{try{await pc.api("DELETE","/rec/keeps/"+encodeURIComponent(name));await reloadRec();pc.toast("Удержание снято")}catch(e){pc.toast("Отказано: "+words(e))}})();
 }
 // The check of a keep's seal is the incidents volume holder's (its door, ADR-0015, ADR-0057 p. 3): the copy lies there.
 // One request per recording of the keep: the door is a place token for the recording <r> (/rec/where/<table>/<volume>
@@ -992,7 +1036,7 @@ async function addToArchive(opt){
   const name=!taken.has(v.cam)?v.cam:v.home?`${v.cam}-${v.home}`:stream?`${v.cam}-s${stream}`:v.cam;
   if(taken.has(name)){pc.toast(`Запись «${name}» уже есть`);return}
   try{await pc.api("POST","/rec/recordings",{name,cam:v.cam,...(stream?{stream}:{}),retention_days:days,...(v.home?{home:v.home}:{})});await reloadRec();pc.toast("Запись создана")}
-  catch(e){pc.toast("Отказано: "+e.message)}
+  catch(e){pc.toast("Отказано: "+words(e))}
 }
 
 // ── Volumes: under each server its own, the network ones apart; their cards; declaring and withdrawing ──────────
@@ -1039,27 +1083,32 @@ async function openVolume(kind,server,was){
     ...(net?[{name:"access_key",label:"Ключ доступа (ID)",value:was?was.access_key||"":""},{name:"access_secret",label:"Секрет ключа",type:"password",help:"пусто — оставить текущий; при смене адреса впишите заново"}]
           :[{name:"server",label:"Сервер",value:was?was.server||"":server||""}])],was?"Записать":"Объявить");
   if(!v)return;
-  const body={name:v.name.trim(),kind:v.kind,url:v.url.trim(),quota_bytes:Math.round((parseFloat(v.quota)||0)*1073741824)};
-  if(!net)body.server=(v.server||"").trim();
+  const old=volByName(v.name.trim());
+  // POST of a table row replaces it whole (P/06.1): every field of the table's schema (the rec manifest's
+  // `tables.<places>.fields`) the dialog does not show is carried from the row as it is — not a list of three; what the
+  // platform computes (`held_by`, the revision, the stamps) is no field of the schema, and a sealed secret is not read
+  const fields=((((pc.manifest("rec")||{}).tables||{})[T_PLACES]||{}).fields)||{},body={};
+  if(old)for(const k of Object.keys(fields))if(k in old&&old[k]!=null&&!/_secret$/.test(k)&&old[k]!=="***")body[k]=old[k];
+  Object.assign(body,{name:v.name.trim(),kind:v.kind,url:v.url.trim(),quota_bytes:Math.round((parseFloat(v.quota)||0)*1073741824)});
+  if(!net)body.server=(v.server||"").trim();else delete body.server;
   if(v.access_key&&v.access_key.trim())body.access_key=v.access_key.trim();
   if(v.access_secret)body.access_secret=v.access_secret;
-  const old=volByName(body.name);
-  // POST of a table row replaces it whole (P/06.1): what the dialog does not show is carried from the row as it is
-  if(old){if(old.enabled===false)body.enabled=false;if(old.kind==="edge"&&body.kind==="edge"&&old.cam!=null)body.cam=old.cam}
+  if(body.kind!=="edge")delete body.cam;           // `cam` is an edge card's only (the table's schema)
   if(body.kind==="incidents")body.admits=false;   // evidence takes no recordings (the table's schema, V/02.1 Н1.2)
+  delete body.shrink_confirmed;                    // its own rule below
   const pend=old?shrinkPending(old):0;
   if(old&&old.quota_bytes&&(body.quota_bytes<old.quota_bytes||pend&&body.quota_bytes===old.quota_bytes)){
     if(!pc.confirm(`Уменьшить том «${body.name}»${body.quota_bytes<old.quota_bytes?` с ${gbytes(old.quota_bytes)}`:""} до ${gbytes(body.quota_bytes)}?`,"Самое старое будет стёрто, чтобы уместиться: стёртое не вернуть."))return;
     body.shrink_confirmed=body.quota_bytes;
   }else if(old&&body.quota_bytes===old.quota_bytes&&+old.shrink_confirmed)body.shrink_confirmed=+old.shrink_confirmed;
   try{await pc.api("POST","/rec/"+encodeURIComponent(T_PLACES),body);await reloadRec();pc.select("vol:"+body.name);pc.toast(body.shrink_confirmed?"Квота тома уменьшена":"Архив объявлен")}
-  catch(e){pc.toast("Отказано: "+e.message)}
+  catch(e){pc.toast("Отказано: "+words(e))}
 }
 function delVolume(name){
   const list=volRecs(name);
   if(!pc.confirm(`Отозвать объявление тома «${name}»?`,(list.length?`Записей, выбравших этот том: ${list.length} — они уедут туда, где есть место. `:"")+"Записанное видео не удаляется: отозвать объявление — не то же самое, что стереть архив."))return;
   (async()=>{try{await pc.api("DELETE","/rec/"+encodeURIComponent(T_PLACES)+"/"+encodeURIComponent(name));
-    if(pc.selected()==="vol:"+name)pc.select("netvols");await reloadRec();pc.toast("Объявление отозвано")}catch(e){pc.toast("Отказано: "+e.message)}})();
+    if(pc.selected()==="vol:"+name)pc.select("netvols");await reloadRec();pc.toast("Объявление отозвано")}catch(e){pc.toast("Отказано: "+words(e))}})();
 }
 pc.addTreeNodes("server",ref=>recOn?serverVolumes(ref.slice(7)).map(v=>({ref:"vol:"+v.name,label:v.name,icon:"storage",badge:volKind(v,true),off:!v.enabled})):[]);
 pc.addTreeNodes("servers",()=>recOn?[{ref:"netvols",label:"Сетевые архивы",icon:"storage",count:networkVolumes().length,
@@ -1090,12 +1139,14 @@ pc.addMenu("vol",ref=>{const v=volByName(ref.slice(4));return v&&v.enabled?[{lab
 // is the auto manifest's `then` (each of its `anyOf`, with its required fields): the operator cannot ask for what no
 // executor is written for — a check of the specification holds the two together. A detector's actions are offered when
 // the console mounts det.
+// A field's type is the `then` schema's (V/07.1 Н1.3): `int` — a JSON integer from `min`, `num` — a number in [min, max];
+// the rest strings. `params` is a string, as the detector's own field is (V/04.1 Н1.1): the form writes it as typed.
 const RACTIONS=[
-  {sub:"cam",action:"output",label:"Щёлкнуть реле",fields:[{id:"unit",label:"Устройство"},{id:"port",label:"Реле №"},{id:"state",label:"Состояние",opt:true},{id:"pulse_ms",label:"Импульс, мс",opt:true}]},
-  {sub:"cam",action:"preset",label:"Встать в пресет",fields:[{id:"unit",label:"Камера"},{id:"n",label:"Пресет №"}]},
-  {sub:"rec",action:"record",label:"Записывать",fields:[{id:"cam",label:"Камера"},{id:"minutes",label:"Минут"},{id:"archive",label:"Архив",opt:true}]},
-  {sub:"det",action:"detect",label:"Искать детектором",fields:[{id:"cam",label:"Камера"},{id:"kind",label:"Детектор"},{id:"minutes",label:"Минут"},{id:"params",label:"Параметры (JSON)",opt:true,json:true}]},
-  {sub:"det",action:"scan",label:"Искать в архиве",fields:[{id:"cam",label:"Камера"},{id:"kind",label:"Детектор"},{id:"before",label:"Секунд до",opt:true},{id:"after",label:"Секунд после",opt:true},{id:"rec",label:"Запись",opt:true},{id:"params",label:"Параметры (JSON)",opt:true,json:true}]}];
+  {sub:"cam",action:"output",label:"Щёлкнуть реле",fields:[{id:"unit",label:"Устройство"},{id:"port",label:"Реле №",t:"int",min:1},{id:"state",label:"Состояние",opt:true},{id:"pulse_ms",label:"Импульс, мс",opt:true,t:"int",min:0}]},
+  {sub:"cam",action:"preset",label:"Встать в пресет",fields:[{id:"unit",label:"Камера"},{id:"n",label:"Пресет №",t:"int",min:1}]},
+  {sub:"rec",action:"record",label:"Записывать",fields:[{id:"cam",label:"Камера"},{id:"minutes",label:"Минут",t:"num",min:1,max:1440},{id:"archive",label:"Архив",opt:true}]},
+  {sub:"det",action:"detect",label:"Искать детектором",fields:[{id:"cam",label:"Камера"},{id:"kind",label:"Детектор"},{id:"minutes",label:"Минут",t:"num",min:1,max:1440},{id:"params",label:"Параметры модели",opt:true}]},
+  {sub:"det",action:"scan",label:"Искать в архиве",fields:[{id:"cam",label:"Камера"},{id:"kind",label:"Детектор"},{id:"before",label:"Секунд до",opt:true,t:"num",min:0,max:3600},{id:"after",label:"Секунд после",opt:true,t:"num",min:0,max:3600},{id:"rec",label:"Запись",opt:true},{id:"params",label:"Параметры модели",opt:true}]}];
 let RSEL=null,ruleDraft=null,ruleFires={},autos=[],autoOff=false,detOn=false,RULES_HOST=null;
 const actionsOn=()=>RACTIONS.filter(a=>a.sub!=="det"||detOn);
 const actionKind=a=>RACTIONS.find(k=>k.sub===a.sub&&k.action===a.action)||{sub:a.sub,action:a.action,label:(a.sub||"?")+"."+(a.action||"?"),fields:[]};
@@ -1112,7 +1163,8 @@ async function loadAuto(){
       .sort((a,b)=>a.id.localeCompare(b.id));
     autoOff=false;
   }catch(e){autos=[];autoOff=true}
-  try{detOn=(await fetch("/det/manifest")).ok}catch(e){detOn=false}
+  // det is there when the console mounts it (`/mounts`, P/06.5 root), not when the module's subsystems name it
+  try{const m=await getJSON("/mounts");detOn=m.root==="det"||!!(m.mounts&&"det" in m.mounts)}catch(e){detOn=false}
 }
 // The last firings: the evaluator writes `fired` into the scenario's bucket — «why did the door open at 14:02».
 async function loadFires(id){
@@ -1127,24 +1179,36 @@ function ruleOf(r){return{id:r.id,name:r.name||r.id,enabled:r.enabled!==false,ra
   valid_for:+r.valid_for||0,when:jsonList(r.when),then:jsonList(r.then)}}
 const curRule=()=>ruleDraft||(autos.find(r=>r.id===RSEL)?ruleOf(autos.find(r=>r.id===RSEL)):null);
 const editRule=()=>(ruleDraft=ruleDraft||JSON.parse(JSON.stringify(curRule())));
+// A name by the row-check contract, «Identifier» (`named.refused`): not empty, not "." or "..", no / \ | " , no
+// control (Cc), line or paragraph separator (Zl, Zp), no digit outside 0–9. A taken name is the door's 409, not checked here.
+const idProblem=n=>!n?"пустое":n==="."||n===".."?"«.» и «..» — не имена":/[\/\\|",]/.test(n)?"знаки / \\ | \" , в имени нельзя":
+  /[\p{Cc}\p{Zl}\p{Zp}]/u.test(n)?"управляющие знаки и переводы строк в имени нельзя":/(?![0-9])\p{Nd}/u.test(n)?"цифры — только 0–9":"";
 // The same refusals as the server's, in its words: a screen that takes what the subsystem will refuse lies twice.
 function ruleProblem(r){
   if(!r.name)return"У сценария должно быть имя: по нему его находят в списке и в журнале";
+  if(!r.id){const w=idProblem(r.name);if(w)return"Имя сценария: "+w}
   if(!r.when.length||r.when.length>4)return"«если» — от одного до четырёх событий";
   if(r.when.some(t=>!t.sub||!t.kind))return"у события должны быть подсистема и вид";
   if(!r.then.length||r.then.length>4)return"«то» — от одного до четырёх действий";
   for(const a of r.then){const k=actionKind(a),miss=k.fields.filter(f=>!f.opt).find(f=>!String(a[f.id]??"").trim());if(miss)return`«${k.label}»: не заполнено поле «${miss.label}»`}
-  for(const a of r.then){const k=actionKind(a),j=k.fields.find(f=>f.json&&a[f.id]!=null&&(typeof a[f.id]!=="object"||Array.isArray(a[f.id])));if(j)return`«${k.label}»: «${j.label}» — объект JSON`}
+  for(const a of r.then){const k=actionKind(a);for(const f of k.fields){const x=a[f.id];if(x==null||!f.t)continue;
+    if(f.t==="int"&&!(Number.isInteger(x)&&x>=f.min))return`«${k.label}»: «${f.label}» — целое от ${f.min}`;
+    if(f.t==="num"&&!(typeof x==="number"&&isFinite(x)&&x>=f.min&&x<=f.max))return`«${k.label}»: «${f.label}» — число от ${f.min} до ${f.max}`}
+    // what one field cannot say: an empty window of a scan (V/07.3 Н1.1), said before writing
+    if(a.sub==="det"&&a.action==="scan"&&a.before===0&&a.after===0)return`«${k.label}»: окно пустое — нужно «секунд до» или «секунд после»`}
+  for(const t of r.when)if(t.match!=null&&(typeof t.match!=="object"||Array.isArray(t.match)))return"«Уточнения» — объект JSON: {\"port\": 1}";
   if(r.within<0||r.within>3600)return"«в пределах» — от 0 до 3600 секунд";
   // what one field's form cannot say — the evaluator's refusal of two fields together (V/07.3 Н1.1), said before writing
   if(r.when.length>1&&!r.within)return"два события и больше — нужно «в пределах»: окно, в которое они должны попасть";
   if(r.when.length===1&&r.within)return"«в пределах» — окно между событиями; у одного события окна нет";
   if(r.rate_per_minute&&(r.rate_per_minute<1||r.rate_per_minute>600))return"не чаще — от 1 до 600 в минуту (0 — по умолчанию)";
-  if(r.valid_for&&(r.valid_for<5||r.valid_for>600))return"заявка действительна — от 5 до 600 секунд (0 — по умолчанию)";
+  if(r.valid_for&&(r.valid_for<10||r.valid_for>600))return"заявка действительна — от 10 до 600 секунд (0 — по умолчанию)";
   return"";
 }
-const parseMatch=s=>Object.fromEntries(String(s||"").split(",").map(x=>x.split("=").map(y=>y.trim())).filter(x=>x[0]&&x[1]!==undefined&&x[1]!==""));
-const matchText=m=>Object.entries(m||{}).map(([k,v])=>`${k}=${v}`).join(", ");
+// `match` — a JSON object as typed: its values keep their types (the comparison is strict, "1" ≠ 1 — V/07.2 Н1.3);
+// what does not parse is kept as text and ruleProblem names it
+const parseMatch=s=>{try{return JSON.parse(s)}catch(e){return s}};
+const matchText=m=>m==null?"":typeof m==="string"?m:JSON.stringify(m);
 function rulesListHtml(){
   if(autoOff)return`<div class="n"><span class="nm sub">Подсистема автоматизации не смонтирована</span></div>`;
   return autos.map(r=>{const on=r.enabled!==false,st=!on?"выключен":r.phase==="running"?"следит":r.phase==="refused"?"отказан":r.phase==="unreadable"?"не читается":"размещается";
@@ -1158,7 +1222,7 @@ function ruleCardHtml(r){
       <div><label>Подсистема</label><input type="text" value="${esc(t.sub)}" data-act="tf" data-i="${i}" data-f="sub"></div>
       <div><label>Событие</label><input type="text" list="auto-kinds" value="${esc(t.kind)}" data-act="tf" data-i="${i}" data-f="kind"></div>
       <div><label>Единица</label><input type="text" placeholder="любая" value="${esc(t.unit??"")}" data-act="tf" data-i="${i}" data-f="unit"></div>
-      <div><label>Уточнения</label><input type="text" placeholder="port=1, value=closed" value="${esc(matchText(t.match))}" data-act="tf" data-i="${i}" data-f="match"></div>
+      <div><label>Уточнения</label><input type="text" placeholder='{"port": 1, "value": "closed"}' value="${esc(matchText(t.match))}" data-act="tf" data-i="${i}" data-f="match"></div>
       <div><label>&nbsp;</label><button type="button" class="btn s" title="Убрать" data-act="tdel" data-i="${i}">✕</button></div></div>`).join("")+
     `<datalist id="auto-kinds">${kinds.map(([k,w])=>`<option value="${esc(k)}">${esc(w)}</option>`).join("")}</datalist>
     <div class="vrow"><button type="button" class="btn s" data-act="tadd">Добавить событие</button>
@@ -1168,7 +1232,7 @@ function ruleCardHtml(r){
     return`<div class="g" style="grid-template-columns:44px 1.4fr repeat(4,1fr) auto;align-items:end;margin-bottom:8px">
       <div><label>&nbsp;</label><div class="sub" style="padding:8px 0">${i+1}</div></div>
       <div><label>Действие</label><select data-act="akind" data-i="${i}">${acts.map((x,j)=>`<option value="${j}" ${j===ki?"selected":""}>${esc(x.label)}</option>`).join("")}${ki<0?`<option value="" selected>${esc(k.label)}</option>`:""}</select></div>
-      ${k.fields.map(f=>`<div><label>${esc(f.label)}${f.opt?" <span class='sub'>необяз.</span>":""}</label><input type="text" value="${esc(f.json&&a[f.id]!=null&&typeof a[f.id]==="object"?JSON.stringify(a[f.id]):a[f.id]??"")}" data-act="af" data-i="${i}" data-f="${esc(f.id)}"${f.json?' data-json="1"':""}></div>`).join("")}
+      ${k.fields.map(f=>`<div><label>${esc(f.label)}${f.opt?" <span class='sub'>необяз.</span>":""}</label><input type="text" value="${esc(a[f.id]??"")}" data-act="af" data-i="${i}" data-f="${esc(f.id)}"></div>`).join("")}
       <div><label>&nbsp;</label><button type="button" class="btn s" title="Убрать" data-act="adel" data-i="${i}">✕</button></div></div>`}).join("")+
     `<div class="vrow"><button type="button" class="btn s" data-act="aadd">Добавить действие</button>
       <span class="sub">заявка действительна <input type="number" min="0" max="600" style="width:80px" value="${esc(r.valid_for)}" data-act="rf" data-f="valid_for"> с · не чаще <input type="number" min="0" max="600" style="width:80px" value="${esc(r.rate_per_minute)}" data-act="rf" data-f="rate_per_minute"> в минуту (0 — по умолчанию)</span></div>
@@ -1197,13 +1261,13 @@ function renderRules(){
     pick:el=>{RSEL=el.dataset.id;ruleDraft=null;renderRules()},
     new:()=>{RSEL=null;const a=actionsOn()[0];ruleDraft={id:"",name:"",enabled:true,rate_per_minute:0,within:0,valid_for:0,when:[{sub:"cam",kind:(triggerKinds()[0]||["silent"])[0]}],then:[{sub:a.sub,action:a.action}]};renderRules()},
     rf:(el)=>{const d=editRule(),f=el.dataset.f;d[f]=f==="enabled"?el.value==="1":f==="name"?el.value.trim():num(el.value);renderRules()},
-    tf:(el)=>{const t=editRule().when[i(el)],f=el.dataset.f,v=el.value.trim();if(f==="match"){const m=parseMatch(v);if(Object.keys(m).length)t.match=m;else delete t.match}else if(v)t[f]=v;else delete t[f];renderRules()},
+    tf:(el)=>{const t=editRule().when[i(el)],f=el.dataset.f,v=el.value.trim();if(f==="match"){if(v)t.match=parseMatch(v);else delete t.match}else if(v)t[f]=v;else delete t[f];renderRules()},
     tadd:()=>{editRule().when.push({sub:"cam",kind:""});renderRules()},
     tdel:el=>{editRule().when.splice(i(el),1);renderRules()},
     akind:el=>{const k=actionsOn()[+el.value];if(k)editRule().then[i(el)]={sub:k.sub,action:k.action};renderRules()},
-    af:el=>{const a=editRule().then[i(el)],v=el.value.trim();
-      // a JSON field kept as typed when it does not parse: ruleProblem names it, nothing is written
-      if(!v)delete a[el.dataset.f];else if(el.dataset.json){try{a[el.dataset.f]=JSON.parse(v)}catch(e){a[el.dataset.f]=v}}else a[el.dataset.f]=v;renderRules()},
+    af:el=>{const a=editRule().then[i(el)],v=el.value.trim(),f=actionKind(a).fields.find(x=>x.id===el.dataset.f)||{};
+      // the value by the field's type; what is not one is kept as typed — ruleProblem names it, nothing is written
+      if(!v)delete a[el.dataset.f];else if(f.t&&v!==""&&isFinite(Number(v)))a[el.dataset.f]=Number(v);else a[el.dataset.f]=v;renderRules()},
     aadd:()=>{const k=actionsOn()[0];editRule().then.push({sub:k.sub,action:k.action});renderRules()},
     adel:el=>{editRule().then.splice(i(el),1);renderRules()},
     save:()=>saveRule(),undo:()=>{ruleDraft=null;renderRules()},del:()=>delRule(RSEL)});
@@ -1216,12 +1280,12 @@ async function saveRule(){
     if(r.id)await pc.api("PUT","/auto/scenarios/"+encodeURIComponent(r.id),body);
     else await pc.api("POST","/auto/scenarios",{name:r.name,...body});
     RSEL=r.id||r.name;ruleDraft=null;await loadAuto();renderRules();pc.toast("Сохранено");
-  }catch(e){pc.toast("Отказано: "+e.message)}
+  }catch(e){pc.toast("Отказано: "+words(e))}
 }
 function delRule(id){
   if(!id||!pc.confirm(`Удалить сценарий «${id}»?`,"Уже поданные заявки этим не отменяются: их выполнит или отвергнет тот, кому они адресованы."))return;
   (async()=>{try{await pc.api("DELETE","/auto/scenarios/"+encodeURIComponent(id));RSEL=null;ruleDraft=null;await loadAuto();renderRules();pc.toast("Сценарий удалён")}
-    catch(e){pc.toast("Отказано: "+e.message)}})();
+    catch(e){pc.toast("Отказано: "+words(e))}})();
 }
 pc.addSection({id:"rules",label:"Сценарии",icon:"bolt",after:"units",render:host=>{RULES_HOST=host;loadAuto().then(renderRules)}});
 
@@ -1257,7 +1321,7 @@ async function domainRecording(camera,backup=false){
   if(!ref){pc.toast("Для записи нужно имя камеры в домене");return}
   const route="/domain/placement/rec/"+encodeURIComponent(ref);
   let old=null;
-  try{old=await pc.api("GET",route)}catch(e){if(e.status!==404){pc.toast("Назначение недоступно: "+e.message);return}}
+  try{old=await pc.api("GET",route)}catch(e){if(e.status!==404){pc.toast("Назначение недоступно: "+words(e));return}}
   if(backup&&!old){pc.toast("Сначала назначьте основную запись");return}
   const was=old?jsonList(old.copies):[];
   const members=((domView&&domView.members)||[]).filter(m=>!m.left&&!m.refused&&(!backup||m.name!==old.cluster&&!was.includes(m.name)));
@@ -1276,7 +1340,7 @@ async function domainRecording(camera,backup=false){
     const row=`строку rec/recordings с cam: ref:${ref}, ref: ${ref}`+(backup?", дом на резервном томе, when: offline":"");
     const moved=!backup&&old&&old.cluster!==v.cluster?` Запись кластера ${old.cluster} встанет и хранит архив до срока; её строку убирает оператор ${old.cluster}.`:"";
     pc.toast(`${backup?"Резерв назначен":"Запись назначена"} в ${v.cluster}. Оператор ${v.cluster} заводит ${row}.${moved}`);
-  }catch(e){pc.toast("Отказано: "+e.message)}
+  }catch(e){pc.toast("Отказано: "+words(e))}
 }
 function domCamCard(host,key){
   const u=domFind("cam",key);
@@ -1333,7 +1397,7 @@ pc.addCard("streamaccounts",host=>{
   forgetAccountPassword();
   const view=++accountView,live=()=>view===accountView&&host.isConnected&&pc.selected()==="streamaccounts:local";
   let rows=[],loading=false,busy=false,error="",draft="";
-  const failure=e=>(e.status?String(e.status)+": ":"")+(e.message||String(e));
+  const failure=e=>(e.status?String(e.status)+": ":"")+words(e);
   function draw(){
     if(!live())return;
     forgetAccountPassword();

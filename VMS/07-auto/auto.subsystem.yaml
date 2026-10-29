@@ -97,7 +97,7 @@ unit:
                 cam: {type: [string, integer]}
                 kind: {type: string}
                 minutes: {type: number, minimum: 1, maximum: 1440}
-                params: {}
+                params: {type: string}   # as the owner has it (det, detjob: string; V/08 review, question 4)
               required: [cam, kind, minutes]
               additionalProperties: false
             - properties:
@@ -108,7 +108,7 @@ unit:
                 before: {type: number, minimum: 0, maximum: 3600}
                 after: {type: number, minimum: 0, maximum: 3600}
                 rec: {type: string}
-                params: {}
+                params: {type: string}   # as the owner has it (det, detjob: string; V/08 review, question 4)
               required: [cam, kind]
               additionalProperties: false
     # The ceiling on firing, per scenario. Automation that can fire without bound is automation that can ring: a sensor
