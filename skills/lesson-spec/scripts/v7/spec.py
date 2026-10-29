@@ -445,13 +445,16 @@ def key_templates(root, catalog):
 
 
 def who_of(row, mode):
-    """«Кто исполняет» по каталогу: писатель — роли операций `ops`, читатель — `readers`."""
-    s = re.sub(r"\([^()]*\)", "", row["ops"] if mode == "writer" else row["readers"])
+    """«Кто исполняет» по каталогу: писатель — роли операций `ops`, читатель — `readers`. Пояснения в скобках снимаются
+    до неподвижной точки (вложенные), роли делятся по `,`, операции — по `;`, пробелы вокруг — любые."""
+    s, prev = row["ops"] if mode == "writer" else row["readers"], None
+    while s != prev:
+        s, prev = re.sub(r"\([^()]*\)", "", s), s
     if mode != "writer":
-        return [r for r in s.split(", ") if r]
+        return [r for r in re.split(r"\s*,\s*", s.strip()) if r]
     out = []
-    for part in s.split("; "):
-        for r in part.partition("=")[2].split(", "):
+    for part in re.split(r"\s*;\s*", s.strip()):
+        for r in re.split(r"\s*,\s*", part.partition("=")[2].strip()):
             if r and r not in out:
                 out.append(r)
     return out
