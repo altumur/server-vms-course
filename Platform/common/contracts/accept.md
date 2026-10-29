@@ -120,7 +120,10 @@ member_objects:                               # что агент несёт и 
     охват:                    reports и witness — каждого манифеста, объявившего их, domain.ref не нужен; ключ пульса или шарда
                               снимка манифеста с domain.ref — своей семьи, reports его не расширяет и не заменяет; у манифеста
                               без domain.ref этих семей нет — объекты идут как reports (C09-REPORTS-SCOPE-01, решение
-                              Спецификации домена)
+                              Спецификации домена); reports — последняя из семей member_objects: ключ иной семьи (вклады,
+                              свидетели, domain/…) — её; строка вклада, не прошедшая liveness или no_seal, ключа не освобождает;
+                              вклады domain.books.*.from и свидетели — каждого манифеста, объявившего их, domain.ref не нужен
+                              (C09-REPORTS-SCOPE-02, решение Спецификации домена)
     domain/shared, domain/shared-refused: значение — разобранный doc строки: {term, rev, sha256} | {term, rev, reason, at};
                               у кластера держателя domain/shared — {term, rev, sha256, object}; term и rev — целые JSON (P/09.1 Н1.10)
     domain/alarms:            страница тревог (P/09.1 Н1.10, P/10 Н1.8)
