@@ -34,6 +34,8 @@ function boot(opts={}){
     beforeParse(w){
       w.matchMedia=()=>({matches:false,addListener(){},removeListener(){},addEventListener(){},removeEventListener(){}});
       w.requestAnimationFrame=cb=>setTimeout(cb,0);
+      // Blob.text — в браузере есть, в jsdom окружения нет: через FileReader самого jsdom (module-domain читает файл восстановления)
+      if(!w.Blob.prototype.text)w.Blob.prototype.text=function(){return new Promise((ok,no)=>{const r=new w.FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(r.error);r.readAsText(this)})};
       Object.defineProperty(w,"innerWidth",{value:1600,configurable:true});
       w.__calls=[];   // что страница отправила не чтением: метод, путь, тело
       w.__log=[];     // каждый запрос страницы: метод, адрес как есть, время (закрытый список и порядок P/07 Н1.4)
