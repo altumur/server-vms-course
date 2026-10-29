@@ -61,6 +61,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Publication'
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: Принято (поколение, «слышал» или тот же отчёт снова)
           content:
@@ -160,6 +161,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Batch'
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: Ответ ретранслятору; отказ одного члена — в refused, не код
           content:
@@ -196,6 +198,7 @@ paths:
           application/json:
             schema: {$ref: '#/components/schemas/HolderAsk'}
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: 'Ответ, запечатанный члену конвертом m1; содержимое — договор конвертов домена «Содержимое sealed»'
           content:
@@ -235,6 +238,7 @@ paths:
                 user: {type: string}
                 password: {type: string}
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: Токен человека
           content:
@@ -273,6 +277,8 @@ paths:
                 name: {$ref: '#/components/schemas/MemberName'}
                 fingerprint: {type: string, pattern: "^(?:[0-9a-f]{16})$"}
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: Список после записи
           content:
@@ -352,6 +358,8 @@ paths:
                   description: 'Н1.6 admin: PEM сертификатов центров в порядке ca, sha256(DER) — отпечаток на том же месте; пишутся в domain/members/<член>/ca-certs до Entry.ca.'
                   items: {type: string, minLength: 1}
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: Список членов после записи по CAS (Н2)
           content:
@@ -378,6 +386,8 @@ paths:
             schema:
               $ref: '#/components/schemas/TopologyEdit'
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: Документ после записи
           content:
@@ -410,6 +420,8 @@ paths:
             schema:
               $ref: '#/components/schemas/PlacementEdit'
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: Запись после правки; то же содержимое — прежняя rev
           content:
@@ -468,6 +480,8 @@ paths:
               properties:
                 cluster: {$ref: '#/components/schemas/MemberName'}
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
         '202': {$ref: '#/components/responses/Kept'}
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Denied'}
@@ -502,6 +516,8 @@ paths:
               additionalProperties: true
               description: Открыт намеренно — поля domain.edit манифеста (Н1.3); прочие поля — 400 по норме, не по схеме.
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
         '202': {$ref: '#/components/responses/Kept'}
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Denied'}
@@ -523,6 +539,8 @@ paths:
           application/json:
             schema: {type: object, maxProperties: 0, additionalProperties: false}
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
         '202': {$ref: '#/components/responses/Kept'}
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Denied'}
@@ -585,6 +603,7 @@ paths:
                 name: {$ref: '#/components/schemas/PersonName'}
                 password: {type: string, description: 'длина — шаг Н3 (bad password), не форма тела'}
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
         '201':
           description: Человек заведён
           content:
@@ -625,6 +644,7 @@ paths:
                 password: {type: string, description: 'длина — шаг Н3 (bad password), не форма тела'}
                 disabled: {type: boolean}
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: Человек после правки
           content:
@@ -709,6 +729,7 @@ paths:
                       scope: {$ref: '#/components/schemas/Scope'}
                       until: {type: number, minimum: 0, description: '0 или нет — без срока.'}
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: Строка после записи
           content:
@@ -793,6 +814,7 @@ paths:
               properties:
                 password: {type: string, description: 'длина — шаг Н3 (bad password), не форма тела'}
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: Задан
           content:
@@ -828,6 +850,7 @@ paths:
               properties:
                 token: {type: string}
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: jti добавлен в domain/revoked
           content:
@@ -893,6 +916,8 @@ paths:
                     doc: {type: string, description: 'JCS {grant: handover, domain, to, from, term, rev, at, issuer, kid, sig}.'}
                 keys_sealed: {type: string, pattern: "^(?:x25519:v1:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+:[A-Za-z0-9_-]+)$"}
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: Запись срока цели
           content:
@@ -928,6 +953,8 @@ paths:
                 copy: {$ref: '#/components/schemas/Pair'}
                 why: {type: string, minLength: 1, pattern: "^(?:[\\s\\S]*[^\u0009\u000A\u000B\u000C\u000D \u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF][\\s\\S]*)$", description: 'Хотя бы один непробельный знак (Н1.8 copy; добавлено сверкой М11, H18). Без copy — разрешение перенести «из ничего», когда ни одна резервная копия не получена (Н1.8 шаг 6; добавлено моделью Quint М11, ER).'}
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: Новый срок
           content:
@@ -981,6 +1008,8 @@ paths:
               properties:
                 to: {$ref: '#/components/schemas/MemberName'}
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: Передача сделана
           content:
@@ -1022,6 +1051,8 @@ paths:
                 path: {type: string, minLength: 1}
                 key: {type: string, minLength: 1}
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '413': {$ref: '#/components/responses/BodyRefused'}
         '202': {description: 'Правка принята новым держателем — ответ его двери как пришёл (операции editCreate, editUpdate, editDelete)'}
         '400':
           description: 'redo it on the new holder — элемент не правка (Н1.6 apply), до пересылки'
@@ -1055,6 +1086,7 @@ paths:
           application/json:
             schema: {$ref: '#/components/schemas/SharedEdit'}
       responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: Новая ревизия
           content:
@@ -1114,6 +1146,14 @@ components:
       required: true
       schema: {type: string, minLength: 1, maxLength: 200}
   responses:
+    BodyRefused:
+      description: 'Ошибка чтения тела запроса (разбор P/01.1 Н2.1 с отступлениями P/06.5 Н2, Н4 «тело»): chunked или
+        коротко — 400, больше предела — 413, не дочитано за BODY_WAIT — 408; тело {detail, error: denied} (GP-L03; C08-BODY-DENIED-01).
+        Разобранное тело не по форме двери — 400 своей строки Н4 (Refused).'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Refusal'
     Refused:
       description: Отказ двери (Н4 главы двери)
       content:
