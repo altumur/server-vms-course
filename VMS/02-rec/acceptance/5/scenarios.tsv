@@ -11,3 +11,4 @@ scenario	step	request	expect
 01-door	9	archive r-srv-a-1 GET /spans/door/	404 {"error": "no such path"}
 01-door	10	archive r-srv-a-1 POST /spans/door	405 {"error": "method not allowed"}
 01-door	11	archive r-srv-a-1 GET /timeline/door	403 {"error": "forbidden"}
+01-door	12	archive r-srv-a-1 POST /spans/door/	404 {"error": "no such path"}

@@ -38,3 +38,5 @@ scenario	step	request	expect
 10-kind	1	POST /cameras {"source": "rtsp://10.0.0.30/ch/1", "kind": "thermal"}	400 {"error": "@any", "fault": "@absent"}
 10-kind	2	POST /cameras {"source": "rtsp://10.0.0.30/ch/1", "kind": "io"}	201 {"id": "@any", "kind": "io"}
 10-kind	3	POST /cameras {"source": "rtsp://10.0.0.31/ch/1", "kind": "video"}	201 {"id": "@any", "kind": "video"}
+11-order	1	POST /cameras {"source": "RTSP://10.0.0.7:554/ch/1", "live": "sometimes"}	400 {"error": "@any", "fault": "@absent"}
+11-order	2	PUT /cameras/999 {"live": "sometimes"}	400 {"error": "@any"}
