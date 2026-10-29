@@ -75,19 +75,19 @@ unit:
                 sub: {const: cam}
                 action: {const: output}
                 unit: {type: [string, integer]}
-                port: {type: [string, integer]}
-                state: {type: string}
-                pulse_ms: {type: [string, integer]}
+                port: {type: integer, minimum: 1}         # ports count from 1 (V/01.4 Н1.1)
+                state: {type: [string, integer], maxLength: 32}
+                pulse_ms: {type: integer, minimum: 0}
               required: [unit, port]
               additionalProperties: false
-            - properties: {sub: {const: cam}, action: {const: preset}, unit: {type: [string, integer]}, n: {type: [string, integer]}}
+            - properties: {sub: {const: cam}, action: {const: preset}, unit: {type: [string, integer]}, n: {type: integer, minimum: 1}}
               required: [unit, n]
               additionalProperties: false
             - properties:
                 sub: {const: rec}
                 action: {const: record}
                 cam: {type: [string, integer]}
-                minutes: {type: [number, string]}
+                minutes: {type: number, minimum: 1, maximum: 1440}
                 archive: {type: string}
               required: [cam, minutes]
               additionalProperties: false
@@ -96,7 +96,7 @@ unit:
                 action: {const: detect}
                 cam: {type: [string, integer]}
                 kind: {type: string}
-                minutes: {type: [number, string]}
+                minutes: {type: number, minimum: 1, maximum: 1440}
                 params: {}
               required: [cam, kind, minutes]
               additionalProperties: false
@@ -105,8 +105,8 @@ unit:
                 action: {const: scan}
                 cam: {type: [string, integer]}
                 kind: {type: string}
-                before: {type: [number, string]}
-                after: {type: [number, string]}
+                before: {type: number, minimum: 0, maximum: 3600}
+                after: {type: number, minimum: 0, maximum: 3600}
                 rec: {type: string}
                 params: {}
               required: [cam, kind]
@@ -115,9 +115,10 @@ unit:
     # bouncing at 5 Hz would file three hundred door commands a minute, and every one of them would be obeyed.
     rate_per_minute: {type: int,    default: 6, schema: {anyOf: [{const: 0}, {minimum: 1, maximum: 600}]}}   # 0: the default
     # How long a request this scenario files stays worth doing, from the moment of the event: the holder does not perform
-    # it later (`expired`). Five seconds at least — less is shorter than the road from an event to the device — and ten
-    # minutes at most: the holder refuses a command valid longer (`requests.most_valid` of `cam`, V/01.4).
-    valid_for:       {type: int,    default: 30, schema: {anyOf: [{const: 0}, {minimum: 5, maximum: 600}]}}  # 0: the default
+    # it later (`expired`). Ten seconds at least — the evaluator reads a line no sooner than SETTLE (5 s) after it, and the
+    # road to the device follows — and ten minutes at most: the holder refuses a command valid longer (`requests.most_valid`
+    # of `cam`, V/01.4).
+    valid_for:       {type: int,    default: 30, schema: {anyOf: [{const: 0}, {minimum: 10, maximum: 600}]}}  # 0: the default
     enabled:         {type: bool,   default: true}
     labels:          {type: list}
   # How far the evaluator has read the cluster's log for this scenario, and since when the window has been incomplete —
@@ -184,7 +185,7 @@ metrics:
   # The rows it ordered for a while and how each order went (P/03.6 Н1.6: created, extended, unchanged, taken, gone,
   # expired, refused), and how many of its rows stand now.
   - {name: creates_total, from: "heartbeat.creates.<outcome>", agg: sum, type: counter}
-  - {name: made_rows, from: heartbeat.made_rows, agg: sum}
+  - {name: made_rows, from: "heartbeat.made_rows.<target>", agg: sum}   # label target: rec/recordings, det/units, detjob/jobs
   - {name: scenarios_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
   - {name: pass_seconds, from: heartbeat.pass_seconds}
   - {name: queries_per_pass, from: heartbeat.queries}
@@ -230,15 +231,25 @@ domain:
               properties:
                 camera: {type: string, minLength: 1}
                 kind:   {type: string, minLength: 1}
+            # between cameras only a preset or a relay: a recording, a detector, a scan are a cluster's rows; numbers count
+            # from 1 as the holder's (V/01.4 Н1.1); valid_for — how long the ask stays worth doing, bounds as a scenario's
             then:
-              type: object
-              required: [camera, action]
-              additionalProperties: false
-              properties:
-                camera:    {type: string, minLength: 1}
-                action:    {enum: [preset, output]}     # between cameras only these: a recording, a detector, a scan are a cluster's rows
-                n:         {type: [integer, string]}    # the preset
-                port:      {type: [integer, string]}    # the relay
-                valid_for: {type: number, exclusiveMinimum: 0, maximum: 600}   # how long the ask stays worth doing; the same name as a scenario's
+              oneOf:
+                - type: object
+                  required: [camera, action, n]
+                  additionalProperties: false
+                  properties:
+                    camera:    {type: string, minLength: 1}
+                    action:    {const: preset}
+                    n:         {type: integer, minimum: 1}
+                    valid_for: {type: integer, minimum: 10, maximum: 600}
+                - type: object
+                  required: [camera, action, port]
+                  additionalProperties: false
+                  properties:
+                    camera:    {type: string, minLength: 1}
+                    action:    {const: output}
+                    port:      {type: integer, minimum: 1}
+                    valid_for: {type: integer, minimum: 10, maximum: 600}
             rate_per_minute: {type: integer, minimum: 0, maximum: 600}
             enabled:         {type: boolean}
