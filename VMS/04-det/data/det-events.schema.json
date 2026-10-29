@@ -1,0 +1,33 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "description": "слова подсистемы det в строке события бакета детектора (открытое место семьи платформы events-unit — корень строки); тип поля задаёт пишущий урок — V/04.2 Н1.2 (учебная модель tick), V/04.3 Н1.1; поля прочих моделей — реестр воркера («Решает реализация» V/04.2), семьёй не судятся; читают консоль (как есть) и сценарии auto (V/07.2 Н1.3 — строго)",
+ "type": "object",
+ "allOf": [
+  {
+   "if": {
+    "properties": {
+     "kind": {
+      "const": "tick"
+     }
+    },
+    "required": [
+     "kind"
+    ]
+   },
+   "then": {
+    "properties": {
+     "pass": {
+      "type": "integer",
+      "minimum": 3,
+      "x-integer": true,
+      "description": "число проходов цикла воркера после запуска модели, кратное 3"
+     }
+    },
+    "required": [
+     "pass"
+    ]
+   }
+  }
+ ],
+ "additionalProperties": true
+}

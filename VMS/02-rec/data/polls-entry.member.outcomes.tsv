@@ -1,0 +1,3 @@
+# Исходы нечитаемого value элемента книги опроса: строка `domain/rec/polls/<член>` у держателя домена, схема `polls-entry.schema.json#member` (V/02.9 Н1.7); путь — от value. Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+path	reader	outcome	priority	unit	norm
+	camworker	элемент опроса не по форме: не прочитан, а не отсутствует — камера держит опрос по последним прочитанным urls; прочитанных нет — опроса нет, журнал	1	элемент	V/01.6 Н1.3

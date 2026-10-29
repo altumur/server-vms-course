@@ -1,0 +1,45 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "description": "value элемента книги domain/rec/upstream (копия у члена, #copy) и domain/rec/upstream/<член> (у держателя домена, #member), V/02.9 Н1.8",
+ "type": "object",
+ "properties": {
+  "relay": {
+   "type": "string",
+   "minLength": 1
+  },
+  "to": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "string",
+    "minLength": 1
+   }
+  },
+  "ingest": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "string",
+    "pattern": "^(?:http://[\\s\\S]+|https://[\\s\\S]+)$"
+   }
+  },
+  "mode": {
+   "enum": [
+    "pull",
+    "push"
+   ]
+  },
+  "as_of": {
+   "type": "number",
+   "x-time": true
+  }
+ },
+ "required": [
+  "relay",
+  "to",
+  "ingest",
+  "mode",
+  "as_of"
+ ],
+ "additionalProperties": false
+}

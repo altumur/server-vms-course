@@ -1,0 +1,4 @@
+# Исходы нечитаемого value элемента книги дорог asks: копия у члена `domain/auto/asks`, схема `asks-entry.schema.json#copy` (V/07.5 Н1.3); путь — от value. Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+path	reader	outcome	priority	unit	norm
+	autoworker	value элемента цели не по форме: дорога не прочитана, а не отсутствует — просьба к этой цели не подаётся (сработка без действия, reason в пульсе), прочие цели книги идут; следующая копия — снова	1	элемент	V/07.5 Н1.4
+	domainagent	value не судит: элементы копии — как получены от держателя (P/09.1 Н1.4 member_row)	1	элемент	P/09.1 Н1.4

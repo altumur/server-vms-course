@@ -35,6 +35,14 @@ trickle), без перекодирования; устройствам (вид�
 - **Строки и объекты:** `live/streams/<cam>` (единица), таблица `live/accounts/<имя>` (`password_secret`), вклад
   `live/stream-accounts/<слот>`, копия книги `domain/live/stream-accounts`; пульс `live/heartbeats/<воркер>`; журнал
   шлюза (`live.view*`, `live.rtsp.*`).
+- **Семьи данных** (класс семей VMS, решение «Архитектора» А): строка раздачи, таблица `accounts` и вклад
+  `live/stream-accounts/<слот>` выражает манифест (P/02.1) — своих семей у них нет. Своё содержимое в открытых местах семей
+  платформы — [`data/`](data/): `value`
+  элемента книги учёток `stream-accounts-entry` (место `/*/entries/*/value`; пароль — только конверт кольца) — форма, слои,
+  исходы по читателям; строки — в каталоге VMS [`../common/data/catalog.tsv`](../common/data/catalog.tsv) (колонка
+  `place`); векторы строит построитель family-read, вручную не пишутся. Слова пульса шлюза своей семьи нет: `capacity` и
+  `headroom` судит контроллер платформы (договор пула; нечитаемый `headroom` — запрос во входящих), прочие слова другие
+  процессы не читают.
 - **Двери:** дверь шлюза `whep` (страница, токен двери консоли) и `/live/accounts` через `door.pass` — OpenAPI урока
   `spec/03-live.api.openapi.yaml`; дверь RTSP шлюза — RTSP с Digest (не HTTP), глава 6.
 

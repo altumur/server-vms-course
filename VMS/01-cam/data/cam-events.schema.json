@@ -1,0 +1,70 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "description": "слова подсистемы cam в строке события бакета камеры (открытое место семьи платформы events-unit — корень строки, поля сверх t, kind, id, of, class, occurred, v); тип поля задаёт пишущий урок — V/01.2 Н1.5; читают консоль (/events, P/06.4 — как есть) и сценарии auto (V/07.2 Н1.3 — строго)",
+ "type": "object",
+ "allOf": [
+  {
+   "if": {
+    "properties": {
+     "kind": {
+      "const": "io.input"
+     }
+    },
+    "required": [
+     "kind"
+    ]
+   },
+   "then": {
+    "properties": {
+     "port": {
+      "type": "integer",
+      "minimum": 1,
+      "x-integer": true,
+      "description": "вход устройства в нумерации V/01.4 Н1.1, с 1"
+     },
+     "value": {
+      "type": "string",
+      "description": "слово устройства как есть"
+     }
+    },
+    "required": [
+     "port",
+     "value"
+    ]
+   }
+  },
+  {
+   "if": {
+    "properties": {
+     "kind": {
+      "const": "source-stats"
+     }
+    },
+    "required": [
+     "kind"
+    ]
+   },
+   "then": {
+    "properties": {
+     "dropped": {
+      "type": "integer",
+      "minimum": 0,
+      "x-integer": true,
+      "description": "кадров отброшено за окно сводки"
+     },
+     "depth": {
+      "type": "integer",
+      "minimum": 0,
+      "x-integer": true,
+      "description": "глубина очереди источника"
+     }
+    },
+    "required": [
+     "dropped",
+     "depth"
+    ]
+   }
+  }
+ ],
+ "additionalProperties": true
+}

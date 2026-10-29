@@ -1,0 +1,6 @@
+place	layer	word	value
+/allOf/0/then/properties/pass	3	x-integer	true
+/allOf/1/then/properties/from	3	x-time	true
+/allOf/1/then/properties/to	3	x-time	true
+/allOf/2/then/properties/from	3	x-time	true
+/allOf/2/then/properties/to	3	x-time	true

@@ -1,0 +1,93 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "description": "слова подсистемы detedge в строке события бакета обхода (открытое место семьи платформы events-unit — корень строки); тип поля задаёт пишущий урок — V/06.3 Н1.3 (detedge.overrun, detedge.rewound), Н1.4 (tick на абсолютной сетке); поля прочих моделей — реестр воркера, семьёй не судятся; читают консоль (как есть) и сценарии auto (V/07.2 Н1.3 — строго)",
+ "type": "object",
+ "allOf": [
+  {
+   "if": {
+    "properties": {
+     "kind": {
+      "const": "tick"
+     }
+    },
+    "required": [
+     "kind"
+    ]
+   },
+   "then": {
+    "properties": {
+     "pass": {
+      "type": "integer",
+      "minimum": 0,
+      "x-integer": true,
+      "description": "n сетки t_n = n × STEP, кратное 3"
+     }
+    },
+    "required": [
+     "pass"
+    ]
+   }
+  },
+  {
+   "if": {
+    "properties": {
+     "kind": {
+      "const": "detedge.overrun"
+     }
+    },
+    "required": [
+     "kind"
+    ]
+   },
+   "then": {
+    "properties": {
+     "from": {
+      "type": "number",
+      "x-time": true,
+      "description": "прежний рубеж"
+     },
+     "to": {
+      "type": "number",
+      "x-time": true,
+      "description": "oldest архива"
+     }
+    },
+    "required": [
+     "from",
+     "to"
+    ]
+   }
+  },
+  {
+   "if": {
+    "properties": {
+     "kind": {
+      "const": "detedge.rewound"
+     }
+    },
+    "required": [
+     "kind"
+    ]
+   },
+   "then": {
+    "properties": {
+     "from": {
+      "type": "number",
+      "x-time": true,
+      "description": "прежний рубеж"
+     },
+     "to": {
+      "type": "number",
+      "x-time": true,
+      "description": "новый рубеж"
+     }
+    },
+    "required": [
+     "from",
+     "to"
+    ]
+   }
+  }
+ ],
+ "additionalProperties": true
+}

@@ -1,0 +1,38 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "description": "value элемента книги domain/rec/polls (копия у члена, #copy) и domain/rec/polls/<член> (у держателя домена, #member), V/02.9 Н1.7",
+ "type": "object",
+ "properties": {
+  "ref": {
+   "type": "string",
+   "minLength": 1
+  },
+  "to": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "string",
+    "minLength": 1
+   }
+  },
+  "urls": {
+   "type": "array",
+   "minItems": 1,
+   "items": {
+    "type": "string",
+    "pattern": "^(?:http://[\\s\\S]+|https://[\\s\\S]+)$"
+   }
+  },
+  "as_of": {
+   "type": "number",
+   "x-time": true
+  }
+ },
+ "required": [
+  "ref",
+  "to",
+  "urls",
+  "as_of"
+ ],
+ "additionalProperties": false
+}

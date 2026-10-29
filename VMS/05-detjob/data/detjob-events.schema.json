@@ -1,0 +1,66 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "description": "слова подсистемы detjob в строке события бакета задачи скана (открытое место семьи платформы events-unit — корень строки); тип поля задаёт пишущий урок — V/05.3 Н1.3 (учебная tick в медийном времени), V/05.4 Н1.2 (scan.partial); поля прочих моделей — реестр воркера, семьёй не судятся; читают консоль (как есть) и сценарии auto (V/07.2 Н1.3 — строго)",
+ "type": "object",
+ "allOf": [
+  {
+   "if": {
+    "properties": {
+     "kind": {
+      "const": "tick"
+     }
+    },
+    "required": [
+     "kind"
+    ]
+   },
+   "then": {
+    "properties": {
+     "pass": {
+      "type": "integer",
+      "minimum": 3,
+      "x-integer": true,
+      "description": "номер взгляда k на сетке интервала, кратный 3 (V/05.3 Н1.3)"
+     }
+    },
+    "required": [
+     "pass"
+    ]
+   }
+  },
+  {
+   "if": {
+    "properties": {
+     "kind": {
+      "const": "scan.partial"
+     }
+    },
+    "required": [
+     "kind"
+    ]
+   },
+   "then": {
+    "properties": {
+     "missing": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "minLength": 1
+      },
+      "description": "пропущенные тома <том>@<сервер> (V/05.4 Н1.2)"
+     },
+     "waited": {
+      "type": "number",
+      "minimum": 0,
+      "description": "накопленные секунды ожидания пропущенного (V/05.4 Н1.2)"
+     }
+    },
+    "required": [
+     "missing",
+     "waited"
+    ]
+   }
+  }
+ ],
+ "additionalProperties": true
+}

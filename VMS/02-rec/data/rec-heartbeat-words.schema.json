@@ -1,0 +1,36 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "description": "слова подсистемы rec в пульсе rec/heartbeats/<имя>, которые читают другие процессы (открытые места семьи платформы heartbeats, P/03.4 Н1.1: верх пульса и элемент status[] сверх полей платформы); смысл — V/02.4 Н1.8, V/02.5 Н1.7, V/02.9 Н1.4, Н1.5, Н1.10; прочие слова пульса — диагностика, их платформа и подсистемы не читают",
+ "type": "object",
+ "properties": {
+  "volume": {
+   "description": "держимый том (place_by) или \"\" — не держит (V/02.4 Н1.8)",
+   "type": "string"
+  },
+  "url": {
+   "type": "string",
+   "pattern": "^(?:http://[\\s\\S]+|https://[\\s\\S]+)$",
+   "description": "адрес двери архива (V/02.5 Н1.7)"
+  },
+  "ingest": {
+   "type": "string",
+   "pattern": "^(?:http://[\\s\\S]+|https://[\\s\\S]+)$",
+   "description": "адрес приёмника регистратора (V/02.9 Н1.4, Н1.10)"
+  },
+  "status": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "written_through": {
+      "description": "докуда запись записана, секунды по часам кластера (V/02.9 Н1.4)",
+      "type": "number",
+      "minimum": 0
+     }
+    },
+    "additionalProperties": true
+   }
+  }
+ },
+ "additionalProperties": true
+}

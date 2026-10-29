@@ -1,0 +1,3 @@
+# Исходы нечитаемого value элемента книги дорог asks: строка `domain/auto/asks/<член>` у держателя домена, схема `asks-entry.schema.json#member` (V/07.5 Н1.3); путь — от value. Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+path	reader	outcome	priority	unit	norm
+	autoworker	value элемента цели не по форме: дорога не прочитана, а не отсутствует — просьба к этой цели не подаётся (сработка без действия, reason в пульсе), прочие цели книги идут; следующее чтение — снова	1	элемент	V/07.5 Н1.4
