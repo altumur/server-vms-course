@@ -1,70 +1,117 @@
-# Сопоставление видов consolem ↔ подсистемы VMS (V/11.3; ADR-0094 A6). Строка: вид и поле контракта → подсистема и место у нас (`<sub>/<rows|tables>` или дверь консоли), поле у нас, направление (read — только чтение, both — чтение и запись, none — у нас нет), заметка. Поле `—` — вид целиком. Формат — README урока «Сопоставление видов».
+# Сопоставление видов consolem ↔ подсистемы VMS (V/11.3; ADR-0094 A6). Строка: вид и поле контракта → подсистема и место у нас (`<sub>/<rows|tables>` или дверь консоли), поле у нас или правило, направление way (read, both, write, const, none), заметка. Поле `—` — вид целиком. Формат и смысл way — V/11.3 Н1.1; полнота — каждое поле схем ответа и тел записи переводимых операций.
 kind	field	vms	vms_field	way	note
 Domain	—	кластер	—	read	домен consolem = наш кластер (ADR-0094 A6); одна запись — свой кластер
-Domain	id	кластер	CLUSTER	read	имя кластера установщика (P/02.4 Н1.2)
-Domain	name	кластер	CLUSTER	read	
-Domain	license	—	—	none	лицензий consolem нет
-Domain	online	кластер	—	read	консоль ответила — true
-Domain	version	—	—	none	версии у кластера нет — норма B4 (ADR-0094) или константа 1 до неё
+Domain	id	кластер	UUID domain:<CLUSTER>	read	имя кластера установщика (P/02.4 Н1.2); UUID — V/11.4 Н1.6
+Domain	name	кластер	CLUSTER	read
+Domain	license	—	""	const	лицензий consolem нет
+Domain	online	—	true	const	ответила консоль — кластер на связи
+Domain	version	—	"1"	const	видимые поля домена не меняются (online — связь, версию не двигает)
 Server	—	GET /servers	—	read	сервер = элемент /servers консоли (P/06.6)
-Server	id	GET /servers	name	read	
-Server	name	GET /servers	name	read	
-Server	online	GET /servers	state	read	живой ресурс — true
-Server	ip, port, netmask, gateway, dns	—	—	none	сеть сервера не у консоли
-Server	role	—	—	none	ролей primary/node/standby нет: размещает контроллер
-Server	telemetry, gpu, disks	—	—	none	телеметрия — ADR-0094 C (пульс ресурса)
-Device(type=camera)	—	cam/cameras + rec/recordings + det/units	—	both	сборка камеры из трёх подсистем (глава 4)
-Device(type=camera)	id	cam/cameras	id	read	id строки cam
-Device(type=camera)	name	cam/cameras	name	both	
-Device(type=camera)	enabled	cam/cameras	enabled	both	
+Server	id	GET /servers	UUID server:<name>	read
+Server	name	GET /servers	name	read
+Server	online	GET /servers	state	read	state live — true, иначе false
+Server	domainId	кластер	UUID domain:<CLUSTER>	read
+Server	ip	—	""	const	адреса сервера у консоли нет
+Server	port	—	0	const
+Server	role	—	"node"	const	ролей primary/node/standby нет: размещает контроллер (features без serverRoles)
+Server	allocated	—	true	const	сервер в кластере
+Server	telemetry	—	{}	const	телеметрия — ADR-0094 C (пульс ресурса)
+Server	gpu	—	null	const
+Server	disks	—	[]	const
+Server	version	—	"1"	const	видимые поля сервера не меняются (online — связь)
+Server	netmask, gateway, dns	—	—	none	сеть сервера не у консоли (features без serverNetwork)
+Device(type=camera)	—	cam/cameras + rec/recordings + det/units	—	both	сборка: строка камеры (main пуст) и её потоки, записи, детекторы (V/11.4); камера kind io устройством не отдаётся
+Device(type=camera)	id	cam/cameras	UUID device:cam/cameras/<id>	read
+Device(type=camera)	type	—	"camera"	const
+Device(type=camera)	parentId	—	null	const	камера — устройство верхнего уровня
+Device(type=camera)	domainId	кластер	UUID domain:<CLUSTER>	read
+Device(type=camera)	identifier	cam/cameras	id	read	номер камеры (numeric, cam/next_id); при создании — выдаёт счётчик (V/11.4 Н1.2)
+Device(type=camera)	name	cam/cameras	name	both
+Device(type=camera)	enabled	cam/cameras	enabled	both
 Device(type=camera)	ip, port	cam/cameras	source	both	хост и порт адреса source (договор адреса url, P/06.1)
-Device(type=camera)	login	cam/cameras	cred_username	both	
+Device(type=camera)	login	cam/cameras	cred_username	both
 Device(type=camera)	hasPassword	cam/cameras	cred_secret	read	true — секрет задан; значение не отдаётся
-Device(type=camera)	subtype=io	cam/cameras	kind=io	both	kind video — без subtype
-Device(type=camera)	serverId	rec/recordings	where записи	read	сервер выводится из держателя основной записи (V/02.1)
-Device(type=camera)	archiveId	rec/recordings	home	both	том основной записи камеры
-Device(type=camera)	recordMode	rec/recordings	состав записей камеры	both	none — основной записи нет; always — основная есть и enabled; motion — запись по событию (паузы); sched — расписание: until записи (сценарий auto — с «Автоматизацией», не объявлена: ADR-0094 доп. (7)); replica — резервная запись (том с ролью резерва) (ADR-0094 доп. (2) п. 3)
-Device(type=camera)	extraArchives	rec/recordings	прочие записи камеры	both	резервные записи (when, home)
-Device(type=camera)	recordDetectorIds	—	—	none	запись по детектору — глава 4 (открытый вопрос)
-Device(type=camera)	stream	cam/cameras	main	both	поток камеры (V/01.1 Н1.1а)
-Device(type=camera)	online, fault	cam/heartbeats	phase, device_state	read	слова пульса держателя (V/01.2 Н1.4)
-Device(type=camera)	vendor, model, firmware, mac	cam/devices	device, identity	read	строка устройства (V/01.4 Н1.4)
+Device(type=camera)	password	cam/cameras	cred_secret	write	нет поля — не трогать; null или "" — снять; строка — новый (V/11.3 Н1.3)
+Device(type=camera)	serverId	rec/heartbeats	сервер держателя основной записи <cam>	read	наблюдение, в версию не входит; нет держателя — поля нет
+Device(type=camera)	online	cam/heartbeats	phase	read	running или held — true; в версию не входит
+Device(type=camera)	fault	cam/heartbeats	device_state	read	отказ входа — auth, не открылось или нет связи — conn, иное — drv; устройство отвечает — поля нет
+Device(type=camera)	licenseExceeded	cam/heartbeats	phase	read	unlicensed — true (V/01.7)
+Device(type=camera)	vendor, model, firmware, mac	cam/devices	device, identity	read	строка устройства пишет держатель (V/01.4 Н1.4): наблюдение, в версию не входит
+Device(type=camera)	archiveId	rec/recordings	home основной <cam>	both	основной нет — null (V/11.3 Н1.3)
+Device(type=camera)	recordMode	rec/recordings	<cam>, <cam>-<том>	both	always — основная enabled; replica — основной нет или выключена, есть включённая резервная; none — иначе; motion, sched — не объявляются: запись 422 NOT_SUPPORTED (разбор ревью V/11, вопрос 2)
+Device(type=camera)	extraArchives	rec/recordings	резервные <cam>-<том>	both	в порядке имени тома: {archiveId, recordMode always|none по enabled, stream}
+Device(type=camera)	stream	rec/recordings	stream основной <cam>	both	выбор потока записи (V/02.1), не cam.main
+Device(type=camera)	recordDetectorIds	—	—	none	записи по детектору нет
+Device(type=camera)	children	det/units	<cam>-<kind>	write	только при создании: дочерние детекторы (V/11.4 Н1.2); иные дочерние — 422 NOT_SUPPORTED, field children
+Device(type=camera)	subtype, short, preRecordSec, videoChannel, channel, lat, lon, azimuth, streamProfile, buffering, codec, res, fps, bitrate, rtspUrl	—	—	none	у камеры нет
+Device(type=camera)	detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, configMode, templateId, norm, pulse, debounce, gain, acodec, vol	—	—	none	поля других видов устройств
 Device(type=camera)	disabledByRuleId, disabledByRuleAt, armed	—	—	none	не объявляется: «Автоматизация» не объявлена (ADR-0094 доп. (7)); поля необязательны — в ответе их нет; armed — только чтение
-Device(type=camera)	lat, lon, azimuth, videoChannel, streamProfile, codec, res, fps, bitrate	—	—	none	у камеры нет
-Device(type=camera)	version	cam/cameras + rec/recordings + det/units	склейка c<cam>.r<rec…>.d<det…> индексов хранилища частей и надгробий (V/11.4 Н1.1)	read	ADR-0094 доп. (4) п. 1; индекс — ETag строки по B4 (после Go GREEN 01–10); до ответа продукта
-Device(type=det)	—	det/units	—	both	детектор камеры (V/04.1)
-Device(type=det)	version	det/units	индекс хранилища строки	read	ETag строки по B4 (после Go GREEN 01–10); If-Match сверяет его (V/11.4)
-Device(type=det)	parentId	det/units	cam	both	камера детектора
-Device(type=det)	name	det/units	name	both	
-Device(type=det)	enabled	det/units	enabled	both	
-Device(type=det)	detectorKind	det/units	kind	both	motion, linecross — реестр воркера (V/04.2); abandoned, disappeared, crowd — нет в реестре, kind как записан
-Device(type=det)	sensitivity	det/units	params	both	params — строка как у владельца (V/04.1)
-Device(type=det)	builtin	—	—	none	детектор устройства ≈ detedge — не переводится сейчас
+Device(type=camera)	version	cam/cameras + rec/recordings + det/units	склейка c<камера-потоки>.r<rec…>.d<det…> индексов хранилища частей и надгробий (V/11.4 Н1.1)	read	ADR-0094 доп. (4) п. 1; индекс — в элементе списка по B4 (после Go GREEN 01–10)
+Device(type=det)	—	det/units	—	both	детектор камеры (V/04.1), ключ <cam>-<kind>
+Device(type=det)	id	det/units	UUID device:det/units/<cam>-<kind>	read
+Device(type=det)	type	—	"det"	const
+Device(type=det)	parentId	det/units	cam — UUID device:cam/cameras/<cam>	read	при создании — parentId элемента items
+Device(type=det)	domainId	кластер	UUID domain:<CLUSTER>	read
+Device(type=det)	serverId	det/heartbeats	сервер держателя детектора	read	наблюдение, в версию не входит; нет держателя — поля нет
+Device(type=det)	name	det/units	ключ <cam>-<kind>	read	ключ строки: иное — 422 NOT_SUPPORTED, field name (V/11.3 Н1.3)
+Device(type=det)	enabled	det/units	enabled	both
+Device(type=det)	online	det/heartbeats	phase	read	running — true; в версию не входит
+Device(type=det)	detectorKind	det/units	kind	read	часть ключа: правка — 422 NOT_SUPPORTED; при создании — kind новой строки; motion, linecross — реестр воркера (V/04.2)
+Device(type=det)	sensitivity	det/units	params, ключ sensitivity JSON-объекта	both	кодек — V/11.3 Н1.3; params не объект — запись 422 NOT_SUPPORTED, чтение — поля нет
+Device(type=det)	builtin	—	false	const	детектор устройства ≈ detedge — не переводится сейчас
+Device(type=det)	fault, subtype, short, identifier, ip, port, mac, vendor, model, login, hasPassword, password, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, configMode, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, rtspUrl, children	—	—	none	у детектора нет
 Device(type=det)	disabledByRuleId, disabledByRuleAt, armed	—	—	none	как у камеры: не объявляется, в ответе полей нет
+Device(type=det)	version	det/units	индекс хранилища строки	read	в элементе списка по B4 (после Go GREEN 01–10); If-Match сверяет его (V/11.4)
 Device(type=mic|spk|sensor|relay|storage|ipsrv|channel|eventsrc|acfa*|export|email|sms)	—	—	—	none	таких устройств нет (deviceTypes — camera, det): создание — 422 NOT_SUPPORTED, field type
-Folder	—	—	—	none	папки как записи — ADR-0094 C; у камеры — поле-список folders
-Archive	—	rec/volumes	—	both	хранилище = один том (строка таблицы rec/volumes)
-Archive	version	rec/volumes	индекс хранилища строки	read	ETag строки по B4 (после Go GREEN 01–10); If-Match сверяет его (V/11.4)
-Archive	id, name	rec/volumes	name	both	
-Archive	kind	rec/volumes	kind	both	local ↔ local; remote ↔ network; cloud ↔ network со схемой бакета (V/02.1)
-Archive	serverId	rec/volumes	server	both	
-Archive	retentionDays	rec/recordings	retention_days	read	срок у записи, не у хранилища: наибольший у записей тома
-Archive	encrypted	—	—	none	шифрования тома нет (features без archiveEncryption): encrypted true — 422 NOT_SUPPORTED
-Archive	storage, provider	rec/volumes	url (схема)	read	block — file://, object — бакет
+Folder	—	—	—	none	папки как записи — ADR-0094 C; folderId создания не null — NOT_SUPPORTED, field folderId
+Archive	—	rec/volumes	—	both	хранилище = один том (строка таблицы rec/volumes) и записи на нём; том edge не отдаётся
+Archive	id	rec/volumes	UUID archive:rec/volumes/<name>	read	иной, чем у Volume той же строки (V/11.4 Н1.6)
+Archive	name	rec/volumes	name	read	ключ строки: при создании — ключ новой строки; правка — 422 NOT_SUPPORTED, field name
+Archive	kind	rec/volumes	по url: file:// — local; smb, nfs — remote; бакет — cloud	read	при создании: local — kind local, remote и cloud — kind network; роль backup, incidents наружу не выходит (V/11.3 Н1.3)
+Archive	storage	rec/volumes	url: бакет — object, иное — block	read	при создании — схема адреса тома
+Archive	provider	rec/volumes	схема адреса бакета; не бакет — null	read
+Archive	serverId	rec/volumes	server — UUID server:<server>; пусто — null	both
+Archive	domainId	кластер	UUID domain:<CLUSTER>	read	при создании — domainId тела
+Archive	retentionDays	rec/recordings	наибольший retention_days записей с home = том; записей нет — 30 (умолчание записи)	both	запись — retention_days всех записей тома одним пакетом; 0 — 422 NOT_SUPPORTED; при создании — только умолчание (V/11.3 Н1.3)
+Archive	encrypted	—	false	const	шифрования тома нет (features без archiveEncryption): true — 422 NOT_SUPPORTED
+Archive	firstVolume	rec/volumes	поля тома той же строки	write	только при создании: том = то же хранилище (строки Volume)
+Archive	version	rec/volumes + rec/recordings	склейка v<индекс тома>.r<индексы записей тома> (V/11.4 Н1.1)	read	в элементе списка по B4 (после Go GREEN 01–10); If-Match сверяет её
 Volume	—	rec/volumes	—	both	том = то же хранилище
-Volume	version	rec/volumes	индекс хранилища строки	read	ETag строки по B4 (после Go GREEN 01–10); If-Match сверяет его (V/11.4)
-Volume	sizeBytes	rec/volumes	quota_bytes	both	
-Volume	usedPercent, state, online	rec/heartbeats	volume, volume_error	read	слова пульса регистратора (V/02.4)
-Volume	login, hasPassword, keyId, hasSecret	rec/volumes	access_key, access_secret	both	секрет не отдаётся
-Volume	disk, mode, dir, file, bucket, region, path, host, port, proto, endpoint, style	rec/volumes	url	both	части адреса url тома
+Volume	id	rec/volumes	UUID volume:rec/volumes/<name>	read
+Volume	archiveId	rec/volumes	UUID archive:rec/volumes/<name>	read	хранилище той же строки
+Volume	name	rec/volumes	name	read	ключ строки: правка — 422 NOT_SUPPORTED, field name
+Volume	disk	rec/volumes	url: путь file:// или адрес папки	both
+Volume	sizeBytes	rec/volumes	quota_bytes	both
+Volume	usedPercent, state, online	rec/heartbeats	volume, volume_error	read	слова пульса регистратора (V/02.4): наблюдение, в версию не входит
+Volume	login, keyId	rec/volumes	access_key	both	block — логин NAS, object — ключ бакета
+Volume	hasPassword, hasSecret	rec/volumes	access_secret	read	true — секрет задан; значение не отдаётся
+Volume	password, secret	rec/volumes	access_secret	write	нет поля — не трогать; null или "" — снять; строка — новый (V/11.3 Н1.3)
+Volume	mode, dir, file, bucket, region, path, host, port, proto, endpoint, style, account	rec/volumes	url	both	части адреса url тома
+Volume	version	rec/volumes	индекс хранилища строки	read	в элементе списка по B4 (после Go GREEN 01–10); If-Match сверяет его (V/11.4)
 Rule, RuleFire, RuleVersion, Schedule, DayGroup, Modes, ObjectMode, MaintenanceWindow	—	—	—	none	«Автоматизация» не объявляется (ADR-0094 доп. (7)): операции — 404 NO_ROUTE (V/11.2); отображение — вторая очередь C
-JournalEvent	—	GET /events	—	read	category audit ↔ журнал audit/console; alarm ↔ класс alarm; info ↔ прочее
-Me	userId, login, name	GET /session	user	read	кто я
+JournalEvent	—	GET /events	—	read	строка события (договор журнала событий)
+JournalEvent	id	GET /events	UUID event:<id строки события>	read
+JournalEvent	at	GET /events	t	read	секунды Unix → date-time UTC
+JournalEvent	category	GET /events	журнал и класс	read	audit ↔ журнал audit/console; alarm ↔ класс alarm; info ↔ прочее
+JournalEvent	text	GET /events	kind и of	read	«<kind> <of>»
+Me	userId	GET /session	UUID user:<user>	read
+Me	login, name	GET /session	user	read	кто я
 Me	serverTime, timezone	GET /session	server_time, timezone	read	норма платформы B6 — после Go GREEN 01–10
-Reference	—	GET /manifest	перечисления полей	read	модели — таблица cam/devices
+Reference	—	GET /manifest	перечисления полей	read
+Reference	deviceModels	cam/devices	[{vendor, models}] по строкам устройств	read
+Reference	deviceKinds	—	[{"group": "video", "view": "camera", "types": ["camera", "det"]}]	const	что можно добавить — виды deviceTypes
+Reference	detectorKinds	—	["motion", "linecross"]	const	реестр воркера det (V/04.2)
+Reference	recordModes	—	["none", "always", "replica"]	const	motion, sched не объявляются (разбор ревью V/11, вопрос 2)
+Reference	archiveKinds	—	["local", "remote", "cloud"]	const
+Reference	storageTypes	—	["block", "object"]	const
+Reference	volumeStates	—	["ready", "open", "off", "broken", "error"]	const	состояния, которые даёт пульс регистратора
+Reference	ipServerSubtypes, serviceTypes, supportLevels, cloudProviders	—	[]	const	IP-серверов, служб, уровней поддержки и облачных поставщиков продукта нет; бакет — адрес тома
+Reference	deviceParams	—	{}	const	параметров начинки по видам нет
+Reference	limits	—	{"ipScanMax": 0, "defaultServerPort": 0}	const	поиска устройств нет
+Reference	access	—	наименьшее по схеме: пустые списки и объекты, числа 0, строки "" — по каждому обязательному полю вглубь	const	роли и доступ — ADR-0094 C
 Reference	capabilities	backend	объявление возможностей	read	operations — «переводится» V/11.2; deviceTypes — camera, det; features — пусто (V/11.2 Н1.5)
-Reference	ruleTriggers, ruleActions, ruleConditions, ruleControls	—	—	none	пустые списки: «Автоматизация» не объявлена (ADR-0094 доп. (7))
-Reference	layouts, monitors	—	—	none	пустые списки: раскладок клиента и видеостены нет
+Reference	ruleTriggers, ruleActions, ruleConditions, ruleControls	—	[]	const	«Автоматизация» не объявлена (ADR-0094 доп. (7))
+Reference	layouts, monitors	—	[]	const	раскладок клиента и видеостены нет
 Settings	—	—	—	none	вне перечня обратного вызова (V/11.1 Н1.5)
 License	—	—	—	none	лицензий consolem нет
 Access	—	—	—	none	роли, группы, каталоги — ADR-0094 C
