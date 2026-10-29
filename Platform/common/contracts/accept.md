@@ -116,6 +116,10 @@ member_objects:                               # что агент несёт и 
     domain/reaches:           {networks: [<сеть>…]} (P/09.1 Н1.7)
     witness:                  объекты <sub>/<report>/<имя> свидетелей domain.witness (P/02.1 Н1.2б); <sub>/<report> без имени —
                               не свидетель (P/09.1 Н1.10, P/10 Н1.8)
+    охват:                    reports и witness — каждого манифеста, объявившего их, domain.ref не нужен; ключ пульса или шарда
+                              снимка манифеста с domain.ref — своей семьи, reports его не расширяет и не заменяет; у манифеста
+                              без domain.ref этих семей нет — объекты идут как reports (C09-REPORTS-SCOPE-01, решение
+                              Спецификации домена)
     domain/shared, domain/shared-refused: значение — разобранный doc строки: {term, rev, sha256} | {term, rev, reason, at};
                               у кластера держателя domain/shared — {term, rev, sha256, object}; term и rev — целые JSON (P/09.1 Н1.10)
     domain/alarms:            страница тревог (P/09.1 Н1.10, P/10 Н1.8)
