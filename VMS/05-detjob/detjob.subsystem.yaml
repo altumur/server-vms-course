@@ -33,7 +33,7 @@ unit:
     # filed what it found under camera 1). `must_match` says it, and the platform refuses the row.
     rec:     {type: string, required: true, fixed: true, ref: rec/recordings, must_match: {cam: cam}}
     kind:    {type: string, required: true}      # which model: motion | linecross | lpr | tick | … — the detectors' registry
-    params:  {type: string}                      # the model's settings, opaque to the platform — and SMALL
+    params:  {type: string}                      # the model's settings, opaque to the platform; the row's limit is its limit
     mask:    {type: blob}                        # sha256-<hex>; the bytes are in the object store (P/06.1 Н1.5)
     # WHOSE mask: the id of a detector of the same camera (an order names the detector it scans for, V/02.8, V/07.4). The
     # row's own non-empty `mask` wins; else the mask of that detector's row when the model starts; no such row — the job
@@ -56,7 +56,7 @@ unit:
         covered: {type: number, minimum: 0}      # seconds of footage scanned
         asked:   {type: number, minimum: 0}      # seconds of the interval
         events:  {type: integer, minimum: 0}
-        partial: {type: array, items: {type: string}}   # what was missing when the wait ran out (V/05.4)
+        partial: {type: array, items: {type: string}}   # what was not waited out (V/05.4): <volume>@<server> | device:<from:int>-<to:int>
         why:     {type: string}
     cursor:
       type: object
@@ -68,8 +68,10 @@ unit:
           type: array
           items: {type: array, items: {type: number}, minItems: 2, maxItems: 2}
         events:   {type: integer, minimum: 0}
-        waiting_since: {type: number}           # when something first went missing (the wait runs from here, V/05.4)
-        fetch_since:   {type: number}           # when backfill was first asked for
+        # Waits are ACCUMULATED durations, not points of a clock: the holder adds what its monotonic clock ran between
+        # cursor writes; a new holder goes on from here; time with no holder is not counted (V/05.4 Н1.2).
+        waited:       {type: number, minimum: 0}  # seconds something has been missing (or the model unsupported)
+        fetch_waited: {type: number, minimum: 0}  # seconds backfill has been awaited
 # The words of the console and of the assistant (V/10.4 Н1.4): labels the admin's text names a field by.
 display:
   unit: задача скана
@@ -124,6 +126,6 @@ metrics:
 console:
   running: jobs_running              # detjob_jobs_running: scans whose worker is decoding right now
 # What a job worker reads besides its rows: the recorders' heartbeats (their archive doors) and volumes, the recordings
-# (what is visible), the holders' heartbeats (the device's archive index), the detectors' mask bodies; and the
-# requests for backfill it files to the recorders (V/05.4).
-worker: {exec: /usr/lib/detjob/worker, reads: [rec/heartbeats/, rec/volumes/, rec/recordings/, cam/heartbeats/, det/blobs/], requests: [rec]}
+# (what is visible), the holders' heartbeats (the device's archive index), the detectors' rows (`mask_of`) and mask
+# bodies; and the requests for backfill it files to the recorders (V/05.4).
+worker: {exec: /usr/lib/detjob/worker, reads: [rec/heartbeats/, rec/volumes/, rec/recordings/, cam/heartbeats/, det/units/, det/blobs/], requests: [rec]}
