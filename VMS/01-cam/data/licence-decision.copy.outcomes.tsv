@@ -1,0 +1,4 @@
+# Исходы нечитаемого решения лицензии — value элемента decision: копия у члена `domain/cam/licence`, схема `licence-decision.schema.json#copy` (V/01.7 Н1.2, Н1.3); путь — от value. Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+path	reader	outcome	priority	unit	norm
+	camworker	решение ожидается, но не читается: держит по последнему прочитанному с запуска решению; прочитанного нет — камеры не запускаются, unlicensed «решение лицензии не читается», не «не ограничено»	1	строка	V/01.7 Н1.3, Н3 «Применение», Н4
+	domainagent	value не судит: копия domain/cam/licence — элементы как получены от держателя (P/09.1 Н1.4 member_row)	1	элемент	P/09.1 Н1.4
