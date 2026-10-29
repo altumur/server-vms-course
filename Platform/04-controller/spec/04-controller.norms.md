@@ -205,7 +205,9 @@ resource_state:     # ресурс сервера — live | unreachable | unkno
                     # исключает и двигает только silent
 process_presence:   # что ресурс говорит о процессе воркера: вывод [P/05 Н1.4](../../05-resource/spec/05-resource.norms.md) `presence` по ключу <sub>/<имя слота> своей подсистемы;
                     # только из пульса ресурса в состоянии live: устаревший пульс со словом runs присутствия не даёт, и слот
-                    # судится по resource_state (сверка python и go 2026-10-18)
+                    # судится по resource_state (сверка python и go 2026-10-18); отсутствующее из полей workers, running,
+                    # unknown — пустой список (частичный набор: running без workers — runs, workers без running — gone;
+                    # C04-PRESENCE-PARTIAL-01)
   runs | gone | unlisted | unknown   # unknown — неподтверждённое чтение; silent — только состояние ресурса выше
 fate:               alive | wait | hung | hung_moved | unsure | unsure_moved | move | release
 NAME_FATES:         [move, hung_moved, unsure_moved, release]   # + wait за пределом HUNG_MOVE_AFTER
