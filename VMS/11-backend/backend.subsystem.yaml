@@ -14,7 +14,7 @@ name: backend
 slot: {prefix: b, name_env: BACKEND_NAME}
 # Reads, writes and asks nothing of anybody by itself: what it needs it reads through the console with the ticket of the
 # request it serves (V/11.1 Н1.3). No state outside the platform's store: the memory of repeats of a group
-# `idempotencyKey` is always there, in its own rows backend/idem/<user>/<key> read and written through the console with
+# `idempotencyKey` is always there, in its own rows backend/idem/<h> read and written through the console with
 # the ticket (V/11.4 Н1.4, ADR-0094 доп. (3) п. 4). A table key with `/` is not in the table grammar of P/02.1 — the rows
 # are declared below as intent, not keys.
 worker: {exec: /usr/lib/backend/worker, stop_timeout: 20}
@@ -75,7 +75,8 @@ door:
 # index.html is not used. The set without it, with the png and svg pictures (ADR-0094 доп. (4) п. 2) — SHA-256
 # 0084f8637e3dbfd72742008e47ca8dc071c02770d6069825fcb77f06c91c5658.
 # The memory of repeats (ADR-0094 доп. (3) п. 4), declared intent, not loaded today (a key `<user>/<key>` has a `/`):
-#   rows backend/idem/<user>/<key>: {body: <fingerprint of the whole body>, result?: <outcome of the group>, until: <s>}
+#   rows backend/idem/<h>: {user, key, body: <fingerprint of the whole body>, result?: <outcome of the group>, until: <s>}
+#   h = sha256 hex of user bytes, a zero byte and the external key; the row keeps user and key and is compared on lookup
 #   «started» (no result) before the first step; the result after the last; the time to live — that of the console's POST.
 metrics:
   - {name: instances_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
