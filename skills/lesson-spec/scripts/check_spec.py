@@ -1547,13 +1547,22 @@ class Check:
         # Deliberately invalid JSON requests are acceptance data, not parse errors here.
         if not re.match(r"^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS) /", request):
             self.error(path, f"line {line}: unsupported request form; needs format-specific check")
-        code, separator, body = expect.partition(" ")
-        try:
-            if not separator or not re.fullmatch(r"[1-5][0-9]{2}", code):
-                raise ValueError("expected HTTP status and JSON body")
-            strict_json(body)
-        except (ValueError, TypeError) as exc:
-            self.error(path, f"line {line}: {exc}")
+        # `@oneof <код> <JSON> | <код> <JSON>` — one of the branches (C-ONEOF-01, решение «Архитектора» 2026-10-29);
+        # a code class `2xx` stands alone, without a body (общий словарь приёмки).
+        oneof = expect.startswith("@oneof ")
+        branches = expect[len("@oneof "):].split(" | ") if oneof else [expect]
+        if oneof and len(branches) < 2:
+            self.error(path, f"line {line}: @oneof needs at least two branches separated by « | »")
+        for branch in branches:
+            if not oneof and re.fullmatch(r"[1-5]xx", branch):
+                continue
+            code, separator, body = branch.partition(" ")
+            try:
+                if not separator or not re.fullmatch(r"[1-5][0-9]{2}", code):
+                    raise ValueError("expected HTTP status and JSON body" + (" in every @oneof branch" if oneof else ""))
+                strict_json(body)
+            except (ValueError, TypeError) as exc:
+                self.error(path, f"line {line}: {exc}")
 
     def verdicts(self, path):
         verdicts = {}

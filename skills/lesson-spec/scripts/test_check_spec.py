@@ -794,6 +794,19 @@ properties:
         result = self.registry([("М12A_Example/01", "acceptance-entry", "README.md", "supported anyway")])
         self.assertTrue(any("supported without it" in e for e in result.errors), result.errors)
 
+    def test_oneof_needs_code_and_json_in_every_branch(self):
+        # C-ONEOF-01: «@oneof 202 {…} | 200 {…}» — a step that may get either of two answers.
+        head = "scenario\tstep\trequest\texpect\n"
+        for expect, bad in [('@oneof 202 {"queued": "$rid"} | 200 {"answered": {}}', False),
+                            ('@oneof 202 {"queued": "$rid"}', True),
+                            ('@oneof 202 {"queued": "$rid"} | 200', True),
+                            ('@oneof 202 {"queued": "$rid"} | xyz {}', True),
+                            ('2xx', False)]:
+            with self.subTest(expect=expect):
+                self.scenarios.write_text(head + f"01-a\t1\tPOST /requests {{}}\t{expect}\n")
+                errors = [e for e in self.check().errors if "line 2" in e]
+                self.assertEqual(bool(errors), bad, errors)
+
     def test_key_names_a_writing_step_of_its_scenario(self):
         # ACC-06-KEY-SHIFT-01: «@start resource» inserted as step 1 left «@key(1)» pointing at a step without a key.
         head = "scenario\tstep\trequest\texpect\n"
