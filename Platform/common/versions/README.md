@@ -11,6 +11,7 @@
 | JSON Schema 2020-12 (форма) | `jsonschema` 4.26.0 | `github.com/santhosh-tekuri/jsonschema/v6` v6.0.2 | JSON-Schema-Test-Suite |
 | CEL (связи) | `cel-expr-python` 0.1.3 | `github.com/google/cel-go` v0.26.1 (`cel.dev/expr` v0.24.0) | cel-spec conformance |
 | YAML 1.2 (слой 1) | `ruamel.yaml` 0.19.1 | `go.yaml.in/yaml/v3` v3.0.5 | yaml-test-suite |
+| криптография (AES-GCM, Ed25519/X25519, X.509, CRL; только `lib/w2cforms` по договорам `common/contracts`) | `cryptography` 50.0.2 (`cffi` 2.1.1, `pycparser` 3.11) | стандартная библиотека | внешний набор тестов проекта (ADR-0092 доп. 2026-10-29) |
 
 **yaml-test-suite** — тег данных `data-2022-01-17`, архив
 `https://github.com/yaml/yaml-test-suite/archive/refs/tags/data-2022-01-17.tar.gz`, sha256
