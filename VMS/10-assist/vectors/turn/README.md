@@ -11,10 +11,14 @@ console:        консоль — ../plan-check/<имя>.console.json
 text:           просьба админа
 answers:        ответы админа на ask_admin по порядку (тексты хода)
 answer_secrets: номера секретов, введённых вместе с ответом
+cancel_on_tool: имя инструмента — сброс панели, пока он исполняется (cancelled() — да с этого вызова; V/10.3 Н1.6)
 context:        окно строки модели (умолчание 16384); prompt_tokens — usage каждого ответа модели
 model:          ответы шагов по порядку — {ok: true, message, usage} (состояние done двери: message как есть),
                 {ok: false, lost: true} (410/404), {ok: false, why, reason} (failed и прочие исходы шага, V/10.3 Н1.3)
-expect:         outcome (plan | refusal | unfinished | cancelled), why и reason у unfinished и refusal, plan_rows у плана,
+expect:         outcome (plan | refusal | unfinished | cancelled), why и reason у unfinished и refusal, rule — вид правила у
+                предела после отвергнутых версий (V/10.3 Н1.5), plan_rows у плана
+                (unit, revision, changes {field, from, to}, because — свидетели отбора по условиям: [{field, witnesses,
+                values}] или null у named; V/10.5 Н1.7),
                 texts — тексты хода, steps — число шагов, step_messages — сообщения каждого шага: role,
                 reasoning_content (ключ есть, только если сообщение его несёт: страница его снимает — V/10.3 Н1.2,
                 поэтому в ожиданиях его нет), tool_call_id, имена tool_calls, content — первые 160 знаков

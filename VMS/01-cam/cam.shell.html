@@ -75,9 +75,10 @@ recording may lie on are the rows of the table the rec manifest names
 (`PUT /domain/placement/rec/<ref>`); the holders' doors from
 `/rec/where/<recording>`, `/rec/where/<table>/<place>?unit=<recording>`, `/live/where/<stream>`, and another
 cluster's from `/domain/at/<cluster>/rec/where/…` (ADR-0061); at the incidents holder's door,
-`POST /keeps/<keep>/verify?recording=<r>`. The assistant: `/mounts`, `/manifest`, `/<sub>/manifest`, `/session`, `/schema`,
-the rows and tables of this page's subsystems (reads), `/assist/models`, `/assist/where/<name>` and the model's door
-(`/chat/<name>/steps`), `PUT /<rows>/<id>` with `If-Match` (its writes). Everything else is the module's.
+`POST /keeps/<keep>/verify?recording=<r>`. The assistant: `/schema`, the rows and tables of this page's subsystems
+(reads; manifests and rights from the module — `manifest`, `may`), `/<sub>/manifest` only to tell «outside the scope»,
+`/assist/models`, `/assist/where/<name>` and the model's door (`/chat/<name>/steps`), `PUT /<rows>/<id>` with `If-Match`
+(its writes). Everything else is the module's.
 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -1410,6 +1411,9 @@ pc.addMenu("unit",ref=>isCam(ref)?[{label:"Смотреть видео",run:()=>
 
 
 
+
+
+
 // assist:core:begin — the assistant's core (V/10.3–V/10.6): pure, the vectors run it from here
 // The assistant's core (V/10.3–V/10.6): the harness's tools, the plan check, the turn's loop and the apply — pure over
 // a console (`ctx`) and a model (`env`) given to it: no DOM, no module. The page wires them to `pc.api`, `pc.may`, the
@@ -1428,7 +1432,10 @@ const ENDINGS=listOf(W.endings).map(norm);
 function sameWord(a,b){if(a.length<4)return b===a||ENDINGS.some(e=>b===a+e);let n=0;while(n<a.length&&n<b.length&&a[n]===b[n])n++;return n>=3&&n>=Math.min(a.length,b.length)-2}
 const wordFits=(t,w)=>{const B=stems(w);return stems(t).some(a=>B.some(b=>sameWord(a,b)))};
 const EDGE=/[\p{L}\p{N}_-]/u;
-function nameAt(T,n){const out=[];let i=T.indexOf(n);while(i>=0){const L=i?T[i-1]:"",R=T[i+n.length]||"";if(!(L&&EDGE.test(L))&&!(R&&EDGE.test(R)))out.push(i);i=T.indexOf(n,i+1)}return out}
+// the code point before i and the one at i — whole, not a half of a surrogate pair (V/10.5 Н1.2)
+function cpBefore(T,i){if(i<=0)return"";const lo=T.charCodeAt(i-1);if(lo>=0xDC00&&lo<=0xDFFF&&i>=2){const hi=T.charCodeAt(i-2);if(hi>=0xD800&&hi<=0xDBFF)return String.fromCodePoint(T.codePointAt(i-2))}return T[i-1]}
+function cpAt(T,i){if(i>=T.length)return"";return String.fromCodePoint(T.codePointAt(i))}
+function nameAt(T,n){const out=[];let i=T.indexOf(n);while(i>=0){const L=cpBefore(T,i),R=cpAt(T,i+n.length);if(!(L&&EDGE.test(L))&&!(R&&EDGE.test(R)))out.push(i);i=T.indexOf(n,i+1)}return out}
 const nameIn=(t,x)=>{const n=norm(x);return!!n&&nameAt(norm(t),n).length>0};
 const BOUND="(?:(?<![\\p{L}\\p{N}_])(?=[\\p{L}\\p{N}_])|(?<=[\\p{L}\\p{N}_])(?![\\p{L}\\p{N}_]))";
 const re=src=>new RegExp(String(src||"(?!)").replace(/\\b/g,BOUND),"iu");
@@ -1439,7 +1446,7 @@ function numbers(t,names){
   let T=norm(t);
   for(const x of names){const n=norm(x);if(!n)continue;for(const i of nameAt(T,n).reverse())T=T.slice(0,i)+" ".repeat(n.length)+T.slice(i+n.length)}
   const out=[],rx=/(-?)(\d+(?:[.,]\d+)?)/g;let m;
-  while((m=rx.exec(T))){let v=parseFloat(m[2].replace(",","."));if(m[1]&&!(m.index&&/[\p{L}\p{N}]/u.test(T[m.index-1])))v=-v;out.push(v)}
+  while((m=rx.exec(T))){let v=parseFloat(m[2].replace(",","."));if(m[1]&&!/[\p{L}\p{N}]/u.test(cpBefore(T,m.index)))v=-v;out.push(v)}
   return out}
 // ── values ──
 function same(a,b){
@@ -1498,7 +1505,10 @@ function fieldView(sub,f,d){
   if(isSecret(f.name))v.secret=true;
   return v}
 function fieldWords(sub,f,d){const v=fieldView(sub,f,d);return[v.label,v.help,v.words,...Object.values(v.enum_labels||{}),...Object.values(v.enum_words||{})].filter(Boolean).map(String).join(" ")}
-const fieldsOf=man=>Object.fromEntries((man.fields||[]).map(f=>[f.name,f]));
+// a dictionary keyed by names the model may write: own keys only, never the prototype's (constructor, __proto__)
+const dict=entries=>{const o=Object.create(null);for(const[k,v]of entries)o[k]=v;return o};
+const own=(o,k)=>o!=null&&typeof o==="object"&&Object.prototype.hasOwnProperty.call(o,k)?o[k]:undefined;
+const fieldsOf=man=>dict((man.fields||[]).map(f=>[f.name,f]));
 // ── tools (V/10.4 Н1.5) ──
 function tools(ctx,turn){
   let R=reader(ctx);   // a fresh reader per call: each call reads anew, one door once within a call (V/10.4 Н1.2)
@@ -1547,7 +1557,7 @@ function tools(ctx,turn){
     if(!about)R.fail(`this subsystem has no about — filter ${field} has nothing to apply to`);
     const o=await R.manifest(about.sub),names=new Set([...(o.fields||[]).map(f=>f.name),"id"]);
     if(!names.has(field.slice(6)))R.fail(`no field ${J(field.slice(6))} in the related subsystem ${about.sub}; its fields: ${[...names].sort().map(n=>"about."+n).join(", ")} — filter about.<field>`)}
-  async function fieldTypes(man,about){const out={...fieldsOf(man)};if(about){const o=await R.manifest(about.sub);for(const f of o.fields||[])out["about."+f.name]=f}return out}
+  async function fieldTypes(man,about){const out=fieldsOf(man);if(about){const o=await R.manifest(about.sub);for(const f of o.fields||[])out["about."+f.name]=f}return out}
   const valueOf=(row,field,about,arows)=>field.startsWith("about.")?((arows.get(String(row[about.field]))||{})[field.slice(6)]):row[field];
   function match(v,op,want){
     switch(op){
@@ -1589,7 +1599,7 @@ function tools(ctx,turn){
         if(v===""&&!(want||[]).includes(k))continue;
         if(v===null&&!(want||[]).includes(k))continue;
         view[k]=v}
-      for(const k of want||[])if(!(k in view)&&!k.startsWith("about.")&&k!=="id"&&k!=="revision"&&k!==man.id&&k in r)view[k]=r[k];
+      for(const k of want||[])if(!(k in view)&&!k.startsWith("about.")&&k!=="id"&&k!=="revision"&&k!==man.id&&Object.prototype.hasOwnProperty.call(r,k))view[k]=r[k];
       const inherited={};
       for(const f of man.fields||[])if(f.inherit!==undefined&&r[f.name]==null&&(!want||want.includes(f.name)))inherited[f.name]=f.inherit;
       for(const k of Object.keys(inherited))view[k]=null;
@@ -1643,7 +1653,7 @@ function tools(ctx,turn){
     args=args||{};const sub=String(args.sub||""),table=String(args.table||""),man=await R.manifest(sub);
     if(!(await tablesOf(man)).includes(table))R.fail(`no table ${J(table)} in ${sub}`);
     const r=await R.get((await R.base(sub))+"/"+encodeURIComponent(table));if(r.err)R.fail(r.err);
-    const rows=r.body&&Array.isArray(r.body[table])?r.body[table]:null;if(!rows)R.fail(`no table ${J(table)} in ${sub}`);
+    const rows=Array.isArray(own(r.body,table))?own(r.body,table):null;if(!rows)R.fail(`no table ${J(table)} in ${sub}`);
     if(rows.length>LIST_MAX)R.fail(`${sub}: more than ${LIST_MAX} units — too many to check here; refuse and say so`);
     return{sub,table,rows:rows.slice(0,ROW_LIMIT).map(x=>Object.fromEntries(Object.entries(x).filter(([k])=>!["by","at","held_by"].includes(k)))),read_only:true}}
   async function ask_admin(args){const q=String((args||{}).question??"").trim();if(!q)R.fail("question is one short question to the admin");return{question:q}}
@@ -1721,7 +1731,7 @@ function tools(ctx,turn){
     if(await relatedValue(sub,f,to,row))return null;
     if(f.type==="int"||f.type==="float")return isNum(to)&&(await textNumbers()).includes(to)?null:J(to);
     if(nameIn(t,String(to)))return null;
-    for(const lab of[((d.options||{})[f.name]||{})[to],(((W.options||{})[sub]||{})[f.name]||{})[to]])if(lab&&wordFits(t,lab))return null;
+    for(const lab of[own(own(d.options,f.name),String(to)),own(own(own(W.options,sub),f.name),String(to))])if(typeof lab==="string"&&wordFits(t,lab))return null;
     return J(to)}
   async function relatedValue(sub,f,to,row){
     const man=await R.manifest(sub);if(!man.about||!row||typeof to==="boolean")return false;
@@ -1755,13 +1765,14 @@ function tools(ctx,turn){
     for(const e of edits)if(String(e.unit).split("/")[0]!==editSub)errors.push(`selection: you edit ${e.unit}, but the edit subsystem is ${editSub}`);
     let espec;try{espec=await R.manifest(editSub)}catch(x){if(!x.tool)throw x;return errors.concat([`selection: ${x.message}`])}
     const efields=fieldsOf(espec),ed=espec.display||{};
-    let said={};const sf=sel.fields;
+    const said=dict([]);const sf=sel.fields;
     if(sf&&typeof sf==="object"&&!Array.isArray(sf)){for(const[k,v]of Object.entries(sf))if(v in efields&&!(k in efields))said[v]=k;for(const[k,v]of Object.entries(sf))if(k in efields)said[k]=v}
     const t=text(),seenList=new Set();
     let eunits;try{eunits=(await R.units(editSub)).by}catch(x){if(!x.tool)throw x;return errors.concat([`selection: ${x.message}`])}
     for(const name of[...new Set(edits.map(e=>e.field).filter(n=>n in efields))].sort()){
       const f=efields[name],word=said[name],words=fieldWords(editSub,f,ed);
       for(const e of edits){if(e.field!==name)continue;
+        if(isSecret(name)?!isLabel(e.to):(hasLabel(e.to)||!typeOk(f.type,e.to)))continue;   // its form is an error of Н1.3 already
         const row=eunits.get(String(e.unit).slice(String(e.unit).indexOf("/")+1))||{};
         const miss=await valueNamed(editSub,f,e.to,row[name]??null,ed,row);
         if(miss)errors.push(`${e.unit}: value ${miss} of field ${name} is not named in the admin's request${ASK}`);
@@ -1773,7 +1784,7 @@ function tools(ctx,turn){
       errors.push(`selection.where: condition ${J(c)} is not from the admin's request — neither its field nor its value is named there; select by the admin's words (label codes — field_values, the related unit — about.<field>)`);
     let picked,sspec,sunits,hits;
     try{
-      if(cond.length){const s=await select(selectSub,cond);sspec=s.man;hits=s.hits;picked=new Set(hits.map(h=>String(h.id)))}
+      if(cond.length){const s=await select(selectSub,cond);sspec=s.man;hits=s.hits;picked=new Set(hits.map(h=>String(h.id)));sunits=(await R.units(selectSub)).by}
       else{const u=await R.units(selectSub);sspec=u.man;sunits=u.by;picked=new Set(named.map(n=>n.slice(n.lastIndexOf("/")+1)));
         const unknown=[...picked].filter(x=>!sunits.has(x)).sort();if(unknown.length)errors.push(`selection.named: ${selectSub} has no ${unknown.join(", ")}`)}}
     catch(x){if(!x.tool)throw x;return errors.concat([`selection.where: ${x.message}`])}
@@ -1782,24 +1793,37 @@ function tools(ctx,turn){
     else if(ea.sub===selectSub)expected=new Set([...eunits].filter(([,r])=>picked.has(String(r[ea.field]))).map(([id])=>id));
     else if(sa.sub===editSub){if(!sunits)sunits=(await R.units(selectSub)).by;expected=new Set([...picked].filter(x=>sunits.has(x)).map(x=>String(sunits.get(x)[sa.field])))}
     else return errors.concat([`selection: ${selectSub} and ${editSub} are not related (about) — select in the edit subsystem`]);
+    // which selected units put each expected unit in the plan (its witnesses; several for a reverse about)
+    const witness=new Map();const add=(t,w)=>{if(!witness.has(t))witness.set(t,[]);witness.get(t).push(w)};
+    if(selectSub===editSub)for(const x of picked)add(x,x);
+    else if(ea.sub===selectSub){for(const[id,r]of eunits)if(picked.has(String(r[ea.field])))add(id,String(r[ea.field]))}
+    else for(const x of[...picked].sort())if(sunits.has(x))add(String(sunits.get(x)[sa.field]),x);
     const planned=new Set(edits.filter(e=>String(e.unit).split("/")[0]===editSub).map(e=>String(e.unit).slice(String(e.unit).indexOf("/")+1)));
     const extra=[...planned].filter(x=>!expected.has(x)).sort();
     if(extra.length)errors.push(`selection: ${extra.join(", ")} not selected (${named.length&&!cond.length?"named: "+[...picked].sort().join(", "):"condition in "+selectSub}); selected: ${[...expected].sort().join(", ")||"none"}`);
     for(const name of[...new Set(edits.map(e=>e.field).filter(n=>n in efields))].sort()){
       const f=efields[name];let delta=null,to;
       if(f.type==="list"){const ds=new Set();
-        for(const e of edits){if(e.field!==name||!Array.isArray(e.to))continue;const row=eunits.get(String(e.unit).slice(String(e.unit).indexOf("/")+1))||{};
+        for(const e of edits){if(e.field!==name||!typeOk("list",e.to))continue;const row=eunits.get(String(e.unit).slice(String(e.unit).indexOf("/")+1))||{};
           const cur=row[name]||(f.inherit!==undefined?f.inherit:null)||[];ds.add(J([[...new Set(e.to)].filter(x=>!cur.includes(x)).sort(),[...new Set(cur)].filter(x=>!e.to.includes(x)).sort()]))}
         if(ds.size!==1)continue;delta=JSON.parse([...ds][0])}
       else{const tos=new Set(edits.filter(e=>e.field===name).map(e=>J(e.to)));if(tos.size!==1)continue;to=JSON.parse([...tos][0])}
-      const missed=[];
-      for(const uid of[...expected].filter(x=>!planned.has(x)).sort()){
+      const missed=[],plannedHere=new Set(edits.filter(e=>e.field===name&&String(e.unit).split("/")[0]===editSub).map(e=>String(e.unit).slice(String(e.unit).indexOf("/")+1)));
+      for(const uid of[...expected].filter(x=>!plannedHere.has(x)).sort()){   // per field: a unit with another field's edit is not excused
         const row=eunits.get(uid);if(!row)continue;const cur=row[name]??null;
         if(delta){const have=cur||(f.inherit!==undefined?f.inherit:null)||[];if(delta[0].every(x=>have.includes(x))&&!delta[1].some(x=>have.includes(x)))continue}
         else if(same(cur==null&&f.inherit!==undefined?f.inherit:cur,to))continue;
         if(R.canWrite(editSub,uid))missed.push(`${uid} (${name} = ${J(cur)})`)}
       if(missed.length)errors.push(`selection: selected but missing from the plan: ${missed.join(", ")}`)}
-    return{errors,selectSub,editSub,picked:[...picked].sort(),expected:[...expected].sort(),cond,named,hits}}
+    // because: the value of each condition's field at the unit's witnesses (V/10.5 Н1.7), not at the edited row
+    const because=new Map();
+    if(cond.length){const{about:sab,arows:sar}=await R.aboutOf(sspec);
+      for(const[t,ws]of witness){because.set(t,cond.map(c=>{const vals=[];
+        for(const w of[...new Set(ws)].sort()){const row=sunits.get(w)||{};const f=String(c.field);
+          const v=f.startsWith("about.")&&sab?own(sar.get(String(row[sab.field])),f.slice(6)):own(row,f);
+          if(!vals.some(x=>same(x,v===undefined?null:v)))vals.push(v===undefined?null:v)}
+        return{field:String(c.field),witnesses:[...new Set(ws)].sort(),values:vals}}))}}
+    return{errors,selectSub,editSub,picked:[...picked].sort(),expected:[...expected].sort(),cond,named,hits,because}}
   async function propose_plan(args){
     args=args||{};const edits=args.edits;
     if(!Array.isArray(edits)||!edits.length)R.fail("edits is a non-empty list of {unit, field, from, to, why}");
@@ -1809,7 +1833,7 @@ function tools(ctx,turn){
     turn.version=(turn.version||0)+1;
     if(errors.length){turn.lastReason=errors[0];return{valid:false,errors,hint:"fix the plan and call propose_plan again, or ask the admin"}}
     const diff=[];for(const r of p.rows)for(const c of r.changes)diff.push(`${r.unit}  ${c.field}${c.label?` «${c.label}»`:""}: ${J(c.from)} → ${J(c.to)}   (${c.why})`);
-    turn.plan={version:turn.version,summary:String(args.summary??""),selection:{named:s.named,where:s.cond,select_sub:s.selectSub,edit_sub:s.editSub,picked:s.picked,expected:s.expected},rows:p.rows.map(r=>({unit:r.unit,sub:r.sub,id:r.id,revision:r.revision,changes:r.changes}))};
+    turn.plan={version:turn.version,summary:String(args.summary??""),selection:{named:s.named,where:s.cond,select_sub:s.selectSub,edit_sub:s.editSub,picked:s.picked,expected:s.expected},rows:p.rows.map(r=>({unit:r.unit,sub:r.sub,id:r.id,revision:r.revision,changes:r.changes,because:s.because.get(String(r.id))||null}))};
     return{valid:true,diff,note:"the plan is shown to the admin; the admin applies it with the Apply button (written through the console doors with CAS on revision)"}}
   async function refuse(args){
     const r=String((args||{}).reason??"").trim();if(!r)R.fail("reason is why the request cannot be done (or that there are no such units)");
@@ -1819,10 +1843,11 @@ function tools(ctx,turn){
     if(said(NOT_FOUND,r)&&!turn.told.has("not_found")){const n=await allNamed();if(n.length){turn.told.add("not_found");
       R.fail(`the refusal says there are no such units, but the request names units that exist: ${n.slice(0,6).map(([s,i])=>s+"/"+i).join(", ")} — find them with find_units (where id) and propose the plan; if the request's condition really matches no unit, say which condition`)}}
     return{reason:r}}
-  const ALLT={list_subsystems,get_manifest,get_schema,find_units,field_values,list_table,propose_plan,ask_admin,refuse};
+  // the closed set (V/10.4 Н1.1): a Map — a name is a tool only if it is one of the nine, never by the prototype
+  const ALLT=new Map(Object.entries({list_subsystems,get_manifest,get_schema,find_units,field_values,list_table,propose_plan,ask_admin,refuse}));
   // call(name, args) → {content: string, error: bool, data}
   async function call(name,args){
-    const fn=ALLT[name];if(!fn)return{content:`no tool ${name}`,error:true};
+    const fn=ALLT.get(name);if(!fn)return{content:`no tool ${name}`,error:true};
     R=reader(ctx);
     try{const data=await fn(args);return{content:J(data),error:false,data}}
     catch(x){if(x&&x.tool)return{content:"error: "+x.message,error:true};throw x}}
@@ -1830,7 +1855,13 @@ function tools(ctx,turn){
     R=reader(ctx);
     const subs=await list_subsystems(),manifests={};for(const x of subs.subsystems)manifests[x.sub]=await get_manifest({sub:x.sub});
     return{subsystems:subs.subsystems,manifests,session:{note:"the admin's rights are per unit: find_units shows can_edit: false where the admin has no right; such units are left out of the plan"}}}
-  return{call,overview,names:Object.keys(ALLT),reader:R}}
+  return{call,overview,names:[...ALLT.keys()],reader:R}}
+// the kind of a check's error, for the page's words of «план не прошёл проверку: <правило>» (V/10.3 Н1.5)
+const RULES=[["secret",/secret label|is a secret/],["rights",/has no right to edit/],["empty",/empty edit/],["twice",/is edited twice/],
+  ["missing",/selected but missing from the plan/],["extra",/not selected \(/],["condition",/^selection\.where: condition/],
+  ["named",/^selection\.named:/],["selection",/^selection/],["value",/value .* is not named/],["list",/does not say to add, remove or replace/],
+  ["field",/^field .* is not named|^selection\.fields/],["form",/is of type|is one of|is required|is fixed|is bytes|is the unit's name|has no field|missing |an edit is an object|unit is "|no unit |from = /]];
+const ruleOf=reason=>{const r=String(reason||"").replace(/^edits\[\d+\]: /,"");for(const[k,rx]of RULES)if(rx.test(r))return k;return"other"};
 // ── a turn (V/10.3 Н0, Н1.2–Н1.5) ──
 const newTurn=()=>({texts:[],seen:new Map(),told:new Set(),secrets:new Set(),version:0,plan:null,lastReason:"",looked:false,lookNudged:false});
 const TURN_CALLS=25,RESTARTS=2,RESERVE=4096,KEEP_TOOL_RESULTS=4,CHARS_PER_TOKEN=3;
@@ -1860,10 +1891,11 @@ async function runTurn(env,turn,text,note){
     const idx=messages.map((m,i)=>m.role==="tool"&&m.content!==ELIDED&&!asked.has(m.tool_call_id)?i:-1).filter(i=>i>=0);
     while(est>(env.context||16384)-RESERVE&&idx.length>KEEP_TOOL_RESULTS){const i=idx.shift();est-=Math.floor(messages[i].content.length/CHARS_PER_TOKEN);messages[i]={...messages[i],content:ELIDED}}}
   try{await start()}catch(x){if(x&&x.tool)return{outcome:"unfinished",why:"read",reason:x.message};throw x}
+  if(env.cancelled())return{outcome:"cancelled"};
   let calls=0;
   for(;;){
     if(env.cancelled())return{outcome:"cancelled"};
-    if(calls>=TURN_CALLS)return{outcome:"unfinished",why:"limit",reason:turn.lastReason};
+    if(calls>=TURN_CALLS)return{outcome:"unfinished",why:"limit",reason:turn.lastReason,...(turn.lastReason?{rule:ruleOf(turn.lastReason)}:{})};
     fit();
     const r=await env.step({messages,tools:toolDefs,tool_choice:"required",reasoning_effort:"medium",turn:turn.id});
     if(env.cancelled())return{outcome:"cancelled"};
@@ -1887,7 +1919,7 @@ async function runTurn(env,turn,text,note){
       if(!T.names.includes(name)){const fits=(H.tools||[]).filter(t=>{const p=Object.keys((t.inputSchema||{}).properties||{}),q=(t.inputSchema||{}).required||[];return Object.keys(args).length&&Object.keys(args).every(k=>p.includes(k))&&q.every(k=>k in args)});if(fits.length===1)name=fits[0].name}
       let res;
       if((name==="ask_admin"||name==="refuse")&&!turn.looked&&!turn.lookNudged){turn.lookNudged=true;res={content:LOOK_FIRST,error:true}}
-      else{env.status&&env.status(name);res=await T.call(name,args)}
+      else{env.status&&env.status(name);res=await T.call(name,args);if(env.cancelled())return{outcome:"cancelled"}}   // reset while the tool ran: nothing of it is published
       if(LOOKUPS.has(name))turn.looked=true;
       if(name==="ask_admin"&&!res.error){question={id,text:res.data.question};stop="waiting for the admin's answer";results.push(null);continue}
       results.push({role:"tool",tool_call_id:id,content:res.content});
@@ -1904,9 +1936,10 @@ async function runTurn(env,turn,text,note){
     if(end)return end}}
 // ── the apply (V/10.6 Н1.4) ──
 // env: {api(method, path, body, opts) → {status, body} (throws {status, body} as the module does), get(path) → {status, body},
-//       secret(n) → value, base(sub) → "" | "/<sub>", rows(sub) → the rows' name}
+//       secret(n) → value | undefined (forgotten), base(sub) → "" | "/<sub>", rows(sub) → the rows' name,
+//       alive() → false once the panel is reset (cancel, new turn, logout, pagehide): nothing more is sent (RVP-01)}
 async function applyRow(env,row,retry){
-  const body={};for(const c of row.changes)body[c.field]=isLabel(c.to)?env.secret(c.to.secret):c.to;
+  const body={};for(const c of row.changes){const v=isLabel(c.to)?env.secret(c.to.secret):c.to;if(v===undefined)return{outcome:"skipped",unsent:true};body[c.field]=v}
   const path=(await env.base(row.sub))+"/"+(await env.rows(row.sub))+"/"+encodeURIComponent(row.id);
   let r;try{r=await env.api("PUT",path,body,{ifMatch:row.revision})}catch(e){r=e&&e.status?e:{status:0}}
   const st=r.status|0;
@@ -1929,11 +1962,13 @@ async function apply(env,plan,results){
   for(const row of plan.rows){
     const prev=results&&results[row.unit];
     if(prev&&!["pending","skipped"].includes(prev.outcome)){out[row.unit]=prev;continue}
-    if(stopped){out[row.unit]={outcome:"skipped"};continue}
-    const o=await applyRow(env,row,!!(prev&&prev.outcome==="pending"));
-    if(o.stop){stopped=true;delete o.stop}out[row.unit]=o}
+    const alive=()=>!env.alive||env.alive();
+    if(stopped||!alive()){stopped=true;out[row.unit]={outcome:"skipped"};continue}
+    let o=await applyRow(env,row,!!(prev&&prev.outcome==="pending"));
+    if(!alive()&&!o.unsent){o={outcome:"unknown"};stopped=true}   // reset while this row was in flight: its outcome is not known here
+    delete o.unsent;if(o.stop){stopped=true;delete o.stop}out[row.unit]=o}
   return out}
-return{tools,newTurn,runTurn,apply,norm,stems,sameWord,wordFits,nameIn,numbers,same,said:(k,t)=>said({rights:RIGHTS,not_found:NOT_FOUND,all:ALL}[k],t),polar,fieldView,fieldWords,isLabel}}
+return{tools,newTurn,runTurn,apply,ruleOf,norm,stems,sameWord,wordFits,nameIn,numbers,same,said:(k,t)=>said({rights:RIGHTS,not_found:NOT_FOUND,all:ALL}[k],t),polar,fieldView,fieldWords,isLabel}}
 // assist:core:end
 // assist:panel:begin
 // The panel «Ассистент» (V/10.3–V/10.6): a section of this page when the console mounts `assist` and the session sees a
@@ -1945,7 +1980,9 @@ const AS=ASSIST_HARNESS?makeAssist(ASSIST_HARNESS):null;
 const ASSIST_OPS={eq:"=",ne:"≠",in:"одно из",not_in:"ни одно из",contains:"содержит",not_contains:"не содержит",gt:">",gte:"≥",lt:"<",lte:"≤",exists:"задано",missing:"не задано"};
 const ASSIST_OUT={applied:"записано",moved:"строку изменили после чтения — не записано",refused:"отказано",skipped:"не отправлено",pending:"исход не виден: запись могла не дойти",unknown:"исход неизвестен — проверьте строку"};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const A={host:null,models:[],model:"",turn:null,busy:false,cancelled:false,log:[],status:"",plan:null,shown:null,results:null,
+// gen — the generation of the panel's work: every reset (cancel, new turn, logout, pagehide) moves it, and work started
+// under an older one stops at its next await and touches nothing (RVP-01)
+const A={host:null,models:[],model:"",turn:null,busy:false,gen:0,log:[],status:"",plan:null,shown:null,results:null,
   secrets:new Map(),ask:null,step:null,door:null,applying:false};
 const assistConsole={
   get:async p=>{try{return{status:200,body:await pc.api("GET",p)}}catch(e){return{status:(e&&e.status)||0,body:e&&e.body}}},
@@ -1967,11 +2004,11 @@ async function assistCall(method,path,body,keepalive){
     return{status:r.status,body:j}}}
 const stepPath=id=>`/chat/${encodeURIComponent(A.model)}/steps`+(id?"/"+encodeURIComponent(id):"");
 // A step of the model (V/10.3 Н1.3): post, poll by long wait, the model's own failures tried again up to three times.
-async function assistStep(body){
+async function assistStep(body,alive){
   for(let attempt=0;attempt<3;attempt++){
     let p;
     for(;;){
-      if(A.cancelled)return{ok:false,why:"cancelled"};
+      if(!alive())return{ok:false,why:"cancelled"};
       p=await assistCall("POST",stepPath(),body);
       if(p.status===202&&p.body&&p.body.step)break;
       const e=(p.body&&p.body.error)||"";
@@ -1979,9 +2016,10 @@ async function assistStep(body){
       if(p.status===-1||(p.status===503&&e==="model unavailable"))return{ok:false,why:"unavailable",reason:[e,p.body&&p.body.detail].filter(Boolean).join(": ")};
       if(p.status===0)return{ok:false,why:"network",reason:"нет ответа двери модели"};
       return{ok:false,why:"door",reason:`${p.status} ${e} ${(p.body&&p.body.detail)||""}`.trim()}}
+    if(!alive()){assistCall("DELETE",stepPath(p.body.step));return{ok:false,why:"cancelled"}}   // posted after a reset: drop it
     A.step=p.body.step;let st=null,net=0;
     for(;;){
-      if(A.cancelled)return{ok:false,why:"cancelled"};
+      if(!alive())return{ok:false,why:"cancelled"};
       const g=await assistCall("GET",stepPath(A.step)+"?wait=20");
       if(g.status===200&&g.body){st=g.body;if(["done","failed","cancelled"].includes(st.state))break;
         assistStatus(st.state==="queued"?`очередь: ${st.ahead|0} впереди`:"модель думает");continue}
@@ -1996,23 +2034,31 @@ function assistDrop(keepalive){if(A.step&&A.model){const id=A.step;A.step=null;a
 function assistStatus(s){A.status=s;const el=A.host&&A.host.querySelector(".as-status");if(el)el.textContent=s}
 const TOOL_WORDS={list_subsystems:"читаю подсистемы",get_manifest:"читаю манифест",get_schema:"читаю схему",find_units:"ищу единицы",field_values:"читаю значения",list_table:"читаю таблицу",propose_plan:"проверяю план",refuse:"проверяю отказ",ask_admin:"вопрос"};
 // The words of «ход не завершён» by its kind (V/10.3 Н1.5); the reason itself folded under them.
-const UNFINISHED={limit:"предел хода: модель не довела план до проверки",lost:"держатель модели сменился",unavailable:"модель недоступна",network:"нет связи с моделью",door:"шаг не удался",read:"консоль не прочиталась",
+const RULE_WORDS={secret:"метка секрета не на месте",rights:"нет права записи на единицу",empty:"пустая правка",twice:"поле правится дважды",
+  missing:"пропущены отобранные единицы",extra:"в плане лишние единицы",condition:"условие отбора не из просьбы",named:"единица не названа в просьбе",
+  selection:"отбор не сходится с правками",value:"значение не названо в просьбе",list:"правка списка без глагола",field:"поле не названо в просьбе",
+  form:"правка не по форме поля",other:"правило проверки"};
+const UNFINISHED={limit:"предел хода: модель не довела план до проверки",cancelled:"шаг снят у двери модели",lost:"держатель модели сменился",unavailable:"модель недоступна",network:"нет связи с моделью",door:"шаг не удался",read:"консоль не прочиталась",
   "too long":"шаг шёл слишком долго","queue too long":"очередь к модели слишком длинная","context exceeded":"не уместилось в окно модели","model failed":"модель дала сбой","model restarted":"модель перезапустилась"};
 async function assistRun(text,note){
-  A.busy=true;A.cancelled=false;A.plan=null;A.shown=null;A.results=null;assistDraw();
+  const g=A.gen,alive=()=>g===A.gen;
+  A.busy=true;A.plan=null;A.shown=null;A.results=null;assistDraw();
   const row=A.models.find(m=>m.id===A.model)||{};
-  const env={console:assistConsole,context:+row.context||16384,random:n=>crypto.getRandomValues(new Uint8Array(n)),cancelled:()=>A.cancelled,
-    status:name=>assistStatus(TOOL_WORDS[name]||name),step:assistStep,
-    ask:q=>new Promise(res=>{A.log.push({who:"model",text:q,ask:true});A.ask=res;A.busy=false;assistDraw()})};
+  const env={console:assistConsole,context:+row.context||16384,random:n=>crypto.getRandomValues(new Uint8Array(n)),cancelled:()=>!alive(),
+    status:name=>{if(alive())assistStatus(TOOL_WORDS[name]||name)},step:body=>assistStep(body,alive),
+    ask:q=>alive()?new Promise(res=>{A.log.push({who:"model",text:q,ask:true});A.ask=res;A.busy=false;assistDraw()}):null};
   let out;
-  try{out=await AS.runTurn(env,A.turn,text,note)}catch(e){out={outcome:"unfinished",why:"door",reason:String(e&&e.message||e)}}
+  const turn=A.turn,secrets=A.secrets;
+  try{out=await AS.runTurn(env,turn,text,note)}catch(e){out={outcome:"unfinished",why:"door",reason:String(e&&e.message||e)}}
+  if(!alive())return;                       // reset meanwhile: a newer turn owns the panel
   A.busy=false;A.ask=null;assistStatus("");
-  if(out.outcome==="plan"){A.plan=out.plan;await assistShow()}
+  if(out.outcome==="plan"){const plan={...out.plan,secrets};if(!await assistShow(plan,alive))return;A.plan=plan}   // the secrets go with this version
   else if(out.outcome==="refusal")A.log.push({who:"model",text:out.reason});
-  else if(out.outcome==="unfinished")A.log.push({who:"page",text:"Ход не завершён: "+(UNFINISHED[out.why]||out.why),detail:out.reason});
+  else if(out.outcome==="unfinished")A.log.push({who:"page",text:"Ход не завершён: "+(out.why==="limit"&&out.rule?"план не прошёл проверку: "+(RULE_WORDS[out.rule]||RULE_WORDS.other):UNFINISHED[out.why]||"шаг не удался"),detail:out.reason});
   if(out.outcome!=="plan"&&out.outcome!=="cancelled")assistForgetSecrets();
   assistDraw()}
-function assistForgetSecrets(){A.secrets=new Map()}
+// forgetting clears the map a shown plan holds, so an apply still running under it sends no secret (RVP-01)
+function assistForgetSecrets(){A.secrets.clear();A.secrets=new Map()}
 function assistSecretsFromInputs(){
   A.host.querySelectorAll(".as-secret").forEach(el=>{if(el.value){const n=A.secrets.size+1;A.secrets.set(n,el.value);A.turn.secrets.add(n)}el.value=""});
   A.host.querySelectorAll(".as-secret-row").forEach(el=>el.remove())}
@@ -2020,48 +2066,51 @@ async function assistSend(){
   const ta=A.host.querySelector(".as-text"),text=ta.value.trim();if(!text)return;ta.value="";
   if(A.ask){const res=A.ask;A.ask=null;assistSecretsFromInputs();A.log.push({who:"admin",text});A.busy=true;assistDraw();res(text);return}
   if(A.busy)return;
-  assistForgetSecrets();A.turn=AS.newTurn();assistSecretsFromInputs();
+  assistReset();A.results=null;A.turn=AS.newTurn();assistSecretsFromInputs();
   A.log=[{who:"admin",text}];assistRun(text)}
-function assistCancel(){A.cancelled=true;assistDrop();if(A.ask){const r=A.ask;A.ask=null;r(null)}A.busy=false;assistForgetSecrets();A.plan=null;A.shown=null;A.log.push({who:"page",text:"Ход отменён"});assistDraw()}
+function assistReset(keepalive){A.gen++;assistDrop(keepalive);if(A.ask){const r=A.ask;A.ask=null;r(null)}A.busy=false;A.applying=false;assistForgetSecrets();A.plan=null;A.shown=null}
+function assistCancel(){assistReset();A.log.push({who:"page",text:"Ход отменён"});assistDraw()}
 function assistNew(){assistCancel();A.log=[];A.results=null;A.turn=null;assistDraw()}
 // The plan in the page's words (V/10.5 Н1.7, V/10.6 Н1.2): manifests read for the labels; the selection above the diff.
-async function assistShow(){
-  const p=A.plan,mans={},rows={};
+async function assistShow(p,alive){
+  const mans={},rows={};
   const man=async s=>mans[s]||(mans[s]=pc.manifest(s)||{});
   const units=async s=>{if(rows[s])return rows[s];const m=await man(s),r=(await assistConsole.get((s===assistConsole.root?"":"/"+s)+"/"+m.rows)).body;return rows[s]=new Map(((r&&r.configured)||[]).map(x=>[String(x.id),x]))};
   const label=async(s,f)=>{if(f.startsWith("about.")){const m=await man(s);if(m.about){const am=await man(m.about.sub);return`${((am.display||{}).unit)||m.about.sub}: ${((am.display||{}).fields||{})[f.slice(6)]||f.slice(6)}`}}return((await man(s)).display||{}).fields?.[f]||f};
-  const word=async(s,f,v)=>{if(v&&typeof v==="object"&&AS.isLabel(v))return`секрет № ${v.secret}`;if(Array.isArray(v))return v.map(String).join(", ")||"пусто";if(v===null||v===undefined)return"не задано";const o=(((await man(s)).display||{}).options||{})[f]||{};return o[v]||(typeof v==="string"?v:JSON.stringify(v))};
+  const word=async(s,f,v)=>{if(v&&typeof v==="object"&&AS.isLabel(v))return`секрет № ${v.secret}`;if(Array.isArray(v))return v.map(String).join(", ")||"пусто";if(v===null||v===undefined)return"не задано";if(typeof v==="boolean")return v?"да":"нет";const o=(((await man(s)).display||{}).options||{})[f]||{};return o[v]||(typeof v==="string"?v:JSON.stringify(v))};
   const unitName=async(s,id)=>{const m=await man(s),r=(await units(s)).get(String(id));return`${((m.display||{}).unit)||s} ${r&&m.id!=="numeric"&&r[m.id]!==undefined?r[m.id]:(r&&r.name)||id}`};
   const sel=p.selection,conds=[];
   for(const c of sel.where||[])conds.push(`${await label(sel.select_sub,String(c.field))} ${ASSIST_OPS[c.op||"eq"]||c.op}${["exists","missing"].includes(c.op)?"":" "+(Array.isArray(c.value)?c.value.join(", "):await word(sel.select_sub,String(c.field),c.value))}`);
   const shown={by:sel.where&&sel.where.length?"условие: "+conds.join(" и "):"по имени: "+(await Promise.all((sel.named||[]).map(n=>unitName(sel.select_sub,n.slice(n.lastIndexOf("/")+1))))).join(", "),
     subs:sel.select_sub!==sel.edit_sub?`отбор — ${sel.select_sub}, правка — ${sel.edit_sub}`:"",picked:sel.expected.length,inPlan:p.rows.length,rows:[]};
   for(const r of p.rows){
+    // the condition's value at the units that selected this one — itself, its related unit, or the related units that
+    // name it (a reverse about: several) — as the check kept them (V/10.5 Н1.7; RVP-05)
     const why=[];
-    if(sel.where&&sel.where.length){const m=await man(r.sub),u=(await units(r.sub)).get(String(r.id))||{};
-      for(const c of sel.where){const f=String(c.field);let v;
-        if(f.startsWith("about.")&&m.about){const ar=(await units(m.about.sub)).get(String(u[m.about.field]))||{};v=ar[f.slice(6)]}
-        else if(sel.select_sub!==r.sub&&m.about&&m.about.sub===sel.select_sub){const ar=(await units(sel.select_sub)).get(String(u[m.about.field]))||{};v=ar[f]}
-        else v=u[f];
-        why.push(`${await label(sel.select_sub,f)}: ${await word(sel.select_sub,f.replace(/^about\./,""),v)}`)}}
+    if(r.because)for(const b of r.because){const m=await man(sel.select_sub),f=b.field,ab=f.startsWith("about.")&&m.about?m.about.sub:sel.select_sub;
+      const vs=[];for(const v of b.values)vs.push(await word(ab,f.replace(/^about\./,""),v));
+      why.push(`${await label(sel.select_sub,f)}: ${vs.join(", ")}${sel.select_sub!==r.sub?` (${(await Promise.all(b.witnesses.map(w=>unitName(sel.select_sub,w)))).join(", ")})`:""}`)}
     else why.push("названа");
     const ch=[];for(const c of r.changes)ch.push({label:await label(r.sub,c.field),from:AS.isLabel(c.to)||/_secret$/.test(c.field)?(c.from??"—"):await word(r.sub,c.field,c.from),to:await word(r.sub,c.field,c.to),why:c.why});
     shown.rows.push({unit:await unitName(r.sub,r.id),ref:r.unit,cond:why.join("; "),changes:ch})}
-  A.shown=shown;A.log.push({who:"model",text:p.summary,plan:true})}
+  if(!alive())return false;
+  A.shown=shown;A.log.push({who:"model",text:p.summary,plan:true});return true}
 async function assistApply(again){
   if(!A.plan||A.applying||!FEATURES.has("api.if-match"))return;
+  const g=A.gen,alive=()=>g===A.gen,plan=A.plan,secrets=plan.secrets;
   A.applying=true;assistDraw();
-  const env={api:async(m,p,b,o)=>({status:200,body:await pc.api(m,p,b,o)}),get:assistConsole.get,secret:n=>A.secrets.get(n),
+  const env={api:async(m,p,b,o)=>({status:200,body:await pc.api(m,p,b,o)}),get:assistConsole.get,secret:n=>secrets.get(n),alive,
     base:async s=>s===assistConsole.root?"":"/"+s,rows:async s=>(pc.manifest(s)||{}).rows};
-  try{A.results=await AS.apply(env,A.plan,again?A.results:null)}catch(e){pc.toast("Применение прервано: "+(e&&e.message||e))}
-  A.applying=false;
-  const left=A.results&&Object.values(A.results).some(r=>["pending","skipped"].includes(r.outcome));
+  let results=null;try{results=await AS.apply(env,plan,again?A.results:null)}catch(e){if(alive())pc.toast("Применение прервано: "+(e&&e.message||e))}
+  if(!alive())return;                       // reset meanwhile: the new turn's state is not this apply's
+  A.applying=false;A.results=results;
+  const left=results&&Object.values(results).some(r=>["pending","skipped"].includes(r.outcome));
   if(!left)assistForgetSecrets();    // the secrets live while «Повторить» may still send them (V/10.6 Н1.3)
   assistDraw()}
 function assistRebuild(){
   if(!A.turn||!A.results)return;
   const texts=A.turn.texts.slice(),notes=A.plan.rows.filter(r=>A.results[r.unit]&&A.results[r.unit].outcome!=="applied").map(r=>`${r.unit}: ${A.results[r.unit].outcome}`);
-  assistForgetSecrets();A.turn=AS.newTurn();A.turn.texts=texts;A.results=null;A.plan=null;A.shown=null;
+  assistReset();A.turn=AS.newTurn();A.turn.texts=texts;A.results=null;
   A.log.push({who:"page",text:"Перестройка: "+notes.join(", ")});
   assistRun(null,"The previous plan was applied in part. Rows to rebuild from a fresh reading: "+notes.join("; ")+".")}
 function assistDraw(){
@@ -2098,7 +2147,7 @@ if(AS)pc.ready.then(async()=>{
   A.models=rows.map(x=>({id:String(x.id),context:x.context})).sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
   A.model=(A.models.find(x=>live.has(x.id))||A.models[0]).id;
   pc.addSection({id:"assist",label:"Ассистент",icon:"bolt",after:"rules",render:host=>{A.host=host;assistDraw()}});
-  addEventListener("pagehide",()=>{A.cancelled=true;assistDrop(true)});
+  addEventListener("pagehide",()=>assistReset(true));
   pc.on("logout",()=>{assistCancel();A.log=[];assistDraw()});
 });
 // assist:panel:end

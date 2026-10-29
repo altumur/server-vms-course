@@ -285,6 +285,142 @@
      ]
     },
     "content": "{\"sub\":\"testsub2\",\"count\":0,\"shown\":0,\"units\":[],\"query\":{\"sub\":\"testsub2\",\"where\":[{\"field\":\"active\",\"op\":\"eq\",\"value\":1}]},\"hints\":[\"no matches anywhere; check the field's values with field_values\"]}"
+   },
+   {
+    "name": "find_units",
+    "args": {
+     "sub": "testsub2",
+     "where": [
+      {
+       "field": "step",
+       "op": "gte",
+       "value": 4
+      }
+     ],
+     "fields": [
+      "step"
+     ]
+    },
+    "content": "{\"sub\":\"testsub2\",\"count\":4,\"shown\":4,\"units\":[{\"unit\":\"testsub2/Gate-2\",\"step\":5,\"about.labels\":[\"east\",\"floor3\"]},{\"unit\":\"testsub2/Shop-2\",\"step\":4,\"about.labels\":[\"west\",\"floor1\"]},{\"unit\":\"testsub2/Store-2\",\"step\":10,\"about.labels\":[\"east\",\"floor2\"]},{\"unit\":\"testsub2/Yard-2\",\"step\":20,\"about.labels\":[\"north\"],\"can_edit\":false}],\"can_edit_note\":\"can_edit: false — the admin has no edit right on this unit: leave it out of the plan, tell the admin in summary\",\"query\":{\"sub\":\"testsub2\",\"where\":[{\"field\":\"step\",\"op\":\"gte\",\"value\":4}]}}"
+   },
+   {
+    "name": "find_units",
+    "args": {
+     "sub": "testsub2",
+     "where": [
+      {
+       "field": "step",
+       "op": "gte",
+       "value": 5
+      }
+     ],
+     "fields": [
+      "step"
+     ]
+    },
+    "content": "{\"sub\":\"testsub2\",\"count\":3,\"shown\":3,\"units\":[{\"unit\":\"testsub2/Gate-2\",\"step\":5,\"about.labels\":[\"east\",\"floor3\"]},{\"unit\":\"testsub2/Store-2\",\"step\":10,\"about.labels\":[\"east\",\"floor2\"]},{\"unit\":\"testsub2/Yard-2\",\"step\":20,\"about.labels\":[\"north\"],\"can_edit\":false}],\"can_edit_note\":\"can_edit: false — the admin has no edit right on this unit: leave it out of the plan, tell the admin in summary\",\"query\":{\"sub\":\"testsub2\",\"where\":[{\"field\":\"step\",\"op\":\"gte\",\"value\":5}]}}"
+   },
+   {
+    "name": "find_units",
+    "args": {
+     "sub": "testsub2",
+     "where": [
+      {
+       "field": "step",
+       "op": "gte",
+       "value": 6
+      }
+     ],
+     "fields": [
+      "step"
+     ]
+    },
+    "content": "{\"sub\":\"testsub2\",\"count\":2,\"shown\":2,\"units\":[{\"unit\":\"testsub2/Store-2\",\"step\":10,\"about.labels\":[\"east\",\"floor2\"]},{\"unit\":\"testsub2/Yard-2\",\"step\":20,\"about.labels\":[\"north\"],\"can_edit\":false}],\"can_edit_note\":\"can_edit: false — the admin has no edit right on this unit: leave it out of the plan, tell the admin in summary\",\"query\":{\"sub\":\"testsub2\",\"where\":[{\"field\":\"step\",\"op\":\"gte\",\"value\":6}]}}"
+   },
+   {
+    "name": "find_units",
+    "args": {
+     "sub": "testsub2",
+     "where": [
+      {
+       "field": "step",
+       "op": "lt",
+       "value": 4
+      }
+     ],
+     "fields": [
+      "step"
+     ]
+    },
+    "content": "{\"sub\":\"testsub2\",\"count\":6,\"shown\":6,\"units\":[{\"unit\":\"testsub2/Gate-1\",\"step\":1,\"about.labels\":[\"east\",\"floor3\"]},{\"unit\":\"testsub2/Office-1\",\"step\":1,\"about.labels\":[\"west\",\"floor3\"]},{\"unit\":\"testsub2/Office-2\",\"step\":3,\"about.labels\":[\"west\",\"floor3\"]},{\"unit\":\"testsub2/Shop-1\",\"step\":1,\"about.labels\":[\"west\",\"floor1\"]},{\"unit\":\"testsub2/Store-1\",\"step\":2,\"about.labels\":[\"east\",\"floor2\"]},{\"unit\":\"testsub2/Yard-1\",\"step\":1,\"about.labels\":[\"north\"],\"can_edit\":false}],\"can_edit_note\":\"can_edit: false — the admin has no edit right on this unit: leave it out of the plan, tell the admin in summary\",\"query\":{\"sub\":\"testsub2\",\"where\":[{\"field\":\"step\",\"op\":\"lt\",\"value\":4}]}}"
+   },
+   {
+    "name": "find_units",
+    "args": {
+     "sub": "testsub2",
+     "where": [
+      {
+       "field": "step",
+       "op": "lt",
+       "value": 5
+      }
+     ],
+     "fields": [
+      "step"
+     ]
+    },
+    "content": "{\"sub\":\"testsub2\",\"count\":7,\"shown\":7,\"units\":[{\"unit\":\"testsub2/Gate-1\",\"step\":1,\"about.labels\":[\"east\",\"floor3\"]},{\"unit\":\"testsub2/Office-1\",\"step\":1,\"about.labels\":[\"west\",\"floor3\"]},{\"unit\":\"testsub2/Office-2\",\"step\":3,\"about.labels\":[\"west\",\"floor3\"]},{\"unit\":\"testsub2/Shop-1\",\"step\":1,\"about.labels\":[\"west\",\"floor1\"]},{\"unit\":\"testsub2/Shop-2\",\"step\":4,\"about.labels\":[\"west\",\"floor1\"]},{\"unit\":\"testsub2/Store-1\",\"step\":2,\"about.labels\":[\"east\",\"floor2\"]},{\"unit\":\"testsub2/Yard-1\",\"step\":1,\"about.labels\":[\"north\"],\"can_edit\":false}],\"can_edit_note\":\"can_edit: false — the admin has no edit right on this unit: leave it out of the plan, tell the admin in summary\",\"query\":{\"sub\":\"testsub2\",\"where\":[{\"field\":\"step\",\"op\":\"lt\",\"value\":5}]}}"
+   },
+   {
+    "name": "find_units",
+    "args": {
+     "sub": "testsub2",
+     "where": [
+      {
+       "field": "step",
+       "op": "lt",
+       "value": 6
+      }
+     ],
+     "fields": [
+      "step"
+     ]
+    },
+    "content": "{\"sub\":\"testsub2\",\"count\":8,\"shown\":8,\"units\":[{\"unit\":\"testsub2/Gate-1\",\"step\":1,\"about.labels\":[\"east\",\"floor3\"]},{\"unit\":\"testsub2/Gate-2\",\"step\":5,\"about.labels\":[\"east\",\"floor3\"]},{\"unit\":\"testsub2/Office-1\",\"step\":1,\"about.labels\":[\"west\",\"floor3\"]},{\"unit\":\"testsub2/Office-2\",\"step\":3,\"about.labels\":[\"west\",\"floor3\"]},{\"unit\":\"testsub2/Shop-1\",\"step\":1,\"about.labels\":[\"west\",\"floor1\"]},{\"unit\":\"testsub2/Shop-2\",\"step\":4,\"about.labels\":[\"west\",\"floor1\"]},{\"unit\":\"testsub2/Store-1\",\"step\":2,\"about.labels\":[\"east\",\"floor2\"]},{\"unit\":\"testsub2/Yard-1\",\"step\":1,\"about.labels\":[\"north\"],\"can_edit\":false}],\"can_edit_note\":\"can_edit: false — the admin has no edit right on this unit: leave it out of the plan, tell the admin in summary\",\"query\":{\"sub\":\"testsub2\",\"where\":[{\"field\":\"step\",\"op\":\"lt\",\"value\":6}]}}"
+   },
+   {
+    "name": "find_units",
+    "args": {
+     "sub": "testsub2",
+     "where": [
+      {
+       "field": "step",
+       "op": "gt",
+       "value": 5
+      }
+     ],
+     "fields": [
+      "step"
+     ]
+    },
+    "content": "{\"sub\":\"testsub2\",\"count\":2,\"shown\":2,\"units\":[{\"unit\":\"testsub2/Store-2\",\"step\":10,\"about.labels\":[\"east\",\"floor2\"]},{\"unit\":\"testsub2/Yard-2\",\"step\":20,\"about.labels\":[\"north\"],\"can_edit\":false}],\"can_edit_note\":\"can_edit: false — the admin has no edit right on this unit: leave it out of the plan, tell the admin in summary\",\"query\":{\"sub\":\"testsub2\",\"where\":[{\"field\":\"step\",\"op\":\"gt\",\"value\":5}]}}"
+   },
+   {
+    "name": "find_units",
+    "args": {
+     "sub": "testsub2",
+     "where": [
+      {
+       "field": "step",
+       "op": "lte",
+       "value": 5
+      }
+     ],
+     "fields": [
+      "step"
+     ]
+    },
+    "content": "{\"sub\":\"testsub2\",\"count\":8,\"shown\":8,\"units\":[{\"unit\":\"testsub2/Gate-1\",\"step\":1,\"about.labels\":[\"east\",\"floor3\"]},{\"unit\":\"testsub2/Gate-2\",\"step\":5,\"about.labels\":[\"east\",\"floor3\"]},{\"unit\":\"testsub2/Office-1\",\"step\":1,\"about.labels\":[\"west\",\"floor3\"]},{\"unit\":\"testsub2/Office-2\",\"step\":3,\"about.labels\":[\"west\",\"floor3\"]},{\"unit\":\"testsub2/Shop-1\",\"step\":1,\"about.labels\":[\"west\",\"floor1\"]},{\"unit\":\"testsub2/Shop-2\",\"step\":4,\"about.labels\":[\"west\",\"floor1\"]},{\"unit\":\"testsub2/Store-1\",\"step\":2,\"about.labels\":[\"east\",\"floor2\"]},{\"unit\":\"testsub2/Yard-1\",\"step\":1,\"about.labels\":[\"north\"],\"can_edit\":false}],\"can_edit_note\":\"can_edit: false — the admin has no edit right on this unit: leave it out of the plan, tell the admin in summary\",\"query\":{\"sub\":\"testsub2\",\"where\":[{\"field\":\"step\",\"op\":\"lte\",\"value\":5}]}}"
    }
   ]
  },
@@ -802,7 +938,7 @@
       }
      ]
     },
-    "content": "{\"valid\":false,\"errors\":[\"edits[0]: an edit is an object {unit, field, from, to, why}\",\"edits[1]: missing field, to, why\",\"edits[2]: unit is \\\"<sub>/<name>\\\", e.g. cam/<name>\",\"edits[3]: no unit testsub2/Nope (or the session cannot see it)\",\"edits[4]: testsub2 has no field \\\"colour\\\"\",\"edits[5]: name is the unit's name, it is not changed\",\"edits[6]: field of is fixed — it cannot be changed\",\"edits[7]: field mask is bytes, a plan does not carry them\",\"edits[7]: mask is of type blob, but to = \\\"x\\\"\",\"edits[8]: step is of type int, but to = \\\"three\\\" — write an integer without quotes, e.g. 14\",\"edits[9]: mode is one of [\\\"plain\\\",\\\"loud\\\"], but to = \\\"loudest\\\"\",\"edits[10]: empty edit — testsub2/Gate-1 already has active = true; a unit with nothing to change is left out of the plan (if no unit has anything to change, there is no plan: tell the admin)\",\"edits[10]: why is empty — an edit needs a reason\",\"testsub2/Gate-1: value true of field active is not named in the admin's request — do not choose it yourself; ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\",\"field active (\\\"active (on / off, enabled / disabled) turn on / turn off\\\") is not named in the admin's request — edit only what the admin named; if the needed field does not exist, refuse and explain; to confirm it, ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\",\"testsub2/Gate-1: value \\\"x\\\" of field mask is not named in the admin's request — do not choose it yourself; ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\",\"testsub2/Gate-1: value \\\"loudest\\\" of field mode is not named in the admin's request — do not choose it yourself; ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\",\"field of (\\\"counter counter\\\") is not named in the admin's request — edit only what the admin named; if the needed field does not exist, refuse and explain; to confirm it, ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\",\"testsub2/Gate-1: value \\\"three\\\" of field step is not named in the admin's request — do not choose it yourself; ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\",\"selection: Nope not selected (named: Gate-1); selected: Gate-1\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
+    "content": "{\"valid\":false,\"errors\":[\"edits[0]: an edit is an object {unit, field, from, to, why}\",\"edits[1]: missing field, to, why\",\"edits[2]: unit is \\\"<sub>/<name>\\\", e.g. cam/<name>\",\"edits[3]: no unit testsub2/Nope (or the session cannot see it)\",\"edits[4]: testsub2 has no field \\\"colour\\\"\",\"edits[5]: name is the unit's name, it is not changed\",\"edits[6]: field of is fixed — it cannot be changed\",\"edits[7]: field mask is bytes, a plan does not carry them\",\"edits[7]: mask is of type blob, but to = \\\"x\\\"\",\"edits[8]: step is of type int, but to = \\\"three\\\" — write an integer without quotes, e.g. 14\",\"edits[9]: mode is one of [\\\"plain\\\",\\\"loud\\\"], but to = \\\"loudest\\\"\",\"edits[10]: empty edit — testsub2/Gate-1 already has active = true; a unit with nothing to change is left out of the plan (if no unit has anything to change, there is no plan: tell the admin)\",\"edits[10]: why is empty — an edit needs a reason\",\"testsub2/Gate-1: value true of field active is not named in the admin's request — do not choose it yourself; ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\",\"field active (\\\"active (on / off, enabled / disabled) turn on / turn off\\\") is not named in the admin's request — edit only what the admin named; if the needed field does not exist, refuse and explain; to confirm it, ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\",\"testsub2/Gate-1: value \\\"loudest\\\" of field mode is not named in the admin's request — do not choose it yourself; ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\",\"field of (\\\"counter counter\\\") is not named in the admin's request — edit only what the admin named; if the needed field does not exist, refuse and explain; to confirm it, ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\",\"selection: Nope not selected (named: Gate-1); selected: Gate-1\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
    }
   ]
  },
@@ -1066,7 +1202,7 @@
       }
      ]
     },
-    "content": "{\"valid\":false,\"errors\":[\"edits[0]: feed_secret is a secret: a plan carries only the secret label {\\\"secret\\\": N} the admin entered, not a value\",\"testsub2/Office-2: value \\\"hunter2\\\" of field feed_secret is not named in the admin's request — do not choose it yourself; ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
+    "content": "{\"valid\":false,\"errors\":[\"edits[0]: feed_secret is a secret: a plan carries only the secret label {\\\"secret\\\": N} the admin entered, not a value\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
    },
    {
     "name": "propose_plan",
@@ -1212,7 +1348,7 @@
       }
      ]
     },
-    "content": "{\"valid\":false,\"errors\":[\"edits[0]: feed_secret is a secret: a plan carries only the secret label {\\\"secret\\\": N} the admin entered, not a value\",\"testsub2/Office-2: value \\\"{{secret:1}}\\\" of field feed_secret is not named in the admin's request — do not choose it yourself; ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
+    "content": "{\"valid\":false,\"errors\":[\"edits[0]: feed_secret is a secret: a plan carries only the secret label {\\\"secret\\\": N} the admin entered, not a value\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
    },
    {
     "name": "propose_plan",
@@ -1235,7 +1371,7 @@
       }
      ]
     },
-    "content": "{\"valid\":false,\"errors\":[\"edits[0]: the secret label is allowed only as the whole to of a *_secret field the admin entered\",\"testsub2/Office-2: value [\\\"{{secret:1}}\\\"] of field feed_user is not named in the admin's request — do not choose it yourself; ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
+    "content": "{\"valid\":false,\"errors\":[\"edits[0]: the secret label is allowed only as the whole to of a *_secret field the admin entered\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
    }
   ]
  },
@@ -2874,6 +3010,445 @@
      ]
     },
     "content": "{\"valid\":true,\"diff\":[\"rec/vhod  min_depth_days «Глубина не меньше, дней»: 0 → 14   (Вход)\",\"rec/vhod-backup  min_depth_days «Глубина не меньше, дней»: 0 → 14   (Вход)\"],\"note\":\"the plan is shown to the admin; the admin applies it with the Apply button (written through the console doors with CAS on revision)\"}"
+   }
+  ]
+ },
+ {
+  "id": "tools-prototype-names",
+  "console": "stand3",
+  "rule": "V/10.4 Н1.1 закрытый набор: имя из прототипа — не инструмент (RVP-06)",
+  "source": "lesson",
+  "texts": [
+   "x"
+  ],
+  "calls": [
+   {
+    "name": "constructor",
+    "args": {},
+    "content": "no tool constructor"
+   },
+   {
+    "name": "toString",
+    "args": {},
+    "content": "no tool toString"
+   },
+   {
+    "name": "__proto__",
+    "args": {},
+    "content": "no tool __proto__"
+   },
+   {
+    "name": "hasOwnProperty",
+    "args": {
+     "sub": "testsub2"
+    },
+    "content": "no tool hasOwnProperty"
+   }
+  ]
+ },
+ {
+  "id": "plan-prototype-field",
+  "console": "stand3",
+  "rule": "V/10.5 Н1.3 поле с именем из прототипа — нет поля (RVP-06)",
+  "source": "lesson",
+  "texts": [
+   "Set Gate-1 constructor to loud"
+  ],
+  "calls": [
+   {
+    "name": "propose_plan",
+    "args": {
+     "summary": "s",
+     "selection": {
+      "named": [
+       "Gate-1"
+      ],
+      "edit_sub": "testsub2"
+     },
+     "edits": [
+      {
+       "unit": "testsub2/Gate-1",
+       "field": "constructor",
+       "to": "loud",
+       "why": "x"
+      }
+     ]
+    },
+    "content": "{\"valid\":false,\"errors\":[\"edits[0]: testsub2 has no field \\\"constructor\\\"\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
+   },
+   {
+    "name": "propose_plan",
+    "args": {
+     "summary": "s",
+     "selection": {
+      "named": [
+       "Gate-1"
+      ],
+      "edit_sub": "testsub2",
+      "fields": {
+       "constructor": "mode"
+      }
+     },
+     "edits": [
+      {
+       "unit": "testsub2/Gate-1",
+       "field": "mode",
+       "to": "constructor",
+       "why": "mode"
+      }
+     ]
+    },
+    "content": "{\"valid\":false,\"errors\":[\"edits[0]: mode is one of [\\\"plain\\\",\\\"loud\\\"], but to = \\\"constructor\\\"\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
+   }
+  ]
+ },
+ {
+  "id": "plan-form-list",
+  "console": "stand3",
+  "rule": "V/10.5 Н1.3, Н1.6 неверная форма списка — ошибка проверки, не исключение (RVP-04)",
+  "source": "lesson",
+  "texts": [
+   "Set Gate-1 tags to blue"
+  ],
+  "calls": [
+   {
+    "name": "propose_plan",
+    "args": {
+     "summary": "s",
+     "selection": {
+      "named": [
+       "Gate-1"
+      ],
+      "edit_sub": "testsub2"
+     },
+     "edits": [
+      {
+       "unit": "testsub2/Gate-1",
+       "field": "tags",
+       "to": {
+        "a": 1
+       },
+       "why": "tags"
+      }
+     ]
+    },
+    "content": "{\"valid\":false,\"errors\":[\"edits[0]: tags is of type list, but to = {\\\"a\\\":1} — write the whole list of strings, e.g. [\\\"blue\\\", \\\"green\\\"]\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
+   },
+   {
+    "name": "propose_plan",
+    "args": {
+     "summary": "s",
+     "selection": {
+      "named": [
+       "Gate-1"
+      ],
+      "edit_sub": "testsub2"
+     },
+     "edits": [
+      {
+       "unit": "testsub2/Gate-1",
+       "field": "tags",
+       "to": "blue",
+       "why": "tags"
+      }
+     ]
+    },
+    "content": "{\"valid\":false,\"errors\":[\"edits[0]: tags is of type list, but to = \\\"blue\\\" — write the whole list of strings, e.g. [\\\"blue\\\", \\\"green\\\"]\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
+   },
+   {
+    "name": "propose_plan",
+    "args": {
+     "summary": "s",
+     "selection": {
+      "named": [
+       "Gate-1"
+      ],
+      "edit_sub": "testsub2"
+     },
+     "edits": [
+      {
+       "unit": "testsub2/Gate-1",
+       "field": "tags",
+       "to": [
+        1,
+        2
+       ],
+       "why": "tags"
+      }
+     ]
+    },
+    "content": "{\"valid\":false,\"errors\":[\"edits[0]: tags is of type list, but to = [1,2] — write the whole list of strings, e.g. [\\\"blue\\\", \\\"green\\\"]\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
+   }
+  ]
+ },
+ {
+  "id": "plan-missed-per-field",
+  "console": "stand3",
+  "rule": "V/10.5 Н1.4 п. 10 пропущенные — по каждому полю: правка другого поля единицу не извиняет (RVP-02)",
+  "source": "lesson",
+  "texts": [
+   "For Gate-1 and Office-1 set mode loud and step 9"
+  ],
+  "calls": [
+   {
+    "name": "propose_plan",
+    "args": {
+     "summary": "s",
+     "selection": {
+      "named": [
+       "Gate-1",
+       "Office-1"
+      ],
+      "edit_sub": "testsub2"
+     },
+     "edits": [
+      {
+       "unit": "testsub2/Gate-1",
+       "field": "mode",
+       "from": "plain",
+       "to": "loud",
+       "why": "mode"
+      },
+      {
+       "unit": "testsub2/Gate-1",
+       "field": "step",
+       "from": 1,
+       "to": 9,
+       "why": "step"
+      },
+      {
+       "unit": "testsub2/Office-1",
+       "field": "step",
+       "from": 1,
+       "to": 9,
+       "why": "step"
+      }
+     ]
+    },
+    "content": "{\"valid\":false,\"errors\":[\"selection: selected but missing from the plan: Office-1 (mode = \\\"plain\\\")\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
+   }
+  ]
+ },
+ {
+  "id": "plan-missed-per-field-control",
+  "console": "stand3",
+  "rule": "V/10.5 Н1.4 п. 10 положительный контроль: у единицы значение уже стоит — правки не нужно (RVP-02)",
+  "source": "lesson",
+  "texts": [
+   "For Gate-1 and Gate-2 set mode loud and step 9"
+  ],
+  "calls": [
+   {
+    "name": "propose_plan",
+    "args": {
+     "summary": "s",
+     "selection": {
+      "named": [
+       "Gate-1",
+       "Gate-2"
+      ],
+      "edit_sub": "testsub2"
+     },
+     "edits": [
+      {
+       "unit": "testsub2/Gate-1",
+       "field": "mode",
+       "from": "plain",
+       "to": "loud",
+       "why": "mode"
+      },
+      {
+       "unit": "testsub2/Gate-1",
+       "field": "step",
+       "from": 1,
+       "to": 9,
+       "why": "step"
+      },
+      {
+       "unit": "testsub2/Gate-2",
+       "field": "step",
+       "from": 5,
+       "to": 9,
+       "why": "step"
+      }
+     ]
+    },
+    "content": "{\"valid\":true,\"diff\":[\"testsub2/Gate-1  mode «Mode»: \\\"plain\\\" → \\\"loud\\\"   (mode)\",\"testsub2/Gate-1  step «step»: 1 → 9   (step)\",\"testsub2/Gate-2  step «step»: 5 → 9   (step)\"],\"note\":\"the plan is shown to the admin; the admin applies it with the Apply button (written through the console doors with CAS on revision)\"}"
+   }
+  ]
+ },
+ {
+  "id": "plan-astral-name",
+  "console": "stand3",
+  "rule": "V/10.5 Н1.2 граница имени — кодовые точки целиком: 𐐀Gate-1𐐀 не называет Gate-1 (RVP-03)",
+  "source": "lesson",
+  "texts": [
+   "Switch 𐐀Gate-1𐐀 to loud mode"
+  ],
+  "calls": [
+   {
+    "name": "propose_plan",
+    "args": {
+     "summary": "s",
+     "selection": {
+      "named": [
+       "Gate-1"
+      ],
+      "edit_sub": "testsub2"
+     },
+     "edits": [
+      {
+       "unit": "testsub2/Gate-1",
+       "field": "mode",
+       "to": "loud",
+       "why": "mode"
+      }
+     ]
+    },
+    "content": "{\"valid\":false,\"errors\":[\"selection.named: Gate-1 is not named in the admin's request\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
+   }
+  ]
+ },
+ {
+  "id": "plan-astral-name-control",
+  "console": "stand3",
+  "rule": "V/10.5 Н1.2 положительный контроль: 𐐀 через пробел — граница есть (RVP-03)",
+  "source": "lesson",
+  "texts": [
+   "Switch 𐐀 Gate-1 𐐀 to loud mode"
+  ],
+  "calls": [
+   {
+    "name": "propose_plan",
+    "args": {
+     "summary": "s",
+     "selection": {
+      "named": [
+       "Gate-1"
+      ],
+      "edit_sub": "testsub2"
+     },
+     "edits": [
+      {
+       "unit": "testsub2/Gate-1",
+       "field": "mode",
+       "to": "loud",
+       "why": "mode"
+      }
+     ]
+    },
+    "content": "{\"valid\":true,\"diff\":[\"testsub2/Gate-1  mode «Mode»: \\\"plain\\\" → \\\"loud\\\"   (mode)\"],\"note\":\"the plan is shown to the admin; the admin applies it with the Apply button (written through the console doors with CAS on revision)\"}"
+   }
+  ]
+ },
+ {
+  "id": "plan-reverse-about",
+  "console": "stand3",
+  "rule": "V/10.5 Н1.4 п. 8 отбор в дочерней подсистеме, правка — в связанной (обратный about; RVP-05)",
+  "source": "lesson",
+  "texts": [
+   "For tallies with loud mode set step 9"
+  ],
+  "calls": [
+   {
+    "name": "propose_plan",
+    "args": {
+     "summary": "s",
+     "selection": {
+      "where": [
+       {
+        "field": "mode",
+        "op": "eq",
+        "value": "loud"
+       }
+      ],
+      "select_sub": "testsub2",
+      "edit_sub": "testsub"
+     },
+     "edits": [
+      {
+       "unit": "testsub/Alder",
+       "field": "step",
+       "to": 9,
+       "why": "loud"
+      },
+      {
+       "unit": "testsub/Spruce",
+       "field": "step",
+       "to": 9,
+       "why": "loud"
+      },
+      {
+       "unit": "testsub/Oak",
+       "field": "step",
+       "to": 9,
+       "why": "loud"
+      }
+     ]
+    },
+    "content": "{\"valid\":true,\"diff\":[\"testsub/Alder  step «step»: 1 → 9   (loud)\",\"testsub/Spruce  step «step»: 2 → 9   (loud)\",\"testsub/Oak  step «step»: null → 9   (loud)\"],\"note\":\"the plan is shown to the admin; the admin applies it with the Apply button (written through the console doors with CAS on revision)\"}"
+   }
+  ]
+ },
+ {
+  "id": "tools-list-max-5000",
+  "console": "stand3",
+  "rule": "V/10.4 Н1.2 LIST_MAX: 5000 строк читаются",
+  "source": "lesson",
+  "texts": [
+   "x"
+  ],
+  "bulk": {
+   "testsub2": 5000
+  },
+  "calls": [
+   {
+    "name": "find_units",
+    "args": {
+     "sub": "testsub2",
+     "where": [
+      {
+       "field": "mode",
+       "op": "eq",
+       "value": "loud"
+      }
+     ],
+     "fields": [
+      "mode"
+     ]
+    },
+    "content": "{\"sub\":\"testsub2\",\"count\":4,\"shown\":4,\"units\":[{\"unit\":\"testsub2/Gate-2\",\"mode\":\"loud\",\"about.labels\":[\"east\",\"floor3\"]},{\"unit\":\"testsub2/Office-2\",\"mode\":\"loud\",\"about.labels\":[\"west\",\"floor3\"]},{\"unit\":\"testsub2/Store-2\",\"mode\":\"loud\",\"about.labels\":[\"east\",\"floor2\"]},{\"unit\":\"testsub2/Yard-1\",\"mode\":\"loud\",\"about.labels\":[\"north\"],\"can_edit\":false}],\"can_edit_note\":\"can_edit: false — the admin has no edit right on this unit: leave it out of the plan, tell the admin in summary\",\"query\":{\"sub\":\"testsub2\",\"where\":[{\"field\":\"mode\",\"op\":\"eq\",\"value\":\"loud\"}]}}"
+   }
+  ]
+ },
+ {
+  "id": "tools-list-max-5001",
+  "console": "stand3",
+  "rule": "V/10.4 Н1.2 LIST_MAX: 5001 строка — ошибка, не усечённый отбор",
+  "source": "lesson",
+  "texts": [
+   "x"
+  ],
+  "bulk": {
+   "testsub2": 5001
+  },
+  "calls": [
+   {
+    "name": "find_units",
+    "args": {
+     "sub": "testsub2",
+     "where": [
+      {
+       "field": "mode",
+       "op": "eq",
+       "value": "loud"
+      }
+     ],
+     "fields": [
+      "mode"
+     ]
+    },
+    "content": "error: testsub2: more than 5000 units — too many to check here; refuse and say so"
    }
   ]
  },

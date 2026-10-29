@@ -60,7 +60,8 @@
        "from": "plain",
        "to": "loud"
       }
-     ]
+     ],
+     "because": null
     }
    ],
    "texts": [
@@ -183,7 +184,8 @@
        "from": "plain",
        "to": "loud"
       }
-     ]
+     ],
+     "because": null
     }
    ],
    "texts": [
@@ -457,7 +459,8 @@
        "from": "plain",
        "to": "loud"
       }
-     ]
+     ],
+     "because": null
     }
    ],
    "texts": [
@@ -622,7 +625,8 @@
        "from": "plain",
        "to": "loud"
       }
-     ]
+     ],
+     "because": null
     }
    ],
    "texts": [
@@ -1230,6 +1234,7 @@
    "outcome": "unfinished",
    "why": "limit",
    "reason": "edits[0]: mode is one of [\"plain\",\"loud\"], but to = \"loudest\"",
+   "rule": "form",
    "texts": [
     "Switch tally Gate-1 to \"loud\" mode."
    ],
@@ -5777,7 +5782,8 @@
        "from": "plain",
        "to": "loud"
       }
-     ]
+     ],
+     "because": null
     }
    ],
    "texts": [
@@ -10465,7 +10471,8 @@
        "from": "plain",
        "to": "loud"
       }
-     ]
+     ],
+     "because": null
     }
    ],
    "texts": [
@@ -10630,6 +10637,44 @@
   }
  },
  {
+  "id": "turn-door-cancelled",
+  "rule": "V/10.3 Н1.3, Н1.5 шаг cancelled у двери (не по отмене страницы) — «ход не завершён»",
+  "console": "stand3",
+  "text": "x",
+  "model": [
+   {
+    "ok": false,
+    "why": "cancelled",
+    "reason": "disabled"
+   }
+  ],
+  "expect": {
+   "outcome": "unfinished",
+   "why": "cancelled",
+   "reason": "disabled",
+   "texts": [
+    "x"
+   ],
+   "steps": 1,
+   "step_messages": [
+    [
+     {
+      "role": "system",
+      "content": "# w2c console configuration assistant\n\nYou are the assistant of a w2c cluster admin. The admin writes a request; you find the units and propose\n**a plan of edit"
+     },
+     {
+      "role": "user",
+      "content": "## Cluster overview\nA snapshot of the console doors (list_subsystems, get_manifest of every subsystem, the admin's rights):\n```json\n{\"subsystems\":[{\"sub\":\"tests"
+     },
+     {
+      "role": "user",
+      "content": "x"
+     }
+    ]
+   ]
+  }
+ },
+ {
   "id": "turn-step-failed",
   "rule": "V/10.3 Н1.3 failed too long — «ход не завершён»",
   "console": "stand3",
@@ -10669,7 +10714,7 @@
  },
  {
   "id": "turn-bad-args",
-  "rule": "V/10.3 Н1.4 п. 3 аргументы не JSON; имя по аргументам",
+  "rule": "V/10.3 Н1.4 п. 3 аргументы не JSON; имя по аргументам; имя из прототипа — не инструмент (RVP-06)",
   "console": "stand3",
   "text": "Switch tally Gate-1 to \"loud\" mode.",
   "model": [
@@ -10693,6 +10738,30 @@
        "function": {
         "name": "mcp_find",
         "arguments": "{\"sub\":\"testsub2\",\"where\":[{\"field\":\"name\",\"op\":\"eq\",\"value\":\"Gate-1\"}]}"
+       }
+      },
+      {
+       "id": "c",
+       "type": "function",
+       "function": {
+        "name": "constructor",
+        "arguments": "{}"
+       }
+      },
+      {
+       "id": "s",
+       "type": "function",
+       "function": {
+        "name": "toString",
+        "arguments": "{\"x\":1}"
+       }
+      },
+      {
+       "id": "u",
+       "type": "function",
+       "function": {
+        "name": "__proto__",
+        "arguments": "{}"
        }
       }
      ]
@@ -10736,7 +10805,8 @@
        "from": "plain",
        "to": "loud"
       }
-     ]
+     ],
+     "because": null
     }
    ],
    "texts": [
@@ -10775,7 +10845,10 @@
       "role": "assistant",
       "tool_calls": [
        "find_units",
-       "mcp_find"
+       "mcp_find",
+       "constructor",
+       "toString",
+       "__proto__"
       ],
       "content": null
      },
@@ -10788,6 +10861,288 @@
       "role": "tool",
       "tool_call_id": "y",
       "content": "{\"sub\":\"testsub2\",\"count\":1,\"shown\":1,\"units\":[{\"unit\":\"testsub2/Gate-1\",\"of\":\"Alder\",\"mode\":\"plain\",\"step\":1,\"weight\":1,\"active\":true,\"tags\":[\"night\"],\"shelf\":"
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "c",
+      "content": "no tool constructor"
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "s",
+      "content": "no tool toString"
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "u",
+      "content": "no tool __proto__"
+     }
+    ]
+   ]
+  }
+ },
+ {
+  "id": "turn-cancel-during-check",
+  "rule": "V/10.3 Н1.5, Н1.6 сброс, пока идёт проверка плана: план не публикуется (RVP-01)",
+  "console": "stand3",
+  "text": "Switch tally Gate-1 to \"loud\" mode.",
+  "cancel_on_tool": "propose_plan",
+  "model": [
+   {
+    "ok": true,
+    "message": {
+     "role": "assistant",
+     "content": null,
+     "tool_calls": [
+      {
+       "id": "f1",
+       "type": "function",
+       "function": {
+        "name": "find_units",
+        "arguments": "{\"sub\":\"testsub2\",\"where\":[{\"field\":\"name\",\"op\":\"eq\",\"value\":\"Gate-1\"}]}"
+       }
+      }
+     ]
+    },
+    "usage": {
+     "prompt_tokens": 3000,
+     "completion_tokens": 50
+    }
+   },
+   {
+    "ok": true,
+    "message": {
+     "role": "assistant",
+     "content": null,
+     "tool_calls": [
+      {
+       "id": "p",
+       "type": "function",
+       "function": {
+        "name": "propose_plan",
+        "arguments": "{\"summary\":\"Gate-1 loud\",\"selection\":{\"named\":[\"Gate-1\"],\"edit_sub\":\"testsub2\"},\"edits\":[{\"unit\":\"testsub2/Gate-1\",\"field\":\"mode\",\"from\":\"plain\",\"to\":\"loud\",\"why\":\"mode\"}]}"
+       }
+      }
+     ]
+    },
+    "usage": {
+     "prompt_tokens": 3000,
+     "completion_tokens": 50
+    }
+   }
+  ],
+  "expect": {
+   "outcome": "cancelled",
+   "texts": [
+    "Switch tally Gate-1 to \"loud\" mode."
+   ],
+   "steps": 2,
+   "step_messages": [
+    [
+     {
+      "role": "system",
+      "content": "# w2c console configuration assistant\n\nYou are the assistant of a w2c cluster admin. The admin writes a request; you find the units and propose\n**a plan of edit"
+     },
+     {
+      "role": "user",
+      "content": "## Cluster overview\nA snapshot of the console doors (list_subsystems, get_manifest of every subsystem, the admin's rights):\n```json\n{\"subsystems\":[{\"sub\":\"tests"
+     },
+     {
+      "role": "user",
+      "content": "Switch tally Gate-1 to \"loud\" mode."
+     }
+    ],
+    [
+     {
+      "role": "system",
+      "content": "# w2c console configuration assistant\n\nYou are the assistant of a w2c cluster admin. The admin writes a request; you find the units and propose\n**a plan of edit"
+     },
+     {
+      "role": "user",
+      "content": "## Cluster overview\nA snapshot of the console doors (list_subsystems, get_manifest of every subsystem, the admin's rights):\n```json\n{\"subsystems\":[{\"sub\":\"tests"
+     },
+     {
+      "role": "user",
+      "content": "Switch tally Gate-1 to \"loud\" mode."
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       "find_units"
+      ],
+      "content": null
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "f1",
+      "content": "{\"sub\":\"testsub2\",\"count\":1,\"shown\":1,\"units\":[{\"unit\":\"testsub2/Gate-1\",\"of\":\"Alder\",\"mode\":\"plain\",\"step\":1,\"weight\":1,\"active\":true,\"tags\":[\"night\"],\"shelf\":"
+     }
+    ]
+   ]
+  }
+ },
+ {
+  "id": "turn-reverse-about",
+  "rule": "V/10.5 Н1.4 п. 8, Н1.7 обратный about: свидетели отбора у строк плана (RVP-05)",
+  "console": "stand3",
+  "text": "For tallies with loud mode set step 9",
+  "model": [
+   {
+    "ok": true,
+    "message": {
+     "role": "assistant",
+     "content": null,
+     "tool_calls": [
+      {
+       "id": "f",
+       "type": "function",
+       "function": {
+        "name": "find_units",
+        "arguments": "{\"sub\":\"testsub2\",\"where\":[{\"field\":\"mode\",\"op\":\"eq\",\"value\":\"loud\"}]}"
+       }
+      }
+     ]
+    },
+    "usage": {
+     "prompt_tokens": 3000,
+     "completion_tokens": 50
+    }
+   },
+   {
+    "ok": true,
+    "message": {
+     "role": "assistant",
+     "content": null,
+     "tool_calls": [
+      {
+       "id": "p",
+       "type": "function",
+       "function": {
+        "name": "propose_plan",
+        "arguments": "{\"summary\":\"step 9\",\"selection\":{\"where\":[{\"field\":\"mode\",\"op\":\"eq\",\"value\":\"loud\"}],\"select_sub\":\"testsub2\",\"edit_sub\":\"testsub\"},\"edits\":[{\"unit\":\"testsub/Alder\",\"field\":\"step\",\"to\":9,\"why\":\"loud\"},{\"unit\":\"testsub/Spruce\",\"field\":\"step\",\"to\":9,\"why\":\"loud\"},{\"unit\":\"testsub/Oak\",\"field\":\"step\",\"to\":9,\"why\":\"loud\"}]}"
+       }
+      }
+     ]
+    },
+    "usage": {
+     "prompt_tokens": 3000,
+     "completion_tokens": 50
+    }
+   }
+  ],
+  "expect": {
+   "outcome": "plan",
+   "plan_rows": [
+    {
+     "unit": "testsub/Alder",
+     "revision": 1,
+     "changes": [
+      {
+       "field": "step",
+       "from": 1,
+       "to": 9
+      }
+     ],
+     "because": [
+      {
+       "field": "mode",
+       "witnesses": [
+        "Gate-2"
+       ],
+       "values": [
+        "loud"
+       ]
+      }
+     ]
+    },
+    {
+     "unit": "testsub/Spruce",
+     "revision": 1,
+     "changes": [
+      {
+       "field": "step",
+       "from": 2,
+       "to": 9
+      }
+     ],
+     "because": [
+      {
+       "field": "mode",
+       "witnesses": [
+        "Store-2"
+       ],
+       "values": [
+        "loud"
+       ]
+      }
+     ]
+    },
+    {
+     "unit": "testsub/Oak",
+     "revision": 1,
+     "changes": [
+      {
+       "field": "step",
+       "from": null,
+       "to": 9
+      }
+     ],
+     "because": [
+      {
+       "field": "mode",
+       "witnesses": [
+        "Office-2"
+       ],
+       "values": [
+        "loud"
+       ]
+      }
+     ]
+    }
+   ],
+   "texts": [
+    "For tallies with loud mode set step 9"
+   ],
+   "steps": 2,
+   "step_messages": [
+    [
+     {
+      "role": "system",
+      "content": "# w2c console configuration assistant\n\nYou are the assistant of a w2c cluster admin. The admin writes a request; you find the units and propose\n**a plan of edit"
+     },
+     {
+      "role": "user",
+      "content": "## Cluster overview\nA snapshot of the console doors (list_subsystems, get_manifest of every subsystem, the admin's rights):\n```json\n{\"subsystems\":[{\"sub\":\"tests"
+     },
+     {
+      "role": "user",
+      "content": "For tallies with loud mode set step 9"
+     }
+    ],
+    [
+     {
+      "role": "system",
+      "content": "# w2c console configuration assistant\n\nYou are the assistant of a w2c cluster admin. The admin writes a request; you find the units and propose\n**a plan of edit"
+     },
+     {
+      "role": "user",
+      "content": "## Cluster overview\nA snapshot of the console doors (list_subsystems, get_manifest of every subsystem, the admin's rights):\n```json\n{\"subsystems\":[{\"sub\":\"tests"
+     },
+     {
+      "role": "user",
+      "content": "For tallies with loud mode set step 9"
+     },
+     {
+      "role": "assistant",
+      "tool_calls": [
+       "find_units"
+      ],
+      "content": null
+     },
+     {
+      "role": "tool",
+      "tool_call_id": "f",
+      "content": "{\"sub\":\"testsub2\",\"count\":4,\"shown\":4,\"units\":[{\"unit\":\"testsub2/Gate-2\",\"of\":\"Alder\",\"mode\":\"loud\",\"step\":5,\"weight\":1,\"active\":true,\"shelf\":\"Row-1\",\"zone\":\"z1"
      }
     ]
    ]
@@ -11048,7 +11403,8 @@
        "from": "plain",
        "to": "loud"
       }
-     ]
+     ],
+     "because": null
     }
    ],
    "texts": [
@@ -11936,7 +12292,8 @@
        "from": "plain",
        "to": "loud"
       }
-     ]
+     ],
+     "because": null
     }
    ],
    "texts": [
@@ -12077,7 +12434,8 @@
         "secret": 1
        }
       }
-     ]
+     ],
+     "because": null
     }
    ],
    "texts": [
