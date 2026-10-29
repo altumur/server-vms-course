@@ -720,6 +720,42 @@ class TestTree(unittest.TestCase):
         _, errors = run()
         self.assertTrue(any("no table 01.tsv" in e for e in errors), errors)
 
+    def test_vms_event_branches(self):
+        """Семья VMS в открытом месте семьи событий (вид file, строка JSON): схема ветвится по `kind` (allOf if/then) —
+        у ветки своя основа с её условием, мутации её полей краснеют (`"port": "1"` против 1)."""
+        import check_spec
+        from v7 import schema as gen, vms
+        root = self.copy()
+        data = root / "VMS/01-cam/data"
+        data.mkdir(exist_ok=True)
+        doc = {"$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object", "allOf": [
+            {"if": {"required": ["kind"], "properties": {"kind": {"const": "io.input"}}},
+             "then": {"required": ["port"], "properties": {"port": {"type": "integer", "minimum": 1, "x-integer": True}}}},
+            {"if": {"required": ["kind"], "properties": {"kind": {"const": "io.output"}}},
+             "then": {"properties": {"level": {"type": "boolean"}}}}]}
+        (data / "probe-io.schema.json").write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
+        (data / "probe-io.layers.tsv").write_text(gen.layer_table(doc), encoding="utf-8")
+        (data / "probe-io.outcomes.tsv").write_text(
+            "path\treader\toutcome\tpriority\tunit\tnorm\n"
+            "\tautoworker\tсобытие не читается\t1\tстрока\tV/01.2 Н1.4\n", encoding="utf-8")
+        cat = root / vms.CATALOG
+        cat.write_text("\t".join(vms.FIELDS) + "\n" + "\t".join([
+            "<корень событий>/cam/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl", "file", "V/01.2",
+            "append=camworker", "autoworker", "-", "1", "VMS/01-cam/data/probe-io.schema.json", "V/01.2 Н1.4", ""]) + "\n",
+            encoding="utf-8")
+        vms.build_tables(root)
+        rows = [ln.split("\t") for ln in (root / vms.FAMILY_READ / "01.tsv").read_text(encoding="utf-8").split("\n")[1:]
+                if ln]
+        got = {(r[5], r[-1]): (r[8], r[9]) for r in rows}
+        self.assertEqual(got[("writer", "kind=io.input base")], ("ok", "[]"))
+        self.assertEqual(got[("writer", "kind=io.input /port type")], ("refused", '["/port"]'))
+        self.assertEqual(got[("reader", "kind=io.input /port required")], ("refused", '["/port"]'))
+        self.assertEqual(got[("writer", "kind=io.output /level type")], ("refused", '["/level"]'))
+        self.assertTrue(all('"kind":"io.input"' in r[7] for r in rows if r[-1].startswith("kind=io.input")))
+        c = check_spec.Check(root, None, False)
+        c.vms_families()
+        self.assertEqual([e for e in c.errors if "VMS/" in e], [])
+
     def test_sections_idempotent(self):
         from v7 import sections
         root = self.copy()
