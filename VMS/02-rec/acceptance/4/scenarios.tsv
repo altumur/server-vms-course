@@ -3,7 +3,7 @@ scenario	step	request	expect
 01-record	1	@start worker cam w-srv-a-1 on srv-a	ok
 01-record	2	@start worker rec r-srv-a-1 on srv-a	ok
 01-record	3	console2 POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
-01-record	4	POST /volumes {"name": "disk-a", "kind": "local", "url": "file:///data/platform/subsystems/rec/obsd/volumes/1", "server": "srv-a", "quota_bytes": 1000000000}	201 {"name": "disk-a"}
+01-record	4	POST /volumes {"name": "disk-a", "kind": "local", "url": "file://{data}/subsystems/rec/obsd/volumes/1", "server": "srv-a", "quota_bytes": 1000000000}	201 {"name": "disk-a"}
 01-record	5	POST /recordings {"name": "door", "cam": "$c1", "home": "disk-a"}	201 {"id": "door"}
 01-record	6	@until 90 GET /recordings	200 {"rows": [{"id": "door", "phase": "running", "via": "shm"}]}
 01-record	7	@until 30 resource GET /v1/objects/rec/heartbeats/r-srv-a-1	200 {"volume": "disk-a", "writer": {"state": "ok"}}

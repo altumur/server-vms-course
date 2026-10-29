@@ -365,7 +365,9 @@ async function loadTimeline(id){
     // another cluster's answer, in words: its gate does not know you (403), its console is not reached (502), it is not
     // a member this console can reach (404 from the hop), the members' list does not read here (503)
     if(!w.door&&rec.cluster&&!place&&[403,404,502,503].includes(w.status)){refused.set(rec.cluster,w.status);return null}
-    if(!w.door){if(place&&w.status===404&&w.missing)missing.add(w.missing);return null}   // «no such place»: nothing to say
+    // no door: 404 is «no such place» (named only with X-Unreachable); any other answer without a door — 200 from memory
+    // (lapse: the place is known, no pass), 503, no answer — names the record or the place unavailable
+    if(!w.door){if(w.status!==404)missing.add(place||rec.id);else if(place&&w.missing)missing.add(w.missing);return null}
     try{const r=await doorFetch(where,`/timeline/${encodeURIComponent(rec.id)}?from=${from}&to=${to}`);
       if(!r||!r.ok){missing.add(place||rec.id);return null}
       const m=r.headers.get("X-Unreachable");if(m)missing.add(m);

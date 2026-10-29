@@ -449,12 +449,14 @@
    {
     "status": 503,
     "body": {
+     "detail": "the store does not answer",
      "error": "unavailable"
     }
    },
    {
     "status": 503,
     "body": {
+     "detail": "the store does not answer",
      "error": "unavailable"
     }
    }
