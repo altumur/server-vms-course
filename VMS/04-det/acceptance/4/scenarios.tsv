@@ -7,6 +7,6 @@ scenario	step	request	expect
 01-detect	5	@until 60 GET /units	200 {"rows": [{"id": "t1", "phase": "running", "via": "shm"}]}
 01-detect	6	@until 30 console GET /events?unit=cam/$c1&kind=tick	200 {"events": [{"kind": "tick", "of": "cam/$c1", "subsystem": "det", "class": "alarm"}]}
 01-detect	7	POST /units {"name": "n1", "cam": "nope", "kind": "tick", "labels": []}	201 {"id": "n1"}
-01-detect	8	@until 30 GET /units	200 {"rows": [{"id": "n1", "phase": "waiting", "reason": "no camera nope"}]}
+01-detect	8	@until 30 GET /units	200 {"rows": [{"id": "n1", "phase": "waiting", "reason": "no camera nope"}, {"id": "t1", "phase": "running"}]}
 01-detect	9	POST /units {"name": "u1", "cam": "$c1", "kind": "nosuchmodel", "labels": []}	201 {"id": "u1"}
-01-detect	10	@until 30 GET /units	200 {"rows": [{"id": "u1", "phase": "unsupported", "reason": "no model nosuchmodel on this worker"}]}
+01-detect	10	@until 30 GET /units	200 {"rows": [{"id": "n1", "phase": "waiting", "reason": "no camera nope"}, {"id": "t1", "phase": "running"}, {"id": "u1", "phase": "unsupported", "reason": "no model nosuchmodel on this worker"}]}
