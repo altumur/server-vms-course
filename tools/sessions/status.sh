@@ -1,4 +1,10 @@
 #!/bin/bash
-# status.sh — строки остановки сессий (ADR-0083 доп. (57)): /private/tmp/cammeta-status/*.txt, свежие сверху
-cd /private/tmp/cammeta-status 2>/dev/null || exit 0
-for f in $(ls -t *.txt 2>/dev/null); do printf '%-16s %s\n' "${f%.txt}" "$(tail -1 "$f" | cut -c1-160)"; done
+# status.sh — статус сессий с окон (ADR-0083 доп. (57), (58), уточнение 2026-10-29): сводка «Сторожа» windows.json
+python3 - <<'PY'
+import json
+try: d=json.load(open('/Users/murat/w2c/cammeta-status/windows.json'))
+except Exception as e: print('windows.json не читается:', e); raise SystemExit
+rows=d.get('windows', d) if isinstance(d, dict) else d
+for r in (rows.values() if isinstance(rows, dict) else rows):
+    if isinstance(r, dict): print(f"{str(r.get('name','?')):16} {str(r.get('state','?')):10} {str(r.get('line',''))[:140]}")
+PY
