@@ -5,12 +5,23 @@ info:
   description: |
     HTTP-контракт двери шлюза `liveworker` — урок V/03 «Живое видео» модуля VMS. Канон — нормы глав `03.K-live.norms.md`;
     файл их выражает и не добавляет требований. Маршрут `whep` (глава V/03.3): оффер и отбой; допуск — токен двери консоли
-    (`GET /live/where/<cam>`, договор токена двери; `Authorization: Bearer` или `?t=`). Иной метод — 405, иной путь — 404.
-    Учётки потоков (глава V/03.6) — маршруты консоли `/live/accounts…`, которые консоль передаёт шлюзу (`door.pass`):
-    право человека проверяет консоль (view — чтение, admin — запись), шлюз — его учётные данные снова.
+    (`GET /live/where/<cam>`, договор токена двери; `Authorization: Bearer` или `?t=`). Разбор запроса — P/01.1 Н2.1 с
+    отступлениями глав V/03.3 и V/03.6: путь байт в байт (`/whep/7/`, пустые сегменты — 404), иной метод — 405, повтор
+    `stream` — 400, пустой `stream` — основной; тело SDP — не больше 256 КиБ **байтов** по `Content-Length` (V/03.3 Н1.2;
+    `maxLength` меряет знаки и предела не выражает). CORS — `cors` договора сертификата роли (V/03.3 Н1.4), в контракте не
+    выражается.
+    Учётки потоков (глава V/03.6) — маршруты консоли кластера `/live/accounts…` (смонтированная `live`) и `/accounts…`
+    (`CONSOLE_ROOT=live`), которые консоль передаёт шлюзу (`door.pass`): право человека проверяет консоль (view — чтение,
+    admin — запись); шлюз — лист роли `console` (класс `role`) и удостоверение человека снова (V/03.6 Н1.2). Путь, который
+    получает шлюз, — `/accounts…` при любом корне (запрос к платформе по договору передачи, P/06.5).
 servers:
+  - url: https://{server}:{port}
+    description: шлюз с комплектом роли liveworker — адрес SERVER_NAME (P/03.4 Н1.7 kit)
+    variables:
+      server: {default: "srv-a"}
+      port: {default: "0"}
   - url: http://127.0.0.1:{port}
-    description: без комплекта сертификатов — только петля (P/03.4 Н1.7)
+    description: шлюз без комплекта сертификатов — только петля (P/03.4 Н1.7); двери учёток закрыты (no_kit, 401 no_role)
     variables:
       port: {default: "0"}
 paths:
@@ -27,13 +38,14 @@ paths:
         - name: stream
           in: query
           required: false
-          description: поток камеры — id её прочего потока; нет или пусто — основной; поток не этой камеры — 404 `stream refused` (Н1.2)
+          description: поток камеры — id её прочего потока (раскодированный); нет или пусто — основной; повтор параметра — 400; поток не этой камеры — 404 `stream refused` (V/03.3 Н1.2)
           schema: {type: string}
       requestBody:
         required: true
+        description: оффер SDP; не больше 256 КиБ байтов по Content-Length (V/03.3 Н1.2), иначе 413 до чтения тела
         content:
           application/sdp:
-            schema: {type: string, maxLength: 262144}
+            schema: {type: string}
       responses:
         "201":
           description: ответ SDP со всеми кандидатами ICE
@@ -63,6 +75,11 @@ paths:
           required: true
           description: sid из Location ответа на оффер
           schema: {type: string, pattern: "^(?:[0-9a-f]{32})$"}
+        - name: gateway
+          in: query
+          required: false
+          description: имя шлюза из Location; своё — как без параметра, чужое — 404 `no session` (после проверки токена, V/03.3 Н1.3)
+          schema: {type: string}
       responses:
         "204":
           description: сессия закрыта
@@ -70,98 +87,141 @@ paths:
         "404": {$ref: "#/components/responses/Refusal"}
         "405": {$ref: "#/components/responses/Refusal"}
   /live/accounts:
-    get:
-      summary: Учётки потоков кластера, без паролей (V/03.6 Н1.2; через door.pass консоли, право view)
-      responses:
-        "200":
-          description: список
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [accounts]
-                additionalProperties: false
-                properties:
-                  accounts:
-                    type: array
-                    items: {$ref: "#/components/schemas/Account"}
-        "502": {$ref: "#/components/responses/Refusal"}
-        "503": {$ref: "#/components/responses/Refusal"}
-    post:
-      summary: Новая учётка — пароль один раз (право admin)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [name]
-              additionalProperties: false
-              properties:
-                name: {type: string, minLength: 1, maxLength: 64}
-      responses:
-        "201": {$ref: "#/components/responses/WithPassword"}
-        "400": {$ref: "#/components/responses/Refusal"}
-        "409": {$ref: "#/components/responses/Refusal"}
-        "502": {$ref: "#/components/responses/Refusal"}
-        "503": {$ref: "#/components/responses/Refusal"}
+    $ref: "#/components/pathItems/Accounts"
   /live/accounts/{name}:
-    parameters:
-      - $ref: "#/components/parameters/AccountName"
-    put:
-      summary: Включить или отключить учётку (право admin)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [disabled]
-              additionalProperties: false
-              properties:
-                disabled: {type: boolean}
-      responses:
-        "200":
-          description: учётка после правки
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [account]
-                additionalProperties: false
-                properties:
-                  account: {$ref: "#/components/schemas/Account"}
-        "400": {$ref: "#/components/responses/Refusal"}
-        "404": {$ref: "#/components/responses/Refusal"}
-        "502": {$ref: "#/components/responses/Refusal"}
-        "503": {$ref: "#/components/responses/Refusal"}
-    delete:
-      summary: Удалить учётку и снять её гранты (право admin)
-      responses:
-        "200":
-          description: удалена
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [deleted]
-                additionalProperties: false
-                properties:
-                  deleted: {type: string}
-        "404": {$ref: "#/components/responses/Refusal"}
-        "502": {$ref: "#/components/responses/Refusal"}
-        "503": {$ref: "#/components/responses/Refusal"}
+    $ref: "#/components/pathItems/Account"
   /live/accounts/{name}/password:
-    parameters:
-      - $ref: "#/components/parameters/AccountName"
-    post:
-      summary: Новый пароль — один раз (право admin)
-      responses:
-        "200": {$ref: "#/components/responses/WithPassword"}
-        "404": {$ref: "#/components/responses/Refusal"}
-        "502": {$ref: "#/components/responses/Refusal"}
-        "503": {$ref: "#/components/responses/Refusal"}
+    $ref: "#/components/pathItems/AccountPassword"
+  /accounts:
+    $ref: "#/components/pathItems/Accounts"
+  /accounts/{name}:
+    $ref: "#/components/pathItems/Account"
+  /accounts/{name}/password:
+    $ref: "#/components/pathItems/AccountPassword"
 components:
+  pathItems:
+    Accounts:
+      servers:
+        - url: https://{console}
+          description: консоль кластера (корень или монтирование `live`); шлюзу маршрут передаётся door.pass
+          variables:
+            console: {default: "console.example"}
+      get:
+        summary: Учётки потоков кластера, без паролей (V/03.6 Н1.2; через door.pass консоли, право view)
+        security: [{personToken: []}]
+        responses:
+          "401": {$ref: "#/components/responses/Refusal"}
+          "403": {$ref: "#/components/responses/Refusal"}
+          "200":
+            description: список
+            content:
+              application/json:
+                schema:
+                  type: object
+                  required: [accounts]
+                  additionalProperties: false
+                  properties:
+                    accounts:
+                      type: array
+                      items: {$ref: "#/components/schemas/Account"}
+          "502": {$ref: "#/components/responses/Refusal"}
+          "503": {$ref: "#/components/responses/Refusal"}
+      post:
+        summary: Новая учётка — пароль один раз (право admin)
+        security: [{personToken: []}]
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [name]
+                additionalProperties: false
+                properties:
+                  name: {type: string, minLength: 1, maxLength: 64}
+        responses:
+          "401": {$ref: "#/components/responses/Refusal"}
+          "403": {$ref: "#/components/responses/Refusal"}
+          "201": {$ref: "#/components/responses/WithPassword"}
+          "400": {$ref: "#/components/responses/Refusal"}
+          "409": {$ref: "#/components/responses/Refusal"}
+          "502": {$ref: "#/components/responses/Refusal"}
+          "503": {$ref: "#/components/responses/Refusal"}
+    Account:
+      servers:
+        - url: https://{console}
+          description: консоль кластера (корень или монтирование `live`); шлюзу маршрут передаётся door.pass
+          variables:
+            console: {default: "console.example"}
+      parameters:
+        - $ref: "#/components/parameters/AccountName"
+      put:
+        summary: Включить или отключить учётку (право admin)
+        security: [{personToken: []}]
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [disabled]
+                additionalProperties: false
+                properties:
+                  disabled: {type: boolean}
+        responses:
+          "401": {$ref: "#/components/responses/Refusal"}
+          "403": {$ref: "#/components/responses/Refusal"}
+          "200":
+            description: учётка после правки
+            content:
+              application/json:
+                schema:
+                  type: object
+                  required: [account]
+                  additionalProperties: false
+                  properties:
+                    account: {$ref: "#/components/schemas/Account"}
+          "400": {$ref: "#/components/responses/Refusal"}
+          "404": {$ref: "#/components/responses/Refusal"}
+          "502": {$ref: "#/components/responses/Refusal"}
+          "503": {$ref: "#/components/responses/Refusal"}
+      delete:
+        summary: Удалить строку учётки; гранты снимает сверка домена (право admin; повтор — 404)
+        security: [{personToken: []}]
+        responses:
+          "401": {$ref: "#/components/responses/Refusal"}
+          "403": {$ref: "#/components/responses/Refusal"}
+          "200":
+            description: удалена
+            content:
+              application/json:
+                schema:
+                  type: object
+                  required: [deleted]
+                  additionalProperties: false
+                  properties:
+                    deleted: {type: string}
+          "404": {$ref: "#/components/responses/Refusal"}
+          "502": {$ref: "#/components/responses/Refusal"}
+          "503": {$ref: "#/components/responses/Refusal"}
+    AccountPassword:
+      servers:
+        - url: https://{console}
+          description: консоль кластера (корень или монтирование `live`); шлюзу маршрут передаётся door.pass
+          variables:
+            console: {default: "console.example"}
+      parameters:
+        - $ref: "#/components/parameters/AccountName"
+      post:
+        summary: Новый пароль — один раз (право admin)
+        security: [{personToken: []}]
+        responses:
+          "401": {$ref: "#/components/responses/Refusal"}
+          "403": {$ref: "#/components/responses/Refusal"}
+          "200": {$ref: "#/components/responses/WithPassword"}
+          "404": {$ref: "#/components/responses/Refusal"}
+          "502": {$ref: "#/components/responses/Refusal"}
+          "503": {$ref: "#/components/responses/Refusal"}
   parameters:
     AccountName:
       name: name
@@ -180,6 +240,10 @@ components:
         at: {type: number}
         by: {type: string}
   securitySchemes:
+    personToken:
+      type: http
+      scheme: bearer
+      description: удостоверение человека у консоли кластера (P/06.3); шлюз проверяет его снова после листа роли console (V/03.6 Н1.2)
     doorToken:
       type: http
       scheme: bearer
@@ -197,7 +261,7 @@ components:
               account: {$ref: "#/components/schemas/Account"}
               password: {type: string, minLength: 32, maxLength: 32}
     Refusal:
-      description: отказ (V/03.3 Н4); 503 пределов — с Retry-After
+      description: отказ (V/03.3 Н4, V/03.6 Н4; 401/403 сторожевой и допуска, 502/503 передачи); 503 пределов — с Retry-After
       headers:
         Retry-After:
           required: false
