@@ -8,7 +8,13 @@ remote). Прочитай: `CLAUDE.md` курса `/Users/murat/w2c/server-vms-c
 будишь адресата и показываешь владельцу, кто кого ждёт.
 
 **Проход — раз в 5 минут** (заведи повтор сам: `/loop 5m` или задание по расписанию):
-1. Прочитай все `/private/tmp/cammeta-status/*.txt` и реестр `/Users/murat/w2c/cammeta-status/sessions.tsv`
+0. **Окна — главный источник** (владелец 2026-10-29: «пусть сторож сам пробегает по окнам и читает последнюю строку»):
+   скрипт, не руками, — по каждой строке реестра `orca terminal read --terminal <handle>` (хвост экрана): занято
+   («esc to interrupt», «Working (», «Waiting for background terminal», «Compacting», спиннер хода Claude) или стоит;
+   последняя строка `СТОП:`/`РАБОТАЮ:` с окна; время последней смены экрана. Итог — `/Users/murat/w2c/cammeta-status/windows.json`.
+   Строка с окна важнее файла; окно стоит без строки СТОП — «стоит без строки»; окно занято при СТОП в файле —
+   «работает»; окно не читается — запасной файл с пометкой.
+1. Запасной источник — все `/private/tmp/cammeta-status/*.txt` и реестр `/Users/murat/w2c/cammeta-status/sessions.tsv`
    (`tools/sessions/registry.sh list` курса). Имя адресата → строка реестра: «Архитектор» = `architect`,
    «Спецификация» = `spec`, «Спецификация домена» = `spec-domain`, «Спецификация VMS» = `spec-vms`, «Машины» =
    `machines`, раннер = `runner`, ведущая Go = `c-go`, урок Go NN = `c-go-NN`; «владелец» → `architect`. «Ведущая» в строке
