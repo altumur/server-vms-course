@@ -1,0 +1,3 @@
+# Исходы нечитаемого решения лицензии — value элемента строки domain/cam/licence/<член> и её копии domain/cam/licence (V/01.7 Н1.2, Н1.3). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+path	reader	outcome	priority	unit	norm
+	camworker	решение ожидается, но не читается: держит по последнему прочитанному с запуска решению; прочитанного нет — камеры не запускаются, unlicensed «решение лицензии не читается», не «не ограничено»	1	строка	V/01.7 Н1.3, Н3 «Применение», Н4

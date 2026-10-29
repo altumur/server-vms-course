@@ -1,0 +1,7 @@
+place	layer	word	value
+/properties/devices_opening	3	x-integer	true
+/properties/devices_slow	3	x-integer	true
+/properties/door_reads_stuck	3	x-integer	true
+/properties/events_refused	3	x-integer	true
+/properties/identity_changes	3	x-integer	true
+/properties/identity_coincidences	3	x-integer	true

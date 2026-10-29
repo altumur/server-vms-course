@@ -1,0 +1,121 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "description": "слова подсистемы cam в пульсе cam/heartbeats/<имя> — открытые места семьи платформы heartbeats (P/03.4 Н1.1: элемент status[] сверх полей платформы, верх пульса сверх полей платформы); смысл — V/01.2 Н1.4, V/01.4, V/01.5, V/01.6",
+ "type": "object",
+ "properties": {
+  "status": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "phase": {
+      "description": "слово cam (V/01.2 Н1.4) или фаза платформы sealed, unreadable (P/03.4)",
+      "type": "string",
+      "enum": [
+       "running",
+       "pending",
+       "held",
+       "failed",
+       "unlicensed",
+       "sealed",
+       "unreadable"
+      ]
+     },
+     "live_url": {
+      "description": "RTSP раздачи на петле; только при running и kind video (V/01.2 Н1.3)",
+      "type": "string",
+      "pattern": "^(?:rtsp://[\\s\\S]*)$"
+     },
+     "live_shm": {
+      "description": "доля кадров своей эпохи, абсолютный путь shm:///…/<id>-<эпоха>.shm (V/01.2 Н1.3)",
+      "type": "string",
+      "pattern": "^(?:shm:///[\\s\\S]*)$"
+     },
+     "kind": {
+      "description": "только у kind io",
+      "type": "string",
+      "enum": [
+       "io"
+      ]
+     },
+     "size": {
+      "description": "<ширина>x<высота> кадра потока (V/01.2 Н1.4)",
+      "type": "string",
+      "pattern": "^(?:[1-9][0-9]*x[1-9][0-9]*)$"
+     },
+     "device_state": {
+      "type": "string",
+      "enum": [
+       "busy",
+       "refused",
+       "opening"
+      ]
+     },
+     "warning": {
+      "type": "string"
+     },
+     "reason": {
+      "type": "string"
+     },
+     "can": {
+      "description": "способности устройства камеры (V/01.4 Н1.4)",
+      "type": "object"
+     },
+     "playback_url": {
+      "type": "string"
+     },
+     "coverage": {
+      "description": "покрытие архива устройства (V/01.5 Н1.1)",
+      "type": "array"
+     },
+     "index_url": {
+      "type": "string"
+     },
+     "taken_by": {
+      "description": "кто забирает поток камеры (V/01.6 Н1.4)",
+      "type": "string"
+     }
+    },
+    "additionalProperties": true
+   }
+  },
+  "devices": {
+   "description": "по устройству группы — элемент GET /devices двери держателя (V/01.5 Н1.4)",
+   "type": "array",
+   "items": {
+    "type": "object"
+   }
+  },
+  "devices_slow": {
+   "type": "integer",
+   "minimum": 1,
+   "x-integer": true
+  },
+  "door_reads_stuck": {
+   "type": "integer",
+   "minimum": 0,
+   "x-integer": true
+  },
+  "devices_opening": {
+   "type": "integer",
+   "minimum": 0,
+   "x-integer": true
+  },
+  "identity_changes": {
+   "type": "integer",
+   "minimum": 0,
+   "x-integer": true
+  },
+  "events_refused": {
+   "type": "integer",
+   "minimum": 0,
+   "x-integer": true
+  },
+  "identity_coincidences": {
+   "type": "integer",
+   "minimum": 0,
+   "x-integer": true
+  }
+ },
+ "additionalProperties": true
+}
