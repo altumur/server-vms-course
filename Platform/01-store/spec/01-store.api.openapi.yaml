@@ -423,6 +423,7 @@ components:
       - $ref: "#/components/schemas/BodyTooLargeFault"
       - $ref: "#/components/schemas/UnavailableFault"
       - $ref: "#/components/schemas/AmbiguousFault"
+      - $ref: "#/components/schemas/Refused"
     BadKeyFault:
       type: object
       required: [kind, error]
