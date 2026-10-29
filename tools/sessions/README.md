@@ -19,7 +19,8 @@ tools/sessions/registry.sh get runner      # handle для orca terminal send
 Каждая сессия пишет `СТОП: <почему> | ЖДУ: <чего> от <кого>` или `РАБОТАЮ: <что>` в
 `/private/tmp/cammeta-status/<имя>.txt` (ADR-0083 доп. (57); правило — в `CLAUDE.md` курса, `AGENTS.md`/`CLAUDE.md`
 каждого репозитория и в шаблонах `prompts/`). Свод — `status.sh`. Простой по журналам сессий за час —
-`idle_claude.py <журналы Claude>` и `idle_codex.py` (время без хода; причину даёт строка остановки).
+`idle_claude.py <журналы Claude>` и `idle_codex.py` (время без хода; причину даёт строка остановки). Веб-отчёт владельцу (ведёт «Сторож», раз в 5 минут) —
+https://claude.ai/artifact/AzRz69eWyLhFr2Gfg1FTd1.
 
 ## Запуск и перезапуск
 
