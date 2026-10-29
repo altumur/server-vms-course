@@ -47,6 +47,9 @@ placement:
 lease: {unconfirmed_max: off}
 # C5: local credentials, published contribution, and delivered book have distinct readers.
 secrets:
+  # the holder cluster: the worker is the secret reader of its own row domain/live/stream-accounts/<CLUSTER> only if the
+  # copy is in secrets.reads (P/02.5 Н3 шаг 3, C02-OWN-BOOK-HOLDER-01; Kimi review V/03, question 1)
+  reads: [domain/live/stream-accounts]
   readers:
     live/accounts/: [worker]
     live/stream-accounts/: [worker, domainagent]
