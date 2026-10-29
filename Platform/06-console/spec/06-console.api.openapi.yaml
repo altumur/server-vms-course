@@ -6689,6 +6689,14 @@ components:
           not:
             required:
             - error
+      - if:
+          properties:
+            outcome:
+              const: gone
+        then:
+          properties:
+            ended_by:
+              const: reaper
     AnsweredMark:
       oneOf:
       - $ref: '#/components/schemas/HolderAnswer'
