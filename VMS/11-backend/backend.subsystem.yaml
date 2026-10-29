@@ -1,0 +1,79 @@
+# The configurator's backend (`backend`, V/11; ADR-0094): the product's WebUI (consolem) talks to its own REST API —
+# `api/openapi.json` of consolem at the pinned commit (V/11.2) — and this subsystem answers it by translating every call
+# into the console's own doors (V/11.3–V/11.5). It holds no rights of its own: the console passes it a person's request
+# with a ticket for that one request, and the worker calls the console back with the ticket, only on the doors this
+# manifest lists (ADR-0094 B1).
+#
+# A unit is the backend of one server — `backend/instances/<server>` — on every server whose console serves the WebUI,
+# placed on that server only: while the transport between the console and the worker is the role socket of the worker
+# on the console's server, a backend elsewhere could not be reached (V/11.1 Н1.2). After the mTLS window «console →
+# worker» (ADR-0075) — placement by labels next to `live`, by a new decision.
+name: backend
+# The slot a worker of this subsystem makes, `b-<n>`, and the variable naming the one it is started under beside
+# `WORKER_NAME` (`runtime.slot`).
+slot: {prefix: b, name_env: BACKEND_NAME}
+# Reads, writes and asks nothing of anybody by itself: what it needs it reads through the console with the ticket of the
+# request it serves (V/11.1 Н1.3). Its only state is the memory of repeats of a group `idempotencyKey` (V/11.4, until
+# the platform's B3).
+worker: {exec: /usr/lib/backend/worker, stop_timeout: 20}
+unit:
+  rows: instances                    # backend/instances/<server>
+  id: name                           # the name of the server it serves: "srv-a"
+  fields:
+    name:      {type: string, required: true}
+    # Off: the worker answers nothing; the console's pass to it fails (503 «no worker of backend with a door is heard»).
+    enabled:   {type: bool,   default: true}
+placement:
+  # One per server: a worker carries one row and the controller never orders a second worker on a server (no `grows`).
+  capacity:   {from: capacity, default: 1}
+  # Its own server: the row's name is the server it serves (V/11.1 Н1.2). `home` is a preference of the platform
+  # (P/04 Н1.3), not a filter — strict placement is an open point of the lesson (V/11.1, «Решает реализация» нет).
+  home: name
+  tie_break:  most-free-capacity
+snapshot: [enabled]
+# The pass (P/06.5 Н1.8): a console route `/backend/<segment>/…` whose first segment is listed goes to a live worker of
+# backend with a door. The segments are the first segments of the contract's paths (V/11.2). The second kind of pass
+# (ADR-0094 B1: a ticket instead of the person's `Authorization`, the callback list, streaming routes, a wait per route)
+# is a future platform norm — its declaration is below as a comment, not keys: today's loader does not know them.
+door:
+  pass: [me, reference, domains, servers, devices, folders, archives, volumes, operations, rules, access, settings, licenses, journal, stream, test, objects]
+# B1 (норма платформы B — после Go GREEN 01–10, ADR-0094 «Порядок» п. 1), declared intent, not loaded today:
+#   pass_kind: ticket                       # the console passes a ticket, never the person's Authorization
+#   stream: [stream]                        # streaming: no 5 s / 4 MiB limit; the ticket of a stream — reads and /changes only
+#   wait: {objects: 30, devices: 30}        # a composite write waits longer than PASS_WAIT; the ceiling — the norm
+#   calls:                                  # the closed list of doors the worker may call back with a ticket
+#     - cam/cameras, cam/devices            # rows and tables of cam (V/01.1)
+#     - rec/recordings, rec/volumes         # rows and tables of rec (V/02.1)
+#     - det/units                           # rows of det (V/04.1)
+#     - auto/scenarios                      # rows of auto (V/07.1)
+#     - changes                             # the change feed (B2)
+#     - GET manifest, GET servers, GET events, GET session   # reads; /session — «who am I» only
+#   # not: /where, writes of /session, grants, people, keys, break-glass, /operations
+# B7 (ADR-0094 доп. (1); норма платформы B — после Go GREEN 01–10), declared intent, not loaded today: the console serves
+# the WebUI of consolem as static files next to this manifest, `/backend/<file>`, byte for byte, `script-src 'self'`.
+# The bytes are not in the course: the deployment package places them from consolem @9dc16881 next to the manifest and
+# checks each SHA-256 (V/11.1 Н1.4, V/09.3).
+#   static:
+#     - {file: assets/i18n-en.js, sha256: 50a6aa1daafa48a38b338ad88f499220f3fe98238e883883ddeaa2f12b4322ad}
+#     - {file: assets/one-psim/bridge.css, sha256: 098866f82a8e1af620ebde7efd9c6a7e38de6eaccd95e75548c1c345c35f66b7}
+#     - {file: assets/one-psim/native.css, sha256: dcb5175ed5d4a67f32dcf2ce61819bb9a66c62583246f689bc728fd501ac77ef}
+#     - {file: assets/one-psim/one-psim.css, sha256: a164777147b917ff0e44dc4a2c35376cb9248c9f8975f99560296844afb61c59}
+#     - {file: assets/one-psim/fonts/InterVariable.woff2, sha256: 693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3}
+#     - {file: index.html, sha256: 6099d3a8fc19fea6b9f6a367006e1f58070b21cecca307d55679cb666514cd66}   # html: type not in B7 (open question)
+metrics:
+  - {name: instances_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
+  # Calls the worker passed on, by how they ended (translated, no_route, refused), and the repeats its memory answered.
+  - {name: calls_total, from: "heartbeat.calls.<outcome>", agg: sum, type: counter}
+  - {name: repeats_total, from: heartbeat.repeats, agg: sum, type: counter}
+console:
+  running: instances_running         # backend_instances_running
+# What a page calls a unit of it (the product's words, one spec on both sides).
+display:
+  unit: бэкенд конфигуратора
+  units: бэкенды конфигуратора
+  units_count: бэкендов конфигуратора
+  section: Конфигуратор
+  general: Бэкенд
+  fields:
+    name: сервер
+    enabled: включён
