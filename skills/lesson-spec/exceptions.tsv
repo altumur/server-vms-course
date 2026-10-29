@@ -67,3 +67,5 @@ V/08	no-acceptance	-	ни одна глава приёмки не имеет: с
 V/09	no-openapi	-	своей двери и манифеста у развёртывания нет (запрос VMS «реестр V09»)
 V/09	no-acceptance	-	ни одна глава приёмки не имеет: проверка — чтением и установкой на стенде реализации (запрос VMS «реестр V09»)
 P/02	implied	18:tables.$t.fields.name	строка связей 18 (tables.$t.fields.name.type = string) следует из 16 и 17; держится групповой мутацией (решение «Архитектора» 2026-10-28, PLAN-TRANSITION п. 2.3.6)
+V/11	no-openapi	-	дверь — контракт consolem продукта на закреплённом коммите (VMS/11-backend/consolem.openapi.json, копия с SHA-256), не правится: своего OpenAPI у урока нет (ADR-0094 A1)
+V/11	no-acceptance	-	ни одна глава приёмки не имеет: приёмка — тесты API consolem (tests/api-*.js на закреплённом коммите) в профиле возможностей и ?selftest (ADR-0094 Confirmation)
