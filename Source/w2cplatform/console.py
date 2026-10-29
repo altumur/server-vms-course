@@ -11,7 +11,7 @@ show them. So the console is one class, run from the same spec:
     GET/POST/DELETE /session, POST /session/break-glass   the door in (`session`): {open, login_url, user?, until?, via?}
     …    /<sub>/<route>          a mounted subsystem's route; `/<the root's own name>/<route>` is the root's, served as
                                  `/<route>` (`Mount.resolve`; ADR-0061, дополнение п. 3)
-    GET  /spec                   what the page reads first: name, rows, id rule, fields, door, metric names
+    GET  /manifest               what the page reads first: name, rows, id rule, fields, door, metric names (P/06.5 Н2)
     GET  /<rows>                 {rows: the read model from every worker's heartbeat, configured: the units}
     GET  /where/<id>             the stored placement (why, its worker and server) and the assignments' answer (where, one
                                  scan), and the holder's door for the spec's `door: {routes}`
@@ -77,7 +77,7 @@ rule in this file.
 # units are, which fields the operator owns and what leaves the cluster; that is everything a console needs
 # to list, edit and show them, so the console is one class run from the same spec. It serves the page (`page_of`), the
 # console module (`/platform/console.js`),
-# `/spec` (what the page reads first), the rows with the read model, `/where`, `/resources`, `/unplaceable`,
+# `/manifest` (what the page reads first, P/06.5 Н2), the rows with the read model, `/where`, `/resources`, `/unplaceable`,
 # `/events` (if a `MergedIndex` — anything with `query(t0, t1, kind, subsystem, unit, current_epochs)` — is behind it), `/metrics`, and the writes — POST/PUT/DELETE on the rows and
 # POST `/marks` — with idempotency keys stored in Variables so a retry answered by another console instance
 # is the same request. A subsystem adds no routes of its own: its tables and requests are its spec's, and the bytes
