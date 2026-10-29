@@ -7,4 +7,7 @@ scenario	step	request	expect
 01-door	5	POST /recordings {"name": "door", "cam": "$c1", "home": "disk-a"}	201 {"id": "door"}
 01-door	6	@until 90 resource GET /v1/objects/rec/heartbeats/r-srv-a-1	200 {"volume": "disk-a", "url": "~http://127.0.0.1:"}
 01-door	7	archive r-srv-a-1 GET /spans/door	401 {"error": "no_role"}
-01-door	8	archive r-srv-a-1 GET /elsewhere	404 {"error": "@any"}
+01-door	8	archive r-srv-a-1 GET /elsewhere	404 {"error": "no such path"}
+01-door	9	archive r-srv-a-1 GET /spans/door/	404 {"error": "no such path"}
+01-door	10	archive r-srv-a-1 POST /spans/door	405 {"error": "method not allowed"}
+01-door	11	archive r-srv-a-1 GET /timeline/door	403 {"error": "forbidden"}

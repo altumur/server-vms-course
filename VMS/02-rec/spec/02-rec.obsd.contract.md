@@ -57,9 +57,9 @@ u32 len | u32 id | u16 op | u16 flags | i32 status | u32 jsonLen | json[jsonLen]
 | 16 | `VOLUME_MOUNT_RO` | `{volume}` → `{reader}` |
 | 17 | `VOLUME_MOUNT_RW` | `{volume, owner}` → `{writer, reattached}` |
 | 20 | `READER_CLOSE` | `{reader}` → `{}` |
-| 21 | `READER_INFO` | → `{info: {formatVersion, uuid, createdAtUnixSec, maxVolumeSize, tunables, label}, label}` |
-| 22 | `READER_STATUS` | → `{status: {firstBlockId, numBlocks, usedSize, availableSize, totalWritten, reindexBlockId?}}` |
-| 23 | `READER_STREAMS` | → `{streams: [name]}` |
+| 21 | `READER_INFO` | `{reader}` → `{info: {formatVersion, uuid, createdAtUnixSec, maxVolumeSize, tunables, label}, label}` |
+| 22 | `READER_STATUS` | `{reader}` → `{status: {firstBlockId, numBlocks, usedSize, availableSize, totalWritten, reindexBlockId?}}`; `usedSize`, `availableSize`, `totalWritten` — байты; `totalWritten` — счётчик движка: байты, записанные в том с его форматирования, растёт, кольцо его не уменьшает |
+| 23 | `READER_STREAMS` | `{reader}` → `{streams: [name]}` |
 | 24 | `READER_TIMELINE` | `{reader, stream, from, to, minGap, mode}` → `{intervals: [{start, end, size, streamId}], ready}`; `mode`: `""` — построить, `boundary` — из памяти, `quick` — только из памяти, иначе `ready: false` и чтения запущены |
 | 25 | `READER_SEQUENCES` | `{reader, stream, from, to, pageHint}` → `{entries: [{streamId, tag, start, end, blockId, offset, size}]}` (`pageHint` — 1000) |
 | 26 | `READER_FIND` | `{reader, stream, from, backwards}` → `{found, entry}` |
@@ -69,7 +69,7 @@ u32 len | u32 id | u16 op | u16 flags | i32 status | u32 jsonLen | json[jsonLen]
 | 32 | `FINISH_MEDIA` | `tail`: `writer:u64le streamLen:u16le stream`; `EMPTY_RESULT` — открытой последовательности не было |
 | 33 | `WRITER_FLUSH` | `{writer}` → `{}`: хвост на носитель, блок не закрывается |
 | 34 | `WRITER_RESIZE` | `{writer, size}` → `{status}`; меньше записанного — старейшие блоки освобождаются шагами `OBSD_RESIZE_STEP_MB` (1024), запись в это время стоит |
-| 35 | `WRITER_CLOSE` | `{writer}` → `{}` после сброса (до 30 с); после ответа записанное читаемо |
+| 35 | `WRITER_CLOSE` | `{writer}` → `{}` после сброса (до 30 с); после ответа записанное читаемо; сколько клиент ждёт ответа — V/02.4 Н1.5 «конец закрытия» |
 | 36 | `WRITER_ABANDON` | `{writer}` → `{}`: отдать том без записи (ни очереди, ни статуса, ни индекса); замок снимается, только если он ещё этого писателя; следующий монтаж может потребовать восстановления |
 
 **`PUT_MEDIA`:** `OK` — взят; `SEQUENCE_LOST` — взят, но более ранняя последовательность потеряна; `WRITER_STOPPED` — не
@@ -81,7 +81,11 @@ u32 len | u32 id | u16 op | u16 flags | i32 status | u32 jsonLen | json[jsonLen]
 
 ## Время и запись SMPL
 
-- Время архива — миллисекунды с 1900-01-01 UTC: `archive_ms = round(unix_s × 1000) + 2208988800000`.
+- Время архива — миллисекунды с 1900-01-01 UTC: `archive_ms = r(unix_s × 1000) + 2208988800000`, где `unix_s` — число
+  binary64, произведение — одно умножение binary64 (с округлением к ближайшему), `r(p)` — половина вверх: `⌊p⌋ + 1`, если
+  дробная часть `p` (точно) ≥ 0,5, иначе `⌊p⌋` (не функция языка). Примеры: `1700000000.0004` → `p` = `1700000000000.4001…`
+  → `3908988800000`; `1700000000.0005` → `p` = `1700000000000.5` → `3908988800001` (к ближайшему чётному дало бы `…800000`);
+  `1700000000.0006` → `3908988800001`. Векторы — с семьёй данных VMS (разбор ревью V/01, вопрос 5).
 - Запись SMPL — big-endian: `"SMPL" major:u32 subtype:u32 flags:u32 begin:u64 end:u64 subLen:u32 bodyLen:u32 sub body`.
   Видео — `major = 2`; `subtype` — FourCC в u32 LE (`H264`, `H265`); `sub` — `width:u32le height:u32le`.
 - Флаги: `NEED_KEY_FRAME = 1<<0`, `NEED_PREVIOUS_FRAME = 1<<3`; ключевой кадр — ни одного из двух.

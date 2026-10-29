@@ -45,7 +45,7 @@ old	new	chapter	subject	note
 М12A/05 ш.4 (счёт и состояния)	V/01.7-02	1.7	счёт воркером на домене camdomain по виду домена в порядке ref; valid/grace/degraded/invalid/none; книга licence на члена	-
 М12A/05 ш.4 (применение)	V/01.7-03	1.7	применение у члена: вне licensed — не держать, phase unlicensed; без связи — последняя копия; создание не отказывается	-
 М10B/10 ш.1	V/02.1-01	2.1	запись — rec/recordings/<id>, id: name, поля, смысл и читатели; cam fixed; about cam	-
-М10B/26 ш.5	V/02.1-02	2.1	home — ref на том и must_match по камере	V/02.6
+М10B/26 ш.5	V/02.1-02	2.1	home — ref на том (без must_match: страж — регистратор карты, V/02.6 Н1.7)	V/02.6
 М10B/10 ш.3; М10B/27 ш.1–2 (форма)	V/02.1-03	2.1	таблицы volumes (схема по видам) и keeps — формы	V/02.6, V/02.7
 М10B/10 ш.2	V/02.1-04	2.1	размещение rec: места-тома, place_by volume, servers distinct, affinity, grows	V/02.4
 М10B/10 ш.1 (until)	V/02.1-05	2.1	срок записи placement.ends: снять, строку заказа удалить после made.keep, ручную не удалять	V/07

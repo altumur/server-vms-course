@@ -21,8 +21,9 @@ lease: {unconfirmed_max: forever}
 # What the holder writes beside its claims: what a device it holds turned out to be (`cam/devices/<host>`, М10B Lesson
 # 25) — a discovery, not a decision. Its token and a cluster's rights file are cut from this (`worker:`).
 # Domain books (V/01.6, V/01.7): a member reads the copy `domain/<sub>/<book>`; the holder's cluster has no copy and
-# reads its own row `domain/<sub>/<book>/<itself>` — both declared, exact name and prefix (P/02.5 Н1.4).
-worker: {exec: /usr/lib/cam/worker, writes: [devices], reads: [domain/rec/primaries, domain/rec/primaries/, domain/placed/rec/, domain/rec/polls, domain/rec/polls/, domain/cam/licence, domain/cam/licence/, domain/member-list]}
+# reads its own row `domain/<sub>/<book>/<CLUSTER>` — the rights generator grants that one row (P/02.5 Н1.4); only the
+# copy is declared here, never a prefix.
+worker: {exec: /usr/lib/cam/worker, writes: [devices], reads: [domain/rec/primaries, domain/placed/rec/, domain/rec/polls, domain/cam/licence, domain/view, domain/member-list]}
 # The holder's frames on its own server (V/01.2 Н1.3): a share, `SHM_DIR` of the subsystem file (/run/vms-cam-shm), one
 # file per camera and holder epoch, `<id>-<epoch>.shm`, deleted only by its writer; a subscriber on the same server
 # declares `worker.uses: [cam.shm]` (ADR-0091 п. 5) and takes the exact address from the pulse (`live_shm`).
