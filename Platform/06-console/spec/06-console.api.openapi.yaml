@@ -6666,6 +6666,7 @@ components:
           enum:
           - expired
           - refused
+          - gone
         ended_by:
           enum:
           - reaper
