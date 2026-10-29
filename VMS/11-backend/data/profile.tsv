@@ -1,5 +1,5 @@
 # Профиль возможностей стенда VMS для тестов API consolem (V/11.6 Н1.2): одна строка на операцию контракта
-# consolem.openapi.json @7683f542. profile: in — тесты операции гоняются; out — операция отвечает 404 NO_ROUTE, тест
+# consolem.openapi.json @ef7175b. profile: in — тесты операции гоняются; out — операция отвечает 404 NO_ROUTE, тест
 # вне профиля (тест самого NO_ROUTE — в профиле); stand — только на стенде (/test/reset, /test/clock). Читает драйвер стенда; при новой
 # версии контракта таблица сверяется (V/11.2). Набор продукта — one-domain, часы — --clock real (ответ consolem, ADR-0094
 # доп. (4)). Строки in — список capabilities.operations в GET /reference (V/11.2 Н1.5): объявление и таблица сверяются,
