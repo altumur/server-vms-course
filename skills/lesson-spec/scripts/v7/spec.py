@@ -21,6 +21,10 @@ READER = re.compile(r"(?:console|resource|domainagent|domainconsole|domain|admin
                     r"<s>(?:controller|worker|domain)|proc:[0-9]{2}-[a-z][a-z-]*)")
 UNITS = ("строка", "поле", "элемент")
 KINDS = ("row", "object", "file")
+# Семья VMS (решение «Архитектора» по запросу VMS «семьи в открытых местах», вариант А): схема `VMS/NN-<урок>/data/…`
+# урока-владельца V/NN[.K] судит значение открытого места семьи платформы; читатели её исходов — и роли подсистем VMS.
+VMS_SCHEMA_PATH = re.compile(r"VMS/(([0-9]{2})-[a-z][a-z-]*/data/([^/#]+)\.schema\.json)(?:#([a-z][a-z0-9-]*))?")
+VMS_ROLE_KINDS = ("worker", "domain", "controller")
 
 
 class SpecError(Exception):
@@ -47,6 +51,19 @@ def is_v7_family(row):
 def schema_file(cell):
     """Файл схемы колонки schema каталога (без `#<слово>`)."""
     return cell.split("#", 1)[0]
+
+
+def schema_path(root, row):
+    """Путь схемы строки каталога: платформы — под `Platform/`, VMS — от корня (`VMS/…`)."""
+    cell = schema_file(row["schema"])
+    return Path(root) / (cell if cell.startswith("VMS/") else Path("Platform") / cell)
+
+
+def vms_roles(root):
+    """Роли подсистем VMS по канонам манифестов `VMS/NN-<урок>/<sub>.subsystem.yaml`: `<sub>worker`, `<sub>domain`,
+    `<sub>controller` (как `<s>…` платформы)."""
+    subs = {p.name[:-len(".subsystem.yaml")] for p in Path(root).glob("VMS/[0-9][0-9]-*/*.subsystem.yaml")}
+    return frozenset(s + k for s in subs for k in VMS_ROLE_KINDS)
 
 
 # ---------------------------------------------------------------- схема: самодостаточность, места
@@ -209,9 +226,9 @@ def outcomes_for(outcomes, paths, reader=None):
     return [o for o in hit if o.priority == low]
 
 
-def load_outcomes(path, doc):
+def load_outcomes(path, doc, roles=frozenset()):
     """`<семья>.outcomes.tsv` → [Outcome]: путь — место схемы, (путь, читатель) не повторяется, у пустого пути читатель
-    — роль (не `*`), пустой путь есть."""
+    — роль (не `*`; роли платформы и roles — подсистем VMS у семьи VMS), пустой путь есть."""
     name = Path(path).name
     if not Path(path).is_file():
         raise SpecError("%s: no outcomes file next to the schema (ADR-0088 доп. (2) С11)" % name)
@@ -224,7 +241,7 @@ def load_outcomes(path, doc):
         if (p, reader) in seen:
             raise SpecError("%s:%d: path %r with reader %r repeated" % (name, no, p, reader))
         seen.add((p, reader))
-        if not (READER.fullmatch(reader) or (reader == "*" and p)):
+        if not (READER.fullmatch(reader) or reader in roles or (reader == "*" and p)):
             raise SpecError("%s:%d: reader is a role of the catalog grammar%s" % (
                 name, no, "; the whole row (empty path) is named for each reader, not *" if not p else " or *"))
         wild = {}
@@ -260,6 +277,8 @@ def check_schema(doc, name):
 
 def load_family(root, row):
     """Строка каталога со схемой `.schema.json` → (row, путь схемы, схема, путь исходов, [исход])."""
+    if row["schema"].startswith("VMS/"):
+        return load_vms_family(root, row)
     m = SCHEMA_PATH.fullmatch(row["schema"])
     if not m:
         raise SpecError("catalog %s: schema %s is not NN-<процесс>/data/<имя>.schema.json[#<слово> [a-z][a-z0-9-]*]"
@@ -292,6 +311,35 @@ def load_family(root, row):
         name = name[:-len(row["kind"]) - 1]
     outcomes_path = path.with_name(name + ("." + m.group(4) if m.group(4) else "") + ".outcomes.tsv")
     return row, path, doc, outcomes_path, load_outcomes(outcomes_path, doc)
+
+
+def load_vms_family(root, row):
+    """Строка каталога VMS: схема `VMS/NN-<урок>/data/<имя>.schema.json[#<слово>]` урока владельца V/NN[.K] судит
+    значение места `place` (любой JSON), слои — `<имя>.layers.tsv`, исходы — `<имя>[.<слово>].outcomes.tsv` с ролями
+    подсистем VMS."""
+    m = VMS_SCHEMA_PATH.fullmatch(row["schema"])
+    if not m:
+        raise SpecError("VMS catalog %s: schema %s is not VMS/NN-<урок>/data/<имя>.schema.json[#<слово>]"
+                        % (row["key"], row["schema"]))
+    if not re.fullmatch(r"V/%s(\.(?:0|[1-9][0-9]?))?" % m.group(2), row["owner"]):
+        raise SpecError("VMS catalog %s: schema %s is not in the lesson of its owner %s" % (row["key"], row["schema"],
+                                                                                       row["owner"]))
+    path = Path(root) / "VMS" / m.group(1)
+    if not path.is_file():
+        raise SpecError("VMS catalog %s: schema %s is not a file" % (row["key"], row["schema"]))
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (ValueError, UnicodeError) as exc:
+        raise SpecError("%s: not JSON: %s" % (path.name, exc))
+    check_schema(doc, path.name)
+    layers = path.with_name(path.name[:-len(".schema.json")] + ".layers.tsv")
+    from v7 import schema as gen
+    if not layers.is_file() or layers.read_text(encoding="utf-8") != gen.layer_table(doc):
+        raise SpecError("%s: is not the table of the x-* words of %s (rebuild: python -m v7.layers VMS/%s)"
+                        % (layers.name, path.name, m.group(1)))
+    name = path.name[:-len(".schema.json")] + ("." + m.group(4) if m.group(4) else "")
+    outcomes_path = path.with_name(name + ".outcomes.tsv")
+    return row, path, doc, outcomes_path, load_outcomes(outcomes_path, doc, vms_roles(root))
 
 
 # ---------------------------------------------------------------- переносимость выражений (ADR-0092 п. 14)
@@ -848,7 +896,7 @@ def families_check(root, norms, text, prefix, catalog):
         try:
             built.append(load_family(root, r))
         except (SpecError, OSError) as exc:
-            errors.append((Path(root) / "Platform" / schema_file(r["schema"]), "families: %s" % exc))
+            errors.append((schema_path(root, r), "families: %s" % exc))
             continue
         stats["family_schemas"] += 1
         stats["family_outcomes"] += len(built[-1][4])

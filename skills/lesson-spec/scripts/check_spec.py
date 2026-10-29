@@ -413,6 +413,11 @@ VMS_LESSONS = Path("VMS/common/lessons.tsv")
 VMS_LESSONS_FIELDS = ["lesson", "dir", "title", "subsystem", "status"]
 VMS_STATUS = {"переведён", "не переведён"}
 VMS_CATALOG = Path("VMS/common/data/catalog.tsv")
+# The VMS catalog (решение «Архитектора» по запросу VMS «семьи в открытых местах», вариант А): the Platform columns and
+# `place` — a row is the value of an open place of a Platform family (v7.vms); owner V/NN[.K], the norm a VMS or
+# Platform lesson address.
+VMS_CATALOG_FIELDS = CATALOG_FIELDS + ["place"]
+VMS_LESSON = r"V/[0-9]{2}(?:\.(?:0|[1-9][0-9]?))?"
 VMS_IDMAP = Path("VMS/common/id-map.tsv")
 VMS_FROZEN = Path("tools/vms-boundary/source-vms.sha256")
 VMS_FROZEN_DIR = Path("Source/vms")
@@ -438,14 +443,14 @@ MOVED_SECTION = re.compile(r"^Перенесено в\b")
 STAYS = re.compile(r"[Оо]стаётся здесь")
 
 
-def parse_roles(text, what):
+def parse_roles(text, what, role=ROLE):
     """`role(cond),role` → {role}; a condition belongs to its role, never holds `;` or nested `(`."""
     roles, pos = set(), 0
     while pos < len(text):
-        match = re.match(ROLE + r"(?:\(([^()]*)\))?", text[pos:])
+        match = re.match(role + r"(?:\(([^()]*)\))?", text[pos:])
         if not match or (match.group(1) is not None and ";" in match.group(1)):
             raise ValueError(f"{what}: expected role[(condition)] at {text[pos:]!r}")
-        roles.add(re.match(ROLE, text[pos:]).group(0))
+        roles.add(re.match(role, text[pos:]).group(0))
         pos += match.end()
         if pos < len(text):
             if text[pos] != ",":
@@ -456,14 +461,14 @@ def parse_roles(text, what):
     return roles
 
 
-def parse_ops(text):
+def parse_ops(text, role=ROLE):
     """`op=role(cond),role; op=…` → {op: {role}}; a condition belongs to its role, never holds `;` or nested `(`."""
     ops = {}
     for part in text.split("; "):
         op, sep, rest = part.partition("=")
         if not sep or op not in CATALOG_OPS or op in ops:
             raise ValueError(f"operation {op!r} unknown, repeated or without participants")
-        ops[op] = parse_roles(rest, f"participants of {op}")
+        ops[op] = parse_roles(rest, f"participants of {op}", role)
     return ops
 
 
@@ -641,6 +646,7 @@ class Check:
         self.catalog_checked = False
         self.idmap = None
         self.vms_idmap = {}
+        self.vms_rows = None                         # строки каталога VMS (v7.vms.read_catalog), судит vms_families()
         self.contracts = {}                          # OpenAPI file → (document or None, checked without errors)
         self.loading = []                            # contracts being checked: a cross-file $ref back is a cycle
         self.cross_refs = set()                      # positions of cross-file $ref counted once per run
@@ -2040,7 +2046,9 @@ class Check:
             except ImportError as exc:
                 self.error(norms, f"families on В7 need the В7 stack, missing: {exc}; run: {V7_INSTALL}")
                 return
-            errors, stats = families_check(self.root, norms, text, prefix, list(self.catalog.values()))
+            vms = Path(norms).resolve().is_relative_to(self.root / VMS_DIR)
+            errors, stats = families_check(self.root, norms, text, prefix,
+                                           self.vms_catalog() if vms else list(self.catalog.values()))
             for where, message in errors:
                 self.error(where, message)
             self.stats.update(stats)
@@ -2478,7 +2486,7 @@ class Check:
             if row is None or manifest.name != f"{row['subsystem']}.subsystem.yaml":
                 self.error(manifest, "a VMS manifest lies in the directory of the lesson that lessons.tsv gives it")
             self.stats["vms_manifests"] += 1
-        for table, fields in ((VMS_CATALOG, CATALOG_FIELDS), (VMS_IDMAP, IDMAP_FIELDS)):
+        for table, fields in ((VMS_CATALOG, VMS_CATALOG_FIELDS), (VMS_IDMAP, IDMAP_FIELDS)):
             rows = self.tsv(self.root / table, len(fields)) if (self.root / table).is_file() else None
             if rows is None:
                 self.error(self.root / table, "missing (ADR-0090 доп. (1), «Условия старта»)")
@@ -2486,6 +2494,106 @@ class Check:
                 self.error(self.root / table, f"expected header {' '.join(fields)}")
             else:
                 self.stats["vms_table_rows"] += len(rows) - 1
+
+    def vms_catalog(self):
+        """Строки каталога VMS как в файле (v7.vms.read_catalog), [] — нет файла или заголовок не тот (называет
+        vms_families)."""
+        if self.vms_rows is None:
+            from v7 import spec as v7spec, vms
+            try:
+                self.vms_rows = vms.read_catalog(self.root) or []
+            except v7spec.SpecError:
+                self.vms_rows = []
+        return self.vms_rows
+
+    def vms_norms(self, address):
+        """`V/NN[.K]` → the lesson file VMS/NN-<имя>/NN-<имя>.md or the chapter VMS/NN-<имя>/spec/NN.K-*.norms.md; None
+        if absent."""
+        number, _, chapter = address[2:].partition(".")
+        path = self.root / VMS_LESSONS
+        dirs = [cols[1] for _, cols in self.tsv(path, len(VMS_LESSONS_FIELDS)) if cols[0] == number] \
+            if path.is_file() else []
+        for d in dirs:
+            found = sorted((self.root / VMS_DIR / d / "spec").glob(f"{number}.{chapter}-*.norms.md")) if chapter \
+                else [p for p in [self.root / VMS_DIR / d / f"{d}.md"] if p.is_file()]
+            if found:
+                return found[0]
+        return None
+
+    # Families of VMS in the open places of Platform families (решение «Архитектора» по запросу VMS, вариант А): the
+    # rows of VMS/common/data/catalog.tsv in form (columns of the Platform catalog, roles of the VMS subsystems, owner
+    # V/NN[.K]), each an instance of one Platform family with a schema, its place open there, its schema, layers and
+    # outcomes sound (v7.vms.check_rows); the outcome of the whole value for each reader (readers ∪ cas/guard), as on
+    # the Platform; the vectors VMS/common/vectors/family-read/NN.tsv on the В7 stack. Once per run from main().
+    def vms_families(self):
+        if not self.v7 or not (self.root / VMS_CATALOG).is_file():
+            return
+        if str(SCRIPTS) not in sys.path:
+            sys.path.insert(0, str(SCRIPTS))
+        try:
+            from v7 import spec as v7spec, vms
+        except ImportError as exc:
+            self.error(self.root / VMS_CATALOG, f"VMS families need the В7 stack, missing: {exc}; run: {V7_INSTALL}")
+            return
+        path = self.root / VMS_CATALOG
+        try:
+            rows = vms.read_catalog(self.root) or []
+        except v7spec.SpecError:
+            return                                   # vms_module names the header
+        roles = v7spec.vms_roles(self.root)
+        role = "(?:" + "|".join(re.escape(r) for r in sorted(roles, key=len, reverse=True)) + "|" + ROLE[3:] \
+            if roles else ROLE
+        words = self.when_words(self.root / CATALOG)
+        when_key = self.manifest_key(path, words)
+        good = []
+        for row in rows:
+            try:
+                if not row["key"]:
+                    raise ValueError("key is empty")
+                if row["kind"] not in {"row", "object", "file"}:
+                    raise ValueError("kind is the kind of a Platform family with a schema: row, object or file")
+                if not re.fullmatch(VMS_LESSON, row["owner"]) or self.vms_norms(row["owner"]) is None:
+                    raise ValueError("owner names an existing VMS lesson or chapter (V/NN[.K])")
+                ops = parse_ops(row["ops"], role)
+                readers = parse_roles(row["readers"], "readers", role)
+                if not re.fullmatch(r"-|[a-z_]+(?:\.[a-z_]+)*", row["when"]) or (
+                        row["when"] != "-" and row["when"] not in words and not when_key(row["when"])):
+                    raise ValueError(f"when is - or a key path of the manifest (as in {CATALOG})")
+                if not re.fullmatch(r"[1-9][0-9]*", row["version"]):
+                    raise ValueError("version is an integer ≥ 1")
+                norm = re.match(rf"{VMS_LESSON}|{LESSON}", row["norm"])
+                if not norm or (self.vms_norms(norm.group(0)) if norm.group(0).startswith("V/")
+                                else self.lesson_norms(norm.group(0))) is None:
+                    raise ValueError("norm names an existing VMS or Platform lesson")
+            except ValueError as exc:
+                self.error(path, f"line {row['line']}: {exc}")
+                continue
+            good.append((row, readers | ops.get("cas", set()) | ops.get("guard", set())))
+        self.stats["vms_catalog_rows"] += len(rows)
+        errors, judges = vms.check_rows(self.root)
+        for where, message in errors:
+            self.error(self.root / where, message)
+        for row, want in good:
+            j = judges.get((row["key"], row["kind"], row["place"]))
+            if j is None:
+                continue
+            self.stats["vms_families"] += 1
+            named = {o.reader for o in j.outcomes if o.path == ""}
+            where = j.outcomes_path
+            for o in j.outcomes:
+                if o.path and o.reader != "*" and o.reader not in want:
+                    self.error(where, f"outcomes: {o.path} names {o.reader}, not a reader of {row['key']} by the VMS "
+                                      f"catalog (readers ∪ cas/guard) and not *")
+            for r in sorted(want - named):
+                self.error(where, f"outcomes: no outcome of the whole value (empty path) for the reader {r} of "
+                                  f"{row['key']} (readers ∪ cas/guard of the VMS catalog)")
+            for r in sorted(named - want):
+                self.error(where, f"outcomes: {r} is not a reader of {row['key']} by the VMS catalog (readers ∪ "
+                                  f"cas/guard)")
+        errors, stats = vms.check_tables(self.root, judges)
+        for where, message in errors:
+            self.error(self.root / where, message)
+        self.stats.update(stats)
 
     # The witness's bytes in Source/vms/ are frozen at the start of the VMS kit (ADR-0090 доп. (7) п. 4): every file
     # there (bytecode caches aside) is in the list with its sha256, and nothing else is there. Without the list (an
@@ -2554,6 +2662,7 @@ def main():
     check.vms_frozen()
     check.outcome_readers()
     check.family_read()
+    check.vms_families()
     check.common_contracts()
     check.stub_text()
     check.library_defects()
