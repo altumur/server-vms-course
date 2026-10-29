@@ -117,7 +117,8 @@ components:
       schema: {type: number}
   responses:
     Refusal:
-      description: отказ (V/01.5 Н4); 503 предела соединений — с заголовком Retry-After 1
+      description: отказ (V/01.5 Н4); 503 предела соединений — с заголовком Retry-After 1; у /playback роли detedgeworker — и
+        запас сессий устройства PLAYBACK_SPARE (Н1.5, Н3)
       headers:
         Retry-After:
           required: false

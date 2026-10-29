@@ -27,7 +27,7 @@ unit:
     name:    {type: string, required: true}
     cam:     {type: string, required: true, fixed: true}   # whose device archive to watch
     kind:    {type: string, required: true}      # which model: motion | linecross | lpr | tick | … — the detectors' registry
-    params:  {type: string}                      # the model's settings, opaque to the platform
+    params:  {type: string}                      # the model's settings, opaque to the platform; the row's limit holds
     mask:    {type: blob}                        # sha256-<hex>; the bytes are in the object store (P/06.1 Н1.5)
     alarms:  {type: list,   default: []}         # which event kinds are ALARMS; findings in an old archive are observations
     start:   {type: string, default: now, schema: {enum: [now, earliest]}}   # where the watch begins the first time.
@@ -39,9 +39,10 @@ unit:
     # recorder here: what is kept IS the recording's archive (`rec`), and everything else stays on the device.
     keep:    {type: string, default: none, schema: {enum: [none, hits]}}
     rec:     {type: string, ref: rec/recordings, must_match: {cam: cam}}   # the recording the kept minutes go to; with `keep: hits`
-    pre:     {type: float,  default: 5}          # seconds before a hit: a one-second clip is not evidence
-    post:    {type: float,  default: 5}          # …and after
-    join:    {type: float,  default: 30}         # hits closer than this are one stretch, gap and all —
+    pre:     {type: float,  default: 5, schema: {minimum: 0, maximum: 600}}    # seconds before a hit: a one-second clip is not
+                                                 # evidence; never wider than a pass's window (V/06.2 Н1.2)
+    post:    {type: float,  default: 5, schema: {minimum: 0, maximum: 600}}    # …and after
+    join:    {type: float,  default: 30, schema: {minimum: 0, maximum: 600}}   # hits closer than this are one stretch, gap and all —
                                                  # otherwise a busy minute becomes three hundred clips
     enabled: {type: bool,   default: true}
     labels:  {type: list,   default: ["gpu"]}
@@ -100,6 +101,7 @@ metrics:
   - {name: filings_total, from: "heartbeat.filings.<outcome>", agg: sum, type: counter}   # requests to keep minutes it filed
 console:
   running: watches_running
-# What a watch worker reads besides its rows: the holders' heartbeats (the device's archive doors), the recordings (what
-# is visible, where kept minutes go), the detectors' mask bodies; and the requests to keep minutes it files (V/06.4).
-worker: {exec: /usr/lib/detedge/worker, reads: [cam/heartbeats/, rec/recordings/, det/blobs/], requests: [rec]}
+# What a watch worker reads besides its rows: the holders' heartbeats (the device's archive doors) and the recordings (what
+# is visible, where kept minutes go); its own mask is `detedge/blobs/*`, which its role reads anyway (P/02.5 Н1.4); and the
+# requests to keep minutes it files (V/06.4).
+worker: {exec: /usr/lib/detedge/worker, reads: [cam/heartbeats/, rec/recordings/], requests: [rec]}

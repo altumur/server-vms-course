@@ -1,7 +1,7 @@
 # Приёмка V/06.1 — обход — единица
 
 Норма главы — [`06.1-detedge.norms.md`](../../spec/06.1-detedge.norms.md) Н5. Стенд и словарь — [общий README приёмки
-VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `84958d6`).
+VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `d3f8e05`, пин VMS).
 
 ## Подготовка
 
@@ -12,4 +12,4 @@ VMS](../../../common/acceptance/README.md) поверх общего README пл
 
 | Сценарий | Норма | Что наблюдает |
 |---|---|---|
-| `01-create` | V/06.1-01, V/06.1-02 | обход с умолчаниями `alarms`, `start`, `keep`, `pre`/`post`/`join`; `start` не из перечня — 400; `cam` не меняется; `rec` другой камеры — 409 `must_match` |
+| `01-create` | V/06.1-01, V/06.1-02 | обход с умолчаниями `alarms`, `start`, `keep`, `pre`/`post`/`join`; `start` и `keep` не из перечня — 400; `cam` не меняется; `rec` другой камеры — 409 `must_match` |

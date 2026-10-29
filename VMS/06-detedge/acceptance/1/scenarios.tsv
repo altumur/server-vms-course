@@ -2,6 +2,7 @@ scenario	step	request	expect
 # Приёмка V/06.1: обход — единица (дверь единиц консоли detedge; манифесты cam, rec, detedge). Формат — README.
 01-create	1	POST /watches {"name": "7-lpr", "cam": "7", "kind": "lpr"}	201 {"id": "7-lpr", "alarms": [], "start": "now", "keep": "none", "pre": 5, "post": 5, "join": 30, "labels": ["gpu"]}
 01-create	2	POST /watches {"name": "7-x", "cam": "7", "kind": "motion", "start": "yesterday"}	400 {"error": "@any"}
-01-create	3	PUT /watches/7-lpr {"cam": "8"}	400 {"error": "~cam is fixed"}
-01-create	4	console2 POST /recordings {"name": "r8", "cam": "8"}	201 {"id": "r8"}
-01-create	5	PUT /watches/7-lpr {"keep": "hits", "rec": "r8"}	409 {"error": "conflict", "fault": "must_match"}
+01-create	3	POST /watches {"name": "7-y", "cam": "7", "kind": "motion", "keep": "all"}	400 {"error": "@any"}
+01-create	4	PUT /watches/7-lpr {"cam": "8"}	400 {"error": "~cam is fixed"}
+01-create	5	console2 POST /recordings {"name": "r8", "cam": "8"}	201 {"id": "r8"}
+01-create	6	PUT /watches/7-lpr {"keep": "hits", "rec": "r8"}	409 {"error": "conflict", "fault": "must_match"}
