@@ -1,0 +1,101 @@
+# Черновик C11 — МОЛЧАНИЕ ХРАНИЛИЩА для роли воркера: сценарии исполнимы.
+# Что проверяет: поведение воркера, когда хранилище для его роли молчит: (1) продление слота при молчании — «хранилище не
+#   ответило → ещё мой, store_errors + 1, again» (П/03.2 Н4), окно аренды 25 с (П/03.2 Н1.6; П/03.2-07); (2) подмена при
+#   зависшем шаге цикла дольше STALL (12.5 с): подмена продлевает слот, аренду и место и повторяет пульс с `stood_in`
+#   (П/03.4 Н3 «подмена()», Н1.1; П/03.4-03); (3) после починки (молчание кончено) — пульс обычный, аренда подтверждена,
+#   единица жива, слот снова продлевается.
+# Место нормы: Platform/03-worker/spec/03.2-worker.norms.md — Н1.2 (`LEASE_TTL: 30; LEASE_MARGIN: 5` → окно 25 с;
+#   `LEASE_EVERY: (TTL − MARGIN) / 3 ≈ 8.3` — шаг аренды), Н1.4 (строка слота: `until` — часы писателя + 45 с), Н1.6
+#   (`confirmed`/`silent`/`lost`, `may_act`, `may_write`), Н3 «шаг_аренды()» (шаг 1 — продление слотом; шаг 4 — стоп единицы),
+#   Н4 (таблица отказов: «продление слота: хранилище не ответило → ещё мой, store_errors + 1, again»; «аренда: молчание
+#   дольше потолка → единица остановлена»). Platform/03-worker/spec/03.4-worker.norms.md — Н1.1 (`stood_in: {step, for, as_of}`
+#   — «только в пульсе подмены»; `store_errors` — «запросов к хранилищу без ответа или с ошибкой с запуска»; `status[].lease` —
+#   `unconfirmed`), Н1.2 (`stand_in: STALL 12.5, WAKE ≤ 6.25, FOR 300, BEAT_EVERY 10`), Н3 «подмена()» (продление слота
+#   записью с cas; «хранилище не ответило — всё ещё я»; пульс с `stood_in`, `stand_in_renewals`). Чек-лист: П/03.2-04, П/03.2-07,
+#   П/03.2-08, П/03.4-03.
+# Директива (принята в общий README приёмки, коммит e1b8b60a5; решение «Архитектора» 2026-10-30):
+#   `@cut role <роль> store` / `@mend role <роль> store` — посредник раннера на сокете роли `configstore://<роль>.sock`:
+#   `@cut` — молчание (живые и новые соединения принимаются, байты не пересылаются ни в одну сторону, ничего не закрывается);
+#   `@mend` — соединения, висевшие во время разреза, закрываются, новые снова пересылаются; ожидание — `ok`.
+#   Роль воркера подсистемы testsub — `testsubworker` (П/02.5 Н1.4; `PLATFORM_STORE` воркера — `configstore://<роль>.sock`,
+#   П/02.4 Н1.2). Роль контроллера — `testsubcontroller` (ею пользуется черновик P/04 D07).
+#   Оговорка стенда: посредник ставится до старта процессов роли, если роль названа в сценарии; дверь `store` самого раннера —
+#   роль с правами чтения `testsub/` (README приёмки P/03.2), не `testsubworker`, — поэтому чтения сценария во время молчания
+#   проходят.
+# Подготовка: стенд testsub под раннером: ресурс, контроллер, воркер `w-1`, счётчик `c1` (дверь консоли `POST /counters`).
+#   Счётчик нужен, чтобы было видно, что единица жива (элемент пульса `status` с `phase: running`, строка эпохи `epoch: "1"`,
+#   строка размещения `worker: "w-1"`).
+# Существующие директивы: `@start resource`, `@start controller`, `@start worker <имя>`, `@sleep <с>`, `@until <с> <запрос>`;
+#   двери `console` (создание счётчика), `store` (строки слота, эпохи, размещения), `resource` (пульс воркера).
+# Сроки и допуски (числа — по нормам, не по стенду):
+#   — окно аренды 25 с = LEASE_TTL 30 − LEASE_MARGIN 5; шаг аренды ≈ 8.3 с = (30 − 5) / 3 (П/03.2 Н1.2).
+#   — срок слота 45 с (П/03.2 Н1.4, SLOT_TERM); CONTEND_EVERY 10; WRITE_WINDOW 40; CLOSE_BY 50 (П/03.2 Н1.2).
+#   — подмена: STALL 12.5, WAKE ≤ 6.25, FOR 300, BEAT_EVERY 10 (П/03.4 Н1.2).
+#   — сц. 01: первый отрезок молчания 12 с — дольше шага аренды (8.3 с) и короче окна аренды (25 с); второй отрезок 12 с —
+#     ещё один шаг аренды, за него `until` обязан остаться прежним. Проверка `store_errors` идёт последней: момент, когда
+#     запрос «без ответа» засчитан, норма не называет, к этому моменту окно аренды (25 с) уже может истечь.
+#   — сц. 02, 03: молчание 15 с — дольше STALL (12.5 с), чтобы подмена успела встать.
+#   — бюджет: потолок сценария 3 минуты; сц. 01 ≈ 60 с, сц. 02 ≈ 45 с, сц. 03 ≈ 60 с (в худшем случае, с потолком `@until`) —
+#     потолок не превышен.
+#   — FOR 300 с в потолок сценария не влезает: «по истечении FOR единицы уходят» (П/03.4 Н3 «подмена()») остаётся проверкой
+#     чтением — это оговорка, а не пропуск по незнанию.
+# Почему ожидание именно такое:
+#   — «ещё мой» (П/03.2 Н4) наблюдается строкой слота: `holder` — тот же экземпляр, `released` — "false"; при молчании
+#     продление не подтверждено, поэтому `until` НЕ растёт — его рост наблюдается после `@mend`, когда хранилище отвечает
+#     (продление, зависшее на молчании, повторяется и подтверждается).
+#   — `store_errors` (П/03.4 Н1.1) — «запросов к хранилищу без ответа или с ошибкой с запуска»: при молчании он растёт.
+#     Норма не называет момент, когда запрос «без ответа» засчитан (свой срок клиента — выбор реализации), поэтому проверка
+#     не ловит число, а ждёт отличия от прежнего (`@not`) и сверяет разницу через `ASSERT`.
+#   — пульс с `stood_in` (П/03.4 Н1.1) — «только в пульсе подмены»; после починки пульс обычный, поля `stood_in` нет.
+#   — аренда подтверждена: поля `lease` в элементе `status` нет (Н1.1: `lease: unconfirmed` — только при неподтверждённой
+#     аренде); при молчании дольше окна (25 с) аренда переходит в `silent` и единица останавливается (П/03.2 Н4: потолок
+#     `unconfirmed_max` у testsub — off), поэтому «единица жива» проверяется строкой эпохи (не изменилась) и строкой
+#     размещения (воркер тот же), а не `phase` в пульсе после долгого молчания.
+# Оговорки (для владельца приёмки): (1) `stand_in_renewals` (число продлений подменой, Н1.1: «только когда > 0») в сценарий
+#   не включено: при полном молчании хранилища подтверждённых продлений нет, а что именно реализация считает продлением —
+#   вопрос к владельцу; (2) «уход единиц после FOR 300» не проверяется (см. выше).
+scenario	step	request	expect
+# 01-silent-store-renewal — молчание дольше шага аренды: слот остаётся за воркером, `until` не растёт, `store_errors` растёт.
+01-silent-store-renewal	1	@start resource	ok
+01-silent-store-renewal	2	@start controller	ok
+01-silent-store-renewal	3	@start worker w-1	ok
+01-silent-store-renewal	4	console POST /counters {"name": "c1", "start": 1}	201 {"id": "c1", "revision": 1}
+01-silent-store-renewal	5	@until 30 store GET /v1/get?key=testsub/epoch/c1	200 {"index": "$e1", "items": {"epoch": "1"}}
+01-silent-store-renewal	6	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"store_errors": "$se0", "status": [{"id": "c1", "phase": "running"}]}
+01-silent-store-renewal	7	@cut role testsubworker store	ok
+01-silent-store-renewal	8	@sleep 12	ok
+01-silent-store-renewal	9	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "until": "$u1", "released": "false"}}
+01-silent-store-renewal	10	@sleep 12	ok
+01-silent-store-renewal	11	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "until": "$u1", "released": "false"}}
+01-silent-store-renewal	12	@until 60 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"store_errors": "@not($se0)"}
+01-silent-store-renewal	13	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"store_errors": "$se1"}
+01-silent-store-renewal	14	ASSERT $se1 - $se0 >= 1	ok
+01-silent-store-renewal	15	store GET /v1/get?key=testsub/epoch/c1	200 {"index": "$e1", "items": {"epoch": "1"}}
+01-silent-store-renewal	16	store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+# 02-silent-store-stand-in — молчание дольше STALL: подмена встала и повторяет пульс с `stood_in`; слот и место остались за воркером.
+02-silent-store-stand-in	1	@start resource	ok
+02-silent-store-stand-in	2	@start controller	ok
+02-silent-store-stand-in	3	@start worker w-1	ok
+02-silent-store-stand-in	4	console POST /counters {"name": "c1", "start": 1}	201 {"id": "c1", "revision": 1}
+02-silent-store-stand-in	5	@until 30 store GET /v1/get?key=testsub/epoch/c1	200 {"index": "$e1", "items": {"epoch": "1"}}
+02-silent-store-stand-in	6	@until 30 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false"}}
+02-silent-store-stand-in	7	@cut role testsubworker store	ok
+02-silent-store-stand-in	8	@sleep 15	ok
+02-silent-store-stand-in	9	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"stood_in": {"step": "@any", "for": "@any", "as_of": "@time"}}
+02-silent-store-stand-in	10	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false"}}
+02-silent-store-stand-in	11	store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+# 03-mend-restores — молчание кончено: слот снова продлевается, пульс обычный, аренда подтверждена, единица жива.
+03-mend-restores	1	@start resource	ok
+03-mend-restores	2	@start controller	ok
+03-mend-restores	3	@start worker w-1	ok
+03-mend-restores	4	console POST /counters {"name": "c1", "start": 1}	201 {"id": "c1", "revision": 1}
+03-mend-restores	5	@until 30 store GET /v1/get?key=testsub/epoch/c1	200 {"index": "$e1", "items": {"epoch": "1"}}
+03-mend-restores	6	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"status": [{"id": "c1", "phase": "running"}]}
+03-mend-restores	7	@cut role testsubworker store	ok
+03-mend-restores	8	@sleep 15	ok
+03-mend-restores	9	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "until": "$u1", "released": "false"}}
+03-mend-restores	10	@mend role testsubworker store	ok
+03-mend-restores	11	@until 60 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "until": "@not($u1)"}}
+03-mend-restores	12	@until 60 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"stood_in": "@absent", "status": [{"id": "c1", "lease": "@absent"}]}
+03-mend-restores	13	store GET /v1/get?key=testsub/epoch/c1	200 {"index": "$e1", "items": {"epoch": "1"}}
+03-mend-restores	14	store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}

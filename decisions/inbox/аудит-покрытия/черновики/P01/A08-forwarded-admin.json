@@ -1,0 +1,5 @@
+{
+  "door": "api@s1",
+  "client": "s2",
+  "request": "@header X-Configstore-Role: admin GET /v1/get?key=platform/epoch_floor"
+}

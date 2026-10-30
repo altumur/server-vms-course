@@ -1,0 +1,113 @@
+# Черновик D10 — метки сервера: строка `platform/servers/<сервер>` побеждает метки узла; пустая строка — «ничего не
+# достаёт»; нечитаемая строка — последние прочитанные метки и без суждения о достижимости.
+# Что проверяет: (1) строка меток сервера важнее меток узла: единица с метками `{qq}` размещается на воркере, метки
+#   узла которого — `{zz}`, — только потому, что строка сервера называет `qq`; после снятия строки действуют метки
+#   узла, и единица уходит с сервера; (2) пустая строка меток — сервер не достаёт ни до одной метки: единица уходит,
+#   прогноз консоли называет её; (3) нечитаемая строка меток: контроллер берёт последние прочитанные метки и НЕ судит
+#   о достижимости — единица остаётся размещённой.
+# Место нормы: Platform/04-controller/spec/04-controller.norms.md — Н1.1 (`platform/servers/<сервер>`: `labels` —
+#   «<метки через запятую>; "" — ни одной; строка побеждает метки узла»), Н1.3 (`constraint: labels-subset` — «метки
+#   единицы ⊆ меток воркера…; метки воркера — строка `platform/servers/<сервер>` или метки узла»; «поля нет — пустой
+#   набор, ограничение выполнен»), Н3 «проход()» шаг 5 («достижимость: единицы, чей сервер больше не достаёт до их
+#   меток, — переезд в пределах REACH_BUDGET; … некуда — снять с причиной»), Н3 «выбрать(единица)» («нет → строка не
+#   пишется (или reason, почему), единица в unplaced»), Н3 «Причина» (грамматика причины: «Достижимость:
+#   `<s> no longer reaches <метка>; …` / `; nothing live reaches it`»), Н4 (таблица причин: «никто не достаёт до меток →
+#   в `unplaceable` с `why`; строка размещения не пишется»), Н1.2 (`unplaced`, `unplaceable`). Исходы нечитаемой строки
+#   — Platform/06-console/data/server-labels.outcomes.tsv (читатель `<s>controller`: «строка целиком нечитаема:
+#   контроллер — последние прочитанные метки сервера и без суждения о достижимости с него (П/04-05)»). Договор азбуки
+#   меток — Platform/common/contracts/labels.md («label: 1–64 ASCII-знака… [A-Za-z0-9][A-Za-z0-9_.:-]{0,63}»;
+#   «output: набор… по возрастанию байтов UTF-8»; «env: LABELS окружения воркера»). Права ролей —
+#   Platform/02-installer/spec/02.5-installer.norms.md Н1.4 (у роли `console` есть запись `platform/servers/*` и
+#   чтение `platform/*`). Чек-лист: П/04-05 (метки сервера: строка побеждает узел, пустая — «ничего не достаёт»,
+#   нечитаемая — последние и без суждения).
+# Подготовка: стенд testsub: ресурс, контроллер, воркер `w-1` с метками узла `{zz}` (`@start worker w-1 labels=zz` —
+#   переменная окружения `LABELS`, «Метки узла»; у `testsub` ограничение размещения `labels-subset`, а поле меток
+#   единицы — `labels` типа `list`, то есть счётчик создаётся с метками: `console POST /counters {"name": "c1",
+#   "labels": ["qq"]}`).
+#   Строка меток сервера пишется дверью консоли `PUT /servers/srv-a/labels` (П/06.6 Н2.1: «200 `{will_move:
+#   [<sub>/<id>…]}` после записи строки; это прогноз следующего прохода, не подтверждение переезда»).
+#   Испорченная строка (сценарий 03) пишется мимо писателя — дверью хранилища ролью `console` (`@as console store …`):
+#   дверь консоли отвергла бы «qq!» формой 400 (азбука меток), а хранилище family's форму не проверяет.
+#   Права роли сценария (сценарная роль хранилища — «с полными правами на `testsub/` и `testsub2/`», README приёмки
+#   P/04) на `platform/servers/*` не распространяются, поэтому чтение и запись этой строки идут ролью `console`.
+#   Запись испорченной строки — БЕЗ `cas` («запись без `cas` — поверх», П/01.1 Н1, П/01.1-05): с `cas: ""` по
+#   существующей строке пришёл бы `409 conflict`.
+# Существующие директивы: `@start resource`, `@start controller`, `@start worker <имя> labels=<метки>`, `@sleep <с>`,
+#   `@until <с> <запрос>`, `@as <роль>`; двери `console` (`POST /counters`, `PUT`/`DELETE /servers/<сервер>/labels`,
+#   `/where/<id>`), `store` (строки размещения), `resource` (отчёт прохода).
+# Новых директив не требуется.
+# Сроки и допуски:
+#   — проход раз в 5 с (П/04 Н1.4 `PASS_EVERY`); решение о размещении принимается в проходе после того, как
+#     контроллер увидел строку единицы, поэтому чтения — через `@until`; сон 12 с после записи испорченной строки —
+#     два прохода, чтобы решение устоялось.
+#   — потолок сценария — 3 минуты; каждый из трёх сценариев ≈ 40–60 с. Потолок не превышен.
+# Почему ожидание именно такое:
+#   — размещение единицы в сценарии 01 — прямое следствие приоритета строки: метки узла `{zz}` не покрывают метки
+#     единицы `{qq}`, а строка сервера называет `qq` → ограничение `labels-subset` выполнено. Если бы строка не
+#     побеждала узел, единица была бы в `unplaceable`, и шаг 7 упал бы.
+#   — `will_move` в сценарии 02 — независимый свидетель: консоль считает прогноз по эффективным меткам сервера
+#     (П/06.6 Н2.1: «у которого… его пульс называет `server: s`, а метки единицы… — не подмножество проверяемого
+#     набора… body `PUT`»), и называет единицу, которая уйдёт с сервера. Пустой набор меток не покрывает `{qq}` —
+#     значит единица уйдёт ✓. Ссылка — `<sub>/<id>` = `testsub/c1` ✓.
+#   — после пустой строки единица не размещена: «некуда — снять с причиной» (шаг 5 достижимости), а в следующем
+#     проходе «выбрать» не находит кандидата → единица в `unplaced` и в `unplaceable` с `why` (Н4). Проверяются обе
+#     стороны: счётчик `unplaced`, карта `unplaceable` и 404 у `/where/<id>` с непустой причиной.
+#   — строка размещения остаётся с пустым `worker`: Н1.1 определяет `worker: <имя воркера> | ""` — «"" — не
+#     размещена»; так же снимаются единицы ушедшего воркера («записью `worker: ""`», Н3 «уходит»). Причина в строке
+#     не проверяется: грамматика Н3 «Причина» даёт для достижимости две формы («<s> no longer reaches <метка>; …» и
+#     «; nothing live reaches it»), а их склейка не зафиксирована.
+#   — в сценарии 03 единица остаётся на `w-1`: по исходам нечитаемой строки контроллер берёт «последние прочитанные
+#     метки сервера» ({qq}, прочитанные до порчи) и «без суждения о достижимости с него» — значит он не снимает
+#     единицу с сервера, даже если метки узла ({zz}) её не покрывают. Проверка: строка размещения прежняя и
+#     `unplaced: 0`.
+#   — «qq!» выбрано как заведомо негодная метка: «!» не входит в азбуку `[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}` — строка
+#     целиком нечитаема ✓ (у семьи `server-labels` в исходах только одна строка — «строка целиком»).
+# Оговорка (для владельца приёмки): (1) П/04-05 в части «строка побеждает узел, пустая — «ничего не достаёт»,
+#   нечитаемая — последние и без суждения» прямо назван «проверяется чтением», а на стенде приёмки P/06.6 воркеров
+#   нет — этот черновик и есть та проверка. (2) Права сценарной роли хранилища на `platform/servers/*` не
+#   распространяются (README приёмки P/04) — писать и читать эту строку можно только ролью `console`; в черновике так
+#   и сделано, но владельцу словаря стоит знать, что сценарная роль хранилища на стенде P/04 к метакам сервера не
+#   допущена. (3) Отдельная проверка «прогноз `will_move` не пуст» в корпусе приёмки отсутствует (П/06.6-03: «шага с
+#   непустым прогнозом в приёмке нет (№ 33)») — здесь прогноз проверяется, потому что он служит свидетельством
+#   приоритета строки меток. (4) Контрольная сторона П/06.6 (консоль видит нечитаемую строку как `labels: null`,
+#   `labels_source: null`) — не проверяется: это дверь главы 6.5/6.6, а не контроллера.
+scenario	step	request	expect
+# 01-row-beats-node — метки строки {qq} побеждают метки узла {zz}: единица размещена; после снятия строки узел
+#   возвращает своё, и единица уходит.
+01-row-beats-node	1	@start resource	ok
+01-row-beats-node	2	@start controller	ok
+01-row-beats-node	3	@start worker w-1 labels=zz	ok
+01-row-beats-node	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+01-row-beats-node	5	console PUT /servers/srv-a/labels {"labels": ["qq"]}	200 {"will_move": []}
+01-row-beats-node	6	console POST /counters {"name": "c1", "labels": ["qq"]}	201
+01-row-beats-node	7	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+01-row-beats-node	8	console DELETE /servers/srv-a/labels	200 {}
+01-row-beats-node	9	@until 60 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"unplaced": 1, "unplaceable": {"c1": "@any"}}
+01-row-beats-node	10	store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": ""}}
+# 02-empty-row-reaches-nothing — пустая строка меток: сервер не достаёт ни до одной метки, единица уходит; прогноз
+#   консоли называет её.
+02-empty-row-reaches-nothing	1	@start resource	ok
+02-empty-row-reaches-nothing	2	@start controller	ok
+02-empty-row-reaches-nothing	3	@start worker w-1 labels=zz	ok
+02-empty-row-reaches-nothing	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+02-empty-row-reaches-nothing	5	console PUT /servers/srv-a/labels {"labels": ["qq"]}	200 {"will_move": []}
+02-empty-row-reaches-nothing	6	console POST /counters {"name": "c1", "labels": ["qq"]}	201
+02-empty-row-reaches-nothing	7	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+02-empty-row-reaches-nothing	8	console PUT /servers/srv-a/labels {"labels": []}	200 {"will_move": ["testsub/c1"]}
+02-empty-row-reaches-nothing	9	@until 60 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"unplaced": 1, "unplaceable": {"c1": "@any"}}
+02-empty-row-reaches-nothing	10	console GET /where/c1	404 {"reason": "@any"}
+02-empty-row-reaches-nothing	11	store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": ""}}
+# 03-unreadable-row-keeps-last-read — испорченная строка меток: последние прочитанные метки и без суждения о
+#   достижимости — единица остаётся размещённой.
+03-unreadable-row-keeps-last-read	1	@start resource	ok
+03-unreadable-row-keeps-last-read	2	@start controller	ok
+03-unreadable-row-keeps-last-read	3	@start worker w-1 labels=zz	ok
+03-unreadable-row-keeps-last-read	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+03-unreadable-row-keeps-last-read	5	console PUT /servers/srv-a/labels {"labels": ["qq"]}	200 {"will_move": []}
+03-unreadable-row-keeps-last-read	6	console POST /counters {"name": "c1", "labels": ["qq"]}	201
+03-unreadable-row-keeps-last-read	7	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+03-unreadable-row-keeps-last-read	8	@as console store POST /v1/write {"id":"d10c","op":"put","key":"platform/servers/srv-a","items":{"labels":"qq!"}}	200
+03-unreadable-row-keeps-last-read	9	@as console store GET /v1/get?key=platform/servers/srv-a	200 {"items": {"labels": "qq!"}}
+03-unreadable-row-keeps-last-read	10	@sleep 12	ok
+03-unreadable-row-keeps-last-read	11	store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+03-unreadable-row-keeps-last-read	12	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"unplaced": 0}

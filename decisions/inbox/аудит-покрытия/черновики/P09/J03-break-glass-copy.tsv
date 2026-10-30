@@ -1,0 +1,64 @@
+# Черновик J03 — копия аварийной строки: `domain/break-glass/<член>` у члена из поля `break_glass` ответа; удаление, когда поля нет; агент держателя строку не трогает.
+# Что проверяет: (1) задав аварийный пароль члена `m1`, держатель отдаёт его члену в поле `break_glass` ответа, и агент
+#   члена пишет у себя копию — строку `domain/break-glass/m1`; (2) когда поля в открывшемся конверте нет (строка держателя
+#   нечитаема — процесс `domain` не посылает поле этому кластеру в этом проходе), агент члена **удаляет** свою копию;
+#   (3) собственная строка держателя `domain/break-glass/hold` (её пишет процесс `domain`, а не агент) после проходов агента
+#   остаётся целой и с тем же `set_at` — агент держателя её не пишет и не удаляет (в ответе себе поля `break_glass` нет).
+# Место нормы: Platform/09-agent/spec/09.1-agent.norms.md — Н1.4 `break_glass` («поле break_glass в sealed ответа — у члена
+#   domain/break-glass/<член> (секрет запечатан его кольцом); поля нет в открывшемся конверте — агент удаляет строку (не
+#   открылся — не трогает, sealed выше). У кластера держателя строка domain/break-glass/<держатель> — его собственная (пишет
+#   процесс domain): агент держателя её не пишет и не удаляет, ответ себе поля break_glass не несёт»), Н1.4 `sealed`
+#   («удалять строку — только когда поля нет в открывшемся конверте»); Platform/08-domain/spec/08.4-domain.norms.md — Н1.6
+#   (`domain/break-glass/<кластер>: {pwhash_secret, set_at}`, `writer`: «процесс domain по двери PUT /domain/break-glass/<кластер>
+#   {password} (admin домена)», `GLASS_MIN: 12`, `carry`: «sealed ответа агенту — поле break_glass … у члена —
+#   domain/break-glass/<член> (секрет запечатан его кольцом)»), исходы семьи `domain/break-glass/<кластер>` («у держателя —
+#   GET /domain/break-glass: запись этого кластера без поля строки, поле break_glass ответа агенту для этого кластера в этом
+#   проходе не посылается»), форма `pwhash_secret` (П/08.4 Н1.1: `pbkdf2-sha256$600000$<соль 32 hex>$<ключ 64 hex>`); контракт
+#   Platform/08-domain/spec/08-domain.api.openapi.yaml — путь `/domain/break-glass/{cluster}` (только GET и PUT; DELETE у пути
+#   нет); чек-лист П/09.1-29 («копия своей аварийной строки `domain/break-glass/<член>` из поля `break_glass` ответа; удаление,
+#   когда поля нет в открывшемся конверте; агент держателя её не пишет (Н1.4 `break_glass`) — чтением»).
+# Подготовка: стенд домена `@domain m1` (кластеры `hold`, `m1`). Аварийный пароль задаёт держатель своей дверью домена:
+#   `holder PUT /domain/break-glass/<кластер> {"password": …}` → 200 {cluster, set: true} — прецедент сц. 14 приёмки 6.7
+#   (`holder PUT /domain/break-glass/m1 {"password": "glass password 12"}` → 200 {"cluster": "m1", "set": true};
+#   `holder GET /domain/break-glass` → 200 {"clusters": {"m1": {"set_at": "@any"}}}; `@until 30 member m1 store GET
+#   /v1/get?key=domain/break-glass/m1` → 200 {"items": {"set_at": "@any"}}`). Порчу строки делаем мимо писателя — дверью
+#   хранилища (`member hold store POST /v1/write {"op": "put", "key": …, "items": …}` → 200), как в сц. 03 приёмки 9.1
+#   (`domain/member-key` испорчен через `admin.sock` при остановленном агенте).
+# Существующие директивы: `@domain`, `@until`, `@sleep`; двери `holder`, `member <кластер> store`. Новых директив не требуется.
+# Сроки и допуски: `@domain` — до 90 с; появление копии у члена — до 30 с (проход агента); проходы агента держателя за время
+#   ожидания (шаг 6) — не меньше двух (шаг агента — по его расписанию, `LOST_AFTER` 45 с, `REPORT_EVERY` 5 с); удаление копии
+#   после порчи строки — до 90 с (нужен ответ держателя без поля). Сценарий: подготовка ≈ 30–90 с + шаги ≈ 30–120 с ≈ 2–3.5 минуты.
+#   Потолок сценария — 3 минуты; на пределе (шаг 6 — 30 с; его можно сократить до 15 с, если проход агента идёт чаще).
+# Почему ожидание именно такое:
+#   — `200 {"items": {"set_at": "@any"}}` у члена — копия есть (секрет запечатан кольцом члена, поэтому проверяем видимое поле
+#     `set_at`; прецедент сц. 14 приёмки 6.7 — та же форма ожидания).
+#   — `200 {"items": {"set_at": "$g1"}}` у держателя — своя строка `domain/break-glass/hold`: значение `set_at` связано и
+#     сравнивается с прежним в шаге 7 — «строку не переписали и не удалили» (если бы удалили, `items` был бы `null`; если бы
+#     переписали, `set_at` отличался бы).
+#   — `200 {"items": null}` у члена после порчи — копии нет: поле `break_glass` в открывшемся конверте отсутствует, агент
+#     удалил строку (Н1.4 `break_glass`). Форма «нет строки» — как в сц. 05 приёмки 9.1 (`member m1 store GET
+#     /v1/get?key=domain/shared` → 200 {"items": null}).
+#   — порча — `{"pwhash_secret": "garbled", "set_at": 1}`: секрет не по форме (`pbkdf2-sha256$600000$…`), поэтому строка
+#     нечитаема, и процесс `domain` не посылает поле `break_glass` этому кластеру в этом проходе (П/08.4 Н1.6, исходы семьи).
+#     Прецедент той же мысли — сц. 03 приёмки 9.1 (`seed_secret: "garbled"`).
+# Оговорка (для владельца приёмки): в исходном плане черновика удаление копии проверялось вызовом
+#   `holder DELETE /domain/break-glass/m1` — такого вызова нет: в контракте у пути `/domain/break-glass/{cluster}` только GET
+#   (список) и PUT (задать). Поэтому «поля нет» получается иначе: строка держателя делается нечитаемой, и поле не посылается
+#   в этом проходе — по букве нормы (П/08.4 Н1.6, исходы семьи: «поле break_glass ответа агенту для этого кластера в этом
+#   проходе не посылается»). Если владелец приёмки сочтёт, что снятие пароля должно быть отдельной дверью, — это предложение
+#   к контракту (новый путь/метод), и тогда чек-лист П/09.1-29 меняется. Второе: сценарий ждёт, что агент члена получит ответ
+#   держателя уже после порчи; если между шагами 8 и 9 агент получит ответ без поля раньше (например, ответ зависшего прохода),
+#   шаг 9 просто пройдёт раньше — порядок не важен. Третье: шаг 3 задаёт аварийный пароль самому держателю (`/domain/break-glass/hold`);
+#   если держатель не должен иметь аварийный пароль (это решение нормы, а не стенда), шаги 3, 5, 7 и 10 уходят, и остаётся
+#   проверка копии и её удаления.
+scenario	step	request	expect
+j03-break-glass-copy	1	@domain m1	ok
+j03-break-glass-copy	2	holder PUT /domain/break-glass/m1 {"password": "glass password 12"}	200 {"cluster": "m1", "set": true}
+j03-break-glass-copy	3	holder PUT /domain/break-glass/hold {"password": "holder glass password 12"}	200 {"cluster": "hold", "set": true}
+j03-break-glass-copy	4	@until 30 member m1 store GET /v1/get?key=domain/break-glass/m1	200 {"items": {"set_at": "@any"}}
+j03-break-glass-copy	5	@until 30 member hold store GET /v1/get?key=domain/break-glass/hold	200 {"items": {"set_at": "$g1"}}
+j03-break-glass-copy	6	@sleep 30	ok
+j03-break-glass-copy	7	member hold store GET /v1/get?key=domain/break-glass/hold	200 {"items": {"set_at": "$g1"}}
+j03-break-glass-copy	8	member hold store POST /v1/write {"op": "put", "key": "domain/break-glass/m1", "items": {"pwhash_secret": "garbled", "set_at": 1}}	200
+j03-break-glass-copy	9	@until 90 member m1 store GET /v1/get?key=domain/break-glass/m1	200 {"items": null}
+j03-break-glass-copy	10	member hold store GET /v1/get?key=domain/break-glass/hold	200 {"items": {"set_at": "$g1"}}

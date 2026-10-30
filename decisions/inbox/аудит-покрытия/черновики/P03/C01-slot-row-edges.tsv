@@ -1,0 +1,79 @@
+# Черновик C01 — края строки слота: нечитаемый gen, отсутствие released, отданная строка, чужая коробка, порванный until.
+# Что проверяет: таблицу захвата слота (Platform/03-worker/spec/03.2-worker.norms.md Н3 «захватить(имя?) → слот | никто»)
+#   на краях строки, которые корпус приёмки проверял только чтением (Platform/03-worker/acceptance/2/README.md, раздел
+#   «Таблица захвата и операции над именами (R28-01/02)» и «Контрпримеры прогона 23»): нечитаемый gen ⇒ отказ кандидата,
+#   строка не переписывается даже после TORN_STILL; читаемая строка без released и с пустым holder ⇒ захват (gen + 1);
+#   отданная строка (released = true) ⇒ захват даже с чужим holder; занятая строка чужой коробки ⇒ NameOnAnotherBox
+#   (воркер — никто, имя не берётся); порванный until при читаемом gen ⇒ захват только после TORN_STILL, с gen + 1.
+# Место нормы: P/03.2 Н1.4 (строка слота: holder, until, released, gen, server; состояния held/lapsed/released/taking/torn;
+#   «У отсутствующей строки исходное поколение — 0. У существующей строки отсутствие или недопустимость gen не заменяются
+#   нулём: … Такой кандидат не переписывается автоматически даже после TORN_STILL или разрешения контроллера; исход — отказ
+#   захвата этого имени с причиной «поколение слота не читается». Строка сохраняется для восстановления. Порча других полей
+#   при читаемом gen допускает захват после TORN_STILL с прежним gen + 1»), Н1.4 «состояния» (договор слота
+#   Platform/common/contracts/slot.md: TORN_STILL = 50 с, SLOT_TERM = 45 с), Н3 «захватить» (таблица переходов и псевдокод
+#   шага 3: запись ровно пяти полей {holder, until, released: "taking", gen: gen + 1, server}), Н4 (таблица отказов).
+#   Чек-лист: P/03.2-01 (край строки слота), P/03.2-02 (слот и имя).
+# Подготовка: строка слота — семейство `<sub>/slots/<имя>` (Platform/03-worker/data/slots.schema.json); писатель по
+#   каталогу Platform/common/data/catalog.tsv — воркер, поэтому предустановка идёт дверью `admin` (admin.sock, полные
+#   права; общий README приёмки, таблица «Двери»), а не дверью `console` (на слоты консоль читатель).
+# Существующие директивы: `@start worker <имя>` (запуск воркера с заданным именем слота), `@start resource` (дверь объектов
+#   для чтения пульса), `@sleep <с>`, `@until <с> <запрос>`, `@sigterm <имя>`; двери `store` (чтение ровней с правами на
+#   `testsub/`), `admin` (подготовка), `resource` (`GET /v1/objects/testsub/heartbeats/<имя>?scope=local`).
+# Новых директив не требуется.
+# Почему ожидание именно такое:
+#   — нечитаемый gen: строка с `gen: "x"` не проходит схему по пути `/gen` (исходы семьи slots.outcomes.tsv, читатель
+#     `<s>worker`): захват — отказ кандидата, 0 не подставляется, строка сохраняется; поэтому индекс строки не меняется
+#     (тот же `index`) и пульса нет (воркер — никто, пульс пишется только пока имя моё: Н3 «никто и возврат имени»).
+#   — «порванный until при читаемом gen»: `until: "x"` не по форме времени (P/01.1 Н0 «Время в строке») ⇒ путь отказа
+#     `/until`, gen читается ⇒ захват разрешён только когда та же версия наблюдается не меньше TORN_STILL (50 с), и он
+#     идёт с gen + 1 (7 → 8) — как в README приёмки 2 («порванный until допускает переход только с 50 с, новый gen=8»).
+#   — «строка без released и с пустым holder»: по таблице переходов читаемая строка, у которой released нет или holder
+#     пуст, — первый захват (gen + 1); проверка положительного перехода.
+#   — «released = true»: читаемая строка, отданная, — первый захват (gen + 1) независимо от прежнего holder.
+#   — «занятая строка чужой коробки»: по таблице переходов прочие занятые строки не пишутся, а для заданного имени с
+#     держателем другой коробки — NameOnAnotherBox ⇒ воркер никто, строка не меняется, `worker.name_taken` не пишется
+#     (это запись только при потере имени: Н3 «никто и возврат имени»).
+#   — контроллер в сценариях не поднимается: его «судьба» (P/04 Н3 «судьба») может отдать чужую занятую строку, и тогда
+#     проверка «строка не меняется» ломалась бы не свойством воркера, а решением контроллера (README приёмки 2:
+#     «нечитаемый gen … (также при release контроллера)» — то есть и при release строка не меняется; но для здоровой
+#     занятой строки release возможен, поэтому контроллер здесь не нужен).
+# Оговорка (для владельца приёмки): сценарии считают, что воркер, получив имя, пишет пульс раз в HEARTBEAT_EVERY (10 с);
+#   проверки «пульса нет» сделаны чтением дверью объектов — 404 у отсутствующего объекта (общий README приёмки, P/05 Н1.1).
+scenario	step	request	expect
+# 01-gen-unreadable — нечитаемый gen: отказ кандидата, строка сохраняется (индекс прежний), пульса нет; и после TORN_STILL.
+01-gen-unreadable	1	admin GET /v1/get?key=testsub/slots/w-1	200 {"index": "", "items": null}
+01-gen-unreadable	2	admin POST /v1/write {"id":"c01a","op":"put","key":"testsub/slots/w-1","items":{"holder":"otherbox:1234:abcdef","until":"4102444800","released":"false","gen":"x"},"cas":""}	200
+01-gen-unreadable	3	admin GET /v1/get?key=testsub/slots/w-1	200 {"index": "$v", "items": {"holder": "otherbox:1234:abcdef", "until": "4102444800", "released": "false", "gen": "x"}}
+01-gen-unreadable	4	@start resource	ok
+01-gen-unreadable	5	@start worker w-1	ok
+01-gen-unreadable	6	@sleep 12	ok
+01-gen-unreadable	7	admin GET /v1/get?key=testsub/slots/w-1	200 {"index": "$v", "items": {"holder": "otherbox:1234:abcdef", "until": "4102444800", "released": "false", "gen": "x"}}
+01-gen-unreadable	8	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	404
+01-gen-unreadable	9	@sleep 45	ok
+01-gen-unreadable	10	admin GET /v1/get?key=testsub/slots/w-1	200 {"index": "$v", "items": {"holder": "otherbox:1234:abcdef", "until": "4102444800", "released": "false", "gen": "x"}}
+# 02-no-released-empty-holder — читаемая строка без released и с пустым holder: захват, gen 7 → 8, слот жив.
+02-no-released-empty-holder	1	admin POST /v1/write {"id":"c01b","op":"put","key":"testsub/slots/w-1","items":{"holder":"","until":"4102444800","gen":"7"},"cas":""}	200
+02-no-released-empty-holder	2	@start worker w-1	ok
+02-no-released-empty-holder	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "8", "server": "srv-a"}}
+02-no-released-empty-holder	4	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "8", "server": "srv-a", "until": "@time"}}
+# 03-released-true-foreign-holder — отданная строка с чужим holder: захват, gen 3 → 4.
+03-released-true-foreign-holder	1	admin POST /v1/write {"id":"c01c","op":"put","key":"testsub/slots/w-1","items":{"holder":"otherbox:1234:abcdef","until":"4102444800","released":"true","gen":"3","server":"srv-b"},"cas":""}	200
+03-released-true-foreign-holder	2	@start worker w-1	ok
+03-released-true-foreign-holder	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "4", "server": "srv-a"}}
+# 04-foreign-box-occupied — занятая строка чужой коробки: NameOnAnotherBox, воркер — никто, строка не меняется.
+04-foreign-box-occupied	1	admin POST /v1/write {"id":"c01d","op":"put","key":"testsub/slots/w-1","items":{"holder":"otherbox:1234:abcdef","until":"4102444800","released":"false","gen":"3","server":"srv-b"},"cas":""}	200
+04-foreign-box-occupied	2	admin GET /v1/get?key=testsub/slots/w-1	200 {"index": "$v", "items": {"holder": "otherbox:1234:abcdef", "until": "4102444800", "released": "false", "gen": "3"}}
+04-foreign-box-occupied	3	@start resource	ok
+04-foreign-box-occupied	4	@start worker w-1	ok
+04-foreign-box-occupied	5	@sleep 12	ok
+04-foreign-box-occupied	6	admin GET /v1/get?key=testsub/slots/w-1	200 {"index": "$v", "items": {"holder": "otherbox:1234:abcdef", "until": "4102444800", "released": "false", "gen": "3"}}
+04-foreign-box-occupied	7	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	404
+04-foreign-box-occupied	8	console GET /events?unit=audit/testsubworker&kind=worker.name_taken	200 {"events": []}
+# 05-torn-until-readable-gen — порванный until при читаемом gen: до TORN_STILL не пишется, после — захват с gen 7 → 8.
+05-torn-until-readable-gen	1	admin POST /v1/write {"id":"c01e","op":"put","key":"testsub/slots/w-1","items":{"holder":"","until":"x","gen":"7"},"cas":""}	200
+05-torn-until-readable-gen	2	admin GET /v1/get?key=testsub/slots/w-1	200 {"index": "$v", "items": {"holder": "", "until": "x", "gen": "7"}}
+05-torn-until-readable-gen	3	@start worker w-1	ok
+05-torn-until-readable-gen	4	@sleep 12	ok
+05-torn-until-readable-gen	5	admin GET /v1/get?key=testsub/slots/w-1	200 {"index": "$v", "items": {"holder": "", "until": "x", "gen": "7"}}
+05-torn-until-readable-gen	6	@until 60 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "8"}}
+05-torn-until-readable-gen	7	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"gen": "8", "released": "false", "until": "@time"}}

@@ -1,0 +1,22 @@
+# Черновик A01 — версия строки не повторяется после перезапуска демона.
+# Норма: Platform/01-store/spec/01.1-store.norms.md Н1, поле `index` — «handed out by the store on every write;
+#   never the same twice within one store»; чеклист P/01.1-07 (версия никогда не повторяется; проверяется чтением:
+#   после перезапуска — индекс журнала и основание -index-base, п. 2 «Решает реализация», P/01.3 Н1.3).
+# Место приёмки: глава 1.1 (Platform/01-store/acceptance/1) — роль прогона `acc`, дверь хранилища без префикса
+#   (общий README приёмки, «Стенд»: роль прогона — `acc`, полные права на префикс `acc/`).
+# Существующие директивы: `@restart store` (общий README приёмки, словарь директив: SIGTERM хранилищу, дождаться выхода,
+#   запустить той же командой с тем же `{data}`, ждать сокет); `ASSERT` (словарь: «ASSERT $a != $b [$c …]» — HTTP не
+#   отправляется); `$имя` (словарь ожидания).
+# Новых директив не требуется.
+# Что проверяет: после перезапуска демона тот же каталог данных — то же хранилище; версия, выданная до перезапуска,
+#   не выдаётся снова. Три версии одной строки попарно различны ($a до перезапуска, $b и $c после).
+# Оговорка: реализация, у которой версии выдаёт счётчик в памяти процесса, этот сценарий не проходит — но такая
+#   реализация нарушает и «Решает реализация» п. 2 (версия переживает перезапуск).
+scenario	step	request	expect
+A01-version-restart	1	POST /v1/write {"op":"put","key":"acc/A01-version-restart/c1","items":{"n":"1"},"cas":""}	200 {"index":"$a"}
+A01-version-restart	2	@restart store	ok
+A01-version-restart	3	GET /v1/get?key=acc/A01-version-restart/c1	200 {"items":{"n":"1"},"index":"$a"}
+A01-version-restart	4	POST /v1/write {"op":"put","key":"acc/A01-version-restart/c1","items":{"n":"2"},"cas":"$a"}	200 {"index":"$b"}
+A01-version-restart	5	ASSERT $a != $b	
+A01-version-restart	6	POST /v1/write {"op":"put","key":"acc/A01-version-restart/c1","items":{"n":"3"},"cas":"$b"}	200 {"index":"$c"}
+A01-version-restart	7	ASSERT $a != $b $c	

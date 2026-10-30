@@ -1,0 +1,64 @@
+# Черновик C04 — отсечение по подмене слота: чужой `holder` в строке слота → воркер никто, пульса нет, `worker.name_taken` раз за эпизод, состояние единицы не перезаписано.
+# Что проверяет: последствия того, что строку слота перехватили (в корпусе приёмки этот случай выражен только через
+#   вторую копию воркера — сценарий 10 приёмки главы 3.2, где `name_taken` ловится у первой копии): после подмены
+#   строки слота на чужого держателя воркер перестаёт быть держателем — он никто: слот больше не продлевается, пульс
+#   не пишется, событие `worker.name_taken` пишется ровно один раз за эпизод, а отсечённый держатель не перезаписывает
+#   состояние своей единицы (это отдельная норма — П/03.6-06 — и в корпусе она не проверялась вовсе).
+# Место нормы: Platform/03-worker/spec/03.2-worker.norms.md — Н3 «шаг_аренды()» шаг 1 («holder ≠ я или released ≠
+#   false → отдать_имя(); отсечь("slot <имя> is held by another instance now")»), Н3 «никто и возврат имени» («пока
+#   никто: продление → нет; … пульс → не писать; отдать слот → ничего; … worker.name_taken — только при потере имени
+#   (отдать_имя после отнятого захвата), раз за эпизод»), Н1.4 (строка слота: holder, until, released, gen, server),
+#   Н3 «отсечь(почему)». Platform/03-worker/spec/03.6-worker.norms.md — Н1.7 (строка состояния `{born, revision, epoch,
+#   value}`; писатель — держатель под стражем эпохи) и Н3 «записать состояние» («отсечённый держатель, в том числе
+#   поздним повтором, состояние новой эпохи не перезапишет»): чек-лист P/03.6-06. Чек-лист главы 3.2: P/03.2-09
+#   («шаг аренды: слот первым; чужой `holder` — отсечение всех»).
+# Подготовка: подмена строки слота `testsub2/slots/t-1` — записью дверью `admin` (полные права) с `cas` прочитанной
+#   версии: писатель семейства `<sub>/slots/<имя>` — воркер (Platform/common/data/catalog.tsv), поэтому консоль
+#   (читатель слота, П/02.5 Н1.4) для подмены не годится. Стена стенда — учебный стенд testsub2 (счётчик-держатель
+#   с состоянием и местом): форма сценария — приёмка главы 3.6, сценарий 09.
+# Существующие директивы: `@start resource`, `@start controller <sub>`, `@start worker <sub> <имя>`, `@sleep <с>`,
+#   `@until <с> <запрос>`; двери `store`, `admin` (подмена), `console` (создание счётчика), `console2` (создание
+#   счётчика testsub2), `resource` (чтение пульса `GET /v1/objects/testsub2/heartbeats/<имя>?scope=local`).
+# Новых директив не требуется.
+# Почему ожидание именно такое:
+#   — слот после подмены не меняется: `holder` — чужая коробка, `released` — «false» (норма: пока воркер «никто», отдать
+#     слот — ничего, строку слота он не переписывает), `gen` — 2 (поколение выросло), `until` — не растёт (продления нет).
+#     Проверка «until не растёт» — два чтения с интервалом 12 с: в норме срок слота 45 с, а судьба слота — дело
+#     контроллера (П/04 Н3 «судьба», 45/90 с), поэтому интервал держится заведомо внутри срока.
+#   — пульс не обновляется: «никто — пульс не пишется» (Н3 «никто и возврат имени»); поэтому `ts` после потери имени
+#     не меняется. `ts` связывается ПОСЛЕ потери имени (первое чтение после события) — иначе пульс успевает уйти.
+#   — `worker.name_taken` ровно один раз: норма «раз за эпизод»; последнее чтение событий (после 12 с) требует
+#     тот же массив из одного события — второго нет.
+#   — состояние `testsub2/state/result/t1` не меняется: индекс строки прежний (`$s1`) и те же поля (`revision`, `epoch`).
+#     Это и есть П/03.6-06: отсечённый держатель состояние не перезаписывает.
+#   — строка эпохи `testsub2/epoch/t1` не меняется: потерявший имя воркер эпоху не перевыдаёт и не отпускает записью
+#     (строка эпохи не удаляется и не переписывается — Н3 «взять_эпоху»).
+# Оговорка (для владельца приёмки): ненулевой `was_fenced` в пульсе (чек-лист П/03.4-10) в этой ветви НЕ выразим и
+#   потому не проверяется: при чужом `holder` норма требует `отдать_имя()` ПЕРЕД `отсечь()`, а после отдачи имени пульса
+#   нет вовсе («никто»). Ненулевой `was_fenced` наблюдаем там, где отсечение случается при живом слоте (отсечение по
+#   схеме — черновик C07; отсечение старшего при чужой эпохе — П/03.2 Н3 «Гонки»). Решение о переносе этой проверки —
+#   за владельцем приёмки.
+#   Гонка записи подмены: воркер продлевает слот каждые ~8 с (П/03.2 Н1.2 LEASE_EVERY) — если продление попало между
+#   чтением строки и записью подмены, запись вернёт отказ по `cas` (шаг не повторяется: `@until` повторяет только
+#   чтение). Это редкое окно; при отказе шаг повторяют вручную.
+scenario	step	request	expect
+# 01-slot-swap-foreign-holder — подмена строки слота чужим держателем: воркер никто, пульс стоит, имя отнято один раз, состояние не перезаписано.
+01-slot-swap-foreign-holder	1	@start resource	ok
+01-slot-swap-foreign-holder	2	@start controller testsub2	ok
+01-slot-swap-foreign-holder	3	@start worker testsub2 t-1	ok
+01-slot-swap-foreign-holder	4	@as console store POST /v1/write {"id":"c04a","op":"put","key":"testsub2/shelves/sh1","items":{"name":"sh1","zone":"z1","server":"srv-a","kind":"plain","admits":"true","enabled":"true","size":"1"},"cas":""}	200
+01-slot-swap-foreign-holder	5	@until 30 resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"shelf": "sh1"}
+01-slot-swap-foreign-holder	6	console2 POST /tallies {"name": "t1", "of": "c1", "shelf": "sh1", "zone": "z1"}	201 {"revision": 1}
+01-slot-swap-foreign-holder	7	@until 60 @as testsub2worker store GET /v1/get?key=testsub2/epoch/t1	200 {"index": "$e1", "items": {"epoch": "1"}}
+01-slot-swap-foreign-holder	8	@until 30 store GET /v1/get?key=testsub2/state/result/t1	200 {"index": "$s1", "items": {"revision": "1", "epoch": "1"}}
+01-slot-swap-foreign-holder	9	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"index": "$v", "items": {"holder": "$h1", "released": "false", "gen": "1", "server": "srv-a"}}
+01-slot-swap-foreign-holder	10	admin POST /v1/write {"id":"c04b","op":"put","key":"testsub2/slots/t-1","items":{"holder":"otherbox:1234:abcdef","until":"4102444800","released":"false","gen":"2","server":"srv-b"},"cas":"$v"}	200
+01-slot-swap-foreign-holder	11	@until 20 console GET /events?unit=audit/testsub2worker&kind=worker.name_taken	200 {"events": [{"kind": "worker.name_taken", "class": "alarm"}]}
+01-slot-swap-foreign-holder	12	store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "otherbox:1234:abcdef", "released": "false", "gen": "2", "until": "$u1"}}
+01-slot-swap-foreign-holder	13	resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"ts": "$t1"}
+01-slot-swap-foreign-holder	14	@sleep 12	ok
+01-slot-swap-foreign-holder	15	store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"released": "false", "until": "$u1"}}
+01-slot-swap-foreign-holder	16	resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"ts": "$t1"}
+01-slot-swap-foreign-holder	17	store GET /v1/get?key=testsub2/state/result/t1	200 {"index": "$s1", "items": {"revision": "1", "epoch": "1"}}
+01-slot-swap-foreign-holder	18	store GET /v1/get?key=testsub2/epoch/t1	200 {"index": "$e1", "items": {"epoch": "1"}}
+01-slot-swap-foreign-holder	19	console GET /events?unit=audit/testsub2worker&kind=worker.name_taken	200 {"events": [{"kind": "worker.name_taken", "class": "alarm"}]}

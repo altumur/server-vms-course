@@ -1,0 +1,75 @@
+# Черновик F03 — пульс ресурса: поле `door` и счёт `room`/`live` в строке двери.
+# Что проверяет: (1) в каждом пульсе ресурса есть поле `door` — адрес двери и её режим (`loopback` без TLS; при
+#   mtls добавляется `cert_until`, при loopback поля нет); (2) строка двери `platform/doors/srv-a` несёт счёт
+#   `room.testsub2` — сколько ещё процессов роли поднимет сервер — и `live.testsub2` — номера n ≥ 2 живых замков;
+#   при двух живых замках (n = 1 и n = 2) счёт `room` уменьшается на оба, а в `live` попадает только n ≥ 2;
+#   (3) живой замок без номера (имя не `<prefix>-<сервер>-<n>`) входит в `room` и не входит в `live`.
+# Место нормы: Platform/05-resource/spec/05-resource.norms.md Н1.4 (`heartbeat` — состав пульса; «door: {addr, mode:
+#   loopback | mtls, cert_until} — в каждом пульсе, пишет ресурс (ADR-0075 доп. (3)): addr — RESOURCE_HOST:RESOURCE_PORT;
+#   mode — loopback без RESOURCE_TLS …; cert_until — … при mtls»; `door_row` — «platform/doors/<server> {url, since, at,
+#   room.<sub>…, live.<sub>…}; at — каждые ALIVE_EVERY»; `room` — «элементы room.<sub> и live.<sub> — по договору замка
+#   присутствия «Счёт room»»), Platform/common/contracts/presence-lock.md «Счёт `room`» («room: элемент room.<sub> каждой
+#   подсистемы каталога, чей файл роли roles/<sub>worker.env … есть на коробке, пишется каждой отметкой двери — сколько
+#   ещё процессов роли поднимет этот сервер: десятичное min(floor(HOST_MEMORY_MB / WORKER_MEMORY_MB) − живые, 98 − живые
+#   с номером n ≥ 2), не меньше 0»; «live: … номера n ≥ 2 живых замков роли, по которым посчитан room.<sub>, десятичные
+#   через запятую по возрастанию, без повторов, из того же снимка замков; замок без номера … входит в room, не в список;
+#   пустой список — ""; room.<sub> "unknown" — live.<sub> нет»), Platform/05-resource/data/resource-heartbeat.schema.json
+#   (`door` — required: addr, mode; additionalProperties: false; cert_until — «при mtls»), Platform/05-resource/data/
+#   doors.schema.json (элементы `room.<sub>`/`live.<sub>` — дополнительные свойства строки двери, значения — строки).
+# Подготовка: стенд testsub С testsub2 (как сценарий 10 приёмки P/05: testsub2 ставится на стенд) — без testsub2 нет
+#   элемента `room.testsub2`: раннер кладёт файл роли `roles/<sub>worker.env` только манифестам с `placement.grows:
+#   true`, а это у testsub2 (у testsub ключа `grows` нет) — значит и элемента `room.testsub`, и `live.testsub` нет вовсе,
+#   и счёт по testsub не наблюдаем.
+#   ИМЕНА ВОРКЕРОВ: `t-srv-a-1` и `t-srv-a-2` (префикс слота testsub2 — `t`, сервер — `srv-a`, номер — 1 и 2). Имена
+#   вида `w-1`/`w-2` — не имена слотов по форме `<prefix>-<сервер>-<n>` (нет сегмента сервера): такой замок «без номера»,
+#   и в `live` он не попадает; к тому же testsub не растёт и его счёта нет. Первое число в имени — базовый юнит (n = 1),
+#   числа n ≥ 2 — «заказанные» (П/02.4 Н1.1).
+#   Окружение роли на стенде: `HOST_MEMORY_MB=4096`, `WORKER_MEMORY_MB=256` (словарь приёмки, строка `@start resource`),
+#   значит floor(4096/256) = 16.
+#   Ожидаемые числа (расчёт в шапке — по договору «Счёт room»):
+#     сценарий 01: живых замков 0 → room = min(16 − 0, 98 − 0) = 16; живых с номером n ≥ 2 нет → live = "" (пустой список).
+#     сценарий 02: живых замков 2 (t-srv-a-1 и t-srv-a-2) → room = min(16 − 2, 98 − 1) = 14; с номером n ≥ 2 один
+#       (t-srv-a-2) → live = "2".
+#     сценарий 03: живых замков 1 (t-1, имя без номера) → room = min(16 − 1, 98 − 0) = 15; n ≥ 2 нет → live = "".
+# Существующие директивы: `@start resource`, `@start worker <sub> <имя> [on <сервер>]`, `@sleep <с>`,
+#   `@until <с> <запрос>`; двери `resource` (пульс) и `store` (строка двери).
+# Новых директив не требуется.
+# Почему ожидание именно такое:
+#   — `door` в пульсе: `addr` — адрес, который стенд назначает (номер порта раннер выбирает) → `@any`; `mode` —
+#     на стенде TLS нет (`RESOURCE_TLS` не задан) → `loopback`; `cert_until` при loopback поля не имеет («при mtls»,
+#     и схема пульса требует только `addr` и `mode`) → `@absent`.
+#   — `room`/`live` — элементы СТРОКИ ДВЕРИ (`platform/doors/srv-a`), а не пульса: Н1.4 `door_row`. Значения — строки
+#     (строка хранилища — map string → string), поэтому «16», «14», «15» и «2» — строки, а пустой список `live` —
+#     пустая строка «» (договор: «пустой список — ""»).
+#   — ожидание появления значений даётся через `@until`: отметка двери идёт каждые ALIVE_EVERY (15 с), поэтому счёт
+#     обновляется не мгновенно; `@until 40` — с запасом на одну-две отметки.
+#   — `running` в сценарии 02: два воркера одной подсистемы — по возрастанию имён. ОГОВОРКА: норма порядок массива
+#     `running` не задаёт (в отличие от `units`, где «id по возрастанию байтов»), а приёмка сравнивает массивы по
+#     длине, порядку и элементам; если реализация выдаёт иной порядок — это решение владельца приёмки (ожидание
+#     ослабляется или порядок нормируется).
+# Сроки и допуски: сценарий 01 ≈ 45 с (ожидание отметки двери), сценарий 02 ≈ 60 с (воркеры + отметка двери),
+#   сценарий 03 ≈ 50 с. Потолок сценария — 3 минуты.
+# Оговорки (для владельца приёмки):
+#   — сценарий 03 (живой замок без номера) требует, чтобы реализация приняла имя слота без сегмента сервера
+#     (`t-1`; так же, как `w-1` в сц. 16 приёмки P/05). Если имя отвергается — сценарий не годится и остаётся
+#     проверкой чтением; решение — за владельцем приёмки.
+#   — сценарий 02 требует, чтобы воркер с номером n = 2 поднялся без заказа контроллера (контроллера на стенде P/05
+#     нет). Если реализация требует заказа — стенд с контроллером (как в приёмке P/04, сценарий 14); решение — за
+#     владельцем приёмки.
+#   — `room`/`live` — элементы строки двери; элемент `room.testsub` не появится никогда (у testsub нет `grows: true`),
+#     и в этом черновике он не ожидается.
+scenario	step	request	expect
+# 01-door-field-and-empty-room — пульс несёт `door`; строка двери несёт room.testsub2 = "16" и пустой live.testsub2.
+01-door-field-and-empty-room	1	@start resource	ok
+01-door-field-and-empty-room	2	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"server": "srv-a", "running": [], "door": {"addr": "@any", "mode": "loopback", "cert_until": "@absent"}}
+01-door-field-and-empty-room	3	@until 40 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"url": "@any", "room.testsub2": "16", "live.testsub2": ""}}
+# 02-two-live-locks — два живых замка: room = 14, live = "2" (только n ≥ 2).
+02-two-live-locks	1	@start resource	ok
+02-two-live-locks	2	@start worker testsub2 t-srv-a-1 on srv-a	ok
+02-two-live-locks	3	@start worker testsub2 t-srv-a-2 on srv-a	ok
+02-two-live-locks	4	@until 40 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": ["testsub2/t-srv-a-1", "testsub2/t-srv-a-2"]}
+02-two-live-locks	5	@until 40 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"room.testsub2": "14", "live.testsub2": "2"}}
+# 03-live-lock-without-number — живой замок без номера: входит в room, не входит в live.
+03-live-lock-without-number	1	@start resource	ok
+03-live-lock-without-number	2	@start worker testsub2 t-1 on srv-a	ok
+03-live-lock-without-number	3	@until 40 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"room.testsub2": "15", "live.testsub2": ""}}

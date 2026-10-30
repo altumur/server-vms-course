@@ -1,0 +1,56 @@
+# Черновик G01 — ссылка с must_match у единицы: отказ по значению цели, отказ по отсутствующему элементу цели, «цели нет — не отказ».
+# Что проверяет: прямую проверку ссылок при создании единицы (П5 договора проверки строки) в трёх случаях:
+#   (1) цель есть, значения не равны → 409 conflict, fault must_match, строка единицы не записана;
+#   (2) цель есть, но элемента сравнения у цели нет, у единицы он "" → 409 conflict, fault must_match;
+#   (3) цели нет вовсе → отказа нет (ADR-0057), единица записана со ссылкой на несуществующую строку.
+# Место нормы: Platform/06-console/spec/06.1-console.norms.md — Н3 «создать» шаг 7 (ссылки — договор проверки строки П5 →
+#   409 conflict с fault), Н4 «Дверь единиц» (409: `error: conflict`, `fault: unique | must_match | garbled`), Н2 «Состояние в ответе»
+#   (выдача не ломается); Platform/common/contracts/row-check.md — «Идентификатор» `ref_and_must_match` (правила: «цели нет — не
+#   отказ: ref без must_match не требует существования цели (ADR-0057)», «цель не читается — 409 conflict, fault garbled»,
+#   «при живой цели значения равны; иначе 409 conflict, fault must_match; отсутствующий элемент цели не равен ничему, и "" тоже»),
+#   «Порядок проверок» П5 (прямые ref/must_match → обратные must_match → unique), «Подготовка полей» («Строка таблицы»: поле, не
+#   переданное в POST и без default, в строке отсутствует); решения/0057-консоль-из-каталога-спек-хуки-консоли-уходят.md, п. 3
+#   («строка только для must_match… строки, которой нет, не спрашивает»; слова must_exist нет); векторы
+#   Platform/common/vectors/row-check/cases.tsv (must_match_differs, must_match_absent_element, must_match_equal);
+#   Platform/06-console/acceptance/1/README.md «Пробы сверки»: «testsub2: must_match, у цели нет элемента, у единицы "" → 409
+#   conflict, fault: must_match». Чек-лист: П/06.1-09 (у единиц — чтением; «отказа единицы в TSV нет»).
+# Подготовка: стенд приёмки главы 6.1 (Platform/06-console/acceptance/1): корень `testsub`, `testsub2` смонтирована (дверь
+#   `console2`), хранилище пустое, счётчик `c1` раннер создаёт сам (черновик от него не зависит: `of` — поле без ref);
+#   манифест `testsub2` (Source/tests/testdata/testsub2.subsystem.yaml): у `tallies` поле `shelf` — `ref: testsub2/shelves`,
+#   `must_match: {zone: zone}`, поле `zone` — строка; у `shelves` (таблица) поле `zone` — строка без default.
+# Существующие директивы: `@as <роль>`, двери `console2` (смонтированная подсистема) и `store`; ожидания — подмножество полей,
+#   `@absent`, `null` для отсутствующей строки. Новых директив не требуется.
+# Сроки и допуски: сценарий 01 — 4 запроса ≈ 5 с; сценарий 02 — 3 запроса ≈ 4 с; сценарий 03 — 2 запроса ≈ 3 с.
+#   Потолок сценария — 3 минуты; потолок не превышен ни в одном.
+# Почему ожидание именно такое:
+#   — отказ 409 несёт `error: conflict` и `fault: must_match` (Н4 «Дверь единиц»); `fault` называет, какое правило нарушено,
+#     поэтому `must_match`, а не `unique` (у `tallies` `name` — единственное `unique`-поле, и оно другое).
+#   — «строка единицы не записана» читается прямо из хранилища (`store GET /v1/get?key=…` → `items: null`): один код ответа
+#     не доказывает отсутствие записи, а П5 проверяет до записи (Н3 «создать» шаг 7).
+#   — контроль в сценарии 01 (те же `shelf` и `zone`) — та же ссылка, что и в отказе, с равными значениями: 201 доказывает, что
+#     отказ был о значении, а не о самой ссылке.
+#   — сценарий 02: у строки таблицы поле, не переданное в POST и без default, в строке отсутствует («Подготовка полей»); у
+#     единицы `zone` передаётся как "" — «отсутствующий элемент цели не равен ничему, и "" тоже» → 409.
+#   — сценарий 03: по ADR-0057 и договору проверки строки отсутствие цели отказом не является; строка единицы пишется.
+# Оговорка (для владельца приёмки): аудит покрытия (`АУДИТ-ПОКРЫТИЯ-P06.md`, строка G01) требует «просьба tally с несуществующей
+#   `shelf` — 409 `conflict` с `fault`». Норма говорит обратное: «цели нет — не отказ» (ADR-0057; договор проверки строки;
+#   README приёмки: «Наличие ref без must_match не означает must_exist»). Черновик написан по норме — сценарий 03 ждёт 201;
+#   решение за владельцем: либо правка аудита, либо правка нормы. Свидетельство (Source/w2cplatform/spec.py, `refuse_refs`)
+#   стоит на стороне нормы: отсутствующая цель — пропуск проверки, отказа нет.
+#   Второе расхождение: сценарий 02 (отсутствующий элемент цели) по норме и вектору `must_match_absent_element` — 409
+#   `must_match`, а свидетельство (`refuse_refs`: `want = str(items.get(theirs) or "")`, сравнение только при непустом `want`)
+#   такой отказ не даёт. Черновик написан по норме и вектору.
+scenario	step	request	expect
+# 01-must-match-differs — цель есть, значения не равны: отказ 409 must_match, строки нет; те же значения — 201.
+01-must-match-differs	1	console2 POST /shelves {"name": "sh1", "zone": "z1"}	201 {"row": {"name": "sh1", "zone": "z1"}}
+01-must-match-differs	2	console2 POST /tallies {"name": "t1", "of": "c1", "shelf": "sh1", "zone": "z2"}	409 {"error": "conflict", "fault": "must_match"}
+01-must-match-differs	3	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": null}
+01-must-match-differs	4	console2 POST /tallies {"name": "t2", "of": "c1", "shelf": "sh1", "zone": "z1"}	201 {"shelf": "sh1", "zone": "z1"}
+01-must-match-differs	5	store GET /v1/get?key=testsub2/tallies/t2	200 {"items": {"shelf": "sh1", "zone": "z1", "revision": "1"}}
+# 02-must-match-absent-element — у цели нет элемента сравнения, у единицы он "": 409 must_match, строки нет.
+02-must-match-absent-element	1	console2 POST /shelves {"name": "sh2"}	201 {"row": {"name": "sh2", "zone": "@absent"}}
+02-must-match-absent-element	2	console2 POST /tallies {"name": "t3", "of": "c1", "shelf": "sh2", "zone": ""}	409 {"error": "conflict", "fault": "must_match"}
+02-must-match-absent-element	3	store GET /v1/get?key=testsub2/tallies/t3	200 {"items": null}
+# 03-target-absent — цели нет вовсе: отказа нет (ADR-0057), строка записана.
+03-target-absent	1	console2 POST /tallies {"name": "t4", "of": "c1", "shelf": "sh-none", "zone": "z1"}	201 {"shelf": "sh-none"}
+03-target-absent	2	store GET /v1/get?key=testsub2/tallies/t4	200 {"items": {"shelf": "sh-none", "revision": "1"}}

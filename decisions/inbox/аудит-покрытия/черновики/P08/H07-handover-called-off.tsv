@@ -1,0 +1,47 @@
+# Черновик H07 — отмена передачи: `take`/`prepare` не состоялся → заморозка снята, 409 `called off` одним словом.
+# Что проверяет: исход отказавшейся плановой передачи: (1) `POST /domain/handover {to}` на цель без подписанта даёт
+#   409 {error: "called off", detail: …} — слово `called off` одно (HF), detail называет цель и причину; (2) заморозка
+#   передачи снята — вид держателя больше не называет `frozen_for`, и правка (назначение) принимается снова (200), тогда
+#   как при заморозке правки отвечают 503 frozen; (3) срок не сменился — держатель тот же.
+# Место нормы: Platform/08-domain/spec/08.8-domain.norms.md — Н1.7 (`order` шаг 1 «заморозка: frozen_for = to; правки
+#   людей и подписанта — 503 {error: "frozen"}»; шаг 3 «нет отчёта to — снять заморозку, 409 {error: "called off",
+#   detail: "<to> did not take backup rev R; the handover is called off and <h> is still the holder"}»; шаг 5 «take не
+#   ответил за 90 с, оборвался или отказал — снять заморозку, 409 {error: "called off", detail: "<to> did not take the
+#   domain (<why>): the handover is called off and <h> is still the holder"}»; «одно слово called off для исходов шагов 3 и 5
+#   (HF)» и C08-HANDOVER-STEPS-CALLED-OFF-01: то же слово и тот же исход для шага 4), Н2 (POST /domain/handover — 409
+#   deposed, called off), Н4 (`called off` — 409), `HANDOVER_WAIT: 30`; вид — 08.1 Н1.4 (`domain/view.term`: {term, holder,
+#   …, frozen_for?, stranded?}); правка — 08.6 Н1.1/Н2 (PUT /domain/placement/{sub}/{ref} — 200); чек-лист П/08.8-06
+#   («исход шага 5 — `called off` одним словом (HF) — чтением»).
+# Подготовка: стенд домена `@domain` (кластеры hold, m1, m2 — m1 член списка, у него есть консоль в CLUSTERS). Подписанта
+#   на m1 НЕ поднимаем (`@start domain on m1` не делаем) — на m1 нет процесса domain, поэтому цель передачи не может ни
+#   подготовить ключ (шаг 4, `POST <консоль to>/api/prepare`), ни взять домен (шаг 5, `POST <консоль to>/api/take`).
+#   Прецедент нормальной передачи — сц. 04 приёмки 8.8 (`@start domain on m1`, затем `holder POST /domain/handover
+#   {"to": "m1"}` → 200 {"term": 2, "to": "m1", "stranded": []}).
+# Существующие директивы: `@domain`; двери `holder`; ожидания — подмножество полей, `@absent`. Новых директив не требуется.
+# Сроки и допуски: `@domain` — до 90 с; передача отвечает не позже общего срока 90 с и не позже HANDOVER_WAIT 30 с на
+#   шаге 3; далее просмотр и правка ≈ 2 с. Потолок сценария — 3 минуты; не превышен.
+# Почему ожидание именно такое:
+#   — 409 и слово `called off`: норма требует одного слова (HF; C08-HANDOVER-STEPS-CALLED-OFF-01 распространяет то же
+#     слово и тот же исход — снять заморозку — на шаг 4). Поэтому ожидание судит и код, и `error`, а `detail` — только
+#     на подстроки: обе формы Н1.7 (шаги 3 и 5) называют цель (`m1`) и содержат «called off».
+#   — отказ приходится на шаг 3 или шаг 4 — оба дают одно слово и один исход (снять заморозку, 409). Шаг 5 на стенде
+#     недостижим: он требует успешного `prepare` (шаг 4), а для него нужен подписант на m1, которого по условию сценария
+#     нет. Проверяемое свойство (одно слово, снятая заморозка) от шага не зависит.
+#   — `detail` в ожидании — подстроки «m1» и «called off», а не точный текст: слова реализации (Н4; деталь — слова
+#     реализации) и норму устраивает любая форма, называющая цель и причину.
+#   — заморозка снята: `holder GET /domain` показывает `term.frozen_for` — по 08.1 Н1.4 это поле есть только на время
+#     идущей передачи, поэтому после отказа его нет; и правка (PUT /domain/placement) отвечает 200, а не 503 frozen
+#     («правки людей и подписанта — 503 {error: "frozen"}» на время заморозки).
+#   — `term.holder` — «hold»: передача не состоялась, срок не сменился (смена срока — только успешным `take`, Н1.6).
+# Оговорка (для владельца приёмки): свидетельство (cammeta-python, impl/m11domain/transfer.py, `_handover`) на отказе шага 4
+#   отвечает 409 со словом `refused` («m1 did not prepare (404 …); the handover is called off») — то есть detail содержит
+#   «called off», но `error` — не «called off». Норма (C08-HANDOVER-STEPS-CALLED-OFF-01, HF) требует одно слово `called off`
+#   и для шага 4; черновик написан по норме, расхождение свидетельства — предмет разбора владельца. Второе: журнал
+#   `domain.handover.called_off` на стенде не читается, поэтому проверяются только ответ и снятие заморозки. Третье: если
+#   владелец признаёт, что шаг 4 должен отвечать иначе, чем шаги 3 и 5, ожидание шага 2 стоит развести на `@oneof` по
+#   двум формам detail.
+scenario	step	request	expect
+07-handover-called-off	1	@domain	ok
+07-handover-called-off	2	holder POST /domain/handover {"to": "m1"}	409 {"error": "called off", "detail": "~m1 ~called off"}
+07-handover-called-off	3	holder GET /domain	200 {"term": {"holder": "hold", "frozen_for": "@absent"}}
+07-handover-called-off	4	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "origin": "m2", "copies": []}	200 {"cluster": "m1"}

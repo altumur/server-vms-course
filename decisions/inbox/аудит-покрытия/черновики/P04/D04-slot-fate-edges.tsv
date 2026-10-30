@@ -1,0 +1,89 @@
+# Черновик D04 — края судьбы слота: отдача пустого слота, запись отдачи на порванной строке и нечитаемое поколение.
+# Что проверяет: (1) слот без назначенных единиц после гибели воркера отдаётся (`release`), а не переезжает (`move`);
+#   (2) запись отдачи на строке с порванным `until`, но читаемым `gen`: строка отдаётся целиком и ничьей — `released`
+#   "true", `holder` "", `until` 0, `gen` сохранён, `server` сохранён; (3) строка с нечитаемым `gen` не меняется вовсе,
+#   а имя слота не выдаётся (`names_given` пуст) и слот не достаётся новому процессу.
+# Место нормы: Platform/04-controller/spec/04-controller.norms.md — Н3 «судьба(слот) → fate» (таблица правил: «читаемый
+#   слот не менялся < SLOT_TERM → alive»; «ресурс live ∧ присутствие gone ∧ назначенных единиц нет → release (без
+#   запаса)»; «ресурс live ∧ присутствие gone → move (без запаса)»; замыкающие строки «единицы назначены ∧ ничего из
+#   выше → move», «нет назначенных единиц ∧ ничего из выше → release»), Н3 «запись release: записать слот released (cas),
+#   holder/until/gen/server сохранить; порванную — целиком отданной и ничьей с сохранением читаемого gen; если gen не
+#   читается — строку не менять, разрешение на захват не выдавать», «Нечитаемое gen существующего слота не заменяется нулём
+#   при release; такую строку сохраняют и не включают в names_given до восстановления поколения»), Н3 «Переходы release»
+#   (судья, слот не менялся ≥ SLOT_TERM, назначенных единиц нет; ресурс live, присутствие gone → записать `released` с
+#   `cas` прочитанной версии), Н1.2 (`names_given`, `fates` — «только занятые неотданные слоты»), Н1.4 (`SLOT_TERM: 45`,
+#   `LOST_AFTER: 45`), Н4. Чек-лист: П/04-10 (судьба слота), П/04-11 (поколение слота).
+# Таблица R28 README приёмки P/04: «Слот отдаётся контроллером: читаемый; отдельно until порван, gen читается; отдельно
+#   gen не читается | читаемый — holder/until/gen/server сохранены; порванный с читаемым gen — released "true", holder "",
+#   until 0, gen прочитанный, server — если читается, иначе ""; gen не читается — строка не меняется, имя не выдаётся
+#   (Н3 «запись release»; C04-TORN-01)».
+# Подготовка: стенд testsub: ресурс, контроллер, воркер `w-1`; единиц нет (в этом весь смысл: «нет назначенных единиц»).
+#   Строка слота подменяется мимо писателя дверью роли воркера — приём сц. 13 приёмки P/04 (`@as testsubworker store
+#   POST /v1/write …`).
+# Существующие директивы: `@start resource`, `@start controller`, `@start worker <имя>`, `@sigkill <имя>`, `@sleep <с>`,
+#   `@until <с> <запрос>`, `@as <роль>`; двери `resource` (отчёт прохода), `store` (строка слота).
+# Новых директив не требуется.
+# Сроки и допуски (числа — по нормам):
+#   — `SLOT_TERM: 45` — возраст неизменной версии слота на часах судьи; переход в `release`/`move` требует «слот не
+#     менялся ≥ SLOT_TERM» (Н3 «Переходы release»), поэтому отдача пустого слота наступает не сразу после гибели
+#     воркера, а примерно через 45 с после его последнего продления. Отсюда ожидания сроком 90 с, а не 30 с.
+#   — присутствие воркера становится `gone` после того, как ресурс увидит, что замок присутствия свободен: ресурс пишет
+#     пульс раз в 10 с (`HEARTBEAT_EVERY`, П/03.4 Н1.1), поэтому ветвь «gone» включается на 10–15 с позже гибели.
+#   — сон 60 с в сценарии 03 — это 45 с `SLOT_TERM` плюс запас на проход (5 с) и на опоздание пульса ресурса: к этому
+#     моменту отдача уже была бы испробована, и строка осталась бы прежней.
+#   — потолок сценария — 3 минуты; сценарий 01 ≈ 70 с, сценарий 02 ≈ 60 с, сценарий 03 ≈ 85 с. Потолок не превышен.
+# Почему ожидание именно такое:
+#   — слово `release` в отчёте прохода не проверяется: по Н1.2 в `fates` попадают «только занятые неотданные слоты
+#     (holder непуст, released false)», а отданный слот (released "true") из карты уходит. Наблюдаемая отдача — строка
+#     слота (`released` "true"), `names_given` (имя отдано судьбой: «для release — версия ПОСЛЕ записи отдачи») и
+#     счётчик `slots_released_total`. Это следствие нормы, а не её проверка: владельцу приёмки стоит знать, что слово
+#     `release` в `fates` не видно и что «fate release» наблюдается по строке слота и `names_given`.
+#   — сценарий 01 различает `release` и `move` тем, что у слота нет назначенных единиц: по правилам судьбы «ресурс live
+#     ∧ присутствие gone ∧ назначенных единиц нет → release», а `move` — когда единицы назначены (ср. сц. 12 приёмки
+#     P/04, где у слота единица есть и судьба `move`). Единиц здесь нет — поэтому `move` был бы нарушением.
+#   — после отдачи слот свободен, и новый процесс с тем же именем его занимает (Н3 «запись release»: «отданный слот
+#     берут по ней, и как “свободный” он тоже кандидат»). Это доказывает, что слот действительно отдан, а не только
+#     помечен.
+#   — в сценарии 02 `until` порван (значение «torn» — не число), `gen` читаем («2»), `server` читаем («srv-a»); по Н3
+#     «запись release» такая строка отдаётся целиком и ничьей: `released` "true", `holder` "", `until` 0, `gen`
+#     сохранён. Значение `until` — строка «0»: значения строк хранилища — строки (П/01.1 Н1: «items: map string →
+#     string; every key and every value is a string»), поэтому ноль пишется как «0»; R28 пишет «until 0» без кавычек.
+#   — в сценарии 03 `gen` не читается («x»): норма прямо требует «строку не менять, разрешение на захват не выдавать»
+#     и «не включают в names_given до восстановления поколения». Поэтому строка слота после отдачи-судьбы та же, а
+#     `names_given` — ровно пустой объект.
+# Оговорка (для владельца приёмки): в сценарии 03 повторный `@start worker w-1` не берёт слот и потому, что метка
+#   держателя в подменённой строке — чужая (погибшего воркера), и потому, что поколение нечитаемо; различающий
+#   признак — `names_given` (пуст) и неизменность строки. Проверка «слот не достаётся» в одиночку эти две причины не
+#   разделяет — отсюда и явная `names_given`.
+scenario	step	request	expect
+# 01-release-empty-slot — слот без единиц после гибели воркера отдаётся; новый процесс занимает отданный слот.
+01-release-empty-slot	1	@start resource	ok
+01-release-empty-slot	2	@start controller	ok
+01-release-empty-slot	3	@start worker w-1	ok
+01-release-empty-slot	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "gen": "$g1"}}
+01-release-empty-slot	5	@sigkill w-1	ok
+01-release-empty-slot	6	@until 90 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"names_given": {"w-1": "@any"}}
+01-release-empty-slot	7	@until 90 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "true"}}
+01-release-empty-slot	8	@start worker w-1	ok
+01-release-empty-slot	9	@until 60 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "holder": "@any"}}
+# 02-release-torn-until — порванный until и читаемый gen: строка отдана целиком и ничьей, gen сохранён.
+02-release-torn-until	1	@start resource	ok
+02-release-torn-until	2	@start controller	ok
+02-release-torn-until	3	@start worker w-1	ok
+02-release-torn-until	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "gen": "$g1"}}
+02-release-torn-until	5	@sigkill w-1	ok
+02-release-torn-until	6	@as testsubworker store POST /v1/write {"id":"d04b","op":"put","key":"testsub/slots/w-1","items":{"holder":"other-box:4242:abcdef","until":"torn","released":"false","gen":"2","server":"srv-a"}}	200
+02-release-torn-until	7	@until 90 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "true", "holder": "", "until": "0", "gen": "2", "server": "srv-a"}}
+# 03-gen-unreadable — нечитаемое поколение: строка не меняется, имя не выдаётся, слот не достаётся.
+03-gen-unreadable	1	@start resource	ok
+03-gen-unreadable	2	@start controller	ok
+03-gen-unreadable	3	@start worker w-1	ok
+03-gen-unreadable	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "holder": "$h1", "gen": "$g1"}}
+03-gen-unreadable	5	@sigkill w-1	ok
+03-gen-unreadable	6	@as testsubworker store POST /v1/write {"id":"d04c","op":"put","key":"testsub/slots/w-1","items":{"holder":"$h1","until":"1999999999","released":"false","gen":"x","server":"srv-a"}}	200
+03-gen-unreadable	7	@sleep 60	ok
+03-gen-unreadable	8	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "holder": "$h1", "until": "1999999999", "gen": "x", "server": "srv-a"}}
+03-gen-unreadable	9	@until 60 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"names_given": {}}
+03-gen-unreadable	10	@start worker w-1	ok
+03-gen-unreadable	11	@sleep 12	ok
+03-gen-unreadable	12	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "holder": "$h1", "gen": "x"}}

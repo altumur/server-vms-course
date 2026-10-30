@@ -1,0 +1,124 @@
+# Черновик C09 — отказы старта воркера: имя не по грамматике, имя не по prefix, имя называет чужой сервер, INSTANCE_ID не по грамматике, SERVER_NAME не по грамматике, BOX_ID не по грамматике коробки, бюджет памяти.
+# Что проверяет: ветки отказа старта (Platform/03-worker/spec/03.2-worker.norms.md Н3 «старт()» шаги 2, 2а, 2в и Н4
+#   «Воркер: старт, имя, аренда, место»), которые корпус приёмки проверял только чтением (README приёмки главы 3.2,
+#   сценарий 09: «воркер выходит с кодом 2, код раннер не сравнивает (чтением); наблюдаемо — ни слота под этим именем,
+#   ни слота `w-1` (имя не заменяется поиском)»). Для каждой ветки: код выхода 2, слота нет, метки соперника нет,
+#   пульса нет; имя не подменяется поиском другого имени.
+# Место нормы: Platform/03-worker/spec/03.2-worker.norms.md — Н3 «старт()» шаг 2а («заданное имя (аргумент или
+#   slot.name_env, шаг 3) не по грамматике имени слота или не с prefix своего манифеста (Н1.4) → отказ старта: код выхода 2,
+#   журнал с именем и причиной; слот не захватывается, метки соперника и пульса нет»), шаг 2в («имя от юнита
+#   <prefix>-<s>-<n> … чей <s> ≠ SERVER_NAME → отказ старта, код 2, журнал «<имя> names server <s>, and this server is
+#   <SERVER_NAME>»»), шаг 2 (вычисление экземпляра), Н4 (таблица: «не стартует, код выхода 2, слота, метки и пульса нет»;
+#   «экземпляр … не по грамматике … → не стартует, код выхода 2, слота, замка, метки и пульса нет»). Грамматики:
+#   Platform/common/contracts/slot-name.md (имя слота: `<prefix>-<суффикс>`, суффикс `^[a-z0-9]+(-[a-z0-9]+)*$`; префикс
+#   манифеста `slot.prefix`, умолчание `w`), Platform/common/contracts/instance.md (экземпляр `<коробка>:<pid>:<6 hex>`;
+#   заданная форма INSTANCE_ID — pid цифры ASCII не все нули, 6 hex `[0-9a-fA-F]{6}`; иное — отказ старта, код 2;
+#   BOX_ID задан и не по грамматике коробки — отказ старта, код 2, «заданное оператором не подменяется»),
+#   Platform/common/contracts/env-file.md (SERVER_NAME — по грамматике `^[a-z0-9]+(-[a-z0-9]+)*$`, иначе отказ запуска
+#   с кодом 2; INSTANCE_ID — иначе отказ до старта). Бюджет памяти: Platform/03-worker/spec/03.4-worker.norms.md Н1.2
+#   `memory` («CAPACITY × unit_mb + base_mb ≤ WORKER_MEMORY_MB, иначе процесс не стартует (ADR-0070); без unit_mb — не
+#   проверяется»), Н4 («бюджет памяти превышен → не стартует, MemoryBudgetRefused»), Platform/02-installer/spec/02.1-installer.norms.md
+#   Н1 (`placement.capacity.unit_mb`, `base_mb`). Чек-листы: П/03.2-02, П/03.2-13, П/03.4-06.
+# Подготовка: сверка аудита покрытия (АУДИТ-ПОКРЫТИЯ-P03.md, строка про C09) — там сказано, что `w-100` и `w-01` суть
+#   «отказы старта». ЭТО НЕ ТАК, и черновик это исправляет: по договору имени слота суффикс есть
+#   `^[a-z0-9]+(-[a-z0-9]+)*$`, поэтому `w-100` и `w-01` — законные имена слотов (разные имена с равным номером, «w-01»
+#   и «w-1» — разные). Правило «число 1…99 без ведущих нулей» относится к N в ИМЕНИ ПРОЦЕССА РОЛИ
+#   (`<prefix>-<сервер>-<N>`), а не к имени слота; имена `w-5`, `w-srv-a-02`, `w-srv-a-0` по договору «не процесс роли»
+#   (`not_role`) — они не отказ старта, а просто не имя процесса роли. Отказ старта дают только: имя не по грамматике
+#   суффикса, имя не по prefix своего манифеста, имя вида `<prefix>-<s>-<n>` с <s> ≠ SERVER_NAME.
+# Существующие директивы: `@start worker <имя>`, `@start resource`, `@sleep <с>`; двери `store` (чтение строк слота),
+#   `resource` (чтение пульса и листинг меток соперника — П/05 Н1.1 `door`: `*/heartbeats/*`, `*/contenders/*`).
+# Новых директив требуется три (описаны в черновики/P03/NEW-DIRECTIVES.md, раздел 2): параметры `instance=`, `server=`,
+#   `box=` у `@start worker` (подстановка переменных окружения процесса: INSTANCE_ID, SERVER_NAME, BOX_ID) и
+#   `memory=` (WORKER_MEMORY_MB), плюс ожидание `@exit <код>` у `@start worker` — по образцу `@store-start` и
+#   `@kit-start` общего README приёмки («@exit 2 — процесс вышел с кодом 2 не позже 10 с»). Без `expect_exit` код
+#   выхода остаётся непроверяемым, как и сказано в README приёмки главы 3.2 («код раннер не сравнивает (чтением)»).
+# Почему ожидание именно такое:
+#   — отказ старта происходит ДО захвата слота (Н3 2а/2в и Н4 «слота, метки и пульса нет»), поэтому следов нет вовсе:
+#     строки `testsub/slots/<имя>` нет (не «занята», а отсутствует — `{"index": "", "items": null}`), объекта пульса нет
+#     (404, П/05 Н1.1), объекта метки соперника нет (листинг `testsub/contenders/` пуст).
+#   — имя не подменяется поиском: строки `testsub/slots/w-1` тоже нет — в отличие от отказа «занято чужой коробкой»
+#     (NameOnAnotherBox), где воркер остаётся никто и ищет имя (README приёмки главы 3.2, сценарий 09).
+#   — шаг 2в: имя `w-srv-b-1` называет сервер `srv-b`, а SERVER_NAME стенда — `srv-a`; по Н3 2в это отказ старта
+#     (ADR-0084: имя сервера в юните и в ряду заказа — одна идентичность). Имя `w-srv-a-1` при том же SERVER_NAME
+#     законно (сценарий 04 проверяет, что отказ — про чужой сервер, а не про форму имени).
+#   — INSTANCE_ID `box-a:0:abcdef`: pid из одних нулей — заданная форма требует «цифры ASCII, не все нули»
+#     (договор экземпляра), поэтому отказ до старта, код 2; слота, замка присутствия, метки и пульса нет (Н4).
+#   — SERVER_NAME `SRV-A`: заглавные не проходят грамматику `^[a-z0-9]+(-[a-z0-9]+)*$` → отказ запуска с кодом 2
+#     (договор файла окружения); имя слота при этом по грамматике, так что отказ даёт именно сервер.
+#   — BOX_ID `bad:box`: двоеточие не проходит грамматику коробки (договор экземпляра) → отказ старта, код 2; заданное
+#     оператором не подменяется (machine-id и hostname не берутся).
+#   — бюджет памяти: проверяется, только если манифест называет `placement.capacity.unit_mb`; учебные манифесты
+#     стенда его не называют, поэтому проверка по умолчанию НЕ выполняется («без unit_mb — не проверяется»).
+#     Предложение «Спецификации» (не директива): в `testsub.subsystem.yaml` и `testsub2.subsystem.yaml` дописать
+#     `placement.capacity: {from: capacity, default: 4, unit_mb: 32, base_mb: 0}` (testsub2 — `default: 8`).
+#     Тогда CAPACITY × 32 + 0 > WORKER_MEMORY_MB при `memory=16` — отказ бюджета для любого CAPACITY ≥ 1
+#     (П/02.4 Н1.2: CAPACITY — целое > 0). Без этой правки сценарий 08 не выражается и остаётся чтением.
+# Оговорки (для владельца приёмки):
+#   — вид строки журнала об отказе нормой не назван (Н3 2а говорит «журнал с именем и причиной», 2в — только текст
+#     «<имя> names server <s>, and this server is <SERVER_NAME>»); договор журнала событий называет семейство `worker.*`
+#     и не называет вида внутри него. Поэтому проверка журнала — ВНЕ TSV. Предложение владельцу: принять вид
+#     `worker.start_refused` с полями `worker` и `why` (текст причины — по Н3 2а/2в), тогда шаг добавляется:
+#     `console GET /events?unit=audit/testsubworker&kind=worker.start_refused` → `200 {"events": [{"kind": "worker.start_refused"}]}`.
+#   — код выхода при превышении бюджета памяти нормой не назван (Н4 главы 3.4 говорит «не стартует»). В сценарии 08
+#     ожидается тот же код 2, что у прочих отказов старта, — это предложение владельца, а не требование нормы.
+#   — ветка ADR-0029 «сервер неизвестен» (пульс `server: ""`, поле `server_unsaid`) на стенде не выражается: стенд
+#     всегда задаёт SERVER_NAME (`srv-a`), а пустой SERVER_NAME не проходит грамматику и даёт отказ старта (см.
+#     «Проверки вне TSV после прогона 25» в README приёмки главы 3.4 — там эта ветвь и помечена как «обычный TSV
+#     задаёт srv-a и эту ветвь не наблюдает»).
+scenario	step	request	expect
+# 01-name-off-grammar — имя `w-1_2` не по грамматике суффикса: отказ старта, код 2, следов нет.
+01-name-off-grammar	1	@start resource	ok
+01-name-off-grammar	2	@start worker w-1_2	@exit 2
+01-name-off-grammar	3	@sleep 5	ok
+01-name-off-grammar	4	store GET /v1/get?key=testsub/slots/w-1_2	200 {"index": "", "items": null}
+01-name-off-grammar	5	store GET /v1/get?key=testsub/slots/w-1	200 {"index": "", "items": null}
+01-name-off-grammar	6	resource GET /v1/objects/testsub/heartbeats/w-1_2?scope=local	404
+01-name-off-grammar	7	resource GET /v1/objects?prefix=testsub/contenders/	200 {"objects": {}}
+# 02-name-foreign-prefix — имя `x-1` не по prefix своего манифеста: отказ старта, код 2, следов нет.
+02-name-foreign-prefix	1	@start resource	ok
+02-name-foreign-prefix	2	@start worker x-1	@exit 2
+02-name-foreign-prefix	3	@sleep 5	ok
+02-name-foreign-prefix	4	store GET /v1/get?key=testsub/slots/x-1	200 {"index": "", "items": null}
+02-name-foreign-prefix	5	store GET /v1/get?key=testsub/slots/w-1	200 {"index": "", "items": null}
+02-name-foreign-prefix	6	resource GET /v1/objects/testsub/heartbeats/x-1?scope=local	404
+02-name-foreign-prefix	7	resource GET /v1/objects?prefix=testsub/contenders/	200 {"objects": {}}
+# 03-name-foreign-server — имя `w-srv-b-1` называет чужой сервер: отказ старта, код 2, следов нет.
+03-name-foreign-server	1	@start resource	ok
+03-name-foreign-server	2	@start worker w-srv-b-1	@exit 2
+03-name-foreign-server	3	@sleep 5	ok
+03-name-foreign-server	4	store GET /v1/get?key=testsub/slots/w-srv-b-1	200 {"index": "", "items": null}
+03-name-foreign-server	5	store GET /v1/get?key=testsub/slots/w-1	200 {"index": "", "items": null}
+03-name-foreign-server	6	resource GET /v1/objects/testsub/heartbeats/w-srv-b-1?scope=local	404
+03-name-foreign-server	7	resource GET /v1/objects?prefix=testsub/contenders/	200 {"objects": {}}
+# 04-name-own-server — имя `w-srv-a-1` называет свой сервер: отказов нет, имя берётся (контроль к сценарию 03).
+04-name-own-server	1	@start resource	ok
+04-name-own-server	2	@start worker w-srv-a-1	ok
+04-name-own-server	3	@until 30 store GET /v1/get?key=testsub/slots/w-srv-a-1	200 {"items": {"holder": "$h1", "released": "false", "server": "srv-a"}}
+04-name-own-server	4	resource GET /v1/objects/testsub/heartbeats/w-srv-a-1?scope=local	200 {"worker": "w-srv-a-1", "server": "srv-a"}
+# 05-bad-instance-id — INSTANCE_ID `box-a:0:abcdef`: pid из одних нулей, отказ до старта, код 2.
+05-bad-instance-id	1	@start resource	ok
+05-bad-instance-id	2	@start worker w-1 instance=box-a:0:abcdef	@exit 2
+05-bad-instance-id	3	@sleep 5	ok
+05-bad-instance-id	4	store GET /v1/get?key=testsub/slots/w-1	200 {"index": "", "items": null}
+05-bad-instance-id	5	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	404
+05-bad-instance-id	6	resource GET /v1/objects?prefix=testsub/contenders/	200 {"objects": {}}
+# 06-bad-server-name — SERVER_NAME `SRV-A` не по грамматике: отказ запуска, код 2.
+06-bad-server-name	1	@start resource	ok
+06-bad-server-name	2	@start worker w-1 server=SRV-A	@exit 2
+06-bad-server-name	3	@sleep 5	ok
+06-bad-server-name	4	store GET /v1/get?key=testsub/slots/w-1	200 {"index": "", "items": null}
+06-bad-server-name	5	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	404
+# 07-bad-box-id — BOX_ID `bad:box` не по грамматике коробки: отказ старта, код 2 (заданное не подменяется).
+07-bad-box-id	1	@start resource	ok
+07-bad-box-id	2	@start worker w-1 box=bad:box	@exit 2
+07-bad-box-id	3	@sleep 5	ok
+07-bad-box-id	4	store GET /v1/get?key=testsub/slots/w-1	200 {"index": "", "items": null}
+07-bad-box-id	5	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	404
+# 08-memory-budget — бюджет памяти превышен: процесс не стартует (требует unit_mb в манифесте — см. шапку).
+08-memory-budget	1	@start resource	ok
+08-memory-budget	2	@start worker w-1 memory=16	@exit 2
+08-memory-budget	3	@sleep 5	ok
+08-memory-budget	4	store GET /v1/get?key=testsub/slots/w-1	200 {"index": "", "items": null}
+08-memory-budget	5	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	404
+08-memory-budget	6	resource GET /v1/objects?prefix=testsub/contenders/	200 {"objects": {}}

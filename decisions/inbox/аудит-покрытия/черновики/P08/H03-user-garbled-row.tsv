@@ -1,0 +1,62 @@
+# Черновик H03 — нечитаемая строка человека: вход даёт 503, выключенный не снимается, DELETE удаляет и её.
+# Что проверяет: (1) строка `domain/users/<имя>`, которая не читается (имя в строке не то, что в ключе), не обслуживает
+#   вход под этим именем: 503 {error: "unavailable"} — не 401 (Н1.2 check, Н1.1 unreadable); (2) прочие строки людей служат
+#   (вход другого человека проходит); (3) нечитаемая строка не снимает выключение: имя её ключа остаётся в
+#   `domain/disabled` (Н1.1 unreadable); (4) DELETE /domain/users/<имя> удаляет и нечитаемую строку; (5) после удаления
+#   вход под этим именем — обычный отказ 401 (строки нет — это не аномалия хранилища).
+# Место нормы: Platform/08-domain/spec/08.4-domain.norms.md — Н1.1 (`unreadable`: «строка человека, которая не читается
+#   (не по форме Н1.1 или name ≠ <имя> ключа), — пропускается и считается (диагностика процесса), остальные служат;
+#   domain/disabled она не снимает: имя её ключа остаётся там, если было; DELETE /domain/users/<имя> удаляет и её —
+#   снятие строк грантов и метка как у читаемой»), Н1.2 (`check`: «строка domain/users/<имя> есть, но не читается —
+#   503 {error: "unavailable"}, не 401 (исход семьи users; различимость имени здесь допустима — Г-42)»; `answer`:
+#   401 {error: "refused", detail: "wrong user or password"}), Н3 «дверь людей» шаг 7 («POST: человек есть или стоит метка
+#   domain/deleting/<имя> — 409 exists; PUT, DELETE: нет — 404 no such person») и шаг 9 (DELETE: метка → строка человека →
+#   строки грантов → снятие метки); Platform/08-domain/data/users.schema.json (форма строки: {name, how, pwhash_secret,
+#   disabled, at, by}) и users.outcomes.tsv (исход нечитаемой строки для читателя `domain`). Чек-лист: П/08.4-01
+#   («нечитаемая строка человека не снимает disabled; DELETE удаляет и её»).
+# Подготовка: стенд домена `hold`, `m1`, `m2` (@domain). Человек `ann` заводится черновиком; грантов ему нет — правки
+#   людей не требуют грантов, только токен текущего человека (root). Прецеденты: сц. 01–02 приёмки P/08.4
+#   (Platform/08-domain/acceptance/4/scenarios.tsv) — POST /domain/users → 201, PUT /domain/users/ann {"disabled": true}
+#   → 200 {"user": "ann", "disabled": true}, чтение `domain/disabled` → {"names": "[\"ann\"]"}, DELETE → 200
+#   {"user": "ann", "deleted": true}; запись строки мимо писателя — сц. 09 и 10 той же приёмки (`member hold store
+#   POST /v1/write {"op": "put", "key": …, "items": {}}` → 200).
+# Существующие директивы: `@domain`, `@until`; двери `holder`, `signer`, `member hold store`; ожидания — подмножество полей,
+#   `@absent`, `@oneof`. Новых директив не требуется.
+# Сроки и допуски: @domain — до 90 с; далее 11 запросов ≈ 15 с (вход — сверка PBKDF2, 600000 итераций, ≈ 0,5 с).
+#   Потолок сценария — 3 минуты; не превышен.
+# Почему ожидание именно такое:
+#   — строка пишется мимо писателя с именем «bob» в ключе `domain/users/ann`: по Н1.1 именно `name ≠ <имя> ключа` делает
+#     строку нечитаемой (второй признак нечитаемости — «не по форме Н1.1»). Остальные поля строки по форме записаны
+#     верно, чтобы нечитаемость была ровно по имени: проверка идёт по ключу, а не по содержимому.
+#   — вход под нечитаемым именем — 503 {error: "unavailable"}, а не 401: норма требует различать аномалию хранилища от
+#     отказа по паролю (Н1.2 check, Г-42); отказ 401 был бы неотличим от неверного пароля.
+#   — вход root'а проходит: по Н1.1 нечитаемая строка «пропускается… остальные служат» — прочие строки людей не ломаются.
+#   — `domain/disabled` после порчи остаётся с «ann»: по Н1.1 нечитаемая строка выключение не снимает (сверка прохода
+#     пересобирает флаг по читаемым строкам, но имя нечитаемой строки в списке остаётся). Чтение — @until, потому что
+#     сверка идёт проходом держателя (VIEW_EVERY = 3 с).
+#   — DELETE удаляет и нечитаемую строку: Н1.1 прямо велит снимать строки грантов и метку удаления «как у читаемой»
+#     (иначе испорченная строка вернула бы выключенному старые токены). Ответ — 200 {"user": "ann", "deleted": true}.
+#   — после удаления строки нет, и вход даёт обычный 401 {error: "refused", detail: "wrong user or password"}: это уже не
+#     аномалия хранилища, а отсутствие человека, и вид отказа должен быть прежним.
+# Оговорка (для владельца приёмки): правка (PUT) нечитаемой строки нормой не покрыта — Н3 «дверь людей» шаг 7 говорит
+#   «PUT, DELETE: нет — 404 no such person» (строки нет), а Н1.1 unreadable требует, чтобы такую строку DELETE удалял.
+#   Поэтому шаг 9 ждёт одну из двух форм (`@oneof`): 404 {error: "no such person"} — по шагу 7 (человека как будто нет) или
+#   503 {error: "unavailable"} — по правилу «Нечитаемая строка» (Platform/common/contracts/gate-and-pass.md, «Отказы
+#   сторожевой»). Свидетельство (cammeta-python, impl/m11domain/signer.py, `change`) отдаёт 404 — то есть по шагу 7;
+#   решение, какой ответ верен, остаётся за владельцем: шаг 9 в этом виде проверяет и не пропускает расхождение молча.
+#   Второе: вход под нечитаемым именем в свидетельстве даёт 401 (строка не читается — пароль не сверяется, отказ как у
+#   неизвестного человека), а норма (Н1.2 check, Г-42, ответ «Архитектора» 2026-10-25) требует 503. Черновик написан по
+#   норме; расхождение свидетельства с нормой — предмет разбора владельца.
+scenario	step	request	expect
+03-garbled-person-row	1	@domain	ok
+03-garbled-person-row	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+03-garbled-person-row	3	holder PUT /domain/users/ann {"disabled": true}	200 {"user": "ann", "disabled": true}
+03-garbled-person-row	4	member hold store GET /v1/get?key=domain/disabled	200 {"items": {"names": "[\"ann\"]"}}
+03-garbled-person-row	5	member hold store POST /v1/write {"op": "put", "key": "domain/users/ann", "items": {"name": "bob", "how": "password", "pwhash_secret": "not a secret", "disabled": "false", "at": "1", "by": "root"}}	200
+03-garbled-person-row	6	signer POST /api/login {"user": "ann", "password": "ann password 1"}	503 {"error": "unavailable"}
+03-garbled-person-row	7	signer POST /api/login {"user": "root", "password": "w2c test root password"}	200 {"token": "@any", "until": "@any", "user": "root"}
+03-garbled-person-row	8	@until 30 member hold store GET /v1/get?key=domain/disabled	200 {"items": {"names": "[\"ann\"]"}}
+03-garbled-person-row	9	holder PUT /domain/users/ann {"disabled": false}	@oneof 404 {"error": "no such person"} | 503 {"error": "unavailable"}
+03-garbled-person-row	10	holder DELETE /domain/users/ann	200 {"user": "ann", "deleted": true}
+03-garbled-person-row	11	member hold store GET /v1/get?key=domain/users/ann	200 {"items": null}
+03-garbled-person-row	12	signer POST /api/login {"user": "ann", "password": "ann password 1"}	401 {"error": "refused", "detail": "wrong user or password"}

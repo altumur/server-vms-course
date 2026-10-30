@@ -1,0 +1,68 @@
+# Черновик H08 — битый общий документ: форма правки (400), значение под печать (400), прежний документ не читается (503).
+# Что проверяет: четыре отказа правки общего документа `PUT /domain/shared {base_rev, shared}`:
+#   (1) A9 — `shared.testsub` не объект → 400 «the edit is {base_rev: …, shared: {<sub>: {<field>: value or null}}}»;
+#   (2) тело не по JSON → тот же 400 формы тела;
+#   (3) A6 — значение, которое консоль запечатала бы (имя `*_secret` на любой глубине) → 400 «'<имя>': the shared document
+#   is signed, not sealed»;
+#   (4) A7 — прежний документ (объект, который называет указатель) не читается → 503 {error: "refused", detail: "the
+#   shared document at rev N does not read: nothing is written"}, ничего не пишется.
+# Место нормы: Platform/08-domain/spec/08.9-domain.norms.md — Н1.3 `order`: шаг 2 «тело не {base_rev: целое ≥ 0, shared:
+#   объект, каждое shared.<sub> — объект} — 400 … {error: "refused", detail: "the edit is {base_rev: <the revision it was
+#   made against>, shared: {<sub>: {<field>: value or null}}}"}» (в скобках примечания нормы: «shared.<sub> не объект — тоже
+#   здесь, до base_rev; добавлено сверкой М11, A9»); шаг 4 «содержание — все отказы одним 400 через «; » … значение,
+#   которое консоль запечатала бы (имя *_secret на любой глубине, находка пароля в адресе по P/06.2 Н1.1а), — «'<имя>': the
+#   shared document is signed, not sealed» (сверка М11, A6)»; шаг 5 «прежний документ (объект, который называет указатель)
+#   не читается или не с его sha256 — 503 {error: "refused", detail: "the shared document at rev N does not read: nothing
+#   is written"}, ничего не пишется (сверка М11, A7)»; Н1.2 (`pointer`: domain/shared {doc: JCS {term, rev, sha256,
+#   object}}); Н4 (`refused` — 400, 409, 413, 503; «прежний документ не читается — 503»); исходы
+#   Platform/08-domain/data/shared.outcomes.tsv (строка «объект целиком нечитаем … правка — 503 {error: "refused", detail:
+#   "the shared document at rev N does not read: nothing is written"}»). Правило печати — договор запечатывания
+#   (Platform/common/contracts/sealing.md) и P/06.2 Н1.1а/Н3: имя `*_secret` на любой глубине и пароль в адресе.
+# Подготовка: стенд домена `@domain` (hold, m1, m2). Прецедент правки — сц. 01 приёмки 8.9: `holder PUT /domain/shared
+#   {"base_rev": 0, "shared": {"testsub": {"step": 5, "marks": ["site"]}}}` → 200 {"term": 1, "rev": 1, "by": "root"};
+#   объявленные поля testsub (вид `declared`): step (int), marks (list), rounds (json, schema — массив). Запись мимо писателя
+#   — прецедент записи строки мимо писателя (сц. 09, 10 приёмки 8.4; сц. 05 приёмки 8.10): `member hold store POST
+#   /v1/write {"op": "put", "key": …, "items": {…}}`.
+# Существующие директивы: `@domain`; двери `holder`, `member hold store`; `@raw <текст>` (тело не по JSON); ожидания —
+#   подмножество полей, `~подстрока`. Новых директив не требуется.
+# Сроки и допуски: четыре сценария, у каждого свой `@domain` (до 90 с) и 2–4 шага; суммарно ≈ 2 минуты. Потолок сценария —
+#   3 минуты; не превышен.
+# Почему ожидание именно такое:
+#   — A9 и «тело не по JSON» — 400, а не 503: норма Н1.3 отдаёт их на шаге 2 (форма тела), до `base_rev` и до содержания.
+#     Ответ — {error: "refused", detail: "the edit is …"}; `detail` судим по подстроке «the edit is».
+#   — A6 — 400 шага 4, а не 503: норма Н1.3 относит «значение, которое консоль запечатала бы» к отказам содержания, а
+#     содержание — один 400. Ответ — {error: "refused"}; detail содержит «'<имя>': the shared document is signed, not
+#     sealed» (судим по подстроке без имени поля: имя перед двоеточием — слово реализации).
+#   — A7 — 503 шага 5: прежний документ не читается (указатель называет объект, которого нет) → правка не пишет поверх
+#     («правка не пишет поверх: 503», shared.outcomes.tsv, читатель `domain`) и отвечает {error: "refused", detail: "the
+#     shared document at rev N does not read: nothing is written"}. Судим по подстроке «does not read».
+#   — почему A6 приходится на вложенное имя: правило печати — по ИМЕНИ (`*_secret` на любой глубине), а имя поля общего
+#     документа должно быть объявлено в `domain.shared` манифеста (иначе срабатывает более ранний отказ «is not in its
+#     domain.shared»). В манифесте testsub объявлены step, marks, rounds — секретного имени среди них нет, поэтому значение
+#     несёт секретное имя внутри объявленного поля типа json (`rounds`). Побочно: `rounds` по манифесту — массив, поэтому
+#     отказ по schema может присоединиться к тому же 400 (норма: «все отказы одним 400 через «; »») — ожидание судит
+#     только подстроку про печать.
+#   — шаг A7: указатель `domain/shared` переписан мимо писателя так, что он называет несуществующий объект
+#     `domain/shared-docs/rev-9`; сам указатель при этом читается по форме (term, rev, sha256, object), `rev` остаётся 1 —
+#     поэтому `base_rev` прежний и отказ приходится на шаг 5, а не на шаг 3. Контрольный шаг после отказа: документ по-
+#     прежнему не читается (`doc` в виде — null) и процесс жив.
+# Оговорка (для владельца приёмки): чек-лист П/08.9-02 сводит A6, A7 и A9 к 503, а норма Н1.3 разводит их: форма тела и
+#   содержание — 400, «прежний документ не читается» — 503 (Н4 называет 503 только для этого случая). Черновик написан по
+#   норме (Н1.3, Н4) — чек-лист стоит поправить. Второе: «значение-конверт enc:v2:» в одиночку отказа A6 не даёт: правило
+#   печати смотрит на имя, а не на вид значения; поэтому в варианте A6 значение — объект с секретным именем внутри
+#   (конверт `enc:v2:` в значении оставлен как пример запечатанного вида, на отказ он не влияет). Третье: вариант «указатель
+#   domain/shared сам нечитаем» (строка целиком нечитаема по форме Н1.2 pointer → 503 unavailable по shared.outcomes.tsv) не
+#   проверяется: свидетельство читает такой указатель как «документа нет» и правка проходит — расхождение с исходами
+#   семьи; вопрос к владельцу.
+scenario	step	request	expect
+08a-shared-sub-not-object	1	@domain	ok
+08a-shared-sub-not-object	2	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": "not an object"}}	400 {"error": "refused", "detail": "~the edit is"}
+08b-shared-body-not-json	1	@domain	ok
+08b-shared-body-not-json	2	holder PUT /domain/shared @raw not json	400 {"error": "refused", "detail": "~the edit is"}
+08c-shared-sealed-value	1	@domain	ok
+08c-shared-sealed-value	2	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"rounds": {"token_key_secret": "enc:v2:00"}}}}	400 {"error": "refused", "detail": "~the shared document is signed, not sealed"}
+08d-shared-previous-unreadable	1	@domain	ok
+08d-shared-previous-unreadable	2	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 5, "marks": ["site"]}}}	200 {"rev": 1}
+08d-shared-previous-unreadable	3	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "{\"term\":1,\"rev\":1,\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"object\":\"domain/shared-docs/rev-9\"}"}}	200
+08d-shared-previous-unreadable	4	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"step": 6}}}	503 {"error": "refused", "detail": "~does not read"}
+08d-shared-previous-unreadable	5	holder GET /domain/shared	200 {"doc": null}

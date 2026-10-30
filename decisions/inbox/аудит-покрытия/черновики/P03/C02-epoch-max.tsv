@@ -1,0 +1,61 @@
+# Черновик C02 — граница эпохи 2^53 − 1 и нечитаемая строка эпохи: отказ выдачи до записи.
+# Что проверяет: выдачу эпохи на краях, которые корпус приёмки проверял только чтением (приёмка главы 3.3,
+#   Platform/03-worker/acceptance/3/scenarios.tsv, сценарии 02 и 06 видят только здоровые эпохи 1 → 2):
+#   (1) предустановленная строка `testsub/epoch/c1` со значением 9007199254740991 (= 2^53 − 1) — выдача эпохи
+#   отказана ДО записи: строка эпохи не меняется (та же версия, те же байты) и не удаляется, единица не запускается,
+#   счётчик не растёт; (2) строка эпохи, значение которой не число, — отказ EpochUnreadable (не 0): единица не
+#   запускается, в строку эпохи 0 не пишется, строка не меняется.
+# Место нормы: Platform/03-worker/spec/03.2-worker.norms.md — Н1.5 (строка эпохи: «epoch: десятичное целое ≥ 1,
+#   < 2^53 … max(текущая, пол) + 1 с cas; при max = 2^53 − 1 — отказ выдачи до записи: строка эпохи не меняется,
+#   единицу не запускать, журнал называет единицу и эпоху»), Н3 «взять_эпоху(id)» («прочитать <sub>/epoch/<id>:
+#   нет → 0; не число → отказ EpochUnreadable (не 0) — единицу не запускать»), Н4 (строка `/epoch`: «выдача эпохи:
+#   отказ EpochUnreadable, не 0 — единицу не запускать, тревога»), Н3 «никто и возврат имени» (строка эпохи не
+#   удаляется). Чек-лист: P/03.2-06 («на границе 2^53 − 1 — отказ выдачи до записи … нечитаемая — ошибка не ноль,
+#   строка не удаляется»).
+# Подготовка: строка эпохи — семейство `<sub>/epoch/<id>`; писатель по Platform/common/data/catalog.tsv — воркер,
+#   поэтому предустановка идёт дверью `admin` (полные права; общий README приёмки, таблица «Двери»), а не дверью
+#   `console` (консоль на строки эпохи — читатель). Строка кладётся ДО создания единицы: тогда воркер читает её
+#   ровно один раз — при взятии эпохи, и отказ виден в её неизменности.
+# Существующие директивы: `@start resource`, `@start controller`, `@start worker <имя>`, `@sleep <с>`, `@until <с>
+#   <запрос>`; двери `store` (чтение ровней с правами на `testsub/`), `admin` (предустановка строки эпохи),
+#   `console` (создание счётчика), `resource` (чтение пульса: `GET /v1/objects/testsub/heartbeats/<имя>?scope=local`).
+# Новых директив не требуется.
+# Почему ожидание именно такое:
+#   — граница 2^53 − 1: норма требует отказа ДО записи, поэтому строка эпохи после отказа обязана остаться той же
+#     (та же версия строки `index`, те же байты `items`) — сравнение `$v` и повторное чтение через 12 с это и проверяют;
+#     если бы запись состоялась, версия строки сменилась бы и второе чтение не совпало бы с `$v`.
+#   — «не число»: норма — «отказ EpochUnreadable (не 0)», то есть ни нулевая эпоха, ни запись; поэтому строка эпохи
+#     остаётся с прежним значением «x», а элемента пульса для единицы нет вовсе: у нечитаемой эпохи нет аренды,
+#     и глава 3.4 Н1.1 даёт элемент пульса только для ведомых единиц с арендой.
+#   — «единица не запускается» читается пульсом: `status` — пустой массив (элемента с `phase: "running"` нет).
+#   — счётчик не растёт: строка единицы `testsub/counters/c1` сохраняет `start` и `revision` — воркер, не ведущий
+#     единицу, её не переписывает (у testsub в манифесте нет `worker.writes`).
+# Оговорка (для владельца приёмки): журнал при отказе (норма: «журнал называет единицу и эпоху»; тревога по Н4) в TSV
+#   не читается — это проверка вне сценарного файла. Тревога — событие в журнале событий; на стенде читается только
+#   дверью `console GET /events`, а вид и имя тревоги норма не задаёт, поэтому шага с её видом здесь нет.
+scenario	step	request	expect
+# 01-epoch-max — граница 2^53 − 1: отказ выдачи до записи; строка эпохи не меняется и не удаляется; единица не запущена.
+01-epoch-max	1	@start resource	ok
+01-epoch-max	2	@start controller	ok
+01-epoch-max	3	@start worker w-1	ok
+01-epoch-max	4	admin POST /v1/write {"id":"c02a","op":"put","key":"testsub/epoch/c1","items":{"epoch":"9007199254740991"},"cas":""}	200
+01-epoch-max	5	admin GET /v1/get?key=testsub/epoch/c1	200 {"index": "$v", "items": {"epoch": "9007199254740991"}}
+01-epoch-max	6	console POST /counters {"name": "c1", "start": 1}	201 {"id": "c1", "revision": 1}
+01-epoch-max	7	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1", "reason": "@any", "manifest_rev": "@any"}}
+01-epoch-max	8	@sleep 12	ok
+01-epoch-max	9	admin GET /v1/get?key=testsub/epoch/c1	200 {"index": "$v", "items": {"epoch": "9007199254740991"}}
+01-epoch-max	10	store GET /v1/get?key=testsub/counters/c1	200 {"items": {"start": "1", "revision": "1"}}
+01-epoch-max	11	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"status": [], "pass_failures": 0}
+01-epoch-max	12	@sleep 12	ok
+01-epoch-max	13	admin GET /v1/get?key=testsub/epoch/c1	200 {"index": "$v", "items": {"epoch": "9007199254740991"}}
+# 02-epoch-not-a-number — значение эпохи не число: отказ EpochUnreadable (не 0), строка не меняется, единица не запущена.
+02-epoch-not-a-number	1	@start resource	ok
+02-epoch-not-a-number	2	@start controller	ok
+02-epoch-not-a-number	3	@start worker w-1	ok
+02-epoch-not-a-number	4	admin POST /v1/write {"id":"c02b","op":"put","key":"testsub/epoch/c2","items":{"epoch":"x"},"cas":""}	200
+02-epoch-not-a-number	5	admin GET /v1/get?key=testsub/epoch/c2	200 {"index": "$v", "items": {"epoch": "x"}}
+02-epoch-not-a-number	6	console POST /counters {"name": "c2", "start": 1}	201 {"id": "c2", "revision": 1}
+02-epoch-not-a-number	7	@until 30 store GET /v1/get?key=testsub/placement/c2	200 {"items": {"worker": "w-1", "reason": "@any", "manifest_rev": "@any"}}
+02-epoch-not-a-number	8	@sleep 12	ok
+02-epoch-not-a-number	9	admin GET /v1/get?key=testsub/epoch/c2	200 {"index": "$v", "items": {"epoch": "x"}}
+02-epoch-not-a-number	10	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"status": [], "pass_failures": 0}

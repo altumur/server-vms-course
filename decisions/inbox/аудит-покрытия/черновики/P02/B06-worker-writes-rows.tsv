@@ -1,0 +1,42 @@
+# Черновик B06 — `worker.writes` должен называть объявленную СОБСТВЕННУЮ таблицу (и в списковой форме `tables`).
+# Норма: Platform/02-installer/spec/02.5-installer.norms.md Н1.4 — «правила генератора: … `worker.writes` ДОЛЖЕН называть
+#   объявленную собственную таблицу; имя `unit.rows` и необъявленное имя дают отказ загрузки `refused:reference`
+#   (глава 2.1)»; чеклист П/02.5-01 — «… явный delete и отказ worker.writes=unit.rows — чтением по Н5 и README приёмки главы».
+#   Правило загрузчика — Platform/02-installer/spec/02.1-installer.norms.md Н1.4 (слой связей), строка 85 таблицы связей
+#   `02.1-installer.relations.json`: `worker.writes[]` → `. in keys(tables)` — и по форме словаря, и по форме СПИСКА
+#   (в CEL проверены обе: `doc["tables"]` как отображение и как список имён); отказ — слой связей, класс `relations`
+#   (П/02.1 Н4, `refused:relations`; прежнее слово `reference`).
+# Место приёмки: глава 2.1 (Platform/02-installer/acceptance/1) — таблица `verdicts.tsv`, формат главы 2.1:
+#   `case<TAB>verdict`, ровно два поля; `case` — файл `cases/<case>.subsystem.yaml`, загруженный ОДИН; `verdict` — `ok`
+#   или `refused`; отказ засчитывается только в словах, называющих файл; класс отказа — в `classes.tsv`.
+#   Смежное место: README приёмки главы 2.5 (Platform/02-installer/acceptance/5), «Дополнительная проверка чтением
+#   R36-05» — «worker.writes с именем собственного unit.rows даёт refused:reference, без генерации прав… Сверить все
+#   общие манифесты и все пути генератора, включая списковую форму tables; в текущей TSV нет запуска загрузчика на таком
+#   изменённом манифесте».
+# Существующие директивы: не требуются.
+# Новых директив не требуется.
+# Что проверяет: три границы правила в ОДНОЙ таблице — положительный сосед, отказ по `unit.rows`, отказ по необъявленному
+#   имени — и, главное, то же в СПИСКОВОЙ форме `tables` (`tables: [имя]`), которой нет ни в одном случае корпуса.
+#   Смысл списковой формы: загрузчик обязан развернуть сахар списка в отображение ДО проверки правила; если развернёт
+#   после — «своя таблица» в списковой форме будет объявлена, а имя в `worker.writes` — не найдено, и принятый манифест
+#   получит отказ (или наоборот: отказ там, где принято).
+# Существующий корпус: `profile_worker_writes_table_ok` (ok, форма словаря), `profile_worker_writes_unit_rows` (refused,
+#   БЕЗ строки в `classes.tsv`), `c8_ref84_worker_writes_unit_rows` (refused, класс `relations`),
+#   `c8_ref83_worker_writes_table_unknown` (refused, класс `relations`). Списковой формы `tables` в них нет.
+# Файлы: `cases/worker_writes_declared_ok.subsystem.yaml` (таблица `notes` словом, `worker.writes: [notes]` — принято),
+#   `cases/worker_writes_declared_list_ok.subsystem.yaml` (та же пара в списковой форме `tables: [notes]` — принято),
+#   `cases/worker_writes_unit_rows.subsystem.yaml` (`worker.writes: [counters]` — `counters` есть `unit.rows` — отказ),
+#   `cases/worker_writes_undeclared.subsystem.yaml` (`worker.writes: [ghost]` — имя не объявлено — отказ).
+# Предлагаемые строки `classes.tsv` (слой, где отказ): `worker_writes_unit_rows<TAB>relations` и
+#   `worker_writes_undeclared<TAB>relations` — по аналогии с `c8_ref83`/`c8_ref84`; и, отдельным решением владельца,
+#   класс для прежнего `profile_worker_writes_unit_rows` (тот же вход, класс не записан).
+# Оговорка (дублирование): два отказных случая повторяют входы `c8_ref83`/`c8_ref84` — берутся, чтобы таблица была
+#   самодостаточной (положительный сосед и оба отказа рядом). При переносе в курс владельцу решать: переименовать новые
+#   случаи с признаком формы (`…_list_…`) и оставить отказы только в списковой форме, либо заменить существующие.
+# Оговорка: правило проверяется ЗАГРУЗЧИКОМ (слой связей), а не генератором прав; в случаях отказа файл прав не должен
+#   появиться вовсе — это проверяется генератором прав отдельно (README приёмки главы 2.5, R36-05).
+case	verdict
+worker_writes_declared_ok	ok
+worker_writes_declared_list_ok	ok
+worker_writes_unit_rows	refused
+worker_writes_undeclared	refused

@@ -1,0 +1,131 @@
+# Черновик H05 — предел 50 исходов у держателя: 51 исход одного члена, остаются последние 50.
+# Что проверяет: (1) держатель ведёт исходы в строке `domain/outcomes/<член>` и обрезает её до OUTCOMES_LIMIT = 50
+#   (последние по (at, id) убывая) — при 51 исходе одного члена остаётся 50, а самый старый исход вытесняется;
+#   (2) вид `domain/view.outcomes` показывает ровно эти 50 (массив по (at, id) убывая); (3) вытесняется именно самый
+#   старый исход, а не случайный: тот, что записан раньше всех, в строке исходов отсутствует.
+# Место нормы: Platform/08-domain/spec/08.6-domain.norms.md — Н1.6 (`domain/outcomes/<член>`: строка держателя; элемент
+#   <id> — исход; OUTCOMES_LIMIT 50 — последние по (at, id) убывая; settle: запись исхода — затем снятие правки по CAS;
+#   `domain/view.outcomes`: {<член>: [<исход>…]} — строка domain/outcomes/<член> по (at, id) убывая), Н1.4 (`id`:
+#   «e-» + первые 12 знаков hex sha256(UTF-8(член) ‖ 0x00 ‖ UTF-8(Idempotency-Key)); `KEPT_LIMIT`: 50 — ждущих правок
+#   на члена; 51-я — 409 {error: "kept_full"}; `reply`: 202 {kept, cluster, what, note}; `base`: у ждущей PUT того же
+#   path base = base последней из них по seq + 1), Н1.3 (двери: POST /domain/<sub>/<rows> — создать единицу; PUT
+#   /domain/<sub>/<rows>/<ref> — править поля; Idempotency-Key обязателен), Н3 «исход» (settle). Чек-лист: П/08.6-04
+#   («исходы у держателя: settle по kept_at, вид pending/outcomes — сц. 03; предел 50 — чтением (стенду нужен 51 исход
+#   одного члена)»).
+# Подготовка: стенд домена `hold`, `m1`, `m2` (@domain). Единица `testsub/counters` с именем `c5` — на члене `m1`
+#   (`member m1 console POST /counters {"name": "c5", "start": 0}` → 201), и держатель должен узнать о ней из вида
+#   (`@until 60 holder GET /domain/testsub/counters?cluster=m1` → 200 [{"ref": "c5"}]) — иначе правка по `ref` не
+#   находится (8.6 Н1.3 `find`). Прецеденты: сц. 03 и 05 приёмки P/08.6
+#   (Platform/08-domain/acceptance/6/scenarios.tsv) — хранимая правка 202 {kept, cluster, what}, предел 50 ждущих
+#   правок (50-я — 202, 51-я — 409 kept_full), вид `pending`, вид `outcomes` после применения.
+# Существующие директивы: `@domain`, `@cut <кластер>` / `@mend <кластер>` (молчание члена и его возврат — словарь
+#   «Стенд домена»), `@until`, `@header Idempotency-Key: <значение>` (заменяет ключ раннера); двери `holder`,
+#   `member m1 console`, `member hold store`. Новых директив не требуется.
+# Сроки и допуски: @domain — до 90 с; шаг 3 ждёт первую метку m1 (до 60 с), шаг 5 — применение первой правки (до 90 с),
+#   шаг 6 — запись исхода (до 90 с), 50 правок — ≈ 5 с, шаг 58 — счёт ждущих (до 30 с), шаг 60 — применение всех
+#   50 и settle (до 120 с: проход агента REPORT_EVERY = 5 с, проход вида VIEW_EVERY = 3 с), шаги 61–62 — до 60 с.
+#   Итого ≈ 2–3 минуты — около потолка сценария (3 минуты). ДОРОГОЙ СЦЕНАРИЙ: 62 шага, 50 хранимых правок подряд;
+#   при разборе запускать его отдельно, а не в общем прогоне приёмки.
+# Расчёт шагов (почему именно так — правок 51, а ждущих правок предел 50):
+#   — 51 правку нельзя хранить сразу: KEPT_LIMIT = 50 ждущих правок на члена, 51-я — 409 {error: "kept_full"}
+#     (8.6 Н1.4 KEPT_LIMIT; прецедент — сц. 05 приёмки 8.6). Значит, 51 исход получается в два захода.
+#   — заход 1 (шаги 4–6): одна правка, член на связи, — агент применяет её в ближайшем проходе, держатель записывает
+#     исход; её `at` (время применения агентом) — самый ранний из всех 51. Идентификатор правки задан явно:
+#     Idempotency-Key = `h05-oldest`, член `m1`, значит id = «e-» + sha256(«m1» ‖ 0x00 ‖ «h05-oldest»)[0:12] =
+#     `%s` — по Н1.4 id. Шаг 4 ждёт этот id в ответе 202, шаг 6 — в строке исходов.
+#   — заход 2 (шаги 7–59): член `m1` молчит (`@cut m1`), 50 правок хранятся (ровно предел), затем `@mend m1` — агент
+#     применяет их и отчитывается, держатель записывает исходы. Их 50 `at` — позже первого.
+#   — всего исходов 51; обрезка до 50 вытесняет самый старый — исход захода 1 (его `at` наименьший, порядок
+#     (at, id) убывающий, а при равных `at` — по id; равенства здесь нет: заходы разнесены по времени).
+#   — шаг 60 ждёт `pending` = 0: все правки сняты (settle: запись исхода — затем снятие правки по CAS).
+#   — шаг 61: в строке `domain/outcomes/m1` ключа первого исхода нет — он вытеснен.
+#   — шаг 62: в виде ровно 50 исходов — предел соблюдён.
+# Почему ожидание именно такое:
+#   — «вытеснен именно самый старый» — по Н1.6: «OUTCOMES_LIMIT 50 — последние по (at, id) убывая», то есть остаются
+#     50 последних, а вытесняется тот, у кого (at, id) наименьшие. Первый исход записан раньше всех, значит его `at`
+#     наименьший, и он вытесняется первым.
+#   — проверка идёт по строке `domain/outcomes/m1`, а не по виду: чек-лист требует «предел 50 — чтением», а в виде
+#     массив `outcomes.m1` сравнивается по длине и по порядку, а порядок по (at, id) — по `id` (случайные хэши) при
+#     равных `at` неупорядочен; в строке исходов ключи — сами `id`, и по ключу видно, кого нет.
+#   — ключ в ожидании — литеральный `id`, а не `$имя`: в ожиданиях подстановка `$имя` идёт по значениям, а не по
+#     ключам объекта (README: «$имя» связывает значение; ключи ожидания — как написаны), поэтому `id` первой правки
+#     задан в шапке вычислением по Н1.4 и вставлен в ожидание буквально: тот же id, что ждёт шаг 4.
+#   — элементы массива в шаге 62 — по одному `{"id": "@any"}`: важен счёт (ровно 50) и то, что это исходы (у каждого
+#     есть `id`); содержимое исхода (status/result) — не предмет проверки этого пункта, оно зависит от того, применилась
+#     ли правка без конфликта, и по-разному у разных реализаций.
+#   — ожидание шага 60 — `pending` = 0, а не «меньше 50»: ждать надо, пока правки не сняты (исходы записаны), иначе
+#     шаги 61–62 прочитали бы промежуточное состояние.
+# Оговорка (для владельца приёмки): (1) расходится с заданием форма запроса: задание предлагает
+#   `holder POST /domain/<sub>/<rows>/<ref>`, а хранимая правка по 8.6 Н1.3 — это PUT
+#   `/domain/<sub>/<rows>/<ref>` (POST /domain/<sub>/<rows> создаёт единицу и кладёт её на член, а не правит поле);
+#   черновик написан по норме. (2) 50 правок идут по одному path (`/testsub/counters/c5`): по Н1.4 `base` у ждущей PUT
+#   того же path — base последней по seq + 1, поэтому правки применяются по порядку; если одна из них даст конфликт
+#   (412), следующие того же path тоже дадут конфликт — это не мешает проверке: исход (конфликт) тоже исход, и счёт
+#   остаётся 51. (3) шаг 62 ждёт ровно 50 исходов: это верно, если все 51 правка дали исход (исход не даёт только
+#   обрыв применения — тогда следующий проход повторяет правку, и счёт восстанавливается). Если реализация не даёт
+#   исхода (правка ждёт), шаг 62 упадёт — это расхождение, но при разборе надо отличить его от «исходов меньше 51».
+#   (4) Предел исходов в строке `domain/outcomes/<член>` — по Н1.6; в этом же файле живут и исходы других членов
+#   (строка на член), обрезка — на строку, а не на вид.
+
+05-outcomes-limit	1	@domain	ok
+05-outcomes-limit	2	member m1 console POST /counters {"name": "c5", "start": 0}	201
+05-outcomes-limit	3	@until 60 holder GET /domain/testsub/counters?cluster=m1	200 [{"ref": "c5"}]
+05-outcomes-limit	4	@header Idempotency-Key: h05-oldest holder PUT /domain/testsub/counters/c5 {"start": 1}	202 {"kept": "e-d43101de75c2", "cluster": "m1", "what": "start"}
+05-outcomes-limit	5	@until 90 member m1 console GET /counters	200 {"configured": [{"id": "c5", "start": 1}]}
+05-outcomes-limit	6	@until 90 member hold store GET /v1/get?key=domain/outcomes/m1	200 {"items": {"e-d43101de75c2": "@any"}}
+05-outcomes-limit	7	@cut m1	ok
+05-outcomes-limit	8	holder PUT /domain/testsub/counters/c5 {"start": 2}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	9	holder PUT /domain/testsub/counters/c5 {"start": 3}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	10	holder PUT /domain/testsub/counters/c5 {"start": 4}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	11	holder PUT /domain/testsub/counters/c5 {"start": 5}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	12	holder PUT /domain/testsub/counters/c5 {"start": 6}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	13	holder PUT /domain/testsub/counters/c5 {"start": 7}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	14	holder PUT /domain/testsub/counters/c5 {"start": 8}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	15	holder PUT /domain/testsub/counters/c5 {"start": 9}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	16	holder PUT /domain/testsub/counters/c5 {"start": 10}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	17	holder PUT /domain/testsub/counters/c5 {"start": 11}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	18	holder PUT /domain/testsub/counters/c5 {"start": 12}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	19	holder PUT /domain/testsub/counters/c5 {"start": 13}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	20	holder PUT /domain/testsub/counters/c5 {"start": 14}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	21	holder PUT /domain/testsub/counters/c5 {"start": 15}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	22	holder PUT /domain/testsub/counters/c5 {"start": 16}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	23	holder PUT /domain/testsub/counters/c5 {"start": 17}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	24	holder PUT /domain/testsub/counters/c5 {"start": 18}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	25	holder PUT /domain/testsub/counters/c5 {"start": 19}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	26	holder PUT /domain/testsub/counters/c5 {"start": 20}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	27	holder PUT /domain/testsub/counters/c5 {"start": 21}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	28	holder PUT /domain/testsub/counters/c5 {"start": 22}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	29	holder PUT /domain/testsub/counters/c5 {"start": 23}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	30	holder PUT /domain/testsub/counters/c5 {"start": 24}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	31	holder PUT /domain/testsub/counters/c5 {"start": 25}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	32	holder PUT /domain/testsub/counters/c5 {"start": 26}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	33	holder PUT /domain/testsub/counters/c5 {"start": 27}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	34	holder PUT /domain/testsub/counters/c5 {"start": 28}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	35	holder PUT /domain/testsub/counters/c5 {"start": 29}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	36	holder PUT /domain/testsub/counters/c5 {"start": 30}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	37	holder PUT /domain/testsub/counters/c5 {"start": 31}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	38	holder PUT /domain/testsub/counters/c5 {"start": 32}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	39	holder PUT /domain/testsub/counters/c5 {"start": 33}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	40	holder PUT /domain/testsub/counters/c5 {"start": 34}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	41	holder PUT /domain/testsub/counters/c5 {"start": 35}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	42	holder PUT /domain/testsub/counters/c5 {"start": 36}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	43	holder PUT /domain/testsub/counters/c5 {"start": 37}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	44	holder PUT /domain/testsub/counters/c5 {"start": 38}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	45	holder PUT /domain/testsub/counters/c5 {"start": 39}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	46	holder PUT /domain/testsub/counters/c5 {"start": 40}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	47	holder PUT /domain/testsub/counters/c5 {"start": 41}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	48	holder PUT /domain/testsub/counters/c5 {"start": 42}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	49	holder PUT /domain/testsub/counters/c5 {"start": 43}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	50	holder PUT /domain/testsub/counters/c5 {"start": 44}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	51	holder PUT /domain/testsub/counters/c5 {"start": 45}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	52	holder PUT /domain/testsub/counters/c5 {"start": 46}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	53	holder PUT /domain/testsub/counters/c5 {"start": 47}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	54	holder PUT /domain/testsub/counters/c5 {"start": 48}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	55	holder PUT /domain/testsub/counters/c5 {"start": 49}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	56	holder PUT /domain/testsub/counters/c5 {"start": 50}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	57	holder PUT /domain/testsub/counters/c5 {"start": 51}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+05-outcomes-limit	58	@until 30 holder GET /domain	200 {"pending": {"m1": 50}}
+05-outcomes-limit	59	@mend m1	ok
+05-outcomes-limit	60	@until 120 holder GET /domain	200 {"pending": {"m1": 0}}
+05-outcomes-limit	61	@until 60 member hold store GET /v1/get?key=domain/outcomes/m1	200 {"items": {"e-d43101de75c2": "@absent"}}
+05-outcomes-limit	62	@until 60 holder GET /domain	200 {"outcomes": {"m1": {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}, {"id": "@any"}}}

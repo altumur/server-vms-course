@@ -1,0 +1,61 @@
+# Черновик H09 — потолок `ENTRY_MAX` 820 байт: большая Entry, засеянная мимо приёма, блокирует любую запись списка.
+# Что проверяет: (1) Entry больше `ENTRY_MAX` (820 байт JCS), засеянная мимо приёма члена, не остаётся незамеченной:
+#   любая запись `domain/members` проверяет ВСЕ Entry нового документа, а не только изменённую, и отказывает
+#   409 {error: "refused", detail: "the entry of <член> would exceed 820 bytes"} — ничего не записано (член не принят);
+#   (2) отказ виден читателю — принятого члена в списке нет; (3) после снятия лишней Entry (уход члена) запись списка
+#   снова идёт — приём отвечает 200.
+# Место нормы: Platform/08-domain/spec/08.10-domain.norms.md — Н1.5 (`ENTRY_MAX: 820` — «байт JCS Entry … Запись,
+#   после которой Entry больше, не пишется: 409 «the entry of <член> would exceed 820 bytes»»; `every_entry`: «любая запись
+#   domain/members (приём, уход, держатель в списке, claim, Entry.ca, правка администратора) проверяет все Entry нового
+#   документа, не только изменённую: … затем Entry больше ENTRY_MAX — 409 «the entry of <член> would exceed 820 bytes»,
+#   ничего не записано (добавлено сверкой М11, N6: засеянная мимо приёма большая Entry иначе осталась бы в списке)»),
+#   Н4 (409 — `refused`; исходы: «Entry больше ENTRY_MAX | 409 refused «the entry of <член> would exceed 820 bytes» |
+#   администратор | снять лишнее (revoked_keys, ca)»), чек-лист П/08.10-01 («`ENTRY_MAX` по всем Entry при любой записи»).
+#   Формы — Platform/08-domain/data/members.schema.json: `common.domain_members_doc` {rev, term, members} (все три
+#   обязательны, текст JCS), `common.domain_member_entry` {how, since, by?, key?, revoked_keys?, ca?} — `by` (человек,
+#   принявший члена) единственное поле без ограничения длины; примечание формы: «Entry не больше ENTRY_MAX 820 байт JCS —
+#   проверки урока у писателя, не формы». Приём члена — 08.3 Н3 «принять члена» (дверь `POST /domain/members`).
+# Подготовка: стенд домена вручную, как в сц. 05 приёмки 8.10: `@install domain`, `@start domain`, `@start agent hold`,
+#   `@start agent m1` — `@domain` не годится: он сам принимает членов по отпечатку, и к моменту проверки m1 уже был бы
+#   принят (триггером служит именно приём ещё не принятого члена). Готовность — `holder GET /domain/members`: hold в
+#   списке, m1 в `knocking`. Запись строки мимо писателя — прецедент сц. 05 приёмки 8.10 (`member hold store POST
+#   /v1/write {"op": "put", "key": "domain/members", "items": {"doc": …}}` → 200) и сц. 09–10 приёмки 8.4.
+# Существующие директивы: `@install domain`, `@start domain`, `@start agent <кластер>`, `@until`, `@big(N)`; двери
+#   `holder`, `member hold store`. Новых директив не требуется.
+# Сроки и допуски: `@until 30` на появление m1 в `knocking` (отчёт агента — REPORT_EVERY 5 с, проход держателя —
+#   VIEW_EVERY 3 с), далее пять запросов ≈ 5 с. Потолок сценария — 3 минуты; не превышен.
+# Почему ожидание именно такое:
+#   — 409, а не 413: Н1.5 отводит 413 {error: "whole too large"} под другое — целое поколение больше 16 MiB
+#     (`whole`, глава 8.3 Н1.3 whole', `BODY_LIMIT`), и сам чек-лист П/08.10-01 оставляет `whole too large` «чтением
+#     (стенду нужны запись в 820 байт и поколение в 16 MiB)». Потолок Entry — 409 `refused` с названием члена.
+#   — код отказа и слово: Н4 (`refused` — 409), исход Н1.5 называет форму сообщения; `detail` судим по подстроке
+#     «would exceed 820 bytes» и по имени виновника («big») — имя входит в форму сообщения нормы («<член>»).
+#   — триггер — приём члена: `every_entry` велит проверять все Entry при любой записи списка; приём — самая простая
+#     такая запись (уход и `Entry.ca` — тоже, но уход большой Entry её и снимает). Entry проверяется по JCS-байтам
+#     записи: `{"by":"<900 знаков>","how":"admitted","since":1}` — около 936 байт, заведомо больше 820.
+#   — «ничего не записано»: после отказа принятого m1 в списке нет (`m1` — `@absent`); это и есть проверка «nothing
+#     written» — отказ не превращается в частичную запись.
+#   — снятие лишней Entry: `DELETE /domain/members/big` — уход члена; новый документ без этой Entry проходит проверку,
+#     и приём m1 после этого отвечает 200. Это же показывает, что процесс переживает исправление (норма Н1.5 в исходах:
+#     «администратор — снять лишнее»).
+# Оговорка (для владельца приёмки): задание этой части называет для этого случая 413 `whole too large` — по норме это
+#   другой потолок (целое поколение 16 MiB), и сам чек-лист П/08.10-01 оставляет его чтением; черновик написан по Н1.5
+#   (409) и generation 16 MiB не проверяет — помечено здесь. Второе: `by` — единственное поле Entry без ограничения
+#   длины, поэтому большая Entry засевается именно им; если владелец считает, что `by` (имя человека) должен быть
+#   ограничен формой, это отдельная правка формы, а не этого черновика. Третье: норма Н1.5 «every_entry» называет и
+#   другие записи (уход, `Entry.ca`, правка администратора) — черновик держит одну триггерную запись (приём) и одну
+#   восстановительную (уход); остальные пишутся той же проверкой, но на стенде это тот же код. Четвёртое: свидетельство
+#   (cammeta-python, impl/m11domain/dconsole.py, `admit`) отвечает на такую запись 409 refused с тем же словом
+#   «the entry of <член> would exceed 820 bytes» — совпадает с нормой; отличается путь: свидетельство сначала проверяет
+#   Entry нового члена, потом все Entry (write_members), норма велит проверять все.
+scenario	step	request	expect
+09-entry-max	1	@install domain	ok
+09-entry-max	2	@start domain	ok
+09-entry-max	3	@start agent hold	ok
+09-entry-max	4	@start agent m1	ok
+09-entry-max	5	@until 30 holder GET /domain/members	200 {"members": {"hold": {"key": "$hk", "since": "$hs"}}, "knocking": [{"name": "m1", "fingerprint": "$fp1"}]}
+09-entry-max	6	member hold store POST /v1/write {"op": "put", "key": "domain/members", "items": {"doc": "{\"members\":{\"big\":{\"by\":\"@big(900)\",\"how\":\"admitted\",\"since\":1},\"hold\":{\"how\":\"holder\",\"key\":\"$hk\",\"since\":1}},\"rev\":100,\"term\":1}"}}	200
+09-entry-max	7	holder POST /domain/members {"name": "m1", "fingerprint": "$fp1"}	409 {"error": "refused", "detail": "~would exceed 820 bytes ~big"}
+09-entry-max	8	holder GET /domain/members	200 {"members": {"m1": "@absent", "big": "@any"}}
+09-entry-max	9	holder DELETE /domain/members/big	200 {"members": {"big": "@absent"}}
+09-entry-max	10	holder POST /domain/members {"name": "m1", "fingerprint": "$fp1"}	200 {"members": {"m1": {"how": "admitted"}}}

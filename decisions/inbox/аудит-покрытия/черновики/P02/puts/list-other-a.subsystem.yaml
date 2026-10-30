@@ -1,0 +1,5 @@
+name: othera
+unit: {rows: xs, id: numeric}
+placement: {capacity: {default: 1}}
+tables: [otherb]
+worker: {exec: /usr/lib/othera/worker}

@@ -1,0 +1,41 @@
+# Черновик G02 — возврат имени над надгробием: только с теми же `fixed`.
+# Что проверяет: две вещи, обе про `fixed`-поле `of` у `tallies` подсистемы `testsub2`:
+#   (1) создание над надгробием с иным `fixed` → 400 «<поле> is fixed», надгробие не тронуто;
+#       с тем же `of` → 201, revision = надгробие + 1;
+#   (2) правка живого `fixed`-поля → 400 «<поле> is fixed», строка и revision прежние.
+# Место нормы: Platform/06-console/spec/06.1-console.norms.md — Н3 «создать» шаг 5 («надгробие с иными fixed → 400 (П3)») и
+#   шаг 8 («{id, revision: 1 | надгробие + 1, born: новое случайное значение, поля}»), Н3 «править» шаг 4 (Р2 по прочитанной строке →
+#   400 «<поле> is fixed»), Н4 «Дверь единиц» (400: `error` «<поле> is fixed …»), Platform/common/contracts/row-check.md —
+#   «Порядок проверок» П3 («создание над надгробием: иные fixed → «<поле> is fixed» (tombstone)») и Р2 («fixed-поле меняется … →
+#   «<поле> is fixed»»), «Подготовка полей» («Создание над надгробием применяет те же правила подготовки; проверка fixed сравнивает
+#   подготовленное значение с надгробием»), ADR-0091 (made/born — надгробие сохраняет born). Чек-лист: П/06.1-06 («возврат только с
+#   теми же `fixed` — чтением (у `testsub` нет `fixed`-поля; `testsub2` `of: fixed` — сценария нет)»).
+# Подготовка: стенд приёмки главы 6.1 (Platform/06-console/acceptance/1): корень `testsub`, `testsub2` смонтирована (дверь
+#   `console2`), хранилище пустое. Манифест `testsub2`: у `tallies` поле `of` — `{type: string, required: true, fixed: true}`.
+#   Счётчик `c1` раннер создаёт сам; черновик от него не зависит (`of` — поле без ref, ссылок на единицы не проверяется).
+# Существующие директивы: двери `console2` и `store`; ожидания — подмножество полей, `null` для отсутствующей строки.
+#   Новых директив не требуется.
+# Сроки и допуски: сценарий 01 — 6 запросов ≈ 8 с; сценарий 02 — 3 запроса ≈ 4 с. Потолок сценария — 3 минуты; не превышен.
+# Почему ожидание именно такое:
+#   — отказ 400 несёт `error` с текстом «<поле> is fixed …» (Н4). Ожидание взято как подстрока «is fixed»: слово поля в тексте
+#     нормой названо («<поле>»), но свидетельство пишет имя поля в обратных кавычках («`of` is fixed when the unit is created: …»),
+#     и подстрока «is fixed» переживает эту разницу, не теряя самого отказа.
+#   — надгробие проверяется чтением строки из хранилища (`items`): «строка и revision прежние» — это утверждение о строке, а не о коде.
+#   — revision новой строки = revision надгробия + 1 (Н3 «создать» шаг 8): надгробие хранит revision 1 → новая строка 2.
+#   — «прежний `of` не изменился» — это и есть суть `fixed`: смена значения поля — не «правка той же единицы», а другая единица
+#     под другим именем (Н4: «другая единица под другим именем»).
+# Оговорка (для владельца приёмки): у `tallies` поле `of` — `fixed`, но не `unique`; имя `tallies` — `unique`, и проверка `unique`
+#   идёт после `fixed` (П5: прямые ref/must_match → обратные must_match → unique), поэтому отказ `fixed` не маскируется отказом
+#   `unique`. Если владелец решит иначе, ожидание 409 `unique` появится в сценарии 01 шаге 2 — сейчас его там нет.
+scenario	step	request	expect
+# 01-revival-over-tombstone — иной fixed: 400, надгробие прежнее; тот же fixed: 201, revision 2.
+01-revival-over-tombstone	1	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1}
+01-revival-over-tombstone	2	console2 DELETE /tallies/t1	200 {"deleted": "t1"}
+01-revival-over-tombstone	3	console2 POST /tallies {"name": "t1", "of": "c2"}	400 {"error": "~is fixed"}
+01-revival-over-tombstone	4	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"deleted": "true", "of": "c1", "revision": "1"}}
+01-revival-over-tombstone	5	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 2}
+01-revival-over-tombstone	6	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"of": "c1", "revision": "2"}}
+# 02-fixed-on-live — правка живого fixed-поля: 400, строка и revision прежние.
+02-fixed-on-live	1	console2 POST /tallies {"name": "t2", "of": "c1"}	201 {"revision": 1}
+02-fixed-on-live	2	console2 PUT /tallies/t2 {"of": "c2"}	400 {"error": "~is fixed"}
+02-fixed-on-live	3	store GET /v1/get?key=testsub2/tallies/t2	200 {"items": {"of": "c1", "revision": "1"}}

@@ -1,0 +1,34 @@
+# Черновик A07 — `import` отказывает целиком, когда эпоха или пол не десятичные (upper не достоверен).
+# Норма: Platform/01-store/spec/01.3-store.norms.md Н1.3, `import`: «полная предварительная проверка до изменения
+#   пола/любой строки: форма copy …, версии (база, index заголовка) и эпохи — строка <s>/epoch/<id> с epoch не
+#   десятичным целым или platform/epoch_floor с floor не десятичным, строка эпохи или пола нечитаема (исходы семей
+#   epoch, epoch_floor) — upper не достоверен, отказ всего входа (В7 п. 3, решение «Архитектора» 2026-10-28, строка 13
+#   списка)»; Н4: «import/restore: … эпоха или пол не десятичные; нечитаемая (в том числе строка <sub>/epoch/<id> или
+#   platform/epoch_floor — upper не достоверен) | отказ целиком до первой записи | слова | другая база / починить копию».
+# Место приёмки: глава 1.3 (Platform/01-store/acceptance/3) — образец сц. 12 (`12-copy-refused`): `@import store
+#   <файл>` → `refused`, затем дверь `restored` — «что каталог остался без строк, видят следующие шаги restored».
+# Существующие директивы: `@import store <файл>` (словарь: вход — файл от каталога приёмки урока; раннер берёт новый
+#   пустой `{data}`, зовёт команду `import` с `{index_base}` = index заголовка входа, поднимает второй экземпляр
+#   хранилища — его дверь `restored`; ожидание `refused` — код ≠ 0; хранилище стенда не трогается), дверь `restored`.
+# Новых директив не требуется.
+# Входы (рядом, в этом же каталоге черновика; при переносе в приёмку главы 1.3 — каталог `inputs/`, путь в шаге
+#   остаётся `inputs/…`): A07-bad-epoch.jsonl и A07-bad-floor.jsonl. Оба — по форме `copy` (P/01.3 Н1.3 `copy`):
+#   заголовок {"format":"w2c-configstore-copy","version":1,"index":"7"}, дальше строки {key, items, index}.
+#   В каждом входе ПЕРЕД порченой строкой стоит верная строка `testsub/next_id` — как в каждом `bad-*.jsonl` главы 1.3
+#   («верная строка testsub/next_id стоит в каждом до испорченной, поэтому шаг restored после отказа видит, что не
+#   перенесено ничего»). Порядок ключей в копии писатель кладёт по возрастанию байтов, но ЧИТАТЕЛЬ порядок не требует
+#   (P/01.3 Н1.3 `copy`) — поэтому `testsub/next_id` перед испорченной строкой допустимо, и именно так проверяется
+#   «отказ ДО первой записи»: перенос не начался.
+#   «Не десятичное» выражено строкой: форма `copy` требует `items` — map string→string (Н1.3 `copy`: items и index —
+#   как Row главы 1.1), число в `items` сделало бы отказ по другой причине (отказ `copy`, а не отказ по эпохе).
+#   A07-bad-epoch.jsonl: строка `testsub/epoch/u1` с `items` {"epoch":"abc"} — epoch не десятичное целое.
+#   A07-bad-floor.jsonl: строка `platform/epoch_floor` с `items` {"floor":"12.5","generation_at":"1760745600.5"} —
+#   floor не десятичное (форма времени `generation_at` — по Н0 главы 1.1, здесь она верна, чтобы отказ был только
+#   из-за `floor`).
+# Два сценария — два независимых отказа; каждый со своим `@import store` (свой свежий каталог) и своим чтением
+#   `restored`: дверь `restored` — экземпляр, поднятый последним `@import store` этого сценария.
+scenario	step	request	expect
+A07-import-bad-epoch	1	@import store inputs/A07-bad-epoch.jsonl	refused
+A07-import-bad-epoch	2	restored GET /v1/get?key=testsub/next_id	200 {"items":null,"index":""}
+A07-import-bad-floor	1	@import store inputs/A07-bad-floor.jsonl	refused
+A07-import-bad-floor	2	restored GET /v1/get?key=testsub/next_id	200 {"items":null,"index":""}

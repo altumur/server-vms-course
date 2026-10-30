@@ -1,0 +1,66 @@
+# Черновик C07 — схема хранилища: слишком новая до старта (слота нет, пульса нет) и подъём на ходу (отсечение без отдачи слота).
+# Что проверяет: проверку схемы воркером (Platform/03-worker/spec/03.2-worker.norms.md Н3 «проверка схемы воркером»),
+#   которая в корпусе приёмки проверялась только чтением («стенд строку схемы не ставит»): (1) строка `platform/schema`
+#   со значением `version` больше, чем понимает сборка, положенная ДО старта воркера — воркер не стартует: слота нет,
+#   пульса нет; (2) та же строка, положенная на ходу, — при следующем продлении слота воркер отсекается и отдаёт имя
+#   БЕЗ записи `released`: строка слота не меняется (срок `until` не растёт), пульс больше не пишется, строка эпохи
+#   единицы не меняется.
+# Место нормы: Platform/common/contracts/schema.md «Проверка при старте» («прочитать platform/schema: нет → своя
+#   SCHEMA; не число → не стартовать; version > SCHEMA → не стартовать ("store is at schema N; this build understands M")»;
+#   «воркер: после продления слота — П/03.2 Н3 "проверка схемы воркером"») и «Схема» (`SCHEMA` — число, которое понимает
+#   сборка; для нынешней спецификации SCHEMA = 1; `platform/schema: {version: <целое ≥ 1>, at: <момент>}` — писатель
+#   консоль). Platform/03-worker/spec/03.2-worker.norms.md — Н3 «проверка схемы воркером» («version > SCHEMA или не
+#   число → отсечь, отдать_имя(), выход с кодом 2; … слот не отдаётся (released не пишется)»), Н1.4 (строка слота),
+#   Н3 «шаг_аренды()» шаг 1 (продлён → проверка схемы). Чек-лист: П/03.2-15.
+# Подготовка: строка `platform/schema` кладётся дверью консоли (`@as console store`): писатель строки — консоль
+#   (П/06.6 Н1.1а; права ролей — П/02.5 Н1.4: консоль пишет `platform/schema`). Поле `version` кладётся десятичной
+#   строкой «2» (значение больше SCHEMA = 1 нынешней спецификации), `at` — временем по форме Н0 П/01.1. Дверь объектов
+#   (`resource`) поднимается ДО подъёма схемы: ресурс тоже проверяет схему при старте (П/05 Н3 «проверка схемы»),
+#   и без двери объектов нечем читать пульс.
+# Существующие директивы: `@start resource`, `@start controller`, `@start worker <имя>`, `@sleep <с>`, `@until <с>
+#   <запрос>`; двери `console` (создание счётчика, чтение `/schema`), `store` (чтение строк), `resource` (чтение пульса).
+# Новых директив не требуется.
+# Почему ожидание именно такое:
+#   — до старта: проверка схемы — первый шаг старта, до чтения манифеста (договор схемы), поэтому слота нет вовсе
+#     (строка `testsub/slots/w-1` пуста) и пульса нет (объект отсутствует — 404 по П/05 Н1.1). Это и отличает отказ
+#     старта от отказа позже: при отказе позже слот был бы и остался бы.
+#   — `console GET /schema` отдаёт `version` строки точным числом (П/06.6 Н2.3) — так подтверждается, что строка
+#     действительно легла (а не отвергнута хранилищем).
+#   — на ходу: норма требует «отсечь, отдать_имя(), выход с кодом 2» и «слот не отдаётся (released не пишется)» —
+#     поэтому `released` остаётся «false», а `until` перестаёт расти (продлений больше нет). Два чтения строки слота
+#     через 12 с сравнивают `until` — значение связано в первом чтении.
+#   — пульс перестаёт обновляться: после отдачи имени воркер — никто, а «никто — пульс не пишет» (П/03.2 Н3 «никто и
+#     возврат имени»). `ts` связывается после отсечения и сравнивается через 12 с.
+#   — строка эпохи единицы не меняется: отсечение останавливает единицы, эпоха прежняя (номер не выдаётся заново).
+# Оговорка (для владельца приёмки): код выхода 2 и строка журнала («store is at schema N; this build understands M») в
+#   TSV не читаются — это проверка вне сценарного файла (код выхода процесса на стенде не виден, пока нет параметра у
+#   директивы `@start` — см. черновик C09). Поле пульса `fenced`/`was_fenced` в момент отсечения по схеме в этом
+#   черновике не проверяется: норма пишет пульс с причиной, «только пока имя ещё моё», а по П/03.2 Н3 отсечение здесь
+#   непосредственно за отдачей имени — окно для пульса узкое, и свидетель стадии C его не пишет вовсе; решение об этом
+#   — за владельцем приёмки. Шаг `@start worker w-1` в сценарии 01 ждёт `ok` (процесс запущен, а он тут же выходит с
+#   кодом 2); если раннер считает быстрый выход отказом, ожидание шага — `refused` — это решение владельца приёмки.
+scenario	step	request	expect
+# 01-schema-too-new-before-start — схема новее сборки до старта: воркер не стартует, слота нет, пульса нет.
+01-schema-too-new-before-start	1	@start resource	ok
+01-schema-too-new-before-start	2	@as console store POST /v1/write {"id":"c07a","op":"put","key":"platform/schema","items":{"version":"2","at":"4102444800"},"cas":""}	200
+01-schema-too-new-before-start	3	@start worker w-1	ok
+01-schema-too-new-before-start	4	@sleep 12	ok
+01-schema-too-new-before-start	5	store GET /v1/get?key=testsub/slots/w-1	200 {"index": "", "items": null}
+01-schema-too-new-before-start	6	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	404
+01-schema-too-new-before-start	7	console GET /schema	200 {"version": 2}
+# 02-schema-raised-on-the-go — подъём схемы на ходу: отсечение при следующем продлении, слот не отдан, пульс встал.
+02-schema-raised-on-the-go	1	@start resource	ok
+02-schema-raised-on-the-go	2	@start controller	ok
+02-schema-raised-on-the-go	3	@start worker w-1	ok
+02-schema-raised-on-the-go	4	console POST /counters {"name": "c1", "start": 1}	201 {"id": "c1", "revision": 1}
+02-schema-raised-on-the-go	5	@until 30 store GET /v1/get?key=testsub/epoch/c1	200 {"index": "$e1", "items": {"epoch": "1"}}
+02-schema-raised-on-the-go	6	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"ts": "@time", "status": [{"id": "c1", "phase": "running"}]}
+02-schema-raised-on-the-go	7	@as console store POST /v1/write {"id":"c07b","op":"put","key":"platform/schema","items":{"version":"2","at":"4102444800"},"cas":""}	200
+02-schema-raised-on-the-go	8	@sleep 12	ok
+02-schema-raised-on-the-go	9	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "until": "$u1"}}
+02-schema-raised-on-the-go	10	@sleep 12	ok
+02-schema-raised-on-the-go	11	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "until": "$u1"}}
+02-schema-raised-on-the-go	12	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"ts": "$t1"}
+02-schema-raised-on-the-go	13	@sleep 12	ok
+02-schema-raised-on-the-go	14	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"ts": "$t1"}
+02-schema-raised-on-the-go	15	store GET /v1/get?key=testsub/epoch/c1	200 {"index": "$e1", "items": {"epoch": "1"}}

@@ -1,0 +1,147 @@
+# Черновик F04 — края просьб освобождения `free-*`: своя форма, чужая строка под своим ключом, диагноз.
+# Что проверяет: (1) контроль: строка `platform/space` включена, отметки взяты очень малыми (`high` = 1e-7) — диск
+#   стенда всегда «за отметкой»; воркер `testsub2` на `srv-a` даёт живой пульс, и ПЕРВЫЙ проход ресурса (он идёт при
+#   старте, сразу после готовности) считает `need > 0` и пишет СВОЮ строку просьбы
+#   `testsub2/requests/free-srv-a-events` {free, volume, server, at}; в пульсе ресурса `short` — байты, которые просьба
+#   требует освободить, — положительны; (2) четыре края: строка под СВОИМ ключом ресурса, но не своей формы — с лишним
+#   полем `unit`, с чужим `server`, с чужим `volume`, с именем тома вне профиля — не трогается (содержимое и версия
+#   строки не меняются), а ресурс пишет в журнал `free_ask.key_taken` и пропускает её.
+# Место нормы: Platform/05-resource/spec/05-resource.norms.md Н1.4 (`free_ask` — «<sub>/requests/free-<server>-<volume>
+#   {free, volume, server, at} — своя форма (ADR-0059): пишет и перезаписывает с cas только ресурс …; volume — непустое
+#   имя из ASCII A-Z/a-z/0-9/_, 1–64 байта, без дефиса (на коробке один том — файловая система дерева событий, имя
+#   events); … Иной volume — вне профиля: диагностировать конфигурацию, не создавать/менять просьбу этого тома»;
+#   `space` — «platform/space {enabled: true | false, high: 0.85, low: 0.75} … включено, пока не выключили»;
+#   `heartbeat` — «объект platform/resources/<server>/heartbeat каждые 10 с», поле `short`), Н3 «проход ресурса»
+#   (уточнение «Спецификации» C05-PASS-FIRST-AT-START-01, 2026-10-30, выгрузка bc2bb5e: «первый — при старте, сразу
+#   после готовности (строка двери записана); дальше каждые 600 с от конца прохода»), шаг `relieve` («need > 0 →
+#   записать free-<server>-<volume> {free: need, volume, server, at}: cas "" или cas по версии строки СВОЕЙ формы
+#   (без unit И с точными server/volume текущего тома); перед записью проверить грамматику Н1.4 free_ask; под этим
+#   ключом строка с unit, чужими server/volume или испорченной формой → не трогать, журнал free_ask.key_taken,
+#   пропустить»; «пульс воркера этой подсистемы на этом сервере не читается — need этой подсистемы не считается, её
+#   строку free-* шаг не пишет и не снимает»), Platform/05-resource/data/free-ask.outcomes.tsv (исход читателя
+#   `resource`: «не своя форма (есть unit, чужие server/volume, испорченная форма): не трогать, журнал
+#   free_ask.key_taken, пропустить»), Platform/05-resource/data/free-ask.schema.json (`volume` — образец
+#   `^(?:[A-Za-z0-9_]{1,64})$`, `free` — число > 0, `additionalProperties: false`), Platform/05-resource/data/
+#   resource-heartbeat.schema.json (`short` — «Σ по томам наибольшей need (> 0) среди действующих своих
+#   `free-<server>-<volume>` этого прохода relieve»), Platform/common/contracts/events-merge.md «Запрос и ответ
+#   ресурса» (параметр `kind` — фильтр строк по виду), Platform/01-store/spec/01.1-store.norms.md Н1 (значения строки —
+#   map string → string), Platform/02-installer/spec/02.4-installer.norms.md Н1.9 (`platform/space` — строка админа;
+#   `high`/`low` — доли) и Platform/02-installer/spec/02.5-installer.norms.md Н1.4 (права: роль `resource` пишет
+#   `<s>/requests/free-*` при `requests.free`; `platform/space` — admin; роль `<s>worker` пишет `<s>/slots/*`),
+#   Platform/05-resource/acceptance/README.md «Свидетельства вне TSV» («Свободное место») и примечание R36-07
+#   («volume=b-c вне профиля requests.free и диагностируется без записи … при чтении существующей строки отсутствие
+#   unit недостаточно — server/volume обязаны совпасть»), чек-лист П/05-08.
+# Подготовка: стенд testsub С testsub2 (testsub2 — единственный манифест с `requests.free: true`; у testsub раздела
+#   `requests` нет). Ресурс до первого шага не поднят (его поднимает шаг `@start resource`).
+#   ОТМЕТКИ ДИСКА: `platform/space` пишет admin (w2cctl space); строка кладётся дверью `admin` со значениями
+#   `enabled: "true"`, `high: "0.0000001"`, `low: "0.00000001"` — значения строки хранилища есть строки (П/01.1 Н1), а
+#   типы полей (`enabled` — логическое, `high`/`low` — числа) задаёт форма строки (П/02.4 Н1.9; число по договору
+#   проверки строки — десятичная запись без экспоненты). Отметки взяты очень низкими намеренно: по Н3 шаг `relieve`
+#   исполняется при `used/total > high`, а `need = used − total·low − Σ freeing` — при `low` тем меньше, тем надёжнее
+#   `need > 0` (диск стенда управляемо не заполняется, а порог по умолчанию 0.85 не пройти).
+#   ИМЯ ТОМА: том коробки — `events` («на коробке один том — файловая система дерева событий, имя events»), и ключ
+#   своей просьбы ресурса — `testsub2/requests/free-srv-a-events`. Двойного имени (свидетели называют том `default`)
+#   в этом черновике нет: том у коробки один, а имя тома — часть имени карты, и связать его на стенде нечем.
+#   ЗАПИСИ СТРОК: все строки (`platform/space` и семейство `free-*`) пишутся дверью `admin` — внутренний админ
+#   хранилища имеет полные права (П/01.2 Н1.3); роль `console` на стенде консоли `testsub` правами
+#   `<s>/requests/*` не владеет: `<s>` в её правах — её собственный манифест, а у testsub раздела `requests` нет.
+#   Строки кладутся МИМО писателя (писатель семейства `free-*` — ресурс) — ровно тот случай, который норма и
+#   разбирает («строка с unit, чужими server/volume или испорченной формой»).
+#   ПОРЯДОК (детерминированный): все строки кладутся ДО `@start resource`; первым идёт воркер testsub2 — его пульс
+#   нужен ресурсу («пульс воркера этой подсистемы на этом сервере не читается — need этой подсистемы не считается»).
+#   Пульс воркера наблюдается по строке его слота (`testsub2/slots/t-srv-a-1`; слот пишет воркер — П/02.5 Н1.4:
+#   роль `<s>worker` пишет `<s>/slots/*`), затем сон 12 с (пульс воркера пишется каждые 10 с, HEARTBEAT_EVERY; первый
+#   пульс — до первого прохода) — и только потом поднимается ресурс. Сценарию нужен ровно ОДИН проход ресурса:
+#   первый (при старте, сразу после готовности — C05-PASS-FIRST-AT-START-01), следующий — через 600 с от конца
+#   прохода, а это за потолком сценария (3 минуты). Поэтому все проверки — на первом проходе, а момент прохода не
+#   угадывается: `@until` ждёт появления самой строки просьбы (контроль) или строки журнала (края) — они и есть
+#   признак прохода.
+#   ВОРОКЕР: `t-srv-a-1` (префикс testsub2 — `t`, сервер — `srv-a`, номер — 1). Воркер нужен и для `freeing` (нулю при
+#   отсутствии поля), и для того, чтобы пульс подсистемы на сервере был читаем.
+# Существующие директивы: `@start resource`, `@start worker <sub> <имя> [on <сервер>]`, `@sleep <с>`, `@until <с> <запрос>`;
+#   двери `admin` (строки `platform/space` и семейства `free-*`) и `resource` (пульс ресурса и индекс событий).
+# Новых директив не требуется.
+# Почему ожидание именно такое:
+#   — «не трогать» доказывается двумя чтениями строки: содержимое (те же поля, те же значения) и версия строки
+#     (`index` — версия; любая запись меняет версию, поэтому смена версии и есть признак записи). Ресурс пишет с
+#     cas, и cas по чужой форме он не берёт — версия не меняется ✓.
+#   — «журнал free_ask.key_taken» читается из индекса ресурса: `GET /events?kind=free_ask.key_taken` — параметр `kind`
+#     фильтрует строки по виду (договор слияния журнала, «Запрос и ответ ресурса»); ресурс пишет свой журнал в дерево
+#     `audit` своей роли, а дерево `audit` входит в индекс ресурса (Н1.3 `index`).
+#   — контроль по пульсу: `short` — байты, которые просьба требует освободить; при `need > 0` и своей форме строки
+#     просьба записана, и `short` = need > 0 ✓ (схема пульса: `short` — обязательное, целое). Проверка числом —
+#     `ASSERT $s1 >= 1` (форма словаря ожиданий: сравнение связанных чисел).
+#   — `short` читается ПОСЛЕ того, как появилась строка просьбы (шаг 6): пульс пишется каждые 10 с, а поле `short`
+#     набирает значение после прохода, который записал просьбу ✓, поэтому к моменту чтения `short` уже положителен ✓.
+#   — `@until` на строку просьбы и на строку журнала: и то и другое появляется в проходе, а `@until` повторяет запрос,
+#     пока ответ не совпадёт ✓.
+# Сроки и допуски: сон 12 с после появления строки слота — пульс воркера (каждые 10 с); сон 12 с после появления
+#   строки просьбы — пульс ресурса (каждые 10 с). Потолок сценария — 3 минуты; каждый сценарий ≈ 1 мин.
+# Оговорки (для владельца приёмки):
+#   — отметки `high`/`low` взяты неправдоподобно малыми намеренно (диск стенда управляемо не заполняется); на стенде с
+#     другим `platform/space` значения нужно подставить свои.
+#   — сценарии 02–05 наблюдаются одинаково — «не трогать, журнал free_ask.key_taken»: различие только в причине
+#     диагноза (лишнее поле `unit`, чужой `server`, чужой `volume`, имя тома вне профиля — с дефисом), а текста причины
+#     в строке журнала нет (в строке события нет свободного текста). Длины 0, 1 и 64 байт по профилю входят и
+#     наблюдаются так же, как чужой том; отдельными сценариями они не заведены.
+#   — чек-лист П/05-08 (отметки диска долями) целиком остаётся проверкой чтением: реальное освобождение места и окно
+#     удержания на стенде не воспроизводятся.
+#   — сценарий ждёт пульс воркера по строке его слота: если реализация не даёт воркеру слот без контроллера (стенд P/05
+#     контроллера не имеет) — сценарий будет красным; решение — за владельцем приёмки (то же, что в черновике F03).
+#   — ключ своей просьбы ресурса взят по норме (`free-srv-a-events`): имя тома — часть имени карты, и если реализация
+#     назовёт том иначе, строка под её ключом не появится — сценарий 01 будет красным.
+scenario	step	request	expect
+# 01-control-free-request — свои отметки и очень малый порог: первый проход ресурса пишет свою просьбу (short ≥ 1).
+01-control-free-request	1	admin POST /v1/write {"id":"f0401","op":"put","key":"platform/space","items":{"enabled":"true","high":"0.0000001","low":"0.00000001"},"cas":""}	200
+01-control-free-request	2	@start worker testsub2 t-srv-a-1 on srv-a	ok
+01-control-free-request	3	@until 60 admin GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"holder": "@any", "released": "false", "gen": "1", "server": "srv-a"}}
+01-control-free-request	4	@sleep 12	ok
+01-control-free-request	5	@start resource	ok
+01-control-free-request	6	@until 90 admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"items": {"free": "@any", "volume": "events", "server": "srv-a", "at": "@time"}}
+01-control-free-request	7	@sleep 12	ok
+01-control-free-request	8	resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"short": "$s1"}
+01-control-free-request	9	ASSERT $s1 >= 1	ok
+# 02-row-with-unit — лишнее поле `unit` под своим ключом: строка не тронута, в журнале free_ask.key_taken.
+02-row-with-unit	1	admin POST /v1/write {"id":"f0402","op":"put","key":"platform/space","items":{"enabled":"true","high":"0.0000001","low":"0.00000001"},"cas":""}	200
+02-row-with-unit	2	admin POST /v1/write {"id":"f0412","op":"put","key":"testsub2/requests/free-srv-a-events","items":{"free":"1","volume":"events","server":"srv-a","at":"1700000000","unit":"c1"},"cas":""}	200
+02-row-with-unit	3	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i1", "items": {"free": "1", "volume": "events", "server": "srv-a", "at": "1700000000", "unit": "c1"}}
+02-row-with-unit	4	@start worker testsub2 t-srv-a-1 on srv-a	ok
+02-row-with-unit	5	@until 60 admin GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"holder": "@any", "released": "false", "gen": "1", "server": "srv-a"}}
+02-row-with-unit	6	@sleep 12	ok
+02-row-with-unit	7	@start resource	ok
+02-row-with-unit	8	@until 60 resource GET /events?kind=free_ask.key_taken	200 {"events": [{"kind": "free_ask.key_taken"}]}
+02-row-with-unit	9	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i2", "items": {"free": "1", "volume": "events", "server": "srv-a", "at": "1700000000", "unit": "c1"}}
+02-row-with-unit	10	ASSERT $i1 == $i2	ok
+# 03-row-foreign-server — чужой `server` под своим ключом: строка не тронута, в журнале free_ask.key_taken.
+03-row-foreign-server	1	admin POST /v1/write {"id":"f0403","op":"put","key":"platform/space","items":{"enabled":"true","high":"0.0000001","low":"0.00000001"},"cas":""}	200
+03-row-foreign-server	2	admin POST /v1/write {"id":"f0413","op":"put","key":"testsub2/requests/free-srv-a-events","items":{"free":"1","volume":"events","server":"srv-b","at":"1700000000"},"cas":""}	200
+03-row-foreign-server	3	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i1", "items": {"free": "1", "volume": "events", "server": "srv-b", "at": "1700000000"}}
+03-row-foreign-server	4	@start worker testsub2 t-srv-a-1 on srv-a	ok
+03-row-foreign-server	5	@until 60 admin GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"holder": "@any", "released": "false", "gen": "1", "server": "srv-a"}}
+03-row-foreign-server	6	@sleep 12	ok
+03-row-foreign-server	7	@start resource	ok
+03-row-foreign-server	8	@until 60 resource GET /events?kind=free_ask.key_taken	200 {"events": [{"kind": "free_ask.key_taken"}]}
+03-row-foreign-server	9	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i2", "items": {"free": "1", "volume": "events", "server": "srv-b", "at": "1700000000"}}
+03-row-foreign-server	10	ASSERT $i1 == $i2	ok
+# 04-row-foreign-volume — чужой `volume` под своим ключом: строка не тронута, в журнале free_ask.key_taken.
+04-row-foreign-volume	1	admin POST /v1/write {"id":"f0404","op":"put","key":"platform/space","items":{"enabled":"true","high":"0.0000001","low":"0.00000001"},"cas":""}	200
+04-row-foreign-volume	2	admin POST /v1/write {"id":"f0414","op":"put","key":"testsub2/requests/free-srv-a-events","items":{"free":"1","volume":"other","server":"srv-a","at":"1700000000"},"cas":""}	200
+04-row-foreign-volume	3	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i1", "items": {"free": "1", "volume": "other", "server": "srv-a", "at": "1700000000"}}
+04-row-foreign-volume	4	@start worker testsub2 t-srv-a-1 on srv-a	ok
+04-row-foreign-volume	5	@until 60 admin GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"holder": "@any", "released": "false", "gen": "1", "server": "srv-a"}}
+04-row-foreign-volume	6	@sleep 12	ok
+04-row-foreign-volume	7	@start resource	ok
+04-row-foreign-volume	8	@until 60 resource GET /events?kind=free_ask.key_taken	200 {"events": [{"kind": "free_ask.key_taken"}]}
+04-row-foreign-volume	9	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i2", "items": {"free": "1", "volume": "other", "server": "srv-a", "at": "1700000000"}}
+04-row-foreign-volume	10	ASSERT $i1 == $i2	ok
+# 05-row-volume-out-of-profile — имя тома с дефисом (вне профиля requests.free) под своим ключом: не трогать, диагноз.
+05-row-volume-out-of-profile	1	admin POST /v1/write {"id":"f0405","op":"put","key":"platform/space","items":{"enabled":"true","high":"0.0000001","low":"0.00000001"},"cas":""}	200
+05-row-volume-out-of-profile	2	admin POST /v1/write {"id":"f0415","op":"put","key":"testsub2/requests/free-srv-a-events","items":{"free":"1","volume":"b-c","server":"srv-a","at":"1700000000"},"cas":""}	200
+05-row-volume-out-of-profile	3	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i1", "items": {"free": "1", "volume": "b-c", "server": "srv-a", "at": "1700000000"}}
+05-row-volume-out-of-profile	4	@start worker testsub2 t-srv-a-1 on srv-a	ok
+05-row-volume-out-of-profile	5	@until 60 admin GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"holder": "@any", "released": "false", "gen": "1", "server": "srv-a"}}
+05-row-volume-out-of-profile	6	@sleep 12	ok
+05-row-volume-out-of-profile	7	@start resource	ok
+05-row-volume-out-of-profile	8	@until 60 resource GET /events?kind=free_ask.key_taken	200 {"events": [{"kind": "free_ask.key_taken"}]}
+05-row-volume-out-of-profile	9	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i2", "items": {"free": "1", "volume": "b-c", "server": "srv-a", "at": "1700000000"}}
+05-row-volume-out-of-profile	10	ASSERT $i1 == $i2	ok

@@ -1,0 +1,45 @@
+# Черновик G05 — перезапуск воркера под прежним именем виден в `/metrics`: `failover_seconds` и `failovers_unmeasured`.
+# Что проверяет: после остановки воркера и запуска нового экземпляра под тем же именем консоль меряет «провал» этого воркера и пишет
+#   его в `/metrics`: ряд `failover_seconds{kind="last",worker="w-1"}` есть, а `failovers_unmeasured` равен нулю (провал измерен по
+#   одному clock'у — сервер тот же).
+# Место нормы: Platform/06-console/spec/06.5-console.norms.md — Н3 «/metrics — текст» (перечень рядов подсистемы; «failover_seconds
+#   {kind=worst|last,worker}; failovers_unmeasured»; пояснение: «failover_seconds{kind=last,worker} — started − previous_hb
+#   последнего пульса воркера (P/03.4 Н1.1: previous_hb — ts пульса, который воркер застал под своим именем), если оба — конечные
+#   числа и разность ≥ 0, иначе −1; … failovers_unmeasured — число экземпляров (instance), чей пульс несёт previous_instance, а last
+#   не измерить»), Н4 (503 при неподтверждённом обязательном чтении), П/03.4 Н1.1 (`previous_hb`, `previous_instance`,
+#   `previous_server` — поля пульса); Platform/common/acceptance/README.md «Ряды» (ожидание `/metrics` — ряд, не подстрока; «ровно этим
+#   набором подписей, если названы»; несколько рядов — через « ~»). Чек-лист: П/06.5-06 («failover_seconds, failovers_unmeasured —
+#   чтением (стенд не перезапускает воркер под прежним именем)»).
+# Подготовка: стенд приёмки главы 6.5 (Platform/06-console/acceptance/5): корень `testsub`, `testsub2` смонтирована, третий манифест
+#   `probe-x`; хранилище пустое; фоновых controller/resource/worker до `@start` нет; воркер — `w-1` подсистемы `testsub` на `srv-a`;
+#   ресурс `srv-a` — первым шагом (консоль читает пульсы воркеров дверью объектов ресурса своего сервера; C06-PULSE-LAPSE-503-03).
+#   Контроллера нет: он не нужен — воркер встаёт на слот сам, а «провал» меряется по пульсам.
+# Существующие директивы: `@start resource`, `@start worker <имя>`, `@sigterm <имя>`, `@until <с> <запрос>`, ожидания `@not($имя)`,
+#   `~<ряд>[ <значение>]`; двери `console`, `resource`. Новых директив не требуется.
+# Сроки и допуски: шаг 3 — до 30 с (первый пульс воркера), шаг 6 — до 60 с (первый пульс нового экземпляра); прочее — секунды.
+#   Потолок сценария — 3 минуты; потолок не превышен.
+# Почему ожидание именно такое:
+#   — «тот же воркер, другой экземпляр» доказывается полем `instance` пульса: у нового процесса оно иное (P/03.4 Н1.1). Ожидание
+#     `@not($i1)` не фиксирует число, а замечает смену; `started` для этой цели не годится — у двух запусков подряд секунды могут
+#     совпасть.
+#   — ряд `failover_seconds{kind="last",worker="w-1"}` назван с обоими своими подписями: по норме ряд несёт `{kind, worker}`, и словарь
+#     требует «ровно этого набора подписей, если названы». Значение ряда не проверяется: оно — разность двух времён («started −
+#     previous_hb»), величина неуправляемая, а норма требует наличия и измеримости, не конкретного числа.
+#   — `failovers_unmeasured 0`: новый экземпляр несёт `previous_instance` (он застал прежний пульс под своим именем), и его провал
+#     измерим — сервер тот же, обе величины конечны, разность ≥ 0; поэтому ни один экземпляр не попадает в счётчик не измеренных.
+# Оговорка (для владельца приёмки): ряд `failover_seconds{kind="worst"}` в черновик не включён. Норма пишет перечень рядов одним
+#   списком «failover_seconds{kind=worst|last,worker}» — с подписью `worker` у обоих видов, — а свидетельство
+#   (Source/w2cplatform/console.py, `metrics_text`) выдаёт `kind="worst"` без подписи `worker` (ряд один на всю консоль). Словарь
+#   приёмки требует «ровно этого набора подписей, если названы», поэтому назвать ряд нельзя, не решив, какой набор подписей у него
+#   по курсу. Решение за владельцем; после него ряд добавляется одним шагом. Второе: `/metrics` консоли — дверь корневой подсистемы;
+#   те же ряды отдаёт `GET /testsub/metrics` (П/06.5-06, сц. 05 шаг 6 приёмки главы 6.5) — черновик берёт `/metrics` (слово аудита
+#   покрытия) и потому стоит в стенде главы 6.5, где корень — `testsub`.
+scenario	step	request	expect
+# 01-failover-after-restart — воркер перезапущен под прежним именем: провал измерен, не измеренных нет.
+01-failover-after-restart	1	@start resource	ok
+01-failover-after-restart	2	@start worker w-1	ok
+01-failover-after-restart	3	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "server": "srv-a", "instance": "$i1"}
+01-failover-after-restart	4	@sigterm w-1	ok
+01-failover-after-restart	5	@start worker w-1	ok
+01-failover-after-restart	6	@until 60 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "server": "srv-a", "instance": "@not($i1)"}
+01-failover-after-restart	7	console GET /metrics	200 ~testsub_failover_seconds{kind="last",worker="w-1"} ~testsub_failovers_unmeasured 0

@@ -1,0 +1,91 @@
+# Черновик D06 — `made.keep` в будущем: строка заказчика не удаляется, а проход продолжается.
+# Что проверяет: (1) строка единицы с `made`, у которой `keep` в будущем, НЕ удаляется контроллером: она остаётся на
+#   месте, её состояние не вычищается как осиротевшее, а проход продолжает размещать прочие единицы (барьера нет);
+#   (2) контроль — та же строка с `keep` в прошлом удаляется физически, и её состояние удаляется после неё.
+# Место нормы: Platform/04-controller/spec/04-controller.norms.md — Н3 «проход()» шаг 8 («Строка с made удаляется по
+#   договор проверки строки «Строка заказчика: made» `delete` (строго позже made.keep, not_before = max(0,
+#   made.keep − 60); аудит раскладки А-11): 409 early — не удалено, без барьера и журнала, следующим проходом»),
+#   Н1.3 (`ends: {field, never}`; `never: 0` — «без срока»), Н1.2 (`expired_kept`), Н3 шаг 8а (уборка состояния:
+#   удаляются только осиротевшие состояния). Договор проверки строки: Platform/common/contracts/row-check.md «Строка
+#   заказчика: `made`» — `delete`: «строку с made удаляют … только когда часы удаляющего строго позже made.keep, с
+#   условием хранилища not_before = max(0, made.keep − 60) (C04-KEEP-01): 409 early — не удалено, повтор новой записью
+#   на следующем проходе». Время приёма записи: Platform/01-store/spec/01.1-store.norms.md Н1 (`not_before` — «запись
+#   журнала применяется, только если её время приёма строго позже not_before; иначе early»), отказ `409 early`
+#   (`EarlyFault`, Platform/01-store/spec/01-store.api.openapi.yaml). Чек-лист: П/04-25 (защита при удалении),
+#   П/04-24 (срок `ends`, уборка осиротевшего).
+# Подготовка: стенд testsub2: ресурс, контроллер, воркер `t-1`, полка `s-1` (у `testsub2` размещение по полке, а
+#   `servers: distinct` — место нужно). Строка заказчика и её состояние кладутся мимо писателя — приём сц. 18
+#   приёмки P/04 (`@as console store …` для строки единицы, `@as testsub2worker store …` для строки состояния).
+#   Форма `made` — канонический JSON `{by, at, keep}` в значении строки (значения строк хранилища — строки):
+#   `{"at":1000000000,"by":"testsub","keep":9999999999}`.
+#   Время `until` (поле `ends` у `testsub2`) — 1000000000 (2001): срок прошёл при любых часах стенда, поэтому строка
+#   снимается по `ends`, и только после этого контроллер tries удалить её — то есть проверка удаления вообще
+#   достигается. `never` = 0 — срок не задан (Н1.3 `ends`).
+#   Живая единица `live1` (создаётся дверью консоли) — свидетельство того, что проход продолжает размещать после
+#   отказа в удалении: «остальные решения прохода продолжаются» (аналог: «без барьера»).
+# Существующие директивы: `@start resource`, `@start controller [<sub>]`, `@start worker [<sub>] <имя>`, `@sleep <с>`,
+#   `@until <с> <запрос>`, `@as <роль>`; двери `console2` (создание счёта и полки, `/where/<id>`), `store` (строки),
+#   `resource` (отчёт прохода).
+# Новых директив не требуется.
+# Сроки и допуски:
+#   — проход раз в 5 с (П/04 Н1.4 `PASS_EVERY`); удаление повторяется «новой записью на следующем проходе», поэтому
+#     проверка «строка на месте» делается дважды, через два прохода (сон 12 с между чтениями) — иначе первый отказ
+#     мог бы быть единственным.
+#   — `keep` = 9999999999 (2286) — далеко за пределом часов стенда; `not_before` = `keep` − 60 = 9999999939, время
+#     приёма любой записи контроллера на часах стенда (2026) строго раньше — отказ `early` неизбежен, горизонт
+#     сценария его не пересечёт.
+#   — потолок сценария — 3 минуты; сценарий 01 ≈ 60 с, сценарий 02 ≈ 50 с. Потолок не превышен.
+# Почему ожидание именно такое:
+#   — строка остаётся: по договору проверки строки удаление строки с `made` возможно только когда «часы удаляющего
+#     строго позже made.keep»; часы контроллера (2026) раньше `keep` (2286) — удаления нет, а условие хранилища
+#     `not_before` даёт тот же отказ с другой стороны. Строка с `until` в прошлом снята по `ends`, но не удалена.
+#   — состояние строки живо: уборка шага 8а удаляет состояния, у которых «нет [строки единицы], надгробие или её
+#     born ≠ born состояния» — строка единицы на месте и `born` совпадает, значит состояние не осиротевшее и не
+#     трогается. Это же доказывает, что контроллер видел строку единицы живой, а не просто не дошёл до уборки.
+#   — прочие единицы размещаются: отказ в удалении не должен останавливать проход (в Н3 «409 early — не удалено, без
+#     барьера и журнала, следующим проходом»); размещение `live1` после отказа — прямое свидетельство.
+#   — отчёт прохода обновляется (`at` меняется): контроллер не встал и не застрял на отказе; при «барьере» отчёт
+#     перестал бы обновляться.
+#   — контроль (сценарий 02) отличается от сценария 01 ровно значением `keep` (прошедшее вместо будущего) — и строка
+#     удаляется, а её состояние — после неё (шаг 8а после шага 8), что и показывает, что в сценарии 01 отказ был
+#     из-за `keep`, а не из-за чего-то ещё в подготовке.
+#   — `expired_kept` не проверяется: счётчик считает «ручных строк с прошедшим сроком, которые срок снял, но не
+#     удалил» (Н1.2) — строка с `made` ручной не является, и в сценарии 01 её срок снял, а не срок её удалил; при
+#     `early` срок сработал, а удаление не состоялось. Что именно считает реализация, TSV не проверяет: решение — за
+#     владельцем приёмки (в README приёмки P/04 это поле не оговорено).
+# Оговорка (для владельца приёмки): сам ответ хранилища `409 early` и запись журнала `unit.unplaced_deleted` в TSV не
+#   читаются — журнал контроллера пишется в дерево событий (П/06.4), а на стенде P/04 дерево аудита не читается
+#   (README приёмки P/04, «Наблюдение»). Наблюдаемая часть: строка на месте, состояние на месте, проход идёт.
+scenario	step	request	expect
+# 01-keep-future — keep в будущем: строка не удалена, состояние живо, проход продолжает размещать.
+01-keep-future	1	@start resource	ok
+01-keep-future	2	@start controller testsub2	ok
+01-keep-future	3	@start worker testsub2 t-1	ok
+01-keep-future	4	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"released": "false"}}
+01-keep-future	5	console2 POST /shelves {"name": "s-1", "zone": "z", "server": "srv-a"}	201
+01-keep-future	6	@until 30 store GET /v1/get?key=testsub2/holds/s-1	200 {"items": {"by": "t-1", "released": "false"}}
+01-keep-future	7	@as console store POST /v1/write {"id":"d6a","op":"put","key":"testsub2/tallies/future-c2","items":{"id":"future-c2","revision":"1","name":"future-c2","of":"c2","until":"1000000000","born":"0123456789abcdef0123456789abcdef","made":"{\"at\":1000000000,\"by\":\"testsub\",\"keep\":9999999999}"},"cas":""}	200
+01-keep-future	8	@as testsub2worker store POST /v1/write {"id":"d6b","op":"put","key":"testsub2/state/result/future-c2","items":{"born":"0123456789abcdef0123456789abcdef","revision":"1","epoch":"1","value":"{\"state\":\"open\"}"},"cas":""}	200
+01-keep-future	9	console2 POST /tallies {"name": "live1", "of": "c1"}	201
+01-keep-future	10	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"at": "$p1"}
+01-keep-future	11	@sleep 12	ok
+01-keep-future	12	store GET /v1/get?key=testsub2/tallies/future-c2	200 {"items": {"name": "future-c2"}}
+01-keep-future	13	store GET /v1/get?key=testsub2/state/result/future-c2	200 {"items": {"value": "{\"state\":\"open\"}"}}
+01-keep-future	14	@until 30 console2 GET /where/live1	200 {"worker": "t-1"}
+01-keep-future	15	@sleep 12	ok
+01-keep-future	16	store GET /v1/get?key=testsub2/tallies/future-c2	200 {"items": {"name": "future-c2"}}
+01-keep-future	17	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"at": "@not($p1)"}
+# 02-keep-past-control — тот же ход с keep в прошлом: строка удалена, состояние — после неё.
+02-keep-past-control	1	@start resource	ok
+02-keep-past-control	2	@start controller testsub2	ok
+02-keep-past-control	3	@start worker testsub2 t-1	ok
+02-keep-past-control	4	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"released": "false"}}
+02-keep-past-control	5	console2 POST /shelves {"name": "s-1", "zone": "z", "server": "srv-a"}	201
+02-keep-past-control	6	@until 30 store GET /v1/get?key=testsub2/holds/s-1	200 {"items": {"by": "t-1", "released": "false"}}
+02-keep-past-control	7	@as console store POST /v1/write {"id":"d6c","op":"put","key":"testsub2/tallies/past-c2","items":{"id":"past-c2","revision":"1","name":"past-c2","of":"c2","until":"1000000000","born":"0123456789abcdef0123456789abcdef","made":"{\"at\":1000000000,\"by\":\"testsub\",\"keep\":1000000720}"},"cas":""}	200
+02-keep-past-control	8	@as testsub2worker store POST /v1/write {"id":"d6d","op":"put","key":"testsub2/state/result/past-c2","items":{"born":"0123456789abcdef0123456789abcdef","revision":"1","epoch":"1","value":"{\"state\":\"open\"}"},"cas":""}	200
+02-keep-past-control	9	console2 POST /tallies {"name": "live1", "of": "c1"}	201
+02-keep-past-control	10	@sleep 12	ok
+02-keep-past-control	11	@until 30 store GET /v1/get?key=testsub2/tallies/past-c2	200 {"items": null, "index": ""}
+02-keep-past-control	12	@until 30 store GET /v1/get?key=testsub2/state/result/past-c2	200 {"items": null}
+02-keep-past-control	13	@until 30 console2 GET /where/live1	200 {"worker": "t-1"}

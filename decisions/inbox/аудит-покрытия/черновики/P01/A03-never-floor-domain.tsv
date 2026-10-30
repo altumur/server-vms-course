@@ -1,0 +1,31 @@
+# Черновик A03 — `never` главы 1.2: пол эпох и `domain/` (и у admin тоже).
+# Норма: Platform/01-store/spec/01.2-store.norms.md Н1.3, список `never` (и для admin):
+#   — delete строки <x>/epoch/<y> (x ≠ platform);
+#   — delete под `domain/` не ролью домена (роль домена — `domain`, `domainagent`, `<s>domain`);
+#   — write и delete `platform/epoch_floor` (только операция восстановления, P/01.3);
+#   порядок проверок — Н3 «проверить»: `never` → 403 forbidden, ДО оценки прав роли.
+# Место приёмки: глава 1.2 (Platform/01-store/acceptance/2) — дверь без префикса — роль сценария, `@as <роль>` меняет
+#   роль, `admin` — дверь admin.sock; роль сценария по умолчанию — `testsubworker` (как в существующих сценариях),
+#   здесь каждый шаг роль называет сам. Файл прав стенда — Platform/01-store/acceptance/2/inputs/rights.json.
+# Существующие директивы: `@as <роль>` (словарь: шаг и следующие `store`-шаги сценария — от этой роли; роль держится до
+#   следующего `@as`), двери `admin` и «без префикса» (словарь «Двери»), `id` в команде (Н1: 1..64 строчных hex).
+# Новых директив не требуется.
+# Существующие директивы и формы ожидания: `403` без тела (README приёмки 2: `expect` без тела у кода 403 — полная
+#   форма `{kind: forbidden, error: …}`, проверяется по контракту главы 1.2; поля консоли в отказе нет).
+# Различающий шаг — admin. У ролей файла прав стенда НЕТ прав ни на запись/удаление `platform/epoch_floor`, ни на
+#   удаление под `domain/` (в inputs/rights.json у `console`, `testsubcontroller`, `testsubworker`, `testsub2worker`
+#   таких образцов нет; `console` читает `platform/*`, но не пишет и не удаляет). Значит 403 у роли неотличим от
+#   обычного отказа по правам — это НЕ проверка `never`. У admin права «всё, кроме never» (Н1.3), поэтому его 403
+#   различим: без `never` эти три операции прошли бы (admin вправе писать и удалять `domain/holder` и пол эпох).
+#   Поэтому именно admin — различающая роль, а роль — контроль «отказ не из-за неё».
+# Контроль: admin читает `platform/epoch_floor` — 200. `never` запрещает write/delete пола, но не чтение; значит 403
+#   выше относится к действию, а не к строке. Тело ответа 200 не сверяется (его форма — по контракту главы 1.1:
+#   `items` null или объект, `index` — версия или "").
+scenario	step	request	expect
+A03-never-floor-domain	1	@as console POST /v1/write {"id": "a301","op": "put","key": "platform/epoch_floor","items": {"floor": "1","generation_at": "1760745600"},"cas": ""}	403
+A03-never-floor-domain	2	@as console POST /v1/write {"id": "a302","op": "delete","key": "platform/epoch_floor"}	403
+A03-never-floor-domain	3	@as console POST /v1/write {"id": "a303","op": "delete","key": "domain/holder"}	403
+A03-never-floor-domain	4	admin POST /v1/write {"id": "a304","op": "put","key": "platform/epoch_floor","items": {"floor": "1","generation_at": "1760745600"},"cas": ""}	403
+A03-never-floor-domain	5	admin POST /v1/write {"id": "a305","op": "delete","key": "platform/epoch_floor"}	403
+A03-never-floor-domain	6	admin POST /v1/write {"id": "a306","op": "delete","key": "domain/holder"}	403
+A03-never-floor-domain	7	admin GET /v1/get?key=platform/epoch_floor	200

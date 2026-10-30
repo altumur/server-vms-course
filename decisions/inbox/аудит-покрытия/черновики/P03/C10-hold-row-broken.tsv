@@ -1,0 +1,110 @@
+# Черновик C10 — порванная своя строка места: продление не подтверждено, строка не переписывается, место живёт по своему окну (своё — до потолка единиц, чужое строгое — до CLOSE_BY).
+# Что проверяет: чтение нормы о порванной строке места (Platform/03-worker/spec/03.2-worker.norms.md Н3 «место: взять,
+#   держать, отпустить» → «держать: своя строка места порвана (Н1.4 torn) → продление не подтверждено, строка не
+#   переписывается — как молчание») — свойство, которое корпус приёмки проверял только чтением (README приёмки главы
+#   3.2; чек-лист П/03.2-12: «порванная своя строка места при продлении — как молчание»). Сценарий 01: место СВОЁ
+#   (строка места называет сервер воркера) — порванная строка не переписывается, место держится дольше окна WRITE_WINDOW
+#   (40 с), потому что для своего места окно другое (WRITE_WINDOW + unconfirmed_max). Сценарий 02: место ЧУЖОЕ
+#   (строка места не называет сервера — «любое место любой коробки», ADR-0029) при `places.lease: strict` — место
+#   отпускается по окну (WRITE_WINDOW 40 / CLOSE_BY 50), пульс больше не называет места.
+# Место нормы: Platform/03-worker/spec/03.2-worker.norms.md — Н1.3 (`<sub>/holds/<место>`: форма слота без server плюс
+#   `by`; `own_place`: «сервер воркера известен и непуст; строка места в таблице мест называет его (places.server_field) —
+#   место своё (ADR-0029); иначе место чужое или любой коробки — при places.lease: strict держится только в окне»), Н3
+#   «место: взять, держать, отпустить» («держать: … своя строка места порвана … строка не переписывается — как молчание …;
+#   хранилище молчит → держится в окне: строгое место (lease: strict и не своё) — пока подтверждено < WRITE_WINDOW, закрыть
+#   к CLOSE_BY; своё место и не строгое чужое — пока < WRITE_WINDOW + unconfirmed_max …; окно вышло → спросить ещё раз;
+#   не «моё» → leave_place: журнал «the hold on <p> has not been confirmed for N s, and its lease is strict | past the
+#   units' ceiling — letting go of it»; подсистема закрывает писателя»), Н1.2 (WRITE_WINDOW 40 = SLOT_TERM 45 − LEASE_MARGIN
+#   5; CLOSE_BY 50 = 45 + 5; LEASE_EVERY ≈ 8.3), таблица исходов Platform/03-worker/data/holds.outcomes.tsv (строка
+#   целиком → «порванное место: … продление не подтверждено: строка не переписывается, место держится в окне, как при
+#   молчании хранилища …; окно вышло → leave_place»), форма строки Platform/03-worker/data/holds.schema.json (обязательны
+#   `until` и `gen`; `gen` — целое), ADR-0029 «Место держится сквозь молчание хранилища, только если оно сервера этого
+#   воркера» (при `placement.places.lease: strict` всё остальное отпускается после окна аренды: место любой коробки, место
+#   чужого сервера, место, строка которого не прочиталась при взятии). Чек-лист: П/03.2-12.
+# Подготовка: полка места — строка таблицы `testsub2/shelves/<имя>` (манифест testsub2: `placement.places: {table: shelves,
+#   where: {enabled: true}, server_field: server, lease: strict}`; `lease: {unconfirmed_max: 600}`), её пишет консоль
+#   (`@as console store POST /v1/write`, писатель таблиц — консоль, П/06.1 Н1.6). Своё место: в строке полки названа
+#   `server: "srv-a"` (сервер воркера стенда). Чужое место: в строке полки `server` НЕ назван — тогда «место любой коробки».
+#   Строку удержания `testsub2/holds/<место>` пишет сам воркер (guard под своим слотом, П/03.2 Н3 «место»); чтобы её
+#   порвать, дверью `admin` (полные права, общий README приёмки) кладём строку с нечитаемым `gen` — по форме строки
+#   обязательны `until` и `gen`, а `gen` есть целое (десятичная запись целым знаком), поэтому строка с `gen: "x"` не читается
+#   своей формой (исход «строка целиком» таблицы holds.outcomes.tsv → «порванное место»). Поле пульса места — по манифесту
+#   `place_by: shelf`, то есть `shelf`; "" — не держит (П/03.4 Н1.1 `<place_by>`).
+#   Прочая подготовка — как в приёмке главы 3.6 (сценарий 07): оба воркера (`w-1` держит счётчик `c1`, `t-1` — счёт
+#   `t1` рядом с ним), счётчик создан консолью, счёт создан дверью второй подсистемы (`console2 POST /tallies`) — иначе
+#   размещение счёта не состоится (`placement.near`).
+# Существующие директивы: `@start controller testsub2`, `@start worker testsub2 t-1`, `@start resource`, `@sleep <с>`,
+#   `@until <с> <запрос>`; двери `console` (`POST /counters`), `console2` (`POST /tallies`), `store` (чтение строк),
+#   `admin` (подготовка и порча строки), `resource` (чтение пульса).
+# Новых директив не требуется.
+# Почему ожидание именно такое:
+#   — порванная строка НЕ переписывается: после порчи индекс строки и её содержимое прежние (тот же `index` $h1/$h2,
+#     тот же `gen: "x"`). Продление удержания при порванной строке не подтверждено, поэтому воркер не пишет в строку
+#     ничего (он и не может: версию строки не прочитать).
+#   — место держится в окне: пульс продолжает называть место (`shelf: "sh1"` / `"sh2"`), пока окно не вышло. Для СВОЕГО
+#     места (сценарий 01) окно другое: WRITE_WINDOW + unconfirmed_max = 40 + 600 = 640 с — внутри трёхминутного сценария
+#     место отпущено быть не может, и проверка «через 60 с после порчи место ещё держится» отличает своё место от чужого.
+#   — для ЧУЖОГО места при `lease: strict` окно короткое: WRITE_WINDOW 40, закрыть к CLOSE_BY 50; после него
+#     leave_place — пульс больше не называет места (`shelf: ""`). Проверка идёт с запасом (75 с после порчи), чтобы
+#     пережить и шаг аренды (≈8.3 с), и подмену.
+#   — место, порванное до взятия, не берётся снова («взять_место: порванные — пропустить»), поэтому после отпускания
+#     пульс остаётся с пустым местом, а строка остаётся порванной.
+# Оговорки (для владельца приёмки):
+#   — порча строки идёт под cas по прочитанной версии: чтение и запись — соседние шаги, но воркер продлевает строку
+#     каждые ≈8.3 с (LEASE_EVERY), поэтому между ними возможен `409 conflict` (версия устарела). При конфликте шаг
+#     повторяют: версия читается заново, запись — с новой версией; после порчи версия строки уже не меняется
+#     (продление не подтверждено), поэтому второй проход проходит.
+#   — вид строки журнала об отпускании места нормой не назван (Н3 «место» задаёт только ТЕКСТ: «the hold on <p> has not
+#     been confirmed for N s, and its lease is strict — letting go of it»). Проверка журнала — ВНЕ TSV. Предложение
+#     владельцу: принять вид `worker.place_released` с полем `place` и текстом причины; тогда шаг добавляется:
+#     `console GET /events?unit=audit/testsubworker&kind=worker.place_released` → `200 {"events": [{"kind": "worker.place_released"}]}`.
+#   — «подсистема закрывает писателя» (окно вышло) на стенде не наблюдается: учебный воркер testsub2 не пишет в место
+#     после его потери, и отдельного наблюдателя закрытия писателя у стенда нет — проверка чтением.
+#   — сценарий 02 опирается на то, что воркер берёт единственное свободное включённое место; единица у него есть
+#     (счёт `t1` создан), так что размещение состоялось. Если реализация место без единицы не берёт (Н3 «шаг_аренды()»
+#     шаг 6: «без места, не ожидая назначения»), сценарий покажет пустой `shelf` на всех шагах — это расхождение с нормой,
+#     а не дефект сценария; тогда ветвь ADR-0029 «место любой коробки» проверяется на стенде, где полка называет чужой
+#     сервер.
+#   — порча строки идёт мимо платформенной формы: хранилище (дверь `admin`) строки семейств не проверяет — форму
+#     строки проверяют читатели и писатели платформы (П/06.1 Н1.6, договор наблюдения «Строка»); поэтому строка с
+#     `gen: "x"` ложится как есть, и для воркера она порвана. Если реализация хранилища всё же проверяет форму семьи на
+#     записи, такую запись откажут — тогда порча делается значением, которое писатель примет, а читатель — нет (например
+#     `until` не по форме времени), и предмет остаётся тем же: «строка не читается своей формой».
+#   — сценарий 01 не доводит дело до отпускания места (окно 640 с не влезает в сценарий ≤ 3 минут): эта часть нормы
+#     (своё место через молчание) остаётся проверкой чтением — её относит ADR-0029, и на стенде она подтверждается
+#     косвенно, тем, что место СВОЁ в сценарии 01 после 60 с молчания ещё держится.
+scenario	step	request	expect
+# 01-own-place-torn-hold — место своё (полка называет srv-a): строка порвана, не переписывается, место держится и после окна 40 с.
+01-own-place-torn-hold	1	@start resource	ok
+01-own-place-torn-hold	2	@start controller testsub2	ok
+01-own-place-torn-hold	3	@start worker w-1	ok
+01-own-place-torn-hold	4	@start worker testsub2 t-1	ok
+01-own-place-torn-hold	5	@as console store POST /v1/write {"id":"c10a","op":"put","key":"testsub2/shelves/sh1","items":{"name":"sh1","zone":"z1","server":"srv-a","kind":"plain","admits":"true","enabled":"true","size":"1"},"cas":""}	200
+01-own-place-torn-hold	6	console POST /counters {"name": "c1", "start": 1}	201
+01-own-place-torn-hold	7	console2 POST /tallies {"name": "t1", "of": "c1", "shelf": "sh1", "zone": "z1"}	201
+01-own-place-torn-hold	8	@until 60 resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"shelf": "sh1"}
+01-own-place-torn-hold	9	store GET /v1/get?key=testsub2/holds/sh1	200 {"index": "$h1", "items": {"holder": "$hl1", "until": "$un1", "by": "t-1"}}
+01-own-place-torn-hold	10	admin POST /v1/write {"id":"c10b","op":"put","key":"testsub2/holds/sh1","items":{"holder":"$hl1","until":"$un1","released":"false","gen":"x","by":"t-1"},"cas":"$h1"}	200
+01-own-place-torn-hold	11	@sleep 15	ok
+01-own-place-torn-hold	12	admin GET /v1/get?key=testsub2/holds/sh1	200 {"index": "$h1", "items": {"holder": "$hl1", "until": "$un1", "by": "t-1", "gen": "x"}}
+01-own-place-torn-hold	13	resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"shelf": "sh1"}
+01-own-place-torn-hold	14	@sleep 45	ok
+01-own-place-torn-hold	15	admin GET /v1/get?key=testsub2/holds/sh1	200 {"index": "$h1", "items": {"holder": "$hl1", "until": "$un1", "by": "t-1", "gen": "x"}}
+01-own-place-torn-hold	16	resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"shelf": "sh1"}
+# 02-foreign-place-torn-hold — место чужое (полка не называет сервера), lease: strict: строка порвана, место отпускается по окну 40/50.
+02-foreign-place-torn-hold	1	@start resource	ok
+02-foreign-place-torn-hold	2	@start controller testsub2	ok
+02-foreign-place-torn-hold	3	@start worker w-1	ok
+02-foreign-place-torn-hold	4	@start worker testsub2 t-1	ok
+02-foreign-place-torn-hold	5	@as console store POST /v1/write {"id":"c10c","op":"put","key":"testsub2/shelves/sh2","items":{"name":"sh2","zone":"z1","kind":"plain","admits":"true","enabled":"true","size":"1"},"cas":""}	200
+02-foreign-place-torn-hold	6	console POST /counters {"name": "c1", "start": 1}	201
+02-foreign-place-torn-hold	7	console2 POST /tallies {"name": "t1", "of": "c1", "shelf": "sh2", "zone": "z1"}	201
+02-foreign-place-torn-hold	8	@until 60 resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"shelf": "sh2"}
+02-foreign-place-torn-hold	9	store GET /v1/get?key=testsub2/holds/sh2	200 {"index": "$h2", "items": {"holder": "$hl2", "until": "$un2", "by": "t-1"}}
+02-foreign-place-torn-hold	10	admin POST /v1/write {"id":"c10d","op":"put","key":"testsub2/holds/sh2","items":{"holder":"$hl2","until":"$un2","released":"false","gen":"x","by":"t-1"},"cas":"$h2"}	200
+02-foreign-place-torn-hold	11	@sleep 15	ok
+02-foreign-place-torn-hold	12	admin GET /v1/get?key=testsub2/holds/sh2	200 {"index": "$h2", "items": {"holder": "$hl2", "until": "$un2", "by": "t-1", "gen": "x"}}
+02-foreign-place-torn-hold	13	resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"shelf": "sh2"}
+02-foreign-place-torn-hold	14	@sleep 60	ok
+02-foreign-place-torn-hold	15	resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"shelf": ""}
+02-foreign-place-torn-hold	16	admin GET /v1/get?key=testsub2/holds/sh2	200 {"index": "$h2", "items": {"holder": "$hl2", "until": "$un2", "by": "t-1", "gen": "x"}}

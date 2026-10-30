@@ -1,0 +1,91 @@
+# Черновик F01 — проверка схемы при старте ресурса: слишком новая схема, «не число» и ошибка чтения.
+# Что проверяет: (1) строка `platform/schema` с `version` выше SCHEMA сборки — ресурс НЕ СТАРТУЕТ: строки двери
+#   `platform/doors/srv-a` не появляется (два чтения подряд, 12 с между ними); после починки строки новый
+#   `@start resource` работает — значит, отказ был в проверке схемы, а не в стенде; (2) строка с `version` не по
+#   форме («не число») — то же, и независимое свидетельство: сама консоль читает строку как нечитаемую
+#   (`version: null`, `schema_unknown: true`); (3) ошибка чтения строки схемы (хранилище молчит) — ресурс ЖДЁТ:
+#   пульса нет (он не начал работу), и после починки хранилища он сам поднимается, БЕЗ перезапуска.
+# Место нормы: Platform/05-resource/spec/05-resource.norms.md Н3 «старт ресурса — проверка схемы» и чек-лист
+#   П/05-13; Platform/common/contracts/schema.md «Проверка при старте» («первым шагом старта, до чтения манифеста
+#   (P/02.3), у всех четырёх процессов: прочитать platform/schema: нет → своя SCHEMA; не число → не стартовать;
+#   version > SCHEMA → не стартовать (“store is at schema N; this build understands M”); ошибка чтения → ждать
+#   доступности, не начиная работу») и «Граница» («достоверно испорченная/слишком новая схема — отказ старта с
+#   кодом 2»); Platform/06-console/spec/06.6-console.norms.md Н1.1а (строка `platform/schema`:
+#   `{version: <целое ≥ 1>, at: <момент>}`, писатель — консоль (admin); SCHEMA = 1 нынешней спецификации);
+#   Platform/06-console/data/schema.outcomes.tsv (читатель `console`: «`GET /schema` — `version: null`,
+#   `schema_unknown: true`»; читатель `<s>controller`: «старт — не стартовать, выход с кодом 2 … повтор —
+#   перезапуском юнита»). Права ролей — Platform/02-installer/spec/02.5-installer.norms.md Н1.4 (строку схемы
+#   пишет консоль; ресурс её читает).
+# Подготовка: стенд testsub с ресурсом srv-a и консолью (как в приёмке P/05); ресурс до первого шага НЕ поднят
+#   (его поднимает шаг `@start resource` — так же, как в сц. 09 и 16 приёмки P/05). Строка схемы кладётся
+#   дверью `admin` (сокет `admin.sock`; полные права) — как в черновике D07 урока P/04: писатель строки —
+#   консоль, а её дверь на стенде — admin. Значения строк хранилища — строки (П/01.1 Н1: `items: map string →
+#   string`), поэтому `version` кладётся строкой: «2» (выше SCHEMA = 1) и «x» (не число).
+#   Запись строки идёт БЕЗ `cas`: «запись без `cas` — поверх» (П/01.1 Н1); с `cas: ""` (создание) починка
+#   получила бы `409 conflict`, потому что строка уже есть, а первый шаг каждого сценария кладёт строку заново
+#   (сценарии независимы, хранилище пустое — тогда `cas: ""` годится, но единый вид шага проще и устойчивее).
+# Существующие директивы: `@start resource`, `@sleep <с>`, `@until <с> <запрос>`; двери `admin` (запись строки
+#   схемы), `store` (чтение строк), `console` (`GET /schema`), `resource` (пульс).
+# Новые директивы (предложения — `черновики/P05/NEW-DIRECTIVES.md`): ожидание `@exit 2` у `@start resource`
+#   (продолжение предложения П/04 для `@start controller`, принятого при разборе P/04). Принятые директивы общего
+#   README (e1b8b60a5): `@freeze store`/`@thaw store` (SIGSTOP/SIGCONT процесса хранилища, сценарий 03);
+#   и требование к раннеру: `@start resource` ждёт порт, а строку двери — не дольше 30 с (см. NEW-DIRECTIVES:
+#   ресурс, который ждёт доступности хранилища, строку двери не пишет никогда).
+# Почему ожидание именно такое:
+#   — «не стартовать» наблюдается отсутствием строки двери `platform/doors/srv-a`: дверь ресурс пишет при
+#     старте (Н1.4 `door_row`) и освежает каждые ALIVE_EVERY (15 с). Отсутствия строки достаточно; чтение
+#     повторяется через 12 с, чтобы отказ не был «мелькнул и вернулся».
+#   — отказ виден и по тому, что после починки строки нужен НОВЫЙ `@start resource`: по schema.outcomes.tsv
+#     повтор после отказа — «перезапуском юнита», а ожидание доступности — это повтор внутри того же процесса.
+#     Сценарий 03 и проверяет именно эту разницу: там перезапуска нет.
+#   — `console GET /schema` в сценарии 02 — независимое свидетельство, что строка именно нечитаема по форме
+#     («не число»), а не просто «другая»: консоль отдаёт `version: null` и `schema_unknown: true`.
+#   — пульса нет (404) в сценарии 03 — признак «не начал работу»: пульс `platform/resources/<server>/heartbeat`
+#     пишется каждые 10 с, и ресурс, ждущий доступности хранилища, не пишет его, не начав работы (Н3, договор
+#     schema.md «ошибка чтения → ждать доступности, не начиная работу»).
+# Сроки и допуски: сон 12 с — два интервала ALIVE_EVERY (15 с) с запасом: если бы дверь появилась с задержкой,
+#   она появилась бы в первые секунды; `@until 60` на появление двери после починки; `@until 90` в сценарии 03
+#   (ресурс ждал хранилища и мог ждать и после его возврата). Потолок сценария — 3 минуты; сценарий 01 ≈ 40 с,
+#   сценарий 02 ≈ 40 с, сценарий 03 ≈ 60 с.
+# Оговорки (для владельца приёмки):
+#   — код выхода 2 и строка журнала («store is at schema N; this build understands M») в TSV не читаются: у
+#     `@start` нет такого ожидания — предложение `@exit <код>` в NEW-DIRECTIVES. Пока его нет, отказ виден по
+#     отсутствию строки двери (шаги 4 и 6 сценария 01), но не по коду выхода.
+#   — сценарий 03 требует, чтобы дверь ресурса была поднята, пока он ждёт: тогда «нет пульса» — 404. Если
+#     реализация проверяет схему ДО подъёма двери, наблюдение по HTTP недоступно (соединение не установится),
+#     и ветвь «ошибка чтения → ждать» остаётся проверкой чтением. Это решение владельца приёмки.
+#   — сценарий 03 останавливает хранилище (`@freeze store`): пока оно молчит, дверь `store` не отвечает, и
+#     читать строку двери нечем — потому и признак «не начал работу» взят по пульсу, а не по строке двери.
+#   — `@freeze store`/`@thaw store` — принятые директивы общего README (e1b8b60a5: SIGSTOP/SIGCONT,
+#     предел 120 с); сценарий 03 в предел укладывается (остановка ≈ 24 с — два сна по 12 с между `@freeze` и `@thaw`).
+scenario	step	request	expect
+# 01-schema-too-new — версия выше SCHEMA: ресурс не стартует, строки двери нет; после починки — новый старт работает.
+01-schema-too-new	1	admin POST /v1/write {"id":"f01a","op":"put","key":"platform/schema","items":{"version":"2","at":"1700000000"}}	200
+01-schema-too-new	2	@start resource	@exit 2
+01-schema-too-new	3	@sleep 12	ok
+01-schema-too-new	4	store GET /v1/get?key=platform/doors/srv-a	200 {"index": "", "items": null}
+01-schema-too-new	5	@sleep 12	ok
+01-schema-too-new	6	store GET /v1/get?key=platform/doors/srv-a	200 {"index": "", "items": null}
+01-schema-too-new	7	admin POST /v1/write {"id":"f01b","op":"put","key":"platform/schema","items":{"version":"1","at":"1700000000"}}	200
+01-schema-too-new	8	@start resource	ok
+01-schema-too-new	9	@until 60 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"url": "@any", "since": "@time"}}
+# 02-schema-not-a-number — версия не по форме: строка нечитаема, ресурс не стартует.
+02-schema-not-a-number	1	admin POST /v1/write {"id":"f01c","op":"put","key":"platform/schema","items":{"version":"x","at":"1700000000"}}	200
+02-schema-not-a-number	2	console GET /schema	200 {"version": null, "schema_unknown": true}
+02-schema-not-a-number	3	@start resource	@exit 2
+02-schema-not-a-number	4	@sleep 12	ok
+02-schema-not-a-number	5	store GET /v1/get?key=platform/doors/srv-a	200 {"index": "", "items": null}
+02-schema-not-a-number	6	@sleep 12	ok
+02-schema-not-a-number	7	store GET /v1/get?key=platform/doors/srv-a	200 {"index": "", "items": null}
+02-schema-not-a-number	8	admin POST /v1/write {"id":"f01d","op":"put","key":"platform/schema","items":{"version":"1","at":"1700000000"}}	200
+02-schema-not-a-number	9	@start resource	ok
+02-schema-not-a-number	10	@until 60 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"url": "@any", "since": "@time"}}
+# 03-schema-read-error — ошибка чтения: ресурс ждёт и после возврата хранилища начинает сам, без перезапуска.
+03-schema-read-error	1	@freeze store	ok
+03-schema-read-error	2	@start resource	ok
+03-schema-read-error	3	@sleep 12	ok
+03-schema-read-error	4	resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	404
+03-schema-read-error	5	@sleep 12	ok
+03-schema-read-error	6	resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	404
+03-schema-read-error	7	@thaw store	ok
+03-schema-read-error	8	@until 90 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"url": "@any", "since": "@time"}}

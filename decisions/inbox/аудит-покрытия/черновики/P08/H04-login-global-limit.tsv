@@ -1,0 +1,71 @@
+# Черновик H04 — общий потолок отказов входа: 20 отказов всех ключей, дальше ключ — не чаще одной попытки в 60 с.
+# Что проверяет: предел попыток входа (см. ниже) — три части: (1) у каждого имени свой счёт: пять отказов одного имени подряд
+#   ещё проходят (пятый — последний, что проходит); (2) общий потолок: после 20 отказов всех ключей свежее имя ещё
+#   может попробовать (у него нет прежней попытки), а вторая его попытка в том же минуте — отказ 429 {error: "too many
+#   attempts"}; (3) тело отказа — по договору: 429 {error: "too many attempts", detail} (заголовок Retry-After раннером
+#   не проверяется — см. оговорку).
+# Место нормы: Platform/08-domain/spec/08.4-domain.norms.md — Н1.10 («Предел попыток»: scope, count, address, key,
+#   per_address, ceiling, body — по договору сторожевой и передачи), Н1.2 (`answer`: 401 {error: "refused", detail: "wrong
+#   user or password"} — отказ в счёт предела Н1.10);
+#   Platform/common/contracts/gate-and-pass.md — «Предел попыток»: `key` — у процесса domain пара (адрес, имя): имя — поле
+#   user тела POST /api/login байт в байт, в том числе имя, которого нет; `per_address`: 5 отказов этого ключа за последние
+#   900 с → 429 (Retry-After — секунды до выхода старейшего из окна); `ceiling`: 20 отказов всех ключей за последние 900 с →
+#   каждому ключу не чаще одной попытки в 60 с; раньше — 429, Retry-After — секунды до следующей; `count`: отказ — неверная
+#   пара; успех и отказ формы не считаются; попытка — каждый вызов, прошедший форму; `body`: 429 {error: "too many
+#   attempts", detail} и заголовок Retry-After. Чек-лист: П/08.4-06 («общий потолок входа (20 отказов всех ключей) → 429 и
+#   свежему имени»).
+# Подготовка: стенд домена `hold`, `m1`, `m2` (@domain). Людей нет — вход идёт под несуществующими именами, поэтому
+#   каждый отказ честный (неверная пара). Прецедент: сц. 04 приёмки P/08.4 (Platform/08-domain/acceptance/4/scenarios.tsv) —
+#   пять 401 подряд, потом 429 {"error": "too many attempts"}, потом свежее имя — 401.
+# Существующие директивы: `@domain`; дверь `signer` (вход POST /api/login); ожидания — подмножество полей.
+#   Новых директив не требуется.
+# Сроки и допуски: @domain — до 90 с; 22 входа по ≈ 0,5 с (PBKDF2, 600000 итераций) ≈ 12 с. Потолок сценария — 3 минуты;
+#   не превышен. Окно предела — 900 с, окно потолка — 60 с: все 22 попытки укладываются в окно потолка с запасом.
+# Расчёт шагов (по договору «Предел попыток» и по ключу (адрес, имя)):
+#   — счёт ключа = число отказов этого ключа за 900 с; отказ — неверная пара (успех не считается).
+#   — шаги 2–6: имя n1, пять попыток. Перед пятой отказов этого ключа четыре — 4 < 5, попытка проходит; пятый отказ
+#     и есть пятый (счёт ключа становится 5). Шестая попытка n1 была бы отказом 429 — по per_address.
+#   — шаги 7–11: n2 — те же пять (счёт ключа n2 с нуля).
+#   — шаги 12–16: n3 — те же пять. Шаги 17–21: n4 — те же пять.
+#   — итого отказов всех ключей: 20 — потолок достигнут (20 ≥ 20). Теперь каждый ключ — не чаще одной попытки в 60 с.
+#   — шаг 22: имя n5 — свежее, у него нет прежней попытки, поэтому ограничение «не чаще одной попытки в 60 с» его ещё не
+#     касается: попытка проходит и даёт обычный 401 (счёт отказов всех ключей становится 21).
+#   — шаг 23: вторая попытка n5 в пределах 60 с от первой — «не чаще одной попытки в 60 с» → 429 {error: "too many
+#     attempts"} с Retry-After (секунды до следующей попытки).
+#   — пересчёт задания: задание предполагало, что после 20 отказов свежее имя сразу получит 429. По договору это не так:
+#     потолок ограничивает ключ, а не имя, — у свежего ключа попытки ещё не было. Отсюда два шага вместо одного.
+# Оговорка (для владельца приёмки): свидетельство (cammeta-python, impl/m11domain/people.py, `Limiter`) считает отказы по
+#   одному адресу TCP-пира, без имени (прежняя семантика, до решения «Архитектора» 2026-10-21 о паре (адрес, имя)):
+#   после пяти отказов подряд такой счёт отказал бы и свежему имени (шаг 22), и шаг 22 прошёл бы только по старой семантике.
+#   Черновик написан по договору (ключ — пара (адрес, имя)); текущая реализация стадии C
+#   (/Users/murat/w2c/cammeta-c-go/common/gate-and-pass/limits.go) считает по паре — как договор.
+#   Второе: заголовок Retry-After при 429 договор требует, но проверить его в TSV нечем: форма `@header <Имя>: ~<текст>`
+#   ищет литеральную подстроку, а значение — число секунд до следующей попытки, оно не предсказано (пустая подстрока
+#   проходит и при отсутствии заголовка). Поэтому проверяется только тело отказа.
+#   Третье: адрес клиента на стенде один и тот же для всех входов (адрес TCP-пира процесса domain — тот же, что и в прецеденте
+#   сц. 04 приёмки 8.4, где шестая попытка того же имени даёт 429), поэтому пара «адрес, имя» здесь сводится к имени.
+scenario	step	request	expect
+
+04-login-ceiling	1	@domain	ok
+04-login-ceiling	2	signer POST /api/login {"user": "n1", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	3	signer POST /api/login {"user": "n1", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	4	signer POST /api/login {"user": "n1", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	5	signer POST /api/login {"user": "n1", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	6	signer POST /api/login {"user": "n1", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	7	signer POST /api/login {"user": "n2", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	8	signer POST /api/login {"user": "n2", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	9	signer POST /api/login {"user": "n2", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	10	signer POST /api/login {"user": "n2", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	11	signer POST /api/login {"user": "n2", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	12	signer POST /api/login {"user": "n3", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	13	signer POST /api/login {"user": "n3", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	14	signer POST /api/login {"user": "n3", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	15	signer POST /api/login {"user": "n3", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	16	signer POST /api/login {"user": "n3", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	17	signer POST /api/login {"user": "n4", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	18	signer POST /api/login {"user": "n4", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	19	signer POST /api/login {"user": "n4", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	20	signer POST /api/login {"user": "n4", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	21	signer POST /api/login {"user": "n4", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	22	signer POST /api/login {"user": "n5", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+04-login-ceiling	23	signer POST /api/login {"user": "n5", "password": "not the password"}	429 {"error": "too many attempts"}

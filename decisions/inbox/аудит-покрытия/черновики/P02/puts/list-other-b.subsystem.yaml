@@ -1,0 +1,4 @@
+name: otherb
+unit: {rows: xs, id: numeric}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/otherb/worker}

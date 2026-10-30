@@ -1,0 +1,50 @@
+# Черновик C03 — единица, строка которой не прочитана ни разу: не запускается, `garbled_rows`, элемент пульса `unreadable`.
+# Что проверяет: ветку главы 3.3 Н3 «цикл()» шаг 2 для строки, которая не была прочитана ни разу (в корпусе
+#   приёмки этот случай не выражен: сценарий 12 портит строку ПОСЛЕ того, как единица уже пошла, и покрывает ветку
+#   «запущенная единица идёт с последней прочитанной строкой»): битая строка единицы, прочитанная впервые, — единица
+#   не запускается, эпоха не берётся, в пульсе появляется элемент `{id, phase: "unreadable", why: "row unreadable: …"}`
+#   без `epoch` и `observed_revision`, а счётчик `garbled_rows` пульса растёт.
+# Место нормы: Platform/03-worker/spec/03.3-worker.norms.md — Н3 «цикл()» шаг 2 (ветка «строка своей единицы не
+#   читается своим типом»: «ни разу не прочитанная — не запускается, эпоха не берётся, элемент пульса — {id,
+#   phase: "unreadable", why тот же, revision?} без epoch и observed_revision … каждое такое чтение — `garbled_rows`
+#   пульса + 1»), Platform/03-worker/spec/03.4-worker.norms.md Н1.1 (`garbled_rows`: «чтений строк своих единиц, не
+#   прочитанных своим типом») и Н1.1 «phase» (три слова платформы: running, sealed, unreadable). Чек-лист: P/03.3-04.
+#   Форма семьи и правило «не по форме семьи или value не по схеме — не действует, как отсутствующая» —
+#   Platform/common/contracts/row-check.md.
+# Подготовка: строка единицы `testsub/counters/c3n` кладётся битой (`start: "x"` — тот же порок, что в приёмке главы
+#   3.3, сценарий 12, шаг 7); строка назначения `testsub/workers/w-1` (семейство `<sub>/workers/<имя>`, писатель по
+#   Platform/common/data/catalog.tsv — контроллер) кладётся тоже вручную, потому что контроллер в сценарии не
+#   поднимается: поднятый контроллер переписал бы назначение своей строкой и никого не назначил. Воркер читает
+#   назначение из `<sub>/workers/<имя>` (П/03.2 Н3 «шаг_аренды()» шаг 3; в свидетеле стадии C — engine.go, чтение
+#   `workers/<имя>`), а строку размещения `<sub>/placement/<id>` не читает вовсе: это запись контроллера.
+#   Обе строки кладутся дверью `admin` (полные права) — и `console` (роль консоли на слоты, эпохи и назначения —
+#   читатель, см. П/02.5 Н1.4).
+# Существующие директивы: `@start resource`, `@start worker <имя>`, `@sleep <с>`, `@until <с> <запрос>`; двери `store`
+#   (чтение ровней с правами на `testsub/`), `admin` (предустановка строк), `console` (роль консоли — запись строки
+#   единицы), `resource` (чтение пульса: `GET /v1/objects/testsub/heartbeats/<имя>?scope=local`).
+# Новых директив не требуется.
+# Почему ожидание именно такое:
+#   — элемент пульса: по Н3 шаг 2 у ни разу не прочитанной строки нет ни `epoch`, ни `observed_revision` (эпоха не
+#     бралась) — поэтому ожидание требует их отсутствия (`@absent`); `why` содержит начало нормированной строки
+#     «row unreadable: » (дальше — причина чтения, её вид не задан); `revision` в элементе необязателен, поэтому не
+#     проверяется.
+#   — `garbled_rows` — «каждое такое чтение — `garbled_rows` пульса + 1»: значение ненулевое, поэтому `@not(0)` (а не
+#     точное число: проходов сверки за время сценария может быть несколько).
+#   — `pass_failures`: 0 — чтение строки состоялось, оно было нечитаемо по значению, а не оборвано ошибкой (это другой
+#     счётчик, Н3 шаг 2: «проходов сверки, оборванных ошибкой чтения»).
+#   — `testsub/epoch/c3n` отсутствует (пустая строка и `items: null`): эпоха не берётся — по Н3 шаг 2.
+# Оговорка (для владельца приёмки): строка единицы кладётся битой до старта воркера, поэтому «ни разу не прочитанная»
+#   получается без гонки с первым проходом; если контроллер поднять, он перепишет назначение — сценарий без него.
+#   Строка единицы после сценария остаётся битой: воркер строки единиц не переписывает (у testsub в манифесте нет
+#   `worker.writes`), и это проверяется последним шагом.
+scenario	step	request	expect
+# 01-never-read-garbled — битая строка, прочитанная впервые: единица не запущена, эпохи нет, элемент пульса unreadable.
+01-never-read-garbled	1	@start resource	ok
+01-never-read-garbled	2	@as console store POST /v1/write {"id":"c03a","op":"put","key":"testsub/counters/c3n","items":{"id":"c3n","revision":"1","name":"c3n","start":"x","labels":"","born":"0123456789abcdef0123456789abcdef"},"cas":""}	200
+01-never-read-garbled	3	admin POST /v1/write {"id":"c03b","op":"put","key":"testsub/workers/w-1","items":{"units":"c3n","rev":"1"},"cas":""}	200
+01-never-read-garbled	4	@start worker w-1	ok
+01-never-read-garbled	5	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+01-never-read-garbled	6	@sleep 12	ok
+01-never-read-garbled	7	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"garbled_rows": "@not(0)", "pass_failures": 0, "status": [{"id": "c3n", "phase": "unreadable", "why": "~row unreadable: ", "epoch": "@absent", "observed_revision": "@absent"}]}
+01-never-read-garbled	8	store GET /v1/get?key=testsub/epoch/c3n	200 {"index": "", "items": null}
+01-never-read-garbled	9	store GET /v1/get?key=testsub/counters/c3n	200 {"items": {"start": "x", "revision": "1"}}

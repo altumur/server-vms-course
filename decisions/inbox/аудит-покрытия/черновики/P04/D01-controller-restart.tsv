@@ -1,0 +1,77 @@
+# Черновик D01 — перезапуск контроллера: локальная история начинается заново, а решения не пересматриваются.
+# Что проверяет: после потери контроллером локальной истории (процесс остановлен и поднят заново) размещения,
+#   назначения и эпохи не меняются, новых записей (строки размещения, назначения, заказ, отчёт) не появляется, а
+#   новый экземпляр контроллера работает: отчёт прохода обновляется.
+# Место нормы: Platform/04-controller/spec/04-controller.norms.md — Н1.1 (`<sub>/placement/<id>`: `rev` — «+1 на каждую
+#   запись», `manifest_rev` — «ревизия манифеста, под которой принято решение»; `<sub>/workers/<имя>`: `rev` — «+1 только
+#   при изменении списка»; `<sub>/want/<сервер>` — писатель контроллер), Н1.2 (отчёт прохода: `at`, `manifest_rev`),
+#   Н3 «проход()» шаг 4 («sync назначений с размещениями (diverged)») и шаг 9 (заказ — только при нехватке),
+#   Н3 «Гонки» (у каждого контроллера своя история наблюдения; ADR-0049), Н1.5 «Допуск размещения между контроллерами»
+#   и договор очереди писателя (Platform/common/contracts/turn.md: `TURN_TERM: 45`, `TURN_RENEW: 10`, шаг 6 — очередь
+#   отдаётся в конце прохода). Чек-лист: П/04-02 (перезапуск контроллера).
+# Подготовка: сценарий 01 — стенд testsub: ресурс, контроллер, воркер `w-1`, счётчик `c1`. Сценарий 02 — стенд testsub2:
+#   ресурс, контроллер, воркер `t-1`, полка `s-1` (у testsub2 `place_by: shelf`, `places.table: shelves`) и счёт `t1`.
+#   Роли процесса: контроллер testsub — `testsub`, testsub2 — `testsub2` (`@start controller [<sub>]`).
+# Существующие директивы: `@start resource`, `@start controller [<sub>]`, `@start worker [<sub>] <имя>`, `@sigterm <имя>`,
+#   `@sleep <с>`, `@until <с> <запрос>`; двери `resource` (объект отчёта прохода), `store` (строки размещения, назначения,
+#   эпохи, заказа), `console`/`console2` (создание единиц и полок).
+# Новых директив не требуется.
+# Сроки и допуски (все числа — по нормам, не по стенду):
+#   — отчёт прохода пишется в конце каждого прохода; проход — раз в 5 с (П/04 Н1.2, Н1.4 `PASS_EVERY`), поэтому
+#     «новый экземпляр работает» наблюдается по смене `at` отчёта, а ожидание `@until` даёт время на первую запись.
+#   — очередь размещения: новый контроллер берёт её либо сразу (строка отдана в конце прохода — `holder: ""`), либо
+#     по истечении `TURN_TERM` = 45 с (если старый процесс остановлен посреди прохода и очередь не отдана); поэтому
+#     ожидание «новый отчёт» дано сроком 90 с, а не 30 с.
+#   — потолок сценария — 3 минуты; сценарий 01: подготовка ≈ 15 с + ожидание первого прохода нового контроллера
+#     (≤ 45 с) + проверки ≈ 10 с ≈ 70 с; сценарий 02 — то же плюс шаги полки и счёта (≈ 15 с) ≈ 85 с. Потолок не превышен.
+# Почему ожидание именно такое:
+#   — строка размещения не переписывается: `rev` растёт «+1 на каждую запись», а новое решение требует новой записи;
+#     пересмотр решения после перезапуска дал бы другой `rev` (и, скорее всего, другой `at`). Сравнение `rev` до и
+#     после — прямое доказательство, что решение не пересмотрено.
+#   — строка назначения `<sub>/workers/<имя>` меняется «+1 только при изменении списка» — сравниваем список `units`.
+#   — строка эпохи принадлежит воркеру и меняется при переезде; переезд после перезапуска дал бы эпоху 2.
+#   — заказа (`<sub>/want/<сервер>`) нет: у testsub ключа `placement.grows` нет вовсе, у testsub2 он `true`, но нехватки
+#     нет (одна единица, ёмкость 8), поэтому строка заказа не пишется; её появление означало бы, что новый экземпляр
+#     начал планировать заново. В сценарии 01 строка заказа невозможна по манифесту, в сценарии 02 — проверяется по-настоящему.
+#   — `at` отчёта прохода меняется при каждом проходе; пока контроллер жив, отчёт не застаревает. Одинаковое `at` в двух
+#     чтениях через 12 с (два с лишним прохода) означало бы, что контроллер стоит.
+# Оговорка (для владельца приёмки): код выхода нового экземпляра и запись в журнал («манифест сменился, перезапуск»)
+#   в TSV не читаются — на стенде нет параметра у `@start` для кода выхода (см. предложение владельцу в
+#   `черновики/P03/NEW-DIRECTIVES.md`, раздел 2). Наблюдаемая часть — смена `at` отчёта и неизменность решений.
+#   Строка `platform/manifest/<sub>/rev` недоступна роли сценария (права роли — на `testsub/` и `testsub2/`), поэтому
+#   ревизию манифеста смотрим в отчёте прохода и в строке размещения, а не в метке.
+scenario	step	request	expect
+# 01-testsub-restart — перезапуск контроллера testsub: размещение, назначение и эпоха прежние, заказа нет.
+01-testsub-restart	1	@start resource	ok
+01-testsub-restart	2	@start controller	ok
+01-testsub-restart	3	@start worker w-1	ok
+01-testsub-restart	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+01-testsub-restart	5	console POST /counters {"name": "c1", "start": 1}	201
+01-testsub-restart	6	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1", "rev": "$r1"}}
+01-testsub-restart	7	@until 30 store GET /v1/get?key=testsub/epoch/c1	200 {"items": {"epoch": "1"}}
+01-testsub-restart	8	@until 30 store GET /v1/get?key=testsub/workers/w-1	200 {"items": {"units": "$u1"}}
+01-testsub-restart	9	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"at": "$p1"}
+01-testsub-restart	10	@sigterm controller	ok
+01-testsub-restart	11	@start controller	ok
+01-testsub-restart	12	@until 90 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"at": "@not($p1)"}
+01-testsub-restart	13	store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1", "rev": "$r1"}}
+01-testsub-restart	14	store GET /v1/get?key=testsub/epoch/c1	200 {"items": {"epoch": "1"}}
+01-testsub-restart	15	store GET /v1/get?key=testsub/workers/w-1	200 {"items": {"units": "$u1"}}
+01-testsub-restart	16	store GET /v1/get?key=testsub/want/srv-a	200 {"items": null}
+01-testsub-restart	17	console GET /where/c1	200 {"worker": "w-1"}
+# 02-testsub2-restart-no-want — перезапуск контроллера testsub2: решение прежнее, строка заказа не появилась.
+02-testsub2-restart-no-want	1	@start resource	ok
+02-testsub2-restart-no-want	2	@start controller testsub2	ok
+02-testsub2-restart-no-want	3	@start worker testsub2 t-1	ok
+02-testsub2-restart-no-want	4	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"released": "false"}}
+02-testsub2-restart-no-want	5	console2 POST /shelves {"name": "s-1", "zone": "z", "server": "srv-a"}	201
+02-testsub2-restart-no-want	6	@until 30 store GET /v1/get?key=testsub2/holds/s-1	200 {"items": {"by": "t-1", "released": "false"}}
+02-testsub2-restart-no-want	7	console2 POST /tallies {"name": "t1", "of": "c1"}	201
+02-testsub2-restart-no-want	8	@until 30 store GET /v1/get?key=testsub2/placement/t1	200 {"items": {"worker": "t-1", "rev": "$r1", "manifest_rev": "$m1"}}
+02-testsub2-restart-no-want	9	@until 30 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"at": "$p1"}
+02-testsub2-restart-no-want	10	@sigterm controller	ok
+02-testsub2-restart-no-want	11	@start controller testsub2	ok
+02-testsub2-restart-no-want	12	@until 90 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"at": "@not($p1)"}
+02-testsub2-restart-no-want	13	store GET /v1/get?key=testsub2/placement/t1	200 {"items": {"worker": "t-1", "rev": "$r1", "manifest_rev": "$m1"}}
+02-testsub2-restart-no-want	14	store GET /v1/get?key=testsub2/want/srv-a	200 {"items": null}
+02-testsub2-restart-no-want	15	console2 GET /where/t1	200 {"worker": "t-1"}

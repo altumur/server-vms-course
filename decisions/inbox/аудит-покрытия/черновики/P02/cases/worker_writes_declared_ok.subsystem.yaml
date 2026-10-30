@@ -1,0 +1,9 @@
+name: probe
+unit: {rows: counters, id: numeric}
+placement: {capacity: {default: 4}}
+tables:
+  notes:
+    key: name
+    fields:
+      name: {type: string, required: true}
+worker: {exec: /usr/lib/probe/worker, writes: [notes]}

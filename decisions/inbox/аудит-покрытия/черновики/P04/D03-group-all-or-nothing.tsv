@@ -1,0 +1,84 @@
+# Черновик D03 — группа «всё или ничего»: девять счетов с общим хостом feed при ёмкости 8 не размещаются ни один,
+# хотя поодиночке восемь влезли бы.
+# Что проверяет: группа по `group_by` размещается только целиком на одном воркере (ADR-0011, договор группы по хосту):
+#   девять счетов с одним хостом feed при ёмкости воркера 8 не размещены ни один (у каждого — непустая причина в
+#   `unplaceable`), размещён счёт вне группы; а на границе (восемь счетов с одним хостом) группа размещается целиком.
+# Место нормы: Platform/04-controller/spec/04-controller.norms.md — Н1.3 (ключ `group_by: {field, cut_at}`: «группа — одно
+#   значение поля (для `url` — хост по `cut_at: host`); размещается только целиком на одном воркере (ADR-0011)»),
+#   Н3 «проход()» шаг 4 («каждую неразмещённую единицу — выбрать (ниже), группу целиком у первого члена»; «порядок
+#   неразмещённых — по id в байтах UTF-8 (группа — по id первого члена)»), Н3 «выбрать» (причина группы: «Группа:
+#   `with <id>, one <group_by>: <why>; on <s>`»), Н1.2 (`unplaced`, `unplaceable`), Н4 (группа без места — в `unplaceable`
+#   с `why`). Договор группы по хосту: Platform/common/contracts/group-of.md. Чек-лист: П/04-08 (группа).
+# Подготовка: стенд testsub2: ресурс, контроллер, воркер `t-1`, полка `s-1`. У `testsub2` `placement.group_by: {field:
+#   feed, cut_at: host}`, `capacity.default: 8`, `servers: distinct`, `place_by: shelf`. Девять счетов создаются через
+#   дверь консоли с полем `feed` — у счёта `testsub2` поле `feed` типа `url` (схемы https/sftp/mirror), хост у всех
+#   один (`h1`), пути разные (уникальность `feed` — по канонической записи, ADR-0054/П/06.1 Н1.2).
+# Существующие директивы: `@start resource`, `@start controller [<sub>]`, `@start worker [<sub>] <имя>`, `@sleep <с>`,
+#   `@until <с> <запрос>`; двери `console2` (создание счёта и полки, `/where/<id>`), `store` (строки), `resource` (отчёт).
+# Новых директив не требуется.
+# Сроки и допуски:
+#   — проход раз в 5 с (П/04 Н1.4 `PASS_EVERY`); после создания счетов сон 12 с — два с лишним прохода, чтобы решение
+#     устоялось, и второе чтение — чтобы убедиться, что оно не изменилось само по себе.
+#   — потолок сценария — 3 минуты; сценарий 01 ≈ 60 с (создание девяти счетов, сон, чтения), сценарий 02 ≈ 45 с.
+#     Потолок не превышен.
+# Почему ожидание именно такое:
+#   — `unplaced: 9` — счётчик единиц без воркера (Н1.2). Это и есть различие «всё или ничего» от обычной нехватки:
+#     если бы группа размещалась поштучно, поместилось бы восемь, и `unplaced` был бы 1 (или 2 — с учётом счёта вне
+#     группы, если бы он тоже не влез). Девятка единиц без воркера означает, что не размещён ни один член группы.
+#   — причина у первого члена группы непустая: по Н1.3 размещение группы целиком, по Н4 «группа без места» — в
+#     `unplaceable` с `why`. Точную форму причины (`with <id>, one <group_by>: <why>; on <s>`) черновик не зашивает:
+#     слово `one feed` в грамматике есть («Группа: `with <id>, one <group_by>: <why>; on <s>`»), но что именно стоит в
+#     `<why>` для нехватки ёмкости — по Н3 «выбрать» не названо; проверка непустой причины — то, что норма требует
+#     прямо («причина — для человека, ДОЛЖНА быть непустой»).
+#   — `/where/<id>` отдаёт 404 с причиной, взятой из `unplaceable` (Н1.2) — поэтому причина проверяется в отчёте, а
+#     в 404 проверяется лишь сам факт 404.
+#   — счёт `g10` без `feed` — не группа («пустое — не группа», Н1.3 `group_by`) и весит 1; он размещается на `t-1`,
+#     что показывает: стенд размещает, свободная ёмкость есть, дело в группе, а не в стенде.
+#   — сценарий 02 (восемь счетов одной группы) — граница: группа помещается целиком, значит «всё или ничего» не значит
+#     «группа не размещается никогда».
+scenario	step	request	expect
+# 01-group-nine-into-eight — девять счетов одной группы при ёмкости 8: не размещён ни один, счёт вне группы размещён.
+01-group-nine-into-eight	1	@start resource	ok
+01-group-nine-into-eight	2	@start controller testsub2	ok
+01-group-nine-into-eight	3	@start worker testsub2 t-1	ok
+01-group-nine-into-eight	4	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"released": "false"}}
+01-group-nine-into-eight	5	console2 POST /shelves {"name": "s-1", "zone": "z", "server": "srv-a"}	201
+01-group-nine-into-eight	6	@until 30 store GET /v1/get?key=testsub2/holds/s-1	200 {"items": {"by": "t-1", "released": "false"}}
+01-group-nine-into-eight	7	console2 POST /tallies {"name": "g1", "of": "c1", "feed": "https://h1/a1"}	201
+01-group-nine-into-eight	8	console2 POST /tallies {"name": "g2", "of": "c1", "feed": "https://h1/a2"}	201
+01-group-nine-into-eight	9	console2 POST /tallies {"name": "g3", "of": "c1", "feed": "https://h1/a3"}	201
+01-group-nine-into-eight	10	console2 POST /tallies {"name": "g4", "of": "c1", "feed": "https://h1/a4"}	201
+01-group-nine-into-eight	11	console2 POST /tallies {"name": "g5", "of": "c1", "feed": "https://h1/a5"}	201
+01-group-nine-into-eight	12	console2 POST /tallies {"name": "g6", "of": "c1", "feed": "https://h1/a6"}	201
+01-group-nine-into-eight	13	console2 POST /tallies {"name": "g7", "of": "c1", "feed": "https://h1/a7"}	201
+01-group-nine-into-eight	14	console2 POST /tallies {"name": "g8", "of": "c1", "feed": "https://h1/a8"}	201
+01-group-nine-into-eight	15	console2 POST /tallies {"name": "g9", "of": "c1", "feed": "https://h1/a9"}	201
+01-group-nine-into-eight	16	console2 POST /tallies {"name": "g10", "of": "c1"}	201
+01-group-nine-into-eight	17	@sleep 12	ok
+01-group-nine-into-eight	18	@until 30 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"unplaced": 9, "unplaceable": {"g1": "@any"}}
+01-group-nine-into-eight	19	console2 GET /where/g1	404 {"reason": "@any"}
+01-group-nine-into-eight	20	console2 GET /where/g9	404 {"reason": "@any"}
+01-group-nine-into-eight	21	@until 30 console2 GET /where/g10	200 {"worker": "t-1"}
+01-group-nine-into-eight	22	@sleep 12	ok
+01-group-nine-into-eight	23	store GET /v1/get?key=testsub2/placement/g1	200 {"items": null}
+01-group-nine-into-eight	24	store GET /v1/get?key=testsub2/placement/g9	200 {"items": null}
+01-group-nine-into-eight	25	store GET /v1/get?key=testsub2/placement/g10	200 {"items": {"worker": "t-1"}}
+# 02-group-eight-fits — восемь счетов одной группы при ёмкости 8: группа размещена целиком.
+02-group-eight-fits	1	@start resource	ok
+02-group-eight-fits	2	@start controller testsub2	ok
+02-group-eight-fits	3	@start worker testsub2 t-1	ok
+02-group-eight-fits	4	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"released": "false"}}
+02-group-eight-fits	5	console2 POST /shelves {"name": "s-1", "zone": "z", "server": "srv-a"}	201
+02-group-eight-fits	6	@until 30 store GET /v1/get?key=testsub2/holds/s-1	200 {"items": {"by": "t-1", "released": "false"}}
+02-group-eight-fits	7	console2 POST /tallies {"name": "g1", "of": "c1", "feed": "https://h1/a1"}	201
+02-group-eight-fits	8	console2 POST /tallies {"name": "g2", "of": "c1", "feed": "https://h1/a2"}	201
+02-group-eight-fits	9	console2 POST /tallies {"name": "g3", "of": "c1", "feed": "https://h1/a3"}	201
+02-group-eight-fits	10	console2 POST /tallies {"name": "g4", "of": "c1", "feed": "https://h1/a4"}	201
+02-group-eight-fits	11	console2 POST /tallies {"name": "g5", "of": "c1", "feed": "https://h1/a5"}	201
+02-group-eight-fits	12	console2 POST /tallies {"name": "g6", "of": "c1", "feed": "https://h1/a6"}	201
+02-group-eight-fits	13	console2 POST /tallies {"name": "g7", "of": "c1", "feed": "https://h1/a7"}	201
+02-group-eight-fits	14	console2 POST /tallies {"name": "g8", "of": "c1", "feed": "https://h1/a8"}	201
+02-group-eight-fits	15	@sleep 12	ok
+02-group-eight-fits	16	@until 30 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"unplaced": 0}
+02-group-eight-fits	17	@until 30 console2 GET /where/g1	200 {"worker": "t-1"}
+02-group-eight-fits	18	@until 30 console2 GET /where/g8	200 {"worker": "t-1"}

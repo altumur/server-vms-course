@@ -1,0 +1,73 @@
+# Черновик D02 — края веса единицы: испорченное поле веса и «тяжелее любой ёмкости».
+# Что проверяет: (1) строка единицы, у которой поле веса не читается своим типом, — нечитаема: она не размещается и не
+#   снимается, попадает в `garbled` отчёта прохода, причина — в `unplaceable`, а сама строка не удаляется; (2) положительный
+#   контроль — здоровая единица размещается, а счётчик `garbled` равен нулю.
+# Находка аудита (важно для владельца манифестов): ветка «единица тяжелее любой ёмкости» (П/04-07, Н4) на нынешних
+#   манифестах стенда НЕ ВЫРАЗИМА. Ключа `placement.weight` нет ни в `testsub`, ни в `testsub2`
+#   (Source/tests/testdata/testsub.subsystem.yaml, testsub2.subsystem.yaml), а Н1.3 говорит: «без ключа — вес 1 у всех»
+#   и «вес единицы — `int`-поле строки ≥ 1». Значит, все единицы весят 1, «вес 999 при ёмкости 8» поставить нечем:
+#   поле `weight` в строке есть только у `testsub2` (`{type: float, default: 1.0}`), но вес контроллер берёт из поля,
+#   названного в `placement.weight` (в манифесте такого нет), и по Н1.3 поле веса должно быть `int`-полем (у `testsub2`
+#   оно `float` — при включении `placement.weight: {field: weight}` значение 1.0 не было бы `int`, и строка стала бы
+#   нечитаемой по правилу «неверное присутствующее значение не заменяется default»). Чтобы ветка «тяжелее любой ёмкости»
+#   проверялась сценарно, владельцу манифестов нужен стендовый манифест с `placement: {weight: {field: weight, default: 1}}`
+#   и `weight` строки — `int`-полем; тогда шаблон сценария такой: запись единицы мимо с `weight: "999"`, ожидание —
+#   единица в `unplaceable` с непустой причиной, строки размещения нет, остальные единицы размещены. Ниже этот шаблон
+#   не включён: он на нынешнем стенде неисполним и был бы фиктивно зелёным.
+# Место нормы: Platform/04-controller/spec/04-controller.norms.md — Н1.3 (ключ `weight`: «неверное присутствующее значение
+#   не заменяется default: строка единицы нечитаема (`garbled` отчёта прохода), единица не размещается и не снимается,
+#   причина — в `unplaceable`»; по умолчанию «без ключа — вес 1 у всех»), Н1.2 (`garbled: <строк единиц, которые не
+#   читаются>`, `unplaceable: {<id>: <why>}`), Н3 «проход()» шаг 4 («каждую неразмещённую единицу — выбрать»),
+#   Н4 (таблица: «единица тяжелее любой ёмкости … в `unplaceable` с `why`; строка размещения не пишется»),
+#   Н1.3а (строка, не вошедшая в шард снимка). Чек-лист: П/04-07 (вес и ёмкость), П/04-17 (отчёт прохода).
+# Подготовка: стенд testsub2: ресурс, контроллер, воркер `t-1`, полка `s-1` (у testsub2 размещение по полке) и счёт.
+#   Испорченная строка пишется мимо писателя дверью консоли — приём сц. 08 и сц. 18 приёмки P/04
+#   (`@as console store POST /v1/write … "cas": ""`).
+# Существующие директивы: `@start resource`, `@start controller [<sub>]`, `@start worker [<sub>] <имя>`, `@sleep <с>`,
+#   `@until <с> <запрос>`, `@as <роль>`; двери `resource` (отчёт прохода), `store` (строки), `console2` (создание счёта,
+#   `/where/<id>`).
+# Новых директив не требуется.
+# Сроки и допуски:
+#   — проход проходит раз в 5 с (П/04 Н1.4 `PASS_EVERY`), отчёт пишется в конце прохода; «единица не размещена и не
+#     снята» наблюдается через два прохода, поэтому сон 12 с (два с лишним прохода) перед чтением отчёта.
+#   — потолок сценария — 3 минуты; оба сценария ≈ 40–60 с (подготовка, создание счёта, сон 12 с, чтения). Потолок не превышен.
+# Почему ожидание именно такое:
+#   — `garbled` считает строки единиц, которые не читаются (Н1.2), и только их: испорченная строка — одна, значит `garbled: 1`.
+#   — счётчик `snapshot_rows_garbled` НЕ проверяется: по Н1.3а в шард не входит строка, у которой не читается поле из
+#     списка `snapshot`, а `weight` у `testsub2` в списке снимка не значится (`snapshot: [name, of, mode, step,
+#     state.result]`). Проверка этого счётчика была бы проверкой спорного толкования (строка целиком нечитаема — или
+#     нечитаемо только поле), а не свойства по норме; решение об этом — за владельцем приёмки.
+#   — единица не размещается: у испорченной строки нет читаемого веса, а «не размещается и не снимается» — прямая
+#     формулировка Н1.3; `/where/<id>` отдаёт 404, а причину 404 берёт консоль из `unplaceable` (Н1.2) — поэтому причина
+#     проверяется в отчёте прохода.
+#   — строка единицы не удаляется: «не снимается» означает, что контроллер не трогает строку; удалять её могла бы
+#     только уборка «неразмещённых дольше delete_after» (у `testsub2` такого ключа нет — `unplaced` есть только у
+#     `testsub`), поэтому строка стоит на месте.
+#   — здоровая единица размещается: положительный контроль, что «испорченная строка» — свойство строки, а не стенда.
+scenario	step	request	expect
+# 01-garbled-weight-field — испорченное поле веса: строка нечитаема, единица не размещена, причина в unplaceable.
+01-garbled-weight-field	1	@start resource	ok
+01-garbled-weight-field	2	@start controller testsub2	ok
+01-garbled-weight-field	3	@start worker testsub2 t-1	ok
+01-garbled-weight-field	4	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"released": "false"}}
+01-garbled-weight-field	5	console2 POST /shelves {"name": "s-1", "zone": "z", "server": "srv-a"}	201
+01-garbled-weight-field	6	@until 30 store GET /v1/get?key=testsub2/holds/s-1	200 {"items": {"by": "t-1", "released": "false"}}
+01-garbled-weight-field	7	@as console store POST /v1/write {"id":"d02a","op":"put","key":"testsub2/tallies/bad","items":{"id":"bad","revision":"1","name":"bad","of":"c1","weight":"7x"},"cas":""}	200
+01-garbled-weight-field	8	console2 POST /tallies {"name": "good", "of": "c1"}	201
+01-garbled-weight-field	9	@sleep 12	ok
+01-garbled-weight-field	10	@until 30 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"garbled": 1, "unplaceable": {"bad": "@any"}}
+01-garbled-weight-field	11	console2 GET /where/bad	404 {"reason": "@any"}
+01-garbled-weight-field	12	store GET /v1/get?key=testsub2/tallies/bad	200 {"items": {"name": "bad"}}
+01-garbled-weight-field	13	@until 30 console2 GET /where/good	200 {"worker": "t-1"}
+# 02-healthy-control — здоровая строка: размещена, garbled ноль.
+02-healthy-control	1	@start resource	ok
+02-healthy-control	2	@start controller testsub2	ok
+02-healthy-control	3	@start worker testsub2 t-1	ok
+02-healthy-control	4	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"released": "false"}}
+02-healthy-control	5	console2 POST /shelves {"name": "s-1", "zone": "z", "server": "srv-a"}	201
+02-healthy-control	6	@until 30 store GET /v1/get?key=testsub2/holds/s-1	200 {"items": {"by": "t-1", "released": "false"}}
+02-healthy-control	7	console2 POST /tallies {"name": "good", "of": "c1"}	201
+02-healthy-control	8	@sleep 12	ok
+02-healthy-control	9	@until 30 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"garbled": 0}
+02-healthy-control	10	@until 30 console2 GET /where/good	200 {"worker": "t-1"}
+02-healthy-control	11	store GET /v1/get?key=testsub2/placement/good	200 {"items": {"worker": "t-1"}}

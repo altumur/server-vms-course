@@ -1,0 +1,72 @@
+# Черновик C08 — выведенный сервер: воркер на нём остаётся никем (слота нет, пульса нет, метки соперника нет).
+# Что проверяет: поведение воркера на выведенном сервере (Platform/03-worker/spec/03.2-worker.norms.md Н3 «старт()»
+#   шаг 3) — свойство, которое корпус приёмки проверял только чтением (Platform/03-worker/acceptance/2/README.md;
+#   чек-лист П/03.2-14: «выведенный сервер … на старте и при поиске имени воркер остаётся никем, метки соперника нет,
+#   журнал «server <s> is decommissioned» — проверяется чтением (стенд приёмки главы серверов не выводит)»).
+#   Сценарий 01: сервер выведен ДО старта воркера — воркер не берёт имя (строки слота нет вовсе), пульса нет, метки
+#   соперника нет. Сценарий 02: после отзыва запроса вывода новый воркер берёт имя и работает (положительный
+#   контроль: без него шаги 01 не отличают «выведенный сервер» от «воркер не стартует по другой причине»).
+# Место нормы: Platform/03-worker/spec/03.2-worker.norms.md — Н3 «старт()» шаг 3 («сервер выведен (договор наблюдения
+#   «Сервер выведен»: строка platform/decommission/<мой сервер> или <sub>/decommissioned/<мой сервер>) → никто, журнал
+#   «server <s> is decommissioned», имя не берётся, метки соперника нет (Н1.4а)»), шаг 5 («имя не получено →
+#   writing_allowed = false, пульса нет»), Н3 «никто и возврат имени» («пока никто: продление → нет; подмена → нет;
+#   пульс → не писать»), Н1.4а («На выведенном сервере (Н3 «старт()» шаг 3) метки нет: воркер — никто без поиска имени,
+#   и соперником не является»), Н4 (таблица отказов). Договор наблюдения «Сервер выведен»
+#   (Platform/common/contracts/observation.md) — две строки-источника: platform/decommission/<s> (пишет консоль) и
+#   <sub>/decommissioned/<s> (пишет контроллер); каталог данных Platform/common/data/catalog.tsv: семейство
+#   `platform/decommission/<сервер>` — create=console, delete=console; форма — Platform/06-console/data/decommission.schema.json
+#   (обязательны by, at, why; gone — необязательно). Чек-лист: П/03.2-14.
+# Подготовка: строка вывода кладётся дверью консоли в хранилище (`@as console store POST /v1/write`) — писатель
+#   семейства по каталогу — консоль (П/06.6 Н1.1а; права ролей — П/02.5 Н1.4). Поле `at` — время по форме Н0 П/01.1
+#   («4102444800» — десятичное целое, как в черновике C07), `by` — «operator», `why` — «audit». Права роли `store`
+#   ограничены семействами `testsub/` и `testsub2/` (общий README приёмки, «Стенд»), поэтому строку `platform/…`
+#   читают и снимают через `@as console store`. Дверь объектов (`resource`) поднимается ДО старта воркера: без неё
+#   нечем читать пульс и листинг меток.
+# Существующие директивы: `@start resource`, `@start worker <имя>`, `@sleep <с>`, `@until <с> <запрос>`; двери `console`
+#   (роль консоли в хранилище), `store` (чтение строк), `resource` (чтение пульса и листинг объектов).
+# Новых директив не требуется.
+# Почему ожидание именно такое:
+#   — «никто» означает отсутствие следа: строки слота `testsub/slots/w-1` нет вовсе (не «занята», а отсутствует —
+#     шаг 3 не доходит до захвата), пульса нет (объект отсутствует — 404 по П/05 Н1.1), метки соперника нет (Н1.4а:
+#     на выведенном сервере воркер «никто без поиска имени, и соперником не является»). Метка — объект двери
+#     `*/contenders/*` (П/05 Н1.1 `door`), читается листингом с префиксом.
+#   — положительный контроль (сценарий 02) снимает строку запроса вывода (`op":"delete"`, cas — по прочитанной
+#     версии; удаление тратит версию, П/01.1 Н3) и запускает воркера с другим именем: имя берётся (строка слота с
+#     `holder`, `released: "false"`, `gen: "1"` — исходное поколение 0 плюс один, Н1.4), пульс появляется. Это
+#     показывает, что отказ в сценарии 01 вызван строкой вывода, а не состоянием стенда.
+# Оговорки (для владельца приёмки):
+#   — вид строки журнала нормой не назван: П/03.2 Н3 «старт()» шаг 3 задаёт только ТЕКСТ строки («server <s> is
+#     decommissioned»), а договор журнала событий называет семейство видов `server.*` и не называет вида внутри
+#     него. Поэтому проверка журнала — ВНЕ TSV (как «Проверки вне TSV после прогона 25» в README приёмки главы 3.4).
+#     Предложение владельцу: принять для этой строки вид `server.decommissioned` (слово модуля консоли, П/06.6 Н1.1:
+#     «`server.decommission_refused` и `server.decommissioned` — слова модуля консоли») и тогда шаг добавляется:
+#     `console GET /events?unit=audit/testsubworker&kind=server.decommissioned` → `200 {"events": [{"kind": "server.decommissioned"}]}`.
+#   — код выхода нормой не назван для этого отказа (в отличие от отказов старта Н3 2а/2в и по экземпляру — там код 2):
+#     Н3 шаг 5 говорит «имя не получено → writing_allowed = false, пульса нет; запустить подмену и цикл», то есть по
+#     норме воркер остаётся жив и работает как никто. Свидетели (Source/w2cplatform/worker.py, продукт
+#     vmsworker/w2cplatform/decommission.go) на этом отказе выходят с ошибкой. Расхождение нормы и свидетелей —
+#     вопрос владельца; шаг `@start worker w-1` ждёт `ok` (процесс запущен) в любом случае, все дальнейшие ожидания
+#     (нет слота, нет пульса, нет метки) верны при обоих чтениях.
+#   — второй источник вывода, отметка контроллера `<sub>/decommissioned/<сервер>`, на стенде не выражается: её
+#     пишет контроллер при исполнении вывода (П/04 Н3 «вывести сервер»), а на стенде приёмки нет сценария вывода
+#     сервера (README приёмки главы 3.4: «стенд приёмки главы серверов не выводит»). Проверка этой ветви — чтением.
+scenario	step	request	expect
+# 01-decommissioned-before-start — сервер выведен до старта: воркер — никто, слота нет, пульса нет, метки нет.
+01-decommissioned-before-start	1	@start resource	ok
+01-decommissioned-before-start	2	@as console store POST /v1/write {"id":"c08a","op":"put","key":"platform/decommission/srv-a","items":{"by":"operator","at":"4102444800","why":"audit"},"cas":""}	200
+01-decommissioned-before-start	3	@start worker w-1	ok
+01-decommissioned-before-start	4	@sleep 12	ok
+01-decommissioned-before-start	5	store GET /v1/get?key=testsub/slots/w-1	200 {"index": "", "items": null}
+01-decommissioned-before-start	6	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	404
+01-decommissioned-before-start	7	resource GET /v1/objects?prefix=testsub/contenders/	200 {"objects": {}}
+# 02-request-withdrawn-worker-starts — положительный контроль: запрос вывода снят — воркер берёт имя и работает.
+02-request-withdrawn-worker-starts	1	@start resource	ok
+02-request-withdrawn-worker-starts	2	@as console store POST /v1/write {"id":"c08b","op":"put","key":"platform/decommission/srv-a","items":{"by":"operator","at":"4102444800","why":"audit"},"cas":""}	200
+02-request-withdrawn-worker-starts	3	@start worker w-1	ok
+02-request-withdrawn-worker-starts	4	@sleep 12	ok
+02-request-withdrawn-worker-starts	5	store GET /v1/get?key=testsub/slots/w-1	200 {"index": "", "items": null}
+02-request-withdrawn-worker-starts	6	@as console store GET /v1/get?key=platform/decommission/srv-a	200 {"index": "$d1", "items": {"by": "operator", "at": "4102444800", "why": "audit"}}
+02-request-withdrawn-worker-starts	7	@as console store POST /v1/write {"id":"c08c","op":"delete","key":"platform/decommission/srv-a","cas":"$d1"}	200
+02-request-withdrawn-worker-starts	8	@start worker w-2	ok
+02-request-withdrawn-worker-starts	9	@until 30 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"holder": "$h1", "released": "false", "gen": "1", "server": "srv-a"}}
+02-request-withdrawn-worker-starts	10	resource GET /v1/objects/testsub/heartbeats/w-2?scope=local	200 {"worker": "w-2", "server": "srv-a"}

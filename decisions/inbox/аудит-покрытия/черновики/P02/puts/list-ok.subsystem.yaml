@@ -1,0 +1,5 @@
+name: listok
+unit: {rows: xs, id: numeric}
+placement: {capacity: {default: 1}}
+tables: [notes]
+worker: {exec: /usr/lib/listok/worker}

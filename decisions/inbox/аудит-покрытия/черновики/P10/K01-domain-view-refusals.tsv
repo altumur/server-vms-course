@@ -1,0 +1,80 @@
+# Черновик K01 — отказы дверей вида: «вида нет» (404) и «вид есть, но не читается» (503).
+# Что проверяет: собственные отказы дверей чтения консоли домена, которых нет ни в одном сценарии корпуса.
+#   (1) `k01a-no-domain-here` — домена на стенде нет: вида (`domain/view`) нет, и каждая дверь чтения отвечает
+#       404 {error: "no domain here"} — а не 403 и не 503; (2) `k01b-unavailable` — вид и тень есть, но не читаются:
+#       503 {error: "unavailable"} — а не 404 (Н1.2а, Н1.2б; решение «Архитектора» 2026-10-28, П1). Проверяются и дверь
+#       строк подсистемы (`GET /domain/testsub/counters`), и двери «вид», «тень», «члены», «топология», «общий документ».
+# Место нормы: Platform/10-domain-console/spec/10-domain-console.norms.md — Н1.2а (GET /domain: «404 {error: "no domain here",
+#   detail} — объекта нет; объект есть, но не читается — 503 {error: "unavailable"}, не 404»; GET /domain/shadow — «404
+#   {error: "no domain here"} — отчёта нет; отчёт есть, но не читается — 503 {error: "unavailable"}»), Н1.2б (GET /domain/members:
+#   «404 {error: "no domain here"} — вида нет; строки domain/members нет при читаемом виде; строка или вид есть, но не читается —
+#   503 {error: "unavailable"}»), Н1.2в (GET /domain/topology: «404 {error: "no domain here"}; строка domain/topology есть, но не
+#   читается — 503 {error: "unavailable"}»), Н1.2е (GET /domain/shared: «вида (domain/view) нет — 404 {error: "no domain here"},
+#   как прочие двери чтения без вида (Н1.2а); вид есть, но не читается — 503 {error: "unavailable"}»), Н4 (таблица отказов:
+#   «no domain here | 404 | вида нет»; «unavailable | 503 | строка, которой отвечает дверь чтения, есть, но не читается — не 404»).
+#   OpenAPI: Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml — GET /domain: 200 / 400 / 401 / 403 / 404 `NoDomain`
+#   / 503 `ReadUnavailable`; `NoDomainBody` = {error: const "no domain here"}; `Refusal` = {error, detail?} без лишних полей.
+#   Чек-лист: П/10-01 (двери вида `GET /domain` (с `age`), `/domain/<sub>/<rows>`, `/domain/shadow` и их отказы `no domain here`,
+#   `unavailable`, `not in the directory`, `no such member`).
+# Подготовка: стенд домена — три кластера (hold, m1, m2), каталог подсистем П/10 — только `testsub`. Двери: `holder` — консоль
+#   домена на кластере hold (двери `/domain/*`), `holder@<кластер>` — консоль домена на своём кластере, `signer`, `signer2`,
+#   `member <кластер> store|console`.
+# Существующие директивы: `@start domain` (процессы `domain` и консоли домена на hold), `@install domain`, `@domain` (установка,
+#   старт, агенты, приём по отпечатку, join), `@stop domain [<кластер>]`, `@restart domain`, `@on <кластер> @sigterm <процесс>`,
+#   `@on <кластер> @put object <ключ> <файл>`, `@on <кластер> @spoil object <ключ>`, `@until <с> <запрос> <ожидание>`, `@sleep <с>`.
+#   Всё перечисленное — из Platform/common/acceptance/README.md (словарь директив и дверей, строки 220–225 и 355–400); новых
+#   директив в этом черновике нет.
+# Сроки и допуски: бюджет сценария — 3 минуты; `k01a` ≈ 10 с (старт двух процессов и шесть чтений), `k01b` ≈ 60 с (установка и
+#   старт домена со входом root, приём по отпечатку, join, затем чтения). Сроки из норм, участвующие в черновике: строк Н1.2 у
+#   дверей чтения нет (только срок передачи — 5 с), поэтому «Ожидание» на чтениях не проверяется; ожидания `@until` — 30 с.
+# Почему ожидание именно такое:
+#   — «no domain here» отвечает дверь чтения, когда вида нет вовсе: объект `domain/view` не построен. Это не «строка, которой
+#     отвечает дверь чтения, есть, но не читается» — значит, 503 здесь неуместен, и это различие (404 против 503) и есть предмет
+#     проверки: тот же домен, из которого ушёл объект вида, должен давать 404, а не 503.
+#   — «unavailable» отвечает дверь чтения, когда строка или объект есть, но прочитать их нельзя: в `k01b` объект `domain/view`
+#     испорчен (`@spoil object` пишет вместо документа байты «{»), поэтому он ЕСТЬ (отвечать «нет» было бы неверно), но не читается.
+#   — 503 вместо 404 здесь обязателен по Н1.2а: «объект есть, но не читается — 503 {error: "unavailable"}, не 404» (В7 п. 3,
+#     решение «Архитектора» 2026-10-28, П1). Слово отказа — ровно «unavailable», без «detail».
+#   — в `k01b` порча вида приводит к 503 и на `GET /domain/members`, потому что дверь сначала читает вид (Н1.2б: «строка или вид
+#     есть, но не читается — 503»), и лишь потом строку `domain/members`.
+#   — дверь строк подсистемы (`GET /domain/testsub/counters`) отвечает тем же: её порядок отказов (Н1.2а) — «манифеста нет»,
+#     «у манифеста нет domain.ref» («not in the directory»), «строки не его», затем ВИД: вида нет — 404 «no domain here», вид есть,
+#     но не читается — 503 «unavailable»; и лишь потом «no such member» по `?cluster=`.
+# Оговорки (для владельца приёмки):
+#   (1) Форма «вида нет» выбрана как «`@start domain` без `@install domain`»: консоль домена на hold поднята, домен не установлен,
+#       ключей подписанта нет, процесс `domain` стартует в состоянии резерва и в хранилище ничего не пишет (первый термин он не
+#       основывает), следов домена в хранилище нет — состояние ворот «open». В этом состоянии ворота отвечают только с кольца и
+#       личность оператора — «operator», поэтому заголовка `Authorization` в сценарии нет, а `@person` не применён: «до домена
+#       заголовка нет» (README приёмки, строка про `@person`). Альтернативная форма, если владелец предпочтёт: `@start domain on m1`
+#       и дверь `holder@m1` (то же состояние на члене) — она в черновике не использована, потому что задание требует двери `holder`.
+#   (2) Отказ «not in the directory» (Н1.2: у манифеста нет `domain.ref`) на этом стенде недостижим: каталог П/10 — только `testsub`,
+#       а его манифест `domain.ref` содержит; манифест `testsub2` из общих данных тоже содержит `domain.ref`. Поэтому дверь строк
+#       подсистемы проверяется только на отказы по виду (404 «no domain here» и 503 «unavailable»), а сам отказ «not in the
+#       directory» в черновик не вошёл — предложение по данным в NEW-DIRECTIVES.md.
+#   (3) Порча объекта сделана директивой `@spoil object` (не `@put object`): `@put object` требует файла с содержимым, а новый файл
+#       вне `черновики/P10/` создавать нельзя; `@spoil object` файла не требует. Порча выполняется ПОСЛЕ остановки процесса-писателя
+#       (`@on hold @sigterm domain`) — так и требует строка README про `@spoil object`: «после неё чтение объекта — нечитаемо
+#       (П/05 Н1.1)», и «процесс-писатель объекта до этого остановлен» (иначе процесс перезапишет объект при следующем проходе).
+#   (4) `@stop domain` вместо `@on hold @sigterm domain` не годится: он останавливает и процесс `domain`, и консоль домена, а
+#       двери `holder` тогда не отвечают вовсе — отказа 503 не будет.
+scenario	step	request	expect
+# k01a-no-domain-here — домена нет: вида нет, и все двери чтения отвечают 404 {error: "no domain here"}.
+k01a-no-domain-here	1	@start domain	ok
+k01a-no-domain-here	2	holder GET /session	200 {"open": true}
+k01a-no-domain-here	3	holder GET /domain	404 {"error": "no domain here"}
+k01a-no-domain-here	4	holder GET /domain/shadow	404 {"error": "no domain here"}
+k01a-no-domain-here	5	holder GET /domain/members	404 {"error": "no domain here"}
+k01a-no-domain-here	6	holder GET /domain/topology	404 {"error": "no domain here"}
+k01a-no-domain-here	7	holder GET /domain/shared	404 {"error": "no domain here"}
+k01a-no-domain-here	8	@until 30 holder GET /domain/testsub/counters	404 {"error": "no domain here"}
+# k01b-unavailable — домен есть, вид и тень испорчены: 503 {error: "unavailable"}, а не 404.
+k01b-unavailable	1	@domain	ok
+k01b-unavailable	2	@until 30 holder GET /domain	200 {"as_of": "@any", "age": "@any"}
+k01b-unavailable	3	@until 30 holder GET /domain/shadow	200 {"counts": "@any"}
+k01b-unavailable	4	@on hold @sigterm domain	ok
+k01b-unavailable	5	@on hold @spoil object domain/view	ok
+k01b-unavailable	6	holder GET /domain	503 {"error": "unavailable"}
+k01b-unavailable	7	holder GET /domain/members	503 {"error": "unavailable"}
+k01b-unavailable	8	holder GET /domain/testsub/counters	503 {"error": "unavailable"}
+k01b-unavailable	9	@on hold @spoil object domain/shadow	ok
+k01b-unavailable	10	holder GET /domain/shadow	503 {"error": "unavailable"}

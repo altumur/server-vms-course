@@ -1,0 +1,42 @@
+# Черновик A10 — метрики группы: состав, состояние, индексы рядов raft у лидера и у ведомого.
+# Норма: Platform/01-store/spec/01.3-store.norms.md Н1.3, строка `metrics:` — «configstore_raft_term, _state{state},
+#   _elections_total, _index{kind=last|commit|applied}, _last_contact_seconds, _voters, _voters_expected,
+#   configstore_doors; тревоги: состав ≠ объявленному, ведомый отстал > 1000, выборов > 3 за 10 мин»; то же в
+#   Н2 (строка про `GET /metrics`: «Перечень текстовых рядов Н1.3; корректное экранирование меток») и в Н5-пункте
+#   04 («метрики демона: configstore_raft_term, configstore_raft_voters_expected на /metrics хранилища»).
+#   Значения меток — по ADR-0070, «Формы шагов 1 и 3», п. 1: `configstore_raft_state{state=leader|follower|candidate}`,
+#   `configstore_raft_index{kind=last|commit|applied}`.
+# Место приёмки: глава 1.3 (Platform/01-store/acceptance/3), сценарий 17 `17-group-members` — шаги добавляются
+#   ПОСЛЕ шага 5 (`@until 20 admin@s3 GET /v1/status` — «Follower»), когда группа из трёх (s1, s2, s3) уже стоит и
+#   роли избраны. Ниже — тот же кусок как отдельный сценарий со своей подготовкой; при переносе в сц. 17 шаги 1–5
+#   этого файла отпадают, шаги 6–8 становятся шагами 6–8 сц. 17 (нумерация с 1 подряд, сценарий 17 уже занят).
+# Существующие директивы: `@group-setup`, `@store-start`, `@until`, двери `admin@<id>` (общий README приёмки, раздел
+#   «Стенд группы хранилища»: «admin@<id> <запрос> — через его admin.sock»); ожидание `200 ~подстрока` — по словарю
+#   («<код> ~текст»: не-JSON тело содержит подстроку; несколько подстрок — через « ~»).
+# Новых директив не требуется.
+# ЧТО ПРОВЕРЯЕМ: наличие и правдоподобие значений. Имена рядов — дословно из Н1.3 `metrics:`; числа: у лидера
+#   `configstore_raft_voters 3` и `configstore_raft_voters_expected 3` (группа объявлена `-group-size 3`, никто не
+#   выбыл), состояние `leader` — подстрока «configstore_raft_state{state="leader"} 1» (единица — «роль, которую
+#   сервер имеет сейчас»; у ведомого — «...{state="follower"} 1»), у ведомого — ряд `configstore_raft_last_contact_seconds`
+#   (сколько секунд ведомый не слышал лидера; у лидера он равен 0). Индексы — все три вида `kind` из нормы.
+#   Ряд `configstore_doors` в этом куске НЕ проверяется: дверей в группе нет (сценарий 17 их не поднимает), и ряд
+#   проверяется в сц. 07 (`~configstore_doors 1`).
+# ПОЧЕМУ ПРОВЕРКА ПОДСТРОКА, А НЕ ТОЧНОЕ ЗНАЧЕНИЕ: значения, зависящие от времени (last_contact_seconds — доли
+#   секунды, term — число выборов) и от журнала (index) заранее не известны; норма требует наличия рядов и правдоподобия
+#   («состав ≠ объявленному» — тревога, а не поле). Точные числа проверяются там, где они выводимы: `voters` и
+#   `voters_expected` — оба 3 (состав группы и объявленный размер совпадают).
+# ЧЕГО СЦЕНАРИЙ НЕ ПРОВЕРЯЕТ (три тревоги Н1.3 `metrics:`): 1) состав ≠ объявленному — проверяется тем, что оба ряда
+#   равны 3, но сама тревога (правило Prometheus `ConfigstoreVotersNotAsDeclared`) — не проверка приёмки; 2) ведомый
+#   отстал > 1000 — лаг между узлами нужен для правила, а не для проверки «ведомый услышал лидера»; 3) выборов > 3 за
+#   10 мин (тревога `ConfigstoreElectionsChurn`) — на этом стенде выборов мало, и тревога не проверяется.
+# РАЗЛИЧЕНИЕ ПРОПИСНЫХ ЗНАЧЕНИЙ: в `/v1/status` состояние пишется прописными (`state` — Leader/Follower/Candidate/
+#   Shutdown/Door, Н2 Н1.3), а в метрике `configstore_raft_state{state=...}` — строчными (ADR-0070 п. 1: leader|follower|
+#   candidate). В ожиданиях ниже — строчные, как в метрике.
+scenario	step	request	expect
+A10-group-metrics	1	@group-setup inputs/group.json	ok
+A10-group-metrics	2	@store-start s1 -bootstrap -group-size 3	ok
+A10-group-metrics	3	@store-start s2 -join {api@s1} -group-size 3	ok
+A10-group-metrics	4	@store-start s3 -join {api@s1} -group-size 3	ok
+A10-group-metrics	5	@until 20 admin@s3 GET /v1/status	200 {"state": "Follower", "leader_id": "s1"}
+A10-group-metrics	6	admin@s1 GET /metrics	200 ~configstore_raft_term ~configstore_raft_state{state="leader"} 1 ~configstore_raft_elections_total ~configstore_raft_index{kind="last"} ~configstore_raft_index{kind="commit"} ~configstore_raft_index{kind="applied"} ~configstore_raft_voters 3 ~configstore_raft_voters_expected 3
+A10-group-metrics	7	admin@s3 GET /metrics	200 ~configstore_raft_term ~configstore_raft_state{state="follower"} 1 ~configstore_raft_elections_total ~configstore_raft_index{kind="last"} ~configstore_raft_index{kind="commit"} ~configstore_raft_index{kind="applied"} ~configstore_raft_last_contact_seconds ~configstore_raft_voters 3 ~configstore_raft_voters_expected 3

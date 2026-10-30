@@ -1,0 +1,290 @@
+# testsub2.subsystem.yaml — the second subsystem that exists only for the platform's own tests (tests/test_boundary.py,
+# tests/test_spec_rule.py). testsub is the least a spec can say; this one says everything the platform reads in a spec,
+# each key once, so that every key and operator the platform implements is exercised by a subsystem that has nothing
+# to do with the product — and a key no spec uses is a key the platform does not need (`test_spec_rule.py`).
+#
+# A unit is a TALLY about one of testsub's counters (`about`): it is kept on a shelf (a row of `shelves`, its place),
+# beside the worker that holds its counter (`near`), and a person may ask its holder to add to it (`requests`).
+name: testsub2
+slot: {prefix: t, name_env: TALLY_NAME}
+# its worker stops in 30 s at most (`stop_timeout`), and reads the pump's share — its own share, made by its part (ADR-0091
+# доп. (2) пп. 1, 4)
+worker: {exec: /usr/lib/testsub2/worker, reads: [testsub/counters/], requests: [testsub], uses: [testsub2.pump], stop_timeout: 30, writes: [gauges]}
+# its marks are rows of the store; the tickets a holder leaves for the holder of the counter, on another server, are
+# files its resource's door gives out (`resource.door_readable`)
+objects: {rows: [marks/*], door: [tickets/*]}
+# its heartbeat's `jam` is a word a metric compares (`metrics: jam`): a number there is a garbled heartbeat
+heartbeat: {strings: [jam]}
+# a tally's count goes on ten minutes past an unconfirmed lease (a count under an old epoch is told apart by it)
+lease: {unconfirmed_max: 600}
+# the seed of its door's tokens is read by its console alone; its worker reads testsub's counters (`worker.reads`)
+secrets: {readers: {door/signer: [console]}, reads: [testsub/counters/]}
+about: {sub: testsub, field: of}
+unit:
+  rows: tallies                       # testsub2/tallies/<name>
+  id: name
+  fields:
+    name:     {type: string, required: true, unique: true}
+    of:       {type: string, required: true, fixed: true}       # the counter it is about
+    mode:     {type: string, default: plain, enum: [plain, loud]}
+    step:     {type: int, default: 1, schema: {minimum: 1, maximum: 100}}
+    weight:   {type: float, default: 1.0}
+    active:   {type: bool, default: true}
+    tags:     {type: list}
+    rule:     {type: json}
+    mask:     {type: blob}
+    shelf:    {type: string, ref: testsub2/shelves, must_match: {zone: zone}}
+    zone:     {type: string}
+    feed:
+      type: url
+      unique: canonical
+      # mirror://<hub>/<host>/…: a copy kept on a hub — the host in the path (the hub is no part of it), `#` a character
+      # there, and `mirror://local/…` — the shelf's own copy — no host at all
+      schemes: {https: {}, sftp: {}, mirror: {host: path, fragment: none, none: [local]}}
+      credentials: {login: feed_user, secret: feed_secret}
+      secret_in:
+        - {param: [token*, "*key", =who], login: [=who]}
+        - {nested: [via]}
+        - {regex: '^~(?P<login>[^:]+):(?P<name>pin)=(?P<secret>.+)$', in: fragment, schemes: [sftp], decoded: false}
+    feed_user:   {type: string}
+    feed_secret: {type: string, bound_to: [feed]}
+    keep_days:   {inherit: 7, type: int, merge: override}  # scalar inheritance witness, not an event-retention policy
+    flags:       {type: list, inherit: [], merge: union}
+    # a tally may be kept until a time (`placement.ends`); 0 — for good (ADR-0091 п. 2)
+    until:       {type: float, default: 0}
+    # the members a tally's book entries go to (domain.books `to`), and a secret its roll entry carries — sealed to the
+    # domain's book seal on the way, masked at every door (М11/5)
+    to:          {type: list}
+    note_secret: {type: string}
+  # what a tally's holder says of it, kept apart from the row: how its count ended, and how far it has counted — a
+  # row of the store under its epoch, `testsub2/state/<name>/<tally>` (ADR-0091 п. 3; was the field `state`)
+  state:
+    result:
+      type: object
+      required: [state]
+      properties: {state: {type: string, enum: [open, done, failed]}, ended: {type: number}}
+    cursor:
+      type: object
+      properties: {through: {type: number}}
+tables:
+  shelves:
+    key: name
+    fields:
+      name:    {type: string, required: true}
+      zone:    {type: string}
+      server:  {type: string}
+      kind:    {type: string, default: plain, enum: [plain, reserve, closed]}
+      admits:  {type: bool, default: true}
+      enabled: {type: bool, default: true}
+      # where the shelf's own goods come from, and the shelf it overflows to — a table's field says what a unit's does
+      feed:
+        type: url
+        schemes: {https: {}, mirror: {host: path, fragment: none, none: [local]}}
+        credentials: {login: feed_user, secret: feed_secret}
+        secret_in:
+          - {param: [token*, =who], login: [=who]}
+          - {nested: [via]}
+          - {regex: '^/~(?P<login>[^:/]+):(?P<secret>[^/]+)', in: path, schemes: [https], decoded: true}
+      feed_user:   {type: string}
+      feed_secret: {type: string, bound_to: [feed]}
+      size:    {type: int, default: 1, schema: {minimum: 1}}
+      over:    {type: string, ref: testsub2/shelves, must_match: {zone: zone}}
+    schema:
+      if: {properties: {kind: {const: closed}}}
+      then: {properties: {admits: {const: false}}, required: [admits]}
+    stamp: [by, at]
+    journal: {written: shelf.declared, deleted: shelf.withdrawn}
+  notches:                            # not `marks`: `/marks` is the console's own route (spec.CONSOLE_ROUTES)
+    key: "{of}-{from:int}-{to:int}"
+    fields:
+      of:   {type: string, required: true}
+      from: {type: float, required: true}
+      to:   {type: float, required: true}
+      released_at: {type: string}         # not empty: the notch holds nothing (`holds.released`)
+    journal: {written: notch.cut, deleted: notch.cleared}
+  # what a tally's holder measures, a row its worker writes whole; the console only reads it, and an operator may delete a
+  # row — the worker writes it again if it is still its own (P/06.1 Н1.6; запрос VMS «команды и строка устройства»)
+  gauges:
+    key: name
+    fields:
+      name:  {type: string, required: true}
+      level: {type: int}
+placement:
+  capacity:    {from: capacity, default: 8}
+  headroom:    {from: headroom}
+  constraint:  labels-subset
+  requires:    resource
+  servers:     distinct
+  tie_break:   most-free-capacity
+  near:        {sub: testsub3, by: of, of: name, prefer: {start: [0, 1]}}
+  spread_by:   zone
+  # tallies whose feeds name one host go to one worker, the host read by the feed's `schemes`
+  group_by:    {field: feed, cut_at: host}
+  place_by:    shelf
+  places:      {table: shelves, where: {enabled: true}, server_field: server, lease: strict}   # a shared shelf: strict
+  grows:       true
+  home:        shelf
+  retire_when: {state: result, field: state, in: [done, failed], delete_after: 600}   # two ends; gone 10 min later
+  ends:        {field: until}
+  rebalance:   {dead_band: 0.2}
+  affinity:    {field: shelf, table: shelves, server_field: server, strict: {kind: [reserve], enabled: true}}
+holds: {table: notches, unit: of, since: from, until: to, longest: 86400, released: released_at}
+# a person asks the holder of a tally to count a range: the holder adds the integers of [from, to] its count does not
+# cover yet (the ranges covered it keeps in its object row objects/testsub2/marks/<unit>, family marks/* below) and
+# names the rid in its heartbeat's `fetched`; no mark is
+# written, and the same range asked again adds nothing (ADR-0054: `outcome: fetched`, the rid comes from the data)
+requests:
+  free: true
+  schema:
+    type: object
+    required: [unit, from, to]
+    additionalProperties: false
+    properties: {unit: {type: string}, from: {type: integer}, to: {type: integer}, action: {type: string}}
+  key: "{unit}-{from:int}-{to:int}"
+  outcome: fetched
+  per_person: 3
+  settle: 30
+  ttl: 3600
+  stamp: [by, at, about]
+  journal: tally.asked
+  elsewhere: [recount]
+door: {routes: [read, play], pass: [entries]}
+rights:
+  unit_of: {notches: of}
+  routes: {view: [notches], edit: [shelves]}
+  cluster_rows: true
+  reach:
+    group: [feed]
+    cluster: [zone]
+    requests: [add]
+  names:
+    - {field: rule, unit: unit, sub: sub}
+    - {field: rule, unit: of, of: testsub}
+events:
+  older_epochs: fenced
+  suppress:
+    tally.tick: {window: 5, by: [unit]}
+snapshot: [name, of, mode, step, state.result]
+# the belt a tally's holder feeds, and a pump that runs beside the worker, with volumes of its own (ADR-0091 п. 4, 5);
+# the pump's share is made by the pump (`part`), which stops in 10 s (ADR-0091 доп. (2) пп. 1, 4)
+shares:
+  belt: {kind: socket}
+  pump: {kind: dir, part: pump}
+parts:
+  pump: {exec: /usr/lib/testsub2/pump, volumes: true, stop_timeout: 10}
+# what a member reports to the domain beside its heartbeats and snapshot, and who says when a tally was last heard of:
+# `testsub2/seen/*`, naming each member it heard of by the field that carries the member's name — `of`, fixed
+domain:
+  ref: name
+  reports: [counts/]
+  witness: {report: seen, member_field: of}
+  books:
+    notes: {from: testsub2/notes/, key: ref, pick: unique, to: to, show: [ref]}
+    rolls: {from: testsub2/rolls/, key: ref, pick: all, to: to, show: [ref]}
+  names:
+    notes/: {exclusive_with: domain/users, grant: view}
+  tokens:
+    feed:
+      lifetime: 600
+      claims: [aud, ref]
+      grant: [testsub2worker]
+      placement: {sub: testsub2, caller: origin, ref_claim: ref, target_fields: [cluster, copies], audience_claim: aud}
+      unit: {sub: testsub, caller: poll_home, ref_claim: ref, target_fields: [centre], audience_claim: aud}
+    tally2:
+      lifetime: 60
+      claims: [ref, by, acts, up, aud]
+      grant: [testsub2worker]
+      scenario:
+        doc: testsub2
+        items: rules
+        name: name
+        enabled: enabled
+        trigger: when.item
+        target: then.item
+        act: then
+        placement: testsub
+        ref_claim: ref
+        trigger_claim: by
+        acts_claim: acts
+        up_claim: up
+        audience_claim: aud
+  shared:
+    - name: rules
+      type: json
+      schema:
+        type: array
+        maxItems: 1000
+        items:
+          type: object
+          required: [name, when, then]
+          additionalProperties: false
+          properties:
+            name: {type: string, minLength: 1}
+            enabled: {type: boolean}
+            when: {type: object}
+            then: {type: object}
+metrics:
+  # The requests this subsystem's workers filed to others, from the base's heartbeat (`filings`: filed, again — the same
+  # request filed again — and refused; ADR-0013, the fourteenth review: they were on no /metrics).
+  - {name: filings_total, from: "heartbeat.filings.<outcome>", agg: sum, type: counter}
+  - {name: tallies_running, from: status.phase, agg: count, equals: running, live: true}
+  - {name: shelves_open, count: table shelves, where: {enabled: true}, unheld: true}
+  - {name: notches_unshelved, count: table notches, unless: {table: shelves, where: {kind: reserve}}}
+  - {name: phases, from: status.phase, agg: count, when: phase}
+  - {name: depth, from: status.depth, agg: value, type: gauge, default: 0}
+  - {name: jam, from: heartbeat.jam, agg: flag, equals: [stuck, "yes"]}
+  - {name: away_seconds, from: heartbeat.away_since, agg: age, default: 0}
+  - {name: belt, from: heartbeat.belt.state, agg: label, label: state, default: ok, values: [ok, slow]}
+  - {name: adds_total, from: "heartbeat.adds.<outcome>", agg: sum, type: counter, labels: {kind: add}}
+  - {name: queue_max, from: "heartbeat.queue.<lane>", agg: max}
+  - {name: wait_seconds, from: heartbeat.wait, agg: histogram, type: histogram, buckets: [1.0, 5.0]}
+servers:
+  show:
+    - {table: shelves, by: server, title: полки, columns: [name, kind, enabled]}
+  status:
+    - {field: jam, title: затор}
+    - {field: belt.state, title: лента}
+    - {field: shelved, title: счёты на полках, of: shelves}
+display:
+  unit: счёт
+  units: счёты
+  units_count: счётов                 # «12 счётов»
+  section: Счета
+  events: false                       # the card has no journal tab of the module's
+  field_help: {of: счётчик, shelf: полка, lane: "полоса, по которой воркер ведёт счёт"}
+  kinds: {tally.tick: тик}
+  tree:
+    group_by: zone
+    nested_by: "/"
+    columns: [{field: name, width: 12}, {field: phase, title: фаза}]
+    children: false
+    group_title: По зонам
+    group_hint: зоны → счёты
+    filter: имя счёта
+    no_group: Без зоны
+    contents_title: Состав зоны
+    group_word: зона
+    no_group_suffix: без зоны
+    pick_note: выберите счёт в дереве
+    new_root: Зона
+    new_sub: Подзона
+    add_here: Добавить счёт сюда
+    new_group_note: Зона создана — добавьте в неё счёт, иначе она не сохранится
+    remove: убрать из зоны
+    not_in: Не в зоне — попадёт в «без зоны».
+    add_to: Добавить в зону
+    no_others: других зон нет
+    new_group: Новая зона
+  general: Счёт
+  fields: {name: Имя, mode: Режим, id: ID}
+  # `lane` is no field of the row: its worker says it in the unit's status (form[].status), and its values are free words
+  options: {mode: {plain: тихо, loud: громко}, lane: {fast: быстрая, slow: медленная}}
+  form:
+    - {title: Счёт, state: true, fields: [name, mode]}
+    - title: Где
+      placement: true
+      status: [{field: lane, since: lane_since, title: Полоса}]
+      fields: [shelf, zone]
+      note: полка решает
+console:
+  running: tallies_running

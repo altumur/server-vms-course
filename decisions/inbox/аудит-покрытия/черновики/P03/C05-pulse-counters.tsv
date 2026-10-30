@@ -1,0 +1,49 @@
+# Черновик C05 — ненулевые счёты пульса: `command_counts` держателя и `made_rows` заказчика.
+# Что проверяет: счёты держателя и заказчика в пульсе (Platform/03-worker/spec/03.4-worker.norms.md Н1.1, последняя
+#   группа полей: «каждое поле — только когда в нём есть ненулевое») в ненулевом виде — в корпусе приёмки ненулевым
+#   был только `creates` (сценарий 08 приёмки главы 3.6), а сценарий 13 приёмки главы 3.4 фиксирует нули. Здесь два
+#   счёта, которые стенд даёт без расширения учебного воркера: `command_counts.performed` — исходы вызовов действия
+#   этим экземпляром (счётчик берётся у воркера, который выполнил просьбу), и `made_rows` — число ключей под префиксом
+#   `<A>/<rows>/<C>-` по последнему перечислению заказчика.
+# Место нормы: Platform/03-worker/spec/03.4-worker.norms.md — Н1.1 (`command_counts: {performed, refused, expired,
+#   unknown}` — «исходы вызовов действия этим экземпляром с его старта»; `made_rows: {<A>/<rows>: <число>}` — «по
+#   последнему перечислению (не чаще раза в 60 с; надгробия и занятые строки входят)»; `creates: {<исход>: <число>}`;
+#   `filings: {filed, again, refused}`; `commands_in_flight`; «каждое поле — только когда в нём есть ненулевое»).
+#   Чек-лист: P/03.4-09 (счёты держателя и заказчика в пульсе). Источники исходов: Platform/03-worker/spec/03.6-
+#   worker.norms.md Н3 «взгляд держателя» (исходы вызовов действия) и Н1.6 (заказ строк другой подсистемы).
+# Подготовка: стенд testsub под раннером. Просьба к счётчику — `console POST /testsub/requests {"unit": "c5", "add": 5}`
+#   (форма приёмки главы 3.6, сценарий 05): её выполняет держатель счётчика — воркер testsub, значит его пульс и несёт
+#   `command_counts`. Заказ строк другой подсистемы — учебный заказчик testsub (манифест: `worker.creates:
+#   [{sub: testsub2, rows: tallies, key: "{of}"}]`): счётчик со `start` ≥ 1000 порождает заказ `testsub2/tallies/
+#   testsub-<имя>` (приёмка главы 3.6, сценарий 08), и пульс заказчика несёт `made_rows` по семейству `testsub2/tallies`.
+# Существующие директивы: `@start resource`, `@start controller`, `@start worker <имя>`, `@sleep <с>`, `@until <с>
+#   <запрос>`; двери `console` (просьба и создание счётчика), `store` (чтение строк), `resource` (чтение пульса).
+# Новых директив не требуется.
+# Почему ожидание именно такое:
+#   — `command_counts.performed` — не точное число, а «ненулевое» (`@not(0)`): счётчик копится с запуска экземпляра, и
+#     число выполненных вызовов зависит от того, сколько раз повторялась просьба; проверяется ровно то, что хочет
+#     аудит — «ненулевой счёт», а не конкретная величина. Ветви `@oneof` (202 queued | 200 answered) — форма приёмки
+#     главы 3.6 для просьбы к счётчику.
+#   — `made_rows` считается перечислением раз в 60 с, поэтому шаг ждёт до 120 с (`@until`), а значение — «ненулевое»
+#     (`@not(0)`): в счёт входят и надгробия, и занятые строки, точного числа норма не задаёт.
+#   — `pass_failures: 0` — проходы сверки не обрывались ошибкой чтения (в отличие от сценария C03, где строка нечитаема).
+# Оговорка (для владельца приёмки): два счёта из чек-листа П/03.4-09 на нынешнем стенде не выразимы и в черновик не
+#   входят: `filings` (подача просьбы воркером) — учебные подсистемы просьб воркером не подают, это признанный долг
+#   (П/03.6-07); `commands_in_flight` (вызов, ещё не вернувшийся) — требует зависшего действия, то есть медленного
+#   действия учебного воркера (черновик C12). `creates` покрыт сценарием 08 корпуса и здесь не повторяется.
+scenario	step	request	expect
+# 01-command-counts-performed — держатель выполнил просьбу: в пульсе ненулевой `command_counts.performed`.
+01-command-counts-performed	1	@start resource	ok
+01-command-counts-performed	2	@start controller	ok
+01-command-counts-performed	3	@start worker w-1	ok
+01-command-counts-performed	4	console POST /counters {"name": "c5", "start": 1}	201 {"id": "c5", "revision": 1}
+01-command-counts-performed	5	@until 30 store GET /v1/get?key=testsub/epoch/c5	200 {"items": {"epoch": "1"}}
+01-command-counts-performed	6	console POST /testsub/requests {"unit": "c5", "add": 5}	@oneof 202 {"queued": "$rid"} | 200 {"answered": "@any"}
+01-command-counts-performed	7	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"command_counts": {"performed": "@not(0)"}, "pass_failures": 0}
+# 02-made-rows — заказчик заказал строку другой подсистемы: в пульсе ненулевой `made_rows` по семейству `testsub2/tallies`.
+02-made-rows	1	@start resource	ok
+02-made-rows	2	@start controller	ok
+02-made-rows	3	@start worker w-1	ok
+02-made-rows	4	console POST /counters {"name": "c8", "start": 1000}	201 {"id": "c8", "revision": 1}
+02-made-rows	5	@until 30 store GET /v1/get?key=testsub2/tallies/testsub-c8	200 {"items": {"name": "testsub-c8", "of": "c8", "revision": "1"}}
+02-made-rows	6	@until 120 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"made_rows": {"testsub2/tallies": "@not(0)"}, "pass_failures": 0}
