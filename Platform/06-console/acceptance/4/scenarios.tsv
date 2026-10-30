@@ -87,3 +87,18 @@ scenario	step	request	expect
 10-events-query-lexemes	10	console GET /events?to=1.	400 {"detail": "to"}
 10-events-query-lexemes	11	console GET /events?to=00.5	400 {"detail": "to"}
 10-events-query-lexemes	12	console GET /events?to=1.5	200
+11-request-expired	1	console POST /counters {"name": "c1", "start": 1}	201
+11-request-expired	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201
+11-request-expired	3	console2 POST /tallies {"name": "t2", "of": "c1"}	201
+11-request-expired	4	console POST /testsub2/requests {"unit": "t1", "from": 0, "to": 1}	202 {"queued": "$r1"}
+11-request-expired	5	console POST /testsub2/requests {"unit": "t1", "from": 1, "to": 2}	202 {"queued": "$r2"}
+11-request-expired	6	console POST /testsub2/requests {"unit": "t1", "from": 2, "to": 3}	202
+11-request-expired	7	console POST /testsub2/requests {"unit": "t2", "from": 0, "to": 1}	429
+11-request-expired	8	admin GET /v1/get?key=testsub2/requests/$r1	200 {"index": "$q", "items": {"unit": "t1", "from": "0", "to": "1", "digest": "$d", "by": "operator", "of": "c1"}}
+11-request-expired	9	admin POST /v1/write {"id":"b11","op":"put","key":"testsub2/requests/$r1","items":{"unit":"t1","from":"0","to":"1","digest":"$d","by":"operator","at":"1700000000","of":"c1"},"cas":"$q"}	200
+11-request-expired	10	@until 60 admin GET /v1/get?key=objects/testsub2/commands/$r1	200 {"items": {"outcome": "expired", "ended_by": "reaper", "unit": "t1", "digest": "$d", "ended_at": "@time"}}
+11-request-expired	11	admin GET /v1/get?key=testsub2/requests/$r1	200 {"items": {"unit": "t1"}}
+11-request-expired	12	admin GET /v1/get?key=objects/testsub2/commands/$r2	200 {"items": null}
+11-request-expired	13	@until 90 admin GET /v1/get?key=testsub2/requests/$r1	200 {"items": null}
+11-request-expired	14	admin GET /v1/get?key=testsub2/requests/$r2	200 {"items": {"unit": "t1"}}
+11-request-expired	15	@until 90 console POST /testsub2/requests {"unit": "t2", "from": 0, "to": 1}	202
