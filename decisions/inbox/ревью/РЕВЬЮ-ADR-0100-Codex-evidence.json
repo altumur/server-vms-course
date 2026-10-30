@@ -1,0 +1,460 @@
+{
+  "head": "8aa4a15b34c0fece8bd137ca2276642b790e2c35",
+  "SUT": 0,
+  "kind": "finite model of normative rules; no implementation executed",
+  "source_sha256": {
+    "decisions/0100-встроенный-администратор.md": "2df01d592a0c1f529513be921e813029f4fdeb7fac8cb289f9407c662a39a7ae",
+    "decisions/0098-роли-и-группы-людей-в-домене.md": "53613215cc3b8cf422f5364dc6a0148c5751705c85668c814611c91614536d20",
+    "decisions/0099-исключения-прав.md": "969ccadb78ef43eeb4d3bc6a34f6ae463cb2ff16fd780ceebd434bcc15ab3552",
+    "decisions/0097-гранты-по-подсистемам-и-папкам.md": "7389dcb33205eaa0caef1652b1cba50cbb7f77c9f0456fa96b0c21fed140d4c1",
+    "decisions/inbox/2026-10-30-ревью-ADR-0097-разбор.md": "048892c857119a6a73f44351f588f45c5a29af9c340773f014e7ea50c33be2a8",
+    "decisions/inbox/2026-10-30-ревью-ADR-0099-разбор.md": "86ca23647733b7fabc7832e9c57e429cebc25c162daa1e379a3eef6459333fb8",
+    "decisions/inbox/2026-10-30-ревью-ADR-0098-разбор.md": "e4da8953baa969f75fdaecffea31a51ef41d5321a0611295fe4d5711de95389d",
+    "VMS/11-backend/consolem.openapi.json": "8f0ad1b1694febfa082251cd34a5e0c33ca847fa8d9df2c60d04f892ec9684e7",
+    "Platform/08-domain/spec/08.10-domain.norms.md": "f6528c11870691ee31bfad1701d9dbdf99be0347254eac602182f319888f2351",
+    "Platform/08-domain/spec/08.4-domain.norms.md": "b164b31603bba0236ebdb92348a6f0e7a6939dff9d77c34e7e983e5a1b969a01",
+    "Platform/08-domain/spec/08.8-domain.norms.md": "3aae34f81b8ba1f44470b258665457dc2b325a317cc403f238c90bd406872db9",
+    "Platform/10-domain-console/spec/10-domain-console.norms.md": "1ae598f4e152c6c929fdc50822add4944492a5c95a990f86f409a0f6f98d168b",
+    "Platform/common/contracts/may.md": "91845a3c12bdcf53a6f0c43d039809134d59fa1e31f4db9873f118a0f9a11092"
+  },
+  "model_sha256": "80529f577aee21739a2ef5de587eb5cb2da84de35d933dbd0d393c6fbf653473",
+  "may_null": {
+    "input": {
+      "grants": null,
+      "assigned_admin": true,
+      "disabled": false,
+      "as_of": null
+    },
+    "trace": [
+      "1 glass=false",
+      "2 disabled=false",
+      "3 grants=null -> deny no_grant; 4a unreachable"
+    ],
+    "actual": "no_grant",
+    "promised": "allow"
+  },
+  "last_admin": {
+    "total_schedules": 6,
+    "violating_schedules": [
+      {
+        "order": [
+          "prepare1",
+          "prepare2",
+          "commit1",
+          "commit2"
+        ],
+        "zero": true,
+        "trace": [
+          {
+            "event": "prepare1",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g1": 1
+            }
+          },
+          {
+            "event": "prepare2",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g2": 1
+            }
+          },
+          {
+            "event": "commit1",
+            "accepted": true,
+            "count": 1
+          },
+          {
+            "event": "commit2",
+            "accepted": true,
+            "count": 0
+          }
+        ]
+      },
+      {
+        "order": [
+          "prepare1",
+          "prepare2",
+          "commit2",
+          "commit1"
+        ],
+        "zero": true,
+        "trace": [
+          {
+            "event": "prepare1",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g1": 1
+            }
+          },
+          {
+            "event": "prepare2",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g2": 1
+            }
+          },
+          {
+            "event": "commit2",
+            "accepted": true,
+            "count": 1
+          },
+          {
+            "event": "commit1",
+            "accepted": true,
+            "count": 0
+          }
+        ]
+      },
+      {
+        "order": [
+          "prepare2",
+          "prepare1",
+          "commit1",
+          "commit2"
+        ],
+        "zero": true,
+        "trace": [
+          {
+            "event": "prepare2",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g2": 1
+            }
+          },
+          {
+            "event": "prepare1",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g1": 1
+            }
+          },
+          {
+            "event": "commit1",
+            "accepted": true,
+            "count": 1
+          },
+          {
+            "event": "commit2",
+            "accepted": true,
+            "count": 0
+          }
+        ]
+      },
+      {
+        "order": [
+          "prepare2",
+          "prepare1",
+          "commit2",
+          "commit1"
+        ],
+        "zero": true,
+        "trace": [
+          {
+            "event": "prepare2",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g2": 1
+            }
+          },
+          {
+            "event": "prepare1",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g1": 1
+            }
+          },
+          {
+            "event": "commit2",
+            "accepted": true,
+            "count": 1
+          },
+          {
+            "event": "commit1",
+            "accepted": true,
+            "count": 0
+          }
+        ]
+      }
+    ],
+    "guarded": [
+      {
+        "order": [
+          "prepare1",
+          "commit1",
+          "prepare2",
+          "commit2"
+        ],
+        "zero": false,
+        "trace": [
+          {
+            "event": "prepare1",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g1": 1,
+              "g2": 1
+            }
+          },
+          {
+            "event": "commit1",
+            "accepted": true,
+            "count": 1
+          },
+          {
+            "event": "prepare2",
+            "allowed": false,
+            "post_count": 0,
+            "guards": {
+              "g1": 2,
+              "g2": 1
+            }
+          },
+          {
+            "event": "commit2",
+            "accepted": false,
+            "count": 1
+          }
+        ]
+      },
+      {
+        "order": [
+          "prepare1",
+          "prepare2",
+          "commit1",
+          "commit2"
+        ],
+        "zero": false,
+        "trace": [
+          {
+            "event": "prepare1",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g1": 1,
+              "g2": 1
+            }
+          },
+          {
+            "event": "prepare2",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g1": 1,
+              "g2": 1
+            }
+          },
+          {
+            "event": "commit1",
+            "accepted": true,
+            "count": 1
+          },
+          {
+            "event": "commit2",
+            "accepted": false,
+            "count": 1
+          }
+        ]
+      },
+      {
+        "order": [
+          "prepare1",
+          "prepare2",
+          "commit2",
+          "commit1"
+        ],
+        "zero": false,
+        "trace": [
+          {
+            "event": "prepare1",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g1": 1,
+              "g2": 1
+            }
+          },
+          {
+            "event": "prepare2",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g1": 1,
+              "g2": 1
+            }
+          },
+          {
+            "event": "commit2",
+            "accepted": true,
+            "count": 1
+          },
+          {
+            "event": "commit1",
+            "accepted": false,
+            "count": 1
+          }
+        ]
+      },
+      {
+        "order": [
+          "prepare2",
+          "prepare1",
+          "commit1",
+          "commit2"
+        ],
+        "zero": false,
+        "trace": [
+          {
+            "event": "prepare2",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g1": 1,
+              "g2": 1
+            }
+          },
+          {
+            "event": "prepare1",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g1": 1,
+              "g2": 1
+            }
+          },
+          {
+            "event": "commit1",
+            "accepted": true,
+            "count": 1
+          },
+          {
+            "event": "commit2",
+            "accepted": false,
+            "count": 1
+          }
+        ]
+      },
+      {
+        "order": [
+          "prepare2",
+          "prepare1",
+          "commit2",
+          "commit1"
+        ],
+        "zero": false,
+        "trace": [
+          {
+            "event": "prepare2",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g1": 1,
+              "g2": 1
+            }
+          },
+          {
+            "event": "prepare1",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g1": 1,
+              "g2": 1
+            }
+          },
+          {
+            "event": "commit2",
+            "accepted": true,
+            "count": 1
+          },
+          {
+            "event": "commit1",
+            "accepted": false,
+            "count": 1
+          }
+        ]
+      },
+      {
+        "order": [
+          "prepare2",
+          "commit2",
+          "prepare1",
+          "commit1"
+        ],
+        "zero": false,
+        "trace": [
+          {
+            "event": "prepare2",
+            "allowed": true,
+            "post_count": 1,
+            "guards": {
+              "g1": 1,
+              "g2": 1
+            }
+          },
+          {
+            "event": "commit2",
+            "accepted": true,
+            "count": 1
+          },
+          {
+            "event": "prepare1",
+            "allowed": false,
+            "post_count": 0,
+            "guards": {
+              "g1": 1,
+              "g2": 2
+            }
+          },
+          {
+            "event": "commit1",
+            "accepted": false,
+            "count": 1
+          }
+        ]
+      }
+    ]
+  },
+  "unreadable_target": [
+    {
+      "actual_admin_a": false,
+      "observed_members": "unreadable",
+      "manager_may": "allow",
+      "legacy_b_proven": true,
+      "positive_only_admin_only": "allow password change",
+      "unknown_closed": "503 unavailable"
+    },
+    {
+      "actual_admin_a": true,
+      "observed_members": "unreadable",
+      "manager_may": "allow",
+      "legacy_b_proven": true,
+      "positive_only_admin_only": "allow password change",
+      "unknown_closed": "503 unavailable"
+    }
+  ],
+  "expiry_fallback": {
+    "permanent_builtin_admins": 1,
+    "legacy_direct_admin_rows": 0,
+    "target": "ordinary expiring user",
+    "old_section3_result": "keep enabled and log domain.user.expiry_kept",
+    "required": "disable expired ordinary user; permanent built-in administrator remains"
+  },
+  "positive_controls": {
+    "admin_with_empty_doc": true,
+    "disabled_precedes_admin": true,
+    "stale_precedes_admin": true,
+    "ordinary_user_no_grant": true,
+    "glass_precedes_null": true,
+    "serial_last_removal_rejected": true,
+    "read_set_guards_close_all_schedules": true,
+    "unreadable_never_proves_ordinary": true
+  }
+}
