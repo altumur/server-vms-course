@@ -179,7 +179,7 @@ scenario	step	request	expect
 17-distinct-one-shelf	21	@sleep 25	ok
 17-distinct-one-shelf	22	store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "2", "retiring": "@absent"}}
 17-distinct-one-shelf	23	store GET /v1/get?key=testsub2/slots/t-srv-a-2	200 {"items": {"released": "false"}}
-# 18-ends-and-state (ADR-0091 пп. 1–3): ends в 2001 — строка заказа (made.keep в 2001) удалена физически, её состояние и осиротевшее ghost сняты; ручная m1 с fixed of — снята, не удалена (expired_kept); нечитаемое состояние m3 — snapshot_state_garbled
+# 18-ends-and-state (ADR-0091 пп. 1–3): ends в 2001 — строка заказа (made.keep в 2001) удалена физически, её состояние и осиротевшее ghost сняты; ручная m1 с fixed of — снята, не удалена (expired_kept); нечитаемое состояние m3 — snapshot_state_garbled; строка заказа testsub-c3 с made.keep в 2286 (9999999999) и ends в 2001 — снята, но не удалена: часы контроллера не позже keep, её состояние не снято (аудит покрытия P/04, D06)
 18-ends-and-state	1	@start controller testsub2	ok
 18-ends-and-state	2	@start resource	ok
 18-ends-and-state	3	@as console store POST /v1/write {"id":"f3","op":"put","key":"testsub2/tallies/m1","items":{"id":"m1","revision":"1","name":"m1","of":"c1","until":"1000000000"},"cas":""}	200
@@ -194,6 +194,11 @@ scenario	step	request	expect
 18-ends-and-state	12	store GET /v1/get?key=testsub2/tallies/m1	200 {"items": {"name": "m1", "until": "1000000000"}}
 18-ends-and-state	13	store GET /v1/get?key=testsub2/state/result/m3	200 {"items": {"value": "not json"}}
 18-ends-and-state	14	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"expired_kept": 1, "snapshot_state_garbled": 1}
+18-ends-and-state	15	@as console store POST /v1/write {"id":"f15","op":"put","key":"testsub2/tallies/testsub-c3","items":{"id":"testsub-c3","revision":"1","name":"testsub-c3","of":"c3","until":"1000000000","born":"00000000000000000000000000000005","made":"{\"at\":1000000000,\"by\":\"testsub\",\"keep\":9999999999}"},"cas":""}	200
+18-ends-and-state	16	@as testsub2worker store POST /v1/write {"id":"f16","op":"put","key":"testsub2/state/result/testsub-c3","items":{"born":"00000000000000000000000000000005","revision":"1","epoch":"1","value":"{\"state\":\"open\"}"},"cas":""}	200
+18-ends-and-state	17	@sleep 12	ok
+18-ends-and-state	18	store GET /v1/get?key=testsub2/tallies/testsub-c3	200 {"items": {"name": "testsub-c3", "until": "1000000000"}}
+18-ends-and-state	19	store GET /v1/get?key=testsub2/state/result/testsub-c3	200 {"items": {"value": "{\"state\":\"open\"}"}}
 # 19-snapshot-state (ADR-0091 п. 3): действующее состояние result — в шарде снимка (state.result в snapshot манифеста), cursor — нет
 19-snapshot-state	1	@start controller testsub2	ok
 19-snapshot-state	2	@start resource	ok
@@ -201,3 +206,94 @@ scenario	step	request	expect
 19-snapshot-state	4	@as testsub2worker store POST /v1/write {"id":"c4","op":"put","key":"testsub2/state/result/m2","items":{"born":"00000000000000000000000000000003","revision":"1","epoch":"1","value":"{\"state\":\"open\"}"},"cas":""}	200
 19-snapshot-state	5	@as testsub2worker store POST /v1/write {"id":"c5","op":"put","key":"testsub2/state/cursor/m2","items":{"born":"00000000000000000000000000000003","revision":"1","epoch":"1","value":"{\"through\":7}"},"cas":""}	200
 19-snapshot-state	6	@until 20 resource GET /v1/objects/testsub2/snapshot/unplaced?scope=local	200 {"worker": null, "tallies": [{"id": "m2", "name": "m2", "state": {"result": {"state": "open"}}, "worker": null}]}
+# 20-controller-restart (аудит покрытия P/04, D01): перезапуск контроллера — локальная история заново, решение c20 не пересматривается (версия строки размещения та же), эпоха та же; новый экземпляр работает — размещает c21
+20-controller-restart	1	@start resource	ok
+20-controller-restart	2	@start controller	ok
+20-controller-restart	3	@start worker w-1	ok
+20-controller-restart	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+20-controller-restart	5	console POST /counters {"name": "c20", "start": 1}	201
+20-controller-restart	6	@until 30 store GET /v1/get?key=testsub/placement/c20	200 {"index": "$v1", "items": {"worker": "w-1", "rev": "$r1"}}
+20-controller-restart	7	@until 30 store GET /v1/get?key=testsub/epoch/c20	200 {"items": {"epoch": "1"}}
+20-controller-restart	8	@sigterm controller	ok
+20-controller-restart	9	@start controller	ok
+20-controller-restart	10	console POST /counters {"name": "c21", "start": 1}	201
+20-controller-restart	11	@until 90 store GET /v1/get?key=testsub/placement/c21	200 {"items": {"worker": "w-1"}}
+20-controller-restart	12	store GET /v1/get?key=testsub/placement/c20	200 {"index": "$v1", "items": {"worker": "w-1", "rev": "$r1"}}
+20-controller-restart	13	store GET /v1/get?key=testsub/epoch/c20	200 {"items": {"epoch": "1"}}
+# 21-slot-release (аудит покрытия P/04, D04): запись release по таблице R28 — w-1 читаемый без единиц: отдан, holder/until/gen/server сохранены, имя в names_given; w-2 с порванным until и читаемым gen: отдан целиком и ничьим, gen и server сохранены; w-3 с нечитаемым gen: строка не меняется, имени нет; отданный w-1 берёт новый процесс (gen 2)
+21-slot-release	1	@start resource	ok
+21-slot-release	2	@start controller	ok
+21-slot-release	3	@start worker w-1	ok
+21-slot-release	4	@start worker w-2	ok
+21-slot-release	5	@start worker w-3	ok
+21-slot-release	6	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "gen": "1"}}
+21-slot-release	7	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
+21-slot-release	8	@until 20 store GET /v1/get?key=testsub/slots/w-3	200 {"items": {"released": "false", "holder": "$h3"}}
+21-slot-release	9	@sigkill w-1	ok
+21-slot-release	10	@sigkill w-2	ok
+21-slot-release	11	@sigkill w-3	ok
+21-slot-release	12	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "until": "$u1", "released": "false", "gen": "1", "server": "srv-a"}}
+21-slot-release	13	@as testsubworker store POST /v1/write {"id":"e21a","op":"put","key":"testsub/slots/w-2","items":{"holder":"other-box:4242:abcdef","until":"torn","released":"false","gen":"2","server":"srv-a"}}	200
+21-slot-release	14	@as testsubworker store POST /v1/write {"id":"e21b","op":"put","key":"testsub/slots/w-3","items":{"holder":"$h3","until":"1999999999","released":"false","gen":"x","server":"srv-a"}}	200 {"index": "$v3"}
+21-slot-release	15	@until 90 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"names_given": {"w-1": "@any", "w-3": "@absent"}}
+21-slot-release	16	@until 30 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "true", "holder": "$h1", "until": "$u1", "gen": "1", "server": "srv-a"}}
+21-slot-release	17	@until 30 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "true", "holder": "", "until": "@time", "gen": "2", "server": "srv-a"}}
+21-slot-release	18	store GET /v1/get?key=testsub/slots/w-3	200 {"index": "$v3", "items": {"holder": "$h3", "until": "1999999999", "released": "false", "gen": "x"}}
+21-slot-release	19	@start worker w-1	ok
+21-slot-release	20	@until 30 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "gen": "2"}}
+# 22-group-whole (аудит покрытия P/04, D03): девять tallies одного хоста feed — одна группа веса 9 при ёмкости 8: ни одна не размещена, g10 вне группы размещена; группа из восьми при свободных 8 — целиком на t-1; единицы заведены до воркера, чтобы проход увидел группу целиком
+22-group-whole	1	@start resource	ok
+22-group-whole	2	@start controller testsub2	ok
+22-group-whole	3	console2 POST /shelves {"name": "s-1", "zone": "z", "server": "srv-a"}	201
+22-group-whole	4	console2 POST /tallies {"name": "g1", "of": "c1", "feed": "https://h1/a1"}	201
+22-group-whole	5	console2 POST /tallies {"name": "g2", "of": "c1", "feed": "https://h1/a2"}	201
+22-group-whole	6	console2 POST /tallies {"name": "g3", "of": "c1", "feed": "https://h1/a3"}	201
+22-group-whole	7	console2 POST /tallies {"name": "g4", "of": "c1", "feed": "https://h1/a4"}	201
+22-group-whole	8	console2 POST /tallies {"name": "g5", "of": "c1", "feed": "https://h1/a5"}	201
+22-group-whole	9	console2 POST /tallies {"name": "g6", "of": "c1", "feed": "https://h1/a6"}	201
+22-group-whole	10	console2 POST /tallies {"name": "g7", "of": "c1", "feed": "https://h1/a7"}	201
+22-group-whole	11	console2 POST /tallies {"name": "g8", "of": "c1", "feed": "https://h1/a8"}	201
+22-group-whole	12	console2 POST /tallies {"name": "g9", "of": "c1", "feed": "https://h1/a9"}	201
+22-group-whole	13	console2 POST /tallies {"name": "g10", "of": "c1"}	201
+22-group-whole	14	@start worker testsub2 t-1	ok
+22-group-whole	15	@until 30 store GET /v1/get?key=testsub2/holds/s-1	200 {"items": {"by": "t-1", "released": "false"}}
+22-group-whole	16	@until 60 console2 GET /where/g10	200 {"worker": "t-1"}
+22-group-whole	17	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"unplaced": 9}
+22-group-whole	18	console2 GET /where/g1	404 {"reason": "@any"}
+22-group-whole	19	console2 GET /where/g9	404 {"reason": "@any"}
+22-group-whole	20	console2 DELETE /tallies/g9	200 {"deleted": "g9"}
+22-group-whole	21	console2 DELETE /tallies/g10	200 {"deleted": "g10"}
+22-group-whole	22	@until 60 console2 GET /where/g1	200 {"worker": "t-1"}
+22-group-whole	23	@until 30 console2 GET /where/g8	200 {"worker": "t-1"}
+# 23-schema-refusal (аудит покрытия P/04, D07): platform/schema с version выше SCHEMA (2) и не числом — контроллер не стартует, код 2, отчёта прохода нет; с version 1 — стартует
+23-schema-refusal	1	@start resource	ok
+23-schema-refusal	2	admin POST /v1/write {"id":"e23a","op":"put","key":"platform/schema","items":{"version":"2","at":"1700000000"},"cas":""}	200
+23-schema-refusal	3	@start controller	@exit 2
+23-schema-refusal	4	admin POST /v1/write {"id":"e23b","op":"put","key":"platform/schema","items":{"version":"x","at":"1700000000"}}	200
+23-schema-refusal	5	@start controller	@exit 2
+23-schema-refusal	6	resource GET /v1/objects/testsub/controller/pass?scope=local	404
+23-schema-refusal	7	admin POST /v1/write {"id":"e23c","op":"put","key":"platform/schema","items":{"version":"1","at":"1700000000"}}	200
+23-schema-refusal	8	@start controller	ok
+23-schema-refusal	9	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"at": "@time"}
+# 24-server-labels (аудит покрытия P/04, D10): метки узла w-1 {zz}; строка platform/servers/srv-a {qq} побеждает узел — c1 {qq} размещена; пустая строка — ничего не достаёт: c1 снята, c2 {zz} не размещена; строки нет — метки узла: c2 размещена; нечитаемая строка — последние прочитанные {qq, zz} и без суждения о достижимости: c1 и c2 остаются
+24-server-labels	1	@start resource	ok
+24-server-labels	2	@start controller	ok
+24-server-labels	3	@start worker w-1 labels=zz	ok
+24-server-labels	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+24-server-labels	5	@until 30 console GET /servers/srv-a/labels	200 {"would_move": []}
+24-server-labels	6	console PUT /servers/srv-a/labels {"labels": ["qq"]}	200 {"will_move": []}
+24-server-labels	7	console POST /counters {"name": "c1", "labels": ["qq"]}	201
+24-server-labels	8	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+24-server-labels	9	console PUT /servers/srv-a/labels {"labels": []}	200 {"will_move": ["testsub/c1"]}
+24-server-labels	10	@until 60 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "", "reason": "~no longer reaches qq"}}
+24-server-labels	11	console POST /counters {"name": "c2", "labels": ["zz"]}	201
+24-server-labels	12	@sleep 12	ok
+24-server-labels	13	console GET /where/c2	404
+24-server-labels	14	console DELETE /servers/srv-a/labels	200 {}
+24-server-labels	15	@until 30 store GET /v1/get?key=testsub/placement/c2	200 {"items": {"worker": "w-1"}}
+24-server-labels	16	console PUT /servers/srv-a/labels {"labels": ["qq", "zz"]}	200 {"will_move": []}
+24-server-labels	17	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+24-server-labels	18	@as console store POST /v1/write {"id":"e24a","op":"put","key":"platform/servers/srv-a","items":{"labels":"qq!"}}	200
+24-server-labels	19	@sleep 12	ok
+24-server-labels	20	console GET /where/c1	200 {"worker": "w-1"}
+24-server-labels	21	console GET /where/c2	200 {"worker": "w-1"}
