@@ -38,3 +38,19 @@ scenario	step	request	expect
 13-rights-file	5	@rights store inputs/rights-bad-name.json	@exit 2
 13-rights-file	6	@rights store inputs/rights.json	ok
 13-rights-file	7	admin GET /v1/rights	200
+14-never-boundaries	1	admin POST /v1/write {"id":"d141","op":"put","key":"platform/epoch/c1","items":{"n":"1"},"cas":""}	200
+14-never-boundaries	2	admin POST /v1/write {"id":"d142","op":"delete","key":"platform/epoch/c1"}	200
+14-never-boundaries	3	admin POST /v1/write {"id":"d143","op":"put","key":"testsub/epoch/a/b","items":{"n":"1"},"cas":""}	200
+14-never-boundaries	4	admin POST /v1/write {"id":"d144","op":"delete","key":"testsub/epoch/a/b"}	200
+14-never-boundaries	5	admin POST /v1/write {"id":"d145","op":"put","key":"testsub/epoch","items":{"n":"1"},"cas":""}	200
+14-never-boundaries	6	admin POST /v1/write {"id":"d146","op":"delete","key":"testsub/epoch"}	200
+14-never-boundaries	7	@rights store inputs/rights-domain-roles.json	ok
+14-never-boundaries	8	@as domain POST /v1/write {"id":"d147","op":"put","key":"domain/holder","items":{"n":"1"},"cas":""}	200
+14-never-boundaries	9	POST /v1/write {"id":"d148","op":"delete","key":"domain/holder"}	200
+14-never-boundaries	10	@as domainagent POST /v1/write {"id":"d149","op":"put","key":"domain/member","items":{"n":"1"},"cas":""}	200
+14-never-boundaries	11	POST /v1/write {"id":"d14a","op":"delete","key":"domain/member"}	200
+14-never-boundaries	12	@as testsubdomain POST /v1/write {"id":"d14b","op":"put","key":"domain/testsub/k1","items":{"n":"1"},"cas":""}	200
+14-never-boundaries	13	POST /v1/write {"id":"d14c","op":"delete","key":"domain/testsub/k1"}	200
+15-rights-comment	1	@rights store inputs/rights-bad-comment.json	@exit 2
+15-rights-comment	2	@rights store inputs/rights.json	ok
+15-rights-comment	3	admin GET /v1/rights	200 {"comment": "~Готовый вход приёмки"}

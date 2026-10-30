@@ -1,0 +1,41 @@
+{
+  "comment": "Вход приёмки главы P/01.2 сц. 14 (не вывод генератора): роли домена domain, domainagent и testsubdomain с правами на domain/* — never пропускает delete под domain/ только ролью домена (C01-NEVER-DOMAIN-ROLE-01)",
+  "roles": {
+    "domain": {
+      "group": "w2c-domain",
+      "read": [
+        "domain/*"
+      ],
+      "write": [
+        "domain/*"
+      ],
+      "delete": [
+        "domain/*"
+      ]
+    },
+    "domainagent": {
+      "group": "w2c-domainagent",
+      "read": [
+        "domain/*"
+      ],
+      "write": [
+        "domain/*"
+      ],
+      "delete": [
+        "domain/*"
+      ]
+    },
+    "testsubdomain": {
+      "group": "w2c-testsubdomain",
+      "read": [
+        "domain/*"
+      ],
+      "write": [
+        "domain/*"
+      ],
+      "delete": [
+        "domain/*"
+      ]
+    }
+  }
+}

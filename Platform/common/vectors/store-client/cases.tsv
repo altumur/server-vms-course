@@ -8,12 +8,16 @@ get-no-index	{"op":"get","reply":{"status":200,"body":{"items":{"a":"1"}}}}	"una
 get-none	{"op":"get","reply":"@none"}	"unavailable"	ответ не пришёл — для чтения unavailable, не «нет»
 list-truncated	{"op":"list","reply":"@truncated"}	"unavailable"	обрезанный ответ перечисления — unavailable
 list-ok	{"op":"list","reply":{"status":200,"body":{"keys":{"a/b":"3","a/c":"9"}}}}	"listing"	перечисление
+list-bad-version	{"op":"list","reply":{"status":200,"body":{"keys":{"a/b":"03"}}}}	"unavailable"	версия в перечислении не по форме провода (ведущий ноль) — нечитаемый ответ перечисления: unavailable
 write-ok	{"op":"write","reply":{"status":200,"body":{"index":"8"}}}	"written"	запись сделана
 write-again	{"op":"write","reply":{"status":200,"body":{"index":"8","again":true}}}	"written"	ответ сохранённого повтора того же id — тоже written
 write-bad-index	{"op":"write","reply":{"status":200,"body":{"index":"08"}}}	"ambiguous"	версия не по форме провода (ведущий ноль) — нечитаемый ответ записи: ambiguous
 write-none	{"op":"write","reply":"@none"}	"ambiguous"	ответ записи не пришёл — ambiguous: повтор только тем же id
 write-refused-connection	{"op":"write","reply":"@refused"}	"ambiguous"	отказ в соединении — тоже «ответ не пришёл»
+write-truncated	{"op":"write","reply":"@truncated"}	"ambiguous"	обрезанный ответ записи — ambiguous: повтор только тем же id
 write-conflict	{"op":"write","reply":{"status":409,"body":{"kind":"conflict","error":"x","index":"5"}}}	"conflict"	Fault — его kind: перечитать и повторить
 write-guard	{"op":"write","reply":{"status":412,"body":{"kind":"guard","error":"x","key":"s/slots/w-1","index":"4"}}}	"guard"	страж не на той версии: не повторять, перечитать условие
 write-ambiguous	{"op":"write","reply":{"status":503,"body":{"kind":"ambiguous","error":"x"}}}	"ambiguous"	исход записи неизвестен
+write-toolarge	{"op":"write","reply":{"status":413,"body":{"kind":"toolarge","error":"x","limit":1048576}}}	"toolarge"	тело больше предела — Fault, его kind: уменьшить тело, не повторять тем же
+get-forbidden	{"op":"get","reply":{"status":403,"body":{"kind":"forbidden","error":"x"}}}	"forbidden"	личность не допускается или прав нет — Fault, его kind
 get-unavailable	{"op":"get","reply":{"status":503,"body":{"kind":"unavailable","error":"x"}}}	"unavailable"	операция не сделана: повторить на следующем шаге

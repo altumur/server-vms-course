@@ -14,6 +14,8 @@ acc	read	acc/ab	deny
 acc	read	acc/p/!x	allow
 acc	read	acc/p/x	deny
 acc	read	acc/other	deny
+acc	read	acc/pre/secret/k1	deny
+acc	read	acc/pre/secret	allow
 none	read	acc/x	deny
 none	read	acc/a*b	deny
 acc	write	acc/exact	deny
