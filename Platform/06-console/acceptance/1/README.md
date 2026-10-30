@@ -214,6 +214,7 @@ name=wide, start=0, labels="" и marks из 524288 x; step отсутствуе�
 
 ## Дополнительные проверки прогона 25
 
+В TSV — сц. 23 [приёмки главы 6.5](../5/README.md): поле `cost` и `placement.weight` объявлены у `probe-x`.
 Эти проверки идут отдельно от TSV, на изолированной копии testsub.
 Добавить поле cost: {type: int, default: 1} и placement.weight: {field: cost, default: 1};
 остальные ключи не менять. Для POST использовать отдельное имя и ключ каждого случая.
