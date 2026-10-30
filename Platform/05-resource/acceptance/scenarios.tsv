@@ -124,3 +124,52 @@ scenario	step	request	expect
 23-object-ceiling	3	resource GET /v1/objects/testsub2/blobs/sha256-e20a69eca39368572e90b9135738a613838f954987a0b44b6220889c171cbb76?scope=local	200 ~xxxx
 23-object-ceiling	4	resource @header X-Written: 1700000000 PUT /v1/objects/testsub2/blobs/sha256-6832d5ef0f8b4923d7ac5d3ffe71fc0865ed9bf9ef988547583644a461476ca1 @big(67108865)	413
 23-object-ceiling	5	resource GET /v1/objects/testsub2/blobs/sha256-6832d5ef0f8b4923d7ac5d3ffe71fc0865ed9bf9ef988547583644a461476ca1?scope=local	404
+24-free-ask-own	1	admin POST /v1/write {"id":"f0401","op":"put","key":"platform/space","items":{"enabled":"true","high":"0.0000001","low":"0.00000001"},"cas":""}	200
+24-free-ask-own	2	@start worker testsub2 t-srv-a-1 on srv-a	ok
+24-free-ask-own	3	@until 60 admin GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"holder": "@any", "released": "false", "gen": "1", "server": "srv-a"}}
+24-free-ask-own	4	@sleep 12	ok
+24-free-ask-own	5	@start resource	ok
+24-free-ask-own	6	@until 90 admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"items": {"free": "@any", "volume": "events", "server": "srv-a", "at": "@time"}}
+24-free-ask-own	7	@sleep 12	ok
+24-free-ask-own	8	resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"short": "$s1"}
+24-free-ask-own	9	ASSERT $s1 >= 1	
+25-free-ask-unit	1	admin POST /v1/write {"id":"f0402","op":"put","key":"platform/space","items":{"enabled":"true","high":"0.0000001","low":"0.00000001"},"cas":""}	200
+25-free-ask-unit	2	admin POST /v1/write {"id":"f0412","op":"put","key":"testsub2/requests/free-srv-a-events","items":{"free":"1","volume":"events","server":"srv-a","at":"1700000000","unit":"c1"},"cas":""}	200
+25-free-ask-unit	3	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i1", "items": {"free": "1", "volume": "events", "server": "srv-a", "at": "1700000000", "unit": "c1"}}
+25-free-ask-unit	4	@start worker testsub2 t-srv-a-1 on srv-a	ok
+25-free-ask-unit	5	@until 60 admin GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"holder": "@any", "released": "false", "gen": "1", "server": "srv-a"}}
+25-free-ask-unit	6	@sleep 12	ok
+25-free-ask-unit	7	@start resource	ok
+25-free-ask-unit	8	@until 60 resource GET /events?kind=free_ask.key_taken	200 {"events": [{"kind": "free_ask.key_taken"}]}
+25-free-ask-unit	9	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i2", "items": {"free": "1", "volume": "events", "server": "srv-a", "at": "1700000000", "unit": "c1"}}
+25-free-ask-unit	10	ASSERT $i1 == $i2	
+26-free-ask-foreign-server	1	admin POST /v1/write {"id":"f0403","op":"put","key":"platform/space","items":{"enabled":"true","high":"0.0000001","low":"0.00000001"},"cas":""}	200
+26-free-ask-foreign-server	2	admin POST /v1/write {"id":"f0413","op":"put","key":"testsub2/requests/free-srv-a-events","items":{"free":"1","volume":"events","server":"srv-b","at":"1700000000"},"cas":""}	200
+26-free-ask-foreign-server	3	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i1", "items": {"free": "1", "volume": "events", "server": "srv-b", "at": "1700000000"}}
+26-free-ask-foreign-server	4	@start worker testsub2 t-srv-a-1 on srv-a	ok
+26-free-ask-foreign-server	5	@until 60 admin GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"holder": "@any", "released": "false", "gen": "1", "server": "srv-a"}}
+26-free-ask-foreign-server	6	@sleep 12	ok
+26-free-ask-foreign-server	7	@start resource	ok
+26-free-ask-foreign-server	8	@until 60 resource GET /events?kind=free_ask.key_taken	200 {"events": [{"kind": "free_ask.key_taken"}]}
+26-free-ask-foreign-server	9	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i2", "items": {"free": "1", "volume": "events", "server": "srv-b", "at": "1700000000"}}
+26-free-ask-foreign-server	10	ASSERT $i1 == $i2	
+27-free-ask-foreign-volume	1	admin POST /v1/write {"id":"f0404","op":"put","key":"platform/space","items":{"enabled":"true","high":"0.0000001","low":"0.00000001"},"cas":""}	200
+27-free-ask-foreign-volume	2	admin POST /v1/write {"id":"f0414","op":"put","key":"testsub2/requests/free-srv-a-events","items":{"free":"1","volume":"other","server":"srv-a","at":"1700000000"},"cas":""}	200
+27-free-ask-foreign-volume	3	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i1", "items": {"free": "1", "volume": "other", "server": "srv-a", "at": "1700000000"}}
+27-free-ask-foreign-volume	4	@start worker testsub2 t-srv-a-1 on srv-a	ok
+27-free-ask-foreign-volume	5	@until 60 admin GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"holder": "@any", "released": "false", "gen": "1", "server": "srv-a"}}
+27-free-ask-foreign-volume	6	@sleep 12	ok
+27-free-ask-foreign-volume	7	@start resource	ok
+27-free-ask-foreign-volume	8	@until 60 resource GET /events?kind=free_ask.key_taken	200 {"events": [{"kind": "free_ask.key_taken"}]}
+27-free-ask-foreign-volume	9	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i2", "items": {"free": "1", "volume": "other", "server": "srv-a", "at": "1700000000"}}
+27-free-ask-foreign-volume	10	ASSERT $i1 == $i2	
+28-free-ask-volume-profile	1	admin POST /v1/write {"id":"f0405","op":"put","key":"platform/space","items":{"enabled":"true","high":"0.0000001","low":"0.00000001"},"cas":""}	200
+28-free-ask-volume-profile	2	admin POST /v1/write {"id":"f0415","op":"put","key":"testsub2/requests/free-srv-a-events","items":{"free":"1","volume":"b-c","server":"srv-a","at":"1700000000"},"cas":""}	200
+28-free-ask-volume-profile	3	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i1", "items": {"free": "1", "volume": "b-c", "server": "srv-a", "at": "1700000000"}}
+28-free-ask-volume-profile	4	@start worker testsub2 t-srv-a-1 on srv-a	ok
+28-free-ask-volume-profile	5	@until 60 admin GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"holder": "@any", "released": "false", "gen": "1", "server": "srv-a"}}
+28-free-ask-volume-profile	6	@sleep 12	ok
+28-free-ask-volume-profile	7	@start resource	ok
+28-free-ask-volume-profile	8	@until 60 resource GET /events?kind=free_ask.key_taken	200 {"events": [{"kind": "free_ask.key_taken"}]}
+28-free-ask-volume-profile	9	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i2", "items": {"free": "1", "volume": "b-c", "server": "srv-a", "at": "1700000000"}}
+28-free-ask-volume-profile	10	ASSERT $i1 == $i2	
