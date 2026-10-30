@@ -1,0 +1,193 @@
+{
+  "green": true,
+  "SUT": 0,
+  "manifest_sha256": "5e1eaba603e449ae3383e54f79e0285080f461b29ced0c30e9399f7845117fe7",
+  "package_files": 253,
+  "author_input_sha256": "db5a4c670bbd8ebf50a80517ee7bee9b29a03c72cff723e109b48c79cf71b895",
+  "author_input_files": 2621,
+  "source_sha_files": 2620,
+  "probe_sha256": "929678519bfbbf2774bf727fccd9466f6f0eb78a845687c7fd9550f34cbbaae5",
+  "git_blobs": {
+    "specs": 2355,
+    "old": 221,
+    "new": 222
+  },
+  "tests": {
+    "test_store_audit": 17,
+    "test_store_group": 15,
+    "test_c_process": 7,
+    "test_c_execution": 36,
+    "test_assembly": 30,
+    "test_role_readiness": 9,
+    "test_m11_raw_and_agent_door": 9,
+    "test_proxy": 3,
+    "test_diagnostic_secrets": 14
+  },
+  "total_tests": 140,
+  "controls": {
+    "old": {
+      "rights_prelude_separate": {
+        "safety_pass": false,
+        "scenario_reason": null,
+        "attempts": {
+          "none": {
+            "safety_pass": false,
+            "actual_argv_unchanged": true,
+            "unrelated_prelude_changed": true,
+            "actual_argv": [
+              "--implicit-rights",
+              "/actual rights"
+            ],
+            "rewritten": "printf \"%s\\n\"  > /tmp/ck-h5j9_5wv/rights-review-espq0y4_/separate.prelude && exec /opt/check-env/lesson-spec/bin/python3.12 -I -B /tmp/ck-h5j9_5wv/rights-review-espq0y4_/observe.py /tmp/ck-h5j9_5wv/rights-review-espq0y4_/separate.argv --implicit-rights '/actual rights'"
+          },
+          "file": {
+            "safety_pass": false,
+            "actual_argv_unchanged": true,
+            "unrelated_prelude_changed": true,
+            "actual_argv": [
+              "--implicit-rights",
+              "/actual rights"
+            ],
+            "rewritten": "printf \"%s\\n\" -rights '/replacement rights' > /tmp/ck-h5j9_5wv/rights-review-espq0y4_/separate.prelude && exec /opt/check-env/lesson-spec/bin/python3.12 -I -B /tmp/ck-h5j9_5wv/rights-review-espq0y4_/observe.py /tmp/ck-h5j9_5wv/rights-review-espq0y4_/separate.argv --implicit-rights '/actual rights'"
+          }
+        }
+      },
+      "rights_prelude_equal": {
+        "safety_pass": false,
+        "scenario_reason": null,
+        "attempts": {
+          "none": {
+            "safety_pass": false,
+            "actual_argv_unchanged": true,
+            "unrelated_prelude_changed": true,
+            "actual_argv": [
+              "--implicit-rights",
+              "/actual rights"
+            ],
+            "rewritten": "printf \"%s\\n\"  > /tmp/ck-h5j9_5wv/rights-review-espq0y4_/equal.prelude && exec /opt/check-env/lesson-spec/bin/python3.12 -I -B /tmp/ck-h5j9_5wv/rights-review-espq0y4_/observe.py /tmp/ck-h5j9_5wv/rights-review-espq0y4_/equal.argv --implicit-rights '/actual rights'"
+          },
+          "file": {
+            "safety_pass": false,
+            "actual_argv_unchanged": true,
+            "unrelated_prelude_changed": true,
+            "actual_argv": [
+              "--implicit-rights",
+              "/actual rights"
+            ],
+            "rewritten": "printf \"%s\\n\" -rights='/replacement rights' > /tmp/ck-h5j9_5wv/rights-review-espq0y4_/equal.prelude && exec /opt/check-env/lesson-spec/bin/python3.12 -I -B /tmp/ck-h5j9_5wv/rights-review-espq0y4_/observe.py /tmp/ck-h5j9_5wv/rights-review-espq0y4_/equal.argv --implicit-rights '/actual rights'"
+          }
+        }
+      },
+      "exported_skip_coverage": {
+        "safety_pass": false,
+        "bridge_code": 1,
+        "expected_reason": "store command must name exactly one argv -rights flag",
+        "exported_skip": {
+          "13-rights-file": {
+            "content_type": null,
+            "length": 53,
+            "sha256": "9eda0d6333363e6b7ee22e64cf6f433ec20ed4e56eb0987e63ab38340d3a937c",
+            "body_omitted": true
+          }
+        },
+        "coverage": {
+          "expected_steps": 0,
+          "actual_step_results": 0,
+          "manual_not_executed": 0,
+          "errors": [
+            "not-executed scenarios differ from the capability plan"
+          ]
+        }
+      },
+      "opaque_proxy": {
+        "safety_pass": true,
+        "echoed": true,
+        "old_closed": true,
+        "new_closed": true,
+        "direct_ok": true,
+        "mend_ok": true,
+        "remember_calls": 0,
+        "bytes": {
+          "client_to_upstream": 85000,
+          "upstream_to_client": 85000
+        },
+        "payload_length": 85000
+      }
+    },
+    "new": {
+      "rights_prelude_separate": {
+        "safety_pass": true,
+        "scenario_reason": {
+          "status": "not_executed",
+          "reason": "store_rights_template",
+          "text": "store template must name exactly one -rights {rights} or -rights={rights}"
+        },
+        "attempts": {
+          "none": {
+            "safety_pass": true,
+            "reason": "store template must name exactly one -rights placeholder flag"
+          },
+          "file": {
+            "safety_pass": true,
+            "reason": "store template must name exactly one -rights placeholder flag"
+          }
+        }
+      },
+      "rights_prelude_equal": {
+        "safety_pass": true,
+        "scenario_reason": {
+          "status": "not_executed",
+          "reason": "store_rights_template",
+          "text": "store template must name exactly one -rights {rights} or -rights={rights}"
+        },
+        "attempts": {
+          "none": {
+            "safety_pass": true,
+            "reason": "store template must name exactly one -rights placeholder flag"
+          },
+          "file": {
+            "safety_pass": true,
+            "reason": "store template must name exactly one -rights placeholder flag"
+          }
+        }
+      },
+      "exported_skip_coverage": {
+        "safety_pass": true,
+        "bridge_code": 1,
+        "expected_reason": {
+          "status": "not_executed",
+          "reason": "store_rights_template",
+          "text": "store template must name exactly one -rights {rights} or -rights={rights}"
+        },
+        "exported_skip": {
+          "13-rights-file": {
+            "status": "not_executed",
+            "reason": "store_rights_template",
+            "text": "store template must name exactly one -rights {rights} or -rights={rights}"
+          }
+        },
+        "coverage": {
+          "expected_steps": 0,
+          "actual_step_results": 0,
+          "manual_not_executed": 0,
+          "errors": []
+        }
+      },
+      "opaque_proxy": {
+        "safety_pass": true,
+        "echoed": true,
+        "old_closed": true,
+        "new_closed": true,
+        "direct_ok": true,
+        "mend_ok": true,
+        "remember_calls": 0,
+        "bytes": {
+          "client_to_upstream": 85000,
+          "upstream_to_client": 85000
+        },
+        "payload_length": 85000
+      }
+    }
+  },
+  "inputs_unchanged": true
+}
