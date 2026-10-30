@@ -1,0 +1,5 @@
+name: filed
+unit: {rows: things, id: numeric}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/filed/worker}
+console: {files: [sum1.js, sum2.js, sum3.js, sum4.js, sum5.js]}

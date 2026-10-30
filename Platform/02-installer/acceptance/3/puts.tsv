@@ -72,3 +72,6 @@ files_dropped	filed filed-none	0 2
 files_added	filed-none filed	0 2
 shell_declared_missing	pagedecl	2 -
 shell_declared_ok	pagedecl-bare @shell-put pagedok pagedecl	0 2
+files_file_over	filed-none @file-fill big.js 8388609 filed-big	2 1
+files_file_max	filed-none @file-fill big.js 8388608 filed-big	0 2
+files_total_over	filed-none @file-fill sum1.js 8388608 @file-fill sum2.js 8388608 @file-fill sum3.js 8388608 @file-fill sum4.js 8388608 @file-fill sum5.js 1 filed-sum	2 1

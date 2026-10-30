@@ -30,7 +30,7 @@ const FIX={
  "/schema":{}
 };
 function boot(opts={}){
-  const dom=new JSDOM(fs.readFileSync(FILE,"utf8"),{runScripts:"dangerously",url:"http://localhost/",
+  const dom=new JSDOM(fs.readFileSync(FILE,"utf8"),{runScripts:"dangerously",url:opts.url||"http://localhost/",
     beforeParse(w){
       w.matchMedia=()=>({matches:false,addListener(){},removeListener(){},addEventListener(){},removeEventListener(){}});
       w.requestAnimationFrame=cb=>setTimeout(cb,0);

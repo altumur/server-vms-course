@@ -2292,8 +2292,18 @@
     async function afterLogin() {
       await loadSession();
       if (!manifestRead && await readManifests()) { paintRail(); paintAside(); }
+      if (goBack()) return;
       await load();
       if (manifestRead) readyNow(C);
+    }
+    // The way back after a login (P/07 Н1.5 return): the console sends a page of a subsystem here with ?return=/<sub>/.
+    // A link can carry any value, so only exactly /<sub>/ of this console's catalog is followed, anything else — to /.
+    function goBack() {
+      const said = new URLSearchParams(window.location.search).getAll("return");
+      if (!said.length) return false;
+      const m = said.length === 1 && /^\/([a-z][a-z0-9_-]{0,31})\/$/.exec(said[0]);
+      window.location.replace(m && (st.catalog || []).includes(m[1]) ? said[0] : "/");
+      return true;
     }
     async function loadSession() {
       // /session that did not answer leaves the session unknown — closed for may (P/07 Н1.5), not open
@@ -2313,6 +2323,7 @@
         const m = await getJSON("/mounts");
         for (const [n, manifest] of Object.entries(m.mounts || {})) if (manifest && manifest.rows) subs.push({ name: manifest.name || n, base: "/" + n, manifest });
       } catch (e) { /* one console, one manifest */ }
+      st.catalog = subs.map(s => s.name);   // every subsystem of this console, whatever this page shows
       const want = opts.subsystems;
       st.subs = Array.isArray(want) ? subs.filter(s => want.includes(s.name)) : subs;
     }
