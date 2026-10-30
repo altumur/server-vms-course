@@ -74,9 +74,11 @@ door:
 #       counter cam/next_id when a camera is made, the row of backend/repeats of the group step; all or nothing
 #       (V/11.4 Н1.2, Н1.4)
 #     - cam/policy, rec/policy, det/policy  # common settings of these subsystems and their snapshots
-#                                           # (ADR-0094 доп. (2) п. 6); platform settings (/schema, /drain, labels) — no
+#                                           # (ADR-0094 доп. (2) п. 6); writes of platform settings
+#                                           # (/schema, /drain, labels) — no
 #     - changes                             # the change feed (B2)
-#     - GET manifest, GET servers, GET events, GET session   # reads; /session — «who am I» only
+#     - GET manifest, GET servers, GET events, GET session   # reads; /session — «who am I» and its grants (can_edit)
+#     - GET assist/models, GET schema       # the assistant's default model and the tool get_schema (V/11.7 Н1.2)
 #     - GET assist/where/<name>             # the model's door for the assistant's turn (V/11.7; доп. (10) п. 1)
 #     - backend/repeats                     # its own table: the memory of repeats of a group key (V/11.4 Н1.4)
 #   # not: /where, writes of /session, grants, people, keys, break-glass, /operations; nor auto — the automation of
