@@ -285,8 +285,8 @@ placement:
   # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB
   # (a camera's frames are its driver host's — ipintd — not this worker's: 0.09 MB a camera)
   capacity:   {from: capacity, default: 50, unit_mb: 1, base_mb: 18}    # the worker's word, from its heartbeat; the default for one that said nothing
-  # The controller sums the `headroom` heartbeat field over workers seen in the last 45 s; the console
-  # exports it as `cam_headroom` and `cam_worker_headroom{worker,server}` — what the autoscaler sums. The
+  # The console exports the `headroom` heartbeat field of live workers as `cam_worker_headroom{worker,server}`
+  # and their sum as `cam_headroom` — what the autoscaler sums; the controller does not read it (P/04 Н1.3). The
   # worker computes it as its capacity less the units it holds.
   headroom:   {from: headroom}                  # what the autoscaler sums
   # chosen by name from the platform's constraints (P/04): a worker is eligible for a camera only if the camera's `labels` ⊆ the
