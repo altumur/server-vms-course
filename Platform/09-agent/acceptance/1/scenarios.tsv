@@ -144,7 +144,7 @@ scenario	step	request	expect
 18-break-glass-copy	5	member hold store GET /v1/get?key=domain/break-glass/hold	200 {"items": {"set_at": "$g1"}, "index": "$i1"}
 18-break-glass-copy	6	@sleep 10	ok
 18-break-glass-copy	7	member hold store GET /v1/get?key=domain/break-glass/hold	200 {"items": {"set_at": "$g1"}, "index": "$i1"}
-18-break-glass-copy	8	member hold store POST /v1/write {"op": "put", "key": "domain/break-glass/m1", "items": {"pwhash_secret": "garbled", "set_at": "1"}}	200
+18-break-glass-copy	8	member hold store POST /v1/write {"op": "put", "key": "domain/break-glass/m1", "items": {"pwhash_secret": "enc:v2:garbled", "set_at": "garbled"}}	200
 18-break-glass-copy	9	@until 60 member m1 store GET /v1/get?key=domain/break-glass/m1	200 {"items": null}
 18-break-glass-copy	10	member hold store GET /v1/get?key=domain/break-glass/hold	200 {"items": {"set_at": "$g1"}, "index": "$i1"}
 19-backup-refused	1	@domain m1	ok
