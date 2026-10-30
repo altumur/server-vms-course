@@ -151,7 +151,7 @@ scenario	step	request	expect
 18-group-recover	9	store@s2 POST /v1/write {"op":"put","key":"testsub/next_id","items":{"n":"3"},"cas":"3"}	409 {"kind": "conflict", "index": "$n1"}
 18-group-recover	10	store@s2 POST /v1/write {"op":"put","key":"testsub/counters/1","items":{"n":"2"},"cas":"5"}	409 {"kind": "conflict"}
 18-group-recover	11	store@s2 POST /v1/write {"op":"put","key":"testsub/next_id","items":{"n":"3"},"cas":"$n1"}	200 {"index": "$n2"}
-18-group-recover	12	admin@s1 POST /v1/write {"op":"put","key":"testsub/epoch/u1","items":{"epoch":"429496729605"},"cas":""}	200 {"index": "$e"}
+18-group-recover	12	admin@s1 POST /v1/write {"op":"put","key":"testsub/epoch/u1","items":{"epoch":"429496729600005"},"cas":""}	200 {"index": "$e"}
 18-group-recover	13	@sigkill store@s2	ok
 18-group-recover	14	@sigkill store@s3	ok
 18-group-recover	15	@sigterm store@s1	ok
@@ -161,7 +161,7 @@ scenario	step	request	expect
 18-group-recover	19	@restart store@s1	ok
 18-group-recover	20	@until 20 admin@s1 GET /v1/status	200 {"state": "Leader", "leader_id": "s1"}
 18-group-recover	21	admin@s1 GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "429501024567296", "generation_at": "@time"}}
-18-group-recover	22	admin@s1 GET /v1/get?key=testsub/epoch/u1	200 {"items": {"epoch": "429496729605"}}
+18-group-recover	22	admin@s1 GET /v1/get?key=testsub/epoch/u1	200 {"items": {"epoch": "429496729600005"}}
 18-group-recover	23	store@s1 GET /v1/get?key=testsub/next_id	200 {"items": {"n": "3"}}
 18-group-recover	24	@store-start s4 -join {api@s1} -group-size 3 -force	ok
 18-group-recover	25	@store-start s5 -join {api@s1} -group-size 3	ok
