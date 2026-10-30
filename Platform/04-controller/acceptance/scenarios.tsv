@@ -335,3 +335,196 @@ scenario	step	request	expect
 27-frozen-worker-no-unit	9	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
 27-frozen-worker-no-unit	10	@thaw w-1	ok
 27-frozen-worker-no-unit	11	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-1": {"fate": "alive"}}}
+# 28-intent-recovery (аудит покрытия P/04, второй проход, G01): незавершённый active intent {c1 → w-2} до старта контроллера, назначение w-1 несёт c1 — новый держатель доводит intent с шага 3: c1 снята из w-1, строка размещения c1 — цель, причина и ревизия intent, c1 добавлена в w-2, intent idle (строка не удалена)
+28-intent-recovery	1	@start resource	ok
+28-intent-recovery	2	console POST /counters {"name": "c1", "start": 1}	201
+28-intent-recovery	3	@start worker w-1	ok
+28-intent-recovery	4	@start worker w-2	ok
+28-intent-recovery	5	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+28-intent-recovery	6	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
+28-intent-recovery	7	@as testsubcontroller store POST /v1/write {"id":"e28a","op":"put","key":"testsub/workers/w-1","items":{"units":"c1","rev":"1"},"cas":""}	200
+28-intent-recovery	8	store POST /v1/write {"id":"e28b","op":"put","key":"testsub/controller/placement_intent","items":{"state":"active","manifest_rev":"1","members":"[\"c1\"]","target":"w-2","reason":"moving to w-2","at":"1700000000"},"cas":""}	200
+28-intent-recovery	9	@start controller	ok
+28-intent-recovery	10	@until 60 store GET /v1/get?key=testsub/controller/placement_intent	200 {"items": {"state": "idle", "manifest_rev": "1"}}
+28-intent-recovery	11	store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-2", "reason": "moving to w-2", "manifest_rev": "1", "rev": "1"}}
+28-intent-recovery	12	store GET /v1/get?key=testsub/workers/w-1	200 {"items": {"units": "", "rev": "2"}}
+28-intent-recovery	13	store GET /v1/get?key=testsub/workers/w-2	200 {"items": {"units": "c1", "rev": "1"}}
+# 29-sync-diverged (аудит покрытия P/04, второй проход, G01): назначение w-1 переписано без c1 мимо контроллера — sync возвращает c1 в назначение (rev 2 → 3), отчёт прохода diverged 1, строка размещения та же
+29-sync-diverged	1	@start resource	ok
+29-sync-diverged	2	@start controller	ok
+29-sync-diverged	3	@start worker w-1	ok
+29-sync-diverged	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+29-sync-diverged	5	console POST /counters {"name": "c1", "start": 1}	201
+29-sync-diverged	6	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+29-sync-diverged	7	@until 30 store GET /v1/get?key=testsub/workers/w-1	200 {"index": "$va", "items": {"units": "c1", "rev": "1"}}
+29-sync-diverged	8	@as testsubcontroller store POST /v1/write {"id":"e29a","op":"put","key":"testsub/workers/w-1","items":{"units":"","rev":"2"},"cas":"$va"}	200
+29-sync-diverged	9	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"diverged": 1}
+29-sync-diverged	10	@until 30 store GET /v1/get?key=testsub/workers/w-1	200 {"items": {"units": "c1", "rev": "3"}}
+29-sync-diverged	11	store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+# 30-intent-unreadable (аудит покрытия P/04, второй проход, G01): строка intent не по форме Н1.5 (state broken) — контроллер отказывает в изменении размещения (ok false), c1 при живом w-1 не размещена, строку не переписывает; строка восстановлена (idle по cas) — c1 размещена
+30-intent-unreadable	1	@start resource	ok
+30-intent-unreadable	2	@start worker w-1	ok
+30-intent-unreadable	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+30-intent-unreadable	4	console POST /counters {"name": "c1", "start": 1}	201
+30-intent-unreadable	5	@as testsubcontroller store POST /v1/write {"id":"e30a","op":"put","key":"testsub/controller/placement_intent","items":{"state":"broken","manifest_rev":"1"},"cas":""}	200 {"index": "$vi"}
+30-intent-unreadable	6	@start controller	ok
+30-intent-unreadable	7	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"ok": false}
+30-intent-unreadable	8	@sleep 12	ok
+30-intent-unreadable	9	store GET /v1/get?key=testsub/placement/c1	200 {"items": null}
+30-intent-unreadable	10	store GET /v1/get?key=testsub/controller/placement_intent	200 {"index": "$vi", "items": {"state": "broken"}}
+30-intent-unreadable	11	store POST /v1/write {"id":"e30b","op":"put","key":"testsub/controller/placement_intent","items":{"state":"idle","manifest_rev":"1"},"cas":"$vi"}	200
+30-intent-unreadable	12	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+# 31-manifest-rev-stamp (аудит покрытия P/04, второй проход, G02): строка размещения c1 без manifest_rev — проход штампует своей ревизией 1 (rev 2); строка c2 решена ревизией 2 (единицы c2 нет) — не снимается и не переписывается, manifest_behind 1, назначение w-1 то же
+31-manifest-rev-stamp	1	@start resource	ok
+31-manifest-rev-stamp	2	@start worker w-1	ok
+31-manifest-rev-stamp	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+31-manifest-rev-stamp	4	console POST /counters {"name": "c1", "start": 1}	201
+31-manifest-rev-stamp	5	@as testsubcontroller store POST /v1/write {"id":"e31a","op":"put","key":"testsub/placement/c1","items":{"worker":"w-1","reason":"placed before manifest_rev","at":"1700000000","rev":"1"},"cas":""}	200
+31-manifest-rev-stamp	6	store POST /v1/write {"id":"e31b","op":"put","key":"testsub/workers/w-1","items":{"units":"c1,c2","rev":"1"},"cas":""}	200 {"index": "$vw"}
+31-manifest-rev-stamp	7	store POST /v1/write {"id":"e31c","op":"put","key":"testsub/placement/c2","items":{"worker":"w-1","reason":"decided by a newer manifest","at":"1700000000","rev":"1","manifest_rev":"2"},"cas":""}	200 {"index": "$v2"}
+31-manifest-rev-stamp	8	@start controller	ok
+31-manifest-rev-stamp	9	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"manifest_behind": 1}
+31-manifest-rev-stamp	10	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1", "manifest_rev": "1", "rev": "2"}}
+31-manifest-rev-stamp	11	store GET /v1/get?key=testsub/placement/c2	200 {"index": "$v2", "items": {"worker": "w-1", "manifest_rev": "2"}}
+31-manifest-rev-stamp	12	store GET /v1/get?key=testsub/workers/w-1	200 {"index": "$vw", "items": {"units": "c1,c2"}}
+# 32-turn-newer-manifest (аудит покрытия P/04, второй проход, G02): строка очереди с manifest_rev 10 выше ревизии контроллера (1) — очередь не берётся и не переписывается (договор очереди шаг 1), новая c2 за 12 с не размещена; c1 до этого размещена
+32-turn-newer-manifest	1	@start resource	ok
+32-turn-newer-manifest	2	@start controller	ok
+32-turn-newer-manifest	3	@start worker w-1	ok
+32-turn-newer-manifest	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+32-turn-newer-manifest	5	console POST /counters {"name": "c1", "start": 1}	201
+32-turn-newer-manifest	6	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+32-turn-newer-manifest	7	@as testsubcontroller store POST /v1/write {"id":"e32a","op":"put","key":"testsub/controller/placement_turn","items":{"holder":"","manifest_rev":"10"}}	200 {"index": "$vt"}
+32-turn-newer-manifest	8	console POST /counters {"name": "c2", "start": 1}	201
+32-turn-newer-manifest	9	@sleep 12	ok
+32-turn-newer-manifest	10	store GET /v1/get?key=testsub/placement/c2	200 {"items": null}
+32-turn-newer-manifest	11	store GET /v1/get?key=testsub/controller/placement_turn	200 {"index": "$vt", "items": {"holder": "", "manifest_rev": "10"}}
+# 33-drain-moves-unit (аудит покрытия P/04, второй проход, G03): дренаж srv-a при живых воркерах — c1 уходит с w-1 на w-2 сервера srv-b с причиной server srv-a draining; GET /drain — safe; конец дренажа
+33-drain-moves-unit	1	@start resource	ok
+33-drain-moves-unit	2	@start resource on srv-b	ok
+33-drain-moves-unit	3	@start controller	ok
+33-drain-moves-unit	4	@start worker w-1	ok
+33-drain-moves-unit	5	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+33-drain-moves-unit	6	console POST /counters {"name": "c1", "start": 1}	201
+33-drain-moves-unit	7	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+33-drain-moves-unit	8	@start worker w-2 on srv-b	ok
+33-drain-moves-unit	9	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false", "server": "srv-b"}}
+33-drain-moves-unit	10	console POST /drain?server=srv-a	200 {"draining": "srv-a"}
+33-drain-moves-unit	11	@until 60 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-2", "reason": "~server srv-a draining"}}
+33-drain-moves-unit	12	@until 60 console GET /drain	200 {"draining": "srv-a", "safe": true}
+33-drain-moves-unit	13	console DELETE /drain	200 {"draining": ""}
+# 34-retire-when-state (аудит покрытия P/04, второй проход, G04): действующее состояние result t1 (born и revision строки) переписано на done — t1 снята с причиной done, назначение t-1 пусто, в unplaced не входит; строка единицы и состояние на месте
+34-retire-when-state	1	@start resource	ok
+34-retire-when-state	2	@start controller testsub2	ok
+34-retire-when-state	3	console2 POST /shelves {"name": "s-1", "zone": "z", "server": "srv-a"}	201
+34-retire-when-state	4	@start worker testsub2 t-1	ok
+34-retire-when-state	5	@until 30 store GET /v1/get?key=testsub2/holds/s-1	200 {"items": {"by": "t-1", "released": "false"}}
+34-retire-when-state	6	@as console store POST /v1/write {"id":"e34a","op":"put","key":"testsub2/tallies/t1","items":{"id":"t1","revision":"1","name":"t1","of":"c1","born":"00000000000000000000000000000001"},"cas":""}	200
+34-retire-when-state	7	@until 30 store GET /v1/get?key=testsub2/placement/t1	200 {"items": {"worker": "t-1"}}
+34-retire-when-state	8	@until 60 store GET /v1/get?key=testsub2/state/result/t1	200 {"index": "$s", "items": {"born": "00000000000000000000000000000001", "revision": "1", "value": "{\"state\":\"open\"}"}}
+34-retire-when-state	9	@as testsub2worker store POST /v1/write {"id":"e34b","op":"put","key":"testsub2/state/result/t1","items":{"born":"00000000000000000000000000000001","revision":"1","epoch":"1","value":"{\"state\":\"done\"}"},"cas":"$s"}	200
+34-retire-when-state	10	@until 30 store GET /v1/get?key=testsub2/placement/t1	200 {"items": {"worker": "", "reason": "done"}}
+34-retire-when-state	11	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"unplaced": 0}
+34-retire-when-state	12	store GET /v1/get?key=testsub2/workers/t-1	200 {"items": {"units": ""}}
+34-retire-when-state	13	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"name": "t1", "born": "00000000000000000000000000000001"}}
+34-retire-when-state	14	store GET /v1/get?key=testsub2/state/result/t1	200 {"items": {"born": "00000000000000000000000000000001", "value": "{\"state\":\"done\"}"}}
+# 35-state-born-sweep (аудит покрытия P/04, второй проход, G04): строка состояния t2 с чужим born при живой строке единицы — осиротевшая: уборка шага 8а снимает её, state_swept_total 1; строка единицы не тронута
+35-state-born-sweep	1	@start resource	ok
+35-state-born-sweep	2	@start controller testsub2	ok
+35-state-born-sweep	3	@as console store POST /v1/write {"id":"e35a","op":"put","key":"testsub2/tallies/t2","items":{"id":"t2","revision":"1","name":"t2","of":"c1","born":"00000000000000000000000000000002"},"cas":""}	200
+35-state-born-sweep	4	@as testsub2worker store POST /v1/write {"id":"e35b","op":"put","key":"testsub2/state/result/t2","items":{"born":"0000000000000000000000000000ffff","revision":"1","epoch":"1","value":"{\"state\":\"open\"}"},"cas":""}	200
+35-state-born-sweep	5	@until 30 store GET /v1/get?key=testsub2/state/result/t2	200 {"items": null}
+35-state-born-sweep	6	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"state_swept_total": 1}
+35-state-born-sweep	7	store GET /v1/get?key=testsub2/tallies/t2	200 {"items": {"name": "t2", "born": "00000000000000000000000000000002"}}
+# 36-spread-by-zone (аудит покрытия P/04, второй проход, G05): две tallies одной зоны z1 при одном сервере — z1a на t-srv-a-1, z1b не размещена (unplaced 1); воркер с полкой на srv-b — z1b на нём
+36-spread-by-zone	1	@start resource	ok
+36-spread-by-zone	2	@start resource on srv-b	ok
+36-spread-by-zone	3	@start controller testsub2	ok
+36-spread-by-zone	4	console2 POST /shelves {"name": "s-a1", "zone": "z1", "server": "srv-a"}	201
+36-spread-by-zone	5	@start worker testsub2 t-srv-a-1 on srv-a	ok
+36-spread-by-zone	6	@until 30 store GET /v1/get?key=testsub2/holds/s-a1	200 {"items": {"by": "t-srv-a-1", "released": "false"}}
+36-spread-by-zone	7	console2 POST /shelves {"name": "s-b1", "zone": "z1", "server": "srv-b"}	201
+36-spread-by-zone	8	console2 POST /tallies {"name": "z1a", "of": "c1", "zone": "z1"}	201
+36-spread-by-zone	9	console2 POST /tallies {"name": "z1b", "of": "c1", "zone": "z1"}	201
+36-spread-by-zone	10	@until 30 console2 GET /where/z1a	200 {"worker": "t-srv-a-1"}
+36-spread-by-zone	11	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"unplaced": 1}
+36-spread-by-zone	12	console2 GET /where/z1b	404 {"reason": "@any"}
+36-spread-by-zone	13	@start worker testsub2 t-srv-b-1 on srv-b	ok
+36-spread-by-zone	14	@until 30 store GET /v1/get?key=testsub2/holds/s-b1	200 {"items": {"by": "t-srv-b-1", "released": "false"}}
+36-spread-by-zone	15	@until 60 console2 GET /where/z1b	200 {"worker": "t-srv-b-1"}
+# 37-affinity-bound-holder (аудит покрытия P/04, второй проход, G05): r1 на полке s-b1 kind reserve (связывающая по strict) — только к держателю s-b1: при живом t-srv-a-1 (несёт u0) не размещена; t-srv-b-1 взял s-b1 — r1 на нём
+37-affinity-bound-holder	1	@start resource	ok
+37-affinity-bound-holder	2	@start resource on srv-b	ok
+37-affinity-bound-holder	3	@start controller testsub2	ok
+37-affinity-bound-holder	4	console2 POST /shelves {"name": "s-a1", "zone": "z", "server": "srv-a"}	201
+37-affinity-bound-holder	5	@start worker testsub2 t-srv-a-1 on srv-a	ok
+37-affinity-bound-holder	6	@until 30 store GET /v1/get?key=testsub2/holds/s-a1	200 {"items": {"by": "t-srv-a-1", "released": "false"}}
+37-affinity-bound-holder	7	console2 POST /shelves {"name": "s-b1", "zone": "z", "server": "srv-b", "kind": "reserve"}	201
+37-affinity-bound-holder	8	console2 POST /tallies {"name": "u0", "of": "c1"}	201
+37-affinity-bound-holder	9	@until 30 console2 GET /where/u0	200 {"worker": "t-srv-a-1"}
+37-affinity-bound-holder	10	console2 POST /tallies {"name": "r1", "of": "c1", "shelf": "s-b1", "zone": "z"}	201
+37-affinity-bound-holder	11	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"unplaced": 1}
+37-affinity-bound-holder	12	console2 GET /where/r1	404 {"reason": "@any"}
+37-affinity-bound-holder	13	@start worker testsub2 t-srv-b-1 on srv-b	ok
+37-affinity-bound-holder	14	@until 30 store GET /v1/get?key=testsub2/holds/s-b1	200 {"items": {"by": "t-srv-b-1", "released": "false"}}
+37-affinity-bound-holder	15	@until 60 console2 GET /where/r1	200 {"worker": "t-srv-b-1"}
+# 38-home-return (аудит покрытия P/04, второй проход, G05): h1 с домом — полкой s-b1 сервера srv-b; пока на srv-b нет воркера, h1 на t-srv-a-1; t-srv-b-1 взял s-b1 — h1 переезжает домой (шаг 7, HOME_BUDGET)
+38-home-return	1	@start resource	ok
+38-home-return	2	@start resource on srv-b	ok
+38-home-return	3	@start controller testsub2	ok
+38-home-return	4	console2 POST /shelves {"name": "s-a1", "zone": "z", "server": "srv-a"}	201
+38-home-return	5	@start worker testsub2 t-srv-a-1 on srv-a	ok
+38-home-return	6	@until 30 store GET /v1/get?key=testsub2/holds/s-a1	200 {"items": {"by": "t-srv-a-1", "released": "false"}}
+38-home-return	7	console2 POST /shelves {"name": "s-b1", "zone": "z", "server": "srv-b"}	201
+38-home-return	8	console2 POST /tallies {"name": "h1", "of": "c1", "shelf": "s-b1", "zone": "z"}	201
+38-home-return	9	@until 30 console2 GET /where/h1	200 {"worker": "t-srv-a-1"}
+38-home-return	10	@start worker testsub2 t-srv-b-1 on srv-b	ok
+38-home-return	11	@until 30 store GET /v1/get?key=testsub2/holds/s-b1	200 {"items": {"by": "t-srv-b-1", "released": "false"}}
+38-home-return	12	@until 90 console2 GET /where/h1	200 {"worker": "t-srv-b-1"}
+# 39-admits-none (аудит покрытия P/04, второй проход, G05): полка s-a1 держателя t-srv-a-1 переписана с admits false — u1 уходит на t-srv-b-1 с причиной t-srv-a-1's shelf s-a1 admits no unit
+39-admits-none	1	@start resource	ok
+39-admits-none	2	@start resource on srv-b	ok
+39-admits-none	3	@start controller testsub2	ok
+39-admits-none	4	console2 POST /shelves {"name": "s-a1", "zone": "z", "server": "srv-a"}	201
+39-admits-none	5	@start worker testsub2 t-srv-a-1 on srv-a	ok
+39-admits-none	6	@until 30 store GET /v1/get?key=testsub2/holds/s-a1	200 {"items": {"by": "t-srv-a-1", "released": "false"}}
+39-admits-none	7	console2 POST /tallies {"name": "u1", "of": "c1"}	201
+39-admits-none	8	@until 30 console2 GET /where/u1	200 {"worker": "t-srv-a-1"}
+39-admits-none	9	console2 POST /shelves {"name": "s-b1", "zone": "z", "server": "srv-b"}	201
+39-admits-none	10	@start worker testsub2 t-srv-b-1 on srv-b	ok
+39-admits-none	11	@until 30 store GET /v1/get?key=testsub2/holds/s-b1	200 {"items": {"by": "t-srv-b-1", "released": "false"}}
+39-admits-none	12	console2 POST /shelves {"name": "s-a1", "zone": "z", "server": "srv-a", "admits": false}	201
+39-admits-none	13	@until 60 store GET /v1/get?key=testsub2/placement/u1	200 {"items": {"worker": "t-srv-b-1", "reason": "~t-srv-a-1's shelf s-a1 admits no unit"}}
+# 40-worker-snapshot (аудит покрытия P/04, второй проход, G06): шард воркера testsub/snapshot/w-1 с c1 (поля snapshot, worker, server), unplaced пуст; w-1 остановлен — c1 в шарде w-2, шард w-1 опубликован пустым
+40-worker-snapshot	1	@start resource	ok
+40-worker-snapshot	2	@start controller	ok
+40-worker-snapshot	3	@start worker w-1	ok
+40-worker-snapshot	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+40-worker-snapshot	5	console POST /counters {"name": "c1", "start": 7}	201
+40-worker-snapshot	6	@until 30 resource GET /v1/objects/testsub/snapshot/w-1?scope=local	200 {"cluster": "@any", "worker": "w-1", "ts": "@time", "counters": [{"id": "c1", "revision": 1, "name": "c1", "start": 7, "worker": "w-1", "server": "srv-a"}]}
+40-worker-snapshot	7	resource GET /v1/objects/testsub/snapshot/unplaced?scope=local	200 {"worker": null, "counters": []}
+40-worker-snapshot	8	@start worker w-2	ok
+40-worker-snapshot	9	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
+40-worker-snapshot	10	@sigterm w-1	ok
+40-worker-snapshot	11	@until 60 resource GET /v1/objects/testsub/snapshot/w-2?scope=local	200 {"worker": "w-2", "counters": [{"id": "c1", "worker": "w-2", "server": "srv-a"}]}
+40-worker-snapshot	12	@until 20 resource GET /v1/objects/testsub/snapshot/w-1?scope=local	200 {"ts": "@time", "counters": []}
+# 41-unreadable-assignment (аудит покрытия P/04, второй проход, G07): назначение w-1 нечитаемо (rev x) — w-1 не в пуле: c1 у w-2, хотя равенство ёмкости отдало бы её w-1; garbled 0; строку контроллер не переписывает
+41-unreadable-assignment	1	@start resource	ok
+41-unreadable-assignment	2	@start worker w-1	ok
+41-unreadable-assignment	3	@start worker w-2	ok
+41-unreadable-assignment	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+41-unreadable-assignment	5	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
+41-unreadable-assignment	6	@as testsubcontroller store POST /v1/write {"id":"e41a","op":"put","key":"testsub/workers/w-1","items":{"units":"","rev":"x"},"cas":""}	200 {"index": "$vw"}
+41-unreadable-assignment	7	@start controller	ok
+41-unreadable-assignment	8	@sleep 12	ok
+41-unreadable-assignment	9	console POST /counters {"name": "c1", "start": 1}	201
+41-unreadable-assignment	10	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-2"}}
+41-unreadable-assignment	11	@until 20 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"garbled": 0}
+41-unreadable-assignment	12	store GET /v1/get?key=testsub/workers/w-1	200 {"index": "$vw", "items": {"rev": "x"}}
+# 42-fate-wait-unlisted (аудит покрытия P/04, второй проход, G07): занятый слот w-9 без процесса при живом ресурсе (присутствие unlisted) — alive до запаса SLOT_TERM + LOST_AFTER, затем wait: имя не отдано (HUNG_MOVE_AFTER 900 с), слот не отдан и не переписан
+42-fate-wait-unlisted	1	@start resource	ok
+42-fate-wait-unlisted	2	@as testsubworker store POST /v1/write {"id":"e42a","op":"put","key":"testsub/slots/w-9","items":{"holder":"acc:1:111111","until":"1999999999","released":"false","gen":"1","server":"srv-a"},"cas":""}	200 {"index": "$vs"}
+42-fate-wait-unlisted	3	@start controller	ok
+42-fate-wait-unlisted	4	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-9": {"fate": "alive"}}}
+42-fate-wait-unlisted	5	@until 110 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-9": {"fate": "wait"}}, "names_given": {}}
+42-fate-wait-unlisted	6	store GET /v1/get?key=testsub/slots/w-9	200 {"index": "$vs", "items": {"released": "false", "holder": "acc:1:111111"}}
