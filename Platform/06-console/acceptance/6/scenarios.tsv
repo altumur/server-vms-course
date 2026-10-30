@@ -121,18 +121,18 @@ scenario	step	request	expect
 14-unreadable-policy-drain	2	console PUT /policy {"servers": "distinct"}	200
 14-unreadable-policy-drain	3	console GET /policy	200 {"servers": "distinct"}
 14-unreadable-policy-drain	4	@as console store GET /v1/get?key=testsub/policy	200 {"items": {"servers": "distinct"}, "index": "$p"}
-14-unreadable-policy-drain	5	store POST /v1/write {"id":"p5","op":"put","key":"testsub/policy","items":{"servers":"bogus"},"cas":"$p"}	200
+14-unreadable-policy-drain	5	store POST /v1/write {"id":"05","op":"put","key":"testsub/policy","items":{"servers":"bogus"},"cas":"$p"}	200
 14-unreadable-policy-drain	6	console GET /policy	200 {"servers": "shared"}
-14-unreadable-policy-drain	7	store POST /v1/write {"id":"p7","op":"put","key":"platform/drain","items":{"server":"bad/srv","at":"1000"},"cas":""}	200
+14-unreadable-policy-drain	7	store POST /v1/write {"id":"07","op":"put","key":"platform/drain","items":{"server":"bad/srv","at":"1000"},"cas":""}	200
 14-unreadable-policy-drain	8	console GET /drain	503 {"error": "unavailable"}
 # 15-unreadable-schema (аудит покрытия P/06, второй проход Gemini, G10): строка platform/schema не по форме (version не число) у работающей консоли — GET /schema version null и schema_unknown true; PUT /schema — 409 «mend the row first», строка прежняя
 15-unreadable-schema	1	@start resource	ok
-15-unreadable-schema	2	@as console store POST /v1/write {"id":"s2","op":"put","key":"platform/schema","items":{"version":"x","at":"1000"},"cas":""}	200
+15-unreadable-schema	2	@as console store POST /v1/write {"id":"32","op":"put","key":"platform/schema","items":{"version":"x","at":"1000"},"cas":""}	200
 15-unreadable-schema	3	console GET /schema	200 {"version": null, "schema_unknown": true, "understood": 1}
 15-unreadable-schema	4	console PUT /schema?version=1	409 {"error": "~mend the row first"}
 15-unreadable-schema	5	store GET /v1/get?key=platform/schema	200 {"items": {"version": "x", "at": "1000"}}
 # 16-unreadable-server-labels (аудит покрытия P/06, второй проход Gemini, G10): строка меток сервера не по азбуке меток — /servers labels null и labels_source null (не node/unknown), ряд servers_labels_unread 1
 16-unreadable-server-labels	1	@start resource	ok
-16-unreadable-server-labels	2	@as console store POST /v1/write {"id":"l2","op":"put","key":"platform/servers/srv-a","items":{"labels":"bad label"},"cas":""}	200
+16-unreadable-server-labels	2	@as console store POST /v1/write {"id":"c2","op":"put","key":"platform/servers/srv-a","items":{"labels":"bad label"},"cas":""}	200
 16-unreadable-server-labels	3	@until 20 console GET /servers	200 {"servers": {"srv-a": {"labels": null, "labels_source": null}}}
 16-unreadable-server-labels	4	console GET /metrics	200 ~testsub_servers_labels_unread 1

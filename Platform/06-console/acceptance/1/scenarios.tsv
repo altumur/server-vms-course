@@ -235,10 +235,10 @@ scenario	step	request	expect
 30-sweep-unmark	1	@start resource	ok
 30-sweep-unmark	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1}
 30-sweep-unmark	3	@as console store GET /v1/get?key=testsub2/sweep	200 {"index": "$v0"}
-30-sweep-unmark	4	@as console store POST /v1/write {"id":"w4","op":"put","key":"testsub2/sweep","items":{"at":"1000","digests":"sha256-57a256c65db5af18f8a04c7a42df26c3009dd01381fbaaaec7b432fc30d4c8d0,sha256-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},"cas":"$v0"}	200
+30-sweep-unmark	4	@as console store POST /v1/write {"id":"74","op":"put","key":"testsub2/sweep","items":{"at":"1000","digests":"sha256-57a256c65db5af18f8a04c7a42df26c3009dd01381fbaaaec7b432fc30d4c8d0,sha256-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},"cas":"$v0"}	200
 30-sweep-unmark	5	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "sha256-57a256c65db5af18f8a04c7a42df26c3009dd01381fbaaaec7b432fc30d4c8d0", "revision": 2}
 30-sweep-unmark	6	store GET /v1/get?key=testsub2/sweep	200 {"items": {"digests": "sha256-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, "index": "$v1"}
-30-sweep-unmark	7	store POST /v1/write {"id":"w7","op":"put","key":"testsub2/sweep","items":{"at":"1000","digests":"bogus"},"cas":"$v1"}	200 {"index": "$v2"}
+30-sweep-unmark	7	store POST /v1/write {"id":"77","op":"put","key":"testsub2/sweep","items":{"at":"1000","digests":"bogus"},"cas":"$v1"}	200 {"index": "$v2"}
 30-sweep-unmark	8	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "sha256-57a256c65db5af18f8a04c7a42df26c3009dd01381fbaaaec7b432fc30d4c8d0", "revision": 3}
 30-sweep-unmark	9	store GET /v1/get?key=testsub2/sweep	200 {"items": {"digests": "bogus"}, "index": "$v2"}
 # 31-table-stamps (аудит покрытия P/06, второй проход Gemini, G03): штамп by/at/made_at в теле записи строки таблицы — 400 unknown field до записи (made_at — и вне stamp таблицы); запись без штампов — by и at консоли, made_at вне stamp нет
@@ -251,7 +251,7 @@ scenario	step	request	expect
 32-hold-unreadable	1	@start resource	ok
 32-hold-unreadable	2	console2 POST /shelves {"name": "sh1", "zone": "z1", "server": "srv-a"}	201 {"row": {"name": "sh1", "held_by": null}}
 32-hold-unreadable	3	@until 10 console2 GET /metrics	200 ~testsub2_shelves_open 1
-32-hold-unreadable	4	@as testsub2worker store POST /v1/write {"id":"h4","op":"put","key":"testsub2/holds/sh1","items":{"holder":"box:1:aaaaaa","until":"9999999999","released":"false","gen":"x","by":"t-1"},"cas":""}	200
+32-hold-unreadable	4	@as testsub2worker store POST /v1/write {"id":"84","op":"put","key":"testsub2/holds/sh1","items":{"holder":"box:1:aaaaaa","until":"9999999999","released":"false","gen":"x","by":"t-1"},"cas":""}	200
 32-hold-unreadable	5	console2 GET /shelves	200 {"shelves": [{"name": "sh1", "held_by": null}]}
 32-hold-unreadable	6	console2 GET /shelves/sh1	200 {"name": "sh1", "held_by": null}
 32-hold-unreadable	7	console2 GET /where/shelves/sh1?unit=t1	503

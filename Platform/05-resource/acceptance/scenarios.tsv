@@ -172,8 +172,8 @@ scenario	step	request	expect
 28-free-ask-volume-profile	9	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i2", "items": {"free": "1", "volume": "b-c", "server": "srv-a", "at": "1700000000"}}
 28-free-ask-volume-profile	10	ASSERT $i1 == $i2	
 # 29-row-objects (аудит покрытия P/05, второй проход Gemini, G01 п. 1): строки-объекты objects.rows (testsub2/marks/*) и commands/* обеих подсистем дверь объектов не выдаёт — 403 и при записанной строке objects/<ключ>, на любом scope; prefix строк-объектов — 403; prefix=testsub2/ — фильтр, 200 без них
-29-row-objects	1	admin POST /v1/write {"id":"g2901","op":"put","key":"objects/testsub2/marks/m1","items":{"count":"1"},"cas":""}	200
-29-row-objects	2	admin POST /v1/write {"id":"g2902","op":"put","key":"objects/testsub2/commands/r1","items":{"outcome":"expired"},"cas":""}	200
+29-row-objects	1	admin POST /v1/write {"id":"72901","op":"put","key":"objects/testsub2/marks/m1","items":{"count":"1"},"cas":""}	200
+29-row-objects	2	admin POST /v1/write {"id":"72902","op":"put","key":"objects/testsub2/commands/r1","items":{"outcome":"expired"},"cas":""}	200
 29-row-objects	3	resource GET /v1/objects/testsub2/marks/m1?scope=local	403
 29-row-objects	4	resource GET /v1/objects/testsub2/marks/m1?scope=cluster	403
 29-row-objects	5	resource GET /v1/objects/testsub2/commands/r1?scope=local	403
@@ -247,34 +247,34 @@ scenario	step	request	expect
 36-events-bucket-stream	6	resource @header Range: bytes=999999-1000000 GET /events/$b	416 @header Content-Range: ~bytes */87
 36-events-bucket-stream	7	resource GET /buckets/testsub/nosuch	404
 # 37-retention-garbled (G06 ч. 1; C05-RETENTION-PULSE-33, R05-RETENTION-MIXED-51-01): days 0 у testsub/retention и не число у testsub2/alarms_retention (testsub2/retention верен) — первый проход: retention_garbled [testsub, testsub2], retention_withheld days_garbled у обеих; деревья есть до старта
-37-retention-garbled	1	admin POST /v1/write {"id":"g3701","op":"put","key":"testsub/retention","items":{"days":"0"},"cas":""}	200
-37-retention-garbled	2	admin POST /v1/write {"id":"g3702","op":"put","key":"testsub2/retention","items":{"days":"30"},"cas":""}	200
-37-retention-garbled	3	admin POST /v1/write {"id":"g3703","op":"put","key":"testsub2/alarms_retention","items":{"days":"bad"},"cas":""}	200
+37-retention-garbled	1	admin POST /v1/write {"id":"73701","op":"put","key":"testsub/retention","items":{"days":"0"},"cas":""}	200
+37-retention-garbled	2	admin POST /v1/write {"id":"73702","op":"put","key":"testsub2/retention","items":{"days":"30"},"cas":""}	200
+37-retention-garbled	3	admin POST /v1/write {"id":"73703","op":"put","key":"testsub2/alarms_retention","items":{"days":"bad"},"cas":""}	200
 37-retention-garbled	4	@append event testsub/c1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-1"}	ok
 37-retention-garbled	5	@append event testsub2/t1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-7465737473756232-7431-1-70726f6265-1"}	ok
 37-retention-garbled	6	@append event testsub2.alarms/t1/e1 {"t": {now}, "kind": "probe.alarm", "id": "e1-74657374737562322e616c61726d73-7431-1-70726f6265-1", "class": "alarm"}	ok
 37-retention-garbled	7	@start resource	ok
 37-retention-garbled	8	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"retention_garbled": ["testsub", "testsub2"], "retention_withheld": {"testsub": "days_garbled", "testsub2": "days_garbled"}}
 # 38-holds-garbled-row (G06 ч. 2; договор удержаний «Что держит строка»): строка удержания testsub2/notches без читаемого окна (to не число), не отпущена — garbled_rows.notches 1 в пульсе после первого прохода
-38-holds-garbled-row	1	admin POST /v1/write {"id":"g3801","op":"put","key":"testsub2/notches/c1-1760700000-1760703600","items":{"of":"c1","from":"1760700000","to":"bad"},"cas":""}	200
+38-holds-garbled-row	1	admin POST /v1/write {"id":"73801","op":"put","key":"testsub2/notches/c1-1760700000-1760703600","items":{"of":"c1","from":"1760700000","to":"bad"},"cas":""}	200
 38-holds-garbled-row	2	@append event testsub2/t1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-7465737473756232-7431-1-70726f6265-1"}	ok
 38-holds-garbled-row	3	@start resource	ok
 38-holds-garbled-row	4	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"garbled_rows": {"notches": 1}}
 # 39-settings-unread (G06 ч. 3; Н1.4 space, mirror, В7 п. 3 П1): platform/space и platform/mirror с enabled не по форме — строки нечитаемы: settings_unread [mirror, space], шаг relieve не исполняется — своя строка free-* не пишется
-39-settings-unread	1	admin POST /v1/write {"id":"g3901","op":"put","key":"platform/space","items":{"enabled":"maybe","high":"0.0000001","low":"0.00000001"},"cas":""}	200
-39-settings-unread	2	admin POST /v1/write {"id":"g3902","op":"put","key":"platform/mirror","items":{"enabled":"maybe"},"cas":""}	200
+39-settings-unread	1	admin POST /v1/write {"id":"73901","op":"put","key":"platform/space","items":{"enabled":"maybe","high":"0.0000001","low":"0.00000001"},"cas":""}	200
+39-settings-unread	2	admin POST /v1/write {"id":"73902","op":"put","key":"platform/mirror","items":{"enabled":"maybe"},"cas":""}	200
 39-settings-unread	3	@start resource	ok
 39-settings-unread	4	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"settings_unread": ["mirror", "space"]}
 39-settings-unread	5	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"items": null}
 # 40-space-disabled (G07 ч. 1; E45, R05-G03): platform/space enabled false — первый проход снимает свою строку free-srv-a-events, short 0
-40-space-disabled	1	admin POST /v1/write {"id":"g4001","op":"put","key":"platform/space","items":{"enabled":"false","high":"0.0000001","low":"0.00000001"},"cas":""}	200
-40-space-disabled	2	admin POST /v1/write {"id":"g4002","op":"put","key":"testsub2/requests/free-srv-a-events","items":{"free":"100","volume":"events","server":"srv-a","at":"1700000000"},"cas":""}	200
+40-space-disabled	1	admin POST /v1/write {"id":"74001","op":"put","key":"platform/space","items":{"enabled":"false","high":"0.0000001","low":"0.00000001"},"cas":""}	200
+40-space-disabled	2	admin POST /v1/write {"id":"74002","op":"put","key":"testsub2/requests/free-srv-a-events","items":{"free":"100","volume":"events","server":"srv-a","at":"1700000000"},"cas":""}	200
 40-space-disabled	3	@start resource	ok
 40-space-disabled	4	@until 60 admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"items": null}
 40-space-disabled	5	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"short": 0}
 # 41-space-band (G07 ч. 2; E44): доля занятого между low и high, need > 0 — своя строка free-srv-a-events стоит как есть: та же версия и то же free
-41-space-band	1	admin POST /v1/write {"id":"g4101","op":"put","key":"platform/space","items":{"enabled":"true","high":"0.99999999","low":"0.00000001"},"cas":""}	200
-41-space-band	2	admin POST /v1/write {"id":"g4102","op":"put","key":"testsub2/requests/free-srv-a-events","items":{"free":"100","volume":"events","server":"srv-a","at":"1700000000"},"cas":""}	200
+41-space-band	1	admin POST /v1/write {"id":"74101","op":"put","key":"platform/space","items":{"enabled":"true","high":"0.99999999","low":"0.00000001"},"cas":""}	200
+41-space-band	2	admin POST /v1/write {"id":"74102","op":"put","key":"testsub2/requests/free-srv-a-events","items":{"free":"100","volume":"events","server":"srv-a","at":"1700000000"},"cas":""}	200
 41-space-band	3	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i1", "items": {"free": "100", "volume": "events", "server": "srv-a", "at": "1700000000"}}
 41-space-band	4	@start resource	ok
 41-space-band	5	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"pass_started": "@time"}

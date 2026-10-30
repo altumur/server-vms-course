@@ -64,14 +64,14 @@ scenario	step	request	expect
 08-request-exists-ledger	12	store GET /v1/get?key=testsub2/asked/06e55b633481f7bb	200 {"items": {"rids": "t1-0-1", "at": "x"}}
 # 09-request-mark-first (аудит покрытия P/06, второй проход Gemini, G05; testsub — rid r-<sha16(Idempotency-Key)>, ключ задан заголовком): метка rid уже стоит — иной unit — 409 spent; метка не по форме — 409 spent, метка прежняя; тот же unit и digest с исходом — 200 answered; строки просьбы ни в одном случае нет
 09-request-mark-first	1	console POST /counters {"name": "c4", "start": 1}	201
-09-request-mark-first	2	@as testsubworker store POST /v1/write {"id":"m2","op":"put","key":"objects/testsub/commands/r-7f0cd6bacd621c87","items":{"unit":"c9","digest":"e83c1a0bfffbff5eb0a0de9119b1ab36a9591b374b4a655621da34e02f85a969","outcome":"expired","ended_by":"reaper","ended_at":"1000"},"cas":""}	200
+09-request-mark-first	2	@as testsubworker store POST /v1/write {"id":"d2","op":"put","key":"objects/testsub/commands/r-7f0cd6bacd621c87","items":{"unit":"c9","digest":"e83c1a0bfffbff5eb0a0de9119b1ab36a9591b374b4a655621da34e02f85a969","outcome":"expired","ended_by":"reaper","ended_at":"1000"},"cas":""}	200
 09-request-mark-first	3	console @header Idempotency-Key: acc-spent-other POST /testsub/requests {"unit": "c4", "add": 1}	409 {"error": "spent"}
 09-request-mark-first	4	store GET /v1/get?key=testsub/requests/r-7f0cd6bacd621c87	200 {"items": null}
-09-request-mark-first	5	store POST /v1/write {"id":"m5","op":"put","key":"objects/testsub/commands/r-7c4c0556d5a0c07c","items":{"unit":"c4","digest":"not-a-digest","outcome":"expired","ended_by":"reaper","ended_at":"1000"},"cas":""}	200
+09-request-mark-first	5	store POST /v1/write {"id":"d5","op":"put","key":"objects/testsub/commands/r-7c4c0556d5a0c07c","items":{"unit":"c4","digest":"not-a-digest","outcome":"expired","ended_by":"reaper","ended_at":"1000"},"cas":""}	200
 09-request-mark-first	6	console @header Idempotency-Key: acc-spent-garbled POST /testsub/requests {"unit": "c4", "add": 1}	409 {"error": "spent"}
 09-request-mark-first	7	store GET /v1/get?key=objects/testsub/commands/r-7c4c0556d5a0c07c	200 {"items": {"digest": "not-a-digest"}}
 09-request-mark-first	8	store GET /v1/get?key=testsub/requests/r-7c4c0556d5a0c07c	200 {"items": null}
-09-request-mark-first	9	store POST /v1/write {"id":"m9","op":"put","key":"objects/testsub/commands/r-bebf2f46796986bd","items":{"unit":"c4","digest":"e83c1a0bfffbff5eb0a0de9119b1ab36a9591b374b4a655621da34e02f85a969","outcome":"expired","ended_by":"reaper","ended_at":"1000"},"cas":""}	200
+09-request-mark-first	9	store POST /v1/write {"id":"d9","op":"put","key":"objects/testsub/commands/r-bebf2f46796986bd","items":{"unit":"c4","digest":"e83c1a0bfffbff5eb0a0de9119b1ab36a9591b374b4a655621da34e02f85a969","outcome":"expired","ended_by":"reaper","ended_at":"1000"},"cas":""}	200
 09-request-mark-first	10	console @header Idempotency-Key: acc-answered POST /testsub/requests {"unit": "c4", "add": 1}	200 {"answered": {"unit": "c4", "outcome": "expired", "ended_by": "reaper"}}
 09-request-mark-first	11	store GET /v1/get?key=testsub/requests/r-bebf2f46796986bd	200 {"items": null}
 # 10-events-query-lexemes (аудит покрытия P/06, второй проход Gemini, G06; C06-EVENTS-QUERY-LEXEME-162-01): числовые параметры GET /events — после URL-декодирования грамматика читателя; limit — целый знак, затем 1…10000; from/to — время; иначе 400 с detail — имя параметра

@@ -179,16 +179,16 @@ scenario	step	request	expect
 24-where-door	7	@until 30 GET /testsub2/where/ta	200 {"worker": "t-1", "door": {"token": "~door1.", "url": "@any"}}
 24-where-door	8	@as console store GET /v1/get?key=door/signer	200 {"items": {"kid": "$kid", "seed_secret": "~enc:v2:"}}
 24-where-door	9	store GET /v1/get?key=door/keys	200 {"items": "@any", "index": "$kv"}
-24-where-door	10	store POST /v1/write {"id":"k10","op":"put","key":"door/keys","items":{"$kid":"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},"cas":"$kv"}	200 {"index": "$kw"}
+24-where-door	10	store POST /v1/write {"id":"b10","op":"put","key":"door/keys","items":{"$kid":"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},"cas":"$kv"}	200 {"index": "$kw"}
 24-where-door	11	GET /testsub2/where/ta	200 {"worker": "t-1", "door": "@absent"}
 24-where-door	12	store GET /v1/get?key=door/keys	200 {"index": "$kw"}
 24-where-door	13	@until 20 GET /events?kind=door.keys_conflict	200 {"events": [{"kind": "door.keys_conflict", "kid": "$kid"}]}
 # 25-slot-and-contenders (аудит покрытия P/06, второй проход Gemini, G08; Н2 «Выдачи», Н3 «/servers» «Соперники»): строка слота released "taking" — released false и slot_taking; слот не по форме — slot_garbled, slot_until null, released нет; метка соперника под w-1 с иным name — name_conflict с пометкой unreadable, метка поиска «-» не соперник — ряд name_conflicts 1
 25-slot-and-contenders	1	@start resource	ok
 25-slot-and-contenders	2	@put object testsub/heartbeats/w-1 inputs/hb-w-1-labels.json	ok
-25-slot-and-contenders	3	@as testsubworker store POST /v1/write {"id":"g3","op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"taking","gen":"1","server":"srv-a"},"cas":""}	200 {"index": "$s"}
+25-slot-and-contenders	3	@as testsubworker store POST /v1/write {"id":"73","op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"taking","gen":"1","server":"srv-a"},"cas":""}	200 {"index": "$s"}
 25-slot-and-contenders	4	@until 10 GET /servers	200 {"servers": {"srv-a": {"workers": [{"worker": "w-1", "released": false, "slot_taking": true, "slot_garbled": false}]}}}
-25-slot-and-contenders	5	store POST /v1/write {"id":"g5","op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"false","gen":"x","server":"srv-a"},"cas":"$s"}	200
+25-slot-and-contenders	5	store POST /v1/write {"id":"75","op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"false","gen":"x","server":"srv-a"},"cas":"$s"}	200
 25-slot-and-contenders	6	GET /servers	200 {"servers": {"srv-a": {"workers": [{"worker": "w-1", "slot_garbled": true, "slot_until": null, "released": "@absent", "slot_taking": "@absent"}]}}}
 25-slot-and-contenders	7	@put object testsub/contenders/w-1/b1 inputs/ct-w-1-b1-other-name.json	ok
 25-slot-and-contenders	8	@put object testsub/contenders/-/b2 inputs/ct-dash-b2.json	ok
