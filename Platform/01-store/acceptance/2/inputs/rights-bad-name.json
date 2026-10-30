@@ -1,0 +1,11 @@
+{
+  "roles": {
+    "Console": {
+      "group": "w2c-console",
+      "read": [
+        "testsub/*"
+      ],
+      "write": []
+    }
+  }
+}

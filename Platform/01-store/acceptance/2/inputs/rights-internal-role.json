@@ -1,0 +1,11 @@
+{
+  "roles": {
+    "configstore": {
+      "group": "configstore",
+      "read": [
+        "*"
+      ],
+      "write": []
+    }
+  }
+}

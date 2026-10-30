@@ -175,3 +175,11 @@
 28-admission	18	POST /v1/write {"op":"put","key":"acc/28-admission/c4","items":{},"not_before":true}	400 {"kind":"badrequest"}
 28-admission	19	POST /v1/write {"op":"put","key":"acc/28-admission/c4","items":{},"guard":{"key":"/s","index":""},"not_after":-1}	400 {"kind":"badkey"}
 28-admission	20	GET /v1/list?prefix=acc/28-admission/	200 {"keys":{"acc/28-admission/c2":"$b","acc/28-admission/c3":"$c"}}
+29-id-memory	1	POST /v1/write {"op":"put","key":"acc/29-id-memory/c1","items":{"n":"1"},"cas":"","id":"a02b1d0001"}	200 {"index":"$a"}
+29-id-memory	2	@sleep 121	ok
+29-id-memory	3	POST /v1/write {"op":"put","key":"acc/29-id-memory/c1","items":{"n":"1"},"cas":"","id":"a02b1d0001"}	200 {"index":"$a","again":true}
+29-id-memory	4	GET /v1/get?key=acc/29-id-memory/c1	200 {"items":{"n":"1"},"index":"$a"}
+30-key-1025	1	POST /v1/write {"op":"put","key":"acc/30-key-1025/@big(1005)𝄞я","items":{"n":"1"},"cas":""}	400 {"kind":"badkey"}
+30-key-1025	2	GET /v1/get?key=acc/30-key-1025/@big(1005)𝄞я	400 {"kind":"badkey"}
+30-key-1025	3	POST /v1/write {"op":"put","key":"acc/30-key-1025/gu","items":{"n":"g"},"guard":{"key":"acc/30-key-1025/@big(1005)я𝄞","index":""}}	400 {"kind":"badkey"}
+30-key-1025	4	GET /v1/list?prefix=acc/30-key-1025/	200 {"keys":{}}

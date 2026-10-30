@@ -22,3 +22,19 @@ scenario	step	request	expect
 10-rights-door	1	@as testsubworker GET /v1/rights	403
 10-rights-door	2	@as console GET /v1/rights	403
 10-rights-door	3	admin GET /v1/rights	200 {"roles": "@any"}
+11-never-floor-domain	1	@as console POST /v1/write {"id": "a301","op": "put","key": "platform/epoch_floor","items": {"floor": "1","generation_at": "1760745600"},"cas": ""}	403
+11-never-floor-domain	2	@as console POST /v1/write {"id": "a302","op": "delete","key": "platform/epoch_floor"}	403
+11-never-floor-domain	3	@as console POST /v1/write {"id": "a303","op": "delete","key": "domain/holder"}	403
+11-never-floor-domain	4	admin POST /v1/write {"id": "a304","op": "put","key": "platform/epoch_floor","items": {"floor": "1","generation_at": "1760745600"},"cas": ""}	403
+11-never-floor-domain	5	admin POST /v1/write {"id": "a305","op": "delete","key": "platform/epoch_floor"}	403
+11-never-floor-domain	6	admin POST /v1/write {"id": "a306","op": "delete","key": "domain/holder"}	403
+11-never-floor-domain	7	admin GET /v1/get?key=platform/epoch_floor	200
+12-list-role-header	1	@as testsubworker GET /v1/list?prefix=testsub/	200
+12-list-role-header	2	@as testsubworker @header X-Configstore-Role: console GET /v1/list?prefix=testsub/	403
+13-rights-file	1	@rights store none	ok
+13-rights-file	2	admin GET /v1/rights	404 {"kind": "badrequest"}
+13-rights-file	3	@rights store inputs/rights-bad-field.json	@exit 2
+13-rights-file	4	@rights store inputs/rights-internal-role.json	@exit 2
+13-rights-file	5	@rights store inputs/rights-bad-name.json	@exit 2
+13-rights-file	6	@rights store inputs/rights.json	ok
+13-rights-file	7	admin GET /v1/rights	200
