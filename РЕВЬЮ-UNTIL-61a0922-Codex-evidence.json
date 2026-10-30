@@ -1,0 +1,261 @@
+{
+  "head": "61a09223d3c88a56083ec8acb23665283177c237",
+  "manifest_sha256": "0b127ed3d97faed09809f0a4330b9d345d719730a01cf021fc0a444103a261b5",
+  "manifest_files": 5945,
+  "source_files": 212,
+  "restored_git_files": {
+    "f345aec": 211,
+    "5200bd6": 212,
+    "1775898": 212,
+    "61a0922": 212
+  },
+  "source_sha_files": 5115,
+  "spec_counts": {
+    "specs": 2345,
+    "vms-jsdom-specs": 2345
+  },
+  "merge_delta": [
+    "README.md",
+    "SPEC_VERSION",
+    "runner/vms-jsdom/README.txt",
+    "runner/vms-jsdom/SPEC_VERSION",
+    "tests/test_vms_assist.py",
+    "tests/test_vms_repin.py"
+  ],
+  "read_repin_share_unchanged": true,
+  "targeted": {
+    "tests": 117,
+    "failures": 0,
+    "errors": 0,
+    "skips": 1
+  },
+  "matcher_comparisons": 84,
+  "schema_comparisons": 25,
+  "comparison_base": "f345aec2763c64618d82f70bdbc984b6133eb76a",
+  "behaviour_identical": true,
+  "original_probe_exit_codes": {
+    "1775898": 1,
+    "61a0922": 0
+  },
+  "original_probe": {
+    "1775898": {
+      "cases": [
+        {
+          "schema": {
+            "additionalProperties": false
+          },
+          "initial_typed": true,
+          "raw_unchanged": true,
+          "finalizes": [
+            {
+              "raw_credential_in_path": true,
+              "raw_credential_in_field": true,
+              "got_key_redacted": true,
+              "nearby_keys_redacted": true,
+              "file_trusted": true
+            },
+            {
+              "raw_credential_in_path": true,
+              "raw_credential_in_field": true,
+              "got_key_redacted": true,
+              "nearby_keys_redacted": true,
+              "file_trusted": true
+            }
+          ]
+        },
+        {
+          "schema": {
+            "unevaluatedProperties": false
+          },
+          "initial_typed": true,
+          "raw_unchanged": true,
+          "finalizes": [
+            {
+              "raw_credential_in_path": true,
+              "raw_credential_in_field": true,
+              "got_key_redacted": true,
+              "nearby_keys_redacted": true,
+              "file_trusted": true
+            },
+            {
+              "raw_credential_in_path": true,
+              "raw_credential_in_field": true,
+              "got_key_redacted": true,
+              "nearby_keys_redacted": true,
+              "file_trusted": true
+            }
+          ]
+        },
+        {
+          "schema": {
+            "propertyNames": {
+              "pattern": "^accepted$"
+            }
+          },
+          "initial_typed": true,
+          "raw_unchanged": true,
+          "finalizes": [
+            {
+              "raw_credential_in_path": true,
+              "raw_credential_in_field": true,
+              "got_key_redacted": true,
+              "nearby_keys_redacted": true,
+              "file_trusted": true
+            },
+            {
+              "raw_credential_in_path": true,
+              "raw_credential_in_field": true,
+              "got_key_redacted": true,
+              "nearby_keys_redacted": true,
+              "file_trusted": true
+            }
+          ]
+        },
+        {
+          "schema": {
+            "additionalProperties": {
+              "type": "integer"
+            }
+          },
+          "initial_typed": true,
+          "raw_unchanged": true,
+          "finalizes": [
+            {
+              "raw_credential_in_path": true,
+              "raw_credential_in_field": true,
+              "got_key_redacted": true,
+              "nearby_keys_redacted": true,
+              "file_trusted": true
+            },
+            {
+              "raw_credential_in_path": true,
+              "raw_credential_in_field": true,
+              "got_key_redacted": true,
+              "nearby_keys_redacted": true,
+              "file_trusted": true
+            }
+          ]
+        }
+      ],
+      "initial_unknown_and_known_hidden": true,
+      "SUT": 0
+    },
+    "61a0922": {
+      "cases": [
+        {
+          "schema": {
+            "additionalProperties": false
+          },
+          "initial_typed": true,
+          "raw_unchanged": true,
+          "finalizes": [
+            {
+              "raw_credential_in_path": false,
+              "raw_credential_in_field": false,
+              "got_key_redacted": true,
+              "nearby_keys_redacted": true,
+              "file_trusted": true
+            },
+            {
+              "raw_credential_in_path": false,
+              "raw_credential_in_field": false,
+              "got_key_redacted": true,
+              "nearby_keys_redacted": true,
+              "file_trusted": true
+            }
+          ]
+        },
+        {
+          "schema": {
+            "unevaluatedProperties": false
+          },
+          "initial_typed": true,
+          "raw_unchanged": true,
+          "finalizes": [
+            {
+              "raw_credential_in_path": false,
+              "raw_credential_in_field": false,
+              "got_key_redacted": true,
+              "nearby_keys_redacted": true,
+              "file_trusted": true
+            },
+            {
+              "raw_credential_in_path": false,
+              "raw_credential_in_field": false,
+              "got_key_redacted": true,
+              "nearby_keys_redacted": true,
+              "file_trusted": true
+            }
+          ]
+        },
+        {
+          "schema": {
+            "propertyNames": {
+              "pattern": "^accepted$"
+            }
+          },
+          "initial_typed": true,
+          "raw_unchanged": true,
+          "finalizes": [
+            {
+              "raw_credential_in_path": false,
+              "raw_credential_in_field": false,
+              "got_key_redacted": true,
+              "nearby_keys_redacted": true,
+              "file_trusted": true
+            },
+            {
+              "raw_credential_in_path": false,
+              "raw_credential_in_field": false,
+              "got_key_redacted": true,
+              "nearby_keys_redacted": true,
+              "file_trusted": true
+            }
+          ]
+        },
+        {
+          "schema": {
+            "additionalProperties": {
+              "type": "integer"
+            }
+          },
+          "initial_typed": true,
+          "raw_unchanged": true,
+          "finalizes": [
+            {
+              "raw_credential_in_path": false,
+              "raw_credential_in_field": false,
+              "got_key_redacted": true,
+              "nearby_keys_redacted": true,
+              "file_trusted": true
+            },
+            {
+              "raw_credential_in_path": false,
+              "raw_credential_in_field": false,
+              "got_key_redacted": true,
+              "nearby_keys_redacted": true,
+              "file_trusted": true
+            }
+          ]
+        }
+      ],
+      "initial_unknown_and_known_hidden": true,
+      "SUT": 0
+    }
+  },
+  "additional_controls": {
+    "dynamic_public_and_unicode_keys_are_opaque_immediately": true,
+    "propertyNames_received_never_exports_the_key": true,
+    "placeholder_bytes_stable_across_two_finalizes": true,
+    "declared_unicode_dot_slash_tilde_names_and_indices_preserved": true,
+    "declared_names_do_not_widen_received_values": true,
+    "late_declared_name_rechecked_after_pointer_decode": true,
+    "nested_alternative_paths_refresh_on_both_finalizes": true
+  },
+  "author_modules": 86,
+  "author_tests": 1012,
+  "author_skips": 9,
+  "author_seconds": 317.0,
+  "inputs_unchanged": true,
+  "SUT": 0
+}
