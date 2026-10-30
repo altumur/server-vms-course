@@ -120,3 +120,23 @@ scenario	step	request	expect
 19-members-source	3	@on hold @put object domain/view inputs/view-member-list-ghost.json	ok
 19-members-source	4	holder GET /domain	200 {"as_of": 1760000000, "member_list": {"members": {"ghost": {"how": "admitted"}}}}
 19-members-source	5	holder GET /domain/members	200 {"members": {"hold": {"how": "holder"}, "m1": {"how": "admitted"}, "m2": {"how": "admitted"}, "ghost": "@absent"}, "knocking": []}
+20-view-trust-and-topology	1	@domain	ok
+20-view-trust-and-topology	2	holder GET /domain	200 {"trust": {"rev": "$kr", "root": "@any", "book_seal": "@any"}, "topology": {"rev": 0, "star": [], "via": {}}}
+20-view-trust-and-topology	3	holder GET /domain	200 {"reports": {"hold": {"keys_rev": "$kr"}, "m1": {"keys_rev": "$kr"}, "m2": {"keys_rev": "$kr"}}}
+20-view-trust-and-topology	4	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "m2"}}	200 {"rev": 1, "star": [], "via": {"m1": "m2"}, "by": "root"}
+20-view-trust-and-topology	5	@until 20 holder GET /domain	200 {"trust": {"rev": "$kr"}, "topology": {"rev": 1, "star": [], "via": {"m1": "m2"}, "by": "root"}}
+21-view-relay-refused	1	@domain m1 relay	ok
+21-view-relay-refused	2	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "relay"}}	200 {"rev": 1, "via": {"m1": "relay"}}
+21-view-relay-refused	3	@stop agent m1	ok
+21-view-relay-refused	4	@start agent m1 via relay	ok
+21-view-relay-refused	5	@until 40 holder GET /domain	200 {"reports": {"m1": {"via": "relay"}}}
+21-view-relay-refused	6	@stop domain	ok
+21-view-relay-refused	7	@on hold @spoil object domain/members/m1/reported	ok
+21-view-relay-refused	8	@start domain	ok
+21-view-relay-refused	9	@until 60 holder GET /domain	200 {"relay_refused": {"relay": {"m1": "unavailable"}}}
+21-view-relay-refused	10	holder PUT /domain/topology {"base_rev": 1, "via": {}}	200 {"rev": 2, "via": {}}
+21-view-relay-refused	11	@until 40 holder GET /domain	@oneof 200 {"relay_refused": {}} | 200 {"relay_refused": "@absent"}
+22-mark-rev-beyond-2-53	1	@domain	ok
+22-mark-rev-beyond-2-53	2	@stop agent m1	ok
+22-mark-rev-beyond-2-53	3	@on hold @put object domain/members/m1/reported inputs/member-reported-rev-2pow53.json	ok
+22-mark-rev-beyond-2-53	4	@until 10 holder GET /domain	200 {"complete": false, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "silent"}, {"name": "m2", "state": "ok"}]}

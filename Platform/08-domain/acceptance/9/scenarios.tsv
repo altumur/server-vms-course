@@ -16,3 +16,11 @@ scenario	step	request	expect
 01-shared-edit-and-read	14	@until 60 holder GET /domain/shared	200 {"doc": {"rev": 1}, "delivery": {"term": 1, "rev": 1, "holding": ["hold", "m1", "m2"], "silent": []}}
 01-shared-edit-and-read	15	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"step": null}}}	200 {"rev": 2}
 01-shared-edit-and-read	16	@until 60 member m1 console GET /domain/shared/testsub?unit=c6	200 {"rev": 2, "fields": {"step": {"value": 1, "from": "manifest"}}}
+07-shared-refusals	1	@domain	ok
+07-shared-refusals	2	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": "not an object"}}	400 {"error": "refused", "detail": "~the edit is {base_rev:"}
+07-shared-refusals	3	holder PUT /domain/shared @raw not json	400 {"error": "refused", "detail": "~the edit is {base_rev:"}
+07-shared-refusals	4	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"rounds": [{"counter": "c1", "every": 1, "token_key_secret": "enc:v2:00"}]}}}	400 {"error": "refused", "detail": "~the shared document is signed, not sealed"}
+07-shared-refusals	5	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 5}}}	200 {"term": 1, "rev": 1, "by": "root"}
+07-shared-refusals	6	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "{\"object\":\"domain/shared-docs/rev-1\",\"rev\":1,\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"term\":1}"}}	200
+07-shared-refusals	7	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"step": 6}}}	503 {"error": "refused", "detail": "~the shared document at rev 1 does not read: nothing is written"}
+07-shared-refusals	8	member hold store GET /v1/get?key=domain/shared	200 {"items": {"doc": "~0000000000000000000000000000000000000000000000000000000000000000"}}

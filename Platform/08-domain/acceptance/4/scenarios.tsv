@@ -106,3 +106,47 @@ scenario	step	request	expect
 12-pass-need	7	member m1 console2 GET /entries?unit=testsub2/t1	503 {"error": "denied"}
 12-pass-need	8	member m1 console2 GET /entries?unit=testsub2/t2	403 {"error": "denied"}
 12-pass-need	9	member m1 console2 POST /entries {"note": "x"}	403 {"error": "denied"}
+13-garbled-person-row	1	@domain	ok
+13-garbled-person-row	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+13-garbled-person-row	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200 {"cluster": "m1"}
+13-garbled-person-row	4	holder PUT /domain/users/ann {"disabled": true}	200 {"user": "ann", "disabled": true}
+13-garbled-person-row	5	member hold store GET /v1/get?key=domain/disabled	200 {"items": {"names": "[\"ann\"]"}}
+13-garbled-person-row	6	member hold store POST /v1/write {"op": "put", "key": "domain/users/ann", "items": {"name": "bob", "how": "password", "pwhash_secret": "not a secret", "disabled": "false", "at": "1", "by": "root"}}	200
+13-garbled-person-row	7	signer POST /api/login {"user": "ann", "password": "ann password 1"}	503 {"error": "unavailable"}
+13-garbled-person-row	8	signer POST /api/login {"user": "root", "password": "w2c test root password"}	200 {"user": "root"}
+13-garbled-person-row	9	@sleep 7	ok
+13-garbled-person-row	10	member hold store GET /v1/get?key=domain/disabled	200 {"items": {"names": "[\"ann\"]"}}
+13-garbled-person-row	11	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "ann", "cap": "view", "scope": "*"}, {"subject": "root", "cap": "admin", "scope": "*"}]}}
+13-garbled-person-row	12	holder DELETE /domain/users/ann	200 {"user": "ann", "deleted": true, "grants_changed": ["m1"]}
+13-garbled-person-row	13	member hold store GET /v1/get?key=domain/users/ann	200 {"items": null}
+13-garbled-person-row	14	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root", "cap": "admin", "scope": "*"}]}}
+13-garbled-person-row	15	@until 20 member hold store GET /v1/get?key=domain/disabled	200 {"items": {"names": "[]"}}
+13-garbled-person-row	16	signer POST /api/login {"user": "ann", "password": "ann password 1"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	1	@domain	ok
+14-login-ceiling	2	signer POST /api/login {"user": "n1", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	3	signer POST /api/login {"user": "n1", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	4	signer POST /api/login {"user": "n1", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	5	signer POST /api/login {"user": "n1", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	6	signer POST /api/login {"user": "n1", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	7	signer POST /api/login {"user": "n2", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	8	signer POST /api/login {"user": "n2", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	9	signer POST /api/login {"user": "n2", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	10	signer POST /api/login {"user": "n2", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	11	signer POST /api/login {"user": "n2", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	12	signer POST /api/login {"user": "n3", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	13	signer POST /api/login {"user": "n3", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	14	signer POST /api/login {"user": "n3", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	15	signer POST /api/login {"user": "n3", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	16	signer POST /api/login {"user": "n3", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	17	signer POST /api/login {"user": "n4", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	18	signer POST /api/login {"user": "n4", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	19	signer POST /api/login {"user": "n4", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	20	signer POST /api/login {"user": "n4", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	21	signer POST /api/login {"user": "n4", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	22	signer POST /api/login {"user": "n5", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
+14-login-ceiling	23	signer POST /api/login {"user": "n5", "password": "not the password"}	429 {"error": "too many attempts"}
+15-grants-cluster-no-decode	1	@domain	ok
+15-grants-cluster-no-decode	2	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}]}	200 {"cluster": "m1"}
+15-grants-cluster-no-decode	3	@until 20 holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root", "cap": "admin", "scope": "*"}], "m%31": "@absent"}}
+15-grants-cluster-no-decode	4	holder PUT /domain/grants/m%31 {"lines": [{"subject": "root", "cap": "view", "scope": "*"}]}	400 {"error": "bad name"}
+15-grants-cluster-no-decode	5	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root", "cap": "admin", "scope": "*"}], "m%31": "@absent"}}

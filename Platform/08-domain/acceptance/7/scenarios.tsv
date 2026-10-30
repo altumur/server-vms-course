@@ -27,3 +27,6 @@ scenario	step	request	expect
 03-framing	6	token m2 testsubworker @header X-Pad: @big(16400) POST /tokens/testsub/tally {"request_id": "r4", "ref": "c1"}	400 {"error": "bad request"}
 03-framing	7	token m2 testsubworker POST /tokens/testsub/tally @raw @big(4097)	413 {"error": "refused"}
 03-framing	8	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r5", "ref": "c1"}	200 @header Connection: ~close
+04-holder-body-limit	1	@domain	ok
+04-holder-body-limit	2	signer POST /api/tokens/m1/testsub/tally @raw @big(4608)	401 {"error": "refused", "reason": "no_signature"}
+04-holder-body-limit	3	signer POST /api/tokens/m1/testsub/tally @raw @big(4609)	413 {"error": "refused"}

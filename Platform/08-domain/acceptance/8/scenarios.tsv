@@ -79,3 +79,14 @@ scenario	step	request	expect
 12-handover-then-move	10	member m1 store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 3"}}
 12-handover-then-move	11	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "~deposed by term 2"}}
 12-handover-then-move	12	@until 60 member hold console GET /api/held	200 {"term": 3, "holder": {"holder": "m2"}}
+13-handover-called-off	1	@domain	ok
+13-handover-called-off	2	holder POST /domain/handover {"to": "m1"}	409 {"error": "called off"}
+13-handover-called-off	3	@until 15 holder GET /domain	200 {"term": {"term": 1, "holder": "hold", "frozen_for": "@absent"}}
+13-handover-called-off	4	holder PUT /domain/placement/testsub/c1 {"cluster": "m1"}	200 {"cluster": "m1"}
+13-handover-called-off	5	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "@absent"}}
+14-same-term-forged-record	1	@domain	ok
+14-same-term-forged-record	2	member hold store POST /v1/write {"op": "put", "key": "domain/holder", "items": {"doc": "{\"at\":1759999900,\"domain\":\"acme\",\"holder\":\"m1\",\"issuer\":\"b7478a6313d3d9ca57bd1df746e4ff90811a250846de6e81490b31837f61b41a\",\"kid\":\"b7478a6313d3d9ca\",\"sig\":\"NVTpK7Z0xhNCh6_EPdMRYlvykN3206nq21CsAvVU4sDZYGXfPB9jh5bcg5o01QArLj1nDxb1ekwElPX_TkWfDg\",\"term\":1,\"url\":\"http://m1.test:9999\"}"}}	200
+14-same-term-forged-record	3	@sleep 6	ok
+14-same-term-forged-record	4	holder PUT /domain/topology {"base_rev": 0, "centre": "hold"}	200
+14-same-term-forged-record	5	signer POST /api/login {"user": "root", "password": "w2c test root password"}	200 {"user": "root"}
+14-same-term-forged-record	6	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "@absent"}}

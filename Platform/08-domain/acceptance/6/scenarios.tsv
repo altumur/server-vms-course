@@ -137,3 +137,63 @@ scenario	step	request	expect
 10-executors	12	@mend m1	ok
 10-executors	13	holder PUT /domain/placement/testsub/c4 {"cluster": "m1", "origin": "m2"}	200 {"rev": 3}
 10-executors	14	@until 60 holder GET /domain	200 {"contested": {"testsub": {"c4": ["m1", "m2"]}}}
+11-outcomes-limit	1	@domain	ok
+11-outcomes-limit	2	member m1 console POST /counters {"name": "c11", "start": 0}	201
+11-outcomes-limit	3	@until 60 holder GET /domain/testsub/counters?cluster=m1	200 [{"ref": "c11"}]
+11-outcomes-limit	4	holder @header Idempotency-Key: h05-oldest PUT /domain/testsub/counters/c11 {"start": 1}	202 {"kept": "e-d43101de75c2", "cluster": "m1", "what": "start"}
+11-outcomes-limit	5	@until 60 holder GET /domain	200 {"pending": {"m1": 0}, "outcomes": {"m1": [{"id": "e-d43101de75c2", "what": "start"}]}}
+11-outcomes-limit	6	@cut m1	ok
+11-outcomes-limit	7	holder PUT /domain/testsub/counters/c11 {"start": 2}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	8	holder PUT /domain/testsub/counters/c11 {"start": 3}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	9	holder PUT /domain/testsub/counters/c11 {"start": 4}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	10	holder PUT /domain/testsub/counters/c11 {"start": 5}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	11	holder PUT /domain/testsub/counters/c11 {"start": 6}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	12	holder PUT /domain/testsub/counters/c11 {"start": 7}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	13	holder PUT /domain/testsub/counters/c11 {"start": 8}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	14	holder PUT /domain/testsub/counters/c11 {"start": 9}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	15	holder PUT /domain/testsub/counters/c11 {"start": 10}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	16	holder PUT /domain/testsub/counters/c11 {"start": 11}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	17	holder PUT /domain/testsub/counters/c11 {"start": 12}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	18	holder PUT /domain/testsub/counters/c11 {"start": 13}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	19	holder PUT /domain/testsub/counters/c11 {"start": 14}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	20	holder PUT /domain/testsub/counters/c11 {"start": 15}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	21	holder PUT /domain/testsub/counters/c11 {"start": 16}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	22	holder PUT /domain/testsub/counters/c11 {"start": 17}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	23	holder PUT /domain/testsub/counters/c11 {"start": 18}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	24	holder PUT /domain/testsub/counters/c11 {"start": 19}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	25	holder PUT /domain/testsub/counters/c11 {"start": 20}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	26	holder PUT /domain/testsub/counters/c11 {"start": 21}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	27	holder PUT /domain/testsub/counters/c11 {"start": 22}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	28	holder PUT /domain/testsub/counters/c11 {"start": 23}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	29	holder PUT /domain/testsub/counters/c11 {"start": 24}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	30	holder PUT /domain/testsub/counters/c11 {"start": 25}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	31	holder PUT /domain/testsub/counters/c11 {"start": 26}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	32	holder PUT /domain/testsub/counters/c11 {"start": 27}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	33	holder PUT /domain/testsub/counters/c11 {"start": 28}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	34	holder PUT /domain/testsub/counters/c11 {"start": 29}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	35	holder PUT /domain/testsub/counters/c11 {"start": 30}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	36	holder PUT /domain/testsub/counters/c11 {"start": 31}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	37	holder PUT /domain/testsub/counters/c11 {"start": 32}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	38	holder PUT /domain/testsub/counters/c11 {"start": 33}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	39	holder PUT /domain/testsub/counters/c11 {"start": 34}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	40	holder PUT /domain/testsub/counters/c11 {"start": 35}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	41	holder PUT /domain/testsub/counters/c11 {"start": 36}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	42	holder PUT /domain/testsub/counters/c11 {"start": 37}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	43	holder PUT /domain/testsub/counters/c11 {"start": 38}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	44	holder PUT /domain/testsub/counters/c11 {"start": 39}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	45	holder PUT /domain/testsub/counters/c11 {"start": 40}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	46	holder PUT /domain/testsub/counters/c11 {"start": 41}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	47	holder PUT /domain/testsub/counters/c11 {"start": 42}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	48	holder PUT /domain/testsub/counters/c11 {"start": 43}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	49	holder PUT /domain/testsub/counters/c11 {"start": 44}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	50	holder PUT /domain/testsub/counters/c11 {"start": 45}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	51	holder PUT /domain/testsub/counters/c11 {"start": 46}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	52	holder PUT /domain/testsub/counters/c11 {"start": 47}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	53	holder PUT /domain/testsub/counters/c11 {"start": 48}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	54	holder PUT /domain/testsub/counters/c11 {"start": 49}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	55	holder PUT /domain/testsub/counters/c11 {"start": 50}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	56	holder PUT /domain/testsub/counters/c11 {"start": 51}	202 {"kept": "@any", "cluster": "m1", "what": "start"}
+11-outcomes-limit	57	@until 30 holder GET /domain	200 {"pending": {"m1": 50}}
+11-outcomes-limit	58	@mend m1	ok
+11-outcomes-limit	59	@until 120 holder GET /domain	200 {"pending": {"m1": 0}, "outcomes": {"m1": [{"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}]}}
+11-outcomes-limit	60	member hold store GET /v1/get?key=domain/outcomes/m1	200 {"items": {"e-d43101de75c2": "@absent"}}
