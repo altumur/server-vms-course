@@ -183,3 +183,7 @@ scenario	step	request	expect
 20-spoil-row	8	@spoil row-index testsub/counters/s2	ok
 20-spoil-row	9	admin GET /v1/get?key=testsub/counters/s2	503 {"kind": "unavailable"}
 20-spoil-row	10	admin GET /v1/list?prefix=testsub/counters/	503 {"kind": "unavailable"}
+21-id-memory	1	admin POST /v1/write {"op":"put","key":"testsub/counters/m1","items":{"n":"1"},"cas":"","id":"a02b1d0001"}	200 {"index": "$a"}
+21-id-memory	2	@sleep 121	ok
+21-id-memory	3	admin POST /v1/write {"op":"put","key":"testsub/counters/m1","items":{"n":"1"},"cas":"","id":"a02b1d0001"}	200 {"index": "$a", "again": true}
+21-id-memory	4	admin GET /v1/get?key=testsub/counters/m1	200 {"items": {"n": "1"}, "index": "$a"}
