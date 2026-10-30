@@ -1,0 +1,25 @@
+{
+  "manifest_files": 6393,
+  "manifest_ok": true,
+  "author_tests": 16,
+  "author_green": true,
+  "invalid_copy_after_restart": {
+    "configured_numbers": [
+      1,
+      2
+    ],
+    "current_pids": [
+      102,
+      103
+    ],
+    "lookup_pid": 102,
+    "signals": [
+      [
+        102,
+        9
+      ]
+    ],
+    "directive_result": []
+  },
+  "SUT": 0
+}
