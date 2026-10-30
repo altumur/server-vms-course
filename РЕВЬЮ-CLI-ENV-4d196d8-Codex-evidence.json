@@ -1,0 +1,73 @@
+{
+  "head": "4d196d88fa2e3c7eef4aa366e82806ba2f795e50",
+  "manifest_sha256": "ebcecf13dcb15dc055a93c25b887949918baeadc0a517c229652ad022dd2780d",
+  "manifest_files": 5548,
+  "git_source_files": 211,
+  "snapshot_git_files": {
+    "a656df5": 210,
+    "cbb2fb8": 211,
+    "4d196d8": 211
+  },
+  "source_sha_files": 4902,
+  "spec_counts": {
+    "specs": 2345,
+    "vms-jsdom-specs": 2345
+  },
+  "targeted_tests": 67,
+  "targeted_green": true,
+  "differential_cases": 9,
+  "behaviour_identical": true,
+  "original_probe_exit_codes": {
+    "cbb2fb8": 1,
+    "4d196d8": 0
+  },
+  "original_probe": {
+    "cbb2fb8": {
+      "controls": {
+        "nine_sidecars_match_attempts_and_started": true,
+        "modified_copy_rejected": false,
+        "exact_copy_trusted": true,
+        "late_known_value_removed_from_labels": true,
+        "foreign_metadata_not_blessed": false,
+        "foreign_encoded_label_absent": false
+      },
+      "attack": {
+        "copied": true,
+        "valid_metadata": true,
+        "encoded_exported": true,
+        "encoded_after_finalize": true
+      }
+    },
+    "4d196d8": {
+      "controls": {
+        "nine_sidecars_match_attempts_and_started": true,
+        "modified_copy_rejected": true,
+        "exact_copy_trusted": true,
+        "late_known_value_removed_from_labels": true,
+        "foreign_metadata_not_blessed": true,
+        "foreign_encoded_label_absent": true
+      },
+      "attack": {
+        "copied": true,
+        "valid_metadata": false,
+        "encoded_exported": false,
+        "encoded_after_finalize": false
+      }
+    }
+  },
+  "guards": {
+    "fixed_names_only": true,
+    "unknown_names_count_only": true,
+    "empty_and_absent_distinct": true,
+    "unlisted_stable_after_late_redaction": true,
+    "valid_foreign_and_modified_rejected_before_parse_learn_log": true,
+    "repeated_finalize_never_promotes": true,
+    "copied_rejection_stays_untrusted": true,
+    "malformed_sidecar_not_decoded": true
+  },
+  "author_modules": 85,
+  "author_tests": 1003,
+  "author_skips": 9,
+  "author_full_seconds": 390.0,
+  "SUT": 0
+}
