@@ -1058,6 +1058,36 @@ paths:
         result.lesson(self.lesson)
         self.assertFalse([e for e in result.errors if "acceptance" in e], result.errors)
 
+    def test_variants_forms_of_2_5(self):
+        """variants/ главы 2.5: expect.tsv, refused (имя манифеста) или check.tsv с check/ (аудит Gemini P/02, св. 24, 25)."""
+        root = self.root / "variants"
+        def variant(name, files):
+            d = root / name
+            (d / "check").mkdir(parents=True, exist_ok=True)
+            (d / "check").rmdir()
+            for rel, text in files.items():
+                (d / rel).parent.mkdir(parents=True, exist_ok=True)
+                (d / rel).write_text(text)
+        man = {"va.subsystem.yaml": "name: va\n"}
+        variant("v1-base", dict(man, **{"expect.tsv": "role\taction\tkey\texpect\n"}))
+        variant("v2-refused", dict(man, **{"refused": "# why\nva\n"}))
+        variant("v3-check", dict(man, **{"check.tsv": "# x\ncase\tfile\tcode\nmiss\tcheck/miss.rights\t!0\n",
+                                          "check/miss.rights": "{}\n"}))
+        result = Check(self.root)
+        result.variants(root)
+        self.assertEqual(result.errors, [])
+        variant("v4-bad", dict(man, **{"refused": "vb\n", "expect.tsv": "x\n"}))
+        variant("v5-check", dict(man, **{"check.tsv": "case\tfile\tcode\nx\tcheck/none.rights\t1\n",
+                                          "check/stray.rights": "{}\n"}))
+        variant("bad name", man)
+        result = Check(self.root)
+        result.variants(root)
+        text = "\n".join(result.errors)
+        for needle in ("exactly one of expect.tsv, refused, check.tsv", "the name of a manifest of the variant",
+                       "no file check/none.rights", "code is 0 or !0", "no row of check.tsv names this file",
+                       "a variant is a directory v<N>-<slug>"):
+            self.assertIn(needle, text)
+
     def test_whole_and_chapter_norms_conflict(self):
         (self.spec / "01-store.norms.md").write_text("# x\n")
         self.assertTrue(any("either one norms file or chapter norms" in e for e in self.check().errors))

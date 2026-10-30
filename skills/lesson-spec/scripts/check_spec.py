@@ -215,6 +215,7 @@ FORM_MARKERS = {"<!-- form:begin -->", "<!-- form:end -->", "<!-- families:begin
 # Acceptance chapters whose puts.tsv (and puts/) the script checks (form_source.vectors.Chapter.puts): chapter 2.2 with
 # the view column, chapter 2.3 in three columns.
 PUTS_CHAPTERS = {("P/02", "2/"), ("P/02", "3/")}
+VARIANTS_CHAPTER = ("P/02", "5/")                     # variants/ — форма (аудит Gemini P/02, свойства 24, 25)
 
 
 def markdown_links(tokens):
@@ -2208,9 +2209,59 @@ class Check:
             self.error(acceptance, "cases/ without verdicts.tsv")
         if puts and (acceptance / "puts.tsv").is_file():
             formats += 1                            # checked with the vectors of the chapter (canonical_chapter)
+        if (key, entry) == VARIANTS_CHAPTER and (acceptance / "variants").is_dir():
+            self.variants(acceptance / "variants")  # README of the chapter checks the meaning; the form is checked here
         if not formats and not own_format:
             self.error(acceptance, "no supported acceptance table; add a format-specific check")
         return texts, scenarios, verdict_counts, verdicts, classes
+
+    # Variants of chapter 2.5 (аудит Gemini P/02, свойства 24, 25; решение «Архитектора» 2026-10-30): each `v<N>-<slug>/`
+    # holds manifests and exactly one of `expect.tsv` (rights and probes), `refused` (the generation refuses: one line —
+    # `name` of a manifest of the variant), `check.tsv` with `check/` (`rights --check <file>`: code 0 or !0).
+    def variants(self, root):
+        for v in sorted(p for p in root.iterdir() if p.name not in IGNORED):
+            if not v.is_dir() or not re.fullmatch(r"v[1-9][0-9]*-[a-z0-9-]+", v.name):
+                self.error(v, "a variant is a directory v<N>-<slug>")
+                continue
+            names = set()
+            for m in v.glob("*.subsystem.yaml"):
+                found = re.search(r"(?m)^name:\s*([A-Za-z0-9_-]+)\s*$", self.read(m) or "")
+                if found:
+                    names.add(found.group(1))
+            if not names:
+                self.error(v, "a variant holds at least one <name>.subsystem.yaml with name:")
+            forms = [n for n in ("expect.tsv", "refused", "check.tsv") if (v / n).is_file()]
+            if len(forms) != 1:
+                self.error(v, "a variant holds exactly one of expect.tsv, refused, check.tsv (has: %s)" % (", ".join(forms) or "none"))
+            for item in v.iterdir():
+                if item.name in IGNORED or item.name.endswith(".subsystem.yaml") or item.name in ("expect.tsv", "refused", "check.tsv"):
+                    continue
+                if item.name == "check" and item.is_dir() and (v / "check.tsv").is_file():
+                    continue
+                self.error(item, "unsupported entry of a variant; add it to the form check")
+            if (v / "refused").is_file():
+                lines = [ln for ln in (self.read(v / "refused") or "").split("\n") if ln.strip() and not ln.startswith("#")]
+                if len(lines) != 1 or lines[0].strip() not in names:
+                    self.error(v / "refused", "refused holds one line: the name of a manifest of the variant (%s)" % ", ".join(sorted(names)))
+            if (v / "check.tsv").is_file():
+                rows = [ln.split("\t") for ln in (self.read(v / "check.tsv") or "").split("\n") if ln and not ln.startswith("#")]
+                if not rows or rows[0] != ["case", "file", "code"]:
+                    self.error(v / "check.tsv", "the first row is the header case<TAB>file<TAB>code")
+                    continue
+                cases, files = set(), set()
+                for no, r in enumerate(rows[1:], 2):
+                    if len(r) != 3 or not re.fullmatch(r"[a-z0-9_]+", r[0]) or r[0] in cases:
+                        self.error(v / "check.tsv", "row %d: case [a-z0-9_]+ unique, three fields" % no)
+                        continue
+                    cases.add(r[0])
+                    if not re.fullmatch(r"check/[A-Za-z0-9_.-]+", r[1]) or not (v / r[1]).is_file():
+                        self.error(v / "check.tsv", "row %d: no file %s" % (no, r[1]))
+                    files.add(r[1])
+                    if r[2] not in ("0", "!0"):
+                        self.error(v / "check.tsv", "row %d: code is 0 or !0" % no)
+                for extra in sorted((v / "check").glob("*")) if (v / "check").is_dir() else []:
+                    if "check/" + extra.name not in files and extra.name not in IGNORED:
+                        self.error(extra, "no row of check.tsv names this file")
 
     def choices(self, text):
         section = re.search(r"^## Решает реализация\s*$(.*?)(?=^## |\Z)", text, re.S | re.M)
