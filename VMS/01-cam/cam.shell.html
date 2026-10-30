@@ -330,7 +330,8 @@ function piecesFrom(i,t){
   }
   return out;
 }
-function setCap(text){const el=$("#playing");if(el)el.textContent=text}
+// the caption holds until the next action: a redraw of the card keeps it while the choice is the same (V.gen)
+function setCap(text){V.cap={text,gen:V.gen};const el=$("#playing");if(el)el.textContent=text}
 // An event stands on the timeline where it HAPPENED (`occurred`), not where it was written (`t`).
 // One time per event everywhere — `occurred` when the field is there, else `t` (V/08.2 Н1.3).
 function evAt(e){return e&&"occurred" in e?e.occurred:e.t}
@@ -557,7 +558,7 @@ function videoCardHtml(c){
   return card("Просмотр",`<div class="vid"><video id="player" controls playsinline></video></div>
     <div class="vrow"><button type="button" class="btn s ${V.live?"on":""}" id="liveBtn" data-act="live">${V.live?"Остановить":"Живое видео"}</button>
       <select data-act="net" style="width:auto" title="Откуда вы смотрите: раздачу извне ставят на шлюз с публичным адресом"><option value="local"${V.net==="local"?" selected":""}>из локальной сети</option><option value="outside"${V.net==="outside"?" selected":""}>извне</option></select>
-      <span class="sub" id="playing" style="flex:1;min-width:120px">${esc(V.live?"живое":"выберите фрагмент на шкале")}</span><span class="sub" id="tlnote"></span></div>
+      <span class="sub" id="playing" style="flex:1;min-width:120px">${esc(V.live?"живое":(V.cap&&V.cap.gen===V.gen?V.cap.text:"выберите фрагмент на шкале"))}</span><span class="sub" id="tlnote"></span></div>
     <div id="livefeed" class="livefeed" style="display:${V.live?"block":"none"}"></div>`,
     `<span class="sub" style="font-weight:400">${esc(c.liveUrl||"")}</span>`)
   +card("Шкала времени",`<div class="vrow" style="margin:0 0 8px">
