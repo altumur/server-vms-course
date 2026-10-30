@@ -1658,6 +1658,11 @@ function tools(ctx,turn){
       case"exists":return v!=null;case"missing":return v==null}
     if(!isNum(v)||!isNum(want))return false;
     return{gt:v>want,gte:v>=want,lt:v<want,lte:v<=want}[op]}
+  // ids and string values in UTF-8 byte order — the order of code points (V/10.4 Н1.5), not of UTF-16 code units
+  const cmpU8=(a,b)=>{const x=Array.from(a),y=Array.from(b);for(let i=0;i<Math.min(x.length,y.length);i++){const d=x[i].codePointAt(0)-y[i].codePointAt(0);if(d)return d}return x.length-y.length};
+  // a value «as JSON»: the type first (string, number, boolean), within it — numbers by value, strings by bytes, false < true
+  const jsonRank=v=>typeof v==="string"?0:typeof v==="number"?1:2;
+  const cmpJSON=(a,b)=>jsonRank(a)-jsonRank(b)||(typeof a==="string"?cmpU8(a,b):typeof a==="number"?a-b:(a===b?0:a?1:-1));
   async function select(sub,where){
     const{man,by}=await R.units(sub),names=new Set([...(man.fields||[]).map(f=>f.name),"id","revision"]);
     const{about,arows}=await R.aboutOf(man);
@@ -1672,7 +1677,7 @@ function tools(ctx,turn){
       if(f&&f.type==="list"&&((["eq","ne"].includes(op)&&(c.value===""||c.value===null||(Array.isArray(c.value)&&!c.value.length)))||["exists","missing"].includes(op))){
         if(v==null&&f.inherit!==undefined)v=f.inherit;const e=emptyish(v);return["eq","missing"].includes(op)?e:!e}
       return match(v,op,c.value)};
-    const ids=[...by.keys()].sort();
+    const ids=[...by.keys()].sort(cmpU8);
     return{man,about,arows,hits:ids.map(i=>by.get(i)).filter(r=>where.every(c=>ok(r,c)))}}
   async function find_units(args){
     args=args||{};const sub=String(args.sub||""),where=normWhere(args.where),want=Array.isArray(args.fields)?args.fields:null;
@@ -1735,7 +1740,7 @@ function tools(ctx,turn){
       const v=valueOf(row,field,about,arows);
       if(f&&f.type==="list"&&emptyish(v==null&&f.inherit!==undefined?f.inherit:v))empty++;
       for(const x of Array.isArray(v)?v:[v]){if(x==null||typeof x==="object")continue;const k=J(x);count.set(k,(count.get(k)||0)+1)}}
-    const values=[...count].sort((a,b)=>b[1]-a[1]||(a[0]<b[0]?-1:a[0]>b[0]?1:0)).map(([k,n])=>({value:JSON.parse(k),units:n}));
+    const values=[...count].map(([k,n])=>({value:JSON.parse(k),units:n})).sort((a,b)=>b.units-a.units||cmpJSON(a.value,b.value));
     const out={sub,field,values};
     if(empty){out.empty_units=empty;out.empty_note=`empty or not set: {"field": "${field}", "op": "eq", "value": []}`}
     return out}

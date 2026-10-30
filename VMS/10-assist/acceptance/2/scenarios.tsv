@@ -26,6 +26,7 @@ scenario	step	request	expect
 02-step	19	PUT /models/m1 {"enabled": false}	200 {"enabled": false}
 02-step	20	@until 30 GET /models	200 {"rows": [{"id": "m1", "phase": "stopped", "reason": "disabled"}]}
 02-step	21	door assist/m1 POST /chat/m1/steps {"messages": [{"role": "user", "content": "привет"}]}	503 {"error": "model unavailable", "detail": "disabled"}
+02-step	22	door assist/m1 GET /chat/m1/steps/nobody.00000000000000000000000000000000?wait=x	400 {"error": "bad step", "detail": "@any"}
 03-limits	1	@start worker assist m-srv-a-1 on srv-a labels=assist-a	ok
 03-limits	2	POST /models {"name": "m1", "labels": ["assist-a"]}	201 {"id": "m1"}
 03-limits	3	@until 60 GET /models	200 {"rows": [{"id": "m1", "phase": "running"}]}
@@ -35,7 +36,7 @@ scenario	step	request	expect
 03-limits	7	door assist/m1 POST /chat/m1/steps {"messages": [{"role": "user", "content": "привет"}]}	429 {"error": "too many steps"}
 03-limits	8	door assist/m1 GET /chat/m1/steps/$b	200 {"state": "queued", "ahead": 0}
 03-limits	9	door assist/m1 DELETE /chat/m1/steps/$b	200 {"state": "cancelled"}
-03-limits	10	@until 60 resource GET /v1/objects/assist/heartbeats/m-srv-a-1	200 {"steps": {"abandoned": 1}}
+03-limits	10	@until 60 resource GET /v1/objects/assist/heartbeats/m-srv-a-1	200 {"steps": {"cancelled": 1, "abandoned": 1}}
 03-limits	11	door assist/m1 GET /chat/m1/steps/$a	200 {"state": "cancelled", "reason": "abandoned"}
 03-limits	12	GET /models	200 {"rows": [{"id": "m1", "phase": "running"}]}
 04-owner	1	@domain m1	ok
