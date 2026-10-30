@@ -46,3 +46,20 @@ rev_max_changed	revmax-a @rev-max revmax-b	2 9007199254740991
 shell_onclick	paged @shell-put paged paged	2 1
 shell_same_twice	pagedok @shell-put pagedok pagedok pagedok	0 2
 shell_changed	pagedok @shell-put pagedok pagedok @shell-put pagedok-alt pagedok	0 3
+# Аудит покрытия P/02, второй проход (Gemini): worker.requests, правило 4 worker.creates (default), near.of, отсрочка worker.uses, имена ОС (P/02.1 Н3 «загрузить_каталог», P/02.4 Н1.1 users_groups names)
+requests_ok	req-target req-caller	0 1
+requests_missing_target	req-caller	2 -
+requests_target_no_requests	req-target-noreq req-caller	2 -
+requests_target_drops_requests	req-target req-caller req-target-noreq	2 1
+creates_target_secret_default	target-secret-default customer	2 -
+creates_target_after_secret_default	customer target-secret-default	2 -
+near_bad_of	near-target near-client-bad-of	2 -
+near_target_after_bad_of	near-client-bad-of near-target	2 -
+uses_owner_after	user owner	0 1
+uses_owner_after_mismatch	user owner-noshare	2 -
+os_name_len_32_ok	os-len-32-ok	0 1
+os_name_sub_len_33	os-sub-len-33	2 -
+os_name_part_len_33	os-part-len-33	2 -
+os_name_platform_clash	os-platform-store	2 -
+os_name_part_share_clash	os-part-share-clash	2 -
+os_name_part_share_bound_ok	os-part-share-ok	0 1

@@ -1,0 +1,12 @@
+# near.of называет поле nosuch, которого у neart нет, при существующем поле в near.prefer (P/02.1 Н3, ADR-0091 доп. (26) п. 2)
+name: nearb
+unit:
+  rows: nearbs
+  id: name
+  fields:
+    name: {type: string, required: true}
+    of:   {type: string, required: true}
+placement:
+  capacity: {default: 1}
+  near: {sub: neart, by: of, of: nosuch, prefer: {start: [0]}}
+worker: {exec: /usr/lib/nearb/worker}

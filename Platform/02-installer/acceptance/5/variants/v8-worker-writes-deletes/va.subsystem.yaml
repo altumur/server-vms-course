@@ -1,0 +1,25 @@
+name: va
+unit:
+  rows: items
+  id: name
+  fields:
+    name:   {type: string, required: true}
+    start:  {type: int, default: 0}
+tables:
+  shelves:
+    key: name
+    fields:
+      name: {type: string, required: true}
+  gauges:
+    key: name
+    fields:
+      name:  {type: string, required: true}
+      level: {type: int}
+placement:
+  capacity:   {from: capacity, default: 4}
+  constraint: labels-subset
+  tie_break:  most-free-capacity
+worker:
+  exec: /usr/lib/va/worker
+  writes: [gauges]
+  deletes: [items]

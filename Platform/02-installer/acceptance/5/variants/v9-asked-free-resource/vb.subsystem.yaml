@@ -1,0 +1,36 @@
+name: vb
+about: {sub: va, field: of}
+unit:
+  rows: things
+  id: name
+  fields:
+    name:   {type: string, required: true}
+    of:     {type: string, required: true, fixed: true}
+tables:
+  notches:
+    key: "{of}-{from:int}-{to:int}"
+    fields:
+      of:   {type: string, required: true}
+      from: {type: float, required: true}
+      to:   {type: float, required: true}
+  shelves:
+    key: name
+    fields:
+      name: {type: string, required: true}
+holds: {table: notches, unit: of, since: from, until: to, longest: 86400}
+placement:
+  capacity:   {from: capacity, default: 4}
+  constraint: labels-subset
+  tie_break:  most-free-capacity
+requests:
+  free: true
+  per_person: 3
+  ttl: 60
+  valid_for: 30
+  most_valid: 600
+  schema:
+    type: object
+    required: [unit]
+    additionalProperties: false
+    properties: {unit: {type: string}}
+worker: {exec: /usr/lib/vb/worker}

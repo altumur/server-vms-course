@@ -76,9 +76,13 @@ null`); сц. 12 — роли домена.
 | `v4-domain-kept` | `va` с `domain.kept: [ledger, badges/]` | `vadomain` пишет слот и `kept`; `domainagent` — по форме объявления и без слота и пульса воркера на домене (R4, R3) |
 | `v6-near-about-ref` | `va`; `vb` с `placement.near.sub: va`, `vc` с `about.sub: va`, `vd` с полем `ref: va/items` | контроллер читает строки `va` по каталогу (`placement`, `workers`, `slots`, `holds`, строки единиц, `policy`, `placement_turn`), не эпоху, `idem`, `next_id` и не пишет; обратной связи нет (решение «Архитектора» 2026-10-27; P/03 Go 084a3ee9, P/03.6 сц. 07) |
 | `v7-must-match` | `va` (поле `shelf` — `ref: va/shelves`, `must_match: {zone: zone}`; таблица `shelves`); `vb` с `worker.creates` на `va/items` (`key: "{code}"`); `vc` с таблицей `links`, поле `of` — `ref: va/items`, `must_match: {zone: zone}` | заказчик `vbworker` читает цели проверки строки — `va/shelves/*` (прямая ветвь) и `vc/links/*` (обратная ветвь `must_match`), пишет только `va/items/vb-*` без удаления; чужие строки `va/items` и прочие семьи `vc` — нет; контроллер `va` обратную семью не читает (аудит покрытия P/02, B07) | P/02.5 Н1.4 `<s>worker` «чтения общей проверки строки»; договор проверки строки |
+| `v8-worker-writes-deletes` | `va` с таблицами `shelves`, `gauges`, `worker.writes: [gauges]`, `worker.deletes: [items]` | таблица `worker.writes`: воркер пишет, читает и удаляет, консоль читает и только удаляет; обычная таблица: консоль пишет и удаляет, воркер только читает; `worker.deletes`: воркер удаляет строки единиц без записи, контроллер без `delete_after` — нет (аудит покрытия P/02, второй проход) | P/02.5 Н1.4 `console`, `<s>worker`, Н3 шаг 2 |
+| `v9-asked-free-resource` | `va` с `requests` без `per_person` и `free`; `vb` с `about.sub: va`, таблицами `notches` (`holds.table`) и `shelves`, `requests` с `per_person` и `free: true` | консоль пишет `vb/asked/*`, не `va/asked/*`; `!vb/asked/*` у воркера и контроллера `vb`; ресурс пишет, читает, удаляет `vb/requests/free-*`, не `vb/requests/<rid>` и не `va/requests/free-*`; ресурс читает таблицу `holds` (`vb/notches/*`) и строки единиц манифеста с `about` (`vb/things/*`), не прочие таблицы и не строки `va` без `about` (договор удержаний) (там же) | P/02.5 Н1.4 общие правила, `console`, `resource` |
+| `v10-worker-domain-reads` | `va` с `worker.reads: [domain/placed/va/, domain/va/tallies]`, книгами `tallies` (переносимая), `notes` (`from: va/notes/`), `rolls` (`from: va/rolls`), `domain.shared`, видом токена с `unit`, `door.routes`; `vb` без них | `domain/placed/va/` даёт и `domain/placement/va/*`; копия своей книги — и точный ключ `domain/va/tallies/local` (`CLUSTER` не задан — `local`), не префикс; запись источников собираемых книг — префикс и точный ключ; `domain/shared`, `domain/topology`, `domain/member-topology`, `domain/grants` — только у `vaworker` (там же) | P/02.5 Н1.4 `<s>worker`, Н2, Н3 шаг 3 (C02-OWN-BOOK-HOLDER-01) |
+| `v11-controller-cross-tables` | `vb`, `vc`, `vd` — как в `v6-near-about-ref`; `va` с таблицей `shelves` и `requests` (`per_person`) | контроллер связной подсистемы читает таблицы `va`, `va/decommissioned/*`, `va/controller/placement_intent`, не читает `va/requests/*`, `va/asked/*` и не пишет таблицу `va` (там же) | P/02.5 Н1.4 `<s>controller` (решение «Архитектора» 2026-10-27) |
 | `v5-secret-domainworker` | `va` с `secrets.readers: {va/vault: [domainworker]}` и `kept` | `domainworker` → `vadomain` читает, прочие — нет (R6) |
 
-Манифесты вариантов `v1`–`v5` байт в байт те, на которых сверка генерировала права обеих реализаций, — обе их загружают; `v6-near-about-ref` — решение «Архитектора» 2026-10-27; `v7-must-match` — аудит покрытия P/02 (audit-kimi 2026-10-30, коммит 82f4da9fc).
+Манифесты вариантов `v1`–`v5` байт в байт те, на которых сверка генерировала права обеих реализаций, — обе их загружают; `v6-near-about-ref` — решение «Архитектора» 2026-10-27; `v7-must-match` — аудит покрытия P/02 (audit-kimi 2026-10-30, коммит 82f4da9fc). `v8`–`v11` — аудит покрытия P/02, второй проход (Gemini, c698f3291; ниже).
 
 ## Проверки вне сценарного файла
 
@@ -106,3 +110,12 @@ null`); сц. 12 — роли домена.
 
 Сценарий 11 — метки просьб `objects/<s>/commands/*` (P/06.4 Н1.5 mark): воркер манифеста с `requests` пишет, читает и
 удаляет свою, чужого манифеста — 403, контроллер — 403 (Н1.4; журнал cammeta-go, урок 8 № 4).
+
+## Аудит покрытия P/02, второй проход (Gemini)
+
+Отчёт `АУДИТ-ПОКРЫТИЯ-GEMINI-P02.md` (ветка gemini/audit-coverage, c698f3291): вывод прав, что прежде проверялся чтением, —
+варианты `v8-worker-writes-deletes` (G04), `v9-asked-free-resource` (G05), `v10-worker-domain-reads` (G06),
+`v11-controller-cross-tables` (G07; отдельный вариант — манифесты `v6-near-about-ref` не меняются). Таблица вариантов выше.
+Чтением остаются: `--check` на изменённом файле прав и отказы генератора до файла (прямое называние `idem`/`asked`,
+вложение `secrets.reads`, неравенство читателей секрета, `CLUSTER=`) — формат `variants/` ожидаемого отказа генерации не
+знает (код ≠ 0 — несовпадение варианта).

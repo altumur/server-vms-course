@@ -1,0 +1,13 @@
+name: vb
+unit:
+  rows: things
+  id: name
+  fields:
+    name:   {type: string, required: true}
+    of:     {type: string}
+placement:
+  capacity:   {from: capacity, default: 4}
+  constraint: labels-subset
+  tie_break:  most-free-capacity
+  near:       {sub: va, by: of, of: name}
+worker: {exec: /usr/lib/vb/worker}

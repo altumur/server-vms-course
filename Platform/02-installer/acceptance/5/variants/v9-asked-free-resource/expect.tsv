@@ -1,0 +1,20 @@
+# Ожидаемые эффективные права варианта v9-asked-free-resource (P/02.5 Н1.4):
+# - console пишет vb/asked/* (у vb есть requests.per_person) и не пишет va/asked/* (у va нет per_person);
+# - vbworker и vbcontroller не читают vb/asked/* (!vb/asked/*);
+# - resource пишет/читает/удаляет vb/requests/free-* (у vb requests.free: true), не пишет vb/requests/r1 и va/requests/free-*;
+# - resource читает таблицу holds (vb/notches/*) и строки единиц манифеста с about (vb/things/*), но не обычную таблицу vb/shelves/* и не строки va/items/* без about.
+role	action	key	expect
+console	write	vb/asked/alice	allow
+console	delete	vb/asked/alice	allow
+console	write	va/asked/alice	deny
+vbworker	read	vb/asked/alice	deny
+vbcontroller	read	vb/asked/alice	deny
+resource	write	vb/requests/free-r1	allow
+resource	read	vb/requests/free-r1	allow
+resource	delete	vb/requests/free-r1	allow
+resource	write	vb/requests/r1	deny
+resource	write	va/requests/free-r1	deny
+resource	read	vb/notches/n1	allow
+resource	read	vb/shelves/s1	deny
+resource	read	vb/things/t1	allow
+resource	read	va/items/u1	deny
