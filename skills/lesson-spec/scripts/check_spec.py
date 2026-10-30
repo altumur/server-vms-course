@@ -2156,6 +2156,8 @@ class Check:
         puts = (key, entry) in PUTS_CHAPTERS
         if puts:
             supported |= {"puts.tsv", "puts"}
+            if entry == "2/":
+                supported.add("puts-ceiling.tsv")       # потолок не по умолчанию (аудит P/02, B00): checked with puts.tsv
         extra = {value[len(entry):] for (lesson_key, kind, value) in self.registry
                  if lesson_key == key and kind == "acceptance-entry" and value.startswith(entry)}
         own_format = False                          # an excepted entry checked by the README of the acceptance

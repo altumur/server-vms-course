@@ -862,6 +862,54 @@ class TestChapter(unittest.TestCase):
         p.write_text("case\tputs\n", encoding="utf-8")
         self.assertIn("the first row is the header", self.messages(self.run_chapter(root)))
 
+    def test_puts_store_and_shell_directives_of_2_3(self):
+        # Аудит покрытия P/02 (B02, B03): @rev-max и @shell-put <оболочка> — только в трёх колонках главы 2.3.
+        from v7 import vectors
+        root = self.copy()
+        acc = root / "Platform/02-installer/acceptance/3"
+        ch = vectors.Chapter(root).run()
+        name = sorted(p.name[:-len(".subsystem.yaml")] for p in (acc / "puts").glob("*.subsystem.yaml"))[0]
+        (acc / "puts" / "sh1.shell.html").write_text("<p>x</p>", encoding="utf-8")
+        table = acc / "puts.tsv"
+        base = table.read_text(encoding="utf-8").rstrip("\n")
+        table.write_text(base + "\nzz_revmax\t%s @rev-max %s\t0 1\nzz_shell\t%s @shell-put sh1 %s\t0 2\n"
+                         % (name, name, name, name), encoding="utf-8")
+        ch.errors = []
+        n = ch.puts(acc)
+        self.assertEqual(self.messages(ch), "")
+        self.assertGreater(n, 2)
+        table.write_text(base + "\nzz_bad\t%s @shell-put nosh %s\t0 2\nzz_end\t%s @shell-put sh1\t0 2\n"
+                         % (name, name, name), encoding="utf-8")
+        ch.errors = []
+        ch.puts(acc)
+        m = self.messages(ch)
+        self.assertIn("no file puts/nosh.shell.html", m)
+        self.assertIn("file names through one space", m)
+        (acc / "puts" / "junk.txt").write_text("x", encoding="utf-8")
+        table.write_text(base + "\n", encoding="utf-8")
+        ch.errors = []
+        ch.puts(acc)
+        m = self.messages(ch)
+        self.assertIn("puts/ holds only", m)
+        self.assertIn("no row of puts.tsv puts this shell", m)
+
+    def test_puts_ceiling_of_2_2(self):
+        # Аудит покрытия P/02 (B00): puts-ceiling.tsv рядом с puts.tsv главы 2.2, пятая колонка ceiling.
+        from v7 import vectors
+        root = self.copy()
+        acc = root / vectors.ACCEPTANCE
+        rows = [ln for ln in (acc / "puts.tsv").read_text(encoding="utf-8").split("\n")
+                if ln and not ln.startswith("#") and not ln.startswith("case\t")]
+        good = next(r for r in rows if r.split("\t")[2].startswith("0 ") and r.split("\t")[3] != "-").split("\t")
+        (acc / vectors.CEILING_TABLE).write_text(
+            "case\tputs\texpect\tcanonical\tceiling\nzz_ceil\t%s\t%s\t%s\t977\nzz_low\t%s\t2 -\t-\t976\n"
+            % (good[1], good[2], good[3], good[1]), encoding="utf-8")
+        self.assertEqual(self.messages(self.run_chapter(root)), "")
+        (acc / vectors.CEILING_TABLE).write_text(
+            "case\tputs\texpect\tcanonical\tceiling\nzz_ceil\t%s\t%s\t%s\tbig\n" % (good[1], good[2], good[3]),
+            encoding="utf-8")
+        self.assertIn("ceiling is a positive integer", self.messages(self.run_chapter(root)))
+
     def test_absent(self):
         from v7 import vectors
         root = self.copy()

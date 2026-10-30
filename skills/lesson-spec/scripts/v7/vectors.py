@@ -47,7 +47,10 @@ STEP_PLACES = [
     ("П2", ["/tables/*/journal/written", "/tables/*/journal/deleted"]), ("П3", ["/display/form", "/unit/fields"]),
     ("П4", [f + "/default" for f in FIELDS]), ("П5", [f + "/secret_in/*/decoded" for f in FIELDS]),
 ]
-PUTS_DIRECTIVES = {"@view-delete", "@view-spoil"}
+PUTS_DIRECTIVES = {"@view-delete", "@view-spoil"}       # глава 2.2 (с колонкой вида)
+STORE_DIRECTIVES = {"@rev-max"}                         # глава 2.3: rev = 2^53 − 1 у строки, метки и вида (аудит P/02, B02)
+SHELL_PUT = "@shell-put"                                # глава 2.3: за ним — оболочка puts/<имя>.shell.html (аудит P/02, B03)
+CEILING_TABLE = "puts-ceiling.tsv"                      # глава 2.2: потолок не по умолчанию, пятая колонка (аудит P/02, B00)
 PUTS_FILE = re.compile(r"[a-z0-9][a-z0-9_-]*")
 EXPECT = re.compile(r"(0|2) ([1-9][0-9]*|-)")
 
@@ -393,28 +396,55 @@ class Chapter:
 
     # ---- приёмка: puts.tsv (3 колонки — глава 2.3; 4 — глава 2.2 с колонкой вида)
     def puts(self, acceptance):
-        """Форма puts.tsv и puts/ каталога приёмки; возвращает число случаев (ошибки — в errors)."""
+        """Форма puts.tsv (и puts-ceiling.tsv главы 2.2) и puts/ каталога приёмки; возвращает число случаев."""
         acceptance = Path(acceptance)
         rel = acceptance.relative_to(self.root) if acceptance.is_absolute() else acceptance
-        table = self.root / rel / "puts.tsv"
+        files = {p.name[:-len(".subsystem.yaml")] for p in (self.root / rel / "puts").glob("*.subsystem.yaml")}
+        shells = {p.name[:-len(".shell.html")] for p in (self.root / rel / "puts").glob("*.shell.html")}
+        others = [p.name for p in (self.root / rel / "puts").iterdir()] if (self.root / rel / "puts").is_dir() else []
+        for name in others:
+            if not name.endswith((".subsystem.yaml", ".shell.html")) and name != ".DS_Store":
+                self.error(rel / "puts" / name, "puts/ holds only <имя>.subsystem.yaml and <имя>.shell.html")
+        used, used_shells, n, view_chapter = set(), set(), 0, None
+        tables = ["puts.tsv"] + ([CEILING_TABLE] if (self.root / rel / CEILING_TABLE).exists() else [])
+        for table_name in tables:
+            got = self._puts_table(rel, table_name, files, shells, used, used_shells)
+            if got is None:
+                continue
+            count, view = got
+            n += count
+            if table_name == "puts.tsv":
+                view_chapter = view
+        if (self.root / rel / CEILING_TABLE).exists() and view_chapter is False:
+            self.error(rel / CEILING_TABLE, "%s belongs to chapter 2.2 (puts.tsv with the canonical column)" % CEILING_TABLE)
+        for t in sorted(files - used):
+            self.error(rel / "puts" / (t + ".subsystem.yaml"), "no row of puts.tsv installs it")
+        for t in sorted(shells - used_shells):
+            self.error(rel / "puts" / (t + ".shell.html"), "no row of puts.tsv puts this shell (%s)" % SHELL_PUT)
+        return n
+
+    def _puts_table(self, rel, table_name, files, shells, used, used_shells):
+        """Одна таблица установок: puts.tsv (3 колонки — глава 2.3; 4 — глава 2.2) или puts-ceiling.tsv (5 — глава 2.2)."""
+        table = self.root / rel / table_name
+        ceiling = table_name == CEILING_TABLE
         try:
             text = table.read_text(encoding="utf-8")
         except (OSError, UnicodeError) as exc:
-            self.error(rel / "puts.tsv", str(exc))
-            return 0
+            self.error(rel / table_name, str(exc))
+            return None
         rows = [(no, line.split("\t")) for no, line in enumerate(text.split("\n"), 1) if line and not line.startswith("#")]
-        if not rows or rows[0][1] not in (["case", "puts", "expect"], ["case", "puts", "expect", "canonical"]):
-            self.error(rel / "puts.tsv", "the first row is the header case<TAB>puts<TAB>expect[<TAB>canonical]")
-            return 0
-        width, view = len(rows[0][1]), len(rows[0][1]) == 4
-        files = {p.name[:-len(".subsystem.yaml")] for p in (self.root / rel / "puts").glob("*.subsystem.yaml")}
-        others = [p.name for p in (self.root / rel / "puts").iterdir()] if (self.root / rel / "puts").is_dir() else []
-        for name in others:
-            if not name.endswith(".subsystem.yaml") and name != ".DS_Store":
-                self.error(rel / "puts" / name, "puts/ holds only <имя>.subsystem.yaml")
-        used, seen, n = set(), set(), 0
+        headers = ([["case", "puts", "expect", "canonical", "ceiling"]] if ceiling else
+                   [["case", "puts", "expect"], ["case", "puts", "expect", "canonical"]])
+        if not rows or rows[0][1] not in headers:
+            self.error(rel / table_name, "the first row is the header %s" %
+                       ("case<TAB>puts<TAB>expect<TAB>canonical<TAB>ceiling" if ceiling else
+                        "case<TAB>puts<TAB>expect[<TAB>canonical]"))
+            return None
+        width = len(rows[0][1])
+        view = width >= 4
+        seen, n = set(), 0
         for no, cols in rows[1:]:
-            where = rel / "puts.tsv"
+            where = rel / table_name
             if len(cols) != width:
                 self.error(where, "line %d: expected %d TSV columns, got %d" % (no, width, len(cols)))
                 continue
@@ -423,22 +453,51 @@ class Chapter:
                 self.error(where, "line %d: case %r is not unique or not [a-z0-9_]+" % (no, case))
             seen.add(case)
             tokens = puts.split(" ")
-            names = [t for t in tokens if not t.startswith("@")]
-            bad = [t for t in tokens if (t not in PUTS_DIRECTIVES if t.startswith("@") else not PUTS_FILE.fullmatch(t))]
-            if bad or not names or tokens[0].startswith("@") or tokens[-1].startswith("@"):
+            names, shell_args, bad, i = [], [], [], 0
+            while i < len(tokens):
+                t = tokens[i]
+                if t == SHELL_PUT:
+                    arg = tokens[i + 1] if i + 1 < len(tokens) else ""
+                    if not PUTS_FILE.fullmatch(arg):
+                        bad.append(t)
+                    else:
+                        shell_args.append(arg)
+                    i += 2
+                    continue
+                if t.startswith("@"):
+                    if t not in PUTS_DIRECTIVES | STORE_DIRECTIVES:
+                        bad.append(t)
+                elif PUTS_FILE.fullmatch(t):
+                    names.append(t)
+                else:
+                    bad.append(t)
+                i += 1
+            if bad or not names or tokens[0].startswith("@") or not PUTS_FILE.fullmatch(tokens[-1]) \
+                    or (len(tokens) > 1 and tokens[-2] == SHELL_PUT):
                 self.error(where, "line %d: puts — file names through one space (directives %s between them%s)"
-                           % (no, ", ".join(sorted(PUTS_DIRECTIVES)), "" if view else ": only with the canonical column"))
+                           % (no, ", ".join(sorted(PUTS_DIRECTIVES | STORE_DIRECTIVES | {SHELL_PUT + " <оболочка>"})),
+                              "" if view else "; @view-* only with the canonical column"))
                 continue
-            if not view and len(names) != len(tokens):
+            directives = {t for t in tokens if t.startswith("@")}
+            if not view and directives & PUTS_DIRECTIVES:
                 self.error(where, "line %d: directives %s need the canonical column" % (no, ", ".join(sorted(PUTS_DIRECTIVES))))
+            if view and directives & (STORE_DIRECTIVES | {SHELL_PUT}):
+                self.error(where, "line %d: directives %s are of chapter 2.3 (three columns)"
+                           % (no, ", ".join(sorted(STORE_DIRECTIVES | {SHELL_PUT}))))
             for t in names:
                 used.add(t)
                 if t not in files:
                     self.error(where, "line %d: no file puts/%s.subsystem.yaml" % (no, t))
+            for t in shell_args:
+                used_shells.add(t)
+                if t not in shells:
+                    self.error(where, "line %d: no file puts/%s.shell.html" % (no, t))
             m = EXPECT.fullmatch(expect)
             if not m:
                 self.error(where, "line %d: expect is `<code 0|2> <rev|->`" % no)
                 continue
+            if ceiling and not re.fullmatch(r"[1-9][0-9]*", cols[4]):
+                self.error(where, "line %d: ceiling is a positive integer (the store's row ceiling of the instance)" % no)
             n += 1
             if not view:
                 continue
@@ -462,9 +521,7 @@ class Chapter:
             if self.vectors[want] not in got:
                 self.error(where, "line %d: the vector %s is not the view of %s" %
                            (no, want, "the last file" if m.group(1) == "0" else "any file of the case"))
-        for t in sorted(files - used):
-            self.error(rel / "puts" / (t + ".subsystem.yaml"), "no row of puts.tsv installs it")
-        return n
+        return n, view
 
 
 def main(argv=None):
