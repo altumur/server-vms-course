@@ -1,0 +1,173 @@
+{
+  "green": true,
+  "SUT": 0,
+  "manifest_sha256": "50762f756ba1bbc2b4a38375cc843c8fbd6231ba1e63f332f22997af85bc4c48",
+  "package_files": 13,
+  "author_input_sha256": "aef91dc62dacb6e71954f9c92b0839a8db5c1703c6e276005c20d3c103adc242",
+  "author_input_files": 4908,
+  "git_blobs": {
+    "before": 217,
+    "after": 217
+  },
+  "original_probe_blob": "3ee8e0268e04c247fa8fde842f7b03e66b5e2992",
+  "controls": {
+    "before": {
+      "published_4097": {
+        "safety_pass": true,
+        "body_matches": true,
+        "body_length": 4097,
+        "expected_length": 4097,
+        "content_types": [
+          "application/octet-stream"
+        ],
+        "content_lengths": [
+          "4097"
+        ],
+        "body_prefix": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "valid_json": false
+      },
+      "json_literal_marker": {
+        "safety_pass": false,
+        "body_matches": false,
+        "body_length": 34,
+        "expected_length": 46,
+        "content_types": [
+          "application/octet-stream"
+        ],
+        "content_lengths": [
+          "34"
+        ],
+        "body_prefix": "{\"request_id\": \"j1\", \"ref\": \"value",
+        "valid_json": false
+      },
+      "store_raw": {
+        "safety_pass": false,
+        "body_matches": true,
+        "body_length": 7,
+        "expected_length": 7,
+        "content_types": [
+          "application/json"
+        ],
+        "content_lengths": [
+          "7"
+        ],
+        "body_prefix": "abc def",
+        "valid_json": false
+      },
+      "raw_utf8_spaces": {
+        "safety_pass": true,
+        "body_matches": true,
+        "body_length": 22,
+        "expected_length": 22,
+        "content_types": [
+          "application/octet-stream"
+        ],
+        "content_lengths": [
+          "22"
+        ],
+        "body_prefix": "Привет  мир  ",
+        "valid_json": false
+      },
+      "custom_type": {
+        "safety_pass": true,
+        "body_matches": true,
+        "body_length": 2,
+        "expected_length": 2,
+        "content_types": [
+          "application/custom"
+        ],
+        "content_lengths": [
+          "2"
+        ],
+        "body_prefix": "{}",
+        "valid_json": true
+      },
+      "delayed_listener": {
+        "safety_pass": true,
+        "status": 200
+      }
+    },
+    "after": {
+      "published_4097": {
+        "safety_pass": true,
+        "body_matches": true,
+        "body_length": 4097,
+        "expected_length": 4097,
+        "content_types": [
+          "application/octet-stream"
+        ],
+        "content_lengths": [
+          "4097"
+        ],
+        "body_prefix": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "valid_json": false
+      },
+      "json_literal_marker": {
+        "safety_pass": true,
+        "body_matches": true,
+        "body_length": 46,
+        "expected_length": 46,
+        "content_types": [
+          "application/json"
+        ],
+        "content_lengths": [
+          "46"
+        ],
+        "body_prefix": "{\"request_id\": \"j1\", \"ref\": \"value @raw tail\"}",
+        "valid_json": true
+      },
+      "store_raw": {
+        "safety_pass": true,
+        "body_matches": true,
+        "body_length": 7,
+        "expected_length": 7,
+        "content_types": [
+          "application/octet-stream"
+        ],
+        "content_lengths": [
+          "7"
+        ],
+        "body_prefix": "abc def",
+        "valid_json": false
+      },
+      "raw_utf8_spaces": {
+        "safety_pass": true,
+        "body_matches": true,
+        "body_length": 22,
+        "expected_length": 22,
+        "content_types": [
+          "application/octet-stream"
+        ],
+        "content_lengths": [
+          "22"
+        ],
+        "body_prefix": "Привет  мир  ",
+        "valid_json": false
+      },
+      "custom_type": {
+        "safety_pass": true,
+        "body_matches": true,
+        "body_length": 2,
+        "expected_length": 2,
+        "content_types": [
+          "application/custom"
+        ],
+        "content_lengths": [
+          "2"
+        ],
+        "body_prefix": "{}",
+        "valid_json": true
+      },
+      "delayed_listener": {
+        "safety_pass": true,
+        "status": 200
+      }
+    }
+  },
+  "tests": {
+    "test_m11_raw_and_agent_door": ".........\n----------------------------------------------------------------------\nRan 9 tests in 0.813s\n\nOK",
+    "test_c_domain_stand": "..............\n----------------------------------------------------------------------\nRan 14 tests in 2.860s\n\nOK",
+    "test_runner": ".........\n----------------------------------------------------------------------\nRan 9 tests in 0.047s\n\nOK"
+  },
+  "inputs_unchanged": true
+}
