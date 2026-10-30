@@ -101,14 +101,14 @@ scenario	step	request	expect
 15-dot-segments-and-x-user	8	holder @header X-User: forged GET /session	200 {"open": false, "user": "root", "via": "token", "grants": [{"cap": "admin", "scope": "*"}]}
 16-gate-rows-unreadable	1	@domain	ok
 16-gate-rows-unreadable	2	@on hold @sigterm domain	ok
-16-gate-rows-unreadable	3	member hold store GET /v1/get?key=domain/revoked	200 {"items": {"jtis": "$jtis"}}
+16-gate-rows-unreadable	3	holder GET /domain	200 {"holder": "hold"}
 16-gate-rows-unreadable	4	member hold store POST /v1/write {"op": "put", "key": "domain/disabled", "items": {"names": "not a list"}}	200
 16-gate-rows-unreadable	5	holder GET /domain	503 {"error": "unavailable"}
 16-gate-rows-unreadable	6	member hold store POST /v1/write {"op": "put", "key": "domain/disabled", "items": {"names": "[]"}}	200
 16-gate-rows-unreadable	7	holder GET /domain	200 {"holder": "hold"}
 16-gate-rows-unreadable	8	member hold store POST /v1/write {"op": "put", "key": "domain/revoked", "items": {"jtis": "not a revocation"}}	200
 16-gate-rows-unreadable	9	holder GET /domain	503 {"error": "unavailable"}
-16-gate-rows-unreadable	10	member hold store POST /v1/write {"op": "put", "key": "domain/revoked", "items": {"jtis": "$jtis"}}	200
+16-gate-rows-unreadable	10	member hold store POST /v1/write {"op": "put", "key": "domain/revoked", "items": {"jtis": ""}}	200
 16-gate-rows-unreadable	11	holder GET /domain	200 {"holder": "hold"}
 16-gate-rows-unreadable	12	member hold store POST /v1/write {"op": "put", "key": "domain/grants/domain", "items": {"doc": "not json"}}	200
 16-gate-rows-unreadable	13	holder GET /domain	503 {"error": "unavailable"}

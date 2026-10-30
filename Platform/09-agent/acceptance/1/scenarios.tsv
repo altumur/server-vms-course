@@ -213,7 +213,7 @@ scenario	step	request	expect
 24-unreadable-outcomes	7	member m1 console GET /counters	200 {"configured": [{"id": "c24", "start": 1}]}
 24-unreadable-outcomes	8	holder GET /domain	200 {"pending": {"m1": 1}}
 24-unreadable-outcomes	9	member m1 store GET /v1/get?key=domain/outcomes	200 {"items": {"e-000000000001": "garbled"}}
-24-unreadable-outcomes	10	member m1 store POST /v1/write {"op": "delete", "key": "domain/outcomes"}	200
+24-unreadable-outcomes	10	member m1 store POST /v1/write {"op": "put", "key": "domain/outcomes", "items": {}}	200
 24-unreadable-outcomes	11	@until 60 member m1 console GET /counters	200 {"configured": [{"id": "c24", "start": 8}]}
 24-unreadable-outcomes	12	@until 60 holder GET /domain	200 {"pending": {"m1": 0}, "outcomes": {"m1": [{"id": "$id", "status": 200, "result": "performed"}]}}
 25-unreadable-agent-turn	1	@domain	ok
@@ -225,6 +225,6 @@ scenario	step	request	expect
 25-unreadable-agent-turn	7	@until 90 holder GET /domain	200 {"members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "m2", "state": "silent"}]}
 25-unreadable-agent-turn	8	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r1", "ref": "c1"}	200 {"request_id": "r1", "token": "@any", "exp": "@any"}
 25-unreadable-agent-turn	9	member m2 store GET /v1/get?key=domain/agent-turn	200 {"items": {"bad": "1"}, "index": "$i1"}
-25-unreadable-agent-turn	10	member m2 store POST /v1/write {"op": "delete", "key": "domain/agent-turn"}	200
+25-unreadable-agent-turn	10	member m2 store POST /v1/write {"op": "put", "key": "domain/agent-turn", "items": {"holder": ""}}	200
 25-unreadable-agent-turn	11	@until 30 member m2 store GET /v1/get?key=domain/agent-turn	200 {"items": {"holder": "~:"}}
 25-unreadable-agent-turn	12	@until 60 holder GET /domain	200 {"members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "m2", "state": "ok"}]}
