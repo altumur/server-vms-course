@@ -5349,7 +5349,7 @@ components:
       description: стенные секунды консоли, которая ответила (время P/01.1 Н0, запись писателя; договор сторожевой и передачи `session` `server_time`, ADR-0094 B6)
     ClusterTimezone:
       type: string
-      pattern: '^[A-Za-z][A-Za-z0-9_+-]*(/[A-Za-z][A-Za-z0-9_+-]*)*$'
+      pattern: '^(?:[A-Za-z][A-Za-z0-9_+-]*(/[A-Za-z][A-Za-z0-9_+-]*)*)$'
       description: имя часового пояса IANA, настройка кластера, не ОС сервера; значение `TIMEZONE`, не задано — `UTC` (договор файла окружения «Переменные окружения»; договор сторожевой и передачи `session` `timezone`, ADR-0094 B6)
     Session:
       oneOf:
