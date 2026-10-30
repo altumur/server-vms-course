@@ -547,3 +547,16 @@ scenario	step	request	expect
 43-home-place-holder	16	console2 POST /tallies {"name": "h2", "of": "c1", "shelf": "s-a1", "zone": "z1"}	201
 43-home-place-holder	17	@until 30 console2 GET /where/h2	200 {"worker": "t-1"}
 43-home-place-holder	18	console2 GET /where/u1	200 {"worker": "t-1"}
+# 44-home-place-no-server (C04-HOME-PLACE-HOLDER-01): полка s-n без server; держателя нет — дома нет, h1 на t-srv-a-1; t-srv-b-1 взял s-n — h1 переезжает к нему (шаг 7, HOME_BUDGET)
+44-home-place-no-server	1	@start resource	ok
+44-home-place-no-server	2	@start resource on srv-b	ok
+44-home-place-no-server	3	@start controller testsub2	ok
+44-home-place-no-server	4	console2 POST /shelves {"name": "s-a1", "zone": "z", "server": "srv-a"}	201
+44-home-place-no-server	5	@start worker testsub2 t-srv-a-1 on srv-a	ok
+44-home-place-no-server	6	@until 30 store GET /v1/get?key=testsub2/holds/s-a1	200 {"items": {"by": "t-srv-a-1", "released": "false"}}
+44-home-place-no-server	7	console2 POST /shelves {"name": "s-n", "zone": "z"}	201
+44-home-place-no-server	8	console2 POST /tallies {"name": "h1", "of": "c1", "shelf": "s-n", "zone": "z"}	201
+44-home-place-no-server	9	@until 30 console2 GET /where/h1	200 {"worker": "t-srv-a-1"}
+44-home-place-no-server	10	@start worker testsub2 t-srv-b-1 on srv-b	ok
+44-home-place-no-server	11	@until 30 store GET /v1/get?key=testsub2/holds/s-n	200 {"items": {"by": "t-srv-b-1", "released": "false"}}
+44-home-place-no-server	12	@until 90 console2 GET /where/h1	200 {"worker": "t-srv-b-1"}
