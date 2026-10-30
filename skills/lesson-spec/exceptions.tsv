@@ -20,6 +20,7 @@ P/03	scenarios-format	6/own	три двери, @start/@until/@key, JSON Lines и
 P/04	no-openapi	-	своей HTTP-двери у контроллера нет: двери политики, дренажа, меток, вывода сервера, /unplaceable, /where — консоли (P/06, глава 6.6; план переноса урока 4, п. 8)
 P/04	scenarios-format	own	двери store/console/console2/resource и директивы процессов @start/@sig*/@grow/@as (сценарии из М10/05; из М10/10 сц. 03, 08 — @as console store, @time); проверяется по README приёмки
 P/05	scenarios-format	own	двери resource/console/store, @start/@until/@key/@append/@put/@spoil, @start worker/@sigkill (сц. 16 из М10/11), JSON Lines и байты (сценарии из М10/08, М10/10, М10/11); проверяется по README приёмки
+P/05	acceptance-entry	inputs	объекты для @put object (дверь объектов `testsub2/tickets`, надгробие `.gone`; аудит покрытия Gemini P/05); проверяется по README приёмки
 P/06	scenarios-format	1/own	двери console/console2/store, @key/@nokey/@header/@raw/@big, @start resource/@until, ожидание кода без тела и подстроки ответа (сценарии главы 6.1 из М10/03, М10/10); проверяется по README приёмки
 P/06	scenarios-format	2/own	двери console/store, @key, @as, @restart console, @until, проверки подстрок и отсутствия (сценарии главы 6.2 из М10/07); проверяется по README приёмки
 P/06	scenarios-format	3/own	общие двери консоли без префикса, @header с подстрокой (сценарий главы 6.3 из М10/09); проверяется по README приёмки
