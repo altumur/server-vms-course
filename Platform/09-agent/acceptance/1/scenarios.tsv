@@ -124,3 +124,35 @@ scenario	step	request	expect
 15-one-agent	18	@until 40 member m1 store GET /v1/get?key=domain/agent-turn	200 {"items": {"holder": "@not($a2)"}}
 15-one-agent	19	@until 20 member m1 store GET /v1/get?key=domain/agent-turn	200 {"items": {"holder": "~:"}}
 15-one-agent	20	@until 60 holder GET /domain	200 {"members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}]}
+16-holder-self-edit	1	@domain m1	ok
+16-holder-self-edit	2	member hold console POST /counters {"name": "h1", "start": 1}	201
+16-holder-self-edit	3	@until 60 holder GET /domain/testsub/counters?cluster=hold	200 [{"ref": "h1"}]
+16-holder-self-edit	4	holder PUT /domain/testsub/counters/h1?cluster=hold {"start": 7}	202 {"kept": "$id", "cluster": "hold", "what": "start"}
+16-holder-self-edit	5	@until 60 member hold console GET /counters	200 {"configured": [{"id": "h1", "start": 7}]}
+16-holder-self-edit	6	@until 60 holder GET /domain	200 {"pending": {"hold": 0}, "outcomes": {"hold": [{"id": "$id", "status": 200, "result": "performed"}]}}
+17-token-wait	1	@domain	ok
+17-token-wait	2	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "origin": "m2", "copies": []}	200
+17-token-wait	3	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r1", "ref": "c1"}	200 {"request_id": "r1", "token": "@any", "exp": "@any"}
+17-token-wait	4	@on hold @freeze domain	ok
+17-token-wait	5	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r2", "ref": "c1"}	503 {"error": "unavailable"}
+17-token-wait	6	@on hold @thaw domain	ok
+17-token-wait	7	@until 30 token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r3", "ref": "c1"}	200 {"request_id": "r3", "token": "@any", "exp": "@any"}
+18-break-glass-copy	1	@domain m1	ok
+18-break-glass-copy	2	holder PUT /domain/break-glass/m1 {"password": "glass password 12"}	200 {"cluster": "m1", "set": true}
+18-break-glass-copy	3	holder PUT /domain/break-glass/hold {"password": "holder glass password 12"}	200 {"cluster": "hold", "set": true}
+18-break-glass-copy	4	@until 30 member m1 store GET /v1/get?key=domain/break-glass/m1	200 {"items": {"set_at": "@any"}}
+18-break-glass-copy	5	member hold store GET /v1/get?key=domain/break-glass/hold	200 {"items": {"set_at": "$g1"}, "index": "$i1"}
+18-break-glass-copy	6	@sleep 10	ok
+18-break-glass-copy	7	member hold store GET /v1/get?key=domain/break-glass/hold	200 {"items": {"set_at": "$g1"}, "index": "$i1"}
+18-break-glass-copy	8	member hold store POST /v1/write {"op": "put", "key": "domain/break-glass/m1", "items": {"pwhash_secret": "garbled", "set_at": "1"}}	200
+18-break-glass-copy	9	@until 60 member m1 store GET /v1/get?key=domain/break-glass/m1	200 {"items": null}
+18-break-glass-copy	10	member hold store GET /v1/get?key=domain/break-glass/hold	200 {"items": {"set_at": "$g1"}, "index": "$i1"}
+19-backup-refused	1	@domain m1	ok
+19-backup-refused	2	@until 60 store GET /v1/get?key=domain/keepers/m1	200 {"items": {"term": "1"}}
+19-backup-refused	3	@stop agent m1	ok
+19-backup-refused	4	@on m1 @put object domain/backup inputs/backup-foreign-term.json	ok
+19-backup-refused	5	member m1 store POST /v1/write {"op": "put", "key": "domain/backup-taken", "items": {"term": "99", "rev": "99", "sha256": "eec6d36c2e9636846f2d335daf072c791c8022e1e714091f05fe56e4b2380434"}}	200
+19-backup-refused	6	@start agent m1	ok
+19-backup-refused	7	@until 60 member m1 store GET /v1/get?key=domain/backup-refused	200 {"items": {"why": "older than the copy kept here", "term": "1", "rev": "@any"}}
+19-backup-refused	8	member m1 store GET /v1/get?key=domain/backup-taken	200 {"items": {"term": "99", "rev": "99", "sha256": "eec6d36c2e9636846f2d335daf072c791c8022e1e714091f05fe56e4b2380434"}}
+19-backup-refused	9	member m1 resource GET /v1/objects/domain/backup?scope=local	200 {"term": 99, "rev": 99, "holder": "hold"}
