@@ -7,8 +7,11 @@
    "type": "string"
   },
   "worker": {
-   "description": "имя воркера шарда (слот P/03.2 Н1.4)",
-   "type": "string",
+   "description": "имя воркера шарда (слот P/03.2 Н1.4); у шарда ушедшего воркера — null",
+   "type": [
+    "string",
+    "null"
+   ],
    "pattern": "^(?:[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)$"
   },
   "ts": {

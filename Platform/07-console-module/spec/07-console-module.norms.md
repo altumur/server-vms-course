@@ -48,6 +48,8 @@ order:   /session → /manifest → /mounts → по подсистеме /<rows
          → /domain (+ /domain/alarms; P/10-06) → /api/held (P/06.7-14) → /metrics; опрос каждые poll_s; /events?unit= выбранной — каждые 5 с
 ```
 
+Список — о собственных вызовах модуля: `never` запрещает их модулю, а не странице; вызов страницы через `console.api`
+(страница VMS — `POST /<sub>/requests`, дверь просьб P/06.4) — её вызов, не модуля (C07-API-RETRY-UNITS-ONLY-01).
 Слова `servers.show`, `console.running` (`running_gauge`, `workers_gauge`) и `poll_s` — [P/06.5](../../06-console/spec/06.5-console.norms.md)
 Н1.1, Н1.2. Части списка, которые вводит домен (`/domain/*`, `/api/held`, `/domain/shared/<sub>`, `/domain/alarms`,
 `login_url`), — поздний слой Н1.6.
@@ -74,9 +76,10 @@ api:       console.api(method, path, body, opts?) → ответ | throw {status
            ifMatch не целое ≥ 1 — отказ вызова до запроса; иных заголовков модуль не шлёт; 412 → throw {status: 412, body —
            как получено, retry: false}; прочие ошибки HTTP и правила повторов — ниже, прежние; страница без "api.if-match" в
            features запись по версии не делает (ADR-0091 доп. (28), (29))
-           POST с памятью повторов владельца (единица — P/06.1, просьба — P/06.4) — один ключ на логическое действие, не на одинаковые байты;
+           POST с памятью повторов владельца (строки единиц /<rows>, /<sub>/<rows> — P/06.1) — один ключ на логическое действие, не на одинаковые байты;
            повторы этого действия сохраняют ключ и исходное тело. Новый вызов — новый ключ. Сеть/таймаут 20 с/5xx/
-           409 in flight допускают повтор только у дверей с памятью повторов (выше); задержка перед повтором — заголовок
+           409 in flight допускают повтор только у этих дверей (выше): модуль сам повторяет только строки единиц, дверь
+           просьб (P/06.4), которую страница зовёт через api, — нет (C07-API-RETRY-UNITS-ONLY-01); задержка перед повтором — заголовок
            Retry-After ответа (секунды), без него — 2, 3, 5 с, после третьего повтора — throw (разбор ревью стадии B 6–7,
            № 27); 401 → окно входа.
            PUT и таблицы без памяти повторов автоматически не повторяются: при неизвестном исходе сначала чтение.
@@ -98,6 +101,9 @@ adds:      addSection{id, label, icon, after, off, render}, addTab(kind, {id, la
            addFieldEditor(kind, field, render(host, ref, obj, value, set)), addBlock(kind, {id, covers, render}),
            addAction, addNote, addIcons, icon, unitForm(host, ref), dialog(title, fields, ok), confirm, toast,
            select(ref, {tab?}), selected, refresh, logout, fullScreen, isFav, toggleFav
+           dialog(title, fields, ok) — обещание (Promise): по нажатию ok — значения полей {<name>: <значение>}, отмена —
+           null; ok — надпись кнопки; confirm(q, more) — сразу ответ человека true | false (значение, не обещание) на вопрос q
+           с пояснением more (C07-DIALOG-CONFIRM-RESULT-01)
            addBlock(kind) — kind ∈ server, member, domain; addTreeNodes(kind) — kind ∈ unit (узлы под единицей), servers,
            server, member, access (то, что модуль уже даёт; ADR-0091 доп. (22) п. 1)
            select(ref, {tab}) — выбрать объект (единицу или карточку оболочки) и открыть вкладку по id, данному addTab

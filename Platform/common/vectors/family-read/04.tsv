@@ -1302,3 +1302,5 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 04-k0026	<sub>/snapshot/<воркер>	testsub/snapshot/	object	reader	["console", "domainagent"]	{"cluster":"a","worker":"a-a","ts":"1"}	refused	[""]	{"console": [""], "domainagent": [""]}	catalog key: <воркер> ""
 04-k0027	<sub>/snapshot/unplaced	/snapshot/unplaced	object	writer	["<s>controller"]	{"cluster":"a","worker":null,"ts":"1"}	refused	[""]	[]	catalog key: <sub> ""
 04-k0028	<sub>/snapshot/unplaced	/snapshot/unplaced	object	reader	["console", "domainagent"]	{"cluster":"a","worker":null,"ts":"1"}	refused	[""]	{"console": [""], "domainagent": [""]}	catalog key: <sub> ""
+04-x0001	<sub>/snapshot/<воркер>	testsub/snapshot/w-1	object	writer	["<s>controller"]	{"cluster":"a","worker":null,"ts":"1","counters":[]}	ok	[]	[]	add: worker null — шард ушедшего воркера, пустой (C04-SNAPSHOT-GONE-WORKER-01)
+04-x0002	<sub>/snapshot/<воркер>	testsub/snapshot/w-1	object	reader	["console", "domainagent"]	{"cluster":"a","worker":null,"ts":"1","counters":[]}	ok	[]	{"console": [], "domainagent": []}	add: worker null — шард ушедшего воркера, пустой (C04-SNAPSHOT-GONE-WORKER-01)

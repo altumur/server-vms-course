@@ -374,7 +374,7 @@ scenario	step	request	expect
 30-intent-unreadable	10	store GET /v1/get?key=testsub/controller/placement_intent	200 {"index": "$vi", "items": {"state": "broken"}}
 30-intent-unreadable	11	store POST /v1/write {"id":"e30b","op":"put","key":"testsub/controller/placement_intent","items":{"state":"idle","manifest_rev":"1"},"cas":"$vi"}	200
 30-intent-unreadable	12	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
-# 31-manifest-rev-stamp (аудит покрытия P/04, второй проход, G02): строка размещения c1 без manifest_rev — проход штампует своей ревизией 1 (rev 2); строка c2 решена ревизией 2 (единицы c2 нет) — не снимается и не переписывается, manifest_behind 1, назначение w-1 то же
+# 31-manifest-rev-stamp (аудит покрытия P/04, второй проход, G02): строка размещения c1 без manifest_rev — проход штампует своей ревизией 1 (rev 2); строка c2 решена ревизией 2 (единицы c2 нет) — не снимается и не переписывается, manifest_behind 1 (строка c2 — раз за проход, C04-MANIFEST-BEHIND-COUNT-01), назначение w-1 то же
 31-manifest-rev-stamp	1	@start resource	ok
 31-manifest-rev-stamp	2	@start worker w-1	ok
 31-manifest-rev-stamp	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
@@ -495,7 +495,7 @@ scenario	step	request	expect
 39-admits-none	11	@until 30 store GET /v1/get?key=testsub2/holds/s-b1	200 {"items": {"by": "t-srv-b-1", "released": "false"}}
 39-admits-none	12	console2 POST /shelves {"name": "s-a1", "zone": "z", "server": "srv-a", "admits": false}	201
 39-admits-none	13	@until 60 store GET /v1/get?key=testsub2/placement/u1	200 {"items": {"worker": "t-srv-b-1", "reason": "~t-srv-a-1's shelf s-a1 admits no unit"}}
-# 40-worker-snapshot (аудит покрытия P/04, второй проход, G06): шард воркера testsub/snapshot/w-1 с c1 (поля snapshot, worker, server), unplaced пуст; w-1 остановлен — c1 в шарде w-2, шард w-1 опубликован пустым
+# 40-worker-snapshot (аудит покрытия P/04, второй проход, G06): шард воркера testsub/snapshot/w-1 с c1 (поля snapshot, worker, server), unplaced пуст; w-1 остановлен — c1 в шарде w-2, шард w-1 опубликован пустым той же формой, что unplaced: worker null, counters [] (C04-SNAPSHOT-GONE-WORKER-01)
 40-worker-snapshot	1	@start resource	ok
 40-worker-snapshot	2	@start controller	ok
 40-worker-snapshot	3	@start worker w-1	ok
@@ -507,7 +507,7 @@ scenario	step	request	expect
 40-worker-snapshot	9	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
 40-worker-snapshot	10	@sigterm w-1	ok
 40-worker-snapshot	11	@until 60 resource GET /v1/objects/testsub/snapshot/w-2?scope=local	200 {"worker": "w-2", "counters": [{"id": "c1", "worker": "w-2", "server": "srv-a"}]}
-40-worker-snapshot	12	@until 20 resource GET /v1/objects/testsub/snapshot/w-1?scope=local	200 {"ts": "@time", "counters": []}
+40-worker-snapshot	12	@until 20 resource GET /v1/objects/testsub/snapshot/w-1?scope=local	200 {"cluster": "@any", "worker": null, "ts": "@time", "counters": []}
 # 41-unreadable-assignment (аудит покрытия P/04, второй проход, G07): назначение w-1 нечитаемо (rev x) — w-1 не в пуле: c1 у w-2, хотя равенство ёмкости отдало бы её w-1; garbled 0; строку контроллер не переписывает
 41-unreadable-assignment	1	@start resource	ok
 41-unreadable-assignment	2	@start worker w-1	ok
