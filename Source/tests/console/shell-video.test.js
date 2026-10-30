@@ -22,7 +22,7 @@ b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name"
 b.FIX["/rec/recordings"]={configured:[{id:"1",cam:"1",home:"main"},{id:"1-b",cam:"1",home:"card"}],rows:[]};
 b.FIX["/rec/disks"]={disks:[{name:"main",kind:"local",server:"box-a"},{name:"old",kind:"local",server:"box-b"},{name:"gone",kind:"local",server:"box-c"},{name:"card",kind:"backup",server:"cam-a"}]};
 b.FIX["/rec/keeps"]={keeps:[]};
-b.FIX["/live/streams"]={configured:[],rows:[]};
+b.FIX["/live/streams"]={configured:[{id:"1"},{id:"2"}],rows:[]};   // строки раздач без labels — локальная сеть (V/08.3 Н4: строку после 409 exists страница читает)
 b.FIX["/cameras"]={configured:[{id:1,name:"ворота"},{id:2,name:"двор",full:"5"},{id:5,main:"2",profile:"sub"}],rows:[{id:1,worker:"w-1",phase:"running"}]};   // 5 — поток камеры 2, её полный экран (V/01.1 Н1.1а)
 b.FIX["/servers"]={servers:{},policy:{}};
 b.FIX["/events"]={events:[{t:now-500,kind:"camera.footage.lost",subsystem:"cam",unit:"1",epoch:3,lost_s:20}],state:"live"};
@@ -137,6 +137,11 @@ out.yieldsCut=cut==='[[50,100,true],[100,200,false],[200,300,true],[400,500,true
 // с момента t — куски, кончающиеся после него, первый — со смещением внутрь
 out.eachMomentOnce=w.eval(`(()=>{const keep=V.spans;V.spans=[{start:0,end:120,media:1},{start:60,end:200,media:1},{start:100,end:150,media:1,fenced:true}];
   const r=JSON.stringify(piecesFrom(0,90).map(p=>[p.i,p.start,p.end,p.off]))+JSON.stringify(piecesFrom(2,0).map(p=>[p.i,p.start,p.end]));V.spans=keep;return r})()`)==="[[0,60,120,30],[1,120,180,0],[1,180,200,0]][[2,100,150]]";
+// отгороженный спан после неотгороженного: щелчок по первому — очередь идёт и по отгороженному остатку, до 240 (V/08.3 Н1.1)
+out.fencedAfterPlays=w.eval(`(()=>{const keep=V.spans;V.spans=[{start:0,end:120,media:1},{start:120,end:240,media:1,fenced:true}];
+  const r=JSON.stringify(piecesFrom(0,0).map(p=>[p.i,p.start,p.end]));V.spans=keep;return r})()`)==="[[0,0,60],[0,60,120],[1,120,180],[1,180,240]]";
+// запись события на 2 с позже случившегося — подпись «записано в» (граница включительно, V/08.2 Н1.3)
+out.lateAtTwo=/записано в/.test(w.eval("evLate({t:1000,occurred:998})"))&&w.eval("evLate({t:1000,occurred:999})")==="";
 out.errors=errs;
 b.report(out,["errors"]);
 try{fs.unlinkSync(TMP)}catch(e){}

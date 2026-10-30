@@ -54,6 +54,12 @@ n=w.__calls.length;host().querySelector('[data-act="save"]').click();await b.rea
 out.notSent=!call(n,"POST","/auto/scenarios");
 const ak=host().querySelector('[data-act="akind"]');ak.value="2";ak.dispatchEvent(new w.Event("change"));await b.ready(30);   // «Записывать»
 for(const [f,v] of [["cam","1"],["minutes","5"]]){const x=[...host().querySelectorAll('[data-act="af"]')].find(y=>y.dataset.f===f);x.value=v;x.dispatchEvent(new w.Event("change"));await b.ready(20)}
+// «Уточнения» = null — не объект JSON: отказ формы до POST (дополнение Kimi к V/08), затем поле пусто — уточнений нет
+const mt=()=>[...host().querySelectorAll('[data-act="tf"]')].find(x=>x.dataset.f==="match");
+mt().value="null";mt().dispatchEvent(new w.Event("change"));await b.ready(30);
+n=w.__calls.length;host().querySelector('[data-act="save"]').click();await b.ready(80);
+out.nullMatchRefused=!call(n,"POST","/auto/scenarios")&&/«Уточнения» — объект JSON/.test(host().textContent);
+if(mt()){mt().value="";mt().dispatchEvent(new w.Event("change"));await b.ready(30)}
 n=w.__calls.length;host().querySelector('[data-act="save"]').click();await b.ready(150);
 c=call(n,"POST","/auto/scenarios");
 out.newPost=!!c&&c.body.name==="night"&&c.body.when[0].sub==="cam"&&c.body.when[0].kind==="io.input"&&c.body.then.length===1&&c.body.then[0].sub==="rec"&&c.body.then[0].action==="record"&&String(c.body.then[0].cam)==="1"&&c.body.then[0].minutes===5;   // minutes — number схемы; cam — [string, integer]
