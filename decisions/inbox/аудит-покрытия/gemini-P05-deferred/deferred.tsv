@@ -1,0 +1,15 @@
+# Отложено разбором Gemini P/05: нужны каталог inputs/ (строка исключений acceptance-entry P/05 inputs) и @put object в движке P/05 (l08)
+# 44-objects-door-family (G01 п. 1, objects.door testsub2/tickets/*)
+44-objects-door-family	1	@put object testsub2/tickets/t1 inputs/ticket-t1.json	ok
+44-objects-door-family	2	resource GET /v1/objects/testsub2/tickets/t1?scope=local	200 {"id": "t1", "title": "check"}
+44-objects-door-family	3	resource GET /v1/objects?prefix=testsub2/&scope=local	200 {"server": "srv-a", "objects": {"testsub2/tickets/t1": {"server": "srv-a", "written": "@any", "size": "@any"}}}
+# 45-gone-door (G02; C05-GONE-BODY-READ-01, P/05 Н4 409): шаг «.gone пуст после записи новее» снят — вопрос нормы
+45-gone-door	1	@put object .gone/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae inputs/gone-foo.json	ok
+45-gone-door	2	resource GET /v1/objects?prefix=testsub2/blobs/&scope=local	200 {"server": "srv-a", "objects": {}}
+45-gone-door	3	resource GET /v1/objects?prefix=.gone/&scope=local	200 {"server": "srv-a", "objects": {".gone/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"server": "srv-a"}}}
+45-gone-door	4	resource GET /v1/objects/.gone/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae?scope=local	200 {"written": 1700000100, "peers": ["srv-b"], "acked": []}
+45-gone-door	5	resource PUT /v1/objects/.gone/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw {}	405
+45-gone-door	6	resource @header X-Written: 1700000050 PUT /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw foo	409
+45-gone-door	7	resource GET /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae?scope=local	404
+45-gone-door	8	resource @header X-Written: 1700000200 PUT /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw foo	204
+45-gone-door	9	resource GET /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae?scope=local	200 @header X-Written: ~1700000200
