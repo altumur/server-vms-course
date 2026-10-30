@@ -297,3 +297,41 @@ scenario	step	request	expect
 24-server-labels	19	@sleep 12	ok
 24-server-labels	20	console GET /where/c1	200 {"worker": "w-1"}
 24-server-labels	21	console GET /where/c2	200 {"worker": "w-1"}
+# 25-schema-read-wait (аудит покрытия P/04, D07 сц. 03): хранилище молчит роли testsubcontroller на чтении platform/schema — контроллер ждёт, отчёта прохода нет; хранилище снова отвечает — контроллер начинает проходы сам, без перезапуска
+25-schema-read-wait	1	@start resource	ok
+25-schema-read-wait	2	@cut role testsubcontroller store	ok
+25-schema-read-wait	3	@start controller	ok
+25-schema-read-wait	4	@sleep 10	ok
+25-schema-read-wait	5	resource GET /v1/objects/testsub/controller/pass?scope=local	404
+25-schema-read-wait	6	@mend role testsubcontroller store	ok
+25-schema-read-wait	7	@until 90 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"at": "@time"}
+# 26-frozen-worker-hung (аудит покрытия P/04, D08): процесс w-1 с единицей заморожен (@freeze) — слот и пульс не меняются, замок присутствия держится (runs); через 75 с судьба ещё alive (запас SLOT_TERM + LOST_AFTER), затем hung: имя не отдано, слот не отдан, единица на месте; после @thaw — alive
+26-frozen-worker-hung	1	@start resource	ok
+26-frozen-worker-hung	2	@start controller	ok
+26-frozen-worker-hung	3	@start worker w-1	ok
+26-frozen-worker-hung	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+26-frozen-worker-hung	5	console POST /counters {"name": "c26"}	201
+26-frozen-worker-hung	6	@until 30 store GET /v1/get?key=testsub/placement/c26	200 {"items": {"worker": "w-1"}}
+26-frozen-worker-hung	7	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": ["testsub/w-1"]}
+26-frozen-worker-hung	8	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-1": {"fate": "alive"}}}
+26-frozen-worker-hung	9	@freeze w-1	ok
+26-frozen-worker-hung	10	@sleep 75	ok
+26-frozen-worker-hung	11	resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-1": {"fate": "alive"}}}
+26-frozen-worker-hung	12	@until 35 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-1": {"fate": "hung"}}, "names_given": {}}
+26-frozen-worker-hung	13	resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": ["testsub/w-1"]}
+26-frozen-worker-hung	14	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+26-frozen-worker-hung	15	store GET /v1/get?key=testsub/placement/c26	200 {"items": {"worker": "w-1"}}
+26-frozen-worker-hung	16	@thaw w-1	ok
+26-frozen-worker-hung	17	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-1": {"fate": "alive"}}}
+# 27-frozen-worker-no-unit (аудит покрытия P/04, D08): замороженный w-1 без единиц при живом ресурсе и присутствии runs — hung, а не release: слот не отдан, имя не отдано; после @thaw — alive
+27-frozen-worker-no-unit	1	@start resource	ok
+27-frozen-worker-no-unit	2	@start controller	ok
+27-frozen-worker-no-unit	3	@start worker w-1	ok
+27-frozen-worker-no-unit	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+27-frozen-worker-no-unit	5	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": ["testsub/w-1"]}
+27-frozen-worker-no-unit	6	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-1": {"fate": "alive"}}}
+27-frozen-worker-no-unit	7	@freeze w-1	ok
+27-frozen-worker-no-unit	8	@until 110 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-1": {"fate": "hung"}}, "names_given": {}}
+27-frozen-worker-no-unit	9	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+27-frozen-worker-no-unit	10	@thaw w-1	ok
+27-frozen-worker-no-unit	11	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-1": {"fate": "alive"}}}

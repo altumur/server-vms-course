@@ -150,3 +150,19 @@ scenario	step	request	expect
 23-own-place-torn-hold	11	@sleep 60	ok
 23-own-place-torn-hold	12	store GET /v1/get?key=testsub2/holds/sh1	200 {"index": "$v", "items": {"gen": "x"}}
 23-own-place-torn-hold	13	resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"shelf": "sh1"}
+# 24-store-silence (аудит покрытия P/03, C11): хранилище молчит роли testsubworker 10 с (дольше шага аренды, короче окна аренды) — слот за воркером; после — продление тем же держателем, аренда подтверждена, эпоха и размещение прежние
+24-store-silence	1	@start resource	ok
+24-store-silence	2	@start controller	ok
+24-store-silence	3	@start worker w-1	ok
+24-store-silence	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1"}}
+24-store-silence	5	console POST /counters {"name": "c24", "start": 1}	201
+24-store-silence	6	@until 30 store GET /v1/get?key=testsub/epoch/c24	200 {"index": "$e1", "items": {"epoch": "1"}}
+24-store-silence	7	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"status": [{"id": "c24", "phase": "running"}]}
+24-store-silence	8	@cut role testsubworker store	ok
+24-store-silence	9	@sleep 10	ok
+24-store-silence	10	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "until": "$u1", "released": "false", "gen": "1"}}
+24-store-silence	11	@mend role testsubworker store	ok
+24-store-silence	12	@until 30 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1", "until": "@not($u1)"}}
+24-store-silence	13	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"status": [{"id": "c24", "phase": "running", "lease": "@absent"}]}
+24-store-silence	14	store GET /v1/get?key=testsub/epoch/c24	200 {"index": "$e1", "items": {"epoch": "1"}}
+24-store-silence	15	store GET /v1/get?key=testsub/placement/c24	200 {"items": {"worker": "w-1"}}
