@@ -42,9 +42,9 @@ scenario	step	request	expect
 04-conflict	8	@until 60 holder GET /domain	200 {"pending": {"m1": 0}, "outcomes": {"m1": [{"id": "$id", "status": 412, "result": "conflict"}]}}
 04-conflict	9	member m1 console GET /counters	200 {"configured": [{"id": "c4", "start": 9}]}
 05-unsigned-document	1	@domain	ok
-05-unsigned-document	2	@on hold @put object domain/shared-docs/rev-1 inputs/shared-doc-unsigned.json	ok
-05-unsigned-document	3	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "{\"object\":\"domain/shared-docs/rev-1\",\"rev\":1,\"sha256\":\"109c4d58967b71eb4537f1ed14bd01dd88846529efb4d16ff1d7e2b1b2aba01c\",\"term\":1}"}}	200
-05-unsigned-document	4	@until 30 member m1 store GET /v1/get?key=domain/shared-refused	200 {"items": {"doc": "~not_a_record"}}
+05-unsigned-document	2	@on hold @put object domain/shared-docs/rev-1 inputs/shared-doc-unknown-issuer.json	ok
+05-unsigned-document	3	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "{\"object\":\"domain/shared-docs/rev-1\",\"rev\":1,\"sha256\":\"369a5e76e9960c37d6d00e94d0a169ce6d14d830d55f8d9c2b3acecb4d011323\",\"term\":1}"}}	200
+05-unsigned-document	4	@until 30 member m1 store GET /v1/get?key=domain/shared-refused	200 {"items": {"doc": "~unknown_issuer"}}
 05-unsigned-document	5	member m1 store GET /v1/get?key=domain/shared	200 {"items": null}
 05-unsigned-document	6	member hold console GET /domain/shared/testsub	200 {"fields": {"step": {"value": 1, "from": "manifest"}}}
 06-fresh-and-unchanged	1	@domain m1	ok
@@ -100,9 +100,10 @@ scenario	step	request	expect
 13-slot-liveness	4	@on m1 @sigkill t-1	ok
 13-slot-liveness	5	@until 150 member m2 console GET /domain/testsub2/books/rolls	200 {"": {"missing": []}, "t4": "@absent"}
 14-pointer-checksum	1	@domain	ok
-14-pointer-checksum	2	@on hold @put object domain/shared-docs/rev-1 inputs/shared-doc-unsigned.json	ok
+14-pointer-checksum	2	@on hold @put object domain/shared-docs/rev-1 inputs/shared-doc-unknown-issuer.json	ok
 14-pointer-checksum	3	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "{\"object\":\"domain/shared-docs/rev-1\",\"rev\":1,\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"term\":1}"}}	200
-14-pointer-checksum	4	@until 30 member m1 store GET /v1/get?key=domain/shared-refused	200 {"items": {"doc": "~does not match the pointer"}}
+14-pointer-checksum	4	member hold console GET /domain/shared/testsub	503 {"error": "unavailable"}
+14-pointer-checksum	5	member m1 store GET /v1/get?key=domain/shared	200 {"items": null}
 15-one-agent	1	@domain m1	ok
 15-one-agent	2	@start agent m1 second	ok
 15-one-agent	3	@until 30 member m1 store GET /v1/get?key=domain/agent-turn	200 {"items": {"holder": "$a1"}}
