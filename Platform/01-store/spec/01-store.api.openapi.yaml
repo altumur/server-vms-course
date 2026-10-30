@@ -279,7 +279,7 @@ paths:
       summary: Метрики демона
       responses:
         '200':
-          description: Prometheus text exposition UTF-8; Н1.3
+          description: Prometheus text exposition UTF-8; ряды — Н1.3 metrics; у голосующего — configstore_raft_* и configstore_doors, у двери без голоса — только configstore_door_forwards_total{outcome} и configstore_door_voters_reachable (C01-DOOR-METRICS-01)
           content:
             text/plain:
               schema:
