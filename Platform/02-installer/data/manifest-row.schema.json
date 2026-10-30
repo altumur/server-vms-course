@@ -44,7 +44,8 @@
      },
      "size": {
       "$ref": "#/$defs/common.uint53",
-      "description": "байтов в файле"
+      "description": "байтов в файле, не больше FILE_MAX (P/02.3 Н1.5)",
+      "maximum": 8388608
      }
     },
     "additionalProperties": false,

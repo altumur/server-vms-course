@@ -2730,6 +2730,14 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/ConsoleUnavailable'
+        '302':
+          description: 'Оболочка с console.shell, личность не доказана: вход консоли на странице /, возврат — параметр return (Н2 «Вход на оболочке»); без тела'
+          headers:
+            Location:
+              schema:
+                type: string
+                minLength: 1
+              description: /?return=/<sub>/
         '200':
           description: 'Оболочка смонтированной подсистемы с console.shell: поле shell строки манифеста байт в байт (Н1.1 mounted)'
           content:
@@ -2826,6 +2834,14 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/ConsoleUnavailable'
+        '302':
+          description: 'Оболочка с console.shell, личность не доказана: вход консоли на странице /, возврат — параметр return (Н2 «Вход на оболочке»); без тела'
+          headers:
+            Location:
+              schema:
+                type: string
+                minLength: 1
+              description: /?return=/<sub>/
         '200':
           description: 'Оболочка смонтированной подсистемы с console.shell: поле shell строки манифеста байт в байт (Н1.1 mounted)'
           content:
