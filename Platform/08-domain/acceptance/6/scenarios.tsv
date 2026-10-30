@@ -1,19 +1,19 @@
 scenario	step	request	expect
 # Приёмка P/08.6: стенд нескольких кластеров hold, m1, m2 — назначение, хранимые правки и исходы у держателя; сценарии 01, 02, 03, 05, 09 перенесены из М11/06 (стадия B). Формат — README.
 01-placement	1	@domain	ok
-01-placement	2	holder GET /domain/placement	200 {"rev": 0, "records": {}}
+01-placement	2	@until 30 holder GET /domain/placement	200 {"rev": 1, "records": {}}
 01-placement	3	holder PUT /domain/placement/nosuch/c1 {"cluster": "m1"}	404
 01-placement	4	holder PUT /domain/placement/nosuch/c1 {"cluster": "m9"}	404
 01-placement	5	holder PUT /domain/placement/testsub/c1 {"cluster": "m9"}	409
 01-placement	6	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m1"]}	400
-01-placement	7	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m2"], "reason": "test"}	200 {"cluster": "m1", "copies": ["m2"], "origin": "", "reason": "test", "rev": 1}
-01-placement	8	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m2"], "reason": "test"}	200 {"rev": 1}
-01-placement	9	holder PUT /domain/placement/testsub/c2 {"cluster": "m1"}	200 {"rev": 2}
-01-placement	10	@until 30 member m1 store GET /v1/get?key=domain/placed/testsub/c2	200 {"items": {"cluster": "m1", "rev": "2"}}
-01-placement	11	member m1 store GET /v1/get?key=domain/placed/testsub/c1	200 {"items": {"cluster": "m1", "copies": "[\"m2\"]", "rev": "1"}}
+01-placement	7	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m2"], "reason": "test"}	200 {"cluster": "m1", "copies": ["m2"], "origin": "", "reason": "test", "rev": 2}
+01-placement	8	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m2"], "reason": "test"}	200 {"rev": 2}
+01-placement	9	holder PUT /domain/placement/testsub/c2 {"cluster": "m1"}	200 {"rev": 3}
+01-placement	10	@until 30 member m1 store GET /v1/get?key=domain/placed/testsub/c2	200 {"items": {"cluster": "m1", "rev": "3"}}
+01-placement	11	member m1 store GET /v1/get?key=domain/placed/testsub/c1	200 {"items": {"cluster": "m1", "copies": "[\"m2\"]", "rev": "2"}}
 01-placement	12	@until 30 member m2 store GET /v1/get?key=domain/placed/testsub/c1	200 {"items": {"cluster": "m1"}}
 01-placement	13	member m2 store GET /v1/get?key=domain/placed/testsub/c2	200 {"items": null}
-01-placement	14	@until 30 member m2 store GET /v1/get?key=domain/placed	200 {"items": {"rev": "2"}}
+01-placement	14	@until 30 member m2 store GET /v1/get?key=domain/placed	200 {"items": {"rev": "3"}}
 01-placement	15	holder DELETE /domain/placement/testsub/c1	200 {"deleted": "testsub/c1"}
 01-placement	16	@until 30 member m2 store GET /v1/get?key=domain/placed/testsub/c1	200 {"items": null}
 01-placement	17	holder DELETE /domain/placement/testsub/c1	404
@@ -127,7 +127,7 @@ scenario	step	request	expect
 10-executors	2	member m1 console POST /counters {"name": "c4", "start": 1}	201
 10-executors	3	member m2 console POST /counters {"name": "c4", "start": 1}	201
 10-executors	4	@until 60 holder GET /domain	200 {"contested": {"testsub": {"c4": ["m1", "m2"]}}}
-10-executors	5	holder PUT /domain/placement/testsub/c4 {"cluster": "m1", "copies": ["m2"]}	200 {"rev": 1}
+10-executors	5	holder PUT /domain/placement/testsub/c4 {"cluster": "m1", "copies": ["m2"]}	200 {"rev": 2}
 10-executors	6	@until 60 holder GET /domain	200 {"complete": true, "contested": {"testsub": {}}}
 10-executors	7	holder GET /domain/testsub/counters	200 [{"ref": "c4", "cluster": "m1"}, {"ref": "c4", "cluster": "m2"}]
 10-executors	8	@cut m1	ok
@@ -135,5 +135,5 @@ scenario	step	request	expect
 10-executors	10	holder PUT /domain/testsub/counters/c4?cluster=m1 {"start": 5}	202 {"kept": "$id", "cluster": "m1", "what": "start"}
 10-executors	11	@key(10) holder PUT /domain/testsub/counters/c4 {"start": 5}	202 {"kept": "$id", "cluster": "m1"}
 10-executors	12	@mend m1	ok
-10-executors	13	holder PUT /domain/placement/testsub/c4 {"cluster": "m1", "origin": "m2"}	200 {"rev": 2}
+10-executors	13	holder PUT /domain/placement/testsub/c4 {"cluster": "m1", "origin": "m2"}	200 {"rev": 3}
 10-executors	14	@until 60 holder GET /domain	200 {"contested": {"testsub": {"c4": ["m1", "m2"]}}}
