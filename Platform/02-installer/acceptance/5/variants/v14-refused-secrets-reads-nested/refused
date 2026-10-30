@@ -1,0 +1,4 @@
+# Отказ генерации до файла (P/02.5 Н3 шаг 4, Н4; C02-SECRETS-READS-INTERSECTION-01): secrets.reads манифеста vb
+# (va/vault/public/) строго вкладывается в секретный префикс va/vault/ из secrets.readers манифеста va. Строка ниже —
+# манифест отказа (его name).
+vb

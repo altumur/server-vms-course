@@ -10,3 +10,6 @@ view_spoiled	testsub @view-spoil testsub	0 2	course-testsub
 view_over_ceiling	probe view-over	2 1	example-sections
 view_at_ceiling	probe view-at-ceiling	0 2	example-view-at-ceiling
 sugared	sugared	0 1	example-sugared
+# Аудит покрытия Gemini P/02 (свойства 13, 14; формы «Архитектора»): метка /rev снята — «без изменений» её доводит; метка не по форме — отказ
+rev_deleted	probe @rev-delete probe	0 1	example-sections
+rev_spoiled	probe @rev-spoil probe	2 1	example-sections

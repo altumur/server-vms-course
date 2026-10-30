@@ -1,0 +1,292 @@
+{
+ "comment": "generated — do not edit",
+ "extra": 1,
+ "roles": {
+  "console": {
+   "delete": [
+    "door/keys",
+    "door/signer",
+    "platform/decommission/*",
+    "platform/doors/*",
+    "platform/drain",
+    "platform/schema",
+    "platform/servers/*",
+    "va/idem/*",
+    "va/items/*",
+    "va/next_id",
+    "va/policy",
+    "va/sweep"
+   ],
+   "group": "w2c-console",
+   "read": [
+    "domain/backup-taken",
+    "domain/break-glass/*",
+    "domain/disabled",
+    "domain/grants",
+    "domain/grants/*",
+    "domain/holder",
+    "domain/keys",
+    "domain/member",
+    "domain/member-list",
+    "domain/revoked",
+    "domain/root",
+    "domain/shared",
+    "door/keys",
+    "door/signer",
+    "platform/*",
+    "platform/decommission/*",
+    "platform/drain",
+    "platform/schema",
+    "platform/servers/*",
+    "va/*",
+    "va/idem/*",
+    "va/items/*",
+    "va/next_id",
+    "va/policy",
+    "va/sweep"
+   ],
+   "write": [
+    "door/keys",
+    "door/signer",
+    "platform/decommission/*",
+    "platform/drain",
+    "platform/schema",
+    "platform/servers/*",
+    "va/idem/*",
+    "va/items/*",
+    "va/next_id",
+    "va/policy",
+    "va/sweep"
+   ]
+  },
+  "domain": {
+   "delete": [
+    "domain/*"
+   ],
+   "group": "w2c-domain",
+   "read": [
+    "!va/asked/*",
+    "!va/idem/*",
+    "domain/*",
+    "platform/*",
+    "va/*"
+   ],
+   "write": [
+    "domain/*"
+   ]
+  },
+  "domainagent": {
+   "delete": [
+    "!domain/alarm-history",
+    "!domain/alarm-history/*",
+    "!domain/backups",
+    "!domain/backups/*",
+    "!domain/book-seal",
+    "!domain/book-seal/*",
+    "!domain/deleting",
+    "!domain/deleting/*",
+    "!domain/disabled",
+    "!domain/disabled/*",
+    "!domain/grants/*",
+    "!domain/keepers",
+    "!domain/keepers/*",
+    "!domain/members",
+    "!domain/members/*",
+    "!domain/names",
+    "!domain/names/*",
+    "!domain/outcomes/*",
+    "!domain/pending",
+    "!domain/pending/*",
+    "!domain/placement",
+    "!domain/placement/*",
+    "!domain/root",
+    "!domain/root/*",
+    "!domain/shadow",
+    "!domain/shadow/*",
+    "!domain/shared-docs",
+    "!domain/shared-docs/*",
+    "!domain/signer",
+    "!domain/signer-pending",
+    "!domain/signer-pending/*",
+    "!domain/signer-turn",
+    "!domain/signer-turn/*",
+    "!domain/signer/*",
+    "!domain/stranded",
+    "!domain/stranded/*",
+    "!domain/topology",
+    "!domain/topology/*",
+    "!domain/users",
+    "!domain/users/*",
+    "!domain/va/heartbeat",
+    "!domain/va/heartbeat/*",
+    "!domain/va/worker",
+    "!domain/va/worker/*",
+    "!domain/view",
+    "!domain/view/*",
+    "domain/*"
+   ],
+   "group": "w2c-domainagent",
+   "read": [
+    "!domain/book-seal",
+    "!domain/signer",
+    "!domain/signer-pending",
+    "!domain/users/*",
+    "!door/signer",
+    "!va/asked/*",
+    "!va/idem/*",
+    "*",
+    "domain/*"
+   ],
+   "write": [
+    "!domain/alarm-history",
+    "!domain/alarm-history/*",
+    "!domain/backups",
+    "!domain/backups/*",
+    "!domain/book-seal",
+    "!domain/book-seal/*",
+    "!domain/deleting",
+    "!domain/deleting/*",
+    "!domain/disabled",
+    "!domain/disabled/*",
+    "!domain/grants/*",
+    "!domain/keepers",
+    "!domain/keepers/*",
+    "!domain/members",
+    "!domain/members/*",
+    "!domain/names",
+    "!domain/names/*",
+    "!domain/outcomes/*",
+    "!domain/pending",
+    "!domain/pending/*",
+    "!domain/placement",
+    "!domain/placement/*",
+    "!domain/root",
+    "!domain/root/*",
+    "!domain/shadow",
+    "!domain/shadow/*",
+    "!domain/shared-docs",
+    "!domain/shared-docs/*",
+    "!domain/signer",
+    "!domain/signer-pending",
+    "!domain/signer-pending/*",
+    "!domain/signer-turn",
+    "!domain/signer-turn/*",
+    "!domain/signer/*",
+    "!domain/stranded",
+    "!domain/stranded/*",
+    "!domain/topology",
+    "!domain/topology/*",
+    "!domain/users",
+    "!domain/users/*",
+    "!domain/va/heartbeat",
+    "!domain/va/heartbeat/*",
+    "!domain/va/worker",
+    "!domain/va/worker/*",
+    "!domain/view",
+    "!domain/view/*",
+    "domain/*"
+   ]
+  },
+  "domainconsole": {
+   "delete": [],
+   "group": "w2c-domainconsole",
+   "read": [
+    "!domain/book-seal",
+    "!domain/break-glass/*",
+    "!domain/member-key",
+    "!domain/signer*",
+    "!domain/users/*",
+    "domain/*",
+    "platform/manifest/*",
+    "platform/schema"
+   ],
+   "write": []
+  },
+  "resource": {
+   "delete": [
+    "platform/doors/*"
+   ],
+   "group": "w2c-resource",
+   "read": [
+    "platform/decommission/*",
+    "platform/doors/*",
+    "platform/manifest/*",
+    "platform/mirror",
+    "platform/schema",
+    "platform/space",
+    "va/alarms_retention",
+    "va/holds/*",
+    "va/retention"
+   ],
+   "write": [
+    "platform/doors/*"
+   ]
+  },
+  "vacontroller": {
+   "delete": [
+    "va/decommissioned/*",
+    "va/items/*",
+    "va/placement/*",
+    "va/slots/*",
+    "va/want/*",
+    "va/workers/*"
+   ],
+   "group": "w2c-vacontroller",
+   "read": [
+    "!va/asked/*",
+    "!va/idem/*",
+    "platform/*",
+    "platform/schema",
+    "va/*",
+    "va/controller/placement_intent",
+    "va/controller/placement_turn",
+    "va/decommissioned/*",
+    "va/placement/*",
+    "va/slots/*",
+    "va/want/*",
+    "va/workers/*"
+   ],
+   "write": [
+    "va/controller/placement_intent",
+    "va/controller/placement_turn",
+    "va/decommissioned/*",
+    "va/placement/*",
+    "va/slots/*",
+    "va/want/*",
+    "va/workers/*"
+   ]
+  },
+  "vaworker": {
+   "delete": [
+    "va/epoch/*",
+    "va/holds/*",
+    "va/slots/*"
+   ],
+   "group": "dep-vaworker",
+   "read": [
+    "!va/asked/*",
+    "!va/idem/*",
+    "domain/holder",
+    "domain/keys",
+    "domain/member",
+    "domain/revoked",
+    "door/keys",
+    "platform/decommission/*",
+    "platform/doors/*",
+    "platform/epoch_floor",
+    "platform/manifest/*",
+    "platform/schema",
+    "platform/servers/*",
+    "va/*",
+    "va/epoch/*",
+    "va/holds/*",
+    "va/slots/*"
+   ],
+   "write": [
+    "va/epoch/*",
+    "va/holds/*",
+    "va/slots/*"
+   ]
+  }
+ }
+}

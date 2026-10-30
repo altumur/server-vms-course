@@ -1,0 +1,13 @@
+name: vb
+unit:
+  rows: things
+  id: name
+  fields:
+    name:   {type: string, required: true}
+placement:
+  capacity:   {from: capacity, default: 4}
+  constraint: labels-subset
+  tie_break:  most-free-capacity
+secrets:
+  reads: [va/vault/public/]
+worker: {exec: /usr/lib/vb/worker}

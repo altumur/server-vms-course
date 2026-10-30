@@ -1,0 +1,9 @@
+# Сверка файла прав по смыслу (P/02.5 Н2 `--check`, Н3 «установить», Н4): раннер зовёт `rights --check <file>` реализации на
+# манифестах варианта (va — байт в байт v1-base) с развёртыванием dep и сравнивает код: 0 — равен сгенерированному, !0 — не 0.
+# Каждый файл — вывод прав этого каталога с одной правкой, которая по Н3 «установить» расходится при любом верном выводе.
+case	file	code
+role_missing	check/role_missing.rights	!0
+worker_writes_units	check/worker_writes_units.rights	!0
+group_changed	check/group_changed.rights	!0
+delete_dropped	check/delete_dropped.rights	!0
+not_form	check/not_form.rights	!0
