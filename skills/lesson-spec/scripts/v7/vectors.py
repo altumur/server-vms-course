@@ -47,7 +47,8 @@ STEP_PLACES = [
     ("П2", ["/tables/*/journal/written", "/tables/*/journal/deleted"]), ("П3", ["/display/form", "/unit/fields"]),
     ("П4", [f + "/default" for f in FIELDS]), ("П5", [f + "/secret_in/*/decoded" for f in FIELDS]),
 ]
-PUTS_DIRECTIVES = {"@view-delete", "@view-spoil"}       # глава 2.2 (с колонкой вида)
+PUTS_DIRECTIVES = {"@view-delete", "@view-spoil",     # глава 2.2 (с колонкой вида)
+                   "@rev-delete", "@rev-spoil"}        # метка /rev: снять, испортить (аудит Gemini P/02, свойства 13, 14)
 STORE_DIRECTIVES = {"@rev-max"}                         # глава 2.3: rev = 2^53 − 1 у строки, метки и вида (аудит P/02, B02)
 SHELL_PUT = "@shell-put"                                # глава 2.3: за ним — оболочка puts/<имя>.shell.html (аудит P/02, B03)
 CEILING_TABLE = "puts-ceiling.tsv"                      # глава 2.2: потолок не по умолчанию, пятая колонка (аудит P/02, B00)

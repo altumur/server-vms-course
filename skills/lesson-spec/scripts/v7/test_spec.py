@@ -893,6 +893,29 @@ class TestChapter(unittest.TestCase):
         self.assertIn("puts/ holds only", m)
         self.assertIn("no row of puts.tsv puts this shell", m)
 
+    def test_puts_rev_directives_of_2_2(self):
+        # Аудит Gemini P/02 (свойства 13, 14): @rev-delete и @rev-spoil — у четырёх колонок главы 2.2, не у 2.3.
+        from v7 import vectors
+        root = self.copy()
+        acc = root / vectors.ACCEPTANCE
+        table = acc / "puts.tsv"
+        base = table.read_text(encoding="utf-8").rstrip("\n")
+        rows = [ln for ln in base.split("\n") if ln and not ln.startswith("#") and not ln.startswith("case\t")]
+        good = next(r for r in rows if r.split("\t")[2].startswith("0 ") and r.split("\t")[3] != "-").split("\t")
+        name = good[1].split(" ")[-1]
+        table.write_text(base + "\nzz_revdel\t%s @rev-delete %s\t0 1\t%s\nzz_revspoil\t%s @rev-spoil %s\t2 1\t%s\n"
+                         % (name, name, good[3], name, name, good[3]), encoding="utf-8")
+        self.assertEqual(self.messages(self.run_chapter(root)), "")
+        acc3 = root / "Platform/02-installer/acceptance/3"
+        t3 = acc3 / "puts.tsv"
+        n3 = sorted(p.name[:-len(".subsystem.yaml")] for p in (acc3 / "puts").glob("*.subsystem.yaml"))[0]
+        t3.write_text(t3.read_text(encoding="utf-8").rstrip("\n") + "\nzz_revdel\t%s @rev-delete %s\t0 1\n" % (n3, n3),
+                      encoding="utf-8")
+        ch = vectors.Chapter(root).run()
+        ch.errors = []
+        ch.puts(acc3)
+        self.assertIn("need the canonical column", self.messages(ch))
+
     def test_puts_ceiling_of_2_2(self):
         # Аудит покрытия P/02 (B00): puts-ceiling.tsv рядом с puts.tsv главы 2.2, пятая колонка ceiling.
         from v7 import vectors
