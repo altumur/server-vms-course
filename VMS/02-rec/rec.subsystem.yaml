@@ -283,7 +283,8 @@ requests:
   stamp: [by, at, about]
   journal: archive.backfill.asked
   # Backfill's profile (V/02.8 Н1.4; P/06.4 Н3 «жнец»): the outcome is the word `fetched` in the recorder's heartbeat, no
-  # mark; an old request is closed by the recorder, not by age. A scenario's recording is made by `auto` (worker.creates).
+  # mark but the reaper's; an old request is closed by the recorder, and by the reaper's `expired` at ttl + REAP_AFTER when
+  # no recorder is there to do it. A scenario's recording is made by `auto` (worker.creates).
   outcome: fetched
 snapshot: [name, cam, ref, retention_days, enabled, until, labels, home, when]   # `when`: the domain finds an offline backup of another cluster's camera (М12)
 # WHAT A SCALING POLICY AND AN ALERT READ, DECLARED (the boundary's step 6: it was the VMS's function the platform's
