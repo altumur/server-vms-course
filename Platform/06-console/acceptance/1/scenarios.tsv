@@ -159,3 +159,57 @@ scenario	step	request	expect
 21-worker-table-delete	4	console2 DELETE /gauges/g1	200 {"deleted": "g1"}
 21-worker-table-delete	5	store GET /v1/get?key=testsub2/gauges/g1	200 {"items": null}
 21-worker-table-delete	6	console2 DELETE /gauges/g1	404
+# 22-unit-refs (аудит покрытия P/06, G01): прямые ссылки единицы (договор проверки строки П5) — must_match с иным значением и с отсутствующим элементом цели — 409 must_match, строки нет; цели нет — не отказ (ADR-0057); unique canonical — 409 unique; цель не читается — 409 garbled
+22-unit-refs	1	console2 POST /shelves {"name": "sh1", "zone": "z1"}	201 {"row": {"name": "sh1", "zone": "z1"}}
+22-unit-refs	2	console2 POST /tallies {"name": "t1", "of": "c1", "shelf": "sh1", "zone": "z2"}	409 {"error": "conflict", "fault": "must_match"}
+22-unit-refs	3	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": null}
+22-unit-refs	4	console2 POST /tallies {"name": "t2", "of": "c1", "shelf": "sh1", "zone": "z1"}	201 {"shelf": "sh1", "zone": "z1", "revision": 1}
+22-unit-refs	5	console2 POST /shelves {"name": "sh2"}	201 {"row": {"name": "sh2", "zone": "@absent"}}
+22-unit-refs	6	console2 POST /tallies {"name": "t3", "of": "c1", "shelf": "sh2", "zone": ""}	409 {"error": "conflict", "fault": "must_match"}
+22-unit-refs	7	store GET /v1/get?key=testsub2/tallies/t3	200 {"items": null}
+22-unit-refs	8	console2 POST /tallies {"name": "t4", "of": "c1", "shelf": "sh-none", "zone": "z1"}	201 {"shelf": "sh-none", "revision": 1}
+22-unit-refs	9	console2 POST /tallies {"name": "t5", "of": "c1", "feed": "https://h.example/a"}	201 {"feed": "https://h.example/a"}
+22-unit-refs	10	console2 POST /tallies {"name": "t6", "of": "c1", "feed": "https://H.EXAMPLE/a"}	409 {"error": "conflict", "fault": "unique"}
+22-unit-refs	11	@as console store POST /v1/write {"id":"e11","op":"put","key":"testsub2/shelves/shx","items":{"name":"shx","zone":"z1","size":"many"},"cas":""}	200
+22-unit-refs	12	console2 POST /tallies {"name": "t7", "of": "c1", "shelf": "shx", "zone": "z1"}	409 {"error": "conflict", "fault": "garbled"}
+# 23-fixed (аудит покрытия P/06, G02): возврат имени над надгробием — иной fixed (`of`) — 400 «is fixed», надгробие прежнее; тот же — 201, revision надгробия + 1; правка fixed у живой строки — 400, строка и revision прежние
+23-fixed	1	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1}
+23-fixed	2	console2 DELETE /tallies/t1	200 {"deleted": "t1"}
+23-fixed	3	console2 POST /tallies {"name": "t1", "of": "c2"}	400 {"error": "~is fixed", "fault": "@absent"}
+23-fixed	4	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"deleted": "true", "of": "c1", "revision": "1"}}
+23-fixed	5	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"of": "c1", "revision": 2}
+23-fixed	6	console2 POST /tallies {"name": "t2", "of": "c1"}	201 {"revision": 1}
+23-fixed	7	console2 PUT /tallies/t2 {"of": "c2"}	400 {"error": "~is fixed", "fault": "@absent"}
+23-fixed	8	store GET /v1/get?key=testsub2/tallies/t2	200 {"items": {"of": "c1", "revision": "1"}}
+# 24-born-anew (аудит покрытия P/06, G03; ADR-0091 п. 3): удаление сохраняет born, создание над надгробием даёт новое
+24-born-anew	1	console POST /counters {"name": "b1"}	201 {"revision": 1}
+24-born-anew	2	store GET /v1/get?key=testsub/counters/b1	200 {"items": {"born": "$b1", "revision": "1"}}
+24-born-anew	3	console DELETE /counters/b1	200 {"deleted": "b1"}
+24-born-anew	4	store GET /v1/get?key=testsub/counters/b1	200 {"items": {"born": "$b1", "deleted": "true", "revision": "1"}}
+24-born-anew	5	console POST /counters {"name": "b1"}	201 {"revision": 2}
+24-born-anew	6	store GET /v1/get?key=testsub/counters/b1	200 {"items": {"born": "$b2", "revision": "2", "deleted": "@absent"}}
+24-born-anew	7	ASSERT $b1 != $b2	ok
+# 25-list-forms-restart (аудит покрытия P/06, G04; контрпример прогона 24): [] и [""] у marks — разные элементы строки, правка другого поля их не сливает, после перезапуска консоли — те же списки
+25-list-forms-restart	1	@start resource	ok
+25-list-forms-restart	2	console POST /counters {"name": "m1", "marks": []}	201 {"marks": []}
+25-list-forms-restart	3	console POST /counters {"name": "m2", "marks": [""]}	201 {"marks": [""]}
+25-list-forms-restart	4	store GET /v1/get?key=testsub/counters/m1	200 {"items": {"marks": ""}}
+25-list-forms-restart	5	store GET /v1/get?key=testsub/counters/m2	200 {"items": {"marks": "[\"\"]"}}
+25-list-forms-restart	6	console PUT /counters/m1 {"start": 1}	200 {"marks": [], "start": 1, "revision": 2}
+25-list-forms-restart	7	console PUT /counters/m2 {"start": 1}	200 {"marks": [""], "start": 1, "revision": 2}
+25-list-forms-restart	8	@restart console	ok
+25-list-forms-restart	9	@until 30 console GET /counters	200 {"configured": [{"id": "m1", "marks": [], "start": 1}, {"id": "m2", "marks": [""], "start": 1}]}
+25-list-forms-restart	10	store GET /v1/get?key=testsub/counters/m1	200 {"items": {"marks": "", "revision": "2"}}
+25-list-forms-restart	11	store GET /v1/get?key=testsub/counters/m2	200 {"items": {"marks": "[\"\"]", "revision": "2"}}
+# 26-state-unreadable (аудит покрытия P/06, G07; ADR-0091 п. 3): строка состояния с born и revision живой строки, value не по схеме unit.state.result — не действует, state нет; то же с value по схеме — действует
+26-state-unreadable	1	@start resource	ok
+26-state-unreadable	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1}
+26-state-unreadable	3	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"born": "$b", "revision": "1"}}
+26-state-unreadable	4	@as testsub2worker store POST /v1/write {"id":"e4","op":"put","key":"testsub2/state/result/t1","items":{"born":"$b","revision":"1","epoch":"1","value":"{\"state\":\"bogus\"}"},"cas":""}	200 {"index": "$s"}
+26-state-unreadable	5	console2 GET /tallies	200 {"configured": [{"id": "t1", "state": "@absent"}]}
+26-state-unreadable	6	@as testsub2worker store POST /v1/write {"id":"e6","op":"put","key":"testsub2/state/result/t1","items":{"born":"$b","revision":"1","epoch":"1","value":"{\"state\":\"open\"}"},"cas":"$s"}	200
+26-state-unreadable	7	console2 GET /tallies	200 {"configured": [{"id": "t1", "state": {"result": {"state": "open"}}}]}
+# 27-put-row-too-large (аудит покрытия P/06, G08; контрпример прогона 24): правка, после которой строка тяжелее потолка 524288 байт, при теле меньше предела тела — 413 row too large без fault, строка и revision прежние
+27-put-row-too-large	1	console POST /counters {"name": "w1", "start": 1}	201 {"revision": 1}
+27-put-row-too-large	2	console PUT /counters/w1 {"marks": ["@big(524288)"]}	413 {"error": "row too large", "fault": "@absent"}
+27-put-row-too-large	3	store GET /v1/get?key=testsub/counters/w1	200 {"items": {"revision": "1", "start": "1", "marks": "@absent"}}

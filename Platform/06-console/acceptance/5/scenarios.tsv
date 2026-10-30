@@ -135,3 +135,28 @@ scenario	step	request	expect
 19-place-held-no-row	6	GET /testsub2/where/shelves/s9?unit=ta	200 {"worker": "t-1", "place": "s9", "server": "srv-a"}
 19-place-held-no-row	7	store POST /v1/write {"id":"d2","op":"put","key":"testsub2/holds/s8","items":{"by":"t-1","holder":"box:1:ffffff","until":"9999999999","released":"false","gen":"1"},"cas":""}	200
 19-place-held-no-row	8	GET /testsub2/where/shelves/s8?unit=ta	404 {"unreachable": "s8@?"}
+# 20-failover-measured (аудит покрытия P/06, G05): w-1 остановлен SIGTERM (последний пульс, затем отдача слота — P/03.4 Н3), новый экземпляр под тем же именем застаёт его пульс (previous_*): started ≥ previous_hb — провал измерен, failovers_unmeasured 0
+20-failover-measured	1	@start resource	ok
+20-failover-measured	2	@start worker w-1	ok
+20-failover-measured	3	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "instance": "$i1", "previous_instance": "@absent"}
+20-failover-measured	4	@sigterm w-1	ok
+20-failover-measured	5	@until 25 @as testsubworker store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "true"}}
+20-failover-measured	6	@start worker w-1	ok
+20-failover-measured	7	@until 60 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"instance": "@not($i1)", "previous_instance": "$i1", "previous_server": "srv-a"}
+20-failover-measured	8	GET /metrics	200 ~testsub_failovers_unmeasured 0 ~testsub_failover_seconds{kind="last",worker="w-1"}
+# 21-failover-unmeasured (аудит покрытия P/06, G05): застанный пульс w-1 (вход, ts в будущем) — previous_hb > started, last не измерить: failover_seconds{kind=last} −1, failovers_unmeasured 1
+21-failover-unmeasured	1	@start resource	ok
+21-failover-unmeasured	2	@put object testsub/heartbeats/w-1 inputs/hb-w-1-future.json	ok
+21-failover-unmeasured	3	@until 20 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "instance": "acc:9:0f0f0f"}
+21-failover-unmeasured	4	@start worker w-1	ok
+21-failover-unmeasured	5	@until 60 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "previous_instance": "acc:9:0f0f0f", "previous_server": "srv-a"}
+21-failover-unmeasured	6	@until 20 GET /metrics	200 ~testsub_failovers_unmeasured 1 ~testsub_failover_seconds{kind="last",worker="w-1"} -1
+# 22-numeric-id (аудит покрытия P/06, G09 п. 1; P/06.1 Н1.3 numeric): probe-x — первый номер 1, счётчик next_id {n}, надгробие номер не возвращает; в пути 01 — 400 badkey, %32 — единица 2
+22-numeric-id	1	POST /probe-x/probes {}	201 {"id": "1", "label": "probe1", "revision": 1}
+22-numeric-id	2	@as console store GET /v1/get?key=probe-x/next_id	200 {"items": {"n": "1"}}
+22-numeric-id	3	DELETE /probe-x/probes/1	200 {"deleted": "1"}
+22-numeric-id	4	POST /probe-x/probes {}	201 {"id": "2", "label": "probe2", "revision": 1}
+22-numeric-id	5	store GET /v1/get?key=probe-x/next_id	200 {"items": {"n": "2"}}
+22-numeric-id	6	PUT /probe-x/probes/01 {"n": 1}	400 {"error": "badkey"}
+22-numeric-id	7	PUT /probe-x/probes/%32 {"n": 1}	200 {"id": "2", "n": 1, "revision": 2}
+22-numeric-id	8	PUT /probe-x/probes/1 {"n": 1}	404 {"error": "no such unit"}

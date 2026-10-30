@@ -53,3 +53,8 @@ scenario	step	request	expect
 09-unreadable-row-start	2	@as console store POST /v1/write {"id":"a7","op":"put","key":"testsub2/tallies/t9","items":{"name":"t9","of":"c1","rule":"{bad"}}	200
 09-unreadable-row-start	3	@restart console	ok
 09-unreadable-row-start	4	console GET /tallies	200
+# 10-table-secret (аудит покрытия P/06, G06): секретное поле строки таблицы (`feed_secret` у shelves) запечатано в строке и не выдаётся ни ответом POST, ни GET списка, ни GET строки — поля нет (у единиц — маска)
+10-table-secret	1	console POST /shelves {"name": "sh1", "zone": "z1", "feed": "https://hub.example/a", "feed_user": "u", "feed_secret": "hunter2"}	201 {"row": {"name": "sh1", "feed": "https://hub.example/a", "feed_user": "u", "feed_secret": "@absent"}}
+10-table-secret	2	store GET /v1/get?key=testsub2/shelves/sh1	200 {"items": {"feed_secret": "~enc:v2:", "feed_user": "u"}}
+10-table-secret	3	console GET /shelves	200 {"shelves": [{"name": "sh1", "feed": "https://hub.example/a", "feed_user": "u", "feed_secret": "@absent"}]}
+10-table-secret	4	console GET /shelves/sh1	200 {"name": "sh1", "feed_user": "u", "feed_secret": "@absent"}
