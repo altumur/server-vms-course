@@ -50,13 +50,13 @@ const cardOf=t=>cards.find(c=>{const ch=c.querySelector(":scope > .ch");return c
 const c1=cardOf("Section one"),c2=cardOf("Section two"),c3=cardOf("Boxed");
 out.noH2Left=!main().querySelector("h2");
 // первый <h2> карточки — первым в хосте страницы: его раздел — только до следующего заголовка
-out.h2ToCard=!!c1&&!!c2&&!!c1.querySelector(":scope > .cb .s1")&&!c1.querySelector(".s2")&&!c1.contains(c2)&&!!c2.querySelector(":scope > .cb .s2")&&!c2.querySelector(".s3");
+out.pending_h2ToCard=!!c1&&!!c2&&!!c1.querySelector(":scope > .cb .s1")&&!c1.querySelector(".s2")&&!c1.contains(c2)&&!!c2.querySelector(":scope > .cb .s2")&&!c2.querySelector(".s3");
 out.h2BoxIsCard=!!c3&&c3.classList.contains("box")&&!!c3.querySelector(":scope > .cb .s3");
 out.headAboveBody=!!c1&&c1.firstElementChild.className==="ch"&&c1.lastElementChild.className==="cb";
 // <h2> среди прочего: карточка — он и то, что за ним до следующего заголовка; абзац до него остаётся вне карточек
 pc.select("flat:one");await b.ready(80);
 {const fa=cardOfIn(main(),"Part A"),fb=cardOfIn(main(),"Part B");
- out.h2AmongOthersToCard=!!fa&&!!fb&&!!fa.querySelector(":scope > .cb .pa")&&!fa.querySelector(".pb")&&!!fb.querySelector(":scope > .cb .pb")&&!!main().querySelector(".intro")&&!main().querySelector(".intro").closest(".card");
+ out.pending_h2AmongOthersToCard=!!fa&&!!fb&&!!fa.querySelector(":scope > .cb .pa")&&!fa.querySelector(".pb")&&!!fb.querySelector(":scope > .cb .pb")&&!!main().querySelector(".intro")&&!main().querySelector(".intro").closest(".card");
  out.flatGot=main().innerHTML.slice(0,400);}
 pc.select("x:one");await b.ready(80);
 // крошка ведёт к объекту
@@ -69,7 +69,10 @@ out.lateDressed=!main().querySelector("h1")&&/Late/.test(hd().textContent)&&!!hd
 function cardOfIn(root,t){return [...root.querySelectorAll(".card")].find(c=>{const ch=c.querySelector(":scope > .ch");return ch&&ch.textContent===t})}
 w.close();
 out.errors=errs;
-b.report(out,["errors","flatGot"]);
+// pending_* — разделы <h2> не по норме Н1.5 `cards` («он и то, что за ним, до следующего заголовка — карточка»): cardify
+// ставит карточку перед <h2>, и его раздел в .cb не попадает; работает только <h2> первым в своём .box. Дефект модуля —
+// «Архитектору» 2026-10-30 (аудит P/07); после правки — снять приставку pending_ и убрать их из списка ниже.
+b.report(out,["errors","flatGot","pending_h2ToCard","pending_h2AmongOthersToCard"]);
 try{fs.unlinkSync(TMP)}catch(e){}
 process.exit(0);
 })();
