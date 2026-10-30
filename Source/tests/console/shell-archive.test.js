@@ -44,6 +44,12 @@ const home=btn("home","1");home.value="";n=w.__calls.length;home.dispatchEvent(n
 c=call(n,"PUT","/rec/recordings/1");out.homeAny=!!c&&JSON.stringify(c.body)==='{"home":""}';
 const days=btn("days","1");days.value="0";n=w.__calls.length;days.dispatchEvent(new w.Event("change"));await b.ready(60);
 out.badDaysNotSent=!call(n,"PUT","/rec/recordings/1");
+// дробь и показатель — не целое число дней: сказано тостом, PUT нет (не усечение до 1 и не 100; дополнение Kimi к V/08)
+const toast=()=>(d.querySelector(".pc-toast")||{}).textContent||"";
+for(const v of ["1.9","1e2"]){const x=btn("days","1");x.value=v;n=w.__calls.length;x.dispatchEvent(new w.Event("change"));await b.ready(60);
+  out["badDays_"+v]=!call(n,"PUT","/rec/recordings/1")&&/Срок хранения — целое число дней/.test(toast())}
+// фаза waiting — «Ждёт» (не «Ждёт том»: ждать можно не только тома)
+out.waitingWord=w.eval("recState({row:{phase:'waiting'}}).label")==="Ждёт";
 btn("days","1").value="45";n=w.__calls.length;btn("days","1").dispatchEvent(new w.Event("change"));await b.ready(100);
 c=call(n,"PUT","/rec/recordings/1");out.days=!!c&&JSON.stringify(c.body)==='{"retention_days":45}';
 const wh=btn("when","1-b");wh.value="always";n=w.__calls.length;wh.dispatchEvent(new w.Event("change"));await b.ready(100);

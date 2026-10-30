@@ -25,14 +25,15 @@ b.FIX["/events"]={events:[],state:"live"};
 const observation=(member,recording,role="primary")=>({member,item:"r1/"+recording,recording,role,running:true});
 const book=(...entries)=>({entries,missing:[]});
 b.FIX["/domain/rec/books/primaries"]={"":{missing:[]},
-  "SN-DEMO":book(observation("relay-b","SN-DEMO")),"SN-X":book(observation("relay-x","SN-X")),
+  "SN-DEMO":book({...observation("relay-b","SN-DEMO"),home:"vol-b"}),"SN-X":book(observation("relay-x","SN-X")),
   "SN-Y":book(observation("relay-y","SN-Y")),"SN-OWN":book(observation("cam-demo","SN-OWN")),
   "SN-Z":book(observation("relay-z","SN-Z")),
   "SN-BK":book(observation("relay-b","SN-BK"),observation("relay-k","SN-BK-b","backup"),
-                 observation("cam-demo","6-card","card"),"x",{member:"relay-k",role:"backup"})};
+                 observation("cam-demo","6-card","card"),"x",{member:"relay-k",role:"backup"},
+                 {...observation("relay-q","SN-Q"),running:false})};   // запись, которую никто не пишет, — не источник (V/08.2)
 (async()=>{
-const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
-const calls=[];
+const errs=[],calls=[];
+const stub=w=>{w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
 const J=(status,body,hdr={})=>Promise.resolve({status,ok:status<300,headers:{get:k=>hdr[k]??null},json:()=>Promise.resolve(body),text:()=>Promise.resolve(JSON.stringify(body))});
 const f0=w.fetch;w.fetch=(u,i)=>{const s=String(u),auth=((i||{}).headers||{}).Authorization||"";calls.push([s,auth]);
   if(s==="/rec/where/1-card")return J(200,{door:{url:"http://cam-demo:9001",token:"C1",expires:now+120}});
@@ -47,7 +48,9 @@ const f0=w.fetch;w.fetch=(u,i)=>{const s=String(u),auth=((i||{}).headers||{}).Au
   if(s==="/domain/at/relay-k/rec/where/SN-BK-b")return J(200,{door:{url:"http://relay-k:9201",token:"RK",expires:now+120}});
   if(s.startsWith("http://relay-k:9201/timeline/SN-BK-b"))return J(200,{spans:[{start_ms:ms(now-700),end_ms:ms(now-650),epoch:2}],unreachable:[],unavailable:[]});
   if(s.startsWith("/domain/at/cam-demo/"))return J(404,{error:"not another member"});
-  return f0(u,i)};
+  if(s.startsWith("/domain/at/relay-b/rec/where/volumes/"))return J(404,{error:"no such place"});
+  return f0(u,i)};return w};
+const w=stub(b.boot());
 await b.ready(600);await w.platformConsole.ready;await w.platformConsole.refresh();await b.ready(80);
 const d=w.document,pc=w.platformConsole,out={};
 const V=()=>w.eval("V");
@@ -79,6 +82,18 @@ b.FIX["/domain"]={holder:"cam-demo",age:1,complete:true,members:[{name:"cam-demo
 b.FIX["/domain/cam/state"]={cameras:[{cluster:"cam-demo",id:"1",ref:"SN-DEMO",recorded_by:"relay-state",recordings:[{cluster:"relay-state",id:"FROM-STATE"}]}]};
 await w.platformConsole.refresh();await b.ready(120);
 out.holderReadsTheBook=JSON.stringify(w.eval("farRecsOfCam('1')").map(r=>[r.cluster,r.id]))===JSON.stringify([["relay-b","SN-DEMO"]]);
+// элемент книги running: false — не источник: его нет среди записей камеры (V/08.2, дополнение Kimi к V/08)
+out.notRunningNotSource=!w.eval("farRecsOfCam('6')").some(r=>r.id==="SN-Q");
+// чужая запись с home: при places — дверь её места через консоль её кластера; манифест rec без places — запросов мест нет
+const placeAsk=()=>calls.some(([u])=>u.startsWith("/domain/at/relay-b/rec/where/volumes/vol-b?unit="));
+calls.length=0;await w.eval("loadTimeline('1')");await b.ready(80);
+out.farPlaceAskedWithPlaces=placeAsk();
+// вторая загрузка — без вида домена держателя: чужие записи из книги, как выше
+delete b.FIX["/domain"];delete b.FIX["/domain/cam/state"];
+b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},fields:[{name:"cam",type:"string"}]}}};
+const w2=stub(b.boot());await b.ready(600);await w2.platformConsole.ready;await w2.platformConsole.refresh();await b.ready(80);
+calls.length=0;await w2.eval("loadTimeline('1')");await b.ready(80);
+out.noPlacesNoFarAsk=!placeAsk()&&!calls.some(([u])=>/\/rec\/where\/[^/]+\/[^?]+\?unit=/.test(u))&&calls.some(([u])=>u==="/domain/at/relay-b/rec/where/SN-DEMO");
 out.errors=errs;out.noErrors=!errs.length;
 b.report(out);
 try{fs.unlinkSync(TMP)}catch(e){}
