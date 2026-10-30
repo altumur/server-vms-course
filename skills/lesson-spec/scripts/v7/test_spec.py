@@ -878,6 +878,16 @@ class TestChapter(unittest.TestCase):
         n = ch.puts(acc)
         self.assertEqual(self.messages(ch), "")
         self.assertGreater(n, 2)
+        table.write_text(base + "\nzz_fill\t%s @file-fill static/a.bin 8388609 %s\t2 1\nzz_shell\t%s @shell-put sh1 %s\t0 2\n"
+                         % (name, name, name, name), encoding="utf-8")
+        ch.errors = []
+        ch.puts(acc)
+        self.assertEqual(self.messages(ch), "")
+        table.write_text(base + "\nzz_fill\t%s @file-fill ../a 5 %s\t2 1\nzz_tail\t%s @file-fill a.bin 5\t2 1\n" % (name, name, name),
+                         encoding="utf-8")
+        ch.errors = []
+        ch.puts(acc)
+        self.assertIn("file names through one space", self.messages(ch))
         table.write_text(base + "\nzz_bad\t%s @shell-put nosh %s\t0 2\nzz_end\t%s @shell-put sh1\t0 2\n"
                          % (name, name, name), encoding="utf-8")
         ch.errors = []

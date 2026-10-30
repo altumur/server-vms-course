@@ -51,6 +51,8 @@ PUTS_DIRECTIVES = {"@view-delete", "@view-spoil",     # глава 2.2 (с ко�
                    "@rev-delete", "@rev-spoil"}        # метка /rev: снять, испортить (аудит Gemini P/02, свойства 13, 14)
 STORE_DIRECTIVES = {"@rev-max"}                         # глава 2.3: rev = 2^53 − 1 у строки, метки и вида (аудит P/02, B02)
 SHELL_PUT = "@shell-put"                                # глава 2.3: за ним — оболочка puts/<имя>.shell.html (аудит P/02, B03)
+FILE_FILL = "@file-fill"                                # глава 2.3: <путь> <байтов> — файл рядом с манифестом (B7, потолки набора)
+FILL_PATH = re.compile(r"[a-z0-9][a-z0-9._/-]*")
 CEILING_TABLE = "puts-ceiling.tsv"                      # глава 2.2: потолок не по умолчанию, пятая колонка (аудит P/02, B00)
 PUTS_FILE = re.compile(r"[a-z0-9][a-z0-9_-]*")
 EXPECT = re.compile(r"(0|2) ([1-9][0-9]*|-)")
@@ -465,6 +467,12 @@ class Chapter:
                         shell_args.append(arg)
                     i += 2
                     continue
+                if t == FILE_FILL:
+                    path, size = (tokens[i + 1:i + 3] + ["", ""])[:2]
+                    if not FILL_PATH.fullmatch(path) or ".." in path or not re.fullmatch(r"[1-9][0-9]*", size):
+                        bad.append(t)
+                    i += 3
+                    continue
                 if t.startswith("@"):
                     if t not in PUTS_DIRECTIVES | STORE_DIRECTIVES:
                         bad.append(t)
@@ -474,17 +482,17 @@ class Chapter:
                     bad.append(t)
                 i += 1
             if bad or not names or tokens[0].startswith("@") or not PUTS_FILE.fullmatch(tokens[-1]) \
-                    or (len(tokens) > 1 and tokens[-2] == SHELL_PUT):
+                    or (len(tokens) > 1 and tokens[-2] == SHELL_PUT) or (len(tokens) > 2 and tokens[-3] == FILE_FILL):
                 self.error(where, "line %d: puts — file names through one space (directives %s between them%s)"
-                           % (no, ", ".join(sorted(PUTS_DIRECTIVES | STORE_DIRECTIVES | {SHELL_PUT + " <оболочка>"})),
+                           % (no, ", ".join(sorted(PUTS_DIRECTIVES | STORE_DIRECTIVES | {SHELL_PUT + " <оболочка>", FILE_FILL + " <путь> <байтов>"})),
                               "" if view else "; @view-* only with the canonical column"))
                 continue
             directives = {t for t in tokens if t.startswith("@")}
             if not view and directives & PUTS_DIRECTIVES:
                 self.error(where, "line %d: directives %s need the canonical column" % (no, ", ".join(sorted(PUTS_DIRECTIVES))))
-            if view and directives & (STORE_DIRECTIVES | {SHELL_PUT}):
+            if view and directives & (STORE_DIRECTIVES | {SHELL_PUT, FILE_FILL}):
                 self.error(where, "line %d: directives %s are of chapter 2.3 (three columns)"
-                           % (no, ", ".join(sorted(STORE_DIRECTIVES | {SHELL_PUT}))))
+                           % (no, ", ".join(sorted(STORE_DIRECTIVES | {SHELL_PUT, FILE_FILL}))))
             for t in names:
                 used.add(t)
                 if t not in files:
