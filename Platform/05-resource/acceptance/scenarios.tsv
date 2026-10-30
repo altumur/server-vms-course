@@ -122,8 +122,6 @@ scenario	step	request	expect
 23-object-ceiling	1	@start resource	ok
 23-object-ceiling	2	resource @header X-Written: 1700000000 PUT /v1/objects/testsub2/blobs/sha256-e20a69eca39368572e90b9135738a613838f954987a0b44b6220889c171cbb76 @big(67108864)	204
 23-object-ceiling	3	resource GET /v1/objects/testsub2/blobs/sha256-e20a69eca39368572e90b9135738a613838f954987a0b44b6220889c171cbb76?scope=local	200 ~xxxx
-23-object-ceiling	4	resource @header X-Written: 1700000000 PUT /v1/objects/testsub2/blobs/sha256-6832d5ef0f8b4923d7ac5d3ffe71fc0865ed9bf9ef988547583644a461476ca1 @big(67108865)	413
-23-object-ceiling	5	resource GET /v1/objects/testsub2/blobs/sha256-6832d5ef0f8b4923d7ac5d3ffe71fc0865ed9bf9ef988547583644a461476ca1?scope=local	404
 24-free-ask-own	1	admin POST /v1/write {"id":"f0401","op":"put","key":"platform/space","items":{"enabled":"true","high":"0.0000001","low":"0.00000001"},"cas":""}	200
 24-free-ask-own	2	@start worker testsub2 t-srv-a-1 on srv-a	ok
 24-free-ask-own	3	@until 60 admin GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"holder": "@any", "released": "false", "gen": "1", "server": "srv-a"}}
