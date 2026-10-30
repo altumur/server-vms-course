@@ -171,3 +171,126 @@ scenario	step	request	expect
 28-free-ask-volume-profile	8	@until 60 resource GET /events?kind=free_ask.key_taken	200 {"events": [{"kind": "free_ask.key_taken"}]}
 28-free-ask-volume-profile	9	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i2", "items": {"free": "1", "volume": "b-c", "server": "srv-a", "at": "1700000000"}}
 28-free-ask-volume-profile	10	ASSERT $i1 == $i2	
+# 29-row-objects (аудит покрытия P/05, второй проход Gemini, G01 п. 1): строки-объекты objects.rows (testsub2/marks/*) и commands/* обеих подсистем дверь объектов не выдаёт — 403 и при записанной строке objects/<ключ>, на любом scope; prefix строк-объектов — 403; prefix=testsub2/ — фильтр, 200 без них
+29-row-objects	1	admin POST /v1/write {"id":"g2901","op":"put","key":"objects/testsub2/marks/m1","items":{"count":"1"},"cas":""}	200
+29-row-objects	2	admin POST /v1/write {"id":"g2902","op":"put","key":"objects/testsub2/commands/r1","items":{"outcome":"expired"},"cas":""}	200
+29-row-objects	3	resource GET /v1/objects/testsub2/marks/m1?scope=local	403
+29-row-objects	4	resource GET /v1/objects/testsub2/marks/m1?scope=cluster	403
+29-row-objects	5	resource GET /v1/objects/testsub2/commands/r1?scope=local	403
+29-row-objects	6	resource GET /v1/objects/testsub/commands/r1?scope=local	403
+29-row-objects	7	resource GET /v1/objects?prefix=testsub2/marks/&scope=local	403
+29-row-objects	8	resource GET /v1/objects?prefix=testsub2/commands/&scope=local	403
+29-row-objects	9	resource GET /v1/objects?prefix=testsub2/&scope=local	200 {"server": "srv-a", "objects": {"testsub2/marks/m1": "@absent", "testsub2/commands/r1": "@absent"}}
+# 30-copy-written-max (G01 п. 2; C05-COPY-WRITTEN-SOURCE-01): копия тела хранит written исходной; уже лежащая копия того же ключа — written не уменьшается (большее из двух)
+30-copy-written-max	1	resource @header X-Written: 1700000010 PUT /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw foo	204
+30-copy-written-max	2	resource GET /v1/objects?prefix=testsub2/blobs/&scope=local	200 {"server": "srv-a", "objects": {"testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"written": 1700000010, "server": "srv-a", "size": 3}}}
+30-copy-written-max	3	resource @header X-Written: 1700000005 PUT /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw foo	204
+30-copy-written-max	4	resource GET /v1/objects?prefix=testsub2/blobs/&scope=local	200 {"server": "srv-a", "objects": {"testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"written": 1700000010, "server": "srv-a", "size": 3}}}
+30-copy-written-max	5	resource @header X-Written: 1700000020 PUT /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw foo	204
+30-copy-written-max	6	resource GET /v1/objects?prefix=testsub2/blobs/&scope=local	200 {"server": "srv-a", "objects": {"testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"written": 1700000020, "server": "srv-a", "size": 3}}}
+# 31-objects-cluster (G03; два ресурса, srv-b — @start resource on srv-b): тело srv-a копируется соседу первым проходом после перезапуска (C05-PASS-FIRST-AT-START-01) с исходным written; scope=cluster: равный written — больший сервер (srv-b), свежая копия побеждает, молчащий srv-b — missing и X-Missing у 404
+31-objects-cluster	1	@start resource on srv-b	ok
+31-objects-cluster	2	@until 30 store GET /v1/get?key=platform/doors/srv-b	200 {"items": {"url": "@any"}}
+31-objects-cluster	3	@start resource	ok
+31-objects-cluster	4	@until 30 resource GET /v1/objects?prefix=testsub2/blobs/&scope=local	200 {"server": "srv-a", "objects": {}}
+31-objects-cluster	5	resource @header X-Written: 1700000000 PUT /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw foo	204
+31-objects-cluster	6	@sigterm resource	ok
+31-objects-cluster	7	@start resource	ok
+31-objects-cluster	8	@until 60 resource GET /v1/objects?prefix=testsub2/blobs/&scope=cluster	200 {"server": "srv-a", "objects": {"testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"server": "srv-b", "written": 1700000000, "size": 3}}, "missing": "@absent"}
+31-objects-cluster	9	resource GET /v1/objects/platform/resources/srv-b/heartbeat?scope=local	404
+31-objects-cluster	10	resource GET /v1/objects/platform/resources/srv-b/heartbeat?scope=cluster	200 @header X-Server: ~srv-b
+31-objects-cluster	11	resource GET /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae?scope=cluster	200 @header X-Server: ~srv-b
+31-objects-cluster	12	resource @header X-Written: 1700000005 PUT /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw foo	204
+31-objects-cluster	13	resource GET /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae?scope=cluster	200 @header X-Server: ~srv-a
+31-objects-cluster	14	@sigkill resource#1	ok
+31-objects-cluster	15	resource GET /v1/objects?prefix=testsub2/blobs/&scope=cluster	200 {"server": "srv-a", "missing": ["srv-b"], "objects": {"testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"server": "srv-a", "written": 1700000005}}}
+31-objects-cluster	16	resource GET /v1/objects/testsub/heartbeats/w-9?scope=cluster	404 @header X-Missing: ~srv-b
+# 32-mirror-put-refusals (G04 ч. 1): копий srv-b нет — /mirrored/srv-b 404; PUT /mirror открытого бакета (конец окна позже часов приёмника), без X-Sum, X-Sum не по форме — 400; сумма не та — 422; копия не опубликована
+32-mirror-put-refusals	1	resource GET /mirrored/srv-b	404
+32-mirror-put-refusals	2	resource @header X-Sum: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae PUT /mirror/srv-b/testsub/c1/e1/20990101T000000Z.events.jsonl @raw foo	400
+32-mirror-put-refusals	3	resource PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	400
+32-mirror-put-refusals	4	resource @header X-Sum: bad-hex PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	400
+32-mirror-put-refusals	5	resource @header X-Sum: 2C26B46B68FFC68FF99B453C1D30413413422D706483BFA0F98A5E886266E7AE PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	400
+32-mirror-put-refusals	6	resource @header X-Sum: 0000000000000000000000000000000000000000000000000000000000000000 PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	422
+32-mirror-put-refusals	7	resource GET /mirrored/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl	404
+# 33-mirror-put-read (G04 ч. 2; R05-G04): закрытый бакет с верной X-Sum — 204; /mirrored/srv-b — {copies: [{path, written, size, sum}]}; повтор того же бакета с той же суммой written не сдвигает; байты копии с X-Sum; нет такой копии — 404; пульс mirrors {srv-b: 1}
+33-mirror-put-read	1	resource @header X-Sum: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	204
+33-mirror-put-read	2	resource GET /mirrored/srv-b	200 {"copies": [{"path": "testsub/c1/e1/20260101T000000Z.events.jsonl", "written": "$w1", "size": 3, "sum": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae"}]}
+33-mirror-put-read	3	@sleep 2	ok
+33-mirror-put-read	4	resource @header X-Sum: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	204
+33-mirror-put-read	5	resource GET /mirrored/srv-b	200 {"copies": [{"path": "testsub/c1/e1/20260101T000000Z.events.jsonl", "written": "$w1", "size": 3, "sum": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae"}]}
+33-mirror-put-read	6	resource GET /mirrored/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl	200 @header X-Sum: ~2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae
+33-mirror-put-read	7	resource GET /mirrored/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl	200 ~foo
+33-mirror-put-read	8	resource GET /mirrored/srv-b/testsub/c1/e1/20260101T001000Z.events.jsonl	404
+33-mirror-put-read	9	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"mirrors": {"srv-b": 1}}
+# 34-events-alarms-unit (G05 ч. 1; E32, C05-QUERY-UNIT-ALARMS-01): строка дерева testsub.alarms/c1 — subsystem testsub, unit testsub/c1, class alarm; unit=testsub.alarms/c1 — форма UnitRef, не нормализуется: 200 без совпадений
+34-events-alarms-unit	1	@append event testsub.alarms/c1/e1 {"t": {now}, "kind": "probe.alarm", "id": "e1-746573747375622e616c61726d73-6331-1-70726f6265-1", "of": "testsub/c1", "class": "alarm"}	ok
+34-events-alarms-unit	2	@until 30 resource GET /events?unit=testsub/c1	200 {"events": [{"kind": "probe.alarm", "id": "e1-746573747375622e616c61726d73-6331-1-70726f6265-1", "class": "alarm", "subsystem": "testsub", "unit": "testsub/c1"}], "state": "live", "truncated": 0}
+34-events-alarms-unit	3	resource GET /events?unit=testsub.alarms/c1	200 {"events": [], "state": "live", "truncated": 0}
+# 35-events-cut-order (G05 ч. 2; договор слияния журнала событий cut, by, truncated; EJ-L06): HEAD /events — 405; дубль id — первая строка; сначала alarm, затем observation по keep, равное время — id по байтам; by=occurred (без occurred — t); truncated — после дедупликации
+35-events-cut-order	1	resource HEAD /events	405
+35-events-cut-order	2	@append event testsub.alarms/c1/e1 {"t": 1700000010, "kind": "probe.alarm", "id": "e1-746573747375622e616c61726d73-6331-1-70726f6265-10", "of": "testsub/c1", "class": "alarm"}	ok
+35-events-cut-order	3	@append event testsub/c1/e1 {"t": 1700000020, "occurred": 1700000005, "kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-12", "of": "testsub/c1", "val": 1}	ok
+35-events-cut-order	4	@append event testsub/c1/e1 {"t": 1700000020, "occurred": 1700000005, "kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-12", "of": "testsub/c1", "val": 2}	ok
+35-events-cut-order	5	@append event testsub/c1/e1 {"t": 1700000020, "occurred": 1700000030, "kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-11", "of": "testsub/c1"}	ok
+35-events-cut-order	6	@append event testsub/c1/e1 {"t": 1700000025, "kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-13", "of": "testsub/c1"}	ok
+35-events-cut-order	7	@until 30 resource GET /events?unit=testsub/c1	200 {"events": [{"id": "e1-746573747375622e616c61726d73-6331-1-70726f6265-10", "class": "alarm"}, {"id": "e1-74657374737562-6331-1-70726f6265-13", "class": "observation"}, {"id": "e1-74657374737562-6331-1-70726f6265-11", "class": "observation"}, {"id": "e1-74657374737562-6331-1-70726f6265-12", "class": "observation", "val": 1}], "state": "live", "truncated": 0}
+35-events-cut-order	8	resource GET /events?unit=testsub/c1&class=observation&keep=oldest&limit=2	200 {"events": [{"id": "e1-74657374737562-6331-1-70726f6265-11"}, {"id": "e1-74657374737562-6331-1-70726f6265-12", "val": 1}], "state": "live", "truncated": 1}
+35-events-cut-order	9	resource GET /events?unit=testsub/c1&class=observation&by=occurred	200 {"events": [{"id": "e1-74657374737562-6331-1-70726f6265-11"}, {"id": "e1-74657374737562-6331-1-70726f6265-13"}, {"id": "e1-74657374737562-6331-1-70726f6265-12", "val": 1}], "state": "live", "truncated": 0}
+35-events-cut-order	10	resource GET /events?unit=testsub/c1&class=observation&limit=1	200 {"events": [{"id": "e1-74657374737562-6331-1-70726f6265-13"}], "state": "live", "truncated": 2}
+# 36-events-bucket-stream (G05 ч. 3): бакет из одной строки (87 байт с LF) — GET /events/{path} 200 с X-Sum целого тела, один Range — 206 с Content-Range, вне файла — 416 с Content-Range; /buckets неизвестной единицы — 404
+36-events-bucket-stream	1	@append event testsub/c2/e1 {"t": 1700000000, "kind": "probe.tick", "id": "e1-74657374737562-6332-1-70726f6265-1"}	ok
+36-events-bucket-stream	2	@until 30 resource GET /events?unit=testsub/c2	200 {"events": [{"id": "e1-74657374737562-6332-1-70726f6265-1", "bucket": "$b"}], "state": "live", "truncated": 0}
+36-events-bucket-stream	3	resource GET /events/$b	200 @header X-Sum: ~395b0387a7b9605cbdada2e513815aede6bb83fa2f60d1a324287e1708e58fc3
+36-events-bucket-stream	4	resource GET /events/$b	200 ~probe.tick
+36-events-bucket-stream	5	resource @header Range: bytes=0-9 GET /events/$b	206 @header Content-Range: ~bytes 0-9/87
+36-events-bucket-stream	6	resource @header Range: bytes=999999-1000000 GET /events/$b	416 @header Content-Range: ~bytes */87
+36-events-bucket-stream	7	resource GET /buckets/testsub/nosuch	404
+# 37-retention-garbled (G06 ч. 1; C05-RETENTION-PULSE-33, R05-RETENTION-MIXED-51-01): days 0 у testsub/retention и не число у testsub2/alarms_retention (testsub2/retention верен) — первый проход: retention_garbled [testsub, testsub2], retention_withheld days_garbled у обеих; деревья есть до старта
+37-retention-garbled	1	admin POST /v1/write {"id":"g3701","op":"put","key":"testsub/retention","items":{"days":"0"},"cas":""}	200
+37-retention-garbled	2	admin POST /v1/write {"id":"g3702","op":"put","key":"testsub2/retention","items":{"days":"30"},"cas":""}	200
+37-retention-garbled	3	admin POST /v1/write {"id":"g3703","op":"put","key":"testsub2/alarms_retention","items":{"days":"bad"},"cas":""}	200
+37-retention-garbled	4	@append event testsub/c1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-1"}	ok
+37-retention-garbled	5	@append event testsub2/t1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-7465737473756232-7431-1-70726f6265-1"}	ok
+37-retention-garbled	6	@append event testsub2.alarms/t1/e1 {"t": {now}, "kind": "probe.alarm", "id": "e1-74657374737562322e616c61726d73-7431-1-70726f6265-1", "class": "alarm"}	ok
+37-retention-garbled	7	@start resource	ok
+37-retention-garbled	8	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"retention_garbled": ["testsub", "testsub2"], "retention_withheld": {"testsub": "days_garbled", "testsub2": "days_garbled"}}
+# 38-holds-garbled-row (G06 ч. 2; договор удержаний «Что держит строка»): строка удержания testsub2/notches без читаемого окна (to не число), не отпущена — garbled_rows.notches 1 в пульсе после первого прохода
+38-holds-garbled-row	1	admin POST /v1/write {"id":"g3801","op":"put","key":"testsub2/notches/c1-1760700000-1760703600","items":{"of":"c1","from":"1760700000","to":"bad"},"cas":""}	200
+38-holds-garbled-row	2	@append event testsub2/t1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-7465737473756232-7431-1-70726f6265-1"}	ok
+38-holds-garbled-row	3	@start resource	ok
+38-holds-garbled-row	4	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"garbled_rows": {"notches": 1}}
+# 39-settings-unread (G06 ч. 3; Н1.4 space, mirror, В7 п. 3 П1): platform/space и platform/mirror с enabled не по форме — строки нечитаемы: settings_unread [mirror, space], шаг relieve не исполняется — своя строка free-* не пишется
+39-settings-unread	1	admin POST /v1/write {"id":"g3901","op":"put","key":"platform/space","items":{"enabled":"maybe","high":"0.0000001","low":"0.00000001"},"cas":""}	200
+39-settings-unread	2	admin POST /v1/write {"id":"g3902","op":"put","key":"platform/mirror","items":{"enabled":"maybe"},"cas":""}	200
+39-settings-unread	3	@start resource	ok
+39-settings-unread	4	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"settings_unread": ["mirror", "space"]}
+39-settings-unread	5	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"items": null}
+# 40-space-disabled (G07 ч. 1; E45, R05-G03): platform/space enabled false — первый проход снимает свою строку free-srv-a-events, short 0
+40-space-disabled	1	admin POST /v1/write {"id":"g4001","op":"put","key":"platform/space","items":{"enabled":"false","high":"0.0000001","low":"0.00000001"},"cas":""}	200
+40-space-disabled	2	admin POST /v1/write {"id":"g4002","op":"put","key":"testsub2/requests/free-srv-a-events","items":{"free":"100","volume":"events","server":"srv-a","at":"1700000000"},"cas":""}	200
+40-space-disabled	3	@start resource	ok
+40-space-disabled	4	@until 60 admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"items": null}
+40-space-disabled	5	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"short": 0}
+# 41-space-band (G07 ч. 2; E44): доля занятого между low и high, need > 0 — своя строка free-srv-a-events стоит как есть: та же версия и то же free
+41-space-band	1	admin POST /v1/write {"id":"g4101","op":"put","key":"platform/space","items":{"enabled":"true","high":"0.99999999","low":"0.00000001"},"cas":""}	200
+41-space-band	2	admin POST /v1/write {"id":"g4102","op":"put","key":"testsub2/requests/free-srv-a-events","items":{"free":"100","volume":"events","server":"srv-a","at":"1700000000"},"cas":""}	200
+41-space-band	3	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i1", "items": {"free": "100", "volume": "events", "server": "srv-a", "at": "1700000000"}}
+41-space-band	4	@start resource	ok
+41-space-band	5	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"pass_started": "@time"}
+41-space-band	6	@sleep 12	ok
+41-space-band	7	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i2", "items": {"free": "100", "volume": "events", "server": "srv-a", "at": "1700000000"}}
+41-space-band	8	ASSERT $i1 == $i2	ok
+# 42-heartbeat-units (G08 ч. 1; E39): units пульса ресурса — id единиц из status пульса живого воркера w-1, по возрастанию байтов (c2 создана раньше c1)
+42-heartbeat-units	1	@start controller	ok
+42-heartbeat-units	2	@start worker w-1	ok
+42-heartbeat-units	3	console POST /counters {"name": "c2", "start": 1}	201
+42-heartbeat-units	4	console POST /counters {"name": "c1", "start": 1}	201
+42-heartbeat-units	5	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": ["testsub/w-1"], "units": {"testsub": ["c1", "c2"]}}
+# 43-spoiled-object-door (G08 ч. 2; C05-SPOIL-OBJECT-BYTES-01): испорченный пульс воркера дверь объектов не разбирает — в листинге с written, server, size и GET 200, не 503
+43-spoiled-object-door	1	@start worker w-1	ok
+43-spoiled-object-door	2	@until 30 resource GET /v1/objects?prefix=testsub/heartbeats/&scope=local	200 {"server": "srv-a", "objects": {"testsub/heartbeats/w-1": {"server": "srv-a"}}}
+43-spoiled-object-door	3	@sigkill w-1	ok
+43-spoiled-object-door	4	@spoil object testsub/heartbeats/w-1	ok
+43-spoiled-object-door	5	resource GET /v1/objects?prefix=testsub/heartbeats/&scope=local	200 {"server": "srv-a", "objects": {"testsub/heartbeats/w-1": {"written": "@any", "server": "srv-a", "size": "@any"}}}
+43-spoiled-object-door	6	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200
