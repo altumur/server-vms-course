@@ -40,3 +40,14 @@ scenario	step	request	expect
 25-unit-never-read	5	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"garbled_rows": "$g", "pass_failures": 0, "status": [{"id": "c25", "phase": "unreadable", "why": "~row unreadable: ", "epoch": "@absent", "observed_revision": "@absent"}]}
 25-unit-never-read	6	ASSERT $g >= 1	ok
 25-unit-never-read	7	store GET /v1/get?key=testsub/epoch/c25	200 {"items": null}
+# 35 (аудит покрытия P/03, второй проход Gemini): born строки сменился у единицы, что осталась в назначении; назначение и строка — дверью admin, контроллера нет.
+35-unit-born-changed	1	@start resource	ok
+35-unit-born-changed	2	admin POST /v1/write {"id":"e35a","op":"put","key":"testsub/counters/c35","items":{"id":"c35","revision":"1","name":"c35","start":"1","labels":"","born":"0123456789abcdef0123456789abcdef"},"cas":""}	200 {"index": "$v"}
+35-unit-born-changed	3	admin POST /v1/write {"id":"e35b","op":"put","key":"testsub/workers/w-1","items":{"units":"c35","rev":"1"},"cas":""}	200
+35-unit-born-changed	4	@start worker w-1	ok
+35-unit-born-changed	5	@until 30 store GET /v1/get?key=testsub/epoch/c35	200 {"items": {"epoch": "1"}}
+35-unit-born-changed	6	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"status": [{"id": "c35", "phase": "running", "epoch": 1, "observed_revision": 1}]}
+35-unit-born-changed	7	admin POST /v1/write {"id":"e35c","op":"put","key":"testsub/counters/c35","items":{"id":"c35","revision":"2","name":"c35","start":"1","labels":"","born":"fedcba9876543210fedcba9876543210"},"cas":"$v"}	200
+35-unit-born-changed	8	@until 30 store GET /v1/get?key=testsub/epoch/c35	200 {"items": {"epoch": "2"}}
+35-unit-born-changed	9	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"status": [{"id": "c35", "phase": "running", "epoch": 2, "observed_revision": 2}]}
+35-unit-born-changed	10	store GET /v1/get?key=testsub/workers/w-1	200 {"items": {"units": "c35"}}

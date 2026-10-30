@@ -18,3 +18,22 @@ scenario	step	request	expect
 13-pulse-counters	7	console GET /metrics	200 ~testsub_worker_store_errors{worker="w-1"} 0
 13-pulse-counters	8	console GET /metrics	200 ~testsub_worker_pass_failures{worker="w-1"} 0
 13-pulse-counters	9	console GET /metrics	200 ~testsub_worker_unconfirmed{worker="w-1"} 0
+# 36, 37 (аудит покрытия P/03, второй проход Gemini): поля previous_* пульса; место отпускается при SIGTERM.
+36-previous-heartbeat	1	@start resource	ok
+36-previous-heartbeat	2	@start worker w-1	ok
+36-previous-heartbeat	3	@until 20 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "instance": "$i1", "server": "srv-a", "ts": "@time"}
+36-previous-heartbeat	4	@sigkill w-1	ok
+36-previous-heartbeat	5	@start worker w-1	ok
+36-previous-heartbeat	6	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"gen": "2", "released": "false"}}
+36-previous-heartbeat	7	@until 20 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "instance": "@not($i1)", "previous_hb": "@time", "previous_instance": "$i1", "previous_server": "srv-a"}
+36-previous-heartbeat	8	@sigkill w-1	ok
+36-previous-heartbeat	9	@spoil object testsub/heartbeats/w-1	ok
+36-previous-heartbeat	10	@start worker w-1	ok
+36-previous-heartbeat	11	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"gen": "3", "released": "false"}}
+36-previous-heartbeat	12	@until 20 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "previous_hb": "@absent", "previous_instance": "@absent", "previous_server": "@absent"}
+37-place-released-on-sigterm	1	@start worker testsub2 t-1	ok
+37-place-released-on-sigterm	2	admin POST /v1/write {"id":"e37a","op":"put","key":"testsub2/shelves/sh1","items":{"name":"sh1","zone":"z1","server":"srv-a","kind":"plain","admits":"true","enabled":"true","size":"1"},"cas":""}	200
+37-place-released-on-sigterm	3	@until 30 store GET /v1/get?key=testsub2/holds/sh1	200 {"items": {"by": "t-1", "released": "false", "gen": "1"}}
+37-place-released-on-sigterm	4	@sigterm t-1	ok
+37-place-released-on-sigterm	5	@until 25 store GET /v1/get?key=testsub2/holds/sh1	200 {"items": {"by": "t-1", "released": "true", "gen": "1"}}
+37-place-released-on-sigterm	6	@until 25 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"released": "true", "gen": "1"}}

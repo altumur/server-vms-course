@@ -94,3 +94,61 @@ scenario	step	request	expect
 10-slot-swap	14	resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"ts": "$t"}
 10-slot-swap	15	store GET /v1/get?key=testsub2/state/result/t1	200 {"index": "$s", "items": {"epoch": "1"}}
 10-slot-swap	16	console GET /events?unit=audit/testsub2worker&kind=worker.name_taken	200 {"events": [{"kind": "worker.name_taken", "class": "alarm"}]}
+# 38–43 (аудит покрытия P/03, второй проход Gemini, 2026-10-30): взгляд держателя до вызова (срок вышел, срок дальше most_valid, нечитаемая строка просьбы), заказ над надгробием и без перемен, нечитаемое состояние. Строки просьб, надгробия и состояние — дверью admin.
+38-request-expired-holder	1	@start resource	ok
+38-request-expired-holder	2	@start controller	ok
+38-request-expired-holder	3	@start worker w-1	ok
+38-request-expired-holder	4	console POST /counters {"name": "c38", "start": 1}	201
+38-request-expired-holder	5	@until 30 store GET /v1/get?key=testsub/epoch/c38	200 {"items": {"epoch": "1"}}
+38-request-expired-holder	6	@sigterm console	ok
+38-request-expired-holder	7	admin POST /v1/write {"id":"e38a","op":"put","key":"testsub/requests/r-0000000000000038","items":{"unit":"c38","add":"5","digest":"46367a34dc6dca025f052c43ee04903f03c86e90803fd97b8858992e6d3e2cfb","by":"operator","at":"1700000000","valid_until":"100"},"cas":""}	200
+38-request-expired-holder	8	@until 30 store GET /v1/get?key=objects/testsub/commands/r-0000000000000038	200 {"items": {"outcome": "expired", "ended_by": "holder", "unit": "c38", "digest": "46367a34dc6dca025f052c43ee04903f03c86e90803fd97b8858992e6d3e2cfb", "ended_at": "@time"}}
+38-request-expired-holder	9	@until 20 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"command_counts": {"expired": 1}}
+39-request-beyond-most-valid	1	@start resource	ok
+39-request-beyond-most-valid	2	@start controller	ok
+39-request-beyond-most-valid	3	@start worker w-1	ok
+39-request-beyond-most-valid	4	console POST /counters {"name": "c39", "start": 1}	201
+39-request-beyond-most-valid	5	@until 30 store GET /v1/get?key=testsub/epoch/c39	200 {"items": {"epoch": "1"}}
+39-request-beyond-most-valid	6	admin POST /v1/write {"id":"e39a","op":"put","key":"testsub/requests/r-0000000000000039","items":{"unit":"c39","add":"5","digest":"c79ef6d1d9f8fe660ed29fcb07fccde21464d2c084bf9812985d4f54c7c47753","by":"operator","at":"1700000000","valid_until":"4102444800"},"cas":""}	200
+39-request-beyond-most-valid	7	@until 30 store GET /v1/get?key=objects/testsub/commands/r-0000000000000039	200 {"items": {"outcome": "refused", "ended_by": "holder", "unit": "c39", "error": "@any", "ended_at": "@time"}}
+39-request-beyond-most-valid	8	@until 20 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"command_counts": {"refused": 1}}
+40-request-row-unreadable	1	@start resource	ok
+40-request-row-unreadable	2	@start controller	ok
+40-request-row-unreadable	3	@start worker w-1	ok
+40-request-row-unreadable	4	console POST /counters {"name": "c40", "start": 1}	201
+40-request-row-unreadable	5	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"garbled_rows": 0, "status": [{"id": "c40", "phase": "running"}]}
+40-request-row-unreadable	6	admin POST /v1/write {"id":"e40a","op":"put","key":"testsub/requests/r-0000000000000040","items":{"unit":"c40","add":"5","digest":"1971854a7dd14c0980fa5d61a0dff4f6d552b3aa5243ca0a7a9e734ea9ab91bd","by":"operator","at":"1700000000","valid_until":"x"},"cas":""}	200 {"index": "$q"}
+40-request-row-unreadable	7	@sleep 12	ok
+40-request-row-unreadable	8	store GET /v1/get?key=objects/testsub/commands/r-0000000000000040	200 {"items": null}
+40-request-row-unreadable	9	store GET /v1/get?key=testsub/requests/r-0000000000000040	200 {"index": "$q", "items": {"valid_until": "x"}}
+40-request-row-unreadable	10	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"garbled_rows": "$g", "status": [{"id": "c40", "phase": "running"}]}
+40-request-row-unreadable	11	ASSERT $g >= 1	ok
+41-order-tombstones	1	@start resource	ok
+41-order-tombstones	2	@start controller	ok
+41-order-tombstones	3	@start worker w-1	ok
+41-order-tombstones	4	admin POST /v1/write {"id":"e41a","op":"put","key":"testsub2/tallies/testsub-c41","items":{"id":"testsub-c41","revision":"1","name":"testsub-c41","of":"c41","deleted":"true","made":"{\"at\":1000,\"by\":\"testsub\",\"gone\":4102444800,\"keep\":1720}"},"cas":""}	200 {"index": "$v1"}
+41-order-tombstones	5	admin POST /v1/write {"id":"e41b","op":"put","key":"testsub2/tallies/testsub-c42","items":{"id":"testsub-c42","revision":"1","name":"testsub-c42","of":"c42","deleted":"true","born":"0123456789abcdef0123456789abcdef","made":"{\"at\":900,\"by\":\"testsub\",\"gone\":1000,\"keep\":1620}"},"cas":""}	200
+41-order-tombstones	6	console POST /counters {"name": "c41", "start": 1000}	201
+41-order-tombstones	7	console POST /counters {"name": "c42", "start": 1000}	201
+41-order-tombstones	8	@until 30 store GET /v1/get?key=testsub2/tallies/testsub-c42	200 {"items": {"revision": "2", "of": "c42", "deleted": "@absent", "born": "@not(0123456789abcdef0123456789abcdef)", "made": "~\"by\":\"testsub\""}}
+41-order-tombstones	9	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"creates": {"created": 1, "gone": 1}}
+41-order-tombstones	10	store GET /v1/get?key=testsub2/tallies/testsub-c41	200 {"index": "$v1", "items": {"revision": "1", "deleted": "true"}}
+42-order-unchanged-never	1	@start resource	ok
+42-order-unchanged-never	2	@start controller	ok
+42-order-unchanged-never	3	@start worker w-1	ok
+42-order-unchanged-never	4	admin POST /v1/write {"id":"e42a","op":"put","key":"testsub2/tallies/testsub-c43","items":{"id":"testsub-c43","revision":"1","name":"testsub-c43","of":"c43","until":"0","born":"0123456789abcdef0123456789abcdef","made":"{\"at\":4102444800,\"by\":\"testsub\",\"keep\":4102445520}"},"cas":""}	200 {"index": "$v"}
+42-order-unchanged-never	5	console POST /counters {"name": "c43", "start": 1000}	201
+42-order-unchanged-never	6	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"creates": {"unchanged": 1}}
+42-order-unchanged-never	7	store GET /v1/get?key=testsub2/tallies/testsub-c43	200 {"index": "$v", "items": {"revision": "1", "until": "0"}}
+43-state-unreadable	1	@start resource	ok
+43-state-unreadable	2	@start controller testsub2	ok
+43-state-unreadable	3	@start worker testsub2 t-1	ok
+43-state-unreadable	4	admin POST /v1/write {"id":"e43a","op":"put","key":"testsub2/shelves/sh1","items":{"name":"sh1","zone":"z1","server":"srv-a","kind":"plain","admits":"true","enabled":"true","size":"1"},"cas":""}	200
+43-state-unreadable	5	console2 POST /tallies {"name": "t1", "of": "c1", "shelf": "sh1", "zone": "z1"}	201
+43-state-unreadable	6	@until 60 @as testsub2worker store GET /v1/get?key=testsub2/epoch/t1	200 {"items": {"epoch": "1"}}
+43-state-unreadable	7	@until 30 store GET /v1/get?key=testsub2/state/result/t1	200 {"items": {"epoch": "1", "value": "{\"state\":\"open\"}"}}
+43-state-unreadable	8	admin POST /v1/write {"id":"e43b","op":"put","key":"testsub2/state/result/t1","items":{"born":"bad","revision":"x","epoch":"x","value":"not-json"}}	200
+43-state-unreadable	9	@sigterm t-1	ok
+43-state-unreadable	10	@start worker testsub2 t-1	ok
+43-state-unreadable	11	@until 60 store GET /v1/get?key=testsub2/epoch/t1	200 {"items": {"epoch": "2"}}
+43-state-unreadable	12	@until 30 store GET /v1/get?key=testsub2/state/result/t1	200 {"items": {"revision": "1", "epoch": "2", "born": "~", "value": "{\"state\":\"open\"}"}}
