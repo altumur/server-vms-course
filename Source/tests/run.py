@@ -6,8 +6,9 @@ asyncio.run, prints one line per test like Lesson 21 does.
 
 The console's own tests are JavaScript in jsdom (`tests/console/`: the platform's console module, its page, the VMS's
 page): each `*.test.js` is one test here, run by `node` when there is one and `tests/console/node_modules/jsdom` beside
-it (`npm install` there, once). Without them they are skipped — said with the reason and counted in the last line, so
-that a green run never means the console's tests did not run."""
+it (`npm install` there, once). Without them the run FAILS (exit 1, the reason said) unless the caller allows it with
+`W2C_SKIP_CONSOLE_TESTS=1`: then they are skipped — said with the reason and counted in the last line. So a green run
+never means the console's tests did not run unless someone asked for exactly that (ADR-0080, the audit of P/07)."""
 from __future__ import annotations
 
 import asyncio
@@ -89,7 +90,10 @@ def _signals_taken(ours: dict) -> list[str]:
 
 # THE CONSOLE'S TESTS (the boundary's step 3): `node` on each `tests/console/*.test.js`, which prints its checks and
 # `FAILED: …` naming those that did not hold. A test that crashes, hangs past two minutes or prints FAILED fails.
+# Not run at all (no node, no jsdom) — a failed run, unless W2C_SKIP_CONSOLE_TESTS=1 says the caller means it (the
+# audit of P/07, 2026-10-30: a skip that exits 0 let a run without the console look green).
 CONSOLE = "console"
+SKIP_CONSOLE = "W2C_SKIP_CONSOLE_TESTS"
 
 
 def console_tests(here: str) -> tuple[int, int, str]:
@@ -165,6 +169,9 @@ def main() -> int:
         if why:
             print(f"{CONSOLE}: skipped ({why})"); skipped += 1
     print(f"\n{passed} passed, {failed} failed, {skipped} skipped" + (f"; skipped: {CONSOLE} ({why})" if why else ""))
+    if why and os.environ.get(SKIP_CONSOLE) != "1":
+        print(f"the console's tests did not run ({why}): a failed run; {SKIP_CONSOLE}=1 allows the skip")
+        return 1
     return 1 if failed else 0
 
 
