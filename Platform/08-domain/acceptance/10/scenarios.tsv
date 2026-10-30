@@ -40,3 +40,18 @@ scenario	step	request	expect
 08-frozen-domain-process	10	@on hold @thaw domain#1	ok
 08-frozen-domain-process	11	@until 30 signer POST /api/login {"user": "root", "password": "w2c test root password"}	503 {"error": "standby"}
 08-frozen-domain-process	12	signer2 POST /api/login {"user": "root", "password": "w2c test root password"}	200 {"user": "root"}
+09-entry-max-on-ca	1	@install domain	ok
+09-entry-max-on-ca	2	@start domain	ok
+09-entry-max-on-ca	3	@start agent hold	ok
+09-entry-max-on-ca	4	@until 30 holder GET /domain/members	200 {"members": {"hold": {"key": "$hk", "since": "$hs"}}}
+09-entry-max-on-ca	5	member hold store POST /v1/write {"op": "put", "key": "domain/members", "items": {"doc": "{\"members\":{\"big\":{\"by\":\"@big(900)\",\"how\":\"admitted\",\"since\":1},\"hold\":{\"how\":\"holder\",\"key\":\"$hk\",\"since\":$hs},\"m1\":{\"by\":\"root\",\"how\":\"admitted\",\"since\":1}},\"rev\":100,\"term\":1}"}}	200
+09-entry-max-on-ca	6	holder POST /domain/members/m1/ca {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217"]}	409 {"error": "refused", "detail": "~would exceed 820 bytes"}
+09-entry-max-on-ca	7	holder GET /domain/members	200 {"members": {"big": {"how": "admitted"}, "m1": {"how": "admitted", "ca": "@absent"}}}
+09-entry-max-on-ca	8	member hold store POST /v1/write {"op": "put", "key": "domain/members", "items": {"doc": "{\"members\":{\"big\":{\"by\":\"root\",\"how\":\"admitted\",\"revoked_keys\":[\"1111111111111111111111111111111111111111111111111111111111111111\",\"2222222222222222222222222222222222222222222222222222222222222222\",\"3333333333333333333333333333333333333333333333333333333333333333\",\"4444444444444444444444444444444444444444444444444444444444444444\",\"5555555555555555555555555555555555555555555555555555555555555555\"],\"since\":1},\"hold\":{\"how\":\"holder\",\"key\":\"$hk\",\"since\":$hs},\"m1\":{\"by\":\"root\",\"how\":\"admitted\",\"since\":1}},\"rev\":101,\"term\":1}"}}	200
+09-entry-max-on-ca	9	holder POST /domain/members/m1/ca {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217"]}	200 {"members": {"m1": {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217"]}, "big": {"revoked_keys": ["2222222222222222222222222222222222222222222222222222222222222222", "3333333333333333333333333333333333333333333333333333333333333333", "4444444444444444444444444444444444444444444444444444444444444444", "5555555555555555555555555555555555555555555555555555555555555555"]}}}
+10-turn-unreadable	1	@domain	ok
+10-turn-unreadable	2	@stop domain	ok
+10-turn-unreadable	3	member hold store POST /v1/write {"op": "put", "key": "domain/signer-turn", "items": {"turn": "1"}}	200
+10-turn-unreadable	4	@start domain	ok
+10-turn-unreadable	5	@until 30 signer POST /api/login {"user": "root", "password": "w2c test root password"}	503 {"error": "standby"}
+10-turn-unreadable	6	member hold store GET /v1/get?key=domain/signer-turn	200 {"items": {"turn": "1", "holder": "@absent"}}

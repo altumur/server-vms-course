@@ -50,12 +50,36 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 33 строки: 16 только `view`, 10 только `shadow`, 7 оба (28 — из М11/01, 5 — ADR-0091 доп. (12)–(19)) | `input` — вход команды `view` текстом JSON → `expect` — подмножество `{view, shadow}`: члены `ok`/`unseen`/`silent`/`never` и `age` (LOST_AFTER 45/46, пропажа и возврат метки, уход и возврат члена, округление 0.25 → 0.3), единицы `live`/`stale`/`configured`/`silent`, `contested`, `complete`, дубль id, смена пульса по JCS, элемент пульса без строки шарда; находки `lagging`, `stalled` (SHADOW_STALL 60/61), `orphaned`, `unmanaged`, `conflict` (исполнители `cluster` и `copies`, два воркера одного члена), `stale_epoch`, `unknown`, `clean_streak` и `may_write`; исполнители назначения `{cluster} ∪ copies` — не `contested` (`10-copies`, `10-origin-is-cluster`), член вне множества и `origin` вне `copies` — `contested` и `conflict` (`10-not-executor`, `10-origin-outside-copies`), третий член `silent` — `complete: false` без спора (`10-third-silent`), строка без значения `domain.ref` — вне `units`, без заявки (`10-no-ref-row`), назначения не прочитаны — `contested`, отчёт прежний (`10-placements-unread`) |
+| [`cases.tsv`](cases.tsv), 43 строки: 17 только `view`, 14 только `shadow`, 8 оба, 4 `@exit 2` (28 — из М11/01, 5 — ADR-0091 доп. (12)–(19), 10 — аудит покрытия P/08, второй проход) | `input` — вход команды `view` текстом JSON → `expect` — подмножество `{view, shadow}`: члены `ok`/`unseen`/`silent`/`never` и `age` (LOST_AFTER 45/46, пропажа и возврат метки, уход и возврат члена, округление 0.25 → 0.3), единицы `live`/`stale`/`configured`/`silent`, `contested`, `complete`, дубль id, смена пульса по JCS, элемент пульса без строки шарда; находки `lagging`, `stalled` (SHADOW_STALL 60/61), `orphaned`, `unmanaged`, `conflict` (исполнители `cluster` и `copies`, два воркера одного члена), `stale_epoch`, `unknown`, `clean_streak` и `may_write`; исполнители назначения `{cluster} ∪ copies` — не `contested` (`10-copies`, `10-origin-is-cluster`), член вне множества и `origin` вне `copies` — `contested` и `conflict` (`10-not-executor`, `10-origin-outside-copies`), третий член `silent` — `complete: false` без спора (`10-third-silent`), строка без значения `domain.ref` — вне `units`, без заявки (`10-no-ref-row`), назначения не прочитаны — `contested`, отчёт прежний (`10-placements-unread`) |
 
-Случаев `@exit 2` в таблице нет (их не было в приёмке М11/01); вход не по форме — чтением Н5 главы.
+Вход не по форме (Н4, Н5 главы; форма `ViewInput`) — строки `17-exit-*`: `holder` `""`, `passes` `[]`, `mark` 2^53, назначение
+`{cluster: ""}` — `@exit 2` (аудит покрытия P/08, второй проход Gemini; в приёмке М11/01 их не было).
+
+## Строки аудита покрытия P/08, второй проход (Gemini)
+
+Десять строк `17-*`…`21-*` (черновик Gemini G01, коммит `e32df6f8b` ветки аудита; ожидания — вывод команды `view` обеих
+реализаций-свидетелей `cammeta-python` и `cammeta-go` на выгрузке `d27f95d`, вход — `manifests` под прежним именем `specs`):
+
+- `17-exit-*` — четыре входа не по форме `ViewInput`, `@exit 2` (Н4, Н5);
+- `18-duplicate-equal-revision` — id в двух шардах одного члена при равной `revision`: строка первого шарда по ключу в
+  порядке байтов UTF-8 (Н1.4 `duplicate`, V5; `15-duplicate-id` — только большая `revision`);
+- `19-sealed-unreadable-no-claim` — элементы пульса `phase: sealed` (`{id, phase, why, revision}`) и `phase: unreadable`
+  (`{id, phase, why}`) по форме P/03.4 Н1.1: единицы в `units` с этой фазой, заявок нет — без назначений иначе были бы
+  `unmanaged` (Н1.6 `claim`, W03-G02, W03-G05);
+- `20-stall-after-progress-at-60`, `-at-61` — смена `observed_revision` на `at` 190 начинает отсчёт SHADOW_STALL заново:
+  через 60 с — `lagging`, через 61 с — `stalled` (`06-progress` видит только сам прогресс, не отсчёт после него);
+- `21-orphan-retarget-at-60`, `-at-61` — назначение `c1` → `m1`, `m2` и снова `m1` (на `at` 160): тройка (sub, ref, cluster)
+  — новое назначение, отсчёт `orphaned_from` заново (Н1.6 `orphaned_from`, V10): через 60 с от возврата находки нет,
+  через 61 с — `orphaned`. Свидетель `cammeta-python` отсчёт при возврате к прежней цели не сбрасывает (на `-at-60` даёт
+  `orphaned` 1, 120 с от первого взгляда) — расходится с V10; права норма, ожидание — по ней и `cammeta-go`.
+
+Не взяты из черновика: подсистема в `placements` вне `manifests` — нормы «вход не по форме» для неё нет (форма
+`placements` — любые имена подсистем; оба свидетеля дают код 0 и находку `unknown`); элементы `sealed`/`unreadable` с
+`epoch` 0 и `observed_revision` 0 — не по форме P/03.4 Н1.1, заявки нет по другой причине (V14), правило фазы они не
+проверяют — заменены входом по форме.
 
 Векторы проверены оракулом по тексту норм главы 8.1 (Н1.3 `member_state`, `unit_state`; Н1.4; Н1.6; Н3), не по коду
-реализаций: все 33 ожидания — подмножество его вывода (строки `10-*` — оракулом, дополненным правилами ADR-0091 доп. (12)–(19):
+реализаций (строки второго прохода аудита — выводом свидетелей, выше): все 33 ожидания — подмножество его вывода (строки `10-*` — оракулом, дополненным правилами ADR-0091 доп. (12)–(19):
 исполнители, строка без `domain.ref`, назначения не прочитаны; прежний оракул на пяти из них расходится — строки различают
 правило). При расхождении прав норма, вектор правит «Спецификация».
 
@@ -77,3 +101,4 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | 2026-10-20 | перенос | сц. 01–16 (28 шагов) из М11/01 — строки этой таблицы (стадия B; план переноса урока 8, В1); входы — одной строкой, ожидания — прежние, сверены оракулом |
 | 2026-10-23 | 10-copies, 10-not-executor; +10-origin-is-cluster, 10-origin-outside-copies, 10-third-silent, 10-no-ref-row, 10-placements-unread | ADR-0091 доп. (12)–(19) (доп. (15) п. 7): исполнители назначения — не спор (10-copies — `complete: true`, обе единицы в `units`), `origin` множества не меняет, строка без `domain.ref` — не единица, назначения не прочитаны — исключения нет, отчёт не строится; вход — `placements: null`, `origin` |
 | 2026-10-26 | 01-two-members | ACC-EMPTY-OBJECT-02 (решение «Архитектора» 2026-10-26): `{}` в `expect` — ровно пустой объект; `contested` — ключ у каждого манифеста с `domain.ref` (Н1.2, у `testsub2` — `ref: name`): ожидание `{}` → `{"testsub": {}, "testsub2": {}}` |
+| 2026-10-30 | +17-exit-empty-holder, 17-exit-no-passes, 17-exit-mark-2pow53, 17-exit-placement-empty-cluster, 18-duplicate-equal-revision, 19-sealed-unreadable-no-claim, 20-stall-after-progress-at-60, -at-61, 21-orphan-retarget-at-60, -at-61 | аудит покрытия P/08, второй проход (Gemini G01, e32df6f8b): вход не по форме — `@exit 2`; дубль id при равной revision; sealed и unreadable без заявки; отсчёт SHADOW_STALL после прогресса; orphaned_from при смене цели и возврате (V10); ожидания — вывод свидетелей `cammeta-python` и `cammeta-go` (`-at-60` строки 21 — только `cammeta-go`: `cammeta-python` V10 не держит) |

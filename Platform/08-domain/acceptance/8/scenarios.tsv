@@ -90,3 +90,21 @@ scenario	step	request	expect
 14-same-term-forged-record	4	holder PUT /domain/topology {"base_rev": 0, "centre": "hold"}	200
 14-same-term-forged-record	5	signer POST /api/login {"user": "root", "password": "w2c test root password"}	200 {"user": "root"}
 14-same-term-forged-record	6	member hold store GET /v1/get?key=domain/signer	200 {"items": {"forgotten": "@absent"}}
+15-stranded-apply	1	@domain	ok
+15-stranded-apply	2	holder POST /domain/stranded/apply {"path": "domain/pending/m1", "key": "e-000000000001"}	409
+15-stranded-apply	3	@start domain on m1	ok
+15-stranded-apply	4	holder POST /domain/handover {"to": "m1"}	200 {"term": 2, "to": "m1", "stranded": []}
+15-stranded-apply	5	holder POST /domain/stranded/apply {"path": "domain/pending/m1", "key": "e-000000000001"}	404
+15-stranded-apply	6	member hold store POST /v1/write {"op": "put", "key": "domain/stranded", "items": {"doc": "not json"}}	200
+15-stranded-apply	7	holder POST /domain/stranded/apply {"path": "domain/pending/m1", "key": "e-000000000001"}	503 {"error": "unavailable"}
+16-take-refusals	1	@domain	ok
+16-take-refusals	2	member hold console POST /api/take {}	409
+16-take-refusals	3	@start domain on m1	ok
+16-take-refusals	4	member m1 console POST /api/take {}	400
+17-move-restores-exact	1	@domain	ok
+17-move-restores-exact	2	@until 60 member m1 console GET /api/held	200 {"backup": {"term": 1}}
+17-move-restores-exact	3	member m1 store POST /v1/write {"op": "put", "key": "domain/users/ghost", "items": {"name": "ghost"}}	200
+17-move-restores-exact	4	@stop domain	ok
+17-move-restores-exact	5	@start domain on m1	ok
+17-move-restores-exact	6	@move m1	200 {"term": 2, "holder": "m1", "restored_from": {"term": 1}}
+17-move-restores-exact	7	member m1 store GET /v1/get?key=domain/users/ghost	200 {"items": null}

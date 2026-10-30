@@ -51,3 +51,17 @@ scenario	step	request	expect
 12-orphan-grants	7	@until 60 holder GET /domain/grants	200 {"grants": {"m2": [{"subject": "root", "cap": "admin"}]}}
 12-orphan-grants	8	holder POST /domain/users {"name": "t7", "password": "t7 password 1"}	201 {"user": "t7"}
 12-orphan-grants	9	holder GET /domain/grants	200 {"grants": {"m2": [{"subject": "root", "cap": "admin"}]}}
+13-person-names	1	@domain	ok
+13-person-names	2	holder POST /domain/users {"name": "alice", "password": "alice password 1"}	201 {"user": "alice"}
+13-person-names	3	member m1 console2 POST /tallies {"name": "t7", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
+13-person-names	4	@until 90 member hold store GET /v1/get?key=domain/names/testsub2/notes	200 {"items": {"": "{\"missing\":[]}", "t7": "{\"members\":[\"m1\"]}"}}
+13-person-names	5	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "zed", "cap": "view", "scope": "*"}]}	400 {"error": "unknown subject"}
+13-person-names	6	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "alice", "cap": "view", "scope": "*"}, {"subject": "t7", "cap": "view", "scope": "*"}]}	200
+13-person-names	7	member m1 console2 POST /tallies {"name": "alice", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
+13-person-names	8	@until 90 holder GET /domain	200 {"books": {"testsub2/notes": {"person_names": ["alice"]}}}
+13-person-names	9	@until 60 member m2 store GET /v1/get?key=domain/testsub2/notes	200 {"items": {"t7": "@any"}}
+13-person-names	10	@sleep 12	ok
+13-person-names	11	member m2 store GET /v1/get?key=domain/testsub2/notes	200 {"items": {"t7": "@any", "alice": "@absent"}}
+13-person-names	12	@stop agent m1	ok
+13-person-names	13	@until 120 member hold store GET /v1/get?key=domain/names/testsub2/notes	200 {"items": {"": "{\"missing\":[\"m1\"]}"}}
+13-person-names	14	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "alice", "cap": "edit", "scope": "*"}, {"subject": "t7", "cap": "view", "scope": "*"}]}	200

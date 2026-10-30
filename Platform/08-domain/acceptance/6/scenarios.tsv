@@ -197,3 +197,47 @@ scenario	step	request	expect
 11-outcomes-limit	58	@mend m1	ok
 11-outcomes-limit	59	@until 120 holder GET /domain	200 {"pending": {"m1": 0}, "outcomes": {"m1": [{"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}, {"what": "start"}]}}
 11-outcomes-limit	60	member hold store GET /v1/get?key=domain/outcomes/m1	200 {"items": {"e-d43101de75c2": "@absent"}}
+12-post-kept	1	@domain	ok
+12-post-kept	2	@cut m1	ok
+12-post-kept	3	holder @header Idempotency-Key: g08-post POST /domain/testsub/counters {"cluster": "m1", "name": "c12", "start": 10}	202 {"kept": "e-a56508c8a4e8", "cluster": "m1", "what": "name,start"}
+12-post-kept	4	member hold store GET /v1/get?key=domain/pending/m1	200 {"items": {"e-a56508c8a4e8": "~/domain/testsub/counters"}}
+12-post-kept	5	@until 10 holder GET /domain	200 {"pending": {"m1": 1}}
+12-post-kept	6	@mend m1	ok
+12-post-kept	7	@until 60 member m1 console GET /counters	200 {"configured": [{"id": "c12", "start": 10}]}
+12-post-kept	8	@until 40 holder GET /domain	200 {"pending": {"m1": 0}, "outcomes": {"m1": [{"id": "e-a56508c8a4e8", "status": 201, "result": "performed"}]}}
+13-waiting-delete	1	@domain	ok
+13-waiting-delete	2	member m1 console POST /counters {"name": "c13", "start": 1}	201
+13-waiting-delete	3	@until 60 holder GET /domain/testsub/counters?cluster=m1	200 [{"ref": "c13"}]
+13-waiting-delete	4	@cut m1	ok
+13-waiting-delete	5	holder DELETE /domain/testsub/counters/c13	202 {"kept": "$idd", "cluster": "m1", "what": ""}
+13-waiting-delete	6	holder PUT /domain/testsub/counters/c13 {"start": 2}	409 {"error": "unit is being deleted"}
+13-waiting-delete	7	holder DELETE /domain/testsub/counters/c13	409 {"error": "unit is being deleted"}
+13-waiting-delete	8	@until 10 holder GET /domain	200 {"pending": {"m1": 1}}
+13-waiting-delete	9	@mend m1	ok
+13-waiting-delete	10	@until 60 member m1 console GET /counters	200 {"configured": []}
+13-waiting-delete	11	@until 40 holder GET /domain	200 {"pending": {"m1": 0}, "outcomes": {"m1": [{"id": "$idd", "result": "performed"}]}}
+14-garbled-placement	1	@domain	ok
+14-garbled-placement	2	@until 30 holder GET /domain/placement	200 {"rev": 1, "records": {}}
+14-garbled-placement	3	holder PUT /domain/placement/testsub/c1 {"cluster": "m1"}	200 {"cluster": "m1", "rev": 2}
+14-garbled-placement	4	member hold store POST /v1/write {"op": "put", "key": "domain/placement/testsub/c1", "items": {"cluster": "m1"}}	200
+14-garbled-placement	5	holder PUT /domain/placement/testsub/c1 {"cluster": "m1"}	200 {"cluster": "m1", "copies": [], "rev": 3}
+14-garbled-placement	6	member hold store POST /v1/write {"op": "put", "key": "domain/placement/testsub/c1", "items": {"cluster": "m1"}}	200
+14-garbled-placement	7	holder DELETE /domain/placement/testsub/c1	200 {"deleted": "testsub/c1"}
+14-garbled-placement	8	member hold store GET /v1/get?key=domain/placement/testsub/c1	200 {"items": null}
+14-garbled-placement	9	holder DELETE /domain/placement/nosuch/c1	404
+14-garbled-placement	10	holder PUT /domain/placement/testsub/c2 {"cluster": "m1"}	200 {"cluster": "m1", "rev": 5}
+14-garbled-placement	11	member hold store POST /v1/write {"op": "put", "key": "domain/placement", "items": {"rev": "x"}}	200
+14-garbled-placement	12	holder PUT /domain/placement/testsub/c3 {"cluster": "m1"}	503 {"error": "unavailable"}
+14-garbled-placement	13	holder DELETE /domain/placement/testsub/c2	503 {"error": "unavailable"}
+14-garbled-placement	14	member hold store GET /v1/get?key=domain/placement/testsub/c3	200 {"items": null}
+15-garbled-pending	1	@domain	ok
+15-garbled-pending	2	member m1 console POST /counters {"name": "c15", "start": 1}	201
+15-garbled-pending	3	@until 60 holder GET /domain/testsub/counters?cluster=m1	200 [{"ref": "c15"}]
+15-garbled-pending	4	@cut m1	ok
+15-garbled-pending	5	member hold store POST /v1/write {"op": "put", "key": "domain/pending/m1", "items": {"seq": "1", "e-2a8bdc8848eb": "not json"}}	200
+15-garbled-pending	6	holder @header Idempotency-Key: g08-garbled PUT /domain/testsub/counters/c15 {"start": 5}	422
+15-garbled-pending	7	holder @header Idempotency-Key: g08-fresh PUT /domain/testsub/counters/c15 {"start": 5}	202 {"kept": "e-747d2dcc4cc4", "cluster": "m1"}
+15-garbled-pending	8	member hold store GET /v1/get?key=domain/pending/m1	200 {"items": {"seq": "2", "e-2a8bdc8848eb": "not json", "e-747d2dcc4cc4": "~/domain/testsub/counters/c15?cluster=m1"}}
+15-garbled-pending	9	member hold store POST /v1/write {"op": "put", "key": "domain/pending/m1", "items": {"seq": "x"}}	200
+15-garbled-pending	10	holder PUT /domain/testsub/counters/c15 {"start": 6}	503 {"error": "unavailable"}
+15-garbled-pending	11	member hold store GET /v1/get?key=domain/pending/m1	200 {"items": {"seq": "x"}}

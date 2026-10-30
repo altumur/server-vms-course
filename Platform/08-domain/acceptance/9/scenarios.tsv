@@ -24,3 +24,10 @@ scenario	step	request	expect
 07-shared-refusals	6	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "{\"object\":\"domain/shared-docs/rev-1\",\"rev\":1,\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"term\":1}"}}	200
 07-shared-refusals	7	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"step": 6}}}	503 {"error": "refused", "detail": "~the shared document at rev 1 does not read: nothing is written"}
 07-shared-refusals	8	member hold store GET /v1/get?key=domain/shared	200 {"items": {"doc": "~0000000000000000000000000000000000000000000000000000000000000000"}}
+08-shared-last-field	1	@domain	ok
+08-shared-last-field	2	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 5}}}	200 {"term": 1, "rev": 1}
+08-shared-last-field	3	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"step": null}}}	200 {"term": 1, "rev": 2}
+08-shared-last-field	4	holder GET /domain/shared	200 {"doc": {"rev": 2, "shared": {}}}
+08-shared-last-field	5	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "not json"}}	200
+08-shared-last-field	6	holder PUT /domain/shared {"base_rev": 2, "shared": {"testsub": {"step": 6}}}	503 {"error": "unavailable"}
+08-shared-last-field	7	member hold store GET /v1/get?key=domain/shared	200 {"items": {"doc": "not json"}}

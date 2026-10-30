@@ -150,3 +150,21 @@ scenario	step	request	expect
 15-grants-cluster-no-decode	3	@until 20 holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root", "cap": "admin", "scope": "*"}], "m%31": "@absent"}}
 15-grants-cluster-no-decode	4	holder PUT /domain/grants/m%31 {"lines": [{"subject": "root", "cap": "view", "scope": "*"}]}	400 {"error": "bad name"}
 15-grants-cluster-no-decode	5	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root", "cap": "admin", "scope": "*"}], "m%31": "@absent"}}
+16-until-by-value	1	@domain	ok
+16-until-by-value	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+16-until-by-value	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "view", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*", "until": 0.0}]}	400 {"error": "bad line"}
+16-until-by-value	4	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "view", "scope": "*", "until": 4102444800.0011}, {"subject": "ann", "cap": "view", "scope": "*", "until": 4102444800.0014}]}	400 {"error": "bad line"}
+16-until-by-value	5	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*", "until": 0.0001}]}	200 {"cluster": "m1", "lines": [{"subject": "ann", "cap": "view", "scope": "*", "until": 0.001}, {"subject": "root", "cap": "admin", "scope": "*", "until": 0}]}
+17-last-admin-garbled	1	@domain	ok
+17-last-admin-garbled	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+17-last-admin-garbled	3	holder PUT /domain/grants/domain {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "scope": "*"}]}	200 {"cluster": "domain"}
+17-last-admin-garbled	4	member hold store POST /v1/write {"op": "put", "key": "domain/users/ann", "items": {"name": "bob", "how": "password", "pwhash_secret": "not a secret", "disabled": "false", "at": "1", "by": "root"}}	200
+17-last-admin-garbled	5	holder PUT /domain/grants/domain {"lines": [{"subject": "ann", "cap": "admin", "scope": "*"}]}	409 {"error": "last admin"}
+17-last-admin-garbled	6	holder PUT /domain/users/root {"disabled": true}	409 {"error": "last admin"}
+17-last-admin-garbled	7	holder DELETE /domain/users/ann	200 {"user": "ann", "deleted": true}
+18-garbled-grants-row	1	@domain	ok
+18-garbled-grants-row	2	member hold store POST /v1/write {"op": "put", "key": "domain/grants/m1", "items": {"doc": "not json"}}	200
+18-garbled-grants-row	3	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	503 {"error": "unavailable"}
+18-garbled-grants-row	4	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}]}	503 {"error": "unavailable"}
+18-garbled-grants-row	5	member hold store POST /v1/write {"op": "delete", "key": "domain/grants/m1"}	200
+18-garbled-grants-row	6	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	201 {"user": "bob"}

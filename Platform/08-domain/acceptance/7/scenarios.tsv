@@ -30,3 +30,12 @@ scenario	step	request	expect
 04-holder-body-limit	1	@domain	ok
 04-holder-body-limit	2	signer POST /api/tokens/m1/testsub/tally @raw @big(4608)	401 {"error": "refused", "reason": "no_signature"}
 04-holder-body-limit	3	signer POST /api/tokens/m1/testsub/tally @raw @big(4609)	413 {"error": "refused"}
+05-assignment-unreadable	1	@domain	ok
+05-assignment-unreadable	2	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "origin": "m2", "copies": []}	200
+05-assignment-unreadable	3	member hold store POST /v1/write {"op": "put", "key": "domain/placement/testsub/c1", "items": {"cluster": "m1", "origin": "m2"}}	200
+05-assignment-unreadable	4	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r1", "ref": "c1"}	403 {"error": "refused", "reason": "assignment_unreadable"}
+06-topology-unreadable	1	@domain	ok
+06-topology-unreadable	2	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "origin": "m2", "copies": []}	200
+06-topology-unreadable	3	member hold store POST /v1/write {"op": "put", "key": "domain/topology", "items": {"doc": "not json"}}	200
+06-topology-unreadable	4	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r1", "ref": "c1"}	200 {"request_id": "r1", "token": "@any"}
+06-topology-unreadable	5	token m1 testsubworker POST /tokens/testsub/probe {"request_id": "r2", "ref": "c1"}	503 {"error": "unavailable"}

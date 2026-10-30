@@ -20,8 +20,8 @@
 Без стенда: команда `issue` реализации получает вход (колонка `input`) и печатает JSON; `expect` — подмножество полей
 вывода по словарю «Стенда» ([общий README приёмки](../../../common/acceptance/README.md), `<код> <JSON>`: названные поля
 есть и равны, массив — по длине, порядку и элементам, число — по значению) или `@exit 2` (вход не по форме Н5, в том числе
-`decl` не по форме загрузки [P/02.1 Н1.2б](../../../02-installer/spec/02.1-installer.norms.md)). Строк `@exit 2` в таблице
-нет: все 30 входов — по форме. `iat`, `exp` — от `now` входа, не от часов процесса.
+`decl` не по форме загрузки [P/02.1 Н1.2б](../../../02-installer/spec/02.1-installer.norms.md)). Строки `@exit 2` — две
+(`issue-37`, `issue-38`); прочие 36 входов — по форме. `iat`, `exp` — от `now` входа, не от часов процесса.
 
 ## Входы
 
@@ -32,7 +32,9 @@
 `tally`, `probe` манифеста `testsub` и `feed`, `tally2` манифеста `testsub2` из данных спецификации
 ([`testsub`](../../../../Source/tests/testdata/testsub.subsystem.yaml),
 [`testsub2`](../../../../Source/tests/testdata/testsub2.subsystem.yaml)) — входы несут их целиком и от байтов манифестов не
-зависят.
+зависят. Строки `issue-31`…`issue-35` несут объявление `tally` с изменённой областью `placement` (`target_fields`
+`[cluster, star_centre]` или `[cluster, origin]`, `caller: copies`) — по форме загрузки P/02.1 Н1.2б (оба свидетеля его
+принимают), не байты манифеста.
 
 ## Файлы
 
@@ -40,7 +42,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 30 строк: 9 `ok`, 21 `refused` | `input` — вход `issue` текстом JSON → `expect`: `{"result":"ok","claims":…}` (утверждения Н1.4: `iss`, `sub`, `kind`, `iat`, `exp`, утверждение ref и аудитории из области, давшей аудиторию, у `scenario` — `by`, `acts` по JCS, `up`) или `{"result":"refused","status":…,"reason":<слово>}`: `bad_request`, `by_misplaced` (400); `not_granted`, `outside_scope`, `no_assignment`, `assignment_unreadable`, `unit_not_unique`, `not_poll_home`, `trigger_not_reported`, `no_shared_doc`, `no_item`, `no_home`, `no_audience` (403); `no_centre` (409) |
+| [`cases.tsv`](cases.tsv), 38 строк: 12 `ok`, 24 `refused`, 2 `@exit 2` | `input` — вход `issue` текстом JSON → `expect`: `{"result":"ok","claims":…}` (утверждения Н1.4: `iss`, `sub`, `kind`, `iat`, `exp`, утверждение ref и аудитории из области, давшей аудиторию, у `scenario` — `by`, `acts` по JCS, `up`) или `{"result":"refused","status":…,"reason":<слово>}`: `bad_request`, `by_misplaced` (400); `not_granted`, `outside_scope`, `no_assignment`, `assignment_unreadable`, `unit_not_unique`, `not_poll_home`, `trigger_not_reported`, `no_shared_doc`, `no_item`, `no_home`, `no_audience` (403); `no_centre` (409) |
 
 | Случаи | Что проверяет |
 |---|---|
@@ -49,6 +51,13 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | 10–12 | `unit` `self`: владелец — этот член; не владелец, два владельца — `unit_not_unique` |
 | 13–15, 27 | `placement` без записи падает на `unit` (`poll_home`): ретранслятор — ближайшая дверь владельца; не она — `not_poll_home`; `centre` без центра — `no_centre`; `poll_home` через `centre`, не держатель |
 | 16–21, 23, 25, 26, 28, 29 | `scenario`: прямо, за ретранслятором (`up`), подъём ретранслятора, дом по назначению; нет элемента, `by` чужой, нет документа, имя дважды — `no_item`; `acts` по JCS; дом нечитаем — `no_home`; дом не член — `no_audience` |
+| 31–36 (аудит покрытия P/08, второй проход) | `star_centre` (Н1.1 `computed`): `cluster` записи в `star` — `centre` в аудитории, без `centre` — `no_centre`, вне `star` — ничего; `origin` `""` при `caller: origin` — `outside_scope`, в `target_fields` — не в аудитории; `scenario` за ретранслятором ≠ дом без `centre` — `no_centre` |
+| 37, 38 (аудит покрытия P/08, второй проход) | вход не по форме — `@exit 2`: `decl` не по форме загрузки (`lifetime` 0, сверка М11, T4), `now` строкой |
 
 Векторы проверены оракулом по тексту норм (Н1.1 `computed`, Н1.3 `body`, Н1.4, Н3 «выдать»), не по коду реализаций: вывод
-оракула содержит ожидание каждой строки. При расхождении прав текст нормы, вектор правит «Спецификация».
+оракула содержит ожидание каждой строки. Строки `issue-31`…`issue-38` (аудит покрытия P/08, второй проход Gemini, черновик
+G07 `e32df6f8b`, переписан во вход `issue` этой таблицы; входы — `issue-01` и `issue-17` с названной правкой) — ожидание
+каждой строки — подмножество вывода команды `issue` обеих реализаций-свидетелей `cammeta-python` и `cammeta-go` (выгрузка
+`d27f95d`); все 38 строк у обоих совпадают. Не взят из черновика пропуск элемента `scenario` без поля по пути `act`: у
+объявлений манифестов (`tally2`: `act` `then`, `target` `then.item`) элемент без `act` не имеет и `target` — он отсеян
+раньше, правило пропуска так не отличить (чтением). При расхождении прав текст нормы, вектор правит «Спецификация».

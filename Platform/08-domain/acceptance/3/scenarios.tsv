@@ -140,3 +140,22 @@ scenario	step	request	expect
 22-mark-rev-beyond-2-53	2	@stop agent m1	ok
 22-mark-rev-beyond-2-53	3	@on hold @put object domain/members/m1/reported inputs/member-reported-rev-2pow53.json	ok
 22-mark-rev-beyond-2-53	4	@until 10 holder GET /domain	200 {"complete": false, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "silent"}, {"name": "m2", "state": "ok"}]}
+23-admit-again	1	@install domain	ok
+23-admit-again	2	@start domain	ok
+23-admit-again	3	@start agent hold	ok
+23-admit-again	4	@start agent m1	ok
+23-admit-again	5	@until 30 holder GET /domain/members	200 {"members": {"hold": {"how": "holder", "key": "@any"}}, "knocking": [{"name": "m1", "fingerprint": "$fp1"}]}
+23-admit-again	6	holder POST /domain/members {"name": "m1", "fingerprint": "$fp1"}	200 {"rev": "$r1", "members": {"m1": {"how": "admitted", "key": "@any"}}}
+23-admit-again	7	holder POST /domain/members {"name": "m1", "fingerprint": "$fp1"}	200 {"rev": "$r1", "members": {"m1": {"how": "admitted"}}}
+23-admit-again	8	holder POST /domain/members {"name": "m1", "fingerprint": "0000000000000000"}	409 {"error": "refused", "detail": "~was admitted with another key"}
+23-admit-again	9	holder GET /domain/members	200 {"rev": "$r1", "members": {"m1": {"how": "admitted"}}}
+23-admit-again	10	holder POST /domain/members {"name": "m2", "fingerprint": "0000000000000000"}	404
+24-ca-again-sorted	1	@domain	ok
+24-ca-again-sorted	2	holder POST /domain/members/m1/ca {"ca": ["d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6", "6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217"]}	200 {"rev": "$c1", "members": {"m1": {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217", "d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}}}
+24-ca-again-sorted	3	holder POST /domain/members/m1/ca {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217", "d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}	200 {"rev": "$c2", "members": {"m1": {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217", "d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}}}
+24-ca-again-sorted	4	ASSERT $c2 > $c1	ok
+25-topology-clear	1	@domain m1 relay	ok
+25-topology-clear	2	holder PUT /domain/topology {"base_rev": 0, "centre": "hold", "via": {"m1": "relay"}}	200 {"rev": 1, "centre": "hold", "via": {"m1": "relay"}}
+25-topology-clear	3	holder PUT /domain/topology {"base_rev": 1, "centre": "", "via": {"m1": ""}}	200 {"rev": 2, "centre": "@absent", "star": [], "via": {}}
+25-topology-clear	4	holder PUT /domain/topology {"base_rev": 2, "centre": "relay"}	200 {"rev": 3, "centre": "relay", "via": {}}
+25-topology-clear	5	holder PUT /domain/topology {"base_rev": 3, "centre": null}	200 {"rev": 4, "centre": "@absent", "star": [], "via": {}}
