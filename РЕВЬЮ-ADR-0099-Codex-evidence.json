@@ -1,0 +1,109 @@
+{
+  "green": true,
+  "SUT": 0,
+  "course": "27e65d25bd5c5c003fd8d3ffe17ee58ca58797ef",
+  "console": "9849d2889fa565c8696caa1fab10639422dac104",
+  "source_sha256": {
+    "Platform/07-console-module/spec/07-console-module.norms.md": "7a0de924e40ec2213a2b45866fb8b7f3d27f2da322cd22381c35f6474f55c340",
+    "Platform/08-domain/spec/08.4-domain.norms.md": "26d22a42dfa6ebe8228a249ca0144fe8ce7fe955170ea1263fee0e66e989394b",
+    "Platform/08-domain/spec/08.5-domain.norms.md": "db0fad9c6dad449fc352d5d4ac5fa83d2e1961b8193a7735a69ef2b2affc992e",
+    "Platform/common/contracts/gate-and-pass.md": "b6d4db8901544790aae77c8aa49b570884852d25c2d92ab8f178f4334bcf0ce9",
+    "Platform/common/contracts/may.md": "91845a3c12bdcf53a6f0c43d039809134d59fa1e31f4db9873f118a0f9a11092",
+    "VMS/11-backend/consolem.openapi.json": "8f0ad1b1694febfa082251cd34a5e0c33ca847fa8d9df2c60d04f892ec9684e7",
+    "decisions/0096-папки-как-записи.md": "9d83885a0d7a1a3bd2f86f55e578b5f73af1db217215ea99f72d73405cc74284",
+    "decisions/0097-гранты-по-подсистемам-и-папкам.md": "26386b83e6ff2c03f68e4162720abde22aa17d3d38aa06becc4770f4d48875bc",
+    "decisions/0098-роли-и-группы-людей-в-домене.md": "f10af0131413b85900ac3b1ccf503320c74cf67c5f28224656f07e60a41d2587",
+    "decisions/0099-исключения-прав.md": "8a64e3aa421c447c6a96b5f4586c77c8b06c49456ff83569a5773a48c3522590",
+    "decisions/inbox/2026-10-30-ревью-ADR-0097-разбор.md": "048892c857119a6a73f44351f588f45c5a29af9c340773f014e7ea50c33be2a8",
+    "decisions/inbox/2026-10-30-ревью-ADR-0098-разбор.md": "e4da8953baa969f75fdaecffea31a51ef41d5321a0611295fe4d5711de95389d",
+    "skills/lesson-spec/references/review-checklist.md": "3b2ea02d38bcbfe820feb77c4f79426bc351d97c9dd4e9d27ef80f0e91c4e1de"
+  },
+  "console_source_sha256": {
+    "index.html": "efa9f9eae142593ec0599db9ff6ee179cbd3715a095dbd5da9073caf0d6ea567"
+  },
+  "witnesses": {
+    "non_homomorphic_translation": {
+      "oracle": {
+        "folder": "MON",
+        "oneRole": "ONLY_ARCHIVE",
+        "twoRoles": "MON",
+        "rootOverride": "FORBID"
+      },
+      "ordered_pairs_checked": 36,
+      "mismatches": [
+        {
+          "a": "ONLY_ARCHIVE",
+          "b": "MON",
+          "console_level": "MON",
+          "console_caps": [
+            1,
+            1,
+            0
+          ],
+          "platform_caps": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "a": "MON",
+          "b": "ONLY_ARCHIVE",
+          "console_level": "MON",
+          "console_caps": [
+            1,
+            1,
+            0
+          ],
+          "platform_caps": [
+            1,
+            1,
+            1
+          ]
+        }
+      ],
+      "rec_rank_from_folders": 1
+    },
+    "malformed_exception": {
+      "valid_rank": 0,
+      "skip_line_rank": 3,
+      "bad_line": {
+        "subject": "role:R",
+        "cap": "none",
+        "scope": "unit:cam/7",
+        "until": "unreadable"
+      }
+    },
+    "unreadable_target": {
+      "labels": {
+        "readable": 0,
+        "unreadable": 2
+      },
+      "about": {
+        "readable": 0,
+        "unreadable": 2
+      }
+    },
+    "root_scope_collision": {
+      "console_level": "FORBID",
+      "console_cam_rank": 0,
+      "platform_cam_rank": 2
+    }
+  },
+  "controls": {
+    "unit_exception_wins": true,
+    "about_exception_wins": true,
+    "nearest_folder": true,
+    "max_of_memberships": true,
+    "same_tier_max": true,
+    "folder_unknown_denies_role": true,
+    "empty_membership_is_not_failure": true,
+    "expired_exception_falls_back": true,
+    "direct_admin_remains_independent": true,
+    "second_role_can_override_none": true,
+    "role_addition_platform_monotone": true,
+    "console_addition_drops_archive": true,
+    "root_scope_collision_reproduced": true
+  },
+  "model_sha256": "54dbccd0ed8fc871e2d5bd0ae7c3927e8762b7ca4154a3c5a6830577fe6b6a6d"
+}
