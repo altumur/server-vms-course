@@ -75,3 +75,52 @@ scenario	step	request	expect
 16-presence-lock	5	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": []}
 16-presence-lock	6	@start worker w-1	ok
 16-presence-lock	7	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": ["testsub/w-1"]}
+# 17-schema-refusal (аудит покрытия P/05, F01): platform/schema с version выше SCHEMA (2) и не числом — ресурс не стартует, код 2, строки двери нет; с version 1 — стартует
+17-schema-refusal	1	admin POST /v1/write {"id":"f17a","op":"put","key":"platform/schema","items":{"version":"2","at":"1700000000"},"cas":""}	200
+17-schema-refusal	2	@start resource	@exit 2
+17-schema-refusal	3	admin POST /v1/write {"id":"f17b","op":"put","key":"platform/schema","items":{"version":"x","at":"1700000000"}}	200
+17-schema-refusal	4	@start resource	@exit 2
+17-schema-refusal	5	store GET /v1/get?key=platform/doors/srv-a	200 {"items": null}
+17-schema-refusal	6	admin POST /v1/write {"id":"f17c","op":"put","key":"platform/schema","items":{"version":"1","at":"1700000000"}}	200
+17-schema-refusal	7	@start resource	ok
+17-schema-refusal	8	@until 30 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"url": "@any", "since": "@time"}}
+# 18-schema-read-wait (аудит покрытия P/05, F01): хранилище молчит ресурсу на чтении platform/schema — ресурс ждёт, не выходит; хранилище снова отвечает — ресурс стартует сам, без перезапуска
+18-schema-read-wait	1	@cut role resource store	ok
+18-schema-read-wait	2	@start resource	ok
+18-schema-read-wait	3	@sleep 10	ok
+18-schema-read-wait	4	@mend role resource store	ok
+18-schema-read-wait	5	@until 90 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"url": "@any", "since": "@time"}}
+# 19-service-names (аудит покрытия P/05, F02): замок каталога ~lock, который оставляет запись пульса воркера, — не ключ: вне листинга, чтение ключа ~lock — 404
+19-service-names	1	@start resource	ok
+19-service-names	2	@start worker w-1	ok
+19-service-names	3	@until 30 resource GET /v1/objects?prefix=testsub/heartbeats/&scope=local	200 {"server": "srv-a", "objects": {"testsub/heartbeats/w-1": {"server": "srv-a"}, "testsub/heartbeats/~lock": "@absent"}}
+19-service-names	4	resource GET /v1/objects/testsub/heartbeats/~lock?scope=local	404
+# 20-door-room (аудит покрытия P/05, F03; каталог testsub и testsub2): поле door в пульсе; room.testsub2 и live.testsub2 строки двери по живым замкам — номер n ≥ 2 в live, n = 1 и имя без номера — только в room
+20-door-room	1	@start resource	ok
+20-door-room	2	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	@oneof 200 {"server": "srv-a", "door": {"addr": "@any", "mode": "loopback"}} | 200 {"server": "srv-a", "door": {"addr": "@any", "mode": "mtls"}}
+20-door-room	3	@until 40 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"room.testsub2": "16", "live.testsub2": ""}}
+20-door-room	4	@start worker testsub2 t-srv-a-2	ok
+20-door-room	5	@until 40 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"room.testsub2": "15", "live.testsub2": "2"}}
+20-door-room	6	@start worker testsub2 t-1	ok
+20-door-room	7	@until 40 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"room.testsub2": "14", "live.testsub2": "2"}}
+20-door-room	8	@start worker testsub2 t-srv-a-1	ok
+20-door-room	9	@until 40 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"room.testsub2": "13", "live.testsub2": "2"}}
+# 21-events-wait (аудит покрытия P/05, F05): подсказка /events/wait — под want строк нет: {changed: false, seq} по сроку; строка есть: since=0 — сразу changed с touched; курсор since=seq — снова без изменений
+21-events-wait	1	@start resource	ok
+21-events-wait	2	resource GET /events/wait?want=testsub/probe.tick/c1&since=0&timeout=1	200 {"changed": false, "seq": "$s1"}
+21-events-wait	3	@append event testsub/c1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-1"}	ok
+21-events-wait	4	resource GET /events/wait?want=testsub/probe.tick/c1&since=0&timeout=5	200 {"changed": true, "seq": "$s2", "touched": ["testsub/probe.tick/c1"]}
+21-events-wait	5	ASSERT $s1 <= $s2	ok
+21-events-wait	6	resource GET /events/wait?want=testsub/probe.tick/c1&since=$s2&timeout=1	200 {"changed": false}
+# 22-torn-tail (аудит покрытия P/05, F06): хвост бакета без LF (разбираемый JSON) — не строка: не в events и truncated, partial: true, не lines_garbled; целая строка отдаётся
+22-torn-tail	1	@start resource	ok
+22-torn-tail	2	@append event testsub/c1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-1"}	ok
+22-torn-tail	3	@until 30 resource GET /events?unit=testsub/c1	200 {"events": [{"kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-1"}], "state": "live", "truncated": 0}
+22-torn-tail	4	@append event-raw testsub/c1/e1 {"t": {now}, "kind": "probe.torn", "id": "e1-74657374737562-6331-1-70726f6265-2"}	ok
+22-torn-tail	5	@until 30 resource GET /events?unit=testsub/c1	200 {"events": [{"kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-1"}], "state": "live", "truncated": 0, "partial": true, "lines_garbled": "@absent"}
+# 23-object-ceiling (аудит покрытия P/05, F07; каталог testsub и testsub2): потолок двери ресурса 64 МиБ — копия тела ровно 67108864 байт принята и читается, 67108865 байт — 413, ключа нет
+23-object-ceiling	1	@start resource	ok
+23-object-ceiling	2	resource @header X-Written: 1700000000 PUT /v1/objects/testsub2/blobs/sha256-e20a69eca39368572e90b9135738a613838f954987a0b44b6220889c171cbb76 @big(67108864)	204
+23-object-ceiling	3	resource GET /v1/objects/testsub2/blobs/sha256-e20a69eca39368572e90b9135738a613838f954987a0b44b6220889c171cbb76?scope=local	200 ~xxxx
+23-object-ceiling	4	resource @header X-Written: 1700000000 PUT /v1/objects/testsub2/blobs/sha256-6832d5ef0f8b4923d7ac5d3ffe71fc0865ed9bf9ef988547583644a461476ca1 @big(67108865)	413
+23-object-ceiling	5	resource GET /v1/objects/testsub2/blobs/sha256-6832d5ef0f8b4923d7ac5d3ffe71fc0865ed9bf9ef988547583644a461476ca1?scope=local	404
