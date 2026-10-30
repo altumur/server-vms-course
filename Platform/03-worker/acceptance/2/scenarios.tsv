@@ -38,8 +38,8 @@ scenario	step	request	expect
 08-two-manifests	9	@sleep 12	ok
 08-two-manifests	10	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1", "released": "false"}}
 08-two-manifests	11	store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"holder": "$t1", "gen": "1", "released": "false"}}
-09-bad-given-name	1	@start worker W-1	ok
-09-bad-given-name	2	@start worker x-1	ok
+09-bad-given-name	1	@start worker W-1	@exit 2
+09-bad-given-name	2	@start worker x-1	@exit 2
 09-bad-given-name	3	@sleep 12	ok
 09-bad-given-name	4	store GET /v1/get?key=testsub/slots/W-1	200 {"items": null}
 09-bad-given-name	5	store GET /v1/get?key=testsub/slots/x-1	200 {"items": null}
@@ -59,8 +59,94 @@ scenario	step	request	expect
 10-name-taken-once	13	@until 30 console GET /events?unit=audit/testsubworker&kind=worker.name_taken	200 {"events": [{"kind": "worker.name_taken", "class": "alarm"}]}
 10-name-taken-once	14	@sleep 12	ok
 10-name-taken-once	15	console GET /events?unit=audit/testsubworker&kind=worker.name_taken	200 {"events": [{"kind": "worker.name_taken", "class": "alarm"}]}
-11-labels-off-alphabet	1	@start worker w-1 labels=a,b@c	ok
+11-labels-off-alphabet	1	@start worker w-1 labels=a,b@c	@exit 2
 11-labels-off-alphabet	2	@sleep 12	ok
 11-labels-off-alphabet	3	store GET /v1/get?key=testsub/slots/w-1	200 {"items": null}
 11-labels-off-alphabet	4	@start worker w-2 labels=a,b	ok
 11-labels-off-alphabet	5	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
+# 14–23 (аудит покрытия P/03, 2026-10-30): края строки слота, эпоха, схема, выведенный сервер, отказы старта, порванная строка места. Подготовка строк мимо писателя — дверь admin.
+14-slot-gen-unreadable	1	admin POST /v1/write {"id":"e14a","op":"put","key":"testsub/slots/w-1","items":{"holder":"","until":"4102444800","released":"true","gen":"x"},"cas":""}	200 {"index": "$v"}
+14-slot-gen-unreadable	2	@start resource	ok
+14-slot-gen-unreadable	3	@start worker w-1	ok
+14-slot-gen-unreadable	4	@sleep 12	ok
+14-slot-gen-unreadable	5	store GET /v1/get?key=testsub/slots/w-1	200 {"index": "$v", "items": {"holder": "", "released": "true", "gen": "x"}}
+14-slot-gen-unreadable	6	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	404
+14-slot-gen-unreadable	7	@sleep 50	ok
+14-slot-gen-unreadable	8	store GET /v1/get?key=testsub/slots/w-1	200 {"index": "$v", "items": {"gen": "x"}}
+15-slot-row-free	1	admin POST /v1/write {"id":"e15a","op":"put","key":"testsub/slots/w-1","items":{"holder":"","until":"4102444800","gen":"7"},"cas":""}	200
+15-slot-row-free	2	admin POST /v1/write {"id":"e15b","op":"put","key":"testsub/slots/w-2","items":{"holder":"otherbox:1234:abcdef","until":"4102444800","released":"true","gen":"3","server":"srv-b"},"cas":""}	200
+15-slot-row-free	3	@start worker w-1	ok
+15-slot-row-free	4	@start worker w-2	ok
+15-slot-row-free	5	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "gen": "8", "server": "srv-a", "until": "@time"}}
+15-slot-row-free	6	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false", "gen": "4", "server": "srv-a", "until": "@time"}}
+16-slot-foreign-box	1	admin POST /v1/write {"id":"e16a","op":"put","key":"testsub/slots/w-1","items":{"holder":"otherbox:1234:abcdef","until":"4102444800","released":"false","gen":"3","server":"srv-b"},"cas":""}	200 {"index": "$v"}
+16-slot-foreign-box	2	@start resource	ok
+16-slot-foreign-box	3	@start worker w-1	ok
+16-slot-foreign-box	4	@sleep 12	ok
+16-slot-foreign-box	5	store GET /v1/get?key=testsub/slots/w-1	200 {"index": "$v", "items": {"holder": "otherbox:1234:abcdef", "released": "false", "gen": "3", "server": "srv-b"}}
+16-slot-foreign-box	6	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	404
+16-slot-foreign-box	7	console GET /events?unit=audit/testsubworker&kind=worker.name_taken	200 {"events": []}
+17-slot-torn-until	1	admin POST /v1/write {"id":"e17a","op":"put","key":"testsub/slots/w-1","items":{"holder":"","until":"x","released":"true","gen":"7"},"cas":""}	200 {"index": "$v"}
+17-slot-torn-until	2	@start worker w-1	ok
+17-slot-torn-until	3	@sleep 12	ok
+17-slot-torn-until	4	store GET /v1/get?key=testsub/slots/w-1	200 {"index": "$v", "items": {"until": "x", "gen": "7"}}
+17-slot-torn-until	5	@until 70 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "gen": "8", "server": "srv-a", "until": "@time"}}
+18-epoch-edges	1	@start resource	ok
+18-epoch-edges	2	@start controller	ok
+18-epoch-edges	3	@start worker w-1	ok
+18-epoch-edges	4	admin POST /v1/write {"id":"e18a","op":"put","key":"testsub/epoch/c1","items":{"epoch":"9007199254740991"},"cas":""}	200 {"index": "$v1"}
+18-epoch-edges	5	admin POST /v1/write {"id":"e18b","op":"put","key":"testsub/epoch/c2","items":{"epoch":"x"},"cas":""}	200 {"index": "$v2"}
+18-epoch-edges	6	console POST /counters {"name": "c1", "start": 1}	201
+18-epoch-edges	7	console POST /counters {"name": "c2", "start": 1}	201
+18-epoch-edges	8	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+18-epoch-edges	9	@until 30 store GET /v1/get?key=testsub/placement/c2	200 {"items": {"worker": "w-1"}}
+18-epoch-edges	10	@sleep 12	ok
+18-epoch-edges	11	store GET /v1/get?key=testsub/epoch/c1	200 {"index": "$v1", "items": {"epoch": "9007199254740991"}}
+18-epoch-edges	12	store GET /v1/get?key=testsub/epoch/c2	200 {"index": "$v2", "items": {"epoch": "x"}}
+19-schema-too-new	1	admin POST /v1/write {"id":"e19a","op":"put","key":"platform/schema","items":{"version":"2","at":"1700000000"},"cas":""}	200
+19-schema-too-new	2	@start worker w-1	@exit 2
+19-schema-too-new	3	store GET /v1/get?key=testsub/slots/w-1	200 {"items": null}
+20-schema-raised	1	@start resource	ok
+20-schema-raised	2	@start worker w-1	ok
+20-schema-raised	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "gen": "1"}}
+20-schema-raised	4	@until 20 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "ts": "@time"}
+20-schema-raised	5	admin POST /v1/write {"id":"e20a","op":"put","key":"platform/schema","items":{"version":"2","at":"1700000000"},"cas":""}	200
+20-schema-raised	6	@sleep 12	ok
+20-schema-raised	7	store GET /v1/get?key=testsub/slots/w-1	200 {"index": "$v", "items": {"released": "false", "gen": "1"}}
+20-schema-raised	8	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"ts": "$t"}
+20-schema-raised	9	@sleep 12	ok
+20-schema-raised	10	store GET /v1/get?key=testsub/slots/w-1	200 {"index": "$v", "items": {"released": "false", "gen": "1"}}
+20-schema-raised	11	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"ts": "$t"}
+21-decommissioned	1	@start resource	ok
+21-decommissioned	2	admin POST /v1/write {"id":"e21a","op":"put","key":"platform/decommission/srv-a","items":{"by":"operator","at":"1700000000","why":"audit"},"cas":""}	200 {"index": "$d"}
+21-decommissioned	3	@start worker w-1	ok
+21-decommissioned	4	@sleep 12	ok
+21-decommissioned	5	store GET /v1/get?key=testsub/slots/w-1	200 {"items": null}
+21-decommissioned	6	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	404
+21-decommissioned	7	resource GET /v1/objects?prefix=testsub/contenders/&scope=local	200 {"objects": {}}
+21-decommissioned	8	admin POST /v1/write {"id":"e21b","op":"delete","key":"platform/decommission/srv-a","cas":"$d"}	200
+21-decommissioned	9	@start worker w-2	ok
+21-decommissioned	10	@until 30 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false", "gen": "1", "server": "srv-a"}}
+22-start-refusals	1	@start worker w-srv-b-1	@exit 2
+22-start-refusals	2	@start worker w-1 INSTANCE_ID=bad	@exit 2
+22-start-refusals	3	@start worker w-2 BOX_ID=bad:box	@exit 2
+22-start-refusals	4	@start worker w-3 SERVER_NAME=SRV-A	@exit 2
+22-start-refusals	5	store GET /v1/get?key=testsub/slots/w-srv-b-1	200 {"items": null}
+22-start-refusals	6	store GET /v1/get?key=testsub/slots/w-1	200 {"items": null}
+22-start-refusals	7	store GET /v1/get?key=testsub/slots/w-2	200 {"items": null}
+22-start-refusals	8	store GET /v1/get?key=testsub/slots/w-3	200 {"items": null}
+22-start-refusals	9	@start worker w-srv-a-1	ok
+22-start-refusals	10	@until 20 store GET /v1/get?key=testsub/slots/w-srv-a-1	200 {"items": {"released": "false", "gen": "1", "server": "srv-a"}}
+23-own-place-torn-hold	1	@start resource	ok
+23-own-place-torn-hold	2	@start controller testsub2	ok
+23-own-place-torn-hold	3	@start worker testsub2 t-1	ok
+23-own-place-torn-hold	4	admin POST /v1/write {"id":"e23a","op":"put","key":"testsub2/shelves/sh1","items":{"name":"sh1","zone":"z1","server":"srv-a","kind":"plain","admits":"true","enabled":"true","size":"1"},"cas":""}	200
+23-own-place-torn-hold	5	@until 30 resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"shelf": "sh1"}
+23-own-place-torn-hold	6	store GET /v1/get?key=testsub2/holds/sh1	200 {"items": {"holder": "$hl", "until": "$un", "by": "t-1"}}
+23-own-place-torn-hold	7	admin POST /v1/write {"id":"e23b","op":"put","key":"testsub2/holds/sh1","items":{"holder":"$hl","until":"$un","released":"false","gen":"x","by":"t-1"}}	200 {"index": "$v"}
+23-own-place-torn-hold	8	@sleep 12	ok
+23-own-place-torn-hold	9	store GET /v1/get?key=testsub2/holds/sh1	200 {"index": "$v", "items": {"gen": "x"}}
+23-own-place-torn-hold	10	resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"shelf": "sh1"}
+23-own-place-torn-hold	11	@sleep 60	ok
+23-own-place-torn-hold	12	store GET /v1/get?key=testsub2/holds/sh1	200 {"index": "$v", "items": {"gen": "x"}}
+23-own-place-torn-hold	13	resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"shelf": "sh1"}

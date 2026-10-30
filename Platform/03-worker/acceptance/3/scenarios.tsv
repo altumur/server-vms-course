@@ -32,3 +32,11 @@ scenario	step	request	expect
 12-row-unreadable	8	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"status": [{"id": "c12", "phase": "running", "observed_revision": 1, "why": "~row unreadable: "}]}
 12-row-unreadable	9	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"garbled_rows": "@any", "pass_failures": 0}
 12-row-unreadable	10	store GET /v1/get?key=testsub/epoch/c12	200 {"items": {"epoch": "1"}}
+# 25 (аудит покрытия P/03, 2026-10-30): строка единицы битая до первого чтения; назначение кладётся мимо контроллера (его нет), обе строки — дверью admin.
+25-unit-never-read	1	@start resource	ok
+25-unit-never-read	2	admin POST /v1/write {"id":"e25a","op":"put","key":"testsub/counters/c25","items":{"id":"c25","revision":"1","name":"c25","start":"x","labels":"","born":"0123456789abcdef0123456789abcdef"},"cas":""}	200
+25-unit-never-read	3	admin POST /v1/write {"id":"e25b","op":"put","key":"testsub/workers/w-1","items":{"units":"c25","rev":"1"},"cas":""}	200
+25-unit-never-read	4	@start worker w-1	ok
+25-unit-never-read	5	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"garbled_rows": "$g", "pass_failures": 0, "status": [{"id": "c25", "phase": "unreadable", "why": "~row unreadable: ", "epoch": "@absent", "observed_revision": "@absent"}]}
+25-unit-never-read	6	ASSERT $g >= 1	ok
+25-unit-never-read	7	store GET /v1/get?key=testsub/epoch/c25	200 {"items": null}
