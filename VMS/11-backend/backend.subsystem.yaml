@@ -83,21 +83,19 @@ door:
 #     - backend/repeats                     # its own table: the memory of repeats of a group key (V/11.4 Н1.4)
 #   # not: /where, writes of /session, grants, people, keys, break-glass, /operations; nor auto — the automation of
 #   # consolem is not declared on the first step (ADR-0094 доп. (7)), its operations answer 404 NO_ROUTE
-# B7 (ADR-0094 доп. (1); норма платформы B — после Go GREEN 01–10), declared intent, not loaded today (the plan's key is
-# `console.files: [<path>…]`; the installer checks the SHA-256 of each, the manifest row keeps them): the console serves
+# B7 (ADR-0094 доп. (1); P/02.1 `console.shell`, `console.files`, P/02.3, P/06.5 Н1.1 `mounted`), the keys in `console:`
+# below (the installer reads each file, the manifest row keeps its SHA-256 and size): the console serves
 # the WebUI of consolem as static files next to this manifest, `/backend/<file>`, byte for byte, by the name without the
 # query (the shell links `<file>?v=<12 hex>`); no file of the set is named under `api/` — that is the space of the API
-# (ADR-0094 доп. (8) п. 2). It serves backend.shell.html at /backend/ because this manifest declares it (доп. (3) п. 8),
-# a page of its own (no frame of another page, no sandbox), with the Content-Security-Policy that is exactly the minimum
+# (ADR-0094 доп. (8) п. 2). It serves backend.shell.html at /backend/ because `console.shell: true` declares it
+# (доп. (3) п. 8), a page of its own (no frame of another page, no sandbox), with the Content-Security-Policy that is exactly the minimum
 # of P/06.5 Н1.1 `page` — the shell has no inline script, so `script-src 'self'; object-src 'none'; base-uri 'none'`,
 # not stricter: inline styles and `data:` images stay allowed (доп. (8) пп. 1, 4).
 # The build: consolem @ef7175b, `tools/build_webui.py` (reproducible), its MANIFEST.json; its index.html is
 # backend.shell.html (SHA-256 caa73ca5…), the rest is the set (V/11.1 Н1.4). The deployment package builds it from the
-# pinned commit and places it next to the manifest (V/09.3):
-#   console:
-#     files: [app.css, app.js, client.js, fonts/InterVariable.woff2, i18n-en.js, openapi.js]
-#   SHA-256 of each (the lesson's README): 0d9c0fc7… app.css, 621743b8… app.js, 51da0e97… client.js,
-#   693b77d4… fonts/InterVariable.woff2, bde5b214… i18n-en.js, 06f709a4… openapi.js
+# pinned commit and places it next to the manifest (V/09.3).
+# SHA-256 of each (the lesson's README): 0d9c0fc7… app.css, 621743b8… app.js, 51da0e97… client.js,
+# 693b77d4… fonts/InterVariable.woff2, bde5b214… i18n-en.js, 06f709a4… openapi.js
 # The set — SHA-256 fbcb074080610e08bd3534b5de6d35246609a6696dec813410f8c9dc07d20142.
 # The memory of repeats of a group `idempotencyKey` (V/11.4 Н1.4; the review of V/11, question 3): a row per group,
 # key h = SHA-256 hex of the bytes of the person (`user` of the ticket), a zero byte and the external key. Made with
@@ -135,6 +133,8 @@ metrics:
   - {name: instances_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:
   running: instances_running         # backend_instances_running
+  shell: true                        # backend.shell.html at /backend/ (P/06.5 Н1.1 `mounted`)
+  files: [app.css, app.js, client.js, fonts/InterVariable.woff2, i18n-en.js, openapi.js]   # /backend/<file> (V/11.1 Н1.4)
 # What a page calls a unit of it (the product's words, one spec on both sides).
 display:
   unit: бэкенд конфигуратора
