@@ -27,6 +27,7 @@
 | `DOMAIN_CONSOLE_HOST`, `DOMAIN_CONSOLE_PORT` | дверь оператора домена; консоли членов пересылают сюда; TLS — по комплекту роли (P/02.4 Н1.6, [договор сертификата роли](../common/contracts/role-certificate.md) `kit`; ADR-0075 доп. 2026-10-26 (2) п. 4) | `0.0.0.0:8444` — умолчание процесса (юнит не пишет), не явный адрес: только с комплектом, без комплекта — отказ старта, код 2 (P/02.4 Н1.6 `process`; ADR-0075 доп. 2026-10-26 (3) п. 5, (4) п. 4; ревью норм ADR-0075, Claude fd85ea8cc, С-3) | [P/02.4 Н1.12](../02-installer/spec/02.4-installer.norms.md) |
 | `SIGNER_URL` | дверь процесса `domain` своей коробки — передача правок; проверка сервера — [договор сертификата роли](../common/contracts/role-certificate.md) «Клиент двери своего кластера» (хост — литерал петли — имя `SERVER_NAME`; `localhost` — имя) | `http://localhost:8445` (стенд одной машины, как [жизненный цикл P/08](../08-domain/lifecycle.md); разбор ревью стадии A 8–10, № 33) | [P/10 Н1.3](spec/10-domain-console.norms.md) (передача; приём — P/08.0 Н1.8); [P/08.2 Н1.3](../08-domain/spec/08.2-domain.norms.md) |
 | `LOGIN_URL` | вход людей, значение `login_url` в `/session` | `/api/login` | [договор сторожевой и передачи](../common/contracts/gate-and-pass.md) `session` `login_url`; [P/08.4 Н1.2](../08-domain/spec/08.4-domain.norms.md); P/02.4 Н1.2 |
+| `TIMEZONE` | часовой пояс: значение `timezone` в `/session`; из `w2c.env` своей коробки; пустое или не по форме — код 2 | `UTC` | [договор файла окружения](../common/contracts/env-file.md); [P/10 Н1.7](spec/10-domain-console.norms.md) `session` |
 | `W2C_TLS_DIR` | комплект роли `domainconsole` и свои `ca.pem`, `ca.next.pem` — объединение центров двери роли | P/02.4 Н1.6 | [P/10 Н1.4](spec/10-domain-console.norms.md) `roles`, `server.role`; [договор сертификата роли](../common/contracts/role-certificate.md) `kit` |
 | `CLUSTER`, `BOX_ID`, `SERVER_NAME` | кластер, коробка, сервер | P/02.4 Н1.2 | P/02.4 Н1.2 |
 
@@ -50,6 +51,7 @@
 | Код | Когда | Норма |
 |---|---|---|
 | 2 | отказ старта по манифесту, правам, схеме — без перезапуска | P/02.4 Н1.1 `common`; P/10 Н1.1 |
+| 2 | `TIMEZONE` пустое или не по форме | [договор файла окружения](../common/contracts/env-file.md); [P/10 Н1.7](spec/10-domain-console.norms.md) `session` |
 | ≠ 0 | иной сбой; юнит перезапускает | P/02.4 Н1.1 |
 
 ## Сигналы и готовность

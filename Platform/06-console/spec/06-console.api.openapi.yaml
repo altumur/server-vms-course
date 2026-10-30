@@ -5275,17 +5275,25 @@ components:
       required:
       - open
       - login_url
+      - server_time
+      - timezone
       additionalProperties: false
       properties:
         open:
           const: true
         login_url:
           type: string
+        server_time:
+          $ref: '#/components/schemas/ServerTime'
+        timezone:
+          $ref: '#/components/schemas/ClusterTimezone'
     AnonymousSession:
       type: object
       required:
       - open
       - login_url
+      - server_time
+      - timezone
       additionalProperties: false
       properties:
         open:
@@ -5293,6 +5301,10 @@ components:
         login_url:
           type: string
           minLength: 1
+        server_time:
+          $ref: '#/components/schemas/ServerTime'
+        timezone:
+          $ref: '#/components/schemas/ClusterTimezone'
     AuthenticatedSession:
       type: object
       required:
@@ -5302,6 +5314,8 @@ components:
       - until
       - via
       - grants
+      - server_time
+      - timezone
       additionalProperties: false
       properties:
         open:
@@ -5325,6 +5339,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Grant'
+        server_time:
+          $ref: '#/components/schemas/ServerTime'
+        timezone:
+          $ref: '#/components/schemas/ClusterTimezone'
+    ServerTime:
+      type: number
+      minimum: 0
+      description: стенные секунды консоли, которая ответила (время P/01.1 Н0, запись писателя; договор сторожевой и передачи `session` `server_time`, ADR-0094 B6)
+    ClusterTimezone:
+      type: string
+      pattern: '^[A-Za-z][A-Za-z0-9_+-]*(/[A-Za-z][A-Za-z0-9_+-]*)*$'
+      description: имя часового пояса IANA, настройка кластера, не ОС сервера; значение `TIMEZONE`, не задано — `UTC` (договор файла окружения «Переменные окружения»; договор сторожевой и передачи `session` `timezone`, ADR-0094 B6)
     Session:
       oneOf:
       - $ref: '#/components/schemas/OpenSession'

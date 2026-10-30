@@ -26,7 +26,8 @@ root — testsub, второй доступен под /testsub2. Домена �
 - **03/3–5** — ответ `DELETE /session` несёт два заголовка `Set-Cookie` (снимает куки `w2c_token` и `w2c_glass`, C34).
   Ожидание `@header` ищет подстроку в каждом значении повторённого заголовка.
 
-Шаг 03/1 — `login_url` без `LOGIN_URL` — `/api/login` (сверка 2 чистой комнаты М10, faa988b0).
+Шаг 03/1 — `login_url` без `LOGIN_URL` — `/api/login` (сверка 2 чистой комнаты М10, faa988b0); `server_time` — `@time`,
+`timezone` — умолчание `UTC`: стенд не задаёт `TIMEZONE` (ADR-0094 B6).
 
 ## Свидетельства вне TSV
 

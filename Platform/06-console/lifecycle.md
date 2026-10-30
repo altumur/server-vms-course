@@ -8,6 +8,7 @@
 [P/03.2]: ../03-worker/spec/03.2-worker.norms.md
 [P/06.1]: spec/06.1-console.norms.md
 [P/06.2]: spec/06.2-console.norms.md
+[P/06.3]: spec/06.3-console.norms.md
 [P/06.4]: spec/06.4-console.norms.md
 [P/06.5]: spec/06.5-console.norms.md
 [P/06.6]: spec/06.6-console.norms.md
@@ -44,6 +45,7 @@
 | `SERVER_NAME` | сервер | короткий hostname (`%l`) | [P/02.4] Н1.2 |
 | `BOX_ID` | коробка; экземпляр `<коробка>:<pid>:<6 hex>` | `BOX_ID`, иначе `/etc/machine-id`, иначе hostname | [P/02.4] Н1.2, [P/03.2] Н3 «старт()» шаг 2 |
 | `CLUSTER` | имя кластера | `local` | [P/02.4] Н1.2 |
+| `TIMEZONE` | часовой пояс кластера: значение `timezone` в `/session`; из `w2c.env` (пишет установщик); пустое или не по форме — код 2 | `UTC` | [договор файла окружения](../common/contracts/env-file.md); [P/06.3] Н2 |
 | `BUILD` | слово сборки в `/schema` | `dev` | [P/02.4] Н1.2, [P/06.6] Н2.3 |
 | `W2C_TLS_DIR` | корень комплектов; свой — `<W2C_TLS_DIR>/console` | `/etc/w2c/tls` | [P/02.4] Н1.2, Н1.6 |
 | `LOGIN_URL`, `SIGNER_URL`, `DOMAIN_*`, `CLUSTERS` | домен (поздний слой урока 6 — [глава 6.7](spec/06.7-console.norms.md): `CLUSTERS` — Н1.4, `SIGNER_URL` — Н1.8, `DOMAIN_CA`/`RELAY_CA` — договор peer; `LOGIN_URL` — договор сторожевой `login_url`) | — | [P/02.4] Н1.2 |
@@ -79,6 +81,7 @@
 | 2 | схема хранилища выше своей или не число | [P/06.6] Н3 «старт консоли — проверка схемы» |
 | 2 | манифест не читается или отказан | [P/02.3] Н3 «Старт процесса» |
 | 2 | `CONSOLE_ROOT` пустой или не из каталога | [P/06.5] Н1.1 `root`, Н4 |
+| 2 | `TIMEZONE` пустое или не по форме | [P/06.5] Н4; [договор файла окружения](../common/contracts/env-file.md) |
 | 2 | файл окружения не по грамматике; `SERVER_NAME` не по грамматике; `W2C_ROLE` не роль команды | [P/02.4] Н1.2, Н4 |
 | ≠ 0 | вне петли без комплекта; иной отказ старта — строка лога называет источник | [P/02.4] Н1.6, [P/02.3] Н3 |
 

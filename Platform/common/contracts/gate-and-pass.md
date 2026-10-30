@@ -56,7 +56,7 @@ gate:
   open:     ключей нет и следов домена нет → консоль открыта: только с петли (иначе 403), имя — operator
   shut:     ключи были или след домена есть, а проверить нечем / хранилище не ответило → 503, не открыта (строка
             domain/keys есть, но не читается, — unreadable ниже, не shut); GET /session
-            (open_routes) анонимному — {open: false, login_url}, как «закрыта анонимному», не 503 (догадка стадии C
+            (open_routes) анонимному — {open: false, login_url, server_time, timezone}, как «закрыта анонимному», не 503 (догадка стадии C
             GP-G04, решение «Архитектора» 2026-10-23)
             # «ключи есть» и «след домена» — раздел «Следы домена» ниже (поздний слой)
   unreadable: по порядку: хранилище не ответило или строки domain/keys нет при следе домена или виденных ключах → shut
@@ -127,17 +127,18 @@ gate:
 open_routes: [/, /index.html, /platform/console.js, /platform/console.css, /metrics, /healthz, /session, /session/break-glass,
               /api/held, /api/backup, /api/prepare, /api/take, /api/login]   # /api/login — вход людей через консоль (P/08.4 Н1.2)
 session:
-  GET  /session  → открыта: {open: true, login_url}; закрыта анонимному: {open: false, login_url};
-                   доказанной личности: {open: false, login_url, user, until, via, grants: [{cap, scope}], debug?}
+  GET  /session  → открыта: {open: true, login_url, server_time, timezone}; закрыта анонимному: {open: false, login_url,
+                   server_time, timezone}; доказанной личности: {open: false, login_url, user, until, via,
+                   grants: [{cap, scope}], debug?, server_time, timezone}
   POST /session {token} → {user, until} + кука w2c_token (HttpOnly, SameSite=Strict, Secure за https)
   DELETE /session → {out: true}; снимает обе куки (w2c_token, w2c_glass) и аварийную сессию в памяти (GP-L02); POST /session/break-glass {who, why, password} → {user, until} + кука w2c_glass; 429 по пределу
   by_state:  исходы дверей сессии по состояниям сторожевой (gate выше; P/06.3 Н4 — ссылкой; сц. 03 приёмки главы 6.3;
              догадка стадии C C06-GATE-OPEN-33-01, решение «Архитектора» 2026-10-23):
              open — POST /session → 400 {detail, error: "this console is open"}, не 503; GET /session → 200 {open: true,
-             login_url}; DELETE /session → 200 {out: true}, снимает обе куки; POST /session/break-glass — 400 open (Аварийный
+             login_url, server_time, timezone}; DELETE /session → 200 {out: true}, снимает обе куки; POST /session/break-glass — 400 open (Аварийный
              вход, door шаг 1);
              shut — двери, которым нужна проверка личности, — 503 {detail: "…admits nobody", error: denied}; GET /session анонимному —
-             {open: false, login_url} (shut выше); 503 у POST /session — только в shut, никогда в open
+             {open: false, login_url, server_time, timezone} (shut выше); 503 у POST /session — только в shut, никогда в open
   login_url: дверь домена /api/login (P/08.4 Н1.2) — консоль пересылает её домену (open_routes, договор пересылки «Двери домена»);
              консоль токенов людей не выдаёт; значение — LOGIN_URL окружения (договор файла окружения «Переменные окружения»), не задано — "/api/login"
              (строка, не null, и у открытой консоли)
@@ -148,6 +149,14 @@ session:
              пустое `via` у токена — расхождение, правка поведения)
   until:     стенные секунды конца сессии; у отладочной личности (via: debug, debug: true) — 0: без срока, как until строк
              P/08.4 Н1.3 — личность доказывается на каждый запрос, сессии нет (догадка стадии C GP-G02, решение «Архитектора» 2026-10-23)
+  server_time: стенные секунды консоли, которая ответила, в момент ответа — число JSON записи писателя P/01.1 Н0 «Время в строке»
+             (дробная часть не длиннее 3 знаков). Часы консолей кластера расходятся в пределах CLOCK_SKEW (Н0 «Часы кластера»),
+             поэтому поле называет часы только этой консоли (ADR-0094 B6)
+  timezone:  имя часового пояса IANA, значение TIMEZONE окружения (договор файла окружения «Переменные окружения»), не задано — "UTC".
+             Это настройка кластера, не пояс ОС сервера: пояса ОС серверов кластера бывают разные, а люди видят время в одном.
+             Консоль отдаёт слово как есть и времени по нему не считает (ADR-0094 B6)
+  Поля server_time и timezone есть в каждом ответе 200 GET /session: у открытой консоли, анонимному, доказанной личности;
+  их несёт только GET, ответы POST /session и POST /session/break-glass прежние.
 ```
 
 ## Разбор запроса и порядок проверок
@@ -254,7 +263,7 @@ cluster:   P/06.3 Н1.3 identity шаг 3 (Bearer | кука w2c_token): ток�
 | строка `domain/disabled` есть, но не читается — вход `disabled` функции `may` проверить нечем ([семья `disabled`](../../08-domain/data/disabled.outcomes.tsv)) | 503 | `{error: "unavailable"}` — правило «Нечитаемая строка» (C06-GATE-DISABLED-UNREADABLE-JOURNAL-01, решение «Архитектора» 2026-10-28); `may` не решает; отладочный вход консоли — «как без входа» (раздел «Сторожевая») | ждать читаемой строки (C06-GATE-UNREADABLE-ROW-503-01, решение «Архитектора» 2026-10-28) |
 | чужой Origin на действующем запросе по куке | 403 | `{detail, error: denied}` | — |
 | `/session POST` у открытой консоли (раздел «Сторожевая» `session` `by_state`) | 400 | `{detail, error: "this console is open"}` | — |
-| `/session GET` и `DELETE` у открытой консоли (раздел «Сторожевая», `by_state`) | 200 | GET — `{open: true, login_url}`; DELETE — `{out: true}` | — |
+| `/session GET` и `DELETE` у открытой консоли (раздел «Сторожевая», `by_state`) | 200 | GET — `{open: true, login_url, server_time, timezone}`; DELETE — `{out: true}` | — |
 | аварийный вход: предел | 429 | `Retry-After` | ждать |
 
 Отказ сторожевой не имеет побочных записей двери. Полоса, рамка, нет пути, метод, тело, общий предел входа консоли (429) —
