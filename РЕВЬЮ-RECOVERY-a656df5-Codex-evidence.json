@@ -1,0 +1,203 @@
+{
+  "head": "a656df53d9edf3e92ef2bced0341a91c038a1070",
+  "manifest_sha256": "203a8f8ef522ecf1a2209a3a68a5968daf357f6491c22326636361a9085ae4b0",
+  "manifest_files": 5343,
+  "git_source_files": 210,
+  "reverse_patch_git_files": {
+    "5fddbbc": 208,
+    "9a2b04b": 208
+  },
+  "source_sha_files": 4901,
+  "spec_counts": {
+    "specs": 2345,
+    "vms-jsdom-specs": 2345
+  },
+  "targeted_tests": 43,
+  "targeted_green": true,
+  "targeted_job": "20261030T023805Z-rv-recovery-a656",
+  "behaviour_identical": true,
+  "before": {
+    "behaviour": {
+      "calls": [
+        {
+          "argv": [
+            "install",
+            "ROOT/secret root/acme.recovery.json"
+          ],
+          "shell": true,
+          "timeout": 120,
+          "cwd": "ROOT",
+          "env_sha256": "bb547f82708fc2ec7fcd139e3957c6aa2289d6a0a48a38ae4d8d2ac8c9c45fe2",
+          "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "argv": [
+            "admin"
+          ],
+          "shell": true,
+          "timeout": 120,
+          "cwd": "ROOT",
+          "env_sha256": "bb547f82708fc2ec7fcd139e3957c6aa2289d6a0a48a38ae4d8d2ac8c9c45fe2",
+          "input_sha256": "9e704e32057b1e3a0b6a4aca58877bc91e9ca656645987de27083ac19a07a8b8"
+        },
+        {
+          "argv": [
+            "move",
+            "http://localhost:1234",
+            "ROOT/secret root/private/acme.recovery.json",
+            "--fixture"
+          ],
+          "shell": true,
+          "timeout": 150,
+          "cwd": "ROOT",
+          "env_sha256": "bad68691ca33382f4a6a4336618a1378bb7e03ce21482f38dff5f5d0451c0f1f",
+          "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "argv": [
+            "join",
+            "ROOT/secret root/private/acme.recovery.json"
+          ],
+          "shell": true,
+          "timeout": 120,
+          "cwd": "ROOT",
+          "env_sha256": "bad68691ca33382f4a6a4336618a1378bb7e03ce21482f38dff5f5d0451c0f1f",
+          "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "argv": [
+            "join",
+            "ROOT/secret root/acme.recovery.json"
+          ],
+          "shell": true,
+          "timeout": 120,
+          "cwd": "ROOT",
+          "env_sha256": "bad68691ca33382f4a6a4336618a1378bb7e03ce21482f38dff5f5d0451c0f1f",
+          "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "outcomes": [
+        true,
+        true,
+        false
+      ],
+      "env": {
+        "$id": "fixture-binding"
+      },
+      "implicit": [
+        2,
+        "fixture join refusal"
+      ],
+      "source_mode": 416,
+      "copy_mode": 384,
+      "private_mode": 448,
+      "source_sha256": "b91e0822ad2a77d672f94131c8b8c23bd45b1e9c8d07c056815847a7dcc46afc",
+      "copy_sha256": "b91e0822ad2a77d672f94131c8b8c23bd45b1e9c8d07c056815847a7dcc46afc",
+      "classification": "implementation",
+      "counters": {
+        "steps": [
+          2,
+          3
+        ]
+      }
+    }
+  },
+  "after": {
+    "behaviour": {
+      "calls": [
+        {
+          "argv": [
+            "install",
+            "ROOT/secret root/acme.recovery.json"
+          ],
+          "shell": true,
+          "timeout": 120,
+          "cwd": "ROOT",
+          "env_sha256": "bb547f82708fc2ec7fcd139e3957c6aa2289d6a0a48a38ae4d8d2ac8c9c45fe2",
+          "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "argv": [
+            "admin"
+          ],
+          "shell": true,
+          "timeout": 120,
+          "cwd": "ROOT",
+          "env_sha256": "bb547f82708fc2ec7fcd139e3957c6aa2289d6a0a48a38ae4d8d2ac8c9c45fe2",
+          "input_sha256": "9e704e32057b1e3a0b6a4aca58877bc91e9ca656645987de27083ac19a07a8b8"
+        },
+        {
+          "argv": [
+            "move",
+            "http://localhost:1234",
+            "ROOT/secret root/private/acme.recovery.json",
+            "--fixture"
+          ],
+          "shell": true,
+          "timeout": 150,
+          "cwd": "ROOT",
+          "env_sha256": "bad68691ca33382f4a6a4336618a1378bb7e03ce21482f38dff5f5d0451c0f1f",
+          "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "argv": [
+            "join",
+            "ROOT/secret root/private/acme.recovery.json"
+          ],
+          "shell": true,
+          "timeout": 120,
+          "cwd": "ROOT",
+          "env_sha256": "bad68691ca33382f4a6a4336618a1378bb7e03ce21482f38dff5f5d0451c0f1f",
+          "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "argv": [
+            "join",
+            "ROOT/secret root/acme.recovery.json"
+          ],
+          "shell": true,
+          "timeout": 120,
+          "cwd": "ROOT",
+          "env_sha256": "bad68691ca33382f4a6a4336618a1378bb7e03ce21482f38dff5f5d0451c0f1f",
+          "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "outcomes": [
+        true,
+        true,
+        false
+      ],
+      "env": {
+        "$id": "fixture-binding"
+      },
+      "implicit": [
+        2,
+        "fixture join refusal"
+      ],
+      "source_mode": 416,
+      "copy_mode": 384,
+      "private_mode": 448,
+      "source_sha256": "b91e0822ad2a77d672f94131c8b8c23bd45b1e9c8d07c056815847a7dcc46afc",
+      "copy_sha256": "b91e0822ad2a77d672f94131c8b8c23bd45b1e9c8d07c056815847a7dcc46afc",
+      "classification": "implementation",
+      "counters": {
+        "steps": [
+          2,
+          3
+        ]
+      }
+    },
+    "races": {
+      "fifo_replacement_not_read": true,
+      "descriptor_closed": true,
+      "concurrent_mutation_rejected": true,
+      "error_text_not_exported": true,
+      "stat_unchanged": true
+    }
+  },
+  "author_modules": 84,
+  "author_tests": 993,
+  "author_skips": 9,
+  "author_full_seconds": 351.3,
+  "SUT": 0
+}
