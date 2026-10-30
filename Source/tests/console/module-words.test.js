@@ -4,6 +4,10 @@
 // в W.kinds; слова исхода команды (выполнена, отказ, истекла, неизвестно, «поздно», «кто:») — в W.n, по-русски так, как
 // их называет норма. На странице kindWord в обоих языках даёт слово словаря, не вид. Предметные слова в словаре —
 // module-contract (vocabularyClean). Аудит покрытия P/07 (90661897f).
+// Вызовы словаря для страницы (Н1.5 words; описание модуля §4, §9 addEventNote), проход Gemini (G02): display(name) —
+// слова display манифеста подсистемы, у неизвестной — никаких; eventNote(e) — заметка события: событие платформы модуль
+// описывает сам и страница его не переговаривает, событие подсистемы — словами страницы из addEventNote(fn); эти слова —
+// везде, где модуль показывает события: «Журнал» и вкладка событий карточки единицы, вид — словом display.kinds.
 const fs=require("fs"),path=require("path"),vm=require("vm");
 const SRC=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const out={};
@@ -58,6 +62,36 @@ for(const lang of ["en","ru"]){
   await w.pc.ready;await b.ready(100);
   const dict=WORDS[lang].kinds||{};
   out["kindWord_"+lang]=Object.keys(dict).length>5&&Object.keys(dict).every(k=>w.pc.kindWord({kind:k})===dict[k]&&dict[k]!==k);
+  w.close();
+}
+// display(name), eventNote(e), addEventNote(fn)
+b.FIX["/manifest"]={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}],
+  display:{unit:"gadget",units:"gadgets",kinds:{"gadget.jammed":"Gadget jammed"}}};
+b.FIX["/things"]={configured:[{id:1,name:"one"}],rows:[]};
+b.FIX["/events"]={events:[{t:Date.now()/1000-5,kind:"gadget.jammed",subsystem:"testsub",unit:"testsub/1",code:42}],state:"live"};
+{
+  fs.writeFileSync(TMP,`<!doctype html><div id="app"></div><script>${SRC}</script><script>window.pc=PlatformConsole.mount(document.getElementById("app"),{lang:"en"});</script>`);
+  const w=b.boot();w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
+  const pc=w.pc,d=w.document,main=()=>d.querySelector("main").textContent;
+  await pc.ready;await b.ready(100);
+  const disp=pc.display("testsub")||{};
+  out.displayGivesManifestWords=disp.unit==="gadget"&&disp.units==="gadgets"&&(disp.kinds||{})["gadget.jammed"]==="Gadget jammed";
+  out.displayUnknownNoWords=!(pc.display("nosuch")||{}).unit;
+  const ev={kind:"gadget.jammed",subsystem:"testsub",unit:"testsub/1",code:42};
+  const before=pc.eventNote(ev);
+  pc.addEventNote(e=>e.kind==="gadget.jammed"?"jammed with code "+e.code:"page says "+e.kind);
+  out.eventNoteNoPageWordsBefore=!/jammed with code/.test(String(before||""));
+  out.eventNoteByPage=pc.eventNote(ev)==="jammed with code 42";
+  // событие платформы описывает модуль: «кто: by», действие — не слова страницы
+  const cmd=pc.eventNote({kind:"command",action:"reboot",outcome:"performed",by:"ann"});
+  out.platformNoteIsModules=/reboot/.test(cmd)&&/ann/.test(cmd)&&!/page says/.test(cmd);
+  d.querySelector('.pc-rail [data-s="journal"]').click();await b.ready(150);
+  out.journalKindAndPageNote=/Gadget jammed/.test(main())&&/jammed with code 42/.test(main());
+  d.querySelector('.pc-rail [data-s="units"]').click();await b.ready(50);
+  pc.select("unit:testsub/1");await b.ready(80);
+  const evTab=d.querySelector('.pc-tabs [data-tab="events"]');
+  if(evTab){evTab.click();await b.ready(150);}
+  out.unitEventsPageNote=!!evTab&&/Gadget jammed/.test(main())&&/jammed with code 42/.test(main());
   w.close();
 }
 out.errors=errs;

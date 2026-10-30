@@ -1,5 +1,6 @@
 // Вызовы модуля для страницы (P/07 Н1.5; ADR-0091 доп. (22), (24), (25), (27)): PlatformConsole.features, обещание
-// pc.ready — после mount и первого прочитанного /manifest, при 401 — после входа; select(ref, {tab}) — вкладка по id из
+// pc.ready — после mount и первого прочитанного /manifest, при 401 — после входа, при сбое /manifest (сеть, 5xx) — ждёт,
+// модуль читает /manifest снова опросом и разрешает после прочитанного; select(ref, {tab}) — вкладка по id из
 // addTab, нет такой — карточка без смены вкладки; card.closed {ref} — при смене выбора, снятии выбора, уходе со страницы,
 // и у карточки оболочки (её ref как есть); api(method, path, body, {ifMatch}) — If-Match у PUT и DELETE строки единицы
 // /<rows>/<id>, 412 — throw {status: 412, body как есть, retry: false}, иное — отказ вызова до запроса (ADR-0091 доп. (28),
@@ -11,7 +12,8 @@ const HTML=PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\/script>/,
   .replace('PlatformConsole.mount(app)','PlatformConsole.mount(app, { lang: "ru", poll_s: 1 })');
 const MANIFEST={name:"testsub",rows:"things",id:"numeric",fields:[{name:"name",type:"string"}]};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-// state: login — нужен ли вход (до него /manifest и /session отвечают как у закрытой консоли)
+// state: login — нужен ли вход (до него /manifest и /session отвечают как у закрытой консоли); manifest — ответы /manifest
+// по порядку ("net" — обрыв сети, 503), дальше — манифест
 function boot(state){
   const dom=new JSDOM(HTML,{runScripts:"dangerously",url:"http://localhost/",beforeParse(w){
     w.matchMedia=()=>({matches:false,addListener(){},removeListener(){},addEventListener(){},removeEventListener(){}});
@@ -27,7 +29,10 @@ function boot(state){
       if(p==="/api/login"&&method==="POST")return answer(200,{token:"t"});
       if(p==="/session"&&method==="POST"){state.login=false;return answer(200,{user:"a",until:0});}
       if(state.login)return answer(401,{error:"denied",detail:"who are you"});
-      if(p==="/manifest")return answer(200,MANIFEST);
+      if(p==="/manifest"){const s=(state.manifest||[]).shift();
+        if(s==="net")return Promise.reject(new TypeError("Failed to fetch"));
+        if(s===503)return answer(503,{error:"unavailable"});
+        return answer(200,MANIFEST);}
       if(p==="/things")return answer(200,{configured:[{id:1,name:"one"},{id:2,name:"two"}],rows:[]});
       if(p==="/things/1"&&(method==="PUT"||method==="DELETE")){const im=init&&init.headers&&init.headers["If-Match"];w.__ifm.push(method+" "+im);
         return im==="4"?answer(412,{error:"revision moved",revision:5}):answer(200,{id:1,revision:6});}
@@ -85,6 +90,20 @@ const settled=(p,ms)=>Promise.race([p.then(()=>true),sleep(ms).then(()=>false)])
     f.requestSubmit();
     out.readyAfterLogin=await settled(pc.ready,2000);
     out.manifestReadAfterLogin=w.__log.filter(x=>x==="GET /manifest").length>=2;
+    w.close();
+  }
+  // 2а. /manifest не прочитан (сеть, затем 503): обещание ждёт, модуль читает /manifest снова опросом (poll_s 1 с), не
+  // подряд и не окном входа, и разрешает pc.ready объектом страницы после прочитанного (Н1.5 ready; ADR-0091 доп. (24)
+  // п. 1, доп. (27) п. 1). Аудит покрытия P/07, проход Gemini (G01).
+  {
+    const w=boot({login:false,manifest:["net",503]});w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
+    const reads=()=>w.__log.filter(x=>x==="GET /manifest").length;
+    await sleep(500);const pc=w.platformConsole,d=w.document;
+    out.manifestFailOnceBeforePoll=reads()===1;
+    out.notReadyOnManifestFailure=!await settled(pc.ready,300);
+    out.noLoginOnManifestFailure=d.querySelector(".pc-login").hidden;
+    out.readyAfterManifestByPoll=await settled(pc.ready,4000)&&reads()===3;
+    out.readyGivesModuleAfterRetry=out.readyAfterManifestByPoll&&(await pc.ready)===pc;
     w.close();
   }
   // 3. ifMatch: If-Match у PUT и DELETE строки единицы, 412 без повтора, отказы до запроса

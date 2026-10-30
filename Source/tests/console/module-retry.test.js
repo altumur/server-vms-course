@@ -3,7 +3,8 @@
 // двери с памятью повторов владельца — POST единиц /<rows>, /<sub>/<rows> (P/06.1); задержка — заголовок Retry-After, без
 // него — 2, 3, 5 с; после третьего повтора — отказ с status, body и retry, «Повторить» у уведомления шлёт тем же ключом.
 // PUT, DELETE и POST дверей без памяти (/marks, /drain, …) сами не повторяются: при неизвестном исходе — сначала чтение.
-// 401 — окно входа.
+// Таблицы подсистемы (/<sub>/<table>[/<key>], и у корня — под именем подсистемы) — тоже: «PUT и таблицы без памяти повторов
+// автоматически не повторяются» (аудит покрытия P/07, проход Gemini, G04). 401 — окно входа.
 const fs=require("fs"),path=require("path");
 const SRC=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
 const TMP=path.join(require("os").tmpdir(),"pc-retry-"+process.pid+".html");
@@ -70,13 +71,17 @@ out.toastHasRetry=!!btn;
 if(btn)btn.click();await b.ready(120);
 out.retryButtonSameKey=sent.at(-1).key===kLost&&sent.at(-1).path==="/things"&&JSON.parse(sent.at(-1).body).name==="b";
 // дверь без памяти повторов: POST /marks, /drain, decommission; PUT; DELETE — без автоповтора, сначала чтение
-for(const [m,p,body,label] of [["POST","/marks",{unit:"testsub/1",note:"x"},"marks"],["POST","/drain?server=s-1",undefined,"drain"],["POST","/servers/s-1/decommission",{why:"x"},"decommission"],["PUT","/things/1",{name:"e"},"put"],["DELETE","/things/1",undefined,"delete"]]){
+// таблицы подсистемы: корня (/testsub/<table>) и смонтированной (/sub/<table>) — POST, PUT, DELETE
+for(const [m,p,body,label] of [["POST","/marks",{unit:"testsub/1",note:"x"},"marks"],["POST","/drain?server=s-1",undefined,"drain"],["POST","/servers/s-1/decommission",{why:"x"},"decommission"],["PUT","/things/1",{name:"e"},"put"],["DELETE","/things/1",undefined,"delete"],
+  ["POST","/testsub/ledger",{name:"k1"},"tablePost"],["PUT","/testsub/ledger/k1",{name:"k1"},"tablePut"],["DELETE","/testsub/ledger/k1",undefined,"tableDelete"],["POST","/sub/ledger",{name:"k2"},"subTablePost"],["DELETE","/sub/ledger/k2",undefined,"subTableDelete"]]){
   n=sent.length;const r0=reads();plan[p]=["net"];x=await call(m,p,body);
   out["noRepeat_"+label]=!!x.err&&sent.length===n+1&&/outcome unknown/.test(x.err)&&!x.retry;
   out["readFirst_"+label]=reads()>r0;
 }
 n=sent.length;plan["/marks"]=[503];x=await call("POST","/marks",{unit:"testsub/1",note:"y"});
 out.marks5xxNotRepeated=!!x.err&&sent.length===n+1&&x.status===503;
+n=sent.length;plan["/sub/ledger"]=[503];x=await call("POST","/sub/ledger",{name:"k3"});
+out.table5xxNotRepeated=!!x.err&&sent.length===n+1&&x.status===503&&!x.retry;
 out.deleteNoKey=sent.filter(s=>s.m==="DELETE").every(s=>s.key==="");
 out.putKeyed=sent.filter(s=>s.m==="PUT").every(s=>s.key!=="");
 // 401 — окно входа
