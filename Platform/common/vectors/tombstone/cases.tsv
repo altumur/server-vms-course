@@ -21,3 +21,4 @@ remove-empty-peers	remove	{"tombstone":{"written":1000,"peers":[],"acked":[]},"n
 remove-rewritten	remove	{"tombstone":{"written":1000,"peers":["srv-b","srv-c"],"acked":[]},"now":605801,"rewritten":true}	"remove"	ключ записан у удалившего снова после written — снять без подтверждений
 remove-rewritten-early	remove	{"tombstone":{"written":1000,"peers":["srv-b","srv-c"],"acked":[]},"now":1001,"rewritten":true}	"remove"	запись снова до 7 дней — снять сразу: без подтверждений и без срока (ответ «Архитектора» 2026-10-25 (1))
 remove-garbled	remove	{"tombstone":"@garbled","now":3000000,"rewritten":false}	"keep"	нечитаемое надгробие — неизвестный исход: не снимать
+remove-garbled-rewritten	remove	{"tombstone":"@garbled","now":3000000,"rewritten":true}	"keep"	ключ записан снова над нечитаемым надгробием — запись после written не доказана: не снимать (C05-WRITTEN-AFTER-GONE-02)
