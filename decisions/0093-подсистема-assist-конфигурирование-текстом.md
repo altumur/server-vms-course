@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 date: 2026-10-28
 decision-makers: владелец
 consulted: «Архитектор»; пилот `/Users/murat/w2c/assist-pilot` (REPORT.md `07d8d14` … `32da869`); ревью — Kimi, Claude
