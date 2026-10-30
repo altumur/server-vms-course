@@ -2704,7 +2704,7 @@ paths:
   /{sub}/:
     description: Глава 6.5 (06.5-console.norms.md).
     get:
-      summary: Страница смонтированной подсистемы отсутствует
+      summary: Оболочка смонтированной подсистемы с console.shell; без него страницы нет
       responses:
         '400':
           $ref: '#/components/responses/BadBody'
@@ -2713,7 +2713,7 @@ paths:
         '403':
           $ref: '#/components/responses/Denied'
         '404':
-          description: 'Известная смонтированная подсистема: MountedPage; неизвестный sub: NoRoute'
+          description: 'Известная смонтированная подсистема без console.shell: MountedPage; неизвестный sub: NoRoute'
           content:
             application/json:
               schema:
@@ -2730,8 +2730,20 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/ConsoleUnavailable'
+        '200':
+          description: 'Оболочка смонтированной подсистемы с console.shell: поле shell строки манифеста байт в байт (Н1.1 mounted)'
+          content:
+            text/html:
+              schema:
+                type: string
+          headers:
+            Content-Security-Policy:
+              schema:
+                type: string
+                minLength: 1
+              description: Обязателен; ровно минимум Н1.1 page, реализация его не ужесточает.
     head:
-      summary: 'HEAD: Смонтированная подсистема без отдельной страницы'
+      summary: 'HEAD: Оболочка смонтированной подсистемы с console.shell; без него страницы нет'
       responses:
         '400':
           description: 'Общий отказ разбора запроса консоли (глава 6.5 Н2 «Разбор запроса консоли»: query, JSON тела, читаемый
@@ -2744,7 +2756,7 @@ paths:
           description: 'Отказ доступа — сторожевая главы 6.3: «гранта нет» (need), «нет домена, не петля», чужой Origin
             на действующем запросе по куке (csrf); error denied; HEAD не содержит тела'
         '404':
-          description: 'Известная смонтированная подсистема: MountedPage; неизвестный sub: NoRoute; HEAD не содержит тела'
+          description: 'Известная смонтированная подсистема без console.shell: MountedPage; неизвестный sub: NoRoute; HEAD не содержит тела'
         '405':
           description: Метод не из объявленных для этой двери, без заголовка Allow (глава 6.5 Н2 «Общие коды»); HEAD не
             содержит тела
@@ -2771,6 +2783,14 @@ paths:
               schema:
                 type: string
                 const: '1'
+        '200':
+          description: 'Оболочка смонтированной подсистемы с console.shell (Н1.1 mounted); HEAD не содержит тела'
+          headers:
+            Content-Security-Policy:
+              schema:
+                type: string
+                minLength: 1
+              description: Обязателен; ровно минимум Н1.1 page, реализация его не ужесточает.
     parameters:
     - name: sub
       in: path
@@ -2780,7 +2800,7 @@ paths:
   /{sub}/index.html:
     description: Глава 6.5 (06.5-console.norms.md).
     get:
-      summary: Страница смонтированной подсистемы отсутствует
+      summary: Оболочка смонтированной подсистемы с console.shell; без него страницы нет
       responses:
         '400':
           $ref: '#/components/responses/BadBody'
@@ -2789,7 +2809,7 @@ paths:
         '403':
           $ref: '#/components/responses/Denied'
         '404':
-          description: 'Известная смонтированная подсистема: MountedPage; неизвестный sub: NoRoute'
+          description: 'Известная смонтированная подсистема без console.shell: MountedPage; неизвестный sub: NoRoute'
           content:
             application/json:
               schema:
@@ -2806,8 +2826,20 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '503':
           $ref: '#/components/responses/ConsoleUnavailable'
+        '200':
+          description: 'Оболочка смонтированной подсистемы с console.shell: поле shell строки манифеста байт в байт (Н1.1 mounted)'
+          content:
+            text/html:
+              schema:
+                type: string
+          headers:
+            Content-Security-Policy:
+              schema:
+                type: string
+                minLength: 1
+              description: Обязателен; ровно минимум Н1.1 page, реализация его не ужесточает.
     head:
-      summary: 'HEAD: Смонтированная подсистема без отдельной страницы'
+      summary: 'HEAD: Оболочка смонтированной подсистемы с console.shell; без него страницы нет'
       responses:
         '400':
           description: 'Общий отказ разбора запроса консоли (глава 6.5 Н2 «Разбор запроса консоли»: query, JSON тела, читаемый
@@ -2820,7 +2852,7 @@ paths:
           description: 'Отказ доступа — сторожевая главы 6.3: «гранта нет» (need), «нет домена, не петля», чужой Origin
             на действующем запросе по куке (csrf); error denied; HEAD не содержит тела'
         '404':
-          description: 'Известная смонтированная подсистема: MountedPage; неизвестный sub: NoRoute; HEAD не содержит тела'
+          description: 'Известная смонтированная подсистема без console.shell: MountedPage; неизвестный sub: NoRoute; HEAD не содержит тела'
         '405':
           description: Метод не из объявленных для этой двери, без заголовка Allow (глава 6.5 Н2 «Общие коды»); HEAD не
             содержит тела
@@ -2847,12 +2879,154 @@ paths:
               schema:
                 type: string
                 const: '1'
+        '200':
+          description: 'Оболочка смонтированной подсистемы с console.shell (Н1.1 mounted); HEAD не содержит тела'
+          headers:
+            Content-Security-Policy:
+              schema:
+                type: string
+                minLength: 1
+              description: Обязателен; ровно минимум Н1.1 page, реализация его не ужесточает.
     parameters:
     - name: sub
       in: path
       required: true
       schema:
         $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName
+  /{sub}/{file}:
+    description: 'Глава 6.5 (06.5-console.norms.md, Н2 «Статические файлы») — файл перечня console.files манифеста. Имя из перечня разрешается раньше маршрутов смонтированной подсистемы; иное — они, затем NoRoute. Строка запроса не судится.'
+    get:
+      summary: Статический файл подсистемы
+      responses:
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Имени нет в перечне и маршрута нет; неизвестный sub
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoRoute'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/ConsoleUnavailable'
+        '200':
+          description: Байты файла целиком; тип — по расширению (Н2 «Статические файлы»)
+          content:
+            text/javascript:
+              schema:
+                type: string
+            text/css:
+              schema:
+                type: string
+            application/json:
+              schema: {}
+            font/woff2:
+              schema:
+                type: string
+                contentMediaType: font/woff2
+            font/woff:
+              schema:
+                type: string
+                contentMediaType: font/woff
+            font/ttf:
+              schema:
+                type: string
+                contentMediaType: font/ttf
+            image/png:
+              schema:
+                type: string
+                contentMediaType: image/png
+            image/svg+xml:
+              schema:
+                type: string
+          headers:
+            X-Content-Type-Options:
+              schema:
+                type: string
+                const: nosniff
+              description: Обязателен у каждого типа.
+            Content-Security-Policy:
+              schema:
+                type: string
+                minLength: 1
+              description: Обязателен у svg, значение sandbox.
+    head:
+      summary: 'HEAD: Статический файл подсистемы'
+      responses:
+        '400':
+          description: 'Общий отказ разбора запроса консоли (глава 6.5 Н2 «Разбор запроса консоли»: query, JSON тела, читаемый
+            параметр повторён) или транспорта — тело chunked или короче объявленного (глава 6.5 Н4). Отказ формы своей двери
+            называет её операция; HEAD не содержит тела'
+        '401':
+          description: Личность не подтверждена — сторожевая главы 6.3 (identity), error denied; открытые пути — там же
+            (open_routes); HEAD не содержит тела
+        '403':
+          description: 'Отказ доступа — сторожевая главы 6.3: «гранта нет» (need), «нет домена, не петля», чужой Origin
+            на действующем запросе по куке (csrf); error denied; HEAD не содержит тела'
+        '404':
+          description: Имени нет в перечне и маршрута нет; неизвестный sub; HEAD не содержит тела
+        '405':
+          description: Метод не из объявленных для этой двери, без заголовка Allow (глава 6.5 Н2 «Общие коды»); HEAD не
+            содержит тела
+        '408':
+          description: Тело читается слишком медленно (глава 6.5 Н4); HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли (глава 6.5 Н4); служебных полей limit/size P/01.1 сюда не добавляет;
+            HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли (глава 6.5 Н4); новых квот у дверей нет — ни на чтение манифеста, ни на создание
+            единиц; HEAD не содержит тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: 'Общий 503 двери: полоса занята — busy с Retry-After 1; доверие не проверить — denied (сторожевая
+            главы 6.3, shut; глава 6.5 Н4); прочие причины — обязательное чтение и оболочка с атрибутом on…= у страниц — unavailable, запечатывание
+            — словом своей нормы (глава 6.5 Н4); HEAD не содержит тела'
+          headers:
+            Retry-After:
+              description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+              schema:
+                type: string
+                const: '1'
+        '200':
+          description: 'Как GET: те же заголовки по расширению; HEAD не содержит тела'
+          headers:
+            X-Content-Type-Options:
+              schema:
+                type: string
+                const: nosniff
+              description: Обязателен у каждого типа.
+            Content-Security-Policy:
+              schema:
+                type: string
+                minLength: 1
+              description: Обязателен у svg, значение sandbox.
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/SubsystemName
+    - name: file
+      in: path
+      required: true
+      description: Имя из перечня console.files; может содержать /, сравнивается с путём запроса байт в байт (P/02.1 Н1.2а).
+      schema:
+        type: string
   /{pass}:
     description: 'Глава 6.5 (P/06.5-12) — door.pass (из М10/11 Н1.8, Н2; разбор ревью стадии A 6–7, № 25): маршрут, чей
       первый сегмент в door.pass, передаётся живому воркеру подсистемы с дверью (определение — 6.5), с наименьшим именем:
@@ -7455,7 +7629,7 @@ components:
                 error:
                   const: did not answer
 x-mounting: Маршруты подсистемы /manifest, /servers, /unplaceable, /where, /metrics имеют и префикс /<sub> (у /unplaceable и
-  /where/{id} — парой servers). /session, /mounts и /platform общие; страница у смонтированной подсистемы даёт 404 MountedPage.
+  /where/{id} — парой servers). /session, /mounts и /platform общие; страница у смонтированной подсистемы без console.shell даёт 404 MountedPage, с ним — оболочку.
   Имена читаются из каталога, неизвестный sub — NoRoute.
 x-byte-limits: JSON консоли >= 1048576 байт; blob PUT 33554432; копия тела у ресурса — P/05 (67108864). Размер проверяется
   по фактически прочитанным байтам и заголовку, не maxLength строки. Chunked консоли — 400; blob без Content-Length — 400;

@@ -28,6 +28,7 @@ corpus-a91_stop_timeout_bounds_ok	Platform/02-installer/acceptance/1/cases/a91_s
 corpus-a91_unit_field_state_without_unit_state_ok	Platform/02-installer/acceptance/1/cases/a91_unit_field_state_without_unit_state_ok.subsystem.yaml	expect/corpus-a91_unit_field_state_without_unit_state_ok.json	принятый случай корпуса 2.1
 corpus-a91_unit_state_ok	Platform/02-installer/acceptance/1/cases/a91_unit_state_ok.subsystem.yaml	expect/corpus-a91_unit_state_ok.json	принятый случай корпуса 2.1
 corpus-a91_uses_ok	Platform/02-installer/acceptance/1/cases/a91_uses_ok.subsystem.yaml	expect/corpus-a91_uses_ok.json	принятый случай корпуса 2.1
+corpus-a94_console_empty_ok	Platform/02-installer/acceptance/1/cases/a94_console_empty_ok.subsystem.yaml	expect/corpus-a94_console_empty_ok.json	принятый случай корпуса 2.1
 corpus-base	Platform/02-installer/acceptance/1/cases/base.subsystem.yaml	expect/corpus-base.json	принятый случай корпуса 2.1
 corpus-blob_required_false	Platform/02-installer/acceptance/1/cases/blob_required_false.subsystem.yaml	expect/corpus-blob_required_false.json	принятый случай корпуса 2.1
 corpus-block_scalar_hides_lease	Platform/02-installer/acceptance/1/cases/block_scalar_hides_lease.subsystem.yaml	expect/corpus-block_scalar_hides_lease.json	принятый случай корпуса 2.1

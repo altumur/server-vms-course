@@ -701,3 +701,22 @@ worker_writes_declared_ok	ok
 worker_writes_declared_list_ok	ok
 worker_writes_unit_rows	refused
 worker_writes_undeclared	refused
+# ADR-0094 B7: console.shell, console.files — грамматика (положительные случаи с файлами — puts.tsv главы 2.3: установка читает файлы)
+a94_console_empty_ok	ok
+a94_files_dotdot	refused
+a94_files_dotdot_inner	refused
+a94_files_absolute	refused
+a94_files_api	refused
+a94_files_ext_html	refused
+a94_files_no_ext	refused
+a94_files_ext_upper	refused
+a94_files_empty_segment	refused
+a94_files_backslash	refused
+a94_files_query	refused
+a94_files_percent	refused
+a94_files_hidden	refused
+a94_files_repeat	refused
+a94_files_not_list	refused
+a94_files_not_string	refused
+a94_shell_not_bool	refused
+a94_console_unknown_key	refused

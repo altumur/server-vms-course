@@ -14,6 +14,8 @@ place	layer	word	value
 /$defs/common.uint53	3	x-integer	true
 /$defs/writer	3	x-max-names	0
 /additionalProperties	3	x-codec	["any"]
+/properties/files	3	x-codec	["object"]
+/properties/files	3	x-encoding	"jcs"
 /properties/rev	3	x-codec	["integer"]
 /properties/rev	3	x-whole	true
 /properties/sha256	3	x-codec	["string"]

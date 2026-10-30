@@ -1,0 +1,7 @@
+# принятые имена console.files: все расширения, вложенные сегменты, имя лишь начинается с api, пустой файл (ADR-0094 B7)
+name: filed
+unit: {rows: things, id: numeric}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/filed/worker}
+console:
+  files: [api.js, apis/app.css, app.css, app.js, bundle.js, data.json, deep/er/Name_1-2.v3.js, empty.css, fonts/body.ttf, fonts/body.woff, fonts/body.woff2, logo.png, logo.svg]

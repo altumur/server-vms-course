@@ -30,6 +30,33 @@
    "x-codec": [
     "string"
    ]
+  },
+  "files": {
+   "description": "статические файлы подсистемы (P/02.1 `console.files`): путь → размер и SHA-256 байтов; ключи — ровно перечень манифеста; нет перечня или он пуст — поля нет. Байты — строки `platform/manifest/<sub>/files/<sha256>/<n>` (P/02.3 Н1.5)",
+   "type": "object",
+   "additionalProperties": {
+    "description": "файл: `size` — байтов, `sha256` — hex; число частей выводится: size / FILE_PART вверх",
+    "type": "object",
+    "properties": {
+     "sha256": {
+      "$ref": "#/$defs/common.sha256_hex",
+      "description": "дайджест байтов файла"
+     },
+     "size": {
+      "$ref": "#/$defs/common.uint53",
+      "description": "байтов в файле"
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "sha256",
+     "size"
+    ]
+   },
+   "x-encoding": "jcs",
+   "x-codec": [
+    "object"
+   ]
   }
  },
  "propertyNames": {
@@ -39,7 +66,8 @@
      "yaml",
      "sha256",
      "rev",
-     "shell"
+     "shell",
+     "files"
     ]
    },
    {

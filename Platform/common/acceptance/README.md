@@ -120,6 +120,10 @@
   `PLATFORM_DIR` `{data}/servers/<сервер>` (выбор владельца раннеров, cammeta-acceptance e3ec5c3).
 - **Манифесты** ставятся командой `manifest-put` в порядке зависимостей: `testsub`, затем `testsub2` (она ссылается на `testsub`: `about`,
   `near`, `worker.requests`); загрузка каталога (P/02.1 Н3) видит обе.
+  Манифест `testsub2` объявляет `console.shell` и `console.files`: установка читает эти файлы рядом с файлом манифеста (P/02.3 Н3
+  «Смена манифеста»), поэтому стенд кладёт рядом с копией манифеста всё содержимое
+  [`06-console/acceptance/5/inputs/testsub2/`](../../06-console/acceptance/5/inputs/testsub2) под теми же путями — на каждом стенде, где
+  ставится `testsub2`, не только в приёмке 6.5 (ADR-0094 B7).
 - **Корень консоли** (`CONSOLE_ROOT`) называет README урока: глава 6.2 — `testsub2` (короткие пути `/tallies`),
   остальные — `testsub`, вторая подсистема смонтирована под `/testsub2`.
 - **Команда печати отчёта прохода** контроллера `<sub>/controller/pass` ([P/04](../../04-controller/spec/04-controller.norms.md)) — шаблон с `{data}` и `{sub}`;

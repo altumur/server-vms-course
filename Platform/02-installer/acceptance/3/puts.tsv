@@ -63,3 +63,12 @@ os_name_part_len_33	os-part-len-33	2 -
 os_name_platform_clash	os-platform-store	2 -
 os_name_part_share_clash	os-part-share-clash	2 -
 os_name_part_share_bound_ok	os-part-share-ok	0 1
+# ADR-0094 B7: файлы console.files рядом с манифестом и объявленная оболочка (P/02.3 Н3, Н4)
+files_ok	filed	0 1
+files_same_twice	filed filed	0 1
+files_missing	filed-missing	2 -
+files_missing_second	filed filed-missing	2 1
+files_dropped	filed filed-none	0 2
+files_added	filed-none filed	0 2
+shell_declared_missing	pagedecl	2 -
+shell_declared_ok	pagedecl-bare @shell-put pagedok pagedecl	0 2

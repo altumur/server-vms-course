@@ -43,8 +43,8 @@ scenario	step	request	expect
 06-refusals	1	GET /nosuch	404 {"error": "no such path"}
 06-refusals	2	PATCH /counters	405 {"error": "method"}
 06-refusals	3	GET /counters/c4/x	404 {"detail": "~names one unit", "error": "no such path"}
-06-refusals	4	GET /testsub2/	404 {"error": "is mounted"}
-06-refusals	5	GET /testsub2/index.html	404 {"error": "is mounted"}
+06-refusals	4	GET /probe-x/	404 {"error": "is mounted"}
+06-refusals	5	GET /probe-x/index.html	404 {"error": "is mounted"}
 06-refusals	6	GET /testsub2/tallies/t1/mask	405 {"error": "method"}
 06-refusals	7	POST /testsub2/tallies/t1/mask	405 {"error": "method"}
 06-refusals	8	DELETE /testsub2/tallies/t1/mask	405 {"error": "method"}
@@ -194,3 +194,76 @@ scenario	step	request	expect
 25-slot-and-contenders	8	@put object testsub/contenders/-/b2 inputs/ct-dash-b2.json	ok
 25-slot-and-contenders	9	@until 10 GET /servers	200 {"servers": {"srv-a": {"workers": [{"worker": "w-1", "name_conflict": true, "name_conflict_unreadable": true}]}}}
 25-slot-and-contenders	10	GET /metrics	200 ~testsub_name_conflicts 1
+# ADR-0094 B7: статические файлы и оболочка смонтированной подсистемы (стенд сц. 01–12; файлы testsub2 — inputs/testsub2/)
+26-static-files	1	GET /testsub2/app.js	200 @file Platform/06-console/acceptance/5/inputs/testsub2/app.js
+26-static-files	2	GET /testsub2/app.js	200 @header Content-Type: ~text/javascript
+26-static-files	3	GET /testsub2/app.js	200 @header X-Content-Type-Options: ~nosniff
+26-static-files	4	GET /testsub2/app.css	200 @file Platform/06-console/acceptance/5/inputs/testsub2/app.css
+26-static-files	5	GET /testsub2/app.css	200 @header Content-Type: ~text/css
+26-static-files	6	GET /testsub2/app.css	200 @header X-Content-Type-Options: ~nosniff
+26-static-files	7	GET /testsub2/data.json	200 @file Platform/06-console/acceptance/5/inputs/testsub2/data.json
+26-static-files	8	GET /testsub2/data.json	200 @header Content-Type: ~application/json
+26-static-files	9	GET /testsub2/data.json	200 @header X-Content-Type-Options: ~nosniff
+26-static-files	10	GET /testsub2/fonts/body.woff2	200 @file Platform/06-console/acceptance/5/inputs/testsub2/fonts/body.woff2
+26-static-files	11	GET /testsub2/fonts/body.woff2	200 @header Content-Type: ~font/woff2
+26-static-files	12	GET /testsub2/fonts/body.woff2	200 @header X-Content-Type-Options: ~nosniff
+26-static-files	13	GET /testsub2/fonts/body.woff	200 @file Platform/06-console/acceptance/5/inputs/testsub2/fonts/body.woff
+26-static-files	14	GET /testsub2/fonts/body.woff	200 @header Content-Type: ~font/woff
+26-static-files	15	GET /testsub2/fonts/body.woff	200 @header X-Content-Type-Options: ~nosniff
+26-static-files	16	GET /testsub2/fonts/body.ttf	200 @file Platform/06-console/acceptance/5/inputs/testsub2/fonts/body.ttf
+26-static-files	17	GET /testsub2/fonts/body.ttf	200 @header Content-Type: ~font/ttf
+26-static-files	18	GET /testsub2/fonts/body.ttf	200 @header X-Content-Type-Options: ~nosniff
+26-static-files	19	GET /testsub2/logo.png	200 @file Platform/06-console/acceptance/5/inputs/testsub2/logo.png
+26-static-files	20	GET /testsub2/logo.png	200 @header Content-Type: ~image/png
+26-static-files	21	GET /testsub2/logo.png	200 @header X-Content-Type-Options: ~nosniff
+26-static-files	22	GET /testsub2/logo.svg	200 @file Platform/06-console/acceptance/5/inputs/testsub2/logo.svg
+26-static-files	23	GET /testsub2/logo.svg	200 @header Content-Type: ~image/svg+xml
+26-static-files	24	GET /testsub2/logo.svg	200 @header X-Content-Type-Options: ~nosniff
+26-static-files	25	GET /testsub2/logo.svg	200 @header Content-Security-Policy: ~sandbox
+26-static-files	26	GET /testsub2/bundle.js	200 @file Platform/06-console/acceptance/5/inputs/testsub2/bundle.js
+26-static-files	27	GET /testsub2/api.js	200 @file Platform/06-console/acceptance/5/inputs/testsub2/api.js
+26-static-files	28	GET /testsub2/apis/app.css	200 @file Platform/06-console/acceptance/5/inputs/testsub2/apis/app.css
+26-static-files	29	GET /testsub2/deep/er/Name_1-2.v3.js	200 @file Platform/06-console/acceptance/5/inputs/testsub2/deep/er/Name_1-2.v3.js
+26-static-files	30	GET /testsub2/empty.css	200 @file Platform/06-console/acceptance/5/inputs/testsub2/empty.css
+26-static-files	31	GET /testsub2/app.js?v=0123456789ab	200 @file Platform/06-console/acceptance/5/inputs/testsub2/app.js
+26-static-files	32	GET /testsub2/app.js?v=%zz	200 @file Platform/06-console/acceptance/5/inputs/testsub2/app.js
+26-static-files	33	GET /testsub2/app.js?v=1&v=2	200 @file Platform/06-console/acceptance/5/inputs/testsub2/app.js
+26-static-files	34	HEAD /testsub2/app.js	200 @header X-Content-Type-Options: ~nosniff
+26-static-files	35	POST /testsub2/app.js	405 {"error": "method"}
+26-static-files	36	GET /testsub2/nosuch.js	404 {"error": "no such path"}
+26-static-files	37	GET /testsub2/fonts/../app.js	404 {"error": "no such path"}
+26-static-files	38	GET /testsub2/app%2Ejs	404 {"error": "no such path"}
+26-static-files	39	GET /testsub2/testsub2.shell.html	404 {"error": "no such path"}
+26-static-files	40	GET /testsub2/testsub2.subsystem.yaml	404 {"error": "no such path"}
+26-static-files	41	GET /app.js	404 {"error": "no such path"}
+26-static-files	42	GET /testsub/app.js	404 {"error": "no such path"}
+26-static-files	43	GET /testsub2/manifest	200 {"name": "testsub2"}
+26-static-files	44	@as console store GET /v1/get?key=platform/manifest/testsub2	200 {"items": {"files": "~\"app.js\":{\"sha256\":\"2463ed644b363d27904937c4913ce74fc4262bcbf0c39d0d15e123a82834de5c\",\"size\":85} ~\"bundle.js\":{\"sha256\":\"532e4792f7486760ebe4a4d5b4ed3908e823361f52ad41de7da30135cd00e40f\",\"size\":300045}"}}
+26-static-files	45	store GET /v1/get?key=platform/manifest/testsub2/files/532e4792f7486760ebe4a4d5b4ed3908e823361f52ad41de7da30135cd00e40f/0	200 {"items": {"data": "~Ly8gbGluZSAwMDAwMDAgb2YgYSBmaWxlIGhlYXZp"}}
+26-static-files	46	store GET /v1/get?key=platform/manifest/testsub2/files/532e4792f7486760ebe4a4d5b4ed3908e823361f52ad41de7da30135cd00e40f/1	200 {"items": {"data": "~IDAwNDQ0MyBvZiBhIGZpbGUgaGVhdmllciB0aGFu"}}
+26-static-files	47	store GET /v1/get?key=platform/manifest/testsub2/files/532e4792f7486760ebe4a4d5b4ed3908e823361f52ad41de7da30135cd00e40f/2	200 {"items": null}
+27-mounted-shell	1	GET /testsub2/	200 @file Platform/06-console/acceptance/5/inputs/testsub2/testsub2.shell.html
+27-mounted-shell	2	GET /testsub2/index.html	200 @file Platform/06-console/acceptance/5/inputs/testsub2/testsub2.shell.html
+27-mounted-shell	3	GET /testsub2/	200 @header Content-Type: ~text/html
+27-mounted-shell	4	GET /testsub2/	200 @header Content-Security-Policy: ~script-src 'self' 'sha256-Fv4QBmn4e5D3uUQvTmVKsZm0dTPMrjp+nycLTD2M1wc='
+27-mounted-shell	5	GET /testsub2/	200 @header Content-Security-Policy: ~object-src 'none'
+27-mounted-shell	6	GET /testsub2/	200 @header Content-Security-Policy: ~base-uri 'none'
+27-mounted-shell	7	GET /testsub2/	200 @header Content-Security-Policy: ~frame-ancestors 'self'
+27-mounted-shell	8	GET /testsub2/index.html	200 @header Content-Security-Policy: ~script-src 'self'
+27-mounted-shell	9	GET /testsub2/	200 ~<script src="app.js"></script>
+27-mounted-shell	10	GET /testsub2/app.js	200 @file Platform/06-console/acceptance/5/inputs/testsub2/app.js
+27-mounted-shell	11	POST /testsub2/index.html	405 {"error": "method"}
+27-mounted-shell	12	GET /nosuch/	404 {"error": "no such path"}
+27-mounted-shell	13	GET /probe-x/	404 {"error": "is mounted"}
+27-mounted-shell	14	GET /probe-x/index.html	404 {"error": "is mounted"}
+27-mounted-shell	15	GET /	200 @header Content-Security-Policy: ~frame-ancestors 'self'
+28-file-unreadable	1	@as admin store POST /v1/write {"id":"b701","op":"put","key":"platform/manifest/testsub2/files/2463ed644b363d27904937c4913ce74fc4262bcbf0c39d0d15e123a82834de5c/0","items":{"data":"!!"}}	200
+28-file-unreadable	2	@as admin store POST /v1/write {"id":"b702","op":"put","key":"platform/manifest/testsub2/files/b1413fee893387ff968c519e28ed7276943da332422fb68b5974704433bcecb3/0","items":{"data":"eA=="}}	200
+28-file-unreadable	3	@as admin store POST /v1/write {"id":"b703","op":"delete","key":"platform/manifest/testsub2/files/cede323d88e91ccd2840a202814ed8f8ee8449b3aa20640c7061d52b316360d9/0"}	200
+28-file-unreadable	4	@restart console	ok
+28-file-unreadable	5	GET /testsub2/app.js	503 {"error": "unavailable"}
+28-file-unreadable	6	GET /testsub2/app.css	503 {"error": "unavailable"}
+28-file-unreadable	7	GET /testsub2/data.json	503 {"error": "unavailable"}
+28-file-unreadable	8	GET /testsub2/logo.png	200 @file Platform/06-console/acceptance/5/inputs/testsub2/logo.png
+28-file-unreadable	9	GET /testsub2/	200 ~testsub2
+28-file-unreadable	10	GET /testsub2/manifest	200 {"name": "testsub2"}
