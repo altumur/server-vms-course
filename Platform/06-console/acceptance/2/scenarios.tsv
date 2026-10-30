@@ -58,3 +58,12 @@ scenario	step	request	expect
 10-table-secret	2	store GET /v1/get?key=testsub2/shelves/sh1	200 {"items": {"feed_secret": "~enc:v2:", "feed_user": "u"}}
 10-table-secret	3	console GET /shelves	200 {"shelves": [{"name": "sh1", "feed": "https://hub.example/a", "feed_user": "u", "feed_secret": "@absent"}]}
 10-table-secret	4	console GET /shelves/sh1	200 {"name": "sh1", "feed_user": "u", "feed_secret": "@absent"}
+# 11-reseal-at-start (аудит покрытия P/06, второй проход Gemini, G04; Н3 «перезапечатать при старте»): открытые секреты строки единицы, строки таблицы и seed_secret door/signer, записанные мимо консоли, после перезапуска консоли — конверт enc:v2:, revision единицы прежняя; door/keys получает kid подписанта с открытым ключом его зерна
+11-reseal-at-start	1	@as console store POST /v1/write {"id":"r1","op":"put","key":"testsub2/tallies/t11","items":{"id":"t11","revision":"1","name":"t11","of":"c1","feed":"https://hub.example/k","feed_secret":"plain11"},"cas":""}	200
+11-reseal-at-start	2	@as console store POST /v1/write {"id":"r2","op":"put","key":"testsub2/shelves/sh11","items":{"name":"sh11","zone":"z1","feed":"https://hub.example/s","feed_secret":"plain-s11","by":"operator","at":"1000"},"cas":""}	200
+11-reseal-at-start	3	@as console store POST /v1/write {"id":"r3","op":"put","key":"door/signer","items":{"kid":"k-acc","seed_secret":"1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f"},"cas":""}	200
+11-reseal-at-start	4	@restart console	ok
+11-reseal-at-start	5	@until 30 store GET /v1/get?key=testsub2/tallies/t11	200 {"items": {"feed_secret": "~enc:v2:", "revision": "1", "feed": "https://hub.example/k"}}
+11-reseal-at-start	6	@until 30 store GET /v1/get?key=testsub2/shelves/sh11	200 {"items": {"feed_secret": "~enc:v2:", "feed": "https://hub.example/s"}}
+11-reseal-at-start	7	@until 30 store GET /v1/get?key=door/signer	200 {"items": {"kid": "k-acc", "seed_secret": "~enc:v2:"}}
+11-reseal-at-start	8	@until 30 store GET /v1/get?key=door/keys	200 {"items": {"k-acc": "43046bfe4092b3e94994eada15dcc20d8aaa07b658fd3954eb8e0efb8bdca5de"}}

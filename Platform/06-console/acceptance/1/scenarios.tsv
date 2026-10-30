@@ -213,3 +213,46 @@ scenario	step	request	expect
 27-put-row-too-large	1	console POST /counters {"name": "w1", "start": 1}	201 {"revision": 1}
 27-put-row-too-large	2	console PUT /counters/w1 {"marks": ["@big(524288)"]}	413 {"error": "row too large", "fault": "@absent"}
 27-put-row-too-large	3	store GET /v1/get?key=testsub/counters/w1	200 {"items": {"revision": "1", "start": "1", "marks": "@absent"}}
+# 28-state-cursor-born (аудит покрытия P/06, второй проход Gemini, G01; ADR-0091 п. 3): курсор действует по born без revision — правка строки (revision 2) снимает result прежней revision, курсор остаётся; курсор с иным born не действует, state нет
+28-state-cursor-born	1	@start resource	ok
+28-state-cursor-born	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1}
+28-state-cursor-born	3	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"born": "$b", "revision": "1"}}
+28-state-cursor-born	4	@as testsub2worker store POST /v1/write {"id":"e4","op":"put","key":"testsub2/state/result/t1","items":{"born":"$b","revision":"1","epoch":"1","value":"{\"state\":\"open\"}"},"cas":""}	200
+28-state-cursor-born	5	@as testsub2worker store POST /v1/write {"id":"e5","op":"put","key":"testsub2/state/cursor/t1","items":{"born":"$b","revision":"1","epoch":"1","value":"{\"through\":7}"},"cas":""}	200 {"index": "$c"}
+28-state-cursor-born	6	console2 GET /tallies	200 {"configured": [{"id": "t1", "state": {"result": {"state": "open"}, "cursor": {"through": 7}}}]}
+28-state-cursor-born	7	console2 PUT /tallies/t1 {"zone": "z1"}	200 {"revision": 2}
+28-state-cursor-born	8	console2 GET /tallies	200 {"configured": [{"id": "t1", "revision": 2, "state": {"result": "@absent", "cursor": {"through": 7}}}]}
+28-state-cursor-born	9	@as testsub2worker store POST /v1/write {"id":"e9","op":"put","key":"testsub2/state/cursor/t1","items":{"born":"00000000000000000000000000000001","revision":"2","epoch":"1","value":"{\"through\":9}"},"cas":"$c"}	200
+28-state-cursor-born	10	console2 GET /tallies	200 {"configured": [{"id": "t1", "state": "@absent"}]}
+# 29-blob-clear (аудит покрытия P/06, второй проход Gemini, G02): правка полей снимает дайджест blob пустой строкой — 200, revision + 1, в строке ""; прежний дайджест после снятия — 400 (не прежний дайджест строки)
+29-blob-clear	1	@start resource	ok
+29-blob-clear	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"mask": "", "revision": 1}
+29-blob-clear	3	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "$d", "revision": 2}
+29-blob-clear	4	console2 PUT /tallies/t1 {"mask": ""}	200 {"mask": "", "revision": 3}
+29-blob-clear	5	console2 PUT /tallies/t1 {"mask": "$d"}	400
+29-blob-clear	6	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"mask": "", "revision": "3"}}
+# 30-sweep-unmark (аудит покрытия P/06, второй проход Gemini, G02): дверь байтов снимает дайджест своих байтов со списка testsub2/sweep, прочие отметки остаются; список целиком нечитаем — дверь его не переписывает и не падает
+30-sweep-unmark	1	@start resource	ok
+30-sweep-unmark	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1}
+30-sweep-unmark	3	@as console store GET /v1/get?key=testsub2/sweep	200 {"index": "$v0"}
+30-sweep-unmark	4	@as console store POST /v1/write {"id":"w4","op":"put","key":"testsub2/sweep","items":{"at":"1000","digests":"sha256-57a256c65db5af18f8a04c7a42df26c3009dd01381fbaaaec7b432fc30d4c8d0,sha256-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},"cas":"$v0"}	200
+30-sweep-unmark	5	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "sha256-57a256c65db5af18f8a04c7a42df26c3009dd01381fbaaaec7b432fc30d4c8d0", "revision": 2}
+30-sweep-unmark	6	store GET /v1/get?key=testsub2/sweep	200 {"items": {"digests": "sha256-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, "index": "$v1"}
+30-sweep-unmark	7	store POST /v1/write {"id":"w7","op":"put","key":"testsub2/sweep","items":{"at":"1000","digests":"bogus"},"cas":"$v1"}	200 {"index": "$v2"}
+30-sweep-unmark	8	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "sha256-57a256c65db5af18f8a04c7a42df26c3009dd01381fbaaaec7b432fc30d4c8d0", "revision": 3}
+30-sweep-unmark	9	store GET /v1/get?key=testsub2/sweep	200 {"items": {"digests": "bogus"}, "index": "$v2"}
+# 31-table-stamps (аудит покрытия P/06, второй проход Gemini, G03): штамп by/at/made_at в теле записи строки таблицы — 400 unknown field до записи (made_at — и вне stamp таблицы); запись без штампов — by и at консоли, made_at вне stamp нет
+31-table-stamps	1	console2 POST /shelves {"name": "sh1", "zone": "z1", "by": "spoof"}	400 {"error": "unknown field"}
+31-table-stamps	2	console2 POST /shelves {"name": "sh1", "zone": "z1", "at": 100}	400 {"error": "unknown field"}
+31-table-stamps	3	console2 POST /shelves {"name": "sh1", "zone": "z1", "made_at": 100}	400 {"error": "unknown field"}
+31-table-stamps	4	store GET /v1/get?key=testsub2/shelves/sh1	200 {"items": null}
+31-table-stamps	5	console2 POST /shelves {"name": "sh1", "zone": "z1"}	201 {"row": {"name": "sh1", "by": "operator", "at": "@time", "made_at": "@absent"}}
+# 32-hold-unreadable (аудит покрытия P/06, второй проход Gemini, G03; C06-TABLE-HELD-BY-33-01): строка удержания места нечитаема — held_by null в GET списка и строки (не 503), /where места — 503, ряд shelves_open место свободным не считает
+32-hold-unreadable	1	@start resource	ok
+32-hold-unreadable	2	console2 POST /shelves {"name": "sh1", "zone": "z1", "server": "srv-a"}	201 {"row": {"name": "sh1", "held_by": null}}
+32-hold-unreadable	3	@until 10 console2 GET /metrics	200 ~testsub2_shelves_open 1
+32-hold-unreadable	4	@as testsub2worker store POST /v1/write {"id":"h4","op":"put","key":"testsub2/holds/sh1","items":{"holder":"box:1:aaaaaa","until":"9999999999","released":"false","gen":"x","by":"t-1"},"cas":""}	200
+32-hold-unreadable	5	console2 GET /shelves	200 {"shelves": [{"name": "sh1", "held_by": null}]}
+32-hold-unreadable	6	console2 GET /shelves/sh1	200 {"name": "sh1", "held_by": null}
+32-hold-unreadable	7	console2 GET /where/shelves/sh1?unit=t1	503
+32-hold-unreadable	8	@until 10 console2 GET /metrics	200 ~testsub2_shelves_open 0

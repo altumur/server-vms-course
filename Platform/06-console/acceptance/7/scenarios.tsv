@@ -73,3 +73,15 @@ scenario	step	request	expect
 15-held-and-copies	7	@until 60 holder GET /domain	200 {"term": {"term": 1, "holder": "hold", "backup": {"term": 1, "rev": "$r"}, "backup_holders": ["m1", "m2"], "copies": {"m1": {"term": 1, "rev": "$r"}, "m2": {"term": 1, "rev": "$r"}}}}
 15-held-and-copies	8	member m1 console GET /api/backup	401 {"error": "refused", "detail": "~a member signs its ask"}
 15-held-and-copies	9	member m1 console @header X-W2C-Member: m1 GET /api/backup	401 {"error": "refused"}
+# 16-shared-holder-and-open-paths (аудит покрытия P/06, второй проход Gemini, G11; Н1.14, Н1.3 D4, Н1.12 X13): GET /domain/shared/<sub> у консоли кластера держателя — документ, который называет указатель; ?unit= пустой или повторён — 400, `..` — 404; без человека сегмент `.`/`..` (и процент-формой) под /domain/ — 404 not a domain route раньше сторожевой; /api/held с негодным Bearer — 200
+16-shared-holder-and-open-paths	1	@domain	ok
+16-shared-holder-and-open-paths	2	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 5}}}	200 {"term": 1, "rev": 1}
+16-shared-holder-and-open-paths	3	@until 30 member hold console GET /domain/shared/testsub	200 {"sub": "testsub", "term": 1, "rev": 1, "fields": {"step": {"value": 5}}}
+16-shared-holder-and-open-paths	4	member hold console GET /domain/shared/testsub?unit=	400 {"error": "refused", "detail": "a unit id is required"}
+16-shared-holder-and-open-paths	5	member hold console GET /domain/shared/testsub?unit=c1&unit=c1	400 {"error": "refused", "detail": "a unit id is required"}
+16-shared-holder-and-open-paths	6	member hold console GET /domain/shared/testsub?unit=..	404 {"error": "no such unit"}
+16-shared-holder-and-open-paths	7	@person -	ok
+16-shared-holder-and-open-paths	8	member m1 console GET /domain/./members	404 {"error": "not a domain route"}
+16-shared-holder-and-open-paths	9	member m1 console GET /domain/%2e%2e/members	404 {"error": "not a domain route"}
+16-shared-holder-and-open-paths	10	member m1 console GET /domain/members	401
+16-shared-holder-and-open-paths	11	member m1 console @header Authorization: Bearer not-a-token GET /api/held	200 {"cluster": "m1"}

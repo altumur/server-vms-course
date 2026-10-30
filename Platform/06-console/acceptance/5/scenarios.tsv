@@ -169,3 +169,28 @@ scenario	step	request	expect
 23-weight-field	6	PUT /probe-x/probes/1 {"cost": 0}	400 {"error": "cost must be at least 1", "fault": "@absent"}
 23-weight-field	7	@as console store GET /v1/get?key=probe-x/probes/1	200 {"items": {"cost": "1", "revision": "1"}}
 23-weight-field	8	PUT /probe-x/probes/1 {"cost": 2}	200 {"cost": 2, "revision": 2}
+# 24-where-door (аудит покрытия P/06, второй проход Gemini, G07; Н3 «/where/<id>»): единица на живом воркере с дверью (testsub2 door.routes) — /where выдаёт door с токеном door1.; консоль создаёт door/signer (seed запечатан); иное значение под своим kid в door/keys — door нет, строку не переписывает, тревога door.keys_conflict {kid}
+24-where-door	1	@start resource	ok
+24-where-door	2	@start controller testsub2	ok
+24-where-door	3	@start worker testsub2 t-1	ok
+24-where-door	4	POST /testsub2/shelves {"name": "s-1", "zone": "z", "server": "srv-a"}	201
+24-where-door	5	@until 30 @as testsub2worker store GET /v1/get?key=testsub2/holds/s-1	200 {"items": {"by": "t-1", "released": "false"}}
+24-where-door	6	POST /testsub2/tallies {"name": "ta", "of": "c1"}	201
+24-where-door	7	@until 30 GET /testsub2/where/ta	200 {"worker": "t-1", "door": {"token": "~door1.", "url": "@any"}}
+24-where-door	8	@as console store GET /v1/get?key=door/signer	200 {"items": {"kid": "$kid", "seed_secret": "~enc:v2:"}}
+24-where-door	9	store GET /v1/get?key=door/keys	200 {"items": "@any", "index": "$kv"}
+24-where-door	10	store POST /v1/write {"id":"k10","op":"put","key":"door/keys","items":{"$kid":"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},"cas":"$kv"}	200 {"index": "$kw"}
+24-where-door	11	GET /testsub2/where/ta	200 {"worker": "t-1", "door": "@absent"}
+24-where-door	12	store GET /v1/get?key=door/keys	200 {"index": "$kw"}
+24-where-door	13	@until 20 GET /events?kind=door.keys_conflict	200 {"events": [{"kind": "door.keys_conflict", "kid": "$kid"}]}
+# 25-slot-and-contenders (аудит покрытия P/06, второй проход Gemini, G08; Н2 «Выдачи», Н3 «/servers» «Соперники»): строка слота released "taking" — released false и slot_taking; слот не по форме — slot_garbled, slot_until null, released нет; метка соперника под w-1 с иным name — name_conflict с пометкой unreadable, метка поиска «-» не соперник — ряд name_conflicts 1
+25-slot-and-contenders	1	@start resource	ok
+25-slot-and-contenders	2	@put object testsub/heartbeats/w-1 inputs/hb-w-1-labels.json	ok
+25-slot-and-contenders	3	@as testsubworker store POST /v1/write {"id":"g3","op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"taking","gen":"1","server":"srv-a"},"cas":""}	200 {"index": "$s"}
+25-slot-and-contenders	4	@until 10 GET /servers	200 {"servers": {"srv-a": {"workers": [{"worker": "w-1", "released": false, "slot_taking": true, "slot_garbled": false}]}}}
+25-slot-and-contenders	5	store POST /v1/write {"id":"g5","op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"false","gen":"x","server":"srv-a"},"cas":"$s"}	200
+25-slot-and-contenders	6	GET /servers	200 {"servers": {"srv-a": {"workers": [{"worker": "w-1", "slot_garbled": true, "slot_until": null, "released": "@absent", "slot_taking": "@absent"}]}}}
+25-slot-and-contenders	7	@put object testsub/contenders/w-1/b1 inputs/ct-w-1-b1-other-name.json	ok
+25-slot-and-contenders	8	@put object testsub/contenders/-/b2 inputs/ct-dash-b2.json	ok
+25-slot-and-contenders	9	@until 10 GET /servers	200 {"servers": {"srv-a": {"workers": [{"worker": "w-1", "name_conflict": true, "name_conflict_unreadable": true}]}}}
+25-slot-and-contenders	10	GET /metrics	200 ~testsub_name_conflicts 1
