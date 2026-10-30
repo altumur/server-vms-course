@@ -252,3 +252,17 @@ scenario	step	request	expect
 34-foreign-place-torn-hold	9	admin POST /v1/write {"id":"e34c","op":"put","key":"testsub2/shelves/sh2","items":{"name":"sh2","zone":"z2","server":"srv-a","kind":"plain","admits":"true","enabled":"true","size":"1"},"cas":""}	200
 34-foreign-place-torn-hold	10	@until 30 store GET /v1/get?key=testsub2/holds/sh2	200 {"items": {"by": "t-1", "released": "false", "gen": "1"}}
 34-foreign-place-torn-hold	11	store GET /v1/get?key=testsub2/holds/sh1	200 {"index": "$v", "items": {"gen": "x"}}
+44-place-holder-pulse-unreadable	1	@start resource	ok
+44-place-holder-pulse-unreadable	2	@start worker testsub2 t-2	ok
+44-place-holder-pulse-unreadable	3	admin POST /v1/write {"id":"e44a","op":"put","key":"testsub2/shelves/sh1","items":{"name":"sh1","zone":"z1","server":"srv-a","kind":"plain","admits":"true","enabled":"true","size":"1"},"cas":""}	200
+44-place-holder-pulse-unreadable	4	@until 30 store GET /v1/get?key=testsub2/holds/sh1	200 {"items": {"holder": "$h2", "by": "t-2", "released": "false", "gen": "1"}}
+44-place-holder-pulse-unreadable	5	@until 30 resource GET /v1/objects/testsub2/heartbeats/t-2?scope=local	200 {"worker": "t-2", "instance": "$h2", "shelf": "sh1"}
+44-place-holder-pulse-unreadable	6	@sigkill t-2	ok
+44-place-holder-pulse-unreadable	7	@spoil object testsub2/heartbeats/t-2	ok
+44-place-holder-pulse-unreadable	8	store GET /v1/get?key=testsub2/holds/sh1	200 {"index": "$v", "items": {"holder": "$h2", "by": "t-2", "released": "false", "gen": "1"}}
+44-place-holder-pulse-unreadable	9	@start worker testsub2 t-1	ok
+44-place-holder-pulse-unreadable	10	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"released": "false", "gen": "1"}}
+44-place-holder-pulse-unreadable	11	@sleep 30	ok
+44-place-holder-pulse-unreadable	12	store GET /v1/get?key=testsub2/holds/sh1	200 {"index": "$v", "items": {"holder": "$h2", "by": "t-2", "released": "false", "gen": "1"}}
+44-place-holder-pulse-unreadable	13	@until 60 store GET /v1/get?key=testsub2/holds/sh1	200 {"items": {"holder": "@not($h2)", "by": "t-1", "released": "false", "gen": "2"}}
+44-place-holder-pulse-unreadable	14	@until 20 resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"worker": "t-1", "shelf": "sh1"}

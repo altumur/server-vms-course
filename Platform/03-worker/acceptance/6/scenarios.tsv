@@ -112,6 +112,7 @@ scenario	step	request	expect
 39-request-beyond-most-valid	6	admin POST /v1/write {"id":"e39a","op":"put","key":"testsub/requests/r-0000000000000039","items":{"unit":"c39","add":"5","digest":"c79ef6d1d9f8fe660ed29fcb07fccde21464d2c084bf9812985d4f54c7c47753","by":"operator","at":"1700000000","valid_until":"4102444800"},"cas":""}	200
 39-request-beyond-most-valid	7	@until 30 store GET /v1/get?key=objects/testsub/commands/r-0000000000000039	200 {"items": {"outcome": "refused", "ended_by": "holder", "unit": "c39", "error": "@any", "ended_at": "@time"}}
 39-request-beyond-most-valid	8	@until 20 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"command_counts": {"refused": 1}}
+39-request-beyond-most-valid	9	@until 15 resource GET /events?unit=testsub/c39&kind=command.failed&limit=1	200 {"events": [{"kind": "command.failed", "of": "testsub/c39", "outcome": "refused", "error": "@any", "reply": "@absent", "late": "@absent"}]}
 40-request-row-unreadable	1	@start resource	ok
 40-request-row-unreadable	2	@start controller	ok
 40-request-row-unreadable	3	@start worker w-1	ok
