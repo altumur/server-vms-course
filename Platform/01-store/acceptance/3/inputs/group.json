@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "defaults": {
+    "ca": {
+      "key": "ec-p256",
+      "sig": "sha256",
+      "not_before": -3600,
+      "days": 3650
+    },
+    "leaf": {
+      "key": "ec-p256",
+      "sig": "sha256",
+      "not_before": -3600,
+      "days": 825,
+      "eku": [
+        "serverAuth",
+        "clientAuth"
+      ]
+    }
+  },
+  "members": {
+    "s1": "configstore",
+    "s2": "configstore",
+    "s3": "configstore",
+    "s4": "configstore",
+    "s5": "configstore",
+    "d1": "configstore-door",
+    "d2": "configstore-door"
+  }
+}

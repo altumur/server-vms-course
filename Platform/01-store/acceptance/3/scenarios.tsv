@@ -1,8 +1,23 @@
 scenario	step	request	expect
-# Приёмка P/01.3: демон хранилища, служебные двери, копия; учение 07 (@manual). Перенесено из М10/11 (стадия B). Формат — README.
+# Приёмка P/01.3: демон хранилища, служебные двери, копия; группа хранилища — сц. 07, 17, 18 (стенд группы). Перенесено из М10/11 (стадия B). Формат — README.
 04-store-metrics	1	store GET /metrics	200 ~configstore_raft_term
 04-store-metrics	2	store GET /metrics	200 ~configstore_raft_voters_expected
-07-group-size	1	@manual четвёртый сервер: join → 409 refused; с -force при объявленных трёх → отказ (размер сверх объявленного не берёт и -force); дверь без голоса -door -voters на нём отвечает тем же файлом прав, platform/configstore-doors/<id> с seen_at	manual
+07-group-size	1	@group-setup inputs/group.json	ok
+07-group-size	2	@store-start s1 -bootstrap -group-size 3	ok
+07-group-size	3	@store-start s2 -join {api@s1} -group-size 3	ok
+07-group-size	4	@store-start s3 -join {api@s1} -group-size 3	ok
+07-group-size	5	@until 20 admin@s3 GET /v1/status	200 {"state": "Follower", "leader_id": "s1"}
+07-group-size	6	admin@s1 POST /v1/join {"id": "s4", "raft": "{raft@s4}", "api": "{api@s4}"}	409 {"kind": "refused"}
+07-group-size	7	admin@s1 POST /v1/join {"id": "s4", "raft": "{raft@s4}", "api": "{api@s4}", "force": true}	409 {"kind": "refused"}
+07-group-size	8	@store-start d1 -door -voters s1@{api@s1},s2@{api@s2},s3@{api@s3}	ok
+07-group-size	9	@until 20 admin@d1 GET /v1/status	200 {"state": "Door", "leader_id": "s1"}
+07-group-size	10	store@d1 POST /v1/write {"op":"put","key":"testsub/counters/g7","items":{"n":"1"},"cas":""}	200 {"index": "$a"}
+07-group-size	11	store@s2 GET /v1/get?key=testsub/counters/g7	200 {"items": {"n": "1"}, "index": "$a"}
+07-group-size	12	@until 40 admin@s1 GET /v1/get?key=platform/configstore-doors/d1	200 {"items": {"seen_at": "@time"}}
+07-group-size	13	@until 20 admin@s1 GET /metrics	200 ~configstore_doors 1
+07-group-size	14	@store-start d2 kit=d1 -door -voters s1@{api@s1}	@exit 2
+07-group-size	15	@tls inputs/door-row-other.json	ok {"handshake": "ok", "http": {"status": 403}}
+07-group-size	16	@tls inputs/door-row-own.json	ok {"handshake": "ok", "http": {"status": 200}}
 08-floor-replay	1	admin POST /v1/write {"op": "floor", "floor": 4294967296, "id": "f1"}	200 {"index": "$f"}
 08-floor-replay	2	@restart store	ok
 08-floor-replay	3	admin POST /v1/write {"op": "floor", "floor": 4294967296, "id": "f1"}	200 {"index": "$f", "again": true}
@@ -66,3 +81,75 @@ scenario	step	request	expect
 15-service-doors	7	admin HEAD /v1/status	405
 15-service-doors	8	admin HEAD /v1/rights	404
 16-status-no-api	1	admin GET /v1/status	200 {"state": "Leader", "leader": "", "members": {}}
+17-group-members	1	@group-setup inputs/group.json	ok
+17-group-members	2	@store-start s1 -bootstrap -group-size 3	ok
+17-group-members	3	@store-start s2 -join {api@s1} -group-size 3	ok
+17-group-members	4	@store-start s3 -join {api@s1} -group-size 3	ok
+17-group-members	5	@until 20 admin@s3 GET /v1/status	200 {"state": "Follower", "leader_id": "s1"}
+17-group-members	6	@store-start s4 -bootstrap -group-size 2	@exit 2
+17-group-members	7	@store-start s5 -bootstrap -group-size 4	@exit 2
+17-group-members	8	@sigterm store@s3	ok
+17-group-members	9	admin@s1 POST /v1/leave {"id": "s3"}	200 {}
+17-group-members	10	admin@s1 POST /v1/join {"id": "s3", "raft": "{raft@s3}", "api": "{api@s3}"}	403
+17-group-members	11	@store-op s1 admit s3	ok
+17-group-members	12	@store-op s1 admit s3	ok
+17-group-members	13	admin@s1 POST /v1/join {"id": "s3", "raft": "{raft@s3}", "api": "{api@s3}"}	200 {}
+17-group-members	14	admin@s1 POST /v1/join {"id": "s3", "raft": "{raft@s4}", "api": "{api@s3}"}	409 {"kind": "refused"}
+17-group-members	15	admin@s1 POST /v1/leave {"id": "s9"}	409 {"kind": "refused"}
+17-group-members	16	@restart store@s3	ok
+17-group-members	17	@until 20 admin@s3 GET /v1/status	200 {"state": "Follower", "leader_id": "s1"}
+17-group-members	18	store@s1 POST /v1/write {"op":"put","key":"testsub/counters/r1","items":{"n":"1"}}	200 {"index": "$r1"}
+17-group-members	19	store@s2 POST /v1/write {"op":"put","key":"testsub/counters/r1","items":{"n":"2"}}	200 {"index": "$r2"}
+17-group-members	20	store@s3 POST /v1/write {"op":"put","key":"testsub/counters/r1","items":{"n":"3"}}	200 {"index": "$r3"}
+17-group-members	21	@restart store@s2	ok
+17-group-members	22	@until 20 store@s2 GET /v1/get?key=testsub/counters/r1	200 {"items": {"n": "3"}, "index": "$r3"}
+17-group-members	23	store@s2 POST /v1/write {"op":"put","key":"testsub/counters/r2","items":{"n":"1"},"cas":""}	200 {"index": "$w"}
+17-group-members	24	@sigkill store@s1	ok
+17-group-members	25	@until 20 store@s2 GET /v1/get?key=testsub/counters/r2	200 {"items": {"n": "1"}, "index": "$w"}
+17-group-members	26	store@s3 GET /v1/get?key=testsub/counters/r2	200 {"items": {"n": "1"}, "index": "$w"}
+17-group-members	27	@restart store@s1	ok
+17-group-members	28	@until 20 store@s1 GET /v1/get?key=testsub/counters/r2	200 {"items": {"n": "1"}, "index": "$w"}
+17-group-members	29	@sigterm store@s3	ok
+17-group-members	30	@sigterm store@s2	ok
+17-group-members	31	@sigterm store@s1	ok
+17-group-members	32	@restart store@s1	ok
+17-group-members	33	@restart store@s2	ok
+17-group-members	34	@restart store@s3	ok
+17-group-members	35	@until 30 store@s3 GET /v1/get?key=testsub/counters/r1	200 {"items": {"n": "3"}, "index": "$r3"}
+17-group-members	36	store@s1 GET /v1/get?key=testsub/counters/r1	200 {"items": {"n": "3"}, "index": "$r3"}
+17-group-members	37	store@s2 POST /v1/write {"op":"put","key":"testsub/counters/r1","items":{"n":"4"},"cas":"$r3"}	200 {"index": "$r4"}
+17-group-members	38	store@s3 GET /v1/get?key=testsub/counters/r1	200 {"items": {"n": "4"}, "index": "$r4"}
+17-group-members	39	@store-start d1 -door -voters s1@{api@s1},s2@{api@s2},s3@{api@s3}	ok
+17-group-members	40	@sigkill store@s2	ok
+17-group-members	41	@sigkill store@s3	ok
+17-group-members	42	@sleep 6	ok
+17-group-members	43	store@d1 POST /v1/write {"op":"put","key":"testsub/counters/r3","items":{"n":"1"},"cas":""}	503 {"kind": "unavailable"}
+17-group-members	44	store@s1 POST /v1/write {"op":"put","key":"testsub/counters/r3","items":{"n":"1"},"cas":""}	503 {"kind": "unavailable"}
+18-group-recover	1	@group-setup inputs/group.json	ok
+18-group-recover	2	@store-start s1 -bootstrap -group-size 3	ok
+18-group-recover	3	@store-start s2 -join {api@s1} -group-size 3	ok
+18-group-recover	4	@store-start s3 -join {api@s1} -group-size 3	ok
+18-group-recover	5	@until 20 admin@s3 GET /v1/status	200 {"state": "Follower", "leader_id": "s1"}
+18-group-recover	6	@store-op s1 import --from inputs/copy-ok.jsonl -index-base 7	ok
+18-group-recover	7	@store-op s1 import --from inputs/copy-ok.jsonl -index-base 7	refused
+18-group-recover	8	store@s2 GET /v1/get?key=testsub/next_id	200 {"items": {"n": "2"}, "index": "$n1"}
+18-group-recover	9	store@s2 POST /v1/write {"op":"put","key":"testsub/next_id","items":{"n":"3"},"cas":"3"}	409 {"kind": "conflict", "index": "$n1"}
+18-group-recover	10	store@s2 POST /v1/write {"op":"put","key":"testsub/counters/1","items":{"n":"2"},"cas":"5"}	409 {"kind": "conflict"}
+18-group-recover	11	store@s2 POST /v1/write {"op":"put","key":"testsub/next_id","items":{"n":"3"},"cas":"$n1"}	200 {"index": "$n2"}
+18-group-recover	12	admin@s1 POST /v1/write {"op":"put","key":"testsub/epoch/u1","items":{"epoch":"429496729605"},"cas":""}	200 {"index": "$e"}
+18-group-recover	13	@sigkill store@s2	ok
+18-group-recover	14	@sigkill store@s3	ok
+18-group-recover	15	@sigterm store@s1	ok
+18-group-recover	16	@store-op s1 recover -peers s1@{raft@s1}/{api@s1}	refused
+18-group-recover	17	@store-op s1 recover -peers s1@{raft@s1}/{api@s1} -isolated -upper 1	refused
+18-group-recover	18	@store-op s1 recover -peers s1@{raft@s1}/{api@s1} -isolated	ok
+18-group-recover	19	@restart store@s1	ok
+18-group-recover	20	@until 20 admin@s1 GET /v1/status	200 {"state": "Leader", "leader_id": "s1"}
+18-group-recover	21	admin@s1 GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "429501024567296", "generation_at": "@time"}}
+18-group-recover	22	admin@s1 GET /v1/get?key=testsub/epoch/u1	200 {"items": {"epoch": "429496729605"}}
+18-group-recover	23	store@s1 GET /v1/get?key=testsub/next_id	200 {"items": {"n": "3"}}
+18-group-recover	24	@store-start s4 -join {api@s1} -group-size 3 -force	ok
+18-group-recover	25	@store-start s5 -join {api@s1} -group-size 3	ok
+18-group-recover	26	@until 20 admin@s5 GET /v1/status	200 {"state": "Follower", "leader_id": "s1"}
+18-group-recover	27	store@s4 POST /v1/write {"op":"put","key":"testsub/counters/1","items":{"n":"2"},"cas":""}	409 {"kind": "conflict"}
+18-group-recover	28	@until 20 store@s5 GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "429501024567296"}}

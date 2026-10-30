@@ -474,7 +474,7 @@ old	new	chapter	subject	note
 М10/06 сц. 08	P/01.2 сц. 08	1.2	08-role-header	-
 М10/06 сц. 10	P/01.2 сц. 10	1.2	10-rights-door	-
 М10/11 сц. 04	P/01.3 сц. 04	1.3	04-store-metrics	-
-М10/11 сц. 07	P/01.3 сц. 07	1.3	07-group-size	-
+М10/11 сц. 07	P/01.3 сц. 07	1.3	07-group-size	было учение @manual; с 2026-10-30 — стенд группы хранилища
 М10/11 сц. 08	P/01.3 сц. 08	1.3	08-floor-replay	-
 М10/11 сц. 10	P/01.3 сц. 10	1.3	10-foreign-dir	-
 М10/11 сц. 11	P/01.3 сц. 11	1.3	11-copy	-
@@ -590,7 +590,7 @@ old	new	chapter	subject	note
 М10/10 сц. 08	P/04 сц. 08	4	08-snapshot-garbled	шаги 1–6; шаги 7–9 (7–8 — подготовка, 9 — /metrics консоли; разбор ревью стадии B 6–7, № 22) — приёмка P/06.5
 М10/11 сц. 16	P/05 сц. 16	5	16-presence-lock	-
 М10/11 сц. 05	common acceptance/system сц. 05	common	05-power-pull	системная приёмка (учение @manual)
-М10/11 сц. 06	common acceptance/system сц. 06	common	06-recover	системная приёмка (учение @manual)
+М10/11 сц. 06	P/01.3 сц. 18	1.3	18-group-recover	стенд группы хранилища (прежде common acceptance/system сц. 06, учение @manual; 2026-10-30)
 # Векторы урока P/06 и общие (перенос стадии B, урок 6; прежние таблицы Source/tests/testdata/*.tsv сняты): old — норма или таблица прежнего урока.
 М10/3 Н4 fault (Source/tests/testdata/fault.tsv)	P/06.1 vectors/fault	6.1	закрытый словарь слова fault у отказов дверей	-
 М10/3 Н1.2 (новый, разбор ревью стадии A 6–7, № 33)	P/06.1 vectors/values-by-type	6.1	текстовые формы значений строки единицы по типам	-
