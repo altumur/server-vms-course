@@ -915,7 +915,11 @@ mirror:  platform/mirror не читается → шаг не исполняе�
 | 21 | `21-events-wait`: `/events/wait` — по сроку `{changed: false, seq}`; `since=0` при строке под `want` — сразу `changed` с `touched`; `seq` монотонен; курсор `since=seq` — без изменений (аудит покрытия P/05, F05) | Н1.6, Н2 |
 | 22 | `22-torn-tail`: хвост бакета без LF — не в `events` и `truncated`, `partial: true`, не `lines_garbled` (аудит покрытия P/05, F06) | Н1.3 «Нечитаемая строка бакета», Н3 «запрос» шаг 3; договор журнала событий `torn` |
 | 23 | `23-object-ceiling`: копия тела ровно 64 МиБ — 204 и чтение 200; +1 байт — 413, ключа нет (аудит покрытия P/05, F07) | Н1.1 «Потолки ресурса», Н2, Н4 |
-| 24–28 | края `free_ask` на первом проходе (C05-PASS-FIRST-AT-START-01): своя строка просьбы и `short` ≥ 1; строка не своей формы под своим ключом (`unit`, чужой `server`, чужой `volume`, том вне профиля) — не тронута, событие `free_ask.key_taken` (аудит покрытия P/05, F04) | Н1.4 `free_ask`, `space`, `heartbeat`; Н3 «проход ресурса» `relieve` |
+| 24 | края `free_ask` на первом проходе (C05-PASS-FIRST-AT-START-01; аудит покрытия P/05, F04): ресурс пишет свою строку просьбы `free-srv-a-events`, в пульсе `short` ≥ 1 | Н1.4 `free_ask`, `space`, `heartbeat`; Н3 «проход ресурса» `relieve` |
+| 25 | под своим ключом строка с `unit` — не тронута (та же версия), событие `free_ask.key_taken` | Н1.4 `free_ask`, `space`, `heartbeat`; Н3 «проход ресурса» `relieve` |
+| 26 | под своим ключом строка с чужим `server` — не тронута, `free_ask.key_taken` | Н1.4 `free_ask`, `space`, `heartbeat`; Н3 «проход ресурса» `relieve` |
+| 27 | под своим ключом строка с чужим `volume` — не тронута, `free_ask.key_taken` | Н1.4 `free_ask`, `space`, `heartbeat`; Н3 «проход ресурса» `relieve` |
+| 28 | под своим ключом строка с томом вне профиля (`b-c`) — не тронута, `free_ask.key_taken` | Н1.4 `free_ask`, `space`, `heartbeat`; Н3 «проход ресурса» `relieve` |
 
 TSV наблюдает только перечисленные шаги. Остальные свидетельства перечислены отдельно
 в README приёмки: запись/чтение бакетов и реальные барьеры fsync, retention/holds, зеркало и поток с обрывом, free_ask
