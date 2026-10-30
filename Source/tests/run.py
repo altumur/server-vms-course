@@ -104,8 +104,10 @@ def console_tests(here: str) -> tuple[int, int, str]:
     node = shutil.which("node")
     if node is None:
         return 0, 0, "no node on PATH"
-    if not os.path.isdir(os.path.join(d, "node_modules", "jsdom")):
-        return 0, 0, "no jsdom: run npm install in tests/console"
+    # jsdom beside the tests (`npm install` there) or on NODE_PATH, as node itself finds it (CT 103's node environment)
+    roots = [os.path.join(d, "node_modules")] + [p for p in os.environ.get("NODE_PATH", "").split(os.pathsep) if p]
+    if not any(os.path.isdir(os.path.join(r, "jsdom")) for r in roots):
+        return 0, 0, "no jsdom: run npm install in tests/console, or put it on NODE_PATH"
     passed = failed = 0
     for f in sorted(x for x in os.listdir(d) if x.endswith(".test.js")):
         try:
