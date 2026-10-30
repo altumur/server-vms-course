@@ -217,6 +217,10 @@ P/08, P/10 (умолчания адресов). Директива `@kit-start` 
 | `@kit-start domainconsole none` | `@exit 2` | `DOMAIN_CONSOLE_HOST` умолчание `0.0.0.0` без комплекта — отказ старта (Н1.6 `console`, `process`) |
 | `@kit-start domain none` | `@exit 2` | `SIGNER_HOST` нет — умолчание процесса `0.0.0.0` не явный адрес: без комплекта — отказ старта ((5) п. 4) |
 | `@kit-start domain none SIGNER_HOST=0.0.0.0` | `ok ~domain listens on ~without a certificate kit` | явный адрес вне петли без комплекта — старт с громкой строкой (Н1.6 `process`) |
+| `@kit-start console none TIMEZONE=` | `@exit 2` | [договор файла окружения](../../contracts/env-file.md) `TIMEZONE`: пустое значение не по форме (ADR-0094 B6; P/06.3-06) |
+| `@kit-start console none TIMEZONE=+03:00` | `@exit 2` | то же: значение вне грамматики |
+| `@kit-start console none TIMEZONE=Etc/GMT+5` | `ok` | значение по форме; у консоли на петле комплект не нужен, поэтому `@exit 2` строк выше дала сама переменная |
+| `@kit-start console none TIMEZONE=No/Such_Zone` | `ok` | сверяется только форма: консоль базы поясов не читает |
 
 ## Четвёртый кластер — ветви ER (п. 9; [P/08.8 Н1.8](../../../08-domain/spec/08.8-domain.norms.md) шаг 6)
 

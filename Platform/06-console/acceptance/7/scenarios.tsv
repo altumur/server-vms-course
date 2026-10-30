@@ -85,3 +85,11 @@ scenario	step	request	expect
 16-shared-holder-and-open-paths	9	member m1 console GET /domain/%2e%2e/members	404 {"error": "not a domain route"}
 16-shared-holder-and-open-paths	10	member m1 console GET /domain/members	401
 16-shared-holder-and-open-paths	11	member m1 console @header Authorization: Bearer not-a-token GET /api/held	200 {"cluster": "m1"}
+# 17-timezone-of-a-cluster (ADR-0094 B6; P/06.3 Н2, договор файла окружения `TIMEZONE`): значение не по умолчанию у консоли одного кластера, соседний кластер — прежнее; без переменной — снова UTC.
+17-timezone-of-a-cluster	1	@domain m1	ok
+17-timezone-of-a-cluster	2	member m1 console GET /session	200 {"timezone": "UTC", "server_time": "@time"}
+17-timezone-of-a-cluster	3	@env m1 TIMEZONE=Asia/Tokyo	ok
+17-timezone-of-a-cluster	4	member m1 console GET /session	200 {"timezone": "Asia/Tokyo", "server_time": "@time"}
+17-timezone-of-a-cluster	5	member hold console GET /session	200 {"timezone": "UTC", "server_time": "@time"}
+17-timezone-of-a-cluster	6	@env m1 TIMEZONE	ok
+17-timezone-of-a-cluster	7	member m1 console GET /session	200 {"timezone": "UTC", "server_time": "@time"}
