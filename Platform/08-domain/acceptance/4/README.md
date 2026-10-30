@@ -80,7 +80,7 @@ TCP-пиру) — чтением (нормы Н5).
 | 15 | `grants-cluster-no-decode` | 5 | `PUT /domain/grants/m%31` — 400 `bad name`; строка `m1` прежняя, `m%31` нет |
 | 16 | `until-by-value` | 5 | `until` по значению: без `until` и `0.0` — одна строка, повтор — 400 `bad line`; `…0011` и `…0014` округляются в одно — 400; `0.0001` пишется `0.001` |
 | 17 | `last-admin-garbled` | 7 | второй администратор с нечитаемой строкой человека админом не считается: снять `root` из `domain/grants/domain` и выключить `root` — 409 `last admin`; `DELETE` нечитаемого — 200 |
-| 18 | `garbled-grants-row` | 6 | нечитаемая строка `domain/grants/m1`: `POST /domain/users` — 503, правка `PUT` поверх неё — 503; строка снята мимо двери — 201 |
+| 18 | `garbled-grants-row` | 6 | нечитаемая строка `domain/grants/m1`: `POST /domain/users` — 503, правка `PUT` поверх неё — 503; строка исправлена мимо двери (`delete` под `domain/` запрещён и `admin`) — 201 |
 | 19 | `garbled-break-glass` | 7 | нечитаемая `domain/break-glass/m1`: `GET /domain/break-glass` — ключ `m1` есть, `{}`; `PUT` пишет строку заново — снова `set_at` |
 
 Сц. 09 — метка удаления `domain/deleting/<имя>`: метка пишется прямо в хранилище держателя, сверка прохода (глава 8.4 Н3,
@@ -100,7 +100,7 @@ TCP-пиру) — чтением (нормы Н5).
   строка человека админом не считается. `DELETE` удаляет и её (Н3 «дверь людей» шаг 7).
 - сц. 18 — нечитаемая строка `domain/grants/m1` (`doc` не JSON): `POST /domain/users` — 503 `unavailable` (Н3 «дверь людей»
   шаг 7а, C08-GRANTS-ORPHAN-01), правка `PUT /domain/grants/m1` поверх неё — 503 (исходы `domain/grants`, Г-25: правка
-  поверх нечитаемой строки не пишется); строка удалена через `admin.sock` — человек заводится.
+  поверх нечитаемой строки не пишется); строка исправлена через `admin.sock` записью по форме (`doc` с пустым `lines`; `delete` под `domain/` запрещён и `admin`, C09-AUDIT-HEAL-NOT-DELETE-01) — человек заводится.
 
 - сц. 19 — нечитаемая строка `domain/break-glass/m1` (нет `pwhash_secret`): `GET /domain/break-glass` держит ключ кластера
   без `set_at` — `{}` ровно (исходы семьи, Г-23, C08-BREAK-GLASS-UNREAD-KEY-01; свидетель `cammeta-go` ключ опускает —
