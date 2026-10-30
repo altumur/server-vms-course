@@ -207,7 +207,7 @@ function farRecsOfCam(id){
   for(const e of p.entries){
     if(!e||typeof e.member!=="string"||!e.member||typeof e.item!=="string"||!e.item||
        typeof e.recording!=="string"||!e.recording||!["primary","backup"].includes(e.role)||
-       typeof e.running!=="boolean"||p.missing.includes(e.member))continue;
+       e.running!==true||p.missing.includes(e.member))continue;     // a recording nobody writes is not a source (running: true only)
     // ours are this cluster's own rows (recsOfCam); another member's are unique by (member, recording)
     const key=e.member+"|"+e.recording;if((SELF?e.member===SELF:own.has(e.recording))||seen.has(key))continue;seen.add(key);
     out.push({id:e.recording,cluster:e.member,home:typeof e.home==="string"?e.home:"",backup:e.role!=="primary",cam:String(id)});
@@ -307,24 +307,34 @@ function winRange(){
 // after it, the first entered at `t` (`off`: its scale starts at zero).
 const PIECE=60;
 function piecesFrom(i,t){
-  const out=[];let until=-Infinity;
+  // a fenced span other than the clicked one plays where no unfenced span covers the moment (V/08.3 Н1.1): its parts
+  // outside the unfenced ones; the queue goes by time, `until` keeping each moment once
+  const cover=V.spans.filter(s=>s.media&&!s.fenced),segs=[];
   V.spans.forEach((s,j)=>{
-    if(j<i||!s.media||(s.fenced&&j!==i))return;
-    for(let a=Math.max(s.start,until);a<s.end;a+=PIECE){
-      const p={i:j,start:a,end:Math.min(s.end,a+PIECE),off:0};
+    if(j<i||!s.media)return;
+    let parts=[[s.start,s.end]];
+    if(s.fenced&&j!==i)for(const c of cover)
+      parts=parts.flatMap(([a,b])=>c.end<=a||c.start>=b?[[a,b]]:[...(c.start>a?[[a,c.start]]:[]),...(c.end<b?[[c.end,b]]:[])]);
+    for(const [a,b] of parts)if(a<b)segs.push({j,a,b});
+  });
+  segs.sort((x,y)=>x.a-y.a||x.j-y.j);
+  const out=[];let until=-Infinity;
+  for(const g of segs){
+    for(let a=Math.max(g.a,until);a<g.b;a+=PIECE){
+      const p={i:g.j,start:a,end:Math.min(g.b,a+PIECE),off:0};
       if(t&&p.end<=t)continue;
       if(t&&!out.length&&t>p.start)p.off=t-p.start;
       out.push(p);
     }
-    until=Math.max(until,s.end);
-  });
+    until=Math.max(until,g.b);
+  }
   return out;
 }
 function setCap(text){const el=$("#playing");if(el)el.textContent=text}
 // An event stands on the timeline where it HAPPENED (`occurred`), not where it was written (`t`).
 // One time per event everywhere — `occurred` when the field is there, else `t` (V/08.2 Н1.3).
 function evAt(e){return e&&"occurred" in e?e.occurred:e.t}
-function evLate(e){return e.occurred&&e.t-e.occurred>2?` записано в ${fmtT(e.t)} · `:""}
+function evLate(e){return e.occurred&&e.t-e.occurred>=2?` записано в ${fmtT(e.t)} · `:""}
 
 // ── core: COPY WITH A CHECK — the product's page (main), function by function, each checked against it ──────────
 async function whereAt(url){
@@ -392,8 +402,8 @@ async function loadTimeline(id){
   const own=await Promise.all(recs.map(rec=>ask(rec,recWhere(rec),"")));
   recs.forEach((rec,i)=>take(rec,recWhere(rec),own[i]));
   // the places: this cluster's table for its own recordings; another cluster's recording, its home there
-  for(const rec of recs)for(const name of rec.cluster?(rec.home&&!refused.has(rec.cluster)?[rec.home]:[]):places.map(v=>v.name))
-    asks.push((async()=>{const where=placeWhere(rec,T||"volumes",name);take(rec,where,await ask(rec,where,name))})());
+  for(const rec of recs)for(const name of rec.cluster?(rec.home&&T&&!refused.has(rec.cluster)?[rec.home]:[]):places.map(v=>v.name))
+    asks.push((async()=>{const where=placeWhere(rec,T,name);take(rec,where,await ask(rec,where,name))})());
   await Promise.all(asks);
   if(tl!==V.tl)return;                     // a later ask (another camera, another window) owns the timeline now
   // Лента строится по дверям; недоступное названо: его архив не утрачен, а лента без него неполная — это
@@ -484,8 +494,10 @@ async function negotiateLive(id){
     if(!(e.status===409&&e.body&&e.body.error==="exists")){setCap("живое отклонено: "+words(e));pc.close();return}
     let row=null;try{const d=await api("GET","/live/streams");row=((d&&d.configured)||[]).find(x=>String(x.id)===cam)||null}catch(x){}
     graceOf(row);
-    const has=row&&Array.isArray(row.labels)?row.labels.includes("public-address"):null;
-    if(has!==null&&has!==want.includes("public-address")){
+    // the fan-out's labels unread — the network is not checked silently: said (V/08.3 Н4); no `labels` — none, the local network
+    if(!row||(row.labels!=null&&!Array.isArray(row.labels))){setCap("метки раздачи не прочитаны");pc.close();return}
+    const has=Array.isArray(row.labels)&&row.labels.includes("public-address");
+    if(has!==want.includes("public-address")){
       if(!(PC.may("edit","unit:live/"+cam)&&await PC.dialog("Раздачу создали для другой сети — переразместить? Зрители переподключатся.",[],"Переразместить"))){
         setCap("раздачу создали для другой сети");pc.close();return}
       try{await api("PUT","/live/streams/"+encodeURIComponent(cam),{labels:want})}catch(x){setCap("живое отклонено: "+words(x));pc.close();return}
@@ -617,10 +629,11 @@ async function pinBackup(){
   pc.toast(ok?`Заявок на дозапись: ${ok}. Регистратор заберёт их из резервного архива.`:`Не получилось: ${why}`);
 }
 async function fetchEvents(id,from,to){
-  V.events=[];V.evstate="";V.truncated=false;
+  V.events=[];V.evstate="";V.truncated=false;V.withheld=0;
   try{
     const r=await fetch(`/events?from=${from}&to=${to}&unit=${encodeURIComponent("cam/"+id)}`);
-    if(r.ok){const d=await r.json();V.events=d.events||[];V.evstate=d.state||"";V.truncated=!!d.truncated}
+    if(r.ok){const d=await r.json();V.events=d.events||[];V.evstate=d.state||"";V.truncated=!!d.truncated;
+      V.withheld=Array.isArray(d.withheld)?d.withheld.length:0}   // units whose events the grants hide: named, not dropped
     else V.evstate="события недоступны: "+r.status;
   }catch(e){V.evstate="события недоступны"}
   const subs=[...new Set(V.events.map(e=>e.subsystem))].sort();
@@ -651,7 +664,8 @@ function drawEvents(){
     // the last 200 by the event's time, newest first, a tie by `id` (as `cut` of the merge contract) — the answer comes in
     // class groups (alarms, then observations), so its order is not the time's (V/08.2 Н1.3)
     const byTime=(a,b)=>evAt(b)-evAt(a)||(String(a.id)<String(b.id)?-1:String(a.id)>String(b.id)?1:0);
-    ul.innerHTML=(V.truncated?`<li class="sub">окно обрезано: показан его конец</li>`:"")+([...shown].sort(byTime).slice(0,200).map(e=>{
+    ul.innerHTML=(V.truncated?`<li class="sub">окно обрезано: показан его конец</li>`:"")+
+      (V.withheld?`<li class="sub">скрыто правами: события ${V.withheld} единиц</li>`:"")+([...shown].sort(byTime).slice(0,200).map(e=>{
       const extra=Object.entries(e).filter(([k])=>!["subsystem","unit","of","epoch","t","kind","server","bucket","fenced","epoch_is","class","occurred"].includes(k))
         .map(([k,v])=>`${k}=${typeof v==="object"?JSON.stringify(v):v}`).join(" ");
       const note=evKindRu(e)!==e.kind?evNoteRu(e):"";
@@ -716,12 +730,14 @@ async function pollLive(id){
     if(V.live.seen.has(k))return;
     V.live.seen.add(k);
     const el=document.createElement("div");el.className="ev";
-    el.innerHTML=`<span class="swatch" style="background:${subColor(e.subsystem)}"></span>${fmtHMS(e.t)} <strong title="${esc(e.kind)}">${esc(evKindRu(e))}</strong> <small>${esc(e.subsystem)}${e.note?" · "+esc(e.note):""}${e.score!=null?" · "+esc(e.score):""}${e.fenced?" · отгорожено":""}</small>`;
+    el.innerHTML=`<span class="swatch" style="background:${subColor(e.subsystem)}"></span>${fmtHMS(evAt(e))} <strong title="${esc(e.kind)}">${esc(evKindRu(e))}</strong> <small>${esc(e.subsystem)}${e.note?" · "+esc(e.note):""}${e.score!=null?" · "+esc(e.score):""}${e.fenced?" · отгорожено":""}</small>`;
     feed.insertBefore(el,feed.children[1]||null);
     while(feed.children.length>31)feed.removeChild(feed.lastChild);
     V.live.since=Math.max(V.live.since,e.t-1);
   });
-  if(d.state&&d.state!=="live"&&feed.firstChild)feed.firstChild.textContent=`события, пока вы смотрите — ${d.state}`;
+  const hid=Array.isArray(d.withheld)?d.withheld.length:0;
+  if(feed.firstChild&&((d.state&&d.state!=="live")||hid))
+    feed.firstChild.textContent=`события, пока вы смотрите${d.state&&d.state!=="live"?" — "+d.state:""}${hid?` · скрыто правами: события ${hid} единиц`:""}`;
 }
 pc.addTab("unit",{id:"vid",label:"Видео",
   busy:()=>playingNow(),
@@ -815,7 +831,7 @@ function recState(r){
   if(w.phase==="running")return{label:"Пишет",bad:false};
   if(w.phase==="pending")return{label:"Запускается",bad:false};
   if(w.phase==="standby")return{label:"Ждёт: основная запись идёт",bad:false};
-  if(w.phase==="waiting")return{label:"Ждёт том",bad:true};
+  if(w.phase==="waiting")return{label:"Ждёт",bad:true};
   if(w.phase==="failed")return{label:"Ошибка",bad:true};
   return{label:w.phase||"—",bad:false};
 }
@@ -932,7 +948,8 @@ function paintArch(){
     del:el=>delRec(r(el)),
     home:el=>recWrite(r(el),{home:el.value},el.value?`Запись переедет в «${el.value}»`:"Архив не задан — пишется туда, где есть место"),
     when:el=>recWrite(r(el),{when:el.value},el.value==="offline"?"Резервная запись пишет, только пока основная не пишется":"Резервная запись пишет всегда"),
-    days:el=>{const n=parseInt(el.value,10);if(!n||n<1){pc.toast("Срок хранения — целое число дней");return}recWrite(r(el),{retention_days:n},"Срок хранения изменён")},
+    days:el=>{const v=String(el.value).trim(),n=/^[0-9]+$/.test(v)?Number(v):NaN;   // what is typed, not a truncation
+      if(!Number.isSafeInteger(n)||n<1){pc.toast("Срок хранения — целое число дней");return}recWrite(r(el),{retention_days:n},"Срок хранения изменён")},
     lift:el=>liftKeep(el.dataset.keep),verify:el=>verifyKeep(el.dataset.keep)});
 }
 async function reloadRec(){
@@ -1200,7 +1217,7 @@ function ruleProblem(r){
     if(f.t==="num"&&!(typeof x==="number"&&isFinite(x)&&x>=f.min&&x<=f.max))return`«${k.label}»: «${f.label}» — число от ${f.min} до ${f.max}`}
     // what one field cannot say: an empty window of a scan (V/07.3 Н1.1), said before writing
     if(a.sub==="det"&&a.action==="scan"&&a.before===0&&a.after===0)return`«${k.label}»: окно пустое — нужно «секунд до» или «секунд после»`}
-  for(const t of r.when)if(t.match!=null&&(typeof t.match!=="object"||Array.isArray(t.match)))return"«Уточнения» — объект JSON: {\"port\": 1}";
+  for(const t of r.when)if(t.match!==undefined&&(t.match===null||typeof t.match!=="object"||Array.isArray(t.match)))return"«Уточнения» — объект JSON: {\"port\": 1}";
   if(r.within<0||r.within>3600)return"«в пределах» — от 0 до 3600 секунд";
   // what one field's form cannot say — the evaluator's refusal of two fields together (V/07.3 Н1.1), said before writing
   if(r.when.length>1&&!r.within)return"два события и больше — нужно «в пределах»: окно, в которое они должны попасть";
