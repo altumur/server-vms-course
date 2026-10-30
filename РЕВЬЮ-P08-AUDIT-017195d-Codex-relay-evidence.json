@@ -1,0 +1,48 @@
+{
+  "safety_pass": false,
+  "head": "017195d3919019d62e1e68c0eb1f586e7ce6e4df",
+  "pin": "a4d0d926c9e5579fe55dca978c5f670e900d51b6",
+  "SUT": 0,
+  "git_blobs": {
+    "runtime": 228,
+    "specs": 2384
+  },
+  "published_first_step": [
+    "21-view-relay-refused",
+    "1",
+    "@domain m1 relay",
+    "ok"
+  ],
+  "cases": {
+    "15-topology": {
+      "clusters": [
+        "hold",
+        "m1",
+        "m2",
+        "relay"
+      ],
+      "started": true,
+      "failure": null
+    },
+    "16-second-road": {
+      "clusters": [
+        "hold",
+        "m1",
+        "m2",
+        "relay"
+      ],
+      "started": true,
+      "failure": null
+    },
+    "21-view-relay-refused": {
+      "clusters": [
+        "hold",
+        "m1",
+        "m2"
+      ],
+      "started": false,
+      "failure": "KeyError: 'relay'"
+    }
+  },
+  "probe_sha256": "8b49286f4ed724d7da600de75b8b1feab440552907e4e4dd3af6363e29aa281a"
+}
