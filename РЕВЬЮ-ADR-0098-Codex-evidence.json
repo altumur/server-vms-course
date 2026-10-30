@@ -1,0 +1,127 @@
+{
+  "kind": "finite design counterexamples; no implementation evaluated",
+  "SUT": 0,
+  "witnesses": {
+    "mixed_snapshots": {
+      "member": [
+        {
+          "old": {
+            "cap": "view",
+            "assigned": true
+          },
+          "new": {
+            "cap": "admin",
+            "assigned": false
+          },
+          "first_copy": "grants",
+          "mixed": {
+            "cap": "admin",
+            "assigned": true
+          },
+          "old_allows_admin": false,
+          "new_allows_admin": false,
+          "mixed_allows_admin": true
+        },
+        {
+          "old": {
+            "cap": "admin",
+            "assigned": false
+          },
+          "new": {
+            "cap": "view",
+            "assigned": true
+          },
+          "first_copy": "roles",
+          "mixed": {
+            "cap": "admin",
+            "assigned": true
+          },
+          "old_allows_admin": false,
+          "new_allows_admin": false,
+          "mixed_allows_admin": true
+        }
+      ],
+      "holder": {
+        "grants_read": "old",
+        "roles_read": "new",
+        "response_as_of": 100,
+        "copies_as_of": [
+          100,
+          100
+        ],
+        "grants": "admin",
+        "assigned": true
+      }
+    },
+    "last_admin_expiry": {
+      "admitted_at_10": true,
+      "disabled_at_20": [
+        "owner"
+      ],
+      "remaining_admin_at_20": false
+    },
+    "backup": {
+      "authoritative_keys": [
+        "domain/grants/member",
+        "domain/groups/G",
+        "domain/roles/R",
+        "domain/users/u"
+      ],
+      "restored_keys": [
+        "domain/grants/member",
+        "domain/users/u"
+      ],
+      "grants_removed_as_orphans": [
+        {
+          "subject": "role:R",
+          "cap": "view",
+          "scope": "*",
+          "until": 0
+        }
+      ]
+    },
+    "expansion_size": {
+      "people": 5000,
+      "person_name_bytes": 64,
+      "role_name_bytes": 64,
+      "ceiling": 524288,
+      "group_row_weight": 335046,
+      "role_row_weight": 123,
+      "user_row_weight": 251,
+      "group_request_bytes": 335024,
+      "expanded_table_json_bytes": 775001,
+      "expanded_names_alone_bytes": 640000
+    }
+  },
+  "controls": {
+    "finite_expiry_cannot_be_only_permanent_admin": true,
+    "another_permanent_admin_allows_finite_account": true,
+    "omitted_expires_default_zero_is_permanent": true,
+    "assignment_until_boundary": true,
+    "grant_until_and_assignment_until_both_apply": true
+  },
+  "commit": "1b9035f898742d4b89b730a0cdca331cb414fbc1",
+  "source_files": 17,
+  "source_sha256": {
+    ".cursor/rules/consensus-and-leadership.mdc": "62ba16141118ea132a0db27a3410edfad3d16a77f6dd9a3ce67de095a2ca8e2e",
+    ".cursor/rules/control-and-data-plane.mdc": "748cb0a06eb5c9dc69cbe2df3410034e5692e4bdc564c62368fa873d174a9ab9",
+    ".cursor/rules/sharding-and-backpressure.mdc": "fe15751a63ebe38411e239aed2e00c6d674524d4b9df919709fbb749b744c700",
+    "Platform/01-store/spec/01.1-store.norms.md": "9eb53e1a58c80a6f9f89a98db5781ca2d817a69020a83dce1cfd8455ac83f287",
+    "Platform/08-domain/spec/08.4-domain.norms.md": "26d22a42dfa6ebe8228a249ca0144fe8ce7fe955170ea1263fee0e66e989394b",
+    "Platform/08-domain/spec/08.5-domain.norms.md": "db0fad9c6dad449fc352d5d4ac5fa83d2e1961b8193a7735a69ef2b2affc992e",
+    "Platform/08-domain/spec/08.8-domain.norms.md": "91a9c6eff543bbf9dbcfff6317825ed3b342f4c6c822e09ba4f607b23b44ffed",
+    "Platform/09-agent/spec/09.1-agent.norms.md": "7d43d47312ace15fde230a250a20d677653f3083bc036370c7ff8c55676fdd29",
+    "Platform/10-domain-console/spec/10-domain-console.norms.md": "1ae598f4e152c6c929fdc50822add4944492a5c95a990f86f409a0f6f98d168b",
+    "Platform/common/contracts/domain-envelopes.md": "6944fdbf8b2e75805b349bd8a789e39c87eb1d6abdee2fcd8f7ab2e90b592121",
+    "Platform/common/contracts/may.md": "91845a3c12bdcf53a6f0c43d039809134d59fa1e31f4db9873f118a0f9a11092",
+    "Platform/common/contracts/person-name.md": "5d79399c52168624fbeba11585f86545f0ada512a131acaad2aa29f8efa0ed95",
+    "VMS/11-backend/consolem.openapi.json": "8f0ad1b1694febfa082251cd34a5e0c33ca847fa8d9df2c60d04f892ec9684e7",
+    "VMS/11-backend/spec/11.2-backend.norms.md": "c25d61fed95b85220f60f0d1b3e24a45b48793cbce1e5e5ccd44f9ede5910936",
+    "decisions/0094-подсистема-backend-api-consolem-и-платформа-под-неё.md": "5c6ccb4c1ab4d8f62c4bbb4d461766fdfb3b62fc9459c086d0b7ae8076a6fcd7",
+    "decisions/0097-гранты-по-подсистемам-и-папкам.md": "2d7f5c173005d4b7e18b329c385eaf18567b37a1c4c110f4e9cf0c10fdf94a86",
+    "decisions/0098-роли-и-группы-людей-в-домене.md": "2e2d8285a7e7817b0794a4ad407e3470d32ad750cbf4c336a45d6068be21729e"
+  },
+  "archive_sha256": "89dadd48b4a6020c0c64326e079204bfc8ac220173bd31bb51b1becf030fe9a3",
+  "inputs_unchanged": true,
+  "model_sha256": "55b9c1075ea2f151c650f89e2b684eb4209c5ef86ecbac59e57f1d4786400c9a"
+}
