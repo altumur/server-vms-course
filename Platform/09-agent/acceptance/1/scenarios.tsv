@@ -156,3 +156,75 @@ scenario	step	request	expect
 19-backup-refused	7	@until 60 member m1 store GET /v1/get?key=domain/backup-refused	200 {"items": {"why": "older than the copy kept here", "term": "1", "rev": "@any"}}
 19-backup-refused	8	member m1 store GET /v1/get?key=domain/backup-taken	200 {"items": {"term": "99", "rev": "99", "sha256": "eec6d36c2e9636846f2d335daf072c791c8022e1e714091f05fe56e4b2380434"}}
 19-backup-refused	9	member m1 resource GET /v1/objects/domain/backup?scope=local	200 {"term": 99, "rev": 99, "holder": "hold"}
+20-join-same-and-another	1	@domain m1	ok
+20-join-same-and-another	2	member m1 store GET /v1/get?key=domain/root	200 {"items": {"domain": "acme", "pub": "$root"}, "index": "$i1"}
+20-join-same-and-another	3	@join m1	ok
+20-join-same-and-another	4	member m1 store GET /v1/get?key=domain/root	200 {"items": {"domain": "acme", "pub": "$root"}, "index": "$i1"}
+20-join-same-and-another	5	member m2 store GET /v1/get?key=domain/root	200 {"items": null}
+20-join-same-and-another	6	member m2 store POST /v1/write {"op": "put", "key": "domain/root", "items": {"domain": "other", "pub": "$root"}}	200
+20-join-same-and-another	7	member m2 store GET /v1/get?key=domain/root	200 {"items": {"domain": "other", "pub": "$root"}, "index": "$i2"}
+20-join-same-and-another	8	@join m2	refused
+20-join-same-and-another	9	member m2 store GET /v1/get?key=domain/root	200 {"items": {"domain": "other", "pub": "$root"}, "index": "$i2"}
+21-member-key-pair	1	@domain m1	ok
+21-member-key-pair	2	member hold store GET /v1/get?key=domain/member-key	200 {"items": {"pub": "$pubh"}}
+21-member-key-pair	3	@stop agent m1	ok
+21-member-key-pair	4	member m1 store GET /v1/get?key=domain/member-key	200 {"items": {"seed_secret": "$seed", "pub": "$pub"}}
+21-member-key-pair	5	member m1 store POST /v1/write {"op": "put", "key": "domain/member-key", "items": {"seed_secret": "$seed", "pub": "$pubh"}}	200
+21-member-key-pair	6	member m1 store GET /v1/get?key=domain/member-key	200 {"items": {"seed_secret": "$seed", "pub": "$pubh"}, "index": "$k1"}
+21-member-key-pair	7	@start agent m1	ok
+21-member-key-pair	8	@until 30 member m1 store GET /v1/get?key=domain/agent	200 {"items": {"sign_failures_domain": "@any", "at": "@time"}}
+21-member-key-pair	9	token m1 testsubworker POST /tokens/testsub/tally {"request_id": "r1", "ref": "c1"}	503 {"error": "unavailable"}
+21-member-key-pair	10	@until 90 holder GET /domain	200 {"members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "silent"}]}
+21-member-key-pair	11	member m1 store GET /v1/get?key=domain/member-key	200 {"items": {"seed_secret": "$seed", "pub": "$pubh"}, "index": "$k1"}
+22-shared-refused-cleanup	1	@domain m1	ok
+22-shared-refused-cleanup	2	@on hold @put object domain/shared-docs/rev-1 inputs/shared-doc-unknown-issuer.json	ok
+22-shared-refused-cleanup	3	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "{\"object\":\"domain/shared-docs/rev-1\",\"rev\":1,\"sha256\":\"369a5e76e9960c37d6d00e94d0a169ce6d14d830d55f8d9c2b3acecb4d011323\",\"term\":1}"}}	200
+22-shared-refused-cleanup	4	@until 30 member m1 store GET /v1/get?key=domain/shared-refused	200 {"items": {"doc": "~unknown_issuer"}}
+22-shared-refused-cleanup	5	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"step": 5}}}	200 {"rev": 2}
+22-shared-refused-cleanup	6	@until 30 member m1 store GET /v1/get?key=domain/shared	200 {"items": {"doc": "~\"rev\":2"}}
+22-shared-refused-cleanup	7	@until 30 member m1 store GET /v1/get?key=domain/shared-refused	200 {"items": null}
+22-shared-refused-cleanup	8	member m1 store POST /v1/write {"op": "put", "key": "domain/shared-refused", "items": {"doc": "{\"at\":1760000000,\"reason\":\"unknown_issuer\",\"rev\":2,\"term\":1}"}}	200
+22-shared-refused-cleanup	9	@until 30 member m1 store GET /v1/get?key=domain/shared-refused	200 {"items": null}
+22-shared-refused-cleanup	10	member m1 store POST /v1/write {"op": "put", "key": "domain/shared-refused", "items": {"doc": "garbled"}}	200
+22-shared-refused-cleanup	11	@until 30 member m1 store GET /v1/get?key=domain/shared-refused	200 {"items": null}
+22-shared-refused-cleanup	12	member m1 store GET /v1/get?key=domain/shared	200 {"items": {"doc": "~\"rev\":2"}}
+23-unreadable-copies-heal	1	@domain m1	ok
+23-unreadable-copies-heal	2	holder PUT /domain/topology {"base_rev": 0, "centre": "hold"}	200
+23-unreadable-copies-heal	3	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": []}	200
+23-unreadable-copies-heal	4	@until 30 member m1 store GET /v1/get?key=domain/member-topology	200 {"items": {"doc": "~\"centre\":\"hold\""}}
+23-unreadable-copies-heal	5	member m1 store GET /v1/get?key=domain/member-topology	200 {"items": {"doc": "$mt"}}
+23-unreadable-copies-heal	6	@until 30 member m1 store GET /v1/get?key=domain/placed	200 {"items": {"rev": "2"}}
+23-unreadable-copies-heal	7	member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "$ml"}}
+23-unreadable-copies-heal	8	@until 30 member m1 store GET /v1/get?key=domain/grants	200 {"items": {"doc": "$gd"}}
+23-unreadable-copies-heal	9	member m1 store POST /v1/write {"op": "put", "key": "domain/member-list", "items": {"doc": "garbled"}}	200
+23-unreadable-copies-heal	10	member m1 store POST /v1/write {"op": "put", "key": "domain/member-topology", "items": {"doc": "garbled"}}	200
+23-unreadable-copies-heal	11	member m1 store POST /v1/write {"op": "put", "key": "domain/grants", "items": {"doc": "garbled", "as_of": "garbled"}}	200
+23-unreadable-copies-heal	12	member m1 store POST /v1/write {"op": "put", "key": "domain/placed", "items": {"rev": "garbled"}}	200
+23-unreadable-copies-heal	13	@until 30 member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "$ml"}}
+23-unreadable-copies-heal	14	@until 30 member m1 store GET /v1/get?key=domain/member-topology	200 {"items": {"doc": "$mt"}}
+23-unreadable-copies-heal	15	@until 30 member m1 store GET /v1/get?key=domain/grants	200 {"items": {"doc": "$gd"}}
+23-unreadable-copies-heal	16	@until 30 member m1 store GET /v1/get?key=domain/placed	200 {"items": {"rev": "2"}}
+24-unreadable-outcomes	1	@domain m1	ok
+24-unreadable-outcomes	2	member m1 console POST /counters {"name": "c24", "start": 1}	201
+24-unreadable-outcomes	3	@until 60 holder GET /domain/testsub/counters?cluster=m1	200 [{"ref": "c24"}]
+24-unreadable-outcomes	4	member m1 store POST /v1/write {"op": "put", "key": "domain/outcomes", "items": {"e-000000000001": "garbled"}}	200
+24-unreadable-outcomes	5	holder PUT /domain/testsub/counters/c24 {"start": 8}	202 {"kept": "$id"}
+24-unreadable-outcomes	6	@sleep 15	ok
+24-unreadable-outcomes	7	member m1 console GET /counters	200 {"configured": [{"id": "c24", "start": 1}]}
+24-unreadable-outcomes	8	holder GET /domain	200 {"pending": {"m1": 1}}
+24-unreadable-outcomes	9	member m1 store GET /v1/get?key=domain/outcomes	200 {"items": {"e-000000000001": "garbled"}}
+24-unreadable-outcomes	10	member m1 store POST /v1/write {"op": "delete", "key": "domain/outcomes"}	200
+24-unreadable-outcomes	11	@until 60 member m1 console GET /counters	200 {"configured": [{"id": "c24", "start": 8}]}
+24-unreadable-outcomes	12	@until 60 holder GET /domain	200 {"pending": {"m1": 0}, "outcomes": {"m1": [{"id": "$id", "status": 200, "result": "performed"}]}}
+25-unreadable-agent-turn	1	@domain	ok
+25-unreadable-agent-turn	2	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "origin": "m2", "copies": []}	200
+25-unreadable-agent-turn	3	@stop agent m2	ok
+25-unreadable-agent-turn	4	member m2 store POST /v1/write {"op": "put", "key": "domain/agent-turn", "items": {"bad": "1"}}	200
+25-unreadable-agent-turn	5	member m2 store GET /v1/get?key=domain/agent-turn	200 {"items": {"bad": "1"}, "index": "$i1"}
+25-unreadable-agent-turn	6	@start agent m2	ok
+25-unreadable-agent-turn	7	@until 90 holder GET /domain	200 {"members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "m2", "state": "silent"}]}
+25-unreadable-agent-turn	8	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r1", "ref": "c1"}	200 {"request_id": "r1", "token": "@any", "exp": "@any"}
+25-unreadable-agent-turn	9	member m2 store GET /v1/get?key=domain/agent-turn	200 {"items": {"bad": "1"}, "index": "$i1"}
+25-unreadable-agent-turn	10	member m2 store POST /v1/write {"op": "delete", "key": "domain/agent-turn"}	200
+25-unreadable-agent-turn	11	@until 30 member m2 store GET /v1/get?key=domain/agent-turn	200 {"items": {"holder": "~:"}}
+25-unreadable-agent-turn	12	@until 60 holder GET /domain	200 {"members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "m2", "state": "ok"}]}

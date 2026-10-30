@@ -49,3 +49,16 @@ scenario	step	request	expect
 05-relay-moves	10	@on relay @sigterm agent#1	ok
 05-relay-moves	11	@until 60 resource GET /v1/objects/domain/members/m2/reported?scope=local	200 {"via": "relay", "received_at": "@not($t1)"}
 05-relay-moves	12	@until 60 holder GET /domain	200 {"complete": true, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "m2", "state": "ok"}, {"name": "relay", "state": "ok"}]}
+06-token-through-relay	1	@domain m1 relay	ok
+06-token-through-relay	2	@start agent m2 via relay	ok
+06-token-through-relay	3	@until 40 holder GET /domain/members	200 {"knocking": [{"name": "m2", "fingerprint": "$fp2", "pinned": "none"}]}
+06-token-through-relay	4	holder POST /domain/members {"name": "m2", "fingerprint": "$fp2"}	200
+06-token-through-relay	5	@join m2	ok
+06-token-through-relay	6	holder PUT /domain/topology {"base_rev": 0, "via": {"m2": "relay"}}	200 {"rev": 1}
+06-token-through-relay	7	@until 60 holder GET /domain	200 {"complete": true, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "m2", "state": "ok"}, {"name": "relay", "state": "ok"}]}
+06-token-through-relay	8	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "origin": "m2", "copies": []}	200
+06-token-through-relay	9	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r1", "ref": "c1"}	200 {"request_id": "r1", "token": "@any", "exp": "@any"}
+06-token-through-relay	10	@cut relay	ok
+06-token-through-relay	11	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r2", "ref": "c1"}	503 {"error": "unavailable"}
+06-token-through-relay	12	@mend relay	ok
+06-token-through-relay	13	@until 30 token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r3", "ref": "c1"}	200 {"request_id": "r3", "token": "@any", "exp": "@any"}
