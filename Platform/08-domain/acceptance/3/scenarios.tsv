@@ -159,3 +159,9 @@ scenario	step	request	expect
 25-topology-clear	3	holder PUT /domain/topology {"base_rev": 1, "centre": "", "via": {"m1": ""}}	200 {"rev": 2, "centre": "@absent", "star": [], "via": {}}
 25-topology-clear	4	holder PUT /domain/topology {"base_rev": 2, "centre": "relay"}	200 {"rev": 3, "centre": "relay", "via": {}}
 25-topology-clear	5	holder PUT /domain/topology {"base_rev": 3, "centre": null}	200 {"rev": 4, "centre": "@absent", "star": [], "via": {}}
+26-topology-put-unreadable	1	@domain	ok
+26-topology-put-unreadable	2	holder PUT /domain/topology {"base_rev": 0, "centre": "hold"}	200 {"rev": 1, "centre": "hold"}
+26-topology-put-unreadable	3	member hold store POST /v1/write {"op": "put", "key": "domain/topology", "items": {"doc": "not json"}}	200
+26-topology-put-unreadable	4	holder PUT /domain/topology {"base_rev": 1, "centre": ""}	503 {"error": "unavailable"}
+26-topology-put-unreadable	5	member hold store GET /v1/get?key=domain/topology	200 {"items": {"doc": "not json"}}
+26-topology-put-unreadable	6	holder GET /domain/topology	503 {"error": "unavailable"}

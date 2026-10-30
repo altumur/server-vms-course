@@ -168,3 +168,10 @@ scenario	step	request	expect
 18-garbled-grants-row	4	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}]}	503 {"error": "unavailable"}
 18-garbled-grants-row	5	member hold store POST /v1/write {"op": "delete", "key": "domain/grants/m1"}	200
 18-garbled-grants-row	6	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	201 {"user": "bob"}
+19-garbled-break-glass	1	@domain	ok
+19-garbled-break-glass	2	holder PUT /domain/break-glass/m1 {"password": "m1 break glass password"}	200 {"cluster": "m1", "set": true}
+19-garbled-break-glass	3	holder GET /domain/break-glass	200 {"clusters": {"m1": {"set_at": "@time"}}}
+19-garbled-break-glass	4	member hold store POST /v1/write {"op": "put", "key": "domain/break-glass/m1", "items": {"set_at": "1"}}	200
+19-garbled-break-glass	5	holder GET /domain/break-glass	200 {"clusters": {"m1": {}}}
+19-garbled-break-glass	6	holder PUT /domain/break-glass/m1 {"password": "m1 break glass password"}	200 {"cluster": "m1", "set": true}
+19-garbled-break-glass	7	holder GET /domain/break-glass	200 {"clusters": {"m1": {"set_at": "@time"}}}

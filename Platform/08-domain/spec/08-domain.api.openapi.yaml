@@ -373,7 +373,7 @@ paths:
         '409': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /domain/topology:
-    description: 'Глава 8.3 Н1.2 put_order, Н2. GET и HEAD отвечает консоль домена сама (урок P/10; схема — Topology).'
+    description: 'Глава 8.3 Н1.2 put_order, Н2. GET и HEAD отвечает консоль домена сама (урок P/10; схема — Topology). У PUT 503 unavailable — ещё и строка domain/topology не читается, ничего не записано (C08-TOPOLOGY-PUT-UNREADABLE-01).'
     put:
       operationId: topologyPut
       summary: Правка топологии против прочитанной ревизии
@@ -770,7 +770,7 @@ paths:
                     type: object
                     additionalProperties:
                       type: object
-                      required: [set_at]
+                      description: 'строка кластера нечитаема — ключ остаётся, set_at нет: {} (Н1.6, Г-23, C08-BREAK-GLASS-UNREAD-KEY-01)'
                       additionalProperties: false
                       properties:
                         set_at: {type: number}
