@@ -1,0 +1,64 @@
+{
+  "model_only": true,
+  "SUT": 0,
+  "source_commit": "2900d976a04e7e78d57b932f9f9ead78db23c0d0",
+  "sources": {
+    "decisions/0096-папки-как-записи.md": "f7a57ae90396761c34a0d2f78c632e11b839e17fc8b1484dc8856a71210980fb",
+    "decisions/0094-подсистема-backend-api-consolem-и-платформа-под-неё.md": "5c6ccb4c1ab4d8f62c4bbb4d461766fdfb3b62fc9459c086d0b7ae8076a6fcd7",
+    "decisions/0097-гранты-по-подсистемам-и-папкам.md": "3a8e262fd7fb2462076571e9cb8d1756031908d83521c1d7d66bef4b05c5c511",
+    "Platform/06-console/spec/06.4-console.norms.md": "2a0a2cc53d1a3c307c37636f7bb87431093cd3e08d41ac63c4d10bf03f8a1b8f",
+    "Platform/common/contracts/may.md": "91845a3c12bdcf53a6f0c43d039809134d59fa1e31f4db9873f118a0f9a11092",
+    "Platform/common/contracts/event-journal.md": "0a6b87deee8212ff84993bf575add97ca7c4c816a8c345c233eaef81016db2b2"
+  },
+  "mixed_folder_checks": {
+    "required_pair": [
+      true,
+      true
+    ],
+    "fixed_sub": {
+      "platform": [
+        true,
+        false
+      ],
+      "cam": [
+        false,
+        true
+      ]
+    }
+  },
+  "mixed_batch": {
+    "single_sub": [
+      true,
+      true
+    ],
+    "per_row_sub": [
+      true,
+      false
+    ]
+  },
+  "event_sub": {
+    "record": {
+      "t": 1,
+      "kind": "alarm",
+      "id": "example",
+      "of": "cam/7"
+    },
+    "missing_as_null": true,
+    "producer_det": false
+  },
+  "folder_feed": {
+    "visible_before": true,
+    "visible_after": false,
+    "existing_reset": false
+  },
+  "delegation_policy_question": {
+    "before_rec": false,
+    "after_rec": true
+  },
+  "old_grant_compatibility": {
+    "cam": true,
+    "rec": true,
+    "platform": true,
+    "None": true
+  }
+}
