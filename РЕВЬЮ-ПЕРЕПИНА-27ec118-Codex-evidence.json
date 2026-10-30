@@ -1,0 +1,30 @@
+{
+  "manifest_sha256": "7c3ab22d970eb443c2e7bc3592a9e48b6ef22da554e913e9c9365a2ab626fe56",
+  "manifest_files": 2856,
+  "git_source_files": 203,
+  "specs_git_blobs": 2345,
+  "jsdom_git_files": 39,
+  "unit_tests": 29,
+  "unit_green": true,
+  "jsdom_cases": 257,
+  "shell_sha256": "1ace3adb87763256e89d7e45fc3fc3453820707278f5f1e5eb0aa7b8fb9703d0",
+  "shell_bytes": 218099,
+  "shell_plans": 14,
+  "plans_ready": 230,
+  "tables_unchanged": 174,
+  "optional_shell_controls": [
+    {
+      "source_present": true,
+      "before_manifest_put": true,
+      "byte_exact": true,
+      "no_rec_shell": true
+    },
+    {
+      "source_present": false,
+      "before_manifest_put": true,
+      "byte_exact": false,
+      "no_rec_shell": true
+    }
+  ],
+  "SUT": 0
+}
