@@ -32,8 +32,8 @@ scenario	step	request	expect
 11-names-index	1	@domain	ok
 11-names-index	2	member m1 console2 POST /tallies {"name": "t7", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
 11-names-index	3	@until 90 member hold store GET /v1/get?key=domain/names/testsub2/notes	200 {"items": {"": "{\"missing\":[]}", "t7": "{\"members\":[\"m1\"]}"}}
-11-names-index	4	holder POST /domain/users {"name": "t7", "password": "t7 password 1"}	409 {"error": "name taken"}
-11-names-index	5	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "t7", "cap": "edit", "scope": "*"}]}	400 {"error": "grant too wide"}
+11-names-index	4	holder POST /domain/users {"name": "t7", "password": "t7 password 1"}	409 {"error": "name taken", "field": "/name"}
+11-names-index	5	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "t7", "cap": "edit", "scope": "*"}]}	400 {"error": "grant too wide", "field": "/lines/1"}
 11-names-index	6	@until 60 member m2 store GET /v1/get?key=domain/testsub2/notes	200 {"items": {"": "@any", "t7": "@absent"}}
 11-names-index	7	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "t7", "cap": "view", "scope": "*"}]}	200
 11-names-index	8	@until 60 member m2 store GET /v1/get?key=domain/testsub2/notes	200 {"items": {"t7": "@any"}}
@@ -55,7 +55,7 @@ scenario	step	request	expect
 13-person-names	2	holder POST /domain/users {"name": "alice", "password": "alice password 1"}	201 {"user": "alice"}
 13-person-names	3	member m1 console2 POST /tallies {"name": "t7", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
 13-person-names	4	@until 90 member hold store GET /v1/get?key=domain/names/testsub2/notes	200 {"items": {"": "{\"missing\":[]}", "t7": "{\"members\":[\"m1\"]}"}}
-13-person-names	5	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "zed", "cap": "view", "scope": "*"}]}	400 {"error": "unknown subject"}
+13-person-names	5	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "zed", "cap": "view", "scope": "*"}]}	400 {"error": "unknown subject", "field": "/lines/1/subject"}
 13-person-names	6	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "alice", "cap": "view", "scope": "*"}, {"subject": "t7", "cap": "view", "scope": "*"}]}	200
 13-person-names	7	member m1 console2 POST /tallies {"name": "alice", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
 13-person-names	8	@until 90 holder GET /domain	200 {"books": {"testsub2/notes": {"person_names": ["alice"]}}}

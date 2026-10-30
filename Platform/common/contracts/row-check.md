@@ -273,24 +273,24 @@ ref_and_must_match:                      # поле единицы или таб
 
 ## Отказы
 
-Слова отказа — `error` (текст для человека, тест его не сравнивает) и `fault` из закрытого словаря
+Слова отказа — `error` (слово закрытого перечня двери, [P/06.1](../../06-console/spec/06.1-console.norms.md) Н2 «Отказ: `error` и `field`»; тест текста `detail` не сравнивает) и `fault` из закрытого словаря
 [`../vectors/fault/`](../vectors/fault/README.md). У двери — код и тело по P/06.1 Н4 «Дверь единиц» (столбец «дверь»); у
 библиотеки — исход заказа `refused` и счёт `creates.refused` пульса (P/03.6 Н1.6, P/03.4 Н1.1).
 
 | Причина | Шаг | Слово | Дверь |
 |---|---|---|---|
-| задано платформенное поле | П1, Р1 | `error` «a client may not set …» | 400 |
-| незнакомое поле | П1, Р1 | `error` «unknown field(s) …» | 400 |
-| `blob` не дайджест; при создании не `""`; при правке не прежний дайджест и не `""` | П2, Р2 | `error` | 400 |
-| json-поле больше 4000 байт канонического текста / не по схеме | П2 | `fault: too_long` / `error` | 400 |
-| `enum` не из списка | П2 | `error` | 400 |
-| значение не по типу поля: не число у `int`/`float`, не булево, не список строк, не строка | П2 | `fault: not_number` для чисел; `error` с именем поля | 400 |
-| целое значение поля placement.weight.field < 1 | П2 | `{detail, error: "<поле> must be at least 1"}`, без fault | 400 |
-| `url` не читается, с учётными данными, с `#`, схема не из `schemes` | П2 | `fault: bad_url`; `error` без значения, с именами полей `credentials` ([договор адреса](url-credentials.md) А15) | 400 |
-| метки не по азбуке меток | П2 | `error` | 400 |
-| id не по разделу «Идентификатор» | П3 | `error` с именем и причиной (bad id) | 400 |
-| `fixed`-поле меняется (правка или возврат над надгробием); меняется поле-источник id | П3, Р2 | `error` «<поле> is fixed …» | 400 |
-| `required`-поле не задано или `""` | П4 | `error` — `a <sub> unit needs a <поле>` | 400 |
+| задано платформенное поле | П1, Р1 | `error: platform_field` (у строки таблицы `unknown field`), `detail` «a client may not set …» | 400 |
+| незнакомое поле | П1, Р1 | `error: unknown field`, `detail` «unknown field(s) …» | 400 |
+| `blob` не дайджест; при создании не `""`; при правке не прежний дайджест и не `""` | П2, Р2 | `error: blob` | 400 |
+| json-поле больше 4000 байт канонического текста / не по схеме | П2 | `error: too_long`, `fault: too_long` / `error: type` | 400 |
+| `enum` не из списка | П2 | `error: enum` | 400 |
+| значение не по типу поля: не число у `int`/`float`, не булево, не список строк, не строка | П2 | для чисел `error: not_number`, `fault: not_number`; иначе `error: type`; `detail` с именем поля | 400 |
+| целое значение поля placement.weight.field < 1 | П2 | `{detail, error: type}`, без fault; `detail` «<поле> must be at least 1» | 400 |
+| `url` не читается, с учётными данными, с `#`, схема не из `schemes` | П2 | `error: bad_url`, `fault: bad_url`; `detail` без значения, с именами полей `credentials` ([договор адреса](url-credentials.md) А15) | 400 |
+| метки не по азбуке меток | П2 | `error: labels` | 400 |
+| id не по разделу «Идентификатор» | П3 | `error: bad_id`, `detail` с именем и причиной | 400 |
+| `fixed`-поле меняется (правка или возврат над надгробием); меняется поле-источник id | П3, Р2 | `error: fixed`, `detail` «<поле> is fixed …» | 400 |
+| `required`-поле не задано или `""` | П4 | `error: required`, `detail` `a <sub> unit needs a <поле>` | 400 |
 | `unique`/`ref`/`must_match` нарушены; ссылочная строка не читается | П5, Р3 | `error: conflict`, `fault: unique \| must_match \| garbled` | 409 |
 
 ## Векторы

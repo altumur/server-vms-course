@@ -368,7 +368,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextRefusal'
+                $ref: '#/components/schemas/CasRefused'
       requestBody:
         required: true
         content:
@@ -483,7 +483,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/ReferenceConflict'
-                - $ref: '#/components/schemas/TextRefusal'
+                - $ref: '#/components/schemas/CasRefused'
       requestBody:
         required: true
         content:
@@ -628,7 +628,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextRefusal'
+                $ref: '#/components/schemas/CasRefused'
     head:
       summary: 'HEAD: Прочитать одну строку таблицы'
       responses:
@@ -3412,7 +3412,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConsoleRefusal'
+                $ref: '#/components/schemas/ConsoleRefused'
       parameters:
       - name: server
         in: query
@@ -3520,7 +3520,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: '#/components/schemas/ConsoleRefusal'
+                - $ref: '#/components/schemas/ConsoleRefused'
                 - $ref: '#/components/schemas/NoRoute'
         '405':
           $ref: '#/components/responses/Method'
@@ -3564,7 +3564,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: '#/components/schemas/ConsoleRefusal'
+                - $ref: '#/components/schemas/ConsoleRefused'
                 - $ref: '#/components/schemas/NoRoute'
         '405':
           $ref: '#/components/responses/Method'
@@ -3603,7 +3603,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: '#/components/schemas/ConsoleRefusal'
+                - $ref: '#/components/schemas/ConsoleRefused'
                 - $ref: '#/components/schemas/NoRoute'
         '405':
           $ref: '#/components/responses/Method'
@@ -3699,7 +3699,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: '#/components/schemas/ConsoleRefusal'
+                - $ref: '#/components/schemas/ConsoleRefused'
                 - $ref: '#/components/schemas/NoRoute'
         '405':
           $ref: '#/components/responses/Method'
@@ -3744,7 +3744,7 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: '#/components/schemas/ConsoleRefusal'
+                - $ref: '#/components/schemas/ConsoleRefused'
                 - $ref: '#/components/schemas/NoRoute'
         '405':
           $ref: '#/components/responses/Method'
@@ -3909,7 +3909,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextRefusal'
+                $ref: '#/components/schemas/CasRefused'
       parameters:
       - name: version
         in: query
@@ -5067,8 +5067,35 @@ components:
           type: string
         error:
           type: string
-      description: Общая форма отказа консоли (глава 6.5 Н4) `{detail, error}`; это не диагностика загрузчика и не Fault
-        хранилища.
+          enum:
+          - denied
+          - busy
+          - unavailable
+          - too many attempts
+          - no such path
+          - method
+          - refused
+          - badkey
+          - labels
+          - no such unit
+          - no such blob field
+          - no such row
+          - a version is a whole number from 1
+          - this console is open
+          - open
+          - bad body
+        field:
+          $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/RefusalField'
+      description: Общая форма отказа консоли (глава 6.5 Н4) `{detail, error, field?}`; это не диагностика загрузчика и не Fault
+        хранилища. Слова error дверей глав 6.1, 6.5, 6.6 — закрытый перечень data/refusal-words.tsv; слова /session — договор
+        сторожевой и передачи.
+    ConsoleRefused:
+      unevaluatedProperties: false
+      allOf:
+      - $ref: '#/components/schemas/ConsoleRefusal'
+      - properties:
+          error:
+            const: refused
     Denied:
       $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied'
     NoRoute:
@@ -6519,6 +6546,40 @@ components:
           type: string
         error:
           type: string
+          enum:
+          - Idempotency-Key required
+          - badkey
+          - not_json
+          - platform_field
+          - unknown field
+          - not_number
+          - type
+          - too_long
+          - enum
+          - bad_url
+          - blob
+          - labels
+          - required
+          - bad_id
+          - fixed
+          - If-Match is a unit revision
+          - a sealed value is not taken from outside — give the password itself
+          - sealing key required
+          - the body does not fill it in
+          - refused
+          - denied
+          - no such unit
+          - no such path
+          - exists
+          - conflict
+          - in flight
+          - row too large
+          - key reused
+          - store unavailable
+          - busy
+          - unavailable
+        field:
+          $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/RefusalField'
         fault:
           type: string
           enum:
@@ -6535,6 +6596,13 @@ components:
       - not:
           required:
           - fault
+    CasRefused:
+      allOf:
+      - $ref: '#/components/schemas/TextRefusal'
+      - properties:
+          error:
+            const: refused
+      description: Отказ без слова своей причины (глава 6.1 Н2 «Отказ error и field») — конфликт CAS строки, дверь схемы; причина в detail.
     FormRefusal:
       unevaluatedProperties: false
       allOf:
@@ -6559,6 +6627,7 @@ components:
       - $ref: '#/components/schemas/Refusal'
       - required:
         - fault
+        - field
         properties:
           error:
             const: conflict
@@ -7283,8 +7352,8 @@ components:
   responses:
     BadBody:
       description: 'Общий отказ разбора запроса консоли (глава 6.5 Н2 «Разбор запроса консоли»: query, JSON тела, читаемый
-        параметр повторён) или транспорта — тело chunked или короче объявленного (глава 6.5 Н4). Отказ формы своей двери
-        называет её операция.'
+        параметр повторён) — error refused — или транспорта — тело chunked или короче объявленного, error denied (глава 6.5 Н4).
+        Отказ формы своей двери называет её операция: слова перечня data/refusal-words.tsv.'
       content:
         application/json:
           schema:
@@ -7374,11 +7443,14 @@ components:
             type: object
             required:
             - error
+            - field
             - revision
             additionalProperties: false
             properties:
               error:
                 const: revision moved
+              field:
+                const: /revision
               revision:
                 type: integer
                 minimum: 1

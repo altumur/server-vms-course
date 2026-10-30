@@ -5,12 +5,12 @@ scenario	step	request	expect
 01-login-people-grants	3	signer POST /api/login {"user": "root", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
 01-login-people-grants	4	signer POST /api/login {"user": "nobody", "password": "not the password"}	401 {"error": "refused", "detail": "wrong user or password"}
 01-login-people-grants	5	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
-01-login-people-grants	6	holder POST /domain/users {"name": "bob", "password": "short"}	400 {"error": "bad password"}
-01-login-people-grants	7	holder POST /domain/users {"name": "a|b", "password": "ann password 1"}	400 {"error": "bad name"}
+01-login-people-grants	6	holder POST /domain/users {"name": "bob", "password": "short"}	400 {"error": "bad password", "field": "/password"}
+01-login-people-grants	7	holder POST /domain/users {"name": "a|b", "password": "ann password 1"}	400 {"error": "bad name", "field": "/name"}
 01-login-people-grants	8	holder POST /domain/users {"name": "a|b", "password": "short"}	400 {"error": "bad name"}
-01-login-people-grants	9	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	409 {"error": "exists"}
+01-login-people-grants	9	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	409 {"error": "exists", "field": "/name"}
 01-login-people-grants	10	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
-01-login-people-grants	11	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "owner", "scope": "*"}]}	400 {"error": "bad line"}
+01-login-people-grants	11	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "owner", "scope": "*"}]}	400 {"error": "bad line", "field": "/lines/0"}
 01-login-people-grants	12	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "root", "cap": "view", "scope": "*", "until": 4102444800.1234565}]}	200 {"cluster": "m2", "lines": [{"subject": "root", "cap": "admin", "until": 0}, {"subject": "root", "cap": "view", "until": 4102444800.123}]}
 01-login-people-grants	13	@person ann ann password 1	ok
 01-login-people-grants	14	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub/c1-m1"}]}
@@ -83,7 +83,7 @@ scenario	step	request	expect
 10-deleting-any-mark	4	@until 20 member hold store GET /v1/get?key=domain/deleting/aa	200 {"items": null}
 10-deleting-any-mark	5	@until 20 member hold store GET /v1/get?key=domain/deleting/a%7Cb	200 {"items": null}
 10-deleting-any-mark	6	member hold store POST /v1/write {"op": "put", "key": "domain/deleting/zz", "items": {}}	200
-10-deleting-any-mark	7	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "zz", "cap": "view", "scope": "*"}]}	409 {"error": "being deleted"}
+10-deleting-any-mark	7	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "zz", "cap": "view", "scope": "*"}]}	409 {"error": "being deleted", "field": "/lines/1/subject"}
 10-deleting-any-mark	8	holder POST /domain/users {"name": "zz", "password": "zz password 1"}	409 {"error": "exists"}
 10-deleting-any-mark	9	@until 20 member hold store GET /v1/get?key=domain/deleting/zz	200 {"items": null}
 10-deleting-any-mark	10	holder POST /domain/users {"name": "zz", "password": "zz password 1"}	201
@@ -152,7 +152,7 @@ scenario	step	request	expect
 15-grants-cluster-no-decode	5	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root", "cap": "admin", "scope": "*"}], "m%31": "@absent"}}
 16-until-by-value	1	@domain	ok
 16-until-by-value	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
-16-until-by-value	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "view", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*", "until": 0.0}]}	400 {"error": "bad line"}
+16-until-by-value	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "view", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*", "until": 0.0}]}	400 {"error": "bad line", "field": "/lines/1"}
 16-until-by-value	4	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "view", "scope": "*", "until": 4102444800.0011}, {"subject": "ann", "cap": "view", "scope": "*", "until": 4102444800.0014}]}	400 {"error": "bad line"}
 16-until-by-value	5	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*", "until": 0.0001}]}	200 {"cluster": "m1", "lines": [{"subject": "ann", "cap": "view", "scope": "*", "until": 0.001}, {"subject": "root", "cap": "admin", "scope": "*", "until": 0}]}
 17-last-admin-garbled	1	@domain	ok

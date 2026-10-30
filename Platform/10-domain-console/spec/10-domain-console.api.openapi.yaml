@@ -2384,11 +2384,23 @@ components:
       required:
       - error
       additionalProperties: false
-      description: 'Отказ консоли домена (Н4): error — слово, detail — пояснение.'
+      description: 'Отказ своих дверей консоли домена (Н4): error — слово закрытого перечня data/refusal-words.tsv (ADR-0094 B5), detail — пояснение.
+        Поля field нет: свои двери читают, тела у них нет.'
       properties:
         error:
           type: string
-          minLength: 1
+          enum:
+          - no domain here
+          - not a domain route
+          - not in the directory
+          - no such member
+          - no such path
+          - refused
+          - unavailable
+          - denied
+          - did not answer
+          - answer too large
+          - answer broke off
         detail:
           type: string
     RoleRefusal:

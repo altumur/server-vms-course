@@ -440,6 +440,8 @@ HTTP-контракт: [10-domain-console.api.openapi.yaml](10-domain-console.ap
 | — | 400 / 404 | запрос: `cluster` дважды или пуст; нет манифеста; `rows` не его ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н2); назначения: нет записи, нет манифеста или без `domain.ref` (Н1.2г) |
 | `refused` | 400 | окно `/domain/alarms` (Н1.8 `door`) |
 
+Слова своих дверей — закрытый перечень [`refusal-words.tsv`](../data/refusal-words.tsv) (ADR-0094 B5); правила — [P/08.0](../../08-domain/spec/08.0-domain.norms.md) Н4. Строка «—» таблицы: 400 — `refused`, 404 — `no such path`, назначения — `refused`. `field` у своих дверей нет: они читают, тела у них нет; у дверей перехода 3 — ответ процесса `domain` как пришёл.
+
 Слова `peer` — [договор `peer`](../../common/contracts/peer.md) «Слова отказа».
 
 ---

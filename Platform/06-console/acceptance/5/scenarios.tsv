@@ -162,11 +162,11 @@ scenario	step	request	expect
 22-numeric-id	8	PUT /probe-x/probes/1 {"n": 1}	404 {"error": "no such unit"}
 # 23-weight-field (аудит покрытия P/06, G09 п. 2; P/06.1 Н3 «создать» шаг 4, Н4): поле веса cost у probe-x — default 1 материализован; 0 и -1 у POST и PUT — 400 «cost must be at least 1» без fault; строкой и булевым — not_number; отказанный PUT строку не меняет
 23-weight-field	1	POST /probe-x/probes {}	201 {"id": "1", "cost": 1, "revision": 1}
-23-weight-field	2	POST /probe-x/probes {"cost": 0}	400 {"error": "cost must be at least 1", "fault": "@absent"}
-23-weight-field	3	POST /probe-x/probes {"cost": -1}	400 {"error": "cost must be at least 1", "fault": "@absent"}
+23-weight-field	2	POST /probe-x/probes {"cost": 0}	400 {"error": "type", "field": "/cost", "detail": "~cost must be at least 1", "fault": "@absent"}
+23-weight-field	3	POST /probe-x/probes {"cost": -1}	400 {"error": "type", "field": "/cost", "detail": "~cost must be at least 1", "fault": "@absent"}
 23-weight-field	4	POST /probe-x/probes {"cost": "1"}	400 {"fault": "not_number"}
 23-weight-field	5	POST /probe-x/probes {"cost": true}	400 {"fault": "not_number"}
-23-weight-field	6	PUT /probe-x/probes/1 {"cost": 0}	400 {"error": "cost must be at least 1", "fault": "@absent"}
+23-weight-field	6	PUT /probe-x/probes/1 {"cost": 0}	400 {"error": "type", "field": "/cost", "detail": "~cost must be at least 1", "fault": "@absent"}
 23-weight-field	7	@as console store GET /v1/get?key=probe-x/probes/1	200 {"items": {"cost": "1", "revision": "1"}}
 23-weight-field	8	PUT /probe-x/probes/1 {"cost": 2}	200 {"cost": 2, "revision": 2}
 # 24-where-door (аудит покрытия P/06, второй проход Gemini, G07; Н3 «/where/<id>»): единица на живом воркере с дверью (testsub2 door.routes) — /where выдаёт door с токеном door1.; консоль создаёт door/signer (seed запечатан); иное значение под своим kid в door/keys — door нет, строку не переписывает, тревога door.keys_conflict {kid}

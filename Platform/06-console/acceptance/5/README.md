@@ -54,7 +54,7 @@
   400 `badkey`, `%32` — единица 2 (P/06.1 Н2).
 - **Поле веса (сц. 23; аудит покрытия P/06).** У `probe-x` поле `cost: {type: int, default: 1}` и `placement.weight:
   {field: cost, default: 1}` (форма — «Дополнительные проверки прогона 25» README приёмки главы 6.1): POST без `cost` — 1;
-  `cost` 0 и −1 у POST и PUT — 400 `error` «cost must be at least 1» без `fault`; `"1"` и `true` — 400 `not_number` обычной
+  `cost` 0 и −1 у POST и PUT — 400 `error: type`, `field: /cost`, `detail` «cost must be at least 1» без `fault`; `"1"` и `true` — 400 `not_number` обычной
   проверкой типа (раньше веса, договор проверки строки П2); отказанный PUT — строка и `revision` прежние. Номера, сгоревшие
   у отказанных POST, TSV не сравнивает.
 - **Статические файлы и оболочка `testsub2` (сц. 26–28; ADR-0094 B7).** Байты лежат в `inputs/testsub2/`: файлы перечня

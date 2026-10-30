@@ -1,0 +1,84 @@
+# Закрытый перечень слов error дверей консоли кластера: главы 6.1, 6.2, 6.5, 6.6 (ADR-0094 B5). Правила — глава 6.1 Н2 «Отказ: error и field».
+# door — двери: units /{rows}, /{rows}/{id}; blobs /{rows}/{id}/{blob_field}; tables /{table}, /{table}/{name}; policy /policy;
+# drain /drain; labels /servers/{server}/labels; decommission /servers/{server}/decommission; schema /schema; where /where/…;
+# pages страницы и /platform/*; * — каждая дверь этих глав. Слова глав 6.3, 6.4, 6.7 — их Н4.
+# field — что несёт поле field: «-» — поля нет; /<поле> — поле тела, которое называет отказ; иное — точное значение.
+door	code	error	field	norm
+units	400	Idempotency-Key required	-	6.1 Н4
+units	400	badkey	-	6.1 Н3, Н4
+units	400	not_json	-	6.1 Н4
+units	400	platform_field	/<поле>	договор проверки строки П1, Р1
+units	400	unknown field	/<поле>	договор проверки строки П1, Р1
+units	400	not_number	/<поле>	договор проверки строки П2
+units	400	type	/<поле>	договор проверки строки П2; 6.2 Н4
+units	400	too_long	/<поле>	договор проверки строки П2
+units	400	enum	/<поле>	договор проверки строки П2
+units	400	bad_url	/<поле>	договор проверки строки П2; 6.2 Н4
+units	400	blob	/<поле>	договор проверки строки П2, Р2
+units	400	labels	/<поле>	договор проверки строки П2
+units	400	required	/<поле>	договор проверки строки П4
+units	400	bad_id	/<поле>	договор проверки строки П3; 6.1 Н3 «создать» шаг 5
+units	400	fixed	/<поле>	договор проверки строки П3, Р2
+units	400	If-Match is a unit revision	-	6.1 Н3 «править», «удалить»
+units	400	a sealed value is not taken from outside — give the password itself	/<поле>	6.2 Н4
+units	400	sealing key required	-	6.2 Н4
+units	400	refused	/<поле>	6.2 Н4
+units	404	no such unit	-	6.1 Н4
+units	404	no such path	-	6.5 Н2
+units	409	exists	/<поле>	6.1 Н4
+units	409	conflict	/<поле>	договор проверки строки П5, Р3
+units	409	in flight	-	6.1 Н4
+units	412	revision moved	/revision	6.1 Н3 «править», «удалить»
+units	413	row too large	-	6.1 Н4
+units	422	key reused	-	6.1 Н4
+units	503	store unavailable	-	6.1 Н4
+blobs	400	denied	-	6.1 Н4; 6.5 Н4
+blobs	404	no such unit	-	6.1 Н2
+blobs	404	no such blob field	-	6.1 Н2
+blobs	409	refused	-	6.1 Н4
+tables	400	the body does not fill it in	/<поле>	6.1 Н3 «таблица — записать строку» шаг 1
+tables	400	not_json	-	6.1 Н4
+tables	400	unknown field	/<поле>	договор проверки строки П1; 6.1 Н4
+tables	400	not_number	/<поле>	договор проверки строки П2
+tables	400	type	/<поле>	договор проверки строки П2; 6.2 Н4
+tables	400	too_long	/<поле>	договор проверки строки П2
+tables	400	enum	/<поле>	договор проверки строки П2
+tables	400	bad_url	/<поле>	договор проверки строки П2; 6.2 Н4
+tables	400	blob	/<поле>	договор проверки строки П2
+tables	400	labels	/<поле>	договор проверки строки П2
+tables	400	required	/<поле>	договор проверки строки П4
+tables	400	bad_id	/<поле>	6.1 Н4
+tables	400	a sealed value is not taken from outside — give the password itself	/<поле>	6.2 Н4
+tables	400	refused	/<поле>	6.2 Н4
+tables	403	denied	-	6.1 Н1.6
+tables	404	no such row	-	6.1 Н4
+tables	404	no such path	-	6.5 Н2
+tables	405	method	-	6.1 Н2
+tables	409	conflict	/<поле>	договор проверки строки П5; 6.1 Н4
+tables	409	refused	-	6.1 Н4
+policy	400	refused	/servers	6.6 Н4
+drain	400	refused	-	6.6 Н4
+drain	409	refused	-	6.6 Н4
+labels	400	labels	/labels	6.6 Н4
+labels	400	refused	-	6.6 Н4
+labels	404	refused	-	6.6 Н4
+decommission	400	refused	-	6.6 Н4
+decommission	404	refused	-	6.6 Н4
+decommission	409	server answers	-	6.6 Н3
+schema	400	a version is a whole number from 1	-	6.6 Н3 «поднять_схему» шаг 1
+schema	409	refused	-	6.6 Н4
+where	400	badkey	-	6.5 Н4
+pages	404	no such version	-	6.5 Н4
+pages	404	is mounted	-	6.5 Н2
+*	400	refused	-	договор сторожевой и передачи «Разбор запроса и порядок проверок»
+*	400	denied	-	6.5 Н4
+*	401	denied	-	договор сторожевой и передачи
+*	403	denied	-	договор сторожевой и передачи
+*	404	no such path	-	6.5 Н4
+*	405	method	-	6.5 Н4
+*	408	denied	-	6.5 Н4
+*	413	denied	-	6.5 Н4
+*	429	too many attempts	-	6.5 Н4
+*	503	busy	-	6.5 Н4
+*	503	denied	-	6.5 Н4
+*	503	unavailable	-	6.5 Н4

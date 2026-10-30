@@ -20,6 +20,11 @@ components:
           type: string
         error:
           const: denied
+    RefusalField:
+      type: string
+      pattern: "^(?:(?:/(?:[^~/]|~[01])*)+)$"
+      description: 'Путь поля отказа — JSON Pointer RFC 6901 от корня JSON-тела запроса, только у 400, 409, 412 (P/06.1 Н2 «Отказ:
+        error и field», ADR-0094 B5). Отказ всего тела, заголовка, query и сегмента пути идёт без field.'
     Unavailable:
       type: object
       required: [error]

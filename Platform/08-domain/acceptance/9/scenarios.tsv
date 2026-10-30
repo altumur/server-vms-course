@@ -3,10 +3,10 @@ scenario	step	request	expect
 01-shared-edit-and-read	1	@domain	ok
 01-shared-edit-and-read	2	holder GET /domain/shared	200 {"doc": null, "delivery": {"term": 0, "rev": 0, "holding": [], "behind": {}, "refused": {}, "sentence": "~rev 0 on 0 of 3 members"}, "declared": {"testsub": [{"name": "marks", "type": "list"}, {"name": "rounds", "type": "json", "schema": "@any"}, {"name": "step", "type": "int"}]}}
 01-shared-edit-and-read	3	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 5, "marks": ["site"]}}}	200 {"term": 1, "rev": 1, "by": "root"}
-01-shared-edit-and-read	4	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 6}}}	409 {"error": "refused", "detail": "~are at rev 1"}
+01-shared-edit-and-read	4	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 6}}}	409 {"error": "refused", "field": "/base_rev", "detail": "~are at rev 1"}
 01-shared-edit-and-read	5	holder PUT /domain/shared {"base_rev": 0, "shared": {"nosub": {"a": 1}}}	409 {"error": "refused", "detail": "~are at rev 1"}
 01-shared-edit-and-read	6	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"start": 2}, "nosub": {"a": 1}}}	400 {"error": "refused", "detail": "~no subsystem on the domain ~is not in its domain.shared"}
-01-shared-edit-and-read	7	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"step": "five"}}}	400 {"error": "refused"}
+01-shared-edit-and-read	7	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"step": "five"}}}	400 {"error": "refused", "field": "/shared/testsub/step"}
 01-shared-edit-and-read	8	holder PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"rounds": [{"counter": "c1", "every": 0}]}}}	400 {"error": "refused"}
 01-shared-edit-and-read	9	member m1 console POST /counters {"name": "c5", "step": 3, "marks": ["mine"]}	201
 01-shared-edit-and-read	10	member m1 console POST /counters {"name": "c6"}	201

@@ -10,12 +10,12 @@ scenario	step	request	expect
 03-policy	1	GET /policy	200 {"servers": "shared"}
 03-policy	2	PUT /policy {"servers": "distinct"}	200
 03-policy	3	GET /policy	200 {"servers": "distinct"}
-03-policy	4	PUT /policy {"servers": "weird"}	400
+03-policy	4	PUT /policy {"servers": "weird"}	400 {"error": "refused", "field": "/servers"}
 03-policy	5	PUT /policy {"nosuch": "distinct"}	400
 03-policy	6	PUT /policy {"servers": "shared"}	200
 03-policy	7	GET /policy	200 {"servers": "shared"}
 04-drain	1	POST /drain?server=srv-a	2xx
-04-drain	2	POST /drain?server=srv-b	409 {"error": "~already draining"}
+04-drain	2	POST /drain?server=srv-b	409 {"error": "refused", "detail": "~already draining"}
 04-drain	3	GET /drain	200 {"draining": "srv-a"}
 04-drain	4	DELETE /drain	2xx
 04-drain	5	GET /drain	200 {"draining": ""}
@@ -28,10 +28,10 @@ scenario	step	request	expect
 04-drain	12	POST /drain?server=a%20b	400
 04-drain	13	POST /drain?server=@big(254)	400
 04-drain	14	store GET /v1/get?key=platform/drain	200 {"items": {"server": ""}}
-05-server-labels	1	PUT /servers/srv-a/labels {"labels": "vlan:a"}	400
+05-server-labels	1	PUT /servers/srv-a/labels {"labels": "vlan:a"}	400 {"error": "labels", "field": "/labels"}
 05-server-labels	2	PUT /servers/srv-a/labels {"labels": ["vlan a"]}	400
-05-server-labels	3	PUT /servers/srv-nobody/labels {"labels": ["vlan:a"]}	404
-05-server-labels	4	GET /servers/srv-a/labels?labels=a,,b	400
+05-server-labels	3	PUT /servers/srv-nobody/labels {"labels": ["vlan:a"]}	404 {"error": "refused"}
+05-server-labels	4	GET /servers/srv-a/labels?labels=a,,b	400 {"error": "labels", "field": "@absent"}
 05-server-labels	5	PUT /servers/srv-a/labels {"labels": ["vlan:a", "vlan:a"]}	400
 05-server-labels	6	GET /servers/srv-a/labels?labels=a,a	400
 06-decommission	1	POST /servers/srv-nobody/decommission {"why": "test"}	404
@@ -45,8 +45,8 @@ scenario	step	request	expect
 07-drain-units	8	DELETE /drain	2xx
 08-schema	1	@start resource	ok
 08-schema	2	console GET /schema	200 {"version": 1, "understood": 1, "can_raise_to": 1, "builds": "@any"}
-08-schema	3	console PUT /schema?version=abc	400 {"error": "~a whole number from 1"}
-08-schema	4	console PUT /schema?version=0	400 {"error": "~a whole number from 1"}
+08-schema	3	console PUT /schema?version=abc	400 {"error": "a version is a whole number from 1"}
+08-schema	4	console PUT /schema?version=0	400 {"error": "a version is a whole number from 1"}
 08-schema	5	console PUT /schema?version=1	200 {"version": 1}
 08-schema	6	console PUT /schema?version=99999999999999999999999	409
 09-drain-unreadable-pulse	1	@start resource	ok
@@ -129,7 +129,7 @@ scenario	step	request	expect
 15-unreadable-schema	1	@start resource	ok
 15-unreadable-schema	2	@as console store POST /v1/write {"id":"32","op":"put","key":"platform/schema","items":{"version":"x","at":"1000"},"cas":""}	200
 15-unreadable-schema	3	console GET /schema	200 {"version": null, "schema_unknown": true, "understood": 1}
-15-unreadable-schema	4	console PUT /schema?version=1	409 {"error": "~mend the row first"}
+15-unreadable-schema	4	console PUT /schema?version=1	409 {"error": "refused", "detail": "~mend the row first"}
 15-unreadable-schema	5	store GET /v1/get?key=platform/schema	200 {"items": {"version": "x", "at": "1000"}}
 # 16-unreadable-server-labels (аудит покрытия P/06, второй проход Gemini, G10): строка меток сервера не по азбуке меток — /servers labels null и labels_source null (не node/unknown), ряд servers_labels_unread 1
 16-unreadable-server-labels	1	@start resource	ok

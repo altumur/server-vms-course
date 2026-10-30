@@ -4,8 +4,8 @@ scenario	step	request	expect
 01-placement	2	@until 30 holder GET /domain/placement	200 {"rev": 1, "records": {}}
 01-placement	3	holder PUT /domain/placement/nosuch/c1 {"cluster": "m1"}	404
 01-placement	4	holder PUT /domain/placement/nosuch/c1 {"cluster": "m9"}	404
-01-placement	5	holder PUT /domain/placement/testsub/c1 {"cluster": "m9"}	409
-01-placement	6	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m1"]}	400
+01-placement	5	holder PUT /domain/placement/testsub/c1 {"cluster": "m9"}	409 {"error": "refused", "field": "/cluster"}
+01-placement	6	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m1"]}	400 {"error": "refused", "field": "/copies"}
 01-placement	7	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m2"], "reason": "test"}	200 {"cluster": "m1", "copies": ["m2"], "origin": "", "reason": "test", "rev": 2}
 01-placement	8	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": ["m2"], "reason": "test"}	200 {"rev": 2}
 01-placement	9	holder PUT /domain/placement/testsub/c2 {"cluster": "m1"}	200 {"rev": 3}
@@ -23,10 +23,10 @@ scenario	step	request	expect
 02-edit-refusals	2	member m1 console POST /counters {"name": "c1"}	201
 02-edit-refusals	3	@until 60 holder GET /domain/testsub/counters	200 [{"ref": "c1", "cluster": "m1"}]
 02-edit-refusals	4	holder PUT /domain/testsub/counters/c9 {"start": 2}	404 {"error": "refused"}
-02-edit-refusals	5	holder PUT /domain/testsub/counters/c1 {"step": 2}	400
+02-edit-refusals	5	holder PUT /domain/testsub/counters/c1 {"step": 2}	400 {"error": "refused", "field": "/step"}
 02-edit-refusals	6	holder PUT /domain/testsub/counters/c1 {}	400
-02-edit-refusals	7	holder PUT /domain/testsub/counters/c1 {"revision": 3}	400
-02-edit-refusals	8	holder PUT /domain/testsub/counters/c1 {"note_secret": "a"}	400 {"error": "~never through a kept edit"}
+02-edit-refusals	7	holder PUT /domain/testsub/counters/c1 {"revision": 3}	400 {"error": "refused", "field": "/revision"}
+02-edit-refusals	8	holder PUT /domain/testsub/counters/c1 {"note_secret": "a"}	400 {"error": "~never through a kept edit", "field": "/note_secret"}
 02-edit-refusals	9	holder PUT /domain/testsub/counters/c1?cluster=m9 {"start": 2}	404 {"error": "no such member"}
 02-edit-refusals	10	member m2 console POST /counters {"name": "c1"}	201
 02-edit-refusals	11	@until 60 holder GET /domain	200 {"contested": {"testsub": {"c1": ["m1", "m2"]}}}
@@ -111,7 +111,7 @@ scenario	step	request	expect
 09-forms-of-edits	2	member m1 console POST /counters {"name": "c9", "start": 1}	201
 09-forms-of-edits	3	member m1 console POST /counters {"name": "c11", "start": 1}	201
 09-forms-of-edits	4	@until 60 holder GET /domain/testsub/counters?cluster=m1	200 [{"ref": "c11"}, {"ref": "c9"}]
-09-forms-of-edits	5	holder POST /domain/testsub/counters {"name": "c10", "start": 1}	400
+09-forms-of-edits	5	holder POST /domain/testsub/counters {"name": "c10", "start": 1}	400 {"error": "refused", "field": "/cluster"}
 09-forms-of-edits	6	holder POST /domain/testsub/counters {"cluster": 1, "name": "c10", "start": 1}	400
 09-forms-of-edits	7	holder PUT /domain/nosuch/counters/c9 {"start": 2}	404
 09-forms-of-edits	8	holder DELETE /domain/testsub/counters/c9 {"start": 1}	400

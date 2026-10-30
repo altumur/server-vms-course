@@ -3,22 +3,22 @@ scenario	step	request	expect
 01-create	1	POST /counters {"name": "c1", "start": 5}	201 {"id": "c1", "name": "c1", "start": 5, "labels": [], "revision": 1, "worker": null}
 01-create	2	@key(1) POST /counters {"name": "c1", "start": 5}	201 {"id": "c1", "revision": 1}
 01-create	3	@key(1) POST /counters {"name": "c1", "start": 6}	422 {"error": "key reused"}
-01-create	4	@nokey POST /counters {"name": "c1x", "start": 5}	400 {"error": "~Idempotency-Key"}
+01-create	4	@nokey POST /counters {"name": "c1x", "start": 5}	400 {"error": "Idempotency-Key required"}
 02-exists	1	POST /counters {"name": "c2"}	201 {"id": "c2", "start": 0}
-02-exists	2	POST /counters {"name": "c2"}	409 {"error": "exists"}
+02-exists	2	POST /counters {"name": "c2"}	409 {"error": "exists", "field": "/name"}
 03-update	1	@start resource	ok
 03-update	2	POST /counters {"name": "c3", "start": 1}	201 {"revision": 1}
 03-update	3	PUT /counters/c3 {"start": 7}	200 {"id": "c3", "start": 7, "revision": 2}
 03-update	4	PUT /counters/c3 {"labels": ["a", "b"]}	200 {"start": 7, "labels": ["a", "b"], "revision": 3}
 03-update	5	PUT /counters/c3 {"start": 7}	200 {"revision": 4}
-03-update	6	PUT /counters/c3 {"name": "x"}	400 {"error": "~is fixed"}
+03-update	6	PUT /counters/c3 {"name": "x"}	400 {"error": "fixed", "field": "/name", "detail": "~is fixed"}
 03-update	7	PUT /counters/c3 {"start": null}	400
 03-update	8	GET /counters	200 {"configured": [{"id": "c3", "start": 7, "revision": 4}]}
-04-platform-fields	1	POST /counters {"name": "c4", "worker": "w-1"}	400 {"error": "~may not set"}
-04-platform-fields	2	POST /counters {"name": "c4", "revision": 5, "nosuch": 1}	400 {"error": "~may not set"}
-04-platform-fields	3	POST /counters {"name": "c4", "nosuch": 1}	400 {"error": "~unknown field"}
-04-platform-fields	4	PUT /counters/c2 {"epoch": 9}	400 {"error": "~may not set"}
-05-required	1	POST /counters {"start": 1}	400 {"error": "~needs a name"}
+04-platform-fields	1	POST /counters {"name": "c4", "worker": "w-1"}	400 {"error": "platform_field", "field": "/worker", "detail": "~may not set"}
+04-platform-fields	2	POST /counters {"name": "c4", "revision": 5, "nosuch": 1}	400 {"error": "platform_field", "field": "/revision", "detail": "~may not set"}
+04-platform-fields	3	POST /counters {"name": "c4", "nosuch": 1}	400 {"error": "unknown field", "field": "/nosuch", "detail": "~unknown field"}
+04-platform-fields	4	PUT /counters/c2 {"epoch": 9}	400 {"error": "platform_field", "field": "/epoch", "detail": "~may not set"}
+05-required	1	POST /counters {"start": 1}	400 {"error": "required", "field": "/name", "detail": "~needs a name"}
 05-required	2	POST /counters {"name": "", "start": 1}	400
 06-name-grammar	1	POST /counters {"name": "a/b"}	400
 06-name-grammar	2	POST /counters {"name": "a,b"}	400
@@ -38,7 +38,7 @@ scenario	step	request	expect
 07-delete	5	DELETE /counters/c7	404 {"error": "no such unit"}
 07-delete	6	PUT /counters/c7 {"start": 4}	404 {"error": "no such unit"}
 07-delete	7	POST /counters {"name": "c7", "start": 9}	201 {"id": "c7", "start": 9, "revision": 4}
-08-types	1	POST /counters {"name": "c8", "start": "7"}	400 {"fault": "not_number"}
+08-types	1	POST /counters {"name": "c8", "start": "7"}	400 {"fault": "not_number", "error": "not_number", "field": "/start"}
 08-types	2	POST /counters {"name": "c8", "start": 1.5}	400 {"fault": "not_number"}
 08-types	3	POST /counters {"name": "c8", "labels": "a"}	400
 08-types	4	POST /counters {"name": "c8", "start": true}	400 {"fault": "not_number"}
@@ -48,7 +48,7 @@ scenario	step	request	expect
 08-types	8	POST /counters {"name": "c8e", "start": 1e400}	400 {"fault": "not_json"}
 08-types	9	POST /counters {"name": "c8i", "start": 9007199254740992}	400 {"fault": "not_number"}
 08-types	10	POST /counters {"name": "c8j", "start": -9007199254740991}	201 {"start": -9007199254740991}
-08-types	11	POST /counters {"name": "c8x", "step": "b", "start": "a"}	400 {"error": "~start"}
+08-types	11	POST /counters {"name": "c8x", "step": "b", "start": "a"}	400 {"error": "not_number", "field": "/start"}
 09-list-comma	1	POST /counters {"name": "c9", "marks": ["a,b", "c"]}	201 {"marks": ["a,b", "c"]}
 09-list-comma	2	PUT /counters/c9 {"marks": ["[x", "y"]}	200 {"marks": ["[x", "y"], "revision": 2}
 09-list-comma	3	POST /counters {"name": "c9b", "labels": ["a,b"]}	400
@@ -80,15 +80,15 @@ scenario	step	request	expect
 14-if-match	1	@start resource	ok
 14-if-match	2	POST /counters {"name": "m14", "start": 1}	201 {"revision": 1}
 14-if-match	3	@header If-Match: 1 PUT /counters/m14 {"start": 2}	200 {"start": 2, "revision": 2}
-14-if-match	4	@header If-Match: 1 PUT /counters/m14 {"start": 3}	412 {"error": "revision moved", "revision": 2}
+14-if-match	4	@header If-Match: 1 PUT /counters/m14 {"start": 3}	412 {"error": "revision moved", "field": "/revision", "revision": 2}
 14-if-match	5	@header If-Match: 01 PUT /counters/m14 {"start": 3}	400
 14-if-match	6	@header If-Match: two PUT /counters/m14 {"start": 3}	400
 14-if-match	7	@header If-Match: 2 @header If-Match: 2 PUT /counters/m14 {"start": 3}	400
 14-if-match	8	GET /counters	200 {"configured": [{"id": "m14", "start": 2, "revision": 2}]}
-14-if-match	9	@header If-Match: 1 DELETE /counters/m14	412 {"error": "revision moved", "revision": 2}
+14-if-match	9	@header If-Match: 1 DELETE /counters/m14	412 {"error": "revision moved", "field": "/revision", "revision": 2}
 14-if-match	10	@header If-Match: 2 DELETE /counters/m14	200 {"deleted": "m14"}
 15-blob	1	@start resource	ok
-15-blob	2	console2 POST /tallies {"name": "t1", "of": "c1", "mask": "not-a-digest"}	400 {"error": "~takes a digest"}
+15-blob	2	console2 POST /tallies {"name": "t1", "of": "c1", "mask": "not-a-digest"}	400 {"error": "blob", "field": "/mask", "detail": "~takes a digest"}
 15-blob	3	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1, "mask": ""}
 15-blob	4	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "~sha256-", "bytes": 10, "revision": 2}
 15-blob	5	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"mask": "$d", "revision": "2"}}
@@ -100,7 +100,7 @@ scenario	step	request	expect
 15-blob	11	console2 GET /tallies/t1/mask	405
 15-blob	12	console2 DELETE /tallies/t1/mask	405
 15-blob	13	console2 @header If-Match: 999 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "$d"}
-16-ceilings	1	console2 POST /tallies {"name": "t5", "of": "c1", "rule": "@big(4100)"}	400 {"fault": "too_long", "error": "~the ceiling is 4000"}
+16-ceilings	1	console2 POST /tallies {"name": "t5", "of": "c1", "rule": "@big(4100)"}	400 {"fault": "too_long", "error": "too_long", "field": "/rule", "detail": "~the ceiling is 4000"}
 16-ceilings	2	console2 POST /tallies {"name": "t5", "of": "c1", "rule": "@big(3000)"}	201
 16-ceilings	3	console2 POST /tallies {"name": "t6", "of": "c1", "tags": ["@big(1100000)"]}	413 {"detail": "~this door takes at most"}
 16-ceilings	4	console2 POST /tallies {"name": "t5a", "of": "c1", "rule": "@big(3998)"}	201
@@ -124,24 +124,24 @@ scenario	step	request	expect
 18-table-ref	5	console2 DELETE /shelves/sh7	200 {"deleted": "sh7"}
 18-table-ref	6	console2 GET /tallies	200 {"configured": [{"id": "t7", "shelf": "sh7", "zone": "z1"}]}
 19-table-feed	1	console2 POST /shelves {"name": "sh8", "zone": "z1", "feed": "https://h.example/a"}	201 {"row": {"feed": "https://h.example/a"}}
-19-table-feed	2	console2 POST /shelves {"name": "sh8", "zone": "z1", "feed": "https://h.example/b"}	400 {"error": "~must be given anew"}
-19-table-feed	3	console2 POST /shelves {"name": "sh8", "zone": "z1", "feed": "https://h.example/b", "feed_secret": ""}	400 {"error": "~must be given anew"}
+19-table-feed	2	console2 POST /shelves {"name": "sh8", "zone": "z1", "feed": "https://h.example/b"}	400 {"error": "refused", "field": "/feed_secret", "detail": "~must be given anew"}
+19-table-feed	3	console2 POST /shelves {"name": "sh8", "zone": "z1", "feed": "https://h.example/b", "feed_secret": ""}	400 {"error": "refused", "field": "/feed_secret", "detail": "~must be given anew"}
 19-table-feed	4	console2 GET /shelves/sh8	200 {"feed": "https://h.example/a"}
 19-table-feed	5	console2 POST /shelves {"name": "sh8", "zone": "z1", "feed": "https://h.example/a", "feed_secret": ""}	201 {"row": {"feed": "https://h.example/a"}}
-19-table-feed	6	console2 POST /shelves {"name": "sh9", "zone": "z1", "feed": "ftp://h.example/a"}	400 {"fault": "bad_url"}
+19-table-feed	6	console2 POST /shelves {"name": "sh9", "zone": "z1", "feed": "ftp://h.example/a"}	400 {"fault": "bad_url", "error": "bad_url", "field": "/feed"}
 19-table-feed	7	console2 POST /shelves {"name": "sh9", "zone": null}	400
 19-table-feed	8	console2 POST /notches {"of": "c1", "from": -0.5, "to": 2}	201 {"row": {"name": "c1-0-2"}}
-19-table-feed	9	console2 POST /shelves {"name": "a/b", "zone": 5}	400 {"error": "~name"}
-19-table-feed	10	console2 POST /shelves {"zone": 5, "nope": 1}	400 {"error": "~the body does not fill it in"}
+19-table-feed	9	console2 POST /shelves {"name": "a/b", "zone": 5}	400 {"error": "bad_id", "field": "/name"}
+19-table-feed	10	console2 POST /shelves {"zone": 5, "nope": 1}	400 {"error": "the body does not fill it in", "field": "/name"}
 19-table-feed	11	@as console store POST /v1/write {"id":"e1","op":"put","key":"testsub2/shelves/shx","items":{"name":"shx","zone":"z1","size":"many"},"cas":""}	200
 19-table-feed	12	console2 GET /shelves/shx	200 {"name": "shx", "garbled": true}
 19-table-feed	13	console2 POST /shelves {"name": "sh10", "zone": "z1", "over": "shx"}	409 {"fault": "garbled"}
 # 20-made (ADR-0091 пп. 1, 3): префикс заказчика testsub — отказ двери; строка заказа (подготовлена мимо писателя) — поля key неизменяемы, made и born сохраняет правка, made клиент не задаёт; состояние действует по born и revision; born у строки двери; удаление ставит made.gone
 20-made	1	@start resource	ok
-20-made	2	console2 POST /tallies {"name": "testsub-c1", "of": "c1"}	400 {"error": "~are made by testsub"}
+20-made	2	console2 POST /tallies {"name": "testsub-c1", "of": "c1"}	400 {"error": "bad_id", "field": "/name", "detail": "~are made by testsub"}
 20-made	3	store GET /v1/get?key=testsub2/tallies/testsub-c1	200 {"items": null}
 20-made	4	@as console store POST /v1/write {"id":"e3","op":"put","key":"testsub2/tallies/testsub-c2","items":{"id":"testsub-c2","revision":"1","name":"testsub-c2","of":"c2","born":"0123456789abcdef0123456789abcdef","made":"{\"at\":1000000000,\"by\":\"testsub\",\"keep\":1000000720}"},"cas":""}	200
-20-made	5	console2 PUT /tallies/testsub-c2 {"of": "c3"}	400 {"error": "~is fixed"}
+20-made	5	console2 PUT /tallies/testsub-c2 {"of": "c3"}	400 {"error": "fixed", "field": "/of", "detail": "~is fixed"}
 20-made	6	console2 PUT /tallies/testsub-c2 {"made": {"by": "testsub2"}}	400
 20-made	7	console2 PUT /tallies/testsub-c2 {"zone": "z1"}	200 {"zone": "z1", "revision": 2, "made": {"by": "testsub", "at": 1000000000, "keep": 1000000720}}
 20-made	8	store GET /v1/get?key=testsub2/tallies/testsub-c2	200 {"items": {"born": "0123456789abcdef0123456789abcdef", "made": "{\"at\":1000000000,\"by\":\"testsub\",\"keep\":1000000720}", "revision": "2"}}
@@ -161,7 +161,7 @@ scenario	step	request	expect
 21-worker-table-delete	6	console2 DELETE /gauges/g1	404
 # 22-unit-refs (аудит покрытия P/06, G01): прямые ссылки единицы (договор проверки строки П5) — must_match с иным значением и с отсутствующим элементом цели — 409 must_match, строки нет; цели нет — не отказ (ADR-0057); unique canonical — 409 unique; цель не читается — 409 garbled
 22-unit-refs	1	console2 POST /shelves {"name": "sh1", "zone": "z1"}	201 {"row": {"name": "sh1", "zone": "z1"}}
-22-unit-refs	2	console2 POST /tallies {"name": "t1", "of": "c1", "shelf": "sh1", "zone": "z2"}	409 {"error": "conflict", "fault": "must_match"}
+22-unit-refs	2	console2 POST /tallies {"name": "t1", "of": "c1", "shelf": "sh1", "zone": "z2"}	409 {"error": "conflict", "fault": "must_match", "field": "/shelf"}
 22-unit-refs	3	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": null}
 22-unit-refs	4	console2 POST /tallies {"name": "t2", "of": "c1", "shelf": "sh1", "zone": "z1"}	201 {"shelf": "sh1", "zone": "z1", "revision": 1}
 22-unit-refs	5	console2 POST /shelves {"name": "sh2"}	201 {"row": {"name": "sh2", "zone": "@absent"}}
@@ -175,11 +175,11 @@ scenario	step	request	expect
 # 23-fixed (аудит покрытия P/06, G02): возврат имени над надгробием — иной fixed (`of`) — 400 «is fixed», надгробие прежнее; тот же — 201, revision надгробия + 1; правка fixed у живой строки — 400, строка и revision прежние
 23-fixed	1	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1}
 23-fixed	2	console2 DELETE /tallies/t1	200 {"deleted": "t1"}
-23-fixed	3	console2 POST /tallies {"name": "t1", "of": "c2"}	400 {"error": "~is fixed", "fault": "@absent"}
+23-fixed	3	console2 POST /tallies {"name": "t1", "of": "c2"}	400 {"error": "fixed", "field": "/of", "detail": "~is fixed", "fault": "@absent"}
 23-fixed	4	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"deleted": "true", "of": "c1", "revision": "1"}}
 23-fixed	5	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"of": "c1", "revision": 2}
 23-fixed	6	console2 POST /tallies {"name": "t2", "of": "c1"}	201 {"revision": 1}
-23-fixed	7	console2 PUT /tallies/t2 {"of": "c2"}	400 {"error": "~is fixed", "fault": "@absent"}
+23-fixed	7	console2 PUT /tallies/t2 {"of": "c2"}	400 {"error": "fixed", "field": "/of", "detail": "~is fixed", "fault": "@absent"}
 23-fixed	8	store GET /v1/get?key=testsub2/tallies/t2	200 {"items": {"of": "c1", "revision": "1"}}
 # 24-born-anew (аудит покрытия P/06, G03; ADR-0091 п. 3): удаление сохраняет born, создание над надгробием даёт новое
 24-born-anew	1	console POST /counters {"name": "b1"}	201 {"revision": 1}
@@ -242,9 +242,9 @@ scenario	step	request	expect
 30-sweep-unmark	8	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "sha256-57a256c65db5af18f8a04c7a42df26c3009dd01381fbaaaec7b432fc30d4c8d0", "revision": 3}
 30-sweep-unmark	9	store GET /v1/get?key=testsub2/sweep	200 {"items": {"digests": "bogus"}, "index": "$v2"}
 # 31-table-stamps (аудит покрытия P/06, второй проход Gemini, G03): штамп by/at/made_at в теле записи строки таблицы — 400 unknown field до записи (made_at — и вне stamp таблицы); запись без штампов — by и at консоли, made_at вне stamp нет
-31-table-stamps	1	console2 POST /shelves {"name": "sh1", "zone": "z1", "by": "spoof"}	400 {"error": "unknown field"}
-31-table-stamps	2	console2 POST /shelves {"name": "sh1", "zone": "z1", "at": 100}	400 {"error": "unknown field"}
-31-table-stamps	3	console2 POST /shelves {"name": "sh1", "zone": "z1", "made_at": 100}	400 {"error": "unknown field"}
+31-table-stamps	1	console2 POST /shelves {"name": "sh1", "zone": "z1", "by": "spoof"}	400 {"error": "unknown field", "field": "/by"}
+31-table-stamps	2	console2 POST /shelves {"name": "sh1", "zone": "z1", "at": 100}	400 {"error": "unknown field", "field": "/at"}
+31-table-stamps	3	console2 POST /shelves {"name": "sh1", "zone": "z1", "made_at": 100}	400 {"error": "unknown field", "field": "/made_at"}
 31-table-stamps	4	store GET /v1/get?key=testsub2/shelves/sh1	200 {"items": null}
 31-table-stamps	5	console2 POST /shelves {"name": "sh1", "zone": "z1"}	201 {"row": {"name": "sh1", "by": "operator", "at": "@time", "made_at": "@absent"}}
 # 32-hold-unreadable (аудит покрытия P/06, второй проход Gemini, G03; C06-TABLE-HELD-BY-33-01): строка удержания места нечитаема — held_by null в GET списка и строки (не 503), /where места — 503, ряд shelves_open место свободным не считает

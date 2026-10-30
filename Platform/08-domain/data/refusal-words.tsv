@@ -1,0 +1,91 @@
+# Закрытый перечень слов error дверей процесса domain: главы 8.3, 8.4, 8.6–8.10 (ADR-0094 B5). Правила — глава 8.0 Н4; формат field — P/06.1 Н2.
+# door — двери: agents /api/member, /api/carry, /api/relay; tokens /api/tokens; login /api/login; people /domain/users…;
+# grants /domain/grants/…; break-glass /domain/break-glass/…; revoke /domain/revoke; members /domain/members…; topology /domain/topology;
+# placement /domain/placement/…; edits /domain/<sub>/<rows>…; shared /domain/shared; move /api/prepare, /api/take, /domain/move;
+# handover /domain/handover; stranded /domain/stranded/apply; * — каждая дверь процесса. У агентов слово уточняет reason (8.3 Н4, 8.7 Н4).
+# field — что несёт поле field: «-» — поля нет; иначе возможные значения через пробел, <…> — подстановка: <поле> — поле тела, <i> — номер строки с нуля.
+door	code	error	field	norm
+agents	400	refused	-	8.3 Н4
+agents	401	refused	-	8.3 Н4
+agents	403	refused	-	8.3 Н4
+agents	404	refused	-	8.3 Н4
+agents	409	refused	-	8.3 Н4
+agents	413	refused	-	8.3 Н4
+agents	413	whole too large	-	8.10 Н4
+tokens	400	refused	-	8.7 Н4
+tokens	403	refused	-	8.7 Н4
+tokens	404	refused	-	8.7 Н4
+tokens	409	refused	-	8.7 Н4
+tokens	413	refused	-	8.7 Н4
+login	400	bad body	/user /password	8.4 Н2
+login	401	refused	-	8.4 Н4
+login	413	too large	-	8.4 Н4
+login	429	too many attempts	-	8.4 Н4
+people	400	bad body	-	8.4 Н4
+people	400	bad name	/name	8.4 Н4
+people	400	bad password	/password	8.4 Н4
+people	404	no such person	-	8.4 Н4
+people	409	exists	/name	8.4 Н4
+people	409	name taken	/name	8.4 Н4
+people	409	last admin	-	8.4 Н4
+people	413	too large	-	8.4 Н4
+people	503	names unknown	-	8.4 Н4
+grants	400	bad name	-	8.4 Н4
+grants	400	bad line	/lines/<i>	8.4 Н4
+grants	400	grant too wide	/lines/<i>	8.4 Н4
+grants	400	unknown subject	/lines/<i>/subject	8.4 Н4
+grants	409	being deleted	/lines/<i>/subject	8.4 Н4
+grants	409	last admin	-	8.4 Н4
+grants	409	refused	-	8.4 Н4
+grants	413	too large	-	8.4 Н4
+grants	503	names unknown	-	8.4 Н4
+break-glass	400	bad body	-	8.4 Н4
+break-glass	400	bad name	-	8.4 Н4
+break-glass	400	bad password	/password	8.4 Н4
+break-glass	413	too large	-	8.4 Н4
+revoke	400	bad body	/token	8.4 Н4
+revoke	401	refused	-	8.4 Н4
+revoke	413	too large	-	8.4 Н4
+members	400	refused	/name /fingerprint /ca /ca_certs	8.3 Н2, Н4
+members	404	refused	-	8.3 Н4
+members	409	refused	-	8.3 Н4, 8.10 Н4
+topology	400	refused	/base_rev	8.3 Н4
+topology	409	refused	/base_rev /centre /star /via	8.3 Н4
+placement	400	refused	/<поле>	8.6 Н4
+placement	404	refused	-	8.6 Н4
+placement	409	refused	/cluster /origin /copies	8.6 Н4
+placement	503	refused	-	8.6 Н4
+edits	400	refused	/<поле>	8.6 Н4
+edits	400	a secret is set in the member's own cluster, never through a kept edit	/<поле>	8.6 Н1.3
+edits	404	refused	-	8.6 Н4, 8.1 Н4
+edits	404	no such member	-	8.6 Н4
+edits	409	executors	-	8.6 Н4
+edits	409	kept_full	-	8.6 Н4
+edits	409	unit is being deleted	-	8.6 Н4
+edits	409	the pending edits kept changing; ask again	-	8.6 Н4
+edits	422	this Idempotency-Key was used for another edit	-	8.6 Н1.4
+edits	503	refused	-	8.6 Н4, 8.1 Н4
+shared	400	refused	/base_rev /shared /shared/<sub> /shared/<sub>/<имя>	8.9 Н1.3
+shared	409	refused	/base_rev	8.9 Н1.3
+shared	413	refused	-	8.9 Н1.3
+shared	503	refused	-	8.9 Н1.3
+move	400	refused	-	8.8 Н4
+move	403	refused	-	8.8 Н4
+move	404	refused	-	8.8 Н4
+move	409	refused	-	8.8 Н4
+move	503	refused	-	8.8 Н4
+handover	400	refused	/to	8.8 Н4
+handover	409	called off	-	8.8 Н4
+handover	409	refused	-	8.8 Н4
+stranded	400	redo it on the new holder	-	8.8 Н1.6
+stranded	404	refused	-	8.8 Н1.6
+stranded	409	refused	-	8.8 Н1.6
+*	400	denied	-	6.5 Н4
+*	401	denied	-	8.4 Н4
+*	403	denied	-	8.4 Н4
+*	408	denied	-	6.5 Н4
+*	409	deposed	-	8.8 Н1.6
+*	413	denied	-	6.5 Н4
+*	503	frozen	-	8.8 Н1.7
+*	503	standby	-	8.10 Н1.7
+*	503	unavailable	-	8.4 Н1.5; 8.10 Н4

@@ -1328,12 +1328,44 @@ components:
       required: [error]
       additionalProperties: false
       description: 'Тело отказа двери процесса (P/08.0 Н4, Н4 глав двери): error — слово (refused, слова глав 8.4, 8.6 и 8.8, deposed,
-        frozen, standby, whole too large); detail — у отказов, где глава его называет (у дверей агентов — всегда); reason — слово
-        у дверей агентов (P/08.3 Н4, P/08.7 Н4); holder — только у 409 deposed'
+        frozen, standby, whole too large); закрытый перечень по дверям — data/refusal-words.tsv (P/08.0 Н4, ADR-0094 B5); detail — у отказов, где глава его называет (у дверей агентов — всегда); reason — слово
+        у дверей агентов (P/08.3 Н4, P/08.7 Н4); field — JSON Pointer поля у 400 и 409 (P/06.1 Н2); holder — только у 409 deposed'
       properties:
-        error: {type: string, minLength: 1}
+        error:
+          type: string
+          enum:
+            - refused
+            - denied
+            - deposed
+            - frozen
+            - standby
+            - unavailable
+            - whole too large
+            - bad body
+            - bad name
+            - bad password
+            - bad line
+            - grant too wide
+            - unknown subject
+            - no such person
+            - exists
+            - being deleted
+            - name taken
+            - last admin
+            - too large
+            - names unknown
+            - no such member
+            - executors
+            - kept_full
+            - unit is being deleted
+            - the pending edits kept changing; ask again
+            - this Idempotency-Key was used for another edit
+            - a secret is set in the member's own cluster, never through a kept edit
+            - called off
+            - redo it on the new holder
         detail: {type: string}
         reason: {type: string}
+        field: {$ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/RefusalField'}
         holder:
           $ref: '#/components/schemas/HolderRecord'
           description: 'у 409 deposed — документ записи срока нового держателя как объект (P/08.8 Н1.6; добавлено М11/10)'

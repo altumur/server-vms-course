@@ -20,6 +20,7 @@ lifecycle.md                         флаги, окружение, коды в
 data/<семья>.schema.json, .outcomes.tsv схемы семей (JSON Schema, ADR-0092; ADR-0088): next-id, sweep (6.1); requests, asked,
                                      commands (6.4); door-signer, door-keys (6.5); policy, server-labels, drain,
                                      decommission, schema (6.6)
+data/refusal-words.tsv               закрытый перечень слов error по дверям (6.1, 6.2, 6.5, 6.6; ADR-0094 B5)
 vectors/<алгоритм>/                  векторы: fault, values-by-type (6.1); secret-in, log-mask (6.2, в common/vectors); rid, requests-body,
                                      request-digest (6.4); resolve (6.7)
 acceptance/1/ … acceptance/7/        приёмка глав 6.1–6.7 (README, scenarios.tsv, corrections.tsv; 2/fields.yaml,
