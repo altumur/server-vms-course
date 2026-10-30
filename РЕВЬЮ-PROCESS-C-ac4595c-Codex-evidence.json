@@ -1,0 +1,231 @@
+{
+  "green": true,
+  "SUT": 0,
+  "head": "ac4595c2a2a2b3b3c9fea4d67b33c4ca6bbae53a",
+  "pin": "27df7470f2ae66e242078d61d4d58dc5f6983dc5",
+  "manifest_sha256": "2e6693c235a1f08e821eb1b38fe929728b48bedd8d73eff646c4869f17b57ab4",
+  "package_files": 325,
+  "author_input_sha256": "c4f74d74c7c5c5a405e3b20f1c5312e9af4e1132ed5b0d6f5d18f414c20ab8f1",
+  "author_input_files": 2651,
+  "source_sha_files": 2650,
+  "git_blobs": {
+    "runtime": 225,
+    "specs": 2382,
+    "old_specs": 2382
+  },
+  "changed_export_files": [
+    "COURSE_COMMIT",
+    "Platform/01-store/spec/01.3-store.norms.md",
+    "Platform/03-worker/acceptance/2/README.md",
+    "Platform/03-worker/acceptance/2/scenarios.tsv",
+    "Platform/03-worker/acceptance/3/README.md",
+    "Platform/03-worker/acceptance/3/scenarios.tsv",
+    "Platform/03-worker/acceptance/6/README.md",
+    "Platform/03-worker/acceptance/6/scenarios.tsv",
+    "Platform/03-worker/spec/03-worker.README.md",
+    "Platform/03-worker/spec/03.2-worker.norms.md",
+    "Platform/03-worker/spec/03.3-worker.norms.md",
+    "Platform/03-worker/spec/03.4-worker.norms.md",
+    "Platform/03-worker/spec/03.6-worker.norms.md",
+    "Platform/04-controller/04-controller.md",
+    "Platform/04-controller/acceptance/README.md",
+    "Platform/04-controller/acceptance/scenarios.tsv",
+    "Platform/04-controller/spec/04-controller.README.md",
+    "Platform/04-controller/spec/04-controller.norms.md",
+    "Platform/06-console/spec/06.6-console.norms.md",
+    "Platform/07-console-module/spec/07-console-module.norms.md",
+    "Platform/08-domain/spec/08.7-domain.norms.md",
+    "Platform/common/acceptance/README.md"
+  ],
+  "tests": {
+    "test_process_audit_c": 7,
+    "test_stand_setup": 19,
+    "test_c_worker": 24,
+    "test_c_controller": 8,
+    "test_c_shared_engines": 23,
+    "test_console_resource_start": 8,
+    "test_cli_environment": 10,
+    "test_c_process": 7,
+    "test_c_execution": 36,
+    "test_diagnostic_secrets": 14,
+    "test_platform": 21,
+    "test_request_correlation": 11,
+    "test_vms_stand": 26
+  },
+  "total_tests": 214,
+  "probe_sha256": "f3ccdf4e73324f347d9284bb67d4f09476eb556b1291cbd5593805d4e161533e",
+  "controls": {
+    "bridge_launch_env": {
+      "safety_pass": true,
+      "rows": [
+        {
+          "role": "worker",
+          "name": "t-1",
+          "env": {
+            "BOX_ID": "bad:box",
+            "SERVER_NAME": "SRV-A",
+            "INSTANCE_ID": "bad",
+            "TALLY_NAME": "t-1",
+            "LABELS": "x",
+            "OWN_EMPTY": "",
+            "OWN_EQUALS": "a=b",
+            "OWN_PRIVATE": null,
+            "PYTHONPATH": null,
+            "CAMMETA_SPECS": null,
+            "AGENT_TOKEN_DIR": "/own-explicit"
+          }
+        },
+        {
+          "role": "worker",
+          "name": "w-2",
+          "env": {
+            "BOX_ID": "server-box",
+            "SERVER_NAME": "srv-a",
+            "INSTANCE_ID": null,
+            "TALLY_NAME": null,
+            "LABELS": null,
+            "OWN_EMPTY": null,
+            "OWN_EQUALS": null,
+            "OWN_PRIVATE": null,
+            "PYTHONPATH": null,
+            "CAMMETA_SPECS": null,
+            "AGENT_TOKEN_DIR": "/tmp/ck-jj_f97xn/rv-process-C-3diw02ao/tokens"
+          }
+        },
+        {
+          "role": "controller",
+          "name": "controller",
+          "env": {
+            "BOX_ID": "server-box",
+            "SERVER_NAME": "srv-a",
+            "INSTANCE_ID": null,
+            "TALLY_NAME": null,
+            "LABELS": null,
+            "OWN_EMPTY": null,
+            "OWN_EQUALS": null,
+            "OWN_PRIVATE": null,
+            "PYTHONPATH": null,
+            "CAMMETA_SPECS": null,
+            "AGENT_TOKEN_DIR": "/tmp/ck-jj_f97xn/rv-process-C-3diw02ao/tokens"
+          }
+        }
+      ],
+      "ambient_grant_leaked": false
+    },
+    "live_descendant_deadline": {
+      "safety_pass": true,
+      "seconds": 10.004059786908329,
+      "leader_code": 2,
+      "why": [
+        "@start: owned process group still has live members: {1597286: [(1597288, 'S')]}",
+        "@start: exit was not observed within 10 seconds"
+      ],
+      "live_group_after_observation": true
+    },
+    "admin_full_form_wire": {
+      "safety_pass": true,
+      "cases": [
+        {
+          "engine": "l05",
+          "body_hex": "7b22696e646578223a2239227d",
+          "rejected": false
+        },
+        {
+          "engine": "l08",
+          "body_hex": "7b22696e646578223a2239227d",
+          "rejected": false
+        },
+        {
+          "engine": "l05",
+          "body_hex": "7b7d",
+          "rejected": true
+        },
+        {
+          "engine": "l08",
+          "body_hex": "7b7d",
+          "rejected": true
+        },
+        {
+          "engine": "l05",
+          "body_hex": "",
+          "rejected": true
+        },
+        {
+          "engine": "l08",
+          "body_hex": "",
+          "rejected": true
+        },
+        {
+          "engine": "l05",
+          "body_hex": "6e6f742d6a736f6e",
+          "rejected": true
+        },
+        {
+          "engine": "l08",
+          "body_hex": "6e6f742d6a736f6e",
+          "rejected": true
+        },
+        {
+          "engine": "l05",
+          "body_hex": "ff",
+          "rejected": true
+        },
+        {
+          "engine": "l08",
+          "body_hex": "ff",
+          "rejected": true
+        },
+        {
+          "engine": "l05",
+          "body_hex": "6e756c6c",
+          "rejected": true
+        },
+        {
+          "engine": "l08",
+          "body_hex": "6e756c6c",
+          "rejected": true
+        },
+        {
+          "engine": "l05",
+          "body_hex": "5b5d",
+          "rejected": true
+        },
+        {
+          "engine": "l08",
+          "body_hex": "5b5d",
+          "rejected": true
+        },
+        {
+          "engine": "l05",
+          "body_hex": "7b22696e646578223a397d",
+          "rejected": true
+        },
+        {
+          "engine": "l08",
+          "body_hex": "7b22696e646578223a397d",
+          "rejected": true
+        },
+        {
+          "engine": "l05",
+          "body_hex": "7b22696e646578223a2239222c226578747261223a317d",
+          "rejected": true
+        },
+        {
+          "engine": "l08",
+          "body_hex": "7b22696e646578223a2239222c226578747261223a317d",
+          "rejected": true
+        }
+      ],
+      "privileged_calls": 18
+    },
+    "remaining_budget": {
+      "safety_pass": true,
+      "seconds": 0.020103340968489647,
+      "why": [
+        "@start: process did not exit within 0.2 seconds"
+      ],
+      "process_not_killed": true
+    }
+  },
+  "inputs_unchanged": true
+}
