@@ -1,0 +1,5 @@
+# Приёмка P/02.2: потолок строки хранилища не по умолчанию (аудит покрытия P/02, B00). Строка: case<TAB>puts<TAB>expect<TAB>canonical<TAB>ceiling.
+# Четыре первых поля — как puts.tsv главы; ceiling — потолок {row_ceiling} нового экземпляра этой строки. Правила — README, «puts-ceiling.tsv».
+case	puts	expect	canonical	ceiling
+ceiling_976	probe	2 -	-	976
+ceiling_977	probe	0 1	example-sections	977

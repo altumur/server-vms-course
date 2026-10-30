@@ -1,0 +1,18 @@
+name: va
+unit:
+  rows: items
+  id: name
+  fields:
+    name:  {type: string, required: true}
+    code:  {type: string, required: true}
+    zone:  {type: string}
+    shelf: {type: string, ref: va/shelves, must_match: {zone: zone}}
+placement:
+  capacity: {from: capacity, default: 4}
+tables:
+  shelves:
+    key: name
+    fields:
+      name: {type: string, required: true}
+      zone: {type: string}
+worker: {exec: /usr/lib/va/worker}

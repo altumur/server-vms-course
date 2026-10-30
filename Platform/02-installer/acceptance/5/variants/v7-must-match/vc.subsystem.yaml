@@ -1,0 +1,16 @@
+name: vc
+unit:
+  rows: notes
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {from: capacity, default: 4}
+tables:
+  links:
+    key: name
+    fields:
+      name: {type: string, required: true}
+      zone: {type: string}
+      of:  {type: string, ref: va/items, must_match: {zone: zone}}
+worker: {exec: /usr/lib/vc/worker}

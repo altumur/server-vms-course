@@ -1,0 +1,5 @@
+name: selfb
+unit: {rows: xs, id: numeric}
+placement: {capacity: {default: 1}}
+tables: [selfb]
+worker: {exec: /usr/lib/selfb/worker}

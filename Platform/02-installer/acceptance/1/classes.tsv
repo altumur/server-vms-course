@@ -238,3 +238,6 @@ t29_block_header_comment	text
 t30_block_leading	text
 t34_flow_leading_comma	text
 t34b_flow_map_double_comma	text
+secrets_readers_overlap	relations
+worker_writes_unit_rows	relations
+worker_writes_undeclared	relations

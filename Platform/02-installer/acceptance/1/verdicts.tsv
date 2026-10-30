@@ -695,3 +695,9 @@ t33_flow_trailing_comma_ok	ok
 t33b_flow_map_trailing_comma_ok	ok
 t34_flow_leading_comma	refused
 t34b_flow_map_double_comma	refused
+secrets_readers_overlap	refused
+secrets_readers_exact_prefix_ok	ok
+worker_writes_declared_ok	ok
+worker_writes_declared_list_ok	ok
+worker_writes_unit_rows	refused
+worker_writes_undeclared	refused

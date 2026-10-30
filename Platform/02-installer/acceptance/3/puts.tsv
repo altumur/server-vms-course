@@ -37,3 +37,12 @@ near_no_target	near-client	0 1
 near_target_after	near-client near-target	0 1
 near_bad_field	near-target near-client-bad	2 -
 near_target_after_mismatch	near-client-bad near-target	2 -
+toolarge_row	toolarge-base toolarge-big	2 1
+self_table_list	list-self	2 -
+other_table_list	list-other-a list-other-b	2 -
+list_tables_ok	list-ok	0 1
+rev_max_same	revmax-a @rev-max revmax-a	0 9007199254740991
+rev_max_changed	revmax-a @rev-max revmax-b	2 9007199254740991
+shell_onclick	paged	2 -
+shell_same_twice	pagedok pagedok	0 1
+shell_changed	pagedok @shell-put pagedok-alt pagedok	0 2

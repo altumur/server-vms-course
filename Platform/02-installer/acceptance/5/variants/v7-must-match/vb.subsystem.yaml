@@ -1,0 +1,13 @@
+name: vb
+unit:
+  rows: orders
+  id: name
+  fields:
+    name: {type: string, required: true}
+    code: {type: string, required: true}
+placement:
+  capacity: {from: capacity, default: 4}
+worker:
+  exec: /usr/lib/vb/worker
+  creates:
+    - {sub: va, rows: items, key: "{code}"}
