@@ -19,6 +19,7 @@ scenario	step	request	expect
 07-group-size	15	@tls inputs/door-row-other.json	ok {"handshake": "ok", "http": {"status": 403}}
 07-group-size	16	@tls inputs/door-row-own.json	ok {"handshake": "ok", "http": {"status": 200}}
 07-group-size	17	@tls inputs/forwarded-admin.json	ok {"handshake": "ok", "http": {"status": 403}}
+07-group-size	18	@tls inputs/door-on-raft.json	ok {"handshake": "alert", "http": null}
 08-floor-replay	1	admin POST /v1/write {"op": "floor", "floor": 4294967296, "id": "f1"}	200 {"index": "$f"}
 08-floor-replay	2	@restart store	ok
 08-floor-replay	3	admin POST /v1/write {"op": "floor", "floor": 4294967296, "id": "f1"}	200 {"index": "$f", "again": true}
