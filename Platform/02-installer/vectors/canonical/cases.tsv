@@ -149,6 +149,7 @@ corpus-r40_console_table_secret_ok	Platform/02-installer/acceptance/1/cases/r40_
 corpus-requests_outcome_fetched_ok	Platform/02-installer/acceptance/1/cases/requests_outcome_fetched_ok.subsystem.yaml	expect/corpus-requests_outcome_fetched_ok.json	принятый случай корпуса 2.1
 corpus-requests_outcome_mark_ok	Platform/02-installer/acceptance/1/cases/requests_outcome_mark_ok.subsystem.yaml	expect/corpus-requests_outcome_mark_ok.json	принятый случай корпуса 2.1
 corpus-secrets_reader_domainconsole	Platform/02-installer/acceptance/1/cases/secrets_reader_domainconsole.subsystem.yaml	expect/corpus-secrets_reader_domainconsole.json	принятый случай корпуса 2.1
+corpus-secrets_readers_exact_prefix_ok	Platform/02-installer/acceptance/1/cases/secrets_readers_exact_prefix_ok.subsystem.yaml	expect/corpus-secrets_readers_exact_prefix_ok.json	принятый случай корпуса 2.1
 corpus-t07_block_plain_ok	Platform/02-installer/acceptance/1/cases/t07_block_plain_ok.subsystem.yaml	expect/corpus-t07_block_plain_ok.json	принятый случай корпуса 2.1
 corpus-t23_quoted_true_string	Platform/02-installer/acceptance/1/cases/t23_quoted_true_string.subsystem.yaml	expect/corpus-t23_quoted_true_string.json	принятый случай корпуса 2.1
 corpus-t27_escape_tab_ok	Platform/02-installer/acceptance/1/cases/t27_escape_tab_ok.subsystem.yaml	expect/corpus-t27_escape_tab_ok.json	принятый случай корпуса 2.1
@@ -159,5 +160,7 @@ corpus-t33b_flow_map_trailing_comma_ok	Platform/02-installer/acceptance/1/cases/
 corpus-unit_id_numeric	Platform/02-installer/acceptance/1/cases/unit_id_numeric.subsystem.yaml	expect/corpus-unit_id_numeric.json	принятый случай корпуса 2.1
 corpus-unplaced_delete_after_about_its_id	Platform/02-installer/acceptance/1/cases/unplaced_delete_after_about_its_id.subsystem.yaml	expect/corpus-unplaced_delete_after_about_its_id.json	принятый случай корпуса 2.1
 corpus-unplaced_delete_after_fixed_field	Platform/02-installer/acceptance/1/cases/unplaced_delete_after_fixed_field.subsystem.yaml	expect/corpus-unplaced_delete_after_fixed_field.json	принятый случай корпуса 2.1
+corpus-worker_writes_declared_list_ok	Platform/02-installer/acceptance/1/cases/worker_writes_declared_list_ok.subsystem.yaml	expect/corpus-worker_writes_declared_list_ok.json	принятый случай корпуса 2.1
+corpus-worker_writes_declared_ok	Platform/02-installer/acceptance/1/cases/worker_writes_declared_ok.subsystem.yaml	expect/corpus-worker_writes_declared_ok.json	принятый случай корпуса 2.1
 course-testsub	Source/tests/testdata/testsub.subsystem.yaml	expect/course-testsub.json	манифест курса
 course-testsub2	Source/tests/testdata/testsub2.subsystem.yaml	expect/course-testsub2.json	манифест курса

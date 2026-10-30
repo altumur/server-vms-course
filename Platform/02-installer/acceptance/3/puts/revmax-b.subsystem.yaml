@@ -1,4 +1,0 @@
-name: revmax
-unit: {rows: things, id: numeric}
-placement: {capacity: {default: 2}}
-worker: {exec: /usr/lib/revmax/worker}
