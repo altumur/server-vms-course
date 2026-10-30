@@ -76,9 +76,12 @@ null`); сц. 12 — роли домена.
 текст сверх этого не сравнивается. Хранилище не запускается, проб нет.
 
 **`check.tsv`:** UTF-8, LF, поля через TAB; строки с `#` пропускаются; заголовок `case	file	code`; дальше по строке на
-случай: `case` — `[a-z0-9_]+`, уникально; `file` — `check/<case>.rights`, изменённый файл прав; `code` — `0` (файл по смыслу
-равен сгенерированному) или `!0` (любой код, кроме 0). Раннер на каждую строку зовёт сверку прав реализации — `rights --check
-<file>` (Н2, Н3 «установить») на каталоге манифестов варианта с развёртыванием `dep` — и сравнивает код. Сравнение по смыслу
+случай: `case` — `[a-z0-9_]+`, уникально; `file` — `check/<case>.rights`, файл прав; `code` — `0` (файл по смыслу
+равен сгенерированному) или `!0` (любой код, кроме 0). Раннер на каждую строку зовёт сверку прав реализации (`rights --check
+<file>`, Н2, Н3 «установить») — командой `stand.rights-check` профиля `02-installer` ([общий README приёмки](../../../common/acceptance/README.md),
+«Команда сверки прав»): `{manifests}` — каталог манифестов варианта, `{deployment}` = `dep`, `{file}` — `check/<case>.rights`;
+исход — код, сравнивается с колонкой `code`. Нет ключа в профиле — случаи `check.tsv` не исполнены (не GREEN и не исход
+реализации) (решение «Архитектора» 2026-10-30, вопросы норм аудита Gemini, P/02 п. 3; C02-RIGHTS-CHECK-STAND-01). Сравнение по смыслу
 — Н3 «установить»: набор ролей, у каждой `group` и множества образцов `read`, `write`, `delete` (нет `delete` — пустое
 множество); `comment`, порядок, повторы и пробелы не сравниваются; файл не по форме P/01.2 Н1.2 — расходится.
 
@@ -91,10 +94,10 @@ null`); сц. 12 — роли домена.
 | `v6-near-about-ref` | `va`; `vb` с `placement.near.sub: va`, `vc` с `about.sub: va`, `vd` с полем `ref: va/items` | контроллер читает строки `va` по каталогу (`placement`, `workers`, `slots`, `holds`, строки единиц, `policy`, `placement_turn`), не эпоху, `idem`, `next_id` и не пишет; обратной связи нет (решение «Архитектора» 2026-10-27; P/03 Go 084a3ee9, P/03.6 сц. 07) |
 | `v7-must-match` | `va` (поле `shelf` — `ref: va/shelves`, `must_match: {zone: zone}`; таблица `shelves`); `vb` с `worker.creates` на `va/items` (`key: "{code}"`); `vc` с таблицей `links`, поле `of` — `ref: va/items`, `must_match: {zone: zone}` | заказчик `vbworker` читает цели проверки строки — `va/shelves/*` (прямая ветвь) и `vc/links/*` (обратная ветвь `must_match`), пишет только `va/items/vb-*` без удаления; чужие строки `va/items` и прочие семьи `vc` — нет; контроллер `va` обратную семью не читает (аудит покрытия P/02, B07) | P/02.5 Н1.4 `<s>worker` «чтения общей проверки строки»; договор проверки строки |
 | `v8-worker-writes-deletes` | `va` с таблицами `shelves`, `gauges`, `worker.writes: [gauges]`, `worker.deletes: [items]` | таблица `worker.writes`: воркер пишет, читает и удаляет, консоль читает и только удаляет; обычная таблица: консоль пишет и удаляет, воркер только читает; `worker.deletes`: воркер удаляет строки единиц без записи, контроллер без `delete_after` — нет (аудит покрытия P/02, второй проход) | P/02.5 Н1.4 `console`, `<s>worker`, Н3 шаг 2 |
-| `v9-asked-free-resource` | `va` с `requests` без `per_person` и `free`; `vb` с `about.sub: va`, таблицами `notches` (`holds.table`) и `shelves`, `requests` с `per_person` и `free: true` | консоль пишет `vb/asked/*`, не `va/asked/*`; `!vb/asked/*` у воркера и контроллера `vb`; ресурс пишет, читает, удаляет `vb/requests/free-*`, не `vb/requests/<rid>` и не `va/requests/free-*`; ресурс читает таблицу `holds` (`vb/notches/*`) и строки единиц манифеста с `about` (`vb/things/*`), не прочие таблицы и не строки `va` без `about` (договор удержаний) (там же) | P/02.5 Н1.4 общие правила, `console`, `resource` |
+| `v9-asked-free-resource` | `va` с `requests` без `per_person` и `free`; `vb` с `about.sub: va`, таблицами `notches` (`holds.table`) и `shelves`, `requests` с `per_person` и `free: true` | консоль пишет `vb/asked/*`, не `va/asked/*`; `!vb/asked/*` у воркера и контроллера `vb`; ресурс пишет, читает, удаляет `vb/requests/free-*`, не `vb/requests/<rid>` и не `va/requests/free-*`; ресурс читает таблицу `holds.table` (`vb/notches/*`) и строки единиц манифеста с `about` (`vb/things/*`), не прочие таблицы, не строки `va` без `about` и не семью места `<s>/holds/*` ни у `vb`, ни у `va` (договор удержаний; C02-RESOURCE-HOLDS-TABLE-01) (там же) | P/02.5 Н1.4 общие правила, `console`, `resource` |
 | `v10-worker-domain-reads` | `va` с `worker.reads: [domain/placed/va/, domain/va/tallies]`, книгами `tallies` (переносимая), `notes` (`from: va/notes/`), `rolls` (`from: va/rolls`), `domain.shared`, видом токена с `unit`, `door.routes`; `vb` без них | `domain/placed/va/` даёт и `domain/placement/va/*`; копия своей книги — и точный ключ `domain/va/tallies/local` (`CLUSTER` не задан — `local`), не префикс; запись источников собираемых книг — префикс и точный ключ; `domain/shared`, `domain/topology`, `domain/member-topology`, `domain/grants` — только у `vaworker` (там же) | P/02.5 Н1.4 `<s>worker`, Н2, Н3 шаг 3 (C02-OWN-BOOK-HOLDER-01) |
 | `v11-controller-cross-tables` | `vb`, `vc`, `vd` — как в `v6-near-about-ref`; `va` с таблицей `shelves` и `requests` (`per_person`) | контроллер связной подсистемы читает таблицы `va`, `va/decommissioned/*`, `va/controller/placement_intent`, не читает `va/requests/*`, `va/asked/*` и не пишет таблицу `va` (там же) | P/02.5 Н1.4 `<s>controller` (решение «Архитектора» 2026-10-27) |
-| `v12-check-rights` | `va` — байт в байт `v1-base`; `check.tsv` | `--check`: вывод прав без роли `vaworker`, с записью строк единиц воркером, с иной группой воркера, без `delete` контроллера, с лишним полем файла — код не 0 (аудит Gemini P/02, свойство 24) | P/02.5 Н2, Н3 «установить», Н4 |
+| `v12-check-rights` | `va` — байт в байт `v1-base`; `check.tsv` | `--check`: ровно вывод прав по Н1.4 (`same`) — код 0; вывод без роли `vaworker`, с записью строк единиц воркером, с иной группой воркера, без `delete` контроллера, с лишним полем файла — код не 0 (аудит Gemini P/02, свойство 24; `same` — решения «Архитектора» 2026-10-30, P/02 пп. 1, 2) | P/02.5 Н1.4, Н2, Н3 шаг 4, «установить», Н4 |
 | `v13-refused-idem-read` | `va` — байт в байт `v2-requests`; `vb` с `worker.reads: [va/idem/k1]`; `refused` | объявление воркера прямо называет строку внутри `va/idem/` — отказ генерации до файла, код 2, манифест `vb` (свойство 25) | P/02.5 Н1.4 общие правила, Н4 (C02-IDEM-ASKED-EXPLICIT-READ-01) |
 | `v14-refused-secrets-reads-nested` | `va` с `secrets.readers: {va/vault/: [worker]}`; `vb` с `secrets.reads: [va/vault/public/]`; `refused` | элемент `secrets.reads` строго вкладывается в секретный префикс другого манифеста — отказ генерации до файла, код 2, манифест `vb` (свойство 25) | P/02.5 Н3 шаг 4, Н4 (C02-SECRETS-READS-INTERSECTION-01) |
 | `v5-secret-domainworker` | `va` с `secrets.readers: {va/vault: [domainworker]}` и `kept` | `domainworker` → `vadomain` читает, прочие — нет (R6) |
@@ -134,7 +137,11 @@ null`); сц. 12 — роли домена.
 варианты `v8-worker-writes-deletes` (G04), `v9-asked-free-resource` (G05), `v10-worker-domain-reads` (G06),
 `v11-controller-cross-tables` (G07; отдельный вариант — манифесты `v6-near-about-ref` не меняются). Таблица вариантов выше.
 `--check` и отказы генератора до файла — формы «Архитектора» `check.tsv` и `refused` (выше): `v12-check-rights`,
-`v13-refused-idem-read`, `v14-refused-secrets-reads-nested`. Случая `check.tsv` с кодом `0` (файл, по смыслу равный выводу)
-пока нет: множества образцов вывода зависят от нерешённых мест нормы (отчёт разбора). Чтением остаются: неравенство
+`v13-refused-idem-read`, `v14-refused-secrets-reads-nested`. Случай `check.tsv` с кодом `0` — `same` варианта `v12-check-rights`:
+ровно вывод прав по Н1.4 после решений «Архитектора» 2026-10-30 (вопросы норм аудита Gemini, P/02): ресурсу — `<M>/<holds.table>/*`
+только у манифеста с `holds`, `<s>/holds/*` не выдаётся (п. 1, C02-RESOURCE-HOLDS-TABLE-01); отрицание секрета нечитателю — только
+если после уже выданных отрицаний его права ещё достают образец (п. 2, C02-NONREADER-DENY-AFTER-01); метки
+`objects/<s>/commands/*` консоли — только у манифеста с `requests` (как у воркера; у `va` их нет). Прочие файлы `check/` — этот вывод с
+одной правкой. Чтением остаются: неравенство
 читателей секрета (из манифестов каталога не построить: читатели выводятся из тех же объявлений) и `CLUSTER=` (вход
 окружения, не каталога варианта).

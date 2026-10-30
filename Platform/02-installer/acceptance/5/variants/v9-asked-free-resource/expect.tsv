@@ -3,6 +3,8 @@
 # - vbworker и vbcontroller не читают vb/asked/* (!vb/asked/*);
 # - resource пишет/читает/удаляет vb/requests/free-* (у vb requests.free: true), не пишет vb/requests/r1 и va/requests/free-*;
 # - resource читает таблицу holds (vb/notches/*) и строки единиц манифеста с about (vb/things/*), но не обычную таблицу vb/shelves/* и не строки va/items/* без about.
+# - resource не читает семью места <s>/holds/* ни у vb (с holds), ни у va (без holds): ресурсу — только <M>/<holds.table>/*
+#   (C02-RESOURCE-HOLDS-TABLE-01; решение «Архитектора» 2026-10-30, вопросы норм аудита Gemini, P/02 п. 1).
 role	action	key	expect
 console	write	vb/asked/alice	allow
 console	delete	vb/asked/alice	allow
@@ -18,3 +20,5 @@ resource	read	vb/notches/n1	allow
 resource	read	vb/shelves/s1	deny
 resource	read	vb/things/t1	allow
 resource	read	va/items/u1	deny
+resource	read	vb/holds/p1	deny
+resource	read	va/holds/p1	deny

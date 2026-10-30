@@ -214,7 +214,6 @@
     "platform/schema",
     "platform/space",
     "va/alarms_retention",
-    "va/holds/*",
     "va/retention"
    ],
    "write": [

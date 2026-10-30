@@ -1,7 +1,11 @@
 # Сверка файла прав по смыслу (P/02.5 Н2 `--check`, Н3 «установить», Н4): раннер зовёт `rights --check <file>` реализации на
 # манифестах варианта (va — байт в байт v1-base) с развёртыванием dep и сравнивает код: 0 — равен сгенерированному, !0 — не 0.
-# Каждый файл — вывод прав этого каталога с одной правкой, которая по Н3 «установить» расходится при любом верном выводе.
+# Файл same — ровно вывод прав этого каталога по Н1.4 (ресурсу нет va/holds/* — C02-RESOURCE-HOLDS-TABLE-01; у domainconsole
+# нет !domain/signer, !domain/signer-pending при !domain/signer* — C02-NONREADER-DENY-AFTER-01; решения «Архитектора» 2026-10-30,
+# вопросы норм аудита Gemini, P/02 пп. 1, 2): код 0. Прочие — этот вывод с одной правкой, которая по Н3 «установить» расходится.
+# Раннер зовёт сверку командой stand.rights-check профиля 02-installer (общий README приёмки); ключа нет — случаи не исполнены.
 case	file	code
+same	check/same.rights	0
 role_missing	check/role_missing.rights	!0
 worker_writes_units	check/worker_writes_units.rights	!0
 group_changed	check/group_changed.rights	!0
