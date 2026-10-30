@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/10: стенд hold, m1, m2 — консоль домена: список тревог с молчащим членом (сц. 02 из М11/11) и страница держателя (сц. 05 из М11/08); номера и шаги прежние (стадия B); 06–09 — аудит покрытия P/10: отказы дверей вида, 502 передачи при обрыве и молчании процесса domain. Формат — README.
+# Приёмка P/10: стенд hold, m1, m2 — консоль домена: список тревог с молчащим членом (сц. 02 из М11/11) и страница держателя (сц. 05 из М11/08); номера и шаги прежние (стадия B); 06–09 — аудит покрытия P/10: отказы дверей вида, 502 передачи при обрыве и молчании процесса domain; 10–16 — второй проход (Gemini): HEAD и параметры двери строк, нечитаемые строки дверей чтения и сторожевой, грамматика окна тревог, метка reported, сегменты ./.. и X-User. Формат — README.
 02-silent-member	1	@domain	ok
 02-silent-member	2	@stop agent m2	ok
 02-silent-member	3	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 4}}}	200 {"rev": 1}
@@ -50,3 +50,69 @@ scenario	step	request	expect
 09-pass-process-silent	4	@on hold @thaw domain	ok
 09-pass-process-silent	5	@until 30 signer POST /api/login {"user": "root", "password": "w2c test root password"}	200 {"user": "root"}
 09-pass-process-silent	6	holder PUT /domain/topology {"base_rev": 0, "centre": "hold"}	200 {"rev": 1, "centre": "hold"}
+10-read-doors-head-and-query	1	@domain	ok
+10-read-doors-head-and-query	2	holder HEAD /domain	200
+10-read-doors-head-and-query	3	holder HEAD /domain/topology	200
+10-read-doors-head-and-query	4	holder GET /domain/testsub/counters?cluster=	400
+10-read-doors-head-and-query	5	holder GET /domain/testsub/counters?cluster=m1&cluster=m1	400
+10-read-doors-head-and-query	6	holder GET /domain/nosuch/counters	404
+10-read-doors-head-and-query	7	holder GET /domain/testsub/nosuch	404
+11-topology-placement-unreadable	1	@domain	ok
+11-topology-placement-unreadable	2	@until 30 holder GET /domain/placement	200 {"rev": 1, "records": {}}
+11-topology-placement-unreadable	3	@on hold @sigterm domain	ok
+11-topology-placement-unreadable	4	member hold store POST /v1/write {"op": "put", "key": "domain/topology", "items": {"doc": "not json"}}	200
+11-topology-placement-unreadable	5	holder GET /domain/topology	503 {"error": "unavailable"}
+11-topology-placement-unreadable	6	member hold store POST /v1/write {"op": "put", "key": "domain/placement", "items": {"rev": "not a number"}}	200
+11-topology-placement-unreadable	7	holder GET /domain/placement	503 {"error": "unavailable"}
+11-topology-placement-unreadable	8	member hold store POST /v1/write {"op": "put", "key": "domain/placement", "items": {"rev": "1"}}	200
+11-topology-placement-unreadable	9	holder GET /domain/placement	200 {"rev": 1, "records": {}}
+11-topology-placement-unreadable	10	holder GET /domain/placement/testsub/c1	404
+11-topology-placement-unreadable	11	holder GET /domain/placement/nosuch/c1	404
+11-topology-placement-unreadable	12	member hold store POST /v1/write {"op": "put", "key": "domain/placement/testsub/c1", "items": {"cluster": ""}}	200
+11-topology-placement-unreadable	13	holder GET /domain/placement/testsub/c1	503 {"error": "unavailable"}
+12-shared-and-members-unreadable	1	@domain	ok
+12-shared-and-members-unreadable	2	@on hold @sigterm domain	ok
+12-shared-and-members-unreadable	3	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "not json"}}	200
+12-shared-and-members-unreadable	4	holder GET /domain/shared	503 {"error": "unavailable"}
+12-shared-and-members-unreadable	5	holder GET /domain/members	200 {"members": {"hold": {"how": "holder"}}}
+12-shared-and-members-unreadable	6	member hold store POST /v1/write {"op": "put", "key": "domain/members", "items": {"doc": "not json"}}	200
+12-shared-and-members-unreadable	7	holder GET /domain/members	503 {"error": "unavailable"}
+12-shared-and-members-unreadable	8	holder GET /domain/alarms	503 {"error": "unavailable"}
+13-alarms-query-lexemes	1	@domain	ok
+13-alarms-query-lexemes	2	holder GET /domain/alarms?since=1e3	400 {"error": "refused", "detail": "since and until are times, in seconds"}
+13-alarms-query-lexemes	3	holder GET /domain/alarms?since=-1	400 {"error": "refused", "detail": "since and until are times, in seconds"}
+13-alarms-query-lexemes	4	holder GET /domain/alarms?since=%2B1	400 {"error": "refused", "detail": "since and until are times, in seconds"}
+13-alarms-query-lexemes	5	holder GET /domain/alarms?since=%201	400 {"error": "refused", "detail": "since and until are times, in seconds"}
+13-alarms-query-lexemes	6	holder GET /domain/alarms?since=1_000	400 {"error": "refused", "detail": "since and until are times, in seconds"}
+13-alarms-query-lexemes	7	holder GET /domain/alarms?until=1e10	400 {"error": "refused", "detail": "since and until are times, in seconds"}
+13-alarms-query-lexemes	8	holder GET /domain/alarms?since=1&since=2	400 {"error": "refused"}
+13-alarms-query-lexemes	9	holder GET /domain/alarms?since=%31&until=%32	200 {"since": 1, "until": 2, "events": []}
+14-alarms-mark-unreadable	1	@domain	ok
+14-alarms-mark-unreadable	2	@on hold @sigterm domain	ok
+14-alarms-mark-unreadable	3	@on hold @spoil object domain/members/m1/reported	ok
+14-alarms-mark-unreadable	4	holder GET /domain/alarms	200 {"complete": false, "members": {"m1": {"state": "unreadable", "known_until": "@absent", "silent_since": "@absent"}, "m2": {"state": "@not(unreadable)"}}}
+15-dot-segments-and-x-user	1	@domain	ok
+15-dot-segments-and-x-user	2	@person -	ok
+15-dot-segments-and-x-user	3	holder GET /domain/./members	404 {"error": "not a domain route"}
+15-dot-segments-and-x-user	4	holder GET /domain/testsub/.%2E/counters	404 {"error": "not a domain route"}
+15-dot-segments-and-x-user	5	holder @header X-User: root GET /domain/members	401 {"error": "denied"}
+15-dot-segments-and-x-user	6	holder @header X-User: root GET /session	200 {"open": false, "user": "@absent"}
+15-dot-segments-and-x-user	7	@person root w2c test root password	ok
+15-dot-segments-and-x-user	8	holder @header X-User: forged GET /session	200 {"open": false, "user": "root", "via": "token", "grants": [{"cap": "admin", "scope": "*"}]}
+16-gate-rows-unreadable	1	@domain	ok
+16-gate-rows-unreadable	2	@on hold @sigterm domain	ok
+16-gate-rows-unreadable	3	member hold store GET /v1/get?key=domain/revoked	200 {"items": {"jtis": "$jtis"}}
+16-gate-rows-unreadable	4	member hold store POST /v1/write {"op": "put", "key": "domain/disabled", "items": {"names": "not a list"}}	200
+16-gate-rows-unreadable	5	holder GET /domain	503 {"error": "unavailable"}
+16-gate-rows-unreadable	6	member hold store POST /v1/write {"op": "put", "key": "domain/disabled", "items": {"names": "[]"}}	200
+16-gate-rows-unreadable	7	holder GET /domain	200 {"holder": "hold"}
+16-gate-rows-unreadable	8	member hold store POST /v1/write {"op": "put", "key": "domain/revoked", "items": {"jtis": "not a revocation"}}	200
+16-gate-rows-unreadable	9	holder GET /domain	503 {"error": "unavailable"}
+16-gate-rows-unreadable	10	member hold store POST /v1/write {"op": "put", "key": "domain/revoked", "items": {"jtis": "$jtis"}}	200
+16-gate-rows-unreadable	11	holder GET /domain	200 {"holder": "hold"}
+16-gate-rows-unreadable	12	member hold store POST /v1/write {"op": "put", "key": "domain/grants/domain", "items": {"doc": "not json"}}	200
+16-gate-rows-unreadable	13	holder GET /domain	503 {"error": "unavailable"}
+16-gate-rows-unreadable	14	member hold store POST /v1/write {"op": "put", "key": "domain/grants/domain", "items": {"doc": "{\"lines\":[{\"by\":\"root\",\"cap\":\"admin\",\"scope\":\"*\",\"subject\":\"root\",\"until\":0}]}"}}	200
+16-gate-rows-unreadable	15	holder GET /domain	200 {"holder": "hold"}
+16-gate-rows-unreadable	16	member hold store POST /v1/write {"op": "put", "key": "domain/keys", "items": {"doc": "not json"}}	200
+16-gate-rows-unreadable	17	holder GET /domain	503 {"error": "unavailable"}

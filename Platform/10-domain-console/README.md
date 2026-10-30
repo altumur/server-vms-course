@@ -11,5 +11,5 @@ spec/10-domain-console.api.openapi.yaml   двери
 spec/10-domain-console.README.md          инструкция реализации
 lifecycle.md                              флаги, окружение, коды выхода, юниты
 vectors/alarms/                           векторы списка тревог, функция alarms (Н1.8, Н3)
-acceptance/                               приёмка урока (сц. 02, 05–09)
+acceptance/                               приёмка урока (сц. 02, 05–16)
 ```
