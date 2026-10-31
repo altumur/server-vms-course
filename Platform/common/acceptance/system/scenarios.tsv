@@ -1,7 +1,67 @@
 scenario	step	request	expect
-# Системная приёмка модуля «Платформа»: учения (@manual) на настоящем кластере из всех процессов. Перенесено из М10/11 (сц. 05, 06) (стадия B; решение «Архитектора» по В2 плана переноса урока 6). Формат — README.
-05-power-pull	1	@manual на тестовом кластере с заранее наблюдёнными пульсами, исправным хранилищем и свободной ёмкостью выдернуть питание сервера; проверить перенос по допускам P/04 (ориентир 90 с + проход, не общий deadline), новую эпоху, сохранность архива на томе; у соседей только подтверждённые зеркальные копии	manual
-05-power-pull	2	@manual вернуть сервер: демон рестартует по member.json без повторного join, ресурс тянет бакеты (restore), воркеры берут свободные имена; ничего не едет назад, кроме объявленного home (P/04 Н3 «проход()» шаг 7)	manual
+# Системная приёмка модуля «Платформа»: 05 — стенд кластера из трёх серверов; 07, 08 — учения (@manual) на настоящей коробке. Перенесено из М10/11 (сц. 05, 06) (стадия B; решение «Архитектора» по В2 плана переноса урока 6). Формат — README.
+# 05-power-pull (стенд кластера из трёх серверов, ПРАВИЛА-РАБОТЫ.md § 4; пока не исполним — README, «Исполнимость»): c1 без дома и h1 с домом на srv-b; закрытый бакет — копия на srv-c настоящим проходом зеркала, бакет 20260101 — только копия, открытый бакет — только на томе; питание srv-b выдернуто; новая эпоха, копии и архив; возврат без -join, restore, назад едет только h1
+05-power-pull	1	@group-setup inputs/cluster.json	ok
+05-power-pull	2	@server-start srv-a	ok
+05-power-pull	3	@server-start srv-b	ok
+05-power-pull	4	@server-start srv-c	ok
+05-power-pull	5	@until 20 admin@srv-c GET /v1/status	200 {"state": "Follower", "leader_id": "srv-a"}
+05-power-pull	6	admin@srv-a POST /v1/write {"id":"e5a1","op":"put","key":"platform/mirror","items":{"enabled":"true","copies":"1"},"cas":""}	200
+05-power-pull	7	admin@srv-a POST /v1/write {"id":"e5a2","op":"put","key":"testsub/retention","items":{"days":"36500"},"cas":""}	200
+05-power-pull	8	@start controller	ok
+05-power-pull	9	@start controller testsub2	ok
+05-power-pull	10	console2 POST /shelves {"name": "s-a1", "zone": "z", "server": "srv-a"}	201
+05-power-pull	11	@start worker testsub2 t-srv-a-1 on srv-a	ok
+05-power-pull	12	@until 30 admin@srv-a GET /v1/get?key=testsub2/holds/s-a1	200 {"items": {"by": "t-srv-a-1", "released": "false"}}
+05-power-pull	13	console2 POST /shelves {"name": "s-b1", "zone": "z", "server": "srv-b"}	201
+05-power-pull	14	@start worker testsub2 t-srv-b-1 on srv-b	ok
+05-power-pull	15	@until 30 admin@srv-a GET /v1/get?key=testsub2/holds/s-b1	200 {"items": {"by": "t-srv-b-1", "released": "false"}}
+05-power-pull	16	console2 POST /shelves {"name": "s-c1", "zone": "z", "server": "srv-c"}	201
+05-power-pull	17	@start worker testsub2 t-srv-c-1 on srv-c	ok
+05-power-pull	18	@until 30 admin@srv-a GET /v1/get?key=testsub2/holds/s-c1	200 {"items": {"by": "t-srv-c-1", "released": "false"}}
+05-power-pull	19	@start worker w-2 on srv-b	ok
+05-power-pull	20	@until 20 admin@srv-a GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false", "server": "srv-b", "gen": "1"}}
+05-power-pull	21	console POST /counters {"name": "c1", "start": 1}	201
+05-power-pull	22	@until 30 admin@srv-a GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-2"}}
+05-power-pull	23	@until 30 admin@srv-a GET /v1/get?key=testsub/epoch/c1	200 {"items": {"epoch": "1"}}
+05-power-pull	24	@start worker w-1 on srv-a	ok
+05-power-pull	25	@start worker w-3 on srv-c	ok
+05-power-pull	26	@until 20 admin@srv-a GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "server": "srv-a"}}
+05-power-pull	27	@until 20 admin@srv-a GET /v1/get?key=testsub/slots/w-3	200 {"items": {"released": "false", "server": "srv-c"}}
+05-power-pull	28	console2 POST /tallies {"name": "h1", "of": "c1", "shelf": "s-b1", "zone": "z"}	201
+05-power-pull	29	@until 30 console2 GET /where/h1	200 {"worker": "t-srv-b-1"}
+05-power-pull	30	@append event-closed on srv-b testsub/c1/e1 {"t": {now}, "kind": "probe.closed", "id": "e1-74657374737562-6331-1-70726f6265-1"}	ok
+05-power-pull	31	@restart resource#srv-b	ok
+05-power-pull	32	@until 30 resource#srv-c GET /mirrored/srv-b/$closed	200 ~probe.closed
+05-power-pull	33	resource#srv-c @header X-Sum: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	204
+05-power-pull	34	@append event on srv-b testsub/c1/e1 {"t": {now}, "kind": "probe.open", "id": "e1-74657374737562-6331-1-70726f6265-2"}	ok
+05-power-pull	35	@power-pull srv-b	ok
+05-power-pull	36	@until 20 admin@srv-a GET /v1/status	@oneof 200 {"state": "Leader"} | 200 {"state": "Follower", "leader_id": "srv-c"}
+05-power-pull	37	@until 70 console GET /servers	200 {"servers": {"srv-b": {"resource": "silent"}}}
+05-power-pull	38	@until 85 admin@srv-a GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "@not(w-2)"}}
+05-power-pull	39	admin@srv-a GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "$holder"}}
+05-power-pull	40	@until 30 admin@srv-a GET /v1/get?key=testsub/epoch/c1	200 {"items": {"epoch": "2"}}
+05-power-pull	41	@until 85 console2 GET /where/h1	200 {"worker": "@not(t-srv-b-1)"}
+05-power-pull	42	@until 85 resource#srv-a GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-2": {"fate": "move"}}, "names_given": {"w-2": "@any"}}
+05-power-pull	43	console GET /events?unit=testsub/c1&kind=probe.closed	200 {"events": [{"kind": "probe.closed", "server": "srv-b", "fenced": true}], "state": "~srv-b from mirror", "complete": false, "incomplete": {"srv-b": "silent"}}
+05-power-pull	44	console GET /events?unit=testsub/c1&kind=probe.open	200 {"events": [], "complete": false}
+05-power-pull	45	resource#srv-a GET /mirrored/srv-b	404
+05-power-pull	46	resource#srv-c GET /mirrored/srv-b/$closed	200 ~probe.closed
+05-power-pull	47	@power-back srv-b	ok
+05-power-pull	48	@until 20 admin@srv-b GET /v1/status	200 {"state": "Follower"}
+05-power-pull	49	@until 60 resource#srv-b GET /v1/objects/platform/resources/srv-b/heartbeat?scope=local	200 {"restore": {"srv-c": {"done": true}}}
+05-power-pull	50	resource#srv-b GET /events/testsub/c1/e1/20260101T000000Z.events.jsonl	200 ~foo
+05-power-pull	51	resource#srv-b GET /events/$closed	200 ~probe.closed
+05-power-pull	52	@until 30 resource#srv-b GET /events?unit=testsub/c1&kind=probe.open	200 {"events": [{"kind": "probe.open"}]}
+05-power-pull	53	@until 30 console GET /events?unit=testsub/c1&kind=probe.open	200 {"events": [{"kind": "probe.open", "server": "srv-b", "fenced": true}], "complete": true}
+05-power-pull	54	@start worker w-2 on srv-b	ok
+05-power-pull	55	@start worker testsub2 t-srv-b-1 on srv-b	ok
+05-power-pull	56	@until 30 admin@srv-a GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false", "server": "srv-b", "gen": "2"}}
+05-power-pull	57	@until 30 admin@srv-a GET /v1/get?key=testsub2/holds/s-b1	200 {"items": {"by": "t-srv-b-1", "released": "false"}}
+05-power-pull	58	@until 90 console2 GET /where/h1	200 {"worker": "t-srv-b-1"}
+05-power-pull	59	@sleep 12	ok
+05-power-pull	60	admin@srv-a GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "$holder"}}
+05-power-pull	61	@until 30 console GET /servers	200 {"servers": {"srv-b": {"resource": "live"}}}
 07-part-cold-start	1	@manual на коробке с systemd поставить testsub и testsub2 (install.sh), перезагрузить; после загрузки до юнитов есть /run/<dep>-testsub2-belt и /run/<dep>-testsub2-pump (tmpfiles.d установщика, 2750); юнит части <dep>-testsub2-pump.service включён и активен раньше воркеров testsub2; воркеры testsub2 захватили имена; файла /etc/testsub2/testsub2.env нет — оба стартовали	manual
 07-part-cold-start	2	@manual юниты: у воркера testsub2 TimeoutStopSec=30, After= юнита части без Wants/Requires, SupplementaryGroups с группой части, W2C_SUB_ENV=/etc/testsub2/testsub2.env, ReadWritePaths — /data/platform/subsystems/testsub2 и /run/<dep>-testsub2-belt; у части TimeoutStopSec=10, w2c-run.sh part testsub2 pump, ReadWritePaths — свой каталог и /run/<dep>-testsub2-pump; EnvironmentFile= ни у одного; каталог настроек 0751, каталог части 0700	manual
 07-part-cold-start	3	@manual под ProtectSystem=strict часть пишет файл в /run/<dep>-testsub2-pump, воркер testsub2 создаёт сокет в /run/<dep>-testsub2-belt; воркер testsub (worker.uses testsub2.belt, без ReadWritePaths) подключается к сокету ленты, воркер testsub2 читает долю pump; запись потребителя в чужую долю — отказ ОС	manual
