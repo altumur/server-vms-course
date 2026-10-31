@@ -102,3 +102,14 @@ scenario	step	request	expect
 11-request-expired	13	@until 90 admin GET /v1/get?key=testsub2/requests/$r1	200 {"items": null}
 11-request-expired	14	admin GET /v1/get?key=testsub2/requests/$r2	200 {"items": {"unit": "t1"}}
 11-request-expired	15	@until 90 console POST /testsub2/requests {"unit": "t2", "from": 0, "to": 1}	202
+12-table-row-expired	1	console2 POST /scraps {"name": "s1"}	201 {"row": {"name": "s1"}}
+12-table-row-expired	2	console2 POST /scraps {"name": "s2"}	201 {"row": {"name": "s2"}}
+12-table-row-expired	3	console2 POST /shelves {"name": "sh1", "zone": "z1"}	201 {"row": {"name": "sh1"}}
+12-table-row-expired	4	@sleep 31	ok
+12-table-row-expired	5	console2 GET /scraps/s1	200 {"name": "s1"}
+12-table-row-expired	6	console2 POST /scraps {"name": "s2", "note": "again"}	201 {"row": {"name": "s2", "note": "again"}}
+12-table-row-expired	7	@until 90 console2 GET /scraps/s1	404
+12-table-row-expired	8	admin GET /v1/get?key=testsub2/scraps/s1	200 {"items": null}
+12-table-row-expired	9	console2 GET /scraps/s2	200 {"name": "s2", "note": "again"}
+12-table-row-expired	10	console2 GET /shelves/sh1	200 {"name": "sh1"}
+12-table-row-expired	11	@until 90 console2 GET /scraps/s2	404

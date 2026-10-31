@@ -109,6 +109,14 @@ tables:
     fields:
       name:  {type: string, required: true}
       level: {type: int}
+  # rows of a short life: the console's reaper takes a row whose version it has seen unchanged for delete_after seconds
+  # (P/06.4 Н3 `tables`); 35 outlasts one pass of 30 s, so a row is never taken at first sight
+  scraps:
+    key: name
+    fields:
+      name: {type: string, required: true}
+      note: {type: string}
+    delete_after: 35
 placement:
   capacity:    {from: capacity, default: 8}
   headroom:    {from: headroom}

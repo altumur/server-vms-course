@@ -2269,6 +2269,12 @@
       "written",
       "deleted"
      ]
+    },
+    "delete_after": {
+     "description": "срок строки в секундах; строку снимает жнец консоли (P/06.4 Н3 `tables`)",
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
     }
    },
    "additionalProperties": false,

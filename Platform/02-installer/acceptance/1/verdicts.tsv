@@ -720,3 +720,12 @@ a94_files_not_list	refused
 a94_files_not_string	refused
 a94_shell_not_bool	refused
 a94_console_unknown_key	refused
+a94_table_delete_after_ok	ok
+a94_table_delete_after_integral_ok	ok
+a94_table_delete_after_zero	refused
+a94_table_delete_after_negative	refused
+a94_table_delete_after_fraction	refused
+a94_table_delete_after_word	refused
+a94_table_delete_after_bool	refused
+a94_table_delete_after_null	refused
+a94_table_delete_after_over_2p53	refused

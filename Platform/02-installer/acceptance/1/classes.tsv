@@ -258,3 +258,10 @@ a94_files_not_list	form
 a94_files_not_string	form
 a94_shell_not_bool	form
 a94_console_unknown_key	form
+a94_table_delete_after_zero	form
+a94_table_delete_after_negative	form
+a94_table_delete_after_fraction	form
+a94_table_delete_after_word	form
+a94_table_delete_after_bool	form
+a94_table_delete_after_null	form
+a94_table_delete_after_over_2p53	form
