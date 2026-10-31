@@ -237,7 +237,7 @@ tables:
     fields:
       device:   {type: string, required: true}       # the device's key: the host its sources name (`group_by`)
       events:   {type: list}                         # the event kinds its units raise
-      channels: {type: int, default: 0}              # its video sources, as its description names them
+      channels: {type: int, schema: {minimum: 0}}    # its video sources; 0 — none, no field — not said, which is not none
       ptz:      {type: bool, default: false}         # it turns
       presets:  {type: int, default: 0}              # positions it can be asked to go to
       identity: {type: string, schema: {maxLength: 200}}   # its serial number, MAC — not a capability, never leaves the cluster
@@ -254,7 +254,8 @@ tables:
       device: {type: string, required: true}         # the host — what tells a holder its rows when the camera is gone
       gone:   {type: bool, default: false}           # the owner or the number is no longer so; the row stays
   # What the operator says of a row above, under the same key: one writer each (P/06.1 Н1.1), as with `rec/keeps`. No
-  # row here: no title, and on. A row with no row above is allowed: a name set ahead of the device, or left by a
+  # row here: no title, and on unless a row of the same device, type and number is off (V/01.4 Н1.4а). A row with no
+  # row above is allowed: a name set ahead of the device, or left by a
   # device that lost the input.
   child_settings:
     key: "{camera}-{type}-{number:int}"
