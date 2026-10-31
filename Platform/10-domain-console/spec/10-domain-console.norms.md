@@ -248,7 +248,7 @@ server:
 Право — строка `domain` [P/08.4 Н1.5](../../08-domain/spec/08.4-domain.norms.md) (одна строка для консоли домена и процесса
 `domain`; текст — там): `may` ([договор права](../../common/contracts/may.md)) по `domain/grants/domain` (есть, но не читается — правило «Нечитаемая строка» договора сторожевой и передачи,
 503 `unavailable`; решение «Архитектора» 2026-10-28 по сверке ddc9bee1e), `need` view/admin по
-двери; вход `disabled` функции `may` — строка `domain/disabled` у держателя (P/06.3 Н1.3 «Данные», М11/9 Н1.5 `cluster`; есть, но не
+двери; вход `disabled` функции `may` — строка `domain/disabled` у держателя, условие чтения — договор права (P/06.3 Н1.3 «Данные», М11/9 Н1.5 `cluster`; есть, но не
 читается — правило «Нечитаемая строка», 503 `unavailable`); вход `roles` — строки `domain/roles/*`, `domain/groups/*` держателя, `as_of` — `null` (P/08.4 Н1.3б `roles_at_holder`;
 шаг 4а ADR-0100 §1; нечитаемая `domain/roles/admin` или группа из её `assigned` — 503, если прямые строки не разрешили); вход `iat` — токена. Строка управляющего (P/08.4 Н1.3в
 `manager`) служит сторожевой только у дверей `gives`: `/domain/users…`, `/domain/groups…`, `/domain/roles…`, `/domain/batch`, `GET /domain/grants`, `PUT /domain/grants/<кластер>`, а также `/domain/break-glass…`: у этой двери группа считается только затем, чтобы запрос дошёл до процесса и тот ответил 403 `admin only` (P/08.4 Н1.5, Н1.3в `denies`); у прочих её группа в `may` не считается. Подсистемы у дверей домена нет: `sub` — `null`.
