@@ -151,6 +151,11 @@ journal:      domain.forwarded {cluster, path, user, status} у пересыла
 | любой | `/domain/<sub>/<сегмент door.pass манифеста>[/…]` | 8 Н1.7 | 5 | да |
 | GET, POST | `/domain/users` | 9 Н2 (добавлено М11/9) | 5 | да |
 | PUT, DELETE | `/domain/users/<имя>` | 9 Н2 (добавлено М11/9) | 5 | да |
+| GET, POST | `/domain/groups` | P/08.4 Н2 (ADR-0098) | 5 | да |
+| PUT, DELETE | `/domain/groups/<имя>` | P/08.4 Н2 (ADR-0098) | 5 | да |
+| GET, POST | `/domain/roles` | P/08.4 Н2 (ADR-0098) | 5 | да |
+| PUT, DELETE | `/domain/roles/<имя>` | P/08.4 Н2 (ADR-0098) | 5 | да |
+| POST | `/domain/batch` | P/08.4 Н2 (ADR-0098 §6) | 5 | да |
 | GET | `/domain/grants` | 9 Н2 (добавлено М11/9) | 5 | да |
 | PUT | `/domain/grants/<кластер>` | 9 Н2 (добавлено М11/9) | 5 | да |
 | GET | `/domain/break-glass` | 9 Н2 (добавлено М11/9) | 5 | да |

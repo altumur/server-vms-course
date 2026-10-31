@@ -5705,12 +5705,19 @@ components:
       properties:
         cap:
           enum:
+          - none
           - view
           - edit
           - admin
+        sub:
+          type: string
+          description: подсистема строки; нет поля — все подсистемы и platform (ADR-0097 §1)
         scope:
           type: string
           minLength: 1
+        role:
+          type: string
+          description: имя роли, если строка действует через неё; прямая строка — без поля (ADR-0098 §4)
     OpenSession:
       type: object
       required:
@@ -5776,8 +5783,14 @@ components:
           description: шаг identity этой сессии (P/06.3 Н1.3 `session`)
         debug:
           type: boolean
+        admin:
+          type: boolean
+          enum:
+          - true
+          description: действует шаг 4а договора права; поле ответа, не строка; иначе поля нет (договор сторожевой и передачи `session` `admin`, ADR-0100 §1)
         grants:
           type: array
+          description: один элемент на (cap, sub, scope, источник); порядок — договор сторожевой и передачи `session` `grants`
           items:
             $ref: '#/components/schemas/Grant'
         server_time:

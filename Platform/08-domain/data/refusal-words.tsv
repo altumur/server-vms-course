@@ -1,5 +1,5 @@
 # Закрытый перечень слов error дверей процесса domain: главы 8.3, 8.4, 8.6–8.10 (ADR-0094 B5). Правила — глава 8.0 Н4; формат field — P/06.1 Н2.
-# door — двери: agents /api/member, /api/carry, /api/relay; tokens /api/tokens; login /api/login; people /domain/users…;
+# door — двери: agents /api/member, /api/carry, /api/relay; tokens /api/tokens; login /api/login; people /domain/users…; groups /domain/groups…; roles /domain/roles…; batch /domain/batch;
 # grants /domain/grants/…; break-glass /domain/break-glass/…; revoke /domain/revoke; members /domain/members…; topology /domain/topology;
 # placement /domain/placement/…; edits /domain/<sub>/<rows>…; shared /domain/shared; move /api/prepare, /api/take, /domain/move;
 # handover /domain/handover; stranded /domain/stranded/apply; * — каждая дверь процесса. У агентов слово уточняет reason (8.3 Н4, 8.7 Н4).
@@ -89,3 +89,42 @@ stranded	409	refused	-	8.8 Н1.6
 *	503	frozen	-	8.8 Н1.7
 *	503	standby	-	8.10 Н1.7
 *	503	unavailable	-	8.4 Н1.5; 8.10 Н4
+groups	400	bad body	-	8.4 Н4
+groups	400	bad name	-	8.4 Н4
+groups	400	unknown member	/members/<i>	8.4 Н4
+groups	403	admin only	-	8.4 Н4
+groups	404	no such group	-	8.4 Н4
+groups	409	exists	-	8.4 Н4
+groups	409	last admin	-	8.4 Н4
+groups	409	password set by a non-admin	/members/<i>	8.4 Н4
+groups	409	roles table too large	-	8.4 Н4
+groups	413	too large	-	8.4 Н4
+groups	503	unavailable	-	8.4 Н4
+roles	400	bad body	-	8.4 Н4
+roles	400	bad name	-	8.4 Н4
+roles	400	unknown member	/assigned/<i>	8.4 Н4
+roles	403	admin only	-	8.4 Н4
+roles	404	no such role	-	8.4 Н4
+roles	409	builtin	-	8.4 Н4
+roles	409	exists	-	8.4 Н4
+roles	409	last admin	-	8.4 Н4
+roles	409	password set by a non-admin	/assigned/<i>	8.4 Н4
+roles	409	roles table too large	-	8.4 Н4
+roles	409	too many admins	/assigned	8.4 Н4
+roles	413	too large	-	8.4 Н4
+roles	503	unavailable	-	8.4 Н4
+batch	400	bad batch	-	8.4 Н4
+batch	403	admin only	/writes/<i>	8.4 Н4
+batch	409	last admin	-	8.4 Н4
+batch	409	password set by a non-admin	/writes/<i>	8.4 Н4
+batch	409	roles table too large	-	8.4 Н4
+batch	409	too many admins	/writes/<i>	8.4 Н4
+batch	412	conflict	/writes/<i>	8.4 Н4
+batch	413	batch too large	-	8.4 Н4
+batch	413	too large	-	8.4 Н4
+batch	503	unavailable	-	8.4 Н4
+people	403	admin only	-	8.4 Н4
+people	409	roles table too large	-	8.4 Н4
+grants	403	admin only	-	8.4 Н4
+grants	409	roles table too large	-	8.4 Н4
+break-glass	403	admin only	-	8.4 Н4

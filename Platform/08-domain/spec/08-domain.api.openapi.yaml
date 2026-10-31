@@ -1,14 +1,15 @@
 # P/08 — двери процесса domain (SIGNER_URL): HTTP-контракт (одна дверь процесса — один контракт урока; план переноса
 # урока 8 § 4). Главы ссылаются на свои пути (описание каждого пути называет главу): 8.3 — /api/member/{member},
 # /api/carry/{member}, /api/relay/{relay}, /domain/members, /domain/members/{name}, /domain/members/{member}/ca,
-# /domain/topology; 8.4 — /api/login, /domain/users, /domain/users/{name}, /domain/grants/{cluster}, /domain/break-glass,
+# /domain/topology; 8.4 — /api/login, /domain/users, /domain/users/{name}, /domain/groups, /domain/groups/{name}, /domain/roles,
+# /domain/roles/{name}, /domain/batch, /domain/grants/{cluster}, /domain/break-glass,
 # /domain/break-glass/{cluster}, /domain/revoke; 8.6 — /domain/placement/{sub}/{ref}, /domain/{sub}/{rows},
 # /domain/{sub}/{rows}/{ref}; 8.7 — /api/tokens/{member}/{sub}/{kind}; 8.8 — /api/prepare, /api/take, /domain/move,
 # /domain/handover, /domain/stranded/apply; 8.9 — /domain/shared. Своих путей у глав 8.0, 8.1, 8.2, 8.5, 8.10 нет: 8.0 —
 # параметр X-W2C-Client и ответы deposed, frozen, standby; 8.1 — схемы вида и теневого отчёта (их отдаёт консоль домена,
 # урок P/10 ссылается $ref), вход и вывод команды view; 8.10 — 409 и 413 потолков у путей 8.3, 503 standby у каждой двери.
 # Свои двери процесса (класс signed: /api/member, /api/carry, /api/relay, /api/tokens) — 4 операции; двери, которые процессу
-# передают, — 24 и 2 HEAD (консоль домена — 21 и HEAD у GET /domain/users, /domain/break-glass; консоль кластера — 3:
+# передают, — 33 и 4 HEAD (консоль домена — 30 и HEAD у GET /domain/users, /domain/groups, /domain/roles, /domain/break-glass; консоль кластера — 3:
 # /api/prepare, /api/take, POST /domain/move; глава 8.0 Н2; разбор ревью стадии B 8–10, № 22: М-6); у каждой операции — operationId: OpenAPI урока 10 ссылается на ответы этих операций (решение
 # «Архитектора» 2026-10-20 по планам 8–10, п. 9). Контракт несёт только коды процесса (переход 3 договора пересылки
 # Platform/common/contracts/forwarding.md «Отказы по переходам»; разбор ревью стадии A 8–10, решение 3): коды Н3 дверей,
@@ -602,6 +603,9 @@ paths:
               properties:
                 name: {$ref: '#/components/schemas/PersonName'}
                 password: {type: string, description: 'длина — шаг Н3 (bad password), не форма тела'}
+                title: {type: string, maxLength: 200}
+                email: {type: string, maxLength: 254}
+                expires: {type: number, minimum: 0}
       responses:
         '408': {$ref: '#/components/responses/BodyRefused'}
         '201':
@@ -643,6 +647,9 @@ paths:
               properties:
                 password: {type: string, description: 'длина — шаг Н3 (bad password), не форма тела'}
                 disabled: {type: boolean}
+                title: {type: string, maxLength: 200}
+                email: {type: string, maxLength: 254}
+                expires: {type: number, minimum: 0}
       responses:
         '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
@@ -695,6 +702,341 @@ paths:
                 oneOf:
                   - {$ref: '#/components/schemas/StandbyBody'}
                   - {$ref: '#/components/schemas/NotStandby'}
+  /domain/groups:
+    description: 'Глава 8.4 Н1.3а, Н1.9 pass, Н2, Н3 «группы и роли»; процессу передаёт консоль домена при любом методе.'
+    get:
+      operationId: groupsList
+      summary: Группы домена по имени (Н1.3а)
+      parameters:
+        - $ref: '#/components/parameters/XW2CClient'
+      responses:
+        '200':
+          description: Элементы по имени
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [groups]
+                additionalProperties: false
+                properties:
+                  groups:
+                    type: array
+                    items: {$ref: '#/components/schemas/GroupView'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '503': {$ref: '#/components/responses/StandbyOrUnavailable'}
+    head:
+      operationId: groupsListHead
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2)'
+      parameters:
+        - $ref: '#/components/parameters/XW2CClient'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+    post:
+      operationId: groupCreate
+      summary: Завести (Н1.3а, Н3)
+      parameters:
+        - $ref: '#/components/parameters/XW2CClient'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              additionalProperties: false
+              properties:
+                name: {$ref: '#/components/schemas/PersonName'}
+                title: {type: string, maxLength: 200}
+                comment: {type: string, maxLength: 2000}
+                members:
+                  type: array
+                  items: {$ref: '#/components/schemas/PersonName'}
+      responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '201':
+          description: Заведено
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [group]
+                additionalProperties: false
+                properties:
+                  group: {$ref: '#/components/schemas/PersonName'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused503'}
+  /domain/groups/{name}:
+    description: 'Глава 8.4 Н1.3а, Н2, Н3 «группы и роли».'
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: {$ref: '#/components/schemas/PersonName'}
+    put:
+      operationId: groupUpdate
+      summary: Править (Н1.3а, Н3)
+      parameters:
+        - $ref: '#/components/parameters/XW2CClient'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              additionalProperties: false
+              properties:
+                title: {type: string, maxLength: 200}
+                comment: {type: string, maxLength: 2000}
+                members:
+                  type: array
+                  items: {$ref: '#/components/schemas/PersonName'}
+      responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '200':
+          description: После правки
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [group]
+                additionalProperties: false
+                properties:
+                  group: {$ref: '#/components/schemas/PersonName'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused503'}
+    delete:
+      operationId: groupDelete
+      summary: Удалить (Н3)
+      parameters:
+        - $ref: '#/components/parameters/XW2CClient'
+      responses:
+        '200':
+          description: Удалено
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [group, deleted]
+                additionalProperties: false
+                properties:
+                  group: {$ref: '#/components/schemas/PersonName'}
+                  deleted: {const: true}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused503'}
+  /domain/roles:
+    description: 'Глава 8.4 Н1.3а, Н1.9 pass, Н2, Н3 «группы и роли»; процессу передаёт консоль домена при любом методе.'
+    get:
+      operationId: rolesList
+      summary: Роли домена по имени (Н1.3а)
+      parameters:
+        - $ref: '#/components/parameters/XW2CClient'
+      responses:
+        '200':
+          description: Элементы по имени
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [roles]
+                additionalProperties: false
+                properties:
+                  roles:
+                    type: array
+                    items: {$ref: '#/components/schemas/RoleView'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '503': {$ref: '#/components/responses/StandbyOrUnavailable'}
+    head:
+      operationId: rolesListHead
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (P/06.5 Н2)'
+      parameters:
+        - $ref: '#/components/parameters/XW2CClient'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+    post:
+      operationId: roleCreate
+      summary: Завести (Н1.3а, Н3)
+      parameters:
+        - $ref: '#/components/parameters/XW2CClient'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              additionalProperties: false
+              properties:
+                name: {$ref: '#/components/schemas/PersonName'}
+                title: {type: string, maxLength: 200}
+                comment: {type: string, maxLength: 2000}
+                assigned:
+                  type: array
+                  items: {$ref: '#/components/schemas/RoleAssigned'}
+      responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '201':
+          description: Заведено
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [role]
+                additionalProperties: false
+                properties:
+                  role: {$ref: '#/components/schemas/PersonName'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused503'}
+  /domain/roles/{name}:
+    description: 'Глава 8.4 Н1.3а, Н2, Н3 «группы и роли».'
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema: {$ref: '#/components/schemas/PersonName'}
+    put:
+      operationId: roleUpdate
+      summary: Править (Н1.3а, Н3)
+      parameters:
+        - $ref: '#/components/parameters/XW2CClient'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              additionalProperties: false
+              properties:
+                title: {type: string, maxLength: 200}
+                comment: {type: string, maxLength: 2000}
+                assigned:
+                  type: array
+                  items: {$ref: '#/components/schemas/RoleAssigned'}
+      responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '200':
+          description: После правки
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [role]
+                additionalProperties: false
+                properties:
+                  role: {$ref: '#/components/schemas/PersonName'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused503'}
+    delete:
+      operationId: roleDelete
+      summary: Удалить (Н3)
+      parameters:
+        - $ref: '#/components/parameters/XW2CClient'
+      responses:
+        '200':
+          description: Удалено
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [role, deleted, grants_changed]
+                additionalProperties: false
+                properties:
+                  role: {$ref: '#/components/schemas/PersonName'}
+                  deleted: {const: true}
+                  grants_changed:
+                    type: array
+                    items: {type: string}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused503'}
+  /domain/batch:
+    description: 'Глава 8.4 Н1.9 pass, Н2 «Пакетная дверь», Н1.3в batch_diff (ADR-0098 §6).'
+    post:
+      operationId: domainBatch
+      summary: Люди, группы, роли и гранты одного снимка — одна запись (Н2)
+      parameters:
+        - $ref: '#/components/parameters/XW2CClient'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [writes]
+              additionalProperties: false
+              properties:
+                writes:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [kind, op, name, cas]
+                    additionalProperties: false
+                    properties:
+                      kind: {enum: [user, group, role, grants]}
+                      op: {enum: [put, delete]}
+                      name: {type: string}
+                      cas: {type: string, description: 'index из GET этой строки; "" — создание.'}
+                      fields: {type: object, additionalProperties: true}
+      responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '200':
+          description: Пакет записан
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [written]
+                additionalProperties: false
+                properties:
+                  written: {type: integer, minimum: 1}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Denied'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '412': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused503'}
   /domain/grants/{cluster}:
     description: 'Глава 8.4 Н1.3, Н2, Н3 «гранты». GET /domain/grants отвечает консоль домена сама (урок P/10).'
     parameters:
@@ -724,8 +1066,9 @@ paths:
                     required: [subject, cap, scope]
                     additionalProperties: false
                     properties:
-                      subject: {$ref: '#/components/schemas/PersonName'}
-                      cap: {$ref: '#/components/schemas/Cap'}
+                      subject: {$ref: '#/components/schemas/LineSubject'}
+                      cap: {$ref: '#/components/schemas/LineCap'}
+                      sub: {$ref: '#/components/schemas/SubName'}
                       scope: {$ref: '#/components/schemas/Scope'}
                       until: {type: number, minimum: 0, description: '0 или нет — без срока.'}
       responses:
@@ -1352,6 +1695,17 @@ components:
             - being deleted
             - name taken
             - last admin
+            - no such group
+            - no such role
+            - unknown member
+            - bad batch
+            - admin only
+            - builtin
+            - too many admins
+            - roles table too large
+            - password set by a non-admin
+            - conflict
+            - batch too large
             - too large
             - names unknown
             - no such member
@@ -1931,30 +2285,90 @@ components:
         не субъект индекса имён — 400 bad name по норме, не по схеме.'
     Cap:
       enum: [view, edit, admin]
+    LineCap:
+      enum: [none, view, edit, admin]
+      description: Ранг строки гранта; none — только у строки роли (P/08.4 Н1.3).
+    LineSubject:
+      anyOf:
+        - $ref: '#/components/schemas/PersonName'
+        - type: string
+          pattern: "^(?:role:[^\u0000- \u007F\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000:|()\"/]{1,64})$"
+      description: Имя человека, субъект индекса имён или role:<имя роли> (P/08.4 Н1.3).
+    SubName:
+      type: string
+      pattern: "^(?:[a-z][a-z0-9_-]{0,31})$"
+      description: Имя манифеста (P/02.1 Н1.2) или platform.
     Scope:
       type: string
-      pattern: "^(?:\\*|unit:[a-z][a-z0-9_-]{0,31}/[^\u000A\u000D\u2028\u2029]+|labels:[^,]+(?:,[^,]+)*)$"
+      pattern: "^(?:\\*|unit:[a-z][a-z0-9_-]{0,31}/[^\u000A\u000D\u2028\u2029]+|labels:[^,]+(?:,[^,]+)*|folder:[0-9a-f]{32})$"
     Line:
       type: object
       required: [subject, cap, scope, until, by]
       additionalProperties: false
       description: Строка гранта (P/08.4 Н1.3).
       properties:
-        subject: {$ref: '#/components/schemas/PersonName'}
-        cap: {$ref: '#/components/schemas/Cap'}
+        subject: {$ref: '#/components/schemas/LineSubject'}
+        cap: {$ref: '#/components/schemas/LineCap'}
+        sub: {$ref: '#/components/schemas/SubName'}
         scope: {$ref: '#/components/schemas/Scope'}
         until: {type: number, minimum: 0}
         by: {type: string}
     PersonView:
       type: object
-      required: [name, how, disabled, at, by]
+      required: [name, how, disabled, title, expires, at, by, index]
       additionalProperties: false
       properties:
         name: {$ref: '#/components/schemas/PersonName'}
         how: {const: password}
         disabled: {type: boolean}
+        title: {type: string, maxLength: 200}
+        email: {type: string, maxLength: 254, description: 'Только администратору домена, управляющему и в своём элементе (P/08.4 Н2).'}
+        expires: {type: number, minimum: 0}
         at: {type: number}
         by: {type: string}
+        index: {type: string, description: Индекс хранилища строки; значение cas двери пакета.}
+    GroupView:
+      type: object
+      required: [name, title, comment, members, source, at, by, index]
+      additionalProperties: false
+      description: Строка группы (P/08.4 Н1.3а).
+      properties:
+        name: {$ref: '#/components/schemas/PersonName'}
+        title: {type: string, maxLength: 200}
+        comment: {type: string, maxLength: 2000}
+        members:
+          type: array
+          items: {$ref: '#/components/schemas/PersonName'}
+        source: {const: local}
+        at: {type: number}
+        by: {type: string}
+        index: {type: string}
+    RoleAssigned:
+      type: object
+      required: [until]
+      additionalProperties: false
+      oneOf:
+        - required: [person]
+        - required: [group]
+      properties:
+        person: {$ref: '#/components/schemas/PersonName'}
+        group: {$ref: '#/components/schemas/PersonName'}
+        until: {type: number, minimum: 0}
+    RoleView:
+      type: object
+      required: [name, title, comment, assigned, at, by, index]
+      additionalProperties: false
+      description: Строка роли (P/08.4 Н1.3а).
+      properties:
+        name: {$ref: '#/components/schemas/PersonName'}
+        title: {type: string, maxLength: 200}
+        comment: {type: string, maxLength: 2000}
+        assigned:
+          type: array
+          items: {$ref: '#/components/schemas/RoleAssigned'}
+        at: {type: number}
+        by: {type: string}
+        index: {type: string}
     MayInput:
       type: object
       description: 'Не HTTP: вход функции may (договор права Platform/common/contracts/may.md; P/08.4 Н1.4; векторы common/vectors/may).'
@@ -1985,6 +2399,45 @@ components:
             - const: '*'
             - $ref: '#/components/schemas/MayUnit'
         now: {type: number}
+        sub:
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/SubName'
+        roles:
+          unevaluatedProperties: false
+          oneOf:
+            - type: 'null'
+            - const: unreadable
+            - type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: object
+                  required: [role, until, at]
+                  additionalProperties: false
+                  properties:
+                    role: {type: string}
+                    until: {type: number, minimum: 0}
+                    at: {type: number, minimum: 0}
+        unread:
+          oneOf:
+            - const: all
+            - type: array
+              items:
+                type: object
+                required: [role]
+                additionalProperties: false
+                properties:
+                  role: {type: string}
+                  sub: {type: string}
+        iat: {type: ['number', 'null']}
+    MayChains:
+      oneOf:
+        - const: unknown
+        - type: array
+          items:
+            type: array
+            items: {type: string}
     MayUnit:
       type: object
       description: 'Не HTTP: единица входа функции may (договор may.md).'
@@ -1996,27 +2449,32 @@ components:
         labels:
           type: array
           items: {type: string}
+        chains: {$ref: '#/components/schemas/MayChains'}
         about:
-          type: object
-          required: [sub, id, labels]
-          additionalProperties: false
-          properties:
-            sub: {type: string}
-            id: {type: string}
-            labels:
-              type: array
-              items: {type: string}
+          unevaluatedProperties: false
+          oneOf:
+            - const: unknown
+            - type: object
+              required: [sub, id, labels]
+              additionalProperties: false
+              properties:
+                sub: {type: string}
+                id: {type: string}
+                labels:
+                  type: array
+                  items: {type: string}
+                chains: {$ref: '#/components/schemas/MayChains'}
     MayOutput:
       type: object
       required: [result]
       additionalProperties: false
       properties:
-        result: {enum: [allow, deny]}
+        result: {enum: [allow, deny, unavailable]}
         reason: {enum: [disabled, stale, no_grant]}
       description: 'Не HTTP: вывод функции may; reason — только при deny (договор may.md; P/08.4 Н1.4)'
-      if: {properties: {result: {const: allow}}}
-      then: {not: {required: [reason]}}
-      else: {required: [reason]}
+      if: {properties: {result: {const: deny}}}
+      then: {required: [reason]}
+      else: {not: {required: [reason]}}
     # --- глава 8.6: назначение, ждущие правки, исходы ---
     Placement:
       type: object

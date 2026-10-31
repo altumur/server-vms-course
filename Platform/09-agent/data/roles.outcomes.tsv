@@ -1,0 +1,5 @@
+# Исходы нечитаемой строки domain/roles (ADR-0098 §5, ADR-0100). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	console	строка целиком нечитаема: вход roles функции may = "unreadable" (договор сторожевой и передачи roles_in): прямые строки разрешили — allow, иначе 503 unavailable (правило «Нечитаемая строка»)	0	строка	договор сторожевой и передачи «Сторожевая с грантами» roles_in; P/09.1 Н1.4 member_roles
+	domainagent	строка целиком нечитаема: своя копия — агент, единственный писатель, перезаписывает её CAS по прочитанной версии из ответа держателя, причина в журнал без значения	0	строка	P/09.1 Н1.4 member_roles

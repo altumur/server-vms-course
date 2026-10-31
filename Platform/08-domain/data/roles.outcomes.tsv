@@ -1,0 +1,5 @@
+# Исходы нечитаемой строки domain/roles/<имя> (ADR-0098 §5, ADR-0100). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	domain	строка целиком нечитаема: прав через неё нет, ссылки в ней «есть», имя занято: POST /domain/users, POST групп и ролей — 503 unavailable; DELETE /domain/users/<имя> — 503 до читаемых строк, метка остаётся; сверка субъектов ничего по ней не снимает, строки role:<имя> остаются; нечитаемая domain/roles/admin — администраторов по роли нет (last_admin), статус цели admin only — 503, вход roles may = "unreadable", сверка роли admin её не трогает, журнал раз в проход; роль в таблицу члена не идёт	0	строка	P/08.4 Н1.3а unreadable, Н1.3б, Н1.3в target; Н3
+	domainconsole	строка целиком нечитаема: domain/roles/admin — вход roles may = "unreadable": двери, которым нужен may, если прямые строки не разрешили, — 503 unavailable; прочая роль прав не даёт	0	строка	P/08.4 Н1.3б roles_at_holder; P/10 Н1.5
