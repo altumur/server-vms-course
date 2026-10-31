@@ -25,11 +25,11 @@ n	method	path	profile	why
 18	GET	/devices/{deviceId}	in	переводится (V/11.2)
 19	PATCH	/devices/{deviceId}	in	переводится (V/11.2)
 20	DELETE	/devices/{deviceId}	in	переводится (V/11.2)
-21	GET	/folders	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-22	POST	/folders	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-23	GET	/folders/{folderId}	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-24	PATCH	/folders/{folderId}	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-25	DELETE	/folders/{folderId}	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+21	GET	/folders	in	переводится (V/11.4 Н1.7)
+22	POST	/folders	in	переводится (V/11.4 Н1.7)
+23	GET	/folders/{folderId}	in	переводится (V/11.4 Н1.7)
+24	PATCH	/folders/{folderId}	in	переводится (V/11.4 Н1.7)
+25	DELETE	/folders/{folderId}	in	переводится (V/11.4 Н1.7)
 26	GET	/archives	in	переводится (V/11.2)
 27	POST	/archives	in	переводится (V/11.2)
 28	POST	/archives/check	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
@@ -42,13 +42,13 @@ n	method	path	profile	why
 35	PATCH	/volumes/{volumeId}	in	переводится (V/11.2)
 36	DELETE	/volumes/{volumeId}	in	переводится: том вместе с записями на нём одним пакетом (V/11.2, V/11.4 Н1.2)
 37	POST	/volumes/{volumeId}/format	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-38	POST	/operations	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-39	GET	/operations/{operationId}	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-40	POST	/operations/{operationId}/pause	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-41	POST	/operations/{operationId}/resume	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-42	POST	/operations/{operationId}/cancel	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-43	POST	/operations/{operationId}/retry-failed	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-44	POST	/operations/{operationId}/revert	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+38	POST	/operations	in	переводится (V/11.4 Н1.8)
+39	GET	/operations/{operationId}	in	переводится (V/11.4 Н1.8)
+40	POST	/operations/{operationId}/pause	in	переводится (V/11.4 Н1.8)
+41	POST	/operations/{operationId}/resume	in	переводится (V/11.4 Н1.8)
+42	POST	/operations/{operationId}/cancel	in	переводится (V/11.4 Н1.8)
+43	POST	/operations/{operationId}/retry-failed	in	переводится (V/11.4 Н1.8)
+44	POST	/operations/{operationId}/revert	out	404 NO_ROUTE: откат не объявляется (ADR-0095 §4); тест вне профиля
 45	GET	/domains/{domainId}/discovery	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 46	POST	/domains/{domainId}/discovery	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 47	DELETE	/domains/{domainId}/discovery	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
@@ -82,7 +82,7 @@ n	method	path	profile	why
 75	GET	/maintenance-windows/{windowId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
 76	PUT	/maintenance-windows/{windowId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
 77	DELETE	/maintenance-windows/{windowId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-78	GET	/access	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+78	GET	/access	in	переводится (V/11.8)
 79	GET	/settings	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 80	PATCH	/settings	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 81	GET	/licenses	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
@@ -92,5 +92,5 @@ n	method	path	profile	why
 85	POST	/test/clock	stand	только на стенде: TEST_SUPPORT=1 и отметка петли консоли (V/11.6 Н1.3)
 86	POST	/test/events	out	404 NO_ROUTE: связь и сбой камеры — пульс держателя cam, дверью не подделать; тест вне профиля (V/11.6 Н1.3)
 87	POST	/objects/delete	in	переводится (V/11.2)
-88	POST	/access/apply	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-89	POST	/access/catalogs/{catalogId}/sync	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+88	POST	/access/apply	in	переводится (V/11.8)
+89	POST	/access/catalogs/{catalogId}/sync	out	404 NO_ROUTE: каталогов нет (ADR-0098 §8); тест вне профиля

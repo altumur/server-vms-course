@@ -53,6 +53,8 @@ display:
   unit: детектор
   units: детекторы
   units_count: детекторов
+  tree:
+    folders: true                      # a detector is a member of the cluster's folders, as a camera (P/06.8 Н1.1; ADR-0096 §1)
   fields:
     name: Имя детектора
     cam: Камера
