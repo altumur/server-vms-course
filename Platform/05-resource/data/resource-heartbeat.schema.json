@@ -250,7 +250,8 @@
       "type": "number"
      },
      "restored": {
-      "$ref": "#/$defs/common.uint53"
+      "$ref": "#/$defs/common.uint53",
+      "description": "только реально вытянутые у этого соседа бакеты; бакет, уже лежащий на томе, не считается (Н1.4 «Восстановление бакетов»)"
      },
      "missing": {
       "$ref": "#/$defs/common.uint53"

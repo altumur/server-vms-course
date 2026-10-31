@@ -49,7 +49,7 @@ scenario	step	request	expect
 05-power-pull	46	resource#srv-c GET /mirrored/srv-b/$closed	200 ~probe.closed
 05-power-pull	47	@power-back srv-b	ok
 05-power-pull	48	@until 20 admin@srv-b GET /v1/status	200 {"state": "Follower"}
-05-power-pull	49	@until 60 resource#srv-b GET /v1/objects/platform/resources/srv-b/heartbeat?scope=local	200 {"restore": {"srv-c": {"done": true}}}
+05-power-pull	49	@until 60 resource#srv-b GET /v1/objects/platform/resources/srv-b/heartbeat?scope=local	200 {"restore": {"srv-c": {"done": true, "restored": 1}}}
 05-power-pull	50	resource#srv-b GET /events/testsub/c1/e1/20260101T000000Z.events.jsonl	200 ~foo
 05-power-pull	51	resource#srv-b GET /events/$closed	200 ~probe.closed
 05-power-pull	52	@until 30 resource#srv-b GET /events?unit=testsub/c1&kind=probe.open	200 {"events": [{"kind": "probe.open"}]}
