@@ -1,0 +1,7 @@
+# holds.table называет таблицу с delete_after; строка 125 связей (ADR-0094 шаг 3б; решение «Архитектора» 2026-10-31)
+name: probe
+unit: {rows: things, id: numeric}
+placement: {capacity: {default: 1}}
+tables: {disks: {fields: {server: {type: string}}, delete_after: 60}}
+holds: {table: disks}
+worker: {exec: /usr/lib/probe/worker}

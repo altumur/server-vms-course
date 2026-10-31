@@ -58,3 +58,4 @@ date	sample	fix	languages
 2026-10-28	c9_flow_lone_dash_ok	V7-FLOW-DASH-01 (решение «Архитектора», набор Б, ADR-0092 доп. (1)): одиночный «-» простым скаляром в потоке ([-, a], [-]) — отказ text, 26-е правило тонкой проверки (сужение YAML 1.2.2; yaml-test-suite G5U8, YJV2 — error); было ok (Т16 — слово); имя случая прежнее	all
 2026-10-31	a94_table_delete_after_*	новые случаи: срок строк таблицы, форма ключа (ADR-0094 шаг 3б)	all
 2026-10-31	a94_unit_field_index, a94_table_field_*	новые случаи: index — поле платформы единицы, revision и index — поля платформы строки таблицы (ADR-0094 B4)	all
+2026-10-31	c8_ref125_holds_table_delete_after, c8_ref126_places_table_delete_after	новые случаи: delete_after у таблицы holds.table и placement.places.table — отказ связей (решение «Архитектора» 2026-10-31)	all
