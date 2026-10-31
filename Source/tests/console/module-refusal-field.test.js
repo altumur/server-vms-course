@@ -27,19 +27,16 @@ const submit=async(body,status=400)=>{
 };
 const atField=(f,n)=>{const c=f.elements[n];if(!c||c.getAttribute("aria-invalid")!=="true")return "";const e=c.closest("div")&&c.closest("div").querySelector(".pc-field-err");return e?e.textContent:"";};
 let f=await submit({detail:"start is not a number",error:"not_number",fault:"not_number",field:"/start"});
-out.pending_fieldAtControl=atField(f,"start")==="start is not a number";
-out.pending_firstFieldFocused=d.activeElement===f.elements.start;
+out.fieldAtControl=atField(f,"start")==="start is not a number";
+out.firstFieldFocused=d.activeElement===f.elements.start;
 f=await submit({detail:"a/b is fixed",error:"fixed",field:"/a~1b"});
-out.pending_pointerDecoded=atField(f,"a/b")==="a/b is fixed";
+out.pointerDecoded=atField(f,"a/b")==="a/b is fixed";
 f=await submit({detail:"row moved",error:"revision moved",field:"/revision",revision:2},412);
 out.noControlGoesToCommon=/row moved/.test(f.querySelector(".pc-err").textContent);
 f=await submit({detail:"the door is shut",error:"refused"});
 out.noFieldGoesToCommon=/the door is shut/.test(f.querySelector(".pc-err").textContent)&&!f.querySelector("[aria-invalid=true]");
 out.errors=errs;
-// pending_* — отказ у поля по `field` (P/07 Н1.5 `forms`): опубликованный модуль его ещё не ставит, «Решает реализация» п. 4;
-// правка байтов модуля — после поручения (модуль байт в байт в пине, сц. 01 приёмки главы 6.5); после правки — снять приставку
-// pending_ и убрать имена из списка ниже.
-b.report(out,["errors","pending_fieldAtControl","pending_firstFieldFocused","pending_pointerDecoded"]);
+b.report(out,["errors"]);
 try{fs.unlinkSync(TMP)}catch(e){}
 process.exit(0);
 })().catch(e=>{console.log("FAILED: "+(e&&e.stack||e));process.exit(1);});

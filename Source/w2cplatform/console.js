@@ -423,7 +423,7 @@
         finally { clearTimeout(t); }
         if (r) { try { d = await r.json(); } catch (e) { d = null; } }
         const said = d && (d.detail || d.error);
-        const inFlight = !!r && r.status === 409 && /in.?flight/i.test(String(said || ""));
+        const inFlight = !!r && r.status === 409 && !!d && d.error === "in flight";
         if (r && r.status < 500 && !inFlight) {
           if (r.status === 401) showLogin(said || "");
           // 412: the unit's revision moved under the page's ifMatch — its body as is, never repeated (ADR-0091 доп. (28), (29))
@@ -1175,9 +1175,8 @@
         } else {
           // an h2 among others: it and what follows it, up to the next heading, become a card
           const card = document.createElement("div"); card.className = "card";
-          h2.before(card); card.append(ch, cb);
+          h2.replaceWith(card); card.append(ch, cb);
           while (card.nextSibling && !(card.nextSibling.nodeType === 1 && /^H[12]$/.test(card.nextSibling.tagName))) cb.appendChild(card.nextSibling);
-          h2.remove();
         }
       });
     }
@@ -1474,16 +1473,32 @@
       if (st.newInto && gf && form.elements[gf]) { form.elements[gf].value = st.newInto; const tmp = document.createElement("div"); tmp.innerHTML = groupsBox(sub, sub.manifest.fields.find(f => f.name === gf), { [gf]: [st.newInto], id: "" }, st.newInto, ""); const box = form.querySelector(`[data-groups="${gf}"]`); if (box) { const nb = tmp.firstElementChild; nb.querySelector('input[type="hidden"]').replaceWith(form.elements[gf]); box.replaceWith(nb); } }
       wireGroups(form); wireSwitches(form, sub, null);
       form.onsubmit = async e => {
-        e.preventDefault(); form.querySelector(".pc-err").textContent = "";
+        e.preventDefault(); form.querySelector(".pc-err").textContent = ""; unmarkFields(form);
         try {
           const body = formBody(sub, form, false); if (!body) return;
           const out = await C.api("POST", rowsPath, body);
           await load(); C.toast(W.created);
           const id = out && out.id;
           if (id != null) C.select(unitRef(sub, id)); else paintMain();
-        } catch (err) { form.querySelector(".pc-err").textContent = W.refused + ": " + err.message; if (err.retry) C.toast(W.refused + ": " + err.message); }
+        } catch (err) { if (!markField(form, err)) form.querySelector(".pc-err").textContent = W.refused + ": " + err.message; if (err.retry) C.toast(W.refused + ": " + err.message); }
       };
     }
+    // A refusal naming a field (`field`, JSON Pointer of the body): at that control of the form, focused; no such control
+    // or no `field` — false, and the caller writes it in the form's common line (P/07 Н1.5 `forms`).
+    const unmarkFields = form => {
+      form.querySelectorAll(".pc-field-err").forEach(n => n.remove());
+      form.querySelectorAll('[aria-invalid="true"]').forEach(n => n.removeAttribute("aria-invalid"));
+    };
+    const markField = (form, err) => {
+      const at = err.body && err.body.field;
+      if (![400, 409, 412].includes(err.status) || typeof at !== "string") return false;
+      const c = form.elements[at.split("/")[1].replace(/~1/g, "/").replace(/~0/g, "~")];
+      if (!c || !c.setAttribute) return false;
+      c.setAttribute("aria-invalid", "true");
+      const said = document.createElement("div"); said.className = "nt err pc-field-err"; said.textContent = err.message;
+      (c.closest("div") || form).appendChild(said); c.focus();
+      return true;
+    };
     // The general form of a unit into host: its blocks, Delete as may() allows, the page's field editors in their
     // slots; the footer saves it. The page's own general card calls it for its fields.
     C.unitForm = (host, ref) => {
@@ -1494,14 +1509,14 @@
       const form = host.querySelector(".pc-edit");
       wireGroups(form); wireSwitches(form, sub, r); wireEditors(form, sub, ref, row);
       form.onsubmit = async e => {
-        e.preventDefault(); form.querySelector(".pc-err").textContent = "";
+        e.preventDefault(); form.querySelector(".pc-err").textContent = ""; unmarkFields(form);
         // A secret bound to other fields (the manifest's bound_to) is asked anew when one of them changes: the server
         // would refuse to send the one it keeps to the new value.
         const stale = staleSecrets(sub, form, r);
         if (stale.length) { form.querySelector(".pc-err").textContent = stale.map(n => fieldTitle(sub, n)).join(", ") + ": " + W.boundAnew; form.elements[stale[0]].focus(); return; }
         const body = formBody(sub, form, true); if (!body) return;
         try { await C.api("PUT", rowsPath + "/" + encodeURIComponent(id), body); C.toast(W.saved); await load(); paintMain(); }
-        catch (err) { form.querySelector(".pc-err").textContent = W.refused + ": " + err.message; C.toast(W.refused + ": " + err.message); }
+        catch (err) { if (!markField(form, err)) form.querySelector(".pc-err").textContent = W.refused + ": " + err.message; C.toast(W.refused + ": " + err.message); }
       };
       const del = host.querySelector(".pc-del");
       if (del) del.onclick = async () => {

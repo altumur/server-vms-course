@@ -31,7 +31,7 @@ w.fetch=(url,init)=>{
   if(s==="hang")return new Promise((_,no)=>init.signal.addEventListener("abort",()=>{const e=new Error("aborted");e.name="AbortError";no(e)}));
   if(s===503)return Promise.resolve(res(503,{detail:"busy",error:"busy"}));
   if(s==="ra0")return Promise.resolve(res(503,{detail:"busy",error:"busy"},"0"));
-  if(s==="inflight")return Promise.resolve(res(409,{detail:"in flight: another console holds this key"}));
+  if(s==="inflight")return Promise.resolve(res(409,{detail:"another console holds this key",error:"in flight"}));
   if(s===409)return Promise.resolve(res(409,{detail:"recording exists"}));
   if(s===400)return Promise.resolve(res(400,{detail:"bad name"}));
   if(s===401)return Promise.resolve(res(401,{detail:"sign in",error:"denied"}));
