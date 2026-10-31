@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: superseded
 date: 2026-10-31
 decision-makers: владелец
 consulted: «Вопросы»
