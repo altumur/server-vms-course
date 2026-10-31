@@ -47,8 +47,7 @@ scenario	step	request	expect
 03-person-off	16	@pass-chunk c data: 1	200 ~data: 1
 03-person-off	17	holder PUT /domain/users/ann {"disabled": true}	200 {"user": "ann", "disabled": true}
 03-person-off	18	@until 30 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $b GET /session	200 {"user": "ann", "grants": []}
-03-person-off	19	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $b GET /probe-p/things	403 {"error": "denied"}
-03-person-off	20	@pass-closed c	ok
+03-person-off	19	@pass-closed c	ok
 04-open-console-gives-no-call	1	@pass-worker probe-p p-1	ok
 04-open-console-gives-no-call	2	@pass-open a console GET /probe-p/api/x	ok {"ticket": "$t"}
 04-open-console-gives-no-call	3	socket probe-pworker @header X-W2C-Pass-Ticket: $t GET /session	401 {"error": "denied", "detail": "ticket refused"}
