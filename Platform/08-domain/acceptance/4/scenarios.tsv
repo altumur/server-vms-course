@@ -297,6 +297,9 @@ scenario	step	request	expect
 26-roles-and-groups	21	holder DELETE /domain/roles/ops	200 {"role": "ops", "deleted": true, "grants_changed": ["m1"]}
 26-roles-and-groups	22	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "role:rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr", "cap": "view", "scope": "*"}, {"subject": "root", "cap": "admin", "scope": "*"}]}}
 26-roles-and-groups	23	holder POST /domain/roles {"name": "ops"}	201 {"role": "ops"}
+26-roles-and-groups	24	holder POST /domain/users {"name": "carl", "password": "carl password 1"}	201 {"user": "carl"}
+26-roles-and-groups	25	member hold store POST /v1/write {"op": "put", "key": "domain/deleting/carl", "items": {}}	200
+26-roles-and-groups	26	holder PUT /domain/groups/g1 {"members": ["carl"]}	409 {"error": "being deleted", "field": "/members/0"}
 27-person-card-and-term	1	@domain	ok
 27-person-card-and-term	2	holder POST /domain/users {"name": "ann", "password": "ann password 1", "title": "Ann", "email": "ann@example.test"}	201 {"user": "ann"}
 27-person-card-and-term	3	holder POST /domain/users {"name": "bob", "password": "bob password 1", "email": "bob@example.test"}	201 {"user": "bob"}
@@ -418,3 +421,30 @@ scenario	step	request	expect
 33-changes-folders	13	member m1 console DELETE /folders/$f	200 {"deleted": "$f"}
 33-changes-folders	14	@person ann ann password 1	ok
 33-changes-folders	15	@until 30 member m1 console GET /changes?after=$q	200 {"position": "$r", "changes": [], "reset": true}
+34-changes-folder-rows	1	@domain	ok
+34-changes-folder-rows	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+34-changes-folder-rows	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200 {"cluster": "m1"}
+34-changes-folder-rows	4	@person ann ann password 1	ok
+34-changes-folder-rows	5	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "*"}]}
+34-changes-folder-rows	6	@until 10 member m1 console GET /changes	200 {"position": "$p"}
+34-changes-folder-rows	7	@person root w2c test root password	ok
+34-changes-folder-rows	8	member m1 console POST /folders {"name": "F"}	201 {"id": "$f"}
+34-changes-folder-rows	9	@person ann ann password 1	ok
+34-changes-folder-rows	10	@until 30 member m1 console GET /changes?after=$p	200 {"position": "$q", "changes": [{"key": "~platform/folders/", "revision": 0}], "reset": "@absent"}
+34-changes-folder-rows	11	@person root w2c test root password	ok
+34-changes-folder-rows	12	member m1 console DELETE /folders/$f	200 {"deleted": "$f"}
+34-changes-folder-rows	13	member m1 store GET /v1/get?key=platform/folders/$f	200 {"index": "$t"}
+34-changes-folder-rows	14	@person ann ann password 1	ok
+34-changes-folder-rows	15	@until 30 member m1 console GET /changes?after=$q	200 {"changes": [{"key": "~platform/folders/", "deleted": "$t"}], "reset": "@absent"}
+35-changes-role-assignment	1	@domain	ok
+35-changes-role-assignment	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+35-changes-role-assignment	3	holder POST /domain/roles {"name": "ops", "assigned": [{"person": "ann", "until": 0}]}	201 {"role": "ops"}
+35-changes-role-assignment	4	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:testsub/c1-m1"}, {"subject": "role:ops", "cap": "view", "scope": "*"}]}	200 {"cluster": "m1"}
+35-changes-role-assignment	5	@person ann ann password 1	ok
+35-changes-role-assignment	6	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "*", "role": "ops"}, {"cap": "view", "scope": "unit:testsub/c1-m1"}]}
+35-changes-role-assignment	7	@until 10 member m1 console GET /changes	200 {"position": "$p"}
+35-changes-role-assignment	8	@person root w2c test root password	ok
+35-changes-role-assignment	9	holder PUT /domain/roles/ops {"assigned": []}	200 {"role": "ops"}
+35-changes-role-assignment	10	@person ann ann password 1	ok
+35-changes-role-assignment	11	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub/c1-m1"}]}
+35-changes-role-assignment	12	member m1 console GET /changes?after=$p	200 {"changes": [], "reset": true}

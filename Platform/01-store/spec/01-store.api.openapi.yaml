@@ -404,7 +404,7 @@ components:
           items: {}    # у delete не читается: любое JSON-значение или отсутствие — не отказ
     BatchCmd:
       type: object
-      description: "Пакет: Н1 batch, Н3 «записать пакет» (ADR-0094 B9). Лишние поля верхнего уровня не читаются, в том числе key, items, cas, guard одиночной записи (Н2); элементы writes и guards закрыты. Пределы BATCH_WRITES и BATCH_GUARDS, повтор ключа и страж на ключ записи — проверка двери, 400 badrequest; у роли console пределов числа нет (Н1), поэтому maxItems схема не задаёт."
+      description: "Пакет: Н1 batch, Н3 «записать пакет» (ADR-0094 B9). Лишние поля верхнего уровня не читаются, в том числе key, items, cas, guard одиночной записи (Н2); элементы writes и guards закрыты. Пределы BATCH_WRITES и BATCH_GUARDS, повтор ключа и страж на ключ записи — проверка двери, 400 badrequest; у роли console пределов числа нет, у роли domain нет предела числа стражей (Н1), поэтому maxItems схема не задаёт."
       unevaluatedProperties: true
       required: [op, writes]
       properties:

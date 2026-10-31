@@ -2145,7 +2145,14 @@
        "schema",
        "domain",
        "api",
-       "folders"
+       "folders",
+       "users",
+       "grants",
+       "groups",
+       "roles",
+       "deleting",
+       "disabled",
+       "names"
       ]
      },
      {

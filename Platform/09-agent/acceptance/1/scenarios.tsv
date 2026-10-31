@@ -240,7 +240,12 @@ scenario	step	request	expect
 27-roles-copy	10	member m1 store GET /v1/get?key=domain/roles	200 {"items": {"assigned": "~\"ops\":[{\"person\":\"ann\""}}
 27-roles-copy	11	@person ann ann password 1	ok
 27-roles-copy	12	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "*", "role": "ops"}]}
-27-roles-copy	13	member m1 store GET /v1/get?key=domain/grants	200 {"items": {"doc": "$gd"}}
-27-roles-copy	14	member hold store POST /v1/write {"op": "put", "key": "domain/grants/m1", "items": {"doc": "not json"}}	200
-27-roles-copy	15	@sleep 7	ok
-27-roles-copy	16	member m1 store GET /v1/get?key=domain/grants	200 {"items": {"doc": "$gd"}}
+27-roles-copy	13	@person root w2c test root password	ok
+27-roles-copy	14	holder PUT /domain/break-glass/m1 {"password": "glass password 1"}	200
+27-roles-copy	15	@until 30 member m1 store GET /v1/get?key=domain/break-glass/m1	200 {"items": {"pwhash_secret": "~enc:v2:"}}
+27-roles-copy	16	member m1 store GET /v1/get?key=domain/grants	200 {"index": "$gi"}
+27-roles-copy	17	member m1 store GET /v1/get?key=domain/roles	200 {"index": "$ri"}
+27-roles-copy	18	member hold store POST /v1/write {"op": "put", "key": "domain/grants/m1", "items": {"doc": "not json"}}	200
+27-roles-copy	19	@sleep 7	ok
+27-roles-copy	20	member m1 store GET /v1/get?key=domain/grants	200 {"index": "$gi"}
+27-roles-copy	21	member m1 store GET /v1/get?key=domain/roles	200 {"index": "$ri"}

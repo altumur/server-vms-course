@@ -3,7 +3,7 @@
 Стенд, словарь директив и дверей — [общий README приёмки](../../../common/acceptance/README.md). Норма главы —
 [`01.2-store.norms.md`](../../spec/01.2-store.norms.md) Н5, полные тела двух маршрутов —
 [OpenAPI](../../spec/01-store.api.openapi.yaml).
-В файле 11 сценариев / 65 шагов (мутационная проверка 7cecaf2 № 28, 31: `never` у admin, `/v1/rights` только admin; сц. 11–13 — аудит покрытия P/01 2026-10-30: `never` пола и `domain/`, заголовок роли у перечисления, файл прав — `@rights store`; сц. 14–15 — его второй проход: границы `never`, роли домена, `comment`); файл
+В файле 11 сценариев / 67 шагов (мутационная проверка 7cecaf2 № 28, 31: `never` у admin, `/v1/rights` только admin; сц. 11–13 — аудит покрытия P/01 2026-10-30: `never` пола и `domain/`, заголовок роли у перечисления, файл прав — `@rights store`; сц. 14–15 — его второй проход: границы `never`, роли домена, `comment`); файл
 прав стенда — готовый вход [`inputs/rights.json`](inputs/rights.json) (форма P/01.2 Н1.2): роли `console`,
 `testsubcontroller`, `testsubworker`, `testsub2worker` и образцы, нужные шагам, — подмножество вывода прав P/02.5 Н1.4 для
 `testsub` и `testsub2` (`Source/tests/testdata/testsub*.subsystem.yaml`) с именем развёртывания `testsub`. Раннер кладёт его
