@@ -2701,7 +2701,7 @@ components:
           description: Открыт намеренно — поля domain.edit манифеста (P/08.6 Н1.3); DELETE — {}.
         key: {type: string, minLength: 1, maxLength: 200}
         at: {type: number}
-        base: {type: integer, minimum: 0}
+        base: {type: integer, minimum: 1}
         asked:
           type: object
           required: [method, path, body]
@@ -2840,8 +2840,8 @@ components:
       additionalProperties: false
       description: Доставка общего документа — domain/view.shared (P/08.9 Н1.6).
       properties:
-        term: {type: ['integer', 'null']}
-        rev: {type: ['integer', 'null']}
+        term: {type: integer, minimum: 0, description: 'До первого документа 0 (P/08.9 Н1.6 before).'}
+        rev: {type: integer, minimum: 0, description: 'До первого документа 0 (P/08.9 Н1.6 before).'}
         holding:
           type: array
           items: {type: string}
