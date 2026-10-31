@@ -165,3 +165,34 @@ scenario	step	request	expect
 26-topology-put-unreadable	4	holder PUT /domain/topology {"base_rev": 1, "centre": ""}	503 {"error": "unavailable"}
 26-topology-put-unreadable	5	member hold store GET /v1/get?key=domain/topology	200 {"items": {"doc": "not json"}}
 26-topology-put-unreadable	6	holder GET /domain/topology	503 {"error": "unavailable"}
+27-topology-versions	1	@domain	ok
+27-topology-versions	2	holder GET /domain/topology	200 {"rev": 0, "star": [], "via": {}}
+27-topology-versions	3	holder @header If-Match: 1 PUT /domain/topology {"centre": "hold"}	412 {"error": "revision moved", "field": "/revision", "revision": 0, "row": "@absent"}
+27-topology-versions	4	holder PUT /domain/topology {"centre": "hold"}	400 {"error": "refused", "field": "/base_rev"}
+27-topology-versions	5	holder PUT /domain/topology {"base_rev": 0, "centre": "hold"}	200 {"rev": 1, "centre": "hold"}
+27-topology-versions	6	member hold store GET /v1/get?key=domain/topology	200 {"index": "$t1"}
+27-topology-versions	7	holder @header If-Match: 9 PUT /domain/topology {"via": {"m1": "hold"}}	412 {"error": "revision moved", "field": "/revision", "revision": 1, "row": {"rev": 1, "centre": "hold"}}
+27-topology-versions	8	holder @header If-Match: 1 PUT /domain/topology {"via": {"m1": "hold"}}	409 {"error": "refused", "detail": "~domain holder"}
+27-topology-versions	9	holder @header If-Match: two PUT /domain/topology {"centre": ""}	400 {"error": "If-Match is a unit revision"}
+27-topology-versions	10	holder @header If-Match: 1 PUT /domain/topology {"base_rev": 2, "centre": ""}	400 {"error": "refused", "field": "/base_rev"}
+27-topology-versions	11	holder @header If-Match: "$t1" PUT /domain/topology {"base_rev": 1, "centre": ""}	400 {"error": "refused", "field": "/base_rev"}
+27-topology-versions	12	holder @header If-Match: 1 PUT /domain/topology {"base_rev": 1, "centre": ""}	200 {"rev": 2, "centre": "@absent"}
+27-topology-versions	13	holder @header If-Match: "$t1" PUT /domain/topology {"centre": "hold"}	412 {"error": "revision moved", "revision": 2}
+27-topology-versions	14	member hold store GET /v1/get?key=domain/topology	200 {"index": "$t2"}
+27-topology-versions	15	holder @header If-Match: "$t2" PUT /domain/topology {"centre": "hold"}	200 {"rev": 3, "centre": "hold"}
+27-topology-versions	16	holder @header Idempotency-Key: t-r1 @header If-Match: 3 PUT /domain/topology {"centre": "m1"}	200 {"rev": 4, "centre": "m1"}
+27-topology-versions	17	holder @header Idempotency-Key: t-r1 @header If-Match: 3 PUT /domain/topology {"centre": "m1"}	200 {"rev": 4, "centre": "m1"}
+27-topology-versions	18	holder @header Idempotency-Key: t-r1 @header If-Match: 3 PUT /domain/topology {"centre": "m2"}	422 {"error": "key reused"}
+27-topology-versions	19	holder GET /domain/topology	200 {"rev": 4, "centre": "m1"}
+27-topology-versions	20	holder @header Idempotency-Key: t-r2 @header If-Match: 3 PUT /domain/topology {"centre": "hold"}	412 {"error": "revision moved", "revision": 4}
+27-topology-versions	21	holder @header If-Match: 4 PUT /domain/topology {"centre": "hold"}	200 {"rev": 5, "centre": "hold"}
+27-topology-versions	22	holder @header Idempotency-Key: t-r2 @header If-Match: 3 PUT /domain/topology {"centre": "hold"}	412 {"error": "revision moved", "revision": 4}
+27-topology-versions	23	holder @header Idempotency-Key: a/b PUT /domain/topology {"centre": "hold"}	400 {"error": "Idempotency-Key required"}
+27-topology-versions	24	member hold store GET /v1/get?key=domain/idem/e4fd3ebd0f3c1e247c73e6d53c22abe83322c48bd8ef10a83ca775ba699f506d	200 {"items": {"print": "@any", "code": "200", "body": "~rev", "at": "@time"}}
+27-topology-versions	25	holder @header If-Match: 5 PUT /domain/topology {"centre": "m1"}	200 @header ETag: ~"
+27-topology-versions	26	holder GET /domain/topology	200 @header ETag: ~"
+27-topology-versions	27	holder GET /domain/members	200 {"rev": "$m"}
+27-topology-versions	28	holder @header If-Match: 9999 DELETE /domain/members/m2	412 {"error": "revision moved", "revision": "$m", "row": {"rev": "$m", "members": {"m2": "@any"}}}
+27-topology-versions	29	holder @header If-Match: $m DELETE /domain/members/m2	200 {"members": {"m2": "@absent"}}
+27-topology-versions	30	holder @header If-Match: 9999 DELETE /domain/members/m2	404 {"error": "refused"}
+27-topology-versions	31	holder @header If-Match: 9999 POST /domain/members {"name": "m2", "fingerprint": "0000000000000000"}	412 {"error": "revision moved"}

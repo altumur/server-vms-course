@@ -41,6 +41,7 @@
 | 12 | `post-kept` | 8 | хранимый `POST`: 202 `kept`, `what` — `name,start` (поле `domain.ref`, без `cluster`), `asked.path` без query; после возврата `m1` — единица создана, исход `performed` 201 |
 | 13 | `waiting-delete` | 11 | ждёт `DELETE` единицы — новая правка того же пути (`PUT`, второй `DELETE`) — 409 `unit is being deleted`; после возврата — единицы нет |
 | 14 | `garbled-placement` | 14 | нечитаемая запись назначения: `PUT` пишет поверх с новой `rev`, `DELETE` удаляет; `DELETE` без манифеста — 404; нечитаемый счётчик `domain/placement` — `PUT` и `DELETE` 503, ничего не записано |
+| 16 | `placement-versions` | 20 | `index` записи, `ETag`, `If-Match` числом и индексом, 412 с `row`, нет записи — 412 у `PUT` и 404 у `DELETE`; повтор ключа, иное тело 422; то же содержимое под ключом и повтор — `ETag`; повтор `DELETE` — прежний ответ |
 | 15 | `garbled-pending` | 11 | нечитаемый элемент `domain/pending/m1`: тот же ключ — 422, свежий — 202, элемент не тронут, `seq` 2; нечитаемый `seq` — 503, строка прежняя |
 
 Сц. 09: шаг 14 ставит `Idempotency-Key: a3-asked`, поэтому id правки известен заранее — `e-a5231d61506d`

@@ -31,3 +31,18 @@ scenario	step	request	expect
 08-shared-last-field	5	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "not json"}}	200
 08-shared-last-field	6	holder PUT /domain/shared {"base_rev": 2, "shared": {"testsub": {"step": 6}}}	503 {"error": "unavailable"}
 08-shared-last-field	7	member hold store GET /v1/get?key=domain/shared	200 {"items": {"doc": "not json"}}
+09-shared-versions	1	@domain	ok
+09-shared-versions	2	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 5}}}	200 {"rev": 1}
+09-shared-versions	3	member hold store GET /v1/get?key=domain/shared	200 {"index": "$s"}
+09-shared-versions	4	holder GET /domain/shared	200 @header ETag: ~"
+09-shared-versions	5	holder @header If-Match: 9 PUT /domain/shared {"shared": {"testsub": {"step": 6}}}	412 {"error": "revision moved", "field": "/revision", "revision": 1, "row": {"term": 1, "rev": 1, "sha256": "@any", "object": "domain/shared-docs/rev-1"}}
+09-shared-versions	6	holder @header If-Match: 1 PUT /domain/shared {"base_rev": 2, "shared": {"testsub": {"step": 6}}}	400 {"error": "refused", "field": "/base_rev"}
+09-shared-versions	7	holder @header If-Match: "$s" PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"step": 6}}}	400 {"error": "refused", "field": "/base_rev"}
+09-shared-versions	8	holder PUT /domain/shared {"shared": {"testsub": {"step": 6}}}	400 {"error": "refused", "field": "/base_rev"}
+09-shared-versions	9	holder @header If-Match: 1 PUT /domain/shared {"base_rev": 1, "shared": {"testsub": {"step": 6}}}	200 {"rev": 2, "by": "root"}
+09-shared-versions	10	holder @header If-Match: "$s" PUT /domain/shared {"shared": {"testsub": {"step": 7}}}	412 {"error": "revision moved", "revision": 2}
+09-shared-versions	11	holder @header Idempotency-Key: s-r1 @header If-Match: 2 PUT /domain/shared {"shared": {"testsub": {"step": 7}}}	200 {"rev": 3}
+09-shared-versions	12	holder @header Idempotency-Key: s-r1 @header If-Match: 2 PUT /domain/shared {"shared": {"testsub": {"step": 7}}}	200 {"rev": 3}
+09-shared-versions	13	holder @header Idempotency-Key: s-r1 @header If-Match: 2 PUT /domain/shared {"shared": {"testsub": {"step": 8}}}	422 {"error": "key reused"}
+09-shared-versions	14	holder @header If-Match: 9 PUT /domain/shared {"shared": {"nosub": {"a": 1}}}	412 {"error": "revision moved", "revision": 3}
+09-shared-versions	15	holder @header If-Match: 3 PUT /domain/shared {"shared": {"testsub": {"step": 8}}}	200 @header ETag: ~"

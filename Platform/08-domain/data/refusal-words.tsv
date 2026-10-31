@@ -3,6 +3,7 @@
 # grants /domain/grants/…; break-glass /domain/break-glass/…; revoke /domain/revoke; members /domain/members…; topology /domain/topology;
 # placement /domain/placement/…; edits /domain/<sub>/<rows>…; shared /domain/shared; move /api/prepare, /api/take, /domain/move;
 # handover /domain/handover; stranded /domain/stranded/apply; * — каждая дверь процесса. У агентов слово уточняет reason (8.3 Н4, 8.7 Н4).
+# versions — двери таблицы 8.0 Н1.9: эти слова идут к словам своей двери (members, topology, people, grants, break-glass, placement, shared); If-Match у POST /domain/users не читают.
 # field — что несёт поле field: «-» — поля нет; иначе возможные значения через пробел, <…> — подстановка: <поле> — поле тела, <i> — номер строки с нуля.
 door	code	error	field	norm
 agents	400	refused	-	8.3 Н4
@@ -65,6 +66,12 @@ edits	409	unit is being deleted	-	8.6 Н4
 edits	409	the pending edits kept changing; ask again	-	8.6 Н4
 edits	422	this Idempotency-Key was used for another edit	-	8.6 Н1.4
 edits	503	refused	-	8.6 Н4, 8.1 Н4
+versions	400	If-Match is a unit revision	-	8.0 Н1.9 «Версии»
+versions	400	Idempotency-Key required	-	8.0 Н1.9 «Память повторов»
+versions	409	in flight	-	8.0 Н1.9 «Память повторов»
+versions	412	revision moved	/revision	8.0 Н1.9 «Версии»
+versions	413	row too large	-	8.0 Н1.9 «Память повторов»
+versions	422	key reused	-	8.0 Н1.9 «Память повторов»; ADR-0094 доп. (14)
 shared	400	refused	/base_rev /shared /shared/<sub> /shared/<sub>/<имя>	8.9 Н1.3
 shared	409	refused	/base_rev	8.9 Н1.3
 shared	413	refused	-	8.9 Н1.3

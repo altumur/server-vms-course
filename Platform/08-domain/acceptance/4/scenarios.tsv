@@ -237,3 +237,33 @@ scenario	step	request	expect
 22-changes-labels	19	@person ann ann password 1	ok
 22-changes-labels	20	@until 30 member m1 console GET /changes?after=$s	200 {"position": "$r", "changes": [], "reset": true}
 22-changes-labels	21	member m1 console GET /changes?after=$r	200 {"changes": [], "reset": "@absent"}
+23-versions-and-repeats	1	@domain	ok
+23-versions-and-repeats	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann", "revision": 1}
+23-versions-and-repeats	3	holder GET /domain/users	200 {"users": [{"name": "ann", "revision": 1, "index": "$u1", "pwhash_secret": "@absent"}, {"name": "root", "revision": 1}]}
+23-versions-and-repeats	4	member hold store GET /v1/get?key=domain/users/ann	200 {"items": {"revision": "1"}, "index": "$u1"}
+23-versions-and-repeats	5	holder @header If-Match: 1 PUT /domain/users/ann {"disabled": true}	200 {"user": "ann", "disabled": true, "revision": 2}
+23-versions-and-repeats	6	holder @header If-Match: 1 PUT /domain/users/ann {"disabled": false}	412 {"error": "revision moved", "field": "/revision", "revision": 2, "row": {"name": "ann", "disabled": true, "revision": 2, "pwhash_secret": "@absent"}}
+23-versions-and-repeats	7	holder @header If-Match: "$u1" PUT /domain/users/ann {"disabled": false}	412 {"error": "revision moved", "revision": 2}
+23-versions-and-repeats	8	holder @header If-Match: * PUT /domain/users/ann {"disabled": false}	400 {"error": "If-Match is a unit revision"}
+23-versions-and-repeats	9	holder @header If-Match: 2 PUT /domain/users/nobody {"disabled": true}	404 {"error": "no such person"}
+23-versions-and-repeats	10	holder @header Idempotency-Key: u-r1 @header If-Match: 2 PUT /domain/users/ann {"password": "ann password 2"}	200 {"user": "ann", "disabled": true, "revision": 3}
+23-versions-and-repeats	11	holder @header Idempotency-Key: u-r1 @header If-Match: 2 PUT /domain/users/ann {"password": "ann password 2"}	200 {"user": "ann", "disabled": true, "revision": 3}
+23-versions-and-repeats	12	holder @header Idempotency-Key: u-r1 @header If-Match: 2 PUT /domain/users/ann {"password": "ann password 3"}	422 {"error": "key reused"}
+23-versions-and-repeats	13	member hold store GET /v1/get?key=domain/users/ann	200 {"items": {"revision": "3"}}
+23-versions-and-repeats	14	member hold store GET /v1/get?key=domain/idem/85559f34367815a41e8fab8e358c29e60d8f6a5a7e7c8311644397298e7dd26b	200 {"items": {"print": "!contains ann password", "code": "200", "body": "!contains ann password", "at": "@time"}}
+23-versions-and-repeats	15	holder @header Idempotency-Key: u-r2 POST /domain/users {"name": "bob", "password": "bob password 1"}	201 {"user": "bob", "revision": 1}
+23-versions-and-repeats	16	holder @header Idempotency-Key: u-r2 POST /domain/users {"name": "bob", "password": "bob password 1"}	201 {"user": "bob", "revision": 1}
+23-versions-and-repeats	17	holder @header Idempotency-Key: u-r3 @header If-Match: 9 DELETE /domain/users/bob	412 {"error": "revision moved", "revision": 1, "row": {"name": "bob", "pwhash_secret": "@absent"}}
+23-versions-and-repeats	18	holder @header Idempotency-Key: u-r4 @header If-Match: 1 DELETE /domain/users/bob	200 {"user": "bob", "deleted": true}
+23-versions-and-repeats	19	holder @header Idempotency-Key: u-r4 @header If-Match: 1 DELETE /domain/users/bob	200 {"user": "bob", "deleted": true}
+23-versions-and-repeats	20	holder DELETE /domain/users/bob	404 {"error": "no such person"}
+23-versions-and-repeats	21	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root"}]}, "versions": {"m1": {"revision": "$g", "index": "$gi"}}}
+23-versions-and-repeats	22	holder @header If-Match: 99 PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}]}	412 {"error": "revision moved", "field": "/revision", "revision": "$g", "row": {"lines": [{"subject": "root"}], "revision": "$g", "index": "$gi"}}
+23-versions-and-repeats	23	holder @header If-Match: "$gi" PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200 {"cluster": "m1", "revision": "@not($g)"}
+23-versions-and-repeats	24	holder @header If-Match: "$gi" PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}]}	412 {"error": "revision moved"}
+23-versions-and-repeats	25	holder @header If-Match: 1 PUT /domain/grants/c9 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}]}	412 {"error": "revision moved", "revision": 0, "row": "@absent"}
+23-versions-and-repeats	26	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200 @header ETag: ~"
+23-versions-and-repeats	27	holder PUT /domain/break-glass/m1 {"password": "a glass password"}	200 {"cluster": "m1", "set": true, "revision": 1}
+23-versions-and-repeats	28	holder GET /domain/break-glass	200 {"clusters": {"m1": {"set_at": "@time", "revision": 1, "index": "$b"}}}
+23-versions-and-repeats	29	holder @header If-Match: 5 PUT /domain/break-glass/m1 {"password": "a glass password"}	412 {"error": "revision moved", "revision": 1, "row": {"revision": 1, "index": "$b", "pwhash_secret": "@absent"}}
+23-versions-and-repeats	30	holder @header If-Match: "$b" PUT /domain/break-glass/m1 {"password": "a glass password"}	200 {"cluster": "m1", "set": true, "revision": 2}

@@ -11,3 +11,4 @@ date	sample	fix	languages
 2026-10-19	04-alarms 6; inputs alarms-06	cammeta-go М11-11 № 12: у m2 с last_report sent_at null — по Н5 (H14) вход не по форме, код 2, а шаг ждёт unreadable; sent_at числом, page garbled оставлен. Прочие входы векторов М11 сверены с правилами кода 2 — иных несостыковок нет (коды 2 — только у шагов @exit 2)	all
 2026-10-20	перенос	сценарий 01-shared-edit-and-read из М11/11 (стадия B); строки выше — журнал приёмки М11/11 целиком	all
 2026-10-30	01-shared-edit-and-read	ADR-0094 B5: у 400, 409 в ожидании слово `error` и `field` (P/08.0 Н4; формат — P/06.1 Н2 «Отказ: `error` и `field`»); шаги те же	all
+2026-10-31	09-shared-versions	ADR-0094 B3, B4: новый сценарий: If-Match основной, base_rev — только без заголовка	all

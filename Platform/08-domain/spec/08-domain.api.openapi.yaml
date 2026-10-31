@@ -265,6 +265,8 @@ paths:
       summary: Принять стучащегося по отпечатку его ключа
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -277,9 +279,13 @@ paths:
                 name: {$ref: '#/components/schemas/MemberName'}
                 fingerprint: {type: string, pattern: "^(?:[0-9a-f]{16})$"}
       responses:
+        '412': {$ref: '#/components/responses/RevisionMoved'}
+        '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
         '413': {$ref: '#/components/responses/BodyRefused'}
         '200':
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
           description: Список после записи
           content:
             application/json:
@@ -311,8 +317,14 @@ paths:
       summary: Член уходит из домена
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
       responses:
+        '412': {$ref: '#/components/responses/RevisionMoved'}
+        '422': {$ref: '#/components/responses/KeyReused'}
         '200':
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
           description: Список после записи
           content:
             application/json:
@@ -337,6 +349,8 @@ paths:
       summary: Администратор заменяет отпечатки центра члена (Н1.6 admin)
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -358,9 +372,13 @@ paths:
                   description: 'Н1.6 admin: PEM сертификатов центров в порядке ca, sha256(DER) — отпечаток на том же месте; пишутся в domain/members/<член>/ca-certs до Entry.ca.'
                   items: {type: string, minLength: 1}
       responses:
+        '412': {$ref: '#/components/responses/RevisionMoved'}
+        '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
         '413': {$ref: '#/components/responses/BodyRefused'}
         '200':
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
           description: Список членов после записи по CAS (Н2)
           content:
             application/json:
@@ -379,6 +397,8 @@ paths:
       summary: Правка топологии против прочитанной ревизии
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -386,9 +406,13 @@ paths:
             schema:
               $ref: '#/components/schemas/TopologyEdit'
       responses:
+        '412': {$ref: '#/components/responses/RevisionMoved'}
+        '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
         '413': {$ref: '#/components/responses/BodyRefused'}
         '200':
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
           description: Документ после записи
           content:
             application/json:
@@ -413,6 +437,8 @@ paths:
       summary: Назначить (только оператор)
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -420,9 +446,13 @@ paths:
             schema:
               $ref: '#/components/schemas/PlacementEdit'
       responses:
+        '412': {$ref: '#/components/responses/RevisionMoved'}
+        '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
         '413': {$ref: '#/components/responses/BodyRefused'}
         '200':
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
           description: Запись после правки; то же содержимое — прежняя rev
           content:
             application/json:
@@ -438,7 +468,11 @@ paths:
       summary: Снять назначение
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
       responses:
+        '412': {$ref: '#/components/responses/RevisionMoved'}
+        '422': {$ref: '#/components/responses/KeyReused'}
         '200':
           description: Снято
           content:
@@ -591,6 +625,7 @@ paths:
       summary: Завести человека (Н1.1, Н3)
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
       requestBody:
         required: true
         content:
@@ -603,17 +638,21 @@ paths:
                 name: {$ref: '#/components/schemas/PersonName'}
                 password: {type: string, description: 'длина — шаг Н3 (bad password), не форма тела'}
       responses:
+        '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
         '201':
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
           description: Человек заведён
           content:
             application/json:
               schema:
                 type: object
-                required: [user]
+                required: [user, revision]
                 additionalProperties: false
                 properties:
                   user: {$ref: '#/components/schemas/PersonName'}
+                  revision: {type: integer, minimum: 1}
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Denied'}
@@ -632,6 +671,8 @@ paths:
       summary: Сменить пароль или выключить (Н1.1)
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -644,18 +685,23 @@ paths:
                 password: {type: string, description: 'длина — шаг Н3 (bad password), не форма тела'}
                 disabled: {type: boolean}
       responses:
+        '412': {$ref: '#/components/responses/RevisionMoved'}
+        '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
           description: Человек после правки
           content:
             application/json:
               schema:
                 type: object
-                required: [user, disabled]
+                required: [user, disabled, revision]
                 additionalProperties: false
                 properties:
                   user: {$ref: '#/components/schemas/PersonName'}
                   disabled: {type: boolean}
+                  revision: {type: integer, minimum: 1}
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Denied'}
@@ -668,7 +714,11 @@ paths:
       summary: Удалить человека и его строки грантов (Н1.1)
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
       responses:
+        '412': {$ref: '#/components/responses/RevisionMoved'}
+        '422': {$ref: '#/components/responses/KeyReused'}
         '200':
           description: Удалён
           content:
@@ -708,6 +758,8 @@ paths:
       summary: Записать строку грантов кластера целиком (Н1.3, Н3)
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -729,20 +781,25 @@ paths:
                       scope: {$ref: '#/components/schemas/Scope'}
                       until: {type: number, minimum: 0, description: '0 или нет — без срока.'}
       responses:
+        '412': {$ref: '#/components/responses/RevisionMoved'}
+        '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
           description: Строка после записи
           content:
             application/json:
               schema:
                 type: object
-                required: [cluster, lines]
+                required: [cluster, lines, revision]
                 additionalProperties: false
                 properties:
                   cluster: {type: string}
                   lines:
                     type: array
                     items: {$ref: '#/components/schemas/Line'}
+                  revision: {type: integer, minimum: 1}
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Denied'}
@@ -774,6 +831,8 @@ paths:
                       additionalProperties: false
                       properties:
                         set_at: {type: number}
+                        revision: {type: integer, minimum: 0}
+                        index: {type: string, minLength: 1}
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Denied'}
         '503': {$ref: '#/components/responses/StandbyOrUnavailable'}
@@ -803,6 +862,8 @@ paths:
       summary: Задать аварийный пароль кластера (Н1.6)
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -814,18 +875,23 @@ paths:
               properties:
                 password: {type: string, description: 'длина — шаг Н3 (bad password), не форма тела'}
       responses:
+        '412': {$ref: '#/components/responses/RevisionMoved'}
+        '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
           description: Задан
           content:
             application/json:
               schema:
                 type: object
-                required: [cluster, set]
+                required: [cluster, set, revision]
                 additionalProperties: false
                 properties:
                   cluster: {type: string}
                   set: {const: true}
+                  revision: {type: integer, minimum: 1}
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Denied'}
@@ -1083,14 +1149,20 @@ paths:
       summary: Правка общего документа (P/08.9 Н1.3)
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
           application/json:
             schema: {$ref: '#/components/schemas/SharedEdit'}
       responses:
+        '412': {$ref: '#/components/responses/RevisionMoved'}
+        '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
           description: Новая ревизия
           content:
             application/json:
@@ -1158,6 +1230,26 @@ components:
       in: header
       required: true
       schema: {type: string, minLength: 1, maxLength: 200}
+    RepeatKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: 'Необязателен у этой двери: нет — проход прежний, повтор есть новая запись; есть — память повторов (P/08.0 Н1.9; ADR-0094 B3).'
+      schema: {type: string, minLength: 1, maxLength: 200}
+    IfMatch:
+      name: If-Match
+      in: header
+      required: false
+      description: 'Условие записи (P/08.0 Н1.9 «Версии»): revision строки — десятичное целое ≥ 1 — или индекс хранилища в двойных кавычках, как отдал ETag. Не равен — 412, иная форма — 400; значение не входит в отпечаток памяти повторов.'
+      schema:
+        type: string
+        pattern: "^(?:[1-9][0-9]*|\"(?:0|[1-9][0-9]{0,19})\")$"
+  headers:
+    ETag:
+      description: Индекс строки хранилища в двойных кавычках, сильный тег RFC 9110 (P/08.0 Н1.9 «Версии»). Значение годится для If-Match.
+      schema:
+        type: string
+        pattern: "^(?:\"(?:0|[1-9][0-9]{0,19})\")$"
   responses:
     BodyRefused:
       description: 'Ошибка чтения тела запроса (разбор P/01.1 Н2.1 с отступлениями P/06.5 Н2, Н4 «тело»): chunked или
@@ -1173,6 +1265,16 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Refusal'
+    RevisionMoved:
+      description: If-Match не равен версии строки, ничего не записано (P/08.0 Н1.9 «Версии»; форма row — таблица там же).
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/RevisionMoved'}
+    KeyReused:
+      description: 'Иное тело под тем же Idempotency-Key: error — key reused (P/08.0 Н1.9 «Память повторов»; ADR-0094 доп. (14)).'
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Refusal'}
     RefusedEdit409:
       description: 'Отказ 409 двери правки по ref (P/08.6 Н4): Refusal — kept_full, «unit is being deleted», «the pending edits kept
         changing; ask again»; Executors — ref у двух исполнителей и больше без ?cluster= (P/08.6 Н3 «принять правку» шаг 2а;
@@ -1328,8 +1430,8 @@ components:
       required: [error]
       additionalProperties: false
       description: 'Тело отказа двери процесса (P/08.0 Н4, Н4 глав двери): error — слово (refused, слова глав 8.4, 8.6 и 8.8, deposed,
-        frozen, standby, whole too large); закрытый перечень по дверям — data/refusal-words.tsv (P/08.0 Н4, ADR-0094 B5); detail — у отказов, где глава его называет (у дверей агентов — всегда); reason — слово
-        у дверей агентов (P/08.3 Н4, P/08.7 Н4); field — JSON Pointer поля у 400 и 409 (P/06.1 Н2); holder — только у 409 deposed'
+        frozen, standby, whole too large, слова памяти повторов P/08.0 Н1.9); закрытый перечень по дверям — data/refusal-words.tsv (P/08.0 Н4, ADR-0094 B5); detail — у отказов, где глава его называет (у дверей агентов — всегда); reason — слово
+        у дверей агентов (P/08.3 Н4, P/08.7 Н4); field — JSON Pointer поля у 400 и 409 (P/06.1 Н2), у 412 — своя схема RevisionMoved; holder — только у 409 deposed'
       properties:
         error:
           type: string
@@ -1363,12 +1465,31 @@ components:
             - a secret is set in the member's own cluster, never through a kept edit
             - called off
             - redo it on the new holder
+            - If-Match is a unit revision
+            - Idempotency-Key required
+            - in flight
+            - key reused
+            - revision moved
+            - row too large
         detail: {type: string}
         reason: {type: string}
         field: {$ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/RefusalField'}
         holder:
           $ref: '#/components/schemas/HolderRecord'
           description: 'у 409 deposed — документ записи срока нового держателя как объект (P/08.8 Н1.6; добавлено М11/10)'
+    RevisionMoved:
+      type: object
+      required: [detail, error, field, revision]
+      additionalProperties: false
+      description: 'Отказ 412 дверей правок (P/08.0 Н1.9 «Версии»); форма та же, что у консоли кластера (P/06.1 Н2 «Версии»).'
+      properties:
+        detail: {type: string}
+        error: {const: revision moved}
+        field: {const: /revision}
+        revision: {type: integer, minimum: 0, description: 'нынешняя; 0 — строки нет или её revision не читается'}
+        row:
+          type: object
+          description: 'текущая строка в форме таблицы P/08.0 Н1.9; секретов не несёт; нет, если строки нет, она не читается или строка заявки вышла бы тяжелее потолка'
     Executors:
       type: object
       required: [error, detail, clusters]
@@ -1899,9 +2020,8 @@ components:
         at: {type: number}
     TopologyEdit:
       type: object
-      required: [base_rev]
       additionalProperties: false
-      description: Тело PUT /domain/topology (P/08.3 Н1.2 put_order).
+      description: 'Тело PUT /domain/topology (P/08.3 Н1.2 put_order). base_rev обязателен, только если нет заголовка If-Match; оба есть и расходятся — 400 (P/08.0 Н1.9 «base_rev»).'
       properties:
         base_rev: {type: integer, minimum: 0}
         centre:
@@ -1947,7 +2067,7 @@ components:
         by: {type: string}
     PersonView:
       type: object
-      required: [name, how, disabled, at, by]
+      required: [name, how, disabled, at, by, revision, index]
       additionalProperties: false
       properties:
         name: {$ref: '#/components/schemas/PersonName'}
@@ -1955,6 +2075,8 @@ components:
         disabled: {type: boolean}
         at: {type: number}
         by: {type: string}
+        revision: {type: integer, minimum: 0, description: 'глава 8.0 Н1.9 «Версии»: 0 — поля нет или оно не читается'}
+        index: {type: string, minLength: 1, description: 'индекс строки хранилища, из чтения этой строки (глава 8.0 Н1.9)'}
     MayInput:
       type: object
       description: 'Не HTTP: вход функции may (договор права Platform/common/contracts/may.md; P/08.4 Н1.4; векторы common/vectors/may).'
@@ -2032,6 +2154,7 @@ components:
         reason: {type: string}
         at: {type: number}
         rev: {type: integer, minimum: 1}
+        index: {type: string, minLength: 1, description: 'индекс строки хранилища: только в GET /domain/placement и row отказа 412 (глава 8.0 Н1.9); в ответе агенту поля нет'}
     PlacementEdit:
       type: object
       required: [cluster]
@@ -2189,9 +2312,9 @@ components:
         sig: {type: string}
     SharedEdit:
       type: object
-      required: [base_rev, shared]
+      required: [shared]
       additionalProperties: false
-      description: Тело PUT /domain/shared (P/08.9 Н1.3).
+      description: 'Тело PUT /domain/shared (P/08.9 Н1.3). base_rev обязателен, только если нет заголовка If-Match; оба есть и расходятся — 400 (P/08.0 Н1.9 «base_rev»).'
       properties:
         base_rev: {type: integer, minimum: 0}
         shared:
