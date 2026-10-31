@@ -13,6 +13,7 @@ archive	404	no device archive	-	02.5 Н4
 archive	404	no such path	-	02.5 Н4
 archive	404	no such segment	-	02.5 Н4
 archive	405	method not allowed	-	02.5 Н4
+archive	413	toolarge	-	02.5 Н4; P/03.4 Н1.7
 archive	415	not playable	-	02.5 Н4
 archive	401	no_role	-	02.5 Н2, Н4
 archive	403	no_role	-	02.5 Н2, Н4
@@ -23,6 +24,7 @@ keeps	404	no such keep	-	02.7 Н4
 keeps	404	no such recording in the keep	-	02.7 Н4
 keeps	400	bad range	-	02.7 Н4; 02.5 Н2
 keeps	405	method not allowed	-	02.7 Н4; 02.5 Н2
+keeps	413	toolarge	-	02.7 Н4; P/03.4 Н1.7
 keeps	409	cannot verify a keep whose interval is garbled	-	02.7 Н4
 keeps	503	cannot verify	-	02.7 Н4
 keeps	503	busy	-	02.7 Н4; 02.5 Н2, Н4
