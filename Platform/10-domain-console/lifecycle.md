@@ -37,7 +37,7 @@
 
 ## Каталоги и файлы
 
-- Читает строки держателя (`domain/*` кроме `!domain/signer*`, P/02.5 Н1.4); своих строк не пишет; чтения — абзац
+- Читает строки держателя (`domain/*` кроме `!domain/signer*` и `!domain/idem/*`, P/02.5 Н1.4); своих строк не пишет; чтения — абзац
   «Данные» [P/10 Н1](spec/10-domain-console.norms.md) и каталог данных [`common/data/catalog.tsv`](../common/data/catalog.tsv),
   читатель `domainconsole`.
 - Кольца нет ([P/02.4 Н1.12](../02-installer/spec/02.4-installer.norms.md)).

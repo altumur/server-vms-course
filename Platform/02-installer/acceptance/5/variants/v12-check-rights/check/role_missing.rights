@@ -196,6 +196,7 @@
    "read": [
     "!domain/book-seal",
     "!domain/break-glass/*",
+    "!domain/idem/*",
     "!domain/member-key",
     "!domain/signer*",
     "!domain/users/*",
