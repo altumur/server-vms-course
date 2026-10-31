@@ -23,6 +23,13 @@
     "string"
    ]
   },
+  "iat": {
+   "$ref": "#/$defs/common.time",
+   "description": "iat того же токена: вход шага 4а договора права (P/06.9 Н1.2; ADR-0100 §3)",
+   "x-codec": [
+    "time"
+   ]
+  },
   "exp": {
    "$ref": "#/$defs/common.time",
    "description": "срок того же токена",
@@ -98,6 +105,7 @@
   "by",
   "jti",
   "kid",
+  "iat",
   "exp",
   "created_at",
   "state",

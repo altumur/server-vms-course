@@ -18,6 +18,7 @@ place	layer	word	value
 /properties/exp	3	x-codec	["time"]
 /properties/expired	3	x-codec	["boolean"]
 /properties/finished_at	3	x-codec	["time"]
+/properties/iat	3	x-codec	["time"]
 /properties/jti	3	x-codec	["string"]
 /properties/kid	3	x-codec	["string"]
 /properties/paused	3	x-codec	["boolean"]

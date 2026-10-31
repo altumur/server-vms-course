@@ -6,4 +6,5 @@ worker: {exec: /usr/lib/probe/worker}
 door:
   pass:
     routes: [api]
-    calls: [probe/operations, other/operations, folders, GET folders, GET domain/users, GET domain/groups, GET domain/roles, GET domain/grants, domain/batch]
+    calls: [probe/operations, folders, GET folders, GET domain/users, GET domain/groups, GET domain/roles, GET domain/grants, domain/batch]
+    operations: {step: steps}

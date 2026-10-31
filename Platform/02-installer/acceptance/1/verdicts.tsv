@@ -818,3 +818,6 @@ a95_ops_limit_high	refused
 a95_ops_unknown	refused
 a95_calls_domain_other	refused
 a95_calls_domain_write	refused
+a95_ops_step_door_route	refused
+a95_calls_ops_other	refused
+a95_calls_ops_undeclared	refused
