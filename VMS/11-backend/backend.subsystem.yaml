@@ -148,18 +148,19 @@ tables:
               field:   {type: string, minLength: 1}
   # The id consolem knows a person by (V/11.8 Н1.2): a person's name is their login, so the id cannot be the key.
   people:
-    key: name
+    key: h
     service: true
     fields:
+      h:        {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of the name: `.` is no key
       name:     {type: string, required: true, schema: {minLength: 1}}
-      id:       {type: string, required: true, schema: {pattern: "^[0-9a-f-]{36}$"}}
+      id:       {type: string, required: true, schema: {pattern: "^[0-9a-fA-F-]{36}$"}}
   # The history of the rights screen (V/11.8 Н1.7): the platform's journal stays the record, this only shows it.
   history:
     key: id
     service: true
     delete_after: 7776000            # 90 days
     fields:
-      id:       {type: string, required: true, schema: {pattern: "^[0-9a-f-]{36}$"}}
+      id:       {type: string, required: true, schema: {pattern: "^[0-9a-fA-F-]{36}$"}}
       kind:     {type: string, required: true, enum: [history, cell]}
       when:     {type: string, required: true, schema: {minLength: 1}}   # RFC 3339 UTC
       entry:    {type: json, required: true, schema: {type: object}}     # AccessHistoryWrite or AccessCellWrite, with `actor`

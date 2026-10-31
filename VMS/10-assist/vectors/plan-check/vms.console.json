@@ -194,12 +194,6 @@
      "required": false
     },
     {
-     "name": "folders",
-     "type": "list",
-     "default": null,
-     "required": false
-    },
-    {
      "name": "alarms",
      "type": "list",
      "default": null,
@@ -260,7 +254,6 @@
      "profile": "Поток",
      "grid": "Поток сетки",
      "full": "Поток полного экрана",
-     "folders": "Папки",
      "source": "Источник",
      "cred_username": "Логин устройства",
      "cred_secret": "Пароль устройства",
@@ -284,8 +277,7 @@
        "enabled",
        "name",
        "ref",
-       "id",
-       "folders"
+       "id"
       ]
      },
      {
@@ -325,7 +317,6 @@
      "full": "поток этой камеры для полного экрана; пусто — основной",
      "source": "адрес устройства (driverpack://производитель/адрес/ch/канал)",
      "labels": "сети, в которых виден адрес камеры (vlan:cctv-a)",
-     "folders": "папки, в которых камера показана",
      "cred_username": "логин устройства",
      "cred_secret": "пароль устройства",
      "live": "живой поток: держать всегда или по требованию"
@@ -335,20 +326,18 @@
      "silent": "камера молчит"
     },
     "tree": {
-     "group_by": "folders",
-     "nested_by": "/",
+     "folders": true,
      "group_title": "По папкам",
-     "group_hint": "Папки из поля folders → камеры",
+     "group_hint": "Папки кластера → камеры",
      "filter": "Фильтр по имени, адресу…",
      "no_group": "Без папки",
      "contents_title": "Состав папки",
      "group_word": "папка",
      "no_group_suffix": "без папки",
-     "pick_note": "Папки берутся из поля folders камеры и на размещение не влияют; размещение решают её labels.",
+     "pick_note": "Папки — записи кластера и на размещение не влияют; размещение решают labels камеры.",
      "new_root": "Папка",
      "new_sub": "Подпапка",
-     "add_here": "Добавить камеру сюда",
-     "new_group_note": "Папка создана — добавьте в неё камеру, иначе она не сохранится"
+     "add_here": "Добавить камеру сюда"
     },
     "keys": {
      "sources": {
@@ -504,9 +493,6 @@
     "enabled": true,
     "priority": 100,
     "labels": null,
-    "folders": [
-     "Офис/Этаж 3"
-    ],
     "alarms": null,
     "ref": null,
     "cred_username": "admin",
@@ -526,9 +512,6 @@
     "enabled": true,
     "priority": 100,
     "labels": null,
-    "folders": [
-     "Улица"
-    ],
     "alarms": null,
     "ref": null,
     "cred_username": null,
@@ -548,9 +531,6 @@
     "enabled": false,
     "priority": 100,
     "labels": null,
-    "folders": [
-     "Офис/Этаж 1"
-    ],
     "alarms": null,
     "ref": null,
     "cred_username": null,
@@ -570,7 +550,6 @@
     "enabled": true,
     "priority": 100,
     "labels": null,
-    "folders": null,
     "alarms": null,
     "ref": null,
     "cred_username": null,
