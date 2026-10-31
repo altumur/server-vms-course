@@ -7721,6 +7721,29 @@ components:
           - row moved
           - batch too large
           - no such row
+          - bad folder
+          - bad member
+          - too many members
+          - too many folders
+          - too deep
+          - no such folder
+          - no such parent
+          - parent gone
+          - folder moved
+          - parent moved
+          - no chain
+          - no membership
+          - folder gone
+          - leader moved
+          - bad operation
+          - too many steps
+          - too many operations
+          - no operations
+          - no such operation
+          - root busy
+          - operation done
+          - operation running
+          - nothing to retry
         field:
           $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/RefusalField'
         fault:

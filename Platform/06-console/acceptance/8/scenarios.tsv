@@ -53,7 +53,7 @@ scenario	step	request	expect
 04-depth-parent	7	POST /folders {"name": "d7", "parent": "$f6"}	201 {"id": "$f7", "parent": "$f6"}
 04-depth-parent	8	POST /folders {"name": "d8", "parent": "$f7"}	201 {"id": "$f8", "parent": "$f7"}
 04-depth-parent	9	POST /folders {"name": "d9", "parent": "$f8"}	400 {"error": "too deep", "field": "/parent"}
-04-depth-parent	10	POST /folders {"name": "x", "parent": "00000000000000000000000000000001"}	404 {"error": "no such parent", "field": "/parent"}
+04-depth-parent	10	POST /folders {"name": "x", "parent": "00000000000000000000000000000001"}	404 {"error": "no such parent"}
 04-depth-parent	11	DELETE /folders/$f8	200 {"deleted": "$f8"}
 04-depth-parent	12	POST /folders {"name": "x", "parent": "$f8"}	409 {"error": "parent gone", "field": "/parent"}
 04-depth-parent	13	DELETE /folders/$f2	200 {"deleted": "$f2"}

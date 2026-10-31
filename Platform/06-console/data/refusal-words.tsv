@@ -157,7 +157,7 @@ folders	400	too many members	/members	6.8 Н4
 folders	400	too many folders	/members/<i>	6.8 Н4
 folders	400	too deep	/parent	6.8 Н4
 folders	404	no such folder	-	6.8 Н4
-folders	404	no such parent	/parent	6.8 Н4
+folders	404	no such parent	-	6.8 Н4
 folders	409	parent gone	/parent	6.8 Н4
 folders	409	in flight	-	6.8 Н4
 folders	400	If-Match is a unit revision	-	6.1 Н2 «Версии»
