@@ -182,3 +182,46 @@ scenario	step	request	expect
 08-profile-ops	35	member m1 console2 POST /api/operations/$r/retry-failed	202 {"id": "$r2"}
 08-profile-ops	36	ASSERT $r != $r2	
 08-profile-ops	37	@until 60 member m1 console2 GET /api/operations/$r2	200 {"state": "done", "failed": 1}
+09-stream	1	@domain m1	ok
+09-stream	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+09-stream	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+09-stream	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+09-stream	5	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.1"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.2"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"failed": []}
+09-stream	6	holder POST /domain/users {"name": "ann", "password": "ann-password-1"}	201 {"user": "ann"}
+09-stream	7	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "view", "scope": "unit:cam/1", "sub": "cam"}, {"subject": "root", "cap": "admin", "scope": "*"}]}	200 {"cluster": "m1"}
+09-stream	8	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$v1"}
+09-stream	9	member m1 console2 GET /api/devices/8b99c4f9-f9f1-5926-ab12-5925acb99a02	200 {"version": "$v2"}
+09-stream	10	@person ann ann-password-1	ok
+09-stream	11	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:cam/1"}]}
+09-stream	12	@stream-open s1 member m1 console2 GET /api/stream	2xx
+09-stream	13	@person root w2c test root password	ok
+09-stream	14	@until 30 member m1 console GET /session	200 {"user": "root"}
+09-stream	15	member m1 console2 @header If-Match: "$v2" PATCH /api/devices/8b99c4f9-f9f1-5926-ab12-5925acb99a02 {"name": "c2a"}	200 {"name": "c2a"}
+09-stream	16	@stream-none s1 10 ~8b99c4f9-f9f1-5926-ab12-5925acb99a02	ok
+09-stream	17	member m1 console2 @header If-Match: "$v1" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"name": "c1a"}	200 {"name": "c1a", "version": "$v1b"}
+09-stream	18	@stream-wait s1 30	ok {"type": "entity.changed", "kind": "device", "entityId": "068df1b2-b153-5712-bb0f-06efd7b21699", "version": "$v1b", "id": "$p"}
+09-stream	19	@stream-close s1	ok
+09-stream	20	@person ann ann-password-1	ok
+09-stream	21	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:cam/1"}]}
+09-stream	22	@stream-open s2 member m1 console2 @header Last-Event-ID: $p GET /api/stream	2xx
+09-stream	23	@person root w2c test root password	ok
+09-stream	24	@until 30 member m1 console GET /session	200 {"user": "root"}
+09-stream	25	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "view", "scope": "unit:cam/1", "sub": "cam"}, {"subject": "ann", "cap": "view", "scope": "unit:cam/2", "sub": "cam"}, {"subject": "root", "cap": "admin", "scope": "*"}]}	200 {"cluster": "m1"}
+09-stream	26	@stream-wait s2 90	ok {"type": "stream.reset"}
+09-stream	27	@stream-close s2	ok
+09-stream	28	@stream-open s3 member m1 console2 @header Last-Event-ID: not-a-number GET /api/stream	2xx
+09-stream	29	@stream-wait s3 30	ok {"type": "stream.reset"}
+09-stream	30	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$v1c"}
+09-stream	31	member m1 console2 @header If-Match: "$v1c" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"name": "c1b"}	200 {"version": "$v1d"}
+09-stream	32	@stream-wait s3 30	ok {"type": "entity.changed", "entityId": "068df1b2-b153-5712-bb0f-06efd7b21699", "version": "$v1d", "id": "$q"}
+09-stream	33	@stream-close s3	ok
+09-stream	34	@on m1 @sigkill b-srv-a-1	ok
+09-stream	35	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+09-stream	36	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "d7329777-a64d-54c5-86fa-eda63d75d992"}]}
+09-stream	37	member m1 console2 @header If-Match: "$v1d" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"name": "c1c"}	200 {"version": "$v1e"}
+09-stream	38	@stream-open s4 member m1 console2 @header Last-Event-ID: $q GET /api/stream	2xx
+09-stream	39	@stream-wait s4 30	ok {"type": "entity.changed", "entityId": "068df1b2-b153-5712-bb0f-06efd7b21699", "version": "$v1e"}
+09-stream	40	@stream-close s4	ok
+09-stream	41	@stream-open s5 member m1 console2 @header Last-Event-ID: not-a-number GET /api/stream	2xx
+09-stream	42	@stream-wait s5 30	ok {"type": "stream.reset"}
+09-stream	43	@stream-close s5	ok
