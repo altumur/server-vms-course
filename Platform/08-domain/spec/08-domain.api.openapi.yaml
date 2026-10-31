@@ -103,7 +103,7 @@ paths:
                         not: {required: [reason]}
                   - $ref: '#/components/schemas/Deposed'
         '413':
-          description: 'Тело больше BODY_LIMIT или целое поколение больше BODY_LIMIT — {error: "whole too large"} (P/08.10 Н1.5; добавлено М11/12)'
+          description: 'Тело больше BODY_LIMIT — {error: denied} до разбора (C08-BODY-DENIED-01); целое поколение больше BODY_LIMIT — {error: "whole too large"} (P/08.10 Н1.5; добавлено М11/12)'
           content:
             application/json:
               schema:
@@ -1822,6 +1822,7 @@ components:
           enum:
             - refused
             - denied
+            - method
             - deposed
             - frozen
             - standby

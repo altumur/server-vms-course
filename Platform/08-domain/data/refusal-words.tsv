@@ -11,7 +11,7 @@ agents	401	refused	-	8.3 Н4
 agents	403	refused	-	8.3 Н4
 agents	404	refused	-	8.3 Н4
 agents	409	refused	-	8.3 Н4
-agents	413	refused	-	8.3 Н4
+agents	503	refused	-	8.3 Н4
 agents	413	whole too large	-	8.10 Н4
 tokens	400	refused	-	8.7 Н4
 tokens	403	refused	-	8.7 Н4
@@ -32,7 +32,7 @@ people	409	last admin	-	8.4 Н4
 people	413	too large	-	8.4 Н4
 people	503	names unknown	-	8.4 Н4
 grants	400	bad name	-	8.4 Н4
-grants	400	bad line	/lines/<i>	8.4 Н4
+grants	400	bad line	/lines /lines/<i>	8.4 Н4
 grants	400	grant too wide	/lines/<i>	8.4 Н4
 grants	400	unknown subject	/lines/<i>/subject	8.4 Н4
 grants	409	being deleted	/lines/<i>/subject	8.4 Н4
@@ -90,6 +90,7 @@ stranded	409	refused	-	8.8 Н1.6
 *	400	denied	-	6.5 Н4
 *	401	denied	-	8.4 Н4
 *	403	denied	-	8.4 Н4
+*	405	method	-	8.0 Н4
 *	408	denied	-	6.5 Н4
 *	409	deposed	-	8.8 Н1.6
 *	413	denied	-	6.5 Н4
