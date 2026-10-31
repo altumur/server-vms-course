@@ -39,50 +39,48 @@ placement:
   tie_break:  most-free-capacity
   grows:      true
 snapshot: [labels, enabled]
-# The pass (P/06.5 Н1.8): a console route `/backend/<segment>/…` whose first segment is listed goes to a live worker of
-# backend with a door. The API of the contract (V/11.2) lives under one segment, `api` (ADR-0094 доп. (8) п. 2): the
-# browser calls `/backend/api/<contract path>`, the worker gets `/api/<contract path>` (the mount prefix is not passed)
-# and answers any path under it, a path the contract has not with 404 NO_ROUTE; the static files (B7) are
-# `/backend/<file>` outside `api/`, so the two spaces do not meet. The second kind of pass
-# (ADR-0094 B1: a ticket instead of the person's `Authorization`, the callback list, routes by a path prefix, the form of
-# the console's own refusals, the loopback mark) is a future platform norm — its declaration is below as a comment, not
-# keys: today's loader does not know them.
+# The pass (P/06.5 Н1.8), the second kind (ADR-0094 B1, ADR-0091 доп. (30); the contract of the gate and the pass,
+# «Передача второго вида»): a request under `routes` goes to a live worker of backend with a door, without the person's
+# Authorization, with a ticket for this one request. The API of the contract (V/11.2) lives under one segment, `api`
+# (ADR-0094 доп. (8) п. 2): the browser calls `/backend/api/<contract path>`, the worker gets `/api/<contract path>` (the
+# mount prefix is not passed) and answers any path under it, a path the contract has not with 404 NO_ROUTE; the static
+# files (B7) are `/backend/<file>` outside `api/`, so the two spaces do not meet. The transport of the callback — V/11.1
+# Н1.2. Not here, because the platform fixes them: the headers, the media types and the loopback mark (V/11.1 Н1.5).
 door:
-  pass: [api]
-# B1 (норма платформы B — после Go GREEN 01–10, ADR-0094 «Порядок» п. 1), declared intent, not loaded today:
-#   pass_kind: ticket                       # the console passes a ticket, never the person's Authorization
-#   callback: tls                           # the callback — TLS with the leaf of role backend of the addressee instance
-#                                           # (доп. (6) пп. 1, 2); another leaf — 401; the role socket — no kit only
-#   # routes by a path prefix under the subsystem, the longest wins (B1; the review of V/11, question 7)
-#   stream: [api/stream, api/assist/turns]  # streaming: no 5 s / 4 MiB limit; a stream's ticket — reads and /changes only
-#   wait: {api/objects/delete: 30, api/devices: 30, api/assist/turns: 7500}   # longer than PASS_WAIT; the ceiling — B1
-#     api/assist/turns — the assistant's turn (V/11.7; ADR-0094 доп. (10)): 25 model calls × (120 + 180) s
-#   refusals: problem                       # the console's own refusals on api — application/problem+json (question 5):
-#     401: UNAUTHORIZED, 403: PERMISSION_DENIED, 404: NO_ROUTE, 413: VALIDATION_FAILED
-#     502, 503, 504: the contract has no code for them — a request to the product (V/11.2 Н1.3)
-#   loopback: the console adds `X-W2C-Loopback: 1` when its TCP client is the loopback and drops one that came in
-#     (question 4); backend runs /test/* only with it and TEST_SUPPORT=1 (V/11.2 Н1.4)
-#   headers: to the worker Content-Type, Idempotency-Key, If-Match, Last-Event-ID, X-W2C-Loopback; to the client
-#     Content-Type, ETag
-#   types: application/json, application/problem+json, text/event-stream, no body (204, 304); else 502 (доп. (3) пп. 2, 3)
-#   calls:                                  # the closed list of doors the worker may call back with a ticket
-#     - cam/cameras, cam/devices            # rows and tables of cam (V/01.1)
-#     - rec/recordings, rec/volumes         # rows and tables of rec (V/02.1)
-#     - det/units                           # rows of det (V/04.1)
-#     - the batch write of a unit's rows and its parts (B9, ADR-0094 доп. (9) п. 2): a device is one batch — the row
-#       cam always written (the lock of the device), written rows with cas, the device's other rows as guards, the
-#       counter cam/next_id when a camera is made, the row of backend/repeats of the group step; all or nothing
-#       (V/11.4 Н1.2, Н1.4)
-#     - cam/policy, rec/policy, det/policy  # common settings of these subsystems and their snapshots
-#                                           # (ADR-0094 доп. (2) п. 6); writes of platform settings
-#                                           # (/schema, /drain, labels) — no
-#     - changes                             # the change feed (B2)
-#     - GET manifest, GET servers, GET events, GET session   # reads; /session — «who am I» and its grants (can_edit)
-#     - GET assist/models, GET schema       # the assistant's default model and the tool get_schema (V/11.7 Н1.2)
-#     - GET assist/where/<name>             # the model's door for the assistant's turn (V/11.7; доп. (10) п. 1)
-#     - backend/repeats                     # its own table: the memory of repeats of a group key (V/11.4 Н1.4)
-#   # not: /where, writes of /session, grants, people, keys, break-glass, /operations; nor auto — the automation of
-#   # consolem is not declared on the first step (ADR-0094 доп. (7)), its operations answer 404 NO_ROUTE
+  pass:
+    routes: [api]
+    # A stream goes to the client as it comes, without the 4 MiB limit; its ticket — reads, /changes, the model's route.
+    stream: [api/stream, api/assist/turns]
+    # Longer than PASS_WAIT, the longest covering key wins; api/assist/turns — ASSIST_TURN_MAX (V/11.7 Н1.5).
+    wait: {api/objects/delete: 30, api/devices: 30, api/assist/turns: 7500}
+    # The console's own refusals on api are `Problem` (question 5). 502, 503, 504: the contract has no code for them, a
+    # request to the product (V/11.2 Н1.3); till then they stay outside the map and answer the console's form.
+    refusals:
+      form: problem
+      codes: {'401': UNAUTHORIZED, '403': PERMISSION_DENIED, '404': NO_ROUTE, '413': VALIDATION_FAILED}
+    # The doors the worker may call back with a ticket, in the closed list of the platform (P/06.3 Н1.9). Not: `/where`,
+    # writes of /session, grants, people, keys, break-glass, /operations; nor auto — the automation of consolem is not
+    # declared on the first step (ADR-0094 доп. (7)), its operations answer 404 NO_ROUTE.
+    calls:
+      - cam/cameras                  # the rows of cam, their tombstones (V/01.1)
+      - cam/devices
+      - cam/next_id                  # a new camera names its number itself (V/11.4 Н1.2)
+      - rec/recordings               # the rows of rec, their tombstones (V/02.1)
+      - rec/volumes
+      - det/units                    # the rows of det, their tombstones (V/04.1)
+      - cam/policy                   # the common settings of these subsystems (ADR-0094 доп. (2) п. 6)
+      - rec/policy
+      - det/policy
+      - console/batch                # a device is one batch (B9, V/11.4 Н1.2, Н1.4)
+      - changes                      # the change feed (B2, V/11.5)
+      - GET manifest
+      - GET servers
+      - GET events
+      - GET session                  # «who am I» and its grants (can_edit)
+      - GET schema                   # the tool get_schema (V/11.7 Н1.2)
+      - GET assist/models            # the assistant's default model (V/11.7 Н1.2)
+      - assist/chat                  # the model's route: the console passes it to the holder (V/11.7; доп. (12) п. 7)
+      - backend/repeats              # its own table: the memory of repeats of a group key (V/11.4 Н1.4)
 # B7 (ADR-0094 доп. (1); P/02.1 `console.shell`, `console.files`, P/02.3, P/06.5 Н1.1 `mounted`), the keys in `console:`
 # below (the installer reads each file, the manifest row keeps its SHA-256 and size): the console serves
 # the WebUI of consolem as static files next to this manifest, `/backend/<file>`, byte for byte, by the name without the
@@ -101,12 +99,13 @@ door:
 # key h = SHA-256 hex of the bytes of the person (`user` of the ticket), a zero byte and the external key. Made with
 # cas "" as «started» before the snapshot; each step's outcome lands in it in the step's own batch (B9). The form of the
 # row is this table's fields (the platform's family of tables has the schema `manifest`, P/06.1 Н1.6): a row the console
-# reads not by them is unreadable — backend answers 503 and runs nothing (V/11.4 Н1.4). Its lifetime — `delete_after` of
-# the table by the store's time, the platform's reaper (not a key of the table grammar today: a point for the norm B).
+# reads not by them is unreadable — backend answers 503 and runs nothing (V/11.4 Н1.4). Its lifetime — `delete_after`: the
+# console counts it from the first sight of the row's version, so it can only grow; the platform's reaper removes the row.
 tables:
   repeats:
     key: h
     service: true                    # by a live ticket from a leaf of this role only, the person's may is not asked (P/06.1 Н1.6)
+    delete_after: 86400              # as the console's own memory of repeats (P/06.1 Н3)
     fields:
       h:        {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of user, 0, key
       user:     {type: string, required: true, schema: {minLength: 1}}   # the person of the ticket; compared on lookup
