@@ -21,13 +21,15 @@ archive	403	bad_chain	-	02.5 Н2, Н4
 keeps	403	forbidden	-	02.7 Н3
 keeps	404	no such keep	-	02.7 Н4
 keeps	404	no such recording in the keep	-	02.7 Н4
-keeps	405	method	-	02.7 Н4; 02.5 Н2 — method not allowed, спрошено
+keeps	400	bad range	-	02.7 Н4; 02.5 Н2
+keeps	405	method not allowed	-	02.7 Н4; 02.5 Н2
 keeps	409	cannot verify a keep whose interval is garbled	-	02.7 Н4
 keeps	503	cannot verify	-	02.7 Н4
 ingest	400	bad body	-	02.9 Н2, Н4
 ingest	403	not allowed for this call	-	02.9 Н2, Н4
 ingest	404	no such path	-	02.9 Н2, Н4
 ingest	405	method not allowed	-	02.9 Н2, Н4
+ingest	413	toolarge	-	02.9 Н4; P/01.1 Н2.1
 ingest	503	no_handler	-	02.9 Н1.3; P/03.4 Н1.7
 ingest	401	no_role	-	02.9 Н1.3, Н4
 ingest	403	wrong_role	-	02.9 Н1.3, Н4

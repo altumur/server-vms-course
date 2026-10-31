@@ -5,7 +5,7 @@ scenario	step	request	expect
 01-no-device	3	POST /requests {"unit": "$c1", "action": "output"}	202 {"queued": "$rid2"}
 01-no-device	4	@start worker cam w-srv-a-1 on srv-a	ok
 01-no-device	5	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "running"}]}
-01-no-device	6	@until 30 resource GET /v1/objects/cam/commands/$rid	200 {"outcome": "refused", "error": "~has no device"}
-01-no-device	7	@until 30 resource GET /v1/objects/cam/commands/$rid2	200 {"outcome": "refused", "error": "~has no device"}
-01-no-device	8	@until 30 GET /events?unit=cam/$c1&kind=command.failed	200 {"events": [{"kind": "command.failed", "of": "cam/1", "outcome": "refused", "action": "output", "error": "~has no device"}, {"kind": "command.failed", "of": "cam/1", "outcome": "refused", "action": "output", "error": "~has no device"}]}
+01-no-device	6	@until 30 resource GET /v1/objects/cam/commands/$rid	200 {"outcome": "refused", "error": "camera has no device"}
+01-no-device	7	@until 30 resource GET /v1/objects/cam/commands/$rid2	200 {"outcome": "refused", "error": "camera has no device"}
+01-no-device	8	@until 30 GET /events?unit=cam/$c1&kind=command.failed	200 {"events": [{"kind": "command.failed", "of": "cam/1", "outcome": "refused", "action": "output", "error": "camera has no device"}, {"kind": "command.failed", "of": "cam/1", "outcome": "refused", "action": "output", "error": "camera has no device"}]}
 01-no-device	9	POST /requests {"unit": "$c1", "action": "output", "port": "@big(33)"}	400 {"error": "@any"}
