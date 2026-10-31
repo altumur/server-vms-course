@@ -759,6 +759,9 @@ a94_table_field_revision	refused
 a94_table_field_index	refused
 c8_ref125_holds_table_delete_after	refused
 c8_ref126_places_table_delete_after	refused
+k38_sub_changes	refused
+m49_table_changes	refused
+rows_changes	refused
 a98_sub_users	refused
 a98_sub_grants	refused
 a98_sub_groups	refused

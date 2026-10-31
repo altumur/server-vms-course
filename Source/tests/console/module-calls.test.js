@@ -35,7 +35,7 @@ function allowed(method,url,loginUrl){
   const p=u.pathname,seg=p.split("/").slice(1);
   const rows=SUBS.some(s=>p===s.base+"/"+s.rows),row=SUBS.some(s=>p.startsWith(s.base+"/"+s.rows+"/")&&p.slice((s.base+"/"+s.rows+"/").length).indexOf("/")<0);
   if(method==="GET"){
-    if(["/session","/manifest","/mounts","/servers","/unplaceable","/policy","/drain","/schema","/events","/metrics","/api/held"].includes(p))return true;
+    if(["/session","/manifest","/mounts","/changes","/servers","/unplaceable","/policy","/drain","/schema","/events","/metrics","/api/held"].includes(p))return true;
     if(SUBS.some(s=>s.base&&(p===s.base+"/manifest"||p===s.base+"/unplaceable"||p.startsWith(s.base+"/where/"))))return true;
     if(rows||p.startsWith("/where/"))return true;
     if(SUBS.some(s=>s.show.some(t=>p==="/"+s.name+"/"+t)))return true;   // /<sub>/<table> только из servers.show
@@ -64,7 +64,7 @@ cluster();page(`{lang:"en",poll_s:0.3}`);
 let w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
 w.confirm=()=>true;
 await w.pc.ready;const mountEnd=w.__log.length,mountAt=Date.now();
-out.orderAtMount=JSON.stringify(gets(w.__log).slice(0,mountEnd))===JSON.stringify(["/session","/manifest","/mounts",...ORDER]);
+out.orderAtMount=JSON.stringify(gets(w.__log).slice(0,mountEnd))===JSON.stringify(["/session","/manifest","/mounts","/changes",...ORDER]);
 out.orderAtMountGot=gets(w.__log).join(" ");
 await b.ready(1000);
 const polls=[];{const g=gets(w.__log,mountEnd);let cur=null;for(const p of g){if(p==="/things"){cur=[];polls.push(cur)}if(cur)cur.push(p)}}

@@ -296,3 +296,12 @@ scenario	step	request	expect
 30-next-id	12	@spoil row probe-x/next_id	ok
 30-next-id	13	store GET /v1/get?key=probe-x/next_id	200 {"items": null, "index": "$b", "unreadable": true}
 30-next-id	14	GET /probe-x/next_id	200 {"n": 3, "index": "$b"}
+31-changes-metrics	1	@start resource	ok
+31-changes-metrics	2	GET /metrics	200 ~w2c_changes_subscribers 0 ~w2c_changes_messages_total 0 ~w2c_changes_tick_failures_total 0 ~w2c_changes_tick_seconds ~w2c_changes_rows_read_total
+31-changes-metrics	3	GET /metrics	200 ~w2c_changes_resets_total{reason="foreign"} 0 ~w2c_changes_resets_total{reason="evicted"} 0 ~w2c_changes_resets_total{reason="rights"} 0 ~w2c_changes_resets_total{reason="labels"} 0
+31-changes-metrics	4	@until 10 GET /changes	200 {"position": "$p"}
+31-changes-metrics	5	POST /counters {"name": "c1"}	201 {"revision": 1}
+31-changes-metrics	6	@until 10 GET /changes?after=$p	200 {"changes": [{"key": "testsub/counters/c1", "revision": 1}]}
+31-changes-metrics	7	GET /metrics	200 ~w2c_changes_messages_total 1
+31-changes-metrics	8	GET /changes?after=nothing	200 {"changes": [], "reset": true}
+31-changes-metrics	9	GET /metrics	200 ~w2c_changes_resets_total{reason="foreign"} 1
