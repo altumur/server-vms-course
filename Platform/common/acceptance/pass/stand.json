@@ -45,6 +45,19 @@
       "issuer": "m1",
       "role": "probe-pworker",
       "server": "other-box"
+    },
+    "m1-probe-pworker-expired": {
+      "issuer": "m1",
+      "role": "probe-pworker",
+      "not_before": -172800,
+      "days": 1
+    },
+    "m1-probe-pworker-server-only": {
+      "issuer": "m1",
+      "role": "probe-pworker",
+      "eku": [
+        "serverAuth"
+      ]
     }
   }
 }

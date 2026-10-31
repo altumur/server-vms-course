@@ -97,8 +97,13 @@ scenario	step	request	expect
 08-leaf-of-the-role	6	@pass-call m1-probe-pworker @header X-W2C-Pass-Ticket: $t GET /session	ok {"handshake": "ok", "http": {"status": 200, "body": {"via": "ticket"}}}
 08-leaf-of-the-role	7	@pass-call m1-testsubworker @header X-W2C-Pass-Ticket: $t GET /session	ok {"handshake": "ok", "http": {"status": 401, "body": {"detail": "ticket refused"}}}
 08-leaf-of-the-role	8	@pass-call m1-probe-pworker-other @header X-W2C-Pass-Ticket: $t GET /session	ok {"handshake": "ok", "http": {"status": 401, "body": {"detail": "ticket refused"}}}
-08-leaf-of-the-role	9	@pass-call null @header X-W2C-Pass-Ticket: $t GET /session	ok {"handshake": "ok", "http": {"status": 401, "body": {"detail": "ticket refused"}}}
-08-leaf-of-the-role	10	@pass-answer a 200 application/json {}	200
-08-leaf-of-the-role	11	@pass-worker m1 probe-p p-1 kit=m1-testsubworker	ok
-08-leaf-of-the-role	12	member m1 console PUT /probe-p/api/secret {"password": "x"}	502 {"error": "denied"}
-08-leaf-of-the-role	13	@pass-seen p-1	ok {"requests": 0}
+08-leaf-of-the-role	9	@pass-call m1-probe-pworker GET /session	ok {"handshake": "ok", "http": {"status": 401, "body": {"detail": "ticket refused"}}}
+08-leaf-of-the-role	10	@pass-call null @header X-W2C-Pass-Ticket: $t GET /session	ok {"handshake": "alert", "http": null}
+08-leaf-of-the-role	11	@pass-call foreign-console @header X-W2C-Pass-Ticket: $t GET /session	ok {"handshake": "alert", "http": null}
+08-leaf-of-the-role	12	@pass-call m1-probe-pworker-expired @header X-W2C-Pass-Ticket: $t GET /session	ok {"handshake": "alert", "http": null}
+08-leaf-of-the-role	13	@pass-call m1-probe-pworker-server-only @header X-W2C-Pass-Ticket: $t GET /session	ok {"handshake": "alert", "http": null}
+08-leaf-of-the-role	14	member m1 console @header X-W2C-Pass-Ticket: $t GET /session	401 {"error": "denied", "detail": "ticket refused"}
+08-leaf-of-the-role	15	@pass-answer a 200 application/json {}	200
+08-leaf-of-the-role	16	@pass-worker m1 probe-p p-1 kit=m1-testsubworker	ok
+08-leaf-of-the-role	17	member m1 console PUT /probe-p/api/secret {"password": "x"}	502 {"error": "denied"}
+08-leaf-of-the-role	18	@pass-seen p-1	ok {"requests": 0}
