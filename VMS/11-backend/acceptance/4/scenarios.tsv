@@ -209,18 +209,19 @@ scenario	step	request	expect
 09-stream	25	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "view", "scope": "unit:cam/1", "sub": "cam"}, {"subject": "ann", "cap": "view", "scope": "unit:cam/2", "sub": "cam"}, {"subject": "root", "cap": "admin", "scope": "*"}]}	200 {"cluster": "m1"}
 09-stream	26	@stream-wait s2 90	ok {"type": "stream.reset"}
 09-stream	27	@stream-close s2	ok
-09-stream	28	@stream-open s3 member m1 console2 GET /api/stream	2xx
-09-stream	29	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$v1c"}
-09-stream	30	member m1 console2 @header If-Match: "$v1c" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"name": "c1b"}	200 {"version": "$v1d"}
-09-stream	31	@stream-wait s3 30	ok {"type": "entity.changed", "entityId": "068df1b2-b153-5712-bb0f-06efd7b21699", "version": "$v1d", "id": "$q"}
-09-stream	32	@stream-close s3	ok
-09-stream	33	@on m1 @sigkill b-srv-a-1	ok
-09-stream	34	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
-09-stream	35	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "d7329777-a64d-54c5-86fa-eda63d75d992"}]}
-09-stream	36	member m1 console2 @header If-Match: "$v1d" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"name": "c1c"}	200 {"version": "$v1e"}
-09-stream	37	@stream-open s4 member m1 console2 @header Last-Event-ID: $q GET /api/stream	2xx
-09-stream	38	@stream-wait s4 30	ok {"type": "entity.changed", "entityId": "068df1b2-b153-5712-bb0f-06efd7b21699", "version": "$v1e"}
-09-stream	39	@stream-close s4	ok
-09-stream	40	@stream-open s5 member m1 console2 @header Last-Event-ID: not-a-number GET /api/stream	2xx
-09-stream	41	@stream-wait s5 30	ok {"type": "stream.reset"}
-09-stream	42	@stream-close s5	ok
+09-stream	28	@stream-open s3 member m1 console2 @header Last-Event-ID: not-a-number GET /api/stream	2xx
+09-stream	29	@stream-wait s3 30	ok {"type": "stream.reset"}
+09-stream	30	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$v1c"}
+09-stream	31	member m1 console2 @header If-Match: "$v1c" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"name": "c1b"}	200 {"version": "$v1d"}
+09-stream	32	@stream-wait s3 30	ok {"type": "entity.changed", "entityId": "068df1b2-b153-5712-bb0f-06efd7b21699", "version": "$v1d", "id": "$q"}
+09-stream	33	@stream-close s3	ok
+09-stream	34	@on m1 @sigkill b-srv-a-1	ok
+09-stream	35	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+09-stream	36	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "d7329777-a64d-54c5-86fa-eda63d75d992"}]}
+09-stream	37	member m1 console2 @header If-Match: "$v1d" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"name": "c1c"}	200 {"version": "$v1e"}
+09-stream	38	@stream-open s4 member m1 console2 @header Last-Event-ID: $q GET /api/stream	2xx
+09-stream	39	@stream-wait s4 30	ok {"type": "entity.changed", "entityId": "068df1b2-b153-5712-bb0f-06efd7b21699", "version": "$v1e"}
+09-stream	40	@stream-close s4	ok
+09-stream	41	@stream-open s5 member m1 console2 @header Last-Event-ID: not-a-number GET /api/stream	2xx
+09-stream	42	@stream-wait s5 30	ok {"type": "stream.reset"}
+09-stream	43	@stream-close s5	ok
