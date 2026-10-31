@@ -7872,7 +7872,7 @@ components:
           description: Ссылки на единицы по порядку, без фильтра по view.
         index:
           type: string
-          description: Индекс хранилища строки; только равенство (ADR-0094 B4, ещё не внесено).
+          description: Индекс хранилища строки; только равенство.
     FolderId:
       type: string
       pattern: ^(?:[0-9a-f]{32})$
@@ -7959,7 +7959,7 @@ components:
           const: /index
         row:
           $ref: '#/components/schemas/Folder'
-      description: Глава 6.8 Н4; тело 412 с текущей строкой — ADR-0094 B4 (ещё не внесено).
+      description: Глава 6.8 Н4; тело 412 несёт текущую строку в row.
     OperationInput:
       type: object
       required: [id, items]
