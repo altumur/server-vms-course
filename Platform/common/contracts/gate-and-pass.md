@@ -388,9 +388,9 @@ create_about: создание строки единицы, чья единиц�
 unresolved: единица, которую нельзя разрешить (строки нет, строка нечитаема) — по about, unit_of, names — нужен грант на
            "*"; cluster_rows — всегда "*" (GP-L06); только единицы из тела — единица, названная в пути или ?unit=, сверяется
            по scope выше (C06-EVENTS-QUERY-UNKNOWN-138-10, решение «Архитектора» 2026-10-26)
-session:   GET /session доказанной личности (раздел «Сторожевая» session) — grants: [{cap, scope}] — действующие строки этого человека
+session:   GET /session доказанной личности (раздел «Сторожевая» session) — grants: [{cap, sub?, scope, role?}] — действующие строки этого человека и групп его ролей (шаг 5 договора права при sub = null)
            (шаг 5 may) у этой консоли, по (cap, scope); у аварийной сессии — [] (её may — allow по glass)
-domain:    консоль домена и процесс domain: may с grants = domain/grants/domain, as_of null; view — GET /domain*, /manifest,
+domain:    консоль домена и процесс domain: may с grants = domain/grants/domain, as_of null, roles — строки ролей и групп держателя (P/08.4 Н1.3б roles_at_holder), iat — токена, sub — null; view — GET /domain*, /manifest,
            /mounts и двери урока с GET; admin — остальные двери /domain/* (таблица [договора пересылки](forwarding.md)
            «Двери домена»; аудит раскладки, Б-10); unit = "*" у admin; кроме POST /domain/revoke — без личности и гранта: удостоверение — токен в теле
            (P/08.4 Н1.2 revoke)
