@@ -116,3 +116,21 @@ scenario	step	request	expect
 16-gate-rows-unreadable	15	holder GET /domain	200 {"holder": "hold"}
 16-gate-rows-unreadable	16	member hold store POST /v1/write {"op": "put", "key": "domain/keys", "items": {"doc": "not json"}}	200
 16-gate-rows-unreadable	17	holder GET /domain	503 {"error": "unavailable"}
+17-read-versions	1	@domain	ok
+17-read-versions	2	holder PUT /domain/topology {"base_rev": 0, "centre": "hold"}	200 {"rev": 1}
+17-read-versions	3	holder GET /domain/topology	200 @header ETag: ~"
+17-read-versions	4	holder HEAD /domain/topology	200 @header ETag: ~"
+17-read-versions	5	holder GET /domain/members	200 @header ETag: ~"
+17-read-versions	6	holder PUT /domain/placement/testsub/c1 {"cluster": "m1"}	200 {"cluster": "m1"}
+17-read-versions	7	holder GET /domain/placement/testsub/c1	200 @header ETag: ~"
+17-read-versions	8	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 4}}}	200 {"rev": 1}
+17-read-versions	9	holder GET /domain/shared	200 @header ETag: ~"
+17-read-versions	10	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root"}]}, "versions": {"m1": {"revision": 1, "index": "$g"}}}
+17-read-versions	11	member hold store GET /v1/get?key=domain/grants/m1	200 {"items": {"revision": "1"}, "index": "$g"}
+17-read-versions	12	holder GET /domain/placement	200 {"records": {"testsub/c1": {"cluster": "m1", "index": "$p"}}}
+17-read-versions	13	member hold store GET /v1/get?key=domain/placement/testsub/c1	200 {"index": "$p"}
+17-read-versions	14	@until 30 member m1 console GET /domain/topology	200 {"rev": 1}
+17-read-versions	15	member m1 console @header If-Match: 9 PUT /domain/topology {"centre": "m1"}	412 {"error": "revision moved", "revision": 1}
+17-read-versions	16	member m1 console @header Idempotency-Key: f-r1 @header If-Match: 1 PUT /domain/topology {"centre": "m1"}	200 @header ETag: ~"
+17-read-versions	17	member m1 console @header Idempotency-Key: f-r1 @header If-Match: 1 PUT /domain/topology {"centre": "m1"}	200 {"rev": 2, "centre": "m1"}
+17-read-versions	18	member m1 console GET /domain/topology	200 @header ETag: ~"

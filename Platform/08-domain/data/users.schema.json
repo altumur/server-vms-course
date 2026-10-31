@@ -76,6 +76,14 @@
    "x-codec": [
     "string"
    ]
+  },
+  "revision": {
+   "$ref": "#/$defs/common.pos53",
+   "description": "счётчик записей строки: 1 при создании, +1 на каждую запись; читает только процесс domain и консоль домена, писатель пишет всегда (P/08.0 Н1.9 «Версии»; ADR-0094 B4)",
+   "x-whole": true,
+   "x-codec": [
+    "integer"
+   ]
   }
  },
  "additionalProperties": true,

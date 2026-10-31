@@ -8,4 +8,5 @@ date	sample	fix	languages
 2026-10-19	04-alarms 6; inputs alarms-06	cammeta-go М11-11 № 12: у m2 с last_report sent_at null — по Н5 (H14) вход не по форме, код 2, а шаг ждёт unreadable; sent_at числом, page garbled оставлен. Прочие входы векторов М11 сверены с правилами кода 2 — иных несостыковок нет (коды 2 — только у шагов @exit 2)	all
 2026-10-20	перенос	сценарии 02-silent-member из М11/11, 05-the-holders-page из М11/08 (стадия B); сценарий 04-alarms из М11/11 — вектор vectors/alarms (15 строк); строки выше — журналы приёмок М11/08 и М11/11 по плану переноса урока 10, § 3	all
 2026-10-30	05-the-holders-page 6	ADR-0094 B6: ожидание GET /session дополнено полями server_time (@time) и timezone (умолчание UTC, стенд не задаёт TIMEZONE)	all
+2026-10-31	17-read-versions	ADR-0094 B4: новый сценарий: ETag дверей чтения, заголовки версии через пересылку	all
 2026-10-31	15-dot-segments-and-x-user 8	ADR-0100: root — назначением роли admin, в /session консоли домена admin: true и пустые grants; сухого прогона нет	all

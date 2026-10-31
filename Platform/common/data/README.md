@@ -90,7 +90,7 @@
 | `<volume>` | `<sub>/requests/free-<server>-<volume>` | том ресурса | `[A-Za-z0-9_]{1,64}` | часть 1 | P/05 Н1.4 free_ask |
 | `<rid>` | `<sub>/requests/<rid>` | id просьбы | непустой компонент, не `.`, не `..`, не `free-[\s\S]*` | 1 | договор просьбы и её метки `rid`; P/06.4 Н1.5 |
 | `<sha16(имя)>` | `<sub>/asked/<sha16(имя)>` | первые 16 знаков sha256 имени человека | `[0-9a-f]{16}` | 1 | P/06.4 Н1.5 |
-| `<key>` | `<sub>/idem/<key>` | дайджест ключа заявки `(user, метод, путь, Idempotency-Key)` | `[0-9a-f]{64}` | 1 | P/06.1 Н1.1, Н3 «память повторов» |
+| `<key>` | `<sub>/idem/<key>`, `domain/idem/<key>` | дайджест ключа заявки `(user, метод, путь, Idempotency-Key)` | `[0-9a-f]{64}` | 1 | P/06.1 Н1.1, Н3 «память повторов»; P/08.0 Н1.9 |
 | `<id>` | `platform/folders/<id>`, `<sub>/operations/<id>`, `<sub>/opsteps/<id>/<i>`, `<sub>/opdone/<id>/<i>`, `<sub>/opcount/<id>` | id папки, id операции | 128 случайных бит: `[0-9a-f]{32}` | 1 | P/06.8 Н1.1; P/06.9 Н1.2 |
 | `<sub>`, `<manifest:unit.rows>`, `<id>` | `platform/memberof/<sub>/<manifest:unit.rows>/<id>` | единица-член: ссылка из состава папки | как у `<sub>/<manifest:unit.rows>/<id>` | 3 | P/06.8 Н1.1 |
 | `<i>` | `<sub>/opsteps/<id>/<i>`, `<sub>/opdone/<id>/<i>` | номер шага операции от нуля | `0\|[1-9][0-9]*` | 1 | P/06.9 Н1.2 |

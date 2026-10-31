@@ -241,3 +241,23 @@ scenario	step	request	expect
 15-garbled-pending	9	member hold store POST /v1/write {"op": "put", "key": "domain/pending/m1", "items": {"seq": "x"}}	200
 15-garbled-pending	10	holder PUT /domain/testsub/counters/c15 {"start": 6}	503 {"error": "unavailable"}
 15-garbled-pending	11	member hold store GET /v1/get?key=domain/pending/m1	200 {"items": {"seq": "x"}}
+16-placement-versions	1	@domain	ok
+16-placement-versions	2	@until 30 holder GET /domain/placement	200 {"rev": 1, "records": {}}
+16-placement-versions	3	holder PUT /domain/placement/testsub/c1 {"cluster": "m1"}	200 {"cluster": "m1", "rev": 2}
+16-placement-versions	4	holder GET /domain/placement	200 {"rev": 2, "records": {"testsub/c1": {"rev": 2, "index": "$p"}}}
+16-placement-versions	5	holder GET /domain/placement/testsub/c1	200 @header ETag: ~"
+16-placement-versions	6	holder @header If-Match: 1 PUT /domain/placement/testsub/c1 {"cluster": "m2"}	412 {"error": "revision moved", "field": "/revision", "revision": 2, "row": {"cluster": "m1", "rev": 2, "index": "$p"}}
+16-placement-versions	7	holder @header If-Match: "$p" PUT /domain/placement/testsub/c1 {"cluster": "m2"}	200 {"cluster": "m2", "rev": 3}
+16-placement-versions	8	holder @header If-Match: 2 PUT /domain/placement/testsub/c9 {"cluster": "m1"}	412 {"error": "revision moved", "revision": 0, "row": "@absent"}
+16-placement-versions	9	holder @header If-Match: 2 DELETE /domain/placement/testsub/c9	404 {"error": "refused"}
+16-placement-versions	10	holder @header If-Match: x PUT /domain/placement/testsub/c1 {"cluster": "m2"}	400 {"error": "If-Match is a unit revision"}
+16-placement-versions	11	holder @header Idempotency-Key: p-r1 @header If-Match: 3 PUT /domain/placement/testsub/c1 {"cluster": "m1"}	200 {"cluster": "m1", "rev": 4}
+16-placement-versions	12	holder @header Idempotency-Key: p-r1 @header If-Match: 3 PUT /domain/placement/testsub/c1 {"cluster": "m1"}	200 {"cluster": "m1", "rev": 4}
+16-placement-versions	13	holder @header Idempotency-Key: p-r1 @header If-Match: 3 PUT /domain/placement/testsub/c1 {"cluster": "m2"}	422 {"error": "key reused"}
+16-placement-versions	14	holder GET /domain/placement	200 {"rev": 4}
+16-placement-versions	15	holder @header Idempotency-Key: p-r2 @header If-Match: 4 PUT /domain/placement/testsub/c1 {"cluster": "m1"}	200 {"rev": 4}
+16-placement-versions	16	holder @header Idempotency-Key: p-r2 @header If-Match: 4 PUT /domain/placement/testsub/c1 {"cluster": "m1"}	200 @header ETag: ~"
+16-placement-versions	17	holder @header Idempotency-Key: p-r3 @header If-Match: 9 DELETE /domain/placement/testsub/c1	412 {"error": "revision moved", "revision": 4}
+16-placement-versions	18	holder @header Idempotency-Key: p-r4 @header If-Match: 4 DELETE /domain/placement/testsub/c1	200 {"deleted": "testsub/c1"}
+16-placement-versions	19	holder @header Idempotency-Key: p-r4 @header If-Match: 4 DELETE /domain/placement/testsub/c1	200 {"deleted": "testsub/c1"}
+16-placement-versions	20	holder GET /domain/placement/testsub/c1	404

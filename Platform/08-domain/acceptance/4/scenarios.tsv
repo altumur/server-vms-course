@@ -237,214 +237,244 @@ scenario	step	request	expect
 22-changes-labels	19	@person ann ann password 1	ok
 22-changes-labels	20	@until 30 member m1 console GET /changes?after=$s	200 {"position": "$r", "changes": [], "reset": true}
 22-changes-labels	21	member m1 console GET /changes?after=$r	200 {"changes": [], "reset": "@absent"}
-23-grant-line-forms	1	@domain	ok
-23-grant-line-forms	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
-23-grant-line-forms	3	holder PUT /domain/grants/domain {"lines": [{"subject": "ann", "cap": "view", "sub": "testsub", "scope": "*"}]}	400 {"error": "bad line", "field": "/lines/0"}
-23-grant-line-forms	4	holder PUT /domain/grants/domain {"lines": [{"subject": "ann", "cap": "view", "scope": "folder:0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f"}]}	400 {"error": "bad line", "field": "/lines/0"}
-23-grant-line-forms	5	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "sub": "Bad Name", "scope": "*"}]}	400 {"error": "bad line", "field": "/lines/1"}
-23-grant-line-forms	6	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "none", "scope": "*"}]}	400 {"error": "bad line", "field": "/lines/1"}
-23-grant-line-forms	7	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "folder:17"}]}	400 {"error": "bad line", "field": "/lines/1"}
-23-grant-line-forms	8	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "sub": "testsub2", "scope": "*"}, {"subject": "ann", "cap": "view", "sub": "testsub2", "scope": "*"}]}	400 {"error": "bad line", "field": "/lines/2"}
-23-grant-line-forms	9	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "sub": "testsub2", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "folder:0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f"}]}	200 {"cluster": "m1"}
-23-grant-line-forms	10	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "ann", "cap": "view", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "folder:0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f"}, {"subject": "ann", "cap": "view", "sub": "testsub2", "scope": "*"}, {"subject": "root", "cap": "admin", "scope": "*"}]}}
-24-sub-of-each-check	1	@domain	ok
-24-sub-of-each-check	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
-24-sub-of-each-check	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "sub": "testsub2", "scope": "unit:testsub/c1-m1"}, {"subject": "ann", "cap": "view", "sub": "testsub", "scope": "*"}, {"subject": "ann", "cap": "edit", "sub": "testsub", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
-24-sub-of-each-check	4	member m1 store GET /v1/get?key=testsub/counters/c1-m1	200 {"index": "$a"}
-24-sub-of-each-check	5	@person ann ann password 1	ok
-24-sub-of-each-check	6	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "testsub2", "scope": "unit:testsub/c1-m1"}, {"cap": "edit", "sub": "testsub", "scope": "unit:testsub/c1-m1"}, {"cap": "view", "sub": "testsub", "scope": "*"}]}
-24-sub-of-each-check	7	member m1 console GET /drain	403 {"error": "denied"}
-24-sub-of-each-check	8	member m1 console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1-m1", "fields": {"start": 5}, "cas": "$a"}]}	403 {"error": "denied"}
-24-sub-of-each-check	9	member m1 console POST /marks {"unit": "testsub/c1-m1", "note": "sub testsub"}	403 {"error": "denied"}
-24-sub-of-each-check	10	@person root w2c test root password	ok
-24-sub-of-each-check	11	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "sub": "testsub2", "scope": "unit:testsub/c1-m1"}, {"subject": "ann", "cap": "admin", "sub": "testsub", "scope": "unit:testsub/c1-m1"}, {"subject": "ann", "cap": "edit", "sub": "platform", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
-24-sub-of-each-check	12	@person ann ann password 1	ok
-24-sub-of-each-check	13	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "testsub", "scope": "unit:testsub/c1-m1"}, {"cap": "admin", "sub": "testsub2", "scope": "unit:testsub/c1-m1"}, {"cap": "edit", "sub": "platform", "scope": "unit:testsub/c1-m1"}]}
-24-sub-of-each-check	14	member m1 console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1-m1", "fields": {"start": 5}, "cas": "$a"}]}	200 {"written": 1}
-24-sub-of-each-check	15	member m1 console POST /marks {"unit": "testsub/c1-m1", "note": "sub platform"}	2xx
-25-events-by-sub	1	@domain	ok
-25-events-by-sub	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
-25-events-by-sub	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "sub": "testsub2", "scope": "unit:testsub/c1"}]}	200 {"cluster": "m1"}
-25-events-by-sub	4	@on m1 @append event testsub/c1/e1 {"id": "ev-tick-c1", "t": {now}, "kind": "tick", "of": "testsub/c1"}	ok
-25-events-by-sub	5	@person ann ann password 1	ok
-25-events-by-sub	6	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "sub": "testsub2", "scope": "unit:testsub/c1"}]}
-25-events-by-sub	7	member m1 console GET /events	200 {"events": [], "truncated": 0, "complete": true}
-25-events-by-sub	8	@person root w2c test root password	ok
-25-events-by-sub	9	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "sub": "testsub", "scope": "unit:testsub/c1"}]}	200 {"cluster": "m1"}
-25-events-by-sub	10	@person ann ann password 1	ok
-25-events-by-sub	11	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "sub": "testsub", "scope": "unit:testsub/c1"}]}
-25-events-by-sub	12	@until 30 member m1 console GET /events	200 {"events": [{"kind": "tick", "of": "testsub/c1"}], "truncated": 0, "complete": true}
-26-roles-and-groups	1	@domain	ok
-26-roles-and-groups	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
-26-roles-and-groups	3	holder POST /domain/groups {"name": "g1", "members": ["zed"]}	400 {"error": "unknown member", "field": "/members/0"}
-26-roles-and-groups	4	holder POST /domain/groups {"name": "g1", "title": "Operators", "members": ["ann"]}	201 {"group": "g1"}
-26-roles-and-groups	5	holder POST /domain/groups {"name": "g1"}	409 {"error": "exists", "field": "/name"}
-26-roles-and-groups	6	holder POST /domain/roles {"name": "ops", "assigned": [{"group": "g9", "until": 0}]}	400 {"error": "unknown member", "field": "/assigned/0"}
-26-roles-and-groups	7	holder POST /domain/roles {"name": "ops", "assigned": [{"group": "g1", "until": 0}]}	201 {"role": "ops"}
-26-roles-and-groups	8	holder POST /domain/roles {"name": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr"}	201 {"role": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr"}
-26-roles-and-groups	9	holder PUT /domain/grants/domain {"lines": [{"subject": "role:ops", "cap": "view", "scope": "*"}]}	400 {"error": "bad line", "field": "/lines/0"}
-26-roles-and-groups	10	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "role:nosuch", "cap": "view", "scope": "*"}]}	400 {"error": "unknown subject", "field": "/lines/1/subject"}
-26-roles-and-groups	11	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "role:ops", "cap": "view", "scope": "labels:east"}]}	400 {"error": "bad line", "field": "/lines/1"}
-26-roles-and-groups	12	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "role:admin", "cap": "view", "scope": "*"}]}	400 {"error": "bad line", "field": "/lines/1"}
-26-roles-and-groups	13	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "role:rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr", "cap": "view", "scope": "*"}, {"subject": "role:ops", "cap": "none", "scope": "unit:testsub/c1-m1"}, {"subject": "role:ops", "cap": "view", "scope": "*"}]}	200 {"cluster": "m1"}
-26-roles-and-groups	14	@person ann ann password 1	ok
-26-roles-and-groups	15	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "none", "scope": "unit:testsub/c1-m1", "role": "ops"}, {"cap": "view", "scope": "*", "role": "ops"}]}
-26-roles-and-groups	16	holder POST /domain/roles {"name": "x"}	403 {"error": "denied"}
-26-roles-and-groups	17	@person root w2c test root password	ok
-26-roles-and-groups	18	holder DELETE /domain/users/ann	200 {"user": "ann", "deleted": true}
-26-roles-and-groups	19	holder GET /domain/groups	200 {"groups": [{"name": "g1", "members": []}]}
-26-roles-and-groups	20	holder POST /domain/users {"name": "ann", "password": "ann password 2"}	201 {"user": "ann"}
-26-roles-and-groups	21	holder DELETE /domain/roles/ops	200 {"role": "ops", "deleted": true, "grants_changed": ["m1"]}
-26-roles-and-groups	22	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "role:rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr", "cap": "view", "scope": "*"}, {"subject": "root", "cap": "admin", "scope": "*"}]}}
-26-roles-and-groups	23	holder POST /domain/roles {"name": "ops"}	201 {"role": "ops"}
-26-roles-and-groups	24	holder POST /domain/users {"name": "carl", "password": "carl password 1"}	201 {"user": "carl"}
-26-roles-and-groups	25	member hold store POST /v1/write {"op": "put", "key": "domain/deleting/carl", "items": {}}	200
-26-roles-and-groups	26	holder PUT /domain/groups/g1 {"members": ["carl"]}	409 {"error": "being deleted", "field": "/members/0"}
-27-person-card-and-term	1	@domain	ok
-27-person-card-and-term	2	holder POST /domain/users {"name": "ann", "password": "ann password 1", "title": "Ann", "email": "ann@example.test"}	201 {"user": "ann"}
-27-person-card-and-term	3	holder POST /domain/users {"name": "bob", "password": "bob password 1", "email": "bob@example.test"}	201 {"user": "bob"}
-27-person-card-and-term	4	holder PUT /domain/grants/domain {"lines": [{"subject": "ann", "cap": "view", "scope": "*"}]}	200 {"cluster": "domain"}
-27-person-card-and-term	5	holder GET /domain/users	200 {"users": [{"name": "ann", "email": "ann@example.test"}, {"name": "bob", "email": "bob@example.test"}, {"name": "root"}]}
-27-person-card-and-term	6	@person ann ann password 1	ok
-27-person-card-and-term	7	holder GET /domain/users	200 {"users": [{"name": "ann", "title": "Ann", "email": "ann@example.test"}, {"name": "bob", "email": "@absent"}, {"name": "root", "email": "@absent"}]}
-27-person-card-and-term	8	holder GET /domain/roles	200 {"roles": [{"name": "admin"}]}
-27-person-card-and-term	9	holder POST /domain/roles {"name": "x"}	403 {"error": "denied"}
-27-person-card-and-term	10	@person root w2c test root password	ok
-27-person-card-and-term	11	holder PUT /domain/users/bob {"expires": 1}	200 {"user": "bob"}
-27-person-card-and-term	12	@until 20 member hold store GET /v1/get?key=domain/disabled	200 {"items": {"names": "[\"bob\"]"}}
-27-person-card-and-term	13	signer POST /api/login {"user": "bob", "password": "bob password 1"}	401 {"error": "refused", "detail": "wrong user or password"}
-27-person-card-and-term	14	holder PUT /domain/users/bob {"expires": 0}	200 {"user": "bob"}
-27-person-card-and-term	15	@until 20 member hold store GET /v1/get?key=domain/disabled	200 {"items": {"names": "[]"}}
-28-last-admin-by-role	1	@domain	ok
-28-last-admin-by-role	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
-28-last-admin-by-role	3	holder PUT /domain/users/root {"expires": 4102444800}	409 {"error": "last admin"}
-28-last-admin-by-role	4	holder PUT /domain/roles/admin {"assigned": []}	409 {"error": "last admin"}
-28-last-admin-by-role	5	holder PUT /domain/roles/admin {"assigned": [{"person": "root", "until": 4102444800}]}	409 {"error": "last admin"}
-28-last-admin-by-role	6	holder PUT /domain/roles/admin {"assigned": [{"person": "ann", "until": 4102444800}, {"person": "root", "until": 0}]}	200 {"role": "admin"}
-28-last-admin-by-role	7	holder DELETE /domain/users/root	409 {"error": "last admin"}
-28-last-admin-by-role	8	holder PUT /domain/roles/admin {"assigned": [{"person": "ann", "until": 0}, {"person": "root", "until": 0}]}	200 {"role": "admin"}
-28-last-admin-by-role	9	holder PUT /domain/users/root {"expires": 4102444800}	200 {"user": "root"}
-28-last-admin-by-role	10	holder PUT /domain/users/root {"expires": 0}	200 {"user": "root"}
-28-last-admin-by-role	11	holder POST /domain/groups {"name": "g1", "members": ["root"]}	201 {"group": "g1"}
-28-last-admin-by-role	12	holder PUT /domain/roles/admin {"assigned": [{"group": "g1", "until": 0}]}	200 {"role": "admin"}
-28-last-admin-by-role	13	@person root w2c test root password	ok
-28-last-admin-by-role	14	holder PUT /domain/groups/g1 {"members": []}	409 {"error": "last admin"}
-28-last-admin-by-role	15	holder DELETE /domain/groups/g1	409 {"error": "last admin"}
-28-last-admin-by-role	16	holder DELETE /domain/roles/admin	409 {"error": "builtin"}
-28-last-admin-by-role	17	holder PUT /domain/roles/admin {"title": "x"}	409 {"error": "builtin"}
-28-last-admin-by-role	18	holder POST /domain/roles {"name": "admin"}	409 {"error": "exists", "field": "/name"}
-29-manager-of-people	1	@domain	ok
-29-manager-of-people	2	holder POST /domain/users {"name": "mgr", "password": "mgr password 1"}	201 {"user": "mgr"}
-29-manager-of-people	3	holder POST /domain/roles {"name": "users", "assigned": [{"person": "mgr", "until": 0}]}	201 {"role": "users"}
-29-manager-of-people	4	holder PUT /domain/grants/domain {"lines": [{"subject": "role:users", "cap": "admin", "scope": "*"}]}	200 {"cluster": "domain"}
-29-manager-of-people	5	holder PUT /domain/grants/domain {"lines": [{"subject": "role:users", "cap": "edit", "scope": "*"}]}	400 {"error": "bad line", "field": "/lines/0"}
-29-manager-of-people	6	@person mgr mgr password 1	ok
-29-manager-of-people	7	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	201 {"user": "bob"}
-29-manager-of-people	8	holder PUT /domain/users/bob {"title": "Bob"}	200 {"user": "bob"}
-29-manager-of-people	9	holder PUT /domain/users/root {"title": "Root"}	403 {"error": "admin only"}
-29-manager-of-people	10	holder DELETE /domain/users/root	403 {"error": "admin only"}
-29-manager-of-people	11	holder PUT /domain/roles/admin {"assigned": [{"person": "mgr", "until": 0}]}	403 {"error": "admin only"}
-29-manager-of-people	12	holder PUT /domain/grants/domain {"lines": [{"subject": "role:users", "cap": "admin", "scope": "*"}, {"subject": "mgr", "cap": "admin", "scope": "*"}]}	403 {"error": "admin only"}
-29-manager-of-people	13	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "bob", "cap": "view", "scope": "*"}]}	200 {"cluster": "m1"}
-29-manager-of-people	14	holder GET /domain/break-glass	403 {"error": "admin only"}
-29-manager-of-people	15	holder PUT /domain/break-glass/m1 {"password": "glass password 1"}	403 {"error": "admin only"}
-29-manager-of-people	16	holder DELETE /domain/roles/users	403 {"error": "admin only"}
-29-manager-of-people	17	member hold store POST /v1/write {"op": "put", "key": "domain/roles/admin", "items": {"name": "other"}}	200
-29-manager-of-people	18	holder PUT /domain/users/bob {"title": "Bob again"}	503 {"error": "unavailable"}
-29-manager-of-people	19	member hold store POST /v1/write {"op": "put", "key": "domain/roles/admin", "items": {"name": "admin", "title": "", "comment": "", "assigned": "[{\"person\":\"root\",\"until\":0,\"at\":1}]", "at": "1", "by": "root"}}	200
-29-manager-of-people	20	holder PUT /domain/users/bob {"title": "Bob again"}	200 {"user": "bob"}
-29-manager-of-people	21	holder PUT /domain/users/root {"expires": "x"}	400 {"error": "bad body"}
-30-password-set-by-non-admin	1	@domain	ok
-30-password-set-by-non-admin	2	holder POST /domain/users {"name": "mgr", "password": "mgr password 1"}	201 {"user": "mgr"}
-30-password-set-by-non-admin	3	holder POST /domain/roles {"name": "users", "assigned": [{"person": "mgr", "until": 0}]}	201 {"role": "users"}
-30-password-set-by-non-admin	4	holder PUT /domain/grants/domain {"lines": [{"subject": "role:users", "cap": "admin", "scope": "*"}]}	200 {"cluster": "domain"}
-30-password-set-by-non-admin	5	@person mgr mgr password 1	ok
-30-password-set-by-non-admin	6	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	201 {"user": "bob"}
-30-password-set-by-non-admin	7	@person root w2c test root password	ok
-30-password-set-by-non-admin	8	holder PUT /domain/roles/admin {"assigned": [{"person": "bob", "until": 0}, {"person": "root", "until": 0}]}	409 {"error": "password set by a non-admin", "field": "/assigned/0"}
-30-password-set-by-non-admin	9	holder POST /domain/groups {"name": "g1", "members": ["root"]}	201 {"group": "g1"}
-30-password-set-by-non-admin	10	holder PUT /domain/roles/admin {"assigned": [{"group": "g1", "until": 0}, {"person": "root", "until": 0}]}	200 {"role": "admin"}
-30-password-set-by-non-admin	11	holder PUT /domain/groups/g1 {"members": ["bob", "root"]}	409 {"error": "password set by a non-admin", "field": "/members/0"}
-30-password-set-by-non-admin	12	holder PUT /domain/users/bob {"password": "bob password 2"}	200 {"user": "bob"}
-30-password-set-by-non-admin	13	holder PUT /domain/groups/g1 {"members": ["bob", "root"]}	200 {"group": "g1"}
-31-domain-batch	1	@domain	ok
-31-domain-batch	2	holder POST /domain/users {"name": "mgr", "password": "mgr password 1"}	201 {"user": "mgr"}
-31-domain-batch	3	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	201 {"user": "bob"}
-31-domain-batch	4	holder POST /domain/roles {"name": "users", "assigned": [{"person": "mgr", "until": 0}]}	201 {"role": "users"}
-31-domain-batch	5	holder PUT /domain/grants/domain {"lines": [{"subject": "role:users", "cap": "admin", "scope": "*"}]}	200 {"cluster": "domain"}
-31-domain-batch	6	holder GET /domain/roles	200 {"roles": [{"name": "admin", "index": "$r"}, {"name": "users"}]}
-31-domain-batch	7	holder GET /domain/users	200 {"users": [{"name": "bob", "index": "$b"}, {"name": "mgr"}, {"name": "root"}]}
-31-domain-batch	8	@person mgr mgr password 1	ok
-31-domain-batch	9	holder POST /domain/batch {"writes": [{"kind": "role", "op": "put", "name": "admin", "cas": "$r", "fields": {"assigned": [{"person": "mgr", "until": 0}, {"person": "root", "until": 0}]}}]}	403 {"error": "admin only", "field": "/writes/0"}
-31-domain-batch	10	holder POST /domain/batch {"writes": [{"kind": "user", "op": "put", "name": "bob", "cas": "$b", "fields": {"title": "Bob"}}, {"kind": "role", "op": "put", "name": "admin", "cas": "$r", "fields": {"assigned": [{"person": "root", "until": 0}]}}]}	200 {"written": 1}
-31-domain-batch	11	holder POST /domain/batch {"writes": [{"kind": "user", "op": "put", "name": "bob", "cas": "$b", "fields": {"title": "Bob"}}, {"kind": "role", "op": "put", "name": "admin", "cas": "$r", "fields": {"assigned": [{"person": "root", "until": 0}]}}]}	412 {"error": "conflict", "field": "/writes/0"}
-31-domain-batch	12	holder POST /domain/batch {"writes": []}	400 {"error": "bad batch"}
-31-domain-batch	13	@person root w2c test root password	ok
-31-domain-batch	14	holder GET /domain/roles	200 {"roles": [{"name": "admin", "index": "$r"}, {"name": "users"}]}
-31-domain-batch	15	holder POST /domain/batch {"writes": [{"kind": "role", "op": "put", "name": "admin", "cas": "$r", "fields": {"assigned": []}}]}	409 {"error": "last admin"}
-31-domain-batch	16	holder POST /domain/batch {"writes": [{"kind": "role", "op": "put", "name": "admin", "cas": "$r", "fields": {"assigned": [{"person": "mgr", "until": 0}, {"person": "root", "until": 0}]}}]}	200 {"written": 1}
-32-folder-rights	1	@domain	ok
-32-folder-rights	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
-32-folder-rights	3	member m1 console POST /folders {"name": "F"}	201 {"id": "$f"}
-32-folder-rights	4	member m1 console POST /folders {"name": "G"}	201 {"id": "$g"}
-32-folder-rights	5	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "sub": "platform", "scope": "folder:$f"}, {"subject": "ann", "cap": "edit", "sub": "testsub", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
-32-folder-rights	6	@person ann ann password 1	ok
-32-folder-rights	7	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "platform"}, {"cap": "edit", "sub": "testsub"}]}
-32-folder-rights	8	member m1 console PUT /folders/$f {"name": "F2"}	200 {"name": "F2"}
-32-folder-rights	9	member m1 console POST /folders {"name": "S", "parent": "$f"}	201 {"id": "$s", "parent": "$f"}
-32-folder-rights	10	member m1 console POST /folders {"name": "top"}	403 {"error": "denied"}
-32-folder-rights	11	member m1 console PUT /folders/$g {"name": "x"}	403 {"error": "denied"}
-32-folder-rights	12	member m1 console PUT /folders/$f {"members": ["testsub/counters/c1-m1"]}	403 {"error": "denied"}
-32-folder-rights	13	@person root w2c test root password	ok
-32-folder-rights	14	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "sub": "platform", "scope": "folder:$f"}, {"subject": "ann", "cap": "admin", "sub": "testsub", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
-32-folder-rights	15	@person ann ann password 1	ok
-32-folder-rights	16	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "platform"}, {"cap": "admin", "sub": "testsub"}]}
-32-folder-rights	17	member m1 console PUT /folders/$f {"members": ["testsub/counters/c1-m1"]}	200 {"members": ["testsub/counters/c1-m1"]}
-32-folder-rights	18	member m1 console PUT /folders/$g {"members": []}	403 {"error": "denied"}
-32-folder-rights	19	@person root w2c test root password	ok
-32-folder-rights	20	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "sub": "platform", "scope": "folder:$f"}]}	200 {"cluster": "m1"}
-32-folder-rights	21	@person ann ann password 1	ok
-32-folder-rights	22	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "platform"}]}
-32-folder-rights	23	member m1 console PUT /folders/$f {"members": []}	403 {"error": "denied"}
-33-changes-folders	1	@domain	ok
-33-changes-folders	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
-33-changes-folders	3	member m1 console POST /folders {"name": "F"}	201 {"id": "$f", "index": "$i"}
-33-changes-folders	4	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "folder:$f"}]}	200 {"cluster": "m1"}
-33-changes-folders	5	@person ann ann password 1	ok
-33-changes-folders	6	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view"}]}
-33-changes-folders	7	@until 10 member m1 console GET /changes	200 {"position": "$p"}
-33-changes-folders	8	@person root w2c test root password	ok
-33-changes-folders	9	member m1 console PUT /folders/$f {"members": ["testsub/counters/c1-m1"]}	200 {"members": ["testsub/counters/c1-m1"]}
-33-changes-folders	10	@person ann ann password 1	ok
-33-changes-folders	11	@until 30 member m1 console GET /changes?after=$p	200 {"position": "$q", "changes": [], "reset": true}
-33-changes-folders	12	@person root w2c test root password	ok
-33-changes-folders	13	member m1 console DELETE /folders/$f	200 {"deleted": "$f"}
-33-changes-folders	14	@person ann ann password 1	ok
-33-changes-folders	15	@until 30 member m1 console GET /changes?after=$q	200 {"position": "$r", "changes": [], "reset": true}
-34-changes-folder-rows	1	@domain	ok
-34-changes-folder-rows	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
-34-changes-folder-rows	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:testsub/none"}]}	200 {"cluster": "m1"}
-34-changes-folder-rows	4	@person ann ann password 1	ok
-34-changes-folder-rows	5	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub/none"}]}
-34-changes-folder-rows	6	@until 10 member m1 console GET /changes	200 {"position": "$p"}
-34-changes-folder-rows	7	@person root w2c test root password	ok
-34-changes-folder-rows	8	member m1 console POST /folders {"name": "F"}	201 {"id": "$f"}
-34-changes-folder-rows	9	@person ann ann password 1	ok
-34-changes-folder-rows	10	@until 30 member m1 console GET /changes?after=$p	200 {"position": "$q", "changes": [{"key": "~platform/folders/", "revision": 0}], "reset": "@absent"}
-34-changes-folder-rows	11	@person root w2c test root password	ok
-34-changes-folder-rows	12	member m1 console DELETE /folders/$f	200 {"deleted": "$f"}
-34-changes-folder-rows	13	member m1 store GET /v1/get?key=platform/folders/$f	200 {"index": "$t"}
-34-changes-folder-rows	14	@person ann ann password 1	ok
-34-changes-folder-rows	15	@until 30 member m1 console GET /changes?after=$q	200 {"changes": [{"key": "~platform/folders/", "deleted": "$t"}], "reset": "@absent"}
-35-changes-role-assignment	1	@domain	ok
-35-changes-role-assignment	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
-35-changes-role-assignment	3	holder POST /domain/roles {"name": "ops", "assigned": [{"person": "ann", "until": 0}]}	201 {"role": "ops"}
-35-changes-role-assignment	4	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:testsub/c1-m1"}, {"subject": "role:ops", "cap": "view", "scope": "*"}]}	200 {"cluster": "m1"}
-35-changes-role-assignment	5	@person ann ann password 1	ok
-35-changes-role-assignment	6	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "*", "role": "ops"}, {"cap": "view", "scope": "unit:testsub/c1-m1"}]}
-35-changes-role-assignment	7	@until 10 member m1 console GET /changes	200 {"position": "$p"}
-35-changes-role-assignment	8	@person root w2c test root password	ok
-35-changes-role-assignment	9	holder PUT /domain/roles/ops {"assigned": []}	200 {"role": "ops"}
-35-changes-role-assignment	10	@person ann ann password 1	ok
-35-changes-role-assignment	11	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub/c1-m1"}]}
-35-changes-role-assignment	12	member m1 console GET /changes?after=$p	200 {"changes": [], "reset": true}
+23-versions-and-repeats	1	@domain	ok
+23-versions-and-repeats	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann", "revision": 1}
+23-versions-and-repeats	3	holder GET /domain/users	200 {"users": [{"name": "ann", "revision": 1, "index": "$u1", "pwhash_secret": "@absent"}, {"name": "root", "revision": 1}]}
+23-versions-and-repeats	4	member hold store GET /v1/get?key=domain/users/ann	200 {"items": {"revision": "1"}, "index": "$u1"}
+23-versions-and-repeats	5	holder @header If-Match: 1 PUT /domain/users/ann {"disabled": true}	200 {"user": "ann", "disabled": true, "revision": 2}
+23-versions-and-repeats	6	holder @header If-Match: 1 PUT /domain/users/ann {"disabled": false}	412 {"error": "revision moved", "field": "/revision", "revision": 2, "row": {"name": "ann", "disabled": true, "revision": 2, "pwhash_secret": "@absent"}}
+23-versions-and-repeats	7	holder @header If-Match: "$u1" PUT /domain/users/ann {"disabled": false}	412 {"error": "revision moved", "revision": 2}
+23-versions-and-repeats	8	holder @header If-Match: * PUT /domain/users/ann {"disabled": false}	400 {"error": "If-Match is a unit revision"}
+23-versions-and-repeats	9	holder @header If-Match: 2 PUT /domain/users/nobody {"disabled": true}	404 {"error": "no such person"}
+23-versions-and-repeats	10	holder @header Idempotency-Key: u-r1 @header If-Match: 2 PUT /domain/users/ann {"password": "ann password 2"}	200 {"user": "ann", "disabled": true, "revision": 3}
+23-versions-and-repeats	11	holder @header Idempotency-Key: u-r1 @header If-Match: 2 PUT /domain/users/ann {"password": "ann password 2"}	200 {"user": "ann", "disabled": true, "revision": 3}
+23-versions-and-repeats	12	holder @header Idempotency-Key: u-r1 @header If-Match: 2 PUT /domain/users/ann {"password": "ann password 3"}	422 {"error": "key reused"}
+23-versions-and-repeats	13	member hold store GET /v1/get?key=domain/users/ann	200 {"items": {"revision": "3"}}
+23-versions-and-repeats	14	member hold store GET /v1/get?key=domain/idem/85559f34367815a41e8fab8e358c29e60d8f6a5a7e7c8311644397298e7dd26b	200 {"items": {"print": "!contains ann password", "code": "200", "body": "!contains ann password", "at": "@time"}}
+23-versions-and-repeats	15	holder @header Idempotency-Key: u-r2 POST /domain/users {"name": "bob", "password": "bob password 1"}	201 {"user": "bob", "revision": 1}
+23-versions-and-repeats	16	holder @header Idempotency-Key: u-r2 POST /domain/users {"name": "bob", "password": "bob password 1"}	201 {"user": "bob", "revision": 1}
+23-versions-and-repeats	17	holder @header Idempotency-Key: u-r3 @header If-Match: 9 DELETE /domain/users/bob	412 {"error": "revision moved", "revision": 1, "row": {"name": "bob", "pwhash_secret": "@absent"}}
+23-versions-and-repeats	18	holder @header Idempotency-Key: u-r4 @header If-Match: 1 DELETE /domain/users/bob	200 {"user": "bob", "deleted": true}
+23-versions-and-repeats	19	holder @header Idempotency-Key: u-r4 @header If-Match: 1 DELETE /domain/users/bob	200 {"user": "bob", "deleted": true}
+23-versions-and-repeats	20	holder DELETE /domain/users/bob	404 {"error": "no such person"}
+23-versions-and-repeats	21	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "root"}]}, "versions": {"m1": {"revision": "$g", "index": "$gi"}}}
+23-versions-and-repeats	22	holder @header If-Match: 99 PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}]}	412 {"error": "revision moved", "field": "/revision", "revision": "$g", "row": {"lines": [{"subject": "root"}], "revision": "$g", "index": "$gi"}}
+23-versions-and-repeats	23	holder @header If-Match: "$gi" PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200 {"cluster": "m1", "revision": "@not($g)"}
+23-versions-and-repeats	24	holder @header If-Match: "$gi" PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}]}	412 {"error": "revision moved"}
+23-versions-and-repeats	25	holder @header If-Match: 1 PUT /domain/grants/c9 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}]}	412 {"error": "revision moved", "revision": 0, "row": "@absent"}
+23-versions-and-repeats	26	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200 @header ETag: ~"
+23-versions-and-repeats	27	holder PUT /domain/break-glass/m1 {"password": "a glass password"}	200 {"cluster": "m1", "set": true, "revision": 1}
+23-versions-and-repeats	28	holder GET /domain/break-glass	200 {"clusters": {"m1": {"set_at": "@time", "revision": 1, "index": "$b"}}}
+23-versions-and-repeats	29	holder @header If-Match: 5 PUT /domain/break-glass/m1 {"password": "a glass password"}	412 {"error": "revision moved", "revision": 1, "row": {"revision": 1, "index": "$b", "pwhash_secret": "@absent"}}
+23-versions-and-repeats	30	holder @header If-Match: "$b" PUT /domain/break-glass/m1 {"password": "a glass password"}	200 {"cluster": "m1", "set": true, "revision": 2}
+24-grant-line-forms	1	@domain	ok
+24-grant-line-forms	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+24-grant-line-forms	3	holder PUT /domain/grants/domain {"lines": [{"subject": "ann", "cap": "view", "sub": "testsub", "scope": "*"}]}	400 {"error": "bad line", "field": "/lines/0"}
+24-grant-line-forms	4	holder PUT /domain/grants/domain {"lines": [{"subject": "ann", "cap": "view", "scope": "folder:0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f"}]}	400 {"error": "bad line", "field": "/lines/0"}
+24-grant-line-forms	5	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "sub": "Bad Name", "scope": "*"}]}	400 {"error": "bad line", "field": "/lines/1"}
+24-grant-line-forms	6	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "none", "scope": "*"}]}	400 {"error": "bad line", "field": "/lines/1"}
+24-grant-line-forms	7	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "folder:17"}]}	400 {"error": "bad line", "field": "/lines/1"}
+24-grant-line-forms	8	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "sub": "testsub2", "scope": "*"}, {"subject": "ann", "cap": "view", "sub": "testsub2", "scope": "*"}]}	400 {"error": "bad line", "field": "/lines/2"}
+24-grant-line-forms	9	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "sub": "testsub2", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "folder:0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f"}]}	200 {"cluster": "m1"}
+24-grant-line-forms	10	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "ann", "cap": "view", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "folder:0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f"}, {"subject": "ann", "cap": "view", "sub": "testsub2", "scope": "*"}, {"subject": "root", "cap": "admin", "scope": "*"}]}}
+25-sub-of-each-check	1	@domain	ok
+25-sub-of-each-check	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+25-sub-of-each-check	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "sub": "testsub2", "scope": "unit:testsub/c1-m1"}, {"subject": "ann", "cap": "view", "sub": "testsub", "scope": "*"}, {"subject": "ann", "cap": "edit", "sub": "testsub", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
+25-sub-of-each-check	4	member m1 store GET /v1/get?key=testsub/counters/c1-m1	200 {"index": "$a"}
+25-sub-of-each-check	5	@person ann ann password 1	ok
+25-sub-of-each-check	6	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "testsub2", "scope": "unit:testsub/c1-m1"}, {"cap": "edit", "sub": "testsub", "scope": "unit:testsub/c1-m1"}, {"cap": "view", "sub": "testsub", "scope": "*"}]}
+25-sub-of-each-check	7	member m1 console GET /drain	403 {"error": "denied"}
+25-sub-of-each-check	8	member m1 console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1-m1", "fields": {"start": 5}, "cas": "$a"}]}	403 {"error": "denied"}
+25-sub-of-each-check	9	member m1 console POST /marks {"unit": "testsub/c1-m1", "note": "sub testsub"}	403 {"error": "denied"}
+25-sub-of-each-check	10	@person root w2c test root password	ok
+25-sub-of-each-check	11	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "sub": "testsub2", "scope": "unit:testsub/c1-m1"}, {"subject": "ann", "cap": "admin", "sub": "testsub", "scope": "unit:testsub/c1-m1"}, {"subject": "ann", "cap": "edit", "sub": "platform", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
+25-sub-of-each-check	12	@person ann ann password 1	ok
+25-sub-of-each-check	13	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "testsub", "scope": "unit:testsub/c1-m1"}, {"cap": "admin", "sub": "testsub2", "scope": "unit:testsub/c1-m1"}, {"cap": "edit", "sub": "platform", "scope": "unit:testsub/c1-m1"}]}
+25-sub-of-each-check	14	member m1 console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1-m1", "fields": {"start": 5}, "cas": "$a"}]}	200 {"written": 1}
+25-sub-of-each-check	15	member m1 console POST /marks {"unit": "testsub/c1-m1", "note": "sub platform"}	2xx
+26-events-by-sub	1	@domain	ok
+26-events-by-sub	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+26-events-by-sub	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "sub": "testsub2", "scope": "unit:testsub/c1"}]}	200 {"cluster": "m1"}
+26-events-by-sub	4	@on m1 @append event testsub/c1/e1 {"id": "ev-tick-c1", "t": {now}, "kind": "tick", "of": "testsub/c1"}	ok
+26-events-by-sub	5	@person ann ann password 1	ok
+26-events-by-sub	6	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "sub": "testsub2", "scope": "unit:testsub/c1"}]}
+26-events-by-sub	7	member m1 console GET /events	200 {"events": [], "truncated": 0, "complete": true}
+26-events-by-sub	8	@person root w2c test root password	ok
+26-events-by-sub	9	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "sub": "testsub", "scope": "unit:testsub/c1"}]}	200 {"cluster": "m1"}
+26-events-by-sub	10	@person ann ann password 1	ok
+26-events-by-sub	11	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "sub": "testsub", "scope": "unit:testsub/c1"}]}
+26-events-by-sub	12	@until 30 member m1 console GET /events	200 {"events": [{"kind": "tick", "of": "testsub/c1"}], "truncated": 0, "complete": true}
+27-roles-and-groups	1	@domain	ok
+27-roles-and-groups	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+27-roles-and-groups	3	holder POST /domain/groups {"name": "g1", "members": ["zed"]}	400 {"error": "unknown member", "field": "/members/0"}
+27-roles-and-groups	4	holder POST /domain/groups {"name": "g1", "title": "Operators", "members": ["ann"]}	201 {"group": "g1"}
+27-roles-and-groups	5	holder POST /domain/groups {"name": "g1"}	409 {"error": "exists", "field": "/name"}
+27-roles-and-groups	6	holder POST /domain/roles {"name": "ops", "assigned": [{"group": "g9", "until": 0}]}	400 {"error": "unknown member", "field": "/assigned/0"}
+27-roles-and-groups	7	holder POST /domain/roles {"name": "ops", "assigned": [{"group": "g1", "until": 0}]}	201 {"role": "ops"}
+27-roles-and-groups	8	holder POST /domain/roles {"name": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr"}	201 {"role": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr"}
+27-roles-and-groups	9	holder PUT /domain/grants/domain {"lines": [{"subject": "role:ops", "cap": "view", "scope": "*"}]}	400 {"error": "bad line", "field": "/lines/0"}
+27-roles-and-groups	10	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "role:nosuch", "cap": "view", "scope": "*"}]}	400 {"error": "unknown subject", "field": "/lines/1/subject"}
+27-roles-and-groups	11	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "role:ops", "cap": "view", "scope": "labels:east"}]}	400 {"error": "bad line", "field": "/lines/1"}
+27-roles-and-groups	12	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "role:admin", "cap": "view", "scope": "*"}]}	400 {"error": "bad line", "field": "/lines/1"}
+27-roles-and-groups	13	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "role:rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr", "cap": "view", "scope": "*"}, {"subject": "role:ops", "cap": "none", "scope": "unit:testsub/c1-m1"}, {"subject": "role:ops", "cap": "view", "scope": "*"}]}	200 {"cluster": "m1"}
+27-roles-and-groups	14	@person ann ann password 1	ok
+27-roles-and-groups	15	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "none", "scope": "unit:testsub/c1-m1", "role": "ops"}, {"cap": "view", "scope": "*", "role": "ops"}]}
+27-roles-and-groups	16	holder POST /domain/roles {"name": "x"}	403 {"error": "denied"}
+27-roles-and-groups	17	@person root w2c test root password	ok
+27-roles-and-groups	18	holder DELETE /domain/users/ann	200 {"user": "ann", "deleted": true}
+27-roles-and-groups	19	holder GET /domain/groups	200 {"groups": [{"name": "g1", "members": []}]}
+27-roles-and-groups	20	holder POST /domain/users {"name": "ann", "password": "ann password 2"}	201 {"user": "ann"}
+27-roles-and-groups	21	holder DELETE /domain/roles/ops	200 {"role": "ops", "deleted": true, "grants_changed": ["m1"]}
+27-roles-and-groups	22	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "role:rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr", "cap": "view", "scope": "*"}, {"subject": "root", "cap": "admin", "scope": "*"}]}}
+27-roles-and-groups	23	holder POST /domain/roles {"name": "ops"}	201 {"role": "ops"}
+27-roles-and-groups	24	holder POST /domain/users {"name": "carl", "password": "carl password 1"}	201 {"user": "carl"}
+27-roles-and-groups	25	member hold store POST /v1/write {"op": "put", "key": "domain/deleting/carl", "items": {}}	200
+27-roles-and-groups	26	holder PUT /domain/groups/g1 {"members": ["carl"]}	409 {"error": "being deleted", "field": "/members/0"}
+28-person-card-and-term	1	@domain	ok
+28-person-card-and-term	2	holder POST /domain/users {"name": "ann", "password": "ann password 1", "title": "Ann", "email": "ann@example.test"}	201 {"user": "ann"}
+28-person-card-and-term	3	holder POST /domain/users {"name": "bob", "password": "bob password 1", "email": "bob@example.test"}	201 {"user": "bob"}
+28-person-card-and-term	4	holder PUT /domain/grants/domain {"lines": [{"subject": "ann", "cap": "view", "scope": "*"}]}	200 {"cluster": "domain"}
+28-person-card-and-term	5	holder GET /domain/users	200 {"users": [{"name": "ann", "email": "ann@example.test"}, {"name": "bob", "email": "bob@example.test"}, {"name": "root"}]}
+28-person-card-and-term	6	@person ann ann password 1	ok
+28-person-card-and-term	7	holder GET /domain/users	200 {"users": [{"name": "ann", "title": "Ann", "email": "ann@example.test"}, {"name": "bob", "email": "@absent"}, {"name": "root", "email": "@absent"}]}
+28-person-card-and-term	8	holder GET /domain/roles	200 {"roles": [{"name": "admin"}]}
+28-person-card-and-term	9	holder POST /domain/roles {"name": "x"}	403 {"error": "denied"}
+28-person-card-and-term	10	@person root w2c test root password	ok
+28-person-card-and-term	11	holder PUT /domain/users/bob {"expires": 1}	200 {"user": "bob"}
+28-person-card-and-term	12	@until 20 member hold store GET /v1/get?key=domain/disabled	200 {"items": {"names": "[\"bob\"]"}}
+28-person-card-and-term	13	signer POST /api/login {"user": "bob", "password": "bob password 1"}	401 {"error": "refused", "detail": "wrong user or password"}
+28-person-card-and-term	14	holder PUT /domain/users/bob {"expires": 0}	200 {"user": "bob"}
+28-person-card-and-term	15	@until 20 member hold store GET /v1/get?key=domain/disabled	200 {"items": {"names": "[]"}}
+29-last-admin-by-role	1	@domain	ok
+29-last-admin-by-role	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+29-last-admin-by-role	3	holder PUT /domain/users/root {"expires": 4102444800}	409 {"error": "last admin"}
+29-last-admin-by-role	4	holder PUT /domain/roles/admin {"assigned": []}	409 {"error": "last admin"}
+29-last-admin-by-role	5	holder PUT /domain/roles/admin {"assigned": [{"person": "root", "until": 4102444800}]}	409 {"error": "last admin"}
+29-last-admin-by-role	6	holder PUT /domain/roles/admin {"assigned": [{"person": "ann", "until": 4102444800}, {"person": "root", "until": 0}]}	200 {"role": "admin"}
+29-last-admin-by-role	7	holder DELETE /domain/users/root	409 {"error": "last admin"}
+29-last-admin-by-role	8	holder PUT /domain/roles/admin {"assigned": [{"person": "ann", "until": 0}, {"person": "root", "until": 0}]}	200 {"role": "admin"}
+29-last-admin-by-role	9	holder PUT /domain/users/root {"expires": 4102444800}	200 {"user": "root"}
+29-last-admin-by-role	10	holder PUT /domain/users/root {"expires": 0}	200 {"user": "root"}
+29-last-admin-by-role	11	holder POST /domain/groups {"name": "g1", "members": ["root"]}	201 {"group": "g1"}
+29-last-admin-by-role	12	holder PUT /domain/roles/admin {"assigned": [{"group": "g1", "until": 0}]}	200 {"role": "admin"}
+29-last-admin-by-role	13	@person root w2c test root password	ok
+29-last-admin-by-role	14	holder PUT /domain/groups/g1 {"members": []}	409 {"error": "last admin"}
+29-last-admin-by-role	15	holder DELETE /domain/groups/g1	409 {"error": "last admin"}
+29-last-admin-by-role	16	holder DELETE /domain/roles/admin	409 {"error": "builtin"}
+29-last-admin-by-role	17	holder PUT /domain/roles/admin {"title": "x"}	409 {"error": "builtin"}
+29-last-admin-by-role	18	holder POST /domain/roles {"name": "admin"}	409 {"error": "exists", "field": "/name"}
+30-manager-of-people	1	@domain	ok
+30-manager-of-people	2	holder POST /domain/users {"name": "mgr", "password": "mgr password 1"}	201 {"user": "mgr"}
+30-manager-of-people	3	holder POST /domain/roles {"name": "users", "assigned": [{"person": "mgr", "until": 0}]}	201 {"role": "users"}
+30-manager-of-people	4	holder PUT /domain/grants/domain {"lines": [{"subject": "role:users", "cap": "admin", "scope": "*"}]}	200 {"cluster": "domain"}
+30-manager-of-people	5	holder PUT /domain/grants/domain {"lines": [{"subject": "role:users", "cap": "edit", "scope": "*"}]}	400 {"error": "bad line", "field": "/lines/0"}
+30-manager-of-people	6	@person mgr mgr password 1	ok
+30-manager-of-people	7	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	201 {"user": "bob"}
+30-manager-of-people	8	holder PUT /domain/users/bob {"title": "Bob"}	200 {"user": "bob"}
+30-manager-of-people	9	holder PUT /domain/users/root {"title": "Root"}	403 {"error": "admin only"}
+30-manager-of-people	10	holder DELETE /domain/users/root	403 {"error": "admin only"}
+30-manager-of-people	11	holder PUT /domain/roles/admin {"assigned": [{"person": "mgr", "until": 0}]}	403 {"error": "admin only"}
+30-manager-of-people	12	holder PUT /domain/grants/domain {"lines": [{"subject": "role:users", "cap": "admin", "scope": "*"}, {"subject": "mgr", "cap": "admin", "scope": "*"}]}	403 {"error": "admin only"}
+30-manager-of-people	13	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "bob", "cap": "view", "scope": "*"}]}	200 {"cluster": "m1"}
+30-manager-of-people	14	holder GET /domain/break-glass	403 {"error": "admin only"}
+30-manager-of-people	15	holder PUT /domain/break-glass/m1 {"password": "glass password 1"}	403 {"error": "admin only"}
+30-manager-of-people	16	holder DELETE /domain/roles/users	403 {"error": "admin only"}
+30-manager-of-people	17	member hold store POST /v1/write {"op": "put", "key": "domain/roles/admin", "items": {"name": "other"}}	200
+30-manager-of-people	18	holder PUT /domain/users/bob {"title": "Bob again"}	503 {"error": "unavailable"}
+30-manager-of-people	19	member hold store POST /v1/write {"op": "put", "key": "domain/roles/admin", "items": {"name": "admin", "title": "", "comment": "", "assigned": "[{\"person\":\"root\",\"until\":0,\"at\":1}]", "at": "1", "by": "root"}}	200
+30-manager-of-people	20	holder PUT /domain/users/bob {"title": "Bob again"}	200 {"user": "bob"}
+30-manager-of-people	21	holder PUT /domain/users/root {"expires": "x"}	400 {"error": "bad body"}
+31-password-set-by-non-admin	1	@domain	ok
+31-password-set-by-non-admin	2	holder POST /domain/users {"name": "mgr", "password": "mgr password 1"}	201 {"user": "mgr"}
+31-password-set-by-non-admin	3	holder POST /domain/roles {"name": "users", "assigned": [{"person": "mgr", "until": 0}]}	201 {"role": "users"}
+31-password-set-by-non-admin	4	holder PUT /domain/grants/domain {"lines": [{"subject": "role:users", "cap": "admin", "scope": "*"}]}	200 {"cluster": "domain"}
+31-password-set-by-non-admin	5	@person mgr mgr password 1	ok
+31-password-set-by-non-admin	6	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	201 {"user": "bob"}
+31-password-set-by-non-admin	7	@person root w2c test root password	ok
+31-password-set-by-non-admin	8	holder PUT /domain/roles/admin {"assigned": [{"person": "bob", "until": 0}, {"person": "root", "until": 0}]}	409 {"error": "password set by a non-admin", "field": "/assigned/0"}
+31-password-set-by-non-admin	9	holder POST /domain/groups {"name": "g1", "members": ["root"]}	201 {"group": "g1"}
+31-password-set-by-non-admin	10	holder PUT /domain/roles/admin {"assigned": [{"group": "g1", "until": 0}, {"person": "root", "until": 0}]}	200 {"role": "admin"}
+31-password-set-by-non-admin	11	holder PUT /domain/groups/g1 {"members": ["bob", "root"]}	409 {"error": "password set by a non-admin", "field": "/members/0"}
+31-password-set-by-non-admin	12	holder PUT /domain/users/bob {"password": "bob password 2"}	200 {"user": "bob"}
+31-password-set-by-non-admin	13	holder PUT /domain/groups/g1 {"members": ["bob", "root"]}	200 {"group": "g1"}
+32-domain-batch	1	@domain	ok
+32-domain-batch	2	holder POST /domain/users {"name": "mgr", "password": "mgr password 1"}	201 {"user": "mgr"}
+32-domain-batch	3	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	201 {"user": "bob"}
+32-domain-batch	4	holder POST /domain/roles {"name": "users", "assigned": [{"person": "mgr", "until": 0}]}	201 {"role": "users"}
+32-domain-batch	5	holder PUT /domain/grants/domain {"lines": [{"subject": "role:users", "cap": "admin", "scope": "*"}]}	200 {"cluster": "domain"}
+32-domain-batch	6	holder GET /domain/roles	200 {"roles": [{"name": "admin", "index": "$r"}, {"name": "users"}]}
+32-domain-batch	7	holder GET /domain/users	200 {"users": [{"name": "bob", "index": "$b"}, {"name": "mgr"}, {"name": "root"}]}
+32-domain-batch	8	@person mgr mgr password 1	ok
+32-domain-batch	9	holder POST /domain/batch {"writes": [{"kind": "role", "op": "put", "name": "admin", "cas": "$r", "fields": {"assigned": [{"person": "mgr", "until": 0}, {"person": "root", "until": 0}]}}]}	403 {"error": "admin only", "field": "/writes/0"}
+32-domain-batch	10	holder POST /domain/batch {"writes": [{"kind": "user", "op": "put", "name": "bob", "cas": "$b", "fields": {"title": "Bob"}}, {"kind": "role", "op": "put", "name": "admin", "cas": "$r", "fields": {"assigned": [{"person": "root", "until": 0}]}}]}	200 {"written": 1}
+32-domain-batch	11	holder POST /domain/batch {"writes": [{"kind": "user", "op": "put", "name": "bob", "cas": "$b", "fields": {"title": "Bob"}}, {"kind": "role", "op": "put", "name": "admin", "cas": "$r", "fields": {"assigned": [{"person": "root", "until": 0}]}}]}	412 {"error": "conflict", "field": "/writes/0"}
+32-domain-batch	12	holder POST /domain/batch {"writes": []}	400 {"error": "bad batch"}
+32-domain-batch	13	@person root w2c test root password	ok
+32-domain-batch	14	holder GET /domain/roles	200 {"roles": [{"name": "admin", "index": "$r"}, {"name": "users"}]}
+32-domain-batch	15	holder POST /domain/batch {"writes": [{"kind": "role", "op": "put", "name": "admin", "cas": "$r", "fields": {"assigned": []}}]}	409 {"error": "last admin"}
+32-domain-batch	16	holder POST /domain/batch {"writes": [{"kind": "role", "op": "put", "name": "admin", "cas": "$r", "fields": {"assigned": [{"person": "mgr", "until": 0}, {"person": "root", "until": 0}]}}]}	200 {"written": 1}
+33-folder-rights	1	@domain	ok
+33-folder-rights	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+33-folder-rights	3	member m1 console POST /folders {"name": "F"}	201 {"id": "$f"}
+33-folder-rights	4	member m1 console POST /folders {"name": "G"}	201 {"id": "$g"}
+33-folder-rights	5	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "sub": "platform", "scope": "folder:$f"}, {"subject": "ann", "cap": "edit", "sub": "testsub", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
+33-folder-rights	6	@person ann ann password 1	ok
+33-folder-rights	7	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "platform"}, {"cap": "edit", "sub": "testsub"}]}
+33-folder-rights	8	member m1 console PUT /folders/$f {"name": "F2"}	200 {"name": "F2"}
+33-folder-rights	9	member m1 console POST /folders {"name": "S", "parent": "$f"}	201 {"id": "$s", "parent": "$f"}
+33-folder-rights	10	member m1 console POST /folders {"name": "top"}	403 {"error": "denied"}
+33-folder-rights	11	member m1 console PUT /folders/$g {"name": "x"}	403 {"error": "denied"}
+33-folder-rights	12	member m1 console PUT /folders/$f {"members": ["testsub/counters/c1-m1"]}	403 {"error": "denied"}
+33-folder-rights	13	@person root w2c test root password	ok
+33-folder-rights	14	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "sub": "platform", "scope": "folder:$f"}, {"subject": "ann", "cap": "admin", "sub": "testsub", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
+33-folder-rights	15	@person ann ann password 1	ok
+33-folder-rights	16	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "platform"}, {"cap": "admin", "sub": "testsub"}]}
+33-folder-rights	17	member m1 console PUT /folders/$f {"members": ["testsub/counters/c1-m1"]}	200 {"members": ["testsub/counters/c1-m1"]}
+33-folder-rights	18	member m1 console PUT /folders/$g {"members": []}	403 {"error": "denied"}
+33-folder-rights	19	@person root w2c test root password	ok
+33-folder-rights	20	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "sub": "platform", "scope": "folder:$f"}]}	200 {"cluster": "m1"}
+33-folder-rights	21	@person ann ann password 1	ok
+33-folder-rights	22	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "platform"}]}
+33-folder-rights	23	member m1 console PUT /folders/$f {"members": []}	403 {"error": "denied"}
+34-changes-folders	1	@domain	ok
+34-changes-folders	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+34-changes-folders	3	member m1 console POST /folders {"name": "F"}	201 {"id": "$f", "index": "$i"}
+34-changes-folders	4	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "folder:$f"}]}	200 {"cluster": "m1"}
+34-changes-folders	5	@person ann ann password 1	ok
+34-changes-folders	6	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view"}]}
+34-changes-folders	7	@until 10 member m1 console GET /changes	200 {"position": "$p"}
+34-changes-folders	8	@person root w2c test root password	ok
+34-changes-folders	9	member m1 console PUT /folders/$f {"members": ["testsub/counters/c1-m1"]}	200 {"members": ["testsub/counters/c1-m1"]}
+34-changes-folders	10	@person ann ann password 1	ok
+34-changes-folders	11	@until 30 member m1 console GET /changes?after=$p	200 {"position": "$q", "changes": [], "reset": true}
+34-changes-folders	12	@person root w2c test root password	ok
+34-changes-folders	13	member m1 console DELETE /folders/$f	200 {"deleted": "$f"}
+34-changes-folders	14	@person ann ann password 1	ok
+34-changes-folders	15	@until 30 member m1 console GET /changes?after=$q	200 {"position": "$r", "changes": [], "reset": true}
+35-changes-folder-rows	1	@domain	ok
+35-changes-folder-rows	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+35-changes-folder-rows	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:testsub/none"}]}	200 {"cluster": "m1"}
+35-changes-folder-rows	4	@person ann ann password 1	ok
+35-changes-folder-rows	5	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub/none"}]}
+35-changes-folder-rows	6	@until 10 member m1 console GET /changes	200 {"position": "$p"}
+35-changes-folder-rows	7	@person root w2c test root password	ok
+35-changes-folder-rows	8	member m1 console POST /folders {"name": "F"}	201 {"id": "$f"}
+35-changes-folder-rows	9	@person ann ann password 1	ok
+35-changes-folder-rows	10	@until 30 member m1 console GET /changes?after=$p	200 {"position": "$q", "changes": [{"key": "~platform/folders/", "revision": 0}], "reset": "@absent"}
+35-changes-folder-rows	11	@person root w2c test root password	ok
+35-changes-folder-rows	12	member m1 console DELETE /folders/$f	200 {"deleted": "$f"}
+35-changes-folder-rows	13	member m1 store GET /v1/get?key=platform/folders/$f	200 {"index": "$t"}
+35-changes-folder-rows	14	@person ann ann password 1	ok
+35-changes-folder-rows	15	@until 30 member m1 console GET /changes?after=$q	200 {"changes": [{"key": "~platform/folders/", "deleted": "$t"}], "reset": "@absent"}
+36-changes-role-assignment	1	@domain	ok
+36-changes-role-assignment	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+36-changes-role-assignment	3	holder POST /domain/roles {"name": "ops", "assigned": [{"person": "ann", "until": 0}]}	201 {"role": "ops"}
+36-changes-role-assignment	4	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:testsub/c1-m1"}, {"subject": "role:ops", "cap": "view", "scope": "*"}]}	200 {"cluster": "m1"}
+36-changes-role-assignment	5	@person ann ann password 1	ok
+36-changes-role-assignment	6	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "*", "role": "ops"}, {"cap": "view", "scope": "unit:testsub/c1-m1"}]}
+36-changes-role-assignment	7	@until 10 member m1 console GET /changes	200 {"position": "$p"}
+36-changes-role-assignment	8	@person root w2c test root password	ok
+36-changes-role-assignment	9	holder PUT /domain/roles/ops {"assigned": []}	200 {"role": "ops"}
+36-changes-role-assignment	10	@person ann ann password 1	ok
+36-changes-role-assignment	11	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub/c1-m1"}]}
+36-changes-role-assignment	12	member m1 console GET /changes?after=$p	200 {"changes": [], "reset": true}

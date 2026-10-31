@@ -21,4 +21,6 @@ place	layer	word	value
 /properties/name	3	x-codec	["string"]
 /properties/pw_by	3	x-codec	["string"]
 /properties/pwhash_secret	3	x-codec	["string"]
+/properties/revision	3	x-codec	["integer"]
+/properties/revision	3	x-whole	true
 /properties/title	3	x-codec	["string"]
