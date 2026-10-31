@@ -1,0 +1,54 @@
+# Закрытый перечень значений code ответа Problem дверей backend: главы 11.1–11.6, 11.8 (ADR-0094 B5; замер С.5). Перенос из Н4, нормы не меняет: при расхождении источник — норма в столбце norm.
+# Слово error здесь — code контракта. Откуда оно переведено (слово консоли или домена) — в столбце norm. Значения — перечень ProblemCode контракта; своих кодов нет (V/11.2 Н1.3).
+# door — двери контракта: devices, archives, volumes, objects; folders; operations; access; test — /test/*; * — каждая дверь. code — статус; 4xx — статус двери; «-» — код итога шага, в failed групповой записи статуса нет: 200.
+# field — «-»: поля нет; <поле> — поле контракта, которое называет отказ; иное — точное значение. 502–504 кода не имеют (V/11.2 Н1.3): строк нет. Слова хода ассистента — V/10.
+door	code	error	field	norm
+*	401	UNAUTHORIZED	-	11.1, 11.2 Н4; 11.4 Н4: 401 сторожевой, 401 обратного вызова; 11.5 Н4
+*	403	PERMISSION_DENIED	-	11.1 Н4; 11.4 Н4: 403 denied
+*	404	NO_ROUTE	-	11.1, 11.2 Н4
+*	404	NOT_FOUND	-	11.4 Н4: 404 строки нет
+*	412	VERSION_MISMATCH	-	11.4 Н4: 412 row moved прочее, revision moved; current
+*	428	PRECONDITION_REQUIRED	-	11.4 Н1.3
+*	422	NOT_SUPPORTED	<поле>	11.3 Н4: запись поля none, read, const
+*	422	VALIDATION_FAILED	<поле>	11.4 Н4: 400 схемы, поле названо в слове
+*	4xx	VALIDATION_FAILED	-	11.4, 11.8 Н4: 4xx, слово не выводится однозначно; статус двери
+devices	409	NAME_TAKEN	-	11.4 Н4: 409 unique (имя)
+devices	409	NAME_TAKEN	detectorKind	11.4 Н4: 412 row moved строки det/units/<cam>-<kind> с cas ""
+devices	422	VALIDATION_FAILED	ip	11.4 Н4: 409 unique (адрес камеры); 11.3 Н4: нет ip, PATCH ip: null
+devices	422	VALIDATION_FAILED	<поле>	11.4 Н4: 409 ref, must_match, fixed
+devices	422	VALIDATION_FAILED	-	11.4 Н4: 413 batch too large
+devices	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.4: иное тело, иная операция с тем же ключом
+devices	422	NOT_SUPPORTED	type	11.3 Н4: вид устройства
+devices	422	NOT_SUPPORTED	recordMode	11.2, 11.3 Н4: motion, sched
+devices	422	NOT_SUPPORTED	encrypted	11.3 Н4
+devices	422	NOT_SUPPORTED	name	11.3 Н4
+devices	422	NOT_SUPPORTED	detectorKind	11.3 Н4
+devices	422	NOT_SUPPORTED	sensitivity	11.3 Н4
+devices	422	NOT_SUPPORTED	retentionDays	11.3 Н4
+devices	422	NOT_SUPPORTED	ip	11.3 Н4: source без сетевого хоста
+devices	422	NOT_SUPPORTED	candidateId	11.4 Н1.5
+folders	404	NOT_FOUND	-	11.4 Н4: no such folder, no such parent, parent gone, folder gone, parent moved, row moved стража цепочки
+folders	412	VERSION_MISMATCH	-	11.4 Н4: folder moved; current
+folders	422	VALIDATION_FAILED	deviceIds	11.4 Н4: bad member, too many folders, too many members, row too large
+folders	422	VALIDATION_FAILED	parentId	11.4 Н4: too deep
+folders	422	NAME_REQUIRED	name	11.4 Н1.7
+operations	404	NOT_FOUND	-	11.4 Н4: no such operation, no operations
+operations	409	BUSY	-	11.4 Н4: root busy, operation done, operation running, nothing to retry
+operations	422	VALIDATION_FAILED	items	11.4 Н4: too many steps, too many operations
+operations	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.8
+operations	-	DEVICE_OFFLINE	-	11.4 Н1.8: шаг not_run, код итога шага
+access	409	BUILTIN	-	11.8 Н4: 409 builtin; правка, удаление роли admin
+access	409	NAME_TAKEN	<поле>	11.8 Н4: повтор имени; 409 exists, name taken
+access	409	LOGIN_TAKEN	<поле>	11.8 Н4: повтор логина; 409 exists, name taken у человека
+access	422	NAME_REQUIRED	<поле>	11.8 Н4
+access	422	NOT_SUPPORTED	<поле>	11.8 Н1.6, Н4
+access	422	VALIDATION_FAILED	<поле>	11.8 Н4: ссылка никуда; unknown member, unknown subject, bad name, bad line, bad batch, bad body, grant too wide
+access	422	VALIDATION_FAILED	roleIds	11.8 Н4: too many admins, admin table too large, roles table too large
+access	422	VALIDATION_FAILED	access	11.8 Н4: batch too large, too large; сохраните частями
+access	409	VALIDATION_FAILED	roleIds	11.8 Н4: password set by a non-admin
+access	409	BUSY	-	11.8 Н4: being deleted, in flight
+access	409	SELF_LOCKOUT	-	11.8 Н1.8, Н4; last admin
+access	412	VERSION_MISMATCH	-	11.8 Н4: версия снимка, 412 conflict; current
+test	404	TEST_SUPPORT_OFF	-	11.2, 11.6 Н4
+test	422	NOT_SUPPORTED	fixturePatch	11.6 Н1.3, Н4
+test	422	NOT_SUPPORTED	actAs	11.6 Н1.3, Н4
