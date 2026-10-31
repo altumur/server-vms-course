@@ -117,6 +117,14 @@ tables:
       name: {type: string, required: true}
       note: {type: string}
     delete_after: 35
+  # rows of its worker alone: read and written with the ticket of the request it serves, by the right of consequences;
+  # a person's door is closed to them (P/06.1 Н1.6 `service`; ADR-0094 доп. (15) п. 3)
+  stash:
+    key: name
+    fields:
+      name: {type: string, required: true}
+      note: {type: string}
+    service: true
 placement:
   capacity:    {from: capacity, default: 8}
   headroom:    {from: headroom}

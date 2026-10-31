@@ -75,3 +75,7 @@ shell_declared_ok	pagedecl-bare @shell-put pagedok pagedecl	0 2
 files_file_over	filed-none @file-fill big.js 8388609 filed-big	2 1
 files_file_max	filed-none @file-fill big.js 8388608 filed-big	0 2
 files_total_over	filed-none @file-fill sum1.js 8388608 @file-fill sum2.js 8388608 @file-fill sum3.js 8388608 @file-fill sum4.js 8388608 @file-fill sum5.js 1 filed-sum	2 1
+# ADR-0094 B1: door.pass.calls называет подсистему каталога: дверь есть — ok, подсистемы ещё нет — отсрочка, двери нет — отказ каталога
+calls_ok	neart-door calls-client	0 1
+calls_no_target	calls-client	0 1
+calls_bad_door	neart-door calls-client-bad	2 -

@@ -1,2 +1,3 @@
 date	sample	fix	languages
 2026-10-19	перенос	puts.tsv и puts/ из приёмки М10/02 (стадия B), главы 2.3; случаи, файлы и ожидания без изменений	all
+2026-10-31	calls_ok, calls_no_target, calls_bad_door	новые установки: door.pass.calls у подсистемы каталога (ADR-0094 B1)	all

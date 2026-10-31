@@ -24,6 +24,7 @@ vectors/{keys,agent-sig,accept,record,ask-sig,may,peer}/  векторы общ�
 contracts/gate-and-pass.api.openapi.yaml  общие формы тел договора сторожевой и передачи (Denied; ссылаются P/06, P/08, P/10)
 testdata/                  testsub*.yaml — сквозной пример (переезжает из Source/tests/testdata на стадии B)
 acceptance/system/         сквозные сценарии нескольких микромодулей
+acceptance/pass/           передача второго вида с подставным воркером раннера
 acceptance/matrix/         смешанные сборки
 id-map.tsv                 старый id нормы, сценария, шага, вектора → новый
 ```

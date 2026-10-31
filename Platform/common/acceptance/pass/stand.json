@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "server": "localhost",
+  "defaults": {
+    "ca": {
+      "key": "ec-p256",
+      "sig": "sha256",
+      "not_before": -3600,
+      "days": 3650
+    },
+    "leaf": {
+      "key": "ec-p256",
+      "sig": "sha256",
+      "not_before": -3600,
+      "days": 825,
+      "eku": [
+        "serverAuth",
+        "clientAuth"
+      ]
+    }
+  },
+  "clusters": {
+    "hold": [
+      "domain",
+      "domainconsole",
+      "console",
+      "domainagent",
+      "probe-pworker",
+      "testsubworker"
+    ],
+    "m1": [
+      "domain",
+      "domainconsole",
+      "console",
+      "domainagent",
+      "probe-pworker",
+      "testsubworker"
+    ]
+  },
+  "foreign": [
+    "console"
+  ],
+  "negative": {
+    "m1-probe-pworker-other": {
+      "issuer": "m1",
+      "role": "probe-pworker",
+      "server": "other-box"
+    }
+  }
+}

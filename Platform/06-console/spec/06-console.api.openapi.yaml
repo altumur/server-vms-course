@@ -3310,7 +3310,8 @@ paths:
       required: true
       description: Сегмент из door.pass загруженного манифеста подсистемы (ключ door.pass — P/02.1 «Форма»; не повторяет door.routes,
         unit.rows и where — P/02.1 Н1.4, правило 81). Путь длиннее одного сегмента с тем же первым сегментом передаётся
-        так же; шаблона из нескольких сегментов OpenAPI не задаёт.
+        так же; шаблона из нескольких сегментов OpenAPI не задаёт. У door.pass второго вида маршрут — путь из нескольких сегментов (P/02.1 Н1.4), а отказы
+        консоли 401, 403, 404, 413, 502, 503, 504, чей статус назван в refusals манифеста, идут формой ProblemRefusal (договор сторожевой и передачи refusals).
       schema:
         type: string
         minLength: 1
@@ -3333,6 +3334,8 @@ paths:
           $ref: '#/components/responses/PassFailed'
         '503':
           $ref: '#/components/responses/PassUnavailable'
+        '504':
+          $ref: '#/components/responses/PassTimedOut'
         default:
           $ref: '#/components/responses/PassAnswer'
     post:
@@ -3354,6 +3357,8 @@ paths:
           $ref: '#/components/responses/PassFailed'
         '503':
           $ref: '#/components/responses/PassUnavailable'
+        '504':
+          $ref: '#/components/responses/PassTimedOut'
         default:
           $ref: '#/components/responses/PassAnswer'
     put:
@@ -3375,6 +3380,8 @@ paths:
           $ref: '#/components/responses/PassFailed'
         '503':
           $ref: '#/components/responses/PassUnavailable'
+        '504':
+          $ref: '#/components/responses/PassTimedOut'
         default:
           $ref: '#/components/responses/PassAnswer'
     patch:
@@ -3396,6 +3403,8 @@ paths:
           $ref: '#/components/responses/PassFailed'
         '503':
           $ref: '#/components/responses/PassUnavailable'
+        '504':
+          $ref: '#/components/responses/PassTimedOut'
         default:
           $ref: '#/components/responses/PassAnswer'
     delete:
@@ -3417,6 +3426,8 @@ paths:
           $ref: '#/components/responses/PassFailed'
         '503':
           $ref: '#/components/responses/PassUnavailable'
+        '504':
+          $ref: '#/components/responses/PassTimedOut'
         default:
           $ref: '#/components/responses/PassAnswer'
     head:
@@ -5460,6 +5471,20 @@ components:
       - type: object
         additionalProperties:
           $ref: '#/components/schemas/JsonValue'
+    ProblemRefusal:
+      type: object
+      description: Отказ консоли на маршруте door.pass второго вида с refusals манифеста (application/problem+json; договор сторожевой и передачи refusals). code — значение
+        карты манифеста, message — detail отказа.
+      required:
+      - code
+      - message
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          pattern: ^(?:[A-Z][A-Z0-9_]{0,63})$
+        message:
+          type: string
     ConsoleRefusal:
       type: object
       required:
@@ -7990,7 +8015,8 @@ components:
           schema:
             $ref: '#/components/schemas/ConsoleRefusal'
     Unauthenticated:
-      description: Личность не подтверждена — сторожевая главы 6.3 (identity), error denied; открытые пути — там же (open_routes).
+      description: Личность не подтверждена — сторожевая главы 6.3 (identity), error denied; открытые пути — там же (open_routes). Обратный вызов с заголовком
+        X-W2C-Pass-Ticket, который не прошёл порядок ticket, — detail «ticket refused» (глава 6.3 Н1.9; договор сторожевой и передачи).
       content:
         application/json:
           schema:
@@ -8165,14 +8191,30 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ConsoleRefusal'
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemRefusal'
     PassFailed:
       description: 'door.pass: воркер не ответил, ответ больше 4 МиБ, оборван или истёк таймаут ответа — до успешных заголовков
-        (error denied, detail «<worker> did not answer»; глава 6.5, P/06.5-12). Повтор не автоматический: исход выяснить у держателя. Ответ
-        воркера с кодом 502 передаётся как получен.'
+        (error denied, detail «<worker> did not answer»; глава 6.5, P/06.5-12). У второго вида ещё тип ответа вне перечня и чужой серверный лист.
+        Повтор не автоматический: исход выяснить у держателя. Ответ воркера с кодом 502 передаётся как получен.'
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ConsoleRefusal'
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemRefusal'
+    PassTimedOut:
+      description: 'door.pass второго вида: вышел предел ожидания маршрута до заголовков ответа (error denied, detail «<worker> did not answer»; договор
+        сторожевой и передачи timeout). Повтор не автоматический: исход выяснить у держателя. Ответ воркера с кодом 504 передаётся как получен.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConsoleRefusal'
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemRefusal'
     PassUnavailable:
       description: 'door.pass: у консоли нет клиента к воркерам — error denied, detail «this console passes no route on to a
         worker»; нет живого воркера подсистемы с дверью (определение — глава 6.5, P/06.5-12) — error denied, detail «no worker

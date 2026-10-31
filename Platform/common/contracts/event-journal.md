@@ -75,7 +75,7 @@ class:      [alarm, observation]             # закрыто; класс стр
 ## Журнал и писатели файла
 
 ```yaml
-journal:    дерево audit/<роль>/e1/…: строки платформы о себе (unit.created|changed|deleted, door.issued, schema.raised,
+journal:    дерево audit/<роль>/e1/…: строки платформы о себе (unit.created|changed|deleted, door.issued, pass.called, schema.raised,
             events.removed, policy.changed, drain.*, server.*, worker.name_taken (alarm), door.keys_conflict (alarm; P/06.5 Н3 «/where/<id>»; решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7), worker.name_back (observation; глава P/03.2 Н3 «воссоединиться»), worker.hung, clock.skew, free_ask.key_taken, …);
             поля: о чём строка — sub и target (единица; не subsystem/unit), адрес клиента у строк о двери — addr;
             второго имени у этих полей нет (ADR-0069)

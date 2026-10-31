@@ -1,0 +1,11 @@
+# адресат перечня обратного вызова: строки, таблица, маршрут двери (ADR-0094 B1)
+name: neartd
+unit:
+  rows: neartds
+  id: name
+  fields:
+    name:  {type: string, required: true}
+tables: {notes: {fields: {note: {type: string}}}}
+placement: {capacity: {default: 1}}
+door: {routes: [chat]}
+worker: {exec: /usr/lib/neartd/worker}

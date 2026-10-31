@@ -1,0 +1,10 @@
+# перечень называет то, чего у адресата нет (ADR-0094 B1)
+name: callc
+unit:
+  rows: callers
+  id: name
+  fields:
+    name:  {type: string, required: true}
+placement: {capacity: {default: 1}}
+door: {pass: {routes: [api], calls: [neartd/nosuch]}}
+worker: {exec: /usr/lib/callc/worker}

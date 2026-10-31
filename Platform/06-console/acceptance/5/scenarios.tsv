@@ -305,3 +305,14 @@ scenario	step	request	expect
 31-changes-metrics	7	GET /metrics	200 ~w2c_changes_messages_total 1
 31-changes-metrics	8	GET /changes?after=nothing	200 {"changes": [], "reset": true}
 31-changes-metrics	9	GET /metrics	200 ~w2c_changes_resets_total{reason="foreign"} 1
+32-pass-second-kind	1	GET /probe-x/api/v1/x	503 {"code": "NOT_NOW", "message": "no worker of probe-x with a door is heard"}
+32-pass-second-kind	2	GET /probe-x/api/v1/x	503 @header Content-Type: ~application/problem+json
+32-pass-second-kind	3	GET /probe-x/api/v2	404 {"code": "NO_ROUTE"}
+32-pass-second-kind	4	GET /probe-x/apix	404 {"error": "no such path"}
+32-pass-second-kind	5	@header X-W2C-Pass-Ticket: 00112233445566778899aabbccddeeff GET /counters	401 {"error": "denied", "detail": "ticket refused"}
+32-pass-second-kind	6	@header X-W2C-Pass-Ticket: not-a-ticket GET /counters	401 {"error": "denied", "detail": "ticket refused"}
+32-pass-second-kind	7	@header X-W2C-Pass-Ticket: 00112233445566778899aabbccddeeff POST /counters {"name": "c1"}	401 {"error": "denied", "detail": "ticket refused"}
+32-pass-second-kind	8	GET /counters/c1	404 {"error": "no such unit"}
+32-pass-second-kind	9	@header X-W2C-Pass-Ticket: 00112233445566778899aabbccddeeff GET /metrics	200 ~testsub_workers_live
+32-pass-second-kind	10	GET /probe-x/metrics	200 ~probe_x_passed_calls_total 0
+32-pass-second-kind	11	GET /metrics	200 !contains passed_calls_total

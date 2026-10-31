@@ -515,10 +515,32 @@
      }
     },
     "pass": {
-     "$ref": "#/$defs/strList",
      "default": [],
      "x-owner": "P/06.5 Н1.8",
-     "x-default-text": "передачи нет"
+     "x-default-text": "передачи нет",
+     "type": [
+      "array",
+      "object"
+     ],
+     "allOf": [
+      {
+       "if": {
+        "type": "array"
+       },
+       "then": {
+        "$ref": "#/$defs/strList",
+        "description": "вид первый: первые сегменты пути"
+       }
+      },
+      {
+       "if": {
+        "type": "object"
+       },
+       "then": {
+        "$ref": "#/$defs/passTicket"
+       }
+      }
+     ]
     }
    },
    "additionalProperties": false
@@ -1605,6 +1627,110 @@
      "pattern": "^(?:[\\s\\S]*_secret)$"
     }
    }
+  },
+  "passCall": {
+   "description": "дверь обратного вызова по закрытому перечню P/06.3 Н1.9: `<s>/<имя>` — строки единиц, таблица, `policy`, `next_id` или маршрут двери подсистемы `<s>`; приставка `GET ` — только чтение; `console/batch`, `changes`; `GET manifest|servers|events|session|schema`",
+   "type": "string",
+   "not": {
+    "pattern": "^(?:(?:GET )?(?:[a-z][a-z0-9_-]{0,31}/(?:platform|spec|manifest|slots|epoch|idem|placement|workers|controller|decommissioned|holds|requests|asked|sweep|servers|where|unplaceable|drain|events|marks|console|audit|session|mounts|healthz|changes|metrics|resources|schema|domain|api|heartbeats|contenders|snapshot|blobs|commands|state)|(?:platform|domain)/[a-z][a-z0-9_-]{0,31}))$"
+   },
+   "pattern": "^(?:changes|console/batch|GET (?:manifest|servers|events|session|schema)|(?:GET )?[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31})$"
+  },
+  "passRoute": {
+   "description": "путь маршрута: сегменты по грамматике `name` через `/`; совпадает с началом пути целыми сегментами",
+   "type": "string",
+   "pattern": "^(?:[a-z][a-z0-9_-]{0,31}(?:/[a-z][a-z0-9_-]{0,31})*)$"
+  },
+  "passTicket": {
+   "description": "вид второй: билет на запрос вместо удостоверения человека (P/06.5 Н1.8, договор сторожевой и передачи)",
+   "type": "object",
+   "properties": {
+    "routes": {
+     "description": "передаваемые маршруты; первый сегмент — как у вида первого",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/passRoute"
+     },
+     "minItems": 1,
+     "uniqueItems": true
+    },
+    "calls": {
+     "description": "двери консоли, которые воркер зовёт обратно по билету",
+     "default": [],
+     "x-default-text": "обратного вызова нет",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/passCall"
+     },
+     "uniqueItems": true
+    },
+    "stream": {
+     "description": "маршруты, передаваемые потоком; каждый лежит под маршрутом `routes`",
+     "default": [],
+     "x-default-text": "потоков нет",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/passRoute"
+     },
+     "uniqueItems": true
+    },
+    "wait": {
+     "description": "предел ожидания маршрута, секунды; ключ лежит под маршрутом `routes`, выигрывает самый длинный; потолок — `PASS_WAIT_MAX`",
+     "default": {},
+     "x-default-text": "`PASS_WAIT`, у потока — до конца запроса",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/passRoute"
+     },
+     "additionalProperties": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9000
+     }
+    },
+    "refusals": {
+     "description": "форма отказов консоли на этих маршрутах; нет ключа — ConsoleRefusal",
+     "type": "object",
+     "properties": {
+      "form": {
+       "description": "`application/problem+json` `{code, message}`",
+       "type": "string",
+       "enum": [
+        "problem"
+       ]
+      },
+      "codes": {
+       "description": "статус консоли → `code`; ключ в кавычках; статуса нет в карте — ConsoleRefusal",
+       "type": "object",
+       "propertyNames": {
+        "enum": [
+         "401",
+         "403",
+         "404",
+         "413",
+         "502",
+         "503",
+         "504"
+        ]
+       },
+       "additionalProperties": {
+        "type": "string",
+        "pattern": "^(?:[A-Z][A-Z0-9_]{0,63})$"
+       },
+       "minProperties": 1
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "form",
+      "codes"
+     ]
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "routes"
+   ]
   },
   "placement": {
    "type": "object",
