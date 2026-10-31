@@ -794,6 +794,7 @@ paths:
       summary: Завести (Н1.3а, Н3)
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
       requestBody:
         required: true
         content:
@@ -813,14 +814,17 @@ paths:
         '408': {$ref: '#/components/responses/BodyRefused'}
         '201':
           description: Заведено
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
           content:
             application/json:
               schema:
                 type: object
-                required: [group]
+                required: [group, revision]
                 additionalProperties: false
                 properties:
                   group: {$ref: '#/components/schemas/PersonName'}
+                  revision: {type: integer, minimum: 1}
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Refused'}
@@ -839,6 +843,8 @@ paths:
       summary: Править (Н1.3а, Н3)
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -857,19 +863,23 @@ paths:
         '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: После правки
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
           content:
             application/json:
               schema:
                 type: object
-                required: [group]
+                required: [group, revision]
                 additionalProperties: false
                 properties:
                   group: {$ref: '#/components/schemas/PersonName'}
+                  revision: {type: integer, minimum: 1}
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
+        '412': {$ref: '#/components/responses/RevisionMoved'}
         '413': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/Refused503'}
     delete:
@@ -877,6 +887,8 @@ paths:
       summary: Удалить (Н3)
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
       responses:
         '200':
           description: Удалено
@@ -893,6 +905,7 @@ paths:
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
+        '412': {$ref: '#/components/responses/RevisionMoved'}
         '503': {$ref: '#/components/responses/Refused503'}
   /domain/roles:
     description: 'Глава 8.4 Н1.3а, Н1.9 pass, Н2, Н3 «группы и роли»; процессу передаёт консоль домена при любом методе.'
@@ -936,6 +949,7 @@ paths:
       summary: Завести (Н1.3а, Н3)
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
       requestBody:
         required: true
         content:
@@ -955,14 +969,17 @@ paths:
         '408': {$ref: '#/components/responses/BodyRefused'}
         '201':
           description: Заведено
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
           content:
             application/json:
               schema:
                 type: object
-                required: [role]
+                required: [role, revision]
                 additionalProperties: false
                 properties:
                   role: {$ref: '#/components/schemas/PersonName'}
+                  revision: {type: integer, minimum: 1}
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Refused'}
@@ -981,6 +998,8 @@ paths:
       summary: Править (Н1.3а, Н3)
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -999,19 +1018,23 @@ paths:
         '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: После правки
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
           content:
             application/json:
               schema:
                 type: object
-                required: [role]
+                required: [role, revision]
                 additionalProperties: false
                 properties:
                   role: {$ref: '#/components/schemas/PersonName'}
+                  revision: {type: integer, minimum: 1}
         '400': {$ref: '#/components/responses/Refused'}
         '401': {$ref: '#/components/responses/Denied'}
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
+        '412': {$ref: '#/components/responses/RevisionMoved'}
         '413': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/Refused503'}
     delete:
@@ -1019,6 +1042,8 @@ paths:
       summary: Удалить (Н3)
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
+        - $ref: '#/components/parameters/IfMatch'
       responses:
         '200':
           description: Удалено
@@ -1038,6 +1063,7 @@ paths:
         '403': {$ref: '#/components/responses/Refused'}
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
+        '412': {$ref: '#/components/responses/RevisionMoved'}
         '503': {$ref: '#/components/responses/Refused503'}
   /domain/batch:
     description: 'Глава 8.4 Н1.9 pass, Н2 «Пакетная дверь», Н1.3в batch_diff (ADR-0098 §6).'
@@ -1046,6 +1072,7 @@ paths:
       summary: Люди, группы, роли и гранты одного снимка — одна запись (Н2)
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/RepeatKey'
         - $ref: '#/components/parameters/XW2CViaWorker'
       requestBody:
         required: true
@@ -2459,7 +2486,7 @@ components:
         index: {type: string, minLength: 1, description: 'индекс строки хранилища, из чтения этой строки (глава 8.0 Н1.9)'}
     GroupView:
       type: object
-      required: [name, title, comment, members, source, at, by, index]
+      required: [name, title, comment, members, source, at, by, revision, index]
       additionalProperties: false
       description: Строка группы (P/08.4 Н1.3а).
       properties:
@@ -2472,6 +2499,7 @@ components:
         source: {const: local}
         at: {type: number}
         by: {type: string}
+        revision: {type: integer, minimum: 0}
         index: {type: string}
     RoleAssigned:
       type: object
@@ -2486,7 +2514,7 @@ components:
         until: {type: number, minimum: 0}
     RoleView:
       type: object
-      required: [name, title, comment, assigned, at, by, index]
+      required: [name, title, comment, assigned, at, by, revision, index]
       additionalProperties: false
       description: Строка роли (P/08.4 Н1.3а).
       properties:
@@ -2498,6 +2526,7 @@ components:
           items: {$ref: '#/components/schemas/RoleAssigned'}
         at: {type: number}
         by: {type: string}
+        revision: {type: integer, minimum: 0}
         index: {type: string}
     MayInput:
       type: object

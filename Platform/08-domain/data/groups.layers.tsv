@@ -20,5 +20,7 @@ place	layer	word	value
 /properties/members	3	x-codec	["array"]
 /properties/members	3	x-encoding	"jcs"
 /properties/name	3	x-codec	["string"]
+/properties/revision	3	x-codec	["integer"]
+/properties/revision	3	x-whole	true
 /properties/source	3	x-codec	["string"]
 /properties/title	3	x-codec	["string"]

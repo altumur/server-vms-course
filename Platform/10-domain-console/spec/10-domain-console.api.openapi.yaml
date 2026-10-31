@@ -1814,6 +1814,8 @@ paths:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1groups/post/requestBody/content/application~1json/schema'
       responses:
+        '422':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/KeyReused'
         '201':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1groups/post/responses/201'
         '400':
@@ -1901,6 +1903,10 @@ paths:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1groups~1{name}/put/requestBody/content/application~1json/schema'
       responses:
+        '412':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
+        '422':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/KeyReused'
         '200':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1groups~1{name}/put/responses/200'
         '400':
@@ -1981,6 +1987,10 @@ paths:
         (переход 3) — ссылкой на операцию groupDelete OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки «Отказы
         по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
       responses:
+        '412':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
+        '422':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/KeyReused'
         '200':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1groups~1{name}/delete/responses/200'
         '400':
@@ -2037,7 +2047,7 @@ paths:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
                 - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
-                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1groups~1{name}/delete/responses/503/content/application~1json/schema'
   /domain/roles:
     get:
       operationId: passRolesList
@@ -2145,6 +2155,8 @@ paths:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1roles/post/requestBody/content/application~1json/schema'
       responses:
+        '422':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/KeyReused'
         '201':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1roles/post/responses/201'
         '400':
@@ -2232,6 +2244,10 @@ paths:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1roles~1{name}/put/requestBody/content/application~1json/schema'
       responses:
+        '412':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
+        '422':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/KeyReused'
         '200':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1roles~1{name}/put/responses/200'
         '400':
@@ -2312,6 +2328,10 @@ paths:
         (переход 3) — ссылкой на операцию roleDelete OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки «Отказы
         по переходам»); голого default нет (решение «Архитектора» по планам 8–10, п. 9).'
       responses:
+        '412':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/RevisionMoved'
+        '422':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/KeyReused'
         '200':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1roles~1{name}/delete/responses/200'
         '400':
@@ -2368,7 +2388,7 @@ paths:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
                 - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
-                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1roles~1{name}/delete/responses/503/content/application~1json/schema'
   /domain/batch:
     post:
       operationId: passDomainBatch
@@ -2384,6 +2404,8 @@ paths:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1batch/post/requestBody/content/application~1json/schema'
       responses:
+        '422':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/KeyReused'
         '200':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1batch/post/responses/200'
         '400':
