@@ -1177,7 +1177,8 @@
           // an h2 among others: it and what follows it, up to the next heading, become a card
           const card = document.createElement("div"); card.className = "card";
           h2.replaceWith(card); card.append(ch, cb);
-          while (card.nextSibling && !(card.nextSibling.nodeType === 1 && /^H[12]$/.test(card.nextSibling.tagName))) cb.appendChild(card.nextSibling);
+          const heading = n => n.nodeType === 1 && (/^H[12]$/.test(n.tagName) || !!n.querySelector("h1, h2"));
+          while (card.nextSibling && !heading(card.nextSibling)) cb.appendChild(card.nextSibling);
         }
       });
     }
