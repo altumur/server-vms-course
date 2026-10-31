@@ -91,7 +91,7 @@ scenario	step	request	expect
 14-if-match	12	@header Idempotency-Key: p1 @header If-Match: 1 PUT /counters/n14 {"start": 2}	200 {"id": "n14", "start": 2, "revision": 2}
 14-if-match	13	@header Idempotency-Key: p1 @header If-Match: 1 PUT /counters/n14 {"start": 2}	200 {"id": "n14", "start": 2, "revision": 2}
 14-if-match	14	@header Idempotency-Key: p1 @header If-Match: 1 PUT /testsub/counters/n14 {"start": 2}	200 {"id": "n14", "revision": 2}
-14-if-match	15	@header Idempotency-Key: p1 PUT /counters/n14 {"start": 3}	409 {"error": "key reused"}
+14-if-match	15	@header Idempotency-Key: p1 PUT /counters/n14 {"start": 3}	422 {"error": "key reused"}
 14-if-match	16	GET /counters	200 {"configured": [{"id": "n14", "start": 2, "revision": 2}]}
 14-if-match	17	@header Idempotency-Key: p2 @header If-Match: 1 PUT /counters/n14 {"start": 3}	412 {"error": "revision moved", "field": "/revision", "revision": 2}
 14-if-match	18	PUT /counters/n14 {"start": 4}	200 {"start": 4, "revision": 3}
@@ -132,7 +132,7 @@ scenario	step	request	expect
 17-tables	12	console GET /events?kind=shelf.withdrawn	200 {"events": [{"kind": "shelf.withdrawn", "sub": "testsub2", "target": "shelves/sh1"}]}
 17-tables	13	console2 POST /shelves {"name": "sh2", "zone": "z1"}	201 {"row": {"name": "sh2", "zone": "z1"}}
 17-tables	14	@key(13) console2 POST /shelves {"name": "sh2", "zone": "z1"}	201 {"row": {"name": "sh2", "zone": "z1"}}
-17-tables	15	@key(13) console2 POST /shelves {"name": "sh2", "zone": "z2"}	409 {"error": "key reused"}
+17-tables	15	@key(13) console2 POST /shelves {"name": "sh2", "zone": "z2"}	422 {"error": "key reused"}
 17-tables	16	console2 GET /shelves/sh2	200 {"name": "sh2", "zone": "z1"}
 17-tables	17	console2 @header Idempotency-Key: t1 DELETE /shelves/sh2	200 {"deleted": "sh2"}
 17-tables	18	console2 @header Idempotency-Key: t1 DELETE /shelves/sh2	200 {"deleted": "sh2"}

@@ -261,6 +261,12 @@ paths:
           $ref: '#/components/responses/RevisionMoved'
         '413':
           $ref: '#/components/responses/LargeBody'
+        '422':
+          description: Тот же ключ с другим отпечатком запроса; заявка не меняется.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyReused'
         '429':
           $ref: '#/components/responses/RateLimited'
         '503':
@@ -292,13 +298,19 @@ paths:
         '412':
           $ref: '#/components/responses/RevisionMoved'
         '409':
-          description: Отказ памяти повторов — in flight, key reused.
+          description: Заявка другой консоли ещё в работе — in flight.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RepeatRefused'
         '413':
           $ref: '#/components/responses/LargeBody'
+        '422':
+          description: Тот же ключ с другим отпечатком запроса; заявка не меняется.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyReused'
         '429':
           $ref: '#/components/responses/RateLimited'
         '503':
@@ -496,6 +508,12 @@ paths:
                 - $ref: '#/components/schemas/ReferenceConflict'
                 - $ref: '#/components/schemas/CasRefused'
                 - $ref: '#/components/schemas/RepeatRefused'
+        '422':
+          description: Тот же ключ с другим отпечатком запроса; заявка не меняется.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyReused'
       requestBody:
         required: true
         content:
@@ -645,6 +663,12 @@ paths:
                 oneOf:
                 - $ref: '#/components/schemas/CasRefused'
                 - $ref: '#/components/schemas/RepeatRefused'
+        '422':
+          description: Тот же ключ с другим отпечатком запроса; заявка не меняется.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyReused'
     head:
       summary: 'HEAD: Прочитать одну строку таблицы'
       responses:
@@ -3313,13 +3337,19 @@ paths:
         '408':
           $ref: '#/components/responses/SlowBody'
         '409':
-          description: Отказ памяти повторов — in flight, key reused.
+          description: Заявка другой консоли ещё в работе — in flight.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RepeatRefused'
         '413':
           $ref: '#/components/responses/LargeBody'
+        '422':
+          description: Тот же ключ с другим отпечатком запроса; заявка не меняется.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyReused'
         '429':
           $ref: '#/components/responses/RateLimited'
         '503':
@@ -3439,6 +3469,12 @@ paths:
                 oneOf:
                 - $ref: '#/components/schemas/ConsoleRefused'
                 - $ref: '#/components/schemas/RepeatRefused'
+        '422':
+          description: Тот же ключ с другим отпечатком запроса; заявка не меняется.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyReused'
       parameters:
       - $ref: '#/components/parameters/RepeatKey'
       - name: server
@@ -3470,13 +3506,19 @@ paths:
         '408':
           $ref: '#/components/responses/SlowBody'
         '409':
-          description: Отказ памяти повторов — in flight, key reused.
+          description: Заявка другой консоли ещё в работе — in flight.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RepeatRefused'
         '413':
           $ref: '#/components/responses/LargeBody'
+        '422':
+          description: Тот же ключ с другим отпечатком запроса; заявка не меняется.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyReused'
         '429':
           $ref: '#/components/responses/RateLimited'
         '503':
@@ -3608,13 +3650,19 @@ paths:
         '408':
           $ref: '#/components/responses/SlowBody'
         '409':
-          description: Отказ памяти повторов — in flight, key reused.
+          description: Заявка другой консоли ещё в работе — in flight.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RepeatRefused'
         '413':
           $ref: '#/components/responses/LargeBody'
+        '422':
+          description: Тот же ключ с другим отпечатком запроса; заявка не меняется.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyReused'
         '429':
           $ref: '#/components/responses/RateLimited'
         '503':
@@ -3655,13 +3703,19 @@ paths:
         '408':
           $ref: '#/components/responses/SlowBody'
         '409':
-          description: Отказ памяти повторов — in flight, key reused.
+          description: Заявка другой консоли ещё в работе — in flight.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RepeatRefused'
         '413':
           $ref: '#/components/responses/LargeBody'
+        '422':
+          description: Тот же ключ с другим отпечатком запроса; заявка не меняется.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyReused'
         '429':
           $ref: '#/components/responses/RateLimited'
         '503':
@@ -3772,6 +3826,12 @@ paths:
                 oneOf:
                 - $ref: '#/components/schemas/ServerAnswers'
                 - $ref: '#/components/schemas/RepeatRefused'
+        '422':
+          description: Тот же ключ с другим отпечатком запроса; заявка не меняется.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyReused'
       requestBody:
         required: false
         content:
@@ -3808,13 +3868,19 @@ paths:
         '408':
           $ref: '#/components/responses/SlowBody'
         '409':
-          description: Отказ памяти повторов — in flight, key reused.
+          description: Заявка другой консоли ещё в работе — in flight.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RepeatRefused'
         '413':
           $ref: '#/components/responses/LargeBody'
+        '422':
+          description: Тот же ключ с другим отпечатком запроса; заявка не меняется.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyReused'
         '429':
           $ref: '#/components/responses/RateLimited'
         '503':
@@ -3975,6 +4041,12 @@ paths:
                 oneOf:
                 - $ref: '#/components/schemas/CasRefused'
                 - $ref: '#/components/schemas/RepeatRefused'
+        '422':
+          description: Тот же ключ с другим отпечатком запроса; заявка не меняется.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyReused'
       parameters:
       - $ref: '#/components/parameters/RepeatKey'
       - name: version
@@ -6725,9 +6797,7 @@ components:
       - $ref: '#/components/schemas/TextRefusal'
       - properties:
           error:
-            enum:
-            - in flight
-            - key reused
+            const: in flight
       description: Отказ памяти повторов двери с необязательным ключом (глава 6.1 Н3 «память повторов»; ADR-0094 B3).
     KeyReused:
       unevaluatedProperties: false
