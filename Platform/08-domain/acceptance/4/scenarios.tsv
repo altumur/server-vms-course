@@ -478,3 +478,23 @@ scenario	step	request	expect
 36-changes-role-assignment	10	@person ann ann password 1	ok
 36-changes-role-assignment	11	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub/c1-m1"}]}
 36-changes-role-assignment	12	member m1 console GET /changes?after=$p	200 {"changes": [], "reset": true}
+37-versions-groups-roles	1	@domain	ok
+37-versions-groups-roles	2	holder POST /domain/groups {"name": "g1"}	201 {"group": "g1", "revision": 1}
+37-versions-groups-roles	3	holder GET /domain/groups	200 {"groups": [{"name": "g1", "revision": 1, "index": "$g1"}]}
+37-versions-groups-roles	4	holder @header If-Match: 1 PUT /domain/groups/nosuch {"title": "x"}	404 {"error": "no such group"}
+37-versions-groups-roles	5	holder @header If-Match: 1 PUT /domain/groups/g1 {"title": "a"}	200 {"group": "g1", "revision": 2}
+37-versions-groups-roles	6	holder @header If-Match: 1 PUT /domain/groups/g1 {"title": "b"}	412 {"error": "revision moved", "field": "/revision", "revision": 2, "row": {"name": "g1", "title": "a"}}
+37-versions-groups-roles	7	holder @header If-Match: "$g1" PUT /domain/groups/g1 {"title": "b"}	412 {"error": "revision moved", "revision": 2}
+37-versions-groups-roles	8	holder @header Idempotency-Key: g-r1 PUT /domain/groups/g1 {"title": "c"}	200 {"group": "g1", "revision": 3}
+37-versions-groups-roles	9	holder @header Idempotency-Key: g-r1 PUT /domain/groups/g1 {"title": "c"}	200 {"group": "g1", "revision": 3}
+37-versions-groups-roles	10	holder @header Idempotency-Key: g-r1 PUT /domain/groups/g1 {"title": "d"}	422 {"error": "key reused"}
+37-versions-groups-roles	11	holder POST /domain/roles {"name": "ops"}	201 {"role": "ops", "revision": 1}
+37-versions-groups-roles	12	holder @header If-Match: 7 DELETE /domain/roles/ops	412 {"error": "revision moved", "revision": 1}
+37-versions-groups-roles	13	holder @header If-Match: 1 DELETE /domain/roles/ops	200 {"role": "ops", "deleted": true}
+37-versions-groups-roles	14	holder @header If-Match: 1 DELETE /domain/roles/ops	404 {"error": "no such role"}
+37-versions-groups-roles	15	holder GET /domain/roles	200 {"roles": [{"name": "admin", "index": "$r"}]}
+37-versions-groups-roles	16	holder GET /domain/groups	200 {"groups": [{"name": "g1", "index": "$g2"}]}
+37-versions-groups-roles	17	holder @header Idempotency-Key: b-r1 POST /domain/batch {"writes": [{"kind": "group", "op": "put", "name": "g1", "cas": "$g2", "fields": {"title": "e"}}]}	200 {"written": 1}
+37-versions-groups-roles	18	holder @header Idempotency-Key: b-r1 POST /domain/batch {"writes": [{"kind": "group", "op": "put", "name": "g1", "cas": "$g2", "fields": {"title": "e"}}]}	200 {"written": 1}
+37-versions-groups-roles	19	holder @header Idempotency-Key: b-r1 POST /domain/batch {"writes": [{"kind": "group", "op": "put", "name": "g1", "cas": "$g2", "fields": {"title": "f"}}]}	422 {"error": "key reused"}
+37-versions-groups-roles	20	holder POST /domain/batch {"writes": [{"kind": "group", "op": "put", "name": "g1", "cas": "$g2", "fields": {"title": "f"}}]}	412 {"error": "conflict", "field": "/writes/0"}

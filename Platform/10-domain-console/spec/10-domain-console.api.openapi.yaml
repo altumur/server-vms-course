@@ -2404,6 +2404,8 @@ paths:
             schema:
               $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1batch/post/requestBody/content/application~1json/schema'
       responses:
+        '412':
+          $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1batch/post/responses/412'
         '422':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/KeyReused'
         '200':

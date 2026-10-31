@@ -811,6 +811,7 @@ paths:
                   type: array
                   items: {$ref: '#/components/schemas/PersonName'}
       responses:
+        '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
         '201':
           description: Заведено
@@ -860,6 +861,7 @@ paths:
                   type: array
                   items: {$ref: '#/components/schemas/PersonName'}
       responses:
+        '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: После правки
@@ -890,6 +892,7 @@ paths:
         - $ref: '#/components/parameters/RepeatKey'
         - $ref: '#/components/parameters/IfMatch'
       responses:
+        '422': {$ref: '#/components/responses/KeyReused'}
         '200':
           description: Удалено
           content:
@@ -966,6 +969,7 @@ paths:
                   type: array
                   items: {$ref: '#/components/schemas/RoleAssigned'}
       responses:
+        '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
         '201':
           description: Заведено
@@ -1015,6 +1019,7 @@ paths:
                   type: array
                   items: {$ref: '#/components/schemas/RoleAssigned'}
       responses:
+        '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: После правки
@@ -1045,6 +1050,7 @@ paths:
         - $ref: '#/components/parameters/RepeatKey'
         - $ref: '#/components/parameters/IfMatch'
       responses:
+        '422': {$ref: '#/components/responses/KeyReused'}
         '200':
           description: Удалено
           content:
@@ -1097,6 +1103,7 @@ paths:
                       cas: {type: string, description: 'index из GET этой строки; "" — создание.'}
                       fields: {type: object, additionalProperties: true, description: 'Открыт: поля — тела двери своего kind (P/08.4 Н2 «Пакетная дверь»).'}
       responses:
+        '422': {$ref: '#/components/responses/KeyReused'}
         '408': {$ref: '#/components/responses/BodyRefused'}
         '200':
           description: Пакет записан
