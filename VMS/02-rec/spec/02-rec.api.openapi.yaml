@@ -136,6 +136,7 @@ paths:
         "404": {$ref: "#/components/responses/Refusal"}
         "405": {$ref: "#/components/responses/Refusal"}
         "409": {$ref: "#/components/responses/Refusal"}
+        "413": {$ref: "#/components/responses/Refusal"}
         "503": {$ref: "#/components/responses/Refusal"}
   /ingest/poll:
     post:

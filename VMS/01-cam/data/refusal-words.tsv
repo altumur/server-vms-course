@@ -1,11 +1,12 @@
 # Закрытый перечень слов error дверей урока V/01: глава 1.5, глава 1.4 (ADR-0094 B5; замер С.5). Перенос из Н4, нормы не меняет: при расхождении источник — норма в столбце norm.
-# door — двери: holder GET /devices, /recordings/{id}, /playback/{id}; commands — поле error метки просьбы со словами cam, код — «-». Дверь консоли — перечень P/06.
+# door — двери: holder GET /devices, /recordings/{id}, /playback/{id}; commands — поле error метки просьбы, слова cam, код — «-»; прочие слова той же метки (отказ до вызова, срок дальше most_valid, чужая эпоха) — база воркера, P/03.6 Н3. Дверь консоли — перечень P/06.
 # Слова постоянные (ADR-0094 доп. (13)): имена и числа у двери — в detail, у метки detail нет. field — «-»: поля нет.
 door	code	error	field	norm
 holder	400	bad range	-	01.5 Н4
 holder	404	no device archive	-	01.5 Н4
 holder	404	no such path	-	01.5 Н4
 holder	405	method not allowed	-	01.5 Н4
+holder	413	toolarge	-	01.5 Н4; P/03.4 Н1.7
 holder	501	no index	-	01.5 Н4
 holder	503	device opening	-	01.5 Н4
 holder	503	device busy	-	01.5 Н4: застряло, сессии кончились, запас PLAYBACK_SPARE; V/06.2 Н1.4
