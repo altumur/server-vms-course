@@ -46,7 +46,7 @@ Device(type=camera)	children	det/units	<cam>-<kind>	write	только при с
 Device(type=camera)	subtype, short, preRecordSec, videoChannel, channel, lat, lon, azimuth, streamProfile, buffering, codec, res, fps, bitrate, rtspUrl	—	—	none	у камеры нет
 Device(type=camera)	detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, configMode, templateId, norm, pulse, debounce, gain, acodec, vol, overlayDelayMs, overlayDurationSec	—	—	none	поля других видов устройств
 Device(type=camera)	disabledByRuleId, disabledByRuleAt, armed	—	—	none	не объявляется: «Автоматизация» не объявлена (ADR-0094 доп. (7)); поля необязательны — в ответе их нет; armed — только чтение
-Device(type=camera)	version	cam/cameras + rec/recordings + det/units	склейка c<камера-потоки>.r<rec…>.d<det…> индексов хранилища частей и надгробий (V/11.4 Н1.1)	read	ADR-0094 доп. (4) п. 1; индекс — в элементе списка по B4 (после Go GREEN 01–10)
+Device(type=camera)	version	cam/cameras + rec/recordings + det/units	склейка c<камера-потоки>.r<rec…>.d<det…> индексов хранилища частей и надгробий (V/11.4 Н1.1)	read	ADR-0094 доп. (4) п. 1; индекс — в элементе списка по B4 
 Device(type=det)	—	det/units	—	both	детектор камеры (V/04.1), ключ <cam>-<kind>
 Device(type=det)	id	det/units	UUID device:det/units/<cam>-<kind>	read
 Device(type=det)	type	—	"det"	const
@@ -61,7 +61,7 @@ Device(type=det)	sensitivity	det/units	params, ключ sensitivity JSON-объ�
 Device(type=det)	builtin	—	false	const	детектор устройства ≈ detedge — не переводится сейчас
 Device(type=det)	fault, subtype, short, identifier, ip, port, mac, vendor, model, login, hasPassword, password, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, configMode, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, rtspUrl, children, overlayDelayMs, overlayDurationSec	—	—	none	у детектора нет
 Device(type=det)	disabledByRuleId, disabledByRuleAt, armed	—	—	none	как у камеры: не объявляется, в ответе полей нет
-Device(type=det)	version	det/units	индекс хранилища строки	read	в элементе списка по B4 (после Go GREEN 01–10); If-Match сверяет его (V/11.4)
+Device(type=det)	version	det/units	индекс хранилища строки	read	в элементе списка по B4; If-Match сверяет его (V/11.4)
 Device(type=mic|spk|sensor|relay|storage|ipsrv|channel|eventsrc|acfa*|export|email|sms)	—	—	—	none	таких устройств нет (deviceTypes — camera, det): создание — 422 NOT_SUPPORTED, field type
 Folder	—	—	—	none	папки как записи — ADR-0094 C; folderId создания не null — NOT_SUPPORTED, field folderId
 Archive	—	rec/volumes	—	both	хранилище = один том (строка таблицы rec/volumes) и записи на нём; том edge не отдаётся
@@ -75,7 +75,7 @@ Archive	domainId	кластер	UUID domain:<CLUSTER>	read	при создани
 Archive	retentionDays	rec/recordings	наибольший retention_days записей с home = том; записей нет — 30 (умолчание записи)	both	запись — retention_days всех записей тома одним пакетом; 0 — 422 NOT_SUPPORTED; при создании — только умолчание (V/11.3 Н1.3)
 Archive	encrypted	—	false	const	шифрования тома нет (features без archiveEncryption): true — 422 NOT_SUPPORTED
 Archive	firstVolume	rec/volumes	поля тома той же строки	write	только при создании: том = то же хранилище (строки Volume)
-Archive	version	rec/volumes + rec/recordings	склейка v<индекс тома>.r<индексы записей тома> (V/11.4 Н1.1)	read	в элементе списка по B4 (после Go GREEN 01–10); If-Match сверяет её
+Archive	version	rec/volumes + rec/recordings	склейка v<индекс тома>.r<индексы записей тома> (V/11.4 Н1.1)	read	в элементе списка по B4; If-Match сверяет её
 Volume	—	rec/volumes	—	both	том = то же хранилище
 Volume	id	rec/volumes	UUID volume:rec/volumes/<name>	read
 Volume	archiveId	rec/volumes	UUID archive:rec/volumes/<name>	read	хранилище той же строки
@@ -87,7 +87,7 @@ Volume	login, keyId	rec/volumes	access_key	both	block — логин NAS, object
 Volume	hasPassword, hasSecret	rec/volumes	access_secret	read	true — секрет задан; значение не отдаётся
 Volume	password, secret	rec/volumes	access_secret	write	нет поля — не трогать; null или "" — снять; строка — новый (V/11.3 Н1.3)
 Volume	mode, dir, file, bucket, region, path, host, port, proto, endpoint, style, account	rec/volumes	url	both	части адреса url тома
-Volume	version	rec/volumes	индекс хранилища строки	read	в элементе списка по B4 (после Go GREEN 01–10); If-Match сверяет его (V/11.4)
+Volume	version	rec/volumes	индекс хранилища строки	read	в элементе списка по B4; If-Match сверяет его (V/11.4)
 Rule, RuleFire, RuleVersion, Schedule, DayGroup, Modes, ObjectMode, MaintenanceWindow	—	—	—	none	«Автоматизация» не объявляется (ADR-0094 доп. (7)): операции — 404 NO_ROUTE (V/11.2); отображение — вторая очередь C
 JournalEvent	—	GET /events	—	read	строка события (договор журнала событий)
 JournalEvent	id	GET /events	UUID event:<id строки события>	read
@@ -96,7 +96,7 @@ JournalEvent	category	GET /events	журнал и класс	read	audit ↔ жу
 JournalEvent	text	GET /events	kind и of	read	«<kind> <of>»
 Me	userId	GET /session	UUID user:<user>	read
 Me	login, name	GET /session	user	read	кто я
-Me	serverTime, timezone	GET /session	server_time, timezone	read	норма платформы B6 — после Go GREEN 01–10
+Me	serverTime, timezone	GET /session	server_time, timezone	read	норма платформы B6
 Reference	—	GET /manifest	перечисления полей	read
 Reference	deviceModels	cam/devices	[{vendor, models}] по строкам устройств	read
 Reference	deviceKinds	—	[{"group": "video", "view": "camera", "types": ["camera", "det"]}]	const	что можно добавить — виды deviceTypes
