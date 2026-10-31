@@ -821,3 +821,7 @@ a95_calls_domain_write	refused
 a95_ops_step_door_route	refused
 a95_calls_ops_other	refused
 a95_calls_ops_undeclared	refused
+a95_ops_step_over_route	refused
+a95_ops_step_operations	refused
+a95_ops_route_operations	refused
+a95_ops_door_route_operations	refused

@@ -1262,10 +1262,10 @@
   {
    "no": 133,
    "path": "door.pass.operations.step",
-   "relation": "split(. \"/\" 0) not in values(door.routes[]) | values(door.routes[].name) | {@unit.rows, where}",
+   "relation": "split(. \"/\" 0) not in values(door.routes[]) | values(door.routes[].name) | {@unit.rows, where, operations} | first(door.pass.routes[])",
    "class": "reference",
    "norm": "ADR-0095 §8; P/02.1 Н1.4; P/06.9 Н1.1",
-   "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"operations\" in doc[\"door\"][\"pass\"]) ? ((type(doc[\"door\"][\"pass\"][\"operations\"]) == map && \"step\" in doc[\"door\"][\"pass\"][\"operations\"]) ? ((type(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]) == string && ((\"routes\" in doc[\"door\"] && type(doc[\"door\"][\"routes\"]) == list && dyn(doc[\"door\"][\"routes\"]).exists(e3, (type(e3) == string && e3 == dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).split(\"/\")[0]) || (type(e3) == map && \"name\" in e3 && e3[\"name\"] == dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).split(\"/\")[0]))) || (type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"rows\" in doc[\"unit\"] && doc[\"unit\"][\"rows\"] == dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).split(\"/\")[0]) || \"where\" == dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).split(\"/\")[0])) ? [{\"p\": [\"door\", \"pass\", \"operations\", \"step\"]}] : []) : []) : []) : []) : [])",
+   "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"operations\" in doc[\"door\"][\"pass\"]) ? ((type(doc[\"door\"][\"pass\"][\"operations\"]) == map && \"step\" in doc[\"door\"][\"pass\"][\"operations\"]) ? ((type(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]) == string && ((\"routes\" in doc[\"door\"] && type(doc[\"door\"][\"routes\"]) == list && dyn(doc[\"door\"][\"routes\"]).exists(e3, (type(e3) == string && e3 == dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).split(\"/\")[0]) || (type(e3) == map && \"name\" in e3 && e3[\"name\"] == dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).split(\"/\")[0]))) || (type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"rows\" in doc[\"unit\"] && doc[\"unit\"][\"rows\"] == dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).split(\"/\")[0]) || \"where\" == dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).split(\"/\")[0] || \"operations\" == dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).split(\"/\")[0] || (type(doc[\"door\"][\"pass\"][\"routes\"]) == list && dyn(doc[\"door\"][\"pass\"][\"routes\"]).exists(e4, type(e4) == string && e4.split(\"/\")[0] == dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).split(\"/\")[0])))) ? [{\"p\": [\"door\", \"pass\", \"operations\", \"step\"]}] : []) : []) : []) : []) : [])",
    "own": []
   },
   {
@@ -1275,6 +1275,24 @@
    "class": "reference",
    "norm": "ADR-0095 §8; P/02.1 Н1.4; P/06.9 Н1.1",
    "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"calls\" in doc[\"door\"][\"pass\"]) ? (type(doc[\"door\"][\"pass\"][\"calls\"]) == list ? dyn(doc[\"door\"][\"pass\"][\"calls\"]).transformList(i1, e2, ((type(e2) == string && size((e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")) == 2 && (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1] == \"operations\" && !(\"name\" in doc && (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[0] == doc[\"name\"] && \"operations\" in doc[\"door\"][\"pass\"])) ? [{\"p\": [\"door\", \"pass\", \"calls\", i1]}] : [])) : []) : []) : []) : [])",
+   "own": []
+  },
+  {
+   "no": 135,
+   "path": "door.pass.routes[]",
+   "relation": "when door.pass.operations : split(. \"/\" 0) != operations",
+   "class": "reference",
+   "norm": "ADR-0095 §8; P/02.1 Н1.4; P/06.9 Н1.1",
+   "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"operations\" in doc[\"door\"][\"pass\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"routes\" in doc[\"door\"][\"pass\"] && type(doc[\"door\"][\"pass\"][\"routes\"]) == list) ? dyn(doc[\"door\"][\"pass\"][\"routes\"]).transformList(i1, e2, ((type(e2) == string && e2.split(\"/\")[0] == \"operations\") ? [{\"p\": [\"door\", \"pass\", \"routes\", i1]}] : [])) : []) : []) : []) : [])",
+   "own": []
+  },
+  {
+   "no": 136,
+   "path": "door.routes[]",
+   "relation": "when door.pass.operations : . != operations, .name != operations",
+   "class": "reference",
+   "norm": "ADR-0095 §8; P/02.1 Н1.4; P/06.9 Н1.1",
+   "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"operations\" in doc[\"door\"][\"pass\"]) ? ((\"routes\" in doc[\"door\"] && type(doc[\"door\"][\"routes\"]) == list) ? dyn(doc[\"door\"][\"routes\"]).transformList(i1, e2, (((type(e2) == string && e2 == \"operations\") || (type(e2) == map && \"name\" in e2 && e2[\"name\"] == \"operations\")) ? [{\"p\": [\"door\", \"routes\", i1]}] : [])) : []) : []) : []) : [])",
    "own": []
   }
  ],
