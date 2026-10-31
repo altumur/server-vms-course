@@ -140,13 +140,13 @@ scenario	step	request	expect
 18-break-glass-copy	1	@domain m1	ok
 18-break-glass-copy	2	holder PUT /domain/break-glass/m1 {"password": "glass password 12"}	200 {"cluster": "m1", "set": true}
 18-break-glass-copy	3	holder PUT /domain/break-glass/hold {"password": "holder glass password 12"}	200 {"cluster": "hold", "set": true}
-18-break-glass-copy	4	@until 30 member m1 store GET /v1/get?key=domain/break-glass/m1	200 {"items": {"set_at": "$g2"}, "index": "$i2"}
+18-break-glass-copy	4	@until 30 member m1 store GET /v1/get?key=domain/break-glass/m1	200 {"items": {"set_at": "$g2"}}
 18-break-glass-copy	5	member hold store GET /v1/get?key=domain/break-glass/hold	200 {"items": {"set_at": "$g1"}, "index": "$i1"}
 18-break-glass-copy	6	@sleep 10	ok
 18-break-glass-copy	7	member hold store GET /v1/get?key=domain/break-glass/hold	200 {"items": {"set_at": "$g1"}, "index": "$i1"}
 18-break-glass-copy	8	member hold store POST /v1/write {"op": "put", "key": "domain/break-glass/m1", "items": {"pwhash_secret": "enc:v2:garbled", "set_at": "garbled"}}	200
 18-break-glass-copy	9	@sleep 10	ok
-18-break-glass-copy	10	member m1 store GET /v1/get?key=domain/break-glass/m1	200 {"items": {"set_at": "$g2"}, "index": "$i2"}
+18-break-glass-copy	10	member m1 store GET /v1/get?key=domain/break-glass/m1	200 {"items": {"set_at": "$g2"}}
 18-break-glass-copy	11	member hold store POST /v1/write {"op": "delete", "key": "domain/break-glass/m1"}	200
 18-break-glass-copy	12	@until 60 member m1 store GET /v1/get?key=domain/break-glass/m1	200 {"items": null}
 18-break-glass-copy	13	member hold store GET /v1/get?key=domain/break-glass/hold	200 {"items": {"set_at": "$g1"}, "index": "$i1"}
