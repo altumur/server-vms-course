@@ -114,6 +114,18 @@ roles	409	too many admins	/assigned	8.4 Н4
 roles	413	too large	-	8.4 Н4
 roles	503	unavailable	-	8.4 Н4
 batch	400	bad batch	-	8.4 Н4
+batch	400	bad name	/writes/<i>	8.4 Н4
+batch	400	bad line	/writes/<i>	8.4 Н4
+batch	400	unknown member	/writes/<i>	8.4 Н4
+batch	400	grant too wide	/writes/<i>	8.4 Н4
+batch	400	unknown subject	/writes/<i>	8.4 Н4
+batch	409	exists	/writes/<i>	8.4 Н4
+batch	409	being deleted	/writes/<i>	8.4 Н4
+batch	409	builtin	/writes/<i>	8.4 Н4
+batch	409	name taken	/writes/<i>	8.4 Н4
+batch	503	names unknown	-	8.4 Н4
+groups	409	being deleted	/members/<i>	8.4 Н4
+roles	409	being deleted	/assigned/<i>	8.4 Н4
 batch	403	admin only	/writes/<i>	8.4 Н4
 batch	409	last admin	-	8.4 Н4
 batch	409	password set by a non-admin	/writes/<i>	8.4 Н4

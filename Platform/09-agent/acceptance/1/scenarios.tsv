@@ -233,7 +233,10 @@ scenario	step	request	expect
 27-roles-copy	3	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	201
 27-roles-copy	4	holder POST /domain/roles {"name": "ops", "assigned": [{"person": "ann", "until": 0}, {"person": "bob", "until": 0}]}	201
 27-roles-copy	5	holder POST /domain/roles {"name": "other", "assigned": [{"person": "ann", "until": 0}]}	201
-27-roles-copy	6	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "role:ops", "cap": "view", "scope": "*"}]}	200
-27-roles-copy	7	holder PUT /domain/users/bob {"disabled": true}	200
-27-roles-copy	8	@until 30 member m1 store GET /v1/get?key=domain/roles	200 {"items": {"assigned": "~\"ops\":[{\"person\":\"ann\"", "admin_at": "~root"}}
-27-roles-copy	9	member m1 store GET /v1/get?key=domain/roles	200 {"items": {"assigned": "!contains bob"}}
+27-roles-copy	6	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "bob", "cap": "edit", "scope": "*"}, {"subject": "role:ops", "cap": "view", "scope": "*"}]}	200
+27-roles-copy	7	@until 30 member m1 store GET /v1/get?key=domain/roles	200 {"items": {"assigned": "~{\"person\":\"bob\"", "admin_at": "~root"}}
+27-roles-copy	8	holder PUT /domain/users/bob {"disabled": true}	200
+27-roles-copy	9	@until 30 member m1 store GET /v1/get?key=domain/roles	200 {"items": {"assigned": "!contains bob"}}
+27-roles-copy	10	member m1 store GET /v1/get?key=domain/roles	200 {"items": {"assigned": "~\"ops\":[{\"person\":\"ann\""}}
+27-roles-copy	11	@person ann ann password 1	ok
+27-roles-copy	12	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "*", "role": "ops"}]}

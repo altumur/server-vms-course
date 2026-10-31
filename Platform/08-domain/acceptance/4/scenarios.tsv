@@ -212,7 +212,7 @@ scenario	step	request	expect
 22-sub-of-each-check	7	member m1 console GET /drain	403 {"error": "denied"}
 22-sub-of-each-check	8	member m1 console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1-m1", "fields": {"start": 5}, "cas": "$a"}]}	403 {"error": "denied"}
 22-sub-of-each-check	9	member m1 console POST /marks {"unit": "testsub/c1-m1", "note": "sub testsub"}	403 {"error": "denied"}
-22-sub-of-each-check	10	@person -	ok
+22-sub-of-each-check	10	@person root w2c test root password	ok
 22-sub-of-each-check	11	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "sub": "testsub2", "scope": "unit:testsub/c1-m1"}, {"subject": "ann", "cap": "admin", "sub": "testsub", "scope": "unit:testsub/c1-m1"}, {"subject": "ann", "cap": "edit", "sub": "platform", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
 22-sub-of-each-check	12	@person ann ann password 1	ok
 22-sub-of-each-check	13	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "testsub", "scope": "unit:testsub/c1-m1"}, {"cap": "admin", "sub": "testsub2", "scope": "unit:testsub/c1-m1"}, {"cap": "edit", "sub": "platform", "scope": "unit:testsub/c1-m1"}]}
@@ -225,7 +225,7 @@ scenario	step	request	expect
 23-events-by-sub	5	@person ann ann password 1	ok
 23-events-by-sub	6	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "sub": "testsub2", "scope": "unit:testsub/c1"}]}
 23-events-by-sub	7	member m1 console GET /events	200 {"events": [], "truncated": 0, "complete": true}
-23-events-by-sub	8	@person -	ok
+23-events-by-sub	8	@person root w2c test root password	ok
 23-events-by-sub	9	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "sub": "testsub", "scope": "unit:testsub/c1"}]}	200 {"cluster": "m1"}
 23-events-by-sub	10	@person ann ann password 1	ok
 23-events-by-sub	11	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "sub": "testsub", "scope": "unit:testsub/c1"}]}
@@ -246,7 +246,7 @@ scenario	step	request	expect
 24-roles-and-groups	14	@person ann ann password 1	ok
 24-roles-and-groups	15	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "none", "scope": "unit:testsub/c1-m1", "role": "ops"}, {"cap": "view", "scope": "*", "role": "ops"}]}
 24-roles-and-groups	16	holder POST /domain/roles {"name": "x"}	403 {"error": "denied"}
-24-roles-and-groups	17	@person -	ok
+24-roles-and-groups	17	@person root w2c test root password	ok
 24-roles-and-groups	18	holder DELETE /domain/users/ann	200 {"user": "ann", "deleted": true}
 24-roles-and-groups	19	holder GET /domain/groups	200 {"groups": [{"name": "g1", "members": []}]}
 24-roles-and-groups	20	holder POST /domain/users {"name": "ann", "password": "ann password 2"}	201 {"user": "ann"}
@@ -262,7 +262,7 @@ scenario	step	request	expect
 25-person-card-and-term	7	holder GET /domain/users	200 {"users": [{"name": "ann", "title": "Ann", "email": "ann@example.test"}, {"name": "bob", "email": "@absent"}, {"name": "root", "email": "@absent"}]}
 25-person-card-and-term	8	holder GET /domain/roles	200 {"roles": [{"name": "admin"}]}
 25-person-card-and-term	9	holder POST /domain/roles {"name": "x"}	403 {"error": "denied"}
-25-person-card-and-term	10	@person -	ok
+25-person-card-and-term	10	@person root w2c test root password	ok
 25-person-card-and-term	11	holder PUT /domain/users/bob {"expires": 1}	200 {"user": "bob"}
 25-person-card-and-term	12	@until 20 member hold store GET /v1/get?key=domain/disabled	200 {"items": {"names": "[\"bob\"]"}}
 25-person-card-and-term	13	signer POST /api/login {"user": "bob", "password": "bob password 1"}	401 {"error": "refused", "detail": "wrong user or password"}
@@ -280,13 +280,12 @@ scenario	step	request	expect
 26-last-admin-by-role	10	holder PUT /domain/users/root {"expires": 0}	200 {"user": "root"}
 26-last-admin-by-role	11	holder POST /domain/groups {"name": "g1", "members": ["root"]}	201 {"group": "g1"}
 26-last-admin-by-role	12	holder PUT /domain/roles/admin {"assigned": [{"group": "g1", "until": 0}]}	200 {"role": "admin"}
-26-last-admin-by-role	13	@sleep 2	ok
-26-last-admin-by-role	14	@person root w2c test root password	ok
-26-last-admin-by-role	15	holder PUT /domain/groups/g1 {"members": []}	409 {"error": "last admin"}
-26-last-admin-by-role	16	holder DELETE /domain/groups/g1	409 {"error": "last admin"}
-26-last-admin-by-role	17	holder DELETE /domain/roles/admin	409 {"error": "builtin"}
-26-last-admin-by-role	18	holder PUT /domain/roles/admin {"title": "x"}	409 {"error": "builtin"}
-26-last-admin-by-role	19	holder POST /domain/roles {"name": "admin"}	409 {"error": "exists", "field": "/name"}
+26-last-admin-by-role	13	@person root w2c test root password	ok
+26-last-admin-by-role	14	holder PUT /domain/groups/g1 {"members": []}	409 {"error": "last admin"}
+26-last-admin-by-role	15	holder DELETE /domain/groups/g1	409 {"error": "last admin"}
+26-last-admin-by-role	16	holder DELETE /domain/roles/admin	409 {"error": "builtin"}
+26-last-admin-by-role	17	holder PUT /domain/roles/admin {"title": "x"}	409 {"error": "builtin"}
+26-last-admin-by-role	18	holder POST /domain/roles {"name": "admin"}	409 {"error": "exists", "field": "/name"}
 27-manager-of-people	1	@domain	ok
 27-manager-of-people	2	holder POST /domain/users {"name": "mgr", "password": "mgr password 1"}	201 {"user": "mgr"}
 27-manager-of-people	3	holder POST /domain/roles {"name": "users", "assigned": [{"person": "mgr", "until": 0}]}	201 {"role": "users"}
@@ -307,13 +306,14 @@ scenario	step	request	expect
 27-manager-of-people	18	holder PUT /domain/users/bob {"title": "Bob again"}	503 {"error": "unavailable"}
 27-manager-of-people	19	member hold store POST /v1/write {"op": "put", "key": "domain/roles/admin", "items": {"name": "admin", "title": "", "comment": "", "assigned": "[{\"person\":\"root\",\"until\":0,\"at\":1}]", "at": "1", "by": "root"}}	200
 27-manager-of-people	20	holder PUT /domain/users/bob {"title": "Bob again"}	200 {"user": "bob"}
+27-manager-of-people	21	holder PUT /domain/users/root {"expires": "x"}	400 {"error": "bad body"}
 28-password-set-by-non-admin	1	@domain	ok
 28-password-set-by-non-admin	2	holder POST /domain/users {"name": "mgr", "password": "mgr password 1"}	201 {"user": "mgr"}
 28-password-set-by-non-admin	3	holder POST /domain/roles {"name": "users", "assigned": [{"person": "mgr", "until": 0}]}	201 {"role": "users"}
 28-password-set-by-non-admin	4	holder PUT /domain/grants/domain {"lines": [{"subject": "role:users", "cap": "admin", "scope": "*"}]}	200 {"cluster": "domain"}
 28-password-set-by-non-admin	5	@person mgr mgr password 1	ok
 28-password-set-by-non-admin	6	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	201 {"user": "bob"}
-28-password-set-by-non-admin	7	@person -	ok
+28-password-set-by-non-admin	7	@person root w2c test root password	ok
 28-password-set-by-non-admin	8	holder PUT /domain/roles/admin {"assigned": [{"person": "bob", "until": 0}, {"person": "root", "until": 0}]}	409 {"error": "password set by a non-admin", "field": "/assigned/0"}
 28-password-set-by-non-admin	9	holder POST /domain/groups {"name": "g1", "members": ["root"]}	201 {"group": "g1"}
 28-password-set-by-non-admin	10	holder PUT /domain/roles/admin {"assigned": [{"group": "g1", "until": 0}, {"person": "root", "until": 0}]}	200 {"role": "admin"}
@@ -332,7 +332,7 @@ scenario	step	request	expect
 29-domain-batch	10	holder POST /domain/batch {"writes": [{"kind": "user", "op": "put", "name": "bob", "cas": "$b", "fields": {"title": "Bob"}}, {"kind": "role", "op": "put", "name": "admin", "cas": "$r", "fields": {"assigned": [{"person": "root", "until": 0}]}}]}	200 {"written": 1}
 29-domain-batch	11	holder POST /domain/batch {"writes": [{"kind": "user", "op": "put", "name": "bob", "cas": "$b", "fields": {"title": "Bob"}}, {"kind": "role", "op": "put", "name": "admin", "cas": "$r", "fields": {"assigned": [{"person": "root", "until": 0}]}}]}	412 {"error": "conflict", "field": "/writes/0"}
 29-domain-batch	12	holder POST /domain/batch {"writes": []}	400 {"error": "bad batch"}
-29-domain-batch	13	@person -	ok
+29-domain-batch	13	@person root w2c test root password	ok
 29-domain-batch	14	holder GET /domain/roles	200 {"roles": [{"name": "admin", "index": "$r"}, {"name": "users"}]}
 29-domain-batch	15	holder POST /domain/batch {"writes": [{"kind": "role", "op": "put", "name": "admin", "cas": "$r", "fields": {"assigned": []}}]}	409 {"error": "last admin"}
 29-domain-batch	16	holder POST /domain/batch {"writes": [{"kind": "role", "op": "put", "name": "admin", "cas": "$r", "fields": {"assigned": [{"person": "mgr", "until": 0}, {"person": "root", "until": 0}]}}]}	200 {"written": 1}
@@ -348,13 +348,13 @@ scenario	step	request	expect
 30-folder-rights	10	member m1 console POST /folders {"name": "top"}	403 {"error": "denied"}
 30-folder-rights	11	member m1 console PUT /folders/$g {"name": "x"}	403 {"error": "denied"}
 30-folder-rights	12	member m1 console PUT /folders/$f {"members": ["testsub/counters/c1-m1"]}	403 {"error": "denied"}
-30-folder-rights	13	@person -	ok
+30-folder-rights	13	@person root w2c test root password	ok
 30-folder-rights	14	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "sub": "platform", "scope": "folder:$f"}, {"subject": "ann", "cap": "admin", "sub": "testsub", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
 30-folder-rights	15	@person ann ann password 1	ok
 30-folder-rights	16	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "platform"}, {"cap": "admin", "sub": "testsub"}]}
 30-folder-rights	17	member m1 console PUT /folders/$f {"members": ["testsub/counters/c1-m1"]}	200 {"members": ["testsub/counters/c1-m1"]}
 30-folder-rights	18	member m1 console PUT /folders/$g {"members": []}	403 {"error": "denied"}
-30-folder-rights	19	@person -	ok
+30-folder-rights	19	@person root w2c test root password	ok
 30-folder-rights	20	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "sub": "platform", "scope": "folder:$f"}]}	200 {"cluster": "m1"}
 30-folder-rights	21	@person ann ann password 1	ok
 30-folder-rights	22	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "platform"}]}

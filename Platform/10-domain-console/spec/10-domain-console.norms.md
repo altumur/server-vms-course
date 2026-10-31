@@ -131,7 +131,7 @@ TLS, порт (решение «Архитектора» 2026-10-25, C10-START83
 
 | Дверь | Кто | Право | Успех | Отказы |
 |---|---|---|---|---|
-| GET `/domain/grants` | консоль домена | view | 200 `{grants: {<кластер>: [line…]}}` | 401/403 |
+| GET `/domain/grants` | консоль домена | view | 200 `{grants: {<кластер>: [line…]}, indexes: {<кластер>: <index>}}`; `index` — индекс хранилища строки, значение `cas` двери `POST /domain/batch` (P/08.4 Н2); нечитаемая строка — ключа нет | 401/403 |
 
 Строка гранта `line` — [глава 8.4](../../08-domain/spec/08.4-domain.norms.md) Н1.3; правку `PUT /domain/grants/<кластер>`
 консоль передаёт процессу (Н1.3).
@@ -251,7 +251,7 @@ server:
 двери; вход `disabled` функции `may` — строка `domain/disabled` у держателя (P/06.3 Н1.3 «Данные», М11/9 Н1.5 `cluster`; есть, но не
 читается — правило «Нечитаемая строка», 503 `unavailable`); вход `roles` — строки `domain/roles/*`, `domain/groups/*` держателя, `as_of` — `null` (P/08.4 Н1.3б `roles_at_holder`;
 шаг 4а ADR-0100 §1; нечитаемая `domain/roles/admin` или группа из её `assigned` — 503, если прямые строки не разрешили); вход `iat` — токена. Строка управляющего (P/08.4 Н1.3в
-`manager`) служит сторожевой только у дверей `gives`: `/domain/users…`, `/domain/groups…`, `/domain/roles…`, `/domain/batch`, `GET /domain/grants`, `PUT /domain/grants/<кластер>`; у прочих её группа в `may` не считается. Подсистемы у дверей домена нет: `sub` — `null`.
+`manager`) служит сторожевой только у дверей `gives`: `/domain/users…`, `/domain/groups…`, `/domain/roles…`, `/domain/batch`, `GET /domain/grants`, `PUT /domain/grants/<кластер>`, а также `/domain/break-glass…`: у этой двери группа считается только затем, чтобы запрос дошёл до процесса и тот ответил 403 `admin only` (P/08.4 Н1.5, Н1.3в `denies`); у прочих её группа в `may` не считается. Подсистемы у дверей домена нет: `sub` — `null`.
 
 Строки `body_unit` и `session` — [договор сторожевой и передачи](../../common/contracts/gate-and-pass.md) «Права по телу» (перенесены; догадка стадии C GP-G05, решение «Архитектора» 2026-10-23).
 

@@ -873,6 +873,9 @@ paths:
       responses:
         '201':
           description: Папка создана; при повторе тем же ключом — сохранённый ответ.
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           content:
             application/json:
               schema:
@@ -939,6 +942,9 @@ paths:
       responses:
         '200':
           description: Живая папка.
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           content:
             application/json:
               schema:
@@ -971,6 +977,9 @@ paths:
       responses:
         '200':
           description: Папка после записи; записи без изменений нет, индекс тот же.
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           content:
             application/json:
               schema:
@@ -1033,6 +1042,9 @@ paths:
       responses:
         '200':
           description: Папка удалена.
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           content:
             application/json:
               schema:
@@ -5787,7 +5799,7 @@ components:
       name: If-Match
       in: header
       required: false
-      description: Индекс строки папки (глава 6.8 Н2); форма заголовка — ADR-0094 B4, ещё не внесено.
+      description: Индекс строки папки в двойных кавычках, как отдал ETag (глава 6.8 Н2). revision у папки нет, иное значение — 400 If-Match is a unit revision.
       schema:
         type: string
     RepeatKey:
@@ -7843,7 +7855,7 @@ components:
       description: Отказ дверей папок; слова — refusal-words.tsv, строки folders и *.
     FolderMoved:
       type: object
-      required: [detail, error, field, folder]
+      required: [detail, error, field]
       additionalProperties: false
       properties:
         detail:
@@ -7852,7 +7864,7 @@ components:
           const: folder moved
         field:
           const: /index
-        folder:
+        row:
           $ref: '#/components/schemas/Folder'
       description: Глава 6.8 Н4; тело 412 с текущей строкой — ADR-0094 B4 (ещё не внесено).
     OperationInput:

@@ -2,7 +2,7 @@
 # input — вход команды may текстом JSON: grants — {lines} строки грантов (доверенный вход) или null; as_of — приём копии (null — строка держателя);
 # unit — null, "*" или {sub, id, labels, about?}; now — стенные секунды проверяющего. expect — подмножество вывода или «@exit 2» (вход не по форме).
 # Строки — входы приёмки М11/9 inputs/may-*.json, сц. 07 (снят переносом урока 8; may-24 — с labels: [], README).
-# Строка: case<TAB>input<TAB>expect<TAB>note. Строки may-27…may-105 — ADR-0097–ADR-0100: вход несёт sub, roles, unread, iat и chains; сухого прогона реализацией у них нет.
+# Строка: case<TAB>input<TAB>expect<TAB>note. Строки may-27…may-106 — ADR-0097–ADR-0100: вход несёт sub, roles, unread, iat и chains; сухого прогона реализацией у них нет.
 case	input	expect	note
 may-01-glass-without-grants	{"grants":null,"as_of":1759999990,"disabled":[],"user":"ann","glass":true,"cap":"admin","unit":"*","now":1760000000}	{"result":"allow"}	М11/09 сц. 07-may шаг 1
 may-02-disabled-with-grants	{"grants":{"lines":[{"subject":"ann","cap":"admin","scope":"*","until":0,"by":"root"}]},"as_of":1759999990,"disabled":["ann"],"user":"ann","glass":false,"cap":"view","unit":{"sub":"testsub","id":"c1","labels":["east","ground"]},"now":1760000000}	{"result":"deny","reason":"disabled"}	М11/09 сц. 07-may шаг 2
@@ -109,3 +109,4 @@ may-102-admin-token-at	{"grants":{"lines":[]},"as_of":1759999990,"disabled":[],"
 may-103-admin-iat-null	{"grants":{"lines":[]},"as_of":1759999990,"disabled":[],"user":"ann","glass":false,"cap":"view","unit":{"sub":"testsub","id":"c1","labels":[]},"now":1760000000,"roles":{"ann":[{"role":"admin","until":0,"at":1759999995}]}}	{"result":"allow"}	iat нет — сравнения нет
 may-104-line-role-admin-not-form	{"grants":{"lines":[{"subject":"role:admin","cap":"view","scope":"*","until":0,"by":"root"}]},"as_of":1759999990,"disabled":[],"user":"ann","glass":false,"cap":"view","unit":{"sub":"testsub","id":"c1","labels":[]},"now":1760000000}	@exit 2	строка role:admin — не по форме (ADR-0100 §1)
 may-105-iat-not-number	{"grants":{"lines":[{"subject":"ann","cap":"view","scope":"*","until":0,"by":"root"}]},"as_of":1759999990,"disabled":[],"user":"ann","glass":false,"cap":"view","unit":{"sub":"testsub","id":"c1","labels":[]},"now":1760000000,"iat":"x"}	@exit 2	iat не число и не null
+may-106-admin-same-second	{"grants":{"lines":[]},"as_of":1759999990,"disabled":[],"user":"ann","glass":false,"cap":"view","unit":{"sub":"testsub","id":"c1","labels":[]},"now":1760000000,"roles":{"ann":[{"role":"admin","until":0,"at":1759999990.4}]},"iat":1759999990.2}	{"result":"allow"}	iat и at в одной секунде, at с дробью: сравнение по целым секундам

@@ -160,6 +160,7 @@ folders	404	no such folder	-	6.8 Н4
 folders	404	no such parent	/parent	6.8 Н4
 folders	409	parent gone	/parent	6.8 Н4
 folders	409	in flight	-	6.8 Н4
+folders	400	If-Match is a unit revision	-	6.1 Н2 «Версии»
 folders	412	folder moved	/index	6.8 Н4
 folders	412	parent moved	-	6.8 Н4
 folders	413	row too large	-	6.8 Н4

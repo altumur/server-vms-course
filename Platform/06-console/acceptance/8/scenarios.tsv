@@ -22,13 +22,14 @@ scenario	step	request	expect
 02-members	7	PUT /folders/$f {"members": ["testsub/counters/c1"]}	200 {"members": ["testsub/counters/c1"], "index": "$k"}
 02-members	8	store GET /v1/get?key=platform/memberof/testsub/counters/c2	200 {"items": null}
 02-members	9	store GET /v1/get?key=platform/memberof/testsub/counters/c1	200 {"items": {"folders": "$f"}, "index": "$m"}
-02-members	10	@header If-Match: $i PUT /folders/$f {"name": "b"}	412 {"error": "folder moved", "field": "/index", "folder": {"id": "$f", "name": "a", "index": "$k"}}
+02-members	10	@header If-Match: "$i" PUT /folders/$f {"name": "b"}	412 {"error": "folder moved", "field": "/index", "row": {"id": "$f", "name": "a", "index": "$k"}}
 02-members	11	GET /folders/$f	200 {"name": "a", "index": "$k"}
-02-members	12	@header If-Match: $k PUT /folders/$f {"name": "b"}	200 {"name": "b"}
+02-members	12	@header If-Match: "$k" PUT /folders/$f {"name": "b"}	200 {"name": "b"}
 02-members	13	@key(k1) PUT /folders/$f {"name": "c"}	200 {"name": "c", "index": "$n"}
 02-members	14	@key(k1) PUT /folders/$f {"name": "c"}	200 {"name": "c", "index": "$n"}
 02-members	15	@key(k1) PUT /folders/$f {"name": "d"}	422 {"error": "key reused"}
 02-members	16	GET /folders/$f	200 {"name": "c", "index": "$n"}
+02-members	17	@header If-Match: 1 PUT /folders/$f {"name": "e"}	400 {"error": "If-Match is a unit revision"}
 03-bad-members	1	POST /counters {"name": "c1"}	201
 03-bad-members	2	POST /folders {"name": "a"}	201 {"id": "$f"}
 03-bad-members	3	PUT /folders/$f {"members": ["testsub/counters/c1", "testsub/counters/c1"]}	400 {"error": "bad member", "field": "/members/1"}
@@ -166,6 +167,14 @@ scenario	step	request	expect
 11-batch	11	store GET /v1/get?key=platform/folders/$p	200 {"index": "$t"}
 11-batch	12	POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c2", "fields": {"name": "c2"}, "cas": ""}, {"op": "put", "key": "platform/folders/$f", "fields": {"members": ["testsub/counters/c1", "testsub/counters/c2"]}, "cas": "$j"}, {"op": "put", "key": "platform/memberof/testsub/counters/c2", "fields": {"folders": ["$f"]}, "cas": ""}], "guards": [{"key": "platform/folders/$p", "index": "$t"}]}	409 {"error": "parent gone", "field": "/writes/1/key"}
 11-batch	13	store GET /v1/get?key=testsub/counters/c2	200 {"items": null}
+11-batch	14	POST /folders {"name": "a"}	201 {"id": "$fa", "index": "$ia"}
+11-batch	15	POST /folders {"name": "b"}	201 {"id": "$fb", "index": "$ib"}
+11-batch	16	POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c3", "fields": {"name": "c3"}, "cas": ""}, {"op": "put", "key": "platform/folders/$fa", "fields": {"members": ["testsub/counters/c3"]}, "cas": "$ia"}, {"op": "put", "key": "platform/memberof/testsub/counters/c3", "fields": {"folders": ["$fa"]}, "cas": ""}]}	200 {"written": 3}
+11-batch	17	GET /folders/$fa	200 {"members": ["testsub/counters/c3"], "index": "$ja"}
+11-batch	18	store GET /v1/get?key=platform/memberof/testsub/counters/c3	200 {"index": "$m"}
+11-batch	19	store GET /v1/get?key=testsub/counters/c3	200 {"index": "$u"}
+11-batch	20	POST /console/batch {"writes": [{"op": "put", "key": "platform/folders/$fa", "fields": {"members": []}, "cas": "$ja"}, {"op": "put", "key": "platform/folders/$fb", "fields": {"members": ["testsub/counters/c3"]}, "cas": "$ib"}, {"op": "put", "key": "platform/memberof/testsub/counters/c3", "fields": {"folders": ["$fb"]}, "cas": "$m"}], "guards": [{"key": "testsub/counters/c3", "index": "$u"}]}	200 {"written": 3}
+11-batch	21	store GET /v1/get?key=platform/memberof/testsub/counters/c3	200 {"items": {"folders": "$fb"}}
 12-doors	1	POST /counters {"name": "c1"}	201
 12-doors	2	POST /folders {"name": "a"}	201 {"id": "$f"}
 12-doors	3	PUT /folders/$f {"members": ["testsub/counters/c1"]}	200
