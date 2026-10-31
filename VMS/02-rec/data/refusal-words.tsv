@@ -1,0 +1,52 @@
+# Закрытый перечень слов error дверей урока V/02: главы 2.5, 2.7, 2.9 (ADR-0094 B5; замер С.5). Перенос из Н4, нормы не меняет: при расхождении источник — норма в столбце norm.
+# door — двери регистратора: archive /spans, /samples, /timeline, /segment; keeps POST /keeps/{keep}/verify; ingest POST /ingest/*. Дверь консоли — перечень P/06.
+# field — «-»: поля нет.
+door	code	error	field	norm
+archive	503	no volume open here	-	02.5 Н1.4, Н4
+archive	503	not_ready	-	02.5 Н2; P/02.4 Н1.10
+archive	503	busy	-	02.5 Н4: пределы, 503 держателя у .device.mp4
+archive	400	bad range	-	02.5 Н4
+archive	400	range too long	-	02.5 Н4
+archive	403	forbidden	-	02.5 Н4
+archive	404	nothing recorded	-	02.5 Н4
+archive	404	no device archive	-	02.5 Н4
+archive	404	no such path	-	02.5 Н4
+archive	404	no such segment	-	02.5 Н4
+archive	405	method not allowed	-	02.5 Н4
+archive	415	not playable	-	02.5 Н4
+archive	401	no_role	-	02.5 Н2, Н4
+archive	403	no_role	-	02.5 Н2, Н4
+archive	403	wrong_role	-	02.5 Н2, Н4
+archive	403	bad_chain	-	02.5 Н2, Н4
+keeps	403	forbidden	-	02.7 Н3
+keeps	404	no such keep	-	02.7 Н4
+keeps	404	no such recording in the keep	-	02.7 Н4
+keeps	400	bad range	-	02.7 Н4; 02.5 Н2
+keeps	405	method not allowed	-	02.7 Н4; 02.5 Н2
+keeps	409	cannot verify a keep whose interval is garbled	-	02.7 Н4
+keeps	503	cannot verify	-	02.7 Н4
+keeps	503	busy	-	02.7 Н4; 02.5 Н2, Н4
+keeps	503	not_ready	-	02.7 Н4; 02.5 Н2; P/02.4 Н1.10
+ingest	400	bad body	-	02.9 Н2, Н4
+ingest	403	not allowed for this call	-	02.9 Н2, Н4
+ingest	404	no such path	-	02.9 Н2, Н4
+ingest	405	method not allowed	-	02.9 Н2, Н4
+ingest	413	toolarge	-	02.9 Н4; P/01.1 Н2.1
+ingest	503	no_handler	-	02.9 Н1.3; P/03.4 Н1.7
+ingest	503	busy	-	02.9 Н4; P/03.4 Н1.7 door_limits
+ingest	503	not_ready	-	02.9 Н4; P/02.4 Н1.10
+ingest	503	unavailable	-	02.9 Н4; P/03.4 Н4
+ingest	503	no_revocations	-	02.9 Н4; P/03.4 Н4
+ingest	403	stream: other cluster	-	02.9 Н4
+ingest	401	no_role	-	02.9 Н1.3, Н4
+ingest	403	wrong_role	-	02.9 Н1.3, Н4
+ingest	403	wrong_audience	-	02.9 Н1.3; договор токена домена
+ingest	403	wrong_kind	-	P/03.4 Н4; договор токена домена
+ingest	403	bad_chain	-	P/03.4 Н1.7
+ingest	401	not_a_token	-	02.9 Н1.3: истёкший, отозванный; договор токена домена
+ingest	401	unknown_key	-	02.9 Н1.3: истёкший, отозванный; договор токена домена
+ingest	401	bad_signature	-	02.9 Н1.3: истёкший, отозванный; договор токена домена
+ingest	401	bad_claims	-	02.9 Н1.3: истёкший, отозванный; договор токена домена
+ingest	401	expired	-	02.9 Н1.3: истёкший, отозванный; договор токена домена
+ingest	401	future	-	02.9 Н1.3: истёкший, отозванный; договор токена домена
+ingest	401	revoked	-	02.9 Н1.3: истёкший, отозванный; договор токена домена
