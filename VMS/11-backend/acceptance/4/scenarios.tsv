@@ -1,0 +1,136 @@
+scenario	step	request	expect
+# Приёмка V/11.4: свой набор (ADR-0094 доп. (17), (18)): только то, чего не видят тесты consolem. Формат — README.
+01-person	1	@domain m1	ok
+01-person	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+01-person	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+01-person	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+01-person	5	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"done": [{"index": 0, "devices": [{"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "name": "c1"}], "folders": []}, {"index": 1, "devices": [{"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "name": "c2"}], "folders": []}], "failed": []}
+01-person	6	member m1 console POST /det/units {"name": "t1", "cam": "1", "kind": "tick", "labels": [], "alarms": ["tick"]}	201 {"id": "t1"}
+01-person	7	holder POST /domain/users {"name": "ann", "password": "ann-password-1"}	201 {"user": "ann"}
+01-person	8	holder POST /domain/users {"name": "bob", "password": "bob-password-1"}	201 {"user": "bob"}
+01-person	9	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "admin", "scope": "unit:cam/1", "sub": "cam"}, {"subject": "ann", "cap": "view", "scope": "unit:cam/2", "sub": "cam"}, {"subject": "ann", "cap": "view", "scope": "unit:cam/2", "sub": "det"}, {"subject": "ann", "cap": "view", "scope": "unit:cam/1", "sub": "rec"}, {"subject": "bob", "cap": "view", "scope": "unit:cam/2", "sub": "cam"}, {"subject": "root", "cap": "admin", "scope": "*"}]}	200 {"cluster": "m1"}
+01-person	10	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "version": "$vroot"}
+01-person	11	@person -	ok
+01-person	12	member m1 console2 GET /api/devices	401 {"code": "UNAUTHORIZED"}
+01-person	13	@person bob bob-password-1	ok
+01-person	14	@until 30 member m1 console GET /session	200 {"user": "bob"}
+01-person	15	member m1 console2 GET /api/devices	200 {"items": [{"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "name": "c2"}]}
+01-person	16	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	404 {"code": "NOT_FOUND"}
+01-person	17	@person ann ann-password-1	ok
+01-person	18	@until 30 member m1 console GET /session	200 {"user": "ann"}
+01-person	19	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "version": "$vann"}
+01-person	20	ASSERT $vroot != $vann	
+01-person	21	member m1 console2 GET /api/devices/8b99c4f9-f9f1-5926-ab12-5925acb99a02	200 {"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "version": "$v2"}
+01-person	22	member m1 console2 @header If-Match: "$v2" PATCH /api/devices/8b99c4f9-f9f1-5926-ab12-5925acb99a02 {"name": "чужая"}	403 {"code": "PERMISSION_DENIED"}
+01-person	23	member m1 console2 POST /api/devices {"idempotencyKey": "group-two", "items": [{"device": {"type": "camera", "name": "c3", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"done": [], "failed": [{"index": 0, "code": "PERMISSION_DENIED"}]}
+01-person	24	@person root w2c test root password	ok
+01-person	25	@until 30 member m1 console GET /session	200 {"user": "root"}
+01-person	26	member m1 console2 @header If-Match: "$vann" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"name": "c1a"}	412 {"code": "VERSION_MISMATCH", "current": {"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "name": "c1"}}
+01-person	27	member m1 console2 GET /api/devices	200 {"items": [{"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "name": "c1"}, {"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "name": "c2"}]}
+02-person-bulk	1	@domain m1	ok
+02-person-bulk	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+02-person-bulk	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+02-person-bulk	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+02-person-bulk	5	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c3", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"failed": []}
+02-person-bulk	6	holder POST /domain/users {"name": "ann", "password": "ann-password-1"}	201 {"user": "ann"}
+02-person-bulk	7	holder POST /domain/users {"name": "bob", "password": "bob-password-1"}	201 {"user": "bob"}
+02-person-bulk	8	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "admin", "scope": "unit:cam/1", "sub": "cam"}, {"subject": "ann", "cap": "admin", "scope": "unit:cam/3", "sub": "cam"}, {"subject": "ann", "cap": "view", "scope": "unit:cam/2", "sub": "cam"}, {"subject": "bob", "cap": "view", "scope": "unit:cam/2", "sub": "cam"}, {"subject": "root", "cap": "admin", "scope": "*"}]}	200 {"cluster": "m1"}
+02-person-bulk	9	@person ann ann-password-1	ok
+02-person-bulk	10	@until 30 member m1 console GET /session	200 {"user": "ann"}
+02-person-bulk	11	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$v1"}
+02-person-bulk	12	member m1 console2 GET /api/devices/8b99c4f9-f9f1-5926-ab12-5925acb99a02	200 {"version": "$v2"}
+02-person-bulk	13	member m1 console2 GET /api/devices/6a35f2a7-c9e9-5942-a4a4-5c242851765a	200 {"version": "$v3"}
+02-person-bulk	14	member m1 console2 POST /api/devices/update {"idempotencyKey": "group-upd", "items": [{"deviceId": "068df1b2-b153-5712-bb0f-06efd7b21699", "version": "$v1", "set": {"name": "c1a"}}, {"deviceId": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "version": "$v2", "set": {"name": "чужая"}}]}	200 {"done": [{"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "name": "c1a"}], "failed": [{"deviceId": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "code": "PERMISSION_DENIED"}]}
+02-person-bulk	15	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$v1b"}
+02-person-bulk	16	member m1 console2 POST /api/operations {"idempotencyKey": "group-op1", "items": [{"targetId": "068df1b2-b153-5712-bb0f-06efd7b21699", "set": {"name": "c1b"}}, {"targetId": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "set": {"name": "чужая"}}], "expectedVersions": {"068df1b2-b153-5712-bb0f-06efd7b21699": "$v1b", "8b99c4f9-f9f1-5926-ab12-5925acb99a02": "$v2"}}	202 {"id": "$op"}
+02-person-bulk	17	@until 30 member m1 console2 GET /api/operations/$op	200 {"state": "done", "items": [{"index": 0, "state": "ok"}, {"index": 1, "state": "fail", "code": "PERMISSION_DENIED"}]}
+02-person-bulk	18	@person bob bob-password-1	ok
+02-person-bulk	19	@until 30 member m1 console GET /session	200 {"user": "bob"}
+02-person-bulk	20	member m1 console2 GET /api/operations/$op	404 {"code": "NOT_FOUND"}
+02-person-bulk	21	@person ann ann-password-1	ok
+02-person-bulk	22	@until 30 member m1 console GET /session	200 {"user": "ann"}
+02-person-bulk	23	member m1 console2 POST /api/objects/delete {"idempotencyKey": "group-del", "items": [{"id": "6a35f2a7-c9e9-5942-a4a4-5c242851765a", "version": "$v3"}, {"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "version": "$v2"}]}	200 {"done": ["6a35f2a7-c9e9-5942-a4a4-5c242851765a"], "failed": [{"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "code": "PERMISSION_DENIED"}]}
+02-person-bulk	24	@person root w2c test root password	ok
+02-person-bulk	25	@until 30 member m1 console GET /session	200 {"user": "root"}
+02-person-bulk	26	member m1 console2 GET /api/devices	200 {"items": [{"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "name": "c1b"}, {"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "name": "c2"}]}
+03-person-folder	1	@domain m1	ok
+03-person-folder	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+03-person-folder	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+03-person-folder	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+03-person-folder	5	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"failed": []}
+03-person-folder	6	member m1 console2 POST /api/folders {"name": "f", "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null}	201 {"id": "$f", "version": "$vf"}
+03-person-folder	7	member m1 console2 @header If-Match: "$vf" PATCH /api/folders/$f {"deviceIds": ["068df1b2-b153-5712-bb0f-06efd7b21699", "8b99c4f9-f9f1-5926-ab12-5925acb99a02"]}	200 {"deviceIds": ["068df1b2-b153-5712-bb0f-06efd7b21699", "8b99c4f9-f9f1-5926-ab12-5925acb99a02"], "version": "$vf2"}
+03-person-folder	8	holder POST /domain/users {"name": "ann", "password": "ann-password-1"}	201 {"user": "ann"}
+03-person-folder	9	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "admin", "scope": "*", "sub": "platform"}, {"subject": "ann", "cap": "view", "scope": "unit:cam/1", "sub": "cam"}, {"subject": "root", "cap": "admin", "scope": "*"}]}	200 {"cluster": "m1"}
+03-person-folder	10	@person ann ann-password-1	ok
+03-person-folder	11	@until 30 member m1 console GET /session	200 {"user": "ann"}
+03-person-folder	12	member m1 console2 GET /api/folders	200 {"items": [{"id": "$f", "deviceIds": ["068df1b2-b153-5712-bb0f-06efd7b21699"], "version": "$vfa"}]}
+03-person-folder	13	member m1 console2 @header If-Match: "$vfa" PATCH /api/folders/$f {"name": "f2", "deviceIds": ["068df1b2-b153-5712-bb0f-06efd7b21699"]}	200 {"name": "f2", "deviceIds": ["068df1b2-b153-5712-bb0f-06efd7b21699"]}
+03-person-folder	14	@person root w2c test root password	ok
+03-person-folder	15	@until 30 member m1 console GET /session	200 {"user": "root"}
+03-person-folder	16	member m1 console2 GET /api/folders	200 {"items": [{"id": "$f", "name": "f2", "deviceIds": ["068df1b2-b153-5712-bb0f-06efd7b21699", "8b99c4f9-f9f1-5926-ab12-5925acb99a02"]}]}
+04-repeats	1	@domain m1	ok
+04-repeats	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+04-repeats	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+04-repeats	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+04-repeats	5	member m1 console2 POST /api/devices {"idempotencyKey": "group-rep", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "mic", "name": "m"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"done": [{"index": 0, "devices": [{"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "name": "c1"}], "folders": []}, {"index": 1, "devices": [{"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "name": "c2"}], "folders": []}], "failed": [{"index": 2, "code": "NOT_SUPPORTED"}]}
+04-repeats	6	@on m1 @sigkill b-srv-a-1	ok
+04-repeats	7	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+04-repeats	8	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "d7329777-a64d-54c5-86fa-eda63d75d992"}]}
+04-repeats	9	member m1 console2 POST /api/devices {"idempotencyKey": "group-rep", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "mic", "name": "m"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"done": [{"index": 0, "devices": [{"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "name": "c1"}], "folders": []}, {"index": 1, "devices": [{"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "name": "c2"}], "folders": []}], "failed": [{"index": 2, "code": "NOT_SUPPORTED"}]}
+04-repeats	10	member m1 console2 GET /api/devices	200 {"items": [{"id": "068df1b2-b153-5712-bb0f-06efd7b21699"}, {"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02"}]}
+04-repeats	11	member m1 console2 POST /api/devices {"idempotencyKey": "group-rep", "items": [{"device": {"type": "camera", "name": "c3", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	422 {"code": "VALIDATION_FAILED", "field": "idempotencyKey"}
+04-repeats	12	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$v1"}
+04-repeats	13	member m1 console2 GET /api/devices/8b99c4f9-f9f1-5926-ab12-5925acb99a02	200 {"version": "$v2"}
+04-repeats	14	member m1 console2 POST /api/devices/update {"idempotencyKey": "group-rep", "items": [{"deviceId": "068df1b2-b153-5712-bb0f-06efd7b21699", "version": "$v1", "set": {"name": "x"}}]}	422 {"code": "VALIDATION_FAILED", "field": "idempotencyKey"}
+04-repeats	15	member m1 console2 POST /api/devices/update {"idempotencyKey": "group-upd", "items": [{"deviceId": "068df1b2-b153-5712-bb0f-06efd7b21699", "version": "$v1", "set": {"name": "c1a"}}]}	200 {"done": [{"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "name": "c1a"}], "failed": []}
+04-repeats	16	@on m1 @sigkill b-srv-a-1	ok
+04-repeats	17	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+04-repeats	18	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "d7329777-a64d-54c5-86fa-eda63d75d992"}]}
+04-repeats	19	member m1 console2 POST /api/devices/update {"idempotencyKey": "group-upd", "items": [{"deviceId": "068df1b2-b153-5712-bb0f-06efd7b21699", "version": "$v1", "set": {"name": "c1a"}}]}	200 {"done": [{"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "name": "c1a"}], "failed": []}
+04-repeats	20	member m1 console2 POST /api/objects/delete {"idempotencyKey": "group-del", "items": [{"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "version": "$v2"}]}	200 {"done": ["8b99c4f9-f9f1-5926-ab12-5925acb99a02"], "failed": []}
+04-repeats	21	@on m1 @sigkill b-srv-a-1	ok
+04-repeats	22	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+04-repeats	23	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "d7329777-a64d-54c5-86fa-eda63d75d992"}]}
+04-repeats	24	member m1 console2 POST /api/objects/delete {"idempotencyKey": "group-del", "items": [{"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "version": "$v2"}]}	200 {"done": ["8b99c4f9-f9f1-5926-ab12-5925acb99a02"], "failed": []}
+04-repeats	25	member m1 store POST /v1/write {"id":"bad1","op":"put","key":"backend/repeats/e3882c66c92ee39a49890e6b1d2af4403ab322ac8ac1651687dbf131c4cfecb6","items":{"h":"нечитаемая"}}	200 {"index": "@any"}
+04-repeats	26	member m1 console2 POST /api/devices {"idempotencyKey": "group-rep", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "mic", "name": "m"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	503 {"code": "@absent"}
+04-repeats	27	member m1 console2 GET /api/devices	200 {"items": [{"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "name": "c1a"}]}
+05-resume	1	@domain m1	ok
+05-resume	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+05-resume	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+05-resume	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+05-resume	5	member m1 console POST /cameras {"name": "c1", "source": "driverpack://file/door.mp4"}	201 {"id": "1"}
+05-resume	6	member m1 store POST /v1/write {"id":"seed-createDevices","op":"put","key":"backend/repeats/c5045d9be15e5208d6a8ab3a71fd09ea57a64f4326ac2c729b5fe1c7af421308","items":{"h":"c5045d9be15e5208d6a8ab3a71fd09ea57a64f4326ac2c729b5fe1c7af421308","user":"root","idem_key":"group-resume","op":"createDevices","body":"deffc1909af1d0973d27669851ca5a73decaf55fc122e328e1ed72d6ea7898ec","state":"started","steps":"[{\"index\":0,\"outcome\":\"done\",\"id\":\"068df1b2-b153-5712-bb0f-06efd7b21699\"}]","revision":"1"},"cas":""}	200 {"index": "@any"}
+05-resume	7	member m1 console2 POST /api/devices {"idempotencyKey": "group-resume", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"done": [{"index": 0, "devices": [{"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "name": "c1"}], "folders": []}, {"index": 1, "devices": [{"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "name": "c2"}], "folders": []}], "failed": []}
+05-resume	8	member m1 console2 GET /api/devices	200 {"items": [{"id": "068df1b2-b153-5712-bb0f-06efd7b21699"}, {"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02"}]}
+05-resume	9	member m1 store POST /v1/write {"id":"seed-updateDevices","op":"put","key":"backend/repeats/e6352de7bb7436687be77f5f28faea87e682fd57edbaa70a42157b9fc51d30ec","items":{"h":"e6352de7bb7436687be77f5f28faea87e682fd57edbaa70a42157b9fc51d30ec","user":"root","idem_key":"group-resume-u","op":"updateDevices","body":"5cdc1a1ad8ac536b383b23c2a45795c43ff4b0384d667458782ae10444c3d077","state":"started","steps":"[{\"index\":0,\"outcome\":\"done\",\"id\":\"068df1b2-b153-5712-bb0f-06efd7b21699\"},{\"index\":1,\"outcome\":\"failed\",\"code\":\"VERSION_MISMATCH\"}]","revision":"1"},"cas":""}	200 {"index": "@any"}
+05-resume	10	member m1 console2 POST /api/devices/update {"idempotencyKey": "group-resume-u", "items": [{"deviceId": "068df1b2-b153-5712-bb0f-06efd7b21699", "version": "stale", "set": {"name": "нельзя"}}, {"deviceId": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "version": "stale", "set": {"name": "нельзя"}}]}	200 {"done": [{"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "name": "c1"}], "failed": [{"deviceId": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "code": "VERSION_MISMATCH"}]}
+05-resume	11	member m1 store POST /v1/write {"id":"seed-deleteObjects","op":"put","key":"backend/repeats/439b0dff7c01db9aee2c513fee57c60c90f31be35adfc846850d3f6149aaa975","items":{"h":"439b0dff7c01db9aee2c513fee57c60c90f31be35adfc846850d3f6149aaa975","user":"root","idem_key":"group-resume-d","op":"deleteObjects","body":"467f5a1c23371ecbea0c99dd3f8ee0316fe7529b1b2887bf97cb51b5c77cc8f3","state":"started","steps":"[{\"index\":0,\"outcome\":\"failed\",\"code\":\"VERSION_MISMATCH\"}]","revision":"1"},"cas":""}	200 {"index": "@any"}
+05-resume	12	member m1 console2 POST /api/objects/delete {"idempotencyKey": "group-resume-d", "items": [{"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "version": "stale"}]}	200 {"done": [], "failed": [{"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "code": "VERSION_MISMATCH"}]}
+05-resume	13	member m1 console2 GET /api/devices	200 {"items": [{"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "name": "c1"}, {"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "name": "c2"}]}
+06-operation	1	@domain m1	ok
+06-operation	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+06-operation	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+06-operation	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+06-operation	5	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"failed": []}
+06-operation	6	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$v1"}
+06-operation	7	member m1 console2 GET /api/devices/8b99c4f9-f9f1-5926-ab12-5925acb99a02	200 {"version": "$v2"}
+06-operation	8	member m1 console2 POST /api/operations {"idempotencyKey": "group-op1", "items": [{"targetId": "068df1b2-b153-5712-bb0f-06efd7b21699", "set": {"name": "c1a"}}, {"targetId": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "set": {"name": "c2a"}}], "expectedVersions": {"068df1b2-b153-5712-bb0f-06efd7b21699": "$v1", "8b99c4f9-f9f1-5926-ab12-5925acb99a02": "$v2"}}	202 {"id": "$op"}
+06-operation	9	@on m1 @sigkill b-srv-a-1	ok
+06-operation	10	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+06-operation	11	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "d7329777-a64d-54c5-86fa-eda63d75d992"}]}
+06-operation	12	@until 60 member m1 console2 GET /api/operations/$op	200 {"state": "done", "total": 2, "ok": 2, "failed": 0}
+06-operation	13	member m1 console2 POST /api/operations {"idempotencyKey": "group-op1", "items": [{"targetId": "068df1b2-b153-5712-bb0f-06efd7b21699", "set": {"name": "c1a"}}, {"targetId": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "set": {"name": "c2a"}}], "expectedVersions": {"068df1b2-b153-5712-bb0f-06efd7b21699": "$v1", "8b99c4f9-f9f1-5926-ab12-5925acb99a02": "$v2"}}	202 {"id": "$op", "state": "done"}
+06-operation	14	member m1 console2 GET /api/devices	200 {"items": [{"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "name": "c1a"}, {"id": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "name": "c2a"}]}
+07-profile	1	@domain m1	ok
+07-profile	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+07-profile	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+07-profile	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+07-profile	5	@until 30 member m1 console2 GET /api/domains	200 {"items": [{"id": "d7329777-a64d-54c5-86fa-eda63d75d992"}]}
+07-profile	6	member m1 console2 GET /api/servers	200 {"items": [{"id": "@any", "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992"}]}
+07-profile	7	member m1 console2 GET /api/devices/1ac81f5e-4d49-5378-a874-d424984b6ce0	404 {"code": "NOT_FOUND"}
+07-profile	8	member m1 console2 GET /api/rules	404 {"code": "NO_ROUTE"}
+07-profile	9	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.9", "port": 80}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"failed": []}
+07-profile	10	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$v1"}
+07-profile	11	member m1 console2 @header If-Match: "$v1" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"recordMode": "motion"}	422 {"code": "NOT_SUPPORTED", "field": "recordMode"}
