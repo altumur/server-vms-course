@@ -96,9 +96,9 @@ scenario	step	request	expect
 # 18-shell-login (ADR-0094 B7): оболочка testsub2 без личности — 302 на страницу входа, HEAD и файл — 401; с человеком — страница (P/06.5 Н2 «Вход на оболочке»)
 18-shell-login	1	@domain	ok
 18-shell-login	2	@person -	ok
-18-shell-login	3	member m1 console GET /testsub2/	302 @header Location: ~/?return=/testsub2/
-18-shell-login	4	member m1 console GET /testsub2/index.html	302 @header Location: ~/?return=/testsub2/
-18-shell-login	5	member m1 console @header Authorization: Bearer not-a-token GET /testsub2/	302 @header Location: ~/?return=/testsub2/
+18-shell-login	3	member m1 console GET /testsub2/	302 @empty @header Location: =/?return=/testsub2/
+18-shell-login	4	member m1 console GET /testsub2/index.html	302 @empty @header Location: =/?return=/testsub2/
+18-shell-login	5	member m1 console @header Authorization: Bearer not-a-token GET /testsub2/	302 @empty @header Location: =/?return=/testsub2/
 18-shell-login	6	member m1 console HEAD /testsub2/	401
 18-shell-login	7	member m1 console GET /testsub2/app.js	401
 18-shell-login	8	@person root w2c test root password	ok
