@@ -2047,7 +2047,7 @@ paths:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
                 - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
-                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1groups~1{name}/delete/responses/503/content/application~1json/schema'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
   /domain/roles:
     get:
       operationId: passRolesList
@@ -2388,7 +2388,7 @@ paths:
                 anyOf:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
                 - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
-                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1roles~1{name}/delete/responses/503/content/application~1json/schema'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Refused503/content/application~1json/schema'
   /domain/batch:
     post:
       operationId: passDomainBatch

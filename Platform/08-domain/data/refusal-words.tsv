@@ -3,7 +3,7 @@
 # grants /domain/grants/…; break-glass /domain/break-glass/…; revoke /domain/revoke; members /domain/members…; topology /domain/topology;
 # placement /domain/placement/…; edits /domain/<sub>/<rows>…; shared /domain/shared; move /api/prepare, /api/take, /domain/move;
 # handover /domain/handover; stranded /domain/stranded/apply; * — каждая дверь процесса. У агентов слово уточняет reason (8.3 Н4, 8.7 Н4).
-# versions — двери таблицы 8.0 Н1.9: эти слова идут к словам своей двери (members, topology, people, grants, break-glass, placement, shared); If-Match у POST /domain/users не читают.
+# versions — двери таблицы 8.0 Н1.9: эти слова идут к словам своей двери (members, topology, people, grants, break-glass, groups, roles, batch, placement, shared); If-Match у POST /domain/users, /domain/groups, /domain/roles и у /domain/batch не читают.
 # field — что несёт поле field: «-» — поля нет; иначе возможные значения через пробел, <…> — подстановка: <поле> — поле тела, <i> — номер строки с нуля.
 door	code	error	field	norm
 agents	400	refused	-	8.3 Н4
