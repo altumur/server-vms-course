@@ -333,3 +333,26 @@ scenario	step	request	expect
 29-domain-batch	14	holder GET /domain/roles	200 {"roles": [{"name": "admin", "index": "$r"}, {"name": "users"}]}
 29-domain-batch	15	holder POST /domain/batch {"writes": [{"kind": "role", "op": "put", "name": "admin", "cas": "$r", "fields": {"assigned": []}}]}	409 {"error": "last admin"}
 29-domain-batch	16	holder POST /domain/batch {"writes": [{"kind": "role", "op": "put", "name": "admin", "cas": "$r", "fields": {"assigned": [{"person": "mgr", "until": 0}, {"person": "root", "until": 0}]}}]}	200 {"written": 1}
+30-folder-rights	1	@domain	ok
+30-folder-rights	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+30-folder-rights	3	member m1 console POST /folders {"name": "F"}	201 {"id": "$f"}
+30-folder-rights	4	member m1 console POST /folders {"name": "G"}	201 {"id": "$g"}
+30-folder-rights	5	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "sub": "platform", "scope": "folder:$f"}, {"subject": "ann", "cap": "edit", "sub": "testsub", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
+30-folder-rights	6	@person ann ann password 1	ok
+30-folder-rights	7	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "platform"}, {"cap": "edit", "sub": "testsub"}]}
+30-folder-rights	8	member m1 console PUT /folders/$f {"name": "F2"}	200 {"name": "F2"}
+30-folder-rights	9	member m1 console POST /folders {"name": "S", "parent": "$f"}	201 {"id": "$s", "parent": "$f"}
+30-folder-rights	10	member m1 console POST /folders {"name": "top"}	403 {"error": "denied"}
+30-folder-rights	11	member m1 console PUT /folders/$g {"name": "x"}	403 {"error": "denied"}
+30-folder-rights	12	member m1 console PUT /folders/$f {"members": ["testsub/counters/c1-m1"]}	403 {"error": "denied"}
+30-folder-rights	13	@person -	ok
+30-folder-rights	14	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "sub": "platform", "scope": "folder:$f"}, {"subject": "ann", "cap": "admin", "sub": "testsub", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
+30-folder-rights	15	@person ann ann password 1	ok
+30-folder-rights	16	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "platform"}, {"cap": "admin", "sub": "testsub"}]}
+30-folder-rights	17	member m1 console PUT /folders/$f {"members": ["testsub/counters/c1-m1"]}	200 {"members": ["testsub/counters/c1-m1"]}
+30-folder-rights	18	member m1 console PUT /folders/$g {"members": []}	403 {"error": "denied"}
+30-folder-rights	19	@person -	ok
+30-folder-rights	20	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "sub": "platform", "scope": "folder:$f"}]}	200 {"cluster": "m1"}
+30-folder-rights	21	@person ann ann password 1	ok
+30-folder-rights	22	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "platform"}]}
+30-folder-rights	23	member m1 console PUT /folders/$f {"members": []}	403 {"error": "denied"}
