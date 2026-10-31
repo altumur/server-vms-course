@@ -1,6 +1,6 @@
 # Закрытый перечень слов error дверей консоли кластера: главы 6.1, 6.2, 6.4, 6.5, 6.6 (ADR-0094 B5, доп. (13)). Правила — глава 6.1 Н2 «Отказ: error и field».
 # door — двери: units /{rows}, /{rows}/{id}; blobs /{rows}/{id}/{blob_field}; tables /{table}, /{table}/{name}; batch /console/batch; policy /policy;
-# next_id /{sub}/next_id; drain /drain; labels /servers/{server}/labels; decommission /servers/{server}/decommission; schema /schema; where /where/…;
+# next_id /{sub}/next_id; changes /changes — своих строк нет, слова 6.1 Н4 «Лента изменений» — строки *; drain /drain; labels /servers/{server}/labels; decommission /servers/{server}/decommission; schema /schema; where /where/…;
 # pages страницы и /platform/*; events GET /events; marks POST /marks; requests POST /{sub}/requests; asked DELETE /{sub}/asked/{sha16};
 # * — каждая дверь этих глав. Слова глав 6.3, 6.7 — их Н4.
 # field — что несёт поле field: «-» — поля нет; /<поле> — поле тела, которое называет отказ; иное — точное значение.

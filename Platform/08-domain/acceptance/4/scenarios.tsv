@@ -193,3 +193,47 @@ scenario	step	request	expect
 20-batch-rights	16	member m1 console2 GET /tallies?deleted=1&about=c1-m1	200 {"deleted": []}
 20-batch-rights	17	member m1 console2 GET /tallies?deleted=1&about=c2-m1	403 {"error": "denied"}
 20-batch-rights	18	member m1 console GET /testsub/next_id	403 {"error": "denied"}
+21-changes-rights	1	@domain	ok
+21-changes-rights	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+21-changes-rights	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:testsub/a1"}]}	200 {"cluster": "m1"}
+21-changes-rights	4	@person ann ann password 1	ok
+21-changes-rights	5	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub/a1"}]}
+21-changes-rights	6	@until 10 member m1 console GET /changes	200 {"position": "$p"}
+21-changes-rights	7	@person root w2c test root password	ok
+21-changes-rights	8	member m1 console POST /counters {"name": "a2"}	201 {"revision": 1}
+21-changes-rights	9	member m1 console POST /counters {"name": "a1"}	201 {"revision": 1}
+21-changes-rights	10	@person ann ann password 1	ok
+21-changes-rights	11	@until 30 member m1 console GET /changes?after=$p	200 {"position": "$q", "changes": [{"key": "testsub/counters/a1", "revision": 1}], "reset": "@absent"}
+21-changes-rights	12	member m1 console GET /changes?after=$q	200 {"changes": [], "reset": "@absent"}
+21-changes-rights	13	@person root w2c test root password	ok
+21-changes-rights	14	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:testsub/a1"}, {"subject": "ann", "cap": "view", "scope": "unit:testsub/a2"}]}	200 {"cluster": "m1"}
+21-changes-rights	15	@person ann ann password 1	ok
+21-changes-rights	16	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub/a1"}, {"cap": "view", "scope": "unit:testsub/a2"}]}
+21-changes-rights	17	member m1 console GET /changes?after=$q	200 {"position": "$r", "changes": [], "reset": true}
+21-changes-rights	18	member m1 console GET /changes?after=$r	200 {"changes": [], "reset": "@absent"}
+21-changes-rights	19	@person root w2c test root password	ok
+21-changes-rights	20	member m1 console GET /changes?after=$r	200 {"changes": [], "reset": true}
+21-changes-rights	21	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}]}	200 {"cluster": "m1"}
+21-changes-rights	22	@person ann ann password 1	ok
+21-changes-rights	23	@until 30 member m1 console GET /changes?after=$r	403 {"error": "denied"}
+22-changes-labels	1	@domain	ok
+22-changes-labels	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+22-changes-labels	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "labels:zone"}]}	200 {"cluster": "m1"}
+22-changes-labels	4	@person ann ann password 1	ok
+22-changes-labels	5	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "labels:zone"}]}
+22-changes-labels	6	@until 10 member m1 console GET /changes	200 {"position": "$p"}
+22-changes-labels	7	@person root w2c test root password	ok
+22-changes-labels	8	member m1 console POST /counters {"name": "b2"}	201 {"revision": 1}
+22-changes-labels	9	member m1 console POST /counters {"name": "b1", "labels": ["zone"]}	201 {"revision": 1}
+22-changes-labels	10	@person ann ann password 1	ok
+22-changes-labels	11	@until 30 member m1 console GET /changes?after=$p	200 {"position": "$q", "changes": [{"key": "testsub/counters/b1", "revision": 1}], "reset": "@absent"}
+22-changes-labels	12	@person root w2c test root password	ok
+22-changes-labels	13	member m1 console PUT /counters/b2 {"start": 5}	200 {"revision": 2}
+22-changes-labels	14	member m1 console PUT /counters/b1 {"start": 5}	200 {"revision": 2}
+22-changes-labels	15	@person ann ann password 1	ok
+22-changes-labels	16	@until 30 member m1 console GET /changes?after=$q	200 {"position": "$s", "changes": [{"key": "testsub/counters/b1", "revision": 2}], "reset": "@absent"}
+22-changes-labels	17	@person root w2c test root password	ok
+22-changes-labels	18	member m1 console PUT /counters/b2 {"labels": ["zone"]}	200 {"revision": 3}
+22-changes-labels	19	@person ann ann password 1	ok
+22-changes-labels	20	@until 30 member m1 console GET /changes?after=$s	200 {"position": "$r", "changes": [], "reset": true}
+22-changes-labels	21	member m1 console GET /changes?after=$r	200 {"changes": [], "reset": "@absent"}

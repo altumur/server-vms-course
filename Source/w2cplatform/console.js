@@ -451,7 +451,7 @@
     // is refused before a request (P/07 Н1.5 api; ADR-0091 доп. (28), (29); ADR-0094 B4). /manifest does not name the tables:
     // a table is known by the shape of its path, one or two segments that are neither unit.rows nor a platform door.
     const unitRowPath = path => st.subs.some(s => { const p = s.base + "/" + s.manifest.rows + "/"; return path.startsWith(p) && path.length > p.length && !path.slice(p.length).includes("/"); });
-    const PLATFORM_DOORS = new Set(["console", "session", "events", "marks", "servers", "policy", "drain", "schema", "where", "unplaceable", "manifest", "mounts", "metrics", "resources", "domain", "api", "platform", "healthz", "requests", "asked", "next_id"]);
+    const PLATFORM_DOORS = new Set(["console", "changes", "session", "events", "marks", "servers", "policy", "drain", "schema", "where", "unplaceable", "manifest", "mounts", "metrics", "resources", "domain", "api", "platform", "healthz", "requests", "asked", "next_id"]);
     const tablePath = (path, n) => {
       const seg = path.split("/").slice(1), mounted = st.subs.find(s => s.base && s.base === "/" + seg[0]), sub = mounted || st.subs.find(s => !s.base);
       const rest = mounted ? seg.slice(1) : seg;
@@ -2434,6 +2434,32 @@
       repaint(!same, !same);
       emit("refresh", { domain: st.dom });
     }
+    // The feed (P/07 Н1.4 changes; P/06.1 Н2 «Лента изменений»; ADR-0094 B2): the number is taken before the rows are read,
+    // so an edit between the two is told, not lost. A message or a reset reads the data at once; the module never applies a
+    // message itself. 404 — this console has no feed: the poll goes on alone. The poll stays either way: GET /<rows> also
+    // brings the pulses, and /servers and /metrics have no feed.
+    const FEED_WAIT = 15, feed = { at: null, off: domainOnly };
+    async function feedRead() {
+      const q = feed.at === null ? "/changes" : "/changes?after=" + encodeURIComponent(feed.at) + "&wait=" + FEED_WAIT;
+      let d = null;
+      try {
+        const r = await fetch(q);
+        if (r.status === 404) feed.off = true;
+        if (r.ok) d = await r.json();
+      } catch (e) { d = null; }   // the network: the next turn asks again; a 401 is the poll's to show
+      if (!d || typeof d.position !== "string") return null;
+      const first = feed.at === null;
+      feed.at = d.position;
+      return { fresh: first || !!d.reset || (d.changes || []).some(m => st.subs.some(s => String(m.key).startsWith(s.name + "/"))) };
+    }
+    async function follow(periodMs) {
+      while (!feed.off) {
+        const t0 = Date.now(), got = await feedRead();
+        if (feed.off) return;
+        if (got && got.fresh) { try { await load(true); } catch (e) { /* the poll reads again */ } }
+        await sleep(Math.max(0, (got ? 1000 : periodMs) - (Date.now() - t0)));   // at most one request a second, whatever answers
+      }
+    }
     // The shared settings of the domain (GET /domain/shared: {doc, delivery, declared}) — read while the domain's card
     // is what a person looks at.
     async function loadDomShared() {
@@ -2447,9 +2473,11 @@
       await loadSession();
       await readManifests();
       paintRail(); paintAside();
+      if (!feed.off) await feedRead();
       await load();
       paintMain();
       setPoll(Number(opts.poll_s) > 0 ? Number(opts.poll_s) : 5);   // the page's poll_s (P/06.5 opts), 5 s when it names none
+      follow((Number(opts.poll_s) > 0 ? Number(opts.poll_s) : 5) * 1000);
       setInterval(() => { if (st.sel && parseUnit(st.sel)) loadEvents(st.sel); }, 5000);
       if (manifestRead) readyNow(C);
     })();

@@ -1309,6 +1309,52 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/MarkInput'
+  /changes:
+    description: Глава 6.1 Н2 «Лента изменений» — лента строк длинным опросом; дверь общая, префикса подсистемы нет (ADR-0094 B2, доп. (3) п. 6).
+    get:
+      summary: 'Какие строки изменились после номера'
+      parameters:
+      - name: after
+        in: query
+        required: false
+        description: Номер, с которого продолжать; нет — начало подписки. Значение, которого этот экземпляр не выдавал, — не отказ, а сброс.
+        schema:
+          type: string
+      - name: wait
+        in: query
+        required: false
+        description: 'Сколько секунд держать ответ, если сказать нечего. Читается только с after. Целое целым знаком после URL-декодирования: ^-?(0|[1-9][0-9]*)$,
+          затем 0…25 (CHANGES_WAIT); иначе 400, detail — wait (договор сторожевой и передачи «Числовые параметры query»).'
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 25
+          default: 0
+      responses:
+        '200':
+          description: Сообщения после номера, текущий номер или сброс.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Changes'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/NoRoute'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
   /{sub}/next_id:
     description: Глава 6.1 Н2 «Дверь счётчика» — чтение счётчика <sub>/next_id; подсистема названа в пути всегда (ADR-0094 B4).
     parameters:
@@ -5721,6 +5767,53 @@ components:
           type: string
           pattern: ^(?:(?:0|[1-9][0-9]{0,19})?)$
           description: Индекс строки счётчика; пустая строка — строки нет.
+    ChangeNumber:
+      type: string
+      pattern: ^(?:[0-9A-Za-z._]{1,128})$
+      description: Номер ленты; непрозрачен, сравнивается только на равенство, действует у выдавшего экземпляра (глава 6.1 Н2 «Лента изменений»).
+    ChangeMessage:
+      type: object
+      required: [n, key, at]
+      additionalProperties: false
+      description: Правка строки без её значения; ровно одно из revision и deleted (глава 6.1 Н2 «Лента изменений»).
+      oneOf:
+      - required: [revision]
+      - required: [deleted]
+      properties:
+        n:
+          $ref: '#/components/schemas/ChangeNumber'
+        key:
+          type: string
+          description: Полный ключ строки единицы или строки таблицы.
+        revision:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          description: revision живой строки; 0 — revision не читается.
+        deleted:
+          type: string
+          pattern: ^(?:(?:0|[1-9][0-9]{0,19})?)$
+          description: Индекс надгробия единицы; пустая строка — надгробия нет.
+        at:
+          type: number
+          minimum: 0
+          description: Стенные секунды такта, который увидел эту версию; досылка отдаёт то же значение.
+    Changes:
+      type: object
+      required: [position, changes]
+      additionalProperties: false
+      description: Ответ ленты. reset есть только у сброса, changes тогда пуст (глава 6.1 Н2 «Лента изменений»).
+      properties:
+        position:
+          $ref: '#/components/schemas/ChangeNumber'
+        changes:
+          type: array
+          maxItems: 256
+          items:
+            $ref: '#/components/schemas/ChangeMessage'
+        reset:
+          type: boolean
+          const: true
     DeletedList:
       type: object
       required: [deleted]
