@@ -53,7 +53,7 @@ door:
     # A stream goes to the client as it comes, without the 4 MiB limit; its ticket — reads, /changes, the model's route.
     stream: [api/stream, api/assist/turns]
     # Longer than PASS_WAIT, the longest covering key wins; api/assist/turns — ASSIST_TURN_MAX (V/11.7 Н1.5).
-    wait: {api/objects/delete: 30, api/devices: 30, api/folders: 30, api/operations: 30, api/access: 30, api/assist/turns: 7500}
+    wait: {api/objects/delete: 30, api/devices: 30, api/folders: 30, api/operations: 30, api/access: 30, api/test: 120, api/assist/turns: 7500}
     # The console's own refusals on api are `Problem` (question 5). 502, 503, 504: the contract has no code for them, a
     # request to the product (V/11.2 Н1.3); till then they stay outside the map and answer the console's form.
     refusals:

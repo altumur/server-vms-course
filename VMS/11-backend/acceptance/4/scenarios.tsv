@@ -142,6 +142,43 @@ scenario	step	request	expect
 07-profile	17	member m1 console2 @header If-Match: "$vv" DELETE /api/volumes/b0e5e0ae-dad2-5033-9950-6e696104f1dd	2xx
 07-profile	18	member m1 console2 GET /api/volumes/b0e5e0ae-dad2-5033-9950-6e696104f1dd	404 {"code": "NOT_FOUND"}
 07-profile	19	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.1"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"done": [{"index": 0, "devices": [{"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "name": "c1"}], "folders": []}], "failed": [{"index": 1, "code": "VALIDATION_FAILED", "field": "ip"}]}
-07-profile	20	member m1 console GET /cameras/1	200 {"source": "rtsp://10.9.9.1:554/"}
+07-profile	20	member m1 console GET /cameras	200 {"configured": [{"id": "1", "source": "rtsp://10.9.9.1:554/"}]}
 07-profile	21	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"ip": "10.9.9.1", "port": 554, "version": "$v1"}
 07-profile	22	member m1 console2 @header If-Match: "$v1" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"recordMode": "motion"}	422 {"code": "NOT_SUPPORTED", "field": "recordMode"}
+08-profile-ops	1	@domain m1	ok
+08-profile-ops	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+08-profile-ops	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+08-profile-ops	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+08-profile-ops	5	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.1"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.2"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c3", "ip": "10.9.9.3"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"failed": []}
+08-profile-ops	6	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$v1"}
+08-profile-ops	7	member m1 console2 PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"name": "c1a"}	428 {"code": "PRECONDITION_REQUIRED"}
+08-profile-ops	8	member m1 console2 @header If-Match: "stale" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"name": "c1a"}	412 {"code": "VERSION_MISMATCH", "current": {"id": "068df1b2-b153-5712-bb0f-06efd7b21699", "name": "c1"}}
+08-profile-ops	9	member m1 console2 @header If-Match: "$v1" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"password": "secret-1"}	200 {"hasPassword": true, "password": "@absent"}
+08-profile-ops	10	member m1 console2 GET /api/devices/6a35f2a7-c9e9-5942-a4a4-5c242851765a	200 {"version": "$v3"}
+08-profile-ops	11	member m1 console2 @header If-Match: "$v3" DELETE /api/devices/6a35f2a7-c9e9-5942-a4a4-5c242851765a	2xx
+08-profile-ops	12	member m1 console2 GET /api/devices/6a35f2a7-c9e9-5942-a4a4-5c242851765a	404 {"code": "NOT_FOUND"}
+08-profile-ops	13	member m1 console2 POST /api/folders {"name": "f", "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null}	201 {"id": "$f", "version": "$vf"}
+08-profile-ops	14	member m1 console2 GET /api/folders/$f	200 {"id": "$f"}
+08-profile-ops	15	member m1 console2 @header If-Match: "$vf" DELETE /api/folders/$f	2xx
+08-profile-ops	16	member m1 console2 GET /api/folders/$f	404 {"code": "NOT_FOUND"}
+08-profile-ops	17	member m1 console2 GET /api/folders	200 {"items": []}
+08-profile-ops	18	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$a1"}
+08-profile-ops	19	member m1 console2 GET /api/devices/8b99c4f9-f9f1-5926-ab12-5925acb99a02	200 {"version": "$b1"}
+08-profile-ops	20	member m1 console2 POST /api/operations {"idempotencyKey": "group-pause", "items": [{"targetId": "068df1b2-b153-5712-bb0f-06efd7b21699", "set": {"name": "c1p"}}, {"targetId": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "set": {"name": "c2p"}}], "expectedVersions": {"068df1b2-b153-5712-bb0f-06efd7b21699": "$a1", "8b99c4f9-f9f1-5926-ab12-5925acb99a02": "$b1"}}	202 {"id": "$p"}
+08-profile-ops	21	member m1 console2 POST /api/operations/$p/pause	200 {"state": "paused"}
+08-profile-ops	22	member m1 console2 POST /api/operations/$p/resume	200 {"state": "running"}
+08-profile-ops	23	@until 60 member m1 console2 GET /api/operations/$p	200 {"state": "done", "ok": 2}
+08-profile-ops	24	member m1 console2 POST /api/operations/$p/pause	409 {"code": "BUSY"}
+08-profile-ops	25	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$a2"}
+08-profile-ops	26	member m1 console2 GET /api/devices/8b99c4f9-f9f1-5926-ab12-5925acb99a02	200 {"version": "$b2"}
+08-profile-ops	27	member m1 console2 POST /api/operations {"idempotencyKey": "group-cancel", "items": [{"targetId": "068df1b2-b153-5712-bb0f-06efd7b21699", "set": {"name": "c1c"}}, {"targetId": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "set": {"name": "c2c"}}], "expectedVersions": {"068df1b2-b153-5712-bb0f-06efd7b21699": "$a2", "8b99c4f9-f9f1-5926-ab12-5925acb99a02": "$b2"}}	202 {"id": "$c"}
+08-profile-ops	28	member m1 console2 POST /api/operations/$c/pause	200 {"state": "paused"}
+08-profile-ops	29	member m1 console2 POST /api/operations/$c/cancel	200 {"id": "$c"}
+08-profile-ops	30	@until 60 member m1 console2 GET /api/operations/$c	200 {"state": "done"}
+08-profile-ops	31	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$a3"}
+08-profile-ops	32	member m1 console2 GET /api/devices/8b99c4f9-f9f1-5926-ab12-5925acb99a02	200 {"version": "$b3"}
+08-profile-ops	33	member m1 console2 POST /api/operations {"idempotencyKey": "group-retry", "items": [{"targetId": "068df1b2-b153-5712-bb0f-06efd7b21699", "set": {"short": "x"}}], "expectedVersions": {"068df1b2-b153-5712-bb0f-06efd7b21699": "$a3"}}	202 {"id": "$r"}
+08-profile-ops	34	@until 60 member m1 console2 GET /api/operations/$r	200 {"state": "done", "failed": 1, "items": [{"index": 0, "state": "fail", "code": "NOT_SUPPORTED"}]}
+08-profile-ops	35	member m1 console2 POST /api/operations/$r/retry-failed	202 {"id": "$r2"}
+08-profile-ops	36	ASSERT $r != $r2	
+08-profile-ops	37	@until 60 member m1 console2 GET /api/operations/$r2	200 {"state": "done", "failed": 1}
