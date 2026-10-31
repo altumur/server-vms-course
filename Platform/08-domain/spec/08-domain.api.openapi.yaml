@@ -1384,6 +1384,8 @@ paths:
       operationId: move
       parameters:
         - {$ref: '#/components/parameters/XW2CUser'}
+        - {name: X-W2C-Time, in: header, required: false, description: 'перенос по подписи корнем (P/08.8 Н1.8 by_file; договор подписи просьбы)', schema: {type: string}}
+        - {name: X-W2C-Signature, in: header, required: false, description: 'перенос по подписи корнем (P/08.8 Н1.8 by_file; договор подписи просьбы)', schema: {type: string}}
       summary: Аварийный перенос сюда по файлу восстановления (Н1.8)
       requestBody:
         required: true

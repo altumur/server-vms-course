@@ -5789,6 +5789,19 @@ paths:
       операция move OpenAPI урока P/08 (тело, шаги переноса и отказы — P/08.8 Н1.8). Только с петли подпись корнем в X-W2C-Time и X-W2C-Signature заменяет токен (P/08.8 Н1.8 by_file; C08-MOVE-BY-FILE-01).'
     post:
       summary: 'Пересылка подписанту: аварийный перенос сюда'
+      parameters:
+      - name: X-W2C-Time
+        in: header
+        required: false
+        description: Перенос по подписи корнем (P/08.8 Н1.8 by_file; договор подписи просьбы).
+        schema:
+          type: string
+      - name: X-W2C-Signature
+        in: header
+        required: false
+        description: Перенос по подписи корнем (P/08.8 Н1.8 by_file; договор подписи просьбы).
+        schema:
+          type: string
       requestBody:
         $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/paths/~1domain~1move/post/requestBody'
       responses:

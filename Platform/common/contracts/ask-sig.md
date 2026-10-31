@@ -19,7 +19,7 @@
 
 ## Форма
 
-`pub` — ключ члена `domain/member-key` (backup), ключ `current` набора `domain/keys` (prepare) или `root_pub` строки `domain/root` (move): `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`. Двери, где проверяют `X-W2C-*`, — `Platform/06-console/spec/06-console.api.openapi.yaml` (`/api/backup`) и `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`/api/prepare`) (аудит раскладки, В-07, В-08; решение «Архитектора» 2026-10-25).
+`pub` — ключ члена `domain/member-key` (backup), ключ `current` набора `domain/keys` (prepare) или `root_pub` строки `domain/root` (move): `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`. Двери, где проверяют `X-W2C-*`, — `Platform/06-console/spec/06-console, а также `POST /domain/move`.api.openapi.yaml` (`/api/backup`) и `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`/api/prepare`) (аудит раскладки, В-07, В-08; решение «Архитектора» 2026-10-25).
 
 ## Подпись и проверка
 
@@ -67,8 +67,8 @@ exit:      0 — вычислено; 2 — вход не по форме; код
 ## Векторы
 
 Пакет [`ask-sig`](../vectors/ask-sig/README.md) (разбор ревью стадии A 8–10, № 13): 27 строк — 12 входов команды `ask-sig`
-приёмки М11/10 (сц. 07) без изменения байтов; одна из них — вход не по форме (`@exit 2`; разбор ревью стадии B 8–10, № 22); строка 13 — поле `member` на верхнем уровне, `@exit 2` (вопрос 2 того же разбора). Сценарий и входы сняты Строки 14–27 — `move`.
-переносом урока 8 — таблица единственный источник этих случаев.
+приёмки М11/10 (сц. 07) без изменения байтов; одна из них — вход не по форме (`@exit 2`; разбор ревью стадии B 8–10, № 22); строка 13 — поле `member` на верхнем уровне, `@exit 2` (вопрос 2 того же разбора). Сценарий и входы сняты
+переносом урока 8 — таблица единственный источник этих случаев. Строки 14–27 — `move`.
 
 ## Соответствие прежним урокам
 
