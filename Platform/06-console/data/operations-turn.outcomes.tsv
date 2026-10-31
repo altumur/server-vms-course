@@ -1,0 +1,4 @@
+# Исходы нечитаемой строки <sub>/operations-turn (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	console	строка целиком нечитаема: шаг 1 договора очереди писателя — отказ шага, этот такт ведущий не ведёт операций; двери работают	0	строка	договор очереди писателя; P/06.9 Н3 «ведущий»

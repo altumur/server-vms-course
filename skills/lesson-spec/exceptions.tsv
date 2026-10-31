@@ -31,6 +31,8 @@ P/06	acceptance-entry	5/probe-x.subsystem.yaml	третий манифест с�
 P/06	acceptance-entry	5/inputs	пульсы для @put object (наблюдения консоли, глава 6.5 из М10/09); проверяется по README приёмки
 P/06	acceptance-entry	6/inputs	пульсы воркера w-1 для @put object (дренаж, pending_writes, schema, build; глава 6.6 из М10/04 и М10/10); проверяется по README приёмки
 P/06	scenarios-format	7/own	стенд нескольких кластеров («Стенд домена»): двери holder, member <кластер> console/console2; директивы @domain, @person, @env, @on <кластер> @sigterm, @sleep, @until, тело @big (сценарии главы 6.7 из М11/05, М11/08, М11/09, М11/10); проверяется по README приёмки
+P/06	scenarios-format	8/own	двери без префикса и store, @as/@until/@header/@key, ожидание кода без тела (сценарии главы 6.8, ADR-0096); проверяется по README приёмки
+P/06	scenarios-format	9/own	дверь store, ожидание по форме словаря (сценарии главы 6.9, ADR-0095); проверяется по README приёмки
 P/07	no-openapi	-	своей HTTP-двери у модуля нет: двери, которые он зовёт, — контракт урока 6 (06-console.api.openapi.yaml); публикация модуля — глава 6.5 (план переноса урока 7)
 P/07	no-acceptance	-	модуль проверяется чтением и jsdom-тестом владельца спецификации Source/tests/console (Н5); публикацию и ?v=1 наблюдает сц. 01 приёмки главы 6.5 (разбор ревью стадии A 6–7, № 31)
 P/08	scenarios-format	1/own	стенд домена: двери holder, member; директивы @domain, @on, @cut, @mend, @restart, @sigkill, @until (сценарии главы 8.1 из М11/03, М11/06); проверяется по README приёмки

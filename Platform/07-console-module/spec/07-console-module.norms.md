@@ -40,11 +40,11 @@ P/08](../../08-domain/spec/08-domain.api.openapi.yaml)), которые конс
 ```yaml
 reads:   /session, /manifest, /<sub>/manifest, /mounts, /<rows>, /<sub>/<rows>, /<sub>/<table> (только из servers.show; добавлено М10/10),
          /where/<id>, /<sub>/where/<id>, /servers, /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema (добавлено М10/10),
-         /events, /metrics (только running_gauge и workers_gauge), /domain/* (договор пересылки «Двери домена»), /api/held (P/06.7-14), /domain/shared/<sub> (P/06.7-15)
-writes:  POST/PUT/DELETE /<rows>[/<id>] и /<sub>/<rows>[/<id>], POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
+         /events, /metrics (только running_gauge и workers_gauge), /domain/* (договор пересылки «Двери домена»), /api/held (P/06.7-14), /domain/shared/<sub> (P/06.7-15), /folders (только при display.tree.folders)
+writes:  POST/PUT/DELETE /<rows>[/<id>] и /<sub>/<rows>[/<id>], POST /folders, PUT/DELETE /folders/<id> (только при display.tree.folders), POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
          POST/DELETE /servers/<s>/decommission, /domain/* (договор пересылки «Двери домена»), POST/DELETE /session, /session/break-glass, login_url
 never:   /{sub}/requests, /api/backup (P/06.7-16), /resources, /{sub}/{table} вне show, двери держателей (door из where — только оболочке)
-order:   /session → /manifest → /mounts → по подсистеме /<rows> → /servers → /unplaceable → /domain/shared/<sub> (P/06.7-15) → /drain → /schema
+order:   /session → /manifest → /mounts → по подсистеме /<rows> → /folders (если хоть одна подсистема объявила display.tree.folders) → /servers → /unplaceable → /domain/shared/<sub> (P/06.7-15) → /drain → /schema
          → /domain (+ /domain/alarms; P/10-06) → /api/held (P/06.7-14) → /metrics; опрос каждые poll_s; /events?unit= выбранной — каждые 5 с
 ```
 
@@ -68,7 +68,7 @@ features:  PlatformConsole.features — список строк возможно
 ready:     pc.ready — обещание (Promise), нового вызова нет: разрешается объектом страницы после mount и первого прочитанного
            /manifest (двери /spec нет — Н1.4); ответ 401 — обещание ждёт входа и разрешается после него; /manifest не
            прочитан (сеть, 5xx) — модуль читает его снова опросом, обещание ждёт (ADR-0091 доп. (24) п. 1, доп. (27) п. 1)
-objects:   ref: unit:<sub>/<id> | server:<s> | worker:<sub>/<w> | member:<m> | domain | person:<name> | group:<sub>/<поле>/<путь>
+objects:   ref: unit:<sub>/<id> | server:<s> | worker:<sub>/<w> | member:<m> | domain | person:<name> | group:<sub>/<поле>/<путь> | folder:<id>
            | <prefix>:<…> оболочки (модуль только хранит)
 api:       console.api(method, path, body, opts?) → ответ | throw {status, body, retry}
            opts.ifMatch — целое ≥ 1 (revision, P/06.1 Н3) → заголовок If-Match; только у PUT и DELETE на путь строки единицы
@@ -118,6 +118,12 @@ adds:      addSection{id, label, icon, after, off, render}, addTab(kind, {id, la
            select(ref, {tab}) — выбрать объект (единицу или карточку оболочки) и открыть вкладку по id, данному addTab
            ("general" — карточка модуля); такой вкладки нет — карточка открывается без смены вкладки (ADR-0091 доп. (22)
            п. 2, доп. (24) п. 2, доп. (25) п. 2)
+tree:      display.tree.folders: true — дерево раздела строится из GET /folders: узел folder:<id> на живую папку, родитель — parent, дети — подпапки, затем члены этой подсистемы по порядку members;
+           имя папки — name; пустая папка — узел с нулём единиц, а не фильтр в браузере; единица вне папок — особый узел, как «без группы»;
+           член другой подсистемы или единица, которой модуль не видит, не даёт узла; переименование — одна запись PUT /folders/<id> {name}, с If-Match по index (P/06.8 Н2);
+           создать папку и подпапку — POST /folders; добавить и снять единицу — PUT /folders/<id> {members}, состав целиком, порядок прежний, новая единица в конец;
+           права кнопок — may(admin, …) как у прочих записей, отказ сервера — как у всех дверей (P/06.8 Н3 «права папки»);
+           без display.tree.folders — дерево по group_by, как прежде
 return:    после входа окном модуля (пароль или аварийный вход) модуль читает параметр return адреса страницы: значение ровно /<sub>/,
            где <sub> — подсистема каталога этой консоли (корень и /mounts), — location.replace на него; параметра нет — страница
            остаётся; иное значение — location.replace на /: абсолютный адрес, //…, сегмент .. или его процент-форма (параметр уже
@@ -240,6 +246,7 @@ jsdom-тестами владельца спецификации [`Source/tests/
 | Н1.5 `module`, `features`, `ready`, `select(ref, {tab})`, `card.closed` (ADR-0091 доп. (22)–(27)) | предмет — поведение страницы | jsdom-тест `module-page-calls`: `features`, версия 1, `pc.ready` после `mount` и первого `/manifest` и после 401 → вход, при обрыве и 503 `/manifest` — ждёт следующего опроса без окна входа и без немедленного повтора (второй проход аудита покрытия, Gemini), `select` с вкладкой, без неё, с неизвестной и `general`, `card.closed` при смене выбора, снятии выбора, уходе со страницы, у карточки оболочки, не при опросе; страница VMS без обращений к DOM рамки (`shell.may_not`) — тесты страницы владельца VMS и чтением |
 | Н1.5 `return` — возврат после входа, защита от открытого перенаправления | вызов страницы, TSV идёт к дверям и за `302` не следует | jsdom-тест `module-return`: `/<sub>/` своего каталога и корня — переход; вне каталога, абсолютный, `//evil`, `/%2e%2e/`, с `..`, без конечного `/`, с хвостом, повтор параметра — на `/`; без параметра страница остаётся |
 | Н1.5 `forms` — отказ у поля по `field` | что форма сделала с отказом, TSV не видит | jsdom-тест `module-refusal-field`: контрол поля, `.pc-field-err`, фокус, разбор `~1`; без `field` и без элемента формы — общий `.pc-err` (ADR-0094 B5) |
+| Н1.5 `tree` — дерево по папкам кластера (ADR-0096) | вызовов страницы TSV не видит | jsdom-тест `module-folders` (ещё не написан: модуль этого не делает, долг продукта): дерево из `/folders`, пустая папка, переименование одной записью |
 | Н1.6 поздний слой (режим `domain`, разделы `domain`, `access`, `login_url`, `refresh {access}`) | домена у стенда урока 6 нет; вызовов страницы TSV не видит | jsdom-тест режима `domain` у владельца модуля (Н1.6 `holder`; `Source/tests/console`); двери страницы держателя — приёмка [урока P/10](../../10-domain-console/spec/10-domain-console.norms.md) (P/10-04), двери людей — [приёмка главы P/08.4](../../08-domain/acceptance/4/README.md); форма по `schema` — jsdom-тест `module-shared-schema` (решение «Архитектора» 2026-10-21) |
 
 ---
@@ -276,6 +283,7 @@ jsdom-тестами владельца спецификации [`Source/tests/
 - [ ] **P/07-01** закрытый список вызовов модуля Н1.4 и порядок загрузки — проверяется jsdom-тестом: вызовы модуля и их порядок — по Н1.4 `reads`/`writes`/`never`/`order`; причина — модуль один у всех реализаций, двери порядок загрузки не показывают; место доказательства — jsdom-тест владельца спецификации `Source/tests/console/module-calls.test.js` (Н5; разбор ревью стадии A 6–7, № 31; разбор ревью стадии B 6–7, № 29; решение «Архитектора» 2026-10-21); части позднего слоя — Н1.6 `reads`, `writes` (`login_url`), `order`, `never`, режим `holder` (`sections: [domain]`)
 - [ ] **P/07-02** контракт оболочки Н1.5: `api` с ключом логического действия и повторами только по контракту владельца, `where` с `door`, вызовы библиотеки, без хуков и чужого DOM — проверяется чтением: тест оболочки (jsdom; предмет — поведение страницы, не двери); причина — TSV говорит с дверями, страницу не исполняет; место доказательства — `Source/tests/console` (Н5; разбор, № 31); `api`, `may`, `version`, `where`, `objects`, `events` — jsdom-тесты `module-retry`, `module-may`, `platform-page`, `module-contract`, `module-session`; `features`, `ready`, `select(ref, {tab})`, `card.closed` — `module-page-calls` (ADR-0091 доп. (22)–(27)) (Н5; разбор, № 6; разбор ревью стадии B 6–7, № 29; решение «Архитектора» 2026-10-21); части позднего слоя — Н1.6 `objects`, `events` (`refresh {access}`), `adds`, разделы `domain`, `access`, `held`, `schema` (форма по `schema` — jsdom-тест `module-shared-schema`); `return` — jsdom-тест `module-return`
 - [ ] **P/07-03** отказ у поля Н1.5 `forms` (ADR-0094 B5) — проверяется jsdom-тестом `Source/tests/console/module-refusal-field.test.js` (Н5); причина — TSV страницу не исполняет
+- [ ] **P/07-04** дерево по папкам кластера Н1.5 `tree` (ADR-0096) — проверяется jsdom-тестом `module-folders` (Н5), когда модуль внесён; причина — TSV страницу не исполняет
 
 ## Соответствие прежним урокам
 

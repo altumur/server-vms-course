@@ -1,0 +1,10 @@
+scenario	step	request	expect
+# Приёмка P/06.9: двери операций у подсистемы без объявления (стенд консоли). Шаги операции — план README, после ADR-0094 B1. Формат — README.
+01-not-declared	1	POST /testsub/operations {"id": "0123456789abcdef0123456789abcdef", "items": [{"body": {}, "root": "r1", "expected": {}}]}	404 {"error": "no operations"}
+01-not-declared	2	store GET /v1/get?key=testsub/operations/0123456789abcdef0123456789abcdef	200 {"items": null}
+01-not-declared	3	store GET /v1/get?key=testsub/opbusy/r1	200 {"items": null}
+01-not-declared	4	GET /testsub/operations/0123456789abcdef0123456789abcdef	404 {"error": "no operations"}
+02-doors	1	PUT /testsub/operations {}	404 {"error": "no operations"}
+02-doors	2	POST /testsub/operations/0123456789abcdef0123456789abcdef/pause	404 {"error": "no operations"}
+02-doors	3	POST /testsub/operations/0123456789abcdef0123456789abcdef/revert	404 {"error": "no such path"}
+02-doors	4	POST /nosub/operations {"id": "0123456789abcdef0123456789abcdef", "items": []}	404 {"error": "no such path"}

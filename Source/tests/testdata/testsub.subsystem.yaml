@@ -81,6 +81,8 @@ domain:
     - {id: tallies, keys: [domain/testsub/tallies], prefix: domain/testsub/tallies/}
     - {id: ledger, keys: [domain/testsub/ledger]}
 display:
+  tree:
+    folders: true                    # the tree of the page is the cluster's folders; counters are their members (P/06.8)
   keys:
     tallies: {title: tallies, about: "a member's tally book: domain/testsub/tallies/<member> at the holder, domain/testsub/tallies at home"}
     ledger: {title: ledger, about: the ledger the holder keeps for the domain, absent: nothing ledgered yet}

@@ -1,0 +1,27 @@
+place	layer	word	value
+/$defs/common.book_row/additionalProperties/properties/entries/items/properties/value	2, 6	x-opaque	true
+/$defs/common.book_row/additionalProperties	3	x-encoding	"json"
+/$defs/common.book_row/properties/	3	x-encoding	"json"
+/$defs/common.domain_backup_doc/properties/objects	2, 6	x-opaque	true
+/$defs/common.domain_members_doc	3	x-encoding	"jcs"
+/$defs/common.domain_outcome/properties/status	3	x-integer	true
+/$defs/common.domain_outcome	3	x-encoding	"json"
+/$defs/common.domain_placement/properties/copies	3	x-encoding	"jcs"
+/$defs/common.domain_topology_doc	3	x-encoding	"jcs"
+/$defs/common.grants_doc	3	x-encoding	"jcs"
+/$defs/common.pos53	3	x-integer	true
+/$defs/common.time	3	x-time	true
+/$defs/common.uint53	3	x-integer	true
+/properties/by	3	x-codec	["string"]
+/properties/cancel	3	x-codec	["boolean"]
+/properties/created_at	3	x-codec	["time"]
+/properties/exp	3	x-codec	["time"]
+/properties/expired	3	x-codec	["boolean"]
+/properties/finished_at	3	x-codec	["time"]
+/properties/jti	3	x-codec	["string"]
+/properties/kid	3	x-codec	["string"]
+/properties/paused	3	x-codec	["boolean"]
+/properties/retry_of	3	x-codec	["string"]
+/properties/state	3	x-codec	["string"]
+/properties/total	3	x-codec	["integer"]
+/properties/total	3	x-whole	true

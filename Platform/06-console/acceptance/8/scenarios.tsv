@@ -1,0 +1,182 @@
+scenario	step	request	expect
+# Приёмка P/06.8: папки кластера на стенде консоли (`testsub`, без домена). Формат — README.
+01-folder-basics	1	POST /folders {"name": "Подъезд"}	201 {"id": "$f", "name": "Подъезд", "parent": "", "members": [], "index": "$i"}
+01-folder-basics	2	GET /folders/$f	200 {"id": "$f", "name": "Подъезд", "parent": "", "members": [], "index": "$i"}
+01-folder-basics	3	store GET /v1/get?key=platform/folders/$f	200 {"items": {"name": "Подъезд", "parent": "", "members": ""}, "index": "$i"}
+01-folder-basics	4	GET /folders	200 {"folders": [{"id": "$f", "index": "$i"}]}
+01-folder-basics	5	PUT /folders/$f {"name": "Двор"}	200 {"name": "Двор", "index": "$j"}
+01-folder-basics	6	PUT /folders/$f {"name": "Двор"}	200 {"name": "Двор", "index": "$j"}
+01-folder-basics	7	ASSERT $i != $j	
+01-folder-basics	8	POST /folders {"name": "x", "members": []}	400 {"error": "bad folder", "field": "/members"}
+01-folder-basics	9	POST /folders {"name": ""}	400 {"error": "bad folder", "field": "/name"}
+01-folder-basics	10	POST /folders {"name": "@big(256)"}	400 {"error": "bad folder", "field": "/name"}
+01-folder-basics	11	POST /folders {"name": "@big(255)"}	201 {"parent": ""}
+01-folder-basics	12	POST /folders [1]	400 {"error": "not_json", "fault": "not_json"}
+01-folder-basics	13	POST /folders {"name": "x", "parent": "p1"}	400 {"error": "bad folder", "field": "/parent"}
+02-members	1	POST /counters {"name": "c1"}	201
+02-members	2	POST /counters {"name": "c2"}	201
+02-members	3	POST /folders {"name": "a"}	201 {"id": "$f", "index": "$i"}
+02-members	4	PUT /folders/$f {"members": ["testsub/counters/c2", "testsub/counters/c1"]}	200 {"members": ["testsub/counters/c2", "testsub/counters/c1"], "index": "$j"}
+02-members	5	store GET /v1/get?key=platform/folders/$f	200 {"items": {"members": "testsub/counters/c2,testsub/counters/c1"}, "index": "$j"}
+02-members	6	store GET /v1/get?key=platform/memberof/testsub/counters/c1	200 {"items": {"folders": "$f"}, "index": "$m"}
+02-members	7	PUT /folders/$f {"members": ["testsub/counters/c1"]}	200 {"members": ["testsub/counters/c1"], "index": "$k"}
+02-members	8	store GET /v1/get?key=platform/memberof/testsub/counters/c2	200 {"items": null}
+02-members	9	store GET /v1/get?key=platform/memberof/testsub/counters/c1	200 {"items": {"folders": "$f"}, "index": "$m"}
+02-members	10	@header If-Match: $i PUT /folders/$f {"name": "b"}	412 {"error": "folder moved", "field": "/index", "folder": {"id": "$f", "name": "a", "index": "$k"}}
+02-members	11	GET /folders/$f	200 {"name": "a", "index": "$k"}
+02-members	12	@header If-Match: $k PUT /folders/$f {"name": "b"}	200 {"name": "b"}
+02-members	13	@key(k1) PUT /folders/$f {"name": "c"}	200 {"name": "c", "index": "$n"}
+02-members	14	@key(k1) PUT /folders/$f {"name": "c"}	200 {"name": "c", "index": "$n"}
+02-members	15	@key(k1) PUT /folders/$f {"name": "d"}	422 {"error": "key reused"}
+02-members	16	GET /folders/$f	200 {"name": "c", "index": "$n"}
+03-bad-members	1	POST /counters {"name": "c1"}	201
+03-bad-members	2	POST /folders {"name": "a"}	201 {"id": "$f"}
+03-bad-members	3	PUT /folders/$f {"members": ["testsub/counters/c1", "testsub/counters/c1"]}	400 {"error": "bad member", "field": "/members/1"}
+03-bad-members	4	PUT /folders/$f {"members": ["testsub2/tallies/t1"]}	400 {"error": "bad member", "field": "/members/0"}
+03-bad-members	5	PUT /folders/$f {"members": ["testsub/counters/none"]}	400 {"error": "bad member", "field": "/members/0"}
+03-bad-members	6	PUT /folders/$f {"members": ["c1"]}	400 {"error": "bad member", "field": "/members/0"}
+03-bad-members	7	PUT /folders/$f {"members": ["testsub/shelves/c1"]}	400 {"error": "bad member", "field": "/members/0"}
+03-bad-members	8	PUT /folders/$f {"members": ["nosub/counters/c1"]}	400 {"error": "bad member", "field": "/members/0"}
+03-bad-members	9	PUT /folders/$f {"name": "b", "parent": ""}	400 {"error": "bad folder", "field": "/parent"}
+03-bad-members	10	store GET /v1/get?key=platform/folders/$f	200 {"items": {"name": "a", "members": ""}}
+03-bad-members	11	POST /counters {"name": "@big(1007)"}	201
+03-bad-members	12	PUT /folders/$f {"members": ["testsub/counters/@big(1007)"]}	400 {"error": "bad member", "field": "/members/0"}
+03-bad-members	13	POST /counters {"name": "@big(989)"}	201
+03-bad-members	14	PUT /folders/$f {"members": ["testsub/counters/@big(989)"]}	200 {"name": "a"}
+04-depth-parent	1	POST /folders {"name": "d1"}	201 {"id": "$f1"}
+04-depth-parent	2	POST /folders {"name": "d2", "parent": "$f1"}	201 {"id": "$f2", "parent": "$f1"}
+04-depth-parent	3	POST /folders {"name": "d3", "parent": "$f2"}	201 {"id": "$f3", "parent": "$f2"}
+04-depth-parent	4	POST /folders {"name": "d4", "parent": "$f3"}	201 {"id": "$f4", "parent": "$f3"}
+04-depth-parent	5	POST /folders {"name": "d5", "parent": "$f4"}	201 {"id": "$f5", "parent": "$f4"}
+04-depth-parent	6	POST /folders {"name": "d6", "parent": "$f5"}	201 {"id": "$f6", "parent": "$f5"}
+04-depth-parent	7	POST /folders {"name": "d7", "parent": "$f6"}	201 {"id": "$f7", "parent": "$f6"}
+04-depth-parent	8	POST /folders {"name": "d8", "parent": "$f7"}	201 {"id": "$f8", "parent": "$f7"}
+04-depth-parent	9	POST /folders {"name": "d9", "parent": "$f8"}	400 {"error": "too deep", "field": "/parent"}
+04-depth-parent	10	POST /folders {"name": "x", "parent": "00000000000000000000000000000001"}	404 {"error": "no such parent", "field": "/parent"}
+04-depth-parent	11	DELETE /folders/$f8	200 {"deleted": "$f8"}
+04-depth-parent	12	POST /folders {"name": "x", "parent": "$f8"}	409 {"error": "parent gone", "field": "/parent"}
+04-depth-parent	13	DELETE /folders/$f2	200 {"deleted": "$f2"}
+04-depth-parent	14	POST /folders {"name": "x", "parent": "$f5"}	409 {"error": "parent gone", "field": "/parent"}
+04-depth-parent	15	GET /folders/$f5	404 {"error": "no such folder"}
+04-depth-parent	16	PUT /folders/$f5 {"name": "x"}	404 {"error": "no such folder"}
+05-tombstone	1	POST /folders {"name": "a"}	201 {"id": "$f"}
+05-tombstone	2	POST /folders {"name": "s", "parent": "$f"}	201 {"id": "$s"}
+05-tombstone	3	DELETE /folders/$f	200 {"deleted": "$f"}
+05-tombstone	4	POST /folders {"name": "a"}	201 {"id": "$g", "parent": "", "members": []}
+05-tombstone	5	ASSERT $f != $g	
+05-tombstone	6	GET /folders	200 {"folders": [{"id": "$g"}]}
+05-tombstone	7	store GET /v1/get?key=platform/folders/$f	200 {"items": {"deleted": "true", "members": ""}, "index": "$t"}
+05-tombstone	8	POST /console/batch {"writes": [{"op": "put", "key": "platform/folders/$f", "fields": {"members": []}, "cas": "$t"}]}	409 {"error": "folder gone", "field": "/writes/0/key"}
+05-tombstone	9	DELETE /folders/$f	404 {"error": "no such folder"}
+05-tombstone	10	PUT /folders/$f {"name": "x"}	404 {"error": "no such folder"}
+06-delete-tree	1	POST /counters {"name": "c1"}	201
+06-delete-tree	2	POST /counters {"name": "c2"}	201
+06-delete-tree	3	POST /folders {"name": "p"}	201 {"id": "$p"}
+06-delete-tree	4	POST /folders {"name": "s", "parent": "$p"}	201 {"id": "$s"}
+06-delete-tree	5	PUT /folders/$p {"members": ["testsub/counters/c1"]}	200
+06-delete-tree	6	PUT /folders/$s {"members": ["testsub/counters/c2"]}	200
+06-delete-tree	7	DELETE /folders/$p	200 {"deleted": "$p"}
+06-delete-tree	8	GET /folders/$p	404 {"error": "no such folder"}
+06-delete-tree	9	GET /folders/$s	404 {"error": "no such folder"}
+06-delete-tree	10	PUT /folders/$s {"name": "x"}	404 {"error": "no such folder"}
+06-delete-tree	11	GET /folders	200 {"folders": []}
+06-delete-tree	12	store GET /v1/get?key=testsub/counters/c1	200 {"items": {"revision": "1", "name": "c1"}}
+06-delete-tree	13	store GET /v1/get?key=platform/memberof/testsub/counters/c1	200 {"items": null}
+06-delete-tree	14	@until 90 store GET /v1/get?key=platform/memberof/testsub/counters/c2	200 {"items": null}
+06-delete-tree	15	store GET /v1/get?key=platform/folders/$s	200 {"items": {"deleted": "true", "members": ""}}
+06-delete-tree	16	store GET /v1/get?key=testsub/counters/c2	200 {"items": {"revision": "1", "name": "c2"}}
+07-unit-delete	1	POST /counters {"name": "c1"}	201
+07-unit-delete	2	POST /folders {"name": "a"}	201 {"id": "$a"}
+07-unit-delete	3	POST /folders {"name": "b"}	201 {"id": "$b"}
+07-unit-delete	4	PUT /folders/$a {"members": ["testsub/counters/c1"]}	200 {"index": "$i"}
+07-unit-delete	5	PUT /folders/$b {"members": ["testsub/counters/c1"]}	200 {"index": "$k"}
+07-unit-delete	6	DELETE /counters/c1	200 {"deleted": "c1"}
+07-unit-delete	7	GET /folders/$a	200 {"members": [], "index": "$j"}
+07-unit-delete	8	GET /folders/$b	200 {"members": [], "index": "$l"}
+07-unit-delete	9	store GET /v1/get?key=platform/memberof/testsub/counters/c1	200 {"items": null}
+07-unit-delete	10	ASSERT $i != $j	
+07-unit-delete	11	ASSERT $k != $l	
+07-unit-delete	12	POST /counters {"name": "c2"}	201
+07-unit-delete	13	POST /folders {"name": "c"}	201 {"id": "$c"}
+07-unit-delete	14	PUT /folders/$c {"members": ["testsub/counters/c2"]}	200
+07-unit-delete	15	PUT /folders/$a {"members": ["testsub/counters/c2"]}	200
+07-unit-delete	16	DELETE /folders/$c	200 {"deleted": "$c"}
+07-unit-delete	17	store GET /v1/get?key=platform/memberof/testsub/counters/c2	200 {"items": {"folders": "$a"}}
+07-unit-delete	18	DELETE /counters/c2	200 {"deleted": "c2"}
+07-unit-delete	19	GET /folders/$a	200 {"members": []}
+07-unit-delete	20	store GET /v1/get?key=platform/memberof/testsub/counters/c2	200 {"items": null}
+08-orders	1	POST /counters {"name": "c1"}	201
+08-orders	2	POST /folders {"name": "f"}	201 {"id": "$f"}
+08-orders	3	DELETE /counters/c1	200 {"deleted": "c1"}
+08-orders	4	PUT /folders/$f {"members": ["testsub/counters/c1"]}	400 {"error": "bad member", "field": "/members/0"}
+08-orders	5	store GET /v1/get?key=platform/memberof/testsub/counters/c1	200 {"items": null}
+08-orders	6	POST /counters {"name": "c2"}	201
+08-orders	7	PUT /folders/$f {"members": ["testsub/counters/c2"]}	200
+08-orders	8	store GET /v1/get?key=platform/memberof/testsub/counters/c2	200 {"items": {"folders": "$f"}, "index": "$m"}
+08-orders	9	POST /folders {"name": "g"}	201 {"id": "$g"}
+08-orders	10	PUT /folders/$g {"members": ["testsub/counters/c2"]}	200
+08-orders	11	store GET /v1/get?key=platform/memberof/testsub/counters/c2	200 {"items": {"folders": "@any"}, "index": "$n"}
+08-orders	12	ASSERT $m != $n	
+08-orders	13	DELETE /counters/c2	200 {"deleted": "c2"}
+08-orders	14	GET /folders/$f	200 {"members": []}
+08-orders	15	GET /folders/$g	200 {"members": []}
+08-orders	16	store GET /v1/get?key=platform/memberof/testsub/counters/c2	200 {"items": null}
+09-per-unit-limit	1	POST /counters {"name": "c1"}	201
+09-per-unit-limit	2	POST /folders {"name": "u1"}	201 {"id": "$u1"}
+09-per-unit-limit	3	PUT /folders/$u1 {"members": ["testsub/counters/c1"]}	200
+09-per-unit-limit	4	POST /folders {"name": "u2"}	201 {"id": "$u2"}
+09-per-unit-limit	5	PUT /folders/$u2 {"members": ["testsub/counters/c1"]}	200
+09-per-unit-limit	6	POST /folders {"name": "u3"}	201 {"id": "$u3"}
+09-per-unit-limit	7	PUT /folders/$u3 {"members": ["testsub/counters/c1"]}	200
+09-per-unit-limit	8	POST /folders {"name": "u4"}	201 {"id": "$u4"}
+09-per-unit-limit	9	PUT /folders/$u4 {"members": ["testsub/counters/c1"]}	200
+09-per-unit-limit	10	POST /folders {"name": "u5"}	201 {"id": "$u5"}
+09-per-unit-limit	11	PUT /folders/$u5 {"members": ["testsub/counters/c1"]}	200
+09-per-unit-limit	12	POST /folders {"name": "u6"}	201 {"id": "$u6"}
+09-per-unit-limit	13	PUT /folders/$u6 {"members": ["testsub/counters/c1"]}	200
+09-per-unit-limit	14	POST /folders {"name": "u7"}	201 {"id": "$u7"}
+09-per-unit-limit	15	PUT /folders/$u7 {"members": ["testsub/counters/c1"]}	200
+09-per-unit-limit	16	POST /folders {"name": "u8"}	201 {"id": "$u8"}
+09-per-unit-limit	17	PUT /folders/$u8 {"members": ["testsub/counters/c1"]}	200
+09-per-unit-limit	18	POST /folders {"name": "u9"}	201 {"id": "$u9"}
+09-per-unit-limit	19	PUT /folders/$u9 {"members": ["testsub/counters/c1"]}	400 {"error": "too many folders", "field": "/members/0"}
+09-per-unit-limit	20	store GET /v1/get?key=platform/memberof/testsub/counters/c1	200 {"items": {"folders": "@any"}}
+09-per-unit-limit	21	DELETE /counters/c1	200 {"deleted": "c1"}
+09-per-unit-limit	22	GET /folders/$u1	200 {"members": []}
+09-per-unit-limit	23	GET /folders/$u8	200 {"members": []}
+09-per-unit-limit	24	store GET /v1/get?key=platform/memberof/testsub/counters/c1	200 {"items": null}
+10-bypass	1	POST /counters {"name": "c1"}	201
+10-bypass	2	POST /folders {"name": "f"}	201 {"id": "$f"}
+10-bypass	3	PUT /folders/$f {"members": ["testsub/counters/c1"]}	200 {"index": "$i"}
+10-bypass	4	store GET /v1/get?key=testsub/counters/c1	200 {"index": "$u"}
+10-bypass	5	@as console store POST /v1/write {"id":"b1","op":"delete","key":"testsub/counters/c1","cas":"$u"}	200
+10-bypass	6	@until 90 GET /folders/$f	200 {"members": [], "index": "$j"}
+10-bypass	7	store GET /v1/get?key=platform/memberof/testsub/counters/c1	200 {"items": null}
+10-bypass	8	ASSERT $i != $j	
+11-batch	1	POST /folders {"name": "p"}	201 {"id": "$p", "index": "$ip"}
+11-batch	2	POST /folders {"name": "c", "parent": "$p"}	201 {"id": "$f", "index": "$i"}
+11-batch	3	POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"name": "c1"}, "cas": ""}, {"op": "put", "key": "platform/folders/$f", "fields": {"members": ["testsub/counters/c1"]}, "cas": "$i"}, {"op": "put", "key": "platform/memberof/testsub/counters/c1", "fields": {"folders": ["$f"]}, "cas": ""}], "guards": [{"key": "platform/folders/$p", "index": "$ip"}]}	200 {"written": 3}
+11-batch	4	GET /folders/$f	200 {"members": ["testsub/counters/c1"], "index": "$j"}
+11-batch	5	store GET /v1/get?key=platform/memberof/testsub/counters/c1	200 {"items": {"folders": "$f"}}
+11-batch	6	POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c2", "fields": {"name": "c2"}, "cas": ""}, {"op": "put", "key": "platform/folders/$f", "fields": {"members": ["testsub/counters/c1", "testsub/counters/c2"]}, "cas": "$j"}, {"op": "put", "key": "platform/memberof/testsub/counters/c2", "fields": {"folders": ["$f"]}, "cas": ""}]}	400 {"error": "no chain", "field": "/writes/1/key"}
+11-batch	7	POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c2", "fields": {"name": "c2"}, "cas": ""}, {"op": "put", "key": "platform/folders/$f", "fields": {"members": ["testsub/counters/c1", "testsub/counters/c2"]}, "cas": "$j"}], "guards": [{"key": "platform/folders/$p", "index": "$ip"}]}	400 {"error": "no membership", "field": "/writes/1/key"}
+11-batch	8	POST /console/batch {"writes": [{"op": "delete", "key": "platform/folders/$f", "cas": "$j"}]}	400 {"error": "bad batch"}
+11-batch	9	POST /console/batch {"writes": [{"op": "put", "key": "platform/folders/$f", "fields": {"name": "x"}, "cas": "$j"}], "guards": [{"key": "platform/folders/$p", "index": "$ip"}]}	400 {"error": "bad batch"}
+11-batch	10	DELETE /folders/$p	200 {"deleted": "$p"}
+11-batch	11	store GET /v1/get?key=platform/folders/$p	200 {"index": "$t"}
+11-batch	12	POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c2", "fields": {"name": "c2"}, "cas": ""}, {"op": "put", "key": "platform/folders/$f", "fields": {"members": ["testsub/counters/c1", "testsub/counters/c2"]}, "cas": "$j"}, {"op": "put", "key": "platform/memberof/testsub/counters/c2", "fields": {"folders": ["$f"]}, "cas": ""}], "guards": [{"key": "platform/folders/$p", "index": "$t"}]}	409 {"error": "parent gone", "field": "/writes/1/key"}
+11-batch	13	store GET /v1/get?key=testsub/counters/c2	200 {"items": null}
+12-doors	1	POST /counters {"name": "c1"}	201
+12-doors	2	POST /folders {"name": "a"}	201 {"id": "$f"}
+12-doors	3	PUT /folders/$f {"members": ["testsub/counters/c1"]}	200
+12-doors	4	store GET /v1/get?key=platform/memberof/testsub/counters/c1	200 {"index": "$m"}
+12-doors	5	GET /folders?member=testsub/counters/c1	200 {"folders": [{"id": "$f"}], "member": {"index": "$m"}}
+12-doors	6	GET /folders?member=testsub/counters/none	200 {"folders": [], "member": {"index": ""}}
+12-doors	7	GET /folders?member=c1	400 {"error": "bad member"}
+12-doors	8	HEAD /folders	200
+12-doors	9	PATCH /folders/$f {"name": "x"}	405 {"error": "method"}
+12-doors	10	GET /folders/$f/x	404 {"error": "no such path"}
+12-doors	11	GET /folders/nothex	404 {"error": "no such folder"}
+12-doors	12	@as console store POST /v1/write {"id":"c1","op":"put","key":"platform/folders/00000000000000000000000000000002","items":{"name":""},"cas":""}	200
+12-doors	13	GET /folders	200 {"folders": [{"id": "00000000000000000000000000000002", "garbled": true}, {"id": "$f"}]}
+12-doors	14	GET /folders/00000000000000000000000000000002	503 {"error": "unavailable"}
