@@ -1542,7 +1542,15 @@ class Check:
                 if match and nested:
                     return self.scenario_form(path, line, match.group("request"), expect, forms)
                 if match:
-                    if expect != "ok":
+                    # `@stream-wait` alone waits for `ok <JSON>`, a subset of the message (общий словарь приёмки).
+                    if name == "@stream-wait":
+                        try:
+                            strict_json(expect.removeprefix("ok "))
+                            if not expect.startswith("ok "):
+                                raise ValueError
+                        except (ValueError, TypeError):
+                            self.error(path, f"line {line}: directive {name} expects ok <JSON>")
+                    elif expect != "ok":
                         self.error(path, f"line {line}: directive {name} expects ok")
                     return
             if any(pattern.fullmatch(request) for pattern in doors):

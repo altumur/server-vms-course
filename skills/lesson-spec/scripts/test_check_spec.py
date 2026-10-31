@@ -1779,7 +1779,8 @@ class VmsLessonTests(unittest.TestCase):
                   "| `@start worker <sub> <имя> on <сервер>` | воркер | V/01 |\n"
                   "| `@until <секунды> <запрос>` | повтор | V/01 |\n"
                   "| `holder <воркер> <МЕТОД> <путь>` | дверь держателя | V/01 |\n"
-                  "| `resource GET /v1/objects/<ключ>` | дверь ресурса | V/01 |\n")
+                  "| `resource GET /v1/objects/<ключ>` | дверь ресурса | V/01 |\n"
+                  "| `@stream-wait <метка> <с>` | сообщение потока | V/11 |\n")
 
     def scenarios(self, rows):
         (self.root / "VMS/common/acceptance").mkdir(parents=True, exist_ok=True)
@@ -1794,6 +1795,16 @@ class VmsLessonTests(unittest.TestCase):
                         ("@until 30 resource GET /v1/objects/cam/commands/$rid", "200 {}"),
                         ("holder w-srv-a-1 GET /devices", "200 []")])
         self.assertEqual(self.errors(), [])
+
+    def test_stream_wait_expects_ok_with_json(self):
+        self.scenarios([("@stream-wait s1 5", 'ok {"type": "$t"}'),
+                        ("@stream-wait s1 5", "ok"),
+                        ("@stream-wait s1 5", "200 {}"),
+                        ("@stream-wait s1 5", "ok {broken")])
+        errors = self.errors()
+        self.assertFalse(any("line 2:" in e for e in errors), errors)
+        for line in (3, 4, 5):
+            self.assertTrue(any(f"line {line}: directive @stream-wait expects ok <JSON>" in e for e in errors), errors)
 
     def test_vms_forms_refuse_unknown_and_bad_expectation(self):
         self.scenarios([("@start worker cam w-srv-a-1", "ok"),
