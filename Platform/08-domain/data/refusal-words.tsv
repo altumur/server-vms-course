@@ -2,7 +2,7 @@
 # door — двери: agents /api/member, /api/carry, /api/relay; tokens /api/tokens; login /api/login; people /domain/users…; groups /domain/groups…; roles /domain/roles…; batch /domain/batch;
 # grants /domain/grants/…; break-glass /domain/break-glass/…; revoke /domain/revoke; members /domain/members…; topology /domain/topology;
 # placement /domain/placement/…; edits /domain/<sub>/<rows>…; shared /domain/shared; move /api/prepare, /api/take, /domain/move;
-# handover /domain/handover; stranded /domain/stranded/apply; * — каждая дверь процесса. У агентов слово уточняет reason (8.3 Н4, 8.7 Н4).
+# handover /domain/handover; stranded /domain/stranded/apply; agent-tokens — местная дверь токенов агента (приёмка 8.7); * — каждая дверь процесса. У агентов слово уточняет reason (8.3 Н4, 8.7 Н4).
 # versions — двери таблицы 8.0 Н1.9: эти слова идут к словам своей двери (members, topology, people, grants, break-glass, groups, roles, batch, placement, shared); If-Match у POST /domain/users, /domain/groups, /domain/roles и у /domain/batch не читают.
 # field — что несёт поле field: «-» — поля нет; иначе возможные значения через пробел, <…> — подстановка: <поле> — поле тела, <i> — номер строки с нуля.
 door	code	error	field	norm
@@ -152,3 +152,5 @@ people	409	roles table too large	-	8.4 Н4
 grants	403	admin only	-	8.4 Н4
 grants	409	roles table too large	-	8.4 Н4
 break-glass	403	admin only	-	8.4 Н4
+agent-tokens	400	bad request	-	P/09.1 Н1.6 местная дверь агента
+agent-tokens	404	not found	-	P/09.1 Н1.6 местная дверь агента

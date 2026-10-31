@@ -2,7 +2,7 @@
 # door — двери: units /{rows}, /{rows}/{id}; blobs /{rows}/{id}/{blob_field}; tables /{table}, /{table}/{name}; batch /console/batch; policy /policy;
 # next_id /{sub}/next_id; changes /changes — своих строк нет, слова 6.1 Н4 «Лента изменений» — строки *; drain /drain; labels /servers/{server}/labels; decommission /servers/{server}/decommission; schema /schema; where /where/…;
 # folders /folders, /folders/{id}; operations /{sub}/operations…; pass маршруты door.pass, отказ консоли: ответ воркера идёт как получен, форма ProblemRefusal своих слов не несёт (code и message называет манифест); pages страницы и /platform/*; events GET /events; marks POST /marks; requests POST /{sub}/requests; asked DELETE /{sub}/asked/{sha16};
-# * — каждая дверь этих глав. Слова глав 6.3, 6.7 — их Н4.
+# * — каждая дверь этих глав; session — POST /session; domain-forward — двери главы 6.7 у консоли кластера. Прочие слова глав 6.3, 6.7 — их Н4.
 # field — что несёт поле field: «-» — поля нет; /<поле> — поле тела, которое называет отказ; иное — точное значение.
 door	code	error	field	norm
 units	400	Idempotency-Key required	-	6.1 Н4
@@ -205,3 +205,12 @@ pass	504	denied	-	6.5 Н4; договор сторожевой и передач
 *	503	busy	-	6.5 Н4
 *	503	denied	-	6.5 Н4
 *	503	unavailable	-	6.5 Н4
+session	400	this console is open	-	договор сторожевой и передачи «Отказы сторожевой»
+domain-forward	400	one hop	-	6.7 Н1.8
+domain-forward	404	no console known	-	6.7 Н4
+domain-forward	404	no signer here	-	6.7 Н1.8
+domain-forward	404	not a route handed to a member	-	6.7 Н4
+domain-forward	404	not another member	-	6.7 Н4
+domain-forward	502	did not answer	-	договор пересылки
+domain-forward	503	CLUSTERS does not read	-	6.7 Н4
+domain-forward	404	no such book shown	-	6.7 Н4
