@@ -795,6 +795,15 @@ P/06.3 Н1.3 gate, open_routes, session; P/06.5 Н1.8 manifest, rule, codes (р�
 # Вектор урока P/10 (план переноса урока 10, § 3, В7; решение «Архитектора» по планам 8–10, п. 17): сценарий-команда М11/11 сц. 04 переложен в пакет alarms, шаг — строка cases.tsv с case = имя файла входа.
 М11/11 Н3 alarms (входы приёмки М11/11 alarms-*; разбор ревью стадии A 8–10, № 8)	P/10 vectors/alarms	10	список тревог: функция alarms	15 строк из сц. 04 без изменения значений (ожидания — JSON без префикса ok и пробелов вне строк; (разбор ревью стадии B 8–10, № 22)) (14 вычислено, 1 @exit 2); владелец P/10 (решение 8)
 М11/11 сц. 04	P/10 vectors/alarms	10	04-alarms	переложен: 15 шагов = 15 строк cases.tsv: шаг 1 → alarms-01-all-answered, шаг 2 → alarms-02-storm-truncated, шаг 3 → alarms-03-silent-last-report, шаг 4 → alarms-04-not-reporting-witness, шаг 5 → alarms-05-witness-older-than-report, шаг 6 → alarms-06-never-and-unreadable, шаг 7 → alarms-07-history-dedup-and-cut, шаг 8 → alarms-08-window, шаг 9 → alarms-09-clock-offset, шаг 10 → alarms-10-two-witnesses, шаг 11 → alarms-11-cut-before-zero, шаг 12 → alarms-12-page-line-not-alarm, шаг 13 → alarms-13-same-line-in-page, шаг 14 → alarms-14-witness-tie, шаг 15 → alarms-15-lost-after-negative
+- (новая)	P/02.1-38	2.1	door.pass вида второго: форма и связи	ADR-0094 B1
+- (новая)	P/02.5-06	2.5	сокет роли воркера к консоли	ADR-0094 B1
+- (новая)	P/03.4-15	3.4	дверь и клиент door.pass второго вида	ADR-0094 B1
+- (новая)	P/06.1-33	6.1	таблица service: true	ADR-0094 B1
+- (новая)	P/06.3-07	6.3	обратный вызов по билету	ADR-0094 B1
+- (новая)	P/06.3-08	6.3	закрытый перечень в манифесте	ADR-0094 B1
+- (новая)	P/06.5-17	6.5	door.pass второго вида	ADR-0094 B1
+- (новая)	P/10-16	10	door.pass второго вида на домене	ADR-0094 B1
+- (новая)	P/06.1-34	6.1	лента по билету: строки service своего user	ADR-0094 B1, доп. (15), правка 2026-10-31
 - (новая)	P/08.4-10	8.4	строка гранта: sub, folder:, role:, none	ADR-0097, ADR-0099
 - (новая)	P/08.4-11	8.4	группы и роли	ADR-0098
 - (новая)	P/08.4-12	8.4	таблица ролей члена	ADR-0098 §4
@@ -840,5 +849,5 @@ P/06.3 Н1.3 gate, open_routes, session; P/06.5 Н1.8 manifest, rule, codes (р�
 - (новая)	P/06.9-16	6.9	жнец операций	ADR-0095
 - (новая)	P/06.9-17	6.9	двери операций	ADR-0095
 - (новая)	P/06.9-18	6.9	лента и обратный вызов операций	ADR-0095
-- (новая)	P/02.1-38	2.1	имена семей папок и операций, display.tree.folders	ADR-0095, ADR-0096
+- (новая)	P/02.1-39	2.1	имена семей папок и операций, display.tree.folders	ADR-0095, ADR-0096
 - (новая)	P/07-06	7	дерево по папкам кластера	ADR-0096

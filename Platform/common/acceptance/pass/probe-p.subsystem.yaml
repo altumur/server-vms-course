@@ -1,0 +1,12 @@
+# probe-p — манифест стенда передачи второго вида (ADR-0094 B1): воркера играет подставной воркер раннера, поэтому манифест не влияет на testsub и testsub2.
+name: probe-p
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+tables: {stash: {key: name, fields: {name: {type: string, required: true}, note: {type: string}, user: {type: string}}, service: true}}
+door:
+  pass:
+    routes: [api]
+    calls: [probe-p/things, probe-p/stash, console/batch, changes, GET session, GET manifest]
+    stream: [api/stream]
+    wait: {api/slow: 2}
+worker: {exec: /usr/lib/probe-p/worker}

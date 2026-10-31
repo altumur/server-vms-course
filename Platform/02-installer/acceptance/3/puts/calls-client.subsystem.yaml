@@ -1,0 +1,10 @@
+# заказчик перечня: все виды записей адресата (ADR-0094 B1)
+name: callc
+unit:
+  rows: callers
+  id: name
+  fields:
+    name:  {type: string, required: true}
+placement: {capacity: {default: 1}}
+door: {pass: {routes: [api], calls: [neartd/neartds, neartd/notes, GET neartd/policy, GET neartd/next_id, neartd/chat]}}
+worker: {exec: /usr/lib/callc/worker}

@@ -50,3 +50,4 @@ date	sample	fix	languages
 2026-10-31	31-changes-metrics	ADR-0094 B2: ряды ленты w2c_changes_*	all
 2026-10-31	29-batch-next-id/2, 4, 5, 7, 30-next-id	ADR-0094 B4: индекс счётчика — дверью GET /{sub}/next_id, не хранилища; новый сценарий двери	all
 2026-10-31	29-batch-next-id	ADR-0094 B9: счётчик numeric в пакете: n — наибольший номер пакета, следующий POST берёт следующий номер	all
+2026-10-31	32-pass-second-kind, probe-x	ADR-0094 B1: door.pass второго вида без живого воркера, мёртвый билет; манифест probe-x получил второй вид	all

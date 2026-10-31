@@ -1,0 +1,104 @@
+scenario	step	request	expect
+# Стенд передачи второго вида (ADR-0094 B1): пока не исполним — README, «Исполнимость». Манифест probe-p, воркер — подставной воркер раннера.
+01-ticket-lives-with-request	1	@domain m1	ok
+01-ticket-lives-with-request	2	@pass-worker m1 probe-p p-1	ok
+01-ticket-lives-with-request	3	@pass-open a member m1 console GET /probe-p/api/x?y=1	ok {"path": "/api/x", "query": "y=1", "ticket": "$t", "headers": {"Authorization": "@absent", "Cookie": "@absent", "X-W2C-Pass-Console": "@absent"}}
+01-ticket-lives-with-request	4	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /session	200 {"user": "root", "via": "ticket"}
+01-ticket-lives-with-request	5	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /probe-p/things	200
+01-ticket-lives-with-request	6	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /probe-p/things {"name": "n1"}	201 {"revision": 1}
+01-ticket-lives-with-request	7	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /where/n1	401 {"error": "denied", "detail": "ticket refused"}
+01-ticket-lives-with-request	8	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t DELETE /session	401 {"error": "denied", "detail": "ticket refused"}
+01-ticket-lives-with-request	9	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /testsub/counters	401 {"error": "denied", "detail": "ticket refused"}
+01-ticket-lives-with-request	10	socket m1 probe-pworker GET /session	401 {"error": "denied", "detail": "ticket refused"}
+01-ticket-lives-with-request	11	member m1 console @header X-W2C-Pass-Ticket: $t GET /session	401 {"error": "denied", "detail": "ticket refused"}
+01-ticket-lives-with-request	12	socket m1 testsubworker @header X-W2C-Pass-Ticket: $t GET /session	401 {"error": "denied", "detail": "ticket refused"}
+01-ticket-lives-with-request	13	@pass-answer a 200 application/json {"ok": true}	200 {"ok": true}
+01-ticket-lives-with-request	14	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /session	401 {"error": "denied", "detail": "ticket refused"}
+01-ticket-lives-with-request	15	member m1 console GET /probe-p/metrics	200 ~probe_p_passed_calls_total 3
+01-ticket-lives-with-request	16	member m1 console GET /events?kind=pass.called&limit=10	200 ~probe-p/p-1
+02-headers-and-types	1	@domain m1	ok
+02-headers-and-types	2	@pass-worker m1 probe-p p-1	ok
+02-headers-and-types	3	@pass-open a member m1 console @header If-Match: "7" @header Last-Event-ID: 41 @header Cookie: w2c_token=x @header X-User: mallory PUT /probe-p/api/x {"a": 1}	ok {"method": "PUT", "body": "{\"a\": 1}", "headers": {"If-Match": "\"7\"", "Last-Event-ID": "41", "Content-Type": "@any", "X-W2C-Pass-Ticket": "@any", "Cookie": "@absent", "X-User": "@absent", "X-Operator": "@absent"}}
+02-headers-and-types	4	@pass-answer a 412 application/problem+json {"code": "VERSION"}	412 {"code": "VERSION"}
+02-headers-and-types	5	@pass-open b member m1 console DELETE /probe-p/api/x	ok {"method": "DELETE"}
+02-headers-and-types	6	@pass-answer b 204 -	204
+02-headers-and-types	7	@pass-open c member m1 console GET /probe-p/api/x	ok {"method": "GET"}
+02-headers-and-types	8	@pass-answer c 200 text/html <b>x</b>	502 {"error": "denied"}
+02-headers-and-types	9	@pass-open d member m1 console GET /probe-p/api/x	ok {"method": "GET"}
+02-headers-and-types	10	@pass-answer d 200 text/event-stream;charset=utf-8 data: 1	200 @header X-Content-Type-Options: ~nosniff
+02-headers-and-types	11	@pass-open e member m1 console GET /probe-p/api/x	ok {"method": "GET"}
+02-headers-and-types	12	@pass-answer e 200 application/json {}	200 @header Content-Security-Policy: ~sandbox
+02-headers-and-types	13	@pass-open f member m1 console GET /probe-p/api/slow	ok {"method": "GET"}
+02-headers-and-types	14	@pass-result f	504 {"error": "denied"}
+03-person-off	1	@domain m1	ok
+03-person-off	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
+03-person-off	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200
+03-person-off	4	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$t1"}
+03-person-off	5	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$t2"}
+03-person-off	6	@pass-worker m1 probe-p p-1	ok
+03-person-off	7	@pass-open a member m1 console @header Authorization: Bearer $t1 GET /probe-p/api/x	ok {"ticket": "$a"}
+03-person-off	8	@pass-open b member m1 console @header Authorization: Bearer $t2 GET /probe-p/api/x	ok {"ticket": "$b"}
+03-person-off	9	@until 30 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $a GET /session	200 {"user": "ann", "via": "ticket"}
+03-person-off	10	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $a POST /probe-p/things {"name": "n1"}	403 {"error": "denied"}
+03-person-off	11	holder POST /domain/revoke {"token": "$t1"}	200 {"revoked": "@any"}
+03-person-off	12	@until 30 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $a GET /session	401 {"error": "denied", "detail": "ticket refused"}
+03-person-off	13	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $b GET /session	200 {"user": "ann"}
+03-person-off	14	holder PUT /domain/users/ann {"disabled": true}	200 {"user": "ann", "disabled": true}
+03-person-off	15	@until 30 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $b GET /session	401 {"error": "denied", "detail": "ticket refused"}
+04-open-console-gives-no-call	1	@pass-worker probe-p p-1	ok
+04-open-console-gives-no-call	2	@pass-open a console GET /probe-p/api/x	ok {"ticket": "$t"}
+04-open-console-gives-no-call	3	socket probe-pworker @header X-W2C-Pass-Ticket: $t GET /session	401 {"error": "denied", "detail": "ticket refused"}
+04-open-console-gives-no-call	4	@pass-answer a 200 application/json {}	200
+05-stream	1	@domain m1	ok
+05-stream	2	@pass-worker m1 probe-p p-1	ok
+05-stream	3	signer POST /api/login {"user": "root", "password": "w2c test root password"}	200 {"token": "$r"}
+05-stream	4	@pass-open a member m1 console @header Authorization: Bearer $r @header Last-Event-ID: 7 GET /probe-p/api/stream	ok {"ticket": "$t", "headers": {"Last-Event-ID": "7"}}
+05-stream	5	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /changes	200 {"changes": []}
+05-stream	6	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /probe-p/things	200
+05-stream	7	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /probe-p/things {"name": "n1"}	401 {"error": "denied", "detail": "ticket refused"}
+05-stream	8	@pass-chunk a data: 1	200 ~data: 1
+05-stream	9	@pass-abort a	ok
+05-stream	10	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /session	401 {"error": "denied", "detail": "ticket refused"}
+05-stream	11	@pass-open b member m1 console @header Authorization: Bearer $r GET /probe-p/api/stream	ok {"ticket": "$u"}
+05-stream	12	@pass-chunk b data: 2	200 ~data: 2
+05-stream	13	holder POST /domain/revoke {"token": "$r"}	200 {"revoked": "@any"}
+05-stream	14	@pass-closed b	ok
+06-service-table	1	@domain m1	ok
+06-service-table	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
+06-service-table	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:probe-p/none"}]}	200
+06-service-table	4	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$ta"}
+06-service-table	5	@pass-worker m1 probe-p p-1	ok
+06-service-table	6	@until 30 member m1 console @header Authorization: Bearer $ta GET /session	200 {"user": "ann"}
+06-service-table	7	@pass-open a member m1 console @header Authorization: Bearer $ta GET /probe-p/api/x	ok {"ticket": "$t"}
+06-service-table	8	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /changes	200 {"position": "$p", "changes": []}
+06-service-table	9	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /probe-p/stash {"name": "s1", "note": "kept", "user": "ann"}	201 {"row": {"name": "s1"}}
+06-service-table	10	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /probe-p/stash {"name": "s4", "user": "bob"}	201 {"row": {"name": "s4"}}
+06-service-table	11	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /probe-p/stash/s1	200 {"name": "s1", "note": "kept"}
+06-service-table	12	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /probe-p/things {"name": "n2"}	403 {"error": "denied"}
+06-service-table	13	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /console/batch {"writes": [{"op": "put", "key": "probe-p/stash/s2", "fields": {"name": "s2"}, "cas": ""}]}	200 {"written": 1}
+06-service-table	14	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /console/batch {"writes": [{"op": "put", "key": "probe-p/stash/s3", "fields": {"name": "s3"}, "cas": ""}, {"op": "put", "key": "testsub/counters/c1", "fields": {"name": "c1"}, "cas": ""}]}	401 {"error": "denied", "detail": "ticket refused"}
+06-service-table	15	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /probe-p/stash/s3	404
+06-service-table	16	@until 10 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /changes?after=$p	200 {"position": "$q", "changes": [{"key": "probe-p/stash/s1", "revision": 1}]}
+06-service-table	17	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t DELETE /probe-p/stash/s1	200
+06-service-table	18	@until 10 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /changes?after=$q	200 {"changes": [{"key": "probe-p/stash/s1", "deleted": ""}]}
+06-service-table	19	@pass-answer a 200 application/json {}	200
+06-service-table	20	member m1 console GET /probe-p/stash/s1	403 {"error": "denied"}
+07-lane-of-calls	1	@domain m1	ok
+07-lane-of-calls	2	@pass-worker m1 probe-p p-1	ok
+07-lane-of-calls	3	@pass-open a member m1 console GET /probe-p/api/x	ok {"ticket": "$t"}
+07-lane-of-calls	4	@pass-fill m1 probe-p	ok
+07-lane-of-calls	5	member m1 console GET /probe-p/api/x	503 {"error": "busy"}
+07-lane-of-calls	6	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /session	200 {"user": "root"}
+08-leaf-of-the-role	1	@clusters hold m1	ok
+08-leaf-of-the-role	2	@tls-setup stand.json	ok
+08-leaf-of-the-role	3	@domain m1	ok
+08-leaf-of-the-role	4	@pass-worker m1 probe-p p-1 kit=m1	ok
+08-leaf-of-the-role	5	@pass-open a member m1 console GET /probe-p/api/x	ok {"ticket": "$t", "headers": {"X-W2C-Pass-Console": "~https://"}}
+08-leaf-of-the-role	6	@pass-call m1-probe-pworker @header X-W2C-Pass-Ticket: $t GET /session	ok {"handshake": "ok", "http": {"status": 200, "body": {"via": "ticket"}}}
+08-leaf-of-the-role	7	@pass-call m1-testsubworker @header X-W2C-Pass-Ticket: $t GET /session	ok {"handshake": "ok", "http": {"status": 401, "body": {"detail": "ticket refused"}}}
+08-leaf-of-the-role	8	@pass-call m1-probe-pworker-other @header X-W2C-Pass-Ticket: $t GET /session	ok {"handshake": "ok", "http": {"status": 401, "body": {"detail": "ticket refused"}}}
+08-leaf-of-the-role	9	@pass-call null @header X-W2C-Pass-Ticket: $t GET /session	ok {"handshake": "ok", "http": {"status": 401, "body": {"detail": "ticket refused"}}}
+08-leaf-of-the-role	10	@pass-answer a 200 application/json {}	200
+08-leaf-of-the-role	11	@pass-worker m1 probe-p p-1 kit=m1-testsubworker	ok
+08-leaf-of-the-role	12	member m1 console PUT /probe-p/api/secret {"password": "x"}	502 {"error": "denied"}
+08-leaf-of-the-role	13	@pass-seen p-1	ok {"requests": 0}

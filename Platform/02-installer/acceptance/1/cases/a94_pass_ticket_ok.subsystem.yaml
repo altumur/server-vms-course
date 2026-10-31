@@ -1,0 +1,13 @@
+# вид второй целиком: маршруты, обратный вызов, поток, предел ожидания, форма отказов (ADR-0094 B1) (ADR-0094 B1)
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+tables: {stash: {fields: {note: {type: string}}, service: true}}
+worker: {exec: /usr/lib/probe/worker}
+door:
+  pass:
+    routes: [api]
+    calls: [probe/things, probe/stash, probe/policy, GET probe/next_id, other/rows, GET other/chat, console/batch, changes, GET manifest, GET servers, GET events, GET session, GET schema]
+    stream: [api/stream, api/turns]
+    wait: {api/turns: 9000, api/slow: 30}
+    refusals: {form: problem, codes: {'401': UNAUTHORIZED, '403': PERMISSION_DENIED, '404': NO_ROUTE, '413': VALIDATION_FAILED}}

@@ -5,3 +5,11 @@ name: probe-x
 unit: {rows: probes, id: numeric, fields: {label: {type: string, default: 'probe{id}'}, n: {type: int}, cost: {type: int, default: 1}}}
 placement: {capacity: {default: 1}, weight: {field: cost, default: 1}}
 worker: {exec: /usr/lib/probe-x/worker}
+# door.pass второго вида без живого воркера (ADR-0094 B1, сц. 32): маршрут глубже одного сегмента, форма отказов консоли — из манифеста
+door:
+  pass:
+    routes: [api/v1]
+    calls: [probe-x/probes, GET session, changes]
+    stream: [api/v1/stream]
+    wait: {api/v1/slow: 30}
+    refusals: {form: problem, codes: {'404': NO_ROUTE, '503': NOT_NOW}}
