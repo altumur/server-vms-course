@@ -4,7 +4,7 @@ scenario	step	request	expect
 03-operator-mark	2	console POST /marks {"unit": "testsub/c3", "note": "checked"}	2xx
 03-operator-mark	3	@until 15 console GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c3", "epoch_is": "current", "subsystem": "console"}]}
 03-operator-mark	4	resource GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c3", "epoch_is": "@absent", "fenced": "@absent"}]}
-03-operator-mark	5	console POST /marks {"note": "no unit"}	400
+03-operator-mark	5	console POST /marks {"note": "no unit"}	400 {"error": "a mark names a unit", "field": "/unit"}
 03-operator-mark	6	console POST /counters {"name": "c6", "start": 1}	201
 03-operator-mark	7	console POST /marks {"unit": "testsub/c6", "note": "extra ok", "text": "ignored"}	2xx
 03-operator-mark	8	@until 15 console GET /events?unit=testsub/c6&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c6", "text": "@absent"}]}
@@ -31,20 +31,20 @@ scenario	step	request	expect
 04-request-reaped	19	store GET /v1/get?key=testsub/requests/$r2	200 {"items": {"unit": "c4", "valid_until": "0"}}
 04-request-reaped	20	console POST /testsub/requests {"unit": "c4", "add": 8, "valid_until": 1000.1234}	202 {"queued": "$r3"}
 04-request-reaped	21	store GET /v1/get?key=testsub/requests/$r3	200 {"items": {"unit": "c4", "valid_until": "1000.123"}}
-06-request-refused	1	console POST /testsub/requests {"unit": "c5"}	400
-06-request-refused	2	console POST /testsub/requests {"add": 5}	400
-06-request-refused	3	console POST /testsub/requests {"unit": "nosuch", "add": 5}	404
-06-request-refused	4	console POST /testsub/requests {"unit": "c5", "add": "five"}	400
-06-request-refused	5	console POST /testsub/requests {bad	400 {"fault": "@absent"}
-06-request-refused	6	console POST /testsub/requests {"unit": "c5", "add": 5, "valid_until": null}	400
-06-request-refused	7	console POST /testsub/requests {"unit": "nosuch", "add": 5, "valid_until": 99999999999}	400
+06-request-refused	1	console POST /testsub/requests {"unit": "c5"}	400 {"error": "refused"}
+06-request-refused	2	console POST /testsub/requests {"add": 5}	400 {"error": "refused"}
+06-request-refused	3	console POST /testsub/requests {"unit": "nosuch", "add": 5}	404 {"error": "no such unit"}
+06-request-refused	4	console POST /testsub/requests {"unit": "c5", "add": "five"}	400 {"error": "refused"}
+06-request-refused	5	console POST /testsub/requests {bad	400 {"error": "bad body", "fault": "@absent"}
+06-request-refused	6	console POST /testsub/requests {"unit": "c5", "add": 5, "valid_until": null}	400 {"error": "bad deadline", "field": "/valid_until"}
+06-request-refused	7	console POST /testsub/requests {"unit": "nosuch", "add": 5, "valid_until": 99999999999}	400 {"error": "too far", "field": "/valid_until"}
 07-request-gone	1	console POST /counters {"name": "c1", "start": 1}	201
 07-request-gone	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201
 07-request-gone	3	console2 POST /tallies {"name": "t2", "of": "c1"}	201
 07-request-gone	4	console POST /testsub2/requests {"unit": "t1", "from": 0, "to": 1}	202 {"queued": "$r1"}
 07-request-gone	5	console POST /testsub2/requests {"unit": "t1", "from": 1, "to": 2}	202
 07-request-gone	6	console POST /testsub2/requests {"unit": "t1", "from": 2, "to": 3}	202
-07-request-gone	7	console POST /testsub2/requests {"unit": "t2", "from": 0, "to": 1}	429
+07-request-gone	7	console POST /testsub2/requests {"unit": "t2", "from": 0, "to": 1}	429 {"error": "too many"}
 07-request-gone	8	console2 DELETE /tallies/t1	200 {"deleted": "t1"}
 07-request-gone	9	@until 60 store GET /v1/get?key=objects/testsub2/commands/$r1	200 {"items": {"outcome": "gone", "ended_by": "reaper", "unit": "t1"}}
 07-request-gone	10	@until 90 store GET /v1/get?key=testsub2/requests/$r1	200 {"items": null}
@@ -57,9 +57,9 @@ scenario	step	request	expect
 08-request-exists-ledger	5	store GET /v1/get?key=testsub2/asked/06e55b633481f7bb	200 {"items": {"rids": "t1-0-1", "by": "operator"}}
 08-request-exists-ledger	6	console DELETE /testsub2/asked/06e55b633481f7bb	200 {"cleared": true}
 08-request-exists-ledger	7	store GET /v1/get?key=testsub2/asked/06e55b633481f7bb	200 {"items": null}
-08-request-exists-ledger	8	console DELETE /testsub2/asked/06e55b633481f7bb	404
+08-request-exists-ledger	8	console DELETE /testsub2/asked/06e55b633481f7bb	404 {"error": "no such path"}
 08-request-exists-ledger	9	store POST /v1/write {"id":"a9","op":"put","key":"testsub2/asked/06e55b633481f7bb","items":{"rids":"t1-0-1","by":"operator","at":"x"},"cas":""}	200
-08-request-exists-ledger	10	console POST /testsub2/requests {"unit": "t1", "from": 1, "to": 2}	429
+08-request-exists-ledger	10	console POST /testsub2/requests {"unit": "t1", "from": 1, "to": 2}	429 {"error": "refused"}
 08-request-exists-ledger	11	store GET /v1/get?key=testsub2/requests/t1-1-2	200 {"items": null}
 08-request-exists-ledger	12	store GET /v1/get?key=testsub2/asked/06e55b633481f7bb	200 {"items": {"rids": "t1-0-1", "at": "x"}}
 # 09-request-mark-first (аудит покрытия P/06, второй проход Gemini, G05; testsub — rid r-<sha16(Idempotency-Key)>, ключ задан заголовком): метка rid уже стоит — иной unit — 409 spent; метка не по форме — 409 spent, метка прежняя; тот же unit и digest с исходом — 200 answered; строки просьбы ни в одном случае нет
@@ -93,7 +93,7 @@ scenario	step	request	expect
 11-request-expired	4	console POST /testsub2/requests {"unit": "t1", "from": 0, "to": 1}	202 {"queued": "$r1"}
 11-request-expired	5	console POST /testsub2/requests {"unit": "t1", "from": 1, "to": 2}	202 {"queued": "$r2"}
 11-request-expired	6	console POST /testsub2/requests {"unit": "t1", "from": 2, "to": 3}	202
-11-request-expired	7	console POST /testsub2/requests {"unit": "t2", "from": 0, "to": 1}	429
+11-request-expired	7	console POST /testsub2/requests {"unit": "t2", "from": 0, "to": 1}	429 {"error": "too many"}
 11-request-expired	8	admin GET /v1/get?key=testsub2/requests/$r1	200 {"index": "$q", "items": {"unit": "t1", "from": "0", "to": "1", "digest": "$d", "by": "operator", "of": "c1"}}
 11-request-expired	9	admin POST /v1/write {"id":"b11","op":"put","key":"testsub2/requests/$r1","items":{"unit":"t1","from":"0","to":"1","digest":"$d","by":"operator","at":"1700000000","of":"c1"},"cas":"$q"}	200
 11-request-expired	10	@until 60 admin GET /v1/get?key=objects/testsub2/commands/$r1	200 {"items": {"outcome": "expired", "ended_by": "reaper", "unit": "t1", "digest": "$d", "ended_at": "@time"}}

@@ -864,42 +864,42 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConsoleEvents'
         '400':
-          description: Неверные параметры/чтение тела — TextError (Н2; from, to, limit — договор сторожевой и передачи «Числовые
+          description: Неверные параметры/чтение тела — ConsoleRefusal (Н2; from, to, limit — договор сторожевой и передачи «Числовые
             параметры query», прочие параметры — P/05 Н1.3)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '408':
           description: 'Консоль: чтение тела медленно'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '413':
           description: 'Консоль: тело больше предела'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '429':
           description: 'Консоль: предел входа — error too many attempts'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '404':
           description: 'Консоль: путь недоступен'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '405':
-          description: 'Метод не поддержан: консоль — TextError (ресурс — без тела, P/05 Н2)'
+          description: 'Метод не поддержан: консоль — ConsoleRefusal (ресурс — без тела, P/05 Н2)'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '401':
           description: 'Консоль: личность не установлена'
           content:
@@ -917,7 +917,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
           headers:
             Retry-After:
               description: При busy обязателен со значением 1.
@@ -1089,25 +1089,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '408':
           description: Слишком медленное тело
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '413':
           description: Тело или подготовленная строка больше применимого предела
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '429':
           description: Предел входа
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '401':
           description: Личность не установлена
           content:
@@ -1125,19 +1125,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '405':
           description: Метод не поддержан
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '503':
           description: busy, недоступно хранилище или доверие; без успешной публикации при известном отказе
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
           headers:
             Retry-After:
               description: При busy обязателен со значением 1.
@@ -1177,19 +1177,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '413':
           description: Тело или подготовленная строка больше применимого предела
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '429':
           description: Учёт полон либо успешно прочитанная строка учёта повреждена; недоступное чтение — 503
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '401':
           description: Личность не установлена
           content:
@@ -1207,19 +1207,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '405':
           description: Метод не поддержан
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '503':
           description: busy, недоступно хранилище или доверие; без успешной публикации при известном отказе
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
           headers:
             Retry-After:
               description: При busy обязателен со значением 1.
@@ -1242,7 +1242,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
       parameters:
       - name: Idempotency-Key
         in: header
@@ -1277,25 +1277,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '408':
           description: Тело пришло слишком медленно
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '413':
           description: Тело больше предела двери
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '429':
           description: Предел входа
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '401':
           description: Личность не установлена
           content:
@@ -1313,19 +1313,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '405':
           description: Метод не поддержан
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
         '503':
           description: busy, недоступно хранилище или доверие; без успешной публикации при известном отказе
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextError'
+                $ref: '#/components/schemas/ConsoleRefusal'
           headers:
             Retry-After:
               description: При busy обязателен со значением 1.
@@ -5084,10 +5084,16 @@ components:
           - this console is open
           - open
           - bad body
+          - a mark names a unit
+          - no requests
+          - exists
+          - spent
+          - too many
+          - store unavailable
         field:
           $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/RefusalField'
       description: Общая форма отказа консоли (глава 6.5 Н4) `{detail, error, field?}`; это не диагностика загрузчика и не Fault
-        хранилища. Слова error дверей глав 6.1, 6.5, 6.6 — закрытый перечень data/refusal-words.tsv; слова /session — договор
+        хранилища. Слова error дверей глав 6.1, 6.4, 6.5, 6.6 — закрытый перечень data/refusal-words.tsv; слова /session — договор
         сторожевой и передачи.
     ConsoleRefused:
       unevaluatedProperties: false
@@ -6674,18 +6680,6 @@ components:
           - .
           - ..
         - pattern: "^(?:[\\s\\S]*[/\\\\\"'\u0000-\u001F\u007F-\u009F\u2028\u2029][\\s\\S]*)$"
-    TextError:
-      type: object
-      required:
-      - detail
-      - error
-      additionalProperties: false
-      properties:
-        detail:
-          type: string
-        error:
-          type: string
-          minLength: 1
     ConsoleDenied:
       type: object
       required:
@@ -6709,9 +6703,22 @@ components:
           type: string
         error:
           type: string
-          minLength: 1
+          enum:
+          - Idempotency-Key required
+          - bad body
+          - bad unit
+          - bad id
+          - bad deadline
+          - too far
+          - this subsystem takes no deadline
+          - too_long
+          - refused
+          - denied
         fault:
           const: too_long
+        field:
+          $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/RefusalField'
+      description: Отказ 400 двери просьб — форма ConsoleRefusal и `fault` длины поля (глава 6.4 Н2, Н4). Слова — data/refusal-words.tsv.
     ConsoleEventRow:
       description: Строка ответа консоли — с fenced и epoch_is (P/05 Н1.3, договор слияния журнала событий); epoch_is нет
         только у строки подсистемы, чья эпоха не прочитана (incomplete[<sub>/epoch]); unknown у консоли не бывает.

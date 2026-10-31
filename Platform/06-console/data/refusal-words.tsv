@@ -1,7 +1,8 @@
-# Закрытый перечень слов error дверей консоли кластера: главы 6.1, 6.2, 6.5, 6.6 (ADR-0094 B5). Правила — глава 6.1 Н2 «Отказ: error и field».
+# Закрытый перечень слов error дверей консоли кластера: главы 6.1, 6.2, 6.4, 6.5, 6.6 (ADR-0094 B5, доп. (13)). Правила — глава 6.1 Н2 «Отказ: error и field».
 # door — двери: units /{rows}, /{rows}/{id}; blobs /{rows}/{id}/{blob_field}; tables /{table}, /{table}/{name}; policy /policy;
 # drain /drain; labels /servers/{server}/labels; decommission /servers/{server}/decommission; schema /schema; where /where/…;
-# pages страницы и /platform/*; * — каждая дверь этих глав. Слова глав 6.3, 6.4, 6.7 — их Н4.
+# pages страницы и /platform/*; events GET /events; marks POST /marks; requests POST /{sub}/requests; asked DELETE /{sub}/asked/{sha16};
+# * — каждая дверь этих глав. Слова глав 6.3, 6.7 — их Н4.
 # field — что несёт поле field: «-» — поля нет; /<поле> — поле тела, которое называет отказ; иное — точное значение.
 door	code	error	field	norm
 units	400	Idempotency-Key required	-	6.1 Н4
@@ -70,6 +71,22 @@ schema	409	refused	-	6.6 Н4
 where	400	badkey	-	6.5 Н4
 pages	404	no such version	-	6.5 Н4
 pages	404	is mounted	-	6.5 Н2
+marks	400	a mark names a unit	/unit	6.4 Н4
+requests	400	Idempotency-Key required	-	6.4 Н3 шаг 1; 6.1 Н4
+requests	400	bad body	-	6.4 Н4
+requests	400	bad unit	/unit	6.4 Н4
+requests	400	bad id	/<поле>	6.4 Н4
+requests	400	bad deadline	/valid_until	6.4 Н4; векторы deadline
+requests	400	too far	/valid_until	6.4 Н3 шаг 1
+requests	400	this subsystem takes no deadline	/valid_until	6.4 Н3 шаг 1
+requests	400	too_long	/<поле>	6.4 Н2
+requests	404	no requests	-	6.4 Н3 шаг 0
+requests	404	no such unit	-	6.4 Н3 шаг 0
+requests	409	exists	-	6.4 Н4
+requests	409	spent	-	6.4 Н4
+requests	429	too many	-	6.4 Н4
+requests	429	refused	-	6.4 Н4: учёт прочитан, но повреждён
+requests	503	store unavailable	-	6.4 Н4
 *	400	refused	-	договор сторожевой и передачи «Разбор запроса и порядок проверок»
 *	400	denied	-	6.5 Н4
 *	401	denied	-	договор сторожевой и передачи
