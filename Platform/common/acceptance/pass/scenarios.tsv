@@ -43,8 +43,12 @@ scenario	step	request	expect
 03-person-off	12	holder POST /domain/revoke {"token": "$t1"}	200 {"revoked": "@any"}
 03-person-off	13	@until 30 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $a GET /session	401 {"error": "denied", "detail": "ticket refused"}
 03-person-off	14	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $b GET /session	200 {"user": "ann"}
-03-person-off	15	holder PUT /domain/users/ann {"disabled": true}	200 {"user": "ann", "disabled": true}
-03-person-off	16	@until 30 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $b GET /session	401 {"error": "denied", "detail": "ticket refused"}
+03-person-off	15	@pass-open c member m1 console @header Authorization: Bearer $t2 GET /probe-p/api/stream	ok {"ticket": "$c"}
+03-person-off	16	@pass-chunk c data: 1	200 ~data: 1
+03-person-off	17	holder PUT /domain/users/ann {"disabled": true}	200 {"user": "ann", "disabled": true}
+03-person-off	18	@until 30 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $b GET /session	200 {"user": "ann", "grants": []}
+03-person-off	19	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $b GET /probe-p/things	403 {"error": "denied"}
+03-person-off	20	@pass-closed c	ok
 04-open-console-gives-no-call	1	@pass-worker probe-p p-1	ok
 04-open-console-gives-no-call	2	@pass-open a console GET /probe-p/api/x	ok {"ticket": "$t"}
 04-open-console-gives-no-call	3	socket probe-pworker @header X-W2C-Pass-Ticket: $t GET /session	401 {"error": "denied", "detail": "ticket refused"}
@@ -109,3 +113,15 @@ scenario	step	request	expect
 08-leaf-of-the-role	16	@pass-worker m1 probe-p p-1 kit=m1-testsubworker	ok
 08-leaf-of-the-role	17	member m1 console PUT /probe-p/api/secret {"password": "x"}	502 {"error": "denied"}
 08-leaf-of-the-role	18	@pass-seen p-1	ok {"requests": 0}
+09-person-off-holder	1	@domain m1	ok
+09-person-off-holder	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
+09-person-off-holder	3	holder PUT /domain/grants/hold {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200
+09-person-off-holder	4	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$t"}
+09-person-off-holder	5	@pass-worker hold probe-p p-1	ok
+09-person-off-holder	6	@until 30 member hold console @header Authorization: Bearer $t GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "*"}]}
+09-person-off-holder	7	@pass-open a member hold console @header Authorization: Bearer $t GET /probe-p/api/x	ok {"ticket": "$a"}
+09-person-off-holder	8	@pass-open s member hold console @header Authorization: Bearer $t GET /probe-p/api/stream	ok {"ticket": "$s"}
+09-person-off-holder	9	@until 30 socket hold probe-pworker @header X-W2C-Pass-Ticket: $a GET /session	200 {"user": "ann", "via": "ticket"}
+09-person-off-holder	10	holder PUT /domain/users/ann {"disabled": true}	200 {"user": "ann", "disabled": true}
+09-person-off-holder	11	@until 30 socket hold probe-pworker @header X-W2C-Pass-Ticket: $a GET /session	401 {"error": "denied", "detail": "ticket refused"}
+09-person-off-holder	12	@pass-closed s	ok
