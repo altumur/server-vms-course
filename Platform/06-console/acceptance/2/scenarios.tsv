@@ -22,7 +22,7 @@ scenario	step	request	expect
 03-keep-and-bound	8	console PUT /tallies/t3 {"feed": "https://hub.example/c2"}	400 {"error": "refused", "field": "/feed_secret", "detail": "~feed_secret"}
 03-keep-and-bound	9	console PUT /tallies/t3 {"feed": "https://hub.example/c2", "feed_secret": "s3new"}	200 {"revision": 5}
 03-keep-and-bound	10	store GET /v1/get?key=testsub2/tallies/t3	200 {"items": {"feed_secret": "$e2"}}
-03-keep-and-bound	11	ASSERT $e1 != $e2	ok
+03-keep-and-bound	11	ASSERT $e1 != $e2	
 04-password-in-address	1	console POST /tallies {"name": "t4", "of": "c1", "feed": "https://admin:hunter2@hub.example/d"}	400 {"fault": "bad_url", "error": "bad_url", "field": "/feed", "detail": "!contains hunter2"}
 04-password-in-address	2	console POST /tallies {"name": "t4", "of": "c1", "feed": "https://hub.example/d?token=hunter2"}	400 {"fault": "bad_url", "error": "bad_url", "field": "/feed", "detail": "!contains hunter2"}
 04-password-in-address	3	console POST /tallies {"name": "t4", "of": "c1", "feed": "https://hub.example/d?apikey=hunter2"}	400 {"fault": "bad_url"}

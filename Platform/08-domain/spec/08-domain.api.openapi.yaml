@@ -1412,6 +1412,10 @@ paths:
                 properties:
                   term: {type: integer, minimum: 2}
                   holder: {$ref: '#/components/schemas/MemberName'}
+                  unanswered:
+                    type: array
+                    items: {$ref: '#/components/schemas/MemberName'}
+                    description: Соседи шага 5 без ответа (P/08.8 Н1.8 answer).
                   restored_from:
                     oneOf:
                       - type: 'null'

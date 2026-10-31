@@ -123,7 +123,7 @@ scenario	step	request	expect
 40-request-row-unreadable	8	store GET /v1/get?key=objects/testsub/commands/r-0000000000000040	200 {"items": null}
 40-request-row-unreadable	9	store GET /v1/get?key=testsub/requests/r-0000000000000040	200 {"index": "$q", "items": {"valid_until": "x"}}
 40-request-row-unreadable	10	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"garbled_rows": "$g", "status": [{"id": "c40", "phase": "running"}]}
-40-request-row-unreadable	11	ASSERT $g >= 1	ok
+40-request-row-unreadable	11	ASSERT $g >= 1	
 41-order-tombstones	1	@start resource	ok
 41-order-tombstones	2	@start controller	ok
 41-order-tombstones	3	@start worker w-1	ok

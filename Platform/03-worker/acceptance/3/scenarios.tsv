@@ -38,7 +38,7 @@ scenario	step	request	expect
 25-unit-never-read	3	admin POST /v1/write {"id":"e25b","op":"put","key":"testsub/workers/w-1","items":{"units":"c25","rev":"1"},"cas":""}	200
 25-unit-never-read	4	@start worker w-1	ok
 25-unit-never-read	5	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"garbled_rows": "$g", "pass_failures": 0, "status": [{"id": "c25", "phase": "unreadable", "why": "~row unreadable: ", "epoch": "@absent", "observed_revision": "@absent"}]}
-25-unit-never-read	6	ASSERT $g >= 1	ok
+25-unit-never-read	6	ASSERT $g >= 1	
 25-unit-never-read	7	store GET /v1/get?key=testsub/epoch/c25	200 {"items": null}
 # 35 (аудит покрытия P/03, второй проход Gemini): born строки сменился у единицы, что осталась в назначении; назначение и строка — дверью admin, контроллера нет.
 35-unit-born-changed	1	@start resource	ok

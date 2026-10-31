@@ -7,7 +7,7 @@ scenario	step	request	expect
 01-start	5	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "released": "false", "gen": "1", "until": "$u1"}}
 01-start	6	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"until": "@not($u1)"}}
 01-start	7	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1", "until": "$u2"}}
-01-start	8	ASSERT $u1 != $u2	ok
+01-start	8	ASSERT $u1 != $u2	
 04-two-copies	1	@start resource	ok
 04-two-copies	2	@start controller	ok
 04-two-copies	3	@start worker w-1	ok
@@ -16,7 +16,7 @@ scenario	step	request	expect
 04-two-copies	6	@until 30 store GET /v1/get?key=testsub/epoch/c4	200 {"items": {"epoch": "1"}}
 04-two-copies	7	@start worker w-1	ok
 04-two-copies	8	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
-04-two-copies	9	ASSERT $h1 != $h2	ok
+04-two-copies	9	ASSERT $h1 != $h2	
 04-two-copies	10	@until 60 store GET /v1/get?key=testsub/epoch/c4	200 {"items": {"epoch": "@not(1)"}}
 04-two-copies	11	@sleep 12	ok
 04-two-copies	12	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
@@ -52,7 +52,7 @@ scenario	step	request	expect
 10-name-taken-once	6	@until 30 store GET /v1/get?key=testsub/epoch/c4	200 {"items": {"epoch": "1"}}
 10-name-taken-once	7	@start worker w-1	ok
 10-name-taken-once	8	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
-10-name-taken-once	9	ASSERT $h1 != $h2	ok
+10-name-taken-once	9	ASSERT $h1 != $h2	
 10-name-taken-once	10	@until 60 store GET /v1/get?key=testsub/epoch/c4	200 {"items": {"epoch": "@not(1)"}}
 10-name-taken-once	11	@sleep 12	ok
 10-name-taken-once	12	store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
@@ -200,7 +200,7 @@ scenario	step	request	expect
 29-contender-nameless-back	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "gen": "1", "released": "false"}}
 29-contender-nameless-back	4	@start worker w-1 BOX_ID=box1	ok
 29-contender-nameless-back	5	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
-29-contender-nameless-back	6	ASSERT $h1 != $h2	ok
+29-contender-nameless-back	6	ASSERT $h1 != $h2	
 29-contender-nameless-back	7	@until 30 resource GET /v1/objects/testsub/contenders/w-1/box1?scope=local	200 {"name": "w-1", "state": "nameless", "box": "box1", "instance": "$h1", "holder": "$h2", "holder_box": "box1"}
 29-contender-nameless-back	8	@until 30 console GET /events?unit=audit/testsubworker&kind=worker.name_taken	200 {"events": [{"kind": "worker.name_taken", "class": "alarm"}]}
 29-contender-nameless-back	9	@sigterm w-1	ok

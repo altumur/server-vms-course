@@ -208,7 +208,7 @@ scenario	step	request	expect
 24-born-anew	4	store GET /v1/get?key=testsub/counters/b1	200 {"items": {"born": "$b1", "deleted": "true", "revision": "1"}}
 24-born-anew	5	console POST /counters {"name": "b1"}	201 {"revision": 2}
 24-born-anew	6	store GET /v1/get?key=testsub/counters/b1	200 {"items": {"born": "$b2", "revision": "2", "deleted": "@absent"}}
-24-born-anew	7	ASSERT $b1 != $b2	ok
+24-born-anew	7	ASSERT $b1 != $b2	
 # 25-list-forms-restart (аудит покрытия P/06, G04; контрпример прогона 24): [] и [""] у marks — разные элементы строки, правка другого поля их не сливает, после перезапуска консоли — те же списки
 25-list-forms-restart	1	@start resource	ok
 25-list-forms-restart	2	console POST /counters {"name": "m1", "marks": []}	201 {"marks": []}

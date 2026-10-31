@@ -19,7 +19,7 @@ scenario	step	request	expect
 09-resource-door	2	@until 20 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"url": "@any", "since": "@time", "at": "$a1"}}
 09-resource-door	3	@until 30 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"at": "@not($a1)"}}
 09-resource-door	4	store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"at": "$a2"}}
-09-resource-door	5	ASSERT $a1 != $a2	ok
+09-resource-door	5	ASSERT $a1 != $a2	
 09-resource-door	6	console GET /servers	200 {"servers": {"srv-a": {"resource": "live"}}}
 09-resource-door	7	console GET /metrics	200 ~w2c_resources_live 1
 02-events-query	1	resource GET /events?keep=sideways	400
@@ -110,7 +110,7 @@ scenario	step	request	expect
 21-events-wait	2	resource GET /events/wait?want=testsub/probe.tick/c1&since=0&timeout=1	200 {"changed": false, "seq": "$s1"}
 21-events-wait	3	@append event testsub/c1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-1"}	ok
 21-events-wait	4	resource GET /events/wait?want=testsub/probe.tick/c1&since=0&timeout=5	200 {"changed": true, "seq": "$s2", "touched": ["testsub/probe.tick/c1"]}
-21-events-wait	5	ASSERT $s1 <= $s2	ok
+21-events-wait	5	ASSERT $s1 <= $s2	
 21-events-wait	6	resource GET /events/wait?want=testsub/probe.tick/c1&since=$s2&timeout=1	200 {"changed": false}
 # 22-torn-tail (аудит покрытия P/05, F06): хвост бакета без LF (разбираемый JSON) — не строка: не в events и truncated, partial: true, не lines_garbled; целая строка отдаётся
 22-torn-tail	1	@start resource	ok
@@ -280,7 +280,7 @@ scenario	step	request	expect
 41-space-band	5	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"pass_started": "@time"}
 41-space-band	6	@sleep 12	ok
 41-space-band	7	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i2", "items": {"free": "100", "volume": "events", "server": "srv-a", "at": "1700000000"}}
-41-space-band	8	ASSERT $i1 == $i2	ok
+41-space-band	8	ASSERT $i1 == $i2	
 # 42-heartbeat-units (G08 ч. 1; E39): units пульса ресурса — id единиц из status пульса живого воркера w-1, по возрастанию байтов (c2 создана раньше c1)
 42-heartbeat-units	1	@start controller	ok
 42-heartbeat-units	2	@start worker w-1	ok
