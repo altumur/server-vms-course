@@ -8,7 +8,7 @@ door	code	error	field	norm
 *	404	NO_ROUTE	-	11.1, 11.2 Н4
 *	404	NOT_FOUND	-	11.4 Н4: 404 строки нет
 *	412	VERSION_MISMATCH	-	11.4 Н4: 412 row moved прочее, revision moved; current
-*	428	PRECONDITION_REQUIRED	-	11.4 Н1.3
+*	428	PRECONDITION_REQUIRED	-	11.4 Н1.3, Н1.8; 11.8 Н4
 *	422	NOT_SUPPORTED	<поле>	11.3 Н4: запись поля none, read, const
 *	422	VALIDATION_FAILED	<поле>	11.4 Н4: 400 схемы, поле названо в слове
 *	4xx	VALIDATION_FAILED	-	11.4, 11.8 Н4: 4xx, слово не выводится однозначно; статус двери
