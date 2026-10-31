@@ -1637,7 +1637,7 @@ components:
   responses:
     BodyRefused:
       description: 'Ошибка чтения тела запроса (разбор P/01.1 Н2.1 с отступлениями P/06.5 Н2, Н4 «тело»): chunked или
-        коротко — 400, больше предела — 413, не дочитано за BODY_WAIT — 408; тело {detail, error: denied} (GP-L03; C08-BODY-DENIED-01).
+        коротко — 400, больше предела — 413, не дочитано за BODY_WAIT — 408; тело {detail, error: denied} (GP-L03; C08-BODY-DENIED-01); у дверей правок 413 ещё {detail, error: "too large"}: правка больше потолка строки (P/08.6 Н1.4 row_full).
         Разобранное тело не по форме двери — 400 своей строки Н4 (Refused).'
       content:
         application/json:
