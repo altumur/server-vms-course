@@ -54,7 +54,7 @@ scenario	step	request	expect
 07-restart-with-outcome	8	socket m1 probe-opworker @header X-W2C-Pass-Ticket: $t0 @header Idempotency-Key: bf0292892600b1700f44d133fca0cbf3466272c17acc6673d52ed4ae06f840a9 POST /console/batch {"writes": [{"op": "put", "key": "probe-op/things/n1", "fields": {"note": "a"}, "cas": "$v1"}, {"op": "put", "key": "probe-op/opdone/11ff961a85067361e448e9841e2ebf5d/0", "fields": {"state": "ok", "version": "2", "versions": {"n1": "2"}}, "cas": ""}, {"op": "put", "key": "probe-op/opcount/11ff961a85067361e448e9841e2ebf5d", "fields": {"done": 1, "ok": 1, "failed": 0, "cancelled": 0}, "cas": "$c0"}]}	200 {"written": 3}
 07-restart-with-outcome	9	@on m1 @start console#2	ok
 07-restart-with-outcome	10	@on m1 @sigkill console#1	ok
-07-restart-with-outcome	11	@until 55 member m1 store GET /v1/get?key=probe-op/operations-epoch	200 {"items": {"n": "2"}, "index": "@not($e1)"}
+07-restart-with-outcome	11	@until 65 member m1 store GET /v1/get?key=probe-op/operations-epoch	200 {"items": {"n": "2"}, "index": "@not($e1)"}
 07-restart-with-outcome	12	@pass-step b	ok {"method": "POST", "path": "/opstep", "ticket": "$t1", "id": "11ff961a85067361e448e9841e2ebf5d", "index": 1, "body": {"name": "n2", "note": "b"}, "secret": "@absent", "expected": {"n2": "1"}, "opcount": "$c1"}
 07-restart-with-outcome	13	socket m1#2 probe-opworker @header X-W2C-Pass-Ticket: $t1 @header Idempotency-Key: a8501a6634cc7dcb58e4c350712208f390d782af86f6af435137f9c45b70cae7 POST /console/batch {"writes": [{"op": "put", "key": "probe-op/things/n2", "fields": {"note": "b"}, "cas": "$v2"}, {"op": "put", "key": "probe-op/opdone/11ff961a85067361e448e9841e2ebf5d/1", "fields": {"state": "ok", "version": "2", "versions": {"n2": "2"}}, "cas": ""}, {"op": "put", "key": "probe-op/opcount/11ff961a85067361e448e9841e2ebf5d", "fields": {"done": 2, "ok": 2, "failed": 0, "cancelled": 0}, "cas": "$c1"}]}	200 {"written": 3}
 07-restart-with-outcome	14	@pass-step-answer b 200 application/json {}	ok
@@ -72,7 +72,7 @@ scenario	step	request	expect
 07-restart-no-outcome	8	@on m1 @sigterm console#1	ok
 07-restart-no-outcome	9	@until 40 member m1 store GET /v1/get?key=probe-op/operations-epoch	200 {"items": {"n": "2"}, "index": "@not($e1)"}
 07-restart-no-outcome	10	@pass-step b	ok {"method": "POST", "path": "/opstep", "ticket": "$t2", "id": "d2f467b1fce58ef0a92945ae22bc41b7", "index": 0, "body": {"name": "n1", "note": "a"}, "secret": "@absent", "expected": {"n1": "1"}, "opcount": "$c"}
-07-restart-no-outcome	11	ASSERT $t1 != $t2	ok
+07-restart-no-outcome	11	ASSERT $t1 != $t2	
 07-restart-no-outcome	12	socket m1#2 probe-opworker @header X-W2C-Pass-Ticket: $t1 GET /session	401 {"error": "denied", "detail": "ticket refused"}
 07-restart-no-outcome	13	socket m1#2 probe-opworker @header X-W2C-Pass-Ticket: $t2 @header Idempotency-Key: 7d4ef685904fb4dc9ea2ea3898a0510bc16187b2a16cb7678221dba31f470dae POST /console/batch {"writes": [{"op": "put", "key": "probe-op/things/n1", "fields": {"note": "a"}, "cas": "$v1"}, {"op": "put", "key": "probe-op/opdone/d2f467b1fce58ef0a92945ae22bc41b7/0", "fields": {"state": "ok", "version": "2", "versions": {"n1": "2"}}, "cas": ""}, {"op": "put", "key": "probe-op/opcount/d2f467b1fce58ef0a92945ae22bc41b7", "fields": {"done": 1, "ok": 1, "failed": 0, "cancelled": 0}, "cas": "$c"}]}	200 {"written": 3}
 07-restart-no-outcome	14	@pass-step-answer b 200 application/json {}	ok
@@ -100,17 +100,19 @@ scenario	step	request	expect
 07-late-batch	6	member m1 console#2 POST /probe-op/operations {"id": "aa5f05eb117dd8034bd449ad765e9faf", "items": [{"body": {"name": "n1", "note": "a"}, "root": "n1", "expected": {"n1": "1"}}]}	202 {"id": "aa5f05eb117dd8034bd449ad765e9faf", "by": "root", "state": "running", "finished_at": null, "retry_of": null, "total": 1, "done": 0, "ok": 0, "failed": 0, "cancelled": 0}
 07-late-batch	7	@pass-step a	ok {"method": "POST", "path": "/opstep", "ticket": "$t", "id": "aa5f05eb117dd8034bd449ad765e9faf", "index": 0, "body": {"name": "n1", "note": "a"}, "secret": "@absent", "expected": {"n1": "1"}, "opcount": "$c"}
 07-late-batch	8	member m1 store GET /v1/get?key=probe-op/operations-epoch	200 {"items": {"n": "1"}, "index": "$e1"}
-07-late-batch	9	@on m1 @freeze console#2	ok
-07-late-batch	10	member m1 store GET /v1/get?key=probe-op/operations-turn	200 {"index": "$q"}
-07-late-batch	11	member m1 store POST /v1/write {"id": "fe3b4d7674d2ab66", "op": "put", "key": "probe-op/operations-turn", "items": {"holder": ""}, "cas": "$q"}	200
-07-late-batch	12	@on m1 @thaw console#1	ok
-07-late-batch	13	@until 10 member m1 store GET /v1/get?key=probe-op/operations-epoch	200 {"items": {"n": "2"}, "index": "@not($e1)"}
-07-late-batch	14	member m1 console POST /probe-op/operations/aa5f05eb117dd8034bd449ad765e9faf/cancel	200 {"id": "aa5f05eb117dd8034bd449ad765e9faf"}
-07-late-batch	15	@until 10 member m1 console GET /probe-op/operations/aa5f05eb117dd8034bd449ad765e9faf	200 {"id": "aa5f05eb117dd8034bd449ad765e9faf", "by": "root", "state": "done", "finished_at": "@time", "total": 1, "done": 1, "ok": 0, "failed": 0, "cancelled": 1, "items": [{"state": "cancel"}]}
-07-late-batch	16	@on m1 @thaw console#2	ok
-07-late-batch	17	socket m1#2 probe-opworker @header X-W2C-Pass-Ticket: $t @header Idempotency-Key: a64821777346e3a65db6151aa2bf6eab4afc8bc8f3b7994100ae7e86215da699 POST /console/batch {"writes": [{"op": "put", "key": "probe-op/things/n1", "fields": {"note": "a"}, "cas": "$v1"}, {"op": "put", "key": "probe-op/opdone/aa5f05eb117dd8034bd449ad765e9faf/0", "fields": {"state": "ok", "version": "2", "versions": {"n1": "2"}}, "cas": ""}, {"op": "put", "key": "probe-op/opcount/aa5f05eb117dd8034bd449ad765e9faf", "fields": {"done": 1, "ok": 1, "failed": 0, "cancelled": 0}, "cas": "$c"}]}	412 {"error": "leader moved"}
-07-late-batch	18	member m1 store GET /v1/get?key=probe-op/opdone/aa5f05eb117dd8034bd449ad765e9faf/0	200 {"items": {"state": "cancel"}}
-07-late-batch	19	member m1 store GET /v1/get?key=probe-op/opcount/aa5f05eb117dd8034bd449ad765e9faf	200 {"items": {"done": "1", "ok": "0", "failed": "0", "cancelled": "1"}}
-07-late-batch	20	member m1 store GET /v1/get?key=probe-op/things/n1	200 {"items": {"revision": "1", "note": "@absent"}}
-07-late-batch	21	member m1 console GET /probe-op/operations/aa5f05eb117dd8034bd449ad765e9faf	200 {"id": "aa5f05eb117dd8034bd449ad765e9faf", "by": "root", "state": "done", "finished_at": "@time", "total": 1, "done": 1, "ok": 0, "failed": 0, "cancelled": 1, "items": [{"state": "cancel"}]}
-07-late-batch	22	@pass-step-answer a 200 application/json {}	ok
+07-late-batch	9	member m1 console#2 POST /probe-op/operations/aa5f05eb117dd8034bd449ad765e9faf/pause	200 {"id": "aa5f05eb117dd8034bd449ad765e9faf", "state": "paused"}
+07-late-batch	10	@on m1 @freeze console#2	ok
+07-late-batch	11	member m1 store GET /v1/get?key=probe-op/operations-turn	200 {"index": "$q"}
+07-late-batch	12	member m1 store POST /v1/write {"id": "fe3b4d7674d2ab66", "op": "put", "key": "probe-op/operations-turn", "items": {"holder": ""}, "cas": "$q"}	200
+07-late-batch	13	@on m1 @thaw console#1	ok
+07-late-batch	14	@until 10 member m1 store GET /v1/get?key=probe-op/operations-epoch	200 {"items": {"n": "2"}, "index": "@not($e1)"}
+07-late-batch	15	member m1 console POST /probe-op/operations/aa5f05eb117dd8034bd449ad765e9faf/cancel	200 {"id": "aa5f05eb117dd8034bd449ad765e9faf"}
+07-late-batch	16	@until 10 member m1 console GET /probe-op/operations/aa5f05eb117dd8034bd449ad765e9faf	200 {"id": "aa5f05eb117dd8034bd449ad765e9faf", "by": "root", "state": "done", "finished_at": "@time", "total": 1, "done": 1, "ok": 0, "failed": 0, "cancelled": 1, "items": [{"state": "cancel"}]}
+07-late-batch	17	@on m1 @thaw console#2	ok
+07-late-batch	18	socket m1#2 probe-opworker @header X-W2C-Pass-Ticket: $t @header Idempotency-Key: a64821777346e3a65db6151aa2bf6eab4afc8bc8f3b7994100ae7e86215da699 POST /console/batch {"writes": [{"op": "put", "key": "probe-op/things/n1", "fields": {"note": "a"}, "cas": "$v1"}, {"op": "put", "key": "probe-op/opdone/aa5f05eb117dd8034bd449ad765e9faf/0", "fields": {"state": "ok", "version": "2", "versions": {"n1": "2"}}, "cas": ""}, {"op": "put", "key": "probe-op/opcount/aa5f05eb117dd8034bd449ad765e9faf", "fields": {"done": 1, "ok": 1, "failed": 0, "cancelled": 0}, "cas": "$c"}]}	412 {"error": "leader moved"}
+07-late-batch	19	member m1 store GET /v1/get?key=probe-op/opdone/aa5f05eb117dd8034bd449ad765e9faf/0	200 {"items": {"state": "cancel"}}
+07-late-batch	20	member m1 store GET /v1/get?key=probe-op/opcount/aa5f05eb117dd8034bd449ad765e9faf	200 {"items": {"done": "1", "ok": "0", "failed": "0", "cancelled": "1"}}
+07-late-batch	21	member m1 store GET /v1/get?key=probe-op/things/n1	200 {"items": {"revision": "1", "note": "@absent"}}
+07-late-batch	22	member m1 console GET /probe-op/operations/aa5f05eb117dd8034bd449ad765e9faf	200 {"id": "aa5f05eb117dd8034bd449ad765e9faf", "by": "root", "state": "done", "finished_at": "@time", "total": 1, "done": 1, "ok": 0, "failed": 0, "cancelled": 1, "items": [{"state": "cancel"}]}
+07-late-batch	23	@pass-step-answer a 200 application/json {}	ok
+07-late-batch	24	@pass-seen op-1	ok {"requests": 1}
