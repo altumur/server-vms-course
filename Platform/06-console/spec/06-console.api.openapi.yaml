@@ -8066,7 +8066,7 @@ components:
         created_id:
           type: string
         body:
-          description: Тело шага без секретов, только при объявлении с `service: true` (глава 6.9 Н2).
+          description: 'Тело шага без секретов, только при объявлении с `service: true` (глава 6.9 Н2).'
     Operation:
       type: object
       required: [id, by, state, created_at, finished_at, retry_of, total, done, ok, failed, cancelled, items]
