@@ -1925,7 +1925,7 @@ paths:
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
     delete:
       operationId: passGroupDelete
-      summary: 'Передача процессу domain: Удалить (Н1.1) (OpenAPI P/08, operationId groupDelete)'
+      summary: 'Передача процессу domain: Удалить (Н3) (OpenAPI P/08, operationId groupDelete)'
       description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
         Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
         (переход 3) — ссылкой на операцию groupDelete OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки «Отказы
@@ -2256,7 +2256,7 @@ paths:
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
     delete:
       operationId: passRoleDelete
-      summary: 'Передача процессу domain: Удалить (Н1.1) (OpenAPI P/08, operationId roleDelete)'
+      summary: 'Передача процессу domain: Удалить (Н3) (OpenAPI P/08, operationId roleDelete)'
       description: 'Консоль домена передаёт запрос процессу domain (Н1.3, Н1.3а): метод, путь с query, тело, Authorization,
         Idempotency-Key, If-Match как пришли; X-W2C-Client ставит консоль (договор пересылки «Адрес клиента»). Ответы процесса
         (переход 3) — ссылкой на операцию roleDelete OpenAPI P/08, как пришли; свои коды — перехода 2 (договор пересылки «Отказы

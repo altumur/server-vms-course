@@ -1,0 +1,9 @@
+# ADR-0095 §8, ADR-0098 §6
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+door:
+  pass:
+    routes: [api]
+    calls: [probe/operations, other/operations, folders, GET folders, GET domain/users, GET domain/groups, GET domain/roles, GET domain/grants, domain/batch]

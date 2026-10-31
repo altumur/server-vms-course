@@ -1658,12 +1658,25 @@
    }
   },
   "passCall": {
-   "description": "дверь обратного вызова по закрытому перечню P/06.3 Н1.9: `<s>/<имя>` — строки единиц, таблица, `policy`, `next_id` или маршрут двери подсистемы `<s>`; приставка `GET ` — только чтение; `console/batch`, `changes`; `GET manifest|servers|events|session|schema`",
+   "description": "дверь обратного вызова по закрытому перечню P/06.3 Н1.9: `<s>/<имя>` — строки единиц, таблица, `policy`, `next_id` или маршрут двери подсистемы `<s>`; приставка `GET ` — только чтение; `console/batch`, `changes`, `folders`; `<s>/operations`; `GET manifest|servers|events|session|schema`; двери домена: `GET domain/users|groups|roles|grants`, `domain/batch`",
    "type": "string",
-   "not": {
-    "pattern": "^(?:(?:GET )?(?:[a-z][a-z0-9_-]{0,31}/(?:platform|spec|manifest|slots|epoch|idem|placement|workers|controller|decommissioned|holds|requests|asked|sweep|servers|where|unplaceable|drain|events|marks|console|audit|session|mounts|healthz|changes|metrics|resources|schema|domain|api|heartbeats|contenders|snapshot|blobs|commands|state)|(?:platform|domain)/[a-z][a-z0-9_-]{0,31}))$"
-   },
-   "pattern": "^(?:changes|console/batch|GET (?:manifest|servers|events|session|schema)|(?:GET )?[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31})$"
+   "anyOf": [
+    {
+     "enum": [
+      "GET domain/users",
+      "GET domain/groups",
+      "GET domain/roles",
+      "GET domain/grants",
+      "domain/batch"
+     ]
+    },
+    {
+     "not": {
+      "pattern": "^(?:(?:GET )?(?:[a-z][a-z0-9_-]{0,31}/(?:platform|spec|manifest|slots|epoch|idem|placement|workers|controller|decommissioned|holds|requests|asked|sweep|servers|where|unplaceable|drain|events|marks|console|audit|session|mounts|healthz|changes|metrics|resources|schema|domain|api|heartbeats|contenders|snapshot|blobs|commands|state)|(?:platform|domain)/[a-z][a-z0-9_-]{0,31}))$"
+     },
+     "pattern": "^(?:changes|console/batch|(?:GET )?folders|GET (?:manifest|servers|events|session|schema)|(?:GET )?[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31})$"
+    }
+   ]
   },
   "passRoute": {
    "description": "путь маршрута: сегменты по грамматике `name` через `/`; совпадает с началом пути целыми сегментами",
@@ -1753,6 +1766,59 @@
      "required": [
       "form",
       "codes"
+     ]
+    },
+    "operations": {
+     "description": "групповые операции подсистемы (P/06.9 Н1.1): маршрут вызова шага, свои пределы, служебная таблица",
+     "type": "object",
+     "properties": {
+      "step": {
+       "$ref": "#/$defs/passRoute",
+       "description": "маршрут вызова шага; не лежит под `routes`: браузеру недоступен"
+      },
+      "limits": {
+       "description": "свои пределы, не выше потолков P/06.9 Н1.6",
+       "default": {},
+       "x-default-text": "потолки P/06.9 Н1.6",
+       "type": "object",
+       "properties": {
+        "steps": {
+         "description": "шагов в операции",
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 1000
+        },
+        "active": {
+         "description": "незавершённых операций",
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 64
+        },
+        "per_person": {
+         "description": "незавершённых операций человека",
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 8
+        },
+        "parallel": {
+         "description": "одновременно ведомых операций",
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 4
+        }
+       },
+       "additionalProperties": false
+      },
+      "service": {
+       "description": "таблица операций служебная: двери только по билету, человек видит свою операцию (P/06.9 Н2)",
+       "default": false,
+       "x-default-text": "`false`",
+       "type": "boolean"
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "step"
      ]
     }
    },

@@ -1,0 +1,9 @@
+# ADR-0095 §8, ADR-0098 §6
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+door:
+  pass:
+    routes: [api]
+    operations: {step: steps, limits: {steps: 100, active: 8, per_person: 2, parallel: 2}, service: true}

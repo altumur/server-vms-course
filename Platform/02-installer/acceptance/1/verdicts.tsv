@@ -809,3 +809,12 @@ a98_sub_roles	refused
 a98_sub_deleting	refused
 a98_sub_disabled	refused
 a98_sub_names	refused
+a95_ops_ok	ok
+a95_ops_min_ok	ok
+a95_calls_ok	ok
+a95_ops_step_under	refused
+a95_ops_no_step	refused
+a95_ops_limit_high	refused
+a95_ops_unknown	refused
+a95_calls_domain_other	refused
+a95_calls_domain_write	refused

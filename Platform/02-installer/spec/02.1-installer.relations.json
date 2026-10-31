@@ -1244,10 +1244,19 @@
   {
    "no": 131,
    "path": "door.pass.calls[]",
-   "relation": "when split(. \"/\" 0) = @name : split(. \"/\" 1) in {@unit.rows, policy, next_id} | keys(tables)",
+   "relation": "when split(. \"/\" 0) = @name : split(. \"/\" 1) in {@unit.rows, policy, next_id, operations} | keys(tables)",
    "class": "reference",
    "norm": "ADR-0094 B1; P/02.1 Н1.4; P/06.5 Н1.8",
-   "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"calls\" in doc[\"door\"][\"pass\"]) ? (type(doc[\"door\"][\"pass\"][\"calls\"]) == list ? dyn(doc[\"door\"][\"pass\"][\"calls\"]).transformList(i1, e2, ((type(e2) == string && size((e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")) == 2 && type(doc) == map && \"name\" in doc && (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[0] == doc[\"name\"] && !(\"policy\" == (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1] || \"next_id\" == (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1] || (\"unit\" in doc && type(doc[\"unit\"]) == map && \"rows\" in doc[\"unit\"] && doc[\"unit\"][\"rows\"] == (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1]) || (\"tables\" in doc && type(doc[\"tables\"]) == map && (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1] in doc[\"tables\"]))) ? [{\"p\": [\"door\", \"pass\", \"calls\", i1]}] : [])) : []) : []) : []) : [])",
+   "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"calls\" in doc[\"door\"][\"pass\"]) ? (type(doc[\"door\"][\"pass\"][\"calls\"]) == list ? dyn(doc[\"door\"][\"pass\"][\"calls\"]).transformList(i1, e2, ((type(e2) == string && size((e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")) == 2 && type(doc) == map && \"name\" in doc && (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[0] == doc[\"name\"] && !(\"operations\" == (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1] || \"policy\" == (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1] || \"next_id\" == (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1] || (\"unit\" in doc && type(doc[\"unit\"]) == map && \"rows\" in doc[\"unit\"] && doc[\"unit\"][\"rows\"] == (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1]) || (\"tables\" in doc && type(doc[\"tables\"]) == map && (e2.startsWith(\"GET \") ? e2.substring(4) : e2).split(\"/\")[1] in doc[\"tables\"]))) ? [{\"p\": [\"door\", \"pass\", \"calls\", i1]}] : [])) : []) : []) : []) : [])",
+   "own": []
+  },
+  {
+   "no": 132,
+   "path": "door.pass.operations.step",
+   "relation": ". not under door.pass.routes[]",
+   "class": "reference",
+   "norm": "ADR-0095 §8; P/02.1 Н1.4; P/06.9 Н1.1",
+   "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"operations\" in doc[\"door\"][\"pass\"]) ? ((type(doc[\"door\"][\"pass\"][\"operations\"]) == map && \"step\" in doc[\"door\"][\"pass\"][\"operations\"]) ? ((type(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]) == string && type(doc[\"door\"][\"pass\"][\"routes\"]) == list && dyn(doc[\"door\"][\"pass\"][\"routes\"]).exists(e3, type(e3) == string && (e3 == doc[\"door\"][\"pass\"][\"operations\"][\"step\"] || dyn(doc[\"door\"][\"pass\"][\"operations\"][\"step\"]).startsWith(e3 + \"/\")))) ? [{\"p\": [\"door\", \"pass\", \"operations\", \"step\"]}] : []) : []) : []) : []) : [])",
    "own": []
   }
  ],

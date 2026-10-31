@@ -423,9 +423,9 @@ scenario	step	request	expect
 33-changes-folders	15	@until 30 member m1 console GET /changes?after=$q	200 {"position": "$r", "changes": [], "reset": true}
 34-changes-folder-rows	1	@domain	ok
 34-changes-folder-rows	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
-34-changes-folder-rows	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200 {"cluster": "m1"}
+34-changes-folder-rows	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:testsub/none"}]}	200 {"cluster": "m1"}
 34-changes-folder-rows	4	@person ann ann password 1	ok
-34-changes-folder-rows	5	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "*"}]}
+34-changes-folder-rows	5	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:testsub/none"}]}
 34-changes-folder-rows	6	@until 10 member m1 console GET /changes	200 {"position": "$p"}
 34-changes-folder-rows	7	@person root w2c test root password	ok
 34-changes-folder-rows	8	member m1 console POST /folders {"name": "F"}	201 {"id": "$f"}
