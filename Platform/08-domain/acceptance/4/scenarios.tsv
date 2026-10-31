@@ -403,3 +403,18 @@ scenario	step	request	expect
 32-folder-rights	21	@person ann ann password 1	ok
 32-folder-rights	22	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "sub": "platform"}]}
 32-folder-rights	23	member m1 console PUT /folders/$f {"members": []}	403 {"error": "denied"}
+33-changes-folders	1	@domain	ok
+33-changes-folders	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+33-changes-folders	3	member m1 console POST /folders {"name": "F"}	201 {"id": "$f", "index": "$i"}
+33-changes-folders	4	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "folder:$f"}]}	200 {"cluster": "m1"}
+33-changes-folders	5	@person ann ann password 1	ok
+33-changes-folders	6	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view"}]}
+33-changes-folders	7	@until 10 member m1 console GET /changes	200 {"position": "$p"}
+33-changes-folders	8	@person root w2c test root password	ok
+33-changes-folders	9	member m1 console PUT /folders/$f {"members": ["testsub/counters/c1-m1"]}	200 {"members": ["testsub/counters/c1-m1"]}
+33-changes-folders	10	@person ann ann password 1	ok
+33-changes-folders	11	@until 30 member m1 console GET /changes?after=$p	200 {"position": "$q", "changes": [], "reset": true}
+33-changes-folders	12	@person root w2c test root password	ok
+33-changes-folders	13	member m1 console DELETE /folders/$f	200 {"deleted": "$f"}
+33-changes-folders	14	@person ann ann password 1	ok
+33-changes-folders	15	@until 30 member m1 console GET /changes?after=$q	200 {"position": "$r", "changes": [], "reset": true}

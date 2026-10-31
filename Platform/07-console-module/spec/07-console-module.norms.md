@@ -301,7 +301,7 @@ jsdom-тестами владельца спецификации [`Source/tests/
 - [ ] **P/07-04** форма единицы всегда шлёт `ifMatch`, экран 412 Н1.5 `forms`; `api` с `ifMatch` у таблиц и дверей настроек (ADR-0094 B4) — jsdom-тесты `Source/tests/console/module-form-if-match.test.js`, `module-page-calls.test.js` (Н5); причина — TSV не видит поведения страницы
 - [ ] **P/07-05** строки по ленте Н1.4 `changes` (ADR-0094 B2) — проверяется jsdom-тестами `Source/tests/console/module-changes.test.js`, `module-calls.test.js` (Н5); причина — TSV страницу не исполняет
 - [ ] **P/07-03** отказ у поля Н1.5 `forms` (ADR-0094 B5) — проверяется jsdom-тестом `Source/tests/console/module-refusal-field.test.js` (Н5); причина — TSV страницу не исполняет
-- [ ] **P/07-05** дерево по папкам кластера Н1.5 `tree` (ADR-0096) — проверяется jsdom-тестом `module-folders` (Н5), когда модуль внесён; причина — TSV страницу не исполняет
+- [ ] **P/07-06** дерево по папкам кластера Н1.5 `tree` (ADR-0096) — проверяется jsdom-тестом `module-folders` (Н5), когда модуль внесён; причина — TSV страницу не исполняет
 
 ## Соответствие прежним урокам
 

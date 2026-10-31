@@ -1703,6 +1703,7 @@ components:
             - builtin
             - too many admins
             - roles table too large
+            - admin table too large
             - password set by a non-admin
             - conflict
             - batch too large
