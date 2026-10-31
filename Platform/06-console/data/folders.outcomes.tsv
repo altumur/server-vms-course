@@ -1,0 +1,4 @@
+# Исходы нечитаемой строки platform/folders/<id> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	console	строка целиком нечитаема: `GET /folders` отдаёт элемент `{id, garbled: true}`, так же — папки под ней; `GET /folders/<id>` этой папки и папок под ней — 503 `unavailable`: живость цепочки не подтверждена; запись этой папки и папок под ней — 503 `unavailable`, ничего не записано; жнец ничего не снимает («неизвестное чтение не даёт удалить строку»), причина — в журнал	0	строка	P/06.8 Н3 «цепочка»

@@ -1,7 +1,7 @@
-# Закрытый перечень слов error дверей консоли кластера: главы 6.1, 6.2, 6.4, 6.5, 6.6 (ADR-0094 B5, доп. (13)). Правила — глава 6.1 Н2 «Отказ: error и field».
+# Закрытый перечень слов error дверей консоли кластера: главы 6.1, 6.2, 6.4, 6.5, 6.6, 6.8, 6.9 (ADR-0094 B5, доп. (13)). Правила — глава 6.1 Н2 «Отказ: error и field».
 # door — двери: units /{rows}, /{rows}/{id}; blobs /{rows}/{id}/{blob_field}; tables /{table}, /{table}/{name}; batch /console/batch; policy /policy;
 # drain /drain; labels /servers/{server}/labels; decommission /servers/{server}/decommission; schema /schema; where /where/…;
-# pages страницы и /platform/*; events GET /events; marks POST /marks; requests POST /{sub}/requests; asked DELETE /{sub}/asked/{sha16};
+# folders /folders, /folders/{id}; operations /{sub}/operations…; pages страницы и /platform/*; events GET /events; marks POST /marks; requests POST /{sub}/requests; asked DELETE /{sub}/asked/{sha16};
 # * — каждая дверь этих глав. Слова глав 6.3, 6.7 — их Н4.
 # field — что несёт поле field: «-» — поля нет; /<поле> — поле тела, которое называет отказ; иное — точное значение.
 door	code	error	field	norm
@@ -138,6 +138,47 @@ requests	409	spent	-	6.4 Н4
 requests	429	too many	-	6.4 Н4
 requests	429	refused	-	6.4 Н4: учёт прочитан, но повреждён
 requests	503	store unavailable	-	6.4 Н4
+folders	400	not_json	-	6.8 Н4
+folders	400	Idempotency-Key required	-	6.8 Н3
+folders	400	bad folder	/<поле>	6.8 Н4
+folders	400	bad member	/members/<i>	6.8 Н4; без поля у query member
+folders	400	too many members	/members	6.8 Н4
+folders	400	too many folders	/members/<i>	6.8 Н4
+folders	400	too deep	/parent	6.8 Н4
+folders	404	no such folder	-	6.8 Н4
+folders	404	no such parent	/parent	6.8 Н4
+folders	409	parent gone	/parent	6.8 Н4
+folders	409	in flight	-	6.8 Н4
+folders	412	folder moved	/index	6.8 Н4
+folders	412	parent moved	-	6.8 Н4
+folders	413	row too large	-	6.8 Н4
+folders	413	batch too large	-	6.8 Н4
+folders	422	key reused	-	6.8 Н4
+folders	503	store unavailable	-	6.8 Н4
+batch	400	bad member	/writes/<номер>/fields/members/<i>	6.8 Н3 «строки папок в пакете»
+batch	400	too many members	/writes/<номер>/fields/members	6.8 Н3 «строки папок в пакете»
+batch	400	too many folders	/writes/<номер>/key	6.8 Н3 «строки папок в пакете»
+batch	400	no chain	/writes/<номер>/key	6.8 Н3 «строки папок в пакете»
+batch	400	no membership	/writes/<номер>/key	6.8 Н3 «строки папок в пакете»
+batch	404	no such folder	-	6.8 Н3 «строки папок в пакете»
+batch	404	no such parent	-	6.8 Н3 «строки папок в пакете»
+batch	409	folder gone	/writes/<номер>/key	6.8 Н3 «строки папок в пакете»
+batch	409	parent gone	/writes/<номер>/key	6.8 Н3 «строки папок в пакете»
+batch	412	leader moved	-	6.9 Н2 «Пакет шага»
+operations	400	not_json	-	6.9 Н4
+operations	400	bad operation	/<поле>	6.9 Н4
+operations	400	too many steps	/items	6.9 Н4
+operations	400	too many operations	/items	6.9 Н4
+operations	404	no operations	-	6.9 Н4
+operations	404	no such operation	-	6.9 Н4
+operations	409	root busy	/items/<i>/root	6.9 Н4
+operations	409	exists	/id	6.9 Н4
+operations	409	operation done	-	6.9 Н4
+operations	409	operation running	-	6.9 Н4
+operations	409	nothing to retry	-	6.9 Н4
+operations	412	row moved	/memory/cas	6.9 Н4
+operations	413	batch too large	-	6.9 Н4
+operations	503	store unavailable	-	6.9 Н4
 *	400	refused	-	договор сторожевой и передачи «Разбор запроса и порядок проверок»
 *	400	denied	-	6.5 Н4
 *	401	denied	-	договор сторожевой и передачи

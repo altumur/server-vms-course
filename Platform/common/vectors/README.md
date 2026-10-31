@@ -39,6 +39,7 @@
 | слияние журнала событий (консоль и воркер: дубли, `cut`, эпохи, `unknown`, полнота) | [`events-merge/`](events-merge/README.md) | P/06.4 (участник — воркер) | [договор слияния журнала событий](../contracts/events-merge.md) (ADR-0091 доп. (21)) |
 | чтение пульса ресурса и воркера по форме и исходам семьи | [`heartbeat-read/`](heartbeat-read/README.md) | common (договор наблюдения) | [договор наблюдения](../contracts/observation.md) «Форма» (C04-DEP-OBS-HEARTBEAT-01, C08-HEARTBEAT-READER-99-VECTORS) |
 | жнец над просьбой дозаписи: метки `gone` и `expired`, `settle`, без снятия по одному `ttl` | [`06-console/vectors/reap/`](../../06-console/vectors/reap/README.md) | P/06.4 | договор просьбы и её метки «Состояния…» (C06-GONE-FETCHED-33-01) |
+| ключ пакета шага и ожидаемая версия шага | [`06-console/vectors/op-step/`](../../06-console/vectors/op-step/README.md) | P/06.9 | P/06.9 Н1.4, Н2 «Пакет шага» (ADR-0095) |
 | ряды манифеста `metrics[]` на `/metrics` | [`06-console/vectors/metrics/`](../../06-console/vectors/metrics/README.md) | P/06.5 | P/06.5 Н3 «Ряды манифеста metrics[]» (C06-METRICS-DSL-33-01) |
 | запись присланного срока `valid_until` | [`deadline/`](deadline/README.md) | P/06.4 (договор просьбы) | договор просьбы и её метки «Просьба» `valid_until` (C47-DEADLINE-VECTORS-01) |
 | пул, хранитель места, `idle_by_policy`, `placeable` | [`pool/`](pool/README.md) | P/04 (участник — консоль P/06.5) | [договор пула](../contracts/pool.md) (C06-SERVER-POLICY-33-01) |

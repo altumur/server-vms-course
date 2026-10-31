@@ -1,0 +1,4 @@
+# Исходы нечитаемой строки <sub>/opsteps/<id>/<i> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	console	строка целиком нечитаема: ведущий вызова шага не делает, пишет итог `fail` кодом `not_run` со счётчиками, операция идёт дальше; `retry-failed` такого шага не копирует, причина — в журнал	0	строка	P/06.9 Н3 «шаг», «повторить»

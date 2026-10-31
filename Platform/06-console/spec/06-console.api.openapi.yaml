@@ -6,7 +6,7 @@
 # /servers/{server}/labels, /servers/{server}/decommission, /unplaceable, /schema; 6.7 (поздний слой, вводят уроки 8 и 10) —
 # /session/break-glass (порядок двери), /domain/{sub}/books/{book}, пересылка /domain и /domain/{route} (переходы 1–2 договора
 # пересылки), /domain/at/{cluster}/{sub}/where/…, /domain/keys, /domain/shared/{sub}, /api/held, /api/backup, пересылка
-# подписанту /api/prepare, /api/take, /domain/move. Пути главы 6.7 слиты из контрактов М11/5, М11/8, М11/9, М11/10, М11/11
+# подписанту /api/prepare, /api/take, /domain/move; 6.8 — /folders, /folders/{id}; 6.9 — /{sub}/operations и двери операции. Пути главы 6.7 слиты из контрактов М11/5, М11/8, М11/9, М11/10, М11/11
 # (сторона консоли кластера; перенос урока 10, стадия B, без изменения поведения): у пересылки — только коды переходов 1–2
 # (договор пересылки Platform/common/contracts/forwarding.md «Отказы по переходам»; разбор ревью стадии A 8–10, решение 3),
 # ответ консоли домена как пришёл — ForwardAnswer (как PassAnswer у door.pass); у пересылки подписанту ответ процесса —
@@ -28,11 +28,11 @@ openapi: 3.1.0
 info:
   title: P/06 — двери консоли кластера
   version: '1'
-  description: 'Канон — нормы глав 06.1…06.7-console.norms.md; Н2 «Разбор запроса консоли» и общие коды (глава 6.5 Н2, Н4)
+  description: 'Канон — нормы глав 06.1…06.9-console.norms.md; Н2 «Разбор запроса консоли» и общие коды (глава 6.5 Н2, Н4)
     действуют у каждой двери, их ответы перечислены у каждой операции явно. Короткие пути единиц, таблиц, blob-полей, /policy,
     /unplaceable, /where/{id} выбирают CONSOLE_ROOT; пара servers {origin}/{sub} явно выбирает загруженную подсистему, включая
     root. /manifest, /servers, /where/{table}/{place}, /metrics объявлены и с префиксом /{sub}. Общие /drain, /schema, /session,
-    /mounts, /healthz, /resources, /platform/*, /servers/{server}/…, /console/batch не получают префикса; /events и /marks — без префикса;
+    /mounts, /healthz, /resources, /platform/*, /servers/{server}/…, /console/batch, /folders не получают префикса; /events и /marks — без префикса;
     просьбы и учёт человека всегда именуют подсистему. Один сегмент пути различает загруженный манифест: unit.rows — /{rows},
     tables — /{table}, door.pass — /{pass}; непересечение имён и зарезервированных слов — загрузчик P/02.1. Внутренний API
     не нормируется; контракт не утверждает, что какая-либо реализация ему проверена.'
@@ -758,11 +758,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/BatchRefused'
         '412':
-          description: Страж или cas строки разошёлся; ничего не записано.
+          description: Страж или cas строки разошёлся; ничего не записано. leader moved — страж поколения пакета шага (глава 6.9 Н2).
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BatchMoved'
+                oneOf:
+                - $ref: '#/components/schemas/BatchMoved'
+                - $ref: '#/components/schemas/LeaderMoved'
         '413':
           description: Сверх пределов пакета, строка тяжелее потолка или тело больше предела консоли.
           content:
@@ -775,6 +777,571 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/KeyReused'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /folders:
+    description: Глава 6.8 Н2 — папки кластера (ADR-0096). Дверь общая, префикса подсистемы не получает.
+    get:
+      summary: Живые папки кластера
+      parameters:
+      - name: member
+        in: query
+        required: false
+        description: Ссылка на единицу <sub>/<rows>/<id>, процент-кодированная; ответ — её папки и индекс строки членства (глава 6.8 Н2).
+        schema:
+          type: string
+          minLength: 1
+      responses:
+        '200':
+          description: Папки по id в байтах UTF-8.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderList'
+        '400':
+          description: Ссылка member не по форме.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderRefused'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+    post:
+      summary: Создать папку
+      parameters:
+      - $ref: '#/components/parameters/RepeatKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FolderInput'
+      responses:
+        '201':
+          description: Папка создана; при повторе тем же ключом — сохранённый ответ.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+        '400':
+          description: Тело не по форме, глубина.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderRefused'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Родителя нет.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderRefused'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '409':
+          description: У родителя или предка надгробие; заявка в работе.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderRefused'
+        '412':
+          description: Предок изменён или удалён после чтения; ничего не записано.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderRefused'
+        '413':
+          description: Строка или пакет тяжелее потолка; тело больше предела консоли.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderRefused'
+        '422':
+          description: Тот же ключ, иное тело (ADR-0094 доп. (14)).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyReused'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /folders/{id}:
+    description: Глава 6.8 Н2 — одна папка. Надгробие и папка под удалённой ветвью снаружи не существуют.
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    get:
+      summary: Папка
+      responses:
+        '200':
+          description: Живая папка.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Папки нет, надгробие, папка недостижима, сегмент не id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderRefused'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+    put:
+      summary: Переименовать папку или задать состав целиком
+      parameters:
+      - $ref: '#/components/parameters/FolderIfMatch'
+      - $ref: '#/components/parameters/RepeatKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FolderPatch'
+      responses:
+        '200':
+          description: Папка после записи; записи без изменений нет, индекс тот же.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+        '400':
+          description: Тело, parent в теле, член, пределы.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderRefused'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Папки нет, надгробие, папка недостижима.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderRefused'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '409':
+          description: Заявка в работе.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderRefused'
+        '412':
+          description: Разошёлся If-Match (folder moved) или страж цепочки (parent moved); ничего не записано.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/FolderMoved'
+                - $ref: '#/components/schemas/FolderRefused'
+        '413':
+          description: Строка папки или пакет тяжелее потолка; тело больше предела консоли.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderRefused'
+        '422':
+          description: Тот же ключ, иное тело (ADR-0094 доп. (14)).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyReused'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+    delete:
+      summary: Удалить папку; единицы остаются, подпапки недостижимы с этого индекса
+      parameters:
+      - $ref: '#/components/parameters/FolderIfMatch'
+      - $ref: '#/components/parameters/RepeatKey'
+      responses:
+        '200':
+          description: Папка удалена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Папки нет, надгробие, папка недостижима.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderRefused'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '409':
+          description: Заявка в работе.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderRefused'
+        '412':
+          description: Разошёлся If-Match (folder moved) или страж цепочки (parent moved); ничего не записано.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/FolderMoved'
+                - $ref: '#/components/schemas/FolderRefused'
+        '413':
+          description: Пакет тяжелее потолка.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderRefused'
+        '422':
+          description: Тот же ключ, иное тело (ADR-0094 доп. (14)).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyReused'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /{sub}/operations:
+    description: Глава 6.9 Н2 — приём групповой операции (ADR-0095). Двери перечня нет.
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/Subsystem
+    post:
+      summary: Принять операцию
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationInput'
+      responses:
+        '202':
+          description: Операция принята, все шаги wait.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+        '400':
+          description: Тело не по форме; пределы шагов и операций.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationRefused'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Манифест не объявил операции.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationRefused'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '409':
+          description: Корень занят (root busy) или id занят (exists).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationBusy'
+        '412':
+          description: Строка памяти вызывающего разошлась.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchMoved'
+        '413':
+          description: Пакет приёма тяжелее потолка; тело больше предела консоли.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationRefused'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /{sub}/operations/{id}:
+    description: Глава 6.9 Н2 — ход и итог операции.
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/Subsystem
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    get:
+      summary: Операция
+      responses:
+        '200':
+          description: Запись, счётчики и шаги.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Манифест не объявил операции; операции нет или нет view.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationRefused'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /{sub}/operations/{id}/pause:
+    description: Глава 6.9 Н3 «пауза, продолжение, отмена».
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/Subsystem
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    post:
+      summary: Поставить на паузу
+      description: Текущий шаг доигрывает, следующий не начинается.
+      responses:
+        '200':
+          description: Операция после записи; значение уже такое — без записи.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Манифест не объявил операции; операции нет или нет view.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationRefused'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '409':
+          description: Операция завершена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationRefused'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /{sub}/operations/{id}/resume:
+    description: Глава 6.9 Н3 «пауза, продолжение, отмена».
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/Subsystem
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    post:
+      summary: Продолжить
+      description: Снимает человеческую паузу.
+      responses:
+        '200':
+          description: Операция после записи; значение уже такое — без записи.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Манифест не объявил операции; операции нет или нет view.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationRefused'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '409':
+          description: Операция завершена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationRefused'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /{sub}/operations/{id}/cancel:
+    description: Глава 6.9 Н3 «пауза, продолжение, отмена».
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/Subsystem
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    post:
+      summary: Отменить
+      description: Выполненное остаётся, оставшиеся шаги получают итог cancel.
+      responses:
+        '200':
+          description: Операция после записи; значение уже такое — без записи.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Манифест не объявил операции; операции нет или нет view.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationRefused'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '409':
+          description: Операция завершена.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationRefused'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /{sub}/operations/{id}/retry-failed:
+    description: Глава 6.9 Н3 «повторить» — неудачные шаги новой операцией. 412 у двери нет — сверка идёт шагом.
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/Subsystem
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    post:
+      summary: Повторить неудачные шаги
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationRetry'
+      responses:
+        '202':
+          description: Новая операция принята.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+        '400':
+          description: Тело не по форме; пределы.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationRefused'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Манифест не объявил операции; операции нет или нет view.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationRefused'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '409':
+          description: Операция не завершена, повторять нечего, корень занят.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationBusy'
+        '413':
+          description: Пакет приёма тяжелее потолка.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationRefused'
         '429':
           $ref: '#/components/responses/RateLimited'
         '503':
@@ -5072,6 +5639,13 @@ paths:
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
 components:
   parameters:
+    FolderIfMatch:
+      name: If-Match
+      in: header
+      required: false
+      description: Индекс строки папки (глава 6.8 Н2); форма заголовка — ADR-0094 B4, ещё не внесено.
+      schema:
+        type: string
     RepeatKey:
       name: Idempotency-Key
       in: header
@@ -6900,11 +7474,11 @@ components:
         key:
           type: string
           minLength: 1
-          description: Полный ключ строки единицы, строки объявленной таблицы или <s>/next_id; правила ключа — P/01.1 Н1.
+          description: Полный ключ строки единицы, строки объявленной таблицы, <s>/next_id или строки папки и членства (глава 6.8 Н2); правила ключа — P/01.1 Н1.
         fields:
           type: object
           additionalProperties: true
-          description: 'Тело двери этой строки: у единицы — POST или PUT, у таблицы — POST, у счётчика — {n}. Поля проверяет манифест, у delete поля нет.'
+          description: 'Тело двери этой строки: у единицы — POST или PUT, у таблицы — POST, у счётчика — {n}, у папки — {members}, у членства — {folders}. Поля проверяет манифест, у delete поля нет.'
         cas:
           type: string
           pattern: ^(?:(?:0|[1-9][0-9]{0,19})?)$
@@ -6961,6 +7535,276 @@ components:
           pattern: ^(?:(?:0|[1-9][0-9]{0,19})?)$
           description: Индекс этой строки сейчас; пустая строка — строки нет или страж без view.
       description: Глава 6.1 Н4 «Пакетная дверь»; field — /guards/<номер>/index или /writes/<номер>/cas; ничего не записано.
+    Folder:
+      type: object
+      required: [id, name, parent, members, index]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/FolderId'
+        name:
+          type: string
+          minLength: 1
+          description: Предел FOLDER_NAME_MAX байт UTF-8 проверяет дверь; уникальности нет.
+        parent:
+          type: string
+          pattern: ^(?:([0-9a-f]{32})?)$
+          description: Id родителя; пустая строка — корень кластера.
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/FolderMember'
+          description: Ссылки на единицы по порядку, без фильтра по view.
+        index:
+          type: string
+          description: Индекс хранилища строки; только равенство (ADR-0094 B4, ещё не внесено).
+    FolderId:
+      type: string
+      pattern: ^(?:[0-9a-f]{32})$
+      description: 128 случайных бит.
+    FolderMember:
+      type: string
+      pattern: ^(?:[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31}/[^/]+)$
+      description: Полный ключ строки единицы (глава 6.8 Н1.1).
+    FolderGarbled:
+      type: object
+      required: [id, garbled]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/FolderId'
+        garbled:
+          const: true
+      description: Строка не читается своей формой (исходы семьи platform/folders).
+    FolderList:
+      type: object
+      required: [folders]
+      additionalProperties: false
+      properties:
+        folders:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/Folder'
+            - $ref: '#/components/schemas/FolderGarbled'
+        member:
+          type: object
+          required: [index]
+          additionalProperties: false
+          properties:
+            index:
+              type: string
+              description: Индекс строки членства; пустая строка — строки нет.
+          description: Только у запроса с member.
+    FolderInput:
+      type: object
+      required: [name]
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+        parent:
+          type: string
+          pattern: ^(?:([0-9a-f]{32})?)$
+    FolderPatch:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+        members:
+          type: array
+          items:
+            type: string
+          description: Состав целиком; грамматику ссылки, повтор и пределы проверяет дверь (400 bad member, глава 6.8 Н3).
+      description: Закрытое тело; parent в нём — 400 bad folder, поле /parent.
+    FolderDeleted:
+      type: object
+      required: [deleted]
+      additionalProperties: false
+      properties:
+        deleted:
+          $ref: '#/components/schemas/FolderId'
+    FolderRefused:
+      allOf:
+      - $ref: '#/components/schemas/Refusal'
+      description: Отказ дверей папок; слова — refusal-words.tsv, строки folders и *.
+    FolderMoved:
+      type: object
+      required: [detail, error, field, folder]
+      additionalProperties: false
+      properties:
+        detail:
+          type: string
+        error:
+          const: folder moved
+        field:
+          const: /index
+        folder:
+          $ref: '#/components/schemas/Folder'
+      description: Глава 6.8 Н4; тело 412 с текущей строкой — ADR-0094 B4 (ещё не внесено).
+    OperationInput:
+      type: object
+      required: [id, items]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/OperationId'
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OperationItemInput'
+          description: Шаги по порядку; предел OPS_STEPS_MAX проверяет дверь.
+        memory:
+          $ref: '#/components/schemas/OperationMemory'
+    OperationRetry:
+      type: object
+      required: [id]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/OperationId'
+        memory:
+          $ref: '#/components/schemas/OperationMemory'
+    OperationId:
+      type: string
+      pattern: ^(?:[0-9a-f]{32})$
+      description: 128 случайных бит; называет вызывающий (глава 6.9 Н1.2).
+    OperationItemInput:
+      type: object
+      required: [body, root, expected]
+      additionalProperties: false
+      properties:
+        body:
+          description: Тело шага без секретов; консоль его не разбирает.
+        root:
+          type: string
+          minLength: 1
+          description: Корень цели; один компонент ключа, не больше 200 байт UTF-8 (глава 6.9 Н1.3).
+        expected:
+          description: Ожидаемые версии объектов корня; консоль их не разбирает.
+        secret:
+          type: string
+          description: Значение секрета шага; ляжет запечатанным, в ответ не выходит.
+    OperationMemory:
+      type: object
+      required: [key, fields, cas]
+      additionalProperties: false
+      properties:
+        key:
+          type: string
+          minLength: 1
+          description: Строка таблицы вызывающего <sub>/<таблица>/<имя>.
+        fields:
+          type: object
+          additionalProperties: true
+          description: Тело POST этой строки таблицы; поля проверяет манифест.
+        cas:
+          type: string
+          pattern: ^(?:(?:0|[1-9][0-9]{0,19})?)$
+    OperationItem:
+      type: object
+      required: [state]
+      additionalProperties: false
+      properties:
+        state:
+          enum:
+          - wait
+          - run
+          - ok
+          - fail
+          - cancel
+        code:
+          type: string
+        field:
+          type: string
+        version:
+          type: string
+        created_id:
+          type: string
+    Operation:
+      type: object
+      required: [id, by, state, created_at, finished_at, retry_of, total, done, ok, failed, cancelled, items]
+      additionalProperties: false
+      properties:
+        id:
+          $ref: '#/components/schemas/OperationId'
+        by:
+          type: string
+        state:
+          enum:
+          - running
+          - paused
+          - done
+        created_at:
+          type: number
+        finished_at:
+          type:
+          - number
+          - 'null'
+        retry_of:
+          oneOf:
+          - $ref: '#/components/schemas/OperationId'
+          - type: 'null'
+        total:
+          type: integer
+          minimum: 1
+        done:
+          type: integer
+          minimum: 0
+        ok:
+          type: integer
+          minimum: 0
+        failed:
+          type: integer
+          minimum: 0
+        cancelled:
+          type: integer
+          minimum: 0
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationItem'
+    OperationRefused:
+      allOf:
+      - $ref: '#/components/schemas/Refusal'
+      description: Отказ дверей операций; слова — refusal-words.tsv, строки operations и *.
+    OperationBusy:
+      type: object
+      required: [detail, error]
+      additionalProperties: false
+      properties:
+        detail:
+          type: string
+        error:
+          enum:
+          - root busy
+          - exists
+          - in flight
+          - operation done
+          - operation running
+          - nothing to retry
+        field:
+          $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/RefusalField'
+        operation:
+          type: string
+          description: Кто держит корень; пустая строка — строка занятости нечитаема.
+        root:
+          type: string
+      description: Глава 6.9 Н4.
+    LeaderMoved:
+      type: object
+      required: [detail, error]
+      additionalProperties: false
+      properties:
+        detail:
+          type: string
+        error:
+          const: leader moved
+      description: Глава 6.9 Н2 «Пакет шага»; подсистема заканчивает вызов и итог не пишет.
     KeyReused:
       unevaluatedProperties: false
       allOf:

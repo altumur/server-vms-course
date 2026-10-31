@@ -14,6 +14,8 @@ spec/06.4-console.norms.md           нормы главы 6.4 — просьб�
 spec/06.5-console.norms.md           нормы главы 6.5 — наблюдения
 spec/06.6-console.norms.md           нормы главы 6.6 — двери управления
 spec/06.7-console.norms.md           нормы главы 6.7 — поздний слой: книга члена, пересылка к домену, двери переноса
+spec/06.8-console.norms.md           нормы главы 6.8 — папки кластера (ADR-0096)
+spec/06.9-console.norms.md           нормы главы 6.9 — групповые операции (ADR-0095)
 spec/06-console.api.openapi.yaml     двери (один контракт урока)
 spec/06-console.README.md            инструкция реализации
 lifecycle.md                         флаги, окружение, коды выхода, юниты
@@ -22,7 +24,7 @@ data/<семья>.schema.json, .outcomes.tsv схемы семей (JSON Schema,
                                      decommission, schema (6.6)
 data/refusal-words.tsv               закрытый перечень слов error по дверям (6.1, 6.2, 6.5, 6.6; ADR-0094 B5)
 vectors/<алгоритм>/                  векторы: fault, values-by-type (6.1); secret-in, log-mask (6.2, в common/vectors); rid, requests-body,
-                                     request-digest (6.4); resolve (6.7)
-acceptance/1/ … acceptance/7/        приёмка глав 6.1–6.7 (README, scenarios.tsv, corrections.tsv; 2/fields.yaml,
+                                     request-digest (6.4); resolve (6.7); op-step (6.9)
+acceptance/1/ … acceptance/9/        приёмка глав 6.1–6.9 (README, scenarios.tsv, corrections.tsv; 2/fields.yaml,
                                      5/inputs/, 5/probe-x.subsystem.yaml, 6/inputs/)
 ```

@@ -1,0 +1,4 @@
+# Исходы нечитаемой строки <sub>/opbusy/<корень> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	console	строка целиком нечитаема: корень считается занятым, приём — 409 `root busy` с пустым `operation`; жнец строку не снимает: основания нет, причина — в журнал	0	строка	P/06.9 Н3 «принять», «жнец»

@@ -1,0 +1,4 @@
+# Исходы нечитаемой строки <sub>/operations/<id> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	console	строка целиком нечитаема: двери операции — 503 `unavailable`; ведущий операцию не ведёт, шагов не зовёт; жнец её строк не снимает, причина — в журнал	0	строка	P/06.9 Н3 «шаг», «жнец»
