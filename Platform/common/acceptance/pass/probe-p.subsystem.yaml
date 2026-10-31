@@ -9,5 +9,5 @@ door:
     routes: [api]
     calls: [probe-p/things, probe-p/stash, console/batch, changes, GET session, GET manifest]
     stream: [api/stream]
-    wait: {api: 300, api/slow: 2}
+    wait: {api/x: 300, api/slow: 2}
 worker: {exec: /usr/lib/probe-p/worker}

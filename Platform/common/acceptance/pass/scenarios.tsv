@@ -35,7 +35,7 @@ scenario	step	request	expect
 03-person-off	4	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$t1"}
 03-person-off	5	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$t2"}
 03-person-off	6	@pass-worker m1 probe-p p-1	ok
-03-person-off	7	@until 30 member m1 console @header Authorization: Bearer $t1 GET /session	200 {"user": "ann"}
+03-person-off	7	@until 30 member m1 console @header Authorization: Bearer $t1 GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "*"}]}
 03-person-off	8	@pass-open a member m1 console @header Authorization: Bearer $t1 GET /probe-p/api/x	ok {"ticket": "$a"}
 03-person-off	9	@pass-open b member m1 console @header Authorization: Bearer $t2 GET /probe-p/api/x	ok {"ticket": "$b"}
 03-person-off	10	@until 30 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $a GET /session	200 {"user": "ann", "via": "ticket"}
@@ -70,7 +70,7 @@ scenario	step	request	expect
 06-service-table	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:probe-p/none"}]}	200
 06-service-table	4	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$ta"}
 06-service-table	5	@pass-worker m1 probe-p p-1	ok
-06-service-table	6	@until 30 member m1 console @header Authorization: Bearer $ta GET /session	200 {"user": "ann"}
+06-service-table	6	@until 30 member m1 console @header Authorization: Bearer $ta GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:probe-p/none"}]}
 06-service-table	7	@pass-open a member m1 console @header Authorization: Bearer $ta GET /probe-p/api/x	ok {"ticket": "$t"}
 06-service-table	8	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /changes	200 {"position": "$p", "changes": []}
 06-service-table	9	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /probe-p/stash {"name": "s1", "note": "kept", "user": "ann"}	201 {"row": {"name": "s1"}}

@@ -3,3 +3,4 @@ date	sample	fix	languages
 2026-10-31	06-service-table	лента по билету: строки service своего user (ADR-0094 доп. (15), правка 2026-10-31)	all
 2026-10-31	08-leaf-of-the-role, stand.json	ADR-0094 доп. (16): обратный вызов — на отдельном слушателе {cport}, без листа и с чужим центром — отказ рукопожатия, основной слушатель билета не принимает	all
 2026-10-31	01-ticket-lives-with-request, 03-person-off, 05-stream, probe-p.subsystem.yaml	чтение серии раннера: `wait: {api: 300}`, иначе истечение билета маскирует отзыв; `slot.prefix: p` к имени `p-1`; шаг сокета чужой роли снят: сокета нет; сц. 03 ждёт копию грантов; сц. 05 — поток дольше `PASS_WAIT`.	all
+2026-10-31	03-person-off, 06-service-table, probe-p.subsystem.yaml	чтение серии раннера: ожидание копии грантов судит `grants`, не `user`; `wait: {api/x: 300}`, чтобы поток остался без предела.	all
