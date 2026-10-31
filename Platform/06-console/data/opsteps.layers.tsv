@@ -19,4 +19,3 @@ place	layer	word	value
 /properties/password_secret	3	x-codec	["string"]
 /properties/root	3	x-codec	["string"]
 /properties/root	3	x-max-bytes	200
-/properties/secret_gone	3	x-codec	["boolean"]

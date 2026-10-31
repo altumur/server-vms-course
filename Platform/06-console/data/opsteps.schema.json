@@ -26,17 +26,10 @@
    ]
   },
   "password_secret": {
-   "description": "значение секрета шага: запечатано договором запечатывания, путь AAD `/password_secret`; снято после итога `ok` и при завершении операции с любым исходом (Н3)",
+   "description": "значение секрета шага: запечатано договором запечатывания, путь AAD `/password_secret`; у шага `ok` и `cancel` снято, у `fail` лежит до OPS_KEEP ради повтора (Н3)",
    "type": "string",
    "x-codec": [
     "string"
-   ]
-  },
-  "secret_gone": {
-   "description": "true — шаг нёс значение секрета, оно снято; повтор такого шага — итог fail not_run (Н3 «повторить»)",
-   "type": "boolean",
-   "x-codec": [
-    "boolean"
    ]
   }
  },
