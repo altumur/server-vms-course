@@ -107,6 +107,18 @@
    "x-codec": [
     "string"
    ]
+  },
+  "reply": {
+   "description": "ответ perform начавшего держателя: текст JSON объекта, значения — строки до 200 кодовых точек; у no_begun, expired, gone нет",
+   "type": "object",
+   "additionalProperties": {
+    "type": "string",
+    "maxLength": 200
+   },
+   "x-encoding": "json",
+   "x-codec": [
+    "any"
+   ]
   }
  },
  "additionalProperties": false,
@@ -549,6 +561,34 @@
       "not": {}
      },
      "late": {
+      "not": {}
+     }
+    }
+   }
+  },
+  {
+   "if": {
+    "allOf": [
+     {
+      "type": "object"
+     },
+     {
+      "required": [
+       "outcome"
+      ]
+     },
+     {
+      "not": {
+       "required": [
+        "instance"
+       ]
+      }
+     }
+    ]
+   },
+   "then": {
+    "properties": {
+     "reply": {
       "not": {}
      }
     }
