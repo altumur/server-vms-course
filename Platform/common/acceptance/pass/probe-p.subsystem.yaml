@@ -2,11 +2,12 @@
 name: probe-p
 unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
 placement: {capacity: {default: 1}}
+slot: {prefix: p}
 tables: {stash: {key: name, fields: {name: {type: string, required: true}, note: {type: string}, user: {type: string}}, service: true}}
 door:
   pass:
     routes: [api]
     calls: [probe-p/things, probe-p/stash, console/batch, changes, GET session, GET manifest]
     stream: [api/stream]
-    wait: {api/slow: 2}
+    wait: {api: 300, api/slow: 2}
 worker: {exec: /usr/lib/probe-p/worker}

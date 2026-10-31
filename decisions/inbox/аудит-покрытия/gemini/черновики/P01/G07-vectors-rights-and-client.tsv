@@ -1,0 +1,29 @@
+# Черновик G07 — дополнения пакета векторов `Platform/01-store/vectors/rights-evaluator` и `Platform/common/vectors/store-client`.
+#
+# 1. `Platform/01-store/vectors/rights-evaluator/expect.tsv`:
+# Норма: P/01.2 Н1.2 `pattern` (`""` — пустой ключ, `"!"` — отрицание пустого ключа, `"!*"` — отрицание всего) и Н1.3 `allowed` (любой `!образец` роли для action совпал → нет, независимо от порядка в массиве до или после разрешения).
+# В `rights.json` пакета у роли `none` `read: ["acc/*", "!*"]` (`!*` стоит ПОСЛЕ `acc/*`), но случая, где `!образец` стоит ПЕРЕД более широким разрешением (`["!acc/pre/secret/*", "acc/pre/*"]`), и проверки отрицания подпрефикса внутри разрешённого префикса в `expect.tsv` нет.
+# Предлагаемое расширение `rights.json` (у роли `acc` в `read` добавить `"!acc/pre/secret/*"`, поставить первым элементом массива `read`) и новые строки `expect.tsv`:
+#
+# role	action	key	expect
+acc	read	acc/pre/secret/k1	deny
+acc	read	acc/pre/secret	allow
+#
+# 2. `Platform/common/vectors/store-client/cases.tsv`:
+# Норма: `Platform/common/contracts/store-client.md` «Ответ» (`forms: формы ответов закрыты`), «Исходы и что делает клиент» (`outcome`, `no_reply`):
+#   — нечитаемый ответ (не по закрытой форме операции: лишнее поле, `unreadable: false`, `again: false`, `Fault` без `error`, код 200 у `list` с неверной версией в `keys`) → `unavailable` у `get`/`list`, `ambiguous` у `write`;
+#   — отказы `badkey`, `badrequest`, `forbidden`, `expired`, `early`, `toolarge`, `refused` (`op: floor`, C01-REFUSED-OUTCOME-01).
+# Новые строки `cases.tsv`:
+# case	input	expect	note
+get-extra-field	{"op":"get","reply":{"status":200,"body":{"items":{"a":"1"},"index":"7","extra":1}}}	"unavailable"	закрытая форма Row: лишнее поле — нечитаемый ответ чтения: unavailable
+get-unreadable-false	{"op":"get","reply":{"status":200,"body":{"items":null,"index":"7","unreadable":false}}}	"unavailable"	unreadable бывает только true — не по форме Row: unavailable
+list-bad-version	{"op":"list","reply":{"status":200,"body":{"keys":{"a/b":"03"}}}}	"unavailable"	версия в Listing с ведущим нулём — не по форме: unavailable
+write-again-false	{"op":"write","reply":{"status":200,"body":{"index":"8","again":false}}}	"ambiguous"	again бывает только true — не по закрытой форме Written: ambiguous
+write-truncated	{"op":"write","reply":"@truncated"}	"ambiguous"	обрезанный ответ записи — ambiguous
+write-expired	{"op":"write","reply":{"status":409,"body":{"kind":"expired","error":"x"}}}	"expired"	время приёма позже not_after
+write-early	{"op":"write","reply":{"status":409,"body":{"kind":"early","error":"x"}}}	"early"	время приёма не позже not_before
+write-refused-floor	{"op":"write","reply":{"status":409,"body":{"kind":"refused","error":"x"}}}	"refused"	op floor не выше нынешнего (C01-REFUSED-OUTCOME-01)
+write-toolarge	{"op":"write","reply":{"status":413,"body":{"kind":"toolarge","error":"x","limit":1048576}}}	"toolarge"	превышен предел тела или потолок строки
+get-forbidden	{"op":"get","reply":{"status":403,"body":{"kind":"forbidden","error":"x"}}}	"forbidden"	прав нет или личность не допускается
+get-badkey	{"op":"get","reply":{"status":400,"body":{"kind":"badkey","error":"x"}}}	"badkey"	ключ не по правилам Н1
+write-badrequest	{"op":"write","reply":{"status":400,"body":{"kind":"badrequest","error":"x"}}}	"badrequest"	запрос или команда не по форме

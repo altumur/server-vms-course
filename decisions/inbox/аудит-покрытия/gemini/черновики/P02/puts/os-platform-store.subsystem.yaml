@@ -1,0 +1,5 @@
+# name: store → пользователь/группа <dep>-store = w2c-store совпадает с группой платформы w2c-store (P/02.4 Н1.1 users_groups names)
+name: store
+unit: {rows: things, id: numeric}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/store/worker}

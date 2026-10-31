@@ -1,0 +1,82 @@
+# Черновик G09: расширения для Platform/08-domain/acceptance/8/scenarios.tsv
+# Покрывает:
+# - 8.8 Н1.6 и Н3.6 (POST /domain/stranded/apply: 409 на действующем держателе; на низложенном держателе: 404 если пары (path, key) нет в domain/stranded, 400 {"error": "redo it on the new holder"} при key="seq" в domain/pending/*, 202 при пересылке ожидающей правки e-..., 503 при нечитаемой domain/stranded Г-40)
+# - 8.8 Н1.7 (POST /api/prepare и POST /api/take на действующем держателе -> 409; POST /api/take без подготовленного ключа -> 409 nothing is prepared on ...)
+# - 8.8 Н1.8 и Н3.8 (C08-RESTORE-EXACT-01 и C08-BACKUP-JSON-99: очистка лишних/нечитаемых записей domain/* на принимающем кластере при @move и побайтный перенос необъектного JSON domain/alarm-history/* через raw)
+
+name	act	expect
+
+# POST /domain/stranded/apply:
+# - на действующем держателе -> 409 {"error": "this cluster is the active holder"};
+# - на низложенном держателе при отсутствии (path, key) -> 404;
+# - для domain/pending/<c> с key="seq" -> 400 {"error": "redo it on the new holder"};
+# - для domain/pending/<c> с key="e-..." -> пересылает правку новому держателю (202);
+# - при нечитаемой domain/stranded -> 503 {"error": "unavailable"} (Г-40).
+stranded_apply_pending_seq_missing_and_unreadable
+	@cluster hold
+	@cluster m1
+	@cluster m2
+	@bootstrap domain on hold
+	POST /domain/members	{"cluster": "m1", "pubkey": "@pubkey(m1)"}
+		200	~
+	POST /domain/members	{"cluster": "m2", "pubkey": "@pubkey(m2)"}
+		200	~
+	@join m1 to hold
+	@join m2 to hold
+	POST /domain/stranded/apply	{"path": "domain/users", "key": "alice"}
+		409	{"error": "this cluster is the active holder"}
+	@disconnect m2 from hold
+	PUT /domain/testsub/things/t1?cluster=m2	{"name": "stranded-thing"}
+		202	{"id": "e-1"}
+	@disconnect m1 from hold
+	@seize domain on m1
+	@connect m1 to hold
+	@carry hold to m1
+	@connect m2 to m1
+	@carry m1 to m2
+	on hold POST /domain/stranded/apply	{"path": "domain/users", "key": "nosuch"}
+		404	{"error": "~"}
+	on hold POST /domain/stranded/apply	{"path": "domain/pending/m2", "key": "seq"}
+		400	{"error": "redo it on the new holder"}
+	on hold POST /domain/stranded/apply	{"path": "domain/pending/m2", "key": "e-1"}
+		202	{"id": "e-1"}
+	@corrupt hold state domain/stranded/0 00
+	on hold POST /domain/stranded/apply	{"path": "domain/pending/m2", "key": "e-1"}
+		503	{"error": "unavailable"}
+
+# POST /api/prepare и POST /api/take отказывают 409 на действующем держателе,
+# а POST /api/take на кандидате без предварительного prepare отказывает 409 "nothing is prepared on ...".
+prepare_and_take_refusals_on_holder_and_unprepared
+	@cluster hold
+	@cluster m1
+	@bootstrap domain on hold
+	POST /domain/members	{"cluster": "m1", "pubkey": "@pubkey(m1)"}
+		200	~
+	@join m1 to hold
+	on hold POST /api/prepare	{}
+		409	{"error": "this cluster is already the holder"}
+	on hold POST /api/take	{"backup": {}, "holder_key_enc": "AA=="}
+		409	{"error": "this cluster is already the holder"}
+	on m1 POST /api/take	{"backup": {}, "holder_key_enc": "AA=="}
+		409	{"error": "~nothing is prepared on m1"}
+
+# C08-RESTORE-EXACT-01 и C08-BACKUP-JSON-99:
+# при передаче места держателя (@move) лишние и повреждённые записи domain/* в state кандидата удаляются,
+# а необъектные JSON-значения в domain/* (например, массив в domain/alarm-history/m1) переносятся через raw побайтно.
+move_clears_extra_target_rows_and_preserves_raw_json_array
+	@cluster hold
+	@cluster m1
+	@bootstrap domain on hold
+	POST /domain/members	{"cluster": "m1", "pubkey": "@pubkey(m1)"}
+		200	~
+	@join m1 to hold
+	POST /domain/users	{"name": "alice"}
+		200	~
+	@put hold state domain/alarm-history/m1 [{"id":"a1","sev":"critical"}]
+	@put m1 state domain/users/ghost {"name":"ghost","roles":["user"],"rev":1}
+	@corrupt m1 state domain/users/broken 00
+	@move domain from hold to m1
+	on m1 GET /domain/users
+		200	{"users": {"alice": {"name": "alice", "roles": ["user"], "rev": 1}}}
+	on m1 GET /domain/view
+		200	{"holder": "m1", "unreadable": []}

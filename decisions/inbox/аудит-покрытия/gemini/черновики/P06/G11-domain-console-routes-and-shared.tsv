@@ -1,0 +1,19 @@
+# Draft G11 (subchapter 6.7): dot-segments in /domain/* rejected before gate (404), /api/held ignores bad Bearer header (200), and GET /domain/shared/<sub> on holder console + ?unit= validation
+# Norms: 6.7 Н1.3 (D4), Н1.12 (P/06.7-14), Н1.14 (X13, P/06.7-15)
+
+# 1. Dot-segments in /domain/... return 404 {"error": "not a domain route"} even without Authorization (before gate)
+@as member pass console	GET	/domain/./members	-	404	{"error": "not a domain route"}
+@as member pass console	GET	/domain/%2e%2e/members	-	404	{"error": "not a domain route"}
+# 2. GET /api/held is open without pass and ignores an invalid Authorization header (X13)
+@as member pass console	@with Authorization=Bearer bogus-token	GET	/api/held	-	200	{"held": true}
+# 3. GET /domain/shared/<sub> on the holder's cluster console reads domain/shared + domain/shared-docs/rev-<rev>, and validates ?unit=
+@as member hold store	PUT	/kv/domain/shared	{"revision": "1", "updated": "1700000000", "digest": "sha256:6b82eedac3c0fdbe16cd99cc09b2a421f99a32f8f82491b319ca5996030a3240", "prev_digest": ""}	200	{}
+@as member hold store	PUT	/objects/domain/shared-docs/rev-1	@file:inputs/shared-doc-rev1.json	200	{}
+@as member hold console	GET	/domain/shared/testsub	-	200	{"sub": "testsub", "revision": 1, "units": [{"id": "cam-1"}]}
+@as member hold console	GET	/domain/shared/testsub?unit=cam-1	-	200	{"sub": "testsub", "revision": 1, "unit": {"id": "cam-1"}}
+@as member hold console	GET	/domain/shared/testsub?unit=	-	400	{"error": "refused", "detail": "a unit id is required"}
+@as member hold console	GET	/domain/shared/testsub?unit=cam-1&unit=cam-2	-	400	{"error": "refused", "detail": "a unit id is required"}
+@as member hold console	GET	/domain/shared/testsub?unit=nosuch	-	404	{"error": "no such unit"}
+@as member hold console	GET	/domain/shared/testsub?unit=..	-	404	{"error": "no such unit"}
+@as member hold store	DELETE	/kv/domain/shared	-	200	{}
+@as member hold store	DELETE	/objects/domain/shared-docs/rev-1	-	200	{}

@@ -1,0 +1,37 @@
+scenario	step	request	expect
+# Черновик G05 (урок 04, контроллер): разведение по непустому spread_by (zone в testsub2 — две единицы с одной зоной не на одном сервере), связывающая affinity (kind: reserve ведёт только к держателю места) и уход при admits: false, а также предпочтение home (shelf → server) и возврат домой шагом 7 (HOME_BUDGET = 1) при появлении воркера домашнего сервера (P/04-06, P/04-08, P/04-13; Н1.3 spread_by, affinity, home, Н3 «проход()» шаги 4, 6, 7, «выбрать», «уходит»).
+01-spread-by-zone	1	@start resource	ok
+01-spread-by-zone	2	@start resource on srv-b	ok
+01-spread-by-zone	3	@start controller testsub2	ok
+01-spread-by-zone	4	console2 POST /shelves {"name": "s-a1", "zone": "z1", "server": "srv-a"}	201
+01-spread-by-zone	5	console2 POST /shelves {"name": "s-b1", "zone": "z1", "server": "srv-b"}	201
+01-spread-by-zone	6	@start worker testsub2 t-srv-a-1 on srv-a	ok
+01-spread-by-zone	7	@until 30 store GET /v1/get?key=testsub2/holds/s-a1	200 {"items": {"by": "t-srv-a-1", "released": "false"}}
+01-spread-by-zone	8	console2 POST /tallies {"name": "z1a", "of": "c1", "zone": "z1"}	201
+01-spread-by-zone	9	console2 POST /tallies {"name": "z1b", "of": "c1", "zone": "z1"}	201
+01-spread-by-zone	10	@until 30 console2 GET /where/z1a	200 {"worker": "t-srv-a-1"}
+01-spread-by-zone	11	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"unplaced": 1}
+01-spread-by-zone	12	console2 GET /where/z1b	404
+01-spread-by-zone	13	@start worker testsub2 t-srv-b-1 on srv-b	ok
+01-spread-by-zone	14	@until 30 store GET /v1/get?key=testsub2/holds/s-b1	200 {"items": {"by": "t-srv-b-1", "released": "false"}}
+01-spread-by-zone	15	@until 30 console2 GET /where/z1b	200 {"worker": "t-srv-b-1"}
+02-affinity-home-and-admits	1	@start resource	ok
+02-affinity-home-and-admits	2	@start resource on srv-b	ok
+02-affinity-home-and-admits	3	@start controller testsub2	ok
+02-affinity-home-and-admits	4	console2 POST /shelves {"name": "s-a1", "zone": "z", "server": "srv-a", "kind": "plain"}	201
+02-affinity-home-and-admits	5	console2 POST /shelves {"name": "s-b1", "zone": "z", "server": "srv-b", "kind": "reserve"}	201
+02-affinity-home-and-admits	6	console2 POST /shelves {"name": "s-b2", "zone": "z2", "server": "srv-b", "kind": "plain"}	201
+02-affinity-home-and-admits	7	@start worker testsub2 t-srv-a-1 on srv-a	ok
+02-affinity-home-and-admits	8	@until 30 store GET /v1/get?key=testsub2/holds/s-a1	200 {"items": {"by": "t-srv-a-1", "released": "false"}}
+02-affinity-home-and-admits	9	console2 POST /tallies {"name": "t-res", "of": "c1", "shelf": "s-b1", "zone": "z"}	201
+02-affinity-home-and-admits	10	console2 POST /tallies {"name": "t-home", "of": "c1", "shelf": "s-b2", "zone": "z2"}	201
+02-affinity-home-and-admits	11	@until 30 console2 GET /where/t-home	200 {"worker": "t-srv-a-1"}
+02-affinity-home-and-admits	12	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"unplaced": 1}
+02-affinity-home-and-admits	13	console2 GET /where/t-res	404
+02-affinity-home-and-admits	14	@start worker testsub2 t-srv-b-1 on srv-b	ok
+02-affinity-home-and-admits	15	@until 30 store GET /v1/get?key=testsub2/holds/s-b1	200 {"items": {"by": "t-srv-b-1", "released": "false"}}
+02-affinity-home-and-admits	16	@until 30 console2 GET /where/t-res	200 {"worker": "t-srv-b-1"}
+02-affinity-home-and-admits	17	@until 30 store GET /v1/get?key=testsub2/placement/t-home	200 {"items": {"worker": "t-srv-b-1", "reason": "~at home on srv-b"}}
+02-affinity-home-and-admits	18	console2 PUT /shelves/s-b1 {"zone": "z", "server": "srv-b", "kind": "reserve", "admits": false, "enabled": true}	200
+02-affinity-home-and-admits	19	@until 30 store GET /v1/get?key=testsub2/placement/t-home	200 {"items": {"worker": "t-srv-a-1", "reason": "~t-srv-b-1's shelf s-b1 admits no unit"}}
+02-affinity-home-and-admits	20	@until 30 store GET /v1/get?key=testsub2/placement/t-res	200 {"items": {"worker": "", "reason": "~t-srv-b-1's shelf s-b1 admits no unit"}}

@@ -1,0 +1,17 @@
+# Draft G03 (subchapter 6.1): table stamp fields (by/at/made_at) forbidden in POST body, overwrite event was=true, and unreadable hold row yields held_by: null
+# Norms: 6.1 Н1.6 «held_by» (C06-TABLE-HELD-BY-33-01), Н3 «таблица — записать строку» шаги 1, 4 (P/06.1-15)
+
+# Stamp fields by/at/made_at are not in the manifest fields list -> 400 unknown field
+POST	/testsub2/shelves	{"name": "sh1", "path": "/mnt/a", "by": "spoof"}	400	{"error": "~unknown field"}
+POST	/testsub2/shelves	{"name": "sh1", "path": "/mnt/a", "at": 100}	400	{"error": "~unknown field"}
+POST	/testsub2/shelves	{"name": "sh1", "path": "/mnt/a", "made_at": 100}	400	{"error": "~unknown field"}
+# Create and then overwrite sh1: overwrite returns 200 and emits shelf.declared with was: true
+POST	/testsub2/shelves	{"name": "sh1", "path": "/mnt/a"}	200	{"name": "sh1", "path": "/mnt/a", "by": "operator", "at": "$at1", "made_at": "$at1"}
+POST	/testsub2/shelves	{"name": "sh1", "path": "/mnt/b"}	200	{"name": "sh1", "path": "/mnt/b", "by": "operator", "at": "$at2", "made_at": "$at1"}
+GET	/events?kind=shelf.declared&subject=sh1&limit=1	-	200	{"events": [{"kind": "shelf.declared", "subject": "sh1", "detail": {"was": true}}]}
+# Unreadable hold record (released: "bogus") is treated as no hold (held_by: null), not 503
+@as console store	PUT	/kv/testsub2/holds/sh1	{"holder": "t1", "born": "1", "released": "bogus"}	200	{}
+GET	/testsub2/shelves/sh1	-	200	{"name": "sh1", "held_by": null}
+GET	/testsub2/shelves	-	200	{"shelves": [{"name": "sh1", "held_by": null}]}
+@as console store	DELETE	/kv/testsub2/holds/sh1	-	200	{}
+DELETE	/testsub2/shelves/sh1	-	200	{"deleted": "sh1"}

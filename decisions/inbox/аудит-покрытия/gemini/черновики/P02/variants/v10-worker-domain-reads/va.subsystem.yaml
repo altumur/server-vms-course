@@ -1,0 +1,32 @@
+name: va
+unit:
+  rows: items
+  id: name
+  fields:
+    name:   {type: string, required: true}
+    step:   {type: int, inherit: 1}
+    to:     {type: list}
+placement:
+  capacity:   {from: capacity, default: 4}
+  constraint: labels-subset
+  tie_break:  most-free-capacity
+door:
+  routes: [read]
+worker:
+  exec: /usr/lib/va/worker
+  reads:
+    - domain/placed/va/
+    - domain/va/tallies
+domain:
+  ref: name
+  shared: [step]
+  books:
+    tallies: {show: [n]}
+    notes:   {from: va/notes/, key: ref, pick: unique, to: to, show: [ref]}
+    rolls:   {from: va/rolls, key: ref, pick: all, to: to, show: [ref]}
+  tokens:
+    probe:
+      lifetime: 60
+      claims: [ref, aud]
+      grant: [vaworker]
+      unit: {ref_claim: ref, target_fields: [poll_home], audience_claim: aud}

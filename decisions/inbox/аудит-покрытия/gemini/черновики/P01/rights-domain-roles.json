@@ -1,0 +1,23 @@
+{
+  "comment": "Вход черновика G04: роли домена domain, domainagent, testsubdomain для проверки C01-NEVER-DOMAIN-ROLE-01",
+  "roles": {
+    "domain": {
+      "group": "w2c-domain",
+      "read": ["domain/*"],
+      "write": ["domain/*"],
+      "delete": ["domain/*"]
+    },
+    "domainagent": {
+      "group": "w2c-domainagent",
+      "read": ["domain/*"],
+      "write": ["domain/*"],
+      "delete": ["domain/*"]
+    },
+    "testsubdomain": {
+      "group": "w2c-testsubdomain",
+      "read": ["domain/*"],
+      "write": ["domain/*"],
+      "delete": ["domain/*"]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+# Черновик P/02 G02 — проверки каталога: секрет с default у адресата worker.creates, near.of на несуществующем поле соседа, отсрочка worker.uses при установке владельца после потребителя
+# Куда: Platform/02-installer/acceptance/3/puts.tsv (новые строки в конец таблицы) и файлы в Platform/02-installer/acceptance/3/puts/
+# Норма: P/02.1 Н3 «загрузить_каталог» (правило 4 worker.creates: «у A нет поля *_secret с required: true или с default»; near.of и near.prefer — поля near.sub; отсрочка worker.uses), P/02.1-11, P/02.1-30, P/02.1-32
+# Что закрывает:
+#   1. creates_target_secret_default / creates_target_after_secret_default — необязательное поле *_secret у адресата с default (в текущем puts.tsv проверен только required: true).
+#   2. near_bad_of / near_target_after_bad_of — near.of называет поле, которого нет у near.sub, при корректном near.prefer (в текущем puts.tsv проверен только near.prefer).
+#   3. uses_owner_after / uses_owner_after_mismatch — установка владельца доли после потребителя (использует существующие puts/user.subsystem.yaml, puts/owner.subsystem.yaml, puts/owner-noshare.subsystem.yaml).
+# Новых директив стенда не требует.
+case	puts	expect
+creates_target_secret_default	target-secret-default customer	2 -
+creates_target_after_secret_default	customer target-secret-default	2 -
+near_bad_of	near-target near-client-bad-of	2 -
+near_target_after_bad_of	near-client-bad-of near-target	2 -
+uses_owner_after	user owner	0 1
+uses_owner_after_mismatch	user owner-noshare	2 -

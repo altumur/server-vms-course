@@ -1,0 +1,20 @@
+# Draft G04 (subchapter 6.2 & 6.5): startup resealing of plaintext secrets in unit rows, table rows, and door/signer (without bumping unit revision)
+# Norms: 6.2 Н3 «перезапечатать при старте» (P/06.2-02), 6.5 Н3 «door/signer и door/keys»
+
+# Write a unit row, a table row, and door/signer with plaintext *_secret directly into store
+@as console store	PUT	/kv/testsub2/tallies/t10	{"id": "t10", "zone": "", "weight": "1", "tags": "[]", "token_secret": "plain-unit-sec", "mask": "", "revision": "1", "born": "1700000000"}	200	{}
+@as console store	PUT	/kv/testsub2/shelves/sh2	{"name": "sh2", "path": "/mnt/sh2", "Quota": "10G", "pin_secret": "plain-table-sec", "by": "operator", "at": "1700000000", "made_at": "1700000000"}	200	{}
+@as console store	PUT	/kv/door/signer	{"kid": "k-door-1", "seed_secret": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20", "created": "1700000000"}	200	{}
+@restart console
+# After restart: all three secrets are resealed under the active key (~enc:v2:), unit revision stays "1", and door/keys publishes k-door-1
+@as console store	GET	/kv/testsub2/tallies/t10	-	200	{"value": {"token_secret": "~enc:v2:", "revision": "1"}}
+@as console store	GET	/kv/testsub2/shelves/sh2	-	200	{"value": {"pin_secret": "~enc:v2:"}}
+@as console store	GET	/kv/door/signer	-	200	{"value": {"kid": "k-door-1", "seed_secret": "~enc:v2:"}}
+@as console store	GET	/kv/door/keys	-	200	{"value": {"keys": "~k-door-1"}}
+GET	/testsub2/tallies/t10	-	200	{"id": "t10", "revision": 1, "token_secret": true}
+GET	/testsub2/shelves/sh2	-	200	{"name": "sh2", "pin_secret": true}
+# Clean up
+DELETE	/testsub2/tallies/t10	-	200	{"deleted": "t10"}
+DELETE	/testsub2/shelves/sh2	-	200	{"deleted": "sh2"}
+@as console store	DELETE	/kv/door/signer	-	200	{}
+@as console store	DELETE	/kv/door/keys	-	200	{}

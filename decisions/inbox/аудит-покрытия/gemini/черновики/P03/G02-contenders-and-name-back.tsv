@@ -1,0 +1,24 @@
+# Черновик G02: сценарии для Platform/03-worker/acceptance/2/scenarios.tsv
+# Норма: P/03.2 Н1.4а, Н3 «никто и возврат имени», contenders.schema.json.
+# 1) Три состояния объекта метки соперника testsub/contenders/<имя>/<коробка>:
+#    - waiting: своего захвата ещё не было и кандидат w-1 недоступен без NameOnAnotherBox (нечитаемый gen);
+#    - refused: заданное имя w-1 занято неотданной строкой другой коробки (NameOnAnotherBox);
+#    - nameless: вторая копия на той же коробке забрала w-1 у первой — у первой своего прежнего захвата больше нет.
+# 2) Возврат имени в воссоединиться(): когда слот w-1 освобождается (released: "true"), вытесненный воркер снова захватывает w-1 (gen + 1) и пишет событие worker.name_back в audit/testsubworker (только после worker.name_taken этого эпизода).
+scenario	step	request	expect
+27-contender-states-and-rejoin	1	@start resource	ok
+27-contender-states-and-rejoin	2	admin POST /v1/write {"id":"c27a","op":"put","key":"testsub/slots/w-1","items":{"holder":"","until":"4102444800","released":"true","gen":"x"},"cas":""}	200
+27-contender-states-and-rejoin	3	@start worker w-1 BOX_ID=box1	ok
+27-contender-states-and-rejoin	4	@until 20 resource GET /v1/objects/testsub/contenders/w-1/box1?scope=local	200 {"name": "w-1", "state": "waiting", "box": "box1", "server": "srv-a"}
+27-contender-states-and-rejoin	5	admin POST /v1/write {"id":"c27b","op":"put","key":"testsub/slots/w-2","items":{"holder":"otherbox:1234:abcdef","until":"4102444800","released":"false","gen":"3","server":"srv-b"},"cas":""}	200
+27-contender-states-and-rejoin	6	@start worker w-2 BOX_ID=box1	ok
+27-contender-states-and-rejoin	7	@until 20 resource GET /v1/objects/testsub/contenders/w-2/box1?scope=local	200 {"name": "w-2", "state": "refused", "box": "box1", "holder": "otherbox:1234:abcdef", "holder_box": "otherbox"}
+27-contender-states-and-rejoin	8	@start worker w-3 BOX_ID=box1	ok
+27-contender-states-and-rejoin	9	@until 20 store GET /v1/get?key=testsub/slots/w-3	200 {"items": {"holder": "$h1", "gen": "1", "released": "false"}}
+27-contender-states-and-rejoin	10	@start worker w-3 BOX_ID=box1	ok
+27-contender-states-and-rejoin	11	@until 20 store GET /v1/get?key=testsub/slots/w-3	200 {"items": {"holder": "$h2", "gen": "2", "released": "false"}}
+27-contender-states-and-rejoin	12	@until 20 resource GET /v1/objects/testsub/contenders/w-3/box1?scope=local	200 {"name": "w-3", "state": "nameless", "box": "box1", "instance": "$h1", "holder": "$h2", "holder_box": "box1"}
+27-contender-states-and-rejoin	13	@until 30 console GET /events?unit=audit/testsubworker&kind=worker.name_taken	200 {"events": [{"kind": "worker.name_taken", "class": "alarm"}]}
+27-contender-states-and-rejoin	14	@sigterm w-3	ok
+27-contender-states-and-rejoin	15	@until 25 store GET /v1/get?key=testsub/slots/w-3	200 {"items": {"holder": "$h1", "gen": "3", "released": "false"}}
+27-contender-states-and-rejoin	16	@until 30 console GET /events?unit=audit/testsubworker&kind=worker.name_back	200 {"events": [{"kind": "worker.name_back"}]}

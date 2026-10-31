@@ -1,0 +1,41 @@
+# Черновик G06 — хранимый POST, ждущее DELETE (unit is being deleted) и нечитаемые строки главы 8.6 (P/08.6 Н1.1, Н1.4, Н1.6, Н2, Н3, Н4)
+# Куда: Platform/08-domain/acceptance/6/scenarios.tsv
+# Покрывает новые свойства, отсутствующие в acceptance/6 и в отчёте Kimi:
+# 1. Хранимый POST /domain/testsub/counters {"cluster": "m1", "name": "c-post", "start": 10} (Н1.4 method POST: what = "name,start" с полем domain.ref без cluster, base отсутствует, asked.path = "/domain/testsub/counters" без query) и его доставка на m1.
+# 2. Ждущая правка DELETE того же path в domain/pending/<член> отвергает новую правку (PUT или DELETE с иным ключом) этого path кодом 409 {"error": "unit is being deleted"} (Н1.4 base, Н3 шаг 4).
+# 3. Нечитаемая запись domain/placement/testsub/c1 исцеляется PUT (200) и удаляется DELETE (200), тогда как DELETE /domain/placement/nosuch/c1 возвращает 404 (проверка манифеста раньше чтения строки); нечитаемый счётчик domain/placement отвергает PUT и DELETE кодом 503 unavailable (Г-36).
+# 4. Нечитаемый элемент e-<id> в domain/pending/m1 отвергает повтор того же Idempotency-Key кодом 422, но пропускает новый ключ (Г-32); нечитаемый seq в domain/pending/m1 даёт 503 unavailable и view.pending.m1 = null (Г-33, Г-34); нечитаемая строка domain/outcomes/m1 отвергает приём новой правки кодом 503 unavailable (Г-31, C08-KEPT-EDIT-BOUNDS-01).
+scenario	step	request	expect
+12-post-kept-and-waiting-delete	1	@domain	ok
+12-post-kept-and-waiting-delete	2	@cut m1	ok
+12-post-kept-and-waiting-delete	3	holder @header Idempotency-Key: post-c1 POST /domain/testsub/counters {"cluster": "m1", "name": "c-post", "start": 10}	202 {"kept": "$idp", "cluster": "m1", "what": "name,start"}
+12-post-kept-and-waiting-delete	4	member hold store GET /v1/get?key=domain/pending/m1	200 {"items": {"$idp": "~\"path\":\"/domain/testsub/counters\""}}
+12-post-kept-and-waiting-delete	5	@mend m1	ok
+12-post-kept-and-waiting-delete	6	@until 60 member m1 console GET /counters	200 {"configured": [{"name": "c-post", "start": 10}]}
+12-post-kept-and-waiting-delete	7	@until 60 holder GET /domain/testsub/counters?cluster=m1	200 [{"ref": "c-post"}]
+12-post-kept-and-waiting-delete	8	@cut m1	ok
+12-post-kept-and-waiting-delete	9	holder DELETE /domain/testsub/counters/c-post	202 {"kept": "$idd", "cluster": "m1", "what": ""}
+12-post-kept-and-waiting-delete	10	holder PUT /domain/testsub/counters/c-post {"start": 20}	409 {"error": "unit is being deleted"}
+12-post-kept-and-waiting-delete	11	holder DELETE /domain/testsub/counters/c-post	409 {"error": "unit is being deleted"}
+12-post-kept-and-waiting-delete	12	@mend m1	ok
+12-post-kept-and-waiting-delete	13	@until 60 member m1 console GET /counters	200 {"configured": []}
+13-placement-and-pending-unreadable	1	@domain	ok
+13-placement-and-pending-unreadable	2	member m1 console POST /counters {"name": "c11", "start": 1}	201
+13-placement-and-pending-unreadable	3	@until 60 holder GET /domain/testsub/counters?cluster=m1	200 [{"ref": "c11"}]
+13-placement-and-pending-unreadable	4	holder DELETE /domain/placement/nosuch/c1	404
+13-placement-and-pending-unreadable	5	member hold store POST /v1/write {"op": "put", "key": "domain/placement/testsub/c1", "items": {"cluster": "bad..name"}}	200
+13-placement-and-pending-unreadable	6	holder PUT /domain/placement/testsub/c1 {"cluster": "m1"}	200 {"cluster": "m1"}
+13-placement-and-pending-unreadable	7	member hold store POST /v1/write {"op": "put", "key": "domain/placement/testsub/c1", "items": {"cluster": "bad..name"}}	200
+13-placement-and-pending-unreadable	8	holder DELETE /domain/placement/testsub/c1	200 {"deleted": "testsub/c1"}
+13-placement-and-pending-unreadable	9	member hold store POST /v1/write {"op": "put", "key": "domain/placement", "items": {"rev": "not-an-int"}}	200
+13-placement-and-pending-unreadable	10	holder PUT /domain/placement/testsub/c1 {"cluster": "m1"}	503 {"error": "unavailable"}
+13-placement-and-pending-unreadable	11	@cut m1	ok
+13-placement-and-pending-unreadable	12	member hold store POST /v1/write {"op": "put", "key": "domain/pending/m1", "items": {"seq": "1", "e-a5231d61506d": "not-json"}}	200
+13-placement-and-pending-unreadable	13	holder @header Idempotency-Key: a3-asked PUT /domain/testsub/counters/c11 {"start": 5}	422 {"error": "this Idempotency-Key was used for another edit"}
+13-placement-and-pending-unreadable	14	holder @header Idempotency-Key: fresh-key PUT /domain/testsub/counters/c11 {"start": 5}	202 {"cluster": "m1"}
+13-placement-and-pending-unreadable	15	member hold store POST /v1/write {"op": "put", "key": "domain/pending/m1", "items": {"seq": "not-an-int"}}	200
+13-placement-and-pending-unreadable	16	holder PUT /domain/testsub/counters/c11 {"start": 6}	503 {"error": "unavailable"}
+13-placement-and-pending-unreadable	17	@until 20 holder GET /domain	200 {"pending": {"m1": null}}
+13-placement-and-pending-unreadable	18	member hold store POST /v1/write {"op": "delete", "key": "domain/pending/m1"}	200
+13-placement-and-pending-unreadable	19	member hold store POST /v1/write {"op": "put", "key": "domain/outcomes/m1", "items": {"e-a5231d61506d": "not-json"}}	200
+13-placement-and-pending-unreadable	20	holder PUT /domain/testsub/counters/c11 {"start": 7}	503 {"error": "unavailable"}

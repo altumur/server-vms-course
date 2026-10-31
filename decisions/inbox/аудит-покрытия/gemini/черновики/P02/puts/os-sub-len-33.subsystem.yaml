@@ -1,0 +1,5 @@
+# len(sub) = 19 → группа w2c-s123456789012345678controller = 33 знака > 32 (P/02.4 Н1.1 users_groups names, C02-NAME32-ROLES-01)
+name: s123456789012345678
+unit: {rows: things, id: numeric}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/s19/worker}

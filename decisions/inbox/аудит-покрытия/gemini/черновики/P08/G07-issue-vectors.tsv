@@ -1,0 +1,40 @@
+# Черновик G07: расширения для Platform/08-domain/vectors/issue/cases.tsv
+# Покрывает:
+# - 8.7 Н1.1 и Н3 шаг 5 (placement: star_centre в target_fields добавляет topology.centre, если placement.cluster в topology.star, возвращает 409 no_centre если centre отсутствует, и ничего не добавляет если placement.cluster вне topology.star)
+# - 8.7 Н1.1 и Н3 шаг 5 (placement: origin == "" при caller: "origin" -> 403 outside_scope; origin == "" в target_fields не добавляется в aud и не проверяется как член домена)
+# - 8.7 Н1.1 и Н3 шаг 5 (scenario: пропуск записи items без поля act при наличии подходящей записи; 403 no_item если ни в одной подходящей записи нет поля act; 409 no_centre при ретрансляторе R != home без topology.centre)
+# - 8.7 Н5 (exit 2 при невалидной верхней записи issue)
+
+name	act	 expect
+
+placement_star_centre_adds_centre_when_in_star
+	issue	{"now": 1000, "holder": "hold", "caller": "m2", "sub": "testsub", "action": "sync", "body": {"request_id": "req-sc-1", "ref": "c1"}, "members": ["hold", "m1", "m2"], "topology": {"star": ["m1"], "centre": "hold", "via": {}}, "ActionSpec": {"scope": {"form": "placement", "caller": "copies", "target_fields": ["cluster", "star_centre"]}, "grant_cap": "", "grant_target": "", "ttl": 60, "claim_mappings": {}}, "placement": {"c1": {"cluster": "m1", "copies": ["m2"], "origin": ""}}}
+	{"status": 200, "claims": {"iss": "domain", "sub": "m2", "aud": ["m1", "hold"], "act": "testsub/sync", "scope": "c1", "iat": 1000, "exp": 1060, "jti": "m2:req-sc-1"}}
+
+placement_star_centre_no_centre_when_in_star
+	issue	{"now": 1000, "holder": "hold", "caller": "m2", "sub": "testsub", "action": "sync", "body": {"request_id": "req-sc-2", "ref": "c1"}, "members": ["hold", "m1", "m2"], "topology": {"star": ["m1"], "via": {}}, "ActionSpec": {"scope": {"form": "placement", "caller": "copies", "target_fields": ["cluster", "star_centre"]}, "grant_cap": "", "grant_target": "", "ttl": 60, "claim_mappings": {}}, "placement": {"c1": {"cluster": "m1", "copies": ["m2"], "origin": ""}}}
+	{"status": 409, "body": {"error": "refused", "reason": "no_centre"}}
+
+placement_star_centre_ignored_when_not_in_star
+	issue	{"now": 1000, "holder": "hold", "caller": "m2", "sub": "testsub", "action": "sync", "body": {"request_id": "req-sc-3", "ref": "c1"}, "members": ["hold", "m1", "m2"], "topology": {"star": ["m2"], "via": {}}, "ActionSpec": {"scope": {"form": "placement", "caller": "copies", "target_fields": ["cluster", "star_centre"]}, "grant_cap": "", "grant_target": "", "ttl": 60, "claim_mappings": {}}, "placement": {"c1": {"cluster": "m1", "copies": ["m2"], "origin": ""}}}
+	{"status": 200, "claims": {"iss": "domain", "sub": "m2", "aud": ["m1"], "act": "testsub/sync", "scope": "c1", "iat": 1000, "exp": 1060, "jti": "m2:req-sc-3"}}
+
+placement_empty_origin_caller_refused_and_target_omitted
+	issue	{"now": 1000, "holder": "hold", "caller": "m1", "sub": "testsub", "action": "back", "body": {"request_id": "req-orig-1", "ref": "c1"}, "members": ["hold", "m1"], "ActionSpec": {"scope": {"form": "placement", "caller": "origin", "target_fields": ["cluster"]}, "grant_cap": "", "grant_target": "", "ttl": 60, "claim_mappings": {}}, "placement": {"c1": {"cluster": "m1", "copies": [], "origin": ""}}}
+	{"status": 403, "body": {"error": "refused", "reason": "outside_scope"}}
+	issue	{"now": 1000, "holder": "hold", "caller": "m1", "sub": "testsub", "action": "push", "body": {"request_id": "req-orig-2", "ref": "c1"}, "members": ["hold", "m1"], "ActionSpec": {"scope": {"form": "placement", "caller": "cluster", "target_fields": ["cluster", "origin"]}, "grant_cap": "", "grant_target": "", "ttl": 60, "claim_mappings": {}}, "placement": {"c1": {"cluster": "m1", "copies": [], "origin": ""}}}
+	{"status": 200, "claims": {"iss": "domain", "sub": "m1", "aud": ["m1"], "act": "testsub/push", "scope": "c1", "iat": 1000, "exp": 1060, "jti": "m1:req-orig-2"}}
+
+scenario_skips_item_missing_act_and_refuses_when_none_match
+	issue	{"now": 1000, "holder": "hold", "caller": "m2", "sub": "testsub", "action": "Step", "body": {"request_id": "req-scen-1", "scenario_id": "s1", "item_id": "i1"}, "members": ["hold", "m1", "m2"], "ActionSpec": {"scope": {"form": "scenario", "items": "/items", "id": "/id", "where": {"/kind": "remote"}, "act": "/target"}, "grant_cap": "", "grant_target": "", "ttl": 60, "claim_mappings": {}}, "units": {"m1": {"testsub": {"scenarios": {"s1": {"items": [{"id": "i1", "kind": "remote"}, {"id": "i1", "kind": "remote", "target": "m1"}]}}}}}}
+	{"status": 200, "claims": {"iss": "domain", "sub": "m2", "aud": ["m1"], "act": "testsub/Step", "scope": "s1", "iat": 1000, "exp": 1060, "jti": "m2:req-scen-1"}}
+	issue	{"now": 1000, "holder": "hold", "caller": "m2", "sub": "testsub", "action": "Step", "body": {"request_id": "req-scen-2", "scenario_id": "s1", "item_id": "i1"}, "members": ["hold", "m1", "m2"], "ActionSpec": {"scope": {"form": "scenario", "items": "/items", "id": "/id", "where": {"/kind": "remote"}, "act": "/target"}, "grant_cap": "", "grant_target": "", "ttl": 60, "claim_mappings": {}}, "units": {"m1": {"testsub": {"scenarios": {"s1": {"items": [{"id": "i1", "kind": "remote"}]}}}}}}
+	{"status": 403, "body": {"error": "refused", "reason": "no_item"}}
+
+scenario_via_relay_without_centre_refused
+	issue	{"now": 1000, "holder": "hold", "caller": "m2", "sub": "testsub", "action": "Step", "body": {"request_id": "req-scen-3", "scenario_id": "s1", "item_id": "i1"}, "members": ["hold", "m1", "m2", "r1"], "topology": {"star": [], "via": {"m2": "r1"}}, "ActionSpec": {"scope": {"form": "scenario", "items": "/items", "id": "/id", "where": {}, "act": "/target"}, "grant_cap": "", "grant_target": "", "ttl": 60, "claim_mappings": {}}, "units": {"m1": {"testsub": {"scenarios": {"s1": {"items": [{"id": "i1", "target": "m1"}]}}}}}}
+	{"status": 409, "body": {"error": "refused", "reason": "no_centre"}}
+
+issue_malformed_top_level_exits_2
+	issue	{"now": "bad", "holder": "hold"}
+	@exit 2

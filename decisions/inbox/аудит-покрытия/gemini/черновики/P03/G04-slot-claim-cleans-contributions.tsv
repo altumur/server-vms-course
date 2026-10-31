@@ -1,0 +1,15 @@
+# Черновик G04: сценарий для Platform/03-worker/acceptance/2/scenarios.tsv
+# Норма: P/03.2 Н3 «захватить» шаг 4 и P/03.7 Н1.2 claim.
+# Захват слота t-1 новым экземпляром (прежний держатель — otherbox:1234:abcdef) до объявления слота живым (released: "false")
+# удаляет вклады предшественника под этим слотом по каждому domain.books.<книга>.from манифеста (testsub2/notes/t-1 и testsub2/rolls/t-1),
+# не трогая вкладов чужого слота (testsub2/notes/t-2) и другой подсистемы.
+scenario	step	request	expect
+31-slot-claim-cleans-contributions	1	admin POST /v1/write {"id":"c31a","op":"put","key":"testsub2/slots/t-1","items":{"holder":"otherbox:1234:abcdef","until":"4102444800","released":"true","gen":"2","server":"srv-b"},"cas":""}	200
+31-slot-claim-cleans-contributions	2	admin POST /v1/write {"id":"c31b","op":"put","key":"testsub2/notes/t-1","items":{"old":"{\"ref\":\"old\",\"to\":[\"m1\"]}"},"cas":""}	200
+31-slot-claim-cleans-contributions	3	admin POST /v1/write {"id":"c31c","op":"put","key":"testsub2/rolls/t-1","items":{"old":"{\"ref\":\"old\",\"to\":[\"m1\"]}"},"cas":""}	200
+31-slot-claim-cleans-contributions	4	admin POST /v1/write {"id":"c31d","op":"put","key":"testsub2/notes/t-2","items":{"keep":"{\"ref\":\"keep\",\"to\":[\"m1\"]}"},"cas":""}	200
+31-slot-claim-cleans-contributions	5	@start worker testsub2 t-1	ok
+31-slot-claim-cleans-contributions	6	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"released": "false", "gen": "3", "server": "srv-a"}}
+31-slot-claim-cleans-contributions	7	store GET /v1/get?key=testsub2/notes/t-1	200 {"items": null}
+31-slot-claim-cleans-contributions	8	store GET /v1/get?key=testsub2/rolls/t-1	200 {"items": null}
+31-slot-claim-cleans-contributions	9	store GET /v1/get?key=testsub2/notes/t-2	200 {"items": {"keep": "{\"ref\":\"keep\",\"to\":[\"m1\"]}"}}

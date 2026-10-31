@@ -1,0 +1,24 @@
+# Черновик G01 (аудит покрытия P/05, Gemini):
+# 1. P/05-01, P/05-02 (Н1.1 door, row_object, Н2, Н4): объектная дверь ресурса выдаёт семьи objects.door манифеста
+#    (testsub2/tickets/* — 200 и в листинге prefix=testsub2/), но отказывает 403 на строки-объекты objects.rows
+#    (testsub2/marks/*) и requests (testsub2/commands/*), даже когда строка objects/testsub2/marks/m1 записана в хранилище;
+#    листинг prefix=testsub2/ фильтрует и не включает строки-объекты, а prefix=testsub2/marks/ отвечает 403.
+# 2. P/05-01, P/05-14 (Н1.1 written, «Тела у ресурса», C05-COPY-WRITTEN-SOURCE-01): при повторном PUT копии того же blob
+#    его written не уменьшается (становится большим из двух: 1700000010 после PUT с X-Written: 1700000005, затем 1700000020
+#    после PUT с X-Written: 1700000020).
+scenario	step	request	expect
+g01-objects-door-rows-and-written	1	@put object testsub2/tickets/t1 inputs/ticket-t1.json	ok
+g01-objects-door-rows-and-written	2	@as console store POST /v1/write {"op": "put", "key": "objects/testsub2/marks/m1", "items": {"note": "row-obj"}}	200
+g01-objects-door-rows-and-written	3	@as console store POST /v1/write {"op": "put", "key": "objects/testsub2/commands/r1", "items": {"outcome": "expired"}}	200
+g01-objects-door-rows-and-written	4	resource GET /v1/objects/testsub2/tickets/t1	200 @header X-Server: ~srv-a {"id": "t1", "title": "check"}
+g01-objects-door-rows-and-written	5	resource GET /v1/objects/testsub2/marks/m1	403 {"error": "@any"}
+g01-objects-door-rows-and-written	6	resource GET /v1/objects/testsub2/commands/r1	403 {"error": "@any"}
+g01-objects-door-rows-and-written	7	resource GET /v1/objects?prefix=testsub2/marks/	403 {"error": "@any"}
+g01-objects-door-rows-and-written	8	resource GET /v1/objects?prefix=testsub2/commands/	403 {"error": "@any"}
+g01-objects-door-rows-and-written	9	resource GET /v1/objects?prefix=testsub2/	200 {"server": "srv-a", "objects": {"testsub2/tickets/t1": {"server": "srv-a", "written": "@time", "size": "@any"}, "testsub2/marks/m1": "@absent", "testsub2/commands/r1": "@absent"}}
+g01-objects-door-rows-and-written	10	resource @header X-Written: 1700000010 PUT /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw foo	204
+g01-objects-door-rows-and-written	11	resource GET /v1/objects?prefix=testsub2/blobs/&scope=local	200 {"objects": {"testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"written": 1700000010, "server": "srv-a", "size": 3}}}
+g01-objects-door-rows-and-written	12	resource @header X-Written: 1700000005 PUT /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw foo	204
+g01-objects-door-rows-and-written	13	resource GET /v1/objects?prefix=testsub2/blobs/&scope=local	200 {"objects": {"testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"written": 1700000010, "server": "srv-a", "size": 3}}}
+g01-objects-door-rows-and-written	14	resource @header X-Written: 1700000020 PUT /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw foo	204
+g01-objects-door-rows-and-written	15	resource GET /v1/objects?prefix=testsub2/blobs/&scope=local	200 {"objects": {"testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"written": 1700000020, "server": "srv-a", "size": 3}}}

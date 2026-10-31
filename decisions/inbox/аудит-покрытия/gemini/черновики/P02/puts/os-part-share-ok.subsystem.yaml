@@ -1,0 +1,9 @@
+# часть belt и доля belt с part: belt используют одну группу пользователя части — столкновения нет (P/02.4 Н1.1 users_groups)
+name: psub
+unit: {rows: things, id: numeric}
+placement: {capacity: {default: 1}}
+parts:
+  belt: {exec: /usr/lib/psub/beltd}
+shares:
+  belt: {kind: socket, part: belt}
+worker: {exec: /usr/lib/psub/worker}

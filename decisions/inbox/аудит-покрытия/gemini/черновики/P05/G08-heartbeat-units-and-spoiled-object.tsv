@@ -1,0 +1,20 @@
+# Черновик G08 (аудит покрытия P/05, Gemini):
+# P/05-01, P/05-02, P/05-07 (Н1.1 door C05-SPOIL-OBJECT-BYTES-01, Н1.4 heartbeat.units E39, instances):
+# - пока воркер w-1 в running и его пульс называет единицы c2 и c1 в status, пульс ресурса содержит instances: {"testsub/w-1": "@any"}
+#   и units: {"testsub": ["c1", "c2"]} (id единиц по возрастанию байтов, E39);
+# - после порчи байтов объекта пульса воркера (@spoil object testsub/heartbeats/w-1 при замороженном @freeze w-1) объектная дверь
+#   ресурса по-прежнему включает объект в листинг и отдаёт его телом 200 как есть (не 503, C05-SPOIL-OBJECT-BYTES-01),
+#   а ресурс при сборке своего пульса считает испорченный пульс воркера нечитаемым и не переносит его единицы в units ({}).
+scenario	step	request	expect
+g08-heartbeat-units-and-spoiled-object	1	console POST /counters {"name": "c2", "start": 1}	201
+g08-heartbeat-units-and-spoiled-object	2	console POST /counters {"name": "c1", "start": 1}	201
+g08-heartbeat-units-and-spoiled-object	3	@start controller	ok
+g08-heartbeat-units-and-spoiled-object	4	@start worker w-1	ok
+g08-heartbeat-units-and-spoiled-object	5	@until 25 resource GET /v1/objects/platform/resources/srv-a/heartbeat	200 {"running": ["testsub/w-1"], "instances": {"testsub/w-1": "@any"}, "units": {"testsub": ["c1", "c2"]}}
+g08-heartbeat-units-and-spoiled-object	6	@sigterm controller	ok
+g08-heartbeat-units-and-spoiled-object	7	@freeze w-1	ok
+g08-heartbeat-units-and-spoiled-object	8	@spoil object testsub/heartbeats/w-1	ok
+g08-heartbeat-units-and-spoiled-object	9	resource GET /v1/objects?prefix=testsub/heartbeats/&scope=local	200 {"objects": {"testsub/heartbeats/w-1": {"server": "srv-a", "written": "@time", "size": "@any"}}}
+g08-heartbeat-units-and-spoiled-object	10	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 @header X-Server: ~srv-a
+g08-heartbeat-units-and-spoiled-object	11	@until 25 resource GET /v1/objects/platform/resources/srv-a/heartbeat	200 {"running": ["testsub/w-1"], "units": {}}
+g08-heartbeat-units-and-spoiled-object	12	@thaw w-1	ok

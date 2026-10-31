@@ -1,0 +1,19 @@
+scenario	step	request	expect
+# Черновик G04 (урок 04, контроллер): снятие размещения по retire_when.state при действующем состоянии (born совпал, state in ["done","failed"]) с причиной — значением поля и без включения снятой единицы в unplaced; игнорирование недействующего состояния с чужим born и его уборка со счётом state_swept_total; снятие удалённой единицы с причиной deleted (P/04-24; Н1.2 unplaced, state_swept_total, Н1.3 retire_when, Н3 «проход()» шаги 4, 8а).
+01-retire-when-state-and-sweep	1	@start resource	ok
+01-retire-when-state-and-sweep	2	@start controller testsub2	ok
+01-retire-when-state-and-sweep	3	console2 POST /shelves {"name": "s-1", "zone": "z", "server": "srv-a"}	201
+01-retire-when-state-and-sweep	4	@start worker testsub2 t-1	ok
+01-retire-when-state-and-sweep	5	@until 30 store GET /v1/get?key=testsub2/holds/s-1	200 {"items": {"by": "t-1", "released": "false"}}
+01-retire-when-state-and-sweep	6	@as console store POST /v1/write {"id":"g04a","op":"put","key":"testsub2/tallies/t1","items":{"id":"t1","revision":"1","name":"t1","of":"c1","born":"00000000000000000000000000000001"},"cas":""}	200
+01-retire-when-state-and-sweep	7	@until 30 store GET /v1/get?key=testsub2/placement/t1	200 {"items": {"worker": "t-1"}}
+01-retire-when-state-and-sweep	8	@as testsub2worker store POST /v1/write {"id":"g04b","op":"put","key":"testsub2/state/result/t1","items":{"born":"00000000000000000000000000000001","revision":"2","epoch":"1","value":"{\"state\":\"done\"}"}}	200
+01-retire-when-state-and-sweep	9	@until 30 store GET /v1/get?key=testsub2/placement/t1	200 {"items": {"worker": "", "reason": "done"}}
+01-retire-when-state-and-sweep	10	store GET /v1/get?key=testsub2/workers/t-1	200 {"items": {"units": ""}}
+01-retire-when-state-and-sweep	11	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"unplaced": 0}
+01-retire-when-state-and-sweep	12	@as console store POST /v1/write {"id":"g04c","op":"put","key":"testsub2/tallies/t2","items":{"id":"t2","revision":"1","name":"t2","of":"c1","born":"00000000000000000000000000000002"},"cas":""}	200
+01-retire-when-state-and-sweep	13	@as testsub2worker store POST /v1/write {"id":"g04d","op":"put","key":"testsub2/state/result/t2","items":{"born":"00000000000000000000000000009999","revision":"1","epoch":"1","value":"{\"state\":\"done\"}"},"cas":""}	200
+01-retire-when-state-and-sweep	14	@until 30 store GET /v1/get?key=testsub2/placement/t2	200 {"items": {"worker": "t-1"}}
+01-retire-when-state-and-sweep	15	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"state_swept_total": "@not(0)"}
+01-retire-when-state-and-sweep	16	console2 DELETE /tallies/t2	200 {"deleted": "t2"}
+01-retire-when-state-and-sweep	17	@until 30 store GET /v1/get?key=testsub2/placement/t2	200 {"items": {"worker": "", "reason": "deleted"}}

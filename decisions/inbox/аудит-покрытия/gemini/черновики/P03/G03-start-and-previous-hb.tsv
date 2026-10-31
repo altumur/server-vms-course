@@ -1,0 +1,40 @@
+# Черновик G03: сценарии для Platform/03-worker/acceptance/2/scenarios.tsv
+# Норма: P/03.2 Н1.4, Н3 «старт()» шаги 1, 3, 4, «захватить» и P/03.4 Н1.1 (heartbeats.outcomes.tsv).
+# 1) Расхождение W2C_MANIFEST_REV с rev строки platform/manifest/testsub при старте → выход 0 (@exit 0), слота нет (P/03.2 Н3 «старт()» шаг 1, P/02.3 Н3).
+# 2) Свободные формы строки слота: released="taking" (незавершённый захват предшественника) и released="false" при пустом holder="" захватываются сразу с gen + 1 (P/03.2 Н1.4, Н3 «захватить»).
+# 3) Строка вывода подсистемы testsub/decommissioned/srv-a оставляет воркер testsub никем, не мешая воркеру testsub2 на том же сервере; нечитаемая строка platform/decommission/srv-a (at: "bad") не даёт воркеру взять имя, пока не исправлена/удалена.
+# 4) Захват слота, под которым лежал читаемый пульс предшественника, переносит его ts/instance/server в previous_hb/previous_instance/previous_server нового пульса; если застанный пульс нечитаем (@spoil object), поля previous_* не пишутся (@absent).
+scenario	step	request	expect
+28-manifest-rev-mismatch-and-taking	1	@start worker w-1 W2C_MANIFEST_REV=99	@exit 0
+28-manifest-rev-mismatch-and-taking	2	store GET /v1/get?key=testsub/slots/w-1	200 {"items": null}
+28-manifest-rev-mismatch-and-taking	3	admin POST /v1/write {"id":"s28a","op":"put","key":"testsub/slots/w-1","items":{"holder":"otherbox:1:aaaaaa","until":"4102444800","released":"taking","gen":"4","server":"srv-b"},"cas":""}	200
+28-manifest-rev-mismatch-and-taking	4	admin POST /v1/write {"id":"s28b","op":"put","key":"testsub/slots/w-2","items":{"holder":"","until":"4102444800","released":"false","gen":"6","server":"srv-b"},"cas":""}	200
+28-manifest-rev-mismatch-and-taking	5	@start worker w-1	ok
+28-manifest-rev-mismatch-and-taking	6	@start worker w-2	ok
+28-manifest-rev-mismatch-and-taking	7	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "gen": "5", "server": "srv-a"}}
+28-manifest-rev-mismatch-and-taking	8	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false", "gen": "7", "server": "srv-a"}}
+29-sub-decommissioned-and-unreadable	1	@start resource	ok
+29-sub-decommissioned-and-unreadable	2	admin POST /v1/write {"id":"s29a","op":"put","key":"testsub/decommissioned/srv-a","items":{"at":"1700000000","holds":""},"cas":""}	200 {"index": "$d1"}
+29-sub-decommissioned-and-unreadable	3	@start worker w-1	ok
+29-sub-decommissioned-and-unreadable	4	@start worker testsub2 t-1	ok
+29-sub-decommissioned-and-unreadable	5	@until 20 store GET /v1/get?key=testsub2/slots/t-1	200 {"items": {"released": "false", "gen": "1", "server": "srv-a"}}
+29-sub-decommissioned-and-unreadable	6	@sleep 12	ok
+29-sub-decommissioned-and-unreadable	7	store GET /v1/get?key=testsub/slots/w-1	200 {"items": null}
+29-sub-decommissioned-and-unreadable	8	admin POST /v1/write {"id":"s29b","op":"delete","key":"testsub/decommissioned/srv-a","cas":"$d1"}	200
+29-sub-decommissioned-and-unreadable	9	admin POST /v1/write {"id":"s29c","op":"put","key":"platform/decommission/srv-a","items":{"by":"operator","at":"bad","why":"audit"},"cas":""}	200 {"index": "$d2"}
+29-sub-decommissioned-and-unreadable	10	@start worker w-2	ok
+29-sub-decommissioned-and-unreadable	11	@sleep 12	ok
+29-sub-decommissioned-and-unreadable	12	store GET /v1/get?key=testsub/slots/w-2	200 {"items": null}
+30-previous-heartbeat-fields	1	@start resource	ok
+30-previous-heartbeat-fields	2	@start worker w-1	ok
+30-previous-heartbeat-fields	3	@until 20 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "ts": "$ts1", "instance": "$inst1", "server": "srv-a", "previous_hb": "@absent", "previous_instance": "@absent", "previous_server": "@absent"}
+30-previous-heartbeat-fields	4	@sigkill w-1	ok
+30-previous-heartbeat-fields	5	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"ts": "$ts_last", "instance": "$inst1", "server": "srv-a"}
+30-previous-heartbeat-fields	6	@start worker w-1	ok
+30-previous-heartbeat-fields	7	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"gen": "2", "released": "false"}}
+30-previous-heartbeat-fields	8	@until 20 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "previous_hb": "$ts_last", "previous_instance": "$inst1", "previous_server": "srv-a"}
+30-previous-heartbeat-fields	9	@sigkill w-1	ok
+30-previous-heartbeat-fields	10	@spoil object testsub/heartbeats/w-1	ok
+30-previous-heartbeat-fields	11	@start worker w-1	ok
+30-previous-heartbeat-fields	12	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"gen": "3", "released": "false"}}
+30-previous-heartbeat-fields	13	@until 20 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "previous_hb": "@absent", "previous_instance": "@absent", "previous_server": "@absent"}

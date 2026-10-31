@@ -1,0 +1,20 @@
+# Draft G08 (subchapter 6.5): WorkerRow slot states (released="taking", unreadable slot -> slot_garbled=true) and unreadable contender mark -> name_conflict_unreadable=true
+# Norms: 6.5 Н2 «Выдачи», Н3 «/servers», Н3 «/metrics — текст», vectors/contender-projection (P/06.5-04, P/06.5-06)
+
+@as console store	PUT	/kv/testsub/heartbeats/w-1	@file:inputs/hb-w-1-srv-a.json	200	{}
+# 1. Slot with released: "taking" -> released: false, slot_taking: true, slot_garbled: false
+@as console store	PUT	/kv/testsub/slots/w-1	{"holder": "boot-1", "server": "srv-a", "born": "1700000000", "until": "4102444800", "released": "taking"}	200	{}
+GET	/servers	-	200	{"subsystems": {"testsub": {"workers": [{"name": "w-1", "released": false, "slot_taking": true, "slot_garbled": false}]}}}
+# 2. Unreadable slot (until: "bogus") -> slot_garbled: true, slot_until: null, released omitted
+@as console store	PUT	/kv/testsub/slots/w-1	{"holder": "boot-1", "server": "srv-a", "born": "1700000000", "until": "bogus", "released": "false"}	200	{}
+GET	/servers	-	200	{"subsystems": {"testsub": {"workers": [{"name": "w-1", "slot_garbled": true, "slot_until": null, "released": "@absent"}]}}}
+# 3. Contender mark under w-1 with mismatched name ("w-2") is unreadable -> name_conflict: true, name_conflict_unreadable: true; contender under "-" is ignored
+@as console store	PUT	/kv/testsub/contenders/w-1/b1	{"name": "w-2", "holder": "b1", "server": "srv-a", "at": "4102444800"}	200	{}
+@as console store	PUT	/kv/testsub/contenders/-/b2	{"name": "-", "holder": "b2", "server": "srv-a", "at": "4102444800"}	200	{}
+GET	/servers	-	200	{"subsystems": {"testsub": {"workers": [{"name": "w-1", "name_conflict": true, "name_conflict_unreadable": true, "contenders": []}]}}}
+GET	/metrics	-	200	@text:~testsub_name_conflicts 1
+# Clean up
+@as console store	DELETE	/kv/testsub/contenders/w-1/b1	-	200	{}
+@as console store	DELETE	/kv/testsub/contenders/-/b2	-	200	{}
+@as console store	DELETE	/kv/testsub/slots/w-1	-	200	{}
+@as console store	DELETE	/kv/testsub/heartbeats/w-1	-	200	{}

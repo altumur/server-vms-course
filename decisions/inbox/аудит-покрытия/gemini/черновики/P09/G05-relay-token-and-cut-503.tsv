@@ -1,0 +1,23 @@
+# Черновик G05: расширения для Platform/09-agent/acceptance/2/scenarios.tsv
+# Покрывает:
+# - P/09.2 Н1.1 not_author, Н2 POST /api/tokens/<член>/<sub>/<вид> (P/09.2-05: пересылка запроса токена через ретранслятор байт в байт и распаковка m1 агентом члена за ретранслятором -> 200)
+# - P/09.2 Н2 и договор местной двери токенов no_queue (при разрыве связи ретранслятора с держателем @cut relay ретранслятор возвращает 502 did not answer, который местная дверь токенов члена переводит в 503 {"error": "unavailable"})
+
+scenario	step	request	expect
+# Член m2 за ретранслятором запрашивает рабочий токен через свою местную дверь токенов:
+# запрос проходит через POST /api/tokens/m2/testsub/tally двери ретранслятора байт в байт к держателю и возвращает 200.
+# При разрыве связи ретранслятора с держателем (@cut relay) ретранслятор отвечает 502 did not answer,
+# а местная дверь токенов агента m2 возвращает вызывающему воркеру 503 {"error": "unavailable"} (не 502 ретранслятора).
+06-token-through-relay-and-cut-503	1	@domain m1 relay	ok
+06-token-through-relay-and-cut-503	2	@start agent m2 via relay	ok
+06-token-through-relay-and-cut-503	3	@until 40 holder GET /domain/members	200 {"knocking": [{"name": "m2", "fingerprint": "$fp2", "pinned": "none"}]}
+06-token-through-relay-and-cut-503	4	holder POST /domain/members {"name": "m2", "fingerprint": "$fp2"}	200
+06-token-through-relay-and-cut-503	5	@join m2	ok
+06-token-through-relay-and-cut-503	6	holder PUT /domain/topology {"base_rev": 0, "via": {"m2": "relay"}}	200 {"rev": 1}
+06-token-through-relay-and-cut-503	7	@until 60 holder GET /domain	200 {"complete": true, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "m2", "state": "ok"}, {"name": "relay", "state": "ok"}]}
+06-token-through-relay-and-cut-503	8	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "origin": "m2", "copies": []}	200
+06-token-through-relay-and-cut-503	9	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r-rel-1", "ref": "c1"}	200 {"request_id": "r-rel-1", "token": "@any", "exp": "@any"}
+06-token-through-relay-and-cut-503	10	@cut relay	ok
+06-token-through-relay-and-cut-503	11	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r-rel-2", "ref": "c1"}	503 {"error": "unavailable"}
+06-token-through-relay-and-cut-503	12	@mend relay	ok
+06-token-through-relay-and-cut-503	13	@until 30 token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r-rel-3", "ref": "c1"}	200 {"request_id": "r-rel-3", "token": "@any", "exp": "@any"}

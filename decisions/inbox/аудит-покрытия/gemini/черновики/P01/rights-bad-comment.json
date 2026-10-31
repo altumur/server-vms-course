@@ -1,0 +1,11 @@
+{
+  "comment": 123,
+  "roles": {
+    "console": {
+      "group": "w2c-console",
+      "read": ["testsub/*"],
+      "write": ["testsub/*"],
+      "delete": ["testsub/*"]
+    }
+  }
+}

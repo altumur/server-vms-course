@@ -1,0 +1,5 @@
+{
+  "door": "api@s1",
+  "client": "d1",
+  "request": "@header X-Configstore-Role: configstore-door POST /v1/write {\"op\":\"delete\",\"key\":\"platform/configstore-doors/d1\"}"
+}

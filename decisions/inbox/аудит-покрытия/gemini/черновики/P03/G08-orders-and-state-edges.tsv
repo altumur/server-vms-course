@@ -1,0 +1,65 @@
+# Черновик Gemini G08: заказы `creates` (`P/03.6` Н1.6, Н3 «заказать») и нечитаемое состояние `state` (`P/03.6` Н1.7)
+# Куда: Platform/03-worker/acceptance/6/scenarios.tsv
+# Норма: P/03.6 Н1.6 (creates-key/README.md и векторы 06, 09, 10, 12), Н1.7 (state.outcomes.tsv), Н3 «заказать(E, U)».
+# Все эти ветки находятся в процедуре `заказать(E, U)` и в чтении `state` внутри базового воркера (worker SDK)
+# и проверяются на штатном `testsub2` без доработок тестовой подсистемы.
+# Дефекты:
+#   1) Заказ поверх свежего надгробия (`t_E <= made.gone + 60`) пересоздаёт строку в обход карантина 60 с вместо `creates.gone`;
+#   2) Заказ поверх своего старого надгробия (`t_E > made.gone + 60`, вектор 09) отказывается пересоздавать строку вместо создания с новым `born` и `creates.created`;
+#   3) Заказ поверх своей строки с `until: "0"` (`never`, вектор 06) и будущим `made.at`/`made.keep` перезаписывает строку или сбрасывает `until: "0"` на `t_E + 600` вместо `creates.unchanged`;
+#   4) Заказ поверх своей строки с расходящимся `fixed`-полем (`of: "other"`, правило Р1, вектор 12) перезаписывает `of` вместо `creates.refused`;
+#   5) При битой строке состояния `testsub2/state/result/t1` (`born: "bad"`, `value: "not-json"`) воркер падает или пропускает запись вместо перезаписи валидным состоянием (по `state.outcomes.tsv` `unreadable` трактуется как `inactive`).
+
+scenario	step	actor	action	expect
+# --- Сценарий G08a: свежее надгробие (t_E <= made.gone + 60) -> не пишем, creates.gone=1 ---
+G08a-order-fresh-tombstone-gone	1	admin	POST /v1/write {"op": "create", "table": "testsub2/things", "key": "t1", "fields": {"label": "alpha", "want_ticket": "tk-1"}}	status 200; json $.ok = true
+G08a-order-fresh-tombstone-gone	2	admin	POST /v1/write {"op": "create", "table": "testsub2/workers", "key": "t-1", "fields": {"units": "t1"}}	status 200; json $.ok = true
+# Создаём и удаляем tk-1 сейчас, а в made.gone пишем время в далёком будущем, чтобы t_E <= made.gone + 60 гарантированно выполнялось
+G08a-order-fresh-tombstone-gone	3	admin	POST /v1/write {"op": "create", "table": "testsub2/tickets", "key": "tk-1", "fields": {"of": "t1", "until": "1000"}, "made": {"by": "testsub2/things/t1", "at": 1000, "keep": 1600}}	status 200; json $.ok = true
+G08a-order-fresh-tombstone-gone	4	admin	POST /v1/write {"op": "delete", "table": "testsub2/tickets", "key": "tk-1", "expected_revision": 1, "made": {"by": "testsub2/things/t1", "at": 1000, "keep": 1600, "gone": 9999999999}}	status 200; json $.ok = true
+G08a-order-fresh-tombstone-gone	5	harness	@start_worker t-1 subsystem=testsub2	@ok
+G08a-order-fresh-tombstone-gone	6	harness	@advance 3s	@ok
+G08a-order-fresh-tombstone-gone	7	resource	GET /v1/objects/testsub2/tickets/tk-1	status 404
+G08a-order-fresh-tombstone-gone	8	resource	GET /v1/objects/testsub2/heartbeats/t-1	status 200; json $.creates.gone >= 1; json $.creates.created = 0
+G08a-order-fresh-tombstone-gone	9	harness	@stop_worker t-1	@ok
+
+# --- Сценарий G08b: старое своё надгробие (t_E > made.gone + 60, вектор 09) -> пересоздание на ревизии 3 с новым born ---
+G08b-order-old-own-tombstone-recreate	1	admin	POST /v1/write {"op": "create", "table": "testsub2/things", "key": "t1", "fields": {"label": "alpha", "want_ticket": "tk-1"}}	status 200; json $.ok = true
+G08b-order-old-own-tombstone-recreate	2	admin	POST /v1/write {"op": "create", "table": "testsub2/workers", "key": "t-1", "fields": {"units": "t1"}}	status 200; json $.ok = true
+G08b-order-old-own-tombstone-recreate	3	admin	POST /v1/write {"op": "create", "table": "testsub2/tickets", "key": "tk-1", "fields": {"of": "t1", "until": "1000"}, "made": {"by": "testsub2/things/t1", "at": 900, "keep": 1500}}	status 200; json $.ok = true
+G08b-order-old-own-tombstone-recreate	4	admin	POST /v1/write {"op": "delete", "table": "testsub2/tickets", "key": "tk-1", "expected_revision": 1, "made": {"by": "testsub2/things/t1", "at": 900, "keep": 1500, "gone": 1000}}	status 200; json $.ok = true
+G08b-order-old-own-tombstone-recreate	5	harness	@start_worker t-1 subsystem=testsub2	@ok
+G08b-order-old-own-tombstone-recreate	6	harness	@advance 3s	@ok
+G08b-order-old-own-tombstone-recreate	7	resource	GET /v1/objects/testsub2/tickets/tk-1	status 200; json $.revision = 3; json $.fields.of = "t1"; json $.made.by = "testsub2/things/t1"
+G08b-order-old-own-tombstone-recreate	8	resource	GET /v1/objects/testsub2/heartbeats/t-1	status 200; json $.creates.created = 1
+G08b-order-old-own-tombstone-recreate	9	harness	@stop_worker t-1	@ok
+
+# --- Сценарий G08c: своя строка с until="0" (never, вектор 06) и актуальным made -> не переписывается, creates.unchanged ---
+G08c-order-until-zero-unchanged	1	admin	POST /v1/write {"op": "create", "table": "testsub2/things", "key": "t1", "fields": {"label": "alpha", "want_ticket": "tk-1"}}	status 200; json $.ok = true
+G08c-order-until-zero-unchanged	2	admin	POST /v1/write {"op": "create", "table": "testsub2/workers", "key": "t-1", "fields": {"units": "t1"}}	status 200; json $.ok = true
+# made.at в будущем, поэтому max(made.at, t_E) == made.at и made не меняется; until="0" означает бессрочную строку и не должно заменяться на t_E+600
+G08c-order-until-zero-unchanged	3	admin	POST /v1/write {"op": "create", "table": "testsub2/tickets", "key": "tk-1", "fields": {"of": "t1", "until": "0"}, "made": {"by": "testsub2/things/t1", "at": 9999999000, "keep": 9999999600}}	status 200; json $.ok = true
+G08c-order-until-zero-unchanged	4	harness	@start_worker t-1 subsystem=testsub2	@ok
+G08c-order-until-zero-unchanged	5	harness	@advance 3s	@ok
+G08c-order-until-zero-unchanged	6	resource	GET /v1/objects/testsub2/tickets/tk-1	status 200; json $.revision = 1; json $.fields.until = "0"
+G08c-order-until-zero-unchanged	7	resource	GET /v1/objects/testsub2/heartbeats/t-1	status 200; json $.creates.unchanged >= 1; json $.creates.updated = 0
+G08c-order-until-zero-unchanged	8	harness	@stop_worker t-1	@ok
+
+# --- Сценарий G08d: своя строка с расходящимся fixed-полем of="other" (правило Р1, вектор 12) -> отказ, creates.refused ---
+G08d-order-fixed-field-mismatch-refused	1	admin	POST /v1/write {"op": "create", "table": "testsub2/things", "key": "t1", "fields": {"label": "alpha", "want_ticket": "tk-1"}}	status 200; json $.ok = true
+G08d-order-fixed-field-mismatch-refused	2	admin	POST /v1/write {"op": "create", "table": "testsub2/workers", "key": "t-1", "fields": {"units": "t1"}}	status 200; json $.ok = true
+G08d-order-fixed-field-mismatch-refused	3	admin	POST /v1/write {"op": "create", "table": "testsub2/tickets", "key": "tk-1", "fields": {"of": "other", "until": "9999999999"}, "made": {"by": "testsub2/things/t1", "at": 1000, "keep": 1600}}	status 200; json $.ok = true
+G08d-order-fixed-field-mismatch-refused	4	harness	@start_worker t-1 subsystem=testsub2	@ok
+G08d-order-fixed-field-mismatch-refused	5	harness	@advance 3s	@ok
+G08d-order-fixed-field-mismatch-refused	6	resource	GET /v1/objects/testsub2/tickets/tk-1	status 200; json $.revision = 1; json $.fields.of = "other"
+G08d-order-fixed-field-mismatch-refused	7	resource	GET /v1/objects/testsub2/heartbeats/t-1	status 200; json $.creates.refused >= 1; json $.creates.updated = 0
+G08d-order-fixed-field-mismatch-refused	8	harness	@stop_worker t-1	@ok
+
+# --- Сценарий G08e: битая строка state (state.outcomes.tsv -> unreadable -> inactive) перезаписывается держателем ---
+G08e-unreadable-state-overwritten	1	admin	POST /v1/write {"op": "create", "table": "testsub2/things", "key": "t1", "fields": {"label": "alpha"}}	status 200; json $.ok = true
+G08e-unreadable-state-overwritten	2	admin	POST /v1/write {"op": "create", "table": "testsub2/state/result", "key": "t1", "fields": {"by": "t-9", "epoch": "x", "born": "bad", "at": "not-int", "value": "not-json"}}	status 200; json $.ok = true
+G08e-unreadable-state-overwritten	3	admin	POST /v1/write {"op": "create", "table": "testsub2/workers", "key": "t-1", "fields": {"units": "t1"}}	status 200; json $.ok = true
+G08e-unreadable-state-overwritten	4	harness	@start_worker t-1 subsystem=testsub2	@ok
+G08e-unreadable-state-overwritten	5	harness	@advance 3s	@ok
+G08e-unreadable-state-overwritten	6	resource	GET /v1/objects/testsub2/state/result/t1	status 200; json $.fields.by = "t-1"; json $.fields.epoch = "1"; json $.fields.value = "{\"state\":\"open\"}"
+G08e-unreadable-state-overwritten	7	harness	@stop_worker t-1	@ok

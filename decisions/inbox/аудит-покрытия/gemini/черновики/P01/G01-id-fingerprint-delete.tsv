@@ -1,0 +1,33 @@
+# Черновик G01 — отпечаток повтора `delete` по `id`: изменение `key`, `cas`, `guard`, `not_after`, `not_before` — `400 badrequest`; порядок полей `items` у `put` — `again: true`.
+# Норма: Platform/01-store/spec/01.1-store.norms.md Н3 «записать» (стр. 339–341: порядок полей `items` и `cas: null` против отсутствия `cas` не меняют отпечаток) и «удалить» (стр. 363–364: «повтор по id: сличить (op, key, cas, guard, not_after, not_before); items не читается и не входит в отпечаток, даже если прислано с другим JSON-типом. Совпало → прежний ответ с again=true; иначе badrequest»); также Platform/01-store/acceptance/1/README.md «Дополнительная проверка класса ошибок прогона 36 (Kimi)».
+# Место приёмки: глава 1.1 (Platform/01-store/acceptance/1/scenarios.tsv) — роль `acc`, дверь хранилища без префикса.
+# Существующие директивы: обычные HTTP-запросы главы 1.1 и связывание `$имя`. Новых директив не требуется.
+# Что проверяет:
+#   Шаги 1–3: `put` с `items: {"a":"1","b":"2"}` и `cas: null`, повтор с тем же `id`, обратным порядком `{"b":"2","a":"1"}` и без поля `cas` → `200 {"index":"$a","again":true}` (отпечаток по значению, не по байтам JSON); повтор `delete` с тем же `id` от `put` → `400 badrequest` (`op` в отпечатке).
+#   Шаги 4–12: `delete` с `id: "d001"`, `cas: "$a"`, `guard: {"key":"acc/30-id-fingerprint/s","index":""}`, `not_before: 1`, `not_after: 4102444800`:
+#     — шаг 5: повтор с `items: [1,2,3]` и `4102444800.0` → `200 {"index":"$d","again":true}`;
+#     — шаг 6: иной `key` → `400 badrequest`;
+#     — шаг 7: иной `cas` (`""` вместо `"$a"`) → `400 badrequest`;
+#     — шаг 8: без `cas` → `400 badrequest`;
+#     — шаг 9: иной `guard.key` → `400 badrequest`;
+#     — шаг 10: иной `guard.index` (`"$a"` вместо `""`) → `400 badrequest`;
+#     — шаг 11: без `guard` → `400 badrequest`;
+#     — шаг 12: иной `not_after` (`4102444801`) → `400 badrequest`;
+#     — шаг 13: иной `not_before` (`2`) → `400 badrequest`;
+#     — шаг 14: повтор `put` с тем же `id: "d001"` от `delete` → `400 badrequest`.
+# scenario	step	request	expect
+30-id-fingerprint	1	POST /v1/write {"op":"put","key":"acc/30-id-fingerprint/c1","items":{"a":"1","b":"2"},"cas":null,"id":"f001"}	200 {"index":"$a"}
+30-id-fingerprint	2	POST /v1/write {"op":"put","key":"acc/30-id-fingerprint/c1","items":{"b":"2","a":"1"},"id":"f001"}	200 {"index":"$a","again":true}
+30-id-fingerprint	3	POST /v1/write {"op":"delete","key":"acc/30-id-fingerprint/c1","id":"f001"}	400 {"kind":"badrequest"}
+30-id-fingerprint	4	POST /v1/write {"op":"delete","key":"acc/30-id-fingerprint/c1","cas":"$a","guard":{"key":"acc/30-id-fingerprint/s","index":""},"not_before":1,"not_after":4102444800,"id":"d001"}	200 {"index":"$d"}
+30-id-fingerprint	5	POST /v1/write {"op":"delete","key":"acc/30-id-fingerprint/c1","items":[1,2,3],"cas":"$a","guard":{"key":"acc/30-id-fingerprint/s","index":""},"not_before":1.0,"not_after":4102444800.0,"id":"d001"}	200 {"index":"$d","again":true}
+30-id-fingerprint	6	POST /v1/write {"op":"delete","key":"acc/30-id-fingerprint/c2","cas":"$a","guard":{"key":"acc/30-id-fingerprint/s","index":""},"not_before":1,"not_after":4102444800,"id":"d001"}	400 {"kind":"badrequest"}
+30-id-fingerprint	7	POST /v1/write {"op":"delete","key":"acc/30-id-fingerprint/c1","cas":"","guard":{"key":"acc/30-id-fingerprint/s","index":""},"not_before":1,"not_after":4102444800,"id":"d001"}	400 {"kind":"badrequest"}
+30-id-fingerprint	8	POST /v1/write {"op":"delete","key":"acc/30-id-fingerprint/c1","guard":{"key":"acc/30-id-fingerprint/s","index":""},"not_before":1,"not_after":4102444800,"id":"d001"}	400 {"kind":"badrequest"}
+30-id-fingerprint	9	POST /v1/write {"op":"delete","key":"acc/30-id-fingerprint/c1","cas":"$a","guard":{"key":"acc/30-id-fingerprint/s2","index":""},"not_before":1,"not_after":4102444800,"id":"d001"}	400 {"kind":"badrequest"}
+30-id-fingerprint	10	POST /v1/write {"op":"delete","key":"acc/30-id-fingerprint/c1","cas":"$a","guard":{"key":"acc/30-id-fingerprint/s","index":"$a"},"not_before":1,"not_after":4102444800,"id":"d001"}	400 {"kind":"badrequest"}
+30-id-fingerprint	11	POST /v1/write {"op":"delete","key":"acc/30-id-fingerprint/c1","cas":"$a","not_before":1,"not_after":4102444800,"id":"d001"}	400 {"kind":"badrequest"}
+30-id-fingerprint	12	POST /v1/write {"op":"delete","key":"acc/30-id-fingerprint/c1","cas":"$a","guard":{"key":"acc/30-id-fingerprint/s","index":""},"not_before":1,"not_after":4102444801,"id":"d001"}	400 {"kind":"badrequest"}
+30-id-fingerprint	13	POST /v1/write {"op":"delete","key":"acc/30-id-fingerprint/c1","cas":"$a","guard":{"key":"acc/30-id-fingerprint/s","index":""},"not_before":2,"not_after":4102444800,"id":"d001"}	400 {"kind":"badrequest"}
+30-id-fingerprint	14	POST /v1/write {"op":"put","key":"acc/30-id-fingerprint/c1","items":{},"cas":"$a","guard":{"key":"acc/30-id-fingerprint/s","index":""},"not_before":1,"not_after":4102444800,"id":"d001"}	400 {"kind":"badrequest"}
+30-id-fingerprint	15	GET /v1/get?key=acc/30-id-fingerprint/c1	200 {"items":null,"index":""}

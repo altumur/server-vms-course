@@ -1,0 +1,59 @@
+# Черновик G06 — служебные двери Н2 главы 1.3, права двери без голоса `configstore-door`, учёт нечитаемой строки двери в `configstore_doors` и отказы `import`/`recover` на стенде группы.
+# Норма: Platform/01-store/spec/01.3-store.norms.md:
+#   — Н2 (стр. 251–258):
+#     * `GET /v1/status` двери без голоса: `state: "Door"`, `role: "door"`, `term: 0`, `commit: 0`, `applied: 0`;
+#     * неизвестные поля в телах `POST /v1/join`, `POST /v1/leave` и `FloorCmd` отвергаются (`400 badrequest`);
+#     * `MemberId` в `join`/`leave` — `^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$` (`"_bad"` — `400 badrequest`);
+#     * неверный метод у `/metrics`, `/v1/join`, `/v1/leave` — `405 badrequest`, у `/v1/write` — `404 badrequest`;
+#   — Н1.3 `door` (стр. 50–58) и `configstore-doors.outcomes.tsv`:
+#     * роль `configstore-door` пишет ТОЛЬКО свою `platform/configstore-doors/<id>` командой `put` без `cas` и `guard`, единственный элемент `seen_at`; иная запись (`cas`, лишнее поле в `items`, `delete` своей строки, запись в `testsub/*`) — `403 forbidden`;
+#     * строка двери, которая не читается своей формой (`seen_at` не время), видимой дверью не считается (не входит в `configstore_doors`), причина в журнал лидера;
+#   — Н1.3 `import` (стр. 117–123):
+#     * `import` в свежую группу допустим, когда в хранилище есть строка двери без голоса `platform/configstore-doors/<id>` (свежести не отменяет, C01-IMPORT-DOOR-ROWS-01);
+#     * `import` в несвежую группу (есть прикладная строка) — отказ;
+#     * `import` с `-index-base` меньше наибольшей версии копии (`-index-base 6` при версии 6 в `copy-ok.jsonl` — допустимо, `-index-base 4` при версиях 5 и 6 — отказ);
+#   — Н1.3 `-peers` и Н4 (стр. 169, 328): `recover -peers`: элемент не `id@<raft>/<api>`, повтор `id` или отсутствие восстанавливаемого `-id` среди них — отказ до изменений, код ≠ 0.
+# Место приёмки: глава 1.3 (Platform/01-store/acceptance/3/scenarios.tsv):
+#   — шаги 1–10 (`15-service-doors-extra`): на одиночном хранилище стенда;
+#   — шаги `23-group-door-and-recover-edges`: на стенде группы (`@group-setup inputs/group.json`).
+# Существующие директивы: `admin`, `@group-setup`, `@store-start`, `@store-op`, `@tls`, `admin@<id>`, `store@<id>`. Новых директив не требуется.
+# Входы проб `@tls` (при переносе — `acceptance/3/inputs/`):
+#   — `inputs/door-row-with-cas.json`: `d1` пишет свою `platform/configstore-doors/d1` с `"cas": ""` → `403`;
+#   — `inputs/door-row-extra-item.json`: `d1` пишет свою строку с `{"seen_at":"1760745600","extra":"1"}` → `403`;
+#   — `inputs/door-row-delete.json`: `d1` шлёт `delete` своей строки `platform/configstore-doors/d1` → `403`.
+scenario	step	request	expect
+15-service-doors-extra	1	admin POST /v1/join {"id": "x1", "raft": "127.0.0.1:1", "api": "127.0.0.1:2", "extra": 1}	400 {"kind": "badrequest"}
+15-service-doors-extra	2	admin POST /v1/leave {"id": "", "extra": 1}	400 {"kind": "badrequest"}
+15-service-doors-extra	3	admin POST /v1/write {"op": "floor", "floor": 4294967296, "id": "f1", "extra": 1}	400 {"kind": "badrequest"}
+15-service-doors-extra	4	admin POST /v1/join {"id": "_bad", "raft": "127.0.0.1:1", "api": "127.0.0.1:2"}	400 {"kind": "badrequest"}
+15-service-doors-extra	5	admin POST /v1/leave {"id": "_bad"}	400 {"kind": "badrequest"}
+15-service-doors-extra	6	admin POST /metrics	405 {"kind": "badrequest"}
+15-service-doors-extra	7	admin GET /v1/join	405 {"kind": "badrequest"}
+15-service-doors-extra	8	admin GET /v1/leave	405 {"kind": "badrequest"}
+23-group-door-and-recover-edges	1	@group-setup inputs/group.json	ok
+23-group-door-and-recover-edges	2	@store-start s1 -bootstrap -group-size 3	ok
+23-group-door-and-recover-edges	3	@store-start s2 -join {api@s1} -group-size 3 -force	ok
+23-group-door-and-recover-edges	4	@store-start s3 -join {api@s1} -group-size 3	ok
+23-group-door-and-recover-edges	5	@until 20 admin@s3 GET /v1/status	200 {"state": "Follower", "leader_id": "s1"}
+23-group-door-and-recover-edges	6	@store-start d1 -door -voters s1@{api@s1},s2@{api@s2},s3@{api@s3}	ok
+23-group-door-and-recover-edges	7	@until 20 admin@d1 GET /v1/status	200 {"state": "Door", "role": "door", "term": 0, "commit": 0, "applied": 0, "leader_id": "s1"}
+23-group-door-and-recover-edges	8	@tls inputs/door-row-with-cas.json	ok {"handshake": "ok", "http": {"status": 403}}
+23-group-door-and-recover-edges	9	@tls inputs/door-row-extra-item.json	ok {"handshake": "ok", "http": {"status": 403}}
+23-group-door-and-recover-edges	10	@tls inputs/door-row-delete.json	ok {"handshake": "ok", "http": {"status": 403}}
+23-group-door-and-recover-edges	11	@tls inputs/door-row-own.json	ok {"handshake": "ok", "http": {"status": 200}}
+23-group-door-and-recover-edges	12	@until 20 admin@s1 GET /metrics	200 ~configstore_doors 1
+23-group-door-and-recover-edges	13	admin@s1 POST /v1/write {"op":"put","key":"platform/configstore-doors/d2","items":{"seen_at":"not-a-time"}}	200
+23-group-door-and-recover-edges	14	admin@s1 GET /metrics	200 ~configstore_doors 1
+23-group-door-and-recover-edges	15	admin@s1 POST /v1/write {"op":"delete","key":"platform/configstore-doors/d2"}	200
+23-group-door-and-recover-edges	16	@store-op s1 import --from inputs/copy-ok.jsonl -index-base 4	refused
+23-group-door-and-recover-edges	17	@store-op s1 import --from inputs/copy-ok.jsonl -index-base 7	ok
+23-group-door-and-recover-edges	18	@sigkill store@s2	ok
+23-group-door-and-recover-edges	19	@sigkill store@s3	ok
+23-group-door-and-recover-edges	20	@sigterm store@s1	ok
+23-group-door-and-recover-edges	21	@store-op s1 recover -peers s2@{raft@s2}/{api@s2} -isolated	refused
+23-group-door-and-recover-edges	22	@store-op s1 recover -peers s1@{raft@s1} -isolated	refused
+23-group-door-and-recover-edges	23	@store-op s1 recover -peers s1@{raft@s1}/{api@s1},s1@{raft@s1}/{api@s1} -isolated	refused
+23-group-door-and-recover-edges	24	@store-op s1 recover -peers s1@{raft@s1}/{api@s1} -isolated -upper 429496729700000	ok
+23-group-door-and-recover-edges	25	@restart store@s1	ok
+23-group-door-and-recover-edges	26	@until 20 admin@s1 GET /v1/status	200 {"state": "Leader", "leader_id": "s1"}
+23-group-door-and-recover-edges	27	admin@s1 GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "429501024567296", "generation_at": "@time"}}

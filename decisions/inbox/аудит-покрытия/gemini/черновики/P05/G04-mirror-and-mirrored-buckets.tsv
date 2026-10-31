@@ -1,0 +1,25 @@
+# Черновик G04 (аудит покрытия P/05, Gemini):
+# P/05-07, P/05-09 (Н1.4 mirror, heartbeat.mirrors, Н1.6 /mirror/{server}/{path}, /mirrored/{server}[/{path}], R05-G04, Н2, Н4):
+# - GET /mirrored/srv-b при отсутствии копий отвечает 404 без тела;
+# - PUT /mirror/<свой SERVER_NAME>/… отвечает 400 без следа;
+# - PUT /mirror/srv-b/… открытого бакета (конец окна позже часов приёмника: 20990101T000000Z.events.jsonl) отвечает 400;
+# - PUT /mirror/srv-b/… без X-Sum или с X-Sum не по форме — 400; с несовпавшим SHA-256 — 422 без публикации копии;
+# - PUT /mirror/srv-b/… закрытого бакета с верным X-Sum — 204; GET /mirrored/srv-b выдаёт {copies: [{path, written, size, sum}]};
+#   повторный PUT того же бакета с той же суммой не сдвигает written (R05-G04);
+# - GET /mirrored/srv-b/{path} выдаёт байты копии с заголовком X-Sum; в пульсе ресурса mirrors: {"srv-b": 1}.
+scenario	step	request	expect
+g04-mirror-and-mirrored-buckets	1	resource GET /mirrored/srv-b	404
+g04-mirror-and-mirrored-buckets	2	resource @header X-Sum: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae PUT /mirror/srv-a/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	400
+g04-mirror-and-mirrored-buckets	3	resource @header X-Sum: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae PUT /mirror/srv-b/testsub/c1/e1/20990101T000000Z.events.jsonl @raw foo	400
+g04-mirror-and-mirrored-buckets	4	resource PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	400
+g04-mirror-and-mirrored-buckets	5	resource @header X-Sum: bad-hex PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	400
+g04-mirror-and-mirrored-buckets	6	resource @header X-Sum: 0000000000000000000000000000000000000000000000000000000000000000 PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	422
+g04-mirror-and-mirrored-buckets	7	resource GET /mirrored/srv-b	404
+g04-mirror-and-mirrored-buckets	8	resource @header X-Sum: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	204
+g04-mirror-and-mirrored-buckets	9	resource GET /mirrored/srv-b	200 {"copies": [{"path": "testsub/c1/e1/20260101T000000Z.events.jsonl", "written": "$w1", "size": 3, "sum": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae"}]}
+g04-mirror-and-mirrored-buckets	10	@sleep 2	ok
+g04-mirror-and-mirrored-buckets	11	resource @header X-Sum: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	204
+g04-mirror-and-mirrored-buckets	12	resource GET /mirrored/srv-b	200 {"copies": [{"path": "testsub/c1/e1/20260101T000000Z.events.jsonl", "written": "$w1", "size": 3, "sum": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae"}]}
+g04-mirror-and-mirrored-buckets	13	resource GET /mirrored/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl	200 @header X-Sum: ~2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae ~foo
+g04-mirror-and-mirrored-buckets	14	resource GET /mirrored/srv-b/testsub/c1/e1/20260101T001000Z.events.jsonl	404
+g04-mirror-and-mirrored-buckets	15	@until 15 resource GET /v1/objects/platform/resources/srv-a/heartbeat	200 {"mirrors": {"srv-b": 1}}

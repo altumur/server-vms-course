@@ -11,11 +11,10 @@ scenario	step	request	expect
 01-ticket-lives-with-request	9	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /testsub/counters	401 {"error": "denied", "detail": "ticket refused"}
 01-ticket-lives-with-request	10	socket m1 probe-pworker GET /session	401 {"error": "denied", "detail": "ticket refused"}
 01-ticket-lives-with-request	11	member m1 console @header X-W2C-Pass-Ticket: $t GET /session	401 {"error": "denied", "detail": "ticket refused"}
-01-ticket-lives-with-request	12	socket m1 testsubworker @header X-W2C-Pass-Ticket: $t GET /session	401 {"error": "denied", "detail": "ticket refused"}
-01-ticket-lives-with-request	13	@pass-answer a 200 application/json {"ok": true}	200 {"ok": true}
-01-ticket-lives-with-request	14	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /session	401 {"error": "denied", "detail": "ticket refused"}
-01-ticket-lives-with-request	15	member m1 console GET /probe-p/metrics	200 ~probe_p_passed_calls_total 3
-01-ticket-lives-with-request	16	member m1 console GET /events?kind=pass.called&limit=10	200 ~probe-p/p-1
+01-ticket-lives-with-request	12	@pass-answer a 200 application/json {"ok": true}	200 {"ok": true}
+01-ticket-lives-with-request	13	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /session	401 {"error": "denied", "detail": "ticket refused"}
+01-ticket-lives-with-request	14	member m1 console GET /probe-p/metrics	200 ~probe_p_passed_calls_total 3
+01-ticket-lives-with-request	15	member m1 console GET /events?kind=pass.called&limit=10	200 ~probe-p/p-1
 02-headers-and-types	1	@domain m1	ok
 02-headers-and-types	2	@pass-worker m1 probe-p p-1	ok
 02-headers-and-types	3	@pass-open a member m1 console @header If-Match: "7" @header Last-Event-ID: 41 @header Cookie: w2c_token=x @header X-User: mallory PUT /probe-p/api/x {"a": 1}	ok {"method": "PUT", "body": "{\"a\": 1}", "headers": {"If-Match": "\"7\"", "Last-Event-ID": "41", "Content-Type": "@any", "X-W2C-Pass-Ticket": "@any", "Cookie": "@absent", "X-User": "@absent", "X-Operator": "@absent"}}
@@ -36,15 +35,16 @@ scenario	step	request	expect
 03-person-off	4	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$t1"}
 03-person-off	5	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$t2"}
 03-person-off	6	@pass-worker m1 probe-p p-1	ok
-03-person-off	7	@pass-open a member m1 console @header Authorization: Bearer $t1 GET /probe-p/api/x	ok {"ticket": "$a"}
-03-person-off	8	@pass-open b member m1 console @header Authorization: Bearer $t2 GET /probe-p/api/x	ok {"ticket": "$b"}
-03-person-off	9	@until 30 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $a GET /session	200 {"user": "ann", "via": "ticket"}
-03-person-off	10	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $a POST /probe-p/things {"name": "n1"}	403 {"error": "denied"}
-03-person-off	11	holder POST /domain/revoke {"token": "$t1"}	200 {"revoked": "@any"}
-03-person-off	12	@until 30 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $a GET /session	401 {"error": "denied", "detail": "ticket refused"}
-03-person-off	13	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $b GET /session	200 {"user": "ann"}
-03-person-off	14	holder PUT /domain/users/ann {"disabled": true}	200 {"user": "ann", "disabled": true}
-03-person-off	15	@until 30 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $b GET /session	401 {"error": "denied", "detail": "ticket refused"}
+03-person-off	7	@until 30 member m1 console @header Authorization: Bearer $t1 GET /session	200 {"user": "ann"}
+03-person-off	8	@pass-open a member m1 console @header Authorization: Bearer $t1 GET /probe-p/api/x	ok {"ticket": "$a"}
+03-person-off	9	@pass-open b member m1 console @header Authorization: Bearer $t2 GET /probe-p/api/x	ok {"ticket": "$b"}
+03-person-off	10	@until 30 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $a GET /session	200 {"user": "ann", "via": "ticket"}
+03-person-off	11	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $a POST /probe-p/things {"name": "n1"}	403 {"error": "denied"}
+03-person-off	12	holder POST /domain/revoke {"token": "$t1"}	200 {"revoked": "@any"}
+03-person-off	13	@until 30 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $a GET /session	401 {"error": "denied", "detail": "ticket refused"}
+03-person-off	14	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $b GET /session	200 {"user": "ann"}
+03-person-off	15	holder PUT /domain/users/ann {"disabled": true}	200 {"user": "ann", "disabled": true}
+03-person-off	16	@until 30 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $b GET /session	401 {"error": "denied", "detail": "ticket refused"}
 04-open-console-gives-no-call	1	@pass-worker probe-p p-1	ok
 04-open-console-gives-no-call	2	@pass-open a console GET /probe-p/api/x	ok {"ticket": "$t"}
 04-open-console-gives-no-call	3	socket probe-pworker @header X-W2C-Pass-Ticket: $t GET /session	401 {"error": "denied", "detail": "ticket refused"}
@@ -61,8 +61,10 @@ scenario	step	request	expect
 05-stream	10	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /session	401 {"error": "denied", "detail": "ticket refused"}
 05-stream	11	@pass-open b member m1 console @header Authorization: Bearer $r GET /probe-p/api/stream	ok {"ticket": "$u"}
 05-stream	12	@pass-chunk b data: 2	200 ~data: 2
-05-stream	13	holder POST /domain/revoke {"token": "$r"}	200 {"revoked": "@any"}
-05-stream	14	@pass-closed b	ok
+05-stream	13	@sleep 7	ok
+05-stream	14	@pass-chunk b data: 3	200 ~data: 3
+05-stream	15	holder POST /domain/revoke {"token": "$r"}	200 {"revoked": "@any"}
+05-stream	16	@pass-closed b	ok
 06-service-table	1	@domain m1	ok
 06-service-table	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
 06-service-table	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "unit:probe-p/none"}]}	200

@@ -1,0 +1,24 @@
+# Черновик G02 — `delete` отсутствующей строки с `cas: ""` и последующее создание с `cas: ""`; память `id` раньше `not_after`/`not_before`, стража и CAS; отказ `early`, `guard` и `conflict` не занимает `id`.
+# Норма:
+#   1. Platform/01-store/spec/01.1-store.norms.md Н3 «удалить» (стр. 376–378): «Удаление отсутствующей строки — сделано: повтор сделанного удаления — то же удаление. … С `cas ""` у отсутствующей строки удаление ничего не меняет (строки как не было, так и нет; версия чтения остаётся `""`), и последующая запись с `cas ""` проходит».
+#   2. Н3 «записать» (стр. 328–335): «Порядок проверок внутри операции нормативен: память `id`, затем `not_after` и `not_before`, затем страж, затем CAS; при нескольких нарушениях ответ — по первому (ADR-0091 п. 1). Повтор применённой записи получает её ответ и после `not_after` … Отказ `expired` и `early`, как `conflict` и `guard`, записи не делает и `id` не занимает».
+# Место приёмки: глава 1.1 (Platform/01-store/acceptance/1/scenarios.tsv) — роль `acc`.
+# Существующие директивы: обычные HTTP-запросы главы 1.1, `$имя`, `ASSERT`. Новых директив не требуется.
+# Что проверяет:
+#   Шаги 1–4: `delete` отсутствующей строки с `cas: ""` → `200 {"index":"$d1"}` (тратит версию); чтение → `{"items":null,"index":""}`; последующий `put` с `cas: ""` → `200 {"index":"$p1"}`, `ASSERT $d1 != $p1` (версия удаления потрачена, но строка осталась отсутствующей для `cas: ""`).
+#   Шаги 5–8: порядок «память `id` раньше `cas` и `guard`»: `put` с `cas: ""` и `guard` (`index: ""`) под `id: "e001"` создаёт строку и меняет состояние; затем создаём и строку-страж `s` (теперь и `cas: ""`, и `guard.index: ""` нарушены); повтор того же запроса с `id: "e001"` возвращает `200 {"index":"$p2","again":true}`, а не `412 guard` и не `409 conflict`.
+#   Шаги 9–14: отказы `early` (`not_before: 4102444800`), `guard` (`412`) и `conflict` (`409`) не занимают `id`: после каждого отказа новая запись с тем же `id` и исправленным условием проходит как первая (`200` без `again`).
+# scenario	step	request	expect
+31-delete-cas-and-id-order	1	POST /v1/write {"op":"delete","key":"acc/31-delete-cas/c1","cas":""}	200 {"index":"$d1"}
+31-delete-cas-and-id-order	2	GET /v1/get?key=acc/31-delete-cas/c1	200 {"items":null,"index":""}
+31-delete-cas-and-id-order	3	POST /v1/write {"op":"put","key":"acc/31-delete-cas/c1","items":{"n":"1"},"cas":""}	200 {"index":"$p1"}
+31-delete-cas-and-id-order	4	ASSERT $d1 != $p1	
+31-delete-cas-and-id-order	5	POST /v1/write {"op":"put","key":"acc/31-delete-cas/c2","items":{"n":"1"},"cas":"","guard":{"key":"acc/31-delete-cas/s","index":""},"id":"e001"}	200 {"index":"$p2"}
+31-delete-cas-and-id-order	6	POST /v1/write {"op":"put","key":"acc/31-delete-cas/s","items":{"owner":"w1"},"cas":""}	200 {"index":"$s1"}
+31-delete-cas-and-id-order	7	POST /v1/write {"op":"put","key":"acc/31-delete-cas/c2","items":{"n":"1"},"cas":"","guard":{"key":"acc/31-delete-cas/s","index":""},"id":"e001"}	200 {"index":"$p2","again":true}
+31-delete-cas-and-id-order	8	POST /v1/write {"op":"put","key":"acc/31-delete-cas/c3","items":{"n":"1"},"not_before":4102444800,"id":"e002"}	409 {"kind":"early"}
+31-delete-cas-and-id-order	9	POST /v1/write {"op":"put","key":"acc/31-delete-cas/c3","items":{"n":"1"},"not_before":1,"id":"e002"}	200 {"index":"$p3"}
+31-delete-cas-and-id-order	10	POST /v1/write {"op":"put","key":"acc/31-delete-cas/c4","items":{"n":"1"},"guard":{"key":"acc/31-delete-cas/s","index":""},"id":"e003"}	412 {"kind":"guard","key":"acc/31-delete-cas/s","index":"$s1"}
+31-delete-cas-and-id-order	11	POST /v1/write {"op":"put","key":"acc/31-delete-cas/c4","items":{"n":"1"},"guard":{"key":"acc/31-delete-cas/s","index":"$s1"},"id":"e003"}	200 {"index":"$p4"}
+31-delete-cas-and-id-order	12	POST /v1/write {"op":"put","key":"acc/31-delete-cas/c4","items":{"n":"2"},"cas":"","id":"e004"}	409 {"kind":"conflict","index":"$p4"}
+31-delete-cas-and-id-order	13	POST /v1/write {"op":"put","key":"acc/31-delete-cas/c4","items":{"n":"2"},"cas":"$p4","id":"e004"}	200 {"index":"$p5"}

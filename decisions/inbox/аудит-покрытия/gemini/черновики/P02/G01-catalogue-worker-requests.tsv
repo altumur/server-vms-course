@@ -1,0 +1,14 @@
+# Черновик P/02 G01 — проверки каталога для worker.requests при manifest put
+# Куда: Platform/02-installer/acceptance/3/puts.tsv (новые строки в конец таблицы) и файлы в Platform/02-installer/acceptance/3/puts/
+# Норма: P/02.1 Н1.2а worker.requests, P/02.1 Н3 «загрузить_каталог» («worker.requests называет подсистему каталога, принимающую просьбы»), P/02.1-11, P/02.3 Н3 «Смена манифеста»
+# Что закрывает:
+#   1. requests_ok — адресат reqt установлен и объявляет раздел requests; клиент reqc с worker.requests: [reqt] принимается (0 1).
+#   2. requests_missing_target — у worker.requests нет отсрочки (в отличие от near, creates, uses): установка reqc без reqt в хранилище отказывает (2 -).
+#   3. requests_target_no_requests — адресат reqt есть в каталоге, но не принимает просьбы (нет раздела requests): установка reqc отказывает (2 -).
+#   4. requests_target_drops_requests — reqt и reqc уже в каталоге; обновление reqt манифестом без раздела requests проверяет полный каталог с подставленным кандидатом и отказывает до записи (2 1).
+# Новых директив стенда не требует.
+case	puts	expect
+requests_ok	req-target req-caller	0 1
+requests_missing_target	req-caller	2 -
+requests_target_no_requests	req-target-noreq req-caller	2 -
+requests_target_drops_requests	req-target req-caller req-target-noreq	2 1

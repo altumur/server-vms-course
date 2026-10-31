@@ -1,0 +1,24 @@
+# Черновик G03 (аудит покрытия P/05, Gemini):
+# P/05-01, P/05-02, P/05-14 (Н1.1 cluster, written, «Тела у ресурса» mirror, Н2 scope=cluster, missing, X-Missing, Н4):
+# - на первом проходе при старте (C05-PASS-FIRST-AT-START-01) ресурс srv-a копирует локальное тело в соседа srv-b (copies по умолчанию 1)
+#   с сохранением исходного X-Written;
+# - при чтении scope=cluster и равном written на srv-a и srv-b выбирается лексикографически больший сервер (srv-b);
+# - более свежая копия по written (1999999999 на srv-a) побеждает в scope=cluster (X-Server: srv-a);
+# - при молчащем соседе srv-b (@sigkill resource#1) листинг scope=cluster возвращает missing: ["srv-b"], чтение существующего объекта —
+#   200 с X-Missing: srv-b, а чтение отсутствующего среди ответивших — 404 с обязательным X-Missing: srv-b.
+# Подготовка сценария: ресурс srv-a не запущен до шага 4 (как сц. 09, 10, 16–28).
+scenario	step	request	expect
+g03-objects-cluster-scope-and-missing	1	@start resource on srv-b	ok
+g03-objects-cluster-scope-and-missing	2	@until 10 store GET /v1/get?key=platform/doors/srv-b	200 {"items": {"url": "@any"}}
+g03-objects-cluster-scope-and-missing	3	@put object testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae inputs/blob-foo.bin	ok
+g03-objects-cluster-scope-and-missing	4	@start resource	ok
+g03-objects-cluster-scope-and-missing	5	@until 15 resource GET /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae?scope=cluster	200 @header X-Server: ~srv-b ~foo
+g03-objects-cluster-scope-and-missing	6	resource GET /v1/objects?prefix=testsub2/blobs/&scope=cluster	200 {"server": "srv-a", "objects": {"testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"server": "srv-b", "size": 3}}}
+g03-objects-cluster-scope-and-missing	7	resource GET /v1/objects/platform/resources/srv-b/heartbeat?scope=local	404 {"error": "@any"}
+g03-objects-cluster-scope-and-missing	8	resource GET /v1/objects/platform/resources/srv-b/heartbeat?scope=cluster	200 @header X-Server: ~srv-b {"server": "srv-b"}
+g03-objects-cluster-scope-and-missing	9	resource @header X-Written: 1999999999 PUT /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw foo	204
+g03-objects-cluster-scope-and-missing	10	resource GET /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae?scope=cluster	200 @header X-Server: ~srv-a @header X-Written: ~1999999999 ~foo
+g03-objects-cluster-scope-and-missing	11	@sigkill resource#1	ok
+g03-objects-cluster-scope-and-missing	12	resource GET /v1/objects?prefix=platform/resources/&scope=cluster	200 {"server": "srv-a", "missing": ["srv-b"], "objects": {"platform/resources/srv-a/heartbeat": {"server": "srv-a"}, "platform/resources/srv-b/heartbeat": "@absent"}}
+g03-objects-cluster-scope-and-missing	13	resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=cluster	200 @header X-Server: ~srv-a @header X-Missing: ~srv-b {"server": "srv-a"}
+g03-objects-cluster-scope-and-missing	14	resource GET /v1/objects/platform/resources/srv-b/heartbeat?scope=cluster	404 @header X-Missing: ~srv-b {"error": "@any"}

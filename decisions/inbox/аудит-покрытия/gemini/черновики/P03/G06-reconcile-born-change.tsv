@@ -1,0 +1,23 @@
+# Черновик Gemini G06: сверка (`цикл` шаг 2) — смена `born` у продолжающего числиться в назначении агрегата перевыпускает эпоху
+# Куда: Platform/03-worker/acceptance/3/scenarios.tsv
+# Норма: P/03.3 Н3 «цикл()» шаг 2 и Н4:
+#   «у агрегата, который продолжает числиться в моём списке и уже в работе, сменился born
+#    (строка пересоздана) — остановить как снятый, освободить эпоху, на следующем шаге взять заново».
+# В отличие от сценария 02-unit (шаг 9), где меняется только `revision` и `epoch` остаётся "1",
+# при смене `born` без удаления `c1` из `testsub/workers/w-1` воркер обязан остановить старое исполнение
+# и выдать новую эпоху (`epoch: "2"`).
+
+scenario	step	actor	action	expect
+G06-born-change-in-place	1	harness	@start_worker w-1	@ok
+G06-born-change-in-place	2	admin	POST /v1/write {"op": "create", "table": "testsub/counters", "key": "c1", "fields": {"step": 1, "limit": 100}}	status 200; json $.ok = true
+G06-born-change-in-place	3	admin	POST /v1/write {"op": "create", "table": "testsub/workers", "key": "w-1", "fields": {"units": "c1"}}	status 200; json $.ok = true
+G06-born-change-in-place	4	harness	@advance 3s	@ok
+G06-born-change-in-place	5	resource	GET /v1/objects/testsub/leases/c1	status 200; json $.fields.holder = "w-1"; json $.fields.epoch = "1"; json $.fields.released = "false"
+# Между проходами сверки строка c1 удалена и тут же создана заново (новый born), пока c1 не убирался из workers/w-1
+G06-born-change-in-place	6	admin	POST /v1/write {"op": "delete", "table": "testsub/counters", "key": "c1", "expected_revision": 1}	status 200; json $.ok = true
+G06-born-change-in-place	7	admin	POST /v1/write {"op": "create", "table": "testsub/counters", "key": "c1", "fields": {"step": 2, "limit": 100}}	status 200; json $.ok = true
+G06-born-change-in-place	8	harness	@advance 5s	@ok
+# Воркер обнаружил смену born у работающего c1, остановил прежнее исполнение и взял новую эпоху "2"
+G06-born-change-in-place	9	resource	GET /v1/objects/testsub/leases/c1	status 200; json $.fields.holder = "w-1"; json $.fields.epoch = "2"; json $.fields.released = "false"
+G06-born-change-in-place	10	resource	GET /v1/objects/testsub/progress/c1	status 200; json $.epoch = 2; json $.ticks >= 1
+G06-born-change-in-place	11	harness	@stop_worker w-1	@ok

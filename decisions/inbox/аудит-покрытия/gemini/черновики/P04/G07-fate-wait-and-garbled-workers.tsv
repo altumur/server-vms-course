@@ -1,0 +1,18 @@
+scenario	step	request	expect
+# Черновик G07 (урок 04, контроллер): нечитаемая строка назначения <sub>/workers/<имя> исключает воркера из пула без включения в garbled отчёта прохода; судьба wait у слота без единиц при живом ресурсе и присутствии unlisted (не release и не move, имя не в names_given до HUNG_MOVE_AFTER, слот не отдан) (P/04-04, P/04-10, P/04-11; договор пула, Н3 «судьба», «Переходы release», Н4 «пульс/слот/назначение не читается»).
+01-garbled-workers-row	1	@start resource	ok
+01-garbled-workers-row	2	@start worker w-1	ok
+01-garbled-workers-row	3	@start worker w-2	ok
+01-garbled-workers-row	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+01-garbled-workers-row	5	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
+01-garbled-workers-row	6	@as testsubcontroller store POST /v1/write {"id":"g07a","op":"put","key":"testsub/workers/w-1","items":{"units":"","rev":"x"},"cas":""}	200
+01-garbled-workers-row	7	@start controller	ok
+01-garbled-workers-row	8	console POST /counters {"name": "c1", "start": 1}	201
+01-garbled-workers-row	9	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-2"}}
+01-garbled-workers-row	10	@until 20 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"garbled": 0}
+02-fate-wait-unlisted	1	@start resource	ok
+02-fate-wait-unlisted	2	@as testsubworker store POST /v1/write {"id":"g07b","op":"put","key":"testsub/slots/w-unlisted","items":{"holder":"acc:1:111111","until":"1999999999","released":"false","gen":"1","server":"srv-a"},"cas":""}	200
+02-fate-wait-unlisted	3	@start controller	ok
+02-fate-wait-unlisted	4	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-unlisted": {"fate": "alive"}}}
+02-fate-wait-unlisted	5	@until 110 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"fates": {"w-unlisted": {"fate": "wait"}}, "names_given": {}}
+02-fate-wait-unlisted	6	store GET /v1/get?key=testsub/slots/w-unlisted	200 {"items": {"released": "false"}}

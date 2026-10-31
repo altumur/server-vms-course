@@ -1,0 +1,57 @@
+# Черновик Gemini G07: взгляд держателя на заявки (`P/03.6` Н3, Н4) — просроченная заявка (`expired`), превышение `most_valid` (`refused`), закрытие подвешенной чужой метки (`unknown`) и счётчик `garbled_rows` при битой заявке
+# Куда: Platform/03-worker/acceptance/6/scenarios.tsv
+# Норма: P/03.6 Н1.3, Н1.4, Н3 «взгляд держателя», Н4.
+# Все четыре ветки целиком исполняются базовым воркером (worker SDK) до вызова функции `action` и не требуют изменений в `testsub`.
+# Дефекты:
+#   1) Воркер исполняет заявку с истёкшим `valid_until` или ставит `refused` вместо `expired` (и не увеличивает `command_counts.expired`);
+#   2) Воркер не проверяет `valid_until > at + most_valid` (120 с для `ping`) и исполняет заявку вместо `outcome: "refused"` + `command.failed`;
+#   3) Воркер оставляет чужую метку без `outcome` навечно в `begun`, не закрывая её по индексу через `PERFORM_TIMEOUT + PERFORM_GRACE` (10.2 с) с `outcome: "unknown"`, `ended_by: "holder"`;
+#   4) Воркер при нечитаемой строке заявки (`RM-G01`) пишет метку или не учитывает её в `garbled_rows` пульса.
+
+scenario	step	actor	action	expect
+# --- Сценарий G07a: заявка с истёкшим valid_until -> outcome="expired", command_counts.expired=1 ---
+G07a-request-expired	1	admin	POST /v1/write {"op": "create", "table": "testsub2/things", "key": "t1", "fields": {"label": "alpha"}}	status 200; json $.ok = true
+G07a-request-expired	2	admin	POST /v1/write {"op": "create", "table": "testsub2/workers", "key": "t-1", "fields": {"units": "t1"}}	status 200; json $.ok = true
+G07a-request-expired	3	harness	@start_worker t-1 subsystem=testsub2	@ok
+G07a-request-expired	4	harness	@advance 3s	@ok
+# Создаём заявку, у которой valid_until уже в прошлом (100 < текущего времени ~1700000003)
+G07a-request-expired	5	admin	POST /v1/write {"op": "create", "table": "testsub2/requests/ping", "key": "req-exp", "fields": {"target": "t1", "at": "90", "valid_until": "100", "by": "admin", "payload": "{\"msg\":\"late\"}"}}	status 200; json $.ok = true
+G07a-request-expired	6	harness	@advance 3s	@ok
+G07a-request-expired	7	resource	GET /v1/objects/testsub2/marks/ping/req-exp	status 200; json $.fields.outcome = "expired"; json $.fields.by = "t-1"
+G07a-request-expired	8	resource	GET /v1/objects/testsub2/heartbeats/t-1	status 200; json $.command_counts.expired = 1; json $.command_counts.performed = 0
+G07a-request-expired	9	harness	@stop_worker t-1	@ok
+
+# --- Сценарий G07b: заявка с valid_until > at + most_valid (120 с для ping) -> outcome="refused" + command.failed ---
+G07b-request-exceeds-most-valid	1	admin	POST /v1/write {"op": "create", "table": "testsub2/things", "key": "t1", "fields": {"label": "alpha"}}	status 200; json $.ok = true
+G07b-request-exceeds-most-valid	2	admin	POST /v1/write {"op": "create", "table": "testsub2/workers", "key": "t-1", "fields": {"units": "t1"}}	status 200; json $.ok = true
+G07b-request-exceeds-most-valid	3	harness	@start_worker t-1 subsystem=testsub2	@ok
+G07b-request-exceeds-most-valid	4	harness	@advance 3s	@ok
+# most_valid для ping равен 120 с; разница valid_until - at = 1000 с > 120 с
+G07b-request-exceeds-most-valid	5	admin	POST /v1/write {"op": "create", "table": "testsub2/requests/ping", "key": "req-wide", "fields": {"target": "t1", "at": "1700000000", "valid_until": "1700001000", "by": "admin", "payload": "{\"msg\":\"too-wide\"}"}}	status 200; json $.ok = true
+G07b-request-exceeds-most-valid	6	harness	@advance 3s	@ok
+G07b-request-exceeds-most-valid	7	resource	GET /v1/objects/testsub2/marks/ping/req-wide	status 200; json $.fields.outcome = "refused"; json $.fields.by = "t-1"; json $.fields.error != ""
+G07b-request-exceeds-most-valid	8	resource	GET /v1/objects/testsub2/heartbeats/t-1	status 200; json $.command_counts.refused = 1; json $.command_counts.performed = 0
+G07b-request-exceeds-most-valid	9	resource	GET /v1/events/audit/testsub2worker?limit=10	status 200; json $.events[*].name contains "command.failed"
+G07b-request-exceeds-most-valid	10	harness	@stop_worker t-1	@ok
+
+# --- Сценарий G07c: подвешенная чужая метка без outcome старше PERFORM_TIMEOUT + PERFORM_GRACE закрывается с outcome="unknown" ---
+G07c-stale-begun-mark-unknown	1	admin	POST /v1/write {"op": "create", "table": "testsub2/things", "key": "t1", "fields": {"label": "alpha"}}	status 200; json $.ok = true
+G07c-stale-begun-mark-unknown	2	admin	POST /v1/write {"op": "create", "table": "testsub2/workers", "key": "t-1", "fields": {"units": "t1"}}	status 200; json $.ok = true
+# Предшественник начал исполнение заявки в t=1000 и погиб, оставив метку без outcome
+G07c-stale-begun-mark-unknown	3	admin	POST /v1/write {"op": "create", "table": "testsub2/requests/ping", "key": "req-hung", "fields": {"target": "t1", "at": "1000", "valid_until": "9999999999", "by": "admin", "payload": "{\"msg\":\"hung\"}"}}	status 200; json $.ok = true
+G07c-stale-begun-mark-unknown	4	admin	POST /v1/write {"op": "create", "table": "testsub2/marks/ping", "key": "req-hung", "fields": {"target": "t1", "by": "t-2", "instance": "t-2/dead-inst", "epoch": "1", "begun": "1000"}}	status 200; json $.ok = true
+G07c-stale-begun-mark-unknown	5	harness	@start_worker t-1 subsystem=testsub2	@ok
+G07c-stale-begun-mark-unknown	6	harness	@advance 15s	@ok
+G07c-stale-begun-mark-unknown	7	resource	GET /v1/objects/testsub2/marks/ping/req-hung	status 200; json $.fields.outcome = "unknown"; json $.fields.ended_by = "holder"; json $.fields.error = "begun by t-2/dead-inst and never answered"
+G07c-stale-begun-mark-unknown	8	harness	@stop_worker t-1	@ok
+
+# --- Сценарий G07d: битая строка заявки (RM-G01) не порождает метку и увеличивает garbled_rows в пульсе ---
+G07d-garbled-request-row	1	admin	POST /v1/write {"op": "create", "table": "testsub2/things", "key": "t1", "fields": {"label": "alpha"}}	status 200; json $.ok = true
+G07d-garbled-request-row	2	admin	POST /v1/write {"op": "create", "table": "testsub2/workers", "key": "t-1", "fields": {"units": "t1"}}	status 200; json $.ok = true
+# Нечитаемая заявка: valid_until не число (нарушение RM-G01)
+G07d-garbled-request-row	3	admin	POST /v1/write {"op": "create", "table": "testsub2/requests/ping", "key": "req-bad", "fields": {"target": "t1", "at": "1000", "valid_until": "not-a-number", "by": "admin", "payload": "{\"msg\":\"bad\"}"}}	status 200; json $.ok = true
+G07d-garbled-request-row	4	harness	@start_worker t-1 subsystem=testsub2	@ok
+G07d-garbled-request-row	5	harness	@advance 3s	@ok
+G07d-garbled-request-row	6	resource	GET /v1/objects/testsub2/marks/ping/req-bad	status 404
+G07d-garbled-request-row	7	resource	GET /v1/objects/testsub2/heartbeats/t-1	status 200; json $.garbled_rows >= 1
+G07d-garbled-request-row	8	harness	@stop_worker t-1	@ok

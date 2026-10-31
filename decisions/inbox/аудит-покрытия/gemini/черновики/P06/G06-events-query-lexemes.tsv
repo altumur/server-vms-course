@@ -1,0 +1,15 @@
+# Draft G06 (subchapter 6.4): strict numeric query lexemes on GET /events (from, to, limit)
+# Norms: 6.4 Н4, gate-and-pass.md «Числовые параметры query», C06-EVENTS-QUERY-LEXEME-162-01 (P/06.4-02)
+
+GET	/events?limit=01	-	400	{"error": "bad query", "detail": "limit"}
+GET	/events?limit=+1	-	400	{"error": "bad query", "detail": "limit"}
+GET	/events?limit=%2B1	-	400	{"error": "bad query", "detail": "limit"}
+GET	/events?limit=1e2	-	400	{"error": "bad query", "detail": "limit"}
+GET	/events?from=-0	-	400	{"error": "bad query", "detail": "from"}
+GET	/events?from=+10	-	400	{"error": "bad query", "detail": "from"}
+GET	/events?from=1e3	-	400	{"error": "bad query", "detail": "from"}
+GET	/events?from=.5	-	400	{"error": "bad query", "detail": "from"}
+GET	/events?to=1.	-	400	{"error": "bad query", "detail": "to"}
+GET	/events?to=00.5	-	400	{"error": "bad query", "detail": "to"}
+# Percent-encoded digit %31 decodes to "1", which is a valid canonical integer lexeme
+GET	/events?limit=%31	-	200	{"events": "@any"}

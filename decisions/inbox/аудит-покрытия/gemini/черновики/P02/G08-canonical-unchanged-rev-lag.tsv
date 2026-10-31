@@ -1,0 +1,6 @@
+# Черновик G08: дополнение к Platform/02-installer/acceptance/2/puts.tsv (P/02.2 Н3 и P/02.3 Н3)
+# Ветка «без изменений» при отсутствующей/отставшей метке platform/manifest/<name>/rev:
+# основная строка уже хранит текущую форму с тем же каноническим видом на rev 1 → основная строка не перезаписывается (rev остаётся 1),
+# а удалённая директивой @rev-delete метка platform/manifest/base/rev восстанавливается со значением {"rev": 1}.
+case	put	name	outcome	rev	note
+rev_deleted_unchanged	puts/base.subsystem.yaml; @rev-delete; puts/same_view.subsystem.yaml	base	ok	1	ветка «без изменений» (Н3 шаг 3): основная строка остаётся на rev 1, а отсутствующая метка platform/manifest/base/rev доводится до rev 1 (сравнить с rev_deleted, где проекция менялась и rev вырос до 2)

@@ -1,0 +1,26 @@
+# Черновик G10: расширения для Platform/08-domain/acceptance/9/scenarios.tsv
+# Покрывает:
+# - 8.9 Н1.3 шаг 5 (удаление последнего поля подсистемы в PUT /domain/shared удаляет пустой ключ <sub> из doc.shared; повторный null для отсутствующего поля не увеличивает rev)
+# - 8.9 Н1.3 шаг 1 и Н5 (нечитаемый указатель domain/shared в хранилище держателя -> PUT /domain/shared возвращает 503 {"error": "unavailable"})
+
+name	act	expect
+
+# Удаление единственного поля подсистемы через null убирает сам ключ подсистемы из shared ({}),
+# а удаление уже отсутствующего поля не меняет документ и не увеличивает rev.
+# При повреждении указателя domain/shared в state держателя PUT /domain/shared возвращает 503 unavailable.
+shared_delete_last_field_removes_sub_and_unreadable_pointer_503
+	@cluster hold
+	@cluster m1
+	@bootstrap domain on hold
+	POST /domain/members	{"cluster": "m1", "pubkey": "@pubkey(m1)"}
+		200	~
+	@join m1 to hold
+	PUT /domain/shared	{"testsub": {"threshold": 10}}
+		200	{"rev": 1, "shared": {"testsub": {"threshold": 10}}}
+	PUT /domain/shared	{"testsub": {"threshold": null}}
+		200	{"rev": 2, "shared": {}}
+	PUT /domain/shared	{"testsub": {"threshold": null}}
+		200	{"rev": 2, "shared": {}}
+	@corrupt hold state domain/shared 00
+	PUT /domain/shared	{"testsub": {"threshold": 20}}
+		503	{"error": "unavailable"}

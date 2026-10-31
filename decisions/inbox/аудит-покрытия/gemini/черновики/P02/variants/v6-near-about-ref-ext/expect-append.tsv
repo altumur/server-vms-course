@@ -1,0 +1,10 @@
+# Дополнительные строки для Platform/02-installer/acceptance/5/variants/v6-near-about-ref/expect.tsv (P/02.5 Н1.4 строка <s>controller)
+role	action	key	expect
+vbcontroller	read	va/shelves/s1	allow
+vccontroller	read	va/shelves/s1	allow
+vdcontroller	read	va/shelves/s1	allow
+vbcontroller	read	va/decommissioned/w-1	allow
+vccontroller	read	va/controller/placement_intent	allow
+vbcontroller	read	va/requests/r1	deny
+vccontroller	read	va/asked/alice	deny
+vdcontroller	read	va/requests/r1	deny

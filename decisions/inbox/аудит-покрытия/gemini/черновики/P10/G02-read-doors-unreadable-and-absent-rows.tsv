@@ -1,0 +1,39 @@
+# Черновик G02: расширения для Platform/10-domain-console/acceptance/scenarios.tsv
+# Покрывает:
+# - P/10 Н1.2 (HEAD на дверях чтения возвращает тот же код и заголовки без тела)
+# - P/10 Н1.2а GET /domain/<sub>/<rows>[?cluster=] (400 при пустом или повторённом cluster; 404 при неизвестном манифесте или rows; 404 no such member при неизвестном члене)
+# - P/10 Н1.2б и Н3 alarms (нечитаемая строка domain/members -> 503 {"error": "unavailable"} у GET /domain/members и GET /domain/alarms)
+# - P/10 Н1.2в GET /domain/topology (C10-TOPOLOGY-ABSENT-01: отсутствие строки domain/topology при построенном виде -> 200 {"rev": 0, "star": [], "via": {}}; нечитаемая строка -> 503 {"error": "unavailable"})
+# - P/10 Н1.2г GET /domain/placement и /domain/placement/<sub>/<ref> (C10-PLACEMENT-ABSENT-01: отсутствие счётчика domain/placement -> 200 {"rev": 0, "records": {}}; нечитаемый счётчик или запись -> 503 {"error": "unavailable"}; 404 при отсутствии записи или манифеста)
+# - P/10 Н1.2е GET /domain/shared (нечитаемый указатель domain/shared -> 503 {"error": "unavailable"}, не doc: null)
+
+scenario	step	request	expect
+# Проверка отказов параметров и маршрутов GET /domain/<sub>/<rows>, поддержки HEAD на дверях чтения,
+# а также поведения GET /domain/topology и GET /domain/placement при отсутствии и при нечитаемости строк хранилища.
+10-read-doors-rows-topology-placement-shared-unreadable	1	@domain	ok
+10-read-doors-rows-topology-placement-shared-unreadable	2	holder HEAD /domain	200
+10-read-doors-rows-topology-placement-shared-unreadable	3	holder HEAD /domain/topology	200
+10-read-doors-rows-topology-placement-shared-unreadable	4	holder GET /domain/testsub/counters?cluster=	400
+10-read-doors-rows-topology-placement-shared-unreadable	5	holder GET /domain/testsub/counters?cluster=m1&cluster=m2	400
+10-read-doors-rows-topology-placement-shared-unreadable	6	holder GET /domain/nosuch/counters	404
+10-read-doors-rows-topology-placement-shared-unreadable	7	holder GET /domain/testsub/nosuch	404
+10-read-doors-rows-topology-placement-shared-unreadable	8	holder GET /domain/testsub/counters?cluster=nosuch	404 {"error": "no such member"}
+10-read-doors-rows-topology-placement-shared-unreadable	9	member hold store POST /v1/write {"op": "delete", "key": "domain/topology"}	200
+10-read-doors-rows-topology-placement-shared-unreadable	10	holder GET /domain/topology	200 {"rev": 0, "star": [], "via": {}}
+10-read-doors-rows-topology-placement-shared-unreadable	11	member hold store POST /v1/write {"op": "put", "key": "domain/topology", "items": {"doc": "garbled"}}	200
+10-read-doors-rows-topology-placement-shared-unreadable	12	holder GET /domain/topology	503 {"error": "unavailable"}
+10-read-doors-rows-topology-placement-shared-unreadable	13	member hold store POST /v1/write {"op": "delete", "key": "domain/topology"}	200
+10-read-doors-rows-topology-placement-shared-unreadable	14	holder GET /domain/placement	200 {"rev": 0, "records": {}}
+10-read-doors-rows-topology-placement-shared-unreadable	15	holder GET /domain/placement/testsub/nosuch	404
+10-read-doors-rows-topology-placement-shared-unreadable	16	holder GET /domain/placement/nosuch/c1	404
+10-read-doors-rows-topology-placement-shared-unreadable	17	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "copies": []}	200
+10-read-doors-rows-topology-placement-shared-unreadable	18	member hold store POST /v1/write {"op": "put", "key": "domain/placement/testsub/c1", "items": {"cluster": ""}}	200
+10-read-doors-rows-topology-placement-shared-unreadable	19	holder GET /domain/placement/testsub/c1	503 {"error": "unavailable"}
+10-read-doors-rows-topology-placement-shared-unreadable	20	member hold store POST /v1/write {"op": "put", "key": "domain/placement", "items": {"rev": "bad"}}	200
+10-read-doors-rows-topology-placement-shared-unreadable	21	holder GET /domain/placement	503 {"error": "unavailable"}
+10-read-doors-rows-topology-placement-shared-unreadable	22	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "garbled"}}	200
+10-read-doors-rows-topology-placement-shared-unreadable	23	holder GET /domain/shared	503 {"error": "unavailable"}
+10-read-doors-rows-topology-placement-shared-unreadable	24	@on hold @sigterm domain	ok
+10-read-doors-rows-topology-placement-shared-unreadable	25	member hold store POST /v1/write {"op": "put", "key": "domain/members", "items": {"doc": "garbled"}}	200
+10-read-doors-rows-topology-placement-shared-unreadable	26	holder GET /domain/members	503 {"error": "unavailable"}
+10-read-doors-rows-topology-placement-shared-unreadable	27	holder GET /domain/alarms	503 {"error": "unavailable"}

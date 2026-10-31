@@ -1,0 +1,18 @@
+scenario	step	request	expect
+# Черновик G02 (урок 04, контроллер): штамп manifest_rev на старую строку размещения без него (шаг 1 прохода), страж правила row.manifest_rev > моя ревизия (строка не переписывается, manifest_behind + 1 в отчёте прохода) и отказ захвата очереди при placement_turn.manifest_rev > моей ревизии (P/04-16; Н1.1 manifest_rev, Н1.2 manifest_behind, Н3 «проход()» шаг 1, «manifest_rev — страж правила», договор очереди шаг 1).
+01-stamp-and-manifest-behind	1	@start resource	ok
+01-stamp-and-manifest-behind	2	@start worker w-1	ok
+01-stamp-and-manifest-behind	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+01-stamp-and-manifest-behind	4	console POST /counters {"name": "c1", "start": 1}	201
+01-stamp-and-manifest-behind	5	@as testsubcontroller store POST /v1/write {"id":"g02a","op":"put","key":"testsub/placement/c1","items":{"worker":"w-1","reason":"legacy","at":"1700000000","rev":"1"},"cas":""}	200
+01-stamp-and-manifest-behind	6	@as testsubcontroller store POST /v1/write {"id":"g02b","op":"put","key":"testsub/workers/w-1","items":{"units":"c1","rev":"1"},"cas":""}	200
+01-stamp-and-manifest-behind	7	@as testsubcontroller store POST /v1/write {"id":"g02c","op":"put","key":"testsub/placement/c2","items":{"worker":"w-1","reason":"future manifest","at":"1700000000","rev":"1","manifest_rev":"2"},"cas":""}	200 {"index": "$vc2"}
+01-stamp-and-manifest-behind	8	@start controller	ok
+01-stamp-and-manifest-behind	9	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1", "manifest_rev": "1"}}
+01-stamp-and-manifest-behind	10	@until 20 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"manifest_behind": 1}
+01-stamp-and-manifest-behind	11	store GET /v1/get?key=testsub/placement/c2	200 {"index": "$vc2", "items": {"worker": "w-1", "manifest_rev": "2"}}
+01-stamp-and-manifest-behind	12	@as testsubcontroller store POST /v1/write {"id":"g02d","op":"put","key":"testsub/controller/placement_turn","items":{"holder":"","manifest_rev":"10"}}	200
+01-stamp-and-manifest-behind	13	console POST /counters {"name": "c3", "start": 1}	201
+01-stamp-and-manifest-behind	14	@sleep 12	ok
+01-stamp-and-manifest-behind	15	store GET /v1/get?key=testsub/placement/c3	200 {"items": null}
+01-stamp-and-manifest-behind	16	store GET /v1/get?key=testsub/controller/placement_turn	200 {"items": {"holder": "", "manifest_rev": "10"}}

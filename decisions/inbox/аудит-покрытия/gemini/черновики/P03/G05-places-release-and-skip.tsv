@@ -1,0 +1,41 @@
+# Черновик Gemini G05: места (`holds`) — освобождение места при SIGTERM, пропуск битой записи (`torn`) при переборе и отказ при нечитаемом пульсе держателя
+# Куда: Platform/03-worker/acceptance/3/scenarios.tsv
+# Норма: P/03.2 Н1.3, Н3 «место: взять, держать, отпустить» (holds.outcomes.tsv, heartbeats.outcomes.tsv) и P/03.4 Н3 «остановка по SIGTERM» шаг 4.
+# Дефекты:
+#   1) Воркер при SIGTERM освобождает только свой слот (`released: "true"`), забывая освободить занятое место (`testsub2/holds/<k>`);
+#   2) Воркер при `взять_место` падает или выбирает битую строку `testsub2/holds/<k>` вместо пропуска `torn` и перехода к следующему свободному месту;
+#   3) Воркер при нечитаемом `testsub2/heartbeats/<by>` чужого держателя считает пульс устаревшим и отбирает занятое место по истечении `45 + HOLD_SKEW`.
+
+scenario	step	actor	action	expect
+# --- Сценарий G05a: освобождение занятого места (hold) при остановке по SIGTERM ---
+G05a-hold-release-on-sigterm	1	admin	POST /v1/write {"op": "create", "table": "testsub2/shelves", "key": "sh1", "fields": {"open": "true", "capacity": 1}}	status 200; json $.ok = true
+G05a-hold-release-on-sigterm	2	harness	@start_worker t-1 subsystem=testsub2	@ok
+G05a-hold-release-on-sigterm	3	harness	@advance 3s	@ok
+G05a-hold-release-on-sigterm	4	resource	GET /v1/objects/testsub2/holds/sh1	status 200; json $.fields.by = "t-1"; json $.fields.released = "false"; json $.fields.gen = "1"
+G05a-hold-release-on-sigterm	5	harness	@sigterm t-1	@exit 0 within 10s
+# Место освобождено под стражей слота до освобождения самого слота
+G05a-hold-release-on-sigterm	6	resource	GET /v1/objects/testsub2/holds/sh1	status 200; json $.fields.by = "t-1"; json $.fields.released = "true"; json $.fields.gen = "1"
+G05a-hold-release-on-sigterm	7	resource	GET /v1/objects/testsub2/slots/t-1	status 200; json $.fields.released = "true"
+
+# --- Сценарий G05b: пропуск битой записи места (torn hold) и взятие следующего свободного места ---
+G05b-hold-skip-torn	1	admin	POST /v1/write {"op": "create", "table": "testsub2/shelves", "key": "sh1", "fields": {"open": "true", "capacity": 1}}	status 200; json $.ok = true
+G05b-hold-skip-torn	2	admin	POST /v1/write {"op": "create", "table": "testsub2/shelves", "key": "sh2", "fields": {"open": "true", "capacity": 1}}	status 200; json $.ok = true
+# sh1 имеет битую запись hold (gen не целое >= 1 -> torn по holds.outcomes.tsv)
+G05b-hold-skip-torn	3	admin	POST /v1/write {"op": "create", "table": "testsub2/holds", "key": "sh1", "fields": {"by": "t-9", "holder": "t-9/old", "gen": "x", "SlotGen": "1", "released": "false", "acquired_at": "1"}}	status 200; json $.ok = true
+G05b-hold-skip-torn	4	harness	@start_worker t-1 subsystem=testsub2	@ok
+G05b-hold-skip-torn	5	harness	@advance 3s	@ok
+# sh1 не тронута, t-1 взял следующее место sh2
+G05b-hold-skip-torn	6	resource	GET /v1/objects/testsub2/holds/sh1	status 200; json $.fields.gen = "x"; json $.fields.by = "t-9"
+G05b-hold-skip-torn	7	resource	GET /v1/objects/testsub2/holds/sh2	status 200; json $.fields.by = "t-1"; json $.fields.released = "false"; json $.fields.gen = "1"
+
+# --- Сценарий G05c: запрет перехвата места при нечитаемом пульсе держателя даже после 50 с ---
+G05c-hold-unreadable-holder-hb	1	admin	POST /v1/write {"op": "create", "table": "testsub2/shelves", "key": "sh1", "fields": {"open": "true", "capacity": 1}}	status 200; json $.ok = true
+G05c-hold-unreadable-holder-hb	2	admin	POST /v1/write {"op": "create", "table": "testsub2/slots", "key": "t-2", "fields": {"holder": "t-2/other-inst", "server": "srv-a", "gen": "1", "released": "false", "claimed_at": "1000", "schema": "1"}}	status 200; json $.ok = true
+G05c-hold-unreadable-holder-hb	3	admin	POST /v1/write {"op": "create", "table": "testsub2/holds", "key": "sh1", "fields": {"by": "t-2", "holder": "t-2/other-inst", "gen": "1", "SlotGen": "1", "released": "false", "acquired_at": "1000"}}	status 200; json $.ok = true
+G05c-hold-unreadable-holder-hb	4	resource	PUT /v1/objects/testsub2/heartbeats/t-2 {"instance":"t-2/other-inst","server":"srv-a","gen":1,"at":1000,"started_at":1000,"schema":1,"status":"ok","units":0}	status 200
+# Портим объект пульса t-2 -> по heartbeats.outcomes.tsv (unreadable -> unknown) перехват запрещён
+G05c-hold-unreadable-holder-hb	5	harness	@spoil object testsub2/heartbeats/t-2	@ok
+G05c-hold-unreadable-holder-hb	6	harness	@start_worker t-1 subsystem=testsub2	@ok
+G05c-hold-unreadable-holder-hb	7	harness	@advance 60s	@ok
+G05c-hold-unreadable-holder-hb	8	resource	GET /v1/objects/testsub2/holds/sh1	status 200; json $.fields.by = "t-2"; json $.fields.gen = "1"; json $.fields.released = "false"
+G05c-hold-unreadable-holder-hb	9	harness	@stop_worker t-1	@ok
