@@ -17,7 +17,8 @@ slot: {prefix: b, name_env: BACKEND_NAME}
 # Reads, writes and asks nothing of anybody by itself: what it needs it reads through the console with the ticket of the
 # request it serves (V/11.1 Н1.3). No state outside the platform's store: the memory of repeats of a group
 # `idempotencyKey` is always there, in its own table `repeats` (below) read and written through the console's door of
-# tables with the ticket (V/11.4 Н1.4; the review of V/11, question 3). The family `<sub>/idem/` is the console's own
+# tables with the ticket (V/11.4 Н1.4; the review of V/11, question 3); so are the ids of people and the history of the
+# rights screen (`people`, `history`, V/11.8). The family `<sub>/idem/` is the console's own
 # memory of `Idempotency-Key` (P/06.1): backend does not touch it.
 worker: {exec: /usr/lib/backend/worker, stop_timeout: 20}
 unit:
@@ -52,15 +53,21 @@ door:
     # A stream goes to the client as it comes, without the 4 MiB limit; its ticket — reads, /changes, the model's route.
     stream: [api/stream, api/assist/turns]
     # Longer than PASS_WAIT, the longest covering key wins; api/assist/turns — ASSIST_TURN_MAX (V/11.7 Н1.5).
-    wait: {api/objects/delete: 30, api/devices: 30, api/assist/turns: 7500}
+    wait: {api/objects/delete: 30, api/devices: 30, api/folders: 30, api/operations: 30, api/access: 30, api/assist/turns: 7500}
     # The console's own refusals on api are `Problem` (question 5). 502, 503, 504: the contract has no code for them, a
     # request to the product (V/11.2 Н1.3); till then they stay outside the map and answer the console's form.
     refusals:
       form: problem
       codes: {'401': UNAUTHORIZED, '403': PERMISSION_DENIED, '404': NO_ROUTE, '413': VALIDATION_FAILED}
+    # The group operations of consolem (ADR-0095, P/06.9): the console leads them, a step comes to the route `opstep`, which
+    # no browser reaches (it is not under routes). Their table is a service one: a person sees only their own operation,
+    # by the ticket, and no line `sub: backend` exists (V/11.4 Н1.8).
+    operations:
+      step: opstep
+      service: true
     # The doors the worker may call back with a ticket, in the closed list of the platform (P/06.3 Н1.9). Not: `/where`,
-    # writes of /session, grants, people, keys, break-glass, /operations; nor auto — the automation of consolem is not
-    # declared on the first step (ADR-0094 доп. (7)), its operations answer 404 NO_ROUTE.
+    # writes of /session, keys, break-glass; nor auto — the automation of consolem is not declared on the first step
+    # (ADR-0094 доп. (7)), its operations answer 404 NO_ROUTE. The doors of the domain judge the person, not backend (V/11.8).
     calls:
       - cam/cameras                  # the rows of cam, their tombstones (V/01.1)
       - cam/devices
@@ -80,7 +87,16 @@ door:
       - GET schema                   # the tool get_schema (V/11.7 Н1.2)
       - GET assist/models            # the assistant's default model (V/11.7 Н1.2)
       - assist/chat                  # the model's route: the console passes it to the holder (V/11.7; доп. (12) п. 7)
+      - folders                      # the cluster's folders and, in a batch, their rows (P/06.8; V/11.4 Н1.7)
+      - backend/operations           # the group operations (P/06.9; V/11.4 Н1.8)
+      - GET domain/users             # the snapshot of rights (V/11.8 Н1.1)
+      - GET domain/groups
+      - GET domain/roles
+      - GET domain/grants
+      - domain/batch                 # one apply is one batch of the domain (V/11.8 Н1.5)
       - backend/repeats              # its own table: the memory of repeats of a group key (V/11.4 Н1.4)
+      - backend/people               # its own table: the id of a person (V/11.8 Н1.2)
+      - backend/history              # its own table: the history of the rights screen (V/11.8 Н1.7)
 # B7 (ADR-0094 доп. (1); P/02.1 `console.shell`, `console.files`, P/02.3, P/06.5 Н1.1 `mounted`), the keys in `console:`
 # below (the installer reads each file, the manifest row keeps its SHA-256 and size): the console serves
 # the WebUI of consolem as static files next to this manifest, `/backend/<file>`, byte for byte, by the name without the
@@ -110,9 +126,10 @@ tables:
       h:        {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of user, 0, key
       user:     {type: string, required: true, schema: {minLength: 1}}   # the person of the ticket; compared on lookup
       idem_key: {type: string, required: true, schema: {minLength: 1}}   # the external idempotencyKey as given
-      op:       {type: string, required: true, enum: [createDevices, updateDevices, deleteObjects]}
+      op:       {type: string, required: true, enum: [createDevices, updateDevices, deleteObjects, createOperation]}
       body:     {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of the body's bytes
       state:    {type: string, required: true, enum: [started, done]}
+      operation: {type: string, schema: {pattern: "^[0-9a-f]{32}$"}}   # op createOperation: the id of the accepted operation
       # the steps' outcomes by the index of `items` (V/11.4 Н1.4)
       steps:
         type: json
@@ -129,6 +146,24 @@ tables:
               id:      {type: string, minLength: 1}      # the id of the step's record
               code:    {type: string, minLength: 1}      # the contract's code of a failed step
               field:   {type: string, minLength: 1}
+  # The id consolem knows a person by (V/11.8 Н1.2): a person's name is their login, so the id cannot be the key.
+  people:
+    key: h
+    service: true
+    fields:
+      h:        {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of the name: `.` is no key
+      login:    {type: string, required: true, schema: {minLength: 1}}
+      id:       {type: string, required: true, schema: {pattern: "^[0-9a-fA-F-]{36}$"}}
+  # The history of the rights screen (V/11.8 Н1.7): the platform's journal stays the record, this only shows it.
+  history:
+    key: id
+    service: true
+    delete_after: 7776000            # 90 days
+    fields:
+      id:       {type: string, required: true, schema: {pattern: "^[0-9a-fA-F-]{36}$"}}
+      kind:     {type: string, required: true, enum: [history, cell]}
+      when:     {type: string, required: true, schema: {minLength: 1}}   # RFC 3339 UTC
+      entry:    {type: json, required: true, schema: {type: object}}     # AccessHistoryWrite or AccessCellWrite, with `actor`
 metrics:
   - {name: instances_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:

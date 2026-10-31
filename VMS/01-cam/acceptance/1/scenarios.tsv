@@ -1,22 +1,22 @@
 scenario	step	request	expect
 # Приёмка V/01.1: камера — единица (дверь единиц консоли cam, манифест VMS/01-cam/cam.subsystem.yaml). Формат — README.
-01-create	1	POST /cameras {"source": "driverpack://file/door.mp4"}	201 {"id": "1", "name": "cam1", "enabled": true, "priority": 100, "live": "always", "kind": "video", "labels": [], "folders": [], "revision": 1}
+01-create	1	POST /cameras {"source": "driverpack://file/door.mp4"}	201 {"id": "1", "name": "cam1", "enabled": true, "priority": 100, "live": "always", "kind": "video", "labels": [], "revision": 1}
 01-create	2	GET /cameras	200 {"configured": [{"id": "1", "name": "cam1", "source": "driverpack://file/door.mp4", "cred_secret": ""}]}
 01-create	3	POST /cameras {"source": "driverpack://file/second.mp4"}	201 {"id": "2", "name": "cam2"}
 01-create	4	PUT /cameras/2 {"priority": 50}	200 {"id": "2", "name": "cam2", "priority": 50}
-02-numeric	1	POST /cameras {"id": 7, "source": "driverpack://file/a.mp4"}	400 {"error": "~id"}
+02-numeric	1	POST /cameras {"id": 7, "source": "driverpack://file/a.mp4"}	400 {"error": "platform_field", "field": "/id", "detail": "~id"}
 02-numeric	2	POST /cameras {"name": "gate", "source": "driverpack://file/b.mp4"}	201 {"id": "$c2", "name": "gate"}
 02-numeric	3	POST /cameras {"source": "driverpack://file/c.mp4", "live": "sometimes"}	400 {"error": "@any", "fault": "@absent"}
 03-one-channel	1	POST /cameras {"source": "rtsp://10.0.0.7:554/ch/1"}	201 {"id": "$c3"}
 03-one-channel	2	POST /cameras {"source": "RTSP://10.0.0.7:554/ch/1"}	409 {"error": "conflict", "fault": "unique"}
 03-one-channel	3	POST /cameras {"source": "rtsp://10.0.0.7:554/ch/2"}	201 {"id": "@any"}
 03-one-channel	4	POST /cameras {"source": "rtsp://10.0.0.7/ch/1"}	201 {"id": "@any", "source": "rtsp://10.0.0.7/ch/1"}
-04-credentials	1	POST /cameras {"source": "rtsp://admin:hunter2@10.0.0.8/ch/1"}	400 {"fault": "bad_url", "error": "~cred_secret ~cred_username"}
-04-credentials	2	POST /cameras {"source": "rtsp://10.0.0.8/ch/1?usr=admin&pwd=hunter2"}	400 {"fault": "bad_url", "error": "~cred_secret"}
-04-credentials	3	POST /cameras {"source": "driverpack://acme/admin:hunter2@10.0.0.9/ch/1"}	400 {"fault": "bad_url", "error": "~cred_secret"}
+04-credentials	1	POST /cameras {"source": "rtsp://admin:hunter2@10.0.0.8/ch/1"}	400 {"fault": "bad_url", "error": "bad_url", "field": "/source", "detail": "~cred_secret ~cred_username"}
+04-credentials	2	POST /cameras {"source": "rtsp://10.0.0.8/ch/1?usr=admin&pwd=hunter2"}	400 {"fault": "bad_url", "error": "bad_url", "field": "/source", "detail": "~cred_secret"}
+04-credentials	3	POST /cameras {"source": "driverpack://acme/admin:hunter2@10.0.0.9/ch/1"}	400 {"fault": "bad_url", "error": "bad_url", "field": "/source", "detail": "~cred_secret"}
 04-credentials	4	POST /cameras {"source": "rtsp://10.0.0.8/ch/1", "cred_username": "admin", "cred_secret": "hunter2"}	201 {"id": "$c4", "cred_secret": "***"}
 05-bound	1	POST /cameras {"source": "rtsp://10.0.0.8/ch/5", "cred_username": "admin", "cred_secret": "hunter2"}	201 {"id": "$c5", "cred_secret": "***"}
-05-bound	2	PUT /cameras/$c5 {"source": "rtsp://10.0.0.8/ch/3"}	400 {"error": "~source changed ~cred_secret must be given anew"}
+05-bound	2	PUT /cameras/$c5 {"source": "rtsp://10.0.0.8/ch/3"}	400 {"error": "refused", "field": "/cred_secret", "detail": "~source changed ~cred_secret must be given anew"}
 05-bound	3	PUT /cameras/$c5 {"source": "rtsp://10.0.0.8/ch/3", "cred_secret": "hunter3"}	200 {"source": "rtsp://10.0.0.8/ch/3"}
 06-schemes	1	POST /cameras {"source": "ftp://10.0.0.10/cam"}	400 {"fault": "bad_url"}
 06-schemes	2	POST /cameras {"source": "ipint://10.0.0.11/ch#1"}	201 {"id": "@any", "source": "ipint://10.0.0.11/ch#1"}
@@ -26,7 +26,7 @@ scenario	step	request	expect
 07-devices	4	PUT /devices/10.0.0.7 {"device": "10.0.0.7"}	405 {"error": "@any"}
 08-streams	1	POST /cameras {"source": "rtsp://10.0.0.20/ch/1", "name": "Вход"}	201 {"id": "$m", "profile": "main"}
 08-streams	2	POST /cameras {"source": "rtsp://10.0.0.20/ch/2", "main": "$m", "profile": "сетка"}	201 {"id": "$s", "main": "$m", "profile": "сетка"}
-08-streams	3	PUT /cameras/$s {"main": "999"}	400 {"error": "~main is fixed"}
+08-streams	3	PUT /cameras/$s {"main": "999"}	400 {"error": "fixed", "field": "/main", "detail": "~main is fixed"}
 08-streams	4	PUT /cameras/$s {"profile": "детекция"}	200 {"profile": "детекция", "main": "$m"}
 08-streams	5	PUT /cameras/$m {"grid": "$s"}	200 {"grid": "$s"}
 09-delete-camera	1	POST /cameras {"source": "rtsp://10.0.0.21/ch/1", "name": "Склад"}	201 {"id": "$m"}

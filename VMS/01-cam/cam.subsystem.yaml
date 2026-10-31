@@ -170,46 +170,9 @@ unit:
     # against the worker's server labels. Accepts a JSON list or a comma-separated string; stored
     # comma-joined.
     labels:                {type: list}                       # where the camera is reachable from: "vlan:cctv-a"
-    # The operator's grouping — «Подъезд», «Улица», «Объект А». A separate key from `labels`, and not
-    # because it is tidier: `labels` are MATCHED by placement (`labels-subset` below) against what a server
-    # declares about itself, and a server declares two kinds of fact there — which segments it reaches
-    # (`vlan:cctv-a`) and what it has (`gpu`). Put a folder in that set and the camera becomes unplaceable
-    # until some server claims to reach «Подъезд»: an absurdity that arrives looking like a placement
-    # failure, which is the most expensive kind of wrong.
-    #
-    # And no `loc:` prefix. A prefix would exist only to smuggle folders past a field that is matched;
-    # with a key of their own it carries no information, and a prefix carrying no information is a thing
-    # to get wrong (`Loc:`, `loc :`) with no one to refuse it.
-    #
-    # PATHS, `/` between the levels — `Объект А/Подъезд` — and a camera may be in several, visible in each
-    # (`Объект А/Подъезд,Периметр`). The same model as the product.
-    #
-    # A folder exists NOWHERE in the store: it is the path on the cameras that carry it. So there are no
-    # empty folders — a folder lasts exactly as long as one camera is filed in it — and renaming one means
-    # rewriting the path on every camera under it. The tree is whatever draws it, splitting on `/`.
-    #
-    # A plain list, not a type of its own: nothing in the platform needs to know an entry is a path. And it
-    # has the list's one limit (P/06.1, list values): the store keeps a list comma-joined, so a level may not
-    # contain a comma — `Корпус 1, этаж 2` would come back as two paths. The product has the same limit.
-    #
-    # Nothing is inherited down the tree. A folder groups; it carries no policy — no retention, no
-    # placement, no rights. The day a folder is meant to CARRY something, that is a separate decision with
-    # its own rules about what a child overrides.
-    #
-    # Nothing in М10 reads it — like `priority`. Stored, and shown by the console because the page builds
-    # its form from `/spec`.
-    #
-    # NOT in the snapshot below, and that was measured rather than chosen: the snapshot is one object per
-    # worker under a 64 MiB ceiling now (P/04 Н1.3а). The measure below was taken under the witness's 64 KiB, the course's
-    # test holding a shard to a third of that (this field pushed the biggest shard from 20.9 to 21.7 KiB — past the line;
-    # under 64 MiB the argument is to be reweighed, V/01 README). The margin is
-    # there so the shape survives the next field; spending it on a field nothing reads, to loosen a test
-    # written to measure exactly this, would be the wrong trade. When М12's directory wants folders, put it
-    # in and re-measure — that is a decision with a number attached, which is what the test is for.
-    #
-    # The product DOES carry `folders` in its snapshot. It has no test holding a shard to a third of the
-    # ceiling, so nothing there measured what this field costs; here something does.
-    folders:               {type: list}                       # paths it is filed under: "Объект А/Подъезд,Периметр"
+    # No folders here: a folder is a record of the cluster's console (`platform/folders/<id>`, P/06.8; ADR-0096 §8, the
+    # field and `shared: folders` went without a transfer, stands are reinstalled). The camera is a member of them; the
+    # tree says so below (`display.tree.folders`). Placement stays with `labels`, and a folder carries nothing down.
     # Which of this device's event kinds are ALARMS (the platform fixes the vocabulary, the unit says
     # which of its lines belong to which class). A list of kinds, empty by
     # default — a camera observes, and observing is not alarming.
@@ -401,7 +364,7 @@ domain:
   # by the licence count (V/01.7)
   view: [name, enabled, main]
   # What the domain's door lets through in a member's camera (PUT /domain/cam/cameras/<ref>): on or off. Its name,
-  # folders, labels and retention are its cluster's console's (ADR-0031).
+  # labels and retention are its cluster's console's (ADR-0031).
   edit: [enabled]
   books:
     sources: {from: cam/sources/, key: ref, pick: unique, to: to}
@@ -430,10 +393,8 @@ domain:
   # of 2026-10-08); asks carried up wait in the relay's memory; the scenarios between cameras are `auto`'s document in
   # the shared settings (`auto.subsystem.yaml`).
   # The fields whose domain-wide value the domain holds (the shared document; the platform resolves them and serves
-  # them at GET /domain/shared/cam): the folders the page offers, and two that inherit — the site's alarm kinds
-  # (added to the camera's own).
+  # them at GET /domain/shared/cam): one that inherits — the site's alarm kinds (added to the camera's own).
   shared:
-    - folders
     - alarms
     # The vendor's licence (V/01.7 Н1.1): a document of the shared settings, signed like any; the worker on the domain
     # checks the vendor's signature and counts.
@@ -514,7 +475,6 @@ display:
     profile: Поток
     grid: Поток сетки
     full: Поток полного экрана
-    folders: Папки
     source: Источник
     cred_username: Логин устройства
     cred_secret: Пароль устройства
@@ -530,7 +490,7 @@ display:
   form:
     - title: Идентификация
       state: true
-      fields: [enabled, name, ref, id, kind, folders]
+      fields: [enabled, name, ref, id, kind]
     - title: Подключение
       fields: [source, cred_username, cred_secret]
       note: "Пароль хранится отдельно и не покидает кластер: в ответах он замаскирован, поле при правке пустое. Сменили источник — впишите пароль заново."
@@ -548,7 +508,6 @@ display:
     full: "поток этой камеры для полного экрана; пусто — основной"
     source: "адрес устройства (driverpack://производитель/адрес/ch/канал)"
     labels: "сети, в которых виден адрес камеры (vlan:cctv-a)"
-    folders: папки, в которых камера показана
     cred_username: логин устройства
     cred_secret: пароль устройства
     live: "живой поток: держать всегда или по требованию"
@@ -556,20 +515,18 @@ display:
     io.input: вход устройства
     silent: камера молчит
   tree:
-    group_by: folders
-    nested_by: "/"
+    folders: true                    # the tree is the cluster's folders, a camera is their member (P/06.8 Н1.1)
     group_title: По папкам
-    group_hint: Папки из поля folders → камеры
+    group_hint: Папки кластера → камеры
     filter: Фильтр по имени, адресу…
     no_group: Без папки
     contents_title: Состав папки
     group_word: папка
     no_group_suffix: без папки
-    pick_note: "Папки берутся из поля folders камеры и на размещение не влияют; размещение решают её labels."
+    pick_note: "Папки — записи кластера и на размещение не влияют; размещение решают labels камеры."
     new_root: Папка
     new_sub: Подпапка
     add_here: Добавить камеру сюда
-    new_group_note: "Папка создана — добавьте в неё камеру, иначе она не сохранится"
   # The words of the key families (domain.keys), by id; `absent` — what to say when the row is missing.
   keys:
     sources:

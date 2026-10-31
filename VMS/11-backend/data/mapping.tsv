@@ -63,7 +63,15 @@ Device(type=det)	fault, subtype, short, identifier, ip, port, mac, vendor, model
 Device(type=det)	disabledByRuleId, disabledByRuleAt, armed	—	—	none	как у камеры: не объявляется, в ответе полей нет
 Device(type=det)	version	det/units	индекс хранилища строки	read	в элементе списка по B4; If-Match сверяет его (V/11.4)
 Device(type=mic|spk|sensor|relay|storage|ipsrv|channel|eventsrc|acfa*|export|email|sms)	—	—	—	none	таких устройств нет (deviceTypes — camera, det): создание — 422 NOT_SUPPORTED, field type
-Folder	—	—	—	none	папки как записи — ADR-0094 C; folderId создания не null — NOT_SUPPORTED, field folderId
+Folder	—	GET /folders	элемент	both	папка — строка консоли (P/06.8; V/11.4 Н1.7)
+Folder	id	GET /folders	UUID folder:platform/folders/<id>	read	V/11.4 Н1.6
+Folder	name	GET /folders	name	both
+Folder	domainId	кластер	UUID domain:<CLUSTER>	read
+Folder	parentId	GET /folders	parent	read	"" — null; задаётся при создании
+Folder	deviceIds	GET /folders	members	both	видимые члены по порядку; скрытые сохраняются (V/11.4 Н1.7)
+Folder	version	GET /folders	index	read
+FolderCreate	name, domainId, parentId	POST /folders	name, parent	write	domainId иной — NOT_FOUND
+FolderPatch	name, deviceIds	PUT /folders/<id>	name, members	write	V/11.4 Н1.7
 Archive	—	rec/volumes	—	both	хранилище = один том (строка таблицы rec/volumes) и записи на нём; том edge не отдаётся
 Archive	id	rec/volumes	UUID archive:rec/volumes/<name>	read	иной, чем у Volume той же строки (V/11.4 Н1.6)
 Archive	name	rec/volumes	name	read	ключ строки: при создании — ключ новой строки; правка — 422 NOT_SUPPORTED, field name
@@ -108,13 +116,30 @@ Reference	volumeStates	—	["ready", "open", "off", "broken", "error"]	const	с�
 Reference	ipServerSubtypes, serviceTypes, supportLevels, cloudProviders	—	[]	const	IP-серверов, служб, уровней поддержки и облачных поставщиков продукта нет; бакет — адрес тома
 Reference	deviceParams	—	{}	const	параметров начинки по видам нет
 Reference	limits	—	{"ipScanMax": 0, "defaultServerPort": 0}	const	поиска устройств нет
-Reference	access	—	наименьшее по схеме: пустые списки и объекты, числа 0, строки "" — по каждому обязательному полю вглубь	const	роли и доступ — ADR-0094 C
+Reference	access	—	{"features":["DEVICES_SETUP","ARCHIVES_SETUP","DETECTORS_SETUP","EDIT_PTZ_PRESETS","USERS_RIGHTS_SETUP"],"levels":{"cam":["FORBID","ONLY_ARCHIVE","MON","ARCHIVE","ARCH_MANAGE","FULL"],"arch":["FORBID","FULL"],"ur":["NO","ALL"]},"defaults":[{"key":"dCam","levels":"cam"},{"key":"dArch","levels":"arch"}],"globals":[],"folderFields":["cam"],"fieldDefaults":{"cam":"dCam","arch":"dArch"},"visibleFrom":{"cam":"ONLY_ARCHIVE","arch":"FULL"},"restrictions":[],"plugins":[],"roleTemplates":[{"id":"commissioner","rights":{"feat":["DEVICES_SETUP","ARCHIVES_SETUP","DETECTORS_SETUP","EDIT_PTZ_PRESETS"],"dCam":"FULL","dArch":"FULL"}},{"id":"operator","rights":{"feat":[],"dCam":"MON","dArch":"FULL"}},{"id":"viewer","rights":{"feat":[],"dCam":"MON"}}],"loginSchedules":[0],"syncTimezones":[],"staleDays":90,"expiringSoonDays":7,"passwordPolicy":{"minLength":0,"letter":false,"digit":false,"notLogin":false}}	const	только переводимое (V/11.8; V/11.2 Н1.5)
 Reference	capabilities	backend	объявление возможностей	read	operations — «переводится» V/11.2; deviceTypes — camera, det; features — пусто (V/11.2 Н1.5)
 Reference	ruleTriggers, ruleActions, ruleConditions, ruleControls	—	[]	const	«Автоматизация» не объявлена (ADR-0094 доп. (7))
 Reference	layouts, monitors	—	[]	const	раскладок клиента и видеостены нет
 Settings	—	—	—	none	вне перечня обратного вызова (V/11.1 Н1.5)
 License	—	—	—	none	лицензий consolem нет
-Access	—	—	—	none	роли, группы, каталоги — ADR-0094 C
-Operation	—	—	—	none	групповые операции — ADR-0094 C
+Access	—	двери домена	снимок	both	V/11.8
+Access	version	двери домена	a + SHA-256 индексов	read	V/11.8 Н1.1
+Access	roles, users, groups	двери домена	V/11.8 Н1.1	both
+Access	catalogs	—	[]	const	каталогов нет (ADR-0098 §8)
+Access	history, cellHistory	backend/history	entry	both	V/11.8 Н1.7
+Operation	—	GET /backend/operations/<id>	запись	both	только автор (V/11.4 Н1.8)
+Operation	id	backend/operations	id в форме UUID 8-4-4-4-12	read
+Operation	state, total, done, ok, failed, cancelled	GET /backend/operations/<id>	те же поля	read
+Operation	createdAt, finishedAt	GET /backend/operations/<id>	created_at, finished_at	read	секунды в RFC 3339 UTC
+Operation	retryOf	GET /backend/operations/<id>	retry_of в форме UUID	read
+Operation	revertOf	—	null	const	откат не объявляется (ADR-0095 §4)
+Operation	items	GET /backend/operations/<id>	items	read	OperationItem
+OperationItem	index	GET /backend/operations/<id>	номер элемента	read
+OperationItem	targetId	GET /backend/operations/<id>	items[].body.targetId	read	body — при service: true (P/06.9 Н2)
+OperationItem	state, code, version	GET /backend/operations/<id>	state, code, version	read	not_run — V/11.4 Н1.8
+OperationItem	createdId	GET /backend/operations/<id>	created_id	read
+OperationRequest	idempotencyKey	backend/repeats	<h>	write	V/11.4 Н1.4, Н1.8
+OperationRequest	items	POST /backend/operations	items[].body, root, secret	write
+OperationRequest	expectedVersions	POST /backend/operations	items[].expected	write
 Discovery	—	—	—	none	поиска устройств нет
 StreamMessage	—	GET /changes	—	read	лента изменений — норма B2 (глава 5)
