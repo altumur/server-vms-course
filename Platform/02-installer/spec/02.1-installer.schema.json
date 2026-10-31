@@ -2748,6 +2748,11 @@
     "schema": {
      "$ref": "#/$defs/jsonSchemaLite"
     },
+    "service": {
+     "description": "служебная таблица воркера: только по билету (P/06.1 Н1.6 `service`)",
+     "type": "boolean",
+     "x-default-text": "`false`"
+    },
     "stamp": {
      "type": "array",
      "items": {
