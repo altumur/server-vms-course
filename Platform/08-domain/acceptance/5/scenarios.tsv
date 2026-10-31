@@ -65,3 +65,8 @@ scenario	step	request	expect
 13-person-names	12	@stop agent m1	ok
 13-person-names	13	@until 120 member hold store GET /v1/get?key=domain/names/testsub2/notes	200 {"items": {"": "{\"missing\":[\"m1\"]}"}}
 13-person-names	14	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "alice", "cap": "edit", "scope": "*"}, {"subject": "t7", "cap": "view", "scope": "*"}]}	200
+14-grant-sub-rank	1	@domain	ok
+14-grant-sub-rank	2	member m1 console2 POST /tallies {"name": "t7", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
+14-grant-sub-rank	3	@until 90 member hold store GET /v1/get?key=domain/names/testsub2/notes	200 {"items": {"": "{\"missing\":[]}", "t7": "{\"members\":[\"m1\"]}"}}
+14-grant-sub-rank	4	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "t7", "cap": "view", "sub": "testsub2", "scope": "*"}]}	200
+14-grant-sub-rank	5	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "t7", "cap": "edit", "sub": "testsub2", "scope": "*"}]}	400 {"error": "grant too wide", "field": "/lines/1"}

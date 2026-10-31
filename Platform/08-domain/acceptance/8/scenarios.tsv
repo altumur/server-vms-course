@@ -108,3 +108,17 @@ scenario	step	request	expect
 17-move-restores-exact	5	@start domain on m1	ok
 17-move-restores-exact	6	@move m1	200 {"term": 2, "holder": "m1", "restored_from": {"term": 1}}
 17-move-restores-exact	7	member m1 store GET /v1/get?key=domain/users/ghost	200 {"items": null}
+18-roles-survive-move	1	@domain	ok
+18-roles-survive-move	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
+18-roles-survive-move	3	holder POST /domain/groups {"name": "g1", "members": ["ann"]}	201
+18-roles-survive-move	4	holder POST /domain/roles {"name": "ops", "assigned": [{"group": "g1", "until": 0}]}	201
+18-roles-survive-move	5	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "role:ops", "cap": "view", "scope": "*"}]}	200
+18-roles-survive-move	6	@sleep 45	ok
+18-roles-survive-move	7	@until 60 member m1 console GET /api/held	200 {"backup": {"term": 1, "rev": "$r"}}
+18-roles-survive-move	8	@stop domain	ok
+18-roles-survive-move	9	@start domain on m1	ok
+18-roles-survive-move	10	@move m1	200 {"term": 2, "holder": "m1", "restored_from": {"term": 1, "rev": "$r"}}
+18-roles-survive-move	11	holder@m1 GET /domain/roles	200 {"roles": [{"name": "admin"}, {"name": "ops", "assigned": [{"group": "g1"}]}]}
+18-roles-survive-move	12	holder@m1 GET /domain/groups	200 {"groups": [{"name": "g1", "members": ["ann"]}]}
+18-roles-survive-move	13	@sleep 7	ok
+18-roles-survive-move	14	holder@m1 GET /domain/grants	200 {"grants": {"m2": [{"subject": "role:ops", "cap": "view", "scope": "*"}, {"subject": "root", "cap": "admin", "scope": "*"}]}}

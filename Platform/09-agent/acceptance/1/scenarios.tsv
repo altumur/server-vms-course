@@ -228,3 +228,11 @@ scenario	step	request	expect
 25-unreadable-agent-turn	10	member m2 store POST /v1/write {"op": "put", "key": "domain/agent-turn", "items": {"holder": ""}}	200
 25-unreadable-agent-turn	11	@until 30 member m2 store GET /v1/get?key=domain/agent-turn	200 {"items": {"holder": "~:"}}
 25-unreadable-agent-turn	12	@until 60 holder GET /domain	200 {"members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "ok"}, {"name": "m2", "state": "ok"}]}
+27-roles-copy	1	@domain m1	ok
+27-roles-copy	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
+27-roles-copy	3	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	201
+27-roles-copy	4	holder POST /domain/roles {"name": "ops", "assigned": [{"person": "ann", "until": 0}, {"person": "bob", "until": 0}]}	201
+27-roles-copy	5	holder POST /domain/roles {"name": "other", "assigned": [{"person": "ann", "until": 0}]}	201
+27-roles-copy	6	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "role:ops", "cap": "view", "scope": "*"}]}	200
+27-roles-copy	7	holder PUT /domain/users/bob {"disabled": true}	200
+27-roles-copy	8	@until 30 member m1 store GET /v1/get?key=domain/roles	200 {"items": {"doc_sha256": "~", "assigned": "~\"ops\":[{\"person\":\"ann\"", "admin_at": "~root"}}

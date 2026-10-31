@@ -94,7 +94,7 @@ groups	400	bad name	-	8.4 Н4
 groups	400	unknown member	/members/<i>	8.4 Н4
 groups	403	admin only	-	8.4 Н4
 groups	404	no such group	-	8.4 Н4
-groups	409	exists	-	8.4 Н4
+groups	409	exists	/name	8.4 Н4
 groups	409	last admin	-	8.4 Н4
 groups	409	password set by a non-admin	/members/<i>	8.4 Н4
 groups	409	roles table too large	-	8.4 Н4
@@ -106,7 +106,7 @@ roles	400	unknown member	/assigned/<i>	8.4 Н4
 roles	403	admin only	-	8.4 Н4
 roles	404	no such role	-	8.4 Н4
 roles	409	builtin	-	8.4 Н4
-roles	409	exists	-	8.4 Н4
+roles	409	exists	/name	8.4 Н4
 roles	409	last admin	-	8.4 Н4
 roles	409	password set by a non-admin	/assigned/<i>	8.4 Н4
 roles	409	roles table too large	-	8.4 Н4

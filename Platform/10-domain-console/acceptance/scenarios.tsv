@@ -98,7 +98,7 @@ scenario	step	request	expect
 15-dot-segments-and-x-user	5	holder @header X-User: root GET /domain/members	401 {"error": "denied"}
 15-dot-segments-and-x-user	6	holder @header X-User: root GET /session	200 {"open": false, "user": "@absent"}
 15-dot-segments-and-x-user	7	@person root w2c test root password	ok
-15-dot-segments-and-x-user	8	holder @header X-User: forged GET /session	200 {"open": false, "user": "root", "via": "token", "grants": [{"cap": "admin", "scope": "*"}]}
+15-dot-segments-and-x-user	8	holder @header X-User: forged GET /session	200 {"open": false, "user": "root", "via": "token", "admin": true, "grants": []}
 16-gate-rows-unreadable	1	@domain	ok
 16-gate-rows-unreadable	2	@on hold @sigterm domain	ok
 16-gate-rows-unreadable	3	holder GET /domain	200 {"holder": "hold"}
