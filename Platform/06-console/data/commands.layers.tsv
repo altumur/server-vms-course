@@ -22,6 +22,8 @@ place	layer	word	value
 /properties/late	3	x-codec	["string"]
 /properties/of	3	x-codec	["string"]
 /properties/outcome	3	x-codec	["string"]
+/properties/reply	3	x-codec	["any"]
+/properties/reply	3	x-encoding	"json"
 /properties/slot	3	x-codec	["string"]
 /properties/unit	3	x-codec	["string"]
 /properties/valid_until	3	x-codec	["time"]

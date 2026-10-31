@@ -8404,6 +8404,9 @@ components:
         error:
           type: string
           maxLength: 200
+        reply:
+          type: string
+          description: Текст JSON ответа perform (договор просьбы «Метка», C06-MARK-REPLY-01).
         late:
           const: 'true'
       allOf:

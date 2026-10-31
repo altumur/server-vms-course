@@ -1,0 +1,29 @@
+# Закрытый перечень слов error дверей урока V/01: глава 1.5, глава 1.4 (ADR-0094 B5; замер С.5). Перенос из Н4, нормы не меняет: при расхождении источник — норма в столбце norm.
+# door — двери: holder GET /devices, /recordings/{id}, /playback/{id}; commands — поле error метки просьбы, слова cam, код — «-»; прочие слова той же метки (отказ до вызова, срок дальше most_valid, чужая эпоха) — база воркера, P/03.6 Н3. Дверь консоли — перечень P/06.
+# Слова постоянные (ADR-0094 доп. (13)): имена и числа у двери — в detail, у метки detail нет. field — «-»: поля нет.
+door	code	error	field	norm
+holder	400	bad range	-	01.5 Н4
+holder	404	no device archive	-	01.5 Н4
+holder	404	no such path	-	01.5 Н4
+holder	405	method not allowed	-	01.5 Н4
+holder	413	toolarge	-	01.5 Н4; P/03.4 Н1.7
+holder	501	no index	-	01.5 Н4
+holder	503	device opening	-	01.5 Н4
+holder	503	device busy	-	01.5 Н4: застряло, сессии кончились, запас PLAYBACK_SPARE; V/06.2 Н1.4
+holder	503	busy	-	01.5 Н4: PLAYBACK_PER_CLIENT, бюджет двери; P/03.4 Н1.7 door_limits
+holder	401	no_role	-	01.5 Н2, Н4
+holder	403	no_role	-	01.5 Н2, Н4
+holder	403	wrong_role	-	01.5 Н2, Н4
+holder	403	bad_chain	-	01.5 Н2, Н4
+commands	-	camera is not licensed	-	01.4 Н3, Н4
+commands	-	command the camera, not its stream	-	01.4 Н3, Н4
+commands	-	camera has no device	-	01.4 Н3, Н4
+commands	-	device is not open now	-	01.4 Н3, Н4
+commands	-	an argument is a number or a word	-	01.4 Н3, Н4
+commands	-	pulse_ms is a whole number of milliseconds	-	01.4 Н3, Н4
+commands	-	ports and presets count from 1	-	01.4 Н3, Н4
+commands	-	output needs a port	-	01.4 Н3, Н4
+commands	-	this device has no outputs	-	01.4 Н3, Н4
+commands	-	preset needs n	-	01.4 Н3, Н4
+commands	-	this device has no telemetry	-	01.4 Н3, Н4
+commands	-	device refused	-	01.4 Н3, Н4
