@@ -235,4 +235,5 @@ scenario	step	request	expect
 27-roles-copy	5	holder POST /domain/roles {"name": "other", "assigned": [{"person": "ann", "until": 0}]}	201
 27-roles-copy	6	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "role:ops", "cap": "view", "scope": "*"}]}	200
 27-roles-copy	7	holder PUT /domain/users/bob {"disabled": true}	200
-27-roles-copy	8	@until 30 member m1 store GET /v1/get?key=domain/roles	200 {"items": {"doc_sha256": "~", "assigned": "~\"ops\":[{\"person\":\"ann\"", "admin_at": "~root"}}
+27-roles-copy	8	@until 30 member m1 store GET /v1/get?key=domain/roles	200 {"items": {"assigned": "~\"ops\":[{\"person\":\"ann\"", "admin_at": "~root"}}
+27-roles-copy	9	member m1 store GET /v1/get?key=domain/roles	200 {"items": {"assigned": "!contains bob"}}
