@@ -8,6 +8,7 @@
 |---|---|---|
 | `backup` — `GET /api/backup` (P/06.7 Н1.13) | процесс `domain` кластера-цели при аварийном переносе ключом члена `domain/member-key` (P/08.8 Н1.8 `order` шаг 5) | консоль кластера, которая держит резервную копию ([P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.13) |
 | `prepare` — `POST /api/prepare` (P/08.8 Н1.7 шаг 4) | процесс `domain` держателя ключом токенов `current` набора (8.8) | процесс `domain` цели (8.8); консоль цели передаёт просьбу без проверки (P/06.7 Н1.8) |
+| `move` — `POST /domain/move` (P/08.8 Н1.8 by_file) | команда `w2cctl domain move` корнем файла восстановления, когда токена нет | консоль кластера цели (P/06.7 Н1.8) и процесс `domain` (8.8) |
 
 Перенесено из М11/10 Н3 «ask-sig — подпись просьбы» (блок `message`, `time`, `signature`, `check`) и Н4 (слова `ask-sig`)
 без изменения поведения. Что дверь отвечает на отказ (401 у `/api/backup` с `detail` — слово; 400 и 403 у `/api/prepare`),
@@ -18,7 +19,7 @@
 
 ## Форма
 
-`pub` — ключ члена `domain/member-key` (backup) или ключ `current` набора `domain/keys` (prepare): `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`. Двери, где проверяют `X-W2C-*`, — `Platform/06-console/spec/06-console.api.openapi.yaml` (`/api/backup`) и `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`/api/prepare`) (аудит раскладки, В-07, В-08; решение «Архитектора» 2026-10-25).
+`pub` — ключ члена `domain/member-key` (backup), ключ `current` набора `domain/keys` (prepare) или `root_pub` строки `domain/root` (move): `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`. Двери, где проверяют `X-W2C-*`, — `Platform/06-console/spec/06-console.api.openapi.yaml` (`/api/backup`) и `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`/api/prepare`) (аудит раскладки, В-07, В-08; решение «Архитектора» 2026-10-25).
 
 ## Подпись и проверка
 
@@ -65,8 +66,8 @@ exit:      0 — вычислено; 2 — вход не по форме; код
 
 ## Векторы
 
-Пакет [`ask-sig`](../vectors/ask-sig/README.md) (разбор ревью стадии A 8–10, № 13): 13 строк — 12 входов команды `ask-sig`
-приёмки М11/10 (сц. 07) без изменения байтов; одна из них — вход не по форме (`@exit 2`; разбор ревью стадии B 8–10, № 22); строка 13 — поле `member` на верхнем уровне, `@exit 2` (вопрос 2 того же разбора). Сценарий и входы сняты
+Пакет [`ask-sig`](../vectors/ask-sig/README.md) (разбор ревью стадии A 8–10, № 13): 27 строк — 12 входов команды `ask-sig`
+приёмки М11/10 (сц. 07) без изменения байтов; одна из них — вход не по форме (`@exit 2`; разбор ревью стадии B 8–10, № 22); строка 13 — поле `member` на верхнем уровне, `@exit 2` (вопрос 2 того же разбора). Сценарий и входы сняты Строки 14–27 — `move`.
 переносом урока 8 — таблица единственный источник этих случаев.
 
 ## Соответствие прежним урокам
