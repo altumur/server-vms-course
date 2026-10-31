@@ -1806,6 +1806,17 @@ class VmsLessonTests(unittest.TestCase):
         for line in (3, 4, 5):
             self.assertTrue(any(f"line {line}: directive @stream-wait expects ok <JSON>" in e for e in errors), errors)
 
+    def test_error_word_is_in_a_refusal_table(self):
+        (self.dir / "data").mkdir(exist_ok=True)
+        (self.dir / "data/refusal-words.tsv").write_text("# w\ndoor\tcode\terror\tfield\tnorm\nu\t404\tno such unit\t-\tН4\n",
+                                                         encoding="utf-8")
+        self.scenarios([("holder w GET /a", '404 {"error": "no such unit"}'),
+                        ("holder w GET /b", '404 {"error": "no such thing"}'),
+                        ("holder w GET /c", '404 {"error": "@any"}')])
+        errors = self.errors()
+        self.assertTrue(any("line 3: error word 'no such thing'" in e for e in errors), errors)
+        self.assertFalse(any("line 2: error word" in e or "line 4: error word" in e for e in errors), errors)
+
     def test_vms_forms_refuse_unknown_and_bad_expectation(self):
         self.scenarios([("@start worker cam w-srv-a-1", "ok"),
                         ("@start worker cam w-srv-a-1 on srv-a", "200 {}"),

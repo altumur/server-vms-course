@@ -643,6 +643,7 @@ class Check:
         self.catalog = None
         self.lessons = None
         self.vms_request_forms = None
+        self._refusal_words = None
         self.processes_checked = False
         self.catalog_checked = False
         self.idmap = None
@@ -1485,6 +1486,7 @@ class Check:
             if own:
                 silenced += len(self.errors) - before
                 del self.errors[before:]
+            self.refusal_word(path, line, expect)
         # `@key(N)` repeats the key bytes of step N of the same scenario: that step exists and carries a writing
         # request (ACC-06-KEY-SHIFT-01, решение «Архитектора» 2026-10-29: a step inserted before it shifts the number).
         for line, scenario, n in keys:
@@ -1496,6 +1498,24 @@ class Check:
         if not steps:
             self.error(path, "empty scenarios table")
         return silenced
+
+    # The word of `error` in an expectation is a word of a closed table `data/refusal-words.tsv` (стандарт пробы, ADR-0083,
+    # правка В-7). Judged against the union of the tables, not door by door: `@any`, `!contains`, `~`, `$имя` are not words.
+    def refusal_words(self):
+        if self._refusal_words is None:
+            self._refusal_words = set()
+            for table in sorted(self.root.glob("*/*/data/refusal-words.tsv")):
+                rows = [row.split("\t") for row in table.read_text(encoding="utf-8").splitlines()
+                        if row and not row.startswith("#")]
+                column = rows[0].index("error")
+                self._refusal_words |= {row[column] for row in rows[1:] if len(row) > column}
+        return self._refusal_words
+
+    def refusal_word(self, path, line, expect):
+        words = self.refusal_words()
+        for word in re.findall(r'"error"\s*:\s*"([^"]+)"', expect) if words else ():
+            if word[0] not in "@!~$" and word not in words:
+                self.error(path, f"line {line}: error word {word!r} is in no refusal-words table")
 
     # Request forms a VMS scenario may use besides `<МЕТОД> /<путь>` of the console: the table «Директивы и двери VMS»
     # of VMS/common/acceptance/README.md (ADR-0090; one rule for every VMS lesson instead of `K/own` rows per chapter).
