@@ -190,3 +190,6 @@ scenario	step	request	expect
 20-batch-rights	13	member m1 store GET /v1/get?key=testsub/counters/c1-m1	200 {"index": "$a"}
 20-batch-rights	14	member m1 console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1-m1", "fields": {"start": 5}, "cas": "$a"}]}	200 {"written": 1}
 20-batch-rights	15	member m1 store GET /v1/get?key=testsub/counters/c1-m1	200 {"items": {"start": "5"}}
+20-batch-rights	16	member m1 console2 GET /tallies?deleted=1&about=c1-m1	200 {"deleted": []}
+20-batch-rights	17	member m1 console2 GET /tallies?deleted=1&about=c2-m1	403 {"error": "denied"}
+20-batch-rights	18	member m1 console GET /testsub/next_id	403 {"error": "denied"}

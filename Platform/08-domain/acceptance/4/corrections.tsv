@@ -22,3 +22,4 @@ date	sample	fix	languages
 2026-10-28	12-pass-need 6, 7	503 door.pass без воркера с дверью — ожидание {"error": "denied"}: неназванное error отказов body и door.pass — denied, текст codes — detail (договор сторожевой и передачи words; GP-L03, решение «Архитектора» 2026-10-28)	all
 2026-10-30	01-login-people-grants, 10-deleting-any-mark, 16-until-by-value	ADR-0094 B5: у 400, 409 в ожидании слово `error` и `field` (P/08.0 Н4; формат — P/06.1 Н2 «Отказ: `error` и `field`»); шаги те же	all
 2026-10-31	20-batch-rights	ADR-0094 B9: пакетная дверь консоли кластера под грантом: права по каждой строке, страж без view — отказ отсутствующей строки	all
+2026-10-31	20-batch-rights/16–18	ADR-0094 B4: право новых чтений консоли кластера: надгробия по about — view на единицу about, GET /{sub}/next_id — как создание строк	all

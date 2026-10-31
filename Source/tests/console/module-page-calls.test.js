@@ -19,10 +19,11 @@ function boot(state){
     w.matchMedia=()=>({matches:false,addListener(){},removeListener(){},addEventListener(){},removeEventListener(){}});
     w.requestAnimationFrame=cb=>setTimeout(cb,0);
     Object.defineProperty(w,"innerWidth",{value:1600,configurable:true});
-    w.__log=[];w.__ifm=[];
+    w.__log=[];w.__ifm=[];w.__sentIf=[];
     const answer=(status,body)=>Promise.resolve({ok:status<300,status,headers:{get:()=>"application/json"},
       json:()=>Promise.resolve(body),text:()=>Promise.resolve(JSON.stringify(body)),clone(){return this}});
     w.fetch=(url,init)=>{
+      if(init&&init.headers&&init.headers["If-Match"])w.__sentIf.push((init.method||"GET")+" "+init.headers["If-Match"]);
       const method=(init&&init.method)||"GET",p=String(url).split("?")[0].replace(/^https?:\/\/[^/]+/,"");
       w.__log.push(method+" "+p);
       if(p==="/session"&&method==="GET")return answer(200,state.login?{open:false,login_url:"/api/login"}:{open:false,login_url:"/api/login",user:"a",until:0,via:"token",grants:[{cap:"admin",scope:"*"}]});
@@ -120,8 +121,12 @@ const settled=(p,ms)=>Promise.race([p.then(()=>true),sleep(ms).then(()=>false)])
       &&w.__log.filter(x=>x==="PUT /things/1").length===nPut+1;
     await fails("PUT","/things/1",{name:"z"});
     out.noIfMatchWithoutOpts=w.__ifm[w.__ifm.length-1]==="PUT undefined";
+    // двери, которые читают If-Match, кроме строки единицы (ADR-0094 B4)
+    const doors=[["POST","/shelves",{name:"a"}],["DELETE","/shelves/a",undefined],["PUT","/policy",{servers:"shared"}],["POST","/drain?server=a",undefined],["DELETE","/drain",undefined],["PUT","/servers/a/labels",{labels:[]}],["DELETE","/servers/a/labels",undefined],["PUT","/schema?version=1",undefined]];
+    out.ifMatchOnReadingDoors=await (async()=>{let ok=true;for(const[m,p,b]of doors){const n=w.__sentIf.length;await fails(m,p,b,{ifMatch:3});if(w.__sentIf[n]!==m+" 3")ok=false;}return ok;})();
     const before=w.__log.length;
     const refused=[await fails("POST","/things",{name:"n"},{ifMatch:1}),await fails("PUT","/shelves/a",{},{ifMatch:1}),
+      await fails("POST","/marks",{},{ifMatch:1}),await fails("POST","/servers/a/decommission",{},{ifMatch:1}),await fails("PUT","/things/1/mask",{},{ifMatch:1}),await fails("POST","/console/batch",{},{ifMatch:1}),
       await fails("PUT","/things/1",{},{ifMatch:1,headers:{x:1}}),await fails("PUT","/things/1",{},{ifMatch:1.5}),
       await fails("DELETE","/things/1",undefined,{ifMatch:0})];
     out.refusedBeforeRequest=refused.every(e=>!!e)&&w.__log.length===before;

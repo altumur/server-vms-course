@@ -61,6 +61,7 @@ paths:
     post:
       summary: создать единицу; повтор по ключу возвращает прежний ответ
       parameters:
+      - $ref: '#/components/parameters/IfMatch'
       - name: Idempotency-Key
         in: header
         required: true
@@ -74,6 +75,9 @@ paths:
               $ref: '#/components/schemas/ClientFields'
       responses:
         '201':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Создано или прежний ответ завершённой заявки. Поля по типам манифеста, секреты маской; worker всегда
             null, включая повтор.
           content:
@@ -100,6 +104,8 @@ paths:
                 oneOf:
                 - $ref: '#/components/schemas/CreateBusy'
                 - $ref: '#/components/schemas/ReferenceConflict'
+        '412':
+          $ref: '#/components/responses/RevisionMoved'
         '413':
           $ref: '#/components/responses/LargeBody'
         '422':
@@ -114,13 +120,29 @@ paths:
           $ref: '#/components/responses/WriteUnavailable'
     get:
       summary: все единицы и конфигурация, доступные по view (сторожевая главы 6.3, need)
+      parameters:
+      - name: deleted
+        in: query
+        required: false
+        description: Ровно 1, только вместе с about — выдача надгробий (Н2 «Надгробия по about»; ADR-0094 доп. (5) п. 1).
+        schema:
+          const: '1'
+      - name: about
+        in: query
+        required: false
+        description: Значение поля about.field надгробий; непустое, только вместе с deleted.
+        schema:
+          type: string
+          minLength: 1
       responses:
         '200':
           description: rows — единицы из пульсов с данными воркера; configured — строки конфигурации с масками секретов.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UnitList'
+                oneOf:
+                - $ref: '#/components/schemas/UnitList'
+                - $ref: '#/components/schemas/DeletedList'
         '400':
           $ref: '#/components/responses/BadRead'
         '401':
@@ -232,6 +254,9 @@ paths:
               $ref: '#/components/schemas/ClientFields'
       responses:
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Строка после правки; значения по типам манифеста, секреты маской, revision увеличен.
           content:
             application/json:
@@ -278,6 +303,9 @@ paths:
       - $ref: '#/components/parameters/IfMatch'
       responses:
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Идентификатор помеченной единицы; повторное удаление — 404.
           content:
             application/json:
@@ -379,6 +407,9 @@ paths:
         '503':
           $ref: '#/components/responses/ConsoleUnavailable'
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Полное JSON-тело
           content:
             application/json:
@@ -464,6 +495,7 @@ paths:
       summary: Записать полную строку таблицы
       parameters:
       - $ref: '#/components/parameters/RepeatKey'
+      - $ref: '#/components/parameters/IfMatch'
       responses:
         '400':
           description: Полное JSON-тело
@@ -487,6 +519,8 @@ paths:
           $ref: '#/components/responses/TableMethod'
         '408':
           $ref: '#/components/responses/SlowBody'
+        '412':
+          $ref: '#/components/responses/RevisionMoved'
         '413':
           $ref: '#/components/responses/LargeBody'
         '429':
@@ -494,6 +528,9 @@ paths:
         '503':
           $ref: '#/components/responses/ConsoleUnavailable'
         '201':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Полное JSON-тело
           content:
             application/json:
@@ -617,6 +654,9 @@ paths:
         '503':
           $ref: '#/components/responses/ConsoleUnavailable'
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Полное JSON-тело
           content:
             application/json:
@@ -626,6 +666,7 @@ paths:
       summary: Удалить строку таблицы
       parameters:
       - $ref: '#/components/parameters/RepeatKey'
+      - $ref: '#/components/parameters/IfMatch'
       responses:
         '400':
           $ref: '#/components/responses/BadBody'
@@ -643,6 +684,8 @@ paths:
           $ref: '#/components/responses/TableMethod'
         '408':
           $ref: '#/components/responses/SlowBody'
+        '412':
+          $ref: '#/components/responses/RevisionMoved'
         '413':
           $ref: '#/components/responses/LargeBody'
         '429':
@@ -710,6 +753,9 @@ paths:
                 type: string
                 const: '1'
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Полное JSON-тело; HEAD не содержит тела
   /console/batch:
     description: Глава 6.1 Н2 «Пакетная дверь», Н3 «пакет» — запись строк единицы и её частей одной операцией хранилища, всё или ничего (ADR-0094 B9).
@@ -1263,6 +1309,41 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/MarkInput'
+  /{sub}/next_id:
+    description: Глава 6.1 Н2 «Дверь счётчика» — чтение счётчика <sub>/next_id; подсистема названа в пути всегда (ADR-0094 B4).
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      schema:
+        $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/Subsystem
+    get:
+      summary: 'Последний выданный номер и индекс строки счётчика'
+      responses:
+        '200':
+          description: n — последний выданный номер; строки нет — n по recover Н1.3, index пустой.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NextId'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/NoRoute'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
   /{sub}/requests:
     description: Глава 6.4 — дверь просьб.
     parameters:
@@ -3358,6 +3439,9 @@ paths:
       summary: Effective policy
       responses:
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Effective policy
           content:
             application/json:
@@ -3385,8 +3469,12 @@ paths:
       summary: Write policy
       parameters:
       - $ref: '#/components/parameters/RepeatKey'
+      - $ref: '#/components/parameters/IfMatch'
       responses:
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Write policy
           content:
             application/json:
@@ -3410,6 +3498,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RepeatRefused'
+        '412':
+          $ref: '#/components/responses/RevisionMoved'
         '413':
           $ref: '#/components/responses/LargeBody'
         '422':
@@ -3432,6 +3522,9 @@ paths:
       summary: 'HEAD: Effective policy'
       responses:
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Effective policy; HEAD не содержит тела
         '400':
           description: 'Общий отказ разбора запроса консоли (глава 6.5 Н2 «Разбор запроса консоли»: query, JSON тела, читаемый
@@ -3479,6 +3572,9 @@ paths:
       summary: Drain snapshot; глава 6.6
       responses:
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Drain snapshot; глава 6.6
           content:
             application/json:
@@ -3506,6 +3602,9 @@ paths:
       summary: Start one-server drain
       responses:
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Start one-server drain
           content:
             application/json:
@@ -3523,6 +3622,8 @@ paths:
           $ref: '#/components/responses/Method'
         '408':
           $ref: '#/components/responses/SlowBody'
+        '412':
+          $ref: '#/components/responses/RevisionMoved'
         '413':
           $ref: '#/components/responses/LargeBody'
         '429':
@@ -3545,6 +3646,7 @@ paths:
                 $ref: '#/components/schemas/KeyReused'
       parameters:
       - $ref: '#/components/parameters/RepeatKey'
+      - $ref: '#/components/parameters/IfMatch'
       - name: server
         in: query
         required: true
@@ -3554,8 +3656,12 @@ paths:
       summary: Cancel drain
       parameters:
       - $ref: '#/components/parameters/RepeatKey'
+      - $ref: '#/components/parameters/IfMatch'
       responses:
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Cancel drain
           content:
             application/json:
@@ -3579,6 +3685,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RepeatRefused'
+        '412':
+          $ref: '#/components/responses/RevisionMoved'
         '413':
           $ref: '#/components/responses/LargeBody'
         '422':
@@ -3595,6 +3703,9 @@ paths:
       summary: 'HEAD: Drain snapshot; глава 6.6'
       responses:
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Drain snapshot; глава 6.6; HEAD не содержит тела
         '400':
           description: 'Общий отказ разбора запроса консоли (глава 6.5 Н2 «Разбор запроса консоли»: query, JSON тела, читаемый
@@ -3648,6 +3759,9 @@ paths:
       summary: Probe effective or proposed labels, without writing
       responses:
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Probe effective or proposed labels, without writing
           content:
             application/json:
@@ -3692,8 +3806,12 @@ paths:
       summary: Write cluster-wide server labels
       parameters:
       - $ref: '#/components/parameters/RepeatKey'
+      - $ref: '#/components/parameters/IfMatch'
       responses:
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Write cluster-wide server labels
           content:
             application/json:
@@ -3723,6 +3841,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RepeatRefused'
+        '412':
+          $ref: '#/components/responses/RevisionMoved'
         '413':
           $ref: '#/components/responses/LargeBody'
         '422':
@@ -3745,6 +3865,7 @@ paths:
       summary: Remove override and use node labels
       parameters:
       - $ref: '#/components/parameters/RepeatKey'
+      - $ref: '#/components/parameters/IfMatch'
       responses:
         '200':
           description: Remove override and use node labels
@@ -3776,6 +3897,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RepeatRefused'
+        '412':
+          $ref: '#/components/responses/RevisionMoved'
         '413':
           $ref: '#/components/responses/LargeBody'
         '422':
@@ -3803,6 +3926,9 @@ paths:
             pattern: "^(?:[\\s\\S]*[^A-Za-z0-9_.:,\\-][\\s\\S]*)$"
       responses:
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Probe effective or proposed labels, without writing; HEAD не содержит тела
         '400':
           description: 'Общий отказ разбора запроса консоли (глава 6.5 Н2 «Разбор запроса консоли»: query, JSON тела, читаемый
@@ -4069,6 +4195,9 @@ paths:
         '503':
           $ref: '#/components/responses/ConsoleUnavailable'
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Полное JSON-тело
           content:
             application/json:
@@ -4089,6 +4218,8 @@ paths:
           $ref: '#/components/responses/Method'
         '408':
           $ref: '#/components/responses/SlowBody'
+        '412':
+          $ref: '#/components/responses/RevisionMoved'
         '413':
           $ref: '#/components/responses/LargeBody'
         '429':
@@ -4096,6 +4227,9 @@ paths:
         '503':
           $ref: '#/components/responses/ConsoleUnavailable'
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Полное JSON-тело
           content:
             application/json:
@@ -4117,6 +4251,7 @@ paths:
                 $ref: '#/components/schemas/KeyReused'
       parameters:
       - $ref: '#/components/parameters/RepeatKey'
+      - $ref: '#/components/parameters/IfMatch'
       - name: version
         in: query
         required: true
@@ -4166,6 +4301,9 @@ paths:
                 type: string
                 const: '1'
         '200':
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           description: Полное JSON-тело; HEAD не содержит тела
   /domain/{sub}/books/{book}:
     description: 'Глава 6.7 Н1.1 (06.7-console.norms.md; из М11/5 Н2) — дверь книги этого члена у консоли кластера (члена и
@@ -5071,6 +5209,12 @@ paths:
                 - $ref: '#/components/schemas/GuardUnavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
 components:
+  headers:
+    ETag:
+      description: Индекс хранилища строки в двойных кавычках, сильный тег RFC 9110; у DELETE единицы — индекс надгробия (глава 6.1 Н2 «Версии»). Значение годится для If-Match.
+      schema:
+        type: string
+        pattern: "^(?:\"(?:0|[1-9][0-9]{0,19})\")$"
   parameters:
     RepeatKey:
       name: Idempotency-Key
@@ -5084,10 +5228,10 @@ components:
       name: If-Match
       in: header
       required: false
-      description: Условие правки по revision строки (Н3 «править», «удалить»); не равен — 412, не целое — 400.
+      description: 'Условие записи (глава 6.1 Н2 «Версии»): revision строки — десятичное целое ≥ 1 — или индекс хранилища в двойных кавычках, как отдал ETag. Не равен — 412, иная форма — 400.'
       schema:
         type: string
-        pattern: "^(?:[1-9][0-9]*)$"
+        pattern: "^(?:[1-9][0-9]*|\"(?:0|[1-9][0-9]{0,19})\")$"
     Rows:
       name: rows
       in: path
@@ -5294,6 +5438,7 @@ components:
           - no such unit
           - no such blob field
           - no such row
+          - If-Match is a unit revision
           - a version is a whole number from 1
           - this console is open
           - open
@@ -5544,6 +5689,7 @@ components:
       type: object
       required:
       - servers
+      - revision
       additionalProperties: false
       properties:
         servers:
@@ -5551,6 +5697,47 @@ components:
           enum:
           - shared
           - distinct
+        revision:
+          $ref: '#/components/schemas/SettingsRevision'
+    SettingsRevision:
+      type: integer
+      minimum: 0
+      description: revision строки настройки; 0 — строки нет или поле не читается (глава 6.6 Н2.1 «Версия строки»).
+    StoreIndex:
+      type: string
+      pattern: ^(?:0|[1-9][0-9]{0,19})$
+      description: Индекс хранилища строки (P/01.1 index) — условие cas и стража пакетной двери; сравнивается только на равенство.
+    NextId:
+      type: object
+      required: [n, index]
+      additionalProperties: false
+      properties:
+        n:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          description: Последний выданный номер; следующий — n + 1. 0 — ничего не выдано (глава 6.1 Н2 «Дверь счётчика»).
+        index:
+          type: string
+          pattern: ^(?:(?:0|[1-9][0-9]{0,19})?)$
+          description: Индекс строки счётчика; пустая строка — строки нет.
+    DeletedList:
+      type: object
+      required: [deleted]
+      additionalProperties: false
+      description: Надгробия единиц по значению поля about (глава 6.1 Н2 «Надгробия по about»).
+      properties:
+        deleted:
+          type: array
+          items:
+            type: object
+            required: [id, index]
+            additionalProperties: false
+            properties:
+              id:
+                $ref: '#/components/schemas/UnitId'
+              index:
+                $ref: '#/components/schemas/StoreIndex'
     Where:
       type: object
       required:
@@ -6466,8 +6653,11 @@ components:
       type: object
       required:
       - would_move
+      - revision
       additionalProperties: false
       properties:
+        revision:
+          $ref: '#/components/schemas/SettingsRevision'
         would_move:
           type: array
           uniqueItems: true
@@ -6564,8 +6754,11 @@ components:
       - safe
       - would_strand
       - subsystems
+      - revision
       additionalProperties: false
       properties:
+        revision:
+          $ref: '#/components/schemas/SettingsRevision'
         draining:
           $ref: '#/components/schemas/ServerOrEmpty'
         safe:
@@ -6608,6 +6801,7 @@ components:
           - epoch
           - phase
           - observed_revision
+          - index
       additionalProperties: true
       description: Только поля unit.fields; дополнительные имена здесь нужны для произвольного манифеста, но неизвестное ему поле
         отказывается. Типы, required, enum, url, blob, json и fixed/inherit проверяются по Н1 и в порядке Н3, а не одним
@@ -6620,12 +6814,15 @@ components:
       required:
       - id
       - revision
+      - index
       properties:
         id:
           $ref: '#/components/schemas/UnitId'
         revision:
           type: integer
           minimum: 1
+        index:
+          $ref: '#/components/schemas/StoreIndex'
         made:
           type: object
           required: [by, at, keep]
@@ -7363,8 +7560,11 @@ components:
       - builds
       - can_raise_to
       - processes
+      - revision
       additionalProperties: false
       properties:
+        revision:
+          $ref: '#/components/schemas/SettingsRevision'
         version:
           anyOf:
           - type: integer
@@ -7447,9 +7647,16 @@ components:
       type: object
       required:
       - name
+      - index
       properties:
         name:
           $ref: '#/components/schemas/TableRowName'
+        revision:
+          type: integer
+          minimum: 0
+          description: Счётчик записей строки (Н1.6; ADR-0094 B4); 0 — поле не читается.
+        index:
+          $ref: '#/components/schemas/StoreIndex'
         held_by:
           description: by действующего удержания места (договор наблюдения «Удержание места»), иначе null;
             неподтверждённое чтение удержания или пульса — null, не 503 (Н1.6; C06-TABLE-HELD-BY-33-01).
@@ -7473,7 +7680,7 @@ components:
       additionalProperties:
         $ref: '#/components/schemas/SecretFreeValue'
       description: Поля объявленной таблицы и stamp проверяются по её манифесту; секретные поля исключены на любой глубине.
-        garbled=true означает только диагностическую строку name/garbled.
+        garbled=true означает только диагностическую строку name/garbled/index.
       allOf:
       - if:
           required:
@@ -7482,7 +7689,10 @@ components:
             garbled:
               const: true
         then:
-          maxProperties: 2
+          maxProperties: 3
+        else:
+          required:
+          - revision
     TableList:
       type: object
       minProperties: 1
@@ -7504,9 +7714,11 @@ components:
           - by
           - at
           - made_at
+          - revision
+          - index
       additionalProperties: true
-      description: Штампы by/at/made_at клиентом не передаются (400 unknown field), независимо от stamp. Только объявленные
-        поля этой таблицы; типы, required, enum, schema и ключ проверяются динамически по манифесту. id/revision/worker/placement/epoch/phase/observed_revision
+      description: Штампы by/at/made_at и версии revision/index клиентом не передаются (400 unknown field), независимо от stamp. Только объявленные
+        поля этой таблицы; типы, required, enum, schema и ключ проверяются динамически по манифесту. id/worker/placement/epoch/phase/observed_revision
         допустимы при объявлении. Поле name допускается только у key=name с типом string.
     TableWritten:
       type: object
@@ -7762,24 +7974,32 @@ components:
           schema:
             $ref: '#/components/schemas/Unavailable'
     RevisionMoved:
-      description: If-Match не равен revision строки (Н3 «править», «удалить»); ничего не записано.
+      description: If-Match не равен версии строки (глава 6.1 Н2 «Версии»); ничего не записано.
       content:
         application/json:
           schema:
             type: object
             required:
+            - detail
             - error
             - field
             - revision
             additionalProperties: false
             properties:
+              detail:
+                type: string
               error:
                 const: revision moved
               field:
                 const: /revision
               revision:
                 type: integer
-                minimum: 1
+                minimum: 0
+                description: Нынешняя revision; 0 — строки нет или поле не читается.
+              row:
+                type: object
+                additionalProperties: true
+                description: Текущая строка в форме чтения двери, секреты маской; только при праве чтения этой строки, нет строки или надгробие — поля нет.
     BadRead:
       description: Общий отказ транспорта или пути, включая badkey полного ключа хранилища; detail и error, без fault.
       content:

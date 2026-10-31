@@ -99,6 +99,9 @@ gate:
     строки единиц: POST → admin на * | по rights.routes view/edit на единицу about | cluster_rows → *
                    PUT/DELETE        → admin на единицу | cluster_rows → *; rights.routes их не понижает — у строк
                                        единиц понижается только создание (таблица «Права по телу» ниже; находка М-2)
+    GET /<rows>?deleted=1&about=<z>  → view на единицу <about.sub>/<z> (P/06.1 Н2 «Надгробия по about»; ADR-0094 доп. (5) п. 1)
+    GET /{sub}/next_id               → как создание строк <sub>: admin на * | по rights.routes — тела нет, предпроверка create_about | cluster_rows → *
+                                       (P/06.1 Н2 «Дверь счётчика»; ADR-0094 B4)
     таблицы                          → по rights.routes (view | edit | admin)
     POST /console/batch              → до тела — любой грант; после тела — каждая строка writes по её двери выше: создание — как POST,
                                        правка и снятие — как PUT и DELETE, строка таблицы — как таблица, <s>/next_id — как создание

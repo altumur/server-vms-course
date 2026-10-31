@@ -2172,7 +2172,7 @@
      "type": "string"
     },
     "fields": {
-     "description": "поле по таблице «Поле»; поля `held_by`, `garbled`, `by`, `at`, `made_at` запрещены",
+     "description": "поле по таблице «Поле»; поля `held_by`, `garbled`, `by`, `at`, `made_at`, `revision`, `index` запрещены",
      "x-default": true,
      "type": "array",
      "items": {
@@ -2187,7 +2187,9 @@
           "garbled",
           "by",
           "at",
-          "made_at"
+          "made_at",
+          "revision",
+          "index"
          ]
         }
        },
@@ -2552,7 +2554,8 @@
         "phase",
         "observed_revision",
         "born",
-        "made"
+        "made",
+        "index"
        ]
       }
      },

@@ -45,3 +45,4 @@ date	sample	fix	languages
 2026-10-30	03-policy, 04-drain, 05-server-labels, 08-schema, 15-unreadable-schema	ADR-0094 B5: `error` — слово закрытого перечня, фраза с именами — в `detail`, у 400, 409, 412 — `field` (P/06.1 Н2 «Отказ: `error` и `field`»); ожидания шагов сдвинуты на слово и поле, шаги те же	all
 2026-10-31	03-policy/8–12, 04-drain/15–22, 05-server-labels/7–13, 08-schema/7–9, 13-decommission-flow/17–20	ADR-0094 B3: память повторов дверей записи: повтор — сохранённый ответ, запись не повторена, иное тело или вход query — 409 key reused	all
 2026-10-31	03-policy, 04-drain, 05-server-labels, 08-schema, 13-decommission-flow	ADR-0094 доп. (14): `key reused` на дверях памяти — 422, не 409.	all
+2026-10-31	17-settings-versions	ADR-0094 B4: новый сценарий: revision, ETag, If-Match и 412 снимков настроек	all

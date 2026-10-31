@@ -163,3 +163,39 @@ scenario	step	request	expect
 16-unreadable-server-labels	2	@as console store POST /v1/write {"id":"c2","op":"put","key":"platform/servers/srv-a","items":{"labels":"bad label"},"cas":""}	200
 16-unreadable-server-labels	3	@until 20 console GET /servers	200 {"servers": {"srv-a": {"labels": null, "labels_source": null}}}
 16-unreadable-server-labels	4	console GET /metrics	200 ~testsub_servers_labels_unread 1
+17-settings-versions	1	@start resource	ok
+17-settings-versions	2	console GET /policy	200 {"servers": "shared", "revision": 0}
+17-settings-versions	3	console @header If-Match: 1 PUT /policy {"servers": "distinct"}	412 {"error": "revision moved", "field": "/revision", "revision": 0, "row": "@absent"}
+17-settings-versions	4	console PUT /policy {"servers": "distinct"}	200 {"servers": "distinct", "revision": 1}
+17-settings-versions	5	console @header If-Match: 1 PUT /policy {"servers": "shared"}	200 {"servers": "shared", "revision": 2}
+17-settings-versions	6	console @header If-Match: 1 PUT /policy {"servers": "distinct"}	412 {"error": "revision moved", "field": "/revision", "revision": 2, "row": {"servers": "shared", "revision": 2}}
+17-settings-versions	7	console GET /policy	200 {"servers": "shared", "revision": 2}
+17-settings-versions	8	console GET /policy	200 @header ETag: ~"
+17-settings-versions	9	console @header If-Match: two PUT /policy {"servers": "distinct"}	400 {"error": "If-Match is a unit revision"}
+17-settings-versions	10	@as console store GET /v1/get?key=testsub/policy	200 {"items": {"servers": "shared", "revision": "2"}, "index": "$p"}
+17-settings-versions	11	console @header If-Match: "$p" PUT /policy {"servers": "distinct"}	200 {"revision": 3}
+17-settings-versions	12	console @header If-Match: "$p" PUT /policy {"servers": "shared"}	412 {"error": "revision moved", "revision": 3}
+17-settings-versions	13	console @header Idempotency-Key: r1 @header If-Match: 3 PUT /policy {"servers": "shared"}	200 {"servers": "shared", "revision": 4}
+17-settings-versions	14	console @header Idempotency-Key: r1 @header If-Match: 3 PUT /policy {"servers": "shared"}	200 {"servers": "shared", "revision": 4}
+17-settings-versions	15	console GET /policy	200 {"revision": 4}
+17-settings-versions	16	console POST /drain?server=srv-a	200 {"draining": "srv-a"}
+17-settings-versions	17	console GET /drain	200 {"draining": "srv-a", "revision": 1}
+17-settings-versions	18	console @header If-Match: 9 DELETE /drain	412 {"error": "revision moved", "revision": 1, "row": {"server": "srv-a", "revision": 1}}
+17-settings-versions	19	console @header If-Match: 1 POST /drain?server=srv-a	200 {"draining": "srv-a"}
+17-settings-versions	20	console GET /drain	200 {"revision": 1}
+17-settings-versions	21	console @header If-Match: 1 DELETE /drain	200 {"draining": ""}
+17-settings-versions	22	console GET /drain	200 {"draining": "", "revision": 2}
+17-settings-versions	23	console DELETE /drain	200 {"draining": ""}
+17-settings-versions	24	console GET /drain	200 {"revision": 2}
+17-settings-versions	25	@until 20 console GET /servers/srv-a/labels	200 {"revision": 0}
+17-settings-versions	26	console PUT /servers/srv-a/labels {"labels": ["vlan:a"]}	200 {"will_move": []}
+17-settings-versions	27	console GET /servers/srv-a/labels	200 {"revision": 1}
+17-settings-versions	28	console @header If-Match: 5 PUT /servers/srv-a/labels {"labels": ["vlan:b"]}	412 {"error": "revision moved", "revision": 1, "row": {"labels": ["vlan:a"], "revision": 1}}
+17-settings-versions	29	console @header If-Match: 1 DELETE /servers/srv-a/labels	200 {}
+17-settings-versions	30	console GET /servers/srv-a/labels	200 {"revision": 0}
+17-settings-versions	31	console GET /schema	200 {"revision": 0}
+17-settings-versions	32	console @header If-Match: 3 PUT /schema?version=1	412 {"error": "revision moved", "revision": 0, "row": "@absent"}
+17-settings-versions	33	console PUT /schema?version=1	200 {"version": 1}
+17-settings-versions	34	console GET /schema	200 {"revision": 1}
+17-settings-versions	35	console @header If-Match: 1 PUT /schema?version=1	200 {"version": 1}
+17-settings-versions	36	console GET /schema	200 {"revision": 2}

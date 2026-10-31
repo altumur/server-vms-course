@@ -32,7 +32,7 @@ out.firstFieldFocused=d.activeElement===f.elements.start;
 f=await submit({detail:"a/b is fixed",error:"fixed",field:"/a~1b"});
 out.pointerDecoded=atField(f,"a/b")==="a/b is fixed";
 f=await submit({detail:"row moved",error:"revision moved",field:"/revision",revision:2},412);
-out.noControlGoesToCommon=/row moved/.test(f.querySelector(".pc-err").textContent);
+out.noControlGoesToCommon=/changed/.test(f.querySelector(".pc-err").textContent);   // 412 — экран module-form-if-match
 f=await submit({detail:"the door is shut",error:"refused"});
 out.noFieldGoesToCommon=/the door is shut/.test(f.querySelector(".pc-err").textContent)&&!f.querySelector("[aria-invalid=true]");
 out.errors=errs;

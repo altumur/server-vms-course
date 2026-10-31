@@ -1,0 +1,11 @@
+# платформенное поле index в unit.fields; P/06.1 Н1.2 platform_fields, ADR-0094 B4
+name: probe
+unit:
+  rows: counters
+  id: name
+  fields:
+    name: {type: string, required: true}
+    index: {type: string}
+placement:
+  capacity: {default: 4}
+worker: {exec: /usr/lib/probe/worker}
