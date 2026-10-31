@@ -1,0 +1,13 @@
+# probe-op — манифест стенда групповых операций (ADR-0095, P/06.9): воркера играет подставной воркер раннера, поэтому манифест не влияет на testsub и testsub2.
+name: probe-op
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}, note: {type: string}}}
+placement: {capacity: {default: 1}}
+slot: {prefix: op}
+tables: {repeats: {key: name, fields: {name: {type: string, required: true}, op: {type: string}}, service: true}}
+door:
+  pass:
+    routes: [api]
+    calls: [probe-op/things, probe-op/repeats, probe-op/operations, console/batch, GET session]
+    wait: {api/x: 300}
+    operations: {step: opstep}
+worker: {exec: /usr/lib/probe-op/worker}
