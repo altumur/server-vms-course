@@ -36,8 +36,8 @@ item]` и JSON Pointer секрета). Случай 12 — секрет кон�
 
 | Манифест | Файл | sha256 |
 |---|---|---|
-| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `f529f2d9d9d3cdc02aa7639071626ab7005554e51f0421b6eda85e16b254d87d` |
-| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `af4ff2fff234f2ed7bb172048252c700c3cf7fe90124de9ef20daf15b5d9d3b2` |
+| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `f07e53992348a78aa88ed80bd6eaf27b74fccaff9a16de5feba34a3bc70f9459` |
+| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `99e5a69f476f57e2137c0a43dfef3e4b05544c9fba1238e0da1fae79515f22a9` |
 
 ## Файлы
 
