@@ -1886,6 +1886,15 @@
      "blobs",
      "commands",
      "state",
+     "folders",
+     "memberof",
+     "operations",
+     "opsteps",
+     "opdone",
+     "opcount",
+     "opbusy",
+     "operations-turn",
+     "operations-epoch",
      "cluster",
      "worker",
      "ts"
@@ -2106,7 +2115,7 @@
    }
   },
   "subName": {
-   "description": "не из 22 зарезервированных слов и не начинается с `free-` (rid подателя `<подсистема>.<ключ>` иначе начался бы с `free-`, который грамматика rid запрещает; ADR-0091 доп. (24) п. 5); имя — первый сегмент всех ключей подсистемы `<name>/…` и её места на домене",
+   "description": "не из 23 зарезервированных слов и не начинается с `free-` (rid подателя `<подсистема>.<ключ>` иначе начался бы с `free-`, который грамматика rid запрещает; ADR-0091 доп. (24) п. 5); имя — первый сегмент всех ключей подсистемы `<name>/…` и её места на домене",
    "type": "string",
    "not": {
     "anyOf": [
@@ -2133,7 +2142,8 @@
        "resources",
        "schema",
        "domain",
-       "api"
+       "api",
+       "folders"
       ]
      },
      {
@@ -2323,7 +2333,16 @@
      "snapshot",
      "blobs",
      "commands",
-     "state"
+     "state",
+     "folders",
+     "memberof",
+     "operations",
+     "opsteps",
+     "opdone",
+     "opcount",
+     "opbusy",
+     "operations-turn",
+     "operations-epoch"
     ]
    },
    "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"

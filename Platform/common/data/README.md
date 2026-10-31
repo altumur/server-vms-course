@@ -72,7 +72,7 @@
 
 | Плейсхолдер | Где (шаблоны) | Что | Грамматика нормы | Компонентов | Норма |
 |---|---|---|---|---|---|
-| `<sub>` | `platform/manifest/<sub>…`, `<sub>/…`, `objects/<sub>/…`, `domain/<sub>/…`, `domain/{placement,placed,names}/<sub>/…`, `<корень событий>/<sub>…`, `.workers/<sub>/…` | имя подсистемы — `name` манифеста | `[a-z][a-z0-9_-]{0,31}`, не из 22 зарезервированных слов, не `free-[\s\S]*` (`common.sub_name`) | 1 | P/02.1 Н1.2 |
+| `<sub>` | `platform/manifest/<sub>…`, `<sub>/…`, `objects/<sub>/…`, `domain/<sub>/…`, `domain/{placement,placed,names}/<sub>/…`, `<корень событий>/<sub>…`, `.workers/<sub>/…` | имя подсистемы — `name` манифеста | `[a-z][a-z0-9_-]{0,31}`, не из 23 зарезервированных слов, не `free-[\s\S]*` (`common.sub_name`) | 1 | P/02.1 Н1.2 |
 | `<форма>` | `platform/manifest/<sub>/canonical/<форма>` | номер формы канонического вида | `[1-9][0-9]*` | 1 | P/02.2 Н1.2 |
 | `<sha256>`, `<n>` | `platform/manifest/<sub>/files/<sha256>/<n>` | дайджест байтов файла; номер части от 0 | 64 строчных hex; десятичное целое без ведущих нулей | по 1 | P/02.3 Н1.5 |
 | `<id>` | `<sub>/placement/<id>`, `<sub>/<manifest:unit.rows>/<id>`, `<sub>/state/<имя>/<id>`, `<sub>/epoch/<id>` | id единицы | по `unit.id` манифеста: numeric — `[1-9][0-9]*`; named — грамматика id Н1.3 (`common.named_id`); без манифеста — объединение обеих | 1 | P/06.1 Н1.3 |

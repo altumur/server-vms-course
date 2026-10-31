@@ -149,7 +149,7 @@ scenario	step	request	expect
 10-bypass	2	POST /folders {"name": "f"}	201 {"id": "$f"}
 10-bypass	3	PUT /folders/$f {"members": ["testsub/counters/c1"]}	200 {"index": "$i"}
 10-bypass	4	store GET /v1/get?key=testsub/counters/c1	200 {"index": "$u"}
-10-bypass	5	@as testsubcontroller store POST /v1/write {"id":"b1","op":"delete","key":"testsub/counters/c1","cas":"$u"}	200
+10-bypass	5	@as console store POST /v1/write {"id":"b1","op":"delete","key":"testsub/counters/c1","cas":"$u"}	200
 10-bypass	6	@until 90 GET /folders/$f	200 {"members": [], "index": "$j"}
 10-bypass	7	store GET /v1/get?key=platform/memberof/testsub/counters/c1	200 {"items": null}
 10-bypass	8	ASSERT $i != $j	
