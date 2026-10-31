@@ -58,6 +58,8 @@ scenario	step	request	expect
 12-domain-roles	16	POST /v1/write {"id":"aa12","op":"put","key":"domain/shared-docs/rev-1","items":{"n":"1"}}	403
 12-domain-roles	17	POST /v1/write {"id":"aa13","op":"put","key":"domain/alarm-history/m1","items":{"n":"1"}}	403
 12-domain-roles	18	POST /v1/write {"id":"aa14","op":"put","key":"domain/idem/k1","items":{"n":"1"}}	403
+12-domain-roles	19	@as domainconsole GET /v1/get?key=domain/idem/k1	403
+12-domain-roles	20	@as testsubdomain GET /v1/get?key=domain/idem/k1	403
 # 13-orders (ADR-0091 пп. 1, 3): заказчик testsub пишет строки своего префикса в testsub2/tallies без удаления; держатель testsub2 пишет состояние, контроллер — только удаляет его
 13-orders	1	@as testsubworker POST /v1/write {"id":"d1","op":"put","key":"testsub2/tallies/testsub-c1","items":{"id":"testsub-c1","revision":"1","name":"testsub-c1","of":"c1"},"cas":""}	200
 13-orders	2	@as testsubworker GET /v1/get?key=testsub2/tallies/testsub-c1	200 {"items": {"of": "c1"}}
