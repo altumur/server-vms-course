@@ -70,14 +70,19 @@ scenario	step	request	expect
 06-service-table	5	@pass-worker m1 probe-p p-1	ok
 06-service-table	6	@until 30 member m1 console @header Authorization: Bearer $ta GET /session	200 {"user": "ann"}
 06-service-table	7	@pass-open a member m1 console @header Authorization: Bearer $ta GET /probe-p/api/x	ok {"ticket": "$t"}
-06-service-table	8	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /probe-p/stash {"name": "s1", "note": "kept"}	201 {"row": {"name": "s1"}}
-06-service-table	9	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /probe-p/stash/s1	200 {"name": "s1", "note": "kept"}
-06-service-table	10	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /probe-p/things {"name": "n2"}	403 {"error": "denied"}
-06-service-table	11	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /console/batch {"writes": [{"op": "put", "key": "probe-p/stash/s2", "fields": {"name": "s2"}, "cas": ""}]}	200 {"written": 1}
-06-service-table	12	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /console/batch {"writes": [{"op": "put", "key": "probe-p/stash/s3", "fields": {"name": "s3"}, "cas": ""}, {"op": "put", "key": "testsub/counters/c1", "fields": {"name": "c1"}, "cas": ""}]}	401 {"error": "denied", "detail": "ticket refused"}
-06-service-table	13	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /probe-p/stash/s3	404
-06-service-table	14	@pass-answer a 200 application/json {}	200
-06-service-table	15	member m1 console GET /probe-p/stash/s1	403 {"error": "denied"}
+06-service-table	8	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /changes	200 {"position": "$p", "changes": []}
+06-service-table	9	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /probe-p/stash {"name": "s1", "note": "kept", "user": "ann"}	201 {"row": {"name": "s1"}}
+06-service-table	10	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /probe-p/stash {"name": "s4", "user": "bob"}	201 {"row": {"name": "s4"}}
+06-service-table	11	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /probe-p/stash/s1	200 {"name": "s1", "note": "kept"}
+06-service-table	12	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /probe-p/things {"name": "n2"}	403 {"error": "denied"}
+06-service-table	13	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /console/batch {"writes": [{"op": "put", "key": "probe-p/stash/s2", "fields": {"name": "s2"}, "cas": ""}]}	200 {"written": 1}
+06-service-table	14	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /console/batch {"writes": [{"op": "put", "key": "probe-p/stash/s3", "fields": {"name": "s3"}, "cas": ""}, {"op": "put", "key": "testsub/counters/c1", "fields": {"name": "c1"}, "cas": ""}]}	401 {"error": "denied", "detail": "ticket refused"}
+06-service-table	15	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /probe-p/stash/s3	404
+06-service-table	16	@until 10 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /changes?after=$p	200 {"position": "$q", "changes": [{"key": "probe-p/stash/s1", "revision": 1}]}
+06-service-table	17	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t DELETE /probe-p/stash/s1	200
+06-service-table	18	@until 10 socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /changes?after=$q	200 {"changes": [{"key": "probe-p/stash/s1", "deleted": ""}]}
+06-service-table	19	@pass-answer a 200 application/json {}	200
+06-service-table	20	member m1 console GET /probe-p/stash/s1	403 {"error": "denied"}
 07-lane-of-calls	1	@domain m1	ok
 07-lane-of-calls	2	@pass-worker m1 probe-p p-1	ok
 07-lane-of-calls	3	@pass-open a member m1 console GET /probe-p/api/x	ok {"ticket": "$t"}
