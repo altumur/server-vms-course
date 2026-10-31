@@ -39,7 +39,7 @@ window:         |now − мс/1000| ≤ окно, в обе стороны; now 
   MEMBER_WINDOW: 300        # с — двери держателя (Н2) и ретранслятора (урок 4)
   UNIT_WINDOW:   60         # с — двери единиц консоли члена (P/06.3 Н1.3 identity 2: агент правит единицы своего кластера, урок 6)
 replay:         кэша повторов нет: те же байты в окне принимаются снова — норма называет это пределом; дверь отчёта
-                идемпотентна по (sent_at, delta_sha256) (Н3), двери единиц — POST по Idempotency-Key, PUT и DELETE — по If-Match (P/06.1 Н2: Idempotency-Key у PUT не читается)
+                идемпотентна по (sent_at, request_sha256) (договор приёма отчёта; C08-REPEAT-KEY-01), двери единиц — POST по Idempotency-Key, PUT и DELETE — по If-Match (P/06.1 Н2: Idempotency-Key у PUT не читается)
 ```
 
 ## Проверка и слова отказа

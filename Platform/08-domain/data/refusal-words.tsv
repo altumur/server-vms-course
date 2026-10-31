@@ -64,6 +64,7 @@ edits	409	executors	-	8.6 Н4
 edits	409	kept_full	-	8.6 Н4
 edits	409	unit is being deleted	-	8.6 Н4
 edits	409	the pending edits kept changing; ask again	-	8.6 Н4
+edits	413	too large	-	8.6 Н1.4
 edits	422	this Idempotency-Key was used for another edit	-	8.6 Н1.4
 edits	503	refused	-	8.6 Н4, 8.1 Н4
 versions	400	If-Match is a unit revision	-	8.0 Н1.9 «Версии»
