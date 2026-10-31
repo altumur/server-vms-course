@@ -996,6 +996,7 @@ paths:
       summary: Люди, группы, роли и гранты одного снимка — одна запись (Н2)
       parameters:
         - $ref: '#/components/parameters/XW2CClient'
+        - $ref: '#/components/parameters/XW2CViaWorker'
       requestBody:
         required: true
         content:
@@ -1446,6 +1447,12 @@ paths:
         '503': {$ref: '#/components/responses/Refused503'}
 components:
   parameters:
+    XW2CViaWorker:
+      name: X-W2C-Via-Worker
+      in: header
+      required: false
+      description: '<sub>/<экземпляр> воркера, чей обратный вызов переслан (договор пересылки); процесс верит ему только на соединении роли domainconsole.'
+      schema: {type: string}
     XW2CClient:
       name: X-W2C-Client
       in: header
