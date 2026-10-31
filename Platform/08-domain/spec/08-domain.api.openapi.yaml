@@ -1489,6 +1489,7 @@ components:
         revision: {type: integer, minimum: 0, description: 'нынешняя; 0 — строки нет или её revision не читается'}
         row:
           type: object
+          additionalProperties: true
           description: 'текущая строка в форме таблицы P/08.0 Н1.9; секретов не несёт; нет, если строки нет, она не читается или строка заявки вышла бы тяжелее потолка'
     Executors:
       type: object
