@@ -745,3 +745,12 @@ a96_tree_folders_group_by	refused
 a96_tree_folders_nested_by	refused
 a96_tree_folders_false_ok	ok
 a96_tree_folders_not_bool	refused
+a94_table_delete_after_ok	ok
+a94_table_delete_after_integral_ok	ok
+a94_table_delete_after_zero	refused
+a94_table_delete_after_negative	refused
+a94_table_delete_after_fraction	refused
+a94_table_delete_after_word	refused
+a94_table_delete_after_bool	refused
+a94_table_delete_after_null	refused
+a94_table_delete_after_over_2p53	refused

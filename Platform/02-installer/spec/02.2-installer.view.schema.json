@@ -2283,6 +2283,16 @@
       "written",
       "deleted"
      ]
+    },
+    "service": {
+     "description": "служебная таблица воркера: только по билету (P/06.1 Н1.6 `service`)",
+     "type": "boolean"
+    },
+    "delete_after": {
+     "description": "срок строки в секундах; строку снимает жнец консоли (P/06.4 Н3 `tables`)",
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 9007199254740991
     }
    },
    "additionalProperties": false,
