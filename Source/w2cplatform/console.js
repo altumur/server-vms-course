@@ -1167,7 +1167,8 @@
         const box = h2.parentElement; if (!box || !h2.isConnected) return;
         const ch = document.createElement("div"); ch.className = "ch"; ch.innerHTML = h2.innerHTML;
         const cb = document.createElement("div"); cb.className = "cb";
-        if (box !== root && box.firstElementChild === h2 && !box.classList.contains("cb")) {
+        const alone = ![...box.children].some(n => n !== h2 && /^H[12]$/.test(n.tagName));
+        if (box !== root && box.firstElementChild === h2 && !box.classList.contains("cb") && alone) {
           // a box of its own (labels, drain, ...): it becomes the card
           box.classList.add("card");
           while (h2.nextSibling) cb.appendChild(h2.nextSibling);
