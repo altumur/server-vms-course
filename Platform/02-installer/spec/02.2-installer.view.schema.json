@@ -793,6 +793,10 @@
        "description": "строка-разделитель",
        "type": "string"
       },
+      "folders": {
+       "description": "`true` — дерево страницы строится по папкам кластера, а единицы `unit.rows` бывают их членами (P/06.8 Н1.1; P/06.5 Н1.2 `tree`)",
+       "type": "boolean"
+      },
       "columns": {
        "type": "array",
        "items": {
