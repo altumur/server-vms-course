@@ -152,7 +152,7 @@ tables:
     service: true
     fields:
       h:        {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of the name: `.` is no key
-      name:     {type: string, required: true, schema: {minLength: 1}}
+      login:    {type: string, required: true, schema: {minLength: 1}}
       id:       {type: string, required: true, schema: {pattern: "^[0-9a-fA-F-]{36}$"}}
   # The history of the rights screen (V/11.8 Н1.7): the platform's journal stays the record, this only shows it.
   history:
