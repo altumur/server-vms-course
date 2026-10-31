@@ -1,0 +1,36 @@
+scenario	step	request	expect
+# Черновик G01 (урок 04, контроллер): доведение незавершённого active intent при старте/смене держателя с шага 3 (снятие из прежнего назначения, запись placement, добавление в новое назначение, перевод intent в idle без удаления строки), починка расхождения назначений с размещениями шагом sync (diverged) и отказ на нечитаемой строке placement_intent (P/04-01, P/04-02, P/04-12, P/04-19; Н1.2 diverged, Н1.5, Н3 «принять и довести решение» шаг 0, «проход()» шаг 4, Н4).
+01-intent-recovery	1	@start resource	ok
+01-intent-recovery	2	console POST /counters {"name": "c1", "start": 1}	201
+01-intent-recovery	3	@start worker w-1	ok
+01-intent-recovery	4	@start worker w-2	ok
+01-intent-recovery	5	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+01-intent-recovery	6	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
+01-intent-recovery	7	@as testsubcontroller store POST /v1/write {"id":"g01a","op":"put","key":"testsub/workers/w-1","items":{"units":"c1","rev":"1"},"cas":""}	200
+01-intent-recovery	8	@as testsubcontroller store POST /v1/write {"id":"g01b","op":"put","key":"testsub/controller/placement_intent","items":{"state":"active","manifest_rev":"1","members":"[\"c1\"]","target":"w-2","reason":"moving to w-2","at":"1700000000"},"cas":""}	200
+01-intent-recovery	9	@start controller	ok
+01-intent-recovery	10	@until 30 store GET /v1/get?key=testsub/controller/placement_intent	200 {"items": {"state": "idle", "manifest_rev": "1"}}
+01-intent-recovery	11	store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-2", "reason": "moving to w-2", "manifest_rev": "1"}}
+01-intent-recovery	12	store GET /v1/get?key=testsub/workers/w-1	200 {"items": {"units": "", "rev": "2"}}
+01-intent-recovery	13	store GET /v1/get?key=testsub/workers/w-2	200 {"items": {"units": "c1", "rev": "1"}}
+02-sync-diverged	1	@start resource	ok
+02-sync-diverged	2	@start controller	ok
+02-sync-diverged	3	@start worker w-1	ok
+02-sync-diverged	4	@start worker w-2	ok
+02-sync-diverged	5	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+02-sync-diverged	6	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
+02-sync-diverged	7	console POST /counters {"name": "c1", "start": 1}	201
+02-sync-diverged	8	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+02-sync-diverged	9	@until 20 store GET /v1/get?key=testsub/workers/w-1	200 {"items": {"units": "c1", "rev": "1"}}
+02-sync-diverged	10	@as testsubcontroller store POST /v1/write {"id":"g01c","op":"put","key":"testsub/workers/w-1","items":{"units":"","rev":"2"}}	200
+02-sync-diverged	11	@as testsubcontroller store POST /v1/write {"id":"g01d","op":"put","key":"testsub/workers/w-2","items":{"units":"c1","rev":"1"},"cas":""}	200
+02-sync-diverged	12	@until 30 store GET /v1/get?key=testsub/workers/w-1	200 {"items": {"units": "c1", "rev": "3"}}
+02-sync-diverged	13	store GET /v1/get?key=testsub/workers/w-2	200 {"items": {"units": "", "rev": "2"}}
+02-sync-diverged	14	@until 20 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"diverged": "@not(0)"}
+03-intent-garbled	1	@start resource	ok
+03-intent-garbled	2	console POST /counters {"name": "c1", "start": 1}	201
+03-intent-garbled	3	@as testsubcontroller store POST /v1/write {"id":"g01e","op":"put","key":"testsub/controller/placement_intent","items":{"state":"broken","manifest_rev":"1"},"cas":""}	200 {"index": "$vi"}
+03-intent-garbled	4	@start controller	ok
+03-intent-garbled	5	@until 30 resource GET /v1/objects/testsub/controller/pass?scope=local	200 {"ok": false, "failures": "@not(0)"}
+03-intent-garbled	6	store GET /v1/get?key=testsub/controller/placement_intent	200 {"index": "$vi", "items": {"state": "broken"}}
+03-intent-garbled	7	console GET /where/c1	503 {"error": "unavailable"}

@@ -1,0 +1,7 @@
+{
+  "server": "srv-a",
+  "url": "http://127.0.0.1:19999",
+  "version": "v1",
+  "started": "1700000000",
+  "statuses": "{\"ta\":{\"state\":\"open\",\"born\":1700000000}}"
+}

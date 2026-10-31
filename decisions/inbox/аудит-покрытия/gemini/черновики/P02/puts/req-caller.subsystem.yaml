@@ -1,0 +1,7 @@
+# податель просьб в подсистему reqt (P/02.1 Н3 «загрузить_каталог»)
+name: reqc
+unit: {rows: reqcs, id: numeric}
+placement: {capacity: {default: 1}}
+worker:
+  exec: /usr/lib/reqc/worker
+  requests: [reqt]

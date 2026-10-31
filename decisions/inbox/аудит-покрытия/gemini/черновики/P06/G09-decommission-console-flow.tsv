@@ -1,0 +1,25 @@
+# Draft G09 (subchapter 6.6): server decommission console flow (409 may_confirm_gone=false on live server, 409 may_confirm_gone=true on silent server known by slot, 202 with gone=true, idempotent repeat, DELETE withdrawal)
+# Norms: 6.6 Н1 «decommission», Н2.1, Н3 «вывести_сервер(s) — сторона консоли», Н4 (P/06.6-02)
+
+@start resource
+@wait-store /kv/platform/resources/srv-a
+# 1. Live server srv-a: both gone=false and gone=true are rejected with 409 and may_confirm_gone=false
+POST	/servers/srv-a/decommission	{"why": "live box"}	409	{"error": "server answers", "server": "srv-a", "may_confirm_gone": false}
+POST	/servers/srv-a/decommission	{"why": "live box", "gone": true}	409	{"error": "server answers", "server": "srv-a", "may_confirm_gone": false}
+# 2. Server srv-b known via slot testsub/slots/w-1 without resource heartbeat: once slot observation ages past LOST_AFTER (45s), may_confirm_gone becomes true
+@as console store	PUT	/kv/testsub/slots/w-1	{"holder": "boot-1", "server": "srv-b", "born": "1700000000", "until": "1700000030", "released": "false"}	200	{}
+GET	/servers	-	200	{"servers": {"srv-b": {"status": "lost"}}}
+@sleep 46
+POST	/servers/srv-b/decommission	{"why": "gone box"}	409	{"error": "server answers", "server": "srv-b", "may_confirm_gone": true}
+POST	/servers/srv-b/decommission	{"why": "gone box", "gone": true}	202	{"warning": "~"}
+@as console store	GET	/kv/platform/decommission/srv-b	-	200	{"value": {"by": "operator", "at": "$at1", "why": "gone box", "gone": "true"}}
+# 3. Repeated POST /servers/srv-b/decommission returns 202 without overwriting existing platform/decommission/srv-b
+POST	/servers/srv-b/decommission	{"why": "new why", "gone": true}	202	{"warning": "~"}
+@as console store	GET	/kv/platform/decommission/srv-b	-	200	{"value": {"by": "operator", "at": "$at1", "why": "gone box", "gone": "true"}}
+# 4. DELETE /servers/srv-b/decommission withdraws the mark and logs server.decommission_withdrawn
+DELETE	/servers/srv-b/decommission	-	200	{}
+@as console store	GET	/kv/platform/decommission/srv-b	-	404	{}
+GET	/events?kind=server.decommission_withdrawn&subject=srv-b&limit=1	-	200	{"events": [{"kind": "server.decommission_withdrawn", "subject": "srv-b"}]}
+@as console store	DELETE	/kv/testsub/slots/w-1	-	200	{}
+@stop resource
+@as console store	DELETE	/kv/platform/resources/srv-a	-	200	{}

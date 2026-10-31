@@ -1,0 +1,18 @@
+# Draft G02 (subchapter 6.1): clearing blob field via PUT {"<field>": ""} and unmarking digest from <sub>/sweep on PUT /<noun>/<id>/<field>
+# Norms: 6.1 Н3 «править» (Гонки, сброс на ""), Н3 «положить_тело» шаг 2, sweep.outcomes.tsv (P/06.1-13, P/06.1-14)
+
+POST	/testsub2/tallies	{"id": "t1"}	201	{"id": "t1", "mask": "", "revision": 1}
+# Seed <sub>/sweep with the digest of "hello" (2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824) and another digest
+@as console store	PUT	/kv/testsub2/sweep	{"digests": "[\"2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824\",\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"]", "at": "1700000000"}	200	{}
+# Uploading body "hello" removes its digest from testsub2/sweep (step 2 of положить_тело)
+PUT	/testsub2/tallies/t1/mask	@bytes:hello	200	{"id": "t1", "mask": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824", "revision": 2}
+@as console store	GET	/kv/testsub2/sweep	-	200	{"value": {"digests": "[\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"]"}}
+# Clearing blob field via PUT {"mask": ""} succeeds and increments revision; old digest is no longer accepted as current
+PUT	/testsub2/tallies/t1	{"mask": ""}	200	{"id": "t1", "mask": "", "revision": 3}
+PUT	/testsub2/tallies/t1	{"mask": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"}	400	{"error": "~"}
+# Unreadable testsub2/sweep does not block PUT /<noun>/<id>/<field> and is left untouched
+@as console store	PUT	/kv/testsub2/sweep	{"digests": "[\"2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824\"]", "at": "not-a-time"}	200	{}
+PUT	/testsub2/tallies/t1/mask	@bytes:hello	200	{"id": "t1", "mask": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824", "revision": 4}
+@as console store	GET	/kv/testsub2/sweep	-	200	{"value": {"at": "not-a-time"}}
+DELETE	/testsub2/tallies/t1	-	200	{"deleted": "t1"}
+@as console store	DELETE	/kv/testsub2/sweep	-	200	{}

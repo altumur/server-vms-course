@@ -1,0 +1,34 @@
+# Черновик G03 — полный порядок проверок команды `POST /v1/write` при совмещённых нарушениях, `id: null` и одиночный суррогат в `guard.key` и в значении `items`.
+# Норма: Platform/01-store/spec/01.1-store.norms.md:
+#   — Н1: `id: null` — не по форме (`400 badrequest`, в отличие от `cas: null`);
+#   — Н2.1 (стр. 212–214): одиночный суррогат (`\ud800`) в `key` или `guard.key` — `400 badkey`; в имени или значении `items` — `400 badrequest`;
+#   — Н2.1 (стр. 245–248): «Порядок проверок команды при нескольких нарушениях: тело — JSON-объект → `op` → сокет для `floor` (`op: floor` не на admin-сокете — `403 forbidden`, P/01.3 Н4) → `key` (форма — `badrequest`, правила Н1 — `badkey`) → `items` у put → `cas` → `guard` (форма — `badrequest`, затем правила ключа — `badkey`) → `id` → `not_after` → `not_before` (форма — `badrequest`; ADR-0091 п. 1) → вес → права. Вид отказа — от первого нарушения».
+# Место приёмки: глава 1.1 (Platform/01-store/acceptance/1/scenarios.tsv) — роль `acc` (права только на `acc/*`).
+# Существующие директивы: обычные HTTP-запросы главы 1.1, `@big(N)`. Новых директив не требуется.
+# Что проверяет:
+#   Шаг 1: `id: null` → `400 badrequest`.
+#   Шаг 2: одиночный суррогат `\ud800` в `guard.key` → `400 badkey`.
+#   Шаг 3: одиночный суррогат `\ud800` в значении `items` → `400 badrequest`.
+#   Шаг 4: `op` не по форме (`"bad"`) + `key: "/bad"` (`badkey`) + чужой ключ `other/x` (`403`) → `400 badrequest` (`op` раньше `key` и прав).
+#   Шаг 5: `op: "floor"` на ролевом сокете + `floor: "bad"` (`400`) → `403 forbidden` (сокет для `floor` раньше формы полей).
+#   Шаг 6: `key: 5` (`badrequest`) + `guard.key: "/bad"` (`badkey`) + `other/x` → `400 badrequest` (форма `key` раньше `guard`).
+#   Шаг 7: `key: "/other/x"` (`badkey`) + `items: 1` (`badrequest`) + вес > потолка (`413`) + чужой префикс (`403`) → `400 badkey` (`key` раньше `items`, веса и прав).
+#   Шаг 8: `key: "other/x"` (чужой, `403`) + `items: 1` (`badrequest`) + `guard.key: "/bad"` (`badkey`) → `400 badrequest` (`items` раньше `guard` и прав).
+#   Шаг 9: `key: "other/x"` (чужой, `403`) + `cas: "abc"` (`badrequest`) + `guard.key: "/bad"` (`badkey`) → `400 badrequest` (`cas` раньше `guard` и прав).
+#   Шаг 10: `key: "other/x"` (чужой, `403`) + `id: "XYZ"` (`badrequest`) + вес > потолка (`413`) → `400 badrequest` (`id` раньше веса и прав).
+#   Шаг 11: `key: "other/x"` (чужой, `403`) + `not_after: -1` (`badrequest`) + вес > потолка (`413`) → `400 badrequest` (`not_after` раньше веса и прав).
+#   Шаг 12: `not_after: 1e400` (не конечно в binary64, Н1 `not_after` rules `[finite, at least 0]`) → `400 badrequest`.
+# scenario	step	request	expect
+32-validation-order	1	POST /v1/write {"op":"put","key":"acc/32-order/c1","items":{},"id":null}	400 {"kind":"badrequest"}
+32-validation-order	2	POST /v1/write {"op":"put","key":"acc/32-order/c1","items":{},"guard":{"key":"acc/32-order/\ud800","index":""}}	400 {"kind":"badkey"}
+32-validation-order	3	POST /v1/write {"op":"put","key":"acc/32-order/c1","items":{"k":"\ud800"}}	400 {"kind":"badrequest"}
+32-validation-order	4	POST /v1/write {"op":"bad","key":"/other/x","items":{}}	400 {"kind":"badrequest"}
+32-validation-order	5	POST /v1/write {"op":"floor","floor":"bad","id":"XYZ"}	403 {"kind":"forbidden"}
+32-validation-order	6	POST /v1/write {"op":"put","key":5,"items":{},"guard":{"key":"/bad","index":""}}	400 {"kind":"badrequest"}
+32-validation-order	7	POST /v1/write {"op":"put","key":"/other/x","items":1,"guard":{"key":"/bad","index":""}}	400 {"kind":"badkey"}
+32-validation-order	8	POST /v1/write {"op":"put","key":"other/32-order/c1","items":1,"guard":{"key":"/bad","index":""}}	400 {"kind":"badrequest"}
+32-validation-order	9	POST /v1/write {"op":"put","key":"other/32-order/c1","items":{},"cas":"abc","guard":{"key":"/bad","index":""}}	400 {"kind":"badrequest"}
+32-validation-order	10	POST /v1/write {"op":"put","key":"other/32-order/c1","items":{"blob":"@big(524288)"},"id":"XYZ"}	400 {"kind":"badrequest"}
+32-validation-order	11	POST /v1/write {"op":"put","key":"other/32-order/c1","items":{"blob":"@big(524288)"},"not_after":-1}	400 {"kind":"badrequest"}
+32-validation-order	12	POST /v1/write {"op":"put","key":"acc/32-order/c1","items":{},"not_after":1e400}	400 {"kind":"badrequest"}
+32-validation-order	13	GET /v1/list?prefix=acc/32-order/	200 {"keys":{}}

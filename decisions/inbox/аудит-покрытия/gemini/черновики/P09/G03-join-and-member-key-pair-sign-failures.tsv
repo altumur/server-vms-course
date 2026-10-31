@@ -1,0 +1,36 @@
+# Черновик G03: расширения для Platform/09-agent/acceptance/1/scenarios.tsv
+# Покрывает:
+# - P/09.1 Н1.1 join (same: повторный @join с тем же корнем — ok без перезаписи; another: при другом закреплённом корне в domain/root — отказ, строка не меняется)
+# - P/09.1 Н1.1 domain/member-key (C09-MEMBER-KEY-PAIR-01: pub не соответствует открытому ключу seed_secret -> строка нечитаема, агент не подписывает, пишет sign_failures_domain и не пересоздаёт строку)
+# - P/09.1 Н1.12 count, key_unreadable (C09-SIGN-FAILURES-COUNT-01: при нечитаемом ключе члена местная дверь токенов сразу возвращает 503 {"error": "unavailable"} и увеличивает sign_failures_domain, а неприменённая правка своей консоли увеличивает sign_failures_console в domain/agent)
+
+scenario	step	request	expect
+# Повторный @join m1 с тем же корнем проходит идемпотентно и не меняет index строки domain/root;
+# если в domain/root уже закреплён другой домен/ключ, @join m2 отказывает и не перезаписывает domain/root.
+20-join-same-and-another	1	@domain m1	ok
+20-join-same-and-another	2	member m1 store GET /v1/get?key=domain/root	200 {"items": {"domain": "acme", "pub": "$root"}, "index": "$idx1"}
+20-join-same-and-another	3	@join m1	ok
+20-join-same-and-another	4	member m1 store GET /v1/get?key=domain/root	200 {"items": {"domain": "acme", "pub": "$root"}, "index": "$idx1"}
+20-join-same-and-another	5	member m2 store POST /v1/write {"op": "put", "key": "domain/root", "items": {"domain": "other", "pub": "1111111111111111111111111111111111111111111111111111111111111111"}}	200 {"index": "$idx2"}
+20-join-same-and-another	6	@join m2	error
+20-join-same-and-another	7	member m2 store GET /v1/get?key=domain/root	200 {"items": {"domain": "other", "pub": "1111111111111111111111111111111111111111111111111111111111111111"}, "index": "$idx2"}
+
+# C09-MEMBER-KEY-PAIR-01 и C09-SIGN-FAILURES-COUNT-01:
+# 1) На m1 создаётся единица c1 и ставится в очередь правка (когда m1 ещё читаем, либо у держателя).
+# 2) В domain/member-key у m1 сохраняется валидный конверт seed_secret, но pub заменяется на чужой 64-hex:
+#    строка становится нечитаемой по C09-MEMBER-KEY-PAIR-01.
+# 3) Местная дверь токенов на m1 при нечитаемом ключе сразу возвращает 503 {"error": "unavailable"}.
+# 4) В domain/agent у m1 растут и sign_failures_domain, и sign_failures_console (из-за невозможности подписать правку своей консоли).
+21-member-key-mismatch-and-console-token-sign-failures	1	@domain m1	ok
+21-member-key-mismatch-and-console-token-sign-failures	2	member m1 console POST /counters {"name": "c21", "start": 1}	201
+21-member-key-mismatch-and-console-token-sign-failures	3	@until 60 holder GET /domain/testsub/counters?cluster=m1	200 [{"ref": "c21"}]
+21-member-key-mismatch-and-console-token-sign-failures	4	holder PUT /domain/placement/testsub/c21 {"cluster": "m1", "origin": "m1", "copies": []}	200
+21-member-key-mismatch-and-console-token-sign-failures	5	member m1 store GET /v1/get?key=domain/member-key	200 {"items": {"seed_secret": "$seed", "pub": "$pub"}}
+21-member-key-mismatch-and-console-token-sign-failures	6	@cut m1	ok
+21-member-key-mismatch-and-console-token-sign-failures	7	holder PUT /domain/testsub/counters/c21 {"start": 10}	202 {"kept": "$id"}
+21-member-key-mismatch-and-console-token-sign-failures	8	@mend m1	ok
+21-member-key-mismatch-and-console-token-sign-failures	9	member m1 store POST /v1/write {"op": "put", "key": "domain/member-key", "items": {"seed_secret": "$seed", "pub": "1111111111111111111111111111111111111111111111111111111111111111"}}	200
+21-member-key-mismatch-and-console-token-sign-failures	10	token m1 testsubworker POST /tokens/testsub/tally {"request_id": "r-nokey", "ref": "c21"}	503 {"error": "unavailable"}
+21-member-key-mismatch-and-console-token-sign-failures	11	@until 30 member m1 store GET /v1/get?key=domain/agent	200 {"items": {"sign_failures_domain": "@any", "at": "@time"}}
+21-member-key-mismatch-and-console-token-sign-failures	12	member m1 store POST /v1/write {"op": "put", "key": "domain/member-key", "items": {"seed_secret": "$seed", "pub": "$pub"}}	200
+21-member-key-mismatch-and-console-token-sign-failures	13	@until 60 holder GET /domain	200 {"pending": {"m1": 0}, "outcomes": {"m1": [{"id": "$id", "status": 200, "result": "performed"}]}}

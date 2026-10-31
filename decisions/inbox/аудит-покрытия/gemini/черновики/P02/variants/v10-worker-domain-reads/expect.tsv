@@ -1,0 +1,22 @@
+# Ожидаемые эффективные права варианта v10-worker-domain-reads (P/02.5 Н1.4 строка <s>worker, Н3 шаг 3):
+# - domain/placed/va/ в worker.reads даёт и domain/placed/va/*, и domain/placement/va/*;
+# - копия своей книги domain/va/tallies в worker.reads даёт точный ключ domain/va/tallies/local (CLUSTER=local по умолчанию), но не domain/va/tallies/other (C02-OWN-BOOK-HOLDER-01);
+# - источники собираемых книг domain.books.<книга>.from: va/notes/ даёт write на va/notes/*, одиночная строка va/rolls даёт write на va/rolls, но не на va/rolls/*;
+# - условные чтения vaworker (и отсутствие их у vbworker): domain/shared (при domain.shared), domain/topology и domain/member-topology (при domain.tokens.<вид>.unit), domain/grants (при door.routes).
+role	action	key	expect
+vaworker	read	domain/placed/va/u1	allow
+vaworker	read	domain/placement/va/u1	allow
+vaworker	read	domain/va/tallies	allow
+vaworker	read	domain/va/tallies/local	allow
+vaworker	read	domain/va/tallies/other	deny
+vaworker	write	va/notes/w-1	allow
+vaworker	write	va/rolls	allow
+vaworker	write	va/rolls/w-1	deny
+vaworker	read	domain/shared	allow
+vbworker	read	domain/shared	deny
+vaworker	read	domain/topology	allow
+vaworker	read	domain/member-topology	allow
+vbworker	read	domain/topology	deny
+vbworker	read	domain/member-topology	deny
+vaworker	read	domain/grants	allow
+vbworker	read	domain/grants	deny

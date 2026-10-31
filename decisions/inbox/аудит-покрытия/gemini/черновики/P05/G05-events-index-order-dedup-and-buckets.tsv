@@ -1,0 +1,28 @@
+# Черновик G05 (аудит покрытия P/05, Gemini):
+# P/05-05 (Н1.2 subsystem, unit, Н1.3 query, cut, answer, Н2 GET/HEAD /events, GET /buckets/{sub}/{unit}, GET /events/{path},
+# Н3 «запрос (ресурс)»; common/contracts/events-merge.md «Запрос и ответ ресурса»):
+# - HEAD /events у ресурса отвечает 405 без тела (Н2);
+# - строка в дереве testsub.alarms/c1 получает subsystem: "testsub" и unit: "testsub/c1" (без .alarms, E32); запрос с
+#   unit=testsub.alarms/c1 допустим по форме UnitRef, но не нормализуется и возвращает 200 {"events": []} (C05-QUERY-UNIT-ALARMS-01);
+# - дедупликация по id внутри бакета (первая строка побеждает, EJ-L06) выполняется до обрезки limit и расчёта truncated;
+# - порядок cut: сначала class alarm, затем observation; внутри класса по keep (newest — убывание, oldest — возрастание),
+#   при равном времени — id по возрастанию байтов UTF-8;
+# - by=occurred упорядочивает и фильтрует по occurred (при отсутствии occurred — по t);
+# - GET /buckets/testsub/c1 выдаёт JSON Lines BucketInfo, GET /events/{path} выдаёт 200 с X-Sum, 206 с Content-Range и 416 с Content-Range.
+scenario	step	request	expect
+g05-events-index-order-dedup-and-buckets	1	resource HEAD /events	405
+g05-events-index-order-dedup-and-buckets	2	@append event testsub.alarms/c1/e1 {"t":1700000010,"id":"e-alarm-1","kind":"jam","of":"testsub/c1","class":"alarm"}	ok
+g05-events-index-order-dedup-and-buckets	3	@append event testsub/c1/e1 {"t":1700000020,"occurred":1700000005,"id":"e-obs-b","kind":"tick","of":"testsub/c1","val":1}	ok
+g05-events-index-order-dedup-and-buckets	4	@append event testsub/c1/e1 {"t":1700000020,"occurred":1700000005,"id":"e-obs-b","kind":"tick","of":"testsub/c1","val":2}	ok
+g05-events-index-order-dedup-and-buckets	5	@append event testsub/c1/e1 {"t":1700000020,"occurred":1700000030,"id":"e-obs-a","kind":"tick","of":"testsub/c1"}	ok
+g05-events-index-order-dedup-and-buckets	6	@append event testsub/c1/e1 {"t":1700000025,"id":"e-obs-c","kind":"tick","of":"testsub/c1"}	ok
+g05-events-index-order-dedup-and-buckets	7	resource GET /events?unit=testsub.alarms/c1	200 {"events": [], "state": "live", "truncated": 0}
+g05-events-index-order-dedup-and-buckets	8	resource GET /events?unit=testsub/c1	200 {"events": [{"id": "e-alarm-1", "subsystem": "testsub", "unit": "testsub/c1", "class": "alarm"}, {"id": "e-obs-c", "class": "observation"}, {"id": "e-obs-a", "class": "observation"}, {"id": "e-obs-b", "class": "observation", "val": 1}], "state": "live", "truncated": 0}
+g05-events-index-order-dedup-and-buckets	9	resource GET /events?unit=testsub/c1&class=observation&keep=oldest&limit=2	200 {"events": [{"id": "e-obs-a"}, {"id": "e-obs-b", "val": 1}], "state": "live", "truncated": 1}
+g05-events-index-order-dedup-and-buckets	10	resource GET /events?unit=testsub/c1&class=observation&by=occurred&keep=newest	200 {"events": [{"id": "e-obs-a"}, {"id": "e-obs-c"}, {"id": "e-obs-b", "val": 1}], "state": "live", "truncated": 0}
+g05-events-index-order-dedup-and-buckets	11	resource GET /events?unit=testsub/c1&class=observation&limit=1	200 {"events": [{"id": "e-obs-c", "bucket": "$b"}], "truncated": 2}
+g05-events-index-order-dedup-and-buckets	12	resource GET /buckets/testsub/c1	200 @header Content-Type: ~application/x-ndjson ~"kind":"events" ~"subsystem":"testsub" ~"unit":"c1"
+g05-events-index-order-dedup-and-buckets	13	resource GET /buckets/testsub/nosuch	404
+g05-events-index-order-dedup-and-buckets	14	resource GET /events/$b	200 @header X-Sum: ~
+g05-events-index-order-dedup-and-buckets	15	resource @header Range: bytes=0-9 GET /events/$b	206 @header Content-Range: ~bytes 0-9/
+g05-events-index-order-dedup-and-buckets	16	resource @header Range: bytes=999999-1000000 GET /events/$b	416 @header Content-Range: ~bytes */

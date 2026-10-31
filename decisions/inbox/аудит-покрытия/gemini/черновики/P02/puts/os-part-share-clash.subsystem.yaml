@@ -1,0 +1,9 @@
+# часть belt (группа w2c-psub-belt) и доля belt без ключа part (отдельная группа доли w2c-psub-belt) сталкиваются (P/02.4 Н1.1 users_groups)
+name: psub
+unit: {rows: things, id: numeric}
+placement: {capacity: {default: 1}}
+parts:
+  belt: {exec: /usr/lib/psub/beltd}
+shares:
+  belt: {kind: socket}
+worker: {exec: /usr/lib/psub/worker}

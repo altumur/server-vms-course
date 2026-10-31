@@ -1,0 +1,27 @@
+# Черновик G05 — полные отказы предварительной проверки `import` копии (ключ вне правил Н1, вес строки сверх потолка 524288, нечитаемый `generation_at` строки пола) и поведение повреждённой строки со стражем и удалением.
+# Норма:
+#   1. Platform/01-store/spec/01.3-store.norms.md Н1.3 `import` (стр. 123–129) и Н4 (стр. 323): «полная предварительная проверка до изменения пола/любой строки: форма copy (строка Row, ключ по главе 1.1 Н1, размер не выше потолка строки), версии (база, index заголовка) и эпохи — строка <s>/epoch/<id> с epoch не десятичным целым или platform/epoch_floor с floor не десятичным, строка эпохи или пола нечитаема (исходы семей epoch, epoch_floor) — upper не достоверен, отказ всего входа»; `epoch_floor.outcomes.tsv` стр. 5: `/generation_at` не по форме — у `import, restore: отказ всего входа, ничего не меняется`.
+#   2. Platform/01-store/spec/01.1-store.norms.md Н2 (стр. 165–166): «Повреждённая строка существует и имеет версию: перечисление выдаёт эту версию, страж сравнивает с ней, запись и удаление с `cas` по ней проходят (P/01.1-17)».
+# Место приёмки: глава 1.3 (Platform/01-store/acceptance/3/scenarios.tsv).
+# Существующие директивы: `@import store <файл>`, дверь `restored`, `@spoil row <ключ>`. Новых директив не требуется.
+# Входы (при переносе — `acceptance/3/inputs/`):
+#   — `inputs/bad-row-key.jsonl`: верная строка `testsub/next_id`, затем строка с ключом `testsub/../bad` (сегмент `..` нарушает Н1 главы 1.1) → `refused`, в `restored` строки `testsub/next_id` нет;
+#   — `inputs/bad-floor-gen-at.jsonl`: верная строка `testsub/next_id`, затем `platform/epoch_floor` с верным `floor: "4294967296"` и нечитаемым `generation_at: "not-a-time"` → `refused`, ничего не перенесено.
+# Шаги 5–12 (расширение проверок `@spoil row` сц. 20):
+#   — строка `testsub/counters/s3` записана (`$v`) и испорчена `@spoil row testsub/counters/s3`;
+#   — запись другой строки со стражем `guard: {"key":"testsub/counters/s3","index":""}` (ожидание отсутствия) → `412 {"kind":"guard","key":"testsub/counters/s3","index":"$v"}` (повреждённая строка существует и имеет версию `$v`, не `""`);
+#   — запись другой строки со стражем `guard: {"key":"testsub/counters/s3","index":"$v"}` → `200` (страж по версии повреждённой строки держит);
+#   — удаление повреждённой строки с устаревшим `cas: ""` → `409 {"kind":"conflict","index":"$v"}`;
+#   — удаление повреждённой строки с `cas: "$v"` → `200`, после него чтение — `{"items":null,"index":""}`.
+scenario	step	request	expect
+22-import-and-spoil-edges	1	@import store inputs/bad-row-key.jsonl	refused
+22-import-and-spoil-edges	2	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
+22-import-and-spoil-edges	3	@import store inputs/bad-floor-gen-at.jsonl	refused
+22-import-and-spoil-edges	4	restored GET /v1/get?key=testsub/next_id	200 {"items": null, "index": ""}
+22-import-and-spoil-edges	5	admin POST /v1/write {"op":"put","key":"testsub/counters/s3","items":{"n":"1"},"cas":""}	200 {"index": "$v"}
+22-import-and-spoil-edges	6	@spoil row testsub/counters/s3	ok
+22-import-and-spoil-edges	7	admin POST /v1/write {"op":"put","key":"testsub/counters/s4","items":{"n":"1"},"guard":{"key":"testsub/counters/s3","index":""}}	412 {"kind": "guard", "key": "testsub/counters/s3", "index": "$v"}
+22-import-and-spoil-edges	8	admin POST /v1/write {"op":"put","key":"testsub/counters/s4","items":{"n":"1"},"guard":{"key":"testsub/counters/s3","index":"$v"}}	200 {"index": "$w"}
+22-import-and-spoil-edges	9	admin POST /v1/write {"op":"delete","key":"testsub/counters/s3","cas":""}	409 {"kind": "conflict", "index": "$v"}
+22-import-and-spoil-edges	10	admin POST /v1/write {"op":"delete","key":"testsub/counters/s3","cas":"$v"}	200 {"index": "$d"}
+22-import-and-spoil-edges	11	admin GET /v1/get?key=testsub/counters/s3	200 {"items": null, "index": ""}

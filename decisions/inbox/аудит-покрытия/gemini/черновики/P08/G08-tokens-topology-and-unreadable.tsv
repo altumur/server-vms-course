@@ -1,0 +1,33 @@
+# Черновик G08: расширения для Platform/08-domain/acceptance/7/scenarios.tsv
+# Покрывает:
+# - 8.7 Н2 и Н3 шаг 5 (placement: нечитаемая запись domain/placement/<sub>/<ref> -> 403 {"error": "refused", "reason": "assignment_unreadable"})
+# - 8.7 Н3 шаг 4а (нечитаемая domain/topology: если вид объёма не использует топологию, запрос проходит 200; если использует топологию, возвращает 503 {"error": "unavailable"})
+
+name	act	expect
+
+# При нечитаемой записи domain/placement/testsub/c1 выпуск жетона по форме placement возвращает 403 assignment_unreadable.
+# При нечитаемой записи domain/topology действие tally (placement без star_centre) продолжает выпускать жетоны (200),
+# а действие probe (unit с poll_home, использующее топологию) возвращает 503 unavailable.
+token_unreadable_placement_and_topology_selective_503
+	@cluster hold
+	@cluster m1
+	@cluster m2
+	@bootstrap domain on hold
+	POST /domain/members	{"cluster": "m1", "pubkey": "@pubkey(m1)"}
+		200	~
+	POST /domain/members	{"cluster": "m2", "pubkey": "@pubkey(m2)"}
+		200	~
+	@join m1 to hold
+	@join m2 to hold
+	PUT /domain/placement/testsub/c1	{"cluster": "m1", "copies": ["m2"]}
+		200	~
+	PUT /domain/placement/testsub/c2	{"cluster": "m1", "copies": ["m2"]}
+		200	~
+	@corrupt hold state domain/placement/testsub/c1 00
+	token m2 testsubworker POST /tokens/testsub/tally	{"request_id": "r-unread-pl", "ref": "c1"}
+		403	{"error": "refused", "reason": "assignment_unreadable"}
+	@corrupt hold state domain/topology 00
+	token m2 testsubworker POST /tokens/testsub/tally	{"request_id": "r-unread-top-ok", "ref": "c2"}
+		200	{"token": "~"}
+	token hold testsubworker POST /tokens/testsub/probe	{"request_id": "r-unread-top-503", "cluster": "m1"}
+		503	{"error": "unavailable"}

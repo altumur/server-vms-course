@@ -1,0 +1,19 @@
+# Ожидаемые эффективные права варианта v8-worker-writes-deletes (P/02.5 Н1.4 строки console и <s>worker, Н3 шаг 2):
+# - таблица gauges из worker.writes: vaworker пишет, читает и удаляет va/gauges/*; console не пишет va/gauges/*, но читает и удаляет (delete:va/gauges/*);
+# - обычная таблица shelves: console пишет и удаляет va/shelves/*; vaworker только читает;
+# - worker.deletes [items]: vaworker удаляет va/items/* (delete:va/items/*), но не пишет; vacontroller без delete_after/ends не удаляет.
+role	action	key	expect
+vaworker	write	va/gauges/g1	allow
+vaworker	read	va/gauges/g1	allow
+vaworker	delete	va/gauges/g1	allow
+vaworker	write	va/shelves/s1	deny
+vaworker	delete	va/shelves/s1	deny
+vaworker	read	va/shelves/s1	allow
+console	write	va/shelves/s1	allow
+console	delete	va/shelves/s1	allow
+console	write	va/gauges/g1	deny
+console	read	va/gauges/g1	allow
+console	delete	va/gauges/g1	allow
+vaworker	delete	va/items/u1	allow
+vaworker	write	va/items/u1	deny
+vacontroller	delete	va/items/u1	deny

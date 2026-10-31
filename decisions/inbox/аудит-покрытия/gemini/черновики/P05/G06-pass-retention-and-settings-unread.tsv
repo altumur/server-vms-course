@@ -1,0 +1,20 @@
+# Черновик G06 (аудит покрытия P/05, Gemini):
+# P/05-06, P/05-07, P/05-08, P/05-09 (Н1.3 retention, Н1.4 heartbeat, space, mirror, Н3 «проход ресурса» retain, relieve, mirror,
+# Н4; C05-RETENTION-PULSE-33, R05-RETENTION-MIXED-51-01; common/contracts/holds.md):
+# На первом проходе при старте ресурса (C05-PASS-FIRST-AT-START-01):
+# - неверный days в testsub/retention (days: "0") и в testsub2/alarms_retention (days: "bad") при валидном testsub2/retention (days: "30")
+#   отражается в пульсе как retention_garbled: ["testsub", "testsub2"] и retention_withheld: {"testsub": "days_garbled", "testsub2": "days_garbled"};
+# - строка удержания testsub2/notches/n1 с нечитаемым окном (to: "bad") считается в garbled_rows: {"notches": 1} пульса;
+# - нечитаемые строки platform/space и platform/mirror отражаются в settings_unread: ["mirror", "space"] пульса, шаг relieve
+#   не исполняется (умолчания 0.85/0.75 не подставляются, testsub2/requests/free-srv-a-events не пишется).
+# Подготовка сценария: ресурс srv-a запускается шагом 6 (@start resource).
+scenario	step	request	expect
+g06-pass-retention-and-settings-unread	1	@as admin store POST /v1/write {"op": "put", "key": "testsub/retention", "items": {"days": "0"}}	200
+g06-pass-retention-and-settings-unread	2	@as admin store POST /v1/write {"op": "put", "key": "testsub2/retention", "items": {"days": "30"}}	200
+g06-pass-retention-and-settings-unread	3	@as admin store POST /v1/write {"op": "put", "key": "testsub2/alarms_retention", "items": {"days": "bad"}}	200
+g06-pass-retention-and-settings-unread	4	@as console store POST /v1/write {"op": "put", "key": "testsub2/notches/n1", "items": {"of": "c1", "from": "1760700000", "to": "bad"}}	200
+g06-pass-retention-and-settings-unread	5	@as admin store POST /v1/write {"op": "put", "key": "platform/space", "items": {"enabled": "maybe", "high": "0.85", "low": "0.75"}}	200
+g06-pass-retention-and-settings-unread	6	@as admin store POST /v1/write {"op": "put", "key": "platform/mirror", "items": {"enabled": "true", "copies": "bad"}}	200
+g06-pass-retention-and-settings-unread	7	@start resource	ok
+g06-pass-retention-and-settings-unread	8	@until 15 resource GET /v1/objects/platform/resources/srv-a/heartbeat	200 {"retention_garbled": ["testsub", "testsub2"], "retention_withheld": {"testsub": "days_garbled", "testsub2": "days_garbled"}, "garbled_rows": {"notches": 1}, "settings_unread": ["mirror", "space"], "short": 0}
+g06-pass-retention-and-settings-unread	9	store GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"items": null}

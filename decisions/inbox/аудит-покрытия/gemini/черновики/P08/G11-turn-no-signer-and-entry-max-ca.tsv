@@ -1,0 +1,63 @@
+# Черновик G11: расширения для Platform/08-domain/acceptance/10/scenarios.tsv
+# Покрывает:
+# - 8.10 Н1.7 (no_signer, C08-TURN-WITHOUT-SIGNER-01: запуск domain на кластере без domain/signer занимает очередь domain/signer-turn, отвечает на POST /domain/move по существу (400), а на остальные двери 503 {"error": "standby"})
+# - 8.10 Н3 шаг 1 (нечитаемая запись domain/signer-turn при запуске domain: процесс остаётся в standby и не перезаписывает запись)
+# - 8.10 Н1.5 (every_entry, C08-CA-ENTRY-MAX-01: если в domain/members уже есть запись > 820 байт, POST /domain/members/<c>/ca возвращает 409, а приём сведений по каналу остаётся 200 без записи ca в Entry; обрезка revoked_keys > 4 до 4 хвоста при следующей записи в domain/members)
+
+name	act	expect
+
+# C08-TURN-WITHOUT-SIGNER-01:
+# На кластере m1, где нет domain/signer, запуск экземпляра domain занимает очередь domain/signer-turn,
+# отвечает 503 {"error": "standby"} на обычные двери, но обрабатывает POST /domain/move в собственном порядке (400).
+domain_without_signer_takes_turn_and_serves_move_only
+	@cluster hold
+	@cluster m1
+	@bootstrap domain on hold
+	POST /domain/members	{"cluster": "m1", "pubkey": "@pubkey(m1)"}
+		200	~
+	@join m1 to hold
+	@start domain on m1
+	on m1 GET /domain/view
+		503	{"error": "standby"}
+	on m1 POST /domain/move	{"to": "hold"}
+		400	{"error": "~"}
+
+# Если запись domain/signer-turn в хранилище нечитаема, запускаемый экземпляр domain не может прочитать очередь,
+# не перезаписывает запись и остаётся в запасе (503 {"error": "standby"}).
+domain_unreadable_signer_turn_stays_standby
+	@cluster hold
+	@bootstrap domain on hold
+	@stop domain on hold
+	@corrupt hold state domain/signer-turn 00
+	@start domain on hold
+	GET /domain/view
+		503	{"error": "standby"}
+
+# C08-CA-ENTRY-MAX-01 и every_entry / revoked_keys:
+# 1) Если у члена big в domain/members раздута запись (> 820 байт), POST /domain/members/m1/ca для другого члена m1
+#    возвращает 409 (проверка every_entry по всем записям таблицы), но приём сведений от m1 с tls_ca не падает,
+#    оставляя Entry.ca у m1 пустым.
+# 2) Если у члена m1 накопилось 5 элементов в revoked_keys (в пределах 820 байт), следующая запись в domain/members
+#    обрезает revoked_keys у m1 до 4 последних элементов.
+entry_max_blocks_ca_post_on_other_member_and_trims_revoked_keys
+	@cluster hold
+	@cluster m1
+	@cluster big
+	@bootstrap domain on hold
+	POST /domain/members	{"cluster": "m1", "pubkey": "@pubkey(m1)"}
+		200	~
+	POST /domain/members	{"cluster": "big", "pubkey": "@pubkey(big)"}
+		200	~
+	@join m1 to hold
+	@put hold state domain/members/big {"pubkey":"@pubkey(big)","joined_at":1,"revoked_keys":["1111111111111111111111111111111111111111111111111111111111111111","2222222222222222222222222222222222222222222222222222222222222222"],"ca":["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd","eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee","ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff","0000000000000000000000000000000000000000000000000000000000000000","1212121212121212121212121212121212121212121212121212121212121212","3434343434343434343434343434343434343434343434343434343434343434"]}
+	POST /domain/members/m1/ca	{"fingerprint": "9999999999999999999999999999999999999999999999999999999999999999"}
+		409	{"error": "~"}
+	@put m1 state local/tls-ca {"fingerprint": "9999999999999999999999999999999999999999999999999999999999999999"}
+	@carry m1 to hold
+	GET /domain/members
+		200	{"members": {"m1": {"ca": []}}}
+	@put hold state domain/members/big {"pubkey":"@pubkey(big)","joined_at":1,"revoked_keys":["k1","k2","k3","k4","k5"],"ca":[]}
+	POST /domain/members/m1/ca	{"fingerprint": "9999999999999999999999999999999999999999999999999999999999999999"}
+		200	{"ca": ["9999999999999999999999999999999999999999999999999999999999999999"]}
+	GET /domain/members
+		200	{"members": {"big": {"revoked_keys": ["k2", "k3", "k4", "k5"]}}}

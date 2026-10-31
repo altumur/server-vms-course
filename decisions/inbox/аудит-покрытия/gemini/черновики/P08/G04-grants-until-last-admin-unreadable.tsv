@@ -1,0 +1,28 @@
+# Черновик G04 — нормализация until, last_admin над нечитаемым админом и нечитаемые строки грантов/break-glass (P/08.4 Н1.3, Н1.6, Н3, Н4)
+# Куда: Platform/08-domain/acceptance/4/scenarios.tsv
+# Покрывает новые свойства, отсутствующие в acceptance/4 и в отчёте Kimi:
+# 1. PUT /domain/grants/<кластер>: дубль строки после округления until до тысячных и совпадение until: 0.0 с опущенным until → 400 bad line (P7, P9); положительное until, округляющееся в 0 (0.0001), перезаписывается в 0.001, а не в бессрочный 0 (C08-UNTIL-REWRITE-01).
+# 2. last_admin (Н1.3, C08-LAST-ADMIN-UNREADABLE-01): второй администратор в domain/grants/domain с нечитаемой строкой domain/users/<имя> не считается действующим администратором — снятие прав root или его выключение отвергается 409 last admin.
+# 3. Нечитаемая строка domain/grants/m1 блокирует POST /domain/users кодом 503 unavailable (Н3 шаг 7а, C08-GRANTS-ORPHAN-01), а PUT /domain/grants/m1 перезаписывает и исцеляет её (Г-25).
+# 4. Нечитаемая строка domain/break-glass/m1 опускается в GET /domain/break-glass (Г-23) и исцеляется дверью PUT /domain/break-glass/m1.
+scenario	step	request	expect
+16-until-rewrite-and-dup-after-round	1	@domain	ok
+16-until-rewrite-and-dup-after-round	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+16-until-rewrite-and-dup-after-round	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "view", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*", "until": 0.0}]}	400 {"error": "bad line"}
+16-until-rewrite-and-dup-after-round	4	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "view", "scope": "*", "until": 4102444800.0011}, {"subject": "ann", "cap": "view", "scope": "*", "until": 4102444800.0014}]}	400 {"error": "bad line"}
+16-until-rewrite-and-dup-after-round	5	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*", "until": 0.0001}]}	200 {"cluster": "m1", "lines": [{"subject": "ann", "cap": "view", "scope": "*", "until": 0.001}, {"subject": "root", "cap": "admin", "scope": "*", "until": 0}]}
+17-last-admin-unreadable-and-garbled-grants	1	@domain	ok
+17-last-admin-unreadable-and-garbled-grants	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+17-last-admin-unreadable-and-garbled-grants	3	holder PUT /domain/grants/domain {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "scope": "*"}]}	200
+17-last-admin-unreadable-and-garbled-grants	4	member hold store POST /v1/write {"op": "put", "key": "domain/users/ann", "items": {"name": "bob", "how": "password", "pwhash_secret": "not a secret", "disabled": "false", "at": "1", "by": "root"}}	200
+17-last-admin-unreadable-and-garbled-grants	5	holder PUT /domain/grants/domain {"lines": [{"subject": "ann", "cap": "admin", "scope": "*"}]}	409 {"error": "last admin"}
+17-last-admin-unreadable-and-garbled-grants	6	holder PUT /domain/users/root {"disabled": true}	409 {"error": "last admin"}
+17-last-admin-unreadable-and-garbled-grants	7	holder DELETE /domain/users/ann	200 {"user": "ann", "deleted": true}
+17-last-admin-unreadable-and-garbled-grants	8	member hold store POST /v1/write {"op": "put", "key": "domain/grants/m1", "items": {"doc": "not-json"}}	200
+17-last-admin-unreadable-and-garbled-grants	9	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	503 {"error": "unavailable"}
+17-last-admin-unreadable-and-garbled-grants	10	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}]}	200 {"cluster": "m1"}
+17-last-admin-unreadable-and-garbled-grants	11	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	201 {"user": "bob"}
+17-last-admin-unreadable-and-garbled-grants	12	member hold store POST /v1/write {"op": "put", "key": "domain/break-glass/m1", "items": {"pwhash_secret": "not-a-secret", "set_at": "1"}}	200
+17-last-admin-unreadable-and-garbled-grants	13	holder GET /domain/break-glass	200 {"clusters": {"m1": "@absent"}}
+17-last-admin-unreadable-and-garbled-grants	14	holder PUT /domain/break-glass/m1 {"password": "valid break glass 1"}	200 {"cluster": "m1", "set": true}
+17-last-admin-unreadable-and-garbled-grants	15	holder GET /domain/break-glass	200 {"clusters": {"m1": {"set_at": "@any"}}}

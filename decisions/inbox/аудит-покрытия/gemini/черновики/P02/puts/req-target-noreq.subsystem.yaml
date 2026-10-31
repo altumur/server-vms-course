@@ -1,0 +1,5 @@
+# адресат worker.requests без раздела requests — просьбы не принимает (P/02.1 Н3 «загрузить_каталог»)
+name: reqt
+unit: {rows: reqts, id: numeric}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/reqt/worker}

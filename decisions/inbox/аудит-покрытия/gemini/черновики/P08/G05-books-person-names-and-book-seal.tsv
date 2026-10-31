@@ -1,0 +1,19 @@
+# Черновик G05 — правило reverse (person_names), unknown subject и проверка индекса имён (P/08.5 Н1.3, Н1.5, Н1.7, Н3)
+# Куда: Platform/08-domain/acceptance/5/scenarios.tsv
+# Покрывает новые свойства, отсутствующие в acceptance/4, acceptance/5 и в отчёте Kimi:
+# 1. Правило reverse (Н1.3 grant, Н1.5 person_names, Н1.7 reverse): вклад в книгу с domain.names под ключом, совпадающим с именем человека в domain/users (alice), не доставляется получателю (даже при наличии гранта) и отражается в view.books["testsub2/notes"].person_names.
+# 2. Отказ 400 {"error": "unknown subject"} в PUT /domain/grants/<кластер>, когда индекс имён known (missing: []), а subject новой строки не человек домена и не ключ индекса (Н1.7 checks).
+# 3. При не-known индексе имён (missing непуст или строка индекса нечитаема) PUT /domain/grants/<кластер> со строками людей домена (alice, root) и с уже существовавшими в прежней строке субъектами (t7) проходит 200 без ожидания индекса (Н1.7 checks).
+scenario	step	request	expect
+13-person-names-reverse-and-unknown-subject	1	@domain	ok
+13-person-names-reverse-and-unknown-subject	2	holder POST /domain/users {"name": "alice", "password": "alice password 1"}	201 {"user": "alice"}
+13-person-names-reverse-and-unknown-subject	3	member m1 console2 POST /tallies {"name": "t7", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
+13-person-names-reverse-and-unknown-subject	4	@until 90 member hold store GET /v1/get?key=domain/names/testsub2/notes	200 {"items": {"": "{\"missing\":[]}", "t7": "{\"members\":[\"m1\"]}"}}
+13-person-names-reverse-and-unknown-subject	5	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "no_such_subject", "cap": "view", "scope": "*"}]}	400 {"error": "unknown subject"}
+13-person-names-reverse-and-unknown-subject	6	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "alice", "cap": "view", "scope": "*"}, {"subject": "t7", "cap": "view", "scope": "*"}]}	200
+13-person-names-reverse-and-unknown-subject	7	member m1 console2 POST /tallies {"name": "alice", "of": "c1-m1", "shelf": "sh1", "zone": "z1", "to": ["m2"]}	201
+13-person-names-reverse-and-unknown-subject	8	@until 90 holder GET /domain	200 {"books": {"testsub2/notes": {"person_names": ["alice"]}}}
+13-person-names-reverse-and-unknown-subject	9	@until 60 member m2 store GET /v1/get?key=domain/testsub2/notes	200 {"items": {"": "@any", "t7": "@any", "alice": "@absent"}}
+13-person-names-reverse-and-unknown-subject	10	@stop agent m1	ok
+13-person-names-reverse-and-unknown-subject	11	@until 120 member hold store GET /v1/get?key=domain/names/testsub2/notes	200 {"items": {"": "{\"missing\":[\"m1\"]}"}}
+13-person-names-reverse-and-unknown-subject	12	holder PUT /domain/grants/m2 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "alice", "cap": "edit", "scope": "*"}, {"subject": "t7", "cap": "view", "scope": "*"}]}	200

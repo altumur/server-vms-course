@@ -1,0 +1,39 @@
+# Черновик G04 — `never` для `<x>/epoch/<y>`: граница ровно одного сегмента `<y>` и исключение `x = platform`, а также роль домена (`domain`, `domainagent`, `<sub>domain`) для `delete` под `domain/`.
+# Норма: Platform/01-store/spec/01.2-store.norms.md Н1.3 `never`:
+#   — «delete строки <x>/epoch/<y> — ровно один сегмент <y> после «<x>/epoch/», в том числе пустой (`t/epoch/`), x ≠ platform (строка эпохи P/03.2 <sub>/epoch/<id>) (сверка python и go М10/6–11, R12)»;
+#   — «delete под domain/ не ролью домена (domain, domainagent, <s>domain — в своих семьях по договору вывода прав P/02.5 Н1.4, Н1.4а); роль домена — имя domain, domainagent или <sub>domain (<sub> — грамматика имени подсистемы P/02.1, `[a-z][a-z0-9_-]{0,31}`); never проверяет только это (C01-NEVER-DOMAIN-ROLE-01)»;
+#   — Н1.2 `comment`: число/null/объект вместо строкового `comment` в файле прав — отказ старта, код 2.
+# Место приёмки: глава 1.2 (Platform/01-store/acceptance/2/scenarios.tsv).
+# Существующие директивы: `admin`, `@as <роль>`, `@rights store <файл>`. Новых директив не требуется.
+# Входы (в каталоге черновиков, при переносе — `acceptance/2/inputs/`):
+#   — `inputs/rights-domain-roles.json`: добавлены роли `domain`, `domainagent`, `testsubdomain` с `write`/`delete` `["domain/*"]`;
+#   — `inputs/rights-bad-comment.json`: `"comment": 123` (не строка — отказ старта `@exit 2`).
+# Что проверяет:
+#   Шаги 1–6 (на `admin`, у которого права «всё, кроме never»):
+#     — `platform/epoch/c1` (`x = platform`): `put` → `200`, `delete` → `200` (не попадает под `never`, т.к. `x ≠ platform`);
+#     — `testsub/epoch/a/b` (два сегмента после `epoch/`): `put` → `200`, `delete` → `200` (не попадает под `never`, т.к. ровно один сегмент `<y>`);
+#     — `testsub/epoch` (нет `/` после `epoch`): `put` → `200`, `delete` → `200`.
+#   Шаги 7–15 (с файлом прав `inputs/rights-domain-roles.json`):
+#     — `@as domain`: `put` и `delete` `domain/holder` → `200` (`never` пропускает роль `domain`);
+#     — `@as domainagent`: `put` и `delete` `domain/member` → `200` (`never` пропускает роль `domainagent`);
+#     — `@as testsubdomain`: `put` и `delete` `domain/testsub/k1` → `200` (`never` пропускает роль `<sub>domain`);
+#     — `admin` `delete` `domain/holder` → по-прежнему `403` (`admin` не роль домена).
+#   Шаги 16–17: `@rights store inputs/rights-bad-comment.json` → `@exit 2`; возврат `inputs/rights.json` → `ok`.
+scenario	step	request	expect
+14-never-boundaries	1	admin POST /v1/write {"id":"n1","op":"put","key":"platform/epoch/c1","items":{"n":"1"},"cas":""}	200
+14-never-boundaries	2	admin POST /v1/write {"id":"n2","op":"delete","key":"platform/epoch/c1"}	200
+14-never-boundaries	3	admin POST /v1/write {"id":"n3","op":"put","key":"testsub/epoch/a/b","items":{"n":"1"},"cas":""}	200
+14-never-boundaries	4	admin POST /v1/write {"id":"n4","op":"delete","key":"testsub/epoch/a/b"}	200
+14-never-boundaries	5	admin POST /v1/write {"id":"n5","op":"put","key":"testsub/epoch","items":{"n":"1"},"cas":""}	200
+14-never-boundaries	6	admin POST /v1/write {"id":"n6","op":"delete","key":"testsub/epoch"}	200
+14-never-boundaries	7	@rights store inputs/rights-domain-roles.json	ok
+14-never-boundaries	8	@as domain POST /v1/write {"id":"n7","op":"put","key":"domain/holder","items":{"n":"1"},"cas":""}	200
+14-never-boundaries	9	@as domain POST /v1/write {"id":"n8","op":"delete","key":"domain/holder"}	200
+14-never-boundaries	10	@as domainagent POST /v1/write {"id":"n9","op":"put","key":"domain/member","items":{"n":"1"},"cas":""}	200
+14-never-boundaries	11	@as domainagent POST /v1/write {"id":"n10","op":"delete","key":"domain/member"}	200
+14-never-boundaries	12	@as testsubdomain POST /v1/write {"id":"n11","op":"put","key":"domain/testsub/k1","items":{"n":"1"},"cas":""}	200
+14-never-boundaries	13	@as testsubdomain POST /v1/write {"id":"n12","op":"delete","key":"domain/testsub/k1"}	200
+14-never-boundaries	14	admin POST /v1/write {"id":"n13","op":"put","key":"domain/holder","items":{"n":"1"},"cas":""}	200
+14-never-boundaries	15	admin POST /v1/write {"id":"n14","op":"delete","key":"domain/holder"}	403
+14-never-boundaries	16	@rights store inputs/rights-bad-comment.json	@exit 2
+14-never-boundaries	17	@rights store inputs/rights.json	ok

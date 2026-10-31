@@ -1,0 +1,19 @@
+# Черновик G07 (аудит покрытия P/05, Gemini):
+# P/05-08 (Н1.4 space, free_ask, heartbeat.short, Н3 «проход ресурса» relieve; E44, E45):
+# 1. При platform/space enabled: false ресурс на первом проходе снимает свою существующую строку testsub2/requests/free-srv-a-events
+#    и выставляет short: 0 (E45).
+# 2. При platform/space enabled: true, когда доля занятого места находится между low и high (low: 0.00000001, high: 0.99999999)
+#    и need > 0, существующая своя строка testsub2/requests/free-srv-a-events стоит как есть — не снимается и не переписывается
+#    (сохраняет прежнюю версию index и значение free, E44).
+# Подготовка обоих сценариев: ресурс srv-a запускается шагом @start resource.
+scenario	step	request	expect
+g07a-space-disabled-removes-free-ask	1	@as admin store POST /v1/write {"op": "put", "key": "platform/space", "items": {"enabled": "false", "high": "0.00000001", "low": "0.00000001"}}	200
+g07a-space-disabled-removes-free-ask	2	@as resource store POST /v1/write {"op": "put", "key": "testsub2/requests/free-srv-a-events", "items": {"free": "100", "volume": "events", "server": "srv-a", "at": "1700000000"}}	200
+g07a-space-disabled-removes-free-ask	3	@start resource	ok
+g07a-space-disabled-removes-free-ask	4	@until 15 store GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"items": null}
+g07a-space-disabled-removes-free-ask	5	@until 15 resource GET /v1/objects/platform/resources/srv-a/heartbeat	200 {"short": 0}
+g07b-space-between-low-high-keeps-free-ask	1	@as admin store POST /v1/write {"op": "put", "key": "platform/space", "items": {"enabled": "true", "high": "0.99999999", "low": "0.00000001"}}	200
+g07b-space-between-low-high-keeps-free-ask	2	@as resource store POST /v1/write {"op": "put", "key": "testsub2/requests/free-srv-a-events", "items": {"free": "100", "volume": "events", "server": "srv-a", "at": "1700000000"}}	200 {"index": "$v1"}
+g07b-space-between-low-high-keeps-free-ask	3	@start resource	ok
+g07b-space-between-low-high-keeps-free-ask	4	@until 15 resource GET /v1/objects/platform/resources/srv-a/heartbeat	200 {"pass_started": "@time"}
+g07b-space-between-low-high-keeps-free-ask	5	store GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$v1", "items": {"free": "100", "volume": "events", "server": "srv-a", "at": "1700000000"}}

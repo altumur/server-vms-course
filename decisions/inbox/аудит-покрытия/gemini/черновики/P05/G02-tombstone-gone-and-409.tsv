@@ -1,0 +1,17 @@
+# Черновик G02 (аудит покрытия P/05, Gemini):
+# P/05-01, P/05-02, P/05-11, P/05-14 (Н1.1 written C05-WRITTEN-AFTER-GONE-01, door C05-GONE-BODY-READ-01, «Тела у ресурса»,
+# «Надгробия», Н2, Н4; common/contracts/tombstone.md):
+# - надгробие .gone/<ключ> не входит в обычный листинг, но выдаётся по prefix=.gone/ и GET /v1/objects/.gone/<ключ> (только чтение; PUT — 405);
+# - входящая копия PUT /v1/objects/<sub>/blobs/<digest> с X-Written старше надгробия (1700000050 < 1700000100) отвергается 409 («удалено позже»);
+# - запись того же ключа с X-Written новее надгробия (1700000200 > 1700000100) принимается (204) и сразу снимает надгробие (rewrite).
+scenario	step	request	expect
+g02-tombstone-gone-and-409	1	@put object .gone/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae inputs/gone-foo.json	ok
+g02-tombstone-gone-and-409	2	resource GET /v1/objects?prefix=testsub2/blobs/&scope=local	200 {"objects": {}}
+g02-tombstone-gone-and-409	3	resource GET /v1/objects?prefix=.gone/&scope=local	200 {"objects": {".gone/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"server": "srv-a", "written": "@time", "size": "@any"}}}
+g02-tombstone-gone-and-409	4	resource GET /v1/objects/.gone/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae?scope=local	200 {"written": 1700000100, "peers": ["srv-b"], "acked": []}
+g02-tombstone-gone-and-409	5	resource PUT /v1/objects/.gone/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw {}	405 {"error": "@any"}
+g02-tombstone-gone-and-409	6	resource @header X-Written: 1700000050 PUT /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw foo	409 {"error": "@any"}
+g02-tombstone-gone-and-409	7	resource GET /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae?scope=local	404 {"error": "@any"}
+g02-tombstone-gone-and-409	8	resource @header X-Written: 1700000200 PUT /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw foo	204
+g02-tombstone-gone-and-409	9	resource GET /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae?scope=local	200 @header X-Written: ~1700000200 ~foo
+g02-tombstone-gone-and-409	10	resource GET /v1/objects?prefix=.gone/&scope=local	200 {"objects": {}}

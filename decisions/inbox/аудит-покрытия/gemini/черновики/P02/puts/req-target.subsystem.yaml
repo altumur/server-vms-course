@@ -1,0 +1,6 @@
+# адресат worker.requests, принимающий просьбы (P/02.1 Н3 «загрузить_каталог»)
+name: reqt
+unit: {rows: reqts, id: numeric}
+placement: {capacity: {default: 1}}
+requests: {free: true, ttl: 60}
+worker: {exec: /usr/lib/reqt/worker}

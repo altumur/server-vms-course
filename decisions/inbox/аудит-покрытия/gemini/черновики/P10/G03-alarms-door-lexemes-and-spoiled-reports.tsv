@@ -1,0 +1,20 @@
+# Черновик G03: расширения для Platform/10-domain-console/acceptance/scenarios.tsv
+# Покрывает:
+# - P/10 Н1.8 door (C06-EVENTS-QUERY-LEXEME-162-01, A12: отказ 400 {"error": "refused", "detail": "since and until are times, in seconds"} на экспоненциальную запись 1e3, отрицательное число -1, знак +, подчёркивание 1_000 и повтор параметра since)
+# - P/10 Н3 alarms (C10-ALARMS-INPUT-01, C10-REPORTED-OUTCOME-1D6: при нечитаемой метке domain/members/<член>/reported и при нечитаемом поколении domain/members/<член>/reports/<rev> дверь GET /domain/alarms отвечает 200 со статусом члена unreadable)
+
+scenario	step	request	expect
+# Проверка строгой грамматики since/until двери GET /domain/alarms и сборки входа из хранилища держателя
+# при повреждении объекта метки reported или объекта отчёта reports/<rev>.
+11-alarms-query-lexemes-and-spoiled-report-objects	1	@domain	ok
+11-alarms-query-lexemes-and-spoiled-report-objects	2	holder GET /domain/alarms?since=1e3	400 {"error": "refused", "detail": "since and until are times, in seconds"}
+11-alarms-query-lexemes-and-spoiled-report-objects	3	holder GET /domain/alarms?since=-1	400 {"error": "refused", "detail": "since and until are times, in seconds"}
+11-alarms-query-lexemes-and-spoiled-report-objects	4	holder GET /domain/alarms?since=%2B1	400 {"error": "refused", "detail": "since and until are times, in seconds"}
+11-alarms-query-lexemes-and-spoiled-report-objects	5	holder GET /domain/alarms?until=1_000	400 {"error": "refused", "detail": "since and until are times, in seconds"}
+11-alarms-query-lexemes-and-spoiled-report-objects	6	holder GET /domain/alarms?since=1&since=2	400 {"error": "refused"}
+11-alarms-query-lexemes-and-spoiled-report-objects	7	@stop agent m1	ok
+11-alarms-query-lexemes-and-spoiled-report-objects	8	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$rev1"}
+11-alarms-query-lexemes-and-spoiled-report-objects	9	@on hold @spoil object domain/members/m1/reports/$rev1	ok
+11-alarms-query-lexemes-and-spoiled-report-objects	10	holder GET /domain/alarms	200 {"complete": false, "members": {"m1": {"state": "unreadable"}}, "sentence": "~m1's page of alarms does not read"}
+11-alarms-query-lexemes-and-spoiled-report-objects	11	@on hold @spoil object domain/members/m1/reported	ok
+11-alarms-query-lexemes-and-spoiled-report-objects	12	holder GET /domain/alarms	200 {"complete": false, "members": {"m1": {"state": "unreadable", "known_until": "@absent", "silent_since": "@absent"}}}

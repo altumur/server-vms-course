@@ -1,0 +1,30 @@
+# Черновик G04: расширения для Platform/10-domain-console/acceptance/scenarios.tsv
+# Покрывает:
+# - P/10 Н2 и Н4 (путь с сегментом . или .., в т.ч. в процент-форме — 404 {"error": "not a domain route"} до сторожевой)
+# - P/10 Н1.4 и Н1.5 (снятие внешнего заголовка X-User; выдача своих грантов из domain/grants/domain в GET /session; отказ 403 при отсутствии гранта на домене с областью "*")
+# - P/10 Н1.5 и Н4 (правило «Нечитаемая строка» у сторожевой консоли домена: нечитаемые domain/grants/domain, domain/disabled, domain/revoked, domain/keys -> 503 {"error": "unavailable"}, не 401/403; отсутствие domain/keys при наличии следа домена -> 503 shut)
+
+scenario	step	request	expect
+# Сегменты . и .. (в т.ч. %2e%2e) отвергаются 404 not a domain route до сторожевой.
+# Внешний X-User снимается; /session отдаёт строки грантов субъекта из domain/grants/domain.
+# При повреждении любой из строк проверки доступа (domain/grants/domain, domain/disabled, domain/revoked, domain/keys)
+# сторожевая консоли домена возвращает 503 {"error": "unavailable"}, а при удалении domain/keys — 503 (shut).
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	1	@domain	ok
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	2	holder GET /domain/./members	404 {"error": "not a domain route"}
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	3	holder GET /domain/testsub/%2e%2e/members	404 {"error": "not a domain route"}
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	4	holder @header X-User: forged GET /session	200 {"user": "root", "grants": [{"subject": "root", "cap": "admin", "scope": "*"}]}
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	5	@on hold @sigterm domain	ok
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	6	member hold store GET /v1/get?key=domain/grants/domain	200 {"items": {"doc": "$gdoc"}}
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	7	member hold store POST /v1/write {"op": "put", "key": "domain/grants/domain", "items": {"doc": "garbled"}}	200
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	8	holder GET /domain	503 {"error": "unavailable"}
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	9	member hold store POST /v1/write {"op": "put", "key": "domain/grants/domain", "items": {"doc": "$gdoc"}}	200
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	10	member hold store POST /v1/write {"op": "put", "key": "domain/disabled", "items": {"bad": "1"}}	200
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	11	holder GET /domain	503 {"error": "unavailable"}
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	12	member hold store POST /v1/write {"op": "delete", "key": "domain/disabled"}	200
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	13	member hold store POST /v1/write {"op": "put", "key": "domain/revoked", "items": {"j1": "garbled"}}	200
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	14	holder GET /domain	503 {"error": "unavailable"}
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	15	member hold store POST /v1/write {"op": "delete", "key": "domain/revoked"}	200
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	16	member hold store POST /v1/write {"op": "put", "key": "domain/keys", "items": {"doc": "garbled"}}	200
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	17	holder GET /domain	503 {"error": "unavailable"}
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	18	member hold store POST /v1/write {"op": "delete", "key": "domain/keys"}	200
+12-gatekeeper-dot-segments-session-and-unreadable-auth-rows	19	holder GET /domain	503

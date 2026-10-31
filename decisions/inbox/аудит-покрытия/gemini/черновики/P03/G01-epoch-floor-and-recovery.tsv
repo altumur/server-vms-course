@@ -1,0 +1,25 @@
+# Черновик G01: сценарии для Platform/03-worker/acceptance/2/scenarios.tsv
+# Норма: P/03.2 Н1.5, Н1.6, Н3 «взять_эпоху(id)», «подтвердить(id)», «шаг_аренды()» шаг 2, Н4.
+# 1) Выдача первой эпохи учитывает platform/epoch_floor: max(текущая, floor) + 1 (при floor=10 первая эпоха c1 равна 11).
+# 2) Подъём platform/epoch_floor на ходу (op: floor, floor: 20 через дверь admin) переводит аренду c1 (epoch 11 < 20) в lost на следующем шаге аренды, после чего цикл сверки берёт новую эпоху max(11, 20) + 1 = 21.
+# 3) Нечитаемая строка platform/epoch_floor (floor: "x") запрещает выдачу новой эпохи (пол не подменяется 0) и отсекает подтверждение аренды.
+scenario	step	request	expect
+25-epoch-floor	1	@start resource	ok
+25-epoch-floor	2	@start controller	ok
+25-epoch-floor	3	admin POST /v1/write {"id":"f25a","op":"floor","floor":10}	200
+25-epoch-floor	4	@start worker w-1	ok
+25-epoch-floor	5	console POST /counters {"name": "c1", "start": 1}	201
+25-epoch-floor	6	@until 30 store GET /v1/get?key=testsub/epoch/c1	200 {"items": {"epoch": "11"}}
+25-epoch-floor	7	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"status": [{"id": "c1", "phase": "running", "epoch": 11}]}
+25-epoch-floor	8	admin POST /v1/write {"id":"f25b","op":"floor","floor":20}	200
+25-epoch-floor	9	@until 30 store GET /v1/get?key=testsub/epoch/c1	200 {"items": {"epoch": "21"}}
+25-epoch-floor	10	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"status": [{"id": "c1", "phase": "running", "epoch": 21}]}
+26-epoch-floor-unreadable	1	@start resource	ok
+26-epoch-floor-unreadable	2	@start controller	ok
+26-epoch-floor-unreadable	3	@start worker w-1	ok
+26-epoch-floor-unreadable	4	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false", "gen": "1"}}
+26-epoch-floor-unreadable	5	admin POST /v1/write {"id":"f26a","op":"put","key":"platform/epoch_floor","items":{"floor":"x","generation_at":"1700000000"},"cas":""}	200
+26-epoch-floor-unreadable	6	console POST /counters {"name": "c1", "start": 1}	201
+26-epoch-floor-unreadable	7	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+26-epoch-floor-unreadable	8	@sleep 12	ok
+26-epoch-floor-unreadable	9	store GET /v1/get?key=testsub/epoch/c1	200 {"items": null}

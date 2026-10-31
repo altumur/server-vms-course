@@ -1,0 +1,37 @@
+scenario	step	request	expect
+# Черновик G03 (урок 04, контроллер): исполнение контроллером дренажа (platform/drain → переезд единиц с причиной server <s> draining) и вывода сервера (platform/decommission/<s> → отдача слотов, запись <sub>/decommissioned/<s>, удаление <sub>/want/<s>, переезд единиц, счёт servers_decommissioned_total; при отзыве — снятие отметки <sub>/decommissioned/<s>) (P/04-13, P/04-14; Н1.1, Н1.2, Н3 «проход()» шаги 2, 6, 9а, «вывести_сервер(s)»).
+01-drain-moves-unit	1	@start resource	ok
+01-drain-moves-unit	2	@start resource on srv-b	ok
+01-drain-moves-unit	3	@start controller	ok
+01-drain-moves-unit	4	@start worker w-1 on srv-a	ok
+01-drain-moves-unit	5	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"released": "false"}}
+01-drain-moves-unit	6	console POST /counters {"name": "c1", "start": 1}	201
+01-drain-moves-unit	7	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-1"}}
+01-drain-moves-unit	8	@start worker w-2 on srv-b	ok
+01-drain-moves-unit	9	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
+01-drain-moves-unit	10	console POST /drain?server=srv-a	200 {"draining": "srv-a"}
+01-drain-moves-unit	11	@until 30 store GET /v1/get?key=testsub/placement/c1	200 {"items": {"worker": "w-2", "reason": "~server srv-a draining"}}
+01-drain-moves-unit	12	@until 20 console GET /drain	200 {"draining": "srv-a", "safe": true}
+01-drain-moves-unit	13	console DELETE /drain	200 {"draining": null}
+02-decommission-and-revoke	1	@start resource	ok
+02-decommission-and-revoke	2	@start resource on srv-b	ok
+02-decommission-and-revoke	3	@start controller testsub2	ok
+02-decommission-and-revoke	4	console2 POST /shelves {"name": "s-a1", "zone": "z", "server": "srv-a"}	201
+02-decommission-and-revoke	5	console2 POST /shelves {"name": "s-b1", "zone": "z", "server": "srv-b"}	201
+02-decommission-and-revoke	6	@start worker testsub2 t-srv-a-1 on srv-a	ok
+02-decommission-and-revoke	7	@start worker testsub2 t-srv-b-1 on srv-b	ok
+02-decommission-and-revoke	8	@until 30 store GET /v1/get?key=testsub2/holds/s-a1	200 {"items": {"by": "t-srv-a-1", "released": "false"}}
+02-decommission-and-revoke	9	@until 30 store GET /v1/get?key=testsub2/holds/s-b1	200 {"items": {"by": "t-srv-b-1", "released": "false"}}
+02-decommission-and-revoke	10	@until 30 store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "1"}}
+02-decommission-and-revoke	11	console2 POST /tallies {"name": "t1", "of": "c1"}	201
+02-decommission-and-revoke	12	@until 30 store GET /v1/get?key=testsub2/placement/t1	200 {"items": {"worker": "t-srv-a-1"}}
+02-decommission-and-revoke	13	@sigkill t-srv-a-1	ok
+02-decommission-and-revoke	14	@as console store POST /v1/write {"id":"g03a","op":"put","key":"platform/decommission/srv-a","items":{"by":"admin","at":"1700000000","why":"retire"},"cas":""}	200
+02-decommission-and-revoke	15	@until 30 store GET /v1/get?key=testsub2/decommissioned/srv-a	200 {"items": {"asked_at": "1700000000", "at": "@time", "slots": "t-srv-a-1"}}
+02-decommission-and-revoke	16	store GET /v1/get?key=testsub2/slots/t-srv-a-1	200 {"items": {"released": "true"}}
+02-decommission-and-revoke	17	store GET /v1/get?key=testsub2/want/srv-a	200 {"items": null}
+02-decommission-and-revoke	18	@until 30 store GET /v1/get?key=testsub2/placement/t1	200 {"items": {"worker": "t-srv-b-1"}}
+02-decommission-and-revoke	19	@until 20 resource GET /v1/objects/testsub2/controller/pass?scope=local	200 {"servers_decommissioned_total": 1}
+02-decommission-and-revoke	20	console DELETE /servers/srv-a/decommission	200 {"decommissioned": false}
+02-decommission-and-revoke	21	@until 30 store GET /v1/get?key=testsub2/decommissioned/srv-a	200 {"items": null}
+02-decommission-and-revoke	22	@until 30 store GET /v1/get?key=testsub2/want/srv-a	200 {"items": {"want": "1"}}

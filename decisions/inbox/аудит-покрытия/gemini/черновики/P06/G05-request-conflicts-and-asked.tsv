@@ -1,0 +1,29 @@
+# Draft G05 (subchapter 6.4): request rid conflicts (409 exists / 409 spent), idempotent replay of answered request (200), DELETE /<sub>/asked/<sha16>, and unreadable asked row -> 429
+# Norms: 6.4 Н2, Н3 «подать просьбу» шаги 2–5, Н4 (P/06.4-04, P/06.4-06)
+
+POST	/testsub2/tallies	{"id": "t1"}	201	{"id": "t1", "revision": 1, "born": "$b"}
+# 1. Active request with same rid (t1-0-1) but different digest -> 409 exists
+POST	/testsub2/requests	{"unit": "t1", "from": 0, "to": 1}	202	{"rid": "t1-0-1", "unit": "t1"}
+POST	/testsub2/requests	{"unit": "t1", "from": 0, "to": 1, "action": "recount"}	409	{"error": "exists"}
+DELETE	/testsub2/requests/t1-0-1	-	200	{"cancelled": "t1-0-1"}
+# Clear operator's rate-limit ledger (sha256("person:operator")[:16] = 084ef0566b7b6a21) via DELETE /testsub2/asked/<sha16>
+DELETE	/testsub2/asked/084ef0566b7b6a21	-	200	{"cleared": "084ef0566b7b6a21", "dropped": 1}
+DELETE	/testsub2/asked/084ef0566b7b6a21	-	404	{"error": "~"}
+# 2. Historical command record at objects/testsub2/commands/t1-1-2 with unreadable form or mismatched digest -> 409 spent
+@as console store	PUT	/objects/testsub2/commands/t1-1-2	@json:{"unit": "t1", "born": "$b", "digest": "0000000000000000000000000000000000000000000000000000000000000000", "outcome": "ok", "at": 1700000001}	200	{}
+POST	/testsub2/requests	{"unit": "t1", "from": 1, "to": 2}	409	{"error": "spent"}
+@as console store	PUT	/objects/testsub2/commands/t1-1-2	@json:{"unit": "t1", "outcome": "bogus"}	200	{}
+POST	/testsub2/requests	{"unit": "t1", "from": 1, "to": 2}	409	{"error": "spent"}
+@as console store	DELETE	/objects/testsub2/commands/t1-1-2	-	200	{}
+# 3. Historical command record with matching unit & digest -> 200 {"answered": ...} without recording a new request
+POST	/testsub2/requests	{"unit": "t1", "from": 2, "to": 3}	202	{"rid": "t1-2-3"}
+@as console store	GET	/kv/testsub2/requests/t1-2-3	-	200	{"value": {"digest": "$d23"}}
+@as console store	DELETE	/kv/testsub2/requests/t1-2-3	-	200	{}
+@as console store	PUT	/objects/testsub2/commands/t1-2-3	@json:{"unit": "t1", "born": "$b", "digest": "$d23", "outcome": "ok", "at": 1700000005, "detail": "done"}	200	{}
+POST	/testsub2/requests	{"unit": "t1", "from": 2, "to": 3}	200	{"answered": {"rid": "t1-2-3", "outcome": "ok", "detail": "done"}}
+@as console store	DELETE	/objects/testsub2/commands/t1-2-3	-	200	{}
+# 4. Unreadable asked row (corrupted rids or at) -> 429 (fail-closed)
+@as console store	PUT	/kv/testsub2/asked/084ef0566b7b6a21	{"rids": "[1]", "at": "1700000000"}	200	{}
+POST	/testsub2/requests	{"unit": "t1", "from": 3, "to": 4}	429	{"error": "~"}
+DELETE	/testsub2/asked/084ef0566b7b6a21	-	200	{"cleared": "084ef0566b7b6a21"}
+DELETE	/testsub2/tallies/t1	-	200	{"deleted": "t1"}

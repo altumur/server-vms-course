@@ -1,0 +1,21 @@
+# Draft G07 (subchapter 6.5): /where/<id> door ticket issuance, door/signer + door/keys creation, and door.keys_conflict alarm on mismatched key under same kid
+# Norms: 6.5 Н1 «door/signer и door/keys», Н3 «/where/<id>», Н4 «door.keys_conflict» (P/06.5-05)
+
+@as console store	PUT	/kv/testsub2/tallies/ta	{"id": "ta", "zone": "", "weight": "1", "tags": "[]", "token_secret": "", "mask": "", "revision": "1", "born": "1700000000"}	200	{}
+@as console store	PUT	/kv/testsub2/heartbeats/t-1	@file:inputs/hb-t-1-door.json	200	{}
+@as console store	PUT	/kv/testsub2/placements/t-1	{"units": "[{\"id\":\"ta\",\"revision\":1,\"born\":1700000000}]", "updated": "1700000001"}	200	{}
+# 1. /testsub2/where/ta issues a door1.<kid>.<payload>.<sig> ticket and populates door/signer & door/keys
+GET	/testsub2/where/ta	-	200	{"unit": "ta", "worker": "t-1", "server": "srv-a", "door": {"url": "http://127.0.0.1:19999", "token": "~door1.", "routes": ["read", "play"]}}
+@as console store	GET	/kv/door/signer	-	200	{"value": {"kid": "$kid"}}
+@as console store	GET	/kv/door/keys	-	200	{"value": {"keys": "~$kid"}}
+# 2. Corrupt door/keys so $kid maps to a different 32-byte public key: /where/ta omits door (without overwriting door/keys) and emits door.keys_conflict
+@as console store	PUT	/kv/door/keys	{"keys": "{\"$kid\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"}", "updated": "1700000005"}	200	{}
+GET	/testsub2/where/ta	-	200	{"unit": "ta", "worker": "t-1", "door": "@absent"}
+@as console store	GET	/kv/door/keys	-	200	{"value": {"keys": "{\"$kid\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"}"}}
+GET	/events?kind=door.keys_conflict&subject=door&limit=1	-	200	{"events": [{"kind": "door.keys_conflict", "subject": "door", "detail": {"kid": "$kid"}}]}
+# Clean up
+@as console store	DELETE	/kv/testsub2/placements/t-1	-	200	{}
+@as console store	DELETE	/kv/testsub2/heartbeats/t-1	-	200	{}
+@as console store	DELETE	/kv/testsub2/tallies/ta	-	200	{}
+@as console store	DELETE	/kv/door/signer	-	200	{}
+@as console store	DELETE	/kv/door/keys	-	200	{}

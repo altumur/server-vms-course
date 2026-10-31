@@ -1,0 +1,23 @@
+# Draft G10 (subchapter 6.6): unreadable rows in management families (policy -> manifest default, drain -> 503, schema -> schema_unknown=true & 409 on PUT, server-labels -> labels=null & unread metric)
+# Norms: 6.6 Н1 «policy, drain, schema, server-labels», Н2.1, Н2.3 (P/06.6-01, P/06.6-03, P/06.6-04)
+
+# 1. Unreadable <sub>/policy -> GET /testsub/policy returns manifest default (200 {"servers": "shared"})
+@as console store	PUT	/kv/testsub/policy	{"servers": "bogus"}	200	{}
+GET	/testsub/policy	-	200	{"servers": "shared"}
+@as console store	DELETE	/kv/testsub/policy	-	200	{}
+# 2. Unreadable platform/drain -> GET /drain returns 503 {"error": "unavailable"}
+@as console store	PUT	/kv/platform/drain	{"server": "bad/srv", "by": "op", "at": "1700000000", "why": ""}	200	{}
+GET	/drain	-	503	{"error": "unavailable"}
+@as console store	DELETE	/kv/platform/drain	-	200	{}
+# 3. Unreadable platform/schema -> GET /schema returns version=null, schema_unknown=true; PUT /schema?version=1 returns 409
+@as console store	PUT	/kv/platform/schema	{"version": "0"}	200	{}
+GET	/schema	-	200	{"version": null, "schema_unknown": true}
+PUT	/schema?version=1	-	409	{"error": "~mend the row first"}
+@as console store	DELETE	/kv/platform/schema	-	200	{}
+# 4. Unreadable platform/servers/srv-a -> GET /servers reports labels: null, labels_source: null and increments *_servers_labels_unread
+@as console store	PUT	/kv/testsub/heartbeats/w-1	{"server": "srv-a", "url": "http://127.0.0.1:9999", "version": "v1", "started": "1700000000", "statuses": "{}"}	200	{}
+@as console store	PUT	/kv/platform/servers/srv-a	{"labels": "INVALID LABEL!"}	200	{}
+GET	/servers	-	200	{"servers": {"srv-a": {"labels": null, "labels_source": null}}}
+GET	/metrics	-	200	@text:~testsub_servers_labels_unread 1
+@as console store	DELETE	/kv/platform/servers/srv-a	-	200	{}
+@as console store	DELETE	/kv/testsub/heartbeats/w-1	-	200	{}

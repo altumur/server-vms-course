@@ -1,0 +1,16 @@
+# Draft G01 (subchapter 6.1): unit.state.cursor verifies only born (ignoring revision), whereas unit.state.result verifies both born and revision
+# Norms: 6.1 Н1.9 «unit.state.result и unit.state.cursor», Н2 «Состояние в ответе» (P/06.1-18)
+
+POST	/testsub2/tallies	{"id": "t1", "zone": "z0"}	201	{"id": "t1", "zone": "z0", "revision": 1, "born": "$b"}
+@as console store	PUT	/kv/testsub2/state/result/t1	{"revision": "1", "born": "$b", "at": "1700000000", "by": "t-1", "value": "{\"state\":\"open\"}"}	200	{}
+@as console store	PUT	/kv/testsub2/state/cursor/t1	{"revision": "1", "born": "$b", "at": "1700000001", "by": "t-1", "value": "{\"offset\":42}"}	200	{}
+GET	/testsub2/tallies	-	200	{"configured": [{"id": "t1", "revision": 1, "state": {"state": "open", "offset": 42, "state_at": 1700000001}}]}
+# Advance unit revision to 2: result (revision 1 != 2) stops acting, while cursor (born == $b) remains active
+PUT	/testsub2/tallies/t1	{"zone": "z1"}	200	{"id": "t1", "zone": "z1", "revision": 2, "born": "$b"}
+GET	/testsub2/tallies	-	200	{"configured": [{"id": "t1", "revision": 2, "state": {"state": "@absent", "offset": 42, "state_at": 1700000001}}]}
+# Wrong born on cursor: cursor also stops acting, so state is omitted
+@as console store	PUT	/kv/testsub2/state/cursor/t1	{"revision": "2", "born": "0", "at": "1700000002", "by": "t-1", "value": "{\"offset\":99}"}	200	{}
+GET	/testsub2/tallies	-	200	{"configured": [{"id": "t1", "revision": 2, "state": "@absent"}]}
+DELETE	/testsub2/tallies/t1	-	200	{"deleted": "t1"}
+@as console store	DELETE	/kv/testsub2/state/result/t1	-	200	{}
+@as console store	DELETE	/kv/testsub2/state/cursor/t1	-	200	{}
