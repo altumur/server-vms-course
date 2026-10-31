@@ -5,3 +5,4 @@ place	layer	word	value
 /properties/events_refused	3	x-integer	true
 /properties/identity_changes	3	x-integer	true
 /properties/identity_coincidences	3	x-integer	true
+/properties/inputs_off	3	x-integer	true

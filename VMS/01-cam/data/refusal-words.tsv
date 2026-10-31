@@ -24,6 +24,8 @@ commands	-	pulse_ms is a whole number of milliseconds	-	01.4 Н3, Н4
 commands	-	ports and presets count from 1	-	01.4 Н3, Н4
 commands	-	output needs a port	-	01.4 Н3, Н4
 commands	-	this device has no outputs	-	01.4 Н3, Н4
+commands	-	no such output	-	01.4 Н3, Н4
+commands	-	output is disabled	-	01.4 Н3, Н4
 commands	-	preset needs n	-	01.4 Н3, Н4
 commands	-	this device has no telemetry	-	01.4 Н3, Н4
 commands	-	device refused	-	01.4 Н3, Н4
