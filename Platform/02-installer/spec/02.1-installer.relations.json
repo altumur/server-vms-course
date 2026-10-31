@@ -1186,6 +1186,24 @@
    "norm": "P/02.1 Н1.3; P/06.1 Н1.2",
    "cel": "((type(doc) == map && \"unit\" in doc) ? ((type(doc[\"unit\"]) == map && \"fields\" in doc[\"unit\"]) ? (type(doc[\"unit\"][\"fields\"]) == map ? dyn(doc[\"unit\"][\"fields\"]).map(k1, ((type(doc[\"unit\"][\"fields\"][k1]) == map && \"default\" in doc[\"unit\"][\"fields\"][k1]) ? ((doc[\"unit\"][\"fields\"][k1][\"default\"] != null && type(doc[\"unit\"][\"fields\"][k1][\"default\"]) != map && type(doc[\"unit\"][\"fields\"][k1][\"default\"]) != list && ((type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"id\" in doc[\"unit\"] && doc[\"unit\"][\"id\"] != null) && doc[\"unit\"][\"id\"] == \"numeric\") && ((type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"fields\" in doc[\"unit\"] && type(doc[\"unit\"][\"fields\"]) == map && k1 in doc[\"unit\"][\"fields\"] && type(doc[\"unit\"][\"fields\"][k1]) == map && \"type\" in doc[\"unit\"][\"fields\"][k1] && doc[\"unit\"][\"fields\"][k1][\"type\"] != null) ? doc[\"unit\"][\"fields\"][k1][\"type\"] : \"string\") == \"string\" && !((type(doc[\"unit\"][\"fields\"][k1][\"default\"]) == string && doc[\"unit\"][\"fields\"][k1][\"default\"].matches(\"^(?:([^{}]|\\\\{id\\\\})*)$\")))) ? [{\"p\": [\"unit\", \"fields\", k1, \"default\"]}] : []) : [])) : []) : []) : [])",
    "own": []
+  },
+  {
+   "no": 125,
+   "path": "holds.table",
+   "relation": "when . in keys(tables) : absent tables.{.}.delete_after",
+   "class": "value",
+   "norm": "ADR-0094 шаг 3б; решение «Архитектора» 2026-10-31",
+   "cel": "((type(doc) == map && \"holds\" in doc) ? ((type(doc[\"holds\"]) == map && \"table\" in doc[\"holds\"]) ? ((doc[\"holds\"][\"table\"] != null && type(doc[\"holds\"][\"table\"]) == string && (type(doc) == map && \"tables\" in doc && type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(k1, k1 == doc[\"holds\"][\"table\"]) && type(doc[\"tables\"][doc[\"holds\"][\"table\"]]) == map && \"delete_after\" in doc[\"tables\"][doc[\"holds\"][\"table\"]])) ? [{\"p\": [\"holds\", \"table\"]}] : []) : []) : [])",
+   "own": []
+  },
+  {
+   "no": 126,
+   "path": "placement.places.table",
+   "relation": "when . in keys(tables) : absent tables.{.}.delete_after",
+   "class": "value",
+   "norm": "ADR-0094 шаг 3б; решение «Архитектора» 2026-10-31",
+   "cel": "((type(doc) == map && \"placement\" in doc) ? ((type(doc[\"placement\"]) == map && \"places\" in doc[\"placement\"]) ? ((type(doc[\"placement\"][\"places\"]) == map && \"table\" in doc[\"placement\"][\"places\"]) ? ((doc[\"placement\"][\"places\"][\"table\"] != null && type(doc[\"placement\"][\"places\"][\"table\"]) == string && (type(doc) == map && \"tables\" in doc && type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(k1, k1 == doc[\"placement\"][\"places\"][\"table\"]) && type(doc[\"tables\"][doc[\"placement\"][\"places\"][\"table\"]]) == map && \"delete_after\" in doc[\"tables\"][doc[\"placement\"][\"places\"][\"table\"]])) ? [{\"p\": [\"placement\", \"places\", \"table\"]}] : []) : []) : []) : [])",
+   "own": []
   }
  ],
  "untranslated": []

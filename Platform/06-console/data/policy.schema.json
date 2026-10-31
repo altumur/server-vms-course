@@ -12,6 +12,14 @@
    "x-codec": [
     "string"
    ]
+  },
+  "revision": {
+   "$ref": "#/$defs/common.pos53",
+   "description": "счётчик записей строки: 1 при создании, +1 на каждую запись; читает только консоль, писатель пишет всегда (P/06.6 Н2.1 «Версия строки»; ADR-0094 B4)",
+   "x-whole": true,
+   "x-codec": [
+    "integer"
+   ]
   }
  },
  "additionalProperties": false,

@@ -31,7 +31,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | `row` | у `ok` — часть подготовленной строки, которую сравнивают: объект JSON `{элемент: текст}`, `"@absent"` — элемента нет; пусто — не сравнивается. Текст списка в форме массива JSON сравнивается по значению JSON (как `@json` векторов [`values-by-type`](../values-by-type/README.md)) |
 | `note` | правило договора или шаг приёмки P/06.1 |
 
-78 случаев: 30 `ok`, 48 `refused` (`labels_repeat` — повтор метки в поле меток единицы, значение как есть, C51-LABEL-LIST-01; `unique_required_*` — required + unique с пустым значением, отказ П4 раньше unique; не-required unique с пустыми — `unique_*_not_counted`, RC-17; C51-UNIQUE-EMPTY-01).
+81 случай: 30 `ok`, 51 `refused` (`labels_repeat` — повтор метки в поле меток единицы, значение как есть, C51-LABEL-LIST-01; `unique_required_*` — required + unique с пустым значением, отказ П4 раньше unique; не-required unique с пустыми — `unique_*_not_counted`, RC-17; C51-UNIQUE-EMPTY-01).
 
 ## Прогон
 

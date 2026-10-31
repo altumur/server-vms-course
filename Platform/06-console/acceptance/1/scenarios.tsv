@@ -174,7 +174,7 @@ scenario	step	request	expect
 20-made	15	console2 DELETE /tallies/testsub-c2	200 {"deleted": "testsub-c2"}
 20-made	16	store GET /v1/get?key=testsub2/tallies/testsub-c2	200 {"items": {"deleted": "true", "born": "0123456789abcdef0123456789abcdef", "made": "~\"gone\":"}}
 21-worker-table-delete	1	@as testsub2worker store POST /v1/write {"id":"e1","op":"put","key":"testsub2/gauges/g1","items":{"name":"g1","level":"3"},"cas":""}	200
-21-worker-table-delete	2	console2 GET /gauges/g1	200 {"name": "g1", "level": 3}
+21-worker-table-delete	2	console2 GET /gauges/g1	200 {"name": "g1", "level": 3, "revision": 0, "index": "@any"}
 21-worker-table-delete	3	console2 POST /gauges {"name": "g2"}	403
 21-worker-table-delete	4	console2 DELETE /gauges/g1	200 {"deleted": "g1"}
 21-worker-table-delete	5	store GET /v1/get?key=testsub2/gauges/g1	200 {"items": null}
@@ -276,52 +276,54 @@ scenario	step	request	expect
 32-hold-unreadable	6	console2 GET /shelves/sh1	200 {"name": "sh1", "held_by": null}
 32-hold-unreadable	7	console2 GET /where/shelves/sh1?unit=t1	503
 32-hold-unreadable	8	@until 10 console2 GET /metrics	200 ~testsub2_shelves_open 0
-33-batch-anchor	1	console POST /counters {"name": "c1", "start": 1}	201 {"revision": 1}
-33-batch-anchor	2	store GET /v1/get?key=testsub/counters/c1	200 {"index": "$c"}
-33-batch-anchor	3	console POST /console/batch {"writes": [{"op": "put", "key": "testsub2/tallies/t1", "fields": {"name": "t1", "of": "c1"}, "cas": ""}]}	400 {"error": "no anchor", "field": "/writes/0/fields/of"}
-33-batch-anchor	4	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": null}
-33-batch-anchor	5	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$c"}, {"op": "put", "key": "testsub2/tallies/t1", "fields": {"name": "t1", "of": "c1"}, "cas": ""}]}	200 {"written": 2}
-33-batch-anchor	6	store GET /v1/get?key=testsub/counters/c1	200 {"items": {"start": "2", "revision": "2"}, "index": "$i"}
-33-batch-anchor	7	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"of": "c1", "revision": "1"}, "index": "$i"}
-33-batch-anchor	8	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {}, "cas": "$i"}, {"op": "put", "key": "testsub2/tallies/t1", "fields": {"mode": "loud"}, "cas": "$i"}]}	200 {"written": 2}
-33-batch-anchor	9	store GET /v1/get?key=testsub/counters/c1	200 {"items": {"start": "2", "revision": "3"}, "index": "$j"}
-33-batch-anchor	10	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"mode": "loud", "revision": "2"}, "index": "$j"}
-33-batch-anchor	11	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 9}, "cas": "$j"}, {"op": "put", "key": "testsub2/tallies/t1", "fields": {"mode": "plain"}, "cas": "$i"}]}	412 {"error": "row moved", "field": "/writes/1/cas", "key": "testsub2/tallies/t1", "index": "$j"}
-33-batch-anchor	12	store GET /v1/get?key=testsub/counters/c1	200 {"items": {"start": "2", "revision": "3"}, "index": "$j"}
-33-batch-anchor	13	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {}, "cas": "$j"}, {"op": "delete", "key": "testsub2/tallies/t1", "cas": "$j"}]}	200 {"written": 2}
-33-batch-anchor	14	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"deleted": "true", "revision": "2"}, "index": "$k"}
-33-batch-anchor	15	console POST /console/batch {"writes": [{"op": "delete", "key": "testsub2/tallies/t1", "cas": "$k"}]}	400 {"error": "no anchor", "field": "/writes/0/fields/of"}
-33-batch-anchor	16	store GET /v1/get?key=testsub/counters/c1	200 {"items": {"revision": "4"}, "index": "$k"}
-33-batch-anchor	17	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {}, "cas": "$k"}, {"op": "put", "key": "testsub2/tallies/t1", "fields": {"name": "t1", "of": "c1"}, "cas": "$k"}]}	200 {"written": 2}
-33-batch-anchor	18	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"deleted": "@absent", "revision": "3"}, "index": "$m"}
-33-batch-anchor	19	ASSERT $i != $j $k $m	
-34-batch-guards	1	console POST /counters {"name": "c1"}	201
-34-batch-guards	2	console POST /counters {"name": "c2"}	201
-34-batch-guards	3	store GET /v1/get?key=testsub/counters/c1	200 {"index": "$a"}
-34-batch-guards	4	store GET /v1/get?key=testsub/counters/c2	200 {"index": "$b"}
+33-batch-anchor	1	@start resource	ok
+33-batch-anchor	2	console POST /counters {"name": "c1", "start": 1}	201 {"revision": 1}
+33-batch-anchor	3	console GET /counters	200 {"configured": [{"id": "c1", "index": "$c"}]}
+33-batch-anchor	4	console POST /console/batch {"writes": [{"op": "put", "key": "testsub2/tallies/t1", "fields": {"name": "t1", "of": "c1"}, "cas": ""}]}	400 {"error": "no anchor", "field": "/writes/0/fields/of"}
+33-batch-anchor	5	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": null}
+33-batch-anchor	6	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$c"}, {"op": "put", "key": "testsub2/tallies/t1", "fields": {"name": "t1", "of": "c1"}, "cas": ""}]}	200 {"written": 2}
+33-batch-anchor	7	console GET /counters	200 {"configured": [{"id": "c1", "start": 2, "revision": 2, "index": "$i"}]}
+33-batch-anchor	8	console2 GET /tallies	200 {"configured": [{"id": "t1", "of": "c1", "revision": 1, "index": "$i"}]}
+33-batch-anchor	9	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {}, "cas": "$i"}, {"op": "put", "key": "testsub2/tallies/t1", "fields": {"mode": "loud"}, "cas": "$i"}]}	200 {"written": 2}
+33-batch-anchor	10	console GET /counters	200 {"configured": [{"id": "c1", "start": 2, "revision": 3, "index": "$j"}]}
+33-batch-anchor	11	console2 GET /tallies	200 {"configured": [{"id": "t1", "mode": "loud", "revision": 2, "index": "$j"}]}
+33-batch-anchor	12	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 9}, "cas": "$j"}, {"op": "put", "key": "testsub2/tallies/t1", "fields": {"mode": "plain"}, "cas": "$i"}]}	412 {"error": "row moved", "field": "/writes/1/cas", "key": "testsub2/tallies/t1", "index": "$j"}
+33-batch-anchor	13	console GET /counters	200 {"configured": [{"id": "c1", "start": 2, "revision": 3, "index": "$j"}]}
+33-batch-anchor	14	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {}, "cas": "$j"}, {"op": "delete", "key": "testsub2/tallies/t1", "cas": "$j"}]}	200 {"written": 2}
+33-batch-anchor	15	console2 GET /tallies?deleted=1&about=c1	200 {"deleted": [{"id": "t1", "index": "$k"}]}
+33-batch-anchor	16	console POST /console/batch {"writes": [{"op": "delete", "key": "testsub2/tallies/t1", "cas": "$k"}]}	400 {"error": "no anchor", "field": "/writes/0/fields/of"}
+33-batch-anchor	17	console GET /counters	200 {"configured": [{"id": "c1", "revision": 4, "index": "$k"}]}
+33-batch-anchor	18	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {}, "cas": "$k"}, {"op": "put", "key": "testsub2/tallies/t1", "fields": {"name": "t1", "of": "c1"}, "cas": "$k"}]}	200 {"written": 2}
+33-batch-anchor	19	console2 GET /tallies	200 {"configured": [{"id": "t1", "revision": 3, "index": "$m"}]}
+33-batch-anchor	20	ASSERT $i != $j $k $m	
+34-batch-guards	1	@start resource	ok
+34-batch-guards	2	console POST /counters {"name": "c1"}	201
+34-batch-guards	3	console POST /counters {"name": "c2"}	201
+34-batch-guards	4	console GET /counters	200 {"configured": [{"id": "c1", "index": "$a"}, {"id": "c2", "index": "$b"}]}
 34-batch-guards	5	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 1}, "cas": "$a"}], "guards": [{"key": "testsub/counters/c2", "index": "$b"}, {"key": "testsub/counters/c3", "index": ""}]}	200 {"written": 1}
-34-batch-guards	6	store GET /v1/get?key=testsub/counters/c2	200 {"items": {"revision": "1"}, "index": "$b"}
-34-batch-guards	7	store GET /v1/get?key=testsub/counters/c1	200 {"index": "$a2"}
+34-batch-guards	6	console GET /counters	200 {"configured": [{"id": "c1"}, {"id": "c2", "revision": 1, "index": "$b"}]}
+34-batch-guards	7	console GET /counters	200 {"configured": [{"id": "c1", "index": "$a2"}, {"id": "c2"}]}
 34-batch-guards	8	console PUT /counters/c2 {"start": 9}	200 {"revision": 2}
-34-batch-guards	9	store GET /v1/get?key=testsub/counters/c2	200 {"index": "$b2"}
+34-batch-guards	9	console GET /counters	200 {"configured": [{"id": "c1"}, {"id": "c2", "index": "$b2"}]}
 34-batch-guards	10	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$a2"}], "guards": [{"key": "testsub/counters/c2", "index": "$b"}]}	412 {"error": "row moved", "field": "/guards/0/index", "key": "testsub/counters/c2", "index": "$b2"}
 34-batch-guards	11	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$a"}], "guards": [{"key": "testsub/counters/c3", "index": ""}, {"key": "testsub/counters/c2", "index": "$b"}]}	412 {"error": "row moved", "field": "/guards/1/index", "key": "testsub/counters/c2", "index": "$b2"}
 34-batch-guards	12	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$a"}], "guards": [{"key": "testsub/counters/c2", "index": "$b2"}]}	412 {"error": "row moved", "field": "/writes/0/cas", "key": "testsub/counters/c1", "index": "$a2"}
-34-batch-guards	13	store GET /v1/get?key=testsub/counters/c1	200 {"items": {"start": "1"}, "index": "$a2"}
-35-batch-repeat	1	console POST /counters {"name": "c1"}	201
-35-batch-repeat	2	store GET /v1/get?key=testsub/counters/c1	200 {"index": "$a"}
-35-batch-repeat	3	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$a"}]}	200 {"written": 1}
-35-batch-repeat	4	@key(3) console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$a"}]}	200 {"written": 1}
-35-batch-repeat	5	store GET /v1/get?key=testsub/counters/c1	200 {"items": {"start": "2", "revision": "2"}, "index": "$b"}
-35-batch-repeat	6	@key(3) console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 3}, "cas": "$a"}]}	422 {"error": "key reused"}
-35-batch-repeat	7	@nokey console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$a"}]}	412 {"error": "row moved", "field": "/writes/0/cas", "key": "testsub/counters/c1", "index": "$b"}
-35-batch-repeat	8	console @header Idempotency-Key: a/b POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$b"}]}	400 {"error": "Idempotency-Key required"}
-35-batch-repeat	9	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$a"}]}	412 {"error": "row moved", "key": "testsub/counters/c1", "index": "$b"}
-35-batch-repeat	10	console PUT /counters/c1 {"start": 7}	200 {"revision": 3}
-35-batch-repeat	11	store GET /v1/get?key=testsub/counters/c1	200 {"index": "$c"}
-35-batch-repeat	12	@key(9) console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$a"}]}	412 {"error": "row moved", "key": "testsub/counters/c1", "index": "$b"}
-35-batch-repeat	13	@nokey console @header If-Match: 99 POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 8}, "cas": "$c"}]}	200 {"written": 1}
-35-batch-repeat	14	store GET /v1/get?key=testsub/counters/c1	200 {"items": {"start": "8", "revision": "4"}}
+34-batch-guards	13	console GET /counters	200 {"configured": [{"id": "c1", "start": 1, "index": "$a2"}, {"id": "c2"}]}
+35-batch-repeat	1	@start resource	ok
+35-batch-repeat	2	console POST /counters {"name": "c1"}	201
+35-batch-repeat	3	console GET /counters	200 {"configured": [{"id": "c1", "index": "$a"}]}
+35-batch-repeat	4	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$a"}]}	200 {"written": 1}
+35-batch-repeat	5	@key(4) console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$a"}]}	200 {"written": 1}
+35-batch-repeat	6	console GET /counters	200 {"configured": [{"id": "c1", "start": 2, "revision": 2, "index": "$b"}]}
+35-batch-repeat	7	@key(4) console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 3}, "cas": "$a"}]}	422 {"error": "key reused"}
+35-batch-repeat	8	@nokey console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$a"}]}	412 {"error": "row moved", "field": "/writes/0/cas", "key": "testsub/counters/c1", "index": "$b"}
+35-batch-repeat	9	console @header Idempotency-Key: a/b POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$b"}]}	400 {"error": "Idempotency-Key required"}
+35-batch-repeat	10	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$a"}]}	412 {"error": "row moved", "key": "testsub/counters/c1", "index": "$b"}
+35-batch-repeat	11	console PUT /counters/c1 {"start": 7}	200 {"revision": 3}
+35-batch-repeat	12	console GET /counters	200 {"configured": [{"id": "c1", "index": "$c"}]}
+35-batch-repeat	13	@key(10) console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 2}, "cas": "$a"}]}	412 {"error": "row moved", "key": "testsub/counters/c1", "index": "$b"}
+35-batch-repeat	14	@nokey console @header If-Match: 99 POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {"start": 8}, "cas": "$c"}]}	200 {"written": 1}
+35-batch-repeat	15	console GET /counters	200 {"configured": [{"id": "c1", "start": 8, "revision": 4}]}
 36-batch-form	1	console POST /console/batch [1]	400 {"error": "not_json"}
 36-batch-form	2	console POST /console/batch {}	400 {"error": "bad batch", "field": "/writes"}
 36-batch-form	3	console POST /console/batch {"writes": []}	400 {"error": "bad batch", "field": "/writes"}
@@ -352,19 +354,85 @@ scenario	step	request	expect
 36-batch-form	28	console POST /testsub/console/batch {}	404
 36-batch-form	29	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/w00", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w01", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w02", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w03", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w04", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w05", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w06", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w07", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w08", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w09", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w10", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w11", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w12", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w13", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w14", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w15", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w16", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w17", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w18", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w19", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w20", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w21", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w22", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w23", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w24", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w25", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w26", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w27", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w28", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w29", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w30", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w31", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w32", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w33", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w34", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w35", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w36", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w37", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w38", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w39", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w40", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w41", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w42", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w43", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w44", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w45", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w46", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w47", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w48", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w49", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w50", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w51", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w52", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w53", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w54", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w55", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w56", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w57", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w58", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w59", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w60", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w61", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w62", "fields": {}, "cas": ""}, {"op": "put", "key": "testsub/counters/w63", "fields": {}, "cas": ""}]}	200 {"written": 64}
 36-batch-form	30	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/a1", "fields": {}, "cas": ""}], "guards": [{"key": "testsub/counters/g00", "index": ""}, {"key": "testsub/counters/g01", "index": ""}, {"key": "testsub/counters/g02", "index": ""}, {"key": "testsub/counters/g03", "index": ""}, {"key": "testsub/counters/g04", "index": ""}, {"key": "testsub/counters/g05", "index": ""}, {"key": "testsub/counters/g06", "index": ""}, {"key": "testsub/counters/g07", "index": ""}, {"key": "testsub/counters/g08", "index": ""}, {"key": "testsub/counters/g09", "index": ""}, {"key": "testsub/counters/g10", "index": ""}, {"key": "testsub/counters/g11", "index": ""}, {"key": "testsub/counters/g12", "index": ""}, {"key": "testsub/counters/g13", "index": ""}, {"key": "testsub/counters/g14", "index": ""}, {"key": "testsub/counters/g15", "index": ""}, {"key": "testsub/counters/g16", "index": ""}, {"key": "testsub/counters/g17", "index": ""}, {"key": "testsub/counters/g18", "index": ""}, {"key": "testsub/counters/g19", "index": ""}, {"key": "testsub/counters/g20", "index": ""}, {"key": "testsub/counters/g21", "index": ""}, {"key": "testsub/counters/g22", "index": ""}, {"key": "testsub/counters/g23", "index": ""}, {"key": "testsub/counters/g24", "index": ""}, {"key": "testsub/counters/g25", "index": ""}, {"key": "testsub/counters/g26", "index": ""}, {"key": "testsub/counters/g27", "index": ""}, {"key": "testsub/counters/g28", "index": ""}, {"key": "testsub/counters/g29", "index": ""}, {"key": "testsub/counters/g30", "index": ""}, {"key": "testsub/counters/g31", "index": ""}, {"key": "testsub/counters/g32", "index": ""}, {"key": "testsub/counters/g33", "index": ""}, {"key": "testsub/counters/g34", "index": ""}, {"key": "testsub/counters/g35", "index": ""}, {"key": "testsub/counters/g36", "index": ""}, {"key": "testsub/counters/g37", "index": ""}, {"key": "testsub/counters/g38", "index": ""}, {"key": "testsub/counters/g39", "index": ""}, {"key": "testsub/counters/g40", "index": ""}, {"key": "testsub/counters/g41", "index": ""}, {"key": "testsub/counters/g42", "index": ""}, {"key": "testsub/counters/g43", "index": ""}, {"key": "testsub/counters/g44", "index": ""}, {"key": "testsub/counters/g45", "index": ""}, {"key": "testsub/counters/g46", "index": ""}, {"key": "testsub/counters/g47", "index": ""}, {"key": "testsub/counters/g48", "index": ""}, {"key": "testsub/counters/g49", "index": ""}, {"key": "testsub/counters/g50", "index": ""}, {"key": "testsub/counters/g51", "index": ""}, {"key": "testsub/counters/g52", "index": ""}, {"key": "testsub/counters/g53", "index": ""}, {"key": "testsub/counters/g54", "index": ""}, {"key": "testsub/counters/g55", "index": ""}, {"key": "testsub/counters/g56", "index": ""}, {"key": "testsub/counters/g57", "index": ""}, {"key": "testsub/counters/g58", "index": ""}, {"key": "testsub/counters/g59", "index": ""}, {"key": "testsub/counters/g60", "index": ""}, {"key": "testsub/counters/g61", "index": ""}, {"key": "testsub/counters/g62", "index": ""}, {"key": "testsub/counters/g63", "index": ""}]}	200 {"written": 1}
-37-batch-refs	1	console POST /counters {"name": "c1"}	201
-37-batch-refs	2	store GET /v1/get?key=testsub/counters/c1	200 {"index": "$a"}
-37-batch-refs	3	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {}, "cas": "$a"}, {"op": "put", "key": "testsub2/tallies/t1", "fields": {"name": "t1", "of": "c1", "shelf": "sh1", "zone": "z1"}, "cas": ""}, {"op": "put", "key": "testsub2/shelves/sh1", "fields": {"name": "sh1", "zone": "z1"}, "cas": ""}]}	200 {"written": 3}
-37-batch-refs	4	store GET /v1/get?key=testsub2/shelves/sh1	200 {"items": {"zone": "z1"}, "index": "$b"}
-37-batch-refs	5	store GET /v1/get?key=testsub/counters/c1	200 {"index": "$b"}
-37-batch-refs	6	store GET /v1/get?key=testsub2/tallies/t1	200 {"index": "$b"}
-37-batch-refs	7	console POST /console/batch {"writes": [{"op": "put", "key": "testsub2/shelves/sh1", "fields": {"name": "sh1", "zone": "z2"}, "cas": "$b"}]}	409 {"error": "conflict", "fault": "must_match"}
-37-batch-refs	8	store GET /v1/get?key=testsub2/shelves/sh1	200 {"items": {"zone": "z1"}, "index": "$b"}
-37-batch-refs	9	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {}, "cas": "$b"}, {"op": "put", "key": "testsub2/shelves/sh1", "fields": {"name": "sh1", "zone": "z2"}, "cas": "$b"}, {"op": "put", "key": "testsub2/tallies/t1", "fields": {"zone": "z2"}, "cas": "$b"}]}	200 {"written": 3}
-37-batch-refs	10	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"zone": "z2"}, "index": "$c"}
-37-batch-refs	11	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {}, "cas": "$c"}, {"op": "put", "key": "testsub2/tallies/t1", "fields": {"zone": "z3"}, "cas": "$c"}]}	409 {"error": "conflict", "fault": "must_match", "field": "/writes/1/fields/shelf"}
-37-batch-refs	12	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {}, "cas": "$c"}, {"op": "delete", "key": "testsub2/shelves/sh1", "cas": "$c"}, {"op": "put", "key": "testsub2/tallies/t1", "fields": {"zone": "z3"}, "cas": "$c"}]}	200 {"written": 3}
-37-batch-refs	13	store GET /v1/get?key=testsub2/shelves/sh1	200 {"items": null}
-37-batch-refs	14	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"shelf": "sh1", "zone": "z3"}, "index": "$d"}
-37-batch-refs	15	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {}, "cas": "$d"}, {"op": "put", "key": "testsub2/tallies/t2", "fields": {"name": "t2", "of": "c1", "feed": "https://hub.example/a"}, "cas": ""}, {"op": "put", "key": "testsub2/tallies/t3", "fields": {"name": "t3", "of": "c1", "feed": "https://hub.example/a"}, "cas": ""}]}	409 {"error": "conflict", "fault": "unique", "field": "/writes/2/fields/feed"}
-37-batch-refs	16	store GET /v1/get?key=testsub2/tallies/t2	200 {"items": null}
+37-batch-refs	1	@start resource	ok
+37-batch-refs	2	console POST /counters {"name": "c1"}	201
+37-batch-refs	3	console GET /counters	200 {"configured": [{"id": "c1", "index": "$a"}]}
+37-batch-refs	4	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {}, "cas": "$a"}, {"op": "put", "key": "testsub2/tallies/t1", "fields": {"name": "t1", "of": "c1", "shelf": "sh1", "zone": "z1"}, "cas": ""}, {"op": "put", "key": "testsub2/shelves/sh1", "fields": {"name": "sh1", "zone": "z1"}, "cas": ""}]}	200 {"written": 3}
+37-batch-refs	5	console2 GET /shelves/sh1	200 {"zone": "z1", "index": "$b"}
+37-batch-refs	6	console GET /counters	200 {"configured": [{"id": "c1", "index": "$b"}]}
+37-batch-refs	7	console2 GET /tallies	200 {"configured": [{"id": "t1", "index": "$b"}]}
+37-batch-refs	8	console POST /console/batch {"writes": [{"op": "put", "key": "testsub2/shelves/sh1", "fields": {"name": "sh1", "zone": "z2"}, "cas": "$b"}]}	409 {"error": "conflict", "fault": "must_match"}
+37-batch-refs	9	console2 GET /shelves/sh1	200 {"zone": "z1", "index": "$b"}
+37-batch-refs	10	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {}, "cas": "$b"}, {"op": "put", "key": "testsub2/shelves/sh1", "fields": {"name": "sh1", "zone": "z2"}, "cas": "$b"}, {"op": "put", "key": "testsub2/tallies/t1", "fields": {"zone": "z2"}, "cas": "$b"}]}	200 {"written": 3}
+37-batch-refs	11	console2 GET /tallies	200 {"configured": [{"id": "t1", "zone": "z2", "index": "$c"}]}
+37-batch-refs	12	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {}, "cas": "$c"}, {"op": "put", "key": "testsub2/tallies/t1", "fields": {"zone": "z3"}, "cas": "$c"}]}	409 {"error": "conflict", "fault": "must_match", "field": "/writes/1/fields/shelf"}
+37-batch-refs	13	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {}, "cas": "$c"}, {"op": "delete", "key": "testsub2/shelves/sh1", "cas": "$c"}, {"op": "put", "key": "testsub2/tallies/t1", "fields": {"zone": "z3"}, "cas": "$c"}]}	200 {"written": 3}
+37-batch-refs	14	store GET /v1/get?key=testsub2/shelves/sh1	200 {"items": null}
+37-batch-refs	15	console2 GET /tallies	200 {"configured": [{"id": "t1", "shelf": "sh1", "zone": "z3", "index": "$d"}]}
+37-batch-refs	16	console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1", "fields": {}, "cas": "$d"}, {"op": "put", "key": "testsub2/tallies/t2", "fields": {"name": "t2", "of": "c1", "feed": "https://hub.example/a"}, "cas": ""}, {"op": "put", "key": "testsub2/tallies/t3", "fields": {"name": "t3", "of": "c1", "feed": "https://hub.example/a"}, "cas": ""}]}	409 {"error": "conflict", "fault": "unique", "field": "/writes/2/fields/feed"}
+37-batch-refs	17	store GET /v1/get?key=testsub2/tallies/t2	200 {"items": null}
+38-versions-units	1	@start resource	ok
+38-versions-units	2	POST /counters {"name": "c1", "start": 1}	201 {"revision": 1, "index": "$a"}
+38-versions-units	3	GET /counters	200 {"configured": [{"id": "c1", "revision": 1, "index": "$a"}]}
+38-versions-units	4	store GET /v1/get?key=testsub/counters/c1	200 {"items": {"revision": "1"}, "index": "$a"}
+38-versions-units	5	@header If-Match: "$a" PUT /counters/c1 {"start": 2}	200 {"start": 2, "revision": 2, "index": "$b"}
+38-versions-units	6	ASSERT $a != $b	
+38-versions-units	7	@header If-Match: "$a" PUT /counters/c1 {"start": 3}	412 {"error": "revision moved", "field": "/revision", "revision": 2, "row": {"id": "c1", "start": 2, "revision": 2, "index": "$b"}}
+38-versions-units	8	@header If-Match: 1 PUT /counters/c1 {"start": 3}	412 {"error": "revision moved", "field": "/revision", "revision": 2, "row": {"id": "c1", "index": "$b"}}
+38-versions-units	9	GET /counters	200 {"configured": [{"id": "c1", "start": 2, "revision": 2, "index": "$b"}]}
+38-versions-units	10	@header If-Match: 2 PUT /counters/c1 {"start": 3}	200 @header ETag: ~"
+38-versions-units	11	GET /counters	200 {"configured": [{"id": "c1", "start": 3, "revision": 3, "index": "$c"}]}
+38-versions-units	12	@header If-Match: * PUT /counters/c1 {"start": 4}	400 {"error": "If-Match is a unit revision"}
+38-versions-units	13	@header If-Match: W/"$c" PUT /counters/c1 {"start": 4}	400 {"error": "If-Match is a unit revision"}
+38-versions-units	14	@header If-Match: "$c", "$c" PUT /counters/c1 {"start": 4}	400 {"error": "If-Match is a unit revision"}
+38-versions-units	15	@header If-Match: "" PUT /counters/c1 {"start": 4}	400 {"error": "If-Match is a unit revision"}
+38-versions-units	16	PUT /counters/c1 {"index": "7"}	400 {"error": "platform_field", "field": "/index"}
+38-versions-units	17	@header If-Match: "$b" DELETE /counters/c1	412 {"error": "revision moved", "revision": 3, "row": {"id": "c1", "index": "$c"}}
+38-versions-units	18	@header If-Match: "$c" DELETE /counters/c1	200 @header ETag: ~"
+38-versions-units	19	GET /counters	200 {"configured": []}
+38-versions-units	20	@header If-Match: 3 POST /counters {"name": "c9"}	412 {"error": "revision moved", "revision": 0, "row": "@absent"}
+38-versions-units	21	GET /counters	200 {"configured": []}
+39-versions-tables	1	console2 POST /shelves {"name": "sh1", "zone": "z1"}	201 {"row": {"name": "sh1", "revision": 1, "index": "$a"}}
+39-versions-tables	2	console2 GET /shelves	200 {"shelves": [{"name": "sh1", "revision": 1, "index": "$a"}]}
+39-versions-tables	3	console2 GET /shelves/sh1	200 {"revision": 1, "index": "$a"}
+39-versions-tables	4	console2 GET /shelves/sh1	200 @header ETag: ~"
+39-versions-tables	5	console2 @header If-Match: 1 POST /shelves {"name": "sh1", "zone": "z2"}	201 {"row": {"zone": "z2", "revision": 2, "index": "$b"}}
+39-versions-tables	6	console2 @header If-Match: 1 POST /shelves {"name": "sh1", "zone": "z3"}	412 {"error": "revision moved", "field": "/revision", "revision": 2, "row": {"name": "sh1", "zone": "z2", "index": "$b"}}
+39-versions-tables	7	console2 GET /shelves/sh1	200 {"zone": "z2", "revision": 2}
+39-versions-tables	8	console2 @header If-Match: "$a" DELETE /shelves/sh1	412 {"error": "revision moved", "revision": 2}
+39-versions-tables	9	console2 @header If-Match: "$a" POST /shelves {"name": "sh1", "zone": "z3"}	412 {"error": "revision moved", "revision": 2}
+39-versions-tables	10	console2 @header If-Match: 01 POST /shelves {"name": "sh1", "zone": "z3"}	400 {"error": "If-Match is a unit revision"}
+39-versions-tables	11	console2 @header If-Match: 2 POST /shelves {"name": "sh2", "zone": "z1"}	412 {"error": "revision moved", "revision": 0, "row": "@absent"}
+39-versions-tables	12	console2 GET /shelves/sh2	404
+39-versions-tables	13	console2 @header If-Match: 2 DELETE /shelves/sh2	404 {"error": "no such row"}
+39-versions-tables	14	console2 POST /shelves {"name": "sh1", "zone": "z1", "revision": 7}	400 {"error": "unknown field", "field": "/revision"}
+39-versions-tables	15	console2 POST /shelves {"name": "sh1", "zone": "z1", "index": "7"}	400 {"error": "unknown field", "field": "/index"}
+39-versions-tables	16	console2 @header Idempotency-Key: v1 @header If-Match: 2 POST /shelves {"name": "sh1", "zone": "z4"}	201 {"row": {"zone": "z4", "revision": 3}}
+39-versions-tables	17	console2 @header Idempotency-Key: v1 @header If-Match: 2 POST /shelves {"name": "sh1", "zone": "z4"}	201 {"row": {"zone": "z4", "revision": 3}}
+39-versions-tables	18	console2 GET /shelves/sh1	200 {"revision": 3}
+39-versions-tables	19	console2 @header Idempotency-Key: v2 @header If-Match: 1 POST /shelves {"name": "sh1", "zone": "z5"}	412 {"error": "revision moved", "revision": 3}
+39-versions-tables	20	console2 POST /shelves {"name": "sh1", "zone": "z6"}	201 {"row": {"revision": 4, "index": "$c"}}
+39-versions-tables	21	console2 @header Idempotency-Key: v2 @header If-Match: 1 POST /shelves {"name": "sh1", "zone": "z5"}	412 {"error": "revision moved", "revision": 3}
+39-versions-tables	22	console2 @header If-Match: "$c" DELETE /shelves/sh1	200 {"deleted": "sh1"}
+39-versions-tables	23	console2 POST /shelves {"name": "sh1", "zone": "z1"}	201 {"row": {"revision": 1}}
+40-deleted-about	1	@start resource	ok
+40-deleted-about	2	POST /counters {"name": "c1"}	201
+40-deleted-about	3	POST /counters {"name": "c2"}	201
+40-deleted-about	4	console2 POST /tallies {"name": "t1", "of": "c1"}	201
+40-deleted-about	5	console2 POST /tallies {"name": "t2", "of": "c1"}	201
+40-deleted-about	6	console2 POST /tallies {"name": "t3", "of": "c2"}	201
+40-deleted-about	7	console2 DELETE /tallies/t2	200 {"deleted": "t2"}
+40-deleted-about	8	console2 DELETE /tallies/t1	200 @header ETag: ~"
+40-deleted-about	9	console2 DELETE /tallies/t3	200 {"deleted": "t3"}
+40-deleted-about	10	console2 GET /tallies?deleted=1&about=c1	200 {"deleted": [{"id": "t1", "index": "$x"}, {"id": "t2", "index": "$y"}]}
+40-deleted-about	11	console2 GET /tallies?deleted=1&about=c2	200 {"deleted": [{"id": "t3", "index": "@any"}]}
+40-deleted-about	12	console2 GET /tallies?deleted=1&about=nosuch	200 {"deleted": []}
+40-deleted-about	13	console2 GET /tallies?deleted=1	400 {"error": "refused"}
+40-deleted-about	14	console2 GET /tallies?deleted=2&about=c1	400 {"error": "refused"}
+40-deleted-about	15	GET /counters?deleted=1&about=c1	400 {"error": "refused"}
+40-deleted-about	16	console2 @header If-Match: "$y" POST /tallies {"name": "t1", "of": "c1"}	412 {"error": "revision moved", "revision": 1, "row": "@absent"}
+40-deleted-about	17	console2 @header If-Match: "$x" POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 2}
+40-deleted-about	18	console2 GET /tallies?deleted=1&about=c1	200 {"deleted": [{"id": "t2", "index": "$y"}]}
+40-deleted-about	19	console2 @header If-Match: 1 POST /tallies {"name": "t2", "of": "c1"}	201 {"revision": 2}
+40-deleted-about	20	console2 @header If-Match: 1 POST /tallies {"name": "t8", "of": "c1"}	412 {"error": "revision moved", "revision": 0, "row": "@absent"}
+40-deleted-about	21	console2 GET /tallies	200 {"configured": [{"id": "t1"}, {"id": "t2"}]}

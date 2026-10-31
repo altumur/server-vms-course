@@ -754,3 +754,8 @@ a94_table_delete_after_word	refused
 a94_table_delete_after_bool	refused
 a94_table_delete_after_null	refused
 a94_table_delete_after_over_2p53	refused
+a94_unit_field_index	refused
+a94_table_field_revision	refused
+a94_table_field_index	refused
+c8_ref125_holds_table_delete_after	refused
+c8_ref126_places_table_delete_after	refused

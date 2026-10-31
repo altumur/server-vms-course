@@ -12,4 +12,6 @@ place	layer	word	value
 /$defs/common.pos53	3	x-integer	true
 /$defs/common.time	3	x-time	true
 /$defs/common.uint53	3	x-integer	true
+/properties/revision	3	x-codec	["integer"]
+/properties/revision	3	x-whole	true
 /properties/servers	3	x-codec	["string"]

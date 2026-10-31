@@ -265,3 +265,8 @@ a94_table_delete_after_word	form
 a94_table_delete_after_bool	form
 a94_table_delete_after_null	form
 a94_table_delete_after_over_2p53	form
+a94_unit_field_index	form
+a94_table_field_revision	form
+a94_table_field_index	form
+c8_ref125_holds_table_delete_after	relations
+c8_ref126_places_table_delete_after	relations

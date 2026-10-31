@@ -59,11 +59,12 @@ values_by_type:
 absent:
   - поле с inherit, если не задано: элемента нет (не "" и не "null")
   - json-поле со значением null
-platform_fields:   [id, revision, deleted, worker, placement, epoch, phase, observed_revision, born, made]   # строки единицы
-table_platform_fields: [by, at, made_at, held_by, garbled]   # строки таблицы — свой список (P/02.1 tables.<имя>.fields «не из»;
+platform_fields:   [id, revision, deleted, worker, placement, epoch, phase, observed_revision, born, made, index]   # строки единицы
+table_platform_fields: [by, at, made_at, held_by, garbled, revision, index]   # строки таблицы — свой список (P/02.1 tables.<имя>.fields «не из»;
   # P/06.1 Н3 «таблица — записать строку» шаг 1): поле таблицы, объявленное с именем из platform_fields единицы (worker,
   # epoch, …), — обычное поле; незнакомое — отказ, как прежде (догадка стадии C C06-ROWCHECK-TABLE-FIELDS-707-01, решение
   # «Архитектора» 2026-10-25)
+  # index — индекс хранилища строки (P/01.1 index) в ответе двери (P/06.1 Н2 «Версии»), в строке не хранится; revision строки таблицы — P/06.1 Н1.6 (ADR-0094 B4)
   # unit.fields не объявляет (отказ загрузки P/02.1), клиент не задаёт; в живой строке только id, revision, born и
   # made (у строки заказчика), deleted — только у надгробия; born и made дверь не выдаёт клиенту на запись: тело с ними —
   # 400 «a client may not set …» (Н3 шаг 4), правка их сохраняет (ADR-0091 пп. 1, 3); made — в ответе (Н2);

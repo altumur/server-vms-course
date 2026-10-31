@@ -81,7 +81,7 @@
       units: "units", unit: "unit", servers: "servers", journal: "journal", pick: "Pick one", add: "Add", save: "Save",
       enable: "Enable", disable: "Disable", del: "Delete", events: "Events", mark: "Mark", markPh: "what you saw",
       unplaced: "unplaced", stale: "last known state", workers: "workers", noWorkers: "no workers", notPlaceable: "not placeable",
-      resource: "resource", login: "Sign in", user: "User", password: "Password", refused: "refused", saved: "Saved",
+      resource: "resource", login: "Sign in", user: "User", password: "Password", refused: "refused", saved: "Saved", rowMoved: "The row has changed since this form was drawn; nothing was written.", reread: "Read again",
       every: "every subsystem", deleteQ: "Delete", setKeeps: "set — empty keeps it", notSet: "not set", noEvents: "no events",
       policy: "servers", loading: "…", where: "why here", none: "—", worker: "worker", server: "server",
       labels: "Labels: the networks the server is plugged into", labelsConsole: "set in the console — placement reads these",
@@ -236,7 +236,7 @@
       save: "Сохранить", enable: "Включить", disable: "Выключить", del: "Удалить", events: "События", mark: "Отметить",
       markPh: "что вы увидели", unplaced: "не размещена", stale: "последнее известное состояние", workers: "воркеры",
       noWorkers: "воркеров нет", notPlaceable: "размещать нельзя", resource: "ресурс", login: "Вход", user: "Пользователь",
-      password: "Пароль", refused: "Отказано", saved: "Сохранено", every: "все подсистемы", deleteQ: "Удалить",
+      password: "Пароль", refused: "Отказано", saved: "Сохранено", rowMoved: "Строка изменилась, пока была открыта форма; правка не сохранена.", reread: "Перечитать", every: "все подсистемы", deleteQ: "Удалить",
       setKeeps: "задан — пусто оставляет прежний", notSet: "не задан", noEvents: "событий нет", policy: "серверы",
       loading: "…", where: "почему здесь", none: "—", worker: "воркер", server: "сервер",
       labels: "Метки: сети, в которые включён сервер", labelsConsole: "заданы в консоли — размещение читает их",
@@ -446,10 +446,25 @@
         await sleep(Number.isFinite(after) && after >= 0 ? after * 1000 : C.retryWaits[i]);
       }
     }
-    // opts.ifMatch (integer ≥ 1) — If-Match on PUT and DELETE of a unit's row /<rows>/<id> only: other doors do not read
-    // it and would write without CAS; any other method, path, field of opts or value is refused before a request
-    // (P/07 Н1.5 api; ADR-0091 доп. (28), (29)).
+    // opts.ifMatch (integer ≥ 1) — If-Match only on the doors that read it: a unit's row, a table's row, the settings of
+    // P/06.6 (P/06.1 Н2 «Версии»). Any other door would write without CAS; any other method, path, field of opts or value
+    // is refused before a request (P/07 Н1.5 api; ADR-0091 доп. (28), (29); ADR-0094 B4). /manifest does not name the tables:
+    // a table is known by the shape of its path, one or two segments that are neither unit.rows nor a platform door.
     const unitRowPath = path => st.subs.some(s => { const p = s.base + "/" + s.manifest.rows + "/"; return path.startsWith(p) && path.length > p.length && !path.slice(p.length).includes("/"); });
+    const PLATFORM_DOORS = new Set(["console", "session", "events", "marks", "servers", "policy", "drain", "schema", "where", "unplaceable", "manifest", "mounts", "metrics", "resources", "domain", "api", "platform", "healthz", "requests", "asked", "next_id"]);
+    const tablePath = (path, n) => {
+      const seg = path.split("/").slice(1), mounted = st.subs.find(s => s.base && s.base === "/" + seg[0]), sub = mounted || st.subs.find(s => !s.base);
+      const rest = mounted ? seg.slice(1) : seg;
+      return !!sub && rest.length === n && rest.every(Boolean) && rest[0] !== sub.manifest.rows && !PLATFORM_DOORS.has(rest[0]);
+    };
+    const settingsPath = (method, path) => {
+      const p = path.split("?")[0];
+      if (p === "/drain") return method === "POST" || method === "DELETE";
+      if (/^\/servers\/[^/]+\/labels$/.test(p)) return method === "PUT" || method === "DELETE";
+      return method === "PUT" && (p === "/schema" || p === "/policy" || st.subs.some(s => p === s.base + "/policy"));
+    };
+    const readsIfMatch = (method, path) => unitRowPath(path) ? method === "PUT" || method === "DELETE"
+      : (method === "POST" && tablePath(path, 1)) || (method === "DELETE" && tablePath(path, 2)) || settingsPath(method, path);
     C.api = (method, path, body, opts) => {
       let ifMatch;
       if (opts !== undefined) {
@@ -459,8 +474,7 @@
         if (extra.length) return no("opts has no " + extra.join(", "));
         if ("ifMatch" in opts) {
           if (!Number.isSafeInteger(opts.ifMatch) || opts.ifMatch < 1) return no("ifMatch is a whole revision ≥ 1");
-          if (method !== "PUT" && method !== "DELETE") return no("ifMatch is for PUT and DELETE only");
-          if (!unitRowPath(path)) return no("ifMatch is for a unit's row /<rows>/<id> only");
+          if (!readsIfMatch(method, path)) return no("ifMatch is for the doors that read it: this one would write without CAS");
           ifMatch = opts.ifMatch;
         }
       }
@@ -1491,6 +1505,17 @@
       form.querySelectorAll(".pc-field-err").forEach(n => n.remove());
       form.querySelectorAll('[aria-invalid="true"]').forEach(n => n.removeAttribute("aria-invalid"));
     };
+    // 412: someone else's edit came first. The form keeps what the person typed, says so and shows what the row holds now;
+    // only «Read again» redraws it (P/07 Н1.5 forms; ADR-0094 B4).
+    const showMoved = (form, err, sub) => {
+      const box = form.querySelector(".pc-err"); box.textContent = W.rowMoved;
+      const row = err.body && err.body.row;
+      const was = row ? Object.keys(row).filter(n => form.elements[n] && String(form.elements[n].value) !== String(row[n])) : [];
+      const more = document.createElement("div"); more.className = "pc-moved";
+      more.innerHTML = was.map(n => `<div>${h(fieldTitle(sub, n))}: ${h(Array.isArray(row[n]) ? row[n].join(", ") : String(row[n]))}</div>`).join("") + `<button type="button" class="pc-reread">${h(W.reread)}</button>`;
+      box.appendChild(more);
+      more.querySelector(".pc-reread").onclick = async () => { await load(); paintMain(); };
+    };
     const markField = (form, err) => {
       const at = err.body && err.body.field;
       if (![400, 409, 412].includes(err.status) || typeof at !== "string") return false;
@@ -1506,6 +1531,7 @@
     C.unitForm = (host, ref) => {
       const u = parseUnit(ref); if (!u) return null;
       const { sub, id, row } = u, r = row || {}, rowsPath = sub.base + "/" + sub.manifest.rows;
+      const shownRevision = Number.isSafeInteger(r.revision) && r.revision >= 1 ? { ifMatch: r.revision } : undefined;   // the row this form shows
       host.innerHTML = `<form class="pc-edit" data-sub="${h(sub.name)}">${formCards(sub, r, ref)}
         ${C.may("edit", ref) ? `<button type="submit" class="pc-save-in">${h(W.save)}</button>` : ""}<div class="nt err pc-err"></div></form>`;
       const form = host.querySelector(".pc-edit");
@@ -1517,13 +1543,13 @@
         const stale = staleSecrets(sub, form, r);
         if (stale.length) { form.querySelector(".pc-err").textContent = stale.map(n => fieldTitle(sub, n)).join(", ") + ": " + W.boundAnew; form.elements[stale[0]].focus(); return; }
         const body = formBody(sub, form, true); if (!body) return;
-        try { await C.api("PUT", rowsPath + "/" + encodeURIComponent(id), body); C.toast(W.saved); await load(); paintMain(); }
-        catch (err) { if (!markField(form, err)) form.querySelector(".pc-err").textContent = W.refused + ": " + err.message; C.toast(W.refused + ": " + err.message); }
+        try { await C.api("PUT", rowsPath + "/" + encodeURIComponent(id), body, shownRevision); C.toast(W.saved); await load(); paintMain(); }
+        catch (err) { if (err.status === 412) showMoved(form, err, sub); else if (!markField(form, err)) form.querySelector(".pc-err").textContent = W.refused + ": " + err.message; C.toast(W.refused + ": " + err.message); }
       };
       const del = host.querySelector(".pc-del");
       if (del) del.onclick = async () => {
         if (!confirm(W.deleteQ + " " + label(sub, r) + "?")) return;
-        try { await C.api("DELETE", rowsPath + "/" + encodeURIComponent(id)); st.sel = null; await load(); paintMain(); } catch (err) { form.querySelector(".pc-err").textContent = W.refused + ": " + err.message; }
+        try { await C.api("DELETE", rowsPath + "/" + encodeURIComponent(id), undefined, shownRevision); st.sel = null; await load(); paintMain(); } catch (err) { if (err.status === 412) showMoved(form, err, sub); else form.querySelector(".pc-err").textContent = W.refused + ": " + err.message; }
       };
       return form;
     };
