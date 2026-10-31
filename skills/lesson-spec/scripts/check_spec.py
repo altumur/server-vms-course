@@ -7,6 +7,7 @@ also jsonschema, ruamel.yaml and regress. See validation.md.
 """
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -2311,6 +2312,16 @@ class Check:
                           and r[1] != "no-schema" and r[1] not in V7_EXCEPTIONS):
             self.error(where, f"stale exception {row[1]} {row[2]}: this lesson does not need it")
 
+    # A hash a vectors README names is the hash of the bytes it links (C08-VEC-MANIFEST-SHA-01): nothing else saw three go stale.
+    def vector_hashes(self):
+        for readme in sorted(self.root.glob("*/**/vectors/**/README.md")):
+            for line, text in enumerate(readme.read_text(encoding="utf-8").splitlines(), 1):
+                match = re.search(r"\]\(([^)]+)\)\s*\|\s*`([0-9a-f]{64})`", text)
+                if match:
+                    target = readme.parent / match.group(1)
+                    if not target.is_file() or hashlib.sha256(target.read_bytes()).hexdigest() != match.group(2):
+                        self.error(readme, f"line {line}: sha256 is not of {match.group(1)}")
+
     def lesson(self, lesson):
         if lesson.parent.parent == self.root / "Platform":
             return self.platform_lesson(lesson)
@@ -2740,6 +2751,7 @@ def main():
     for name in names:
         check.lesson((check.root / name).resolve())
     check.vms_module()
+    check.vector_hashes()
     check.vms_frozen()
     check.outcome_readers()
     check.family_read()

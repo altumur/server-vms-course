@@ -1806,6 +1806,18 @@ class VmsLessonTests(unittest.TestCase):
         for line in (3, 4, 5):
             self.assertTrue(any(f"line {line}: directive @stream-wait expects ok <JSON>" in e for e in errors), errors)
 
+    def test_vector_readme_hash_is_of_the_linked_bytes(self):
+        import hashlib
+        folder = self.dir / "vectors/x"
+        folder.mkdir(parents=True)
+        (folder / "m.yaml").write_bytes(b"a")
+        good = hashlib.sha256(b"a").hexdigest()
+        (folder / "README.md").write_text(f"| [m](m.yaml) | `{good}` |\n| [m](m.yaml) | `{'0' * 64}` |\n", encoding="utf-8")
+        check = Check(self.root)
+        check.vector_hashes()
+        self.assertEqual([e for e in check.errors if "line 1:" in e], [])
+        self.assertTrue(any("line 2: sha256 is not of m.yaml" in e for e in check.errors), check.errors)
+
     def test_error_word_is_in_a_refusal_table(self):
         (self.dir / "data").mkdir(exist_ok=True)
         (self.dir / "data/refusal-words.tsv").write_text("# w\ndoor\tcode\terror\tfield\tnorm\nu\t404\tno such unit\t-\tН4\n",
