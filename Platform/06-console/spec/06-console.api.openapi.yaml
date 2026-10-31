@@ -221,8 +221,8 @@ paths:
         required: false
         schema:
           $ref: '#/components/schemas/IdempotencyKey'
-        description: Необязателен и не читается — правка сходится по cas (Н3 «править»); каждый повтор PUT поднимает revision.
-          Обязательный ключ и проход повторов POST описаны в Н3.
+        description: Необязателен. Без него правка сходится по cas и каждый повтор поднимает revision; с ним — память повторов
+          (глава 6.1 Н3 «память повторов»), её порядок раньше If-Match.
       - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
@@ -254,7 +254,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReferenceConflict'
+                oneOf:
+                - $ref: '#/components/schemas/ReferenceConflict'
+                - $ref: '#/components/schemas/RepeatRefused'
         '412':
           $ref: '#/components/responses/RevisionMoved'
         '413':
@@ -266,6 +268,7 @@ paths:
     delete:
       summary: пометить удалённой без изменения revision
       parameters:
+      - $ref: '#/components/parameters/RepeatKey'
       - $ref: '#/components/parameters/IfMatch'
       responses:
         '200':
@@ -288,6 +291,12 @@ paths:
           $ref: '#/components/responses/SlowBody'
         '412':
           $ref: '#/components/responses/RevisionMoved'
+        '409':
+          description: Отказ памяти повторов — in flight, key reused.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepeatRefused'
         '413':
           $ref: '#/components/responses/LargeBody'
         '429':
@@ -441,6 +450,8 @@ paths:
                 $ref: '#/components/schemas/TableList'
     post:
       summary: Записать полную строку таблицы
+      parameters:
+      - $ref: '#/components/parameters/RepeatKey'
       responses:
         '400':
           description: Полное JSON-тело
@@ -484,6 +495,7 @@ paths:
                 anyOf:
                 - $ref: '#/components/schemas/ReferenceConflict'
                 - $ref: '#/components/schemas/CasRefused'
+                - $ref: '#/components/schemas/RepeatRefused'
       requestBody:
         required: true
         content:
@@ -594,6 +606,8 @@ paths:
                 $ref: '#/components/schemas/TableRow'
     delete:
       summary: Удалить строку таблицы
+      parameters:
+      - $ref: '#/components/parameters/RepeatKey'
       responses:
         '400':
           $ref: '#/components/responses/BadBody'
@@ -628,7 +642,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CasRefused'
+                oneOf:
+                - $ref: '#/components/schemas/CasRefused'
+                - $ref: '#/components/schemas/RepeatRefused'
     head:
       summary: 'HEAD: Прочитать одну строку таблицы'
       responses:
@@ -3275,6 +3291,8 @@ paths:
           $ref: '#/components/responses/Unavailable'
     put:
       summary: Write policy
+      parameters:
+      - $ref: '#/components/parameters/RepeatKey'
       responses:
         '200':
           description: Write policy
@@ -3294,6 +3312,12 @@ paths:
           $ref: '#/components/responses/Method'
         '408':
           $ref: '#/components/responses/SlowBody'
+        '409':
+          description: Отказ памяти повторов — in flight, key reused.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepeatRefused'
         '413':
           $ref: '#/components/responses/LargeBody'
         '429':
@@ -3412,8 +3436,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConsoleRefused'
+                oneOf:
+                - $ref: '#/components/schemas/ConsoleRefused'
+                - $ref: '#/components/schemas/RepeatRefused'
       parameters:
+      - $ref: '#/components/parameters/RepeatKey'
       - name: server
         in: query
         required: true
@@ -3421,6 +3448,8 @@ paths:
           $ref: '#/components/schemas/Server'
     delete:
       summary: Cancel drain
+      parameters:
+      - $ref: '#/components/parameters/RepeatKey'
       responses:
         '200':
           description: Cancel drain
@@ -3440,6 +3469,12 @@ paths:
           $ref: '#/components/responses/Method'
         '408':
           $ref: '#/components/responses/SlowBody'
+        '409':
+          description: Отказ памяти повторов — in flight, key reused.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepeatRefused'
         '413':
           $ref: '#/components/responses/LargeBody'
         '429':
@@ -3545,6 +3580,8 @@ paths:
             pattern: "^(?:[\\s\\S]*[^A-Za-z0-9_.:,\\-][\\s\\S]*)$"
     put:
       summary: Write cluster-wide server labels
+      parameters:
+      - $ref: '#/components/parameters/RepeatKey'
       responses:
         '200':
           description: Write cluster-wide server labels
@@ -3570,6 +3607,12 @@ paths:
           $ref: '#/components/responses/Method'
         '408':
           $ref: '#/components/responses/SlowBody'
+        '409':
+          description: Отказ памяти повторов — in flight, key reused.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepeatRefused'
         '413':
           $ref: '#/components/responses/LargeBody'
         '429':
@@ -3584,6 +3627,8 @@ paths:
               $ref: '#/components/schemas/LabelsInput'
     delete:
       summary: Remove override and use node labels
+      parameters:
+      - $ref: '#/components/parameters/RepeatKey'
       responses:
         '200':
           description: Remove override and use node labels
@@ -3609,6 +3654,12 @@ paths:
           $ref: '#/components/responses/Method'
         '408':
           $ref: '#/components/responses/SlowBody'
+        '409':
+          description: Отказ памяти повторов — in flight, key reused.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepeatRefused'
         '413':
           $ref: '#/components/responses/LargeBody'
         '429':
@@ -3680,6 +3731,8 @@ paths:
         $ref: '#/components/schemas/Server'
     post:
       summary: Record decommission request
+      parameters:
+      - $ref: '#/components/parameters/RepeatKey'
       responses:
         '202':
           description: Record decommission request
@@ -3716,7 +3769,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ServerAnswers'
+                oneOf:
+                - $ref: '#/components/schemas/ServerAnswers'
+                - $ref: '#/components/schemas/RepeatRefused'
       requestBody:
         required: false
         content:
@@ -3725,6 +3780,8 @@ paths:
               $ref: '#/components/schemas/DecommissionInput'
     delete:
       summary: Withdraw decommission request
+      parameters:
+      - $ref: '#/components/parameters/RepeatKey'
       responses:
         '200':
           description: Withdraw decommission request
@@ -3750,6 +3807,12 @@ paths:
           $ref: '#/components/responses/Method'
         '408':
           $ref: '#/components/responses/SlowBody'
+        '409':
+          description: Отказ памяти повторов — in flight, key reused.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepeatRefused'
         '413':
           $ref: '#/components/responses/LargeBody'
         '429':
@@ -3909,8 +3972,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CasRefused'
+                oneOf:
+                - $ref: '#/components/schemas/CasRefused'
+                - $ref: '#/components/schemas/RepeatRefused'
       parameters:
+      - $ref: '#/components/parameters/RepeatKey'
       - name: version
         in: query
         required: true
@@ -4866,6 +4932,14 @@ paths:
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
 components:
   parameters:
+    RepeatKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: 'Необязателен у этой двери: нет — проход прежний, повтор есть новая запись; есть — память повторов (глава
+        6.1 Н3 «память повторов»; ADR-0094 B3).'
+      schema:
+        $ref: '#/components/schemas/IdempotencyKey'
     IfMatch:
       name: If-Match
       in: header
@@ -5090,6 +5164,10 @@ components:
           - spent
           - too many
           - store unavailable
+          - Idempotency-Key required
+          - in flight
+          - key reused
+          - row too large
         field:
           $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/RefusalField'
       description: Общая форма отказа консоли (глава 6.5 Н4) `{detail, error, field?}`; это не диагностика загрузчика и не Fault
@@ -6375,8 +6453,8 @@ components:
         - const: ..
         - pattern: "^(?:[\\s\\S]*/[\\s\\S]*)$"
       description: Один непустой сегмент, кроме '..', не больше 200 UTF-8-байт (Н3). maxLength считает символы и не заменяет
-        отдельную проверку байтов. Предел полного ключа с префиксом проверяется отдельно по P/01.1 Н1; определённый отказ
-        хранилища badkey преобразуется по главе 6.1 Н3–Н4.
+        отдельную проверку байтов. Ключ строки заявки — дайджест (глава 6.1 Н3 «память повторов»), предел полного
+        ключа его не касается.
     ClientFields:
       type: object
       propertyNames:
@@ -6642,6 +6720,15 @@ components:
             - must_match
             - unique
             - garbled
+    RepeatRefused:
+      allOf:
+      - $ref: '#/components/schemas/TextRefusal'
+      - properties:
+          error:
+            enum:
+            - in flight
+            - key reused
+      description: Отказ памяти повторов двери с необязательным ключом (глава 6.1 Н3 «память повторов»; ADR-0094 B3).
     KeyReused:
       unevaluatedProperties: false
       allOf:

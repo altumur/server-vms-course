@@ -14,6 +14,11 @@ scenario	step	request	expect
 03-policy	5	PUT /policy {"nosuch": "distinct"}	400
 03-policy	6	PUT /policy {"servers": "shared"}	200
 03-policy	7	GET /policy	200 {"servers": "shared"}
+03-policy	8	@header Idempotency-Key: q1 PUT /policy {"servers": "distinct"}	200 {"servers": "distinct"}
+03-policy	9	PUT /policy {"servers": "shared"}	200 {"servers": "shared"}
+03-policy	10	@header Idempotency-Key: q1 PUT /policy {"servers": "distinct"}	200 {"servers": "distinct"}
+03-policy	11	GET /policy	200 {"servers": "shared"}
+03-policy	12	@header Idempotency-Key: q1 PUT /policy {"servers": "shared"}	409 {"error": "key reused"}
 04-drain	1	POST /drain?server=srv-a	2xx
 04-drain	2	POST /drain?server=srv-b	409 {"error": "refused", "detail": "~already draining"}
 04-drain	3	GET /drain	200 {"draining": "srv-a"}
@@ -28,12 +33,27 @@ scenario	step	request	expect
 04-drain	12	POST /drain?server=a%20b	400
 04-drain	13	POST /drain?server=@big(254)	400
 04-drain	14	store GET /v1/get?key=platform/drain	200 {"items": {"server": ""}}
+04-drain	15	POST /drain?server=srv-a	200 {"draining": "srv-a"}
+04-drain	16	@key(15) POST /drain?server=srv-a	200 {"draining": "srv-a"}
+04-drain	17	@key(15) POST /drain?server=srv-b	409 {"error": "key reused"}
+04-drain	18	@header Idempotency-Key: d1 DELETE /drain	200 {"draining": ""}
+04-drain	19	POST /drain?server=srv-b	200 {"draining": "srv-b"}
+04-drain	20	@header Idempotency-Key: d1 DELETE /drain	200 {"draining": ""}
+04-drain	21	GET /drain	200 {"draining": "srv-b"}
+04-drain	22	DELETE /drain	2xx
 05-server-labels	1	PUT /servers/srv-a/labels {"labels": "vlan:a"}	400 {"error": "labels", "field": "/labels"}
 05-server-labels	2	PUT /servers/srv-a/labels {"labels": ["vlan a"]}	400
 05-server-labels	3	PUT /servers/srv-nobody/labels {"labels": ["vlan:a"]}	404 {"error": "refused"}
 05-server-labels	4	GET /servers/srv-a/labels?labels=a,,b	400 {"error": "labels", "field": "@absent"}
 05-server-labels	5	PUT /servers/srv-a/labels {"labels": ["vlan:a", "vlan:a"]}	400
 05-server-labels	6	GET /servers/srv-a/labels?labels=a,a	400
+05-server-labels	7	@header Idempotency-Key: l1 PUT /servers/srv-a/labels {"labels": ["vlan:a"]}	200 {"will_move": []}
+05-server-labels	8	PUT /servers/srv-a/labels {"labels": ["vlan:b"]}	200 {"will_move": []}
+05-server-labels	9	@header Idempotency-Key: l1 PUT /servers/srv-a/labels {"labels": ["vlan:a"]}	200 {"will_move": []}
+05-server-labels	10	store GET /v1/get?key=platform/servers/srv-a	200 {"items": {"labels": "vlan:b"}}
+05-server-labels	11	@header Idempotency-Key: l1 PUT /servers/srv-a/labels {"labels": ["vlan:c"]}	409 {"error": "key reused"}
+05-server-labels	12	@header Idempotency-Key: l2 DELETE /servers/srv-a/labels	200 {}
+05-server-labels	13	@header Idempotency-Key: l2 DELETE /servers/srv-a/labels	200 {}
 06-decommission	1	POST /servers/srv-nobody/decommission {"why": "test"}	404
 07-drain-units	1	@as testsubworker store POST /v1/write {"op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"false","gen":"1","server":"srv-a"},"cas":""}	200
 07-drain-units	2	@put object testsub/heartbeats/w-1 inputs/hb-w-1-no-status.json	ok
@@ -49,6 +69,9 @@ scenario	step	request	expect
 08-schema	4	console PUT /schema?version=0	400 {"error": "a version is a whole number from 1"}
 08-schema	5	console PUT /schema?version=1	200 {"version": 1}
 08-schema	6	console PUT /schema?version=99999999999999999999999	409
+08-schema	7	console @header Idempotency-Key: s1 PUT /schema?version=1	200 {"version": 1}
+08-schema	8	console @header Idempotency-Key: s1 PUT /schema?version=1	200 {"version": 1}
+08-schema	9	console @header Idempotency-Key: s1 PUT /schema?version=2	409 {"error": "key reused"}
 09-drain-unreadable-pulse	1	@start resource	ok
 09-drain-unreadable-pulse	2	@as testsubworker store POST /v1/write {"op":"put","key":"testsub/slots/w-1","items":{"holder":"acc:1:0a0b0c","until":"9999999999","released":"false","gen":"1","server":"srv-a"},"cas":""}	200
 09-drain-unreadable-pulse	3	@put object testsub/heartbeats/w-1 inputs/hb-w-1-no-status.json	ok
@@ -116,6 +139,10 @@ scenario	step	request	expect
 13-decommission-flow	14	store GET /v1/get?key=platform/decommission/srv-b	200 {"items": null}
 13-decommission-flow	15	@until 20 console GET /events?kind=server.decommission_requested	200 {"events": [{"kind": "server.decommission_requested", "server": "srv-b", "why": "gone box"}]}
 13-decommission-flow	16	@until 20 console GET /events?kind=server.decommission_withdrawn	200 {"events": [{"kind": "server.decommission_withdrawn", "server": "srv-b"}]}
+13-decommission-flow	17	console POST /servers/srv-b/decommission {"why": "third", "gone": true}	202 {"warning": "@any"}
+13-decommission-flow	18	@key(17) console POST /servers/srv-b/decommission {"why": "third", "gone": true}	202 {"warning": "@any"}
+13-decommission-flow	19	@key(17) console POST /servers/srv-b/decommission {"why": "fourth", "gone": true}	409 {"error": "key reused"}
+13-decommission-flow	20	store GET /v1/get?key=platform/decommission/srv-b	200 {"items": {"why": "third"}}
 # 14-unreadable-policy-drain (аудит покрытия P/06, второй проход Gemini, G10): строка политики не по форме — GET /policy отдаёт умолчание манифеста (shared), не прежнее distinct и не отказ; строка дренажа не по форме — GET /drain 503 unavailable
 14-unreadable-policy-drain	1	@start resource	ok
 14-unreadable-policy-drain	2	console PUT /policy {"servers": "distinct"}	200
