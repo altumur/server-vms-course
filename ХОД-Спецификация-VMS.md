@@ -587,3 +587,4 @@
 - «Сборке»: `cam.subsystem.yaml` — `domain.shared` с документом `licence`, `domain.books.licence: {}`, `worker.reads` — `domain/cam/licence`; воркер на домене `camdomain` (продукт — лицензия по-своему).
 - «Сборке»: `cam.subsystem.yaml` — сняты `heartbeat.strings: [playback_key]`, `secrets.readers: {door/signer}` (у продукта двери держателя нет — ADR-0075).
 - «Сборке»: `cam.subsystem.yaml` `requests` — снято поле `id` (имя просьбы — от `Idempotency-Key`, P/06.4); `shares: {shm}` — доля `/run/vms-cam-shm`.
+- «Сборке»: `cam.subsystem.yaml` — таблицы `children`, `child_settings`, `devices` без `rays`, `relays`, с `channels`; `worker.writes`, `rights.unit_of`, `rights.routes`, ряд `device_inputs_off_total`; `auto.subsystem.yaml` — `worker.reads` + `cam/child_settings/` (ADR-0102 доп. (1)); продукт — строки детей у держателя.

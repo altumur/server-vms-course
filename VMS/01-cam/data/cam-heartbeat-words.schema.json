@@ -111,6 +111,11 @@
    "minimum": 0,
    "x-integer": true
   },
+  "inputs_off": {
+   "type": "integer",
+   "minimum": 0,
+   "x-integer": true
+  },
   "identity_coincidences": {
    "type": "integer",
    "minimum": 0,

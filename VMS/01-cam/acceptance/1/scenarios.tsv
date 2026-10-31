@@ -40,3 +40,14 @@ scenario	step	request	expect
 10-kind	3	POST /cameras {"source": "rtsp://10.0.0.31/ch/1", "kind": "video"}	201 {"id": "@any", "kind": "video"}
 11-order	1	POST /cameras {"source": "RTSP://10.0.0.7:554/ch/1", "live": "sometimes"}	400 {"error": "@any", "fault": "@absent"}
 11-order	2	PUT /cameras/999 {"live": "sometimes"}	400 {"error": "@any"}
+12-children	1	POST /cameras {"source": "rtsp://10.0.0.24/ch/1"}	201 {"id": "$c"}
+12-children	2	GET /children	200 {"children": []}
+12-children	3	POST /children {"camera": "$c", "type": "sensor", "number": 1, "device": "10.0.0.24"}	403 {"error": "denied", "detail": "~written by its worker"}
+12-children	4	PUT /children/$c-sensor-1 {"camera": "$c"}	405 {"error": "@any"}
+12-children	5	POST /child_settings {"camera": "$c", "type": "relay", "number": 2, "title": "Замок"}	201 {"row": {"name": "$c-relay-2", "title": "Замок", "enabled": true}}
+12-children	6	POST /child_settings {"camera": "$c", "type": "relay", "number": 2, "title": "Замок", "enabled": false}	201 {"row": {"name": "$c-relay-2", "enabled": false}}
+12-children	7	POST /child_settings {"camera": "$c", "number": 3}	400 {"error": "@any"}
+12-children	8	POST /child_settings {"camera": "$c", "type": "mic", "number": 3}	400 {"error": "@any"}
+12-children	9	POST /child_settings {"camera": "$c", "type": "relay", "number": 0}	400 {"error": "@any"}
+12-children	10	POST /child_settings {"camera": "$c", "kind": "relay", "type": "relay", "number": 3}	400 {"error": "unknown field", "field": "kind"}
+12-children	11	DELETE /child_settings/$c-relay-2	200 {"deleted": "$c-relay-2"}

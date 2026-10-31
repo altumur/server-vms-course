@@ -186,7 +186,7 @@ components:
           type: array
           items: {type: string}
         can:
-          description: описание устройства без identity (V/01.4 Н1.4)
+          description: описание устройства без identity и channels, rays и relays — по живым детям хоста (V/01.4 Н1.4)
           type: object
           additionalProperties: false
           properties:

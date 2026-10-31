@@ -3,12 +3,13 @@
 # `name` is the prefix: every key is `cam/…`: rows under
 # `cam/cameras/`, `cam/next_id`, `cam/workers/<w>`, `cam/placement/<id>`, `cam/slots/<w>`, `cam/epoch/<id>`,
 # `cam/idem/<key>`, `cam/devices/<host>` (what a held device raises and can do — its
-# holder's, V/01.4), and the object-store keys `cam/heartbeats/<w>` and `cam/snapshot`.
+# holder's, V/01.4), `cam/children/<id>` and `cam/child_settings/<id>` (a device's inputs and outputs — the holder's
+# and the operator's, V/01.1 Н1.2а), and the object-store keys `cam/heartbeats/<w>` and `cam/snapshot`.
 # It also prefixes every `/metrics` line (`cam_…`) and is the `<subsystem>` directory on the resource
 # (`<archive>/cam/<cam>/…`). The platform cuts the grants from it (P/02.1): the console's token gets `cam/cameras/*`,
 # `cam/next_id`, `cam/idem/*`, `cam/requests/*`, …;
 # the controller's `cam/workers/*`, `cam/placement/*`, `cam/slots/*`, `cam/decommissioned/*`; a worker's its epochs,
-# slot and place, and the rows of its own tables (`worker.writes`: `cam/devices/*`).
+# slot and place, and the rows of its own tables (`worker.writes`: `cam/devices/*`, `cam/children/*`).
 name: cam
 # The slot a worker of this subsystem makes, `w-<n>`, and the variable naming the one it is started under
 # beside `WORKER_NAME` (the boundary's step 4: it was each worker's class saying it).
@@ -19,11 +20,11 @@ lease: {unconfirmed_max: forever}
 # No door tokens: a holder's door (V/01.5) admits processes by their role certificate, not a page by a token — no
 # `heartbeat.strings: [playback_key]`, no `secrets.readers: {door/signer: …}` (ADR-0075, window 2).
 # What the holder writes beside its claims: what a device it holds turned out to be (`cam/devices/<host>`, М10B Lesson
-# 25) — a discovery, not a decision. Its token and a cluster's rights file are cut from this (`worker:`).
+# 25) and the inputs and outputs it turned out to have (`cam/children/<id>`, ADR-0102) — a discovery, not a decision. Its token and a cluster's rights file are cut from this (`worker:`).
 # Domain books (V/01.6, V/01.7): a member reads the copy `domain/<sub>/<book>`; the holder's cluster has no copy and
 # reads its own row `domain/<sub>/<book>/<CLUSTER>` — the rights generator grants that one row (P/02.5 Н1.4); only the
 # copy is declared here, never a prefix.
-worker: {exec: /usr/lib/cam/worker, writes: [devices], reads: [domain/rec/primaries, domain/placed/rec/, domain/rec/polls, domain/cam/licence, domain/view, domain/member-list]}
+worker: {exec: /usr/lib/cam/worker, writes: [devices, children], reads: [domain/rec/primaries, domain/placed/rec/, domain/rec/polls, domain/cam/licence, domain/view, domain/member-list]}
 # The holder's frames on its own server (V/01.2 Н1.3): a share, `SHM_DIR` of the subsystem file (/run/vms-cam-shm), one
 # file per camera and holder epoch, `<id>-<epoch>.shm`, deleted only by its writer; a subscriber on the same server
 # declares `worker.uses: [cam.shm]` (ADR-0091 п. 5) and takes the exact address from the pulse (`live_shm`).
@@ -220,12 +221,13 @@ unit:
     #
     # Deliberately NOT a list of capabilities. What a device can do — two inputs, one relay, PTZ — is a
     # DISCOVERY and belongs to the holder, not to the operator's row: the holder writes it in
-    # `cam/devices/<host>` when it changes and says it per camera in its heartbeat (`can`) — М10B Lesson
+    # `cam/devices/<host>` and `cam/children/<id>` when it changes and says it per camera in its heartbeat (`can`) — М10B Lesson
     # 25, where automation checks a scenario against it. The row is what the operator declared; the device
-    # row is what the process found.
+    # row is what the process found. A device of many sources or none hangs its inputs and outputs on its `io` row
+    # (V/01.4 Н1.4а).
     kind:                  {type: string, enum: [video, io], default: "video"}   # io — no picture: held, no stream (V/01.2 Н1.1)
 # What a holder says of each DEVICE it has open, as the device said it: the kinds of event its units
-# raise, its contacts and relays, whether it turns, its presets — what automation may point at — and the
+# raise, its video sources, whether it turns, its presets — what automation may point at — and the
 # device's own word for which device it is (`identity`), which tells two spellings of one box apart. A table the
 # worker writes (`worker.writes`) and the console shows (`GET /devices`): two writers, the holder's next word wins
 # (ADR-0012, «Архитектор» 2026-10-06: `writes` names only a unit's rows or a declared table).
@@ -235,11 +237,33 @@ tables:
     fields:
       device:   {type: string, required: true}       # the device's key: the host its sources name (`group_by`)
       events:   {type: list}                         # the event kinds its units raise
-      rays:     {type: int, default: 0}              # inputs (contacts) — `io.input` with a port
-      relays:   {type: int, default: 0}              # outputs it can be asked to switch
+      channels: {type: int, default: 0}              # its video sources, as its description names them
       ptz:      {type: bool, default: false}         # it turns
       presets:  {type: int, default: 0}              # positions it can be asked to go to
       identity: {type: string, schema: {maxLength: 200}}   # its serial number, MAC — not a capability, never leaves the cluster
+  # What a device turned out to have besides pictures, one row an input or an output (ADR-0102): a discovery, so the
+  # holder's. A device tells them as blocks with no tie to its channels, so they hang on one row of the host, the
+  # owner (V/01.4 Н1.4а): the camera of a one-source device, else its `kind: io` row. A row is never taken away: one
+  # that stopped being so is `gone`, and the name the operator gave it outlives that in the table below.
+  children:
+    key: "{camera}-{type}-{number:int}"
+    fields:
+      camera: {type: string, required: true}         # the owner: the id of a main row of the host (`rights.unit_of`)
+      type:   {type: string, required: true, enum: [sensor, relay]}   # not `kind`: a camera's `kind` is `video` or `io`
+      number: {type: int, required: true, schema: {minimum: 1}}       # `port` of `io.input` and of `output`: through all the device's blocks, from 1
+      device: {type: string, required: true}         # the host — what tells a holder its rows when the camera is gone
+      gone:   {type: bool, default: false}           # the owner or the number is no longer so; the row stays
+  # What the operator says of a row above, under the same key: one writer each (P/06.1 Н1.1), as with `rec/keeps`. No
+  # row here: no title, and on. A row with no row above is allowed: a name set ahead of the device, or left by a
+  # device that lost the input.
+  child_settings:
+    key: "{camera}-{type}-{number:int}"
+    fields:
+      camera:  {type: string, required: true}        # `key` names these three: the door cuts the name from them
+      type:    {type: string, required: true, enum: [sensor, relay]}
+      number:  {type: int, required: true, schema: {minimum: 1}}
+      title:   {type: string}                        # not `name`: that is for a table keyed by it (P/06.1 Н1.6)
+      enabled: {type: bool, default: true}           # off: an input raises no event, an output is refused (V/01.4 Н1.4а)
 placement:
   # The controller reads a worker's capacity from the `capacity` field of its latest heartbeat (any age);
   # a worker that never said anything counts as `default`, 50 (a spec without `default` does not load).
@@ -338,8 +362,11 @@ requests:
 # leaves and joins — the credentials are the device's, so `…/ch/2` under camera 1's name showed camera 2's picture (the
 # review's sixth pass), and a device nobody holds a camera of is the cluster's to point one at (the ninth pass); its
 # `ref` — the name the domain knows it by — is the cluster's to change; a relay or a preset is every camera's of the
-# device (the seventh pass: the device performs it, no channel in it).
+# device (the seventh pass: the device performs it, no channel in it). An input or an output is its owner's: a row of
+# either table needs on that camera what the route needs, and naming one or turning it off is an operator's (`edit`).
 rights:
+  unit_of: {children: camera, child_settings: camera}
+  routes: {edit: [child_settings]}
   reach:
     group: [source, labels]
     cluster: [ref]
@@ -436,6 +463,7 @@ metrics:
   - {name: devices_opening, from: heartbeat.devices_opening, default: 0}                      # the tenth pass
   - {name: device_identity_changes_total, from: heartbeat.identity_changes, default: 0, type: counter}
   - {name: device_events_refused_total, from: heartbeat.events_refused, default: 0, type: counter}
+  - {name: device_inputs_off_total, from: heartbeat.inputs_off, default: 0, type: counter}    # ADR-0102 доп. (1) п. 6
   - {name: commands_reanswered_total, from: heartbeat.commands_reanswered, default: 0, type: counter}
   - {name: door_reads_stuck, from: heartbeat.door_reads_stuck, default: 0}                    # the thirteenth pass, major 18
   # The driver host's counts (heartbeat.driver, summed over a worker's hosts: the product's; a worker that runs its cameras

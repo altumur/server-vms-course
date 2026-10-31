@@ -68,7 +68,7 @@
 7. **Одно имя на обеих сторонах:** в документе домена `then.within` (срок просьбы) → `valid_for`, как у сценария кластера;
    `action` — `enum: [preset, output]`, `arg` → `n` / `port`, срок ≤ 600 с, `rate_per_minute` ≤ 600 — форма у двери домена
    ловит то, что можно поймать формой; смысл (что умеет цель) — отказ исполнителя и цели.
-8. **`worker.reads`** + `cam/cameras/`, `cam/heartbeats/` (`can` камер), `cam/devices/`, `det/units/`, `rec/recordings/`,
+8. **`worker.reads`** + `cam/cameras/`, `cam/heartbeats/` (`can` камер), `cam/devices/`, `cam/child_settings/`, `det/units/`, `rec/recordings/`,
    `rec/heartbeats/` (адреса приёмников для книги `asks`).
 9. **Пульс и ряды:** фазы сценария `running` | `refused` | `failed` (под взятой эпохой), `why` — платформы, слова — `reason`,
    поля `unfit`, `unchecked`, `holding`, `decided_without`, `late`; ряды `creates_total{outcome}`, `made_rows`; ряд
