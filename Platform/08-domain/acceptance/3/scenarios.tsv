@@ -196,3 +196,11 @@ scenario	step	request	expect
 27-topology-versions	29	holder @header If-Match: $m DELETE /domain/members/m2	200 {"members": {"m2": "@absent"}}
 27-topology-versions	30	holder @header If-Match: 9999 DELETE /domain/members/m2	404 {"error": "refused"}
 27-topology-versions	31	holder @header If-Match: 9999 POST /domain/members {"name": "m2", "fingerprint": "0000000000000000"}	412 {"error": "revision moved"}
+28-machine-back-after-theft	1	@domain m1	ok
+28-machine-back-after-theft	2	holder GET /domain/members	200 {"members": {"hold": {"key": "$hk", "since": "$hs"}, "m1": {"key": "$mk", "since": "$ms"}}}
+28-machine-back-after-theft	3	member hold store POST /v1/write {"op": "put", "key": "domain/members", "items": {"doc": "{\"members\":{\"hold\":{\"how\":\"holder\",\"key\":\"$hk\",\"since\":$hs},\"m1\":{\"by\":\"root\",\"how\":\"admitted\",\"revoked_keys\":[\"$mk\"],\"since\":$ms}},\"rev\":101,\"term\":1}"}}	200
+28-machine-back-after-theft	4	@until 30 holder GET /domain/members	200 {"members": {"m1": {"key": "@absent", "revoked_keys": ["$mk"]}}, "knocking": [{"name": "m1", "fingerprint": "$fp"}]}
+28-machine-back-after-theft	5	holder POST /domain/members {"name": "m1", "fingerprint": "$fp"}	409 {"error": "refused", "detail": "~this key was revoked"}
+28-machine-back-after-theft	6	member hold store POST /v1/write {"op": "put", "key": "domain/members", "items": {"doc": "{\"members\":{\"hold\":{\"how\":\"holder\",\"key\":\"$hk\",\"since\":$hs},\"m1\":{\"by\":\"root\",\"how\":\"admitted\",\"revoked_keys\":[\"1111111111111111111111111111111111111111111111111111111111111111\"],\"since\":$ms}},\"rev\":102,\"term\":1}"}}	200
+28-machine-back-after-theft	7	holder POST /domain/members {"name": "m1", "fingerprint": "$fp"}	200 {"members": {"m1": {"how": "admitted", "key": "$mk", "revoked_keys": ["1111111111111111111111111111111111111111111111111111111111111111"]}}}
+28-machine-back-after-theft	8	@until 30 holder GET /domain/members	200 {"knocking": []}
