@@ -8,17 +8,17 @@ C08-SDK-06, решение «Архитектора» 2026-10-25). Участн�
 
 UTF-8, LF, поля через TAB; строки с `#` и пустые пропускаются, первая непропущенная — заголовок `case<TAB>input<TAB>expect<TAB>note`.
 
-**Вход** — `{op, reply}`: `op` — `get` | `list` | `write` (запись и удаление — `write`); `reply` — `{status, body}` (код HTTP
+**Вход** — `{op, reply}`: `op` — `get` | `list` | `write` (запись, удаление и пакет — `write`; у `conflict` пакета есть `key`, P/01.1 Н4); `reply` — `{status, body}` (код HTTP
 и тело JSON) или `"@none"` (ответ не пришёл), `"@truncated"` (обрезан), `"@refused"` (отказ в соединении).
 
 **Выход** — строка JSON: `row`, `absent`, `unreadable`, `listing`, `written` или `kind` отказа (`conflict`, `guard`,
 `unavailable`, `ambiguous`, …) — договор, раздел «Исходы и что делает клиент» (`outcome`, `no_reply`). Сравнение — JSON по
 значению.
 
-20 строк: формы ответа чтения (строка, отсутствующая, повреждённая, не по форме), перечисление, запись и повтор `again`,
+21 строка: формы ответа чтения (строка, отсутствующая, повреждённая, не по форме), перечисление, запись и повтор `again`,
 версия не по форме провода у записи и перечисления, нет ответа, обрыв и отказ в соединении у чтения и записи, отказы
 `conflict`, `guard`, `ambiguous`, `unavailable`, `toolarge`, `forbidden` (строки `list-bad-version`, `write-truncated`,
-`write-toolarge`, `get-forbidden` — аудит покрытия P/01, второй проход, G07).
+`write-toolarge`, `get-forbidden` — аудит покрытия P/01, второй проход, G07; `write-conflict-batch` — ADR-0094 B9).
 
 ## Прогон
 

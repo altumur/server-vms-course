@@ -1,5 +1,5 @@
 # Закрытый перечень слов error дверей консоли кластера: главы 6.1, 6.2, 6.4, 6.5, 6.6 (ADR-0094 B5, доп. (13)). Правила — глава 6.1 Н2 «Отказ: error и field».
-# door — двери: units /{rows}, /{rows}/{id}; blobs /{rows}/{id}/{blob_field}; tables /{table}, /{table}/{name}; policy /policy;
+# door — двери: units /{rows}, /{rows}/{id}; blobs /{rows}/{id}/{blob_field}; tables /{table}, /{table}/{name}; batch /console/batch; policy /policy;
 # drain /drain; labels /servers/{server}/labels; decommission /servers/{server}/decommission; schema /schema; where /where/…;
 # pages страницы и /platform/*; events GET /events; marks POST /marks; requests POST /{sub}/requests; asked DELETE /{sub}/asked/{sha16};
 # * — каждая дверь этих глав. Слова глав 6.3, 6.7 — их Н4.
@@ -62,6 +62,37 @@ tables	409	refused	-	6.1 Н4
 tables	409	in flight	-	6.1 Н3 «память повторов»
 tables	422	key reused	-	6.1 Н3 «память повторов»; ADR-0094 доп. (14)
 tables	413	row too large	-	6.1 Н3 «память повторов»
+batch	400	not_json	-	6.1 Н4 «Пакетная дверь»
+batch	400	bad batch	/<поле>	6.1 Н4 «Пакетная дверь»
+batch	400	badkey	/<поле>	6.1 Н4 «Пакетная дверь»
+batch	400	no anchor	/writes/<номер>/fields/<поле>	6.1 Н2 «Пакетная дверь»; ADR-0094 доп. (12) п. 3
+batch	400	Idempotency-Key required	-	6.1 Н3 «пакет»
+batch	400	sealing key required	-	6.2 Н4
+batch	400	a sealed value is not taken from outside — give the password itself	/writes/<номер>/fields/<поле>	6.2 Н4
+batch	400	platform_field	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Пакетная дверь»
+batch	400	unknown field	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Пакетная дверь»
+batch	400	not_number	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Пакетная дверь»
+batch	400	type	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Пакетная дверь»
+batch	400	too_long	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Пакетная дверь»
+batch	400	enum	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Пакетная дверь»
+batch	400	bad_url	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Пакетная дверь»
+batch	400	blob	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Пакетная дверь»
+batch	400	labels	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Пакетная дверь»
+batch	400	required	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Пакетная дверь»
+batch	400	bad_id	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Пакетная дверь»
+batch	400	fixed	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Пакетная дверь»
+batch	400	refused	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Пакетная дверь»
+batch	400	the body does not fill it in	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Пакетная дверь»
+batch	403	denied	-	6.1 Н4 «Пакетная дверь»
+batch	404	no such unit	-	6.1 Н4 «Пакетная дверь»
+batch	404	no such row	-	6.1 Н4 «Пакетная дверь»
+batch	409	conflict	/writes/<номер>/fields/<поле>	договор проверки строки П5, Р3; 6.1 Н4 «Пакетная дверь»
+batch	409	in flight	-	6.1 Н3 «пакет»
+batch	412	row moved	/writes/<номер>/cas	6.1 Н2 «Пакетная дверь»; у стража — /guards/<номер>/index
+batch	413	batch too large	-	6.1 Н1.4, Н4 «Пакетная дверь»
+batch	413	row too large	-	6.1 Н4 «Пакетная дверь»
+batch	422	key reused	-	6.1 Н3 «пакет»; ADR-0094 доп. (14)
+batch	503	store unavailable	-	6.1 Н4 «Пакетная дверь»
 policy	400	refused	/servers	6.6 Н4
 policy	400	Idempotency-Key required	-	6.6 Н2.1 «Память повторов»
 policy	409	in flight	-	6.6 Н2.1 «Память повторов»

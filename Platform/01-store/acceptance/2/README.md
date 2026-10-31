@@ -3,7 +3,7 @@
 Стенд, словарь директив и дверей — [общий README приёмки](../../../common/acceptance/README.md). Норма главы —
 [`01.2-store.norms.md`](../../spec/01.2-store.norms.md) Н5, полные тела двух маршрутов —
 [OpenAPI](../../spec/01-store.api.openapi.yaml).
-В файле 10 сценариев / 54 шага (мутационная проверка 7cecaf2 № 28, 31: `never` у admin, `/v1/rights` только admin; сц. 11–13 — аудит покрытия P/01 2026-10-30: `never` пола и `domain/`, заголовок роли у перечисления, файл прав — `@rights store`; сц. 14–15 — его второй проход: границы `never`, роли домена, `comment`); файл
+В файле 11 сценариев / 65 шагов (мутационная проверка 7cecaf2 № 28, 31: `never` у admin, `/v1/rights` только admin; сц. 11–13 — аудит покрытия P/01 2026-10-30: `never` пола и `domain/`, заголовок роли у перечисления, файл прав — `@rights store`; сц. 14–15 — его второй проход: границы `never`, роли домена, `comment`); файл
 прав стенда — готовый вход [`inputs/rights.json`](inputs/rights.json) (форма P/01.2 Н1.2): роли `console`,
 `testsubcontroller`, `testsubworker`, `testsub2worker` и образцы, нужные шагам, — подмножество вывода прав P/02.5 Н1.4 для
 `testsub` и `testsub2` (`Source/tests/testdata/testsub*.subsystem.yaml`) с именем развёртывания `testsub`. Раннер кладёт его
@@ -21,6 +21,9 @@
 входа главы 1.1; 403 — ровно строки kind/error без полей консоли. `$имя` связывается только
 после совпадения всего шага; повтор переменной сравнивается с прежним значением. Порядок
 ключей в list остаётся порядком хранилища, раннер не сортирует фактический ответ.
+
+Сц. 16 — пакет `op: batch` по ролям (P/01.1 Н1 `batch`, ADR-0094 B9): шаг 1 — роль `console` не знает предела `BATCH_WRITES`, шаг 3 — прочие
+роли знают; шаги 4–7 — строка и страж без права, ничего не записано; шаги 8–11 — `never` у admin судит каждую строку пакета.
 
 Роли сценариев: `console`, `testsubcontroller`, `testsubworker`, `testsub2worker`, `admin`; в сц. 14 после `@rights store
 inputs/rights-domain-roles.json` — роли домена `domain`, `domainagent`, `testsubdomain`.

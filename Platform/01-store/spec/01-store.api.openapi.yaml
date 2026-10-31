@@ -40,14 +40,14 @@ paths:
         "503": {$ref: "#/components/responses/Unavailable"}
   /v1/write:
     post:
-      summary: Обычная запись P/01.1 или привилегированный подъём пола
+      summary: Обычная запись P/01.1, пакет или привилегированный подъём пола
       description: >-
         Н2 норм: предел чтения тела задаётся отдельно от потолка строки; при его
         превышении до разбора JSON — 413 toolarge, limit равен пределу тела в байтах.
         В приёмке предел тела 1048576, потолок строки 524288 байт.
       requestBody:
         required: true
-        content: {application/json: {schema: {oneOf: [$ref: '#/components/schemas/Cmd', $ref: '#/components/schemas/FloorCmd']}}}
+        content: {application/json: {schema: {oneOf: [$ref: '#/components/schemas/Cmd', $ref: '#/components/schemas/BatchCmd', $ref: '#/components/schemas/FloorCmd']}}}
       responses:
         "200":
           description: сделано; again — ответ прежнего применения записи с этим id
@@ -56,12 +56,13 @@ paths:
         "404": {$ref: "#/components/responses/NoRoute"}
         "403": {$ref: "#/components/responses/Forbidden"}
         "409":
-          description: CAS P/01.1, условия времени приёма (expired, early — ADR-0091 п. 1) либо floor не возрастает (refused — строка P/01.1 Н4); иной payload с тем же id — 400 badrequest, не 409
+          description: CAS P/01.1 (у пакета — с key строки), условия времени приёма (expired, early — ADR-0091 п. 1) либо floor не возрастает (refused — строка P/01.1 Н4); иной payload с тем же id — 400 badrequest, не 409
           content:
             application/json:
               schema:
                 oneOf:
                 - $ref: '#/components/schemas/ConflictFault'
+                - $ref: '#/components/schemas/BatchConflictFault'
                 - $ref: '#/components/schemas/ExpiredFault'
                 - $ref: '#/components/schemas/EarlyFault'
                 - $ref: '#/components/schemas/Refused'
@@ -401,6 +402,47 @@ components:
       - properties:
           op: {const: delete}
           items: {}    # у delete не читается: любое JSON-значение или отсутствие — не отказ
+    BatchCmd:
+      type: object
+      description: "Пакет: Н1 batch, Н3 «записать пакет» (ADR-0094 B9). Лишние поля верхнего уровня не читаются, в том числе key, items, cas, guard одиночной записи (Н2); элементы writes и guards закрыты. Пределы BATCH_WRITES и BATCH_GUARDS, повтор ключа и страж на ключ записи — проверка двери, 400 badrequest; у роли console пределов числа нет (Н1), поэтому maxItems схема не задаёт."
+      unevaluatedProperties: true
+      required: [op, writes]
+      properties:
+        op: {const: batch}
+        writes:
+          type: array
+          minItems: 1
+          items: {$ref: "#/components/schemas/BatchWrite"}
+        guards:
+          type: array
+          items: {$ref: "#/components/schemas/BatchGuard"}
+        id: {type: string, pattern: "^(?:[0-9a-f]{1,64})$"}
+        not_after: {type: number, minimum: 0}
+        not_before: {type: number, minimum: 0}
+    BatchWrite:
+      type: object
+      required: [op, key]
+      additionalProperties: false
+      properties:
+        op: {type: string, enum: [put, delete]}
+        key: {$ref: "#/components/schemas/Key"}
+        items: {}
+        cas: {type: [string, "null"], pattern: "^(?:(?:0|[1-9][0-9]{0,19})?)$"}
+      oneOf:
+      - properties:
+          op: {const: put}
+          items: {type: object, additionalProperties: {type: string}}
+        required: [items]
+      - properties:
+          op: {const: delete}
+          items: {}    # у delete не читается: любое JSON-значение или отсутствие — не отказ
+    BatchGuard:
+      type: object
+      required: [key, index]
+      additionalProperties: false
+      properties:
+        key: {$ref: "#/components/schemas/Key"}
+        index: {type: string, pattern: "^(?:(?:0|[1-9][0-9]{0,19})?)$"}
     Written:
       type: object
       required: [index]
@@ -408,7 +450,7 @@ components:
       properties:
         index: {$ref: "#/components/schemas/Version"}
         again: {const: true}
-      description: Первое применение — index; сохранённый повтор добавляет again true.
+      description: Первое применение — index, у пакета одна версия на все строки; сохранённый повтор добавляет again true.
     Fault:
       description: Закрытые формы отказов Н4; конкретный код операции ограничивает допустимые ветви.
       oneOf:
@@ -416,6 +458,7 @@ components:
       - $ref: "#/components/schemas/BadRequestFault"
       - $ref: "#/components/schemas/ForbiddenFault"
       - $ref: "#/components/schemas/ConflictFault"
+      - $ref: "#/components/schemas/BatchConflictFault"
       - $ref: "#/components/schemas/ExpiredFault"
       - $ref: "#/components/schemas/EarlyFault"
       - $ref: "#/components/schemas/GuardFault"
@@ -453,6 +496,16 @@ components:
         kind: {const: conflict}
         error: {type: string}
         index: {$ref: "#/components/schemas/VersionOrAbsent"}
+    BatchConflictFault:
+      type: object
+      required: [kind, error, key, index]
+      additionalProperties: false
+      properties:
+        kind: {const: conflict}
+        error: {type: string}
+        key: {$ref: "#/components/schemas/Key"}
+        index: {$ref: "#/components/schemas/VersionOrAbsent"}
+      description: Н4, пакет — первая по порядку writes строка, чей cas разошёлся; ничего не записано.
     ExpiredFault:
       type: object
       required: [kind, error]

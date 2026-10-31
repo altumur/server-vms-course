@@ -1,6 +1,6 @@
 # P/06 — двери процесса консоли кластера: HTTP-контракт (одна дверь процесса — один контракт урока, план урока 6 В6).
 # Главы ссылаются на свои пути (описание каждого пути называет главу): 6.1 — /{rows}, /{rows}/{id},
-# /{rows}/{id}/{blob_field}, /{table}, /{table}/{name}; 6.3 — /session (форма сессии и кука w2c_glass у /session/break-glass);
+# /{rows}/{id}/{blob_field}, /{table}, /{table}/{name}, /console/batch; 6.3 — /session (форма сессии и кука w2c_glass у /session/break-glass);
 # 6.4 — /events (слияние консолью), /marks, /{sub}/requests, /{sub}/asked/{sha16}; 6.5 — страницы, /platform/*, /healthz,
 # /manifest, /{sub}/manifest, /mounts, /servers, /resources, /where, /metrics, /{sub}/…, door.pass /{pass}; 6.6 — /policy, /drain,
 # /servers/{server}/labels, /servers/{server}/decommission, /unplaceable, /schema; 6.7 (поздний слой, вводят уроки 8 и 10) —
@@ -32,7 +32,7 @@ info:
     действуют у каждой двери, их ответы перечислены у каждой операции явно. Короткие пути единиц, таблиц, blob-полей, /policy,
     /unplaceable, /where/{id} выбирают CONSOLE_ROOT; пара servers {origin}/{sub} явно выбирает загруженную подсистему, включая
     root. /manifest, /servers, /where/{table}/{place}, /metrics объявлены и с префиксом /{sub}. Общие /drain, /schema, /session,
-    /mounts, /healthz, /resources, /platform/*, /servers/{server}/… не получают префикса; /events и /marks — без префикса;
+    /mounts, /healthz, /resources, /platform/*, /servers/{server}/…, /console/batch не получают префикса; /events и /marks — без префикса;
     просьбы и учёт человека всегда именуют подсистему. Один сегмент пути различает загруженный манифест: unit.rows — /{rows},
     tables — /{table}, door.pass — /{pass}; непересечение имён и зарезервированных слов — загрузчик P/02.1. Внутренний API
     не нормируется; контракт не утверждает, что какая-либо реализация ему проверена.'
@@ -711,6 +711,74 @@ paths:
                 const: '1'
         '200':
           description: Полное JSON-тело; HEAD не содержит тела
+  /console/batch:
+    description: Глава 6.1 Н2 «Пакетная дверь», Н3 «пакет» — запись строк единицы и её частей одной операцией хранилища, всё или ничего (ADR-0094 B9).
+      Дверь общая, префикса подсистемы не получает; строки названы полными ключами.
+    post:
+      summary: Записать строки пакетом
+      parameters:
+      - $ref: '#/components/parameters/RepeatKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchInput'
+      responses:
+        '200':
+          description: Пакет записан; при повторе тем же ключом — сохранённый ответ.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchWritten'
+        '400':
+          description: Тело или строка не по форме, ключ, якорь, счётчик, проверка строки; field — путь поля с номером строки.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchRefused'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Снятие отсутствующей строки или надгробия; нет маршрута.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchRefused'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '409':
+          description: Ссылки строки (conflict с fault) или заявка в работе (in flight).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchRefused'
+        '412':
+          description: Страж или cas строки разошёлся; ничего не записано.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchMoved'
+        '413':
+          description: Сверх пределов пакета, строка тяжелее потолка или тело больше предела консоли.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchRefused'
+        '422':
+          description: Тот же ключ, иное тело (ADR-0094 доп. (14)).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyReused'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
   /session:
     description: Глава 6.3 (06.3-console.norms.md) — /session и гранты.
     get:
@@ -6734,6 +6802,11 @@ components:
           - store unavailable
           - busy
           - unavailable
+          - bad batch
+          - no anchor
+          - row moved
+          - batch too large
+          - no such row
         field:
           $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/RefusalField'
         fault:
@@ -6799,6 +6872,95 @@ components:
           error:
             const: in flight
       description: Отказ памяти повторов двери с необязательным ключом (глава 6.1 Н3 «память повторов»; ADR-0094 B3).
+    BatchInput:
+      type: object
+      required: [writes]
+      additionalProperties: false
+      properties:
+        writes:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/BatchWrite'
+          description: Глава 6.1 Н2 «Пакетная дверь»; предел BATCH_WRITES (P/01.1 Н1) проверяет дверь — 413, ключ один раз.
+        guards:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatchGuard'
+          description: Прочитанные незаписываемые строки; предел BATCH_GUARDS (P/01.1 Н1); ключ один раз и не в writes.
+    BatchWrite:
+      type: object
+      required: [op, key, cas]
+      additionalProperties: false
+      properties:
+        op:
+          enum:
+          - put
+          - delete
+        key:
+          type: string
+          minLength: 1
+          description: Полный ключ строки единицы, строки объявленной таблицы или <s>/next_id; правила ключа — P/01.1 Н1.
+        fields:
+          type: object
+          additionalProperties: true
+          description: 'Тело двери этой строки: у единицы — POST или PUT, у таблицы — POST, у счётчика — {n}. Поля проверяет манифест, у delete поля нет.'
+        cas:
+          type: string
+          pattern: ^(?:(?:0|[1-9][0-9]{0,19})?)$
+          description: Индекс хранилища прочитанной строки, у надгробия — его индекс; пустая строка — строки нет.
+      oneOf:
+      - properties:
+          op:
+            const: put
+        required: [fields]
+      - properties:
+          op:
+            const: delete
+          fields: false
+    BatchGuard:
+      type: object
+      required: [key, index]
+      additionalProperties: false
+      properties:
+        key:
+          type: string
+          minLength: 1
+        index:
+          type: string
+          pattern: ^(?:(?:0|[1-9][0-9]{0,19})?)$
+    BatchWritten:
+      type: object
+      required: [written]
+      additionalProperties: false
+      properties:
+        written:
+          type: integer
+          minimum: 1
+          description: Число строк writes. Версии в ответе нет — done-заявка пишется тем же пакетом.
+    BatchRefused:
+      allOf:
+      - $ref: '#/components/schemas/Refusal'
+      description: Отказ пакетной двери; слова — refusal-words.tsv, строки batch и *; field — путь поля от корня тела, с номером строки.
+    BatchMoved:
+      type: object
+      required: [detail, error, field, key, index]
+      additionalProperties: false
+      properties:
+        detail:
+          type: string
+        error:
+          const: row moved
+        field:
+          $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/RefusalField'
+        key:
+          type: string
+          minLength: 1
+        index:
+          type: string
+          pattern: ^(?:(?:0|[1-9][0-9]{0,19})?)$
+          description: Индекс этой строки сейчас; пустая строка — строки нет или страж без view.
+      description: Глава 6.1 Н4 «Пакетная дверь»; field — /guards/<номер>/index или /writes/<номер>/cas; ничего не записано.
     KeyReused:
       unevaluatedProperties: false
       allOf:

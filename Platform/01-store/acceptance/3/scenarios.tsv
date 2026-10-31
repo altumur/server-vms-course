@@ -264,3 +264,31 @@ scenario	step	request	expect
 29-group-import-clock	8	@store-op s1 import --from inputs/copy-future-floor.jsonl -index-base 7 -force	ok
 29-group-import-clock	9	store@s2 GET /v1/get?key=testsub/next_id	200 {"items": {"n": "2"}, "index": "3"}
 29-group-import-clock	10	admin@s1 GET /v1/get?key=platform/epoch_floor	200 {"items": {"floor": "@any", "generation_at": "@time"}}
+30-batch-restart	1	admin POST /v1/write {"op":"batch","writes":[{"op":"put","key":"testsub/counters/p1","items":{"n":"1"},"cas":""},{"op":"put","key":"testsub/counters/p2","items":{"n":"1"},"cas":""}],"id":"b30a"}	200 {"index": "$i"}
+30-batch-restart	2	@restart store	ok
+30-batch-restart	3	admin GET /v1/get?key=testsub/counters/p1	200 {"items": {"n": "1"}, "index": "$i"}
+30-batch-restart	4	admin GET /v1/get?key=testsub/counters/p2	200 {"items": {"n": "1"}, "index": "$i"}
+30-batch-restart	5	admin POST /v1/write {"op":"batch","writes":[{"op":"put","key":"testsub/counters/p1","items":{"n":"1"},"cas":""},{"op":"put","key":"testsub/counters/p2","items":{"n":"1"},"cas":""}],"id":"b30a"}	200 {"index": "$i", "again": true}
+30-batch-restart	6	admin POST /v1/write {"op":"batch","writes":[{"op":"put","key":"testsub/counters/p1","items":{"n":"2"},"cas":"$i"},{"op":"delete","key":"testsub/counters/p2","cas":"$i"}]}	200 {"index": "$j"}
+30-batch-restart	7	@restart store	ok
+30-batch-restart	8	admin GET /v1/get?key=testsub/counters/p1	200 {"items": {"n": "2"}, "index": "$j"}
+30-batch-restart	9	admin GET /v1/get?key=testsub/counters/p2	200 {"items": null, "index": ""}
+30-batch-restart	10	ASSERT $i != $j	
+31-group-batch	1	@group-setup inputs/group.json	ok
+31-group-batch	2	@store-start s1 -bootstrap -group-size 3	ok
+31-group-batch	3	@store-start s2 -join {api@s1} -group-size 3 -force	ok
+31-group-batch	4	@store-start s3 -join {api@s1} -group-size 3	ok
+31-group-batch	5	@until 20 admin@s3 GET /v1/status	200 {"state": "Follower", "leader_id": "s1"}
+31-group-batch	6	@store-start d1 -door -voters s1@{api@s1},s2@{api@s2},s3@{api@s3}	ok
+31-group-batch	7	@until 20 admin@d1 GET /v1/status	200 {"state": "Door", "leader_id": "s1"}
+31-group-batch	8	store@d1 POST /v1/write {"op":"batch","writes":[{"op":"put","key":"testsub/counters/g1","items":{"n":"1"},"cas":""},{"op":"put","key":"testsub/counters/g2","items":{"n":"1"},"cas":""}],"id":"b31a"}	200 {"index": "$i"}
+31-group-batch	9	store@s2 GET /v1/get?key=testsub/counters/g1	200 {"items": {"n": "1"}, "index": "$i"}
+31-group-batch	10	store@s3 GET /v1/get?key=testsub/counters/g2	200 {"items": {"n": "1"}, "index": "$i"}
+31-group-batch	11	store@s3 POST /v1/write {"op":"batch","writes":[{"op":"put","key":"testsub/counters/g1","items":{"n":"1"},"cas":""},{"op":"put","key":"testsub/counters/g2","items":{"n":"1"},"cas":""}],"id":"b31a"}	200 {"index": "$i", "again": true}
+31-group-batch	12	store@d1 POST /v1/write {"op":"batch","writes":[{"op":"put","key":"testsub/counters/g1","items":{"n":"1"},"cas":""},{"op":"put","key":"testsub/counters/g2","items":{"n":"1"},"cas":""}],"id":"b31a"}	200 {"index": "$i", "again": true}
+31-group-batch	13	store@s2 POST /v1/write {"op":"batch","writes":[{"op":"put","key":"testsub/counters/g1","items":{"n":"2"},"cas":"$i"},{"op":"put","key":"testsub/counters/g2","items":{"n":"2"},"cas":""}]}	409 {"kind": "conflict", "key": "testsub/counters/g2", "index": "$i"}
+31-group-batch	14	store@d1 GET /v1/get?key=testsub/counters/g1	200 {"items": {"n": "1"}, "index": "$i"}
+31-group-batch	15	@tls inputs/door-row-batch.json	ok {"handshake": "ok", "http": {"status": 403}}
+31-group-batch	16	@sigkill store@s1	ok
+31-group-batch	17	@until 30 store@s2 GET /v1/get?key=testsub/counters/g1	200 {"items": {"n": "1"}, "index": "$i"}
+31-group-batch	18	store@s3 GET /v1/get?key=testsub/counters/g2	200 {"items": {"n": "1"}, "index": "$i"}

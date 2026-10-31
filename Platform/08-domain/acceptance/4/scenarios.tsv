@@ -175,3 +175,18 @@ scenario	step	request	expect
 19-garbled-break-glass	5	holder GET /domain/break-glass	200 {"clusters": {"m1": {}}}
 19-garbled-break-glass	6	holder PUT /domain/break-glass/m1 {"password": "m1 break glass password"}	200 {"cluster": "m1", "set": true}
 19-garbled-break-glass	7	holder GET /domain/break-glass	200 {"clusters": {"m1": {"set_at": "@time"}}}
+20-batch-rights	1	@domain	ok
+20-batch-rights	2	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201 {"user": "ann"}
+20-batch-rights	3	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "scope": "unit:testsub/c1-m1"}]}	200 {"cluster": "m1"}
+20-batch-rights	4	member m1 console POST /counters {"name": "c2-m1"}	201
+20-batch-rights	5	member m1 store GET /v1/get?key=testsub/counters/c1-m1	200 {"index": "$a"}
+20-batch-rights	6	member m1 store GET /v1/get?key=testsub/counters/c2-m1	200 {"index": "$b"}
+20-batch-rights	7	@person ann ann password 1	ok
+20-batch-rights	8	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "admin", "scope": "unit:testsub/c1-m1"}]}
+20-batch-rights	9	member m1 console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1-m1", "fields": {"start": 5}, "cas": "$a"}, {"op": "put", "key": "testsub/counters/c2-m1", "fields": {"start": 5}, "cas": "$b"}]}	403 {"error": "denied"}
+20-batch-rights	10	member m1 store GET /v1/get?key=testsub/counters/c1-m1	200 {"index": "$a"}
+20-batch-rights	11	member m1 store GET /v1/get?key=testsub/counters/c2-m1	200 {"index": "$b"}
+20-batch-rights	12	member m1 console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1-m1", "fields": {"start": 5}, "cas": "$a"}], "guards": [{"key": "testsub/counters/c2-m1", "index": "$b"}]}	412 {"error": "row moved", "field": "/guards/0/index", "key": "testsub/counters/c2-m1", "index": ""}
+20-batch-rights	13	member m1 store GET /v1/get?key=testsub/counters/c1-m1	200 {"index": "$a"}
+20-batch-rights	14	member m1 console POST /console/batch {"writes": [{"op": "put", "key": "testsub/counters/c1-m1", "fields": {"start": 5}, "cas": "$a"}]}	200 {"written": 1}
+20-batch-rights	15	member m1 store GET /v1/get?key=testsub/counters/c1-m1	200 {"items": {"start": "5"}}

@@ -16,6 +16,7 @@ write-none	{"op":"write","reply":"@none"}	"ambiguous"	ответ записи н
 write-refused-connection	{"op":"write","reply":"@refused"}	"ambiguous"	отказ в соединении — тоже «ответ не пришёл»
 write-truncated	{"op":"write","reply":"@truncated"}	"ambiguous"	обрезанный ответ записи — ambiguous: повтор только тем же id
 write-conflict	{"op":"write","reply":{"status":409,"body":{"kind":"conflict","error":"x","index":"5"}}}	"conflict"	Fault — его kind: перечитать и повторить
+write-conflict-batch	{"op":"write","reply":{"status":409,"body":{"kind":"conflict","error":"x","key":"s/rows/a","index":"5"}}}	"conflict"	отказ cas пакета называет строку: ключ не меняет исход
 write-guard	{"op":"write","reply":{"status":412,"body":{"kind":"guard","error":"x","key":"s/slots/w-1","index":"4"}}}	"guard"	страж не на той версии: не повторять, перечитать условие
 write-ambiguous	{"op":"write","reply":{"status":503,"body":{"kind":"ambiguous","error":"x"}}}	"ambiguous"	исход записи неизвестен
 write-toolarge	{"op":"write","reply":{"status":413,"body":{"kind":"toolarge","error":"x","limit":1048576}}}	"toolarge"	тело больше предела — Fault, его kind: уменьшить тело, не повторять тем же

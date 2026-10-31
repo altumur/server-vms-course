@@ -267,3 +267,18 @@ scenario	step	request	expect
 28-file-unreadable	8	GET /testsub2/logo.png	200 @file Platform/06-console/acceptance/5/inputs/testsub2/logo.png
 28-file-unreadable	9	GET /testsub2/	200 ~testsub2
 28-file-unreadable	10	GET /testsub2/manifest	200 {"name": "testsub2"}
+29-batch-next-id	1	POST /probe-x/probes {}	201 {"id": "1", "revision": 1}
+29-batch-next-id	2	@as console store GET /v1/get?key=probe-x/next_id	200 {"items": {"n": "1"}, "index": "$n"}
+29-batch-next-id	3	POST /console/batch {"writes": [{"op": "put", "key": "probe-x/probes/2", "fields": {}, "cas": ""}, {"op": "put", "key": "probe-x/next_id", "fields": {"n": 2}, "cas": "$n"}]}	200 {"written": 2}
+29-batch-next-id	4	store GET /v1/get?key=probe-x/next_id	200 {"items": {"n": "2"}, "index": "$m"}
+29-batch-next-id	5	store GET /v1/get?key=probe-x/probes/2	200 {"items": {"id": "2", "label": "probe2", "revision": "1"}, "index": "$m"}
+29-batch-next-id	6	POST /probe-x/probes {}	201 {"id": "3", "revision": 1}
+29-batch-next-id	7	store GET /v1/get?key=probe-x/next_id	200 {"index": "$k"}
+29-batch-next-id	8	POST /console/batch {"writes": [{"op": "put", "key": "probe-x/probes/4", "fields": {}, "cas": ""}]}	400 {"error": "bad_id", "field": "/writes/0/key"}
+29-batch-next-id	9	POST /console/batch {"writes": [{"op": "put", "key": "probe-x/probes/4", "fields": {}, "cas": ""}, {"op": "put", "key": "probe-x/next_id", "fields": {"n": 5}, "cas": "$k"}]}	400 {"error": "bad_id", "field": "/writes/1/fields/n"}
+29-batch-next-id	10	POST /console/batch {"writes": [{"op": "put", "key": "probe-x/probes/3", "fields": {}, "cas": ""}, {"op": "put", "key": "probe-x/next_id", "fields": {"n": 3}, "cas": "$k"}]}	412 {"error": "row moved", "field": "/writes/0/cas", "key": "probe-x/probes/3", "index": "@any"}
+29-batch-next-id	11	POST /console/batch {"writes": [{"op": "put", "key": "probe-x/next_id", "fields": {"n": 9}, "cas": "$k"}]}	400 {"error": "bad_id", "field": "/writes/0/key"}
+29-batch-next-id	12	POST /console/batch {"writes": [{"op": "put", "key": "probe-x/probes/4", "fields": {}, "cas": ""}, {"op": "put", "key": "probe-x/next_id", "fields": {"n": 4}, "cas": "$n"}]}	412 {"error": "row moved", "field": "/writes/1/cas", "key": "probe-x/next_id", "index": "$k"}
+29-batch-next-id	13	POST /console/batch {"writes": [{"op": "delete", "key": "probe-x/next_id", "cas": "$k"}]}	400 {"error": "bad batch", "field": "/writes/0/op"}
+29-batch-next-id	14	POST /console/batch {"writes": [{"op": "put", "key": "probe-x/probes/4", "fields": {}, "cas": ""}, {"op": "put", "key": "probe-x/next_id", "fields": {"n": 4}, "cas": "$k"}]}	200 {"written": 2}
+29-batch-next-id	15	POST /probe-x/probes {}	201 {"id": "5", "revision": 1}
