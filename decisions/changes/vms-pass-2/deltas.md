@@ -12,6 +12,8 @@
 `common/contracts/`
 - MODIFIED `gate-and-pass.md` `need`, «Передача»; `domain-token.md` таблица `expect`; `row-check.md` П2, таблица отказов.
 
+Сборка книг (Quint V/03.6 В1): `08.5` Н1.3 `bad_contribution`, Н3 шаг 4а; `03.7` Н1.2 `same_key`; `vectors/assemble/cases.tsv`, `README.md`.
+
 Запрос событий (вопрос 8): `events-merge.md` `query`, `by`; `05-resource` Н1.3, Н3 «запрос», Н4, OpenAPI, приёмка сц. 35; `06-console` OpenAPI, 06.4 Н4; `gate-and-pass.md` «Числовые параметры query».
 
 `03.4`: `domain/holder` в списке «читает», исключение P/03 снято.
