@@ -22,7 +22,7 @@
       ]
      },
      "live_url": {
-      "description": "RTSP раздачи на петле; только при running и kind video (V/01.2 Н1.3)",
+      "description": "RTSP раздачи на петле; только при running и type camera (V/01.2 Н1.3)",
       "type": "string",
       "pattern": "^(?:rtsp://[\\s\\S]*)$"
      },
@@ -31,17 +31,23 @@
       "type": "string",
       "pattern": "^(?:shm:///[\\s\\S]*)$"
      },
-     "kind": {
-      "description": "только у kind io",
+     "type": {
+      "description": "только у строки не camera (V/01.2 Н1.4)",
       "type": "string",
       "enum": [
-       "io"
+       "ipsrv",
+       "eventsrc",
+       "acfa"
       ]
      },
      "size": {
       "description": "<ширина>x<высота> кадра потока (V/01.2 Н1.4)",
       "type": "string",
       "pattern": "^(?:[1-9][0-9]*x[1-9][0-9]*)$"
+     },
+     "codec": {
+      "description": "кодек потока по первым кадрам; только при running и type camera (V/01.2 Н1.4)",
+      "type": "string"
      },
      "device_state": {
       "type": "string",
