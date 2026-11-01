@@ -575,6 +575,8 @@
     C.addSection = s => { shell.sections.push(s); paintRail(); return C; };
     C.addTab = (kind, t) => { (shell.tabs[kind] = shell.tabs[kind] || []).push(t); return C; };
     C.addTreeNodes = (kind, fn) => { (shell.nodes[kind] = shell.nodes[kind] || []).push(fn); return C; };
+    // the page's nodes changed with no data of the module changing: the tree again, the scroll kept, not under a pressed button
+    C.repaintTree = () => { repaint(true, false); return C; };
     // The page's own editor of ONE field inside the module's form: render(host, ref, obj, value, set). The form still
     // sends it — set(v) writes the value the form will read; the field is still the manifest's.
     C.addFieldEditor = (kind, field, render) => { ((shell.editors = shell.editors || {})[kind] = (shell.editors[kind] || {}))[field] = render; return C; };
@@ -2490,5 +2492,5 @@
 
   // features: what this version 1 gives beyond its first calls — a page asks before it uses them (P/07 Н1.5 features;
   // ADR-0091 доп. (25) п. 1). No string — no such capability. "api.if-match" — api(…, {ifMatch}) (ADR-0091 доп. (28), (29)).
-  window.PlatformConsole = { version: VERSION, features: Object.freeze(["select.tab", "card.closed", "api.if-match", "placement.if-match", "session"]), mount };
+  window.PlatformConsole = { version: VERSION, features: Object.freeze(["select.tab", "card.closed", "api.if-match", "placement.if-match", "session", "tree.repaint"]), mount };
 })();

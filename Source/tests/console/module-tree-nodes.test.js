@@ -25,6 +25,7 @@ const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.
 const pc=w.pc,args={};
 // вызовы оболочки — до первого опроса
 pc.addTreeNodes("unit",(ref,u)=>{args.unit=[ref,u&&u.name];return ref==="unit:testsub/1"?[{ref:"x:u1",label:"under one",icon:"folder",count:3,badge:"B",tags:["t1",{text:"t2",title:"tt"}],dot:["red","bad"],title:"hint",off:true}]:[]});
+let late=false;pc.addTreeNodes("unit",ref=>late&&ref==="unit:testsub/1"?[{ref:"x:late",label:"Late"}]:[]);
 pc.addTreeNodes("servers",()=>[{ref:"x:top",label:"Top",kids:[{ref:"x:kid",label:"Kid"}]},{ref:"x:open",label:"Opened",open:true,kids:[{ref:"x:okid",label:P}]}]);
 pc.addTreeNodes("server",(ref,s)=>{args.server=[ref,s&&s.resource];return ref==="server:s-1"?[{ref:"x:vol",label:"Vol"}]:[]});
 pc.addTreeNodes("member",(ref,m)=>{(args.member=args.member||[]).push([ref,m&&m.name]);
@@ -44,6 +45,11 @@ const u1=row("x:u1");
 out.unitNodeUnder=!!u1&&refs().indexOf("x:u1")===refs().indexOf("unit:testsub/1")+1&&pad("x:u1")>pad("unit:testsub/1");
 out.unitFnArgs=!!args.unit&&args.unit[0].startsWith("unit:testsub/")&&typeof args.unit[1]==="string";
 out.fieldLabel=!!u1&&u1.querySelector(".nm").textContent==="under one";
+// repaintTree: узлы страницы сменились, данные модуля нет — дерево заново по слову страницы, прокрутка цела
+tree().style.height="20px";tree().style.overflow="auto";Object.defineProperty(tree(),"scrollTop",{value:7,writable:true,configurable:true});
+late=true;out.repaintWaitsForTheWord=!row("x:late");
+out.repaintTree=pc.repaintTree()===pc&&!!row("x:late")&&w.PlatformConsole.features.includes("tree.repaint")&&tree().scrollTop===7;
+late=false;pc.repaintTree();delete tree().scrollTop;tree().style.height="";tree().style.overflow="";
 out.fieldIcon=!!u1&&!!u1.querySelector(".ici.ici-folder svg");
 out.fieldCount=!!u1&&u1.querySelector(".cnt").textContent==="3";
 out.fieldBadgeTags=!!u1&&[...u1.querySelectorAll(".n-tags .tag")].map(x=>x.textContent).join("|")==="B|t1|t2"&&u1.querySelectorAll(".n-tags .tag")[2].title==="tt";

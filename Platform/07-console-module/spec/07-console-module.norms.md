@@ -69,7 +69,7 @@ version:   console.version — целое версии API оболочки (P/0
            остаётся 1: новое ниже (features, ready, select с tab, card.closed) только добавляется, загрузка ?v=1 та же
            (ADR-0091 доп. (25) п. 1)
 features:  PlatformConsole.features — список строк возможностей сверх первых вызовов версии 1: "select.tab", "card.closed",
-           "api.if-match" (ADR-0091 доп. (28), (29)), "placement.if-match", "session";
+           "api.if-match" (ADR-0091 доп. (28), (29)), "placement.if-match", "session", "tree.repaint";
            строки нет — нет возможности; страница узнаёт новое по нему, не по версии (ADR-0091 доп. (25) п. 1)
 ready:     pc.ready — обещание (Promise), нового вызова нет: разрешается объектом страницы после mount и первого прочитанного
            /manifest (двери /spec нет — Н1.4); ответ 401 — обещание ждёт входа и разрешается после него; /manifest не
@@ -119,7 +119,7 @@ where:     where(ref) → {worker, server, door: {url, token, expires, routes} |
 words:     display(name), manifest(name), kindWord(e), eventNote(e), addEventNote; W — словарь модуля ru | en
 adds:      addSection{id, label, icon, after, off, render}, addTab(kind, {id, label, render, busy}) kind ∈ unit | server |
            worker | member | domain, addTreeNodes(kind | servers | server, fn) → узлы {ref, label, icon, count, kids, badge,
-           tags, dot, title, off, open, after, replaces}, addCard(prefix, render), addMenu, addDecor{icon, badge, title},
+           tags, dot, title, off, open, after, replaces}, repaintTree() — дерево заново по этим узлам, когда у страницы они сменились, а данные модуля нет: как опрос, прокрутка цела, при нажатой кнопке ждёт отпускания (features "tree.repaint", C07-TREE-REPAINT-01), addCard(prefix, render), addMenu, addDecor{icon, badge, title},
            addFieldEditor(kind, field, render(host, ref, obj, value, set)), addBlock(kind, {id, covers, render}),
            addAction, addNote, addIcons, icon, unitForm(host, ref), dialog(title, fields, ok), confirm, toast,
            select(ref, {tab?}), selected, refresh, logout, fullScreen, isFav, toggleFav
