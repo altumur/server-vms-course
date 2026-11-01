@@ -34,14 +34,14 @@ slot: {prefix: r, name_env: RECORDER_NAME}
 # camera's pieces of the offset the next ingest goes on from (`rec/ingest/clock/<camera key>.json`: `<cam>`, or `ref:<ref>` for another cluster's). What
 # a member's witness says to the domain (`domain.witness`) the resource's door gives out unasked. What
 # a relay's forwarder carried and lost is not an object: its recorder's heartbeat says it (`upstream`; ADR-0065, its
-# addition of 2026-10-08). A keep's seal (`rec/sealed/<keep>`): written once by CAS by the
-# recorder of the incidents volume, under its role, when it holds the copy whole and has its sha256; never by the
+# addition of 2026-10-08). A keep's seal (`rec/sealed/<volume>/<keep>`; `sealed/*` covers both parts): written once by CAS by the
+# recorder of that incidents volume, under its role, when it holds the copy whole and has its sha256; never by the
 # tables door; the door's `verify` reads it (ADR-0057). A relay's word of the centre per camera (`rec/ingest/up/<ref>.json`):
 # the next process of the relay goes on from it while the centre is unreachable; and the
 # pieces of a camera's clock offset the ingest goes on from (`rec/ingest/clock/<camera key>.json`, V/02.9 Н1.3; ADR-0019).
 # What an incidents volume took of each recording, and whether its ring came round (`rec/taken/<volume>`): written by the
 # recorder that holds the volume, read by whichever holds it next, on any box (ADR-0057).
-objects: {rows: [ingest/clock/*, ingest/up/*, sealed/*, used/*], door: [taken/*]}
+objects: {rows: [ingest/clock/*, ingest/up/*, sealed/*, used/*, taken/*]}
 # The fields of a recorder's heartbeat that are strings and that something decides by: the volume it is counted in
 # (`place_by`), why that volume will not open, the box's own volume a page offers to declare, and where
 # the ingest it hosts takes streams (`ingest`: the domain writes it into the cameras' books, the cluster's other ingests
@@ -57,7 +57,7 @@ lease: {unconfirmed_max: forever}
 # the book `domain/auto/asks`. Here a worker reads what its spec
 # names. A book is a member's copy by its exact name; the domain-holder cluster has no copy and reads its own row
 # `domain/<sub>/<book>/<CLUSTER>` — the rights generator grants that one row (P/02.5 Н1.4); only the copy is declared.
-worker: {exec: /usr/lib/rec/worker, reads: [cam/heartbeats/, det/units/, domain/cam/sources, domain/rec/primaries, domain/rec/upstream, domain/placed/rec/, domain/member-list, domain/member-topology, domain/topology, domain/view], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 47}   # requests: a camera's pusher files cam/requests/rec.ask-<id> as the recorder (V/02.9 Н1.2)
+worker: {exec: /usr/lib/rec/worker, writes: [wanted], reads: [cam/heartbeats/, det/units/, domain/cam/sources, domain/rec/primaries, domain/rec/upstream, domain/placed/rec/, domain/member-list, domain/member-topology, domain/topology, domain/view], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 47}   # requests: a camera's pusher files cam/requests/rec.ask-<id> as the recorder (V/02.9 Н1.2)
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
@@ -150,7 +150,7 @@ placement:
   # (a failure caught per beat, a monotonic clock, a limit on no progress).
   requires:   resource                               # the only subsystem that must be where the archive is
   # what a recorder holds, one each; a volume any box may serve is let go when its hold goes unconfirmed (`lease`)
-  places:     {table: volumes, where: {enabled: true}, server_field: server, lease: strict}
+  places:     {table: volumes, where: {enabled: true}, server_field: server, lease: strict, wanted: wanted}
   place_by:   volume                                 # WHAT `distinct` and `home` count in: the disk, not the box —
                                                      # a server with three volumes runs three recorders, and one
                                                      # recording's worth of work goes to each. Reachability,
@@ -158,7 +158,7 @@ placement:
                                                      # address and cannot be drained on its own.
   servers:    distinct                               # one recorder per VOLUME carries recordings (the others idle)
   tie_break:  most-free-capacity
-  grows:      true                                   # recorders by order (P/04 Н3 «нехватка()»): a recording with nowhere to go asks for one, a volume nobody holds does not (V/02.1 Н1.3); no spares (ADR-0084)
+  grows:      true                                   # recorders by order (P/04 Н3 «нехватка()»): a recording with nowhere to go asks for one, and so does a volume with a row in `wanted` (V/02.1 Н1.3); no spares (ADR-0084)
   ends:       {field: until, never: 0}               # a recording's end (ADR-0091 п. 2; V/02.1 Н1.3)
   # No `near`. A recorder does not follow a camera around: it is the one thing here that CANNOT move, being
   # pinned to disks (`requires: resource` above). A fan-out is read three ways: shared memory and the loopback RTSP
@@ -236,6 +236,14 @@ tables:
             allOf: [{not: {required: [access_key]}}, {not: {required: [access_secret]}}]
           else: {not: {required: [cam]}}             # `cam` is a card's: a disk or a bucket is no camera's
     journal: {written: archive.volume.declared, deleted: archive.volume.withdrawn}
+  # Why a volume nobody holds needs a holder (`placement.places.wanted`, P/04 Н3 «нехватка()»): the platform does not know
+  # what lies on a volume. A recorder writes the row (V/02.4 Н1.3): `archive` — it was opened, footage may lie there;
+  # `keeps` — an incidents volume never opened, with keeps standing.
+  wanted:
+    key: name
+    fields:
+      name: {type: string, required: true}
+      why:  {type: string, required: true, enum: [archive, keeps]}
   keeps:
     key: "{cam}-{from:int}-{to:int}"
     fields:
@@ -335,7 +343,7 @@ metrics:
   - {name: recordings_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
   - {name: volumes_declared, count: table volumes, where: {enabled: true}}          # what the operator says to write into
   - {name: volumes_unserved, count: table volumes, where: {enabled: true}, unheld: true}   # …and nobody holds
-  # (How many recorders are short is the platform's, from the recordings that wait: P/04 Н3 «нехватка()».)
+  # (How many recorders are short is the platform's, from the recordings that wait and the rows of `wanted`: P/04 Н3 «нехватка()».)
   # Keeps that nothing copies: marks set while no incidents volume is declared (the review's second pass, B10).
   - {name: keeps_unprotected, count: table keeps, unless: {table: volumes, where: {kind: incidents, enabled: true}}}
   # The seconds of each keep not in the incidents volume yet, the largest a live recorder says (the fourth pass, major).
@@ -446,6 +454,7 @@ display:
     archive.keep.lost: сохранённое потеряно или не скопировано
     archive.backfill.asked: попросили дописать
     archive.backfill.refused: дозапись отклонена
+    archive.backfill.unscanned: дозаписанные минуты не просканированы
     archive.keep.made: поставлена метка «сохранить»
     archive.keep.lifted: метка «сохранить» снята
     archive.keep.uncopied: сохранённое ещё не скопировано
