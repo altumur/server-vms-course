@@ -132,7 +132,7 @@ Device(type=storage)	subtype, serverId, short, identifier, ip, port, mac, vendor
 Device(type=eventsrc|acfa)	—	cam/cameras	основная строка type eventsrc, acfa	both	соединение, события и команды держателя; детей и записи нет (V/01.1 Н1.1б)
 Device(type=eventsrc|acfa)	id	cam/cameras	UUID device:cam/cameras/<id>	read
 Device(type=eventsrc|acfa)	type	cam/cameras	type	read	слово контракта без перевода
-Device(type=eventsrc|acfa)	parentId	—	null	const
+Device(type=eventsrc|acfa)	parentId	—	null	const	строка; acfa с родителем — единица, ниже
 Device(type=eventsrc|acfa)	domainId	кластер	UUID domain:<CLUSTER>	read
 Device(type=eventsrc|acfa)	identifier	cam/cameras	id	read	как у камеры, с проверкой при создании
 Device(type=eventsrc|acfa)	name, enabled, short, ip, port, vendor, model, firmware, rtspUrl, login	cam/cameras	как у камеры	both	как у камеры
@@ -151,22 +151,22 @@ Device(type=eventsrc|acfa)	children	—	—	none	детей нет: 422 NOT_SUPP
 Device(type=eventsrc|acfa)	mac	—	—	none	при создании пропускается без записи: MAC — только из поиска (V/11.3 Н1.1)
 Device(type=eventsrc|acfa)	subtype, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, detectorKind, sensitivity, builtin, sizeBytes, onServer, mode, smtp, ssl, from, to, gateway, path, format, templateId, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, disabledByRuleId, disabledByRuleAt, armed	—	—	none	у строки eventsrc, acfa нет
 Device(type=acfa)	cameraId, words, overlayDelayMs, overlayDurationSec	—	—	none	у строки acfa нет
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	—	cam/device_units	строка таблицы, type не controller	both	единица СКУД (V/01.1 Н1.2б); relay ребёнка — строкой Device(type=sensor|relay|mic|spk), различает таблица; создание и снятие — V/11.4 Н1.2
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	id	cam/device_units	UUID device:cam/device_units/<id>	read
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	type	cam/device_units	type	read	слово контракта без перевода
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	parentId	cam/device_units	parent; строка controller — её владелец; нет — запись основной строки, у ipsrv — ipsrv хоста	both	при создании; правка — 422 NOT_SUPPORTED, field parentId
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	domainId	кластер	UUID domain:<CLUSTER>	read
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	identifier	cam/device_units	id	read	<строка>-<n>
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	name	cam/device_units	title	both	нет — <type> <n>
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	enabled	cam/device_units	enabled	both
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	path	cam/device_units	address	both	слово устройства как есть
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	model	cam/device_units	template	both	при создании выбирает шаблон; правка — 422 NOT_SUPPORTED, field model
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	online, fault	cam/heartbeats	phase, device_state строки, units_down	read	held или running и слова нет — true; lost строки или единицы — false, fault conn; failed, refused — false, fault drv; в версию не входит
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	serverId, licenseExceeded	cam/heartbeats	как у строки camera	read	наблюдение, в версию не входит
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	version	cam/device_units	индекс хранилища строки	read
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	configMode	—	—	none	current — умолчание, пропускается; default, template — 422 NOT_SUPPORTED, field configMode (V/11.3 Н1.1)
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	children	—	—	none	вложенные — отдельными элементами: 422 NOT_SUPPORTED, field children
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	subtype, short, ip, port, mac, vendor, login, hasPassword, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, format, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, rtspUrl, disabledByRuleId, disabledByRuleAt, armed, overlayDelayMs, overlayDurationSec, password	—	—	none	у единицы нет: запись 422 NOT_SUPPORTED, field этого поля
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	—	cam/device_units	строка таблицы	both	единица СКУД (V/01.1 Н1.2б); acfa — только с родителем, строка type controller; acfa без родителя — строка cam/cameras; relay ребёнка — строкой Device(type=sensor|relay|mic|spk), различает таблица; создание и снятие — V/11.4 Н1.2
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	id	cam/device_units	UUID device:cam/device_units/<id>	read
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	type	cam/device_units	type; controller — acfa	read	слово контракта без перевода
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	parentId	cam/device_units	parent; нет — запись основной строки, у ipsrv — ipsrv хоста	both	при создании; правка — 422 NOT_SUPPORTED, field parentId
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	domainId	кластер	UUID domain:<CLUSTER>	read
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	identifier	cam/device_units	id	read	<строка>-<n>
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	name	cam/device_units	title	both	нет — <Device.type> <n>
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	enabled	cam/device_units	enabled	both
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	path	cam/device_units	address	both	слово устройства как есть
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	model	cam/device_units	template	both	при создании выбирает шаблон; правка — 422 NOT_SUPPORTED, field model
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	online, fault	cam/heartbeats	phase, device_state строки, units_down	read	held или running и слова нет — true; lost строки или единицы — false, fault conn; failed, refused — false, fault drv; в версию не входит
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	serverId, licenseExceeded	cam/heartbeats	как у строки camera	read	наблюдение, в версию не входит
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	version	cam/device_units	индекс хранилища строки	read
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	configMode	—	—	none	current — умолчание, пропускается; default, template — 422 NOT_SUPPORTED, field configMode (V/11.3 Н1.1)
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	children	—	—	none	вложенные — отдельными элементами: 422 NOT_SUPPORTED, field children
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	subtype, short, ip, port, mac, vendor, login, hasPassword, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, format, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, rtspUrl, disabledByRuleId, disabledByRuleAt, armed, overlayDelayMs, overlayDurationSec, password	—	—	none	у единицы нет: запись 422 NOT_SUPPORTED, field этого поля
 Device(type=export|email|sms)	—	—	—	none	таких устройств нет: создание — 422 NOT_SUPPORTED, field type; вне дерева DriverPack (ADR-0102 п. 1)
 Folder	—	GET /folders	элемент	both	папка — строка консоли (P/06.8; V/11.4 Н1.7)
 Folder	id	GET /folders	UUID folder:platform/folders/<id>	read	V/11.4 Н1.6

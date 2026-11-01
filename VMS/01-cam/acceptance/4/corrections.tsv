@@ -9,3 +9,4 @@ date	sample	fix	languages
 2026-11-01	4/scenarios.tsv: 04-units	дерево единиц, units_down, событие и действие unit — @manual: в подставном драйвере единиц нет (ADR-0102 доп. (9) п. 9)	all
 2026-11-01	4/scenarios.tsv: 04-sound	новый сценарий: звук и разговор держателя, @manual: живого драйвера со звуком на стенде нет (ADR-0102 доп. (9) пп. 7, 9)	all
 2026-11-01	4/scenarios.tsv: 04-sound шаг 2	выключенный mic закрывает открытую точку (ревью pos, Б-1)	all
+2026-11-01	4/scenarios.tsv: 04-sound шаг 5	TALK_SILENT: 8 с без кадра — HangUp (ревью pos, С-11)	all

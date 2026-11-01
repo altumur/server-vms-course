@@ -13,4 +13,4 @@ scenario	step	request	expect
 02-sound	3	@manual шлюз на другом сервере, чем держатель: источник ingest — видео без звука	manual
 03-talk	1	@manual живой драйвер с spk, браузер: просьба talk, POST /talk/<cam>/1 — 201, Location, в журнале live.talk; устройство слышит звук кодеком из talk пульса	manual
 03-talk	2	@manual POST /talk без просьбы — 404 not yet; второй говорящий — 409 busy; нет spk — 404 no speaker; оффер без m=audio на отправку — 400 bad offer	manual
-03-talk	3	@manual DELETE /whep/session — 204, live.talk.ended, устройство получило HangUp; устройство положило трубку — сессия закрыта, why device	manual
+03-talk	3	@manual DELETE /whep/session — 204, live.talk.ended, устройство получило HangUp; браузер молчит — шлюз шлёт кадры тишины, разговор держится; устройство положило трубку — сессия закрыта, why device	manual

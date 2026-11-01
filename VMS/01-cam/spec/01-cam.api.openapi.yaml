@@ -107,7 +107,7 @@ paths:
           schema: {type: string, minLength: 1}
       requestBody:
         required: true
-        description: записи SMPL звука подряд, HTTP/1.1 chunked, пока идёт разговор; `BODY` и `PACE_FLOOR` не действуют (V/01.5 Н1.5)
+        description: записи SMPL звука подряд, HTTP/1.1 chunked, пока идёт разговор; `BODY` и `PACE_FLOOR` не действуют, кадра нет `TALK_SILENT` — конец (V/01.5 Н1.5)
         content:
           application/octet-stream:
             schema: {type: string, format: binary}
