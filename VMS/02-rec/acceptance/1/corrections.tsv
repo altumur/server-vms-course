@@ -3,3 +3,4 @@ date	sample	fix	languages
 2026-10-29	1/scenarios.tsv: 03-home, шаги 2, 4	у home снят must_match: запись на карте другой камеры — 201 (страж — регистратор карты, V/02.6 Н1.7), тома нет — 201 (ссылка цели не требует, размещение не ставит); прежде 409 must_match отказывал и любой записи на томе без поля cam (local, network, backup, incidents); разбор ревью V/02, вопрос 1 и строки 1, 2 (Codex R01, Claude Б-1, С-1)	all
 2026-10-31	1/scenarios.tsv: 01-create 3, 02-fixed 2, 02-fixed 3	error — слово перечня и field, фраза в detail (ADR-0094 доп. (13), B5)	all
 2026-11-01	1/scenarios.tsv: 06-audio	новый сценарий: поле audio записи (ADR-0102 доп. (9) п. 7)	all
+2026-11-01	1/scenarios.tsv: 07-replica	новый сценарий: дверь не судит replica_from и when у тома backup (ADR-0107 доп. (2) п. 4)	all

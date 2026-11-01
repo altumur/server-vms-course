@@ -13,6 +13,7 @@
       "type": "string",
       "enum": [
        "running",
+       "idle",
        "pending",
        "held",
        "failed",
