@@ -544,6 +544,16 @@ domain:
   # all the same (the module's form gives a stream its fields too; they are inert, V/01.1 Н1.1а) is told from a camera
   # by the licence count (V/01.7)
   view: [name, enabled, main]
+  # What a backend on another member needs of this one (ADR-0110, V/11.3 Н1.2а): the words of a unit's heartbeat and the
+  # rows behind `Device`. `ref` joins a camera to its recorder on another member; `rec/recordings` carries the same value.
+  view_status: [device_state, codec, units_down]
+  view_tables:
+    cameras: [name, main, type, ref, source, enabled, short, lat, lon, azimuth, mac, cred_username, resolution, fps, camera, words, overlay_delay_ms, overlay_duration_sec]
+    devices: [channels, videos, storage]
+    children: [camera, type, number, gone]
+    child_settings: [camera, title, enabled, norm]
+    device_units: [camera, type, template, address, parent, sensitivity, title, enabled]
+    rule_state: [camera, armed, disabled_by_rule, disabled_at, disabled_until]
   # What the domain's door lets through in a member's camera (PUT /domain/cam/cameras/<ref>): on or off. Its name,
   # labels and retention are its cluster's console's (ADR-0031).
   edit: [enabled]

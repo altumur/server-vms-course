@@ -112,6 +112,25 @@ door:
       - folders                      # the cluster's folders and, in a batch, their rows (P/06.8; V/11.4 Н1.7)
       - backend/operations           # the group operations (P/06.9; V/11.4 Н1.8)
       - GET domain/cam/books/licence # the licence, read only (V/11.3 Н1.3; P/06.3 Н1.9)
+      # The view of the domain, how another member's rows are read (V/11.3 Н1.2а; ADR-0110 доп. (2)): the members, their
+      # servers, the knocking; a recording's server by its `ref`; a member's tables, one member a call.
+      - GET domain
+      - GET domain/rec/recordings
+      - GET domain/cam/tables/cameras
+      - GET domain/cam/tables/devices
+      - GET domain/cam/tables/children
+      - GET domain/cam/tables/child_settings
+      - GET domain/cam/tables/device_units
+      - GET domain/cam/tables/rule_state
+      - GET domain/rec/tables/recordings
+      - GET domain/rec/tables/volumes
+      - GET domain/det/tables/units
+      - GET domain/auto/tables/scenarios
+      - GET domain/auto/tables/rule_marks
+      - GET domain/auto/tables/schedules
+      - GET domain/auto/tables/day_groups
+      - GET domain/auto/tables/windows
+      - GET domain/at/auto/versions  # beyond the view: the console of the target's cluster (ADR-0111 п. 15; V/11.3 Н1.2а)
       - GET domain/users             # the snapshot of rights (V/11.8 Н1.1)
       - GET domain/groups
       - GET domain/roles

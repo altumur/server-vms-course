@@ -94,6 +94,10 @@ placement:
   tie_break:  most-free-capacity
   rebalance:  {dead_band: 0.10}
 snapshot: [name, cam, kind, enabled, until]
+# No `ref`: a detector is no unit of the domain. What a backend on another member needs of this one (V/11.3 Н1.2а).
+domain:
+  view_tables:
+    units: [cam, kind, title, params, enabled]
 metrics:
   - {name: units_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:
