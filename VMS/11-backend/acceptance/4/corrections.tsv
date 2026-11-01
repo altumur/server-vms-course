@@ -32,3 +32,4 @@ date	sample	fix	languages
 2026-11-02	4/scenarios.tsv: 09-stream шаги 45–50; 24-streams; 25-ptz	ответы Консоли: operation.finished одиночной правки, zone, второй детектор вида, имя пресета только чтение	-
 2026-11-02	4/scenarios.tsv: 24-streams шаги 30–32; 25-ptz шаг 13; новые 30-live-accounts, 31-server-labels	разбор ревью дельты: linecross только line; имя пресета — @manual, пульса с can у стенда нет; ADR-0112 доп. (1): № 13, 91, 102–106 in	-
 2026-11-02	4/scenarios.tsv: 25-ptz шаг 13	таблица cam/preset_labels, имя положения не трогает (ADR-0112 доп. (4))	all
+2026-11-02	4/scenarios.tsv: 25-ptz шаг 13	DELETE снимает строку всегда и первой, PUT {} строку после performed (разбор ревью fork-52c-3)	all
