@@ -44,12 +44,12 @@
      "from": {
       "type": "number",
       "x-time": true,
-      "description": "прежний рубеж"
+      "description": "начало стёртого: прежний рубеж, внутри чтения — его начало"
      },
      "to": {
       "type": "number",
       "x-time": true,
-      "description": "oldest архива"
+      "description": "конец стёртого: oldest архива, внутри чтения — конец стёртого"
      }
     },
     "required": [

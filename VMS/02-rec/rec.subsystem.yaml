@@ -57,7 +57,7 @@ lease: {unconfirmed_max: forever}
 # the book `domain/auto/asks`. Here a worker reads what its spec
 # names. A book is a member's copy by its exact name; the domain-holder cluster has no copy and reads its own row
 # `domain/<sub>/<book>/<CLUSTER>` — the rights generator grants that one row (P/02.5 Н1.4); only the copy is declared.
-worker: {exec: /usr/lib/rec/worker, reads: [cam/heartbeats/, det/units/, domain/cam/sources, domain/rec/primaries, domain/rec/upstream, domain/placed/rec/, domain/member-list, domain/member-topology, domain/topology, domain/view], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 45}   # requests: a camera's pusher files cam/requests/rec.ask-<id> as the recorder (V/02.9 Н1.2)
+worker: {exec: /usr/lib/rec/worker, reads: [cam/heartbeats/, det/units/, domain/cam/sources, domain/rec/primaries, domain/rec/upstream, domain/placed/rec/, domain/member-list, domain/member-topology, domain/topology, domain/view], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 47}   # requests: a camera's pusher files cam/requests/rec.ask-<id> as the recorder (V/02.9 Н1.2)
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
@@ -109,6 +109,24 @@ unit:
     # recordings on the volume, is the answer.
     min_depth_days: {type: float,  default: 0}
     when:           {type: string, default: "always", enum: [always, offline]}  # a BACKUP recording (home on a backup or edge volume, V/02.6 Н1.4): `always`, or `offline` — only while no primary that should be written is (V/02.6 Н1.4)
+  # What a backfill still owes the detectors (V/02.8 Н1.5): ranges landed, each with the moment of the event, until the
+  # order's outcome. In the state and not in memory: a recorder that dies after landing would leave the minutes unscanned.
+  state:
+    scan:
+      type: object
+      required: [owed]
+      additionalProperties: false
+      properties:
+        owed:
+          type: array
+          items:
+            type: object
+            required: [from, to, at]
+            additionalProperties: false
+            properties:
+              from: {type: number}
+              to:   {type: number}
+              at:   {type: number}                   # the moment of the event: a repeat keeps it
 placement:
   # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
   # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB

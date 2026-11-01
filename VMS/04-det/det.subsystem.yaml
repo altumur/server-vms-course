@@ -35,7 +35,7 @@ unit:
     enabled:   {type: bool,   default: true}
     labels:    {type: list,   default: ["gpu"]}    # where it may run: a worker whose server has these labels
     # Which of this detector's event kinds are ALARMS: written down with fsync, kept in a tree of their own for
-    # the alarms' days, kept ahead of observations when a window overflows (P/05 Н1.2). The VMS's
+    # the alarms' days, kept ahead of observations when a window overflows (the events-merge contract, `cut`). The VMS's
     # field, on the row for the VMS's reason: the class is a fact about what the operator set the model up FOR,
     # and the platform fixes only the two words. The default answers for the three models here (M12 of the
     # review — every detector line used to be an observation): a line is drawn where crossing it matters and a
