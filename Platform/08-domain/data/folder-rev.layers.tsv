@@ -13,3 +13,4 @@ place	layer	word	value
 /$defs/common.time	3	x-time	true
 /$defs/common.uint53	3	x-integer	true
 /properties/rev	3	x-codec	["integer"]
+/properties/term	3	x-codec	["integer"]

@@ -3,9 +3,26 @@
  "type": "object",
  "properties": {
   "rev": {
-   "description": "rev копии папок у члена; копии нет — 0",
-   "type": "integer",
-   "minimum": 0
+   "description": "{term, rev} копии папок у члена; копии нет — null",
+   "type": [
+    "object",
+    "null"
+   ],
+   "properties": {
+    "term": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "rev": {
+     "type": "integer",
+     "minimum": 0
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "term",
+    "rev"
+   ]
   },
   "scope": {
    "description": "что держать: всё дерево или цепочки своих единиц",
@@ -25,7 +42,46 @@
   "own": {
    "description": "папки кластера до входа в домен",
    "type": "object",
-   "x-opaque": true
+   "properties": {
+    "folders": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^(?:[0-9a-f]{32})$"
+       },
+       "name": {
+        "type": "string"
+       },
+       "parent": {
+        "type": "string"
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "name",
+       "parent"
+      ]
+     }
+    },
+    "memberof": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "folders",
+    "memberof"
+   ]
   }
  },
  "additionalProperties": false,

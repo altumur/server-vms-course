@@ -3068,11 +3068,11 @@ c08_memberof.005	domain/memberof/<член>/<sub>/<manifest:unit.rows>/<id>	doma
 c08_memberof.006	domain/memberof/<член>/<sub>/<manifest:unit.rows>/<id>	domain/memberof/m1/testsub/counters/c1	row	reader	["domain", "domainconsole"]	{	refused	[""]	{"domain": [""], "domainconsole": [""]}	not JSON
 c08_memberof.007	domain/memberof/<член>/<sub>/<manifest:unit.rows>/<id>	domain/memberof/m1/testsub/counters/c1	row	writer	["domain"]	{}	refused	["/folders"]	[]	: without required folders
 c08_memberof.008	domain/memberof/<член>/<sub>/<manifest:unit.rows>/<id>	domain/memberof/m1/testsub/counters/c1	row	reader	["domain", "domainconsole"]	{}	refused	["/folders"]	{"domain": [""], "domainconsole": [""]}	: without required folders
-c08_folder_rev.001	domain/folder-rev	domain/folder-rev	row	writer	["domain"]	{"rev":"1"}	ok	[]	[]	base
-c08_folder_rev.002	domain/folder-rev	domain/folder-rev	row	reader	["domain"]	{"rev":"1"}	ok	[]	{"domain": []}	base
+c08_folder_rev.001	domain/folder-rev	domain/folder-rev	row	writer	["domain"]	{"term":"1","rev":"1"}	ok	[]	[]	base
+c08_folder_rev.002	domain/folder-rev	domain/folder-rev	row	reader	["domain"]	{"term":"1","rev":"1"}	ok	[]	{"domain": []}	base
 c08_folder_rev.003	domain/folder-rev	domain/folder-rev	row	writer	["domain"]	null	refused	[""]	[]	root null
 c08_folder_rev.004	domain/folder-rev	domain/folder-rev	row	reader	["domain"]	null	refused	[""]	{"domain": [""]}	root null
 c08_folder_rev.005	domain/folder-rev	domain/folder-rev	row	writer	["domain"]	{	refused	[""]	[]	not JSON
 c08_folder_rev.006	domain/folder-rev	domain/folder-rev	row	reader	["domain"]	{	refused	[""]	{"domain": [""]}	not JSON
-c08_folder_rev.007	domain/folder-rev	domain/folder-rev	row	writer	["domain"]	{}	refused	["/rev"]	[]	: without required rev
-c08_folder_rev.008	domain/folder-rev	domain/folder-rev	row	reader	["domain"]	{}	refused	["/rev"]	{"domain": [""]}	: without required rev
+c08_folder_rev.007	domain/folder-rev	domain/folder-rev	row	writer	["domain"]	{"term":"1"}	refused	["/rev"]	[]	: without required rev
+c08_folder_rev.008	domain/folder-rev	domain/folder-rev	row	reader	["domain"]	{"term":"1"}	refused	["/rev"]	{"domain": [""]}	: without required rev

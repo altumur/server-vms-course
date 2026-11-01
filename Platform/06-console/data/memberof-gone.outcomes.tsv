@@ -1,0 +1,4 @@
+# Исходы нечитаемой строки platform/memberof-gone/… (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	domainagent	строка целиком нечитаема: ключ сам называет ссылку, агент несёт её в gone как есть; журнал без значения	1	строка	P/06.8 Н1.2а

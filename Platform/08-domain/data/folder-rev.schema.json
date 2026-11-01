@@ -2,6 +2,13 @@
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "type": "object",
  "properties": {
+  "term": {
+   "$ref": "#/$defs/common.uint53",
+   "description": "срок держателя",
+   "x-codec": [
+    "integer"
+   ]
+  },
   "rev": {
    "$ref": "#/$defs/common.uint53",
    "description": "счётчик записей папок и членства",
@@ -12,6 +19,7 @@
  },
  "additionalProperties": false,
  "required": [
+  "term",
   "rev"
  ],
  "$defs": {

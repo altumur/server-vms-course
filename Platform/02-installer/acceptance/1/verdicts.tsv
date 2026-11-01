@@ -862,3 +862,6 @@ a110_name_edits	refused
 a110_view_tables_kept_family	refused
 a110_view_tables_unit_of	refused
 a110_view_pulse_no_ref	refused
+a110_edit_tables_partial	refused
+a110_edit_tables_worker	refused
+a110_edit_secrets_no_door	refused

@@ -508,9 +508,25 @@ paths:
     post:
       operationId: folderCreate
       summary: Новая папка домена (глава 8.5 Н1.8)
+      parameters:
+        - {name: Idempotency-Key, in: header, required: false, schema: {type: string, minLength: 1, maxLength: 200}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, required: [name], additionalProperties: false, properties: {name: {type: string}, parent: {type: string}}}
       responses:
         '201': {description: Папка}
         '400': {$ref: '#/components/responses/BodyRefused'}
+        '403': {description: Не зритель домена с admin}
+        '404': {description: no such parent}
+        '409': {description: 'parent gone, too many folders'}
+        '503': {description: unavailable}
+    get:
+      operationId: foldersRead
+      summary: Дерево папок домена (отвечает консоль домена)
+      responses:
+        '200': {description: '{rev, folders}'}
   /domain/folders/{folder}:
     parameters:
       - name: folder
@@ -547,8 +563,49 @@ paths:
     post:
       operationId: keptEdits
       summary: Связка правок одного устройства (глава 8.6 Н1.3б)
+      parameters:
+        - {name: Idempotency-Key, in: header, required: true, schema: {type: string, minLength: 1, maxLength: 200}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cluster, writes]
+              additionalProperties: false
+              properties:
+                cluster: {$ref: '#/components/schemas/MemberName'}
+                writes:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [op, sub, rows]
+                    additionalProperties: false
+                    properties:
+                      op: {enum: [put, delete]}
+                      sub: {type: string}
+                      rows: {type: string}
+                      ref: {type: string}
+                      id: {type: string}
+                      name: {type: string}
+                      new: {type: boolean}
+                      fields: {type: object, additionalProperties: true}
       responses:
         '202': {description: Правка хранится (Н1.4 reply)}
+        '400': {$ref: '#/components/responses/BodyRefused'}
+        '403': {description: Суд одной из строк}
+        '404': {description: 'Нет ref, манифеста или члена'}
+        '409': {description: 'kept_full, unit is being deleted'}
+        '413': {description: too large}
+        '422': {description: Ключ использован для другой правки}
+        '503': {description: 'refused, unavailable'}
+  /domain/edits/stranded:
+    post:
+      operationId: keptEditsStranded
+      summary: Повтор правки у нового держателя (глава 8.8 Н1.6 apply; 8.6 Н1.3а stranded)
+      responses:
+        '202': {description: Правка хранится}
         '400': {$ref: '#/components/responses/BodyRefused'}
   /domain/{sub}/{rows}:
     description: 'Глава 8.6 Н1.3, Н1.4, Н2, Н3 «принять правку». GET и HEAD (вид единиц) отвечает консоль домена сама (урок P/10; схема — Unit).'
@@ -589,6 +646,11 @@ paths:
       - {$ref: '#/components/parameters/Sub'}
       - {$ref: '#/components/parameters/Rows'}
       - {$ref: '#/components/parameters/Ref'}
+      - name: id
+        in: query
+        required: false
+        schema: {type: string, minLength: 1}
+        description: Единица среди нескольких с этим ref у члена (глава 8.6 Н1.3 find).
       - name: cluster
         in: query
         required: false
@@ -2370,6 +2432,15 @@ components:
       required: [cluster, rev, every]
       additionalProperties: false
       properties:
+        folders:
+          type: object
+          required: [rev, folders, memberof]
+          additionalProperties: false
+          description: Общие папки, глава 8.5 Н1.8.
+          properties:
+            rev: {type: object, required: [term, rev], additionalProperties: false, properties: {term: {type: integer}, rev: {type: integer}}}
+            folders: {type: object, additionalProperties: {type: object, required: [name, parent], additionalProperties: false, properties: {name: {type: string}, parent: {type: string}}}}
+            memberof: {type: object, additionalProperties: {type: array, items: {type: string}}}
         cluster: {$ref: '#/components/schemas/MemberName'}
         rev: {type: integer, minimum: 0}
         every: {type: number, minimum: 1, maximum: 3600}
@@ -2838,6 +2909,8 @@ components:
         key: {type: string, minLength: 1, maxLength: 200}
         at: {type: number}
         base: {type: integer, minimum: 1}
+        by: {type: string, description: 'человек, которого судит консоль члена (P/08.6 Н1.4 by)'}
+        iat: {type: number}
         asked:
           type: object
           required: [method, path, body]

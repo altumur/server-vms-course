@@ -153,6 +153,7 @@ journal:      domain.forwarded {cluster, path, user, status} у пересыла
 | POST | `/domain/<sub>/<таблица>` (ключ `domain.edit_tables`) | P/08.6 Н1.3 | 5 | да |
 | DELETE | `/domain/<sub>/<таблица>/<имя>` | P/08.6 Н1.3 | 5 | да |
 | POST | `/domain/edits` | P/08.6 Н1.3б | 5 | да |
+| POST | `/domain/edits/stranded` | P/08.6 Н1.3а, P/08.8 Н1.6 | 5 | да |
 | GET, POST | `/domain/folders` | P/08.5 Н1.8 | 5 | да |
 | PUT, DELETE | `/domain/folders/<id>` | P/08.5 Н1.8 | 5 | да |
 | PUT | `/domain/memberof/<член>/<sub>/<rows>/<id>` | P/08.5 Н1.8 | 5 | да |

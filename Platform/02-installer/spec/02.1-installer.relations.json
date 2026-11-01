@@ -1397,10 +1397,10 @@
   {
    "no": 148,
    "path": "domain.edit_secrets.{}",
-   "relation": ". in keys(tables) | {@unit.rows}",
+   "relation": ". in keys(domain.edit_tables) | {@unit.rows}",
    "class": "reference",
    "norm": "P/08.6 Н1.3а",
-   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"edit_secrets\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"edit_secrets\"]) == map ? dyn(doc[\"domain\"][\"edit_secrets\"]).map(k1, ((k1 != null && type(k1) != map && type(k1) != list && !((type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"rows\" in doc[\"unit\"] && doc[\"unit\"][\"rows\"] == k1) || (type(doc) == map && \"tables\" in doc && ((type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(k2, k2 == k1)) || (type(doc[\"tables\"]) == list && dyn(doc[\"tables\"]).exists(e3, (type(e3) == string && e3 == k1))))))) ? [{\"p\": [\"domain\", \"edit_secrets\", k1]}] : [])) : []) : []) : [])",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"edit_secrets\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"edit_secrets\"]) == map ? dyn(doc[\"domain\"][\"edit_secrets\"]).map(k1, ((k1 != null && type(k1) != map && type(k1) != list && !((type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"rows\" in doc[\"unit\"] && doc[\"unit\"][\"rows\"] == k1) || (type(doc) == map && \"domain\" in doc && type(doc[\"domain\"]) == map && \"edit_tables\" in doc[\"domain\"] && type(doc[\"domain\"][\"edit_tables\"]) == map && k1 in doc[\"domain\"][\"edit_tables\"]))) ? [{\"p\": [\"domain\", \"edit_secrets\", k1]}] : [])) : []) : []) : [])",
    "own": []
   },
   {
@@ -1428,6 +1428,24 @@
    "class": "value",
    "norm": "P/08.1 Н1.4",
    "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"view_pulse\" in doc[\"domain\"]) ? (!(\"ref\" in doc[\"domain\"]) ? [{\"p\": [\"domain\", \"view_pulse\"]}] : []) : []) : [])",
+   "own": []
+  },
+  {
+   "no": 152,
+   "path": "domain.edit_tables.{}",
+   "relation": "список покрывает все несекретные поля таблицы: запись строки — полная замена (P/06.1 Н1.6)",
+   "class": "value",
+   "norm": "P/08.6 Н1.3",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"edit_tables\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"edit_tables\"]) == map ? dyn(doc[\"domain\"][\"edit_tables\"]).map(k1, ((type(doc) == map && \"tables\" in doc && type(doc[\"tables\"]) == map && k1 in doc[\"tables\"] && type(doc[\"tables\"][k1]) == map && \"fields\" in doc[\"tables\"][k1] && type(doc[\"tables\"][k1][\"fields\"]) == map && type(doc[\"domain\"][\"edit_tables\"][k1]) == list && dyn(doc[\"tables\"][k1][\"fields\"]).exists(k6, !k6.endsWith(\"_secret\") && !dyn(doc[\"domain\"][\"edit_tables\"][k1]).exists(e7, e7 == k6))) ? [{\"p\": [\"domain\", \"edit_tables\", k1]}] : [])) : []) : []) : [])",
+   "own": []
+  },
+  {
+   "no": 153,
+   "path": "domain.edit_tables.{}",
+   "relation": ". not in values(worker.writes[])",
+   "class": "value",
+   "norm": "P/08.6 Н1.3",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"edit_tables\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"edit_tables\"]) == map ? dyn(doc[\"domain\"][\"edit_tables\"]).map(k1, ((type(doc) == map && \"worker\" in doc && type(doc[\"worker\"]) == map && \"writes\" in doc[\"worker\"] && type(doc[\"worker\"][\"writes\"]) == list && dyn(doc[\"worker\"][\"writes\"]).exists(e6, e6 == k1)) ? [{\"p\": [\"domain\", \"edit_tables\", k1]}] : [])) : []) : []) : [])",
    "own": []
   }
  ],

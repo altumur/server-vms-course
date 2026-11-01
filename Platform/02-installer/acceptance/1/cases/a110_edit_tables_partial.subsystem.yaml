@@ -1,0 +1,7 @@
+# запись строки — полная замена: неполный список затёр бы поля
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+tables: {disks: {fields: {note: {type: string}, kind: {type: string}}}}
+domain: {edit_tables: {disks: [note]}}

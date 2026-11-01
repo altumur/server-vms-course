@@ -1448,6 +1448,9 @@
    "anyOf": [
     {
      "enum": [
+      "GET domain/folders",
+      "domain/folders",
+      "domain/memberof",
       "GET domain",
       "GET domain/users",
       "GET domain/groups",

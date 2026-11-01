@@ -1283,3 +1283,9 @@ a94_revision.040	platform/schema	platform/schema	row	reader	["<s>controller", "<
 06-rights-8158	<sub>/operations-epoch	testsub/operations-epoch	row	reader	["console"]	{}	refused	["/n"]	{"console": [""]}	/n: нет
 06-rights-8159	<sub>/operations-epoch	/operations-epoch	row	writer	["console"]	{"n":"1"}	refused	[""]	[]	catalog key: <sub> ""
 06-rights-8160	<sub>/operations-epoch	/operations-epoch	row	reader	["console"]	{"n":"1"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
+c06_memberof_gone.001	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub/counters/c1	row	writer	["console", "domainagent"]	{}	ok	[]	[]	base
+c06_memberof_gone.002	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub/counters/c1	row	reader	["domainagent"]	{}	ok	[]	{"domainagent": []}	base
+c06_memberof_gone.003	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub/counters/c1	row	writer	["console", "domainagent"]	null	refused	[""]	[]	root null
+c06_memberof_gone.004	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub/counters/c1	row	reader	["domainagent"]	null	refused	[""]	{"domainagent": [""]}	root null
+c06_memberof_gone.005	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub/counters/c1	row	writer	["console", "domainagent"]	{	refused	[""]	[]	not JSON
+c06_memberof_gone.006	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub/counters/c1	row	reader	["domainagent"]	{	refused	[""]	{"domainagent": [""]}	not JSON

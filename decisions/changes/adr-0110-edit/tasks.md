@@ -8,3 +8,5 @@ ADR-0110 разбор, шаг 4; ADR-0111 п. 16. Случаи `a110_edit_*`. Р
 | C08-KEPT-TABLES-01 | `domain.edit_secrets`, конверт `m1` при приёме, открытие агентом | [x] | [ ] | [ ] |
 | C08-KEPT-TABLES-01 | связка `POST /domain/edits`, применение пакетом | [x] | [ ] | [ ] |
 | C08-KEPT-TABLES-01 | `by`, `iat`, `X-Agent-For`, суд человека у консоли члена | [x] | [ ] | [ ] |
+| C08-KEPT-TABLES-01 | разбор ревью: `cas` вне отпечатка пакета, `revision` строки пакета, правила по keys, `new_id`, дверь `/domain/edits/stranded`, 403 stale без исхода, связи 152, 153, `cap` двери в `write`, `member_anywhere` | [x] | [ ] | [ ] |
+| C08-REF-SIBLINGS-01 | `?id=`, `id` строки связки, 409 `siblings`; `conflict` теневого отчёта по одному id | [x] | [ ] | [ ] |

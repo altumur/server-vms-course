@@ -1,0 +1,17 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "type": "object",
+ "properties": {},
+ "propertyNames": {
+  "type": "string",
+  "pattern": "^(?:e-[0-9a-f]{12})$"
+ },
+ "additionalProperties": {
+  "description": "номер новой единицы связки: текст десятичного целого",
+  "type": "string",
+  "pattern": "^(?:[1-9][0-9]*)$",
+  "x-codec": [
+   "string"
+  ]
+ }
+}

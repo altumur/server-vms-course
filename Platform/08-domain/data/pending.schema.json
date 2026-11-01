@@ -725,7 +725,7 @@
      "type": "string"
     },
     "method": {
-     "description": "метод двери единиц консоли члена",
+     "description": "метод двери консоли члена",
      "type": "string",
      "enum": [
       "POST",
@@ -734,7 +734,7 @@
      ]
     },
     "path": {
-     "description": "путь двери единиц консоли члена — `/<sub>/<rows>` или `/<sub>/<rows>/<id>` (id — местный id единицы из копии члена)",
+     "description": "путь двери консоли члена: строки единиц, таблицы или `/console/batch` (Н1.4 path, Н1.3б)",
      "type": "string"
     },
     "body": {
