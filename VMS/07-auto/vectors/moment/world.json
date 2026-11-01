@@ -1067,6 +1067,21 @@
    "owner": null,
    "builtin": false,
    "title": "u-first"
+  },
+  {
+   "id": "00000000-0000-4000-8000-0000000000e1",
+   "title": "e-no-week",
+   "kind": "week"
+  },
+  {
+   "id": "00000000-0000-4000-8000-0000000000e2",
+   "title": "e-no-dates",
+   "kind": "dates"
+  },
+  {
+   "id": "00000000-0000-4000-8000-0000000000e3",
+   "title": "e-always",
+   "kind": "always"
   }
  ],
  "day_groups": [

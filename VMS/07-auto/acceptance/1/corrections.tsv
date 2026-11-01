@@ -6,3 +6,5 @@ date	sample	fix	languages
 2026-11-01	1/scenarios.tsv: 03-fields шаги 7, 8; 07-requests шаги 6–8; 08-run шаги 12, 13	mute и order вынесены из строки сценария в таблицу rule_marks: новой revision нет; цепочка — таблица воркера chains, POST двери — 403; слово «Архитектора» по отчёту V/07	all
 2026-11-01	1/scenarios.tsv: 07-requests шаги 9, 10	дверь ответа, роль судит вычислитель	all
 2026-11-01	1/scenarios.tsv: 08-run шаг 14	done, желания всех wait_event, очередь (Quint vrun В1–В3)	all
+2026-11-01	1/scenarios.tsv: 07-requests шаг 6	ответ POST таблицы — 201 {row: TableRow} (P/06.1 Н2), поля шли верхним уровнем; проба V/07, стыки 3	all
+2026-11-01	1/scenarios.tsv: 08-run шаги 15–18	добавлены: путь после ветки, запись ветки до шагов, имя при смене состава цели, вид устройства, конец ask и escalate, цепочка после падения и правки; проба V/07	all

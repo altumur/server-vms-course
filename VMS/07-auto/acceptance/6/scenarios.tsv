@@ -9,7 +9,7 @@ scenario	step	request	expect
 01-tables	7	POST /schedules {"id": "not-a-uuid", "title": "x", "kind": "never"}	400 {"error": "@any"}
 01-tables	8	POST /day_groups {"id": "00000000-0000-4000-8000-000000000011", "title": "Праздники", "rules": [{"type": "range", "from": "2026-01-01", "to": "2026-01-08", "yearly": true}, {"type": "ord", "nth": "last", "dow": 7, "month": 3}]}	201 {"row": {"title": "Праздники"}}
 01-tables	9	POST /day_groups {"id": "00000000-0000-4000-8000-000000000012", "title": "x", "rules": [{"type": "lunar"}]}	400 {"error": "@any"}
-01-tables	10	POST /modes {"id": "all", "otherwise": "m1", "items": [{"id": "m1", "title": "Ночь", "schedule": null, "system": "night", "color": null}]}	201 {"row": {"otherwise": "m1"}}
+01-tables	10	POST /modes {"id": "all", "otherwise": "m1", "items": [{"id": "m1", "name": "Ночь", "schedule": null, "system": "night", "color": null}]}	201 {"row": {"otherwise": "m1"}}
 01-tables	11	POST /modes {"id": "second", "otherwise": "m1", "items": []}	400 {"error": "@any"}
 01-tables	12	POST /mode_current {"id": "now", "mode": "m1", "until": null}	201 {"row": {"mode": "m1", "by": "@any", "at": "@any"}}
 01-tables	13	POST /mode_current {"id": "later", "mode": "m1"}	400 {"error": "@any"}
@@ -17,6 +17,6 @@ scenario	step	request	expect
 01-tables	15	POST /windows {"id": "00000000-0000-4000-8000-000000000022", "title": "x"}	400 {"error": "@any"}
 02-history	1	POST /versions {"scenario": "1", "number": 1, "note": {"code": "created", "params": {}}, "rule": "{}"}	201 {"row": {"scenario": "1", "number": 1, "by": "@any", "at": "@any"}}
 02-history	2	POST /versions {"scenario": "name", "number": 1, "rule": "{}"}	400 {"error": "@any"}
-02-history	3	POST /answers {"scenario": "1", "fire": "1-run-a", "step": "2.no.1", "answer": "yes"}	201 {"row": {"answer": "yes", "by": "@any", "at": "@any"}}
-02-history	4	POST /answers {"scenario": "1", "fire": "1-run-a", "step": "0", "answer": "maybe"}	400 {"error": "@any"}
+02-history	3	POST /answers {"scenario": "1", "fire": "1-run-a", "step": "2.no.1", "user": "admin", "answer": "yes"}	201 {"row": {"answer": "yes", "by": "@any", "at": "@any"}}
+02-history	4	POST /answers {"scenario": "1", "fire": "1-run-a", "step": "0", "user": "admin", "answer": "maybe"}	400 {"error": "@any"}
 03-pulse	1	@manual вычислитель на стенде с TIMEZONE=Europe/Moscow и строками modes, schedules: пульс несёт object_mode {mode, manual: false, until: null}; строка mode_current — manual: true и её until; срок прошёл — снова по расписаниям; строка modes нечитаема — поля нет. Стенд главы вычислителя не запускает	manual

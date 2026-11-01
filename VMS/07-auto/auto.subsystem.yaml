@@ -129,7 +129,7 @@ unit:
                 unit: {type: [string, integer], maximum: 9007199254740991}
                 target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
                 n: {type: integer, minimum: 1, maximum: 9007199254740991}
-            # `duration: event`, `after_sec`: kept as data; the journal has no end of an event, the evaluator refuses them (V/07.3)
+            # `duration`, `after_sec`: kept as data; the journal has no end of an event, so `duration: event` is refused by the evaluator (V/07.3)
             - type: object
               required: [sub, action]
               additionalProperties: false
@@ -299,7 +299,6 @@ unit:
     created_by:      {type: string}
     changed_at:      {type: float}
     changed_by:      {type: string}
-    history_note:    {type: json, schema: {type: [object, "null"], required: [code], additionalProperties: false, properties: {code: {enum: [restore, undo]}, params: {type: object}}}}
     # `record`: a scenario `backend` keeps for a camera's `recordMode` (ADR-0111 п. 4); the list of rules does not show it.
     hidden:          {type: string, enum: ["", record], default: ""}
   # How far the evaluator has read the cluster's log for this scenario, from which `t` it looks at all, and since when the
@@ -441,8 +440,8 @@ tables:
       number:   {type: int, required: true, schema: {minimum: 1}}
       note:     {type: json, schema: {type: [object, "null"], required: [code, params], additionalProperties: false, properties: {code: {type: string}, params: {type: object}}}}
       rule:     {type: string, required: true}
-  # An operator's answer to `ask` and the acknowledgement of `escalate`: the evaluator reads it; the contract has no door
-  # for it, so `backend` writes none yet.
+  # An operator's answer to `ask` and the acknowledgement of `escalate`: the evaluator reads it; `backend` writes it by a door
+  # the contract does not have yet (V/11.4 Н1.10), the door of tables too.
   # An operator answers: `view` on the scenario, the step's role is the evaluator's to judge by `by` (V/07.6 Н1.9).
   answers:
     key: "{scenario}-{fire}-{step}-{user}"
@@ -513,7 +512,6 @@ display:
     created_by: Кем создан
     changed_at: Изменён
     changed_by: Кем изменён
-    history_note: Пометка версии
     hidden: Скрыт
 placement:
   # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
@@ -566,7 +564,7 @@ requests:
     properties:
       unit:        {type: string}
       action:      {enum: [run, retry]}
-      fire:        {type: string, minLength: 1, maxLength: 200}
+      fire:        {type: string, minLength: 1}   # a firing's name carries an event's id, longer than a request's name may be
       valid_until: {type: number}
   valid_for: 30
   most_valid: 600
