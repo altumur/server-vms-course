@@ -42,13 +42,17 @@
    "description": "дорога в свой ретранслятор для подъёма к центру"
   },
   "to": {
-   "type": "array",
+   "type": [
+    "array",
+    "string"
+   ],
    "minItems": 1,
    "items": {
     "type": "string",
     "minLength": 1
    },
-   "description": "дом и центр — все члены; ретранслятор — члены за ним"
+   "pattern": "^(?:[*])$",
+   "description": "дом и центр — \"*\"; ретранслятор — члены за ним"
   }
  },
  "required": [
