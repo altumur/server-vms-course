@@ -34,3 +34,25 @@ scenario	step	request	expect
 05-ptz	2	@manual строка cam/ptz_moves с растущим seq: MoveContinuous, ZoomContinuous, FocusContinuous; снятие строки — нулевая скорость каждой оси; повтора нет PTZ_LEASE — стоп; застанная при старте строка не движет	manual
 05-ptz	3	@manual завис вызов группы (Execute единицы, output): стоп камеры идёт; завис вызов телеметрии — стоп идёт мимо него	manual
 05-ptz	4	@manual SIGKILL держателя при движении: новый держатель при взятии эпохи шлёт стоп; от сбоя до стопа — не дольше 105 с	manual
+06-rule-state	1	POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
+06-rule-state	2	@start worker cam w-srv-a-1 on srv-a	ok
+06-rule-state	3	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "idle"}]}
+06-rule-state	4	GET /rule_state/$c1	404 {"error": "@any"}
+06-rule-state	5	POST /requests {"unit": "$c1", "action": "arm"}	@oneof 202 {"queued": "@any"} | 200 {"answered": {"outcome": "performed"}}
+06-rule-state	6	@until 30 GET /rule_state/$c1	200 {"armed": true}
+06-rule-state	7	GET /cameras/$c1	200 {"revision": 1}
+06-rule-state	8	POST /requests {"unit": "$c1", "action": "disarm"}	@oneof 202 {"queued": "@any"} | 200 {"answered": {"outcome": "performed"}}
+06-rule-state	9	@until 30 GET /rule_state/$c1	200 {"armed": false}
+06-rule-state	10	POST /requests {"unit": "$c1", "action": "disable", "disabled_by_rule": "7"}	@oneof 202 {"queued": "@any"} | 200 {"answered": {"outcome": "refused", "error": "disable needs a rule and a time"}}
+06-rule-state	11	POST /requests {"unit": "$c1", "action": "disable", "disabled_by_rule": "7", "disabled_until": 9999999999}	@oneof 202 {"queued": "@any"} | 200 {"answered": {"outcome": "performed"}}
+06-rule-state	12	@until 30 GET /rule_state/$c1	200 {"disabled_by_rule": "7", "disabled_at": "@time", "disabled_until": "@time"}
+06-rule-state	13	@until 30 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "pending", "reason": "rule: off"}]}
+06-rule-state	14	POST /requests {"unit": "$c1", "action": "arm"}	@oneof 202 {"queued": "@any"} | 200 {"answered": {"outcome": "refused", "error": "camera is off by a rule"}}
+06-rule-state	15	@until 30 GET /events?unit=cam/$c1&kind=command.failed	200 {"events": [{"kind": "command.failed", "action": "disable", "error": "disable needs a rule and a time"}, {"kind": "command.failed", "action": "arm", "error": "camera is off by a rule"}]}
+06-rule-state	16	PUT /cameras/$c1 {"priority": 5}	200 {"revision": 2}
+06-rule-state	17	@until 30 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "pending", "reason": "rule: off"}]}
+06-rule-state	18	POST /requests {"unit": "$c1", "action": "disable", "disabled_by_rule": "7", "disabled_until": 1}	@oneof 202 {"queued": "@any"} | 200 {"answered": {"outcome": "performed"}}
+06-rule-state	19	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "idle"}]}
+06-rule-state	20	POST /rule_state {"camera": "$c1", "armed": true}	403 {"error": "@any"}
+06-rule-state	21	@manual срок вышел сам: камера выключена на 60 с, через срок фаза снова idle без правки строки; строка осталась, поля выключения те же: стенду не задать момент в теле просьбы	manual
+06-rule-state	22	@manual перезапуск держателя при выключенной камере: новый читает строку и камеру не запускает; строка порчена — камера идёт, warning: нужна запись мимо двери при живом держателе	manual

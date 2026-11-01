@@ -1,6 +1,6 @@
 # Закрытый перечень значений code ответа Problem дверей backend: главы 11.1–11.6, 11.8 (ADR-0094 B5; замер С.5). Перенос из Н4, нормы не меняет: при расхождении источник — норма в столбце norm.
 # Слово error здесь — code контракта. Откуда оно переведено (слово консоли или домена) — в столбце norm. Значения — перечень ProblemCode контракта; своих кодов нет (V/11.2 Н1.3).
-# door — двери контракта: devices, archives, volumes, objects; folders; operations; discovery; access; test — /test/*; * — каждая дверь. code — статус; 4xx — статус двери; «-» — код итога шага, в failed групповой записи статуса нет: 200.
+# door — двери контракта: devices, archives, volumes, objects; folders; operations; discovery; access; rules; schedules — и day-groups, modes, maintenance-windows; test — /test/*; * — каждая дверь. code — статус; 4xx — статус двери; «-» — код итога шага, в failed групповой записи статуса нет: 200.
 # field — «-»: поля нет; <поле> — поле контракта, которое называет отказ; иное — точное значение. 502–504 кода не имеют (V/11.2 Н1.3): строк нет. Слова хода ассистента — V/10.
 door	code	error	field	norm
 *	401	UNAUTHORIZED	-	11.1, 11.2 Н4; 11.4 Н4: 401 сторожевой, 401 обратного вызова; 11.5 Н4
@@ -30,7 +30,11 @@ devices	409	IDENTIFIER_TAKEN	identifier	11.4 Н1.2, Н1.5: занятый ном
 devices	422	PARENT_MISMATCH	parentId	11.4 Н1.5: parentId создания
 devices	-	IDENTIFIER_TAKEN	identifier	11.4 Н1.5: failed элемента, статус 200
 devices	-	PARENT_MISMATCH	parentId	11.4 Н1.5: failed элемента, статус 200
-devices	422	NOT_SUPPORTED	recordMode	11.2, 11.3 Н4: motion, sched
+devices	422	NOT_SUPPORTED	recordMode	11.2, 11.3 Н4: sched
+devices	422	NOT_SUPPORTED	recordDetectorIds	11.3 Н4: разные виды
+devices	422	VALIDATION_FAILED	recordDetectorIds	11.3 Н4: не det/units, встроенный, без motion
+devices	409	DEVICE_OFFLINE	enabled	11.4 Н1.2: включение выключенной правилом, просьба без исхода
+devices	-	DEVICE_OFFLINE	enabled	11.4 Н1.2: то же, failed элемента, итог шага
 devices	422	NOT_SUPPORTED	encrypted	11.3 Н4
 devices	422	NOT_SUPPORTED	name	11.3 Н4
 devices	422	NOT_SUPPORTED	detectorKind	11.3 Н4
@@ -53,6 +57,25 @@ discovery	409	BUSY	-	11.4 Н1.9, Н4: поиск идёт
 operations	422	VALIDATION_FAILED	items	11.4 Н4: too many steps, too many operations; 11.4 Н1.8: шаг не ровно с одним из set, folderIds, create, пустой items
 operations	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.8
 operations	-	DEVICE_OFFLINE	-	11.4 Н1.8: шаг not_run, код итога шага
+operations	409	BUSY	-	11.4 Н1.12: откат: gone, reverted, running, nothing, too_large в params.reason
+operations	-	NOT_SUPPORTED	<слово>	11.4 Н1.12: шаг отката, refuse: volume, deleted, bound_to, secret, folderIds
+operations	-	VERSION_MISMATCH	-	11.4 Н1.12: шаг отката, значения не равны after
+rules	422	RULE_INVALID	-	11.4 Н1.10; params.issue
+rules	409	NOT_RUNNABLE	-	11.4 Н1.10: run, retry; params.reason.code
+rules	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.10: 409 exists, spent просьбы
+rules	-	RULE_INVALID	-	11.4 Н1.10: failed элемента /rules/update
+rules	422	NAME_REQUIRED	name	11.4 Н1.10
+rules	422	VALIDATION_FAILED	triggers	11.3 Н4: match.port, цель
+rules	422	VALIDATION_FAILED	conditions	11.3 Н4: цель
+rules	422	VALIDATION_FAILED	steps	11.3 Н4: preset, port, цель
+rules	422	VALIDATION_FAILED	windowSec	11.4 Н1.10
+rules	422	VALIDATION_FAILED	items	11.4 Н1.10: reorder больше BATCH_WRITES
+rules	422	VALIDATION_FAILED	log	11.4 Н1.10: log без ruleId
+schedules	409	BUILTIN	-	11.4 Н1.11: встроенное, системный режим, params.modeId
+schedules	422	NAME_REQUIRED	<поле>	11.4 Н1.11: name, items
+schedules	422	VALIDATION_FAILED	owner	11.4 Н1.11
+schedules	422	VALIDATION_FAILED	otherwise	11.4 Н1.11
+schedules	422	VALIDATION_FAILED	scheduleId	11.4 Н1.11
 access	409	BUILTIN	-	11.8 Н4: 409 builtin; правка, удаление роли admin
 access	409	NAME_TAKEN	<поле>	11.8 Н4: повтор имени; 409 exists, name taken
 access	409	LOGIN_TAKEN	<поле>	11.8 Н4: повтор логина; 409 exists, name taken у человека

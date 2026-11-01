@@ -460,6 +460,7 @@ servers:
   show:
     - {table: volumes, by: server, title: тома, columns: [name, kind, url, quota_bytes, enabled]}
   status:
+    - {field: disks, title: диски сервера}
     - {field: volume_missing, title: том не найден}
     - {field: volume_error, title: том не взят}
     - {field: shrink_pending, title: уменьшение квоты не подтверждено}
@@ -511,6 +512,7 @@ display:
     archive.keep.lifted: метка «сохранить» снята
     archive.keep.uncopied: сохранённое ещё не скопировано
     archive.keep.garbled: метка «сохранить» не читается
+    segment.lost: потерян кусок записи
 # The recorders on the domain (V/02.9): a recording is the domain's by its camera's `ref` (the assignment
 # `domain/placement/rec/<ref>`: the cluster of the primary, the camera's cluster as origin, the clusters of backups as
 # copies). Each recorder contributes its held recordings to the book of primaries — with the addresses of its cluster's
@@ -534,5 +536,12 @@ domain:
   # What the domain's door lets through in a member's recording (ADR-0031): switching it and its days, found by its
   # camera's `ref` (`PUT /domain/rec/recordings/<ref>?cluster=`). It makes none: name, camera, home are its cluster's.
   edit: [enabled, retention_days]
+# A lost stretch of a recording is said as soon as the engine says it (V/02.3 Н1.6), and an engine says it on many frames
+# after one loss: one line a window for a recording, the rest as `repeats`.
+events:
+  suppress:
+    segment.lost:
+      window: 60
+      by: [cam, recording]
 console:
   running: recordings_running          # rec_recordings_running: recordings whose pipeline is writing — what the health check reads
