@@ -71,6 +71,7 @@ door:
     # (ADR-0094 доп. (7)), its operations answer 404 NO_ROUTE. The doors of the domain judge the person, not backend (V/11.8).
     calls:
       - cam/cameras                  # the rows of cam, their tombstones (V/01.1)
+      - cam/devices
       - cam/next_id                  # a new camera names its number itself (V/11.4 Н1.2)
       - rec/recordings               # the rows of rec, their tombstones (V/02.1)
       - rec/volumes

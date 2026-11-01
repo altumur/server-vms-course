@@ -251,5 +251,6 @@ scenario	step	request	expect
 10-archives	24	member m1 console GET /rec/volumes	200 {"rows": [{"name": "bkt-a", "kind": "network", "url": "s3://s3.example/eu/vms/a"}]}
 10-archives	25	member m1 console2 GET /api/volumes	200 {"items": [{"id": "ef748505-c5d7-5143-a996-dabf69c75a5a", "archiveId": "5521c600-6afd-5626-a797-467824ea8509", "hasSecret": true}]}
 10-archives	26	member m1 console2 GET /api/volumes/ef748505-c5d7-5143-a996-dabf69c75a5a	200 {"region": "eu", "bucket": "vms", "path": "a", "hasSecret": true, "secret": "@absent", "version": "$vc"}
-10-archives	27	member m1 console2 @header If-Match: "$vc" PATCH /api/volumes/ef748505-c5d7-5143-a996-dabf69c75a5a {"region": "us"}	200 {"region": "us", "bucket": "vms", "path": "a"}
-10-archives	28	member m1 console GET /rec/volumes	200 {"rows": [{"name": "bkt-a", "url": "s3://s3.example/us/vms/a"}]}
+10-archives	27	member m1 console2 @header If-Match: "$vc" PATCH /api/volumes/ef748505-c5d7-5143-a996-dabf69c75a5a {"region": "us"}	422 {"code": "VALIDATION_FAILED", "field": "secret"}
+10-archives	28	member m1 console2 @header If-Match: "$vc" PATCH /api/volumes/ef748505-c5d7-5143-a996-dabf69c75a5a {"region": "us", "secret": "s2"}	200 {"region": "us", "bucket": "vms", "path": "a"}
+10-archives	29	member m1 console GET /rec/volumes	200 {"rows": [{"name": "bkt-a", "url": "s3://s3.example/us/vms/a"}]}

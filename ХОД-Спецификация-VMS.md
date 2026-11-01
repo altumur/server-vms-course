@@ -594,4 +594,4 @@
 - «Сборке»: `rec.subsystem.yaml` — `volumes.url.schemes: {file: {host: path}, s3: {}}`, голый путь и прочие схемы бакета — отказ двери; `worker.stop_timeout: 45`; `servers.status` + `volume_error`; слово `codec not supported: <кодек>` в `reason` записи.
 - «Сборке»: `cam.shell.html` — подсказка «пусто — логин и пароль камеры» у поля пароля потока.
 - «Сборке»: `rec.subsystem.yaml` — `archive` снят из `heartbeat.strings`.
-- «Сборке»: `backend.subsystem.yaml` `repeats.steps` — текст JSON, не `json`; `calls` без `cam/devices`; комментарии `enabled`, сборка без имени скрипта.
+- «Сборке»: `backend.subsystem.yaml` `repeats.steps` — текст JSON, не `json`; комментарии `enabled`, сборка без имени скрипта.
