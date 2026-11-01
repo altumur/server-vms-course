@@ -1,0 +1,8 @@
+# вид цели вместе с постоянной подсистемой
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}, target: {type: json}, then: {type: json}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+rights:
+  names:
+    - {field: target, unit: id, of: cam, kind: kind, kinds: {device: {of: cam}}}

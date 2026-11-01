@@ -589,6 +589,7 @@ paths:
                       ref: {type: string}
                       id: {type: string}
                       name: {type: string}
+                      create: {type: boolean}
                       new: {type: boolean}
                       fields: {type: object, additionalProperties: true}
       responses:

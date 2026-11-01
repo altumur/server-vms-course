@@ -8,3 +8,5 @@ ADR-0110 разбор, шаг 6, Д-5; ADR-0111 п. 13. Реализацией �
 | C08-SHARED-FOLDERS-01 | `carry.folders`, копия агента, `domain/folders-state`, `gone`, `own`, `scope` | [x] | [ ] | [ ] |
 | C08-SHARED-FOLDERS-01 | консоль члена: запись папок 409 `folders are the domain's`, запрет строк в пакете, без жнеца, `platform/memberof-gone` | [x] | [ ] | [ ] |
 | C08-SHARED-FOLDERS-01 | перенос: три семьи в `state`, `folder-rev` парой {term, rev}, `own` с подъёмом до `carry.folders` | [x] | [ ] | [ ] |
+
+Вливание стопки связано с шагом 8: папки V/11 пишут `POST /folders` и `folderId` в пакете, у члена домена это 409 и `badkey`.

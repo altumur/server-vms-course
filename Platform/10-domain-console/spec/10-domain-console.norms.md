@@ -449,6 +449,7 @@ HTTP-контракт: [10-domain-console.api.openapi.yaml](10-domain-console.ap
 | `unavailable` | 503 | строка, которой отвечает дверь чтения (вид, тень, `domain/members`, `domain/topology`, `domain/placement`, запись назначения, указатель `domain/shared` и его документ), есть, но не читается — не 404 и не «строки нет» (Н1.2а–Н1.2г, Н1.2е; В7 п. 3, решение «Архитектора» 2026-10-28, П1; строки 36, 42, 43, 50, 54 списка) |
 | `not in the directory` | 404 | манифест без `domain.ref` (Н1.2а) |
 | `no such member` | 404 | `?cluster=` не член (Н1.2а) |
+| `siblings` | 409 | переход 3 — ответ процесса `domain` как пришёл: правка ref у нескольких единиц одного члена без `?id=` |
 | `executors` | 409 | переход 3 — ответ процесса `domain` как пришёл: правка `PUT`, `DELETE` `/domain/<sub>/<rows>/<ref>` без `?cluster=`, ref у двух исполнителей и больше; тело `{error, detail, clusters}` ([P/08.6](../../08-domain/spec/08.6-domain.norms.md) Н3 «принять правку» шаг 2а; ADR-0091 доп. (15) п. 4) |
 | — | 400 / 404 | запрос: `cluster` дважды или пуст; нет манифеста; `rows` не его ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н2); назначения: нет записи, нет манифеста или без `domain.ref` (Н1.2г) |
 | `refused` | 400 | окно `/domain/alarms` (Н1.8 `door`) |

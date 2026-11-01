@@ -61,6 +61,7 @@ edits	400	a secret is set in the member's own cluster, never through a kept edit
 edits	404	refused	-	8.6 Н4, 8.1 Н4
 edits	404	no such member	-	8.6 Н4
 edits	409	executors	-	8.6 Н4
+edits	409	siblings	-	8.6 Н4
 edits	409	kept_full	-	8.6 Н4
 edits	409	unit is being deleted	-	8.6 Н4
 edits	409	the pending edits kept changing; ask again	-	8.6 Н4
