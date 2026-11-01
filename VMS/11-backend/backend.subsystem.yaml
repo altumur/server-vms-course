@@ -129,6 +129,7 @@ door:
       - GET domain/cam/tables/device_units
       - GET domain/cam/tables/unit_next
       - GET domain/cam/tables/rule_state
+      - GET domain/cam/tables/preset_labels
       - GET domain/rec/tables/recordings
       - GET domain/rec/tables/volumes
       - GET domain/det/tables/units
