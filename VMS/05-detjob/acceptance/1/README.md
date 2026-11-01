@@ -1,7 +1,7 @@
 # Приёмка V/05.1 — задача — единица
 
 Норма главы — [`05.1-detjob.norms.md`](../../spec/05.1-detjob.norms.md) Н5. Стенд и словарь — [общий README приёмки
-VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `002c6bf5`).
+VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `2eb1d9cb`).
 
 ## Подготовка
 

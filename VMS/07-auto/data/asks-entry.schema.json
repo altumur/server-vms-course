@@ -40,18 +40,13 @@
   "up": {
    "const": true,
    "description": "дорога в свой ретранслятор для подъёма к центру"
-  },
-  "to": {
-   "description": "\"*\": дом, центр и дорога вверх, отбор — aud токена (V/07.5 Н1.3)",
-   "const": "*"
   }
  },
  "required": [
   "target",
   "by",
   "acts",
-  "urls",
-  "to"
+  "urls"
  ],
  "additionalProperties": false
 }

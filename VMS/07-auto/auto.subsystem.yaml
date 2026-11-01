@@ -636,7 +636,7 @@ domain:
     versions: [scenario, number, note, rule]
     rule_marks: [scenario, mute, order]
   books:
-    asks: {from: auto/asks/, key: target, pick: all, to: to}
+    asks: {from: auto/asks/, key: target, pick: all, to: "*"}
   shared:
     - name: scenarios
       type: json

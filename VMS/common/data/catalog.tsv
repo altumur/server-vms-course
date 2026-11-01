@@ -30,4 +30,4 @@ live/heartbeats/<имя>	object	V/03.2	put=liveworker(свой пульс, P/03.
 domain/live/stream-accounts	row	V/03.6	cas=domainagent(копия у члена, секреты — конверты кольца члена, P/09.1 Н1.4)	liveworker	domain.books	1	VMS/03-live/data/stream-accounts-entry.schema.json#copy	V/03.6 Н1.3, Н1.4	/*/entries/*/value
 domain/live/stream-accounts/<член>	row	V/03.6	put=domain(собираемая книга, секреты — кольцом держателя, P/08.5 Н1.3)	liveworker	domain.books	1	VMS/03-live/data/stream-accounts-entry.schema.json#member	V/03.6 Н1.3, Н1.4	/*/entries/*/value
 domain/auto/asks	row	V/07.5	cas=domainagent(копия у члена, P/09.1 Н1.4)	autoworker	domain.books	1	VMS/07-auto/data/asks-entry.schema.json#copy	V/07.5 Н1.3, Н1.4	/*/entries/*/value
-domain/auto/asks/<член>	row	V/07.5	put=domain(собираемая книга, P/08.5 Н1.3)	autoworker	domain.books	1	VMS/07-auto/data/asks-entry.schema.json#member	V/07.5 Н1.3, Н1.4	/*/entries/*/value
+domain/auto/asks/*	row	V/07.5	put=domain(собираемая книга всем, P/08.5 Н1.3 to_all)	autoworker	domain.books	1	VMS/07-auto/data/asks-entry.schema.json#member	V/07.5 Н1.3, Н1.4	/*/entries/*/value
