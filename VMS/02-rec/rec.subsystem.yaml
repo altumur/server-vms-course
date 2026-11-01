@@ -91,9 +91,9 @@ unit:
     enabled:        {type: bool,   default: true}
     labels:         {type: list}                     # where it may run: a recorder whose server has these labels
     # the VOLUME whose archive holds it — the operator's answer to "where does this footage live" (a storage tier, say).
-    # A card in a camera holds that camera's recordings and no other's: the volume row says whose card it is (`cam`),
-    # and the card's recorder writes no other camera (V/02.6 Н1.7, `reason`). No `must_match` here: a volume of any
-    # other kind has no `cam`, and the platform's check would refuse every recording homed on it (the V/02 review, q. 1).
+    # A card holds the recordings of the cameras held on its server: their holders order them (`cam-<cam>`, V/01.6 Н1.7),
+    # and the card's recorder writes no other (V/02.6 Н1.7, `reason`). No `must_match` here: a volume names no camera, and
+    # which server holds a camera is no row a door could compare (the V/02 review, q. 1).
     home:           {type: string, ref: rec/volumes}
     # WHEN THIS RECORDING STOPS BEING ONE, in unix seconds; 0 — never, which is every recording an
     # operator creates by hand. A scenario asks for ten minutes of a camera, and ten minutes is not a
@@ -113,7 +113,7 @@ unit:
     min_depth_days: {type: float,  default: 0}
     # A BACKUP recording (V/02.6 Н1.4): on a `backup` volume only `offline` — only while no primary that should be written
     # is; `always` there is the recorder's `waiting` (a door cannot judge it: the home's kind is another row). On a card
-    # (`edge`) both. Read by nobody on any other volume.
+    # (`edge`) the word is the volume's (`volumes.when`), this one a copy from the order. Read by nobody on any other volume.
     when:           {type: string, default: "always", enum: [always, offline]}
     # A recording WITHOUT A LIVE STREAM (V/02.6 Н1.9; ADR-0107): `device` — copied from the camera's device archive; the name
     # of another recording of the same camera and stream — copied from that archive; empty — the live stream. The door
@@ -256,7 +256,9 @@ tables:
       # a quota SMALLER than the ring's erases its oldest footage: applied only when this says the same number — the
       # operator's second word (the review's third pass)
       shrink_confirmed: {type: int, default: 0, schema: {minimum: 0}}
-      cam:              {type: string}               # an edge volume is the card IN a camera: which (the sixth pass)
+      # how a card writes the cameras of its server; no field — `always` for a camera with no primary in a cluster of one,
+      # else `offline` (V/02.6 Н1.7): its reader's rule and not a `default` here, and the schema below refuses it on any other kind
+      when:             {type: string, enum: [always, offline]}
       # the word the platform's placement reads (`affinity`): `false` — a place that takes no recording (an incidents
       # volume: a place for what somebody kept, never one to record into)
       admits:           {type: bool, default: true}
@@ -269,12 +271,13 @@ tables:
         - if: {properties: {kind: {const: incidents}}}
           then: {properties: {admits: {const: false}}, required: [admits]}
         - if: {properties: {kind: {const: edge}}}
-          # the card in one camera — a directory on it, with no key: an address is a local or network volume
+          # the card of one box, with every camera of its server — a directory on it, with no key: an address is a local or
+          # network volume
           then:
-            required: [server, cam]
+            required: [server]
             properties: {url: {pattern: "^file://"}}
             allOf: [{not: {required: [access_key]}}, {not: {required: [access_secret]}}]
-          else: {not: {required: [cam]}}             # `cam` is a card's: a disk or a bucket is no camera's
+          else: {not: {required: [when]}}            # `when` is a card's: elsewhere it is a recording's
     journal: {written: archive.volume.declared, deleted: archive.volume.withdrawn}
   # Why a volume nobody holds needs a holder (`placement.places.wanted`, P/04 Н3 «нехватка()»): the platform does not know
   # what lies on a volume. A recorder writes the row (V/02.4 Н1.3): `archive` — it was opened, footage may lie there;
@@ -353,7 +356,7 @@ requests:
   journal: archive.backfill.asked
   # Backfill's profile (V/02.8 Н1.4; P/06.4 Н3 «жнец»): the outcome is the word `fetched` in the recorder's heartbeat, no
   # mark but the reaper's; an old request is closed by the recorder, and by the reaper's `expired` at ttl + REAP_AFTER when
-  # no recorder is there to do it. A scenario's recording is made by `auto` (worker.creates).
+  # no recorder is there to do it. A scenario's recording is made by `auto`, a card's by `cam` (worker.creates).
   outcome: fetched
 snapshot: [name, cam, ref, retention_days, enabled, until, labels, home, when]   # `when`: the domain finds an offline backup of another cluster's camera (М12)
 # WHAT A SCALING POLICY AND AN ALERT READ, DECLARED (the boundary's step 6: it was the VMS's function the platform's

@@ -1089,7 +1089,7 @@ pc.addCard("child",(host,ref)=>childCard(host,ref.slice(6)));
 // places (`places.table`); a keep is a row of `rec/keeps` — a range that must not go by the retention.
 let recOn=null,vols=[],recs=[],keeps=[],T_PLACES="",recErr="",keepErr="";
 const VOL_NET="network";
-const VOL_KIND={local:"локальный",network:"сетевой",backup:"резервный",edge:"карта камеры",incidents:"инциденты"};
+const VOL_KIND={local:"локальный",network:"сетевой",backup:"резервный",edge:"карта сервера",incidents:"инциденты"};
 function volKind(v,short){const k=VOL_KIND[v.kind]||v.kind||"—";return short||v.kind===VOL_NET?k:k+", "+(v.server||"—")}
 // A unit's rows of /<rows>: the pulses of any age (P/06.1), so after a move it has two; a live one wins, else the last.
 function rowsById(rows){
@@ -1140,19 +1140,10 @@ function volState(v){
   return{label:"Никто не обслуживает или не подтверждено",bad:true};   // null is «no» and «not known» (P/06.1)
 }
 const offCard=(title,why,body)=>`<div class="card is-off"><div class="ch">${title}<span class="sub" style="font-weight:400">${esc(why)}</span></div><div class="cb"><p class="sub">${body||""}</p></div></div>`;
-// The volumes a recording of this camera may be homed on: enabled, admitting recordings (not `incidents`, `admits:
-// false`), a camera's card only for its own camera (`home` — `must_match: {cam: cam}`, V/02.1).
-const homesFor=cam=>vols.filter(x=>x.enabled&&x.admits!==false&&(x.kind!=="edge"||cam==null||String(x.cam)===String(cam)));
-const homeOptions=(cur,cam)=>`<option value="" ${cur?"":"selected"}>любой свободный том</option>`+homesFor(cam).map(x=>`<option value="${esc(x.name)}" ${x.name===cur?"selected":""}>${esc(x.name)} · ${esc(volKind(x))}</option>`).join("");
-function whenSelectHtml(r){
-  const v=volByName(r.home);
-  // a backup volume is `when: offline` and nothing else (V/02.6 Н1.4): only a card has the choice
-  if(!v||v.kind!=="edge")return"";
-  const cur=r.when||"always";
-  return`<div><label>Когда писать</label><select data-act="when" data-rec="${esc(r.id)}">
-      <option value="always" ${cur==="always"?"selected":""}>всегда — основная закрывает из неё любую дыру</option>
-      <option value="offline" ${cur==="offline"?"selected":""}>только пока основная не пишется</option></select></div>`;
-}
+// The volumes a recording may be homed on: enabled, admitting recordings (not `incidents`, `admits: false`), not a card:
+// a card's recordings are ordered by the camera's holder (V/01.6 Н1.7). What a row already names stays in its choice.
+const homesFor=cur=>vols.filter(x=>x.enabled&&x.admits!==false&&x.kind!=="edge"||x.name===cur);
+const homeOptions=cur=>`<option value="" ${cur?"":"selected"}>любой свободный том</option>`+homesFor(cur).map(x=>`<option value="${esc(x.name)}" ${x.name===cur?"selected":""}>${esc(x.name)} · ${esc(volKind(x))}</option>`).join("");
 // A recording without a live stream (V/02.6 Н1.9): the device's archive or another recording of this camera and stream.
 // Not on a backup volume or a card, and no backup as a source: the recorder says so too, in words (`reason`).
 function replicaSelectHtml(r){
@@ -1181,8 +1172,7 @@ function camRecCardHtml(cam){
       <button type="button" class="btn s" data-act="toggle" data-rec="${esc(r.id)}" data-on="${r.enabled===false?"1":""}">${r.enabled===false?"Включить":"Выключить"}</button>
       <button type="button" class="btn s" data-act="del" data-rec="${esc(r.id)}">Удалить</button></div>
     <div class="g" style="margin:0 0 10px">
-      <div><label>Архив</label><select data-act="home" data-rec="${esc(r.id)}">${homeOptions(r.home,cam)}</select></div>
-      ${whenSelectHtml(r)}
+      <div><label>Архив</label><select data-act="home" data-rec="${esc(r.id)}">${homeOptions(r.home)}</select></div>
       ${replicaSelectHtml(r)}
       <div><label>Срок хранения, дн</label><input type="number" min="1" value="${esc(r.retention_days)}" data-act="days" data-rec="${esc(r.id)}"></div>
       <div><label>Микрофон № (0 — первый у камеры)</label><input type="number" min="0" value="${esc(r.audio||0)}" data-act="audio" data-rec="${esc(r.id)}"></div>
@@ -1267,7 +1257,6 @@ function paintArch(){
     del:el=>delRec(r(el)),
     // a backup volume takes `offline` and nothing else (V/02.6 Н1.4), and it has no choice of `when`
     home:el=>recWrite(r(el),{home:el.value,...((volByName(el.value)||{}).kind===VOL_BACKUP?{when:"offline"}:{})},el.value?`Запись переедет в «${el.value}»`:"Архив не задан — пишется туда, где есть место"),
-    when:el=>recWrite(r(el),{when:el.value},el.value==="offline"?"Запись на карте пишет, только пока основная не пишется":"Запись на карте пишет всегда"),
     replica:el=>recWrite(r(el),{replica_from:el.value},el.value?"Запись забирает видео из источника, живой поток снят":"Запись идёт с живого потока"),
     days:el=>{const n=wholeDays(el.value);
       if(!n){pc.toast("Срок хранения — целое число дней");return}recWrite(r(el),{retention_days:n},"Срок хранения изменён")},
@@ -1368,7 +1357,7 @@ loadRec().then(()=>{KEEP_ON=!!recOn});
 async function addToArchive(opt){
   opt=opt||{};
   if(recOn===false){pc.toast("Консоль не монтирует rec");return}
-  const homes=homesFor(opt.cam).filter(v=>(!opt.server||v.server===opt.server||v.kind===VOL_NET)&&(!opt.home||v.name===opt.home));
+  const homes=homesFor().filter(v=>(!opt.server||v.server===opt.server||v.kind===VOL_NET)&&(!opt.home||v.name===opt.home));
   // a camera the server (the volume) writes already is not offered again: one camera, one recording a place
   const here=opt.home?[opt.home]:opt.server?serverVolumes(opt.server).map(v=>v.name):[];
   const cams=(UNITS.cam||[]).filter(c=>!camMain(c)&&hasPicture(c)).filter(c=>opt.cam!=null?String(c.id)===String(opt.cam):!recs.some(r=>String(r.cam)===String(c.id)&&here.includes(r.home)));
@@ -1386,7 +1375,6 @@ async function addToArchive(opt){
   const days=wholeDays(v.days);
   if(!days){pc.toast("Срок хранения — целое число дней, не меньше 1");return}
   const hv=volByName(v.home);
-  if(hv&&hv.kind==="edge"&&String(hv.cam)!==String(v.cam)){pc.toast(`Том «${hv.name}» — карта камеры ${hv.cam}: только для её записей`);return}
   const taken=new Set(recs.map(r=>r.id));
   // the name (V/08.4): the camera's id; taken — `<cam>-<volume>` with a volume chosen, else `<cam>-s<stream>` with a stream
   const name=!taken.has(v.cam)?v.cam:v.home?`${v.cam}-${v.home}`:stream?`${v.cam}-s${stream}`:v.cam;
@@ -1433,14 +1421,17 @@ function netVolumesCard(host){
 // its oldest footage — the recorder applies it only with `shrink_confirmed` equal to it, the operator's second word.
 async function openVolume(kind,server,was){
   const net=kind===VOL_NET,shownQuota=was?String(Math.round(was.quota_bytes/1073741824*100)/100):"100";
-  // the key of an address: of any kind but a camera's card (the table's schema)
+  // the key of an address: of any kind but a card (the table's schema)
   const keyFields=(was&&was.kind==="edge")?[]:[{name:"access_key",label:"Ключ доступа (ID)",value:was?was.access_key||"":""},{name:"access_secret",label:"Секрет ключа",type:"password",help:"пусто — оставить текущий; при смене адреса впишите заново"}];
   const v=await pc.dialog(was?"Объявление тома "+was.name:net?"Новый сетевой архив":"Новый архив на сервере",[
     {name:"name",label:"Имя",value:was?was.name:net?"nas":(server||"local")},
-    {name:"kind",label:"Вид",options:(net?[VOL_NET]:["local","backup","incidents"]).concat(was&&!["local","backup","incidents",VOL_NET].includes(was.kind)?[was.kind]:[]).map(k=>[k,VOL_KIND[k]||k])},
+    // a select opens on its first option: the row's own word first
+    {name:"kind",label:"Вид",options:(net?[VOL_NET]:["local","backup","incidents"]).concat(was&&!["local","backup","incidents",VOL_NET].includes(was.kind)?[was.kind]:[]).sort((a,b)=>(was&&b===was.kind)-(was&&a===was.kind)).map(k=>[k,VOL_KIND[k]||k])},
     {name:"url",label:net?"Адрес":"Путь",value:was?was.url||"":net?"s3://bucket/vms":"file:///var/lib/vms/archive"},
     {name:"quota",label:"Квота, ГБ",value:shownQuota},
-    ...(net?[]:[{name:"server",label:"Сервер",value:was?was.server||"":server||""}]),...keyFields],was?"Записать":"Объявить");
+    ...(net?[]:[{name:"server",label:"Сервер",value:was?was.server||"":server||""}]),
+    // how a card writes: the volume's word (V/02.6 Н1.7)
+    ...(was&&was.kind==="edge"?[{name:"when",label:"Когда писать",options:[["offline","только пока основная не пишется"],["always","всегда"]].sort((a,b)=>(b[0]===was.when)-(a[0]===was.when))}]:[]),...keyFields],was?"Записать":"Объявить");
   if(!v)return;
   // the name is the row's key: another name would be another volume, without this one's fields
   const name=v.name.trim();
@@ -1452,7 +1443,7 @@ async function openVolume(kind,server,was){
   if(!net)body.server=(v.server||"").trim();else delete body.server;
   if(v.access_key&&v.access_key.trim())body.access_key=v.access_key.trim();
   if(v.access_secret)body.access_secret=v.access_secret;
-  if(body.kind!=="edge")delete body.cam;           // `cam` is an edge card's only (the table's schema)
+  if(body.kind==="edge"&&v.when)body.when=v.when;else if(body.kind!=="edge")delete body.when;   // `when` is a card's only (the table's schema)
   if(body.kind==="incidents")body.admits=false;   // evidence takes no recordings (the table's schema, V/02.1 Н1.2)
   delete body.shrink_confirmed;                    // its own rule below
   const pend=old?shrinkPending(old):0;
