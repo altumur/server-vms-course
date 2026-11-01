@@ -33,7 +33,8 @@ devices	-	PARENT_MISMATCH	parentId	11.4 Н1.5: failed элемента, стат
 devices	422	NOT_SUPPORTED	recordMode	11.2, 11.3 Н4: sched
 devices	422	NOT_SUPPORTED	recordDetectorIds	11.3 Н4: разные виды
 devices	422	VALIDATION_FAILED	recordDetectorIds	11.3 Н4: не det/units, встроенный, без motion
-devices	422	NOT_SUPPORTED	enabled	11.4 Н1.2: включение выключенной правилом
+devices	409	DEVICE_OFFLINE	enabled	11.4 Н1.2: включение выключенной правилом, просьба без исхода
+devices	-	DEVICE_OFFLINE	enabled	11.4 Н1.2: то же, failed элемента, итог шага
 devices	422	NOT_SUPPORTED	encrypted	11.3 Н4
 devices	422	NOT_SUPPORTED	name	11.3 Н4
 devices	422	NOT_SUPPORTED	detectorKind	11.3 Н4
@@ -60,6 +61,8 @@ operations	409	BUSY	-	11.4 Н1.12: откат: gone, reverted, running, nothing,
 operations	-	NOT_SUPPORTED	<слово>	11.4 Н1.12: шаг отката, refuse: volume, deleted, bound_to, secret, folderIds
 operations	-	VERSION_MISMATCH	-	11.4 Н1.12: шаг отката, значения не равны after
 rules	422	RULE_INVALID	-	11.4 Н1.10; params.issue
+rules	409	NOT_RUNNABLE	-	11.4 Н1.10: run, retry; params.reason.code
+rules	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.10: 409 exists, spent просьбы
 rules	-	RULE_INVALID	-	11.4 Н1.10: failed элемента /rules/update
 rules	422	NAME_REQUIRED	name	11.4 Н1.10
 rules	422	VALIDATION_FAILED	triggers	11.3 Н4: match.port, цель

@@ -60,9 +60,9 @@ n	method	path	profile	why
 53	POST	/rules/update	in	переводится (V/11.4 Н1.10; ADR-0105)
 54	POST	/rules/reorder	in	переводится (V/11.4 Н1.10; ADR-0105)
 55	POST	/rules/test	in	переводится (V/11.4 Н1.10; ADR-0105)
-56	POST	/rules/{ruleId}/run	out	404 NO_ROUTE: просьбы нет в закрытом перечне обратного вызова (V/11.2 № 56, P/06.3 Н1.9); тест вне профиля
+56	POST	/rules/{ruleId}/run	in	переводится (V/11.4 Н1.10; V/07.4 Н1.12)
 57	GET	/rules/{ruleId}/versions	in	переводится (V/11.4 Н1.10; ADR-0105)
-58	POST	/rules/{ruleId}/fires/{fireId}/retry	out	404 NO_ROUTE: просьбы нет в закрытом перечне обратного вызова (V/11.2 № 56, P/06.3 Н1.9); тест вне профиля
+58	POST	/rules/{ruleId}/fires/{fireId}/retry	in	переводится (V/11.4 Н1.10; V/07.4 Н1.12)
 59	GET	/schedules	in	переводится (V/11.4 Н1.11; ADR-0105)
 60	POST	/schedules	in	переводится (V/11.4 Н1.11; ADR-0105)
 61	GET	/schedules/{scheduleId}	in	переводится (V/11.4 Н1.11; ADR-0105)

@@ -67,8 +67,7 @@ door:
       step: opstep
       service: true
     # The doors the worker may call back with a ticket, in the closed list of the platform (P/06.3 Н1.9). Not: `/where`,
-    # writes of /session, keys, break-glass; nor `auto/requests`: a request door is not in that list, so a manual run and a
-    # retry answer 404 NO_ROUTE (V/11.2 № 56, 58). The doors of the domain judge the person, not backend (V/11.8).
+    # writes of /session, keys, break-glass. The doors of the domain judge the person, not backend (V/11.8).
     calls:
       - cam/cameras                  # the rows of cam, their tombstones (V/01.1)
       - cam/devices                  # what a host turned out to be: channels, videos — the tree of a device (V/11.3 Н1.3)
@@ -78,6 +77,7 @@ door:
       - cam/unit_next                # the last unit number of a row: it goes up in the batch that adds one (V/11.4 Н1.2)
       - cam/next_id                  # a new camera names its number itself (V/11.4 Н1.2)
       - GET cam/rule_state           # on guard, off by a rule: the holder's words, read only (V/11.3 Н1.3; V/01.4 Н1.4д)
+      - cam/requests                 # `disable` with a past term: a camera turned off by a rule goes on (V/11.4 Н1.2)
       - cam/searches                 # a search of the cluster, one row: start and stop (V/11.4 Н1.9, V/01.8)
       - cam/found                    # what it found; a created candidate's row goes
       - cam/probes                   # «which model», a question to every server (V/01.8 Н1.3)
@@ -95,6 +95,7 @@ door:
       - auto/windows
       - auto/versions                # the history of a rule, written in the batch of the edit (ADR-0106 п. 7)
       - auto/test                    # the evaluator's door: a trial run of a draft, the rule's code is one (ADR-0105 п. 7)
+      - auto/requests                # `run`, `retry`: filing only, the person of the ticket is judged (V/11.4 Н1.10; P/06.3 Н1.9)
       - cam/policy                   # the common settings of these subsystems (ADR-0094 доп. (2) п. 6)
       - rec/policy
       - det/policy

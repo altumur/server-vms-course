@@ -482,7 +482,10 @@ scenario	step	request	expect
 17-rules	36	member m1 console2 GET /api/rules/2c5ab56c-a4c0-50f7-b7f7-574190b5b191	200 {"version": "$r2d"}
 17-rules	37	member m1 console2 POST /api/objects/delete {"idempotencyKey": "rule-gone", "items": [{"id": "2c5ab56c-a4c0-50f7-b7f7-574190b5b191", "version": "$r2d"}]}	200 {"done": ["2c5ab56c-a4c0-50f7-b7f7-574190b5b191"], "failed": []}
 17-rules	38	member m1 console2 GET /api/rules/2c5ab56c-a4c0-50f7-b7f7-574190b5b191/versions	404 {"code": "NOT_FOUND"}
-17-rules	39	@manual вычислитель на стенде: POST /rules/test — черновик, ничего не выполнено, log: true — запись в /fires; держателя нет — 503; сработка — entity.created kind ruleFire; смена режима — entity.changed kind objectMode	manual
+17-rules	39	member m1 console2 POST /api/rules/887563b5-f41f-5423-96a6-5efc08469142/run {"idempotencyKey": "run-off-1"}	409 {"code": "NOT_RUNNABLE", "params": {"reason": {"code": "off"}}}
+17-rules	40	member m1 console2 POST /api/rules/787acf57-b937-5281-b6f3-1ad68921a553/run {"idempotencyKey": "run-none-1"}	404 {"code": "NOT_FOUND"}
+17-rules	41	member m1 console2 POST /api/rules/887563b5-f41f-5423-96a6-5efc08469142/fires/d0009999-0000-4000-8000-000000000000/retry {"idempotencyKey": "retry-none-1"}	404 {"code": "NOT_FOUND"}
+17-rules	42	@manual вычислитель на стенде: POST /rules/{id}/run — 201 RuleFire by manual, в /fires, повтор ключа — тот же запуск, нет держателя — 503; retry — только отказавшие шаги, нечего — 409 NOT_RUNNABLE nothing; POST /rules/test — черновик, ничего не выполнено, log: true — запись в /fires; держателя нет — 503; сработка — entity.created kind ruleFire; смена режима — entity.changed kind objectMode	manual
 18-schedules	1	@domain m1	ok
 18-schedules	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 18-schedules	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
@@ -578,7 +581,7 @@ scenario	step	request	expect
 20-motion	21	member m1 console GET /auto/scenarios	200 {"configured": []}
 20-motion	22	member m1 store POST /v1/write {"id":"rule-state","op":"put","key":"cam/rule_state/1","items":{"camera":"1","armed":"true","disabled_by_rule":"7","disabled_at":"1000","disabled_until":"9999999999"}}	200 {"index": "@any"}
 20-motion	23	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"armed": true, "enabled": false, "disabledByRuleId": "4eff442a-1009-5926-95ab-51b158e2d598", "version": "$v5"}
-20-motion	24	member m1 console2 @header If-Match: "$v5" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"enabled": true}	422 {"code": "NOT_SUPPORTED", "field": "enabled"}
+20-motion	24	@manual держателя cam на стенде нет: PATCH enabled: true подаёт просьбу cam disable со сроком 0, строка камеры поля не получает, строка cam/rule_state снимает выключение, enabled: true; держатель молчит — 409 DEVICE_OFFLINE, field: enabled за срок маршрута	manual
 20-motion	25	member m1 store POST /v1/write {"id":"rule-state-2","op":"put","key":"cam/rule_state/1","items":{"camera":"1","armed":"true","disabled_by_rule":"7","disabled_at":"1000","disabled_until":"1001"}}	200 {"index": "@any"}
 20-motion	26	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"armed": true, "enabled": true, "disabledByRuleId": null, "disabledByRuleAt": null}
 20-motion	27	member m1 store POST /v1/write {"id":"rule-state-3","op":"put","key":"cam/rule_state/1","items":{"armed":"нечитаемая"}}	200 {"index": "@any"}
