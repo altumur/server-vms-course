@@ -30,7 +30,7 @@ P/06.7 Н1.8; «урок 9 Н1.5» — P/06.7 Н1.9; «урок 2 Н1.8» — P/
 
 - вид домена `domain/view` (`holds`, `view.url` перехода 2; 503 `domain console not known`) — семья `view`:
   `Platform/08-domain/data/view.schema.json`, `Platform/08-domain/data/view.outcomes.tsv`;
-- копия списка членов `domain/member-list` (503 `the list of members does not read`; `Entry.ca` назначения для `tls`) —
+- копия списка членов `domain/member-list/<раздел>` (503 `the list of members does not read`; `Entry.ca` назначения для `tls`) —
   семья `member-list`: `Platform/09-agent/data/member-list.schema.json`, `Platform/09-agent/data/member-list.outcomes.tsv`;
 - тело отказа сторожевой `Denied` (401/403 на переходах 1 и 2) — `Platform/common/contracts/gate-and-pass.api.openapi.yaml`.
 
@@ -144,6 +144,7 @@ journal:      domain.forwarded {cluster, path, user, status} у пересыла
 | GET | `/domain/<sub>/tables/<таблица>` (P/10 Н1.2а; `tables` — зарезервированное имя, `unit.rows` им не бывает, P/02.1) | 1 Н2 | 5 | да |
 | GET | `/domain/<sub>/<rows>` (`<rows>` — `unit.rows` манифеста каталога; манифест без `domain.ref` — пересылается, держатель отвечает 404 `not in the directory`, урок 1 Н2) | 1 Н2 | 5 | да |
 | GET, POST | `/domain/members` | 3 Н2 | 5 | да |
+| GET | `/domain/members/<член>` | P/10 Н1.2б | 5 | да |
 | DELETE | `/domain/members/<член>` | 3 Н2 | 5 | да |
 | POST | `/domain/members/<член>/ca` | 8 Н1.6 | 5 | да |
 | GET, PUT | `/domain/topology` | 4 Н2 | 5 | да |

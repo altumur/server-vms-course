@@ -148,7 +148,7 @@ scenario	step	request	expect
 23-admit-again	6	holder POST /domain/members {"name": "m1", "fingerprint": "$fp1"}	200 {"rev": "$r1", "members": {"m1": {"how": "admitted", "key": "@any"}}}
 23-admit-again	7	holder POST /domain/members {"name": "m1", "fingerprint": "$fp1"}	200 {"rev": "$r1", "members": {"m1": {"how": "admitted"}}}
 23-admit-again	8	holder POST /domain/members {"name": "m1", "fingerprint": "0000000000000000"}	409 {"error": "refused", "detail": "~was admitted with another key"}
-23-admit-again	9	holder GET /domain/members	200 {"rev": "$r1", "members": {"m1": {"how": "admitted"}}}
+23-admit-again	9	holder GET /domain/members	200 {"members": {"m1": {"how": "admitted"}}}
 23-admit-again	10	holder POST /domain/members {"name": "m2", "fingerprint": "0000000000000000"}	404
 24-ca-again-sorted	1	@domain	ok
 24-ca-again-sorted	2	holder POST /domain/members/m1/ca {"ca": ["d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6", "6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217"]}	200 {"rev": "$c1", "members": {"m1": {"ca": ["6fefd57b6ab12465ab8f0e869505a7000fc269e62521446a20c8f47b6f30e217", "d72f9e5e3c383d21475386e3c0c718dca231fc5c9be50170420c0423783a68a6"]}}}
@@ -191,7 +191,7 @@ scenario	step	request	expect
 27-topology-versions	24	member hold store GET /v1/get?key=domain/idem/e4fd3ebd0f3c1e247c73e6d53c22abe83322c48bd8ef10a83ca775ba699f506d	200 {"items": {"print": "@any", "code": "200", "body": "~rev", "at": "@time"}}
 27-topology-versions	25	holder @header If-Match: 5 PUT /domain/topology {"centre": "m1"}	200 @header ETag: ~"
 27-topology-versions	26	holder GET /domain/topology	200 @header ETag: ~"
-27-topology-versions	27	holder GET /domain/members	200 {"rev": "$m"}
+27-topology-versions	27	holder GET /domain/members/m2	200 {"rev": "$m"}
 27-topology-versions	28	holder @header If-Match: 9999 DELETE /domain/members/m2	412 {"error": "revision moved", "revision": "$m", "row": {"rev": "$m", "members": {"m2": "@any"}}}
 27-topology-versions	29	holder @header If-Match: $m DELETE /domain/members/m2	200 {"members": {"m2": "@absent"}}
 27-topology-versions	30	holder @header If-Match: 9999 DELETE /domain/members/m2	404 {"error": "refused"}

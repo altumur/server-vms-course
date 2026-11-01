@@ -1,4 +1,4 @@
-# Исходы нечитаемой строки domain/member-list (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Исходы нечитаемой строки domain/member-list/<раздел> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
 path	reader	outcome	priority	unit	norm
 	<s>worker	строка целиком нечитаема: воркер (центры членов для пира двери mixed другого кластера, ADR-0091 доп. 18 п. 2) — действие, которому строка нужна, в этом проходе не выполняется, причина в журнал (аудит раскладки, Г-53; правило DF-OUTCOMES-109, решение «Архитектора» 2026-10-25)	0	строка	P/09.1 Н1.4 from_carry

@@ -301,6 +301,27 @@
      "minItems": 1,
      "uniqueItems": true,
      "maxItems": 2
+    },
+    "class": {
+     "description": "server — кластер с серверами, camera — камера-кластер (P/08.3 Н1.1)",
+     "type": "string",
+     "enum": [
+      "server",
+      "camera"
+     ]
+    },
+    "url": {
+     "description": "адрес входа, не длиннее 256 байт (P/08.1 Н1.4)",
+     "type": "string",
+     "maxLength": 256
+    },
+    "via": {
+     "description": "ретранслятор члена (P/08.3 Н1.2)",
+     "type": "string"
+    },
+    "batch": {
+     "description": "партия приёма (P/08.3 Н1.1а)",
+     "type": "string"
     }
    },
    "additionalProperties": false,
@@ -315,9 +336,18 @@
    "pattern": "^(?:[0-9a-f]{64})$"
   },
   "common.domain_members_doc": {
-   "description": "doc строки domain/members держателя (P/08.3 Н1.1) и её копии domain/member-list у члена — текст JCS (P/09.1 Н1.1, Н1.4)",
+   "description": "doc строки domain/member-rows/<раздел> держателя (P/08.3 Н1.1) и её копии domain/member-list/<раздел> у члена — текст JCS (P/09.1 Н1.1, Н1.4)",
    "type": "object",
    "properties": {
+    "domain": {
+     "description": "имя домена (P/08.2 Н1.1)",
+     "type": "string"
+    },
+    "part": {
+     "description": "раздел: 4 цифры, 0000…4095 (P/08.3 Н1.1)",
+     "type": "string",
+     "pattern": "^(?:[0-9]{4})$"
+    },
     "rev": {
      "$ref": "#/$defs/common.pos53",
      "description": "+1 на каждую запись"
@@ -327,7 +357,7 @@
      "description": "срок держателя, записавшего строку (P/08.8 Н1.1; установка — 1)"
     },
     "members": {
-     "description": "записи членов, держатель в счёте; не больше MEMBERS_MAX 500 (P/08.10 Н1.5)",
+     "description": "записи членов этого раздела, держатель в счёте своего раздела (P/08.10 Н1.5)",
      "type": "object",
      "propertyNames": {
       "$ref": "#/$defs/common.domain_member"
@@ -335,13 +365,30 @@
      "additionalProperties": {
       "$ref": "#/$defs/common.domain_member_entry"
      }
+    },
+    "issuer": {
+     "description": "hex открытого ключа выпускающего",
+     "type": "string"
+    },
+    "kid": {
+     "description": "первые 16 знаков hex issuer",
+     "type": "string"
+    },
+    "sig": {
+     "description": "подпись выпускающего над UTF-8(JCS(doc без kid и sig))",
+     "type": "string"
     }
    },
    "additionalProperties": false,
    "required": [
+    "domain",
+    "part",
     "rev",
     "term",
-    "members"
+    "members",
+    "issuer",
+    "kid",
+    "sig"
    ],
    "x-encoding": "jcs"
   },

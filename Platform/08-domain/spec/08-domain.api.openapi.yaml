@@ -564,6 +564,20 @@ paths:
       responses:
         '200': {description: Записано}
         '400': {$ref: '#/components/responses/BodyRefused'}
+  /api/members/{member}/{part}:
+    parameters:
+      - {$ref: '#/components/parameters/Member'}
+      - name: part
+        in: path
+        required: true
+        schema: {type: string, pattern: '^(?:[0-9]{4})$'}
+      - {$ref: '#/components/parameters/AgentSignature'}
+    get:
+      operationId: memberRow
+      summary: Строка раздела по запросу члена (договор приёма отчёта; ADR-0113)
+      responses:
+        '200': {description: '{doc}'}
+        '429': {description: 'busy {retry_in}'}
   /domain/edits:
     post:
       operationId: keptEdits
@@ -2431,7 +2445,7 @@ components:
         sign_failures:
           description: 'Вне дельты (out_of_delta): форма — {domain?: целое ≥ 1, console?: целое ≥ 1}, не пусто — запросы, которые агент с запуска не отправил, потому что не смог подписать (P/08.3 Н1.6а; сторона агента — P/09.1 Н1.12); не по ней — поле не взято.'
         members_rev:
-          description: 'Вне дельты (out_of_delta): форма — {term: целое ≥ 1, rev: целое ≥ 1} документа domain/member-list, который член держит (P/08.3 Н1.4а); не по ней — поле не взято.'
+          description: 'Вне дельты (out_of_delta): форма — {term: целое ≥ 1, rev: целое ≥ 1} документа domain/member-list/<раздел>, который член держит (P/08.3 Н1.4а); не по ней — поле не взято.'
     Carry:
       type: object
       description: 'Ответ держателя агенту (P/08.3 Н1.5). Поля глав 8.3 Н1.2, 8.6, 8.8, 8.9 — их нормы; секретное члену (книги
@@ -2461,7 +2475,7 @@ components:
           type: object
           required: [doc]
           additionalProperties: false
-          description: 'Строка domain/members (MembersDoc текстом) — только отставшему: members_rev публикации нет или не равен (term, rev) держателя (P/08.3 Н1.4а; добавлено М11/12); у GET /api/carry — всегда; нет поля — без изменений.'
+          description: 'Строка domain/member-rows/<раздел> (MembersDoc текстом) — только отставшему: members_rev публикации нет или не равен (term, rev) держателя (P/08.3 Н1.4а; добавлено М11/12); у GET /api/carry — всегда; нет поля — без изменений.'
           properties:
             doc: {type: string}
         holder:
@@ -2496,6 +2510,7 @@ components:
       additionalProperties: false
       description: 'Пакет ретранслятора (P/09.2 Н1.4; подлинник формы тела — ретранслятор P/09.2 читает отсюда).'
       properties:
+        relay_rev: {type: integer, minimum: 0, description: 'rev индекса, который держит ретранслятор (P/09.2 Н1.4)'}
         relayed:
           type: object
           description: 'Имена — по MemberName у писателя (ретранслятор P/09.2); держатель имя не по грамматике отказывает в
@@ -2513,9 +2528,10 @@ components:
           additionalProperties: true
     RelayAnswer:
       type: object
-      required: [relay_for, relayed, refused, keys]
+      required: [relayed, refused]
       additionalProperties: false
       properties:
+        relay_rev: {type: integer, minimum: 0}
         relay_for:
           type: array
           items: {$ref: '#/components/schemas/MemberName'}
@@ -2525,7 +2541,16 @@ components:
           description: Ответ держателя каждому члену relay_for; rev — для дороги этого ретранслятора.
         refused:
           type: object
-          additionalProperties: {type: string}
+          additionalProperties:
+            unevaluatedProperties: false
+            oneOf:
+              - type: string
+              - type: object
+                required: [reason, retry_in]
+                additionalProperties: false
+                properties:
+                  reason: {const: busy}
+                  retry_in: {type: number, minimum: 0}
         keys:
           type: object
           additionalProperties:
@@ -2558,7 +2583,7 @@ components:
       type: object
       required: [rev, term, members]
       additionalProperties: false
-      description: 'Документ domain/members {rev, term, members} (P/08.3 Н1.1; term — срок держателя, записавшего строку, P/08.8 Н1.1) —
+      description: 'Документ domain/member-rows/<раздел> {rev, term, members} (P/08.3 Н1.1; term — срок держателя, записавшего строку, P/08.8 Н1.1) —
         форма строки (семья members, common.domain_members_doc; текстом — Carry.members), ответом двери не служит: ответ
         дверей членов — MembersAnswer (дополнение «Архитектора» к № 8 разбора ревью стадии B 8–10).'
       properties:
@@ -2573,7 +2598,7 @@ components:
       required: [rev, members]
       additionalProperties: false
       description: 'Ответ 200 дверей POST, DELETE /domain/members и POST /domain/members/{member}/ca — {rev, members}, закрытая
-        форма (P/08.3 Н2); не MembersDoc: MembersDoc — форма строки domain/members, ответом двери не служит (дополнение
+        форма (P/08.3 Н2); не MembersDoc: MembersDoc — форма строки domain/member-rows/<раздел>, ответом двери не служит (дополнение
         «Архитектора» к № 8 разбора ревью стадии B 8–10).'
       properties:
         rev: {type: integer, minimum: 1}

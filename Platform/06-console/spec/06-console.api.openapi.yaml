@@ -9479,7 +9479,7 @@ components:
             - $ref: '#/components/schemas/Unavailable'
     BackupRefused:
       description: 'GET /api/backup (глава 6.7 Н1.13 order): 401 — нет заголовков подписи или ask-sig не ok (detail — слово
-        договора подписи просьбы); 403 — член не в domain/member-list этого кластера или без ключа, ключ отозван; error —
+        договора подписи просьбы); 403 — член не в domain/member-list/<раздел> этого кластера или без ключа, ключ отозван; error —
         refused.'
       content:
         application/json:

@@ -58,7 +58,7 @@ rotation:     ca.next.pem рядом — следующий центр, кото
 
 ## Форма
 
-`Entry.ca` — поле записи члена `domain/members`: `Platform/08-domain/data/members.schema.json`, `Platform/08-domain/data/members.outcomes.tsv`; поля `tls_ca`, `tls_ca_certs` публикации `POST /api/member` — `Platform/08-domain/spec/08-domain.api.openapi.yaml`, `Platform/09-agent/spec/09-agent.api.openapi.yaml` (аудит раскладки, В-55, В-56; решение «Архитектора» 2026-10-25). Класс `role`: строка `domain/members/<член>/ca-certs` — `Platform/08-domain/data/member-ca-certs.schema.json`, `Platform/08-domain/data/member-ca-certs.outcomes.tsv`; отказ двери роли — схема `RoleRefusal` `Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml` (C10-SDK-ROLE83, решение «Архитектора» 2026-10-25).
+`Entry.ca` — поле записи члена `domain/member-rows/<раздел>`: `Platform/08-domain/data/members.schema.json`, `Platform/08-domain/data/members.outcomes.tsv`; поля `tls_ca`, `tls_ca_certs` публикации `POST /api/member` — `Platform/08-domain/spec/08-domain.api.openapi.yaml`, `Platform/09-agent/spec/09-agent.api.openapi.yaml` (аудит раскладки, В-55, В-56; решение «Архитектора» 2026-10-25). Класс `role`: строка `domain/members/<член>/ca-certs` — `Platform/08-domain/data/member-ca-certs.schema.json`, `Platform/08-domain/data/member-ca-certs.outcomes.tsv`; отказ двери роли — схема `RoleRefusal` `Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml` (C10-SDK-ROLE83, решение «Архитектора» 2026-10-25).
 
 ## Комплект кластера, роли домена, центр между кластерами
 
@@ -89,7 +89,7 @@ tls_ca_certs: поле публикации рядом с tls_ca: [<PEM>…] —
               добавлено сверкой М11, D12), sha256(DER) элемента — отпечаток tls_ca на том же месте; есть только вместе с
               tls_ca; вне дельты; идёт в каждой публикации (решение «Архитектора» по cammeta-python М11-08 № 19). Форма
               публикации закрыта: держатель прежней сборки отчёт с полем отвергает — реализации переходят одновременно
-Entry.ca:     поле записи члена в domain/members и в копии domain/member-list члена: [<отпечаток>…], 1–2, по возрастанию, без
+Entry.ca:     поле записи члена в domain/member-rows/<раздел> и в копии domain/member-list/<раздел> члена: [<отпечаток>…], 1–2, по возрастанию, без
               повторов; нет — отпечатков нет; пишет держатель (P/08.3 Н1.6 on_accept, admin); форма копии у члена —
               Platform/09-agent/data/member-list.schema.json (исходы — `Platform/09-agent/data/member-list.outcomes.tsv`), member-list.outcomes.tsv (C04-DEP-OBS-HEARTBEAT-01)
 ```
@@ -207,7 +207,7 @@ role:         двери, где важна роль: приём консоль�
               по-прежнему (решение «Архитектора» 2026-10-21, ADR-0083 доп. (18), доп. (19) п. 2; разбор ревью ADR-0090,
               № 24, 27). Дверь запрашивает сертификат клиента и в рукопожатии доверяет объединению центров
               принятых членов: сертификаты строки domain/members/<член>/ca-certs, чей sha256 стоит в текущем Entry.ca
-              этого члена (domain/members), и свои ca.pem, ca.next.pem кластера держателя (W2C_TLS_DIR); смена списка
+              этого члена (domain/member-rows/<раздел>), и свои ca.pem, ca.next.pem кластера держателя (W2C_TLS_DIR); смена списка
               или строки — новые соединения видят новый набор; сертификат, не сходящийся ни к одному из них (центр
               чужой, цепочка или срок не те), — рукопожатие отказано (TLS alert), ответа HTTP нет; так же отказано листу
               клиента, у которого есть extendedKeyUsage без clientAuth (разбор ревью стадии A 8–10, № 35); член без
@@ -226,10 +226,10 @@ role:         двери, где важна роль: приём консоль�
               (signer класса signed выше; ADR-0083 доп. (20), доп. (21) п. 5)
 trust_set:    набор доверия двери роли — функция над прочитанным: свои ca.pem, ca.next.pem кластера держателя (W2C_TLS_DIR)
               ∪ сертификаты строки domain/members/<член>/ca-certs каждого члена, чей sha256 (fingerprint выше) стоит в
-              текущем Entry.ca этого члена в domain/members; член без Entry.ca (до отчёта с tls_ca) или только с
+              текущем Entry.ca этого члена в domain/member-rows/<раздел>; член без Entry.ca (до отчёта с tls_ca) или только с
               отпечатками без сертификатов — не входит; сертификат строки ca-certs, чьего отпечатка нет в Entry.ca, — не
-              входит; повтор — один (копию domain/member-list консоль домена не читает — P/10 Н1 «Данные»)
-unreadable:   domain/members нечитаема — в наборе только свои центры; строка ca-certs члена нечитаема или его Entry.ca не
+              входит; повтор — один (копию domain/member-list/<раздел> консоль домена не читает — P/10 Н1 «Данные»)
+unreadable:   domain/member-rows/<раздел> нечитаема — в наборе только свои центры; строка ca-certs члена нечитаема или его Entry.ca не
               по форме — член не входит: доверия меньше — безопасно (C10-SDK-ROLE83, решение «Архитектора» 2026-10-25);
               журнал — по смене: строка при переходе входа в нечитаемый и при возврате, не на каждое рукопожатие
               (C10-ROLE-LOG-C47, решение «Архитектора» 2026-10-25)

@@ -120,7 +120,7 @@ scenario	step	request	expect
 17-read-versions	2	holder PUT /domain/topology {"base_rev": 0, "centre": "hold"}	200 {"rev": 1}
 17-read-versions	3	holder GET /domain/topology	200 @header ETag: ~"
 17-read-versions	4	holder HEAD /domain/topology	200 @header ETag: ~"
-17-read-versions	5	holder GET /domain/members	200 @header ETag: ~"
+17-read-versions	5	holder GET /domain/members/hold	200 @header ETag: ~"
 17-read-versions	6	holder PUT /domain/placement/testsub/c1 {"cluster": "m1"}	200 {"cluster": "m1"}
 17-read-versions	7	holder GET /domain/placement/testsub/c1	200 @header ETag: ~"
 17-read-versions	8	holder PUT /domain/shared {"base_rev": 0, "shared": {"testsub": {"step": 4}}}	200 {"rev": 1}
