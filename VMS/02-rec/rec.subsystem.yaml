@@ -131,8 +131,8 @@ placement:
   # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
   # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB
   # — by the worst case: a backup recording (`when: offline`) holds its prebuffer of the stream, ~28 MB at
-  # 3.8 Mbit/s, inside unit_mb (1.73 + 28, +25 %): which rows a recorder will hold is not known at its start
-  capacity:   {from: capacity, default: 50, unit_mb: 38, base_mb: 51}         # cameras a recorder can write — its own number, from its heartbeat: disks and NIC
+  # 3.8 Mbit/s, inside unit_mb (1.73 + 31, a ring of 66 s, +25 %): which rows a recorder will hold is not known at its start
+  capacity:   {from: capacity, default: 50, unit_mb: 41, base_mb: 51}         # cameras a recorder can write — its own number, from its heartbeat: disks and NIC
   headroom:   {from: headroom}
   constraint: labels-subset
   # STILL `requires: resource` with the footage in obsd (the review's third pass asked why). The footage no longer
