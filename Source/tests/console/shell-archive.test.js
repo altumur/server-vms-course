@@ -1,5 +1,5 @@
 // Вкладка «Архив» камеры на странице VMS курса: её записи (/rec/recordings) — состояние словом, выключить и включить,
-// том, срок, «когда писать» у записи на карте (только у неё; том backup — всегда offline, ADR-0107 п. 4, V/02.6 Н1.4), «откуда» (replica_from), удалить после подтверждения — каждое действие
+// том, срок (выбора «когда писать» у записи нет: when пишется в строке тома, V/02.6 Н1.7, V/08.4 Н1.1), «откуда» (replica_from), удалить после подтверждения — каждое действие
 // сразу записью через console.api (PUT/DELETE /rec/recordings/<имя>); её удержания (/rec/keeps) — поставить (с — по,
 // зачем) и снять. Без rec в консоли — карточка «подсистема записи не подключена», без кнопок.
 const fs=require("fs"),path=require("path");
@@ -17,7 +17,7 @@ b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name"
 b.FIX["/cameras"]={configured:[{id:1,name:"ворота"}],rows:[{id:1,worker:"w-1",phase:"running"}]};
 b.FIX["/rec/recordings"]={configured:[{id:"1",cam:"1",home:"disk-a",retention_days:30,enabled:true},{id:"1-b",cam:"1",home:"bk",retention_days:7,enabled:false,when:"offline"},{id:"1-e",cam:"1",home:"sd",retention_days:7,enabled:true,when:"offline"}],
   rows:[{id:"1",worker:"r-1",server:"box-a",phase:"running"}]};
-b.FIX["/rec/volumes"]={volumes:[{name:"disk-a",server:"box-a",kind:"local",url:"file:///a",quota_bytes:1e11,enabled:true,held_by:"r-1"},{name:"bk",server:"box-b",kind:"backup",url:"file:///b",quota_bytes:1e11,enabled:true},{name:"sd",server:"box-a",kind:"edge",cam:"1",url:"file:///sd",quota_bytes:1e10,enabled:true}]};
+b.FIX["/rec/volumes"]={volumes:[{name:"disk-a",server:"box-a",kind:"local",url:"file:///a",quota_bytes:1e11,enabled:true,held_by:"r-1"},{name:"bk",server:"box-b",kind:"backup",url:"file:///b",quota_bytes:1e11,enabled:true},{name:"sd",server:"box-a",kind:"edge",url:"file:///sd",quota_bytes:1e10,enabled:true}]};
 b.FIX["/rec/keeps"]={keeps:[{name:"1-100-200",cam:"1",from:now-7200,to:now-3600,note:"кража",by:"murat",at:now-3000}]};
 b.FIX["/servers"]={servers:{"box-a":{resource:"live",workers:[]}},policy:{}};
 b.FIX["/events"]={events:[],state:"live"};
@@ -32,9 +32,8 @@ pc.select("unit:cam/1");await b.ready(60);
 main().querySelector('.pc-tabs [data-tab="rec"]').click();await b.ready(200);
 const t=tab().textContent+" "+[...tab().querySelectorAll("input")].map(x=>x.value).join(" | ");
 out.recordingsListed=/Запись камеры/.test(t)&&/том «disk-a»/.test(t)&&/Пишет/.test(t)&&/Выключена/.test(t)&&/r-1 · box-a/.test(t);
-// «когда писать» — только у записи на карте: том backup только offline, выбора нет (ADR-0107 п. 4, V/02.6 Н1.4, V/08.4 Н1.1)
-const whens=[...tab().querySelectorAll('[data-act="when"]')];
-out.whenOnlyOnCard=whens.length===1&&whens[0].dataset.rec==="1-e"&&whens[0].value==="offline";
+// выбора «когда писать» у записи нет, и у записи на карте тоже: when пишется в строке тома (V/08.4 Н1.1, V/02.6 Н1.7, V/02.1 Н1.2)
+out.noWhenAtRecord=tab().querySelectorAll('[data-act="when"]').length===0;
 // «откуда» — не у backup и не у карты; источник — архив устройства и записи камеры, кроме записей на backup (V/08.4 Н1.1)
 const replicas=[...tab().querySelectorAll('[data-act="replica"]')];
 out.replicaNotOnBackupOrCard=replicas.length===1&&replicas[0].dataset.rec==="1";
@@ -56,8 +55,6 @@ for(const v of ["1.9","1e2"]){const x=btn("days","1");x.value=v;n=w.__calls.leng
 out.waitingWord=w.eval("recState({row:{phase:'waiting'}}).label")==="Ждёт";
 btn("days","1").value="45";n=w.__calls.length;btn("days","1").dispatchEvent(new w.Event("change"));await b.ready(100);
 c=call(n,"PUT","/rec/recordings/1");out.days=!!c&&JSON.stringify(c.body)==='{"retention_days":45}';
-const wh=btn("when","1-e");wh.value="always";n=w.__calls.length;wh.dispatchEvent(new w.Event("change"));await b.ready(100);
-c=call(n,"PUT","/rec/recordings/1-e");out.when=!!c&&JSON.stringify(c.body)==='{"when":"always"}';
 const rp=btn("replica","1");rp.value="device";n=w.__calls.length;rp.dispatchEvent(new w.Event("change"));await b.ready(100);
 c=call(n,"PUT","/rec/recordings/1");out.replica=!!c&&JSON.stringify(c.body)==='{"replica_from":"device"}';
 n=w.__calls.length;btn("del","1-b").click();await b.ready(100);
