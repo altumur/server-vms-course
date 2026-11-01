@@ -191,15 +191,19 @@ components:
           type: array
           items: {type: string}
         can:
-          description: описание устройства без identity и channels, rays и relays — по живым детям хоста (V/01.4 Н1.4)
+          description: описание устройства без identity, channels и resolutions; rays и relays — номера живых детей хоста (V/01.4 Н1.4)
           type: object
           additionalProperties: false
           properties:
             events:
               type: array
               items: {type: string}
-            rays: {type: integer, minimum: 0}
-            relays: {type: integer, minimum: 0}
+            rays:
+              type: array
+              items: {type: integer, minimum: 1}
+            relays:
+              type: array
+              items: {type: integer, minimum: 1}
             ptz: {type: boolean}
             presets: {type: integer, minimum: 0}
         same_serial_as: {type: string}

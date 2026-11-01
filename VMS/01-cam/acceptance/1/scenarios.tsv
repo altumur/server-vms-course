@@ -1,6 +1,6 @@
 scenario	step	request	expect
 # Приёмка V/01.1: камера — единица (дверь единиц консоли cam, манифест VMS/01-cam/cam.subsystem.yaml). Формат — README.
-01-create	1	POST /cameras {"source": "driverpack://file/door.mp4"}	201 {"id": "1", "name": "cam1", "enabled": true, "priority": 100, "live": "always", "kind": "video", "labels": [], "revision": 1}
+01-create	1	POST /cameras {"source": "driverpack://file/door.mp4"}	201 {"id": "1", "name": "cam1", "enabled": true, "priority": 100, "live": "always", "type": "camera", "labels": [], "revision": 1}
 01-create	2	GET /cameras	200 {"configured": [{"id": "1", "name": "cam1", "source": "driverpack://file/door.mp4", "cred_secret": ""}]}
 01-create	3	POST /cameras {"source": "driverpack://file/second.mp4"}	201 {"id": "2", "name": "cam2"}
 01-create	4	PUT /cameras/2 {"priority": 50}	200 {"id": "2", "name": "cam2", "priority": 50}
@@ -28,28 +28,45 @@ scenario	step	request	expect
 08-streams	2	POST /cameras {"source": "rtsp://10.0.0.20/ch/2", "main": "$m", "profile": "сетка"}	201 {"id": "$s", "main": "$m", "profile": "сетка"}
 08-streams	3	PUT /cameras/$s {"main": "999"}	400 {"error": "fixed", "field": "/main", "detail": "~main is fixed"}
 08-streams	4	PUT /cameras/$s {"profile": "детекция"}	200 {"profile": "детекция", "main": "$m"}
-08-streams	5	PUT /cameras/$m {"grid": "$s"}	200 {"grid": "$s"}
+08-streams	5	PUT /cameras/$s {"resolution": "1280x720", "fps": 15}	200 {"resolution": "1280x720", "fps": 15}
+08-streams	6	PUT /cameras/$m {"nosuch": "$s"}	400 {"error": "unknown field", "field": "/nosuch"}
+08-streams	7	PUT /cameras/$s {"resolution": "1280"}	400 {"error": "type"}
+08-streams	8	PUT /cameras/$s {"fps": -1}	400 {"error": "type"}
 09-delete-camera	1	POST /cameras {"source": "rtsp://10.0.0.21/ch/1", "name": "Склад"}	201 {"id": "$m"}
 09-delete-camera	2	POST /cameras {"source": "rtsp://10.0.0.21/ch/2", "main": "$m", "profile": "сетка"}	201 {"id": "$s", "main": "$m"}
 09-delete-camera	3	DELETE /cameras/$m	200 {"deleted": "$m"}
 09-delete-camera	4	PUT /cameras/$s {"profile": "детекция"}	200 {"main": "$m", "profile": "детекция"}
 09-delete-camera	5	POST /cameras {"source": "rtsp://10.0.0.21/ch/3", "main": "$m"}	201 {"main": "$m"}
 09-delete-camera	6	DELETE /cameras/$s	200 {"deleted": "$s"}
-10-kind	1	POST /cameras {"source": "rtsp://10.0.0.30/ch/1", "kind": "thermal"}	400 {"error": "@any", "fault": "@absent"}
-10-kind	2	POST /cameras {"source": "rtsp://10.0.0.30/ch/1", "kind": "io"}	201 {"id": "@any", "kind": "io"}
-10-kind	3	POST /cameras {"source": "rtsp://10.0.0.31/ch/1", "kind": "video"}	201 {"id": "@any", "kind": "video"}
+10-type	1	POST /cameras {"source": "rtsp://10.0.0.30/ch/1", "type": "thermal"}	400 {"error": "enum", "fault": "@absent"}
+10-type	2	POST /cameras {"source": "rtsp://10.0.0.30/ch/1", "type": "ipsrv"}	201 {"id": "$i", "type": "ipsrv"}
+10-type	3	POST /cameras {"source": "rtsp://10.0.0.31/ch/1", "type": "camera"}	201 {"id": "$c", "type": "camera"}
+10-type	4	PUT /cameras/$c {"type": "ipsrv"}	400 {"error": "fixed", "field": "/type"}
+10-type	5	POST /cameras {"source": "rtsp://10.0.0.30/ch/2", "main": "$i"}	409 {"error": "conflict", "fault": "must_match"}
+10-type	6	POST /cameras {"source": "rtsp://10.0.0.31/ch/2", "main": "$c", "type": "ipsrv"}	409 {"error": "conflict", "fault": "must_match"}
+10-type	7	POST /cameras {"source": "rtsp://10.0.0.31/ch/3", "main": "$c"}	201 {"main": "$c", "type": "camera"}
+10-type	8	POST /cameras {"source": "rtsp://10.0.0.32/ch/1", "type": "eventsrc"}	201 {"type": "eventsrc"}
+10-type	9	POST /cameras {"source": "rtsp://10.0.0.33/ch/1", "type": "acfa"}	201 {"type": "acfa"}
 11-order	1	POST /cameras {"source": "RTSP://10.0.0.7:554/ch/1", "live": "sometimes"}	400 {"error": "@any", "fault": "@absent"}
 11-order	2	PUT /cameras/999 {"live": "sometimes"}	400 {"error": "@any"}
 12-children	1	POST /cameras {"source": "rtsp://10.0.0.24/ch/1"}	201 {"id": "$c"}
 12-children	2	GET /children	200 {"children": []}
 12-children	3	POST /children {"camera": "$c", "type": "sensor", "number": 1, "device": "10.0.0.24"}	403 {"error": "denied", "detail": "~written by its worker"}
 12-children	4	PUT /children/$c-sensor-1 {"camera": "$c"}	405 {"error": "@any"}
-12-children	5	POST /child_settings {"camera": "$c", "type": "relay", "number": 2, "title": "Замок"}	201 {"row": {"name": "@any", "title": "Замок", "enabled": true}}
+12-children	5	POST /child_settings {"camera": "$c", "type": "relay", "number": 2, "title": "Замок"}	201 {"row": {"name": "@any", "title": "Замок", "enabled": "@absent", "norm": "@absent"}}
 12-children	6	POST /child_settings {"camera": "$c", "type": "relay", "number": 2, "title": "Замок", "enabled": false}	201 {"row": {"name": "@any", "title": "Замок", "enabled": false}}
 12-children	7	POST /child_settings {"camera": "$c", "number": 3}	400 {"error": "@any"}
-12-children	8	POST /child_settings {"camera": "$c", "type": "mic", "number": 3}	400 {"error": "@any"}
+12-children	8	POST /child_settings {"camera": "$c", "type": "acfa_lock", "number": 3}	400 {"error": "@any"}
 12-children	9	POST /child_settings {"camera": "$c", "type": "relay", "number": 0}	400 {"error": "@any"}
 12-children	10	POST /child_settings {"camera": "$c", "kind": "relay", "type": "relay", "number": 3}	400 {"error": "unknown field", "field": "/kind"}
 12-children	11	GET /child_settings/$c-relay-2	200 {"title": "Замок", "enabled": false}
 12-children	12	DELETE /child_settings/$c-relay-2	200 {"deleted": "@any"}
-12-children	13	GET /child_settings/$c-relay-2	404
+12-children	13	GET /child_settings/$c-relay-2	404 {"error": "@any"}
+12-children	14	POST /child_settings {"camera": "$c", "type": "mic", "number": 1, "enabled": false}	201 {"row": {"name": "@any", "enabled": false}}
+12-children	15	POST /child_settings {"camera": "$c", "type": "spk", "number": 1, "title": "Динамик"}	201 {"row": {"name": "@any", "title": "Динамик"}}
+12-children	16	POST /child_settings {"camera": "$c", "type": "sensor", "number": 1, "norm": "ajar"}	400 {"error": "@any"}
+12-children	17	POST /child_settings {"camera": "$c", "type": "sensor", "number": 1, "norm": "closed"}	201 {"row": {"name": "@any", "norm": "closed", "enabled": "@absent"}}
+13-fields	1	POST /cameras {"source": "rtsp://10.0.0.34/ch/1", "lat": 55.75, "lon": 37.61, "azimuth": 0, "short": "3.3.1"}	201 {"id": "$c", "lat": 55.75, "lon": 37.61, "azimuth": 0, "short": "3.3.1"}
+13-fields	2	POST /cameras {"source": "rtsp://10.0.0.35/ch/1", "lat": "север"}	400 {"error": "type"}
+13-fields	3	PUT /cameras/$c {"lat": null}	200 {"lat": "@absent", "lon": 37.61}
+13-fields	4	POST /cameras {"source": "rtsp://10.0.0.36/ch/1", "type": "ipsrv", "mac": "00:11:22:33:44:55"}	201 {"type": "ipsrv", "mac": "00:11:22:33:44:55"}

@@ -24,7 +24,11 @@
      },
      "value": {
       "type": "string",
-      "description": "слово устройства как есть"
+      "enum": [
+       "open",
+       "closed"
+      ],
+      "description": "closed — начало тревоги, open — конец: от norm входа (V/01.4 Н1.4а)"
      }
     },
     "required": [

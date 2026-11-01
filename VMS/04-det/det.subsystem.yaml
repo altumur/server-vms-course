@@ -21,6 +21,8 @@ unit:
     # empty — the camera's main stream. The user's choice; the door checks it is this camera's stream, the worker again.
     stream:    {type: string, ref: cam/cameras, must_match: {main: cam}}
     kind:      {type: string, required: true}      # which model: motion | linecross | lpr | …
+    # What people call it: free text, unlike `name`, which is the row's key. Nobody but `backend` and the page reads it.
+    title:     {type: string}
     params:    {type: string}                      # the model's settings, opaque to the platform; bounded by the row limit
     # The one thing about a detector that does not fit in a row. A polygon mask is a few hundred bytes and
     # belongs in `params`; a per-pixel one is 345 KB and belongs here — the row keeps the digest, the bytes
@@ -57,6 +59,7 @@ display:
     folders: true                      # a detector is a member of the cluster's folders, as a camera (P/06.8 Н1.1; ADR-0096 §1)
   fields:
     name: Имя детектора
+    title: Название
     cam: Камера
     stream: Поток
     kind: Модель

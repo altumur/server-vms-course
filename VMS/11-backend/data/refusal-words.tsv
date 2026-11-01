@@ -17,10 +17,19 @@ devices	409	NAME_TAKEN	detectorKind	11.4 Н4: 412 row moved строки det/uni
 devices	409	NAME_TAKEN	name	11.4 Н4: 412 row moved строки rec/volumes/<name> с cas ""
 devices	422	NAME_REQUIRED	name	11.3 Н4: пустое имя устройства, хранилища
 devices	422	VALIDATION_FAILED	ip	11.4 Н4: 409 unique (адрес камеры); 11.3 Н4: нет ip, PATCH ip: null
+devices	422	VALIDATION_FAILED	rtspUrl	11.3 Н4: создание без rtspUrl и без vendor, model
+devices	422	VALIDATION_FAILED	videoChannel	11.3 Н4: videoChannel меньше 1
+devices	422	VALIDATION_FAILED	detectorKind	11.4 Н1.2: создание детектора без вида
 devices	422	VALIDATION_FAILED	<поле>	11.4 Н4: 409 ref, must_match, fixed
 devices	422	VALIDATION_FAILED	-	11.4 Н4: 413 batch too large
 devices	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.4: иное тело, иная операция с тем же ключом
-devices	422	NOT_SUPPORTED	type	11.3 Н4: вид устройства
+devices	422	NOT_SUPPORTED	type	11.3 Н4: вид устройства; 11.4 Н1.2: DELETE, PATCH channel, storage, детей
+devices	422	NOT_SUPPORTED	stream	11.3 Н4: нет прочего потока, иное слово
+devices	422	NOT_SUPPORTED	<поле>	11.3 Н4: поля адреса рядом с rtspUrl, адрес не ipint://, смена хоста ipsrv, configMode, children; 11.4 Н1.2: ipsrv без строки
+devices	409	IDENTIFIER_TAKEN	identifier	11.4 Н1.2, Н1.5: занятый номер
+devices	422	PARENT_MISMATCH	parentId	11.4 Н1.5: parentId создания
+devices	-	IDENTIFIER_TAKEN	identifier	11.4 Н1.5: failed элемента, статус 200
+devices	-	PARENT_MISMATCH	parentId	11.4 Н1.5: failed элемента, статус 200
 devices	422	NOT_SUPPORTED	recordMode	11.2, 11.3 Н4: motion, sched
 devices	422	NOT_SUPPORTED	encrypted	11.3 Н4
 devices	422	NOT_SUPPORTED	name	11.3 Н4
@@ -34,6 +43,7 @@ folders	412	VERSION_MISMATCH	-	11.4 Н4: folder moved; current
 folders	422	VALIDATION_FAILED	deviceIds	11.4 Н4: bad member, too many folders, too many members, row too large; 11.4 Н1.7: id вне перечня вида
 folders	422	VALIDATION_FAILED	parentId	11.4 Н4: too deep
 folders	422	NAME_REQUIRED	name	11.4 Н1.7
+folders	422	NOT_SUPPORTED	<поле>	11.4 Н1.7: член папки — не единица
 operations	404	NOT_FOUND	-	11.4 Н4: no such operation, no operations
 operations	409	BUSY	-	11.4 Н4: root busy, operation done, operation running, nothing to retry
 operations	422	VALIDATION_FAILED	items	11.4 Н4: too many steps, too many operations; 11.4 Н1.8: шаг не ровно с одним из set, folderIds, create, пустой items

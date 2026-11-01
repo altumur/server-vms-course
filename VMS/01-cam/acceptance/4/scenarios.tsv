@@ -7,3 +7,12 @@ scenario	step	request	expect
 01-no-device	5	POST /requests {"unit": "$c1", "action": "output"}	@oneof 202 {"queued": "@any"} | 200 {"answered": {"outcome": "refused", "error": "camera has no device"}}
 01-no-device	6	@until 30 GET /events?unit=cam/$c1&kind=command.failed	200 {"events": [{"kind": "command.failed", "of": "cam/1", "outcome": "refused", "action": "output", "error": "camera has no device"}, {"kind": "command.failed", "of": "cam/1", "outcome": "refused", "action": "output", "error": "camera has no device"}]}
 01-no-device	7	POST /requests {"unit": "$c1", "action": "output", "port": "@big(33)"}	400 {"error": "@any"}
+02-owner	1	@manual подставной драйвер с моделью на несколько видео (Drivers/Virtual такой не имеет): один блок на многоканальной — на строке ipsrv при любом relatedChannel	manual
+02-owner	2	@manual блок с relatedChannel в пределах channels — на камере этого индекса; блок с -1 и блок с индексом вне channels — на строке ipsrv; блок без поля — по индексу блока	manual
+02-owner	3	@manual блок канала без заведённой камеры детей не даёт и без warning; появилась основная строка без индекса — блок не решается, строки не тронуты, warning	manual
+02-owner	4	@manual выключенная камера хозяина не меняет; две строки с одним индексом — хозяин наименьший id; videos в cam/devices пишется при смене строк группы без описания	manual
+02-owner	5	@manual can камеры канала: rays, relays — списки номеров её детей, номера могут идти не с 1; output с port не из relays этой камеры — refused «no such output»	manual
+02-owner	6	@manual смена хозяина: выключенный выход остаётся выключенным; enabled: true в настройке нынешней строки включает его, строка gone остаётся	manual
+03-norm	1	@manual подставной драйвер: норма open — замыкание даёт io.input value closed, размыкание value open; норма closed — размыкание даёт value closed, замыкание value open	manual
+03-norm	2	@manual выключенный sensor: события нет, inputs_off растёт; хозяин unlicensed: события нет, events_refused растёт	manual
+03-norm	3	@manual слово драйвера о контакте, которое реализация не переводит в open, closed: события нет, events_refused растёт; перевод — в описании реализации	manual

@@ -40,7 +40,7 @@ n	method	path	profile	why
 33	GET	/volumes	in	переводится (V/11.2)
 34	GET	/volumes/{volumeId}	in	переводится (V/11.2)
 35	PATCH	/volumes/{volumeId}	in	переводится (V/11.2)
-36	DELETE	/volumes/{volumeId}	in	переводится: том вместе с записями на нём одним пакетом (V/11.2, V/11.4 Н1.2)
+36	DELETE	/volumes/{volumeId}	out	404 NO_ROUTE: хранилище = один том, том отдельно не снимается (V/11.2 № 36); тест объявлен needs deleteVolume
 37	POST	/volumes/{volumeId}/format	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 38	POST	/operations	in	переводится (V/11.4 Н1.8)
 39	GET	/operations/{operationId}	in	переводится (V/11.4 Н1.8)
@@ -85,7 +85,7 @@ n	method	path	profile	why
 78	GET	/access	in	переводится (V/11.8)
 79	GET	/settings	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 80	PATCH	/settings	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-81	GET	/licenses	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+81	GET	/licenses	in	переводится, только чтение (V/11.2 № 81, V/11.3 Н1.3)
 82	GET	/journal	in	переводится (V/11.2)
 83	GET	/stream	in	переводится (V/11.2)
 84	POST	/test/reset	stand	только на стенде: TEST_SUPPORT=1 и отметка петли консоли (V/11.6 Н1.3); test.reset не шлётся
