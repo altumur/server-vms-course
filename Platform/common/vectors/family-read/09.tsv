@@ -1597,3 +1597,9 @@ c09_member_want.003	domain/member-want/<раздел>	domain/member-want/0042	ro
 c09_member_want.004	domain/member-want/<раздел>	domain/member-want/0042	row	reader	["domainagent"]	null	refused	[""]	{"domainagent": [""]}	root null
 c09_member_want.005	domain/member-want/<раздел>	domain/member-want/0042	row	writer	["console", "<s>worker", "domainagent"]	{	refused	[""]	[]	not JSON
 c09_member_want.006	domain/member-want/<раздел>	domain/member-want/0042	row	reader	["domainagent"]	{	refused	[""]	{"domainagent": [""]}	not JSON
+c09_relay_for.001	domain/relay-for	domain/relay-for	row	writer	["domainagent"]	{"rev":"1","members":"[]"}	ok	[]	[]	base
+c09_relay_for.002	domain/relay-for	domain/relay-for	row	reader	["domainagent", "<s>worker"]	{"rev":"1","members":"[]"}	ok	[]	{"domainagent": [], "<s>worker": []}	base
+c09_relay_for.003	domain/relay-for	domain/relay-for	row	writer	["domainagent"]	null	refused	[""]	[]	root null
+c09_relay_for.004	domain/relay-for	domain/relay-for	row	reader	["domainagent", "<s>worker"]	null	refused	[""]	{"domainagent": [""], "<s>worker": [""]}	root null
+c09_relay_for.005	domain/relay-for	domain/relay-for	row	writer	["domainagent"]	{	refused	[""]	[]	not JSON
+c09_relay_for.006	domain/relay-for	domain/relay-for	row	reader	["domainagent", "<s>worker"]	{	refused	[""]	{"domainagent": [""], "<s>worker": [""]}	not JSON

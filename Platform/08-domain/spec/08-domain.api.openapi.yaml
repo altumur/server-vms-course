@@ -2304,7 +2304,7 @@ components:
               minItems: 2
               items:
                 $ref: '#/components/schemas/MemberName'
-      description: 'Вид домена (P/08.1 Н1.4). Поля других глав (trust — 8.1 Н1.2а; member_list, knocking, reports — 8.1 Н1.7;
+      description: 'Вид домена (P/08.1 Н1.4). Поля других глав (trust — 8.1 Н1.2а; knocking, reports — 8.1 Н1.7;
         topology, relay_refused — 8.1 Н1.6а; books — 8.5; pending, outcomes — 8.6; url — глава P/06.7 (адрес пересылки); term — 8.8;
         shared — 8.9) задают их главы; отданный вид (ServedView) закрыт и называет их.'
     ServedView:
@@ -2316,7 +2316,7 @@ components:
           properties:
             age: {type: number, minimum: 0, description: 'поле двери урока P/10: секунды с as_of по стенным часам консоли домена, один знак после точки (P/10 Н1.2а; разбор ревью стадии B 8–10, № 22: М-7)'}
             trust: {description: 'P/08.1 Н1.2а: {rev, root, book_seal}; отпечаток — глава 8.2 Н1.1'}
-            member_list: {description: 'P/08.1 Н1.7: {rev, members}'}
+            knocking_count: {type: integer, minimum: 0, description: 'P/08.1 Н1.4б.'}
             knocking: {description: 'P/08.1 Н1.7: [knock…]'}
             reports: {description: 'P/08.1 Н1.7; via — P/08.1 Н1.6а'}
             topology: {description: P/08.1 Н1.6а}
@@ -2742,6 +2742,10 @@ components:
         rev: {type: integer, minimum: 0}
         centre: {$ref: '#/components/schemas/MemberName'}
         star:
+          type: array
+          uniqueItems: true
+          items: {$ref: '#/components/schemas/MemberName'}
+        relays:
           type: array
           uniqueItems: true
           items: {$ref: '#/components/schemas/MemberName'}

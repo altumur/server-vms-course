@@ -45,7 +45,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 19 строк: 18 вычислено, 1 `@exit 2` | `input` — вход `assemble` текстом JSON → `expect`: строки `rows` (доставка только членам из `to`, порядок `entries` по (member, item), `missing` с закрытыми словами, ключ конфликта `unique` и недоставленный по гранту — `"@absent"`, открытый секрет в `value`) и `report` (`conflicts`, `dropped` — `bad_contribution`, `secret_unopened`, `undelivered`); `@exit 2` — `grants` без `now` |
+| [`cases.tsv`](cases.tsv), 20 строк: 19 вычислено, 1 `@exit 2` | `input` — вход `assemble` текстом JSON → `expect`: строки `rows` (доставка только членам из `to`, порядок `entries` по (member, item), `missing` с закрытыми словами, ключ конфликта `unique` и недоставленный по гранту — `"@absent"`, открытый секрет в `value`) и `report` (`conflicts`, `dropped` — `bad_contribution`, `secret_unopened`, `undelivered`); `@exit 2` — `grants` без `now` |
 
 | Случаи | Что проверяет |
 |---|---|

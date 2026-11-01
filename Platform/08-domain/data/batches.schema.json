@@ -609,6 +609,14 @@
     "at": {
      "$ref": "#/$defs/common.time",
      "description": "когда записал (стенные секунды консоли)"
+    },
+    "relays": {
+     "description": "кто ведёт хотя бы одного члена (P/08.3 Н1.2)",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.domain_member"
+     },
+     "uniqueItems": true
     }
    },
    "additionalProperties": false,
