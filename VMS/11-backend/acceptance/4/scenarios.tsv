@@ -663,4 +663,4 @@ scenario	step	request	expect
 23-folders-offline	20	@until 30 member m1 console2 POST /api/devices {"idempotencyKey": "off-2", "items": [{"device": {"type": "camera", "name": "c3", "ip": "10.9.9.3", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": "$f"}]}	200 {"done": [{"index": 0, "folders": [{"id": "$f"}]}], "failed": []}
 23-folders-offline	21	@until 30 member m1 console GET /folders?member=cam%2Fcameras%2F3	200 {"folders": [{"name": "f"}]}
 23-folders-offline	22	@manual чужая единица в PATCH deviceIds: GET и PUT /domain/memberof другого кластера: на стенде камеры только у m1, вид держателя их не несёт на этом шаге	manual
-22-foreign	18	@manual второй член: GET /rules/{id}/fires чужого правила — дверь /domain/at/<кластер>/events; член за NAT — 200 с пустым items и X-Unreachable, versions так же; правка правила за NAT — строка auto/versions связкой, номер revision + 1	manual
+22-foreign	18	@manual второй член: GET /rules/{id}/fires чужого правила — дверь /domain/at/<кластер>/events; член за NAT — 200 с пустым items, versions так же; правка правила за NAT — строка auto/versions связкой, номер revision + 1	manual
