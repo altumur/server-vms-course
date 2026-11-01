@@ -6448,13 +6448,18 @@ components:
           type: array
           items:
             type: object
-            required: [id, index]
+            required: [id, index, revision]
             additionalProperties: false
             properties:
               id:
                 $ref: '#/components/schemas/UnitId'
               index:
                 $ref: '#/components/schemas/StoreIndex'
+              revision:
+                type: integer
+                minimum: 0
+                maximum: 9007199254740991
+                description: revision надгробия; 0 — revision не читается.
     Where:
       type: object
       required:

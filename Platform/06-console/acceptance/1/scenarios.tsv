@@ -424,7 +424,7 @@ scenario	step	request	expect
 40-deleted-about	7	console2 DELETE /tallies/t2	200 {"deleted": "t2"}
 40-deleted-about	8	console2 DELETE /tallies/t1	200 @header ETag: ~"
 40-deleted-about	9	console2 DELETE /tallies/t3	200 {"deleted": "t3"}
-40-deleted-about	10	console2 GET /tallies?deleted=1&about=c1	200 {"deleted": [{"id": "t1", "index": "$x"}, {"id": "t2", "index": "$y"}]}
+40-deleted-about	10	console2 GET /tallies?deleted=1&about=c1	200 {"deleted": [{"id": "t1", "index": "$x", "revision": 1}, {"id": "t2", "index": "$y", "revision": 1}]}
 40-deleted-about	11	console2 GET /tallies?deleted=1&about=c2	200 {"deleted": [{"id": "t3", "index": "@any"}]}
 40-deleted-about	12	console2 GET /tallies?deleted=1&about=nosuch	200 {"deleted": []}
 40-deleted-about	13	console2 GET /tallies?deleted=1	400 {"error": "refused"}
