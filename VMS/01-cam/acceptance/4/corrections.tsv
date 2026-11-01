@@ -12,3 +12,4 @@ date	sample	fix	languages
 2026-11-01	4/scenarios.tsv: 04-sound шаг 5	TALK_SILENT: 8 с без кадра — HangUp (ревью pos, С-11)	all
 2026-11-01	4/scenarios.tsv: 01-no-device, шаг 3	камера без потребителя — idle (ADR-0107 доп. (2) п. 1)	all
 2026-11-01	4/scenarios.tsv: 05-builtin, 05-ptz	новые сценарии, @manual: аналитики и телеметрии в подставном драйвере нет (ADR-0107 пп. 8, 9, доп. (2) п. 3)	all
+2026-11-01	4/scenarios.tsv: 02-owner шаг 7	обязательный перечень повторяется, пока не пройдёт (Quint v014o В3)	all
