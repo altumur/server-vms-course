@@ -29,7 +29,7 @@ scenario	step	request	expect
 08-streams	3	PUT /cameras/$s {"main": "999"}	400 {"error": "fixed", "field": "/main", "detail": "~main is fixed"}
 08-streams	4	PUT /cameras/$s {"profile": "детекция"}	200 {"profile": "детекция", "main": "$m"}
 08-streams	5	PUT /cameras/$s {"resolution": "1280x720", "fps": 15}	200 {"resolution": "1280x720", "fps": 15}
-08-streams	6	PUT /cameras/$m {"grid": "$s"}	400 {"error": "unknown field", "field": "/grid"}
+08-streams	6	PUT /cameras/$m {"nosuch": "$s"}	400 {"error": "unknown field", "field": "/nosuch"}
 08-streams	7	PUT /cameras/$s {"resolution": "1280"}	400 {"error": "type"}
 08-streams	8	PUT /cameras/$s {"fps": -1}	400 {"error": "type"}
 09-delete-camera	1	POST /cameras {"source": "rtsp://10.0.0.21/ch/1", "name": "Склад"}	201 {"id": "$m"}

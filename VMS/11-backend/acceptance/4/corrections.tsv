@@ -1,1 +1,2 @@
 date	sample	fix	languages
+2026-11-01	4/scenarios.tsv	11-devices: новый сценарий; камеры сценариев — с vendor, model: без адреса создания нет (V/11.3 Н1.3); 05-resume: body пересчитан; 07-profile: DELETE /volumes — NO_ROUTE, source ipint://	-

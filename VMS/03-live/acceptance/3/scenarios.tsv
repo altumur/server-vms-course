@@ -1,0 +1,9 @@
+scenario	step	request	expect
+# Приёмка V/03.3: выбор потока по размеру при двух потоках. Формат — README.
+01-size	1	@manual стенд WHEP с воркером live и клиентом WebRTC: ?width=320&height=180 и ?width=640&height=360 — 201, в журнале live.view поток 640x360; ?width=641&height=360 — поток 1920x1080	manual
+01-size	2	@manual ?width=3840&height=2160 больше всех — самый крупный, 1920x1080	manual
+01-size	3	@manual ни resolution, ни size ни у одного потока (первый проход, источник не поднят) — основной	manual
+01-size	4	@manual ?stream=<прочий>&width=1920&height=1080 — названный поток, размер не судит; ?stream=&width=320&height=180 — выбор по размеру	manual
+01-size	5	@manual малый поток H.265, основной H.264, оффер только H.264, окно малое — малый отсеян, выбран основной; оффер только VP8 — основной, 400 bad offer	manual
+01-size	6	@manual раздача ref:<ref> с ?width=320&height=180 — основной поток, отказа нет	manual
+01-size	7	@manual ?width=320 без height, ?width=0&height=0, ?width=a&height=1, повтор width — 400 bad query	manual

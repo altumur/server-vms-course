@@ -71,7 +71,9 @@ door:
     # (ADR-0094 доп. (7)), its operations answer 404 NO_ROUTE. The doors of the domain judge the person, not backend (V/11.8).
     calls:
       - cam/cameras                  # the rows of cam, their tombstones (V/01.1)
-      - cam/devices
+      - cam/devices                  # what a host turned out to be: channels, videos — the tree of a device (V/11.3 Н1.3)
+      - cam/children                 # the holder's rows of a device's inputs, outputs and sound (V/01.1 Н1.2а)
+      - cam/child_settings           # the operator's words on them; a PATCH merges: a POST of the table replaces the row (V/11.4 Н1.2)
       - cam/next_id                  # a new camera names its number itself (V/11.4 Н1.2)
       - rec/recordings               # the rows of rec, their tombstones (V/02.1)
       - rec/volumes

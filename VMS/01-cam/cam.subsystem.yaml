@@ -30,7 +30,7 @@ worker: {exec: /usr/lib/cam/worker, writes: [devices, children], reads: [domain/
 # declares `worker.uses: [cam.shm]` (ADR-0091 п. 5) and takes the exact address from the pulse (`live_shm`).
 shares: {shm: {kind: dir}}
 # A STREAM IS A UNIT, A CAMERA IS ITS MAIN STREAM (the owner's decision 2026-10-26, V/01.1 Н1.1а). A device gives a
-# camera several streams — the full picture to record, a small one for a grid, one for a detector — and each is a row
+# camera several streams — the full picture to record, a small one to watch, one for a detector — and each is a row
 # of its own here: its address, its holder, its fan-out. What belongs to the CAMERA — the place's name, the labels
 # and so the grants, the domain's `ref`, the device's commands, events and alarms — lives only in the main stream's
 # row; another stream says only its `source`, its `profile` and `main: <the main's id>`. So a stream is ABOUT its

@@ -56,7 +56,7 @@ scenario	step	request	expect
 03-pair	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
 03-pair	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
 03-pair	5	holder POST /domain/users {"name": "ann", "password": "ann-password-1"}	201 {"user": "ann"}
-03-pair	6	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.1"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.2"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"failed": []}
+03-pair	6	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.1", "vendor": "acme", "model": "m1"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.2", "vendor": "acme", "model": "m1"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"failed": []}
 03-pair	7	member m1 console2 POST /api/folders {"name": "f1", "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null}	201 {"id": "$f1"}
 03-pair	8	member m1 console2 POST /api/folders {"name": "f2", "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null}	201 {"id": "$f2"}
 03-pair	9	member m1 console2 GET /api/access	200 {"version": "$v"}
@@ -80,7 +80,7 @@ scenario	step	request	expect
 04-levels	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 04-levels	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
 04-levels	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
-04-levels	5	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.1"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"failed": []}
+04-levels	5	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.1", "vendor": "acme", "model": "m1"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"failed": []}
 04-levels	6	member m1 console2 POST /api/folders {"name": "f", "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null}	201 {"id": "$f"}
 04-levels	7	member m1 console GET /folders	200 {"folders": [{"id": "$fid"}]}
 04-levels	8	member m1 console2 GET /api/access	200 {"version": "$v"}
