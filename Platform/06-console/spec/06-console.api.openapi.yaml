@@ -5295,6 +5295,53 @@ paths:
           description: как у GET, без тела
         default:
           description: ответ консоли домена на HEAD как пришёл, без тела
+  /domain/at/{cluster}/events:
+    description: 'Глава 6.7 Н1.6 read (ADR-0111 п. 15) — чтение журнала у консоли другого члена; право судит консоль цели.'
+    parameters:
+    - name: cluster
+      in: path
+      required: true
+      description: Имя члена домена (глава 6.7 Н1.6 member; P/08.3 Н1.1).
+      schema:
+        $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName'
+    get:
+      summary: Журнал у консоли другого члена (Н1.6)
+      responses:
+        '200':
+          $ref: '#/components/responses/AtAnswer'
+        '400':
+          $ref: '#/components/responses/AtBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/AtNotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '502':
+          $ref: '#/components/responses/ForwardFailed'
+        '503':
+          $ref: '#/components/responses/ForwardUnavailable'
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (глава 6.5 Н2)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '429':
+          description: как у GET, без тела
+        '502':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
   /domain/at/{cluster}/{sub}/{rows}:
     description: 'Глава 6.7 Н1.6 read (ADR-0111 п. 15) — чтение списка у консоли другого члена; право судит консоль цели.'
     parameters:

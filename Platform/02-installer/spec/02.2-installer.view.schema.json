@@ -1452,6 +1452,7 @@
    "anyOf": [
     {
      "enum": [
+      "GET domain/at/events",
       "domain/roles/lines",
       "GET domain/memberof",
       "domain/edits",

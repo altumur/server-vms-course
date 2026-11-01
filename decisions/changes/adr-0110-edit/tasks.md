@@ -12,3 +12,5 @@ ADR-0110 разбор, шаг 4; ADR-0111 п. 16. Случаи `a110_edit_*`. Р
 | C08-REF-SIBLINGS-01 | `?id=`, `id` строки связки, 409 `siblings`; `conflict` теневого отчёта по одному id | [x] | [ ] | [ ] |
 | C08-KEPT-TABLES-01 | к шагу 8: `calls` `domain/edits`, `domain/members`, `domain/placement`; адрес (cluster, id) без ref; `server` таблицы; `outcomes` незрителю по `by`; `made` исхода; `members[].url`, `PUBLIC_URL`; `ETag` снимка | [x] | [ ] | [ ] |
 | C08-ROLE-SPREAD-01, C08-SHARED-FOLDERS-01 | к шагу 8: `calls` `domain/roles/lines`, `GET domain/memberof`; `lines` в `RoleView`; проход не трогает `unit:`; `GET /domain/memberof`; суд `/domain/batch` по строке | [x] | [ ] | [ ] |
+| C08-NAME-UNIQUE-01 | имя кластера уникально на домен: приём (ADR-0110 доп. (8)) | [x] | [ ] | [ ] |
+| C06-AT-READ-01 | журнал у другого члена `GET /domain/at/<кластер>/events`, `calls` `GET domain/at/events` | [x] | [ ] | [ ] |
