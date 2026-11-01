@@ -1,0 +1,4 @@
+# Исходы нечитаемой строки domain/ref-claims/… (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	domain	строка целиком нечитаема: дверь правки по этому ref — 503 unavailable; проход переписывает; журнал без значения	1	строка	P/08.1 Н1.4б

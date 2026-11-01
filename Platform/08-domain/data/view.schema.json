@@ -429,16 +429,25 @@
      ]
     }
    }
+  },
+  "parts": {
+   "description": "непустые разделы последнего круга: раздел → as_of (Н1.4б)",
+   "type": "object",
+   "additionalProperties": {
+    "type": "number"
+   }
+  },
+  "counts": {
+   "description": "{servers, cameras} (Н1.4б)",
+   "type": "object",
+   "x-opaque": true
   }
  },
  "additionalProperties": false,
  "required": [
   "as_of",
   "holder",
-  "complete",
-  "members",
-  "units",
-  "contested"
+  "complete"
  ],
  "$defs": {
   "age": {
