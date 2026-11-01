@@ -3076,3 +3076,11 @@ c08_folder_rev.005	domain/folder-rev	domain/folder-rev	row	writer	["domain"]	{	r
 c08_folder_rev.006	domain/folder-rev	domain/folder-rev	row	reader	["domain"]	{	refused	[""]	{"domain": [""]}	not JSON
 c08_folder_rev.007	domain/folder-rev	domain/folder-rev	row	writer	["domain"]	{"term":"1"}	refused	["/rev"]	[]	: without required rev
 c08_folder_rev.008	domain/folder-rev	domain/folder-rev	row	reader	["domain"]	{"term":"1"}	refused	["/rev"]	{"domain": [""]}	: without required rev
+c08_issued.001	domain/issued/<sub>/<вид>/<sha16>	domain/issued/testsub2/feed/0123456789abcdef	row	writer	["domain"]	{"ref":"a","jti":"0123456789abcdef","exp":"1","member":"m1","at":"1"}	ok	[]	[]	base
+c08_issued.002	domain/issued/<sub>/<вид>/<sha16>	domain/issued/testsub2/feed/0123456789abcdef	row	reader	["domain"]	{"ref":"a","jti":"0123456789abcdef","exp":"1","member":"m1","at":"1"}	ok	[]	{"domain": []}	base
+c08_issued.003	domain/issued/<sub>/<вид>/<sha16>	domain/issued/testsub2/feed/0123456789abcdef	row	writer	["domain"]	null	refused	[""]	[]	root null
+c08_issued.004	domain/issued/<sub>/<вид>/<sha16>	domain/issued/testsub2/feed/0123456789abcdef	row	reader	["domain"]	null	refused	[""]	{"domain": [""]}	root null
+c08_issued.005	domain/issued/<sub>/<вид>/<sha16>	domain/issued/testsub2/feed/0123456789abcdef	row	writer	["domain"]	{	refused	[""]	[]	not JSON
+c08_issued.006	domain/issued/<sub>/<вид>/<sha16>	domain/issued/testsub2/feed/0123456789abcdef	row	reader	["domain"]	{	refused	[""]	{"domain": [""]}	not JSON
+c08_issued.007	domain/issued/<sub>/<вид>/<sha16>	domain/issued/testsub2/feed/0123456789abcdef	row	writer	["domain"]	{"ref":"a"}	refused	["/at", "/exp", "/jti", "/member"]	[]	: without required
+c08_issued.008	domain/issued/<sub>/<вид>/<sha16>	domain/issued/testsub2/feed/0123456789abcdef	row	reader	["domain"]	{"ref":"a"}	refused	["/at", "/exp", "/jti", "/member"]	{"domain": [""]}	: without required
