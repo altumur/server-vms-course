@@ -9,3 +9,4 @@ date	sample	fix	languages
 2026-10-31	1/scenarios.tsv: 01-create, шаг 1	поля `folders` у камеры нет: папки — записи кластера, поле ушло без переноса (ADR-0096 §8)	all
 2026-10-31	1/scenarios.tsv: 02-numeric 1, 04-credentials 1, 04-credentials 2, 04-credentials 3, 05-bound 2, 08-streams 3	error — слово перечня и field, фраза в detail (ADR-0094 доп. (13), B5)	all
 2026-11-01	1/scenarios.tsv: 01-create шаг 1, 10-type, 08-streams шаги 5–8, 12-children шаги 5, 8, 14–17, 13-fields	type вместо прежнего поля вида: enum, fixed, пара потока и main на одном type (must_match); grid, full сняты, resolution, fps; enabled без умолчания, norm, mic, spk в child_settings; поля оператора lat, lon, azimuth, short, mac (ADR-0102 доп. (4)–(7), (10), ADR-0104)	all
+2026-11-01	1/scenarios.tsv: 14-eventsrc, 15-units	новые сценарии: поля строки eventsrc camera, words, overlay_*; таблицы device_units, unit_next (ADR-0102 доп. (9), (10))	all

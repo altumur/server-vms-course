@@ -1,3 +1,9 @@
 date	sample	fix	languages
 2026-11-01	4/scenarios.tsv	11-devices: новый сценарий; камеры сценариев — с vendor, model: без адреса создания нет (V/11.3 Н1.3); 05-resume: body пересчитан; 07-profile: DELETE /volumes — NO_ROUTE, source ipint://	-
 2026-11-01	4/scenarios.tsv	разбор ревью слоя: 11-devices — поля мастера, смена хоста ipsrv, поток за камерой, parentId при несказанном channels; 07-profile — GET /licenses	-
+2026-11-01	4/scenarios.tsv	11-devices шаг 5: deviceTypes с единицами и relay; 13-units: новый сценарий, единицы acfa_*, eventsrc (ADR-0102 доп. (9), (10))	-
+2026-11-01	4/scenarios.tsv: 11-devices, шаг 53	enabled у mic, spk действует, audio записи не снимается; @manual (ADR-0102 доп. (9) п. 7)	-
+2026-11-01	4/scenarios.tsv	14-discovery, 15-probe: новые сценарии поиска и вопроса о модели на двойнике (ADR-0103 доп. (1)); строки держателя кладёт дверь хранилища	-
+2026-11-01	4/scenarios.tsv: 14-discovery	ключ находки — MAC и адрес (V/01.8 Н1.2): h и id кандидата пересчитаны	-
+2026-11-01	4/scenarios.tsv	13-units, шаги 22–24: номер единицы — после строки, заведённой дверью таблиц мимо счётчика (ревью POS, Б-3)	-
+2026-11-01	4/scenarios.tsv	13-units, шаги 25–39: controller — запись acfa с родителем: цепочка, выбор шаблона model, два узла одного шаблона, снятие с вложенными (слово «Архитектора» по Б-3, С-6 ревью POS)	-

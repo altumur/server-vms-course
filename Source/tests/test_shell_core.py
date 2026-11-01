@@ -7,7 +7,7 @@ is ONE code for the course and the product: `whereAt`, `doorOf`, `doorFetch`, `y
 skipped: the course builds alone.
 
 What differs is the debt, `testdata/shell_core_debt.txt` — where the course leads and the product has not followed yet
-(empty now: the product followed the last of it, the places read at `/rec/<table>`), one line per line of the diff:
+(now the rename `spec` → `manifest` of ADR-0086, the product stands paused), one line per line of the diff:
 
     <function> | <+ the course's line, - the product's> | <sha1 of the line, stripped, first eight hex digits> | <text>
 
@@ -28,7 +28,7 @@ from tests.productdir import SOURCE, product_file
 CORE = ("whereAt", "doorOf", "doorFetch", "yieldCut", "loadTimeline", "segmentURL", "play", "playNext",
         "negotiateLive", "stopLive")
 PRODUCT = "vmsworker/vms/cam.shell.html"
-OURS = os.path.join(SOURCE, "vms", "cam.shell.html")
+OURS = os.path.join(SOURCE, "vms", "cam.shell.html")   # the frozen witness; the canon page VMS/01-cam/cam.shell.html is not compared (V/08.1 «Соответствие»)
 BEGIN, END = "// ── core: COPY WITH A CHECK", "// ── end of core"
 DEBT = os.path.join(SOURCE, "tests", "testdata", "shell_core_debt.txt")
 HEAD = ("# shell_core_debt.txt — the lines the core of the course's VMS page (vms/cam.shell.html) differs from the product's by\n"

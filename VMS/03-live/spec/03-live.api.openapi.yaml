@@ -98,6 +98,47 @@ paths:
         "404": {$ref: "#/components/responses/Refusal"}
         "405": {$ref: "#/components/responses/Refusal"}
         "503": {$ref: "#/components/responses/Refusal"}
+  /talk/{cam}/{number}:
+    post:
+      summary: Оффер разговора — звук браузера к `spk` хозяина (V/03.3 Н1.2а)
+      security: [{doorToken: []}]
+      parameters:
+        - name: cam
+          in: path
+          required: true
+          description: id строки-хозяина `spk` — имя раздачи
+          schema: {type: string, minLength: 1}
+        - name: number
+          in: path
+          required: true
+          description: номер `spk`; не целое ≥ 1 — 404 `no such path`
+          schema: {type: string}
+      requestBody:
+        required: true
+        description: оффер SDP с `m=audio` на отправку; не больше 256 КиБ байтов по Content-Length
+        content:
+          application/sdp:
+            schema: {type: string}
+      responses:
+        "201":
+          description: ответ SDP со всеми кандидатами ICE; отбой — `DELETE /whep/session/{session}`
+          headers:
+            Location:
+              required: true
+              description: "/whep/session/<sid>?gateway=<имя шлюза>"
+              schema: {type: string}
+          content:
+            application/sdp:
+              schema: {type: string}
+        "400": {$ref: "#/components/responses/Refusal"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
+        "409": {$ref: "#/components/responses/Refusal"}
+        "413": {$ref: "#/components/responses/Refusal"}
+        "415": {$ref: "#/components/responses/Refusal"}
+        "500": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
   /live/accounts:
     $ref: "#/components/pathItems/Accounts"
   /live/accounts/{name}:

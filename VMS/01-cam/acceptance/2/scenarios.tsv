@@ -17,3 +17,7 @@ scenario	step	request	expect
 01-hold	15	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "running", "warning": "@absent"}]}
 02-settings	1	@manual живой драйвер, у стенда файл: строка с resolution и fps открывает поток, драйвер получил оба значения; пусто и 0 — настройка устройства не тронута	manual
 02-settings	2	@manual живой драйвер, адрес ipint:// с src.resolution и непустое поле resolution: device_state refused, reason «settings: in the address and in the field: resolution», устройство не открывалось; то же для src.fps и fps	manual
+04-events	1	@manual подставной драйвер с textEventSource (в Drivers/Virtual текста нет): строка eventsrc — фаза held, адресов раздачи нет, EventData — строка text с lines, group, camera, occurred	manual
+04-events	2	@manual слово из words в строке — поле word, msg первого совпавшего; без совпадения поля нет; words порчен — поля нет, warning	manual
+04-events	3	@manual две строки eventsrc со словом «слушает», один порт, одна метка server:*, один держатель: вторая device_state refused, reason «port: taken by <id>»; адрес 0.0.0.0 — reason «address: not a place»	manual
+04-events	4	@manual SignalLost источника текста: held, device_state lost; Started снимает слово; EventData без rawData — отброшено, events_refused	manual

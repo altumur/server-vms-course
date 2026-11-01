@@ -22,3 +22,6 @@ scenario	step	request	expect
 05-stream	5	POST /recordings {"name": "$o-sub", "cam": "$o", "stream": "$s"}	409 {"error": "conflict", "fault": "must_match"}
 05-stream	6	POST /recordings {"name": "$m-main", "cam": "$m", "stream": "$m"}	409 {"error": "conflict", "fault": "must_match"}
 05-stream	7	PUT /recordings/$m-sub {"stream": ""}	200 {"cam": "$m", "stream": ""}
+06-audio	1	POST /recordings {"name": "7-a", "cam": "7"}	201 {"audio": 0}
+06-audio	2	PUT /recordings/7-a {"audio": 2}	200 {"audio": 2}
+06-audio	3	POST /recordings {"name": "7-b", "cam": "7", "audio": -1}	400 {"error": "@any"}

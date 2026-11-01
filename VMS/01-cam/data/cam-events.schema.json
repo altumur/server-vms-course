@@ -68,6 +68,84 @@
      "depth"
     ]
    }
+  },
+  {
+   "if": {
+    "properties": {
+     "kind": {
+      "const": "text"
+     }
+    },
+    "required": [
+     "kind"
+    ]
+   },
+   "then": {
+    "properties": {
+     "lines": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "description": "rawData строки EventData источника текста"
+     },
+     "group": {
+      "type": "integer",
+      "minimum": 1,
+      "x-integer": true,
+      "description": "номер группы в пределах соединения; вне группы поля нет"
+     },
+     "camera": {
+      "type": "string",
+      "description": "поле camera строки eventsrc (V/01.1 Н1.1г)"
+     },
+     "word": {
+      "type": "string",
+      "minLength": 1,
+      "description": "msg первого совпавшего элемента words (V/01.2 Н1.5)"
+     }
+    },
+    "required": [
+     "lines"
+    ]
+   }
+  },
+  {
+   "if": {
+    "properties": {
+     "kind": {
+      "const": "unit"
+     }
+    },
+    "required": [
+     "kind"
+    ]
+   },
+   "then": {
+    "properties": {
+     "unit": {
+      "type": "string",
+      "description": "id строки cam/device_units"
+     },
+     "event": {
+      "type": "string",
+      "minLength": 1,
+      "description": "слово шаблона единицы как есть"
+     },
+     "phase": {
+      "type": "string",
+      "enum": [
+       "begin",
+       "end"
+      ],
+      "description": "у двухфазного события; у мгновенного поля нет"
+     }
+    },
+    "required": [
+     "unit",
+     "event"
+    ]
+   }
   }
  ],
  "additionalProperties": true

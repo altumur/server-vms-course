@@ -1,0 +1,16 @@
+scenario	step	request	expect
+# Приёмка V/01.8: формы таблиц поиска; живой драйвер — шаги @manual. Формат — README.
+01-tables	1	POST /searches {"cluster": "local", "search": "0123456789abcdef0123456789abcdef", "started_at": 1760000000, "until": 1760000030}	201 {"row": {"name": "local", "search": "0123456789abcdef0123456789abcdef", "stopped_at": "@absent"}}
+01-tables	2	POST /searches {"cluster": "local", "search": "not-hex", "started_at": 1760000000, "until": 1760000030}	400 {"error": "@any"}
+01-tables	3	POST /searches {"cluster": "local", "search": "0123456789abcdef0123456789abcdef", "started_at": 1760000000}	400 {"error": "@any"}
+01-tables	4	POST /found {"h": "0000000000000000000000000000000000000000000000000000000000000000", "search": "0123456789abcdef0123456789abcdef", "vendor": "acme", "model": "m1", "ip": "10.0.0.7", "port": 80, "support": "ok", "found_at": 1760000001}	403 {"error": "denied", "detail": "~written by its worker"}
+01-tables	5	POST /probes {"id": "0123456789abcdef0123456789abcdef", "ip": "10.0.0.7", "port": 80, "vendor": "acme", "until": 1760000010}	201 {"row": {"name": "0123456789abcdef0123456789abcdef", "vendor": "acme"}}
+01-tables	6	POST /probes {"id": "0123456789abcdef0123456789abcdef", "ip": "10.0.0.7", "port": 0, "vendor": "acme", "until": 1760000010}	400 {"error": "@any"}
+01-tables	7	POST /probe_replies {"probe": "0123456789abcdef0123456789abcdef", "server": "srv-a", "model": "m1"}	403 {"error": "denied", "detail": "~written by its worker"}
+02-live	1	@manual сеть с двумя камерами на подсетях двух серверов, живой драйвер: новая строка searches — находки обеих в cam/found, vendor, model, ip, port, mac от драйвера, логина и пароля нет	manual
+02-live	2	@manual камера, видимая двум серверам: строка одна; второй поиск заменяет search той же строки, h тот же	manual
+02-live	3	@manual support: модель в .rep — ok, модели нет, у бренда generic — manual, иначе bad	manual
+02-live	4	@manual stopped_at и until останавливают поиск: новых строк нет, найденное стоит	manual
+02-live	5	@manual вопрос о модели камеры без пароля: каждый сервер отвечает строкой, сервер её подсети — с model	manual
+02-live	6	@manual вопрос о модели камеры, которая требует вход: ответ без model	manual
+02-live	7	@manual две камеры с нулевым или одним MAC на разных адресах: две строки cam/found	manual

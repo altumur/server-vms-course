@@ -70,7 +70,7 @@ rights:
 # gateway ↔ browser): `POST /whep/<cam>?stream=<id>` with the console's door token (no `stream` — the main one; a stream
 # not of this camera — 404 in words), `DELETE /whep/session/<id>` to hang up. `GET /live/where/<cam>` hands it out.
 door:
-  routes: [whep]
+  routes: [whep, talk]   # `talk`: a conversation, browser → gateway → holder (V/03.3 Н1.2а); the token is a viewer's, the right to speak is the holder's
   pass: [accounts]
 metrics:
   - {name: streams_live, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)

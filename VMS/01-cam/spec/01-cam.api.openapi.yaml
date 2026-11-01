@@ -6,7 +6,7 @@ info:
     HTTP-контракт двери держателя `camworker` — главы V/01.5 урока «Камера» модуля VMS. Канон —
     [нормы главы 5](01.5-cam.norms.md); этот файл их выражает и не добавляет требований: порядок отказов,
     пределы, куски и бюджет — Н1.5, Н3; личность клиента и разбор запроса — Н2 (сертификат роли, класс `mixed`
-    договора сертификата роли; без комплекта — только петля, маршруты — 401 `no_role`). Только `GET`; иной метод на
+    договора сертификата роли; без комплекта — только петля, маршруты — 401 `no_role`). Только `GET`, у `talk` — `POST`; иной метод на
     маршруте — 405, иной путь — 404 `no such path`. Порядок: путь → метод → допуск → query (Н2). Цепочка, отвергнутая
     TLS, — отказ рукопожатия без HTTP-ответа (в контракте не выражается).
 servers:
@@ -90,13 +90,44 @@ paths:
         "404": {$ref: "#/components/responses/Refusal"}
         "405": {$ref: "#/components/responses/Refusal"}
         "503": {$ref: "#/components/responses/Refusal"}
+  /talk/{id}/{number}:
+    post:
+      summary: Звук разговора шлюз → держатель → динамик (V/01.5 Н1.3, Н3; V/01.4 Н1.4а); роль liveworker
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - name: number
+          in: path
+          required: true
+          description: номер `spk`; не целое ≥ 1 — 404 `no call`
+          schema: {type: string}
+        - name: user
+          in: query
+          required: true
+          description: кто говорит, `user` токена двери шлюза; сверяется с `by` просьбы `talk`
+          schema: {type: string, minLength: 1}
+      requestBody:
+        required: true
+        description: записи SMPL звука подряд, HTTP/1.1 chunked, пока идёт разговор; `BODY` и `PACE_FLOOR` не действуют, кадра нет `TALK_SILENT` — конец (V/01.5 Н1.5)
+        content:
+          application/octet-stream:
+            schema: {type: string, format: binary}
+      responses:
+        "200":
+          description: заголовки — сразу, как занятость сверена; ответ кончается с разговором, тела нет
+        "400": {$ref: "#/components/responses/Refusal"}
+        "401": {$ref: "#/components/responses/NoRole"}
+        "403": {$ref: "#/components/responses/RoleRefusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "405": {$ref: "#/components/responses/Refusal"}
+        "409": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
 components:
   securitySchemes:
     roleCertificate:
       type: mutualTLS
       description: |
         сертификат роли клиента (класс `mixed` договора сертификата роли): допущены recworker, detjobworker,
-        detedgeworker; набор доверия — ca.pem, ca.next.pem своего кластера (V/01.5 Н2)
+        detedgeworker, у `talk` — liveworker; набор доверия — ca.pem, ca.next.pem своего кластера (V/01.5 Н2)
   parameters:
     Id:
       name: id

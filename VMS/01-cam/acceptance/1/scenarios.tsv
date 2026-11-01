@@ -70,3 +70,20 @@ scenario	step	request	expect
 13-fields	2	POST /cameras {"source": "rtsp://10.0.0.35/ch/1", "lat": "север"}	400 {"error": "type"}
 13-fields	3	PUT /cameras/$c {"lat": null}	200 {"lat": "@absent", "lon": 37.61}
 13-fields	4	POST /cameras {"source": "rtsp://10.0.0.36/ch/1", "type": "ipsrv", "mac": "00:11:22:33:44:55"}	201 {"type": "ipsrv", "mac": "00:11:22:33:44:55"}
+14-eventsrc	1	POST /cameras {"source": "ipint://10.0.0.40:2555/PosXml/PosXml%20Device", "type": "eventsrc", "labels": ["server:srv-a"], "camera": "7", "words": [{"msg": "ВОЗВРАТ", "color": "#ffffff", "bg": "#cc0000"}], "overlay_delay_ms": 500, "overlay_duration_sec": 5}	201 {"id": "$e", "type": "eventsrc", "camera": "7", "overlay_delay_ms": 500, "overlay_duration_sec": 5}
+14-eventsrc	2	GET /cameras/$e	200 {"words": [{"msg": "ВОЗВРАТ", "color": "#ffffff", "bg": "#cc0000"}], "labels": ["server:srv-a"]}
+14-eventsrc	3	PUT /cameras/$e {"words": [{"color": "#ffffff"}]}	400 {"error": "@any"}
+14-eventsrc	4	PUT /cameras/$e {"overlay_delay_ms": -1}	400 {"error": "@any"}
+14-eventsrc	5	PUT /cameras/$e {"overlay_duration_sec": 0}	200 {"overlay_duration_sec": 0}
+15-units	1	POST /cameras {"source": "ipint://10.0.0.41/Axis/A1001", "type": "acfa"}	201 {"id": "$a"}
+15-units	2	GET /device_units	200 {"device_units": []}
+15-units	3	POST /device_units {"camera": "$a", "n": 1, "type": "acfa_lock", "template": "axisDoor", "address": "door1", "title": "Дверь"}	201 {"row": {"name": "@any", "title": "Дверь", "enabled": true}}
+15-units	4	POST /device_units {"camera": "$a", "n": 2, "type": "acfa_sensor", "template": "axisAccessPoint", "parent": 1}	201 {"row": {"parent": 1, "enabled": true}}
+15-units	5	POST /device_units {"camera": "$a", "n": 3, "type": "acfa_gate", "template": "axisDoor"}	400 {"error": "@any"}
+15-units	6	POST /device_units {"camera": "$a", "n": 0, "type": "acfa_lock", "template": "axisDoor"}	400 {"error": "@any"}
+15-units	7	POST /device_units {"camera": "$a", "n": 3, "type": "acfa_lock"}	400 {"error": "@any"}
+15-units	8	POST /device_units {"camera": "$a", "n": 3, "type": "relay", "template": "x", "parent": 0}	400 {"error": "@any"}
+15-units	9	GET /device_units/$a-1	200 {"title": "Дверь", "address": "door1"}
+15-units	10	POST /unit_next {"camera": "$a", "n": 2}	201 {"row": {"name": "$a", "n": 2}}
+15-units	11	DELETE /device_units/$a-2	200 {"deleted": "@any"}
+15-units	12	GET /device_units/$a-2	404 {"error": "@any"}
