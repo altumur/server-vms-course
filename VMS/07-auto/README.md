@@ -70,7 +70,7 @@
    `action` — `enum: [preset, output]`, `arg` → `n` / `port`, срок ≤ 600 с, `rate_per_minute` ≤ 600 — форма у двери домена
    ловит то, что можно поймать формой; смысл (что умеет цель) — отказ цели.
 8. **`worker.reads`** + `cam/cameras/`, `cam/heartbeats/` (`can` камер), `cam/devices/`, `cam/children/`, `cam/child_settings/`, `det/units/`, `rec/recordings/`,
-   `rec/heartbeats/` (адреса приёмников для книги `asks`), `domain/cam/sources`, `domain/topology`, `domain/view`.
+   `rec/heartbeats/` (адреса приёмников для книги `asks`), `domain/cam/sources`, `domain/topology`.
 9. **Пульс и ряды:** фазы сценария `running` | `pending` | `refused` | `failed` (под взятой эпохой), `why` — платформы, слова — `reason`,
    поля `unfit`, `unchecked`, `holding`, `decided_without`, `late`; ряды `creates_total{outcome}`, `made_rows`; ряд
    `wants_folded` снять (свёртки нет).
