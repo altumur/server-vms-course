@@ -161,9 +161,9 @@ gate:
 open_routes: [/, /index.html, /platform/console.js, /platform/console.css, /metrics, /healthz, /session, /session/break-glass,
               /api/held, /api/backup, /api/prepare, /api/take, /api/login]   # /api/login — вход людей через консоль (P/08.4 Н1.2)
 session:
-  GET  /session  → открыта: {open: true, login_url, server_time, timezone}; закрыта анонимному: {open: false, login_url,
+  GET  /session  → открыта: {open: true, login_url, server_time, timezone, domain?}; закрыта анонимному: {open: false, login_url,
                    server_time, timezone}; доказанной личности: {open: false, login_url, user, until, via,
-                   grants: [{cap, sub?, scope, role?}], admin?, debug?, server_time, timezone}
+                   grants: [{cap, sub?, scope, role?}], admin?, debug?, server_time, timezone, domain?}
   POST /session {token} → {user, until} + кука w2c_token (HttpOnly, SameSite=Strict, Secure за https)
   DELETE /session → {out: true}; снимает обе куки (w2c_token, w2c_glass) и аварийную сессию в памяти (GP-L02); POST /session/break-glass {who, why, password} → {user, until} + кука w2c_glass; 429 по пределу
   by_state:  исходы дверей сессии по состояниям сторожевой (gate выше; P/06.3 Н4 — ссылкой; сц. 03 приёмки главы 6.3;
@@ -191,6 +191,8 @@ session:
   server_time: стенные секунды консоли, которая ответила, в момент ответа — число JSON записи писателя P/01.1 Н0 «Время в строке»
              (дробная часть не длиннее 3 знаков). Часы консолей кластера расходятся в пределах CLOCK_SKEW (Н0 «Часы кластера»),
              поэтому поле называет часы только этой консоли (ADR-0094 B6)
+  domain:    {name, root} — из строки domain/root этого кластера: name — поле domain, root — pub: постоянный знак домена, не зависит от вида и держателя; строки нет — поля нет: кластер вне домена;
+             есть, но не читается — null: неизвестно, не «вне домена». Анонимному поля нет. Так 404 no domain here у GET /domain при поле domain значит «вид ещё не готов», а не «домена нет» (V/11 шаг 8)
   timezone:  имя часового пояса IANA, значение TIMEZONE окружения (договор файла окружения «Переменные окружения»), не задано — "UTC".
              Это настройка кластера, не пояс ОС сервера: пояса ОС серверов кластера бывают разные, а люди видят время в одном.
              Консоль отдаёт слово как есть и времени по нему не считает (ADR-0094 B6)
