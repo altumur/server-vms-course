@@ -42,17 +42,8 @@
    "description": "дорога в свой ретранслятор для подъёма к центру"
   },
   "to": {
-   "type": [
-    "array",
-    "string"
-   ],
-   "minItems": 1,
-   "items": {
-    "type": "string",
-    "minLength": 1
-   },
-   "pattern": "^(?:[*])$",
-   "description": "дом и центр — \"*\"; ретранслятор — члены за ним"
+   "description": "\"*\": дом, центр и дорога вверх, отбор — aud токена (V/07.5 Н1.3)",
+   "const": "*"
   }
  },
  "required": [
