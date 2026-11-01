@@ -628,18 +628,19 @@ scenario	step	request	expect
 22-foreign	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 22-foreign	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
 22-foreign	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
-22-foreign	5	member m1 console2 POST /api/devices {"idempotencyKey": "foreign-own", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.1", "vendor": "acme", "model": "m1", "serverId": "92a5a2f5-c063-5b48-b3e5-95000ca864af"}, "domainId": "01fbb276-49ea-533f-a648-e9dcdb775bea", "parentId": null, "folderId": null}]}	200 {"failed": []}
-22-foreign	6	member m1 console2 POST /api/devices {"idempotencyKey": "foreign-none", "items": [{"device": {"type": "camera", "name": "c2", "ip": "10.9.9.2", "vendor": "acme", "model": "m1", "serverId": "c5076c43-d2e4-53d2-9582-ea3d3e571af0"}, "domainId": "01fbb276-49ea-533f-a648-e9dcdb775bea", "parentId": null, "folderId": null}]}	200 {"done": [], "failed": [{"index": 0, "code": "NOT_FOUND"}]}
-22-foreign	7	@manual второй член с манифестами и агентом: POST /api/devices с serverId его сервера — связка у домена, строка камеры с ref <кластер>-<n>, ответ с записью по made исхода	manual
-22-foreign	8	@manual второй член: PATCH чужой камеры — одна строка domain/pending, записи камеры с id строки, 200 с новой версией; чужая версия If-Match — 412	manual
-22-foreign	9	@manual второй член: секрет PATCH password — в domain/pending конверт m1, открытого значения нет; том с secret так же	manual
-22-foreign	10	@manual второй член молчит: PATCH — 409 SERVER_OFFLINE, правка не подана; агент замер после приёма: 409 SERVER_OFFLINE с params.kept, агент ожил — правка применилась, повтор той же правки новой не завёл	manual
-22-foreign	11	@manual второй член: локальная правка между приёмом и применением — исход conflict, 412; отказ консоли члена — исход refused, 403	manual
-22-foreign	12	@manual второй член: POST /devices/update с чужим элементом без исхода — failed SERVER_OFFLINE, <h> started, повтор ключа доводит; шаг операции над чужой целью: итог после исхода, вызов снова тем же ключом	manual
-22-foreign	13	@manual второй член: откат чужой правки — новая связка, поле вне вида — fail view, правка не отменена	manual
-22-foreign	14	@manual смена входа: тот же idempotencyKey на другом backend исполняется заново, операции входа там нет	manual
-22-foreign	15	@manual вошедший по anywhere без прав на своём кластере: POST /devices без serverId — 403, с serverId кластера с его грантом — проходит	manual
-22-foreign	16	@manual второй член: цель без ref (детектор, правило, ipsrv) — строка (cluster, id) правится; DELETE камеры снимает детекторы; motion — строка записи; POST /rules с serverId его сервера — правило там, id из made	manual
+22-foreign	5	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "$dom"}]}
+22-foreign	6	member m1 console2 POST /api/devices {"idempotencyKey": "foreign-own", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.1", "vendor": "acme", "model": "m1", "serverId": "92a5a2f5-c063-5b48-b3e5-95000ca864af"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"failed": []}
+22-foreign	7	member m1 console2 POST /api/devices {"idempotencyKey": "foreign-none", "items": [{"device": {"type": "camera", "name": "c2", "ip": "10.9.9.2", "vendor": "acme", "model": "m1", "serverId": "c5076c43-d2e4-53d2-9582-ea3d3e571af0"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"done": [], "failed": [{"index": 0, "code": "NOT_FOUND"}]}
+22-foreign	8	@manual второй член с манифестами и агентом: POST /api/devices с serverId его сервера — связка у домена, строка камеры с ref <кластер>-<n>, ответ с записью по made исхода	manual
+22-foreign	9	@manual второй член: PATCH чужой камеры — одна строка domain/pending, записи камеры с id строки, 200 с новой версией; чужая версия If-Match — 412	manual
+22-foreign	10	@manual второй член: секрет PATCH password — в domain/pending конверт m1, открытого значения нет; том с secret так же	manual
+22-foreign	11	@manual второй член молчит: PATCH — 409 SERVER_OFFLINE, правка не подана; агент замер после приёма: 409 SERVER_OFFLINE с params.kept, агент ожил — правка применилась, повтор той же правки новой не завёл	manual
+22-foreign	12	@manual второй член: локальная правка между приёмом и применением — исход conflict, 412; отказ консоли члена — исход refused, 403	manual
+22-foreign	13	@manual второй член: POST /devices/update с чужим элементом без исхода — failed SERVER_OFFLINE, <h> started, повтор ключа доводит; шаг операции над чужой целью: итог после исхода, вызов снова тем же ключом	manual
+22-foreign	14	@manual второй член: откат чужой правки — новая связка, поле вне вида — fail view, правка не отменена	manual
+22-foreign	15	@manual смена входа: тот же idempotencyKey на другом backend исполняется заново, операции входа там нет	manual
+22-foreign	16	@manual вошедший по anywhere без прав на своём кластере: POST /devices без serverId — 403, с serverId кластера с его грантом — проходит	manual
+22-foreign	17	@manual второй член, правила связки: DELETE камеры с детекторами — delete det/units по domain.edit_delete, у манифеста без него 404; motion — новая строка записи new, уход — delete auto/scenarios; put без create по снятой строке — исход refused, 422; цель без ref (детектор, правило, ipsrv) — строка (cluster, id); POST /rules с serverId его сервера — правило там, id из made	manual
 23-folders-offline	1	@domain m1	ok
 23-folders-offline	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 23-folders-offline	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
@@ -662,3 +663,4 @@ scenario	step	request	expect
 23-folders-offline	20	@until 30 member m1 console2 POST /api/devices {"idempotencyKey": "off-2", "items": [{"device": {"type": "camera", "name": "c3", "ip": "10.9.9.3", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": "$f"}]}	200 {"done": [{"index": 0, "folders": [{"id": "$f"}]}], "failed": []}
 23-folders-offline	21	@until 30 member m1 console GET /folders?member=cam%2Fcameras%2F3	200 {"folders": [{"name": "f"}]}
 23-folders-offline	22	@manual чужая единица в PATCH deviceIds: GET и PUT /domain/memberof другого кластера: на стенде камеры только у m1, вид держателя их не несёт на этом шаге	manual
+22-foreign	18	@manual второй член: GET /rules/{id}/fires чужого правила — дверь /domain/at/<кластер>/events; член за NAT — 200 с пустым items и X-Unreachable, versions так же; правка правила за NAT — строка auto/versions связкой, номер revision + 1	manual

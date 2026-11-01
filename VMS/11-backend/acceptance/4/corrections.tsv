@@ -26,3 +26,5 @@ date	sample	fix	languages
 2026-11-01	4/scenarios.tsv	03-person-folder: папки домена: дерево правит администратор домена, состав с задержкой копии; 23-folders-offline: новый сценарий, без связи с доменом (ADR-0110 доп. (5) п. 3, ADR-0111 п. 13)	-
 2026-11-01	4/scenarios.tsv: 22-foreign шаги 7, 16	пределы платформы сняты: строка (cluster, id), made исхода	-
 2026-11-01	4/scenarios.tsv	23-folders-offline: чужая единица в составе — @manual, 422 снят (P/08.5 Н1.8 GET memberof)	-
+2026-11-01	4/scenarios.tsv: 22-foreign шаги 5–7, 17	domainId — $dom, шаг захвата; motion и DELETE с детекторами по правилам связки: put по живой строке, edit_delete	-
+2026-11-01	4/scenarios.tsv: 22-foreign шаг 18	журнал чужого правила дверью /domain/at/<кластер>/events, член за NAT — 200 пусто, строка версий связкой	-

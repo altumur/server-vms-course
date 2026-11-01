@@ -622,6 +622,7 @@ domain:
   # What a backend on another member writes of a rule (V/11.4 Н1.13), by (cluster, id); not `server`, a unit's word of the
   # platform at the door.
   edit: [name, start, run_at, run_mode, operator_menu, repeat, when, within, conditions, then, rate_per_minute, valid_for, enabled, labels, log_only, log_only_since, owner, purpose, run_as_role, allow_chain, created_at, created_by, changed_at, changed_by, history_note, hidden]
+  edit_delete: true                  # a rule, and the hidden row of recording by detectors (V/11.4 Н1.2, Н1.10)
   edit_tables:
     versions: [scenario, number, note, rule]
     rule_marks: [scenario, mute, order]

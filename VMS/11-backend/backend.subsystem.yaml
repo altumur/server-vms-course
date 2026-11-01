@@ -134,6 +134,7 @@ door:
       - GET domain/auto/tables/day_groups
       - GET domain/auto/tables/windows
       - GET domain/at/auto/versions  # beyond the view: the console of the target's cluster (ADR-0111 п. 15; V/11.3 Н1.2а)
+      - GET domain/at/events         # the journal of the target's cluster: the fires of its rule (V/11.3 Н1.2а)
       - domain/edits                 # a kept edit of another member's row, one device a line (V/11.4 Н1.13)
       - domain/members               # taking a box in, leaving out (V/11.4 Н1.14): the domain's admin is judged
       - domain/placement             # the recorder of a camera (V/11.4 Н1.14)
