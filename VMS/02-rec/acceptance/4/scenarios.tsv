@@ -48,6 +48,7 @@ scenario	step	request	expect
 04-replica	22	@manual кольцо тома disk-b меньше покрытия источника: over_quota: true, минуты, выгнанные кольцом, снова не качаются (to не падает, поток …/backfill не растёт по ним), кольцо источника обогнало копию — replica_lost_s растёт	manual
 04-replica	23	@manual смена replica_from: новая revision, to заново; источник снят — waiting, накопленное видно своим сроком; живая запись стала replica — конвейер снят, поток раздачи закрыт при отсутствии иных потребителей (V/01.2 Н1.2в)	manual
 04-replica	24	@manual метка на камере с одной replica: /spans дверь говорит copied_to; печать не ставится, пока ниже конца метки есть непривезённое	manual
+04-replica	25	@manual источник с разрывами: выше 64 отрезков «нет» старший снимается, replica_absent_dropped_s растёт; держатель умер посреди диапазона: to не обогнал садящееся, остаток докачан; источник моложе 900 с: replica_lost_s 0	manual
 05-replica-device	1	@manual живой драйвер с архивом устройства, у стенда файл: replica_from device, у камеры нет иных потребителей — держатель в фазе idle, поток не читает, архив идёт в том через /playback	manual
 05-replica-device	2	@manual device и непустой stream — reason «replica from device: stream is set»; cam ref:<ref> — «replica from device: other cluster»	manual
 05-replica-device	3	@manual скан: посаженная часть без держателя running — задача detjob, при running заказа нет; переезд записи минуты не перекачивает и не заказывает снова	manual
