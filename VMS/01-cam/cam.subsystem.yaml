@@ -505,7 +505,7 @@ rights:
   reach:
     group: [source, labels]
     cluster: [ref]
-    requests: [output, preset, unit]
+    requests: [output, unit]
 # No door at a camera's holder for a page (the product's rule): the scale is built from the camera's recordings, each its
 # own door (`rec.subsystem.yaml`), and what the camera holds itself is a span of its recording's door that yields.
 # The holder's door (V/01.5) admits processes by their role certificate only — class `mixed`, role routes, as at `rec`; no token routes.
