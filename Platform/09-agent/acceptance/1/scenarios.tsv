@@ -6,11 +6,11 @@ scenario	step	request	expect
 01-quiet-member	4	@until 30 member m1 store GET /v1/get?key=domain/backup-taken	200 {"items": {"sha256": "$b1"}}
 01-quiet-member	5	@sleep 10	ok
 01-quiet-member	6	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r1", "received_at": "$t1"}
-01-quiet-member	7	member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "@any"}, "index": "$i1"}
+01-quiet-member	7	member m1 store GET /v1/get?key=domain/member-list/3232	200 {"items": {"doc": "@any"}, "index": "$i1"}
 01-quiet-member	8	member m1 store GET /v1/get?key=domain/keys	200 {"items": {"doc": "@any"}, "index": "$k1"}
 01-quiet-member	9	@until 30 resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r1", "received_at": "@not($t1)"}
 01-quiet-member	10	resource GET /v1/objects/domain/members/m1/reported?scope=local	200 {"rev": "$r1", "received_at": "@not($t1)"}
-01-quiet-member	11	member m1 store GET /v1/get?key=domain/member-list	200 {"index": "$i1"}
+01-quiet-member	11	member m1 store GET /v1/get?key=domain/member-list/3232	200 {"index": "$i1"}
 01-quiet-member	12	member m1 store GET /v1/get?key=domain/keys	200 {"index": "$k1"}
 01-quiet-member	13	member m1 store GET /v1/get?key=domain/agent	200 {"items": null}
 03-unreadable-member-key	1	@domain m1	ok
@@ -197,13 +197,13 @@ scenario	step	request	expect
 23-unreadable-copies-heal	4	@until 30 member m1 store GET /v1/get?key=domain/member-topology	200 {"items": {"doc": "~\"centre\":\"hold\""}}
 23-unreadable-copies-heal	5	member m1 store GET /v1/get?key=domain/member-topology	200 {"items": {"doc": "$mt"}}
 23-unreadable-copies-heal	6	@until 30 member m1 store GET /v1/get?key=domain/placed	200 {"items": {"rev": "2"}}
-23-unreadable-copies-heal	7	member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "$ml"}}
+23-unreadable-copies-heal	7	member m1 store GET /v1/get?key=domain/member-list/3232	200 {"items": {"doc": "$ml"}}
 23-unreadable-copies-heal	8	@until 30 member m1 store GET /v1/get?key=domain/grants	200 {"items": {"doc": "$gd"}}
-23-unreadable-copies-heal	9	member m1 store POST /v1/write {"op": "put", "key": "domain/member-list", "items": {"doc": "garbled"}}	200
+23-unreadable-copies-heal	9	member m1 store POST /v1/write {"op": "put", "key": "domain/member-list/3232", "items": {"doc": "garbled"}}	200
 23-unreadable-copies-heal	10	member m1 store POST /v1/write {"op": "put", "key": "domain/member-topology", "items": {"doc": "garbled"}}	200
 23-unreadable-copies-heal	11	member m1 store POST /v1/write {"op": "put", "key": "domain/grants", "items": {"doc": "garbled", "as_of": "garbled"}}	200
 23-unreadable-copies-heal	12	member m1 store POST /v1/write {"op": "put", "key": "domain/placed", "items": {"rev": "garbled"}}	200
-23-unreadable-copies-heal	13	@until 30 member m1 store GET /v1/get?key=domain/member-list	200 {"items": {"doc": "$ml"}}
+23-unreadable-copies-heal	13	@until 30 member m1 store GET /v1/get?key=domain/member-list/3232	200 {"items": {"doc": "$ml"}}
 23-unreadable-copies-heal	14	@until 30 member m1 store GET /v1/get?key=domain/member-topology	200 {"items": {"doc": "$mt"}}
 23-unreadable-copies-heal	15	@until 30 member m1 store GET /v1/get?key=domain/grants	200 {"items": {"doc": "$gd"}}
 23-unreadable-copies-heal	16	@until 30 member m1 store GET /v1/get?key=domain/placed	200 {"items": {"rev": "2"}}

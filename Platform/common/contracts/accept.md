@@ -244,7 +244,7 @@ publication.batch: {name, sig}    # не по форме — поле не вз�
 order:         по порядку:
   1:           строки domain/batches/<batch.name> нет, не читается или подпись не сходится → обычный стук (память KNOCKS), поля batch нет
   2:           партия годна: now < until, revoked нет, used < n, отпечаток key не в refused; ключ не малого порядка и не в revoked_members набора; имя свободно (записи нет или она без key с revoked_keys);
-               строка раздела не полна; class-предел приёма P/08.3 Н3 «принять члена» шаг 5а и 5б; via партии есть в domain/member-rows и строка domain/relay-members/<via> не полна
+               строка раздела не полна; предел приёма P/08.3 Н3 «принять члена» шаги 5а, 5б; via партии есть в domain/member-rows и строка domain/relay-members/<via> не полна
                всё да → шаг 3; иначе → шаг 4
   3:           приём партии: одним пакетом — Entry {how: "admitted", since, class: camera, by: <партия.by>, key, via?, batch} в строке раздела (подпись, rev + 1), used + 1 в строке партии, domain/member-count,
                domain/relay-members/<via> при via; CAS — до 3 раз, затем шаг 4; журнал domain.member.admitted.batch {batch, name, fingerprint}; стук этого имени убирается из domain/knocks; ответ — тот же 404 стука: член узнаёт

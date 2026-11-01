@@ -66,9 +66,8 @@ W2C_TLS_DIR=…`, `@env m1 W2C_TLS_DIR`; значение `inputs/…` — пу�
 
 **Сценарий 19** — сосед на стенде: дверь `GET /domain/members` консоли домена ([урок P/10](../../../10-domain-console/spec/10-domain-console.norms.md)
 Н1.2б, P/10-07; C10-MEMBERS-SOURCE-01, C10-MEMBERS-KNOCKING-ABSENT-01). Процесс `domain` остановлен (шаг 2), чтобы проход
-держателя не переписал вид; на его место кладётся вид `inputs/view-member-list-ghost.json`: в `member_list` — `hold` и
-посторонний `ghost`, поля `knocking` нет (шаг 3). Шаг 4 показывает, что консоль домена читает этот вид. Шаг 5: `members` —
-doc строки `domain/member-rows/<раздел>` (`hold`, `m1`, `m2`, без `ghost`), а не `member_list` вида; поля `knocking` в читаемом виде нет —
+держателя не переписал вид; на его место кладётся вид `inputs/view-member-list-ghost.json`: только `hold`, поля `knocking` нет (шаг 3). Шаг 4 показывает, что консоль домена читает этот вид. Шаг 5: `members` —
+doc строк `domain/member-rows/<раздел>` (`hold`, `m1`, `m2`), а не вид; поля `knocking` в читаемом виде нет —
 `knocking: []`.
 
 **Сценарий 17** (из README приёмки М11/12): агент `m1` держит список — ответ держателя без `members`. Принят `m2` — копия
