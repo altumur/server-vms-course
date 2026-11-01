@@ -333,6 +333,16 @@ unit:
               until: {type: number}
               vars:  {type: object}
               trace: {type: array}
+        done:                          # the names of runs that ended, while the question back still sees them (V/07.4 Н1.11)
+          type: array
+          maxItems: 256                # DONE_MAX: a value with no ground yet, to be measured
+          items:
+            type: object
+            required: [fire, t]
+            additionalProperties: false
+            properties:
+              fire: {type: string, minLength: 1}
+              t:    {type: number}
 # The library of a run's moment (V/07.6): written at the console's doors of tables by `backend` or a person, read by the
 # evaluator on each pass. No row of them moves a row of `scenarios`: what follows a deletion is `backend`'s (V/11.4). `title`
 # is the contract's `name`: a table keyed otherwise may declare no field `name` (P/06.1 Н1.6).
