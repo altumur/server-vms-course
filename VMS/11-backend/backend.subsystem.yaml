@@ -115,7 +115,7 @@ door:
 # (доп. (3) п. 8), a page of its own (no frame of another page, no sandbox), with the Content-Security-Policy that is exactly the minimum
 # of P/06.5 Н1.1 `page` — the shell has no inline script, so `script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'`,
 # not stricter: inline styles and `data:` images stay allowed (доп. (8) пп. 1, 4).
-# The build: consolem @ef7175b (reproducible), its MANIFEST.json; its index.html is
+# The build: consolem @785824c (reproducible), its MANIFEST.json; its index.html is
 # backend.shell.html (SHA-256 caa73ca5…), the rest is the set (V/11.1 Н1.4). The deployment package builds it from the
 # pinned commit and places it next to the manifest (V/09.3).
 # SHA-256 of each (the lesson's README): 0d9c0fc7… app.css, 621743b8… app.js, 51da0e97… client.js,

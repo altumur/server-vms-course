@@ -166,15 +166,15 @@ scenario	step	request	expect
 08-profile-ops	18	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$a1"}
 08-profile-ops	19	member m1 console2 GET /api/devices/8b99c4f9-f9f1-5926-ab12-5925acb99a02	200 {"version": "$b1"}
 08-profile-ops	20	member m1 console2 POST /api/operations {"idempotencyKey": "group-pause", "items": [{"targetId": "068df1b2-b153-5712-bb0f-06efd7b21699", "set": {"name": "c1p"}}, {"targetId": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "set": {"name": "c2p"}}], "expectedVersions": {"068df1b2-b153-5712-bb0f-06efd7b21699": "$a1", "8b99c4f9-f9f1-5926-ab12-5925acb99a02": "$b1"}}	202 {"id": "$p"}
-08-profile-ops	21	member m1 console2 POST /api/operations/$p/pause	200 {"state": "paused"}
-08-profile-ops	22	member m1 console2 POST /api/operations/$p/resume	200 {"state": "running"}
+08-profile-ops	21	member m1 console2 POST /api/operations/$p/pause	404 {"code": "NO_ROUTE"}
+08-profile-ops	22	member m1 console2 POST /api/operations/$p/resume	404 {"code": "NO_ROUTE"}
 08-profile-ops	23	@until 60 member m1 console2 GET /api/operations/$p	200 {"state": "done", "ok": 2}
-08-profile-ops	24	member m1 console2 POST /api/operations/$p/pause	409 {"code": "BUSY"}
+08-profile-ops	24	member m1 console2 POST /api/operations/$p/cancel	409 {"code": "BUSY"}
 08-profile-ops	25	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$a2"}
 08-profile-ops	26	member m1 console2 GET /api/devices/8b99c4f9-f9f1-5926-ab12-5925acb99a02	200 {"version": "$b2"}
 08-profile-ops	27	member m1 console2 POST /api/operations {"idempotencyKey": "group-cancel", "items": [{"targetId": "068df1b2-b153-5712-bb0f-06efd7b21699", "set": {"name": "c1c"}}, {"targetId": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "set": {"name": "c2c"}}], "expectedVersions": {"068df1b2-b153-5712-bb0f-06efd7b21699": "$a2", "8b99c4f9-f9f1-5926-ab12-5925acb99a02": "$b2"}}	202 {"id": "$c"}
-08-profile-ops	28	member m1 console2 POST /api/operations/$c/pause	200 {"state": "paused"}
-08-profile-ops	29	member m1 console2 POST /api/operations/$c/cancel	200 {"id": "$c"}
+08-profile-ops	28	@manual идущая операция: PATCH и DELETE цели — 409 BUSY, params.targetId; /devices/update и /objects/delete — failed BUSY, прочие элементы идут: шаги стенда идут быстрее двух запросов	manual
+08-profile-ops	29	@manual идущая операция: cancel — 200, оставшиеся шаги cancel, правка цели проходит	manual
 08-profile-ops	30	@until 60 member m1 console2 GET /api/operations/$c	200 {"state": "done"}
 08-profile-ops	31	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$a3"}
 08-profile-ops	32	member m1 console2 GET /api/devices/8b99c4f9-f9f1-5926-ab12-5925acb99a02	200 {"version": "$b3"}
