@@ -1943,6 +1943,10 @@
        "enum": [
         "strict"
        ]
+      },
+      "wanted": {
+       "description": "таблица: строка с именем места — месту нужен держатель (P/04 Н3 «нехватка()»)",
+       "type": "string"
       }
      },
      "additionalProperties": false,
@@ -2384,6 +2388,10 @@
         "type": "string"
        },
        "of": {
+        "type": "string"
+       },
+       "action": {
+        "description": "ключ объекта: действие просьбы к единице (договор сторожевой и передачи names)",
         "type": "string"
        }
       },
@@ -3656,6 +3664,9 @@
        "$ref": "#/$defs/fieldPath"
       },
       "target": {
+       "$ref": "#/$defs/fieldPath"
+      },
+      "member": {
        "$ref": "#/$defs/fieldPath"
       },
       "act": {

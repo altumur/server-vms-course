@@ -6,7 +6,7 @@
   "type": "string"
  },
  "additionalProperties": {
-  "description": "поля метки: читатель их не читает и ими не отказывает; писатель пишет {} (Н1.1 domain/deleting)",
+  "description": "поля метки: `at`, `done` (Н1.1 domain/deleting); читатель ими не отказывает: at нет или не читается — срока нет",
   "x-codec": [
    "any"
   ]

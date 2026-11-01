@@ -828,3 +828,7 @@ a95_ops_door_route_operations	refused
 a103_calls_book_ok	ok
 a103_calls_book_write	refused
 a103_calls_book_deep	refused
+a103_scenario_member_ok	ok
+a103_places_wanted_ok	ok
+a103_places_wanted_unknown	refused
+a103_names_action_ok	ok

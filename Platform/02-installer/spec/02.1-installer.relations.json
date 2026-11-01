@@ -1285,6 +1285,15 @@
    "norm": "ADR-0095 §8; P/02.1 Н1.4; P/06.9 Н1.1",
    "cel": "((type(doc) == map && \"door\" in doc) ? ((type(doc[\"door\"]) == map && \"pass\" in doc[\"door\"]) ? ((type(doc[\"door\"][\"pass\"]) == map && \"operations\" in doc[\"door\"][\"pass\"]) ? ((\"routes\" in doc[\"door\"] && type(doc[\"door\"][\"routes\"]) == list) ? dyn(doc[\"door\"][\"routes\"]).transformList(i1, e2, (((type(e2) == string && e2 == \"operations\") || (type(e2) == map && \"name\" in e2 && e2[\"name\"] == \"operations\")) ? [{\"p\": [\"door\", \"routes\", i1]}] : [])) : []) : []) : []) : [])",
    "own": []
+  },
+  {
+   "no": 136,
+   "path": "placement.places.wanted",
+   "relation": ". in keys(tables)",
+   "class": "reference",
+   "norm": "P/02.1 Н1.4",
+   "cel": "((type(doc) == map && \"placement\" in doc) ? ((type(doc[\"placement\"]) == map && \"places\" in doc[\"placement\"]) ? ((type(doc[\"placement\"][\"places\"]) == map && \"wanted\" in doc[\"placement\"][\"places\"]) ? ((doc[\"placement\"][\"places\"][\"wanted\"] != null && type(doc[\"placement\"][\"places\"][\"wanted\"]) != map && type(doc[\"placement\"][\"places\"][\"wanted\"]) != list && !((type(doc) == map && \"tables\" in doc && ((type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(k1, k1 == doc[\"placement\"][\"places\"][\"wanted\"])) || (type(doc[\"tables\"]) == list && dyn(doc[\"tables\"]).exists(e2, (type(e2) == string && e2 == doc[\"placement\"][\"places\"][\"wanted\"]))))))) ? [{\"p\": [\"placement\", \"places\", \"wanted\"]}] : []) : []) : []) : [])",
+   "own": []
   }
  ],
  "untranslated": []

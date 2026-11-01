@@ -323,7 +323,7 @@ scenario	step	request	expect
 27-roles-and-groups	17	@person root w2c test root password	ok
 27-roles-and-groups	18	holder DELETE /domain/users/ann	200 {"user": "ann", "deleted": true}
 27-roles-and-groups	19	holder GET /domain/groups	200 {"groups": [{"name": "g1", "members": []}]}
-27-roles-and-groups	20	holder POST /domain/users {"name": "ann", "password": "ann password 2"}	201 {"user": "ann"}
+27-roles-and-groups	20	holder POST /domain/users {"name": "ann", "password": "ann password 2"}	409 {"error": "exists"}
 27-roles-and-groups	21	holder DELETE /domain/roles/ops	200 {"role": "ops", "deleted": true, "grants_changed": ["m1"]}
 27-roles-and-groups	22	holder GET /domain/grants	200 {"grants": {"m1": [{"subject": "role:rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr", "cap": "view", "scope": "*"}, {"subject": "root", "cap": "admin", "scope": "*"}]}}
 27-roles-and-groups	23	holder POST /domain/roles {"name": "ops"}	201 {"role": "ops"}

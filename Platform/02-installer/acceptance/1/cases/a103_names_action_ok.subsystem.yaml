@@ -1,0 +1,9 @@
+# действие названной единицы (договор сторожевой и передачи names)
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}, rule: {type: json}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+rights:
+  cluster_rows: true
+  names:
+    - {field: rule, unit: unit, of: cam, action: action}
