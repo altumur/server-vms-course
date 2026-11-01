@@ -236,6 +236,7 @@ unit:
     lat:                   {type: json, schema: {type: [number, "null"]}}
     lon:                   {type: json, schema: {type: [number, "null"]}}
     azimuth:               {type: json, schema: {type: [number, "null"]}}
+    preset_labels:         {type: json, schema: {type: object, additionalProperties: {type: string}}}   # the operator's names of presets, older than the driver's (V/11.4 Н1.16)
     # The number shown in a tree («3.3.1»): for people, a camera's.
     short:                 {type: string}
     # An `ipsrv` row's MAC, the operator's word: nobody here reads it. A camera's comes from a search and is not kept.
@@ -549,7 +550,7 @@ domain:
   # rows behind `Device`. `ref` joins a camera to its recorder on another member; `rec/recordings` carries the same value.
   view_status: [device_state, codec, units_down]
   view_tables:
-    cameras: [name, main, type, ref, source, enabled, short, lat, lon, azimuth, mac, cred_username, resolution, fps, camera, words, overlay_delay_ms, overlay_duration_sec]
+    cameras: [name, main, type, ref, source, profile, enabled, labels, alarms, short, lat, lon, azimuth, mac, cred_username, resolution, fps, camera, words, overlay_delay_ms, overlay_duration_sec, preset_labels]
     devices: [channels, videos, storage]
     children: [camera, type, number, gone]
     child_settings: [camera, type, number, title, enabled, norm]
@@ -559,7 +560,7 @@ domain:
   # What the domain's door lets through in a member's camera: whatever a backend on another member writes of a device
   # (ADR-0110, V/11.4 Н1.13); `type` for a new row, `ref` — the camera's name in the domain. A kept edit is applied by the
   # member's agent and judged by the member's console, by the person who asked.
-  edit: [name, type, main, ref, source, profile, enabled, priority, labels, alarms, cred_username, short, lat, lon, azimuth, mac, camera, words, overlay_delay_ms, overlay_duration_sec, resolution, fps]
+  edit: [name, type, main, ref, source, profile, enabled, priority, labels, alarms, cred_username, short, lat, lon, azimuth, mac, camera, words, overlay_delay_ms, overlay_duration_sec, resolution, fps, preset_labels]
   # A row of a table is written whole, so each list is all its fields (P/02.1, link 152).
   edit_tables:
     child_settings: [camera, type, number, title, enabled, norm]
