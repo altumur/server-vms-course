@@ -528,22 +528,22 @@ scenario	step	request	expect
 19-revert	10	member m1 console2 POST /api/operations/$op1/revert	409 {"code": "BUSY", "params": {"reason": "reverted"}}
 19-revert	11	@until 30 member m1 console2 GET /api/operations/$rv1	200 {"state": "done", "ok": 1, "failed": 0}
 19-revert	12	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"name": "c1", "version": "$v2"}
-19-revert	13	member m1 console2 POST /api/operations/$rv1/revert	202 {"id": "$rv2"}
-19-revert	14	@until 30 member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"name": "моё", "version": "$v3"}
+19-revert	13	member m1 console2 POST /api/operations/$rv1/revert	409 {"code": "NOT_REVERTIBLE", "params": {"reason": "revert"}}
+19-revert	14	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"name": "c1", "version": "$v3"}
 19-revert	15	member m1 console2 @header If-Match: "$v3" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"short": "чужое"}	200 {"short": "чужое", "version": "$v4"}
 19-revert	16	member m1 console2 POST /api/operations {"idempotencyKey": "rev-op2", "items": [{"targetId": "068df1b2-b153-5712-bb0f-06efd7b21699", "set": {"name": "второе"}}], "expectedVersions": {"068df1b2-b153-5712-bb0f-06efd7b21699": "$v4"}}	202 {"id": "$op2"}
 19-revert	17	@until 30 member m1 console2 GET /api/operations/$op2	200 {"state": "done"}
 19-revert	18	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$v5"}
 19-revert	19	member m1 console2 @header If-Match: "$v5" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"short": "другое поле"}	200 {"version": "$v6"}
-19-revert	20	member m1 console2 POST /api/operations/$op2/revert	202 {"id": "$rv3"}
-19-revert	21	@until 30 member m1 console2 GET /api/operations/$rv3	200 {"state": "done", "ok": 1}
-19-revert	22	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"name": "моё", "short": "другое поле", "version": "$v7"}
+19-revert	20	member m1 console2 POST /api/operations/$op2/revert	409 {"code": "NOT_REVERTIBLE", "params": {"reason": "notLast"}}
+19-revert	21	@manual откат с правкой другого поля той же строки мимо backend проходит: одиночная правка backend теперь сама последняя	manual
+19-revert	22	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"name": "второе", "short": "другое поле", "version": "$v7"}
 19-revert	23	member m1 console2 POST /api/operations {"idempotencyKey": "rev-op3", "items": [{"targetId": "068df1b2-b153-5712-bb0f-06efd7b21699", "set": {"name": "третье"}}], "expectedVersions": {"068df1b2-b153-5712-bb0f-06efd7b21699": "$v7"}}	202 {"id": "$op3"}
 19-revert	24	@until 30 member m1 console2 GET /api/operations/$op3	200 {"state": "done"}
 19-revert	25	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$v8"}
 19-revert	26	member m1 console2 @header If-Match: "$v8" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"name": "чужое имя"}	200 {"name": "чужое имя"}
-19-revert	27	member m1 console2 POST /api/operations/$op3/revert	202 {"id": "$rv4"}
-19-revert	28	@until 30 member m1 console2 GET /api/operations/$rv4	200 {"state": "done", "items": [{"state": "fail", "code": "VERSION_MISMATCH"}]}
+19-revert	27	member m1 console2 POST /api/operations/$op3/revert	409 {"code": "NOT_REVERTIBLE", "params": {"reason": "notLast"}}
+19-revert	28	@manual правка мимо backend того же поля: шаг отката fail VERSION_MISMATCH, строка не затёрта: одиночная правка backend теперь сама последняя	manual
 19-revert	29	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"name": "чужое имя"}
 19-revert	30	member m1 console2 GET /api/devices/8b99c4f9-f9f1-5926-ab12-5925acb99a02	200 {"version": "$w1"}
 19-revert	31	member m1 console2 POST /api/operations {"idempotencyKey": "rev-op4", "items": [{"targetId": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "create": {"type": "det", "name": "Новый", "detectorKind": "motion", "sensitivity": 12}}, {"targetId": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "set": {"password": "p"}}], "expectedVersions": {"8b99c4f9-f9f1-5926-ab12-5925acb99a02": "$w1"}}	202 {"id": "$op4"}
@@ -558,6 +558,7 @@ scenario	step	request	expect
 19-revert	40	@until 30 member m1 console GET /session	200 {"user": "ann"}
 19-revert	41	member m1 console2 POST /api/operations/$op4/revert	404 {"code": "NOT_FOUND"}
 19-revert	42	@manual откат тома, удаления, папок и смены bound_to — fail со словом; идущая операция — 409 running: шаги стенда идут быстрее двух запросов; одиночная правка: id взять неоткуда, GET /operations нет в контракте; UNDO_KEEP, UNDO_DAYS стенду не дождаться	manual
+19-revert	43	@manual откат с fail оставляет ряд открытым, повтор идёт, операция не закрыта; 50 правок и 50 откатов назад дошли до первой: стенд не держит столько шагов	manual
 20-motion	1	@domain m1	ok
 20-motion	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 20-motion	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
