@@ -61,3 +61,4 @@ date	sample	fix	languages
 2026-10-31	k38_sub_changes, m49_table_changes, rows_changes	новые случаи: первый сегмент двери ленты changes закрыт от имён подсистем, единиц и таблиц (ADR-0094 B2)	all
 2026-10-31	c8_ref125_holds_table_delete_after, c8_ref126_places_table_delete_after	новые случаи: delete_after у таблицы holds.table и placement.places.table — отказ связей (решение «Архитектора» 2026-10-31)	all
 2026-10-31	a94_pass_*, c8_ref127_*…c8_ref131_*	новые случаи: вид второй door.pass, закрытый перечень calls, связи 127–131 (ADR-0094 B1)	all
+2026-11-01	a103_calls_book_*	новые случаи: дверь книги в закрытом перечне calls, только чтение (C06-CALLS-BOOK-01); реализацией ещё не прогнаны	all

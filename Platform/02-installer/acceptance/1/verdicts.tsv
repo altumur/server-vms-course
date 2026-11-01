@@ -825,3 +825,6 @@ a95_ops_step_over_route	refused
 a95_ops_step_operations	refused
 a95_ops_route_operations	refused
 a95_ops_door_route_operations	refused
+a103_calls_book_ok	ok
+a103_calls_book_write	refused
+a103_calls_book_deep	refused

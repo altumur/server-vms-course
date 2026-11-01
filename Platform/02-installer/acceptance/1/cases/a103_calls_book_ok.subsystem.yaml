@@ -1,0 +1,7 @@
+# дверь книги, только чтение (ADR-0103 п. 5, P/06.3 Н1.9)
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+tables: {stash: {fields: {note: {type: string}}, service: true}}
+worker: {exec: /usr/lib/probe/worker}
+door: {pass: {routes: [api], calls: ["GET domain/cam/books/licence"]}}
