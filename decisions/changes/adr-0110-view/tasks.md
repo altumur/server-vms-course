@@ -8,5 +8,6 @@ ADR-0110 доп. (5), разбор `decisions/inbox/ревью/РАЗБОР-ADR-
 | C08-VIEW-TABLES-01 | контроллер: `<sub>/snapshot-tables/<таблица>` при смене строк, потолок SNAPSHOT_TABLE_MAX, счёт `snapshot_tables_refused` | [x] | [ ] | [ ] |
 | C08-VIEW-TABLES-01 | агент несёт семью, `ready` её не судит | [x] | [ ] | [ ] |
 | C08-VIEW-TABLES-01 | проход держателя, шаг 3б: `domain/members/<член>/tables/<sub>/<таблица>` | [x] | [ ] | [ ] |
-| C08-VIEW-TABLES-01 | `Unit.revision` обязателен, `Unit.status`, `members[].servers` | [x] | [ ] | [ ] |
+| C08-VIEW-TABLES-01 | `Unit.revision` обязателен, `Unit.status`, `members[].servers` {name, online, labels?}, объект `domain/servers` | [x] | [ ] | [ ] |
+| C08-VIEW-TABLES-01 | строки единиц в `domain.view_tables`: `worker`, `server`, `phase`, `status`; `secrets`, `held_by`, заглушка `refused`, `tables_budget`, снятие при уходе | [x] | [ ] | [ ] |
 | C08-VIEW-TABLES-01 | дверь `GET /domain/<sub>/tables/<таблица>?cluster=`, слово `not reported yet`; `calls`: `GET domain`, `GET domain/<s>/<rows>`, `GET domain/<s>/tables/<таблица>` | [x] | [ ] | [ ] |

@@ -1555,3 +1555,15 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 09-x0008	domain/roles	domain/roles	row	reader	["console", "domainagent"]	{"doc_sha256":"0000000000000000000000000000000000000000000000000000000000000000","groups":"{}","assigned":"{\"r\":[{\"person\":\"a\"}]}","admin_at":"{\"ann\":1760000000}","as_of":"1760000000"}	refused	["/assigned/r/0/until"]	{"console": [""], "domainagent": [""]}	add: /assigned: без until
 09-x0009	domain/roles	domain/roles	row	writer	["domainagent"]	{"doc_sha256":"0000000000000000000000000000000000000000000000000000000000000000","groups":"{}","assigned":"{\"admin\":[{\"person\":\"ann\",\"until\":0}]}","admin_at":"{\"a\":\"x\"}","as_of":"1760000000"}	refused	["/admin_at/a"]	[]	add: /admin_at: значение не время
 09-x0010	domain/roles	domain/roles	row	reader	["console", "domainagent"]	{"doc_sha256":"0000000000000000000000000000000000000000000000000000000000000000","groups":"{}","assigned":"{\"admin\":[{\"person\":\"ann\",\"until\":0}]}","admin_at":"{\"a\":\"x\"}","as_of":"1760000000"}	refused	["/admin_at/a"]	{"console": [""], "domainagent": [""]}	add: /admin_at: значение не время
+c09_servers.001	domain/servers	domain/servers	object	writer	["domainagent"]	{"servers":{"s1":{"labels":"a"}}}	ok	[]	[]	base
+c09_servers.002	domain/servers	domain/servers	object	reader	["domainagent"]	{"servers":{"s1":{"labels":"a"}}}	ok	[]	{"domainagent": []}	base
+c09_servers.003	domain/servers	domain/servers	object	writer	["domainagent"]	null	refused	[""]	[]	root null
+c09_servers.004	domain/servers	domain/servers	object	reader	["domainagent"]	null	refused	[""]	{"domainagent": [""]}	root null
+c09_servers.005	domain/servers	domain/servers	object	writer	["domainagent"]	{	refused	[""]	[]	not JSON
+c09_servers.006	domain/servers	domain/servers	object	reader	["domainagent"]	{	refused	[""]	{"domainagent": [""]}	not JSON
+c09_servers.007	domain/servers	domain/servers	object	writer	["domainagent"]	{}	refused	["/servers"]	[]	: without required servers
+c09_servers.008	domain/servers	domain/servers	object	reader	["domainagent"]	{}	refused	["/servers"]	{"domainagent": [""]}	: without required servers
+c09_servers.009	domain/servers	domain/servers	object	writer	["domainagent"]	{"servers":{"s1":{}}}	refused	["/servers/s1/labels"]	[]	: without required labels
+c09_servers.010	domain/servers	domain/servers	object	reader	["domainagent"]	{"servers":{"s1":{}}}	refused	["/servers/s1/labels"]	{"domainagent": [""]}	: without required labels
+c09_servers.011	domain/servers	domain/servers	object	writer	["domainagent"]	{"servers":{},"z":1}	refused	["/z"]	[]	extra field
+c09_servers.012	domain/servers	domain/servers	object	reader	["domainagent"]	{"servers":{},"z":1}	refused	["/z"]	{"domainagent": [""]}	extra field

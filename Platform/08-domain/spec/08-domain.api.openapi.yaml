@@ -1975,8 +1975,15 @@ components:
           $ref: '#/components/schemas/MemberName'
         servers:
           type: array
-          items: {type: string, minLength: 1}
-          description: Имена серверов копии по возрастанию; нет копии или ни одного имени — поля нет (Н1.4).
+          items:
+            type: object
+            required: [name, online]
+            additionalProperties: false
+            properties:
+              name: {type: string, minLength: 1}
+              online: {type: boolean}
+              labels: {type: string}
+          description: Серверы копии по name; нет копии или ни одного имени — поля нет (Н1.4).
         state:
           enum: [ok, unseen, silent, never]
         age:
@@ -2017,6 +2024,8 @@ components:
         cluster:
           $ref: '#/components/schemas/MemberName'
         ts: {type: number}
+        refused:
+          enum: [too_large, whole_too_large]
         rows:
           type: array
           items:
@@ -2030,6 +2039,16 @@ components:
                 type: object
                 additionalProperties: true
                 description: Поля domain.view_tables манифеста; секретов нет.
+              secrets:
+                type: array
+                items: {type: string}
+                description: Имена заданных полей *_secret, значений нет.
+              worker: {type: string}
+              server: {type: string}
+              phase: {type: string}
+              status:
+                type: object
+                additionalProperties: true
     View:
       type: object
       required: [as_of, holder, complete, members, units, contested]

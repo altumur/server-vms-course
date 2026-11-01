@@ -10,6 +10,14 @@
    "$ref": "#/$defs/common.time",
    "description": "момент записи объекта у члена (P/04 Н1.3б); часы члена"
   },
+  "refused": {
+   "description": "вместо строк заглушка: таблица не вошла (P/04 Н1.3б ceiling, P/09.1 Н1.2 tables_budget)",
+   "type": "string",
+   "enum": [
+    "too_large",
+    "whole_too_large"
+   ]
+  },
   "rows": {
    "description": "строки таблицы по key в байтах UTF-8 (порядок — правило урока, не форма)",
    "type": "array",
@@ -716,6 +724,30 @@
     },
     "fields": {
      "description": "поля списка domain.view_tables манифеста; значения своим типом; секретов нет",
+     "type": "object",
+     "x-opaque": true
+    },
+    "secrets": {
+     "description": "имена заданных полей *_secret; значений нет",
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "worker": {
+     "description": "у строк единиц — из назначения",
+     "type": "string"
+    },
+    "server": {
+     "description": "у строк единиц — из назначения",
+     "type": "string"
+    },
+    "phase": {
+     "description": "у строк единиц — из пульса",
+     "type": "string"
+    },
+    "status": {
+     "description": "поля domain.view_status из элемента status[] пульса",
      "type": "object",
      "x-opaque": true
     }

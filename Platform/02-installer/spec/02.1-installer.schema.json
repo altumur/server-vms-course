@@ -1690,7 +1690,10 @@
      "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/books/[a-z][a-z0-9_-]{0,31})$"
     },
     {
-     "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/(?:tables/)?[a-z][a-z0-9_-]{0,31})$"
+     "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/(?:tables/)?[a-z][a-z0-9_-]{0,31})$",
+     "not": {
+      "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/books)$"
+     }
     },
     {
      "not": {

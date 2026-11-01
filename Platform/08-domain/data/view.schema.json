@@ -60,15 +60,33 @@
       ]
      },
      "servers": {
-      "description": "имена серверов копии, по возрастанию в байтах UTF-8; нет копии или ни одного имени — поля нет (Н1.4)",
+      "description": "серверы копии по name в байтах UTF-8; нет копии или ни одного имени — поля нет (Н1.4)",
       "type": "array",
       "items": {
-       "type": "string",
-       "not": {
-        "enum": [
-         ""
-        ]
-       }
+       "type": "object",
+       "properties": {
+        "name": {
+         "type": "string",
+         "not": {
+          "enum": [
+           ""
+          ]
+         }
+        },
+        "online": {
+         "description": "член ok и хоть одна единица сервера live",
+         "type": "boolean"
+        },
+        "labels": {
+         "description": "метки через запятую из domain/servers",
+         "type": "string"
+        }
+       },
+       "additionalProperties": false,
+       "required": [
+        "name",
+        "online"
+       ]
       }
      }
     },

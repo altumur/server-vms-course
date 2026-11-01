@@ -13,3 +13,4 @@ place	layer	word	value
 /$defs/common.time	3	x-time	true
 /$defs/common.uint53	3	x-integer	true
 /$defs/row/properties/fields	2, 6	x-opaque	true
+/$defs/row/properties/status	2, 6	x-opaque	true
