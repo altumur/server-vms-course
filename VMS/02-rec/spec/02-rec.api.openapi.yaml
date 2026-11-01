@@ -206,7 +206,7 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /ingest/upload:
     post:
-      summary: Выгрузка диапазона кусками (V/02.9 Н1.7, Н2) — токены домена stream, upstream
+      summary: Выгрузка диапазона кусками (V/02.9 Н1.4, Н2) — токены домена stream, upstream
       security: [{domainToken: []}]
       requestBody:
         required: true
@@ -481,7 +481,7 @@ components:
             from: {type: number}
             to: {type: number}
             recording: {type: string}
-            piece: {type: integer}
+            piece: {type: integer, description: "размер куска, байты (V/02.9 Н1.4)"}
         asks:
           type: array
           items:

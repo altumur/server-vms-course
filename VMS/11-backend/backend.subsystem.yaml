@@ -16,8 +16,8 @@ name: backend
 slot: {prefix: b, name_env: BACKEND_NAME}
 # Reads, writes and asks nothing of anybody by itself: what it needs it reads through the console with the ticket of the
 # request it serves (V/11.1 Н1.3). No state outside the platform's store: the memory of repeats of a group
-# `idempotencyKey` is always there, in its own table `repeats` (below) read and written through the console's door of
-# tables with the ticket (V/11.4 Н1.4; the review of V/11, question 3); so are the ids of people and the history of the
+# `idempotencyKey` is always there, in its own table `repeats` (below) read through the console's door of tables and
+# written through its batch door with the ticket (V/11.4 Н1.4; the review of V/11, question 3); so are the ids of people and the history of the
 # rights screen (`people`, `history`, V/11.8). The family `<sub>/idem/` is the console's own
 # memory of `Idempotency-Key` (P/06.1): backend does not touch it.
 worker: {exec: /usr/lib/backend/worker, stop_timeout: 20}
@@ -28,7 +28,8 @@ unit:
     name:      {type: string, required: true, fixed: true}
     # Where it may stand: labels of the servers, as for the gateways of `live` ("public-address" for a WebUI from outside).
     labels:    {type: list}
-    # Off: the worker answers nothing; the console's pass to it fails (503 «no worker of backend with a door is heard»).
+    # Off: the worker publishes no `url` while it holds no enabled row, so the console's pass finds no door
+    # (503 «no worker of backend with a door is heard»).
     enabled:   {type: bool,   default: true}
 placement:
   # By labels next to `live` (ADR-0094 доп. (6) п. 3; B8 `placement.home strict` is not needed for backend): a worker
@@ -105,7 +106,7 @@ door:
 # (доп. (3) п. 8), a page of its own (no frame of another page, no sandbox), with the Content-Security-Policy that is exactly the minimum
 # of P/06.5 Н1.1 `page` — the shell has no inline script, so `script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'`,
 # not stricter: inline styles and `data:` images stay allowed (доп. (8) пп. 1, 4).
-# The build: consolem @ef7175b, `tools/build_webui.py` (reproducible), its MANIFEST.json; its index.html is
+# The build: consolem @ef7175b (reproducible), its MANIFEST.json; its index.html is
 # backend.shell.html (SHA-256 caa73ca5…), the rest is the set (V/11.1 Н1.4). The deployment package builds it from the
 # pinned commit and places it next to the manifest (V/09.3).
 # SHA-256 of each (the lesson's README): 0d9c0fc7… app.css, 621743b8… app.js, 51da0e97… client.js,
@@ -114,8 +115,8 @@ door:
 # The memory of repeats of a group `idempotencyKey` (V/11.4 Н1.4; the review of V/11, question 3): a row per group,
 # key h = SHA-256 hex of the bytes of the person (`user` of the ticket), a zero byte and the external key. Made with
 # cas "" as «started» before the snapshot; each step's outcome lands in it in the step's own batch (B9). The form of the
-# row is this table's fields (the platform's family of tables has the schema `manifest`, P/06.1 Н1.6): a row the console
-# reads not by them is unreadable — backend answers 503 and runs nothing (V/11.4 Н1.4). Its lifetime — `delete_after`: the
+# row is this table's fields (the platform's family of tables has the schema `manifest`, P/06.1 Н1.6): a row not by
+# them is unreadable — backend answers 503 and runs nothing (V/11.4 Н1.4). Its lifetime — `delete_after`: the
 # console counts it from the first sight of the row's version, so it can only grow; the platform's reaper removes the row.
 tables:
   repeats:
@@ -130,22 +131,12 @@ tables:
       body:     {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of the body's bytes
       state:    {type: string, required: true, enum: [started, done]}
       operation: {type: string, schema: {pattern: "^[0-9a-f]{32}$"}}   # op createOperation: the id of the accepted operation
-      # the steps' outcomes by the index of `items` (V/11.4 Н1.4)
+      # the steps' outcomes by the index of `items`, as the text of a JSON array (V/11.4 Н1.4): a `json` field stops at
+      # 4000 bytes and a group is longer. An element: index (integer ≥ 0), outcome (done | failed), and at will id (the
+      # id of the step's record), code (the contract's code of a failed step), field; nothing else.
       steps:
-        type: json
-        default: []
-        schema:
-          type: array
-          items:
-            type: object
-            required: [index, outcome]
-            additionalProperties: false
-            properties:
-              index:   {type: integer, minimum: 0}
-              outcome: {enum: [done, failed]}
-              id:      {type: string, minLength: 1}      # the id of the step's record
-              code:    {type: string, minLength: 1}      # the contract's code of a failed step
-              field:   {type: string, minLength: 1}
+        type: string
+        default: "[]"
   # The id consolem knows a person by (V/11.8 Н1.2): a person's name is their login, so the id cannot be the key.
   people:
     key: h

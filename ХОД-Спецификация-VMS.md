@@ -51,6 +51,7 @@
 | 2026-10-31 | ревью таблиц | V/01, V/02, V/11 | та же ветка | форма `reply` при отказе V/01.4, слова `ingest`, `keeps`, 503 держателя у `.device.mp4`. `reply` в метке — запрос платформе: разбор `decisions/inbox/2026-10-31-запрос-vms-разбор-ревью-tables.md` |
 | 2026-10-31 | остаток ревью таблиц и потока | V/01, V/02, V/11 | ветка `vms/refusal-minor` | 413 `toolarge` у `holder`, `archive`, `keeps`, предел в `detail`; шапка V/01; README `4`: срок сна, обрыв потока — чтением. М-6 Claude — вопрос проверки `check_spec`, правок нет |
 | 2026-11-01 | выгрузка `b8505490` (`c8dfd56d1`) | V/01–V/11 | ветка `vms/repin-b8505490` | перепин всех одиннадцати на один пин по слову «Архитектора», дифф `d389cf5..b8505490` сверен. Пересказы платформы приведены: слова `error` и `field`, `may` с `sub`, `index` у модели, `reply` в метке, P/04 уход и `home`, B1, B7, B9 есть, 302 оболочки, ключ шага V/11.4, лицензия и книга после переноса, право учётки на точку. Приёмка — только хэши в 17 README и пояснение V/02 по слову «Архитектора», шаги не менялись. «Сборке»: `cam.shell.html`, комментарии манифестов `cam`, `rec`, `backend`. Разбор — `decisions/inbox/2026-11-01-запрос-vms-перепин-b8505490.md` |
+| 2026-11-01 | снимок `1041a985` (`36d6699df`) | V/01, V/02, V/11 | ветка `vms/pass-close-1` | разбор первой очереди прохода: 269 мест, 243 строки, ВЕРНО 160, НЕВЕРНО 60, СПОРНО 23; правки норм, манифестов `cam`, `rec`, `backend`, схем слов пульса, векторы 01, 02; приёмка 1, 4 V/01, V/02, V/11 по слову «Архитектора». Разбор — `decisions/inbox/2026-11-01-запрос-vms-разбор-прохода-01-02-11.md`, там же открытое. |
 
 ## Заведение сессии (2026-10-23)
 - Дерево `/Users/murat/w2c/wt-vms-spec`, ветка `vms/inventory` от `5d752c661`; хуки — `tools/vms-boundary/install.sh
@@ -589,3 +590,6 @@
 - «Сборке»: `cam.subsystem.yaml` — сняты `heartbeat.strings: [playback_key]`, `secrets.readers: {door/signer}` (у продукта двери держателя нет — ADR-0075).
 - «Сборке»: `cam.subsystem.yaml` `requests` — снято поле `id` (имя просьбы — от `Idempotency-Key`, P/06.4); `shares: {shm}` — доля `/run/vms-cam-shm`.
 - «Сборке»: `cam.subsystem.yaml` — таблицы `children`, `child_settings`, `devices` без `rays`, `relays`, с `channels`; `worker.writes`, `rights.unit_of`, `rights.routes`, ряд `device_inputs_off_total`; `auto.subsystem.yaml` — `worker.reads` + `cam/children/`, `cam/child_settings/` (ADR-0102 доп. (1)); продукт — строки детей у держателя.
+- «Сборке»: `cam.subsystem.yaml` `worker.reads` + `domain/member-topology`, `domain/topology` (дом опроса читает держатель; продукт — проверить).
+- «Сборке»: `rec.subsystem.yaml` — `volumes.url.schemes: {file: {host: path}, s3: {}}`, голый путь и прочие схемы бакета — отказ двери; `worker.stop_timeout: 45`; `servers.status` + `volume_error`; слово `codec not supported: <кодек>` в `reason` записи.
+- «Сборке»: `backend.subsystem.yaml` `repeats.steps` — текст JSON, не `json`; комментарии `enabled`, сборка без имени скрипта.

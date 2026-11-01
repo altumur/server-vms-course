@@ -10,10 +10,12 @@ door	code	error	field	norm
 *	412	VERSION_MISMATCH	-	11.4 Н4: 412 row moved прочее, revision moved; current
 *	428	PRECONDITION_REQUIRED	-	11.4 Н1.3, Н1.8; 11.8 Н4
 *	422	NOT_SUPPORTED	<поле>	11.3 Н4: запись поля none, read, const
-*	422	VALIDATION_FAILED	<поле>	11.4 Н4: 400 схемы, поле названо в слове
+*	422	VALIDATION_FAILED	<поле>	11.4 Н4: 400 схемы, поле названо в слове; 11.4 Н1.3, 11.8 Н1.5: тело не по схеме контракта; 11.3 Н4: null, id вне перечня, local без serverId
 *	4xx	VALIDATION_FAILED	-	11.4, 11.8 Н4: 4xx, слово не выводится однозначно; статус двери
 devices	409	NAME_TAKEN	-	11.4 Н4: 409 unique (имя)
 devices	409	NAME_TAKEN	detectorKind	11.4 Н4: 412 row moved строки det/units/<cam>-<kind> с cas ""
+devices	409	NAME_TAKEN	name	11.4 Н4: 412 row moved строки rec/volumes/<name> с cas ""
+devices	422	NAME_REQUIRED	name	11.3 Н4: пустое имя устройства, хранилища
 devices	422	VALIDATION_FAILED	ip	11.4 Н4: 409 unique (адрес камеры); 11.3 Н4: нет ip, PATCH ip: null
 devices	422	VALIDATION_FAILED	<поле>	11.4 Н4: 409 ref, must_match, fixed
 devices	422	VALIDATION_FAILED	-	11.4 Н4: 413 batch too large
@@ -29,12 +31,12 @@ devices	422	NOT_SUPPORTED	ip	11.3 Н4: source без сетевого хоста
 devices	-	NOT_SUPPORTED	candidateId	11.4 Н1.5: failed элемента, статус 200
 folders	404	NOT_FOUND	-	11.4 Н4: no such folder, no such parent, parent gone, folder gone, parent moved, row moved стража цепочки
 folders	412	VERSION_MISMATCH	-	11.4 Н4: folder moved; current
-folders	422	VALIDATION_FAILED	deviceIds	11.4 Н4: bad member, too many folders, too many members, row too large
+folders	422	VALIDATION_FAILED	deviceIds	11.4 Н4: bad member, too many folders, too many members, row too large; 11.4 Н1.7: id вне перечня вида
 folders	422	VALIDATION_FAILED	parentId	11.4 Н4: too deep
 folders	422	NAME_REQUIRED	name	11.4 Н1.7
 operations	404	NOT_FOUND	-	11.4 Н4: no such operation, no operations
 operations	409	BUSY	-	11.4 Н4: root busy, operation done, operation running, nothing to retry
-operations	422	VALIDATION_FAILED	items	11.4 Н4: too many steps, too many operations
+operations	422	VALIDATION_FAILED	items	11.4 Н4: too many steps, too many operations; 11.4 Н1.8: шаг не ровно с одним из set, folderIds, create, пустой items
 operations	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.8
 operations	-	DEVICE_OFFLINE	-	11.4 Н1.8: шаг not_run, код итога шага
 access	409	BUILTIN	-	11.8 Н4: 409 builtin; правка, удаление роли admin

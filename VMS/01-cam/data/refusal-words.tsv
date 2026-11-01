@@ -9,7 +9,7 @@ holder	405	method not allowed	-	01.5 Н4
 holder	413	toolarge	-	01.5 Н4; P/03.4 Н1.7
 holder	501	no index	-	01.5 Н4
 holder	503	device opening	-	01.5 Н4
-holder	503	device busy	-	01.5 Н4: застряло, сессии кончились, запас PLAYBACK_SPARE; V/06.2 Н1.4
+holder	503	device busy	-	01.5 Н4: застряло, чтения, сессии кончились, запас PLAYBACK_SPARE; V/06.2 Н1.4
 holder	503	busy	-	01.5 Н4: PLAYBACK_PER_CLIENT, бюджет двери; P/03.4 Н1.7 door_limits
 holder	401	no_role	-	01.5 Н2, Н4
 holder	403	no_role	-	01.5 Н2, Н4

@@ -5,7 +5,7 @@ info:
   description: |
     HTTP-контракт двери держателя `camworker` — главы V/01.5 урока «Камера» модуля VMS. Канон —
     [нормы главы 5](01.5-cam.norms.md); этот файл их выражает и не добавляет требований: порядок отказов,
-    пределы, куски и бюджет — Н1.5, Н3; личность клиента и разбор запроса — Н2 (сертификат роли, класс `role`
+    пределы, куски и бюджет — Н1.5, Н3; личность клиента и разбор запроса — Н2 (сертификат роли, класс `mixed`
     договора сертификата роли; без комплекта — только петля, маршруты — 401 `no_role`). Только `GET`; иной метод на
     маршруте — 405, иной путь — 404 `no such path`. Порядок: путь → метод → допуск → query (Н2). Цепочка, отвергнутая
     TLS, — отказ рукопожатия без HTTP-ответа (в контракте не выражается).
@@ -90,22 +90,22 @@ components:
     roleCertificate:
       type: mutualTLS
       description: |
-        сертификат роли клиента (класс `role` договора сертификата роли): допущены recworker, detjobworker,
+        сертификат роли клиента (класс `mixed` договора сертификата роли): допущены recworker, detjobworker,
         detedgeworker; набор доверия — ca.pem, ca.next.pem своего кластера (V/01.5 Н2)
   parameters:
     Id:
       name: id
       in: path
       required: true
-      description: id камеры (V/01.1 Н1.1)
-      schema: {type: string, pattern: "^(?:[0-9]+)$"}
+      description: id камеры (V/01.1 Н1.1); сегмент как записан, не из назначения — 404 (V/01.5 Н2)
+      schema: {type: string}
     From:
       name: from
       in: query
       required: false
       description: |
         секунды Unix, включительно, запись числа JSON, конечное; без параметра — от начала архива; повтор, пустое
-        значение, иная запись, from > to — 400 bad range (V/01.5 Н2)
+        значение, иная запись, from > to (заданы оба) — 400 bad range (V/01.5 Н2)
       schema: {type: number}
     To:
       name: to
@@ -113,7 +113,7 @@ components:
       required: false
       description: |
         секунды Unix, не включительно, запись числа JSON, конечное; без параметра — до конца архива; повтор, пустое
-        значение, иная запись, from > to — 400 bad range (V/01.5 Н2)
+        значение, иная запись, from > to (заданы оба) — 400 bad range (V/01.5 Н2)
       schema: {type: number}
   responses:
     Refusal:
@@ -127,7 +127,7 @@ components:
         application/json:
           schema:
             type: object
-            required: [error]
+            required: [error, detail]
             additionalProperties: false
             properties:
               error: {type: string}
@@ -147,7 +147,7 @@ components:
     RoleRefusal:
       description: |
         после рукопожатия: роль не из допущенных — wrong_role; роли в SAN не ровно одна — no_role; подпись листа
-        или центра вне sig — bad_chain (класс `role` договора сертификата роли; V/01.5 Н2)
+        или центра вне sig, серийник в revoked — bad_chain (слова класса `role` договора сертификата роли; V/01.5 Н2)
       content:
         application/json:
           schema:
@@ -181,7 +181,7 @@ components:
           type: array
           items: {type: string}
         playbacks: {type: integer, minimum: 0}
-        max_playbacks: {type: [integer, "null"], minimum: 0}
+        max_playbacks: {type: integer, minimum: 0}
         reads_stuck:
           type: array
           items: {type: string}

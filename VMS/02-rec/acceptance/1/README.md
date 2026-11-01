@@ -5,7 +5,7 @@ VMS](../../../common/acceptance/README.md) поверх общего README пл
 
 ## Подготовка
 
-Хранилище и консоль кластера; установлены манифесты `VMS/01-cam/cam.subsystem.yaml` и `VMS/02-rec/rec.subsystem.yaml`;
+Хранилище и консоль кластера; установлены манифесты `VMS/01-cam/cam.subsystem.yaml`, `VMS/02-rec/rec.subsystem.yaml` и `VMS/07-auto/auto.subsystem.yaml`;
 консоль — `CONSOLE_ROOT=rec` (двери `/recordings`, `/volumes`, `/keeps`), `cam` смонтирован (`console2` — `/cam/…`). Контроллер, воркеры, ресурс и
 домен не запущены. Запросы — с петли без домена (одна личность с полными правами). Сценарии — последовательно на одном
 экземпляре с пустыми данными `rec/` и `cam/` после установки; сценарии 02, 03 опираются на том `disk-a` сценария 01.
