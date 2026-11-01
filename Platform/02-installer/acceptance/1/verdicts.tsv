@@ -872,3 +872,7 @@ a111_calls_requests_ok	ok
 a111_calls_requests_read	refused
 a110_edit_delete_ok	ok
 a110_edit_delete_no_edit	refused
+a110_token_keep_ok	ok
+a110_token_keep_long	refused
+a112_calls_list_ok	ok
+a112_calls_where_write	refused
