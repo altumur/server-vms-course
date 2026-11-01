@@ -5,5 +5,6 @@ placement: {capacity: {default: 1}}
 worker: {exec: /usr/lib/probe/worker}
 rights:
   names:
-    - {field: when, at: "target.include[]", unit: id, kind: kind, kinds: {device: {of: cam}, folder: {folder: true}, server: {server: true}}}
-    - {field: then, at: "target.include[]", walk: ["yes", "no"], quiet: [control], unit: id, kind: kind, kinds: {device: {of: cam}, folder: {folder: true}, server: {server: true}}}
+    - {field: when, at: "target.include[]", unit: id, kind: kind, kinds: {device: {of: cam}, child: {of: cam, table: children}, folder: {folder: true}, server: {server: true}}}
+    - {field: then, at: "target.include[]", walk: ["yes", "no"], quiet: [control], action: action, unit: id, kind: kind, kinds: {device: {of: cam}, child: {of: cam, table: children}, folder: {folder: true}, server: {server: true}}}
+    - {field: then, at: "event.target.include[]", walk: ["yes", "no"], unit: id, kind: kind, kinds: {device: {of: cam}}}

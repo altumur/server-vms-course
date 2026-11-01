@@ -2433,11 +2433,25 @@
            "enum": [
             true
            ]
+          },
+          "table": {
+           "type": "string"
           }
          },
          "additionalProperties": false,
          "minProperties": 1,
-         "maxProperties": 1
+         "maxProperties": 2,
+         "dependentRequired": {
+          "table": [
+           "of"
+          ]
+         },
+         "not": {
+          "required": [
+           "folder",
+           "server"
+          ]
+         }
         }
        },
        "quiet": {
