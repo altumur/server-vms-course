@@ -720,7 +720,7 @@ scenario	step	request	expect
 25-ptz	10	member m1 console2 PUT /api/devices/3d08e8ba-11ab-5128-97e6-d03888680c2e/presets/1 {}	409 {"code": "DEVICE_OFFLINE"}
 25-ptz	11	member m1 console2 DELETE /api/devices/3d08e8ba-11ab-5128-97e6-d03888680c2e/ptz	204
 25-ptz	12	@manual живая камера: строка cam/ptz_moves со скоростью 50, продление меняет seq, DELETE снимает строку, камера останавливается не позже PTZ_LEASE; камера без ptz — 422 field ptz; preset_save, preset_clear исполнены, n вне presets — 404, отказ устройства — 409 DEVICE_REFUSED refused	manual
-25-ptz	13	@manual живая камера: PUT presets/{n} {"name": "Ворота"} — только имя: строка камеры с preset_labels, presets[].name — «Ворота», preset_save не подан, камера не движется; пустое имя снимает подпись; n вне can.presets — 404: у стенда нет пульса с can	manual
+25-ptz	13	@manual живая камера: PUT presets/{n} {} — положение, строка cam/preset_labels с пустым name; PUT {"name": "Ворота"} — только имя, камера не движется, revision строки камеры прежняя; PUT {"name": ""} — подпись снята, строка осталась, положения нет; DELETE снимает строку и пресет: у стенда нет пульса с can	manual
 26-unit-op	1	@domain m1	ok
 26-unit-op	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 26-unit-op	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}

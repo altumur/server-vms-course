@@ -71,6 +71,7 @@ door:
       - cam/cameras                  # the rows of cam, their tombstones (V/01.1)
       - cam/devices                  # what a host turned out to be: channels, videos — the tree of a device (V/11.3 Н1.3)
       - cam/children                 # the holder's rows of a device's inputs, outputs and sound (V/01.1 Н1.2а)
+      - cam/preset_labels            # a preset that went through us and its name (V/11.4 Н1.16)
       - cam/child_settings           # the operator's words on them; a PATCH merges: a POST of the table replaces the row (V/11.4 Н1.2)
       - cam/device_units             # the units of a device: a door, a reader, a relay under a door (V/01.1 Н1.2б)
       - cam/unit_next                # the last unit number of a row: it goes up in the batch that adds one (V/11.4 Н1.2)

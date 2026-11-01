@@ -31,3 +31,4 @@ date	sample	fix	languages
 2026-11-02	4/scenarios.tsv: 07-profile шаг 24; 11-devices шаги 5, 31–37, 47; 14-discovery шаги 34, 35; 17-rules; 19-revert шаги 11, 14, 37; новые 24-streams, 25-ptz, 26-unit-op, 27-journal, 28-redo, 29-assist	перепин на контракт 52c1113 (ADR-0112): /settings NO_ROUTE, id потока вместо слов main и sub, UPSTREAM_UNAVAILABLE, reason NOT_REVERTIBLE; новые операции	-
 2026-11-02	4/scenarios.tsv: 09-stream шаги 45–50; 24-streams; 25-ptz	ответы Консоли: operation.finished одиночной правки, zone, второй детектор вида, имя пресета только чтение	-
 2026-11-02	4/scenarios.tsv: 24-streams шаги 30–32; 25-ptz шаг 13; новые 30-live-accounts, 31-server-labels	разбор ревью дельты: linecross только line; имя пресета — @manual, пульса с can у стенда нет; ADR-0112 доп. (1): № 13, 91, 102–106 in	-
+2026-11-02	4/scenarios.tsv: 25-ptz шаг 13	таблица cam/preset_labels, имя положения не трогает (ADR-0112 доп. (4))	all
