@@ -577,6 +577,7 @@ domain:
       # Ten years (ADR-0110, addition (9)): a silent domain does not stop a recording. The form is the same, the token
       # is bound to `aud` and `ref`; the box keeps it sealed on its flash (V/01.6 Н1.3).
       lifetime: 315360000
+      keep: true
       claims: [aud, ref]
       grant: [camworker, recworker]
       placement: {sub: rec, caller: origin, ref_claim: ref, target_fields: [cluster, copies, star_centre], audience_claim: aud}
