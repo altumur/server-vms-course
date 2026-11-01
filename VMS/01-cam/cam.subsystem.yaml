@@ -544,9 +544,29 @@ domain:
   # all the same (the module's form gives a stream its fields too; they are inert, V/01.1 Н1.1а) is told from a camera
   # by the licence count (V/01.7)
   view: [name, enabled, main]
-  # What the domain's door lets through in a member's camera (PUT /domain/cam/cameras/<ref>): on or off. Its name,
-  # labels and retention are its cluster's console's (ADR-0031).
-  edit: [enabled]
+  # What a backend on another member needs of this one (ADR-0110, V/11.3 Н1.2а): the words of a unit's heartbeat and the
+  # rows behind `Device`. `ref` joins a camera to its recorder on another member; `rec/recordings` carries the same value.
+  view_status: [device_state, codec, units_down]
+  view_tables:
+    cameras: [name, main, type, ref, source, enabled, short, lat, lon, azimuth, mac, cred_username, resolution, fps, camera, words, overlay_delay_ms, overlay_duration_sec]
+    devices: [channels, videos, storage]
+    children: [camera, type, number, gone]
+    child_settings: [camera, type, number, title, enabled, norm]
+    device_units: [camera, n, type, template, address, parent, sensitivity, title, enabled]
+    unit_next: [camera, n]
+    rule_state: [camera, armed, disabled_by_rule, disabled_at, disabled_until]
+  # What the domain's door lets through in a member's camera: whatever a backend on another member writes of a device
+  # (ADR-0110, V/11.4 Н1.13); `type` for a new row, `ref` — the camera's name in the domain. A kept edit is applied by the
+  # member's agent and judged by the member's console, by the person who asked.
+  edit: [name, type, main, ref, source, profile, enabled, priority, labels, alarms, cred_username, short, lat, lon, azimuth, mac, camera, words, overlay_delay_ms, overlay_duration_sec, resolution, fps]
+  # A row of a table is written whole, so each list is all its fields (P/02.1, link 152).
+  edit_tables:
+    child_settings: [camera, type, number, title, enabled, norm]
+    device_units: [camera, n, type, template, address, parent, sensitivity, title, enabled]
+    unit_next: [camera, n]
+  # Sealed to the member's key at the door (P/08.6 Н1.3а): the camera's password.
+  edit_secrets:
+    cameras: [cred_secret]
   books:
     sources: {from: cam/sources/, key: ref, pick: unique, to: to}
     # The licence decision (V/01.7): written by the subsystem's worker on the domain (`camdomain`, P/03.7 Н1.6) — per

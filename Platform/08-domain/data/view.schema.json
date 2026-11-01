@@ -58,6 +58,44 @@
         }
        }
       ]
+     },
+     "servers": {
+      "description": "серверы копии по name в байтах UTF-8; нет копии или ни одного имени — поля нет (Н1.4)",
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "name": {
+         "type": "string",
+         "not": {
+          "enum": [
+           ""
+          ]
+         }
+        },
+        "online": {
+         "description": "есть пульс сервера: член ok и пульс свеж; пульсов нет — поля нет",
+         "type": "boolean"
+        },
+        "labels": {
+         "description": "метки через запятую из domain/servers",
+         "type": "string"
+        },
+        "pulse": {
+         "description": "поля domain.view_pulse из пульса воркера сервера, по подсистемам",
+         "type": "object",
+         "x-opaque": true
+        }
+       },
+       "additionalProperties": false,
+       "required": [
+        "name"
+       ]
+      }
+     },
+     "url": {
+      "description": "адрес входа члена из domain/servers; нет — член за NAT (Н1.4)",
+      "type": "string"
      }
     },
     "additionalProperties": false,
@@ -376,6 +414,21 @@
    "description": "поле главы 8.9 (М11/11 Н1.6 view.shared)",
    "type": "object",
    "x-opaque": true
+  },
+  "role_spread": {
+   "description": "расхождение роли по кластерам, только не ok (P/08.4 Н3)",
+   "type": "object",
+   "additionalProperties": {
+    "type": "object",
+    "additionalProperties": {
+     "type": "string",
+     "enum": [
+      "local",
+      "pending",
+      "refused"
+     ]
+    }
+   }
   }
  },
  "additionalProperties": false,
@@ -764,6 +817,14 @@
     "kept_at": {
      "$ref": "#/$defs/common.time",
      "description": "at правки (P/08.6 Н1.4 at)"
+    },
+    "made": {
+     "description": "id созданной единицы: POST единицы, связка с new или create (P/09.1 Н1.5 made)",
+     "type": "string"
+    },
+    "by": {
+     "description": "человек правки: by правки; нет — зритель домена (P/08.6 Н1.6)",
+     "type": "string"
     }
    },
    "additionalProperties": false,
@@ -1146,6 +1207,26 @@
      "$ref": "#/$defs/common.domain_member",
      "description": "член, в копии которого единица"
     },
+    "revision": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "версия строки единицы из строки шарда (Н1.4 Unit revision)"
+    },
+    "labels": {
+     "description": "поле labels строки шарда (Н1.4 Unit)",
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "about": {
+     "description": "id about-единицы из строки шарда (Н1.4 Unit)",
+     "type": "string",
+     "not": {
+      "enum": [
+       ""
+      ]
+     }
+    },
     "worker": {
      "description": "из пульса или из строки шарда; нет — поля нет; пульс без поля worker — имя из ключа пульса",
      "type": "string",
@@ -1191,6 +1272,11 @@
      "description": "поля, названные domain.view манифеста (P/02.1 Н1.2а), из строки шарда; секретных полей нет (P/06.2 Н1.4)",
      "type": "object",
      "x-opaque": true
+    },
+    "status": {
+     "description": "поля domain.view_status манифеста из элемента status[] пульса (Н1.4 Unit status)",
+     "type": "object",
+     "x-opaque": true
     }
    },
    "additionalProperties": false,
@@ -1199,6 +1285,7 @@
     "id",
     "ref",
     "cluster",
+    "revision",
     "phase",
     "age",
     "state"

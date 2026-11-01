@@ -1,0 +1,6 @@
+# без domain.ref пульсов в копии нет
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+domain: {view_pulse: [belt]}

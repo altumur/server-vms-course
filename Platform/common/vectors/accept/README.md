@@ -29,7 +29,7 @@ Kimi SB810-06): у строк уроков 3 и 4 `catalog` — `["testsub"]`, �
 | Манифест | Файл | sha256 |
 |---|---|---|
 | `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `f07e53992348a78aa88ed80bd6eaf27b74fccaff9a16de5feba34a3bc70f9459` |
-| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `99e5a69f476f57e2137c0a43dfef3e4b05544c9fba1238e0da1fae79515f22a9` |
+| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `3bd7d88decb6fbdba9930d4646887f5eb6afa32713f92f3572340229617ba710` |
 
 Смена этих байтов — повод перепроверить таблицу.
 Кто исполняет — держатель (`08-domain`, процесс `domain`: P/08.3 Н3 «принять» на `POST /api/member/<член>` и пакет ретранслятора с `via`) и ретранслятор (`09-agent`, дверь над своей памятью, P/09.2 Н2) — все строки. Только читают готовое: агент члена (сторона P/09.1 — ответ `carry` и 409 держателя, Н3 «проход агента») и консоль домена (`10-domain-console` — метку `reported`, P/10 Н3 `alarms`) (ACC-VECTORS-CONNECT-03: строку исполняет роль, чья норма вызывает её функцию; решение «Архитектора» 2026-10-27).

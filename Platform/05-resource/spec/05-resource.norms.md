@@ -45,7 +45,7 @@ object:
   key:       <семья>/… ; семьи платформы: heartbeats, contenders (P/03.4, P/03.2), controller (P/04), snapshot, blobs (добавлено М10/10),
              commands (договор просьбы и её метки, «Метка» mark; разбор ревью стадии B 6–7, № 24) — манифест их не называет
   writer:    один каталог — один писатель: worker → <s>/heartbeats/*, <s>/contenders/*;
-             controller → <s>/snapshot/* (добавлено М10/10), <s>/controller/*; console → <s>/blobs/* (добавлено М10/10); resource → platform/resources/*
+             controller → <s>/snapshot/* (добавлено М10/10), <s>/snapshot-tables/* (ADR-0110), <s>/controller/*; console → <s>/blobs/* (добавлено М10/10); resource → platform/resources/*
   cluster:   файл на сервере писателя; при чтении свежая копия (written) побеждает; сервер, который не ответил, — missing
   written:   отметка ресурса-хранителя при записи ключа (X-Written двери, written листинга), не поле времени тела; каждая
              запись ключа ставит written строго больше прежнего written того же ключа: часы не ушли вперёд — прежнее
@@ -63,7 +63,7 @@ object:
              после written не доказана), его перепишет следующее удаление тела (C05-WRITTEN-AFTER-GONE-02)
   row_object: ключи, чей следующий писатель может быть на другом сервере, — строки хранилища objects/<ключ>
              (objects.rows манифеста; commands/* — всегда, у манифеста с requests); put_new = запись с cas ""
-  door:      только семьи PLATFORM_DOOR (platform/resources/*, domain/* (М11), */heartbeats/*, */contenders/*, */snapshot/*,
+  door:      только семьи PLATFORM_DOOR (platform/resources/*, domain/* (М11), */heartbeats/*, */contenders/*, */snapshot/*, */snapshot-tables/*,
              */controller/*, */blobs/*; snapshot и blobs — добавлено М10/10) и objects.door манифеста; иное — 403;
              надгробия .gone/<ключ> — только чтение: листинг prefix=.gone/ и GET тела (договор надгробий; C05-GONE-BODY-READ-01);
              `*` первой части — подсистема каталога манифестов: `other/heartbeats/x` без манифеста other — 403 (сверка python и go М10/6–11, E5)

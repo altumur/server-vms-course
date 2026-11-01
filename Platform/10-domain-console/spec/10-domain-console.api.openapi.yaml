@@ -62,6 +62,45 @@ paths:
           description: как у GET, без тела
         '503':
           description: как у GET, без тела
+  '/domain/{sub}/tables/{table}':
+    get:
+      summary: Снимок таблицы члена (Н1.2а; P/08.1 Н1.4а)
+      description: Отвечает консоль домена сама (P/10-01); один член на запрос.
+      parameters:
+      - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Sub'
+      - name: table
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Ключ domain.view_tables манифеста.
+      - name: cluster
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 1
+        description: Член; нет, повтор или пусто — 400.
+      - name: If-None-Match
+        in: header
+        required: false
+        schema: {type: string}
+      responses:
+        '304':
+          description: Тело то же, что по ETag
+        '200':
+          description: Объект как есть
+          content:
+            application/json:
+              schema:
+                $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberTable'
+        '400': *id001
+        '401': *id002
+        '403': *id003
+        '404':
+          $ref: '#/components/responses/ViewNotFound'
+        '503':
+          $ref: '#/components/responses/ReadUnavailable'
   '/domain/{sub}/{rows}':
     get:
       summary: Единицы подсистемы в виде домена (Н1.2а)

@@ -1,0 +1,5 @@
+# Исходы нечитаемой строки domain/folders/<id> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	domain	строка целиком нечитаема: правка этой папки и папок под ней — 503 unavailable, ничего не записано; цепочка неизвестна; жнец её не трогает	1	строка	P/08.5 Н1.8
+	domainconsole	строка целиком нечитаема: `GET /domain/folders` отдаёт элемент `{id, garbled: true}`; цепочка неизвестна: договор права `partial`	1	строка	P/08.5 Н1.8

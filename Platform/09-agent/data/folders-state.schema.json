@@ -1,0 +1,93 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "type": "object",
+ "properties": {
+  "rev": {
+   "description": "{term, rev} копии папок у члена; копии нет — null",
+   "type": [
+    "object",
+    "null"
+   ],
+   "properties": {
+    "term": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "rev": {
+     "type": "integer",
+     "minimum": 0
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "term",
+    "rev"
+   ]
+  },
+  "scope": {
+   "description": "что держать: всё дерево или цепочки своих единиц",
+   "type": "string",
+   "enum": [
+    "all",
+    "chains"
+   ]
+  },
+  "gone": {
+   "description": "строки членства, чья единица снята",
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "own": {
+   "description": "папки кластера до входа в домен",
+   "type": "object",
+   "properties": {
+    "folders": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "pattern": "^(?:[0-9a-f]{32})$"
+       },
+       "name": {
+        "type": "string"
+       },
+       "parent": {
+        "type": "string"
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "name",
+       "parent"
+      ]
+     }
+    },
+    "memberof": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "folders",
+    "memberof"
+   ]
+  }
+ },
+ "additionalProperties": false,
+ "required": [
+  "rev",
+  "scope",
+  "gone"
+ ]
+}

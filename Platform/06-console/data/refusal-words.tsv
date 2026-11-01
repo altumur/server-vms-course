@@ -214,3 +214,4 @@ domain-forward	404	not another member	-	6.7 Н4
 domain-forward	502	did not answer	-	договор пересылки
 domain-forward	503	CLUSTERS does not read	-	6.7 Н4
 domain-forward	404	no such book shown	-	6.7 Н4
+folders	409	folders are the domain's	-	6.8 Н1.2а

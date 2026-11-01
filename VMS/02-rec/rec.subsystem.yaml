@@ -521,6 +521,12 @@ display:
 # (`rec/polled/<slot>`), the member named by its token; `cam` is the fixed field the platform's check asks for.
 domain:
   ref: ref
+  # What a backend on another member needs of this one (ADR-0110, V/11.3 Н1.2а): the disks of a server, a word of the
+  # server and not of a unit (ADR-0111 п. 2), the recordings behind `Device` and the volumes behind `Archive`, `Volume`.
+  view_pulse: [disks]
+  view_tables:
+    recordings: [cam, ref, stream, retention_days, enabled, home, when, replica_from]
+    volumes: [kind, url, server, quota_bytes, access_key, enabled, shrink_confirmed, when, admits, held_by]
   books:
     primaries: {from: rec/primaries/, key: ref, pick: all, to: to, show: [recording, running, role, coverage, retention_days, when, home]}
     polls: {from: rec/polls/, key: ref, pick: unique, to: to}
@@ -533,9 +539,14 @@ domain:
       placement: {sub: rec, caller: cluster, ref_claim: ref, target_fields: [centre], audience_claim: aud}
       unit: {sub: cam, caller: poll_home, ref_claim: ref, target_fields: [centre], audience_claim: aud}
   witness: {report: polled, member_field: cam}
-  # What the domain's door lets through in a member's recording (ADR-0031): switching it and its days, found by its
-  # camera's `ref` (`PUT /domain/rec/recordings/<ref>?cluster=`). It makes none: name, camera, home are its cluster's.
-  edit: [enabled, retention_days]
+  # What the domain's door lets through in a member's recording: whatever a backend on another member writes of a
+  # camera's recording (ADR-0110, V/11.4 Н1.13), found by its camera's `ref`; several rows of one `ref` are told by `id`.
+  edit: [name, cam, ref, stream, retention_days, enabled, home, when, replica_from]
+  # A volume, whole (P/02.1, link 152): a box of one cluster gets its volumes this way, and its secret sealed.
+  edit_tables:
+    volumes: [name, kind, url, server, quota_bytes, access_key, enabled, shrink_confirmed, when, admits]
+  edit_secrets:
+    volumes: [access_secret]
 # A lost stretch of a recording is said as soon as the engine says it (V/02.3 Н1.6), and an engine says it on many frames
 # after one loss: one line a window for a recording, the rest as `repeats`.
 events:

@@ -1,0 +1,9 @@
+# строки единиц и таблица мест в снимке (P/04 Н1.3б)
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement:
+  capacity: {default: 1}
+  places: {table: disks}
+tables: {disks: {fields: {note: {type: string}}}}
+worker: {exec: /usr/lib/probe/worker}
+domain: {view_tables: {things: [name], disks: [note, held_by]}}

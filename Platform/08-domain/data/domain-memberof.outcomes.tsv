@@ -1,0 +1,5 @@
+# Исходы нечитаемой строки domain/memberof/<член>/<sub>/<manifest:unit.rows>/<id> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	domain	строка целиком нечитаема: правка членства этой единицы — 503 unavailable; ответ агенту — без этой единицы в memberof, копия у члена прежняя	1	строка	P/08.5 Н1.8
+	domainconsole	строка целиком нечитаема: chains этой единицы неизвестны: договор права `partial`	1	строка	P/08.5 Н1.8

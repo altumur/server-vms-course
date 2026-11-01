@@ -1,0 +1,7 @@
+# таблицы нет
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}, key_secret: {type: string}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+domain: {edit_tables: {nosuch: [note]}}
+tables: {disks: {fields: {note: {type: string}, url_secret: {type: string}}}, stash: {fields: {note: {type: string}}, service: true}}

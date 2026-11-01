@@ -15,3 +15,4 @@ place	layer	word	value
 /properties/doc	3	x-codec	["object"]
 /properties/revision	3	x-codec	["integer"]
 /properties/revision	3	x-whole	true
+/properties/role_at	3	x-encoding	"json"

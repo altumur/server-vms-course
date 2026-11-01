@@ -405,6 +405,14 @@
     "kept_at": {
      "$ref": "#/$defs/common.time",
      "description": "at правки (P/08.6 Н1.4 at)"
+    },
+    "made": {
+     "description": "id созданной единицы: POST единицы, связка с new или create (P/09.1 Н1.5 made)",
+     "type": "string"
+    },
+    "by": {
+     "description": "человек правки: by правки; нет — зритель домена (P/08.6 Н1.6)",
+     "type": "string"
     }
    },
    "additionalProperties": false,
@@ -708,7 +716,7 @@
    "maximum": 9007199254740991
   },
   "edit": {
-   "description": "хранимая правка {id, seq, what, method, path, body, key, at, base?, asked} — текст JSON (Н1.4 edit)",
+   "description": "хранимая правка {id, seq, what, method, path, body, key, at, base?, by?, iat?, asked} — текст JSON (Н1.4 edit)",
    "type": "object",
    "properties": {
     "id": {
@@ -725,7 +733,7 @@
      "type": "string"
     },
     "method": {
-     "description": "метод двери единиц консоли члена",
+     "description": "метод двери консоли члена",
      "type": "string",
      "enum": [
       "POST",
@@ -734,7 +742,7 @@
      ]
     },
     "path": {
-     "description": "путь двери единиц консоли члена — `/<sub>/<rows>` или `/<sub>/<rows>/<id>` (id — местный id единицы из копии члена)",
+     "description": "путь двери консоли члена: строки единиц, таблицы или `/console/batch` (Н1.4 path, Н1.3б)",
      "type": "string"
     },
     "body": {
@@ -756,6 +764,14 @@
      "x-integer": true,
      "minimum": 1
     },
+    "by": {
+     "description": "человек, которого судит консоль члена (Н1.4 by)",
+     "type": "string"
+    },
+    "iat": {
+     "description": "iat токена этого человека (Н1.4 by)",
+     "type": "number"
+    },
     "asked": {
      "description": "запрос двери домена, как его принял процесс; по нему правку повторяют у нового держателя (глава 8.8 Н1.6 apply)",
      "type": "object",
@@ -770,7 +786,7 @@
        ]
       },
       "path": {
-       "description": "путь двери домена, нормализован — PUT, DELETE `/domain/<sub>/<rows>/<ref>?cluster=<член найденный>`; POST `/domain/<sub>/<rows>` без query (Н1.4 asked)",
+       "description": "путь двери домена, нормализован — PUT, DELETE `/domain/<sub>/<rows>/<ref>?cluster=<член найденный>[&id=<id>]`; POST `/domain/<sub>/<rows>` без query (Н1.4 asked)",
        "type": "string"
       },
       "body": {

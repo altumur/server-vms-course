@@ -1,0 +1,7 @@
+# таблица на домене: у члена её строк нет
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}, note: {type: string}, pic: {type: blob}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+tables: {stash: {fields: {note: {type: string}}}}
+domain: {kept: [stash], tables: [stash], view_tables: {stash: [note]}}

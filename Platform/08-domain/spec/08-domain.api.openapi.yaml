@@ -492,6 +492,127 @@ paths:
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
+  /domain/roles/{role}/lines:
+    parameters:
+      - name: role
+        in: path
+        required: true
+        schema: {type: string}
+    put:
+      operationId: roleLines
+      summary: Права роли на весь домен (глава 8.4 Н1.3а lines)
+      responses:
+        '200': {description: Записано; расхождение идёт проходом}
+        '400': {$ref: '#/components/responses/BodyRefused'}
+  /domain/folders:
+    post:
+      operationId: folderCreate
+      summary: Новая папка домена (глава 8.5 Н1.8)
+      parameters:
+        - {name: Idempotency-Key, in: header, required: false, schema: {type: string, minLength: 1, maxLength: 200}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, required: [name], additionalProperties: false, properties: {name: {type: string}, parent: {type: string}}}
+      responses:
+        '201': {description: Папка}
+        '400': {$ref: '#/components/responses/BodyRefused'}
+        '403': {description: Не зритель домена с admin}
+        '404': {description: no such parent}
+        '409': {description: 'parent gone, too many folders'}
+        '503': {description: unavailable}
+    get:
+      operationId: foldersRead
+      summary: Дерево папок домена (отвечает консоль домена)
+      responses:
+        '200': {description: '{rev, folders}'}
+  /domain/folders/{folder}:
+    parameters:
+      - name: folder
+        in: path
+        required: true
+        schema: {type: string}
+    put:
+      operationId: folderRename
+      summary: Имя папки домена
+      responses:
+        '200': {description: Папка}
+        '400': {$ref: '#/components/responses/BodyRefused'}
+    delete:
+      operationId: folderDelete
+      summary: Надгробие папки домена
+      responses:
+        '200': {description: Снята}
+  /domain/memberof/{member}/{sub}/{rows}/{id}:
+    parameters:
+      - {$ref: '#/components/parameters/Member'}
+      - {$ref: '#/components/parameters/Sub'}
+      - {$ref: '#/components/parameters/Rows'}
+      - name: id
+        in: path
+        required: true
+        schema: {type: string}
+    get:
+      operationId: memberofRead
+      summary: Членство единицы в папках домена (отвечает консоль домена)
+      responses:
+        '200': {description: '{folders, index}'}
+    put:
+      operationId: memberofWrite
+      summary: Членство единицы в папках домена
+      responses:
+        '200': {description: Записано}
+        '400': {$ref: '#/components/responses/BodyRefused'}
+  /domain/edits:
+    post:
+      operationId: keptEdits
+      summary: Связка правок одного устройства (глава 8.6 Н1.3б)
+      parameters:
+        - {name: Idempotency-Key, in: header, required: true, schema: {type: string, minLength: 1, maxLength: 200}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cluster, writes]
+              additionalProperties: false
+              properties:
+                cluster: {$ref: '#/components/schemas/MemberName'}
+                writes:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [op, sub, rows]
+                    additionalProperties: false
+                    properties:
+                      op: {enum: [put, delete]}
+                      sub: {type: string}
+                      rows: {type: string}
+                      ref: {type: string}
+                      id: {type: string}
+                      name: {type: string}
+                      create: {type: boolean}
+                      new: {type: boolean}
+                      fields: {type: object, additionalProperties: true}
+      responses:
+        '202': {description: Правка хранится (Н1.4 reply)}
+        '400': {$ref: '#/components/responses/BodyRefused'}
+        '403': {description: Суд одной из строк}
+        '404': {description: 'Нет ref, манифеста или члена'}
+        '409': {description: 'kept_full, unit is being deleted'}
+        '413': {description: too large}
+        '422': {description: Ключ использован для другой правки}
+        '503': {description: 'refused, unavailable'}
+  /domain/edits/stranded:
+    post:
+      operationId: keptEditsStranded
+      summary: Повтор правки у нового держателя (глава 8.8 Н1.6 apply; 8.6 Н1.3а stranded)
+      responses:
+        '202': {description: Правка хранится}
+        '400': {$ref: '#/components/responses/BodyRefused'}
   /domain/{sub}/{rows}:
     description: 'Глава 8.6 Н1.3, Н1.4, Н2, Н3 «принять правку». GET и HEAD (вид единиц) отвечает консоль домена сама (урок P/10; схема — Unit).'
     parameters:
@@ -531,6 +652,11 @@ paths:
       - {$ref: '#/components/parameters/Sub'}
       - {$ref: '#/components/parameters/Rows'}
       - {$ref: '#/components/parameters/Ref'}
+      - name: id
+        in: query
+        required: false
+        schema: {type: string, minLength: 1}
+        description: Единица среди нескольких с этим ref у члена (глава 8.6 Н1.3 find).
       - name: cluster
         in: query
         required: false
@@ -1668,7 +1794,7 @@ components:
     RefusedEdit409:
       description: 'Отказ 409 двери правки по ref (P/08.6 Н4): Refusal — kept_full, «unit is being deleted», «the pending edits kept
         changing; ask again»; Executors — ref у двух исполнителей и больше без ?cluster= (P/08.6 Н3 «принять правку» шаг 2а;
-        ADR-0091 доп. (13) п. 3, доп. (15) п. 4)'
+        ADR-0091 доп. (13) п. 3, доп. (15) п. 4); siblings — ref у нескольких единиц одного члена без ?id= (P/08.6 Н1.3 find)'
       content:
         application/json:
           schema:
@@ -1973,6 +2099,22 @@ components:
       properties:
         name:
           $ref: '#/components/schemas/MemberName'
+        url: {type: string, description: 'адрес входа члена, PUBLIC_URL его окружения; нет — член за NAT (Н1.4)'}
+        servers:
+          type: array
+          items:
+            type: object
+            required: [name]
+            additionalProperties: false
+            properties:
+              name: {type: string, minLength: 1}
+              online: {type: boolean}
+              labels: {type: string}
+              pulse:
+                type: object
+                additionalProperties: true
+                description: Поля domain.view_pulse манифеста из пульса воркера сервера, по подсистемам.
+          description: Серверы копии по name; нет копии или ни одного имени — поля нет (Н1.4).
         state:
           enum: [ok, unseen, silent, never]
         age:
@@ -1981,7 +2123,7 @@ components:
           description: Секунды с последней смены метки, которую видел этот процесс держателя, без смены — с первого взгляда; у never — null.
     Unit:
       type: object
-      required: [sub, id, ref, cluster, phase, age, state]
+      required: [sub, id, ref, cluster, revision, phase, age, state]
       additionalProperties: false
       properties:
         sub: {type: string, minLength: 1}
@@ -1989,6 +2131,19 @@ components:
         ref: {type: string, minLength: 1}
         cluster:
           $ref: '#/components/schemas/MemberName'
+        revision: {type: integer, minimum: 1}
+        labels:
+          type: array
+          items: {type: string}
+          description: Поле labels строки шарда; нет — поля нет (Н1.4).
+        about:
+          type: string
+          minLength: 1
+          description: id about-единицы из строки шарда; нет — поля нет (Н1.4).
+        status:
+          type: object
+          additionalProperties: true
+          description: Поля domain.view_status манифеста из элемента status[] пульса (Н1.4).
         worker: {type: string, minLength: 1}
         server: {type: string, minLength: 1}
         phase: {type: string, minLength: 1}
@@ -1999,6 +2154,44 @@ components:
           type: object
           additionalProperties: true
           description: Поля domain.view манифеста; секретных нет. Открыт намеренно — набор полей задаёт манифест подсистемы, не урок.
+    MemberTable:
+      type: object
+      description: Снимок таблицы члена (P/08.1 Н1.4а, P/04 Н1.3б).
+      required: [cluster, ts, rows]
+      additionalProperties: false
+      properties:
+        cluster:
+          $ref: '#/components/schemas/MemberName'
+        ts: {type: number}
+        refused:
+          enum: [too_large, whole_too_large]
+        rows:
+          type: array
+          items:
+            type: object
+            required: [key, revision, fields]
+            additionalProperties: false
+            properties:
+              key: {type: string, minLength: 1}
+              revision: {type: integer, minimum: 1}
+              fields:
+                type: object
+                additionalProperties: true
+                description: Поля domain.view_tables манифеста; секретов нет.
+              secrets:
+                type: array
+                items: {type: string}
+                description: Имена заданных полей *_secret, значений нет.
+              labels:
+                type: array
+                items: {type: string}
+              about: {type: string}
+              worker: {type: string}
+              server: {type: string}
+              phase: {type: string}
+              status:
+                type: object
+                additionalProperties: true
     View:
       type: object
       required: [as_of, holder, complete, members, units, contested]
@@ -2246,6 +2439,19 @@ components:
       required: [cluster, rev, every]
       additionalProperties: false
       properties:
+        gone_seen:
+          type: array
+          items: {type: string}
+          description: Ссылки gone, у держателя строк нет (глава 8.5 Н1.8).
+        folders:
+          type: object
+          required: [rev, folders, memberof]
+          additionalProperties: false
+          description: Общие папки, глава 8.5 Н1.8.
+          properties:
+            rev: {type: object, required: [term, rev], additionalProperties: false, properties: {term: {type: integer}, rev: {type: integer}}}
+            folders: {type: object, additionalProperties: {type: object, required: [name, parent], additionalProperties: false, properties: {name: {type: string}, parent: {type: string}}}}
+            memberof: {type: object, additionalProperties: {type: array, items: {type: string}}}
         cluster: {$ref: '#/components/schemas/MemberName'}
         rev: {type: integer, minimum: 0}
         every: {type: number, minimum: 1, maximum: 3600}
@@ -2532,6 +2738,11 @@ components:
       additionalProperties: false
       description: Строка роли (P/08.4 Н1.3а).
       properties:
+        lines:
+          type: array
+          items: {type: object, additionalProperties: true}
+          description: Права роли на весь домен (глава 8.4 Н1.3а lines).
+        lines_at: {type: number}
         name: {$ref: '#/components/schemas/PersonName'}
         title: {type: string, maxLength: 200}
         comment: {type: string, maxLength: 2000}
@@ -2559,6 +2770,10 @@ components:
                 lines:
                   type: array
                   items: {$ref: '#/components/schemas/Line'}
+        anywhere:
+          type: object
+          additionalProperties: {type: number, minimum: 0}
+          description: Сводка P/08.4 Н1.3 anywhere; только шаг 6 договора права.
         as_role: {type: string, description: Проверка действия от роли, договор права «Действие от роли».}
         as_of: {type: ['number', 'null']}
         disabled:
@@ -2571,6 +2786,7 @@ components:
           oneOf:
             - type: 'null'
             - const: '*'
+            - const: any
             - $ref: '#/components/schemas/MayUnit'
         now: {type: number}
         sub:
@@ -2710,6 +2926,8 @@ components:
         key: {type: string, minLength: 1, maxLength: 200}
         at: {type: number}
         base: {type: integer, minimum: 1}
+        by: {type: string, description: 'человек, которого судит консоль члена (P/08.6 Н1.4 by)'}
+        iat: {type: number}
         asked:
           type: object
           required: [method, path, body]
@@ -2725,6 +2943,8 @@ components:
       additionalProperties: false
       description: 'Исход правки (P/08.6 Н1.5): элемент outcomes публикации и вида домена.'
       properties:
+        made: {type: string, description: 'id созданной единицы (P/09.1 Н1.5 made)'}
+        by: {type: string}
         id: {type: string, pattern: "^(?:e-[0-9a-f]{12})$"}
         status: {type: integer}
         result: {enum: [performed, conflict, refused]}

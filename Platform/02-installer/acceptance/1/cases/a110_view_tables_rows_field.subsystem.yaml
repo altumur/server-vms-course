@@ -1,0 +1,6 @@
+# поля нет у единицы
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}, note: {type: string}, pic: {type: blob}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+domain: {view_tables: {things: [nosuch]}}

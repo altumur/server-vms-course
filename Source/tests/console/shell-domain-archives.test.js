@@ -10,7 +10,7 @@ fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\
 process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
-const u=(sub,cluster,id,o={})=>({sub,id,cluster,server:cluster,worker:"w",phase:"running",age:2,state:"live",...o});
+const u=(sub,cluster,id,o={})=>({revision:1,sub,id,cluster,server:cluster,worker:"w",phase:"running",age:2,state:"live",...o});
 b.FIX["/session"]={open:true};
 b.FIX["/manifest"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/cameras"]={configured:[],rows:[]};

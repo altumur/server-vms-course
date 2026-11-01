@@ -53,6 +53,7 @@
     "platform/decommission/*",
     "platform/drain",
     "platform/folders/*",
+    "platform/memberof-gone/*",
     "platform/memberof/*",
     "platform/schema",
     "platform/servers/*",
@@ -91,6 +92,10 @@
     "!domain/deleting/*",
     "!domain/disabled",
     "!domain/disabled/*",
+    "!domain/folder-rev",
+    "!domain/folder-rev/*",
+    "!domain/folders",
+    "!domain/folders/*",
     "!domain/from-nothing",
     "!domain/from-nothing/*",
     "!domain/grants/*",
@@ -99,6 +104,8 @@
     "!domain/idem/*",
     "!domain/keepers",
     "!domain/keepers/*",
+    "!domain/memberof",
+    "!domain/memberof/*",
     "!domain/members",
     "!domain/members/*",
     "!domain/move-ask",
@@ -135,7 +142,10 @@
     "!domain/va/worker/*",
     "!domain/view",
     "!domain/view/*",
-    "domain/*"
+    "domain/*",
+    "platform/folders/*",
+    "platform/memberof-gone/*",
+    "platform/memberof/*"
    ],
    "group": "w2c-domainagent",
    "read": [
@@ -160,6 +170,10 @@
     "!domain/deleting/*",
     "!domain/disabled",
     "!domain/disabled/*",
+    "!domain/folder-rev",
+    "!domain/folder-rev/*",
+    "!domain/folders",
+    "!domain/folders/*",
     "!domain/from-nothing",
     "!domain/from-nothing/*",
     "!domain/grants/*",
@@ -168,6 +182,8 @@
     "!domain/idem/*",
     "!domain/keepers",
     "!domain/keepers/*",
+    "!domain/memberof",
+    "!domain/memberof/*",
     "!domain/members",
     "!domain/members/*",
     "!domain/move-ask",
@@ -204,7 +220,10 @@
     "!domain/va/worker/*",
     "!domain/view",
     "!domain/view/*",
-    "domain/*"
+    "domain/*",
+    "platform/folders/*",
+    "platform/memberof-gone/*",
+    "platform/memberof/*"
    ]
   },
   "domainconsole": {

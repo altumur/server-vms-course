@@ -611,6 +611,21 @@ console:
 # events and asks the target over the ingest it polls; the evaluators on the path publish the roads (`asks`, V/07.5);
 # the target camera checks its own capabilities when the ask arrives (ADR-0074 C6, C7).
 domain:
+  # What a backend on another member needs of this one (V/11.3 Н1.2а): the rules and their library. Not `modes`, not
+  # `mode_current`: a mode is its cluster's (ADR-0111 п. 10). Not `versions`: read at the member, beyond the view.
+  view_tables:
+    scenarios: [name, start, run_at, run_mode, operator_menu, repeat, when, within, conditions, then, rate_per_minute, enabled, log_only, log_only_since, owner, purpose, server, run_as_role, allow_chain, created_at, created_by, changed_at, changed_by, hidden]
+    rule_marks: [scenario, mute, order]
+    schedules: [id, title, kind, week, overrides, valid, cycle, dates, astro, owner, builtin]
+    day_groups: [id, title, rules]
+    windows: [id, title, schedule, rules, enabled]
+  # What a backend on another member writes of a rule (V/11.4 Н1.13), by (cluster, id); not `server`, a unit's word of the
+  # platform at the door.
+  edit: [name, start, run_at, run_mode, operator_menu, repeat, when, within, conditions, then, rate_per_minute, valid_for, enabled, labels, log_only, log_only_since, owner, purpose, run_as_role, allow_chain, created_at, created_by, changed_at, changed_by, history_note, hidden]
+  edit_delete: true                  # a rule, and the hidden row of recording by detectors (V/11.4 Н1.2, Н1.10)
+  edit_tables:
+    versions: [scenario, number, note, rule]
+    rule_marks: [scenario, mute, order]
   books:
     asks: {from: auto/asks/, key: target, pick: all, to: to}
   shared:

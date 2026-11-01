@@ -1,0 +1,7 @@
+# вид, единицы и таблицы домена по билету (P/06.3 Н1.9)
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+tables: {stash: {fields: {note: {type: string}}, service: true}}
+door: {pass: {routes: [api], calls: ["GET domain", "GET domain/cam/cameras", "GET domain/cam/tables/volumes"]}}

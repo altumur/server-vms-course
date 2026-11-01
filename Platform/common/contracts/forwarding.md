@@ -85,7 +85,7 @@ FORWARD_MAX:  1 МиБ
 FORWARD_WAIT: столбец «Ожидание» строки таблицы Н1.2 (умолчание 5 с); двери переноса — свои сроки: пересылка подписанту своей
               коробки — 10 с у /api/prepare, 90 с у /api/take и /domain/move (P/06.7 Н1.8 order шаг 5; P/08.8 Н1.7, Н1.8);
               /domain/handover — 100 с (таблица ниже), больше 90 с ответа процесса domain (P/08.8 Н1.7 door) (аудит раскладки Б-19, решение «Архитектора» 2026-10-25)
-gate:         сторожевая пересылающей консоли спрашивает только, кто звонит (любой грант этого кластера, урок 9 Н1.5; петля
+gate:         сторожевая пересылающей консоли спрашивает только, кто звонит (любой грант этого кластера или строка domain/anywhere, договор права шаг 6; урок 9 Н1.5; петля
               operator — договор сторожевой и передачи «Сторожевая» `open`), и не спрашивает у открытых строк таблицы (Личность «—»); что можно, решает сторожевая
               консоли домена или члена
 tls:          к https:// — клиент роли console (P/02.4 Н1.6) с проверкой сервера peer (Н1.6) по члену назначения:
@@ -141,6 +141,7 @@ journal:      domain.forwarded {cluster, path, user, status} у пересыла
 |---|---|---|---|---|
 | GET | `/domain` | 1 Н2 | 5 | да |
 | GET | `/domain/shadow` | 1 Н2 | 5 | да |
+| GET | `/domain/<sub>/tables/<таблица>` (P/10 Н1.2а; `tables` — зарезервированное имя, `unit.rows` им не бывает, P/02.1) | 1 Н2 | 5 | да |
 | GET | `/domain/<sub>/<rows>` (`<rows>` — `unit.rows` манифеста каталога; манифест без `domain.ref` — пересылается, держатель отвечает 404 `not in the directory`, урок 1 Н2) | 1 Н2 | 5 | да |
 | GET, POST | `/domain/members` | 3 Н2 | 5 | да |
 | DELETE | `/domain/members/<член>` | 3 Н2 | 5 | да |
@@ -149,6 +150,13 @@ journal:      domain.forwarded {cluster, path, user, status} у пересыла
 | GET | `/domain/placement` | 6 Н2 | 5 | да |
 | GET, PUT, DELETE | `/domain/placement/<sub>/<ref>` | 6 Н2 | 5 | да |
 | POST | `/domain/<sub>/<rows>` | 6 Н2 | 5 | да |
+| POST | `/domain/<sub>/<таблица>` (ключ `domain.edit_tables`) | P/08.6 Н1.3 | 5 | да |
+| DELETE | `/domain/<sub>/<таблица>/<имя>` | P/08.6 Н1.3 | 5 | да |
+| POST | `/domain/edits` | P/08.6 Н1.3б | 5 | да |
+| POST | `/domain/edits/stranded` | P/08.6 Н1.3а, P/08.8 Н1.6 | 5 | да |
+| GET, POST | `/domain/folders` | P/08.5 Н1.8 | 5 | да |
+| PUT, DELETE | `/domain/folders/<id>` | P/08.5 Н1.8 | 5 | да |
+| GET, PUT | `/domain/memberof/<член>/<sub>/<rows>/<id>` | P/08.5 Н1.8 | 5 | да |
 | PUT, DELETE | `/domain/<sub>/<rows>/<ref>` | 6 Н2 | 5 | да |
 | любой | `/domain/<sub>/<сегмент door.pass манифеста>[/…]` | 8 Н1.7 | 5 | да |
 | GET, POST | `/domain/users` | 9 Н2 (добавлено М11/9) | 5 | да |
@@ -156,6 +164,7 @@ journal:      domain.forwarded {cluster, path, user, status} у пересыла
 | GET, POST | `/domain/groups` | P/08.4 Н2 (ADR-0098) | 5 | да |
 | PUT, DELETE | `/domain/groups/<имя>` | P/08.4 Н2 (ADR-0098) | 5 | да |
 | GET, POST | `/domain/roles` | P/08.4 Н2 (ADR-0098) | 5 | да |
+| PUT | `/domain/roles/<имя>/lines` | P/08.4 Н2 (ADR-0110 Д-3) | 5 | да |
 | PUT, DELETE | `/domain/roles/<имя>` | P/08.4 Н2 (ADR-0098) | 5 | да |
 | POST | `/domain/batch` | P/08.4 Н2 (ADR-0098 §6) | 5 | да |
 | GET | `/domain/grants` | 9 Н2 (добавлено М11/9) | 5 | да |
@@ -170,14 +179,14 @@ journal:      domain.forwarded {cluster, path, user, status} у пересыла
 | POST | `/api/login` | 9 Н1.2 (добавлено М11/9; вход людей через консоль) | 5 | — (вход) |
 
 Строка с `GET` покрывает и `HEAD` того же пути: пересылается как `HEAD`, ответ — тот же код и заголовки без тела ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н2;
-прогон 41). То же у `/domain/at/…` (М11/8 Н1.5): `HEAD` — как `GET` формы `where`, без тела (добавлено сверкой М11, D2).
+прогон 41). То же у `/domain/at/…` (М11/8 Н1.5): `HEAD` — как `GET` той же формы, без тела (добавлено сверкой М11, D2).
 
 Путь с сегментом `.` или `..`, в том числе в процент-форме (`%2e`, `%2E`, `.%2e`, `%2e%2e` и подобные), — 404 `not a domain
 route` до сторожевой, до пересылки и до передачи воркеру на домене (Н1.7); сегменты не нормализуются (добавлено сверкой
 М11, D4: путь `/domain/<sub>/<сегмент>/../members` иначе ушёл бы мимо таблицы).
 
 Сопоставление по порядку: `books` (своя: дверь книги `GET /domain/<sub>/books/<книга>`, [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.1; аудит раскладки Б-19, решение «Архитектора» 2026-10-25), `at` (своя), строки таблицы сверху вниз; `<sub>` — подсистема каталога
-этой консоли; сегмент `door.pass`, совпавший с `books`, `placement`, `members`, `topology`, `shadow`, `at`, на домене не
+этой консоли; сегмент `door.pass`, совпавший с `books`, `tables`, `placement`, `members`, `topology`, `shadow`, `at`, на домене не
 передаётся.
 
 ## Отказы по переходам

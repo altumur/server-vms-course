@@ -920,9 +920,58 @@
      "$ref": "#/$defs/nonSecretList",
      "x-owner": "P/08.1 Н1.4"
     },
+    "view_status": {
+     "$ref": "#/$defs/nonSecretList",
+     "x-owner": "P/08.1 Н1.4"
+    },
+    "view_pulse": {
+     "$ref": "#/$defs/nonSecretList",
+     "x-owner": "P/08.1 Н1.4"
+    },
+    "view_tables": {
+     "x-owner": "P/08.1 Н1.4а",
+     "x-class": "reference",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/tableName"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/nonSecretList"
+     }
+    },
     "edit": {
      "$ref": "#/$defs/nonSecretList",
      "x-owner": "P/08.6 Н1.3"
+    },
+    "edit_delete": {
+     "x-owner": "P/08.6 Н1.3б",
+     "type": "boolean"
+    },
+    "edit_tables": {
+     "x-owner": "P/08.6 Н1.3",
+     "x-class": "reference",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/tableName"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/nonSecretList"
+     }
+    },
+    "edit_secrets": {
+     "x-owner": "P/08.6 Н1.3а",
+     "x-class": "reference",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/name"
+     },
+     "additionalProperties": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "pattern": "^(?:[\\s\\S]*_secret)$"
+      }
+     }
     },
     "kept": {
      "$ref": "#/$defs/strList",
@@ -1403,6 +1452,18 @@
    "anyOf": [
     {
      "enum": [
+      "GET domain/at/events",
+      "domain/roles/lines",
+      "GET domain/memberof",
+      "domain/edits",
+      "domain/members",
+      "GET domain/members",
+      "domain/placement",
+      "GET domain/placement",
+      "GET domain/folders",
+      "domain/folders",
+      "domain/memberof",
+      "GET domain",
       "GET domain/users",
       "GET domain/groups",
       "GET domain/roles",
@@ -1415,6 +1476,15 @@
     },
     {
      "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/books/[a-z][a-z0-9_-]{0,31})$"
+    },
+    {
+     "pattern": "^(?:GET domain/at/[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31})$"
+    },
+    {
+     "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/(?:tables/)?[a-z][a-z0-9_-]{0,31})$",
+     "not": {
+      "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/books)$"
+     }
     },
     {
      "not": {
@@ -2168,7 +2238,9 @@
      "operations-epoch",
      "cluster",
      "worker",
-     "ts"
+     "ts",
+     "tables",
+     "snapshot-tables"
     ]
    },
    "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
@@ -2386,7 +2458,7 @@
    }
   },
   "subName": {
-   "description": "не из 31 зарезервированного слов и не начинается с `free-` (rid подателя `<подсистема>.<ключ>` иначе начался бы с `free-`, который грамматика rid запрещает; ADR-0091 доп. (24) п. 5); имя — первый сегмент всех ключей подсистемы `<name>/…` и её места на домене",
+   "description": "не из 32 зарезервированных слов и не начинается с `free-` (rid подателя `<подсистема>.<ключ>` иначе начался бы с `free-`, который грамматика rid запрещает; ADR-0091 доп. (24) п. 5); имя — первый сегмент всех ключей подсистемы `<name>/…` и её места на домене",
    "type": "string",
    "not": {
     "anyOf": [
@@ -2422,7 +2494,8 @@
        "roles",
        "deleting",
        "disabled",
-       "names"
+       "names",
+       "edits"
       ]
      },
      {
@@ -2634,7 +2707,8 @@
      "opcount",
      "opbusy",
      "operations-turn",
-     "operations-epoch"
+     "operations-epoch",
+     "snapshot-tables"
     ]
    },
    "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"

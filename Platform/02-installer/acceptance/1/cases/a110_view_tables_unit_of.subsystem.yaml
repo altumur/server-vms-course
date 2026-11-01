@@ -1,0 +1,8 @@
+# поле единицы таблицы не в списке: строку некому судить
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+tables: {disks: {fields: {note: {type: string}, unit: {type: string}}}}
+rights: {unit_of: {disks: unit}}
+domain: {view_tables: {disks: [note]}}

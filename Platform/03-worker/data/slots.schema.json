@@ -439,6 +439,14 @@
     "kept_at": {
      "$ref": "#/$defs/common.time",
      "description": "at правки (P/08.6 Н1.4 at)"
+    },
+    "made": {
+     "description": "id созданной единицы: POST единицы, связка с new или create (P/09.1 Н1.5 made)",
+     "type": "string"
+    },
+    "by": {
+     "description": "человек правки: by правки; нет — зритель домена (P/08.6 Н1.6)",
+     "type": "string"
     }
    },
    "additionalProperties": false,
