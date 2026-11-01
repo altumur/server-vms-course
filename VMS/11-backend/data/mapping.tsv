@@ -18,7 +18,7 @@ Server	allocated	—	true	const	сервер в кластере
 Server	telemetry	—	{}	const	телеметрия — ADR-0094 C (пульс ресурса)
 Server	gpu	—	null	const
 Server	disks	rec/heartbeats	disks первого по имени слота услышанного регистратора сервера; нет — []	read	disk, sizeBytes, system (ADR-0111 п. 2; V/02.4)
-Server	version	rec/heartbeats	SHA-256 hex канонического JSON disks; disks пуст — "1"	read	из видимых полей меняются только disks (online — связь)
+Server	version	rec/heartbeats	SHA-256 hex канонического JSON disks; disks пуст — "1"	read	из видимых полей меняются только disks (online — связь); тот же набор дисков возвращает прежнее значение, предел V/11.3 Н1.3
 Server	netmask, gateway, dns	—	—	none	сеть сервера не у консоли (features без serverNetwork)
 Device(type=camera)	—	cam/cameras + rec/recordings + det/units	—	both	сборка: основная строка type camera, её потоки, записи, детекторы (V/11.4)
 Device(type=camera)	id	cam/cameras	UUID device:cam/cameras/<id>	read
@@ -204,13 +204,13 @@ Archive	serverId	rec/volumes	server — UUID server:<server>; пусто — nul
 Archive	domainId	кластер	server пуст — UUID domain:<CLUSTER>, иначе null	read	при создании — domainId тела; владелец один: сервер или домен
 Archive	retentionDays	rec/recordings	наибольший retention_days записей с home = том; записей нет — 30 (умолчание записи)	both	запись — retention_days всех записей тома одним пакетом; 0 — 422 NOT_SUPPORTED; при создании — только умолчание (V/11.3 Н1.3)
 Archive	encrypted	—	false	const	шифрования тома нет (features без archiveEncryption): true — 422 NOT_SUPPORTED
-Archive	firstVolume	rec/volumes	поля тома той же строки	write	только при создании: том = то же хранилище (строки Volume)
+Archive	firstVolume	rec/volumes	поля тома той же строки	write	только при создании: том = то же хранилище (строки Volume); name первого тома принимается и не хранится (ADR-0111 п. 2)
 Archive	version	rec/volumes + rec/recordings	склейка v<индекс тома>.r<индексы записей тома> (V/11.4 Н1.1)	read	в элементе списка по B4; If-Match сверяет её
 Volume	—	rec/volumes	—	both	том = то же хранилище
 Volume	id	rec/volumes	UUID volume:rec/volumes/<name>	read
 Volume	archiveId	rec/volumes	UUID archive:rec/volumes/<name>	read	хранилище той же строки
 Volume	name	rec/volumes	name	read	ключ строки: правка — 422 NOT_SUPPORTED, field name
-Volume	disk	rec/volumes	url: путь file://, у бакета — схема	both	формы адреса — V/11.3 Н1.3
+Volume	disk	rec/volumes	url: путь file:// без конечного сегмента, равного имени строки, иначе путь целиком; у бакета — схема	both	запись — file://<disk>/<имя строки> (V/11.3 Н1.3)
 Volume	sizeBytes	rec/volumes	quota_bytes	both
 Volume	usedPercent	—	0	const	заполнения тома строка и пульс не несут; поле обязательно в контракте (V/11.3 Н1.3)
 Volume	state	rec/volumes	enabled: false — off, иначе ready	read	V/11.3 Н1.3
@@ -220,8 +220,9 @@ Volume	hasSecret	rec/volumes	access_secret	read	true — секрет задан
 Volume	secret	rec/volumes	access_secret	write	нет поля — не трогать; null или "" — снять; строка — новый (V/11.3 Н1.3)
 Volume	bucket, region, path, host, port	rec/volumes	url	both	части адреса бакета; region, bucket у cloud обязательны (V/11.3 Н1.3)
 Volume	mode	rec/volumes	файл — dir; бакета — поля нет	read	значение формы принимается и не хранится (ADR-0111 п. 2; V/11.3 Н1.3)
-Volume	dir	rec/volumes	путь file://; бакета — поля нет	read	как mode
-Volume	file, login, hasPassword, password, proto, endpoint, style, account	—	—	none	формы адреса тома их не несут (V/11.3 Н1.3)
+Volume	dir	rec/volumes	конечный сегмент пути file://; бакета — поля нет	read	как mode
+Volume	file	—	—	none	значение формы принимается и не хранится (ADR-0111 п. 2)
+Volume	login, hasPassword, password, proto, endpoint, style, account	—	—	none	формы адреса тома их не несут (V/11.3 Н1.3)
 Volume	version	rec/volumes	индекс хранилища строки	read	в элементе списка по B4; If-Match сверяет его (V/11.4)
 Rule, RuleFire, RuleVersion, Schedule, DayGroup, Modes, ObjectMode, MaintenanceWindow	—	—	—	none	«Автоматизация» не объявляется (ADR-0094 доп. (7)): операции — 404 NO_ROUTE (V/11.2); отображение — вторая очередь C
 JournalEvent	—	GET /events	—	read	строка события (договор журнала событий)

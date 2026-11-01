@@ -146,6 +146,9 @@ scenario	step	request	expect
 07-profile	21	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"ip": "10.9.9.1", "port": "@absent", "vendor": "acme", "model": "m1", "version": "$v1"}
 07-profile	22	member m1 console2 @header If-Match: "$v1" PATCH /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699 {"recordMode": "motion"}	422 {"code": "NOT_SUPPORTED", "field": "recordMode"}
 07-profile	23	member m1 console2 GET /api/licenses	200 {"items": []}
+07-profile	24	member m1 console2 GET /api/settings	200 {"version": "1", "values": {"sec.2fa": "off"}}
+07-profile	25	member m1 console GET /cameras	200 {"configured": [{"id": "1", "ref": "m1-1"}]}
+07-profile	26	@manual диски сервера: GET /api/servers несёт disks из пульса регистратора, tmpfs и /boot их нет, version сменилась с набором дисков: на стенде у слота один каталог	manual
 08-profile-ops	1	@domain m1	ok
 08-profile-ops	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 08-profile-ops	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
@@ -173,7 +176,7 @@ scenario	step	request	expect
 08-profile-ops	25	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$a2"}
 08-profile-ops	26	member m1 console2 GET /api/devices/8b99c4f9-f9f1-5926-ab12-5925acb99a02	200 {"version": "$b2"}
 08-profile-ops	27	member m1 console2 POST /api/operations {"idempotencyKey": "group-cancel", "items": [{"targetId": "068df1b2-b153-5712-bb0f-06efd7b21699", "set": {"name": "c1c"}}, {"targetId": "8b99c4f9-f9f1-5926-ab12-5925acb99a02", "set": {"name": "c2c"}}], "expectedVersions": {"068df1b2-b153-5712-bb0f-06efd7b21699": "$a2", "8b99c4f9-f9f1-5926-ab12-5925acb99a02": "$b2"}}	202 {"id": "$c"}
-08-profile-ops	28	@manual идущая операция: PATCH и DELETE цели — 409 BUSY, params.targetId; /devices/update и /objects/delete — failed BUSY, прочие элементы идут: шаги стенда идут быстрее двух запросов	manual
+08-profile-ops	28	@manual идущая операция короткого плана: занятость проверяет тест «Операция: пока идёт…» длинным планом стенда; здесь шаги стенда идут быстрее двух запросов	manual
 08-profile-ops	29	@manual идущая операция: cancel — 200, оставшиеся шаги cancel, правка цели проходит	manual
 08-profile-ops	30	@until 60 member m1 console2 GET /api/operations/$c	200 {"state": "done"}
 08-profile-ops	31	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"version": "$a3"}
@@ -263,6 +266,7 @@ scenario	step	request	expect
 10-archives	35	member m1 console2 POST /api/archives {"name": "card-b", "kind": "edge", "storage": "block", "encrypted": false, "retentionDays": 30, "provider": null, "serverId": null, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "firstVolume": {"name": "card-b", "disk": "/card", "sizeBytes": 1000000000}}	422 {"code": "VALIDATION_FAILED", "field": "serverId"}
 10-archives	36	member m1 console2 POST /api/archives {"name": "card-c", "kind": "edge", "storage": "object", "encrypted": false, "retentionDays": 30, "provider": "s3", "serverId": "c56b020f-44cf-580c-b83d-851a9c63dcc8", "domainId": null, "firstVolume": {"name": "card-c", "disk": "s3", "host": "s3.example", "bucket": "vms", "path": "b", "keyId": "k1", "secret": "s1", "sizeBytes": 1000000000, "region": "eu"}}	422 {"code": "VALIDATION_FAILED", "field": "storage"}
 10-archives	37	member m1 console2 POST /api/archives {"name": "rep-a", "kind": "replica", "storage": "block", "encrypted": false, "retentionDays": 30, "provider": null, "serverId": "c56b020f-44cf-580c-b83d-851a9c63dcc8", "domainId": null, "firstVolume": {"name": "rep-a", "disk": "/rep", "sizeBytes": 1000000000}}	422 {"code": "NOT_SUPPORTED", "field": "kind"}
+10-archives	38	member m1 console2 POST /api/archives {"name": "disk-f", "kind": "local", "storage": "block", "encrypted": false, "retentionDays": 30, "provider": null, "serverId": "c56b020f-44cf-580c-b83d-851a9c63dcc8", "domainId": null, "firstVolume": {"name": "dir", "disk": "{data}/subsystems/rec/obsd/volumes/9", "sizeBytes": 1000000000, "mode": "file", "dir": "x", "file": "disk-f.afs"}}	201 {"name": "disk-f"}
 11-devices	1	@domain m1	ok
 11-devices	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 11-devices	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
