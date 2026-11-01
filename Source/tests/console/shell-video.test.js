@@ -23,7 +23,7 @@ b.FIX["/rec/recordings"]={configured:[{id:"1",cam:"1",home:"main"},{id:"1-b",cam
 b.FIX["/rec/disks"]={disks:[{name:"main",kind:"local",server:"box-a"},{name:"old",kind:"local",server:"box-b"},{name:"gone",kind:"local",server:"box-c"},{name:"card",kind:"backup",server:"cam-a"}]};
 b.FIX["/rec/keeps"]={keeps:[]};
 b.FIX["/live/streams"]={configured:[{id:"1"},{id:"2"}],rows:[]};   // строки раздач без labels — локальная сеть (V/08.3 Н4: строку после 409 exists страница читает)
-b.FIX["/cameras"]={configured:[{id:1,name:"ворота"},{id:2,name:"двор",full:"5"},{id:5,main:"2",profile:"sub"}],rows:[{id:1,worker:"w-1",phase:"running"}]};   // 5 — поток камеры 2, её полный экран (V/01.1 Н1.1а)
+b.FIX["/cameras"]={configured:[{id:1,name:"ворота"},{id:2,name:"двор"},{id:5,main:"2",profile:"sub"}],rows:[{id:1,worker:"w-1",phase:"running"}]};   // 5 — поток камеры 2 (V/01.1 Н1.1а)
 b.FIX["/servers"]={servers:{},policy:{}};
 b.FIX["/events"]={events:[{t:now-500,kind:"camera.footage.lost",subsystem:"cam",unit:"1",epoch:3,lost_s:20}],state:"live"};
 (async()=>{
@@ -52,6 +52,7 @@ const f0=w.fetch;w.fetch=(u,i)=>{const s=String(u),auth=((i||{}).headers||{}).Au
   // раздача — камеры (V/03.1): where по камере; поток — на двери шлюза ?stream= (V/03.3 Н1.2); первый offer — 404 «stream refused»
   if(s==="/live/where/2")return J(200,{door:{url:"http://gw-1:9002",token:"M",expires:Date.now()/1000+120,routes:["whep"]}});
   if(s==="http://gw-1:9002/whep/2?stream=5"){whep2++;return whep2===1?J(404,{error:"stream refused"}):J(201,"v=0",{Location:"/whep/session/s2"})}
+  if(s==="http://gw-1:9002/whep/2"||s.startsWith("http://gw-1:9002/whep/2?width="))return J(201,"v=0",{Location:"/whep/session/s3"});
   if(s.startsWith("http://gw-1:9002/whep/session/"))return J(200,{});
   if(s==="/live/streams"&&m==="POST"){streamsPost++;return streamsPost>1?J(409,{error:"exists"}):J(201,{id:"1"})}
   if(s==="/rec/requests"&&m==="POST"){asked.push(JSON.parse(i.body));return J(202,{queued:{id:"x"}})}
@@ -127,8 +128,9 @@ out.markViaApi=!!c&&c.body.note==="видел"&&c.body.unit==="cam/1"&&!("cam" i
 // другой объект — трубка положена
 pc.select("unit:cam/2");await b.ready(80);
 out.hangsUpOnSelect=w.eval("V.live")===null;
-// камера с полным экраном на потоке 5: раздача — камеры {cam: "2"}, offer на /whep/2?stream=5; 404 «stream refused» — сказано,
+// выбран поток 5 камеры 2: раздача — камеры {cam: "2"}, offer на /whep/2?stream=5; 404 «stream refused» — сказано,
 // без повтора (V/03.3 Н4); следующий раз шлюз взял поток
+pc.select("unit:cam/5");await b.ready(80);
 calls.length=0;main().querySelector('.pc-tabs [data-tab="vid"]').click();await b.ready(250);
 main().querySelector("#liveBtn").click();await b.ready(2200);   // повтор был бы через 1,5 с
 const posts=calls.filter(([m,u])=>m==="POST"&&u==="/live/streams");
@@ -137,6 +139,16 @@ main().querySelector("#liveBtn").click();await b.ready(600);
 out.streamBody=posts.length>0&&JSON.stringify(JSON.parse(posts[0][3]))==='{"cam":"2"}'&&whep2===2&&!!w.eval("V.live")&&
   calls.some(([,u])=>u==="/live/where/2")&&!calls.some(([,u])=>/^\/live\/where\/2\./.test(u));
 w.eval("stopLive()");await b.ready(40);
+// выбрана камера: размер окна в пикселях экрана, поток выбирает шлюз; окно 0 — без параметров (V/08.3 Н1.2, V/03.3 Н1.2; ADR-0104 пп. 1, 2)
+const offered=async(cw,ch,dpr)=>{w.devicePixelRatio=dpr;const box=main().querySelector("#player");
+  Object.defineProperty(box,"clientWidth",{value:cw,configurable:true});Object.defineProperty(box,"clientHeight",{value:ch,configurable:true});
+  calls.length=0;main().querySelector("#liveBtn").click();await b.ready(400);w.eval("stopLive()");await b.ready(40);
+  return calls.filter(([,u])=>u.startsWith("http://gw-1:9002/whep/2")&&!u.includes("/session/")).map(([,u])=>u)};
+pc.select("unit:cam/2");await b.ready(80);main().querySelector('.pc-tabs [data-tab="vid"]').click();await b.ready(250);
+out.cameraNoSizeNoParams=JSON.stringify(await offered(0,0,1))==='["http://gw-1:9002/whep/2"]';
+out.cameraWindowSize=JSON.stringify(await offered(640,360,1))==='["http://gw-1:9002/whep/2?width=640&height=360"]';
+out.cameraScreenPixels=JSON.stringify(await offered(320,180,2))==='["http://gw-1:9002/whep/2?width=640&height=360"]';
+w.devicePixelRatio=1;
 // участок, записанный самой камерой (yields), уступает регистратору
 const cut=w.eval(`JSON.stringify(yieldCut([{start:100,end:200},{start:50,end:300,yields:true},{start:400,end:500,yields:true}]).map(s=>[s.start,s.end,!!s.yields]).sort((a,b)=>a[0]-b[0]))`);
 out.yieldsCut=cut==='[[50,100,true],[100,200,false],[200,300,true],[400,500,true]]';
