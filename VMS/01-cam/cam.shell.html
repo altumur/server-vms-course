@@ -875,7 +875,12 @@ async function readChildren(){
   const gen=childGen;                         // another person came meanwhile: the former one's answer is not kept
   try{
     const[c,s]=await Promise.all([tableRows(camPath("/children"),"children"),tableRows(camPath("/child_settings"),"child_settings")]);
-    if(gen===childGen){CHILDREN=c;CHILD_SET=Object.fromEntries(s.map(x=>[String(x.name),x]));childErr=""}
+    if(gen===childGen){
+      const was=JSON.stringify([CHILDREN,CHILD_SET]);
+      CHILDREN=c;CHILD_SET=Object.fromEntries(s.map(x=>[String(x.name),x]));childErr="";
+      // the tables are ours, the module's data did not change: it would not redraw the tree by itself (V/08.1 Н1.5)
+      if(FEATURES.has("tree.repaint")&&JSON.stringify([CHILDREN,CHILD_SET])!==was)pc.repaintTree();
+    }
   }catch(e){if(gen===childGen)childErr=String(e&&e.message||e)}
   finally{childReading=false}
 }

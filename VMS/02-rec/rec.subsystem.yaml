@@ -155,7 +155,7 @@ placement:
                                                      # address and cannot be drained on its own.
   servers:    distinct                               # one recorder per VOLUME carries recordings (the others idle)
   tie_break:  most-free-capacity
-  grows:      true                                   # recorders by order (P/04 Н3 «нехватка()»): a volume nobody holds asks for one; no spares (ADR-0084)
+  grows:      true                                   # recorders by order (P/04 Н3 «нехватка()»): a recording with nowhere to go asks for one, a volume nobody holds does not (V/02.1 Н1.3); no spares (ADR-0084)
   ends:       {field: until, never: 0}               # a recording's end (ADR-0091 п. 2; V/02.1 Н1.3)
   # No `near`. A recorder does not follow a camera around: it is the one thing here that CANNOT move, being
   # pinned to disks (`requires: resource` above). A fan-out is read three ways: shared memory and the loopback RTSP
@@ -332,8 +332,7 @@ metrics:
   - {name: recordings_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
   - {name: volumes_declared, count: table volumes, where: {enabled: true}}          # what the operator says to write into
   - {name: volumes_unserved, count: table volumes, where: {enabled: true}, unheld: true}   # …and nobody holds
-  # (How many recorders are short is the platform's, from `placement.places`: the enabled volumes nobody holds, less the
-  # live recorders that hold none.)
+  # (How many recorders are short is the platform's, from the recordings that wait: P/04 Н3 «нехватка()».)
   # Keeps that nothing copies: marks set while no incidents volume is declared (the review's second pass, B10).
   - {name: keeps_unprotected, count: table keeps, unless: {table: volumes, where: {kind: incidents, enabled: true}}}
   # The seconds of each keep not in the incidents volume yet, the largest a live recorder says (the fourth pass, major).

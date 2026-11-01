@@ -206,8 +206,8 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /ingest/upload:
     post:
-      summary: Выгрузка диапазона кусками (V/02.9 Н1.4, Н2) — токены домена stream, upstream
-      security: [{domainToken: []}]
+      summary: Выгрузка диапазона кусками (V/02.9 Н1.4, Н1.5, Н2) — recworker (сосед); токены домена stream, upstream
+      security: [{roleCertificate: []}, {domainToken: []}]
       requestBody:
         required: true
         content:
