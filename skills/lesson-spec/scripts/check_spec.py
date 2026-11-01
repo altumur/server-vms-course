@@ -1555,6 +1555,11 @@ class Check:
         return self.vms_request_forms
 
     def scenario_form(self, path, line, request, expect, forms=None):
+        # `@manual <причина>` — шаг, который стенд не исполняет (ADR-0102 доп. (4) п. 8); ожидание — слово `manual`.
+        if request.startswith("@manual "):
+            if expect != "manual":
+                self.error(path, f"line {line}: @manual expects manual")
+            return
         if forms is not None:
             directives, doors = forms
             name = request.split(" ", 1)[0]

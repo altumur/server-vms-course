@@ -1796,6 +1796,12 @@ class VmsLessonTests(unittest.TestCase):
                         ("holder w-srv-a-1 GET /devices", "200 []")])
         self.assertEqual(self.errors(), [])
 
+    def test_manual_step_is_a_reason_and_the_word_manual(self):
+        self.scenarios([("@manual живой драйвер, у стенда файл", "manual")])
+        self.assertEqual(self.errors(), [])
+        self.scenarios([("@manual живой драйвер", "ok")])
+        self.assertTrue(any("@manual expects manual" in e for e in self.errors()))
+
     def test_stream_wait_expects_ok_with_json(self):
         self.scenarios([("@stream-wait s1 5", 'ok {"type": "$t"}'),
                         ("@stream-wait s1 5", "ok"),
