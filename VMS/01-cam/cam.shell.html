@@ -565,7 +565,7 @@ async function negotiateLive(id){
     if(r&&r.status===403&&!whereAgain&&tries<8){whereAgain=true;tries++;await doorOf(where,true);if(gen!==V.gen){pc.close();return}continue}
     if(r&&r.status===404){let d={};try{d=await r.clone().json()}catch(e){}if(d.error==="stream refused")break}
     if(r&&![404,500,503].includes(r.status))break;
-    if(++tries>8||made+grace*1000-(Date.now()+1500)<ICE_WAIT){
+    if(++tries>20||made+grace*1000-(Date.now()+1500)<ICE_WAIT){
       if(await remade()){tries=0;made=Date.now();continue}
       spent=true;break}
     setCap(`живое: ждём шлюз… (${tries})`);
