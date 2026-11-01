@@ -1,0 +1,4 @@
+# Исходы нечитаемой строки domain/from-nothing (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	domain	строка целиком нечитаема: признак не известен — не «его нет»: ответ члену по строкам прав, которых нет, несёт held, копии не трогаются; строку не переписывает, причина в журнал (C08-MOVE-NOTHING-HELD-02)	0	строка	P/08.8 Н1.8 шаг 6

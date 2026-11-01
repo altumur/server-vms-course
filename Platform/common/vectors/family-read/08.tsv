@@ -2993,3 +2993,17 @@ c08_move_ask.037	domain/move-ask	domain/move-ask	row	writer	["domain"]	{"at":"17
 c08_move_ask.038	domain/move-ask	domain/move-ask	row	reader	["domain"]	{"at":"1760000000.123","sha256":""}	refused	["/sha256"]	{"domain": [""]}	add: пустой sha256
 c08_move_ask.039	domain/move-ask	domain/move-askx	row	writer	["domain"]	{"at":"1760000000.123","sha256":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	[]	catalog key: literal
 c08_move_ask.040	domain/move-ask	domain/move-askx	row	reader	["domain"]	{"at":"1760000000.123","sha256":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	{"domain": [""]}	catalog key: literal
+c08_from_nothing.001	domain/from-nothing	domain/from-nothing	row	writer	["domain"]	{"term":"2"}	ok	[]	[]	base
+c08_from_nothing.002	domain/from-nothing	domain/from-nothing	row	reader	["domain"]	{"term":"2"}	ok	[]	{"domain": []}	base
+c08_from_nothing.003	domain/from-nothing	domain/from-nothing	row	writer	["domain"]	null	refused	[""]	[]	root null
+c08_from_nothing.004	domain/from-nothing	domain/from-nothing	row	reader	["domain"]	null	refused	[""]	{"domain": [""]}	root null
+c08_from_nothing.005	domain/from-nothing	domain/from-nothing	row	writer	["domain"]	{	refused	[""]	[]	not JSON
+c08_from_nothing.006	domain/from-nothing	domain/from-nothing	row	reader	["domain"]	{	refused	[""]	{"domain": [""]}	not JSON
+c08_from_nothing.007	domain/from-nothing	domain/from-nothing	row	writer	["domain"]	{}	refused	["/term"]	[]	: without required term
+c08_from_nothing.008	domain/from-nothing	domain/from-nothing	row	reader	["domain"]	{}	refused	["/term"]	{"domain": [""]}	: without required term
+c08_from_nothing.009	domain/from-nothing	domain/from-nothing	row	writer	["domain"]	{"term":"0"}	refused	["/term"]	[]	term below 1
+c08_from_nothing.010	domain/from-nothing	domain/from-nothing	row	reader	["domain"]	{"term":"0"}	refused	["/term"]	{"domain": [""]}	term below 1
+c08_from_nothing.011	domain/from-nothing	domain/from-nothing	row	writer	["domain"]	{"term":"x"}	refused	["/term"]	[]	term not a number
+c08_from_nothing.012	domain/from-nothing	domain/from-nothing	row	reader	["domain"]	{"term":"x"}	refused	["/term"]	{"domain": [""]}	term not a number
+c08_from_nothing.013	domain/from-nothing	domain/from-nothing	row	writer	["domain"]	{"term":"2","z":"1"}	refused	["/z"]	[]	extra field
+c08_from_nothing.014	domain/from-nothing	domain/from-nothing	row	reader	["domain"]	{"term":"2","z":"1"}	refused	["/z"]	{"domain": [""]}	extra field
