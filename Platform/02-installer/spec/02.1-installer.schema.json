@@ -1707,11 +1707,12 @@
    }
   },
   "passCall": {
-   "description": "дверь обратного вызова по закрытому перечню P/06.3 Н1.9: `<s>/<имя>` — строки единиц, таблица, `policy`, `next_id` или маршрут двери подсистемы `<s>`; приставка `GET ` — только чтение; `console/batch`, `changes`, `folders`; `<s>/operations`; `<s>/requests`; `GET manifest|servers|events|session|schema`; двери домена: `GET domain/users|groups|roles|grants`, `domain/batch`; дверь книги: `GET domain/<s>/books/<книга>`",
+   "description": "дверь обратного вызова по закрытому перечню P/06.3 Н1.9: `<s>/<имя>` — строки единиц, таблица, `policy`, `next_id` или маршрут двери подсистемы `<s>`; приставка `GET ` — только чтение; `console/batch`, `changes`, `folders`; `<s>/operations`; `<s>/requests`; `GET <s>/where`; дверь `door.pass` первого вида; `servers/labels`; `GET manifest|servers|events|session|schema`; двери домена: `GET domain/users|groups|roles|grants`, `domain/batch`; дверь книги: `GET domain/<s>/books/<книга>`",
    "type": "string",
    "anyOf": [
     {
      "enum": [
+      "servers/labels",
       "GET domain/at/events",
       "domain/roles/lines",
       "GET domain/memberof",
@@ -1730,6 +1731,9 @@
       "GET domain/grants",
       "domain/batch"
      ]
+    },
+    {
+     "pattern": "^(?:GET [a-z][a-z0-9_-]{0,31}/where)$"
     },
     {
      "pattern": "^(?:[a-z][a-z0-9_-]{0,31}/requests)$"
