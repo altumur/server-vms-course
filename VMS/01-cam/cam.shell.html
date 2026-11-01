@@ -361,7 +361,7 @@ function setCap(text){V.cap={text,gen:V.gen};const el=$("#playing");if(el)el.tex
 function evAt(e){return e&&"occurred" in e?e.occurred:e.t}
 function evLate(e){return e&&"occurred" in e&&e.t-e.occurred>=2?` записано в ${fmtT(e.t)} · `:""}
 
-// ── core: COPY WITH A CHECK — the product's page (main), function by function, each checked against it ──────────
+// ── core: the page's own, begun from the product's and gone its way (V/08): nothing compares the two ──────────────
 async function whereAt(url){
   try{const r=await fetch(url);let d={};try{d=await r.json()}catch(e){}
     return{status:r.status,door:d&&d.door&&d.door.url?d.door:null,missing:r.headers.get("X-Unreachable")||(d&&d.unreachable)||"",error:d&&d.error||""}}
