@@ -4,9 +4,16 @@
  "properties": {
   "doc": {
    "$ref": "#/$defs/common.domain_members_doc",
-   "description": "текст JCS {rev, term, members: {<член>: Entry}} — поле members ответа держателя как есть (Н1.4 from_carry)",
+   "description": "текст JCS строки domain/member-rows/<раздел> {domain, part, rev, term, members, issuer, kid, sig}, прошедшей take (Н1.4 member_row)",
    "x-codec": [
     "object"
+   ]
+  },
+  "fetched_at": {
+   "$ref": "#/$defs/common.time",
+   "description": "стенные секунды получения строки: старше MEMBER_ROW_AGE или поля нет — просьба о разделе (договор peer client)",
+   "x-codec": [
+    "time"
    ]
   }
  },

@@ -1,0 +1,4 @@
+# Исходы нечитаемой строки domain/member-want/<раздел> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	domainagent	строка целиком нечитаема: агент — считает просьбой: читает раздел дверью, снимает строку (Н1.4 member_want)	0	строка	P/09.1 Н1.4 member_want

@@ -1,0 +1,4 @@
+# Исходы нечитаемой строки domain/join (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	domainagent	строка целиком нечитаема: агент — поля class и batch публикации не шлёт, стук обычный, журнал без значения; строка не чинится: её пишет команда join	0	строка	P/09.1 Н1.1 join

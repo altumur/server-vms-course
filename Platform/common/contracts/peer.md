@@ -41,7 +41,7 @@ client:       клиент двери другого кластера по https
               RELAY_MEMBER; агент у двери DOMAIN_URL — держатель, по порядку: carry.holder последнего доверенного ответа
               этой дороги (запись deposed); до первого ответа после старта — своя читаемая domain/holder; нет — DOMAIN_CA (first ниже, первый контакт); ничего —
               foreign_ca; новых слов и переменных нет (fail-closed, П1; C09-PEER-DEST-MEMBER-01); отпечатки держателя — ca записи срока domain/holder (договор записи срока; ADR-0113 доп. (3) п. 2);
-              прочего члена — Entry.ca его строки domain/member-list/<раздел> этого кластера: строки нет — запрос двери GET /api/members (форма копии — Platform/09-agent/data/member-list.schema.json,
+              прочего члена — Entry.ca его строки domain/member-list/<раздел> этого кластера; строки нет, её fetched_at старше MEMBER_ROW_AGE (3600 с) или peer отказал по ней foreign_ca — клиент кладёт просьбу domain/member-want/<раздел> (P/09.1 Н1.4 member_want), этот запрос идёт по тому, что есть, без строки — foreign_ca (форма копии — Platform/09-agent/data/member-list.schema.json,
               исходы — `Platform/09-agent/data/member-list.outcomes.tsv`; C04-DEP-OBS-HEARTBEAT-01)
 first:        DOMAIN_CA=<отпечаток> рядом с DOMAIN_URL, RELAY_CA=<отпечаток> рядом с RELAY_URL — действует, только пока
               запись члена назначения не называет ca; ни записи, ни отпечатка — отказ foreign_ca: доверия при первом

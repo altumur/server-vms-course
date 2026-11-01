@@ -1585,3 +1585,15 @@ c09_edit_ids.005	domain/edit-ids	domain/edit-ids	row	writer	["domainagent"]	{	re
 c09_edit_ids.006	domain/edit-ids	domain/edit-ids	row	reader	["domainagent"]	{	refused	[""]	{"domainagent": [""]}	not JSON
 c09_edit_ids.007	domain/edit-ids	domain/edit-ids	row	writer	["domainagent"]	{"e-0123456789ab":"0"}	refused	["/e-0123456789ab"]	[]	number not positive
 c09_edit_ids.008	domain/edit-ids	domain/edit-ids	row	reader	["domainagent"]	{"e-0123456789ab":"0"}	refused	["/e-0123456789ab"]	{"domainagent": [""]}	number not positive
+c09_join.001	domain/join	domain/join	row	writer	["admin"]	{"class":"camera"}	ok	[]	[]	base
+c09_join.002	domain/join	domain/join	row	reader	["domainagent"]	{"class":"camera"}	ok	[]	{"domainagent": []}	base
+c09_join.003	domain/join	domain/join	row	writer	["admin"]	null	refused	[""]	[]	root null
+c09_join.004	domain/join	domain/join	row	reader	["domainagent"]	null	refused	[""]	{"domainagent": [""]}	root null
+c09_join.005	domain/join	domain/join	row	writer	["admin"]	{	refused	[""]	[]	not JSON
+c09_join.006	domain/join	domain/join	row	reader	["domainagent"]	{	refused	[""]	{"domainagent": [""]}	not JSON
+c09_member_want.001	domain/member-want/<раздел>	domain/member-want/0042	row	writer	["console", "<s>worker", "domainagent"]	{"at":"1760000000"}	ok	[]	[]	base
+c09_member_want.002	domain/member-want/<раздел>	domain/member-want/0042	row	reader	["domainagent"]	{"at":"1760000000"}	ok	[]	{"domainagent": []}	base
+c09_member_want.003	domain/member-want/<раздел>	domain/member-want/0042	row	writer	["console", "<s>worker", "domainagent"]	null	refused	[""]	[]	root null
+c09_member_want.004	domain/member-want/<раздел>	domain/member-want/0042	row	reader	["domainagent"]	null	refused	[""]	{"domainagent": [""]}	root null
+c09_member_want.005	domain/member-want/<раздел>	domain/member-want/0042	row	writer	["console", "<s>worker", "domainagent"]	{	refused	[""]	[]	not JSON
+c09_member_want.006	domain/member-want/<раздел>	domain/member-want/0042	row	reader	["domainagent"]	{	refused	[""]	{"domainagent": [""]}	not JSON

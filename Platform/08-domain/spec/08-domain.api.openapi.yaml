@@ -111,6 +111,7 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/Refusal'
                   - required: [detail]
+        '429': {$ref: '#/components/responses/Busy'}
         '503':
           $ref: '#/components/responses/StandbyOrExhausted'
   /api/carry/{member}:
@@ -137,6 +138,7 @@ paths:
           $ref: '#/components/responses/RefusedPlain'
         '409':
           $ref: '#/components/responses/DeposedAgent'
+        '429': {$ref: '#/components/responses/Busy'}
         '503':
           $ref: '#/components/responses/StandbyOrUnavailable'
   /api/relay/{relay}:
@@ -577,7 +579,7 @@ paths:
       summary: Строка раздела по запросу члена (договор приёма отчёта; ADR-0113)
       responses:
         '200': {description: '{doc}'}
-        '429': {description: 'busy {retry_in}'}
+        '429': {$ref: '#/components/responses/Busy'}
   /api/backup-part/{member}/{part}:
     parameters:
       - {$ref: '#/components/parameters/Member'}
@@ -591,7 +593,7 @@ paths:
       summary: Часть резервной копии хранителю (глава 8.8 Н1.5а)
       responses:
         '200': {description: Объект части}
-        '429': {description: 'busy {retry_in}'}
+        '429': {$ref: '#/components/responses/Busy'}
   /api/anywhere/{member}:
     parameters:
       - {$ref: '#/components/parameters/Member'}
@@ -601,7 +603,7 @@ paths:
       summary: Тело сводки anywhere (глава 8.4 Н1.3)
       responses:
         '200': {description: '{doc, as_of}'}
-        '429': {description: 'busy {retry_in}'}
+        '429': {$ref: '#/components/responses/Busy'}
   /domain/batches:
     get:
       operationId: batchesRead
@@ -1965,6 +1967,17 @@ components:
                       reason: {const: rev_exhausted}
                     required: [reason, detail]
               - {$ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'}
+    Busy:
+      description: 'Занято: договор приёма отчёта «Занято» (ADR-0113): только class camera, после подписи, записи нет'
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error, retry_in]
+            additionalProperties: false
+            properties:
+              error: {const: busy}
+              retry_in: {type: number, minimum: 0}
     TooMany:
       description: 'Предел попыток (P/08.4 Н1.10)'
       headers:
@@ -2461,7 +2474,7 @@ components:
     Publication:
       type: object
       description: 'Тело POST /api/member — публикация P/09.1 Н1.2 (подлинник формы тела; агент — глава 9.1). base 0 или нет — тело
-        целое; deleted — только при base > 0. Поля вне дельты (stale, tls_ca, tls_ca_certs, sign_failures, members_rev) — любое
+        целое; deleted — только при base > 0. Поля вне дельты (stale, tls_ca, tls_ca_certs, sign_failures, members_rev, class, batch) — любое
         значение: не по форме своей нормы — поле не взято, журнал держателя, отчёт принят (P/08.3 Н1.2 out_of_delta, семья
         member-report-delta; сверка контракта с нормами P/08, перенос урока 8).'
       required: [sent_at, objects, key]
@@ -2493,11 +2506,15 @@ components:
           description: 'Вне дельты (out_of_delta): форма — {domain?: целое ≥ 1, console?: целое ≥ 1}, не пусто — запросы, которые агент с запуска не отправил, потому что не смог подписать (P/08.3 Н1.6а; сторона агента — P/09.1 Н1.12); не по ней — поле не взято.'
         members_rev:
           description: 'Вне дельты (out_of_delta): форма — {term: целое ≥ 1, rev: целое ≥ 1} документа domain/member-list/<раздел>, который член держит (P/08.3 Н1.4а); не по ней — поле не взято.'
+        class:
+          description: 'Вне дельты: форма — server | camera (P/09.1 Н1.1 domain/join); не по ней — поле не взято, server.'
+        batch:
+          description: 'Вне дельты: форма — {name, sig}, sig — 128 hex (договор приёма отчёта «Стук партии»); не по ней — поле не взято, стук обычный.'
     Carry:
       type: object
       description: 'Ответ держателя агенту (P/08.3 Н1.5). Поля глав 8.3 Н1.2, 8.6, 8.8, 8.9 — их нормы; секретное члену (книги
         8.5, гранты и аварийная учётка 8.4, токены) — в sealed.'
-      required: [cluster, rev, every]
+      required: [cluster, rev]
       additionalProperties: false
       properties:
         gone_seen:
@@ -2515,7 +2532,7 @@ components:
             memberof: {type: object, additionalProperties: {type: array, items: {type: string}}}
         cluster: {$ref: '#/components/schemas/MemberName'}
         rev: {type: integer, minimum: 0}
-        every: {type: number, minimum: 1, maximum: 3600}
+        every: {type: number, minimum: 1, maximum: 3600, description: 'Нет поля — агент держит прежнее (договор приёма отчёта «Ответ carry: every»).'}
         keys: {$ref: '#/components/schemas/KeysRow'}
         revoked: {$ref: '#/components/schemas/RevokedRow'}
         members:
@@ -2607,7 +2624,7 @@ components:
       type: object
       required: [how, since]
       additionalProperties: false
-      description: Запись члена (P/08.3 Н1.1).
+      description: Запись члена (P/08.3 Н1.1). Нет class — server.
       properties:
         how:
           type: string
@@ -2655,7 +2672,7 @@ components:
           additionalProperties: {$ref: '#/components/schemas/Entry'}
     Knock:
       type: object
-      required: [name, last, times, key, fingerprint, pinned, keys_rev]
+      required: [name, last, times, key, fingerprint, pinned, keys_rev, class]
       additionalProperties: false
       description: Стучащийся (P/08.3 Н1.1 knock).
       properties:
@@ -2666,6 +2683,8 @@ components:
         fingerprint: {type: string, pattern: "^(?:[0-9a-f]{16})$"}
         pinned: {enum: [this, another, none]}
         keys_rev: {type: ['integer', 'null'], minimum: 1}
+        class: {enum: [server, camera]}
+        batch: {type: string, description: 'Партия: стук с верной подписью партии (договор приёма отчёта «Стук партии»).'}
     MembersView:
       type: object
       required: [rev, members, knocking]
