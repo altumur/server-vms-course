@@ -307,3 +307,13 @@ scenario	step	request	expect
 11-devices	50	member m1 console2 @header If-Match: "$vi4" DELETE /api/devices/c5d38593-2410-5ef2-8ec6-48854d5ecf20	422 {"code": "NOT_SUPPORTED", "field": "type"}
 11-devices	51	@manual живой драйвер: камера из vendor, model открывается адресом ipint://, описание пишет channels, videos, строки детей; res, fps доходят до устройства, codec приходит пульсом; регистратор с привязанными блоками: sensor под камерой канала, блок устройства — под ipsrv	manual
 11-devices	52	@manual живой драйвер: устройство без видео, строка ipsrv: subtype io, sip, mic по составу; смена описания снимает ребёнка: gone, запись уходит из списка, имя переживает возврат	manual
+12-identifier	1	@domain m1	ok
+12-identifier	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+12-identifier	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+12-identifier	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+12-identifier	5	member m1 console2 POST /api/devices {"idempotencyKey": "group-a", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.8.1", "vendor": "acme", "model": "m1"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"failed": []}
+12-identifier	6	member m1 console2 GET /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	200 {"name": "c1", "version": "$v1"}
+12-identifier	7	member m1 console2 @header If-Match: "$v1" DELETE /api/devices/068df1b2-b153-5712-bb0f-06efd7b21699	2xx
+12-identifier	8	member m1 console2 POST /api/devices {"idempotencyKey": "group-b", "items": [{"device": {"type": "camera", "name": "c2", "ip": "10.9.8.2", "vendor": "acme", "model": "m1", "identifier": "1"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c3", "ip": "10.9.8.3", "vendor": "acme", "model": "m1", "identifier": "2"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"failed": []}
+12-identifier	9	member m1 console GET /cameras	200 {"configured": [{"id": "2", "source": "ipint://10.9.8.2/acme/m1"}, {"id": "3", "source": "ipint://10.9.8.3/acme/m1"}]}
+12-identifier	10	member m1 console2 POST /api/devices {"idempotencyKey": "group-c", "items": [{"device": {"type": "camera", "name": "c4", "ip": "10.9.8.4", "vendor": "acme", "model": "m1", "identifier": "2"}, "domainId": "d7329777-a64d-54c5-86fa-eda63d75d992", "parentId": null, "folderId": null}]}	200 {"done": [], "failed": [{"code": "IDENTIFIER_TAKEN", "field": "identifier"}]}
