@@ -47,6 +47,8 @@ folders	422	NAME_REQUIRED	name	11.4 Н1.7
 folders	422	NOT_SUPPORTED	<поле>	11.4 Н1.7: член папки — не единица
 operations	404	NOT_FOUND	-	11.4 Н4: no such operation, no operations
 operations	409	BUSY	-	11.4 Н4: root busy, operation done, operation running, nothing to retry
+devices	409	BUSY	-	11.4 Н1.8: занятый объект
+devices	-	BUSY	-	11.4 Н1.8: занятый объект, failed элемента
 discovery	409	BUSY	-	11.4 Н1.9, Н4: поиск идёт
 operations	422	VALIDATION_FAILED	items	11.4 Н4: too many steps, too many operations; 11.4 Н1.8: шаг не ровно с одним из set, folderIds, create, пустой items
 operations	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.8

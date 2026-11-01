@@ -2134,6 +2134,13 @@
          "minProperties": 1,
          "maxProperties": 1
         }
+       },
+       "quiet": {
+        "description": "ключи объекта без цели (договор сторожевой и передачи names)",
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
        }
       },
       "additionalProperties": false,

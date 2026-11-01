@@ -334,7 +334,8 @@
           "default": {
             "$ref": "#/components/responses/Problem"
           }
-        }
+        },
+        "description": "Над объектом идёт групповая операция (POST /operations) — 409 BUSY, какой объект — в params.targetId"
       },
       "delete": {
         "operationId": "deleteDomain",
@@ -342,7 +343,7 @@
           "hardware"
         ],
         "summary": "Удалить домен, перенеся содержимое",
-        "description": "Серверы становятся нераспределёнными в домене moveTo, туда же переезжают папки, устройства, сетевые хранилища и найденное поиском. Последний домен удалить нельзя",
+        "description": "Серверы становятся нераспределёнными в домене moveTo, туда же переезжают папки, устройства, сетевые хранилища и найденное поиском. Последний домен удалить нельзя. Над доменом или его сервером, устройством, хранилищем идёт групповая операция — 409 BUSY, какой объект — в params.targetId",
         "parameters": [
           {
             "name": "domainId",
@@ -548,7 +549,7 @@
           "hardware"
         ],
         "summary": "Добавить серверы в домен или исключить из него",
-        "description": "Групповая операция одним запросом: частичный успех, повтор с тем же idempotencyKey ничего не выполняет снова. «Отменить» — обратный запрос",
+        "description": "Групповая операция одним запросом: частичный успех, повтор с тем же idempotencyKey ничего не выполняет снова. «Отменить» — обратный запрос. Сервер, над которым идёт групповая операция (POST /operations), — в failed с кодом BUSY",
         "requestBody": {
           "required": true,
           "content": {
@@ -682,6 +683,9 @@
           "404": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "412": {
             "$ref": "#/components/responses/Problem"
           },
@@ -697,7 +701,8 @@
           "default": {
             "$ref": "#/components/responses/Problem"
           }
-        }
+        },
+        "description": "Над объектом идёт групповая операция (POST /operations) — 409 BUSY, какой объект — в params.targetId"
       }
     },
     "/devices": {
@@ -815,7 +820,8 @@
           "default": {
             "$ref": "#/components/responses/Problem"
           }
-        }
+        },
+        "description": "Частичный успех: устройство, над которым идёт групповая операция (POST /operations), — в failed с кодом BUSY, остальные меняются"
       }
     },
     "/devices/probe": {
@@ -909,7 +915,7 @@
           "hardware"
         ],
         "summary": "Изменить устройство",
-        "description": "Сразу, без очереди: переименование в дереве. План карточки уходит операцией (POST /operations)",
+        "description": "Сразу, без очереди: переименование в дереве. План карточки уходит операцией (POST /operations). Над объектом идёт групповая операция (POST /operations) — 409 BUSY, какой объект — в params.targetId",
         "parameters": [
           {
             "name": "deviceId",
@@ -959,6 +965,9 @@
           "404": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "412": {
             "$ref": "#/components/responses/Problem"
           },
@@ -982,7 +991,7 @@
           "hardware"
         ],
         "summary": "Удалить устройство вместе с дочерними",
-        "description": "Убирает его из папок и из записи по детекторам у камер",
+        "description": "Убирает его из папок и из записи по детекторам у камер. Над ним, дочерним или камерой, что записывает по его детектору, идёт групповая операция — 409 BUSY, какой объект — в params.targetId",
         "parameters": [
           {
             "name": "deviceId",
@@ -1008,6 +1017,9 @@
             "description": "Удалено"
           },
           "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
             "$ref": "#/components/responses/Problem"
           },
           "412": {
@@ -1210,6 +1222,9 @@
           "404": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "412": {
             "$ref": "#/components/responses/Problem"
           },
@@ -1225,7 +1240,8 @@
           "default": {
             "$ref": "#/components/responses/Problem"
           }
-        }
+        },
+        "description": "Состав папки — это папки устройства: добавить или убрать устройство, над которым идёт групповая операция, — 409 BUSY, какое — в params.targetId"
       },
       "delete": {
         "operationId": "deleteFolder",
@@ -1260,6 +1276,9 @@
           "404": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "412": {
             "$ref": "#/components/responses/Problem"
           },
@@ -1272,7 +1291,8 @@
           "default": {
             "$ref": "#/components/responses/Problem"
           }
-        }
+        },
+        "description": "Над устройством в ней или в подпапках идёт групповая операция — 409 BUSY, какое — в params.targetId"
       }
     },
     "/archives": {
@@ -1498,6 +1518,9 @@
           "404": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "412": {
             "$ref": "#/components/responses/Problem"
           },
@@ -1513,7 +1536,8 @@
           "default": {
             "$ref": "#/components/responses/Problem"
           }
-        }
+        },
+        "description": "Над объектом идёт групповая операция (POST /operations) — 409 BUSY, какой объект — в params.targetId"
       },
       "delete": {
         "operationId": "deleteArchive",
@@ -1521,7 +1545,7 @@
           "storage"
         ],
         "summary": "Удалить хранилище с томами",
-        "description": "Камеры не удаляются: у тех, что писали сюда основным хранилищем, основным становится первое дополнительное, а если его нет — запись выключается (recordMode none)",
+        "description": "Камеры не удаляются: у тех, что писали сюда основным хранилищем, основным становится первое дополнительное, а если его нет — запись выключается (recordMode none). Над хранилищем, его томом или камерой, что в него пишет, идёт групповая операция — 409 BUSY, какой объект — в params.targetId",
         "parameters": [
           {
             "name": "archiveId",
@@ -1547,6 +1571,9 @@
             "description": "Удалено"
           },
           "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
             "$ref": "#/components/responses/Problem"
           },
           "412": {
@@ -1783,7 +1810,8 @@
           "default": {
             "$ref": "#/components/responses/Problem"
           }
-        }
+        },
+        "description": "Над объектом идёт групповая операция (POST /operations) — 409 BUSY, какой объект — в params.targetId"
       },
       "delete": {
         "operationId": "deleteVolume",
@@ -1818,6 +1846,9 @@
           "404": {
             "$ref": "#/components/responses/Problem"
           },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
           "412": {
             "$ref": "#/components/responses/Problem"
           },
@@ -1830,7 +1861,8 @@
           "default": {
             "$ref": "#/components/responses/Problem"
           }
-        }
+        },
+        "description": "Над объектом идёт групповая операция (POST /operations) — 409 BUSY, какой объект — в params.targetId"
       }
     },
     "/volumes/{volumeId}/format": {
@@ -1840,7 +1872,7 @@
           "storage"
         ],
         "summary": "Форматировать том",
-        "description": "Сразу — state=format; когда закончит (во встроенном сервере через 1,5 с), — ready и usedPercent 0, изменение в потоке",
+        "description": "Сразу — state=format; когда закончит (во встроенном сервере через 1,5 с), — ready и usedPercent 0, изменение в потоке. Над объектом идёт групповая операция (POST /operations) — 409 BUSY, какой объект — в params.targetId",
         "parameters": [
           {
             "name": "volumeId",
@@ -1890,7 +1922,7 @@
           "operations"
         ],
         "summary": "Запустить групповую операцию",
-        "description": "Шаги выполняются по одному; ход приходит в поток (operation.progress, operation.finished). Объект, над которым идёт другая операция, — 409 BUSY",
+        "description": "Шаги выполняются по одному; ход приходит в поток (operation.progress, operation.finished). Объект, над которым идёт другая операция, — 409 BUSY. Пока операция не завершена (выполнена или отменена), её объекты не меняют и другие запросы: правка, удаление, состав папок — 409 BUSY, в пакетных — failed с кодом BUSY",
         "requestBody": {
           "required": true,
           "content": {
@@ -2019,7 +2051,8 @@
             "$ref": "#/components/responses/Problem"
           }
         },
-        "description": "Текущий шаг доигрывает, следующие ждут"
+        "description": "Устарело: паузы не будет — операцию можно только отменить (cancel); в прототипе 11 не используется. Текущий шаг доигрывает, следующие ждут. Объекты операции на паузе остаются занятыми",
+        "deprecated": true
       }
     },
     "/operations/{operationId}/resume": {
@@ -2063,7 +2096,9 @@
           "default": {
             "$ref": "#/components/responses/Problem"
           }
-        }
+        },
+        "deprecated": true,
+        "description": "Устарело: паузы не будет — операцию можно только отменить (cancel); в прототипе 11 не используется"
       }
     },
     "/operations/{operationId}/cancel": {
@@ -2118,6 +2153,7 @@
           "operations"
         ],
         "summary": "Повторить неудачные шаги новой операцией",
+        "description": "Если над одним из объектов уже выполняется другая операция — 409 BUSY с params.targetId, повтор не начинается",
         "parameters": [
           {
             "name": "operationId",
@@ -2162,7 +2198,7 @@
           "operations"
         ],
         "summary": "Отменить выполненное: вернуть объекты к состоянию «до» новой операцией",
-        "description": "Сервер помнит, какими объекты были до каждого выполненного шага. Если объект с тех пор изменился, его шаг отката — fail VERSION_MISMATCH",
+        "description": "Сервер помнит, какими объекты были до каждого выполненного шага. Если объект с тех пор изменился, его шаг отката — fail VERSION_MISMATCH. Если над одним из объектов уже выполняется другая операция — 409 BUSY с params.targetId, откат не начинается",
         "parameters": [
           {
             "name": "operationId",
@@ -4204,7 +4240,7 @@
           "hardware"
         ],
         "summary": "Удалить несколько объектов",
-        "description": "Групповое удаление после отсчёта «Отменить» в интерфейсе: частичный успех, каскады — как у одиночного DELETE. Серверы и домены так не удаляют",
+        "description": "Групповое удаление после отсчёта «Отменить» в интерфейсе: частичный успех, каскады — как у одиночного DELETE. Серверы и домены так не удаляют. Объект, удаление которого заденет то, над чем идёт групповая операция (как у одиночного DELETE), — в failed с кодом BUSY",
         "requestBody": {
           "required": true,
           "content": {
@@ -8474,7 +8510,7 @@
           "SERVER_OFFLINE": "Сервер без связи: изменение не применено (409, или по объекту в групповой операции)",
           "DEVICE_OFFLINE": "Устройство без связи (по объекту в групповой операции): учётные данные и видео не применить. Встроенный сервер так не отказывает — см. api/BACKEND.md",
           "LICENSE_EXCEEDED": "Лицензия превышена (по объекту в групповой операции)",
-          "BUSY": "Над объектом выполняется другая операция (409)",
+          "BUSY": "Над объектом выполняется другая операция: пока групповая операция не завершена, её объекты не меняют ни новая операция, ни правка, ни удаление (409, какой объект — в params.targetId; в пакетных — по объекту)",
           "LOGIN_TAKEN": "Логин уже занят (409)",
           "PASSWORD_POLICY": "Пароль не соответствует политике (422). Встроенный сервер пароли не проверяет — см. api/BACKEND.md",
           "SELF_LOCKOUT": "Изменение оставит систему без администратора или лишит вас входа (409)",
