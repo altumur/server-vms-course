@@ -832,3 +832,8 @@ a103_scenario_member_ok	ok
 a103_places_wanted_ok	ok
 a103_places_wanted_unknown	refused
 a103_names_action_ok	ok
+a111_names_deep_ok	ok
+a111_names_kind_no_kinds	refused
+a111_names_kind_and_of	refused
+a111_calls_requests_ok	ok
+a111_calls_requests_read	refused

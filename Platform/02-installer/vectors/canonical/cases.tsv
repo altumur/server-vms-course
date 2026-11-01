@@ -21,6 +21,8 @@ corpus-a103_calls_book_ok	Platform/02-installer/acceptance/1/cases/a103_calls_bo
 corpus-a103_names_action_ok	Platform/02-installer/acceptance/1/cases/a103_names_action_ok.subsystem.yaml	expect/corpus-a103_names_action_ok.json	принятый случай корпуса 2.1
 corpus-a103_places_wanted_ok	Platform/02-installer/acceptance/1/cases/a103_places_wanted_ok.subsystem.yaml	expect/corpus-a103_places_wanted_ok.json	принятый случай корпуса 2.1
 corpus-a103_scenario_member_ok	Platform/02-installer/acceptance/1/cases/a103_scenario_member_ok.subsystem.yaml	expect/corpus-a103_scenario_member_ok.json	принятый случай корпуса 2.1
+corpus-a111_calls_requests_ok	Platform/02-installer/acceptance/1/cases/a111_calls_requests_ok.subsystem.yaml	expect/corpus-a111_calls_requests_ok.json	принятый случай корпуса 2.1
+corpus-a111_names_deep_ok	Platform/02-installer/acceptance/1/cases/a111_names_deep_ok.subsystem.yaml	expect/corpus-a111_names_deep_ok.json	принятый случай корпуса 2.1
 corpus-a86_sub_manifest2	Platform/02-installer/acceptance/1/cases/a86_sub_manifest2.subsystem.yaml	expect/corpus-a86_sub_manifest2.json	принятый случай корпуса 2.1
 corpus-a91_affinity_exclusive_ok	Platform/02-installer/acceptance/1/cases/a91_affinity_exclusive_ok.subsystem.yaml	expect/corpus-a91_affinity_exclusive_ok.json	принятый случай корпуса 2.1
 corpus-a91_creates_ok	Platform/02-installer/acceptance/1/cases/a91_creates_ok.subsystem.yaml	expect/corpus-a91_creates_ok.json	принятый случай корпуса 2.1

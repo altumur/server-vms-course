@@ -1658,7 +1658,7 @@
    }
   },
   "passCall": {
-   "description": "дверь обратного вызова по закрытому перечню P/06.3 Н1.9: `<s>/<имя>` — строки единиц, таблица, `policy`, `next_id` или маршрут двери подсистемы `<s>`; приставка `GET ` — только чтение; `console/batch`, `changes`, `folders`; `<s>/operations`; `GET manifest|servers|events|session|schema`; двери домена: `GET domain/users|groups|roles|grants`, `domain/batch`; дверь книги: `GET domain/<s>/books/<книга>`",
+   "description": "дверь обратного вызова по закрытому перечню P/06.3 Н1.9: `<s>/<имя>` — строки единиц, таблица, `policy`, `next_id` или маршрут двери подсистемы `<s>`; приставка `GET ` — только чтение; `console/batch`, `changes`, `folders`; `<s>/operations`; `<s>/requests`; `GET manifest|servers|events|session|schema`; двери домена: `GET domain/users|groups|roles|grants`, `domain/batch`; дверь книги: `GET domain/<s>/books/<книга>`",
    "type": "string",
    "anyOf": [
     {
@@ -1669,6 +1669,9 @@
       "GET domain/grants",
       "domain/batch"
      ]
+    },
+    {
+     "pattern": "^(?:[a-z][a-z0-9_-]{0,31}/requests)$"
     },
     {
      "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/books/[a-z][a-z0-9_-]{0,31})$"
@@ -2393,6 +2396,49 @@
        "action": {
         "description": "ключ объекта: действие просьбы к единице (договор сторожевой и передачи names)",
         "type": "string"
+       },
+       "at": {
+        "description": "путь внутри значения поля: ключи через точку, [] — каждый элемент (договор сторожевой и передачи names)",
+        "type": "string",
+        "pattern": "^(?:[a-z_][a-z0-9_]*(\\[\\])?(\\.[a-z_][a-z0-9_]*(\\[\\])?)*)$"
+       },
+       "walk": {
+        "description": "ключи вложенных веток",
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "kind": {
+        "description": "ключ объекта: вид цели",
+        "type": "string"
+       },
+       "kinds": {
+        "description": "вид цели → подсистема, папка или сервер",
+        "type": "object",
+        "additionalProperties": {
+         "type": "object",
+         "properties": {
+          "of": {
+           "type": "string"
+          },
+          "folder": {
+           "type": "boolean",
+           "enum": [
+            true
+           ]
+          },
+          "server": {
+           "type": "boolean",
+           "enum": [
+            true
+           ]
+          }
+         },
+         "additionalProperties": false,
+         "minProperties": 1,
+         "maxProperties": 1
+        }
        }
       },
       "additionalProperties": false,
@@ -2418,6 +2464,12 @@
              "required": [
               "of"
              ]
+            },
+            {
+             "required": [
+              "kind",
+              "kinds"
+             ]
             }
            ]
           },
@@ -2429,6 +2481,23 @@
            },
            "then": {
             "properties": {
+             "of": {
+              "not": {}
+             }
+            }
+           }
+          },
+          {
+           "if": {
+            "required": [
+             "kind"
+            ]
+           },
+           "then": {
+            "properties": {
+             "sub": {
+              "not": {}
+             },
              "of": {
               "not": {}
              }
