@@ -2,7 +2,7 @@
 // записи камеры (/rec/where/<запись>) и двери мест из таблицы, которую называет манифест rec (places.table: /rec/where/
 // volumes/<том>?unit=<запись>, V/08.2); близнецы сливаются, своя дверь записи впереди; том без держателя назван
 // (X-Unreachable), «нет такого места» пропущен. Кусок — …/e<эпоха>/<from>-<to>.<source>.mp4 с ?t=. Участок с yields и
-// участок резервной записи уступают основным; остаток резервной — «только в резервном», «Закрепить» — заявка основной
+// участок резервной записи уступают основным; остаток резервной — «только в резервном», архив устройства — «только на устройстве», «Закрепить» — заявка основной
 // записи (POST /rec/requests, unit — id записи, V/08.2). Живое: первый зритель заводит раздачу камеры (POST /live/streams {cam}; 409 exists — дальше), offer на
 // дверь шлюза /whep/<камера>?stream= (404/503 — повтор, 404 «stream refused» — без повтора, 403 — where заново, V/08.3), трубка — DELETE на двери со свежим токеном. Отметка через
 // console.api; опрос не трогает плеер; выбор другого объекта кладёт трубку. (По образцу продуктового shell-video.)
@@ -68,10 +68,10 @@ out.doorsAsked=calls.some(([,u,a])=>u.startsWith("http://box-a:9001/timeline/1?"
 out.placesFromManifest=!calls.some(([,u])=>/\/volumes/.test(u));
 const spans=JSON.parse(w.eval("JSON.stringify(V.spans.map(s=>({a:Math.round(s.start-"+now+"),z:Math.round(s.end-"+now+"),r:s.recording,src:s.source,y:!!s.yields,bk:!!s.backupOnly})))"));
 out.twinMerged=spans.filter(s=>s.r==="1"&&s.a===-600&&s.z===-300).length===1&&spans.some(s=>s.r==="1"&&s.a===-900&&s.z===-700);
-// участок устройства на резервной записи уступает основной: видны только непокрытые края
+// участок устройства уступает основной: видны только непокрытые края; архив устройства — не «только в резервном» (V/08.2 Н1.2)
 const bk=spans.filter(s=>s.r==="1-b").map(s=>[s.a,s.z]).sort((x,y)=>x[0]-y[0]);
-out.backupYields=JSON.stringify(bk)==="[[-650,-600],[-300,-250]]"&&spans.filter(s=>s.r==="1-b").every(s=>s.bk);
-out.backupOnlyLine=/только в резервном/.test(main().querySelector("#devline").textContent)&&!!main().querySelector("#timeline .span.backup");
+out.backupYields=JSON.stringify(bk)==="[[-650,-600],[-300,-250]]"&&spans.filter(s=>s.r==="1-b").every(s=>s.src==="device"&&s.y&&!s.bk);
+out.deviceOnlyLine=/только на устройстве/.test(main().querySelector("#devline").textContent)&&!!main().querySelector('#devline [data-act="pin"]')&&!main().querySelector("#timeline .span.backup");
 out.unreachableNamed=/Недоступно: gone@box-c/.test(main().querySelector("#tlnote").textContent);
 out.eventTickInWords=/камера потеряла запись/.test(main().querySelector("#timeline .tick").title);
 // camera.footage.lost — вид без производителя, у канона снят (V/08.1 «Соответствие прежним урокам»): своей строки у него нет
@@ -80,6 +80,13 @@ calls.length=0;
 main().querySelector('#devline [data-act="pin"]').click();await b.ready(80);
 const pins=calls.filter(([m,u])=>m==="POST"&&u==="/rec/requests");
 out.pinAsksPrimary=pins.length===2&&asked.every(x=>x.unit==="1"&&x.to>x.from&&Object.keys(x).length===3);
+// спан резервной записи без source device: остаток уступки — «только в резервном», «Закрепить» берёт и его (V/08.2 Н1.2)
+TL["http://cam-a:9001"].push({start_ms:ms(now-1000),end_ms:ms(now-950),epoch:0});await w.eval("loadTimeline('1')");await b.ready(80);
+const backupSpan=JSON.parse(w.eval("JSON.stringify(V.spans.filter(s=>s.backupOnly).map(s=>[Math.round(s.start-"+now+"),Math.round(s.end-"+now+"),s.recording,!!s.yields]))"));
+out.backupOnlyLine=JSON.stringify(backupSpan)==='[[-1000,-950,"1-b",true]]'&&/только в резервном/.test(main().querySelector("#devline").textContent)&&!!main().querySelector("#timeline .span.backup");
+calls.length=0;asked.length=0;main().querySelector('#devline [data-act="pin"]').click();await b.ready(80);
+out.pinTakesBackup=calls.filter(([m,u])=>m==="POST"&&u==="/rec/requests").length===3&&asked.every(x=>x.unit==="1"&&x.to>x.from);
+TL["http://cam-a:9001"].pop();await w.eval("loadTimeline('1')");await b.ready(80);
 // кусок: дверь, с которой пришёл участок; суффикс источника; токен в ?t=
 w.eval("play(V.spans.findIndex(s=>s.recording==='1'&&s.source===''&&Math.round(s.start-"+now+")===-600))");await b.ready(40);
 out.pieceViaDoor=main().querySelector("video").src===`http://box-a:9001/segment/1/e3/${ms(now-600)}-${ms(now-540)}.mp4?t=A1`&&main().querySelector("video").crossOrigin==="anonymous";
@@ -133,10 +140,11 @@ w.eval("stopLive()");await b.ready(40);
 // участок, записанный самой камерой (yields), уступает регистратору
 const cut=w.eval(`JSON.stringify(yieldCut([{start:100,end:200},{start:50,end:300,yields:true},{start:400,end:500,yields:true}]).map(s=>[s.start,s.end,!!s.yields]).sort((a,b)=>a[0]-b[0]))`);
 out.yieldsCut=cut==='[[50,100,true],[100,200,false],[200,300,true],[400,500,true]]';
-// каждый момент — один раз (урок 24 М10B): перекрытое не ставится дважды, отсечённый спан — только если щёлкнули его;
+// каждый момент — один раз (V/08.3 Н1.1): перекрытое не ставится дважды, очередь идёт от конца поставленного: щелчок по отсечённому
+// не выбрасывает остаток длинного;
 // с момента t — куски, кончающиеся после него, первый — со смещением внутрь
 out.eachMomentOnce=w.eval(`(()=>{const keep=V.spans;V.spans=[{start:0,end:120,media:1},{start:60,end:200,media:1},{start:100,end:150,media:1,fenced:true}];
-  const r=JSON.stringify(piecesFrom(0,90).map(p=>[p.i,p.start,p.end,p.off]))+JSON.stringify(piecesFrom(2,0).map(p=>[p.i,p.start,p.end]));V.spans=keep;return r})()`)==="[[0,60,120,30],[1,120,180,0],[1,180,200,0]][[2,100,150]]";
+  const r=JSON.stringify(piecesFrom(0,90).map(p=>[p.i,p.start,p.end,p.off]))+JSON.stringify(piecesFrom(2,0).map(p=>[p.i,p.start,p.end]));V.spans=keep;return r})()`)==="[[0,60,120,30],[1,120,180,0],[1,180,200,0]][[2,100,150],[1,150,200]]";
 // отгороженный спан после неотгороженного: щелчок по первому — очередь идёт и по отгороженному остатку, до 240 (V/08.3 Н1.1)
 out.fencedAfterPlays=w.eval(`(()=>{const keep=V.spans;V.spans=[{start:0,end:120,media:1},{start:120,end:240,media:1,fenced:true}];
   const r=JSON.stringify(piecesFrom(0,0).map(p=>[p.i,p.start,p.end]));V.spans=keep;return r})()`)==="[[0,0,60],[0,60,120],[1,120,180],[1,180,240]]";
