@@ -943,6 +943,32 @@
      "$ref": "#/$defs/nonSecretList",
      "x-owner": "P/08.6 Н1.3"
     },
+    "edit_tables": {
+     "x-owner": "P/08.6 Н1.3",
+     "x-class": "reference",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/tableName"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/nonSecretList"
+     }
+    },
+    "edit_secrets": {
+     "x-owner": "P/08.6 Н1.3а",
+     "x-class": "reference",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/name"
+     },
+     "additionalProperties": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "pattern": "^(?:[\\s\\S]*_secret)$"
+      }
+     }
+    },
     "kept": {
      "$ref": "#/$defs/strList",
      "x-owner": "P/03.7 Н1.6"
@@ -2350,7 +2376,7 @@
    }
   },
   "subName": {
-   "description": "не из 31 зарезервированного слов и не начинается с `free-` (rid подателя `<подсистема>.<ключ>` иначе начался бы с `free-`, который грамматика rid запрещает; ADR-0091 доп. (24) п. 5); имя — первый сегмент всех ключей подсистемы `<name>/…` и её места на домене",
+   "description": "не из 32 зарезервированных слов и не начинается с `free-` (rid подателя `<подсистема>.<ключ>` иначе начался бы с `free-`, который грамматика rid запрещает; ADR-0091 доп. (24) п. 5); имя — первый сегмент всех ключей подсистемы `<name>/…` и её места на домене",
    "type": "string",
    "not": {
     "anyOf": [
@@ -2386,7 +2412,8 @@
        "roles",
        "deleting",
        "disabled",
-       "names"
+       "names",
+       "edits"
       ]
      },
      {

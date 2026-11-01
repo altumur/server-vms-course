@@ -492,6 +492,13 @@ paths:
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
+  /domain/edits:
+    post:
+      operationId: keptEdits
+      summary: Связка правок одного устройства (глава 8.6 Н1.3б)
+      responses:
+        '202': {description: Правка хранится (Н1.4 reply)}
+        '400': {$ref: '#/components/responses/BodyRefused'}
   /domain/{sub}/{rows}:
     description: 'Глава 8.6 Н1.3, Н1.4, Н2, Н3 «принять правку». GET и HEAD (вид единиц) отвечает консоль домена сама (урок P/10; схема — Unit).'
     parameters:
@@ -1977,7 +1984,7 @@ components:
           type: array
           items:
             type: object
-            required: [name, online]
+            required: [name]
             additionalProperties: false
             properties:
               name: {type: string, minLength: 1}
@@ -2055,6 +2062,10 @@ components:
                 type: array
                 items: {type: string}
                 description: Имена заданных полей *_secret, значений нет.
+              labels:
+                type: array
+                items: {type: string}
+              about: {type: string}
               worker: {type: string}
               server: {type: string}
               phase: {type: string}

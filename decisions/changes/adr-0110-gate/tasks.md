@@ -11,3 +11,4 @@ ADR-0110 доп. (5), разбор, шаг 3 «Суд по цели»: Д-1, Д-
 | C10-TARGET-JUDGE-01 | `Unit.labels`, `Unit.about` | [x] | [ ] | [ ] |
 | C06-AT-READ-01 | чтение у другого члена `GET /domain/at/<кластер>/<sub>/<имя>[/<id>]`, `calls`: `GET domain/at/<s>/<имя>` (ADR-0111 п. 15) | [x] | [ ] | [ ] |
 | C08-VIEW-PULSE-01 | `domain.view_pulse`, `members[].servers[].pulse` (ADR-0111 п. 2) | [x] | [ ] | [ ] |
+| C10-TARGET-JUDGE-01 | разбор ревью: `domain/anywhere` своей строкой, `wide` без группы управляющего, `partial` и `withheld`, суд раньше поиска; `Unit`, строки снимка: `labels`, `about`; связи 150, 151 | [x] | [ ] | [ ] |

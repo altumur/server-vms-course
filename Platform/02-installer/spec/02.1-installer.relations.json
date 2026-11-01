@@ -1325,10 +1325,10 @@
   {
    "no": 140,
    "path": "domain.view_tables.{}",
-   "relation": ". not in values(domain.kept[])",
+   "relation": ". not in values(domain.kept[]), ни семьёй <.>/",
    "class": "value",
    "norm": "P/08.1 Н1.4а",
-   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"view_tables\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"view_tables\"]) == map ? dyn(doc[\"domain\"][\"view_tables\"]).map(k1, ((k1 != null && type(k1) != map && type(k1) != list && !(!((type(doc) == map && \"domain\" in doc && (type(doc[\"domain\"]) == map && \"kept\" in doc[\"domain\"] && (type(doc[\"domain\"][\"kept\"]) == list && dyn(doc[\"domain\"][\"kept\"]).exists(e2, ((e2 != null && type(e2) != map && type(e2) != list) && e2 == k1)))))))) ? [{\"p\": [\"domain\", \"view_tables\", k1]}] : [])) : []) : []) : [])",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"view_tables\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"view_tables\"]) == map ? dyn(doc[\"domain\"][\"view_tables\"]).map(k1, ((k1 != null && type(k1) != map && type(k1) != list && !(!((type(doc) == map && \"domain\" in doc && (type(doc[\"domain\"]) == map && \"kept\" in doc[\"domain\"] && (type(doc[\"domain\"][\"kept\"]) == list && dyn(doc[\"domain\"][\"kept\"]).exists(e2, ((e2 != null && type(e2) != map && type(e2) != list) && (e2 == k1 || (type(e2) == string && e2 == k1 + \"/\")))))))))) ? [{\"p\": [\"domain\", \"view_tables\", k1]}] : [])) : []) : []) : [])",
    "own": []
   },
   {
@@ -1356,6 +1356,78 @@
    "class": "value",
    "norm": "P/08.1 Н1.4а",
    "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"view_tables\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"view_tables\"]) == map ? dyn(doc[\"domain\"][\"view_tables\"]).map(k1, (type(doc[\"domain\"][\"view_tables\"][k1]) == list ? dyn(doc[\"domain\"][\"view_tables\"][k1]).transformList(i4, e5, ((e5 != null && type(e5) != map && type(e5) != list && (type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"rows\" in doc[\"unit\"] && doc[\"unit\"][\"rows\"] == k1) && (type(doc) == map && \"unit\" in doc && (type(doc[\"unit\"]) == map && \"fields\" in doc[\"unit\"] && (type(doc[\"unit\"][\"fields\"]) == map && dyn(doc[\"unit\"][\"fields\"]).exists(k6, ((type(doc[\"unit\"][\"fields\"][k6]) == map && \"type\" in doc[\"unit\"][\"fields\"][k6] && doc[\"unit\"][\"fields\"][k6][\"type\"] == \"blob\") && k6 == e5)))))) ? [{\"p\": [\"domain\", \"view_tables\", k1, i4]}] : [])) : [])) : []) : []) : [])",
+   "own": []
+  },
+  {
+   "no": 144,
+   "path": "domain.edit_tables.{}",
+   "relation": ". in keys(tables)",
+   "class": "reference",
+   "norm": "P/08.6 Н1.3",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"edit_tables\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"edit_tables\"]) == map ? dyn(doc[\"domain\"][\"edit_tables\"]).map(k1, ((k1 != null && type(k1) != map && type(k1) != list && !((type(doc) == map && \"tables\" in doc && ((type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(k2, k2 == k1)) || (type(doc[\"tables\"]) == list && dyn(doc[\"tables\"]).exists(e3, (type(e3) == string && e3 == k1))))))) ? [{\"p\": [\"domain\", \"edit_tables\", k1]}] : [])) : []) : []) : [])",
+   "own": []
+  },
+  {
+   "no": 145,
+   "path": "domain.edit_tables.{}",
+   "relation": ". not in keys(tables ? service = true)",
+   "class": "value",
+   "norm": "P/08.6 Н1.3",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"edit_tables\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"edit_tables\"]) == map ? dyn(doc[\"domain\"][\"edit_tables\"]).map(k1, ((k1 != null && type(k1) != map && type(k1) != list && (type(doc) == map && \"tables\" in doc && (type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(k2, ((type(doc[\"tables\"][k2]) == map && \"service\" in doc[\"tables\"][k2] && doc[\"tables\"][k2][\"service\"] == true) && k2 == k1))))) ? [{\"p\": [\"domain\", \"edit_tables\", k1]}] : [])) : []) : []) : [])",
+   "own": []
+  },
+  {
+   "no": 146,
+   "path": "domain.edit_tables.$t.*",
+   "relation": "when $t in keys(tables) : . in keys(tables.$t.fields)",
+   "class": "reference",
+   "norm": "P/08.6 Н1.3",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"edit_tables\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"edit_tables\"]) == map ? dyn(doc[\"domain\"][\"edit_tables\"]).map(k1, (type(doc[\"domain\"][\"edit_tables\"][k1]) == list ? dyn(doc[\"domain\"][\"edit_tables\"][k1]).transformList(i4, e5, ((e5 != null && type(e5) != map && type(e5) != list && (type(doc) == map && \"tables\" in doc && ((type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(k2, k2 == k1)) || (type(doc[\"tables\"]) == list && dyn(doc[\"tables\"]).exists(e3, (type(e3) == string && e3 == k1))))) && !(type(doc) == map && \"tables\" in doc && (type(doc[\"tables\"]) == map && k1 in doc[\"tables\"] && (type(doc[\"tables\"][k1]) == map && \"fields\" in doc[\"tables\"][k1] && ((type(doc[\"tables\"][k1][\"fields\"]) == map && dyn(doc[\"tables\"][k1][\"fields\"]).exists(k6, k6 == e5)) || (type(doc[\"tables\"][k1][\"fields\"]) == list && dyn(doc[\"tables\"][k1][\"fields\"]).exists(e7, (type(e7) == string && e7 == e5)))))))) ? [{\"p\": [\"domain\", \"edit_tables\", k1, i4]}] : [])) : [])) : []) : []) : [])",
+   "own": []
+  },
+  {
+   "no": 147,
+   "path": "domain.edit_tables.{}",
+   "relation": ". not in values(domain.kept[]), ни семьёй <.>/",
+   "class": "value",
+   "norm": "P/08.6 Н1.3",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"edit_tables\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"edit_tables\"]) == map ? dyn(doc[\"domain\"][\"edit_tables\"]).map(k1, ((k1 != null && type(k1) != map && type(k1) != list && !(!((type(doc) == map && \"domain\" in doc && (type(doc[\"domain\"]) == map && \"kept\" in doc[\"domain\"] && (type(doc[\"domain\"][\"kept\"]) == list && dyn(doc[\"domain\"][\"kept\"]).exists(e2, ((e2 != null && type(e2) != map && type(e2) != list) && (e2 == k1 || (type(e2) == string && e2 == k1 + \"/\")))))))))) ? [{\"p\": [\"domain\", \"edit_tables\", k1]}] : [])) : []) : []) : [])",
+   "own": []
+  },
+  {
+   "no": 148,
+   "path": "domain.edit_secrets.{}",
+   "relation": ". in keys(tables) | {@unit.rows}",
+   "class": "reference",
+   "norm": "P/08.6 Н1.3а",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"edit_secrets\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"edit_secrets\"]) == map ? dyn(doc[\"domain\"][\"edit_secrets\"]).map(k1, ((k1 != null && type(k1) != map && type(k1) != list && !((type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"rows\" in doc[\"unit\"] && doc[\"unit\"][\"rows\"] == k1) || (type(doc) == map && \"tables\" in doc && ((type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(k2, k2 == k1)) || (type(doc[\"tables\"]) == list && dyn(doc[\"tables\"]).exists(e3, (type(e3) == string && e3 == k1))))))) ? [{\"p\": [\"domain\", \"edit_secrets\", k1]}] : [])) : []) : []) : [])",
+   "own": []
+  },
+  {
+   "no": 149,
+   "path": "domain.edit_secrets.$t.*",
+   "relation": "when $t in keys(tables) | {@unit.rows} : . in keys(unit.fields) | keys(tables.$t.fields)",
+   "class": "reference",
+   "norm": "P/08.6 Н1.3а",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"edit_secrets\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"edit_secrets\"]) == map ? dyn(doc[\"domain\"][\"edit_secrets\"]).map(k1, (type(doc[\"domain\"][\"edit_secrets\"][k1]) == list ? dyn(doc[\"domain\"][\"edit_secrets\"][k1]).transformList(i4, e5, ((e5 != null && type(e5) != map && type(e5) != list && ((type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"rows\" in doc[\"unit\"] && doc[\"unit\"][\"rows\"] == k1) || (type(doc) == map && \"tables\" in doc && type(doc[\"tables\"]) == map && k1 in doc[\"tables\"])) && !(((type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"rows\" in doc[\"unit\"] && doc[\"unit\"][\"rows\"] == k1) && (type(doc) == map && \"unit\" in doc && type(doc[\"unit\"]) == map && \"fields\" in doc[\"unit\"] && type(doc[\"unit\"][\"fields\"]) == map && dyn(doc[\"unit\"][\"fields\"]).exists(k6, k6 == e5))) || (type(doc) == map && \"tables\" in doc && type(doc[\"tables\"]) == map && k1 in doc[\"tables\"] && type(doc[\"tables\"][k1]) == map && \"fields\" in doc[\"tables\"][k1] && type(doc[\"tables\"][k1][\"fields\"]) == map && dyn(doc[\"tables\"][k1][\"fields\"]).exists(k6, k6 == e5)))) ? [{\"p\": [\"domain\", \"edit_secrets\", k1, i4]}] : [])) : [])) : []) : []) : [])",
+   "own": []
+  },
+  {
+   "no": 150,
+   "path": "domain.view_tables.{}",
+   "relation": "поле rights.unit_of таблицы — в списке этой таблицы",
+   "class": "reference",
+   "norm": "договор права «Суд по цели»",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"view_tables\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"view_tables\"]) == map ? dyn(doc[\"domain\"][\"view_tables\"]).map(k1, (((type(doc) == map && \"rights\" in doc && type(doc[\"rights\"]) == map && \"unit_of\" in doc[\"rights\"] && type(doc[\"rights\"][\"unit_of\"]) == map && k1 in doc[\"rights\"][\"unit_of\"]) && type(doc[\"domain\"][\"view_tables\"][k1]) == list && !dyn(doc[\"domain\"][\"view_tables\"][k1]).exists(e4, e4 == doc[\"rights\"][\"unit_of\"][k1])) ? [{\"p\": [\"domain\", \"view_tables\", k1]}] : [])) : []) : []) : [])",
+   "own": []
+  },
+  {
+   "no": 151,
+   "path": "domain.view_pulse",
+   "relation": "exists @domain.ref",
+   "class": "value",
+   "norm": "P/08.1 Н1.4",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"view_pulse\" in doc[\"domain\"]) ? (!(\"ref\" in doc[\"domain\"]) ? [{\"p\": [\"domain\", \"view_pulse\"]}] : []) : []) : [])",
    "own": []
   }
  ],

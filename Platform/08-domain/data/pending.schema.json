@@ -708,7 +708,7 @@
    "maximum": 9007199254740991
   },
   "edit": {
-   "description": "хранимая правка {id, seq, what, method, path, body, key, at, base?, asked} — текст JSON (Н1.4 edit)",
+   "description": "хранимая правка {id, seq, what, method, path, body, key, at, base?, by?, iat?, asked} — текст JSON (Н1.4 edit)",
    "type": "object",
    "properties": {
     "id": {
@@ -755,6 +755,14 @@
      "type": "integer",
      "x-integer": true,
      "minimum": 1
+    },
+    "by": {
+     "description": "человек, которого судит консоль члена (Н1.4 by)",
+     "type": "string"
+    },
+    "iat": {
+     "description": "iat токена этого человека (Н1.4 by)",
+     "type": "number"
     },
     "asked": {
      "description": "запрос двери домена, как его принял процесс; по нему правку повторяют у нового держателя (глава 8.8 Н1.6 apply)",

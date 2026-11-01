@@ -750,6 +750,17 @@
      "description": "поля domain.view_status из элемента status[] пульса",
      "type": "object",
      "x-opaque": true
+    },
+    "labels": {
+     "description": "у строк единиц — поле labels",
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "about": {
+     "description": "у строк единиц — id about-единицы",
+     "type": "string"
     }
    },
    "additionalProperties": false,

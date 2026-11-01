@@ -849,3 +849,16 @@ a110_view_tables_rows_field	refused
 a110_view_tables_rows_blob	refused
 a110_calls_view_books	refused
 a110_calls_at_ok	ok
+a110_edit_tables_ok	ok
+a110_edit_tables_unknown	refused
+a110_edit_tables_service	refused
+a110_edit_tables_field	refused
+a110_edit_tables_kept	refused
+a110_edit_tables_secret	refused
+a110_edit_secrets_unknown	refused
+a110_edit_secrets_field	refused
+a110_edit_secrets_not_secret	refused
+a110_name_edits	refused
+a110_view_tables_kept_family	refused
+a110_view_tables_unit_of	refused
+a110_view_pulse_no_ref	refused

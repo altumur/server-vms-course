@@ -156,19 +156,24 @@ exit:      0 — вычислено; 2 — вход не по форме; код
 Дверь домена судит запись кластера по гранту этого кластера, а не `domain/grants/domain` (ADR-0110 доп. (4) п. 4, доп. (5) пп. 1, 5; Д-1, Д-2, Д-8 разбора). Иначе человек с грантом только на кластер получит пустой домен.
 
 ```yaml
-wide:      may(grants = domain/grants/domain, cap = view, unit = "*", sub = null) = allow — зритель домена: фильтра нет, ответ целиком
-gate:      вход дверей вида: wide, или may(unit = null, cap = view, sub = null, anywhere = сводка держателя) по любому кластеру;
-           иначе 403 по refusal; сводка не прочитана и строки domain/grants/domain не хватило — 503 unavailable
+wide:      may(grants = domain/grants/domain, cap = view, unit = "*", sub = null) = allow — зритель домена: фильтра нет, ответ целиком;
+           группа строки управляющего (P/08.4 Н1.3в manager) здесь не считается: прав в кластерах она не даёт
+gate:      вход дверей вида: wide, или may(grants = null, unit = null, cap = view, sub = null, anywhere = строка domain/anywhere держателя);
+           иначе 403 по refusal; строка есть, но не читается, и wide не хватило — 503 unavailable
 target:    запись кластера C: may(grants = domain/grants/C, as_of = null, disabled и roles — у держателя, как строка domain, iat — токена,
            sub — подсистема записи); строки domain/grants/C нет — grants = null
 read:      каждая запись судится отдельно, cap = view:
-  unit:    {sub, id, labels, about?, chains} — из вида (P/08.1 Н1.4): labels — Unit.labels, нет — []; about — Unit.about и единица с этим id в
-           той же копии: нашлась — {sub, id, labels}, нет — "unknown"; у манифеста без about поля нет; chains — "unknown"
-  row:     строка снимка таблицы (P/04 Н1.3б): строка единицы — {sub, id: key, labels — fields.labels или []}; таблица в rights.unit_of и поле в списке
-           domain.view_tables — unit единицы из этого поля, значения нет — unit = "*"; иначе unit = null
+  unit:    {sub, id, labels, about?, chains} — из вида (P/08.1 Н1.4): labels — Unit.labels, нет — [] и вход неполон; about — Unit.about и единица с этим id в
+           той же копии: нашлась — {sub, id, labels}, нет — "unknown"; у манифеста без about поля нет; chains — "unknown" (предел до папок
+           домена, шаг 6 разбора: строка folder: через домен не покрывает)
+  row:     строка снимка таблицы (P/04 Н1.3б): строка единицы — {sub, id: key, labels, about?} из полей строки снимка, как unit выше; таблица в rights.unit_of —
+           unit единицы из её поля (связь 150 держит поле в списке), значения нет — unit = "*"; иначе unit = null, как GET таблицы у консоли
   allow:   запись в ответе; deny — записи нет; unavailable — записи нет, счёт withheld ответа
+  partial: deny при неполном входе (labels нет, about или chains "unknown"), и у человека в C есть действующая строка labels:, folder: или unit: не на
+           саму единицу, которую этот вход мог бы покрыть: запись скрыта и считается в withheld: «не вижу» отличается от «нет»
 write:     правка записи кластера C: wide с cap = admin и unit = "*", или may(unit = "any", cap = edit, sub — подсистема записи) по C.
-           Это грубая проверка: области, about, цепочки, routes, unit_of, names домен не считает, строк члена у него нет.
+           Суд раньше поиска: у человека нет строки edit ни в одном кластере — 403 до find; нашёлся кластер, суд не прошёл — 403 без имён
+           кластеров; contested и executors называют кластеры только зрителю домена. Это грубая проверка: области, about, цепочки, routes, unit_of, names домен не считает, строк члена у него нет.
            Точный суд — у консоли члена при применении, по тому человеку, чья правка; отказ — исход refused
            (P/09.1 Н1.5; P/08.6 Н1.4). Один суд на правку, через какой вход она ни пришла
 cost:      may считается на запись, но вход меняется только с кластером и человеком: памятью прохода двери можно не пересчитывать grants
