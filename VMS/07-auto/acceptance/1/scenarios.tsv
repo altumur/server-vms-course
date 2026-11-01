@@ -70,6 +70,8 @@ scenario	step	request	expect
 07-requests	6	POST /rule_marks {"scenario": "$s", "mute": {"since": 1760000000, "until": 1760003600, "by": "admin", "reason": "работы"}, "order": 3}	201 {"order": 3, "mute": {"by": "admin", "until": 1760003600}}
 07-requests	7	GET /scenarios/$s	200 {"revision": 1}
 07-requests	8	POST /chains {"target": "$s", "f": "00000000000000000000000000000000", "i": "0", "firing": "x", "level": 2, "moment": 1760000000, "started_by": "manual"}	403 {"error": "denied"}
+07-requests	9	POST /answers {"scenario": "$s", "fire": "f1", "step": "0", "user": "admin", "answer": "yes"}	2xx
+07-requests	10	@manual ответ на ask: член группы роли шага — ветка ответа; чужая роль и чужой user — answer.refused, answers_refused + 1, срок идёт; ответ после срока не действует; из двух действующих решает ранний at: стенд без воркеров	manual
 08-run	1	@manual стенд приёмки 1 без воркеров: сценарий с wait 30: рестарт вычислителя на ожидании — строка auto/state/runs/<id> цела, шаг после ожидания подан один раз, срок от конца ожидания; перезапуск до записи строки — курсор стоял, сработка решена заново	manual
 08-run	2	@manual стенд приёмки 1 без воркеров: wait_event: событие до until — ветка yes, срок от его occurred; без события — ветка no только при through ≥ until; при молчащем ресурсе ветка не решена	manual
 08-run	3	@manual стенд приёмки 1 без воркеров: repeat: при идущем запуске skip — fired result skip, busy false; restart — прежний снят, новый идёт; queue — идёт за прежним, сверх 16 — как skip	manual

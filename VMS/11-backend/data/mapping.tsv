@@ -277,7 +277,7 @@ RuleAction	ruleId	auto/scenarios	rule: UUID ↔ номер	both
 RuleAction	layoutId, roleId, monitorId, to, subject, body, chat, method, url	auto/scenarios	те же поля в snake_case	both	данные: действие не объявлено
 RuleWait	control, sec	auto/scenarios	then[]: wait	both
 RuleWaitEvent	control, event, sec, yes, no	auto/scenarios	then[]: wait_event	both	event — как RuleTrigger
-RuleAsk	control, text, roleId, sec, default, yes, no	auto/scenarios	then[]: ask; role	both	данные: двери ответа нет, строка auto/answers объявлена, backend не пишет (предел)
+RuleAsk	control, text, roleId, sec, default, yes, no	auto/scenarios	then[]: ask; role	both	данные: ждёт контракта, дверь ответа V/11.4 Н1.10
 RuleEscalate	control, levels, stop	auto/scenarios	then[]: escalate; role, via, wait_min	both	данные, как RuleAsk
 RuleFire	—	GET /events	fired, step журнала auto этого сценария	read	V/11.3 Н1.3; ответ двери auto/test — та же форма
 RuleFire	id	GET /events	UUID ruleFire:<firing>	read

@@ -94,6 +94,7 @@ door:
       - auto/mode_current
       - auto/windows
       - auto/versions                # the history of a rule, written in the batch of the edit (ADR-0106 п. 7)
+      - auto/answers                 # an operator answers `ask`, acknowledges `escalate` (V/07.6 Н1.9): waits for the contract
       - auto/test                    # the evaluator's door: a trial run of a draft, the rule's code is one (ADR-0105 п. 7)
       - auto/requests                # `run`, `retry`: filing only, the person of the ticket is judged (V/11.4 Н1.10; P/06.3 Н1.9)
       - cam/policy                   # the common settings of these subsystems (ADR-0094 доп. (2) п. 6)

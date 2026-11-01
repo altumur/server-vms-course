@@ -433,13 +433,16 @@ tables:
       rule:     {type: string, required: true}
   # An operator's answer to `ask` and the acknowledgement of `escalate`: the evaluator reads it; the contract has no door
   # for it, so `backend` writes none yet.
+  # An operator answers: `view` on the scenario, the step's role is the evaluator's to judge by `by` (V/07.6 Н1.9).
   answers:
-    key: "{scenario}-{fire}-{step}"
+    key: "{scenario}-{fire}-{step}-{user}"
     stamp: [by, at]
+    delete_after: 86400
     fields:
       scenario: {type: string, required: true, schema: {pattern: "^[1-9][0-9]*$"}}
       fire:     {type: string, required: true, schema: {pattern: "^[^/]+$"}}
       step:     {type: string, required: true, schema: {pattern: "^[0-9a-z.]+$"}}
+      user:     {type: string, required: true, schema: {pattern: "^[^/]+$"}}   # must be the row's `by`: a row of another's name does not count
       answer:   {type: string, required: true, schema: {pattern: "^(yes|no|ack:[1-9][0-9]*)$"}}
   # What is said of a scenario and is no edit of it (V/07.6 Н1.1): silence and order. A table and not fields: a new `revision`
   # would move the cursor and take the waiting runs away (V/07.4 Н1.11). No row — not silent, order 0.
@@ -532,7 +535,7 @@ placement:
 # branch, are out of its reach (V/07.1 Н1.4).
 rights:
   cluster_rows: true
-  routes: {edit: [schedules, day_groups, modes, mode_current, windows, versions, answers, rule_marks]}
+  routes: {view: [answers], edit: [schedules, day_groups, modes, mode_current, windows, versions, rule_marks]}
   unit_of: {versions: scenario, answers: scenario, rule_marks: scenario, chains: target}
   names:
     - {field: when, unit: unit, sub: sub}
