@@ -580,6 +580,18 @@ paths:
       responses:
         '200': {description: '{doc}'}
         '429': {$ref: '#/components/responses/Busy'}
+  /api/book/{member}/{sub}/{book}:
+    parameters:
+      - {$ref: '#/components/parameters/Member'}
+      - {name: sub, in: path, required: true, schema: {type: string}}
+      - {name: book, in: path, required: true, schema: {type: string}}
+      - {$ref: '#/components/parameters/AgentSignature'}
+    get:
+      operationId: bookAll
+      summary: Строка книги to "*" (глава 8.5 Н1.4)
+      responses:
+        '200': {description: '{items}'}
+        '429': {$ref: '#/components/responses/Busy'}
   /api/backup-part/{member}/{part}:
     parameters:
       - {$ref: '#/components/parameters/Member'}
@@ -2578,6 +2590,10 @@ components:
             doc: {type: string}
         domain_age: {type: number, minimum: 0, description: 'Добавляет ретранслятор (P/09.2 Н1.4).'}
         send_row: {const: true, description: 'Пришли свою строку раздела полем row (P/08.8 Н1.8а).'}
+        book_rev:
+          type: object
+          description: 'Версии строк книг to "*" (P/08.5 Н1.4).'
+          additionalProperties: {$ref: '#/components/schemas/Pair'}
         placement: {$ref: '#/components/schemas/CarryPlacement'}
         pending:
           type: array

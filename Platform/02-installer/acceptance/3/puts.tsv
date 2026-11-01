@@ -84,3 +84,5 @@ calls_bad_door	neart-door calls-client-bad	2 -
 calls_first_ok	live-first rec-where calls-first	0 1
 calls_first_nosuch	live-first calls-first-nosuch	2 -
 calls_second_kind	second-kind calls-second	2 -
+# ADR-0113 доп. (9) п. 1: книга to "*" с grant — отказ каталога
+book_all_grant	book-all-grant	2 -

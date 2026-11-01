@@ -1,0 +1,10 @@
+# книга всем с grant: на получателя в строке ничего нет (ADR-0113 доп. (9) п. 1)
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+domain:
+  books:
+    asks: {from: probe/asks/, key: target, pick: all, to: "*"}
+  names:
+    asks/: {exclusive_with: domain/groups, grant: view}

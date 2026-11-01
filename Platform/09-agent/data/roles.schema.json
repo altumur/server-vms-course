@@ -136,6 +136,18 @@
      "properties": {
       "missing": {
        "$ref": "#/$defs/common.book_missing"
+      },
+      "missing_count": {
+       "description": "книга to: \"*\": всех членов в missing (P/08.5 Н1.3 to_all)",
+       "$ref": "#/$defs/common.uint53"
+      },
+      "term": {
+       "description": "книга to: \"*\": срок записи строки",
+       "$ref": "#/$defs/common.pos53"
+      },
+      "rev": {
+       "description": "книга to: \"*\": версия строки",
+       "$ref": "#/$defs/common.pos53"
       }
      },
      "additionalProperties": false,

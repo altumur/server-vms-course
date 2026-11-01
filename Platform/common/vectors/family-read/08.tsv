@@ -3148,3 +3148,9 @@ c08_partial.003	domain/partial/<раздел>	domain/partial/0042	row	writer	["d
 c08_partial.004	domain/partial/<раздел>	domain/partial/0042	row	reader	["domain"]	null	refused	[""]	{"domain": [""]}	root null
 c08_partial.005	domain/partial/<раздел>	domain/partial/0042	row	writer	["domain"]	{	refused	[""]	[]	not JSON
 c08_partial.006	domain/partial/<раздел>	domain/partial/0042	row	reader	["domain"]	{	refused	[""]	{"domain": [""]}	not JSON
+c08_book_all.001	domain/<sub>/<manifest:domain.books>/*	domain/testsub2/rolls/*	row	writer	["domain"]	{"":"{\"missing\":[]}"}	ok	[]	[]	base
+c08_book_all.002	domain/<sub>/<manifest:domain.books>/*	domain/testsub2/rolls/*	row	reader	["domain", "console", "<s>worker"]	{"":"{\"missing\":[]}"}	ok	[]	{"domain": [], "console": [], "<s>worker": []}	base
+c08_book_all.003	domain/<sub>/<manifest:domain.books>/*	domain/testsub2/rolls/*	row	writer	["domain"]	null	refused	[""]	[]	root null
+c08_book_all.004	domain/<sub>/<manifest:domain.books>/*	domain/testsub2/rolls/*	row	reader	["domain", "console", "<s>worker"]	null	refused	[""]	{"domain": [""], "console": [""], "<s>worker": [""]}	root null
+c08_book_all.005	domain/<sub>/<manifest:domain.books>/*	domain/testsub2/rolls/*	row	writer	["domain"]	{	refused	[""]	[]	not JSON
+c08_book_all.006	domain/<sub>/<manifest:domain.books>/*	domain/testsub2/rolls/*	row	reader	["domain", "console", "<s>worker"]	{	refused	[""]	{"domain": [""], "console": [""], "<s>worker": [""]}	not JSON

@@ -876,3 +876,4 @@ a110_token_keep_ok	ok
 a110_token_keep_long	refused
 a112_calls_list_ok	ok
 a112_calls_where_write	refused
+a113_book_all_ok	ok

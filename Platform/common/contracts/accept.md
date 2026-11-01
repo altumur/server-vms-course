@@ -181,6 +181,7 @@ carry:          ответ 200 на POST /api/member/<член> и GET /api/carr
   members?:     строка domain/member-rows/<раздел> {doc} (P/08.3 Н1.1) — только отставшему: members_rev публикации нет или ≠ (term, rev)
                 (раздел «Список членов отставшему»; добавлено М11/12); у GET /api/carry — всегда
   holder?:      строка domain/holder держателя {doc} (P/08.8 Н1.1; договор записи срока)
+  book_rev?:    {<sub>/<книга>: {term, rev}} — версии строк книг to: "*" (P/08.5 Н1.4), каждому ответу
   send_row?:    true — пришли свою строку раздела полем row (P/08.8 Н1.8а); carry.members при этом нет
   sealed?:      конверт m1 с JSON-объектом секретного члену — договор конвертов домена «Содержимое sealed» (разбор ревью
                 стадии A 8–10, № 12)
@@ -206,7 +207,7 @@ carry_without_body:        GET /api/carry (P/08.3 Н2) публикации не
 
 ```yaml
 name_hash:   первые 4 байта SHA-256(UTF-8 имени члена), целое без знака, старший байт первым — разброс проходов и retry_in
-busy:        ответ 429 {error: "busy", retry_in} — после проверки подписи: считаются только члены; на всех дверях агента: POST /api/member, GET /api/carry, /api/members, /api/anywhere, /api/backup-part
+busy:        ответ 429 {error: "busy", retry_in} — после проверки подписи: считаются только члены; на всех дверях агента: POST /api/member, GET /api/carry, /api/members, /api/anywhere, /api/backup-part, /api/book
              class server его не получает: кластеры держат хранителей и цель передачи; держит бюджет REPORT_RATE при старте агента и рывке rebase
 порог:       запросов дверей агента от class camera за последнюю секунду монотонных часов больше REPORT_RATE (P/08.3 Н1.1а); счёт — память процесса domain
 retry_in:    с, period + name_hash mod period, целое; period — every камеры (P/08.3 Н1.1а), счёта нет — REPORT_EVERY; агент не обращается к дверям раньше (P/09.1 Н1.2а)
