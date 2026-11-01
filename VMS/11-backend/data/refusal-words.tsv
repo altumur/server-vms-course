@@ -1,6 +1,6 @@
 # Закрытый перечень значений code ответа Problem дверей backend: главы 11.1–11.6, 11.8 (ADR-0094 B5; замер С.5). Перенос из Н4, нормы не меняет: при расхождении источник — норма в столбце norm.
 # Слово error здесь — code контракта. Откуда оно переведено (слово консоли или домена) — в столбце norm. Значения — перечень ProblemCode контракта; своих кодов нет (V/11.2 Н1.3).
-# door — двери контракта: devices, archives, volumes, objects; folders; operations; access; test — /test/*; * — каждая дверь. code — статус; 4xx — статус двери; «-» — код итога шага, в failed групповой записи статуса нет: 200.
+# door — двери контракта: devices, archives, volumes, objects; folders; operations; discovery; access; test — /test/*; * — каждая дверь. code — статус; 4xx — статус двери; «-» — код итога шага, в failed групповой записи статуса нет: 200.
 # field — «-»: поля нет; <поле> — поле контракта, которое называет отказ; иное — точное значение. 502–504 кода не имеют (V/11.2 Н1.3): строк нет. Слова хода ассистента — V/10.
 door	code	error	field	norm
 *	401	UNAUTHORIZED	-	11.1, 11.2 Н4; 11.4 Н4: 401 сторожевой, 401 обратного вызова; 11.5 Н4
@@ -46,6 +46,7 @@ folders	422	NAME_REQUIRED	name	11.4 Н1.7
 folders	422	NOT_SUPPORTED	<поле>	11.4 Н1.7: член папки — не единица
 operations	404	NOT_FOUND	-	11.4 Н4: no such operation, no operations
 operations	409	BUSY	-	11.4 Н4: root busy, operation done, operation running, nothing to retry
+discovery	409	BUSY	-	11.4 Н1.9, Н4: поиск идёт
 operations	422	VALIDATION_FAILED	items	11.4 Н4: too many steps, too many operations; 11.4 Н1.8: шаг не ровно с одним из set, folderIds, create, пустой items
 operations	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.8
 operations	-	DEVICE_OFFLINE	-	11.4 Н1.8: шаг not_run, код итога шага

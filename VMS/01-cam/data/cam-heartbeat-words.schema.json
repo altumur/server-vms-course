@@ -58,8 +58,21 @@
       "enum": [
        "busy",
        "refused",
-       "opening"
+       "opening",
+       "lost"
       ]
+     },
+     "units_down": {
+      "description": "единицы строки, которые не работают (V/01.2 Н1.4, V/01.4 Н1.4б): ключ — n",
+      "type": "object",
+      "additionalProperties": {
+       "type": "string",
+       "enum": [
+        "lost",
+        "failed",
+        "refused"
+       ]
+      }
      },
      "warning": {
       "type": "string"
@@ -105,6 +118,29 @@
      },
      "index_url": {
       "type": "string"
+     },
+     "talk": {
+       "description": "разговор у строки-хозяина с живым невыключенным spk: url двери держателя и кодек каждого номера, имя rtpmap (V/01.2 Н1.4, V/01.4 Н1.4а)",
+       "type": "object",
+       "properties": {
+         "url": {
+           "type": "string",
+           "minLength": 1
+         },
+         "spk": {
+           "type": "object",
+           "minProperties": 1,
+           "additionalProperties": {
+             "type": "string",
+             "minLength": 1
+           }
+         }
+       },
+       "required": [
+         "url",
+         "spk"
+       ],
+       "additionalProperties": false
      },
      "taken_by": {
       "description": "кто забирает поток камеры: список имён кластеров (V/01.6 Н1.4)",

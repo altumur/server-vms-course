@@ -53,8 +53,8 @@ paths:
         - name: stream
           in: query
           required: false
-          description: только этот поток записи, отсечённого тоже — `<epoch>` или `<epoch>/backfill`; без параметра — по правилу «один момент — одна эпоха» (Н1.3)
-          schema: {type: string, pattern: "^(?:[0-9]+(/backfill)?)$"}
+          description: только этот поток записи, отсечённого тоже — `<epoch>`, `<epoch>/backfill` или `<epoch>/audio`; без параметра — по правилу «один момент — одна эпоха» (Н1.3)
+          schema: {type: string, pattern: "^(?:[0-9]+(/backfill|/audio)?)$"}
       security: [{roleCertificate: []}]
       responses:
         "200":

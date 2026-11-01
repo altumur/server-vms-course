@@ -3,3 +3,4 @@ date	sample	fix	languages
 2026-10-29	2/scenarios.tsv: 01-hold, шаг 11	kind io — фаза held и нет обоих адресов раздачи (live_url, live_shm) — прежде фаза не сверялась; разбор ревью V/01 стр. 4, вопрос 1 (Claude С-5)	all
 2026-10-29	2/README.md: Подготовка	файл подсистемы cam задан стендом: MEDIA_DIR={data}/subsystems/cam/media и SHM_DIR через W2C_SUB_ENV, как велит общий README приёмки VMS (прежде «не задан» — держатель искал бы door.mp4 в /data/platform); разбор ревью V/01 стр. 19 (Claude С-3)	all
 2026-11-01	2/scenarios.tsv: 01-hold шаги 10–15, 02-settings	type закреплён: строка не camera — новая строка $c2, а не правка $c1; расхождение resolution с size — warning и его снятие; передача настройки и одна настройка в двух местах — @manual, нужен живой драйвер (ADR-0102 доп. (10), ADR-0104 пп. 3, 4, 6)	all
+2026-11-01	2/scenarios.tsv: 04-events	источник текста, text, word, занятый порт — @manual: в подставном драйвере текста нет (ADR-0102 доп. (9) п. 9)	all

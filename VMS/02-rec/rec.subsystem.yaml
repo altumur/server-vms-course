@@ -84,6 +84,9 @@ unit:
     # The door checks the stream is this camera's (its `main` is `cam`); the recorder checks again and records nothing of a
     # stream that is not (`reason`). `cam` stays the camera — the recording's `about` (a grant on the camera covers it).
     stream:         {type: string, ref: cam/cameras, must_match: {main: cam}}
+    # WHICH MICROPHONE it records: the `number` of a `mic` of the camera's device; 0 — the camera's first; no such one —
+    # no sound (V/02.4 Н1.2а). A recorder of a device with one microphone for sixteen channels says it here by hand.
+    audio:          {type: int, default: 0, schema: {minimum: 0}}
     retention_days: {type: int,    default: 30, schema: {minimum: 1}}      # media: how far back its door shows it — a ceiling, the ring decides what is there
     enabled:        {type: bool,   default: true}
     labels:         {type: list}                     # where it may run: a recorder whose server has these labels
@@ -417,6 +420,7 @@ display:
     cam: Камера
     ref: Имя в домене
     stream: Поток
+    audio: Микрофон
     retention_days: Хранить, дней
     enabled: Включена
     labels: Метки серверов
@@ -429,6 +433,7 @@ display:
   field_help:
     cam: камера, которую пишет запись
     stream: "поток камеры, который пишет запись; пусто — основной"
+    audio: "номер микрофона устройства; 0 — первый микрофон камеры"
     home: том, в котором лежит запись
     retention_days: сколько дней показывать
     min_depth_days: сколько дней должно быть не меньше

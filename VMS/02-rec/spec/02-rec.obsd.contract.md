@@ -90,6 +90,9 @@ u32 len | u32 id | u16 op | u16 flags | i32 status | u32 jsonLen | json[jsonLen]
 - Запись SMPL — big-endian: `"SMPL" major:u32 subtype:u32 flags:u32 begin:u64 end:u64 subLen:u32 bodyLen:u32 sub body`.
   Видео — `major = 2`; `subtype` — FourCC в u32 LE (`H264`; `H265` — форма движка, вход `rec` только `H264`, V/02.4 Н1.2); `sub` — `width:u32le height:u32le`; `body` — блок
   доступа Annex B, параметры кодека — в каждом ключевом кадре; `end` — `begin` + длительность буфера, нет её — 40 мс.
+- Звук — `major = 3`; `subtype` — FourCC в u32 LE (`AAC ` с пробелом); `sub` — `channels:u8 rate:u32le`; `body` — кадр AAC с заголовком ADTS; `end` — `begin` +
+  длительность кадра; каждый кадр ключевой, флаги 0. Тип кадра внутри последовательности не меняется (`SEQUENCE_TYPE_CHANGED`): звук — свой поток (V/02.3 Н1.1).
+  Это требование к движку, а не наблюдённое свойство: подтверждается на первом прогоне с живым `obsd` (V/02.2 Н1.4).
 - Флаги: `NEED_KEY_FRAME = 1<<0`, `NEED_PREVIOUS_FRAME = 1<<3`; ключевой кадр — ни одного из двух; зависимый кадр —
   `NEED_KEY_FRAME`.
 

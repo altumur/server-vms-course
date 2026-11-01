@@ -21,7 +21,7 @@ n	method	path	profile	why
 14	GET	/devices	in	переводится (V/11.2)
 15	POST	/devices	in	переводится (V/11.2)
 16	POST	/devices/update	in	переводится (V/11.2)
-17	POST	/devices/probe	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+17	POST	/devices/probe	in	переводится (V/11.2)
 18	GET	/devices/{deviceId}	in	переводится (V/11.2)
 19	PATCH	/devices/{deviceId}	in	переводится (V/11.2)
 20	DELETE	/devices/{deviceId}	in	переводится (V/11.2)
@@ -49,9 +49,9 @@ n	method	path	profile	why
 42	POST	/operations/{operationId}/cancel	in	переводится (V/11.4 Н1.8)
 43	POST	/operations/{operationId}/retry-failed	in	переводится (V/11.4 Н1.8)
 44	POST	/operations/{operationId}/revert	out	404 NO_ROUTE: откат не объявляется (ADR-0095 §4); тест вне профиля
-45	GET	/domains/{domainId}/discovery	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-46	POST	/domains/{domainId}/discovery	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-47	DELETE	/domains/{domainId}/discovery	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+45	GET	/domains/{domainId}/discovery	in	переводится (V/11.2)
+46	POST	/domains/{domainId}/discovery	in	переводится (V/11.2)
+47	DELETE	/domains/{domainId}/discovery	in	переводится (V/11.2)
 48	GET	/rules	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
 49	POST	/rules	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
 50	GET	/rules/{ruleId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
