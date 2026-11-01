@@ -1,13 +1,9 @@
 # цели и шаги вглубь (договор сторожевой и передачи names; ADR-0105 п. 4)
 name: probe
-unit: {rows: things, id: name, fields: {name: {type: string, required: true}, target: {type: json}, then: {type: json}}}
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}, when: {type: json}, then: {type: json}}}
 placement: {capacity: {default: 1}}
 worker: {exec: /usr/lib/probe/worker}
 rights:
   names:
-    - {field: then, unit: unit, sub: sub, action: action, walk: [then, else]}
-    - field: target
-      at: include[]
-      unit: id
-      kind: kind
-      kinds: {device: {of: cam}, folder: {folder: true}, server: {server: true}}
+    - {field: when, at: "target.include[]", unit: id, kind: kind, kinds: {device: {of: cam}, folder: {folder: true}, server: {server: true}}}
+    - {field: then, at: "target.include[]", walk: ["yes", "no"], quiet: [control], unit: id, kind: kind, kinds: {device: {of: cam}, folder: {folder: true}, server: {server: true}}}
