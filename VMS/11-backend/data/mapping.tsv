@@ -1,16 +1,16 @@
 # Сопоставление видов consolem ↔ подсистемы VMS (V/11.3; ADR-0094 A6). Строка: вид и поле контракта → подсистема и место у нас (`<sub>/<rows|tables>` или дверь консоли), поле у нас или правило, направление way (read, both, write, const, none), заметка. Поле `—` — вид целиком. Формат и смысл way — V/11.3 Н1.1; полнота — каждое поле схем ответа и тел записи переводимых операций.
 kind	field	vms	vms_field	way	note
 Domain	—	кластер	—	read	домен consolem = наш кластер (ADR-0094 A6); одна запись — свой кластер
-Domain	id	кластер	UUID domain:<CLUSTER>	read	имя кластера установщика (P/02.4 Н1.2); UUID — V/11.4 Н1.6
+Domain	id	кластер	UUID domain:/; вне домена UUID domain:<CLUSTER>	read	запись одна на домен; V/11.3 Н1.2, V/11.4 Н1.6
 Domain	name	кластер	CLUSTER	read
 Domain	license	—	""	const	лицензий consolem нет
 Domain	online	—	true	const	ответила консоль — кластер на связи
 Domain	version	—	"1"	const	видимые поля домена не меняются (online — связь, версию не двигает)
 Server	—	GET /servers	—	read	сервер = элемент /servers консоли (P/06.6)
-Server	id	GET /servers	UUID server:<name>	read
+Server	id	GET /servers	UUID server:<кластер>/<name>	read
 Server	name	GET /servers	name	read
 Server	online	GET /servers	state	read	state live — true, иначе false
-Server	domainId	кластер	UUID domain:<CLUSTER>	read
+Server	domainId	кластер	Domain.id	read
 Server	ip	—	""	const	адреса сервера у консоли нет
 Server	port	—	0	const
 Server	role	—	"node"	const	ролей primary/node/standby нет: размещает контроллер (features без serverRoles)
@@ -21,10 +21,10 @@ Server	disks	GET /servers	disks первого по имени слота усл
 Server	version	GET /servers	SHA-256 hex канонического JSON disks; disks пуст — "1"	read	из видимых полей меняются только disks (online — связь); тот же набор дисков возвращает прежнее значение, предел V/11.3 Н1.3
 Server	netmask, gateway, dns	—	—	none	сеть сервера не у консоли (features без serverNetwork)
 Device(type=camera)	—	cam/cameras + rec/recordings + det/units	—	both	сборка: основная строка type camera, её потоки, записи, детекторы (V/11.4)
-Device(type=camera)	id	cam/cameras	UUID device:cam/cameras/<id>	read
+Device(type=camera)	id	cam/cameras	UUID device:<кластер>/cam/cameras/<id>	read
 Device(type=camera)	type	cam/cameras	type	read	слово контракта без перевода; задаёт POST /devices, в DevicePatch поля нет
 Device(type=camera)	parentId	cam/devices	ipsrv хоста есть — его id, иначе null	read	channels сказан или таблица не видна; V/11.3 Н1.3 «Дерево»; при создании — null или этот id
-Device(type=camera)	domainId	кластер	UUID domain:<CLUSTER>	read
+Device(type=camera)	domainId	кластер	Domain.id	read
 Device(type=camera)	identifier	cam/cameras	id	read	номер камеры (numeric, cam/next_id); при создании выдаёт счётчик, занятый — IDENTIFIER_TAKEN, свободный пропускается (V/11.4 Н1.2)
 Device(type=camera)	name	cam/cameras	name	both
 Device(type=camera)	enabled	cam/cameras + cam/rule_state	enabled; пока действует выключение правилом — false	both	запись true у выключенной правилом — просьба cam disable со сроком в прошлом, строка не пишется (V/11.4 Н1.2)
@@ -51,7 +51,7 @@ Device(type=camera)	stream	rec/recordings	stream основной <cam>: пус�
 Device(type=camera)	children	det/units	<cam>-<kind>	write	только при создании: дочерние детекторы (V/11.4 Н1.2); иные дочерние — 422 NOT_SUPPORTED, field children
 Device(type=camera)	version	cam/cameras + rec/recordings + det/units + cam/devices	склейка c<камера-потоки>.r<rec…>.d<det…>.h<строка устройства>.i<строка ipsrv>.s<cam/rule_state>.a<строка записи> индексов хранилища частей и надгробий (V/11.4 Н1.1)	read	ADR-0094 доп. (4) п. 1; индекс — в элементе списка по B4
 Device(type=camera)	armed	cam/rule_state	armed	read	строки нет — false; строка не читается — поля нет (V/11.3 Н1.3)
-Device(type=camera)	disabledByRuleId	cam/rule_state	disabled_by_rule	read	UUID rule:auto/scenarios/<id>; только если disabled_until позже сейчас, иначе null; строка не читается — поля нет
+Device(type=camera)	disabledByRuleId	cam/rule_state	disabled_by_rule	read	UUID rule:<кластер>/auto/scenarios/<id>; только если disabled_until позже сейчас, иначе null; строка не читается — поля нет
 Device(type=camera)	disabledByRuleAt	cam/rule_state	disabled_at	read	те же условия; секунды → date-time UTC
 Device(type=camera)	recordDetectorIds	auto/scenarios	цель строки записи: det/units/<c>-<kind>	both	только при recordMode motion; строки нет — []; разные виды — 422 NOT_SUPPORTED (V/11.3 Н1.3)
 Device(type=camera)	mac	—	—	none	при создании пропускается без записи: MAC камеры — только из поиска (ADR-0102 доп. (7) п. 3; V/11.3 Н1.1)
@@ -60,10 +60,10 @@ Device(type=camera)	templateId	POST /devices	id камеры-источника	
 Device(type=camera)	streamProfile, buffering	—	—	none	заглушки прототипа: при создании пропускаются без записи (V/11.3 Н1.1); вопрос consolem
 Device(type=camera)	subtype, preRecordSec, channel, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, bitrate, norm, pulse, debounce, gain, acodec, vol, overlayDelayMs, overlayDurationSec	—	—	none	у камеры нет
 Device(type=det)	—	det/units	—	both	детектор камеры (V/04.1), ключ <cam>-<kind>
-Device(type=det)	id	det/units	UUID device:det/units/<cam>-<kind>	read
+Device(type=det)	id	det/units	UUID device:<кластер>/det/units/<cam>-<kind>	read
 Device(type=det)	type	—	"det"	const
-Device(type=det)	parentId	det/units	cam — UUID device:cam/cameras/<cam>	read	при создании — parentId элемента items
-Device(type=det)	domainId	кластер	UUID domain:<CLUSTER>	read
+Device(type=det)	parentId	det/units	cam — UUID device:<кластер>/cam/cameras/<cam>	read	при создании — parentId элемента items
+Device(type=det)	domainId	кластер	Domain.id	read
 Device(type=det)	serverId	det/heartbeats	сервер держателя детектора	read	наблюдение, в версию не входит; нет держателя — поля нет
 Device(type=det)	name	det/units	title; пусто — ключ <cam>-<kind>	both	свободное имя, ключ от него не зависит (V/11.3 Н1.3)
 Device(type=det)	enabled	det/units	enabled	both
@@ -76,10 +76,10 @@ Device(type=det)	disabledByRuleId, disabledByRuleAt, armed	—	—	none	толь
 Device(type=det)	configMode	—	—	none	current — умолчание, пропускается; default, template — 422 NOT_SUPPORTED, field configMode (V/11.3 Н1.1)
 Device(type=det)	subtype, short, identifier, ip, port, mac, vendor, model, login, hasPassword, fault, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, rtspUrl, overlayDelayMs, overlayDurationSec, password, children	—	—	none	у детектора нет
 Device(type=det,builtin)	—	cam/device_units	строка type det	both	детектор на устройстве (V/01.4 Н1.4в); создание, правка, снятие — V/11.4 Н1.2; в папки не входит
-Device(type=det,builtin)	id	cam/device_units	UUID device:cam/device_units/<id>	read
+Device(type=det,builtin)	id	cam/device_units	UUID device:<кластер>/cam/device_units/<id>	read
 Device(type=det,builtin)	type	—	"det"	const
-Device(type=det,builtin)	parentId	cam/device_units	camera — UUID device:cam/cameras/<camera>	read	при создании — parentId элемента items
-Device(type=det,builtin)	domainId	кластер	UUID domain:<CLUSTER>	read
+Device(type=det,builtin)	parentId	cam/device_units	camera — UUID device:<кластер>/cam/cameras/<camera>	read	при создании — parentId элемента items
+Device(type=det,builtin)	domainId	кластер	Domain.id	read
 Device(type=det,builtin)	serverId	cam/heartbeats	сервер держателя камеры	read	наблюдение, в версию не входит
 Device(type=det,builtin)	name	cam/device_units	title; нет — template	both
 Device(type=det,builtin)	enabled	cam/device_units	enabled	both	true при включённом несовместимом — 409 BUSY, field enabled (V/11.4 Н1.2)
@@ -92,11 +92,11 @@ Device(type=det,builtin)	version	cam/device_units	индекс хранилищ�
 Device(type=det,builtin)	configMode	—	—	none	current — умолчание, пропускается; default, template — 422 NOT_SUPPORTED, field configMode (V/11.3 Н1.1)
 Device(type=det,builtin)	disabledByRuleId, disabledByRuleAt, armed, subtype, short, identifier, ip, port, mac, vendor, login, hasPassword, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, rtspUrl, overlayDelayMs, overlayDurationSec, password, children	—	—	none	только у камеры: поля нет
 Device(type=ipsrv)	—	cam/devices + cam/cameras	—	both	устройство хоста: channels > 1 или живая строка type ipsrv; один на хост (V/11.3 Н1.3 «Дерево»)
-Device(type=ipsrv)	id	cam/devices	UUID device:cam/devices/<хост>	read	от хоста: заведение строки id не меняет
+Device(type=ipsrv)	id	cam/devices	UUID device:<кластер>/cam/devices/<хост>	read	от хоста: заведение строки id не меняет
 Device(type=ipsrv)	type	—	"ipsrv"	const
 Device(type=ipsrv)	subtype	cam/devices + cam/children	channels и живые дети хоста: V/11.3 Н1.3	read	channels не сказан — поля нет; при создании принимается и не хранится
 Device(type=ipsrv)	parentId	—	null	const
-Device(type=ipsrv)	domainId	кластер	UUID domain:<CLUSTER>	read
+Device(type=ipsrv)	domainId	кластер	Domain.id	read
 Device(type=ipsrv)	name	cam/cameras	name строки ipsrv; строки нет — хост	both	строка источник, у двух — наименьший id; без строки запись 422 NOT_SUPPORTED
 Device(type=ipsrv)	enabled	cam/cameras	enabled строки ipsrv; строки нет — true	both	без строки запись 422 NOT_SUPPORTED
 Device(type=ipsrv)	online	cam/heartbeats	phase строки; строки нет — любая камера хоста	read	running, idle или held — true; в версию не входит
@@ -113,10 +113,10 @@ Device(type=ipsrv)	configMode	—	—	none	current — умолчание, пр�
 Device(type=ipsrv)	children	—	—	none	при создании пропускается без записи: состав находит держатель (V/11.3 Н1.1)
 Device(type=ipsrv)	archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, templateId, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, overlayDelayMs, overlayDurationSec	—	—	none	у ipsrv нет
 Device(type=channel)	—	cam/devices	channels	read	выводимая запись: n от 0 до channels − 1 у ipsrv хоста; правки нет: 422 NOT_SUPPORTED, field type
-Device(type=channel)	id	cam/devices	UUID device:cam/devices/<хост>#<n>	read
+Device(type=channel)	id	cam/devices	UUID device:<кластер>/cam/devices/<хост>#<n>	read
 Device(type=channel)	type	—	"channel"	const
 Device(type=channel)	parentId	cam/devices	UUID ipsrv хоста	read
-Device(type=channel)	domainId	кластер	UUID domain:<CLUSTER>	read
+Device(type=channel)	domainId	кластер	Domain.id	read
 Device(type=channel)	name	cam/devices	Канал <n + 1>	read
 Device(type=channel)	channel	cam/devices	n + 1	read	тот же счёт, что videoChannel
 Device(type=channel)	enabled	—	true	const
@@ -125,10 +125,10 @@ Device(type=channel)	version	cam/devices	индекс хранилища стр�
 Device(type=channel)	configMode	—	—	none	current — умолчание, пропускается; default, template — 422 NOT_SUPPORTED, field configMode (V/11.3 Н1.1)
 Device(type=channel)	subtype, serverId, short, identifier, ip, port, mac, vendor, model, login, hasPassword, fault, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, lat, lon, azimuth, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, rtspUrl, disabledByRuleId, disabledByRuleAt, armed, overlayDelayMs, overlayDurationSec, password, children	—	—	none	у канала нет
 Device(type=sensor|relay|mic|spk)	—	cam/children + cam/child_settings	—	both	находка держателя и слово оператора (V/01.1 Н1.2а); только gone: false и живой хозяин; POST, DELETE — 422 NOT_SUPPORTED, field type
-Device(type=sensor|relay|mic|spk)	id	cam/children	UUID device:cam/children/<camera>-<type>-<number>	read
+Device(type=sensor|relay|mic|spk)	id	cam/children	UUID device:<кластер>/cam/children/<camera>-<type>-<number>	read
 Device(type=sensor|relay|mic|spk)	type	cam/children	type	read	слово контракта без перевода
 Device(type=sensor|relay|mic|spk)	parentId	cam/children	хозяин camera — его id; хозяин ipsrv — id ipsrv хоста	read
-Device(type=sensor|relay|mic|spk)	domainId	кластер	UUID domain:<CLUSTER>	read
+Device(type=sensor|relay|mic|spk)	domainId	кластер	Domain.id	read
 Device(type=sensor|relay|mic|spk)	name	cam/child_settings	title; нет — <type> <number>	both	PATCH сливает: POST таблицы — полная замена (V/11.4 Н1.2)
 Device(type=sensor|relay|mic|spk)	enabled	cam/child_settings	enabled; нет — true	both	запись настройки; действует, у mic, spk тоже (V/01.4 Н1.4а); null — 422 VALIDATION_FAILED
 Device(type=sensor|relay)	norm	cam/child_settings	norm	both	поля нет — в ответе поля нет; null — снять
@@ -139,10 +139,10 @@ Device(type=sensor|relay|mic|spk)	version	cam/children + cam/child_settings	ск
 Device(type=sensor|relay|mic|spk)	configMode	—	—	none	current — умолчание, пропускается; default, template — 422 NOT_SUPPORTED, field configMode (V/11.3 Н1.1)
 Device(type=sensor|relay|mic|spk)	subtype, serverId, short, identifier, ip, port, mac, vendor, model, login, hasPassword, fault, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, lat, lon, azimuth, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, pulse, debounce, gain, acodec, vol, rtspUrl, disabledByRuleId, disabledByRuleAt, armed, overlayDelayMs, overlayDurationSec, password, children	—	—	none	у ребёнка нет: запись 422 NOT_SUPPORTED, field этого поля
 Device(type=storage)	—	cam/devices	строка с storage: true	read	архив устройства, не том: одна запись на устройство (V/11.3 Н1.3); только чтение; правка, DELETE — 422 NOT_SUPPORTED, field type
-Device(type=storage)	id	cam/devices	UUID device:cam/devices/<хост>#storage	read	иной, чем у ipsrv хоста
+Device(type=storage)	id	cam/devices	UUID device:<кластер>/cam/devices/<хост>#storage	read	иной, чем у ipsrv хоста
 Device(type=storage)	type	—	"storage"	const
 Device(type=storage)	parentId	cam/devices	channels 1 — камера хоста с наименьшим id; больше 1 — ipsrv хоста	read	V/11.3 Н1.3 «Дерево»
-Device(type=storage)	domainId	кластер	UUID domain:<CLUSTER>	read
+Device(type=storage)	domainId	кластер	Domain.id	read
 Device(type=storage)	name	—	"Встроенное хранилище"	const	постоянная подпись
 Device(type=storage)	enabled	—	true	const
 Device(type=storage)	online	cam/heartbeats	запись устройства отвечает: как у ipsrv хоста	read	наблюдение, в версию не входит
@@ -150,17 +150,17 @@ Device(type=storage)	version	cam/devices	индекс хранилища стр�
 Device(type=storage)	configMode	—	—	none	current — умолчание, пропускается; default, template — 422 NOT_SUPPORTED, field configMode (V/11.3 Н1.1)
 Device(type=storage)	subtype, serverId, short, identifier, ip, port, mac, vendor, model, login, hasPassword, fault, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, rtspUrl, disabledByRuleId, disabledByRuleAt, armed, overlayDelayMs, overlayDurationSec, password, children	—	—	none	у хранилища камеры нет
 Device(type=eventsrc|acfa)	—	cam/cameras	основная строка type eventsrc, acfa	both	соединение, события и команды держателя; детей и записи нет (V/01.1 Н1.1б)
-Device(type=eventsrc|acfa)	id	cam/cameras	UUID device:cam/cameras/<id>	read
+Device(type=eventsrc|acfa)	id	cam/cameras	UUID device:<кластер>/cam/cameras/<id>	read
 Device(type=eventsrc|acfa)	type	cam/cameras	type	read	слово контракта без перевода
 Device(type=eventsrc|acfa)	parentId	—	null	const	строка; acfa с родителем — единица, ниже
-Device(type=eventsrc|acfa)	domainId	кластер	UUID domain:<CLUSTER>	read
+Device(type=eventsrc|acfa)	domainId	кластер	Domain.id	read
 Device(type=eventsrc|acfa)	identifier	cam/cameras	id	read	как у камеры, с проверкой при создании
 Device(type=eventsrc|acfa)	name, enabled, short, ip, port, vendor, model, firmware, rtspUrl, login	cam/cameras	как у камеры	both	как у камеры
 Device(type=eventsrc|acfa)	hasPassword	cam/cameras	cred_secret	read	true — секрет задан; значение не отдаётся
 Device(type=eventsrc|acfa)	password	cam/cameras	cred_secret	write	как у камеры
 Device(type=eventsrc|acfa)	online, fault, licenseExceeded	cam/heartbeats	phase, device_state строки	read	как у ipsrv; device_state lost — online false, fault conn; наблюдение, в версию не входит
-Device(type=eventsrc)	serverId	cam/cameras	метка server:<имя> поля labels, UUID server:<имя>; метки нет — сервер держателя	both	запись — метка, адрес кассы знает один сервер; переноса при падении нет (V/11.3 Н1.3)
-Device(type=eventsrc)	cameraId	cam/cameras	camera, UUID device:cam/cameras/<id>	both	камера титров; не камера или вне перечня — 422 VALIDATION_FAILED, field cameraId
+Device(type=eventsrc)	serverId	cam/cameras	метка server:<имя> поля labels, UUID server:<кластер>/<имя>; метки нет — сервер держателя	both	запись — метка, адрес кассы знает один сервер; переноса при падении нет (V/11.3 Н1.3)
+Device(type=eventsrc)	cameraId	cam/cameras	camera, UUID device:<кластер>/cam/cameras/<id>	both	камера титров; не камера или вне перечня — 422 VALIDATION_FAILED, field cameraId
 Device(type=eventsrc)	words	cam/cameras	words	both	слова источника и их цвета как есть (V/01.1 Н1.1г)
 Device(type=eventsrc)	overlayDelayMs	cam/cameras	overlay_delay_ms	both
 Device(type=eventsrc)	overlayDurationSec	cam/cameras	overlay_duration_sec	both
@@ -172,10 +172,10 @@ Device(type=eventsrc|acfa)	mac	—	—	none	при создании пропус
 Device(type=eventsrc|acfa)	subtype, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, detectorKind, sensitivity, builtin, sizeBytes, onServer, mode, smtp, ssl, from, to, gateway, path, format, templateId, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, disabledByRuleId, disabledByRuleAt, armed	—	—	none	у строки eventsrc, acfa нет
 Device(type=acfa)	cameraId, words, overlayDelayMs, overlayDurationSec	—	—	none	у строки acfa нет
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	—	cam/device_units	строка таблицы	both	единица СКУД (V/01.1 Н1.2б); acfa — только с родителем, строка type controller; acfa без родителя — строка cam/cameras; relay ребёнка — строкой Device(type=sensor|relay|mic|spk), различает таблица; создание и снятие — V/11.4 Н1.2
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	id	cam/device_units	UUID device:cam/device_units/<id>	read
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	id	cam/device_units	UUID device:<кластер>/cam/device_units/<id>	read
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	type	cam/device_units	type; controller — acfa	read	слово контракта без перевода
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	parentId	cam/device_units	parent; нет — запись основной строки, у ipsrv — ipsrv хоста	both	при создании; правка — 422 NOT_SUPPORTED, field parentId
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	domainId	кластер	UUID domain:<CLUSTER>	read
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	domainId	кластер	Domain.id	read
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	identifier	cam/device_units	id	read	<строка>-<n>
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	name	cam/device_units	title	both	нет — <Device.type> <n>
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay|acfa)	enabled	cam/device_units	enabled	both
@@ -191,27 +191,27 @@ Device(type=export|email|sms)	—	—	—	none	таких устройств н�
 Folder	—	GET /folders	элемент	both	папка — строка консоли (P/06.8; V/11.4 Н1.7)
 Folder	id	GET /folders	UUID folder:platform/folders/<id>	read	V/11.4 Н1.6
 Folder	name	GET /folders	name	both
-Folder	domainId	кластер	UUID domain:<CLUSTER>	read
+Folder	domainId	кластер	Domain.id	read
 Folder	parentId	GET /folders	parent	read	"" — null; задаётся при создании
 Folder	deviceIds	GET /folders	members	both	видимые члены по порядку; скрытые сохраняются (V/11.4 Н1.7)
 Folder	version	GET /folders	index	read
 FolderCreate	name, domainId, parentId	POST /folders	name, parent	write	domainId иной — NOT_FOUND
 FolderPatch	name, deviceIds	PUT /folders/<id>	name, members	write	V/11.4 Н1.7
 Archive	—	rec/volumes	—	both	хранилище = один том (строка таблицы rec/volumes) и записи на нём
-Archive	id	rec/volumes	UUID archive:rec/volumes/<name>	read	иной, чем у Volume той же строки (V/11.4 Н1.6)
+Archive	id	rec/volumes	UUID archive:<кластер>/rec/volumes/<name>	read	иной, чем у Volume той же строки (V/11.4 Н1.6)
 Archive	name	rec/volumes	name	read	ключ строки: при создании — ключ новой строки; правка — 422 NOT_SUPPORTED, field name
 Archive	kind	rec/volumes	kind: network — remote, прочие словом	read	при создании: local, backup, edge, incidents — kind словом, remote и cloud — kind network; incidents — admits: false; иное — 422 NOT_SUPPORTED (V/11.3 Н1.3)
 Archive	storage	rec/volumes	url: бакет — object, иное — block	read	значение формы принимается и не хранится (ADR-0111 п. 2)
 Archive	provider	rec/volumes	схема адреса бакета; не бакет — null	read
-Archive	serverId	rec/volumes	server — UUID server:<server>; пусто — null	both	у бакета принимается и не хранится (ADR-0111 п. 2)
-Archive	domainId	кластер	server пуст — UUID domain:<CLUSTER>, иначе null	read	при создании — domainId тела; владелец один: сервер или домен
+Archive	serverId	rec/volumes	server — UUID server:<кластер>/<server>; пусто — null	both	у бакета принимается и не хранится (ADR-0111 п. 2)
+Archive	domainId	кластер	server пуст — Domain.id, иначе null	read	при создании — domainId тела; владелец один: сервер или домен
 Archive	retentionDays	rec/recordings	наибольший retention_days записей с home = том; записей нет — 30 (умолчание записи)	both	запись — retention_days всех записей тома одним пакетом; 0 — 422 NOT_SUPPORTED; при создании — только умолчание (V/11.3 Н1.3)
 Archive	encrypted	—	false	const	шифрования тома нет (features без archiveEncryption): true — 422 NOT_SUPPORTED
 Archive	firstVolume	rec/volumes	поля тома той же строки	write	только при создании: том = то же хранилище (строки Volume); name первого тома принимается и не хранится (ADR-0111 п. 2)
 Archive	version	rec/volumes + rec/recordings	склейка v<индекс тома>.r<индексы записей тома> (V/11.4 Н1.1)	read	в элементе списка по B4; If-Match сверяет её
 Volume	—	rec/volumes	—	both	том = то же хранилище
-Volume	id	rec/volumes	UUID volume:rec/volumes/<name>	read
-Volume	archiveId	rec/volumes	UUID archive:rec/volumes/<name>	read	хранилище той же строки
+Volume	id	rec/volumes	UUID volume:<кластер>/rec/volumes/<name>	read
+Volume	archiveId	rec/volumes	UUID archive:<кластер>/rec/volumes/<name>	read	хранилище той же строки
 Volume	name	rec/volumes	name	read	ключ строки: правка — 422 NOT_SUPPORTED, field name
 Volume	disk	rec/volumes	url: путь file:// без конечного сегмента, равного Archive.id, иначе путь целиком; у бакета — схема	both	запись — file://<disk>/<Archive.id> (V/11.3 Н1.3)
 Volume	sizeBytes	rec/volumes	quota_bytes	both
@@ -228,7 +228,7 @@ Volume	file	—	—	none	значение формы принимается и �
 Volume	login, hasPassword, password, proto, endpoint, style, account	—	—	none	формы адреса тома их не несут (V/11.3 Н1.3)
 Volume	version	rec/volumes	индекс хранилища строки	read	в элементе списка по B4; If-Match сверяет его (V/11.4)
 Rule	—	auto/scenarios	строка без hidden	both	ADR-0105; перевод — V/11.3 Н1.3, запись — V/11.4 Н1.10
-Rule	id	auto/scenarios	UUID rule:auto/scenarios/<id>	read	номер выдаёт auto/next_id
+Rule	id	auto/scenarios	UUID rule:<кластер>/auto/scenarios/<id>	read	номер выдаёт auto/next_id
 Rule	name	auto/scenarios	name	both
 Rule	enabled	auto/scenarios	enabled	both
 Rule	logOnly	auto/scenarios	log_only	both
@@ -246,7 +246,7 @@ Rule	purpose	auto/scenarios	purpose	both
 Rule	allowChain	auto/scenarios	allow_chain	both
 Rule	triggers	auto/scenarios	when	both	см. RuleTrigger
 Rule	steps	auto/scenarios	then	both	см. RuleAction; ветки yes, no; глубина — V/07.1
-Rule	serverId	auto/scenarios	server: UUID server:<имя> ↔ имя	both	данные, вычислитель не читает; вне перечня — 422 VALIDATION_FAILED
+Rule	serverId	auto/scenarios	server: UUID server:<кластер>/<имя> ↔ имя	both	данные, вычислитель не читает; вне перечня — 422 VALIDATION_FAILED
 Rule	runAsRoleId	auto/scenarios	run_as_role: id роли ↔ имя (V/11.8 Н1.2)	both	действие судится правом роли (V/07.4)
 Rule	createdAt	auto/scenarios	created_at	read	пишет backend; пусто — наименьшее по схеме
 Rule	createdBy	auto/scenarios	created_by	read	пишет backend; пусто — наименьшее по схеме
@@ -281,8 +281,8 @@ RuleWaitEvent	control, event, sec, yes, no	auto/scenarios	then[]: wait_event	bot
 RuleAsk	control, text, roleId, sec, default, yes, no	auto/scenarios	then[]: ask; role: id роли ↔ имя (V/11.8 Н1.2)	both	данные: ждёт контракта, дверь ответа V/11.4 Н1.10
 RuleEscalate	control, levels, stop	auto/scenarios	then[]: escalate; role: id роли ↔ имя, via, wait_min	both	данные, как RuleAsk
 RuleFire	—	GET /events	fired, step журнала auto этого сценария	read	V/11.3 Н1.3; ответ двери auto/test — та же форма
-RuleFire	id	GET /events	UUID ruleFire:<firing>	read
-RuleFire	ruleId	GET /events	unit: rule:auto/scenarios/<id>	read
+RuleFire	id	GET /events	UUID ruleFire:<кластер>/<firing>	read
+RuleFire	ruleId	GET /events	unit: rule:<кластер>/auto/scenarios/<id>	read
 RuleFire	at	GET /events	occurred	read
 RuleFire	by, result, checks	GET /events	те же поля fired	read
 RuleFire	logOnly	GET /events	log_only	read	нет — false
@@ -290,7 +290,7 @@ RuleFire	sourceDeviceIds	GET /events	source	read
 RuleFire	events	GET /events	events: sub ↔ source, cam ↔ deviceId, occurred ↔ at	read
 RuleFire	steps	GET /events	строки step: step ↔ path, target ↔ deviceId, action, label, result ↔ state, reason, note	read	control — поле не null; skip — result: skip; depth — число веток в step (V/11.3 Н1.3)
 RuleVersion	—	auto/versions	<scenario>-<number>	read	пишется пакетом правки (ADR-0106 п. 7)
-RuleVersion	id	auto/versions	UUID ruleVersion:auto/versions/<scenario>-<number>	read
+RuleVersion	id	auto/versions	UUID ruleVersion:<кластер>/auto/versions/<scenario>-<number>	read
 RuleVersion	ruleId, number	auto/versions	scenario, number	read
 RuleVersion	at, by	auto/versions	штамп	read
 RuleVersion	note	auto/versions	note	read
@@ -319,7 +319,7 @@ MaintenanceWindow	ruleIds	auto/windows	rules: UUID ↔ номера, null — в
 MaintenanceWindow	version	auto/windows	индекс строки	read
 MaintenanceWindowCreate	schedule	auto/schedules	новая строка в пакете окна	write	owner — это окно
 JournalEvent	—	GET /events	—	read	строка события (договор журнала событий)
-JournalEvent	id	GET /events	UUID event:<id строки события>	read
+JournalEvent	id	GET /events	UUID event:<кластер>/<id строки события>	read
 JournalEvent	at	GET /events	t	read	секунды Unix → date-time UTC
 JournalEvent	category	GET /events	журнал и класс	read	audit ↔ журнал audit/console; alarm ↔ класс alarm; info ↔ прочее
 JournalEvent	text	GET /events	kind и of	read	«<kind> <of>»; of пусто — «<kind>»
@@ -373,13 +373,13 @@ OperationRequest	idempotencyKey	backend/repeats	<h>	write	V/11.4 Н1.4, Н1.8
 OperationRequest	items	POST /backend/operations	items[].body, root, secret	write
 OperationRequest	expectedVersions	POST /backend/operations	items[].expected	write
 Discovery	—	cam/searches	строка <CLUSTER>	read	V/11.4 Н1.9; поиск — V/01.8
-Discovery	domainId	кластер	UUID domain:<CLUSTER>	read
+Discovery	domainId	кластер	Domain.id	read
 Discovery	state	cam/searches	idle, searching, done, stopped по строке и часам	read	V/11.4 Н1.9
 Discovery	progress	cam/searches	доля срока, целое	read	V/11.4 Н1.9
 Discovery	startedAt	cam/searches	started_at	read
 Discovery	finishedAt	cam/searches	until или stopped_at	read
 Discovery	candidates	cam/found	строки нынешнего search	read	V/11.4 Н1.9
-DiscoveryCandidate	id	cam/found	UUID candidate:cam/found/<h>	read	V/11.4 Н1.6
+DiscoveryCandidate	id	cam/found	UUID candidate:<кластер>/cam/found/<h>	read	V/11.4 Н1.6
 DiscoveryCandidate	type	—	"camera"	const	вида драйвер не говорит
 DiscoveryCandidate	name	cam/found	<vendor> <model>	read	имени драйвер не говорит
 DiscoveryCandidate	ip	cam/found	ip	read
