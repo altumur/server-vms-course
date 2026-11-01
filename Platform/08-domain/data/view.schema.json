@@ -80,6 +80,11 @@
         "labels": {
          "description": "метки через запятую из domain/servers",
          "type": "string"
+        },
+        "pulse": {
+         "description": "поля domain.view_pulse из пульса воркера сервера, по подсистемам",
+         "type": "object",
+         "x-opaque": true
         }
        },
        "additionalProperties": false,

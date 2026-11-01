@@ -1013,6 +1013,10 @@
      "$ref": "#/$defs/nonSecretList",
      "x-owner": "P/08.1 Н1.4"
     },
+    "view_pulse": {
+     "$ref": "#/$defs/nonSecretList",
+     "x-owner": "P/08.1 Н1.4"
+    },
     "view_tables": {
      "x-owner": "P/08.1 Н1.4а",
      "x-class": "reference",
@@ -1688,6 +1692,9 @@
     },
     {
      "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/books/[a-z][a-z0-9_-]{0,31})$"
+    },
+    {
+     "pattern": "^(?:GET domain/at/[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31})$"
     },
     {
      "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/(?:tables/)?[a-z][a-z0-9_-]{0,31})$",

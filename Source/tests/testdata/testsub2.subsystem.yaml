@@ -193,6 +193,7 @@ parts:
 domain:
   ref: name
   view_status: [jam]
+  view_pulse: [belt]
   view_tables:
     shelves: [zone, server]
   reports: [counts/]

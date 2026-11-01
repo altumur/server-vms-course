@@ -1,0 +1,7 @@
+# чтение у другого члена по билету (P/06.3 Н1.9, ADR-0111 п. 15)
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+tables: {stash: {fields: {note: {type: string}}, service: true}}
+worker: {exec: /usr/lib/probe/worker}
+door: {pass: {routes: [api], calls: ["GET domain/at/cam/cameras"]}}

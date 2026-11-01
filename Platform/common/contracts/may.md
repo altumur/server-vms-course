@@ -164,8 +164,8 @@ target:    запись кластера C: may(grants = domain/grants/C, as_of 
 read:      каждая запись судится отдельно, cap = view:
   unit:    {sub, id, labels, about?, chains} — из вида (P/08.1 Н1.4): labels — Unit.labels, нет — []; about — Unit.about и единица с этим id в
            той же копии: нашлась — {sub, id, labels}, нет — "unknown"; у манифеста без about поля нет; chains — "unknown"
-  row:     строка таблицы: таблица в rights.unit_of и поле в списке domain.view_tables — unit единицы из этого поля, значения нет —
-           unit = "*"; иначе unit = null
+  row:     строка снимка таблицы (P/04 Н1.3б): строка единицы — {sub, id: key, labels — fields.labels или []}; таблица в rights.unit_of и поле в списке
+           domain.view_tables — unit единицы из этого поля, значения нет — unit = "*"; иначе unit = null
   allow:   запись в ответе; deny — записи нет; unavailable — записи нет, счёт withheld ответа
 write:     правка записи кластера C: wide с cap = admin и unit = "*", или may(unit = "any", cap = edit, sub — подсистема записи) по C.
            Это грубая проверка: области, about, цепочки, routes, unit_of, names домен не считает, строк члена у него нет.

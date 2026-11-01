@@ -15,6 +15,7 @@ place	layer	word	value
 /$defs/knock/properties/keys_rev	3	x-integer	true
 /$defs/unit/properties/status	2, 6	x-opaque	true
 /$defs/unit/properties/view	2, 6	x-opaque	true
+/properties/members/items/properties/servers/items/properties/pulse	2, 6	x-opaque	true
 /properties/outcomes	2, 6	x-opaque	true
 /properties/pending	2, 6	x-opaque	true
 /properties/shared	2, 6	x-opaque	true

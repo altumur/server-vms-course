@@ -848,3 +848,4 @@ a110_view_tables_held_by	refused
 a110_view_tables_rows_field	refused
 a110_view_tables_rows_blob	refused
 a110_calls_view_books	refused
+a110_calls_at_ok	ok
