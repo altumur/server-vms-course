@@ -11,6 +11,9 @@
 - MODIFIED `03.5` Н1: Sealed у держимого места.
 - MODIFIED `03.4`, `03.7`: список «читает».
 
+`04-controller/spec/04-controller.norms.md`
+- MODIFIED Н1.3 `retire_when`, Н3 шаг 8, чеклист P/04-24: отсчёт снимается, когда снятие отменено (выгрузка после `2bc760aa`).
+
 `06-console/`
 - MODIFIED `06.1` Н2 «Надгробия по `about`», OpenAPI `DeletedList`, приёмка 1 сц. 40 шаг 10.
 
