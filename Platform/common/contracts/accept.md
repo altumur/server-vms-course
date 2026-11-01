@@ -118,6 +118,7 @@ member_objects:                               # что агент несёт и 
                               liveness, in_report; держатель хранит как есть, решает сборка (P/08.5 Н1.3)
     domain/reaches:           {networks: [<сеть>…]} (P/09.1 Н1.7)
     domain/servers:           {servers: {<сервер>: {labels}}} (P/09.1 Н1.2)
+    domain/folders-state:     {rev, scope, gone, own?} (P/08.5 Н1.8, P/09.1 Н1.5)
     witness:                  объекты <sub>/<report>/<имя> свидетелей domain.witness (P/02.1 Н1.2б); <sub>/<report> без имени —
                               не свидетель (P/09.1 Н1.10, P/10 Н1.8)
     охват:                    reports и witness — каждого манифеста, объявившего их, domain.ref не нужен; ключ пульса или шарда
@@ -170,6 +171,7 @@ carry:          ответ 200 на POST /api/member/<член> и GET /api/carr
   # sealed М11/3 не было (секретного члену до М11/5 и М11/9 не было); в P/08 — sealed? ниже (разбор ревью стадии B 8–10, № 22: М-9)
   keys?:        строка domain/keys держателя {doc} (договор набора ключей домена «Набор domain/keys»)
   revoked?:     строка domain/revoked держателя {jtis} (договор набора ключей домена «Отзывы domain/revoked»)
+  folders?:     общие папки (P/08.5 Н1.8) — только когда rev копии отстал
   members?:     строка domain/members {doc} (P/08.3 Н1.1) — только отставшему: members_rev публикации нет или ≠ (term, rev)
                 (раздел «Список членов отставшему»; добавлено М11/12); у GET /api/carry — всегда
   holder?:      строка domain/holder держателя {doc} (P/08.8 Н1.1; договор записи срока)

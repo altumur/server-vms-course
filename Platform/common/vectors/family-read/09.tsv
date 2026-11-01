@@ -1567,3 +1567,13 @@ c09_servers.009	domain/servers	domain/servers	object	writer	["domainagent"]	{"se
 c09_servers.010	domain/servers	domain/servers	object	reader	["domainagent"]	{"servers":{"s1":{}}}	refused	["/servers/s1/labels"]	{"domainagent": [""]}	: without required labels
 c09_servers.011	domain/servers	domain/servers	object	writer	["domainagent"]	{"servers":{},"z":1}	refused	["/z"]	[]	extra field
 c09_servers.012	domain/servers	domain/servers	object	reader	["domainagent"]	{"servers":{},"z":1}	refused	["/z"]	{"domainagent": [""]}	extra field
+c09_folders_state.001	domain/folders-state	domain/folders-state	object	writer	["domainagent"]	{"rev":0,"scope":"all","gone":[]}	ok	[]	[]	base
+c09_folders_state.002	domain/folders-state	domain/folders-state	object	reader	["domainagent"]	{"rev":0,"scope":"all","gone":[]}	ok	[]	{"domainagent": []}	base
+c09_folders_state.003	domain/folders-state	domain/folders-state	object	writer	["domainagent"]	null	refused	[""]	[]	root null
+c09_folders_state.004	domain/folders-state	domain/folders-state	object	reader	["domainagent"]	null	refused	[""]	{"domainagent": [""]}	root null
+c09_folders_state.005	domain/folders-state	domain/folders-state	object	writer	["domainagent"]	{	refused	[""]	[]	not JSON
+c09_folders_state.006	domain/folders-state	domain/folders-state	object	reader	["domainagent"]	{	refused	[""]	{"domainagent": [""]}	not JSON
+c09_folders_state.007	domain/folders-state	domain/folders-state	object	writer	["domainagent"]	{"scope":"all","gone":[]}	refused	["/rev"]	[]	: without required rev
+c09_folders_state.008	domain/folders-state	domain/folders-state	object	reader	["domainagent"]	{"scope":"all","gone":[]}	refused	["/rev"]	{"domainagent": [""]}	: without required rev
+c09_folders_state.009	domain/folders-state	domain/folders-state	object	writer	["domainagent"]	{"rev":0,"scope":"x","gone":[]}	refused	["/scope"]	[]	scope: unknown word
+c09_folders_state.010	domain/folders-state	domain/folders-state	object	reader	["domainagent"]	{"rev":0,"scope":"x","gone":[]}	refused	["/scope"]	{"domainagent": [""]}	scope: unknown word

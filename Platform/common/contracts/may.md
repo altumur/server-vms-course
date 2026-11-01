@@ -164,8 +164,7 @@ target:    запись кластера C: may(grants = domain/grants/C, as_of 
            sub — подсистема записи); строки domain/grants/C нет — grants = null
 read:      каждая запись судится отдельно, cap = view:
   unit:    {sub, id, labels, about?, chains} — из вида (P/08.1 Н1.4): labels — Unit.labels, нет — [] и вход неполон; about — Unit.about и единица с этим id в
-           той же копии: нашлась — {sub, id, labels}, нет — "unknown"; у манифеста без about поля нет; chains — "unknown" (предел до папок
-           домена, шаг 6 разбора: строка folder: через домен не покрывает)
+           той же копии: нашлась — {sub, id, labels}, нет — "unknown"; у манифеста без about поля нет; chains — из domain/memberof и domain/folders (P/08.5 Н1.8), не читается — "unknown"
   row:     строка снимка таблицы (P/04 Н1.3б): строка единицы — {sub, id: key, labels, about?} из полей строки снимка, как unit выше; таблица в rights.unit_of —
            unit единицы из её поля (связь 150 держит поле в списке), значения нет — unit = "*"; иначе unit = null, как GET таблицы у консоли
   allow:   запись в ответе; deny — записи нет; unavailable — записи нет, счёт withheld ответа

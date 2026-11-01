@@ -3048,3 +3048,31 @@ c08_anywhere.011	domain/anywhere	domain/anywhere	row	writer	["domain", "domainag
 c08_anywhere.012	domain/anywhere	domain/anywhere	row	reader	["console", "domain", "domainagent", "domainconsole"]	{"doc":"{\"ann\":-1}","as_of":"1"}	refused	["/doc/ann"]	{"console": [""], "domain": [""], "domainagent": [""], "domainconsole": [""]}	until below 0
 c08_anywhere.013	domain/anywhere	domain/anywhere	row	writer	["domain", "domainagent"]	{"doc":"{}","as_of":"1","z":"1"}	refused	["/z"]	[]	extra field
 c08_anywhere.014	domain/anywhere	domain/anywhere	row	reader	["console", "domain", "domainagent", "domainconsole"]	{"doc":"{}","as_of":"1","z":"1"}	refused	["/z"]	{"console": [""], "domain": [""], "domainagent": [""], "domainconsole": [""]}	extra field
+c08_folders.001	domain/folders/<id>	domain/folders/0123456789abcdef0123456789abcdef	row	writer	["domain"]	{"name":"a","parent":"","at":"1","by":"ann"}	ok	[]	[]	base
+c08_folders.002	domain/folders/<id>	domain/folders/0123456789abcdef0123456789abcdef	row	reader	["domain", "domainconsole"]	{"name":"a","parent":"","at":"1","by":"ann"}	ok	[]	{"domain": [], "domainconsole": []}	base
+c08_folders.003	domain/folders/<id>	domain/folders/0123456789abcdef0123456789abcdef	row	writer	["domain"]	null	refused	[""]	[]	root null
+c08_folders.004	domain/folders/<id>	domain/folders/0123456789abcdef0123456789abcdef	row	reader	["domain", "domainconsole"]	null	refused	[""]	{"domain": [""], "domainconsole": [""]}	root null
+c08_folders.005	domain/folders/<id>	domain/folders/0123456789abcdef0123456789abcdef	row	writer	["domain"]	{	refused	[""]	[]	not JSON
+c08_folders.006	domain/folders/<id>	domain/folders/0123456789abcdef0123456789abcdef	row	reader	["domain", "domainconsole"]	{	refused	[""]	{"domain": [""], "domainconsole": [""]}	not JSON
+c08_folders.007	domain/folders/<id>	domain/folders/0123456789abcdef0123456789abcdef	row	writer	["domain"]	{"parent":"","at":"1","by":"ann"}	refused	["/name"]	[]	: without required name
+c08_folders.008	domain/folders/<id>	domain/folders/0123456789abcdef0123456789abcdef	row	reader	["domain", "domainconsole"]	{"parent":"","at":"1","by":"ann"}	refused	["/name"]	{"domain": [""], "domainconsole": [""]}	: without required name
+c08_folders.009	domain/folders/<id>	domain/folders/0123456789abcdef0123456789abcdef	row	writer	["domain"]	{"name":"a","parent":"x","at":"1","by":"ann"}	refused	["/parent"]	[]	parent not id
+c08_folders.010	domain/folders/<id>	domain/folders/0123456789abcdef0123456789abcdef	row	reader	["domain", "domainconsole"]	{"name":"a","parent":"x","at":"1","by":"ann"}	refused	["/parent"]	{"domain": [""], "domainconsole": [""]}	parent not id
+c08_folders.011	domain/folders/<id>	domain/folders/0123456789abcdef0123456789abcdef	row	writer	["domain"]	{"name":"a","parent":"","at":"1","by":"ann","z":"1"}	refused	["/z"]	[]	extra field
+c08_folders.012	domain/folders/<id>	domain/folders/0123456789abcdef0123456789abcdef	row	reader	["domain", "domainconsole"]	{"name":"a","parent":"","at":"1","by":"ann","z":"1"}	refused	["/z"]	{"domain": [""], "domainconsole": [""]}	extra field
+c08_memberof.001	domain/memberof/<член>/<sub>/<manifest:unit.rows>/<id>	domain/memberof/m1/testsub/counters/c1	row	writer	["domain"]	{"folders":"0123456789abcdef0123456789abcdef"}	ok	[]	[]	base
+c08_memberof.002	domain/memberof/<член>/<sub>/<manifest:unit.rows>/<id>	domain/memberof/m1/testsub/counters/c1	row	reader	["domain", "domainconsole"]	{"folders":"0123456789abcdef0123456789abcdef"}	ok	[]	{"domain": [], "domainconsole": []}	base
+c08_memberof.003	domain/memberof/<член>/<sub>/<manifest:unit.rows>/<id>	domain/memberof/m1/testsub/counters/c1	row	writer	["domain"]	null	refused	[""]	[]	root null
+c08_memberof.004	domain/memberof/<член>/<sub>/<manifest:unit.rows>/<id>	domain/memberof/m1/testsub/counters/c1	row	reader	["domain", "domainconsole"]	null	refused	[""]	{"domain": [""], "domainconsole": [""]}	root null
+c08_memberof.005	domain/memberof/<член>/<sub>/<manifest:unit.rows>/<id>	domain/memberof/m1/testsub/counters/c1	row	writer	["domain"]	{	refused	[""]	[]	not JSON
+c08_memberof.006	domain/memberof/<член>/<sub>/<manifest:unit.rows>/<id>	domain/memberof/m1/testsub/counters/c1	row	reader	["domain", "domainconsole"]	{	refused	[""]	{"domain": [""], "domainconsole": [""]}	not JSON
+c08_memberof.007	domain/memberof/<член>/<sub>/<manifest:unit.rows>/<id>	domain/memberof/m1/testsub/counters/c1	row	writer	["domain"]	{}	refused	["/folders"]	[]	: without required folders
+c08_memberof.008	domain/memberof/<член>/<sub>/<manifest:unit.rows>/<id>	domain/memberof/m1/testsub/counters/c1	row	reader	["domain", "domainconsole"]	{}	refused	["/folders"]	{"domain": [""], "domainconsole": [""]}	: without required folders
+c08_folder_rev.001	domain/folder-rev	domain/folder-rev	row	writer	["domain"]	{"rev":"1"}	ok	[]	[]	base
+c08_folder_rev.002	domain/folder-rev	domain/folder-rev	row	reader	["domain"]	{"rev":"1"}	ok	[]	{"domain": []}	base
+c08_folder_rev.003	domain/folder-rev	domain/folder-rev	row	writer	["domain"]	null	refused	[""]	[]	root null
+c08_folder_rev.004	domain/folder-rev	domain/folder-rev	row	reader	["domain"]	null	refused	[""]	{"domain": [""]}	root null
+c08_folder_rev.005	domain/folder-rev	domain/folder-rev	row	writer	["domain"]	{	refused	[""]	[]	not JSON
+c08_folder_rev.006	domain/folder-rev	domain/folder-rev	row	reader	["domain"]	{	refused	[""]	{"domain": [""]}	not JSON
+c08_folder_rev.007	domain/folder-rev	domain/folder-rev	row	writer	["domain"]	{}	refused	["/rev"]	[]	: without required rev
+c08_folder_rev.008	domain/folder-rev	domain/folder-rev	row	reader	["domain"]	{}	refused	["/rev"]	{"domain": [""]}	: without required rev

@@ -504,6 +504,45 @@ paths:
       responses:
         '200': {description: Записано; расхождение идёт проходом}
         '400': {$ref: '#/components/responses/BodyRefused'}
+  /domain/folders:
+    post:
+      operationId: folderCreate
+      summary: Новая папка домена (глава 8.5 Н1.8)
+      responses:
+        '201': {description: Папка}
+        '400': {$ref: '#/components/responses/BodyRefused'}
+  /domain/folders/{folder}:
+    parameters:
+      - name: folder
+        in: path
+        required: true
+        schema: {type: string}
+    put:
+      operationId: folderRename
+      summary: Имя папки домена
+      responses:
+        '200': {description: Папка}
+        '400': {$ref: '#/components/responses/BodyRefused'}
+    delete:
+      operationId: folderDelete
+      summary: Надгробие папки домена
+      responses:
+        '200': {description: Снята}
+  /domain/memberof/{member}/{sub}/{rows}/{id}:
+    parameters:
+      - {$ref: '#/components/parameters/Member'}
+      - {$ref: '#/components/parameters/Sub'}
+      - {$ref: '#/components/parameters/Rows'}
+      - name: id
+        in: path
+        required: true
+        schema: {type: string}
+    put:
+      operationId: memberofWrite
+      summary: Членство единицы в папках домена
+      responses:
+        '200': {description: Записано}
+        '400': {$ref: '#/components/responses/BodyRefused'}
   /domain/edits:
     post:
       operationId: keptEdits
