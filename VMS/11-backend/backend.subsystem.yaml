@@ -55,11 +55,10 @@ door:
     stream: [api/stream, api/assist/turns]
     # Longer than PASS_WAIT, the longest covering key wins; api/assist/turns — ASSIST_TURN_MAX (V/11.7 Н1.5).
     wait: {api/domains: 15, api/servers: 15, api/archives: 15, api/volumes: 15, api/objects/delete: 30, api/devices: 30, api/folders: 30, api/operations: 30, api/access: 30, api/rules: 30, api/schedules: 30, api/day-groups: 30, api/modes: 30, api/maintenance-windows: 30, api/test: 120, api/assist/turns: 7500}
-    # The console's own refusals on api are `Problem` (question 5). 502, 503, 504: the contract has no code for them, a
-    # request to the product (V/11.2 Н1.3); till then they stay outside the map and answer the console's form.
+    # The console's own refusals on api are `Problem` (question 5).
     refusals:
       form: problem
-      codes: {'401': UNAUTHORIZED, '403': PERMISSION_DENIED, '404': NO_ROUTE, '413': VALIDATION_FAILED}
+      codes: {'401': UNAUTHORIZED, '403': PERMISSION_DENIED, '404': NO_ROUTE, '413': VALIDATION_FAILED, '502': UPSTREAM_UNAVAILABLE, '503': UPSTREAM_UNAVAILABLE, '504': UPSTREAM_UNAVAILABLE}
     # The group operations of consolem (ADR-0095, P/06.9): the console leads them, a step comes to the route `opstep`, which
     # no browser reaches (it is not under routes). Their table is a service one: a person sees only their own operation,
     # by the ticket, and no line `sub: backend` exists (V/11.4 Н1.8).
@@ -77,7 +76,8 @@ door:
       - cam/unit_next                # the last unit number of a row: it goes up in the batch that adds one (V/11.4 Н1.2)
       - cam/next_id                  # a new camera names its number itself (V/11.4 Н1.2)
       - GET cam/rule_state           # on guard, off by a rule: the holder's words, read only (V/11.3 Н1.3; V/01.4 Н1.4д)
-      - cam/requests                 # `disable` with a past term: a camera turned off by a rule goes on (V/11.4 Н1.2)
+      - cam/requests                 # `disable` with a past term (V/11.4 Н1.2), presets (Н1.16), a unit's command (Н1.17)
+      - cam/ptz_moves                # the lease of a move: the table, a person's edit on the camera (V/11.4 Н1.16)
       - cam/searches                 # a search of the cluster, one row: start and stop (V/11.4 Н1.9, V/01.8)
       - cam/found                    # what it found; a created candidate's row goes
       - cam/probes                   # «which model», a question to every server (V/01.8 Н1.3)
@@ -216,7 +216,10 @@ tables:
     fields:
       id:       {type: string, required: true, schema: {pattern: "^[0-9a-f]{32}$"}}   # the operation's id
       user:     {type: string, required: true, schema: {minLength: 1}}   # the author: only they read and undo it
+      single:   {type: bool, default: false}                             # not `POST /operations`: a single edit or a group request
       revert_of:   {type: string, schema: {pattern: "^([0-9a-f]{32})?$"}}   # this operation undoes that one
+      redo_of:     {type: string, schema: {pattern: "^([0-9a-f]{32})?$"}}   # this operation redoes that one (V/11.4 Н1.12)
+      redone_by:   {type: string, schema: {pattern: "^([0-9a-f]{32})?$"}}   # the last redo of this row: its `memory`, a double click does not redo twice
       reverted_by: {type: string, schema: {pattern: "^([0-9a-f]{32})?$"}}   # the last undo of this row; a row of `steps` closed by it says `reverted`, a failed one stays open
       overflow: {type: bool, default: false}                             # `steps` did not fit a row: not undoable
       # The steps that ran, as the text of a JSON array, as `repeats.steps`: a `json` field stops at 4000 bytes. An element:

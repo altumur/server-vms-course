@@ -1,5 +1,5 @@
 # Профиль возможностей стенда VMS для тестов API consolem (V/11.6 Н1.2): одна строка на операцию контракта
-# consolem.openapi.json @785824c. profile: in — тесты операции гоняются; out — операция отвечает 404 NO_ROUTE, тест
+# consolem.openapi.json @52c1113. profile: in — тесты операции гоняются; out — операция отвечает 404 NO_ROUTE, тест
 # вне профиля (тест самого NO_ROUTE — в профиле); stand — только на стенде (/test/reset, /test/clock). Читает драйвер стенда; при новой
 # версии контракта таблица сверяется (V/11.2). Набор продукта — one-domain, часы — --clock real (ответ consolem, ADR-0094
 # доп. (4)). Строки in — список capabilities.operations в GET /reference (V/11.2 Н1.5): объявление и таблица сверяются,
@@ -17,7 +17,7 @@ n	method	path	profile	why
 10	POST	/servers/probe	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 11	POST	/servers/assign	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 12	GET	/servers/{serverId}	in	переводится (V/11.2)
-13	PATCH	/servers/{serverId}	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+13	PATCH	/servers/{serverId}	out	404 NO_ROUTE (V/11.2 № 13): запись меток вне перечня обратного вызова; тест, который зовёт операцию, вне профиля
 14	GET	/devices	in	переводится (V/11.2)
 15	POST	/devices	in	переводится (V/11.2)
 16	POST	/devices/update	in	переводится (V/11.2)
@@ -83,7 +83,7 @@ n	method	path	profile	why
 76	PUT	/maintenance-windows/{windowId}	in	переводится (V/11.4 Н1.11; ADR-0105)
 77	DELETE	/maintenance-windows/{windowId}	in	переводится (V/11.4 Н1.11; ADR-0105)
 78	GET	/access	in	переводится (V/11.8)
-79	GET	/settings	in	переводится (V/11.3 Н1.3)
+79	GET	/settings	out	404 NO_ROUTE (V/11.2 № 79): форма зовёт только объявленное
 80	PATCH	/settings	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 81	GET	/licenses	in	переводится, только чтение (V/11.2 № 81, V/11.3 Н1.3)
 82	GET	/journal	in	переводится (V/11.2)
@@ -94,3 +94,20 @@ n	method	path	profile	why
 87	POST	/objects/delete	in	переводится (V/11.2)
 88	POST	/access/apply	in	переводится (V/11.8)
 89	POST	/access/catalogs/{catalogId}/sync	out	404 NO_ROUTE: каталогов нет (ADR-0098 §8); тест вне профиля
+90	POST	/assist/turns	in	переводится (V/11.7)
+91	POST	/devices/{deviceId}/live	out	404 NO_ROUTE (V/11.2 № 91): обе формы /where вне перечня обратного вызова
+92	POST	/devices/{deviceId}/operations/{operation}	in	переводится (V/11.4 Н1.17)
+93	PUT	/devices/{deviceId}/presets/{n}	in	переводится (V/11.4 Н1.16)
+94	DELETE	/devices/{deviceId}/presets/{n}	in	переводится (V/11.4 Н1.16)
+95	DELETE	/devices/{deviceId}/ptz	in	переводится (V/11.4 Н1.16)
+96	PUT	/devices/{deviceId}/ptz	in	переводится (V/11.4 Н1.16)
+97	POST	/devices/{deviceId}/streams	in	переводится (V/11.4 Н1.15)
+98	DELETE	/devices/{deviceId}/streams/{streamId}	in	переводится (V/11.4 Н1.15)
+99	PATCH	/devices/{deviceId}/streams/{streamId}	in	переводится (V/11.4 Н1.15)
+100	GET	/operations	in	переводится (V/11.4 Н1.12)
+101	POST	/operations/{operationId}/redo	in	переводится (V/11.4 Н1.12; ADR-0106 доп. (4))
+102	POST	/stream-accounts	out	404 NO_ROUTE (V/11.2 № 102): /live/accounts вне перечня обратного вызова
+103	GET	/stream-accounts	out	как № 102
+104	DELETE	/stream-accounts/{name}	out	как № 102
+105	PATCH	/stream-accounts/{name}	out	как № 102
+106	POST	/stream-accounts/{name}/password	out	как № 102
