@@ -441,7 +441,8 @@ components:
         key: {type: boolean}
         sample: {type: string, contentEncoding: base64}
         kind: {type: string, enum: [audio], description: кадр звука; нет поля — видео (V/02.9 Н2)}
-        mic: {type: integer, minimum: 0, description: номер `audio` подписки; у звука обязателен}
+        mic: {type: integer, minimum: 0, description: настоящий номер `mic`, у выгрузки передатчика — `audio` заявки; у звука обязателен}
+        first: {type: boolean, description: этот `mic` первый у камеры; кадр идёт и подписчикам номера 0 (V/02.9 Н1.3а)}
         codec: {type: string, minLength: 1, description: "<имя rtpmap>/<частота>[/<каналы>]; у звука обязателен"}
     Frames:
       type: array
@@ -490,6 +491,7 @@ components:
           additionalProperties: false
           required: [rid, from, to, recording, piece]
           properties:
+            audio: {type: integer, minimum: 0, description: номер `mic` записи; нет поля — звука нет (V/02.9 Н1.4)}
             rid: {type: string}
             from: {type: number}
             to: {type: number}
