@@ -166,4 +166,5 @@ informed: «Спецификация VMS», «Спецификация», «Сб
 7. **`ipsrv`.** Подтипы `sip`, `mic` — из описания: звук без видео. `lat`, `lon`, `azimuth`, `mac`, `login` — на строке `is_video: false`, без неё `422 NOT_SUPPORTED`.
 8. **`lat`, `lon`, `azimuth`, `short`** — поля оператора в `cam/cameras`. Предмет простой, поэтому `in`.
 9. **Режимы записи** (`recordMode: motion, sched`, `recordDetectorIds`, `preRecordSec`), `armed`, `disabledBy*` — в перечне строк `out` ADR-0103, решаются вместе с V/07. `export`, `email`, `sms` — вне дерева (п. 1 ADR-0102), `out` с этой причиной.
+10. **Уточнения.** Для `ipint://` достаточно `vendor`, `model`: `videoChannel` пуст — индекс 0, адрес без `source`; так читается п. 3 доп. (5). `mac` камеры — только из поиска (п. 3); `mac` строки `is_video: false` правится оператором (п. 7). `storage` — в `foundDeviceTypes`.
 
