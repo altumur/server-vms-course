@@ -80,7 +80,7 @@ paths:
         '409':
           description: 'rebase, same_sent_at или not_ready (договор приёма отчёта); deposed смещённого держателя с записью нового
             (P/08.8 Н1.6; добавлено М11/10); запись первого key держателя (P/08.3 Н3 «держатель в списке» шаг 2) нарушила бы
-            every_entry — {error: refused, detail: "the entry of <член> would exceed 820 bytes"} без reason, метки нет
+            every_entry — {error: refused, detail: "the entry of <член> would exceed 1240 bytes"} без reason, метки нет
             (P/08.10 Н1.5; C08-MEMBER-409-ENTRY-01)'
           content:
             application/json:
@@ -303,7 +303,7 @@ paths:
         '404':
           $ref: '#/components/responses/Refused'
         '409':
-          description: 'Н3 «принять члена» шаги 1–6; список полон — detail «too many members: the list holds 500»; Entry больше 820 байт — «the entry of <name> would exceed 820 bytes» (P/08.10 Н1.5; добавлено М11/12); deposed (P/08.8 Н1.6)'
+          description: 'Н3 «принять члена» шаги 1–6; список полон — detail «too many members: the list holds 500»; Entry больше 820 байт — «the entry of <name> would exceed 1240 bytes» (P/08.10 Н1.5; добавлено М11/12); deposed (P/08.8 Н1.6)'
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Refusal'}
@@ -572,7 +572,7 @@ paths:
       - name: part
         in: path
         required: true
-        schema: {type: string, pattern: '^(?:[0-9]{4})$'}
+        schema: {type: string, pattern: '^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$'}
       - {$ref: '#/components/parameters/AgentSignature'}
     get:
       operationId: memberRow
@@ -586,7 +586,7 @@ paths:
       - name: part
         in: path
         required: true
-        schema: {type: string, pattern: '^(?:[0-9]{4})$'}
+        schema: {type: string, pattern: '^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$'}
       - {$ref: '#/components/parameters/AgentSignature'}
     get:
       operationId: backupPart
@@ -2687,13 +2687,28 @@ components:
         batch: {type: string, description: 'Партия: стук с верной подписью партии (договор приёма отчёта «Стук партии»).'}
     MembersView:
       type: object
-      required: [rev, members, knocking]
+      required: [members, parts, knocking]
       additionalProperties: false
-      description: 'Ответ GET /domain/members консоли домена (урок P/10 Н2): {rev, members, knocking} — список и стучащиеся;
-        term — необязательное поле (форма М11/3; разбор ревью стадии B 8–10, № 8).'
+      description: 'Ответ GET /domain/members консоли домена (урок P/10 Н2): страница непустых разделов.'
       properties:
-        rev: {type: integer, minimum: 1}
-        term: {type: integer, minimum: 1}
+        parts:
+          type: object
+          additionalProperties:
+            type: object
+            required: [rev, term, index]
+            additionalProperties: false
+            properties:
+              rev: {type: integer, minimum: 1}
+              term: {type: integer, minimum: 1}
+              index: {type: integer, minimum: 0}
+        count:
+          type: object
+          required: [servers, cameras]
+          additionalProperties: false
+          properties:
+            servers: {type: integer, minimum: 0}
+            cameras: {type: integer, minimum: 0}
+        cursor: {type: string}
         members:
           type: object
           propertyNames: {$ref: '#/components/schemas/MemberName'}
@@ -2703,9 +2718,9 @@ components:
           items: {$ref: '#/components/schemas/Knock'}
     Topology:
       type: object
-      required: [rev, star, via]
+      required: [rev, star]
       additionalProperties: false
-      description: Документ domain/topology (P/08.3 Н1.2).
+      description: 'Документ domain/topology (P/08.3 Н1.2); via только у ответа правки (названные члены) и копии члена (сам член).'
       properties:
         rev: {type: integer, minimum: 0}
         centre: {$ref: '#/components/schemas/MemberName'}

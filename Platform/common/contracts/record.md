@@ -83,7 +83,7 @@ switch:      у кластера держателя строки domain/keys, do
 
 ```yaml
 member_row:   строка членов — JCS {domain, part, rev, term, members, issuer, kid, sig}   # закрытый набор; P/08.3 Н1.1
-backup_doc:   документ резервной копии — JCS {term, rev, holder, at, members, state, objects, raw?, backup_key_rev,
+backup_doc:   документ резервной копии — JCS {term, rev, holder, at, members, state, objects, raw?, parts?, counts?, backup_key_rev,
               holder_member_key?, issuer, kid, sig}   # закрытый набор; подпись — как запись срока
 grant_doc:    грант передачи — {doc: JCS {grant: "handover", domain, to, from, term, rev, at, issuer, kid, sig}}   # закрытый набор
 member_name:  имя члена — CLUSTER его установки: 1–64 знака [a-z0-9-], не пустое; holder, to, from и элементы members —
@@ -109,7 +109,7 @@ member_name:  имя члена — CLUSTER его установки: 1–64 з
    отпечатка без повторов, restored_from — {term, rev}, issuer — hex 32 байт; у документа резервной копии rev —
    целое ≥ 1, members — список имён членов без повторов, state — {<ключ строки>: {<элемент>: <текст>}}, objects —
    объект, raw — {<ключ>: строка base64 RFC 4648 §4 с дополнением, "" — 0 байт}, ключ raw не ключ objects (C08-BACKUP-JSON-99, решение «Архитектора» 2026-10-26), backup_key_rev — целое ≥ 1,
-   holder_member_key — hex 32 байт; у гранта grant — "handover", to и from —
+   holder_member_key — hex 32 байт, parts — {<раздел>: {sha256, rev, key_rev}}, counts — {servers, cameras} (P/08.8 Н1.5а); у гранта grant — "handover", to и from —
    имена членов, rev — целое ≥ 1 (виды и типы — добавлено сверкой М11, H9, H11, H12); у строки членов part — четыре цифры 0000…4095, rev — целое ≥ 1, members — {<имя члена>: объект}, раздел каждого имени (P/08.3 Н1.1) равен part; у записи срока с term 1 — поле
    restored_from; domain, kid и sig шаг 1 не проверяет по содержимому (любой JSON-тип domain — шаг 2; kid — любая
    строка, sig — любая строка: шаги 3–5) — одно правило для всех видов, в том числе общего документа (догадка стадии C REC-G01, решение «Архитектора» 2026-10-23)

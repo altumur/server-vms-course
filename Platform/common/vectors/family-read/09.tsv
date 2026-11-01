@@ -194,7 +194,7 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 09-0193	domain/member-topology	domain/member-topology	row	writer	["domainagent"]	{"doc":"[1e400]"}	refused	["/doc"]	[]	doc: encoded jcs '[1e400]'
 09-0194	domain/member-topology	domain/member-topology	row	reader	["domainagent", "<s>worker"]	{"doc":"[1e400]"}	refused	["/doc"]	{"domainagent": [""], "<s>worker": [""]}	doc: encoded jcs '[1e400]'
 09-0195	domain/member-topology	domain/member-topology	row	writer	["domainagent"]	{"doc":"{\"b\":1,\"a\":2}"}	refused	["/doc"]	[]	doc: encoded jcs '{"b":1,"a":2}'
-09-0196	domain/member-topology	domain/member-topology	row	reader	["domainagent", "<s>worker"]	{"doc":"{\"b\":1,\"a\":2}"}	refused	["/doc/a", "/doc/b", "/doc/rev", "/doc/star", "/doc/via"]	{"domainagent": [""], "<s>worker": [""]}	doc: encoded jcs '{"b":1,"a":2}'
+09-0196	domain/member-topology	domain/member-topology	row	reader	["domainagent", "<s>worker"]	{"doc":"{\"b\":1,\"a\":2}"}	refused	["/doc/a", "/doc/b", "/doc/rev", "/doc/star"]	{"domainagent": [""], "<s>worker": [""]}	doc: encoded jcs '{"b":1,"a":2}'
 09-0197	domain/member-topology	domain/member-topology	row	writer	["domainagent"]	{"doc":"{"}	refused	["/doc"]	[]	doc: encoded jcs '{'
 09-0198	domain/member-topology	domain/member-topology	row	reader	["domainagent", "<s>worker"]	{"doc":"{"}	refused	["/doc"]	{"domainagent": [""], "<s>worker": [""]}	doc: encoded jcs '{'
 09-0199	domain/member-topology	domain/member-topology	row	writer	["domainagent"]	{"doc":"NaN"}	refused	["/doc"]	[]	doc: encoded jcs 'NaN'
@@ -203,8 +203,8 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 09-0202	domain/member-topology	domain/member-topology	row	reader	["domainagent", "<s>worker"]	{"doc":"{\"star\":[\"a\"],\"via\":{}}"}	refused	["/doc/rev"]	{"domainagent": [""], "<s>worker": [""]}	doc: without required rev
 09-0203	domain/member-topology	domain/member-topology	row	writer	["domainagent"]	{"doc":"{\"rev\":1,\"via\":{}}"}	refused	["/doc/star"]	[]	doc: without required star
 09-0204	domain/member-topology	domain/member-topology	row	reader	["domainagent", "<s>worker"]	{"doc":"{\"rev\":1,\"via\":{}}"}	refused	["/doc/star"]	{"domainagent": [""], "<s>worker": [""]}	doc: without required star
-09-0205	domain/member-topology	domain/member-topology	row	writer	["domainagent"]	{"doc":"{\"rev\":1,\"star\":[\"a\"]}"}	refused	["/doc/via"]	[]	doc: without required via
-09-0206	domain/member-topology	domain/member-topology	row	reader	["domainagent", "<s>worker"]	{"doc":"{\"rev\":1,\"star\":[\"a\"]}"}	refused	["/doc/via"]	{"domainagent": [""], "<s>worker": [""]}	doc: without required via
+09-0205	domain/member-topology	domain/member-topology	row	writer	["domainagent"]	{"doc":"{\"rev\":1,\"star\":[\"a\"]}"}	ok	[]	[]	без via: у строки держателя его нет (ADR-0113)
+09-0206	domain/member-topology	domain/member-topology	row	reader	["domainagent", "<s>worker"]	{"doc":"{\"rev\":1,\"star\":[\"a\"]}"}	ok	[]	{"domainagent": [], "<s>worker": []}	без via: у строки держателя его нет (ADR-0113)
 09-0207	domain/member-topology	domain/member-topology	row	writer	["domainagent"]	{"doc":"{\"centre\":\"a\",\"rev\":1,\"star\":[\"a\"],\"via\":{}}"}	ok	[]	[]	doc: optional centre
 09-0208	domain/member-topology	domain/member-topology	row	reader	["domainagent", "<s>worker"]	{"doc":"{\"centre\":\"a\",\"rev\":1,\"star\":[\"a\"],\"via\":{}}"}	ok	[]	{"domainagent": [], "<s>worker": []}	doc: optional centre
 09-0209	domain/member-topology	domain/member-topology	row	writer	["domainagent"]	{"doc":"{\"by\":\"a\",\"rev\":1,\"star\":[\"a\"],\"via\":{}}"}	ok	[]	[]	doc: optional by

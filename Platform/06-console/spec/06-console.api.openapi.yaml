@@ -5773,6 +5773,20 @@ paths:
           description: как у GET, без тела
         '503':
           description: как у GET, без тела
+  /api/backup-part/{member}/{part}:
+    description: 'Глава 6.7 Н1.13: часть резервной копии этого кластера подписанному члену, те же заголовки и порядок, что у /api/backup (ask = backup; P/08.8 Н1.5а); открытая дверь сторожевой.'
+    get:
+      summary: Часть резервной копии этого кластера
+      parameters:
+      - {name: member, in: path, required: true, schema: {type: string}}
+      - {name: part, in: path, required: true, schema: {type: string, pattern: '^(?:0[0-9]{3}|[1-3][0-9]{3}|40[0-8][0-9]|409[0-5])$'}}
+      - {name: rev, in: query, required: true, schema: {type: integer, minimum: 1}}
+      responses:
+        '200': {description: 'Объект domain/backups/part-<раздел>-<rev> как есть', content: {application/json: {schema: {type: object, additionalProperties: true}}}}
+        '401': {description: 'Н1.13 order'}
+        '403': {description: 'Н1.13 order'}
+        '404': {description: 'Части нет'}
+        '503': {description: 'Часть не читается'}
   /api/backup:
     description: 'Глава 6.7 Н1.13 (из М11/10 Н1.9) — резервная копия этого кластера подписанному члену: заголовки
       X-W2C-Member, X-W2C-Time, X-W2C-Signature (договор подписи просьбы Platform/common/contracts/ask-sig.md, ask = backup);

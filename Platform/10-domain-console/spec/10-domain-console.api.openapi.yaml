@@ -386,6 +386,34 @@ paths:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
                 - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
+  /domain/batches:
+    get:
+      summary: Партии приёма без токена (глава 8.3 Н1.1б)
+      responses:
+        '200': {description: 'Передача процессу', content: {application/json: {schema: {type: object, additionalProperties: true}}}}
+        '401': {description: Нет личности}
+        '403': {description: Нет права view}
+    post:
+      summary: Новая партия приёма, токен показан один раз (глава 8.3 Н1.1б; право admin домена)
+      requestBody:
+        required: true
+        content: {application/json: {schema: {type: object, required: [name, n], additionalProperties: false, properties: {name: {type: string}, record: {type: string}, via: {type: string}, n: {type: integer, minimum: 1}}}}}
+      responses:
+        '200': {description: 'Передача процессу', content: {application/json: {schema: {type: object, additionalProperties: true}}}}
+        '400': {description: Не по форме}
+        '401': {description: Нет личности}
+        '403': {description: Нет права admin}
+        '409': {description: Такая партия есть}
+  /domain/batches/{name}:
+    delete:
+      summary: Отзыв партии (глава 8.3 Н1.1б; право admin домена)
+      parameters:
+      - {name: name, in: path, required: true, schema: {type: string}}
+      responses:
+        '200': {description: 'Передача процессу', content: {application/json: {schema: {type: object, additionalProperties: true}}}}
+        '401': {description: Нет личности}
+        '403': {description: Нет права admin}
+        '404': {description: Партии нет}
   /domain/topology:
     get:
       summary: Топология домена (Н1.2в)
