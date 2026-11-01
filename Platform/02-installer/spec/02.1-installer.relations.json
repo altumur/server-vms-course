@@ -1447,6 +1447,15 @@
    "norm": "P/08.6 Н1.3",
    "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"edit_tables\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"edit_tables\"]) == map ? dyn(doc[\"domain\"][\"edit_tables\"]).map(k1, ((type(doc) == map && \"worker\" in doc && type(doc[\"worker\"]) == map && \"writes\" in doc[\"worker\"] && type(doc[\"worker\"][\"writes\"]) == list && dyn(doc[\"worker\"][\"writes\"]).exists(e6, e6 == k1)) ? [{\"p\": [\"domain\", \"edit_tables\", k1]}] : [])) : []) : []) : [])",
    "own": []
+  },
+  {
+   "no": 154,
+   "path": "domain.edit_delete",
+   "relation": "exists @domain.edit",
+   "class": "value",
+   "norm": "P/08.6 Н1.3б",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"edit_delete\" in doc[\"domain\"]) ? (!(\"edit\" in doc[\"domain\"]) ? [{\"p\": [\"domain\", \"edit_delete\"]}] : []) : []) : [])",
+   "own": []
   }
  ],
  "untranslated": []

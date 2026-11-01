@@ -1,0 +1,6 @@
+# согласие на снятие без domain.edit
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}, note: {type: string}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+domain: {edit_delete: true}
