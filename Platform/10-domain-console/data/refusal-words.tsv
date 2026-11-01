@@ -6,6 +6,7 @@ view	400	refused	-	Н4
 view	404	no domain here	-	Н4
 view	404	not in the directory	-	Н4
 view	404	no such member	-	Н4
+view	404	not reported yet	-	Н4
 placement	404	refused	-	Н4
 alarms	400	refused	-	Н1.8 door; Н4
 *	400	denied	-	P/06.5 Н4

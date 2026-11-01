@@ -1,0 +1,5 @@
+# Исходы нечитаемого объекта domain/members/<член>/tables/<sub>/<таблица> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	domain	объект целиком нечитаем: проход держателя считает записанное отличным и пишет объект из копии члена; журнал без значения (P/08.1 Н1.4а)	1	строка	P/08.1 Н1.4а
+	domainconsole	объект целиком нечитаем: дверь `GET /domain/<sub>/tables/<таблица>` — 503 `{error: "unavailable"}`, не 404 (P/10 Н1.2а)	1	строка	P/10 Н1.2а

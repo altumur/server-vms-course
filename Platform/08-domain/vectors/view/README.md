@@ -40,7 +40,7 @@ JSON файла одной строкой: сняты только незнач�
 | Манифест | Файл | sha256 |
 |---|---|---|
 | `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `f07e53992348a78aa88ed80bd6eaf27b74fccaff9a16de5feba34a3bc70f9459` |
-| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `99e5a69f476f57e2137c0a43dfef3e4b05544c9fba1238e0da1fae79515f22a9` |
+| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `1c60577cdac3315d6469b8c08932ae2d2c0bc9c78dad4a6fbf44e03231d70e4d` |
 
 Смена этих байтов — повод перепроверить таблицу оракулом.
 
@@ -50,7 +50,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 43 строки: 17 только `view`, 14 только `shadow`, 8 оба, 4 `@exit 2` (28 — из М11/01, 5 — ADR-0091 доп. (12)–(19), 10 — аудит покрытия P/08, второй проход) | `input` — вход команды `view` текстом JSON → `expect` — подмножество `{view, shadow}`: члены `ok`/`unseen`/`silent`/`never` и `age` (LOST_AFTER 45/46, пропажа и возврат метки, уход и возврат члена, округление 0.25 → 0.3), единицы `live`/`stale`/`configured`/`silent`, `contested`, `complete`, дубль id, смена пульса по JCS, элемент пульса без строки шарда; находки `lagging`, `stalled` (SHADOW_STALL 60/61), `orphaned`, `unmanaged`, `conflict` (исполнители `cluster` и `copies`, два воркера одного члена), `stale_epoch`, `unknown`, `clean_streak` и `may_write`; исполнители назначения `{cluster} ∪ copies` — не `contested` (`10-copies`, `10-origin-is-cluster`), член вне множества и `origin` вне `copies` — `contested` и `conflict` (`10-not-executor`, `10-origin-outside-copies`), третий член `silent` — `complete: false` без спора (`10-third-silent`), строка без значения `domain.ref` — вне `units`, без заявки (`10-no-ref-row`), назначения не прочитаны — `contested`, отчёт прежний (`10-placements-unread`) |
+| [`cases.tsv`](cases.tsv), 44 строки: 18 только `view`, 14 только `shadow`, 8 оба, 4 `@exit 2` (28 — из М11/01, 5 — ADR-0091 доп. (12)–(19), 10 — аудит покрытия P/08, второй проход, 1 — ADR-0110) | `input` — вход команды `view` текстом JSON → `expect` — подмножество `{view, shadow}`: члены `ok`/`unseen`/`silent`/`never` и `age` (LOST_AFTER 45/46, пропажа и возврат метки, уход и возврат члена, округление 0.25 → 0.3), единицы `live`/`stale`/`configured`/`silent`, `contested`, `complete`, дубль id, смена пульса по JCS, элемент пульса без строки шарда; находки `lagging`, `stalled` (SHADOW_STALL 60/61), `orphaned`, `unmanaged`, `conflict` (исполнители `cluster` и `copies`, два воркера одного члена), `stale_epoch`, `unknown`, `clean_streak` и `may_write`; исполнители назначения `{cluster} ∪ copies` — не `contested` (`10-copies`, `10-origin-is-cluster`), член вне множества и `origin` вне `copies` — `contested` и `conflict` (`10-not-executor`, `10-origin-outside-copies`), третий член `silent` — `complete: false` без спора (`10-third-silent`), строка без значения `domain.ref` — вне `units`, без заявки (`10-no-ref-row`), назначения не прочитаны — `contested`, отчёт прежний (`10-placements-unread`) |
 
 Вход не по форме (Н4, Н5 главы; форма `ViewInput`) — строки `17-exit-*`: `holder` `""`, `passes` `[]`, `mark` 2^53, назначение
 `{cluster: ""}` — `@exit 2` (аудит покрытия P/08, второй проход Gemini; в приёмке М11/01 их не было).

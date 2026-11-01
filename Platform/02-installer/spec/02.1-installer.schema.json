@@ -1009,6 +1009,21 @@
      "$ref": "#/$defs/nonSecretList",
      "x-owner": "P/08.1 Н1.4"
     },
+    "view_status": {
+     "$ref": "#/$defs/nonSecretList",
+     "x-owner": "P/08.1 Н1.4"
+    },
+    "view_tables": {
+     "x-owner": "P/08.1 Н1.4а",
+     "x-class": "reference",
+     "type": "object",
+     "propertyNames": {
+      "$ref": "#/$defs/tableName"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/nonSecretList"
+     }
+    },
     "edit": {
      "$ref": "#/$defs/nonSecretList",
      "x-owner": "P/08.6 Н1.3"
@@ -1663,6 +1678,7 @@
    "anyOf": [
     {
      "enum": [
+      "GET domain",
       "GET domain/users",
       "GET domain/groups",
       "GET domain/roles",
@@ -1672,6 +1688,9 @@
     },
     {
      "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/books/[a-z][a-z0-9_-]{0,31})$"
+    },
+    {
+     "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/(?:tables/)?[a-z][a-z0-9_-]{0,31})$"
     },
     {
      "not": {
@@ -2499,7 +2518,9 @@
      "operations-epoch",
      "cluster",
      "worker",
-     "ts"
+     "ts",
+     "tables",
+     "snapshot-tables"
     ]
    },
    "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
@@ -3503,7 +3524,8 @@
      "opcount",
      "opbusy",
      "operations-turn",
-     "operations-epoch"
+     "operations-epoch",
+     "snapshot-tables"
     ]
    },
    "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"

@@ -1,0 +1,7 @@
+# таблица и поля пульса в виде домена (P/08.1 Н1.4, Н1.4а)
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+tables: {disks: {fields: {note: {type: string}, url: {type: string}}}}
+domain: {view_status: [jam], view_tables: {disks: [note, url]}}

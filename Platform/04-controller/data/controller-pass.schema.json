@@ -119,6 +119,9 @@
   "garbled": {
    "$ref": "#/$defs/count"
   },
+  "snapshot_tables_refused": {
+   "$ref": "#/$defs/count"
+  },
   "snapshot_rows_garbled": {
    "$ref": "#/$defs/count"
   },
@@ -342,6 +345,7 @@
   "diverged",
   "unplaced",
   "garbled",
+  "snapshot_tables_refused",
   "snapshot_rows_garbled",
   "reach_moves_total",
   "slots_released_total",

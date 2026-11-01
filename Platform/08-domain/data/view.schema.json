@@ -58,6 +58,18 @@
         }
        }
       ]
+     },
+     "servers": {
+      "description": "имена серверов копии, по возрастанию в байтах UTF-8; нет копии или ни одного имени — поля нет (Н1.4)",
+      "type": "array",
+      "items": {
+       "type": "string",
+       "not": {
+        "enum": [
+         ""
+        ]
+       }
+      }
      }
     },
     "additionalProperties": false,
@@ -1146,6 +1158,10 @@
      "$ref": "#/$defs/common.domain_member",
      "description": "член, в копии которого единица"
     },
+    "revision": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "версия строки единицы из строки шарда (Н1.4 Unit revision)"
+    },
     "worker": {
      "description": "из пульса или из строки шарда; нет — поля нет; пульс без поля worker — имя из ключа пульса",
      "type": "string",
@@ -1191,6 +1207,11 @@
      "description": "поля, названные domain.view манифеста (P/02.1 Н1.2а), из строки шарда; секретных полей нет (P/06.2 Н1.4)",
      "type": "object",
      "x-opaque": true
+    },
+    "status": {
+     "description": "поля domain.view_status манифеста из элемента status[] пульса (Н1.4 Unit status)",
+     "type": "object",
+     "x-opaque": true
     }
    },
    "additionalProperties": false,
@@ -1199,6 +1220,7 @@
     "id",
     "ref",
     "cluster",
+    "revision",
     "phase",
     "age",
     "state"

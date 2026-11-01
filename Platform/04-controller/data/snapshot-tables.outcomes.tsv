@@ -1,0 +1,4 @@
+# Исходы нечитаемого объекта <sub>/snapshot-tables/<таблица> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	domainagent	объект целиком нечитаем (не JSON или не объект семьи): в публикацию не входит и в deleted не попадает, прежняя копия у держателя остаётся, журнал (P/09.1 Н1.2)	1	строка	P/09.1 Н1.2

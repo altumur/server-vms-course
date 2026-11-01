@@ -10,7 +10,7 @@
 урок [P/08](../../08-domain/spec/08-domain.README.md), агент — урок [P/09](../../09-agent/spec/09-agent.README.md), пересылка
 консоли кластера — глава P/06.7.
 
-- Двери чтения `GET /domain`, `/domain/<sub>/<rows>`, `/domain/shadow`, `/domain/members`, `/domain/topology`,
+- Двери чтения `GET /domain`, `/domain/<sub>/<rows>`, `/domain/<sub>/tables/<таблица>`, `/domain/shadow`, `/domain/members`, `/domain/topology`,
   `/domain/placement*`, `/domain/grants`, `/domain/shared`, `/domain/alarms`.
 - Передача правок, дверей людей и входа процессу `domain`.
 - Дверь роли TLS и «принять консолью»; сторожевая по `domain/grants/domain`.

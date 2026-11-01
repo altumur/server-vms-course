@@ -141,6 +141,7 @@ journal:      domain.forwarded {cluster, path, user, status} у пересыла
 |---|---|---|---|---|
 | GET | `/domain` | 1 Н2 | 5 | да |
 | GET | `/domain/shadow` | 1 Н2 | 5 | да |
+| GET | `/domain/<sub>/tables/<таблица>` (P/10 Н1.2а; `tables` — зарезервированное имя, `unit.rows` им не бывает, P/02.1) | 1 Н2 | 5 | да |
 | GET | `/domain/<sub>/<rows>` (`<rows>` — `unit.rows` манифеста каталога; манифест без `domain.ref` — пересылается, держатель отвечает 404 `not in the directory`, урок 1 Н2) | 1 Н2 | 5 | да |
 | GET, POST | `/domain/members` | 3 Н2 | 5 | да |
 | DELETE | `/domain/members/<член>` | 3 Н2 | 5 | да |
@@ -177,7 +178,7 @@ route` до сторожевой, до пересылки и до передач
 М11, D4: путь `/domain/<sub>/<сегмент>/../members` иначе ушёл бы мимо таблицы).
 
 Сопоставление по порядку: `books` (своя: дверь книги `GET /domain/<sub>/books/<книга>`, [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.1; аудит раскладки Б-19, решение «Архитектора» 2026-10-25), `at` (своя), строки таблицы сверху вниз; `<sub>` — подсистема каталога
-этой консоли; сегмент `door.pass`, совпавший с `books`, `placement`, `members`, `topology`, `shadow`, `at`, на домене не
+этой консоли; сегмент `door.pass`, совпавший с `books`, `tables`, `placement`, `members`, `topology`, `shadow`, `at`, на домене не
 передаётся.
 
 ## Отказы по переходам

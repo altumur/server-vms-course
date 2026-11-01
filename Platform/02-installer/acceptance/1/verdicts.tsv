@@ -832,3 +832,13 @@ a103_scenario_member_ok	ok
 a103_places_wanted_ok	ok
 a103_places_wanted_unknown	refused
 a103_names_action_ok	ok
+a110_view_tables_ok	ok
+a110_view_tables_unknown	refused
+a110_view_tables_service	refused
+a110_view_tables_field	refused
+a110_view_tables_secret	refused
+a110_view_status_secret	refused
+a110_rows_tables	refused
+a110_table_snapshot_tables	refused
+a110_objects_snapshot_tables	refused
+a110_calls_view_ok	ok

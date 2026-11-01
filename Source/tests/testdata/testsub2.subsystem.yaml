@@ -192,6 +192,9 @@ parts:
 # `testsub2/seen/*`, naming each member it heard of by the field that carries the member's name — `of`, fixed
 domain:
   ref: name
+  view_status: [jam]
+  view_tables:
+    shelves: [zone, server]
   reports: [counts/]
   witness: {report: seen, member_field: of}
   books:

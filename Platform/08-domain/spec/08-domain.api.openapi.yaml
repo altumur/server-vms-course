@@ -1973,6 +1973,10 @@ components:
       properties:
         name:
           $ref: '#/components/schemas/MemberName'
+        servers:
+          type: array
+          items: {type: string, minLength: 1}
+          description: Имена серверов копии по возрастанию; нет копии или ни одного имени — поля нет (Н1.4).
         state:
           enum: [ok, unseen, silent, never]
         age:
@@ -1981,7 +1985,7 @@ components:
           description: Секунды с последней смены метки, которую видел этот процесс держателя, без смены — с первого взгляда; у never — null.
     Unit:
       type: object
-      required: [sub, id, ref, cluster, phase, age, state]
+      required: [sub, id, ref, cluster, revision, phase, age, state]
       additionalProperties: false
       properties:
         sub: {type: string, minLength: 1}
@@ -1989,6 +1993,11 @@ components:
         ref: {type: string, minLength: 1}
         cluster:
           $ref: '#/components/schemas/MemberName'
+        revision: {type: integer, minimum: 1}
+        status:
+          type: object
+          additionalProperties: true
+          description: Поля domain.view_status манифеста из элемента status[] пульса (Н1.4).
         worker: {type: string, minLength: 1}
         server: {type: string, minLength: 1}
         phase: {type: string, minLength: 1}
@@ -1999,6 +2008,28 @@ components:
           type: object
           additionalProperties: true
           description: Поля domain.view манифеста; секретных нет. Открыт намеренно — набор полей задаёт манифест подсистемы, не урок.
+    MemberTable:
+      type: object
+      description: Снимок таблицы члена (P/08.1 Н1.4а, P/04 Н1.3б).
+      required: [cluster, ts, rows]
+      additionalProperties: false
+      properties:
+        cluster:
+          $ref: '#/components/schemas/MemberName'
+        ts: {type: number}
+        rows:
+          type: array
+          items:
+            type: object
+            required: [key, revision, fields]
+            additionalProperties: false
+            properties:
+              key: {type: string, minLength: 1}
+              revision: {type: integer, minimum: 1}
+              fields:
+                type: object
+                additionalProperties: true
+                description: Поля domain.view_tables манифеста; секретов нет.
     View:
       type: object
       required: [as_of, holder, complete, members, units, contested]
