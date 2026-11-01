@@ -3099,13 +3099,13 @@ c08_relay_members.004	domain/relay-members/<ретранслятор>	domain/rel
 c08_relay_members.005	domain/relay-members/<ретранслятор>	domain/relay-members/m1	row	writer	["domain"]	{	refused	[""]	[]	not JSON
 c08_relay_members.006	domain/relay-members/<ретранслятор>	domain/relay-members/m1	row	reader	["domain"]	{	refused	[""]	{"domain": [""]}	not JSON
 c08_view_rows.001	domain/view-rows/<раздел>	domain/view-rows/0123	object	writer	["domain"]	{"part":"0123","as_of":"1","members":[],"units":{},"contested":{}}	ok	[]	[]	base
-c08_view_rows.002	domain/view-rows/<раздел>	domain/view-rows/0123	object	reader	["domain", "domainconsole"]	{"part":"0123","as_of":"1","members":[],"units":{},"contested":{}}	ok	[]	{"domain": [], "domainconsole": []}	base
+c08_view_rows.002	domain/view-rows/<раздел>	domain/view-rows/0123	object	reader	["domain", "domainconsole", "<s>domain"]	{"part":"0123","as_of":"1","members":[],"units":{},"contested":{}}	ok	[]	{"domain": [], "domainconsole": [], "<s>domain": []}	base
 c08_view_rows.003	domain/view-rows/<раздел>	domain/view-rows/0123	object	writer	["domain"]	null	refused	[""]	[]	root null
-c08_view_rows.004	domain/view-rows/<раздел>	domain/view-rows/0123	object	reader	["domain", "domainconsole"]	null	refused	[""]	{"domain": [""], "domainconsole": [""]}	root null
+c08_view_rows.004	domain/view-rows/<раздел>	domain/view-rows/0123	object	reader	["domain", "domainconsole", "<s>domain"]	null	refused	[""]	{"domain": [""], "domainconsole": [""], "<s>domain": [""]}	root null
 c08_view_rows.005	domain/view-rows/<раздел>	domain/view-rows/0123	object	writer	["domain"]	{	refused	[""]	[]	not JSON
-c08_view_rows.006	domain/view-rows/<раздел>	domain/view-rows/0123	object	reader	["domain", "domainconsole"]	{	refused	[""]	{"domain": [""], "domainconsole": [""]}	not JSON
+c08_view_rows.006	domain/view-rows/<раздел>	domain/view-rows/0123	object	reader	["domain", "domainconsole", "<s>domain"]	{	refused	[""]	{"domain": [""], "domainconsole": [""], "<s>domain": [""]}	not JSON
 c08_view_rows.007	domain/view-rows/<раздел>	domain/view-rows/0123	object	writer	["domain"]	{"part":"0123","as_of":"1","members":[],"units":{}}	refused	["/contested"]	[]	: without required contested
-c08_view_rows.008	domain/view-rows/<раздел>	domain/view-rows/0123	object	reader	["domain", "domainconsole"]	{"part":"0123","as_of":"1","members":[],"units":{}}	refused	["/contested"]	{"domain": [""], "domainconsole": [""]}	: without required contested
+c08_view_rows.008	domain/view-rows/<раздел>	domain/view-rows/0123	object	reader	["domain", "domainconsole", "<s>domain"]	{"part":"0123","as_of":"1","members":[],"units":{}}	refused	["/contested"]	{"domain": [""], "domainconsole": [""], "<s>domain": [""]}	: without required contested
 c08_ref_claims.001	domain/ref-claims/<sub>/<sha16>	domain/ref-claims/testsub/0123456789abcdef	row	writer	["domain"]	{"m1":"1"}	ok	[]	[]	base
 c08_ref_claims.002	domain/ref-claims/<sub>/<sha16>	domain/ref-claims/testsub/0123456789abcdef	row	reader	["domain"]	{"m1":"1"}	ok	[]	{"domain": []}	base
 c08_ref_claims.003	domain/ref-claims/<sub>/<sha16>	domain/ref-claims/testsub/0123456789abcdef	row	writer	["domain"]	null	refused	[""]	[]	root null
