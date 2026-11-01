@@ -297,7 +297,7 @@ tables:
       device: {type: string, required: true}         # the host — what tells a holder its rows when the camera is gone
       gone:   {type: bool, default: false}           # the owner or the number is no longer so; the row stays
   # What the operator says of a row above, under the same key: one writer each (P/06.1 Н1.1), as with `rec/keeps`. No
-  # `enabled` here: on unless a row of the same device, type and number is off (V/01.4 Н1.4а), so it has no default — a
+  # `enabled` here: the latest word among the rows of the same device, type and number decides (`at`, V/01.4 Н1.4а), so it has no default — a
   # name given to a row must not turn its output on. A row with no row above is allowed: a name set ahead of the device,
   # or left by a device that lost the input.
   child_settings:
@@ -309,6 +309,7 @@ tables:
       title:   {type: string}                        # not `name`: that is for a table keyed by it (P/06.1 Н1.6)
       enabled: {type: bool}                          # off: an input raises no event, an output and a speaker refuse, a microphone gives no sound (V/01.4 Н1.4а)
       norm:    {type: string, enum: [open, closed]}  # the contact's normal state; no field — `open` (V/01.4 Н1.4а)
+    stamp: [at]                                      # orders the `enabled` of different rows (V/01.4 Н1.4а)
   # A unit of a device: a door, a reader, a zone, a fence, a relay under a door (V/01.1 Н1.2б). `.rep` says what MAY be
   # there, not what is, so unlike the table above the operator declares them, on a row of any type; the holder reads the
   # table and creates them in the driver, from the root down (V/01.4 Н1.4б). `n` never comes back: a request or a rule
