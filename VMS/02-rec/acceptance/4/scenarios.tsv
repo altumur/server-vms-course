@@ -52,3 +52,17 @@ scenario	step	request	expect
 05-replica-device	2	@manual device и непустой stream — reason «replica from device: stream is set»; cam ref:<ref> — «replica from device: other cluster»	manual
 05-replica-device	3	@manual скан: посаженная часть без держателя running — задача detjob, при running заказа нет; переезд записи минуты не перекачивает и не заказывает снова	manual
 05-replica-device	4	@manual замер отставания: регистратор на 16 камер, max_playbacks кончились — 503 device busy, источник на отсрочке, отставание по камерам в replica_lag_s	manual
+06-edge	1	@start worker cam w-srv-a-1 on srv-a	ok
+06-edge	2	console2 POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
+06-edge	3	console2 POST /cameras {"name": "yard", "source": "driverpack://file/door.mp4"}	201 {"id": "$c2"}
+06-edge	4	POST /volumes {"name": "card", "kind": "edge", "url": "file:///card", "server": "srv-a", "quota_bytes": 1000000}	201 {"name": "card"}
+06-edge	5	@until 90 GET /recordings	200 {"configured": [{"id": "cam-$c1-card", "cam": "$c1", "home": "card", "when": "offline"}, {"id": "cam-$c2-card", "cam": "$c2", "home": "card", "when": "offline"}]}
+06-edge	6	DELETE /recordings/cam-$c2-card	2xx
+06-edge	7	@until 90 GET /recordings	200 {"configured": [{"id": "cam-$c2-card", "cam": "$c2", "home": "card"}]}
+06-edge	8	@manual две камеры на одной карте: одна строка тома, сегменты обеих рядом; квота — бюджет всей карты; по бюджету уходит старейшее из доставленного по всей карте, камера с большим битрейтом укорачивает соседку; открытый сегмент не уходит; недоставленное — последним	manual
+06-edge	9	@manual запись камеры, чей держатель на другом сервере: waiting, reason edge volume serves its own server; дверь строку приняла	manual
+06-edge	10	@manual when always у тома: запись на карте идёт без новой revision строки; offline — standby с кольцом, поток камеры открыт без других потребителей (V/01.2 Н1.2в)	manual
+06-edge	11	@manual камера снята: регистратор снимает строку, сегменты на карте остаются, вытесняются первыми из долга; новая строка этой камеры на этом томе видит их	manual
+06-edge	12	@manual камера ушла на другой сервер с томом edge: новый держатель сразу заказывает строку своей карты; прежняя waiting, долг копируется; через 7200 с без долга её снимает регистратор карты; единица не перезапускается: revision строки за час не растёт	manual
+06-edge	13	@manual кластер из одного, строка cam/cameras/1 с cfw://local, том без when, основной нет: запись на карте пишет как always; появилась основная — standby; строка камеры или книга не прочитаны — прежнее слово	manual
+06-edge	14	@manual прочая камера коробки: заявка диапазона приходит регистратору карты в ответе опроса, он читает сегменты и выгружает POST /ingest/upload: листом роли в свой приёмник, токеном stream в чужой; role записи в книге — backup при always и offline	manual

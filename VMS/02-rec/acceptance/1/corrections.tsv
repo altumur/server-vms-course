@@ -4,3 +4,4 @@ date	sample	fix	languages
 2026-10-31	1/scenarios.tsv: 01-create 3, 02-fixed 2, 02-fixed 3	error — слово перечня и field, фраза в detail (ADR-0094 доп. (13), B5)	all
 2026-11-01	1/scenarios.tsv: 06-audio	новый сценарий: поле audio записи (ADR-0102 доп. (9) п. 7)	all
 2026-11-01	1/scenarios.tsv: 07-replica	новый сценарий: дверь не судит replica_from и when у тома backup (ADR-0107 доп. (2) п. 4)	all
+2026-11-01	1/scenarios.tsv: 02-fixed шаг 4, 03-home шаг 1, 04-volumes шаги 4–9	поля cam у тома нет, when — только у edge, без умолчания; имена cam- — заказчика cam (ADR-0108, доп. (1))	all

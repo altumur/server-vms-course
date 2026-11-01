@@ -7,14 +7,20 @@ scenario	step	request	expect
 02-fixed	1	POST /recordings {"name": "7b", "cam": "7"}	201 {"id": "7b"}
 02-fixed	2	PUT /recordings/7b {"cam": "8"}	400 {"error": "fixed", "field": "/cam", "detail": "~cam is fixed"}
 02-fixed	3	POST /recordings {"name": "auto-7", "cam": "7"}	400 {"error": "bad_id", "field": "/name", "detail": "~made by auto"}
-03-home	1	POST /volumes {"name": "card-7", "kind": "edge", "url": "file:///card", "server": "srv-a", "cam": "7", "quota_bytes": 1000000}	201 {"name": "card-7"}
+02-fixed	4	POST /recordings {"name": "cam-7", "cam": "7"}	400 {"error": "bad_id", "field": "/name", "detail": "~made by cam"}
+03-home	1	POST /volumes {"name": "card-7", "kind": "edge", "url": "file:///card", "server": "srv-a", "quota_bytes": 1000000}	201 {"name": "card-7"}
 03-home	2	POST /recordings {"name": "8-card", "cam": "8", "home": "card-7"}	201 {"home": "card-7"}
 03-home	3	POST /recordings {"name": "7-card", "cam": "7", "home": "card-7", "when": "always"}	201 {"home": "card-7"}
 03-home	4	POST /recordings {"name": "7-none", "cam": "7", "home": "no-such"}	201 {"home": "no-such"}
 04-volumes	1	POST /volumes {"name": "net-a", "kind": "network", "url": "s3://bucket/a", "server": "srv-a", "quota_bytes": 1}	400 {"error": "@any"}
 04-volumes	2	POST /volumes {"name": "inc-a", "kind": "incidents", "url": "file:///inc", "server": "srv-a", "quota_bytes": 1}	400 {"error": "@any"}
 04-volumes	3	POST /volumes {"name": "inc-a", "kind": "incidents", "url": "file:///inc", "server": "srv-a", "quota_bytes": 1, "admits": false}	201 {"name": "inc-a"}
-04-volumes	4	POST /volumes {"name": "disk-b", "kind": "local", "url": "file:///b", "server": "srv-a", "quota_bytes": 1, "cam": "7"}	400 {"error": "@any"}
+04-volumes	4	POST /volumes {"name": "disk-b", "kind": "local", "url": "file:///b", "server": "srv-a", "quota_bytes": 1, "when": "offline"}	400 {"error": "@any"}
+04-volumes	5	POST /volumes {"name": "card-b", "kind": "edge", "url": "file:///b", "quota_bytes": 1}	400 {"error": "@any"}
+04-volumes	6	POST /volumes {"name": "card-b", "kind": "edge", "url": "file:///b", "server": "srv-b", "quota_bytes": 1, "cam": "7"}	400 {"error": "@any"}
+04-volumes	7	POST /volumes {"name": "card-b", "kind": "edge", "url": "file:///b", "server": "srv-b", "quota_bytes": 1, "when": "sometimes"}	400 {"error": "@any"}
+04-volumes	8	POST /volumes {"name": "card-b", "kind": "edge", "url": "file:///b", "server": "srv-b", "quota_bytes": 1, "when": "always"}	201 {"when": "always"}
+04-volumes	9	POST /volumes {"name": "card-c", "kind": "edge", "url": "file:///c", "server": "srv-c", "quota_bytes": 1}	201 {"when": "@absent"}
 05-stream	1	console2 POST /cameras {"name": "Вход", "source": "rtsp://10.0.0.30/ch/1"}	201 {"id": "$m"}
 05-stream	2	console2 POST /cameras {"source": "rtsp://10.0.0.30/ch/2", "main": "$m", "profile": "сетка"}	201 {"id": "$s"}
 05-stream	3	console2 POST /cameras {"name": "Двор", "source": "rtsp://10.0.0.31/ch/1"}	201 {"id": "$o"}

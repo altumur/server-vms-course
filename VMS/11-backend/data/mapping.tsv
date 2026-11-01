@@ -44,9 +44,9 @@ Device(type=camera)	serverId	rec/heartbeats	сервер держателя ос
 Device(type=camera)	online	cam/heartbeats	phase	read	running, idle или held — true; в версию не входит
 Device(type=camera)	fault	cam/heartbeats	device_state	read	отказ входа — auth, не открылось или нет связи — conn, иное — drv; устройство отвечает — поля нет
 Device(type=camera)	licenseExceeded	cam/heartbeats	phase	read	unlicensed — true (V/01.7)
-Device(type=camera)	archiveId	rec/recordings	home основной <cam>	both	основной нет — null; том backup — 422 VALIDATION_FAILED, field archiveId (V/11.3 Н1.3)
+Device(type=camera)	archiveId	rec/recordings	home основной <cam>	both	основной нет — null; том backup, edge, incidents — 422 VALIDATION_FAILED, field archiveId (V/11.3 Н1.3)
 Device(type=camera)	recordMode	rec/recordings	<cam>: enabled и replica_from	both	always — основная enabled, replica_from пуст; replica — основная enabled, replica_from не пуст; none — иначе; запись replica без поля источника — replica_from: device; motion, sched — не объявляются: запись 422 NOT_SUPPORTED (V/11.3 Н1.3)
-Device(type=camera)	extraArchives	rec/recordings	дополнительные <cam>-<том>	both	в порядке имени тома: {archiveId, recordMode none|always|replica по enabled и replica_from, stream}; резерв when: offline читается always, слова backup у контракта нет; запись на томе backup пишет when: offline (V/11.3 Н1.3)
+Device(type=camera)	extraArchives	rec/recordings	дополнительные <cam>-<том>, затем cam-<cam>-<том>	both	в порядке имени тома: {archiveId, recordMode none|always|replica по enabled и replica_from, stream}; резерв when: offline читается always, слова backup у контракта нет; запись на томе backup пишет when: offline; cam-<cam> на edge — только чтение, эхо пропускается (V/11.3 Н1.3)
 Device(type=camera)	stream	rec/recordings	stream основной <cam>: пусто — main; иначе sub	both	запись sub — прочий поток с наименьшим id, поле уже непусто — не меняется, потока нет — 422 NOT_SUPPORTED; не cam.main (V/11.3 Н1.3)
 Device(type=camera)	children	det/units	<cam>-<kind>	write	только при создании: дочерние детекторы (V/11.4 Н1.2); иные дочерние — 422 NOT_SUPPORTED, field children
 Device(type=camera)	version	cam/cameras + rec/recordings + det/units + cam/devices	склейка c<камера-потоки>.r<rec…>.d<det…>.h<строка устройства>.i<строка ipsrv> индексов хранилища частей и надгробий (V/11.4 Н1.1)	read	ADR-0094 доп. (4) п. 1; индекс — в элементе списка по B4
@@ -194,10 +194,10 @@ Folder	deviceIds	GET /folders	members	both	видимые члены по пор
 Folder	version	GET /folders	index	read
 FolderCreate	name, domainId, parentId	POST /folders	name, parent	write	domainId иной — NOT_FOUND
 FolderPatch	name, deviceIds	PUT /folders/<id>	name, members	write	V/11.4 Н1.7
-Archive	—	rec/volumes	—	both	хранилище = один том (строка таблицы rec/volumes) и записи на нём; том edge не отдаётся
+Archive	—	rec/volumes	—	both	хранилище = один том (строка таблицы rec/volumes) и записи на нём
 Archive	id	rec/volumes	UUID archive:rec/volumes/<name>	read	иной, чем у Volume той же строки (V/11.4 Н1.6)
 Archive	name	rec/volumes	name	read	ключ строки: при создании — ключ новой строки; правка — 422 NOT_SUPPORTED, field name
-Archive	kind	rec/volumes	по url: file:// — local; бакет — cloud	read	при создании: local — kind local, cloud — kind network, remote — 422 NOT_SUPPORTED; роль backup, incidents наружу не выходит (V/11.3 Н1.3)
+Archive	kind	rec/volumes	kind: network — remote, прочие словом	read	при создании: local, backup, edge, incidents — kind словом, remote и cloud — kind network; incidents — admits: false; иное — 422 NOT_SUPPORTED (V/11.3 Н1.3)
 Archive	storage	rec/volumes	url: бакет — object, иное — block	read	при создании — схема адреса тома
 Archive	provider	rec/volumes	схема адреса бакета; не бакет — null	read
 Archive	serverId	rec/volumes	server — UUID server:<server>; пусто — null	both
@@ -234,8 +234,8 @@ Reference	—	GET /manifest	перечисления полей	read
 Reference	deviceModels	файл пакета device-models.json	[{vendor, models}] из .rep DriverPack	read	файл данных пакета рядом с worker (V/11.3 Н1.3); не таблица; файла нет — []
 Reference	deviceKinds	—	[{"group": "video", "view": "cam", "types": ["camera", "ipsrv-nvr", "det"]}, {"group": "io", "view": "cam", "types": ["ipsrv-io", "ipsrv-sip", "ipsrv-mic"]}, {"group": "integ", "view": "cam", "types": ["eventsrc"]}, {"group": "acfa", "view": "acfa", "types": ["acfa", "acfa_sensor", "acfa_lock", "acfa_fence", "relay"]}]	const	что можно добавить — виды deviceTypes; подтип ipsrv выводится, выбор в мастере на него не влияет
 Reference	detectorKinds	—	["motion", "linecross", "abandoned", "disappeared", "crowd"]	const	motion, linecross — реестр воркера det (V/04.2); все пять — встроенные (detector-kinds.tsv)
-Reference	recordModes	—	["none", "always", "replica"]	const	motion, sched не объявляются (разбор ревью V/11, вопрос 2)
-Reference	archiveKinds	—	["local", "cloud"]	const
+Reference	recordModes	—	["none", "always", "replica"]	const	motion, sched не объявляются (разбор ревью V/11, вопрос 2); backup ждёт контракта (ADR-0107 п. 6)
+Reference	archiveKinds	—	["local", "remote", "backup", "edge", "incidents"]	const	ADR-0109 п. 3; replica — режим, не вид
 Reference	storageTypes	—	["block", "object"]	const
 Reference	volumeStates	—	["ready", "off"]	const	состояния тома (V/11.3 Н1.3)
 Reference	ipServerSubtypes	—	["nvr", "io", "sip", "mic"]	const	выводятся из описания (V/11.3 Н1.3)
