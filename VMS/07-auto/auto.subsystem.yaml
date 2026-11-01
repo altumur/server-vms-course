@@ -619,6 +619,12 @@ domain:
     schedules: [id, title, kind, week, overrides, valid, cycle, dates, astro, owner, builtin]
     day_groups: [id, title, rules]
     windows: [id, title, schedule, rules, enabled]
+  # What a backend on another member writes of a rule (V/11.4 Н1.13); not `server`, a word of the platform at the door. The
+  # door takes a unit by `ref`, so these words act when the kept edit addresses a row by (cluster, id).
+  edit: [name, start, run_at, run_mode, operator_menu, repeat, when, within, conditions, then, rate_per_minute, valid_for, enabled, labels, log_only, log_only_since, owner, purpose, run_as_role, allow_chain, created_at, created_by, changed_at, changed_by, history_note, hidden]
+  edit_tables:
+    versions: [scenario, number, note, rule]
+    rule_marks: [scenario, mute, order]
   books:
     asks: {from: auto/asks/, key: target, pick: all, to: to}
   shared:

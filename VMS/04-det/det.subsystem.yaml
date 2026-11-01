@@ -98,6 +98,9 @@ snapshot: [name, cam, kind, enabled, until]
 domain:
   view_tables:
     units: [cam, kind, title, params, enabled]
+  # What a backend on another member writes of a detector (V/11.4 Н1.13). The door takes a unit by `ref`, so these words
+  # act when the kept edit addresses a row by (cluster, id).
+  edit: [name, cam, stream, kind, title, params, enabled, labels, alarms]
 metrics:
   - {name: units_running, from: status.phase, agg: count, equals: running, live: true}   # the running gauge (`console.running`)
 console:

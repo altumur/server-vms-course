@@ -109,7 +109,9 @@ door:
       - GET schema                   # the tool get_schema (V/11.7 Н1.2)
       - GET assist/models            # the assistant's default model (V/11.7 Н1.2)
       - assist/chat                  # the model's route: the console passes it to the holder (V/11.7; доп. (12) п. 7)
-      - folders                      # the cluster's folders and, in a batch, their rows (P/06.8; V/11.4 Н1.7)
+      - folders                      # the copy of the domain's folders; outside a domain the cluster's folders and, in a batch, their rows (P/06.8; V/11.4 Н1.7)
+      - domain/folders               # the tree of the domain (P/08.5 Н1.8; V/11.4 Н1.7)
+      - domain/memberof              # who stands in which folder: not one batch with the folder (ADR-0110 доп. (5) п. 3)
       - backend/operations           # the group operations (P/06.9; V/11.4 Н1.8)
       - GET domain/cam/books/licence # the licence, read only (V/11.3 Н1.3; P/06.3 Н1.9)
       # The view of the domain, how another member's rows are read (V/11.3 Н1.2а; ADR-0110 доп. (2)): the members, their
@@ -121,6 +123,7 @@ door:
       - GET domain/cam/tables/children
       - GET domain/cam/tables/child_settings
       - GET domain/cam/tables/device_units
+      - GET domain/cam/tables/unit_next
       - GET domain/cam/tables/rule_state
       - GET domain/rec/tables/recordings
       - GET domain/rec/tables/volumes
@@ -135,7 +138,7 @@ door:
       - GET domain/groups
       - GET domain/roles
       - GET domain/grants
-      - domain/batch                 # one apply is one batch of the domain (V/11.8 Н1.5)
+      - domain/batch                 # people, groups, roles in one batch, the rows of rights a batch per cluster (V/11.8 Н1.5)
       - backend/repeats              # its own table: the memory of repeats of a group key (V/11.4 Н1.4)
       - backend/people               # its own table: the id of a person (V/11.8 Н1.2)
       - backend/history              # its own table: the history of the rights screen (V/11.8 Н1.7)
@@ -169,7 +172,7 @@ tables:
       h:        {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of user, 0, key
       user:     {type: string, required: true, schema: {minLength: 1}}   # the person of the ticket; compared on lookup
       idem_key: {type: string, required: true, schema: {minLength: 1}}   # the external idempotencyKey as given
-      op:       {type: string, required: true, enum: [createDevices, updateDevices, deleteObjects, createOperation, updateRules]}
+      op:       {type: string, required: true, enum: [createDevices, updateDevices, deleteObjects, createOperation, updateRules, assignServers]}
       body:     {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of the body's bytes
       state:    {type: string, required: true, enum: [started, done]}
       operation: {type: string, schema: {pattern: "^[0-9a-f]{32}$"}}   # op createOperation: the id of the accepted operation

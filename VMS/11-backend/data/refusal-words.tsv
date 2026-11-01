@@ -33,6 +33,8 @@ devices	-	PARENT_MISMATCH	parentId	11.4 Н1.5: failed элемента, стат
 devices	422	NOT_SUPPORTED	recordMode	11.2, 11.3 Н4: sched
 devices	422	NOT_SUPPORTED	recordDetectorIds	11.3 Н4: разные виды
 devices	422	VALIDATION_FAILED	recordDetectorIds	11.3 Н4: не det/units, встроенный, без motion
+devices	-	VALIDATION_FAILED	folderId	11.4 Н1.7: failed, двери домена не отвечают, устройства нет
+devices	-	NOT_FOUND	folderId	11.4 Н1.7: failed, папки нет в дереве
 devices	409	DEVICE_OFFLINE	enabled	11.4 Н1.2: включение выключенной правилом, просьба без исхода
 devices	-	DEVICE_OFFLINE	enabled	11.4 Н1.2: то же, failed элемента, итог шага
 devices	422	NOT_SUPPORTED	encrypted	11.3 Н4
@@ -43,20 +45,27 @@ devices	409	BUSY	enabled	11.3 Н4: встроенный детектор, вкл
 devices	-	BUSY	enabled	11.4 Н1.5: failed элемента, статус 200
 devices	422	NOT_SUPPORTED	retentionDays	11.3 Н4
 devices	422	NOT_SUPPORTED	ip	11.3 Н4: source без сетевого хоста
+folders	403	PERMISSION_DENIED	-	11.4 Н1.7: дерево папок администратору кластера, params scope
+folders	409	SERVER_OFFLINE	-	11.4 Н1.7: двери домена папок и членства не отвечают
 folders	404	NOT_FOUND	-	11.4 Н4: no such folder, no such parent, parent gone, folder gone, parent moved, row moved стража цепочки
-folders	412	VERSION_MISMATCH	-	11.4 Н4: folder moved; current
+folders	412	VERSION_MISMATCH	-	11.4 Н4: folder moved, revision moved; current
 folders	422	VALIDATION_FAILED	deviceIds	11.4 Н4: bad member, too many folders, too many members, row too large; 11.4 Н1.7: id вне перечня вида
 folders	422	VALIDATION_FAILED	parentId	11.4 Н4: too deep
 folders	422	NAME_REQUIRED	name	11.4 Н1.7
-folders	422	NOT_SUPPORTED	<поле>	11.4 Н1.7: член папки — не единица
+folders	422	NOT_SUPPORTED	<поле>	11.4 Н1.7: член папки — не единица; чужая единица в составе
 operations	404	NOT_FOUND	-	11.4 Н4: no such operation, no operations
 operations	409	BUSY	-	11.4 Н4: root busy, operation done, operation running, nothing to retry
 devices	409	BUSY	-	11.4 Н1.8: занятый объект
 devices	-	BUSY	-	11.4 Н1.8: занятый объект, failed элемента
+devices	409	SERVER_OFFLINE	-	11.4 Н4: член цели не ok, срок исхода правки вышел (Н1.13)
+devices	412	VERSION_MISMATCH	-	11.4 Н4: исход правки conflict (Н1.13)
+devices	403	PERMISSION_DENIED	-	11.4 Н4: исход правки refused, status 403 (Н1.13)
+devices	404	NOT_FOUND	-	11.4 Н4: исход правки refused, status 404; serverId вне перечня (Н1.13)
 discovery	409	BUSY	-	11.4 Н1.9, Н4: поиск идёт
 operations	422	VALIDATION_FAILED	items	11.4 Н4: too many steps, too many operations; 11.4 Н1.8: шаг не ровно с одним из set, folderIds, create, пустой items
 operations	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.8
 operations	-	DEVICE_OFFLINE	-	11.4 Н1.8: шаг not_run, код итога шага
+operations	-	SERVER_OFFLINE	-	11.4 Н1.7: шаг folderIds, двери домена не отвечают
 operations	409	BUSY	-	11.4 Н1.12: откат: gone, reverted, running, nothing, too_large в params.reason
 operations	409	NOT_REVERTIBLE	-	11.4 Н1.12: откат: notLast, revert в params.reason
 operations	-	NOT_SUPPORTED	<слово>	11.4 Н1.12: шаг отката, refuse: volume, deleted, bound_to, secret, folderIds
@@ -72,6 +81,8 @@ rules	422	VALIDATION_FAILED	steps	11.3 Н4: preset, port, цель
 rules	422	VALIDATION_FAILED	windowSec	11.4 Н1.10
 rules	422	VALIDATION_FAILED	items	11.4 Н1.10: reorder больше BATCH_WRITES
 rules	422	VALIDATION_FAILED	log	11.4 Н1.10: log без ruleId
+rules	422	VALIDATION_FAILED	serverId	11.4 Н1.10: цели другого кластера
+rules	422	NOT_SUPPORTED	triggers	11.4 Н1.10: цели из нескольких кластеров
 schedules	409	BUILTIN	-	11.4 Н1.11: встроенное, системный режим, params.modeId
 schedules	422	NAME_REQUIRED	<поле>	11.4 Н1.11: name, items
 schedules	422	VALIDATION_FAILED	owner	11.4 Н1.11
