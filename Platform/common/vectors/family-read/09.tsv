@@ -1603,3 +1603,9 @@ c09_relay_for.003	domain/relay-for	domain/relay-for	row	writer	["domainagent"]	n
 c09_relay_for.004	domain/relay-for	domain/relay-for	row	reader	["domainagent", "<s>worker"]	null	refused	[""]	{"domainagent": [""], "<s>worker": [""]}	root null
 c09_relay_for.005	domain/relay-for	domain/relay-for	row	writer	["domainagent"]	{	refused	[""]	[]	not JSON
 c09_relay_for.006	domain/relay-for	domain/relay-for	row	reader	["domainagent", "<s>worker"]	{	refused	[""]	{"domainagent": [""], "<s>worker": [""]}	not JSON
+c09_book_want.001	domain/book-want/<sub>/<manifest:domain.books>/<раздел>	domain/book-want/testsub2/rolls/0042	row	writer	["<s>worker"]	{"at":"1760000000"}	ok	[]	[]	base
+c09_book_want.002	domain/book-want/<sub>/<manifest:domain.books>/<раздел>	domain/book-want/testsub2/rolls/0042	row	reader	["domainagent"]	{"at":"1760000000"}	ok	[]	{"domainagent": []}	base
+c09_book_want.003	domain/book-want/<sub>/<manifest:domain.books>/<раздел>	domain/book-want/testsub2/rolls/0042	row	writer	["<s>worker"]	null	refused	[""]	[]	root null
+c09_book_want.004	domain/book-want/<sub>/<manifest:domain.books>/<раздел>	domain/book-want/testsub2/rolls/0042	row	reader	["domainagent"]	null	refused	[""]	{"domainagent": [""]}	root null
+c09_book_want.005	domain/book-want/<sub>/<manifest:domain.books>/<раздел>	domain/book-want/testsub2/rolls/0042	row	writer	["<s>worker"]	{	refused	[""]	[]	not JSON
+c09_book_want.006	domain/book-want/<sub>/<manifest:domain.books>/<раздел>	domain/book-want/testsub2/rolls/0042	row	reader	["domainagent"]	{	refused	[""]	{"domainagent": [""]}	not JSON

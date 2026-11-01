@@ -1,0 +1,5 @@
+# Исходы нечитаемой строки domain/folder-units/<id>/<раздел> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	domain	строка целиком нечитаема: запись членства этой папки — 503 unavailable, ничего не записано	0	строка	P/08.5 Н1.8
+	domainconsole	строка целиком нечитаема: `GET /domain/folders/<id>/units` — 503 {error: "unavailable"}	0	строка	P/08.5 Н1.8

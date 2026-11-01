@@ -160,6 +160,7 @@ journal:      domain.forwarded {cluster, path, user, status} у пересыла
 | GET, POST | `/domain/folders` | P/08.5 Н1.8 | 5 | да |
 | PUT, DELETE | `/domain/folders/<id>` | P/08.5 Н1.8 | 5 | да |
 | GET, PUT | `/domain/memberof/<член>/<sub>/<rows>/<id>` | P/08.5 Н1.8 | 5 | да |
+| GET | `/domain/folders/<id>/units` | P/08.5 Н1.8 | 5 | нет |
 | PUT, DELETE | `/domain/<sub>/<rows>/<ref>` | 6 Н2 | 5 | да |
 | любой | `/domain/<sub>/<сегмент door.pass манифеста>[/…]` | 8 Н1.7 | 5 | да |
 | GET, POST | `/domain/users` | 9 Н2 (добавлено М11/9) | 5 | да |

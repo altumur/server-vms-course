@@ -88,6 +88,14 @@
      "url": {
       "description": "адрес входа члена из domain/servers; нет — член за NAT (Н1.4)",
       "type": "string"
+     },
+     "class": {
+      "description": "Entry.class, нет — server (P/08.1 Н1.7)",
+      "type": "string",
+      "enum": [
+       "server",
+       "camera"
+      ]
      }
     },
     "additionalProperties": false,

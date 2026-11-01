@@ -394,6 +394,39 @@ paths:
         '401': {description: Нет личности}
         '403': {description: Нет права admin}
         '404': {description: Сбора нет}
+  /domain/folders/{id}/units:
+    get:
+      summary: Единицы папки постранично (глава 8.5 Н1.8)
+      parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+      - {name: cursor, in: query, required: false, schema: {type: string}}
+      - {name: limit, in: query, required: false, schema: {type: integer, minimum: 1, maximum: 1000}}
+      responses:
+        '200':
+          description: Страница, порядок сервера, цена постоянна
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [units]
+                additionalProperties: false
+                properties:
+                  units:
+                    type: array
+                    items:
+                      type: object
+                      required: [cluster, sub, rows, id]
+                      additionalProperties: false
+                      properties:
+                        cluster: {type: string}
+                        sub: {type: string}
+                        rows: {type: string}
+                        id: {type: string}
+                  cursor: {type: string}
+        '401': {description: Нет личности}
+        '403': {description: Нет права}
+        '404': {description: Папки нет}
+        '503': {description: Строка не читается}
   /domain/batches:
     get:
       summary: Партии приёма без токена (глава 8.3 Н1.1б)
