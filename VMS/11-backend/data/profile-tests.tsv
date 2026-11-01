@@ -14,7 +14,7 @@ api-read.js	Текущий администратор и часы сервера
 api-read.js	Времена набора сдвинуты на «сейчас − capturedAt»: моменты — точно, даты — на целые сутки	out	ждёт journal[0].at набора: журнал растёт, сброс его не откатывает (V/11.6 Н1.3)
 api-read.js	Справочники: коды, без подписей	out	ждёт recordModes с sched (V/11.2 Н1.5) и вендора набора: deviceModels — файл пакета, данных нет (V/11.3 Н1.3); справочник — acceptance/4
 api-read.js	Возможности системы: объявлены в справочниках, как в наборе; обязательный минимум есть	in	-
-api-read.js	Неподдержанные вид устройства и настройки — 422 NOT_SUPPORTED, ничего не меняется	out	зовёт patchServer: вне профиля
+api-read.js	Неподдержанные вид устройства и настройки — 422 NOT_SUPPORTED, ничего не меняется	in	-
 api-read.js	Права, опции, лицензии: снимок с версией в ETag	out	зовёт getSettings: опции вне профиля (ETag опций)
 api-read.js	Журнал: новые первыми, фильтр по категории	out	ждёт длину журнала набора: журнал растёт, сброс его не откатывает (V/11.6 Н1.3); GET /journal — acceptance/4
 api-read.js	Срабатывания правила: только этого правила, новые первыми	out	ждёт ruleFires набора: журнал растёт, сброс его не откатывает (V/11.6 Н1.3); GET /rules/{id}/fires — acceptance/4 17-rules
@@ -38,7 +38,7 @@ api-hardware.js	Операция: пока идёт, её объекты не м
 api-hardware.js	Операция: папку, в которую ещё не выполненный шаг кладёт объект, удалить нельзя — 409 BUSY; переименовать можно	out	двери папок занятость не судят, предел V/11.4 Н1.8
 api-hardware.js	Операция: «Повторить неудачные» — новая операция только с неудачными шагами	out	SERVER_OFFLINE нет: шаг fail не держится (V/11.4 Н1.8); retry-failed — acceptance/4
 api-hardware.js	Операция: «Отменить» — объекты возвращаются к «до» обратной операцией, второй раз нельзя	in	-
-api-hardware.js	Операция: «Отменить» после чужой правки того же поля — шаг отката fail VERSION_MISMATCH, чужое не затирается	out	зовёт patchServer: вне профиля; чужая правка поля — acceptance/4 19-revert
+api-hardware.js	Операция: «Отменить» после чужой правки того же поля — шаг отката fail VERSION_MISMATCH, чужое не затирается	out	правит name сервера: 422 NOT_SUPPORTED (V/11.4 Н1.19); чужая правка поля — acceptance/4 19-revert
 api-domains.js	Домен: создать — 201, имя занято (без учёта регистра) — 409, пустое — 422	skip	система не умеет: createDomain
 api-domains.js	Домен: переименовать и задать лицензию — PATCH с версией; чужое имя — 409	out	зовёт patchDomain: вне профиля
 api-domains.js	Домен: удалить с переносом — серверы нераспределённые в целевом, папки, устройства, хранилища и найденное — там же	skip	система не умеет: deleteDomain
@@ -48,7 +48,7 @@ api-domains.js	Серверы: частичный успех — устарев�
 api-domains.js	Серверы: повтор с тем же idempotencyKey — тот же ответ, второй раз не выполняется	out	зовёт assignServers: вне профиля
 api-domains.js	Серверы: опрос адресов — в домене, найден, не отвечает; лишние адреса — 422	out	зовёт probeServers: вне профиля
 api-domains.js	Серверы: завести по адресу — нераспределённый в домене; тот же адрес — 409; неверный — 422	out	зовёт createServer: вне профиля
-api-domains.js	Сервер: PATCH — имя, роль и сеть (если система их умеет); неизвестная роль — 422	out	зовёт patchServer: вне профиля
+api-domains.js	Сервер: PATCH — имя, роль и сеть (если система их умеет); неизвестная роль — 422	out	правит name, роль сервера: 422 NOT_SUPPORTED (V/11.4 Н1.19)
 api-domains.js	Операция: план карточки сервера и домена; сервер без связи — fail SERVER_OFFLINE	out	ServerPatch, DomainPatch — fail NOT_SUPPORTED (V/11.4 Н1.8 п. 6)
 api-domains.js	Папка: создать корневую и вложенную; родитель в другом домене — 422	in	-
 api-domains.js	Папка: переименовать, очистить, задать состав; устройство чужого домена — 422	in	-
@@ -99,15 +99,15 @@ api-access.js	Права: защита от самоблокировки — б�
 api-access.js	Права: без версии — 428, старая — 412; состояние синхронизации от клиента не берётся	out	читает catalogs[0], каталогов нет (ADR-0094 доп. (18) п. 4); 428, 412 — acceptance/8
 api-access.js	Синхронизация каталога: сразу run, через 1,5 с ok и время; во время — 409; группа отдельно	out	зовёт syncCatalog: вне профиля
 api-read.js	Журнал: отбор по устройству, подсистеме, времени, limit; truncated и withheldCount	out	ждёт длину журнала набора: журнал растёт, сброс его не откатывает (V/11.6 Н1.3); отбор — acceptance/4 27-journal
-api-hardware.js	Операция: правка другого поля откату не мешает	out	зовёт patchServer: вне профиля; другое поле — acceptance/4 19-revert
+api-hardware.js	Операция: правка другого поля откату не мешает	out	правит ip сервера: 422 NOT_SUPPORTED (V/11.4 Н1.19); другое поле — acceptance/4 19-revert
 api-hardware.js	Одиночная правка — операция из одного шага: откат строго по стопке, с верхней	in	-
 api-hardware.js	Откат по стопке: новая правка после отмены становится верхней	in	-
 api-hardware.js	Откат одиночных правок: создание снимается, удаление и пароль — NOT_SUPPORTED, операции без шагов нет	out	удаляет камеру набора: сброс её не вернёт (V/11.6 Н1.3); пароль, удаление — acceptance/4 19-revert
 api-hardware.js	Повтор: после отмены значения возвращаются новой операцией, она снова верхняя и отменяется	in	-
 api-hardware.js	Повтор: цепочка — отменили B, затем A, повторяется сначала A, потом B	in	-
 api-hardware.js	Повтор: новая правка очищает его целиком, откат отменённого не очищает	in	-
-api-hardware.js	Повтор: чужая правка поля — шаг fail VERSION_MISMATCH, чужое цело; созданное не создаётся заново; не откатившееся не повторяется	out	зовёт patchServer: вне профиля; шаги — acceptance/4 28-redo
-api-domains.js	Метки сервера: PATCH, попадают в reference.serverLabels; детектор просит метку, сервера нет — faultText	out	зовёт patchServer: вне профиля (V/11.2 № 13)
+api-hardware.js	Повтор: чужая правка поля — шаг fail VERSION_MISMATCH, чужое цело; созданное не создаётся заново; не откатившееся не повторяется	out	правит name сервера: 422 NOT_SUPPORTED (V/11.4 Н1.19); шаги — acceptance/4 28-redo
+api-domains.js	Метки сервера: PATCH, попадают в reference.serverLabels; детектор просит метку, сервера нет — faultText	out	faultText — слово держателя; метки — acceptance/4 31-server-labels
 api-devices.js	Находки сервера: не создаются и не удаляются, 422 NOT_SUPPORTED, field: type	out	строки cam/children пишет держатель: на стенде его нет; acceptance/4 11-devices
 api-devices.js	Находки сервера: правятся только поля из writableFields, у вида без полей — field: type	out	как выше; acceptance/4 11-devices
 api-devices.js	Справочник: deviceParams не предлагает pulse, debounce, gain, vol, acodec	in	-
@@ -118,7 +118,7 @@ api-devices.js	Адрес камеры: без rtspUrl и без vendor, model �
 api-devices.js	MAC камеры — только из поиска: без candidateId не хранится, PATCH — 422 NOT_SUPPORTED	in	-
 api-devices.js	Потоки: добавить, изменить, удалить; основной — это Device.res и fps; запись ссылается на id потока	out	online — пульс, держателя на стенде нет (V/11.3 Н1.2); acceptance/4 24-streams
 api-devices.js	Разрешение: латинская x, из resOptions; нет списка — ввод руками; codec только чтение, у потока откат	out	resOptions — строка cam/devices держателя; acceptance/4 24-streams
-api-devices.js	Живое видео: адрес, токен, срок; без связи — 409 DEVICE_OFFLINE; не камера — 422	out	404 NO_ROUTE (V/11.2 № 91)
+api-devices.js	Живое видео: адрес, токен, срок; без связи — 409 DEVICE_OFFLINE; не камера — 422	out	online — пульс, шлюза на стенде нет; acceptance/4 30-live-accounts
 api-devices.js	Встроенный детектор: шаблон из detectorOptions, без них — 422; чувствительность по диапазону, нет настройки — 422	out	файла device-catalog.json у стенда нет; acceptance/4 16-record
 api-devices.js	Несовместимые детекторы: включение — 409 BUSY с params.reason, шаг операции — fail BUSY	out	файла device-catalog.json у стенда нет; чтением
 api-devices.js	Зона: rect, polygon, line в долях кадра, неверная — 422 field: zone; два детектора одного вида; stream и params серверного	out	камера из detectorOptions: файла device-catalog.json у стенда нет; acceptance/4 24-streams
@@ -134,7 +134,7 @@ api-devices.js	Профиль при добавлении: разовый выб
 api-devices.js	Метки, тревожные виды, строка записи: хранятся; состояние только чтение	out	ждёт serverLabels непустым: у сервера стенда меток нет; acceptance/4 24-streams
 api-rules.js	Правило: номер входа и выхода — из записи, расхождение с полем правила — 422 RULE_INVALID	out	строк cam/children на стенде нет: acceptance/4 17-rules
 api-rules.js	Правило: варианты уточнения входа — начало и конец тревоги, номера нет	in	-
-api-access.js	Учётки потоков: создать, пароль один раз, отключить, новый пароль, удалить	out	404 NO_ROUTE (V/11.2 № 102)
+api-access.js	Учётки потоков: создать, пароль один раз, отключить, новый пароль, удалить	out	шлюза live на стенде нет (V/11.6 Н1.1); acceptance/4 30-live-accounts
 api-assist.js	Ассистент: план на камеры, «Применить» — POST /devices/update, старый план — VERSION_MISMATCH	out	заглушка разбирает слова, у нас ход ведёт модель (V/11.7 Н5)
 api-assist.js	Ассистент: вопрос, ответ с context — план; разговор держит клиент	out	как выше
 api-assist.js	Ассистент: отказ по полю и ошибка завершают поток	out	как выше

@@ -701,12 +701,13 @@ scenario	step	request	expect
 24-streams	27	member m1 console2 @header If-Match: "$w1" PATCH /api/devices/5937be2d-dfe2-5601-b0b3-f4eba44b12f8 {"res": "1920×1080"}	422 {"code": "VALIDATION_FAILED", "field": "res"}
 24-streams	28	member m1 console2 POST /api/devices {"idempotencyKey": "str-det", "items": [{"device": {"type": "det", "name": "линия", "detectorKind": "linecross", "stream": "2", "params": "{}", "zone": {"shape": "line", "points": [[0.1, 0.1], [0.9, 0.9]]}}, "domainId": "$dom", "parentId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "folderId": null}]}	200 {"done": [{"devices": [{"id": "$d1", "zone": {"shape": "line"}, "labels": ["gpu"], "version": "$dv"}]}]}
 24-streams	29	member m1 console2 @header If-Match: "$dv" PATCH /api/devices/$d1 {"zone": {"shape": "polygon", "points": [[0, 0], [1, 1]]}}	422 {"code": "VALIDATION_FAILED", "field": "zone"}
-24-streams	30	member m1 console2 @header If-Match: "$dv" PATCH /api/devices/$d1 {"zone": {"shape": "rect", "points": [[0.2, 0.2], [0.4, 0.4]]}}	200 {"zone": {"shape": "rect"}}
-24-streams	31	member m1 console GET /det/units	200 {"configured": [{"id": "2-linecross", "mask": "@any"}]}
-24-streams	32	member m1 console2 POST /api/devices {"idempotencyKey": "str-det2", "items": [{"device": {"type": "det", "name": "линия 2", "detectorKind": "linecross"}, "domainId": "$dom", "parentId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "folderId": null}]}	200 {"failed": []}
-24-streams	33	member m1 console GET /det/units	200 {"configured": [{"id": "2-linecross"}, {"id": "2-linecross-2"}]}
-24-streams	34	member m1 console2 POST /api/devices {"idempotencyKey": "str-det3", "items": [{"device": {"type": "det", "name": "движение", "detectorKind": "motion", "zone": {"shape": "line", "points": [[0, 0], [1, 1]]}}, "domainId": "$dom", "parentId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "folderId": null}]}	200 {"failed": [{"code": "NOT_SUPPORTED", "field": "zone"}]}
-24-streams	35	@manual res вне resOptions, codec и online потока: строка cam/devices и пульс — слова держателя; faultText, recordState, recordReason, state, reason элемента extraArchives; detectorOptions, unitOptions: файл device-catalog.json	manual
+24-streams	30	member m1 console2 @header If-Match: "$dv" PATCH /api/devices/$d1 {"zone": {"shape": "rect", "points": [[0.2, 0.2], [0.4, 0.4]]}}	422 {"code": "NOT_SUPPORTED", "field": "zone"}
+24-streams	31	member m1 console2 POST /api/devices {"idempotencyKey": "str-det4", "items": [{"device": {"type": "det", "name": "зона", "detectorKind": "motion", "zone": {"shape": "rect", "points": [[0.2, 0.2], [0.4, 0.4]]}}, "domainId": "$dom", "parentId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "folderId": null}]}	200 {"failed": []}
+24-streams	32	member m1 console GET /det/units	200 {"configured": [{"id": "2-motion", "mask": "@any"}]}
+24-streams	33	member m1 console2 POST /api/devices {"idempotencyKey": "str-det2", "items": [{"device": {"type": "det", "name": "линия 2", "detectorKind": "linecross"}, "domainId": "$dom", "parentId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "folderId": null}]}	200 {"failed": []}
+24-streams	34	member m1 console GET /det/units	200 {"configured": [{"id": "2-linecross"}, {"id": "2-linecross-2"}]}
+24-streams	35	member m1 console2 POST /api/devices {"idempotencyKey": "str-det3", "items": [{"device": {"type": "det", "name": "движение", "detectorKind": "motion", "zone": {"shape": "line", "points": [[0, 0], [1, 1]]}}, "domainId": "$dom", "parentId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "folderId": null}]}	200 {"failed": [{"code": "NOT_SUPPORTED", "field": "zone"}]}
+24-streams	36	@manual res вне resOptions, codec и online потока: строка cam/devices и пульс — слова держателя; faultText, recordState, recordReason, state, reason элемента extraArchives; detectorOptions, unitOptions: файл device-catalog.json	manual
 25-ptz	1	@domain m1	ok
 25-ptz	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 25-ptz	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
@@ -719,6 +720,7 @@ scenario	step	request	expect
 25-ptz	10	member m1 console2 PUT /api/devices/3d08e8ba-11ab-5128-97e6-d03888680c2e/presets/1 {}	409 {"code": "DEVICE_OFFLINE"}
 25-ptz	11	member m1 console2 DELETE /api/devices/3d08e8ba-11ab-5128-97e6-d03888680c2e/ptz	204
 25-ptz	12	@manual живая камера: строка cam/ptz_moves со скоростью 50, продление меняет seq, DELETE снимает строку, камера останавливается не позже PTZ_LEASE; камера без ptz — 422 field ptz; preset_save, preset_clear исполнены, n вне presets — 404, отказ устройства — 409 DEVICE_REFUSED refused	manual
+25-ptz	13	@manual живая камера: PUT presets/{n} {"name": "Ворота"} — только имя: строка камеры с preset_labels, presets[].name — «Ворота», preset_save не подан, камера не движется; пустое имя снимает подпись; n вне can.presets — 404: у стенда нет пульса с can	manual
 26-unit-op	1	@domain m1	ok
 26-unit-op	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 26-unit-op	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
@@ -784,3 +786,29 @@ scenario	step	request	expect
 29-assist	6	member m1 console2 POST /api/devices {"idempotencyKey": "as-cams", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.7.1", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.7.2", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"failed": []}
 29-assist	7	member m1 console2 POST /api/assist/turns {"text": ""}	422 {"code": "VALIDATION_FAILED", "field": "text"}
 29-assist	8	@manual модели на стенде нет: ход потоком, progress, question, plan с changes, refused, error; поток кончается одним из четырёх; секрет № N в set, в changes только номер	manual
+30-live-accounts	1	@domain m1	ok
+30-live-accounts	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+30-live-accounts	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+30-live-accounts	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+30-live-accounts	5	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "$dom"}]}
+30-live-accounts	6	member m1 console2 POST /api/devices {"idempotencyKey": "la-cams", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.7.1", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.7.2", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"failed": []}
+30-live-accounts	7	member m1 console2 POST /api/devices/3d08e8ba-11ab-5128-97e6-d03888680c2e/live {"width": 0, "height": 360}	422 {"code": "VALIDATION_FAILED"}
+30-live-accounts	8	member m1 console2 POST /api/devices/3d08e8ba-11ab-5128-97e6-d03888680c2e/live {"width": 640, "height": 360}	409 {"code": "DEVICE_OFFLINE"}
+30-live-accounts	9	member m1 console2 GET /api/stream-accounts	503 {"code": "UPSTREAM_UNAVAILABLE"}
+30-live-accounts	10	member m1 console2 POST /api/stream-accounts {"name": " "}	422 {"code": "NAME_REQUIRED", "field": "name"}
+30-live-accounts	11	@manual шлюз на стенде: живая раздача — whepUrl, token, expiresAt, токен не в журнале; учётка: POST — пароль один раз, в списке и журнале его нет, занятое имя 409 NAME_TAKEN, отключить, новый пароль, удалить, повтор 404; цель не камера — 422	manual
+31-server-labels	1	@domain m1	ok
+31-server-labels	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+31-server-labels	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+31-server-labels	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+31-server-labels	5	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "$dom"}]}
+31-server-labels	6	member m1 console2 GET /api/servers	200 {"items": [{"id": "$srv", "version": "$s1"}]}
+31-server-labels	7	member m1 console2 PATCH /api/servers/$srv {"labels": ["hall"]}	428 {"code": "PRECONDITION_REQUIRED"}
+31-server-labels	8	member m1 console2 @header If-Match: "$s1" PATCH /api/servers/$srv {"role": "standby"}	422 {"code": "NOT_SUPPORTED", "field": "role"}
+31-server-labels	9	member m1 console2 @header If-Match: "$s1" PATCH /api/servers/$srv {"name": "x"}	422 {"code": "NOT_SUPPORTED", "field": "name"}
+31-server-labels	10	member m1 console2 @header If-Match: "$s1" PATCH /api/servers/$srv {"labels": ["hall"]}	200 {"labels": ["hall"], "version": "$s2"}
+31-server-labels	11	member m1 console2 @header If-Match: "$s1" PATCH /api/servers/$srv {"labels": ["old"]}	412 {"code": "VERSION_MISMATCH"}
+31-server-labels	12	member m1 console2 GET /api/reference	200 {"serverLabels": ["hall"]}
+31-server-labels	13	member m1 console2 GET /api/operations	200 {"items": []}
+31-server-labels	14	member m1 console2 @header If-Match: "$s2" PATCH /api/servers/$srv {"labels": null}	200 {"labels": "@absent"}
+31-server-labels	15	@manual сервер другого кластера, стучащийся — 422 field type: стенд из одного члена	manual

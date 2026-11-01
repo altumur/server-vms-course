@@ -54,7 +54,7 @@ door:
     # A stream goes to the client as it comes, without the 4 MiB limit; its ticket — reads, /changes, the model's route.
     stream: [api/stream, api/assist/turns]
     # Longer than PASS_WAIT, the longest covering key wins; api/assist/turns — ASSIST_TURN_MAX (V/11.7 Н1.5).
-    wait: {api/domains: 15, api/servers: 15, api/archives: 15, api/volumes: 15, api/objects/delete: 30, api/devices: 30, api/folders: 30, api/operations: 30, api/access: 30, api/rules: 30, api/schedules: 30, api/day-groups: 30, api/modes: 30, api/maintenance-windows: 30, api/test: 120, api/assist/turns: 7500}
+    wait: {api/domains: 15, api/servers: 15, api/archives: 15, api/volumes: 15, api/stream-accounts: 15, api/objects/delete: 30, api/devices: 30, api/folders: 30, api/operations: 30, api/access: 30, api/rules: 30, api/schedules: 30, api/day-groups: 30, api/modes: 30, api/maintenance-windows: 30, api/test: 120, api/assist/turns: 7500}
     # The console's own refusals on api are `Problem` (question 5).
     refusals:
       form: problem
@@ -78,6 +78,9 @@ door:
       - GET cam/rule_state           # on guard, off by a rule: the holder's words, read only (V/11.3 Н1.3; V/01.4 Н1.4д)
       - cam/requests                 # `disable` with a past term (V/11.4 Н1.2), presets (Н1.16), a unit's command (Н1.17)
       - cam/ptz_moves                # the lease of a move: the table, a person's edit on the camera (V/11.4 Н1.16)
+      - GET live/where               # the gateway's address and token for a person's live view (V/11.4 Н1.15; ADR-0112 доп. (1))
+      - live/accounts                # the gateway's door of stream accounts: the password passes once, to no journal or row (V/11.4 Н1.18)
+      - servers/labels               # PUT, DELETE of a server's labels (V/11.4 Н1.19)
       - cam/searches                 # a search of the cluster, one row: start and stop (V/11.4 Н1.9, V/01.8)
       - cam/found                    # what it found; a created candidate's row goes
       - cam/probes                   # «which model», a question to every server (V/01.8 Н1.3)

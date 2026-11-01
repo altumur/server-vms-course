@@ -17,7 +17,7 @@ n	method	path	profile	why
 10	POST	/servers/probe	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 11	POST	/servers/assign	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 12	GET	/servers/{serverId}	in	переводится (V/11.2)
-13	PATCH	/servers/{serverId}	out	404 NO_ROUTE (V/11.2 № 13): запись меток вне перечня обратного вызова; тест, который зовёт операцию, вне профиля
+13	PATCH	/servers/{serverId}	in	только labels (V/11.4 Н1.19; ADR-0112 доп. (1))
 14	GET	/devices	in	переводится (V/11.2)
 15	POST	/devices	in	переводится (V/11.2)
 16	POST	/devices/update	in	переводится (V/11.2)
@@ -95,7 +95,7 @@ n	method	path	profile	why
 88	POST	/access/apply	in	переводится (V/11.8)
 89	POST	/access/catalogs/{catalogId}/sync	out	404 NO_ROUTE: каталогов нет (ADR-0098 §8); тест вне профиля
 90	POST	/assist/turns	in	переводится (V/11.7)
-91	POST	/devices/{deviceId}/live	out	404 NO_ROUTE (V/11.2 № 91): обе формы /where вне перечня обратного вызова
+91	POST	/devices/{deviceId}/live	in	переводится (V/11.4 Н1.15; ADR-0112 доп. (1))
 92	POST	/devices/{deviceId}/operations/{operation}	in	переводится (V/11.4 Н1.17)
 93	PUT	/devices/{deviceId}/presets/{n}	in	переводится (V/11.4 Н1.16)
 94	DELETE	/devices/{deviceId}/presets/{n}	in	переводится (V/11.4 Н1.16)
@@ -106,8 +106,8 @@ n	method	path	profile	why
 99	PATCH	/devices/{deviceId}/streams/{streamId}	in	переводится (V/11.4 Н1.15)
 100	GET	/operations	in	переводится (V/11.4 Н1.12)
 101	POST	/operations/{operationId}/redo	in	переводится (V/11.4 Н1.12; ADR-0106 доп. (4))
-102	POST	/stream-accounts	out	404 NO_ROUTE (V/11.2 № 102): /live/accounts вне перечня обратного вызова
-103	GET	/stream-accounts	out	как № 102
-104	DELETE	/stream-accounts/{name}	out	как № 102
-105	PATCH	/stream-accounts/{name}	out	как № 102
-106	POST	/stream-accounts/{name}/password	out	как № 102
+102	POST	/stream-accounts	in	переводится (V/11.4 Н1.18; ADR-0112 доп. (1))
+103	GET	/stream-accounts	in	переводится (V/11.4 Н1.18; ADR-0112 доп. (1))
+104	DELETE	/stream-accounts/{name}	in	переводится (V/11.4 Н1.18; ADR-0112 доп. (1))
+105	PATCH	/stream-accounts/{name}	in	переводится (V/11.4 Н1.18; ADR-0112 доп. (1))
+106	POST	/stream-accounts/{name}/password	in	переводится (V/11.4 Н1.18; ADR-0112 доп. (1))

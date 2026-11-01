@@ -18,8 +18,9 @@ Server	allocated	—	true	const	сервер в кластере; стучащи
 Server	telemetry	—	{}	const	телеметрия — ADR-0094 C (пульс ресурса)
 Server	gpu	—	null	const
 Server	disks	GET /servers + GET /domain	disks первого по имени слота услышанного регистратора сервера; чужой — pulse.rec.disks элемента; нет — []	read	disk, sizeBytes, system (ADR-0111 п. 2; V/02.4)
-Server	labels	GET /servers	labels элемента	read	чужой — поля нет; запись вне перечня обратного вызова, V/11.2 № 13
-Server	version	GET /servers + GET /domain	SHA-256 hex канонического JSON disks; disks пуст — "1"	read	из видимых полей меняются только disks (online — связь); тот же набор дисков возвращает прежнее значение, предел V/11.3 Н1.3
+Server	labels	GET /servers	labels элемента	both	чужой — поля нет; запись — PUT, DELETE /servers/<имя>/labels (V/11.4 Н1.19)
+ServerPatch	name, ip, port, role, netmask, gateway, dns	—	—	none	422 NOT_SUPPORTED, field этого поля (V/11.4 Н1.19)
+Server	version	GET /servers + GET /domain	SHA-256 hex канонического JSON disks и labels; оба пусты — "1"	read	из видимых полей меняются disks, labels (online — связь); тот же набор дисков возвращает прежнее значение, предел V/11.3 Н1.3
 Server	netmask, gateway, dns	—	—	none	сеть сервера не у консоли (features без serverNetwork)
 Server(knocking)	—	GET /domain	элемент knocking	read	стучащийся, ещё не член (ADR-0110 доп. (6)); только зрителю домена; fingerprint в Server закрыт, ждёт контракта
 Server(knocking)	id	GET /domain	UUID server:<name>/	read
@@ -409,7 +410,7 @@ Reference	capabilities.writableFields	—	{"channel":[],"storage":[],"mic":["nam
 Reference	eventKinds	—	["motion", "linecross", "lpr", "silent", "io.input", "text", "unit"]	const	варианты Device.alarmKinds: виды cam (V/01.2 Н1.5), det (V/04.2)
 Reference	serverLabels	GET /servers	метки серверов по порядку байтов без server:*	read	отказ чтения — [], строка лога
 Reference	ruleTriggers	—	[{"source":"vms","kind":"io.input","match":[{"id":"value","options":["active","normal"]}]},{"source":"vms","kind":"text","deviceTypes":["eventsrc"],"match":[{"id":"word","options":[]}]},{"source":"vms","kind":"unit","deviceTypes":["acfa_sensor","acfa_lock","acfa_fence","relay","acfa"],"match":[{"id":"word","options":[]}]},{"source":"det","kind":"motion","match":[]},{"source":"det","kind":"linecross","match":[]},{"source":"det","kind":"lpr","match":[]},{"source":"vms","kind":"silent","match":[]},{"source":"rec","kind":"segment.lost","match":[]}]	const	что исполняет вычислитель (V/11.2 Н1.5)
-Reference	ruleActions	—	[{"source":"vms","action":"arm","deviceTypes":["camera"],"fields":[{"id":"target"}]},{"source":"vms","action":"disarm","deviceTypes":["camera"],"fields":[{"id":"target"}]},{"source":"vms","action":"preset","deviceTypes":["camera"],"fields":[{"id":"target"},{"id":"preset"}]},{"source":"rec","action":"record","deviceTypes":["camera"],"fields":[{"id":"target"},{"id":"duration","options":["min"],"optional":true},{"id":"minutes"},{"id":"archive","optional":true}]},{"source":"vms","action":"disable","deviceTypes":["camera"],"fields":[{"id":"target"},{"id":"minutes"}]},{"source":"alarm","action":"alarm","deviceTypes":["camera"],"fields":[{"id":"target"},{"id":"priority","options":["normal","high"],"optional":true},{"id":"text","optional":true}]},{"source":"vms","action":"output","deviceTypes":["relay"],"fields":[{"id":"target"},{"id":"pulseMs"}]},{"source":"rule","action":"runrule","deviceTypes":[],"fields":[{"id":"ruleId"}]},{"source":"vms","action":"unit","deviceTypes":["acfa_sensor","acfa_lock","acfa_fence","relay","controller"],"fields":[{"id":"target"},{"id":"operation"}]}]	const	email, tg, http, layout, wall, alarmclose не объявляются: предмета нет (ADR-0102 п. 9); duration event — конца события нет
+Reference	ruleActions	—	[{"source":"vms","action":"arm","deviceTypes":["camera"],"fields":[{"id":"target"}]},{"source":"vms","action":"disarm","deviceTypes":["camera"],"fields":[{"id":"target"}]},{"source":"vms","action":"preset","deviceTypes":["camera"],"fields":[{"id":"target"},{"id":"preset"}]},{"source":"rec","action":"record","deviceTypes":["camera"],"fields":[{"id":"target"},{"id":"duration","options":["min"],"optional":true},{"id":"minutes"},{"id":"archive","optional":true}]},{"source":"vms","action":"disable","deviceTypes":["camera"],"fields":[{"id":"target"},{"id":"minutes"}]},{"source":"alarm","action":"alarm","deviceTypes":["camera"],"fields":[{"id":"target"},{"id":"priority","options":["normal","high"],"optional":true},{"id":"text","optional":true}]},{"source":"vms","action":"output","deviceTypes":["relay"],"fields":[{"id":"target"},{"id":"pulseMs"}]},{"source":"rule","action":"runrule","deviceTypes":[],"fields":[{"id":"ruleId"}]},{"source":"vms","action":"unit","deviceTypes":["acfa_sensor","acfa_lock","acfa_fence","relay","acfa"],"fields":[{"id":"target"},{"id":"operation"}]}]	const	email, tg, http, layout, wall, alarmclose не объявляются: предмета нет (ADR-0102 п. 9); duration event — конца события нет
 Reference	ruleConditions	—	[{"kind":"time","deviceTypes":[]},{"kind":"mode","deviceTypes":[]},{"kind":"armed","deviceTypes":["camera"]},{"kind":"recording","deviceTypes":["camera"]},{"kind":"online","deviceTypes":["camera","sensor","relay"]}]	const	online, recording, armed — состояние в момент решения (ADR-0105 п. 3)
 Reference	ruleControls	—	[{"control":"wait","branches":[]},{"control":"waitEvent","branches":["yes","no"]}]	const	ask, escalate не объявляются: двери ответа нет
 Reference	layouts, monitors	—	[]	const	раскладок клиента и видеостены нет
@@ -449,7 +450,8 @@ PresetWrite	name	—	—	none	не читается: имя только из д
 PtzMove	pan, tilt, zoom, focus	cam/ptz_moves	значение × 100, до целого	write	V/11.4 Н1.16; нет поля — 0
 PtzMove	ttlSec	—	—	write	только expiresAt ответа: срок держателя PTZ_LEASE (V/11.4 Н1.16)
 PtzLease	expiresAt	—	сейчас + ttlSec	read
-LiveRequest, LiveResult	—	—	—	none	операция не объявлена, V/11.2 № 91
+LiveRequest	width, height	—	?width=<ш>&height=<в> whepUrl	write	V/03.3 Н1.2
+LiveResult	whepUrl, token, expiresAt	GET /live/where/<cam>	door: <url>/whep/<cam>, token, expires	read	токен в журнал и строки не попадает (V/11.4 Н1.15)
 DetectorOption	template	device-catalog.json	detectors[].template	read
 DetectorOption	name, kind	detector-kinds.tsv	name, kind по driver, template; нет — template, other	read
 DetectorOption	sensitivityMin, sensitivityMax	device-catalog.json	range	read	нет range — полей нет: настройки нет
@@ -462,8 +464,9 @@ UnitOption	properties	—	—	none	свойства кроме address держ�
 ExtraArchive	archiveId, recordMode, stream	rec/recordings	см. Device(type=camera) extraArchives	both
 ExtraArchive	labels	rec/recordings	labels	both
 ExtraArchive	state, reason	rec/heartbeats	phase, reason элемента status[] записи	read	в версию не входят
-StreamAccount	name, disabled, at, by	live/accounts	те же поля	both	не объявлена, V/11.4 Н1.18
-StreamAccountSecret	name, password	POST /live/accounts	account.name, password	read	не объявлена, V/11.4 Н1.18
+StreamAccount	name, disabled, at, by	live/accounts	те же поля	both	дверь шлюза, V/11.4 Н1.18
+StreamAccountSecret	name, password	POST /live/accounts	account.name, password	read	пароль один раз, в журнал и строку не попадает (V/11.4 Н1.18)
+StreamAccountCreate, StreamAccountPatch	name, disabled	live/accounts	name, disabled	write	V/11.4 Н1.18
 AssistTurnRequest	text, context, secrets	—	V/11.7 Н1.1	write	состояния у backend нет
 AssistEvent	type, at, text, context, summary, items, field, code, message	—	V/11.7 Н1.4	read
 AssistPlanItem	deviceId, version, set, name, changes	—	V/11.7 Н1.3	read

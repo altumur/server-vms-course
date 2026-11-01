@@ -73,6 +73,11 @@ devices	409	DEVICE_REFUSED	-	11.4 Н1.16, Н1.17: noOperation, refused в params
 devices	409	DEVICE_OFFLINE	-	11.4 Н1.16, Н1.17: нет связи, просьба без исхода
 devices	422	NOT_SUPPORTED	streamId	11.4 Н1.15: основной поток
 devices	422	NOT_SUPPORTED	ptz	11.4 Н1.16: камера без ptz
+devices	422	NOT_SUPPORTED	<поле>	11.4 Н1.19: поле ServerPatch кроме labels
+devices	422	VALIDATION_FAILED	labels	11.4 Н1.19: метка не по азбуке
+access	422	NAME_REQUIRED	name	11.4 Н1.18: учётка без имени
+access	422	VALIDATION_FAILED	name	11.4 Н1.18: bad name
+access	404	NOT_FOUND	-	11.4 Н1.18: no such account
 devices	422	VALIDATION_FAILED	stream	11.3 Н4, 11.4 Н1.15: поток не из Device.streams, занят
 devices	422	VALIDATION_FAILED	res	11.3 Н4: вне resOptions
 devices	422	VALIDATION_FAILED	zone	11.3 Н4: зона не по форме
