@@ -52,7 +52,7 @@ folders	412	VERSION_MISMATCH	-	11.4 Н4: folder moved, revision moved; current
 folders	422	VALIDATION_FAILED	deviceIds	11.4 Н4: bad member, too many folders, too many members, row too large; 11.4 Н1.7: id вне перечня вида
 folders	422	VALIDATION_FAILED	parentId	11.4 Н4: too deep
 folders	422	NAME_REQUIRED	name	11.4 Н1.7
-folders	422	NOT_SUPPORTED	<поле>	11.4 Н1.7: член папки — не единица; чужая единица в составе
+folders	422	NOT_SUPPORTED	<поле>	11.4 Н1.7: член папки — не единица
 operations	404	NOT_FOUND	-	11.4 Н4: no such operation, no operations
 operations	409	BUSY	-	11.4 Н4: root busy, operation done, operation running, nothing to retry
 devices	409	BUSY	-	11.4 Н1.8: занятый объект

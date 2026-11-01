@@ -134,11 +134,15 @@ door:
       - GET domain/auto/tables/day_groups
       - GET domain/auto/tables/windows
       - GET domain/at/auto/versions  # beyond the view: the console of the target's cluster (ADR-0111 п. 15; V/11.3 Н1.2а)
+      - domain/edits                 # a kept edit of another member's row, one device a line (V/11.4 Н1.13)
+      - domain/members               # taking a box in, leaving out (V/11.4 Н1.14): the domain's admin is judged
+      - domain/placement             # the recorder of a camera (V/11.4 Н1.14)
       - GET domain/users             # the snapshot of rights (V/11.8 Н1.1)
       - GET domain/groups
       - GET domain/roles
       - GET domain/grants
-      - domain/batch                 # people, groups, roles in one batch, the rows of rights a batch per cluster (V/11.8 Н1.5)
+      - domain/batch                 # people, groups, roles in one batch, the rows of one cluster a batch (V/11.8 Н1.5)
+      - domain/roles/lines           # a role's rights on the whole domain: the source the rows spread from (V/11.8 Н1.5; ADR-0111 п. 16)
       - backend/repeats              # its own table: the memory of repeats of a group key (V/11.4 Н1.4)
       - backend/people               # its own table: the id of a person (V/11.8 Н1.2)
       - backend/history              # its own table: the history of the rights screen (V/11.8 Н1.7)

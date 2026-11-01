@@ -558,7 +558,7 @@ domain:
   # What the domain's door lets through in a member's camera: whatever a backend on another member writes of a device
   # (ADR-0110, V/11.4 Н1.13); `type` for a new row, `ref` — the camera's name in the domain. A kept edit is applied by the
   # member's agent and judged by the member's console, by the person who asked.
-  edit: [name, type, ref, source, enabled, priority, labels, alarms, cred_username, short, lat, lon, azimuth, mac, camera, words, overlay_delay_ms, overlay_duration_sec, resolution, fps]
+  edit: [name, type, main, ref, source, profile, enabled, priority, labels, alarms, cred_username, short, lat, lon, azimuth, mac, camera, words, overlay_delay_ms, overlay_duration_sec, resolution, fps]
   # A row of a table is written whole, so each list is all its fields (P/02.1, link 152).
   edit_tables:
     child_settings: [camera, type, number, title, enabled, norm]
