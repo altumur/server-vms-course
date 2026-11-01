@@ -67,7 +67,7 @@ scenario	step	request	expect
 07-requests	3	POST /requests {"unit": "$s", "action": "retry", "fire": "$s-at-1800000000"}	202 {"queued": "@any"}
 07-requests	4	POST /requests {"unit": "$s", "action": "reboot"}	400 {"error": "@any"}
 07-requests	5	POST /requests {"unit": "$s", "action": "run", "port": 1}	400 {"error": "@any"}
-07-requests	6	POST /rule_marks {"scenario": "$s", "mute": {"since": 1760000000, "until": 1760003600, "by": "admin", "reason": "работы"}, "order": 3}	201 {"order": 3, "mute": {"by": "admin", "until": 1760003600}}
+07-requests	6	POST /rule_marks {"scenario": "$s", "mute": {"since": 1760000000, "until": 1760003600, "by": "admin", "reason": "работы"}, "order": 3}	201 {"row": {"order": 3, "mute": {"by": "admin", "until": 1760003600}}}
 07-requests	7	GET /scenarios/$s	200 {"revision": 1}
 07-requests	8	POST /chains {"target": "$s", "f": "00000000000000000000000000000000", "i": "0", "firing": "x", "level": 2, "moment": 1760000000, "started_by": "manual"}	403 {"error": "denied"}
 07-requests	9	POST /answers {"scenario": "$s", "fire": "f1", "step": "0", "user": "admin", "answer": "yes"}	2xx
@@ -86,3 +86,7 @@ scenario	step	request	expect
 08-run	12	@manual стенд приёмки 1 без воркеров: runrule: строка auto/chains/<target>-<f>-<i> записана один раз, цель запускается, taken стоит, повтор сработки — та же строка; allow_chain false — шаг fail chain.forbidden; уровень 6 — chain.max; приглушённая цель — fired skip	manual
 08-run	13	@manual стенд приёмки 1 без воркеров: приглушение на ожидании: строка rule_marks записана, revision сценария прежняя, запуск дошёл до конца, since не сдвинут; строка rule_marks нечитаема — проверка cond.unread, сработка не идёт	manual
 08-run	14	@manual рестарт держателя после ветки yes в пределах JOURNAL_BACK: сработка решена по done, ветки no нет; простой дольше JOURNAL_BACK: событие wait_event найдено, ветка yes; запуск из очереди: срок просьбы от начала: стенд без воркеров	manual
+08-run	15	@manual then [wait_event{yes, no}, c]: после ветки подан c; падение после записи ветки, до её первого шага: новый держатель идёт той же веткой, строка, легшая позже, ветку не меняет, срок просьбы тот же: стенд без воркеров	manual
+08-run	16	@manual цель-папка из одной камеры стала из двух, повтор сработки: той камере имя просьбы то же, again; элемент-камера с port и ребёнок relay того же номера — одна просьба; exclude камеры детей не вычитает: стенд без воркеров	manual
+08-run	17	@manual ask: ответ до срока — конец ожидания at, срок просьбы от него; нет ответа — ветка default, конец until; log_only: ждёт sec, строки ответа не читаются. escalate stop reset: событие open тех же cam и port кончает ожидание; run без события — конец по сроку; levels пусты — refused: стенд без воркеров	manual
+08-run	18	@manual runrule: падение между строкой runs цели и taken: второго запуска нет, taken стоит; цель в очереди — taken стоит; строка цепочки до правки цели, moment раньше since: fired skip chain.off, taken: стенд без воркеров	manual

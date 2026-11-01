@@ -1,1 +1,3 @@
 date	sample	fix	languages
+2026-11-01	6/scenarios.tsv: 01-tables шаг 10	элемент items — name, не title: title — поле строки таблицы, схема элемента своя; проба V/07, стыки 1	all
+2026-11-01	6/scenarios.tsv: 02-history шаги 3, 4	user обязателен и входит в ключ answers: без него 400 раньше проверяемого слова; проба V/07, стыки 2	all

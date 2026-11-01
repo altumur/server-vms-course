@@ -68,7 +68,7 @@ unit:
             kind:  {type: string, minLength: 1}
             unit:  {type: [string, integer], minLength: 1, pattern: "^[^/]+$", minimum: 0, maximum: 9007199254740991}
             match: {type: object}
-            target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
+            target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, child, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
     # The correlation window, in seconds. That two triggers need it and one refuses it is the evaluator's to say (a
     # scenario's two fields together); how large it may be is the schema's.
     within:          {type: int,    default: 0, schema: {minimum: 0, maximum: 3600}}
@@ -86,7 +86,7 @@ unit:
             kind:     {enum: [time, mode, armed, recording, online]}
             schedule: {type: string}                          # time: a row of `schedules`
             modes:    {type: array, items: {type: string}}    # mode: ids of `modes.items`
-            target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
+            target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, child, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
             value:    {type: boolean}                         # armed
     # THEN: the steps of a run, a tree, each step one of the shapes below: a request to a camera's holder, which has an
     # owner who performs it and a `valid_until` after which it is not performed; a row ordered for a while — a recording,
@@ -113,7 +113,7 @@ unit:
                 sub: {const: cam}
                 action: {const: output}
                 unit: {type: [string, integer], maximum: 9007199254740991}
-                target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
+                target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, child, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
                 port: {type: integer, minimum: 1, maximum: 9007199254740991}
                 state: {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
                 pulse_ms: {type: integer, minimum: 0, maximum: 9007199254740991}
@@ -127,9 +127,9 @@ unit:
                 sub: {const: cam}
                 action: {const: preset}
                 unit: {type: [string, integer], maximum: 9007199254740991}
-                target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
+                target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, child, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
                 n: {type: integer, minimum: 1, maximum: 9007199254740991}
-            # `duration: event`, `after_sec`: kept as data; the journal has no end of an event, the evaluator refuses them (V/07.3)
+            # `duration`, `after_sec`: kept as data; the journal has no end of an event, so `duration: event` is refused by the evaluator (V/07.3)
             - type: object
               required: [sub, action]
               additionalProperties: false
@@ -140,7 +140,7 @@ unit:
                 sub: {const: rec}
                 action: {const: record}
                 cam: {type: [string, integer], maximum: 9007199254740991}
-                target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
+                target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, child, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
                 minutes: {type: number, minimum: 1, maximum: 1440}
                 archive: {type: string}
                 duration: {enum: [min, event]}
@@ -155,7 +155,7 @@ unit:
                 sub: {const: det}
                 action: {const: detect}
                 cam: {type: [string, integer], maximum: 9007199254740991}
-                target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
+                target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, child, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
                 kind: {type: string}
                 minutes: {type: number, minimum: 1, maximum: 1440}
                 params: {type: string}   # as the owner has it (det, detjob: string; V/08 review, question 4)
@@ -169,7 +169,7 @@ unit:
                 sub: {const: det}
                 action: {const: scan}
                 cam: {type: [string, integer], maximum: 9007199254740991}
-                target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
+                target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, child, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
                 kind: {type: string}
                 before: {type: number, minimum: 0, maximum: 3600}
                 after: {type: number, minimum: 0, maximum: 3600}
@@ -186,7 +186,7 @@ unit:
                 sub: {const: cam}
                 action: {enum: [arm, disarm]}
                 unit: {type: [string, integer], maximum: 9007199254740991}
-                target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
+                target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, child, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
             - type: object
               required: [sub, action]
               additionalProperties: false
@@ -197,7 +197,7 @@ unit:
                 sub: {const: cam}
                 action: {const: disable}
                 unit: {type: [string, integer], maximum: 9007199254740991}
-                target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
+                target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, child, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
                 minutes: {type: integer, minimum: 1, maximum: 1440}
             # a line of class alarm of `auto` (V/07.4), and another scenario run from this one
             - type: object
@@ -206,7 +206,7 @@ unit:
               properties:
                 sub: {const: auto}
                 action: {const: alarm}
-                target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
+                target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, child, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
                 text: {type: string}
                 priority: {enum: [normal, high]}
             - type: object
@@ -244,7 +244,7 @@ unit:
                     kind:  {type: string, minLength: 1}
                     unit:  {type: [string, integer], minLength: 1, pattern: "^[^/]+$", minimum: 0, maximum: 9007199254740991}
                     match: {type: object}
-                    target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
+                    target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, child, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
                 sec: {type: integer, minimum: 0}
                 "yes": {type: array, items: {type: object, properties: {"yes": {type: array, items: {type: object, properties: {"yes": {maxItems: 0}, "no": {maxItems: 0}}}}, "no": {type: array, items: {type: object, properties: {"yes": {maxItems: 0}, "no": {maxItems: 0}}}}}}}
                 "no": {type: array, items: {type: object, properties: {"yes": {type: array, items: {type: object, properties: {"yes": {maxItems: 0}, "no": {maxItems: 0}}}}, "no": {type: array, items: {type: object, properties: {"yes": {maxItems: 0}, "no": {maxItems: 0}}}}}}}
@@ -299,7 +299,6 @@ unit:
     created_by:      {type: string}
     changed_at:      {type: float}
     changed_by:      {type: string}
-    history_note:    {type: json, schema: {type: [object, "null"], required: [code], additionalProperties: false, properties: {code: {enum: [restore, undo]}, params: {type: object}}}}
     # `record`: a scenario `backend` keeps for a camera's `recordMode` (ADR-0111 п. 4); the list of rules does not show it.
     hidden:          {type: string, enum: ["", record], default: ""}
   # How far the evaluator has read the cluster's log for this scenario, from which `t` it looks at all, and since when the
@@ -441,8 +440,8 @@ tables:
       number:   {type: int, required: true, schema: {minimum: 1}}
       note:     {type: json, schema: {type: [object, "null"], required: [code, params], additionalProperties: false, properties: {code: {type: string}, params: {type: object}}}}
       rule:     {type: string, required: true}
-  # An operator's answer to `ask` and the acknowledgement of `escalate`: the evaluator reads it; the contract has no door
-  # for it, so `backend` writes none yet.
+  # An operator's answer to `ask` and the acknowledgement of `escalate`: the evaluator reads it; `backend` writes it by a door
+  # the contract does not have yet (V/11.4 Н1.10), the door of tables too.
   # An operator answers: `view` on the scenario, the step's role is the evaluator's to judge by `by` (V/07.6 Н1.9).
   answers:
     key: "{scenario}-{fire}-{step}-{user}"
@@ -513,7 +512,6 @@ display:
     created_by: Кем создан
     changed_at: Изменён
     changed_by: Кем изменён
-    history_note: Пометка версии
     hidden: Скрыт
 placement:
   # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
@@ -549,12 +547,14 @@ rights:
   unit_of: {versions: scenario, answers: scenario, rule_marks: scenario, chains: target}
   names:
     - {field: when, unit: unit, sub: sub}
-    - {field: when, at: "target.include[]", unit: id, kind: kind, kinds: {device: {of: cam}, folder: {folder: true}, server: {server: true}}}
+    - {field: when, at: "target.include[]", unit: id, kind: kind, kinds: {device: {of: cam}, child: {of: cam, table: children}, folder: {folder: true}, server: {server: true}}}
     # Read from each step and each branch node; a step that names nothing — `wait`, `ask`, an `alarm` — gives no `*`.
     - {field: then, unit: unit, sub: sub, action: action, walk: ["yes", "no"], quiet: [control, text]}
     - {field: then, unit: cam, of: cam, action: action, walk: ["yes", "no"], quiet: [control, text]}
     - {field: then, unit: rule, of: auto, walk: ["yes", "no"], quiet: [control, text]}
-    - {field: then, at: "target.include[]", unit: id, kind: kind, kinds: {device: {of: cam}, folder: {folder: true}, server: {server: true}}, walk: ["yes", "no"], quiet: [control, text]}
+    - {field: then, at: "target.include[]", unit: id, kind: kind, kinds: {device: {of: cam}, child: {of: cam, table: children}, folder: {folder: true}, server: {server: true}}, action: action, walk: ["yes", "no"], quiet: [control, text]}
+    - {field: then, at: event, unit: unit, sub: sub, walk: ["yes", "no"], quiet: [control, text]}
+    - {field: then, at: "event.target.include[]", unit: id, kind: kind, kinds: {device: {of: cam}, child: {of: cam, table: children}, folder: {folder: true}, server: {server: true}}, walk: ["yes", "no"], quiet: [control, text]}
 snapshot: [name, enabled]
 # A person asks the evaluator of a scenario to run it, or to do again the failed steps of a firing (`fire`, V/07.4): the
 # mechanism of requests (P/06.4), the holder is the evaluator.
@@ -566,7 +566,7 @@ requests:
     properties:
       unit:        {type: string}
       action:      {enum: [run, retry]}
-      fire:        {type: string, minLength: 1, maxLength: 200}
+      fire:        {type: string, minLength: 1}   # a firing's name carries an event's id, longer than a request's name may be
       valid_until: {type: number}
   valid_for: 30
   most_valid: 600

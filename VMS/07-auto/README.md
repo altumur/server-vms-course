@@ -19,7 +19,7 @@
 
 | Глава | Что нормирует | Прежние шаги | Платформа |
 |---|---|---|---|
-| V/07.1 | Сценарий — единица и язык: ключ-номер, поля (`start`, `run_at`, `when` — до 4 триггеров `{sub, kind, unit?, target?, match?}`, `within`, `conditions`, `then` — до 4 шагов: действия и шаги хода, ветки до двух уровней, `rate_per_minute`, `valid_for`, `enabled`, `labels`, `log_only`, `mute`, `order`, данные страницы), цель `target`, каталог шагов = схема `then`, `rights` (`cluster_rows`, `names`), размещение, снимок, отказы формы у двери | М10B/25 шаги 1–4, 8 (`rights`); М10B/12 шаг 12 (смысл) | P/02.1; P/06.1 Н1.2 (схема поля); договор gate-and-pass; P/04 Н1.3 |
+| V/07.1 | Сценарий — единица и язык: ключ-номер, поля (`start`, `run_at`, `when` — до 4 триггеров `{sub, kind, unit?, target?, match?}`, `within`, `conditions`, `then` — до 4 шагов: действия и шаги хода, ветки до двух уровней, `rate_per_minute`, `valid_for`, `enabled`, `labels`, `log_only`, данные страницы), цель `target`, каталог шагов = схема `then`, `rights` (`cluster_rows`, `names`), размещение, снимок, отказы формы у двери | М10B/25 шаги 1–4, 8 (`rights`); М10B/12 шаг 12 (смысл) | P/02.1; P/06.1 Н1.2 (схема поля); договор gate-and-pass; P/04 Н1.3 |
 | V/07.2 | Вычислитель — вопрос к журналу: что смотреть (`wants`), сработка по завершающему событию и окну, `occurred` против `t`, `JOURNAL_SETTLE`, сводки подавления не срабатывают, отсечённое — не доказательство; курсор `unit.state.cursor`, полное окно, `COLD_START`, долгий опрос | М10B/25 шаги 5, 6, 10; М10B/11 шаг 6 | P/05 Н1.3, Н1.6; P/06.4 Н1.3; P/03.6 Н1.7; P/03.3 |
 | V/07.3 | Соответствие и отказы: смысл сценария против того, что умеют камеры (`can`, `cam/devices`) и какие детекторы есть; `refused`, `unfit`, `unchecked`, нечитаемая строка — беда одного; тексты отказов | М10B/25 шаги 3 (смысл), 4а | V/01.4 Н1.4; V/04.1 |
 | V/07.4 | Действия: просьба `cam` (`output`, `preset`; срок `occurred + valid_for`, штампы); заказы — детектор на время (`worker.creates` к `det`, основа — детектор оператора, второй не заводится), скан (`worker.creates` к `detjob`, окно `before`/`after`, `alarms`, `mask_of`), запись на время (`worker.creates` к `rec`); потолки `rate_per_minute`, `PER_PASS`; пульс, ряды, события `fired`, `suppressed` | М10B/25 шаги 7, 8, 9; «Что может пойти не так» | P/03.6 Н1.5, Н1.6; P/04 Н1.3 (`ends`); V/01.4, V/02.1, V/04.1, V/05.1 |
@@ -32,9 +32,9 @@
 
 ## Формы и двери
 
-- **Строки и объекты:** `auto/scenarios/<id>`, `auto/next_id`, таблицы `auto/schedules/*`, `auto/day_groups/*`, `auto/modes/all`, `auto/mode_current/now`, `auto/windows/*`, `auto/versions/*`, `auto/answers/*`, курсор `auto/state/cursor/<scenario>`, строка запуска `auto/state/runs/<scenario>`, просьбы `cam/requests/<rid>` (подача),
+- **Строки и объекты:** `auto/scenarios/<id>`, `auto/next_id`, таблицы `auto/schedules/*`, `auto/day_groups/*`, `auto/modes/all`, `auto/mode_current/now`, `auto/windows/*`, `auto/versions/*`, `auto/answers/*`, `auto/rule_marks/*`, `auto/chains/*`, курсор `auto/state/cursor/<scenario>`, строка запуска `auto/state/runs/<scenario>`, просьбы `cam/requests/<rid>` (подача),
   заказы `det/units/auto-…`, `detjob/jobs/auto-…`, `rec/recordings/auto-…`, вклад книги `auto/asks/<слот>`, копии
-  `domain/shared`, `domain/auto/asks`; события `auto/<scenario>/e<n>` (`fired`, `suppressed`).
+  `domain/shared`, `domain/auto/asks`; события `auto/<scenario>/e<n>` (`fired`, `step`, `suppressed`), тревоги `auto.alarms/<scenario>/e<n>`.
 - **Двери:** строки и таблицы — дверью консоли (P/06.1), просьбы `run`, `retry` — `POST /auto/requests` (P/06.4), общие настройки — дверь
   домена (P/08.9), просьба сценария — приёмник регистратора (V/02.9); своя дверь держателя — маршрут `test` (V/07.4 Н2); OpenAPI урока нет.
 - **Семьи данных** (класс семей VMS, разбор ревью V/01 вопрос 5, решение «Архитектора» А): строки сценариев, курсор
@@ -66,7 +66,7 @@
    вопросы на тройку и класс, окно чтения до `now`, курсор до `now − JOURNAL_SETTLE`, вопрос назад `JOURNAL_BACK`, `keep: oldest`,
    партнёры — `by=occurred&late`, полнота — `complete` и `truncated` = 0 (V/07.2 Н1.2).
 6. **Имя поданной просьбы — по ключу подателя** (ADR-0091 доп. (21) п. 2): `auto.<f>-<i>`, `f` — первые 32 hex
-   `sha256(UTF-8(<сценарий> + "\n" + <id события>))`, 39 байт при любых именах (V/07.4 Н1.1); просьба между камерами несёт
+   `sha256(UTF-8(<сценарий> + "\n" + <id события>))`, `i` — путь шага и у шага с целью устройство (V/07.4 Н1.1); просьба между камерами несёт
    `firing` = `f`, у держателя — `rec.ask-<firing>-<i>` (V/07.5 Н1.4, V/02.9).
 7. **Одно имя на обеих сторонах:** в документе домена `then.within` (срок просьбы) → `valid_for`, как у сценария кластера;
    `action` — `enum: [preset, output]`, `arg` → `n` / `port`, срок ≤ 600 с, `rate_per_minute` ≤ 600 — форма у двери домена

@@ -260,11 +260,12 @@ RuleTrigger	source	auto/scenarios	when[].sub: vms ↔ cam, det, rec	both
 RuleTrigger	kind	auto/scenarios	when[].kind; lpr ↔ plate	both
 RuleTrigger	target	auto/scenarios	when[].target; unit — цель из одного устройства	both	см. RuleTarget
 RuleTrigger	match	auto/scenarios	when[].match: port строка цифр ↔ целое, value как есть	both
-RuleTarget	include	auto/scenarios	target.include: device — 7 или <cam>-<type>-<number>, folder — id папки, server — имя, domain — CLUSTER	both	обратно — по перечням вида
+RuleTarget	include	auto/scenarios	target.include: device — 7, child — <cam>-<type>-<number>, folder — id папки, server — имя, domain — CLUSTER	both	обратно — по перечням вида
 RuleTarget	exclude	auto/scenarios	target.exclude	both
 RuleTarget	gone	auto/scenarios	target.gone	both	ставит каскад (V/11.4 Н1.10)
 RuleTarget	fromEvent	auto/scenarios	target.from_event	both
-RuleCondition	kind, target, value	auto/scenarios	conditions[] как есть	both
+RuleCondition	kind, value	auto/scenarios	conditions[] как есть	both
+RuleCondition	target	auto/scenarios	conditions[].target	both	см. RuleTarget
 RuleCondition	scheduleId	auto/scenarios	conditions[].schedule	both
 RuleCondition	modeIds	auto/scenarios	conditions[].modes	both
 RuleAction	source, action	auto/scenarios	then[]: vms preset, output, arm, disarm, disable ↔ cam; rec record; alarm alarm ↔ auto alarm; rule runrule ↔ auto runrule; прочие — данными	both	необъявленное у включённого — RULE_INVALID
@@ -277,8 +278,8 @@ RuleAction	ruleId	auto/scenarios	rule: UUID ↔ номер	both
 RuleAction	layoutId, roleId, monitorId, to, subject, body, chat, method, url	auto/scenarios	те же поля в snake_case	both	данные: действие не объявлено
 RuleWait	control, sec	auto/scenarios	then[]: wait	both
 RuleWaitEvent	control, event, sec, yes, no	auto/scenarios	then[]: wait_event	both	event — как RuleTrigger
-RuleAsk	control, text, roleId, sec, default, yes, no	auto/scenarios	then[]: ask; role	both	данные: ждёт контракта, дверь ответа V/11.4 Н1.10
-RuleEscalate	control, levels, stop	auto/scenarios	then[]: escalate; role, via, wait_min	both	данные, как RuleAsk
+RuleAsk	control, text, roleId, sec, default, yes, no	auto/scenarios	then[]: ask; role: id роли ↔ имя (V/11.8 Н1.2)	both	данные: ждёт контракта, дверь ответа V/11.4 Н1.10
+RuleEscalate	control, levels, stop	auto/scenarios	then[]: escalate; role: id роли ↔ имя, via, wait_min	both	данные, как RuleAsk
 RuleFire	—	GET /events	fired, step журнала auto этого сценария	read	V/11.3 Н1.3; ответ двери auto/test — та же форма
 RuleFire	id	GET /events	UUID ruleFire:<firing>	read
 RuleFire	ruleId	GET /events	unit: rule:auto/scenarios/<id>	read
@@ -287,7 +288,7 @@ RuleFire	by, result, checks	GET /events	те же поля fired	read
 RuleFire	logOnly	GET /events	log_only	read	нет — false
 RuleFire	sourceDeviceIds	GET /events	source	read
 RuleFire	events	GET /events	events: sub ↔ source, cam ↔ deviceId, occurred ↔ at	read
-RuleFire	steps	GET /events	строки step: step ↔ path, target ↔ deviceId, action, control, result ↔ state, reason, note	read	label, skip, depth — выводятся из шага
+RuleFire	steps	GET /events	строки step: step ↔ path, target ↔ deviceId, action, label, result ↔ state, reason, note	read	control — поле не null; skip — result: skip; depth — число веток в step (V/11.3 Н1.3)
 RuleVersion	—	auto/versions	<scenario>-<number>	read	пишется пакетом правки (ADR-0106 п. 7)
 RuleVersion	id	auto/versions	UUID ruleVersion:auto/versions/<scenario>-<number>	read
 RuleVersion	ruleId, number	auto/versions	scenario, number	read
