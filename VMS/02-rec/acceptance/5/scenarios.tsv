@@ -13,5 +13,6 @@ scenario	step	request	expect
 01-door	11	archive r-srv-a-1 GET /timeline/door	403 {"error": "forbidden"}
 01-door	12	archive r-srv-a-1 POST /spans/door/	404 {"error": "no such path"}
 02-audio	1	@manual запись со звуком: кусок fMP4 — два trak, moof с двумя traf, файл играет браузером со звуком; тот же интервал — те же байты	manual
-02-audio	2	@manual запись без звука и источник backfill — байты одной дорожки, как без звука; /samples со stream=<эпоха>/audio — записи major 3	manual
+02-audio	2	@manual запись без звука — байты одной дорожки; кусок backfill и e0 со звуком — две дорожки; /samples с track=audio — записи major 3; track иное — 400 bad range	manual
 02-audio	3	@manual разрыв видео внутри куска — звук не наезжает на себя, звук разрыва потерян; камера 15 к/с без длительности буфера — сэмплы видео по разности begin, звук не обрезан	manual
+02-audio	4	@manual удержание: копия e0 и e0/audio, сохранённый инцидент играет со звуком; дайджест считает оба потока, правка байта звука — verify damaged	manual

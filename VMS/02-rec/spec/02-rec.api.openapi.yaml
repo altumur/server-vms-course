@@ -53,8 +53,13 @@ paths:
         - name: stream
           in: query
           required: false
-          description: только этот поток записи, отсечённого тоже — `<epoch>`, `<epoch>/backfill` или `<epoch>/audio`; без параметра — по правилу «один момент — одна эпоха» (Н1.3)
-          schema: {type: string, pattern: "^(?:[0-9]+(/backfill|/audio)?)$"}
+          description: только этот поток записи, отсечённого тоже — `<epoch>` или `<epoch>/backfill`; без параметра — по правилу «один момент — одна эпоха» (Н1.3)
+          schema: {type: string, pattern: "^(?:[0-9]+(/backfill)?)$"}
+        - name: track
+          in: query
+          required: false
+          description: "`audio` — кадры звука тех же потоков (V/02.5 Н1.4); повтор, иное значение — 400"
+          schema: {type: string, enum: [audio]}
       security: [{roleCertificate: []}]
       responses:
         "200":
@@ -435,6 +440,10 @@ components:
         t: {type: number, description: секунды по часам отправителя}
         key: {type: boolean}
         sample: {type: string, contentEncoding: base64}
+        kind: {type: string, enum: [audio], description: кадр звука; нет поля — видео (V/02.9 Н2)}
+        mic: {type: integer, minimum: 0, description: настоящий номер `mic`, у выгрузки передатчика — `audio` заявки; у звука обязателен}
+        first: {type: boolean, description: этот `mic` первый у камеры; кадр идёт и подписчикам номера 0 (V/02.9 Н1.3а)}
+        codec: {type: string, minLength: 1, description: "<имя rtpmap>/<частота>[/<каналы>]; у звука обязателен"}
     Frames:
       type: array
       items: {$ref: "#/components/schemas/Frame"}
@@ -473,11 +482,16 @@ components:
               stream: {type: string}
               push: {type: boolean}
               have: {type: number}
+              audio:
+                type: array
+                description: номера `mic`, нужные подписчикам потока (V/02.9 Н1.3а)
+                items: {type: integer, minimum: 0}
         range:
           type: object
           additionalProperties: false
           required: [rid, from, to, recording, piece]
           properties:
+            audio: {type: integer, minimum: 0, description: номер `mic` записи; нет поля — звука нет (V/02.9 Н1.4)}
             rid: {type: string}
             from: {type: number}
             to: {type: number}
@@ -502,6 +516,7 @@ components:
       additionalProperties: true
       required: [cam]
       properties:
+        audio: {type: integer, minimum: 0, description: номер `mic`; 0 — первый камеры; нет поля — без звука (V/02.9 Н1.3а)}
         cam: {type: string}
         stream: {type: string}
     PushRequest:
@@ -552,6 +567,7 @@ components:
       required: [ref]
       properties:
         ref: {type: string}
+        audio: {type: integer, minimum: 0, description: номер `mic` записи (V/02.9 Н1.3а)}
         last:
           type: object
           additionalProperties: true
