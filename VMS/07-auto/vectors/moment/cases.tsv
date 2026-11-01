@@ -90,3 +90,6 @@ u-tail	in_effect	u-tail	UTC	2026-11-04T01:30:00Z	unknown	день решён, к
 u-known-true	in_effect	u-known-true	UTC	2026-11-04T01:30:00Z	true	известный true сильнее нерешённого кануна
 u-both-decided	in_effect	u-both-decided	UTC	2026-11-04T01:30:00Z	false	оба дня решены раньше нечитаемой группы
 u-first	in_effect	u-first	UTC	2026-11-02T10:00:00Z	unknown	нечитаемая группа первой: день не решён
+e-no-week	in_effect	e-no-week	UTC	2026-11-02T10:00:00Z	false	строка только с id, title, kind: поля week нет, пустая форма
+e-no-dates	in_effect	e-no-dates	UTC	2026-11-02T10:00:00Z	false	поля dates нет
+e-always	in_effect	e-always	UTC	2026-11-02T10:00:00Z	true	нет overrides и valid: вид решает
