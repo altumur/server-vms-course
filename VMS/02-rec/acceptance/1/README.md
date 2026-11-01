@@ -1,7 +1,7 @@
 # Приёмка V/02.1 — запись — единица
 
 Норма главы — [`02.1-rec.norms.md`](../../spec/02.1-rec.norms.md) Н5. Стенд и словарь — [общий README приёмки
-VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `f225f3ef`).
+VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `226bd220`).
 
 ## Подготовка
 
