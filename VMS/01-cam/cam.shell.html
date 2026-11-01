@@ -15,7 +15,7 @@ NOTES — what this page is, its parts and its state (each function is described
 # cam.shell.html — the VMS's page over the platform's console module (М10B, beside lesson 12)
 
 **Role.** The page at `/` of a console whose root is `cam` (P/06: a subsystem's own page is `<sub>.shell.html`
-beside its manifest, served by the console's root alone). It mounts the module
+beside its manifest, served at the console's root). It mounts the module
 (`PlatformConsole.mount(#app, {lang, subsystems: [cam, rec, live]})`); rec and live are about the camera (`about`), so the module nests their units under it and the page reads
 their manifests with `pc.manifest(name)`. No platform section is drawn here: no login, no tree of servers, no domain card, no
 journal — the module's; the page's own tests hold it to that.
@@ -248,7 +248,7 @@ pc.addFieldEditor("unit","source",(host,ref,obj,value,set)=>{
   const inp=host.querySelector(".cam-src"),parts=host.querySelector(".cam-src-parts");
   const show=v=>{const s2=parseSource(v);parts.innerHTML=fldRo("Адрес",s2.host)+fldRo("Производитель",s2.vendor)+fldRo("Канал",s2.channel)};
   show(value);
-  if(!pc.may("edit",ref))inp.disabled=true;
+  if(!pc.may("edit",ref,"cam"))inp.disabled=true;
   inp.oninput=()=>{set(inp.value);show(inp.value)};
 });
 // What the driver host does with a camera, said aloud when it goes wrong: a device that has not opened (its open has
@@ -499,7 +499,7 @@ async function negotiateLive(id){
     if(!row||(row.labels!=null&&!Array.isArray(row.labels))){setCap("метки раздачи не прочитаны");pc.close();return}
     const has=Array.isArray(row.labels)&&row.labels.includes("public-address");
     if(has!==want.includes("public-address")){
-      if(!(PC.may("edit","unit:live/"+cam)&&await PC.dialog("Раздачу создали для другой сети — переразместить? Зрители переподключатся.",[],"Переразместить"))){
+      if(!(PC.may("edit","unit:live/"+cam,"live")&&await PC.dialog("Раздачу создали для другой сети — переразместить? Зрители переподключатся.",[],"Переразместить"))){
         setCap("раздачу создали для другой сети");pc.close();return}
       try{await api("PUT","/live/streams/"+encodeURIComponent(cam),{labels:want})}catch(x){setCap("живое отклонено: "+words(x));pc.close();return}
     }
@@ -625,7 +625,7 @@ function drawDeviceLine(){
 async function pinBackup(){
   const rs=deviceRanges(),to=primariesOf(V.cam);let ok=0,why="";
   for(const rec of to)for(const r of rs){
-    try{await pc.api("POST","/rec/requests",{unit:rec.id,from:Math.floor(r.start),to:Math.ceil(r.end)});ok++}catch(e){why=words(e)}
+    try{await pc.api("POST","/rec/requests",{unit:rec.id,from:Math.floor(r.start),to:Math.ceil(r.end)});ok++}catch(e){why=!e.status||e.status>=500?"исход неизвестен, нажмите ещё раз":words(e)}
   }
   pc.toast(ok?`Заявок на дозапись: ${ok}. Регистратор заберёт их из резервного архива.`:`Не получилось: ${why}`);
 }
@@ -1106,11 +1106,11 @@ async function openVolume(kind,server,was){
           :[{name:"server",label:"Сервер",value:was?was.server||"":server||""}])],was?"Записать":"Объявить");
   if(!v)return;
   const old=volByName(v.name.trim());
-  // POST of a table row replaces it whole (P/06.1): every field of the table's schema (the rec manifest's
-  // `tables.<places>.fields`) the dialog does not show is carried from the row as it is — not a list of three; what the
-  // platform computes (`held_by`, the revision, the stamps) is no field of the schema, and a sealed secret is not read
-  const fields=((((pc.manifest("rec")||{}).tables||{})[T_PLACES]||{}).fields)||{},body={};
-  if(old)for(const k of Object.keys(fields))if(k in old&&old[k]!=null&&!/_secret$/.test(k)&&old[k]!=="***")body[k]=old[k];
+  // POST of a table row replaces it whole (P/06.1): every field of the row the dialog does not show is carried as it
+  // is — not a list of three; what the platform computes (`table_platform_fields`, row-check) is refused in a body as
+  // an unknown field, and a sealed secret is not read
+  const CALC=new Set(["by","at","made_at","held_by","garbled","revision","index"]),body={};
+  if(old)for(const k of Object.keys(old))if(!CALC.has(k)&&old[k]!=null&&!/_secret$/.test(k)&&old[k]!=="***")body[k]=old[k];
   Object.assign(body,{name:v.name.trim(),kind:v.kind,url:v.url.trim(),quota_bytes:Math.round((parseFloat(v.quota)||0)*1073741824)});
   if(!net)body.server=(v.server||"").trim();else delete body.server;
   if(v.access_key&&v.access_key.trim())body.access_key=v.access_key.trim();
@@ -1313,23 +1313,23 @@ pc.addSection({id:"rules",label:"Сценарии",icon:"bolt",after:"units",ren
 
 // ── The domain, as the VMS sees it ───────────────────────────────────────────────────────────────────────────────
 // The domain holder's view (`GET /domain`, the module hands it over on refresh): its `units` by subsystem — every
-// member's units with their cluster, server, worker and phase — and its `tables`, the domain's tables the manifests serve (`domain/placement/rec/`:
-// for a camera, the cluster that records it). The module draws the domain's platform part (members, topology, alarms,
+// member's units with their cluster, server, worker and phase (P/08.1 Н1.4 `Unit`: the name is `view.name`). The assignments are the domain's table
+// `domain/placement/rec/` (for a camera, the cluster that records it). The module draws the domain's platform part (members, topology, alarms,
 // keys); this is the rest: a member's cameras and archives in the tree, their cards, recording assignments. The page
 // writes only the assignment (`PUT /domain/placement/rec/<ref>`); the recordings are their clusters' rows.
-const DOM_CAM={live:["идёт",""],stale:["воркер молчит — последнее известное","wait"],configured:["настроена, никто не держит","wait"],unreachable:["кластер молчит — последнее известное","off"]};
+const DOM_CAM={live:["идёт",""],stale:["воркер молчит — последнее известное","wait"],configured:["настроена, никто не держит","wait"],silent:["кластер молчит — последнее известное","off"]};
 const domUnits=(sub,cluster)=>((((domView&&domView.units)||{})[sub])||[]).filter(u=>cluster==null||u.cluster===cluster);
-const domKey=u=>u.cluster+"/"+u.unit;
+const domKey=u=>u.cluster+"/"+u.id;
 const domFind=(sub,key)=>domUnits(sub).find(u=>domKey(u)===key)||null;
 const assignments=()=>Object.fromEntries(Object.entries((PLACEMENTS&&PLACEMENTS.records)||{}).filter(([key])=>key.startsWith("rec/")).map(([key,row])=>[key.slice(4),row]));
-const domDot=u=>{const st=DOM_CAM[u.worker_state]||[u.worker_state||"?","mu"];return[st[1]==="off"?"var(--rd)":st[1]==="wait"?"#f0c36a":"var(--gn)",st[0]]};
-const domBadge=u=>{const st=DOM_CAM[u.worker_state]||[u.worker_state||"?","mu"];return`<span class="bd ${st[1]}">${esc(st[0])}</span>`};
+const domDot=u=>{const st=DOM_CAM[u.state]||[u.state||"?","mu"];return[st[1]==="off"?"var(--rd)":st[1]==="wait"?"#f0c36a":"var(--gn)",st[0]]};
+const domBadge=u=>{const st=DOM_CAM[u.state]||[u.state||"?","mu"];return`<span class="bd ${st[1]}">${esc(st[0])}</span>`};
 // a member's cameras, then its archives (the recordings it writes); a member of one camera stands as its camera, its
 // archives under it, open from the first look (the product's camera server)
 pc.addTreeNodes("member",ref=>{
   const name=ref.slice(7),cams=domUnits("cam",name),arcs=domUnits("rec",name);
-  const arc=u=>({ref:"da:"+domKey(u),label:"Архив · "+(u.name||u.unit),icon:"storage",dot:domDot(u),title:"Запись кластера "+u.cluster});
-  const cam=u=>({ref:"dc:"+domKey(u),label:u.name||u.ref||u.unit,icon:"camera",dot:domDot(u),tags:[{text:u.ref||"id "+u.unit,title:"Имя камеры в домене"}]});
+  const arc=u=>({ref:"da:"+domKey(u),label:"Архив · "+((u.view&&u.view.name)||u.id),icon:"storage",dot:domDot(u),title:"Запись кластера "+u.cluster});
+  const cam=u=>({ref:"dc:"+domKey(u),label:(u.view&&u.view.name)||u.ref||u.id,icon:"camera",dot:domDot(u),tags:[{text:u.ref||"id "+u.id,title:"Имя камеры в домене"}]});
   if(cams.length===1)return[{...cam(cams[0]),replaces:true,title:"Сервер-камера "+name,open:arcs.length>0,kids:arcs.map(arc)}];
   return cams.map(cam).concat(arcs.map(u=>({...arc(u),after:true})));
 });
@@ -1368,27 +1368,27 @@ function domCamCard(host,key){
   const u=domFind("cam",key);
   if(!u){host.innerHTML=`<h1>Нет такой камеры</h1>`;return}
   const by=u.ref?((assignments()[u.ref]||{}).cluster||""):"";
-  host.innerHTML=`<h1><span class="pc-crumbs" data-crumbs="${esc(JSON.stringify([["Домен","domain"],[u.cluster,"member:"+u.cluster]]))}"></span>${esc(u.name||u.ref||u.unit)}</h1>
+  host.innerHTML=`<h1><span class="pc-crumbs" data-crumbs="${esc(JSON.stringify([["Домен","domain"],[u.cluster,"member:"+u.cluster]]))}"></span>${esc((u.view&&u.view.name)||u.ref||u.id)}</h1>
     <p class="sub pc-hdsub">камера ${esc(u.ref||"—")} кластера ${esc(u.cluster)}</p>`+
-    card("Камера",`${domBadge(u)} <span class="sub" style="margin-left:8px">${esc(u.phase||"")} · ${esc(u.as_of||"")}</span>
-      <div class="g" style="margin-top:10px">${fldRo("Имя в домене (ref)",u.ref||"—")}${fldRo("Номер в кластере",u.unit)}${fldRo("Воркер",u.worker||"—")}${fldRo("Сервер",u.server||"—")}${fldRo("Пишет кластер",by||"—")}</div>${u.ref?`<div class="vrow"><button type="button" class="btn s" data-act="domainRecord">Назначить запись</button><button type="button" class="btn s" data-act="domainBackup">Добавить резерв</button></div>`:""}`)+
-    card("Записи кластера",domUnits("rec",u.cluster).map(a=>`<div class="it" data-act="arc" data-key="${esc(domKey(a))}"><span>${pc.icon("storage")}</span><span>${esc(a.name||a.unit)}<small>${esc(a.worker||"—")} · ${esc(a.server||"—")}</small></span>${domBadge(a)}</div>`).join("")||`<p class="sub">Кластер не пишет ни одной записи — по последнему ответу.</p>`);
+    card("Камера",`${domBadge(u)} <span class="sub" style="margin-left:8px">${esc(u.phase||"")} · ${u.age==null?"":esc(u.age+" с")}</span>
+      <div class="g" style="margin-top:10px">${fldRo("Имя в домене (ref)",u.ref||"—")}${fldRo("Номер в кластере",u.id)}${fldRo("Воркер",u.worker||"—")}${fldRo("Сервер",u.server||"—")}${fldRo("Пишет кластер",by||"—")}</div>${u.ref?`<div class="vrow"><button type="button" class="btn s" data-act="domainRecord">Назначить запись</button><button type="button" class="btn s" data-act="domainBackup">Добавить резерв</button></div>`:""}`)+
+    card("Записи кластера",domUnits("rec",u.cluster).map(a=>`<div class="it" data-act="arc" data-key="${esc(domKey(a))}"><span>${pc.icon("storage")}</span><span>${esc((a.view&&a.view.name)||a.id)}<small>${esc(a.worker||"—")} · ${esc(a.server||"—")}</small></span>${domBadge(a)}</div>`).join("")||`<p class="sub">Кластер не пишет ни одной записи — по последнему ответу.</p>`);
   wire(host,{arc:el=>pc.select("da:"+el.dataset.key),domainRecord:()=>domainRecording(u),domainBackup:()=>domainRecording(u,true)});
 }
 function domArcCard(host,key){
   const u=domFind("rec",key);
   if(!u){host.innerHTML=`<h1>Нет такого архива</h1>`;return}
-  host.innerHTML=`<h1><span class="pc-crumbs" data-crumbs="${esc(JSON.stringify([["Домен","domain"],[u.cluster,"member:"+u.cluster]]))}"></span>Архив · ${esc(u.name||u.unit)}</h1>
-    <p class="sub pc-hdsub">запись ${esc(u.unit)} кластера ${esc(u.cluster)}</p>`+
-    card("Запись",`${domBadge(u)} <span class="sub" style="margin-left:8px">${esc(u.phase||"")} · ${esc(u.as_of||"")}</span>
-      <div class="g" style="margin-top:10px">${fldRo("Запись",u.unit)}${fldRo("Регистратор",u.worker||"—")}${fldRo("Сервер",u.server||"—")}</div>
+  host.innerHTML=`<h1><span class="pc-crumbs" data-crumbs="${esc(JSON.stringify([["Домен","domain"],[u.cluster,"member:"+u.cluster]]))}"></span>Архив · ${esc((u.view&&u.view.name)||u.id)}</h1>
+    <p class="sub pc-hdsub">запись ${esc(u.id)} кластера ${esc(u.cluster)}</p>`+
+    card("Запись",`${domBadge(u)} <span class="sub" style="margin-left:8px">${esc(u.phase||"")} · ${u.age==null?"":esc(u.age+" с")}</span>
+      <div class="g" style="margin-top:10px">${fldRo("Запись",u.id)}${fldRo("Регистратор",u.worker||"—")}${fldRo("Сервер",u.server||"—")}</div>
       <p class="sub">Срок, том и включение записи задаются в самом кластере — на его консоли.</p>`);
 }
 pc.addCard("dc",(host,ref)=>domCamCard(host,ref.slice(3)));
 pc.addCard("da",(host,ref)=>domArcCard(host,ref.slice(3)));
 // the member's VMS part only: its cameras and its archives; the cluster itself — networks, leaving — is the module's
 pc.addBlock("member",{id:"cam",render:(host,ref)=>{
-  const name=ref.slice(7),row=u=>`<div class="it" data-act="go" data-ref="${esc(u.sub==="cam"?"dc:":"da:")}${esc(domKey(u))}"><span>${pc.icon(u.sub==="cam"?"camera":"storage")}</span><span>${esc(u.name||u.ref||u.unit)}<small>${esc(u.ref||u.unit)} · ${esc(u.worker||"—")}${u.sub==="cam"&&u.ref&&(assignments()[u.ref]||{}).cluster?" · пишет кластер "+esc((assignments()[u.ref]||{}).cluster):""}</small></span>${domBadge(u)}</div>`;
+  const name=ref.slice(7),row=u=>`<div class="it" data-act="go" data-ref="${esc(u.sub==="cam"?"dc:":"da:")}${esc(domKey(u))}"><span>${pc.icon(u.sub==="cam"?"camera":"storage")}</span><span>${esc((u.view&&u.view.name)||u.ref||u.id)}<small>${esc(u.ref||u.id)} · ${esc(u.worker||"—")}${u.sub==="cam"&&u.ref&&(assignments()[u.ref]||{}).cluster?" · пишет кластер "+esc((assignments()[u.ref]||{}).cluster):""}</small></span>${domBadge(u)}</div>`;
   host.innerHTML=card("Камеры",domUnits("cam",name).map(row).join("")||`<p class="sub">Камер нет — по последнему ответу кластера.</p>`)+
     card("Архивы",domUnits("rec",name).map(row).join("")||`<p class="sub">Записей нет — по последнему ответу кластера.</p>`);
   wire(host,{go:el=>pc.select(el.dataset.ref)});
@@ -1397,7 +1397,7 @@ pc.addBlock("member",{id:"cam",render:(host,ref)=>{
 function renderAssignments(host){
   if(!domView){host.innerHTML="";return}
   if(!PLACEMENTS){host.innerHTML=card("Назначения записи",`<p class="sub">Назначения сейчас недоступны.</p>`);return}
-  const rows=Object.entries(assignments()),nameOf=ref=>{const u=domUnits("cam").find(c=>c.ref===ref);return u?(u.name||ref)+" · "+u.cluster:ref};
+  const rows=Object.entries(assignments()),nameOf=ref=>{const u=domUnits("cam").find(c=>c.ref===ref);return u?((u.view&&u.view.name)||ref)+" · "+u.cluster:ref};
   host.innerHTML=card("Назначения записи",rows.length?`<table><tr><th>Камера</th><th>Основной</th><th>Резервы</th></tr>${rows.map(([ref,row])=>`<tr><td>${esc(nameOf(ref))}</td><td>${esc(row.cluster)}</td><td>${esc(jsonList(row.copies).join(", ")||"—")}</td></tr>`).join("")}</table>`
     :`<p class="sub">Назначений нет.</p>`);
 }
@@ -1423,7 +1423,7 @@ pc.addCard("streamaccounts",host=>{
   function draw(){
     if(!live())return;
     forgetAccountPassword();
-    const admin=pc.may("admin","domain"),disabled=busy||loading?" disabled":"";
+    const admin=pc.may("admin","domain","live"),disabled=busy||loading?" disabled":"";
     host.innerHTML=`<h1>Учётки потоков</h1><div class="live-accounts">
       <p class="sub">Учётки этого кластера для внешних потребителей видео. Доступ к камерам задают гранты.</p>
       <button type="button" data-account="reload"${disabled}>Обновить</button>
@@ -1580,7 +1580,7 @@ function reader(ctx){
     const by=new Map();for(const x of rows)by.set(String(x.id),x);return{man,by}}
   async function tryUnits(sub){try{return await units(sub)}catch(e){if(e.tool)return{err:e.message};throw e}}
   async function aboutOf(man){if(!man.about)return{about:null,arows:new Map(),aman:null};const u=await units(man.about.sub);return{about:man.about,arows:u.by,aman:u.man}}
-  const canWrite=(sub,id)=>!!ctx.may("admin",`unit:${sub}/${id}`);
+  const canWrite=(sub,id)=>!!ctx.may("admin",`unit:${sub}/${id}`,sub);
   return{get,fail,subs,manifest,base,units,tryUnits,aboutOf,canWrite}}
 // ── field words (V/10.4 Н1.4) ──
 function fieldView(sub,f,d){
@@ -1690,11 +1690,11 @@ function tools(ctx,turn){
       let view={};
       for(const[k,v]of Object.entries(r)){
         if(want&&!want.includes(k))continue;
-        if(k==="id"||k==="revision"||k===man.id)continue;
+        if(k==="id"||k==="revision"||k==="index"||k===man.id)continue;
         if(v===""&&!(want||[]).includes(k))continue;
         if(v===null&&!(want||[]).includes(k))continue;
         view[k]=v}
-      for(const k of want||[])if(!(k in view)&&!k.startsWith("about.")&&k!=="id"&&k!=="revision"&&k!==man.id&&Object.prototype.hasOwnProperty.call(r,k))view[k]=r[k];
+      for(const k of want||[])if(!(k in view)&&!k.startsWith("about.")&&k!=="id"&&k!=="revision"&&k!=="index"&&k!==man.id&&Object.prototype.hasOwnProperty.call(r,k))view[k]=r[k];
       const inherited={};
       for(const f of man.fields||[])if(f.inherit!==undefined&&r[f.name]==null&&(!want||want.includes(f.name)))inherited[f.name]=f.inherit;
       for(const k of Object.keys(inherited))view[k]=null;
@@ -1750,7 +1750,7 @@ function tools(ctx,turn){
     const r=await R.get((await R.base(sub))+"/"+encodeURIComponent(table));if(r.err)R.fail(r.err);
     const rows=Array.isArray(own(r.body,table))?own(r.body,table):null;if(!rows)R.fail(`no table ${J(table)} in ${sub}`);
     if(rows.length>LIST_MAX)R.fail(`${sub}: more than ${LIST_MAX} units — too many to check here; refuse and say so`);
-    return{sub,table,rows:rows.slice(0,ROW_LIMIT).map(x=>Object.fromEntries(Object.entries(x).filter(([k])=>!["by","at","held_by"].includes(k)))),read_only:true}}
+    return{sub,table,rows:rows.slice(0,ROW_LIMIT).map(x=>Object.fromEntries(Object.entries(x).filter(([k])=>!["by","at","made_at","held_by","revision","index"].includes(k)))),read_only:true}}
   async function ask_admin(args){const q=String((args||{}).question??"").trim();if(!q)R.fail("question is one short question to the admin");return{question:q}}
   // ── the plan (V/10.5 Н1.3–Н1.6) ──
   const text=()=>turn.texts.join("\n");
@@ -2081,7 +2081,7 @@ const A={host:null,models:[],model:"",turn:null,busy:false,gen:0,log:[],status:"
   secrets:new Map(),ask:null,step:null,door:null,applying:false};
 const assistConsole={
   get:async p=>{try{return{status:200,body:await pc.api("GET",p)}}catch(e){return{status:(e&&e.status)||0,body:e&&e.body}}},
-  may:(cap,ref)=>pc.may(cap,ref),get subs(){return SUBS.filter(s=>pc.manifest(s))},root:SUBS[0],manifest:sub=>pc.manifest(sub),   // the page's subsystems the console mounts
+  may:(cap,ref,sub)=>pc.may(cap,ref,sub),get subs(){return SUBS.filter(s=>pc.manifest(s))},root:SUBS[0],manifest:sub=>pc.manifest(sub),   // the page's subsystems the console mounts
   mounted:async sub=>{try{await pc.api("GET",`/${sub}/manifest`);return true}catch(e){return false}}};
 async function assistDoor(fresh){
   if(!fresh&&A.door&&A.door.expires-Date.now()/1000>10)return A.door;

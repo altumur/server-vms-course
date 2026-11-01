@@ -43,7 +43,7 @@ unit:
   # /cameras/<id>`; `/spec` reports `rows: "cameras"` and the page builds its list from it.
   # The controller lists the units under this prefix.
   rows: cameras                      # cam/cameras/<id>
-  # ids are integers the controller issues by a CAS bump on `cam/next_id {n}`. A `POST` body carrying `id`
+  # ids are integers the console issues by a CAS bump on `cam/next_id {n}`. A `POST` body carrying `id`
   # is refused (it is a platform field). The URL's last segment is read as an integer; sort order is
   # numeric.
   id: numeric                        # cam/next_id
@@ -298,7 +298,8 @@ placement:
   group_by:   {field: source, cut_at: host}
   # a worker records into the resource on its own server: every server runs its resource (`w2c-resource`) beside its
   # worker, and this is the live fact — a worker whose server's resource has gone silent is
-  # not placed on, and its cameras are moved off on the controller's next pass.
+  # not placed on; one that still lives has its cameras moved off on the controller's next pass, one silent with its
+  # resource goes by its fate, about 90 s (P/04 Н3).
   requires:   resource                          # the worker's server must have a resource that answers
   # Among eligible workers the one with the largest `capacity − load`, strictly positive; ties to
   # the first in sorted order. The only tie-break the catalogue has.
@@ -613,8 +614,8 @@ events:
 #
 # - Key layout: `cam/cameras/<id>` (row), `cam/workers/<w>` (assignment), `cam/placement/<id>`, `cam/retention`,
 #   `cam/alarms_retention`, `cam/epoch/<id>` (a worker takes by CAS), `cam/next_id`.
-# - Fields the operator may never send, whatever the manifest says — the platform's fields (P/06.1): `worker, placement,
-#   epoch, revision, observed_revision, phase, id`. Those are the controller's (placement, with a reason) or the
+# - Fields the operator may never send, whatever the manifest says — the platform's fields (P/06.1): `id, revision,
+#   deleted, worker, placement, epoch, phase, observed_revision, born, made, index`. Those are the controller's (placement, with a reason) or the
 #   worker's (phase, epoch, observed_revision in its heartbeat).
 # - Editing this file changes the controller and the console together, with no change of code.
 # ================================================================================================

@@ -60,4 +60,22 @@ function report(out,skip=[]){
   console.log(JSON.stringify(out,null,1));
   console.log(bad.length?"FAILED: "+bad.map(([k])=>k).join(", "):"все проверки пройдены");
 }
-module.exports={boot,ready,report,FIX};
+// Подставной вид домена против схемы Unit (P/08.1 Н1.4, OpenAPI урока 8): поле старой формы страница молча не читает, и проверка
+// проходит мимо него. По умолчанию судятся и значения, values:false — только состав полей: пробы XSS нарочно несут значения не по форме.
+function unitForm(view,{values=true}={}){
+  const path=require("path"),api=fs.readFileSync(path.join(__dirname,"..","..","..","Platform","08-domain","spec","08-domain.api.openapi.yaml"),"utf8");
+  const s=api.match(/\n    Unit:\n[\s\S]*?\n    View:/)[0],list=x=>s.match(new RegExp(x+": \\[(.*?)\\]"))[1].split(", ");
+  const required=list("required"),fields=[...s.matchAll(/^        (\w+):/gm)].map(m=>m[1]),states=list("enum"),bad=[];
+  for(const[sub,units]of Object.entries(view.units))for(const u of units){
+    const at=`${sub}/${u.id}`;
+    for(const k of required)if(!(k in u))bad.push(`${at}: no ${k}`);
+    for(const k of Object.keys(u))if(!fields.includes(k))bad.push(`${at}: ${k} is no field of Unit`);
+    if(values){
+      if(!states.includes(u.state))bad.push(`${at}: state ${u.state}`);
+      for(const k of ["sub","id","ref","phase"])if(typeof u[k]!=="string"||!u[k])bad.push(`${at}: ${k} empty`);
+      if(typeof u.age!=="number")bad.push(`${at}: age ${u.age}`);
+    }
+  }
+  return bad.length?bad:true;
+}
+module.exports={boot,ready,report,FIX,unitForm};

@@ -3,7 +3,7 @@
 // блоки членов показывают «Камеры» и «Архивы», обзор домена — «Назначения записи».
 // Просмотр не отправляет правки. Действия записи и резерва меняют только назначение (PUT /domain/placement/rec/<ref>):
 // строку rec/recordings заводит оператор кластера записи, страница это говорит (V/08.5 Н1.2; V/02.9 Н1.1).
-// Фикстуры — вид домена с units и members, записи назначения и ответы очереди правок.
+// Фикстуры — вид домена с units формы Unit (P/08.1 Н1.4) и members, записи назначения и ответы очереди правок.
 const fs=require("fs"),path=require("path");
 const PAGE=fs.readFileSync(path.join(__dirname,"..","..","..","VMS","01-cam","cam.shell.html"),"utf8");
 const MOD=fs.readFileSync(path.join(__dirname,"..","..","w2cplatform","console.js"),"utf8");
@@ -12,22 +12,24 @@ fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\
 process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
-const u=(sub,cluster,unit,o={})=>({sub,cluster,unit,ref:"",name:"",server:cluster+"-srv",worker:sub==="cam"?"w-1":"r-1",phase:"running",worker_state:"live",as_of:"as of 2 s ago",...o});
+const u=(sub,cluster,id,o={})=>({sub,id,cluster,server:cluster+"-srv",worker:sub==="cam"?"w-1":"r-1",phase:"running",age:2,state:"live",...o});
 b.FIX["/session"]={open:true};
 b.FIX["/manifest"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/cameras"]={configured:[],rows:[]};
 b.FIX["/servers"]={servers:{"box-a":{resource:"live",workers:[]}},policy:{}};
 b.FIX["/events"]={events:[],state:"live"};
 b.FIX["/domain"]={holder:"srv",age:1,complete:true,members:["srv","office","north"].map(n=>({name:n,state:"ok",age:2,rpo:2,reaches:[],holder:n==="srv"})),
-  units:{cam:[u("cam","office","1",{ref:"SN-A",name:"door a"}),u("cam","office","2",{ref:"SN-B",name:"door b",worker_state:"stale"}),
-              u("cam","north","1",{ref:"SN-C",name:"gate",worker_state:"configured"}),u("cam","north","2",{ref:"SN-D",name:"yard"})],
-         rec:[u("rec","office","1")]},
+  units:{cam:[u("cam","office","1",{ref:"SN-A",view:{name:"door a"}}),u("cam","office","2",{ref:"SN-B",view:{name:"door b"},state:"stale"}),
+              u("cam","north","1",{ref:"SN-C",view:{name:"gate"},state:"configured",phase:"unobserved"}),u("cam","north","2",{ref:"SN-D",view:{name:"yard"}}),
+              u("cam","north","3",{ref:"SN-E",view:{name:"roof"},state:"silent"})],
+         rec:[u("rec","office","1",{ref:"SN-A"})]},
   tables:{},causes:[]};
 b.FIX["/domain/placement"]={rev:1,records:{"rec/SN-C":{cluster:"office",origin:"north",copies:[],reason:"operator",at:1,rev:1}}};
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
 await b.ready(700);await w.platformConsole.ready;await w.platformConsole.refresh();await b.ready(50);
 const d=w.document,pc=w.platformConsole,out={};
+out.fixtureIsUnit=b.unitForm(b.FIX["/domain"]);
 const main=()=>d.querySelector("main"),txt=()=>main().textContent+" "+[...main().querySelectorAll("input")].map(x=>x.value).join(" | ");
 (d.querySelector('.pc-rail [data-s="units"]').click(),d.querySelector('.pc-layout').click(),d.querySelector('[data-layout="servers"]').click());await b.ready(40);
 d.querySelectorAll('.pc-tree [data-tw^="member:"]').forEach(t=>{if(t.textContent==="▸")t.click()});await b.ready(20);
@@ -37,9 +39,11 @@ out.cameraSignAndRef=!!row("dc:office/1").querySelector(".ici-camera")&&/SN-A/.t
 out.archiveAfterCameras=!!row("da:office/1")&&[...d.querySelectorAll(".pc-tree .n")].indexOf(row("dc:office/2"))<[...d.querySelectorAll(".pc-tree .n")].indexOf(row("da:office/1"));
 // камера: имя в домене, номер, воркер, сервер; кто её пишет — из пересечений
 pc.select("dc:north/1");await b.ready(60);
-out.cameraCard=/gate/.test(txt())&&/SN-C/.test(txt())&&/north-srv/.test(txt())&&/настроена, никто не держит/.test(txt())&&[...main().querySelectorAll("input")].some(x=>x.value==="office")&&!!main().querySelector(".pc-star");
+out.cameraCard=/gate/.test(txt())&&/SN-C/.test(txt())&&/north-srv/.test(txt())&&/настроена, никто не держит/.test(txt())&&/· 2 с/.test(txt())&&[...main().querySelectorAll("input")].some(x=>x.value==="office")&&!!main().querySelector(".pc-star");
 pc.select("dc:office/2");await b.ready(60);
 out.staleSaid=/воркер молчит/.test(txt());
+pc.select("dc:north/3");await b.ready(60);
+out.silentSaid=/кластер молчит/.test(txt());
 pc.select("da:office/1");await b.ready(60);
 out.archiveCard=/Архив · 1/.test(txt())&&/r-1/.test(txt())&&/задаются в самом кластере/.test(txt());
 // блок члена: камеры и архивы; платформенное (вывод из домена и т. п.) — модуля, не в блоке

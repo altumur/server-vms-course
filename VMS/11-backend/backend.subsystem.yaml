@@ -103,7 +103,7 @@ door:
 # query (the shell links `<file>?v=<12 hex>`); no file of the set is named under `api/` — that is the space of the API
 # (ADR-0094 доп. (8) п. 2). It serves backend.shell.html at /backend/ because `console.shell: true` declares it
 # (доп. (3) п. 8), a page of its own (no frame of another page, no sandbox), with the Content-Security-Policy that is exactly the minimum
-# of P/06.5 Н1.1 `page` — the shell has no inline script, so `script-src 'self'; object-src 'none'; base-uri 'none'`,
+# of P/06.5 Н1.1 `page` — the shell has no inline script, so `script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'`,
 # not stricter: inline styles and `data:` images stay allowed (доп. (8) пп. 1, 4).
 # The build: consolem @ef7175b, `tools/build_webui.py` (reproducible), its MANIFEST.json; its index.html is
 # backend.shell.html (SHA-256 caa73ca5…), the rest is the set (V/11.1 Н1.4). The deployment package builds it from the

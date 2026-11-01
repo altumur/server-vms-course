@@ -217,7 +217,7 @@
    {
     "status": 400,
     "body": {
-     "error": "bad_body",
+     "error": "refused",
      "detail": "must be given anew"
     }
    }
@@ -249,7 +249,7 @@
     },
     "testsub2/Office-2": {
      "outcome": "refused",
-     "words": "bad_body · must be given anew"
+     "words": "refused · must be given anew"
     }
    }
   }
@@ -296,7 +296,7 @@
    {
     "status": 401,
     "body": {
-     "error": "unauthenticated"
+     "error": "denied"
     }
    }
   ],
