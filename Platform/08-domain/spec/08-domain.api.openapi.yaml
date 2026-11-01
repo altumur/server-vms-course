@@ -2559,6 +2559,7 @@ components:
                 lines:
                   type: array
                   items: {$ref: '#/components/schemas/Line'}
+        as_role: {type: string, description: Проверка действия от роли, договор права «Действие от роли».}
         as_of: {type: ['number', 'null']}
         disabled:
           type: array
