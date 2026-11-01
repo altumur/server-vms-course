@@ -43,3 +43,5 @@ commands	-	no such speaker	-	01.4 Н3, Н4
 commands	-	speaker is disabled	-	01.4 Н3, Н4
 commands	-	busy	-	01.4 Н3, Н4
 commands	-	device refused	-	01.4 Н3, Н4
+commands	-	state is open, closed or pulse	-	01.4 Н3
+commands	-	pulse needs pulse_ms	-	01.4 Н3

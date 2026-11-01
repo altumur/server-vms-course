@@ -16,3 +16,4 @@ date	sample	fix	languages
 2026-11-01	4/scenarios.tsv: 02-owner шаг 8	решает позднейшее слово настроек по штампу at (Quint v014o В1)	all
 2026-11-01	4/scenarios.tsv: 06-rule-state	новый сценарий: охрана и выключение на время, строка rule_state (ADR-0105 пп. 6, 8)	all
 2026-11-01	4/scenarios.tsv: 06-rule-state шаги 14, 15	arm на выключенной правилом проходит, отказ судится на output (проба V/07, М-3)	all
+2026-11-02	4/scenarios.tsv: 06-rule-state шаг 14	pulse_ms: pulse без него отказ (ipintd)	all

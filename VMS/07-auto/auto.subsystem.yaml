@@ -115,7 +115,7 @@ unit:
                 unit: {type: [string, integer], maximum: 9007199254740991}
                 target: {type: [object, "null"], required: [include, exclude, gone, from_event], additionalProperties: false, properties: {include: {type: array, items: {type: object, required: [kind, id], additionalProperties: false, properties: {kind: {enum: [device, child, folder, server, domain]}, id: {type: string, minLength: 1}}}}, exclude: {type: array, items: {type: string}}, gone: {type: array, items: {type: string}}, from_event: {type: boolean}}}
                 port: {type: integer, minimum: 1, maximum: 9007199254740991}
-                state: {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
+                state: {enum: [open, closed, pulse]}
                 pulse_ms: {type: integer, minimum: 0, maximum: 9007199254740991}
             - type: object
               required: [sub, action]

@@ -497,7 +497,7 @@ requests:
       # the eleventh review; integers past 2^53 are no number a spec holds), at the door as
       # at the holder
       port:        {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
-      state:       {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
+      state:       {type: string, enum: [open, closed, pulse]}
       pulse_ms:    {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
       n:           {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
       operation:   {type: string, maxLength: 32}    # `unit`: an operation of the unit's template, as the device names it
