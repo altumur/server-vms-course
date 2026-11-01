@@ -61,7 +61,7 @@ scenario	step	request	expect
 12-children	10	POST /child_settings {"camera": "$c", "kind": "relay", "type": "relay", "number": 3}	400 {"error": "unknown field", "field": "/kind"}
 12-children	11	GET /child_settings/$c-relay-2	200 {"title": "Замок", "enabled": false}
 12-children	12	DELETE /child_settings/$c-relay-2	200 {"deleted": "@any"}
-12-children	13	GET /child_settings/$c-relay-2	404
+12-children	13	GET /child_settings/$c-relay-2	404 {"error": "@any"}
 12-children	14	POST /child_settings {"camera": "$c", "type": "mic", "number": 1, "enabled": false}	201 {"row": {"name": "@any", "enabled": false}}
 12-children	15	POST /child_settings {"camera": "$c", "type": "spk", "number": 1, "title": "Динамик"}	201 {"row": {"name": "@any", "title": "Динамик"}}
 12-children	16	POST /child_settings {"camera": "$c", "type": "sensor", "number": 1, "norm": "ajar"}	400 {"error": "@any"}

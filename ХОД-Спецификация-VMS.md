@@ -54,6 +54,7 @@
 | 2026-11-01 | снимок `1041a985` (`36d6699df`) | V/01, V/02, V/11 | ветка `vms/pass-close-1` | разбор первой очереди прохода: 269 мест, 243 строки, ВЕРНО 160, НЕВЕРНО 60, СПОРНО 23; правки норм, манифестов `cam`, `rec`, `backend`, схем слов пульса, векторы 01, 02; приёмка 1, 4 V/01, V/02, V/11 по слову «Архитектора». Разбор — `decisions/inbox/2026-11-01-запрос-vms-разбор-прохода-01-02-11.md`, там же открытое. |
 | 2026-11-01 | снимок `1041a985`, main `87c38d4eb` | V/01–V/06, V/07.4–5, V/08.2–3, V/09.2–4, V/10 векторы, V/11.4 | ветка `vms/pass-2` | вторая очередь прохода (281 место), `late`, находки Quint V/02.x, V/01.4, V/01.7, V/03.6, V/05.1, V/05.4, V/06, V/11.4. Разбор — `decisions/inbox/2026-11-01-запрос-vms-разбор-прохода-03-06.md`. |
 | 2026-11-01 | снимок `1041a985`, ветка от `vms/pass-2` | V/07–V/10, страница | ветка `vms/pass-3` | третья очередь прохода (337 мест), Quint V/07, правки платформы `changes/vms-pass-3`; перечень out по ADR-0103. Разбор — `decisions/inbox/2026-11-01-запрос-vms-разбор-прохода-07-10.md`. |
+| 2026-11-01 | main `d9ca8fe8c` | V/01–V/11 | ветка `vms/dev-layer` | слой устройств: ADR-0102 доп. (3)–(10), ADR-0104, потоки, поля, перечень out по слою. Разбор — `decisions/inbox/2026-11-01-запрос-vms-слой-устройств.md`. |
 
 ## Заведение сессии (2026-10-23)
 - Дерево `/Users/murat/w2c/wt-vms-spec`, ветка `vms/inventory` от `5d752c661`; хуки — `tools/vms-boundary/install.sh
@@ -602,3 +603,5 @@
 - «Сборке»: `cam.shell.html` — `may("admin")` учёток, создание раздачи заново при 404 от `where`, окно шкалы `by=occurred&late`.
 - «Сборке»: `auto.subsystem.yaml` — курсор + `since`, `reads` + `domain/topology`, `domain/view`, `domain/cam/sources`; окно чтения до `now`, вопрос назад `JOURNAL_BACK`.
 - «Сборке»: V/02.5 — дверь `/timeline` и `.device.mp4` не отдаёт `device` записи с `stream`; V/01.5 — заголовок `X-Coverage-From` ответа `/playback`; V/10 — шаг `%3A` у двери модели.
+- «Сборке»: `cam/cameras.type` вместо `kind`, `lat`, `lon`, `azimuth`, `short`, `mac`, `resolution`, `fps`; `grid`, `full` сняты; `cam/devices` + `videos`, `resolutions`; `can` — списки; `cam/children` + `mic`, `spk`; `child_settings.norm`; `io.input.value` — `open`, `closed`.
+- «Сборке»: V/03 `POST /whep/<cam>?width=&height=`, поток по размеру; `backend`: дерево `ipsrv`, `channel`, адрес из `rtspUrl` или `vendor`, `model`, `firmware`, файл пакета `device-models.json`; `det` — поле `title`; `rec` `unit_mb` 41.
