@@ -551,7 +551,7 @@ domain:
     cameras: [name, main, type, ref, source, enabled, short, lat, lon, azimuth, mac, cred_username, resolution, fps, camera, words, overlay_delay_ms, overlay_duration_sec]
     devices: [channels, videos, storage]
     children: [camera, type, number, gone]
-    child_settings: [camera, title, enabled, norm]
+    child_settings: [camera, type, number, title, enabled, norm]
     device_units: [camera, n, type, template, address, parent, sensitivity, title, enabled]
     unit_next: [camera, n]
     rule_state: [camera, armed, disabled_by_rule, disabled_at, disabled_until]
