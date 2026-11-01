@@ -1180,6 +1180,22 @@
      "$ref": "#/$defs/common.pos53",
      "description": "версия строки единицы из строки шарда (Н1.4 Unit revision)"
     },
+    "labels": {
+     "description": "поле labels строки шарда (Н1.4 Unit)",
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "about": {
+     "description": "id about-единицы из строки шарда (Н1.4 Unit)",
+     "type": "string",
+     "not": {
+      "enum": [
+       ""
+      ]
+     }
+    },
     "worker": {
      "description": "из пульса или из строки шарда; нет — поля нет; пульс без поля worker — имя из ключа пульса",
      "type": "string",

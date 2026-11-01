@@ -15,6 +15,14 @@
    "x-codec": [
     "time"
    ]
+  },
+  "anywhere": {
+   "description": "сводка P/08.4 Н1.3 anywhere: человек — until, 0 — без срока",
+   "type": "object",
+   "additionalProperties": {
+    "type": "number",
+    "minimum": 0
+   }
   }
  },
  "additionalProperties": false,

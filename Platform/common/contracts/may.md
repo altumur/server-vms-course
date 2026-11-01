@@ -37,8 +37,9 @@ P/08.4 Н1.3; метки — [договор азбуки меток](labels.md)
 
 ```yaml
 input:     {grants: <doc {lines}> | null, as_of: <число> | null, disabled: [<имя>…], user, glass, cap, unit, now,
-            sub?, roles?, unread?, iat?}
-  unit:    null — дверь без единицы; "*" — право на всё; {sub, id, labels: [<метка>…], about?, chains?}
+            sub?, roles?, unread?, iat?, anywhere?}
+  unit:    null — дверь без единицы; "*" — право на всё; "any" — суд домена по кластеру цели: хоть одна строка нужного ранга, область не
+           судится («Суд по цели» ниже); {sub, id, labels: [<метка>…], about?, chains?}
   about:   {sub, id, labels, chains?} — about-единица; "unknown" — about нужен, но неизвестен (строка единицы нечитаема или
            чтение не подтверждено); поля нет — about у единицы нет; значение поля about.field в строке пусто или поля в строке
            нет — тоже: about нет, единица судится по себе (C02-ABOUT-EMPTY-01)
@@ -65,6 +66,8 @@ input:     {grants: <doc {lines}> | null, as_of: <число> | null, disabled: 
   unread:  какие группы ролей видел вызывающий неполными: [{role: <R>, sub?: <S>}…] — строка этой роли не по форме, субъект
            прочёлся (sub — если прочёлся и он: тогда только в этой sub); "all" — у строки не прочёлся субъект: неполны все
            группы ролей документа; поля нет — []. Вызывающий отбрасывает нечитаемую строку (lines_in), но признак не теряет (ADR-0099 §2)
+  anywhere: {<человек>: <until>} — у кого есть грант в любом кластере домена (P/08.4 Н1.3 anywhere); только шагу 6 и только на двери
+           door.pass второго вида и дверях вида домена; поля нет — {}
   iat:     iat токена запроса; на пути билета и шага операции — iat записи билета, токен тот же (договор сторожевой и передачи «Передача второго вида»); null — только сессии без токена: glass, отладочная личность; поля нет — null; нужно только шагу 4а:
            токен, выпущенный раньше at назначения admin, шагу 4а не служит (ADR-0100 §3); сравнение — по целым секундам: at несёт до
            трёх знаков дроби, iat токена — любое конечное число
@@ -75,14 +78,16 @@ output:    {result: allow} | {result: deny, reason: disabled | stale | no_grant}
 ```
 1. glass                                                                → allow
 2. user ∈ disabled                                                      → deny disabled
-3. grants = null                                                        → deny no_grant
+3. grants = null и (unit ≠ null или user нет в anywhere)                → deny no_grant
 4. as_of ≠ null и now − as_of > GRANT_LIFETIME                          → deny stale
 4а. в roles[user] есть {role: admin, until: t, at}, t = 0 или now < t, и iat = null или ⌊iat⌋ ≥ ⌊at⌋ → allow
 5. отбор: строка действует, если until = 0 или now < until, и sub строки нет, или равен sub входа, или sub входа = null.
    прямая группа — действующие строки subject = user;
    группы ролей — по одной на каждый {role: R, until: t} из roles[user], R ≠ admin, t = 0 или now < t: действующие строки
    subject = role:R; строки роли не из roles[user] не действуют (ADR-0097 §2, ADR-0098 §4, ADR-0099 §2)
-6. unit = null и cap = view: хоть одна строка прямой группы или группы роли, чей cap ≠ none  → allow
+6. unit = null и cap = view: хоть одна строка прямой группы или группы роли, чей cap ≠ none,
+   или anywhere[user] = 0, или now < anywhere[user]                     → allow
+6а. unit = "any": хоть одна строка прямой группы или группы роли с rank(cap строки) ≥ rank(cap) → allow; иначе шаг 7б, затем шаг 8
 7. прямая группа: строка с rank(cap строки) ≥ rank(cap) и область покрывает unit → allow
    * — любую (и "*"); unit:<s>/<i> — unit с (sub, id) = (s, i) или его about с (s, i); labels:L — все метки L у about, если
    about есть, иначе у самого unit; folder:<id> — id в цепочке chains у unit или у about;
@@ -146,13 +151,36 @@ exit:      0 — вычислено; 2 — вход не по форме; код
            строки grants у may — доверенный вход (копия, уже разобранная по Н1.3), поэтому строка не по форме — 2, не пропуск
 ```
 
+## Суд по цели
+
+Дверь домена судит запись кластера по гранту этого кластера, а не `domain/grants/domain` (ADR-0110 доп. (4) п. 4, доп. (5) пп. 1, 5; Д-1, Д-2, Д-8 разбора). Иначе человек с грантом только на кластер получит пустой домен.
+
+```yaml
+wide:      may(grants = domain/grants/domain, cap = view, unit = "*", sub = null) = allow — зритель домена: фильтра нет, ответ целиком
+gate:      вход дверей вида: wide, или may(unit = null, cap = view, sub = null, anywhere = сводка держателя) по любому кластеру;
+           иначе 403 по refusal; сводка не прочитана и строки domain/grants/domain не хватило — 503 unavailable
+target:    запись кластера C: may(grants = domain/grants/C, as_of = null, disabled и roles — у держателя, как строка domain, iat — токена,
+           sub — подсистема записи); строки domain/grants/C нет — grants = null
+read:      каждая запись судится отдельно, cap = view:
+  unit:    {sub, id, labels, about?, chains} — из вида (P/08.1 Н1.4): labels — Unit.labels, нет — []; about — Unit.about и единица с этим id в
+           той же копии: нашлась — {sub, id, labels}, нет — "unknown"; у манифеста без about поля нет; chains — "unknown"
+  row:     строка таблицы: таблица в rights.unit_of и поле в списке domain.view_tables — unit единицы из этого поля, значения нет —
+           unit = "*"; иначе unit = null
+  allow:   запись в ответе; deny — записи нет; unavailable — записи нет, счёт withheld ответа
+write:     правка записи кластера C: wide с cap = admin и unit = "*", или may(unit = "any", cap = edit, sub — подсистема записи) по C.
+           Это грубая проверка: области, about, цепочки, routes, unit_of, names домен не считает, строк члена у него нет.
+           Точный суд — у консоли члена при применении, по тому человеку, чья правка; отказ — исход refused
+           (P/09.1 Н1.5; P/08.6 Н1.4). Один суд на правку, через какой вход она ни пришла
+cost:      may считается на запись, но вход меняется только с кластером и человеком: памятью прохода двери можно не пересчитывать grants
+```
+
 ## Слова отказа
 
 Из М11/9 Н4: слова `may`: `disabled`, `stale`, `no_grant`. Исход `unavailable` — не слово отказа `may`: дверь отвечает 503 `{error: "unavailable"}`.
 
 ## Векторы
 
-Пакет [`may`](../vectors/may/README.md): 106 строк: may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, роли, ярусы, шаг 4а); из первых 26: 24 — входы команды `may` приёмки М11/9 (сц. 07) без изменения значений, кроме `labels: []` у единицы
+Пакет [`may`](../vectors/may/README.md): 115 строк: may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, роли, ярусы, шаг 4а); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); из первых 26: 24 — входы команды `may` приёмки М11/9 (сц. 07) без изменения значений, кроме `labels: []` у единицы
 `may-24` (решение «Архитектора» 2026-10-20; README пакета);
 одна строка — вход не по форме (`@exit 2`; разбор ревью стадии B 8–10, № 22); `may-25` — `subject` "" (`@exit 2`, MAY-G03); `may-26` — `until` не помещается в binary64 (`@exit 2`, MAY-UNTIL-D8-01). Сценарий и входы сняты переносом урока 8 — таблица единственный
 источник этих случаев. Там же `covers.tsv` — 19 строк функции `covers(scope, ref, row)` сторожевой ([договор

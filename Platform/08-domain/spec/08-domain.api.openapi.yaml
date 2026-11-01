@@ -2001,6 +2001,14 @@ components:
         cluster:
           $ref: '#/components/schemas/MemberName'
         revision: {type: integer, minimum: 1}
+        labels:
+          type: array
+          items: {type: string}
+          description: Поле labels строки шарда; нет — поля нет (Н1.4).
+        about:
+          type: string
+          minLength: 1
+          description: id about-единицы из строки шарда; нет — поля нет (Н1.4).
         status:
           type: object
           additionalProperties: true
@@ -2609,6 +2617,10 @@ components:
                 lines:
                   type: array
                   items: {$ref: '#/components/schemas/Line'}
+        anywhere:
+          type: object
+          additionalProperties: {type: number, minimum: 0}
+          description: Сводка P/08.4 Н1.3 anywhere; только шаг 6 договора права.
         as_of: {type: ['number', 'null']}
         disabled:
           type: array
@@ -2620,6 +2632,7 @@ components:
           oneOf:
             - type: 'null'
             - const: '*'
+            - const: any
             - $ref: '#/components/schemas/MayUnit'
         now: {type: number}
         sub:
