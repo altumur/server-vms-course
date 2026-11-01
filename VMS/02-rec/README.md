@@ -38,14 +38,14 @@
   `rec/ingest/clock/*`, `rec/ingest/up/*` (`objects`), просьбы `rec/requests/*`, вклады в книги `rec/primaries/*`,
   `rec/upstream/*`, `rec/polls/*`, отчёт `rec/polled/<приёмник>`.
 - **Семьи данных** — своё содержимое в открытых местах семей платформы, которое читают другие процессы и манифест не
-  выражает, — [`data/`](data/): слова пульса `rec-heartbeat-words` (`ingest`, `url`, `volume`, `written_through`
+  выражает, — [`data/`](data/): слова пульса `rec-heartbeat-words` (`ingest`, `url`, `volume`, `stream.lagging`, `written_through`
   элемента записи; место — корень пульса, пустой указатель), `value` элементов книг `primaries-entry`, `polls-entry`,
   `upstream-entry` (место `/*/entries/*/value`; `#copy` — копия у члена, `#member` — строка члена у держателя домена) —
   форма, слои, исходы по читателям; строки — в каталоге VMS [`../common/data/catalog.tsv`](../common/data/catalog.tsv)
   (колонка `place`). Объекты `rec/ingest/*`, `rec/sealed/*`, `rec/used/*`, `rec/taken/*` (`objects` манифеста) и вклады
   `rec/<книга>/<слот>` — форма манифеста, семьёй VMS не судятся; свидетель `rec/polled/<слот>` читает консоль домена по
   объявлению `witness` (P/10 Н1.8). Векторы — построитель `family-read` (`VMS/common/vectors/family-read/02.tsv`).
-- **Двери:** дверь архива регистратора (`/spans`, `/samples` — процессы, класс `role`; `/timeline`, `/segment`, `/keeps` —
+- **Двери:** дверь архива регистратора (`/spans`, `/samples` — процессы, класс `mixed`; `/timeline`, `/segment`, `/keeps` —
   страница, токен двери) — OpenAPI урока `spec/02-rec.api.openapi.yaml`; дверь приёмника (опрос, толчок, `/ask`) — глава 9;
   протокол `obsd` — сокет части (не HTTP), глава 2.
 
@@ -56,7 +56,7 @@
 - Подмена продлевает место (P/03.4 Н3), отпускание места посреди работы — по ADR-0091 п. 9; `may_stand_in_hold` и отсчёт
   `FOR` свидетеля не переносятся.
 - Том не открылся — `place_by: ""` в пульсе (ADR-0091 п. 9), удержание отпускается по P/03.2.
-- `worker.stop_timeout: 40`; бюджет закрытия мест после SIGTERM — около 31 с (40 − `RENEW_EVERY`); закрытие писателей —
+- `worker.stop_timeout: 45`; бюджет закрытия мест после SIGTERM — около 31 с (40 − `RENEW_EVERY`); закрытие писателей —
   до «конца закрытия» V/02.4 Н1.5 (разбор ревью V/02, вопрос 2; прежде — «≈ 22 с укладывается», слово «Архитектора»
   2026-10-23).
 - Порядок остановки — P/03.4 Н3 SIGTERM (писатели мест → пульс → место → слот).
@@ -67,7 +67,7 @@
   `placement.ends: {field: until, never: 0}`.
 - Доля части `obsd` — `shares: {obsd: {kind: socket, part: obsd}}`, свой регистратор — `worker.uses: [rec.obsd]`;
   доля `cam.shm` — `worker.uses: [cam.shm]` (ADR-0091 п. 5, доп. (2) п. 4).
-- Дверь архива для процессов — класс `role` сертификата роли (ADR-0075 окно 2), для страницы — токен двери консоли
+- Дверь архива для процессов — класс `mixed` сертификата роли (ADR-0075 окно 2), для страницы — токен двери консоли
   (`door.routes`).
 
 ## Запросы урока (опись § 6) — история перевода
@@ -82,13 +82,13 @@
 
 Порядок остановки по P/03.4; `place_by: ""` при неоткрытом томе; подмена продлевает место; `grows` вместо запасного;
 `/data/vms/obsd/volume` → `/data/platform/subsystems/rec/obsd/volumes/<n>`; `vms-obsd` → `vms-rec-obsd`; сокет — доля
-части; `TimeoutStopSec` 40 — `worker.stop_timeout` с бюджетом ≈ 31 с; профиль дозаписи `fetched`; `elsewhere: [record]`
+части; `TimeoutStopSec` 45 — `worker.stop_timeout` с бюджетом ≈ 31 с; профиль дозаписи `fetched`; `elsewhere: [record]`
 снят; HMAC-ключ двери держателя не используется — дверь архива процессам по сертификату роли.
 
 ## Правки манифеста при переводе — история перевода
 
 `placement.ends`, `grows: true`, `parts.obsd {exec, volumes: true, stop_timeout}`, `shares.obsd {kind: socket, part:
-obsd}`, `worker.uses: [cam.shm, rec.obsd]`, `worker.stop_timeout: 40`, `worker.creates` к `detjob` (V/02.8),
+obsd}`, `worker.uses: [cam.shm, rec.obsd]`, `worker.stop_timeout: 45`, `worker.creates` к `detjob` (V/02.8),
 `requests.outcome: fetched`; снять `requests.elsewhere`; комментарии с кодом свидетеля и «петлёй консоли» — ссылками на
 нормы. Продукт — строкой долга «Сборке» по главе.
 

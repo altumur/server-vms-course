@@ -46,7 +46,7 @@ objects: {rows: [ingest/clock/*, ingest/up/*, sealed/*, used/*], door: [taken/*]
 # (`place_by`), why that volume will not open, the box's own volume a page offers to declare, and where
 # the ingest it hosts takes streams (`ingest`: the domain writes it into the cameras' books, the cluster's other ingests
 # find it there; ADR-0065, its addition of 2026-10-08).
-heartbeat: {strings: [volume, volume_error, archive, ingest, volume_missing]}
+heartbeat: {strings: [volume, volume_error, ingest, volume_missing]}
 # A recorder records on past an unconfirmed lease for as long as the silence lasts — its samples carry the epoch — but
 # a volume any box may serve is let go when its hold goes unconfirmed (`placement.places.lease: strict` below).
 lease: {unconfirmed_max: forever}
@@ -57,7 +57,7 @@ lease: {unconfirmed_max: forever}
 # the book `domain/auto/asks`. Here a worker reads what its spec
 # names. A book is a member's copy by its exact name; the domain-holder cluster has no copy and reads its own row
 # `domain/<sub>/<book>/<CLUSTER>` — the rights generator grants that one row (P/02.5 Н1.4); only the copy is declared.
-worker: {exec: /usr/lib/rec/worker, reads: [cam/heartbeats/, det/units/, domain/cam/sources, domain/rec/primaries, domain/rec/upstream, domain/placed/rec/, domain/member-list, domain/member-topology, domain/topology, domain/view], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 40}   # requests: a camera's pusher files cam/requests/rec.ask-<id> as the recorder (V/02.9 Н1.2)
+worker: {exec: /usr/lib/rec/worker, reads: [cam/heartbeats/, det/units/, domain/cam/sources, domain/rec/primaries, domain/rec/upstream, domain/placed/rec/, domain/member-list, domain/member-topology, domain/topology, domain/view], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 45}   # requests: a camera's pusher files cam/requests/rec.ask-<id> as the recorder (V/02.9 Н1.2)
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
@@ -66,8 +66,8 @@ about: {sub: cam, field: cam}
 # share of the part (the recorders of the server are let in by the part's group); its protocol — spec/02-rec.obsd.contract.md.
 # Its path is `OBSD_SOCKET` of the subsystem file (default /run/vms-rec-obsd/obsd.sock, V/02.2 Н1.3), not an argument here:
 # a stand gives each instance its own. The engine reads no file and the part's unit passes only W2C_SUB_ENV (P/02.4 Н1.1)
-# — the part's exec is a VMS wrapper: it reads the subsystem file and starts /usr/local/bin/obsd with the file's OBSD_* keys
-# in its environment (the socket always, with its default).
+# — the part's exec is a VMS wrapper: it reads the subsystem file and starts /usr/local/bin/obsd with the four OBSD_* keys of
+# V/02.2 Н1.3 in its environment, each from the file or at its default; no other name is passed.
 parts: {obsd: {exec: "/usr/lib/rec/obsd-part", volumes: true, stop_timeout: 60}}
 shares: {obsd: {kind: socket, part: obsd}}
 unit:
@@ -183,9 +183,9 @@ tables:
     fields:
       name:             {type: string, required: true}
       kind:             {type: string, default: local, schema: {enum: [local, network, backup, edge, incidents]}}
-      # the directory it is, or the address it is at — never the key to it: a login or a credential anywhere in it is
+      # the directory it is (`file://`), or the bucket's address (`s3://`) — never the key to it: a login or a credential anywhere in it is
       # refused (the platform's address rule; the twelfth review, blocker 10)
-      url:              {type: url, required: true, credentials: {login: access_key, secret: access_secret}, secret_in: [{param: [sig, signature, xamzsignature, accountkey, sharedaccesssignature]}, {param: ['password*', 'passwd*', 'pwd*', 'secret*', '*password', '*passwd', '*pwd', '*secret', '*token']}, {nested: [src, url]}]}
+      url:              {type: url, required: true, credentials: {login: access_key, secret: access_secret}, secret_in: [{param: [sig, signature, xamzsignature, accountkey, sharedaccesssignature]}, {param: ['password*', 'passwd*', 'pwd*', 'secret*', '*password', '*passwd', '*pwd', '*secret', '*token']}, {nested: [src, url]}], schemes: {file: {host: path}, s3: {}}}
       server:           {type: string}               # local, edge, a backup or incidents disk: whose; network: empty
       # its SIZE: the ring the engine formats it as — what lets one partition hold two volumes
       quota_bytes:      {type: int, required: true, schema: {minimum: 1}}
@@ -211,7 +211,7 @@ tables:
           # the card in one camera — a directory on it, with no key: an address is a local or network volume
           then:
             required: [server, cam]
-            properties: {url: {anyOf: [{pattern: "^file://"}, {not: {pattern: "^[A-Za-z][A-Za-z0-9+.-]*://"}}]}}
+            properties: {url: {pattern: "^file://"}}
             allOf: [{not: {required: [access_key]}}, {not: {required: [access_secret]}}]
           else: {not: {required: [cam]}}             # `cam` is a card's: a disk or a bucket is no camera's
     journal: {written: archive.volume.declared, deleted: archive.volume.withdrawn}
@@ -330,7 +330,7 @@ metrics:
   - {name: volume_shrink_pending, from: heartbeat.quota_note, agg: flag, default: 0}
   - {name: archive_away_seconds, from: heartbeat.archive_away_since, agg: age, default: 0, live: true}
   - {name: archive_failure, from: heartbeat.archive_failure, agg: label, label: kind, live: true}
-  # No default: a recorder that has said nothing of its writer has no series (V/02.4 Н1.6 — every recorder counts).
+  # No default: a recorder that has said nothing of its writer has no series (V/02.4 Н1.7 — every recorder counts).
 # The rows about the recording NOW (writer, volume_error, archive_failure, archive_away_seconds, last_frame_age_seconds) are
 # `live: true`: a gone recorder's last pulse does not stay in them (V/02.4 Н1.8; P/06.5 Н3 «Ряды манифеста»).
   - {name: writer, from: heartbeat.writer.state, agg: label, label: state, values: [ok, stalled, losing], live: true}
@@ -383,6 +383,7 @@ servers:
     - {table: volumes, by: server, title: тома, columns: [name, kind, url, quota_bytes, enabled]}
   status:
     - {field: volume_missing, title: том не найден}
+    - {field: volume_error, title: том не взят}
     - {field: shrink_pending, title: уменьшение квоты не подтверждено}
     - {field: writer.state, title: запись в архив}
     - {field: objectstorage.block_small, title: "блок тома меньше кадров видео, байт"}

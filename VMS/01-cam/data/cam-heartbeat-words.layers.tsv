@@ -6,3 +6,7 @@ place	layer	word	value
 /properties/identity_changes	3	x-integer	true
 /properties/identity_coincidences	3	x-integer	true
 /properties/inputs_off	3	x-integer	true
+/properties/status/items/properties/coverage/properties/fragments	3	x-integer	true
+/properties/status/items/properties/coverage/properties/from	3	x-time	true
+/properties/status/items/properties/coverage/properties/said_at	3	x-time	true
+/properties/status/items/properties/coverage/properties/to	3	x-time	true

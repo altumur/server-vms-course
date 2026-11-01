@@ -776,8 +776,8 @@ async function addStream(cam){
   const v=await pc.dialog("Новый поток: "+camName(cam),[
     {name:"profile",label:"Имя потока",value:""},
     {name:"source",label:"Адрес потока",value:""},
-    {name:"cred_username",label:"Логин устройства",value:"",help:"пусто — логин и пароль камеры, если адрес на том же хосте"},
-    {name:"cred_secret",label:"Пароль устройства",type:"password"}],"Создать");
+    {name:"cred_username",label:"Логин устройства",value:""},
+    {name:"cred_secret",label:"Пароль устройства",type:"password",help:"пусто — логин и пароль камеры, если адрес на том же хосте"}],"Создать");
   if(!v)return;
   if(!v.source){pc.toast("Нужен адрес потока");return}
   const body={main:String(cam),profile:v.profile||"поток",source:v.source,...(v.cred_username?{cred_username:v.cred_username}:{}),...(v.cred_secret?{cred_secret:v.cred_secret}:{})};

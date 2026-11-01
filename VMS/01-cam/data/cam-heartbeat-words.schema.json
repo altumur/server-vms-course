@@ -66,14 +66,43 @@
      },
      "coverage": {
       "description": "покрытие архива устройства (V/01.5 Н1.1)",
-      "type": "array"
+      "type": "object",
+      "properties": {
+       "from": {
+        "type": "number",
+        "x-time": true
+       },
+       "to": {
+        "type": "number",
+        "x-time": true
+       },
+       "fragments": {
+        "type": "integer",
+        "minimum": 0,
+        "x-integer": true
+       },
+       "said_at": {
+        "type": "number",
+        "x-time": true
+       }
+      },
+      "required": [
+       "from",
+       "to",
+       "fragments"
+      ],
+      "additionalProperties": false
      },
      "index_url": {
       "type": "string"
      },
      "taken_by": {
-      "description": "кто забирает поток камеры (V/01.6 Н1.4)",
-      "type": "string"
+      "description": "кто забирает поток камеры: список имён кластеров (V/01.6 Н1.4)",
+      "type": "array",
+      "items": {
+       "type": "string",
+       "minLength": 1
+      }
      }
     },
     "additionalProperties": true
