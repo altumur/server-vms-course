@@ -1,7 +1,7 @@
 # Приёмка V/06.1 — обход — единица
 
 Норма главы — [`06.1-detedge.norms.md`](../../spec/06.1-detedge.norms.md) Н5. Стенд и словарь — [общий README приёмки
-VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `2eb1d9cb`, пин VMS).
+VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `0d855785`, пин VMS).
 
 ## Подготовка
 
