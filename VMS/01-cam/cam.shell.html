@@ -1514,7 +1514,7 @@ async function loadAuto(){
     autos=(d.configured||[]).map(c=>{const r=seen[String(c.id)]||null;
       return{...c,id:String(c.id),worker:r?r.worker:null,phase:r?r.phase:"silent",reason:r&&(r.reason||r.why)||"",
         unfit:r&&Array.isArray(r.unfit)&&r.unfit.length?r.unfit:null,unchecked:r&&Array.isArray(r.unchecked)&&r.unchecked.length?r.unchecked:null}})
-      .sort((a,b)=>a.id.localeCompare(b.id));
+      .sort((a,b)=>(+a.id)-(+b.id));   // a scenario's id is a number the door issues (V/07.1): the list keeps that order
     autoOff=false;
   }catch(e){autos=[];autoOff=true}
   // det is there when the console mounts it (`/mounts`, P/06.5 root), not when the module's subsystems name it
@@ -1529,22 +1529,19 @@ async function loadFires(id){
   renderRules();
 }
 const jsonList=v=>{try{const x=typeof v==="string"?JSON.parse(v):v;return Array.isArray(x)?x:[]}catch(e){return[]}};
-function ruleOf(r){return{id:r.id,name:r.name||r.id,enabled:r.enabled!==false,rate_per_minute:+r.rate_per_minute||0,within:+r.within||0,
+function ruleOf(r){return{id:r.id,name:r.name||r.id,start:r.start||"event",enabled:r.enabled!==false,rate_per_minute:+r.rate_per_minute||0,within:+r.within||0,
   valid_for:+r.valid_for||0,when:jsonList(r.when),then:jsonList(r.then)}}
 const curRule=()=>ruleDraft||(autos.find(r=>r.id===RSEL)?ruleOf(autos.find(r=>r.id===RSEL)):null);
 const editRule=()=>(ruleDraft=ruleDraft||JSON.parse(JSON.stringify(curRule())));
-// A name by the row-check contract, «Identifier» (`named.refused`): not empty, not "." or "..", no / \ | " , no
-// control (Cc), line or paragraph separator (Zl, Zp), no digit outside 0–9. A taken name is the door's 409, not checked here.
-const idProblem=n=>!n?"пустое":n==="."||n===".."?"«.» и «..» — не имена":/[\/\\|",]/.test(n)?"знаки / \\ | \" , в имени нельзя":
-  /[\p{Cc}\p{Zl}\p{Zp}]/u.test(n)?"управляющие знаки и переводы строк в имени нельзя":/(?![0-9])\p{Nd}/u.test(n)?"цифры — только 0–9":"";
 // The same refusals as the server's, in its words: a screen that takes what the subsystem will refuse lies twice.
 function ruleProblem(r){
-  if(!r.name)return"У сценария должно быть имя: по нему его находят в списке и в журнале";
-  if(!r.id){const w=idProblem(r.name);if(w)return"Имя сценария: "+w}
-  if(!r.when.length||r.when.length>4)return"«если» — от одного до четырёх событий";
+  if(!r.name)return"У сценария должно быть имя: по нему его находят в списке";
+  // an unfinished scenario is kept switched off, and one started by a schedule or a person has no event (V/07.1)
+  if(r.when.length>4||(!r.when.length&&r.enabled&&(r.start||"event")==="event"))return"«если» — от одного до четырёх событий";
   if(r.when.some(t=>!t.sub||!t.kind))return"у события должны быть подсистема и вид";
-  if(!r.then.length||r.then.length>4)return"«то» — от одного до четырёх действий";
-  for(const a of r.then){const k=actionKind(a),miss=k.fields.filter(f=>!f.opt).find(f=>!String(a[f.id]??"").trim());if(miss)return`«${k.label}»: не заполнено поле «${miss.label}»`}
+  if(r.then.length>4||(!r.then.length&&r.enabled))return"«то» — от одного до четырёх действий";
+  // a step with `target` names its devices there, not in `unit` or `cam` (V/07.1)
+  for(const a of r.then){const k=actionKind(a),miss=k.fields.filter(f=>!f.opt&&!("target" in a&&(f.id==="unit"||f.id==="cam"))).find(f=>!String(a[f.id]??"").trim());if(miss)return`«${k.label}»: не заполнено поле «${miss.label}»`}
   for(const a of r.then){const k=actionKind(a);for(const f of k.fields){const x=a[f.id];if(x==null)continue;
     if(f.len&&typeof x==="string"&&x.length>f.len)return`«${k.label}»: «${f.label}» — не длиннее ${f.len} знаков`;
     if(!f.t)continue;
@@ -1602,7 +1599,7 @@ function ruleCardHtml(r){
     ${row&&row.phase==="refused"&&row.reason?`<div class="nt err">Вычислитель отказал: ${esc(row.reason)}</div>`:""}
     ${row&&row.unfit?`<div class="nt err">Не годится: ${esc(row.unfit.join("; "))}</div>`:""}
     ${row&&row.unchecked?`<p class="sub">Не проверено (устройство не сказало): ${esc(row.unchecked.join("; "))}</p>`:""}
-    ${card("Сценарий",`<div class="g"><div><label>Имя</label><input type="text" value="${esc(r.name)}" data-act="rf" data-f="name" ${r.id?"readonly disabled":""}></div>
+    ${card("Сценарий",`<div class="g"><div><label>Имя</label><input type="text" value="${esc(r.name)}" data-act="rf" data-f="name"></div>
       <div><label>Включён</label><select data-act="rf" data-f="enabled"><option value="1" ${r.enabled?"selected":""}>да</option><option value="0" ${r.enabled?"":"selected"}>нет</option></select></div></div>`)}
     ${card("Если",when)}${card("То",then)}
     ${bad?`<div class="nt err">${esc(bad)}</div>`:""}
@@ -1620,7 +1617,7 @@ function renderRules(){
   const num=el=>{if(el.validity&&el.validity.badInput)return"?";const t=String(el.value).trim(),n=Number(t);return t===""?0:isFinite(n)?n:t},i=el=>+el.dataset.i;
   wire(RULES_HOST,{
     pick:el=>{RSEL=el.dataset.id;ruleDraft=null;renderRules()},
-    new:()=>{RSEL=null;const a=actionsOn()[0];ruleDraft={id:"",name:"",enabled:true,rate_per_minute:0,within:0,valid_for:0,when:[{sub:"cam",kind:(triggerKinds("cam")[0]||["silent"])[0]}],then:[{sub:a.sub,action:a.action}]};renderRules()},
+    new:()=>{RSEL=null;const a=actionsOn()[0];ruleDraft={id:"",name:"",start:"event",enabled:true,rate_per_minute:0,within:0,valid_for:0,when:[{sub:"cam",kind:(triggerKinds("cam")[0]||["silent"])[0]}],then:[{sub:a.sub,action:a.action}]};renderRules()},
     rf:(el)=>{const d=editRule(),f=el.dataset.f;d[f]=f==="enabled"?el.value==="1":f==="name"?el.value.trim():num(el);renderRules()},
     tf:(el)=>{const t=editRule().when[i(el)],f=el.dataset.f,v=el.value.trim();if(f==="match"){if(v)t.match=parseMatch(v);else delete t.match}else if(v)t[f]=v;else delete t[f];renderRules()},
     tadd:()=>{editRule().when.push({sub:"cam",kind:""});renderRules()},
@@ -1638,13 +1635,16 @@ async function saveRule(){
   const bad=ruleProblem(r);if(bad){pc.toast("Отказано: "+bad);return}
   const body={enabled:r.enabled,when:r.when,then:r.then,within:r.within,rate_per_minute:r.rate_per_minute,valid_for:r.valid_for};
   try{
-    if(r.id)await pc.api("PUT","/auto/scenarios/"+encodeURIComponent(r.id),body);
-    else await pc.api("POST","/auto/scenarios",{name:r.name,...body});
-    RSEL=r.id||r.name;ruleDraft=null;await loadAuto();renderRules();pc.toast("Сохранено");
+    // the id is the door's: a new scenario is found by the row it answers with; the name is a field like any
+    if(r.id){const was=autos.find(x=>x.id===r.id);if(!was||r.name!==(was.name||was.id))body.name=r.name;
+      await pc.api("PUT","/auto/scenarios/"+encodeURIComponent(r.id),body);RSEL=r.id}
+    else{const made=await pc.api("POST","/auto/scenarios",{name:r.name,...body});RSEL=made&&made.id!=null?String(made.id):null}
+    ruleDraft=null;await loadAuto();renderRules();pc.toast("Сохранено");
   }catch(e){writeFailed(e,()=>loadAuto().then(renderRules))}
 }
 function delRule(id){
-  if(!id||!pc.confirm(`Удалить сценарий «${id}»?`,"Уже поданные заявки этим не отменяются: их выполнит или отвергнет тот, кому они адресованы."))return;
+  const was=autos.find(x=>x.id===id);
+  if(!id||!pc.confirm(`Удалить сценарий «${(was&&was.name)||id}»?`,"Уже поданные заявки этим не отменяются: их выполнит или отвергнет тот, кому они адресованы."))return;
   (async()=>{try{await pc.api("DELETE","/auto/scenarios/"+encodeURIComponent(id));RSEL=null;ruleDraft=null;await loadAuto();renderRules();pc.toast("Сценарий удалён")}
     catch(e){writeFailed(e,()=>loadAuto().then(renderRules))}})();
 }

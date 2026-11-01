@@ -6768,6 +6768,17 @@ components:
       - timezone
       additionalProperties: false
       properties:
+        domain:
+          description: Домен кластера из domain/root; null — строка не читается; нет поля — вне домена (договор сторожевой session).
+          unevaluatedProperties: false
+          oneOf:
+            - type: 'null'
+            - type: object
+              required: [name, root]
+              additionalProperties: false
+              properties:
+                name: {type: string}
+                root: {type: string}
         open:
           const: true
         login_url:
@@ -6807,6 +6818,17 @@ components:
       - timezone
       additionalProperties: false
       properties:
+        domain:
+          description: Домен кластера из domain/root; null — строка не читается; нет поля — вне домена (договор сторожевой session).
+          unevaluatedProperties: false
+          oneOf:
+            - type: 'null'
+            - type: object
+              required: [name, root]
+              additionalProperties: false
+              properties:
+                name: {type: string}
+                root: {type: string}
         open:
           const: false
         login_url:

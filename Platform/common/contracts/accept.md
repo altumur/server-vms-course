@@ -117,7 +117,7 @@ member_objects:                               # что агент несёт и 
                               (P/02.1 Н1.2б); что агент берёт в отчёт (фильтр живости слота, конверты секретов) — P/09.1 Н1.2
                               liveness, in_report; держатель хранит как есть, решает сборка (P/08.5 Н1.3)
     domain/reaches:           {networks: [<сеть>…]} (P/09.1 Н1.7)
-    domain/servers:           {servers: {<сервер>: {labels}}} (P/09.1 Н1.2)
+    domain/servers:           {servers: {<сервер>: {labels}}, url?} (P/09.1 Н1.2)
     domain/folders-state:     {rev, scope, gone, own?} (P/08.5 Н1.8, P/09.1 Н1.5)
     witness:                  объекты <sub>/<report>/<имя> свидетелей domain.witness (P/02.1 Н1.2б); <sub>/<report> без имени —
                               не свидетель (P/09.1 Н1.10, P/10 Н1.8)

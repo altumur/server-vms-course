@@ -1,15 +1,15 @@
 scenario	step	request	expect
 # Приёмка V/07.1: сценарий — единица и язык (дверь единиц консоли auto). Формат — README.
-01-create	1	POST /scenarios {"name": "door-on-badge", "when": [{"sub": "cam", "kind": "io.input", "unit": "12", "match": {"port": 1, "value": "closed"}}], "then": [{"sub": "cam", "action": "output", "unit": "12", "port": 2, "pulse_ms": 500}]}	201 {"id": "door-on-badge", "within": 0, "rate_per_minute": 6, "valid_for": 30, "enabled": true}
-01-create	2	POST /scenarios {"name": "s2", "when": [], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "@any"}
+01-create	1	POST /scenarios {"name": "door-on-badge", "when": [{"sub": "cam", "kind": "io.input", "unit": "12", "match": {"port": 1, "value": "closed"}}], "then": [{"sub": "cam", "action": "output", "unit": "12", "port": 2, "pulse_ms": 500}]}	201 {"id": "1", "name": "door-on-badge", "start": "event", "when": "@any", "within": 0, "rate_per_minute": 6, "valid_for": 30, "enabled": true, "repeat": "skip", "log_only": false, "allow_chain": true, "hidden": ""}
+01-create	2	POST /scenarios {"name": "s2", "when": [], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	201 {"name": "s2", "when": []}
 01-create	3	POST /scenarios {"name": "s3", "when": [{"sub": "det", "kind": "motion", "extra": 1}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "@any"}
 01-create	4	POST /scenarios {"name": "s4", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "reboot", "unit": "7"}]}	400 {"error": "@any"}
 01-create	5	POST /scenarios {"name": "s5", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "within": 4000}	400 {"error": "@any"}
 01-create	6	POST /scenarios {"name": "s6", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "valid_for": 3}	400 {"error": "@any"}
-01-create	7	POST /scenarios {"name": "f-preset", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	201 {"id": "f-preset"}
-01-create	8	POST /scenarios {"name": "f-record", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "rec", "action": "record", "cam": "7", "minutes": 5}]}	201 {"id": "f-record"}
-01-create	9	POST /scenarios {"name": "f-detect", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "det", "action": "detect", "cam": "7", "kind": "motion", "minutes": 5}]}	201 {"id": "f-detect"}
-01-create	10	POST /scenarios {"name": "f-scan", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "det", "action": "scan", "cam": "7", "kind": "motion", "before": 30, "after": 30}]}	201 {"id": "f-scan"}
+01-create	7	POST /scenarios {"name": "f-preset", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	201 {"name": "f-preset"}
+01-create	8	POST /scenarios {"name": "f-record", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "rec", "action": "record", "cam": "7", "minutes": 5}]}	201 {"name": "f-record"}
+01-create	9	POST /scenarios {"name": "f-detect", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "det", "action": "detect", "cam": "7", "kind": "motion", "minutes": 5}]}	201 {"name": "f-detect"}
+01-create	10	POST /scenarios {"name": "f-scan", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "det", "action": "scan", "cam": "7", "kind": "motion", "before": 30, "after": 30}]}	201 {"name": "f-scan"}
 01-create	11	POST /scenarios {"name": "m-output", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "output", "unit": "12"}]}	400 {"error": "@any"}
 01-create	12	POST /scenarios {"name": "x-output", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "output", "unit": "12", "port": 2, "n": 1}]}	400 {"error": "@any"}
 01-create	13	POST /scenarios {"name": "m-preset", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7"}]}	400 {"error": "@any"}
@@ -23,8 +23,66 @@ scenario	step	request	expect
 01-create	21	POST /scenarios {"name": "five-when", "when": [{"sub": "det", "kind": "motion"}, {"sub": "det", "kind": "motion"}, {"sub": "det", "kind": "motion"}, {"sub": "det", "kind": "motion"}, {"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "@any"}
 01-create	22	POST /scenarios {"name": "five-then", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}, {"sub": "cam", "action": "preset", "unit": "7", "n": 3}, {"sub": "cam", "action": "preset", "unit": "7", "n": 3}, {"sub": "cam", "action": "preset", "unit": "7", "n": 3}, {"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "@any"}
 01-create	23	POST /scenarios {"name": "rate-601", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "rate_per_minute": 601}	400 {"error": "@any"}
-01-create	24	POST /scenarios {"name": "rate-0", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "rate_per_minute": 0}	201 {"id": "rate-0", "rate_per_minute": 0}
-01-create	25	POST /scenarios {"name": "valid-0", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "valid_for": 0}	201 {"id": "valid-0", "valid_for": 0}
+01-create	24	POST /scenarios {"name": "rate-0", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "rate_per_minute": 0}	201 {"name": "rate-0", "rate_per_minute": 0}
+01-create	25	POST /scenarios {"name": "valid-0", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "valid_for": 0}	201 {"name": "valid-0", "valid_for": 0}
 01-create	26	POST /scenarios {"name": "valid-9", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "valid_for": 9}	400 {"error": "@any"}
 01-create	27	POST /scenarios {"name": "minutes-str", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "rec", "action": "record", "cam": "7", "minutes": "5"}]}	400 {"error": "@any"}
 01-create	28	POST /scenarios {"name": "port-str", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "output", "unit": "12", "port": "2"}]}	400 {"error": "@any"}
+02-key	1	POST /scenarios {"id": 7, "name": "k", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "platform_field", "field": "/id", "detail": "~id"}
+02-key	2	POST /scenarios {"name": "Дверь по пропуску", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	201 {"id": "$k", "name": "Дверь по пропуску"}
+02-key	3	PUT /scenarios/$k {"name": "Другое имя, тот же номер"}	200 {"id": "$k", "name": "Другое имя, тот же номер"}
+03-fields	1	POST /scenarios {"name": "sched", "start": "schedule", "run_at": {"days": [1, 5], "time": "23:30"}, "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	201 {"start": "schedule", "run_at": {"days": [1, 5], "time": "23:30"}, "when": []}
+03-fields	2	POST /scenarios {"name": "draft", "enabled": false, "start": "manual", "run_mode": "manual"}	201 {"enabled": false, "start": "manual", "run_mode": "manual", "when": [], "then": []}
+03-fields	3	POST /scenarios {"name": "bad-time", "run_at": {"days": [1], "time": "25:00"}}	400 {"error": "@any"}
+03-fields	4	POST /scenarios {"name": "bad-day", "run_at": {"days": [8], "time": "10:00"}}	400 {"error": "@any"}
+03-fields	5	POST /scenarios {"name": "bad-start", "start": "cron"}	400 {"error": "@any"}
+03-fields	6	POST /scenarios {"name": "bad-repeat", "repeat": "twice"}	400 {"error": "@any"}
+03-fields	7	POST /scenarios {"name": "mute", "log_only": true, "log_only_since": "2026-11-01", "owner": "admin", "purpose": "проверка", "run_as_role": "r1", "allow_chain": false}	201 {"log_only": true, "allow_chain": false}
+03-fields	8	POST /rule_marks {"scenario": "1", "mute": {"until": 1760003600}}	400 {"error": "@any"}
+03-fields	9	POST /scenarios {"name": "hidden", "hidden": "record"}	201 {"hidden": "record"}
+03-fields	10	POST /scenarios {"name": "bad-hidden", "hidden": "secret"}	400 {"error": "@any"}
+04-target	1	POST /scenarios {"name": "area", "when": [{"sub": "det", "kind": "motion", "target": {"include": [{"kind": "folder", "id": "ab12"}, {"kind": "device", "id": "7"}], "exclude": ["9"], "gone": [], "from_event": false}}], "then": [{"sub": "rec", "action": "record", "target": {"include": [{"kind": "folder", "id": "ab12"}, {"kind": "device", "id": "7"}], "exclude": ["9"], "gone": [], "from_event": false}, "minutes": 5}]}	201 {"name": "area"}
+04-target	2	POST /scenarios {"name": "no-target", "enabled": false, "then": [{"sub": "cam", "action": "output", "target": null}]}	201 {"name": "no-target"}
+04-target	3	POST /scenarios {"name": "from-event", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "n": 2, "target": {"include": [], "exclude": [], "gone": [], "from_event": true}}]}	201 {"name": "from-event"}
+04-target	4	POST /scenarios {"name": "both-then", "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3, "target": {"include": [{"kind": "folder", "id": "ab12"}, {"kind": "device", "id": "7"}], "exclude": ["9"], "gone": [], "from_event": false}}]}	400 {"error": "@any"}
+04-target	5	POST /scenarios {"name": "both-when", "when": [{"sub": "det", "kind": "motion", "unit": "7", "target": {"include": [{"kind": "folder", "id": "ab12"}, {"kind": "device", "id": "7"}], "exclude": ["9"], "gone": [], "from_event": false}}]}	400 {"error": "@any"}
+04-target	6	POST /scenarios {"name": "bad-kind", "when": [{"sub": "det", "kind": "motion", "target": {"include": [{"kind": "city", "id": "1"}], "exclude": [], "gone": [], "from_event": false}}]}	400 {"error": "@any"}
+05-conditions	1	POST /scenarios {"name": "cond", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "conditions": [{"kind": "time", "schedule": "s"}, {"kind": "mode", "modes": ["m"]}, {"kind": "armed", "target": {"include": [{"kind": "folder", "id": "ab12"}, {"kind": "device", "id": "7"}], "exclude": ["9"], "gone": [], "from_event": false}, "value": true}, {"kind": "recording", "target": {"include": [{"kind": "folder", "id": "ab12"}, {"kind": "device", "id": "7"}], "exclude": ["9"], "gone": [], "from_event": false}}, {"kind": "online", "target": {"include": [{"kind": "folder", "id": "ab12"}, {"kind": "device", "id": "7"}], "exclude": ["9"], "gone": [], "from_event": false}}]}	201 {"name": "cond"}
+05-conditions	2	POST /scenarios {"name": "bad-cond", "conditions": [{"kind": "weather"}]}	400 {"error": "@any"}
+05-conditions	3	POST /scenarios {"name": "extra-cond", "conditions": [{"kind": "time", "extra": 1}]}	400 {"error": "@any"}
+06-steps	1	POST /scenarios {"name": "wait", "then": [{"control": "wait", "sec": 5}, {"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	201 {"name": "wait"}
+06-steps	2	POST /scenarios {"name": "wait-event", "then": [{"control": "wait_event", "event": {"sub": "det", "kind": "motion"}, "sec": 30, "yes": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}], "no": []}]}	201 {"name": "wait-event"}
+06-steps	3	POST /scenarios {"name": "ask", "then": [{"control": "ask", "text": "Открыть?", "role": null, "sec": 60, "default": "no", "yes": [{"control": "wait", "sec": 1}], "no": []}]}	201 {"name": "ask"}
+06-steps	4	POST /scenarios {"name": "escalate", "then": [{"control": "escalate", "levels": [{"role": null, "via": "client", "wait_min": 5}], "stop": "ack"}]}	201 {"name": "escalate"}
+06-steps	5	POST /scenarios {"name": "two-levels", "then": [{"control": "ask", "text": "a", "role": null, "sec": 1, "default": "no", "no": [], "yes": [{"control": "wait_event", "yes": [{"control": "wait", "sec": 1}]}]}]}	201 {"name": "two-levels"}
+06-steps	6	POST /scenarios {"name": "three-levels", "then": [{"control": "ask", "text": "a", "role": null, "sec": 1, "default": "no", "no": [], "yes": [{"control": "wait_event", "yes": [{"control": "wait_event", "yes": [{"control": "wait", "sec": 1}]}]}]}]}	400 {"error": "@any"}
+06-steps	7	POST /scenarios {"name": "wait-no-sec", "then": [{"control": "wait"}]}	400 {"error": "@any"}
+06-steps	8	POST /scenarios {"name": "no-control", "then": [{"control": "sleep", "sec": 1}]}	400 {"error": "@any"}
+06-steps	9	POST /scenarios {"name": "arm", "then": [{"sub": "cam", "action": "arm", "unit": "7"}, {"sub": "cam", "action": "disarm", "unit": "7"}, {"sub": "cam", "action": "disable", "unit": "7", "minutes": 10}, {"sub": "auto", "action": "alarm", "target": {"include": [{"kind": "folder", "id": "ab12"}, {"kind": "device", "id": "7"}], "exclude": ["9"], "gone": [], "from_event": false}, "text": "Тревога", "priority": "high"}]}	201 {"name": "arm"}
+06-steps	10	POST /scenarios {"name": "disable-no-minutes", "then": [{"sub": "cam", "action": "disable", "unit": "7"}]}	400 {"error": "@any"}
+06-steps	11	POST /scenarios {"name": "chain", "then": [{"sub": "auto", "action": "runrule", "rule": 1}]}	201 {"name": "chain"}
+06-steps	12	POST /scenarios {"name": "no-subject", "enabled": false, "then": [{"sub": "ntf", "action": "email", "to": "a@b", "subject": "s"}]}	201 {"name": "no-subject"}
+07-requests	1	POST /scenarios {"name": "req-run", "when": [{"sub": "det", "kind": "motion"}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	201 {"id": "$s"}
+07-requests	2	POST /requests {"unit": "$s", "action": "run"}	202 {"queued": "@any"}
+07-requests	3	POST /requests {"unit": "$s", "action": "retry", "fire": "$s-at-1800000000"}	202 {"queued": "@any"}
+07-requests	4	POST /requests {"unit": "$s", "action": "reboot"}	400 {"error": "@any"}
+07-requests	5	POST /requests {"unit": "$s", "action": "run", "port": 1}	400 {"error": "@any"}
+07-requests	6	POST /rule_marks {"scenario": "$s", "mute": {"since": 1760000000, "until": 1760003600, "by": "admin", "reason": "работы"}, "order": 3}	201 {"order": 3, "mute": {"by": "admin", "until": 1760003600}}
+07-requests	7	GET /scenarios/$s	200 {"revision": 1}
+07-requests	8	POST /chains {"target": "$s", "f": "00000000000000000000000000000000", "i": "0", "firing": "x", "level": 2, "moment": 1760000000, "started_by": "manual"}	403 {"error": "denied"}
+07-requests	9	POST /answers {"scenario": "$s", "fire": "f1", "step": "0", "user": "admin", "answer": "yes"}	2xx
+07-requests	10	@manual ответ на ask: член группы роли шага — ветка ответа; чужая роль и чужой user — answer.refused, answers_refused + 1, срок идёт; ответ после срока не действует; из двух действующих решает ранний at: стенд без воркеров	manual
+08-run	1	@manual стенд приёмки 1 без воркеров: сценарий с wait 30: рестарт вычислителя на ожидании — строка auto/state/runs/<id> цела, шаг после ожидания подан один раз, срок от конца ожидания; перезапуск до записи строки — курсор стоял, сработка решена заново	manual
+08-run	2	@manual стенд приёмки 1 без воркеров: wait_event: событие до until — ветка yes, срок от его occurred; без события — ветка no только при through ≥ until; при молчащем ресурсе ветка не решена	manual
+08-run	3	@manual стенд приёмки 1 без воркеров: repeat: при идущем запуске skip — fired result skip, busy false; restart — прежний снят, новый идёт; queue — идёт за прежним, сверх 16 — как skip	manual
+08-run	4	@manual стенд приёмки 1 без воркеров: новая revision на ожидании: запуск снят, шаг не подан, последняя строка fired — с waiting	manual
+08-run	5	@manual стенд приёмки 1 без воркеров: log_only: fired result watch, step would, просьбы нет; приглушение и окно обслуживания: result skip; просьба run при них идёт, условие time судит	manual
+08-run	6	@manual стенд приёмки 1 без воркеров: условие armed: строки cam/rule_state нет — не на охране; строка нечитаема — проверка cond.unread, а не «условие ложно»; online и recording по текущему состоянию	manual
+08-run	7	@manual стенд приёмки 1 без воркеров: цель-папка: новая камера в папке входит без правки сценария; exclude вычтен; папка нечитаема — шаг fail target.unread, не target.areaEmpty; gone — шаг fail, прочие идут, result part	manual
+08-run	8	@manual стенд приёмки 1 без воркеров: run_as_role: роль без права — шаг fail role.denied; роль admin — отказ	manual
+08-run	9	@manual стенд приёмки 1 без воркеров: run_at: момент в окне даёт одну сработку <id>-at-<m>, повтор после переезда — те же имена; момент простоя — кандидат при подъёме, просьба late	manual
+08-run	10	@manual стенд приёмки 1 без воркеров: retry: отказавшие шаги сработки поданы снова, именем <id>-retry-<rid>; отказов нет — refused nothing; log_only — refused logOnly; run выключенного — refused off	manual
+08-run	11	@manual стенд приёмки 1 без воркеров: POST /auto/test/<id>: черновик без строки, шаги would, просьб и заказов нет, branches выбирают ветку; log без scenario — 422 log_needs_scenario	manual
+08-run	12	@manual стенд приёмки 1 без воркеров: runrule: строка auto/chains/<target>-<f>-<i> записана один раз, цель запускается, taken стоит, повтор сработки — та же строка; allow_chain false — шаг fail chain.forbidden; уровень 6 — chain.max; приглушённая цель — fired skip	manual
+08-run	13	@manual стенд приёмки 1 без воркеров: приглушение на ожидании: строка rule_marks записана, revision сценария прежняя, запуск дошёл до конца, since не сдвинут; строка rule_marks нечитаема — проверка cond.unread, сработка не идёт	manual
+08-run	14	@manual рестарт держателя после ветки yes в пределах JOURNAL_BACK: сработка решена по done, ветки no нет; простой дольше JOURNAL_BACK: событие wait_event найдено, ветка yes; запуск из очереди: срок просьбы от начала: стенд без воркеров	manual

@@ -14,3 +14,4 @@ date	sample	fix	languages
 2026-11-01	4/scenarios.tsv: 05-builtin, 05-ptz	новые сценарии, @manual: аналитики и телеметрии в подставном драйвере нет (ADR-0107 пп. 8, 9, доп. (2) п. 3)	all
 2026-11-01	4/scenarios.tsv: 02-owner шаг 7	обязательный перечень повторяется, пока не пройдёт (Quint v014o В3)	all
 2026-11-01	4/scenarios.tsv: 02-owner шаг 8	решает позднейшее слово настроек по штампу at (Quint v014o В1)	all
+2026-11-01	4/scenarios.tsv: 06-rule-state	новый сценарий: охрана и выключение на время, строка rule_state (ADR-0105 пп. 6, 8)	all

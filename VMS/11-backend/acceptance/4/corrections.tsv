@@ -14,3 +14,5 @@ date	sample	fix	languages
 2026-11-01	4/scenarios.tsv: 10-archives шаги 31–33	Archive.kind вне перечня закреплённого контракта шаг не судит: вид — строкой rec/volumes, шаг 34 (ждёт перепина)	-
 2026-11-01	4/scenarios.tsv: 08-profile-ops шаги 21–29	пауза устарела, занятые объекты 409 BUSY (ADR-0111 п. 20, контракт 785824c)	all
 2026-11-01	4/scenarios.tsv: 07-profile шаги 24–26, 10-archives шаг 38	тело формы, /settings, ref (ревью consolem-pin Б-2, С-1, М-6)	all
+2026-11-01	4/scenarios.tsv	17-rules, 18-schedules, 19-revert, 20-motion: новые сценарии автоматизации и отката (ADR-0105, ADR-0106, ADR-0111 пп. 4, 18, 19)	-
+2026-11-01	4/scenarios.tsv: 17-rules шаги 39–41, 20-motion шаг 24	запись calls <s>/requests (P/06.3 Н1.9): run, retry — просьбы; включение выключенной правилом — просьба disable, шаг 24 — @manual	-

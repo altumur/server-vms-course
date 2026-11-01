@@ -1708,6 +1708,11 @@
    "anyOf": [
     {
      "enum": [
+      "domain/edits",
+      "domain/members",
+      "GET domain/members",
+      "domain/placement",
+      "GET domain/placement",
       "GET domain/folders",
       "domain/folders",
       "domain/memberof",

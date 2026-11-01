@@ -6,12 +6,12 @@
 # holder's, V/01.4), `cam/children/<id>` and `cam/child_settings/<id>` (a device's inputs and outputs — the holder's
 # and the operator's, V/01.1 Н1.2а), `cam/device_units/<id>` and `cam/unit_next/<camera>` (the units of a device, which
 # the operator declares and the holder creates, V/01.1 Н1.2б), `cam/searches/<cluster>`, `cam/found/<h>`, `cam/probes/<id>`,
-# `cam/probe_replies/<id>` (a search of the network and «which model», V/01.8), and the object-store keys `cam/heartbeats/<w>` and `cam/snapshot`.
+# `cam/probe_replies/<id>` (a search of the network and «which model», V/01.8), `cam/rule_state/<id>` (what rules set on a camera, V/01.4 Н1.4д), and the object-store keys `cam/heartbeats/<w>` and `cam/snapshot`.
 # It also prefixes every `/metrics` line (`cam_…`) and is the `<subsystem>` directory on the resource
 # (`<archive>/cam/<cam>/…`). The platform cuts the grants from it (P/02.1): the console's token gets `cam/cameras/*`,
 # `cam/next_id`, `cam/idem/*`, `cam/requests/*`, …;
 # the controller's `cam/workers/*`, `cam/placement/*`, `cam/slots/*`, `cam/decommissioned/*`; a worker's its epochs,
-# slot and place, and the rows of its own tables (`worker.writes`: `cam/devices/*`, `cam/children/*`).
+# slot and place, and the rows of its own tables (`worker.writes`: `cam/devices/*`, `cam/children/*`, `cam/rule_state/*`).
 name: cam
 # The slot a worker of this subsystem makes, `w-<n>`, and the variable naming the one it is started under
 # beside `WORKER_NAME` (the boundary's step 4: it was each worker's class saying it).
@@ -23,7 +23,7 @@ lease: {unconfirmed_max: forever}
 # `heartbeat.strings: [playback_key]`, no `secrets.readers: {door/signer: …}` (ADR-0075, window 2).
 # What the holder writes beside its claims: what a device it holds turned out to be (`cam/devices/<host>`, М10B Lesson
 # 25), the inputs and outputs it turned out to have (`cam/children/<id>`, ADR-0102) and what a search found (`cam/found/<h>`,
-# `cam/probe_replies/<id>`, V/01.8) — a discovery, not a decision. Its token and a cluster's rights file are cut from this (`worker:`).
+# `cam/probe_replies/<id>`, V/01.8) — a discovery, not a decision — and what a request of a rule set on a camera (`cam/rule_state/<id>`, V/01.4 Н1.4д). Its token and a cluster's rights file are cut from this (`worker:`).
 # Domain books (V/01.6, V/01.7): a member reads the copy `domain/<sub>/<book>`; the holder's cluster has no copy and
 # reads its own row `domain/<sub>/<book>/<CLUSTER>` — the rights generator grants that one row (P/02.5 Н1.4); only the
 # copy is declared here, never a prefix.
@@ -31,7 +31,7 @@ lease: {unconfirmed_max: forever}
 # in their heartbeats: with nobody, the device stays held and the stream unread.
 # `creates`: the holder orders its camera's recording on the card of its server, `rec/recordings/cam-<cam>-<volume>`, once:
 # no `until` to renew, a renewal would restart the recording (V/01.6 Н1.7; ADR-0108 доп. (1)); `rec/volumes/` — to see that card.
-worker: {exec: /usr/lib/cam/worker, writes: [devices, children, found, probe_replies], creates: [{sub: rec, rows: recordings, key: "{cam}-{home}"}], reads: [rec/recordings/, rec/volumes/, det/units/, live/heartbeats/, domain/rec/primaries, domain/placed/rec/, domain/rec/polls, domain/cam/licence, domain/view, domain/member-list, domain/member-topology, domain/topology]}
+worker: {exec: /usr/lib/cam/worker, writes: [devices, children, found, probe_replies, rule_state], creates: [{sub: rec, rows: recordings, key: "{cam}-{home}"}], reads: [rec/recordings/, rec/volumes/, det/units/, live/heartbeats/, domain/rec/primaries, domain/placed/rec/, domain/rec/polls, domain/cam/licence, domain/view, domain/member-list, domain/member-topology, domain/topology]}
 # The holder's frames on its own server (V/01.2 Н1.3): a share, `SHM_DIR` of the subsystem file (/run/vms-cam-shm), one
 # file per camera and holder epoch, `<id>-<epoch>.shm`, deleted by its writer, and a lower epoch's by the holder starting the unit (it has no writer); a subscriber on the same server
 # declares `worker.uses: [cam.shm]` (ADR-0091 п. 5) and takes the exact address from the pulse (`live_shm`).
@@ -352,6 +352,18 @@ tables:
     fields:
       camera: {type: string, required: true}
       n:      {type: int, required: true, schema: {minimum: 0}}
+  # What rules set on a camera (V/01.4 Н1.4д): on guard, and off for a while. The holder's, which performs `arm`, `disarm`
+  # and `disable`: a holder writes no row of `cam/cameras`, and a field there would bump `revision` and restart the
+  # camera for every word of a rule. A table and not `unit.state`: an edit of the camera must not take the word back.
+  # No row — never said: not on guard, not off.
+  rule_state:
+    key: camera
+    fields:
+      camera:           {type: string, required: true}   # a main `camera` row (`rights.unit_of`)
+      armed:            {type: bool, default: false}     # on guard: read by a rule's condition and `Device.armed`
+      disabled_by_rule: {type: string}                   # the scenario that turned it off; no field — not off
+      disabled_at:      {type: float}                    # since when, the holder's clock
+      disabled_until:   {type: float}                    # off while now < this: nobody clears it when it passes
   # A search of the cluster's networks (V/01.8): it has no unit and no holder and goes on every server, so it is no request
   # of `requests:` (P/06.4 asks for a unit) but one row a cluster, which `backend` writes with a person's ticket (a batch
   # with cas: a second search is refused there) and the base worker of every server reads. A new search replaces the row.
@@ -480,7 +492,7 @@ requests:
     additionalProperties: false
     properties:
       unit:        {type: string}
-      action:      {enum: [output, preset, preset_save, preset_clear, unit, talk]}
+      action:      {enum: [output, preset, preset_save, preset_clear, unit, talk, arm, disarm, disable]}
       # an argument is a word of at most 32 characters or a whole number up to 2^53 − 1 (the product's cross-check of
       # the eleventh review; integers past 2^53 are no number a spec holds), at the door as
       # at the holder
@@ -489,6 +501,8 @@ requests:
       pulse_ms:    {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
       n:           {type: [string, integer], maxLength: 32, maximum: 9007199254740991}
       operation:   {type: string, maxLength: 32}    # `unit`: an operation of the unit's template, as the device names it
+      disabled_by_rule: {type: string, maxLength: 32}   # `disable`: the scenario's id
+      disabled_until:   {type: number}                  # `disable`: off until then; not later than now — on again (V/01.4 Н1.4д)
       valid_until: {type: number}
   valid_for: 30
   most_valid: 600
@@ -501,9 +515,10 @@ requests:
 # device (the seventh pass: the device performs it, no channel in it). An input or an output is its owner's: a row of
 # either table needs on that camera what the route needs, and naming one or turning it off is an operator's (`edit`).
 # A unit is its row's too, with no route of its own: adding or taking one away is an administrator's.
-# Turning a camera, and saving its presets, is that camera's: its channel moves, not the device (V/01.4 Н1.4г).
+# Turning a camera, and saving its presets, is that camera's: its channel moves, not the device (V/01.4 Н1.4г). So is what a rule
+# sets on a camera (`arm`, `disarm`, `disable`): `rule_state` is read with `view` on it and written by no person.
 rights:
-  unit_of: {children: camera, child_settings: camera, device_units: camera, unit_next: camera, ptz_moves: camera}
+  unit_of: {children: camera, child_settings: camera, device_units: camera, unit_next: camera, ptz_moves: camera, rule_state: camera}
   routes: {edit: [child_settings, ptz_moves]}
   reach:
     group: [source, labels]

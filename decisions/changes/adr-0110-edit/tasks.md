@@ -10,3 +10,4 @@ ADR-0110 разбор, шаг 4; ADR-0111 п. 16. Случаи `a110_edit_*`. Р
 | C08-KEPT-TABLES-01 | `by`, `iat`, `X-Agent-For`, суд человека у консоли члена | [x] | [ ] | [ ] |
 | C08-KEPT-TABLES-01 | разбор ревью: `cas` вне отпечатка пакета, `revision` строки пакета, правила по keys, `new_id`, дверь `/domain/edits/stranded`, 403 stale без исхода, связи 152, 153, `cap` двери в `write`, `member_anywhere` | [x] | [ ] | [ ] |
 | C08-REF-SIBLINGS-01 | `?id=`, `id` строки связки, 409 `siblings`; `conflict` теневого отчёта по одному id | [x] | [ ] | [ ] |
+| C08-KEPT-TABLES-01 | к шагу 8: `calls` `domain/edits`, `domain/members`, `domain/placement`; адрес (cluster, id) без ref; `server` таблицы; `outcomes` незрителю по `by`; `made` исхода; `members[].url`, `PUBLIC_URL`; `ETag` снимка | [x] | [ ] | [ ] |

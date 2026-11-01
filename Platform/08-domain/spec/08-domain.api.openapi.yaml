@@ -2094,6 +2094,7 @@ components:
       properties:
         name:
           $ref: '#/components/schemas/MemberName'
+        url: {type: string, description: 'адрес входа члена, PUBLIC_URL его окружения; нет — член за NAT (Н1.4)'}
         servers:
           type: array
           items:
@@ -2932,6 +2933,8 @@ components:
       additionalProperties: false
       description: 'Исход правки (P/08.6 Н1.5): элемент outcomes публикации и вида домена.'
       properties:
+        made: {type: string, description: 'id созданной единицы (P/09.1 Н1.5 made)'}
+        by: {type: string}
         id: {type: string, pattern: "^(?:e-[0-9a-f]{12})$"}
         status: {type: integer}
         result: {enum: [performed, conflict, refused]}
