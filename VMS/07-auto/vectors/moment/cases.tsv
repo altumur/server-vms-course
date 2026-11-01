@@ -86,3 +86,7 @@ m-until	object_mode	{"mode":"00000000-0000-4000-8000-000000000201","until":17936
 m-until-over	object_mode	{"mode":"00000000-0000-4000-8000-000000000201","until":1793617200,"at":0}	UTC	2026-11-02T11:00:00Z	work	срок вышел: until не входит
 m-unknown	object_mode	{"mode":"00000000-0000-4000-8000-000000000777","until":null,"at":0}	UTC	2026-11-02T10:00:00Z	work	режима нет в списке — по расписаниям
 m-before-at	object_mode	{"mode":"00000000-0000-4000-8000-000000000201","until":null,"at":1793613605}	UTC	2026-11-02T10:00:00Z	work	момент раньше at строки — по расписаниям
+u-tail	in_effect	u-tail	UTC	2026-11-04T01:30:00Z	unknown	день решён, канун нет: хвост кануна неизвестен
+u-known-true	in_effect	u-known-true	UTC	2026-11-04T01:30:00Z	true	известный true сильнее нерешённого кануна
+u-both-decided	in_effect	u-both-decided	UTC	2026-11-04T01:30:00Z	false	оба дня решены раньше нечитаемой группы
+u-first	in_effect	u-first	UTC	2026-11-02T10:00:00Z	unknown	нечитаемая группа первой: день не решён

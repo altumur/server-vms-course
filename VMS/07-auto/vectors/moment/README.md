@@ -11,7 +11,7 @@
 
 | Файл | Что |
 |---|---|
-| `world.json` | вход всех случаев: `schedules`, `day_groups`, `modes` — строки таблиц (V/07.6 Н1.1) |
+| `world.json` | вход всех случаев: `schedules`, `day_groups`, `modes` — строки таблиц (V/07.6 Н1.1); `unreadable: true` у группы — строка не читается |
 | `cases.tsv` | случаи: UTF-8, LF, поля через TAB, первая строка — заголовок |
 
 ## `cases.tsv`
@@ -21,7 +21,7 @@
 - `arg` — `in_effect`: `title` расписания из `world.json`; `object_mode`: строка `mode_current` JSON `{mode, until, at}` (время — секунды, `at` 0 — не ограничивает) или `-` — строки нет; `sun`: JSON `{date, lat, lon, utc_offset_hours, event}`, `event` — `rise`, `set`;
 - `tz` — пояс момента, `sun` — `-`;
 - `t` — момент RFC 3339 UTC, `sun` — `-`;
-- `expect` — `in_effect`: `true`, `false`; `object_mode`: `name` режима; `sun`: минута суток или слово `day`, `night`;
+- `expect` — `in_effect`: `true`, `false`, `unknown` (приставка `u-`); `object_mode`: `name` режима; `sun`: минута суток или слово `day`, `night`;
 - `why` — пояснение, не сравнивается.
 
 ## Команда пакета
