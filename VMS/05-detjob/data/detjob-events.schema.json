@@ -53,7 +53,7 @@
      "waited": {
       "type": "number",
       "minimum": 0,
-      "description": "вышедший срок: накопленные секунды waited или fetch_waited (V/05.4 Н1.2, Н1.4)"
+      "description": "значение вышедшего счётчика waited или fetch_waited, накопленные секунды; вышли оба — большее (V/05.4 Н1.2, Н1.4)"
      }
     },
     "required": [

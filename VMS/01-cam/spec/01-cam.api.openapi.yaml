@@ -75,7 +75,12 @@ paths:
         "200":
           description: |
             байты устройства как есть; HTTP/1.1 — Transfer-Encoding chunked, без Content-Length; отказ после
-            первого байта — ответ без последнего куска; Range не поддерживается
+            первого байта — ответ без последнего куска; Range не поддерживается; дыра внутри краёв покрытия — не
+            отказ, ни байта за весь интервал — 200 без байтов, с последним куском
+          headers:
+            X-Coverage-From:
+              description: нижний край покрытия, по которому подрезано, секунды (V/01.5 Н1.3)
+              schema: {type: number}
           content:
             video/mp4:
               schema: {type: string, format: binary}

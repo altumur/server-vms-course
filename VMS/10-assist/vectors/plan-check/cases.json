@@ -2966,7 +2966,7 @@
       }
      ]
     },
-    "content": "{\"valid\":false,\"errors\":[\"cam/1: value \\\"on-demand\\\" of field live is not named in the admin's request — do not choose it yourself; ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\",\"field live (\\\"Живой поток живой поток: держать всегда или по требованию живое, live Держать всегда По требованию всегда, always по требованию, on demand\\\") is not named in the admin's request — edit only what the admin named; if the needed field does not exist, refuse and explain; to confirm it, ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
+    "content": "{\"valid\":false,\"errors\":[\"cam/1: value \\\"on-demand\\\" of field live is not named in the admin's request — do not choose it yourself; ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\",\"field live (\\\"Живой поток живой поток: держать всегда или не открывать (только устройство) живое, live Держать всегда Без потока всегда, always по требованию, on demand\\\") is not named in the admin's request — edit only what the admin named; if the needed field does not exist, refuse and explain; to confirm it, ask the admin so that the answer itself names the field and the value (a yes/no answer names nothing)\"],\"hint\":\"fix the plan and call propose_plan again, or ask the admin\"}"
    }
   ]
  },
