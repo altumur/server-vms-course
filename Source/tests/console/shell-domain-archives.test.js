@@ -10,19 +10,20 @@ fs.writeFileSync(TMP,PAGE.replace(/<script src="\/platform\/console\.js\?v=1"><\
 process.env.CONSOLE_FILE=TMP;
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
-const u=(sub,cluster,unit,o={})=>({sub,cluster,unit,ref:"",name:"",server:cluster,worker:"w",phase:"running",worker_state:"live",...o});
+const u=(sub,cluster,id,o={})=>({sub,id,cluster,server:cluster,worker:"w",phase:"running",age:2,state:"live",...o});
 b.FIX["/session"]={open:true};
 b.FIX["/manifest"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/cameras"]={configured:[],rows:[]};
 b.FIX["/servers"]={servers:{"srv-box":{resource:"live",workers:[]}},policy:{}};
 b.FIX["/events"]={events:[],state:"live"};
 b.FIX["/domain"]={holder:"srv",age:1,complete:true,members:[{name:"srv",holder:true,state:"ok",age:0,rpo:0,reaches:[]},{name:"cam-a",holder:false,state:"ok",age:2,rpo:2,reaches:[]},{name:"office",holder:false,state:"ok",age:2,rpo:2,reaches:[]}],
-  units:{cam:[u("cam","cam-a","1",{ref:"SN-A",name:"door a"}),u("cam","office","1",{ref:"SN-B",name:"hall"}),u("cam","office","2",{ref:"SN-C",name:"lobby"})],
-         rec:[u("rec","cam-a","1-sd",{name:"1-sd",phase:"standby"}),u("rec","office","SN-A")]},tables:{}};
+  units:{cam:[u("cam","cam-a","1",{ref:"SN-A",view:{name:"door a"}}),u("cam","office","1",{ref:"SN-B",view:{name:"hall"}}),u("cam","office","2",{ref:"SN-C",view:{name:"lobby"}})],
+         rec:[u("rec","cam-a","1-sd",{ref:"SN-A",view:{name:"1-sd"},phase:"standby"}),u("rec","office","SN-A",{ref:"SN-A"})]},tables:{}};
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
 await b.ready(700);await w.platformConsole.ready;await w.platformConsole.refresh();await b.ready(50);
 const d=w.document,pc=w.platformConsole,out={};
+out.fixtureIsUnit=b.unitForm(b.FIX["/domain"]);
 (d.querySelector('.pc-rail [data-s="units"]').click(),d.querySelector('.pc-layout').click(),d.querySelector('[data-layout="servers"]').click());await b.ready(40);
 const row=r=>d.querySelector(`.pc-tree .n[data-ref="${r}"]`);
 const cam=row("dc:cam-a/1"),arc=row("da:cam-a/1-sd");
