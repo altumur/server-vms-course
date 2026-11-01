@@ -148,6 +148,16 @@ unit:
         born: {type: string}                         # the source row's `born`: a source made anew is another source
         to:   {type: number, minimum: 0}             # the copy went up to here: below it nothing is a gap
         lost: {type: number, minimum: 0}             # seconds the source's ring took before the copy got to them
+        absent:                                      # what the source said it has not, above `to`: it may write it later
+          type: array
+          maxItems: 64
+          items:
+            type: object
+            required: [from, to]
+            additionalProperties: false
+            properties:
+              from: {type: number}
+              to:   {type: number}
         seen: {type: number, minimum: 0}             # up to here the recorder watched the holder (V/02.8 Н1.5)
         gaps:                                        # …and in these stretches the holder was not `running`
           type: array

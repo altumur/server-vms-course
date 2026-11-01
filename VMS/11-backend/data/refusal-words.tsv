@@ -35,6 +35,8 @@ devices	422	NOT_SUPPORTED	encrypted	11.3 Н4
 devices	422	NOT_SUPPORTED	name	11.3 Н4
 devices	422	NOT_SUPPORTED	detectorKind	11.3 Н4
 devices	422	NOT_SUPPORTED	sensitivity	11.3 Н4
+devices	409	BUSY	enabled	11.3 Н4: встроенный детектор, включён несовместимый
+devices	-	BUSY	enabled	11.4 Н1.5: failed элемента, статус 200
 devices	422	NOT_SUPPORTED	retentionDays	11.3 Н4
 devices	422	NOT_SUPPORTED	ip	11.3 Н4: source без сетевого хоста
 folders	404	NOT_FOUND	-	11.4 Н4: no such folder, no such parent, parent gone, folder gone, parent moved, row moved стража цепочки

@@ -9,3 +9,4 @@ date	sample	fix	languages
 2026-11-01	4/scenarios.tsv	13-units, шаги 25–39: controller — запись acfa с родителем: цепочка, выбор шаблона model, два узла одного шаблона, снятие с вложенными (слово «Архитектора» по Б-3, С-6 ревью POS)	-
 2026-11-01	4/scenarios.tsv: 11-devices, шаги 10, 40, 41	storage — архив устройства: id от хоста, родитель ipsrv, sizeBytes нет (ADR-0107 п. 7)	-
 2026-11-01	4/scenarios.tsv: 16-record	новый сценарий: recordMode replica, when на томе backup, configMode, builtin; файл пакета и живой драйвер — @manual (ADR-0107 пп. 6, 8, доп. (1))	-
+2026-11-01	4/scenarios.tsv: 16-record	разбор ревью: элемент replica дополнительной — device, непустое не меняется; основная на backup — 422; firmware «как у шаблона» — заглушка	-

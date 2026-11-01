@@ -561,8 +561,8 @@ async function negotiateLive(id){
   for(;;){
     try{r=await doorFetch(where,`/whep/${encodeURIComponent(cam)}${q}`,{method:"POST",headers:{"Content-Type":"application/sdp"},body:pc.localDescription.sdp},true)}
     catch(e){r=null}
-    // 403 — `where` once a series, and the offer after it is one of the nine (V/08.3 Н1.2)
-    if(r&&r.status===403&&!whereAgain&&tries<8){whereAgain=true;tries++;await doorOf(where,true);if(gen!==V.gen){pc.close();return}continue}
+    // 403 — `where` once a series, and the offer after it is one of the twenty-one (V/08.3 Н1.2)
+    if(r&&r.status===403&&!whereAgain&&tries<20){whereAgain=true;tries++;await doorOf(where,true);if(gen!==V.gen){pc.close();return}continue}
     if(r&&r.status===404){let d={};try{d=await r.clone().json()}catch(e){}if(d.error==="stream refused")break}
     if(r&&![404,500,503].includes(r.status))break;
     if(++tries>20||made+grace*1000-(Date.now()+1500)<ICE_WAIT){
@@ -1162,10 +1162,11 @@ function replicaSelectHtml(r){
   const src=camRecs(r.cam).filter(o=>{const h=volByName(o.home);return o.id!==r.id&&String(o.stream||"")===String(r.stream||"")&&!(h&&h.kind===VOL_BACKUP)}).map(o=>o.id);
   const known=[...(r.stream?[]:["device"]),...src];
   const opt=(val,label)=>`<option value="${esc(val)}" ${val===cur?"selected":""}>${esc(label)}</option>`;
-  return`<div><label>Откуда</label><select data-act="replica" data-rec="${esc(r.id)}">${opt("","живой поток")}${known.map(x=>opt(x,x==="device"?"архив устройства":"запись «"+x+"»")).join("")}${cur&&!known.includes(cur)?opt(cur,"запись «"+cur+"»"):""}</select></div>`;
+  return`<div><label>Откуда</label><select data-act="replica" data-rec="${esc(r.id)}">${opt("","живой поток")}${[...known,...(cur&&!known.includes(cur)?[cur]:[])].map(x=>opt(x,x==="device"?"архив устройства":"запись «"+x+"»")).join("")}</select></div>`;
 }
-const replicaNote=w=>(w.replica_lag_s!=null?`<small>отстаёт от источника: ${esc(Math.round(w.replica_lag_s))} с</small>`:"")+
-  (w.replica_lost_s?`<small style="color:var(--rd)">кольцо источника обогнало копию: потеряно ${esc(Math.round(w.replica_lost_s))} с</small>`:"")+
+const replicaSec=v=>typeof v==="number"&&Number.isFinite(v)&&v>=0?Math.round(v):null;   // not in form — no words (V/08.4)
+const replicaNote=w=>(replicaSec(w.replica_lag_s)!=null?`<small>отстаёт от источника: ${esc(replicaSec(w.replica_lag_s))} с</small>`:"")+
+  (replicaSec(w.replica_lost_s)?`<small style="color:var(--rd)">кольцо источника обогнало копию: потеряно ${esc(replicaSec(w.replica_lost_s))} с</small>`:"")+
   (w.over_quota===true?`<small style="color:var(--rd)">у источника больше, чем вмещает том</small>`:"");
 function camRecCardHtml(cam){
   if(recOn===false)return offCard("Архив","подсистема записи не подключена","Консоль не монтирует <code>rec</code>: записывать некуда и нечем.");
@@ -1264,7 +1265,8 @@ function paintArch(){
   wire(ARCH.host,{addRec:()=>addToArchive({cam}),addKeep:()=>openKeep(cam),
     toggle:el=>recWrite(r(el),{enabled:!!el.dataset.on},el.dataset.on?"Запись включена":"Запись выключена"),
     del:el=>delRec(r(el)),
-    home:el=>recWrite(r(el),{home:el.value},el.value?`Запись переедет в «${el.value}»`:"Архив не задан — пишется туда, где есть место"),
+    // a backup volume takes `offline` and nothing else (V/02.6 Н1.4), and it has no choice of `when`
+    home:el=>recWrite(r(el),{home:el.value,...((volByName(el.value)||{}).kind===VOL_BACKUP?{when:"offline"}:{})},el.value?`Запись переедет в «${el.value}»`:"Архив не задан — пишется туда, где есть место"),
     when:el=>recWrite(r(el),{when:el.value},el.value==="offline"?"Запись на карте пишет, только пока основная не пишется":"Запись на карте пишет всегда"),
     replica:el=>recWrite(r(el),{replica_from:el.value},el.value?"Запись забирает видео из источника, живой поток снят":"Запись идёт с живого потока"),
     days:el=>{const n=wholeDays(el.value);

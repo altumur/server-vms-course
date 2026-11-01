@@ -334,7 +334,7 @@ tables:
     delete_after: 86400
     fields:
       camera: {type: string, required: true}         # the camera: `edit` on it, not on its group (`rights`)
-      person: {type: string, required: true, schema: {pattern: "^[A-Za-z0-9._-]{1,64}$"}}
+      person: {type: string, required: true, schema: {pattern: '^[^\s/\\|",:()]{1,64}$'}}   # a person's name, as a table key may carry it (no comma)
       seq:    {type: int, required: true, schema: {minimum: 1}}   # goes up with every renewal: the same body is still a new write
       # speeds with a sign, in per cent of the model's own (`panSpeed`… in `.rep`); 0 — that axis stands
       pan:    {type: int, default: 0, schema: {minimum: -100, maximum: 100}}

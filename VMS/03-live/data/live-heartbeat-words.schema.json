@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "слова подсистемы live в пульсе live/heartbeats/<имя>, которые читают другие процессы (открытое место семьи платформы heartbeats, P/03.4 Н1.1: элемент status[] сверх полей платформы); смысл — V/03.2 Н1.5; прочие слова пульса — диагностика",
+ "description": "слова подсистемы live в пульсе live/heartbeats/<имя>, которые читают другие процессы (открытое место семьи платформы heartbeats, P/03.4 Н1.1: элемент status[] и верх пульса сверх полей платформы); смысл — V/03.2 Н1.5; прочие слова пульса — диагностика",
  "type": "object",
  "properties": {
   "status": {
@@ -21,6 +21,16 @@
     },
     "additionalProperties": true
    }
+  },
+  "asked_solo": {
+   "description": "id потоков со спросом или подпиской без раздачи: самостоятельные подписки точки RTSP (V/03.2 Н1.5, V/03.6 Н1.4)",
+   "type": "array",
+   "items": {
+    "type": "string",
+    "minLength": 1
+   },
+   "minItems": 1,
+   "uniqueItems": true
   }
  },
  "additionalProperties": true
