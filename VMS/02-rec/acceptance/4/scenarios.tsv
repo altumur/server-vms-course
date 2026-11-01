@@ -11,4 +11,8 @@ scenario	step	request	expect
 01-record	9	@until 30 GET /recordings	200 {"rows": [{"id": "door", "phase": "pending"}]}
 02-audio	1	@manual подставной драйвер со звуком G.711: запись running, audio_codec PCMU, в томе поток <запись>/e<эпоха>/audio кадрами AAC; audio 2 — пишется mic 2	manual
 02-audio	2	@manual mic нет или выключен — видео идёт, audio_reason no mic; G.726 — AAC; L16, MPA — AAC; иной кодек — audio_reason codec not supported: <кодек>	manual
-02-audio	3	@manual запись из приёмника — видео идёт, audio_reason no sound over ingest; обрыв точки — видео не прерывается, watchdog не срабатывает	manual
+02-audio	3	@manual держатель на другом сервере: запись из приёмника пишет звук, кадры вида audio; кадров звука нет — видео идёт, audio_reason no sound frames; обрыв точки — видео не прерывается, watchdog не срабатывает	manual
+02-audio	4	@manual have и written_through идут только по видео; поток звука молчит — have растёт, окна не встают	manual
+02-audio	5	@manual резерв when: offline: кольцо держит звук, выпуск со времени первого ключевого кадра, поток …/audio без дыры с видео	manual
+02-audio	6	@manual дозапись: выгрузка карты и копия из резервной садят …/backfill/audio только на времена взятых групп; звука у источника нет — не дыра	manual
+02-audio	7	@manual ретранслятор: толчок и забор несут кадры audio в центр, заявка центра выгружает звук из архива; камера-кластер: кольцо, карта, выгрузка со звуком	manual
