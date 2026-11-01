@@ -286,6 +286,7 @@ function evNoteRu(e){
   if(k==="card.prebuffer.short")return`кольцо карты держит ${durRu(e.reach_s)}, а обрыв замечают за ${durRu(e.need_s)}: начало обрыва не попадёт в запись`;
   if(k==="card.failing")return`карта камеры: ${e.state||"?"}${e.error?" · "+e.error:""}`;
   if(k==="archive.backfill.refused")return`дозапись не принята${e.error?": "+e.error:""}`;
+  if(k==="archive.backfill.unscanned")return`дозаписанные минуты не просканированы${e.model?": "+e.model:""}${e.why?" · "+e.why:""}`;
   return pc.eventNote(e);   // the platform's own events the module describes
 }
 // An event's words: its subsystem's display.kinds, any of the VMS's (a line about the camera from a subsystem about
@@ -856,9 +857,8 @@ pc.addTab("unit",{id:"streams",label:"Потоки",
 // What a device has is its holder's row (`cam/children`), what it is called and whether it is on — the operator's
 // (`cam/child_settings`, the same key). They stand under their owner, a camera or a row `ipsrv`, and a row `gone` is not
 // drawn. A table not read is not an empty one: what was read stays, and it is said (the camera's note). No such table
-// at this console — no children. A read does not draw: the module redraws its tree when its own data change or on a click,
-// and the page has no call for it, so children read on a quiet cluster stand there from the next change of rows or click
-// (V/08.1 Н1.5, the limit).
+// at this console — no children. The tables changed — the page asks the module to redraw its tree: its own data did not
+// change (V/08.1 Н1.5).
 const CHILD_WORD={sensor:"Вход",relay:"Выход",mic:"Микрофон",spk:"Динамик"},CHILD_ORDER=["sensor","relay","mic","spk"];
 let CHILDREN=null,CHILD_SET={},childErr="",childReading=false,childGen=0;
 const camPath=p=>(MOUNTED.cam?"/cam":"")+p;

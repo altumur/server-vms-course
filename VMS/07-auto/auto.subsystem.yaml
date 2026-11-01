@@ -174,13 +174,14 @@ placement:
 # `scenario_cams`): a write to one is the whole cluster's business — its labels say where its evaluator runs, not whose
 # it is (the review's fifth pass); and the units it names — every trigger's, every action's — are what a camera it
 # commands answers for when it is moved to another device (the eighth pass: the scenario's port, chosen by somebody
-# with no right on the new device). A trigger on any unit names anybody.
+# with no right on the new device). A trigger on any unit names anybody. An action a request of its target's subsystem
+# reaches its group by (`rights.reach.requests`) asks the same of whoever writes it: `action` on `then`.
 rights:
   cluster_rows: true
   names:
     - {field: when, unit: unit, sub: sub}
-    - {field: then, unit: unit, sub: sub}
-    - {field: then, unit: cam, of: cam}
+    - {field: then, unit: unit, sub: sub, action: action}
+    - {field: then, unit: cam, of: cam, action: action}
 snapshot: [name, enabled]
 # Each evaluator's last pass and what it counted since it started, from its heartbeat (the boundary's step 6: it was
 # a function of the VMS's console). `auto_<name>`; the shapes are the platform's (P/06.5).
@@ -239,6 +240,7 @@ domain:
               properties:
                 camera: {type: string, minLength: 1}
                 kind:   {type: string, minLength: 1}
+                member: {type: string, minLength: 1}   # the trigger's cluster: `ref` is unique in a cluster only (V/07.5 Н1.1)
             # between cameras only a preset or a relay: a recording, a detector, a scan are a cluster's rows; numbers count
             # from 1 as the holder's (V/01.4 Н1.1); valid_for — how long the ask stays worth doing, bounds as a scenario's
             then:

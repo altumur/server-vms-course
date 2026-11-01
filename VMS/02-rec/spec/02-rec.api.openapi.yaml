@@ -396,10 +396,11 @@ components:
         now: {type: number}
     KeepVerify:
       type: object
-      required: [keep, integrity, ok, recordings]
+      required: [keep, volume, integrity, ok, recordings]
       additionalProperties: false
       properties:
         keep: {type: string}
+        volume: {type: string, description: "том этой двери, копия и печать которого сверены (V/02.7 Н1.4)"}
         integrity: {type: string, description: "ok | broken: … | unknown: …"}
         ok: {type: boolean}
         recordings:
