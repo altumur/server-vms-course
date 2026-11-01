@@ -72,7 +72,7 @@ Device(type=camera)	alarmKinds	cam/cameras	alarms	both
 Device(type=camera)	faultText	cam/heartbeats	reason; нет — warning	read	слова держателя; в версию не входит
 Device(type=camera)	recordState, recordReason	rec/heartbeats	phase, reason элемента status[] основной <cam>	read	в версию не входит
 Device(type=camera)	ptz	cam/heartbeats	can.ptz	read	can не сказан — поля нет; в версию не входит
-Device(type=camera)	presets	cam/preset_labels, cam/heartbeats	номера строк таблицы и can.preset_names, name — подпись, пустая — имя драйвера	read	запись — операции /presets (V/11.4 Н1.16); в версию не входит
+Device(type=camera)	presets	cam/preset_labels, cam/heartbeats	номера строк таблицы и can.preset_names, name — label строки, пустой — имя драйвера	read	запись — операции /presets (V/11.4 Н1.16); в версию не входит
 Device(type=camera)	detectorOptions	файл пакета device-catalog.json	detectors модели	read	V/11.3 Н1.3 «Варианты модели»; нет строки модели — поля нет
 Device(type=camera)	unitOptions	unit-templates.tsv + device-catalog.json	шаблоны вендора, parent -	read	V/11.3 Н1.3 «Варианты модели»
 Device(type=camera)	children	det/units	<cam>-<kind>[-<n>]	write	только при создании: дочерние детекторы (V/11.4 Н1.2); иные дочерние — 422 NOT_SUPPORTED, field children
@@ -445,7 +445,7 @@ DeviceStream	width, height	cam/cameras	из resolution	read	пусто — по�
 DeviceStream	codec, online	cam/heartbeats	codec, phase строки	read	в версию не входят
 DeviceStream	resOptions	cam/devices	resolutions хоста	read
 StreamCreate, StreamPatch	name, res, fps	cam/cameras	profile, resolution, fps	write	V/11.4 Н1.15; source строит backend
-DevicePreset	n, name	cam/heartbeats	номер, can.preset_names[n]	read	имени нет — пустая строка
+DevicePreset	n, name	cam/preset_labels, cam/heartbeats	номер, label, can.preset_names[n]	read	подпись старше имени драйвера; обоих нет — пустая строка
 PresetWrite	name	—	—	none	не читается: имя только из драйвера (V/11.4 Н1.16)
 PtzMove	pan, tilt, zoom, focus	cam/ptz_moves	значение × 100, до целого	write	V/11.4 Н1.16; нет поля — 0
 PtzMove	ttlSec	—	—	write	только expiresAt ответа: срок держателя PTZ_LEASE (V/11.4 Н1.16)
