@@ -13,10 +13,10 @@ domain/member-rows/<раздел>: {doc: {part, rev, term, members: {<член>:
   term:      claim новым держателем: переподписать все разделы, подъём rev, размазанно по REPORT_RATE; до переподписи строка прежнего срока верна по цепочке записей срока, как набор следования (С7)
 domain/member-count: {servers, cameras}    # счёт; в голове копии; SERVERS_MAX 500 — отдельным счётом, приём сверх — 409 (С3)
 Entry:       ещё class: server | camera; url?; via?; every? не в Entry, см. метку
-domain/holder-entry: {term, name, ca?, key, kid, sig}   # маленькая подписанная запись держателя, идёт следованием с записью срока (доп. (3) п. 2, С1, Б2)
+domain/holder:  подписанная запись срока несёт ещё ca и key держателя (доп. (3) п. 2, Б2): доходит следованием, раздел держателя члену не нужен (С1)
 domain/relay-members/<ретранслятор>: {<член>: 1}       # индекс, тем же пакетом, что Entry.via (С9); via в Entry, но relay_for читает индекс
 domain/member-list/<раздел>: {doc, kid, sig, fetched_at}  # у члена: свой раздел и запрошенные; срок запрошенной — 1 час, сброс при отказе TLS; домена нет — живёт дальше, это предел (С8)
-publication.members_rev: {term, rev} своего раздела; carry.members: свой раздел, только если отстал; carry.holder_entry — только при смене
+publication.members_rev: {term, rev} своего раздела; carry.members: свой раздел, только если отстал
 дверь:       GET /api/members/<член>/<раздел> с подписью агента; у ретранслятора та же дверь из памяти: строки подписаны (С8)
 GET /domain/members?part=<раздел>; без part — {count, knocking}
 ```
