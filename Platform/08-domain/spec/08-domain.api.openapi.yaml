@@ -604,6 +604,16 @@ paths:
       responses:
         '200': {description: '{doc, as_of}'}
         '429': {$ref: '#/components/responses/Busy'}
+  /domain/partial/close:
+    post:
+      operationId: partialClose
+      summary: Конец сбора «из ничего» словом оператора (глава 8.8 Н1.8а)
+      responses:
+        '200': {description: '{closed: true}'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Refused'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/StandbyOrUnavailable'}
   /domain/batches:
     get:
       operationId: batchesRead
@@ -2412,6 +2422,10 @@ components:
                       type: object
                       additionalProperties: true
                       description: Объекты копии по ключам P/03.4 Н1.1 и P/04 Н1.3а. Открыт намеренно — копия несёт и семьи других уроков (P/09.1 Н1.2 member_objects); вид берёт названные.
+                    silent_after:
+                      type: number
+                      minimum: 0
+                      description: 'Срок молчания члена (договор наблюдения «Свежесть члена домена»); нет — LOST_AFTER.'
                     stale:
                       type: array
                       items: {type: string}
@@ -2506,6 +2520,8 @@ components:
           description: 'Вне дельты (out_of_delta): форма — {domain?: целое ≥ 1, console?: целое ≥ 1}, не пусто — запросы, которые агент с запуска не отправил, потому что не смог подписать (P/08.3 Н1.6а; сторона агента — P/09.1 Н1.12); не по ней — поле не взято.'
         members_rev:
           description: 'Вне дельты (out_of_delta): форма — {term: целое ≥ 1, rev: целое ≥ 1} документа domain/member-list/<раздел>, который член держит (P/08.3 Н1.4а); не по ней — поле не взято.'
+        row:
+          description: 'Вне дельты: форма — {doc} строки раздела по слову send_row (P/08.8 Н1.8а); не по ней — поле не взято.'
         class:
           description: 'Вне дельты: форма — server | camera (P/09.1 Н1.1 domain/join); не по ней — поле не взято, server.'
         batch:
@@ -2561,6 +2577,7 @@ components:
           properties:
             doc: {type: string}
         domain_age: {type: number, minimum: 0, description: 'Добавляет ретранслятор (P/09.2 Н1.4).'}
+        send_row: {const: true, description: 'Пришли свою строку раздела полем row (P/08.8 Н1.8а).'}
         placement: {$ref: '#/components/schemas/CarryPlacement'}
         pending:
           type: array

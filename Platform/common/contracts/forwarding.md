@@ -177,6 +177,7 @@ journal:      domain.forwarded {cluster, path, user, status} у пересыла
 | POST | `/domain/revoke` | 9 Н2 (добавлено М11/9) | 5 | — (токен в теле) |
 | DELETE | `/domain/issued/<sub>/<вид>/<ref>` | P/08.2 Н1.6а | 5 | да |
 | POST | `/domain/handover` | 10 Н2 (добавлено М11/10) | 100 | да |
+| POST | `/domain/partial/close` | P/08.8 Н1.8а | 5 | да |
 | POST | `/domain/stranded/apply` | 10 Н2 (добавлено М11/10) | 5 | да |
 | GET, PUT | `/domain/shared` | 11 Н2 (добавлено М11/11) | 5 | да |
 | GET | `/domain/alarms` | 11 Н2 (добавлено М11/11) | 5 | да |

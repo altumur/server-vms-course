@@ -386,6 +386,14 @@ paths:
                 - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
                 - $ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/StandbyOrFrozen/content/application~1json/schema'
+  /domain/partial/close:
+    post:
+      summary: Конец сбора «из ничего» (глава 8.8 Н1.8а; право admin домена)
+      responses:
+        '200': {description: 'Передача процессу', content: {application/json: {schema: {type: object, additionalProperties: true}}}}
+        '401': {description: Нет личности}
+        '403': {description: Нет права admin}
+        '404': {description: Сбора нет}
   /domain/batches:
     get:
       summary: Партии приёма без токена (глава 8.3 Н1.1б)

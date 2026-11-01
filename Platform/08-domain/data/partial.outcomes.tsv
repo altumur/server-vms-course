@@ -1,0 +1,4 @@
+# Исходы нечитаемой строки domain/partial/<раздел> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+path	reader	outcome	priority	unit	norm
+	domain	строка целиком нечитаема: источник не известен — слияние раздела не идёт, строка раздела не меняется, журнал без значения; приём и DELETE этого раздела — 503 unavailable	0	строка	P/08.8 Н1.8а

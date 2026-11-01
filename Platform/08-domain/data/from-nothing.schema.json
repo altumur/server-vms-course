@@ -8,6 +8,28 @@
    "x-codec": [
     "integer"
    ]
+  },
+  "partial": {
+   "description": "сбор списка (P/08.8 Н1.8а), текст JSON {kids, closed?}; нет — сбора нет",
+   "type": "object",
+   "x-encoding": "json",
+   "properties": {
+    "kids": {
+     "description": "выпускающие, отозванные этим переносом",
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "closed": {
+     "description": "приём открыт, слияние идёт",
+     "type": "boolean"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "kids"
+   ]
   }
  },
  "additionalProperties": false,

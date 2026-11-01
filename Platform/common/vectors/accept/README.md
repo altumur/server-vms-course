@@ -40,7 +40,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 63 строки (26 урока 3, 9 урока 4, 2 двери ретранслятора — `same_sent_at` после `heard`, справка свидетелей и решение «Архитектора» 2026-10-23; 25 стадии C — ниже; 1 — аудит покрытия P/08, второй проход Gemini) | `input` — вход команды `accept` текстом JSON (`catalog`, `mark`, `stored`, `body`, `refreshed_ago`; у урока 4 — `via`, `heard_ago`) → `expect`: `generation` (`rev`, `base`, части `whole`), `heard` (`refresh`), `same`, `ignored` или `refused` (`status`, `reason`: `rebase`, `same_sent_at`, `not_ready`, `not_a_publication`, `rev_exhausted`; `whole_too_large` — строк нет, «Кандидаты») |
+| [`cases.tsv`](cases.tsv), 66 строк (3 ADR-0113 — `accept-camera-*`, `accept-heard-every-changed`; 26 урока 3, 9 урока 4, 2 двери ретранслятора — `same_sent_at` после `heard`, справка свидетелей и решение «Архитектора» 2026-10-23; 25 стадии C — ниже; 1 — аудит покрытия P/08, второй проход Gemini) | `input` — вход команды `accept` текстом JSON (`catalog`, `mark`, `stored`, `body`, `refreshed_ago`; у урока 4 — `via`, `heard_ago`) → `expect`: `generation` (`rev`, `base`, части `whole`), `heard` (`refresh`), `same`, `ignored` или `refused` (`status`, `reason`: `rebase`, `same_sent_at`, `not_ready`, `not_a_publication`, `rev_exhausted`; `whole_too_large` — строк нет, «Кандидаты») |
 
 ## Строки стадии C
 

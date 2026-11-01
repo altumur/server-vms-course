@@ -3142,3 +3142,9 @@ c08_backup_parts.003	domain/backups/part-<раздел>-<rev>	domain/backups/par
 c08_backup_parts.004	domain/backups/part-<раздел>-<rev>	domain/backups/part-0123-7	object	reader	["domain", "domainagent"]	null	refused	[""]	{"domain": [""], "domainagent": [""]}	root null
 c08_backup_parts.005	domain/backups/part-<раздел>-<rev>	domain/backups/part-0123-7	object	writer	["domain", "domainagent"]	{	refused	[""]	[]	not JSON
 c08_backup_parts.006	domain/backups/part-<раздел>-<rev>	domain/backups/part-0123-7	object	reader	["domain", "domainagent"]	{	refused	[""]	{"domain": [""], "domainagent": [""]}	not JSON
+c08_partial.001	domain/partial/<раздел>	domain/partial/0042	row	writer	["domain"]	{"new":"[]","removed":"[]"}	ok	[]	[]	base
+c08_partial.002	domain/partial/<раздел>	domain/partial/0042	row	reader	["domain"]	{"new":"[]","removed":"[]"}	ok	[]	{"domain": []}	base
+c08_partial.003	domain/partial/<раздел>	domain/partial/0042	row	writer	["domain"]	null	refused	[""]	[]	root null
+c08_partial.004	domain/partial/<раздел>	domain/partial/0042	row	reader	["domain"]	null	refused	[""]	{"domain": [""]}	root null
+c08_partial.005	domain/partial/<раздел>	domain/partial/0042	row	writer	["domain"]	{	refused	[""]	[]	not JSON
+c08_partial.006	domain/partial/<раздел>	domain/partial/0042	row	reader	["domain"]	{	refused	[""]	{"domain": [""]}	not JSON

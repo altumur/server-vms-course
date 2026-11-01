@@ -6,5 +6,6 @@ unit:
   fields:
     name:  {type: string, required: true}
 placement: {capacity: {default: 1}}
-door: {pass: [accounts]}
+tables: [accounts]
+door: {routes: [whep, talk], pass: [accounts]}
 worker: {exec: /usr/lib/live/worker}
