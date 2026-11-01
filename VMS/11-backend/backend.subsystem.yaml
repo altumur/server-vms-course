@@ -190,10 +190,10 @@ tables:
       id:       {type: string, required: true, schema: {pattern: "^[0-9a-f]{32}$"}}   # the operation's id
       user:     {type: string, required: true, schema: {minLength: 1}}   # the author: only they read and undo it
       revert_of:   {type: string, schema: {pattern: "^([0-9a-f]{32})?$"}}   # this operation undoes that one
-      reverted_by: {type: string, schema: {pattern: "^([0-9a-f]{32})?$"}}   # undone by that one: a second undo is 409
+      reverted_by: {type: string, schema: {pattern: "^([0-9a-f]{32})?$"}}   # the last undo of this row; a row of `steps` closed by it says `reverted`, a failed one stays open
       overflow: {type: bool, default: false}                             # `steps` did not fit a row: not undoable
       # The steps that ran, as the text of a JSON array, as `repeats.steps`: a `json` field stops at 4000 bytes. An element:
-      # index, target (the id of the record), root, rows [{key, op: set | create, born?, before, after}], refuse (a word);
+      # index, target (the id of the record), root, rows [{key, op: set | create | recreate, born?, before, after?, reverted?}], refuse (a word);
       # fields of a row without `*_secret`.
       steps:
         type: string

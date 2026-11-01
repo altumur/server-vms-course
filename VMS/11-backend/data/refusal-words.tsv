@@ -58,6 +58,7 @@ operations	422	VALIDATION_FAILED	items	11.4 Н4: too many steps, too many operat
 operations	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.8
 operations	-	DEVICE_OFFLINE	-	11.4 Н1.8: шаг not_run, код итога шага
 operations	409	BUSY	-	11.4 Н1.12: откат: gone, reverted, running, nothing, too_large в params.reason
+operations	409	NOT_REVERTIBLE	-	11.4 Н1.12: откат: notLast, revert в params.reason
 operations	-	NOT_SUPPORTED	<слово>	11.4 Н1.12: шаг отката, refuse: volume, deleted, bound_to, secret, folderIds
 operations	-	VERSION_MISMATCH	-	11.4 Н1.12: шаг отката, значения не равны after
 rules	422	RULE_INVALID	-	11.4 Н1.10; params.issue
