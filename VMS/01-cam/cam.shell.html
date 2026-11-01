@@ -804,6 +804,11 @@ const leaveCam=()=>{V.gen++;dropRetry();stopLive()};
 pc.on("select",leaveCam);
 if(FEATURES.has("card.closed"))pc.on("card.closed",e=>{if(e&&isCam(e.ref))leaveCam()});
 pc.on("logout",leaveCam);
+// Another person: the doors' tokens and a shown password are the former one's (P/07 Н1.5).
+const forgetPerson=()=>{for(const k of Object.keys(DOORS))delete DOORS[k];forgetAccountPassword()};
+let pagePerson=null;
+pc.on("logout",()=>{pagePerson=null;forgetPerson()});
+if(FEATURES.has("session"))pc.on("session",e=>{const u=(e&&e.user)??null;if(pagePerson!==null&&u!==pagePerson)forgetPerson();pagePerson=u});
 window.addEventListener("beforeunload",()=>stopLive(true,true));
 
 // ── «Потоки»: the camera's streams, and which of them a grid and a full screen show ───────────────────────────────
