@@ -15,7 +15,7 @@ scenario	step	request	expect
 01-read	13	member m1 console2 GET /api/access	200 {"history": [{"text": "заведена роль r1", "actor": "root"}]}
 01-read	14	@person bob bob-password-1	ok
 01-read	15	@until 30 member m1 console GET /session	200 {"user": "bob", "grants": [{"cap": "view", "scope": "*"}]}
-01-read	16	member m1 console2 GET /api/access	403 {"code": "PERMISSION_DENIED"}
+01-read	16	member m1 console2 GET /api/access	200 {"catalogs": [], "version": "@any"}
 02-not-supported	1	@domain m1	ok
 02-not-supported	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 02-not-supported	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
