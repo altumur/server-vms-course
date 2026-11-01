@@ -1,3 +1,4 @@
 date	sample	fix	languages
 2026-10-29	4/scenarios.tsv: 01-record	url тома — file://{data}/subsystems/rec/obsd/volumes/1 вместо буквального /data/platform: на стенде PLATFORM_DIR — {data} экземпляра (общий README приёмки VMS «Стенд VMS»); вопрос stand-0106 при движке S1 (раннер)	all
 2026-11-01	4/scenarios.tsv: 02-audio	новый сценарий: звук записи, @manual: живого драйвера со звуком на стенде нет (ADR-0102 доп. (9) пп. 7, 9)	all
+2026-11-01	4/scenarios.tsv: 02-audio шаг 2	L16 перекодируется, не пишется только иной кодек (V/02.4 Н1.2а)	all

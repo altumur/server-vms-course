@@ -138,7 +138,7 @@ Device(type=eventsrc|acfa)	identifier	cam/cameras	id	read	как у камеры
 Device(type=eventsrc|acfa)	name, enabled, short, ip, port, vendor, model, firmware, rtspUrl, login	cam/cameras	как у камеры	both	как у камеры
 Device(type=eventsrc|acfa)	hasPassword	cam/cameras	cred_secret	read	true — секрет задан; значение не отдаётся
 Device(type=eventsrc|acfa)	password	cam/cameras	cred_secret	write	как у камеры
-Device(type=eventsrc|acfa)	online, fault, licenseExceeded	cam/heartbeats	как у ipsrv	read	наблюдение, в версию не входит; device_state lost — fault conn
+Device(type=eventsrc|acfa)	online, fault, licenseExceeded	cam/heartbeats	phase, device_state строки	read	как у ipsrv; device_state lost — online false, fault conn; наблюдение, в версию не входит
 Device(type=eventsrc)	serverId	cam/cameras	метка server:<имя> поля labels, UUID server:<имя>; метки нет — сервер держателя	both	запись — метка, адрес кассы знает один сервер; переноса при падении нет (V/11.3 Н1.3)
 Device(type=eventsrc)	cameraId	cam/cameras	camera, UUID device:cam/cameras/<id>	both	камера титров; не камера или вне перечня — 422 VALIDATION_FAILED, field cameraId
 Device(type=eventsrc)	words	cam/cameras	words	both	слова источника и их цвета как есть (V/01.1 Н1.1г)
@@ -154,20 +154,20 @@ Device(type=acfa)	cameraId, words, overlayDelayMs, overlayDurationSec	—	—	no
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	—	cam/device_units	строка таблицы, type не controller	both	единица СКУД (V/01.1 Н1.2б); relay ребёнка — строкой Device(type=sensor|relay|mic|spk), различает таблица; создание и снятие — V/11.4 Н1.2
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	id	cam/device_units	UUID device:cam/device_units/<id>	read
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	type	cam/device_units	type	read	слово контракта без перевода
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	parentId	cam/device_units	parent; строка controller — её владелец; нет — строка camera	both	при создании; правка — 422 NOT_SUPPORTED, field parentId
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	parentId	cam/device_units	parent; строка controller — её владелец; нет — запись основной строки, у ipsrv — ipsrv хоста	both	при создании; правка — 422 NOT_SUPPORTED, field parentId
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	domainId	кластер	UUID domain:<CLUSTER>	read
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	identifier	cam/device_units	id	read	<строка>-<n>
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	name	cam/device_units	title	both	нет — <type> <n>
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	enabled	cam/device_units	enabled	both
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	path	cam/device_units	address	both	слово устройства как есть
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	model	cam/device_units	template	both	при создании выбирает шаблон; правка — 422 NOT_SUPPORTED, field model
-Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	online, fault	cam/heartbeats	phase строки, units_down	read	held или running и слова нет — true; lost — fault conn; failed, refused — fault drv; в версию не входит
+Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	online, fault	cam/heartbeats	phase, device_state строки, units_down	read	held или running и слова нет — true; lost строки или единицы — false, fault conn; failed, refused — false, fault drv; в версию не входит
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	serverId, licenseExceeded	cam/heartbeats	как у строки camera	read	наблюдение, в версию не входит
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	version	cam/device_units	индекс хранилища строки	read
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	configMode	—	—	none	current — умолчание, пропускается; default, template — 422 NOT_SUPPORTED, field configMode (V/11.3 Н1.1)
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	children	—	—	none	вложенные — отдельными элементами: 422 NOT_SUPPORTED, field children
 Device(type=acfa_sensor|acfa_lock|acfa_fence|relay)	subtype, short, ip, port, mac, vendor, login, hasPassword, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, format, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, rtspUrl, disabledByRuleId, disabledByRuleAt, armed, overlayDelayMs, overlayDurationSec, password	—	—	none	у единицы нет: запись 422 NOT_SUPPORTED, field этого поля
-Device(type=acfa_sensor|acfa_lock|acfa_fence|export|email|sms)	—	—	—	none	таких устройств нет: создание — 422 NOT_SUPPORTED, field type; export, email, sms — вне дерева DriverPack (ADR-0102 п. 1)
+Device(type=export|email|sms)	—	—	—	none	таких устройств нет: создание — 422 NOT_SUPPORTED, field type; вне дерева DriverPack (ADR-0102 п. 1)
 Folder	—	GET /folders	элемент	both	папка — строка консоли (P/06.8; V/11.4 Н1.7)
 Folder	id	GET /folders	UUID folder:platform/folders/<id>	read	V/11.4 Н1.6
 Folder	name	GET /folders	name	both
@@ -215,7 +215,7 @@ Me	login, name	GET /session	user	read	кто я
 Me	serverTime, timezone	GET /session	server_time, timezone	read	норма платформы B6
 Reference	—	GET /manifest	перечисления полей	read
 Reference	deviceModels	файл пакета device-models.json	[{vendor, models}] из .rep DriverPack	read	файл данных пакета рядом с worker (V/11.3 Н1.3); не таблица; файла нет — []
-Reference	deviceKinds	—	[{"group": "video", "view": "cam", "types": ["camera", "ipsrv-nvr", "det"]}, {"group": "io", "view": "cam", "types": ["ipsrv-io", "ipsrv-sip", "ipsrv-mic"]}, {"group": "integ", "view": "cam", "types": ["eventsrc"]}, {"group": "acfa", "view": "acfa", "types": ["acfa"]}]	const	что можно добавить — виды deviceTypes; подтип ipsrv выводится, выбор в мастере на него не влияет
+Reference	deviceKinds	—	[{"group": "video", "view": "cam", "types": ["camera", "ipsrv-nvr", "det"]}, {"group": "io", "view": "cam", "types": ["ipsrv-io", "ipsrv-sip", "ipsrv-mic"]}, {"group": "integ", "view": "cam", "types": ["eventsrc"]}, {"group": "acfa", "view": "acfa", "types": ["acfa", "acfa_sensor", "acfa_lock", "acfa_fence", "relay"]}]	const	что можно добавить — виды deviceTypes; подтип ipsrv выводится, выбор в мастере на него не влияет
 Reference	detectorKinds	—	["motion", "linecross"]	const	реестр воркера det (V/04.2)
 Reference	recordModes	—	["none", "always", "replica"]	const	motion, sched не объявляются (разбор ревью V/11, вопрос 2)
 Reference	archiveKinds	—	["local", "cloud"]	const
@@ -226,7 +226,7 @@ Reference	serviceTypes, supportLevels, cloudProviders	—	[]	const	служб, �
 Reference	deviceParams	—	{"sensor": [{"key": "norm", "options": ["open", "closed"]}], "relay": [{"key": "norm", "options": ["open", "closed"]}]}	const	debounce, pulse, gain, vol, acodec настройками не бывают: pulse_ms — в действии
 Reference	limits	—	{"ipScanMax": 0, "defaultServerPort": 0}	const	опроса адресов серверов нет (V/11.2 № 10)
 Reference	access	—	{"features":["DEVICES_SETUP","ARCHIVES_SETUP","DETECTORS_SETUP","EDIT_PTZ_PRESETS","USERS_RIGHTS_SETUP"],"levels":{"cam":["FORBID","ONLY_ARCHIVE","MON","ARCHIVE","ARCH_MANAGE","FULL"],"arch":["FORBID","FULL"],"ur":["NO","ALL"]},"defaults":[{"key":"dCam","levels":"cam"},{"key":"dArch","levels":"arch"}],"globals":[],"folderFields":["cam"],"fieldDefaults":{"cam":"dCam","arch":"dArch"},"visibleFrom":{"cam":"ONLY_ARCHIVE","arch":"FULL"},"restrictions":[],"plugins":[],"roleTemplates":[{"id":"commissioner","rights":{"feat":["DEVICES_SETUP","ARCHIVES_SETUP","DETECTORS_SETUP","EDIT_PTZ_PRESETS"],"dCam":"FULL","dArch":"FULL"}},{"id":"operator","rights":{"feat":[],"dCam":"MON","dArch":"FULL"}},{"id":"viewer","rights":{"feat":[],"dCam":"MON"}}],"loginSchedules":[0],"syncTimezones":[],"staleDays":90,"expiringSoonDays":7,"passwordPolicy":{"minLength":0,"letter":false,"digit":false,"notLogin":false}}	const	только переводимое (V/11.8; V/11.2 Н1.5)
-Reference	capabilities	backend	объявление возможностей	read	operations — «переводится» V/11.2; deviceTypes — camera, det, ipsrv, eventsrc, acfa; features — пусто (V/11.2 Н1.5)
+Reference	capabilities	backend	объявление возможностей	read	operations — «переводится» V/11.2; deviceTypes — camera, det, ipsrv, eventsrc, acfa, acfa_sensor, acfa_lock, acfa_fence, relay; features — пусто (V/11.2 Н1.5)
 Reference	ruleTriggers, ruleActions, ruleConditions, ruleControls	—	[]	const	«Автоматизация» не объявлена (ADR-0094 доп. (7))
 Reference	layouts, monitors	—	[]	const	раскладок клиента и видеостены нет
 Settings	—	—	—	none	вне перечня обратного вызова (V/11.1 Н1.5)

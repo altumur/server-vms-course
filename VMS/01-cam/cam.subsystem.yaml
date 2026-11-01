@@ -339,13 +339,13 @@ tables:
       until:      {type: float, required: true}                                      # started_at + SEARCH_TIME (V/01.8 Н1.1)
       stopped_at: {type: float}                                                      # stopped by a person; no field — not stopped
   # What a search found, one row a device: a find, so a worker's table. Two servers that see one device write one row, the
-  # key does not name the search, so a device keeps its candidateId from search to search (V/11.4 Н1.9). Only a find: no
+  # key does not name the search, so a device at its address keeps its candidateId from search to search (V/11.4 Н1.9). Only a find: no
   # password, nothing is created from it.
   found:
     key: h
     delete_after: 86400
     fields:
-      h:        {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}  # SHA-256 hex of the device's MAC, else of ip:port
+      h:        {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}  # SHA-256 hex of <mac>|<ip>:<port>
       search:   {type: string, required: true, schema: {pattern: "^[0-9a-f]{32}$"}}  # the search that found it last
       vendor:   {type: string, required: true}
       model:    {type: string, required: true}

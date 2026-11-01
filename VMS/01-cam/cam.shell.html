@@ -278,6 +278,7 @@ pc.addFieldEditor("unit","source",(host,ref,obj,value,set)=>{
 pc.addNote("unit",(ref,u)=>{
   if(!isCam(ref)||!u)return"";
   if(u.phase==="failed"){const w=u.reason||u.why;return`Хост драйверов: сбой устройства${w?" — "+w:""}.`}
+  if(u.device_state==="lost")return"Связь с устройством потеряна: драйвер пробует сам, события не идут.";
   if(u.device_state==="opening")return"Устройство ещё открывается — если это не проходит, открытие не завершается: проверьте адрес, сеть и учётные данные камеры.";
   if(childErr&&!camMain(u))return`Входы и выходы устройства не прочитаны: ${childErr}.`;
   return"";
@@ -583,6 +584,7 @@ async function negotiateLive(id){
   try{await pc.setRemoteDescription({type:"answer",sdp:await r.text()})}
   catch(e){setCap("живое: браузер не принял ответ шлюза");hangUp();pc.close();return}
   V.live={pc,session,where,since:Date.now()/1000-30,seen:new Set(),timer:null};
+  {const pl=$("#player");if(pl)pl.ontimeupdate=null;clearTitle()}   // the archive's titles do not stand over the live picture
   [...($("#timeline")?.children||[])].forEach(el=>el.classList.remove("playing"));
   let via="";
   try{via=new URLSearchParams(session.split("?")[1]).get("gateway")||""}catch(e){}
@@ -804,7 +806,10 @@ async function startTalk(owner,n){
     if(!window.RTCPeerConnection||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){end("Браузер не умеет разговор");return}
     try{mic=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){end("Браузер не дал микрофон");return}
     if(gone()){end();return}
-    await pc.api("POST",camPath("/requests"),{unit:String(owner),action:"talk",port:n});
+    // the door answers at once when the holder was quick: refused — said, no offers; a 500 cost the call, so it is asked again
+    const ask=async()=>{const o=((await pc.api("POST","/cam/requests",{unit:String(owner),action:"talk",port:n}))||{}).answered;
+      return o&&o.outcome==="refused"?(o.error==="busy"?"Динамик занят":"Разговор отклонён: "+(o.error||o.outcome)):""};
+    let no=await ask();if(no){end(no);return}
     try{await pc.api("POST","/live/streams",{cam:String(owner)})}catch(e){if(!(e.status===409&&e.body&&e.body.error==="exists"))throw e}
     if(gone()){end();return}
     peer=new RTCPeerConnection();mic.getTracks().forEach(t=>peer.addTrack(t,mic));
@@ -813,14 +818,15 @@ async function startTalk(owner,n){
     let r=null;
     for(let i=0;i<9;i++){
       try{r=await doorFetch(where,path,{method:"POST",headers:{"Content-Type":"application/sdp"},body:peer.localDescription.sdp})}catch(e){r=null}
-      if(gone()){end();return}
+      if(gone()){const s=r&&r.status===201&&r.headers.get("Location");if(s)doorFetch(where,sessionPath(s),{method:"DELETE"}).catch(()=>{});end();return}
       if(r&&![404,500,503].includes(r.status))break;
       if(r&&r.status===404){let d={};try{d=await r.clone().json()}catch(e){}if(d.error==="no speaker")break}
-      if(i<8){await new Promise(res=>setTimeout(res,1500));if(gone()){end();return}}
+      if(i<8){await new Promise(res=>setTimeout(res,1500));if(gone()){end();return}
+        if(r&&r.status===500){no=await ask();if(no){end(no);return}}}
     }
     if(!r){end("Шлюз не взял разговор");return}
     if(r.status===409){end("Динамик занят");return}
-    if(r.status!==201){let d={};try{d=await r.json()}catch(e){}end("Разговор отклонён: "+(d.detail||d.error||r.status));return}
+    if(r.status!==201){let d={};try{d=await r.json()}catch(e){}end(d.error==="not yet"?"Устройство не приняло разговор":"Разговор отклонён: "+(d.detail||d.error||r.status));return}
     const session=r.headers.get("Location")||"";
     await peer.setRemoteDescription({type:"answer",sdp:await r.text()});
     if(gone()){if(session)doorFetch(where,sessionPath(session),{method:"DELETE"}).catch(()=>{});end();return}
@@ -843,7 +849,7 @@ function stopTalk(closing){
 async function pollLive(id){
   if(!V.live)return;
   let d;
-  try{const r=await fetch(`/events?from=${V.live.since}&to=1e12&unit=${encodeURIComponent("cam/"+id)}`);if(!r.ok)return;d=await r.json()}catch(e){return}
+  try{const r=await fetch(`/events?from=${V.live.since}&unit=${encodeURIComponent("cam/"+id)}`);if(!r.ok)return;d=await r.json()}catch(e){return}
   if(!V.live)return;                       // the viewer hung up while it was asked
   const feed=$("#livefeed");if(!feed)return;
   (d.events||[]).sort((a,b)=>evAt(a)-evAt(b)).forEach(e=>{
@@ -885,7 +891,7 @@ async function pollTitles(id){
   const live=V.live;live.titleSince??=live.since;live.titleSeen??=new Set();
   for(const pos of posOf(id)){
     let d;
-    try{const r=await fetch(`/events?from=${live.titleSince}&to=1e12&kind=text&unit=${encodeURIComponent("cam/"+pos.id)}`);if(!r.ok)continue;d=await r.json()}catch(e){continue}
+    try{const r=await fetch(`/events?from=${live.titleSince}&kind=text&unit=${encodeURIComponent("cam/"+pos.id)}`);if(!r.ok)continue;d=await r.json()}catch(e){continue}
     if(V.live!==live)return;
     (Array.isArray(d.events)?d.events:[]).sort((a,b)=>evAt(a)-evAt(b)).forEach(e=>{
       live.titleSince=Math.max(live.titleSince,e.t-5);
@@ -899,13 +905,16 @@ async function archiveTitles(id,p,gen){
   clearTitle();
   const v=$("#player");if(!v)return;
   v.ontimeupdate=null;
-  const all=[];
+  // the lines of the pieces read before stay: a title does not break at the edge of a piece
+  const was=V.titles&&V.titles.gen===gen&&V.titles.id===id?V.titles.all:[];
+  const all=[...was],seen=new Set(was.map(x=>String(x.e.id)));
   for(const pos of posOf(id)){
     try{const r=await fetch(`/events?from=${p.start}&to=${p.end}&kind=text&unit=${encodeURIComponent("cam/"+pos.id)}`);if(!r.ok)continue;
-      const d=await r.json();(Array.isArray(d.events)?d.events:[]).forEach(e=>all.push({at:Number(evAt(e))+num0(pos.overlay_delay_ms)/1000,pos,e}))}catch(e){}
+      const d=await r.json();(Array.isArray(d.events)?d.events:[]).forEach(e=>{if(seen.has(String(e.id)))return;seen.add(String(e.id));all.push({at:Number(evAt(e))+num0(pos.overlay_delay_ms)/1000,pos,e})})}catch(e){}
   }
-  if(gen!==V.gen||!all.length)return;
+  if(gen!==V.gen||V.live||!all.length)return;      // the viewer went on, or to live: the archive's lines are not for it
   all.sort((a,b)=>a.at-b.at);
+  V.titles={gen,id,all};
   let shown=null;
   v.ontimeupdate=()=>{
     const now=p.start+v.currentTime;
@@ -932,7 +941,7 @@ pc.addTab("unit",{id:"vid",label:"Видео",
 // Leaving the camera: another object, its card gone (another section), the session left. Another tab of it is no leaving.
 const leaveCam=()=>{V.gen++;dropRetry();stopLive();stopTalk()};
 pc.on("select",leaveCam);
-if(FEATURES.has("card.closed"))pc.on("card.closed",e=>{if(e&&isCam(e.ref))leaveCam()});
+if(FEATURES.has("card.closed"))pc.on("card.closed",e=>{if(e&&isCam(e.ref))leaveCam();else if(e&&String(e.ref).startsWith("child:"))stopTalk()});
 pc.on("logout",leaveCam);
 // Another person: the doors' tokens and a shown password are the former one's (P/07 Н1.5).
 const forgetPerson=()=>{for(const k of Object.keys(DOORS))delete DOORS[k];forgetAccountPassword();childGen++;CHILDREN=null;CHILD_SET={};DEV_UNITS=null;childErr=""};
@@ -1032,7 +1041,7 @@ function unitCard(host,name){
   const u=(DEV_UNITS||[]).find(x=>String(x.name)===name);
   if(!u){host.innerHTML=card("Единица",`<p class="sub">Такой строки нет.</p>`);return}
   const on=pc.may("admin","unit:cam/"+u.camera,"cam"),act=pc.may("edit","unit:cam/"+u.camera,"cam"),dis=on?"":" disabled";
-  const row=camById(u.camera),down=row&&row.units_down&&typeof row.units_down==="object"?row.units_down[String(u.n)]:null;
+  const row=camById(u.camera),down=row&&row.device_state==="lost"?"lost":row&&row.units_down&&typeof row.units_down==="object"?row.units_down[String(u.n)]:null;
   host.innerHTML=card(esc(unitLabel(u)),`<div class="g">${fldRo("Вид",UNIT_WORD[u.type]||u.type)}${fldRo("Номер",u.n)}${fldRo("Шаблон",u.template)}${fldRo("Устройство",camName(u.camera))}${fldRo("Владелец",u.parent??"корень")}
     <div><label>Имя</label><input type="text" id="unitTitle" value="${esc(u.title||"")}"${dis}></div>
     <div><label>Адрес</label><input type="text" id="unitAddr" value="${esc(u.address||"")}"${dis}></div>

@@ -13,3 +13,4 @@ scenario	step	request	expect
 02-live	4	@manual stopped_at и until останавливают поиск: новых строк нет, найденное стоит	manual
 02-live	5	@manual вопрос о модели камеры без пароля: каждый сервер отвечает строкой, сервер её подсети — с model	manual
 02-live	6	@manual вопрос о модели камеры, которая требует вход: ответ без model	manual
+02-live	7	@manual две камеры с нулевым или одним MAC на разных адресах: две строки cam/found	manual

@@ -21,7 +21,7 @@ scenario	step	request	expect
 04-units	3	@manual событие единицы: строка unit с unit, event как есть, phase у двухфазного; выключенная единица событий не пишет	manual
 04-units	4	@manual действие unit: performed с reply {action, n, operation}; no such unit, unit is off, no such operation, unit needs n and an operation; строка unlicensed — camera is not licensed	manual
 04-sound	1	@manual подставной драйвер со звуком: точка <live_url>/mic — первый mic камеры, /mic/<n> — mic устройства; кодек в rtpmap как у устройства; поток видео не меняется	manual
-04-sound	2	@manual enabled: false у mic — DESCRIBE 404; настройка не читается — 404; хозяин unlicensed — 404	manual
+04-sound	2	@manual enabled: false у mic — DESCRIBE 404; настройка не читается — 404; хозяин unlicensed — 404; открытая точка при каждом из них и при gone — клиент видит конец потока	manual
 04-sound	3	@manual POST /requests {"unit": "$c", "action": "talk", "port": 1} — performed, устройство получило Call; второй человек — refused «busy»; тот же — performed	manual
 04-sound	4	@manual talk без port, с чужим port, spk выключен — talk needs a port, no such speaker, speaker is disabled	manual
 04-sound	5	@manual маршрут talk не открыт 30 с — HangUp, занятость снята; маршрут оборван — HangUp; устройство положило трубку — маршрут закрыт	manual

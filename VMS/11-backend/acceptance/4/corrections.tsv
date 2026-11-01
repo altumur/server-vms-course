@@ -4,3 +4,5 @@ date	sample	fix	languages
 2026-11-01	4/scenarios.tsv	11-devices шаг 5: deviceTypes с единицами и relay; 13-units: новый сценарий, единицы acfa_*, eventsrc (ADR-0102 доп. (9), (10))	-
 2026-11-01	4/scenarios.tsv: 11-devices, шаг 53	enabled у mic, spk действует, audio записи не снимается; @manual (ADR-0102 доп. (9) п. 7)	-
 2026-11-01	4/scenarios.tsv	14-discovery, 15-probe: новые сценарии поиска и вопроса о модели на двойнике (ADR-0103 доп. (1)); строки держателя кладёт дверь хранилища	-
+2026-11-01	4/scenarios.tsv: 14-discovery	ключ находки — MAC и адрес (V/01.8 Н1.2): h и id кандидата пересчитаны	-
+2026-11-01	4/scenarios.tsv	13-units, шаги 22–24: номер единицы — после строки, заведённой дверью таблиц мимо счётчика (ревью POS, Б-3)	-
