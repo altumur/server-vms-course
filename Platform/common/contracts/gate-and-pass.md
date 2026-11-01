@@ -430,7 +430,7 @@ domain:    консоль домена и процесс domain: may с grants =
            «Двери домена»; аудит раскладки, Б-10); unit = "*" у admin; кроме POST /domain/revoke — без личности и гранта: удостоверение — токен в теле
            (P/08.4 Н1.2 revoke); двери вида GET /domain, GET /domain/<sub>/<rows>, GET /domain/<sub>/tables/<таблица>, все двери
            хранимой правки P/08.6 Н1.3, Н1.3б, GET /domain/users, /groups, /roles, GET /domain/grants, PUT /domain/grants/<кластер> с кластером ≠ domain,
-           PUT /domain/memberof — «Суд по цели» договора права, не эта строка (ADR-0110); консоль домена судит их той же нормой, что процесс
+           POST /domain/batch по строке (P/08.4 Н2), GET и PUT /domain/memberof — «Суд по цели» договора права, не эта строка (ADR-0110); консоль домена судит их той же нормой, что процесс
 ```
 
 ## Аварийный вход

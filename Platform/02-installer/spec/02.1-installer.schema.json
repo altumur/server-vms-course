@@ -1708,6 +1708,8 @@
    "anyOf": [
     {
      "enum": [
+      "domain/roles/lines",
+      "GET domain/memberof",
       "domain/edits",
       "domain/members",
       "GET domain/members",

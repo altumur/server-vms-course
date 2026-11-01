@@ -553,6 +553,11 @@ paths:
         in: path
         required: true
         schema: {type: string}
+    get:
+      operationId: memberofRead
+      summary: Членство единицы в папках домена (отвечает консоль домена)
+      responses:
+        '200': {description: '{folders, index}'}
     put:
       operationId: memberofWrite
       summary: Членство единицы в папках домена
@@ -2733,6 +2738,11 @@ components:
       additionalProperties: false
       description: Строка роли (P/08.4 Н1.3а).
       properties:
+        lines:
+          type: array
+          items: {type: object, additionalProperties: true}
+          description: Права роли на весь домен (глава 8.4 Н1.3а lines).
+        lines_at: {type: number}
         name: {$ref: '#/components/schemas/PersonName'}
         title: {type: string, maxLength: 200}
         comment: {type: string, maxLength: 2000}

@@ -359,7 +359,7 @@ HTTP-контракт: [10-domain-console.api.openapi.yaml](10-domain-console.ap
 
 | Дверь | Кто отвечает | Успех | Отказы |
 |---|---|---|---|
-| GET `/domain`, `/domain/folders`, `/domain/<sub>/<rows>`, `/domain/<sub>/tables/<таблица>`, `/domain/shadow`, `/domain/members`, `/domain/topology`, `/domain/placement`, `/domain/placement/<sub>/<ref>`, `/domain/grants`, `/domain/shared` | консоль домена сама | Н1.2 | Н1.2, Н4 |
+| GET `/domain`, `/domain/folders`, `/domain/memberof/<член>/<sub>/<rows>/<id>`, `/domain/<sub>/<rows>`, `/domain/<sub>/tables/<таблица>`, `/domain/shadow`, `/domain/members`, `/domain/topology`, `/domain/placement`, `/domain/placement/<sub>/<ref>`, `/domain/grants`, `/domain/shared` | консоль домена сама | Н1.2 | Н1.2, Н4 |
 | GET `/domain/alarms` | консоль домена сама | Н1.8 | 400; Н4 |
 | прочие строки списка (правки, двери людей при любом методе, `POST /api/login`) | процесс `domain` — консоль передаёт (Н1.3) | ответ процесса как пришёл (главы урока P/08) | Н4; коды процесса — OpenAPI урока P/08 |
 | `/domain/<sub>/<сегмент door.pass>[/…]` | воркер на домене — консоль передаёт (Н1.6) | ответ воркера как пришёл | [договор сторожевой и передачи](../../common/contracts/gate-and-pass.md) «Передача» |
