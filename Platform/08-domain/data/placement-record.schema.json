@@ -143,6 +143,16 @@
      },
      "uniqueItems": true
     },
+    "parts": {
+     "description": "раздел → {sha256, rev, key_rev} (P/08.8 Н1.5а)",
+     "type": "object",
+     "additionalProperties": true
+    },
+    "counts": {
+     "description": "domain/member-count",
+     "type": "object",
+     "additionalProperties": true
+    },
     "state": {
      "description": "{<ключ строки>: {<элемент>: <текст>}} — строки, что домен решил и чего нет ни у кого больше (Н1.5 state)",
      "type": "object",

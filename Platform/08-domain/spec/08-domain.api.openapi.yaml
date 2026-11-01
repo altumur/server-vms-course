@@ -578,6 +578,53 @@ paths:
       responses:
         '200': {description: '{doc}'}
         '429': {description: 'busy {retry_in}'}
+  /api/backup-part/{member}/{part}:
+    parameters:
+      - {$ref: '#/components/parameters/Member'}
+      - name: part
+        in: path
+        required: true
+        schema: {type: string, pattern: '^(?:[0-9]{4})$'}
+      - {$ref: '#/components/parameters/AgentSignature'}
+    get:
+      operationId: backupPart
+      summary: Часть резервной копии хранителю (глава 8.8 Н1.5а)
+      responses:
+        '200': {description: Объект части}
+        '429': {description: 'busy {retry_in}'}
+  /api/anywhere/{member}:
+    parameters:
+      - {$ref: '#/components/parameters/Member'}
+      - {$ref: '#/components/parameters/AgentSignature'}
+    get:
+      operationId: anywhereBody
+      summary: Тело сводки anywhere (глава 8.4 Н1.3)
+      responses:
+        '200': {description: '{doc, as_of}'}
+        '429': {description: 'busy {retry_in}'}
+  /domain/batches:
+    get:
+      operationId: batchesRead
+      summary: Партии приёма (глава 8.3 Н1.1б)
+      responses:
+        '200': {description: Партии без токена}
+    post:
+      operationId: batchCreate
+      summary: Новая партия; токен показан один раз
+      responses:
+        '201': {description: '{name, token, until}'}
+        '400': {$ref: '#/components/responses/BodyRefused'}
+  /domain/batches/{batch}:
+    parameters:
+      - name: batch
+        in: path
+        required: true
+        schema: {type: string}
+    delete:
+      operationId: batchRevoke
+      summary: Отзыв партии
+      responses:
+        '200': {description: Отозвана}
   /domain/edits:
     post:
       operationId: keptEdits

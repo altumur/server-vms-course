@@ -1,0 +1,33 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "type": "object",
+ "properties": {
+  "part": {
+   "type": "string",
+   "pattern": "^(?:[0-9]{4})$"
+  },
+  "rev": {
+   "type": "integer",
+   "minimum": 1
+  },
+  "state": {
+   "type": "object",
+   "x-opaque": true
+  },
+  "objects": {
+   "type": "object",
+   "x-opaque": true
+  },
+  "raw": {
+   "type": "object",
+   "x-opaque": true
+  }
+ },
+ "additionalProperties": false,
+ "required": [
+  "part",
+  "rev",
+  "state",
+  "objects"
+ ]
+}

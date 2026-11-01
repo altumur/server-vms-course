@@ -162,3 +162,4 @@ domain/batches/<имя>	row	P/08.3	create=domain(POST /domain/batches, cas "", �
 domain/knocks/<раздел>	row	P/08.3	cas=domain(первый стук партии, приём снимает, страж domain/signer-turn)	domain	-	1	08-domain/data/knocks.schema.json	P/08.3 Н1.1б
 domain/folder-log	row	P/08.5	cas=domain(каждая запись папок и членства, кольцо 1024, страж domain/signer-turn)	domain	-	1	08-domain/data/folder-log.schema.json	P/08.5 Н1.8
 domain/folder-counts/<id>	row	P/08.5	cas=domain(проход, страж domain/signer-turn)	domain, domainconsole	-	1	08-domain/data/folder-counts.schema.json	P/08.5 Н1.8
+domain/backups/part-<раздел>-<rev>	object	P/08.8	put=domain(копия частями, P/08.8 Н1.5а), domainagent(хранитель, по sha256 головы); delete=domain(уборка: нет ссылки в 5 головах и докачки)	domain, domainagent	-	1	08-domain/data/backup-parts.schema.json	P/08.8 Н1.5а

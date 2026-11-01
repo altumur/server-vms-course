@@ -3136,3 +3136,9 @@ c08_folder_counts.003	domain/folder-counts/<id>	domain/folder-counts/0123456789a
 c08_folder_counts.004	domain/folder-counts/<id>	domain/folder-counts/0123456789abcdef0123456789abcdef	row	reader	["domain", "domainconsole"]	null	refused	[""]	{"domain": [""], "domainconsole": [""]}	root null
 c08_folder_counts.005	domain/folder-counts/<id>	domain/folder-counts/0123456789abcdef0123456789abcdef	row	writer	["domain"]	{	refused	[""]	[]	not JSON
 c08_folder_counts.006	domain/folder-counts/<id>	domain/folder-counts/0123456789abcdef0123456789abcdef	row	reader	["domain", "domainconsole"]	{	refused	[""]	{"domain": [""], "domainconsole": [""]}	not JSON
+c08_backup_parts.001	domain/backups/part-<раздел>-<rev>	domain/backups/part-0123-7	object	writer	["domain", "domainagent"]	{"part":"0123","rev":7,"state":{},"objects":{}}	ok	[]	[]	base
+c08_backup_parts.002	domain/backups/part-<раздел>-<rev>	domain/backups/part-0123-7	object	reader	["domain", "domainagent"]	{"part":"0123","rev":7,"state":{},"objects":{}}	ok	[]	{"domain": [], "domainagent": []}	base
+c08_backup_parts.003	domain/backups/part-<раздел>-<rev>	domain/backups/part-0123-7	object	writer	["domain", "domainagent"]	null	refused	[""]	[]	root null
+c08_backup_parts.004	domain/backups/part-<раздел>-<rev>	domain/backups/part-0123-7	object	reader	["domain", "domainagent"]	null	refused	[""]	{"domain": [""], "domainagent": [""]}	root null
+c08_backup_parts.005	domain/backups/part-<раздел>-<rev>	domain/backups/part-0123-7	object	writer	["domain", "domainagent"]	{	refused	[""]	[]	not JSON
+c08_backup_parts.006	domain/backups/part-<раздел>-<rev>	domain/backups/part-0123-7	object	reader	["domain", "domainagent"]	{	refused	[""]	{"domain": [""], "domainagent": [""]}	not JSON
