@@ -132,7 +132,7 @@ scenario	step	request	expect
 10-ticket-token-to-first-kind	6	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$tok"}
 10-ticket-token-to-first-kind	7	@until 30 member m1 console @header Authorization: Bearer $tok GET /session	200 {"user": "ann"}
 10-ticket-token-to-first-kind	8	@pass-open a member m1 console @header Authorization: Bearer $tok GET /probe-p/api/x	ok {"ticket": "$t", "headers": {"Authorization": "@absent"}}
-10-ticket-token-to-first-kind	9	@pass-open b socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /probe-f/accounts	ok {"path": "/accounts", "headers": {"Authorization": "Bearer $tok", "X-W2C-Pass-Ticket": "@absent"}}
+10-ticket-token-to-first-kind	9	@pass-open b socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t @header Authorization: Bearer x GET /probe-f/accounts	ok {"path": "/accounts", "headers": {"Authorization": "Bearer $tok", "X-W2C-Pass-Ticket": "@absent"}}
 10-ticket-token-to-first-kind	10	@pass-answer b 200 application/json {"accounts": []}	200 {"accounts": []}
 10-ticket-token-to-first-kind	11	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /probe-f/fthings	401 {"error": "denied", "detail": "ticket refused"}
 10-ticket-token-to-first-kind	12	@pass-answer a 200 application/json {"ok": true}	200 {"ok": true}
