@@ -36,7 +36,7 @@ paths:
           headers:
             Location:
               required: true
-              description: "/chat/<name>/steps/<step>"
+              description: "/chat/<name>/steps/<step>; сегмент step процент-кодирован"
               schema: {type: string}
             Connection: {$ref: "#/components/headers/Close"}
           content:
@@ -79,6 +79,7 @@ paths:
         "404": {$ref: "#/components/responses/Refusal"}
         "405": {$ref: "#/components/responses/Refusal"}
         "410": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
     delete:
       summary: Отбить свой шаг (Н1.5)
       security: [{doorToken: []}]
@@ -103,6 +104,7 @@ paths:
         "404": {$ref: "#/components/responses/Refusal"}
         "405": {$ref: "#/components/responses/Refusal"}
         "410": {$ref: "#/components/responses/Refusal"}
+        "503": {$ref: "#/components/responses/Refusal"}
 components:
   headers:
     Close:
@@ -125,8 +127,8 @@ components:
   schemas:
     StepId:
       type: string
-      description: "<instance держателя>.<128 случайных бит, 32 строчных hex>; экземпляр — печатные знаки ASCII без пробела, в нём может быть точка — разбор по последней"
-      pattern: "^(?:[!-~]+\\.[0-9a-f]{32})$"
+      description: "<instance держателя>.<128 случайных бит, 32 строчных hex>; в экземпляре может быть точка — разбор по последней; в пути сегмент процент-кодирован (V/10.2 Н1.6)"
+      pattern: "^.+\\.[0-9a-f]{32}$"
       examples: ["srv.a:1:abcdef.00000000000000000000000000000000"]
     ToolCall:
       type: object
@@ -154,7 +156,16 @@ components:
             role: {enum: [system, user, tool]}
             content: {type: string}
             tool_call_id: {type: string}
-        - $ref: "#/components/schemas/ModelMessage"
+        - type: object
+          required: [role]
+          additionalProperties: false
+          properties:
+            role: {const: assistant}
+            content: {type: [string, "null"]}
+            tool_calls:
+              type: array
+              items: {$ref: "#/components/schemas/ToolCall"}
+            reasoning_content: {type: string}
     ModelMessage:
       type: object
       description: сообщение модели (V/10.2 Н1.3); иных полей держатель не отдаёт
@@ -257,7 +268,7 @@ components:
       description: токен двери консоли (договор токена двери)
   responses:
     Refusal:
-      description: отказ (V/10.2 Н4); срок повтора — в теле `retry_after` (Retry-After странице не виден через CORS)
+      description: отказ (V/10.2 Н4); срок повтора — в теле `retry_after` (Retry-After странице не виден через CORS), кроме busy двери процесса — там срока в теле нет
       headers:
         Connection:
           required: false

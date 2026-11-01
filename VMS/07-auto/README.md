@@ -61,16 +61,17 @@
 4. **Второй детектор не заводится:** включённый детектор оператора той же пары (`cam`, `kind`) без `made` с `until` = 0 —
    заказа нет (`watched` в пульсе); нужно `det/units/` в `worker.reads`.
 5. **Чтение журнала — договор `events-merge`** (ADR-0091 доп. (21) п. 1, доп. (23)–(27)): вычислитель — участник слияния,
-   вопросы на тройку и класс, `keep: oldest`, партнёры — `by=occurred`, полнота — `complete` и `truncated` = 0 (V/07.2 Н1.2).
+   вопросы на тройку и класс, окно чтения до `now`, курсор до `now − JOURNAL_SETTLE`, вопрос назад `JOURNAL_BACK`, `keep: oldest`,
+   партнёры — `by=occurred&late`, полнота — `complete` и `truncated` = 0 (V/07.2 Н1.2).
 6. **Имя поданной просьбы — по ключу подателя** (ADR-0091 доп. (21) п. 2): `auto.<f>-<i>`, `f` — первые 32 hex
    `sha256(UTF-8(<сценарий> + "\n" + <id события>))`, 39 байт при любых именах (V/07.4 Н1.1); просьба между камерами несёт
    `firing` = `f`, у держателя — `rec.ask-<firing>-<i>` (V/07.5 Н1.4, V/02.9).
 7. **Одно имя на обеих сторонах:** в документе домена `then.within` (срок просьбы) → `valid_for`, как у сценария кластера;
    `action` — `enum: [preset, output]`, `arg` → `n` / `port`, срок ≤ 600 с, `rate_per_minute` ≤ 600 — форма у двери домена
-   ловит то, что можно поймать формой; смысл (что умеет цель) — отказ исполнителя и цели.
+   ловит то, что можно поймать формой; смысл (что умеет цель) — отказ цели.
 8. **`worker.reads`** + `cam/cameras/`, `cam/heartbeats/` (`can` камер), `cam/devices/`, `cam/children/`, `cam/child_settings/`, `det/units/`, `rec/recordings/`,
-   `rec/heartbeats/` (адреса приёмников для книги `asks`).
-9. **Пульс и ряды:** фазы сценария `running` | `refused` | `failed` (под взятой эпохой), `why` — платформы, слова — `reason`,
+   `rec/heartbeats/` (адреса приёмников для книги `asks`), `domain/cam/sources`, `domain/topology`, `domain/view`.
+9. **Пульс и ряды:** фазы сценария `running` | `pending` | `refused` | `failed` (под взятой эпохой), `why` — платформы, слова — `reason`,
    поля `unfit`, `unchecked`, `holding`, `decided_without`, `late`; ряды `creates_total{outcome}`, `made_rows`; ряд
    `wants_folded` снять (свёртки нет).
 10. **Перенос просьбы ретранслятором** — протокол в V/07.5, сторона передатчика — строкой в V/02.9 Н1.8 со ссылкой.

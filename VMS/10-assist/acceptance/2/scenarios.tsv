@@ -27,6 +27,7 @@ scenario	step	request	expect
 02-step	20	@until 30 GET /models	200 {"rows": [{"id": "m1", "phase": "stopped", "reason": "disabled"}]}
 02-step	21	door assist/m1 POST /chat/m1/steps {"messages": [{"role": "user", "content": "привет"}]}	503 {"error": "model unavailable", "detail": "disabled"}
 02-step	22	door assist/m1 GET /chat/m1/steps/nobody.00000000000000000000000000000000?wait=x	400 {"error": "bad step", "detail": "@any"}
+02-step	23	door assist/m1 GET /chat/m1/steps/nobody%3A1%3Aabcdef.00000000000000000000000000000000	410 {"error": "gone"}
 03-limits	1	@start worker assist m-srv-a-1 on srv-a labels=assist-a	ok
 03-limits	2	POST /models {"name": "m1", "labels": ["assist-a"]}	201 {"id": "m1"}
 03-limits	3	@until 60 GET /models	200 {"rows": [{"id": "m1", "phase": "running"}]}

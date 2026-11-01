@@ -425,6 +425,51 @@
   ]
  },
  {
+  "id": "tools-in-scalar",
+  "console": "stand3",
+  "rule": "V/10.4 Н1.5 in, not_in: значение не список — как список из одного",
+  "source": "lesson",
+  "texts": [
+   "x"
+  ],
+  "calls": [
+   {
+    "name": "find_units",
+    "args": {
+     "sub": "testsub2",
+     "where": [
+      {
+       "field": "zone",
+       "op": "in",
+       "value": "z2"
+      }
+     ],
+     "fields": [
+      "zone"
+     ]
+    },
+    "content": "{\"sub\":\"testsub2\",\"count\":5,\"shown\":5,\"units\":[{\"unit\":\"testsub2/Shop-1\",\"zone\":\"z2\",\"about.labels\":[\"west\",\"floor1\"]},{\"unit\":\"testsub2/Shop-2\",\"zone\":\"z2\",\"about.labels\":[\"west\",\"floor1\"]},{\"unit\":\"testsub2/Store-1\",\"zone\":\"z2\",\"about.labels\":[\"east\",\"floor2\"]},{\"unit\":\"testsub2/Store-2\",\"zone\":\"z2\",\"about.labels\":[\"east\",\"floor2\"]},{\"unit\":\"testsub2/Yard-1\",\"zone\":\"z2\",\"about.labels\":[\"north\"],\"can_edit\":false}],\"can_edit_note\":\"can_edit: false — the admin has no edit right on this unit: leave it out of the plan, tell the admin in summary\",\"query\":{\"sub\":\"testsub2\",\"where\":[{\"field\":\"zone\",\"op\":\"in\",\"value\":\"z2\"}]}}"
+   },
+   {
+    "name": "find_units",
+    "args": {
+     "sub": "testsub2",
+     "where": [
+      {
+       "field": "zone",
+       "op": "not_in",
+       "value": "z1"
+      }
+     ],
+     "fields": [
+      "zone"
+     ]
+    },
+    "content": "{\"sub\":\"testsub2\",\"count\":5,\"shown\":5,\"units\":[{\"unit\":\"testsub2/Shop-1\",\"zone\":\"z2\",\"about.labels\":[\"west\",\"floor1\"]},{\"unit\":\"testsub2/Shop-2\",\"zone\":\"z2\",\"about.labels\":[\"west\",\"floor1\"]},{\"unit\":\"testsub2/Store-1\",\"zone\":\"z2\",\"about.labels\":[\"east\",\"floor2\"]},{\"unit\":\"testsub2/Store-2\",\"zone\":\"z2\",\"about.labels\":[\"east\",\"floor2\"]},{\"unit\":\"testsub2/Yard-1\",\"zone\":\"z2\",\"about.labels\":[\"north\"],\"can_edit\":false}],\"can_edit_note\":\"can_edit: false — the admin has no edit right on this unit: leave it out of the plan, tell the admin in summary\",\"query\":{\"sub\":\"testsub2\",\"where\":[{\"field\":\"zone\",\"op\":\"not_in\",\"value\":\"z1\"}]}}"
+   }
+  ]
+ },
+ {
   "id": "tools-empty-list",
   "console": "stand3",
   "rule": "V/10.4 Н1.5 пустой список и inherit",
