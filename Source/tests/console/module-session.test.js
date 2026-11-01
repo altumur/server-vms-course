@@ -49,14 +49,15 @@ d.querySelector(".pc-logout").click();await b.ready(80);
 out.logoutEvent=heard===1;   // P/07 Н1.5 events: on("logout")
 out.logoutDeletes=sent.some(x=>x[0]==="DELETE"&&x[1]==="/session");
 // аварийный вход
-const signed=[];pc.on("session",e=>signed.push(e&&e.user));   // P/07 Н1.5 events: on("session", {user}) после входа
+const signed=[];pc.on("session",e=>signed.push(e&&e.user));   // P/07 Н1.5 events: on("session", {user}): подписка после чтения слышит сразу, затем вход
+out.sessionAtSubscribe=signed.length===1&&signed[0]==="ann";
 b.FIX["/session"]={open:false,user:"ops",login_url:"http://holder/api/login"};
 w.eval("document.querySelector('.pc-login').hidden=false");d.querySelector(".pc-glass-go").click();
 const gf=d.querySelector(".pc-glass-f");out.glassForm=gf.hidden===false;
 gf.elements.who.value="ops";gf.elements.why.value="holder down";gf.elements.password.value="x";gf.dispatchEvent(new w.Event("submit",{cancelable:true}));await b.ready(100);
 const g=sent.find(x=>x[0]==="POST"&&x[1]==="/session/break-glass");
 out.glassPost=!!g&&JSON.parse(g[2]).who==="ops"&&JSON.parse(g[2]).why==="holder down";
-out.sessionEvent=signed.length===1&&signed[0]==="ops";
+out.sessionEvent=signed.length===2&&signed[1]==="ops";
 out.errors=errs;
 b.report(out,["errors"]);
 try{fs.unlinkSync(TMP)}catch(e){}

@@ -382,7 +382,8 @@
     };
 
     // -- events to the page ---------------------------------------------------------------------------------
-    C.on = (evt, fn) => { (listeners[evt] = listeners[evt] || []).push(fn); return C; };
+    let sessionUser;   // the last known user: a page that subscribes after the read hears it at once
+    C.on = (evt, fn) => { (listeners[evt] = listeners[evt] || []).push(fn); if (evt === "session" && sessionUser !== undefined) fn({ user: sessionUser }); return C; };
     const emit = (evt, ...a) => (listeners[evt] || []).forEach(fn => { try { fn(...a); } catch (e) { console.error(e); } });
     // card.closed {ref}: the card a person looked at is gone — another selection, no selection, the page leaving (P/07 Н1.5
     // events; ADR-0091 доп. (22), (24)). A shell card says it too, its ref as the page made it.
@@ -2334,7 +2335,6 @@
     // after a login: the manifests a 401 kept back are read now, and pc.ready settles
     async function afterLogin() {
       await loadSession();
-      emit("session", { user: st.session ? st.session.user : undefined });   // P/07 Н1.5 events: the page compares it with its own user
       if (!manifestRead && await readManifests()) { paintRail(); paintAside(); }
       if (goBack()) return;
       await load();
@@ -2354,6 +2354,9 @@
       try { const r = await fetch("/session"); st.session = r.ok ? await r.json() : null; } catch (e) { st.session = null; }
       if (st.session && st.session.open === false && !st.session.user) showLogin("");
       paintHeader();
+      // P/07 Н1.5 events: a known user at every read of /session; a page comparing it knows whose its secrets are
+      sessionUser = st.session && st.session.user ? st.session.user : undefined;
+      if (sessionUser !== undefined) emit("session", { user: sessionUser });
     }
 
     // -- data --------------------------------------------------------------------------------------------------

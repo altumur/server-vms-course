@@ -23,4 +23,6 @@
 | 14 | C02-UPGRADE-STRAND-01 | Порядок оператора, кода нет | [x] | — | — |
 | 15 | C03-MEMORY-NO-ROLE-01 | Без `CAPACITY` или `WORKER_MEMORY_MB` правило бюджета не проверяется | [x] | [ ] | [ ] |
 | 17 | C03-RESTART-WORD-01 | Вопрос подсистемы к библиотеке `restarting(id)` | [x] | [ ] | [ ] |
-| 18 | C07-SESSION-EVENT-01 | Модуль: `on("session", {user})` | [x] | — | — |
+| 18 | C07-SESSION-EVENT-01 | Модуль: `on("session", {user})` при каждом чтении `/session` с известным `user` | [x] | — | — |
+| 14 | C02-PACKAGE-VENDOR-FILES-01 | Файлы `vendor/` рядом с манифестом заменяются новым пакетом атомарно | [x] | [ ] | [ ] |
+| 14 | C02-KIND-SELF-01 | Порядок `manifest put`: связь подсистемы к себе не цикл и не ребро | [x] | [ ] | [ ] |
