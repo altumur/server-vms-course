@@ -121,10 +121,10 @@ placement:
   # needs the resource; two other things do. The recorder's EVENTS — `archive.shallow`, `archive.keep.copied`/
   # `archive.keep.lost`, what it fetched — go into the resource's tree, and the resource's door is how
   # anybody reads them.
-  # And the resource's heartbeat is the second witness that a SERVER is gone: the controller moves the recordings
-  # of a slot that lapsed only when the resource of its server is silent too (one silence is a crash, two are the
-  # server — P/04 Н3); without `requires` that move never happens, and the recordings of a box that lost its
-  # power wait for it for ever. What the review saw — a five-minute pass whose pulse died on a blinking store, a
+  # And what `requires` adds to the move: a recorder that LIVES while the resource of its server is silent leaves too
+  # (P/04 Н3 «уходит»): its events have nowhere to go. A recorder silent together with its resource needs no key: it
+  # goes by its fate, about 90 s of an unchanged slot (one silence is a crash, two are the server — P/04 Н3 «судьба»),
+  # and the recordings of a box that lost its power move on. What the review saw — a five-minute pass whose pulse died on a blinking store, a
   # silent resource, recordings moved off a sound server — was the pulse, and the pulse is mended
   # (a failure caught per beat, a monotonic clock, a limit on no progress).
   requires:   resource                               # the only subsystem that must be where the archive is

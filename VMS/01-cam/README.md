@@ -1,7 +1,7 @@
 # V/01 Камера
 
 Статус: **переведён** — главы V/01.1–V/01.7 (2026-10-23); план ниже — история перевода. Источники — опись
-[`../common/inventory.md`](../common/inventory.md) § 1, § 2. Платформа — выгрузка `cammeta-specs` `e0b19be`.
+[`../common/inventory.md`](../common/inventory.md) § 1, § 2. Платформа — выгрузка `cammeta-specs` `b8505490`.
 Манифест — [`cam.subsystem.yaml`](cam.subsystem.yaml) (канон; ADR-0090 доп. (6) п. 8). Оболочка —
 [`cam.shell.html`](cam.shell.html) (её текст — урок V/08).
 
