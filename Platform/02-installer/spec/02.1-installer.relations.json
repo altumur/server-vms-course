@@ -1456,6 +1456,15 @@
    "norm": "P/08.6 Н1.3б",
    "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"edit_delete\" in doc[\"domain\"]) ? (!(\"edit\" in doc[\"domain\"]) ? [{\"p\": [\"domain\", \"edit_delete\"]}] : []) : []) : [])",
    "own": []
+  },
+  {
+   "no": 155,
+   "path": "domain.tokens.$k.lifetime",
+   "relation": "when @domain.tokens.$k.keep = true : . <= 315360000",
+   "class": "value",
+   "norm": "P/08.2 Н1.6а",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"tokens\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"tokens\"]) == map ? dyn(doc[\"domain\"][\"tokens\"]).map(k1, ((type(doc[\"domain\"][\"tokens\"][k1]) == map && \"keep\" in doc[\"domain\"][\"tokens\"][k1] && doc[\"domain\"][\"tokens\"][k1][\"keep\"] == true && \"lifetime\" in doc[\"domain\"][\"tokens\"][k1] && type(doc[\"domain\"][\"tokens\"][k1][\"lifetime\"]) != string && double(doc[\"domain\"][\"tokens\"][k1][\"lifetime\"]) > 315360000.0) ? [{\"p\": [\"domain\", \"tokens\", k1, \"lifetime\"]}] : [])) : []) : []) : [])",
+   "own": []
   }
  ],
  "untranslated": []

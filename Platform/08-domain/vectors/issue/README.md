@@ -42,7 +42,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 38 строк: 12 `ok`, 24 `refused`, 2 `@exit 2` | `input` — вход `issue` текстом JSON → `expect`: `{"result":"ok","claims":…}` (утверждения Н1.4: `iss`, `sub`, `kind`, `iat`, `exp`, утверждение ref и аудитории из области, давшей аудиторию, у `scenario` — `by`, `acts` по JCS, `up`) или `{"result":"refused","status":…,"reason":<слово>}`: `bad_request`, `by_misplaced` (400); `not_granted`, `outside_scope`, `no_assignment`, `assignment_unreadable`, `unit_not_unique`, `not_poll_home`, `trigger_not_reported`, `no_shared_doc`, `no_item`, `no_home`, `no_audience` (403); `no_centre` (409) |
+| [`cases.tsv`](cases.tsv), 40 строк: 13 `ok`, 24 `refused`, 3 `@exit 2` | `input` — вход `issue` текстом JSON → `expect`: `{"result":"ok","claims":…}` (утверждения Н1.4: `iss`, `sub`, `kind`, `iat`, `exp`, утверждение ref и аудитории из области, давшей аудиторию, у `scenario` — `by`, `acts` по JCS, `up`) или `{"result":"refused","status":…,"reason":<слово>}`: `bad_request`, `by_misplaced` (400); `not_granted`, `outside_scope`, `no_assignment`, `assignment_unreadable`, `unit_not_unique`, `not_poll_home`, `trigger_not_reported`, `no_shared_doc`, `no_item`, `no_home`, `no_audience` (403); `no_centre` (409) |
 
 | Случаи | Что проверяет |
 |---|---|

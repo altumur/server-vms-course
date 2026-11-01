@@ -25,6 +25,7 @@ corpus-a110_calls_at_ok	Platform/02-installer/acceptance/1/cases/a110_calls_at_o
 corpus-a110_calls_view_ok	Platform/02-installer/acceptance/1/cases/a110_calls_view_ok.subsystem.yaml	expect/corpus-a110_calls_view_ok.json	принятый случай корпуса 2.1
 corpus-a110_edit_delete_ok	Platform/02-installer/acceptance/1/cases/a110_edit_delete_ok.subsystem.yaml	expect/corpus-a110_edit_delete_ok.json	принятый случай корпуса 2.1
 corpus-a110_edit_tables_ok	Platform/02-installer/acceptance/1/cases/a110_edit_tables_ok.subsystem.yaml	expect/corpus-a110_edit_tables_ok.json	принятый случай корпуса 2.1
+corpus-a110_token_keep_ok	Platform/02-installer/acceptance/1/cases/a110_token_keep_ok.subsystem.yaml	expect/corpus-a110_token_keep_ok.json	принятый случай корпуса 2.1
 corpus-a110_view_tables_ok	Platform/02-installer/acceptance/1/cases/a110_view_tables_ok.subsystem.yaml	expect/corpus-a110_view_tables_ok.json	принятый случай корпуса 2.1
 corpus-a110_view_tables_rows_ok	Platform/02-installer/acceptance/1/cases/a110_view_tables_rows_ok.subsystem.yaml	expect/corpus-a110_view_tables_rows_ok.json	принятый случай корпуса 2.1
 corpus-a111_calls_requests_ok	Platform/02-installer/acceptance/1/cases/a111_calls_requests_ok.subsystem.yaml	expect/corpus-a111_calls_requests_ok.json	принятый случай корпуса 2.1
