@@ -42,8 +42,8 @@ shares: {shm: {kind: dir}}
 # and so the grants, the domain's `ref`, the device's commands, events and alarms — lives only in the main stream's
 # row; another stream says only its `source`, its `profile` and `main: <the main's id>`. So a stream is ABOUT its
 # camera: a grant on `unit:cam/<main>` or on the main's labels takes in every stream of it (the `may` contract, step
-# 7), and a stream's lines carry `of: cam/<main>`. The main itself has `main` empty — no `about` (an assumption of
-# the VMS: the platform says nothing of an empty about value; the VMS's request after stage C).
+# 7), and a stream's lines carry `of: cam/<main>`. The main itself has `main` empty — no `about`: it is judged by
+# itself and its lines carry `of: cam/<id>` (the `may` contract, input `about`; the event journal contract, step 2).
 about: {sub: cam, field: main}
 unit:
   # the row directory `cam/cameras/<id>` and the console's URL path: `GET/POST /cameras`, `PUT/DELETE
