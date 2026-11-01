@@ -460,6 +460,7 @@ servers:
   show:
     - {table: volumes, by: server, title: тома, columns: [name, kind, url, quota_bytes, enabled]}
   status:
+    - {field: disks, title: диски сервера}
     - {field: volume_missing, title: том не найден}
     - {field: volume_error, title: том не взят}
     - {field: shrink_pending, title: уменьшение квоты не подтверждено}

@@ -466,6 +466,10 @@ tables:
       log_only:   {type: bool, default: false}
       taken:      {type: float}
 # The words of the console and of the assistant (V/10.4 Н1.4): labels the admin's text names a field by.
+# The mode of the object: `backend` reads it from `GET /servers`, it counts no moment (V/07.6 Н1.5).
+servers:
+  status:
+    - {field: object_mode, title: режим объекта}
 display:
   unit: сценарий
   units: сценарии

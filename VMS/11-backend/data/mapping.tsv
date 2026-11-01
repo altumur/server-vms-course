@@ -17,8 +17,8 @@ Server	role	—	"node"	const	ролей primary/node/standby нет: разме�
 Server	allocated	—	true	const	сервер в кластере
 Server	telemetry	—	{}	const	телеметрия — ADR-0094 C (пульс ресурса)
 Server	gpu	—	null	const
-Server	disks	rec/heartbeats	disks первого по имени слота услышанного регистратора сервера; нет — []	read	disk, sizeBytes, system (ADR-0111 п. 2; V/02.4)
-Server	version	rec/heartbeats	SHA-256 hex канонического JSON disks; disks пуст — "1"	read	из видимых полей меняются только disks (online — связь); тот же набор дисков возвращает прежнее значение, предел V/11.3 Н1.3
+Server	disks	GET /servers	disks первого по имени слота услышанного регистратора сервера; нет — []	read	disk, sizeBytes, system (ADR-0111 п. 2; V/02.4)
+Server	version	GET /servers	SHA-256 hex канонического JSON disks; disks пуст — "1"	read	из видимых полей меняются только disks (online — связь); тот же набор дисков возвращает прежнее значение, предел V/11.3 Н1.3
 Server	netmask, gateway, dns	—	—	none	сеть сервера не у консоли (features без serverNetwork)
 Device(type=camera)	—	cam/cameras + rec/recordings + det/units	—	both	сборка: основная строка type camera, её потоки, записи, детекторы (V/11.4)
 Device(type=camera)	id	cam/cameras	UUID device:cam/cameras/<id>	read
