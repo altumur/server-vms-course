@@ -11,7 +11,6 @@ domain/cam/sources	row	V/01.6	cas=domainagent(копия у члена, P/09.1 �
 domain/cam/sources/<член>	row	V/01.6	put=domain(собираемая книга, P/08.5 Н1.3)	recworker	domain.books	1	VMS/01-cam/data/sources-entry.schema.json#member	V/01.6 Н1.2	/*/entries/*/value
 domain/cam/licence	row	V/01.7	cas=domainagent(копия у члена, P/09.1 Н1.4)	camworker	domain.books	1	VMS/01-cam/data/licence-decision.schema.json#copy	V/01.7 Н1.2, Н1.3	/*/entries/*/value
 domain/cam/licence/<член>	row	V/01.7	put=camdomain(переносимая книга, P/03.7 Н1.6)	camworker, camdomain	domain.books	1	VMS/01-cam/data/licence-decision.schema.json#member	V/01.7 Н1.2, Н1.3	/*/entries/*/value
-domain/cam/licence-count	row	V/01.7	put=camdomain(domain.kept, P/03.7 Н1.6)	camdomain	domain.kept	1	VMS/01-cam/data/licence-count.schema.json	V/01.7 Н1.2	
 <корень событий>/cam/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	V/01.2	append=camworker(держатель, под эпохой камеры, P/03.6 Н1.2)	console, autoworker	-	1	VMS/01-cam/data/cam-events.schema.json	V/01.2 Н1.5	
 <корень событий>/cam.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	V/01.2	append=camworker(держатель, под эпохой камеры, P/03.6 Н1.2)	console, autoworker	-	1	VMS/01-cam/data/cam-events.schema.json	V/01.2 Н1.5	
 <корень событий>/det/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	V/04.3	append=detworker(под эпохой детектора, may_write, P/03.6 Н1.2)	console, autoworker	-	1	VMS/04-det/data/det-events.schema.json	V/04.2 Н1.2; V/04.3 Н1.1	
