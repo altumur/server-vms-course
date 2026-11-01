@@ -44,7 +44,7 @@ recording may lie on are the rows of the table the rec manifest names
   «Видео» of a camera says the size of its window and the gateway picks the stream (`?width=&height=`), of a stream —
   the stream; the timeline is the camera's. «Видео», «Потоки» and «Архив» of a row of another `type` say it has no picture.
   «Потоки» — the camera's streams (`POST /cam/cameras {main, profile, source}`).
-  «Архив» — the camera's recordings (`/rec/recordings`: create, switch, delete, home, days, `when` of a backup) and
+  «Архив» — the camera's recordings (`/rec/recordings`: create, switch, delete, home, days, `when` of a card, `replica_from`) and
   its keeps (`/rec/keeps`: make, lift; check at the incidents holder's door; the state in the recorders' own words, from
   their beat — `servers.status` of their rows at `/rec/servers` with `of: keeps`, ADR-0064: here, pushing, pushed,
   at risk, lost, garbled of the recording's writer; kept of the incidents holder; let go — the row's `released_at` —, «нет кадров,
@@ -279,6 +279,7 @@ pc.addNote("unit",(ref,u)=>{
   if(!isCam(ref)||!u)return"";
   if(u.phase==="failed"){const w=u.reason||u.why;return`Хост драйверов: сбой устройства${w?" — "+w:""}.`}
   if(u.device_state==="lost")return"Связь с устройством потеряна: драйвер пробует сам, события не идут.";
+  if(u.phase==="idle")return"Поток не читается: у камеры нет записи с живым потоком, детектора и зрителей. Откроется, когда они появятся.";
   if(u.device_state==="opening")return"Устройство ещё открывается — если это не проходит, открытие не завершается: проверьте адрес, сеть и учётные данные камеры.";
   if(childErr&&!camMain(u))return`Входы и выходы устройства не прочитаны: ${childErr}.`;
   return"";
@@ -676,7 +677,7 @@ function deviceRanges(){
   return out;
 }
 // a primary: this cluster's recording of the same camera and stream, homed off a backup volume (V/02.6 Н1.4)
-const primariesOf=(cam,stream)=>recsOfCam(cam).filter(r=>{const v=vols.find(x=>x.name===r.home);return String(r.stream||"")===stream&&(!v||!BACKUP_KINDS.includes(v.kind))});
+const primariesOf=(cam,stream)=>recsOfCam(cam).filter(r=>{const v=vols.find(x=>x.name===r.home);return String(r.stream||"")===stream&&!r.replica_from&&(!v||!BACKUP_KINDS.includes(v.kind))});
 function drawDeviceLine(){
   const el=$("#devline");if(!el)return;
   const rs=deviceRanges();
@@ -1125,7 +1126,7 @@ function recState(r){
   const w=r.row;
   if(!w)return{label:"Не размещена",bad:true};
   if(w.worker_state==="stale")return{label:"Регистратор молчит",bad:true};
-  if(w.phase==="running")return{label:"Пишет",bad:false};
+  if(w.phase==="running")return{label:r.replica_from?"Забирает из источника":"Пишет",bad:false};
   if(w.phase==="pending")return{label:"Запускается",bad:false};
   if(w.phase==="standby")return{label:"Ждёт: основная запись идёт",bad:false};
   if(w.phase==="waiting")return{label:"Ждёт",bad:true};
@@ -1145,12 +1146,27 @@ const homesFor=cam=>vols.filter(x=>x.enabled&&x.admits!==false&&(x.kind!=="edge"
 const homeOptions=(cur,cam)=>`<option value="" ${cur?"":"selected"}>любой свободный том</option>`+homesFor(cam).map(x=>`<option value="${esc(x.name)}" ${x.name===cur?"selected":""}>${esc(x.name)} · ${esc(volKind(x))}</option>`).join("");
 function whenSelectHtml(r){
   const v=volByName(r.home);
-  if(!v||!BACKUP_KINDS.includes(v.kind))return"";
+  // a backup volume is `when: offline` and nothing else (V/02.6 Н1.4): only a card has the choice
+  if(!v||v.kind!=="edge")return"";
   const cur=r.when||"always";
   return`<div><label>Когда писать</label><select data-act="when" data-rec="${esc(r.id)}">
       <option value="always" ${cur==="always"?"selected":""}>всегда — основная закрывает из неё любую дыру</option>
       <option value="offline" ${cur==="offline"?"selected":""}>только пока основная не пишется</option></select></div>`;
 }
+// A recording without a live stream (V/02.6 Н1.9): the device's archive or another recording of this camera and stream.
+// Not on a backup volume or a card, and no backup as a source: the recorder says so too, in words (`reason`).
+function replicaSelectHtml(r){
+  const v=volByName(r.home);
+  if(v&&BACKUP_KINDS.includes(v.kind))return"";
+  const cur=r.replica_from||"";
+  const src=camRecs(r.cam).filter(o=>{const h=volByName(o.home);return o.id!==r.id&&String(o.stream||"")===String(r.stream||"")&&!(h&&h.kind===VOL_BACKUP)}).map(o=>o.id);
+  const known=[...(r.stream?[]:["device"]),...src];
+  const opt=(val,label)=>`<option value="${esc(val)}" ${val===cur?"selected":""}>${esc(label)}</option>`;
+  return`<div><label>Откуда</label><select data-act="replica" data-rec="${esc(r.id)}">${opt("","живой поток")}${known.map(x=>opt(x,x==="device"?"архив устройства":"запись «"+x+"»")).join("")}${cur&&!known.includes(cur)?opt(cur,"запись «"+cur+"»"):""}</select></div>`;
+}
+const replicaNote=w=>(w.replica_lag_s!=null?`<small>отстаёт от источника: ${esc(Math.round(w.replica_lag_s))} с</small>`:"")+
+  (w.replica_lost_s?`<small style="color:var(--rd)">кольцо источника обогнало копию: потеряно ${esc(Math.round(w.replica_lost_s))} с</small>`:"")+
+  (w.over_quota===true?`<small style="color:var(--rd)">у источника больше, чем вмещает том</small>`:"");
 function camRecCardHtml(cam){
   if(recOn===false)return offCard("Архив","подсистема записи не подключена","Консоль не монтирует <code>rec</code>: записывать некуда и нечем.");
   const list=camRecs(cam),unread=recErr?`<div class="nt err">Не прочитано: ${esc(recErr)}</div>`:"";
@@ -1159,13 +1175,14 @@ function camRecCardHtml(cam){
     return`<div class="it" style="align-items:flex-start"><span>${pc.icon("storage")}</span>
       <span><b>${esc(r.id)}</b><small>${r.home?`том «${esc(r.home)}»${v?" · "+esc(volKind(v)):""}`:"том не выбран — пишется туда, где есть место"}</small>
         ${w.reason||w.why?`<small style="color:var(--rd)">${esc(w.reason||w.why)}</small>`:""}
-        ${w.audio_reason?`<small>звук не пишется: ${esc(w.audio_reason)}</small>`:""}</span>
+        ${w.audio_reason?`<small>звук не пишется: ${esc(w.audio_reason)}</small>`:""}${replicaNote(w)}</span>
       <span class="bd ${st.bad?"off":""}">${esc(st.label)}</span>
       <button type="button" class="btn s" data-act="toggle" data-rec="${esc(r.id)}" data-on="${r.enabled===false?"1":""}">${r.enabled===false?"Включить":"Выключить"}</button>
       <button type="button" class="btn s" data-act="del" data-rec="${esc(r.id)}">Удалить</button></div>
     <div class="g" style="margin:0 0 10px">
       <div><label>Архив</label><select data-act="home" data-rec="${esc(r.id)}">${homeOptions(r.home,cam)}</select></div>
       ${whenSelectHtml(r)}
+      ${replicaSelectHtml(r)}
       <div><label>Срок хранения, дн</label><input type="number" min="1" value="${esc(r.retention_days)}" data-act="days" data-rec="${esc(r.id)}"></div>
       <div><label>Микрофон № (0 — первый у камеры)</label><input type="number" min="0" value="${esc(r.audio||0)}" data-act="audio" data-rec="${esc(r.id)}"></div>
       ${fldRo("Регистратор · сервер",w.worker?`${w.worker} · ${w.server||"—"}`:"—")}</div>`;
@@ -1248,7 +1265,8 @@ function paintArch(){
     toggle:el=>recWrite(r(el),{enabled:!!el.dataset.on},el.dataset.on?"Запись включена":"Запись выключена"),
     del:el=>delRec(r(el)),
     home:el=>recWrite(r(el),{home:el.value},el.value?`Запись переедет в «${el.value}»`:"Архив не задан — пишется туда, где есть место"),
-    when:el=>recWrite(r(el),{when:el.value},el.value==="offline"?"Резервная запись пишет, только пока основная не пишется":"Резервная запись пишет всегда"),
+    when:el=>recWrite(r(el),{when:el.value},el.value==="offline"?"Запись на карте пишет, только пока основная не пишется":"Запись на карте пишет всегда"),
+    replica:el=>recWrite(r(el),{replica_from:el.value},el.value?"Запись забирает видео из источника, живой поток снят":"Запись идёт с живого потока"),
     days:el=>{const n=wholeDays(el.value);
       if(!n){pc.toast("Срок хранения — целое число дней");return}recWrite(r(el),{retention_days:n},"Срок хранения изменён")},
     audio:el=>{const n=Number(el.value);
@@ -1373,7 +1391,7 @@ async function addToArchive(opt){
   if(taken.has(name)){pc.toast(`Запись «${name}» уже есть`);return}
   // the camera's name in the domain, when it has one: by it the domain finds the recording (V/02.1 `ref`)
   const camRef=(camById(v.cam)||{}).ref;
-  try{await pc.api("POST","/rec/recordings",{name,cam:v.cam,...(stream?{stream}:{}),retention_days:days,...(v.home?{home:v.home}:{}),...(camRef?{ref:camRef}:{})});await reloadRec();pc.toast("Запись создана")}
+  try{await pc.api("POST","/rec/recordings",{name,cam:v.cam,...(stream?{stream}:{}),retention_days:days,...(v.home?{home:v.home}:{}),...(hv&&hv.kind===VOL_BACKUP?{when:"offline"}:{}),...(camRef?{ref:camRef}:{})});await reloadRec();pc.toast("Запись создана")}
   catch(e){writeFailed(e,reloadRec)}
 }
 

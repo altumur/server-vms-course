@@ -152,7 +152,13 @@ unit:
         gaps:                                        # …and in these stretches the holder was not `running`
           type: array
           maxItems: 64
-          items: {type: array, prefixItems: [{type: number}, {type: number}], minItems: 2, maxItems: 2}
+          items:
+            type: object
+            required: [from, to]
+            additionalProperties: false
+            properties:
+              from: {type: number}
+              to:   {type: number}
 placement:
   # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
   # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB
