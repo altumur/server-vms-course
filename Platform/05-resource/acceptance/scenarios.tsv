@@ -242,6 +242,7 @@ scenario	step	request	expect
 35-events-cut-order	12	@until 30 resource GET /events?unit=testsub/c1&class=observation&from=1700000000&to=1700000002&by=occurred&late=100000	200 {"events": [{"id": "e1-74657374737562-6331-1-70726f6265-14"}], "state": "live"}
 35-events-cut-order	13	resource GET /events?unit=testsub/c1&class=observation&from=1700000000&to=1700000002&by=occurred	200 {"events": [], "state": "live"}
 35-events-cut-order	14	resource GET /events?unit=testsub/c1&late=1	400
+35-events-cut-order	15	resource GET /events?unit=testsub/c1&class=observation&from=1700000020&to=1700000025	200 {"events": [{"id": "e1-74657374737562-6331-1-70726f6265-11"}, {"id": "e1-74657374737562-6331-1-70726f6265-12"}], "state": "live"}
 # 36-events-bucket-stream (G05 ч. 3): бакет из одной строки (87 байт с LF) — GET /events/{path} 200 с X-Sum целого тела, один Range — 206 с Content-Range, вне файла — 416 с Content-Range; /buckets неизвестной единицы — 404
 36-events-bucket-stream	1	@append event testsub/c2/e1 {"t": 1700000000, "kind": "probe.tick", "id": "e1-74657374737562-6332-1-70726f6265-1"}	ok
 36-events-bucket-stream	2	@until 30 resource GET /events?unit=testsub/c2	200 {"events": [{"id": "e1-74657374737562-6332-1-70726f6265-1", "bucket": "$b"}], "state": "live", "truncated": 0}

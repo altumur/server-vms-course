@@ -69,7 +69,7 @@ version:   console.version — целое версии API оболочки (P/0
            остаётся 1: новое ниже (features, ready, select с tab, card.closed) только добавляется, загрузка ?v=1 та же
            (ADR-0091 доп. (25) п. 1)
 features:  PlatformConsole.features — список строк возможностей сверх первых вызовов версии 1: "select.tab", "card.closed",
-           "api.if-match" (ADR-0091 доп. (28), (29));
+           "api.if-match" (ADR-0091 доп. (28), (29)), "placement.if-match", "session";
            строки нет — нет возможности; страница узнаёт новое по нему, не по версии (ADR-0091 доп. (25) п. 1)
 ready:     pc.ready — обещание (Promise), нового вызова нет: разрешается объектом страницы после mount и первого прочитанного
            /manifest (двери /spec нет — Н1.4); ответ 401 — обещание ждёт входа и разрешается после него; /manifest не
@@ -79,7 +79,7 @@ objects:   ref: unit:<sub>/<id> | server:<s> | worker:<sub>/<w> | member:<m> | d
 api:       console.api(method, path, body, opts?) → ответ | throw {status, body, retry}
            opts.ifMatch — целое ≥ 1 (revision, P/06.1 Н2 «Версии») → заголовок If-Match; только у дверей, которые его читают (иные
            записали бы без CAS): PUT и DELETE строки единицы /<rows>/<id>; POST /<t> и DELETE /<t>/<имя> таблицы подсистемы;
-           PUT /policy; POST и DELETE /drain; PUT и DELETE /servers/<s>/labels; PUT /schema (ADR-0094 B4). Таблицу модуль узнаёт по
+           PUT /policy; POST и DELETE /drain; PUT и DELETE /servers/<s>/labels; PUT /schema (ADR-0094 B4); PUT и DELETE /domain/placement/<sub>/<ref>: revision — rev записи, P/08.6 Н2 (features "placement.if-match", C07-PLACEMENT-IF-MATCH-01). Таблицу модуль узнаёт по
            форме пути: один или два сегмента после префикса подсистемы, первый — не unit.rows и не имя двери платформы (P/02.1 Н1.2а): вид
            /manifest таблиц не называет. Индекс ifMatch не несёт: страница, которой нужен индекс, пишет пакетной дверью с cas.
            Иной метод, иной путь, поле opts, кроме ifMatch,
@@ -110,7 +110,7 @@ may:       console.may(cap, ref, sub?) → bool по grants сессии и пр
            folder: прямой группы не покрывает (ADR-0097 §4, ADR-0099 §6); admin: true сессии (шаг 4а) — true, модуль по нему ничего не
            скрывает (ADR-0100 §1); via: break-glass (grants []) — true, как сервер у аварийной сессии (договор права common/contracts/may.md шаг 1,
            glass → allow); true без grants только при open: true; в закрытой или неизвестной (/session не ответила) сессии отсутствие grants — false; сервер проверяет всегда (разбор ревью стадии B 6–7, № 28)
-events:    on("select", (ref, obj)) | on("refresh", {units, servers, domain}) | on("logout") | on("card.closed", {ref})
+events:    on("select", (ref, obj)) | on("refresh", {units, servers, domain}) | on("logout") | on("card.closed", {ref}) | on("session", {user}) — после входа окном модуля, обычного и аварийного, /session уже прочитана; другой user — страница сбрасывает своё: секреты прежнего не уходят в запись нового (C07-SESSION-EVENT-01, решение «Архитектора» 2026-11-01, разбор прохода VMS)
            card.closed — карточку убрали: выбор другого объекта, снятие выбора (смена раздела, удаление), уход со страницы;
            и у карточки оболочки — ref её имя как есть (streamaccounts:local, netvols); перерисовка опроса того же выбора
            его не даёт (ADR-0091 доп. (22) п. 2, доп. (24) п. 2, доп. (25) п. 2)

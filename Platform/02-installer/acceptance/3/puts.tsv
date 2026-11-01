@@ -46,6 +46,7 @@ rev_max_changed	revmax-a @rev-max revmax-b	2 9007199254740991
 shell_onclick	paged @shell-put paged paged	2 1
 shell_same_twice	pagedok @shell-put pagedok pagedok pagedok	0 2
 shell_changed	pagedok @shell-put pagedok pagedok @shell-put pagedok-alt pagedok	0 3
+shell_script_text	pagedok @shell-put pagedtext pagedok	0 2
 # Аудит покрытия P/02, второй проход (Gemini): worker.requests, правило 4 worker.creates (default), near.of, отсрочка worker.uses, имена ОС (P/02.1 Н3 «загрузить_каталог», P/02.4 Н1.1 users_groups names)
 requests_ok	req-target req-caller	0 1
 requests_missing_target	req-caller	2 -

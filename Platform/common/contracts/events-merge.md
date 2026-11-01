@@ -30,7 +30,7 @@ P/05 Н1.3 (ниже этого блока) и Н2; у двери консоли
 [договора сторожевой и передачи](gate-and-pass.md) «Числовые параметры query» (C06-EVENTS-QUERY-LEXEME-162-01, решение «Архитектора» 2026-10-27).
 
 ```yaml
-query:       from, to (секунды; умолчание 0..1e12), kind, subsystem, unit (<sub>/<id>; голый id — отказ), limit (1000; предел
+query:       from, to (секунды; умолчание 0..1e12; окно from ≤ t < to, C05-QUERY-TO-OPEN-01), kind, subsystem, unit (<sub>/<id>; голый id — отказ), limit (1000; предел
              10000), keep (newest | oldest; умолчание newest), class (нет — оба класса), by (t | occurred; умолчание t), late (только с by=occurred; целое ≥ 0; умолчание 3600);
              limit ограничивает и каждый ресурс, и итог сливающего; сливающий спрашивает ресурсы тем же
              запросом

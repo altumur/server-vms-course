@@ -111,7 +111,7 @@ const settled=(p,ms)=>Promise.race([p.then(()=>true),sleep(ms).then(()=>false)])
   {
     const w=boot({login:false});w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
     await sleep(50);const pc=w.platformConsole;await settled(pc.ready,2000);
-    out.featuresIfMatch=w.PlatformConsole.features.includes("api.if-match");
+    out.featuresIfMatch=["api.if-match","placement.if-match","session"].every(x=>w.PlatformConsole.features.includes(x));
     const fails=async(...a)=>{try{await pc.api(...a);return null;}catch(e){return e;}};
     out.putIfMatch=(await fails("PUT","/things/1",{name:"x"},{ifMatch:5}))===null&&w.__ifm.includes("PUT 5");
     out.deleteIfMatch=(await fails("DELETE","/things/1",undefined,{ifMatch:5}))===null&&w.__ifm.includes("DELETE 5");
@@ -122,7 +122,7 @@ const settled=(p,ms)=>Promise.race([p.then(()=>true),sleep(ms).then(()=>false)])
     await fails("PUT","/things/1",{name:"z"});
     out.noIfMatchWithoutOpts=w.__ifm[w.__ifm.length-1]==="PUT undefined";
     // двери, которые читают If-Match, кроме строки единицы (ADR-0094 B4)
-    const doors=[["POST","/shelves",{name:"a"}],["DELETE","/shelves/a",undefined],["PUT","/policy",{servers:"shared"}],["POST","/drain?server=a",undefined],["DELETE","/drain",undefined],["PUT","/servers/a/labels",{labels:[]}],["DELETE","/servers/a/labels",undefined],["PUT","/schema?version=1",undefined]];
+    const doors=[["POST","/shelves",{name:"a"}],["DELETE","/shelves/a",undefined],["PUT","/policy",{servers:"shared"}],["POST","/drain?server=a",undefined],["DELETE","/drain",undefined],["PUT","/servers/a/labels",{labels:[]}],["DELETE","/servers/a/labels",undefined],["PUT","/domain/placement/cam/r1",{}],["DELETE","/domain/placement/cam/r1",undefined],["PUT","/schema?version=1",undefined]];
     out.ifMatchOnReadingDoors=await (async()=>{let ok=true;for(const[m,p,b]of doors){const n=w.__sentIf.length;await fails(m,p,b,{ifMatch:3});if(w.__sentIf[n]!==m+" 3")ok=false;}return ok;})();
     const before=w.__log.length;
     const refused=[await fails("POST","/things",{name:"n"},{ifMatch:1}),await fails("PUT","/shelves/a",{},{ifMatch:1}),

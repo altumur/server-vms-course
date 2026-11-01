@@ -320,6 +320,7 @@ paths:
       - name: to
         in: query
         required: false
+        description: Граница не включена, окно from ≤ t < to (договор слияния журнала событий query).
         schema:
           type: number
           default: 1000000000000.0

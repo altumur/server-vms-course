@@ -50,7 +50,7 @@ testsub/ и `platform/doors/`; admin — дверь `admin.sock` (строка `
 ## scenarios.tsv
 
 Формат — [словарь директив и дверей «Стенда» общего README приёмки](../../common/acceptance/README.md#словарь-директив-и-дверей).
-Всего 35 сценариев / 291 шаг; сц. 29–45 (второй проход аудита, ниже) — 127 шагов; сц. 24–28 (края `free_ask`, ниже) — 49 шагов; прочие 115: 88 HTTP (с @until), четыре `@append event`, `@append event-raw`, 18 `@start`, `@sigkill`,
+Всего 35 сценариев / 292 шага; сц. 29–45 (второй проход аудита, ниже) — 128 шагов; сц. 24–28 (края `free_ask`, ниже) — 49 шагов; прочие 115: 88 HTTP (с @until), четыре `@append event`, `@append event-raw`, 18 `@start`, `@sigkill`,
 `@cut`, `@mend`, `@sleep` и два ASSERT.
 
 Шаги сверка python и go М10/6–11 (2026-10-18):

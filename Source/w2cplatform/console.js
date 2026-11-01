@@ -460,7 +460,7 @@
     const settingsPath = (method, path) => {
       const p = path.split("?")[0];
       if (p === "/drain") return method === "POST" || method === "DELETE";
-      if (/^\/servers\/[^/]+\/labels$/.test(p)) return method === "PUT" || method === "DELETE";
+      if (/^\/servers\/[^/]+\/labels$/.test(p) || /^\/domain\/placement\/[^/]+\/[^/]+$/.test(p)) return method === "PUT" || method === "DELETE";
       return method === "PUT" && (p === "/schema" || p === "/policy" || st.subs.some(s => p === s.base + "/policy"));
     };
     const readsIfMatch = (method, path) => unitRowPath(path) ? method === "PUT" || method === "DELETE"
@@ -2334,6 +2334,7 @@
     // after a login: the manifests a 401 kept back are read now, and pc.ready settles
     async function afterLogin() {
       await loadSession();
+      emit("session", { user: st.session ? st.session.user : undefined });   // P/07 Н1.5 events: the page compares it with its own user
       if (!manifestRead && await readManifests()) { paintRail(); paintAside(); }
       if (goBack()) return;
       await load();
@@ -2486,5 +2487,5 @@
 
   // features: what this version 1 gives beyond its first calls — a page asks before it uses them (P/07 Н1.5 features;
   // ADR-0091 доп. (25) п. 1). No string — no such capability. "api.if-match" — api(…, {ifMatch}) (ADR-0091 доп. (28), (29)).
-  window.PlatformConsole = { version: VERSION, features: Object.freeze(["select.tab", "card.closed", "api.if-match"]), mount };
+  window.PlatformConsole = { version: VERSION, features: Object.freeze(["select.tab", "card.closed", "api.if-match", "placement.if-match", "session"]), mount };
 })();
