@@ -1,7 +1,7 @@
 # Приёмка V/03.1 — раздача — единица по спросу
 
 Норма главы — [`03.1-live.norms.md`](../../spec/03.1-live.norms.md) Н5. Стенд и словарь — [общий README приёмки
-VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `f225f3ef`).
+VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `226bd220`).
 
 ## Подготовка
 
