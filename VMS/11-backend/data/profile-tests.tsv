@@ -121,8 +121,8 @@ api-devices.js	Разрешение: латинская x, из resOptions; не
 api-devices.js	Живое видео: адрес, токен, срок; без связи — 409 DEVICE_OFFLINE; не камера — 422	out	404 NO_ROUTE (V/11.2 № 91)
 api-devices.js	Встроенный детектор: шаблон из detectorOptions, без них — 422; чувствительность по диапазону, нет настройки — 422	out	файла device-catalog.json у стенда нет; acceptance/4 16-record
 api-devices.js	Несовместимые детекторы: включение — 409 BUSY с params.reason, шаг операции — fail BUSY	out	файла device-catalog.json у стенда нет; чтением
-api-devices.js	Зона: rect, polygon, line в долях кадра, неверная — 422 field: zone; два детектора одного вида; stream и params серверного	out	два детектора одного вида: ключ <cam>-<kind> (V/11.3 Н1.3); acceptance/4 24-streams
-api-devices.js	Пресеты: задать, переименовать, удалить, откат; камера без PTZ — 422	out	имя пресета и откат: места нет (V/11.4 Н1.16); ptz — пульс; acceptance/4 25-ptz
+api-devices.js	Зона: rect, polygon, line в долях кадра, неверная — 422 field: zone; два детектора одного вида; stream и params серверного	out	камера из detectorOptions: файла device-catalog.json у стенда нет; acceptance/4 24-streams
+api-devices.js	Пресеты: задать, переименовать, удалить, откат; камера без PTZ — 422	out	имя пресета только из драйвера, пресет вне стопки (V/11.4 Н1.16); ptz — пульс; acceptance/4 25-ptz
 api-devices.js	Аренда PTZ: срок от ttlSec, продление, стоп, скорости от -1 до 1	out	ptz, online — пульс; зовёт /test/events; acceptance/4 25-ptz
 api-devices.js	Источник: 0.0.0.0 и :: — 422 field: ip; без сервера выбирает система и предупреждает; второй на порт не запустится	out	faultText — слово держателя, на стенде его нет; acceptance/4 13-units
 api-devices.js	Правило: вид text у источника, match по слову; номера нет	in	-

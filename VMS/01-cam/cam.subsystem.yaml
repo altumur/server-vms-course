@@ -327,6 +327,7 @@ tables:
       address:  {type: string}                       # the device's word, passed as it is
       parent:   {type: int, schema: {minimum: 1}}    # `n` of its owner on the same row; no field — the root
       sensitivity: {type: int}                       # of a `det`, in the model's own range (V/01.1 Н1.2б)
+      zone:     {type: json}                         # of a `det`: {shape, points} in shares of the frame, the driver's `visualElement` (V/01.4 Н1.4в)
       title:    {type: string}
       enabled:  {type: bool, default: true}
   # A person turning a camera now, one row a person and a camera (V/01.4 Н1.4г). A lease, not a request: a request is one more
@@ -552,7 +553,7 @@ domain:
     devices: [channels, videos, storage]
     children: [camera, type, number, gone]
     child_settings: [camera, type, number, title, enabled, norm]
-    device_units: [camera, n, type, template, address, parent, sensitivity, title, enabled]
+    device_units: [camera, n, type, template, address, parent, sensitivity, zone, title, enabled]
     unit_next: [camera, n]
     rule_state: [camera, armed, disabled_by_rule, disabled_at, disabled_until]
   # What the domain's door lets through in a member's camera: whatever a backend on another member writes of a device
@@ -562,7 +563,7 @@ domain:
   # A row of a table is written whole, so each list is all its fields (P/02.1, link 152).
   edit_tables:
     child_settings: [camera, type, number, title, enabled, norm]
-    device_units: [camera, n, type, template, address, parent, sensitivity, title, enabled]
+    device_units: [camera, n, type, template, address, parent, sensitivity, zone, title, enabled]
     unit_next: [camera, n]
   # Sealed to the member's key at the door (P/08.6 Н1.3а): the camera's password.
   edit_secrets:

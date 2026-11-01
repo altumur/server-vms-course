@@ -238,6 +238,12 @@ scenario	step	request	expect
 09-stream	42	@stream-open s5 member m1 console2 @header Last-Event-ID: not-a-number GET /api/stream	2xx
 09-stream	43	@stream-wait s5 30	ok {"type": "stream.reset"}
 09-stream	44	@stream-close s5	ok
+09-stream	45	@stream-open s6 member m1 console2 GET /api/stream	2xx
+09-stream	46	member m1 console2 GET /api/devices/3d08e8ba-11ab-5128-97e6-d03888680c2e	200 {"version": "$v6"}
+09-stream	47	member m1 console2 @header If-Match: "$v6" PATCH /api/devices/3d08e8ba-11ab-5128-97e6-d03888680c2e {"name": "одиночная"}	200 {"name": "одиночная"}
+09-stream	48	member m1 console2 GET /api/operations?limit=1	200 {"items": [{"id": "$sop", "single": true}]}
+09-stream	49	@stream-wait s6 30	ok {"type": "operation.finished", "kind": "operation", "entityId": "$sop"}
+09-stream	50	@stream-close s6	ok
 10-archives	1	@domain m1	ok
 10-archives	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 10-archives	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
@@ -695,7 +701,12 @@ scenario	step	request	expect
 24-streams	27	member m1 console2 @header If-Match: "$w1" PATCH /api/devices/5937be2d-dfe2-5601-b0b3-f4eba44b12f8 {"res": "1920×1080"}	422 {"code": "VALIDATION_FAILED", "field": "res"}
 24-streams	28	member m1 console2 POST /api/devices {"idempotencyKey": "str-det", "items": [{"device": {"type": "det", "name": "линия", "detectorKind": "linecross", "stream": "2", "params": "{}", "zone": {"shape": "line", "points": [[0.1, 0.1], [0.9, 0.9]]}}, "domainId": "$dom", "parentId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "folderId": null}]}	200 {"done": [{"devices": [{"id": "$d1", "zone": {"shape": "line"}, "labels": ["gpu"], "version": "$dv"}]}]}
 24-streams	29	member m1 console2 @header If-Match: "$dv" PATCH /api/devices/$d1 {"zone": {"shape": "polygon", "points": [[0, 0], [1, 1]]}}	422 {"code": "VALIDATION_FAILED", "field": "zone"}
-24-streams	30	@manual res вне resOptions, codec и online потока: строка cam/devices и пульс — слова держателя; faultText, recordState, recordReason, state, reason элемента extraArchives; detectorOptions, unitOptions: файл device-catalog.json	manual
+24-streams	30	member m1 console2 @header If-Match: "$dv" PATCH /api/devices/$d1 {"zone": {"shape": "rect", "points": [[0.2, 0.2], [0.4, 0.4]]}}	200 {"zone": {"shape": "rect"}}
+24-streams	31	member m1 console GET /det/units	200 {"configured": [{"id": "2-linecross", "mask": "@any"}]}
+24-streams	32	member m1 console2 POST /api/devices {"idempotencyKey": "str-det2", "items": [{"device": {"type": "det", "name": "линия 2", "detectorKind": "linecross"}, "domainId": "$dom", "parentId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "folderId": null}]}	200 {"failed": []}
+24-streams	33	member m1 console GET /det/units	200 {"configured": [{"id": "2-linecross"}, {"id": "2-linecross-2"}]}
+24-streams	34	member m1 console2 POST /api/devices {"idempotencyKey": "str-det3", "items": [{"device": {"type": "det", "name": "движение", "detectorKind": "motion", "zone": {"shape": "line", "points": [[0, 0], [1, 1]]}}, "domainId": "$dom", "parentId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "folderId": null}]}	200 {"failed": [{"code": "NOT_SUPPORTED", "field": "zone"}]}
+24-streams	35	@manual res вне resOptions, codec и online потока: строка cam/devices и пульс — слова держателя; faultText, recordState, recordReason, state, reason элемента extraArchives; detectorOptions, unitOptions: файл device-catalog.json	manual
 25-ptz	1	@domain m1	ok
 25-ptz	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 25-ptz	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
@@ -707,7 +718,7 @@ scenario	step	request	expect
 25-ptz	9	member m1 console2 PUT /api/devices/3d08e8ba-11ab-5128-97e6-d03888680c2e/ptz {"pan": 0.5, "ttlSec": 3}	409 {"code": "DEVICE_OFFLINE"}
 25-ptz	10	member m1 console2 PUT /api/devices/3d08e8ba-11ab-5128-97e6-d03888680c2e/presets/1 {}	409 {"code": "DEVICE_OFFLINE"}
 25-ptz	11	member m1 console2 DELETE /api/devices/3d08e8ba-11ab-5128-97e6-d03888680c2e/ptz	204
-25-ptz	12	@manual живая камера: строка cam/ptz_moves со скоростью 50, продление меняет seq, DELETE снимает строку, камера останавливается не позже PTZ_LEASE; камера без ptz — 422 field ptz; preset_save, preset_clear исполнены, n вне presets — 404, иное name — 422 field name, отказ устройства — 409 DEVICE_REFUSED refused	manual
+25-ptz	12	@manual живая камера: строка cam/ptz_moves со скоростью 50, продление меняет seq, DELETE снимает строку, камера останавливается не позже PTZ_LEASE; камера без ptz — 422 field ptz; preset_save, preset_clear исполнены, n вне presets — 404, отказ устройства — 409 DEVICE_REFUSED refused	manual
 26-unit-op	1	@domain m1	ok
 26-unit-op	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 26-unit-op	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}

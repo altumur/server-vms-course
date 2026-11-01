@@ -74,30 +74,30 @@ Device(type=camera)	ptz	cam/heartbeats	can.ptz	read	can не сказан — п
 Device(type=camera)	presets	cam/heartbeats	{n, name} на n от 1 до can.presets, name — can.preset_names[n]	read	запись — операции /presets (V/11.4 Н1.16); в версию не входит
 Device(type=camera)	detectorOptions	файл пакета device-catalog.json	detectors модели	read	V/11.3 Н1.3 «Варианты модели»; нет строки модели — поля нет
 Device(type=camera)	unitOptions	unit-templates.tsv + device-catalog.json	шаблоны вендора, parent -	read	V/11.3 Н1.3 «Варианты модели»
-Device(type=camera)	children	det/units	<cam>-<kind>	write	только при создании: дочерние детекторы (V/11.4 Н1.2); иные дочерние — 422 NOT_SUPPORTED, field children
+Device(type=camera)	children	det/units	<cam>-<kind>[-<n>]	write	только при создании: дочерние детекторы (V/11.4 Н1.2); иные дочерние — 422 NOT_SUPPORTED, field children
 Device(type=camera)	version	cam/cameras + rec/recordings + det/units + cam/devices	склейка c<камера-потоки>.r<rec…>.d<det…>.h<строка устройства>.i<строка ipsrv>.s<cam/rule_state>.a<строка записи> индексов хранилища частей и надгробий (V/11.4 Н1.1)	read	ADR-0094 доп. (4) п. 1; индекс — в элементе списка по B4
 Device(type=camera)	armed	cam/rule_state	armed	read	строки нет — false; строка не читается — поля нет (V/11.3 Н1.3)
 Device(type=camera)	disabledByRuleId	cam/rule_state	disabled_by_rule	read	UUID rule:<кластер>/auto/scenarios/<id>; только если disabled_until позже сейчас, иначе null; строка не читается — поля нет
 Device(type=camera)	disabledByRuleAt	cam/rule_state	disabled_at	read	те же условия; секунды → date-time UTC
-Device(type=camera)	recordDetectorIds	auto/scenarios	цель строки записи: det/units/<c>-<kind>	both	только при recordMode motion; строки нет — []; разные виды — 422 NOT_SUPPORTED (V/11.3 Н1.3)
+Device(type=camera)	recordDetectorIds	auto/scenarios	цель строки записи: строки det/units вида kind камер цели	both	только при recordMode motion; строки нет — []; разные виды — 422 NOT_SUPPORTED (V/11.3 Н1.3)
 Device(type=camera)	mac	—	—	none	при создании пропускается без записи: MAC камеры — только из поиска (ADR-0102 доп. (7) п. 3; V/11.3 Н1.1)
 Device(type=camera)	configMode	POST /devices	разовый выбор при создании	write	current — ничего не пишет; default, template — V/11.4 Н1.2; в строку не пишется, чтения нет; не при создании — current пропускается, иное 422 NOT_SUPPORTED (V/11.3 Н1.1)
 Device(type=camera)	templateId	POST /devices	id камеры-источника	write	только с configMode: template (V/11.4 Н1.2); в строку не пишется, чтения нет; не при создании — 422 NOT_SUPPORTED, field templateId
 Device(type=camera)	subtype, preRecordSec, channel, detectorKind, sensitivity, builtin, sizeBytes, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, norm, overlayDelayMs, overlayDurationSec, derived, params, properties, operations, template, zone	—	—	none	у камеры нет
-Device(type=det)	—	det/units	—	both	детектор камеры (V/04.1), ключ <cam>-<kind>
-Device(type=det)	id	det/units	UUID device:<кластер>/det/units/<cam>-<kind>	read
+Device(type=det)	—	det/units	—	both	детектор камеры (V/04.1), ключ <cam>-<kind>, второй вида — <cam>-<kind>-<n>
+Device(type=det)	id	det/units	UUID device:<кластер>/det/units/<ключ строки>	read
 Device(type=det)	type	—	"det"	const
 Device(type=det)	parentId	det/units	cam — UUID device:<кластер>/cam/cameras/<cam>	read	при создании — parentId элемента items
 Device(type=det)	domainId	GET /session	Domain.id	read
 Device(type=det)	serverId	det/heartbeats	сервер держателя детектора	read	наблюдение, в версию не входит; нет держателя — поля нет
-Device(type=det)	name	det/units	title; пусто — ключ <cam>-<kind>	both	свободное имя, ключ от него не зависит (V/11.3 Н1.3)
+Device(type=det)	name	det/units	title; пусто — ключ строки	both	свободное имя, ключ от него не зависит (V/11.3 Н1.3)
 Device(type=det)	enabled	det/units	enabled	both
 Device(type=det)	online	det/heartbeats	phase	read	running — true; в версию не входит
 Device(type=det)	detectorKind	det/units	kind	read	часть ключа: правка — 422 NOT_SUPPORTED; при создании обязателен — kind новой строки; motion, linecross — реестр воркера (V/04.2)
 Device(type=det)	sensitivity	det/units	params, ключ sensitivity JSON-объекта	both	кодек — V/11.3 Н1.3; params не объект — запись 422 NOT_SUPPORTED, чтение — поля нет
 Device(type=det)	stream	det/units	stream: пусто — id основного потока камеры	both	как у камеры (V/11.3 Н1.3)
 Device(type=det)	params	det/units	params как есть	both	пусто — поля нет; ключи sensitivity, zone — кодек V/11.3 Н1.3
-Device(type=det)	zone	det/units	params, ключ zone JSON-объекта	both	кодек V/11.3 Н1.3; не по форме — 422 VALIDATION_FAILED, field zone
+Device(type=det)	zone	det/units	params, ключ zone; rect, polygon ещё растром в mask	both	V/11.3 Н1.3 «zone»; line — только linecross; не по форме — 422 VALIDATION_FAILED, field zone
 Device(type=det)	labels	det/units	labels	both	умолчание строки — gpu (V/04.1)
 Device(type=det)	alarmKinds	det/units	alarms	both
 Device(type=det)	faultText	det/heartbeats	reason	read	в версию не входит
@@ -117,12 +117,13 @@ Device(type=det,builtin)	enabled	cam/device_units	enabled	both	true при вк�
 Device(type=det,builtin)	online, fault	cam/heartbeats	как у единицы: phase, device_state, units_down	read	в версию не входит
 Device(type=det,builtin)	detectorKind	cam/device_units	template по detector-kinds.tsv	read	вне таблицы — поля нет; при создании выбирает template (V/11.3 Н1.3); правка — 422 NOT_SUPPORTED
 Device(type=det,builtin)	template	cam/device_units	template	both	только при создании, из detectorOptions: вне них — 422 VALIDATION_FAILED, field template; DevicePatch поля не несёт
+Device(type=det,builtin)	zone	cam/device_units	zone	both	держатель передаёт visualElement драйвера (V/01.4 Н1.4в)
 Device(type=det,builtin)	faultText	cam/heartbeats	слово units_down строки	read	в версию не входит
 Device(type=det,builtin)	sensitivity	cam/device_units	sensitivity	both	у детектора модели нет свойства — 422 NOT_SUPPORTED, field sensitivity (V/11.3 Н1.3)
 Device(type=det,builtin)	builtin	—	true	const	при создании выбирает эту строку таблицы
 Device(type=det,builtin)	version	cam/device_units	индекс хранилища строки	read
 Device(type=det,builtin)	configMode	—	—	none	current — умолчание, пропускается; default, template — 422 NOT_SUPPORTED, field configMode (V/11.3 Н1.1)
-Device(type=det,builtin)	disabledByRuleId, disabledByRuleAt, armed, subtype, short, identifier, ip, port, mac, vendor, login, hasPassword, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, sizeBytes, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, templateId, firmware, codec, res, fps, norm, rtspUrl, overlayDelayMs, overlayDurationSec, password, children, model, alarmKinds, derived, detectorOptions, labels, operations, params, presets, properties, ptz, recordReason, recordState, resOptions, streams, unitOptions, zone	—	—	none	только у камеры: поля нет
+Device(type=det,builtin)	disabledByRuleId, disabledByRuleAt, armed, subtype, short, identifier, ip, port, mac, vendor, login, hasPassword, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, sizeBytes, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, templateId, firmware, codec, res, fps, norm, rtspUrl, overlayDelayMs, overlayDurationSec, password, children, model, alarmKinds, derived, detectorOptions, labels, operations, params, presets, properties, ptz, recordReason, recordState, resOptions, streams, unitOptions	—	—	none	только у камеры: поля нет
 Device(type=ipsrv)	—	cam/devices + cam/cameras	—	both	устройство хоста: channels > 1 или живая строка type ipsrv; один на хост (V/11.3 Н1.3 «Дерево»)
 Device(type=ipsrv)	id	cam/devices	UUID device:<кластер>/cam/devices/<хост>	read	от хоста: заведение строки id не меняет
 Device(type=ipsrv)	type	—	"ipsrv"	const
@@ -444,7 +445,7 @@ DeviceStream	codec, online	cam/heartbeats	codec, phase строки	read	в ве
 DeviceStream	resOptions	cam/devices	resolutions хоста	read
 StreamCreate, StreamPatch	name, res, fps	cam/cameras	profile, resolution, fps	write	V/11.4 Н1.15; source строит backend
 DevicePreset	n, name	cam/heartbeats	номер, can.preset_names[n]	read	имени нет — пустая строка
-PresetWrite	name	—	—	none	имя называет драйвер: иное значение — 422 NOT_SUPPORTED, field name (V/11.4 Н1.16)
+PresetWrite	name	—	—	none	не читается: имя только из драйвера (V/11.4 Н1.16)
 PtzMove	pan, tilt, zoom, focus	cam/ptz_moves	значение × 100, до целого	write	V/11.4 Н1.16; нет поля — 0
 PtzMove	ttlSec	—	—	write	только expiresAt ответа: срок держателя PTZ_LEASE (V/11.4 Н1.16)
 PtzLease	expiresAt	—	сейчас + ttlSec	read
@@ -453,7 +454,7 @@ DetectorOption	template	device-catalog.json	detectors[].template	read
 DetectorOption	name, kind	detector-kinds.tsv	name, kind по driver, template; нет — template, other	read
 DetectorOption	sensitivityMin, sensitivityMax	device-catalog.json	range	read	нет range — полей нет: настройки нет
 DetectorOption	conflicts	device-catalog.json	conflicts	read
-DetectorZone	shape, points	det/units	params, ключ zone	both	V/11.3 Н1.3
+DetectorZone	shape, points	det/units, cam/device_units	ключ zone params, mask; поле zone встроенного	both	V/11.3 Н1.3 «zone»
 UnitOption	model, name	unit-templates.tsv	template	read
 UnitOption	type	unit-templates.tsv	type; controller — acfa	read
 UnitOption	events, operations	device-catalog.json	units[].events, operations	read	нет ключа — полей нет

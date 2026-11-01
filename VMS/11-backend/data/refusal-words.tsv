@@ -16,7 +16,6 @@ door	code	error	field	norm
 *	422	VALIDATION_FAILED	<поле>	11.4 Н4: 400 схемы, поле названо в слове; 11.4 Н1.3, 11.8 Н1.5: тело не по схеме контракта; 11.3 Н4: null, id вне перечня, local без serverId
 *	4xx	VALIDATION_FAILED	-	11.4, 11.8 Н4: 4xx, слово не выводится однозначно; статус двери
 devices	409	NAME_TAKEN	-	11.4 Н4: 409 unique (имя)
-devices	409	NAME_TAKEN	detectorKind	11.4 Н4: 412 row moved строки det/units/<cam>-<kind> с cas ""
 devices	409	NAME_TAKEN	name	11.4 Н4: 412 row moved строки rec/volumes/<name> с cas ""
 devices	422	NAME_REQUIRED	name	11.3 Н4: пустое имя устройства, хранилища
 devices	422	VALIDATION_FAILED	ip	11.4 Н4: 409 unique (адрес камеры); 11.3 Н4: нет ip, PATCH ip: null
