@@ -943,6 +943,10 @@
      "$ref": "#/$defs/nonSecretList",
      "x-owner": "P/08.6 Н1.3"
     },
+    "edit_delete": {
+     "x-owner": "P/08.6 Н1.3б",
+     "type": "boolean"
+    },
     "edit_tables": {
      "x-owner": "P/08.6 Н1.3",
      "x-class": "reference",

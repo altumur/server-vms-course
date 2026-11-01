@@ -81,7 +81,13 @@ paths:
           type: string
           minLength: 1
         description: Член; нет, повтор или пусто — 400.
+      - name: If-None-Match
+        in: header
+        required: false
+        schema: {type: string}
       responses:
+        '304':
+          description: Тело то же, что по ETag
         '200':
           description: Объект как есть
           content:
