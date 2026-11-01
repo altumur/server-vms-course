@@ -148,6 +148,7 @@ unit:
         born: {type: string}                         # the source row's `born`: a source made anew is another source
         to:   {type: number, minimum: 0}             # the copy went up to here: below it nothing is a gap
         lost: {type: number, minimum: 0}             # seconds the source's ring took before the copy got to them
+        dropped: {type: number, minimum: 0}          # seconds of `absent` dropped past its 64 pieces: the pulse's `replica_absent_dropped_s`
         absent:                                      # what the source said it has not, above `to`: it may write it later
           type: array
           maxItems: 64
@@ -415,6 +416,7 @@ metrics:
   # larger than the volume, said before the ring proves it.
   - {name: replica_lag_seconds, from: status.replica_lag_s}
   - {name: replica_lost_seconds_total, from: status.replica_lost_s, type: counter}
+  - {name: replica_absent_dropped_seconds_total, from: status.replica_absent_dropped_s, type: counter}
   - {name: replica_over_quota, from: status.over_quota, agg: flag, equals: true}
   - {name: archive_shallow, from: status.shallow, agg: flag, when: depth_days}
   - {name: unconfirmed_seconds, from: status.unconfirmed_s}
