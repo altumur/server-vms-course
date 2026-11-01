@@ -1,3 +1,7 @@
 # shell_core_debt.txt — the lines the core of the course's VMS page (vms/cam.shell.html) differs from the product's by
 # (test_shell_core.py): where the course leads, until the product follows. It only shrinks.
 #   <function> | <+ course, - product> | <sha8 of the line, stripped> | <text, cut>
+loadTimeline | - | e5f92e89 | // the places a recording may lie on: the rows of the table rec's spec names (spec.places), not a na
+loadTimeline | - | 9c78f4a5 | const T=((pc.spec("rec")||{}).places||{}).table||"";
+loadTimeline | + | e66b8c79 | // the places a recording may lie on: the rows of the table rec's manifest names (manifest.places), 
+loadTimeline | + | 3c003eb3 | const T=((pc.manifest("rec")||{}).places||{}).table||"";
