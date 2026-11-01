@@ -4,3 +4,4 @@ date	sample	fix	languages
 2026-10-29	1/scenarios.tsv: 04-mask-of шаг 7	несуществующий mask_of — 201, не 409: договор проверки строки сверяет must_match только при живой цели (ref без цели — не отказ, вектор ref_no_target); поправка «Архитектора» к решению Kimi № 1	all
 2026-10-31	1/scenarios.tsv: 01-create 3, 01-create 4, 02-mask 1	error — слово перечня и field, фраза в detail (ADR-0094 доп. (13), B5)	all
 2026-11-01	1/scenarios.tsv: 01-create (на общий экземпляр 01–04), README: подготовка	первым шагом @start resource, прежние шаги сдвинуты на один: без ресурса своего сервера пульсы и тела «не известно» — GET /units и дверь байтов дают 503 (P03-OBJECTS-DEFAULT-1FD, C06-PULSE-LAPSE-503-03); разбор прохода V/04, с разрешения «Архитектора»	all
+2026-11-02	1/scenarios.tsv: 01-create шаг 2	линия в params.zone (ADR-0112 доп. (1) п. 3)	all
