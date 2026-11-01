@@ -288,6 +288,7 @@ components:
         error: {const: refused}
         detail: {type: string}
         reason: {type: string}
+        send_row: {const: true, description: 'Идёт сбор «из ничего»: пришли свою строку раздела полем row (P/08.8 Н1.8а).'}
     LocalAsk:
       type: object
       required: [request_id, ref]

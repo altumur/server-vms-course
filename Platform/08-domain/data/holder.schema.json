@@ -71,6 +71,11 @@
     "sig": {
      "description": "base64url без = подписи Ed25519 выпускающего над UTF-8(JCS(doc без kid и sig)), 64 байта; не base64url, не 64 байта или не сходится — функция record шаг 5 (bad_signature), не форма",
      "type": "string"
+    },
+    "key": {
+     "description": "hex ключа члена-держателя; у срока 1 до первого отчёта его агента поля нет (ADR-0113 доп. (3) п. 2)",
+     "type": "string",
+     "pattern": "^(?:[0-9a-f]{64})$"
     }
    },
    "additionalProperties": false,

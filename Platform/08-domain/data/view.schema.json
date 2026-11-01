@@ -11,7 +11,7 @@
    "description": "имя держателя"
   },
   "complete": {
-   "description": "true ⟺ каждый член ok и contested пуст",
+   "description": "команда view: true ⟺ каждый член ok и contested пуст; у прохода — круг, Н1.4б complete",
    "type": "boolean"
   },
   "members": {

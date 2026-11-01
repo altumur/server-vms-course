@@ -2632,6 +2632,12 @@ components:
                 properties:
                   reason: {const: busy}
                   retry_in: {type: number, minimum: 0}
+              - type: object
+                required: [reason]
+                additionalProperties: false
+                properties:
+                  reason: {const: send_row}
+        collecting: {const: true, description: 'Идёт сбор «из ничего» (P/08.8 Н1.8а).'}
         keys:
           type: object
           additionalProperties:
@@ -3108,6 +3114,7 @@ components:
           uniqueItems: true
           items: {$ref: '#/components/schemas/Hex32'}
         at: {type: number}
+        key: {$ref: '#/components/schemas/Hex32'}
         restored_from: {$ref: '#/components/schemas/Pair'}
         issuer: {$ref: '#/components/schemas/Hex32'}
         kid: {type: string, pattern: "^(?:[0-9a-f]{16})$"}

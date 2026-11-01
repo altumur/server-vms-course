@@ -4,7 +4,7 @@
  "properties": {
   "doc": {
    "$ref": "#/$defs/common.domain_members_doc",
-   "description": "текст JCS строки domain/member-rows/<раздел> {domain, part, rev, term, members, issuer, kid, sig}, прошедшей take (Н1.4 member_row)",
+   "description": "текст JCS строки domain/member-rows/<раздел> {domain, part, rev, term, members, issuer, kid, sig}, прошедшей take (Н1.4 member_list_take)",
    "x-codec": [
     "object"
    ]
