@@ -4,3 +4,4 @@ date	sample	fix	languages
 2026-11-01	4/scenarios.tsv: 02-audio шаг 2	L16 перекодируется, не пишется только иной кодек (V/02.4 Н1.2а)	all
 2026-11-01	4/scenarios.tsv: 02-audio, шаги 3–7	звук идёт через приёмник, кольцо, дозапись, передатчик; снято слово no sound over ingest; @manual: живого драйвера со звуком и стенда домена нет (ADR-0102 доп. (9) пп. 7, 9)	all
 2026-11-01	4/scenarios.tsv: 02-audio шаг 7	номер mic в заявке, одна точка на 0 и первый, кадр звука не по форме не уносит обращение (ревью sound2, С-1, М-1, М-7)	all
+2026-11-01	4/scenarios.tsv: 03-backup-always, 04-replica, 05-replica-device	новые сценарии: backup только when: offline, replica из архива и с устройства; живой драйвер, срок 900 с, кольцо — @manual (ADR-0107 и доп. (2))	all

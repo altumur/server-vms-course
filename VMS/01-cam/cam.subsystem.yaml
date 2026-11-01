@@ -27,7 +27,9 @@ lease: {unconfirmed_max: forever}
 # Domain books (V/01.6, V/01.7): a member reads the copy `domain/<sub>/<book>`; the holder's cluster has no copy and
 # reads its own row `domain/<sub>/<book>/<CLUSTER>` — the rights generator grants that one row (P/02.5 Н1.4); only the
 # copy is declared here, never a prefix.
-worker: {exec: /usr/lib/cam/worker, writes: [devices, children, found, probe_replies], reads: [domain/rec/primaries, domain/placed/rec/, domain/rec/polls, domain/cam/licence, domain/view, domain/member-list, domain/member-topology, domain/topology]}
+# Who consumes a stream (V/01.2 Н1.2в): the recordings and detectors of the camera, read as rows, and what the gateways ask for
+# in their heartbeats: with nobody, the device stays held and the stream unread.
+worker: {exec: /usr/lib/cam/worker, writes: [devices, children, found, probe_replies], reads: [rec/recordings/, det/units/, live/heartbeats/, domain/rec/primaries, domain/placed/rec/, domain/rec/polls, domain/cam/licence, domain/view, domain/member-list, domain/member-topology, domain/topology]}
 # The holder's frames on its own server (V/01.2 Н1.3): a share, `SHM_DIR` of the subsystem file (/run/vms-cam-shm), one
 # file per camera and holder epoch, `<id>-<epoch>.shm`, deleted by its writer, and a lower epoch's by the holder starting the unit (it has no writer); a subscriber on the same server
 # declares `worker.uses: [cam.shm]` (ADR-0091 п. 5) and takes the exact address from the pulse (`live_shm`).
@@ -278,6 +280,9 @@ tables:
       resolutions: {type: list}                      # `<width>x<height>` the description names; no field — not said, typed by hand
       ptz:      {type: bool, default: false}         # it turns
       presets:  {type: int, default: 0}              # positions it can be asked to go to
+      # their names, where the driver has them (V/01.4 Н1.4): `{"<n>": "<name>"}`; no field — numbers up to `presets`
+      preset_names: {type: json, schema: {type: object, additionalProperties: {type: string}}}
+      storage:  {type: bool, default: false}         # it has an archive of its own (`embeddedStorageRef`, V/01.1 Н1.2): not a volume of ours
       identity: {type: string, schema: {maxLength: 200}}   # its serial number, MAC — not a capability, never leaves the cluster
   # What a device turned out to have besides pictures, one row an input, an output, a microphone or a speaker (ADR-0102):
   # a discovery, so the holder's. A device tells them as blocks, and a block hangs whole on one row of the host, its
@@ -313,12 +318,30 @@ tables:
     fields:
       camera:   {type: string, required: true}       # the row it hangs on, a main row (`rights.unit_of`)
       n:        {type: int, required: true, schema: {minimum: 1}}    # its number on that row, never reused
-      type:     {type: string, required: true, enum: [acfa_sensor, acfa_lock, acfa_fence, relay, controller]}
-      template: {type: string, required: true}       # the unit's id in the model's `.rep`
+      # `det` — a detector that runs on the device (V/01.4 Н1.4в): no model of ours, no `det/units` row, and no stream asked for
+      type:     {type: string, required: true, enum: [acfa_sensor, acfa_lock, acfa_fence, relay, controller, det]}
+      template: {type: string, required: true}       # the unit's id in the model's `.rep`; of a `det`, the detector's
       address:  {type: string}                       # the device's word, passed as it is
       parent:   {type: int, schema: {minimum: 1}}    # `n` of its owner on the same row; no field — the root
+      sensitivity: {type: int}                       # of a `det`, in the model's own range (V/01.1 Н1.2б)
       title:    {type: string}
       enabled:  {type: bool, default: true}
+  # A person turning a camera now, one row a person and a camera (V/01.4 Н1.4г). A lease, not a request: a request is one more
+  # call in the group's queue, and a stop must not stand behind a movement. Renewed by writing it (`seq`), stopped by taking
+  # it away; a row left behind stops by its silence, and goes in a day.
+  ptz_moves:
+    key: "{camera}-{person}"
+    delete_after: 86400
+    fields:
+      camera: {type: string, required: true}         # the camera: `edit` on it, not on its group (`rights`)
+      person: {type: string, required: true, schema: {pattern: "^[A-Za-z0-9._-]{1,64}$"}}
+      seq:    {type: int, required: true, schema: {minimum: 1}}   # goes up with every renewal: the same body is still a new write
+      # speeds with a sign, in per cent of the model's own (`panSpeed`… in `.rep`); 0 — that axis stands
+      pan:    {type: int, default: 0, schema: {minimum: -100, maximum: 100}}
+      tilt:   {type: int, default: 0, schema: {minimum: -100, maximum: 100}}
+      zoom:   {type: int, default: 0, schema: {minimum: -100, maximum: 100}}
+      focus:  {type: int, default: 0, schema: {minimum: -100, maximum: 100}}
+    stamp: [by, at]
   # The last `n` given out on a row. A table and not a field of the row: a field would bump `revision` and restart the
   # holder's connection for every door added.
   unit_next:
@@ -454,7 +477,7 @@ requests:
     additionalProperties: false
     properties:
       unit:        {type: string}
-      action:      {enum: [output, preset, unit, talk]}
+      action:      {enum: [output, preset, preset_save, preset_clear, unit, talk]}
       # an argument is a word of at most 32 characters or a whole number up to 2^53 − 1 (the product's cross-check of
       # the eleventh review; integers past 2^53 are no number a spec holds), at the door as
       # at the holder
@@ -475,9 +498,10 @@ requests:
 # device (the seventh pass: the device performs it, no channel in it). An input or an output is its owner's: a row of
 # either table needs on that camera what the route needs, and naming one or turning it off is an operator's (`edit`).
 # A unit is its row's too, with no route of its own: adding or taking one away is an administrator's.
+# Turning a camera, and saving its presets, is that camera's: its channel moves, not the device (V/01.4 Н1.4г).
 rights:
-  unit_of: {children: camera, child_settings: camera, device_units: camera, unit_next: camera}
-  routes: {edit: [child_settings]}
+  unit_of: {children: camera, child_settings: camera, device_units: camera, unit_next: camera, ptz_moves: camera}
+  routes: {edit: [child_settings, ptz_moves]}
   reach:
     group: [source, labels]
     cluster: [ref]

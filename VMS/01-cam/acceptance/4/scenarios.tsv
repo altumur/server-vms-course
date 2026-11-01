@@ -2,7 +2,7 @@ scenario	step	request	expect
 # Приёмка V/01.4: команда камере без устройства — refused (стенд главы 2). Формат — README.
 01-no-device	1	POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
 01-no-device	2	@start worker cam w-srv-a-1 on srv-a	ok
-01-no-device	3	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "running"}]}
+01-no-device	3	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "idle"}]}
 01-no-device	4	POST /requests {"unit": "$c1", "action": "output", "port": 1}	@oneof 202 {"queued": "@any"} | 200 {"answered": {"outcome": "refused", "error": "camera has no device"}}
 01-no-device	5	POST /requests {"unit": "$c1", "action": "output"}	@oneof 202 {"queued": "@any"} | 200 {"answered": {"outcome": "refused", "error": "camera has no device"}}
 01-no-device	6	@until 30 GET /events?unit=cam/$c1&kind=command.failed	200 {"events": [{"kind": "command.failed", "of": "cam/1", "outcome": "refused", "action": "output", "error": "camera has no device"}, {"kind": "command.failed", "of": "cam/1", "outcome": "refused", "action": "output", "error": "camera has no device"}]}
@@ -25,3 +25,10 @@ scenario	step	request	expect
 04-sound	3	@manual POST /requests {"unit": "$c", "action": "talk", "port": 1} — performed, устройство получило Call; второй человек — refused «busy»; тот же — performed	manual
 04-sound	4	@manual talk без port, с чужим port, spk выключен — talk needs a port, no such speaker, speaker is disabled	manual
 04-sound	5	@manual маршрут talk не открыт 30 с — HangUp, занятость снята; маршрут оборван — HangUp; кадра нет 8 с без обрыва — HangUp; устройство положило трубку — маршрут закрыт	manual
+05-builtin	1	@manual подставной драйвер с аналитикой (в Drivers/Virtual её нет): строка cam/device_units type det — CreateVideoAnalytics с каналом и template, Start; enabled: false — Stop; событие — строка unit в бакете камеры	manual
+05-builtin	2	@manual детектора нет у канала, conflictDetectors у двух включённых строк, строка на ipsrv: units_down refused у большего n, соседние идут	manual
+05-builtin	3	@manual камера с одной replica и встроенным детектором: фаза idle, поток не читается, события идут	manual
+05-ptz	1	@manual подставной драйвер с телеметрией: can.ptz по индексу канала, нет ссылки — ложь; preset_save, preset_clear — performed, reply {action, n}; у камеры без телеметрии — this device has no telemetry; право edit на камеру, а не на группу	manual
+05-ptz	2	@manual строка cam/ptz_moves с растущим seq: MoveContinuous, ZoomContinuous, FocusContinuous; снятие строки — нулевая скорость каждой оси; повтора нет PTZ_LEASE — стоп; застанная при старте строка не движет	manual
+05-ptz	3	@manual завис вызов группы (Execute единицы, output): стоп камеры идёт; завис вызов телеметрии — стоп идёт мимо него	manual
+05-ptz	4	@manual SIGKILL держателя при движении: новый держатель при взятии эпохи шлёт стоп; от сбоя до стопа — не дольше 105 с	manual

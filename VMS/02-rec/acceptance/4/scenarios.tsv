@@ -16,3 +16,39 @@ scenario	step	request	expect
 02-audio	5	@manual резерв when: offline: кольцо держит звук, выпуск со времени первого ключевого кадра, поток …/audio без дыры с видео	manual
 02-audio	6	@manual дозапись: выгрузка карты и копия из резервной садят …/backfill/audio только на времена взятых групп; звука у источника нет — не дыра	manual
 02-audio	7	@manual ретранслятор: толчок и забор несут кадры audio в центр, заявка центра выгружает звук из архива с mic = audio заявки; камера-кластер: кольцо, карта, выгрузка только номера заявки; audio 0 и номер первого — кадры идут один раз; кадр звука не по форме — отброшен, видео обращения идёт	manual
+03-backup-always	1	@start worker cam w-srv-a-1 on srv-a	ok
+03-backup-always	2	@start worker rec r-srv-a-1 on srv-a	ok
+03-backup-always	3	console2 POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
+03-backup-always	4	POST /volumes {"name": "bk-a", "kind": "backup", "url": "file://{data}/subsystems/rec/obsd/volumes/2", "server": "srv-a", "quota_bytes": 1000000000}	201 {"name": "bk-a"}
+03-backup-always	5	POST /recordings {"name": "door-b", "cam": "$c1", "home": "bk-a"}	201 {"when": "always"}
+03-backup-always	6	@until 90 GET /recordings	200 {"rows": [{"id": "door-b", "phase": "waiting", "reason": "a backup volume takes when: offline"}]}
+03-backup-always	7	PUT /recordings/door-b {"when": "offline"}	200 {"when": "offline"}
+03-backup-always	8	@until 90 GET /recordings	200 {"rows": [{"id": "door-b", "phase": "standby"}]}
+04-replica	1	@start worker cam w-srv-a-1 on srv-a	ok
+04-replica	2	@start worker rec r-srv-a-1 on srv-a	ok
+04-replica	3	@start worker rec r-srv-a-2 on srv-a	ok
+04-replica	4	console2 POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
+04-replica	5	POST /volumes {"name": "disk-a", "kind": "local", "url": "file://{data}/subsystems/rec/obsd/volumes/1", "server": "srv-a", "quota_bytes": 1000000000}	201 {"name": "disk-a"}
+04-replica	6	POST /volumes {"name": "disk-b", "kind": "local", "url": "file://{data}/subsystems/rec/obsd/volumes/2", "server": "srv-a", "quota_bytes": 1000000000}	201 {"name": "disk-b"}
+04-replica	7	POST /recordings {"name": "door", "cam": "$c1", "home": "disk-a"}	201 {"id": "door"}
+04-replica	8	@until 90 GET /recordings	200 {"rows": [{"id": "door", "phase": "running", "via": "shm"}]}
+04-replica	9	POST /recordings {"name": "door-r", "cam": "$c1", "home": "disk-b", "replica_from": "door"}	201 {"replica_from": "door"}
+04-replica	10	@until 90 GET /recordings	200 {"rows": [{"id": "door-r", "phase": "running", "via": "@absent", "written_through": "@absent", "replica_lag_s": "@any", "replica_lost_s": 0}]}
+04-replica	11	PUT /recordings/door {"replica_from": "door-r"}	200 {"replica_from": "door-r"}
+04-replica	12	@until 60 GET /recordings	200 {"rows": [{"id": "door", "phase": "waiting", "reason": "replica loop: door-r"}, {"id": "door-r", "phase": "waiting", "reason": "replica loop: door"}]}
+04-replica	13	PUT /recordings/door {"replica_from": ""}	200 {"replica_from": ""}
+04-replica	14	@until 90 GET /recordings	200 {"rows": [{"id": "door", "phase": "running", "via": "shm"}, {"id": "door-r", "phase": "running"}]}
+04-replica	15	POST /recordings {"name": "door-x", "cam": "$c1", "home": "disk-b", "replica_from": "no-such"}	201 {"replica_from": "no-such"}
+04-replica	16	@until 60 GET /recordings	200 {"rows": [{"id": "door-x", "phase": "waiting", "reason": "replica source gone: no-such"}]}
+04-replica	17	POST /volumes {"name": "bk-a", "kind": "backup", "url": "file:///bk", "server": "srv-a", "quota_bytes": 1000000000}	201 {"name": "bk-a"}
+04-replica	18	POST /recordings {"name": "door-b", "cam": "$c1", "home": "bk-a", "when": "offline"}	201 {"when": "offline"}
+04-replica	19	PUT /recordings/door-x {"replica_from": "door-b"}	200 {"replica_from": "door-b"}
+04-replica	20	@until 60 GET /recordings	200 {"rows": [{"id": "door-x", "phase": "waiting", "reason": "replica source on a backup volume: door-b"}]}
+04-replica	21	@manual прогон дольше 900 с: минуты источника садятся в …/backfill тома disk-b, старшая дыра первой; replica_lag_s падает; to растёт; задача V/05 по replica из архива заказа не получает	manual
+04-replica	22	@manual кольцо тома disk-b меньше покрытия источника: over_quota: true, минуты, выгнанные кольцом, снова не качаются (to не падает, поток …/backfill не растёт по ним), кольцо источника обогнало копию — replica_lost_s растёт	manual
+04-replica	23	@manual смена replica_from: новая revision, to заново; источник снят — waiting, накопленное видно своим сроком; живая запись стала replica — конвейер снят, поток раздачи закрыт при отсутствии иных потребителей (V/01.2 Н1.2в)	manual
+04-replica	24	@manual метка на камере с одной replica: /spans дверь говорит copied_to; печать не ставится, пока ниже конца метки есть непривезённое	manual
+05-replica-device	1	@manual живой драйвер с архивом устройства, у стенда файл: replica_from device, у камеры нет иных потребителей — держатель в фазе idle, поток не читает, архив идёт в том через /playback	manual
+05-replica-device	2	@manual device и непустой stream — reason «replica from device: stream is set»; cam ref:<ref> — «replica from device: other cluster»	manual
+05-replica-device	3	@manual скан: посаженная часть без держателя running — задача detjob, при running заказа нет; переезд записи минуты не перекачивает и не заказывает снова	manual
+05-replica-device	4	@manual замер отставания: регистратор на 16 камер, max_playbacks кончились — 503 device busy, источник на отсрочке, отставание по камерам в replica_lag_s	manual

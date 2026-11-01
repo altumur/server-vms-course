@@ -3,6 +3,15 @@
 # field — «-»: поля нет.
 door	code	error	field	norm
 status	-	codec not supported: <кодек>	-	02.4 Н1.1, Н1.2
+status	-	a backup volume takes when: offline	-	02.6 Н1.4
+status	-	replica source unreadable: <имя>	-	02.6 Н1.9
+status	-	replica home is not local or network	-	02.6 Н1.9
+status	-	replica from device: stream is set	-	02.6 Н1.9
+status	-	replica from device: other cluster	-	02.6 Н1.9
+status	-	replica loop: <имя>	-	02.6 Н1.9
+status	-	replica source gone: <имя>	-	02.6 Н1.9
+status	-	replica source is another stream: <имя>	-	02.6 Н1.9
+status	-	replica source on a backup volume: <имя>	-	02.6 Н1.9
 archive	503	no volume open here	-	02.5 Н1.4, Н4
 archive	503	not_ready	-	02.5 Н2; P/02.4 Н1.10
 archive	503	busy	-	02.5 Н4: пределы, неответ или отказ держателя у .device.mp4

@@ -25,3 +25,8 @@ scenario	step	request	expect
 06-audio	1	POST /recordings {"name": "7-a", "cam": "7"}	201 {"audio": 0}
 06-audio	2	PUT /recordings/7-a {"audio": 2}	200 {"audio": 2}
 06-audio	3	POST /recordings {"name": "7-b", "cam": "7", "audio": -1}	400 {"error": "@any"}
+07-replica	1	POST /recordings {"name": "7-r", "cam": "7", "replica_from": "device"}	201 {"replica_from": "device"}
+07-replica	2	POST /recordings {"name": "7-l1", "cam": "7", "replica_from": "7-l2"}	201 {"replica_from": "7-l2"}
+07-replica	3	POST /recordings {"name": "7-l2", "cam": "7", "replica_from": "7-l1"}	201 {"replica_from": "7-l1"}
+07-replica	4	POST /volumes {"name": "bk-1", "kind": "backup", "url": "file:///bk", "server": "srv-a", "quota_bytes": 1}	201 {"name": "bk-1"}
+07-replica	5	POST /recordings {"name": "7-b", "cam": "7", "home": "bk-1"}	201 {"when": "always"}

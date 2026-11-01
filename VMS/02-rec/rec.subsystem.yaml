@@ -111,7 +111,14 @@ unit:
     # raises the alarm `archive.shallow` (V/02.5). It does not stop the ring: a larger quota, or fewer
     # recordings on the volume, is the answer.
     min_depth_days: {type: float,  default: 0}
-    when:           {type: string, default: "always", enum: [always, offline]}  # a BACKUP recording (home on a backup or edge volume, V/02.6 Н1.4): `always`, or `offline` — only while no primary that should be written is (V/02.6 Н1.4)
+    # A BACKUP recording (V/02.6 Н1.4): on a `backup` volume only `offline` — only while no primary that should be written
+    # is; `always` there is the recorder's `waiting` (a door cannot judge it: the home's kind is another row). On a card
+    # (`edge`) both. Read by nobody on any other volume.
+    when:           {type: string, default: "always", enum: [always, offline]}
+    # A recording WITHOUT A LIVE STREAM (V/02.6 Н1.9; ADR-0107): `device` — copied from the camera's device archive; the name
+    # of another recording of the same camera and stream — copied from that archive; empty — the live stream. The door
+    # takes any word: a source, a loop and the kind of a volume are other rows, and only the recorder sees them together.
+    replica_from:   {type: string}
   # What a backfill still owes the detectors (V/02.8 Н1.5): ranges landed, each with the moment of the event, until the
   # order's outcome. In the state and not in memory: a recorder that dies after landing would leave the minutes unscanned.
   state:
@@ -130,6 +137,22 @@ unit:
               from: {type: number}
               to:   {type: number}
               at:   {type: number}                   # the moment of the event: a repeat keeps it
+    # How far a `replica` got (V/02.6 Н1.9). In the state because the ring drops what was copied, and only the memory of
+    # having copied it keeps the plan from copying it again.
+    replica:
+      type: object
+      required: [to]
+      additionalProperties: false
+      properties:
+        of:   {type: string}                         # the `replica_from` it was counted for
+        born: {type: string}                         # the source row's `born`: a source made anew is another source
+        to:   {type: number, minimum: 0}             # the copy went up to here: below it nothing is a gap
+        lost: {type: number, minimum: 0}             # seconds the source's ring took before the copy got to them
+        seen: {type: number, minimum: 0}             # up to here the recorder watched the holder (V/02.8 Н1.5)
+        gaps:                                        # …and in these stretches the holder was not `running`
+          type: array
+          maxItems: 64
+          items: {type: array, prefixItems: [{type: number}, {type: number}], minItems: 2, maxItems: 2}
 placement:
   # memory (ADR-0070 step 3): measured 2026-10-11 on macOS/arm64 (MacBookPro18,1) at bdd1e1e — one worker's RSS (ps, median of 6
   # after 60 s settled) at 10 and 50 units: unit_mb = (RSS50 − RSS10)/40, base_mb = RSS10 − 10·unit_mb, +25 %, whole MB
@@ -369,6 +392,11 @@ metrics:
   - {name: last_frame_age_seconds, from: status.last_frame_at, agg: age, live: true}
   - {name: samples_refused_total, from: "status.samples_refused.<status>", type: counter}
   - {name: archive_depth_days, from: status.depth_days}
+  # A replica (V/02.6 Н1.9): how far behind its source, what the source's ring took before the copy got to it, and a source
+  # larger than the volume, said before the ring proves it.
+  - {name: replica_lag_seconds, from: status.replica_lag_s}
+  - {name: replica_lost_seconds_total, from: status.replica_lost_s, type: counter}
+  - {name: replica_over_quota, from: status.over_quota, agg: flag, equals: true}
   - {name: archive_shallow, from: status.shallow, agg: flag, when: depth_days}
   - {name: unconfirmed_seconds, from: status.unconfirmed_s}
   # A camera's stream as its pusher says it in the camera recorder's heartbeat (`stream`; the eighth to eleventh reviews).
@@ -437,6 +465,7 @@ display:
     until: Действует до
     min_depth_days: Глубина не меньше, дней
     when: Когда писать
+    replica_from: Забирать из
   options:
     when: {always: всегда, offline: когда основная не пишется}
   field_help:
@@ -446,7 +475,8 @@ display:
     home: том, в котором лежит запись
     retention_days: сколько дней показывать
     min_depth_days: сколько дней должно быть не меньше
-    when: "резервная запись: всегда или только когда основная не пишется"
+    when: "запись на карте камеры: всегда или только когда основная не пишется; на резервном томе — только второе"
+    replica_from: "запись без живого потока: device — из архива устройства, имя — из другой записи этой камеры; пусто — живой поток"
   kinds:
     archive.shallow: архив мельче обещанного
     archive.keep.sealed: сохранённое запечатано
