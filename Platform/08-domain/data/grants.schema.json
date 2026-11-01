@@ -16,6 +16,15 @@
    "x-codec": [
     "integer"
    ]
+  },
+  "role_at": {
+   "description": "когда строки роли на этом кластере записаны в последний раз: текст JSON, роль — секунды (Н1.3а role_at)",
+   "type": "object",
+   "additionalProperties": {
+    "type": "number",
+    "minimum": 0
+   },
+   "x-encoding": "json"
   }
  },
  "additionalProperties": false,

@@ -492,6 +492,18 @@ paths:
         '404': {$ref: '#/components/responses/Refused'}
         '409': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
+  /domain/roles/{role}/lines:
+    parameters:
+      - name: role
+        in: path
+        required: true
+        schema: {type: string}
+    put:
+      operationId: roleLines
+      summary: Права роли на весь домен (глава 8.4 Н1.3а lines)
+      responses:
+        '200': {description: Записано; расхождение идёт проходом}
+        '400': {$ref: '#/components/responses/BodyRefused'}
   /domain/edits:
     post:
       operationId: keptEdits

@@ -160,6 +160,7 @@ journal:      domain.forwarded {cluster, path, user, status} у пересыла
 | GET, POST | `/domain/groups` | P/08.4 Н2 (ADR-0098) | 5 | да |
 | PUT, DELETE | `/domain/groups/<имя>` | P/08.4 Н2 (ADR-0098) | 5 | да |
 | GET, POST | `/domain/roles` | P/08.4 Н2 (ADR-0098) | 5 | да |
+| PUT | `/domain/roles/<имя>/lines` | P/08.4 Н2 (ADR-0110 Д-3) | 5 | да |
 | PUT, DELETE | `/domain/roles/<имя>` | P/08.4 Н2 (ADR-0098) | 5 | да |
 | POST | `/domain/batch` | P/08.4 Н2 (ADR-0098 §6) | 5 | да |
 | GET | `/domain/grants` | 9 Н2 (добавлено М11/9) | 5 | да |

@@ -71,6 +71,55 @@
     "array"
    ]
   },
+  "lines": {
+   "description": "права роли на весь домен: JSON-текст списка {cap, sub?, scope, until} (Н1.3а lines)",
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "cap": {
+      "type": "string",
+      "enum": [
+       "none",
+       "view",
+       "edit",
+       "admin"
+      ]
+     },
+     "sub": {
+      "type": "string"
+     },
+     "scope": {
+      "type": "string"
+     },
+     "until": {
+      "type": "number",
+      "minimum": 0
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "cap",
+     "scope",
+     "until"
+    ]
+   },
+   "x-encoding": "json"
+  },
+  "lines_at": {
+   "$ref": "#/$defs/common.time",
+   "description": "когда записаны lines",
+   "x-codec": [
+    "time"
+   ]
+  },
+  "lines_by": {
+   "description": "кто записал lines",
+   "type": "string",
+   "x-codec": [
+    "string"
+   ]
+  },
   "at": {
    "$ref": "#/$defs/common.time",
    "description": "стенные секунды последней правки",
