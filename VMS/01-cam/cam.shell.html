@@ -815,7 +815,7 @@ pc.on("select",leaveCam);
 if(FEATURES.has("card.closed"))pc.on("card.closed",e=>{if(e&&isCam(e.ref))leaveCam()});
 pc.on("logout",leaveCam);
 // Another person: the doors' tokens and a shown password are the former one's (P/07 Н1.5).
-const forgetPerson=()=>{for(const k of Object.keys(DOORS))delete DOORS[k];forgetAccountPassword()};
+const forgetPerson=()=>{for(const k of Object.keys(DOORS))delete DOORS[k];forgetAccountPassword();childGen++;CHILDREN=null;CHILD_SET={};childErr=""};
 let pagePerson=null;
 pc.on("logout",()=>{pagePerson=null;forgetPerson()});
 if(FEATURES.has("session"))pc.on("session",e=>{const u=(e&&e.user)??null;if(pagePerson!==null&&u!==pagePerson)forgetPerson();pagePerson=u});
@@ -856,9 +856,11 @@ pc.addTab("unit",{id:"streams",label:"Потоки",
 // What a device has is its holder's row (`cam/children`), what it is called and whether it is on — the operator's
 // (`cam/child_settings`, the same key). They stand under their owner, a camera or a row `ipsrv`, and a row `gone` is not
 // drawn. A table not read is not an empty one: what was read stays, and it is said (the camera's note). No such table
-// at this console — no children.
+// at this console — no children. A read does not draw: the module redraws its tree when its own data change or on a click,
+// and the page has no call for it, so children read on a quiet cluster stand there from the next change of rows or click
+// (V/08.1 Н1.5, the limit).
 const CHILD_WORD={sensor:"Вход",relay:"Выход",mic:"Микрофон",spk:"Динамик"},CHILD_ORDER=["sensor","relay","mic","spk"];
-let CHILDREN=null,CHILD_SET={},childErr="",childReading=false;
+let CHILDREN=null,CHILD_SET={},childErr="",childReading=false,childGen=0;
 const camPath=p=>(MOUNTED.cam?"/cam":"")+p;
 async function tableRows(path,key){
   const r=await fetch(path);
@@ -870,10 +872,11 @@ async function tableRows(path,key){
 }
 async function readChildren(){
   if(childReading)return;childReading=true;
+  const gen=childGen;                         // another person came meanwhile: the former one's answer is not kept
   try{
     const[c,s]=await Promise.all([tableRows(camPath("/children"),"children"),tableRows(camPath("/child_settings"),"child_settings")]);
-    CHILDREN=c;CHILD_SET=Object.fromEntries(s.map(x=>[String(x.name),x]));childErr="";
-  }catch(e){childErr=String(e&&e.message||e)}
+    if(gen===childGen){CHILDREN=c;CHILD_SET=Object.fromEntries(s.map(x=>[String(x.name),x]));childErr=""}
+  }catch(e){if(gen===childGen)childErr=String(e&&e.message||e)}
   finally{childReading=false}
 }
 pc.on("refresh",d=>{if(d&&d.units)readChildren()});

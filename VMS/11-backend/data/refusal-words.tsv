@@ -25,8 +25,7 @@ devices	422	VALIDATION_FAILED	-	11.4 Н4: 413 batch too large
 devices	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.4: иное тело, иная операция с тем же ключом
 devices	422	NOT_SUPPORTED	type	11.3 Н4: вид устройства; 11.4 Н1.2: DELETE, PATCH channel, storage, детей
 devices	422	NOT_SUPPORTED	stream	11.3 Н4: нет прочего потока, иное слово
-devices	422	NOT_SUPPORTED	identifier	11.4 Н1.2: иной свободный номер
-devices	422	NOT_SUPPORTED	<поле>	11.3 Н4: поля адреса рядом с rtspUrl, адрес не ipint://; 11.4 Н1.2: ipsrv без строки
+devices	422	NOT_SUPPORTED	<поле>	11.3 Н4: поля адреса рядом с rtspUrl, адрес не ipint://, смена хоста ipsrv, configMode, children; 11.4 Н1.2: ipsrv без строки
 devices	409	IDENTIFIER_TAKEN	identifier	11.4 Н1.2, Н1.5: занятый номер
 devices	422	PARENT_MISMATCH	parentId	11.4 Н1.5: parentId создания
 devices	-	IDENTIFIER_TAKEN	identifier	11.4 Н1.5: failed элемента, статус 200

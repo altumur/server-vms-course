@@ -23,9 +23,9 @@ Server	netmask, gateway, dns	—	—	none	сеть сервера не у кон
 Device(type=camera)	—	cam/cameras + rec/recordings + det/units	—	both	сборка: основная строка type camera, её потоки, записи, детекторы (V/11.4)
 Device(type=camera)	id	cam/cameras	UUID device:cam/cameras/<id>	read
 Device(type=camera)	type	cam/cameras	type	read	слово контракта без перевода; задаёт POST /devices, в DevicePatch поля нет
-Device(type=camera)	parentId	cam/devices	ipsrv хоста есть — его id, иначе null	read	V/11.3 Н1.3 «Дерево»; при создании — null или этот id
+Device(type=camera)	parentId	cam/devices	ipsrv хоста есть — его id, иначе null	read	channels сказан или таблица не видна; V/11.3 Н1.3 «Дерево»; при создании — null или этот id
 Device(type=camera)	domainId	кластер	UUID domain:<CLUSTER>	read
-Device(type=camera)	identifier	cam/cameras	id	read	номер камеры (numeric, cam/next_id); не задан при создании — выдаёт счётчик; занятый — IDENTIFIER_TAKEN (V/11.4 Н1.2)
+Device(type=camera)	identifier	cam/cameras	id	read	номер камеры (numeric, cam/next_id); при создании выдаёт счётчик, занятый — IDENTIFIER_TAKEN, свободный пропускается (V/11.4 Н1.2)
 Device(type=camera)	name	cam/cameras	name	both
 Device(type=camera)	enabled	cam/cameras	enabled	both
 Device(type=camera)	short	cam/cameras	short	both
@@ -40,7 +40,7 @@ Device(type=camera)	codec	cam/heartbeats	codec	read	слово пульса, т�
 Device(type=camera)	login	cam/cameras	cred_username	both
 Device(type=camera)	hasPassword	cam/cameras	cred_secret	read	true — секрет задан; значение не отдаётся
 Device(type=camera)	password	cam/cameras	cred_secret	write	нет поля — не трогать; null или "" — снять; строка — новый (V/11.3 Н1.3)
-Device(type=camera)	serverId	rec/heartbeats	сервер держателя основной записи <cam>	read	наблюдение, в версию не входит; нет держателя — поля нет
+Device(type=camera)	serverId	rec/heartbeats	сервер держателя основной записи <cam>	read	наблюдение, в версию не входит; нет держателя — поля нет; при создании пропускается без записи (V/11.3 Н1.1)
 Device(type=camera)	online	cam/heartbeats	phase	read	running или held — true; в версию не входит
 Device(type=camera)	fault	cam/heartbeats	device_state	read	отказ входа — auth, не открылось или нет связи — conn, иное — drv; устройство отвечает — поля нет
 Device(type=camera)	licenseExceeded	cam/heartbeats	phase	read	unlicensed — true (V/01.7)
@@ -49,10 +49,11 @@ Device(type=camera)	recordMode	rec/recordings	<cam>, <cam>-<том>	both	always 
 Device(type=camera)	extraArchives	rec/recordings	резервные <cam>-<том>	both	в порядке имени тома: {archiveId, recordMode always|none по enabled, stream}
 Device(type=camera)	stream	rec/recordings	stream основной <cam>: пусто — main; иначе sub	both	запись sub — прочий поток с наименьшим id, поле уже непусто — не меняется, потока нет — 422 NOT_SUPPORTED; не cam.main (V/11.3 Н1.3)
 Device(type=camera)	children	det/units	<cam>-<kind>	write	только при создании: дочерние детекторы (V/11.4 Н1.2); иные дочерние — 422 NOT_SUPPORTED, field children
-Device(type=camera)	version	cam/cameras + rec/recordings + det/units + cam/devices	склейка c<камера-потоки>.r<rec…>.d<det…>.h<строка устройства> индексов хранилища частей и надгробий (V/11.4 Н1.1)	read	ADR-0094 доп. (4) п. 1; индекс — в элементе списка по B4
+Device(type=camera)	version	cam/cameras + rec/recordings + det/units + cam/devices	склейка c<камера-потоки>.r<rec…>.d<det…>.h<строка устройства>.i<строка ipsrv> индексов хранилища частей и надгробий (V/11.4 Н1.1)	read	ADR-0094 доп. (4) п. 1; индекс — в элементе списка по B4
 Device(type=camera)	disabledByRuleId, disabledByRuleAt, armed	—	—	none	не объявляется: «Автоматизация» не объявлена (ADR-0094 доп. (7)); поля необязательны — в ответе их нет; armed — только чтение
-Device(type=camera)	mac	—	—	none	MAC камеры — только из поиска (ADR-0102 доп. (7) п. 3)
-Device(type=camera)	subtype, recordDetectorIds, preRecordSec, channel, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, configMode, templateId, streamProfile, buffering, bitrate, norm, pulse, debounce, gain, acodec, vol, overlayDelayMs, overlayDurationSec	—	—	none	у камеры нет
+Device(type=camera)	mac	—	—	none	при создании пропускается без записи: MAC камеры — только из поиска (ADR-0102 доп. (7) п. 3; V/11.3 Н1.1)
+Device(type=camera)	configMode	—	—	none	current — умолчание, пропускается; default, template — 422 NOT_SUPPORTED, field configMode (V/11.3 Н1.1)
+Device(type=camera)	subtype, recordDetectorIds, preRecordSec, channel, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, templateId, streamProfile, buffering, bitrate, norm, pulse, debounce, gain, acodec, vol, overlayDelayMs, overlayDurationSec	—	—	none	у камеры нет
 Device(type=det)	—	det/units	—	both	детектор камеры (V/04.1), ключ <cam>-<kind>
 Device(type=det)	id	det/units	UUID device:det/units/<cam>-<kind>	read
 Device(type=det)	type	—	"det"	const
@@ -67,7 +68,8 @@ Device(type=det)	sensitivity	det/units	params, ключ sensitivity JSON-объ�
 Device(type=det)	builtin	—	false	const	детектор устройства ≈ detedge — не переводится сейчас
 Device(type=det)	version	det/units	индекс хранилища строки	read	в элементе списка по B4; If-Match сверяет его (V/11.4)
 Device(type=det)	disabledByRuleId, disabledByRuleAt, armed	—	—	none	как у камеры: не объявляется, в ответе полей нет
-Device(type=det)	subtype, short, identifier, ip, port, mac, vendor, model, login, hasPassword, fault, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, configMode, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, rtspUrl, overlayDelayMs, overlayDurationSec	—	—	none	у детектора нет
+Device(type=det)	configMode	—	—	none	current — умолчание, пропускается; default, template — 422 NOT_SUPPORTED, field configMode (V/11.3 Н1.1)
+Device(type=det)	subtype, short, identifier, ip, port, mac, vendor, model, login, hasPassword, fault, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, rtspUrl, overlayDelayMs, overlayDurationSec, password, children	—	—	none	у детектора нет
 Device(type=ipsrv)	—	cam/devices + cam/cameras	—	both	устройство хоста: channels > 1 или живая строка type ipsrv; один на хост (V/11.3 Н1.3 «Дерево»)
 Device(type=ipsrv)	id	cam/devices	UUID device:cam/devices/<хост>	read	от хоста: заведение строки id не меняет
 Device(type=ipsrv)	type	—	"ipsrv"	const
@@ -77,14 +79,18 @@ Device(type=ipsrv)	domainId	кластер	UUID domain:<CLUSTER>	read
 Device(type=ipsrv)	name	cam/cameras	name строки ipsrv; строки нет — хост	both	строка источник, у двух — наименьший id; без строки запись 422 NOT_SUPPORTED
 Device(type=ipsrv)	enabled	cam/cameras	enabled строки ipsrv; строки нет — true	both	без строки запись 422 NOT_SUPPORTED
 Device(type=ipsrv)	online	cam/heartbeats	phase строки; строки нет — любая камера хоста	read	running или held — true; в версию не входит
-Device(type=ipsrv)	identifier	cam/cameras	id строки	read	строки нет — поля нет; занятый при создании — IDENTIFIER_TAKEN
-Device(type=ipsrv)	short, lat, lon, azimuth, mac, login, hasPassword, password	cam/cameras	short, lat, lon, azimuth, mac, cred_username, cred_secret строки	both	строки нет — полей нет, запись 422 NOT_SUPPORTED, field этого поля; hasPassword — read, password — write, как у камеры
-Device(type=ipsrv)	ip, port, vendor, model, firmware, rtspUrl	cam/cameras	source строки	both	как у камеры; адрес без source: не совпадает с адресом камеры канала, у которой videoChannel назван (V/11.3 Н1.3)
-Device(type=ipsrv)	serverId	cam/heartbeats	сервер держателя строки	read	наблюдение; нет — поля нет
+Device(type=ipsrv)	identifier	cam/cameras	id строки	read	строки нет — поля нет; при создании — как у камеры
+Device(type=ipsrv)	short, lat, lon, azimuth, mac, login	cam/cameras	short, lat, lon, azimuth, mac, cred_username строки	both	строки нет — полей нет, запись 422 NOT_SUPPORTED, field этого поля
+Device(type=ipsrv)	hasPassword	cam/cameras	cred_secret строки	read	true — секрет задан; значение не отдаётся
+Device(type=ipsrv)	password	cam/cameras	cred_secret строки	write	как у камеры; строки нет — 422 NOT_SUPPORTED
+Device(type=ipsrv)	ip, port, vendor, model, firmware, rtspUrl	cam/cameras	source строки	both	как у камеры; адрес без source: не совпадает с адресом камеры канала, у которой videoChannel назван; смена хоста, адрес без группы — 422 NOT_SUPPORTED (V/11.3 Н1.3)
+Device(type=ipsrv)	serverId	cam/heartbeats	сервер держателя строки	read	наблюдение; нет — поля нет; при создании пропускается без записи
 Device(type=ipsrv)	fault, licenseExceeded	cam/heartbeats	device_state, phase строки	read	как у камеры; строки нет — полей нет
 Device(type=ipsrv)	version	cam/devices + cam/cameras	склейка h<строка устройства>.c<строка ipsrv>	read	часть без строки — пусто (V/11.4 Н1.1)
 Device(type=ipsrv)	disabledByRuleId, disabledByRuleAt, armed	—	—	none	как у камеры: не объявляется, в ответе полей нет
-Device(type=ipsrv)	archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, configMode, templateId, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, overlayDelayMs, overlayDurationSec	—	—	none	у ipsrv нет
+Device(type=ipsrv)	configMode	—	—	none	current — умолчание, пропускается; default, template — 422 NOT_SUPPORTED, field configMode (V/11.3 Н1.1)
+Device(type=ipsrv)	children	—	—	none	при создании пропускается без записи: состав находит держатель (V/11.3 Н1.1)
+Device(type=ipsrv)	archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, templateId, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, overlayDelayMs, overlayDurationSec	—	—	none	у ipsrv нет
 Device(type=channel)	—	cam/devices	channels	read	выводимая запись: n от 0 до channels − 1 у ipsrv хоста; правки нет: 422 NOT_SUPPORTED, field type
 Device(type=channel)	id	cam/devices	UUID device:cam/devices/<хост>#<n>	read
 Device(type=channel)	type	—	"channel"	const
@@ -95,7 +101,8 @@ Device(type=channel)	channel	cam/devices	n + 1	read	тот же счёт, что
 Device(type=channel)	enabled	—	true	const
 Device(type=channel)	online	cam/heartbeats	как у ipsrv хоста	read	в версию не входит
 Device(type=channel)	version	cam/devices	индекс хранилища строки	read	в элементе списка по B4
-Device(type=channel)	subtype, serverId, short, identifier, ip, port, mac, vendor, model, login, hasPassword, fault, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, lat, lon, azimuth, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, configMode, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, rtspUrl, disabledByRuleId, disabledByRuleAt, armed, overlayDelayMs, overlayDurationSec	—	—	none	у канала нет
+Device(type=channel)	configMode	—	—	none	current — умолчание, пропускается; default, template — 422 NOT_SUPPORTED, field configMode (V/11.3 Н1.1)
+Device(type=channel)	subtype, serverId, short, identifier, ip, port, mac, vendor, model, login, hasPassword, fault, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, lat, lon, azimuth, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, rtspUrl, disabledByRuleId, disabledByRuleAt, armed, overlayDelayMs, overlayDurationSec, password, children	—	—	none	у канала нет
 Device(type=sensor|relay|mic|spk)	—	cam/children + cam/child_settings	—	both	находка держателя и слово оператора (V/01.1 Н1.2а); только gone: false и живой хозяин; POST, DELETE — 422 NOT_SUPPORTED, field type
 Device(type=sensor|relay|mic|spk)	id	cam/children	UUID device:cam/children/<camera>-<type>-<number>	read
 Device(type=sensor|relay|mic|spk)	type	cam/children	type	read	слово контракта без перевода
@@ -108,7 +115,8 @@ Device(type=mic|spk)	norm	—	—	none	контакта нет
 Device(type=sensor|relay|mic|spk)	channel	cam/children	number	read	port io.input и output (V/01.4 Н1.4а)
 Device(type=sensor|relay|mic|spk)	online	cam/heartbeats	как у хозяина	read	в версию не входит
 Device(type=sensor|relay|mic|spk)	version	cam/children + cam/child_settings	склейка k<строка ребёнка>.s<строка настройки>	read	настройки нет — пусто (V/11.4 Н1.1)
-Device(type=sensor|relay|mic|spk)	subtype, serverId, short, identifier, ip, port, mac, vendor, model, login, hasPassword, fault, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, lat, lon, azimuth, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, configMode, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, pulse, debounce, gain, acodec, vol, rtspUrl, disabledByRuleId, disabledByRuleAt, armed, overlayDelayMs, overlayDurationSec	—	—	none	у ребёнка нет: запись 422 NOT_SUPPORTED, field этого поля
+Device(type=sensor|relay|mic|spk)	configMode	—	—	none	current — умолчание, пропускается; default, template — 422 NOT_SUPPORTED, field configMode (V/11.3 Н1.1)
+Device(type=sensor|relay|mic|spk)	subtype, serverId, short, identifier, ip, port, mac, vendor, model, login, hasPassword, fault, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, lat, lon, azimuth, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, pulse, debounce, gain, acodec, vol, rtspUrl, disabledByRuleId, disabledByRuleAt, armed, overlayDelayMs, overlayDurationSec, password, children	—	—	none	у ребёнка нет: запись 422 NOT_SUPPORTED, field этого поля
 Device(type=storage)	—	rec/volumes	строка kind edge с cam	read	карта камеры (V/02.1, V/01.5): только чтение; правка, DELETE — 422 NOT_SUPPORTED, field type
 Device(type=storage)	id	rec/volumes	UUID device:rec/volumes/<name>	read	иной, чем у Archive, Volume
 Device(type=storage)	type	—	"storage"	const
@@ -119,17 +127,23 @@ Device(type=storage)	sizeBytes	rec/volumes	quota_bytes	read
 Device(type=storage)	enabled	rec/volumes	enabled	read
 Device(type=storage)	online	rec/volumes	held_by не null	read	наблюдение, в версию не входит
 Device(type=storage)	version	rec/volumes	индекс хранилища строки	read
-Device(type=storage)	subtype, serverId, short, identifier, ip, port, mac, vendor, model, login, hasPassword, fault, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, detectorKind, sensitivity, builtin, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, configMode, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, rtspUrl, disabledByRuleId, disabledByRuleAt, armed, overlayDelayMs, overlayDurationSec	—	—	none	у хранилища камеры нет
+Device(type=storage)	configMode	—	—	none	current — умолчание, пропускается; default, template — 422 NOT_SUPPORTED, field configMode (V/11.3 Н1.1)
+Device(type=storage)	subtype, serverId, short, identifier, ip, port, mac, vendor, model, login, hasPassword, fault, licenseExceeded, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, detectorKind, sensitivity, builtin, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, templateId, firmware, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, rtspUrl, disabledByRuleId, disabledByRuleAt, armed, overlayDelayMs, overlayDurationSec, password, children	—	—	none	у хранилища камеры нет
 Device(type=eventsrc|acfa)	—	cam/cameras	основная строка type eventsrc, acfa	both	запись и соединение, детей и записи нет; событий, команд и единиц нет (V/01.1 Н1.1б)
 Device(type=eventsrc|acfa)	id	cam/cameras	UUID device:cam/cameras/<id>	read
 Device(type=eventsrc|acfa)	type	cam/cameras	type	read	слово контракта без перевода
 Device(type=eventsrc|acfa)	parentId	—	null	const
 Device(type=eventsrc|acfa)	domainId	кластер	UUID domain:<CLUSTER>	read
-Device(type=eventsrc|acfa)	identifier	cam/cameras	id	read	как у камеры
-Device(type=eventsrc|acfa)	name, enabled, ip, port, vendor, model, firmware, rtspUrl, login, hasPassword, password	cam/cameras	как у камеры	both	hasPassword — read, password — write
-Device(type=eventsrc|acfa)	serverId, online, fault, licenseExceeded	cam/heartbeats	как у ipsrv	read	наблюдение, в версию не входит
+Device(type=eventsrc|acfa)	identifier	cam/cameras	id	read	как у камеры, с проверкой при создании
+Device(type=eventsrc|acfa)	name, enabled, short, ip, port, vendor, model, firmware, rtspUrl, login	cam/cameras	как у камеры	both	как у камеры
+Device(type=eventsrc|acfa)	hasPassword	cam/cameras	cred_secret	read	true — секрет задан; значение не отдаётся
+Device(type=eventsrc|acfa)	password	cam/cameras	cred_secret	write	как у камеры
+Device(type=eventsrc|acfa)	serverId, online, fault, licenseExceeded	cam/heartbeats	как у ipsrv	read	наблюдение, в версию не входит; serverId при создании пропускается без записи
 Device(type=eventsrc|acfa)	version	cam/cameras	индекс хранилища строки	read
-Device(type=eventsrc|acfa)	subtype, short, mac, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, configMode, templateId, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, disabledByRuleId, disabledByRuleAt, armed, overlayDelayMs, overlayDurationSec	—	—	none	у строки eventsrc, acfa нет
+Device(type=eventsrc|acfa)	configMode	—	—	none	current — умолчание, пропускается; default, template — 422 NOT_SUPPORTED, field configMode (V/11.3 Н1.1)
+Device(type=eventsrc|acfa)	children	—	—	none	детей нет: 422 NOT_SUPPORTED, field children
+Device(type=eventsrc|acfa)	mac	—	—	none	при создании пропускается без записи: MAC — только из поиска (V/11.3 Н1.1)
+Device(type=eventsrc|acfa)	subtype, archiveId, recordMode, stream, extraArchives, recordDetectorIds, preRecordSec, videoChannel, channel, lat, lon, azimuth, detectorKind, sensitivity, builtin, sizeBytes, onServer, cameraId, words, mode, smtp, ssl, from, to, gateway, path, format, templateId, streamProfile, buffering, codec, res, fps, bitrate, norm, pulse, debounce, gain, acodec, vol, disabledByRuleId, disabledByRuleAt, armed, overlayDelayMs, overlayDurationSec	—	—	none	у строки eventsrc, acfa нет
 Device(type=acfa_sensor|acfa_lock|acfa_fence|export|email|sms)	—	—	—	none	таких устройств нет: создание — 422 NOT_SUPPORTED, field type; export, email, sms — вне дерева DriverPack (ADR-0102 п. 1)
 Folder	—	GET /folders	элемент	both	папка — строка консоли (P/06.8; V/11.4 Н1.7)
 Folder	id	GET /folders	UUID folder:platform/folders/<id>	read	V/11.4 Н1.6
@@ -193,7 +207,10 @@ Reference	capabilities	backend	объявление возможностей	rea
 Reference	ruleTriggers, ruleActions, ruleConditions, ruleControls	—	[]	const	«Автоматизация» не объявлена (ADR-0094 доп. (7))
 Reference	layouts, monitors	—	[]	const	раскладок клиента и видеостены нет
 Settings	—	—	—	none	вне перечня обратного вызова (V/11.1 Н1.5)
-License	—	—	—	none	лицензий consolem нет
+License	—	GET /domain/cam/books/licence	запись книги decision (V/01.7)	read	только чтение: книги нет — items пусто (V/11.3 Н1.3)
+License	kind	—	"cameras"	const	acfa своего счёта нет
+License	used	GET /domain/cam/books/licence	число licensed	read	камеры этого кластера
+License	total	GET /domain/cam/books/licence	units	read	на весь домен
 Access	—	двери домена	снимок	both	V/11.8
 Access	version	двери домена	a + SHA-256 индексов	read	V/11.8 Н1.1
 Access	roles, users, groups	двери домена	V/11.8 Н1.1	both

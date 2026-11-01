@@ -1,2 +1,3 @@
 date	sample	fix	languages
 2026-11-01	4/scenarios.tsv	11-devices: новый сценарий; камеры сценариев — с vendor, model: без адреса создания нет (V/11.3 Н1.3); 05-resume: body пересчитан; 07-profile: DELETE /volumes — NO_ROUTE, source ipint://	-
+2026-11-01	4/scenarios.tsv	разбор ревью слоя: 11-devices — поля мастера, смена хоста ipsrv, поток за камерой, parentId при несказанном channels; 07-profile — GET /licenses	-

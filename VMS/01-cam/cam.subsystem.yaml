@@ -237,6 +237,7 @@ unit:
     # heartbeat. The door does not read an address, so the same setting in `source` too is the holder's refusal.
     resolution:            {type: string, schema: {pattern: "^(?:[1-9][0-9]*x[1-9][0-9]*)?$"}}
     fps:                   {type: int, schema: {minimum: 0}}
+    # The codec is no setting: the heartbeat says it, `codec`, by its `rtpmap` name, H264 or H265 (V/01.2 Н1.4).
 # What a holder says of each DEVICE it has open, as the device said it: the kinds of event its units
 # raise, its video sources, whether it turns, its presets — what automation may point at — and the
 # device's own word for which device it is (`identity`), which tells two spellings of one box apart. A table the
@@ -250,7 +251,7 @@ tables:
       events:   {type: list}                         # the event kinds its units raise
       channels: {type: int, schema: {minimum: 0}}    # its video sources; 0 — none, no field — not said, which is not none
       # `{"<camera id>": <index>}`: the video channel of each main `camera` row of the host whose address says one (V/01.1
-      # Н1.1в). The door, the console and `backend` read no address, so the index reaches them here.
+      # Н1.1в). The door, the console and `backend` take no index from an address, so it reaches them here.
       videos:   {type: json, schema: {type: object, additionalProperties: {type: integer, minimum: 0}}}
       resolutions: {type: list}                      # `<width>x<height>` the description names; no field — not said, typed by hand
       ptz:      {type: bool, default: false}         # it turns
@@ -415,7 +416,7 @@ domain:
     sources: {from: cam/sources/, key: ref, pick: unique, to: to}
     # The licence decision (V/01.7): written by the subsystem's worker on the domain (`camdomain`, P/03.7 Н1.6) — per
     # member, the refs of its cameras that the licence covers; a camera outside is kept, not served.
-    licence: {}
+    licence: {show: [units, licensed]}   # what the book's door shows: `backend` reads it for GET /licenses (V/11.3 Н1.3)
   tokens:
     stream:
       lifetime: 86400

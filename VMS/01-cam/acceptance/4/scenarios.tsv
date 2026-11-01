@@ -15,3 +15,4 @@ scenario	step	request	expect
 02-owner	6	@manual смена хозяина: выключенный выход остаётся выключенным; enabled: true в настройке нынешней строки включает его, строка gone остаётся	manual
 03-norm	1	@manual подставной драйвер: норма open — замыкание даёт io.input value closed, размыкание value open; норма closed — размыкание даёт value closed, замыкание value open	manual
 03-norm	2	@manual выключенный sensor: события нет, inputs_off растёт; хозяин unlicensed: события нет, events_refused растёт	manual
+03-norm	3	@manual слово драйвера о контакте, которое реализация не переводит в open, closed: события нет, events_refused растёт; перевод — в описании реализации	manual

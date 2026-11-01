@@ -46,8 +46,12 @@
       "pattern": "^(?:[1-9][0-9]*x[1-9][0-9]*)$"
      },
      "codec": {
-      "description": "кодек потока по первым кадрам; только при running и type camera (V/01.2 Н1.4)",
-      "type": "string"
+      "description": "кодек потока по первым кадрам, имя rtpmap; только при running и type camera, иной кодек — поля нет (V/01.2 Н1.4)",
+      "type": "string",
+      "enum": [
+       "H264",
+       "H265"
+      ]
      },
      "device_state": {
       "type": "string",

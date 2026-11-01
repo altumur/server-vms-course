@@ -92,6 +92,7 @@ door:
       - assist/chat                  # the model's route: the console passes it to the holder (V/11.7; доп. (12) п. 7)
       - folders                      # the cluster's folders and, in a batch, their rows (P/06.8; V/11.4 Н1.7)
       - backend/operations           # the group operations (P/06.9; V/11.4 Н1.8)
+      - GET domain/cam/books/licence # the licence, read only (V/11.3 Н1.3; P/06.3 Н1.9)
       - GET domain/users             # the snapshot of rights (V/11.8 Н1.1)
       - GET domain/groups
       - GET domain/roles

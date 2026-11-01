@@ -7,3 +7,4 @@ scenario	step	request	expect
 01-size	5	@manual малый поток H.265, основной H.264, оффер только H.264, окно малое — малый отсеян, выбран основной; оффер только VP8 — основной, 400 bad offer	manual
 01-size	6	@manual раздача ref:<ref> с ?width=320&height=180 — основной поток, отказа нет	manual
 01-size	7	@manual ?width=320 без height, ?width=0&height=0, ?width=a&height=1, повтор width — 400 bad query	manual
+01-size	8	@manual малый поток держит другой сервер, приёмника нет: первый оффер — 404 not yet, проход отвергает спрос; следующий оффер того же окна — малый не кандидат, выбран основной, 201	manual
