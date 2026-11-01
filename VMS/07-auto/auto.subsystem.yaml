@@ -536,8 +536,12 @@ rights:
   unit_of: {versions: scenario, answers: scenario, rule_marks: scenario, chains: target}
   names:
     - {field: when, unit: unit, sub: sub}
-    - {field: then, unit: unit, sub: sub, action: action}
-    - {field: then, unit: cam, of: cam, action: action}
+    - {field: when, at: "target.include[]", unit: id, kind: kind, kinds: {device: {of: cam}, folder: {folder: true}, server: {server: true}}}
+    # Read from each step and each branch node; a step that names nothing — `wait`, `ask`, an `alarm` — gives no `*`.
+    - {field: then, unit: unit, sub: sub, action: action, walk: ["yes", "no"], quiet: [control, text]}
+    - {field: then, unit: cam, of: cam, action: action, walk: ["yes", "no"], quiet: [control, text]}
+    - {field: then, unit: rule, of: auto, walk: ["yes", "no"], quiet: [control, text]}
+    - {field: then, at: "target.include[]", unit: id, kind: kind, kinds: {device: {of: cam}, folder: {folder: true}, server: {server: true}}, walk: ["yes", "no"], quiet: [control, text]}
 snapshot: [name, enabled]
 # A person asks the evaluator of a scenario to run it, or to do again the failed steps of a firing (`fire`, V/07.4): the
 # mechanism of requests (P/06.4), the holder is the evaluator.
