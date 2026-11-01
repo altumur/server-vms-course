@@ -1721,6 +1721,15 @@ paths:
           - t
           - occurred
           default: t
+      - name: late
+        in: query
+        required: false
+        description: Только с by=occurred; на сколько секунд запись могла отстать от occurred (договор слияния журнала событий by).
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          default: 3600
     head:
       summary: 'HEAD: консоль (глава 6.5 Н2), код и заголовки GET без тела (у ресурса HEAD — 405, P/05 Н2)'
       parameters:
@@ -1788,6 +1797,15 @@ paths:
           - t
           - occurred
           default: t
+      - name: late
+        in: query
+        required: false
+        description: Только с by=occurred; на сколько секунд запись могла отстать от occurred (договор слияния журнала событий by).
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          default: 3600
       responses:
         '200':
           description: Консоль — как GET с ConsoleEvents; HEAD не содержит тела

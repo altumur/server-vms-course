@@ -369,6 +369,15 @@ paths:
           - t
           - occurred
           default: t
+      - name: late
+        in: query
+        required: false
+        description: Только с by=occurred; на сколько секунд запись могла отстать от occurred (договор слияния журнала событий by).
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          default: 3600
   /events/wait:
     get:
       summary: 'Ресурс: подсказка перечитать, без строк событий (ADR-0038)'
