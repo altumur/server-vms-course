@@ -65,8 +65,8 @@ door:
     operations:
       step: opstep
       service: true
-    # The doors the worker may call back with a ticket, in the closed list of the platform (P/06.3 Н1.9). Not: `/where`,
-    # writes of /session, keys, break-glass. The doors of the domain judge the person, not backend (V/11.8).
+    # The doors the worker may call back with a ticket, in the closed list of the platform (P/06.3 Н1.9). Not: `/where` of the other
+    # subsystems, writes of /session, keys, break-glass. The doors of the domain judge the person, not backend (V/11.8).
     calls:
       - cam/cameras                  # the rows of cam, their tombstones (V/01.1)
       - cam/devices                  # what a host turned out to be: channels, videos — the tree of a device (V/11.3 Н1.3)
