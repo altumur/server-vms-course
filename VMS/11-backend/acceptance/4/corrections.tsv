@@ -7,3 +7,8 @@ date	sample	fix	languages
 2026-11-01	4/scenarios.tsv: 14-discovery	ключ находки — MAC и адрес (V/01.8 Н1.2): h и id кандидата пересчитаны	-
 2026-11-01	4/scenarios.tsv	13-units, шаги 22–24: номер единицы — после строки, заведённой дверью таблиц мимо счётчика (ревью POS, Б-3)	-
 2026-11-01	4/scenarios.tsv	13-units, шаги 25–39: controller — запись acfa с родителем: цепочка, выбор шаблона model, два узла одного шаблона, снятие с вложенными (слово «Архитектора» по Б-3, С-6 ревью POS)	-
+2026-11-01	4/scenarios.tsv: 11-devices, шаги 10, 40, 41	storage — архив устройства: id от хоста, родитель ipsrv, sizeBytes нет (ADR-0107 п. 7)	-
+2026-11-01	4/scenarios.tsv: 16-record	новый сценарий: recordMode replica, when на томе backup, configMode, builtin; файл пакета и живой драйвер — @manual (ADR-0107 пп. 6, 8, доп. (1))	-
+2026-11-01	4/scenarios.tsv: 16-record	разбор ревью: элемент replica дополнительной — device, непустое не меняется; основная на backup — 422; firmware «как у шаблона» — заглушка	-
+2026-11-01	4/scenarios.tsv: 10-archives шаги 5, 23, 30–37; 11-devices шаг 39	виды хранилища: archiveKinds, network отдаётся remote, backup, incidents, edge словом, replica — не вид; поля cam у тома нет (ADR-0109 п. 3, ADR-0108)	-
+2026-11-01	4/scenarios.tsv: 10-archives шаги 31–33	Archive.kind вне перечня закреплённого контракта шаг не судит: вид — строкой rec/volumes, шаг 34 (ждёт перепина)	-

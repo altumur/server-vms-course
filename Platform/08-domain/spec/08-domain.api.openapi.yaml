@@ -2758,6 +2758,7 @@ components:
           type: object
           additionalProperties: {type: number, minimum: 0}
           description: Сводка P/08.4 Н1.3 anywhere; только шаг 6 договора права.
+        as_role: {type: string, description: Проверка действия от роли, договор права «Действие от роли».}
         as_of: {type: ['number', 'null']}
         disabled:
           type: array

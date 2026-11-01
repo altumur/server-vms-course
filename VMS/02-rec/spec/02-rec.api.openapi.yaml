@@ -398,6 +398,7 @@ components:
               fenced: {type: boolean}
         current_epoch: {type: [integer, "null"], minimum: 0}
         held_since: {type: [number, "null"]}
+        copied_to: {type: number, minimum: 0}
         now: {type: number}
     KeepVerify:
       type: object
