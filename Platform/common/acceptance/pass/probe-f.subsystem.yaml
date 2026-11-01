@@ -1,0 +1,7 @@
+# probe-f — дверь первого вида стенда передачи (ADR-0112 доп. (3) п. 1): воркера играет подставной воркер раннера.
+name: probe-f
+unit: {rows: fthings, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+slot: {prefix: f}
+door: {pass: [accounts]}
+worker: {exec: /usr/lib/probe-f/worker}

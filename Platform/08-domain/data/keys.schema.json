@@ -49,11 +49,11 @@
      }
     },
     "until": {
-     "description": "`{<kid>: <стенные секунды>}` — срок прежних ключей токенов; нет — у ключей срока нет",
+     "description": "`{<kid>: <стенные секунды>}` — срок прежних ключей токенов только для видов keep; kid есть и в until; нет — такого срока нет",
      "type": "object",
      "properties": {},
      "propertyNames": {
-      "description": "kid ∈ keys",
+      "description": "kid ∈ keys, kid ∈ until",
       "type": "string",
       "not": {
        "enum": [
@@ -63,15 +63,15 @@
      },
      "additionalProperties": {
       "$ref": "#/$defs/common.time",
-      "description": "стенные секунды — ключ ещё принимается до этого момента включительно"
+      "description": "стенные секунды — ключ ещё принимается для видов keep до этого момента включительно"
      }
     },
     "keep_until": {
-     "description": "`{<kid>: <стенные секунды>}` — срок прежних ключей токенов; нет — у ключей срока нет",
+     "description": "`{<kid>: <стенные секунды>}` — срок прежних ключей токенов только для видов keep; kid есть и в until; нет — такого срока нет",
      "type": "object",
      "properties": {},
      "propertyNames": {
-      "description": "kid ∈ keys",
+      "description": "kid ∈ keys, kid ∈ until",
       "type": "string",
       "not": {
        "enum": [
@@ -81,7 +81,7 @@
      },
      "additionalProperties": {
       "$ref": "#/$defs/common.time",
-      "description": "стенные секунды — ключ ещё принимается до этого момента включительно"
+      "description": "стенные секунды — ключ ещё принимается для видов keep до этого момента включительно"
      }
     },
     "issuing": {

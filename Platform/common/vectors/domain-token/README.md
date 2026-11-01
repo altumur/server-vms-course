@@ -18,7 +18,7 @@
 
 Без стенда: функция реализации получает вход (колонка `input`) и даёт вывод; `expect` — подмножество полей вывода. Код
 выхода 0 — вычислено (в том числе отказ словом); `@exit 2` — вход не по форме: код выхода 2, вывод не сравнивается
-(словарь «Стенда» [общего README приёмки](../../acceptance/README.md)); таких строк семь — `token-30`, `token-31`, `token-32`, `token-39`…`token-42` (ниже).
+(словарь «Стенда» [общего README приёмки](../../acceptance/README.md)); таких строк восемь — `token-30`, `token-31`, `token-32`, `token-39`…`token-42`, `token-keep-no-until` (ниже).
 Кто исполняет — каждый проверяющий токен, все строки одной функцией (`expect` — вход): сторожевая консоли кластера (`06-console`, P/06.3 Н1.3 `identity` шаг 3), получатель токена вида и дверь процесса (`03-worker`, P/03.7 Н1.5; P/03.4 Н1.7 `door_admission`), процесс `domain` у дверей людей (`08-domain`, P/08.4) и сторожевая консоли домена (`10-domain-console`, P/10 Н1.5). Агент члена (`09-agent`) функцию не вызывает: ответ местной двери токенов проверяет по `request_id` и `exp` (P/08.7 Н3) (ACC-VECTORS-CONNECT-03: строку исполняет роль, чья норма вызывает её функцию; решение «Архитектора» 2026-10-27).
 
 ## Ключи
@@ -50,7 +50,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 50 строк: 12 `ok`, 29 отказов, 9 `@exit 2` | `input` — вход команды `token` текстом JSON (`keys` — документ набора, `revoked` — `{jtis}` как прочитана или `null`, `now`, `token`, `expect?` — `{kind, cluster, audience_claim?}`, `kind` — строка или список видов) → `expect` — `{"result":"ok","payload":{…}}` (подмножество полей `payload`) или `{"result":"refused","reason":<слово>}`: `unknown_key` (прежний ключ после `until`, ключа нет в наборе, украденный ключ после нового набора), `bad_signature` (подмена `payload`), `not_a_token` (две части, `alg` не `EdDSA`, повтор ключа в `header`), `bad_claims` (нет `jti`, `jti` не по грамматике, нет `kind`, `exp` строкой), `expired`, `future`, `revoked`, `no_revocations` (`jtis` не строка, `exp` записи — слово, ведущий ноль, не конечное), `wrong_kind`, `wrong_audience` (чужой кластер, поле аудитории `audience_claim`) |
+| [`cases.tsv`](cases.tsv), 53 строки: 12 `ok`, 31 отказ, 10 `@exit 2` | `input` — вход команды `token` текстом JSON (`keys` — документ набора, `revoked` — `{jtis}` как прочитана или `null`, `now`, `token`, `expect?` — `{kind, cluster, audience_claim?}`, `kind` — строка или список видов) → `expect` — `{"result":"ok","payload":{…}}` (подмножество полей `payload`) или `{"result":"refused","reason":<слово>}`: `unknown_key` (прежний ключ после `until`, ключа нет в наборе, украденный ключ после нового набора), `bad_signature` (подмена `payload`), `not_a_token` (две части, `alg` не `EdDSA`, повтор ключа в `header`), `bad_claims` (нет `jti`, `jti` не по грамматике, нет `kind`, `exp` строкой), `expired`, `future`, `revoked`, `no_revocations` (`jtis` не строка, `exp` записи — слово, ведущий ноль, не конечное), `wrong_kind`, `wrong_audience` (чужой кластер, поле аудитории `audience_claim`) |
 
 Границы: `now = exp + 60` — `ok`, `exp + 61` — `expired`; `now = iat − 60` — `ok`, `iat − 61` — `future`; `expect` с
 `cluster: null` (`person`) — аудитория не проверяется.

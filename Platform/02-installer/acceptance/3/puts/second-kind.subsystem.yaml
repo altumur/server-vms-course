@@ -1,0 +1,10 @@
+# дверь второго вида: её routes не цель записи calls (ADR-0112 доп. (3) п. 2)
+name: secondk
+unit:
+  rows: seconds
+  id: name
+  fields:
+    name:  {type: string, required: true}
+placement: {capacity: {default: 1}}
+door: {pass: {routes: [api]}}
+worker: {exec: /usr/lib/secondk/worker}

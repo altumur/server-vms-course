@@ -1,0 +1,10 @@
+# запись первого вида и GET <s>/where (ADR-0112 доп. (3) п. 2)
+name: callc
+unit:
+  rows: callers
+  id: name
+  fields:
+    name:  {type: string, required: true}
+placement: {capacity: {default: 1}}
+door: {pass: {routes: [api], calls: [live/accounts, GET rec/where]}}
+worker: {exec: /usr/lib/callc/worker}
