@@ -218,7 +218,7 @@ paths:
                   - $ref: '#/components/schemas/TokenRefusal'
                   - $ref: '#/components/schemas/Deposed'
         '413': {$ref: '#/components/responses/TokenRefused'}
-        '503': {$ref: '#/components/responses/StandbyOrUnavailable'}
+        '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /api/login:
     description: 'Глава 8.4 (08.4-domain.norms.md) Н1.2, Н1.10, Н2; передаёт консоль домена (глава 8.0 Н1.8 pass, открытая строка
       списка дверей домена).'

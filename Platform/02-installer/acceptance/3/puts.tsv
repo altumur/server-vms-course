@@ -80,3 +80,7 @@ files_total_over	filed-none @file-fill sum1.js 8388608 @file-fill sum2.js 838860
 calls_ok	neart-door calls-client	0 1
 calls_no_target	calls-client	0 1
 calls_bad_door	neart-door calls-client-bad	2 -
+# ADR-0112 доп. (3) п. 2: запись первого вида и GET <s>/where при live и rec в каталоге; сегмент не из door.pass и второго вида — отказ каталога
+calls_first_ok	live-first rec-where calls-first	0 1
+calls_first_nosuch	live-first calls-first-nosuch	2 -
+calls_second_kind	second-kind calls-second	2 -

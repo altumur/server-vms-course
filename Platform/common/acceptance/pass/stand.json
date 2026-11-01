@@ -26,6 +26,7 @@
       "console",
       "domainagent",
       "probe-pworker",
+      "probe-fworker",
       "testsubworker"
     ],
     "m1": [
@@ -34,6 +35,7 @@
       "console",
       "domainagent",
       "probe-pworker",
+      "probe-fworker",
       "testsubworker"
     ]
   },

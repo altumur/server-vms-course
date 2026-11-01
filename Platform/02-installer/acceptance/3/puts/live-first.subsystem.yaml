@@ -1,0 +1,10 @@
+# дверь первого вида, как у live (ADR-0112 доп. (3) п. 2)
+name: live
+unit:
+  rows: streams
+  id: name
+  fields:
+    name:  {type: string, required: true}
+placement: {capacity: {default: 1}}
+door: {pass: [accounts]}
+worker: {exec: /usr/lib/live/worker}
