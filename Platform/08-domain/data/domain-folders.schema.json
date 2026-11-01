@@ -26,15 +26,6 @@
     "boolean"
    ]
   },
-  "counts": {
-   "description": "членов папки по кластерам: текст JSON, член — число (Н1.8)",
-   "type": "object",
-   "additionalProperties": {
-    "type": "integer",
-    "minimum": 0
-   },
-   "x-encoding": "json"
-  },
   "at": {
    "$ref": "#/$defs/common.time",
    "description": "стенные секунды записи",

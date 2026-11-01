@@ -144,6 +144,8 @@ journal:      domain.forwarded {cluster, path, user, status} у пересыла
 | GET | `/domain/<sub>/tables/<таблица>` (P/10 Н1.2а; `tables` — зарезервированное имя, `unit.rows` им не бывает, P/02.1) | 1 Н2 | 5 | да |
 | GET | `/domain/<sub>/<rows>` (`<rows>` — `unit.rows` манифеста каталога; манифест без `domain.ref` — пересылается, держатель отвечает 404 `not in the directory`, урок 1 Н2) | 1 Н2 | 5 | да |
 | GET, POST | `/domain/members` | 3 Н2 | 5 | да |
+| GET, POST | `/domain/batches` | P/08.3 Н1.1б | 5 | да |
+| DELETE | `/domain/batches/<имя>` | P/08.3 Н1.1б | 5 | да |
 | GET | `/domain/members/<член>` | P/10 Н1.2б | 5 | да |
 | DELETE | `/domain/members/<член>` | 3 Н2 | 5 | да |
 | POST | `/domain/members/<член>/ca` | 8 Н1.6 | 5 | да |

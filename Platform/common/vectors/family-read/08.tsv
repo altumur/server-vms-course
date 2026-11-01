@@ -3112,3 +3112,27 @@ c08_ref_claims.003	domain/ref-claims/<sub>/<sha16>	domain/ref-claims/testsub/012
 c08_ref_claims.004	domain/ref-claims/<sub>/<sha16>	domain/ref-claims/testsub/0123456789abcdef	row	reader	["domain"]	null	refused	[""]	{"domain": [""]}	root null
 c08_ref_claims.005	domain/ref-claims/<sub>/<sha16>	domain/ref-claims/testsub/0123456789abcdef	row	writer	["domain"]	{	refused	[""]	[]	not JSON
 c08_ref_claims.006	domain/ref-claims/<sub>/<sha16>	domain/ref-claims/testsub/0123456789abcdef	row	reader	["domain"]	{	refused	[""]	{"domain": [""]}	not JSON
+c08_batches.001	domain/batches/<имя>	domain/batches/site-a	row	writer	["domain"]	{"pub":"abababababababababababababababababababababababababababababababab","n":"5","used":"0","until":"1","by":"ann","at":"1"}	ok	[]	[]	base
+c08_batches.002	domain/batches/<имя>	domain/batches/site-a	row	reader	["domain"]	{"pub":"abababababababababababababababababababababababababababababababab","n":"5","used":"0","until":"1","by":"ann","at":"1"}	ok	[]	{"domain": []}	base
+c08_batches.003	domain/batches/<имя>	domain/batches/site-a	row	writer	["domain"]	null	refused	[""]	[]	root null
+c08_batches.004	domain/batches/<имя>	domain/batches/site-a	row	reader	["domain"]	null	refused	[""]	{"domain": [""]}	root null
+c08_batches.005	domain/batches/<имя>	domain/batches/site-a	row	writer	["domain"]	{	refused	[""]	[]	not JSON
+c08_batches.006	domain/batches/<имя>	domain/batches/site-a	row	reader	["domain"]	{	refused	[""]	{"domain": [""]}	not JSON
+c08_knocks.001	domain/knocks/<раздел>	domain/knocks/0123	row	writer	["domain"]	{"m1":"{}"}	ok	[]	[]	base
+c08_knocks.002	domain/knocks/<раздел>	domain/knocks/0123	row	reader	["domain"]	{"m1":"{}"}	ok	[]	{"domain": []}	base
+c08_knocks.003	domain/knocks/<раздел>	domain/knocks/0123	row	writer	["domain"]	null	refused	[""]	[]	root null
+c08_knocks.004	domain/knocks/<раздел>	domain/knocks/0123	row	reader	["domain"]	null	refused	[""]	{"domain": [""]}	root null
+c08_knocks.005	domain/knocks/<раздел>	domain/knocks/0123	row	writer	["domain"]	{	refused	[""]	[]	not JSON
+c08_knocks.006	domain/knocks/<раздел>	domain/knocks/0123	row	reader	["domain"]	{	refused	[""]	{"domain": [""]}	not JSON
+c08_folder_log.001	domain/folder-log	domain/folder-log	row	writer	["domain"]	{"1":"{}"}	ok	[]	[]	base
+c08_folder_log.002	domain/folder-log	domain/folder-log	row	reader	["domain"]	{"1":"{}"}	ok	[]	{"domain": []}	base
+c08_folder_log.003	domain/folder-log	domain/folder-log	row	writer	["domain"]	null	refused	[""]	[]	root null
+c08_folder_log.004	domain/folder-log	domain/folder-log	row	reader	["domain"]	null	refused	[""]	{"domain": [""]}	root null
+c08_folder_log.005	domain/folder-log	domain/folder-log	row	writer	["domain"]	{	refused	[""]	[]	not JSON
+c08_folder_log.006	domain/folder-log	domain/folder-log	row	reader	["domain"]	{	refused	[""]	{"domain": [""]}	not JSON
+c08_folder_counts.001	domain/folder-counts/<id>	domain/folder-counts/0123456789abcdef0123456789abcdef	row	writer	["domain"]	{"m1":"1"}	ok	[]	[]	base
+c08_folder_counts.002	domain/folder-counts/<id>	domain/folder-counts/0123456789abcdef0123456789abcdef	row	reader	["domain", "domainconsole"]	{"m1":"1"}	ok	[]	{"domain": [], "domainconsole": []}	base
+c08_folder_counts.003	domain/folder-counts/<id>	domain/folder-counts/0123456789abcdef0123456789abcdef	row	writer	["domain"]	null	refused	[""]	[]	root null
+c08_folder_counts.004	domain/folder-counts/<id>	domain/folder-counts/0123456789abcdef0123456789abcdef	row	reader	["domain", "domainconsole"]	null	refused	[""]	{"domain": [""], "domainconsole": [""]}	root null
+c08_folder_counts.005	domain/folder-counts/<id>	domain/folder-counts/0123456789abcdef0123456789abcdef	row	writer	["domain"]	{	refused	[""]	[]	not JSON
+c08_folder_counts.006	domain/folder-counts/<id>	domain/folder-counts/0123456789abcdef0123456789abcdef	row	reader	["domain", "domainconsole"]	{	refused	[""]	{"domain": [""], "domainconsole": [""]}	not JSON

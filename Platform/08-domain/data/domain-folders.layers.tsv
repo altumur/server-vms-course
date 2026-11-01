@@ -14,7 +14,6 @@ place	layer	word	value
 /$defs/common.uint53	3	x-integer	true
 /properties/at	3	x-codec	["time"]
 /properties/by	3	x-codec	["string"]
-/properties/counts	3	x-encoding	"json"
 /properties/deleted	3	x-codec	["boolean"]
 /properties/name	3	x-codec	["string"]
 /properties/name	3	x-max-bytes	255
