@@ -33,3 +33,4 @@ date	sample	fix	languages
 2026-11-02	4/scenarios.tsv: 24-streams шаги 30–32; 25-ptz шаг 13; новые 30-live-accounts, 31-server-labels	разбор ревью дельты: linecross только line; имя пресета — @manual, пульса с can у стенда нет; ADR-0112 доп. (1): № 13, 91, 102–106 in	-
 2026-11-02	4/scenarios.tsv: 25-ptz шаг 13	таблица cam/preset_labels, имя положения не трогает (ADR-0112 доп. (4))	all
 2026-11-02	4/scenarios.tsv: 25-ptz шаг 13	DELETE снимает строку всегда и первой, PUT {} строку после performed (разбор ревью fork-52c-3)	all
+2026-11-02	4/scenarios.tsv: 10-archives шаги 5, 23, 24, 31–34, 41–53; 16-record шаги 14–23; новый 32-archive-tasks	контракт 1b53d6d: виды словом, admits, recordMode тома, уменьшение тома, backup, скан и обход (ADR-0112 доп. (5))	all

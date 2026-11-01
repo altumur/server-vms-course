@@ -89,6 +89,8 @@ door:
       - rec/recordings               # the rows of rec, their tombstones (V/02.1)
       - rec/volumes
       - det/units                    # the rows of det, their tombstones (V/04.1)
+      - detjob/jobs                  # a scan of an archive and what it found (V/05.1; V/11.4 Н1.20)
+      - detedge/watches              # a watch of a device archive (V/06.1; V/11.4 Н1.20)
       - auto/scenarios               # rules and the hidden row of recording by detectors (ADR-0105, ADR-0111 п. 4; V/11.4 Н1.10)
       - auto/next_id                 # a new rule names its number itself, as a camera
       - auto/rule_marks              # mute and order of a rule: they change no row of scenarios (V/11.4 Н1.10)
@@ -163,12 +165,12 @@ door:
 # (доп. (3) п. 8), a page of its own (no frame of another page, no sandbox), with the Content-Security-Policy that is exactly the minimum
 # of P/06.5 Н1.1 `page` — the shell has no inline script, so `script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'`,
 # not stricter: inline styles and `data:` images stay allowed (доп. (8) пп. 1, 4).
-# The build: consolem @52c1113 (reproducible), its MANIFEST.json; its index.html is
-# backend.shell.html (SHA-256 f84422cc…), the rest is the set (V/11.1 Н1.4). The deployment package builds it from the
+# The build: consolem @1b53d6d (reproducible), its MANIFEST.json; its index.html is
+# backend.shell.html (SHA-256 bfcc3c30…), the rest is the set (V/11.1 Н1.4). The deployment package builds it from the
 # pinned commit and places it next to the manifest (V/09.3).
-# SHA-256 of each (the lesson's README): 87414636… app.css, 11fa35f2… app.js, c2bf568b… client.js,
-# 693b77d4… fonts/InterVariable.woff2, 2587e136… i18n-en.js, 2592b639… openapi.js
-# The set — SHA-256 9ccb31ae60ae003b0865ac1f4017d45c6cd5c4e71da6fbf8a4336ba5bb5d0028.
+# SHA-256 of each (the lesson's README): 87414636… app.css, 9d7a5f23… app.js, c2bf568b… client.js,
+# 693b77d4… fonts/InterVariable.woff2, 973ab43b… i18n-en.js, a849627b… openapi.js
+# The set — SHA-256 c58bb6292bf8a0ba0473060bcae3a1d86106cc2c3e8c9977698619397491dcfe.
 # The memory of repeats of a group `idempotencyKey` (V/11.4 Н1.4; the review of V/11, question 3): a row per group,
 # key h = SHA-256 hex of the bytes of the person (`user` of the ticket), a zero byte and the external key. Made with
 # cas "" as «started» before the snapshot; each step's outcome lands in it in the step's own batch (B9). The form of the
