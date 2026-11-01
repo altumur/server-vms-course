@@ -20,6 +20,9 @@ holder	403	wrong_role	-	01.5 Н2, Н4
 holder	403	bad_chain	-	01.5 Н2, Н4
 commands	-	camera is not licensed	-	01.4 Н3, Н4
 commands	-	command the camera, not its stream	-	01.4 Н3, Н4
+commands	-	arm and disable are for a camera	-	01.4 Н3, Н4
+commands	-	disable needs a rule and a time	-	01.4 Н3, Н4
+commands	-	camera is off by a rule	-	01.4 Н3, Н4
 commands	-	camera has no device	-	01.4 Н3, Н4
 commands	-	device is not open now	-	01.4 Н3, Н4
 commands	-	an argument is a number or a word	-	01.4 Н3, Н4

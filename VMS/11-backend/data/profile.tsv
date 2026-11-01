@@ -3,7 +3,7 @@
 # вне профиля (тест самого NO_ROUTE — в профиле); stand — только на стенде (/test/reset, /test/clock). Читает драйвер стенда; при новой
 # версии контракта таблица сверяется (V/11.2). Набор продукта — one-domain, часы — --clock real (ответ consolem, ADR-0094
 # доп. (4)). Строки in — список capabilities.operations в GET /reference (V/11.2 Н1.5): объявление и таблица сверяются,
-# расхождение — исправление таблицы, не молчаливая замена. «Автоматизация» (тег automation) не объявляется: доп. (7).
+# расхождение — исправление таблицы, не молчаливая замена. Автоматизация — V/11.2 № 48–77 (ADR-0105).
 n	method	path	profile	why
 1	GET	/me	in	переводится (V/11.2)
 2	GET	/reference	in	переводится (V/11.2)
@@ -48,40 +48,40 @@ n	method	path	profile	why
 41	POST	/operations/{operationId}/resume	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 42	POST	/operations/{operationId}/cancel	in	переводится (V/11.4 Н1.8)
 43	POST	/operations/{operationId}/retry-failed	in	переводится (V/11.4 Н1.8)
-44	POST	/operations/{operationId}/revert	out	404 NO_ROUTE: откат не объявляется (ADR-0095 §4); тест вне профиля
+44	POST	/operations/{operationId}/revert	in	переводится (V/11.4 Н1.12; ADR-0106)
 45	GET	/domains/{domainId}/discovery	in	переводится (V/11.2)
 46	POST	/domains/{domainId}/discovery	in	переводится (V/11.2)
 47	DELETE	/domains/{domainId}/discovery	in	переводится (V/11.2)
-48	GET	/rules	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-49	POST	/rules	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-50	GET	/rules/{ruleId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-51	PUT	/rules/{ruleId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-52	GET	/rules/{ruleId}/fires	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-53	POST	/rules/update	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-54	POST	/rules/reorder	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-55	POST	/rules/test	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-56	POST	/rules/{ruleId}/run	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-57	GET	/rules/{ruleId}/versions	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-58	POST	/rules/{ruleId}/fires/{fireId}/retry	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-59	GET	/schedules	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-60	POST	/schedules	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-61	GET	/schedules/{scheduleId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-62	PUT	/schedules/{scheduleId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-63	DELETE	/schedules/{scheduleId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-64	GET	/day-groups	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-65	POST	/day-groups	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-66	GET	/day-groups/{dayGroupId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-67	PUT	/day-groups/{dayGroupId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-68	DELETE	/day-groups/{dayGroupId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-69	GET	/modes	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-70	PUT	/modes	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-71	GET	/modes/current	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-72	POST	/modes/current	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-73	GET	/maintenance-windows	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-74	POST	/maintenance-windows	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-75	GET	/maintenance-windows/{windowId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-76	PUT	/maintenance-windows/{windowId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
-77	DELETE	/maintenance-windows/{windowId}	out	не объявляется (ADR-0094 доп. (7)): 404 NO_ROUTE, тест вне профиля
+48	GET	/rules	in	переводится (V/11.4 Н1.10; ADR-0105)
+49	POST	/rules	in	переводится (V/11.4 Н1.10; ADR-0105)
+50	GET	/rules/{ruleId}	in	переводится (V/11.4 Н1.10; ADR-0105)
+51	PUT	/rules/{ruleId}	in	переводится (V/11.4 Н1.10; ADR-0105)
+52	GET	/rules/{ruleId}/fires	in	переводится (V/11.4 Н1.10; ADR-0105)
+53	POST	/rules/update	in	переводится (V/11.4 Н1.10; ADR-0105)
+54	POST	/rules/reorder	in	переводится (V/11.4 Н1.10; ADR-0105)
+55	POST	/rules/test	in	переводится (V/11.4 Н1.10; ADR-0105)
+56	POST	/rules/{ruleId}/run	out	404 NO_ROUTE: просьбы нет в закрытом перечне обратного вызова (V/11.2 № 56, P/06.3 Н1.9); тест вне профиля
+57	GET	/rules/{ruleId}/versions	in	переводится (V/11.4 Н1.10; ADR-0105)
+58	POST	/rules/{ruleId}/fires/{fireId}/retry	out	404 NO_ROUTE: просьбы нет в закрытом перечне обратного вызова (V/11.2 № 56, P/06.3 Н1.9); тест вне профиля
+59	GET	/schedules	in	переводится (V/11.4 Н1.11; ADR-0105)
+60	POST	/schedules	in	переводится (V/11.4 Н1.11; ADR-0105)
+61	GET	/schedules/{scheduleId}	in	переводится (V/11.4 Н1.11; ADR-0105)
+62	PUT	/schedules/{scheduleId}	in	переводится (V/11.4 Н1.11; ADR-0105)
+63	DELETE	/schedules/{scheduleId}	in	переводится (V/11.4 Н1.11; ADR-0105)
+64	GET	/day-groups	in	переводится (V/11.4 Н1.11; ADR-0105)
+65	POST	/day-groups	in	переводится (V/11.4 Н1.11; ADR-0105)
+66	GET	/day-groups/{dayGroupId}	in	переводится (V/11.4 Н1.11; ADR-0105)
+67	PUT	/day-groups/{dayGroupId}	in	переводится (V/11.4 Н1.11; ADR-0105)
+68	DELETE	/day-groups/{dayGroupId}	in	переводится (V/11.4 Н1.11; ADR-0105)
+69	GET	/modes	in	переводится (V/11.4 Н1.11; ADR-0105)
+70	PUT	/modes	in	переводится (V/11.4 Н1.11; ADR-0105)
+71	GET	/modes/current	in	переводится (V/11.4 Н1.11; ADR-0105)
+72	POST	/modes/current	in	переводится (V/11.4 Н1.11; ADR-0105)
+73	GET	/maintenance-windows	in	переводится (V/11.4 Н1.11; ADR-0105)
+74	POST	/maintenance-windows	in	переводится (V/11.4 Н1.11; ADR-0105)
+75	GET	/maintenance-windows/{windowId}	in	переводится (V/11.4 Н1.11; ADR-0105)
+76	PUT	/maintenance-windows/{windowId}	in	переводится (V/11.4 Н1.11; ADR-0105)
+77	DELETE	/maintenance-windows/{windowId}	in	переводится (V/11.4 Н1.11; ADR-0105)
 78	GET	/access	in	переводится (V/11.8)
 79	GET	/settings	in	переводится (V/11.3 Н1.3)
 80	PATCH	/settings	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля

@@ -1,0 +1,990 @@
+{
+ "schedules": [
+  {
+   "id": "00000000-0000-4000-8000-000000000001",
+   "kind": "always",
+   "week": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+   ],
+   "overrides": [],
+   "valid": {
+    "from": "",
+    "to": ""
+   },
+   "cycle": {
+    "length": 1,
+    "start": "2026-01-01",
+    "days": [
+     []
+    ]
+   },
+   "dates": [],
+   "astro": {
+    "window": "day",
+    "offset_start_min": 0,
+    "offset_end_min": 0,
+    "lat": 0,
+    "lon": 0,
+    "utc_offset_hours": 0
+   },
+   "owner": null,
+   "builtin": true,
+   "title": "always"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000002",
+   "kind": "never",
+   "week": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+   ],
+   "overrides": [],
+   "valid": {
+    "from": "",
+    "to": ""
+   },
+   "cycle": {
+    "length": 1,
+    "start": "2026-01-01",
+    "days": [
+     []
+    ]
+   },
+   "dates": [],
+   "astro": {
+    "window": "day",
+    "offset_start_min": 0,
+    "offset_end_min": 0,
+    "lat": 0,
+    "lon": 0,
+    "utc_offset_hours": 0
+   },
+   "owner": null,
+   "builtin": true,
+   "title": "never"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000003",
+   "kind": "week",
+   "week": [
+    [
+     [
+      "09:00",
+      "18:00"
+     ]
+    ],
+    [
+     [
+      "09:00",
+      "12:00"
+     ],
+     [
+      "13:00",
+      "18:00"
+     ]
+    ],
+    [],
+    [],
+    [],
+    [],
+    []
+   ],
+   "overrides": [],
+   "valid": {
+    "from": "",
+    "to": ""
+   },
+   "cycle": {
+    "length": 1,
+    "start": "2026-01-01",
+    "days": [
+     []
+    ]
+   },
+   "dates": [],
+   "astro": {
+    "window": "day",
+    "offset_start_min": 0,
+    "offset_end_min": 0,
+    "lat": 0,
+    "lon": 0,
+    "utc_offset_hours": 0
+   },
+   "owner": null,
+   "builtin": false,
+   "title": "office"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000004",
+   "kind": "week",
+   "week": [
+    [],
+    [],
+    [
+     [
+      "22:00",
+      "06:00"
+     ]
+    ],
+    [],
+    [],
+    [],
+    []
+   ],
+   "overrides": [],
+   "valid": {
+    "from": "",
+    "to": ""
+   },
+   "cycle": {
+    "length": 1,
+    "start": "2026-01-01",
+    "days": [
+     []
+    ]
+   },
+   "dates": [],
+   "astro": {
+    "window": "day",
+    "offset_start_min": 0,
+    "offset_end_min": 0,
+    "lat": 0,
+    "lon": 0,
+    "utc_offset_hours": 0
+   },
+   "owner": null,
+   "builtin": false,
+   "title": "night-shift"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000005",
+   "kind": "week",
+   "week": [
+    [],
+    [],
+    [],
+    [
+     [
+      "00:00",
+      "24:00"
+     ]
+    ],
+    [
+     [
+      "08:00",
+      "08:00"
+     ]
+    ],
+    [],
+    []
+   ],
+   "overrides": [],
+   "valid": {
+    "from": "",
+    "to": ""
+   },
+   "cycle": {
+    "length": 1,
+    "start": "2026-01-01",
+    "days": [
+     []
+    ]
+   },
+   "dates": [],
+   "astro": {
+    "window": "day",
+    "offset_start_min": 0,
+    "offset_end_min": 0,
+    "lat": 0,
+    "lon": 0,
+    "utc_offset_hours": 0
+   },
+   "owner": null,
+   "builtin": false,
+   "title": "whole-day"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000006",
+   "kind": "week",
+   "week": [
+    [
+     [
+      "10:00",
+      "11:00"
+     ]
+    ],
+    [
+     [
+      "10:00",
+      "11:00"
+     ]
+    ],
+    [
+     [
+      "10:00",
+      "11:00"
+     ]
+    ],
+    [
+     [
+      "10:00",
+      "11:00"
+     ]
+    ],
+    [
+     [
+      "10:00",
+      "11:00"
+     ]
+    ],
+    [
+     [
+      "10:00",
+      "11:00"
+     ]
+    ],
+    [
+     [
+      "10:00",
+      "11:00"
+     ]
+    ]
+   ],
+   "overrides": [
+    {
+     "day_group": "00000000-0000-4000-8000-000000000101",
+     "mode": "none"
+    },
+    {
+     "day_group": "00000000-0000-4000-8000-000000000102",
+     "mode": "full"
+    },
+    {
+     "day_group": "00000000-0000-4000-8000-000000000103",
+     "mode": "same",
+     "dow": 1
+    },
+    {
+     "day_group": "00000000-0000-4000-8000-000000000104",
+     "mode": "custom",
+     "intervals": [
+      [
+       "23:00",
+       "01:00"
+      ]
+     ]
+    },
+    {
+     "day_group": "00000000-0000-4000-8000-000000000105",
+     "mode": "custom",
+     "intervals": [
+      [
+       "12:00",
+       "13:00"
+      ]
+     ]
+    },
+    {
+     "day_group": "00000000-0000-4000-8000-000000000106",
+     "mode": "none"
+    }
+   ],
+   "valid": {
+    "from": "",
+    "to": ""
+   },
+   "cycle": {
+    "length": 1,
+    "start": "2026-01-01",
+    "days": [
+     []
+    ]
+   },
+   "dates": [],
+   "astro": {
+    "window": "day",
+    "offset_start_min": 0,
+    "offset_end_min": 0,
+    "lat": 0,
+    "lon": 0,
+    "utc_offset_hours": 0
+   },
+   "owner": null,
+   "builtin": false,
+   "title": "holidays"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000007",
+   "kind": "never",
+   "week": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+   ],
+   "overrides": [
+    {
+     "day_group": "00000000-0000-4000-8000-000000000102",
+     "mode": "full"
+    }
+   ],
+   "valid": {
+    "from": "",
+    "to": ""
+   },
+   "cycle": {
+    "length": 1,
+    "start": "2026-01-01",
+    "days": [
+     []
+    ]
+   },
+   "dates": [],
+   "astro": {
+    "window": "day",
+    "offset_start_min": 0,
+    "offset_end_min": 0,
+    "lat": 0,
+    "lon": 0,
+    "utc_offset_hours": 0
+   },
+   "owner": null,
+   "builtin": false,
+   "title": "never-but-sanitary"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000008",
+   "kind": "dates",
+   "week": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+   ],
+   "overrides": [],
+   "valid": {
+    "from": "",
+    "to": ""
+   },
+   "cycle": {
+    "length": 1,
+    "start": "2026-01-01",
+    "days": [
+     []
+    ]
+   },
+   "dates": [
+    {
+     "date": "2026-05-09",
+     "intervals": [
+      [
+       "20:00",
+       "02:00"
+      ]
+     ]
+    }
+   ],
+   "astro": {
+    "window": "day",
+    "offset_start_min": 0,
+    "offset_end_min": 0,
+    "lat": 0,
+    "lon": 0,
+    "utc_offset_hours": 0
+   },
+   "owner": null,
+   "builtin": false,
+   "title": "days"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000009",
+   "kind": "cycle",
+   "week": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+   ],
+   "overrides": [],
+   "valid": {
+    "from": "",
+    "to": ""
+   },
+   "cycle": {
+    "length": 4,
+    "start": "2026-10-01",
+    "days": [
+     [
+      [
+       "08:00",
+       "20:00"
+      ]
+     ],
+     [
+      [
+       "20:00",
+       "08:00"
+      ]
+     ],
+     [],
+     []
+    ]
+   },
+   "dates": [],
+   "astro": {
+    "window": "day",
+    "offset_start_min": 0,
+    "offset_end_min": 0,
+    "lat": 0,
+    "lon": 0,
+    "utc_offset_hours": 0
+   },
+   "owner": null,
+   "builtin": false,
+   "title": "shifts"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000010",
+   "kind": "week",
+   "week": [
+    [
+     [
+      "22:00",
+      "02:00"
+     ]
+    ],
+    [
+     [
+      "22:00",
+      "02:00"
+     ]
+    ],
+    [
+     [
+      "22:00",
+      "02:00"
+     ]
+    ],
+    [
+     [
+      "22:00",
+      "02:00"
+     ]
+    ],
+    [
+     [
+      "22:00",
+      "02:00"
+     ]
+    ],
+    [
+     [
+      "22:00",
+      "02:00"
+     ]
+    ],
+    [
+     [
+      "22:00",
+      "02:00"
+     ]
+    ]
+   ],
+   "overrides": [],
+   "valid": {
+    "from": "2026-02-10",
+    "to": "2026-02-12"
+   },
+   "cycle": {
+    "length": 1,
+    "start": "2026-01-01",
+    "days": [
+     []
+    ]
+   },
+   "dates": [],
+   "astro": {
+    "window": "day",
+    "offset_start_min": 0,
+    "offset_end_min": 0,
+    "lat": 0,
+    "lon": 0,
+    "utc_offset_hours": 0
+   },
+   "owner": null,
+   "builtin": false,
+   "title": "limited"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000011",
+   "kind": "week",
+   "week": [
+    [
+     [
+      "02:15",
+      "02:45"
+     ]
+    ],
+    [
+     [
+      "02:15",
+      "02:45"
+     ]
+    ],
+    [
+     [
+      "02:15",
+      "02:45"
+     ]
+    ],
+    [
+     [
+      "02:15",
+      "02:45"
+     ]
+    ],
+    [
+     [
+      "02:15",
+      "02:45"
+     ]
+    ],
+    [
+     [
+      "02:15",
+      "02:45"
+     ]
+    ],
+    [
+     [
+      "02:15",
+      "02:45"
+     ]
+    ]
+   ],
+   "overrides": [],
+   "valid": {
+    "from": "",
+    "to": ""
+   },
+   "cycle": {
+    "length": 1,
+    "start": "2026-01-01",
+    "days": [
+     []
+    ]
+   },
+   "dates": [],
+   "astro": {
+    "window": "day",
+    "offset_start_min": 0,
+    "offset_end_min": 0,
+    "lat": 0,
+    "lon": 0,
+    "utc_offset_hours": 0
+   },
+   "owner": null,
+   "builtin": false,
+   "title": "dst-gap"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000012",
+   "kind": "week",
+   "week": [
+    [
+     [
+      "01:15",
+      "01:45"
+     ]
+    ],
+    [
+     [
+      "01:15",
+      "01:45"
+     ]
+    ],
+    [
+     [
+      "01:15",
+      "01:45"
+     ]
+    ],
+    [
+     [
+      "01:15",
+      "01:45"
+     ]
+    ],
+    [
+     [
+      "01:15",
+      "01:45"
+     ]
+    ],
+    [
+     [
+      "01:15",
+      "01:45"
+     ]
+    ],
+    [
+     [
+      "01:15",
+      "01:45"
+     ]
+    ]
+   ],
+   "overrides": [],
+   "valid": {
+    "from": "",
+    "to": ""
+   },
+   "cycle": {
+    "length": 1,
+    "start": "2026-01-01",
+    "days": [
+     []
+    ]
+   },
+   "dates": [],
+   "astro": {
+    "window": "day",
+    "offset_start_min": 0,
+    "offset_end_min": 0,
+    "lat": 0,
+    "lon": 0,
+    "utc_offset_hours": 0
+   },
+   "owner": null,
+   "builtin": false,
+   "title": "dst-overlap"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000013",
+   "kind": "astro",
+   "week": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+   ],
+   "overrides": [],
+   "valid": {
+    "from": "",
+    "to": ""
+   },
+   "cycle": {
+    "length": 1,
+    "start": "2026-01-01",
+    "days": [
+     []
+    ]
+   },
+   "dates": [],
+   "astro": {
+    "window": "day",
+    "offset_start_min": 0,
+    "offset_end_min": 0,
+    "lat": 55.75,
+    "lon": 37.62,
+    "utc_offset_hours": 3
+   },
+   "owner": null,
+   "builtin": false,
+   "title": "day-msk"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000014",
+   "kind": "astro",
+   "week": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+   ],
+   "overrides": [],
+   "valid": {
+    "from": "",
+    "to": ""
+   },
+   "cycle": {
+    "length": 1,
+    "start": "2026-01-01",
+    "days": [
+     []
+    ]
+   },
+   "dates": [],
+   "astro": {
+    "window": "night",
+    "offset_start_min": 0,
+    "offset_end_min": 0,
+    "lat": 55.75,
+    "lon": 37.62,
+    "utc_offset_hours": 3
+   },
+   "owner": null,
+   "builtin": false,
+   "title": "night-msk"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000015",
+   "kind": "astro",
+   "week": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+   ],
+   "overrides": [],
+   "valid": {
+    "from": "",
+    "to": ""
+   },
+   "cycle": {
+    "length": 1,
+    "start": "2026-01-01",
+    "days": [
+     []
+    ]
+   },
+   "dates": [],
+   "astro": {
+    "window": "night",
+    "offset_start_min": -30,
+    "offset_end_min": 45,
+    "lat": 55.75,
+    "lon": 37.62,
+    "utc_offset_hours": 3
+   },
+   "owner": null,
+   "builtin": false,
+   "title": "night-msk-shift"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000016",
+   "kind": "astro",
+   "week": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+   ],
+   "overrides": [],
+   "valid": {
+    "from": "",
+    "to": ""
+   },
+   "cycle": {
+    "length": 1,
+    "start": "2026-01-01",
+    "days": [
+     []
+    ]
+   },
+   "dates": [],
+   "astro": {
+    "window": "day",
+    "offset_start_min": 0,
+    "offset_end_min": 0,
+    "lat": 78.22,
+    "lon": 15.65,
+    "utc_offset_hours": 1
+   },
+   "owner": null,
+   "builtin": false,
+   "title": "day-polar"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000017",
+   "kind": "astro",
+   "week": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+   ],
+   "overrides": [],
+   "valid": {
+    "from": "",
+    "to": ""
+   },
+   "cycle": {
+    "length": 1,
+    "start": "2026-01-01",
+    "days": [
+     []
+    ]
+   },
+   "dates": [],
+   "astro": {
+    "window": "night",
+    "offset_start_min": 0,
+    "offset_end_min": 0,
+    "lat": 78.22,
+    "lon": 15.65,
+    "utc_offset_hours": 1
+   },
+   "owner": null,
+   "builtin": false,
+   "title": "night-polar"
+  }
+ ],
+ "day_groups": [
+  {
+   "id": "00000000-0000-4000-8000-000000000101",
+   "rules": [
+    {
+     "type": "range",
+     "from": "2025-12-30",
+     "to": "2026-01-02",
+     "yearly": true
+    }
+   ],
+   "title": "new-year"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000102",
+   "rules": [
+    {
+     "type": "range",
+     "from": "2026-06-10",
+     "to": "2026-06-12",
+     "yearly": false
+    }
+   ],
+   "title": "sanitary"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000103",
+   "rules": [
+    {
+     "type": "ord",
+     "nth": 2,
+     "dow": 5,
+     "month": 0
+    }
+   ],
+   "title": "second-friday"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000104",
+   "rules": [
+    {
+     "type": "ord",
+     "nth": "last",
+     "dow": 7,
+     "month": 3
+    }
+   ],
+   "title": "last-sunday-march"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000105",
+   "rules": [
+    {
+     "type": "range",
+     "from": "2026-07-01",
+     "to": "",
+     "yearly": false
+    }
+   ],
+   "title": "one-day"
+  },
+  {
+   "id": "00000000-0000-4000-8000-000000000106",
+   "rules": [
+    {
+     "type": "ord",
+     "nth": 5,
+     "dow": 1,
+     "month": 0
+    }
+   ],
+   "title": "fifth-monday"
+  }
+ ],
+ "modes": {
+  "id": "all",
+  "otherwise": "00000000-0000-4000-8000-000000000204",
+  "items": [
+   {
+    "id": "00000000-0000-4000-8000-000000000201",
+    "name": "service",
+    "schedule": null,
+    "system": "service",
+    "color": null
+   },
+   {
+    "id": "00000000-0000-4000-8000-000000000202",
+    "name": "night",
+    "schedule": "00000000-0000-4000-8000-000000000004",
+    "system": "night",
+    "color": null
+   },
+   {
+    "id": "00000000-0000-4000-8000-000000000203",
+    "name": "work",
+    "schedule": "00000000-0000-4000-8000-000000000003",
+    "system": "work",
+    "color": null
+   },
+   {
+    "id": "00000000-0000-4000-8000-000000000205",
+    "name": "gone-schedule",
+    "schedule": "00000000-0000-4000-8000-000000000999",
+    "system": "",
+    "color": null
+   },
+   {
+    "id": "00000000-0000-4000-8000-000000000206",
+    "name": "whole",
+    "schedule": "00000000-0000-4000-8000-000000000005",
+    "system": "",
+    "color": null
+   },
+   {
+    "id": "00000000-0000-4000-8000-000000000204",
+    "name": "rest",
+    "schedule": null,
+    "system": "weekend",
+    "color": null
+   }
+  ]
+ }
+}
