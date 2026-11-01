@@ -1014,11 +1014,14 @@ async function readChildren(){
   finally{childReading=false}
 }
 pc.on("refresh",d=>{if(d&&d.units)readChildren()});
-// Off as the holder takes it (V/01.4 Н1.4а): its own setting first, else a setting off on a row of the same device, type and number.
+// Off as the holder takes it (V/01.4 Н1.4а): the latest word among the rows of the same device, type and number, by `at`; no order — off.
 function childOff(c){
-  const own=CHILD_SET[c.name];
-  if(own&&typeof own.enabled==="boolean")return!own.enabled;
-  return CHILDREN.some(x=>x.device===c.device&&x.type===c.type&&x.number===c.number&&(CHILD_SET[x.name]||{}).enabled===false);
+  const said=CHILDREN.filter(x=>x.device===c.device&&x.type===c.type&&x.number===c.number).map(x=>CHILD_SET[x.name]).filter(s=>s&&typeof s.enabled==="boolean");
+  if(!said.length)return false;
+  if(said.every(s=>s.enabled===said[0].enabled))return!said[0].enabled;
+  if(said.some(s=>!Number.isFinite(s.at)))return true;
+  const at=Math.max(...said.map(s=>s.at)),last=said.filter(s=>s.at===at);
+  return last.length!==1||!last[0].enabled;
 }
 const childLabel=c=>(CHILD_SET[c.name]||{}).title||`${CHILD_WORD[c.type]||c.type} ${c.number}`;
 pc.addTreeNodes("unit",ref=>{

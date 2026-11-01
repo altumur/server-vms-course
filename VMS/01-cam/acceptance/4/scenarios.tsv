@@ -14,6 +14,7 @@ scenario	step	request	expect
 02-owner	5	@manual can камеры канала: rays, relays — списки номеров её детей, номера могут идти не с 1; output с port не из relays этой камеры — refused «no such output»	manual
 02-owner	6	@manual смена хозяина: выключенный выход остаётся выключенным; enabled: true в настройке нынешней строки включает его, строка gone остаётся	manual
 02-owner	7	@manual смена хозяина, перечень children отказал: выход выключен и на следующем проходе, где множество то же; перечень прошёл, родственная настройка найдена — выход выключен по ней	manual
+02-owner	8	@manual enabled: true в настройке строки, хозяин сменился, enabled: false в настройке новой строки, хозяин вернулся: выход выключен, позднейшее слово; at настройки равны или порчены при разных словах — выключен	manual
 03-norm	1	@manual подставной драйвер: норма open — замыкание даёт io.input value closed, размыкание value open; норма closed — размыкание даёт value closed, замыкание value open	manual
 03-norm	2	@manual выключенный sensor: события нет, inputs_off растёт; хозяин unlicensed: события нет, events_refused растёт	manual
 03-norm	3	@manual слово драйвера о контакте, которое реализация не переводит в open, closed: события нет, events_refused растёт; перевод — в описании реализации	manual
