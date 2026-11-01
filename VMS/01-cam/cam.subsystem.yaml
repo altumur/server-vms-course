@@ -583,6 +583,7 @@ domain:
     # The licence decision (V/01.7): written by the subsystem's worker on the domain (`camdomain`, P/03.7 Н1.6) — per
     # member, the refs of its cameras that the licence covers; a camera outside is kept, not served.
     licence: {show: [units, licensed]}   # what the book's door shows: `backend` reads it for GET /licenses (V/11.3 Н1.3)
+  kept: [licence-count]                  # the count of the licence's circle over the view's parts (V/01.7 Н1.2): the worker's on the domain, delivered to nobody
   tokens:
     stream:
       # Ten years (ADR-0110, addition (9)): a silent domain does not stop a recording. The form is the same, the token

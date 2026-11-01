@@ -1,0 +1,3 @@
+# Исходы нечитаемого счётчика круга лицензии: строка `domain/cam/licence-count`, схема `licence-count.schema.json` (V/01.7 Н1.2, Н3 «Счёт»); путь — от строки. Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+path	reader	outcome	priority	unit	norm
+	camdomain	счётчик не читается: не прочитан, а не ноль — новых мест круг не выдаёт, камеры ждут, занятые держатся; круг идёт заново с первого раздела, его сумма даёт used, журнал	1	строка	V/01.7 Н3 «Счёт»
