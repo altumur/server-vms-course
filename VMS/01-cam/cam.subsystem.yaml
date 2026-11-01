@@ -327,6 +327,7 @@ tables:
       address:  {type: string}                       # the device's word, passed as it is
       parent:   {type: int, schema: {minimum: 1}}    # `n` of its owner on the same row; no field — the root
       sensitivity: {type: int}                       # of a `det`, in the model's own range (V/01.1 Н1.2б)
+      zone:     {type: json}                         # of a `det`: {shape, points} in shares of the frame, the driver's `visualElement` (V/01.4 Н1.4в)
       title:    {type: string}
       enabled:  {type: bool, default: true}
   # A person turning a camera now, one row a person and a camera (V/01.4 Н1.4г). A lease, not a request: a request is one more
@@ -352,6 +353,14 @@ tables:
     fields:
       camera: {type: string, required: true}
       n:      {type: int, required: true, schema: {minimum: 0}}
+  # A preset that went through us: its number and the operator's name, empty is allowed; older than the driver's name. A table
+  # and not a field of the row: a field would bump `revision` and restart the holder's connection for every label (V/11.4 Н1.16).
+  preset_labels:
+    key: "{camera}-{n:int}"
+    fields:
+      camera: {type: string, required: true}
+      n:      {type: int, required: true, schema: {minimum: 1}}
+      label:  {type: string, default: ""}
   # What rules set on a camera (V/01.4 Н1.4д): on guard, and off for a while. The holder's, which performs `arm`, `disarm`
   # and `disable`: a holder writes no row of `cam/cameras`, and a field there would bump `revision` and restart the
   # camera for every word of a rule. A table and not `unit.state`: an edit of the camera must not take the word back.
@@ -518,8 +527,8 @@ requests:
 # Turning a camera, and saving its presets, is that camera's: its channel moves, not the device (V/01.4 Н1.4г). So is what a rule
 # sets on a camera (`arm`, `disarm`, `disable`): `rule_state` is read with `view` on it and written by no person.
 rights:
-  unit_of: {children: camera, child_settings: camera, device_units: camera, unit_next: camera, ptz_moves: camera, rule_state: camera}
-  routes: {edit: [child_settings, ptz_moves]}
+  unit_of: {children: camera, child_settings: camera, device_units: camera, unit_next: camera, ptz_moves: camera, rule_state: camera, preset_labels: camera}
+  routes: {edit: [child_settings, ptz_moves, preset_labels]}
   reach:
     group: [source, labels]
     cluster: [ref]
@@ -548,12 +557,13 @@ domain:
   # rows behind `Device`. `ref` joins a camera to its recorder on another member; `rec/recordings` carries the same value.
   view_status: [device_state, codec, units_down]
   view_tables:
-    cameras: [name, main, type, ref, source, enabled, short, lat, lon, azimuth, mac, cred_username, resolution, fps, camera, words, overlay_delay_ms, overlay_duration_sec]
+    cameras: [name, main, type, ref, source, profile, enabled, labels, alarms, short, lat, lon, azimuth, mac, cred_username, resolution, fps, camera, words, overlay_delay_ms, overlay_duration_sec]
     devices: [channels, videos, storage]
     children: [camera, type, number, gone]
     child_settings: [camera, type, number, title, enabled, norm]
-    device_units: [camera, n, type, template, address, parent, sensitivity, title, enabled]
+    device_units: [camera, n, type, template, address, parent, sensitivity, zone, title, enabled]
     unit_next: [camera, n]
+    preset_labels: [camera, n, label]
     rule_state: [camera, armed, disabled_by_rule, disabled_at, disabled_until]
   # What the domain's door lets through in a member's camera: whatever a backend on another member writes of a device
   # (ADR-0110, V/11.4 Н1.13); `type` for a new row, `ref` — the camera's name in the domain. A kept edit is applied by the
@@ -562,8 +572,9 @@ domain:
   # A row of a table is written whole, so each list is all its fields (P/02.1, link 152).
   edit_tables:
     child_settings: [camera, type, number, title, enabled, norm]
-    device_units: [camera, n, type, template, address, parent, sensitivity, title, enabled]
+    device_units: [camera, n, type, template, address, parent, sensitivity, zone, title, enabled]
     unit_next: [camera, n]
+    preset_labels: [camera, n, label]
   # Sealed to the member's key at the door (P/08.6 Н1.3а): the camera's password.
   edit_secrets:
     cameras: [cred_secret]

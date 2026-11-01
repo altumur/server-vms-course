@@ -54,30 +54,34 @@ door:
     # A stream goes to the client as it comes, without the 4 MiB limit; its ticket — reads, /changes, the model's route.
     stream: [api/stream, api/assist/turns]
     # Longer than PASS_WAIT, the longest covering key wins; api/assist/turns — ASSIST_TURN_MAX (V/11.7 Н1.5).
-    wait: {api/domains: 15, api/servers: 15, api/archives: 15, api/volumes: 15, api/objects/delete: 30, api/devices: 30, api/folders: 30, api/operations: 30, api/access: 30, api/rules: 30, api/schedules: 30, api/day-groups: 30, api/modes: 30, api/maintenance-windows: 30, api/test: 120, api/assist/turns: 7500}
-    # The console's own refusals on api are `Problem` (question 5). 502, 503, 504: the contract has no code for them, a
-    # request to the product (V/11.2 Н1.3); till then they stay outside the map and answer the console's form.
+    wait: {api/domains: 15, api/servers: 15, api/archives: 15, api/volumes: 15, api/stream-accounts: 15, api/objects/delete: 30, api/devices: 30, api/folders: 30, api/operations: 30, api/access: 30, api/rules: 30, api/schedules: 30, api/day-groups: 30, api/modes: 30, api/maintenance-windows: 30, api/test: 120, api/assist/turns: 7500}
+    # The console's own refusals on api are `Problem` (question 5).
     refusals:
       form: problem
-      codes: {'401': UNAUTHORIZED, '403': PERMISSION_DENIED, '404': NO_ROUTE, '413': VALIDATION_FAILED}
+      codes: {'401': UNAUTHORIZED, '403': PERMISSION_DENIED, '404': NO_ROUTE, '413': VALIDATION_FAILED, '502': UPSTREAM_UNAVAILABLE, '503': UPSTREAM_UNAVAILABLE, '504': UPSTREAM_UNAVAILABLE}
     # The group operations of consolem (ADR-0095, P/06.9): the console leads them, a step comes to the route `opstep`, which
     # no browser reaches (it is not under routes). Their table is a service one: a person sees only their own operation,
     # by the ticket, and no line `sub: backend` exists (V/11.4 Н1.8).
     operations:
       step: opstep
       service: true
-    # The doors the worker may call back with a ticket, in the closed list of the platform (P/06.3 Н1.9). Not: `/where`,
-    # writes of /session, keys, break-glass. The doors of the domain judge the person, not backend (V/11.8).
+    # The doors the worker may call back with a ticket, in the closed list of the platform (P/06.3 Н1.9). Not: `/where` of the other
+    # subsystems, writes of /session, keys, break-glass. The doors of the domain judge the person, not backend (V/11.8).
     calls:
       - cam/cameras                  # the rows of cam, their tombstones (V/01.1)
       - cam/devices                  # what a host turned out to be: channels, videos — the tree of a device (V/11.3 Н1.3)
       - cam/children                 # the holder's rows of a device's inputs, outputs and sound (V/01.1 Н1.2а)
+      - cam/preset_labels            # a preset that went through us and its name (V/11.4 Н1.16)
       - cam/child_settings           # the operator's words on them; a PATCH merges: a POST of the table replaces the row (V/11.4 Н1.2)
       - cam/device_units             # the units of a device: a door, a reader, a relay under a door (V/01.1 Н1.2б)
       - cam/unit_next                # the last unit number of a row: it goes up in the batch that adds one (V/11.4 Н1.2)
       - cam/next_id                  # a new camera names its number itself (V/11.4 Н1.2)
       - GET cam/rule_state           # on guard, off by a rule: the holder's words, read only (V/11.3 Н1.3; V/01.4 Н1.4д)
-      - cam/requests                 # `disable` with a past term: a camera turned off by a rule goes on (V/11.4 Н1.2)
+      - cam/requests                 # `disable` with a past term (V/11.4 Н1.2), presets (Н1.16), a unit's command (Н1.17)
+      - cam/ptz_moves                # the lease of a move: the table, a person's edit on the camera (V/11.4 Н1.16)
+      - GET live/where               # the gateway's address and token for a person's live view (V/11.4 Н1.15; ADR-0112 доп. (1))
+      - live/accounts                # the gateway's door of stream accounts: the password passes once, to no journal or row (V/11.4 Н1.18)
+      - servers/labels               # PUT, DELETE of a server's labels (V/11.4 Н1.19)
       - cam/searches                 # a search of the cluster, one row: start and stop (V/11.4 Н1.9, V/01.8)
       - cam/found                    # what it found; a created candidate's row goes
       - cam/probes                   # «which model», a question to every server (V/01.8 Н1.3)
@@ -125,6 +129,7 @@ door:
       - GET domain/cam/tables/device_units
       - GET domain/cam/tables/unit_next
       - GET domain/cam/tables/rule_state
+      - GET domain/cam/tables/preset_labels
       - GET domain/rec/tables/recordings
       - GET domain/rec/tables/volumes
       - GET domain/det/tables/units
@@ -156,12 +161,12 @@ door:
 # (доп. (3) п. 8), a page of its own (no frame of another page, no sandbox), with the Content-Security-Policy that is exactly the minimum
 # of P/06.5 Н1.1 `page` — the shell has no inline script, so `script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'`,
 # not stricter: inline styles and `data:` images stay allowed (доп. (8) пп. 1, 4).
-# The build: consolem @785824c (reproducible), its MANIFEST.json; its index.html is
-# backend.shell.html (SHA-256 caa73ca5…), the rest is the set (V/11.1 Н1.4). The deployment package builds it from the
+# The build: consolem @52c1113 (reproducible), its MANIFEST.json; its index.html is
+# backend.shell.html (SHA-256 f84422cc…), the rest is the set (V/11.1 Н1.4). The deployment package builds it from the
 # pinned commit and places it next to the manifest (V/09.3).
-# SHA-256 of each (the lesson's README): 0d9c0fc7… app.css, 621743b8… app.js, 51da0e97… client.js,
-# 693b77d4… fonts/InterVariable.woff2, bde5b214… i18n-en.js, 06f709a4… openapi.js
-# The set — SHA-256 fbcb074080610e08bd3534b5de6d35246609a6696dec813410f8c9dc07d20142.
+# SHA-256 of each (the lesson's README): 87414636… app.css, 11fa35f2… app.js, c2bf568b… client.js,
+# 693b77d4… fonts/InterVariable.woff2, 2587e136… i18n-en.js, 2592b639… openapi.js
+# The set — SHA-256 9ccb31ae60ae003b0865ac1f4017d45c6cd5c4e71da6fbf8a4336ba5bb5d0028.
 # The memory of repeats of a group `idempotencyKey` (V/11.4 Н1.4; the review of V/11, question 3): a row per group,
 # key h = SHA-256 hex of the bytes of the person (`user` of the ticket), a zero byte and the external key. Made with
 # cas "" as «started» before the snapshot; each step's outcome lands in it in the step's own batch (B9). The form of the
@@ -216,7 +221,10 @@ tables:
     fields:
       id:       {type: string, required: true, schema: {pattern: "^[0-9a-f]{32}$"}}   # the operation's id
       user:     {type: string, required: true, schema: {minLength: 1}}   # the author: only they read and undo it
+      single:   {type: bool, default: false}                             # not `POST /operations`: a single edit or a group request
       revert_of:   {type: string, schema: {pattern: "^([0-9a-f]{32})?$"}}   # this operation undoes that one
+      redo_of:     {type: string, schema: {pattern: "^([0-9a-f]{32})?$"}}   # this operation redoes that one (V/11.4 Н1.12)
+      redone_by:   {type: string, schema: {pattern: "^([0-9a-f]{32})?$"}}   # the last redo of this row: its `memory`, a double click does not redo twice
       reverted_by: {type: string, schema: {pattern: "^([0-9a-f]{32})?$"}}   # the last undo of this row; a row of `steps` closed by it says `reverted`, a failed one stays open
       overflow: {type: bool, default: false}                             # `steps` did not fit a row: not undoable
       # The steps that ran, as the text of a JSON array, as `repeats.steps`: a `json` field stops at 4000 bytes. An element:

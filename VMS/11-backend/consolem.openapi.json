@@ -67,6 +67,10 @@
       "description": "Журнал"
     },
     {
+      "name": "assist",
+      "description": "Ассистент конфигурирования: разговор и план правок. Модель и проверка плана — на бэкенде"
+    },
+    {
       "name": "stream",
       "description": "Поток событий"
     },
@@ -915,7 +919,7 @@
           "hardware"
         ],
         "summary": "Изменить устройство",
-        "description": "Сразу, без очереди: переименование в дереве. План карточки уходит операцией (POST /operations). Над объектом идёт групповая операция (POST /operations) — 409 BUSY, какой объект — в params.targetId",
+        "description": "Сразу, без очереди: переименование в дереве. План карточки уходит операцией (POST /operations). Над объектом идёт групповая операция (POST /operations) — 409 BUSY, какой объект — в params.targetId. Поле вне capabilities.writableFields вида и любое поле ipsrv с derived: true — 422 NOT_SUPPORTED с field",
         "parameters": [
           {
             "name": "deviceId",
@@ -990,8 +994,8 @@
         "tags": [
           "hardware"
         ],
-        "summary": "Удалить устройство вместе с дочерними",
-        "description": "Убирает его из папок и из записи по детекторам у камер. Над ним, дочерним или камерой, что записывает по его детектору, идёт групповая операция — 409 BUSY, какой объект — в params.targetId",
+        "summary": "Удалить устройство",
+        "description": "Вместе с дочерними; у ipsrv с записью устройства камеры остаются и теряют только родителя (parentId: null, entity.changed). Убирает его из папок и из записи по детекторам у камер. Над ним, дочерним или камерой, что записывает по его детектору, идёт групповая операция — 409 BUSY, какой объект — в params.targetId. Вид из capabilities.foundDeviceTypes и ipsrv с derived: true — 422 NOT_SUPPORTED, field: type",
         "parameters": [
           {
             "name": "deviceId",
@@ -1026,6 +1030,548 @@
             "$ref": "#/components/responses/Problem"
           },
           "428": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/devices/{deviceId}/live": {
+      "post": {
+        "operationId": "startLive",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Живое видео для настройки",
+        "description": "Поток под размер окна выбирает сервер, клиент подключается по WebRTC на whepUrl с token. Нужно для настройки детекторов и пресетов; просмотр — другая часть консоли. Камера без связи — 409 DEVICE_OFFLINE, не камера — 422 NOT_SUPPORTED",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/devices/{deviceId}/streams": {
+      "post": {
+        "operationId": "createStream",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Добавить поток камеры",
+        "description": "Ответ — камера целиком. Не камера — 422 NOT_SUPPORTED",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StreamCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Создано",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/devices/{deviceId}/streams/{streamId}": {
+      "patch": {
+        "operationId": "patchStream",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Изменить поток камеры",
+        "description": "Правка основного потока меняет Device.res, Device.fps. Ответ — камера целиком",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "streamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StreamPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteStream",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Удалить поток камеры",
+        "description": "Основной поток — 422 NOT_SUPPORTED, field: streamId. Поток, по которому идёт запись или детектор, — 422 VALIDATION_FAILED, field: stream. Ответ — камера целиком",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "streamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/devices/{deviceId}/presets/{n}": {
+      "put": {
+        "operationId": "putPreset",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Задать пресет",
+        "description": "Запоминает нынешнее положение камеры под номером n. Камера без ptz — 422 NOT_SUPPORTED, field: ptz; без связи — 409 DEVICE_OFFLINE. Ответ — камера целиком",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "n",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresetWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deletePreset",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Удалить пресет",
+        "description": "Ответ — камера целиком",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "n",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/devices/{deviceId}/ptz": {
+      "put": {
+        "operationId": "putPtz",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Начать движение или продлить его",
+        "description": "Аренда на человека и камеру: движение идёт до срока, клиент повторяет PUT раньше конца срока, пока держит кнопку. Нет продления — камера останавливается сама. Двое на одной камере — действует последняя сменившаяся аренда. Для задания пресетов; движение в работе — часть просмотра",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PtzMove"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PtzLease"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deletePtz",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Остановить движение",
+        "description": "Снимает свою аренду. Аренды нет — тоже 204",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Остановлено"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/devices/{deviceId}/operations/{operation}": {
+      "post": {
+        "operationId": "runDeviceOperation",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Выполнить команду единицы СКУД",
+        "description": "Открыть дверь и другие команды шаблона, для проверки настройки из карточки. Команды нет у единицы или устройство отказало — 409 DEVICE_REFUSED, без связи — 409 DEVICE_OFFLINE, у записи нет команд — 422 NOT_SUPPORTED",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "operation",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "done"
+                  ],
+                  "properties": {
+                    "done": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
             "$ref": "#/components/responses/Problem"
           },
           "401": {
@@ -1916,13 +2462,64 @@
       }
     },
     "/operations": {
+      "get": {
+        "operationId": "listOperations",
+        "tags": [
+          "operations"
+        ],
+        "summary": "Операции: новые сверху",
+        "description": "Групповые операции и одиночные правки оборудования (POST, PATCH, DELETE /devices, /devices/update, /objects/delete, правки архивов и томов). Хранятся последние 50 и не дольше 7 суток. Ответ правки id операции не несёт: id берётся отсюда.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "description": "Сколько последних, по умолчанию 50"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Operation"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
       "post": {
         "operationId": "createOperation",
         "tags": [
           "operations"
         ],
         "summary": "Запустить групповую операцию",
-        "description": "Шаги выполняются по одному; ход приходит в поток (operation.progress, operation.finished). Объект, над которым идёт другая операция, — 409 BUSY. Пока операция не завершена (выполнена или отменена), её объекты не меняют и другие запросы: правка, удаление, состав папок — 409 BUSY, в пакетных — failed с кодом BUSY",
+        "description": "Шаги выполняются по одному; ход приходит в поток (operation.progress, operation.finished). Объект, над которым идёт другая операция, — 409 BUSY. Пока операция не завершена (выполнена или отменена), её объекты не меняют и другие запросы: правка, удаление, состав папок — 409 BUSY, в пакетных — failed с кодом BUSY Версии — в expectedVersions: нет версии цели шага set или folderIds — 428, ничего не создано.",
         "requestBody": {
           "required": true,
           "content": {
@@ -2153,7 +2750,7 @@
           "operations"
         ],
         "summary": "Повторить неудачные шаги новой операцией",
-        "description": "Если над одним из объектов уже выполняется другая операция — 409 BUSY с params.targetId, повтор не начинается",
+        "description": "Если над одним из объектов уже выполняется другая операция — 409 BUSY с params.targetId, повтор не начинается Повторённый шаг сверяется с той версией цели, с которой он шёл: после последнего удачного шага над объектом, иначе из expectedVersions. Объект меняли — шаг снова VERSION_MISMATCH: свежая версия не подставляется, человек строит новый план.",
         "parameters": [
           {
             "name": "operationId",
@@ -2198,7 +2795,52 @@
           "operations"
         ],
         "summary": "Отменить выполненное: вернуть объекты к состоянию «до» новой операцией",
-        "description": "Сервер помнит, какими объекты были до каждого выполненного шага. Если объект с тех пор изменился, его шаг отката — fail VERSION_MISMATCH. Если над одним из объектов уже выполняется другая операция — 409 BUSY с params.targetId, откат не начинается",
+        "description": "Откат — новая операция с revertOf, шаги в обратном порядке. Шаг сверяет значения изменённых полей с теми, что записала операция: другое значение — fail VERSION_MISMATCH, чужое не затирается; правка другого поля той же записи откату не мешает. Откатить можно только последнюю: стопка — законченные операции с удачными шагами, не откачанные и не сами откаты; предыдущая становится доступной после отмены последней, новая правка становится верхней. Откатываются только настройки оборудования: удаление, папки, пароль, адрес и объём тома — шаг fail NOT_SUPPORTED, остальные идут. Откат не откатывается. Не последняя, сама откат, срок вышел, уже откачена, не закончена, без удачных шагов — 409 NOT_REVERTIBLE, причина в params.reason. Отмена с удачными шагами открывает повтор: POST /operations/{id}/redo.",
+        "parameters": [
+          {
+            "name": "operationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Принята",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Operation"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/operations/{operationId}/redo": {
+      "post": {
+        "operationId": "redoOperation",
+        "tags": [
+          "operations"
+        ],
+        "summary": "Повторить отменённое: применить значения операции снова новой операцией",
+        "description": "Как повтор в редакторе. Доступно только для последней отменённой операции: отменили B, затем A — повторяется сначала A, потом B. Новая операция с redoOf. Шаг применяет значения после правки, сверяя текущие значения полей с теми, что были до неё: другое значение — fail VERSION_MISMATCH. Шаги, которые не откатились, не повторяются; созданное устройство, которое откат снял, заново не создаётся — шаг fail NOT_SUPPORTED. Операция повтора снова верхняя в стопке отката и отменяется как обычная. Новая операция или одиночная правка, попавшая в стопку, очищает повтор целиком. Нельзя — 409 NOT_REVERTIBLE: notLast — повторить сначала другую или идёт откат, stale — повтор очищен, операция не отменялась или срок вышел.",
         "parameters": [
           {
             "name": "operationId",
@@ -4019,7 +4661,7 @@
         "tags": [
           "journal"
         ],
-        "summary": "Журнал событий, новые первыми",
+        "summary": "Журнал событий, новые первыми, с отбором",
         "responses": {
           "200": {
             "description": "Готово",
@@ -4033,6 +4675,15 @@
                       "items": {
                         "$ref": "#/components/schemas/JournalEvent"
                       }
+                    },
+                    "truncated": {
+                      "type": "boolean",
+                      "description": "Отобрано больше, чем limit"
+                    },
+                    "withheldCount": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Сколько записей скрыто правами"
                     }
                   },
                   "additionalProperties": false,
@@ -4064,8 +4715,99 @@
               ]
             },
             "description": "Категория; без неё — все"
+          },
+          {
+            "name": "deviceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Устройство"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Не раньше"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Не позже"
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Подсистема"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "description": "Сколько строк, по умолчанию 1000"
           }
         ]
+      }
+    },
+    "/assist/turns": {
+      "post": {
+        "operationId": "assistTurn",
+        "tags": [
+          "assist"
+        ],
+        "summary": "Ход разговора с ассистентом (SSE)",
+        "description": "Ответ — поток text/event-stream: на сообщение строка data: (AssistEvent), без event: и без id:. Ход длится от десятков секунд до нескольких минут. Закрыть поток — отменить ход. Оборванный поток не продолжается: клиент повторяет запрос. Поток без завершающего сообщения — обрыв, UPSTREAM_UNAVAILABLE. «Применить» — обычный POST /devices/update с items плана и новым idempotencyKey; устройство изменилось после плана — его строка в failed с VERSION_MISMATCH. Без него ничего не пишется.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistTurnRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "text/event-stream",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistEvent"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
       }
     },
     "/stream": {
@@ -4394,6 +5136,212 @@
           }
         }
       }
+    },
+    "/stream-accounts": {
+      "get": {
+        "operationId": "listStreamAccounts",
+        "tags": [
+          "access"
+        ],
+        "summary": "Учётки потоков",
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/StreamAccount"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createStreamAccount",
+        "tags": [
+          "access"
+        ],
+        "summary": "Создать учётку потока",
+        "description": "В ответе пароль: он показывается один раз. Занятое имя — 409 NAME_TAKEN",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StreamAccountCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Создано",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreamAccountSecret"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/stream-accounts/{name}": {
+      "patch": {
+        "operationId": "patchStreamAccount",
+        "tags": [
+          "access"
+        ],
+        "summary": "Включить или отключить учётку",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StreamAccountPatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreamAccount"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteStreamAccount",
+        "tags": [
+          "access"
+        ],
+        "summary": "Удалить учётку",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Удалено"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/stream-accounts/{name}/password": {
+      "post": {
+        "operationId": "resetStreamAccountPassword",
+        "tags": [
+          "access"
+        ],
+        "summary": "Новый пароль учётки",
+        "description": "Пароль показывается один раз",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StreamAccountSecret"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4671,6 +5619,13 @@
           "dns": {
             "type": "string",
             "description": "DNS"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Метки сервера: по ним размещаются камеры, детекторы, записи, правила"
           }
         },
         "additionalProperties": false,
@@ -4710,7 +5665,23 @@
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "description": "Поток записи: id из Device.streams"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
+          },
+          "state": {
+            "type": "string",
+            "description": "Только чтение: состояние записи"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Только чтение: почему запись не идёт"
           }
         },
         "additionalProperties": false,
@@ -4758,7 +5729,7 @@
           },
           "subtype": {
             "type": "string",
-            "description": "Подтип IP-сервера (ipsrv)",
+            "description": "Подтип IP-сервера (ipsrv). Сервер выводит его из описания устройства, выбор в мастере на него не влияет",
             "enum": [
               "nvr",
               "io",
@@ -4771,7 +5742,7 @@
               "string",
               "null"
             ],
-            "description": "Родитель: регистратор у канала и камеры NVR, камера у периферии и детектора",
+            "description": "Родитель: регистратор у канала и камеры, камера у периферии и детектора; у единицы СКУД — acfa, камера или ipsrv; acfa с родителем — контроллер: своего подключения нет, ip, port, vendor — 422 NOT_SUPPORTED с field",
             "format": "uuid"
           },
           "domainId": {
@@ -4780,7 +5751,7 @@
           },
           "serverId": {
             "type": "string",
-            "description": "Сервер: к которому подключены камера и регистратор (выводится из хранилища записи), сервер расчёта детектора, сервер службы",
+            "description": "Сервер: к которому подключены камера и регистратор (выводится из хранилища записи), сервер расчёта детектора, сервер службы. У eventsrc — запись: без него сервер выбирает система и предупреждает в faultText, переноса при падении нет",
             "format": "uuid"
           },
           "name": {
@@ -4795,19 +5766,22 @@
             "description": "Номер устройства в системе («16», «3/1» у канала регистратора)"
           },
           "ip": {
-            "type": "string"
+            "type": "string",
+            "description": "Адрес. У eventsrc — адрес сервера или имя кассы, у драйвера, что подключается сам, — адрес кассы; 0.0.0.0 и :: — 422 VALIDATION_FAILED, field: ip"
           },
           "port": {
             "type": "integer"
           },
           "mac": {
-            "type": "string"
+            "type": "string",
+            "description": "MAC. У камеры, источника событий и СКУД — только из поиска: при создании с candidateId, иначе принимается и не хранится; PATCH — 422 NOT_SUPPORTED. У ipsrv с записью устройства правится"
           },
           "vendor": {
             "type": "string"
           },
           "model": {
-            "type": "string"
+            "type": "string",
+            "description": "Модель. У единицы СКУД — шаблон из unitOptions: задаётся при создании, правка — 422 NOT_SUPPORTED, field: model"
           },
           "login": {
             "type": "string"
@@ -4847,7 +5821,8 @@
             "$ref": "#/components/schemas/RecordMode"
           },
           "stream": {
-            "type": "string"
+            "type": "string",
+            "description": "Поток записи камеры или поток, по которому считает детектор: id из Device.streams камеры"
           },
           "extraArchives": {
             "type": "array",
@@ -4869,11 +5844,11 @@
           },
           "videoChannel": {
             "type": "integer",
-            "description": "Видеоканал камеры регистратора"
+            "description": "Видеоканал камеры регистратора, с 1"
           },
           "channel": {
             "type": "integer",
-            "description": "Номер входа, выхода, канала"
+            "description": "Номер входа, выхода, канала: внутри своего вида, с 1. Сквозной по устройству, поэтому у камеры бывает не с 1 и с пропусками (3, 7)"
           },
           "lat": {
             "type": [
@@ -4900,30 +5875,30 @@
               "linecross",
               "abandoned",
               "disappeared",
-              "crowd"
-            ]
+              "crowd",
+              "lpr",
+              "other"
+            ],
+            "description": "Вид детектора. other — вид вне перечня, подпись — name из detectorOptions по template"
           },
           "sensitivity": {
             "type": "integer"
           },
           "builtin": {
             "type": "boolean",
-            "description": "Детектор работает на камере"
+            "description": "Детектор работает на камере. Заводит оператор, потока на сервер не требует"
           },
           "sizeBytes": {
             "type": "integer",
-            "description": "Объём встроенного хранилища"
-          },
-          "onServer": {
-            "type": "boolean",
-            "description": "Динамик сервера — служба сервера, а не устройство"
+            "description": "Объём встроенного хранилища. Устройство может его не сообщать: тогда поля нет"
           },
           "cameraId": {
             "type": [
               "string",
               "null"
             ],
-            "format": "uuid"
+            "format": "uuid",
+            "description": "eventsrc: камера титров. Здесь только настройка: титры рисует клиент просмотра поверх живого видео и архива"
           },
           "words": {
             "type": "array",
@@ -4956,64 +5931,36 @@
             "type": "string"
           },
           "path": {
-            "type": "string"
+            "type": "string",
+            "description": "Папка агента экспорта; адрес единицы СКУД в системе СКУД"
           },
           "format": {
             "type": "string"
           },
-          "configMode": {
-            "type": "string",
-            "enum": [
-              "current",
-              "default",
-              "template"
-            ]
-          },
-          "templateId": {
-            "type": "string"
-          },
           "firmware": {
-            "type": "string"
-          },
-          "streamProfile": {
-            "type": "string"
-          },
-          "buffering": {
-            "type": "string"
+            "type": "string",
+            "description": "Версия драйвера. Обновления прошивки нет"
           },
           "codec": {
-            "type": "string"
+            "type": "string",
+            "description": "Только чтение: что отдаёт устройство"
           },
           "res": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[0-9]+x[0-9]+$",
+            "description": "Разрешение основного потока: ширина x высота, латинская x. Значение вне resOptions — 422 VALIDATION_FAILED"
           },
           "fps": {
-            "type": "integer"
-          },
-          "bitrate": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Частота кадров основного потока"
           },
           "norm": {
             "type": "string",
             "enum": [
               "open",
               "closed"
-            ]
-          },
-          "pulse": {
-            "type": "integer"
-          },
-          "debounce": {
-            "type": "integer"
-          },
-          "gain": {
-            "type": "integer"
-          },
-          "acodec": {
-            "type": "string"
-          },
-          "vol": {
-            "type": "integer"
+            ],
+            "description": "Нормальное состояние контакта: начало и конец тревоги считаются сравнением сигнала с ним"
           },
           "version": {
             "type": "string",
@@ -5022,7 +5969,7 @@
           },
           "rtspUrl": {
             "type": "string",
-            "description": "Адрес видеопотока, если он задан вручную"
+            "description": "Адрес камеры, чтение и запись. Создание камеры без rtspUrl и без vendor, model — 422 VALIDATION_FAILED, field: rtspUrl. Камере под регистратором адрес не нужен: она идёт через него"
           },
           "disabledByRuleId": {
             "type": [
@@ -5053,6 +6000,100 @@
             "type": "integer",
             "minimum": 0,
             "description": "Титры источника событий: сколько держать на экране, с"
+          },
+          "derived": {
+            "type": "boolean",
+            "description": "ipsrv выведен из устройства, своей записи нет: PATCH, DELETE и folderIds — 422 NOT_SUPPORTED. Нет поля — запись есть"
+          },
+          "streams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeviceStream"
+            },
+            "description": "Потоки камеры. Правятся операциями /devices/{id}/streams"
+          },
+          "resOptions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Только чтение: допустимые разрешения основного потока. Нет поля — ввод руками: до первого ответа устройства и у моделей без описания список неизвестен"
+          },
+          "detectorOptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DetectorOption"
+            },
+            "description": "Только чтение: встроенные детекторы камеры. Нет поля — встроенный детектор не предлагать"
+          },
+          "template": {
+            "type": "string",
+            "description": "det с builtin: true: шаблон из detectorOptions камеры. Задаётся при создании"
+          },
+          "zone": {
+            "$ref": "#/components/schemas/DetectorZone",
+            "description": "Зона детектора, у встроенного и серверного. Нет поля — вся картинка"
+          },
+          "params": {
+            "type": "string",
+            "description": "Настройки серверного детектора строкой"
+          },
+          "ptz": {
+            "type": "boolean",
+            "description": "Только чтение: камера поворачивается. PTZ — свойство камеры, своей записи нет"
+          },
+          "presets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DevicePreset"
+            },
+            "description": "Только чтение: пресеты камеры. Правятся операциями /devices/{id}/presets/{n}"
+          },
+          "faultText": {
+            "type": "string",
+            "description": "Только чтение: почему устройство не работает, словами сервера"
+          },
+          "unitOptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UnitOption"
+            },
+            "description": "Только чтение, у acfa и устройств, под которыми бывают единицы: какие единицы можно завести"
+          },
+          "operations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Только чтение, у единицы: команды. POST /devices/{id}/operations/{operation}, действие unit в правиле"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true,
+            "description": "Настройки единицы СКУД: ключи — из unitOptions"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
+          },
+          "alarmKinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Что считать тревогой у камеры и детектора: варианты из reference.eventKinds. Это о классе события, а не о жизни тревоги"
+          },
+          "recordState": {
+            "type": "string",
+            "description": "Только чтение: состояние основной записи, слово сервера"
+          },
+          "recordReason": {
+            "type": "string",
+            "description": "Только чтение: почему запись не идёт, словами сервера"
           }
         },
         "additionalProperties": false,
@@ -5091,7 +6132,7 @@
           },
           "deviceIds": {
             "type": "array",
-            "description": "Устройства папки по порядку; одно устройство может быть в нескольких папках",
+            "description": "Устройства папки по порядку; одно устройство может быть в нескольких папках Порядок — внутри папки, новое устройство встаёт в конец. Устройство, удалённое сервером само (например, по сроку), может оставаться здесь до уборки: клиент пропускает id, которого нет в списке устройств.",
             "items": {
               "type": "string",
               "format": "uuid"
@@ -5339,10 +6380,20 @@
             "type": "object",
             "properties": {
               "port": {
-                "type": "string"
+                "type": "string",
+                "description": "Необязательно. Номер берётся из записи (Device.channel); если поле есть, значит то же самое, расхождение — 422 RULE_INVALID"
               },
               "value": {
-                "type": "string"
+                "type": "string",
+                "description": "Для io.input: active — начало тревоги, normal — конец. Считается сравнением сигнала с Device.norm, а не словом контакта"
+              },
+              "template": {
+                "type": "string",
+                "description": "Для det/other: шаблон из detectorOptions"
+              },
+              "word": {
+                "type": "string",
+                "description": "Для text: сообщение из Device.words источника; для unit: слово единицы"
               }
             },
             "additionalProperties": false,
@@ -5448,7 +6499,8 @@
           },
           "port": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Необязательно. Номер выхода берётся из записи (Device.channel); если поле есть, значит то же самое, расхождение — 422 RULE_INVALID"
           },
           "state": {
             "type": "string"
@@ -5470,6 +6522,10 @@
           "ruleId": {
             "type": "string",
             "format": "uuid"
+          },
+          "operation": {
+            "type": "string",
+            "description": "unit: команда из Device.operations"
           }
         },
         "additionalProperties": false,
@@ -5654,6 +6710,13 @@
             "type": "string",
             "pattern": "^[!#-~]+$",
             "description": "Версия записи — непрозрачная метка: клиент сравнивает её только на равенство и возвращает в If-Match, не разбирая и не упорядочивая. Уходит в ETag (в кавычках). Сервер обязан: менять её при любом изменении того, что видно в записи (в том числе любой из частей, из которых запись собрана); никогда не возвращать прежнее значение той же записи; не менять её без изменений (чтение, связь, нагрузка). Символы — печатные ASCII без пробела и кавычек"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
           }
         },
         "additionalProperties": false,
@@ -6783,6 +7846,29 @@
           },
           "text": {
             "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Когда случилось; at — когда записано"
+          },
+          "deviceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "source": {
+            "type": "string",
+            "description": "Подсистема"
+          },
+          "kind": {
+            "type": "string",
+            "description": "Вид события, код"
+          },
+          "fields": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true,
+            "description": "Подробности события"
           }
         },
         "additionalProperties": false,
@@ -6816,7 +7902,8 @@
                 "vendor",
                 "models"
               ]
-            }
+            },
+            "description": "Производители и модели: сервер наполняет из описаний драйверов, список бывает пуст и бывает на несколько тысяч строк. Форма предлагает из него и принимает ввод руками"
           },
           "deviceKinds": {
             "type": "array",
@@ -6976,6 +8063,13 @@
                       "options"
                     ]
                   }
+                },
+                "deviceTypes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Какие устройства бывают целью. Нет поля — как в ruleActions: камера или вход"
                 }
               },
               "additionalProperties": false,
@@ -7315,6 +8409,20 @@
               ]
             },
             "description": "Мониторы видеостены — для «Показать на видеостене»"
+          },
+          "serverLabels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Известные метки серверов: то, что можно выбрать"
+          },
+          "eventKinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Классы событий: варианты Device.alarmKinds"
           }
         },
         "additionalProperties": false,
@@ -7371,13 +8479,15 @@
         "enum": [
           "serverRoles",
           "serverNetwork",
-          "archiveEncryption"
+          "archiveEncryption",
+          "assist"
         ],
         "description": "Необязательная возможность системы: без неё поле есть в записи, но менять его нельзя (422 NOT_SUPPORTED)",
         "x-enum-descriptions": {
           "serverRoles": "Роль сервера (role в ServerPatch): основной, узел, резервный",
           "serverNetwork": "Сетевые настройки сервера (netmask, gateway, dns в ServerPatch)",
-          "archiveEncryption": "Шифрование хранилища (encrypted: true в ArchiveCreate и ArchivePatch)"
+          "archiveEncryption": "Шифрование хранилища (encrypted: true в ArchiveCreate и ArchivePatch)",
+          "assist": "Ассистент конфигурирования (POST /assist/turns): без него режим ассистента в интерфейсе скрыт"
         }
       },
       "Capabilities": {
@@ -7402,7 +8512,7 @@
             "items": {
               "$ref": "#/components/schemas/DeviceType"
             },
-            "description": "Виды устройств, которые есть в системе. Создать устройство другого вида — 422 NOT_SUPPORTED (в групповых — по строке)"
+            "description": "Виды устройств, которые есть в системе и в данных. Создать устройство другого вида — 422 NOT_SUPPORTED (в групповых — по строке)"
           },
           "features": {
             "type": "array",
@@ -7410,6 +8520,31 @@
               "$ref": "#/components/schemas/Feature"
             },
             "description": "Необязательные возможности, которые есть. Незнакомый код клиент пропускает"
+          },
+          "foundDeviceTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeviceType"
+            },
+            "description": "Виды, которые есть в данных, но не создаются оператором: их находит сервер по описанию устройства. Записи появляются и пропадают сами (entity.created, entity.deleted). POST /devices, шаг create операции и DELETE — 422 NOT_SUPPORTED, field: type"
+          },
+          "unitTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeviceType"
+            },
+            "description": "Единицы СКУД: заводит оператор под родителем из СКУД, в папки не входят. Вид из foundDeviceTypes в этом списке создаётся только так, иначе 422 NOT_SUPPORTED"
+          },
+          "writableFields": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "Вид устройства → поля DevicePatch, которые у него правятся. Вид не назван — все. Остальное — 422 NOT_SUPPORTED с field, у вида с пустым списком — field: type. Интерфейс показывает такие поля только для чтения"
           }
         }
       },
@@ -7447,7 +8582,8 @@
           },
           "at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "Время события на сервере, а не отправки сообщения. У изменений записей — когда изменение принято хранилищем. При досылке после переподключения — прежнее"
           },
           "kind": {
             "type": "string",
@@ -7469,7 +8605,8 @@
               "dayGroup",
               "modes",
               "objectMode",
-              "maintenanceWindow"
+              "maintenanceWindow",
+              "streamAccounts"
             ]
           },
           "entityId": {
@@ -7600,10 +8737,13 @@
         "properties": {
           "type": {
             "type": "string",
-            "description": "device.signal — пропала или вернулась связь (online), device.fault — причина без связи",
+            "description": "device.signal — пропала или вернулась связь (online), device.fault — причина без связи, device.found — устройство назвало новую запись под deviceId (found), device.lost — запись deviceId пропала, device.parent — у записи сменился родитель (parentId)",
             "enum": [
               "device.signal",
-              "device.fault"
+              "device.fault",
+              "device.found",
+              "device.lost",
+              "device.parent"
             ]
           },
           "deviceId": {
@@ -7623,6 +8763,34 @@
               "conn",
               "drv"
             ]
+          },
+          "found": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "type",
+              "name"
+            ],
+            "properties": {
+              "type": {
+                "$ref": "#/components/schemas/DeviceType"
+              },
+              "name": {
+                "type": "string"
+              },
+              "channel": {
+                "type": "integer"
+              }
+            },
+            "description": "device.found: что нашёл сервер"
+          },
+          "parentId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "device.parent: новый родитель"
           }
         },
         "additionalProperties": false,
@@ -7637,6 +8805,11 @@
         "properties": {
           "applied": {
             "type": "boolean"
+          },
+          "deviceId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "device.found: созданная запись"
           }
         },
         "additionalProperties": false,
@@ -7648,16 +8821,6 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "acodec": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "archiveId": {
             "type": [
               "string",
@@ -7670,26 +8833,6 @@
             "type": [
               "number",
               "null"
-            ]
-          },
-          "bitrate": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "buffering": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
             ]
           },
           "builtin": {
@@ -7724,7 +8867,8 @@
           "codec": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "description": "Только чтение: 422 NOT_SUPPORTED"
               },
               {
                 "type": "null"
@@ -7739,17 +8883,8 @@
                   "current",
                   "default",
                   "template"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "debounce": {
-            "anyOf": [
-              {
-                "type": "integer"
+                ],
+                "description": "Только при создании: 422 NOT_SUPPORTED"
               },
               {
                 "type": "null"
@@ -7765,8 +8900,11 @@
                   "linecross",
                   "abandoned",
                   "disappeared",
-                  "crowd"
-                ]
+                  "crowd",
+                  "lpr",
+                  "other"
+                ],
+                "description": "Вид детектора. other — вид вне перечня, подпись — name из detectorOptions по template"
               },
               {
                 "type": "null"
@@ -7831,16 +8969,6 @@
             "anyOf": [
               {
                 "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "gain": {
-            "anyOf": [
-              {
-                "type": "integer"
               },
               {
                 "type": "null"
@@ -7959,17 +9087,6 @@
               }
             ]
           },
-          "onServer": {
-            "anyOf": [
-              {
-                "type": "boolean",
-                "description": "Динамик сервера — служба сервера, а не устройство"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "password": {
             "anyOf": [
               {
@@ -8011,16 +9128,6 @@
               }
             ]
           },
-          "pulse": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "recordDetectorIds": {
             "anyOf": [
               {
@@ -8049,7 +9156,9 @@
           "res": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^[0-9]+x[0-9]+$",
+                "description": "Разрешение: ширина x высота, латинская x. Настройка, сервер передаёт её драйверу"
               },
               {
                 "type": "null"
@@ -8060,7 +9169,7 @@
             "anyOf": [
               {
                 "type": "string",
-                "description": "Адрес видеопотока, если он задан вручную"
+                "description": "Адрес камеры, чтение и запись. Создание камеры без rtspUrl и без vendor, model — 422 VALIDATION_FAILED, field: rtspUrl. Камере под регистратором адрес не нужен: она идёт через него"
               },
               {
                 "type": "null"
@@ -8130,16 +9239,6 @@
               }
             ]
           },
-          "streamProfile": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "subtype": {
             "anyOf": [
               {
@@ -8160,7 +9259,8 @@
           "templateId": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "description": "Только при создании: 422 NOT_SUPPORTED"
               },
               {
                 "type": "null"
@@ -8192,16 +9292,6 @@
               {
                 "type": "integer",
                 "description": "Видеоканал камеры регистратора"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "vol": {
-            "anyOf": [
-              {
-                "type": "integer"
               },
               {
                 "type": "null"
@@ -8240,6 +9330,67 @@
                 "type": "integer",
                 "minimum": 0,
                 "description": "Титры источника событий: сколько держать на экране, с"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "zone": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DetectorZone"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "params": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "properties": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": true,
+                "description": "Настройки единицы СКУД: ключи — из unitOptions"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "labels": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "alarmKinds": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Что считать тревогой у камеры и детектора: варианты из reference.eventKinds. Это о классе события, а не о жизни тревоги"
               },
               {
                 "type": "null"
@@ -8287,7 +9438,7 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "Папки устройства целиком, по порядку"
+            "description": "Папки устройства целиком, набором: порядка папок у устройства нет"
           },
           "create": {
             "$ref": "#/components/schemas/DeviceCreate"
@@ -8374,6 +9525,12 @@
             "type": "string",
             "format": "uuid",
             "description": "Созданное шагом create устройство"
+          },
+          "params": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true,
+            "description": "Подробности отказа шага: как params в Problem"
           }
         }
       },
@@ -8392,7 +9549,11 @@
           "ok",
           "failed",
           "cancelled",
-          "items"
+          "items",
+          "single",
+          "revertible",
+          "redoOf",
+          "redoable"
         ],
         "properties": {
           "id": {
@@ -8454,9 +9615,29 @@
             "items": {
               "$ref": "#/components/schemas/OperationItem"
             }
+          },
+          "single": {
+            "type": "boolean",
+            "description": "Одиночная правка: шаг один, операция уже закончена, откатывается так же, как групповая"
+          },
+          "revertible": {
+            "type": "boolean",
+            "description": "POST /operations/{id}/revert сейчас возможен: это последняя операция стопки отката"
+          },
+          "redoOf": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Эта операция повторяет отменённую операцию …"
+          },
+          "redoable": {
+            "type": "boolean",
+            "description": "POST /operations/{id}/redo сейчас возможен: это последняя отменённая операция"
           }
         },
-        "description": "Групповая операция и её ход. Частичный успех — норма: каждый шаг завершается сам по себе"
+        "description": "Групповая операция или одиночная правка настроек оборудования и её ход. Частичный успех — норма: каждый шаг завершается сам по себе"
       },
       "ProblemCode": {
         "type": "string",
@@ -8490,7 +9671,10 @@
           "NOT_SUPPORTED",
           "RULE_INVALID",
           "BUILTIN",
-          "NOT_RUNNABLE"
+          "NOT_RUNNABLE",
+          "UPSTREAM_UNAVAILABLE",
+          "NOT_REVERTIBLE",
+          "DEVICE_REFUSED"
         ],
         "description": "Машинный код ошибки: интерфейс показывает свой текст по коду",
         "x-enum-descriptions": {
@@ -8498,7 +9682,7 @@
           "NOT_FOUND": "Записи нет или она не видна текущему администратору (404)",
           "NO_ROUTE": "Такой операции нет в контракте или система её не поддерживает — её нет в capabilities.operations (404)",
           "PERMISSION_DENIED": "Нет права на операцию (403). Встроенный сервер права администратора не проверяет — см. api/BACKEND.md",
-          "PRECONDITION_REQUIRED": "Изменение без заголовка If-Match (428)",
+          "PRECONDITION_REQUIRED": "Изменение без версии (428): нет заголовка If-Match, у POST /operations — нет версии цели шага set или folderIds в expectedVersions; ничего не создано. Шагу create версия не нужна",
           "VERSION_MISMATCH": "Запись изменилась с момента чтения: в теле — актуальная (412)",
           "VALIDATION_FAILED": "Поле не прошло проверку: какое — в field (422)",
           "NAME_REQUIRED": "Не указано имя (422)",
@@ -8508,9 +9692,9 @@
           "IP_RANGE_TOO_LARGE": "Диапазон больше лимита поиска (422)",
           "LAST_DOMAIN": "Последний домен удалить нельзя (409)",
           "SERVER_OFFLINE": "Сервер без связи: изменение не применено (409, или по объекту в групповой операции)",
-          "DEVICE_OFFLINE": "Устройство без связи (по объекту в групповой операции): учётные данные и видео не применить. Встроенный сервер так не отказывает — см. api/BACKEND.md",
+          "DEVICE_OFFLINE": "Устройство без связи: команда не дошла (409, или по объекту в групповой операции). Встроенный сервер так отказывает живому видео и PTZ; учётные данные и видео к устройству без связи применяет — см. api/BACKEND.md",
           "LICENSE_EXCEEDED": "Лицензия превышена (по объекту в групповой операции)",
-          "BUSY": "Над объектом выполняется другая операция: пока групповая операция не завершена, её объекты не меняют ни новая операция, ни правка, ни удаление (409, какой объект — в params.targetId; в пакетных — по объекту)",
+          "BUSY": "Над объектом выполняется другая операция: пока групповая операция не завершена, её объекты не меняют ни новая операция, ни правка, ни удаление (409, какой объект — в params.targetId; в пакетных — по объекту). Ещё: включение детектора, несовместимого с уже включённым на том же канале, — params.reason: incompatible, params.with — id того детектора",
           "LOGIN_TAKEN": "Логин уже занят (409)",
           "PASSWORD_POLICY": "Пароль не соответствует политике (422). Встроенный сервер пароли не проверяет — см. api/BACKEND.md",
           "SELF_LOCKOUT": "Изменение оставит систему без администратора или лишит вас входа (409)",
@@ -8523,7 +9707,10 @@
           "NOT_SUPPORTED": "Система этого не поддерживает: вид устройства или настройка вне GET /reference → capabilities (422; в групповых — по объекту)",
           "RULE_INVALID": "Включённое правило с ошибкой не сохраняется: что не так — в params.issue (422)",
           "BUILTIN": "Встроенное («Всегда», «Никогда», системный режим) не правится и не удаляется (409)",
-          "NOT_RUNNABLE": "Правило сейчас нельзя запустить: выключено, с ошибкой или только по событию — в params.reason (409)"
+          "NOT_RUNNABLE": "Правило сейчас нельзя запустить: выключено, с ошибкой или только по событию — в params.reason (409)",
+          "UPSTREAM_UNAVAILABLE": "Бэкенд недоступен, не ответил вовремя или занят (502, 503, 504; при 503 — Retry-After). Запись могла пройти: повтор — с тем же idempotencyKey или после перечитывания. У шага операции — шаг не выполнен из-за сбоя сервера, в объекте ничего не записано, retry-failed повторяет его",
+          "NOT_REVERTIBLE": "Операцию нельзя откатить или повторить (409), причина в params.reason: notLast — не последняя в стопке, isRevert — это сам откат, expired — срок вышел, reverted — уже откачена, running — не закончена, empty — без удачных шагов, stale — повтор очищен или срок вышел",
+          "DEVICE_REFUSED": "Устройство отказало в команде (409), причина — в params.reason: noOperation — такой команды у единицы нет, refused — устройство ответило отказом"
         }
       },
       "ServerPatch": {
@@ -8575,6 +9762,20 @@
             "anyOf": [
               {
                 "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "labels": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Метки сервера: по ним размещаются камеры, детекторы, записи, правила"
               },
               {
                 "type": "null"
@@ -9286,9 +10487,6 @@
           "name"
         ],
         "properties": {
-          "acodec": {
-            "type": "string"
-          },
           "archiveId": {
             "type": [
               "string",
@@ -9302,12 +10500,6 @@
               "number",
               "null"
             ]
-          },
-          "bitrate": {
-            "type": "integer"
-          },
-          "buffering": {
-            "type": "string"
           },
           "builtin": {
             "type": "boolean",
@@ -9340,10 +10532,8 @@
               "current",
               "default",
               "template"
-            ]
-          },
-          "debounce": {
-            "type": "integer"
+            ],
+            "description": "Разовый выбор при добавлении, в записи не хранится. current — на камере ничего не меняется; default — умолчания модели уходят на камеру, камера без модели — 422 VALIDATION_FAILED, field: configMode; template — копия с камеры templateId той же модели"
           },
           "detectorKind": {
             "type": "string",
@@ -9352,8 +10542,11 @@
               "linecross",
               "abandoned",
               "disappeared",
-              "crowd"
-            ]
+              "crowd",
+              "lpr",
+              "other"
+            ],
+            "description": "Вид детектора. other — вид вне перечня, подпись — name из detectorOptions по template"
           },
           "enabled": {
             "type": "boolean"
@@ -9366,7 +10559,8 @@
             }
           },
           "firmware": {
-            "type": "string"
+            "type": "string",
+            "description": "Версия драйвера. Обновления прошивки нет"
           },
           "format": {
             "type": "string"
@@ -9376,9 +10570,6 @@
           },
           "from": {
             "type": "string"
-          },
-          "gain": {
-            "type": "integer"
           },
           "gateway": {
             "type": "string"
@@ -9429,24 +10620,18 @@
               "closed"
             ]
           },
-          "onServer": {
-            "type": "boolean",
-            "description": "Динамик сервера — служба сервера, а не устройство"
-          },
           "password": {
             "type": "string",
             "description": "Пароль устройства; в ответах его нет"
           },
           "path": {
-            "type": "string"
+            "type": "string",
+            "description": "Папка агента экспорта; адрес единицы СКУД в системе СКУД"
           },
           "port": {
             "type": "integer"
           },
           "preRecordSec": {
-            "type": "integer"
-          },
-          "pulse": {
             "type": "integer"
           },
           "recordDetectorIds": {
@@ -9465,7 +10650,7 @@
           },
           "rtspUrl": {
             "type": "string",
-            "description": "Адрес видеопотока, если он задан вручную"
+            "description": "Адрес камеры, чтение и запись. Создание камеры без rtspUrl и без vendor, model — 422 VALIDATION_FAILED, field: rtspUrl. Камере под регистратором адрес не нужен: она идёт через него"
           },
           "sensitivity": {
             "type": "integer"
@@ -9492,9 +10677,6 @@
           "stream": {
             "type": "string"
           },
-          "streamProfile": {
-            "type": "string"
-          },
           "subtype": {
             "type": "string",
             "description": "Подтип IP-сервера (ipsrv)",
@@ -9506,7 +10688,9 @@
             ]
           },
           "templateId": {
-            "type": "string"
+            "type": "string",
+            "format": "uuid",
+            "description": "configMode: template. Копируются разрешение и частота кадров потоков, сами потоки, firmware. Адрес, логин, пароль, имя, записи, папки, детекторы, norm — нет. Другая модель или нет камеры — 422 VALIDATION_FAILED, field: templateId"
           },
           "to": {
             "type": "string"
@@ -9520,9 +10704,6 @@
           "videoChannel": {
             "type": "integer",
             "description": "Видеоканал камеры регистратора"
-          },
-          "vol": {
-            "type": "integer"
           },
           "words": {
             "type": "array",
@@ -9540,6 +10721,38 @@
             "type": "integer",
             "minimum": 0,
             "description": "Титры источника событий: сколько держать на экране, с"
+          },
+          "template": {
+            "type": "string",
+            "description": "det с builtin: true: шаблон из detectorOptions камеры. Задаётся при создании"
+          },
+          "zone": {
+            "$ref": "#/components/schemas/DetectorZone",
+            "description": "Зона детектора, у встроенного и серверного. Нет поля — вся картинка"
+          },
+          "params": {
+            "type": "string",
+            "description": "Настройки серверного детектора строкой"
+          },
+          "properties": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true,
+            "description": "Настройки единицы СКУД: ключи — из unitOptions"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
+          },
+          "alarmKinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Что считать тревогой у камеры и детектора: варианты из reference.eventKinds. Это о классе события, а не о жизни тревоги"
           }
         },
         "description": "Новое устройство вместе с дочерними. Домен и родителя задаёт запрос (DevicesCreateRequest), id выдаёт сервер"
@@ -10018,6 +11231,13 @@
               "code"
             ],
             "description": "Пометка версии истории: restore — восстановлена версия params.number, undo — отмена изменения"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
           }
         },
         "additionalProperties": false,
@@ -10750,6 +11970,13 @@
           "allowChain": {
             "type": "boolean",
             "description": "Разрешить запуск этого правила другими правилами («Запустить правило»)"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
           }
         },
         "additionalProperties": false,
@@ -10939,6 +12166,13 @@
           "allowChain": {
             "type": "boolean",
             "description": "Разрешить запуск этого правила другими правилами («Запустить правило»)"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
           }
         },
         "additionalProperties": false,
@@ -12218,6 +13452,564 @@
           "window",
           "schedule"
         ]
+      },
+      "AssistTurnRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Что написал человек"
+          },
+          "context": {
+            "type": "string",
+            "description": "Непрозрачная строка из прошлого ответа этого разговора, клиент возвращает её как есть. Первый запрос разговора — без неё"
+          },
+          "secrets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Пароли из отдельных полей ассистента. Номер секрета — место в массиве, с 1. В context их нет: клиент держит их в памяти до конца разговора и присылает в каждом запросе, никуда не сохраняет"
+          }
+        },
+        "description": "Ход разговора с ассистентом. Своего состояния у бэкенда нет: разговор держит клиент"
+      },
+      "AssistChange": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "field",
+          "after",
+          "why"
+        ],
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Поле DevicePatch"
+          },
+          "before": {
+            "description": "Значение до правки. Нет у секретов: их значение не показывается"
+          },
+          "after": {
+            "description": "Значение после правки. У секрета — только его номер: «новый (секрет № 2)»"
+          },
+          "why": {
+            "type": "string"
+          }
+        }
+      },
+      "AssistPlanItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "deviceId",
+          "version",
+          "set",
+          "name",
+          "changes"
+        ],
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^[!#-~]+$",
+            "description": "Версия, по которой построен план"
+          },
+          "set": {
+            "$ref": "#/components/schemas/DevicePatch"
+          },
+          "name": {
+            "type": "string"
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistChange"
+            }
+          }
+        },
+        "description": "deviceId, version, set — ровно элемент DevicesUpdateRequest.items; name и changes — пояснение для человека"
+      },
+      "AssistEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "progress",
+              "question",
+              "plan",
+              "refused",
+              "error"
+            ],
+            "x-enum-descriptions": {
+              "progress": "Что ассистент делает сейчас: text. Может приходить много раз",
+              "question": "Нужно уточнение: text, context. Ответ человека — новый запрос с этим context",
+              "plan": "План: summary, context, items. Частичных планов нет: не может всё — refused",
+              "refused": "Не может: text, context, field",
+              "error": "Ошибка: code, message"
+            }
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Момент, когда бэкенд произвёл событие"
+          },
+          "text": {
+            "type": "string"
+          },
+          "context": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Коротко: кого выбрали и сколько"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistPlanItem"
+            }
+          },
+          "field": {
+            "type": "string"
+          },
+          "code": {
+            "$ref": "#/components/schemas/ProblemCode"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "description": "Сообщение хода. Поток заканчивается одним из question, plan, refused, error"
+      },
+      "DeviceStream": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name"
+        ],
+        "description": "Поток камеры. Первый — основной, его res и fps — это Device.res, Device.fps",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Его принимают Device.stream и ExtraArchive.stream"
+          },
+          "name": {
+            "type": "string"
+          },
+          "res": {
+            "type": "string",
+            "pattern": "^[0-9]+x[0-9]+$",
+            "description": "Разрешение: ширина x высота, латинская x. Настройка, сервер передаёт её драйверу"
+          },
+          "fps": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "codec": {
+            "type": "string",
+            "description": "Только чтение: что отдаёт устройство"
+          },
+          "width": {
+            "type": "integer",
+            "description": "Только чтение"
+          },
+          "height": {
+            "type": "integer",
+            "description": "Только чтение"
+          },
+          "online": {
+            "type": "boolean",
+            "description": "Только чтение"
+          },
+          "resOptions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Допустимые разрешения этого потока. Нет поля — ввод руками"
+          }
+        }
+      },
+      "StreamCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "res": {
+            "type": "string",
+            "pattern": "^[0-9]+x[0-9]+$",
+            "description": "Разрешение: ширина x высота, латинская x. Настройка, сервер передаёт её драйверу"
+          },
+          "fps": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "StreamPatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "res": {
+            "type": "string",
+            "pattern": "^[0-9]+x[0-9]+$",
+            "description": "Разрешение: ширина x высота, латинская x. Настройка, сервер передаёт её драйверу"
+          },
+          "fps": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "LiveRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "width",
+          "height"
+        ],
+        "description": "Размер окна: поток под него выбирает сервер",
+        "properties": {
+          "width": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "LiveResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "whepUrl",
+          "token",
+          "expiresAt"
+        ],
+        "properties": {
+          "whepUrl": {
+            "type": "string",
+            "description": "Адрес WHEP: клиент подключается по WebRTC"
+          },
+          "token": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "DetectorOption": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "template",
+          "name",
+          "kind"
+        ],
+        "description": "Встроенный детектор, который умеет камера. Говорит драйвер",
+        "properties": {
+          "template": {
+            "type": "string",
+            "description": "Шаблон: уходит в POST /devices у det"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "motion",
+              "linecross",
+              "abandoned",
+              "disappeared",
+              "crowd",
+              "lpr",
+              "other"
+            ],
+            "description": "Вид детектора. other — вид вне перечня, подпись — name из detectorOptions по template"
+          },
+          "sensitivityMin": {
+            "type": "integer",
+            "description": "Нет поля — настройки нет: запись sensitivity — 422 NOT_SUPPORTED, поле скрыто"
+          },
+          "sensitivityMax": {
+            "type": "integer"
+          },
+          "conflicts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Шаблоны, с которыми нельзя включить вместе на одном канале: 409 BUSY, params.reason: incompatible"
+          }
+        }
+      },
+      "DetectorZone": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "shape",
+          "points"
+        ],
+        "description": "Зона детектора в долях кадра",
+        "properties": {
+          "shape": {
+            "type": "string",
+            "enum": [
+              "rect",
+              "polygon",
+              "line"
+            ],
+            "description": "rect, line — две точки, polygon — от трёх. Иначе 422 VALIDATION_FAILED, field: zone"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "description": "Точки [x, y], доли кадра от 0 до 1"
+          }
+        }
+      },
+      "DevicePreset": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "n",
+          "name"
+        ],
+        "properties": {
+          "n": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Имена есть не у всех драйверов: тогда пусто"
+          }
+        }
+      },
+      "PresetWrite": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "description": "Пресет запоминает нынешнее положение камеры"
+      },
+      "PtzMove": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ttlSec"
+        ],
+        "description": "Аренда движения: скорости осей от -1 до 1, 0 — ось стоит",
+        "properties": {
+          "pan": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "tilt": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "zoom": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "focus": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1
+          },
+          "ttlSec": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "description": "Срок аренды, с. Нет продления — камера останавливается сама"
+          }
+        }
+      },
+      "PtzLease": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expiresAt"
+        ],
+        "properties": {
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UnitProperty": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key"
+        ],
+        "description": "Настройка единицы: ключ, варианты или значение по умолчанию",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "default": {
+            "type": "integer"
+          }
+        }
+      },
+      "UnitOption": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "model",
+          "name",
+          "type"
+        ],
+        "description": "Единица СКУД, которую можно завести: шаблон драйвера",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Шаблон: уходит в Device.model при создании"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/DeviceType"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UnitProperty"
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Слова событий: варианты match.word у вида unit"
+          },
+          "operations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Команды шаблона"
+          }
+        }
+      },
+      "StreamAccount": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "disabled"
+        ],
+        "description": "Учётка потока: имя и пароль внешнего клиента для подключения к потоку. Пароль приходит один раз. Доступ к камерам — как у пользователя, через Access",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "disabled": {
+            "type": "boolean"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Когда изменена"
+          },
+          "by": {
+            "type": "string",
+            "description": "Кем"
+          }
+        }
+      },
+      "StreamAccountCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "StreamAccountPatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "disabled"
+        ],
+        "properties": {
+          "disabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "StreamAccountSecret": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "password"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string",
+            "description": "Показывается один раз"
+          }
+        }
       }
     }
   }
