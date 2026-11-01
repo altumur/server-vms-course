@@ -88,16 +88,16 @@ Volume	—	rec/volumes	—	both	том = то же хранилище
 Volume	id	rec/volumes	UUID volume:rec/volumes/<name>	read
 Volume	archiveId	rec/volumes	UUID archive:rec/volumes/<name>	read	хранилище той же строки
 Volume	name	rec/volumes	name	read	ключ строки: правка — 422 NOT_SUPPORTED, field name
-Volume	disk	rec/volumes	url: путь file://, адрес папки, у бакета — схема	both	формы адреса — V/11.3 Н1.3
+Volume	disk	rec/volumes	url: путь file://, у бакета — схема	both	формы адреса — V/11.3 Н1.3
 Volume	sizeBytes	rec/volumes	quota_bytes	both
 Volume	usedPercent	—	0	const	заполнения тома строка и пульс не несут; поле обязательно в контракте (V/11.3 Н1.3)
 Volume	state	rec/volumes	enabled: false — off, иначе ready	read	V/11.3 Н1.3
 Volume	online	rec/volumes	held_by не null	read	держатель места (P/06.1 Н1.6): наблюдение, в версию не входит
-Volume	login, keyId	rec/volumes	access_key	both	block — логин NAS, object — ключ бакета
-Volume	hasPassword, hasSecret	rec/volumes	access_secret	read	true — секрет задан; значение не отдаётся
-Volume	password, secret	rec/volumes	access_secret	write	нет поля — не трогать; null или "" — снять; строка — новый (V/11.3 Н1.3)
-Volume	bucket, path, host, port	rec/volumes	url	both	части адреса бакета (V/11.3 Н1.3)
-Volume	mode, dir, file, region, proto, endpoint, style, account	—	—	none	формы адреса тома их не несут (V/11.3 Н1.3)
+Volume	keyId	rec/volumes	access_key	both	ключ бакета
+Volume	hasSecret	rec/volumes	access_secret	read	true — секрет задан; значение не отдаётся
+Volume	secret	rec/volumes	access_secret	write	нет поля — не трогать; null или "" — снять; строка — новый (V/11.3 Н1.3)
+Volume	bucket, region, path, host, port	rec/volumes	url	both	части адреса бакета; region, bucket у cloud обязательны (V/11.3 Н1.3)
+Volume	mode, dir, file, login, hasPassword, password, proto, endpoint, style, account	—	—	none	формы адреса тома их не несут (V/11.3 Н1.3)
 Volume	version	rec/volumes	индекс хранилища строки	read	в элементе списка по B4; If-Match сверяет его (V/11.4)
 Rule, RuleFire, RuleVersion, Schedule, DayGroup, Modes, ObjectMode, MaintenanceWindow	—	—	—	none	«Автоматизация» не объявляется (ADR-0094 доп. (7)): операции — 404 NO_ROUTE (V/11.2); отображение — вторая очередь C
 JournalEvent	—	GET /events	—	read	строка события (договор журнала событий)

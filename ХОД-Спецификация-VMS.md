@@ -592,4 +592,6 @@
 - «Сборке»: `cam.subsystem.yaml` — таблицы `children`, `child_settings`, `devices` без `rays`, `relays`, с `channels`; `worker.writes`, `rights.unit_of`, `rights.routes`, ряд `device_inputs_off_total`; `auto.subsystem.yaml` — `worker.reads` + `cam/children/`, `cam/child_settings/` (ADR-0102 доп. (1)); продукт — строки детей у держателя.
 - «Сборке»: `cam.subsystem.yaml` `worker.reads` + `domain/member-topology`, `domain/topology` (дом опроса читает держатель; продукт — проверить).
 - «Сборке»: `rec.subsystem.yaml` — `volumes.url.schemes: {file: {host: path}, s3: {}}`, голый путь и прочие схемы бакета — отказ двери; `worker.stop_timeout: 45`; `servers.status` + `volume_error`; слово `codec not supported: <кодек>` в `reason` записи.
-- «Сборке»: `backend.subsystem.yaml` `repeats.steps` — текст JSON, не `json`; комментарии `enabled`, сборка без имени скрипта.
+- «Сборке»: `cam.shell.html` — подсказка «пусто — логин и пароль камеры» у поля пароля потока.
+- «Сборке»: `rec.subsystem.yaml` — `archive` снят из `heartbeat.strings`.
+- «Сборке»: `backend.subsystem.yaml` `repeats.steps` — текст JSON, не `json`; `calls` без `cam/devices`; комментарии `enabled`, сборка без имени скрипта.

@@ -46,7 +46,7 @@ objects: {rows: [ingest/clock/*, ingest/up/*, sealed/*, used/*], door: [taken/*]
 # (`place_by`), why that volume will not open, the box's own volume a page offers to declare, and where
 # the ingest it hosts takes streams (`ingest`: the domain writes it into the cameras' books, the cluster's other ingests
 # find it there; ADR-0065, its addition of 2026-10-08).
-heartbeat: {strings: [volume, volume_error, archive, ingest, volume_missing]}
+heartbeat: {strings: [volume, volume_error, ingest, volume_missing]}
 # A recorder records on past an unconfirmed lease for as long as the silence lasts — its samples carry the epoch — but
 # a volume any box may serve is let go when its hold goes unconfirmed (`placement.places.lease: strict` below).
 lease: {unconfirmed_max: forever}
