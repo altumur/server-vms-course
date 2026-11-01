@@ -2732,6 +2732,11 @@
      "type": "number",
      "exclusiveMinimum": 0
     },
+    "keep": {
+     "description": "токен лежит запечатанным на носителе воркера (P/03.7 Н1.5 keep; ADR-0110 доп. (9))",
+     "type": "boolean",
+     "x-owner": "P/03.7 Н1.5"
+    },
     "claims": {
      "type": "array",
      "items": {
