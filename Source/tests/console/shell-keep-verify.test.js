@@ -25,14 +25,14 @@ b.FIX["/rec/keeps"]={keeps:[{name:"1-100-200",cam:"1",from:100,to:200,note:"ул
 // дверь — жетон места для rec/<запись>: по одному на запись; проверка называет запись (?recording=)
 (async()=>{
 const w=b.boot();const errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
-const seen=[];let emptyRun=false;
+const seen=[];let emptyRun=false,detailRun=false;
 const J=(status,body)=>Promise.resolve({status,ok:status<300,headers:{get:()=>null},json:()=>Promise.resolve(body),text:()=>Promise.resolve(JSON.stringify(body))});
 {const f0=w.fetch;w.fetch=(u,i)=>{const s=String(u);seen.push([s,(i&&i.method)||"GET",((i&&i.headers)||{}).Authorization||""]);
   if(s==="/rec/where/volumes/inc?unit=1")return J(200,{door:{url:"http://box-a:9009",token:"T1",expires:Date.now()/1000+300}});
   if(s==="/rec/where/volumes/inc?unit=1-b")return J(200,{door:{url:"http://box-a:9009",token:"T2",expires:Date.now()/1000+300}});
   if(s==="http://box-a:9009/keeps/1-100-200/verify?recording=1")return J(200,{keep:"1-100-200",integrity:"ok",ok:true,recordings:{"1":{result:"ok"}}});
   if(s==="http://box-a:9009/keeps/1-100-200/verify?recording=1-b")return J(200,emptyRun?{keep:"1-100-200",integrity:"unknown: 1-b holds no footage in the interval",ok:false,recordings:{"1-b":{result:"empty",detail:"1-b holds no footage in the interval"}}}
-    :{keep:"1-100-200",integrity:"broken: block 12 does not match the seal",ok:false,recordings:{"1-b":{result:"damaged"}}});
+    :{keep:"1-100-200",integrity:"broken: block 12 does not match the seal",ok:false,recordings:{"1-b":detailRun?{result:"damaged",detail:"block 12 does not match the seal"}:{result:"damaged"}}});
   return f0(u,i)}}
 await b.ready(700);await w.platformConsole.ready;await w.eval("reloadRec()");const d=w.document,pc=w.platformConsole,out={};
 const main=()=>d.querySelector("main");
@@ -43,7 +43,11 @@ out.verifyOffered=!!btn(/Проверить/);
 btn(/Проверить/).click();await b.ready(120);
 out.verifyPerRecordingWithItsPlaceToken=seen.some(([u,m,a])=>u==="http://box-a:9009/keeps/1-100-200/verify?recording=1"&&m==="POST"&&a==="Bearer T1")
   &&seen.some(([u,m,a])=>u==="http://box-a:9009/keeps/1-100-200/verify?recording=1-b"&&m==="POST"&&a==="Bearer T2");
-out.saidInWords=/Не подтверждено: 1: цело; 1-b: повреждено — block 12 does not match the seal/.test(d.querySelector(".pc-toast").textContent);
+// слово записи — её recordings[r].result; integrity общий на метку и в запись не идёт (V/08.4 Н1.2, V/02.7 Н1.4)
+out.saidInWords=/^Не подтверждено: 1: цело; 1-b: повреждено$/.test(d.querySelector(".pc-toast").textContent);
+// пояснение записи — её поле detail
+detailRun=true;btn(/Проверить/).click();await b.ready(120);detailRun=false;
+out.detailOfTheRecording=/^Не подтверждено: 1: цело; 1-b: повреждено — block 12 does not match the seal$/.test(d.querySelector(".pc-toast").textContent);
 // запись без кадров в отрезке (result: empty) — не провал и не ожидание: сказано отдельно
 emptyRun=true;btn(/Проверить/).click();await b.ready(120);
 out.emptyIsNotAFailure=/^Проверено: 1: цело; в этом отрезке у 1-b нет кадров — запечатывать нечего/.test(d.querySelector(".pc-toast").textContent);
