@@ -298,6 +298,7 @@ components:
         request_id: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/RequestId'}
         ref: {type: string, minLength: 1}
         by: {type: string, minLength: 1}
+        revoked: {const: true, description: 'Получатель отказал прежнему токену словом revoked (договор «Дверь» body).'}
     Given:
       type: object
       required: [request_id, token, exp]
