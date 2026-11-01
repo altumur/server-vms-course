@@ -7992,6 +7992,7 @@ components:
           type: object
           additionalProperties: true
           description: 'Тело двери этой строки: у единицы — POST или PUT, у таблицы — POST, у счётчика — {n}, у папки — {members}, у членства — {folders}. Поля проверяет манифест, у delete поля нет.'
+        revision: {type: integer, minimum: 0, description: 'Версия строки, которую ждёт хранимая правка, 0 — живой строки нет (P/08.6 Н1.3б).'}
         cas:
           type: string
           pattern: ^(?:(?:0|[1-9][0-9]{0,19})?)$

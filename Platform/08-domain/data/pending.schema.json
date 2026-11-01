@@ -778,7 +778,7 @@
        ]
       },
       "path": {
-       "description": "путь двери домена, нормализован — PUT, DELETE `/domain/<sub>/<rows>/<ref>?cluster=<член найденный>`; POST `/domain/<sub>/<rows>` без query (Н1.4 asked)",
+       "description": "путь двери домена, нормализован — PUT, DELETE `/domain/<sub>/<rows>/<ref>?cluster=<член найденный>[&id=<id>]`; POST `/domain/<sub>/<rows>` без query (Н1.4 asked)",
        "type": "string"
       },
       "body": {

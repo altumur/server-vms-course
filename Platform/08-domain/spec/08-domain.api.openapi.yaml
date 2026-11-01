@@ -1789,7 +1789,7 @@ components:
     RefusedEdit409:
       description: 'Отказ 409 двери правки по ref (P/08.6 Н4): Refusal — kept_full, «unit is being deleted», «the pending edits kept
         changing; ask again»; Executors — ref у двух исполнителей и больше без ?cluster= (P/08.6 Н3 «принять правку» шаг 2а;
-        ADR-0091 доп. (13) п. 3, доп. (15) п. 4)'
+        ADR-0091 доп. (13) п. 3, доп. (15) п. 4); siblings — ref у нескольких единиц одного члена без ?id= (P/08.6 Н1.3 find)'
       content:
         application/json:
           schema:
@@ -2433,6 +2433,10 @@ components:
       required: [cluster, rev, every]
       additionalProperties: false
       properties:
+        gone_seen:
+          type: array
+          items: {type: string}
+          description: Ссылки gone, у держателя строк нет (глава 8.5 Н1.8).
         folders:
           type: object
           required: [rev, folders, memberof]

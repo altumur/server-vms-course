@@ -172,6 +172,7 @@ carry:          ответ 200 на POST /api/member/<член> и GET /api/carr
   keys?:        строка domain/keys держателя {doc} (договор набора ключей домена «Набор domain/keys»)
   revoked?:     строка domain/revoked держателя {jtis} (договор набора ключей домена «Отзывы domain/revoked»)
   folders?:     общие папки (P/08.5 Н1.8) — только когда rev копии отстал
+  gone_seen?:   ссылки gone, у держателя строк нет (P/08.5 Н1.8)
   members?:     строка domain/members {doc} (P/08.3 Н1.1) — только отставшему: members_rev публикации нет или ≠ (term, rev)
                 (раздел «Список членов отставшему»; добавлено М11/12); у GET /api/carry — всегда
   holder?:      строка domain/holder держателя {doc} (P/08.8 Н1.1; договор записи срока)

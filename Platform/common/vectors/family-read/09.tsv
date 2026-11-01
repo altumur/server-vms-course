@@ -1568,15 +1568,15 @@ c09_servers.010	domain/servers	domain/servers	object	reader	["domainagent"]	{"se
 c09_servers.011	domain/servers	domain/servers	object	writer	["domainagent"]	{"servers":{},"z":1}	refused	["/z"]	[]	extra field
 c09_servers.012	domain/servers	domain/servers	object	reader	["domainagent"]	{"servers":{},"z":1}	refused	["/z"]	{"domainagent": [""]}	extra field
 c09_folders_state.001	domain/folders-state	domain/folders-state	object	writer	["domainagent"]	{"rev":null,"scope":"all","gone":[]}	ok	[]	[]	base
-c09_folders_state.002	domain/folders-state	domain/folders-state	object	reader	["domainagent"]	{"rev":null,"scope":"all","gone":[]}	ok	[]	{"domainagent": []}	base
+c09_folders_state.002	domain/folders-state	domain/folders-state	object	reader	["console", "domainagent"]	{"rev":null,"scope":"all","gone":[]}	ok	[]	{"console": [], "domainagent": []}	base
 c09_folders_state.003	domain/folders-state	domain/folders-state	object	writer	["domainagent"]	null	refused	[""]	[]	root null
-c09_folders_state.004	domain/folders-state	domain/folders-state	object	reader	["domainagent"]	null	refused	[""]	{"domainagent": [""]}	root null
+c09_folders_state.004	domain/folders-state	domain/folders-state	object	reader	["console", "domainagent"]	null	refused	[""]	{"console": [""], "domainagent": [""]}	root null
 c09_folders_state.005	domain/folders-state	domain/folders-state	object	writer	["domainagent"]	{	refused	[""]	[]	not JSON
-c09_folders_state.006	domain/folders-state	domain/folders-state	object	reader	["domainagent"]	{	refused	[""]	{"domainagent": [""]}	not JSON
+c09_folders_state.006	domain/folders-state	domain/folders-state	object	reader	["console", "domainagent"]	{	refused	[""]	{"console": [""], "domainagent": [""]}	not JSON
 c09_folders_state.007	domain/folders-state	domain/folders-state	object	writer	["domainagent"]	{"scope":"all","gone":[]}	refused	["/rev"]	[]	: without required rev
-c09_folders_state.008	domain/folders-state	domain/folders-state	object	reader	["domainagent"]	{"scope":"all","gone":[]}	refused	["/rev"]	{"domainagent": [""]}	: without required rev
+c09_folders_state.008	domain/folders-state	domain/folders-state	object	reader	["console", "domainagent"]	{"scope":"all","gone":[]}	refused	["/rev"]	{"console": [""], "domainagent": [""]}	: without required rev
 c09_folders_state.009	domain/folders-state	domain/folders-state	object	writer	["domainagent"]	{"rev":null,"scope":"x","gone":[]}	refused	["/scope"]	[]	scope: unknown word
-c09_folders_state.010	domain/folders-state	domain/folders-state	object	reader	["domainagent"]	{"rev":null,"scope":"x","gone":[]}	refused	["/scope"]	{"domainagent": [""]}	scope: unknown word
+c09_folders_state.010	domain/folders-state	domain/folders-state	object	reader	["console", "domainagent"]	{"rev":null,"scope":"x","gone":[]}	refused	["/scope"]	{"console": [""], "domainagent": [""]}	scope: unknown word
 c09_edit_ids.001	domain/edit-ids	domain/edit-ids	row	writer	["domainagent"]	{"e-0123456789ab":"7"}	ok	[]	[]	base
 c09_edit_ids.002	domain/edit-ids	domain/edit-ids	row	reader	["domainagent"]	{"e-0123456789ab":"7"}	ok	[]	{"domainagent": []}	base
 c09_edit_ids.003	domain/edit-ids	domain/edit-ids	row	writer	["domainagent"]	null	refused	[""]	[]	root null
