@@ -2336,7 +2336,7 @@ if(AS)pc.ready.then(async()=>{
   addEventListener("pagehide",()=>assistReset(true));
   pc.on("logout",()=>{assistCancel();A.log=[];assistDraw()});
   // the same person back: the reads go on; another, or not known yet: the turn and the secrets go (V/10.3 Н1.6)
-  if(FEATURES.has("session"))pc.on("session",e=>{const u=(e&&e.user)??null,same=u!==null&&u===A.who;A.who=u;if(same)A.logins.splice(0).forEach(r=>r(true));else assistNew()});
+  if(FEATURES.has("session"))pc.on("session",e=>{const u=(e&&e.user)??null,same=u!==null&&(A.who===null||u===A.who);A.who=u;if(same)A.logins.splice(0).forEach(r=>r(true));else assistNew()});
 });
 // assist:panel:end
 </script>
