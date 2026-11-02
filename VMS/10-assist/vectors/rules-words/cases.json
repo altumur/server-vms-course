@@ -219,6 +219,24 @@
    {
     "id": 104,
     "name": "Yard tour"
+   },
+   {
+    "id": 105,
+    "name": "Gate line watch",
+    "then": [
+     {
+      "sub": "det",
+      "action": "detect",
+      "cam": "1",
+      "kind": "linecross",
+      "minutes": 5,
+      "params": {
+       "zone": {
+        "shape": "line"
+       }
+      }
+     }
+    ]
    }
   ],
   "servers": [
@@ -1819,6 +1837,258 @@
    ],
    "errors": [
     "edits[0]: the request does not name the rule Yard tour"
+   ]
+  },
+  {
+   "id": "det-kind-other",
+   "note": "запущен не тот детектор",
+   "request": "When the Gate Loop sensor trips, run the line crossing detector on Gate Cam for 5 minutes.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "det",
+      "action": "detect",
+      "cam": "1",
+      "kind": "motion",
+      "minutes": 5
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: the request does not speak of motion: do not substitute another detector"
+   ]
+  },
+  {
+   "id": "detect-minutes",
+   "note": "срок detect не назван",
+   "request": "When the Gate Loop sensor trips, run the motion detector on Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "det",
+      "action": "detect",
+      "cam": "1",
+      "kind": "motion",
+      "minutes": 5
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: minutes 5 is not in the request. Never invent a value: ask_admin"
+   ]
+  },
+  {
+   "id": "scan-before-invented",
+   "note": "окно скана не названо",
+   "request": "When motion is detected on Lobby Cam, scan its archive.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "det",
+      "action": "scan",
+      "cam": "2",
+      "kind": "motion",
+      "before": 60
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: before 60 is not in the request. Never invent a value: ask_admin"
+   ]
+  },
+  {
+   "id": "scan-after-zero",
+   "note": "лишнее поле окна: after 0 не просили",
+   "request": "When motion is detected on Lobby Cam, scan its archive 60 seconds before.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "det",
+      "action": "scan",
+      "cam": "2",
+      "kind": "motion",
+      "before": 60,
+      "after": 0
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: after 0 is not in the request. Never invent a value: ask_admin"
+   ]
+  },
+  {
+   "id": "detection-word",
+   "note": "«detection» называет detect",
+   "request": "When the Gate Loop sensor trips, turn on motion detection on Gate Cam for 5 minutes.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "det",
+      "action": "detect",
+      "cam": "1",
+      "kind": "motion",
+      "minutes": 5
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "check-archive-word",
+   "note": "«check the archive» называет scan",
+   "request": "When motion is detected on Lobby Cam, check the archive of Lobby Cam 60 seconds before.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "det",
+      "action": "scan",
+      "cam": "2",
+      "kind": "motion",
+      "before": 60
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "update-own-params-lost",
+   "note": "своё params выпало: линия заменилась бы основой молча",
+   "request": "Set the Gate line watch rule to 10 minutes on Gate Cam, the line crossing detector.",
+   "edits": [
+    {
+     "table": "scenarios",
+     "op": "update",
+     "id": 105,
+     "row": {
+      "then": [
+       {
+        "sub": "det",
+        "action": "detect",
+        "cam": "1",
+        "kind": "linecross",
+        "minutes": 10
+       }
+      ]
+     }
+    }
+   ],
+   "errors": [
+    "edits[0]: then[0]: the rule has its own params: it is changed on the console page: refuse"
+   ]
+  },
+  {
+   "id": "update-own-params-kept",
+   "note": "своё params равно: проходит",
+   "request": "Set the Gate line watch rule to 10 minutes on Gate Cam, the line crossing detector.",
+   "edits": [
+    {
+     "table": "scenarios",
+     "op": "update",
+     "id": 105,
+     "row": {
+      "then": [
+       {
+        "sub": "det",
+        "action": "detect",
+        "cam": "1",
+        "kind": "linecross",
+        "minutes": 10,
+        "params": {
+         "zone": {
+          "shape": "line"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "update-own-params-other",
+   "note": "своё params другое",
+   "request": "Set the Gate line watch rule to 10 minutes on Gate Cam, the line crossing detector.",
+   "edits": [
+    {
+     "table": "scenarios",
+     "op": "update",
+     "id": 105,
+     "row": {
+      "then": [
+       {
+        "sub": "det",
+        "action": "detect",
+        "cam": "1",
+        "kind": "linecross",
+        "minutes": 10,
+        "params": {
+         "zone": {
+          "shape": "poly"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "errors": [
+    "edits[0]: then[0]: params is not written by a plan: ask_admin",
+    "edits[0]: then[0]: the rule has its own params: it is changed on the console page: refuse"
    ]
   },
   {
