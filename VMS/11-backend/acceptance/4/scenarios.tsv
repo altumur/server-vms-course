@@ -304,7 +304,10 @@ scenario	step	request	expect
 10-archives	58	@until 30 member m1 console2 GET /api/archives/$card	200 {"recordMode": "backup"}
 10-archives	59	member m1 console2 POST /api/operations/$nul/redo	202 {"id": "$dnul"}
 10-archives	60	@until 30 member m1 console2 GET /api/archives/$card	200 {"recordMode": "@absent"}
-10-archives	61	@manual shrinkPendingBytes из пульса регистратора, полная сверка archiveKinds, серверная строка readOnly: стенд без воркеров	manual
+10-archives	61	member m1 console POST /rec/volumes {"name": "card-a", "kind": "edge", "url": "file:///card/$card", "server": "srv-a", "quota_bytes": 1000000000, "when": "always"}	2xx
+10-archives	62	member m1 console2 POST /api/operations/$dnul/revert	202 {"id": "$rmis"}
+10-archives	63	@until 30 member m1 console2 GET /api/operations/$rmis	200 {"state": "done", "ok": 0, "failed": 1, "items": [{"code": "VERSION_MISMATCH"}]}
+10-archives	64	@manual shrinkPendingBytes из пульса регистратора, полная сверка archiveKinds, серверная строка readOnly: стенд без воркеров	manual
 11-devices	1	@domain m1	ok
 11-devices	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 11-devices	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
