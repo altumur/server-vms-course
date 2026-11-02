@@ -56,7 +56,7 @@ Conditions, all must hold at the moment of a run:
 ## Plan
 `propose_plan {summary, edits_json}`: `edits_json` is `[{table, op, id, ref, row}]` written as one JSON string.
 `check_plan` takes the same arguments and only checks: use it for a draft, it does not end the turn.
-- New rule: `{"table":"scenarios","op":"create","row":{…}}`. Any rule can be changed or switched off; switch a rule on only when the admin says so. A step that already has `params`: to change another step, copy it exactly, with its camera, kind and action; to change it, refuse: it is changed on the console page. Change: `{"table":"scenarios","op":"update","id":<number>,
+- New rule: `{"table":"scenarios","op":"create","row":{…}}`. Any rule can be changed or switched off; switch a rule on only when the admin says so. A step that already has `params`: to change another step, copy it exactly, with its camera, kind and action; its time may change, nothing else; to change anything else in it, refuse: it is changed on the console page. Change: `{"table":"scenarios","op":"update","id":<number>,
   "row":{only the changed fields}}`: read the rule first with `list_table`.
 - A time range no schedule covers: also create it, `{"table":"schedules","op":"create","ref":"s1","row":{"id":
   "00000000-0000-4000-8000-000000000001","title":"…","kind":"week","week":[Monday … Sunday, each a list of ["HH:MM","HH:MM"]]}}`,
