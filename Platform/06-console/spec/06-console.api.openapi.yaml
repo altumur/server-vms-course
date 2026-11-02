@@ -8724,6 +8724,10 @@ components:
           $ref: ../../05-resource/spec/05-resource.api.openapi.yaml#/components/schemas/UnitRef
         note:
           type: string
+        occurred:
+          type: number
+          minimum: 0
+          description: Момент, о котором отметка; не больше 3 знаков дроби (глава 6.4 Н2; ADR-0112 доп. (13) п. 7).
       description: Лишние поля принимаются и игнорируются; note при отсутствии — пустая строка. Тип note проверяется, длина
         уроком не ограничена.
     MarkWritten:

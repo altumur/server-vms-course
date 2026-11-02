@@ -33,3 +33,4 @@ date	sample	fix	languages
 2026-10-31	11-request-expired	новый сценарий: дозапись без держателя — метка expired жнеца по ttl + REAP_AFTER, settle, резерв per_person освобождён (запрос VMS «срок просьбы», решение «Архитектора» 2026-10-29; ADR-0094 шаг 1в)	all
 2026-10-31	03-operator-mark, 06-request-refused, 07-request-gone, 08-request-exists-ledger, 11-request-expired	ADR-0094 доп. (13): TextError закрыт, слова `error` дверей главы 6.4 — закрытый перечень, у 400 — `field` (P/06.4 Н2, Н4; P/06.1 Н2 «Отказ: `error` и `field`»).	all
 2026-10-31	12-table-row-expired	новый сценарий: срок строк таблицы `delete_after` — возраст наблюдённой версии, снятие жнецом по cas (ADR-0094 шаг 3б; V/11 46c466087)	all
+2026-11-02	03-operator-mark	ADR-0112 доп. (13) п. 7: новые шаги 11–15, поле occurred двери /marks: идёт в строку, без него поля нет, не число — 400; составлено чтением, сухого прогона реализацией нет	all

@@ -10,6 +10,11 @@ scenario	step	request	expect
 03-operator-mark	8	@until 15 console GET /events?unit=testsub/c6&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c6", "text": "@absent"}]}
 03-operator-mark	9	console GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c3", "user": "operator"}]}
 03-operator-mark	10	resource GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "subsystem": "console", "unit": "~console/ ~:"}]}
+03-operator-mark	11	console POST /counters {"name": "c7", "start": 1}	201
+03-operator-mark	12	console POST /marks {"unit": "testsub/c7", "note": "past", "occurred": 1700000000.5}	2xx
+03-operator-mark	13	@until 15 console GET /events?unit=testsub/c7&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c7", "occurred": 1700000000.5}]}
+03-operator-mark	14	console GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c3", "occurred": "@absent"}]}
+03-operator-mark	15	console POST /marks {"unit": "testsub/c7", "occurred": "1700000000"}	400 {"error": "refused"}
 04-request-reaped	1	console POST /counters {"name": "c4", "start": 1}	201
 04-request-reaped	2	console POST /testsub/requests {"unit": "c4", "add": 5}	202 {"queued": "$rid"}
 04-request-reaped	3	@key(2) console POST /testsub/requests {"unit": "c4", "add": 5}	202 {"queued": "$rid"}
