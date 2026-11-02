@@ -248,7 +248,7 @@ scenario	step	request	expect
 10-archives	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 10-archives	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
 10-archives	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
-10-archives	5	@until 30 member m1 console2 GET /api/reference	200 {"recordModes": ["none", "always", "motion", "sched", "replica", "backup"], "archiveKinds": [{"kind": "local", "serverRequired": true, "address": "disk"}, {"kind": "network", "serverRequired": false, "address": "bucket"}, {"kind": "backup", "recordModes": ["backup"]}, {"kind": "edge", "serverWide": true, "archiveModes": ["always", "backup"]}, {"kind": "incidents", "admits": false}], "deviceModels": [], "volumeStates": ["ready", "off"]}
+10-archives	5	@until 30 member m1 console2 GET /api/reference	200 {"recordModes": ["none", "always", "motion", "sched", "replica", "backup"], "archiveKinds": [{"kind": "local", "serverRequired": true, "address": "disk"}, {"kind": "network", "serverRequired": false, "address": "bucket"}, {"kind": "backup", "recordModes": ["backup"]}, {"kind": "edge", "serverWide": true, "archiveModes": ["always", "backup"], "archiveModeDefault": "backup"}, {"kind": "incidents", "admits": false}], "deviceModels": [], "volumeStates": ["ready", "off"]}
 10-archives	6	member m1 console2 POST /api/archives {"name": "disk-b", "kind": "local", "storage": "block", "encrypted": false, "retentionDays": 30, "provider": null, "serverId": "92a5a2f5-c063-5b48-b3e5-95000ca864af", "domainId": null, "firstVolume": {"name": "disk-b", "disk": "{data}/subsystems/rec/obsd/volumes/2", "sizeBytes": 1000000000}}	201 {"archive": {"id": "635db33a-8a9d-539b-a1f3-a44e771e2cdc", "kind": "local", "storage": "block", "serverId": "92a5a2f5-c063-5b48-b3e5-95000ca864af", "domainId": null}, "volumes": [{"id": "96d05f5e-964a-578d-b856-3da78ffce7e4", "archiveId": "635db33a-8a9d-539b-a1f3-a44e771e2cdc", "state": "ready", "usedPercent": 0, "online": false}]}
 10-archives	7	member m1 console2 GET /api/archives	200 {"items": [{"id": "635db33a-8a9d-539b-a1f3-a44e771e2cdc"}]}
 10-archives	8	member m1 console2 GET /api/archives/635db33a-8a9d-539b-a1f3-a44e771e2cdc	200 {"retentionDays": 30, "version": "$va"}
@@ -296,7 +296,10 @@ scenario	step	request	expect
 10-archives	50	member m1 console2 @header If-Match: "$vvol" PATCH /api/volumes/$vol {"sizeBytes": 500000000, "confirmShrinkBytes": 500000000}	200 {"sizeBytes": 500000000, "confirmShrinkBytes": "@absent", "version": "$vvol2"}
 10-archives	51	member m1 console GET /rec/volumes	200 {"rows": [{"name": "bk-a", "quota_bytes": 500000000, "shrink_confirmed": 500000000}]}
 10-archives	52	member m1 console2 @header If-Match: "$vvol2" PATCH /api/volumes/$vol {"enabled": false}	200 {"enabled": false, "state": "off"}
-10-archives	53	@manual shrinkPendingBytes из пульса регистратора, полная сверка archiveKinds, серверная строка readOnly: стенд без воркеров	manual
+10-archives	53	member m1 console2 GET /api/archives/$card	200 {"version": "$vc3"}
+10-archives	54	member m1 console2 @header If-Match: "$vc3" PATCH /api/archives/$card {"recordMode": null}	200 {"recordMode": "@absent"}
+10-archives	55	member m1 console2 GET /api/archives/$card	200 {"recordMode": "@absent"}
+10-archives	56	@manual shrinkPendingBytes из пульса регистратора, полная сверка archiveKinds, серверная строка readOnly: стенд без воркеров	manual
 11-devices	1	@domain m1	ok
 11-devices	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 11-devices	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
@@ -816,7 +819,7 @@ scenario	step	request	expect
 31-server-labels	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
 31-server-labels	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
 31-server-labels	5	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "$dom"}]}
-31-server-labels	6	member m1 console2 GET /api/servers	200 {"items": [{"id": "$srv", "version": "$s1"}]}
+31-server-labels	6	member m1 console2 GET /api/servers	200 {"items": [{"id": "$srv", "class": "server", "version": "$s1"}]}
 31-server-labels	7	member m1 console2 PATCH /api/servers/$srv {"labels": ["hall"]}	428 {"code": "PRECONDITION_REQUIRED"}
 31-server-labels	8	member m1 console2 @header If-Match: "$s1" PATCH /api/servers/$srv {"role": "standby"}	422 {"code": "NOT_SUPPORTED", "field": "role"}
 31-server-labels	9	member m1 console2 @header If-Match: "$s1" PATCH /api/servers/$srv {"name": "x"}	422 {"code": "NOT_SUPPORTED", "field": "name"}
@@ -832,7 +835,7 @@ scenario	step	request	expect
 32-archive-tasks	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
 32-archive-tasks	5	member m1 console POST /rec/volumes {"name": "disk-a", "kind": "local", "url": "file://{data}/subsystems/rec/obsd/volumes/1", "server": "srv-a", "quota_bytes": 1000000000}	201 {"name": "disk-a"}
 32-archive-tasks	6	member m1 console POST /cameras {"source": "ipint://10.9.9.1:80/acme/m1/1.2?source=0"}	201 {"id": "1"}
-32-archive-tasks	7	@until 30 member m1 console2 GET /api/devices	200 {"items": [{"id": "$cam", "version": "$v1"}]}
+32-archive-tasks	7	@until 30 member m1 console2 GET /api/devices	200 {"items": [{"id": "$cam", "archiveJobs": "@absent", "version": "$v1"}]}
 32-archive-tasks	8	member m1 console2 GET /api/archives	200 {"items": [{"id": "$arch"}]}
 32-archive-tasks	9	member m1 console2 @header If-Match: "$v1" PATCH /api/devices/$cam {"archiveId": "$arch", "recordMode": "always"}	200 {"recordMode": "always", "version": "$v2"}
 32-archive-tasks	10	member m1 console2 POST /api/archive-scans {"deviceId": "$cam", "archiveId": "$arch", "detectorKind": "motion", "from": "2026-10-28T10:00:00Z", "to": "2026-10-28T12:00:00Z", "alarms": ["motion"], "labels": ["gpu"]}	201 {"id": "$scan", "state": "running", "result": null}

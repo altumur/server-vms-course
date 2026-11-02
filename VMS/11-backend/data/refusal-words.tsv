@@ -111,7 +111,8 @@ access	422	NOT_SUPPORTED	<поле>	11.8 Н1.6, Н4
 access	422	VALIDATION_FAILED	<поле>	11.8 Н4: ссылка никуда; unknown member, unknown subject, bad name, bad line, bad batch, bad body, grant too wide
 access	422	VALIDATION_FAILED	roleIds	11.8 Н4: too many admins, admin table too large, roles table too large
 access	422	VALIDATION_FAILED	access	11.8 Н4: batch too large, too large; сохраните частями
-access	409	VALIDATION_FAILED	roleIds	11.8 Н4: password set by a non-admin
+access	409	PASSWORD_NOT_ADMIN	roleIds	11.8 Н4: password set by a non-admin; params.id
+access	422	PASSWORD_POLICY	password	11.8 Н4: пароль короче PASSWORD_MIN, bad password; params.id
 access	409	BUSY	-	11.8 Н4: being deleted, in flight
 access	409	SELF_LOCKOUT	-	11.8 Н1.8, Н4; last admin
 access	412	VERSION_MISMATCH	-	11.8 Н4: версия снимка, 412 conflict; current
