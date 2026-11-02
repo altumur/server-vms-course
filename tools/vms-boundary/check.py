@@ -46,7 +46,7 @@ def own_log(session):
 def allowed(path, session):
     """Путь, который сессия VMS вправе менять (белый список доп. (1) с правками доп. (2), (6) п. 8)."""
     path = nfc(path)
-    return path.startswith(OPEN) or path == own_log(session) or path == "decisions/adr-pipeline.tsv" or bool(INBOX.fullmatch(path))
+    return path.startswith(OPEN) or path == own_log(session) or path in ("decisions/adr-pipeline.tsv", "decisions/adr-norms.tsv") or bool(INBOX.fullmatch(path))
 
 
 def paths_of(diff):
