@@ -601,6 +601,7 @@ scenario	step	request	expect
 19-revert	42	member m1 console2 POST /api/operations/$op4/revert	404 {"code": "NOT_FOUND"}
 19-revert	43	@manual откат тома, удаления, папок и смены bound_to — fail со словом; идущая операция — 409 running: шаги стенда идут быстрее двух запросов; одиночная правка: id взять неоткуда, GET /operations нет в контракте; UNDO_KEEP, UNDO_DAYS стенду не дождаться	manual
 19-revert	44	@manual откат с fail оставляет ряд открытым, повтор идёт, операция не закрыта; 50 правок и 50 откатов назад дошли до первой: стенд не держит столько шагов	manual
+19-revert	45	@manual Archive.recordMode null: откат возвращает when, повтор снимает его снова, when поставлен мимо backend — fail VERSION_MISMATCH: тома edge в сценарии нет	manual
 20-motion	1	@domain m1	ok
 20-motion	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 20-motion	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
