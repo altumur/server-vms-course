@@ -1,7 +1,7 @@
 # Приёмка V/07.1 — сценарий — единица и язык
 
 Норма главы — [`07.1-auto.norms.md`](../../spec/07.1-auto.norms.md) Н5. Стенд и словарь — [общий README приёмки
-VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `f5b33e19`).
+VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `4355d3a5`).
 
 ## Подготовка
 
