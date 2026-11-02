@@ -5,7 +5,7 @@
 # /manifest, /{sub}/manifest, /mounts, /servers, /resources, /where, /metrics, /{sub}/…, door.pass /{pass}; 6.6 — /policy, /drain,
 # /servers/{server}/labels, /servers/{server}/decommission, /unplaceable, /schema; 6.7 (поздний слой, вводят уроки 8 и 10) —
 # /session/break-glass (порядок двери), /domain/{sub}/books/{book}, пересылка /domain и /domain/{route} (переходы 1–2 договора
-# пересылки), /domain/at/{cluster}/{sub}/where/…, /domain/keys, /domain/shared/{sub}, /api/held, /api/backup, пересылка
+# пересылки), /heartbeats, /domain/at/{cluster}/{sub}/where/…, /domain/keys, /domain/shared/{sub}, /api/held, /api/backup, пересылка
 # подписанту /api/prepare, /api/take, /domain/move; 6.8 — /folders, /folders/{id}; 6.9 — /{sub}/operations и двери операции. Пути главы 6.7 слиты из контрактов М11/5, М11/8, М11/9, М11/10, М11/11
 # (сторона консоли кластера; перенос урока 10, стадия B, без изменения поведения): у пересылки — только коды переходов 1–2
 # (договор пересылки Platform/common/contracts/forwarding.md «Отказы по переходам»; разбор ревью стадии A 8–10, решение 3),
@@ -3027,6 +3027,96 @@ paths:
                 const: '1'
         '200':
           description: Полное JSON-тело; HEAD не содержит тела
+  /heartbeats:
+    description: Глава 6.7 Н1.6 pulse (ADR-0112 доп. (12) п. 3) — пульсы подсистемы без status.
+    servers:
+    - url: '{origin}'
+      description: Короткий путь выбирает CONSOLE_ROOT.
+      variables:
+        origin:
+          default: http://localhost
+          description: Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.
+    - url: '{origin}/{sub}'
+      description: Имя явно выбирает загруженную подсистему, включая CONSOLE_ROOT.
+      variables:
+        origin:
+          default: http://localhost
+          description: Origin фактической консоли без завершающего /; это пример адреса, не настройка сервера.
+        sub:
+          default: testsub
+          description: Имя загруженного манифеста по P/02.1; пример заменяется выбранным именем из /mounts.
+    get:
+      summary: Пульсы подсистемы
+      responses:
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/NoRoute'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+        '200':
+          description: Полное JSON-тело
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PulseList'
+    head:
+      summary: 'HEAD: Пульсы подсистемы'
+      responses:
+        '400':
+          description: 'Общий отказ разбора запроса консоли (глава 6.5 Н2 «Разбор запроса консоли»: query, JSON тела, читаемый
+            параметр повторён) или транспорта — тело chunked или короче объявленного (глава 6.5 Н4). Отказ формы своей двери
+            называет её операция; HEAD не содержит тела'
+        '401':
+          description: Личность не подтверждена — сторожевая главы 6.3 (identity), error denied; открытые пути — там же
+            (open_routes); HEAD не содержит тела
+        '403':
+          description: 'Отказ доступа — сторожевая главы 6.3: «гранта нет» (need), «нет домена, не петля», чужой Origin
+            на действующем запросе по куке (csrf); error denied; HEAD не содержит тела'
+        '404':
+          description: Нет маршрута (глава 6.5 Н2 «Общие коды»); это не ответ загрузчика об ошибочном манифесте; HEAD не содержит
+            тела
+        '405':
+          description: Метод не из объявленных для этой двери, без заголовка Allow (глава 6.5 Н2 «Общие коды»); HEAD не
+            содержит тела
+        '408':
+          description: Тело читается слишком медленно (глава 6.5 Н4); HEAD не содержит тела
+        '413':
+          description: Тело больше предела консоли (глава 6.5 Н4); служебных полей limit/size P/01.1 сюда не добавляет;
+            HEAD не содержит тела
+        '429':
+          description: Общий предел входа консоли (глава 6.5 Н4); новых квот у дверей нет — ни на чтение манифеста, ни на создание
+            единиц; HEAD не содержит тела
+          headers:
+            Retry-After:
+              description: Срок повтора по правилу предела входа.
+              schema:
+                type: string
+        '503':
+          description: Обязательное чтение или запись хранилища не подтверждены — error unavailable (двери главы 6.6; у
+            наблюдений /servers, /resources, /where, /metrics — глава 6.5 Н4, слово закреплено разбором ревью стадии A 6–7,
+            № 24); полоса занята — busy с Retry-After 1; ключи были, проверить доверие нечем — denied (сторожевая главы
+            6.3, shut). Перед повтором изменения прочитать состояние; HEAD не содержит тела
+          headers:
+            Retry-After:
+              description: Обязателен со значением 1 при busy; не обещан для остальных причин.
+              schema:
+                type: string
+                const: '1'
+        '200':
+          description: Полное JSON-тело; HEAD не содержит тела
   /where/{id}:
     description: Глава 6.5 — /where (P/06.5-05); формы Where, NotPlaced, Door и коды — двери Н2 бывшего М10/4 (глава 6.6,
       P/06.6-03).
@@ -5309,6 +5399,58 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/AtAnswer'
+        '400':
+          $ref: '#/components/responses/AtBadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/AtNotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '502':
+          $ref: '#/components/responses/ForwardFailed'
+        '503':
+          $ref: '#/components/responses/ForwardUnavailable'
+    head:
+      summary: 'HEAD: тот же код и заголовки, что у GET, без тела (глава 6.5 Н2)'
+      responses:
+        '200':
+          description: как у GET, без тела
+        '400':
+          description: как у GET, без тела
+        '401':
+          description: как у GET, без тела
+        '403':
+          description: как у GET, без тела
+        '404':
+          description: как у GET, без тела
+        '429':
+          description: как у GET, без тела
+        '502':
+          description: как у GET, без тела
+        '503':
+          description: как у GET, без тела
+  /domain/at/{cluster}/{sub}/heartbeats:
+    description: 'Глава 6.7 Н1.6 pulse (ADR-0112 доп. (12) п. 3) — пульс подсистемы у консоли другого члена; право судит консоль цели.'
+    parameters:
+    - name: cluster
+      in: path
+      required: true
+      description: Имя члена домена (глава 6.7 Н1.6 member; P/08.3 Н1.1).
+      schema:
+        $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName'
+    - $ref: '#/components/parameters/AtSub'
+    get:
+      summary: Пульс подсистемы у консоли другого члена (Н1.6)
+      responses:
+        '200':
+          description: Ответ консоли члена как пришёл (глава 6.7 Н1.6 answer)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PulseList'
         '400':
           $ref: '#/components/responses/AtBadRequest'
         '401':
@@ -7818,6 +7960,43 @@ components:
       properties:
         deleted:
           $ref: '#/components/schemas/UnitId'
+    PulseList:
+      type: object
+      required:
+      - rows
+      additionalProperties: false
+      properties:
+        rows:
+          type: array
+          items:
+            type: object
+            required:
+            - worker
+            - server
+            - ts
+            - age
+            - worker_state
+            - fields
+            additionalProperties: false
+            properties:
+              worker:
+                $ref: '#/components/schemas/WorkerName'
+              server:
+                type: string
+              ts:
+                type: number
+              age:
+                type: number
+                minimum: 0
+              worker_state:
+                enum:
+                - live
+                - stale
+              fields:
+                type: object
+                additionalProperties: true
+                description: Прочие поля пульса как есть, кроме status (глава 6.7 Н1.6 pulse).
+      description: Глава 6.7 Н1.6 pulse — по элементу на пульс подсистемы, по worker в байтах UTF-8.
     UnitList:
       type: object
       required:

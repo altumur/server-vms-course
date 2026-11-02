@@ -1712,7 +1712,7 @@
    }
   },
   "passCall": {
-   "description": "дверь обратного вызова по закрытому перечню P/06.3 Н1.9: `<s>/<имя>` — строки единиц, таблица, `policy`, `next_id` или маршрут двери подсистемы `<s>`; приставка `GET ` — только чтение; `console/batch`, `changes`, `folders`; `<s>/operations`; `<s>/requests`; `GET <s>/where`; дверь `door.pass` первого вида; `servers/labels`; `GET manifest|servers|events|session|schema`; двери домена: `GET domain/users|groups|roles|grants`, `domain/batch`; дверь книги: `GET domain/<s>/books/<книга>`; строка kept: `GET domain/<s>/kept/<имя>`",
+   "description": "дверь обратного вызова по закрытому перечню P/06.3 Н1.9: `<s>/<имя>` — строки единиц, таблица, `policy`, `next_id` или маршрут двери подсистемы `<s>`; приставка `GET ` — только чтение; `console/batch`, `changes`, `folders`; `<s>/operations`; `<s>/requests`; `GET <s>/where`; дверь `door.pass` первого вида; `servers/labels`; `GET manifest|servers|events|session|schema`; двери домена: `GET domain/users|groups|roles|grants`, `domain/batch`, `domain/shared`, `GET domain/shared/<s>`, `GET domain/topology`; дверь книги: `GET domain/<s>/books/<книга>`; строка kept: `GET domain/<s>/kept/<имя>`",
    "type": "string",
    "anyOf": [
     {
@@ -1725,6 +1725,8 @@
       "domain/members",
       "GET domain/members",
       "GET domain/relays",
+      "GET domain/topology",
+      "domain/shared",
       "domain/placement",
       "GET domain/placement",
       "GET domain/folders",
@@ -3029,7 +3031,7 @@
    }
   },
   "subName": {
-   "description": "не из 35 зарезервированных слов и не начинается с `free-` (rid подателя `<подсистема>.<ключ>` иначе начался бы с `free-`, который грамматика rid запрещает; ADR-0091 доп. (24) п. 5); имя — первый сегмент всех ключей подсистемы `<name>/…` и её места на домене",
+   "description": "не из 36 зарезервированных слов и не начинается с `free-` (rid подателя `<подсистема>.<ключ>` иначе начался бы с `free-`, который грамматика rid запрещает; ADR-0091 доп. (24) п. 5); имя — первый сегмент всех ключей подсистемы `<name>/…` и её места на домене",
    "type": "string",
    "not": {
     "anyOf": [
@@ -3069,7 +3071,8 @@
        "edits",
        "relays",
        "placement",
-       "memberof"
+       "memberof",
+       "shared"
       ]
      },
      {

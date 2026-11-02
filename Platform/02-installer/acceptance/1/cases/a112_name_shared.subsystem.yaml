@@ -1,0 +1,5 @@
+# зарезервированное имя (02.1 name; ADR-0112 доп. (12) п. 1: GET domain/shared/<s>)
+name: shared
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}, key_secret: {type: string}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}

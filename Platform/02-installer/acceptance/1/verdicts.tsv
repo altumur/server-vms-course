@@ -882,3 +882,6 @@ a110_token_day_no_keep_ok	ok
 a113_name_relays	refused
 a113_name_placement	refused
 a113_name_memberof	refused
+a112_name_shared	refused
+a112_calls_shared_ok	ok
+a112_calls_topology_write	refused

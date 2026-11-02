@@ -32,6 +32,7 @@ corpus-a110_view_tables_rows_ok	Platform/02-installer/acceptance/1/cases/a110_vi
 corpus-a111_calls_requests_ok	Platform/02-installer/acceptance/1/cases/a111_calls_requests_ok.subsystem.yaml	expect/corpus-a111_calls_requests_ok.json	принятый случай корпуса 2.1
 corpus-a111_names_deep_ok	Platform/02-installer/acceptance/1/cases/a111_names_deep_ok.subsystem.yaml	expect/corpus-a111_names_deep_ok.json	принятый случай корпуса 2.1
 corpus-a112_calls_list_ok	Platform/02-installer/acceptance/1/cases/a112_calls_list_ok.subsystem.yaml	expect/corpus-a112_calls_list_ok.json	принятый случай корпуса 2.1
+corpus-a112_calls_shared_ok	Platform/02-installer/acceptance/1/cases/a112_calls_shared_ok.subsystem.yaml	expect/corpus-a112_calls_shared_ok.json	принятый случай корпуса 2.1
 corpus-a113_book_all_ok	Platform/02-installer/acceptance/1/cases/a113_book_all_ok.subsystem.yaml	expect/corpus-a113_book_all_ok.json	принятый случай корпуса 2.1
 corpus-a86_sub_manifest2	Platform/02-installer/acceptance/1/cases/a86_sub_manifest2.subsystem.yaml	expect/corpus-a86_sub_manifest2.json	принятый случай корпуса 2.1
 corpus-a91_affinity_exclusive_ok	Platform/02-installer/acceptance/1/cases/a91_affinity_exclusive_ok.subsystem.yaml	expect/corpus-a91_affinity_exclusive_ok.json	принятый случай корпуса 2.1
