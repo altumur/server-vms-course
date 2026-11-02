@@ -2,7 +2,7 @@
 
 Статус: **переведён** (2026-10-30, «Спецификация VMS»; план принят «Архитектором»): главы V/11.1–V/11.13 — нормы, главы 9–13 перешли из V/10 (ADR-0093 доп. (8) п. 2; 2026-11-02); стенд —
 по кандидату с нормами платформы B. Основание — ADR-0094 (A1–A7, доп. (1)–(16); B1–B7, B9 — нормы платформы), ADR-0095–ADR-0100.
-Платформа — выгрузка `cammeta-specs` `543d9c08` (пин VMS; приращение прав поверх норм B, ADR-0090 доп. (17)). Манифест — [`backend.subsystem.yaml`](backend.subsystem.yaml)
+Платформа — выгрузка `cammeta-specs` `504348e5` (пин VMS; приращение прав поверх норм B, ADR-0090 доп. (17)). Манифест — [`backend.subsystem.yaml`](backend.subsystem.yaml)
 (канон; ADR-0090 доп. (6) п. 8). Источники — сессия «Консоль»
 (сравнение с consolem, набросок адаптера; справка, не канон).
 
@@ -209,7 +209,7 @@ N» основы выключены: их провалы — ответы, ко�
 Приёмка — тесты API consolem (`tests/api-*.js` на закреплённом коммите) против стенда в профиле возможностей и свой набор
 [`acceptance/`](acceptance/) того, чего эти тесты не видят (ADR-0094 доп. (17); глава 6 Н5); `?selftest` — проверка сборки продуктом под нашим CSP (ADR-0094
 Confirmation; глава 6 Н1.4). Профиль — таблица урока [`data/profile-tests.tsv`](data/profile-tests.tsv) (V/11.6 Н1.2); она сверяется при новой версии контракта.
-Ассистент — векторы [`plan-check`](vectors/plan-check/README.md), [`turn`](vectors/turn/README.md), [`rules-words`](vectors/rules-words/README.md), исполняет драйвер `backend` (V/11.7 Н5), заглушка модели — V/10.2 Н5.
+Ассистент — векторы [`plan-check`](vectors/plan-check/README.md), [`turn`](vectors/turn/README.md), [`rules-words`](vectors/rules-words/README.md), [`zone-mask`](vectors/zone-mask/README.md) (растр зоны, V/11.3 Н1.3), исполняет драйвер `backend` (V/11.7 Н5), заглушка модели — V/10.2 Н5.
 
 ## Открытые вопросы
 

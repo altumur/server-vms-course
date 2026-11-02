@@ -46,7 +46,7 @@ objects: {rows: [ingest/clock/*, ingest/up/*, sealed/*, used/*, taken/*]}
 # (`place_by`), why that volume will not open, the box's own volume a page offers to declare, and where
 # the ingest it hosts takes streams (`ingest`: the domain writes it into the cameras' books, the cluster's other ingests
 # find it there; ADR-0065, its addition of 2026-10-08).
-heartbeat: {strings: [volume, volume_error, ingest, volume_missing], door: [keeps, volume]}   # door: the words of a hold for `backend` (V/11.4 Н1.23)
+heartbeat: {strings: [volume, volume_error, ingest, volume_missing], door: [keeps, volume, volume_missing]}   # door: the words of a hold and a lost volume for `backend` (V/11.4 Н1.23, V/11.3 Н1.3)
 # A recorder records on past an unconfirmed lease for as long as the silence lasts — its samples carry the epoch — but
 # a volume any box may serve is let go when its hold goes unconfirmed (`placement.places.lease: strict` below).
 lease: {unconfirmed_max: forever}
@@ -530,7 +530,7 @@ domain:
     recordings: [cam, ref, stream, retention_days, enabled, home, when, replica_from]
     volumes: [kind, url, server, quota_bytes, retention_days, access_key, enabled, shrink_confirmed, when, admits, held_by]
   books:
-    primaries: {from: rec/primaries/, key: ref, pick: all, to: to, show: [recording, running, role, coverage, retention_days, when, home]}
+    primaries: {from: rec/primaries/, key: ref, pick: all, to: to, show: [recording, running, role, retention_days, when, home]}
     polls: {from: rec/polls/, key: ref, pick: unique, to: to}
     upstream: {from: rec/upstream/, key: relay, pick: unique, to: to}
   tokens:

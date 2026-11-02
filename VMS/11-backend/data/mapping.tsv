@@ -61,7 +61,7 @@ Device(type=camera)	codec	cam/heartbeats	codec	read	слово пульса, т�
 Device(type=camera)	login	cam/cameras	cred_username	both
 Device(type=camera)	hasPassword	cam/cameras	cred_secret	read	true — секрет задан; значение не отдаётся
 Device(type=camera)	password	cam/cameras	cred_secret	write	нет поля — не трогать; null или "" — снять; строка — новый (V/11.3 Н1.3)
-Device(type=camera)	serverId	rec/heartbeats	сервер держателя основной записи <cam>; свёрнутая камера w2c — сервер приёмника: Unit GET /domain/rec/recordings с её ref на другом члене, UUID server:<cluster>/<server>	read	наблюдение, в версию не входит; нет держателя, нет приёмника — поля нет, группа «Без сервера» (V/11.3 Н1.3 «Камера w2c»); при создании пропускается без записи (V/11.3 Н1.1)
+Device(type=camera)	serverId	rec/heartbeats	сервер держателя основной записи <cam>; свёрнутая камера w2c — сервер приёмника: Unit GET /domain/rec/recordings с её ref и cluster назначения, UUID server:<cluster>/<server>	read	наблюдение, в версию не входит; нет держателя, нет приёмника — поля нет, группа «Без сервера» (V/11.3 Н1.3 «Камера w2c»); при создании пропускается без записи (V/11.3 Н1.1)
 Device(type=camera)	online	cam/heartbeats	phase	read	running, idle или held — true; в версию не входит
 Device(type=camera)	fault	cam/heartbeats	device_state	read	отказ входа — auth, не открылось или нет связи — conn, иное — drv; устройство отвечает — поля нет
 Device(type=camera)	licenseExceeded	cam/heartbeats	phase	read	unlicensed — true (V/01.7)
@@ -79,7 +79,7 @@ Device(type=camera)	resOptions	cam/devices	resolutions хоста	read	поля 
 Device(type=camera)	labels	cam/cameras	labels	both	метка server:* не отдаётся, запись её сохраняет (V/11.3 Н1.3)
 Device(type=camera)	alarmKinds	cam/cameras	alarms	both
 Device(type=camera)	faultText	cam/heartbeats	reason; нет — warning	read	слова держателя; в версию не входит
-Device(type=camera)	recordState, recordReason	rec/heartbeats, auto/schedules	phase, reason элемента status[] основной <cam>; при sched — слова backend schedule is gone, schedule unread (V/11.3 Н1.3)	read	в версию не входит
+Device(type=camera)	recordState, recordReason	rec/heartbeats, auto/schedules	phase, reason элемента status[] основной <cam>; нет reason — слова replica_lost_s, over_quota; при sched — слова backend schedule is gone, schedule unread (V/11.3 Н1.3)	read	в версию не входит
 Device(type=camera)	ptz	cam/heartbeats	can.ptz	read	can не сказан — поля нет; в версию не входит
 Device(type=camera)	presets	cam/preset_labels, cam/heartbeats	номера строк таблицы и can.preset_names, name — label строки, пустой — имя драйвера	read	запись — операции /presets (V/11.4 Н1.16); в версию не входит
 Device(type=camera)	presetMax	cam/heartbeats	can.presets	read	can не сказан — поля нет; в версию не входит (V/11.4 Н1.16)
@@ -90,7 +90,7 @@ Device(type=camera)	version	cam/cameras + rec/recordings + det/units + cam/devic
 Device(type=camera)	armed	cam/rule_state	armed	read	строки нет — false; строка не читается — поля нет (V/11.3 Н1.3)
 Device(type=camera)	disabledByRuleId	cam/rule_state	disabled_by_rule	read	UUID rule:<кластер>/auto/scenarios/<id>; только если disabled_until позже сейчас, иначе null; строка не читается — поля нет
 Device(type=camera)	disabledByRuleAt	cam/rule_state	disabled_at	read	те же условия; секунды → date-time UTC
-Device(type=camera)	recordDetectorIds	auto/scenarios	цель строки записи: строки det/units вида kind камер цели	both	только при recordMode motion; строки нет — []; разные виды — 422 NOT_SUPPORTED (V/11.3 Н1.3)
+Device(type=camera)	recordDetectorIds	auto/scenarios	цель строки записи: строки det/units вида kind камер цели и их встроенные этого вида	both	только при recordMode motion; строки нет — []; разные виды — 422 NOT_SUPPORTED (V/11.3 Н1.3)
 Device(type=camera)	archiveJobs	GET /domain	false у камеры-кластера и чужой, своя — поля нет	read	V/11.3 Н1.3; в версию не входит
 Device(type=camera)	recordScheduleId	auto/scenarios	schedule условия time строки записи	both	только при recordMode sched; нет — 422 VALIDATION_FAILED (V/11.4 Н1.2)
 Device(type=camera)	mac, writableFields	—	—	none	при создании пропускается без записи: MAC камеры — только из поиска (ADR-0102 доп. (7) п. 3; V/11.3 Н1.1)
@@ -291,7 +291,7 @@ Volume	name	rec/volumes	name	read	ключ строки: правка — 422 NO
 Volume	disk	rec/volumes	url: путь file:// без конечного сегмента, равного Archive.id, иначе путь целиком; у бакета — схема	both	запись — file://<disk>/<Archive.id> (V/11.3 Н1.3)
 Volume	sizeBytes	rec/volumes	quota_bytes	both
 Volume	usedPercent	—	0	const	заполнения тома строка и пульс не несут; поле обязательно в контракте (V/11.3 Н1.3)
-Volume	state	rec/volumes	enabled: false — off, иначе ready	read	V/11.3 Н1.3
+Volume	state	rec/volumes, rec/heartbeats	enabled: false — off, volume_missing пульса — broken, иначе ready	read	V/11.3 Н1.3
 Volume	enabled	rec/volumes	enabled	both	поля нет — true; false — state off
 Volume	shrinkPendingBytes	rec/heartbeats	shrink_pending элемента тома	read	нет — поля нет; в версию не входит (V/11.3 Н1.3)
 Volume	confirmShrinkBytes	rec/volumes	shrink_confirmed	write	равно sizeBytes; не отдаётся (V/11.3 Н1.3)
@@ -337,7 +337,7 @@ Rule	mute	auto/rule_marks	mute	read	пишет /rules/update; числа ↔ dat
 Rule	order	auto/rule_marks	order	read	пишут POST /rules, /rules/reorder; только среди правил одного вычислителя
 Rule	version	auto/scenarios + auto/rule_marks	s<индекс строки>.m<индекс отметки>	read	V/11.4 Н1.10
 Rule	historyNote	auto/versions	note строки версии	write	RuleWrite: restore, undo; в ответе поля нет
-RuleTrigger	source	auto/scenarios	when[].sub: vms ↔ cam, det, rec	both
+RuleTrigger	source	auto/scenarios	when[].sub: vms ↔ cam, det, rec; det покрывает и встроенный, V/07.2 Н1.3	both
 RuleTrigger	kind	auto/scenarios	when[].kind как есть	both
 RuleTrigger	target	auto/scenarios	when[].target; unit — цель из одного устройства	both	см. RuleTarget
 RuleTrigger	match	auto/scenarios	when[].match: value active ↔ closed, normal ↔ open; port строка цифр ↔ целое, из записи цели; word как есть; у вида unit word ↔ event, unit — ключ cam/device_units; прочие ключи и типы как есть	both	template — 422 NOT_SUPPORTED; расхождение номера — RULE_INVALID (V/11.3 Н1.3)

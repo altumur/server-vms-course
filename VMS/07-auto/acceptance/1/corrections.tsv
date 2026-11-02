@@ -8,3 +8,4 @@ date	sample	fix	languages
 2026-11-01	1/scenarios.tsv: 08-run шаг 14	done, желания всех wait_event, очередь (Quint vrun В1–В3)	all
 2026-11-01	1/scenarios.tsv: 07-requests шаг 6	ответ POST таблицы — 201 {row: TableRow} (P/06.1 Н2), поля шли верхним уровнем; проба V/07, стыки 3	all
 2026-11-01	1/scenarios.tsv: 08-run шаги 15–18	добавлены: путь после ветки, запись ветки до шагов, имя при смене состава цели, вид устройства, конец ask и escalate, цепочка после падения и правки; проба V/07	all
+2026-11-02	1/scenarios.tsv: 07-requests шаг 11	встроенный детектор идёт как det, сверка С13	all

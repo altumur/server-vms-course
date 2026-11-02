@@ -27,7 +27,7 @@ scenario	step	request	expect
 04-sound	3	@manual POST /requests {"unit": "$c", "action": "talk", "port": 1} — performed, устройство получило Call; второй человек — refused «busy»; тот же — performed	manual
 04-sound	4	@manual talk без port, с чужим port, spk выключен — talk needs a port, no such speaker, speaker is disabled	manual
 04-sound	5	@manual маршрут talk не открыт 30 с — HangUp, занятость снята; маршрут оборван — HangUp; кадра нет 8 с без обрыва — HangUp; устройство положило трубку — маршрут закрыт	manual
-05-builtin	1	@manual подставной драйвер с аналитикой (в Drivers/Virtual её нет): строка cam/device_units type det — CreateVideoAnalytics с каналом и template, Start; enabled: false — Stop; событие — строка unit в бакете камеры	manual
+05-builtin	1	@manual подставной драйвер с аналитикой (в Drivers/Virtual её нет): строка cam/device_units type det — CreateVideoAnalytics с каналом и template, Start; enabled: false — Stop; событие — строка unit в бакете камеры, det_kind по detector-kinds.tsv, открытая фаза повторяется phase: still раз в 30 с	manual
 05-builtin	2	@manual детектора нет у канала, conflictDetectors у двух включённых строк, строка на ipsrv: units_down refused у большего n, соседние идут	manual
 05-builtin	3	@manual камера с одной replica и встроенным детектором: фаза idle, поток не читается, события идут	manual
 05-ptz	1	@manual подставной драйвер с телеметрией: can.ptz по индексу канала, нет ссылки — ложь; preset_save, preset_clear — performed, reply {action, n}; у камеры без телеметрии — this device has no telemetry; право edit на камеру, а не на группу	manual

@@ -32,7 +32,7 @@ devices	409	IDENTIFIER_TAKEN	identifier	11.4 Н1.2, Н1.5: занятый ном
 devices	422	PARENT_MISMATCH	parentId	11.4 Н1.5: parentId создания
 devices	-	IDENTIFIER_TAKEN	identifier	11.4 Н1.5: failed элемента, статус 200
 devices	-	PARENT_MISMATCH	parentId	11.4 Н1.5: failed элемента, статус 200
-devices	422	NOT_SUPPORTED	recordMode	11.2, 11.3 Н4: sched
+devices	422	VALIDATION_FAILED	recordScheduleId	11.4 Н1.3: sched без расписания
 devices	422	NOT_SUPPORTED	recordDetectorIds	11.3 Н4: разные виды
 devices	422	VALIDATION_FAILED	recordDetectorIds	11.3 Н4: не det/units, встроенный, без motion
 devices	-	VALIDATION_FAILED	folderId	11.4 Н1.7: failed, двери домена не отвечают, устройства нет
