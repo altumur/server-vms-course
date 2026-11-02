@@ -370,8 +370,8 @@ RuleFire	by, result, checks	GET /events	те же поля fired; waiting, а з
 RuleFire	logOnly	GET /events	log_only	read	нет — false
 RuleFire	sourceDeviceIds	GET /events	source	read
 RuleFire	events	GET /events	events: sub ↔ source, cam ↔ deviceId, occurred ↔ at	read
-RuleFire	steps	GET /events	строки step: step ↔ path, target ↔ deviceId, action, label, result ↔ state, reason, note	read	control — поле не null; skip — result: skip; depth — число веток в step (V/11.3 Н1.3)
-RulePrompt	—	auto/scenarios	state.runs строки: шаг ask, уровень escalate	read	свой кластер (V/11.3 Н1.3)
+RuleFire	steps	GET /events	строки step: step ↔ path, target ↔ deviceId, action, label, result ↔ state, reason, note	read	control — поле не null; skip — result: skip; depth — число веток в step; label, note — {code, params}: role ↔ roleId, user ↔ login (V/11.3 Н1.3)
+RulePrompt	—	auto/scenarios	state.runs строки: шаг ask, уровень escalate; кроме log_only и until 0	read	свой кластер (V/11.3 Н1.3)
 RulePrompt	id	auto/scenarios	UUID rulePrompt:<кластер>/<scenario>/<fire>/<step>[/<n>]	read
 RulePrompt	ruleId, fireId, step	auto/scenarios	строка, fire, step запуска	read	как RuleFire
 RulePrompt	kind, roleId	auto/scenarios	ask, escalate шага; role шага или уровня	read
