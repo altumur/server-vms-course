@@ -136,9 +136,15 @@
       "type": "string",
       "enum": [
        "begin",
-       "end"
+       "end",
+       "still"
       ],
-      "description": "у двухфазного события; у мгновенного поля нет"
+      "description": "у двухфазного события: still — фаза открыта, повтор держателя; у мгновенного поля нет"
+     },
+     "det_kind": {
+      "type": "string",
+      "minLength": 1,
+      "description": "у встроенного детектора: вид по detector-kinds.tsv, вне таблицы other"
      }
     },
     "required": [
