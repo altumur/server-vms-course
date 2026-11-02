@@ -211,7 +211,7 @@ components:
           type: integer
           minimum: 1
           description: "верхняя граница — context строки модели (V/10.2 Н1.2): больше — 400 bad step"
-        turn: {type: string, pattern: "^(?:[0-9a-f]{32})$", description: "ход страницы (V/10.2 Н1.2, Н1.4)"}
+        turn: {type: string, pattern: "^(?:[0-9a-f]{32})$", description: "ход клиента (V/10.2 Н1.2, Н1.4)"}
     StepState:
       description: состояние шага по ветвям (V/10.2 Н1.3)
       type: object
@@ -268,7 +268,7 @@ components:
       description: токен двери консоли (договор токена двери)
   responses:
     Refusal:
-      description: отказ (V/10.2 Н4); срок повтора — в теле `retry_after` (Retry-After странице не виден через CORS), кроме busy двери процесса — там срока в теле нет
+      description: отказ (V/10.2 Н4); срок повтора — в теле `retry_after` (Retry-After клиенту в браузере не виден через CORS), кроме busy двери процесса — там срока в теле нет
       headers:
         Connection:
           required: false
