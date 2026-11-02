@@ -127,7 +127,7 @@ door:
       - marks                        # a bookmark: POST only, `edit` on the unit of the body, the ticket's person (V/11.4 Н1.24)
       - GET domain/rec/books/primaries # recordings of other clusters, this member's copy (V/11.4 Н1.22)
       - GET domain/at/rec/where      # the door of a recording of another cluster
-      # `domain/at/rec/timeline`, doors of places: wait for P/06.7 Н1.6 (ADR-0112 доп. (13) п. 10; V/11.1 Н1.2а)
+      - GET domain/at/rec/timeline   # the timeline of another cluster, its console passes it (ADR-0112 доп. (13) п. 10; P/06.7 Н1.6)
       - GET domain/at/rec/keeps
       - GET domain/at/rec/heartbeats
       - GET domain/cam/books/licence # the licence, read only (V/11.3 Н1.3; P/06.3 Н1.9)
