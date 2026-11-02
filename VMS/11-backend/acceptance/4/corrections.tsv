@@ -41,3 +41,4 @@ date	sample	fix	languages
 2026-11-02	4/scenarios.tsv: новый 33-archive-retention; 10-archives шаг 54 снят	умолчание тома новой записи настоящими шагами (ADR-0112 доп. (6) п. 2)	all
 2026-11-02	4/scenarios.tsv: 10-archives шаг 5, шаги 53–56; 31-server-labels шаг 6; 32-archive-tasks шаг 7	контракт e0dd560: archiveModeDefault, recordMode null, class, archiveJobs	all
 2026-11-02	4/scenarios.tsv: 19-revert шаг 45	снятое поле в before, after значением null	all
+2026-11-02	4/scenarios.tsv: 10-archives шаги 56–61; 19-revert шаг 45 снят	откат и повтор recordMode null настоящими шагами	all

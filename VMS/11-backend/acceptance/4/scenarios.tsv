@@ -299,7 +299,12 @@ scenario	step	request	expect
 10-archives	53	member m1 console2 GET /api/archives/$card	200 {"version": "$vc3"}
 10-archives	54	member m1 console2 @header If-Match: "$vc3" PATCH /api/archives/$card {"recordMode": null}	200 {"recordMode": "@absent"}
 10-archives	55	member m1 console2 GET /api/archives/$card	200 {"recordMode": "@absent"}
-10-archives	56	@manual shrinkPendingBytes из пульса регистратора, полная сверка archiveKinds, серверная строка readOnly: стенд без воркеров	manual
+10-archives	56	member m1 console2 GET /api/operations?limit=1	200 {"items": [{"id": "$nul"}]}
+10-archives	57	member m1 console2 POST /api/operations/$nul/revert	202 {"id": "$rnul"}
+10-archives	58	@until 30 member m1 console2 GET /api/archives/$card	200 {"recordMode": "backup"}
+10-archives	59	member m1 console2 POST /api/operations/$nul/redo	202 {"id": "$dnul"}
+10-archives	60	@until 30 member m1 console2 GET /api/archives/$card	200 {"recordMode": "@absent"}
+10-archives	61	@manual shrinkPendingBytes из пульса регистратора, полная сверка archiveKinds, серверная строка readOnly: стенд без воркеров	manual
 11-devices	1	@domain m1	ok
 11-devices	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 11-devices	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
@@ -601,7 +606,6 @@ scenario	step	request	expect
 19-revert	42	member m1 console2 POST /api/operations/$op4/revert	404 {"code": "NOT_FOUND"}
 19-revert	43	@manual откат тома, удаления, папок и смены bound_to — fail со словом; идущая операция — 409 running: шаги стенда идут быстрее двух запросов; одиночная правка: id взять неоткуда, GET /operations нет в контракте; UNDO_KEEP, UNDO_DAYS стенду не дождаться	manual
 19-revert	44	@manual откат с fail оставляет ряд открытым, повтор идёт, операция не закрыта; 50 правок и 50 откатов назад дошли до первой: стенд не держит столько шагов	manual
-19-revert	45	@manual Archive.recordMode null: откат возвращает when, повтор снимает его снова, when поставлен мимо backend — fail VERSION_MISMATCH: тома edge в сценарии нет	manual
 20-motion	1	@domain m1	ok
 20-motion	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 20-motion	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
