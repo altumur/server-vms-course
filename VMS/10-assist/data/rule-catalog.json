@@ -1,0 +1,266 @@
+{
+ "_note": "Каталог событий, шагов, условий и управления правил: данные урока V/10 (глава 7 Н1.3). Слова контракта; канон строки V/07 у входа — closed, open, перевод V/11.3 Н1.3.",
+ "triggers": [
+  {
+   "source": "vms",
+   "kind": "io.input",
+   "match": [
+    {
+     "id": "value",
+     "options": [
+      "active",
+      "normal"
+     ]
+    }
+   ]
+  },
+  {
+   "source": "vms",
+   "kind": "text",
+   "deviceTypes": [
+    "eventsrc"
+   ],
+   "match": [
+    {
+     "id": "word",
+     "options": []
+    }
+   ]
+  },
+  {
+   "source": "vms",
+   "kind": "unit",
+   "deviceTypes": [
+    "acfa_sensor",
+    "acfa_lock",
+    "acfa_fence",
+    "relay",
+    "acfa"
+   ],
+   "match": [
+    {
+     "id": "word",
+     "options": []
+    }
+   ]
+  },
+  {
+   "source": "det",
+   "kind": "motion",
+   "match": []
+  },
+  {
+   "source": "det",
+   "kind": "linecross",
+   "match": []
+  },
+  {
+   "source": "det",
+   "kind": "lpr",
+   "match": []
+  },
+  {
+   "source": "vms",
+   "kind": "silent",
+   "match": []
+  },
+  {
+   "source": "rec",
+   "kind": "segment.lost",
+   "match": []
+  }
+ ],
+ "actions": [
+  {
+   "source": "vms",
+   "action": "arm",
+   "deviceTypes": [
+    "camera"
+   ],
+   "fields": [
+    {
+     "id": "target"
+    }
+   ]
+  },
+  {
+   "source": "vms",
+   "action": "disarm",
+   "deviceTypes": [
+    "camera"
+   ],
+   "fields": [
+    {
+     "id": "target"
+    }
+   ]
+  },
+  {
+   "source": "vms",
+   "action": "preset",
+   "deviceTypes": [
+    "camera"
+   ],
+   "fields": [
+    {
+     "id": "target"
+    },
+    {
+     "id": "preset"
+    }
+   ]
+  },
+  {
+   "source": "rec",
+   "action": "record",
+   "deviceTypes": [
+    "camera"
+   ],
+   "fields": [
+    {
+     "id": "target"
+    },
+    {
+     "id": "duration",
+     "options": [
+      "min"
+     ],
+     "optional": true
+    },
+    {
+     "id": "minutes"
+    },
+    {
+     "id": "archive",
+     "optional": true
+    }
+   ]
+  },
+  {
+   "source": "vms",
+   "action": "disable",
+   "deviceTypes": [
+    "camera"
+   ],
+   "fields": [
+    {
+     "id": "target"
+    },
+    {
+     "id": "minutes"
+    }
+   ]
+  },
+  {
+   "source": "alarm",
+   "action": "alarm",
+   "deviceTypes": [
+    "camera"
+   ],
+   "fields": [
+    {
+     "id": "target"
+    },
+    {
+     "id": "priority",
+     "options": [
+      "normal",
+      "high"
+     ],
+     "optional": true
+    },
+    {
+     "id": "text",
+     "optional": true
+    }
+   ]
+  },
+  {
+   "source": "vms",
+   "action": "output",
+   "deviceTypes": [
+    "relay"
+   ],
+   "fields": [
+    {
+     "id": "target"
+    },
+    {
+     "id": "pulseMs"
+    }
+   ]
+  },
+  {
+   "source": "rule",
+   "action": "runrule",
+   "deviceTypes": [],
+   "fields": [
+    {
+     "id": "ruleId"
+    }
+   ]
+  },
+  {
+   "source": "vms",
+   "action": "unit",
+   "deviceTypes": [
+    "acfa_sensor",
+    "acfa_lock",
+    "acfa_fence",
+    "relay",
+    "acfa"
+   ],
+   "fields": [
+    {
+     "id": "target"
+    },
+    {
+     "id": "operation"
+    }
+   ]
+  }
+ ],
+ "conditions": [
+  {
+   "kind": "time",
+   "deviceTypes": []
+  },
+  {
+   "kind": "mode",
+   "deviceTypes": []
+  },
+  {
+   "kind": "armed",
+   "deviceTypes": [
+    "camera"
+   ]
+  },
+  {
+   "kind": "recording",
+   "deviceTypes": [
+    "camera"
+   ]
+  },
+  {
+   "kind": "online",
+   "deviceTypes": [
+    "camera",
+    "sensor",
+    "relay"
+   ]
+  }
+ ],
+ "controls": [
+  {
+   "control": "wait",
+   "branches": []
+  },
+  {
+   "control": "waitEvent",
+   "branches": [
+    "yes",
+    "no"
+   ]
+  }
+ ]
+}

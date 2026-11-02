@@ -1,0 +1,677 @@
+{
+ "world": {
+  "cameras": [
+   {
+    "id": "1",
+    "name": "Gate Cam"
+   },
+   {
+    "id": "2",
+    "name": "Lobby Cam"
+   },
+   {
+    "id": "3",
+    "name": "Yard PTZ"
+   },
+   {
+    "id": "4",
+    "name": "Dock Cam"
+   },
+   {
+    "id": "12",
+    "name": "Fence East"
+   },
+   {
+    "id": "13",
+    "name": "Fence West"
+   }
+  ],
+  "children": [
+   {
+    "key": "1-sensor-1",
+    "cam": "1",
+    "type": "sensor",
+    "number": 1,
+    "name": "Gate Loop"
+   },
+   {
+    "key": "1-sensor-2",
+    "cam": "1",
+    "type": "sensor",
+    "number": 2,
+    "name": "Gate Button"
+   },
+   {
+    "key": "1-relay-1",
+    "cam": "1",
+    "type": "relay",
+    "number": 1,
+    "name": "Gate Barrier"
+   },
+   {
+    "key": "1-relay-2",
+    "cam": "1",
+    "type": "relay",
+    "number": 2,
+    "name": "Gate Light"
+   },
+   {
+    "key": "2-sensor-1",
+    "cam": "2",
+    "type": "sensor",
+    "number": 1,
+    "name": "Lobby Door"
+   },
+   {
+    "key": "2-relay-1",
+    "cam": "2",
+    "type": "relay",
+    "number": 1,
+    "name": "Lobby Siren"
+   },
+   {
+    "key": "4-sensor-3",
+    "cam": "4",
+    "type": "sensor",
+    "number": 3,
+    "name": "Dock Door"
+   },
+   {
+    "key": "4-sensor-4",
+    "cam": "4",
+    "type": "sensor",
+    "number": 4,
+    "name": "Dock Shutter"
+   },
+   {
+    "key": "4-relay-3",
+    "cam": "4",
+    "type": "relay",
+    "number": 3,
+    "name": "Dock Horn"
+   },
+   {
+    "key": "4-relay-4",
+    "cam": "4",
+    "type": "relay",
+    "number": 4,
+    "name": "Dock Light"
+   },
+   {
+    "key": "12-sensor-1",
+    "cam": "12",
+    "type": "sensor",
+    "number": 1,
+    "name": "Fence Tamper East"
+   },
+   {
+    "key": "12-relay-1",
+    "cam": "12",
+    "type": "relay",
+    "number": 1,
+    "name": "Fence Floodlight"
+   },
+   {
+    "key": "13-sensor-1",
+    "cam": "13",
+    "type": "sensor",
+    "number": 1,
+    "name": "Fence Tamper West"
+   }
+  ],
+  "folders": [
+   {
+    "id": "10",
+    "name": "Building A",
+    "parent": null
+   },
+   {
+    "id": "11",
+    "name": "Floor 1",
+    "parent": "10"
+   },
+   {
+    "id": "12",
+    "name": "Floor 2",
+    "parent": "10"
+   },
+   {
+    "id": "20",
+    "name": "Parking",
+    "parent": null
+   },
+   {
+    "id": "30",
+    "name": "Perimeter",
+    "parent": null
+   },
+   {
+    "id": "40",
+    "name": "Restricted",
+    "parent": null
+   }
+  ],
+  "schedules": [
+   {
+    "id": "11111111-0000-4000-8000-00000000000a",
+    "title": "Always"
+   },
+   {
+    "id": "11111111-0000-4000-8000-00000000000b",
+    "title": "Never"
+   },
+   {
+    "id": "11111111-0000-4000-8000-000000000001",
+    "title": "Night"
+   },
+   {
+    "id": "11111111-0000-4000-8000-000000000002",
+    "title": "Business hours"
+   },
+   {
+    "id": "11111111-0000-4000-8000-000000000003",
+    "title": "Weekend"
+   },
+   {
+    "id": "11111111-0000-4000-8000-000000000004",
+    "title": "Sunday service slot"
+   }
+  ],
+  "modes": [
+   {
+    "id": "22222222-0000-4000-8000-000000000001",
+    "name": "Work"
+   },
+   {
+    "id": "22222222-0000-4000-8000-000000000002",
+    "name": "Night"
+   },
+   {
+    "id": "22222222-0000-4000-8000-000000000003",
+    "name": "Weekend"
+   },
+   {
+    "id": "22222222-0000-4000-8000-000000000004",
+    "name": "Regular"
+   },
+   {
+    "id": "22222222-0000-4000-8000-000000000005",
+    "name": "Service"
+   },
+   {
+    "id": "22222222-0000-4000-8000-000000000006",
+    "name": "High Alert"
+   }
+  ],
+  "rules": [
+   {
+    "id": 101,
+    "name": "Gate barrier on loop"
+   },
+   {
+    "id": 102,
+    "name": "Lobby night alarm"
+   },
+   {
+    "id": 103,
+    "name": "Fence alarm"
+   },
+   {
+    "id": 104,
+    "name": "Yard tour"
+   }
+  ]
+ },
+ "cases": [
+  {
+   "id": "ok-relay-normal",
+   "note": "просьба названа целиком, value normal",
+   "request": "When the Dock Door sensor goes back to normal, turn off the Dock Light relay.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "4",
+      "match": {
+       "port": 3,
+       "value": "normal"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "4",
+      "port": 4,
+      "state": "open"
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "ok-two-cams",
+   "note": "детектор одной, охрана другой",
+   "request": "When a line is crossed on Fence West, arm Fence East.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "linecross",
+      "unit": "13-linecross"
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "arm",
+      "unit": "12"
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "polarity",
+   "note": "конец тревоги записан началом",
+   "request": "When the Dock Door sensor goes back to normal, turn off the Dock Light relay.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "4",
+      "match": {
+       "port": 3,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "4",
+      "port": 4,
+      "state": "open"
+     }
+    ]
+   },
+   "errors": [
+    "when[0]: value active: active is the alarm starting, normal is back to normal; the request says otherwise"
+   ]
+  },
+  {
+   "id": "picked-sensor",
+   "note": "сам выбрал датчик за админа",
+   "request": "When the gate sensor trips, turn on the Gate Light.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 2,
+      "state": "closed"
+     }
+    ]
+   },
+   "errors": [
+    "when[0]: the request does not name Gate Loop: Gate Loop, Gate Button fit. ask_admin which one"
+   ]
+  },
+  {
+   "id": "invented-number",
+   "note": "«немного» стало 5 минутами",
+   "request": "On motion on Lobby Cam, record it for a while.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "rec",
+      "action": "record",
+      "cam": "2",
+      "minutes": 5
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: minutes 5 is not in the request. Never invent a value: ask_admin"
+   ]
+  },
+  {
+   "id": "substitute-minutes",
+   "note": "«пока идёт движение» подменено сроком",
+   "request": "When motion is detected on Lobby Cam, record it for as long as the motion lasts.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "rec",
+      "action": "record",
+      "cam": "2",
+      "minutes": 60
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: minutes 60 is not in the request. Never invent a value: ask_admin"
+   ]
+  },
+  {
+   "id": "substitute-action",
+   "note": "закрыть тревогу подменено снятием с охраны",
+   "request": "When the Gate Loop sensor trips, close the alarm on Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "disarm",
+      "unit": "1"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: the request does not ask for cam disarm. Do not substitute a similar action: if the system cannot do what was asked, refuse"
+   ]
+  },
+  {
+   "id": "extra-priority",
+   "note": "высокий приоритет не просили",
+   "request": "When Yard PTZ goes silent, raise an alarm on it.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "silent",
+      "unit": "3"
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "3"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      },
+      "priority": "high"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: the request does not ask for high priority: leave priority out"
+   ]
+  },
+  {
+   "id": "own-schedule",
+   "note": "«тихие часы» стали расписанием Night",
+   "request": "When the Lobby Door sensor trips, raise an alarm on Lobby Cam during quiet hours.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "2",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "2"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ],
+    "conditions": [
+     {
+      "kind": "time",
+      "schedule": "11111111-0000-4000-8000-000000000001"
+     }
+    ]
+   },
+   "errors": [
+    "conditions[0]: the request does not name the schedule Night: if no schedule fits the admin's words, ask_admin"
+   ]
+  },
+  {
+   "id": "unnamed-camera",
+   "note": "камеру не называли",
+   "request": "When the Gate Loop sensor trips, record Dock Cam and Yard PTZ for 5 minutes.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "rec",
+      "action": "record",
+      "cam": "12",
+      "minutes": 5
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: the request does not name Fence East. A camera must be named; a whole folder is a target with kind folder. If it is unclear which device, ask_admin"
+   ]
+  },
+  {
+   "id": "log-only-word",
+   "note": "log_only модель пишет только по просьбе: заводит его код",
+   "request": "On motion on Lobby Cam, record it for 2 minutes.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "rec",
+      "action": "record",
+      "cam": "2",
+      "minutes": 2
+     }
+    ],
+    "log_only": true
+   },
+   "errors": [
+    "log_only: the request does not ask for it"
+   ]
+  },
+  {
+   "id": "no-scan",
+   "note": "скан не составляется: Н1.5",
+   "request": "When motion is detected on Lobby Cam, scan its archive 60 seconds before.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "det",
+      "action": "scan",
+      "cam": "2",
+      "kind": "motion",
+      "before": 60
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: such a rule is created on the console page: refuse"
+   ]
+  },
+  {
+   "id": "no-ask",
+   "note": "ask не составляется: Н1.5",
+   "request": "When the Gate Loop sensor trips, ask the operator.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "role": "x",
+      "sec": 60
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: such a rule is created on the console page: refuse"
+   ]
+  },
+  {
+   "id": "gap-units",
+   "note": "предел Н1.6: единиц число не знает, 300 с приняты при «5 часов»",
+   "request": "When the Gate Loop sensor trips, wait 5 hours and raise an alarm on Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "wait",
+      "sec": 300
+     },
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "1"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [],
+   "known_gap": true
+  },
+  {
+   "id": "gap-dropped-step",
+   "note": "предел Н1.7: выпавший шаг проверка не видит, сверка принимает план",
+   "request": "When a line is crossed on Fence East, raise an alarm on it and arm Fence West.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "linecross",
+      "unit": "12-linecross"
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "12"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [],
+   "known_gap": true
+  }
+ ]
+}
