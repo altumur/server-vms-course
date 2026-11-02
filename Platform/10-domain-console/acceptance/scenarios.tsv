@@ -155,3 +155,7 @@ scenario	step	request	expect
 19-relay-door	6	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
 19-relay-door	7	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$ann"}
 19-relay-door	8	holder @header Authorization: Bearer $ann GET /domain/relays/relay	403
+19-relay-door	9	holder @header Authorization: Bearer $ann GET /domain/relays/nosuch	403
+19-relay-door	10	member m1 console GET /domain/relays/relay	200 {"relay": "relay", "members": ["m1"]}
+19-relay-door	11	@person -	ok
+19-relay-door	12	holder GET /domain/relays/relay	401

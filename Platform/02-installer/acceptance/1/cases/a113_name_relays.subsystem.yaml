@@ -1,0 +1,5 @@
+# зарезервированное имя (02.1 name, ревью c69957eb7 М1)
+name: relays
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}, key_secret: {type: string}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}

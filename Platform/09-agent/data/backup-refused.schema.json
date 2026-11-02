@@ -447,6 +447,14 @@
        "type": "null"
       }
      ]
+    },
+    "new": {
+     "description": "имена new раздела, члены этой строки (P/08.8 Н1.8а gathered)",
+     "type": "array",
+     "items": {
+      "type": "string",
+      "pattern": "^(?:[a-z0-9-]{1,64})$"
+     }
     }
    },
    "additionalProperties": false,
