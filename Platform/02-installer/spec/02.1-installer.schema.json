@@ -416,6 +416,13 @@
       }
      },
      "x-owner": "P/06.7 Н1.6"
+    },
+    "stale_after": {
+     "description": "порог stale пульсов подсистемы у агента, с (P/09.1 Н1.2 stale): не меньше трёх периодов пульса HEARTBEAT_EVERY 10 с (P/03.4 Н1.1); нет ключа — LOST_AFTER 45 с",
+     "type": "integer",
+     "x-integer": true,
+     "minimum": 30,
+     "x-owner": "P/09.1 Н1.2"
     }
    },
    "additionalProperties": false

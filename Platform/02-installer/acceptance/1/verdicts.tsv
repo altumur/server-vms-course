@@ -895,3 +895,5 @@ a113_calls_book_part_ok	ok
 a113_book_stale_ok	ok
 a113_book_stale_to	refused
 a113_view_pulse_stale	refused
+a113_stale_after_ok	ok
+a113_stale_after_short	refused

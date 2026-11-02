@@ -20,6 +20,7 @@ place	layer	word	value
 /$defs/unitFields/patternProperties/^(?:[\s\S]{0,6}|[\s\S]*(?:[^_][\s\S]{6}|_[^s][\s\S]{5}|_s[^e][\s\S]{4}|_se[^c][\s\S]{3}|_sec[^r][\s\S]{2}|_secr[^e][\s\S]|_secre[^t]))$	5	x-complement-of	"^(?:[\\s\\S]*_secret)$"
 /$defs/unitFields/patternProperties/^(?:|[^A-Za-z_][\s\S]*|[A-Za-z_][A-Za-z0-9_]{0,63}[^A-Za-z0-9_][\s\S]*|[A-Za-z_][A-Za-z0-9_]{63}[\s\S]+)$	5	x-complement-of	"^(?:[A-Za-z_][A-Za-z0-9_]{0,63})$"
 /$defs/unitFields	6	x-ordered	true
+/properties/heartbeat/properties/stale_after	3	x-integer	true
 /properties/lease/properties/unconfirmed_max/allOf/1/then	2	x-integer-place	true
 /properties/parts/additionalProperties/properties/stop_timeout	2	x-integer-place	true
 /properties/worker/properties/stop_timeout	2	x-integer-place	true
