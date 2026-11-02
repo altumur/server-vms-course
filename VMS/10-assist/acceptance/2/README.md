@@ -2,7 +2,7 @@
 
 Норма главы — [`10.2-assist.norms.md`](../../spec/10.2-assist.norms.md) Н5 (и процесс модели, пульс — [`10.1-assist.norms.md`](../../spec/10.1-assist.norms.md)
 Н1.3, Н1.4). Стенд и словарь — [общий README приёмки VMS](../../../common/acceptance/README.md) поверх общего README
-платформы (выгрузка `c7389e67`).
+платформы (выгрузка `727297de`).
 
 ## Подготовка
 
