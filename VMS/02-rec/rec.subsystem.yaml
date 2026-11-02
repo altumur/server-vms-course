@@ -530,7 +530,7 @@ domain:
     recordings: [cam, ref, stream, retention_days, enabled, home, when, replica_from]
     volumes: [kind, url, server, quota_bytes, retention_days, access_key, enabled, shrink_confirmed, when, admits, held_by]
   books:
-    primaries: {from: rec/primaries/, key: ref, pick: all, to: to, show: [recording, running, role, coverage, retention_days, when, home]}
+    primaries: {from: rec/primaries/, key: ref, pick: all, to: to, show: [recording, running, role, retention_days, when, home]}
     polls: {from: rec/polls/, key: ref, pick: unique, to: to}
     upstream: {from: rec/upstream/, key: relay, pick: unique, to: to}
   tokens:

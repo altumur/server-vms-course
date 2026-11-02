@@ -31,19 +31,6 @@
   "when": {
    "const": "offline"
   },
-  "coverage": {
-   "type": "array",
-   "prefixItems": [
-    {
-     "type": "number"
-    },
-    {
-     "type": "number"
-    }
-   ],
-   "minItems": 2,
-   "maxItems": 2
-  },
   "retention_days": {
    "type": "number",
    "minimum": 0
