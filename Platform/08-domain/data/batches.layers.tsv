@@ -16,7 +16,6 @@ place	layer	word	value
 /properties/by	3	x-codec	["string"]
 /properties/n	3	x-codec	["integer"]
 /properties/pub	3	x-codec	["string"]
-/properties/record	3	x-codec	["string"]
 /properties/refused	3	x-encoding	"json"
 /properties/revoked	3	x-codec	["bool"]
 /properties/until	3	x-codec	["time"]

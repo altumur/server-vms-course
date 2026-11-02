@@ -495,7 +495,7 @@ paths:
       summary: Новая партия приёма, токен показан один раз (глава 8.3 Н1.1б; право admin домена)
       requestBody:
         required: true
-        content: {application/json: {schema: {type: object, required: [name, n], additionalProperties: false, properties: {name: {type: string}, record: {type: string}, via: {type: string}, n: {type: integer, minimum: 1}}}}}
+        content: {application/json: {schema: {type: object, required: [name, n], additionalProperties: false, properties: {name: {type: string}, via: {type: string}, n: {type: integer, minimum: 1}}}}}
       responses:
         '200': {description: 'Передача процессу', content: {application/json: {schema: {type: object, additionalProperties: true}}}}
         '400': {description: Не по форме}

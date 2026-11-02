@@ -15,9 +15,10 @@ scenario	step	request	expect
 05-members-max	4	@start agent m1	ok
 05-members-max	5	@start agent m2	ok
 05-members-max	6	@until 30 holder GET /domain/members	200 {"members": {"hold": {"key": "$hk", "since": "$hs"}}, "knocking": [{"name": "m1", "fingerprint": "$fp1"}, {"name": "m2", "fingerprint": "$fp2"}]}
-05-members-max	7	member hold store POST /v1/write {"op": "put", "key": "domain/member-count", "items": {"servers": "499", "cameras": "0"}}	200
-05-members-max	8	holder POST /domain/members {"name": "m1", "fingerprint": "$fp1"}	200 {"members": {"m1": {"how": "admitted"}}}
-05-members-max	9	holder POST /domain/members {"name": "m2", "fingerprint": "$fp2"}	409 {"error": "refused", "detail": "~too many servers"}
+05-members-max	7	@until 30 member hold store GET /v1/get?key=domain/member-count	200 {"items": {"servers": "1", "cameras": "0"}}
+05-members-max	8	member hold store POST /v1/write {"op": "put", "key": "domain/member-count", "items": {"servers": "499", "cameras": "0"}}	200
+05-members-max	9	holder POST /domain/members {"name": "m1", "fingerprint": "$fp1"}	200 {"members": {"m1": {"how": "admitted"}}}
+05-members-max	10	holder POST /domain/members {"name": "m2", "fingerprint": "$fp2"}	409 {"error": "refused", "detail": "~too many servers"}
 07-entry-max	1	@install domain	ok
 07-entry-max	2	@start domain	ok
 07-entry-max	3	@start agent hold	ok

@@ -9,12 +9,6 @@
     "string"
    ]
   },
-  "record": {
-   "type": "string",
-   "x-codec": [
-    "string"
-   ]
-  },
   "via": {
    "type": "string",
    "x-codec": [
