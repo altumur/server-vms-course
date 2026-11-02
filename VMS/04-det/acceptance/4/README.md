@@ -1,7 +1,7 @@
 # Приёмка V/04.4 — детектор на стенде
 
 Норма главы — [`04.4-det.norms.md`](../../spec/04.4-det.norms.md) Н5 (и главы 2, 3). Стенд и словарь — [общий README
-приёмки VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `dde3abc6`, пин VMS).
+приёмки VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `63a905ff`, пин VMS).
 
 ## Подготовка
 
