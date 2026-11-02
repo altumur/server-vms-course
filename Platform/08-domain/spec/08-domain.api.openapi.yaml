@@ -2865,7 +2865,7 @@ components:
         by: {type: string}
     PersonView:
       type: object
-      required: [name, how, disabled, title, expires, at, by, revision, index]
+      required: [name, how, disabled, title, expires, password_by_admin, at, by, revision, index]
       additionalProperties: false
       properties:
         name: {$ref: '#/components/schemas/PersonName'}
@@ -2874,6 +2874,7 @@ components:
         title: {type: string, maxLength: 200}
         email: {type: string, maxLength: 254, description: 'Только администратору домена, управляющему и в своём элементе (P/08.4 Н2).'}
         expires: {type: number, minimum: 0}
+        password_by_admin: {type: boolean, description: 'Пароль задал администратор домена, не сам человек (P/08.4 Н2); pw_by наружу не идёт.'}
         at: {type: number}
         by: {type: string}
         revision: {type: integer, minimum: 0, description: 'глава 8.0 Н1.9 «Версии»: 0 — поля нет или оно не читается'}

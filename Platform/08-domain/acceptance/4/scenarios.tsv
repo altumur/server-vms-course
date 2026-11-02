@@ -334,7 +334,7 @@ scenario	step	request	expect
 28-person-card-and-term	2	holder POST /domain/users {"name": "ann", "password": "ann password 1", "title": "Ann", "email": "ann@example.test"}	201 {"user": "ann"}
 28-person-card-and-term	3	holder POST /domain/users {"name": "bob", "password": "bob password 1", "email": "bob@example.test"}	201 {"user": "bob"}
 28-person-card-and-term	4	holder PUT /domain/grants/domain {"lines": [{"subject": "ann", "cap": "view", "scope": "*"}]}	200 {"cluster": "domain"}
-28-person-card-and-term	5	holder GET /domain/users	200 {"users": [{"name": "ann", "email": "ann@example.test"}, {"name": "bob", "email": "bob@example.test"}, {"name": "root"}]}
+28-person-card-and-term	5	holder GET /domain/users	200 {"users": [{"name": "ann", "email": "ann@example.test", "password_by_admin": true, "pw_by": "@absent"}, {"name": "bob", "email": "bob@example.test", "password_by_admin": true, "pw_by": "@absent"}, {"name": "root", "password_by_admin": false, "pw_by": "@absent"}]}
 28-person-card-and-term	6	@person ann ann password 1	ok
 28-person-card-and-term	7	holder GET /domain/users	200 {"users": [{"name": "ann", "title": "Ann", "email": "ann@example.test"}, {"name": "bob", "email": "@absent"}, {"name": "root", "email": "@absent"}]}
 28-person-card-and-term	8	holder GET /domain/roles	200 {"roles": [{"name": "admin"}]}

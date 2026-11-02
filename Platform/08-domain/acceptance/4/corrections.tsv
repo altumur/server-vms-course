@@ -33,3 +33,4 @@ date	sample	fix	languages
 2026-10-31	27-roles-and-groups 24–26; 35-changes-folder-rows; 36-changes-role-assignment	дельта ревью черновика прав: being deleted в окне до прохода, как сц. 10; сообщения ленты о папке и надгробии; сброс при снятии назначения; сухого прогона нет	all
 2026-10-31	37-versions-groups-roles	версии и память групп, ролей, пакета домена: образец сц. 23; сухого прогона нет	all
 2026-11-01	27-roles-and-groups/20	ожидание: имя удалённого держится срок токена, 409 exists вместо 201 (C08-DELETED-NAME-HOLD-01); реализацией ещё не прогнано	all
+2026-11-02	28-person-card-and-term 5	password_by_admin и отсутствие pw_by (ADR-0112 доп. (7) п. 2); чтением, сухого прогона нет	all
