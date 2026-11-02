@@ -1,0 +1,853 @@
+# Пункты ADR → норма или статус (ADR-0114 п. 7). Черновик «Спецификации» по decisions/inbox/ревью/РЕВЬЮ-ADR-0102-0113-сверка-Claude.md, таблицы «Сверка» приложений: 847 строк, счёт статусов как в итоге отчёта.
+# Статусы и места — на снимке сверки 9e5330946: правки после него (vms/norms-110-112, fork-08e, нормы доп. после сверки) не учтены, НЕТ НОРМЫ и РАСХОДИТСЯ проверить заново.
+# Колонки: adr — номер; add — дополнение, 0 — основной текст; point — пункт как в отчёте; status — НОРМА, ПРЕДЕЛ, РАСХОДИТСЯ, НЕТ НОРМЫ, ОТВЕРГНУТО, НЕ НОРМА; file — файлы норм через «; », - — нет;
+# norm — урок и раздел нормы (V/11.4 Н1.12, P/08.5 Н1.3), договор и его раздел, или файл данных; раздел найден по строке отчёта на снимке; note — «где» отчёта как есть.
+# Нет строк (сверка раньше них): 0103 доп. (3), (4); 0105 (1); 0110 (17), (18); 0111 (1), (2); 0112 (14)–(17); 0113 (25)–(43).
+adr	add	point	status	file	norm	note
+0102	0	п. 1	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2	VMS/11-backend/spec/11.3-backend.norms.md:67
+0102	0	п. 2	ОТВЕРГНУТО	-	-	доп. (1) п. 1 (decisions/0102-устройства-по-дереву-driverpack.md:84, заменяет п. 2)
+0102	0	п. 3	ОТВЕРГНУТО	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.2	доп. (1) п. 1, доп. (6) п. 7; остаток (создания детей нет) — VMS/11-backend/spec/11.4-backend.norms.md:139
+0102	0	п. 4	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md	V/01.1 Н1.2а	VMS/01-cam/spec/01.1-cam.norms.md:244
+0102	0	п. 5	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/01-cam/spec/01.4-cam.norms.md	V/11.3 Н1.2; V/01.4 Н1.4	VMS/11-backend/spec/11.3-backend.norms.md:62; VMS/01-cam/spec/01.4-cam.norms.md:141
+0102	0	п. 6	ОТВЕРГНУТО	VMS/01-cam/spec/01.1-cam.norms.md	V/01.1 Н1.2	доп. (1) п. 2; уход чисел держится — VMS/01-cam/spec/01.1-cam.norms.md:232
+0102	0	п. 7	ОТВЕРГНУТО	-	-	доп. (1) п. 9, затем ADR-0103 п. 2, доп. (2)
+0102	1	п. 1	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/cam.subsystem.yaml; VMS/01-cam/spec/01.4-cam.norms.md	V/01.1 Н1.2а; cam.subsystem.yaml; V/01.1 Н1.2; V/01.4 Н1.4а	VMS/01-cam/spec/01.1-cam.norms.md:240; VMS/01-cam/spec/01.1-cam.norms.md:244-271; VMS/01-cam/cam.subsystem.yaml:530-531; VMS/01-cam/spec/01.1-cam.norms.md:222; VMS/01-cam/spec/01.4-cam.norms.md:215
+0102	1	п. 2	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4а	VMS/01-cam/spec/01.4-cam.norms.md:197-198; VMS/01-cam/spec/01.4-cam.norms.md:181
+0102	1	п. 3	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4а	VMS/01-cam/spec/01.4-cam.norms.md:200-201
+0102	1	п. 4	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3; V/11.3 Н1.2	VMS/11-backend/spec/11.3-backend.norms.md:234; VMS/11-backend/spec/11.3-backend.norms.md:102
+0102	1	п. 5	ОТВЕРГНУТО	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.1	доп. (5) п. 4 (decisions/0102-устройства-по-дереву-driverpack.md:134 «прежняя форма снята»); порт = `number` держится: VMS/01-cam/spec/01.4-cam.norms.md:39
+0102	1	п. 6	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md; VMS/01-cam/data/refusal-words.tsv; VMS/07-auto/spec/07.3-auto.norms.md	V/01.4 Н1.4а; refusal-words.tsv; V/07.3 Н1.2; V/07.3 Н4	VMS/01-cam/spec/01.4-cam.norms.md:234; VMS/01-cam/spec/01.4-cam.norms.md:233; VMS/01-cam/data/refusal-words.tsv:34; VMS/07-auto/spec/07.3-auto.norms.md:70; VMS/07-auto/spec/07.3-auto.norms.md:124; VMS/01-cam/spec/01.4-cam.norms.md:229
+0102	1	п. 7	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/01-cam/spec/01.1-cam.norms.md; VMS/11-backend/spec/11.3-backend.norms.md; VMS/01-cam/spec/01.4-cam.norms.md	V/11.4 Н1.2; V/01.1 Н1.2а; V/11.3 Н1.3; V/01.4 Н1.4	VMS/11-backend/spec/11.4-backend.norms.md:139; VMS/01-cam/spec/01.1-cam.norms.md:246-248; VMS/11-backend/spec/11.3-backend.norms.md:248; VMS/01-cam/spec/01.4-cam.norms.md:153-154
+0102	1	п. 8	ОТВЕРГНУТО	VMS/11-backend/spec/11.2-backend.norms.md	V/11.2 Н1.5	доп. (6) п. 7; `foundDeviceTypes` — VMS/11-backend/spec/11.2-backend.norms.md:223
+0102	1	п. 9	ОТВЕРГНУТО	-	-	ADR-0103 п. 2, доп. (2) этого ADR
+0102	1	п. 10	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н5	VMS/01-cam/spec/01.4-cam.norms.md:508
+0102	1	п. 11	ОТВЕРГНУТО	-	-	доп. (4) п. 6 заменяет; решено доп. (9)
+0102	1	п. 12	НОРМА	VMS/01-cam/cam.subsystem.yaml; VMS/01-cam/spec/01.1-cam.norms.md	cam.subsystem.yaml; V/01.1 Н1.2а	VMS/01-cam/cam.subsystem.yaml:294-298; VMS/01-cam/spec/01.1-cam.norms.md:254
+0102	1	п. 13	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	V/01.1 Н1.1б; V/11.3 Н1.3	VMS/01-cam/spec/01.1-cam.norms.md:158; VMS/11-backend/spec/11.3-backend.norms.md:234
+0102	1	п. 14	ОТВЕРГНУТО	-	-	доп. (4) (заменяет п. 14), ADR-0103 п. 2
+0102	2	целиком	НЕ НОРМА	-	-	порядок работ
+0102	3	п. 1	ОТВЕРГНУТО	-	-	доп. (10) п. 1; слова `is_video` в нормах, манифестах и data нет (grep)
+0102	3	п. 2	ОТВЕРГНУТО	-	-	доп. (10) п. 1 задаёт новое чтение
+0102	3	п. 3	НЕ НОРМА	-	-	порядок работ, форма снята доп. (10)
+0102	4	п. 1	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/spec/01.4-cam.norms.md	V/01.1 Н1.1в; V/01.1 Н1.2; V/01.4 Н1.4а	VMS/01-cam/spec/01.1-cam.norms.md:172-183; VMS/01-cam/spec/01.1-cam.norms.md:224; VMS/01-cam/spec/01.4-cam.norms.md:175
+0102	4	п. 2	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4а	VMS/01-cam/spec/01.4-cam.norms.md:184-195
+0102	4	п. 3	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4а	VMS/01-cam/spec/01.4-cam.norms.md:184-185; VMS/01-cam/spec/01.4-cam.norms.md:260
+0102	4	п. 4	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4а	VMS/01-cam/spec/01.4-cam.norms.md:191-192; VMS/01-cam/spec/01.4-cam.norms.md:258
+0102	4	п. 5	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md; VMS/01-cam/spec/01.1-cam.norms.md	V/01.4 Н1.4а; V/01.1 Н1.2а	VMS/01-cam/spec/01.4-cam.norms.md:172; VMS/01-cam/spec/01.1-cam.norms.md:254; VMS/01-cam/spec/01.4-cam.norms.md:184; VMS/01-cam/spec/01.4-cam.norms.md:246-247
+0102	4	п. 6	ОТВЕРГНУТО	-	-	доп. (5) п. 1, доп. (8), доп. (9)
+0102	4	п. 7	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:223; VMS/11-backend/spec/11.3-backend.norms.md:234; VMS/11-backend/spec/11.3-backend.norms.md:240-241
+0102	4	п. 8	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н5	VMS/01-cam/spec/01.4-cam.norms.md:510-511
+0102	5	п. 1	ОТВЕРГНУТО	-	-	доп. (9): «таблицы снимаются»; в нормах таблиц нет (grep)
+0102	5	п. 2	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/spec/01.4-cam.norms.md	V/01.1 Н1.1в; V/01.4 Н1.4а	VMS/01-cam/spec/01.1-cam.norms.md:179-181; VMS/01-cam/spec/01.4-cam.norms.md:193-194
+0102	5	п. 3	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:211; VMS/11-backend/spec/11.3-backend.norms.md:216
+0102	5	п. 4	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4	VMS/01-cam/spec/01.4-cam.norms.md:158-161
+0102	5	п. 5	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/11.3 Н1.3; V/11.4 Н1.2	VMS/11-backend/spec/11.3-backend.norms.md:234; VMS/11-backend/spec/11.4-backend.norms.md:133
+0102	5	п. 6	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4а	VMS/01-cam/spec/01.4-cam.norms.md:267-269; VMS/01-cam/spec/01.4-cam.norms.md:225-227
+0102	5	п. 7 М-1	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/spec/01.4-cam.norms.md	V/01.1 Н1.2; V/01.4 Н1.4а	VMS/01-cam/spec/01.1-cam.norms.md:224; VMS/01-cam/spec/01.4-cam.norms.md:174-175
+0102	5	п. 7 М-2	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4а	VMS/01-cam/spec/01.4-cam.norms.md:268-269
+0102	5	п. 7 М-3	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4	VMS/01-cam/spec/01.4-cam.norms.md:142
+0102	5	п. 7 М-4	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4	VMS/01-cam/spec/01.4-cam.norms.md:135
+0102	5	п. 7 М-5	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4а	VMS/01-cam/spec/01.4-cam.norms.md:204; VMS/01-cam/spec/01.4-cam.norms.md:181
+0102	5	п. 8	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4а	VMS/01-cam/spec/01.4-cam.norms.md:243
+0102	6	п. 1	ОТВЕРГНУТО	-	-	доп. (9) заменяет пп. 1–4 в части `cam/records`
+0102	6	п. 2	ОТВЕРГНУТО	-	-	доп. (9); у строки `cam/cameras` — `name`
+0102	6	п. 3	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/01-cam/spec/01.1-cam.norms.md	V/11.3 Н1.3; V/01.1 Н1.2б	VMS/11-backend/spec/11.3-backend.norms.md:249; VMS/01-cam/spec/01.1-cam.norms.md:305-306
+0102	6	п. 4	ОТВЕРГНУТО	VMS/01-cam/spec/01.1-cam.norms.md	V/01.1 Н1.2б	доп. (9) п. 4; нынешнее — за строкой, VMS/01-cam/spec/01.1-cam.norms.md:310
+0102	6	п. 5	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4а	VMS/01-cam/spec/01.4-cam.norms.md:193-194
+0102	6	п. 6	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	V/11.4 Н1.7; V/11.3 Н1.3	VMS/11-backend/spec/11.4-backend.norms.md:264; VMS/11-backend/spec/11.3-backend.norms.md:234
+0102	6	п. 7	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/spec/11.2-backend.norms.md	V/11.4 Н1.2; V/11.2 Н1.5	VMS/11-backend/spec/11.4-backend.norms.md:119; VMS/11-backend/spec/11.2-backend.norms.md:223
+0102	6	п. 8	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md	V/01.1 Н1.1в	VMS/01-cam/spec/01.1-cam.norms.md:180
+0102	6	п. 9	НОРМА	VMS/11-backend/backend.subsystem.yaml	backend.subsystem.yaml	VMS/11-backend/backend.subsystem.yaml:72-76
+0102	6	п. 10	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.2	VMS/11-backend/spec/11.4-backend.norms.md:133
+0102	6	п. 11	НЕ НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н5	процесс; `@manual` — VMS/01-cam/spec/01.4-cam.norms.md:510
+0102	7	п. 1	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/spec/01.4-cam.norms.md	V/01.1 Н1.2а; V/01.4 Н1.4а	VMS/01-cam/spec/01.1-cam.norms.md:271; VMS/01-cam/spec/01.4-cam.norms.md:236-241
+0102	7	п. 2	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н4; V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:368; VMS/11-backend/spec/11.3-backend.norms.md:214
+0102	7	п. 3	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:222; VMS/11-backend/spec/11.3-backend.norms.md:225
+0102	7	п. 4	ОТВЕРГНУТО	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	ADR-0107 п. 7 (decisions/0107-replica-backup-хранилище-детекторы-ptz.md:39); нынешнее — VMS/11-backend/spec/11.3-backend.norms.md:250
+0102	7	п. 5	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/01-cam/spec/01.1-cam.norms.md	V/11.3 Н1.2; V/01.1 Н1.2б	VMS/11-backend/spec/11.3-backend.norms.md:66; VMS/01-cam/spec/01.1-cam.norms.md:293
+0102	7	п. 6	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/08-page/spec/08.3-page.norms.md	V/01.1 Н1.1; V/08.3 Н1.2	VMS/01-cam/spec/01.1-cam.norms.md:55; VMS/08-page/spec/08.3-page.norms.md:96
+0102	7	п. 7	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/data/mapping.tsv	V/11.3 Н1.3; mapping.tsv	VMS/11-backend/spec/11.3-backend.norms.md:247; VMS/11-backend/data/mapping.tsv:150
+0102	7	п. 8	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	V/01.1 Н1.1; V/11.3 Н1.3	VMS/01-cam/spec/01.1-cam.norms.md:50-51; VMS/11-backend/spec/11.3-backend.norms.md:225
+0102	7	п. 9	РАСХОДИТСЯ	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/spec/11.2-backend.norms.md	V/11.3 Н4; V/11.3 Н1.3; V/11.2 Н1.5	VMS/11-backend/spec/11.3-backend.norms.md:400; VMS/11-backend/spec/11.3-backend.norms.md:186; VMS/11-backend/spec/11.2-backend.norms.md:215
+0102	7	п. 10	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/01-cam/spec/01.1-cam.norms.md; VMS/11-backend/spec/11.2-backend.norms.md	V/11.3 Н1.3; V/01.1 Н1.1; V/11.2 Н1.5	VMS/11-backend/spec/11.3-backend.norms.md:217; VMS/01-cam/spec/01.1-cam.norms.md:52; VMS/11-backend/spec/11.2-backend.norms.md:223
+0102	8	целиком	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md; VMS/01-cam/spec/01.2-cam.norms.md	V/01.4 Н1.4а; V/01.2 Н1.1	VMS/01-cam/spec/01.4-cam.norms.md:246; VMS/01-cam/spec/01.2-cam.norms.md:40
+0102	9	п. 1	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/11-backend/spec/11.4-backend.norms.md; VMS/01-cam/cam.subsystem.yaml	V/01.1 Н1.1б; V/11.4 Н1.7; cam.subsystem.yaml	VMS/01-cam/spec/01.1-cam.norms.md:159-160; VMS/11-backend/spec/11.4-backend.norms.md:264; VMS/01-cam/cam.subsystem.yaml:233
+0102	9	п. 2	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/spec/01.2-cam.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	V/01.1 Н1.1г; V/01.2 Н1.2б; V/11.3 Н1.3	VMS/01-cam/spec/01.1-cam.norms.md:193; VMS/01-cam/spec/01.1-cam.norms.md:201-203; VMS/01-cam/spec/01.2-cam.norms.md:106-107; VMS/11-backend/spec/11.3-backend.norms.md:219
+0102	9	п. 3	НОРМА	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:56
+0102	9	п. 4	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/spec/01.4-cam.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/01.1 Н1.2б; V/01.4 Н1.4б; V/11.4 Н1.7	VMS/01-cam/spec/01.1-cam.norms.md:287; VMS/01-cam/spec/01.4-cam.norms.md:292; VMS/01-cam/spec/01.1-cam.norms.md:302; VMS/11-backend/spec/11.4-backend.norms.md:264
+0102	9	п. 5	НОРМА	VMS/01-cam/spec/01.2-cam.norms.md; VMS/01-cam/spec/01.4-cam.norms.md	V/01.2 Н1.5; V/01.4 Н1.2	VMS/01-cam/spec/01.2-cam.norms.md:215; VMS/01-cam/spec/01.2-cam.norms.md:210-211; VMS/01-cam/spec/01.4-cam.norms.md:75
+0102	9	п. 6	РАСХОДИТСЯ	VMS/03-live/spec/03.4-live.norms.md; VMS/08-page/spec/08.3-page.norms.md	V/03.4 Н1.3; V/08.3 Н1.2	VMS/03-live/spec/03.4-live.norms.md:59; VMS/08-page/spec/08.3-page.norms.md:95-98
+0102	9	п. 7	НОРМА	VMS/03-live/spec/03.4-live.norms.md; VMS/02-rec/spec/02.4-rec.norms.md; VMS/02-rec/spec/02.1-rec.norms.md; VMS/01-cam/spec/01.4-cam.norms.md; VMS/03-live/spec/03.3-live.norms.md	V/03.4 Н1.5; V/02.4 Н1.2а; V/02.1 Н1.1; V/01.4 Н1.4а; V/03.3 Н1.2а	VMS/03-live/spec/03.4-live.norms.md:77-90; VMS/02-rec/spec/02.4-rec.norms.md:104; VMS/02-rec/spec/02.1-rec.norms.md:40; VMS/01-cam/spec/01.4-cam.norms.md:250-251; VMS/03-live/spec/03.3-live.norms.md:95-100
+0102	9	п. 8	НЕ НОРМА	-	-	работа продукта и вопрос владельцу, не поведение спецификации
+0102	9	п. 9	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н5	VMS/01-cam/spec/01.4-cam.norms.md:511
+0102	9	п. 10	НЕ НОРМА	-	-	процесс
+0102	10	п. 1	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/cam.subsystem.yaml	V/01.1 Н1.1б; cam.subsystem.yaml	VMS/01-cam/spec/01.1-cam.norms.md:152; VMS/01-cam/cam.subsystem.yaml:233
+0102	10	п. 2	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:247
+0102	10	п. 3	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md	V/01.1 Н1.1б	VMS/01-cam/spec/01.1-cam.norms.md:167
+0102	10	п. 4 хозяин	РАСХОДИТСЯ	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4а	VMS/01-cam/spec/01.4-cam.norms.md:181
+0102	10	п. 4 кадры	НОРМА	VMS/02-rec/spec/02.4-rec.norms.md; VMS/04-det/spec/04.2-det.norms.md; VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/spec/01.2-cam.norms.md	V/02.4 Н1.1; V/04.2 Н1.1; V/01.1 Н1.1б; V/01.2 Н1.1	VMS/02-rec/spec/02.4-rec.norms.md:69; VMS/04-det/spec/04.2-det.norms.md:55; VMS/01-cam/spec/01.1-cam.norms.md:153-160; VMS/01-cam/spec/01.2-cam.norms.md:40
+0102	10	п. 4 поток	ПРЕДЕЛ	VMS/01-cam/spec/01.1-cam.norms.md	V/01.1 Н1.1б	VMS/01-cam/spec/01.1-cam.norms.md:162-165
+0103	0	п. 1	НЕ НОРМА	-	-	порядок работ
+0103	0	п. 2	НЕ НОРМА	-	-	порядок работ
+0103	0	п. 3 устройства	РАСХОДИТСЯ	VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/data/mapping.tsv; VMS/01-cam/spec/01.4-cam.norms.md	V/11.2 Н1.5; V/11.3 Н1.2; mapping.tsv; V/01.4 Н1.4а	VMS/11-backend/spec/11.2-backend.norms.md:221; VMS/11-backend/spec/11.3-backend.norms.md:67; VMS/11-backend/data/mapping.tsv:440; VMS/01-cam/spec/01.4-cam.norms.md:184-195
+0103	0	п. 3 архивы	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2	VMS/11-backend/spec/11.3-backend.norms.md:72
+0103	0	п. 3 автоматизация	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/07-auto/spec/07.6-auto.norms.md	V/11.3 Н1.2; V/07.6 Н1.1	VMS/11-backend/spec/11.3-backend.norms.md:78; VMS/11-backend/spec/11.3-backend.norms.md:73; VMS/11-backend/spec/11.3-backend.norms.md:79; VMS/07-auto/spec/07.6-auto.norms.md:29-38
+0103	0	п. 4	ОТВЕРГНУТО	-	-	доп. (2) п. 1
+0103	0	п. 5 вне	ОТВЕРГНУТО	-	-	decisions/0110-домен-consolem-наш-домен.md:31, decisions/0110-домен-consolem-наш-домен.md:70 «заменяет … ADR-0103 п. 5» в части доменов; в ADR-0103 пометки нет; что осталось — таблица V/11.2 № 4, 6, 7, 9, 10
+0103	0	п. 5 причина	НОРМА	VMS/11-backend/data/profile.tsv	profile.tsv	VMS/11-backend/data/profile.tsv:43
+0103	0	п. 6	НЕ НОРМА	-	-	процесс; проверено: у всех 15 строк `out` `profile.tsv` колонка `why` не пуста
+0103	0	п. 7	НЕ НОРМА	-	-	процесс
+0103	1	вводная	ПРЕДЕЛ	VMS/01-cam/spec/01.8-cam.norms.md	V/01.8	VMS/01-cam/spec/01.8-cam.norms.md:4-5
+0103	1	п. 1	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.9	VMS/11-backend/spec/11.4-backend.norms.md:344
+0103	1	п. 2	НОРМА	VMS/01-cam/spec/01.8-cam.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/01.8; V/11.4 Н1.9	VMS/01-cam/spec/01.8-cam.norms.md:7; VMS/11-backend/spec/11.4-backend.norms.md:366
+0103	1	п. 3	НОРМА	VMS/01-cam/spec/01.8-cam.norms.md	V/01.8 Н1.2	VMS/01-cam/spec/01.8-cam.norms.md:67-69
+0103	1	п. 4 срок	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/01-cam/spec/01.8-cam.norms.md	V/11.4 Н1.9; V/01.8 Н1.1	VMS/11-backend/spec/11.4-backend.norms.md:356; VMS/01-cam/spec/01.8-cam.norms.md:43
+0103	1	п. 4 один	РАСХОДИТСЯ	VMS/11-backend/spec/11.4-backend.norms.md; VMS/01-cam/spec/01.8-cam.norms.md	V/11.4 Н1.9; V/01.8 Н1.1	VMS/11-backend/spec/11.4-backend.norms.md:345; VMS/01-cam/spec/01.8-cam.norms.md:45
+0103	1	п. 5	РАСХОДИТСЯ	VMS/01-cam/spec/01.8-cam.norms.md	V/01.8 Н1.1; V/01.8 Н1.4	VMS/01-cam/spec/01.8-cam.norms.md:32; VMS/01-cam/spec/01.8-cam.norms.md:89
+0103	1	п. 6	ОТВЕРГНУТО	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.9	decisions/0110-домен-consolem-наш-домен.md:31, decisions/0111-полнота-настройки-из-consolem.md:39; нынешнее — VMS/11-backend/spec/11.4-backend.norms.md:344
+0103	2	п. 1	НОРМА	VMS/01-cam/spec/01.2-cam.norms.md; VMS/01-cam/spec/01.4-cam.norms.md; VMS/02-rec/spec/02.4-rec.norms.md	V/01.2 Н1.1; V/01.4 Н1.4а; V/02.4 Н1.2а	VMS/01-cam/spec/01.2-cam.norms.md:40; VMS/01-cam/spec/01.4-cam.norms.md:246; VMS/02-rec/spec/02.4-rec.norms.md:104
+0103	2	п. 2	РАСХОДИТСЯ	VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/data/profile.tsv	V/11.2 Н1.5; profile.tsv	VMS/11-backend/spec/11.2-backend.norms.md:218; VMS/11-backend/data/profile.tsv:35; VMS/11-backend/data/profile.tsv:44
+0103	2	п. 3	РАСХОДИТСЯ	VMS/01-cam/spec/01.1-cam.norms.md	V/01.1 Н1.1; V/01.1 Н1.1а	VMS/01-cam/spec/01.1-cam.norms.md:64; VMS/01-cam/spec/01.1-cam.norms.md:116; VMS/01-cam/spec/01.1-cam.norms.md:122; VMS/01-cam/spec/01.1-cam.norms.md:124
+0103	2	п. 4	НЕ НОРМА	-	-	правило порядка; в нормах следовано («на замере»)
+0103	2	п. 5	НЕ НОРМА	-	-	процесс
+0104	0	п. 1	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md	V/01.1 Н1.1а	VMS/01-cam/spec/01.1-cam.norms.md:100; VMS/01-cam/spec/01.1-cam.norms.md:101
+0104	0	п. 2	НОРМА	VMS/03-live/spec/03.3-live.norms.md	V/03.3 Н1.2	VMS/03-live/spec/03.3-live.norms.md:54; VMS/03-live/spec/03.3-live.norms.md:42-53
+0104	0	п. 3	НОРМА	VMS/01-cam/spec/01.2-cam.norms.md; VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/cam.subsystem.yaml	V/01.2 Н1.2а; V/01.1 Н1.1; cam.subsystem.yaml	VMS/01-cam/spec/01.2-cam.norms.md:87-88; VMS/01-cam/spec/01.1-cam.norms.md:56; VMS/01-cam/cam.subsystem.yaml:264
+0104	0	п. 4	НОРМА	VMS/01-cam/spec/01.2-cam.norms.md	V/01.2 Н1.2а	VMS/01-cam/spec/01.2-cam.norms.md:93-95
+0104	0	п. 5	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/spec/01.4-cam.norms.md	V/01.1 Н1.2; V/01.4 Н1.4	VMS/01-cam/spec/01.1-cam.norms.md:225; VMS/01-cam/spec/01.4-cam.norms.md:143
+0104	0	п. 6	НОРМА	VMS/01-cam/spec/01.2-cam.norms.md	V/01.2 Н1.2а	VMS/01-cam/spec/01.2-cam.norms.md:97
+0104	0	п. 7 fps	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/spec/01.2-cam.norms.md	V/01.1 Н1.1; V/01.2 Н1.2а	VMS/01-cam/spec/01.1-cam.norms.md:57; VMS/01-cam/spec/01.2-cam.norms.md:87
+0104	0	п. 7 codec	НОРМА	VMS/01-cam/spec/01.2-cam.norms.md; VMS/02-rec/spec/02.4-rec.norms.md; VMS/11-backend/data/mapping.tsv	V/01.2 Н1.4; V/02.4 Н4; mapping.tsv	VMS/01-cam/spec/01.2-cam.norms.md:188; VMS/02-rec/spec/02.4-rec.norms.md:269; VMS/11-backend/data/mapping.tsv:60
+0104	0	п. 7 bitrate	РАСХОДИТСЯ	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.1	VMS/11-backend/spec/11.3-backend.norms.md:48
+0104	0	п. 8	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/data/mapping.tsv	V/11.3 Н1.3; mapping.tsv	VMS/11-backend/spec/11.3-backend.norms.md:226-227; VMS/11-backend/data/mapping.tsv:58-60
+0105	0	п. 1	НОРМА	VMS/07-auto/spec/07.1-auto.norms.md; VMS/07-auto/auto.subsystem.yaml; VMS/08-page/spec/08.5-page.norms.md	V/07.1 Н1.1; auto.subsystem.yaml; V/08.5 Н1.1	VMS/07-auto/spec/07.1-auto.norms.md:26; VMS/07-auto/auto.subsystem.yaml:37; VMS/08-page/spec/08.5-page.norms.md:25
+0105	0	п. 2 таблицы	НОРМА	VMS/07-auto/spec/07.6-auto.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/07.6 Н1.1; V/11.4 Н1.11	VMS/07-auto/spec/07.6-auto.norms.md:26; VMS/07-auto/spec/07.6-auto.norms.md:29-35; VMS/11-backend/spec/11.4-backend.norms.md:416
+0105	0	п. 2 режим	РАСХОДИТСЯ	VMS/11-backend/spec/11.4-backend.norms.md; VMS/07-auto/spec/07.6-auto.norms.md	V/11.4 Н1.11; V/07.6 Н1.5	VMS/11-backend/spec/11.4-backend.norms.md:423; VMS/07-auto/spec/07.6-auto.norms.md:135-139
+0105	0	п. 3	НОРМА	VMS/07-auto/spec/07.4-auto.norms.md	V/07.4 Н1.8	VMS/07-auto/spec/07.4-auto.norms.md:171
+0105	0	п. 4 области	НОРМА	VMS/07-auto/spec/07.1-auto.norms.md; VMS/07-auto/spec/07.4-auto.norms.md	V/07.1 Н1.2; V/07.4 Н1.9	VMS/07-auto/spec/07.1-auto.norms.md:78-79; VMS/07-auto/spec/07.4-auto.norms.md:179
+0105	0	п. 4 право	НОРМА	VMS/07-auto/spec/07.1-auto.norms.md; VMS/07-auto/auto.subsystem.yaml; VMS/07-auto/spec/07.4-auto.norms.md	V/07.1 Н1.4; auto.subsystem.yaml; V/07.4 Н1.9	VMS/07-auto/spec/07.1-auto.norms.md:150; VMS/07-auto/auto.subsystem.yaml:560; VMS/07-auto/spec/07.4-auto.norms.md:213
+0105	0	п. 4 роль	НОРМА	VMS/07-auto/spec/07.4-auto.norms.md; VMS/07-auto/spec/07.1-auto.norms.md	V/07.4 Н1.9; V/07.1 Н1.4	VMS/07-auto/spec/07.4-auto.norms.md:213; VMS/07-auto/spec/07.1-auto.norms.md:148
+0105	0	п. 5	НОРМА	VMS/07-auto/spec/07.4-auto.norms.md; VMS/07-auto/auto.subsystem.yaml	V/07.4 Н1.11; auto.subsystem.yaml	VMS/07-auto/spec/07.4-auto.norms.md:229; VMS/07-auto/spec/07.4-auto.norms.md:225; VMS/07-auto/spec/07.4-auto.norms.md:235; VMS/07-auto/auto.subsystem.yaml:327-334
+0105	0	п. 6	НОРМА	VMS/07-auto/spec/07.4-auto.norms.md; VMS/01-cam/spec/01.4-cam.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	V/07.4 Н1.10; V/01.4 Н1.4д; V/11.3 Н1.3	VMS/07-auto/spec/07.4-auto.norms.md:218; VMS/01-cam/spec/01.4-cam.norms.md:344-345; VMS/11-backend/spec/11.3-backend.norms.md:316
+0105	0	п. 7	НОРМА	VMS/07-auto/spec/07.4-auto.norms.md; VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/backend.subsystem.yaml	V/07.4 Н2; V/11.4 Н1.10; backend.subsystem.yaml	VMS/07-auto/spec/07.4-auto.norms.md:308; VMS/07-auto/spec/07.4-auto.norms.md:300; VMS/11-backend/spec/11.4-backend.norms.md:409; VMS/11-backend/backend.subsystem.yaml:104
+0105	0	п. 8 armed	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/cam.subsystem.yaml	V/01.1 Н1.2в; cam.subsystem.yaml	VMS/01-cam/spec/01.1-cam.norms.md:315; VMS/01-cam/cam.subsystem.yaml:368-369; VMS/01-cam/cam.subsystem.yaml:34
+0105	0	п. 8 alarm	НОРМА	VMS/07-auto/spec/07.4-auto.norms.md	V/07.4 Н1.10	VMS/07-auto/spec/07.4-auto.norms.md:219
+0105	0	п. 8 segment	НОРМА	VMS/02-rec/spec/02.3-rec.norms.md	V/02.3 Н1.6	VMS/02-rec/spec/02.3-rec.norms.md:124
+0105	0	п. 9	ПРЕДЕЛ	VMS/07-auto/spec/07.2-auto.norms.md	V/07.2 Н1.3	VMS/07-auto/spec/07.2-auto.norms.md:97
+0105	0	п. 10	НОРМА	VMS/07-auto/spec/07.1-auto.norms.md; VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/07.1 Н1.1; V/11.2 Н1.2; V/11.4 Н1.10	VMS/07-auto/spec/07.1-auto.norms.md:36; VMS/11-backend/spec/11.2-backend.norms.md:43; VMS/11-backend/spec/11.4-backend.norms.md:407
+0105	0	п. 11	НЕ НОРМА	VMS/07-auto/acceptance/1/corrections.tsv; VMS/07-auto/acceptance/6/scenarios.tsv	corrections.tsv; scenarios.tsv	процесс; приёмка есть (VMS/07-auto/acceptance/1/corrections.tsv:4-5, VMS/07-auto/acceptance/6/scenarios.tsv); `.qnt` в снимке нет: не проверено
+0106	0	п. 1 (а)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:434
+0106	0	п. 1 (б)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:434, VMS/11-backend/spec/11.4-backend.norms.md:443
+0106	0	п. 1 (в)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:432
+0106	0	п. 2 (а)	ОТВЕРГНУТО	-	-	доп. (1) п. 1
+0106	0	п. 2 (б)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:435
+0106	0	п. 2 (в)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/backend.subsystem.yaml	V/11.4 Н1.12; backend.subsystem.yaml	VMS/11-backend/spec/11.4-backend.norms.md:437, VMS/11-backend/backend.subsystem.yaml:229
+0106	0	п. 2 (г)	ОТВЕРГНУТО	-	-	доп. (1) п. 3
+0106	0	п. 3 (а)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:442
+0106	0	п. 3 (б)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:439
+0106	0	п. 3 (в)	ОТВЕРГНУТО	-	-	доп. (3) п. 2
+0106	0	п. 3 абз. 2 (а)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:441
+0106	0	п. 3 абз. 2 (б)	РАСХОДИТСЯ	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/consolem.openapi.json	V/11.4 Н1.12; V/11.4 Н4; consolem.openapi.json	VMS/11-backend/spec/11.4-backend.norms.md:441, VMS/11-backend/spec/11.4-backend.norms.md:658; VMS/11-backend/consolem.openapi.json `revertOperation`
+0106	0	п. 4	ОТВЕРГНУТО	-	-	доп. (2) п. 2
+0106	0	п. 5, том	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:436
+0106	0	п. 5, удаление	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:436
+0106	0	п. 5, `bound_to`	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:436
+0106	0	п. 5, секрет	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:436
+0106	0	п. 6	ОТВЕРГНУТО	-	-	доп. (2) п. 5
+0106	0	п. 7	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/07-auto/auto.subsystem.yaml	V/11.3 Н1.2; auto.subsystem.yaml	VMS/11-backend/spec/11.3-backend.norms.md:77, VMS/07-auto/auto.subsystem.yaml:442
+0106	0	п. 8	НЕ НОРМА	-	-	—
+0106	1	п. 1	НОРМА	VMS/11-backend/backend.subsystem.yaml; VMS/11-backend/spec/11.4-backend.norms.md	backend.subsystem.yaml; V/11.4 Н1.12	VMS/11-backend/backend.subsystem.yaml:226, VMS/11-backend/spec/11.4-backend.norms.md:432
+0106	1	п. 2	ОТВЕРГНУТО	-	-	доп. (2)
+0106	1	п. 3	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:439
+0106	1	п. 4	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:440, VMS/11-backend/spec/11.4-backend.norms.md:442
+0106	1	п. 5 (а)	РАСХОДИТСЯ	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:441
+0106	1	п. 5 (б)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:440
+0106	1	п. 6	ОТВЕРГНУТО	-	-	доп. (2)
+0106	1	п. 7	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:436
+0106	1	п. 8	НЕ НОРМА	VMS/11-backend/data/profile-tests.tsv	profile-tests.tsv	VMS/11-backend/data/profile-tests.tsv:41, VMS/11-backend/data/profile-tests.tsv:102, VMS/11-backend/data/profile-tests.tsv:103, VMS/11-backend/data/profile-tests.tsv:104
+0106	2	п. 1 (а)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:434
+0106	2	п. 1 (б)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/spec/11.5-backend.norms.md	V/11.4 Н1.12; V/11.5 Н1.2	VMS/11-backend/spec/11.4-backend.norms.md:451, VMS/11-backend/spec/11.5-backend.norms.md:70
+0106	2	п. 1 (в)	ОТВЕРГНУТО	VMS/11-backend/spec/11.2-backend.norms.md	V/11.2 Н1.2	ADR-0112 п. 3; VMS/11-backend/spec/11.2-backend.norms.md:146
+0106	2	п. 2	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:443
+0106	2	п. 3	ОТВЕРГНУТО	-	-	доп. (3)
+0106	2	п. 4	ОТВЕРГНУТО	-	-	доп. (3) п. 2
+0106	2	п. 5 (а)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:435, VMS/11-backend/spec/11.4-backend.norms.md:443
+0106	2	п. 5 (б)	ОТВЕРГНУТО	-	-	ADR-0111 п. 18
+0106	2	п. 5 (в)	НЕ НОРМА	-	-	—
+0106	3	п. 1	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:432, VMS/11-backend/spec/11.4-backend.norms.md:440
+0106	3	п. 2	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:435, VMS/11-backend/spec/11.4-backend.norms.md:437
+0106	3	п. 3	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:443
+0106	4	(а)	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/11.2 Н1.2; V/11.4 Н1.12	VMS/11-backend/spec/11.2-backend.norms.md:147, VMS/11-backend/spec/11.4-backend.norms.md:445, VMS/11-backend/spec/11.4-backend.norms.md:447
+0106	4	(б)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:444
+0106	4	(в)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:449
+0106	4	(г)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:449
+0106	4	(д)	НЕ НОРМА	-	-	—
+0107	0	п. 1	НОРМА	VMS/02-rec/spec/02.1-rec.norms.md; VMS/02-rec/rec.subsystem.yaml	V/02.1 Н1.1; rec.subsystem.yaml	VMS/02-rec/spec/02.1-rec.norms.md:48, VMS/02-rec/rec.subsystem.yaml:121
+0107	0	п. 2 (а)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.9	VMS/02-rec/spec/02.6-rec.norms.md:184
+0107	0	п. 2 (б)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.9	VMS/02-rec/spec/02.6-rec.norms.md:178, VMS/02-rec/spec/02.6-rec.norms.md:180
+0107	0	п. 3 (а)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.9	VMS/02-rec/spec/02.6-rec.norms.md:155, VMS/02-rec/spec/02.6-rec.norms.md:162
+0107	0	п. 3 (б)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.9	VMS/02-rec/spec/02.6-rec.norms.md:155
+0107	0	п. 3 (в)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.9	VMS/02-rec/spec/02.6-rec.norms.md:155, VMS/02-rec/spec/02.6-rec.norms.md:168
+0107	0	п. 3 (г)	ОТВЕРГНУТО	-	-	доп. (2) п. 4
+0107	0	п. 4 (а)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md; VMS/02-rec/data/refusal-words.tsv	V/02.6 Н1.4; refusal-words.tsv	VMS/02-rec/spec/02.6-rec.norms.md:65, VMS/02-rec/data/refusal-words.tsv:6
+0107	0	п. 4 (б)	ОТВЕРГНУТО	-	-	доп. (2) п. 4
+0107	0	п. 4 (в)	ОТВЕРГНУТО	-	-	ADR-0108 доп. (1) п. 1
+0107	0	п. 5 (а)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md; VMS/02-rec/spec/02.9-rec.norms.md	V/02.6 Н1.4; V/02.9 Н1.3; V/02.9 Н1.6	VMS/02-rec/spec/02.6-rec.norms.md:68, VMS/02-rec/spec/02.9-rec.norms.md:158, VMS/02-rec/spec/02.9-rec.norms.md:257, VMS/02-rec/spec/02.9-rec.norms.md:276
+0107	0	п. 5 (б)	НОРМА	VMS/02-rec/spec/02.8-rec.norms.md	V/02.8 Н1.5	VMS/02-rec/spec/02.8-rec.norms.md:138
+0107	0	п. 5 (в)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md; VMS/02-rec/rec.subsystem.yaml	V/02.6 Н1.9; rec.subsystem.yaml	VMS/02-rec/spec/02.6-rec.norms.md:207, VMS/02-rec/spec/02.6-rec.norms.md:208, VMS/02-rec/rec.subsystem.yaml:418
+0107	0	п. 6 (а)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.2	VMS/11-backend/spec/11.4-backend.norms.md:107, VMS/11-backend/spec/11.4-backend.norms.md:114
+0107	0	п. 6 (б)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:195
+0107	0	п. 7 (а)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/01-cam/spec/01.1-cam.norms.md	V/11.3 Н1.3; V/01.1 Н1.2	VMS/11-backend/spec/11.3-backend.norms.md:250, VMS/01-cam/spec/01.1-cam.norms.md:228
+0107	0	п. 7 (б)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:242
+0107	0	п. 7 (в)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:250
+0107	0	п. 7 (г)	ОТВЕРГНУТО	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	ADR-0111 п. 6; VMS/11-backend/spec/11.3-backend.norms.md:255
+0107	0	п. 8 (а)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/spec/11.2-backend.norms.md	V/11.3 Н1.3; V/11.2 Н1.5	VMS/11-backend/spec/11.3-backend.norms.md:259, VMS/11-backend/spec/11.2-backend.norms.md:221
+0107	0	п. 8 (б)	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4в	VMS/01-cam/spec/01.4-cam.norms.md:308, VMS/01-cam/spec/01.4-cam.norms.md:310
+0107	0	п. 8 (в)	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4б; V/01.4 Н1.4в	VMS/01-cam/spec/01.4-cam.norms.md:298, VMS/01-cam/spec/01.4-cam.norms.md:314
+0107	0	п. 8 (г)	РАСХОДИТСЯ	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/data/rule-catalog.json	V/11.3 Н1.3; rule-catalog.json	VMS/11-backend/spec/11.3-backend.norms.md:319, VMS/11-backend/data/rule-catalog.json:32
+0107	0	п. 8 (д)	РАСХОДИТСЯ	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/data/mapping.tsv; VMS/01-cam/data/detector-kinds.tsv	V/11.3 Н1.3; mapping.tsv; detector-kinds.tsv	VMS/11-backend/spec/11.3-backend.norms.md:259, VMS/11-backend/data/mapping.tsv:131, VMS/01-cam/data/detector-kinds.tsv
+0107	0	п. 8 (е)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:259
+0107	0	п. 8 (ж)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/01-cam/spec/01.4-cam.norms.md	V/11.3 Н1.3; V/01.4 Н1.4в	VMS/11-backend/spec/11.3-backend.norms.md:259, VMS/01-cam/spec/01.4-cam.norms.md:312
+0107	0	п. 8 (з)	НОРМА	VMS/11-backend/data/mapping.tsv	mapping.tsv	VMS/11-backend/data/mapping.tsv:562
+0107	0	п. 9 (а)	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	V/01.4 Н1.4г; V/11.3 Н1.3	VMS/01-cam/spec/01.4-cam.norms.md:322, VMS/11-backend/spec/11.3-backend.norms.md:231
+0107	0	п. 9 (б)	ОТВЕРГНУТО	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	ADR-0112 доп. (2) п. 3, доп. (4) п. 2; VMS/11-backend/spec/11.3-backend.norms.md:231
+0107	0	п. 9 (в)	ОТВЕРГНУТО	-	-	доп. (2) п. 3
+0107	0	п. 9 (г)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/01-cam/spec/01.1-cam.norms.md	V/11.4 Н1.16; V/01.1 Н1.5	VMS/11-backend/spec/11.4-backend.norms.md:511, VMS/01-cam/spec/01.1-cam.norms.md:366
+0107	0	п. 9 (д)	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4г	VMS/01-cam/spec/01.4-cam.norms.md:326, VMS/01-cam/spec/01.4-cam.norms.md:330
+0107	0	п. 9 (е)	ПРЕДЕЛ	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4г	VMS/01-cam/spec/01.4-cam.norms.md:334
+0107	0	п. 10	ОТВЕРГНУТО	-	-	доп. (1)
+0107	0	строка «Заменяет»	НЕ НОРМА	-	-	—
+0107	1	п. 1	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/data/mapping.tsv	V/11.4 Н1.2; mapping.tsv	VMS/11-backend/spec/11.4-backend.norms.md:127, VMS/11-backend/data/mapping.tsv:97
+0107	1	п. 2	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/consolem.openapi.json	V/11.4 Н1.2; consolem.openapi.json	VMS/11-backend/spec/11.4-backend.norms.md:127; VMS/11-backend/consolem.openapi.json `DeviceCreate.configMode`
+0107	1	п. 3	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.2	VMS/11-backend/spec/11.4-backend.norms.md:127
+0107	1	п. 4 (а)	ОТВЕРГНУТО	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.1	ADR-0112 п. 5; VMS/11-backend/spec/11.3-backend.norms.md:48
+0107	1	п. 4 (б)	НОРМА	VMS/11-backend/consolem.openapi.json	consolem.openapi.json	VMS/11-backend/consolem.openapi.json `Device.firmware`
+0107	2	п. 1	НОРМА	VMS/01-cam/spec/01.2-cam.norms.md	V/01.2 Н1.2в	VMS/01-cam/spec/01.2-cam.norms.md:116, VMS/01-cam/spec/01.2-cam.norms.md:130
+0107	2	п. 2 (а)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.9	VMS/02-rec/spec/02.6-rec.norms.md:186
+0107	2	п. 2 (б)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.9	VMS/02-rec/spec/02.6-rec.norms.md:196
+0107	2	п. 2 (в)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.9	VMS/02-rec/spec/02.6-rec.norms.md:186
+0107	2	п. 3 (а)	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4г	VMS/01-cam/spec/01.4-cam.norms.md:328, VMS/01-cam/spec/01.4-cam.norms.md:330
+0107	2	п. 3 (б)	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4г	VMS/01-cam/spec/01.4-cam.norms.md:324
+0107	2	п. 3 (в)	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4г	VMS/01-cam/spec/01.4-cam.norms.md:332
+0107	2	п. 3 (г)	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4г	VMS/01-cam/spec/01.4-cam.norms.md:330
+0107	2	п. 3 (д)	ПРЕДЕЛ	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4г	VMS/01-cam/spec/01.4-cam.norms.md:334
+0107	2	п. 4	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	V/02.6 Н1.9; V/02.6 Н1.4; V/11.3 Н1.3	VMS/02-rec/spec/02.6-rec.norms.md:157, VMS/02-rec/spec/02.6-rec.norms.md:65, VMS/11-backend/spec/11.3-backend.norms.md:194
+0107	2	п. 5	НОРМА	VMS/02-rec/spec/02.8-rec.norms.md; VMS/02-rec/spec/02.6-rec.norms.md	V/02.8 Н1.5; V/02.6 Н1.9	VMS/02-rec/spec/02.8-rec.norms.md:138, VMS/02-rec/spec/02.6-rec.norms.md:180
+0107	2	п. 6	НОРМА	VMS/02-rec/spec/02.7-rec.norms.md	V/02.7 Н1.3	VMS/02-rec/spec/02.7-rec.norms.md:59
+0107	2	п. 7 (а)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.9	VMS/02-rec/spec/02.6-rec.norms.md:172
+0107	2	п. 7 (б)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.9	VMS/02-rec/spec/02.6-rec.norms.md:170
+0107	2	п. 7 (в)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md; VMS/02-rec/spec/02.1-rec.norms.md	V/02.6 Н1.9; V/02.1 Н1.1	VMS/02-rec/spec/02.6-rec.norms.md:188, VMS/02-rec/spec/02.1-rec.norms.md:48
+0107	2	п. 7 (г)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.9	VMS/02-rec/spec/02.6-rec.norms.md:198
+0108	0	п. 1 (а)	НОРМА	VMS/02-rec/spec/02.1-rec.norms.md; VMS/02-rec/rec.subsystem.yaml	V/02.1 Н1.2; rec.subsystem.yaml	VMS/02-rec/spec/02.1-rec.norms.md:76, VMS/02-rec/rec.subsystem.yaml:279
+0108	0	п. 1 (б)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.7	VMS/02-rec/spec/02.6-rec.norms.md:141
+0108	0	п. 1 (в)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.2; V/02.6 Н1.7	VMS/02-rec/spec/02.6-rec.norms.md:49, VMS/02-rec/spec/02.6-rec.norms.md:118
+0108	0	п. 2	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.7	VMS/02-rec/spec/02.6-rec.norms.md:127
+0108	0	п. 3	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md; VMS/02-rec/spec/02.1-rec.norms.md	V/02.6 Н1.7; V/02.1 Н1.2	VMS/02-rec/spec/02.6-rec.norms.md:120, VMS/02-rec/spec/02.6-rec.norms.md:125, VMS/02-rec/spec/02.1-rec.norms.md:58
+0108	0	п. 4	НОРМА	VMS/01-cam/spec/01.2-cam.norms.md	V/01.2 Н1.2в	VMS/01-cam/spec/01.2-cam.norms.md:125
+0108	0	п. 5	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.5	VMS/01-cam/spec/01.6-cam.norms.md:171
+0108	0	п. 6	НЕ НОРМА	-	-	—
+0108	1	п. 1 (а)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.7	VMS/02-rec/spec/02.6-rec.norms.md:120
+0108	1	п. 1 (б)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md; VMS/02-rec/spec/02.1-rec.norms.md	V/02.6 Н1.7; V/02.1 Н1.2	VMS/02-rec/spec/02.6-rec.norms.md:126, VMS/02-rec/spec/02.1-rec.norms.md:73
+0108	1	п. 1 (в)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md; VMS/02-rec/spec/02.9-rec.norms.md	V/02.6 Н1.7; V/02.9 Н1.2	VMS/02-rec/spec/02.6-rec.norms.md:140, VMS/02-rec/spec/02.9-rec.norms.md:87
+0108	1	п. 1 (г)	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md; VMS/01-cam/cam.subsystem.yaml	V/01.6 Н1.7; cam.subsystem.yaml	VMS/01-cam/spec/01.6-cam.norms.md:200, VMS/01-cam/cam.subsystem.yaml:34
+0108	1	п. 1 (д)	ОТВЕРГНУТО	-	-	доп. (2) пп. 1, 3
+0108	1	п. 2 (а)	ОТВЕРГНУТО	-	-	доп. (2)
+0108	1	п. 2 (б)	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.7	VMS/01-cam/spec/01.6-cam.norms.md:205
+0108	1	п. 3	ОТВЕРГНУТО	-	-	доп. (2)
+0108	1	п. 4 (а)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.7	VMS/02-rec/spec/02.6-rec.norms.md:127, VMS/02-rec/spec/02.6-rec.norms.md:130
+0108	1	п. 4 (б)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md; VMS/01-cam/spec/01.6-cam.norms.md	V/02.6 Н1.7; V/01.6 Н1.7	VMS/02-rec/spec/02.6-rec.norms.md:129, VMS/02-rec/spec/02.6-rec.norms.md:130, VMS/01-cam/spec/01.6-cam.norms.md:205
+0108	1	п. 5	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md; VMS/02-rec/spec/02.4-rec.norms.md	V/02.6 Н1.7; V/02.4 Н1.1	VMS/02-rec/spec/02.6-rec.norms.md:141, VMS/02-rec/spec/02.4-rec.norms.md:66
+0108	1	п. 6 (а)	РАСХОДИТСЯ	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.7	VMS/01-cam/spec/01.6-cam.norms.md:209
+0108	1	п. 6 (б)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:196
+0108	2	п. 1	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.7	VMS/01-cam/spec/01.6-cam.norms.md:200, VMS/01-cam/spec/01.6-cam.norms.md:202, VMS/01-cam/spec/01.6-cam.norms.md:204
+0108	2	п. 2	НОРМА	VMS/02-rec/rec.subsystem.yaml; VMS/01-cam/spec/01.6-cam.norms.md	rec.subsystem.yaml; V/01.6 Н1.7	VMS/02-rec/rec.subsystem.yaml:60, VMS/01-cam/spec/01.6-cam.norms.md:207
+0108	2	п. 3 (а)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.7	VMS/02-rec/spec/02.6-rec.norms.md:129
+0108	2	п. 3 (б)	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md; VMS/02-rec/spec/02.6-rec.norms.md	V/01.6 Н1.7; V/02.6 Н1.7	VMS/01-cam/spec/01.6-cam.norms.md:205, VMS/02-rec/spec/02.6-rec.norms.md:129
+0108	2	п. 4	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.7	VMS/02-rec/spec/02.6-rec.norms.md:126
+0109	0	п. 1	ОТВЕРГНУТО	-	-	доп. (2), ADR-0112 п. 1
+0109	0	п. 2	ОТВЕРГНУТО	-	-	ADR-0112 п. 2, доп. (13) п. 1
+0109	0	п. 3 (а)	НЕ НОРМА	-	-	—
+0109	0	п. 3 (б)	ОТВЕРГНУТО	VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/data/mapping.tsv	V/11.2 Н1.5; mapping.tsv	ADR-0112 доп. (5) п. 2; VMS/11-backend/spec/11.2-backend.norms.md:217, VMS/11-backend/data/mapping.tsv:435
+0109	0	п. 3 (в)	ОТВЕРГНУТО	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	ADR-0112 доп. (5) п. 2; VMS/11-backend/spec/11.3-backend.norms.md:283
+0109	0	п. 3 (г)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:283, VMS/11-backend/spec/11.3-backend.norms.md:289
+0109	0	п. 4	НЕ НОРМА	-	-	—
+0109	1	п. 1	ОТВЕРГНУТО	-	-	ADR-0111 п. 5, ADR-0112 п. 3
+0109	1	п. 2	ОТВЕРГНУТО	-	-	ADR-0110 доп. (4), доп. (6)
+0109	1	п. 3	НЕ НОРМА	-	-	—
+0109	1	п. 4	РАСХОДИТСЯ	VMS/11-backend/spec/11.13-backend.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	V/11.13 Н4; V/11.3 Н1.3	VMS/11-backend/spec/11.13-backend.norms.md:196, VMS/11-backend/spec/11.13-backend.norms.md:198, VMS/11-backend/spec/11.13-backend.norms.md:199, VMS/11-backend/spec/11.3-backend.norms.md:203
+0109	1	п. 5	ОТВЕРГНУТО	-	-	ADR-0112 п. 2, доп. (13) п. 1
+0109	2	п. 1	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/spec/11.2-backend.norms.md	V/11.4 Н1.15; V/11.2 Н1.2	VMS/11-backend/spec/11.4-backend.norms.md:503, VMS/11-backend/spec/11.2-backend.norms.md:137
+0109	2	п. 2	ОТВЕРГНУТО	-	-	ADR-0112 п. 1
+0109	2	п. 3	ОТВЕРГНУТО	-	-	ADR-0112 п. 1, доп. (13)
+0109	2	п. 4 (а)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.16	VMS/11-backend/spec/11.4-backend.norms.md:509, VMS/11-backend/spec/11.4-backend.norms.md:511
+0109	2	п. 4 (б)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.15	VMS/11-backend/spec/11.4-backend.norms.md:503
+0109	2	п. 4 (в)	ОТВЕРГНУТО	-	-	ADR-0112 доп. (13)
+0111	0	п. 1 (а)	ОТВЕРГНУТО	VMS/11-backend/spec/11.2-backend.norms.md	V/11.2 Н1.2	ADR-0112 п. 5, доп. (9) п. 3; VMS/11-backend/spec/11.2-backend.norms.md:125
+0111	0	п. 1 (б)	НЕ НОРМА	VMS/11-backend/spec/11.2-backend.norms.md	V/11.2 Н1.5	VMS/11-backend/spec/11.2-backend.norms.md:211
+0111	0	п. 2 (а)	НОРМА	VMS/02-rec/spec/02.4-rec.norms.md; VMS/11-backend/data/mapping.tsv; VMS/02-rec/rec.subsystem.yaml	V/02.4 Н1.8; mapping.tsv; rec.subsystem.yaml	VMS/02-rec/spec/02.4-rec.norms.md:212, VMS/11-backend/data/mapping.tsv:22, VMS/02-rec/rec.subsystem.yaml:528
+0111	0	п. 2 (б)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/data/mapping.tsv	V/11.3 Н1.1; V/11.3 Н1.3; mapping.tsv	VMS/11-backend/spec/11.3-backend.norms.md:44, VMS/11-backend/spec/11.3-backend.norms.md:300, VMS/11-backend/data/mapping.tsv:276
+0111	0	п. 2 (в)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/data/mapping.tsv	V/11.3 Н1.3; mapping.tsv	VMS/11-backend/spec/11.3-backend.norms.md:300, VMS/11-backend/data/mapping.tsv:278
+0111	0	п. 3	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.2; V/11.4 Н1.13	VMS/11-backend/spec/11.4-backend.norms.md:121, VMS/11-backend/spec/11.4-backend.norms.md:466
+0111	0	п. 4 (а)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/spec/11.2-backend.norms.md	V/11.3 Н1.3; V/11.4 Н1.2; V/11.2 Н1.2	VMS/11-backend/spec/11.3-backend.norms.md:190, VMS/11-backend/spec/11.4-backend.norms.md:109, VMS/11-backend/spec/11.2-backend.norms.md:94
+0111	0	п. 4 (б)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:190, VMS/11-backend/spec/11.3-backend.norms.md:201
+0111	0	п. 4 (в)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/11.3 Н1.3; V/11.4 Н1.2	VMS/11-backend/spec/11.3-backend.norms.md:191, VMS/11-backend/spec/11.4-backend.norms.md:111
+0111	0	п. 5	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	V/11.4 Н1.14; V/11.2 Н1.2; V/11.3 Н1.3	VMS/11-backend/spec/11.4-backend.norms.md:493, VMS/11-backend/spec/11.2-backend.norms.md:176, VMS/11-backend/spec/11.3-backend.norms.md:257
+0111	0	п. 6 (а)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:255
+0111	0	п. 6 (б)	РАСХОДИТСЯ	VMS/11-backend/spec/11.3-backend.norms.md; VMS/02-rec/spec/02.6-rec.norms.md	V/11.3 Н1.3; V/02.6 Н1.7	VMS/11-backend/spec/11.3-backend.norms.md:255, VMS/02-rec/spec/02.6-rec.norms.md:125
+0111	0	п. 6 (в)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:255
+0111	0	п. 7	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:252, VMS/11-backend/spec/11.3-backend.norms.md:255
+0111	0	п. 8 (а)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.13	VMS/11-backend/spec/11.4-backend.norms.md:462
+0111	0	п. 8 (б)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.10	VMS/11-backend/spec/11.4-backend.norms.md:400
+0111	0	п. 9	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	V/11.4 Н1.9; V/11.3 Н1.2а	VMS/11-backend/spec/11.4-backend.norms.md:344, VMS/11-backend/spec/11.4-backend.norms.md:345, VMS/11-backend/spec/11.3-backend.norms.md:151
+0111	0	п. 10 (а)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.10	VMS/11-backend/spec/11.4-backend.norms.md:400
+0111	0	п. 10 (б)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2а	VMS/11-backend/spec/11.3-backend.norms.md:151
+0111	0	п. 10 (в)	ПРЕДЕЛ	VMS/11-backend/data/mapping.tsv	mapping.tsv	VMS/11-backend/data/mapping.tsv:455
+0111	0	п. 11 (а)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.13	VMS/11-backend/spec/11.4-backend.norms.md:486
+0111	0	п. 11 (б)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/03-live/spec/03.2-live.norms.md	V/11.4 Н1.13; V/03.2 Н1.1	VMS/11-backend/spec/11.4-backend.norms.md:486, VMS/03-live/spec/03.2-live.norms.md:43
+0111	0	п. 11 (в)	РАСХОДИТСЯ	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.13	VMS/11-backend/spec/11.4-backend.norms.md:486
+0111	0	п. 11 (г)	ПРЕДЕЛ	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.13	VMS/11-backend/spec/11.4-backend.norms.md:486
+0111	0	п. 12	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/11.8 Н1.5; V/11.4 Н1.13	VMS/11-backend/spec/11.8-backend.norms.md:196, VMS/11-backend/spec/11.4-backend.norms.md:485
+0111	0	п. 13	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.7	VMS/11-backend/spec/11.4-backend.norms.md:280
+0111	0	п. 14	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/11.3 Н1.3; V/11.4 Н1.13	VMS/11-backend/spec/11.3-backend.norms.md:253, VMS/11-backend/spec/11.4-backend.norms.md:462
+0111	0	п. 15 (а)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; Platform/06-console/spec/06.7-console.norms.md	V/11.3 Н1.2а; P/06.7 Н1.6	VMS/11-backend/spec/11.3-backend.norms.md:155, Platform/06-console/spec/06.7-console.norms.md:143
+0111	0	п. 15 (б)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2а	VMS/11-backend/spec/11.3-backend.norms.md:155
+0111	0	п. 15 (в)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2а	VMS/11-backend/spec/11.3-backend.norms.md:155
+0111	0	п. 16, Д-2	НОРМА	Platform/common/contracts/may.md; Platform/10-domain-console/spec/10-domain-console.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	договор may «Суд по цели»; P/10 Н1.5; V/11.4 Н1.13	Platform/common/contracts/may.md:174, Platform/10-domain-console/spec/10-domain-console.norms.md:253, VMS/11-backend/spec/11.4-backend.norms.md:456
+0111	0	п. 16, Д-4	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.3; V/11.8 Н1.10	VMS/11-backend/spec/11.8-backend.norms.md:111, VMS/11-backend/spec/11.8-backend.norms.md:267
+0111	0	п. 16, Д-10	НЕТ НОРМЫ	-	-	искал: V/11 все главы, V/01.6, V/09, P/06, P/10, P/08.1, P/09.1
+0111	0	п. 16, Д-12	ОТВЕРГНУТО	Platform/08-domain/spec/08.10-domain.norms.md	P/08.10 Н1.5	ADR-0113 п. 6; Platform/08-domain/spec/08.10-domain.norms.md:55
+0111	0	п. 16, секрет	НОРМА	Platform/08-domain/spec/08.6-domain.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	P/08.6 Н1.3а; V/11.4 Н1.13	Platform/08-domain/spec/08.6-domain.norms.md:141 и далее, VMS/11-backend/spec/11.4-backend.norms.md:468
+0111	0	п. 16, отмена	НОРМА	Platform/08-domain/spec/08.6-domain.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	P/08.6 Н1.4; V/11.4 Н1.13	Platform/08-domain/spec/08.6-domain.norms.md:231, VMS/11-backend/spec/11.4-backend.norms.md:481
+0111	0	п. 16, связка	НОРМА	Platform/08-domain/spec/08.6-domain.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	P/08.6 Н1.3б; V/11.4 Н1.13	Platform/08-domain/spec/08.6-domain.norms.md:160 и далее, VMS/11-backend/spec/11.4-backend.norms.md:463
+0111	0	п. 17	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/spec/11.8-backend.norms.md	V/11.4 Н1.14; V/11.8 Н1.9	VMS/11-backend/spec/11.4-backend.norms.md:491, VMS/11-backend/spec/11.4-backend.norms.md:492, VMS/11-backend/spec/11.8-backend.norms.md:259
+0111	0	п. 18	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:451
+0111	0	п. 19 (а)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:434
+0111	0	п. 19 (б)	НОРМА	VMS/11-backend/spec/11.7-backend.norms.md; VMS/11-backend/spec/11.12-backend.norms.md	V/11.7 Н1.3; V/11.12 Н3	VMS/11-backend/spec/11.7-backend.norms.md:106, VMS/11-backend/spec/11.12-backend.norms.md:88
+0111	0	п. 20 (а)	ОТВЕРГНУТО	VMS/11-backend/spec/11.2-backend.norms.md	V/11.2 Н1.1	ADR-0112 п. 4; VMS/11-backend/spec/11.2-backend.norms.md:24
+0111	0	п. 20 (б)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; Platform/06-console/spec/06.3-console.norms.md	V/11.4 Н1.8; V/11.4 Н4; P/06.3 Н1.9	VMS/11-backend/spec/11.4-backend.norms.md:313, VMS/11-backend/spec/11.4-backend.norms.md:665, Platform/06-console/spec/06.3-console.norms.md:114
+0111	0	п. 20 (в)	ПРЕДЕЛ	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.8	VMS/11-backend/spec/11.4-backend.norms.md:313
+0111	0	п. 20 (г)	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md	V/11.2 Н1.2	VMS/11-backend/spec/11.2-backend.norms.md:86, VMS/11-backend/spec/11.2-backend.norms.md:87
+0111	0	п. 20 (д)	ОТВЕРГНУТО	-	-	ADR-0112 пп. 3, 4
+0111	0	п. 21	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.6	VMS/11-backend/spec/11.8-backend.norms.md:216, VMS/11-backend/spec/11.8-backend.norms.md:217
+0111	0	п. 22	НЕ НОРМА	-	-	—
+0111	0	Д6–Д10	НЕ НОРМА	-	-	—
+0110	0	Decision Outcome	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2а	VMS/11-backend/spec/11.3-backend.norms.md:123
+0110	0	что мешает: снимок	НОРМА	Platform/08-domain/spec/08.1-domain.norms.md; Platform/04-controller/spec/04-controller.norms.md	P/08.1 Н1.4а; P/04 Н1.3б	Platform/08-domain/spec/08.1-domain.norms.md:173; Platform/04-controller/spec/04-controller.norms.md:194
+0110	0	что мешает: `domain.edit`	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.1	VMS/01-cam/spec/01.6-cam.norms.md:41
+0110	0	что мешает: секреты	НОРМА	Platform/08-domain/spec/08.6-domain.norms.md	P/08.6 Н1.3а	Platform/08-domain/spec/08.6-domain.norms.md:145
+0110	0	что мешает: ответ правки	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.13	VMS/11-backend/spec/11.4-backend.norms.md:470
+0110	0	что мешает: поиск	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2	VMS/11-backend/spec/11.3-backend.norms.md:88
+0110	0	что мешает: лицензии	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:260
+0110	0	что мешает: правила	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.13	VMS/11-backend/spec/11.4-backend.norms.md:462
+0110	0	что мешает: права	НОРМА	Platform/common/contracts/may.md	договор may «Суд по цели»	Platform/common/contracts/may.md:157
+0110	0	что мешает: `backend` на консоли домена, смена держателя	ОТВЕРГНУТО	-	-	decisions/0110-домен-consolem-наш-домен.md:52
+0110	0	Consequences, Confirmation	НЕ НОРМА	-	-	—
+0110	1	-	НЕ НОРМА	-	-	—
+0110	2	-	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2а	VMS/11-backend/spec/11.3-backend.norms.md:135
+0110	2	п. 1	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/11.3 Н1.2а; V/11.4 Н1.13	VMS/11-backend/spec/11.3-backend.norms.md:123; VMS/11-backend/spec/11.4-backend.norms.md:456
+0110	2	п. 2	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2а	VMS/11-backend/spec/11.3-backend.norms.md:135
+0110	2	п. 3	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2а	VMS/11-backend/spec/11.3-backend.norms.md:123
+0110	2	п. 4	ОТВЕРГНУТО	-	-	decisions/0110-домен-consolem-наш-домен.md:74
+0110	2	п. 5	НЕ НОРМА	-	-	—
+0110	3	-	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:252
+0110	3	п. 1, признак	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.5	VMS/01-cam/spec/01.6-cam.norms.md:166
+0110	3	п. 1, снимок	НОРМА	VMS/01-cam/cam.subsystem.yaml	cam.subsystem.yaml	VMS/01-cam/cam.subsystem.yaml:560
+0110	3	п. 1, остальные	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:252
+0110	3	п. 2, сервер	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:253
+0110	3	п. 2, нет назначения	ОТВЕРГНУТО	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	decisions/0111-полнота-настройки-из-consolem.md:44; VMS/11-backend/spec/11.3-backend.norms.md:253
+0110	3	п. 3	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	V/02.6 Н1.7; V/11.3 Н1.3	VMS/02-rec/spec/02.6-rec.norms.md:121; VMS/11-backend/spec/11.3-backend.norms.md:255
+0110	4	-	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2	VMS/11-backend/spec/11.3-backend.norms.md:57
+0110	4	п. 1	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/data/mapping.tsv	V/11.3 Н1.2; mapping.tsv	VMS/11-backend/spec/11.3-backend.norms.md:57; VMS/11-backend/data/mapping.tsv:3
+0110	4	п. 2	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.5	VMS/01-cam/spec/01.6-cam.norms.md:166
+0110	4	п. 3, своё	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2а	VMS/11-backend/spec/11.3-backend.norms.md:133
+0110	4	п. 3, иерархия	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; Platform/common/contracts/forwarding.md	V/11.3 Н1.2а; договор forwarding «Один переход»	VMS/11-backend/spec/11.3-backend.norms.md:134; Platform/common/contracts/forwarding.md:54
+0110	4	п. 3, `backend` стоит на камере	НЕТ НОРМЫ	VMS/11-backend/spec/11.1-backend.norms.md; Platform/02-installer/spec/02.4-installer.norms.md	V/11.1 Н1.1; P/02.4 Н1.10	VMS/11-backend/spec/11.1-backend.norms.md:50; Platform/02-installer/spec/02.4-installer.norms.md:481
+0110	4	п. 4, запись роли	НОРМА	Platform/08-domain/spec/08.4-domain.norms.md	P/08.4 Н1.3а	Platform/08-domain/spec/08.4-domain.norms.md:244
+0110	4	п. 4, правка	НОРМА	Platform/10-domain-console/spec/10-domain-console.norms.md; Platform/common/contracts/may.md	P/10 Н1.5; договор may «Суд по цели»	Platform/10-domain-console/spec/10-domain-console.norms.md:253; Platform/common/contracts/may.md:174
+0110	4	п. 4, папки	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.8	Platform/08-domain/spec/08.5-domain.norms.md:193
+0110	4	п. 4, новый кластер	НОРМА	Platform/08-domain/spec/08.4-domain.norms.md	P/08.4 Н1.3а	Platform/08-domain/spec/08.4-domain.norms.md:245
+0110	4	п. 5	НЕТ НОРМЫ	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2а	VMS/11-backend/spec/11.3-backend.norms.md:135
+0110	4	п. 6, цена	НЕ НОРМА	-	-	—
+0110	4	п. 6, предел	ОТВЕРГНУТО	Platform/08-domain/spec/08.10-domain.norms.md	P/08.10 Н1.5	decisions/0113-раскладка-членов-домена.md:39; Platform/08-domain/spec/08.10-domain.norms.md:55
+0110	5	-	НЕ НОРМА	-	-	—
+0110	5	п. 1, Д-1	НОРМА	Platform/common/contracts/may.md; Platform/10-domain-console/spec/10-domain-console.norms.md	договор may «Суд по цели»; P/10 Н1.2	Platform/common/contracts/may.md:166; Platform/10-domain-console/spec/10-domain-console.norms.md:108
+0110	5	п. 2, Д-3	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.5	VMS/11-backend/spec/11.8-backend.norms.md:196
+0110	5	п. 2, Д-3, расхождение	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md; Platform/08-domain/spec/08.4-domain.norms.md	V/11.8 Н1.10; P/08.4 Н3	VMS/11-backend/spec/11.8-backend.norms.md:266; Platform/08-domain/spec/08.4-domain.norms.md:775
+0110	5	п. 2, Д-3, предел	НОРМА	Platform/08-domain/spec/08.4-domain.norms.md	P/08.4 Н1.3а	Platform/08-domain/spec/08.4-domain.norms.md:245
+0110	5	п. 3, Д-5, папка	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md; Platform/06-console/spec/06.8-console.norms.md	P/08.5 Н1.8; P/06.8 Н1.2а	Platform/08-domain/spec/08.5-domain.norms.md:193; Platform/06-console/spec/06.8-console.norms.md:81
+0110	5	п. 3, Д-5, без связи	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	P/08.5 Н1.8; V/11.4 Н1.7	Platform/08-domain/spec/08.5-domain.norms.md:193; VMS/11-backend/spec/11.4-backend.norms.md:274
+0110	5	п. 3, Д-5, пакет	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md; Platform/06-console/spec/06.8-console.norms.md	P/08.5 Н1.8; P/06.8 Н1.2а	Platform/08-domain/spec/08.5-domain.norms.md:193; Platform/06-console/spec/06.8-console.norms.md:82
+0110	5	п. 3, Д-5, камера	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.8	Platform/08-domain/spec/08.5-domain.norms.md:220
+0110	5	п. 3, Д-5, лимиты	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.8	Platform/08-domain/spec/08.5-domain.norms.md:214
+0110	5	п. 3, Д-5, ветка	НЕ НОРМА	-	-	—
+0110	5	п. 4, Д-6, имя	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/11.3 Н1.2; V/11.4 Н1.6	VMS/11-backend/spec/11.3-backend.norms.md:91; VMS/11-backend/spec/11.4-backend.norms.md:242
+0110	5	п. 4, Д-6, смена	НЕ НОРМА	-	-	—
+0110	5	п. 5, Д-7	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.13	VMS/11-backend/spec/11.4-backend.norms.md:458
+0110	5	п. 5, Д-8	НОРМА	Platform/common/contracts/gate-and-pass.md; VMS/11-backend/spec/11.8-backend.norms.md	договор gate-and-pass «Сторожевая»; V/11.8 Н1.9	Platform/common/contracts/gate-and-pass.md:121; VMS/11-backend/spec/11.8-backend.norms.md:255
+0110	5	п. 5, Д-11	НОРМА	VMS/11-backend/spec/11.5-backend.norms.md; VMS/11-backend/consolem.openapi.json	V/11.5 Н1.2; consolem.openapi.json	VMS/11-backend/spec/11.5-backend.norms.md:130; VMS/11-backend/consolem.openapi.json:7459
+0110	5	п. 6, Д-9	НЕ НОРМА	-	-	—
+0110	5	п. 7	НЕ НОРМА	-	-	—
+0110	6	-	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.14	VMS/11-backend/spec/11.4-backend.norms.md:490
+0110	6	стучащиеся	НОРМА	VMS/11-backend/data/mapping.tsv; VMS/11-backend/spec/11.3-backend.norms.md	mapping.tsv; V/11.3 Н1.3	VMS/11-backend/data/mapping.tsv:32; VMS/11-backend/spec/11.3-backend.norms.md:256
+0110	6	дверь	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md	V/11.2 Н1.2	VMS/11-backend/spec/11.2-backend.norms.md:57
+0110	6	сверка	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/consolem.openapi.json	V/11.4 Н1.14; consolem.openapi.json	VMS/11-backend/spec/11.4-backend.norms.md:490; VMS/11-backend/consolem.openapi.json:7679
+0110	6	`join`	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.14	VMS/11-backend/spec/11.4-backend.norms.md:490
+0110	6	`out`	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md	V/11.2 Н1.2	VMS/11-backend/spec/11.2-backend.norms.md:55; VMS/11-backend/spec/11.2-backend.norms.md:56
+0110	6	право	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/spec/11.8-backend.norms.md	V/11.4 Н1.14; V/11.8 Н1.9	VMS/11-backend/spec/11.4-backend.norms.md:492; VMS/11-backend/spec/11.8-backend.norms.md:259
+0110	6	пересчёт	НЕ НОРМА	-	-	—
+0110	7	В	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2	VMS/11-backend/spec/11.3-backend.norms.md:91
+0110	7	предел	ОТВЕРГНУТО	Platform/08-domain/spec/08.10-domain.norms.md	P/08.10 Н1.5	decisions/0113-раскладка-членов-домена.md:39; Platform/08-domain/spec/08.10-domain.norms.md:55
+0110	7	тема	ОТВЕРГНУТО	-	-	decisions/0113-раскладка-членов-домена.md:15
+0110	7	стена	НЕ НОРМА	-	-	—
+0110	8	раскладка	ОТВЕРГНУТО	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1	decisions/0113-раскладка-членов-домена.md:57; Platform/08-domain/spec/08.3-domain.norms.md:71
+0110	8	имя	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н3	Platform/08-domain/spec/08.3-domain.norms.md:690
+0110	8	период	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1а	Platform/08-domain/spec/08.3-domain.norms.md:106
+0110	8	падение	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/01-cam/spec/01.6-cam.norms.md	V/11.3 Н1.2а; V/01.6 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:133; VMS/01-cam/spec/01.6-cam.norms.md:98
+0110	8	не снимает	НЕ НОРМА	-	-	—
+0110	9	-	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.3	VMS/01-cam/spec/01.6-cam.norms.md:98
+0110	9	п. 1, срок	НОРМА	VMS/01-cam/cam.subsystem.yaml; Platform/02-installer/spec/02.1-installer.norms.md	cam.subsystem.yaml; P/02.1 Н1.4	VMS/01-cam/cam.subsystem.yaml:592; Platform/02-installer/spec/02.1-installer.norms.md:601
+0110	9	п. 1, граница	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.3	VMS/01-cam/spec/01.6-cam.norms.md:101
+0110	9	п. 2, файл	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md; Platform/03-worker/spec/03.7-worker.norms.md	V/01.6 Н1.3; P/03.7 Н1.5	VMS/01-cam/spec/01.6-cam.norms.md:104; Platform/03-worker/spec/03.7-worker.norms.md:76
+0110	9	п. 2, предел	ПРЕДЕЛ	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.3	VMS/01-cam/spec/01.6-cam.norms.md:107
+0110	9	п. 3	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.3	VMS/01-cam/spec/01.6-cam.norms.md:106
+0110	9	п. 4, смена	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.3	VMS/01-cam/spec/01.6-cam.norms.md:105
+0110	9	п. 4, нет домена	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.3	VMS/01-cam/spec/01.6-cam.norms.md:118
+0110	9	п. 4, `OLD_KEYS`	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.3	VMS/01-cam/spec/01.6-cam.norms.md:109
+0110	10	вводная	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6	Platform/08-domain/spec/08.2-domain.norms.md:146
+0110	10	п. 1, поле	НОРМА	Platform/common/contracts/keys.md	договор keys «Набор `domain/keys`»	Platform/common/contracts/keys.md:54
+0110	10	п. 1, смена и перенос	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md; Platform/08-domain/spec/08.8-domain.norms.md	P/08.2 Н3; P/08.8 Н1.8	Platform/08-domain/spec/08.2-domain.norms.md:426; Platform/08-domain/spec/08.8-domain.norms.md:447
+0110	10	п. 1, живёт	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н3	Platform/08-domain/spec/08.2-domain.norms.md:425
+0110	10	п. 1, кража	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н3	Platform/08-domain/spec/08.2-domain.norms.md:457
+0110	10	п. 2, значение	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6	Platform/08-domain/spec/08.2-domain.norms.md:147
+0110	10	п. 2, форма	НОРМА	Platform/02-installer/spec/02.1-installer.norms.md	P/02.1 Н1.4	Platform/02-installer/spec/02.1-installer.norms.md:1028
+0110	10	п. 2, предел 8	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н3	Platform/08-domain/spec/08.2-domain.norms.md:426
+0110	10	п. 3, шаг	НОРМА	Platform/common/contracts/domain-token.md	договор domain-token «Проверка: `token»	Platform/common/contracts/domain-token.md:83
+0110	10	п. 3, шаг 3	НОРМА	Platform/common/contracts/domain-token.md	договор domain-token «Проверка: `token»	Platform/common/contracts/domain-token.md:80
+0110	10	п. 3, `expect.keep`	НОРМА	Platform/common/contracts/domain-token.md	договор domain-token «Проверка: `token»	Platform/common/contracts/domain-token.md:98
+0110	10	п. 3, цена	ПРЕДЕЛ	Platform/common/contracts/domain-token.md	договор domain-token «Проверка: `token»	Platform/common/contracts/domain-token.md:83
+0110	10	п. 4, `jti`	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:173
+0110	10	п. 4, `DELETE`	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:175
+0110	10	п. 4, предел	ПРЕДЕЛ	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:178
+0110	10	п. 5, хозяин	НОРМА	Platform/03-worker/spec/03.7-worker.norms.md; VMS/01-cam/spec/01.6-cam.norms.md	P/03.7 Н1.5; V/01.6 Н1.3	Platform/03-worker/spec/03.7-worker.norms.md:76; VMS/01-cam/spec/01.6-cam.norms.md:102
+0110	10	п. 5, имя	НОРМА	Platform/03-worker/spec/03.7-worker.norms.md	P/03.7 Н1.5	Platform/03-worker/spec/03.7-worker.norms.md:76
+0110	10	п. 5, срок	НОРМА	Platform/03-worker/spec/03.7-worker.norms.md	P/03.7 Н1.5	Platform/03-worker/spec/03.7-worker.norms.md:76
+0110	10	п. 6	НОРМА	Platform/03-worker/spec/03.7-worker.norms.md	P/03.7 Н1.5	Platform/03-worker/spec/03.7-worker.norms.md:76; Platform/03-worker/spec/03.7-worker.norms.md:76
+0110	10	п. 7	РАСХОДИТСЯ	Platform/02-installer/spec/02.4-installer.norms.md; VMS/01-cam/spec/01.6-cam.norms.md	P/02.4 Н1.10; V/01.6 Н1.5	decisions/0110-домен-consolem-наш-домен.md:129; Platform/02-installer/spec/02.4-installer.norms.md:482; VMS/01-cam/spec/01.6-cam.norms.md:165
+0110	10	п. 8	ПРЕДЕЛ	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.3	VMS/01-cam/spec/01.6-cam.norms.md:117
+0110	10	С5	РАСХОДИТСЯ	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/data/mapping.tsv	V/11.3 Н1.3; mapping.tsv	decisions/0110-домен-consolem-наш-домен.md:132; VMS/11-backend/spec/11.3-backend.norms.md:253; VMS/11-backend/data/mapping.tsv:64
+0110	10	М1	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/01-cam/spec/01.6-cam.norms.md	V/11.3 Н1.3; V/01.6 Н1.5	VMS/11-backend/spec/11.3-backend.norms.md:252; VMS/01-cam/spec/01.6-cam.norms.md:166
+0110	10	М2	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.3	VMS/01-cam/spec/01.6-cam.norms.md:106
+0110	10	М3	НОРМА	VMS/08-page/spec/08.5-page.norms.md	V/08.5 Н1.2	VMS/08-page/spec/08.5-page.norms.md:61
+0110	10	М4	НОРМА	Platform/03-worker/spec/03.7-worker.norms.md	P/03.7 Н1.5	Platform/03-worker/spec/03.7-worker.norms.md:76
+0110	10	кольцо	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.3	VMS/01-cam/spec/01.6-cam.norms.md:102
+0110	10	конверт	ПРЕДЕЛ	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.3	VMS/01-cam/spec/01.6-cam.norms.md:104
+0110	10	распределение работ	НЕ НОРМА	-	-	—
+0110	11	вводная	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:173
+0110	11	п. 1, под отзывом	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:173
+0110	11	п. 1, пакет	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:175
+0110	11	п. 2, CAS	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:174
+0110	11	п. 2, `exp`	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:174
+0110	11	п. 2, двое	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:174
+0110	11	п. 3	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.7	Platform/08-domain/spec/08.8-domain.norms.md:305
+0110	11	п. 4, потеря	ПРЕДЕЛ	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:176
+0110	11	п. 4, нечитаемая	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:176
+0110	11	п. 5, форма	НОРМА	Platform/common/contracts/domain-token.md	договор domain-token «Токен»	Platform/common/contracts/domain-token.md:41
+0110	11	п. 5, билет	НОРМА	Platform/common/contracts/gate-and-pass.md	договор gate-and-pass «Передача второго вида»	Platform/common/contracts/gate-and-pass.md:573
+0110	12	п. 1	НОРМА	Platform/common/contracts/keys.md; Platform/08-domain/spec/08.8-domain.norms.md	договор keys «Набор `domain/keys`»; P/08.8 Н1.8	Platform/common/contracts/keys.md:54; Platform/08-domain/spec/08.8-domain.norms.md:447
+0110	12	п. 2	НОРМА	Platform/08-domain/spec/08.7-domain.norms.md	P/08.7 Н1	Platform/08-domain/spec/08.7-domain.norms.md:41; Platform/08-domain/spec/08.7-domain.norms.md:40
+0110	12	п. 3, слово	НОРМА	Platform/08-domain/spec/08.7-domain.norms.md	P/08.7 Н4; P/08.7 Н2	Platform/08-domain/spec/08.7-domain.norms.md:185; Platform/08-domain/spec/08.7-domain.norms.md:104
+0110	12	п. 3, OpenAPI	НОРМА	Platform/08-domain/spec/08-domain.api.openapi.yaml	08-domain.api.openapi.yaml	Platform/08-domain/spec/08-domain.api.openapi.yaml:223
+0110	12	п. 3, местная дверь	НОРМА	Platform/common/contracts/local-token-door.md	договор local-token-door «Отказы»	Platform/common/contracts/local-token-door.md:107
+0110	12	п. 4	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:174
+0110	12	п. 5, описания	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.7; P/08.2 Н3	Platform/08-domain/spec/08.2-domain.norms.md:161; Platform/08-domain/spec/08.2-domain.norms.md:432
+0110	12	п. 5, журнал	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8	Platform/08-domain/spec/08.8-domain.norms.md:447
+0110	13	п. 1	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md; Platform/08-domain/spec/08.8-domain.norms.md	P/08.2 Н1.6а; P/08.8 Н1.8	Platform/08-domain/spec/08.2-domain.norms.md:177; Platform/08-domain/spec/08.8-domain.norms.md:468
+0110	13	п. 2, слово	НОРМА	Platform/03-worker/spec/03.7-worker.norms.md	P/03.7 Н3	Platform/03-worker/spec/03.7-worker.norms.md:290
+0110	13	п. 2, всегда	ОТВЕРГНУТО	-	-	decisions/0110-домен-consolem-наш-домен.md:165
+0110	13	п. 3	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:174
+0110	13	п. 4, В6	РАСХОДИТСЯ	Platform/03-worker/spec/03.7-worker.norms.md; Platform/common/contracts/domain-token.md	P/03.7 Н3; договор domain-token «Токен»	Platform/03-worker/spec/03.7-worker.norms.md:284; Platform/common/contracts/domain-token.md:59
+0110	13	п. 4, В7	НОРМА	Platform/08-domain/spec/08.7-domain.norms.md	P/08.7 Н3	Platform/08-domain/spec/08.7-domain.norms.md:152
+0110	13	п. 5, В4	ПРЕДЕЛ	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:178
+0110	13	п. 6, В5	ПРЕДЕЛ	Platform/08-domain/spec/08.8-domain.norms.md; Platform/08-domain/spec/08.2-domain.norms.md	P/08.8 Н1.8; P/08.2 Н1.6а	Platform/08-domain/spec/08.8-domain.norms.md:448; Platform/08-domain/spec/08.2-domain.norms.md:178
+0110	14	п. 1, слово	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md; Platform/08-domain/spec/08.7-domain.norms.md	P/08.2 Н1.6а; P/08.7 Н1.3	Platform/08-domain/spec/08.2-domain.norms.md:173; Platform/08-domain/spec/08.2-domain.norms.md:173; Platform/08-domain/spec/08.7-domain.norms.md:74
+0110	14	п. 1, 409	РАСХОДИТСЯ	Platform/08-domain/spec/08.7-domain.norms.md; Platform/08-domain/spec/08.2-domain.norms.md	P/08.7 Н3; P/08.2 Н1.6а	decisions/0110-домен-consolem-наш-домен.md:165; Platform/08-domain/spec/08.7-domain.norms.md:151; Platform/08-domain/spec/08.2-domain.norms.md:179
+0110	14	п. 2	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.7	Platform/08-domain/spec/08.8-domain.norms.md:299
+0110	14	п. 3	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:174
+0110	14	п. 4, М5	ПРЕДЕЛ	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:176
+0110	14	п. 4, М6	НОРМА	Platform/08-domain/spec/08.7-domain.norms.md	P/08.7 Н1.3	Platform/08-domain/spec/08.7-domain.norms.md:74
+0110	14	п. 5	НЕ НОРМА	-	-	—
+0110	15	вводная	НЕ НОРМА	-	-	—
+0110	15	п. 1, счёт	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:173
+0110	15	п. 1, память	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:173
+0110	15	п. 1, сверх	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:173
+0110	15	п. 2	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:173
+0110	15	п. 3	НЕ НОРМА	-	-	—
+0110	16	вводная	НЕ НОРМА	-	-	—
+0110	16	п. 1, дверь	НОРМА	Platform/08-domain/spec/08.4-domain.norms.md; Platform/common/contracts/domain-token.md	P/08.4 Н1.2; договор domain-token «Токен»	Platform/08-domain/spec/08.4-domain.norms.md:122; Platform/common/contracts/domain-token.md:61
+0110	16	п. 1, `keep`	НОРМА	Platform/08-domain/spec/08.4-domain.norms.md	P/08.4 Н1.2	Platform/08-domain/spec/08.4-domain.norms.md:123
+0110	16	п. 1, прочие	ПРЕДЕЛ	Platform/08-domain/spec/08.4-domain.norms.md	P/08.4 Н1.2	Platform/08-domain/spec/08.4-domain.norms.md:123
+0110	16	п. 2	ПРЕДЕЛ	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н1.6а	Platform/08-domain/spec/08.2-domain.norms.md:173
+0110	16	п. 3	НОРМА	Platform/02-installer/spec/02.1-installer.norms.md	P/02.1 Н1.4	Platform/02-installer/spec/02.1-installer.norms.md:1029
+0112	0	п. 1	РАСХОДИТСЯ	VMS/08-page/spec/08.1-page.norms.md; VMS/09-deploy/spec/09.1-deploy.norms.md	V/08.1; V/09.1 Н1.1	VMS/08-page/spec/08.1-page.norms.md:8, :24; VMS/09-deploy/spec/09.1-deploy.norms.md:27
+0112	0	п. 1, конец	НЕ НОРМА	-	-	—
+0112	0	п. 2, а	РАСХОДИТСЯ	VMS/08-page/spec/08.1-page.norms.md	V/08.1	VMS/08-page/spec/08.1-page.norms.md:8; 08-page.README.md:4
+0112	0	п. 2, б	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md	V/11.2	VMS/11-backend/spec/11.2-backend.norms.md:7
+0112	0	п. 2, в	НЕТ НОРМЫ	-	-	—
+0112	0	п. 3	НЕ НОРМА	-	-	—
+0112	0	п. 4, а	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md	V/11.2 Н1.1	VMS/11-backend/spec/11.2-backend.norms.md:23
+0112	0	п. 4, б	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md	V/11.2 Н1.1	VMS/11-backend/spec/11.2-backend.norms.md:30
+0112	0	п. 4, в	РАСХОДИТСЯ	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:264
+0112	0	п. 5	НЕ НОРМА	-	-	—
+0112	1	вступл.	НЕ НОРМА	-	-	—
+0112	1	п. 1, а	НОРМА	Platform/06-console/spec/06.3-console.norms.md; VMS/11-backend/backend.subsystem.yaml	P/06.3 Н1.9; backend.subsystem.yaml	Platform/06-console/spec/06.3-console.norms.md:88; VMS/11-backend/backend.subsystem.yaml:82
+0112	1	п. 1, б	НОРМА	Platform/06-console/spec/06.3-console.norms.md; VMS/11-backend/backend.subsystem.yaml	P/06.3 Н1.9; backend.subsystem.yaml	Platform/06-console/spec/06.3-console.norms.md:89; VMS/11-backend/backend.subsystem.yaml:83
+0112	1	п. 1, в	НОРМА	Platform/06-console/spec/06.3-console.norms.md; VMS/11-backend/backend.subsystem.yaml	P/06.3 Н1.9; backend.subsystem.yaml	Platform/06-console/spec/06.3-console.norms.md:90; VMS/11-backend/backend.subsystem.yaml:84
+0112	1	п. 1, г	НОРМА	Platform/02-installer/spec/02.1-installer.norms.md	P/02.1 Н1.4	Platform/02-installer/spec/02.1-installer.norms.md:447
+0112	1	п. 1, д	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; Platform/06-console/spec/06.3-console.norms.md	V/11.4 Н1.18; P/06.3 Н1.9	VMS/11-backend/spec/11.4-backend.norms.md:522; Platform/06-console/spec/06.3-console.norms.md:89
+0112	1	п. 2, а	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/data/profile.tsv; VMS/11-backend/spec/11.4-backend.norms.md	V/11.2 Н1.2; profile.tsv; V/11.4 Н1.15	VMS/11-backend/spec/11.2-backend.norms.md:137; VMS/11-backend/data/profile.tsv:98; VMS/11-backend/spec/11.4-backend.norms.md:503
+0112	1	п. 2, б	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/data/profile.tsv; VMS/11-backend/spec/11.4-backend.norms.md	V/11.2 Н1.2; profile.tsv; V/11.4 Н1.18	VMS/11-backend/spec/11.2-backend.norms.md:148; VMS/11-backend/data/profile.tsv:109–113; VMS/11-backend/spec/11.4-backend.norms.md:519
+0112	1	п. 2, в	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/data/profile.tsv	V/11.2 Н1.2; V/11.4 Н1.19; profile.tsv	VMS/11-backend/spec/11.2-backend.norms.md:59; VMS/11-backend/spec/11.4-backend.norms.md:528; VMS/11-backend/data/profile.tsv:20
+0112	1	п. 2, г	НЕ НОРМА	-	-	—
+0112	1	п. 3, а	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:271–274
+0112	1	п. 3, б	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:273
+0112	1	п. 3, в	НЕТ НОРМЫ	VMS/04-det/vectors/mask/cases.tsv	cases.tsv	VMS/04-det/vectors/mask/cases.tsv:1
+0112	1	п. 3, г	НОРМА	VMS/04-det/spec/04.2-det.norms.md	V/04.2 Н1.2	VMS/04-det/spec/04.2-det.norms.md:91, :170
+0112	1	п. 3, д	ПРЕДЕЛ	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4в	VMS/01-cam/spec/01.4-cam.norms.md:310
+0112	1	п. 4, а	НОРМА	VMS/07-auto/spec/07.1-auto.norms.md; VMS/01-cam/cam.subsystem.yaml	V/07.1 Н1.3; cam.subsystem.yaml	VMS/07-auto/spec/07.1-auto.norms.md:109; VMS/01-cam/cam.subsystem.yaml:535
+0112	1	п. 4, б	НОРМА	VMS/07-auto/spec/07.3-auto.norms.md; VMS/11-backend/data/rule-catalog.json	V/07.3 Н1.2; rule-catalog.json	VMS/07-auto/spec/07.3-auto.norms.md:66; VMS/11-backend/data/rule-catalog.json:205; auto.yaml:199
+0112	1	п. 4, в	РАСХОДИТСЯ	VMS/11-backend/spec/11.13-backend.norms.md; VMS/11-backend/harness/rules/system.md	V/11.13 Н1.6	VMS/11-backend/spec/11.13-backend.norms.md:138; VMS/11-backend/harness/rules/system.md:36–46
+0112	1	п. 5	РАСХОДИТСЯ	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/data/mapping.tsv; VMS/11-backend/consolem.openapi.json	V/11.4 Н1.8; mapping.tsv; consolem.openapi.json	VMS/11-backend/spec/11.4-backend.norms.md:333, :436; VMS/11-backend/data/mapping.tsv:485; VMS/11-backend/consolem.openapi.json:6515
+0112	2	вступл.	НЕ НОРМА	-	-	—
+0112	2	п. 1	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/consolem.openapi.json	V/11.4 Н1.16; consolem.openapi.json	VMS/11-backend/spec/11.4-backend.norms.md:511; VMS/11-backend/consolem.openapi.json:1446
+0112	2	п. 2, а	ОТВЕРГНУТО	VMS/01-cam/cam.subsystem.yaml	cam.subsystem.yaml	ADR-0112 доп. (4) п. 1; VMS/01-cam/cam.subsystem.yaml:358
+0112	2	п. 2, б	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/11-backend/consolem.openapi.json	V/01.1 Н1.2а; consolem.openapi.json	VMS/01-cam/spec/01.1-cam.norms.md:259; VMS/11-backend/consolem.openapi.json:8130
+0112	2	п. 2, в	НОРМА	VMS/07-auto/spec/07.1-auto.norms.md	V/07.1 Н1.3	VMS/07-auto/spec/07.1-auto.norms.md:105
+0112	2	п. 3, а	ОТВЕРГНУТО	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	ADR-0112 доп. (4) п. 2; VMS/11-backend/spec/11.3-backend.norms.md:231
+0112	2	п. 3, б	НОРМА	VMS/11-backend/data/mapping.tsv; VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/consolem.openapi.json	mapping.tsv; V/11.3 Н1.3; consolem.openapi.json	VMS/11-backend/data/mapping.tsv:85; VMS/11-backend/spec/11.3-backend.norms.md:231; VMS/11-backend/consolem.openapi.json:8227
+0112	2	п. 3, в	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.16	VMS/11-backend/spec/11.4-backend.norms.md:511
+0112	2	п. 4, а	НОРМА	VMS/01-cam/cam.subsystem.yaml	cam.subsystem.yaml	VMS/01-cam/cam.subsystem.yaml:560
+0112	2	п. 4, б	ОТВЕРГНУТО	VMS/01-cam/cam.subsystem.yaml	cam.subsystem.yaml	ADR-0112 доп. (4) п. 1; VMS/01-cam/cam.subsystem.yaml:566
+0112	2	п. 5, М1	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.16	VMS/11-backend/spec/11.4-backend.norms.md:507
+0112	2	п. 5, М2	НОРМА	VMS/11-backend/spec/11.7-backend.norms.md	V/11.7 Н1.3	VMS/11-backend/spec/11.7-backend.norms.md:95–96
+0112	3	п. 1, а	НОРМА	Platform/06-console/spec/06.3-console.norms.md	P/06.3 Н1.9	gate:560, :566; Platform/06-console/spec/06.3-console.norms.md:89
+0112	3	п. 1, б	НЕ НОРМА	Platform/common/acceptance/pass/	-	Platform/common/acceptance/pass/
+0112	3	п. 2, а	НОРМА	Platform/02-installer/spec/02.1-installer.norms.md	P/02.1 Н3	Platform/02-installer/spec/02.1-installer.norms.md:1105
+0112	3	п. 2, б	НЕ НОРМА	Platform/02-installer/acceptance/3/puts/	-	Platform/02-installer/acceptance/3/puts/
+0112	3	п. 3, М1	НОРМА	Platform/06-console/spec/06.3-console.norms.md	P/06.3 Н1.9	Platform/06-console/spec/06.3-console.norms.md:120
+0112	3	п. 4, а	НЕТ НОРМЫ	Platform/06-console/spec/06.3-console.norms.md	P/06.3 Н1.9	Platform/06-console/spec/06.3-console.norms.md:89
+0112	3	п. 4, б	НЕ НОРМА	-	-	—
+0112	3	п. 5, а	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.18	VMS/11-backend/spec/11.4-backend.norms.md:521
+0112	3	п. 5, б	РАСХОДИТСЯ	VMS/11-backend/spec/11.1-backend.norms.md	V/11.1 Н1.5	VMS/11-backend/spec/11.1-backend.norms.md:145; gate:552
+0112	3	п. 5, в	ПРЕДЕЛ	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.18	VMS/11-backend/spec/11.4-backend.norms.md:521
+0112	3	п. 6, М3	НЕ НОРМА	Platform/08-domain/spec/08.4-domain.norms.md	P/08.4 Н1.3в	Platform/08-domain/spec/08.4-domain.norms.md:320
+0112	4	вступл.	НЕ НОРМА	-	-	—
+0112	4	п. 1, а	НОРМА	VMS/01-cam/cam.subsystem.yaml; VMS/01-cam/spec/01.1-cam.norms.md	cam.subsystem.yaml; V/01.1 Н1.2а	VMS/01-cam/cam.subsystem.yaml:358–363; VMS/01-cam/spec/01.1-cam.norms.md:259
+0112	4	п. 1, б	НОРМА	VMS/01-cam/cam.subsystem.yaml	cam.subsystem.yaml	VMS/01-cam/cam.subsystem.yaml:530, :566, :577
+0112	4	п. 1, в	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:231
+0112	4	п. 1, г	РАСХОДИТСЯ	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.16	VMS/11-backend/spec/11.4-backend.norms.md:511, :464, :486, :677
+0112	4	п. 2, а	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md	V/01.1 Н1.2а	VMS/01-cam/spec/01.1-cam.norms.md:259
+0112	4	п. 2, б	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/data/mapping.tsv	V/11.3 Н1.3; mapping.tsv	VMS/11-backend/spec/11.3-backend.norms.md:231; VMS/11-backend/data/mapping.tsv:84
+0112	4	п. 3, а	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.16	VMS/11-backend/spec/11.4-backend.norms.md:511
+0112	4	п. 3, б	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.16	VMS/11-backend/spec/11.4-backend.norms.md:511
+0112	4	п. 3, в	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/consolem.openapi.json	V/11.4 Н1.16; consolem.openapi.json	VMS/11-backend/spec/11.4-backend.norms.md:511; VMS/11-backend/consolem.openapi.json:1516
+0112	4	п. 3, г	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.16	VMS/11-backend/spec/11.4-backend.norms.md:511
+0112	4	п. 3, д	НЕ НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.16	VMS/11-backend/spec/11.4-backend.norms.md:511
+0112	4	п. 3, е	НЕТ НОРМЫ	-	-	—
+0112	4	п. 4, М1	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.16	VMS/11-backend/spec/11.4-backend.norms.md:511
+0112	4	п. 5, М2	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.15	VMS/11-backend/spec/11.4-backend.norms.md:503
+0112	4	п. 5, М3	РАСХОДИТСЯ	VMS/11-backend/spec/11.1-backend.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/11.1 Н1.5; V/11.4 Н1.15	VMS/11-backend/spec/11.1-backend.norms.md:145; gate:552; VMS/11-backend/spec/11.4-backend.norms.md:503
+0112	5	п. 1, а	НОРМА	VMS/11-backend/data/mapping.tsv; VMS/11-backend/consolem.openapi.json	mapping.tsv; consolem.openapi.json	VMS/11-backend/data/mapping.tsv:65; VMS/11-backend/consolem.openapi.json:7875
+0112	5	п. 1, б	НОРМА	VMS/01-cam/spec/01.2-cam.norms.md	V/01.2 Н1.2в	VMS/01-cam/spec/01.2-cam.norms.md:130, :135
+0112	5	п. 1, в	НЕ НОРМА	VMS/11-backend/consolem.openapi.json	consolem.openapi.json	VMS/11-backend/consolem.openapi.json:7875
+0112	5	п. 2, а	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/data/mapping.tsv	V/11.2 Н1.5; V/11.3 Н1.3; mapping.tsv	VMS/11-backend/spec/11.2-backend.norms.md:217; VMS/11-backend/spec/11.3-backend.norms.md:283; VMS/11-backend/data/mapping.tsv:435
+0112	5	п. 2, б	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/data/mapping.tsv	V/11.3 Н1.3; mapping.tsv	VMS/11-backend/spec/11.3-backend.norms.md:285–295; VMS/11-backend/data/mapping.tsv:435
+0112	5	п. 2, в	НЕ НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:295–296
+0112	6	вступл., а	ОТВЕРГНУТО	VMS/11-backend/spec/11.2-backend.norms.md	V/11.2 Н1.2	VMS/11-backend/spec/11.2-backend.norms.md:178
+0112	6	вступл., б	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	V/11.2 Н1.2; V/11.3 Н1.3	VMS/11-backend/spec/11.2-backend.norms.md:153–159; VMS/11-backend/spec/11.3-backend.norms.md:285
+0112	6	п. 1, а	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/11.3 Н1.3; V/11.4 Н1.2	VMS/11-backend/spec/11.3-backend.norms.md:191; VMS/11-backend/spec/11.4-backend.norms.md:111
+0112	6	п. 1, б	НОРМА	VMS/07-auto/spec/07.2-auto.norms.md	V/07.2 Н1.6	VMS/07-auto/spec/07.2-auto.norms.md:141
+0112	6	п. 1, в	ПРЕДЕЛ	VMS/07-auto/spec/07.2-auto.norms.md	V/07.2 Н1.6	VMS/07-auto/spec/07.2-auto.norms.md:141
+0112	6	п. 1, г	НОРМА	VMS/07-auto/spec/07.2-auto.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	V/07.2 Н1.6; V/11.3 Н1.3	VMS/07-auto/spec/07.2-auto.norms.md:141; VMS/11-backend/spec/11.3-backend.norms.md:191
+0112	6	п. 1, д	РАСХОДИТСЯ	VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/11.2 Н4; V/11.2 Н1.5; V/11.4 Н1.2	VMS/11-backend/spec/11.2-backend.norms.md:248 против VMS/11-backend/spec/11.2-backend.norms.md:215, VMS/11-backend/spec/11.4-backend.norms.md:111
+0112	6	п. 2	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/02-rec/spec/02.1-rec.norms.md	V/11.3 Н1.3; V/02.1 Н1.2	VMS/11-backend/spec/11.3-backend.norms.md:315; VMS/02-rec/spec/02.1-rec.norms.md:68
+0112	6	п. 3	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.9	VMS/02-rec/spec/02.6-rec.norms.md:194; rec.yaml:517, :559
+0112	6	п. 4	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/consolem.openapi.json	V/11.3 Н1.3; consolem.openapi.json	VMS/11-backend/spec/11.3-backend.norms.md:299; VMS/11-backend/consolem.openapi.json:11919
+0112	6	п. 5	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.20	VMS/11-backend/spec/11.4-backend.norms.md:532
+0112	7	п. 1	НОРМА	VMS/03-live/spec/03.6-live.norms.md; VMS/11-backend/spec/11.8-backend.norms.md	V/03.6 Н1.4; V/11.8 Н1.11	VMS/03-live/spec/03.6-live.norms.md:147; VMS/11-backend/spec/11.8-backend.norms.md:274
+0112	7	п. 2	НОРМА	Platform/08-domain/spec/08.4-domain.norms.md; VMS/11-backend/spec/11.8-backend.norms.md; VMS/11-backend/data/mapping.tsv	P/08.4 Н2; V/11.8 Н1.1; mapping.tsv	Platform/08-domain/spec/08.4-domain.norms.md:622; VMS/11-backend/spec/11.8-backend.norms.md:45; VMS/11-backend/data/mapping.tsv:467
+0112	7	п. 3, а	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.11	VMS/11-backend/spec/11.8-backend.norms.md:275, :277
+0112	7	п. 3, б	ПРЕДЕЛ	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.11	VMS/11-backend/spec/11.8-backend.norms.md:277
+0112	7	п. 4	НОРМА	VMS/11-backend/data/mapping.tsv	mapping.tsv	VMS/11-backend/data/mapping.tsv:443
+0112	7	п. 5	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.1	VMS/11-backend/spec/11.8-backend.norms.md:38
+0112	8	п. 1	НОРМА	VMS/11-backend/consolem.openapi.json; VMS/11-backend/spec/11.13-backend.norms.md	consolem.openapi.json; V/11.13 Н1.1	VMS/11-backend/consolem.openapi.json:16140, :16266; VMS/11-backend/spec/11.13-backend.norms.md:38, :157
+0112	8	п. 2	НОРМА	VMS/11-backend/spec/11.13-backend.norms.md	V/11.13 Н1.4	VMS/11-backend/spec/11.13-backend.norms.md:72
+0112	8	п. 3, а	НОРМА	VMS/11-backend/spec/11.13-backend.norms.md	V/11.13 Н1.7	VMS/11-backend/spec/11.13-backend.norms.md:154
+0112	8	п. 3, б	НОРМА	VMS/11-backend/spec/11.13-backend.norms.md	V/11.13 Н1.7	VMS/11-backend/spec/11.13-backend.norms.md:155
+0112	8	п. 3, в	ПРЕДЕЛ	VMS/11-backend/spec/11.13-backend.norms.md	V/11.13 Н1.7	VMS/11-backend/spec/11.13-backend.norms.md:156
+0112	8	п. 4, а	НОРМА	VMS/11-backend/spec/11.13-backend.norms.md	V/11.13 Н1.3	VMS/11-backend/spec/11.13-backend.norms.md:58
+0112	8	п. 4, б	НОРМА	VMS/11-backend/spec/11.13-backend.norms.md	V/11.13 Н1.6	VMS/11-backend/spec/11.13-backend.norms.md:144, :197
+0112	8	п. 4, в	НОРМА	VMS/11-backend/spec/11.13-backend.norms.md	V/11.13 Н1.9	VMS/11-backend/spec/11.13-backend.norms.md:171
+0112	9	п. 1, а	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.10	VMS/11-backend/spec/11.4-backend.norms.md:400
+0112	9	п. 1, б	НЕ НОРМА	VMS/11-backend/consolem.openapi.json	consolem.openapi.json	VMS/11-backend/consolem.openapi.json:18143
+0112	9	п. 2	НОРМА	VMS/07-auto/spec/07.4-auto.norms.md; VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/consolem.openapi.json	V/07.4 Н1.8; V/11.3 Н1.3; consolem.openapi.json	VMS/07-auto/spec/07.4-auto.norms.md:175; VMS/11-backend/spec/11.3-backend.norms.md:325; VMS/11-backend/consolem.openapi.json:14394
+0112	9	п. 3	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	V/11.2 Н1.2; V/11.3 Н1.2	VMS/11-backend/spec/11.2-backend.norms.md:125; VMS/11-backend/spec/11.3-backend.norms.md:87
+0112	9	п. 4, а	ПРЕДЕЛ	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/consolem.openapi.json	V/11.3 Н1.3; consolem.openapi.json	VMS/11-backend/spec/11.3-backend.norms.md:325; VMS/11-backend/consolem.openapi.json:6233
+0112	9	п. 4, б	ПРЕДЕЛ	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.10	VMS/11-backend/spec/11.4-backend.norms.md:408
+0112	9	п. 4, в	ПРЕДЕЛ	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/consolem.openapi.json	V/11.4 Н1.10; consolem.openapi.json	VMS/11-backend/spec/11.4-backend.norms.md:408; VMS/11-backend/consolem.openapi.json:6233
+0112	9	п. 5	НОРМА	VMS/07-auto/spec/07.6-auto.norms.md	V/07.6 Н1.9	VMS/07-auto/spec/07.6-auto.norms.md:181, :185
+0112	10	вступл.	НОРМА	VMS/11-backend/consolem.openapi.json; VMS/11-backend/spec/11.4-backend.norms.md	consolem.openapi.json; V/11.4 Н1.21	VMS/11-backend/consolem.openapi.json:18143; VMS/11-backend/spec/11.4-backend.norms.md:543–548
+0112	10	п. 1	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.10	VMS/11-backend/spec/11.4-backend.norms.md:400
+0112	10	п. 2	НОРМА	VMS/07-auto/spec/07.5-auto.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/07.5 Н1.1; V/11.4 Н1.21	VMS/07-auto/spec/07.5-auto.norms.md:47; VMS/11-backend/spec/11.4-backend.norms.md:546
+0112	10	п. 3	ПРЕДЕЛ	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/consolem.openapi.json	V/11.4 Н1.21; consolem.openapi.json	VMS/11-backend/spec/11.4-backend.norms.md:547; VMS/11-backend/consolem.openapi.json:18143
+0112	10	п. 4	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2б	VMS/11-backend/spec/11.3-backend.norms.md:164
+0112	10	п. 5	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/consolem.openapi.json	V/11.4 Н1.7; V/11.2 Н1.2; consolem.openapi.json	VMS/11-backend/spec/11.4-backend.norms.md:271, :432, :436; VMS/11-backend/spec/11.2-backend.norms.md:164; VMS/11-backend/consolem.openapi.json:6515
+0112	11	вступл.	ОТВЕРГНУТО	-	-	ADR-0112 доп. (11) п. 5
+0112	11	п. 1	ОТВЕРГНУТО	-	-	ADR-0112 доп. (11) п. 5
+0112	11	п. 2	НЕ НОРМА	-	-	—
+0112	11	п. 3	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md	V/11.2 Н1.1	VMS/11-backend/spec/11.2-backend.norms.md:23
+0112	11	п. 4	НЕ НОРМА	-	-	—
+0112	11	п. 5	НЕ НОРМА	-	-	—
+0112	11	п. 6	НЕ НОРМА	-	-	—
+0112	12	вступл.	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md	V/11.2 Н1.1	VMS/11-backend/spec/11.2-backend.norms.md:23, :178
+0112	12	п. 1	НОРМА	Platform/06-console/spec/06.3-console.norms.md; VMS/11-backend/backend.subsystem.yaml	P/06.3 Н1.9; backend.subsystem.yaml	Platform/06-console/spec/06.3-console.norms.md:106–108; VMS/11-backend/backend.subsystem.yaml:130–132
+0112	12	п. 2	НОРМА	VMS/11-backend/spec/11.5-backend.norms.md; VMS/11-backend/consolem.openapi.json	V/11.5 Н1.2; consolem.openapi.json	VMS/11-backend/spec/11.5-backend.norms.md:49; VMS/11-backend/consolem.openapi.json:5278
+0112	12	п. 3, а	НОРМА	Platform/06-console/spec/06.7-console.norms.md; Platform/06-console/spec/06.3-console.norms.md	P/06.7 Н1.6; P/06.3 Н1.9	Platform/06-console/spec/06.7-console.norms.md:150, :161–165; Platform/06-console/spec/06.3-console.norms.md:105, :109
+0112	12	п. 3, б	НОРМА	Platform/06-console/spec/06.7-console.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	P/06.7 Н1.6; V/11.4 Н1.21	auto.yaml:28; Platform/06-console/spec/06.7-console.norms.md:162; VMS/11-backend/spec/11.4-backend.norms.md:548
+0112	12	п. 3, в	НОРМА	Platform/06-console/spec/06.7-console.norms.md	P/06.7 Н1.6	Platform/06-console/spec/06.7-console.norms.md:165
+0112	12	п. 4, а	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.5	VMS/11-backend/spec/11.8-backend.norms.md:197
+0112	12	п. 4, б	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.5	VMS/11-backend/spec/11.8-backend.norms.md:198
+0112	12	п. 4, в	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/data/mapping.tsv	V/11.2 Н1.5; mapping.tsv	VMS/11-backend/spec/11.2-backend.norms.md:220; VMS/11-backend/data/mapping.tsv:441
+0112	12	п. 5, а	ПРЕДЕЛ	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.9	VMS/11-backend/spec/11.4-backend.norms.md:369
+0112	12	п. 5, б	ПРЕДЕЛ	VMS/07-auto/spec/07.5-auto.norms.md	V/07.5 Н1.3	VMS/07-auto/spec/07.5-auto.norms.md:82
+0112	12	п. 5, в	ПРЕДЕЛ	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.1	VMS/11-backend/spec/11.8-backend.norms.md:64
+0112	12	п. 5, г	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2б	VMS/11-backend/spec/11.3-backend.norms.md:164
+0112	13	вступл., а	РАСХОДИТСЯ	VMS/08-page/spec/08.1-page.norms.md; VMS/11-backend/consolem.openapi.json	V/08.1 Н1.3; consolem.openapi.json	VMS/08-page/spec/08.1-page.norms.md:57, :62; VMS/11-backend/consolem.openapi.json:1195
+0112	13	вступл., б	ПРЕДЕЛ	VMS/11-backend/spec/11.2-backend.norms.md	V/11.2 Н1.1	VMS/11-backend/spec/11.2-backend.norms.md:30
+0112	13	п. 1	РАСХОДИТСЯ	VMS/08-page/spec/08.1-page.norms.md	V/08.1 Н1.1	VMS/08-page/spec/08.1-page.norms.md:24, :142
+0112	13	п. 2	РАСХОДИТСЯ	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:203
+0112	13	п. 2, конец	НОРМА	VMS/03-live/spec/03.4-live.norms.md	V/03.4 Н1.5	VMS/03-live/spec/03.4-live.norms.md:95
+0112	13	п. 3	НЕ НОРМА	-	-	—
+0112	13	п. 4	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/data/mapping.tsv; VMS/11-backend/consolem.openapi.json	V/11.4 Н1.13; mapping.tsv; consolem.openapi.json	VMS/11-backend/spec/11.4-backend.norms.md:486; VMS/11-backend/data/mapping.tsv:576; VMS/11-backend/consolem.openapi.json:8263, :1195
+0112	13	п. 5, а	РАСХОДИТСЯ	VMS/11-backend/spec/11.1-backend.norms.md; VMS/11-backend/backend.subsystem.yaml	V/11.1 Н1.5; backend.subsystem.yaml	VMS/11-backend/spec/11.1-backend.norms.md:178; VMS/11-backend/backend.subsystem.yaml:82
+0112	13	п. 5, б	НЕТ НОРМЫ	-	-	—
+0112	13	п. 5, в	НЕТ НОРМЫ	-	-	—
+0112	13	п. 5, г	НЕТ НОРМЫ	Platform/06-console/spec/06.7-console.norms.md; VMS/08-page/spec/08.2-page.norms.md	P/06.7 Н2; V/08.2 Н1.2	Platform/06-console/spec/06.7-console.norms.md:341; VMS/08-page/spec/08.2-page.norms.md:43
+0112	13	п. 6, а	НЕТ НОРМЫ	-	-	—
+0112	13	п. 6, б	НЕТ НОРМЫ	-	-	—
+0112	13	п. 6, в	НЕТ НОРМЫ	VMS/02-rec/spec/02.8-rec.norms.md	V/02.8 Н1.4	rec.yaml:354; VMS/02-rec/spec/02.8-rec.norms.md:85
+0112	13	п. 7	НОРМА	Platform/06-console/spec/06.4-console.norms.md; Platform/06-console/spec/06-console.api.openapi.yaml	P/06.4 Н2; 06-console.api.openapi.yaml	Platform/06-console/spec/06.4-console.norms.md:265; Platform/06-console/spec/06-console.api.openapi.yaml:8712
+0112	13	конец	НЕ НОРМА	-	-	—
+0113	0	п. 1	ОТВЕРГНУТО	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1	decisions/0113-раскладка-членов-домена.md:57; Platform/08-domain/spec/08.3-domain.norms.md:70
+0113	0	п. 2 а	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1	Platform/08-domain/spec/08.3-domain.norms.md:72
+0113	0	п. 2 б	НОРМА	Platform/common/contracts/accept.md	договор accept «Список членов отставшему»	Platform/common/contracts/accept.md:203
+0113	0	п. 3 а	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1а	Platform/08-domain/spec/08.3-domain.norms.md:106
+0113	0	п. 3 б	НОРМА	Platform/common/contracts/observation.md	договор observation «Свежесть члена домена»	Platform/common/contracts/observation.md:159
+0113	0	п. 3 в	НОРМА	Platform/08-domain/spec/08.1-domain.norms.md	P/08.1 Н1.4б	Platform/08-domain/spec/08.1-domain.norms.md:201
+0113	0	п. 4 а	НОРМА	Platform/08-domain/spec/08.1-domain.norms.md	P/08.1 Н1.4б	Platform/08-domain/spec/08.1-domain.norms.md:192
+0113	0	п. 4 б	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.8	Platform/08-domain/spec/08.5-domain.norms.md:217
+0113	0	п. 4 в	НОРМА	Platform/08-domain/spec/08.4-domain.norms.md	P/08.4 Н3	Platform/08-domain/spec/08.4-domain.norms.md:769
+0113	0	п. 4 г	НОРМА	Platform/08-domain/spec/08.10-domain.norms.md	P/08.10 Н1.5	Platform/08-domain/spec/08.10-domain.norms.md:59
+0113	0	п. 5	НЕ НОРМА	-	-	—
+0113	0	п. 6	ОТВЕРГНУТО	Platform/08-domain/spec/08.10-domain.norms.md	P/08.10 Н1.5	decisions/0113-раскладка-членов-домена.md:57; Platform/08-domain/spec/08.10-domain.norms.md:55
+0113	0	Confirmation	НЕ НОРМА	-	-	—
+0113	1	п. 1 а	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1	Platform/08-domain/spec/08.3-domain.norms.md:70
+0113	1	п. 1 б	ОТВЕРГНУТО	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1	decisions/0113-раскладка-членов-домена.md:73; Platform/08-domain/spec/08.3-domain.norms.md:70
+0113	1	п. 1 в	ОТВЕРГНУТО	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1	decisions/0113-раскладка-членов-домена.md:81; Platform/08-domain/spec/08.3-domain.norms.md:71
+0113	1	п. 1 г	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1	Platform/08-domain/spec/08.3-domain.norms.md:71
+0113	1	п. 1 д	ОТВЕРГНУТО	Platform/08-domain/spec/08.10-domain.norms.md	P/08.10 Н1.5	decisions/0113-раскладка-членов-домена.md:82; Platform/08-domain/spec/08.10-domain.norms.md:55
+0113	1	п. 2 а	НОРМА	Platform/common/contracts/accept.md	договор accept «Ответ `carry`: `every`»	Platform/common/contracts/accept.md:267
+0113	1	п. 2 б	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1а	Platform/08-domain/spec/08.3-domain.norms.md:106
+0113	1	п. 2 в	НОРМА	Platform/09-agent/spec/09.1-agent.norms.md	P/09.1 Н1.2а	Platform/09-agent/spec/09.1-agent.norms.md:270
+0113	1	п. 3 а	НОРМА	Platform/common/contracts/observation.md	договор observation «Свежесть члена домена»	Platform/common/contracts/observation.md:159
+0113	1	п. 3 б	НОРМА	Platform/08-domain/spec/08.1-domain.norms.md	P/08.1 Н1.6	Platform/08-domain/spec/08.1-domain.norms.md:258
+0113	1	п. 3 в	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.5а	Platform/08-domain/spec/08.8-domain.norms.md:202
+0113	1	п. 3 г	ПРЕДЕЛ	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1а	Platform/08-domain/spec/08.3-domain.norms.md:110
+0113	1	п. 3 д	РАСХОДИТСЯ	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.13	VMS/11-backend/spec/11.4-backend.norms.md:470; VMS/11-backend/spec/11.4-backend.norms.md:479
+0113	1	п. 4 а	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.5а	Platform/08-domain/spec/08.8-domain.norms.md:197
+0113	1	п. 4 б	НОРМА	Platform/08-domain/spec/08.1-domain.norms.md	P/08.1 Н1.4б	Platform/08-domain/spec/08.1-domain.norms.md:197
+0113	1	п. 4 в	НОРМА	Platform/08-domain/spec/08.1-domain.norms.md	P/08.1 Н1.4б	Platform/08-domain/spec/08.1-domain.norms.md:196
+0113	1	п. 4 г	НОРМА	Platform/08-domain/spec/08.1-domain.norms.md	P/08.1 Н1.4б	Platform/08-domain/spec/08.1-domain.norms.md:199
+0113	1	п. 4 д	НОРМА	Platform/04-controller/spec/04-controller.norms.md	P/04 Н1.3б	Platform/04-controller/spec/04-controller.norms.md:214
+0113	1	п. 4 е	НЕТ НОРМЫ	-	-	—
+0113	1	п. 4 ж	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.8	Platform/08-domain/spec/08.5-domain.norms.md:217; Platform/08-domain/spec/08.5-domain.norms.md:198
+0113	1	п. 4 з	РАСХОДИТСЯ	Platform/common/contracts/env-file.md; Platform/06-console/spec/06.7-console.norms.md	договор env-file «`CLUSTERS`»; P/06.7 Н1.4	Platform/common/contracts/env-file.md:109; Platform/06-console/spec/06.7-console.norms.md:126
+0113	1	п. 4 и	НОРМА	Platform/common/contracts/peer.md	договор peer «Клиент и первый контакт»	Platform/common/contracts/peer.md:44
+0113	1	п. 4 к	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.2	Platform/08-domain/spec/08.3-domain.norms.md:139; Platform/08-domain/spec/08.3-domain.norms.md:140
+0113	1	п. 4 л	НОРМА	Platform/08-domain/spec/08.4-domain.norms.md	P/08.4 Н1.3	Platform/08-domain/spec/08.4-domain.norms.md:204
+0113	1	п. 4 м	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.5	Platform/08-domain/spec/08.8-domain.norms.md:167
+0113	1	п. 4 н	НЕ НОРМА	-	-	—
+0113	1	п. 5	НЕ НОРМА	-	-	—
+0113	2	п. 1 а	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1б	Platform/08-domain/spec/08.3-domain.norms.md:123
+0113	2	п. 1 б	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1б	Platform/08-domain/spec/08.3-domain.norms.md:117
+0113	2	п. 1 в	ОТВЕРГНУТО	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1б	decisions/0113-раскладка-членов-домена.md:83; Platform/08-domain/spec/08.3-domain.norms.md:117
+0113	2	п. 2	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md; Platform/09-agent/spec/09.1-agent.norms.md	P/08.3 Н1.1б; P/09.1 Н1.1	Platform/08-domain/spec/08.3-domain.norms.md:117; Platform/09-agent/spec/09.1-agent.norms.md:139
+0113	2	п. 3 а	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1б	Platform/08-domain/spec/08.3-domain.norms.md:119
+0113	2	п. 3 б	НОРМА	Platform/common/contracts/accept.md	договор accept «Стук партии»	Platform/common/contracts/accept.md:252; Platform/common/contracts/accept.md:256
+0113	2	п. 3 в	НОРМА	Platform/common/contracts/accept.md	договор accept «Стук партии»	Platform/common/contracts/accept.md:258
+0113	2	п. 4	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1б	Platform/08-domain/spec/08.3-domain.norms.md:122
+0113	2	п. 5	НОРМА	Platform/common/contracts/accept.md	договор accept «Стук партии»	Platform/common/contracts/accept.md:252; Platform/common/contracts/accept.md:256
+0113	3	п. 1 а	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1	Platform/08-domain/spec/08.3-domain.norms.md:70
+0113	3	п. 1 б	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1	Platform/08-domain/spec/08.3-domain.norms.md:78
+0113	3	п. 2	НОРМА	Platform/common/contracts/record.md; Platform/common/contracts/peer.md	договор record «Запись срока `domain/holder`»; договор peer «Клиент и первый контакт»	Platform/common/contracts/record.md:44; Platform/common/contracts/peer.md:43
+0113	3	п. 3 а	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:497
+0113	3	п. 3 б	ОТВЕРГНУТО	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.5	decisions/0113-раскладка-членов-домена.md:84; Platform/08-domain/spec/08.8-domain.norms.md:168
+0113	3	п. 4 а	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1а	Platform/08-domain/spec/08.3-domain.norms.md:104
+0113	3	п. 4 б	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н3	Platform/08-domain/spec/08.3-domain.norms.md:707
+0113	3	п. 5 а	РАСХОДИТСЯ	Platform/09-agent/spec/09.2-agent.norms.md; Platform/08-domain/spec/08.3-domain.norms.md	P/09.2 Н1.4; P/08.3 Н3	Platform/09-agent/spec/09.2-agent.norms.md:93; Platform/08-domain/spec/08.3-domain.norms.md:752; Platform/08-domain/spec/08.3-domain.norms.md:753
+0113	3	п. 5 б	НОРМА	Platform/09-agent/spec/09.2-agent.norms.md	P/09.2 Н1.4	Platform/09-agent/spec/09.2-agent.norms.md:98
+0113	4	п. 1	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1	Platform/08-domain/spec/08.3-domain.norms.md:71
+0113	4	п. 2 а	НОРМА	Platform/08-domain/spec/08.10-domain.norms.md	P/08.10 Н1.5	Platform/08-domain/spec/08.10-domain.norms.md:54; Platform/08-domain/spec/08.10-domain.norms.md:55
+0113	4	п. 2 б	РАСХОДИТСЯ	Platform/08-domain/spec/08.10-domain.norms.md; Platform/09-agent/spec/09.1-agent.norms.md	P/08.10 Н1.5; P/09.1 Н1.13	Platform/08-domain/spec/08.10-domain.norms.md:54; Platform/09-agent/spec/09.1-agent.norms.md:759
+0113	4	п. 3	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1б	Platform/08-domain/spec/08.3-domain.norms.md:117
+0113	4	п. 4 а	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md; Platform/08-domain/spec/08.3-domain.norms.md	P/08.8 Н1.5; P/08.3 Н3	Platform/08-domain/spec/08.8-domain.norms.md:168; Platform/08-domain/spec/08.3-domain.norms.md:709
+0113	4	п. 4 б	НЕТ НОРМЫ	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.5	Platform/08-domain/spec/08.8-domain.norms.md:168
+0113	4	п. 5	НЕ НОРМА	-	-	—
+0113	5	п. 1	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:500; Platform/08-domain/spec/08.8-domain.norms.md:514
+0113	5	п. 2	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:502
+0113	5	п. 3	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:510
+0113	5	п. 4	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:525
+0113	5	п. 5 а	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:512
+0113	5	п. 5 б	НОРМА	Platform/common/contracts/accept.md	договор accept «Проверка члена и ключа»	Platform/common/contracts/accept.md:158
+0113	5	п. 6	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:504; Platform/08-domain/spec/08.8-domain.norms.md:505
+0113	5	п. 7	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md; Platform/08-domain/spec/08.3-domain.norms.md	P/08.8 Н1.8а; P/08.3 Н3	Platform/08-domain/spec/08.8-domain.norms.md:507; Platform/08-domain/spec/08.3-domain.norms.md:730
+0113	5	п. 8	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:503
+0113	5	п. 9	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.5	Platform/08-domain/spec/08.8-domain.norms.md:168; Platform/08-domain/spec/08.8-domain.norms.md:168
+0113	5	п. 10	ОТВЕРГНУТО	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	decisions/0113-раскладка-членов-домена.md:203; Platform/08-domain/spec/08.8-domain.norms.md:522
+0113	5	п. 11 а	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:527
+0113	5	п. 11 б	ОТВЕРГНУТО	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	decisions/0113-раскладка-членов-домена.md:204; Platform/08-domain/spec/08.8-domain.norms.md:527
+0113	5	п. 12 П1	ПРЕДЕЛ	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:528
+0113	5	п. 12 П2	ПРЕДЕЛ	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:528
+0113	5	п. 12 П3	ПРЕДЕЛ	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:528
+0113	5	п. 12 П4	ПРЕДЕЛ	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:528
+0113	5	п. 13	НЕ НОРМА	-	-	—
+0113	6	п. 1	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.2	Platform/08-domain/spec/08.3-domain.norms.md:137
+0113	6	п. 2	НОРМА	Platform/09-agent/spec/09.2-agent.norms.md; Platform/common/data/catalog.tsv	P/09.2 Н3; catalog.tsv	Platform/09-agent/spec/09.2-agent.norms.md:170; Platform/common/data/catalog.tsv:101
+0113	6	п. 3	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:101
+0113	6	п. 4	НОРМА	Platform/02-installer/spec/02.5-installer.norms.md	P/02.5 Н1.4	Platform/02-installer/spec/02.5-installer.norms.md:93
+0113	6	п. 5 а	НОРМА	Platform/09-agent/spec/09.2-agent.norms.md	P/09.2 Н1.4	Platform/09-agent/spec/09.2-agent.norms.md:91
+0113	6	п. 5 б	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:508
+0113	6	п. 5 в	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н3	Platform/08-domain/spec/08.3-domain.norms.md:741; Platform/08-domain/spec/08.3-domain.norms.md:748
+0113	7	п. 1	НОРМА	VMS/11-backend/spec/11.5-backend.norms.md	V/11.5 Н1.2	VMS/11-backend/spec/11.5-backend.norms.md:127
+0113	7	п. 2	НОРМА	VMS/11-backend/spec/11.5-backend.norms.md	V/11.5 Н1.2	VMS/11-backend/spec/11.5-backend.norms.md:127
+0113	7	п. 3	НОРМА	VMS/11-backend/spec/11.5-backend.norms.md	V/11.5 Н1.2	VMS/11-backend/spec/11.5-backend.norms.md:127
+0113	7	п. 4	ПРЕДЕЛ	VMS/11-backend/spec/11.5-backend.norms.md	V/11.5 Н1.2	VMS/11-backend/spec/11.5-backend.norms.md:127
+0113	8	п. 1 а	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2а	VMS/11-backend/spec/11.3-backend.norms.md:143; VMS/11-backend/spec/11.3-backend.norms.md:144
+0113	8	п. 1 б	ПРЕДЕЛ	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2а	VMS/11-backend/spec/11.3-backend.norms.md:154
+0113	8	п. 2	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2б	VMS/11-backend/spec/11.3-backend.norms.md:159; VMS/11-backend/spec/11.3-backend.norms.md:161
+0113	8	п. 3 а	НОРМА	VMS/07-auto/spec/07.5-auto.norms.md	V/07.5 Н1.3	VMS/07-auto/spec/07.5-auto.norms.md:72
+0113	8	п. 3 б	РАСХОДИТСЯ	Platform/common/data/catalog.tsv; Platform/09-agent/spec/09.2-agent.norms.md	catalog.tsv; P/09.2 Н3	Platform/common/data/catalog.tsv:101; Platform/09-agent/spec/09.2-agent.norms.md:170
+0113	8	п. 3 в	ОТВЕРГНУТО	VMS/07-auto/spec/07.5-auto.norms.md	V/07.5 Н1.3	decisions/0113-раскладка-членов-домена.md:154; VMS/07-auto/spec/07.5-auto.norms.md:89
+0113	8	п. 4 а	НОРМА	Platform/common/contracts/domain-envelopes.md	договор domain-envelopes «Вклад»	Platform/common/contracts/domain-envelopes.md:97
+0113	8	п. 4 б	НОРМА	VMS/03-live/spec/03.6-live.norms.md	V/03.6 Н1.3	VMS/03-live/spec/03.6-live.norms.md:123
+0113	8	п. 5	НЕ НОРМА	-	-	—
+0113	9	п. 1 а	ОТВЕРГНУТО	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	decisions/0113-раскладка-членов-домена.md:154; Platform/08-domain/spec/08.5-domain.norms.md:102
+0113	9	п. 1 б	ОТВЕРГНУТО	Platform/common/contracts/accept.md	договор accept «Публикация члена»	decisions/0113-раскладка-членов-домена.md:163; Platform/common/contracts/accept.md:101
+0113	9	п. 1 в	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:105
+0113	9	п. 1 г	НОРМА	Platform/02-installer/spec/02.1-installer.norms.md	P/02.1 Н3	Platform/02-installer/spec/02.1-installer.norms.md:1109
+0113	9	п. 1 д	РАСХОДИТСЯ	Platform/02-installer/spec/02.1-installer.norms.md; Platform/08-domain/spec/08.5-domain.norms.md	P/02.1 Н3; P/08.5 Н1.3	Platform/02-installer/spec/02.1-installer.norms.md:1109; Platform/08-domain/spec/08.5-domain.norms.md:73
+0113	9	п. 2 а	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:93
+0113	9	п. 2 б	НОРМА	VMS/03-live/spec/03.6-live.norms.md	V/03.6 Н1.3	VMS/03-live/spec/03.6-live.norms.md:122
+0113	9	п. 3	НОРМА	VMS/07-auto/auto.subsystem.yaml	auto.subsystem.yaml	VMS/07-auto/auto.subsystem.yaml:640
+0113	9	п. 4 а	НОРМА	VMS/07-auto/spec/07.5-auto.norms.md; VMS/07-auto/auto.subsystem.yaml	V/07.5 Н1; auto.subsystem.yaml	VMS/07-auto/spec/07.5-auto.norms.md:26; VMS/07-auto/auto.subsystem.yaml:29
+0113	9	п. 4 б	НОРМА	VMS/03-live/live.subsystem.yaml	live.subsystem.yaml	VMS/03-live/live.subsystem.yaml:21
+0113	9	п. 5 а	НОРМА	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:50; VMS/01-cam/spec/01.7-cam.norms.md:63
+0113	9	п. 5 б	НОРМА	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:63
+0113	9	п. 5 в	ОТВЕРГНУТО	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	decisions/0113-раскладка-членов-домена.md:155; VMS/01-cam/spec/01.7-cam.norms.md:63
+0113	9	п. 5 г	ПРЕДЕЛ	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:63
+0113	9	п. 5 д	НОРМА	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:63
+0113	9	п. 5 е	НОРМА	Platform/common/data/catalog.tsv; VMS/01-cam/cam.subsystem.yaml	catalog.tsv; cam.subsystem.yaml	Platform/common/data/catalog.tsv:78; VMS/01-cam/cam.subsystem.yaml:34
+0113	9	п. 6 а	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	V/11.8 Н1.10; V/11.3 Н1.2б	VMS/11-backend/spec/11.8-backend.norms.md:265; VMS/11-backend/spec/11.3-backend.norms.md:161
+0113	9	п. 6 б	РАСХОДИТСЯ	VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/spec/11.2-backend.norms.md	V/11.3 Н1.2а; V/11.2 Н1.2	VMS/11-backend/spec/11.3-backend.norms.md:140; VMS/11-backend/spec/11.2-backend.norms.md:54
+0113	9	п. 6 в	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2а	VMS/11-backend/spec/11.3-backend.norms.md:154
+0113	10	вводный	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2б	VMS/11-backend/spec/11.3-backend.norms.md:164
+0113	10	п. 1 а	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/11.2 Н1.5; V/11.4 Н1.5; V/11.4 Н1.7	VMS/11-backend/spec/11.2-backend.norms.md:220; VMS/11-backend/spec/11.4-backend.norms.md:231; VMS/11-backend/spec/11.4-backend.norms.md:271
+0113	10	п. 1 б	РАСХОДИТСЯ	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.5	VMS/11-backend/spec/11.4-backend.norms.md:228
+0113	10	п. 1 в	НЕ НОРМА	-	-	—
+0113	10	п. 2 а	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2б	VMS/11-backend/spec/11.3-backend.norms.md:166
+0113	10	п. 2 б	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:264
+0113	10	п. 3 а	НОРМА	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:64
+0113	10	п. 3 б	ПРЕДЕЛ	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:64
+0113	11	п. 1 а	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:102
+0113	11	п. 1 б	НОРМА	VMS/07-auto/spec/07.5-auto.norms.md	V/07.5 Н1.3	VMS/07-auto/spec/07.5-auto.norms.md:87
+0113	11	п. 1 в	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.4	Platform/08-domain/spec/08.5-domain.norms.md:129
+0113	11	п. 2 а	НОРМА	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:63
+0113	11	п. 2 б	НОРМА	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:63; VMS/01-cam/spec/01.7-cam.norms.md:63
+0113	11	п. 2 в	НОРМА	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:63
+0113	11	п. 2 г	НОРМА	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:63
+0113	11	п. 3 а	НОРМА	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:63
+0113	11	п. 3 б	НОРМА	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:63
+0113	11	п. 4 а	ПРЕДЕЛ	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:63
+0113	11	п. 4 б	ПРЕДЕЛ	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:63
+0113	11	п. 5	НОРМА	VMS/01-cam/spec/01.7-cam.norms.md; VMS/01-cam/vectors/licence-circle/README.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:63; VMS/01-cam/vectors/licence-circle/README.md:3
+0113	11	п. 6 а	НОРМА	Platform/08-domain/spec/08.1-domain.norms.md	P/08.1 Н1.4	Platform/08-domain/spec/08.1-domain.norms.md:115
+0113	11	п. 6 б	НОРМА	VMS/11-backend/backend.subsystem.yaml; VMS/11-backend/spec/11.1-backend.norms.md	backend.subsystem.yaml; V/11.1 Н1.5	VMS/11-backend/backend.subsystem.yaml:127; VMS/11-backend/spec/11.1-backend.norms.md:176
+0113	12	п. 1	НОРМА	Platform/common/contracts/accept.md; Platform/08-domain/spec/08.5-domain.norms.md	договор accept «Публикация члена»; P/08.5 Н1.4	Platform/common/contracts/accept.md:101; Platform/08-domain/spec/08.5-domain.norms.md:129
+0113	12	п. 2	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:103
+0113	12	п. 3	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.4	Platform/08-domain/spec/08.5-domain.norms.md:129
+0113	12	п. 4	НОРМА	Platform/02-installer/spec/02.5-installer.norms.md	P/02.5 Н3; P/02.5 Н1.3	Platform/02-installer/spec/02.5-installer.norms.md:150; Platform/02-installer/spec/02.5-installer.norms.md:48
+0113	12	п. 5	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.8	Platform/08-domain/spec/08.5-domain.norms.md:200; Platform/08-domain/spec/08.5-domain.norms.md:208
+0113	13	п. 1 а	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:108
+0113	13	п. 1 б	НОРМА	Platform/09-agent/spec/09.1-agent.norms.md	P/09.1 Н1.4	Platform/09-agent/spec/09.1-agent.norms.md:316
+0113	13	п. 1 в	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н2	Platform/08-domain/spec/08.3-domain.norms.md:629
+0113	13	п. 2	НОРМА	Platform/common/contracts/accept.md	договор accept «Ответ `carry`»	Platform/common/contracts/accept.md:187
+0113	13	п. 3	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md; Platform/08-domain/spec/08.8-domain.norms.md	P/08.5 Н1.3; P/08.8 Н1.5	Platform/08-domain/spec/08.5-domain.norms.md:106; Platform/08-domain/spec/08.5-domain.norms.md:105; Platform/08-domain/spec/08.8-domain.norms.md:147
+0113	13	п. 4	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md; Platform/common/data/catalog.tsv	P/08.5 Н1.4; catalog.tsv	Platform/08-domain/spec/08.5-domain.norms.md:129; Platform/common/data/catalog.tsv:112
+0113	13	п. 5	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md; Platform/02-installer/spec/02.1-installer.norms.md	P/08.5 Н1.3; P/02.1 Н3	Platform/08-domain/spec/08.5-domain.norms.md:107; Platform/02-installer/spec/02.1-installer.norms.md:1109
+0113	13	п. 6 а	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.4	Platform/08-domain/spec/08.5-domain.norms.md:129
+0113	13	п. 6 б	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:103
+0113	13	п. 7 а	ОТВЕРГНУТО	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.8	decisions/0113-раскладка-членов-домена.md:189; Platform/08-domain/spec/08.5-domain.norms.md:208
+0113	13	п. 7 б	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.8	Platform/08-domain/spec/08.5-domain.norms.md:208; Platform/08-domain/spec/08.5-domain.norms.md:208
+0113	13	п. 8 а	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.8	Platform/08-domain/spec/08.5-domain.norms.md:201
+0113	13	п. 8 б	ПРЕДЕЛ	Platform/08-domain/spec/08.5-domain.norms.md; Platform/06-console/spec/06.8-console.norms.md	P/08.5 Н1.8; P/06.8 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:214; Platform/06-console/spec/06.8-console.norms.md:91
+0113	13	п. 9	ПРЕДЕЛ	VMS/07-auto/spec/07.5-auto.norms.md	V/07.5 Н1.3	VMS/07-auto/spec/07.5-auto.norms.md:89
+0113	14	п. 1	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:108; Platform/08-domain/spec/08.5-domain.norms.md:109
+0113	14	п. 2	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.4	Platform/08-domain/spec/08.5-domain.norms.md:129
+0113	14	п. 3	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.8	Platform/08-domain/spec/08.5-domain.norms.md:208
+0113	14	п. 4	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.7	Platform/08-domain/spec/08.8-domain.norms.md:299
+0113	15	а	НОРМА	Platform/10-domain-console/spec/10-domain-console.norms.md; VMS/01-cam/cam.subsystem.yaml	P/10 Н1.2; cam.subsystem.yaml	Platform/10-domain-console/spec/10-domain-console.norms.md:106; Platform/10-domain-console/spec/10-domain-console.norms.md:106; VMS/01-cam/cam.subsystem.yaml:586
+0113	15	б	НОРМА	Platform/02-installer/spec/02.1-installer.norms.md	P/02.1 Н3	Platform/02-installer/spec/02.1-installer.norms.md:1107
+0113	16	п. 1	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:518
+0113	16	п. 2 а	НОРМА	Platform/common/contracts/keys.md	договор keys «Набор `domain/keys`»	Platform/common/contracts/keys.md:58; Platform/common/contracts/keys.md:58
+0113	16	п. 2 б	ОТВЕРГНУТО	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	decisions/0113-раскладка-членов-домена.md:210; Platform/08-domain/spec/08.8-domain.norms.md:501
+0113	16	п. 2 в	ПРЕДЕЛ	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:501
+0113	16	п. 3	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md; Platform/08-domain/spec/08.3-domain.norms.md	P/08.8 Н1.8а; P/08.3 Н2	Platform/08-domain/spec/08.8-domain.norms.md:524; Platform/08-domain/spec/08.3-domain.norms.md:628
+0113	16	п. 4	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:522
+0113	16	п. 5	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:527
+0113	17	п. 1 а	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:501; Platform/08-domain/spec/08.8-domain.norms.md:516
+0113	17	п. 1 б	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:501
+0113	17	п. 2	НОРМА	Platform/08-domain/spec/08.2-domain.norms.md	P/08.2 Н3	Platform/08-domain/spec/08.2-domain.norms.md:458
+0113	17	п. 3	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:522; Platform/08-domain/spec/08.8-domain.norms.md:522
+0113	17	п. 4	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:500
+0113	17	п. 5 а	ПРЕДЕЛ	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:528
+0113	17	п. 5 б	ПРЕДЕЛ	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:528
+0113	17	п. 5 в	НОРМА	Platform/common/vectors/record/cases.tsv	cases.tsv	Platform/common/vectors/record/cases.tsv:52
+0113	17	п. 6	НЕ НОРМА	-	-	—
+0113	18	п. 1 а	НОРМА	Platform/common/contracts/accept.md	договор accept «Публикация члена»	Platform/common/contracts/accept.md:102
+0113	18	п. 1 б	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:517
+0113	18	п. 2	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md; Platform/common/contracts/record.md	P/08.8 Н1.8а; договор record «Функция `record`»	Platform/08-domain/spec/08.8-domain.norms.md:501; Platform/common/contracts/record.md:113
+0113	18	п. 3	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:501
+0113	18	п. 4	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:521
+0113	19	—	НОРМА	Platform/10-domain-console/spec/10-domain-console.norms.md; VMS/11-backend/backend.subsystem.yaml	P/10 Н1.2; backend.subsystem.yaml	Platform/10-domain-console/spec/10-domain-console.norms.md:107; VMS/11-backend/backend.subsystem.yaml:129
+0113	20	—	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:501; Platform/08-domain/spec/08.8-domain.norms.md:516
+0113	21	а	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.8а	Platform/08-domain/spec/08.8-domain.norms.md:521
+0113	21	б	НЕ НОРМА	-	-	—
+0113	22	а	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.6	VMS/11-backend/spec/11.4-backend.norms.md:250
+0113	22	б	НОРМА	Platform/10-domain-console/spec/10-domain-console.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	P/10 Н1.2; V/11.3 Н1.2б	Platform/10-domain-console/spec/10-domain-console.norms.md:105; VMS/11-backend/spec/11.3-backend.norms.md:165
+0113	22	в	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2б	VMS/11-backend/spec/11.3-backend.norms.md:165
+0113	22	г	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2б	VMS/11-backend/spec/11.3-backend.norms.md:165
+0113	22	д	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2б	VMS/11-backend/spec/11.3-backend.norms.md:165
+0113	22	е	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.6	VMS/11-backend/spec/11.4-backend.norms.md:250
+0113	22	ж	НЕ НОРМА	-	-	—
+0113	23	п. 1	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:110
+0113	23	п. 2	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:103
+0113	23	п. 3 а	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:103
+0113	23	п. 3 б	ПРЕДЕЛ	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:108
+0113	23	п. 4 а	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:103
+0113	23	п. 4 б	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:103
+0113	23	п. 4 в	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:103
+0113	23	п. 4 г	ПРЕДЕЛ	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:103
+0113	23	п. 4 д	ПРЕДЕЛ	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:108
+0113	24	а	НОРМА	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:63
+0113	24	б	НОРМА	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:63; VMS/01-cam/spec/01.7-cam.norms.md:63
+0113	24	в	НОРМА	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:63
+0113	24	г	НЕ НОРМА	-	-	—
