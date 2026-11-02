@@ -66,7 +66,7 @@
   "cam preset": "preset|пресет",
   "rec record": "record|пиш|запис",
   "det detect": "detector|detection|детектор|детекц",
-  "det scan": "scan|сканир|check the archive|провер\\S* архив",
+  "det scan": "scan|сканир|check\\s+\\S+\\s+archive|провер\\S*(\\s+\\S+)?\\s+архив",
   "cam arm": "\\barm\\b|\\barms\\b|\\barmed\\b|на охрану|охран",
   "cam disarm": "disarm|снимай|сними|снять",
   "cam disable": "disable|выключи|выключ",
