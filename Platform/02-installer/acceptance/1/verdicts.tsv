@@ -889,3 +889,5 @@ a112_heartbeat_door_ok	ok
 a112_heartbeat_door_status	refused
 a112_heartbeat_door_family	refused
 a112_heartbeat_door_secret	refused
+a112_calls_marks_ok	ok
+a112_calls_marks_get	refused

@@ -1,0 +1,6 @@
+# только POST: чтения у записи нет (P/06.3 Н1.9)
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+door: {pass: {routes: [api], calls: ["GET marks"]}}
