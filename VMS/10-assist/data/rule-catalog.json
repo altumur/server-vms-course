@@ -353,10 +353,6 @@
  },
  "crossDomain": [],
  "assist_omit": {
-  "actions": [
-   "detect",
-   "scan"
-  ],
   "controls": [
    "ask",
    "escalate"
