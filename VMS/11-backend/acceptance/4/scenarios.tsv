@@ -478,6 +478,7 @@ scenario	step	request	expect
 16-record	31	member m1 console2 POST /api/devices {"idempotencyKey": "rec-e", "items": [{"device": {"type": "det", "name": "на камере", "detectorKind": "motion", "builtin": true}, "domainId": "$dom", "parentId": "3d08e8ba-11ab-5128-97e6-d03888680c2e", "folderId": null}]}	200 {"done": [], "failed": [{"index": 0, "code": "NOT_SUPPORTED", "field": "builtin"}]}
 16-record	32	@manual файл пакета device-catalog.json: configMode default пишет resolution, fps модели, поля тела важнее; встроенный детектор создаётся строкой cam/device_units type det, template по detectorKind и model, sensitivity без свойства — 422, несовместимый при включении — 409 BUSY; у стенда файла нет: нужны .rep	manual
 16-record	33	@manual живой драйвер: online встроенного детектора из units_down, события unit в JournalEvent; storage: устройство без архива не даёт записи	manual
+16-record	34	@manual расписание записи: recordMode sched с recordScheduleId — строка записи с условием time, заказ продлевается в окне, вне окна кончается; recordScheduleId нет — 422 field recordScheduleId; расписание сняли — recordReason: у стенда нет живого auto	manual
 17-rules	1	@domain m1	ok
 17-rules	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 17-rules	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
