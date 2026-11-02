@@ -1558,6 +1558,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '#/components/schemas/AdminOnly'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
         '404':
           $ref: '#/components/responses/NotADomainRoute'
@@ -1666,6 +1667,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '#/components/schemas/AdminOnly'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
         '404':
           $ref: '#/components/responses/NotADomainRoute'
@@ -1757,6 +1759,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '#/components/schemas/AdminOnly'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
         '404':
           description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
@@ -1833,6 +1836,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '#/components/schemas/AdminOnly'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
         '404':
           description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
@@ -1899,6 +1903,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '#/components/schemas/AdminOnly'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
         '404':
           $ref: '#/components/responses/NotADomainRoute'
@@ -2007,6 +2012,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '#/components/schemas/AdminOnly'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
         '404':
           $ref: '#/components/responses/NotADomainRoute'
@@ -2098,6 +2104,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '#/components/schemas/AdminOnly'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
         '404':
           description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
@@ -2174,6 +2181,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '#/components/schemas/AdminOnly'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
         '404':
           description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
@@ -2240,6 +2248,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '#/components/schemas/AdminOnly'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
         '404':
           $ref: '#/components/responses/NotADomainRoute'
@@ -2348,6 +2357,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '#/components/schemas/AdminOnly'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
         '404':
           $ref: '#/components/responses/NotADomainRoute'
@@ -2439,6 +2449,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '#/components/schemas/AdminOnly'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
         '404':
           description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
@@ -2515,6 +2526,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '#/components/schemas/AdminOnly'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
         '404':
           description: 'Переход 2 — путь с сегментом . или .. (в том числе в процент-форме) — not a domain route, до сторожевой
@@ -2599,6 +2611,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '#/components/schemas/AdminOnly'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
         '404':
           $ref: '#/components/responses/NotADomainRoute'
@@ -2692,6 +2705,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '#/components/schemas/AdminOnly'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
         '404':
           $ref: '#/components/responses/NotADomainRoute'
@@ -2759,6 +2773,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '#/components/schemas/AdminOnly'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
         '404':
           $ref: '#/components/responses/NotADomainRoute'
@@ -2877,6 +2892,7 @@ paths:
               schema:
                 anyOf:
                 - $ref: '#/components/schemas/GateOrRole403'
+                - $ref: '#/components/schemas/AdminOnly'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/Denied/content/application~1json/schema'
         '404':
           $ref: '#/components/responses/NotADomainRoute'
@@ -3411,6 +3427,15 @@ components:
         - properties:
             error:
               const: no_role
+    AdminOnly:
+      description: 'Переход 3: дверь только администратору домена, P/08.4 Н1.3в denies, слова data/refusal-words.tsv; ответ процесса domain как пришёл.'
+      type: object
+      required: [error]
+      additionalProperties: false
+      properties:
+        error: {const: admin only}
+        detail: {type: string}
+        field: {type: string, description: 'У пакета /writes/<i> (refusal-words.tsv).'}
     GateOrRole403:
       oneOf:
       - $ref: '../../06-console/spec/06-console.api.openapi.yaml#/components/schemas/Denied'
