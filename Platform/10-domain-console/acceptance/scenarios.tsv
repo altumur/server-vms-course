@@ -134,3 +134,16 @@ scenario	step	request	expect
 17-read-versions	16	member m1 console @header Idempotency-Key: f-r1 @header If-Match: 1 PUT /domain/topology {"centre": "m1"}	200 @header ETag: ~"
 17-read-versions	17	member m1 console @header Idempotency-Key: f-r1 @header If-Match: 1 PUT /domain/topology {"centre": "m1"}	200 {"rev": 2, "centre": "m1"}
 17-read-versions	18	member m1 console GET /domain/topology	200 @header ETag: ~"
+18-kept-door	1	@domain m1	ok
+18-kept-door	2	member hold store POST /v1/write {"op": "put", "key": "domain/testsub/ledger", "items": {"note": "open", "plain_secret": "s1", "inner": "{\"token_secret\": \"s2\", \"n\": 1}", "sealed": "enc:v2:x"}}	200
+18-kept-door	3	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
+18-kept-door	4	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "view", "scope": "*"}]}	200
+18-kept-door	5	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$ann"}
+18-kept-door	6	holder GET /domain/testsub/kept/ledger	200 {"items": {"note": "open", "plain_secret": "***", "sealed": "***", "inner": "~\"token_secret\": *\"\\*\\*\\*\""}, "index": "@any"}
+18-kept-door	7	holder GET /domain/testsub/kept/badges	404
+18-kept-door	8	holder GET /domain/testsub/kept/nosuch	404
+18-kept-door	9	member m1 console GET /domain/testsub/kept/ledger	200 {"items": {"plain_secret": "***"}}
+18-kept-door	10	@person -	ok
+18-kept-door	11	holder GET /domain/testsub/kept/ledger	401
+18-kept-door	12	holder @header Authorization: Bearer $ann GET /domain/testsub/kept/ledger	403
+18-kept-door	13	holder @header Authorization: Bearer $ann GET /domain/testsub/kept/nosuch	403

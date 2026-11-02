@@ -46,6 +46,7 @@ domain:
   view: [start]
   books: {tallies: {show: [n]}}
   kept: [ledger, badges/]              # `badges/`: a family of rows
+  kept_read: [ledger]                  # the console of the domain reads this one row (P/10)
   tables: [ledger]
   tokens:
     probe:

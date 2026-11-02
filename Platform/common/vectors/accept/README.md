@@ -28,7 +28,7 @@ Kimi SB810-06): у строк уроков 3 и 4 `catalog` — `["testsub"]`, �
 
 | Манифест | Файл | sha256 |
 |---|---|---|
-| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `f07e53992348a78aa88ed80bd6eaf27b74fccaff9a16de5feba34a3bc70f9459` |
+| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a` |
 | `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `3bd7d88decb6fbdba9930d4646887f5eb6afa32713f92f3572340229617ba710` |
 
 Смена этих байтов — повод перепроверить таблицу.

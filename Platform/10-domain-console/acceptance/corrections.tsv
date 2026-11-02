@@ -10,3 +10,4 @@ date	sample	fix	languages
 2026-10-30	05-the-holders-page 6	ADR-0094 B6: ожидание GET /session дополнено полями server_time (@time) и timezone (умолчание UTC, стенд не задаёт TIMEZONE)	all
 2026-10-31	17-read-versions	ADR-0094 B4: новый сценарий: ETag дверей чтения, заголовки версии через пересылку	all
 2026-10-31	15-dot-segments-and-x-user 8	ADR-0100: root — назначением роли admin, в /session консоли домена admin: true и пустые grants; сухого прогона нет	all
+2026-11-02	18-kept-door	новый сценарий двери строки kept: 401, 403 раньше 404, маска вглубь; составлен чтением, сухого прогона реализацией нет; testsub.domain.kept_read добавлен, долг продукта	all
