@@ -47,3 +47,4 @@ date	sample	fix	languages
 2026-11-02	4/scenarios.tsv: 34-rule-prompts шаг 9	разбор ревью fork-5c1: трасса вопроса, отвергнутая строка, снятый запуск, очередь	all
 2026-11-02	4/scenarios.tsv: 34-rule-prompts шаг 9	разбор ревью fork-5c1-3: строка отказа, пробный запуск, порядок steps	all
 2026-11-02	4/scenarios.tsv: 34-rule-prompts шаг 9	разбор ревью fork-5c1-4: исходы пробы none, reset	all
+2026-11-02	4/scenarios.tsv: 34-rule-prompts шаг 9	разбор ревью fork-5c1-5: пустые levels, отказ branches до хода	all
