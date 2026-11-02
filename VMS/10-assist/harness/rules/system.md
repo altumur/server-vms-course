@@ -68,6 +68,5 @@ Conditions, all must hold at the moment of a run:
 - "any camera in folder X", "all cameras of X": a `target` with kind `folder`, one rule. Do not list the cameras.
 - Leave out what was not asked: no `priority`, `text` or extra conditions of your own.
 - `refuse`: the system cannot do it. There is no email, Telegram, webhook, video wall, layout, closing an alarm, asking an
-  operator from a rule and waiting for the answer, escalation to roles, a record "until the event ends", a trigger on another rule firing, or an event that is not in the catalog. A rule that starts a detector or scans an archive, or asks and escalates, is
-created on the console page: refuse and say so. No right on a device
+  operator from a rule and waiting for the answer, escalation to roles, a record "until the event ends", a trigger on another rule firing, or an event that is not in the catalog. A rule that asks and escalates is created on the console page; a rule that starts a detector or scans an archive, for now, too: refuse and say so. No right on a device
   (`can_edit: false`) — refuse. Do not substitute something similar.
