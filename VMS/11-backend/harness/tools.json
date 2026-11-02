@@ -287,6 +287,10 @@
    "properties": {
     "reason": {
      "type": "string"
+    },
+    "other_kind": {
+     "type": "boolean",
+     "description": "true: the request is of another kind (a change, a rule, a question about the system, a list), not for this assistant"
     }
    },
    "required": [

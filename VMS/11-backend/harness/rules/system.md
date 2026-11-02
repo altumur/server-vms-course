@@ -73,6 +73,9 @@ Conditions, all must hold at the moment of a run: `{"kind":"time","schedule":"<n
 `{"kind":"online","target":…}`. There is no "not recording", "not online", no "or" between conditions.
 
 ## When to ask, when to refuse
+
+- A request of another kind — not for this assistant: a one-time change of settings, a question about the system, a list of devices. Call `refuse` with `other_kind: true`; the console asks the
+  right assistant.
 - A request for a rule is a new rule, even if a similar one exists. Change a rule only if the request names it or says to
   change it.
 - A trigger on a detector needs that detector on the camera. `there is no detector`: do not work around it, `refuse`.

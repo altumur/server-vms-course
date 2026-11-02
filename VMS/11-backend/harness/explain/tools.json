@@ -127,6 +127,38 @@
   }
  },
  {
+  "name": "rule_state",
+  "description": "A rule's state: its phase, reason, unfit and unchecked words, the runs that wait.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "rule": {
+     "type": "string",
+     "description": "the rule's name"
+    }
+   },
+   "required": [
+    "rule"
+   ]
+  }
+ },
+ {
+  "name": "rule_fires",
+  "description": "A rule's fires of the last day from the journal, newest first.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "rule": {
+     "type": "string",
+     "description": "the rule's name"
+    }
+   },
+   "required": [
+    "rule"
+   ]
+  }
+ },
+ {
   "name": "answer",
   "description": "The answer to the admin, in words; ends the turn. Nothing is changed.",
   "inputSchema": {
@@ -164,6 +196,10 @@
    "properties": {
     "reason": {
      "type": "string"
+    },
+    "other_kind": {
+     "type": "boolean",
+     "description": "true: the request is of another kind (a change, a rule, a question about the system, a list), not for this assistant"
     }
    },
    "required": [
