@@ -165,11 +165,11 @@ door:
 # (доп. (3) п. 8), a page of its own (no frame of another page, no sandbox), with the Content-Security-Policy that is exactly the minimum
 # of P/06.5 Н1.1 `page` — the shell has no inline script, so `script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'`,
 # not stricter: inline styles and `data:` images stay allowed (доп. (8) пп. 1, 4).
-# The build: consolem @1b53d6d (reproducible), its MANIFEST.json; its index.html is
-# backend.shell.html (SHA-256 bfcc3c30…), the rest is the set (V/11.1 Н1.4). The deployment package builds it from the
+# The build: consolem @e0dd560 (reproducible), its MANIFEST.json; its index.html is
+# backend.shell.html (SHA-256 b0f8292d…), the rest is the set (V/11.1 Н1.4). The deployment package builds it from the
 # pinned commit and places it next to the manifest (V/09.3).
-# SHA-256 of each (the lesson's README): 87414636… app.css, 9d7a5f23… app.js, c2bf568b… client.js,
-# 693b77d4… fonts/InterVariable.woff2, 973ab43b… i18n-en.js, a849627b… openapi.js
+# SHA-256 of each (the lesson's README): d299427b… app.css, 88eb8214… app.js, c2bf568b… client.js,
+# 693b77d4… fonts/InterVariable.woff2, 9052acf1… i18n-en.js, d32771f2… openapi.js
 # The set — SHA-256 c58bb6292bf8a0ba0473060bcae3a1d86106cc2c3e8c9977698619397491dcfe.
 # The memory of repeats of a group `idempotencyKey` (V/11.4 Н1.4; the review of V/11, question 3): a row per group,
 # key h = SHA-256 hex of the bytes of the person (`user` of the ticket), a zero byte and the external key. Made with

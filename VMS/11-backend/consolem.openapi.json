@@ -1302,7 +1302,7 @@
           "hardware"
         ],
         "summary": "Задать пресет",
-        "description": "Без name запоминает нынешнее положение камеры под номером n, с name только задаёт имя: камера не движется. Номер больше presetMax — 404 NOT_FOUND. Камера без ptz — 422 NOT_SUPPORTED, field: ptz; без связи — 409 DEVICE_OFFLINE. Ответ — камера целиком",
+        "description": "PUT {} запоминает нынешнее положение камеры под номером n: записи нет — создаётся с пустым именем; камера без ptz — 422 NOT_SUPPORTED, field: ptz; без связи — 409 DEVICE_OFFLINE. PUT {name}, пустое тоже, положения не трогает и устройству не идёт, поэтому ни связь, ни ptz его не судят: записи нет — создаётся, есть — имя заменяется, пустое снимает подпись. Запись снимает только DELETE. Номер больше presetMax — 404 NOT_FOUND. Ответ — камера целиком",
         "parameters": [
           {
             "name": "deviceId",
@@ -1372,7 +1372,7 @@
           "hardware"
         ],
         "summary": "Удалить пресет",
-        "description": "Снимает пресет вместе с именем. Номер больше presetMax — 404 NOT_FOUND. Ответ — камера целиком",
+        "description": "Снимает запись всегда и первым шагом, затем просит камеру забыть положение, если есть ptz и связь. Иначе просьбы нет, 200, положение остаётся в камере. Камера отказала — 409 DEVICE_REFUSED, запись уже снята. Номер больше presetMax — 404 NOT_FOUND. Ответ — камера целиком",
         "parameters": [
           {
             "name": "deviceId",
@@ -1653,6 +1653,9 @@
               }
             }
           },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
           "404": {
             "$ref": "#/components/responses/Problem"
           },
@@ -1665,7 +1668,8 @@
           "default": {
             "$ref": "#/components/responses/Problem"
           }
-        }
+        },
+        "description": "Папки ведёт только встроенная роль «Администратор»: функции роли и права на папку этого не дают, иначе 403 PERMISSION_DENIED"
       }
     },
     "/folders/{folderId}": {
@@ -1765,6 +1769,9 @@
               }
             }
           },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
           "404": {
             "$ref": "#/components/responses/Problem"
           },
@@ -1787,7 +1794,7 @@
             "$ref": "#/components/responses/Problem"
           }
         },
-        "description": "Состав папки — это папки устройства: добавить или убрать устройство, над которым идёт групповая операция, — 409 BUSY, какое — в params.targetId"
+        "description": "Состав папки — это папки устройства: добавить или убрать устройство, над которым идёт групповая операция, — 409 BUSY, какое — в params.targetId. Папки ведёт только встроенная роль «Администратор»: функции роли и права на папку этого не дают, иначе 403 PERMISSION_DENIED"
       },
       "delete": {
         "operationId": "deleteFolder",
@@ -1819,6 +1826,9 @@
           "204": {
             "description": "Удалено"
           },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
           "404": {
             "$ref": "#/components/responses/Problem"
           },
@@ -1838,7 +1848,7 @@
             "$ref": "#/components/responses/Problem"
           }
         },
-        "description": "Над устройством в ней или в подпапках идёт групповая операция — 409 BUSY, какое — в params.targetId"
+        "description": "Над устройством в ней или в подпапках идёт групповая операция — 409 BUSY, какое — в params.targetId. Папки ведёт только встроенная роль «Администратор»: функции роли и права на папку этого не дают, иначе 403 PERMISSION_DENIED"
       }
     },
     "/archives": {
@@ -5025,7 +5035,7 @@
           "access"
         ],
         "summary": "Применить черновик прав",
-        "description": "Сервер проверяет: имена ролей, групп, каталогов и логины не повторяются (без учёта регистра); ссылки ведут в существующие записи; остаётся хотя бы один включённый администратор с неограниченным доступом и действующим назначением, и текущий администратор его не теряет (иначе 409 SELF_LOCKOUT). Записи истории получают время и автора",
+        "description": "Сервер проверяет: имена ролей, групп, каталогов и логины не повторяются (без учёта регистра); ссылки ведут в существующие записи; уровни, функции, запреты и плагины есть в справочнике, а части прав объявлены возможностями (иначе 422 NOT_SUPPORTED, field — путь поля, params.id — запись); встроенная роль «Администратор» меняется только назначениями (иначе 409 BUILTIN), unr у другой роли — 422 NOT_SUPPORTED; остаётся хотя бы один включённый администратор без срока учётной записи и без срока назначения, а текущий администратор не снимает с себя роль и не лишает себя входа (иначе 409 SELF_LOCKOUT). Записи истории получают время и автора. Кто применяет: администратор — всё; человек с USERS_RIGHTS_SETUP — всё, кроме администратора. Пакет, который меняет назначения «Администратора», пользователей и группы с ним или включает и снимает USERS_RIGHTS_SETUP у роли, отвечает 403 PERMISSION_DENIED целиком, ничего не записано. Строки, которые пакет не меняет, не проверяются: присылать снимок целиком можно. Цель прочитать нельзя — 503 UPSTREAM_UNAVAILABLE. dryRun судит только черновик: право применяющего и 409 PASSWORD_NOT_ADMIN проверяются при записи",
         "parameters": [
           {
             "name": "If-Match",
@@ -5064,6 +5074,9 @@
             }
           },
           "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
             "$ref": "#/components/responses/Problem"
           },
           "409": {
@@ -5401,7 +5414,7 @@
           "storage"
         ],
         "summary": "Завести обход",
-        "description": "Камера без архива устройства — 422 NOT_SUPPORTED, field: deviceId. Второй обход той же камеры и вида — 422 VALIDATION_FAILED, field: detectorKind. keep: hits без архива этой камеры — 422 VALIDATION_FAILED, field: archiveId",
+        "description": "Камера без архива устройства — 422 NOT_SUPPORTED, field: deviceId. Второй обход той же камеры и вида — 422 VALIDATION_FAILED, field: detectorKind. keep: hits без архива этой камеры — 422 VALIDATION_FAILED, field: archiveId. Device.archiveJobs: false — 422 NOT_SUPPORTED, field: deviceId",
         "requestBody": {
           "required": true,
           "content": {
@@ -5493,6 +5506,9 @@
               }
             }
           },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
           "401": {
             "$ref": "#/components/responses/Problem"
           },
@@ -5511,7 +5527,8 @@
           "428": {
             "$ref": "#/components/responses/Problem"
           }
-        }
+        },
+        "description": "Создание требует edit на камеру, правка и снятие — admin: иначе 403 PERMISSION_DENIED"
       },
       "delete": {
         "operationId": "deleteArchiveWatch",
@@ -5543,6 +5560,9 @@
           "204": {
             "description": "Снят"
           },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
           "404": {
             "$ref": "#/components/responses/Problem"
           },
@@ -5558,7 +5578,8 @@
           "default": {
             "$ref": "#/components/responses/Problem"
           }
-        }
+        },
+        "description": "Создание требует edit на камеру, правка и снятие — admin: иначе 403 PERMISSION_DENIED"
       }
     },
     "/archive-scans": {
@@ -5617,7 +5638,7 @@
           "storage"
         ],
         "summary": "Запустить скан отрезка записи",
-        "description": "Итог приходит событием entity.changed с kind: archiveScan. Архив не этой камеры — 422 VALIDATION_FAILED, field: archiveId; from не раньше to — field: to",
+        "description": "Итог приходит событием entity.changed с kind: archiveScan. Архив не этой камеры — 422 VALIDATION_FAILED, field: archiveId; from не раньше to — field: to. Device.archiveJobs: false — 422 NOT_SUPPORTED, field: deviceId",
         "requestBody": {
           "required": true,
           "content": {
@@ -5678,6 +5699,9 @@
           "204": {
             "description": "Снят"
           },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
           "404": {
             "$ref": "#/components/responses/Problem"
           },
@@ -5687,7 +5711,8 @@
           "default": {
             "$ref": "#/components/responses/Problem"
           }
-        }
+        },
+        "description": "Создание требует edit на камеру, правка и снятие — admin: иначе 403 PERMISSION_DENIED"
       }
     }
   },
@@ -5973,6 +5998,15 @@
               "type": "string"
             },
             "description": "Метки сервера: по ним размещаются камеры, детекторы, записи, правила"
+          },
+          "class": {
+            "type": "string",
+            "enum": [
+              "server",
+              "camera"
+            ],
+            "readOnly": true,
+            "description": "Только чтение: чем представился, сервер или камера, у стучащегося в домен тоже. Человек подтверждает это при приёме"
           }
         },
         "additionalProperties": false,
@@ -6168,7 +6202,7 @@
           },
           "online": {
             "type": "boolean",
-            "description": "Есть связь"
+            "description": "Соединение держателя с устройством: состояния running, idle, held. Это состояние, а не проба: простаивающая камера без потока не опрашивается и остаётся online. Идёт ли видео, поле не говорит"
           },
           "enabled": {
             "type": "boolean"
@@ -6423,7 +6457,7 @@
             "items": {
               "$ref": "#/components/schemas/DevicePreset"
             },
-            "description": "Только названные пресеты. Без имени пресет ведётся номером до presetMax"
+            "description": "Сохранённые номера. Имя пустое — пресет сохранён без подписи, форма показывает его номером. Имя оператора старше имени драйвера"
           },
           "faultText": {
             "type": "string",
@@ -6521,6 +6555,11 @@
             "type": "integer",
             "minimum": 1,
             "description": "Только чтение: предел номера пресета"
+          },
+          "archiveJobs": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "Только чтение. false — скан и обход этой камере недоступны: камера-кластер и чужая камера, таблицы живут в кластере записи. Нет поля — доступны"
           }
         },
         "additionalProperties": false,
@@ -6645,7 +6684,7 @@
               "always",
               "backup"
             ],
-            "description": "Как пишет архив на весь сервер: постоянно или только при сбое. Значения — archiveModes вида"
+            "description": "Как пишет архив на весь сервер: постоянно или только при сбое. Значения — archiveModes вида. Нет поля — режим «Авто»: при сбое, а у камеры без основной записи в кластере из одного — постоянно"
           },
           "admits": {
             "type": "boolean",
@@ -6809,7 +6848,7 @@
           },
           "kind": {
             "type": "string",
-            "description": "Вид события из справочника ruleTriggers"
+            "description": "Вид события из справочника ruleTriggers. silent — обрыв открытого потока камеры, а не потеря связи с устройством: у камеры без потока его нет"
           },
           "target": {
             "anyOf": [
@@ -7544,18 +7583,18 @@
         "properties": {
           "unr": {
             "type": "boolean",
-            "description": "Неограниченный доступ: обходит все уровни"
+            "description": "Встроенная роль «Администратор»: у неё всё, исключения других ролей на её пользователей не действуют, администратором делает назначение роли. Такая роль одна: её права, имя и описание не меняются, удалить её нельзя (409 BUILTIN), меняются только назначения. unr у другой роли и снятие unr у встроенной — 422 NOT_SUPPORTED, field: global.unr"
           },
           "feat": {
             "type": "array",
-            "description": "Функции (reference.access.features)",
+            "description": "Функции (reference.access.features). Функция настройки действует только на объектах, где уровень этой роли что-то даёт: DEVICES_SETUP не настраивает камеру с FORBID, а при dCam = FORBID не создаёт камеру вне папок; ARCHIVES_SETUP на камере с ONLY_ARCHIVE работает: архив уровень даёт",
             "items": {
               "type": "string"
             }
           },
           "ur": {
             "type": "string",
-            "description": "Права на права пользователей",
+            "description": "Права на права пользователей (levels.ur)",
             "enum": [
               "NO",
               "DEV",
@@ -7568,11 +7607,11 @@
           },
           "alert": {
             "type": "string",
-            "description": "Уровень из справочника reference.access.levels"
+            "description": "Что можно с тревогами вообще (levels.alert). Камера сужает: тревоги её детекторов видны и обрабатываются там, где камера видна, то есть с visibleFrom.cam"
           },
           "bm": {
             "type": "string",
-            "description": "Уровень из справочника reference.access.levels"
+            "description": "Что можно с отметками вообще (levels.bm). Камера сужает: отметки живут в архиве, они видны и ставятся там, где уровень камеры даёт архив: ONLY_ARCHIVE, ARCHIVE, ARCH_MANAGE, FULL; при MON и MON_PROT нет"
           },
           "depth": {
             "type": "integer",
@@ -7720,7 +7759,7 @@
               },
               "description": "Поле объекта → уровень"
             },
-            "description": "Исключения для объектов: id устройства или хранилища, vw:<id сервера>, macro:<id правила>, plug:<код плагина> → поля"
+            "description": "Исключения для объектов: id устройства или хранилища, vw:<id сервера>, macro:<id правила>, plug:<код плагина> → поля. Исключение действует внутри своей роли: внутри роли — исключение объекта, иначе ближайшая папка, где значение задано, иначе право по умолчанию; между ролями — наибольшее. Понижение бывает, но не отнимает того, что даёт другая роль"
           }
         },
         "additionalProperties": false,
@@ -7749,7 +7788,8 @@
             "type": "string"
           },
           "email": {
-            "type": "string"
+            "type": "string",
+            "description": "Видят администратор и люди с USERS_RIGHTS_SETUP; остальным — пустая строка, кроме своей записи"
           },
           "enabled": {
             "type": "boolean"
@@ -7809,6 +7849,14 @@
             "type": "string",
             "description": "Создан синхронизацией группы каталога",
             "format": "uuid"
+          },
+          "hasPassword": {
+            "type": "boolean",
+            "description": "Пароль задан. Сам пароль сервер не отдаёт"
+          },
+          "passwordByAdmin": {
+            "type": "boolean",
+            "description": "Последний пароль задал сам пользователь или администратор. false — задал другой человек: назначить такому пользователю «Администратора» нельзя, пока администратор не сменит пароль (409 PASSWORD_NOT_ADMIN). Нет поля — неизвестно, интерфейс не предупреждает"
           }
         },
         "additionalProperties": false,
@@ -7824,7 +7872,8 @@
           "expiresDate",
           "webSessions",
           "mobileSessions",
-          "catalogId"
+          "catalogId",
+          "hasPassword"
         ]
       },
       "UserGroup": {
@@ -8179,6 +8228,13 @@
             "items": {
               "$ref": "#/components/schemas/AccessCellEntry"
             }
+          },
+          "streamGrants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StreamGrant"
+            },
+            "description": "Доступ учёток потоков к камерам. Удаление учётки, папки или камеры убирает их отсюда"
           }
         },
         "additionalProperties": false,
@@ -8488,6 +8544,7 @@
             "description": "Параметры начинки по видам: ключ, варианты или значение по умолчанию"
           },
           "ruleTriggers": {
+            "description": "События для запуска правил. Каждый вид своим кодом: io.input, motion и другие; silent — обрыв открытого потока камеры, а не потеря связи с устройством: у камеры без потока его нет",
             "type": "array",
             "items": {
               "type": "object",
@@ -8605,7 +8662,7 @@
                     "type": "string"
                   }
                 },
-                "description": "Вид объекта → уровни от меньшего к большему: по порядку считается «наибольшее»"
+                "description": "Вид объекта → уровни от меньшего к большему: по порядку считается «наибольшее». Уровень вне списка в POST /access/apply — 422 NOT_SUPPORTED"
               },
               "defaults": {
                 "type": "array",
@@ -8740,6 +8797,35 @@
                   "digit",
                   "notLogin"
                 ]
+              },
+              "joins": {
+                "type": "array",
+                "description": "Пары уровней, которые вместе дают уровень выше обоих, а не наибольший по порядку. Сейчас одна: MON и ONLY_ARCHIVE дают ARCHIVE: живое видео из одного источника и архив из другого складываются. Действует и между папками одной роли, и между ролями. Нет поля — только порядок levels",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "levels",
+                    "level"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "description": "Вид объекта из levels"
+                    },
+                    "levels": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "level": {
+                      "type": "string",
+                      "description": "Что дают вместе"
+                    }
+                  }
+                }
               }
             },
             "additionalProperties": false,
@@ -8759,7 +8845,8 @@
               "staleDays",
               "expiringSoonDays",
               "passwordPolicy"
-            ]
+            ],
+            "description": "Что есть в правах этой системы. Интерфейс строит списки только отсюда: вида нет в levels — нет столбца, уровня нет — нет в выборе, функции нет в features — нет галочки, запрета нет в restrictions, плагина нет в plugins — их тоже нет. Подписи и подсказки интерфейс держит у себя по коду, незнакомый код показывает как есть"
           },
           "limits": {
             "type": "object",
@@ -8936,14 +9023,30 @@
           "serverRoles",
           "serverNetwork",
           "archiveEncryption",
-          "assist"
+          "assist",
+          "accessCatalogs",
+          "accessSupervision",
+          "accessLoginSchedule",
+          "accessSessions",
+          "accessDepth",
+          "accessRestrictions",
+          "accessUserRights",
+          "streamGrants"
         ],
         "description": "Необязательная возможность системы: без неё поле есть в записи, но менять его нельзя (422 NOT_SUPPORTED)",
         "x-enum-descriptions": {
           "serverRoles": "Роль сервера (role в ServerPatch): основной, узел, резервный",
           "serverNetwork": "Сетевые настройки сервера (netmask, gateway, dns в ServerPatch)",
           "archiveEncryption": "Шифрование хранилища (encrypted: true в ArchiveCreate и ArchivePatch)",
-          "assist": "Ассистент конфигурирования (POST /assist/turns): без него режим ассистента в интерфейсе скрыт"
+          "assist": "Ассистент конфигурирования (POST /assist/turns): без него режим ассистента в интерфейсе скрыт",
+          "accessCatalogs": "Каталоги LDAP: Access.catalogs, UserGroup.source, AccessUser.catalogId, POST /access/catalogs/{id}/sync. Без неё каталогов в интерфейсе нет, непустое значение — 422 NOT_SUPPORTED, field — путь поля",
+          "accessSupervision": "Подтверждение входа и экспорта второй ролью: Role.supervision. Без неё значение не по умолчанию — 422 NOT_SUPPORTED",
+          "accessLoginSchedule": "Расписание входа: Role.loginSchedule. Без неё значение не 0 — 422 NOT_SUPPORTED",
+          "accessSessions": "Лимиты сессий: AccessUser.webSessions, mobileSessions. Без неё значение не 0 — 422 NOT_SUPPORTED",
+          "accessDepth": "Глубина просмотра архива: RoleGlobal.depth. Без неё значение не 0 — 422 NOT_SUPPORTED",
+          "accessRestrictions": "Запреты роли: RoleGlobal.restr. Без неё непустое значение — 422 NOT_SUPPORTED",
+          "accessUserRights": "Права на права пользователей: выбор RoleGlobal.ur. Без неё ur следует за функцией: ALL при USERS_RIGHTS_SETUP, иначе NO; другое значение — 422 NOT_SUPPORTED",
+          "streamGrants": "Доступ учёток потоков к камерам: Access.streamGrants. Без неё непустой список — 422 NOT_SUPPORTED, field: streamGrants"
         }
       },
       "Capabilities": {
@@ -9195,7 +9298,7 @@
         "properties": {
           "type": {
             "type": "string",
-            "description": "device.signal — пропала или вернулась связь (online), device.fault — причина без связи, device.found — устройство назвало новую запись под deviceId (found), device.lost — запись deviceId пропала, device.parent — у записи сменился родитель (parentId)",
+            "description": "device.signal — пропало или вернулось соединение с устройством (online), device.fault — причина без связи, device.found — устройство назвало новую запись под deviceId (found), device.lost — запись deviceId пропала, device.parent — у записи сменился родитель (parentId)",
             "enum": [
               "device.signal",
               "device.fault",
@@ -9926,6 +10029,11 @@
                 "type": "null"
               }
             ]
+          },
+          "confirmShrinkBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Второе подтверждение уменьшения карты камеры w2c: равно новому sizeBytes. Меньший sizeBytes без него — 422 VALIDATION_FAILED, field: sizeBytes; другое число — field: confirmShrinkBytes. Не хранится"
           }
         },
         "description": "Изменение устройства (JSON Merge Patch, RFC 7396): переданные поля заменяются, null убирает поле"
@@ -10204,14 +10312,15 @@
           "NOT_RUNNABLE",
           "UPSTREAM_UNAVAILABLE",
           "NOT_REVERTIBLE",
-          "DEVICE_REFUSED"
+          "DEVICE_REFUSED",
+          "PASSWORD_NOT_ADMIN"
         ],
         "description": "Машинный код ошибки: интерфейс показывает свой текст по коду",
         "x-enum-descriptions": {
           "UNAUTHORIZED": "Нет сессии администратора (401)",
           "NOT_FOUND": "Записи нет или она не видна текущему администратору (404)",
           "NO_ROUTE": "Такой операции нет в контракте или система её не поддерживает — её нет в capabilities.operations (404)",
-          "PERMISSION_DENIED": "Нет права на операцию (403). Встроенный сервер права администратора не проверяет — см. api/BACKEND.md",
+          "PERMISSION_DENIED": "Нет права на операцию (403). Встроенный сервер судит только POST /access/apply и правку папок — см. api/BACKEND.md",
           "PRECONDITION_REQUIRED": "Изменение без версии (428): нет заголовка If-Match, у POST /operations — нет версии цели шага set или folderIds в expectedVersions; ничего не создано. Шагу create версия не нужна",
           "VERSION_MISMATCH": "Запись изменилась с момента чтения: в теле — актуальная (412)",
           "VALIDATION_FAILED": "Поле не прошло проверку: какое — в field (422)",
@@ -10226,8 +10335,8 @@
           "LICENSE_EXCEEDED": "Лицензия превышена (по объекту в групповой операции)",
           "BUSY": "Над объектом выполняется другая операция: пока групповая операция не завершена, её объекты не меняют ни новая операция, ни правка, ни удаление (409, какой объект — в params.targetId; в пакетных — по объекту). Ещё: включение детектора, несовместимого с уже включённым на том же канале, — params.reason: incompatible, params.with — id того детектора",
           "LOGIN_TAKEN": "Логин уже занят (409)",
-          "PASSWORD_POLICY": "Пароль не соответствует политике (422). Встроенный сервер пароли не проверяет — см. api/BACKEND.md",
-          "SELF_LOCKOUT": "Изменение оставит систему без администратора или лишит вас входа (409)",
+          "PASSWORD_POLICY": "Пароль не соответствует политике reference.access.passwordPolicy (422, field: password)",
+          "SELF_LOCKOUT": "Изменение оставит систему без включённого бессрочного администратора или лишит вас входа (409). Администратор со сроком учётной записи, назначения или ролей группы последним не считается",
           "TEST_SUPPORT_OFF": "Служебные операции тестового стенда выключены (404)",
           "ADDRESS_TAKEN": "Сервер с таким адресом и портом уже есть (409)",
           "DOMAIN_NOT_EMPTY": "В домене есть серверы, папки или устройства, а куда их перенести, не указано (422)",
@@ -10236,11 +10345,12 @@
           "PARENT_MISMATCH": "Родитель — в другом домене или такого вида дочерних у него не бывает (422)",
           "NOT_SUPPORTED": "Система этого не поддерживает: вид устройства или настройка вне GET /reference → capabilities (422; в групповых — по объекту)",
           "RULE_INVALID": "Включённое правило с ошибкой не сохраняется: что не так — в params.issue (422)",
-          "BUILTIN": "Встроенное («Всегда», «Никогда», системный режим) не правится и не удаляется (409)",
+          "BUILTIN": "Встроенное не правится и не удаляется (409): «Всегда», «Никогда», системный режим; у роли «Администратор» меняются только назначения",
           "NOT_RUNNABLE": "Правило сейчас нельзя запустить: выключено, с ошибкой или только по событию — в params.reason (409)",
           "UPSTREAM_UNAVAILABLE": "Бэкенд недоступен, не ответил вовремя или занят (502, 503, 504; при 503 — Retry-After). Запись могла пройти: повтор — с тем же idempotencyKey или после перечитывания. У шага операции — шаг не выполнен из-за сбоя сервера, в объекте ничего не записано, retry-failed повторяет его",
           "NOT_REVERTIBLE": "Операцию нельзя откатить или повторить (409), причина в params.reason: notLast — не последняя в стопке, isRevert — это сам откат, expired — срок вышел, reverted — уже откачена, running — не закончена, empty — без удачных шагов, stale — повтор очищен или срок вышел",
-          "DEVICE_REFUSED": "Устройство отказало в команде (409), причина — в params.reason: noOperation — такой команды у единицы нет, refused — устройство ответило отказом"
+          "DEVICE_REFUSED": "Устройство отказало в команде (409), причина — в params.reason: noOperation — такой команды у единицы нет, refused — устройство ответило отказом",
+          "PASSWORD_NOT_ADMIN": "«Администратора» нельзя назначить пользователю, чей последний пароль задал не он сам и не администратор, напрямую и через группу (409, field: roleIds, params.id — пользователь). Сначала администратор меняет пароль"
         }
       },
       "ServerPatch": {
@@ -10874,12 +10984,19 @@
             ]
           },
           "recordMode": {
-            "type": "string",
-            "enum": [
-              "always",
-              "backup"
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "always",
+                  "backup"
+                ]
+              },
+              {
+                "type": "null"
+              }
             ],
-            "description": "Как пишет архив на весь сервер: постоянно или только при сбое. Значения — archiveModes вида"
+            "description": "Как пишет архив на весь сервер: постоянно или только при сбое. Значения — archiveModes вида. null снимает поле: режим «Авто». Откат возвращает и отсутствие поля"
           },
           "admits": {
             "type": "boolean",
@@ -10957,7 +11074,7 @@
               "always",
               "backup"
             ],
-            "description": "Как пишет архив на весь сервер: постоянно или только при сбое. Значения — archiveModes вида"
+            "description": "Как пишет архив на весь сервер: постоянно или только при сбое. Значения — archiveModes вида. Нет поля — «Авто»: при сбое, а без основной записи — постоянно"
           },
           "admits": {
             "type": "boolean",
@@ -11973,7 +12090,7 @@
           "users": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/AccessUser"
+              "$ref": "#/components/schemas/AccessUserWrite"
             }
           },
           "groups": {
@@ -11987,6 +12104,13 @@
             "items": {
               "$ref": "#/components/schemas/Catalog"
             }
+          },
+          "streamGrants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StreamGrant"
+            },
+            "description": "Список целиком. Нет поля — не меняется. Учётка не из /stream-accounts, повтор учётки, чужая папка, не камера — 422 VALIDATION_FAILED, field: streamGrants"
           }
         }
       },
@@ -14416,7 +14540,7 @@
           },
           "name": {
             "type": "string",
-            "description": "Имя: оператора или драйвера. Имя оператора старше"
+            "description": "Имя: оператора или драйвера, имя оператора старше. Пустое — без подписи"
           }
         }
       },
@@ -14426,10 +14550,10 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Только имя, положение не меняется. Пустое снимает имя"
+            "description": "Только имя. Записи нет — создаётся, есть — имя заменяется, пустое снимает подпись, запись остаётся"
           }
         },
-        "description": "Без name — запомнить нынешнее положение камеры, с name — только имя: камера не движется"
+        "description": "Без name — запомнить нынешнее положение камеры, записи нет — создаётся с пустым именем. С name, пустым тоже, — только имя: положение не меняется никогда"
       },
       "PtzMove": {
         "type": "object",
@@ -14677,11 +14801,19 @@
                 "backup"
               ]
             },
-            "description": "Значения Archive.recordMode, первое — умолчание. Пусто — поля у архива нет"
+            "description": "Значения Archive.recordMode. Порядок ничего не значит. Пусто — поля у архива нет"
           },
           "admits": {
             "type": "boolean",
             "description": "false — архив этого вида записи камер не принимает никогда: Archive.admits всегда false"
+          },
+          "archiveModeDefault": {
+            "type": "string",
+            "enum": [
+              "always",
+              "backup"
+            ],
+            "description": "Что предлагать при создании: значение уходит явно. Нет поля — форма предлагает «Авто» и поле не отправляет"
           }
         }
       },
@@ -15190,6 +15322,151 @@
               "type": "string"
             },
             "description": "Где работает: метки серверов из reference.serverLabels"
+          }
+        }
+      },
+      "AccessUserWrite": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "login": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "description": "Видят администратор и люди с USERS_RIGHTS_SETUP; остальным — пустая строка, кроме своей записи"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "roleIds": {
+            "type": "array",
+            "description": "Личные назначения; роли групп — у групп",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "roleUntil": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Срок назначения: id роли → дата"
+          },
+          "lastLoginDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "expiresDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "webSessions": {
+            "type": "integer",
+            "description": "Лимит веб-сессий; 0 — без лимита",
+            "minimum": 0
+          },
+          "mobileSessions": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "catalogId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "syncedGroupId": {
+            "type": "string",
+            "description": "Создан синхронизацией группы каталога",
+            "format": "uuid"
+          },
+          "hasPassword": {
+            "type": "boolean",
+            "description": "Пароль задан. Сам пароль сервер не отдаёт"
+          },
+          "passwordByAdmin": {
+            "type": "boolean",
+            "description": "Последний пароль задал сам пользователь или администратор. false — задал другой человек: назначить такому пользователю «Администратора» нельзя, пока администратор не сменит пароль (409 PASSWORD_NOT_ADMIN). Нет поля — неизвестно, интерфейс не предупреждает"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "writeOnly": true,
+            "description": "Новый пароль: у нового пользователя и при смене. Только на запись, в ответах его нет. Проверяется по reference.access.passwordPolicy, отказ — 422 PASSWORD_POLICY, field: password, params.id — пользователь. У пользователя из каталога — 422 VALIDATION_FAILED"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "login",
+          "name",
+          "email",
+          "enabled",
+          "roleIds",
+          "roleUntil",
+          "lastLoginDate",
+          "expiresDate",
+          "webSessions",
+          "mobileSessions",
+          "catalogId"
+        ],
+        "description": "Пользователь в черновике. hasPassword и passwordByAdmin ведёт сервер, присланное не берётся"
+      },
+      "StreamGrant": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "account",
+          "all",
+          "folderIds",
+          "deviceIds"
+        ],
+        "description": "На какие камеры учётка потока получает поток. Как права пользователя, но без ролей: строки только складываются, исключений и запрета нет. Учётки нет в списке — камер у неё нет",
+        "properties": {
+          "account": {
+            "type": "string",
+            "description": "Имя учётки из /stream-accounts"
+          },
+          "all": {
+            "type": "boolean",
+            "description": "Все камеры домена"
+          },
+          "folderIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Папки: камеры в них и в подпапках"
+          },
+          "deviceIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Отдельные камеры"
           }
         }
       }
