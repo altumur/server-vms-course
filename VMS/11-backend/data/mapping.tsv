@@ -443,7 +443,7 @@ Access	catalogs	—	[]	const	каталогов нет (ADR-0098 §8)
 Access	streamGrants	GET /domain/grants	строки subject = учётка: *, unit:cam/<id>, folder:<id>	both	V/11.8 Н1.11; * только в кластерах class server
 StreamGrant	account, all, folderIds, deviceIds	GET /domain/grants	V/11.8 Н1.11	both	folderIds читается []
 AccessUser	hasPassword	GET /domain/users	how — password: true	read	V/11.8 Н1.1
-AccessUser	passwordByAdmin	—	—	none	pw_by дверь чтения не отдаёт
+AccessUser	passwordByAdmin	GET /domain/users	password_by_admin	read	P/08.4 Н2; pw_by наружу не идёт
 AccessUserWrite	hasPassword, passwordByAdmin	—	—	none	присланное не берётся
 AccessUserWrite	password	domain/batch	fields.password записи kind user	write	V/11.8 Н1.5 п. 6; не хранится у backend
 Access	history, cellHistory	backend/history	entry	both	V/11.8 Н1.7; записи система — из role_spread при чтении (Н1.10)
