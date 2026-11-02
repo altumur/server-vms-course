@@ -2092,6 +2092,94 @@
    ]
   },
   {
+   "id": "update-own-params-cam",
+   "note": "равный params на другой камере",
+   "request": "Move the Gate line watch rule to Lobby Cam, the line crossing detector for 5 minutes.",
+   "edits": [
+    {
+     "table": "scenarios",
+     "op": "update",
+     "id": 105,
+     "row": {
+      "then": [
+       {
+        "sub": "det",
+        "action": "detect",
+        "cam": "2",
+        "kind": "linecross",
+        "minutes": 5,
+        "params": {
+         "zone": {
+          "shape": "line"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "errors": [
+    "edits[0]: then[0]: params is not written by a plan: ask_admin",
+    "edits[0]: then[0]: the rule has its own params: it is changed on the console page: refuse"
+   ]
+  },
+  {
+   "id": "update-own-params-kind",
+   "note": "равный params при другом виде",
+   "request": "Gate line watch rule: run the motion detector and line crossing on Gate Cam for 5 minutes.",
+   "edits": [
+    {
+     "table": "scenarios",
+     "op": "update",
+     "id": 105,
+     "row": {
+      "then": [
+       {
+        "sub": "det",
+        "action": "detect",
+        "cam": "1",
+        "kind": "motion",
+        "minutes": 5,
+        "params": {
+         "zone": {
+          "shape": "line"
+         }
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "errors": [
+    "edits[0]: then[0]: params is not written by a plan: ask_admin",
+    "edits[0]: then[0]: the rule has its own params: it is changed on the console page: refuse"
+   ]
+  },
+  {
+   "id": "check-its-archive",
+   "note": "«check its archive» называет scan",
+   "request": "When motion is detected on Lobby Cam, check its archive 60 seconds before.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "det",
+      "action": "scan",
+      "cam": "2",
+      "kind": "motion",
+      "before": 60
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
    "id": "update-window",
    "note": "окно план не меняет",
    "request": "Change the night window.",

@@ -38,9 +38,9 @@ Steps:
 - preset: `{"sub":"cam","action":"preset","unit":"…","n":<number>}`.
 - record: `{"sub":"rec","action":"record","cam":"…","minutes":<1..1440>}`.
 - detector for a time: `{"sub":"det","action":"detect","cam":"…","kind":"…","minutes":<1..1440>}`; it starts a detector the
-  camera may not have yet. Never write `params`: a line comes from the camera's detector. If the step needs one, ask_admin.
+  camera may not have yet. Never make up `params`: a line comes from the camera's detector. If the step needs one, ask_admin.
 - archive scan: `{"sub":"det","action":"scan","cam":"…","kind":"…","before"|"after":<sec>}`, both only if both are asked. `before`
-  or `after` alone is a whole request: write only the one asked for, do not ask for the other. Never write `params`.
+  or `after` alone is a whole request: write only the one asked for, do not ask for the other. Never make up `params`.
 - arm, disarm: `{"sub":"cam","action":"arm","unit":"…"}`. Off for a time: `{"sub":"cam","action":"disable","unit":"…","minutes":<1..1440>}`.
 - alarm: `{"sub":"auto","action":"alarm","target":<target>,"text":"…","priority":"normal|high"}`.
 - another rule: `{"sub":"auto","action":"runrule","rule":<rule number>}`.
@@ -56,7 +56,7 @@ Conditions, all must hold at the moment of a run:
 ## Plan
 `propose_plan {summary, edits_json}`: `edits_json` is `[{table, op, id, ref, row}]` written as one JSON string.
 `check_plan` takes the same arguments and only checks: use it for a draft, it does not end the turn.
-- New rule: `{"table":"scenarios","op":"create","row":{…}}`. Any rule can be changed or switched off; switch a rule on only when the admin says so. A step with its own `params` is changed on the console page. Change: `{"table":"scenarios","op":"update","id":<number>,
+- New rule: `{"table":"scenarios","op":"create","row":{…}}`. Any rule can be changed or switched off; switch a rule on only when the admin says so. A step that already has `params`: to change another step, copy it exactly, with its camera, kind and action; to change it, refuse: it is changed on the console page. Change: `{"table":"scenarios","op":"update","id":<number>,
   "row":{only the changed fields}}`: read the rule first with `list_table`.
 - A time range no schedule covers: also create it, `{"table":"schedules","op":"create","ref":"s1","row":{"id":
   "00000000-0000-4000-8000-000000000001","title":"…","kind":"week","week":[Monday … Sunday, each a list of ["HH:MM","HH:MM"]]}}`,
