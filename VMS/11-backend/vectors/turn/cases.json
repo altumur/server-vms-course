@@ -12528,5 +12528,202 @@
     ]
    ]
   }
+ },
+ {
+  "id": "turn-secret-before-ask",
+  "rule": "V/11.12 Н1.3 секрет, введённый с просьбой, живёт через вопрос: план после вопроса ссылается на него",
+  "console": "stand3",
+  "text": "For tally Office-2 change the feed password.",
+  "answers": [
+   "the feed password of that unit"
+  ],
+  "model": [
+   {
+    "ok": true,
+    "message": {
+     "role": "assistant",
+     "content": null,
+     "tool_calls": [
+      {
+       "id": "f",
+       "type": "function",
+       "function": {
+        "name": "find_units",
+        "arguments": "{\"sub\":\"testsub2\",\"where\":[{\"field\":\"name\",\"op\":\"eq\",\"value\":\"Office-2\"}]}"
+       }
+      }
+     ]
+    },
+    "usage": {
+     "prompt_tokens": 3000,
+     "completion_tokens": 50
+    }
+   },
+   {
+    "ok": true,
+    "message": {
+     "role": "assistant",
+     "content": null,
+     "tool_calls": [
+      {
+       "id": "q",
+       "type": "function",
+       "function": {
+        "name": "ask_admin",
+        "arguments": "{\"question\":\"Enter it?\"}"
+       }
+      }
+     ]
+    },
+    "usage": {
+     "prompt_tokens": 3000,
+     "completion_tokens": 50
+    }
+   },
+   {
+    "ok": true,
+    "message": {
+     "role": "assistant",
+     "content": null,
+     "tool_calls": [
+      {
+       "id": "p",
+       "type": "function",
+       "function": {
+        "name": "propose_plan",
+        "arguments": "{\"summary\":\"s\",\"selection\":{\"named\":[\"Office-2\"],\"edit_sub\":\"testsub2\"},\"edits\":[{\"unit\":\"testsub2/Office-2\",\"field\":\"feed_secret\",\"to\":{\"secret\":1},\"why\":\"feed password\"}]}"
+       }
+      }
+     ]
+    },
+    "usage": {
+     "prompt_tokens": 3000,
+     "completion_tokens": 50
+    }
+   }
+  ],
+  "expect": {
+   "outcome": "plan",
+   "plan_rows": [
+    {
+     "unit": "testsub2/Office-2",
+     "revision": 1,
+     "changes": [
+      {
+       "field": "feed_secret",
+       "from": "***",
+       "to": {
+        "secret": 1
+       }
+      }
+     ],
+     "because": null
+    }
+   ],
+   "texts": [
+    "For tally Office-2 change the feed password.",
+    "the feed password of that unit"
+   ],
+   "steps": 3
+  },
+  "text_secrets": [
+   1
+  ]
+ },
+ {
+  "id": "turn-refine",
+  "rule": "V/11.9 Н1.5 уточнение: текст с context плана добавляется к текстам хода, прежние слова в «названо» остаются",
+  "console": "stand3",
+  "text": "Switch tally Gate-1 to \"loud\" mode.",
+  "model": [
+   {
+    "ok": true,
+    "message": {
+     "role": "assistant",
+     "content": null,
+     "tool_calls": [
+      {
+       "id": "f1",
+       "type": "function",
+       "function": {
+        "name": "find_units",
+        "arguments": "{\"sub\":\"testsub2\",\"where\":[{\"field\":\"name\",\"op\":\"eq\",\"value\":\"Gate-1\"}]}"
+       }
+      }
+     ]
+    },
+    "usage": {
+     "prompt_tokens": 3000,
+     "completion_tokens": 50
+    }
+   },
+   {
+    "ok": true,
+    "message": {
+     "role": "assistant",
+     "content": null,
+     "tool_calls": [
+      {
+       "id": "p",
+       "type": "function",
+       "function": {
+        "name": "propose_plan",
+        "arguments": "{\"summary\":\"Gate-1 loud\",\"selection\":{\"named\":[\"Gate-1\"],\"edit_sub\":\"testsub2\"},\"edits\":[{\"unit\":\"testsub2/Gate-1\",\"field\":\"mode\",\"from\":\"plain\",\"to\":\"loud\",\"why\":\"mode\"}]}"
+       }
+      }
+     ]
+    },
+    "usage": {
+     "prompt_tokens": 3000,
+     "completion_tokens": 50
+    }
+   },
+   {
+    "ok": true,
+    "message": {
+     "role": "assistant",
+     "content": null,
+     "tool_calls": [
+      {
+       "id": "p",
+       "type": "function",
+       "function": {
+        "name": "propose_plan",
+        "arguments": "{\"summary\":\"Gate-1 loud\",\"selection\":{\"named\":[\"Gate-1\"],\"edit_sub\":\"testsub2\"},\"edits\":[{\"unit\":\"testsub2/Gate-1\",\"field\":\"mode\",\"from\":\"plain\",\"to\":\"loud\",\"why\":\"mode\"}]}"
+       }
+      }
+     ]
+    },
+    "usage": {
+     "prompt_tokens": 3000,
+     "completion_tokens": 50
+    }
+   }
+  ],
+  "expect": {
+   "outcome": "plan",
+   "plan_rows": [
+    {
+     "unit": "testsub2/Gate-1",
+     "revision": 1,
+     "changes": [
+      {
+       "field": "mode",
+       "from": "plain",
+       "to": "loud"
+      }
+     ],
+     "because": null
+    }
+   ],
+   "texts": [
+    "Switch tally Gate-1 to \"loud\" mode.",
+    "keep only this"
+   ],
+   "steps": 3
+  },
+  "refine": [
+   "keep only this"
+  ]
  }
 ]
