@@ -297,7 +297,6 @@ scenario	step	request	expect
 10-archives	51	member m1 console GET /rec/volumes	200 {"rows": [{"name": "bk-a", "quota_bytes": 500000000, "shrink_confirmed": 500000000}]}
 10-archives	52	member m1 console2 @header If-Match: "$vvol2" PATCH /api/volumes/$vol {"enabled": false}	200 {"enabled": false, "state": "off"}
 10-archives	53	@manual shrinkPendingBytes из пульса регистратора, полная сверка archiveKinds, серверная строка readOnly: стенд без воркеров	manual
-10-archives	54	@manual срок архива: PATCH retentionDays меняет поле тома, срок записей на нём прежний, новая запись backend берёт его; заказ auto-<cam> нет: у сценария нет камеры на этом томе	manual
 11-devices	1	@domain m1	ok
 11-devices	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 11-devices	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
@@ -857,3 +856,18 @@ scenario	step	request	expect
 32-archive-tasks	28	member m1 console2 @header If-Match: "$vw2" DELETE /api/archive-watches/$w	204
 32-archive-tasks	29	member m1 console2 GET /api/archive-watches	200 {"items": []}
 32-archive-tasks	30	@manual итог скана, kind archiveScan в потоке, рубеж и overrunSec обхода, каскады снятия камеры и архива, чужая камера: стенд без воркеров detjob, detedge	manual
+33-archive-retention	1	@domain m1	ok
+33-archive-retention	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+33-archive-retention	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+33-archive-retention	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+33-archive-retention	5	member m1 console POST /rec/volumes {"name": "disk-a", "kind": "local", "url": "file:///a", "server": "srv-a", "quota_bytes": 1000000}	201 {"name": "disk-a"}
+33-archive-retention	6	member m1 console POST /rec/volumes {"name": "disk-b", "kind": "local", "url": "file:///c", "server": "srv-a", "quota_bytes": 1000000, "retention_days": 45}	201 {"name": "disk-b"}
+33-archive-retention	7	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "$dom"}]}
+33-archive-retention	8	member m1 console2 POST /api/devices {"idempotencyKey": "ret-a", "items": [{"device": {"type": "camera", "name": "r1", "ip": "10.9.6.1", "vendor": "acme", "model": "m1", "videoChannel": 1, "archiveId": "6ffa6f75-c212-5ff7-b9c7-6c683620cf25", "recordMode": "always"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"done": [{"index": 0}], "failed": []}
+33-archive-retention	9	member m1 console GET /rec/recordings	200 {"configured": [{"id": "1", "home": "disk-a", "retention_days": 30}]}
+33-archive-retention	10	member m1 console2 GET /api/archives/6ffa6f75-c212-5ff7-b9c7-6c683620cf25	200 {"version": "$va"}
+33-archive-retention	11	member m1 console2 @header If-Match: "$va" PATCH /api/archives/6ffa6f75-c212-5ff7-b9c7-6c683620cf25 {"retentionDays": 60}	200 {"retentionDays": 60}
+33-archive-retention	12	member m1 console GET /rec/recordings	200 {"configured": [{"id": "1", "retention_days": 30}]}
+33-archive-retention	13	member m1 console2 GET /api/devices/3d08e8ba-11ab-5128-97e6-d03888680c2e	200 {"version": "$v1"}
+33-archive-retention	14	member m1 console2 @header If-Match: "$v1" PATCH /api/devices/3d08e8ba-11ab-5128-97e6-d03888680c2e {"extraArchives": [{"archiveId": "635db33a-8a9d-539b-a1f3-a44e771e2cdc", "recordMode": "always"}]}	200 {"extraArchives": [{"archiveId": "635db33a-8a9d-539b-a1f3-a44e771e2cdc", "recordMode": "always"}]}
+33-archive-retention	15	member m1 console GET /rec/recordings	200 {"configured": [{"id": "1", "retention_days": 30}, {"id": "1-disk-b", "home": "disk-b", "retention_days": 45}]}
