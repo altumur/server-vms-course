@@ -3,21 +3,27 @@
  "type": "object",
  "properties": {
   "": {
-   "description": "текст JCS {missing} — полнота индекса",
+   "description": "текст JCS {missing, missing_count} — полнота индекса",
    "type": "object",
    "properties": {
     "missing": {
-     "description": "члены, чьих вкладов нет из-за них (silent, never, no_copy, bad_contribution, secret_unopened), по возрастанию; пуст — индекс known (Н1.7 known)",
+     "description": "члены, чьих вкладов нет из-за них (silent, never, no_copy, bad_contribution, secret_unopened), первые MISSING_SHOWN 500: class server первыми, внутри по возрастанию (Н1.7 missing)",
      "type": "array",
      "items": {
       "$ref": "#/$defs/common.domain_member"
      },
-     "uniqueItems": true
+     "uniqueItems": true,
+     "maxItems": 500
+    },
+    "missing_count": {
+     "description": "все такие члены; 0 — индекс known (Н1.7 known)",
+     "$ref": "#/$defs/common.uint53"
     }
    },
    "additionalProperties": false,
    "required": [
-    "missing"
+    "missing",
+    "missing_count"
    ],
    "x-encoding": "jcs",
    "x-codec": [
@@ -66,7 +72,7 @@
  ],
  "$defs": {
   "common.book_missing": {
-   "description": "кого не хватает в книге — [{member, why}] по member в байтах UTF-8, один на книгу (P/08.5 Н1.3 missing); порядок и «один на член» — правило урока, не форма",
+   "description": "кого не хватает в книге — [{member, why}] class server первыми, внутри по member в байтах UTF-8, один на книгу (P/08.5 Н1.3 missing); порядок и «один на член» — правило урока, не форма",
    "type": "array",
    "items": {
     "type": "object",
@@ -105,8 +111,8 @@
      "properties": {
       "missing": {
        "$ref": "#/$defs/common.book_missing",
-       "description": "первые MISSING_SHOWN 256 по member (P/08.5 Н1.3 result)",
-       "maxItems": 256
+       "description": "первые MISSING_SHOWN 500: class server первыми, внутри по member (P/08.5 Н1.3 result)",
+       "maxItems": 500
       },
       "missing_count": {
        "description": "всех членов в missing (P/08.5 Н1.3 result)",

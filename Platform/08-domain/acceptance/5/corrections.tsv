@@ -28,3 +28,4 @@ date	sample	fix	languages
 2026-10-30	11-names-index, 13-person-names	ADR-0094 B5: у 400, 409 в ожидании слово `error` и `field` (P/08.0 Н4; формат — P/06.1 Н2 «Отказ: `error` и `field`»); шаги те же	all
 2026-10-31	14-grant-sub-rank	ADR-0097 §4: grant too wide сравнивает только ранг, строка с sub — та же граница; сухого прогона нет	all
 2026-11-02	01-roll-delivered/3, 03-silent-contributor/5	разбор этапа 8, «Условие»: missing только в "" с missing_count, на ключе поля нет; вектор assemble-13; реализацией не прогонялось	all
+2026-11-02	11-names-index, 12-orphan-grants, 13-person-names, 14-grant-sub-rank	слово «Архитектора» по разбору этапа 8: строка domain/names несёт missing_count и обрезку, индекс known при missing_count 0, шаги чтения строки поправлены; реализацией не прогонялось	all
