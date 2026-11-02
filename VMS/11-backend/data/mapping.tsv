@@ -584,7 +584,8 @@ TreeNode	—	GET /tree/children	узел	read	V/11.3 Н1.2б
 TreeNode	id, kind, name, parentId, hasChildren, row	GET /tree/children	запись; unalloc:<domainId> у нераспределённых	read	row — DeviceRow у kind device
 TreePath	id, chains	GET /tree/paths	цепочки от корня	read	GET /domain/memberof/…, GET /domain/folders (V/11.3 Н1.2б)
 TreePathStep	id, kind, name	GET /tree/paths	запись	read
-Relay	name	GET domain/topology	relays	read	ждёт двери (V/11.3 Н1.2а)
+RelayMember	name	GET domain/topology	relays	read	ждёт двери (V/11.3 Н1.2а)
+Relay	name	GET domain/relays	relay	read
 Relay	members	GET domain/relays	members	read	GET /domain/relays/<ретранслятор>, до 5000
 ScenarioDoc	version	GET domain/shared/auto	r<rev>	both	V/11.4 Н1.21; ждёт двери
 ScenarioDoc	items	GET domain/shared/auto	fields.scenarios.value	both	settings.shared.auto.scenarios, V/07.5 Н1.1
