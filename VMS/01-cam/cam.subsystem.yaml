@@ -31,7 +31,7 @@ lease: {unconfirmed_max: forever}
 # in their heartbeats: with nobody, the device stays held and the stream unread.
 # `creates`: the holder orders its camera's recording on the card of its server, `rec/recordings/cam-<cam>-<volume>`, once:
 # no `until` to renew, a renewal would restart the recording (V/01.6 Н1.7; ADR-0108 доп. (1)); `rec/volumes/` — to see that card.
-worker: {exec: /usr/lib/cam/worker, writes: [devices, children, found, probe_replies, rule_state], creates: [{sub: rec, rows: recordings, key: "{cam}-{home}"}], reads: [rec/recordings/, rec/volumes/, det/units/, live/heartbeats/, domain/rec/primaries/, domain/placed/rec/, domain/rec/polls, domain/cam/licence, domain/view, domain/member-list/, domain/view-rows/, domain/member-topology, domain/topology]}
+worker: {exec: /usr/lib/cam/worker, writes: [devices, children, found, probe_replies, rule_state], creates: [{sub: rec, rows: recordings, key: "{cam}-{home}"}], reads: [rec/recordings/, rec/volumes/, det/units/, live/heartbeats/, domain/rec/primaries/, domain/rec/ingest/, domain/placed/rec/, domain/rec/polls, domain/cam/licence, domain/view, domain/member-list/, domain/view-rows/, domain/member-topology, domain/topology]}
 # The holder's frames on its own server (V/01.2 Н1.3): a share, `SHM_DIR` of the subsystem file (/run/vms-cam-shm), one
 # file per camera and holder epoch, `<id>-<epoch>.shm`, deleted by its writer, and a lower epoch's by the holder starting the unit (it has no writer); a subscriber on the same server
 # declares `worker.uses: [cam.shm]` (ADR-0091 п. 5) and takes the exact address from the pulse (`live_shm`).

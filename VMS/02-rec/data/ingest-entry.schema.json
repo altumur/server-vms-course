@@ -1,0 +1,33 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "description": "value элемента книги domain/rec/ingest/*/<раздел>: регистратор о себе, ключ — имя кластера, ключи одни у держателя и у копии, V/02.9 Н1.6; жизнь — в голове книги",
+ "type": "object",
+ "properties": {
+  "cluster": {
+   "type": "string",
+   "minLength": 1
+  },
+  "server": {
+   "type": "string",
+   "minLength": 1
+  },
+  "ingest": {
+   "type": "array",
+   "items": {
+    "type": "string",
+    "pattern": "^(?:https?://[\\s\\S]+)$"
+   }
+  },
+  "as_of": {
+   "type": "number",
+   "x-time": true
+  }
+ },
+ "required": [
+  "cluster",
+  "server",
+  "ingest",
+  "as_of"
+ ],
+ "additionalProperties": false
+}

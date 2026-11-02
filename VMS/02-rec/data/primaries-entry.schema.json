@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "value элемента книги domain/rec/primaries/*/<раздел>, ключи одни у держателя и у копии, V/02.9 Н1.6; поля «пусто, ложь, нет» отсутствуют, кроме running и ingest (пустой — [])",
+ "description": "value элемента книги domain/rec/primaries/*/<раздел>, ключи одни у держателя и у копии, V/02.9 Н1.6; поля «пусто, ложь, нет» отсутствуют, кроме running",
  "type": "object",
  "properties": {
   "ref": {
@@ -31,12 +31,9 @@
    "type": "string",
    "minLength": 1
   },
-  "ingest": {
-   "type": "array",
-   "items": {
-    "type": "string",
-    "pattern": "^(?:https?://[\\s\\S]+)$"
-   }
+  "server": {
+   "type": "string",
+   "minLength": 1
   },
   "push": {
    "const": true
@@ -56,7 +53,6 @@
   "running",
   "role",
   "retention_days",
-  "ingest",
   "as_of"
  ],
  "additionalProperties": false
