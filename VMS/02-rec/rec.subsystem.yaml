@@ -532,9 +532,9 @@ domain:
   books:
     primaries: {from: rec/primaries/, key: ref, pick: all, to: "*", show: [recording, running, role, retention_days, when, home]}
     # Each recorder about itself, keyed by its cluster: its ingest addresses; whether it lives is the head of the book
-    # (`stale` of the member's agent, the holder writes the dead set): a dead recorder changes one key, not every
+    # (`stale` of the member's agent, `pulse.rec.stale`, needs `view_pulse` above; the holder writes the dead set): a dead recorder changes one key, not every
     # section of its cluster (ADR-0113 доп. (29)–(33); V/02.9 Н1.6)
-    ingest: {from: rec/receivers/, key: cluster, pick: all, to: "*", show: [server, ingest]}
+    ingest: {from: rec/receivers/, key: cluster, pick: all, to: "*", stale: true, show: [server, ingest]}
     polls: {from: rec/polls/, key: ref, pick: unique, to: to}
     upstream: {from: rec/upstream/, key: relay, pick: unique, to: to}
   tokens:
