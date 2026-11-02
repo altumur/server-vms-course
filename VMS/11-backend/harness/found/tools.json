@@ -1,0 +1,101 @@
+[
+ {
+  "name": "device_values",
+  "description": "The values a Device field takes on the devices in scope, with counts: learn the codes before writing a condition.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "field": {
+     "type": "string"
+    },
+    "type": {
+     "type": "string",
+     "description": "Device type, empty — cameras"
+    }
+   },
+   "required": [
+    "field"
+   ]
+  }
+ },
+ {
+  "name": "found",
+  "description": "The condition of the selection; ends the turn. The console computes the list.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "text": {
+     "type": "string",
+     "description": "what is selected, in words"
+    },
+    "type": {
+     "type": "string",
+     "description": "Device type, empty — cameras"
+    },
+    "where": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "field": {
+        "type": "string"
+       },
+       "op": {
+        "type": "string",
+        "enum": [
+         "eq",
+         "ne",
+         "in",
+         "not_in",
+         "contains",
+         "not_contains",
+         "exists",
+         "missing"
+        ]
+       },
+       "value": {}
+      },
+      "required": [
+       "field",
+       "op"
+      ]
+     }
+    }
+   },
+   "required": [
+    "text",
+    "where"
+   ]
+  }
+ },
+ {
+  "name": "ask_admin",
+  "description": "Ask the admin one short question when the request does not name the unit, the field or the value. The admin's answer comes back as the result.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "question": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "question"
+   ]
+  }
+ },
+ {
+  "name": "refuse",
+  "description": "Cannot be done; ends the turn.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "reason": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "reason"
+   ]
+  }
+ }
+]

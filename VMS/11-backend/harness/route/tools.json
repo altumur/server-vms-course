@@ -1,0 +1,27 @@
+[
+ {
+  "name": "route",
+  "description": "The kind of the request.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "kind": {
+     "type": "string",
+     "enum": [
+      "config",
+      "rules",
+      "explain",
+      "found",
+      "ask"
+     ]
+    },
+    "question": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "kind"
+   ]
+  }
+ }
+]

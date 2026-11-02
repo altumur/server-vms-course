@@ -129,7 +129,7 @@ Device(type=det,builtin)	serverId	cam/heartbeats	сервер держателя
 Device(type=det,builtin)	name	cam/device_units	title; нет — template	both
 Device(type=det,builtin)	enabled	cam/device_units	enabled	both	true при включённом несовместимом — 409 BUSY, field enabled (V/11.4 Н1.2)
 Device(type=det,builtin)	online, fault	cam/heartbeats	как у единицы: phase, device_state, units_down	read	в версию не входит
-Device(type=det,builtin)	detectorKind	cam/device_units	template по detector-kinds.tsv	read	вне таблицы — поля нет; при создании выбирает template (V/11.3 Н1.3); правка — 422 NOT_SUPPORTED
+Device(type=det,builtin)	detectorKind	cam/device_units	template по detector-kinds.tsv	read	вне таблицы — other; при создании выбирает template (V/11.3 Н1.3); правка — 422 NOT_SUPPORTED
 Device(type=det,builtin)	template	cam/device_units	template	both	только при создании, из detectorOptions: вне них — 422 VALIDATION_FAILED, field template; DevicePatch поля не несёт
 Device(type=det,builtin)	zone	cam/device_units	zone	both	держатель передаёт visualElement драйвера (V/01.4 Н1.4в)
 Device(type=det,builtin)	faultText	cam/heartbeats	слово units_down строки	read	в версию не входит
@@ -521,6 +521,8 @@ StreamAccount	name, disabled, at, by	live/accounts	те же поля	both	дв�
 StreamAccountSecret	name, password	POST /live/accounts	account.name, password	read	пароль один раз, в журнал и строку не попадает (V/11.4 Н1.18)
 StreamAccountCreate, StreamAccountPatch	name, disabled	live/accounts	name, disabled	write	V/11.4 Н1.18
 AssistTurnRequest	text, context, secrets	—	V/11.7 Н1.1	write	состояния у backend нет; поля типа хода в контракте нет (ADR-0093 доп. (13))
+AssistEvent(answer)	text, context	—	V/11.7 Н1.7	read	ответ explain, ничего не пишет
+AssistEvent(found)	text, context, conditions, ids, filter, total, truncated	—	V/11.7 Н1.8	read	ids считает backend по полям Device
 AssistTurnRequest	world	—	V/11.7 Н1.1	write	не принимается, 422: AssistWorld — схема демо-страницы контракта
 AssistEvent	type, at, text, context, summary, items, rules, field, code, message	—	V/11.7 Н1.4	read	type answer {text, context} — ответ на вопрос о системе, ничего не пишет (ADR-0093 доп. (13))
 AssistRuleEdit	table, op, id, ref, body	—	V/11.13 Н1.4	read	план типа rules; запись — человек, V/11.13 Н1.7
