@@ -1191,8 +1191,8 @@
         "tags": [
           "hardware"
         ],
-        "summary": "Живое видео для настройки",
-        "description": "Поток под размер окна выбирает сервер, клиент подключается по WebRTC на whepUrl с token. Нужно для настройки детекторов и пресетов; просмотр — другая часть консоли. Камера без связи — 409 DEVICE_OFFLINE, не камера — 422 NOT_SUPPORTED Вошли через другой кластер — 409 OTHER_CLUSTER, params.url: форма даёт кнопку «Открыть».",
+        "summary": "Живое видео",
+        "description": "Адрес и токен для WebRTC: клиент шлёт офер WHEP на whepUrl с token, только приём. Без streamId поток под размер окна выбирает сервер. Закладка «Просмотр» и настройка детекторов, зоны, пресетов — один клиент. Камера без связи — 409 DEVICE_OFFLINE, не камера — 422 NOT_SUPPORTED, чужой streamId — 422 VALIDATION_FAILED, field: streamId. Вошли через другой кластер, в том числе камера w2c за NAT (direct: false) — 409 OTHER_CLUSTER, params.url: форма даёт кнопку «Открыть». Раздача уже создана для другой сети — 409 OTHER_NETWORK, params.labels: метки раздачи, форма предлагает переразместить (PUT этой же двери) или ждать конца срока раздачи. Шлюза ещё нет — 503 UPSTREAM_UNAVAILABLE: клиент повторяет в счёте оферов. Отбой — DELETE на Location ответа WHEP, у этой двери его нет. Адрес stub:// выдаёт только стенд: настоящего видео там нет, форма отвечает на офер сама тестовой картинкой.",
         "parameters": [
           {
             "name": "deviceId",
@@ -1224,6 +1224,61 @@
                 }
               }
             }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "put": {
+        "operationId": "moveLive",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Переразместить раздачу в другую сеть",
+        "description": "Раздача камеры переходит на шлюз для network. Рвёт сессии всех зрителей, они подключаются заново. После ответа клиент снова зовёт POST этой двери. Нет права — 403 PERMISSION_DENIED: право судит система, форма предлагает кнопку всем и показывает отказ словами. Камера без связи — 409 DEVICE_OFFLINE, другой кластер — 409 OTHER_CLUSTER.",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveMove"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Раздача переразмещена"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
           },
           "404": {
             "$ref": "#/components/responses/Problem"
@@ -1666,7 +1721,7 @@
           "hardware"
         ],
         "summary": "Выполнить команду единицы СКУД",
-        "description": "Открыть дверь и другие команды шаблона, для проверки настройки из карточки. Команды нет у единицы или устройство отказало — 409 DEVICE_REFUSED, без связи — 409 DEVICE_OFFLINE, у записи нет команд — 422 NOT_SUPPORTED",
+        "description": "Открыть дверь и другие команды шаблона, для проверки настройки из карточки. У реле — operation: output с телом {state, pulseMs?}, ручное управление с закладки «Просмотр»: без state — 422 VALIDATION_FAILED, field: state, другая команда — 409 DEVICE_REFUSED. Команды нет у единицы или устройство отказало — 409 DEVICE_REFUSED, без связи — 409 DEVICE_OFFLINE, у записи нет команд — 422 NOT_SUPPORTED",
         "parameters": [
           {
             "name": "deviceId",
@@ -1720,6 +1775,16 @@
           },
           "default": {
             "$ref": "#/components/responses/Problem"
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceOperationArgs"
+              }
+            }
           }
         }
       }
@@ -7341,6 +7406,635 @@
           }
         }
       }
+    },
+    "/devices/{deviceId}/talk": {
+      "post": {
+        "operationId": "startTalk",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Разговор через динамик",
+        "description": "deviceId — динамик spk. Адрес и токен для WebRTC: говорит браузер, направление обратное живому, поэтому поле url, а не whepUrl. Просьба к устройству и раздача хозяина — на сервере. Занятость говорит дверь на офере: 409 busy, этой операцией не судится; 404 not yet, 500, 503 — клиент повторяет через 1,5 с, всего 9 оферов, после 500 зовёт эту дверь снова. Отбой — DELETE на Location ответа. Устройство отказало — 409 DEVICE_REFUSED, params.reason: refused. Без связи или выключен — 409 DEVICE_OFFLINE, другой кластер — 409 OTHER_CLUSTER, не spk — 422 NOT_SUPPORTED, field: type, нет права — 403. stub:// — подставной адрес стенда.",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TalkResult"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/devices/{deviceId}/timeline": {
+      "get": {
+        "operationId": "getTimeline",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Шкала записей камеры",
+        "description": "Записи камеры со всех дверей за окно. Без from, to — всё. Дорого: около 1 + R × (1 + 2P) вызовов на чтение, форма читает только при открытой закладке и по окну, не по таймеру. Страницы — общее правило. Что не ответило — в unavailable на каждой странице: не ответившее не утрачено.",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Начало окна"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Конец окна"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "description": "Сколько строк на странице, по умолчанию 200"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "nextCursor прошлой страницы как есть. Просроченный или чужой — 422 INVALID_CURSOR, читать с начала"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimelinePage"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/devices/{deviceId}/playback": {
+      "get": {
+        "operationId": "getPlayback",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Адрес куска записи",
+        "description": "Кусок до 60 с, в который попадает at. Адрес годится на кусок и начало следующего: токен внутри адреса, элемент видео заголовков не шлёт. Со spanId — кусок этого спана, цена один where. Без него — переход по моменту: сервер берёт неотсечённый спан над моментом, нет такого — отсечённый. Очередь «каждый момент один раз» строит форма по спанам. Спана нет или в момент нет записи — 404 NOT_FOUND. stub:// — подставной кусок стенда.",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "at",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Момент"
+          },
+          {
+            "name": "spanId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Спан из шкалы"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaybackResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/devices/{deviceId}/holds": {
+      "get": {
+        "operationId": "listHolds",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Удержания камеры",
+        "description": "Общее правило страницы. states — слова пульса по томам, не названо — не сказано.",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "description": "Сколько строк на странице, по умолчанию 200"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "nextCursor прошлой страницы как есть. Просроченный или чужой — 422 INVALID_CURSOR, читать с начала"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HoldPage"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createHold",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Удержать отрезок",
+        "description": "id — ключ {камера}-{from}-{to}, целые секунды. Новый — 201. Такой ключ уже есть — 200: recordingIds объединяются, заметка и releasedAt не стираются. Без recordingIds — все записи камеры сейчас. Конец не позже начала — 422 VALIDATION_FAILED, field: to. Камера другого кластера — 409 OTHER_CLUSTER, запись удержаний туда не идёт. Нет права — 403.",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HoldCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Создано",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Hold"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Такой отрезок уже удержан, записи объединены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Hold"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/holds/{holdId}": {
+      "delete": {
+        "operationId": "deleteHold",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Снять удержание",
+        "description": "Отрезок снова подчиняется сроку хранения. Нет такого — 404.",
+        "parameters": [
+          {
+            "name": "holdId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Готово"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/holds/{holdId}/verify": {
+      "post": {
+        "operationId": "verifyHold",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Проверить целость копии",
+        "description": "Ответ одним словом на запись. Сверяется первый включённый том incidents с держателем, другой том — нет: предел. Маршрута keeps нет — 409 DEVICE_REFUSED, отказ двери словами.",
+        "parameters": [
+          {
+            "name": "holdId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HoldVerifyResult"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/devices/{deviceId}/bookmarks": {
+      "get": {
+        "operationId": "listBookmarks",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Отметки камеры",
+        "description": "Новые сверху, общее правило страницы. Срок — срок журнала: отметка уходит с ним.",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Начало окна"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Конец окна"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "description": "Сколько строк на странице, по умолчанию 200"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "nextCursor прошлой страницы как есть. Просроченный или чужой — 422 INVALID_CURSOR, читать с начала"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookmarkPage"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createBookmark",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Поставить отметку",
+        "description": "Только создать и смотреть: правки нет. occurred — момент на шкале, нет поля — сейчас. Пустая заметка — 422 VALIDATION_FAILED, field: note. Нет права bm — 403 PERMISSION_DENIED.",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookmarkCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Создано",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Bookmark"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/devices/{deviceId}/archive-fetch": {
+      "post": {
+        "operationId": "fetchArchive",
+        "tags": [
+          "hardware"
+        ],
+        "summary": "Закрепить минуты в архиве",
+        "description": "Привезти минуты из резервного или с устройства в основной архив камеры. Отрезок делится по суткам, одна просьба на сутки, не больше 7 на человека: остальное в refused с причиной per_person. refused — только о подаче: отказ регистратора приходит поздно, в журнале archive.backfill.refused. Основной записи своего кластера нет — 409 NO_PRIMARY, форма кнопки не даёт. Конец не позже начала — 422, field: to. Другой кластер — 409 OTHER_CLUSTER.",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveFetchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchiveFetchResult"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -8515,6 +9209,13 @@
             "type": "integer",
             "minimum": 0,
             "description": "Только чтение: объявленная меньшая квота, которую ещё не подтвердили. Подтверждение — PATCH с sizeBytes и confirmShrinkBytes, равными ей"
+          },
+          "heldBy": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Только чтение: кто обслуживает том. null — никто или не подтверждено; у тома incidents форма предупреждает: удержанное держится, только пока его хранит архив записи"
           }
         },
         "additionalProperties": false,
@@ -10121,6 +10822,11 @@
             "properties": {},
             "additionalProperties": true,
             "description": "Подробности события"
+          },
+          "cameraId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Камера, про которую запись: сама, родитель единицы, камера источника событий. Заполнено в journal.event: по нему форма судит, чья строка, карточка источника может быть не прочитана"
           }
         },
         "additionalProperties": false,
@@ -10959,7 +11665,8 @@
               "prompt.opened",
               "prompt.closed",
               "stream.hello",
-              "tree.changed"
+              "tree.changed",
+              "journal.event"
             ],
             "x-enum-descriptions": {
               "stream.reset": "Пропущенное не дослать (Last-Event-ID слишком старый): клиент перечитывает то, что есть у него в кэше. Весь перечень не читается никогда",
@@ -10974,7 +11681,8 @@
               "prompt.opened": "Открыт вопрос оператору: kind=rulePrompt, entityId — вопрос, payload — ruleId, fireId, step, roleId, level. Клиент перечитывает GET /rule-prompts",
               "prompt.closed": "Вопрос закрыт: kind=rulePrompt, entityId — вопрос, payload — ruleId, fireId, step, reason: answered, expired, reset, stopped; при answered ещё answer и by — кто ответил",
               "stream.hello": "Первое сообщение потока: clientId — для PUT /stream/{clientId}/watch",
-              "tree.changed": "Ветка изменилась вне наблюдения: layout, parentIds. Частота постоянная и не зависит от размера домена. Клиент перечитывает эти ветки, если они у него загружены"
+              "tree.changed": "Ветка изменилась вне наблюдения: layout, parentIds. Частота постоянная и не зависит от размера домена. Клиент перечитывает эти ветки, если они у него загружены",
+              "journal.event": "Новая запись журнала об устройстве: entityId — устройство, payload — JournalEvent. Наблюдающим устройство, его родителя или камеру, к которой привязан источник событий: лента и титры закладки «Просмотр»"
             }
           },
           "at": {
@@ -11007,13 +11715,14 @@
               "archiveWatch",
               "archiveScan",
               "rulePrompt",
-              "scenarios"
+              "scenarios",
+              "hold",
+              "bookmark"
             ]
           },
           "entityId": {
             "type": "string",
-            "description": "Id записи (у access и settings — нет)",
-            "format": "uuid"
+            "description": "Id записи (у access и settings — нет) Обычно uuid, у удержания — ключ Hold.id"
           },
           "version": {
             "type": "string",
@@ -11158,7 +11867,7 @@
         "properties": {
           "type": {
             "type": "string",
-            "description": "device.signal — пропало или вернулось соединение с устройством (online), device.fault — причина без связи, device.found — устройство назвало новую запись под deviceId (found), device.lost — запись deviceId пропала, device.parent — у записи сменился родитель (parentId), io.input — сигнал входа deviceId (value): active запускает включённые правила по этому событию, normal кончает событие: эскалация с stop: reset останавливается",
+            "description": "device.signal — пропало или вернулось соединение с устройством (online), device.fault — причина без связи, device.found — устройство назвало новую запись под deviceId (found), device.lost — запись deviceId пропала, device.parent — у записи сменился родитель (parentId), io.input — сигнал входа deviceId (value): active запускает включённые правила по этому событию, normal кончает событие: эскалация с stop: reset останавливается, journal.event — новая запись журнала об устройстве deviceId (event): уходит в поток",
             "enum": [
               "device.signal",
               "device.fault",
@@ -11167,7 +11876,8 @@
               "device.parent",
               "io.input",
               "scenario.outcome",
-              "domain.link"
+              "domain.link",
+              "journal.event"
             ]
           },
           "deviceId": {
@@ -11236,6 +11946,12 @@
           },
           "status": {
             "$ref": "#/components/schemas/ScenarioStatus"
+          },
+          "event": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {},
+            "description": "journal.event: поля JournalEvent"
           }
         },
         "additionalProperties": false,
@@ -12199,6 +12915,8 @@
           "PASSWORD_NOT_ADMIN",
           "INVALID_CURSOR",
           "OTHER_CLUSTER",
+          "OTHER_NETWORK",
+          "NO_PRIMARY",
           "FINGERPRINT_MISMATCH"
         ],
         "description": "Машинный код ошибки: интерфейс показывает свой текст по коду",
@@ -12239,7 +12957,9 @@
           "PASSWORD_NOT_ADMIN": "«Администратора» нельзя назначить пользователю, чей последний пароль задал не он сам и не администратор, напрямую и через группу (409, field: roleIds, params.id — пользователь). Сначала администратор меняет пароль",
           "INVALID_CURSOR": "Курсор просрочен или чужой (422): форма читает с начала",
           "OTHER_CLUSTER": "Камера другого кластера: живое видео и PTZ идут через него. params.url — вход через её кластер (409)",
-          "FINGERPRINT_MISMATCH": "Отпечаток приёма не совпал с Server.fingerprint"
+          "FINGERPRINT_MISMATCH": "Отпечаток приёма не совпал с Server.fingerprint",
+          "OTHER_NETWORK": "Раздача камеры создана для другой сети. params.labels — метки раздачи (409). Кто вправе — PUT /devices/{id}/live, остальные ждут конца срока раздачи",
+          "NO_PRIMARY": "Основной записи своего кластера нет: закрепить некуда (409)"
         }
       },
       "ServerPatch": {
@@ -16364,7 +17084,7 @@
           "width",
           "height"
         ],
-        "description": "Размер окна: поток под него выбирает сервер",
+        "description": "Размер окна: поток под него выбирает сервер. Со streamId размер не учитывается",
         "properties": {
           "width": {
             "type": "integer",
@@ -16373,6 +17093,22 @@
           "height": {
             "type": "integer",
             "minimum": 1
+          },
+          "network": {
+            "type": "string",
+            "enum": [
+              "local",
+              "outside"
+            ],
+            "description": "Откуда смотрят. local — умолчание; outside — шлюз с публичным адресом. Выбор зрителя, не хранится",
+            "x-enum-descriptions": {
+              "local": "Из локальной сети",
+              "outside": "Извне: шлюз с публичным адресом"
+            }
+          },
+          "streamId": {
+            "type": "string",
+            "description": "Выбранный поток: DeviceStream.id этой камеры"
           }
         }
       },
@@ -16387,14 +17123,20 @@
         "properties": {
           "whepUrl": {
             "type": "string",
-            "description": "Адрес WHEP: клиент подключается по WebRTC"
+            "description": "Адрес WHEP с параметрами потока: клиент шлёт сюда офер SDP, 201 — ответ SDP и Location сессии. stub:// — подставной адрес стенда"
           },
           "token": {
-            "type": "string"
+            "type": "string",
+            "description": "Authorization: Bearer на офере и отбое. Свежий токен — снова POST этой двери"
           },
           "expiresAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "Срок токена, не позже конца срока раздачи: клиент не начинает повтор, если до него меньше 5 с"
+          },
+          "gateway": {
+            "type": "string",
+            "description": "Через какой шлюз идёт видео: подпись для оператора"
           }
         }
       },
@@ -18351,6 +19093,527 @@
           }
         },
         "description": "Только демо-страница. Снимок встроенного сервера: у службы ассистента демо-страницы своих данных нет, сервер живёт в браузере. Массивы целиком, страниц нет. V/11 это поле не принимает и не отдаёт: бэкенд читает свою систему сам"
+      },
+      "LiveMove": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "network"
+        ],
+        "properties": {
+          "network": {
+            "type": "string",
+            "enum": [
+              "local",
+              "outside"
+            ],
+            "description": "Откуда смотрят. local — умолчание; outside — шлюз с публичным адресом. Выбор зрителя, не хранится",
+            "x-enum-descriptions": {
+              "local": "Из локальной сети",
+              "outside": "Извне: шлюз с публичным адресом"
+            }
+          }
+        }
+      },
+      "TalkResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "url",
+          "token",
+          "expiresAt"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Куда браузер шлёт офер со своим звуком"
+          },
+          "token": {
+            "type": "string",
+            "description": "Authorization: Bearer на офере и отбое"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "gateway": {
+            "type": "string"
+          }
+        }
+      },
+      "DeviceOperationArgs": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Аргументы команды. Только у реле",
+        "properties": {
+          "state": {
+            "type": "boolean",
+            "description": "true — замкнуть, false — разомкнуть"
+          },
+          "pulseMs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 60000,
+            "description": "Импульс: вернуть обратно через столько мс"
+          }
+        }
+      },
+      "TimelineSpan": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "spanId",
+          "start",
+          "end",
+          "archiveId",
+          "recordingId",
+          "source",
+          "backupOnly",
+          "fenced"
+        ],
+        "properties": {
+          "spanId": {
+            "type": "string",
+            "description": "Непрозрачный: кластер, запись, эпоха, источник. Адрес куска — по нему, шкалу заново читать не надо"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "archiveId": {
+            "type": "string",
+            "description": "Том, где лежит спан"
+          },
+          "recordingId": {
+            "type": "string",
+            "description": "Запись камеры: у камеры на одном томе их бывает две"
+          },
+          "epoch": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Эпоха записи, для подписи куска"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "live",
+              "backfill",
+              "device"
+            ],
+            "description": "live — писалось с потока, backfill — дозаписано, device — архив устройства",
+            "x-enum-descriptions": {
+              "live": "С живого потока",
+              "backfill": "Дозаписано",
+              "device": "Архив устройства"
+            }
+          },
+          "backupOnly": {
+            "type": "boolean",
+            "description": "Эти минуты только в резервном архиве: можно закрепить"
+          },
+          "fenced": {
+            "type": "boolean",
+            "description": "Отсечённая эпоха: играет, если выбрана сама или момент не покрыт другими; кадры — дубль, не порча"
+          }
+        }
+      },
+      "TimelineUnavailable": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "what",
+          "id",
+          "reason"
+        ],
+        "properties": {
+          "what": {
+            "type": "string",
+            "enum": [
+              "server",
+              "volume",
+              "cluster"
+            ],
+            "description": "Регистратор, том, кластер",
+            "x-enum-descriptions": {
+              "server": "Регистратор",
+              "volume": "Том",
+              "cluster": "Кластер"
+            }
+          },
+          "id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Словами для оператора"
+          }
+        }
+      },
+      "TimelinePage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "unavailable"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TimelineSpan"
+            }
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "unavailable": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TimelineUnavailable"
+            },
+            "description": "Что не ответило: архив не утрачен, лента может быть неполной"
+          }
+        }
+      },
+      "PlaybackResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "url",
+          "from",
+          "to",
+          "expiresAt",
+          "spanId"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Адрес куска .mp4 с токеном"
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "spanId": {
+            "type": "string",
+            "description": "Какой спан выбран: без spanId в запросе его выбрал сервер"
+          }
+        }
+      },
+      "HoldState": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "archiveId",
+          "state"
+        ],
+        "properties": {
+          "archiveId": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "description": "Слово пульса: here, pushing, pushed, at risk, garbled, lost, kept, empty. Открытый список"
+          },
+          "why": {
+            "type": "string"
+          }
+        }
+      },
+      "Hold": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "deviceId",
+          "from",
+          "to",
+          "recordingIds",
+          "by",
+          "at",
+          "states"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Ключ {камера}-{from}-{to}"
+          },
+          "deviceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "note": {
+            "type": "string"
+          },
+          "recordingIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "by": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "releasedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Отпущено: больше не держит"
+          },
+          "states": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HoldState"
+            }
+          }
+        }
+      },
+      "HoldCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "to"
+        ],
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "note": {
+            "type": "string"
+          },
+          "recordingIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Записи, не тома"
+          }
+        }
+      },
+      "HoldPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Hold"
+            }
+          },
+          "nextCursor": {
+            "type": "string"
+          }
+        }
+      },
+      "HoldVerifyResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "results"
+        ],
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "recordingId",
+                "result"
+              ],
+              "properties": {
+                "recordingId": {
+                  "type": "string"
+                },
+                "result": {
+                  "type": "string",
+                  "enum": [
+                    "ok",
+                    "damaged",
+                    "pending",
+                    "unverified",
+                    "empty"
+                  ],
+                  "x-enum-descriptions": {
+                    "ok": "Цело",
+                    "damaged": "Повреждено",
+                    "pending": "Проверяется",
+                    "unverified": "Не с чем сравнить",
+                    "empty": "Нет кадров"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Bookmark": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "deviceId",
+          "note",
+          "occurred",
+          "at",
+          "by"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "deviceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "note": {
+            "type": "string"
+          },
+          "occurred": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Когда записано"
+          },
+          "by": {
+            "type": "string"
+          }
+        }
+      },
+      "BookmarkCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "note"
+        ],
+        "properties": {
+          "note": {
+            "type": "string"
+          },
+          "occurred": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "BookmarkPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Bookmark"
+            }
+          },
+          "nextCursor": {
+            "type": "string"
+          }
+        }
+      },
+      "ArchiveFetchRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "archiveId",
+          "from",
+          "to"
+        ],
+        "properties": {
+          "archiveId": {
+            "type": "string",
+            "description": "Основной архив камеры: куда привезти"
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ArchiveFetchResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "accepted",
+          "refused"
+        ],
+        "properties": {
+          "accepted": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Сколько просьб подано"
+          },
+          "refused": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "from",
+                "to",
+                "reason"
+              ],
+              "properties": {
+                "from": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "to": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
