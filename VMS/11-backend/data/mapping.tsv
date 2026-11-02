@@ -522,7 +522,7 @@ StreamAccountSecret	name, password	POST /live/accounts	account.name, password	re
 StreamAccountCreate, StreamAccountPatch	name, disabled	live/accounts	name, disabled	write	V/11.4 Н1.18
 AssistTurnRequest	text, context, secrets	—	V/11.7 Н1.1	write	состояния у backend нет; поля типа хода в контракте нет (ADR-0093 доп. (13))
 AssistEvent(answer)	text, context	—	V/11.7 Н1.7	read	ответ explain, ничего не пишет
-AssistEvent(found)	text, context, conditions, ids, filter, total, truncated	—	V/11.7 Н1.8	read	ids считает backend по полям Device
+AssistEvent(found)	text, context, conditions, ids, filter, total, truncated	—	V/11.7 Н1.8	read	ids считает backend по полям Device, по имени; filter — AssistFoundFilter, total только при полном проходе
 AssistTurnRequest	world	—	V/11.7 Н1.1	write	не принимается, 422: AssistWorld — схема демо-страницы контракта
 AssistEvent	type, at, text, context, summary, items, rules, field, code, message	—	V/11.7 Н1.4	read	type answer {text, context} — ответ на вопрос о системе, ничего не пишет (ADR-0093 доп. (13))
 AssistRuleEdit	table, op, id, ref, body	—	V/11.13 Н1.4	read	план типа rules; запись — человек, V/11.13 Н1.7
