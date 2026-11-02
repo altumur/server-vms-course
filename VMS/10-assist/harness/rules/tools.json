@@ -1,0 +1,134 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "find_devices",
+      "description": "Cameras with their sensors, relays, presets, detectors, recording and can_edit. Empty args — all.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "a word of the camera, sensor or relay name"
+          },
+          "folder": {
+            "type": "string",
+            "description": "folder id or name, with subfolders"
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "list_table",
+      "description": "Rows of a table: detectors, recordings, rules, schedules, modes, windows, folders, roles. rules — full rules, for a change.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "table": {
+            "type": "string",
+            "enum": [
+              "detectors",
+              "recordings",
+              "rules",
+              "schedules",
+              "modes",
+              "windows",
+              "folders",
+              "roles"
+            ]
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "table"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "check_plan",
+      "description": "Checks a draft and returns valid, errors, warnings. Does not end the turn. edits_json — the edits array as a JSON string.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "string"
+          },
+          "edits_json": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "summary",
+          "edits_json"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "propose_plan",
+      "description": "The plan; checked, not applied. Accepted, it ends the turn. edits_json — the edits array as a JSON string.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "string"
+          },
+          "edits_json": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "summary",
+          "edits_json"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "ask_admin",
+      "description": "One short question; ends the turn.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "refuse",
+      "description": "The request cannot be done; ends the turn.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      }
+    }
+  }
+]
