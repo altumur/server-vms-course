@@ -1,5 +1,5 @@
 {
- "_note": "Каталог событий, шагов, условий и управления правил: данные урока V/10 (глава 7 Н1.3). Слова контракта; канон строки V/07 у входа — closed, open, перевод V/11.3 Н1.3.",
+ "_note": "Каталог событий, шагов, условий, управления, запусков и целей правил: данные урока V/10 (глава 7 Н1.3). Слова контракта; канон строки V/07 у входа — closed, open, перевод V/11.3 Н1.3. assist_omit — чего харнес правил не предлагает: отказ Н1.5.",
  "triggers": [
   {
    "source": "vms",
@@ -218,6 +218,69 @@
      "id": "operation"
     }
    ]
+  },
+  {
+   "source": "det",
+   "action": "detect",
+   "deviceTypes": [
+    "camera"
+   ],
+   "fields": [
+    {
+     "id": "target"
+    },
+    {
+     "id": "detectorKind",
+     "options": [
+      "motion",
+      "linecross",
+      "lpr"
+     ]
+    },
+    {
+     "id": "minutes"
+    },
+    {
+     "id": "params",
+     "optional": true
+    }
+   ]
+  },
+  {
+   "source": "det",
+   "action": "scan",
+   "deviceTypes": [
+    "camera"
+   ],
+   "fields": [
+    {
+     "id": "target"
+    },
+    {
+     "id": "detectorKind",
+     "options": [
+      "motion",
+      "linecross",
+      "lpr"
+     ]
+    },
+    {
+     "id": "beforeSec",
+     "optional": true
+    },
+    {
+     "id": "afterSec",
+     "optional": true
+    },
+    {
+     "id": "archive",
+     "optional": true
+    },
+    {
+     "id": "params",
+     "optional": true
+    }
+   ]
   }
  ],
  "conditions": [
@@ -261,6 +324,42 @@
     "yes",
     "no"
    ]
+  },
+  {
+   "control": "ask",
+   "branches": [
+    "yes",
+    "no"
+   ]
+  },
+  {
+   "control": "escalate",
+   "branches": []
   }
- ]
+ ],
+ "starts": [
+  "event",
+  "schedule",
+  "manual"
+ ],
+ "targets": {
+  "kinds": [
+   "device",
+   "folder",
+   "server",
+   "domain"
+  ],
+  "fromEvent": true
+ },
+ "crossDomain": [],
+ "assist_omit": {
+  "actions": [
+   "detect",
+   "scan"
+  ],
+  "controls": [
+   "ask",
+   "escalate"
+  ]
+ }
 }

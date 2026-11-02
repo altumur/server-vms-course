@@ -3092,8 +3092,12 @@
           },
           "default": {
             "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
           }
-        }
+        },
+        "description": "Сервер выдаёт id, порядок и первую версию истории. Включённое правило вне каталога системы — 422 NOT_SUPPORTED (reference.ruleActions). Автор должен иметь право на всё, что правило называет: устройства триггеров и шагов, папки, серверы, домены, цель ожидаемого события. Нет права — 403 PERMISSION_DENIED, params.target — {kind, id}, ничего не записано. Право судится только при записи: снятие права у автора правило не останавливает"
       }
     },
     "/rules/{ruleId}": {
@@ -3210,9 +3214,12 @@
           },
           "default": {
             "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
           }
         },
-        "description": "Содержимое правила целиком. Сервер пишет версию истории; historyNote — пометка «восстановлена версия», «отмена». Приглушение и порядок — /rules/update и /rules/reorder"
+        "description": "Содержимое правила целиком. Сервер пишет версию истории; historyNote — пометка «восстановлена версия», «отмена». Приглушение и порядок — /rules/update и /rules/reorder. Включённое правило вне каталога системы — 422 NOT_SUPPORTED, выключенное хранится как есть (reference.ruleActions). Автор должен иметь право на всё, что правило называет: устройства триггеров и шагов, папки, серверы, домены, цель ожидаемого события. Нет права — 403 PERMISSION_DENIED, params.target — {kind, id}, ничего не записано. Право судится только при записи: снятие права у автора правило не останавливает"
       }
     },
     "/rules/{ruleId}/fires": {
@@ -4788,7 +4795,7 @@
           "assist"
         ],
         "summary": "Ход разговора с ассистентом (SSE)",
-        "description": "Ответ — поток text/event-stream: на сообщение строка data: (AssistEvent), без event: и без id:. Ход длится от десятков секунд до нескольких минут. Закрыть поток — отменить ход. Оборванный поток не продолжается: клиент повторяет запрос. Поток без завершающего сообщения — обрыв, UPSTREAM_UNAVAILABLE. «Применить» — обычный POST /devices/update с items плана и новым idempotencyKey; устройство изменилось после плана — его строка в failed с VERSION_MISMATCH. Без него ничего не пишется.",
+        "description": "Ответ — поток text/event-stream: на сообщение строка data: (AssistEvent), без event: и без id:. Ход длится от десятков секунд до нескольких минут. Закрыть поток — отменить ход. Оборванный поток не продолжается: клиент повторяет запрос. Поток без завершающего сообщения — обрыв, UPSTREAM_UNAVAILABLE. «Применить» — обычный POST /devices/update с items плана и новым idempotencyKey; устройство изменилось после плана — его строка в failed с VERSION_MISMATCH. Без него ничего не пишется. План правил (kind: rules) — поле rules, «Применить» — двери из описания AssistRuleEdit сессией человека.",
         "requestBody": {
           "required": true,
           "content": {
@@ -5713,6 +5720,100 @@
           }
         },
         "description": "Создание требует edit на камеру, правка и снятие — admin: иначе 403 PERMISSION_DENIED"
+      }
+    },
+    "/rule-prompts": {
+      "get": {
+        "operationId": "listRulePrompts",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Открытые вопросы операторам",
+        "description": "Вопросы шагов ask и уровней escalate, которые сейчас ждут ответа, всех ролей: canAnswer говорит, может ли ответить спросивший. Закрытых здесь нет: итог — в RuleFire. Новые и закрытые приходят потоком: prompt.opened, prompt.closed. Объявляется вместе с шагами ask, escalate в reference.ruleControls",
+        "responses": {
+          "200": {
+            "description": "Список",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RulePrompt"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/rule-prompts/{promptId}/answer": {
+      "post": {
+        "operationId": "answerRulePrompt",
+        "tags": [
+          "automation"
+        ],
+        "summary": "Ответить на вопрос оператору",
+        "description": "Отвечает человек с ролью шага: нет роли — 403 PERMISSION_DENIED. Считается первый ответ по времени: на закрытый ответом вопрос — 409 BUSY, params.reason: answered, в том числе повтор того же человека. Срок вышел или запуск снят — 409 NOT_RUNNABLE, params.reason.code: over, ответ не действует. Ответ не того вида — 422 VALIDATION_FAILED, field: answer. 202 — ответ принят, итог приходит событием prompt.closed и виден в RuleFire: система вправе судить ответы своим проходом, поэтому 202 не обещает, что засчитан именно этот",
+        "parameters": [
+          {
+            "name": "promptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RulePromptAnswer"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Ответ принят"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
       }
     }
   },
@@ -6880,8 +6981,8 @@
                 "description": "Для text: сообщение из Device.words источника; для unit: слово единицы"
               }
             },
-            "additionalProperties": false,
-            "description": "Уточнение события"
+            "additionalProperties": true,
+            "description": "Уточнение события: объект «поле события → значение», ключи не только перечисленные: {\"pass\": 3}. Сравнение строгое, по типу значения: \"1\" не равно 1. Поля нет в событии — не совпало"
           }
         },
         "additionalProperties": false,
@@ -6901,6 +7002,7 @@
             "enum": [
               "vms",
               "rec",
+              "det",
               "alarm",
               "client",
               "ntf",
@@ -6936,14 +7038,17 @@
           },
           "minutes": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "record, disable, detect: минуты. detect: 1…1440, включённое правило вне границ — 422 RULE_INVALID, action.field"
           },
           "afterSec": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "record: ещё после конца события. scan: секунд записи после события, 0…3600, нет поля — 60"
           },
           "archive": {
-            "type": "string"
+            "type": "string",
+            "description": "record: хранилище записи. scan: хранилище, запись которого проверить, нет поля — основная запись камеры"
           },
           "priority": {
             "type": "string",
@@ -7010,6 +7115,20 @@
           "operation": {
             "type": "string",
             "description": "unit: команда из Device.operations"
+          },
+          "beforeSec": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3600,
+            "description": "scan: секунд записи до события, нет поля — 60. Оба окна 0 — 422 RULE_INVALID, action.scanWindow"
+          },
+          "detectorKind": {
+            "type": "string",
+            "description": "detect, scan: вид детектора из reference.detectorKinds; варианты, которые исполняет система, — options поля в ruleActions"
+          },
+          "params": {
+            "type": "string",
+            "description": "detect, scan: настройки детектора строкой, заменяют настройки основы целиком. Основа — первый детектор этой камеры и этого вида"
           }
         },
         "additionalProperties": false,
@@ -7017,7 +7136,7 @@
           "source",
           "action"
         ],
-        "description": "Действие правила. Поля — по виду действия (справочник ruleActions)"
+        "description": "Действие правила. Поля — по виду действия (справочник ruleActions). det/detect — включить детектор на камере на minutes минут: повтор продлевает срок, свой включённый детектор этого вида второго не заводит. det/scan — проверить архив детектором за окно вокруг события: beforeSec до, afterSec после; одно окно — одна задача. Настраиваются только здесь, другой консоли нет"
       },
       "Rule": {
         "type": "object",
@@ -7115,7 +7234,7 @@
               "restart",
               "queue"
             ],
-            "description": "Новое событие, пока идёт прежний запуск"
+            "description": "Новое событие, пока идёт прежний запуск. skip — пропустить. restart — снять прежний, его вопросы закрываются. queue — очередь до 16 запусков, сверх — как skip; запуск из очереди начинается концом прежнего"
           },
           "triggers": {
             "type": "array",
@@ -7147,7 +7266,8 @@
               "string",
               "null"
             ],
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Домен, где живёт правило: сервер выбирает его. Цели только из другого домена у включённого правила — 422 VALIDATION_FAILED, field: serverId. null — домен целей. Цели из нескольких доменов — reference.ruleCrossDomainActions"
           },
           "runAsRoleId": {
             "type": [
@@ -7155,7 +7275,7 @@
               "null"
             ],
             "format": "uuid",
-            "description": "Выполнять с правами роли; null — от имени системы"
+            "description": "Выполнять с правами роли: действие на устройстве, куда у роли нет права, не выполняется, шаг — fail, role.denied. null — от имени системы, без ограничений. Автор выбирает любую роль домена, своей быть не обязана: роль только сужает то, что автор и так вправе назвать. Роли нет — 422 VALIDATION_FAILED, field: runAsRoleId"
           },
           "allowChain": {
             "type": "boolean",
@@ -7201,6 +7321,16 @@
               "type": "string"
             },
             "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
+          },
+          "validForSec": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 600,
+            "description": "Сколько поданное действие остаётся годным от момента события, секунд. Нет поля — 30: сервер отдаёт умолчание"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RuleStatus",
+            "description": "Только чтение. Нет поля — сервер не следит: правило выключено"
           }
         },
         "additionalProperties": false,
@@ -7397,7 +7527,8 @@
                     "ok",
                     "fail",
                     "skip",
-                    "would"
+                    "would",
+                    "waiting"
                   ]
                 },
                 "reason": {
@@ -7447,8 +7578,10 @@
               "part",
               "fail",
               "skip",
-              "watch"
-            ]
+              "watch",
+              "waiting"
+            ],
+            "description": "ok, part, fail, skip, watch — итог. waiting — запуск стоит на шаге ожидания или в очереди repeat: queue; когда пойдёт дальше, запись меняется, entity.changed с kind ruleFire. Правка, выключение, удаление правила снимают идущий запуск"
           }
         },
         "additionalProperties": false,
@@ -8292,6 +8425,13 @@
                 "type": "integer",
                 "minimum": 0,
                 "description": "Срок хранения тревог, дней"
+              },
+              "alarms.domain": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Что считать тревогой на весь домен: значения из reference.eventKinds, как Device.alarmKinds. Другое значение — 422 VALIDATION_FAILED, field: alarms.domain"
               }
             },
             "additionalProperties": false,
@@ -8544,7 +8684,7 @@
             "description": "Параметры начинки по видам: ключ, варианты или значение по умолчанию"
           },
           "ruleTriggers": {
-            "description": "События для запуска правил. Каждый вид своим кодом: io.input, motion и другие; silent — обрыв открытого потока камеры, а не потеря связи с устройством: у камеры без потока его нет",
+            "description": "События для запуска правил. Каждый вид своим кодом: io.input, motion и другие; silent — обрыв открытого потока камеры, а не потеря связи с устройством: у камеры без потока его нет. Что не объявлено, форма не предлагает; как судится — описание ruleActions",
             "type": "array",
             "items": {
               "type": "object",
@@ -8642,7 +8782,8 @@
                 "fields",
                 "deviceTypes"
               ]
-            }
+            },
+            "description": "Каталог «Автоматизации» — то, что система исполняет: части его вместе с ruleTriggers, ruleConditions, ruleControls, ruleStarts, ruleTargets объявляют, что она умеет. Форма предлагает только объявленное. Включённое правило вне каталога — 422 NOT_SUPPORTED, field — раздел (start, triggers, conditions, steps), params.issue — что именно: {code, params}, коды rule.startNotDeclared, trigger.notDeclared, cond.notDeclared, action.notDeclared, action.fieldNotDeclared, control.notDeclared, target.notDeclared. В /rules/update — элемент failed с этим кодом. Запуск такого правила — 409 NOT_RUNNABLE. Выключенное правило хранится как есть: такое правило форма показывает, а не теряет. fields — поля действия: у поля options — его значения, поля нет в списке — у действия его нет (duration у записи: options [min], без afterSec — запись только на минуты)"
           },
           "access": {
             "type": "object",
@@ -8887,7 +9028,8 @@
                 "kind",
                 "deviceTypes"
               ]
-            }
+            },
+            "description": "Условия, которые исполняет система. Что не объявлено, форма не предлагает; как судится — описание ruleActions"
           },
           "ruleControls": {
             "type": "array",
@@ -8909,7 +9051,8 @@
                 "control",
                 "branches"
               ]
-            }
+            },
+            "description": "Шаги хода выполнения, которые исполняет система. Что не объявлено, форма не предлагает; как судится — описание ruleActions"
           },
           "layouts": {
             "type": "array",
@@ -8966,6 +9109,53 @@
               "type": "string"
             },
             "description": "Классы событий: варианты Device.alarmKinds"
+          },
+          "ruleStarts": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "event",
+                "schedule",
+                "manual"
+              ]
+            },
+            "description": "Какие способы запуска исполняет система. Другой в правиле — как шаг вне справочника (описание ruleActions)"
+          },
+          "ruleTargets": {
+            "type": "object",
+            "properties": {
+              "kinds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "device",
+                    "folder",
+                    "server",
+                    "domain"
+                  ]
+                },
+                "description": "Какие элементы бывают в RuleTarget.include"
+              },
+              "fromEvent": {
+                "type": "boolean",
+                "description": "Бывает ли цель «устройство из события» (RuleTarget.fromEvent)"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "kinds",
+              "fromEvent"
+            ],
+            "description": "Какие цели понимает система. Другая цель в правиле — как шаг вне справочника (описание ruleActions)"
+          },
+          "ruleCrossDomainActions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Что исполняет правило с целями из нескольких доменов: виды действий. Другой шаг в таком включённом правиле — 422 NOT_SUPPORTED, field: steps, params.issue: rule.crossDomain. Поля нет — ограничения нет"
           }
         },
         "additionalProperties": false,
@@ -8991,7 +9181,9 @@
           "ruleConditions",
           "ruleControls",
           "layouts",
-          "monitors"
+          "monitors",
+          "ruleStarts",
+          "ruleTargets"
         ]
       },
       "DeviceType": {
@@ -9125,7 +9317,9 @@
               "operation.progress",
               "operation.finished",
               "discovery.progress",
-              "discovery.finished"
+              "discovery.finished",
+              "prompt.opened",
+              "prompt.closed"
             ],
             "x-enum-descriptions": {
               "stream.reset": "Пропущенное не дослать (Last-Event-ID слишком старый): клиент перечитывает всё",
@@ -9136,7 +9330,9 @@
               "operation.progress": "Шаг операции завершён: kind=operation, entityId — операция, payload — шаг (OperationItem) и счётчики",
               "operation.finished": "Операция завершена: payload — итог (state, ok, failed, cancelled)",
               "discovery.progress": "Поиск в сети нашёл устройство: kind=discovery, entityId — домен, payload — progress и candidate",
-              "discovery.finished": "Поиск в сети закончился или остановлен: payload — state"
+              "discovery.finished": "Поиск в сети закончился или остановлен: payload — state",
+              "prompt.opened": "Открыт вопрос оператору: kind=rulePrompt, entityId — вопрос, payload — ruleId, fireId, step, roleId, level. Клиент перечитывает GET /rule-prompts",
+              "prompt.closed": "Вопрос закрыт: kind=rulePrompt, entityId — вопрос, payload — ruleId, fireId, step, reason: answered, expired, reset, stopped; при answered ещё answer и by — кто ответил"
             }
           },
           "at": {
@@ -9167,7 +9363,8 @@
               "maintenanceWindow",
               "streamAccounts",
               "archiveWatch",
-              "archiveScan"
+              "archiveScan",
+              "rulePrompt"
             ]
           },
           "entityId": {
@@ -9298,13 +9495,14 @@
         "properties": {
           "type": {
             "type": "string",
-            "description": "device.signal — пропало или вернулось соединение с устройством (online), device.fault — причина без связи, device.found — устройство назвало новую запись под deviceId (found), device.lost — запись deviceId пропала, device.parent — у записи сменился родитель (parentId)",
+            "description": "device.signal — пропало или вернулось соединение с устройством (online), device.fault — причина без связи, device.found — устройство назвало новую запись под deviceId (found), device.lost — запись deviceId пропала, device.parent — у записи сменился родитель (parentId), io.input — сигнал входа deviceId (value): active запускает включённые правила по этому событию, normal кончает событие: эскалация с stop: reset останавливается",
             "enum": [
               "device.signal",
               "device.fault",
               "device.found",
               "device.lost",
-              "device.parent"
+              "device.parent",
+              "io.input"
             ]
           },
           "deviceId": {
@@ -9352,6 +9550,14 @@
             ],
             "format": "uuid",
             "description": "device.parent: новый родитель"
+          },
+          "value": {
+            "type": "string",
+            "enum": [
+              "active",
+              "normal"
+            ],
+            "description": "io.input: начало или конец сигнала"
           }
         },
         "additionalProperties": false,
@@ -11872,7 +12078,7 @@
               "restart",
               "queue"
             ],
-            "description": "Новое событие, пока идёт прежний запуск"
+            "description": "Новое событие, пока идёт прежний запуск. skip — пропустить. restart — снять прежний, его вопросы закрываются. queue — очередь до 16 запусков, сверх — как skip; запуск из очереди начинается концом прежнего"
           },
           "triggers": {
             "type": "array",
@@ -11904,7 +12110,8 @@
               "string",
               "null"
             ],
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Домен, где живёт правило: сервер выбирает его. Цели только из другого домена у включённого правила — 422 VALIDATION_FAILED, field: serverId. null — домен целей. Цели из нескольких доменов — reference.ruleCrossDomainActions"
           },
           "runAsRoleId": {
             "type": [
@@ -11912,7 +12119,7 @@
               "null"
             ],
             "format": "uuid",
-            "description": "Выполнять с правами роли; null — от имени системы"
+            "description": "Выполнять с правами роли: действие на устройстве, куда у роли нет права, не выполняется, шаг — fail, role.denied. null — от имени системы, без ограничений. Автор выбирает любую роль домена, своей быть не обязана: роль только сужает то, что автор и так вправе назвать. Роли нет — 422 VALIDATION_FAILED, field: runAsRoleId"
           },
           "allowChain": {
             "type": "boolean",
@@ -11944,6 +12151,12 @@
               "type": "string"
             },
             "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
+          },
+          "validForSec": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 600,
+            "description": "Сколько поданное действие остаётся годным от момента события, секунд. Нет поля — 30: сервер отдаёт умолчание"
           }
         },
         "additionalProperties": false,
@@ -12014,6 +12227,13 @@
                 "type": "integer",
                 "minimum": 0,
                 "description": "Срок хранения тревог, дней"
+              },
+              "alarms.domain": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Что считать тревогой на весь домен: значения из reference.eventKinds, как Device.alarmKinds. Другое значение — 422 VALIDATION_FAILED, field: alarms.domain"
               }
             }
           }
@@ -12311,7 +12531,7 @@
           "gone",
           "fromEvent"
         ],
-        "description": "Цель события, условия или действия правила. Пустая цель (не выбрано) — null"
+        "description": "Цель события, условия или действия правила. Пустая цель (не выбрано) — null. Область (папка, сервер, домен) разворачивается в момент шага: новое устройство в ней входит в сохранённое правило само, новой версии правила нет"
       },
       "RuleCondition": {
         "type": "object",
@@ -12372,7 +12592,8 @@
           },
           "sec": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Включённое правило: 1…3600, иначе 422 RULE_INVALID, control.sec"
           }
         },
         "additionalProperties": false,
@@ -12396,7 +12617,8 @@
           },
           "sec": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Включённое правило: 1…3600, иначе 422 RULE_INVALID, control.sec"
           },
           "yes": {
             "type": "array",
@@ -12442,7 +12664,8 @@
           },
           "sec": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Включённое правило: 1…3600, иначе 422 RULE_INVALID, control.sec. Нет ответа за это время — как default"
           },
           "default": {
             "type": "string",
@@ -12475,7 +12698,7 @@
           "yes",
           "no"
         ],
-        "description": "Спросить оператора роли roleId"
+        "description": "Спросить оператора роли roleId. Запуск ждёт: вопрос — RulePrompt, ответ — POST /rule-prompts/{id}/answer. Запуск «Только журнал» спрашивает так же"
       },
       "RuleEscalate": {
         "type": "object",
@@ -12508,7 +12731,8 @@
                 },
                 "waitMin": {
                   "type": "integer",
-                  "minimum": 0
+                  "minimum": 0,
+                  "description": "Включённое правило: 1…120, у последнего уровня 0…120, иначе 422 RULE_INVALID, escalate.wait"
                 }
               },
               "additionalProperties": false,
@@ -12517,7 +12741,8 @@
                 "via",
                 "waitMin"
               ]
-            }
+            },
+            "description": "Уровни по очереди, не больше 5. Уровень стоит waitMin минут. Вопрос уровня — RulePrompt: ответ ack останавливает эскалацию, ответить можно на любом открытом уровне"
           },
           "stop": {
             "type": "string",
@@ -12525,7 +12750,7 @@
               "ack",
               "reset"
             ],
-            "description": "Остановить, когда тревогу квитируют или когда закончится событие"
+            "description": "ack — остановить, когда квитируют. reset — ещё и когда кончится событие: сигнал того же входа вернулся в норму, триггер io.input"
           }
         },
         "additionalProperties": false,
@@ -12534,7 +12759,7 @@
           "levels",
           "stop"
         ],
-        "description": "Уведомлять роли по очереди, пока не квитируют"
+        "description": "Уведомлять роли по очереди, пока не квитируют. Тревога — событие журнала, а не запись: квитируется шаг эскалации, закрывать нечего. Срок всей эскалации — сумма waitMin"
       },
       "RuleStep": {
         "anyOf": [
@@ -12648,7 +12873,7 @@
               "restart",
               "queue"
             ],
-            "description": "Новое событие, пока идёт прежний запуск"
+            "description": "Новое событие, пока идёт прежний запуск. skip — пропустить. restart — снять прежний, его вопросы закрываются. queue — очередь до 16 запусков, сверх — как skip; запуск из очереди начинается концом прежнего"
           },
           "triggers": {
             "type": "array",
@@ -12680,7 +12905,8 @@
               "string",
               "null"
             ],
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Домен, где живёт правило: сервер выбирает его. Цели только из другого домена у включённого правила — 422 VALIDATION_FAILED, field: serverId. null — домен целей. Цели из нескольких доменов — reference.ruleCrossDomainActions"
           },
           "runAsRoleId": {
             "type": [
@@ -12688,7 +12914,7 @@
               "null"
             ],
             "format": "uuid",
-            "description": "Выполнять с правами роли; null — от имени системы"
+            "description": "Выполнять с правами роли: действие на устройстве, куда у роли нет права, не выполняется, шаг — fail, role.denied. null — от имени системы, без ограничений. Автор выбирает любую роль домена, своей быть не обязана: роль только сужает то, что автор и так вправе назвать. Роли нет — 422 VALIDATION_FAILED, field: runAsRoleId"
           },
           "allowChain": {
             "type": "boolean",
@@ -12700,6 +12926,12 @@
               "type": "string"
             },
             "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
+          },
+          "validForSec": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 600,
+            "description": "Сколько поданное действие остаётся годным от момента события, секунд. Нет поля — 30: сервер отдаёт умолчание"
           }
         },
         "additionalProperties": false,
@@ -12844,7 +13076,7 @@
               "restart",
               "queue"
             ],
-            "description": "Новое событие, пока идёт прежний запуск"
+            "description": "Новое событие, пока идёт прежний запуск. skip — пропустить. restart — снять прежний, его вопросы закрываются. queue — очередь до 16 запусков, сверх — как skip; запуск из очереди начинается концом прежнего"
           },
           "triggers": {
             "type": "array",
@@ -12876,7 +13108,8 @@
               "string",
               "null"
             ],
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Домен, где живёт правило: сервер выбирает его. Цели только из другого домена у включённого правила — 422 VALIDATION_FAILED, field: serverId. null — домен целей. Цели из нескольких доменов — reference.ruleCrossDomainActions"
           },
           "runAsRoleId": {
             "type": [
@@ -12884,7 +13117,7 @@
               "null"
             ],
             "format": "uuid",
-            "description": "Выполнять с правами роли; null — от имени системы"
+            "description": "Выполнять с правами роли: действие на устройстве, куда у роли нет права, не выполняется, шаг — fail, role.denied. null — от имени системы, без ограничений. Автор выбирает любую роль домена, своей быть не обязана: роль только сужает то, что автор и так вправе назвать. Роли нет — 422 VALIDATION_FAILED, field: runAsRoleId"
           },
           "allowChain": {
             "type": "boolean",
@@ -12896,6 +13129,12 @@
               "type": "string"
             },
             "description": "Где работает: метки серверов из reference.serverLabels. Сервер без метки запись не возьмёт"
+          },
+          "validForSec": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 600,
+            "description": "Сколько поданное действие остаётся годным от момента события, секунд. Нет поля — 30: сервер отдаёт умолчание"
           }
         },
         "additionalProperties": false,
@@ -14198,6 +14437,14 @@
               "type": "string"
             },
             "description": "Пароли из отдельных полей ассистента. Номер секрета — место в массиве, с 1. В context их нет: клиент держит их в памяти до конца разговора и присылает в каждом запросе, никуда не сохраняет"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "config",
+              "rules"
+            ],
+            "description": "Тип запроса: config — настройка устройств, rules — правила автоматизации. Нет поля — config. Тип называет вызывающий: бэкенд текст просьбы не разбирает, чтобы его угадать"
           }
         },
         "description": "Ход разговора с ассистентом. Своего состояния у бэкенда нет: разговор держит клиент"
@@ -14280,7 +14527,7 @@
             "x-enum-descriptions": {
               "progress": "Что ассистент делает сейчас: text. Может приходить много раз",
               "question": "Нужно уточнение: text, context. Ответ человека — новый запрос с этим context",
-              "plan": "План: summary, context, items. Частичных планов нет: не может всё — refused",
+              "plan": "План: summary, context, items или rules. Частичных планов нет: не может всё — refused",
               "refused": "Не может: text, context, field",
               "error": "Ошибка: code, message"
             }
@@ -14314,6 +14561,13 @@
           },
           "message": {
             "type": "string"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistRuleEdit"
+            },
+            "description": "План правил, тип запроса rules: записи по порядку. Предложение, а не запись: ход ничего не пишет"
           }
         },
         "description": "Сообщение хода. Поток заканчивается одним из question, plan, refused, error"
@@ -15469,6 +15723,204 @@
             "description": "Отдельные камеры"
           }
         }
+      },
+      "RuleStatus": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "watching",
+              "refused",
+              "unfit",
+              "unchecked"
+            ],
+            "x-enum-descriptions": {
+              "watching": "Сервер следит за событиями правила",
+              "refused": "Отказано: правило не проходит проверку и не срабатывает",
+              "unfit": "Не годится: то, что называет правило, этого не умеет, правило молчит, пока не подойдёт",
+              "unchecked": "Не проверено: устройства не сказали, что умеют, правило работает"
+            }
+          },
+          "reason": {
+            "type": "string",
+            "description": "Почему — словами сервера, форма показывает как есть. У watching пусто"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "state",
+          "reason"
+        ],
+        "description": "Что сервер знает о правиле сейчас. Наблюдение: в версию записи не входит, события потока не шлёт"
+      },
+      "RulePrompt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ruleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fireId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Запуск: RuleFire.id"
+          },
+          "step": {
+            "type": "string",
+            "description": "Путь шага в steps правила: «0», «2.no.1»"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "ask",
+              "escalate"
+            ],
+            "description": "ask — вопрос, ответ yes или no; escalate — уровень эскалации, ответ ack"
+          },
+          "text": {
+            "type": "string",
+            "description": "ask: вопрос с подставленными значениями запуска. escalate: пусто, своего текста у шага нет"
+          },
+          "roleId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Кто отвечает: роль шага или уровня"
+          },
+          "level": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "description": "escalate: номер уровня с 1. ask: null"
+          },
+          "openedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "until": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Срок: после него ответ не действует. ask — конец ожидания шага, escalate — конец последнего уровня: уровень, до которого дошло, остаётся открыт, пока идёт эскалация"
+          },
+          "canAnswer": {
+            "type": "boolean",
+            "description": "Есть ли роль шага у того, кто спрашивает"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "ruleId",
+          "fireId",
+          "step",
+          "kind",
+          "text",
+          "roleId",
+          "level",
+          "openedAt",
+          "until",
+          "canAnswer"
+        ],
+        "description": "Открытый вопрос оператору: запуск стоит на шаге ask или на уровне escalate"
+      },
+      "RulePromptAnswer": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "string",
+            "enum": [
+              "yes",
+              "no",
+              "ack"
+            ],
+            "description": "ask: yes, no. escalate: ack, квитировать на уровне вопроса"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "answer"
+        ]
+      },
+      "AssistRuleEdit": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "table",
+              "op",
+              "body"
+            ],
+            "properties": {
+              "table": {
+                "type": "string",
+                "enum": [
+                  "scenarios",
+                  "schedules",
+                  "windows"
+                ],
+                "description": "Что записать: правило, расписание, окно обслуживания. Расписание и окно план только заводит"
+              },
+              "op": {
+                "type": "string",
+                "enum": [
+                  "create"
+                ]
+              },
+              "ref": {
+                "type": "string",
+                "description": "Имя новой строки schedules внутри плана. Ссылка на неё в body других записей — строка \"@<ref>\""
+              },
+              "body": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Запись целиком контрактными словами. scenarios — поля Rule, недостающие поля RuleWrite — умолчания перевода (owner, purpose — пусто, serverId, runAsRoleId — null, прочие — умолчания правила); новое правило — logOnly: true или enabled: false, запись ставит это сама. schedules — ScheduleWrite. windows — MaintenanceWindowCreate, enabled: false; schedule — строка \"@<ref>\" нового расписания или копия строки готового: ссылки на готовое дверь не берёт"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "table",
+              "op",
+              "id",
+              "body"
+            ],
+            "properties": {
+              "table": {
+                "type": "string",
+                "enum": [
+                  "scenarios"
+                ],
+                "description": "Правка есть только у правил"
+              },
+              "op": {
+                "type": "string",
+                "enum": [
+                  "update"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Какое правило"
+              },
+              "body": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Только изменённые поля Rule контрактными словами"
+              }
+            }
+          }
+        ],
+        "description": "Запись плана правил. Пишет человек, по порядку записей. scenarios — POST /rules, PUT /rules/{id}: PUT — запись целиком, чтение поверх body, версия чтения в If-Match. schedules — POST /schedules, \"@<ref>\" у правил — id созданной строки. Расписание, на которое ссылается только окно, отдельно не пишется: идёт телом окна. windows — POST /maintenance-windows, \"@<ref>\" заменяется строкой расписания объектом в schedule. Новое правило заводится logOnly: true, logOnlySince — дата записи, или выключенным; новое окно — enabled: false: наблюдения у него нет, включённое сразу глушит рабочее правило; включает человек. Правка действующего правила наблюдения не заводит: предел. Отказ записи стоит за своей строкой, записанное остаётся, отката нет"
       }
     }
   }

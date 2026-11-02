@@ -96,8 +96,17 @@ rules	422	VALIDATION_FAILED	steps	11.3 Н4: preset, port, цель
 rules	422	VALIDATION_FAILED	windowSec	11.4 Н1.10
 rules	422	VALIDATION_FAILED	items	11.4 Н1.10: reorder больше BATCH_WRITES
 rules	422	VALIDATION_FAILED	log	11.4 Н1.10: log без ruleId
+rules	422	VALIDATION_FAILED	branches	11.4 Н1.10: исход пробы не тот
 rules	422	VALIDATION_FAILED	serverId	11.4 Н1.10: цели другого кластера
-rules	422	NOT_SUPPORTED	triggers	11.4 Н1.10: цели из нескольких кластеров
+rules	422	NOT_SUPPORTED	steps	11.4 Н1.10: цели из нескольких кластеров, rule.crossDomain; вне каталога
+rules	422	NOT_SUPPORTED	start	11.4 Н1.10: вне каталога
+rules	422	NOT_SUPPORTED	triggers	11.4 Н1.10: вне каталога
+rules	422	NOT_SUPPORTED	conditions	11.4 Н1.10: вне каталога
+rules	-	NOT_SUPPORTED	-	11.4 Н1.10: failed элемента /rules/update, вне каталога
+rules	422	VALIDATION_FAILED	validForSec	11.3 Н1.3
+rules	422	VALIDATION_FAILED	runAsRoleId	11.4 Н1.10
+rules	422	VALIDATION_FAILED	answer	11.4 Н1.10: ответ не того вида
+rules	409	BUSY	-	11.4 Н1.10: params.reason answered
 schedules	409	BUILTIN	-	11.4 Н1.11: встроенное, системный режим, params.modeId
 schedules	422	NAME_REQUIRED	<поле>	11.4 Н1.11: name, items
 schedules	422	VALIDATION_FAILED	owner	11.4 Н1.11
