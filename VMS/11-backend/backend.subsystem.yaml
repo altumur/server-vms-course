@@ -79,6 +79,7 @@ door:
       - GET cam/rule_state           # on guard, off by a rule: the holder's words, read only (V/11.3 Н1.3; V/01.4 Н1.4д)
       - cam/requests                 # `disable` with a past term (V/11.4 Н1.2), presets (Н1.16), a unit's command (Н1.17)
       - cam/ptz_moves                # the lease of a move: the table, a person's edit on the camera (V/11.4 Н1.16)
+      - live/streams                 # a person's stream of a camera, its network (V/11.4 Н1.15)
       - GET live/where               # the gateway's address and token for a person's live view (V/11.4 Н1.15; ADR-0112 доп. (1))
       - live/accounts                # the gateway's door of stream accounts: the password passes once, to no journal or row (V/11.4 Н1.18)
       - servers/labels               # PUT, DELETE of a server's labels (V/11.4 Н1.19)
@@ -119,6 +120,15 @@ door:
       - domain/folders               # the tree of the domain (P/08.5 Н1.8; V/11.4 Н1.7)
       - domain/memberof              # who stands in which folder: not one batch with the folder (ADR-0110 доп. (5) п. 3)
       - backend/operations           # the group operations (P/06.9; V/11.4 Н1.8)
+      - GET rec/where                # a recorder's door and the person's token: timeline, verify, the address of a piece (V/11.1 Н1.2а)
+      - rec/keeps                    # holds (V/11.4 Н1.23)
+      - GET rec/heartbeats           # the words of a hold in the pulse
+      - rec/requests                 # filing a fetch (V/11.4 Н1.25)
+      - marks                        # a bookmark (V/11.4 Н1.24; P/06.4 Н2)
+      - GET domain/rec/books/primaries # recordings of other clusters, this member's copy (V/11.4 Н1.22)
+      - GET domain/at/rec/where      # the door of a recording of another cluster
+      - GET domain/at/rec/keeps
+      - GET domain/at/rec/heartbeats
       - GET domain/cam/books/licence # the licence, read only (V/11.3 Н1.3; P/06.3 Н1.9)
       # The view of the domain, how another member's rows are read (V/11.3 Н1.2а; ADR-0110 доп. (2)): the members, their
       # servers, the knocking; a recording's server by its `ref`; a member's tables, one member a call.

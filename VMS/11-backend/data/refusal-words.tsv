@@ -141,3 +141,12 @@ devices	409	NAME_TAKEN	items[i].name	11.4 Н1.21
 devices	422	VALIDATION_FAILED	items	11.4 Н1.21: форма, больше scenariosMax
 access	422	VALIDATION_FAILED	changes[i]	11.8 Н1.5 п. 1а
 access	422	VALIDATION_FAILED	retryClusters	11.8 Н1.5 п. 5а
+devices	409	OTHER_NETWORK	-	11.4 Н1.15: раздача для другой сети, params.labels
+devices	409	NO_PRIMARY	-	11.4 Н1.25: основной записи своего кластера нет
+devices	409	DEVICE_REFUSED	-	11.4 Н1.23: маршрута keeps у двери нет
+devices	422	VALIDATION_FAILED	state	11.4 Н1.17: нет state
+devices	422	VALIDATION_FAILED	at	11.4 Н1.22: at не по форме
+devices	422	VALIDATION_FAILED	to	11.4 Н1.23, Н1.25: конец не позже начала
+devices	422	VALIDATION_FAILED	note	11.4 Н1.24: пустая заметка
+devices	422	VALIDATION_FAILED	recordingIds	11.4 Н1.23: запись не этой камеры
+devices	503	UPSTREAM_UNAVAILABLE	-	11.4 Н1.15: шлюза ещё нет

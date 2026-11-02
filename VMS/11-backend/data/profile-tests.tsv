@@ -251,3 +251,14 @@ api-pages.js	Поиск в сети: страницы у candidates	out	тест
 api-pages.js	Запуски правила: страницы	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
 api-pages.js	Документ V/07.5: чтение, запись целиком, версия, 412 на чужую правку, отказы формы, состояние из пульса	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
 api-pages.js	Документ V/07.5: без admin домена — 403, без связи с доменом — 409	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-devices.js	Живое видео: сеть, поток, шлюз; раздача для другой сети — 409 с params.labels, переразмещение, срок раздачи	out	шлюза на стенде нет: acceptance/4 41-live
+api-devices.js	Переразместить: право, без связи, не камера, другой кластер	out	шлюза на стенде нет: acceptance/4 41-live
+api-view.js	Журнал камеры: и единицы про неё; новая запись — journal.event наблюдающим	out	зовёт /test/events: 404 NO_ROUTE (V/11.6 Н1.3); acceptance/4 44-marks
+api-view.js	Отметка: создать и смотреть, occurred на прошлом моменте, пустая — 422, окно	out	журнал на наборе не воспроизводится: acceptance/4 44-marks
+api-view.js	Закрепить: сутки на просьбу, per_person 7, refused только о подаче; нет основной — 409	out	нужна основная запись на наборе: acceptance/4 44-marks
+api-view.js	Удержание: ключ — id, то же окно объединяет записи, заметка цела, снять, проверить	out	verify: держателя incidents на стенде нет; acceptance/4 43-holds
+api-view.js	Шкала: спаны с spanId и записью, окно, пустое окно, не камера, недоступное названо	out	регистратора на стенде нет (V/11.6 Н1.1); acceptance/4 42-timeline
+api-view.js	Кусок: по spanId и по моменту; 60 с; неотсечённый над моментом; нет записи — 404	out	регистратора на стенде нет (V/11.6 Н1.1); acceptance/4 42-timeline
+api-view.js	Разговор: адрес url, токен, срок; не spk — 422; отказ устройства, право, другой кластер	out	шлюза на стенде нет: acceptance/4 41-live
+api-view.js	Том: heldBy; события hold и bookmark идут в поток	out	регистратора на стенде нет: held_by пуст; acceptance/4 43-holds
+api-view.js	Реле: output с state и pulseMs; без state — 422; другая команда — 409	out	держателя на стенде нет (V/11.6 Н1.1); acceptance/4 41-live
