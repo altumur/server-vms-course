@@ -212,7 +212,7 @@ paths:
         '403': {$ref: '#/components/responses/TokenRefused'}
         '404': {$ref: '#/components/responses/TokenRefused'}
         '409':
-          description: 'no_centre (Н3 «выдать») или deposed смещённого держателя (P/08.8 Н1.6; добавлено М11/10)'
+          description: 'no_centre, too_many_revocations (Н3 «выдать») или deposed смещённого держателя (P/08.8 Н1.6; добавлено М11/10)'
           content:
             application/json:
               schema:
@@ -604,7 +604,11 @@ paths:
       summary: Раздел книги to "*" (глава 8.5 Н1.4)
       responses:
         '200': {description: '{items}'}
-        '404': {$ref: '#/components/responses/Refused'}
+        '404':
+          description: 'reason: empty_part — строки раздела нет, копия снимается; not_a_book — книга не to "*"; без reason — не член (P/08.3 Н2).'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Refusal'}
         '429': {$ref: '#/components/responses/Busy'}
   /api/backup-part/{member}/{part}:
     parameters:
@@ -2186,7 +2190,7 @@ components:
               description: 'слова P/08.7 Н3 «выдать»; у 401 — слова договора подписи агента «Слова отказа» (no_signature, not_a_signature, out_of_window, bad_signature; добавлено прогоном 41)'
               enum: [bad_request, by_misplaced, not_granted, assignment_unreadable, no_assignment, outside_scope,
                      unit_not_unique, not_poll_home, trigger_not_reported, no_shared_doc, no_item, no_home, no_audience,
-                     no_centre, no_signature, not_a_signature, out_of_window, bad_signature]
+                     no_centre, too_many_revocations, no_signature, not_a_signature, out_of_window, bad_signature]
     # --- имена и значения ---
     MemberName:
       type: string
