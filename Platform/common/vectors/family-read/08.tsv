@@ -3174,9 +3174,13 @@ c08_folder_units.005	domain/folder-units/<id>/<раздел>	domain/folder-units
 c08_folder_units.006	domain/folder-units/<id>/<раздел>	domain/folder-units/0123456789abcdef0123456789abcdef/0042	row	reader	["domain", "domainconsole"]	{	refused	[""]	{"domain": [""], "domainconsole": [""]}	not JSON
 c08_book_part.007	domain/<sub>/<manifest:domain.books>/*/<раздел>	domain/testsub2/rolls/*/0042	row	writer	["domain", "domainagent"]	{"": "{\"missing\": []}", "t1": "{\"entries\": [{\"member\": \"m1\", \"item\": \"t-1/t1\", \"value\": {}}], \"missing\": []}"}	ok	[]	[]	элемент формы to_all: /*/entries/*/value
 c08_book_part.008	domain/<sub>/<manifest:domain.books>/*/<раздел>	domain/testsub2/rolls/*/0042	row	reader	["domain", "console", "domainagent", "<s>worker"]	{"": "{\"missing\": []}", "t1": "{\"entries\": [{\"member\": \"m1\", \"item\": \"t-1/t1\", \"value\": {}}], \"missing\": []}"}	ok	[]	{"domain": [], "console": [], "domainagent": [], "<s>worker": []}	элемент формы to_all: /*/entries/*/value
-c08_book_keys.001	domain/book-keys/<sub>/<manifest:domain.books>/<раздел>	domain/book-keys/testsub2/rolls/0042	row	writer	["domain"]	{"m1":"[]"}	ok	[]	[]	base
-c08_book_keys.002	domain/book-keys/<sub>/<manifest:domain.books>/<раздел>	domain/book-keys/testsub2/rolls/0042	row	reader	["domain"]	{"m1":"[]"}	ok	[]	{"domain": []}	base
+c08_book_keys.001	domain/book-keys/<sub>/<manifest:domain.books>/<раздел>	domain/book-keys/testsub2/rolls/0042	row	writer	["domain"]	{"":"{\"term\":1}","m1":"[]"}	ok	[]	[]	base
+c08_book_keys.002	domain/book-keys/<sub>/<manifest:domain.books>/<раздел>	domain/book-keys/testsub2/rolls/0042	row	reader	["domain"]	{"":"{\"term\":1}","m1":"[]"}	ok	[]	{"domain": []}	base
 c08_book_keys.003	domain/book-keys/<sub>/<manifest:domain.books>/<раздел>	domain/book-keys/testsub2/rolls/0042	row	writer	["domain"]	null	refused	[""]	[]	root null
 c08_book_keys.004	domain/book-keys/<sub>/<manifest:domain.books>/<раздел>	domain/book-keys/testsub2/rolls/0042	row	reader	["domain"]	null	refused	[""]	{"domain": [""]}	root null
 c08_book_keys.005	domain/book-keys/<sub>/<manifest:domain.books>/<раздел>	domain/book-keys/testsub2/rolls/0042	row	writer	["domain"]	{	refused	[""]	[]	not JSON
 c08_book_keys.006	domain/book-keys/<sub>/<manifest:domain.books>/<раздел>	domain/book-keys/testsub2/rolls/0042	row	reader	["domain"]	{	refused	[""]	{"domain": [""]}	not JSON
+c08_book_keys.007	domain/book-keys/<sub>/<manifest:domain.books>/<раздел>	domain/book-keys/testsub2/rolls/0042	row	writer	["domain"]	{"m1":"[]"}	refused	["/"]	[]	term нет
+c08_book_keys.008	domain/book-keys/<sub>/<manifest:domain.books>/<раздел>	domain/book-keys/testsub2/rolls/0042	row	reader	["domain"]	{"m1":"[]"}	refused	["/"]	{"domain": [""]}	term нет
+c08_book_keys.009	domain/book-keys/<sub>/<manifest:domain.books>/<раздел>	domain/book-keys/testsub2/rolls/0042	row	writer	["domain"]	{"":"{\"term\":0}","m1":"[]"}	refused	["//term"]	[]	term 0
+c08_book_keys.010	domain/book-keys/<sub>/<manifest:domain.books>/<раздел>	domain/book-keys/testsub2/rolls/0042	row	reader	["domain"]	{"":"{\"term\":0}","m1":"[]"}	refused	["//term"]	{"domain": [""]}	term 0

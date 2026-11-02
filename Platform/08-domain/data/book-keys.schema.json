@@ -1,7 +1,23 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "type": "object",
- "properties": {},
+ "properties": {
+  "": {
+   "description": "срок записи строки: своя читается и в первом круге (P/08.5 Н1.3 first_pass; ADR-0113 доп. (23) п. 1), текст JSON",
+   "type": "object",
+   "x-encoding": "json",
+   "properties": {
+    "term": {
+     "$ref": "#/$defs/common.pos53",
+     "description": "срок записи строки"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "term"
+   ]
+  }
+ },
  "additionalProperties": {
   "description": "имя — член; ключи книги, которые он дал, текст JSON",
   "type": "array",
@@ -800,5 +816,8 @@
    "minimum": 0,
    "maximum": 9007199254740991
   }
- }
+ },
+ "required": [
+  ""
+ ]
 }

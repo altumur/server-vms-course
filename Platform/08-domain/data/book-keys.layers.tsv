@@ -13,3 +13,4 @@ place	layer	word	value
 /$defs/common.time	3	x-time	true
 /$defs/common.uint53	3	x-integer	true
 /additionalProperties	3	x-encoding	"json"
+/properties/	3	x-encoding	"json"
