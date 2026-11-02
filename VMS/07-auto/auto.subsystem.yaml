@@ -25,6 +25,7 @@ slot: {prefix: a, name_env: AUTO_NAME}
 # manifest's policy; a subsystem not declared here is `unknown`, never proof — its events fire nothing, V/07.2 Н1.3).
 # `platform/folders/`, `platform/memberof/`: an area of a target is read at the moment of a run, so a new device enters by
 # itself (V/07.4 Н1.9); `domain/grants`: the cluster's copy, for `run_as_role` (the rights contract, «Действие от роли»; P/02.5 Н3 step 3); `domain/roles`: whose role answers a step (V/07.6 Н1.9).
+heartbeat: {door: [shared]}             # the pulse words the door gives: the state of the scenarios between cameras (V/11.4 Н1.21)
 worker: {exec: /usr/lib/auto/worker, reads: [platform/folders/, platform/memberof/, domain/grants, domain/roles, cam/epoch/, rec/epoch/, live/epoch/, det/epoch/, detjob/epoch/, detedge/epoch/, cam/cameras/, cam/heartbeats/, cam/devices/, cam/children/, cam/child_settings/, cam/device_units/, cam/rule_state/, det/units/, rec/recordings/, rec/heartbeats/, domain/shared, domain/auto/asks/, domain/cam/sources, domain/member-list/, domain/member-topology, domain/topology, domain/placed/rec/], requests: [cam], writes: [chains], creates: [{sub: rec, rows: recordings, key: "{cam}"}, {sub: det, rows: units, key: "{cam}-{kind}"}, {sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}]}
 # Not a moment past its lease's end: what an evaluator does is ACTIONS — a relay pulsed, a preset called, a request
 # filed — and twice is not a duplicate. (The platform's default; said so it is read, as the product says it.)
@@ -666,6 +667,7 @@ domain:
                   additionalProperties: false
                   properties:
                     camera:    {type: string, minLength: 1}
+                    member:    {type: string, minLength: 1}   # the target's cluster: as `when.member` (V/07.5 Н1.1)
                     action:    {const: preset}
                     n:         {type: integer, minimum: 1, maximum: 9007199254740991}
                     valid_for: {type: integer, minimum: 10, maximum: 600}
@@ -674,6 +676,7 @@ domain:
                   additionalProperties: false
                   properties:
                     camera:    {type: string, minLength: 1}
+                    member:    {type: string, minLength: 1}   # the target's cluster: as `when.member` (V/07.5 Н1.1)
                     action:    {const: output}
                     port:      {type: integer, minimum: 1, maximum: 9007199254740991}
                     valid_for: {type: integer, minimum: 10, maximum: 600}

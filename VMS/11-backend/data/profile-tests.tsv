@@ -1,4 +1,4 @@
-# Тесты API consolem @5c1973c в профиле стенда VMS (V/11.6 Н1.2; ADR-0094 доп. (18)): одна строка на проверку страницы tests/api.html.
+# Тесты API consolem @23c3e1b в профиле стенда VMS (V/11.6 Н1.2; ADR-0094 доп. (18)): одна строка на проверку страницы tests/api.html.
 # profile: in — обязана пройти; skip — страница сама пропускает по needs теста; out — вне профиля, строка страницы не судится.
 # Судит драйвер стенда по этой таблице, data-apitest страницы не читается. file — файл теста, harness — сквозная проверка.
 # Операции профиля, которые вызывает только тест out, проверяет свой набор acceptance/ (ADR-0094 доп. (18) п. 3). Сверяется при новом коммите контракта.
@@ -43,9 +43,9 @@ api-domains.js	Домен: создать — 201, имя занято (без �
 api-domains.js	Домен: переименовать и задать лицензию — PATCH с версией; чужое имя — 409	out	зовёт patchDomain: вне профиля
 api-domains.js	Домен: удалить с переносом — серверы нераспределённые в целевом, папки, устройства, хранилища и найденное — там же	skip	система не умеет: deleteDomain
 api-domains.js	Домен: пустой удаляется без moveTo; последний — 409 LAST_DOMAIN	skip	система не умеет: createDomain, deleteDomain
-api-domains.js	Серверы: добавить в домен и исключить одним запросом — версия +1, добавленный в конце списка	out	зовёт assignServers: вне профиля
-api-domains.js	Серверы: частичный успех — устаревшая версия и неизвестный сервер в failed, остальное выполнено	out	зовёт assignServers: вне профиля
-api-domains.js	Серверы: повтор с тем же idempotencyKey — тот же ответ, второй раз не выполняется	out	зовёт assignServers: вне профиля
+api-domains.js	Серверы: добавить в домен и исключить одним запросом — версия +1, добавленный в конце списка	out	нужна стучащаяся коробка: POST /servers/assign — acceptance/4 38-assign
+api-domains.js	Серверы: частичный успех — устаревшая версия и неизвестный сервер в failed, остальное выполнено	out	нужна стучащаяся коробка: POST /servers/assign — acceptance/4 38-assign
+api-domains.js	Серверы: повтор с тем же idempotencyKey — тот же ответ, второй раз не выполняется	out	нужна стучащаяся коробка: POST /servers/assign — acceptance/4 38-assign
 api-domains.js	Серверы: опрос адресов — в домене, найден, не отвечает; лишние адреса — 422	out	зовёт probeServers: вне профиля
 api-domains.js	Серверы: завести по адресу — нераспределённый в домене; тот же адрес — 409; неверный — 422	out	зовёт createServer: вне профиля
 api-domains.js	Сервер: PATCH — имя, роль и сеть (если система их умеет); неизвестная роль — 422	out	правит name, роль сервера: 422 NOT_SUPPORTED (V/11.4 Н1.19)
@@ -96,7 +96,6 @@ api-access.js	Права: применить черновик — роль пе�
 api-access.js	Права: dryRun — проверка без записи	in	-
 api-access.js	Права: повторы имён и логинов (без учёта регистра) — 409; ссылка в никуда — 422	in	-
 api-access.js	Права: защита от самоблокировки — без администраторов и без себя нельзя	out	unr: false у admin — 422 NOT_SUPPORTED раньше SELF_LOCKOUT (V/11.8 Н1.5, ADR-0094 доп. (18) п. 4); SELF_LOCKOUT — acceptance/8
-api-access.js	Права: без версии — 428, старая — 412; состояние синхронизации от клиента не берётся	out	читает catalogs[0], каталогов нет (ADR-0094 доп. (18) п. 4); 428, 412 — acceptance/8
 api-access.js	Синхронизация каталога: сразу run, через 1,5 с ok и время; во время — 409; группа отдельно	out	зовёт syncCatalog: вне профиля
 api-read.js	Журнал: отбор по устройству, подсистеме, времени, limit; truncated и withheldCount	out	ждёт длину журнала набора: журнал растёт, сброс его не откатывает (V/11.6 Н1.3); отбор — acceptance/4 27-journal
 api-hardware.js	Операция: правка другого поля откату не мешает	out	правит ip сервера: 422 NOT_SUPPORTED (V/11.4 Н1.19); другое поле — acceptance/4 19-revert
@@ -214,7 +213,6 @@ api-automation.js	Вопрос: ответ «нет» — ветка «нет»,
 api-automation.js	Вопрос: чужая роль — 403, canAnswer false; не тот вид ответа — 422, вопрос открыт; нет вопроса — 404	out	как выше
 api-automation.js	Вопрос: срок вышел — ветка default, вопрос закрыт, ответ после срока не действует	out	как выше
 api-automation.js	Вопрос: шаг за шагом — второй вопрос после первого, вложенный в ветку	out	как выше
-api-automation.js	Вопрос: «Только журнал» спрашивает так же, действий нет; пробный запуск вопросов не открывает	out	как выше
 api-automation.js	Эскалация: уровни по сроку, прежний остаётся открыт, ack на любом останавливает, уровень в трассе	out	как выше
 api-automation.js	Эскалация: никто не квитировал — конец последнего уровня, запуск идёт дальше	out	как выше
 api-automation.js	Эскалация: stop: reset — конец события останавливает, вопросы закрываются с reason: reset	out	как выше
@@ -222,3 +220,33 @@ api-automation.js	Ход: правку, выключение, удаление �
 api-automation.js	Ход: repeat — skip пропускает, restart снимает прежний, queue идёт следом, сверх 16 — как skip	out	как выше
 api-automation.js	Тревожные виды на весь домен: Settings.values, только из reference.eventKinds	out	Settings — NO_ROUTE (V/11.2)
 api-automation.js	Правило на несколько доменов: только объявленные шаги, прочее — 422 NOT_SUPPORTED, field: steps; сервер выбирает домен	out	набор one-domain: второго домена нет; поведение — V/11.4 Н1.10
+api-access.js	Права: без версии — 422, старая — 412; состояние синхронизации от клиента не берётся	out	читает catalogs[0], каталогов нет (ADR-0094 доп. (18) п. 4); acceptance/8 11-changes, 08-clusters
+api-access.js	Роль на весь домен: запись одна, отказ одного кластера не откатывает прочие, расхождение видно, повтор	out	читает catalogs[0], каталогов нет (ADR-0094 доп. (18) п. 4); acceptance/8 11-changes, 08-clusters
+api-automation.js	Вопрос: «Только журнал» никого не спрашивает: срок, ветка default, действий нет; пробный запуск вопросов не открывает	out	нужен вычислитель стенда: V/11.4 Н1.10, acceptance/4 34-rule-prompts
+api-automation.js	Эскалация: «Только журнал» никого не спрашивает и кончается сроком последнего уровня	out	нужен вычислитель стенда: V/11.4 Н1.10, acceptance/4 34-rule-prompts
+api-automation.js	Вопрос: роль без строк грантов не видна — canAnswer ложь, 403; закрытый вопрос после ухода из памяти — 404	out	нужен вычислитель стенда: V/11.4 Н1.10, acceptance/4 34-rule-prompts
+api-cluster.js	Запись камеры w2c: приёмник — настройка, serverId наблюдение, снять, сервера нет — 422	out	нужен набор с членами /test/*: acceptance/4 38-assign, 39-recording-target; второй член — @manual
+api-cluster.js	Камера w2c: адресные поля не пишутся, молчание — DEVICE_OFFLINE, движение арендой недоступно, пресет можно	out	нужен набор с членами /test/*: acceptance/4 38-assign, 39-recording-target; второй член — @manual
+api-cluster.js	Правка при молчащем сервере — 409 SERVER_OFFLINE; другой кластер — OTHER_CLUSTER со ссылкой	out	нужен набор с членами /test/*: acceptance/4 38-assign, 39-recording-target; второй член — @manual
+api-cluster.js	Определение модели: логин и пароль необязательны, без них система вправе не назвать	out	нужен набор с членами /test/*: acceptance/4 38-assign, 39-recording-target; второй член — @manual
+api-cluster.js	Приём в домен: отпечаток сверяется, только администратор домена, камера становится записью camera	out	нужен набор с членами /test/*: acceptance/4 38-assign, 39-recording-target; второй член — @manual
+api-cluster.js	Папки без связи с доменом: 409 SERVER_OFFLINE, шаг fail, создание с папкой — 422	out	нужен набор с членами /test/*: acceptance/4 38-assign, 39-recording-target; второй член — @manual
+api-domains.js	Домен: потеря связи — только свой кластер, чужое не удалено, stream.reset; ретрансляторы	out	потеря связи и ретрансляторы на наборе: acceptance/4 40-domain-parts
+api-pages.js	Страницы: каждый перечень из таблицы — limit, cursor, обход целиком, чужой и просроченный курсор	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Страницы: курсор живёт круг вида, просроченный — 422 INVALID_CURSOR	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Страницы: вставка не сдвигает, строки не теряются и не повторяются	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Устройства: только строка, полная запись — по id с folderIds; total только без фильтра	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Устройства: фильтр идёт ограниченным проходом, пустая страница с nextCursor законна, обход находит всё	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Устройства: один член — порядок по имени; ids — до idsMax; папка — постоянная цена, скрытое не показывается	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Строка камеры-кластера: без сервера и родителя, r<revision>, hasChildren — «может быть»	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	/objects/delete: обе формы version, r<revision> не видит правку записи, предел selectMax	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Дерево: верхний уровень, дети, порядок, parentCount, узла нет — 404	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Дерево: цепочки от корня; камера в нескольких папках — несколько; до idsMax	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Папка: состав через POST /folders/{id}/devices, одна операция, откат папок — fail NOT_SUPPORTED, предел selectMax	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Домен: stateSummary — числа не пересекаются, выключенные вне total, отставание на круг, unread, нет круга — нет поля	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Поток: stream.hello первым, события устройств — только по наблюдению и детям, tree.changed, предел watchMax	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Права: снимок без людей, перечни страницами, объекты роли, apply изменениями, чужая правка — 412	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Поиск в сети: страницы у candidates	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Запуски правила: страницы	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Документ V/07.5: чтение, запись целиком, версия, 412 на чужую правку, отказы формы, состояние из пульса	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Документ V/07.5: без admin домена — 403, без связи с доменом — 409	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes

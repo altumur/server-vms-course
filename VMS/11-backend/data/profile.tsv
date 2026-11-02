@@ -1,5 +1,5 @@
 # Профиль возможностей стенда VMS для тестов API consolem (V/11.6 Н1.2): одна строка на операцию контракта
-# consolem.openapi.json @5c1973c. profile: in — тесты операции гоняются; out — операция отвечает 404 NO_ROUTE, тест
+# consolem.openapi.json @23c3e1b. profile: in — тесты операции гоняются; out — операция отвечает 404 NO_ROUTE, тест
 # вне профиля (тест самого NO_ROUTE — в профиле); stand — только на стенде (/test/reset, /test/clock). Читает драйвер стенда; при новой
 # версии контракта таблица сверяется (V/11.2). Набор продукта — one-domain, часы — --clock real (ответ consolem, ADR-0094
 # доп. (4)). Строки in — список capabilities.operations в GET /reference (V/11.2 Н1.5): объявление и таблица сверяются,
@@ -15,7 +15,7 @@ n	method	path	profile	why
 8	GET	/servers	in	переводится (V/11.2)
 9	POST	/servers	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
 10	POST	/servers/probe	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
-11	POST	/servers/assign	out	404 NO_ROUTE (V/11.2): тест, который зовёт операцию, вне профиля
+11	POST	/servers/assign	in	переводится (V/11.4 Н1.14)
 12	GET	/servers/{serverId}	in	переводится (V/11.2)
 13	PATCH	/servers/{serverId}	in	только labels (V/11.4 Н1.19; ADR-0112 доп. (1))
 14	GET	/devices	in	переводится (V/11.2)
@@ -120,3 +120,18 @@ n	method	path	profile	why
 113	PATCH	/archive-watches/{id}	in	переводится (V/11.2)
 114	GET	/rule-prompts	in	переводится (V/11.4 Н1.10; ADR-0112)
 115	POST	/rule-prompts/{promptId}/answer	in	переводится (V/11.4 Н1.10; ADR-0112)
+116	GET	/tree/children	in	переводится (V/11.3 Н1.2б; ADR-0112)
+117	GET	/tree/paths	in	переводится (V/11.3 Н1.2б; ADR-0112)
+118	POST	/folders/{folderId}/devices	in	переводится (V/11.4 Н1.7; ADR-0112)
+119	GET	/access/users	in	переводится (V/11.8 Н1.1; ADR-0112)
+120	GET	/access/groups	in	переводится (V/11.8 Н1.1; ADR-0112)
+121	GET	/access/history	in	переводится (V/11.8 Н1.1; ADR-0112)
+122	GET	/access/cell-history	in	переводится (V/11.8 Н1.1; ADR-0112)
+123	GET	/access/roles/{roleId}/objects	in	переводится (V/11.8 Н1.1; ADR-0112)
+124	PUT	/stream/{clientId}/watch	in	переводится (V/11.5 Н1.2; ADR-0112)
+125	GET	/domains/{domainId}/scenarios	in	переводится (V/11.4 Н1.21; ADR-0112)
+126	PUT	/domains/{domainId}/scenarios	in	переводится (V/11.4 Н1.21; ADR-0112)
+127	GET	/domains/{domainId}/scenarios/status	in	переводится (V/11.4 Н1.21; ADR-0112)
+128	GET	/domains/{domainId}/relays	in	переводится (V/11.3 Н1.2а; ADR-0112)
+129	GET	/domains/{domainId}/relays/{name}	in	переводится (V/11.3 Н1.2а; ADR-0112)
+130	PUT	/devices/{deviceId}/recording-target	in	переводится (V/11.4 Н1.14; ADR-0112)

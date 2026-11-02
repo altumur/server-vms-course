@@ -6,6 +6,7 @@ Domain	name	GET /session	domain.name; поля domain нет — CLUSTER	read
 Domain	license	—	""	const	лицензий consolem нет
 Domain	online	GET /domain	200 или 403 — true; иначе false; вне домена — true	read	связь с доменом (V/11.3 Н1.2а)
 Domain	version	—	"1"	const	видимые поля домена не меняются (online — связь, версию не двигает)
+Domain	stateSummary	GET domain/cam/kept/state-summary	total, offline, silent, unread — целые; at — RFC 3339	read	строки нет, вне домена, 403, неответ — поля нет (V/11.3 Н1.3)
 Server	—	GET /servers + GET /domain	—	read	свой — элемент /servers консоли (P/06.6); чужой — members[].servers[] вида домена, кроме свёрнутых членов (V/11.3 Н1.3 «Server»)
 Server	id	GET /servers + GET /domain	UUID server:<кластер>/<name>	read
 Server	name	GET /servers + GET /domain	name	read
@@ -29,6 +30,7 @@ Server(knocking)	name	GET /domain/members	name	read
 Server(knocking)	class	GET /domain/members	class	read	человек подтверждает приёмом (P/08.3 Н1.1а)
 Server(knocking)	domainId	GET /session	Domain.id	read
 Server(knocking)	allocated	—	false	const
+Server(knocking)	fingerprint	GET /domain/members	fingerprint	read	сверяет человек, подтверждение — AssignRequest.items[].fingerprint (V/11.4 Н1.14)
 Server(knocking)	online	—	false	const	в домен не принят: о связи не судим
 Server(knocking)	ip	—	""	const
 Server(knocking)	port	—	0	const
@@ -40,7 +42,7 @@ Server(knocking)	labels	—	—	none	меток ещё нет
 Server(knocking)	version	GET /domain/members	fingerprint	read	новый ключ — новая версия; times, last версию не двигают
 Server(knocking)	netmask, gateway, dns	—	—	none
 Device(type=camera)	—	cam/cameras + rec/recordings + det/units	—	both	сборка: основная строка type camera, её потоки, записи, детекторы (V/11.4)
-Device(type=camera)	id	cam/cameras	UUID device:<кластер>/cam/cameras/<id>	read
+Device(type=camera)	id	cam/cameras	UUID device:<кластер>/cam/cameras/<id>	read	у всех device: первые 12 бит — раздел члена (V/11.4 Н1.6)
 Device(type=camera)	type	cam/cameras	type	read	слово контракта без перевода; задаёт POST /devices, в DevicePatch поля нет
 Device(type=camera)	parentId	cam/devices	ipsrv хоста есть — его id, иначе null	read	channels сказан или таблица не видна; V/11.3 Н1.3 «Дерево»; при создании — null или этот id
 Device(type=camera)	domainId	GET /session	Domain.id	read
@@ -263,10 +265,10 @@ Folder	id	GET /domain/folders	UUID folder:platform/folders/<id>	read	V/11.4 Н1.
 Folder	name	GET /domain/folders	name	both	запись — PUT /domain/folders/<id>, только администратор домена
 Folder	domainId	GET /session	Domain.id	read
 Folder	parentId	GET /domain/folders	parent	read	"" — null; задаётся при создании
-Folder	deviceIds	GET /folders	members	both	видимые члены этого кластера; запись — GET и PUT /domain/memberof/… по разнице, скрытые не трогаются (V/11.4 Н1.7)
-Folder	version	GET /folders, GET /domain/folders	SHA-256 индекса копии, точка, index дерева	read	вне домена — index (V/11.4 Н1.7)
+FolderDevicesRequest	add, remove	PUT /folders/<id>; в домене PUT /domain/memberof/…	members; folders	write	вместе до selectMax, скрытые на местах (V/11.4 Н1.7)
+Folder	version	GET /folders, GET /domain/folders	index	read	в домене — index дерева (V/11.4 Н1.7)
 FolderCreate	name, domainId, parentId	POST /domain/folders	name, parent	write	domainId иной — NOT_FOUND; вне домена — POST /folders
-FolderPatch	name, deviceIds	PUT /domain/folders/<id>, PUT /domain/memberof/…	name, folders	write	вне домена — PUT /folders/<id>; V/11.4 Н1.7
+FolderPatch	name	PUT /domain/folders/<id>	name	write	вне домена — PUT /folders/<id>; V/11.4 Н1.7
 Archive	—	rec/volumes	—	both	хранилище = один том (строка таблицы rec/volumes) и записи на нём; том edge свёрнутого члена не отдаётся: он storage камеры w2c (V/11.3 Н1.3)
 Archive	id	rec/volumes	UUID archive:<кластер>/rec/volumes/<name>	read	иной, чем у Volume той же строки (V/11.4 Н1.6)
 Archive	name	rec/volumes	name	read	ключ строки: при создании — ключ новой строки; правка — 422 NOT_SUPPORTED, field name
@@ -436,7 +438,8 @@ Reference	volumeStates	—	["ready", "off"]	const	состояния тома (V
 Reference	ipServerSubtypes	—	["nvr", "io", "sip", "mic"]	const	выводятся из описания (V/11.3 Н1.3)
 Reference	serviceTypes, supportLevels, cloudProviders	—	[]	const	служб, уровней поддержки и облачных поставщиков продукта нет; бакет — адрес тома
 Reference	deviceParams	—	{"sensor": [{"key": "norm", "options": ["open", "closed"]}], "relay": [{"key": "norm", "options": ["open", "closed"]}]}	const	debounce, pulse, gain, vol, acodec настройками не бывают: pulse_ms — в действии
-Reference	limits	—	{"ipScanMax": 0, "defaultServerPort": 0}	const	опроса адресов серверов нет (V/11.2 № 10)
+Reference	limits	—	{"ipScanMax": 0, "defaultServerPort": 0, "pageMax": 1000, "idsMax": 200, "selectMax": 500, "watchMax": 200, "scanPartsMax": 8, "scenariosMax": 1000}	const	опроса адресов серверов нет (V/11.2 № 10); страницы — V/11.3 Н1.2б; scanPartsMax — значение на замер; scenariosMax — maxItems V/07.5 Н1.1
+Reference	scenarioKinds	—	["io.input", "silent", "text", "unit"]	const	виды событий cam (kinds манифеста): триггер сценария документа только cam (V/07.5 Н1.2)
 Reference	access	—	{"features":["DEVICES_SETUP","ARCHIVES_SETUP","DETECTORS_SETUP","EDIT_PTZ_PRESETS","USERS_RIGHTS_SETUP"],"levels":{"cam":["FORBID","ONLY_ARCHIVE","MON","ARCHIVE","ARCH_MANAGE","FULL"],"arch":["FORBID","FULL"],"ur":["NO","ALL"]},"defaults":[{"key":"dCam","levels":"cam"},{"key":"dArch","levels":"arch"}],"globals":[],"folderFields":["cam"],"fieldDefaults":{"cam":"dCam","arch":"dArch"},"visibleFrom":{"cam":"ONLY_ARCHIVE","arch":"FULL"},"restrictions":[],"plugins":[],"roleTemplates":[{"id":"commissioner","rights":{"feat":["DEVICES_SETUP","ARCHIVES_SETUP","DETECTORS_SETUP","EDIT_PTZ_PRESETS"],"dCam":"FULL","dArch":"FULL"}},{"id":"operator","rights":{"feat":[],"dCam":"MON","dArch":"FULL"}},{"id":"viewer","rights":{"feat":[],"dCam":"MON"}}],"loginSchedules":[0],"syncTimezones":[],"staleDays":90,"expiringSoonDays":7,"joins":[{"kind":"cam","levels":["MON","ONLY_ARCHIVE"],"level":"ARCHIVE"}],"passwordPolicy":{"minLength":10,"letter":false,"digit":false,"notLogin":false}}	const	только переводимое (V/11.8; V/11.2 Н1.5)
 Reference	capabilities	backend	объявление возможностей	read	operations — «переводится» V/11.2; deviceTypes, foundDeviceTypes, unitTypes — V/11.2 Н1.5; features — ["assist", "streamGrants"]; writableFields — следующая строка
 Reference	capabilities.writableFields	—	{"channel":[],"storage":[],"mic":["name","enabled"],"spk":["name","enabled"],"sensor":["name","enabled","norm"],"relay":["name","enabled","norm","path"],"acfa_sensor":["name","enabled","path"],"acfa_lock":["name","enabled","path"],"acfa_fence":["name","enabled","path"],"det":["name","enabled","sensitivity","params","stream","labels","alarmKinds","zone"],"ipsrv":["name","enabled","short","lat","lon","azimuth","mac","login","password","ip","port","vendor","model","firmware","rtspUrl","labels"],"acfa":["name","enabled","short","ip","port","vendor","model","firmware","rtspUrl","login","password","labels","path"],"eventsrc":["name","enabled","short","ip","port","vendor","model","firmware","rtspUrl","login","password","serverId","cameraId","words","overlayDelayMs","overlayDurationSec","labels"],"camera":["name","enabled","short","lat","lon","azimuth","ip","port","vendor","model","firmware","videoChannel","rtspUrl","res","fps","login","password","archiveId","recordMode","extraArchives","stream","recordDetectorIds","labels","alarmKinds"]}	const	вид → поля DevicePatch (V/11.2 Н1.5); relay общий у ребёнка и единицы
@@ -456,7 +459,7 @@ License	used	GET /domain/cam/books/licence	число licensed	read	камеры
 License	total	GET /domain/cam/books/licence	units	read	на весь домен
 Access	—	двери домена	снимок домена	both	по грантам смотрящего, фильтром (V/11.8 Н1.1, Н1.10)
 Access	version	двери домена	a + SHA-256 индексов	read	V/11.8 Н1.1
-Access	roles, users, groups	двери домена	V/11.8 Н1.1	both	пакет домена; права роли — lines, unit: — пакет на кластер (V/11.8 Н1.5 п. 5а)
+Access	roles	двери домена	V/11.8 Н1.1	both	RoleRow; пакет домена; права роли — lines, unit: — пакет на кластер (V/11.8 Н1.5 п. 5а)
 Access	catalogs	—	[]	const	каталогов нет (ADR-0098 §8)
 Access	streamGrants	GET /domain/grants	строки subject = учётка: *, unit:cam/<id>, folder:<id>	both	V/11.8 Н1.11; * только в кластерах class server
 StreamGrant	account, all, folderIds, deviceIds	GET /domain/grants	V/11.8 Н1.11	both	folderIds читается []
@@ -464,7 +467,7 @@ AccessUser	hasPassword	GET /domain/users	how — password: true	read	V/11.8 Н1.
 AccessUser	passwordByAdmin	GET /domain/users	password_by_admin	read	P/08.4 Н2; pw_by наружу не идёт
 AccessUserWrite	hasPassword, passwordByAdmin	—	—	none	присланное не берётся
 AccessUserWrite	password	domain/batch	fields.password записи kind user	write	V/11.8 Н1.5 п. 6; не хранится у backend
-Access	history, cellHistory	backend/history	entry	both	V/11.8 Н1.7; записи система — из role_spread при чтении (Н1.10)
+AccessHistoryEntry	—	backend/history	entry	both	/access/history, /access/cell-history страницами (V/11.8 Н1.7); записи система — из role_spread при чтении (Н1.10)
 Operation	—	GET /backend/operations/<id>	запись	both	только автор (V/11.4 Н1.8)
 Operation	id	backend/operations	id в форме UUID 8-4-4-4-12	read
 Operation	state, total, done, ok, failed, cancelled	GET /backend/operations/<id>	те же поля	read
@@ -479,7 +482,7 @@ OperationItem	targetId	GET /backend/operations/<id>	items[].body.targetId	read	b
 OperationItem	state, code	GET /backend/operations/<id>	state, code	read	not_run — V/11.4 Н1.8
 OperationItem	version	GET /backend/operations/<id> + части цели	нынешняя версия цели, если отпечаток итога равен снимку	read	завершённая операция, последний ok корня; иначе поля нет (V/11.4 Н1.8)
 OperationItem	createdId	GET /backend/operations/<id>	created_id	read
-OperationItem	params	GET /backend/operations/<id>	field итога incompatible:<id> → {reason: incompatible, with}	read	поля подробностей итог не несёт (V/11.4 Н1.8)
+OperationItem	params	GET /backend/operations/<id>	field итога incompatible:<id> → {reason: incompatible, with}; folders → {reason: folders}	read	поля подробностей итог не несёт (V/11.4 Н1.8, Н1.12)
 DeviceStream	id	cam/cameras	id строки словом	read	V/11.3 Н1.3 «Потоки»
 DeviceStream	name	cam/cameras	profile	both
 DeviceStream	res, fps	cam/cameras	resolution, fps	both	как у камеры; основной — те же поля строки камеры
@@ -539,6 +542,7 @@ DiscoveryCandidate	model	cam/found	model	read
 DiscoveryCandidate	support	cam/found	support	read	ok — драйвер есть (V/01.8 Н1.2)
 DiscoveryCandidate	login, password	—	—	none	не отдаются: поиск их не подбирает (ADR-0103 доп. (1) п. 3)
 DeviceProbeRequest	ip, port, vendor	cam/probes	ip, port, vendor	write	V/01.8 Н1.3
+DeviceProbeRequest	login, password	—	—	none	дальше тела не идут, строка не хранит; предел V/01.8 Н1.3 (V/11.4 Н1.9)
 DeviceProbeResult	model	cam/probe_replies	model	read	первый ответ с model, иначе null (V/11.4 Н1.9)
 ArchiveKind	kind, serverRequired, encryption, check, address, recordModes, replicaSource, serverWide, archiveModes, archiveModeDefault, admits	—	см. Reference archiveKinds	const	V/11.3 Н1.3 «ArchiveKind»
 ArchiveScan	—	detjob/jobs	—	both	своего кластера; вне стопки (V/11.4 Н1.20)
@@ -566,3 +570,40 @@ ArchiveWatch	through	detedge/watches	through state.cursor, RFC 3339; нет — 
 ArchiveWatch	overrunSec	detedge/watches	overrun state.cursor вниз до целого; нет — 0	read	в версию не входит
 ArchiveWatch	version	detedge/watches	индекс строки	read
 StreamMessage	—	GET /changes	—	read	лента изменений — норма B2 (глава 5)
+Device	folderIds	GET /domain/memberof/<кластер>/<ссылка>; вне домена GET /folders?member=	folders	read	только GET /devices/{id} (V/11.3 Н1.3)
+Device	recordingTarget	GET /domain/placement/rec/<ref>	serverId — первый сервер cluster; copies	read	запись — RecordingTargetRequest (V/11.4 Н1.14)
+Device	direct	GET domain	members[].url есть — true; нет — false	read	только камера-кластер (V/11.3 Н1.3)
+RecordingTargetRequest	serverId, copies	PUT, DELETE /domain/placement/rec/<ref>	cluster, origin, copies	write	null снимает назначение (V/11.4 Н1.14)
+DeviceRow	—	/devices страницами	запись; камера-кластер — единица вида	read	V/11.3 Н1.2б
+DeviceRow	id, type, domainId, name, enabled, subtype	GET /devices; GET domain/cam/cameras	поля записи; view	read	камера-кластер: только main пуст, class camera (V/11.3 Н1.2б)
+DeviceRow	online, licenseExceeded	GET /devices; GET domain/cam/cameras	поля записи; phase, state единицы	read	V/11.3 Н1.2б
+DeviceRow	fault	GET /devices; GET domain/cam/cameras	Device.fault; status.device_state	read	V/11.3 Н1.2б
+DeviceRow	version	GET /devices; GET domain/cam/cameras	Device.version; r<revision>	read	/objects/delete принимает обе формы
+DeviceRow	parentId, serverId	GET /devices	поля записи; у камеры-кластера null	read	V/11.3 Н1.2б
+DeviceRow	hasChildren	GET /devices	дети есть; у камеры-кластера true	read	«может быть»: раскрытие читает таблицы члена
+TreeNode	—	GET /tree/children	узел	read	V/11.3 Н1.2б
+TreeNode	id, kind, name, parentId, hasChildren, row	GET /tree/children	запись; unalloc:<domainId> у нераспределённых	read	row — DeviceRow у kind device
+TreePath	id, chains	GET /tree/paths	цепочки от корня	read	GET /domain/memberof/…, GET /domain/folders (V/11.3 Н1.2б)
+TreePathStep	id, kind, name	GET /tree/paths	запись	read
+RelayMember	name	GET domain/topology	элемент relays	read	V/11.3 Н1.2а
+Relay	name	GET domain/relays	relay	read
+Relay	members	GET domain/relays	members	read	GET /domain/relays/<ретранслятор>, до 5000
+ScenarioDoc	version	GET domain/shared/auto	r<rev>	both	V/11.4 Н1.21
+ScenarioDoc	items	GET domain/shared/auto	fields.scenarios.value	both	settings.shared.auto.scenarios, V/07.5 Н1.1
+Scenario	name, enabled	GET domain/shared/auto	name, enabled	both
+Scenario	ratePerMinute	GET domain/shared/auto	rate_per_minute	both
+ScenarioWhen	deviceId	GET domain/shared/auto	(when.member, when.camera)	both	id записи V/11.4 Н1.6
+ScenarioWhen	kind	GET domain/shared/auto	when.kind	both	reference.scenarioKinds
+ScenarioThen	deviceId	GET domain/shared/auto	(then.member, then.camera)	both	id записи V/11.4 Н1.6
+ScenarioThen	action, n, port	GET domain/shared/auto	then.action, then.n, then.port	both
+ScenarioThen	validForSec	GET domain/shared/auto	then.valid_for	both	умолчание 30
+ScenarioStatus	name, phase, reason, since, asked, outcomes, holding	GET auto/heartbeats; GET domain/at/auto/heartbeats	fields.shared	read	кластеры документа (V/07.5 Н1.6; V/11.4 Н1.21)
+ScenarioStatus	decidedWithout	GET auto/heartbeats; GET domain/at/auto/heartbeats	fields.shared, decided_without	read
+RoleRow	objectAccessCount	двери домена	ключи objectAccess	read	V/11.8 Н1.1
+RoleRow	spread	GET /domain	role_spread	read	V/11.8 Н1.10; незрителю поля нет
+RoleObject	objectId, levels	двери домена	строки unit: роли	both	/access/roles/{id}/objects; запись — AccessChange roleObject
+AccessChange	kind, id, op, value	двери домена	черновик Н1.5 п. 1а	write	V/11.8 Н1.5
+AccessApplyRequest	version	двери домена	версия снимка	write	If-Match нет (V/11.8 Н1.5)
+AccessApplyRequest	retryClusters	POST /domain/batch	kind grants, name — кластер	write	V/11.8 Н1.5 п. 5а
+AccessApplyResult	notApplied	POST /domain/batch, PUT /domain/roles/<имя>/lines	отказ записи	read	V/11.8 Н1.5 п. 5а
+AccessApplyResult	clusters	—	число кластеров правки	read	V/11.8 Н1.5 п. 5а
