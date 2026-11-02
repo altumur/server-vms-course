@@ -36,7 +36,7 @@
 
 - **Контракт** — [`consolem.openapi.json`](consolem.openapi.json): `api/openapi.json` репозитория форка
   `github.com/altumur/consolem` на коммите `39ba6a3f0ac8d99add4b24c347dfa7f71bc659aa` (2026-11-02), байты как в
-  репозитории; 142 операции; SHA-256 — [`consolem.openapi.json.sha256`](consolem.openapi.json.sha256) (`a149b96c…8e`).
+  репозитории; 142 операции; SHA-256 — [`consolem.openapi.json.sha256`](consolem.openapi.json.sha256) (`a149b96c…70`).
 - **WebUI** — сборка форка под CSP консоли на том же коммите (повторяемая; V/11.1 Н1.4).
   Входная страница — оболочка [`backend.shell.html`](backend.shell.html): `index.html` сборки байт в байт (SHA-256
   `39d14d7c551772b34abda0d47737731eeef07d415989ffea571eedacb0c6fcb4`; ADR-0094 доп. (8) п. 3). API — под
