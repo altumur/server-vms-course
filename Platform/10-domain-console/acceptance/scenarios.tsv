@@ -57,6 +57,10 @@ scenario	step	request	expect
 10-read-doors-head-and-query	5	holder GET /domain/testsub/counters?cluster=m1&cluster=m1	400
 10-read-doors-head-and-query	6	holder GET /domain/nosuch/counters	404
 10-read-doors-head-and-query	7	holder GET /domain/testsub/nosuch	404
+10-read-doors-head-and-query	8	holder GET /domain/testsub/counters?part=	400
+10-read-doors-head-and-query	9	holder GET /domain/testsub/counters?part=4096	400
+10-read-doors-head-and-query	10	holder GET /domain/testsub/counters?part=3232&cluster=m1	400
+10-read-doors-head-and-query	11	holder GET /domain/testsub/counters?part=0000	200 []
 11-topology-placement-unreadable	1	@domain	ok
 11-topology-placement-unreadable	2	@until 30 holder GET /domain/placement	200 {"rev": 1, "records": {}}
 11-topology-placement-unreadable	3	@on hold @sigterm domain	ok
