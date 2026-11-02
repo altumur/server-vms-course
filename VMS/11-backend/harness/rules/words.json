@@ -57,6 +57,9 @@
   "motion": "motion|движен|\\bsees?\\b|видит",
   "linecross": "line|cross|лини|пересеч",
   "lpr": "plate|license|номер",
+  "disappeared": "disappear|missing|taken away|removed|пропал|пропаж|исчез|унесл",
+  "abandoned": "abandon|left behind|left object|unattended|оставлен|забыт|брошен",
+  "crowd": "crowd|gathering|too many people|толп|скоплен|много людей",
   "silent": "silent|silence|lost contact|offline|замолч|молчит|на связи",
   "segment.lost": "segment|recording.*lost|lost.*recording|куск|запис",
   "io.input": "sensor|trips?\\b|tripped|датчик|сработ|срабат|вход"
@@ -83,5 +86,7 @@
   "armed": "armed|on guard|охран",
   "recording": "recording|is recorded|запись идёт|записыва",
   "online": "online|on line|на связи"
- }
+ },
+ "default_yes": "(no answer|nobody answers|no one answers|not answered|без ответа|не ответ\\w*).{0,40}(anyway|still|go ahead|do it|всё равно|все равно|выполн)",
+ "reset": "back to normal|returns? to normal|when (it|the event) ends|reset|вернётся в норм|вернется в норм|в норму|кончится|закончится|сброс"
 }
