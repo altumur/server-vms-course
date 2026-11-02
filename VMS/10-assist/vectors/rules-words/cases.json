@@ -220,6 +220,10 @@
     "id": 104,
     "name": "Yard tour"
    }
+  ],
+  "servers": [
+   "srv-a",
+   "srv-b"
   ]
  },
  "cases": [
@@ -710,7 +714,7 @@
   {
    "id": "domain-named",
    "note": "весь кластер назван",
-   "request": "When a line is crossed on Fence West, arm all cameras.",
+   "request": "When a line is crossed on Fence West, arm the whole cluster.",
    "row": {
     "when": [
      {
@@ -738,6 +742,74 @@
     ]
    },
    "errors": []
+  },
+  {
+   "id": "domain-all-folder",
+   "note": "«все камеры» папки: цель domain шире просьбы",
+   "request": "When a line is crossed on Fence West, arm all cameras in Perimeter.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "linecross",
+      "unit": "13-linecross"
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "arm",
+      "target": {
+       "include": [
+        {
+         "kind": "domain",
+         "id": "x"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: the request does not ask for the whole cluster"
+   ]
+  },
+  {
+   "id": "domain-all-ru",
+   "note": "то же по-русски",
+   "request": "При пересечении линии на Fence West поставь на охрану все камеры Perimeter.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "linecross",
+      "unit": "13-linecross"
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "arm",
+      "target": {
+       "include": [
+        {
+         "kind": "domain",
+         "id": "x"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: the request does not ask for the whole cluster"
+   ]
   },
   {
    "id": "server-unnamed",
@@ -1636,6 +1708,58 @@
     }
    ],
    "errors": []
+  },
+  {
+   "id": "update-wrong-rule",
+   "note": "включено чужое правило",
+   "request": "Enable the Fence alarm rule.",
+   "edits": [
+    {
+     "table": "scenarios",
+     "op": "update",
+     "id": 101,
+     "row": {
+      "enabled": true
+     }
+    }
+   ],
+   "errors": [
+    "edits[0]: the request does not name the rule Gate barrier on loop"
+   ]
+  },
+  {
+   "id": "update-unnamed-steps",
+   "note": "шаги чужого правила, имя не названо",
+   "request": "On motion raise an alarm on Lobby Cam.",
+   "edits": [
+    {
+     "table": "scenarios",
+     "op": "update",
+     "id": 104,
+     "row": {
+      "then": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "2"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "errors": [
+    "edits[0]: the request does not name the rule Yard tour"
+   ]
   },
   {
    "id": "update-window",

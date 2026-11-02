@@ -76,7 +76,7 @@
  "value_open": "normal|\\bends?\\b|is over|clears?\\b|\\bback\\b|норм|конец|закончи",
  "state_on": "\\bon\\b|включ|\\bpulse\\b|импульс|unlock|открой",
  "state_off": "\\boff\\b|выключ",
- "whole": "whole cluster|entire cluster|all cameras|every camera|весь кластер|всех камер|все камеры|каждой камер",
+ "whole": "whole cluster|entire cluster|whole domain|весь кластер|всего кластера|весь домен",
  "switched_on": "\\benable\\b|\\bactivate\\b|(switch|turn) on (the )?rule|(switch|turn) (it|the rule) on|включи правило|включить правило|запусти правило",
  "not_armed": "disarm|not armed|без охраны|снят",
  "conditions": {
