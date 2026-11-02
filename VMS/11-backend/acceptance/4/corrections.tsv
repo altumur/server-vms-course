@@ -37,3 +37,4 @@ date	sample	fix	languages
 2026-11-02	4/scenarios.tsv: 16-record шаг 34	sched условием time (ADR-0112 доп. (6) п. 1)	all
 2026-11-02	4/scenarios.tsv: 10-archives шаги 5, 15, 16; 17-rules шаг 11	sched в справочнике, retention_days тома (ADR-0112 доп. (6))	all
 2026-11-02	4/scenarios.tsv: 10-archives шаг 54	умолчание тома новой записи: тест формы вне профиля	all
+2026-11-02	4/scenarios.tsv: 10-archives шаг 14	срок у тома есть: отказ только у 0 (ADR-0112 доп. (6) п. 2)	all
