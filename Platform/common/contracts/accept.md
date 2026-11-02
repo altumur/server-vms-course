@@ -251,7 +251,7 @@ order:         по порядку:
   2:           партия годна: сбор «из ничего» закрыт или не идёт (P/08.8 Н1.8а), pinned тела = this, now < until, revoked нет, used < n, отпечаток key не в refused; ключ не малого порядка и не в revoked_members набора; имя свободно (записи нет или она без key с revoked_keys);
                строка раздела не полна; предел приёма P/08.3 Н3 «принять члена» шаги 5а, 5б; via партии есть в domain/member-rows и строка domain/relay-members/<via> не полна
                всё да → шаг 3; иначе → шаг 4
-  3:           приём партии: одним пакетом — Entry {how: "admitted", since, class: camera, by: <партия.by>, key, via?, batch} в строке раздела (подпись, rev + 1), used + 1 в строке партии, domain/member-count,
+  3:           приём партии: одним пакетом — Entry {how: "admitted", since, class: camera, by: <партия.by>, key, via?, batch} в строке раздела (подпись, rev + 1), used + 1 в строке партии, domain/member-count или счёт раздела (P/08.8 Н1.8а счёт),
                domain/relay-members/<via> при via; CAS — до 3 раз, затем шаг 4; журнал domain.member.admitted.batch {batch, name, fingerprint}; стук этого имени убирается из domain/knocks; ответ — тот же 404 стука: член узнаёт
                приём следующим проходом, отчёт уже проходит
   4:           стук лежит: первый стук этого имени с этим ключом пишется в domain/knocks/<раздел> {key, pinned, at, batch, class: camera}, строка до потолка P/01.1 Н1, сверх — память KNOCKS; ждёт человека (P/08.3 Н3 «принять члена»)
