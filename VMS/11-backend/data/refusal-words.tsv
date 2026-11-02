@@ -22,6 +22,7 @@ devices	422	VALIDATION_FAILED	ip	11.4 Н4: 409 unique (адрес камеры);
 devices	422	VALIDATION_FAILED	rtspUrl	11.3 Н4: создание без rtspUrl и без vendor, model
 devices	422	VALIDATION_FAILED	videoChannel	11.3 Н4: videoChannel меньше 1
 devices	422	VALIDATION_FAILED	detectorKind	11.4 Н1.2: создание детектора без вида
+devices	422	VALIDATION_FAILED	noDetector	11.3 Н1.2б: вид вне перечня контракта
 devices	422	VALIDATION_FAILED	<поле>	11.4 Н4: 409 ref, must_match, fixed
 devices	422	VALIDATION_FAILED	copies	11.4 Н1.14: повтор, сервера нет, два сервера одного кластера, сервер кластера основного
 devices	422	VALIDATION_FAILED	-	11.4 Н4: 413 batch too large
