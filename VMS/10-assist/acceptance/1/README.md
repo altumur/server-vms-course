@@ -1,7 +1,7 @@
 # Приёмка V/10.1 — модель — единица и воркер
 
 Норма главы — [`10.1-assist.norms.md`](../../spec/10.1-assist.norms.md) Н5. Стенд и словарь — [общий README приёмки
-VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `60307209`).
+VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `ab318f49`).
 
 ## Подготовка
 
