@@ -1804,6 +1804,43 @@
    ]
   },
   {
+   "id": "window-all-rules",
+   "note": "окно без rules глушит все правила",
+   "request": "Create a maintenance window for the Fence alarm rule at Night.",
+   "edits": [
+    {
+     "table": "windows",
+     "op": "create",
+     "row": {
+      "id": "w",
+      "title": "x",
+      "schedule": "11111111-0000-4000-8000-000000000001"
+     }
+    }
+   ],
+   "errors": [
+    "edits[0]: windows.rules: the request does not ask for the whole cluster"
+   ]
+  },
+  {
+   "id": "window-whole",
+   "note": "весь кластер назван",
+   "request": "Create a maintenance window for the whole cluster at Night.",
+   "edits": [
+    {
+     "table": "windows",
+     "op": "create",
+     "row": {
+      "id": "w",
+      "title": "x",
+      "schedule": "11111111-0000-4000-8000-000000000001",
+      "rules": []
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
    "id": "orphan-schedule",
    "note": "новое расписание без правила",
    "request": "On motion on Lobby Cam record it for 2 minutes, from 08:00 to 20:00.",
