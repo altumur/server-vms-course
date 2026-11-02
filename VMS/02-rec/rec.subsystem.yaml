@@ -251,6 +251,7 @@ tables:
       server:           {type: string}               # local, edge, a backup or incidents disk: whose; network: empty
       # its SIZE: the ring the engine formats it as — what lets one partition hold two volumes
       quota_bytes:      {type: int, required: true, schema: {minimum: 1}}
+      retention_days:   {type: int, schema: {minimum: 1}}   # the default of a new recording here; no field — 30; existing recordings keep theirs
       access_key:       {type: string}               # a bucket's key ID — which key, not the key: shown
       access_secret:    {type: string, bound_to: [url]}   # sealed, never shown, kept only for the address it was given for
       enabled:          {type: bool, default: true}
@@ -513,6 +514,7 @@ display:
     archive.keep.uncopied: сохранённое ещё не скопировано
     archive.keep.garbled: метка «сохранить» не читается
     segment.lost: потерян кусок записи
+    replica.lost: копия отстала, источник стёр раньше
 # The recorders on the domain (V/02.9): a recording is the domain's by its camera's `ref` (the assignment
 # `domain/placement/rec/<ref>`: the cluster of the primary, the camera's cluster as origin, the clusters of backups as
 # copies). Each recorder contributes its held recordings to the book of primaries — with the addresses of its cluster's
@@ -526,7 +528,7 @@ domain:
   view_pulse: [disks]
   view_tables:
     recordings: [cam, ref, stream, retention_days, enabled, home, when, replica_from]
-    volumes: [kind, url, server, quota_bytes, access_key, enabled, shrink_confirmed, when, admits, held_by]
+    volumes: [kind, url, server, quota_bytes, retention_days, access_key, enabled, shrink_confirmed, when, admits, held_by]
   books:
     primaries: {from: rec/primaries/, key: ref, pick: all, to: to, show: [recording, running, role, coverage, retention_days, when, home]}
     polls: {from: rec/polls/, key: ref, pick: unique, to: to}
@@ -544,7 +546,7 @@ domain:
   edit: [name, cam, ref, stream, retention_days, enabled, home, when, replica_from]
   # A volume, whole (P/02.1, link 152): a box of one cluster gets its volumes this way, and its secret sealed.
   edit_tables:
-    volumes: [name, kind, url, server, quota_bytes, access_key, enabled, shrink_confirmed, when, admits]
+    volumes: [name, kind, url, server, quota_bytes, retention_days, access_key, enabled, shrink_confirmed, when, admits]
   edit_secrets:
     volumes: [access_secret]
 # A lost stretch of a recording is said as soon as the engine says it (V/02.3 Н1.6), and an engine says it on many frames
@@ -552,6 +554,9 @@ domain:
 events:
   suppress:
     segment.lost:
+      window: 60
+      by: [cam, recording]
+    replica.lost:
       window: 60
       by: [cam, recording]
 console:
