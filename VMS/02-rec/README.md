@@ -40,7 +40,7 @@
 - **Семьи данных** — своё содержимое в открытых местах семей платформы, которое читают другие процессы и манифест не
   выражает, — [`data/`](data/): слова пульса `rec-heartbeat-words` (`ingest`, `url`, `volume`, `stream.lagging`, `written_through`
   элемента записи; место — корень пульса, пустой указатель), `value` элементов книг `primaries-entry`, `polls-entry`,
-  `upstream-entry` (место `/*/entries/*/value`; `#copy` — копия у члена, `#member` — строка члена у держателя домена) —
+  `upstream-entry` (место `/*/entries/*/value`; `#copy` — копия у члена, `#member` — строка члена у держателя домена; у `primaries` только `#member`: книга всем, ключи одни) —
   форма, слои, исходы по читателям; строки — в каталоге VMS [`../common/data/catalog.tsv`](../common/data/catalog.tsv)
   (колонка `place`). Объекты `rec/ingest/*`, `rec/sealed/*`, `rec/used/*`, `rec/taken/*` (`objects` манифеста) и вклады
   `rec/<книга>/<слот>` — форма манифеста, семьёй VMS не судятся; свидетель `rec/polled/<слот>` читает консоль домена по

@@ -57,7 +57,7 @@ lease: {unconfirmed_max: forever}
 # the book `domain/auto/asks`. Here a worker reads what its spec
 # names. A book is a member's copy by its exact name; the domain-holder cluster has no copy and reads its own row
 # `domain/<sub>/<book>/<CLUSTER>` — the rights generator grants that one row (P/02.5 Н1.4); only the copy is declared.
-worker: {exec: /usr/lib/rec/worker, writes: [wanted], deletes: [recordings], reads: [cam/cameras/, cam/heartbeats/, det/units/, domain/cam/sources, domain/rec/primaries, domain/rec/upstream, domain/placed/rec/, domain/member-list/, domain/member-topology, domain/topology, domain/view], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 47}   # requests: a camera's pusher files cam/requests/rec.ask-<id> as the recorder (V/02.9 Н1.2)
+worker: {exec: /usr/lib/rec/worker, writes: [wanted], deletes: [recordings], reads: [cam/cameras/, cam/heartbeats/, det/units/, domain/cam/sources, domain/rec/primaries/, domain/rec/upstream, domain/placed/rec/, domain/member-list/, domain/member-topology, domain/topology, domain/view], requests: [cam], uses: [cam.shm, rec.obsd], creates: [{sub: detjob, rows: jobs, key: "{cam}-{rec}-{kind}-{from}-{to}"}], stop_timeout: 47}   # requests: a camera's pusher files cam/requests/rec.ask-<id> as the recorder (V/02.9 Н1.2)
 # A recording is ABOUT a camera (the boundary's step 2): its events are also the camera's (the line's `of`), a grant
 # on camera 7 takes in its recordings, and a `labels:` grant reads the camera's labels — a recording's own say where
 # it may run, not whose it is. `cam` is fixed: a recording does not move to another camera (the review's fourth pass).
@@ -530,7 +530,7 @@ domain:
     recordings: [cam, ref, stream, retention_days, enabled, home, when, replica_from]
     volumes: [kind, url, server, quota_bytes, retention_days, access_key, enabled, shrink_confirmed, when, admits, held_by]
   books:
-    primaries: {from: rec/primaries/, key: ref, pick: all, to: to, show: [recording, running, role, retention_days, when, home]}
+    primaries: {from: rec/primaries/, key: ref, pick: all, to: "*", show: [recording, running, role, retention_days, when, home]}
     polls: {from: rec/polls/, key: ref, pick: unique, to: to}
     upstream: {from: rec/upstream/, key: relay, pick: unique, to: to}
   tokens:

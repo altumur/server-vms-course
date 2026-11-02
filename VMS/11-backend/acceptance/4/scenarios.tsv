@@ -1042,7 +1042,7 @@ scenario	step	request	expect
 42-timeline	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
 42-timeline	5	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "$dom"}]}
 42-timeline	6	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.1", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.2", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"failed": []}
-42-timeline	7	member m1 console2 GET /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/timeline	200 {"items": [], "unavailable": []}
+42-timeline	7	@until 180 member m1 console2 GET /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/timeline	200 {"items": [], "unavailable": []}
 42-timeline	8	member m1 console2 GET /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/playback?at=1970-01-01T00:16:40Z	404 {"code": "NOT_FOUND"}
 42-timeline	9	member m1 console2 GET /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/playback?at=x	422 {"code": "VALIDATION_FAILED", "field": "at"}
 42-timeline	10	member m1 console2 GET /api/devices/00000000-0000-4000-8000-000000000000/timeline	404 {"code": "NOT_FOUND"}

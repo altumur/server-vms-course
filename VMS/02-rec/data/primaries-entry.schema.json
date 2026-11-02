@@ -1,19 +1,11 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "value элемента книги domain/rec/primaries (копия у члена, #copy) и domain/rec/primaries/<член> (у держателя домена, #member), V/02.9 Н1.6; поля «пусто, ложь, нет» отсутствуют, кроме running и ingest (пустой — [])",
+ "description": "value элемента книги domain/rec/primaries/*/<раздел>, ключи одни у держателя и у копии, V/02.9 Н1.6; поля «пусто, ложь, нет» отсутствуют, кроме running и ingest (пустой — [])",
  "type": "object",
  "properties": {
   "ref": {
    "type": "string",
    "minLength": 1
-  },
-  "to": {
-   "type": "array",
-   "minItems": 1,
-   "items": {
-    "type": "string",
-    "minLength": 1
-   }
   },
   "recording": {
    "type": "string",
@@ -60,7 +52,6 @@
  },
  "required": [
   "ref",
-  "to",
   "recording",
   "running",
   "role",
