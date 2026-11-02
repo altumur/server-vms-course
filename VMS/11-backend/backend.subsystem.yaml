@@ -124,7 +124,7 @@ door:
       - rec/keeps                    # holds (V/11.4 Н1.23)
       - GET rec/heartbeats           # the words of a hold in the pulse
       - rec/requests                 # filing a fetch (V/11.4 Н1.25)
-      - marks                        # a bookmark (V/11.4 Н1.24; P/06.4 Н2)
+      # `marks` waits for the list of P/06.3 Н1.9: the manifest form refuses it until then (V/11.4 Н1.24)
       - GET domain/rec/books/primaries # recordings of other clusters, this member's copy (V/11.4 Н1.22)
       - GET domain/at/rec/where      # the door of a recording of another cluster
       - GET domain/at/rec/keeps
