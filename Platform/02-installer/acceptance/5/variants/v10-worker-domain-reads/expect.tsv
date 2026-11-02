@@ -2,6 +2,7 @@
 # - domain/placed/va/ в worker.reads даёт и domain/placed/va/*, и domain/placement/va/*;
 # - копия своей книги domain/va/tallies в worker.reads даёт точный ключ domain/va/tallies/local (CLUSTER=local по умолчанию), но не domain/va/tallies/other (C02-OWN-BOOK-HOLDER-01);
 # - источники собираемых книг domain.books.<книга>.from: va/notes/ даёт write на va/notes/*, одиночная строка va/rolls даёт write на va/rolls, но не на va/rolls/*;
+# - контроллер снимает вклады семьи источника книги при выводе сервера: delete va/notes/* (ADR-0113 доп. (39)), одиночная строка va/rolls — нет;
 # - условные чтения vaworker (и отсутствие их у vbworker): domain/shared (при domain.shared), domain/topology и domain/member-topology (при domain.tokens.<вид>.unit), domain/grants (при door.routes).
 role	action	key	expect
 vaworker	read	domain/placed/va/u1	allow
@@ -20,3 +21,5 @@ vbworker	read	domain/topology	deny
 vbworker	read	domain/member-topology	deny
 vaworker	read	domain/grants	allow
 vbworker	read	domain/grants	deny
+vacontroller	delete	va/notes/w-1	allow
+vacontroller	delete	va/rolls	deny
