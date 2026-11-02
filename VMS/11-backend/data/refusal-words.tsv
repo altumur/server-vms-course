@@ -128,3 +128,16 @@ access	412	VERSION_MISMATCH	-	11.8 Н4: версия снимка, 412 conflict;
 test	404	TEST_SUPPORT_OFF	-	11.2, 11.6 Н4
 test	422	NOT_SUPPORTED	fixturePatch	11.6 Н1.3, Н4
 test	422	NOT_SUPPORTED	actAs	11.6 Н1.3, Н4
+*	422	INVALID_CURSOR	-	11.3 Н1.2б: cursor просрочен, чужой
+*	422	VALIDATION_FAILED	limit	11.3 Н1.2б: limit вне 1…pageMax
+devices	422	VALIDATION_FAILED	ids	11.3 Н1.2б, 11.5 Н1.2: ids больше idsMax, watchMax
+folders	422	VALIDATION_FAILED	add	11.4 Н1.7: состав больше selectMax, вне вида, цепочка
+folders	422	VALIDATION_FAILED	remove	11.4 Н1.7: вне вида
+objects	422	VALIDATION_FAILED	items	11.4 Н1.5: больше selectMax
+devices	409	OTHER_CLUSTER	-	11.4 Н1.13: живое, поворот, пресет, params.url
+devices	-	FINGERPRINT_MISMATCH	-	11.4 Н1.14: элемент failed
+operations	-	NOT_SUPPORTED	-	11.4 Н1.12: шаг отката, params.reason: folders
+devices	409	NAME_TAKEN	items[i].name	11.4 Н1.21
+devices	422	VALIDATION_FAILED	items	11.4 Н1.21: форма, больше scenariosMax
+access	422	VALIDATION_FAILED	changes[i]	11.8 Н1.5 п. 1а
+access	422	VALIDATION_FAILED	retryClusters	11.8 Н1.5 п. 5а
