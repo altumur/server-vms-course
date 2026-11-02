@@ -1,11 +1,11 @@
-# The assistant (`assist`, V/10): an admin types "turn on motion recording on the third-floor cameras, keep 14 days",
-# a model proposes a plan of row edits, the page checks it and the admin applies it through the console's own doors.
+# The assistant's model service (`assist`, V/10): a local model behind a door, with no rights of its own. The turn, the
+# tools and the check live in `backend` (V/11.9–V/11.13); this subsystem only answers one model step at a time.
 #
 # A unit is one model instance — `assist/models/<name>` — on a server labelled for its memory. Its holder is a platform
 # worker (P/03: placement, epoch, lease, heartbeat, a door) with the model server as its child process on a unix socket
 # nobody else can open (V/10.1). The worker has no rights of its own: it reads no other subsystem's rows, holds nobody's
-# credentials, and what it is told comes from the page under the admin's session — the page runs the turn, the tools
-# and the check (V/10.3–V/10.5); the worker only answers one model step at a time (V/10.2).
+# credentials, and what it is told comes from its client — `backend`, by a ticket, under the admin's rights; the worker
+# only answers one model step at a time (V/10.2).
 #
 # Why a unit and not a daemon on every server: the model is twelve gigabytes of memory, and placement by a label is
 # how the platform already says "this server, not that one". Why the model server is a child and not a part
@@ -14,7 +14,7 @@ name: assist
 # The slot a worker of this subsystem makes, `m-<n>`, and the variable naming the one it is started under beside
 # `WORKER_NAME` (`runtime.slot`).
 slot: {prefix: m, name_env: ASSIST_NAME}
-# Nothing to read, write or ask of anybody: the page brings everything a step needs.
+# Nothing to read, write or ask of anybody: the client brings everything a step needs.
 worker: {exec: /usr/lib/assist/worker, stop_timeout: 30}
 # Not a moment past its lease's end: a holder that lost its row keeps twelve gigabytes and a model nobody may reach —
 # fenced, the model server is stopped before the slot is given back (V/10.1 Н1.3). (The platform's default; said so it
@@ -45,8 +45,8 @@ placement:
   constraint: labels-subset          # a model's labels ⊆ its server's labels
   tie_break:  most-free-capacity
 snapshot: [labels]
-# The model's door (V/10.2): a page asks the console for its address and a door token (`GET /assist/where/<name>`,
-# `view` on the model row) and talks to the holder itself — step by step, each answer in a fraction of a second or a
+# The model's door (V/10.2): a client asks the console for its address and a door token (`GET /assist/where/<name>`,
+# `view` on the model row) and talks to the holder itself, or `backend` calls it through the console by a ticket — step by step, each answer in a fraction of a second or a
 # long poll shorter than the console's limits. The admin's credentials never reach the worker. Who may talk to the
 # model is `view` on its row — the door token says so; no `rights` key is needed (`rights.routes` is about rows, tables
 # and the console's `door.pass`, ADR-0093 доп. (2) п. 4).

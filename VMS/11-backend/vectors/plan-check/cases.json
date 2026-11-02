@@ -2,7 +2,7 @@
  {
   "id": "tools-short-forms",
   "console": "stand3",
-  "rule": "V/10.4 Н1.5 find_units: короткие записи условий",
+  "rule": "V/11.10 Н1.5 find_units: короткие записи условий",
   "source": "lesson",
   "texts": [
    "x"
@@ -36,7 +36,7 @@
  {
   "id": "tools-condition-errors",
   "console": "stand3",
-  "rule": "V/10.4 Н1.5 find_units: ошибки условий",
+  "rule": "V/11.10 Н1.5 find_units: ошибки условий",
   "source": "lesson",
   "texts": [
    "x"
@@ -138,7 +138,7 @@
  {
   "id": "tools-ops",
   "console": "stand3",
-  "rule": "V/10.4 Н1.5 сравнение: каждый op",
+  "rule": "V/11.10 Н1.5 сравнение: каждый op",
   "source": "lesson",
   "texts": [
    "x"
@@ -427,7 +427,7 @@
  {
   "id": "tools-in-scalar",
   "console": "stand3",
-  "rule": "V/10.4 Н1.5 in, not_in: значение не список — как список из одного",
+  "rule": "V/11.10 Н1.5 in, not_in: значение не список — как список из одного",
   "source": "lesson",
   "texts": [
    "x"
@@ -472,7 +472,7 @@
  {
   "id": "tools-empty-list",
   "console": "stand3",
-  "rule": "V/10.4 Н1.5 пустой список и inherit",
+  "rule": "V/11.10 Н1.5 пустой список и inherit",
   "source": "lesson",
   "texts": [
    "x"
@@ -518,7 +518,7 @@
  {
   "id": "tools-about",
   "console": "stand3",
-  "rule": "V/10.4 Н1.5 about.<поле>, inherited связанной",
+  "rule": "V/11.10 Н1.5 about.<поле>, inherited связанной",
   "source": "lesson",
   "texts": [
    "x"
@@ -555,7 +555,7 @@
  {
   "id": "tools-hints",
   "console": "stand3",
-  "rule": "V/10.4 Н1.5 подсказки 1–4",
+  "rule": "V/11.10 Н1.5 подсказки 1–4",
   "source": "lesson",
   "texts": [
    "x"
@@ -641,7 +641,7 @@
  {
   "id": "tools-hint-unreadable",
   "console": "stand3",
-  "rule": "V/10.4 Н1.2 нечитаемая другая подсистема — подсказка 5",
+  "rule": "V/11.10 Н1.2 нечитаемая другая подсистема — подсказка 5",
   "source": "lesson",
   "texts": [
    "x"
@@ -669,7 +669,7 @@
  {
   "id": "tools-about-unreadable",
   "console": "stand3",
-  "rule": "V/10.4 Н1.2 нечитаемая связанная подсистема — ошибка вызова",
+  "rule": "V/11.10 Н1.2 нечитаемая связанная подсистема — ошибка вызова",
   "source": "lesson",
   "texts": [
    "x"
@@ -697,7 +697,7 @@
  {
   "id": "tools-read-error",
   "console": "stand3",
-  "rule": "V/10.4 Н1.2 ошибка чтения — ошибка, не пустой результат",
+  "rule": "V/11.10 Н1.2 ошибка чтения — ошибка, не пустой результат",
   "source": "lesson",
   "texts": [
    "x"
@@ -719,7 +719,7 @@
  {
   "id": "tools-can-edit",
   "console": "stand3",
-  "rule": "V/10.4 Н1.2 can_edit — may с возможностью admin",
+  "rule": "V/11.10 Н1.2 can_edit — may с возможностью admin",
   "source": "lesson",
   "texts": [
    "x"
@@ -763,7 +763,7 @@
  {
   "id": "tools-break-glass",
   "console": "stand3",
-  "rule": "V/10.4 Н1.2 аварийная сессия — may: право есть",
+  "rule": "V/11.10 Н1.2 аварийная сессия — may: право есть",
   "source": "lesson",
   "texts": [
    "x"
@@ -795,7 +795,7 @@
  {
   "id": "tools-manifest-table",
   "console": "stand3",
-  "rule": "V/10.4 Н1.5 list_subsystems, get_manifest, list_table",
+  "rule": "V/11.10 Н1.5 list_subsystems, get_manifest, list_table",
   "source": "lesson",
   "texts": [
    "x"
@@ -841,7 +841,7 @@
  {
   "id": "tools-ask",
   "console": "stand3",
-  "rule": "V/10.4 Н1.6 ask_admin, refuse — пустые",
+  "rule": "V/11.10 Н1.6 ask_admin, refuse — пустые",
   "source": "lesson",
   "texts": [
    "x"
@@ -873,7 +873,7 @@
  {
   "id": "plan-valid",
   "console": "stand3",
-  "rule": "V/10.5 Н1.6 valid: true и diff",
+  "rule": "V/11.11 Н1.6 valid: true и diff",
   "source": "lesson",
   "texts": [
    "Switch tally Gate-1 to \"loud\" mode."
@@ -906,7 +906,7 @@
  {
   "id": "plan-form",
   "console": "stand3",
-  "rule": "V/10.5 Н1.3 форма: объект, ключи, unit, единица, поле, имя, fixed, blob, тип, enum, required, why",
+  "rule": "V/11.11 Н1.3 форма: объект, ключи, unit, единица, поле, имя, fixed, blob, тип, enum, required, why",
   "source": "lesson",
   "texts": [
    "Gate-1 mode loud, of Oak, name G, mask, step 3, why"
@@ -990,7 +990,7 @@
  {
   "id": "plan-coerce",
   "console": "stand3",
-  "rule": "V/10.5 Н1.3 приведение строк к типу",
+  "rule": "V/11.11 Н1.3 приведение строк к типу",
   "source": "lesson",
   "texts": [
    "Set step of Gate-1 to 3 and turn off Gate-1"
@@ -1030,7 +1030,7 @@
  {
   "id": "plan-from-empty",
   "console": "stand3",
-  "rule": "V/10.5 Н1.3 from: не то, пустой список, inherit",
+  "rule": "V/11.11 Н1.3 from: не то, пустой список, inherit",
   "source": "lesson",
   "texts": [
    "Set keep days of Gate-1 to 10 and step 2, add flag audit"
@@ -1079,7 +1079,7 @@
  {
   "id": "plan-empty-edit",
   "console": "stand3",
-  "rule": "V/10.5 Н1.3 пустая правка",
+  "rule": "V/11.11 Н1.3 пустая правка",
   "source": "lesson",
   "texts": [
    "Set Gate-2 to loud mode"
@@ -1111,7 +1111,7 @@
  {
   "id": "plan-twice",
   "console": "stand3",
-  "rule": "V/10.5 Н1.3 поле дважды в строке",
+  "rule": "V/11.11 Н1.3 поле дважды в строке",
   "source": "lesson",
   "texts": [
    "Set Gate-1 to loud mode"
@@ -1149,7 +1149,7 @@
  {
   "id": "plan-rights",
   "console": "stand3",
-  "rule": "V/10.5 Н1.3 право записи — возможность admin",
+  "rule": "V/11.11 Н1.3 право записи — возможность admin",
   "source": "lesson",
   "texts": [
    "Set Yard-1 to plain mode"
@@ -1181,7 +1181,7 @@
  {
   "id": "plan-secret-ok",
   "console": "stand3",
-  "rule": "V/10.6 Н1.3 метка секрета — целиком в to поля *_secret",
+  "rule": "V/11.12 Н1.3 метка секрета — целиком в to поля *_secret",
   "source": "lesson",
   "texts": [
    "For tally Office-2 change the feed password."
@@ -1219,7 +1219,7 @@
  {
   "id": "plan-secret-bad",
   "console": "stand3",
-  "rule": "V/10.6 Н1.3 метка секрета: значение, номер не введён, не *_secret, в why, в summary, две разные поля, слот пилота",
+  "rule": "V/11.12 Н1.3 метка секрета: значение, номер не введён, не *_secret, в why, в summary, две разные поля, слот пилота",
   "source": "lesson",
   "texts": [
    "For tally Office-2 change the feed password and the secret note and the feed login."
@@ -1423,7 +1423,7 @@
  {
   "id": "plan-no-selection",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 1 нет отбора — вопрос",
+  "rule": "V/11.11 Н1.4 п. 1 нет отбора — вопрос",
   "source": "lesson",
   "texts": [
    "Switch Gate-1 to loud mode"
@@ -1452,7 +1452,7 @@
  {
   "id": "plan-named-not-said",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 1 имя named — имя в тексте",
+  "rule": "V/11.11 Н1.4 п. 1 имя named — имя в тексте",
   "source": "lesson",
   "texts": [
    "Remove the label floor2 from all counters."
@@ -1487,7 +1487,7 @@
  {
   "id": "plan-edit-sub",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 2 edit_sub",
+  "rule": "V/11.11 Н1.4 п. 2 edit_sub",
   "source": "lesson",
   "texts": [
    "Switch Gate-1 and Spruce"
@@ -1545,7 +1545,7 @@
  {
   "id": "plan-value-not-named",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 4 значение не названо; ответ «да» не называет",
+  "rule": "V/11.11 Н1.4 п. 4 значение не названо; ответ «да» не называет",
   "source": "lesson",
   "texts": [
    "Change the mode of Gate-1",
@@ -1578,7 +1578,7 @@
  {
   "id": "plan-value-in-answer",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 4 значение названо ответом админа",
+  "rule": "V/11.11 Н1.4 п. 4 значение названо ответом админа",
   "source": "lesson",
   "texts": [
    "Change the mode of Gate-1",
@@ -1611,7 +1611,7 @@
  {
   "id": "plan-value-enum-label",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 4 строка подписью варианта",
+  "rule": "V/11.11 Н1.4 п. 4 строка подписью варианта",
   "source": "lesson",
   "texts": [
    "Make Gate-2 quiet (mode)"
@@ -1643,7 +1643,7 @@
  {
   "id": "plan-value-name-in",
   "console": "stand3",
-  "rule": "V/10.5 Н1.2 имя в тексте: z2 не в z21",
+  "rule": "V/11.11 Н1.2 имя в тексте: z2 не в z21",
   "source": "lesson",
   "texts": [
    "Move Gate-1 to zone z21"
@@ -1696,7 +1696,7 @@
  {
   "id": "plan-number",
   "console": "stand3",
-  "rule": "V/10.5 Н1.2 числа текста без имён единиц",
+  "rule": "V/11.11 Н1.2 числа текста без имён единиц",
   "source": "lesson",
   "texts": [
    "Set the step of Store-2 to 2"
@@ -1728,7 +1728,7 @@
  {
   "id": "plan-number-in-name",
   "console": "stand3",
-  "rule": "V/10.5 Н1.2 число внутри имени единицы не называет",
+  "rule": "V/11.11 Н1.2 число внутри имени единицы не называет",
   "source": "lesson",
   "texts": [
    "Set the step of Store-2"
@@ -1760,7 +1760,7 @@
  {
   "id": "plan-like-unit",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 4 как у единицы",
+  "rule": "V/11.11 Н1.4 п. 4 как у единицы",
   "source": "lesson",
   "texts": [
    "Set the step of Gate-1 like Store-1"
@@ -1792,7 +1792,7 @@
  {
   "id": "plan-like-related",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 4 как у связанной",
+  "rule": "V/11.11 Н1.4 п. 4 как у связанной",
   "source": "lesson",
   "texts": [
    "Set the step of Shop-2 to its counter's step"
@@ -1824,7 +1824,7 @@
  {
   "id": "plan-bool-polarity",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 4 bool полярностью: есть, нет слова, обе",
+  "rule": "V/11.11 Н1.4 п. 4 bool полярностью: есть, нет слова, обе",
   "source": "lesson",
   "texts": [
    "Turn off tally Gate-1"
@@ -1856,7 +1856,7 @@
  {
   "id": "plan-bool-no-word",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 4 bool без слова полярности",
+  "rule": "V/11.11 Н1.4 п. 4 bool без слова полярности",
   "source": "lesson",
   "texts": [
    "Change active of tally Gate-1"
@@ -1888,7 +1888,7 @@
  {
   "id": "plan-bool-both",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 4 bool с обеими полярностями",
+  "rule": "V/11.11 Н1.4 п. 4 bool с обеими полярностями",
   "source": "lesson",
   "texts": [
    "Turn off tally Gate-1 and turn on Store-1"
@@ -1920,7 +1920,7 @@
  {
   "id": "plan-clear",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 4 снятие значения словом clear",
+  "rule": "V/11.11 Н1.4 п. 4 снятие значения словом clear",
   "source": "lesson",
   "texts": [
    "Clear the zone of Gate-1"
@@ -1973,7 +1973,7 @@
  {
   "id": "plan-field-not-named",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 6 поле не названо; слово selection.fields",
+  "rule": "V/11.11 Н1.4 п. 6 поле не названо; слово selection.fields",
   "source": "lesson",
   "texts": [
    "Set Gate-1 to 7"
@@ -2032,7 +2032,7 @@
  {
   "id": "plan-short-words",
   "console": "stand3",
-  "rule": "V/10.5 Н1.2 короткое слово: tag ~ tags",
+  "rule": "V/11.11 Н1.2 короткое слово: tag ~ tags",
   "source": "lesson",
   "texts": [
    "Add the tag vip to tally Office-1."
@@ -2066,7 +2066,7 @@
  {
   "id": "plan-list-verb",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 5 правка списка без глагола",
+  "rule": "V/11.11 Н1.4 п. 5 правка списка без глагола",
   "source": "lesson",
   "texts": [
    "Make all tallies tagged night loud"
@@ -2115,7 +2115,7 @@
  {
   "id": "plan-condition-not-named",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 7 условие не названо",
+  "rule": "V/11.11 Н1.4 п. 7 условие не названо",
   "source": "lesson",
   "texts": [
    "Set mode loud for the tallies on the second floor"
@@ -2151,7 +2151,7 @@
  {
   "id": "plan-condition-named",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 7 условие названо кодом метки, all — exists по имени",
+  "rule": "V/11.11 Н1.4 п. 7 условие названо кодом метки, all — exists по имени",
   "source": "lesson",
   "texts": [
    "Set mode loud for all tallies of counters on floor2"
@@ -2187,7 +2187,7 @@
  {
   "id": "plan-condition-all",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 7 all — условие exists по имени",
+  "rule": "V/11.11 Н1.4 п. 7 all — условие exists по имени",
   "source": "lesson",
   "texts": [
    "Set the step of all counters to 3"
@@ -2241,7 +2241,7 @@
  {
   "id": "plan-extra-missed",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 пп. 8–10 лишние, пропущенные, неизвестное имя, не связаны",
+  "rule": "V/11.11 Н1.4 пп. 8–10 лишние, пропущенные, неизвестное имя, не связаны",
   "source": "lesson",
   "texts": [
    "Set mode loud for all tallies in zone z2 and Gate-1 and Nope-9"
@@ -2305,7 +2305,7 @@
  {
   "id": "plan-about-selection",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 8 отбор в связанной подсистеме",
+  "rule": "V/11.11 Н1.4 п. 8 отбор в связанной подсистеме",
   "source": "lesson",
   "texts": [
    "Set mode loud for the tallies of counter Spruce"
@@ -2338,7 +2338,7 @@
  {
   "id": "passes-but-wrong-negation",
   "console": "stand3",
-  "rule": "V/10.5 Н5 нарушено, но проходит: отрицание просьбы сверка слов не видит",
+  "rule": "V/11.11 Н5 нарушено, но проходит: отрицание просьбы сверка слов не видит",
   "violates": "админ сказал, что Gate-2 остаётся plain (не трогать), а план его правит; все слова названы",
   "source": "lesson",
   "texts": [
@@ -2378,7 +2378,7 @@
  {
   "id": "refuse-rights-forms",
   "console": "stand3",
-  "rule": "V/10.5 Н1.5 «нет прав» при праве у всех найденных — каждая форма",
+  "rule": "V/11.11 Н1.5 «нет прав» при праве у всех найденных — каждая форма",
   "source": "lesson",
   "texts": [
    "Turn off Gate-1"
@@ -2487,7 +2487,7 @@
  {
   "id": "refuse-fixed-accepted",
   "console": "stand3",
-  "rule": "V/10.5 Н1.5 отказ по fixed — не «нет прав», принят",
+  "rule": "V/11.11 Н1.5 отказ по fixed — не «нет прав», принят",
   "source": "lesson",
   "texts": [
    "Move Gate-1 to counter Oak"
@@ -2519,7 +2519,7 @@
  {
   "id": "refuse-fixed-ru",
   "console": "stand3",
-  "rule": "V/10.5 Н1.5 «правка невозможна» — принят",
+  "rule": "V/11.11 Н1.5 «правка невозможна» — принят",
   "source": "lesson",
   "texts": [
    "Move Gate-1 to counter Oak"
@@ -2551,7 +2551,7 @@
  {
   "id": "refuse-rights-nothing-found",
   "console": "stand3",
-  "rule": "V/10.5 Н1.5 «нет прав» без найденных единиц",
+  "rule": "V/11.11 Н1.5 «нет прав» без найденных единиц",
   "source": "lesson",
   "texts": [
    "Turn off Yard-1"
@@ -2569,7 +2569,7 @@
  {
   "id": "refuse-rights-real",
   "console": "stand3",
-  "rule": "V/10.5 Н1.5 «нет прав», и права действительно нет — принят",
+  "rule": "V/11.11 Н1.5 «нет прав», и права действительно нет — принят",
   "source": "lesson",
   "texts": [
    "Turn off Yard-1"
@@ -2601,7 +2601,7 @@
  {
   "id": "refuse-not-found",
   "console": "stand3",
-  "rule": "V/10.5 Н1.5 «не найдено» при названной единице — раз за ход",
+  "rule": "V/11.11 Н1.5 «не найдено» при названной единице — раз за ход",
   "source": "lesson",
   "texts": [
    "Change tallies on shelf Store-2"
@@ -2626,7 +2626,7 @@
  {
   "id": "refuse-not-found-unreadable",
   "console": "stand3",
-  "rule": "V/10.5 Н1.5 нечитаемая подсистема пропускается",
+  "rule": "V/11.11 Н1.5 нечитаемая подсистема пропускается",
   "source": "lesson",
   "texts": [
    "Change counter Spruce"
@@ -2647,7 +2647,7 @@
  {
   "id": "vms-live-enum",
   "console": "vms",
-  "rule": "V/10.5 Н1.4 пп. 4, 6 подпись варианта и поля по-русски",
+  "rule": "V/11.11 Н1.4 пп. 4, 6 подпись варианта и поля по-русски",
   "source": "lesson",
   "texts": [
    "Переключи живой поток камеры Вход на «по требованию»"
@@ -2684,7 +2684,7 @@
  {
   "id": "vms-retention-about",
   "console": "vms",
-  "rule": "V/10.5 Н1.4 п. 8 отбор по связанной (about.name), число — дни; поле без подписи — пробел",
+  "rule": "V/11.11 Н1.4 п. 8 отбор по связанной (about.name), число — дни; поле без подписи — пробел",
   "source": "lesson",
   "texts": [
    "Храни записи камеры Вход 14 дней"
@@ -2726,7 +2726,7 @@
  {
   "id": "vms-named-id",
   "console": "vms",
-  "rule": "V/10.5 Н1.4 п. 1 named — id единицы, а не её имя",
+  "rule": "V/11.11 Н1.4 п. 1 named — id единицы, а не её имя",
   "source": "lesson",
   "texts": [
    "Храни записи камеры Вход 14 дней"
@@ -2765,7 +2765,7 @@
  {
   "id": "vms-off-named",
   "console": "vms",
-  "rule": "V/10.5 Н1.4 пп. 4, 6 «выключи» называет «Включена» словами операторов words.json, значение — полярностью",
+  "rule": "V/11.11 Н1.4 пп. 4, 6 «выключи» называет «Включена» словами операторов words.json, значение — полярностью",
   "source": "lesson",
   "texts": [
    "Выключи камеру Вход"
@@ -2801,7 +2801,7 @@
  {
   "id": "vms-on-polarity",
   "console": "vms",
-  "rule": "V/10.5 Н1.4 п. 4 bool полярностью по-русски (поле rec.enabled без подписи)",
+  "rule": "V/11.11 Н1.4 п. 4 bool полярностью по-русски (поле rec.enabled без подписи)",
   "source": "lesson",
   "texts": [
    "Включи запись parking"
@@ -2833,7 +2833,7 @@
  {
   "id": "vms-secret",
   "console": "vms",
-  "rule": "V/10.6 Н1.3 пароль устройства — метка секрета",
+  "rule": "V/11.12 Н1.3 пароль устройства — метка секрета",
   "source": "lesson",
   "texts": [
    "Смени пароль устройства камеры Вход"
@@ -2875,7 +2875,7 @@
  {
   "id": "vms-stream-fixed",
   "console": "vms",
-  "rule": "V/10.5 Н1.3 fixed (main потока); отказ «неизменяема — правка невозможна» принят",
+  "rule": "V/11.11 Н1.3 fixed (main потока); отказ «неизменяема — правка невозможна» принят",
   "source": "lesson",
   "texts": [
    "Сделай поток Вход малый потоком камеры Парковка"
@@ -2931,7 +2931,7 @@
  {
   "id": "vms-out-of-scope",
   "console": "vms",
-  "rule": "V/10.4 Н0, Н1.5 охват — подсистемы страницы (ADR-0093 доп. (5))",
+  "rule": "V/11.10 Н0, Н1.5 охват — подсистемы страницы (ADR-0093 доп. (5))",
   "source": "lesson",
   "texts": [
    "Храни записи камеры Вход 14 дней"
@@ -2982,7 +2982,7 @@
  {
   "id": "vms-wrong-field",
   "console": "vms",
-  "rule": "V/10.5 Н1.4 п. 6 подмена поля: «выключи» не называет «Живой поток»",
+  "rule": "V/11.11 Н1.4 п. 6 подмена поля: «выключи» не называет «Живой поток»",
   "source": "lesson",
   "texts": [
    "Выключи камеру Вход"
@@ -3018,7 +3018,7 @@
  {
   "id": "vms-passes-days",
   "console": "vms",
-  "rule": "V/10.5 Н5 нарушено, но проходит: «дней» называет и retention_days, и min_depth_days",
+  "rule": "V/11.11 Н5 нарушено, но проходит: «дней» называет и retention_days, и min_depth_days",
   "violates": "админ просил хранить 14 дней, план ставит глубину не меньше 14 дней — оба поля названы словом «дней»",
   "source": "lesson",
   "texts": [
@@ -3061,7 +3061,7 @@
  {
   "id": "tools-prototype-names",
   "console": "stand3",
-  "rule": "V/10.4 Н1.1 закрытый набор: имя из прототипа — не инструмент (RVP-06)",
+  "rule": "V/11.10 Н1.1 закрытый набор: имя из прототипа — не инструмент (RVP-06)",
   "source": "lesson",
   "texts": [
    "x"
@@ -3094,7 +3094,7 @@
  {
   "id": "plan-prototype-field",
   "console": "stand3",
-  "rule": "V/10.5 Н1.3 поле с именем из прототипа — нет поля (RVP-06)",
+  "rule": "V/11.11 Н1.3 поле с именем из прототипа — нет поля (RVP-06)",
   "source": "lesson",
   "texts": [
    "Set Gate-1 constructor to loud"
@@ -3150,7 +3150,7 @@
  {
   "id": "plan-form-list",
   "console": "stand3",
-  "rule": "V/10.5 Н1.3, Н1.6 неверная форма списка — ошибка проверки, не исключение (RVP-04)",
+  "rule": "V/11.11 Н1.3, Н1.6 неверная форма списка — ошибка проверки, не исключение (RVP-04)",
   "source": "lesson",
   "texts": [
    "Set Gate-1 tags to blue"
@@ -3229,7 +3229,7 @@
  {
   "id": "plan-missed-per-field",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 10 пропущенные — по каждому полю: правка другого поля единицу не извиняет (RVP-02)",
+  "rule": "V/11.11 Н1.4 п. 10 пропущенные — по каждому полю: правка другого поля единицу не извиняет (RVP-02)",
   "source": "lesson",
   "texts": [
    "For Gate-1 and Office-1 set mode loud and step 9"
@@ -3277,7 +3277,7 @@
  {
   "id": "plan-missed-per-field-control",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 10 положительный контроль: у единицы значение уже стоит — правки не нужно (RVP-02)",
+  "rule": "V/11.11 Н1.4 п. 10 положительный контроль: у единицы значение уже стоит — правки не нужно (RVP-02)",
   "source": "lesson",
   "texts": [
    "For Gate-1 and Gate-2 set mode loud and step 9"
@@ -3325,7 +3325,7 @@
  {
   "id": "plan-astral-name",
   "console": "stand3",
-  "rule": "V/10.5 Н1.2 граница имени — кодовые точки целиком: 𐐀Gate-1𐐀 не называет Gate-1 (RVP-03)",
+  "rule": "V/11.11 Н1.2 граница имени — кодовые точки целиком: 𐐀Gate-1𐐀 не называет Gate-1 (RVP-03)",
   "source": "lesson",
   "texts": [
    "Switch 𐐀Gate-1𐐀 to loud mode"
@@ -3357,7 +3357,7 @@
  {
   "id": "plan-astral-name-control",
   "console": "stand3",
-  "rule": "V/10.5 Н1.2 положительный контроль: 𐐀 через пробел — граница есть (RVP-03)",
+  "rule": "V/11.11 Н1.2 положительный контроль: 𐐀 через пробел — граница есть (RVP-03)",
   "source": "lesson",
   "texts": [
    "Switch 𐐀 Gate-1 𐐀 to loud mode"
@@ -3389,7 +3389,7 @@
  {
   "id": "plan-reverse-about",
   "console": "stand3",
-  "rule": "V/10.5 Н1.4 п. 8 отбор в дочерней подсистеме, правка — в связанной (обратный about; RVP-05)",
+  "rule": "V/11.11 Н1.4 п. 8 отбор в дочерней подсистеме, правка — в связанной (обратный about; RVP-05)",
   "source": "lesson",
   "texts": [
    "For tallies with loud mode set step 9"
@@ -3438,7 +3438,7 @@
  {
   "id": "tools-list-max-5000",
   "console": "stand3",
-  "rule": "V/10.4 Н1.2 LIST_MAX: 5000 строк читаются",
+  "rule": "V/11.10 Н1.2 LIST_MAX: 5000 строк читаются",
   "source": "lesson",
   "texts": [
    "x"
@@ -3469,7 +3469,7 @@
  {
   "id": "tools-list-max-5001",
   "console": "stand3",
-  "rule": "V/10.4 Н1.2 LIST_MAX: 5001 строка — ошибка, не усечённый отбор",
+  "rule": "V/11.10 Н1.2 LIST_MAX: 5001 строка — ошибка, не усечённый отбор",
   "source": "lesson",
   "texts": [
    "x"

@@ -72,7 +72,7 @@ unit:
         # cursor writes; a new holder goes on from here; time with no holder is not counted (V/05.4 Н1.2).
         waited:       {type: number, minimum: 0}  # seconds something has been missing (or the model unsupported)
         fetch_waited: {type: number, minimum: 0}  # seconds backfill has been awaited
-# The words of the console and of the assistant (V/10.4 Н1.4): labels the admin's text names a field by.
+# The words of the console and of the assistant (V/11.10 Н1.4): labels the admin's text names a field by.
 display:
   unit: задача скана
   units: задачи скана
