@@ -3133,7 +3133,7 @@ components:
         role: {type: string, minLength: 1}
         ref: {type: string, minLength: 1}
         by: {type: string, minLength: 1}
-        revoked: {const: true, description: 'Получатель отказал прежнему токену словом revoked (P/08.2 Н1.6а).'}
+        revoked: {type: string, pattern: '^(?:[0-9a-f]{16})$', description: 'jti токена, которому получатель отказал словом revoked (P/08.2 Н1.6а).'}
     # --- глава 8.8: запись срока, резервная копия, брошенное ---
     HolderRecord:
       type: object

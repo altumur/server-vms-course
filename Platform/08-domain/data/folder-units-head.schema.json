@@ -3,12 +3,11 @@
  "type": "object",
  "properties": {
   "parts": {
-   "description": "непустые разделы папки: `{<раздел>: <число>}`, текст JSON",
-   "type": "object",
+   "description": "непустые разделы папки по возрастанию, текст JSON",
+   "type": "array",
    "x-encoding": "json",
-   "additionalProperties": {
-    "type": "integer",
-    "minimum": 1
+   "items": {
+    "type": "string"
    }
   }
  },

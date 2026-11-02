@@ -86,3 +86,5 @@ calls_first_nosuch	live-first calls-first-nosuch	2 -
 calls_second_kind	second-kind calls-second	2 -
 # ADR-0113 доп. (9) п. 1: книга to "*" с grant — отказ каталога
 book_all_grant	book-all-grant	2 -
+# ADR-0113, ревью дельты С1: книга to "*" при pick: unique — отказ каталога
+book_all_unique	book-all-unique	2 -

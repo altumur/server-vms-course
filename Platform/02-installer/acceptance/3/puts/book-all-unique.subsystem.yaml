@@ -1,0 +1,8 @@
+# книга всем с pick: unique: строка не хранит проигравшего вклада (ADR-0113 доп. (9) п. 1)
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+domain:
+  books:
+    asks: {from: probe/asks/, key: target, pick: unique, to: "*"}

@@ -423,6 +423,7 @@ paths:
                         rows: {type: string}
                         id: {type: string}
                   cursor: {type: string}
+        '400': {description: Плохой cursor}
         '401': {description: Нет личности}
         '403': {description: Нет права}
         '404': {description: Папки нет}
