@@ -90,7 +90,7 @@ Device(type=camera)	version	cam/cameras + rec/recordings + det/units + cam/devic
 Device(type=camera)	armed	cam/rule_state	armed	read	строки нет — false; строка не читается — поля нет (V/11.3 Н1.3)
 Device(type=camera)	disabledByRuleId	cam/rule_state	disabled_by_rule	read	UUID rule:<кластер>/auto/scenarios/<id>; только если disabled_until позже сейчас, иначе null; строка не читается — поля нет
 Device(type=camera)	disabledByRuleAt	cam/rule_state	disabled_at	read	те же условия; секунды → date-time UTC
-Device(type=camera)	recordDetectorIds	auto/scenarios	цель строки записи: строки det/units вида kind камер цели	both	только при recordMode motion; строки нет — []; разные виды — 422 NOT_SUPPORTED (V/11.3 Н1.3)
+Device(type=camera)	recordDetectorIds	auto/scenarios	цель строки записи: строки det/units вида kind камер цели и их встроенные этого вида	both	только при recordMode motion; строки нет — []; разные виды — 422 NOT_SUPPORTED (V/11.3 Н1.3)
 Device(type=camera)	archiveJobs	GET /domain	false у камеры-кластера и чужой, своя — поля нет	read	V/11.3 Н1.3; в версию не входит
 Device(type=camera)	recordScheduleId	auto/scenarios	schedule условия time строки записи	both	только при recordMode sched; нет — 422 VALIDATION_FAILED (V/11.4 Н1.2)
 Device(type=camera)	mac, writableFields	—	—	none	при создании пропускается без записи: MAC камеры — только из поиска (ADR-0102 доп. (7) п. 3; V/11.3 Н1.1)
@@ -337,7 +337,7 @@ Rule	mute	auto/rule_marks	mute	read	пишет /rules/update; числа ↔ dat
 Rule	order	auto/rule_marks	order	read	пишут POST /rules, /rules/reorder; только среди правил одного вычислителя
 Rule	version	auto/scenarios + auto/rule_marks	s<индекс строки>.m<индекс отметки>	read	V/11.4 Н1.10
 Rule	historyNote	auto/versions	note строки версии	write	RuleWrite: restore, undo; в ответе поля нет
-RuleTrigger	source	auto/scenarios	when[].sub: vms ↔ cam, det, rec	both
+RuleTrigger	source	auto/scenarios	when[].sub: vms ↔ cam, det, rec; det покрывает и встроенный, V/07.2 Н1.3	both
 RuleTrigger	kind	auto/scenarios	when[].kind как есть	both
 RuleTrigger	target	auto/scenarios	when[].target; unit — цель из одного устройства	both	см. RuleTarget
 RuleTrigger	match	auto/scenarios	when[].match: value active ↔ closed, normal ↔ open; port строка цифр ↔ целое, из записи цели; word как есть; у вида unit word ↔ event, unit — ключ cam/device_units; прочие ключи и типы как есть	both	template — 422 NOT_SUPPORTED; расхождение номера — RULE_INVALID (V/11.3 Н1.3)
