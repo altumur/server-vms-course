@@ -40,7 +40,7 @@ JSON файла одной строкой: сняты только незнач�
 | Манифест | Файл | sha256 |
 |---|---|---|
 | `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a` |
-| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `3bd7d88decb6fbdba9930d4646887f5eb6afa32713f92f3572340229617ba710` |
+| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `38d5d4c49d10be2418a511115c38ec897ba6ea418c982c23eaf377ab96af5427` |
 
 Смена этих байтов — повод перепроверить таблицу оракулом.
 

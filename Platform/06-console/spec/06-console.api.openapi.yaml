@@ -3028,7 +3028,7 @@ paths:
         '200':
           description: Полное JSON-тело; HEAD не содержит тела
   /heartbeats:
-    description: Глава 6.7 Н1.6 pulse (ADR-0112 доп. (12) п. 3) — пульсы подсистемы без status.
+    description: Глава 6.7 Н1.6 pulse (ADR-0112 доп. (12) п. 3) — пульсы подсистемы, только поля heartbeat.door; нет ключа — 404.
     servers:
     - url: '{origin}'
       description: Короткий путь выбирает CONSOLE_ROOT.
@@ -7995,7 +7995,7 @@ components:
               fields:
                 type: object
                 additionalProperties: true
-                description: Прочие поля пульса как есть, кроме status (глава 6.7 Н1.6 pulse).
+                description: Только поля heartbeat.door манифеста, какие в пульсе есть (глава 6.7 Н1.6 pulse).
       description: Глава 6.7 Н1.6 pulse — по элементу на пульс подсистемы, по worker в байтах UTF-8.
     UnitList:
       type: object

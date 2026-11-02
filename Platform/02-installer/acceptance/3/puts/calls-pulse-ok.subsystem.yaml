@@ -1,0 +1,10 @@
+# записи двери пульса (P/06.3 Н1.9)
+name: callp
+unit:
+  rows: callers
+  id: name
+  fields:
+    name:  {type: string, required: true}
+placement: {capacity: {default: 1}}
+door: {pass: {routes: [api], calls: ["GET hbd/heartbeats", "GET domain/at/hbd/heartbeats"]}}
+worker: {exec: /usr/lib/callp/worker}

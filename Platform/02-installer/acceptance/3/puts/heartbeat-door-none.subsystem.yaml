@@ -1,0 +1,9 @@
+# двери пульса нет (P/06.7 Н1.6 pulse)
+name: hbd
+unit:
+  rows: beats
+  id: name
+  fields:
+    name:  {type: string, required: true}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/hbd/worker}

@@ -885,3 +885,7 @@ a113_name_memberof	refused
 a112_name_shared	refused
 a112_calls_shared_ok	ok
 a112_calls_topology_write	refused
+a112_heartbeat_door_ok	ok
+a112_heartbeat_door_status	refused
+a112_heartbeat_door_family	refused
+a112_heartbeat_door_secret	refused

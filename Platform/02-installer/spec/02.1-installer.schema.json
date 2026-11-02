@@ -360,6 +360,62 @@
        ]
       }
      }
+    },
+    "door": {
+     "description": "поля пульса, которые отдаёт дверь `GET /<sub>/heartbeats` (P/06.7 Н1.6 pulse): поля подсистемы, не семьи пульса P/03.4 Н1.1 и не секрет; нет ключа — двери нет",
+     "type": "array",
+     "items": {
+      "type": "string",
+      "not": {
+       "anyOf": [
+        {
+         "enum": [
+          "worker",
+          "ts",
+          "status",
+          "server",
+          "instance",
+          "labels",
+          "url",
+          "fetched",
+          "events",
+          "conflicts",
+          "started",
+          "previous_hb",
+          "previous_instance",
+          "previous_server",
+          "fenced",
+          "was_fenced",
+          "store_errors",
+          "pass_failures",
+          "unconfirmed",
+          "place_error",
+          "freeing",
+          "garbled_rows",
+          "schema",
+          "build",
+          "pending_writes",
+          "server_unsaid",
+          "stood_in",
+          "stand_in_renewals",
+          "command_counts",
+          "commands_in_flight",
+          "commands_reanswered",
+          "command_road",
+          "command_request",
+          "command_wait",
+          "filings",
+          "creates",
+          "made_rows"
+         ]
+        },
+        {
+         "pattern": "^(?:[\\s\\S]*_secret)$"
+        }
+       ]
+      }
+     },
+     "x-owner": "P/06.7 Н1.6"
     }
    },
    "additionalProperties": false
@@ -1712,7 +1768,7 @@
    }
   },
   "passCall": {
-   "description": "дверь обратного вызова по закрытому перечню P/06.3 Н1.9: `<s>/<имя>` — строки единиц, таблица, `policy`, `next_id` или маршрут двери подсистемы `<s>`; приставка `GET ` — только чтение; `console/batch`, `changes`, `folders`; `<s>/operations`; `<s>/requests`; `GET <s>/where`; дверь `door.pass` первого вида; `servers/labels`; `GET manifest|servers|events|session|schema`; двери домена: `GET domain/users|groups|roles|grants`, `domain/batch`, `domain/shared`, `GET domain/shared/<s>`, `GET domain/topology`; дверь книги: `GET domain/<s>/books/<книга>`; строка kept: `GET domain/<s>/kept/<имя>`",
+   "description": "дверь обратного вызова по закрытому перечню P/06.3 Н1.9: `<s>/<имя>` — строки единиц, таблица, `policy`, `next_id` или маршрут двери подсистемы `<s>`; приставка `GET ` — только чтение; `console/batch`, `changes`, `folders`; `<s>/operations`; `<s>/requests`; `GET <s>/where`; `GET <s>/heartbeats`; дверь `door.pass` первого вида; `servers/labels`; `GET manifest|servers|events|session|schema`; двери домена: `GET domain/users|groups|roles|grants`, `domain/batch`, `domain/shared`, `GET domain/shared/<s>`, `GET domain/topology`; дверь книги: `GET domain/<s>/books/<книга>`; строка kept: `GET domain/<s>/kept/<имя>`",
    "type": "string",
    "anyOf": [
     {
@@ -1742,6 +1798,9 @@
     },
     {
      "pattern": "^(?:GET [a-z][a-z0-9_-]{0,31}/where)$"
+    },
+    {
+     "pattern": "^(?:GET [a-z][a-z0-9_-]{0,31}/heartbeats)$"
     },
     {
      "pattern": "^(?:[a-z][a-z0-9_-]{0,31}/requests)$"

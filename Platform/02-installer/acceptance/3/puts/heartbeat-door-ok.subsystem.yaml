@@ -1,0 +1,10 @@
+# поле двери пульса (heartbeat.door, P/06.7 Н1.6 pulse)
+name: hbd
+unit:
+  rows: beats
+  id: name
+  fields:
+    name:  {type: string, required: true}
+placement: {capacity: {default: 1}}
+heartbeat: {door: [belt]}
+worker: {exec: /usr/lib/hbd/worker}

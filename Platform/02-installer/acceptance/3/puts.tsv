@@ -94,3 +94,5 @@ kept_read_family	kept-read-family	2 -
 kept_read_unknown	kept-read-unknown	2 -
 calls_kept_ok	kept-read-ok calls-kept-ok	0 1
 calls_kept_bad	kept-read-ok calls-kept-bad	2 -
+calls_pulse_ok	heartbeat-door-ok calls-pulse-ok	0 1
+calls_pulse_bad	heartbeat-door-none calls-pulse-ok	2 -

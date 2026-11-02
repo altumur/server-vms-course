@@ -109,7 +109,7 @@ gate:
                                        единиц понижается только создание (таблица «Права по телу» ниже; находка М-2)
     GET /<rows>?deleted=1&about=<z>  → view на единицу <about.sub>/<z> (P/06.1 Н2 «Надгробия по about»; ADR-0094 доп. (5) п. 1)
     GET /changes                     → view без единицы — любой грант; что видно, решает фильтр двери (P/06.1 Н2 «Лента изменений»; ADR-0094 B2)
-    GET /{sub}/heartbeats            → view без единицы — любой грант: status дверь не отдаёт (P/06.7 Н1.6 pulse; ADR-0112 доп. (12) п. 3)
+    GET /{sub}/heartbeats            → view без единицы — любой грант: дверь отдаёт только поля heartbeat.door (P/06.7 Н1.6 pulse; ADR-0112 доп. (12) п. 3)
     GET /{sub}/next_id               → как создание строк <sub>: admin на * | по rights.routes — тела нет, предпроверка create_about | cluster_rows → *
                                        (P/06.1 Н2 «Дверь счётчика»; ADR-0094 B4)
     таблицы                          → по rights.routes (view | edit | admin); таблица service: true — человеку закрыта, 403 по refusal до
