@@ -43,8 +43,9 @@ scenario	step	request	expect
 03-where-at-a-member	14	member m1 console GET /domain/at/m2/testsub/heartbeats	404 {"error": "not a route handed to a member"}
 03-where-at-a-member	15	member m2 console GET /testsub2/heartbeats	200 {"rows": [{"worker": "t-1"}]}
 03-where-at-a-member	16	member m2 console GET /testsub/heartbeats	404
-03-where-at-a-member	17	@on m2 @sigterm console	ok
-03-where-at-a-member	18	member m1 console GET /domain/at/m2/testsub/where/c2	502 {"error": "did not answer"}
+03-where-at-a-member	17	member m1 console GET /domain/at/m2/testsub2/read/nosuch	503 {"detail": "no worker of testsub2 with a door is heard"}
+03-where-at-a-member	18	@on m2 @sigterm console	ok
+03-where-at-a-member	19	member m1 console GET /domain/at/m2/testsub/where/c2	502 {"error": "did not answer"}
 06-domain-keys	1	@domain	ok
 06-domain-keys	2	@until 60 member m1 console GET /domain/keys	200 {"rows": {"domain/keys": ["doc"], "domain/member-list": ["doc"]}, "families": {"tallies": [], "ledger": []}, "keyset": "@any"}
 13-notes-unique	1	@domain	ok
