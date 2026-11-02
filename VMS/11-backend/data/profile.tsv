@@ -118,3 +118,5 @@ n	method	path	profile	why
 111	GET	/archive-watches	in	переводится (V/11.2)
 112	DELETE	/archive-watches/{id}	in	переводится (V/11.2)
 113	PATCH	/archive-watches/{id}	in	переводится (V/11.2)
+114	GET	/rule-prompts	in	переводится (V/11.4 Н1.10; ADR-0112)
+115	POST	/rule-prompts/{promptId}/answer	in	переводится (V/11.4 Н1.10; ADR-0112)

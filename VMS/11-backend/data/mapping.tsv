@@ -319,6 +319,8 @@ Rule	conditions	auto/scenarios	conditions	both
 Rule	owner	auto/scenarios	owner	both
 Rule	purpose	auto/scenarios	purpose	both
 Rule	allowChain	auto/scenarios	allow_chain	both
+Rule	validForSec	auto/scenarios	valid_for, 0 — 30	both	10…600, вне границ — 422 VALIDATION_FAILED, field validForSec
+Rule	status	auto/heartbeats	элемент status[] сценария: phase, reason, unfit, unchecked	read	наблюдение, в версию не входит; enabled false, пульса нет — поля нет (V/11.3 Н1.3)
 Rule	triggers	auto/scenarios	when	both	см. RuleTrigger
 Rule	steps	auto/scenarios	then	both	см. RuleAction; ветки yes, no; глубина — V/07.1
 Rule	serverId	auto/scenarios	server: UUID server:<кластер>/<имя> ↔ имя	both	данные, вычислитель не читает; вне перечня — 422 VALIDATION_FAILED
@@ -335,7 +337,7 @@ Rule	historyNote	auto/versions	note строки версии	write	RuleWrite: r
 RuleTrigger	source	auto/scenarios	when[].sub: vms ↔ cam, det, rec	both
 RuleTrigger	kind	auto/scenarios	when[].kind как есть	both
 RuleTrigger	target	auto/scenarios	when[].target; unit — цель из одного устройства	both	см. RuleTarget
-RuleTrigger	match	auto/scenarios	when[].match: value active ↔ closed, normal ↔ open; port строка цифр ↔ целое, из записи цели; word как есть; у вида unit word ↔ event, unit — ключ cam/device_units	both	template — 422 NOT_SUPPORTED; расхождение номера — RULE_INVALID (V/11.3 Н1.3)
+RuleTrigger	match	auto/scenarios	when[].match: value active ↔ closed, normal ↔ open; port строка цифр ↔ целое, из записи цели; word как есть; у вида unit word ↔ event, unit — ключ cam/device_units; прочие ключи и типы как есть	both	template — 422 NOT_SUPPORTED; расхождение номера — RULE_INVALID (V/11.3 Н1.3)
 RuleTarget	include	auto/scenarios	target.include: device — 7, child — <cam>-<type>-<number>, folder — id папки, server — имя, domain — CLUSTER	both	обратно — по перечням вида
 RuleTarget	exclude	auto/scenarios	target.exclude	both
 RuleTarget	gone	auto/scenarios	target.gone	both	ставит каскад (V/11.4 Н1.10)
@@ -344,28 +346,41 @@ RuleCondition	kind, value	auto/scenarios	conditions[] как есть	both
 RuleCondition	target	auto/scenarios	conditions[].target	both	см. RuleTarget
 RuleCondition	scheduleId	auto/scenarios	conditions[].schedule	both
 RuleCondition	modeIds	auto/scenarios	conditions[].modes	both
-RuleAction	source, action	auto/scenarios	then[]: vms preset, output, unit, arm, disarm, disable ↔ cam; rec record; alarm alarm ↔ auto alarm; rule runrule ↔ auto runrule; прочие — данными	both	необъявленное у включённого — RULE_INVALID
+RuleAction	source, action	auto/scenarios	then[]: vms preset, output, unit, arm, disarm, disable ↔ cam; rec record; det detect, scan как есть; alarm alarm ↔ auto alarm; rule runrule ↔ auto runrule; прочие — данными	both	необъявленное у включённого — 422 NOT_SUPPORTED, field steps
 RuleAction	target	auto/scenarios	then[].target; unit, cam — цель из одного устройства	both
 RuleAction	preset	auto/scenarios	n	both	0 — 422 VALIDATION_FAILED
 RuleAction	port, state, minutes, priority, text, duration	auto/scenarios	те же поля	both	port 0 — 422 VALIDATION_FAILED; duration event — данные, включённое — RULE_INVALID
-RuleAction	pulseMs, afterSec	auto/scenarios	pulse_ms, after_sec	both
-RuleAction	archive	auto/scenarios	archive: id хранилища ↔ имя тома	both
+RuleAction	pulseMs, afterSec	auto/scenarios	pulse_ms; after_sec, у scan after	both
+RuleAction	archive	auto/scenarios	archive: id хранилища ↔ имя тома; у scan rec: запись камеры на этом томе ↔ её home	both
+RuleAction	detectorKind	auto/scenarios	kind	both	detect, scan
+RuleAction	beforeSec	auto/scenarios	before	both	scan
+RuleAction	params	auto/scenarios	params	both	detect, scan
 RuleAction	operation	auto/scenarios	operation	both	цель — единица устройства: unit, n её строки (V/07.1)
 RuleAction	ruleId	auto/scenarios	rule: UUID ↔ номер	both
 RuleAction	layoutId, roleId, monitorId, to, subject, body, chat, method, url	auto/scenarios	те же поля в snake_case	both	данные: действие не объявлено
 RuleWait	control, sec	auto/scenarios	then[]: wait	both
 RuleWaitEvent	control, event, sec, yes, no	auto/scenarios	then[]: wait_event	both	event — как RuleTrigger
-RuleAsk	control, text, roleId, sec, default, yes, no	auto/scenarios	then[]: ask; role: id роли ↔ имя (V/11.8 Н1.2)	both	данные: ждёт контракта, дверь ответа V/11.4 Н1.10
-RuleEscalate	control, levels, stop	auto/scenarios	then[]: escalate; role: id роли ↔ имя, via, wait_min	both	данные, как RuleAsk
+RuleAsk	control, text, roleId, sec, default, yes, no	auto/scenarios	then[]: ask; role: id роли ↔ имя (V/11.8 Н1.2)	both	ответ — RulePrompt (V/11.4 Н1.10)
+RuleEscalate	control, levels, stop	auto/scenarios	then[]: escalate; role: id роли ↔ имя, via, wait_min	both	ответ — RulePrompt (V/11.4 Н1.10)
 RuleFire	—	GET /events	fired, step журнала auto этого сценария	read	V/11.3 Н1.3; ответ двери auto/test — та же форма
 RuleFire	id	GET /events	UUID ruleFire:<кластер>/<firing>	read
 RuleFire	ruleId	GET /events	unit: rule:<кластер>/auto/scenarios/<id>	read
 RuleFire	at	GET /events	occurred	read
-RuleFire	by, result, checks	GET /events	те же поля fired	read
+RuleFire	by, result, checks	GET /events	те же поля fired; waiting, а запуска нет — итог по шагам	read	V/11.3 Н1.3
 RuleFire	logOnly	GET /events	log_only	read	нет — false
 RuleFire	sourceDeviceIds	GET /events	source	read
 RuleFire	events	GET /events	events: sub ↔ source, cam ↔ deviceId, occurred ↔ at	read
 RuleFire	steps	GET /events	строки step: step ↔ path, target ↔ deviceId, action, label, result ↔ state, reason, note	read	control — поле не null; skip — result: skip; depth — число веток в step (V/11.3 Н1.3)
+RulePrompt	—	auto/scenarios	state.runs строки: шаг ask, уровень escalate	read	свой кластер (V/11.3 Н1.3)
+RulePrompt	id	auto/scenarios	UUID rulePrompt:<кластер>/<scenario>/<fire>/<step>[/<n>]	read
+RulePrompt	ruleId, fireId, step	auto/scenarios	строка, fire, step запуска	read	как RuleFire
+RulePrompt	kind, roleId	auto/scenarios	ask, escalate шага; role шага или уровня	read
+RulePrompt	text	auto/scenarios	text шага с подстановками vars запуска	read	escalate — пусто
+RulePrompt	level	auto/scenarios	номер уровня с 1	read	ask — null
+RulePrompt	openedAt, until	auto/scenarios	vars.occurred, начало уровня; until запуска	read
+RulePrompt	canAnswer	GET /session	roleId шага среди role строк grants	read	V/11.4 Н1.10
+RulePromptAnswer	answer	auto/answers	yes, no как есть; ack ↔ ack:<уровень вопроса>	write	V/11.4 Н1.10
+RuleStatus	state, reason	auto/heartbeats	phase refused, непустые unfit, unchecked, иначе watching; reason	read	V/11.3 Н1.3
 RuleVersion	—	auto/versions	<scenario>-<number>	read	пишется пакетом правки (ADR-0106 п. 7)
 RuleVersion	id	auto/versions	UUID ruleVersion:<кластер>/auto/versions/<scenario>-<number>	read
 RuleVersion	ruleId, number	auto/versions	scenario, number	read
@@ -430,7 +445,10 @@ Reference	serverLabels	GET /servers	метки серверов по поряд�
 Reference	ruleTriggers	—	data:VMS/10-assist/data/rule-catalog.json#triggers	const	что исполняет вычислитель (V/11.2 Н1.5)
 Reference	ruleActions	—	data:VMS/10-assist/data/rule-catalog.json#actions	const	email, tg, http, layout, wall, alarmclose не объявляются: предмета нет (ADR-0102 п. 9); duration event — конца события нет
 Reference	ruleConditions	—	data:VMS/10-assist/data/rule-catalog.json#conditions	const	online, recording, armed — состояние в момент решения (ADR-0105 п. 3)
-Reference	ruleControls	—	data:VMS/10-assist/data/rule-catalog.json#controls	const	ask, escalate не объявляются: двери ответа нет
+Reference	ruleControls	—	data:VMS/10-assist/data/rule-catalog.json#controls	const	ask, escalate с дверью ответа (V/11.4 Н1.10)
+Reference	ruleStarts	—	data:VMS/10-assist/data/rule-catalog.json#starts	const	V/07.1 start
+Reference	ruleTargets	—	data:VMS/10-assist/data/rule-catalog.json#targets	const	V/07.1 target
+Reference	ruleCrossDomainActions	—	data:VMS/10-assist/data/rule-catalog.json#crossDomain	const	пусто: Rule из нескольких кластеров не выражается (V/11.4 Н1.10)
 Reference	layouts, monitors	—	[]	const	раскладок клиента и видеостены нет
 License	—	GET /domain/cam/books/licence	запись книги decision (V/01.7)	read	только чтение: книги нет — items пусто (V/11.3 Н1.3)
 License	kind	—	"cameras"	const	acfa своего счёта нет
@@ -495,8 +513,9 @@ ExtraArchive	state, reason	rec/heartbeats	phase, reason элемента status[
 StreamAccount	name, disabled, at, by	live/accounts	те же поля	both	дверь шлюза, V/11.4 Н1.18
 StreamAccountSecret	name, password	POST /live/accounts	account.name, password	read	пароль один раз, в журнал и строку не попадает (V/11.4 Н1.18)
 StreamAccountCreate, StreamAccountPatch	name, disabled	live/accounts	name, disabled	write	V/11.4 Н1.18
-AssistTurnRequest	text, context, secrets	—	V/11.7 Н1.1	write	состояния у backend нет
-AssistEvent	type, at, text, context, summary, items, field, code, message	—	V/11.7 Н1.4	read
+AssistTurnRequest	text, context, secrets, kind	—	V/11.7 Н1.1	write	состояния у backend нет
+AssistEvent	type, at, text, context, summary, items, rules, field, code, message	—	V/11.7 Н1.4	read
+AssistRuleEdit	table, op, id, ref, body	—	V/10.7 Н1.4	read	план типа rules; запись — человек, V/10.7 Н1.7
 AssistPlanItem	deviceId, version, set, name, changes	—	V/11.7 Н1.3	read
 AssistChange	field, before, after, why	—	V/11.7 Н1.3	read	у секрета before нет
 OperationRequest	idempotencyKey	backend/repeats	<h>	write	V/11.4 Н1.4, Н1.8

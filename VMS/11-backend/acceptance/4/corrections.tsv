@@ -43,3 +43,4 @@ date	sample	fix	languages
 2026-11-02	4/scenarios.tsv: 19-revert шаг 45	снятое поле в before, after значением null	all
 2026-11-02	4/scenarios.tsv: 10-archives шаги 56–61; 19-revert шаг 45 снят	откат и повтор recordMode null настоящими шагами	all
 2026-11-02	4/scenarios.tsv: 10-archives шаги 61–64	when мимо backend: откат с null даёт VERSION_MISMATCH	all
+2026-11-02	4/scenarios.tsv: 17-rules шаги 11, 20, 21; новый 34-rule-prompts	контракт 5c1973c: каталог, ask объявлен, вне каталога NOT_SUPPORTED, дверь ответа	all
