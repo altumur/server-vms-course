@@ -62,6 +62,32 @@ paths:
           description: как у GET, без тела
         '503':
           description: как у GET, без тела
+  '/domain/relays/{relay}':
+    get:
+      summary: Кто за ретранслятором (Н1.2а)
+      description: Отвечает консоль домена сама; строка domain/relay-members, только имена, право view домена.
+      parameters:
+      - {name: relay, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Имена по возрастанию; строки нет — rev 0, пусто
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [relay, rev, members]
+                additionalProperties: false
+                properties:
+                  relay: {type: string}
+                  rev: {type: integer, minimum: 0}
+                  members:
+                    type: array
+                    maxItems: 5000
+                    items: {type: string}
+        '401': {description: Нет личности}
+        '403': {description: Нет права view домена}
+        '404': {description: Такого члена нет}
+        '503': {description: Строка не читается}
   '/domain/{sub}/kept/{name}':
     get:
       summary: Объявленная строка domain.kept (Н1.2а)

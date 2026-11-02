@@ -1724,6 +1724,7 @@
       "domain/edits",
       "domain/members",
       "GET domain/members",
+      "GET domain/relays",
       "domain/placement",
       "GET domain/placement",
       "GET domain/folders",

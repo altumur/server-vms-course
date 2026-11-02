@@ -2,3 +2,4 @@
 # path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
 path	reader	outcome	priority	unit	norm
 	domain	строка целиком нечитаема: ответ пакета без relay_for и keys, ретранслятор держит прежние; журнал без значения	1	строка	P/08.3 Н1.2
+	domainconsole	строка целиком нечитаема: дверь — 503 {error: "unavailable"}	1	строка	P/10 Н1.2а

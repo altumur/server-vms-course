@@ -147,3 +147,11 @@ scenario	step	request	expect
 18-kept-door	11	holder GET /domain/testsub/kept/ledger	401
 18-kept-door	12	holder @header Authorization: Bearer $ann GET /domain/testsub/kept/ledger	403
 18-kept-door	13	holder @header Authorization: Bearer $ann GET /domain/testsub/kept/nosuch	403
+19-relay-door	1	@domain m1 relay	ok
+19-relay-door	2	holder PUT /domain/topology {"base_rev": 0, "via": {"m1": "relay"}}	200 {"rev": 1, "via": {"m1": "relay"}}
+19-relay-door	3	holder GET /domain/relays/relay	200 {"relay": "relay", "rev": "@any", "members": ["m1"]}
+19-relay-door	4	holder GET /domain/relays/m1	200 {"relay": "m1", "rev": 0, "members": []}
+19-relay-door	5	holder GET /domain/relays/nosuch	404
+19-relay-door	6	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
+19-relay-door	7	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$ann"}
+19-relay-door	8	holder @header Authorization: Bearer $ann GET /domain/relays/relay	403
