@@ -50,3 +50,4 @@ date	sample	fix	languages
 2026-11-02	4/scenarios.tsv: 34-rule-prompts шаг 9	разбор ревью fork-5c1-5: пустые levels, отказ branches до хода	all
 2026-11-02	4/scenarios.tsv: 03-person-folder, 23-folders-offline, 09-stream; новые 35–40	контракт 23c3e1b: состав POST /folders/{id}/devices, Folder без deviceIds, stream.hello и watch, страницы, дерево	all
 2026-11-02	4/scenarios.tsv: 40-domain-parts шаги вместо 503, 09-stream без отбора до PUT watch	ADR-0112 доп. (12) пп. 1, 2; ревью С3; камер-кластеров в шагах нет, id пересчитывать нечего	all
+2026-11-02	4/scenarios.tsv: idempotencyKey короче 8 — приставка -key, 14 сценариев; 40-domain-parts: holder видит документ с member, чужая форма If-Match — 412	minLength 8 контракта; 05-resume, 04-repeats ключей не меняли: строки памяти считаны от длинных ключей	all

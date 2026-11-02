@@ -597,8 +597,8 @@ ScenarioWhen	kind	GET domain/shared/auto	when.kind	both	reference.scenarioKinds
 ScenarioThen	deviceId	GET domain/shared/auto	(then.member, then.camera)	both	id записи V/11.4 Н1.6
 ScenarioThen	action, n, port	GET domain/shared/auto	then.action, then.n, then.port	both
 ScenarioThen	validForSec	GET domain/shared/auto	then.valid_for	both	умолчание 30
-ScenarioStatus	name, phase, reason, since, asked, outcomes, holding	GET /auto/scenarios; GET domain/at/auto/heartbeats	слово пульса shared; fields.shared	read	кластеры документа (V/07.5 Н1.6; V/11.4 Н1.21)
-ScenarioStatus	decidedWithout	GET /auto/scenarios; GET domain/at/auto/heartbeats	decided_without пульса shared	read
+ScenarioStatus	name, phase, reason, since, asked, outcomes, holding	GET auto/heartbeats; GET domain/at/auto/heartbeats	fields.shared	read	кластеры документа (V/07.5 Н1.6; V/11.4 Н1.21)
+ScenarioStatus	decidedWithout	GET auto/heartbeats; GET domain/at/auto/heartbeats	fields.shared, decided_without	read
 RoleRow	objectAccessCount	двери домена	ключи objectAccess	read	V/11.8 Н1.1
 RoleRow	spread	GET /domain	role_spread	read	V/11.8 Н1.10; незрителю поля нет
 RoleObject	objectId, levels	двери домена	строки unit: роли	both	/access/roles/{id}/objects; запись — AccessChange roleObject
