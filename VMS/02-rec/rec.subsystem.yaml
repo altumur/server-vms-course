@@ -46,7 +46,9 @@ objects: {rows: [ingest/clock/*, ingest/up/*, sealed/*, used/*, taken/*]}
 # (`place_by`), why that volume will not open, the box's own volume a page offers to declare, and where
 # the ingest it hosts takes streams (`ingest`: the domain writes it into the cameras' books, the cluster's other ingests
 # find it there; ADR-0065, its addition of 2026-10-08).
-heartbeat: {strings: [volume, volume_error, ingest, volume_missing], door: [keeps, volume, volume_missing]}   # door: the words of a hold and a lost volume for `backend` (V/11.4 Н1.23, V/11.3 Н1.3)
+# stale_after: three periods of the pulse; a dead recorder is `stale` of its member at 30 s, not LOST_AFTER 45 s —
+# a backup sees it in about 43 s against its ring of 66 s (ADR-0113 доп. (36); V/02.6 Н1.5)
+heartbeat: {strings: [volume, volume_error, ingest, volume_missing], door: [keeps, volume, volume_missing], stale_after: 30}   # door: the words of a hold and a lost volume for `backend` (V/11.4 Н1.23, V/11.3 Н1.3)
 # A recorder records on past an unconfirmed lease for as long as the silence lasts — its samples carry the epoch — but
 # a volume any box may serve is let go when its hold goes unconfirmed (`placement.places.lease: strict` below).
 lease: {unconfirmed_max: forever}
