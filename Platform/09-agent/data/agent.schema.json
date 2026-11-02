@@ -423,6 +423,10 @@
     "sig": {
      "description": "подпись выпускающего над UTF-8(JCS(doc без kid и sig))",
      "type": "string"
+    },
+    "gathered": {
+     "description": "строка сбора «из ничего» (P/08.8 Н1.8а gathered)",
+     "const": true
     }
    },
    "additionalProperties": false,

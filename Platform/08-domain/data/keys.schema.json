@@ -119,6 +119,14 @@
       "pattern": "^(?:[0-9a-f]{64})$"
      }
     },
+    "stolen_issuing": {
+     "description": "выпускающие, отозванные кражей, подмножество revoked_issuing; нет — пусто (договор набора ключей)",
+     "type": "array",
+     "items": {
+      "type": "string",
+      "minLength": 1
+     }
+    },
     "thefts": {
      "$ref": "#/$defs/common.pos53",
      "description": "счёт смен после кражи (P/08.2 Н3 шаг 3); нет — 0; метка кражи для SET_GUARD (договор набора ключей «Набор следования»)"
@@ -548,6 +556,10 @@
     "sig": {
      "description": "подпись выпускающего над UTF-8(JCS(doc без kid и sig))",
      "type": "string"
+    },
+    "gathered": {
+     "description": "строка сбора «из ничего» (P/08.8 Н1.8а gathered)",
+     "const": true
     }
    },
    "additionalProperties": false,
