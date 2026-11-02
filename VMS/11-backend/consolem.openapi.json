@@ -759,7 +759,7 @@
             "$ref": "#/components/responses/Problem"
           }
         },
-        "description": "В перечне только строка DeviceRow, полная запись — GET /devices/{id}. Сортировку клиент не выбирает. Общее правило страницы: limit, cursor, ответ {items, nextCursor?, total?}, пустые items при живом nextCursor законны. Фильтры по цене. Ограниченный проход: q, type, status, domainId, noFolder, noRecord — запрос смотрит не больше scanPartsMax разделов вида, порядок — разделы, не алфавит. Один член: serverId, parentId, archiveId — порядок по имени. По записи: ids, до idsMax. Постоянная цена: folderId, порядок сервера; страница бывает короче limit и пустой, единицы без права view не показываются. total — только без фильтра, оценка.",
+        "description": "В перечне только строка DeviceRow, полная запись — GET /devices/{id}. Сортировку клиент не выбирает. Общее правило страницы: limit, cursor, ответ {items, nextCursor?, total?}, пустые items при живом nextCursor законны. Фильтры по цене. Ограниченный проход: q, type, status, domainId, noFolder, noRecord, noDetector — запрос смотрит не больше scanPartsMax разделов вида, порядок — разделы, не алфавит. Один член: serverId, parentId, archiveId — порядок по имени. По записи: ids, до idsMax. Постоянная цена: folderId, порядок сервера; страница бывает короче limit и пустой, единицы без права view не показываются. total — только без фильтра, оценка.",
         "parameters": [
           {
             "name": "limit",
@@ -884,6 +884,24 @@
               "type": "boolean"
             },
             "description": "Камеры без записи: отбор для группы формы «Без записи», ограниченным проходом. Группы на сервере нет, полного числа тоже"
+          },
+          {
+            "name": "noDetector",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "motion",
+                "linecross",
+                "abandoned",
+                "disappeared",
+                "crowd",
+                "lpr",
+                "other"
+              ]
+            },
+            "description": "Камеры без детектора этого вида (Device.detectorKinds), ограниченным проходом: отбор ассистента «камеры без детектора движения». Полного числа нет"
           }
         ]
       },
@@ -5259,7 +5277,7 @@
           "assist"
         ],
         "summary": "Ход разговора с ассистентом (SSE)",
-        "description": "Ответ — поток text/event-stream: на сообщение строка data: (AssistEvent), без event: и без id:. Ход длится от десятков секунд до нескольких минут. Закрыть поток — отменить ход. Оборванный поток не продолжается: клиент повторяет запрос. Поток без завершающего сообщения — обрыв, UPSTREAM_UNAVAILABLE. «Применить» — обычный POST /devices/update с items плана и новым idempotencyKey; устройство изменилось после плана — его строка в failed с VERSION_MISMATCH. Без него ничего не пишется. Что это за реплика — настройка устройств, правило автоматизации или вопрос о системе, — бэкенд решает сам по каждой реплике, поля типа в запросе и в событиях нет: в одном разговоре бывают и вопрос, и правка, и правило. Вопрос о системе — конечное событие answer, плана нет. План правил — поле rules, «Применить» — двери из описания AssistRuleEdit сессией человека.",
+        "description": "Ответ — поток text/event-stream: на сообщение строка data: (AssistEvent), без event: и без id:. Ход длится от десятков секунд до нескольких минут. Закрыть поток — отменить ход. Оборванный поток не продолжается: клиент повторяет запрос. Поток без завершающего сообщения — обрыв, UPSTREAM_UNAVAILABLE. «Применить» — обычный POST /devices/update с items плана и новым idempotencyKey; устройство изменилось после плана — его строка в failed с VERSION_MISMATCH. Без него ничего не пишется. Что это за реплика — настройка устройств, правило автоматизации или вопрос о системе, — бэкенд решает сам по каждой реплике, поля типа в запросе и в событиях нет: в одном разговоре бывают и вопрос, и правка, и правило. Вопрос о системе — конечное событие answer, плана нет. Отбор («дай список», «покажи», «выведи») — конечное событие found: отбирает бэкенд по полям Device, форма показывает отобранное в дереве; ничего не пишет. План правил — поле rules, «Применить» — двери из описания AssistRuleEdit сессией человека.",
         "requestBody": {
           "required": true,
           "content": {
@@ -8868,6 +8886,22 @@
           "recordReason": {
             "type": "string",
             "description": "Только чтение: слово сервера о записи: почему не идёт, потеря минут, когда источник стёр старое раньше копии, источник больше архива назначения"
+          },
+          "detectorKinds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "motion",
+                "linecross",
+                "abandoned",
+                "disappeared",
+                "crowd",
+                "lpr",
+                "other"
+              ]
+            },
+            "description": "Только чтение, только у камеры: виды её детекторов — встроенных и серверных (cameraId), без повторов. Нет детекторов — пустой массив. По нему отбор noDetector"
           },
           "replicaFrom": {
             "type": [
@@ -16956,6 +16990,7 @@
               "plan",
               "refused",
               "answer",
+              "found",
               "error"
             ],
             "x-enum-descriptions": {
@@ -16964,7 +16999,8 @@
               "plan": "План: summary, context, items или rules. Частичных планов нет: не может всё — refused",
               "refused": "Не может: text, context, field",
               "error": "Ошибка: code, message",
-              "answer": "Ответ на вопрос о системе: text, context. Плана нет, ничего не меняется. Разговор продолжается новым запросом с этим context"
+              "answer": "Ответ на вопрос о системе: text, context. Плана нет, ничего не меняется. Разговор продолжается новым запросом с этим context",
+              "found": "Отбор: text, context, conditions и ровно одно из ids или filter. Только читает. Найдено 0 — тоже found. Разговор продолжается новым запросом с этим context"
             }
           },
           "at": {
@@ -17003,9 +17039,36 @@
               "$ref": "#/components/schemas/AssistRuleEdit"
             },
             "description": "План правил: записи по порядку. Предложение, а не запись: ход ничего не пишет"
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "found: отобранные Device.id камер и детекторов по имени, без повторов, не больше reference.limits.selectMax. Отбирает бэкенд по полям Device, не модель. Отобрано больше — первые и truncated. Найдено 0 — пустой массив"
+          },
+          "filter": {
+            "$ref": "#/components/schemas/AssistFoundFilter"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "found: сколько отобрано всего. Только при полном проходе, иначе поля нет и стоит truncated"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "found: условия отбора словами, по одному: «запись: нет», «папка: Склад». Форма показывает их над деревом: человек видит, что выбрано"
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "found: отобрано не всё — в ids только первые или total неизвестен"
           }
         },
-        "description": "Сообщение хода. Поток заканчивается одним из question, plan, refused, answer, error"
+        "description": "Сообщение хода. Поток заканчивается одним из question, plan, refused, answer, found, error"
       },
       "DeviceStream": {
         "type": "object",
@@ -18303,6 +18366,46 @@
         "required": [
           "answer"
         ]
+      },
+      "AssistFoundFilter": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "found, когда отобрано больше, чем бэкенд отбирает сам: фильтры GET /devices. Форма листает их тем же ограниченным проходом, что обычный фильтр дерева",
+        "properties": {
+          "q": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "Виды через запятую, как type в GET /devices"
+          },
+          "status": {
+            "type": "string",
+            "description": "Как status в GET /devices"
+          },
+          "domainId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "noFolder": {
+            "type": "boolean"
+          },
+          "noRecord": {
+            "type": "boolean"
+          },
+          "noDetector": {
+            "type": "string",
+            "enum": [
+              "motion",
+              "linecross",
+              "abandoned",
+              "disappeared",
+              "crowd",
+              "lpr",
+              "other"
+            ]
+          }
+        }
       },
       "AssistRuleEdit": {
         "oneOf": [
