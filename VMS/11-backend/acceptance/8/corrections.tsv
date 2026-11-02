@@ -10,3 +10,4 @@ date	sample	fix	languages
 2026-11-02	8/scenarios.tsv: 10-password шаги 7, 10	folderIds учётки переводятся (ADR-0112 доп. (7) п. 1), без шлюза 503	all
 2026-11-02	8/scenarios.tsv: все шаги POST /api/access/apply	контракт 23c3e1b: changes, version в теле, 428 → 422; перевод скриптом, set записей тела, delete — разница с прошлым удавшимся телом	all
 2026-11-02	8/scenarios.tsv: история — /api/access/history; 08-clusters: spread, clusters, retryClusters; 09-cluster-admin шаг 26 — devices?folderId; новый 11-changes	ADR-0112 доп. (10), роль на весь домен	all
+2026-11-02	8/scenarios.tsv, README: id всех device: пересчитаны формулой V/11.4 Н1.6, приставка ca0	ADR-0113 доп. (22)	all

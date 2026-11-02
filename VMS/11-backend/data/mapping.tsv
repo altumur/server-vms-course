@@ -42,7 +42,7 @@ Server(knocking)	labels	—	—	none	меток ещё нет
 Server(knocking)	version	GET /domain/members	fingerprint	read	новый ключ — новая версия; times, last версию не двигают
 Server(knocking)	netmask, gateway, dns	—	—	none
 Device(type=camera)	—	cam/cameras + rec/recordings + det/units	—	both	сборка: основная строка type camera, её потоки, записи, детекторы (V/11.4)
-Device(type=camera)	id	cam/cameras	UUID device:<кластер>/cam/cameras/<id>	read
+Device(type=camera)	id	cam/cameras	UUID device:<кластер>/cam/cameras/<id>	read	у всех device: первые 12 бит — раздел члена (V/11.4 Н1.6)
 Device(type=camera)	type	cam/cameras	type	read	слово контракта без перевода; задаёт POST /devices, в DevicePatch поля нет
 Device(type=camera)	parentId	cam/devices	ipsrv хоста есть — его id, иначе null	read	channels сказан или таблица не видна; V/11.3 Н1.3 «Дерево»; при создании — null или этот id
 Device(type=camera)	domainId	GET /session	Domain.id	read
