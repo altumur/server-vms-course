@@ -7,6 +7,7 @@ scenario	step	request	expect
 01-token-and-audience	5	@verify m2 tally $tok	ok {"result": "refused", "reason": "wrong_audience"}
 01-token-and-audience	6	@verify m1 probe $tok	ok {"result": "refused", "reason": "wrong_kind"}
 01-token-and-audience	7	@verify m1 tally @spoil($tok)	ok {"result": "refused", "reason": "bad_signature"}
+01-token-and-audience	8	holder POST /domain/revoke {"token": "$tok"}	401 {"error": "refused"}
 02-refusals	1	@domain	ok
 02-refusals	2	holder PUT /domain/placement/testsub/c1 {"cluster": "m1", "origin": "m2", "copies": []}	200
 02-refusals	3	token m2 testsub2worker POST /tokens/testsub/tally {"request_id": "r2", "ref": "c1"}	403 {"error": "refused", "reason": "not_granted"}
