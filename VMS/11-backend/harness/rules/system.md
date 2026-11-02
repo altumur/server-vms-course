@@ -33,12 +33,14 @@ admin switches it on after a test, so write `logOnly` or `enabled` only when the
 - `triggers`: 1–4. Two or more must all happen within `windowSec` seconds (1..3600); one trigger has none.
 - `steps`: 1–4 at the top level, run in order.
 
-Target: `"<device name>"`, or a list of names, or `{"folder":"<name>","except":["<device name>"]}` (with subfolders, new
-devices enter by themselves), or `"event"` — the device of the event that started the rule, in steps and conditions
-only, never in a trigger. A device is a camera, a sensor, a relay or a unit, each by its own name.
+Target: `"<device name>"`, or a list of names, or `{"folder":"<folder path>","except":["<device name>"]}` (with subfolders,
+new devices enter by themselves), or `"event"` — the device of the event that started the rule, in steps and conditions
+only, never in a trigger. A device is a camera `"<camera>"`, or a sensor, a relay or a unit with its camera:
+`"<camera> / <name>"`. A folder is its path from the top: `"<folder> / <folder>"`. Copy names whole, as the tools give them.
+Two things of one name: ask_admin which one.
 
 Triggers:
-- sensor `{"kind":"io.input","target":"<sensor>","value":"active"}`: `active` — the alarm starts (tripped, triggered),
+- sensor `{"kind":"io.input","target":"<camera> / <sensor>","value":"active"}`: `active` — the alarm starts (tripped, triggered),
   `normal` — it ends (back to normal).
 - detector `{"kind":"motion","target":"<camera>"}`; `linecross` — a line crossed; `lpr` — a license plate; `disappeared`
   — an object taken away; `abandoned` — an object left behind; `crowd` — people gathering. `detectors` of `find_devices`
@@ -46,7 +48,7 @@ Triggers:
 - camera lost `{"kind":"silent","target":"<camera>"}`; recording lost `{"kind":"segment.lost","target":"<camera>"}`.
 
 Steps:
-- relay `{"action":"output","target":"<relay>","state":"closed"}`: `closed` — turn on, `open` — turn off, `pulse` with
+- relay `{"action":"output","target":"<camera> / <relay>","state":"closed"}`: `closed` — turn on, `open` — turn off, `pulse` with
   `pulseMs` — on for a time. A pulse needs its length.
 - `{"action":"preset","target":"<camera>","preset":<n>}`; `{"action":"record","target":"<camera>","minutes":<1..1440>}`;
   `{"action":"arm","target":…}`, `disarm`; off for a time `{"action":"disable","target":…,"minutes":<1..1440>}`.
@@ -61,7 +63,7 @@ Steps:
 - ask an operator: `{"control":"ask","text":"…","role":"<role name>","sec":<1..3600>,"default":"no","yes":[steps],"no":[steps]}`:
   the role answers yes or no within `sec`; no answer counts as `default`. Write `"default":"yes"` only when the admin says
   so. Who answers is the admin's word: a role not named — ask_admin.
-- escalate: `{"control":"escalate","levels":[{"role":"<role name>","via":"client","waitMin":<minutes>}],"stop":"ack"}`:
+- escalate: `{"control":"escalate","levels":[{"role":"<role name>","via":"client","waitMin":<minutes>}],"stop":"ack"}`, each level needs a role:
   roles are notified in turn, each level waits `waitMin`; `stop` `ack` — when acknowledged, `reset` — also when the
   sensor is back to normal. `via` is only `client`: there is no email or Telegram.
 Branches nest two levels at most.

@@ -24,6 +24,22 @@
    {
     "id": "13",
     "name": "Fence West"
+   },
+   {
+    "id": "21",
+    "name": "North Door"
+   },
+   {
+    "id": "22",
+    "name": "South Gate"
+   },
+   {
+    "id": "23",
+    "name": "Lift"
+   },
+   {
+    "id": "24",
+    "name": "Lift"
    }
   ],
   "children": [
@@ -117,6 +133,34 @@
     "type": "sensor",
     "number": 1,
     "name": "Fence Tamper West"
+   },
+   {
+    "key": "21-sensor-1",
+    "cam": "21",
+    "type": "sensor",
+    "number": 1,
+    "name": "Вход 1"
+   },
+   {
+    "key": "21-relay-1",
+    "cam": "21",
+    "type": "relay",
+    "number": 1,
+    "name": "Реле 1"
+   },
+   {
+    "key": "22-sensor-1",
+    "cam": "22",
+    "type": "sensor",
+    "number": 1,
+    "name": "Вход 1"
+   },
+   {
+    "key": "22-relay-1",
+    "cam": "22",
+    "type": "relay",
+    "number": 1,
+    "name": "Реле 1"
    }
   ],
   "folders": [
@@ -149,6 +193,11 @@
     "id": "40",
     "name": "Restricted",
     "parent": null
+   },
+   {
+    "id": "22",
+    "name": "Floor 1",
+    "parent": "20"
    }
   ],
   "schedules": [
@@ -233,6 +282,14 @@
    {
     "id": 105,
     "name": "Gate line watch"
+   },
+   {
+    "id": 201,
+    "name": "Alarm"
+   },
+   {
+    "id": 202,
+    "name": "Alarm"
    }
   ]
  },
@@ -248,14 +305,14 @@
       "triggers": [
        {
         "kind": "io.input",
-        "target": "Dock Door",
+        "target": "Dock Cam / Dock Door",
         "value": "normal"
        }
       ],
       "steps": [
        {
         "action": "output",
-        "target": "Dock Light",
+        "target": "Dock Cam / Dock Light",
         "state": "open"
        }
       ]
@@ -393,7 +450,7 @@
       "triggers": [
        {
         "kind": "io.input",
-        "target": "gate loop",
+        "target": "gate cam / gate loop",
         "value": "active",
         "port": 1
        }
@@ -722,7 +779,7 @@
       "triggers": [
        {
         "kind": "io.input",
-        "target": "Gate Loop",
+        "target": "Gate Cam / Gate Loop",
         "value": "active"
        }
       ],
@@ -736,7 +793,7 @@
         "yes": [
          {
           "action": "output",
-          "target": "Gate Barrier",
+          "target": "Gate Cam / Gate Barrier",
           "state": "closed"
          }
         ],
@@ -897,7 +954,7 @@
       "triggers": [
        {
         "kind": "io.input",
-        "target": "Gate Loop",
+        "target": "Gate Cam / Gate Loop",
         "value": "active"
        }
       ],
@@ -959,6 +1016,527 @@
    "errors": [
     "edits[0]: op is createRule {rule}, updateRule {rule, set}, createSchedule, createWindow"
    ]
+  },
+  {
+   "id": "same-children",
+   "note": "одинаковые имена детей у двух камер: имя с камерой",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "Door relay",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "North Door / Вход 1",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "action": "output",
+        "target": "South Gate / Реле 1",
+        "state": "closed"
+       }
+      ]
+     }
+    }
+   ],
+   "body": [
+    {
+     "table": "scenarios",
+     "op": "create",
+     "body": {
+      "name": "Door relay",
+      "triggers": [
+       {
+        "source": "vms",
+        "kind": "io.input",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "child:21-sensor-1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "match": {
+         "value": "active"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "source": "vms",
+        "action": "output",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "child:22-relay-1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "state": "closed"
+       }
+      ]
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "child-bare",
+   "note": "имя ребёнка без камеры",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "x",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "Вход 1",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "action": "alarm",
+        "target": "North Door"
+       }
+      ]
+     }
+    }
+   ],
+   "body": null,
+   "errors": [
+    "edits[0].triggers[0]: Вход 1 is named with its camera: North Door / Вход 1, South Gate / Вход 1"
+   ]
+  },
+  {
+   "id": "several-cameras",
+   "note": "две камеры одного имени",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "x",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "Gate Cam / Gate Loop",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "action": "record",
+        "target": "Lift",
+        "minutes": 5
+       }
+      ]
+     }
+    }
+   ],
+   "body": null,
+   "errors": [
+    "edits[0].steps[0]: several devices are named Lift: ask_admin which one"
+   ]
+  },
+  {
+   "id": "several-rules",
+   "note": "два правила одного имени: не последнее побеждает, вопрос",
+   "plan": [
+    {
+     "op": "updateRule",
+     "rule": "Alarm",
+     "set": {
+      "enabled": false
+     }
+    }
+   ],
+   "body": null,
+   "errors": [
+    "edits[0]: several rules are named Alarm: ask_admin which one"
+   ]
+  },
+  {
+   "id": "folder-path",
+   "note": "папка путём от корня",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "Parking motion",
+      "triggers": [
+       {
+        "kind": "motion",
+        "target": {
+         "folder": "Parking / Floor 1"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "action": "alarm",
+        "target": "event"
+       }
+      ]
+     }
+    }
+   ],
+   "body": [
+    {
+     "table": "scenarios",
+     "op": "create",
+     "body": {
+      "name": "Parking motion",
+      "triggers": [
+       {
+        "source": "det",
+        "kind": "motion",
+        "target": {
+         "include": [
+          {
+           "kind": "folder",
+           "id": "folder:22"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "match": {}
+       }
+      ],
+      "steps": [
+       {
+        "source": "alarm",
+        "action": "alarm",
+        "target": {
+         "include": [],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": true
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "folder-bare",
+   "note": "папка не путём",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "x",
+      "triggers": [
+       {
+        "kind": "motion",
+        "target": {
+         "folder": "Floor 1"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "action": "alarm",
+        "target": "event"
+       }
+      ]
+     }
+    }
+   ],
+   "body": null,
+   "errors": [
+    "edits[0].triggers[0]: Floor 1 is named by its path: Building A / Floor 1, Parking / Floor 1"
+   ]
+  },
+  {
+   "id": "via-default",
+   "note": "via нет — client",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "Gate escalate",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "Gate Cam / Gate Loop",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "control": "escalate",
+        "levels": [
+         {
+          "role": "Guards",
+          "waitMin": 5
+         }
+        ],
+        "stop": "ack"
+       }
+      ]
+     }
+    }
+   ],
+   "body": [
+    {
+     "table": "scenarios",
+     "op": "create",
+     "body": {
+      "name": "Gate escalate",
+      "triggers": [
+       {
+        "source": "vms",
+        "kind": "io.input",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "child:1-sensor-1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "match": {
+         "value": "active"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "control": "escalate",
+        "levels": [
+         {
+          "roleId": "role:33333333-0000-4000-8000-000000000001",
+          "via": "client",
+          "waitMin": 5
+         }
+        ],
+        "stop": "ack"
+       }
+      ]
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "ask-no-role",
+   "note": "вопрос без роли: V/07.3 судил бы негодным",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "x",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "Gate Cam / Gate Loop",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "control": "ask",
+        "text": "Open?",
+        "sec": 60,
+        "default": "no",
+        "yes": [],
+        "no": []
+       }
+      ]
+     }
+    }
+   ],
+   "body": null,
+   "errors": [
+    "edits[0].steps[0]: a question needs the role that answers: ask_admin"
+   ]
+  },
+  {
+   "id": "default-stop-as-is",
+   "note": "default yes, stop reset переводчик несёт как есть: суд слов — rules-words",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "Gate ask",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "Gate Cam / Gate Loop",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "control": "ask",
+        "text": "Open?",
+        "role": "Guards",
+        "sec": 60,
+        "default": "yes",
+        "yes": [],
+        "no": []
+       },
+       {
+        "control": "escalate",
+        "levels": [
+         {
+          "role": "Guards",
+          "via": "client",
+          "waitMin": 5
+         }
+        ],
+        "stop": "reset"
+       }
+      ]
+     }
+    }
+   ],
+   "body": [
+    {
+     "table": "scenarios",
+     "op": "create",
+     "body": {
+      "name": "Gate ask",
+      "triggers": [
+       {
+        "source": "vms",
+        "kind": "io.input",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "child:1-sensor-1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "match": {
+         "value": "active"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "control": "ask",
+        "text": "Open?",
+        "roleId": "role:33333333-0000-4000-8000-000000000001",
+        "sec": 60,
+        "default": "yes",
+        "yes": [],
+        "no": []
+       },
+       {
+        "control": "escalate",
+        "levels": [
+         {
+          "roleId": "role:33333333-0000-4000-8000-000000000001",
+          "via": "client",
+          "waitMin": 5
+         }
+        ],
+        "stop": "reset"
+       }
+      ]
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "via-email-as-is",
+   "note": "via email переводчик не судит: отказ — слой extra, rules-words escalate-email",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "Gate escalate",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "Gate Cam / Gate Loop",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "control": "escalate",
+        "levels": [
+         {
+          "role": "Guards",
+          "via": "email",
+          "waitMin": 5
+         }
+        ],
+        "stop": "ack"
+       }
+      ]
+     }
+    }
+   ],
+   "body": [
+    {
+     "table": "scenarios",
+     "op": "create",
+     "body": {
+      "name": "Gate escalate",
+      "triggers": [
+       {
+        "source": "vms",
+        "kind": "io.input",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "child:1-sensor-1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "match": {
+         "value": "active"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "control": "escalate",
+        "levels": [
+         {
+          "roleId": "role:33333333-0000-4000-8000-000000000001",
+          "via": "email",
+          "waitMin": 5
+         }
+        ],
+        "stop": "ack"
+       }
+      ]
+     }
+    }
+   ],
+   "errors": []
   }
  ]
 }
