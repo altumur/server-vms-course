@@ -333,7 +333,7 @@ Rule	order	auto/rule_marks	order	read	пишут POST /rules, /rules/reorder; т
 Rule	version	auto/scenarios + auto/rule_marks	s<индекс строки>.m<индекс отметки>	read	V/11.4 Н1.10
 Rule	historyNote	auto/versions	note строки версии	write	RuleWrite: restore, undo; в ответе поля нет
 RuleTrigger	source	auto/scenarios	when[].sub: vms ↔ cam, det, rec	both
-RuleTrigger	kind	auto/scenarios	when[].kind; lpr ↔ plate	both
+RuleTrigger	kind	auto/scenarios	when[].kind как есть	both
 RuleTrigger	target	auto/scenarios	when[].target; unit — цель из одного устройства	both	см. RuleTarget
 RuleTrigger	match	auto/scenarios	when[].match: value active ↔ closed, normal ↔ open; port строка цифр ↔ целое, из записи цели; word как есть; у вида unit word ↔ event, unit — ключ cam/device_units	both	template — 422 NOT_SUPPORTED; расхождение номера — RULE_INVALID (V/11.3 Н1.3)
 RuleTarget	include	auto/scenarios	target.include: device — 7, child — <cam>-<type>-<number>, folder — id папки, server — имя, domain — CLUSTER	both	обратно — по перечням вида
