@@ -116,6 +116,8 @@ placement:
 snapshot: [name, cam, kind, state.result]        # what leaves the cluster: enough for a domain to say "camera 7 is
                                                  # being scanned" and how it ended; `from`/`to`/`rec` have no reader
                                                  # above the cluster.
+rights:
+  routes: {edit: [jobs]}   # a person with `edit` on the camera starts one; PUT and DELETE stay `admin` on the unit (the need of the gate contract)
 events:
   older_epochs: earlier-run          # the same mechanism as everywhere, the opposite meaning: an older epoch of a job
                                      # is a run that moved or was taken over — a result to compare against, not a writer

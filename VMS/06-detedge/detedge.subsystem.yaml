@@ -93,6 +93,8 @@ placement:
   # belong on". And no `retire_when`: it does not end.
   tie_break:  most-free-capacity
 snapshot: [name, cam, kind, enabled]             # enough for a domain to say camera 7 is being watched
+rights:
+  routes: {edit: [watches]}   # a person with `edit` on the camera starts one; PUT and DELETE stay `admin` on the unit (the need of the gate contract)
 events:
   older_epochs: earlier-run          # after a move the earlier epoch's lines are the only record of those minutes — a
                                      # run that moved, not a writer that lost a race
