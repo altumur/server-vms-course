@@ -1474,6 +1474,15 @@
    "norm": "ADR-0110 доп. (16) п. 3",
    "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"tokens\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"tokens\"]) == map ? dyn(doc[\"domain\"][\"tokens\"]).map(k1, ((type(doc[\"domain\"][\"tokens\"][k1]) == map && !(\"keep\" in doc[\"domain\"][\"tokens\"][k1] && doc[\"domain\"][\"tokens\"][k1][\"keep\"] == true) && \"lifetime\" in doc[\"domain\"][\"tokens\"][k1] && type(doc[\"domain\"][\"tokens\"][k1][\"lifetime\"]) != string && double(doc[\"domain\"][\"tokens\"][k1][\"lifetime\"]) > 86400.0) ? [{\"p\": [\"domain\", \"tokens\", k1, \"lifetime\"]}] : [])) : []) : []) : [])",
    "own": []
+  },
+  {
+   "no": 157,
+   "path": "domain.books.$b.stale",
+   "relation": "when . = true : @domain.books.$b.to = \"*\"",
+   "class": "value",
+   "norm": "ADR-0113 доп. (31)–(33); P/08.5 Н1.3 to_all",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"books\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"books\"]) == map ? dyn(doc[\"domain\"][\"books\"]).map(k1, ((type(doc[\"domain\"][\"books\"][k1]) == map && \"stale\" in doc[\"domain\"][\"books\"][k1] && doc[\"domain\"][\"books\"][k1][\"stale\"] == true && !(\"to\" in doc[\"domain\"][\"books\"][k1] && doc[\"domain\"][\"books\"][k1][\"to\"] == \"*\")) ? [{\"p\": [\"domain\", \"books\", k1, \"stale\"]}] : [])) : []) : []) : [])",
+   "own": []
   }
  ],
  "untranslated": []

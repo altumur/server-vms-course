@@ -1,0 +1,6 @@
+# stale — слово платформы в pulse.<sub> вида, поле пульса им не бывает (P/08.1 Н1.4)
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+domain: {ref: name, view_pulse: [stale]}

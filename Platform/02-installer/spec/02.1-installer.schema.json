@@ -659,7 +659,7 @@
  ],
  "$defs": {
   "book": {
-   "description": "`{}` — переносимая книга: пишет воркер подсистемы на домене (P/03.7 Н1.6); `{show}` — она же с показом; `{from, key, pick, to, show?}` — собираемая книга из строк членов",
+   "description": "`{}` — переносимая книга: пишет воркер подсистемы на домене (P/03.7 Н1.6); `{show}` — она же с показом; `{from, key, pick, to, show?, stale?}` — собираемая книга из строк членов",
    "type": "object",
    "properties": {
     "from": {
@@ -703,6 +703,10 @@
      },
      "minItems": 1,
      "uniqueItems": true
+    },
+    "stale": {
+     "description": "книга to: \"*\": голова несёт серверы, чей воркер этой подсистемы молчит (P/08.5 Н1.3 head; ADR-0113 доп. (31)–(33))",
+     "type": "boolean"
     }
    },
    "additionalProperties": false,
@@ -1070,8 +1074,23 @@
      "x-owner": "P/08.1 Н1.4"
     },
     "view_pulse": {
-     "$ref": "#/$defs/nonSecretList",
-     "x-owner": "P/08.1 Н1.4"
+     "allOf": [
+      {
+       "$ref": "#/$defs/nonSecretList"
+      },
+      {
+       "type": "array",
+       "items": {
+        "not": {
+         "enum": [
+          "stale"
+         ]
+        }
+       }
+      }
+     ],
+     "x-owner": "P/08.1 Н1.4",
+     "description": "поля пульса; `stale` — слово платформы в `pulse.<sub>` вида (P/08.1 Н1.4)"
     },
     "view_tables": {
      "x-owner": "P/08.1 Н1.4а",

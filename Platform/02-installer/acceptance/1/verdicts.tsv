@@ -892,3 +892,6 @@ a112_heartbeat_door_secret	refused
 a112_calls_marks_ok	ok
 a112_calls_marks_get	refused
 a113_calls_book_part_ok	ok
+a113_book_stale_ok	ok
+a113_book_stale_to	refused
+a113_view_pulse_stale	refused

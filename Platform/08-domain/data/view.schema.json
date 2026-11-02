@@ -535,6 +535,19 @@
       "rev": {
        "description": "книга to: \"*\": версия строки",
        "$ref": "#/$defs/common.pos53"
+      },
+      "stale": {
+       "description": "книга to: \"*\" с stale: <член>/<сервер> — воркер подсистемы книги молчит, первые MISSING_SHOWN 500 по байтам UTF-8 (P/08.5 Н1.3 head)",
+       "type": "array",
+       "maxItems": 500,
+       "uniqueItems": true,
+       "items": {
+        "type": "string"
+       }
+      },
+      "stale_count": {
+       "description": "все такие серверы (P/08.5 Н1.3 head)",
+       "$ref": "#/$defs/common.uint53"
       }
      },
      "additionalProperties": false,
