@@ -5084,10 +5084,15 @@ paths:
                     type: object
                     required:
                     - missing
+                    - missing_count
                     additionalProperties: false
                     properties:
+                      missing_count:
+                        type: integer
+                        minimum: 0
                       missing:
                         type: array
+                        maxItems: 256
                         items:
                           type: object
                           required:
@@ -5109,7 +5114,6 @@ paths:
                   type: object
                   required:
                   - entries
-                  - missing
                   additionalProperties: false
                   properties:
                     entries:
@@ -5128,25 +5132,6 @@ paths:
                           item:
                             type: string
                             minLength: 1
-                    missing:
-                      type: array
-                      items:
-                        type: object
-                        required:
-                        - member
-                        - why
-                        additionalProperties: false
-                        properties:
-                          member:
-                            $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/MemberName'
-                          why:
-                            enum:
-                            - unseen
-                            - silent
-                            - never
-                            - no_copy
-                            - bad_contribution
-                            - secret_unopened
         '400':
           $ref: '#/components/responses/BadBody'
         '401':

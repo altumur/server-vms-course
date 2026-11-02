@@ -53,18 +53,20 @@
    }
   },
   "common.book_row": {
-   "description": "строка собранной книги (P/08.5 Н1.3 result): элемент \"\" — текст JSON {missing}, элемент `<key>` — текст JSON {entries, missing} только с элементами, где получатель в to; у держателя секреты value — конверты кольца держателя enc:v2 (Н1.3 at_rest), у члена — конверты кольца члена (P/09.1 Н1.4 member_row); ключи элементов — произвольно",
+   "description": "строка собранной книги (P/08.5 Н1.3 result): элемент \"\" — текст JSON {missing, missing_count}, элемент `<key>` — текст JSON {entries} только с элементами, где получатель в to; у держателя секреты value — конверты кольца держателя enc:v2 (Н1.3 at_rest), у члена — конверты кольца члена (P/09.1 Н1.4 member_row); ключи элементов — произвольно",
    "type": "object",
    "properties": {
     "": {
-     "description": "текст JSON {missing} — полнота книги без ключей",
+     "description": "текст JSON {missing, missing_count} — полнота книги без ключей",
      "type": "object",
      "properties": {
       "missing": {
-       "$ref": "#/$defs/common.book_missing"
+       "$ref": "#/$defs/common.book_missing",
+       "description": "первые MISSING_SHOWN 256 по member (P/08.5 Н1.3 result)",
+       "maxItems": 256
       },
       "missing_count": {
-       "description": "книга to: \"*\": всех членов в missing (P/08.5 Н1.3 to_all)",
+       "description": "всех членов в missing (P/08.5 Н1.3 result)",
        "$ref": "#/$defs/common.uint53"
       },
       "term": {
@@ -78,7 +80,8 @@
      },
      "additionalProperties": false,
      "required": [
-      "missing"
+      "missing",
+      "missing_count"
      ],
      "x-encoding": "json"
     }
@@ -98,7 +101,7 @@
     ]
    },
    "additionalProperties": {
-    "description": "текст JSON {entries, missing}",
+    "description": "текст JSON {entries}",
     "type": "object",
     "properties": {
      "entries": {
@@ -129,15 +132,11 @@
         "value"
        ]
       }
-     },
-     "missing": {
-      "$ref": "#/$defs/common.book_missing"
      }
     },
     "additionalProperties": false,
     "required": [
-     "entries",
-     "missing"
+     "entries"
     ],
     "x-encoding": "json"
    },
