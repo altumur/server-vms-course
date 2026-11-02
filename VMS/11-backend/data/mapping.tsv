@@ -445,13 +445,13 @@ Reference	capabilities	backend	объявление возможностей	rea
 Reference	capabilities.writableFields	—	{"channel":[],"storage":[],"mic":["name","enabled"],"spk":["name","enabled"],"sensor":["name","enabled","norm"],"relay":["name","enabled","norm","path"],"acfa_sensor":["name","enabled","path"],"acfa_lock":["name","enabled","path"],"acfa_fence":["name","enabled","path"],"det":["name","enabled","sensitivity","params","stream","labels","alarmKinds","zone"],"ipsrv":["name","enabled","short","lat","lon","azimuth","mac","login","password","ip","port","vendor","model","firmware","rtspUrl","labels"],"acfa":["name","enabled","short","ip","port","vendor","model","firmware","rtspUrl","login","password","labels","path"],"eventsrc":["name","enabled","short","ip","port","vendor","model","firmware","rtspUrl","login","password","serverId","cameraId","words","overlayDelayMs","overlayDurationSec","labels"],"camera":["name","enabled","short","lat","lon","azimuth","ip","port","vendor","model","firmware","videoChannel","rtspUrl","res","fps","login","password","archiveId","recordMode","extraArchives","stream","recordDetectorIds","labels","alarmKinds"]}	const	вид → поля DevicePatch (V/11.2 Н1.5); relay общий у ребёнка и единицы
 Reference	eventKinds	—	["motion", "linecross", "lpr", "silent", "io.input", "text", "unit"]	const	варианты Device.alarmKinds: виды cam (V/01.2 Н1.5), det (V/04.2)
 Reference	serverLabels	GET /servers	метки серверов по порядку байтов без server:*	read	отказ чтения — [], строка лога
-Reference	ruleTriggers	—	data:VMS/10-assist/data/rule-catalog.json#triggers	const	что исполняет вычислитель (V/11.2 Н1.5)
-Reference	ruleActions	—	data:VMS/10-assist/data/rule-catalog.json#actions	const	email, tg, http, layout, wall, alarmclose не объявляются: предмета нет (ADR-0102 п. 9); duration event — конца события нет
-Reference	ruleConditions	—	data:VMS/10-assist/data/rule-catalog.json#conditions	const	online, recording, armed — состояние в момент решения (ADR-0105 п. 3)
-Reference	ruleControls	—	data:VMS/10-assist/data/rule-catalog.json#controls	const	ask, escalate с дверью ответа (V/11.4 Н1.10)
-Reference	ruleStarts	—	data:VMS/10-assist/data/rule-catalog.json#starts	const	V/07.1 start
-Reference	ruleTargets	—	data:VMS/10-assist/data/rule-catalog.json#targets	const	V/07.1 target
-Reference	ruleCrossDomainActions	—	data:VMS/10-assist/data/rule-catalog.json#crossDomain	const	пусто: Rule из нескольких кластеров не выражается (V/11.4 Н1.10)
+Reference	ruleTriggers	—	data:VMS/11-backend/data/rule-catalog.json#triggers	const	что исполняет вычислитель (V/11.2 Н1.5)
+Reference	ruleActions	—	data:VMS/11-backend/data/rule-catalog.json#actions	const	email, tg, http, layout, wall, alarmclose не объявляются: предмета нет (ADR-0102 п. 9); duration event — конца события нет
+Reference	ruleConditions	—	data:VMS/11-backend/data/rule-catalog.json#conditions	const	online, recording, armed — состояние в момент решения (ADR-0105 п. 3)
+Reference	ruleControls	—	data:VMS/11-backend/data/rule-catalog.json#controls	const	ask, escalate с дверью ответа (V/11.4 Н1.10)
+Reference	ruleStarts	—	data:VMS/11-backend/data/rule-catalog.json#starts	const	V/07.1 start
+Reference	ruleTargets	—	data:VMS/11-backend/data/rule-catalog.json#targets	const	V/07.1 target
+Reference	ruleCrossDomainActions	—	data:VMS/11-backend/data/rule-catalog.json#crossDomain	const	пусто: Rule из нескольких кластеров не выражается (V/11.4 Н1.10)
 Reference	layouts, monitors	—	[]	const	раскладок клиента и видеостены нет
 License	—	GET /domain/cam/books/licence	запись книги decision (V/01.7)	read	только чтение: книги нет — items пусто (V/11.3 Н1.3)
 License	kind	—	"cameras"	const	acfa своего счёта нет
@@ -518,7 +518,7 @@ StreamAccountSecret	name, password	POST /live/accounts	account.name, password	re
 StreamAccountCreate, StreamAccountPatch	name, disabled	live/accounts	name, disabled	write	V/11.4 Н1.18
 AssistTurnRequest	text, context, secrets, kind	—	V/11.7 Н1.1	write	состояния у backend нет
 AssistEvent	type, at, text, context, summary, items, rules, field, code, message	—	V/11.7 Н1.4	read
-AssistRuleEdit	table, op, id, ref, body	—	V/10.7 Н1.4	read	план типа rules; запись — человек, V/10.7 Н1.7
+AssistRuleEdit	table, op, id, ref, body	—	V/11.13 Н1.4	read	план типа rules; запись — человек, V/11.13 Н1.7
 AssistPlanItem	deviceId, version, set, name, changes	—	V/11.7 Н1.3	read
 AssistChange	field, before, after, why	—	V/11.7 Н1.3	read	у секрета before нет
 OperationRequest	idempotencyKey	backend/repeats	<h>	write	V/11.4 Н1.4, Н1.8

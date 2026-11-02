@@ -5,7 +5,7 @@
 # worker (P/03: placement, epoch, lease, heartbeat, a door) with the model server as its child process on a unix socket
 # nobody else can open (V/10.1). The worker has no rights of its own: it reads no other subsystem's rows, holds nobody's
 # credentials, and what it is told comes from the page under the admin's session — the page runs the turn, the tools
-# and the check (V/10.3–V/10.5); the worker only answers one model step at a time (V/10.2).
+# and the check (V/11.9–V/11.11); the worker only answers one model step at a time (V/10.2).
 #
 # Why a unit and not a daemon on every server: the model is twelve gigabytes of memory, and placement by a label is
 # how the platform already says "this server, not that one". Why the model server is a child and not a part

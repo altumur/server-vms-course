@@ -57,7 +57,7 @@ unit:
         through:  {type: number}                 # media seconds watched through
         events:   {type: integer, minimum: 0}
         overrun:  {type: number, minimum: 0}     # seconds the device's ring erased before the watch got there
-# The words of the console and of the assistant (V/10.4 Н1.4): labels the admin's text names a field by.
+# The words of the console and of the assistant (V/11.10 Н1.4): labels the admin's text names a field by.
 display:
   unit: обход архива камеры
   units: обходы архива камер

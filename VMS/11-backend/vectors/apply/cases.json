@@ -1,7 +1,7 @@
 [
  {
   "id": "apply-ok",
-  "rule": "V/10.6 Н1.1, Н1.4 строка — один PUT с ifMatch; секрет — только в теле",
+  "rule": "V/11.12 Н1.1, Н1.4 строка — один PUT с ifMatch; секрет — только в теле",
   "console": "stand3",
   "plan": [
    {
@@ -85,7 +85,7 @@
  },
  {
   "id": "apply-moved",
-  "rule": "V/10.6 Н1.4 412 — moved, повтора нет",
+  "rule": "V/11.12 Н1.4 412 — moved, повтора нет",
   "console": "stand3",
   "plan": [
    {
@@ -169,7 +169,7 @@
  },
  {
   "id": "apply-refused",
-  "rule": "V/10.6 Н1.4 отказ двери — refused со словами",
+  "rule": "V/11.12 Н1.4 отказ двери — refused со словами",
   "console": "stand3",
   "plan": [
    {
@@ -256,7 +256,7 @@
  },
  {
   "id": "apply-401",
-  "rule": "V/10.6 Н1.4 401 — прочие skipped",
+  "rule": "V/11.12 Н1.4 401 — прочие skipped",
   "console": "stand3",
   "plan": [
    {
@@ -325,7 +325,7 @@
  },
  {
   "id": "apply-unknown-pending",
-  "rule": "V/10.6 Н1.4 неизвестный исход, revision та же — pending",
+  "rule": "V/11.12 Н1.4 неизвестный исход, revision та же — pending",
   "console": "stand3",
   "plan": [
    {
@@ -409,7 +409,7 @@
  },
  {
   "id": "apply-unknown-applied",
-  "rule": "V/10.6 Н1.4 revision + 1 и поля = to, без секрета — applied; с секретом — unknown",
+  "rule": "V/11.12 Н1.4 revision + 1 и поля = to, без секрета — applied; с секретом — unknown",
   "console": "stand3",
   "plan": [
    {
@@ -505,7 +505,7 @@
  },
  {
   "id": "apply-unknown-absent",
-  "rule": "V/10.6 Н1.4 нет поля в чтении — равно null: to null, revision + 1 — applied",
+  "rule": "V/11.12 Н1.4 нет поля в чтении — равно null: to null, revision + 1 — applied",
   "console": "stand3",
   "plan": [
    {
@@ -552,7 +552,7 @@
  },
  {
   "id": "apply-unknown-other",
-  "rule": "V/10.6 Н1.4 иная revision, поля не те, строки нет — unknown",
+  "rule": "V/11.12 Н1.4 иная revision, поля не те, строки нет — unknown",
   "console": "stand3",
   "plan": [
    {
@@ -635,7 +635,7 @@
  },
  {
   "id": "apply-reset-before-row",
-  "rule": "V/10.6 Н1.4 сброс между строками: следующая не отправляется (RVP-01)",
+  "rule": "V/11.12 Н1.4 сброс между строками: следующая не отправляется (RVP-01)",
   "console": "stand3",
   "plan": [
    {
@@ -705,7 +705,7 @@
  },
  {
   "id": "apply-reset-in-flight",
-  "rule": "V/10.6 Н1.4 сброс, пока строка в пути: её исход неизвестен, следующие не отправляются (RVP-01)",
+  "rule": "V/11.12 Н1.4 сброс, пока строка в пути: её исход неизвестен, следующие не отправляются (RVP-01)",
   "console": "stand3",
   "plan": [
    {
@@ -774,7 +774,7 @@
  },
  {
   "id": "apply-reset-at-start",
-  "rule": "V/10.6 Н1.4 сброс до первой строки: ничего не отправлено (RVP-01)",
+  "rule": "V/11.12 Н1.4 сброс до первой строки: ничего не отправлено (RVP-01)",
   "console": "stand3",
   "plan": [
    {
@@ -826,7 +826,7 @@
  },
  {
   "id": "apply-retry",
-  "rule": "V/10.6 Н1.4 «Повторить» — только pending и skipped с прежним ifMatch; 412 у повтора — чтение",
+  "rule": "V/11.12 Н1.4 «Повторить» — только pending и skipped с прежним ifMatch; 412 у повтора — чтение",
   "console": "stand3",
   "plan": [
    {

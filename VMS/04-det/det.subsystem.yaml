@@ -50,7 +50,7 @@ unit:
     # process's timer dies with the process. Past it the controller unplaces the row and the worker stops the
     # model (`placement.ends`, P/04 Н1.3); a row a scenario made is deleted, one an operator made stays.
     until:     {type: float,  default: 0}          # unix seconds; 0 — never
-# The words of the console and of the assistant (V/10.4 Н1.4): labels the admin's text names a field by.
+# The words of the console and of the assistant (V/11.10 Н1.4): labels the admin's text names a field by.
 display:
   unit: детектор
   units: детекторы
