@@ -517,6 +517,7 @@ StreamAccount	name, disabled, at, by	live/accounts	те же поля	both	дв�
 StreamAccountSecret	name, password	POST /live/accounts	account.name, password	read	пароль один раз, в журнал и строку не попадает (V/11.4 Н1.18)
 StreamAccountCreate, StreamAccountPatch	name, disabled	live/accounts	name, disabled	write	V/11.4 Н1.18
 AssistTurnRequest	text, context, secrets, kind	—	V/11.7 Н1.1	write	состояния у backend нет
+AssistTurnRequest	world	—	V/11.7 Н1.1	write	не принимается, 422: AssistWorld — схема демо-страницы контракта
 AssistEvent	type, at, text, context, summary, items, rules, field, code, message	—	V/11.7 Н1.4	read
 AssistRuleEdit	table, op, id, ref, body	—	V/11.13 Н1.4	read	план типа rules; запись — человек, V/11.13 Н1.7
 AssistPlanItem	deviceId, version, set, name, changes	—	V/11.7 Н1.3	read

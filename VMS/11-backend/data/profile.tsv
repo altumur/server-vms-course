@@ -1,6 +1,6 @@
 # Профиль возможностей стенда VMS для тестов API consolem (V/11.6 Н1.2): одна строка на операцию контракта
-# consolem.openapi.json @23c3e1b. profile: in — тесты операции гоняются; out — операция отвечает 404 NO_ROUTE, тест
-# вне профиля (тест самого NO_ROUTE — в профиле); stand — только на стенде (/test/reset, /test/clock). Читает драйвер стенда; при новой
+# consolem.openapi.json @13ba770. profile: in — тесты операции гоняются; out — операция отвечает 404 NO_ROUTE, тест
+# вне профиля (тест самого NO_ROUTE — в профиле); stand — только на стенде (/test/reset, /test/clock, /test/stream-elsewhere). Читает драйвер стенда; при новой
 # версии контракта таблица сверяется (V/11.2). Набор продукта — one-domain, часы — --clock real (ответ consolem, ADR-0094
 # доп. (4)). Строки in — список capabilities.operations в GET /reference (V/11.2 Н1.5): объявление и таблица сверяются,
 # расхождение — исправление таблицы, не молчаливая замена. Автоматизация — V/11.2 № 48–77 (ADR-0105).
@@ -135,3 +135,4 @@ n	method	path	profile	why
 128	GET	/domains/{domainId}/relays	in	переводится (V/11.3 Н1.2а; ADR-0112)
 129	GET	/domains/{domainId}/relays/{name}	in	переводится (V/11.3 Н1.2а; ADR-0112)
 130	PUT	/devices/{deviceId}/recording-target	in	переводится (V/11.4 Н1.14; ADR-0112)
+131	POST	/test/stream-elsewhere	stand	только на стенде: TEST_SUPPORT=1 и отметка петли консоли (V/11.6 Н1.3)

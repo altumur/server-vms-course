@@ -5251,9 +5251,13 @@
           },
           "default": {
             "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem",
+            "description": "В watch больше watchMax id: VALIDATION_FAILED, field: watch"
           }
         },
-        "description": "Изменения от других администраторов, статусы, ход длительных операций. После переподключения сервер досылает сообщения после Last-Event-ID; если их уже нет — шлёт stream.reset, и клиент перечитывает данные. Первое сообщение — stream.hello {clientId}. События устройств приходят только по наблюдаемым (PUT /stream/{clientId}/watch) и их детям. Операции, правила, права и домен приходят всем.",
+        "description": "Изменения от других администраторов, статусы, ход длительных операций. После переподключения сервер досылает сообщения после Last-Event-ID; если их уже нет — шлёт stream.reset, и клиент перечитывает данные. Первое сообщение — stream.hello {clientId}. События устройств приходят только по наблюдаемым и их детям. Список наблюдаемых держит поток: задаётся параметром watch при открытии или PUT /stream/{clientId}/watch. Операции, правила, права и домен приходят всем.",
         "parameters": [
           {
             "name": "Last-Event-ID",
@@ -5263,6 +5267,15 @@
               "type": "string"
             },
             "description": "С какого сообщения дослать пропущенное"
+          },
+          {
+            "name": "watch",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Что наблюдать с открытия потока: id через запятую, до watchMax. Сверх предела — 422 VALIDATION_FAILED, field: watch. Форма открывает так поток после 404 на PUT /stream/{clientId}/watch"
           }
         ]
       }
@@ -6933,7 +6946,7 @@
           "stream"
         ],
         "summary": "Что наблюдает поток",
-        "description": "Раскрытые ветки и открытая карточка, до watchMax id. Заменяет прошлый список. Сверх предела — 422 VALIDATION_FAILED, field: ids",
+        "description": "Раскрытые ветки и открытая карточка, до watchMax id. Заменяет прошлый список. Сверх предела — 422 VALIDATION_FAILED, field: ids. Список держит поток, поэтому при нескольких экземплярах консоли запрос может прийти не туда, где открыт поток: 404. Это не ошибка клиента: форма переоткрывает поток со списком в запросе, GET /stream?watch=…, и перечитывает наблюдаемые ветки",
         "parameters": [
           {
             "name": "clientId",
@@ -6962,7 +6975,8 @@
             "$ref": "#/components/responses/Problem"
           },
           "404": {
-            "$ref": "#/components/responses/Problem"
+            "$ref": "#/components/responses/Problem",
+            "description": "Потока clientId на этом экземпляре нет: закрыт или открыт на другом. Форма переоткрывает поток с параметром watch"
           },
           "422": {
             "$ref": "#/components/responses/Problem"
@@ -7309,6 +7323,21 @@
           },
           "default": {
             "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/test/stream-elsewhere": {
+      "post": {
+        "operationId": "testStreamElsewhere",
+        "tags": [
+          "test-support"
+        ],
+        "summary": "Потоки ушли на другой экземпляр",
+        "description": "Только тестовый стенд. Открытые потоки продолжают идти, но PUT /stream/{clientId}/watch на них отвечает 404, как при двух экземплярах консоли, когда запрос пришёл не туда. Поток, открытый после вызова, работает как обычно",
+        "responses": {
+          "204": {
+            "description": "Готово"
           }
         }
       }
@@ -16109,6 +16138,9 @@
               "rules"
             ],
             "description": "Тип запроса: config — настройка устройств, rules — правила автоматизации. Нет поля — config. Тип называет вызывающий: бэкенд текст просьбы не разбирает, чтобы его угадать"
+          },
+          "world": {
+            "$ref": "#/components/schemas/AssistWorld"
           }
         },
         "description": "Ход разговора с ассистентом. Своего состояния у бэкенда нет: разговор держит клиент"
@@ -18259,6 +18291,66 @@
             "minimum": 1
           }
         }
+      },
+      "AssistWorld": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "devices",
+          "folders",
+          "rules",
+          "schedules",
+          "modes",
+          "maintenanceWindows"
+        ],
+        "properties": {
+          "reference": {
+            "$ref": "#/components/schemas/Reference"
+          },
+          "devices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Device"
+            },
+            "description": "Все устройства полными записями, как GET /devices/{deviceId}. Состав папок — Device.folderIds"
+          },
+          "folders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Folder"
+            },
+            "description": "Все папки"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rule"
+            },
+            "description": "Все правила"
+          },
+          "schedules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Schedule"
+            },
+            "description": "Все расписания"
+          },
+          "modes": {
+            "$ref": "#/components/schemas/Modes"
+          },
+          "maintenanceWindows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaintenanceWindow"
+            },
+            "description": "Все окна обслуживания"
+          },
+          "me": {
+            "$ref": "#/components/schemas/Me"
+          }
+        },
+        "description": "Только демо-страница. Снимок встроенного сервера: у службы ассистента демо-страницы своих данных нет, сервер живёт в браузере. Массивы целиком, страниц нет. V/11 это поле не принимает и не отдаёт: бэкенд читает свою систему сам"
       }
     }
   }

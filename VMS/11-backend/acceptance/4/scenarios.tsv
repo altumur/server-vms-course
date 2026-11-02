@@ -227,7 +227,7 @@ scenario	step	request	expect
 09-stream	28	holder PUT /domain/grants/m1 {"lines": [{"subject": "ann", "cap": "view", "scope": "unit:cam/1", "sub": "cam"}, {"subject": "ann", "cap": "view", "scope": "unit:cam/2", "sub": "cam"}, {"subject": "root", "cap": "admin", "scope": "*"}]}	200 {"cluster": "m1"}
 09-stream	29	@stream-wait s2 90	ok {"type": "stream.reset"}
 09-stream	30	@stream-close s2	ok
-09-stream	31	@stream-open s3 member m1 console2 @header Last-Event-ID: not-a-number GET /api/stream	2xx
+09-stream	31	@stream-open s3 member m1 console2 @header Last-Event-ID: not-a-number GET /api/stream?watch=ca08e8ba-11ab-5128-97e6-d03888680c2e	2xx
 09-stream	32	@stream-wait s3 30	ok {"type": "stream.reset"}
 09-stream	33	member m1 console2 GET /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e	200 {"version": "$v1c"}
 09-stream	34	member m1 console2 @header If-Match: "$v1c" PATCH /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e {"name": "c1b"}	200 {"version": "$v1d"}
@@ -237,7 +237,7 @@ scenario	step	request	expect
 09-stream	38	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 09-stream	39	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "$dom"}]}
 09-stream	40	member m1 console2 @header If-Match: "$v1d" PATCH /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e {"name": "c1c"}	200 {"version": "$v1e"}
-09-stream	41	@stream-open s4 member m1 console2 @header Last-Event-ID: $q GET /api/stream	2xx
+09-stream	41	@stream-open s4 member m1 console2 @header Last-Event-ID: $q GET /api/stream?watch=ca08e8ba-11ab-5128-97e6-d03888680c2e	2xx
 09-stream	42	@stream-wait s4 30	ok {"type": "entity.changed", "entityId": "ca08e8ba-11ab-5128-97e6-d03888680c2e", "version": "$v1e"}
 09-stream	43	@stream-close s4	ok
 09-stream	44	@stream-open s5 member m1 console2 @header Last-Event-ID: not-a-number GET /api/stream	2xx
@@ -255,12 +255,27 @@ scenario	step	request	expect
 09-stream	56	member m1 console2 PUT /api/stream/00000000000000000000000000000000/watch {"ids": []}	404 {"code": "NOT_FOUND"}
 09-stream	57	member m1 console2 POST /api/devices {"idempotencyKey": "tree-1-key", "items": [{"device": {"type": "camera", "name": "c9", "ip": "10.9.9.9", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"failed": []}
 09-stream	58	@stream-wait s7 30	ok {"type": "tree.changed", "layout": "servers"}
-09-stream	59	@stream-wait s7 30	ok {"type": "entity.created", "kind": "device"}
-09-stream	60	member m1 console2 PUT /api/stream/$c7/watch {"ids": []}	204
-09-stream	61	member m1 console2 POST /api/devices {"idempotencyKey": "tree-2-key", "items": [{"device": {"type": "camera", "name": "c10", "ip": "10.9.9.10", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"failed": []}
-09-stream	62	@stream-wait s7 30	ok {"type": "tree.changed", "layout": "servers"}
-09-stream	63	@stream-none s7 5 ~entity.created	ok
-09-stream	64	@stream-close s7	ok
+09-stream	59	member m1 console2 POST /api/devices {"idempotencyKey": "tree-2-key", "items": [{"device": {"type": "camera", "name": "c10", "ip": "10.9.9.10", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"failed": []}
+09-stream	60	@stream-wait s7 30	ok {"type": "tree.changed", "layout": "servers"}
+09-stream	61	@stream-none s7 5 ~entity.created	ok
+09-stream	62	@stream-close s7	ok
+09-stream	63	member m1 console2 GET /api/stream?watch=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199,200	422 {"code": "VALIDATION_FAILED", "field": "watch"}
+09-stream	64	@stream-open s8 member m1 console2 GET /api/stream?watch=ca08e8ba-11ab-5128-97e6-d03888680c2e	2xx
+09-stream	65	@stream-wait s8 30	ok {"type": "stream.hello", "clientId": "$c8"}
+09-stream	66	member m1 console2 GET /api/devices/ca07be2d-dfe2-5601-b0b3-f4eba44b12f8	200 {"version": "$v8a"}
+09-stream	67	member m1 console2 @header If-Match: "$v8a" PATCH /api/devices/ca07be2d-dfe2-5601-b0b3-f4eba44b12f8 {"name": "c2b"}	200 {"name": "c2b"}
+09-stream	68	@stream-none s8 10 ~ca07be2d-dfe2-5601-b0b3-f4eba44b12f8	ok
+09-stream	69	member m1 console2 GET /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e	200 {"version": "$v8b"}
+09-stream	70	member m1 console2 @header If-Match: "$v8b" PATCH /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e {"name": "c1d"}	200 {"version": "$v8c"}
+09-stream	71	@stream-wait s8 30	ok {"type": "entity.changed", "kind": "device", "entityId": "ca08e8ba-11ab-5128-97e6-d03888680c2e", "version": "$v8c"}
+09-stream	72	@stream-close s8	ok
+09-stream	73	@stream-open s9 member m1 console2 GET /api/stream	2xx
+09-stream	74	@stream-wait s9 30	ok {"type": "stream.hello"}
+09-stream	75	member m1 console2 GET /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e	200 {"version": "$v9a"}
+09-stream	76	member m1 console2 @header If-Match: "$v9a" PATCH /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e {"name": "c1e"}	200 {"name": "c1e"}
+09-stream	77	@stream-none s9 10 ~ca08e8ba-11ab-5128-97e6-d03888680c2e	ok
+09-stream	78	@stream-close s9	ok
+09-stream	79	@manual POST /test/stream-elsewhere: открытый поток идёт, PUT на него 404 NOT_FOUND, поток после вызова обычный: стенд сценария без TEST_SUPPORT, судит api-pages.js	manual
 10-archives	1	@domain m1	ok
 10-archives	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 10-archives	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
