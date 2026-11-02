@@ -512,6 +512,18 @@ paths:
         '401': {description: Нет личности}
         '403': {description: Нет права admin}
         '404': {description: Партии нет}
+  /domain/issued/{sub}/{kind}/{ref}:
+    delete:
+      summary: Отзыв токенов цели вида keep (P/08.2 Н1.6а; право admin домена)
+      parameters:
+      - {name: sub, in: path, required: true, schema: {type: string}}
+      - {name: kind, in: path, required: true, schema: {type: string}}
+      - {name: ref, in: path, required: true, schema: {type: string}}
+      responses:
+        '200': {description: 'Передача процессу', content: {application/json: {schema: {type: object, additionalProperties: true}}}}
+        '401': {description: Нет личности}
+        '403': {description: Нет права admin}
+        '404': {description: Строки нет}
   /domain/topology:
     get:
       summary: Топология домена (Н1.2в)

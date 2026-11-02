@@ -670,6 +670,17 @@ paths:
       responses:
         '201': {description: '{name, token, until}'}
         '400': {$ref: '#/components/responses/BodyRefused'}
+  /domain/issued/{sub}/{kind}/{ref}:
+    parameters:
+      - {name: sub, in: path, required: true, schema: {type: string}}
+      - {name: kind, in: path, required: true, schema: {type: string}}
+      - {name: ref, in: path, required: true, schema: {type: string}}
+    delete:
+      operationId: issuedRevoke
+      summary: Отзыв токенов цели вида keep (глава 8.2 Н1.6а)
+      responses:
+        '200': {description: '{revoked}'}
+        '404': {$ref: '#/components/responses/Refused'}
   /domain/batches/{batch}:
     parameters:
       - name: batch

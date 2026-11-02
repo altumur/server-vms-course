@@ -292,7 +292,7 @@
    "pattern": "^(?:[a-z0-9-]{1,64})$"
   },
   "common.domain_member_entry": {
-   "description": "запись члена Entry (P/08.3 Н1.1); by — только у admitted, Entry не больше ENTRY_MAX 820 байт JCS (P/08.10 Н1.5) — проверки урока у писателя, не формы",
+   "description": "запись члена Entry (P/08.3 Н1.1); by — только у admitted, Entry не больше ENTRY_MAX 1240 байт JCS (P/08.10 Н1.5) — проверки урока у писателя, не формы",
    "type": "object",
    "properties": {
     "how": {
