@@ -527,6 +527,7 @@ domain:
   ref: ref
   # What a backend on another member needs of this one (ADR-0110, V/11.3 Н1.2а): the disks of a server, a word of the
   # server and not of a unit (ADR-0111 п. 2), the recordings behind `Device` and the volumes behind `Archive`, `Volume`.
+  # `disks` also keeps `pulse.rec` alive: without any view_pulse field the agent sends no stale for rec (V/02.9 Н1.6)
   view_pulse: [disks]
   view_tables:
     recordings: [cam, ref, stream, retention_days, enabled, home, when, replica_from]
