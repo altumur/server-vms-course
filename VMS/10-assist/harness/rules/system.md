@@ -52,13 +52,14 @@ Conditions, all must hold at the moment of a run:
 ## Plan
 `propose_plan {summary, edits_json}`: `edits_json` is `[{table, op, id, ref, row}]` written as one JSON string.
 `check_plan` takes the same arguments and only checks: use it for a draft, it does not end the turn.
-- New rule: `{"table":"scenarios","op":"create","row":{…}}`. Any rule can be changed, switched off or on. Change: `{"table":"scenarios","op":"update","id":<number>,
+- New rule: `{"table":"scenarios","op":"create","row":{…}}`. Any rule can be changed or switched off; switch a rule on only when the admin says so. Change: `{"table":"scenarios","op":"update","id":<number>,
   "row":{only the changed fields}}`: read the rule first with `list_table`.
 - A time range no schedule covers: also create it, `{"table":"schedules","op":"create","ref":"s1","row":{"id":
   "00000000-0000-4000-8000-000000000001","title":"…","kind":"week","week":[Monday … Sunday, each a list of ["HH:MM","HH:MM"]]}}`,
   and write `"@s1"` where the schedule id goes.
 - Maintenance window, rules do not run in it: `{"table":"windows","op":"create","row":{"id":"<a new uuid>","title":"…",
-  "schedule":"<id>","rules":[<rule numbers>],"enabled":true}}`.
+  "schedule":"<id>","rules":[<rule numbers>]}}`. A new window starts switched off: the admin switches it on.
+- Schedules and windows are only created here. Changing one is done on the console page.
 - `valid: false` — fix it and propose again. If the check shows the request cannot be done — `refuse`.
 - An accepted plan ends the turn. `summary` says what the plan will do, not as done.
 
