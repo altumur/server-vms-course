@@ -202,7 +202,7 @@ pc.on("refresh",async d=>{
 });
 function farRecsOfCam(id){
   const c=camById(id),ref=c&&c.ref,p=ref&&PRIMARIES&&PRIMARIES[ref],marker=PRIMARIES&&PRIMARIES[""];
-  if(!p||!marker||!Array.isArray(marker.missing)||!Array.isArray(p.entries)||!Array.isArray(p.missing))return[];
+  if(!p||!marker||!Array.isArray(marker.missing)||!Array.isArray(p.entries))return[];
   // this cluster's name not read (no /api/held answer): ours are known by this cluster's own recording ids, as before
   const own=SELF?null:new Set(recsOfCam(id).map(r=>String(r.id))),out=[],seen=new Set();
   for(const e of p.entries){
