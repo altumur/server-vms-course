@@ -1,9 +1,7 @@
 # Сценарии хода — V/11.9
 
-Цикл хода панели «Ассистент» без модели и без DOM: ядро страницы (`VMS/01-cam/cam.shell.html`, между метками
-`assist:core`) ведёт ход по записанным ответам двери модели над консолью
-[`../plan-check/stand3.console.json`](../plan-check/README.md). Исполняет свой прогон jsdom VMS у раннера (ADR-0093
-доп. (1) п. 11).
+Цикл хода без модели: `backend` ведёт ход по записанным ответам двери модели над консолью
+[`../plan-check/stand3.console.json`](../plan-check/README.md). Исполняет драйвер `backend` (V/11.7 Н5).
 
 ```yaml
 id, rule:       имя и правило V/11.9
@@ -11,7 +9,7 @@ console:        консоль — ../plan-check/<имя>.console.json
 text:           просьба админа
 answers:        ответы админа на ask_admin по порядку (тексты хода)
 answer_secrets: номера секретов, введённых вместе с ответом
-cancel_on_tool: имя инструмента — сброс панели, пока он исполняется (cancelled() — да с этого вызова; V/11.9 Н1.6)
+cancel_on_tool: имя инструмента — закрытый поток, пока он исполняется (cancelled() — да с этого вызова; V/11.9 Н1.6)
 context:        окно строки модели (умолчание 16384); prompt_tokens — usage каждого ответа модели
 model:          ответы шагов по порядку — {ok: true, message, usage} (состояние done двери: message как есть),
                 {ok: false, lost: true} (410/404), {ok: false, why, reason} (failed и прочие исходы шага, V/11.9 Н1.3)
