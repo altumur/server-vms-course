@@ -550,7 +550,7 @@ to_worker: заголовки ровно: Content-Type, Idempotency-Key, If-Matc
           X-W2C-Pass-Console — слушатель обратного вызова выдавшего экземпляра, https://<SERVER_NAME>:<CONSOLE_CALL_PORT>, только с комплектом (без него воркер зовёт сокет роли);
           X-W2C-Loopback: 1 — только если адрес TCP-соединения клиента с консолью 127.0.0.1 или ::1 (заголовки адреса не читаются).
           Authorization, куки, X-Operator, X-User и прочие не уходят; пришедшие извне X-W2C-Loopback и X-W2C-Pass-Console консоль снимает всегда
-to_client: от воркера — статус, тело и заголовки ровно Content-Type, ETag; консоль добавляет X-Content-Type-Options: nosniff и
+to_client: от воркера — статус, тело и заголовки ровно Content-Type, ETag, Cache-Control (ADR-0112 доп. (3) п. 5, доп. (4) п. 5); консоль добавляет X-Content-Type-Options: nosniff и
           Content-Security-Policy: sandbox: иначе скрипт захваченного воркера исполнился бы под источником консоли с её кукой
 types:    Content-Type ответа — application/json, application/problem+json, text/event-stream, с параметрами или без; ответ без тела (204, 304) — без
           Content-Type; иное — 502 «<worker> did not answer», тело воркера клиенту не уходит; сравнение типа — без учёта регистра, по части до «;»

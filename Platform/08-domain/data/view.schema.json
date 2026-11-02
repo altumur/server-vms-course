@@ -448,6 +448,25 @@
    "description": "сколько стуков лежит в domain/knocks/* (P/08.1 Н1.4б)",
    "type": "integer",
    "minimum": 0
+  },
+  "backup_short": {
+   "description": "есть камеры, а взявших копию меньше BACKUP_HOLDERS (P/08.8 Н1.5 new_camera)",
+   "type": "object",
+   "properties": {
+    "have": {
+     "description": "взявших копию",
+     "$ref": "#/$defs/common.uint53"
+    },
+    "need": {
+     "description": "BACKUP_HOLDERS",
+     "$ref": "#/$defs/common.uint53"
+    }
+   },
+   "additionalProperties": false,
+   "required": [
+    "have",
+    "need"
+   ]
   }
  },
  "additionalProperties": false,

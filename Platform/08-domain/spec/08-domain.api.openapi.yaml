@@ -2348,6 +2348,14 @@ components:
             age: {type: number, minimum: 0, description: 'поле двери урока P/10: секунды с as_of по стенным часам консоли домена, один знак после точки (P/10 Н1.2а; разбор ревью стадии B 8–10, № 22: М-7)'}
             trust: {description: 'P/08.1 Н1.2а: {rev, root, book_seal}; отпечаток — глава 8.2 Н1.1'}
             knocking_count: {type: integer, minimum: 0, description: 'P/08.1 Н1.4б.'}
+            backup_short:
+              type: object
+              description: 'есть камеры, а взявших копию меньше BACKUP_HOLDERS (P/08.8 Н1.5 new_camera)'
+              required: [have, need]
+              additionalProperties: false
+              properties:
+                have: {type: integer, minimum: 0}
+                need: {type: integer, minimum: 0}
             knocking: {description: 'P/08.1 Н1.7: [knock…]'}
             reports: {description: 'P/08.1 Н1.7; via — P/08.1 Н1.6а'}
             topology: {description: P/08.1 Н1.6а}
