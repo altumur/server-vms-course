@@ -465,20 +465,27 @@
      "type": "string"
     },
     "gathered": {
-     "description": "строка сбора «из ничего»: источник раздела при записи (P/08.8 Н1.8а gathered)",
-     "type": "object",
-     "properties": {
-      "term": {
-       "$ref": "#/$defs/common.pos53"
+     "description": "строка сбора «из ничего»: источник раздела при записи, null — источника нет (P/08.8 Н1.8а gathered)",
+     "anyOf": [
+      {
+       "type": "object",
+       "properties": {
+        "term": {
+         "$ref": "#/$defs/common.pos53"
+        },
+        "rev": {
+         "$ref": "#/$defs/common.pos53"
+        }
+       },
+       "additionalProperties": false,
+       "required": [
+        "term",
+        "rev"
+       ]
       },
-      "rev": {
-       "$ref": "#/$defs/common.pos53"
+      {
+       "type": "null"
       }
-     },
-     "additionalProperties": false,
-     "required": [
-      "term",
-      "rev"
      ]
     }
    },
