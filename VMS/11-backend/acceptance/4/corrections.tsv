@@ -54,3 +54,4 @@ date	sample	fix	languages
 2026-11-02	4/scenarios.tsv, README: id всех device: пересчитаны формулой V/11.4 Н1.6, приставка ca0; порядок id в шести точных массивах GET /api/devices; body 05-resume шаги 9, 11 пересчитан	ADR-0113 доп. (22)	all
 2026-11-02	4/scenarios.tsv: 16-record шаг 27	buffering, streamProfile сняты: полей нет в DeviceCreate контракта, тело не проходило схему	all
 2026-11-02	4/scenarios.tsv: 40-domain-parts, новый шаг перед первой записью; README: auto на hold	документа ещё нет, манифест auto на держателе: P/08.9 Н1.3	all
+2026-11-02	4/scenarios.tsv: 09-stream шаги 31, 41, новые 65–81	контракт 13ba770: watch запроса открытия; без списка событий устройств нет, прежняя правка «без отбора до PUT» отменена	all
