@@ -51,7 +51,6 @@ folders	403	PERMISSION_DENIED	-	11.4 Н1.7: дерево папок админи
 folders	409	SERVER_OFFLINE	-	11.4 Н1.7: двери домена папок и членства не отвечают
 folders	404	NOT_FOUND	-	11.4 Н4: no such folder, no such parent, parent gone, folder gone, parent moved, row moved стража цепочки
 folders	412	VERSION_MISMATCH	-	11.4 Н4: folder moved, revision moved; current
-folders	422	VALIDATION_FAILED	deviceIds	11.4 Н4: bad member, too many folders, too many members, row too large; 11.4 Н1.7: id вне перечня вида
 folders	422	VALIDATION_FAILED	parentId	11.4 Н4: too deep
 folders	422	NAME_REQUIRED	name	11.4 Н1.7
 folders	422	NOT_SUPPORTED	<поле>	11.4 Н1.7: член папки — не единица

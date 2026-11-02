@@ -127,6 +127,10 @@ door:
       - GET domain/cam/cameras       # camera clusters: pages of the view, ADR-0113 доп. (8) п. 1
       - GET domain/cam/kept/state-summary # the states of the domain's cameras, a circle old (V/01.7 Н1.2)
       - GET domain/relays            # who stands behind a relay, one row (V/11.3 Н1.2а)
+      - GET domain/topology          # the relays themselves (ADR-0112 доп. (12) п. 1)
+      - GET domain/shared/auto       # the document of scenarios, this cluster's copy (V/11.4 Н1.21)
+      - domain/shared                # its edit, whole, by the domain's admin
+      - GET domain/at/auto/heartbeats # its state in the pulse of another member (ADR-0112 доп. (12) п. 3)
       - GET domain/cam/tables/cameras
       - GET domain/cam/tables/devices
       - GET domain/cam/tables/children

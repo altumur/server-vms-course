@@ -6,7 +6,7 @@ Domain	name	GET /session	domain.name; поля domain нет — CLUSTER	read
 Domain	license	—	""	const	лицензий consolem нет
 Domain	online	GET /domain	200 или 403 — true; иначе false; вне домена — true	read	связь с доменом (V/11.3 Н1.2а)
 Domain	version	—	"1"	const	видимые поля домена не меняются (online — связь, версию не двигает)
-Domain	stateSummary	GET domain/cam/kept/state-summary	total, offline, silent, unread, at	read	строки нет, вне домена, 403, неответ — поля нет (V/11.3 Н1.3)
+Domain	stateSummary	GET domain/cam/kept/state-summary	total, offline, silent, unread — целые; at — RFC 3339	read	строки нет, вне домена, 403, неответ — поля нет (V/11.3 Н1.3)
 Server	—	GET /servers + GET /domain	—	read	свой — элемент /servers консоли (P/06.6); чужой — members[].servers[] вида домена, кроме свёрнутых членов (V/11.3 Н1.3 «Server»)
 Server	id	GET /servers + GET /domain	UUID server:<кластер>/<name>	read
 Server	name	GET /servers + GET /domain	name	read
@@ -268,7 +268,7 @@ Folder	parentId	GET /domain/folders	parent	read	"" — null; задаётся п
 FolderDevicesRequest	add, remove	PUT /folders/<id>; в домене PUT /domain/memberof/…	members; folders	write	вместе до selectMax, скрытые на местах (V/11.4 Н1.7)
 Folder	version	GET /folders, GET /domain/folders	index	read	в домене — index дерева (V/11.4 Н1.7)
 FolderCreate	name, domainId, parentId	POST /domain/folders	name, parent	write	domainId иной — NOT_FOUND; вне домена — POST /folders
-FolderPatch	name, deviceIds	PUT /domain/folders/<id>, PUT /domain/memberof/…	name, folders	write	вне домена — PUT /folders/<id>; V/11.4 Н1.7
+FolderPatch	name	PUT /domain/folders/<id>	name	write	вне домена — PUT /folders/<id>; V/11.4 Н1.7
 Archive	—	rec/volumes	—	both	хранилище = один том (строка таблицы rec/volumes) и записи на нём; том edge свёрнутого члена не отдаётся: он storage камеры w2c (V/11.3 Н1.3)
 Archive	id	rec/volumes	UUID archive:<кластер>/rec/volumes/<name>	read	иной, чем у Volume той же строки (V/11.4 Н1.6)
 Archive	name	rec/volumes	name	read	ключ строки: при создании — ключ новой строки; правка — 422 NOT_SUPPORTED, field name
@@ -575,7 +575,8 @@ Device	recordingTarget	GET /domain/placement/rec/<ref>	serverId — первый
 Device	direct	GET domain	members[].url есть — true; нет — false	read	только камера-кластер (V/11.3 Н1.3)
 RecordingTargetRequest	serverId, copies	PUT, DELETE /domain/placement/rec/<ref>	cluster, origin, copies	write	null снимает назначение (V/11.4 Н1.14)
 DeviceRow	—	/devices страницами	запись; камера-кластер — единица вида	read	V/11.3 Н1.2б
-DeviceRow	id, type, domainId, name, online, enabled, licenseExceeded, subtype	GET /devices; GET domain/cam/cameras	поля записи; view	read	V/11.3 Н1.2б
+DeviceRow	id, type, domainId, name, enabled, subtype	GET /devices; GET domain/cam/cameras	поля записи; view	read	камера-кластер: только main пуст, class camera (V/11.3 Н1.2б)
+DeviceRow	online, licenseExceeded	GET /devices; GET domain/cam/cameras	поля записи; phase, state единицы	read	V/11.3 Н1.2б
 DeviceRow	fault	GET /devices; GET domain/cam/cameras	Device.fault; status.device_state	read	V/11.3 Н1.2б
 DeviceRow	version	GET /devices; GET domain/cam/cameras	Device.version; r<revision>	read	/objects/delete принимает обе формы
 DeviceRow	parentId, serverId	GET /devices	поля записи; у камеры-кластера null	read	V/11.3 Н1.2б
@@ -584,10 +585,10 @@ TreeNode	—	GET /tree/children	узел	read	V/11.3 Н1.2б
 TreeNode	id, kind, name, parentId, hasChildren, row	GET /tree/children	запись; unalloc:<domainId> у нераспределённых	read	row — DeviceRow у kind device
 TreePath	id, chains	GET /tree/paths	цепочки от корня	read	GET /domain/memberof/…, GET /domain/folders (V/11.3 Н1.2б)
 TreePathStep	id, kind, name	GET /tree/paths	запись	read
-RelayMember	name	GET domain/topology	relays	read	ждёт двери (V/11.3 Н1.2а)
+RelayMember	name	GET domain/topology	элемент relays	read	V/11.3 Н1.2а
 Relay	name	GET domain/relays	relay	read
 Relay	members	GET domain/relays	members	read	GET /domain/relays/<ретранслятор>, до 5000
-ScenarioDoc	version	GET domain/shared/auto	r<rev>	both	V/11.4 Н1.21; ждёт двери
+ScenarioDoc	version	GET domain/shared/auto	r<rev>	both	V/11.4 Н1.21
 ScenarioDoc	items	GET domain/shared/auto	fields.scenarios.value	both	settings.shared.auto.scenarios, V/07.5 Н1.1
 Scenario	name, enabled	GET domain/shared/auto	name, enabled	both
 Scenario	ratePerMinute	GET domain/shared/auto	rate_per_minute	both
@@ -596,8 +597,8 @@ ScenarioWhen	kind	GET domain/shared/auto	when.kind	both	reference.scenarioKinds
 ScenarioThen	deviceId	GET domain/shared/auto	(then.member, then.camera)	both	id записи V/11.4 Н1.6
 ScenarioThen	action, n, port	GET domain/shared/auto	then.action, then.n, then.port	both
 ScenarioThen	validForSec	GET domain/shared/auto	then.valid_for	both	умолчание 30
-ScenarioStatus	name, phase, reason, since, asked, outcomes, holding	GET /auto/scenarios	слово пульса shared	read	только свой кластер (V/07.5 Н1.6; V/11.4 Н1.21)
-ScenarioStatus	decidedWithout	GET /auto/scenarios	decided_without пульса shared	read
+ScenarioStatus	name, phase, reason, since, asked, outcomes, holding	GET /auto/scenarios; GET domain/at/auto/heartbeats	слово пульса shared; fields.shared	read	кластеры документа (V/07.5 Н1.6; V/11.4 Н1.21)
+ScenarioStatus	decidedWithout	GET /auto/scenarios; GET domain/at/auto/heartbeats	decided_without пульса shared	read
 RoleRow	objectAccessCount	двери домена	ключи objectAccess	read	V/11.8 Н1.1
 RoleRow	spread	GET /domain	role_spread	read	V/11.8 Н1.10; незрителю поля нет
 RoleObject	objectId, levels	двери домена	строки unit: роли	both	/access/roles/{id}/objects; запись — AccessChange roleObject

@@ -255,8 +255,12 @@ scenario	step	request	expect
 09-stream	56	member m1 console2 PUT /api/stream/00000000000000000000000000000000/watch {"ids": []}	404 {"code": "NOT_FOUND"}
 09-stream	57	member m1 console2 POST /api/devices {"idempotencyKey": "tree-1", "items": [{"device": {"type": "camera", "name": "c9", "ip": "10.9.9.9", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"failed": []}
 09-stream	58	@stream-wait s7 30	ok {"type": "tree.changed", "layout": "servers"}
-09-stream	59	@stream-none s7 5 ~10.9.9.9	ok
-09-stream	60	@stream-close s7	ok
+09-stream	59	@stream-wait s7 30	ok {"type": "entity.created", "kind": "device"}
+09-stream	60	member m1 console2 PUT /api/stream/$c7/watch {"ids": []}	204
+09-stream	61	member m1 console2 POST /api/devices {"idempotencyKey": "tree-2", "items": [{"device": {"type": "camera", "name": "c10", "ip": "10.9.9.10", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"failed": []}
+09-stream	62	@stream-wait s7 30	ok {"type": "tree.changed", "layout": "servers"}
+09-stream	63	@stream-none s7 5 ~entity.created	ok
+09-stream	64	@stream-close s7	ok
 10-archives	1	@domain m1	ok
 10-archives	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 10-archives	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
@@ -988,9 +992,18 @@ scenario	step	request	expect
 40-domain-parts	6	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.1", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.2", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"failed": []}
 40-domain-parts	7	member m1 console2 GET /api/domains/$dom	200 {"id": "$dom"}
 40-domain-parts	8	member m1 console2 GET /api/domains/$dom/relays/nobody	404 {"code": "NOT_FOUND"}
-40-domain-parts	9	member m1 console2 GET /api/domains/$dom/relays	503 {"code": "UPSTREAM_UNAVAILABLE"}
-40-domain-parts	10	member m1 console2 GET /api/domains/$dom/scenarios	503 {"code": "UPSTREAM_UNAVAILABLE"}
-40-domain-parts	11	member m1 console2 @header If-Match: "r0" PUT /api/domains/$dom/scenarios {"items": []}	503 {"code": "UPSTREAM_UNAVAILABLE"}
-40-domain-parts	12	member m1 console2 GET /api/domains/$dom/scenarios/status	200 {"items": []}
-40-domain-parts	13	@manual Domain.stateSummary после круга: total, offline, silent, unread, at; незрителю поля нет: круг идёт у держателя, строка kept на стенде не пишется	manual
-40-domain-parts	14	@manual документ сценариев: форма items[i], NAME_TAKEN, If-Match, then.member, 412 по чужой правке, entity.changed kind scenarios: ждёт двери domain/shared в P/06.3 Н1.9	manual
+40-domain-parts	9	member m1 console2 GET /api/domains/$dom/relays	200 {"items": []}
+40-domain-parts	10	member m1 console2 GET /api/domains/$dom/scenarios	200 {"version": "r0", "items": []}
+40-domain-parts	11	member m1 console2 PUT /api/domains/$dom/scenarios {"items": [{"name": "s1", "when": {"deviceId": "3d08e8ba-11ab-5128-97e6-d03888680c2e", "kind": "silent"}, "then": {"deviceId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "action": "preset", "n": 1}}]}	428 {"code": "PRECONDITION_REQUIRED"}
+40-domain-parts	12	@stream-open s1 member m1 console2 GET /api/stream	2xx
+40-domain-parts	13	member m1 console2 @header If-Match: "r0" PUT /api/domains/$dom/scenarios {"items": [{"name": "s1", "when": {"deviceId": "3d08e8ba-11ab-5128-97e6-d03888680c2e", "kind": "silent"}, "then": {"deviceId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "action": "preset", "n": 1}}]}	200 {"version": "$vs", "items": [{"name": "s1"}]}
+40-domain-parts	14	@stream-wait s1 30	ok {"type": "entity.changed", "kind": "scenarios", "entityId": "$dom", "version": "$vs"}
+40-domain-parts	15	@stream-close s1	ok
+40-domain-parts	16	member m1 console2 @header If-Match: "r0" PUT /api/domains/$dom/scenarios {"items": [{"name": "s1", "when": {"deviceId": "3d08e8ba-11ab-5128-97e6-d03888680c2e", "kind": "silent"}, "then": {"deviceId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "action": "preset", "n": 1}}]}	412 {"code": "VERSION_MISMATCH"}
+40-domain-parts	17	@until 30 member m1 console2 GET /api/domains/$dom/scenarios	200 {"version": "$vs", "items": [{"name": "s1", "when": {"deviceId": "3d08e8ba-11ab-5128-97e6-d03888680c2e", "kind": "silent"}, "then": {"deviceId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "action": "preset", "n": 1}}]}
+40-domain-parts	18	member m1 console2 @header If-Match: "$vs" PUT /api/domains/$dom/scenarios {"items": [{"name": "s1", "when": {"deviceId": "3d08e8ba-11ab-5128-97e6-d03888680c2e", "kind": "silent"}, "then": {"deviceId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "action": "preset", "n": 1}},{"name": "s1", "when": {"deviceId": "3d08e8ba-11ab-5128-97e6-d03888680c2e", "kind": "silent"}, "then": {"deviceId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "action": "preset", "n": 1}}]}	409 {"code": "NAME_TAKEN", "field": "items[1].name"}
+40-domain-parts	19	member m1 console2 @header If-Match: "$vs" PUT /api/domains/$dom/scenarios {"items": [{"name": "s1", "when": {"deviceId": "3d08e8ba-11ab-5128-97e6-d03888680c2e", "kind": "motion"}, "then": {"deviceId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "action": "preset", "n": 1}}]}	422 {"code": "VALIDATION_FAILED", "field": "items[0].when.kind"}
+40-domain-parts	20	member m1 console2 @header If-Match: "$vs" PUT /api/domains/$dom/scenarios {"items": [{"name": "s1", "when": {"deviceId": "3d08e8ba-11ab-5128-97e6-d03888680c2e", "kind": "silent"}, "then": {"deviceId": "5937be2d-dfe2-5601-b0b3-f4eba44b12f8", "action": "preset", "n": 1, "port": 1}}]}	422 {"code": "VALIDATION_FAILED", "field": "items[0].then.port"}
+40-domain-parts	21	member m1 console2 GET /api/domains/$dom/scenarios/status	200 {"items": []}
+40-domain-parts	22	@manual Domain.stateSummary после круга: total, offline, silent, unread, at; незрителю поля нет: круг идёт у держателя, строка kept на стенде не пишется	manual
+40-domain-parts	23	@manual чужой status: GET /domain/at/<кластер>/auto/heartbeats, fields.shared, decidedWithout; без admin домена — 403; без связи — 409: на стенде один член с вычислителем и без него	manual
