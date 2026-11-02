@@ -995,10 +995,11 @@ scenario	step	request	expect
 39-recording-target	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
 39-recording-target	5	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "$dom"}]}
 39-recording-target	6	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.1", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.2", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"failed": []}
-39-recording-target	7	member m1 console2 PUT /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/recording-target {"serverId": "92a5a2f5-c063-5b48-b3e5-95000ca864af", "copies": 1}	422 {"code": "NOT_SUPPORTED", "field": "serverId"}
-39-recording-target	8	member m1 console2 PUT /api/devices/00000000-0000-4000-8000-000000000000/recording-target {"serverId": "92a5a2f5-c063-5b48-b3e5-95000ca864af", "copies": 1}	404 {"code": "NOT_FOUND"}
+39-recording-target	7	member m1 console2 PUT /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/recording-target {"serverId": "92a5a2f5-c063-5b48-b3e5-95000ca864af", "copies": []}	422 {"code": "NOT_SUPPORTED", "field": "serverId"}
+39-recording-target	8	member m1 console2 PUT /api/devices/00000000-0000-4000-8000-000000000000/recording-target {"serverId": "92a5a2f5-c063-5b48-b3e5-95000ca864af", "copies": []}	404 {"code": "NOT_FOUND"}
 39-recording-target	9	member m1 console2 PUT /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/recording-target {"serverId": null}	422 {"code": "VALIDATION_FAILED", "field": "copies"}
-39-recording-target	10	@manual камера другого кластера: назначение с rec/recordings связкой, Device.recordingTarget, null снимает, 412, без связи 409; direct false у члена без url, OTHER_CLUSTER с params.url: нужен второй член и камера w2c	manual
+39-recording-target	10	@manual камера другого кластера: назначение с rec/recordings связкой, copies списком: повтор, два сервера одного кластера, сервер кластера основного — 422 field copies, origin с картой в ответе не виден, Device.recordingTarget, null снимает, 412, без связи 409; direct false у члена без url, OTHER_CLUSTER с params.url: нужен второй член и камера w2c	manual
+39-recording-target	11	member m1 console2 PUT /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/recording-target {"serverId": "92a5a2f5-c063-5b48-b3e5-95000ca864af", "copies": 1}	422 {"code": "VALIDATION_FAILED", "field": "copies"}
 40-domain-parts	1	@domain m1	ok
 40-domain-parts	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 40-domain-parts	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
