@@ -514,6 +514,7 @@ display:
     archive.keep.uncopied: сохранённое ещё не скопировано
     archive.keep.garbled: метка «сохранить» не читается
     segment.lost: потерян кусок записи
+    replica.lost: копия отстала, источник стёр раньше
 # The recorders on the domain (V/02.9): a recording is the domain's by its camera's `ref` (the assignment
 # `domain/placement/rec/<ref>`: the cluster of the primary, the camera's cluster as origin, the clusters of backups as
 # copies). Each recorder contributes its held recordings to the book of primaries — with the addresses of its cluster's
