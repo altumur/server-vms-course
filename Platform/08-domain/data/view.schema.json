@@ -315,7 +315,7 @@
    }
   },
   "books": {
-   "description": "`{\"<sub>/<книга>\": {conflicts, dropped, undelivered, person_names?, too_large?, too_large_count?}}` — диагностика сборки книг (P/08.5 Н1.5)",
+   "description": "`{\"<sub>/<книга>\": {conflicts, dropped, undelivered, person_names?, too_large?, too_large_count?, near_ceiling?, near_ceiling_count?}}` — диагностика сборки книг (P/08.5 Н1.5)",
    "type": "object",
    "propertyNames": {
     "description": "`<sub>/<книга>` — каждая собираемая книга каталога (P/02.1 Н1.2б domain.books с from)",
@@ -382,6 +382,19 @@
      },
      "too_large_count": {
       "description": "все такие строки (P/08.5 Н1.5)",
+      "$ref": "#/$defs/common.pos53"
+     },
+     "near_ceiling": {
+      "description": "разделы членов, чья строка book-keys этой книги больше NEAR_CEILING (P/08.5 Н1.5), первые MISSING_SHOWN по возрастанию",
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 500,
+      "items": {
+       "type": "string"
+      }
+     },
+     "near_ceiling_count": {
+      "description": "все такие разделы (P/08.5 Н1.5)",
       "$ref": "#/$defs/common.pos53"
      }
     },
