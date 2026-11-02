@@ -550,8 +550,8 @@
    ]
   },
   {
-   "id": "no-scan",
-   "note": "скан не составляется: Н1.5",
+   "id": "scan-ok",
+   "note": "скан составляется, только before: целая просьба",
    "request": "When motion is detected on Lobby Cam, scan its archive 60 seconds before.",
    "row": {
     "when": [
@@ -571,9 +571,7 @@
      }
     ]
    },
-   "errors": [
-    "then[0]: for now such a rule is created on the console page: refuse"
-   ]
+   "errors": []
   },
   {
    "id": "no-ask",
@@ -1580,9 +1578,9 @@
    ]
   },
   {
-   "id": "no-detect",
-   "note": "detect пока не составляется",
-   "request": "When the Gate Loop sensor trips, run the motion detector on Gate Cam.",
+   "id": "detect-ok",
+   "note": "detect составляется",
+   "request": "When the Gate Loop sensor trips, run the motion detector on Gate Cam for 5 minutes.",
    "row": {
     "when": [
      {
@@ -1605,8 +1603,70 @@
      }
     ]
    },
+   "errors": []
+  },
+  {
+   "id": "detect-params",
+   "note": "придуманная геометрия линии: params модель не пишет",
+   "request": "When the Gate Loop sensor trips, run the line crossing detector on Gate Cam for 5 minutes.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "det",
+      "action": "detect",
+      "cam": "1",
+      "kind": "linecross",
+      "minutes": 5,
+      "params": {
+       "zone": {
+        "shape": "line"
+       }
+      }
+     }
+    ]
+   },
    "errors": [
-    "then[0]: for now such a rule is created on the console page: refuse"
+    "then[0]: params is not written by a plan: ask_admin"
+   ]
+  },
+  {
+   "id": "scan-params",
+   "note": "params скана тоже не пишет",
+   "request": "When motion is detected on Lobby Cam, scan its archive 60 seconds before.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "det",
+      "action": "scan",
+      "cam": "2",
+      "kind": "motion",
+      "before": 60,
+      "params": {
+       "x": 1
+      }
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: params is not written by a plan: ask_admin"
    ]
   },
   {
