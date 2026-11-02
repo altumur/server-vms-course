@@ -24,7 +24,7 @@ Server	labels	GET /servers	labels элемента	both	чужой — поля 
 ServerPatch	name, ip, port, role, netmask, gateway, dns	—	—	none	422 NOT_SUPPORTED, field этого поля (V/11.4 Н1.19)
 Server	version	GET /servers + GET /domain	SHA-256 hex канонического JSON disks и labels; оба пусты — "1"	read	из видимых полей меняются disks, labels (online — связь); тот же набор дисков возвращает прежнее значение, предел V/11.3 Н1.3
 Server	netmask, gateway, dns	—	—	none	сеть сервера не у консоли (features без serverNetwork)
-Server(knocking)	—	GET /domain/members	элемент knocking	read	стучащийся, ещё не член (ADR-0110 доп. (6)); только зрителю домена; fingerprint в Server закрыт, ждёт контракта
+Server(knocking)	—	GET /domain/members	элемент knocking	read	стучащийся, ещё не член (ADR-0110 доп. (6)); только зрителю домена; fingerprint — строкой fingerprint ниже
 Server(knocking)	id	GET /domain/members	UUID server:<name>/	read
 Server(knocking)	name	GET /domain/members	name	read
 Server(knocking)	class	GET /domain/members	class	read	человек подтверждает приёмом (P/08.3 Н1.1а)
