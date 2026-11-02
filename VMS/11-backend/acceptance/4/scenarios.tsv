@@ -996,7 +996,7 @@ scenario	step	request	expect
 40-domain-parts	10	member m1 console2 GET /api/domains/$dom/scenarios	200 {"version": "r0", "items": []}
 40-domain-parts	11	member m1 console2 PUT /api/domains/$dom/scenarios {"items": [{"name": "s1", "when": {"deviceId": "ca08e8ba-11ab-5128-97e6-d03888680c2e", "kind": "silent"}, "then": {"deviceId": "ca07be2d-dfe2-5601-b0b3-f4eba44b12f8", "action": "preset", "n": 1}}]}	428 {"code": "PRECONDITION_REQUIRED"}
 40-domain-parts	12	@stream-open s1 member m1 console2 GET /api/stream	2xx
-40-domain-parts	13	holder GET /domain/shared	200 {"doc": null, "declared": "@any"}
+40-domain-parts	13	holder GET /domain/shared	200 {"doc": null, "declared": {"auto": [{"name": "scenarios"}]}}
 40-domain-parts	14	member m1 console2 @header If-Match: "r0" PUT /api/domains/$dom/scenarios {"items": [{"name": "s1", "when": {"deviceId": "ca08e8ba-11ab-5128-97e6-d03888680c2e", "kind": "silent"}, "then": {"deviceId": "ca07be2d-dfe2-5601-b0b3-f4eba44b12f8", "action": "preset", "n": 1}}]}	200 {"version": "$vs", "items": [{"name": "s1"}]}
 40-domain-parts	15	holder GET /domain/shared	200 {"doc": {"shared": {"auto": {"scenarios": [{"name": "s1", "when": {"member": "m1"}, "then": {"member": "m1", "valid_for": "@absent"}}]}}}}
 40-domain-parts	16	member m1 console2 @header If-Match: "bogus" PUT /api/domains/$dom/scenarios {"items": []}	412 {"code": "VERSION_MISMATCH"}
