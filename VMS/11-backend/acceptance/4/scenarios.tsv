@@ -297,6 +297,7 @@ scenario	step	request	expect
 10-archives	51	member m1 console GET /rec/volumes	200 {"rows": [{"name": "bk-a", "quota_bytes": 500000000, "shrink_confirmed": 500000000}]}
 10-archives	52	member m1 console2 @header If-Match: "$vvol2" PATCH /api/volumes/$vol {"enabled": false}	200 {"enabled": false, "state": "off"}
 10-archives	53	@manual shrinkPendingBytes из пульса регистратора, полная сверка archiveKinds, серверная строка readOnly: стенд без воркеров	manual
+10-archives	54	@manual срок архива: PATCH retentionDays меняет поле тома, срок записей на нём прежний, новая запись backend берёт его; заказ auto-<cam> нет: у сценария нет камеры на этом томе	manual
 11-devices	1	@domain m1	ok
 11-devices	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 11-devices	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
