@@ -23,3 +23,4 @@ date	sample	fix	languages
 2026-10-22	scenarios.tsv 02-controller шаг 8	удаление строки testsub2 контроллером — 200, не 403: у testsub2 retire_when.delete_after и ends (ADR-0091 пп. 1, 2), образец delete:testsub2/tallies/* выводится; сц. 13 — права заказа и состояния	all
 2026-10-31	12-domain-roles/18	ADR-0094 B3: domainagent не пишет новую семью domain/idem/<key>	all
 2026-10-31	12-domain-roles	ADR-0094 доля домена: domainconsole и <s>domain не читают domain/idem/*: там ответы дверей людей и грантов (решение «Архитектора»).	all
+2026-11-02	v12-check-rights: check/*.rights	console читает domain/roles и domain/member-list/*, пишет domain/member-want/*; запреты domainagent на семьи ADR-0113 (вопрос нормы c-go, сц. 04 PASS); чтением, сверка реализацией за c-go	all
