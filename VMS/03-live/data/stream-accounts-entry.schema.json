@@ -9,13 +9,8 @@
    "minLength": 1
   },
   "to": {
-   "description": "получатели — члены domain/member-list (V/03.6 Н1.3)",
-   "type": "array",
-   "minItems": 1,
-   "items": {
-    "type": "string",
-    "minLength": 1
-   }
+   "description": "\"servers\": все члены class server прохода (V/03.6 Н1.3)",
+   "const": "servers"
   },
   "disabled": {
    "description": "отключённая не играет (V/03.6 Н1.1)",

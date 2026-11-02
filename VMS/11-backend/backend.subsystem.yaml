@@ -122,6 +122,8 @@ door:
       # servers, the knocking; a recording's server by its `ref`; a member's tables, one member a call.
       - GET domain
       - GET domain/rec/recordings
+      - GET domain/cam/cameras       # camera clusters: pages of the view, ADR-0113 доп. (8) п. 1
+      - GET domain/cam/kept/state-summary # the states of the domain's cameras, a circle old (V/01.7 Н1.2)
       - GET domain/cam/tables/cameras
       - GET domain/cam/tables/devices
       - GET domain/cam/tables/children

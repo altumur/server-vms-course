@@ -22,9 +22,9 @@ Server	labels	GET /servers	labels элемента	both	чужой — поля 
 ServerPatch	name, ip, port, role, netmask, gateway, dns	—	—	none	422 NOT_SUPPORTED, field этого поля (V/11.4 Н1.19)
 Server	version	GET /servers + GET /domain	SHA-256 hex канонического JSON disks и labels; оба пусты — "1"	read	из видимых полей меняются disks, labels (online — связь); тот же набор дисков возвращает прежнее значение, предел V/11.3 Н1.3
 Server	netmask, gateway, dns	—	—	none	сеть сервера не у консоли (features без serverNetwork)
-Server(knocking)	—	GET /domain	элемент knocking	read	стучащийся, ещё не член (ADR-0110 доп. (6)); только зрителю домена; fingerprint в Server закрыт, ждёт контракта
-Server(knocking)	id	GET /domain	UUID server:<name>/	read
-Server(knocking)	name	GET /domain	name	read
+Server(knocking)	—	GET /domain/members	элемент knocking	read	стучащийся, ещё не член (ADR-0110 доп. (6)); только зрителю домена; fingerprint в Server закрыт, ждёт контракта
+Server(knocking)	id	GET /domain/members	UUID server:<name>/	read
+Server(knocking)	name	GET /domain/members	name	read
 Server(knocking)	domainId	GET /session	Domain.id	read
 Server(knocking)	allocated	—	false	const
 Server(knocking)	online	—	false	const	в домен не принят: о связи не судим
@@ -35,7 +35,7 @@ Server(knocking)	telemetry	—	{}	const
 Server(knocking)	gpu	—	null	const
 Server(knocking)	disks	—	[]	const
 Server(knocking)	labels	—	—	none	меток ещё нет
-Server(knocking)	version	GET /domain	fingerprint	read	новый ключ — новая версия; times, last версию не двигают
+Server(knocking)	version	GET /domain/members	fingerprint	read	новый ключ — новая версия; times, last версию не двигают
 Server(knocking)	netmask, gateway, dns	—	—	none
 Device(type=camera)	—	cam/cameras + rec/recordings + det/units	—	both	сборка: основная строка type camera, её потоки, записи, детекторы (V/11.4)
 Device(type=camera)	id	cam/cameras	UUID device:<кластер>/cam/cameras/<id>	read

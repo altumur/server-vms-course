@@ -31,7 +31,7 @@ lease: {unconfirmed_max: forever}
 # in their heartbeats: with nobody, the device stays held and the stream unread.
 # `creates`: the holder orders its camera's recording on the card of its server, `rec/recordings/cam-<cam>-<volume>`, once:
 # no `until` to renew, a renewal would restart the recording (V/01.6 Н1.7; ADR-0108 доп. (1)); `rec/volumes/` — to see that card.
-worker: {exec: /usr/lib/cam/worker, writes: [devices, children, found, probe_replies, rule_state], creates: [{sub: rec, rows: recordings, key: "{cam}-{home}"}], reads: [rec/recordings/, rec/volumes/, det/units/, live/heartbeats/, domain/rec/primaries, domain/placed/rec/, domain/rec/polls, domain/cam/licence, domain/view, domain/member-list, domain/member-topology, domain/topology]}
+worker: {exec: /usr/lib/cam/worker, writes: [devices, children, found, probe_replies, rule_state], creates: [{sub: rec, rows: recordings, key: "{cam}-{home}"}], reads: [rec/recordings/, rec/volumes/, det/units/, live/heartbeats/, domain/rec/primaries, domain/placed/rec/, domain/rec/polls, domain/cam/licence, domain/view, domain/member-list/, domain/view-rows/, domain/member-topology, domain/topology]}
 # The holder's frames on its own server (V/01.2 Н1.3): a share, `SHM_DIR` of the subsystem file (/run/vms-cam-shm), one
 # file per camera and holder epoch, `<id>-<epoch>.shm`, deleted by its writer, and a lower epoch's by the holder starting the unit (it has no writer); a subscriber on the same server
 # declares `worker.uses: [cam.shm]` (ADR-0091 п. 5) and takes the exact address from the pulse (`live_shm`).
@@ -552,7 +552,7 @@ domain:
   # what the holder knows of a camera: its name, and whether it is on (domain.edit); `main` — a stream that carries a `ref`
   # all the same (the module's form gives a stream its fields too; they are inert, V/01.1 Н1.1а) is told from a camera
   # by the licence count (V/01.7)
-  view: [name, enabled, main]
+  view: [name, enabled, main, type]
   # What a backend on another member needs of this one (ADR-0110, V/11.3 Н1.2а): the words of a unit's heartbeat and the
   # rows behind `Device`. `ref` joins a camera to its recorder on another member; `rec/recordings` carries the same value.
   view_status: [device_state, codec, units_down]
@@ -583,6 +583,8 @@ domain:
     # The licence decision (V/01.7): written by the subsystem's worker on the domain (`camdomain`, P/03.7 Н1.6) — per
     # member, the refs of its cameras that the licence covers; a camera outside is kept, not served.
     licence: {show: [units, licensed]}   # what the book's door shows: `backend` reads it for GET /licenses (V/11.3 Н1.3)
+  kept_read: [state-summary]             # the summary is read by `backend`: GET domain/cam/kept/state-summary (P/10 Н1.2а)
+  kept: [licence-count, state-summary]                  # the count of the licence's circle over the view's parts (V/01.7 Н1.2): the worker's on the domain, delivered to nobody
   tokens:
     stream:
       # Ten years (ADR-0110, addition (9)): a silent domain does not stop a recording. The form is the same, the token
