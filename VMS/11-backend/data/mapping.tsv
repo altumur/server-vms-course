@@ -91,6 +91,7 @@ Device(type=camera)	armed	cam/rule_state	armed	read	строки нет — fals
 Device(type=camera)	disabledByRuleId	cam/rule_state	disabled_by_rule	read	UUID rule:<кластер>/auto/scenarios/<id>; только если disabled_until позже сейчас, иначе null; строка не читается — поля нет
 Device(type=camera)	disabledByRuleAt	cam/rule_state	disabled_at	read	те же условия; секунды → date-time UTC
 Device(type=camera)	recordDetectorIds	auto/scenarios	цель строки записи: строки det/units вида kind камер цели и их встроенные этого вида	both	только при recordMode motion; строки нет — []; разные виды — 422 NOT_SUPPORTED (V/11.3 Н1.3)
+Device(type=camera)	detectorKinds	det/units + cam/device_units	kind строк det/units с её cam и вид встроенных по detector-kinds.tsv, вне таблицы other; без повторов, порядок перечня контракта	read	выключенные тоже; фильтр noDetector — тот же вывод (V/11.3 Н1.2б)
 Device(type=camera)	archiveJobs	GET /domain	false у камеры-кластера и чужой, своя — поля нет	read	V/11.3 Н1.3; в версию не входит
 Device(type=camera)	recordScheduleId	auto/scenarios	schedule условия time строки записи	both	только при recordMode sched; нет — 422 VALIDATION_FAILED (V/11.4 Н1.2)
 Device(type=camera)	mac, writableFields	—	—	none	при создании пропускается без записи: MAC камеры — только из поиска (ADR-0102 доп. (7) п. 3; V/11.3 Н1.1)
@@ -287,6 +288,8 @@ Volume	—	rec/volumes	—	both	том = то же хранилище; том ed
 Volume	id	rec/volumes	UUID volume:<кластер>/rec/volumes/<name>	read
 Volume	archiveId	rec/volumes	UUID archive:<кластер>/rec/volumes/<name>	read	хранилище той же строки
 Volume	heldBy	rec/volumes	held_by	read	строка или null: никто или не подтверждено (V/11.4 Н1.23)
+Volume	incidentsLost	rec/heartbeats	incidents_lost пульса держателя тома incidents	read	только incidents; пусто — поля нет; наблюдение (V/11.4 Н1.23, V/02.7 Н1.5)
+Volume	incidentsAtRisk	rec/heartbeats	incidents_at_risk пульса держателя тома incidents	read	только incidents; пусто — поля нет; наблюдение (V/11.4 Н1.23, V/02.7 Н1.5)
 Volume	name	rec/volumes	name	read	ключ строки: правка — 422 NOT_SUPPORTED, field name
 Volume	disk	rec/volumes	url: путь file:// без конечного сегмента, равного Archive.id, иначе путь целиком; у бакета — схема	both	запись — file://<disk>/<Archive.id> (V/11.3 Н1.3)
 Volume	sizeBytes	rec/volumes	quota_bytes	both
@@ -517,9 +520,9 @@ ExtraArchive	state, reason	rec/heartbeats	phase, reason элемента status[
 StreamAccount	name, disabled, at, by	live/accounts	те же поля	both	дверь шлюза, V/11.4 Н1.18
 StreamAccountSecret	name, password	POST /live/accounts	account.name, password	read	пароль один раз, в журнал и строку не попадает (V/11.4 Н1.18)
 StreamAccountCreate, StreamAccountPatch	name, disabled	live/accounts	name, disabled	write	V/11.4 Н1.18
-AssistTurnRequest	text, context, secrets, kind	—	V/11.7 Н1.1	write	состояния у backend нет
+AssistTurnRequest	text, context, secrets	—	V/11.7 Н1.1	write	состояния у backend нет; поля типа хода в контракте нет (ADR-0093 доп. (13))
 AssistTurnRequest	world	—	V/11.7 Н1.1	write	не принимается, 422: AssistWorld — схема демо-страницы контракта
-AssistEvent	type, at, text, context, summary, items, rules, field, code, message	—	V/11.7 Н1.4	read
+AssistEvent	type, at, text, context, summary, items, rules, field, code, message	—	V/11.7 Н1.4	read	type answer {text, context} — ответ на вопрос о системе, ничего не пишет (ADR-0093 доп. (13))
 AssistRuleEdit	table, op, id, ref, body	—	V/11.13 Н1.4	read	план типа rules; запись — человек, V/11.13 Н1.7
 AssistPlanItem	deviceId, version, set, name, changes	—	V/11.7 Н1.3	read
 AssistChange	field, before, after, why	—	V/11.7 Н1.3	read	у секрета before нет
@@ -573,9 +576,9 @@ ArchiveWatch	overrunSec	detedge/watches	overrun state.cursor вниз до це�
 ArchiveWatch	version	detedge/watches	индекс строки	read
 StreamMessage	—	GET /changes	—	read	лента изменений — норма B2 (глава 5)
 Device	folderIds	GET /domain/memberof/<кластер>/<ссылка>; вне домена GET /folders?member=	folders	read	только GET /devices/{id} (V/11.3 Н1.3)
-Device	recordingTarget	GET /domain/placement/rec/<ref>	serverId — первый сервер cluster; copies	read	запись — RecordingTargetRequest (V/11.4 Н1.14)
+Device	recordingTarget	GET /domain/placement/rec/<ref>	serverId — первый сервер cluster; copies — первые серверы кластеров copies без origin карты	read	запись — RecordingTargetRequest; выбранный сервер не хранится (V/11.3 Н1.3, V/11.4 Н1.14)
 Device	direct	GET domain	members[].url есть — true; нет — false	read	только камера-кластер (V/11.3 Н1.3)
-RecordingTargetRequest	serverId, copies	PUT, DELETE /domain/placement/rec/<ref>	cluster, origin, copies	write	null снимает назначение (V/11.4 Н1.14)
+RecordingTargetRequest	serverId, copies	PUT, DELETE /domain/placement/rec/<ref>	cluster, origin, copies — кластеры serverId из copies, плюс origin с томом edge	write	null снимает назначение; повтор, два сервера одного кластера, кластер основного — 422 field copies (V/11.4 Н1.14)
 DeviceRow	—	/devices страницами	запись; камера-кластер — единица вида	read	V/11.3 Н1.2б
 DeviceRow	id, type, domainId, name, enabled, subtype	GET /devices; GET domain/cam/cameras	поля записи; view	read	камера-кластер: только main пуст, class camera (V/11.3 Н1.2б)
 DeviceRow	online, licenseExceeded	GET /devices; GET domain/cam/cameras	поля записи; phase, state единицы	read	V/11.3 Н1.2б

@@ -58,3 +58,4 @@ date	sample	fix	languages
 2026-11-02	4/scenarios.tsv: новые 41-live, 42-timeline, 43-holds, 44-marks	контракт 08ef01e, этап 8; настоящего видео на стенде нет	all
 2026-11-02	4/scenarios.tsv: 20-motion шаг 10	sched без расписания — 422 field recordScheduleId, строка Н4 «sched 422» снята, сверка С6	all
 2026-11-02	4/scenarios.tsv: 42-timeline шаг 7	книга primaries всем: до первой головы срока дверь раздела 503, шкала называет его в unavailable, шаг ждёт голову	all
+2026-11-03	4/scenarios.tsv: 39-recording-target шаги 7, 8, 10, новый 11	контракт b09cdf8: copies — список serverId, число — 422 field copies	all
