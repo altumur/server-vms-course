@@ -79,7 +79,7 @@ Device(type=camera)	resOptions	cam/devices	resolutions хоста	read	поля 
 Device(type=camera)	labels	cam/cameras	labels	both	метка server:* не отдаётся, запись её сохраняет (V/11.3 Н1.3)
 Device(type=camera)	alarmKinds	cam/cameras	alarms	both
 Device(type=camera)	faultText	cam/heartbeats	reason; нет — warning	read	слова держателя; в версию не входит
-Device(type=camera)	recordState, recordReason	rec/heartbeats, auto/schedules	phase, reason элемента status[] основной <cam>; при sched — слова backend schedule is gone, schedule unread (V/11.3 Н1.3)	read	в версию не входит
+Device(type=camera)	recordState, recordReason	rec/heartbeats, auto/schedules	phase, reason элемента status[] основной <cam>; нет reason — слова replica_lost_s, over_quota; при sched — слова backend schedule is gone, schedule unread (V/11.3 Н1.3)	read	в версию не входит
 Device(type=camera)	ptz	cam/heartbeats	can.ptz	read	can не сказан — поля нет; в версию не входит
 Device(type=camera)	presets	cam/preset_labels, cam/heartbeats	номера строк таблицы и can.preset_names, name — label строки, пустой — имя драйвера	read	запись — операции /presets (V/11.4 Н1.16); в версию не входит
 Device(type=camera)	presetMax	cam/heartbeats	can.presets	read	can не сказан — поля нет; в версию не входит (V/11.4 Н1.16)
@@ -291,7 +291,7 @@ Volume	name	rec/volumes	name	read	ключ строки: правка — 422 NO
 Volume	disk	rec/volumes	url: путь file:// без конечного сегмента, равного Archive.id, иначе путь целиком; у бакета — схема	both	запись — file://<disk>/<Archive.id> (V/11.3 Н1.3)
 Volume	sizeBytes	rec/volumes	quota_bytes	both
 Volume	usedPercent	—	0	const	заполнения тома строка и пульс не несут; поле обязательно в контракте (V/11.3 Н1.3)
-Volume	state	rec/volumes	enabled: false — off, иначе ready	read	V/11.3 Н1.3
+Volume	state	rec/volumes, rec/heartbeats	enabled: false — off, volume_missing пульса — broken, иначе ready	read	V/11.3 Н1.3
 Volume	enabled	rec/volumes	enabled	both	поля нет — true; false — state off
 Volume	shrinkPendingBytes	rec/heartbeats	shrink_pending элемента тома	read	нет — поля нет; в версию не входит (V/11.3 Н1.3)
 Volume	confirmShrinkBytes	rec/volumes	shrink_confirmed	write	равно sizeBytes; не отдаётся (V/11.3 Н1.3)
