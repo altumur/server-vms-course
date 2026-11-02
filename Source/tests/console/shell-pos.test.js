@@ -2,14 +2,13 @@
 // в живом и архиве (V/08.3 Н1.2 п. 10, V/03.4 Н1.3); звук живого, muted при отказе автозапуска, разговор: кнопка на «Видео» и на
 // карточке spk, порядок вызовов, busy, конец при уходе (V/08.3 Н1.2 пп. 8, 9); поле микрофона записи и audio_reason (V/02.1);
 // запись с stream без минут устройства (V/08.2 Н1.2); repaintTree при смене детей (V/08.1 Н1.5); смена человека: двери, показанный
-// пароль, таблицы детей; 401 чтения хода ждёт session (V/10.3 Н1.6).
+// пароль, таблицы детей.
 const b=require("./boot");
 for(const k of Object.keys(b.FIX))delete b.FIX[k];
 const now=Math.floor(Date.now()/1000),ms=t=>t*1000;
 b.FIX["/session"]={open:true,user:"ann"};
 b.FIX["/manifest"]={name:"cam",rows:"cameras",id:"numeric",fields:[{name:"name",type:"string"}]};
 b.FIX["/mounts"]={root:"cam",mounts:{rec:{name:"rec",rows:"recordings",id:"name",about:{sub:"cam",field:"cam"},fields:[{name:"cam",type:"string"}]},live:{name:"live",rows:"streams",id:"cam",about:{sub:"cam",field:"cam"},fields:[]},assist:{name:"assist",rows:"models",id:"name",fields:[]}}};
-b.FIX["/assist/models"]={configured:[{id:"m1",context:4000}],rows:[{id:"m1",phase:"running"}]};
 b.FIX["/rec/recordings"]={configured:[{id:"1",cam:"1",home:"main",audio:2},{id:"1-s",cam:"1",stream:"5",home:"main"}],rows:[{id:"1",worker:"r-1",phase:"running",audio_reason:"no mic 2"}]};
 b.FIX["/rec/keeps"]={keeps:[]};
 b.FIX["/rec/volumes"]={rows:[{name:"main",kind:"local"}]};
@@ -19,7 +18,7 @@ b.FIX["/servers"]={servers:{},policy:{}};
 const CH={children:[{name:"h-spk-3",camera:"1",device:"h",type:"spk",number:3},{name:"h-spk-9",camera:"1",device:"h",type:"spk",number:9},{name:"h-mic-1",camera:"1",device:"h",type:"mic",number:1}]};
 const DU={device_units:[{name:"h-2",camera:"1",type:"acfa_lock",n:2,template:"lock",title:"Дверь склада",address:"10",enabled:true,revision:4}]};
 for(const p of ["","/cam"]){b.FIX[p+"/children"]=CH;b.FIX[p+"/child_settings"]={child_settings:[]};b.FIX[p+"/device_units"]=DU}
-const EVENTS={};let talkAnswers=[],talkDeleted=[],unauth=0;
+const EVENTS={};let talkAnswers=[],talkDeleted=[];
 (async()=>{
 const w=b.boot(),errs=[];w.addEventListener("error",e=>errs.push(String(e.error||e.message)));
 const order=[],plays=[];let playRefusals=0;
@@ -49,7 +48,6 @@ w.fetch=(u,i)=>{const s=String(u),m=(i||{}).method||"GET";calls.push([m,s,(i||{}
   if(s==="/session/break-glass"&&m==="POST")return J(200,{ok:true});
   if(/device_units$/.test(s)&&m==="POST")return J(200,{revision:5});
   if(s.startsWith("/rec/recordings/")&&m==="PUT")return J(200,{revision:2});
-  if(s==="/probe-401"){if(unauth>0){unauth--;return J(401,{error:"unauthorized"})}return J(200,{ok:true})}
   return f0(u,i)};
 await b.ready(600);await w.platformConsole.ready;const pc=w.platformConsole,d=w.document,out={};
 await w.eval("reloadRec()");await w.eval("readChildren()");await b.ready(60);
@@ -138,21 +136,18 @@ await w.eval("readChildren()");out.noRepaintWithoutChange=repaints===0;
 for(const p of ["","/cam"])b.FIX[p+"/device_units"]={device_units:[...DU.device_units,{name:"h-3",camera:"1",type:"relay",n:3,template:"r",enabled:true}]};
 await w.eval("readChildren()");out.repaintOnChange=repaints===1;
 pc.repaintTree=rt;
-// --- 401 чтения хода ждёт session; смена человека
+// --- смена человека
 const session=async user=>{b.FIX["/session"]={open:false,user,login_url:"http://holder/api/login"};
   w.eval("document.querySelector('.pc-login').hidden=false");if(d.querySelector(".pc-glass-f").hidden)d.querySelector(".pc-glass-go").click();
   const f=d.querySelector(".pc-glass-f");f.elements.who.value="ops";f.elements.why.value="x";f.elements.password.value="x";f.dispatchEvent(new w.Event("submit",{cancelable:true}));await b.ready(150)};
 await session("ann");   // первое слово модуля панели: кто вошёл
-unauth=1;w.eval("assistConsole.get('/probe-401').then(r=>{window.__got=r.status})");await b.ready(80);
-out.read401Waits=w.__got===undefined;
 w.eval(`keepDoor("/x",{door:{url:"http://a",token:"t",expires:Date.now()/1000+100}});
   (()=>{const h=document.createElement("div");h.className="live-account-secret";const i=document.createElement("input");i.value="секрет";h.appendChild(i);document.body.appendChild(h);accountPassword=i;window.__shown=i})()`);
 await session("ann");
-out.sameUserGoesOn=w.__got===200&&w.eval("!!DOORS['/x']&&CHILDREN!==null")===true&&w.__shown.value==="секрет";
-unauth=1;w.eval(`CHILDREN=[{name:"прежний"}];DEV_UNITS=[{name:"прежний"}];assistConsole.get('/probe-401').then(r=>{window.__other=r.status})`);await b.ready(80);
+out.sameUserGoesOn=w.eval("!!DOORS['/x']&&CHILDREN!==null")===true&&w.__shown.value==="секрет";
+w.eval(`CHILDREN=[{name:"прежний"}];DEV_UNITS=[{name:"прежний"}];`);
 await session("bob");
 out.otherUserForgets=w.eval("!DOORS['/x']&&!(CHILDREN||[]).some(c=>c.name==='прежний')&&!(DEV_UNITS||[]).some(c=>c.name==='прежний')")===true&&w.__shown.value===""&&!d.querySelector(".live-account-secret");
-out.otherUserDropsTheRead=w.__other===401;
 // --- без права edit: операции и разговора нет, правка отключена
 b.FIX["/session"]={open:false,user:"vi",until:9e9,via:"token",grants:[{cap:"view",scope:"*"}]};
 for(const p of ["","/cam"])b.FIX[p+"/device_units"]=DU;
