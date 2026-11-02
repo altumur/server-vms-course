@@ -18,6 +18,8 @@ scenario	step	request	expect
 01-roll-delivered	16	holder DELETE /domain/members/m2	200
 01-roll-delivered	17	@until 30 store GET /v1/get?key=domain/testsub2/rolls/m2	200 {"items": null}
 01-roll-delivered	18	member m2 console GET /domain/testsub2/books/%72olls	404 {"error": "no such book shown"}
+01-roll-delivered	19	holder GET /domain/testsub2/books/rolls/*/0000	404 {"reason": "not_a_book"}
+01-roll-delivered	20	member m1 console GET /domain/testsub2/books/rolls/*/0000	404 {"reason": "not_a_book"}
 03-silent-contributor	1	@domain	ok
 03-silent-contributor	2	member m2 console2 POST /tallies {"name": "t3", "of": "c1-m2", "shelf": "sh1", "zone": "z1", "to": ["m1"]}	201
 03-silent-contributor	3	@until 90 member m1 console GET /domain/testsub2/books/rolls	200 {"t3": {"entries": [{"member": "m2", "ref": "t3"}]}}
