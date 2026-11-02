@@ -206,7 +206,7 @@ N» основы выключены: их провалы — ответы, ко�
 Приёмка — тесты API consolem (`tests/api-*.js` на закреплённом коммите) против стенда в профиле возможностей и свой набор
 [`acceptance/`](acceptance/) того, чего эти тесты не видят (ADR-0094 доп. (17); глава 6 Н5); `?selftest` — проверка сборки продуктом под нашим CSP (ADR-0094
 Confirmation; глава 6 Н1.4). Профиль — таблица урока [`data/profile-tests.tsv`](data/profile-tests.tsv) (V/11.6 Н1.2); она сверяется при новой версии контракта.
-Ассистент — векторы [`plan-check`](vectors/plan-check/README.md), [`turn`](vectors/turn/README.md), [`rules-words`](vectors/rules-words/README.md), исполняет драйвер `backend` (V/11.7 Н5), заглушка модели — V/10.2 Н5; [`apply`](vectors/apply/README.md) описывает снятую запись панели.
+Ассистент — векторы [`plan-check`](vectors/plan-check/README.md), [`turn`](vectors/turn/README.md), [`rules-words`](vectors/rules-words/README.md), исполняет драйвер `backend` (V/11.7 Н5), заглушка модели — V/10.2 Н5.
 
 ## Открытые вопросы
 
