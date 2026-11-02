@@ -62,6 +62,29 @@ paths:
           description: как у GET, без тела
         '503':
           description: как у GET, без тела
+  '/domain/{sub}/kept/{name}':
+    get:
+      summary: Объявленная строка domain.kept (Н1.2а)
+      description: Отвечает консоль домена сама; имя — элемент domain.kept_read манифеста, только чтение, право view домена.
+      parameters:
+      - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/parameters/Sub'
+      - {name: name, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Строка, секреты маскированы
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, index]
+                additionalProperties: false
+                properties:
+                  items: {type: object, additionalProperties: true}
+                  index: {type: string}
+        '401': {description: Нет личности}
+        '403': {description: Нет права view домена}
+        '404': {description: Имя не объявлено или строки нет}
+        '503': {description: Строка не читается}
   '/domain/{sub}/tables/{table}':
     get:
       summary: Снимок таблицы члена (Н1.2а; P/08.1 Н1.4а)

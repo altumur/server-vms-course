@@ -1,0 +1,10 @@
+# запись на объявленную строку (P/06.3 Н1.9)
+name: callc
+unit:
+  rows: callers
+  id: name
+  fields:
+    name:  {type: string, required: true}
+placement: {capacity: {default: 1}}
+door: {pass: {routes: [api], calls: ["GET domain/keptp/kept/summary"]}}
+worker: {exec: /usr/lib/callc/worker}

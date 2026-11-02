@@ -1066,6 +1066,11 @@
      "$ref": "#/$defs/strList",
      "x-owner": "P/03.7 Н1.6"
     },
+    "kept_read": {
+     "$ref": "#/$defs/strList",
+     "description": "строки domain.kept, которые читает дверь консоли домена: точные имена, не семьи",
+     "x-owner": "P/10 Н1.2а"
+    },
     "tables": {
      "$ref": "#/$defs/strList",
      "x-owner": "P/03.7 Н1.6"
@@ -1707,7 +1712,7 @@
    }
   },
   "passCall": {
-   "description": "дверь обратного вызова по закрытому перечню P/06.3 Н1.9: `<s>/<имя>` — строки единиц, таблица, `policy`, `next_id` или маршрут двери подсистемы `<s>`; приставка `GET ` — только чтение; `console/batch`, `changes`, `folders`; `<s>/operations`; `<s>/requests`; `GET <s>/where`; дверь `door.pass` первого вида; `servers/labels`; `GET manifest|servers|events|session|schema`; двери домена: `GET domain/users|groups|roles|grants`, `domain/batch`; дверь книги: `GET domain/<s>/books/<книга>`",
+   "description": "дверь обратного вызова по закрытому перечню P/06.3 Н1.9: `<s>/<имя>` — строки единиц, таблица, `policy`, `next_id` или маршрут двери подсистемы `<s>`; приставка `GET ` — только чтение; `console/batch`, `changes`, `folders`; `<s>/operations`; `<s>/requests`; `GET <s>/where`; дверь `door.pass` первого вида; `servers/labels`; `GET manifest|servers|events|session|schema`; двери домена: `GET domain/users|groups|roles|grants`, `domain/batch`; дверь книги: `GET domain/<s>/books/<книга>`; строка kept: `GET domain/<s>/kept/<имя>`",
    "type": "string",
    "anyOf": [
     {
@@ -1740,6 +1745,9 @@
     },
     {
      "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/books/[a-z][a-z0-9_-]{0,31})$"
+    },
+    {
+     "pattern": "^(?:GET domain/[a-z][a-z0-9_-]{0,31}/kept/[a-z][a-z0-9_-]{0,63})$"
     },
     {
      "pattern": "^(?:GET domain/at/[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31})$"

@@ -88,3 +88,9 @@ calls_second_kind	second-kind calls-second	2 -
 book_all_grant	book-all-grant	2 -
 # ADR-0113, ревью дельты С1: книга to "*" при pick: unique — отказ каталога
 book_all_unique	book-all-unique	2 -
+# domain.kept_read: точное имя строки kept; запись calls сверяется с объявлением
+kept_read_ok	kept-read-ok	0 1
+kept_read_family	kept-read-family	2 -
+kept_read_unknown	kept-read-unknown	2 -
+calls_kept_ok	kept-read-ok calls-kept-ok	0 1
+calls_kept_bad	kept-read-ok calls-kept-bad	2 -

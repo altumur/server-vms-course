@@ -179,6 +179,7 @@ journal:      domain.forwarded {cluster, path, user, status} у пересыла
 | DELETE | `/domain/issued/<sub>/<вид>/<ref>` | P/08.2 Н1.6а | 5 | да |
 | POST | `/domain/handover` | 10 Н2 (добавлено М11/10) | 100 | да |
 | POST | `/domain/partial/close` | P/08.8 Н1.8а | 5 | да |
+| GET | `/domain/<sub>/kept/<имя>` | P/10 Н1.2а | 5 | нет |
 | POST | `/domain/stranded/apply` | 10 Н2 (добавлено М11/10) | 5 | да |
 | GET, PUT | `/domain/shared` | 11 Н2 (добавлено М11/11) | 5 | да |
 | GET | `/domain/alarms` | 11 Н2 (добавлено М11/11) | 5 | да |
@@ -192,7 +193,7 @@ route` до сторожевой, до пересылки и до передач
 М11, D4: путь `/domain/<sub>/<сегмент>/../members` иначе ушёл бы мимо таблицы).
 
 Сопоставление по порядку: `books` (своя: дверь книги `GET /domain/<sub>/books/<книга>`, [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.1; аудит раскладки Б-19, решение «Архитектора» 2026-10-25), `at` (своя), строки таблицы сверху вниз; `<sub>` — подсистема каталога
-этой консоли; сегмент `door.pass`, совпавший с `books`, `tables`, `placement`, `members`, `topology`, `shadow`, `at`, на домене не
+этой консоли; сегмент `door.pass`, совпавший с `books`, `kept`, `tables`, `placement`, `members`, `topology`, `shadow`, `at`, на домене не
 передаётся.
 
 ## Отказы по переходам
