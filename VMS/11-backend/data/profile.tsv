@@ -1,5 +1,5 @@
 # Профиль возможностей стенда VMS для тестов API consolem (V/11.6 Н1.2): одна строка на операцию контракта
-# consolem.openapi.json @13ba770. profile: in — тесты операции гоняются; out — операция отвечает 404 NO_ROUTE, тест
+# consolem.openapi.json @08ef01e. profile: in — тесты операции гоняются; out — операция отвечает 404 NO_ROUTE, тест
 # вне профиля (тест самого NO_ROUTE — в профиле); stand — только на стенде (/test/reset, /test/clock, /test/stream-elsewhere). Читает драйвер стенда; при новой
 # версии контракта таблица сверяется (V/11.2). Набор продукта — one-domain, часы — --clock real (ответ consolem, ADR-0094
 # доп. (4)). Строки in — список capabilities.operations в GET /reference (V/11.2 Н1.5): объявление и таблица сверяются,
@@ -136,3 +136,14 @@ n	method	path	profile	why
 129	GET	/domains/{domainId}/relays/{name}	in	переводится (V/11.3 Н1.2а; ADR-0112)
 130	PUT	/devices/{deviceId}/recording-target	in	переводится (V/11.4 Н1.14; ADR-0112)
 131	POST	/test/stream-elsewhere	stand	только на стенде: TEST_SUPPORT=1 и отметка петли консоли (V/11.6 Н1.3)
+132	PUT	/devices/{deviceId}/live	in	переводится (V/11.4 Н1.15; ADR-0112 доп. (13))
+133	POST	/devices/{deviceId}/talk	in	переводится (V/11.4 Н1.15; ADR-0112 доп. (13))
+134	GET	/devices/{deviceId}/timeline	in	переводится (V/11.4 Н1.22; ADR-0112 доп. (13))
+135	GET	/devices/{deviceId}/playback	in	переводится (V/11.4 Н1.22; ADR-0112 доп. (13))
+136	GET	/devices/{deviceId}/holds	in	переводится (V/11.4 Н1.23; ADR-0112 доп. (13))
+137	POST	/devices/{deviceId}/holds	in	переводится (V/11.4 Н1.23; ADR-0112 доп. (13))
+138	DELETE	/holds/{holdId}	in	переводится (V/11.4 Н1.23; ADR-0112 доп. (13))
+139	POST	/holds/{holdId}/verify	in	переводится (V/11.4 Н1.23; ADR-0112 доп. (13))
+140	GET	/devices/{deviceId}/bookmarks	in	переводится (V/11.4 Н1.24; ADR-0112 доп. (13))
+141	POST	/devices/{deviceId}/bookmarks	in	переводится (V/11.4 Н1.24; ADR-0112 доп. (13))
+142	POST	/devices/{deviceId}/archive-fetch	in	переводится (V/11.4 Н1.25; ADR-0112 доп. (13))

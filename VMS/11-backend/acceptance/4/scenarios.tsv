@@ -1025,3 +1025,54 @@ scenario	step	request	expect
 40-domain-parts	24	member m1 console2 GET /api/domains/$dom/scenarios/status	200 {"items": []}
 40-domain-parts	25	@manual Domain.stateSummary после круга: total, offline, silent, unread, at; незрителю поля нет: круг идёт у держателя, строка kept на стенде не пишется	manual
 40-domain-parts	26	@manual чужой status: GET /domain/at/<кластер>/auto/heartbeats, fields.shared, decidedWithout; без admin домена — 403; без связи — 409: на стенде один член с вычислителем и без него	manual
+41-live	1	@domain m1	ok
+41-live	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+41-live	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+41-live	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+41-live	5	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "$dom"}]}
+41-live	6	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.1", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.2", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"failed": []}
+41-live	7	member m1 console2 POST /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/live {"width": 640, "height": 480}	409 {"code": "DEVICE_OFFLINE"}
+41-live	8	member m1 console2 PUT /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/live {"network": "outside"}	409 {"code": "DEVICE_OFFLINE"}
+41-live	9	member m1 console2 POST /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/talk	422 {"code": "NOT_SUPPORTED", "field": "type"}
+41-live	10	member m1 console2 POST /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/operations/output {"state": true}	422 {"code": "NOT_SUPPORTED", "field": "type"}
+41-live	11	@manual живое: whepUrl с stream и размером, expiresAt не позже grace, шлюза нет — 503, другая сеть — 409 OTHER_NETWORK, PUT правом admin, edit — 403; разговор: url, busy на оффере; реле: state, pulseMs: на стенде нет шлюза и держателя, настоящего видео нет	manual
+42-timeline	1	@domain m1	ok
+42-timeline	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+42-timeline	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+42-timeline	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+42-timeline	5	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "$dom"}]}
+42-timeline	6	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.1", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.2", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"failed": []}
+42-timeline	7	member m1 console2 GET /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/timeline	200 {"items": [], "unavailable": []}
+42-timeline	8	member m1 console2 GET /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/playback?at=1970-01-01T00:16:40Z	404 {"code": "NOT_FOUND"}
+42-timeline	9	member m1 console2 GET /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/playback?at=x	422 {"code": "VALIDATION_FAILED", "field": "at"}
+42-timeline	10	member m1 console2 GET /api/devices/00000000-0000-4000-8000-000000000000/timeline	404 {"code": "NOT_FOUND"}
+42-timeline	11	@manual шкала и куски: двери записей и мест по where, слияние, backupOnly, unavailable по словам, сетка 60 с, spanId чужой записи — 404, цена вызовов и door.issued: на стенде нет регистратора	manual
+43-holds	1	@domain m1	ok
+43-holds	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+43-holds	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+43-holds	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+43-holds	5	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "$dom"}]}
+43-holds	6	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.1", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.2", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"failed": []}
+43-holds	7	@stream-open s1 member m1 console2 GET /api/stream	2xx
+43-holds	8	member m1 console2 POST /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/holds {"from": "1970-01-01T00:16:40Z", "to": "1970-01-01T00:33:20Z", "note": "a"}	201 {"id": "1-1000-2000", "note": "a"}
+43-holds	9	@stream-wait s1 30	ok {"type": "entity.created", "kind": "hold", "entityId": "1-1000-2000"}
+43-holds	10	member m1 console2 POST /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/holds {"from": "1970-01-01T00:16:40Z", "to": "1970-01-01T00:33:20Z", "note": "b"}	200 {"id": "1-1000-2000", "note": "a"}
+43-holds	11	member m1 console2 GET /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/holds	200 {"items": [{"id": "1-1000-2000", "note": "a"}]}
+43-holds	12	member m1 console2 POST /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/holds {"from": "1970-01-01T00:33:20Z", "to": "1970-01-01T00:16:40Z"}	422 {"code": "VALIDATION_FAILED", "field": "to"}
+43-holds	13	member m1 console2 DELETE /api/holds/1-1000-2000	204
+43-holds	14	@stream-wait s1 30	ok {"type": "entity.deleted", "kind": "hold", "entityId": "1-1000-2000"}
+43-holds	15	member m1 console2 DELETE /api/holds/1-1000-2000	404 {"code": "NOT_FOUND"}
+43-holds	16	@stream-close s1	ok
+43-holds	17	@manual states из пульса, verify у держателя incidents, маршрута keeps нет — 409 DEVICE_REFUSED, heldBy, другой кластер — 409 OTHER_CLUSTER: на стенде нет регистратора	manual
+44-marks	1	@domain m1	ok
+44-marks	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
+44-marks	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
+44-marks	4	@until 60 member m1 console2 GET /instances	200 {"rows": [{"id": "main", "phase": "running"}]}
+44-marks	5	@until 60 member m1 console2 GET /api/domains	200 {"items": [{"id": "$dom"}]}
+44-marks	6	member m1 console2 POST /api/devices {"idempotencyKey": "group-one", "items": [{"device": {"type": "camera", "name": "c1", "ip": "10.9.9.1", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}, {"device": {"type": "camera", "name": "c2", "ip": "10.9.9.2", "vendor": "acme", "model": "m1"}, "domainId": "$dom", "parentId": null, "folderId": null}]}	200 {"failed": []}
+44-marks	7	member m1 console2 POST /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/bookmarks {"note": "a"}	201 {"note": "a"}
+44-marks	8	member m1 console2 POST /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/bookmarks {"note": "b", "occurred": "2026-01-01T00:00:00Z"}	201 {"note": "b", "occurred": "2026-01-01T00:00:00Z"}
+44-marks	9	@until 30 member m1 console2 GET /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/bookmarks?from=2025-12-31T00:00:00Z&to=2026-01-02T00:00:00Z	200 {"items": [{"note": "b"}]}
+44-marks	10	member m1 console2 POST /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/bookmarks {"note": " "}	422 {"code": "VALIDATION_FAILED", "field": "note"}
+44-marks	11	member m1 console2 POST /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/archive-fetch {"archiveId": "нет", "from": "2026-01-01T00:00:00Z", "to": "2026-01-02T00:00:00Z"}	409 {"code": "NO_PRIMARY"}
+44-marks	12	@manual журнал камеры: дети, eventsrc, записи; journal.event наблюдающим с cameraId, bookmark потоком; закрепить: сутки, per_person, поздний отказ в журнале: нужны держатель и основная запись, /test/events у нас NO_ROUTE	manual

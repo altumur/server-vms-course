@@ -286,6 +286,7 @@ Archive	version	rec/volumes + rec/recordings	склейка v<индекс то�
 Volume	—	rec/volumes	—	both	том = то же хранилище; том edge свёрнутого члена не отдаётся
 Volume	id	rec/volumes	UUID volume:<кластер>/rec/volumes/<name>	read
 Volume	archiveId	rec/volumes	UUID archive:<кластер>/rec/volumes/<name>	read	хранилище той же строки
+Volume	heldBy	rec/volumes	held_by	read	строка или null: никто или не подтверждено (V/11.4 Н1.23)
 Volume	name	rec/volumes	name	read	ключ строки: правка — 422 NOT_SUPPORTED, field name
 Volume	disk	rec/volumes	url: путь file:// без конечного сегмента, равного Archive.id, иначе путь целиком; у бакета — схема	both	запись — file://<disk>/<Archive.id> (V/11.3 Н1.3)
 Volume	sizeBytes	rec/volumes	quota_bytes	both
@@ -608,3 +609,11 @@ AccessApplyRequest	version	двери домена	версия снимка	wri
 AccessApplyRequest	retryClusters	POST /domain/batch	kind grants, name — кластер	write	V/11.8 Н1.5 п. 5а
 AccessApplyResult	notApplied	POST /domain/batch, PUT /domain/roles/<имя>/lines	отказ записи	read	V/11.8 Н1.5 п. 5а
 AccessApplyResult	clusters	—	число кластеров правки	read	V/11.8 Н1.5 п. 5а
+TimelineSpan	—	rec/timeline	двери записей и мест	read	V/11.4 Н1.22; spanId — без доверия
+PlaybackResult	—	rec/segment	адрес куска с токеном	read	V/11.4 Н1.22; байты мимо backend
+TalkResult	—	cam/requests, live/where	просьба talk, адрес двери	write	V/11.4 Н1.15
+Hold	—	rec/keeps	ключ {cam}-{from:int}-{to:int}	both	V/11.4 Н1.23; id — сам ключ
+Hold	states	GET /rec/heartbeats	keeps, volume	read	V/11.4 Н1.23; не названо — не сказано
+Bookmark	—	GET /events, POST /marks	kind: mark	both	V/11.4 Н1.24; правки нет
+ArchiveFetchRequest	—	rec/requests	unit, from, to	write	V/11.4 Н1.25; просьба на сутки
+JournalEvent	cameraId	GET /events	камера строки	read	V/11.3 Н1.3; заполнено в journal.event

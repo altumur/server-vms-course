@@ -55,3 +55,4 @@ date	sample	fix	languages
 2026-11-02	4/scenarios.tsv: 16-record шаг 27	buffering, streamProfile сняты: полей нет в DeviceCreate контракта, тело не проходило схему	all
 2026-11-02	4/scenarios.tsv: 40-domain-parts, новый шаг перед первой записью; README: auto на hold	документа ещё нет, манифест auto на держателе: P/08.9 Н1.3	all
 2026-11-02	4/scenarios.tsv: 09-stream шаги 31, 41, новые 63–79, сняты 59, 60	контракт 13ba770: watch запроса открытия; без списка событий устройств нет, прежняя правка «без отбора до PUT» отменена	all
+2026-11-02	4/scenarios.tsv: новые 41-live, 42-timeline, 43-holds, 44-marks	контракт 08ef01e, этап 8; настоящего видео на стенде нет	all

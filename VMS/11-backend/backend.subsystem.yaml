@@ -79,6 +79,7 @@ door:
       - GET cam/rule_state           # on guard, off by a rule: the holder's words, read only (V/11.3 Н1.3; V/01.4 Н1.4д)
       - cam/requests                 # `disable` with a past term (V/11.4 Н1.2), presets (Н1.16), a unit's command (Н1.17)
       - cam/ptz_moves                # the lease of a move: the table, a person's edit on the camera (V/11.4 Н1.16)
+      - live/streams                 # a person's stream of a camera, its network (V/11.4 Н1.15)
       - GET live/where               # the gateway's address and token for a person's live view (V/11.4 Н1.15; ADR-0112 доп. (1))
       - live/accounts                # the gateway's door of stream accounts: the password passes once, to no journal or row (V/11.4 Н1.18)
       - servers/labels               # PUT, DELETE of a server's labels (V/11.4 Н1.19)
@@ -119,6 +120,16 @@ door:
       - domain/folders               # the tree of the domain (P/08.5 Н1.8; V/11.4 Н1.7)
       - domain/memberof              # who stands in which folder: not one batch with the folder (ADR-0110 доп. (5) п. 3)
       - backend/operations           # the group operations (P/06.9; V/11.4 Н1.8)
+      - GET rec/where                # a recorder's door and the person's token: timeline, verify, the address of a piece (V/11.1 Н1.2а)
+      - rec/keeps                    # holds (V/11.4 Н1.23)
+      - GET rec/heartbeats           # the words of a hold in the pulse
+      - rec/requests                 # filing a fetch (V/11.4 Н1.25)
+      - marks                        # a bookmark: POST only, `edit` on the unit of the body, the ticket's person (V/11.4 Н1.24)
+      - GET domain/rec/books/primaries # recordings of other clusters, this member's copy (V/11.4 Н1.22)
+      - GET domain/at/rec/where      # the door of a recording of another cluster
+      - GET domain/at/rec/timeline   # the timeline of another cluster, its console passes it (ADR-0112 доп. (13) п. 10; P/06.7 Н1.6)
+      - GET domain/at/rec/keeps
+      - GET domain/at/rec/heartbeats
       - GET domain/cam/books/licence # the licence, read only (V/11.3 Н1.3; P/06.3 Н1.9)
       # The view of the domain, how another member's rows are read (V/11.3 Н1.2а; ADR-0110 доп. (2)): the members, their
       # servers, the knocking; a recording's server by its `ref`; a member's tables, one member a call.
@@ -171,12 +182,13 @@ door:
 # (доп. (3) п. 8), a page of its own (no frame of another page, no sandbox), with the Content-Security-Policy that is exactly the minimum
 # of P/06.5 Н1.1 `page` — the shell has no inline script, so `script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'self'`,
 # not stricter: inline styles and `data:` images stay allowed (доп. (8) пп. 1, 4).
-# The build: consolem @13ba770 (reproducible), its MANIFEST.json; its index.html is
-# backend.shell.html (SHA-256 1d6ad98e…), the rest is the set (V/11.1 Н1.4). The deployment package builds it from the
+# The build: consolem @08ef01e (reproducible), its MANIFEST.json; its index.html is
+# backend.shell.html (SHA-256 b44786ca…), the rest is the set (V/11.1 Н1.4). The deployment package builds it from the
 # pinned commit and places it next to the manifest (V/09.3).
-# SHA-256 of each (the lesson's README): 1e011fe2… app.css, e27a0c64… app.js, b7eb438a… client.js,
-# 693b77d4… fonts/InterVariable.woff2, e42a8fdc… i18n-en.js, 520154e7… openapi.js
-# The set — SHA-256 677e2ee44f0f8d2b09859c28bf2a3ecc66ce445db1e70d1d1ff896113f00ee48.
+# SHA-256 of each (the lesson's README): f85da4cf… app.css, b1d0309f… app.js, b7eb438a… client.js,
+# 693b77d4… fonts/InterVariable.woff2, faf8c0d6… i18n-en.js, 2511bb02… openapi.js, c1e5524f… whep-stub.js
+# (assets/stub-piece.mp4 of the build is left out: `.mp4` is outside console.files, and backend never gives stub://).
+# The set — SHA-256 614d41fc46cd6295893dec5a8cb8b31e6e428704c8a44a76f44abaa808b9e28f.
 # The memory of repeats of a group `idempotencyKey` (V/11.4 Н1.4; the review of V/11, question 3): a row per group,
 # key h = SHA-256 hex of the bytes of the person (`user` of the ticket), a zero byte and the external key. Made with
 # cas "" as «started» before the snapshot; each step's outcome lands in it in the step's own batch (B9). The form of the
@@ -248,7 +260,7 @@ metrics:
 console:
   running: instances_running         # backend_instances_running
   shell: true                        # backend.shell.html at /backend/ (P/06.5 Н1.1 `mounted`)
-  files: [app.css, app.js, client.js, fonts/InterVariable.woff2, i18n-en.js, openapi.js]   # /backend/<file> (V/11.1 Н1.4)
+  files: [app.css, app.js, client.js, fonts/InterVariable.woff2, i18n-en.js, openapi.js, whep-stub.js]   # /backend/<file> (V/11.1 Н1.4)
 # What a page calls a unit of it (the product's words, one spec on both sides).
 display:
   unit: бэкенд конфигуратора
