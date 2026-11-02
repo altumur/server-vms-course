@@ -45,3 +45,4 @@ date	sample	fix	languages
 2026-11-02	4/scenarios.tsv: 10-archives шаги 61–64	when мимо backend: откат с null даёт VERSION_MISMATCH	all
 2026-11-02	4/scenarios.tsv: 17-rules шаги 11, 20, 21; новый 34-rule-prompts	контракт 5c1973c: каталог, ask объявлен, вне каталога NOT_SUPPORTED, дверь ответа	all
 2026-11-02	4/scenarios.tsv: 34-rule-prompts шаг 9	разбор ревью fork-5c1: трасса вопроса, отвергнутая строка, снятый запуск, очередь	all
+2026-11-02	4/scenarios.tsv: 34-rule-prompts шаг 9	разбор ревью fork-5c1-3: строка отказа, пробный запуск, порядок steps	all
