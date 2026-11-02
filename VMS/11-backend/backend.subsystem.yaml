@@ -176,7 +176,7 @@ door:
 # pinned commit and places it next to the manifest (V/09.3).
 # SHA-256 of each (the lesson's README): 1e011fe2… app.css, e27a0c64… app.js, b7eb438a… client.js,
 # 693b77d4… fonts/InterVariable.woff2, e42a8fdc… i18n-en.js, 520154e7… openapi.js
-# The set — SHA-256 434ad786e72c40f69da370b961f674e35449e2639e46addbf62de7a345f8821d.
+# The set — SHA-256 677e2ee44f0f8d2b09859c28bf2a3ecc66ce445db1e70d1d1ff896113f00ee48.
 # The memory of repeats of a group `idempotencyKey` (V/11.4 Н1.4; the review of V/11, question 3): a row per group,
 # key h = SHA-256 hex of the bytes of the person (`user` of the ticket), a zero byte and the external key. Made with
 # cas "" as «started» before the snapshot; each step's outcome lands in it in the step's own batch (B9). The form of the

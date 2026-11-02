@@ -1,7 +1,7 @@
 # Закрытый перечень значений code ответа Problem дверей backend: главы 11.1–11.6, 11.8 (ADR-0094 B5; замер С.5). Перенос из Н4, нормы не меняет: при расхождении источник — норма в столбце norm.
 # Слово error здесь — code контракта. Откуда оно переведено (слово консоли или домена) — в столбце norm. Значения — перечень ProblemCode контракта; своих кодов нет (V/11.2 Н1.3).
 # door — двери контракта: devices, archives, volumes, objects; folders; operations; discovery; access; rules; schedules — и day-groups, modes, maintenance-windows; test — /test/*; * — каждая дверь. code — статус; 4xx — статус двери; «-» — код итога шага, в failed групповой записи статуса нет: 200.
-# field — «-»: поля нет; <поле> — поле контракта, которое называет отказ; иное — точное значение. 502–504 — UPSTREAM_UNAVAILABLE (V/11.2 Н1.3). Слова хода ассистента — V/10.
+# field — «-»: поля нет; <поле> — поле контракта, которое называет отказ; иное — точное значение. 502–504 — UPSTREAM_UNAVAILABLE (V/11.2 Н1.3). Слова хода ассистента — V/11.7.
 door	code	error	field	norm
 *	401	UNAUTHORIZED	-	11.1, 11.2 Н4; 11.4 Н4: 401 сторожевой, 401 обратного вызова; 11.5 Н4
 *	403	PERMISSION_DENIED	-	11.1 Н4; 11.4 Н4: 403 denied
@@ -130,6 +130,7 @@ test	422	NOT_SUPPORTED	actAs	11.6 Н1.3, Н4
 *	422	INVALID_CURSOR	-	11.3 Н1.2б: cursor просрочен, чужой
 *	422	VALIDATION_FAILED	limit	11.3 Н1.2б: limit вне 1…pageMax
 devices	422	VALIDATION_FAILED	ids	11.3 Н1.2б, 11.5 Н1.2: ids больше idsMax, watchMax
+devices	422	VALIDATION_FAILED	watch	11.5 Н1.2: watch запроса открытия больше watchMax
 folders	422	VALIDATION_FAILED	add	11.4 Н1.7: состав больше selectMax, вне вида, цепочка
 folders	422	VALIDATION_FAILED	remove	11.4 Н1.7: вне вида
 objects	422	VALIDATION_FAILED	items	11.4 Н1.5: больше selectMax
