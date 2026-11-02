@@ -1,0 +1,1542 @@
+{
+ "world": {
+  "cameras": [
+   {
+    "id": "1",
+    "name": "Gate Cam"
+   },
+   {
+    "id": "2",
+    "name": "Lobby Cam"
+   },
+   {
+    "id": "3",
+    "name": "Yard PTZ"
+   },
+   {
+    "id": "4",
+    "name": "Dock Cam"
+   },
+   {
+    "id": "12",
+    "name": "Fence East"
+   },
+   {
+    "id": "13",
+    "name": "Fence West"
+   },
+   {
+    "id": "21",
+    "name": "North Door"
+   },
+   {
+    "id": "22",
+    "name": "South Gate"
+   },
+   {
+    "id": "23",
+    "name": "Lift"
+   },
+   {
+    "id": "24",
+    "name": "Lift"
+   }
+  ],
+  "children": [
+   {
+    "key": "1-sensor-1",
+    "cam": "1",
+    "type": "sensor",
+    "number": 1,
+    "name": "Gate Loop"
+   },
+   {
+    "key": "1-sensor-2",
+    "cam": "1",
+    "type": "sensor",
+    "number": 2,
+    "name": "Gate Button"
+   },
+   {
+    "key": "1-relay-1",
+    "cam": "1",
+    "type": "relay",
+    "number": 1,
+    "name": "Gate Barrier"
+   },
+   {
+    "key": "1-relay-2",
+    "cam": "1",
+    "type": "relay",
+    "number": 2,
+    "name": "Gate Light"
+   },
+   {
+    "key": "2-sensor-1",
+    "cam": "2",
+    "type": "sensor",
+    "number": 1,
+    "name": "Lobby Door"
+   },
+   {
+    "key": "2-relay-1",
+    "cam": "2",
+    "type": "relay",
+    "number": 1,
+    "name": "Lobby Siren"
+   },
+   {
+    "key": "4-sensor-3",
+    "cam": "4",
+    "type": "sensor",
+    "number": 3,
+    "name": "Dock Door"
+   },
+   {
+    "key": "4-sensor-4",
+    "cam": "4",
+    "type": "sensor",
+    "number": 4,
+    "name": "Dock Shutter"
+   },
+   {
+    "key": "4-relay-3",
+    "cam": "4",
+    "type": "relay",
+    "number": 3,
+    "name": "Dock Horn"
+   },
+   {
+    "key": "4-relay-4",
+    "cam": "4",
+    "type": "relay",
+    "number": 4,
+    "name": "Dock Light"
+   },
+   {
+    "key": "12-sensor-1",
+    "cam": "12",
+    "type": "sensor",
+    "number": 1,
+    "name": "Fence Tamper East"
+   },
+   {
+    "key": "12-relay-1",
+    "cam": "12",
+    "type": "relay",
+    "number": 1,
+    "name": "Fence Floodlight"
+   },
+   {
+    "key": "13-sensor-1",
+    "cam": "13",
+    "type": "sensor",
+    "number": 1,
+    "name": "Fence Tamper West"
+   },
+   {
+    "key": "21-sensor-1",
+    "cam": "21",
+    "type": "sensor",
+    "number": 1,
+    "name": "Вход 1"
+   },
+   {
+    "key": "21-relay-1",
+    "cam": "21",
+    "type": "relay",
+    "number": 1,
+    "name": "Реле 1"
+   },
+   {
+    "key": "22-sensor-1",
+    "cam": "22",
+    "type": "sensor",
+    "number": 1,
+    "name": "Вход 1"
+   },
+   {
+    "key": "22-relay-1",
+    "cam": "22",
+    "type": "relay",
+    "number": 1,
+    "name": "Реле 1"
+   }
+  ],
+  "folders": [
+   {
+    "id": "10",
+    "name": "Building A",
+    "parent": null
+   },
+   {
+    "id": "11",
+    "name": "Floor 1",
+    "parent": "10"
+   },
+   {
+    "id": "12",
+    "name": "Floor 2",
+    "parent": "10"
+   },
+   {
+    "id": "20",
+    "name": "Parking",
+    "parent": null
+   },
+   {
+    "id": "30",
+    "name": "Perimeter",
+    "parent": null
+   },
+   {
+    "id": "40",
+    "name": "Restricted",
+    "parent": null
+   },
+   {
+    "id": "22",
+    "name": "Floor 1",
+    "parent": "20"
+   }
+  ],
+  "schedules": [
+   {
+    "id": "11111111-0000-4000-8000-00000000000a",
+    "title": "Always"
+   },
+   {
+    "id": "11111111-0000-4000-8000-00000000000b",
+    "title": "Never"
+   },
+   {
+    "id": "11111111-0000-4000-8000-000000000001",
+    "title": "Night"
+   },
+   {
+    "id": "11111111-0000-4000-8000-000000000002",
+    "title": "Business hours"
+   },
+   {
+    "id": "11111111-0000-4000-8000-000000000003",
+    "title": "Weekend"
+   },
+   {
+    "id": "11111111-0000-4000-8000-000000000004",
+    "title": "Sunday service slot"
+   }
+  ],
+  "modes": [
+   {
+    "id": "22222222-0000-4000-8000-000000000001",
+    "name": "Work"
+   },
+   {
+    "id": "22222222-0000-4000-8000-000000000002",
+    "name": "Night"
+   },
+   {
+    "id": "22222222-0000-4000-8000-000000000003",
+    "name": "Weekend"
+   },
+   {
+    "id": "22222222-0000-4000-8000-000000000004",
+    "name": "Regular"
+   },
+   {
+    "id": "22222222-0000-4000-8000-000000000005",
+    "name": "Service"
+   },
+   {
+    "id": "22222222-0000-4000-8000-000000000006",
+    "name": "High Alert"
+   }
+  ],
+  "roles": [
+   {
+    "id": "33333333-0000-4000-8000-000000000001",
+    "name": "Guards"
+   },
+   {
+    "id": "33333333-0000-4000-8000-000000000002",
+    "name": "Operators"
+   }
+  ],
+  "rules": [
+   {
+    "id": 101,
+    "name": "Gate barrier on loop"
+   },
+   {
+    "id": 102,
+    "name": "Lobby night alarm"
+   },
+   {
+    "id": 103,
+    "name": "Fence alarm"
+   },
+   {
+    "id": 104,
+    "name": "Yard tour"
+   },
+   {
+    "id": 105,
+    "name": "Gate line watch"
+   },
+   {
+    "id": 201,
+    "name": "Alarm"
+   },
+   {
+    "id": 202,
+    "name": "Alarm"
+   }
+  ]
+ },
+ "cases": [
+  {
+   "id": "sensor-relay",
+   "note": "датчик и реле по имени, value как есть, source из вида и действия",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "Dock light off",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "Dock Cam / Dock Door",
+        "value": "normal"
+       }
+      ],
+      "steps": [
+       {
+        "action": "output",
+        "target": "Dock Cam / Dock Light",
+        "state": "open"
+       }
+      ]
+     }
+    }
+   ],
+   "body": [
+    {
+     "table": "scenarios",
+     "op": "create",
+     "body": {
+      "name": "Dock light off",
+      "triggers": [
+       {
+        "source": "vms",
+        "kind": "io.input",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "child:4-sensor-3"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "match": {
+         "value": "normal"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "source": "vms",
+        "action": "output",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "child:4-relay-4"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "state": "open"
+       }
+      ]
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "folder-except",
+   "note": "папка с исключением в триггере, цель события в шаге",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "Perimeter motion",
+      "triggers": [
+       {
+        "kind": "motion",
+        "target": {
+         "folder": "Perimeter",
+         "except": [
+          "Fence West"
+         ]
+        }
+       }
+      ],
+      "steps": [
+       {
+        "action": "alarm",
+        "target": "event"
+       }
+      ]
+     }
+    }
+   ],
+   "body": [
+    {
+     "table": "scenarios",
+     "op": "create",
+     "body": {
+      "name": "Perimeter motion",
+      "triggers": [
+       {
+        "source": "det",
+        "kind": "motion",
+        "target": {
+         "include": [
+          {
+           "kind": "folder",
+           "id": "folder:30"
+          }
+         ],
+         "exclude": [
+          "device:13"
+         ],
+         "gone": [],
+         "fromEvent": false
+        },
+        "match": {}
+       }
+      ],
+      "steps": [
+       {
+        "source": "alarm",
+        "action": "alarm",
+        "target": {
+         "include": [],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": true
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "name-list",
+   "note": "список имён, регистр не важен",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "Two cams",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "gate cam / gate loop",
+        "value": "active",
+        "port": 1
+       }
+      ],
+      "steps": [
+       {
+        "action": "record",
+        "target": [
+         "Gate Cam",
+         "Lobby Cam"
+        ],
+        "minutes": 5
+       }
+      ]
+     }
+    }
+   ],
+   "body": [
+    {
+     "table": "scenarios",
+     "op": "create",
+     "body": {
+      "name": "Two cams",
+      "triggers": [
+       {
+        "source": "vms",
+        "kind": "io.input",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "child:1-sensor-1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "match": {
+         "value": "active",
+         "port": "1"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "source": "rec",
+        "action": "record",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "device:1"
+          },
+          {
+           "kind": "device",
+           "id": "device:2"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "minutes": 5
+       }
+      ]
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "runrule-conditions",
+   "note": "правило, расписание и режимы по имени",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "Night tour",
+      "triggers": [
+       {
+        "kind": "silent",
+        "target": "Yard PTZ"
+       }
+      ],
+      "conditions": [
+       {
+        "kind": "time",
+        "schedule": "Night"
+       },
+       {
+        "kind": "mode",
+        "modes": [
+         "Work",
+         "Weekend"
+        ]
+       }
+      ],
+      "steps": [
+       {
+        "action": "runrule",
+        "rule": "Yard tour"
+       }
+      ]
+     }
+    }
+   ],
+   "body": [
+    {
+     "table": "scenarios",
+     "op": "create",
+     "body": {
+      "name": "Night tour",
+      "triggers": [
+       {
+        "source": "vms",
+        "kind": "silent",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "device:3"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "match": {}
+       }
+      ],
+      "conditions": [
+       {
+        "kind": "time",
+        "scheduleId": "schedule:11111111-0000-4000-8000-000000000001"
+       },
+       {
+        "kind": "mode",
+        "modeIds": [
+         "mode:22222222-0000-4000-8000-000000000001",
+         "mode:22222222-0000-4000-8000-000000000003"
+        ]
+       }
+      ],
+      "steps": [
+       {
+        "source": "rule",
+        "action": "runrule",
+        "ruleId": "rule:104"
+       }
+      ]
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "update-set",
+   "note": "правка по имени правила, только изменённое",
+   "plan": [
+    {
+     "op": "updateRule",
+     "rule": "Fence alarm",
+     "set": {
+      "enabled": false
+     }
+    }
+   ],
+   "body": [
+    {
+     "table": "scenarios",
+     "op": "update",
+     "id": "rule:103",
+     "body": {
+      "enabled": false
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "schedule-window",
+   "note": "новое расписание и окно ссылкой @ref",
+   "plan": [
+    {
+     "op": "createSchedule",
+     "ref": "s1",
+     "name": "Lunch",
+     "week": [
+      [
+       [
+        "12:00",
+        "13:00"
+       ]
+      ],
+      [],
+      [],
+      [],
+      [],
+      [],
+      []
+     ]
+    },
+    {
+     "op": "createWindow",
+     "name": "Lunch quiet",
+     "rules": [
+      "Lobby night alarm"
+     ],
+     "schedule": "@s1"
+    }
+   ],
+   "body": [
+    {
+     "table": "schedules",
+     "op": "create",
+     "ref": "s1",
+     "body": {
+      "name": "Lunch",
+      "kind": "week",
+      "week": [
+       [
+        [
+         "12:00",
+         "13:00"
+        ]
+       ],
+       [],
+       [],
+       [],
+       [],
+       [],
+       []
+      ]
+     }
+    },
+    {
+     "table": "windows",
+     "op": "create",
+     "body": {
+      "name": "Lunch quiet",
+      "ruleIds": [
+       "rule:102"
+      ],
+      "enabled": false,
+      "schedule": "@s1"
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "window-all",
+   "note": "окно без rules — все правила",
+   "plan": [
+    {
+     "op": "createSchedule",
+     "ref": "s1",
+     "name": "Lunch",
+     "week": [
+      [
+       [
+        "12:00",
+        "13:00"
+       ]
+      ],
+      [],
+      [],
+      [],
+      [],
+      [],
+      []
+     ]
+    },
+    {
+     "op": "createWindow",
+     "name": "Lunch quiet",
+     "schedule": "@s1"
+    }
+   ],
+   "body": [
+    {
+     "table": "schedules",
+     "op": "create",
+     "ref": "s1",
+     "body": {
+      "name": "Lunch",
+      "kind": "week",
+      "week": [
+       [
+        [
+         "12:00",
+         "13:00"
+        ]
+       ],
+       [],
+       [],
+       [],
+       [],
+       [],
+       []
+      ]
+     }
+    },
+    {
+     "table": "windows",
+     "op": "create",
+     "body": {
+      "name": "Lunch quiet",
+      "ruleIds": null,
+      "enabled": false,
+      "schedule": "@s1"
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "ask-escalate",
+   "note": "роль по имени в roleId, ветки переводятся",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "Gate ask",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "Gate Cam / Gate Loop",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "control": "ask",
+        "text": "Open the gate?",
+        "role": "Guards",
+        "sec": 60,
+        "default": "no",
+        "yes": [
+         {
+          "action": "output",
+          "target": "Gate Cam / Gate Barrier",
+          "state": "closed"
+         }
+        ],
+        "no": []
+       },
+       {
+        "control": "escalate",
+        "levels": [
+         {
+          "role": "Operators",
+          "via": "client",
+          "waitMin": 5
+         }
+        ],
+        "stop": "ack"
+       }
+      ]
+     }
+    }
+   ],
+   "body": [
+    {
+     "table": "scenarios",
+     "op": "create",
+     "body": {
+      "name": "Gate ask",
+      "triggers": [
+       {
+        "source": "vms",
+        "kind": "io.input",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "child:1-sensor-1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "match": {
+         "value": "active"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "control": "ask",
+        "text": "Open the gate?",
+        "roleId": "role:33333333-0000-4000-8000-000000000001",
+        "sec": 60,
+        "default": "no",
+        "yes": [
+         {
+          "source": "vms",
+          "action": "output",
+          "target": {
+           "include": [
+            {
+             "kind": "device",
+             "id": "child:1-relay-1"
+            }
+           ],
+           "exclude": [],
+           "gone": [],
+           "fromEvent": false
+          },
+          "state": "closed"
+         }
+        ],
+        "no": []
+       },
+       {
+        "control": "escalate",
+        "levels": [
+         {
+          "roleId": "role:33333333-0000-4000-8000-000000000002",
+          "via": "client",
+          "waitMin": 5
+         }
+        ],
+        "stop": "ack"
+       }
+      ]
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "no-device",
+   "note": "имени нет",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "x",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "Back Door",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "action": "alarm",
+        "target": "Gate Cam"
+       }
+      ]
+     }
+    }
+   ],
+   "body": null,
+   "errors": [
+    "edits[0].triggers[0]: there is no device named Back Door: use the names from find_devices"
+   ]
+  },
+  {
+   "id": "no-folder",
+   "note": "папки нет",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "x",
+      "triggers": [
+       {
+        "kind": "motion",
+        "target": {
+         "folder": "Garage"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "action": "alarm",
+        "target": "event"
+       }
+      ]
+     }
+    }
+   ],
+   "body": null,
+   "errors": [
+    "edits[0].triggers[0]: there is no folder named Garage"
+   ]
+  },
+  {
+   "id": "no-role",
+   "note": "роли нет",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "x",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "Gate Cam / Gate Loop",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "control": "ask",
+        "text": "?",
+        "role": "Night shift",
+        "sec": 60,
+        "default": "no",
+        "yes": [],
+        "no": []
+       }
+      ]
+     }
+    }
+   ],
+   "body": null,
+   "errors": [
+    "edits[0].steps[0]: there is no role named Night shift"
+   ]
+  },
+  {
+   "id": "no-rule",
+   "note": "правила нет",
+   "plan": [
+    {
+     "op": "updateRule",
+     "rule": "Back door alarm",
+     "set": {
+      "enabled": false
+     }
+    }
+   ],
+   "body": null,
+   "errors": [
+    "edits[0]: there is no rule named Back door alarm"
+   ]
+  },
+  {
+   "id": "empty",
+   "note": "план пуст",
+   "plan": [],
+   "body": null,
+   "errors": [
+    "edits: a plan needs at least one edit"
+   ]
+  },
+  {
+   "id": "bad-op",
+   "note": "op не из четырёх",
+   "plan": [
+    {
+     "op": "deleteRule",
+     "rule": "Fence alarm"
+    }
+   ],
+   "body": null,
+   "errors": [
+    "edits[0]: op is createRule {rule}, updateRule {rule, set}, createSchedule, createWindow"
+   ]
+  },
+  {
+   "id": "same-children",
+   "note": "одинаковые имена детей у двух камер: имя с камерой",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "Door relay",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "North Door / Вход 1",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "action": "output",
+        "target": "South Gate / Реле 1",
+        "state": "closed"
+       }
+      ]
+     }
+    }
+   ],
+   "body": [
+    {
+     "table": "scenarios",
+     "op": "create",
+     "body": {
+      "name": "Door relay",
+      "triggers": [
+       {
+        "source": "vms",
+        "kind": "io.input",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "child:21-sensor-1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "match": {
+         "value": "active"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "source": "vms",
+        "action": "output",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "child:22-relay-1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "state": "closed"
+       }
+      ]
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "child-bare",
+   "note": "имя ребёнка без камеры",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "x",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "Вход 1",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "action": "alarm",
+        "target": "North Door"
+       }
+      ]
+     }
+    }
+   ],
+   "body": null,
+   "errors": [
+    "edits[0].triggers[0]: Вход 1 is named with its camera: North Door / Вход 1, South Gate / Вход 1"
+   ]
+  },
+  {
+   "id": "several-cameras",
+   "note": "две камеры одного имени",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "x",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "Gate Cam / Gate Loop",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "action": "record",
+        "target": "Lift",
+        "minutes": 5
+       }
+      ]
+     }
+    }
+   ],
+   "body": null,
+   "errors": [
+    "edits[0].steps[0]: several devices are named Lift: ask_admin which one"
+   ]
+  },
+  {
+   "id": "several-rules",
+   "note": "два правила одного имени: не последнее побеждает, вопрос",
+   "plan": [
+    {
+     "op": "updateRule",
+     "rule": "Alarm",
+     "set": {
+      "enabled": false
+     }
+    }
+   ],
+   "body": null,
+   "errors": [
+    "edits[0]: several rules are named Alarm: ask_admin which one"
+   ]
+  },
+  {
+   "id": "folder-path",
+   "note": "папка путём от корня",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "Parking motion",
+      "triggers": [
+       {
+        "kind": "motion",
+        "target": {
+         "folder": "Parking / Floor 1"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "action": "alarm",
+        "target": "event"
+       }
+      ]
+     }
+    }
+   ],
+   "body": [
+    {
+     "table": "scenarios",
+     "op": "create",
+     "body": {
+      "name": "Parking motion",
+      "triggers": [
+       {
+        "source": "det",
+        "kind": "motion",
+        "target": {
+         "include": [
+          {
+           "kind": "folder",
+           "id": "folder:22"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "match": {}
+       }
+      ],
+      "steps": [
+       {
+        "source": "alarm",
+        "action": "alarm",
+        "target": {
+         "include": [],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": true
+        }
+       }
+      ]
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "folder-bare",
+   "note": "папка не путём",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "x",
+      "triggers": [
+       {
+        "kind": "motion",
+        "target": {
+         "folder": "Floor 1"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "action": "alarm",
+        "target": "event"
+       }
+      ]
+     }
+    }
+   ],
+   "body": null,
+   "errors": [
+    "edits[0].triggers[0]: Floor 1 is named by its path: Building A / Floor 1, Parking / Floor 1"
+   ]
+  },
+  {
+   "id": "via-default",
+   "note": "via нет — client",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "Gate escalate",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "Gate Cam / Gate Loop",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "control": "escalate",
+        "levels": [
+         {
+          "role": "Guards",
+          "waitMin": 5
+         }
+        ],
+        "stop": "ack"
+       }
+      ]
+     }
+    }
+   ],
+   "body": [
+    {
+     "table": "scenarios",
+     "op": "create",
+     "body": {
+      "name": "Gate escalate",
+      "triggers": [
+       {
+        "source": "vms",
+        "kind": "io.input",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "child:1-sensor-1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "match": {
+         "value": "active"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "control": "escalate",
+        "levels": [
+         {
+          "roleId": "role:33333333-0000-4000-8000-000000000001",
+          "via": "client",
+          "waitMin": 5
+         }
+        ],
+        "stop": "ack"
+       }
+      ]
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "ask-no-role",
+   "note": "вопрос без роли: V/07.3 судил бы негодным",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "x",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "Gate Cam / Gate Loop",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "control": "ask",
+        "text": "Open?",
+        "sec": 60,
+        "default": "no",
+        "yes": [],
+        "no": []
+       }
+      ]
+     }
+    }
+   ],
+   "body": null,
+   "errors": [
+    "edits[0].steps[0]: a question needs the role that answers: ask_admin"
+   ]
+  },
+  {
+   "id": "default-stop-as-is",
+   "note": "default yes, stop reset переводчик несёт как есть: суд слов — rules-words",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "Gate ask",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "Gate Cam / Gate Loop",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "control": "ask",
+        "text": "Open?",
+        "role": "Guards",
+        "sec": 60,
+        "default": "yes",
+        "yes": [],
+        "no": []
+       },
+       {
+        "control": "escalate",
+        "levels": [
+         {
+          "role": "Guards",
+          "via": "client",
+          "waitMin": 5
+         }
+        ],
+        "stop": "reset"
+       }
+      ]
+     }
+    }
+   ],
+   "body": [
+    {
+     "table": "scenarios",
+     "op": "create",
+     "body": {
+      "name": "Gate ask",
+      "triggers": [
+       {
+        "source": "vms",
+        "kind": "io.input",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "child:1-sensor-1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "match": {
+         "value": "active"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "control": "ask",
+        "text": "Open?",
+        "roleId": "role:33333333-0000-4000-8000-000000000001",
+        "sec": 60,
+        "default": "yes",
+        "yes": [],
+        "no": []
+       },
+       {
+        "control": "escalate",
+        "levels": [
+         {
+          "roleId": "role:33333333-0000-4000-8000-000000000001",
+          "via": "client",
+          "waitMin": 5
+         }
+        ],
+        "stop": "reset"
+       }
+      ]
+     }
+    }
+   ],
+   "errors": []
+  },
+  {
+   "id": "via-email-as-is",
+   "note": "via email переводчик не судит: отказ — слой extra, rules-words escalate-email",
+   "plan": [
+    {
+     "op": "createRule",
+     "rule": {
+      "name": "Gate escalate",
+      "triggers": [
+       {
+        "kind": "io.input",
+        "target": "Gate Cam / Gate Loop",
+        "value": "active"
+       }
+      ],
+      "steps": [
+       {
+        "control": "escalate",
+        "levels": [
+         {
+          "role": "Guards",
+          "via": "email",
+          "waitMin": 5
+         }
+        ],
+        "stop": "ack"
+       }
+      ]
+     }
+    }
+   ],
+   "body": [
+    {
+     "table": "scenarios",
+     "op": "create",
+     "body": {
+      "name": "Gate escalate",
+      "triggers": [
+       {
+        "source": "vms",
+        "kind": "io.input",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "child:1-sensor-1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "fromEvent": false
+        },
+        "match": {
+         "value": "active"
+        }
+       }
+      ],
+      "steps": [
+       {
+        "control": "escalate",
+        "levels": [
+         {
+          "roleId": "role:33333333-0000-4000-8000-000000000001",
+          "via": "email",
+          "waitMin": 5
+         }
+        ],
+        "stop": "ack"
+       }
+      ]
+     }
+    }
+   ],
+   "errors": []
+  }
+ ]
+}

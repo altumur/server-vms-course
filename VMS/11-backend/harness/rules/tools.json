@@ -3,7 +3,7 @@
     "type": "function",
     "function": {
       "name": "find_devices",
-      "description": "Cameras with their sensors, relays, presets, detectors, recording and can_edit. Empty args — all.",
+      "description": "Cameras with their sensors, relays, units, presets, detectors, recording and can_edit, by name. Empty args — all.",
       "parameters": {
         "type": "object",
         "properties": {
@@ -13,7 +13,7 @@
           },
           "folder": {
             "type": "string",
-            "description": "folder id or name, with subfolders"
+            "description": "folder name, with subfolders"
           }
         },
         "required": []
@@ -24,7 +24,7 @@
     "type": "function",
     "function": {
       "name": "list_table",
-      "description": "Rows of a table: detectors, recordings, rules, schedules, modes, windows, folders, roles. rules — full rules, for a change.",
+      "description": "Rows of a table by name: detectors, recordings, rules, schedules, modes, windows, folders, roles. rules — full rules in the plan's form, for a change.",
       "parameters": {
         "type": "object",
         "properties": {

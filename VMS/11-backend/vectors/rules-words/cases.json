@@ -242,6 +242,16 @@
   "servers": [
    "srv-a",
    "srv-b"
+  ],
+  "roles": [
+   {
+    "id": "33333333-0000-4000-8000-000000000001",
+    "name": "Guards"
+   },
+   {
+    "id": "33333333-0000-4000-8000-000000000002",
+    "name": "Operators"
+   }
   ]
  },
  "cases": [
@@ -592,9 +602,9 @@
    "errors": []
   },
   {
-   "id": "no-ask",
-   "note": "ask не составляется: Н1.5",
-   "request": "When the Gate Loop sensor trips, ask the operator.",
+   "id": "ask-role-unnamed",
+   "note": "ask составляется; кто отвечает — слово админа: роль не названа",
+   "request": "When the Gate Loop sensor trips, ask an operator within a minute whether to open the gate.",
    "row": {
     "when": [
      {
@@ -610,13 +620,17 @@
     "then": [
      {
       "control": "ask",
-      "role": "x",
-      "sec": 60
+      "text": "Open the gate?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "no",
+      "yes": [],
+      "no": []
      }
     ]
    },
    "errors": [
-    "then[0]: such a rule is created on the console page: refuse"
+    "then[0]: the request does not name the role Guards: ask_admin who answers"
    ]
   },
   {
@@ -1569,9 +1583,9 @@
    ]
   },
   {
-   "id": "no-escalate",
-   "note": "escalate не составляется",
-   "request": "When the Gate Loop sensor trips, escalate.",
+   "id": "escalate-email",
+   "note": "via не client: почты и Telegram нет, Н1.5",
+   "request": "When the Gate Loop sensor trips, escalate to the Guards, 5 minutes per level.",
    "row": {
     "when": [
      {
@@ -1587,12 +1601,213 @@
     "then": [
      {
       "control": "escalate",
-      "levels": []
+      "levels": [
+       {
+        "role": "Guards",
+        "via": "email",
+        "wait_min": 5
+       }
+      ],
+      "stop": "ack"
      }
     ]
    },
    "errors": [
-    "then[0]: such a rule is created on the console page: refuse"
+    "then[0].levels[0]: via email: there is no email or Telegram: only client"
+   ]
+  },
+  {
+   "id": "ask-ok",
+   "note": "роль и срок названы, default no — умолчание",
+   "request": "When the Gate Loop sensor trips, ask the Guards within a minute whether to open the gate.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "text": "Open the gate?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "no",
+      "yes": [],
+      "no": []
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "ask-default-yes",
+   "note": "default yes не назван",
+   "request": "When the Gate Loop sensor trips, ask the Guards within a minute whether to open the gate.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "text": "Open the gate?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "yes",
+      "yes": [],
+      "no": []
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: default yes is not in the request: with no answer the rule goes the no way"
+   ]
+  },
+  {
+   "id": "escalate-ok",
+   "note": "роль, срок уровня и via client",
+   "request": "When the Gate Loop sensor trips, escalate to the Guards, 5 minutes per level.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "escalate",
+      "levels": [
+       {
+        "role": "Guards",
+        "via": "client",
+        "wait_min": 5
+       }
+      ],
+      "stop": "ack"
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "escalate-reset",
+   "note": "stop reset не назван",
+   "request": "When the Gate Loop sensor trips, escalate to the Guards, 5 minutes per level.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "escalate",
+      "levels": [
+       {
+        "role": "Guards",
+        "via": "client",
+        "wait_min": 5
+       }
+      ],
+      "stop": "reset"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: stop reset: the request does not ask to stop when the event ends"
+   ]
+  },
+  {
+   "id": "abandoned-ok",
+   "note": "вид встроенного детектора каталога",
+   "request": "When an object is left behind on Lobby Cam, raise an alarm on Lobby Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "abandoned",
+      "unit": "2-abandoned"
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "2"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "crowd-other",
+   "note": "вид не тот",
+   "request": "When there is motion on Lobby Cam, raise an alarm on Lobby Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "crowd",
+      "unit": "2-crowd"
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "2"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "when[0]: the request does not speak of crowd: the trigger must be the admin's event; if the catalog has no such event, refuse"
    ]
   },
   {
@@ -2027,7 +2242,7 @@
     }
    ],
    "errors": [
-    "edits[0]: then[0]: the rule has its own params: it is changed on the console page: refuse"
+    "edits[0]: then[0]: the rule has its own params: it is changed in the console form: refuse"
    ]
   },
   {
@@ -2088,7 +2303,7 @@
    ],
    "errors": [
     "edits[0]: then[0]: params is not written by a plan: ask_admin",
-    "edits[0]: then[0]: the rule has its own params: it is changed on the console page: refuse"
+    "edits[0]: then[0]: the rule has its own params: it is changed in the console form: refuse"
    ]
   },
   {
@@ -2120,7 +2335,7 @@
    ],
    "errors": [
     "edits[0]: then[0]: params is not written by a plan: ask_admin",
-    "edits[0]: then[0]: the rule has its own params: it is changed on the console page: refuse"
+    "edits[0]: then[0]: the rule has its own params: it is changed in the console form: refuse"
    ]
   },
   {
@@ -2152,7 +2367,7 @@
    ],
    "errors": [
     "edits[0]: then[0]: params is not written by a plan: ask_admin",
-    "edits[0]: then[0]: the rule has its own params: it is changed on the console page: refuse"
+    "edits[0]: then[0]: the rule has its own params: it is changed in the console form: refuse"
    ]
   },
   {

@@ -34,7 +34,7 @@
 | V/11.10 | девять инструментов `harness/tools.json` по билету, отбор над полными списками, `can_edit` | векторы `plan-check`, `turn` |
 | V/11.11 | проверка плана — чистая функция, слова `harness/words.json`, отказы словами главы | векторы [`plan-check`](../vectors/plan-check/README.md) |
 | V/11.12 | изменения к применению, метка секрета, подстановка в `password` плана | векторы `plan-check`; чтением |
-| V/11.13 | харнес правил `harness/rules/`, каталог `data/rule-catalog.json`, слои проверки, запись только человеком | векторы [`rules-words`](../vectors/rules-words/README.md), прогона пока нет |
+| V/11.13 | харнес правил `harness/rules/`, нейтральный план и один переводчик в тело, каталог `data/rule-catalog.json`, слои проверки по строке, `ask`, `escalate`, запись только человеком | векторы [`rules-words`](../vectors/rules-words/README.md), [`rules-neutral`](../vectors/rules-neutral/README.md), прогона пока нет |
 
 Пакет подсистемы несёт исполняемый `/usr/lib/backend/worker` и кладёт рядом с манифестом семь файлов набора WebUI —
 сборку consolem с закреплённого коммита (V/09.3); их отдаёт консоль статическими файлами подсистемы и сверяет SHA-256
