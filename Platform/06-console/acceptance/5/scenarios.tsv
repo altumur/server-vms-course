@@ -319,3 +319,16 @@ scenario	step	request	expect
 32-pass-second-kind	9	@header X-W2C-Pass-Ticket: 00112233445566778899aabbccddeeff GET /metrics	200 ~testsub_workers_live
 32-pass-second-kind	10	GET /probe-x/metrics	200 ~probe_x_passed_calls_total 0
 32-pass-second-kind	11	GET /metrics	200 !contains passed_calls_total
+# 33-writes-via (ADR-0119 доп. (10), (11); P/06.1 Н1.1а): манифест probe-w — строки единицы items и таблицы log пишет только probe-x по билету; сеанс — 403 writes via у создания, правки, удаления, таблицы и строки пакета (весь пакет, ничего не записано); проверка до чтения строки — PUT и DELETE отсутствующей строки 403, не 404; таблица free без слова открыта; чтение не меняется. Половина по билету — стенд передачи, до него чтением (P/06.1-35)
+33-writes-via	1	POST /probe-w/items {"name": "a"}	403 {"error": "writes via"}
+33-writes-via	2	store GET /v1/get?key=probe-w/items/a	404
+33-writes-via	3	PUT /probe-w/items/a {"note": "x"}	403 {"error": "writes via"}
+33-writes-via	4	DELETE /probe-w/items/a	403 {"error": "writes via"}
+33-writes-via	5	POST /probe-w/log {"name": "l1"}	403 {"error": "writes via"}
+33-writes-via	6	DELETE /probe-w/log/l1	403 {"error": "writes via"}
+33-writes-via	7	POST /console/batch {"writes": [{"op": "put", "key": "probe-w/free/f1", "fields": {"name": "f1"}, "cas": ""}, {"op": "put", "key": "probe-w/items/b", "fields": {"name": "b"}, "cas": ""}]}	403 {"error": "writes via"}
+33-writes-via	8	store GET /v1/get?key=probe-w/free/f1	404
+33-writes-via	9	POST /console/batch {"writes": [{"op": "put", "key": "probe-w/log/l2", "fields": {"name": "l2"}, "cas": ""}]}	403 {"error": "writes via"}
+33-writes-via	10	POST /probe-w/free {"name": "f2"}	201 {"row": {"name": "f2"}}
+33-writes-via	11	GET /probe-w/log	200 {"log": []}
+33-writes-via	12	GET /probe-w/items	200 {"configured": []}
