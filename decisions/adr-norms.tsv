@@ -1296,8 +1296,8 @@ adr	add	point	status	file	norm	note
 0119	8	п. 1	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.5	своя роль супервизоров допустима; 409 role referenced мимо backend — снимок устарел
 0119	9	—	ОТВЕРГНУТО	-	-	заменён доп. (10)
 0119	10	—	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.5, Н1.6	доля VMS: writes_via: [backend] в манифесте exp (ключ загрузчика de79bb640); временный NOT_SUPPORTED V/11.8 снят
-0119	11	п. 2	НЕТ НОРМЫ	-	-	уборка части без держателя — DELETE /exports администратора через backend: доля V/11 при закреплении контракта с /exports; V/08.8 «уборка под admin» — после writes_via
+0119	11	п. 2	НОРМА	VMS/08-exp/spec/08.8-exp.norms.md	V/08.8 Н1.4	часть без держателя удаляет backend по билету (уточнено (12)); доля V/11 — DELETE /exports — НЕТ НОРМЫ до контракта с /exports
 0119	11	М	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.5	доля VMS: промежуточный NOT_SUPPORTED был только при смене supervision; снят с writes_via
 0119	10	writes_via exp	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md	V/08.6 Н1.1	строки частей пишет только backend; unit.writes_via: [backend] в exp.subsystem.yaml
 0119	12	—	НОРМА	VMS/08-exp/spec/08.8-exp.norms.md	V/08.8 Н1.4	часть без держателя удаляет backend по DELETE автора или admin; признак — placement без воркера или пульс старше LOST_AFTER, CAS; вернувшийся держатель удаляет файлы без строки (решила)
-0119	12	М ревью	НОРМА	VMS/08-exp/spec/08.8-exp.norms.md; VMS/08-exp/spec/08.6-exp.norms.md	V/08.8 Н1.4; V/08.6 Н1.6	export.deleted без держателя пишет backend (why holder lost); вернувшийся держатель — CAS прочитанной строки, файлы без строки удаляет при подъёме
+0119	12	М ревью	НОРМА	VMS/08-exp/spec/08.8-exp.norms.md; VMS/08-exp/spec/08.6-exp.norms.md	V/08.8 Н1.4; V/08.6 Н1.6	без держателя export.deleted нет — строка журнала консоли об удалении, предел (М3 ревью норм (10)–(12)); вернувшийся держатель — CAS прочитанной строки, удаление не останавливает, файлы без строки удаляет при подъёме
