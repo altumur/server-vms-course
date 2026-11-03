@@ -602,6 +602,8 @@ adr	add	point	status	file	norm	note
 0110	25	п. 1	НОРМА	Platform/09-agent/spec/09.1-agent.norms.md; Platform/common/contracts/keys.md	P/09.1 Н1.4; договор keys «Отзывы»	доля платформы: thefts прежнего — из доверенного набора памяти
 0110	25	п. 2	ОТВЕРГНУТО	-	-	доля платформы: «заменяет» уточнено доп. (26): слить, при 413 заменить
 0110	26	-	НОРМА	Platform/09-agent/spec/09.1-agent.norms.md; Platform/common/contracts/keys.md; Platform/08-domain/spec/08.8-domain.norms.md	P/09.1 Н1.4; договор keys «Отзывы»; P/08.8 Н1.8	доля платформы: старт без памяти и с нечитаемой строкой — ждать ответа, слить, при 413 заменить; предел и журнал domain.revoked.replaced
+0110	25	доля VMS	НЕ НОРМА	-	-	доля VMS: нет; норма платформы
+0110	26	доля VMS	НЕ НОРМА	-	-	доля VMS: нет; норма платформы
 0112	0	п. 1	НОРМА	VMS/08-page/spec/08.1-page.norms.md; VMS/09-deploy/spec/09.1-deploy.norms.md	V/08.1; V/09.1 Н1.1	VMS/08-page/spec/08.1-page.norms.md:8, :24; VMS/09-deploy/spec/09.1-deploy.norms.md:27; закрыто vms/page-tab-2: V/08.1 под закладку формы
 0112	0	п. 1, конец	НЕ НОРМА	-	-	—
 0112	0	п. 2, а	НОРМА	VMS/08-page/spec/08.1-page.norms.md	V/08.1	VMS/08-page/spec/08.1-page.norms.md:8; 08-page.README.md:4; закрыто vms/page-tab-2
