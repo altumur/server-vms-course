@@ -221,6 +221,44 @@ paths:
                   - $ref: '#/components/schemas/Deposed'
         '413': {$ref: '#/components/responses/TokenRefused'}
         '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
+  /api/verify:
+    description: 'Глава 8.4 (08.4-domain.norms.md) Н1.2а, Н1.10 verify, Н2 (ADR-0119); передаёт консоль домена — POST /domain/verify
+      списка дверей домена, только по билету (договор пересылки «Билет на пересылке»). Токена, куки и сеанса нет.'
+    post:
+      operationId: verify
+      summary: Проверка учётных данных без входа (Н1.2а)
+      parameters:
+        - $ref: '#/components/parameters/XW2CClient'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user, password]
+              additionalProperties: false
+              properties:
+                user: {type: string}
+                password: {type: string}
+      responses:
+        '408': {$ref: '#/components/responses/BodyRefused'}
+        '200':
+          description: Пароль сверился; право не судится (его судит консоль кластера, глава 6.7 Н1.15)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user]
+                additionalProperties: false
+                properties:
+                  user: {$ref: '#/components/schemas/PersonName'}
+        '400': {$ref: '#/components/responses/Refused'}
+        '401': {$ref: '#/components/responses/Refused'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '413': {$ref: '#/components/responses/Refused'}
+        '429': {$ref: '#/components/responses/TooMany'}
+        '503': {$ref: '#/components/responses/StandbyOrUnavailable'}
   /api/login:
     description: 'Глава 8.4 (08.4-domain.norms.md) Н1.2, Н1.10, Н2; передаёт консоль домена (глава 8.0 Н1.8 pass, открытая строка
       списка дверей домена).'

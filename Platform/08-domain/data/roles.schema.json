@@ -120,6 +120,21 @@
     "string"
    ]
   },
+  "supervision": {
+   "description": "надзор: подсистема → роль супервизоров; действие автора с этой ролью над подсистемой требует подтверждения человеком роли супервизоров (P/08.4 Н1.3а supervision; ADR-0119 доп. (5) п. 1); нет поля — надзора нет",
+   "type": "object",
+   "propertyNames": {
+    "$ref": "#/$defs/common.sub_name"
+   },
+   "additionalProperties": {
+    "$ref": "#/$defs/common.person_name",
+    "description": "имя роли домена"
+   },
+   "x-encoding": "jcs",
+   "x-codec": [
+    "object"
+   ]
+  },
   "at": {
    "$ref": "#/$defs/common.time",
    "description": "стенные секунды последней правки",

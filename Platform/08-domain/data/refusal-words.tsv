@@ -1,5 +1,5 @@
 # Закрытый перечень слов error дверей процесса domain: главы 8.3, 8.4, 8.6–8.10 (ADR-0094 B5). Правила — глава 8.0 Н4; формат field — P/06.1 Н2.
-# door — двери: agents /api/member, /api/carry, /api/relay; tokens /api/tokens; login /api/login; people /domain/users…; groups /domain/groups…; roles /domain/roles…; batch /domain/batch;
+# door — двери: agents /api/member, /api/carry, /api/relay; tokens /api/tokens; login /api/login; verify /api/verify; people /domain/users…; groups /domain/groups…; roles /domain/roles…; batch /domain/batch;
 # grants /domain/grants/…; break-glass /domain/break-glass/…; revoke /domain/revoke; members /domain/members…; topology /domain/topology;
 # placement /domain/placement/…; edits /domain/<sub>/<rows>…; shared /domain/shared; move /api/prepare, /api/take, /domain/move;
 # handover /domain/handover; stranded /domain/stranded/apply; agent-tokens — местная дверь токенов агента (приёмка 8.7); * — каждая дверь процесса. У агентов слово уточняет reason (8.3 Н4, 8.7 Н4).
@@ -22,6 +22,11 @@ login	400	bad body	/user /password	8.4 Н2
 login	401	refused	-	8.4 Н4
 login	413	too large	-	8.4 Н4
 login	429	too many attempts	-	8.4 Н4
+verify	400	bad body	-	8.4 Н4
+verify	401	refused	-	8.4 Н4
+verify	403	denied	-	8.4 Н4
+verify	413	too large	-	8.4 Н4
+verify	429	too many attempts	-	8.4 Н4
 people	400	bad body	-	8.4 Н4
 people	400	bad name	/name	8.4 Н4
 people	400	bad password	/password	8.4 Н4
@@ -139,6 +144,8 @@ batch	409	name taken	/writes/<i>	8.4 Н4
 batch	503	names unknown	-	8.4 Н4
 groups	409	being deleted	/members/<i>	8.4 Н4
 roles	409	being deleted	/assigned/<i>	8.4 Н4
+roles	400	unknown role	/supervision	8.4 Н4
+roles	409	role referenced	-	8.4 Н4
 batch	403	admin only	/writes/<i>	8.4 Н4
 batch	409	admin table too large	-	8.4 Н4
 batch	409	last admin	-	8.4 Н4

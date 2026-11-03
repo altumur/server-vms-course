@@ -79,6 +79,51 @@
     "object"
    ]
   },
+  "supervision": {
+   "description": "роль с надзором → {подсистема: роль супервизоров}; всегда все такие роли домена (P/08.4 Н1.3б; ADR-0119 доп. (4) п. 1, доп. (6) п. 2); нет поля — надзора нет",
+   "type": "object",
+   "propertyNames": {
+    "$ref": "#/$defs/common.person_name"
+   },
+   "additionalProperties": {
+    "type": "object",
+    "propertyNames": {
+     "$ref": "#/$defs/common.sub_name"
+    },
+    "additionalProperties": {
+     "$ref": "#/$defs/common.person_name"
+    }
+   },
+   "x-encoding": "jcs",
+   "x-codec": [
+    "object"
+   ]
+  },
+  "unreadable": {
+   "description": "нечитаемые у держателя строки ролей и групп, которые таблица несла бы: отметка вместо пропуска — надзор судится в пользу надзора (P/08.4 Н1.3б; ADR-0119 доп. (6) п. 2); нет поля — таких нет",
+   "type": "object",
+   "properties": {
+    "roles": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.person_name"
+     },
+     "uniqueItems": true
+    },
+    "groups": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/common.person_name"
+     },
+     "uniqueItems": true
+    }
+   },
+   "additionalProperties": false,
+   "x-encoding": "jcs",
+   "x-codec": [
+    "object"
+   ]
+  },
   "as_of": {
    "$ref": "#/$defs/common.time",
    "description": "как as_of копии грантов (P/09.1 Н1.4 fresh); таблица старше as_of + GRANT_LIFETIME не используется",
