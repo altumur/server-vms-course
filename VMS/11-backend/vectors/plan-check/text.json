@@ -590,5 +590,77 @@
    "вся зона"
   ],
   "expect": false
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "правда ли это"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "камера недоступна"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "нет прав на камеры"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "Нет доступа к Gate-1"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "not_found",
+   "таких камер у нас нет"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "not_found",
+   "nobody found it"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "said",
+  "args": [
+   "all",
+   "всегда"
+  ],
+  "expect": false
+ },
+ {
+  "fn": "said",
+  "args": [
+   "all",
+   "каждая камера"
+  ],
+  "expect": true
+ },
+ {
+  "fn": "said",
+  "args": [
+   "all",
+   "overall"
+  ],
+  "expect": false
  }
 ]
