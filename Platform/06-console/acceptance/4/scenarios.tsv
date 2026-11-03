@@ -13,8 +13,13 @@ scenario	step	request	expect
 03-operator-mark	11	console POST /counters {"name": "c7", "start": 1}	201
 03-operator-mark	12	console POST /marks {"unit": "testsub/c7", "note": "past", "occurred": 1700000000.5}	2xx
 03-operator-mark	13	@until 15 console GET /events?unit=testsub/c7&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c7", "occurred": 1700000000.5}]}
-03-operator-mark	14	console GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c3", "occurred": "@absent"}]}
+03-operator-mark	14	console GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c3", "occurred": "@absent", "to": "@absent"}]}
 03-operator-mark	15	console POST /marks {"unit": "testsub/c7", "occurred": "1700000000"}	400 {"error": "refused"}
+03-operator-mark	16	console POST /counters {"name": "c8", "start": 1}	201
+03-operator-mark	17	console POST /marks {"unit": "testsub/c8", "note": "span", "occurred": 1700000000, "to": 1700000030.5}	2xx
+03-operator-mark	18	@until 15 console GET /events?unit=testsub/c8&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c8", "occurred": 1700000000, "to": 1700000030.5}]}
+03-operator-mark	19	console POST /marks {"unit": "testsub/c8", "to": 1700000030}	400 {"error": "refused"}
+03-operator-mark	20	console POST /marks {"unit": "testsub/c8", "occurred": 1700000030, "to": 1700000000}	400 {"error": "refused"}
 04-request-reaped	1	console POST /counters {"name": "c4", "start": 1}	201
 04-request-reaped	2	console POST /testsub/requests {"unit": "c4", "add": 5}	202 {"queued": "$rid"}
 04-request-reaped	3	@key(2) console POST /testsub/requests {"unit": "c4", "add": 5}	202 {"queued": "$rid"}

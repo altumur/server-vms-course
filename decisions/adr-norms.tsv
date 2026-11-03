@@ -1141,6 +1141,12 @@ adr	add	point	status	file	norm	note
 0115	13	пп. 1, 2	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md; VMS/12-psim/spec/12.3-psim.norms.md; VMS/12-psim/spec/12.4-psim.norms.md	V/12.1 Н1.2, Н1.6; V/12.3 Н1.5; V/12.4 Н1.3	кольцо <т>_events, PSIM_EVENTS_RING = 1000, предел — кольцо
 0115	14	—	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md; VMS/12-psim/spec/12.2-psim.norms.md; VMS/12-psim/spec/12.4-psim.norms.md	V/12.1 Н1.2; V/12.2 Н0; V/12.4 Н1.3	<т> ≤ 25; кольцо только у видов под чужим source; enabled мимо шага — до следующего шага
 0115	15	—	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md; VMS/12-psim/spec/12.3-psim.norms.md	V/12.1 Н1.2; V/12.3 Н1.5	слот seq mod PSIM_EVENTS_RING, seq монотонно, удалений нет; М ревью (15): после перезапуска max(seq) + 1, пусто — 0; разрыв больше RING — вытеснение, счётчик пульса ring_lost (решила: имя)
+0115	10	-	НЕ НОРМА	-	-	доля платформы: нет — межплагинные вызовы, учётка, i18n.js, класс по severity — VMS/12-psim
+0115	11	-	НОРМА	Platform/02-installer/spec/02.1-installer.schema.json; Platform/02-installer/spec/02.1-installer.relations.json; Platform/02-installer/spec/02.2-installer.view.schema.json; Platform/06-console/spec/06.5-console.norms.md	P/02.1 display.tables, связь № 159; P/06.5 Н1.2	доля платформы: display.tables {<т>: label}, имя — из tables; модуль не читает
+0115	12	-	НЕ НОРМА	-	-	доля платформы: нет
+0115	13	-	НЕ НОРМА	-	-	доля платформы: нет — кольцо <т>_events — worker.writes как есть
+0115	14	-	НЕ НОРМА	-	-	доля платформы: нет — длина вида — генератор
+0115	15	-	НЕ НОРМА	-	-	доля платформы: нет — воркер строк worker.writes не удаляет: каталог delete= console (P/06.1), как есть
 0116	0	-	НЕ НОРМА	-	-	доля платформы: нет — платформа без правок сверх ADR-0115 (ключи загрузчика P/02.1); kinds.changed — перезапуск по метке P/02.3, «наблюдается» — state и пульс, как есть; область гранта «по виду» — отдельный ADR до этапа 4
 0116	0	Drivers	НЕ НОРМА	-	-	—
 0116	0	Options 2–4	ОТВЕРГНУТО	-	-	выбран вариант 1, гибрид этапами
@@ -1169,3 +1175,7 @@ adr	add	point	status	file	norm	note
 0116	2	п. 6	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1, Н1.3	`vms.cam` с `implements: [vms.camera/1]`, камеры плагинов — свои `kind`; закреплений шесть
 0116	1	-	НЕ НОРМА	-	-	доля платформы: нет — слово владельца о наборе
 0116	2	-	НЕ НОРМА	-	-	доля платформы: нет — ETag по каталогу манифестов — метка rev P/02.3 как есть; uid, публикация видов, этап 5 — V/11 и форк
+0117	0	-	НЕ НОРМА	-	-	доля платформы: нет — супервизор отдельным ADR
+0117	3	п. 2	НОРМА	Platform/06-console/spec/06.4-console.norms.md; Platform/06-console/spec/06-console.api.openapi.yaml; Platform/06-console/acceptance/4/scenarios.tsv	P/06.4 Н1.2 marks, Н2 POST /marks; сц. 03 шаги 16–20	доля платформы: to — конец отрезка, только с occurred и не меньше его, иначе 400; поле to строки
+0117	4	-	НЕ НОРМА	-	-	доля платформы: нет — закрепления размещения после done в P/04 нет, предел VMS
+0117	6	п. 1	НЕ НОРМА	-	-	доля платформы: нет — worker.deletes [parts] P/02.1 как есть

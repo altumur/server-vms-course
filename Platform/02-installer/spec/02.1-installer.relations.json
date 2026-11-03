@@ -1492,6 +1492,15 @@
    "norm": "ADR-0115 доп. (6) п. 3; P/02.1 Н1.4",
    "cel": "((type(doc) == map && \"display\" in doc) ? ((type(doc[\"display\"]) == map && \"form\" in doc[\"display\"]) ? (type(doc[\"display\"][\"form\"]) == list ? dyn(doc[\"display\"][\"form\"]).transformList(i1, e2, ((type(e2) == map && \"status\" in e2) ? (type(e2[\"status\"]) == list ? dyn(e2[\"status\"]).transformList(i3, e4, ((type(e4) == map && \"field\" in e4 && type(e4[\"field\"]) == string && (type(doc) == map && \"tables\" in doc && type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(t9, (type(t9) == string && type(doc[\"tables\"][t9]) == map && \"fields\" in doc[\"tables\"][t9] && ((type(doc[\"tables\"][t9][\"fields\"]) == map && dyn(doc[\"tables\"][t9][\"fields\"]).exists(f9, (type(f9) == string && t9 + \".\" + f9 == e4[\"field\"]))) || (type(doc[\"tables\"][t9][\"fields\"]) == list && dyn(doc[\"tables\"][t9][\"fields\"]).exists(f9, (type(f9) == string && t9 + \".\" + f9 == e4[\"field\"])))))))) ? [{\"p\": [\"display\", \"form\", i1, \"status\", i3, \"field\"]}] : [])) : []) : [])) : []) : []) : [])",
    "own": []
+  },
+  {
+   "no": 159,
+   "path": "display.tables.{}",
+   "relation": ". in keys(tables) | values(tables[])",
+   "class": "reference",
+   "norm": "ADR-0115 доп. (11); P/02.1 Н1.4",
+   "cel": "((type(doc) == map && \"display\" in doc) ? ((type(doc[\"display\"]) == map && \"tables\" in doc[\"display\"]) ? (type(doc[\"display\"][\"tables\"]) == map ? dyn(doc[\"display\"][\"tables\"]).map(k1, ((k1 != null && type(k1) != map && type(k1) != list && !(type(doc) == map && \"tables\" in doc && ((type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(t9, t9 == k1)) || (type(doc[\"tables\"]) == list && dyn(doc[\"tables\"]).exists(e9, (type(e9) == string && e9 == k1)))))) ? [{\"p\": [\"display\", \"tables\", k1]}] : [])) : []) : []) : [])",
+   "own": []
   }
  ],
  "untranslated": []

@@ -994,6 +994,17 @@
     },
     "langs": {
      "$ref": "#/$defs/langs"
+    },
+    "tables": {
+     "description": "имя таблицы → подпись вида (`name_key` psim): строка или `{key, text}`, переводы — `display.langs`; имя — таблица `tables` (ADR-0115 доп. (11))",
+     "x-owner": "P/06.5 Н1.2",
+     "type": "object",
+     "propertyNames": {
+      "type": "string"
+     },
+     "additionalProperties": {
+      "$ref": "#/$defs/label"
+     }
     }
    },
    "additionalProperties": false,
