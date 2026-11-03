@@ -3,7 +3,7 @@
 Статус: **переведён** — главы V/01.1–V/01.8 (2026-10-23); план ниже — история перевода. Источники — опись
 [`../common/inventory.md`](../common/inventory.md) § 1, § 2. Платформа — выгрузка `cammeta-specs` `7a875c75`.
 Манифест — [`cam.subsystem.yaml`](cam.subsystem.yaml) (канон; ADR-0090 доп. (6) п. 8). Оболочка корня —
-[`cam.shell.html`](cam.shell.html): ссылка на форму `/backend/` и модуль платформы P/07 (урок V/08, глава 1 Н1.1); прежняя страница — свидетель `Source/vms/cam.shell.html`.
+[`cam.shell.html`](cam.shell.html): ссылка на форму `/backend/` и модуль платформы P/07 (урок V/11, глава 1 Н1.1); прежняя страница — свидетель `Source/vms/cam.shell.html`.
 
 ## Что такое урок V/01
 

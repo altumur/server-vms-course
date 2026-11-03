@@ -1,10 +1,10 @@
 openapi: 3.1.0
 info:
-  title: V/13 — дверь части выгрузки
+  title: V/08 — дверь части выгрузки
   version: 1.0.0
   description: |
-    HTTP-контракт двери процесса воркера `exp` — глава V/13.4 урока «Выгрузка» модуля VMS. Канон —
-    [нормы главы 4](13.4-exp.norms.md); этот файл их выражает и не добавляет требований. Маршрут `files` — человеку по
+    HTTP-контракт двери процесса воркера `exp` — глава V/08.9 урока «Выгрузка» модуля VMS. Канон —
+    [нормы главы 4](08.9-exp.norms.md); этот файл их выражает и не добавляет требований. Маршрут `files` — человеку по
     токену двери консоли (`GET /exp/where/<part>`, договор токена двери; `?t=` или `Authorization: Bearer`), только автору
     части. Маршрут `parts` — ведущей части того же заказа по сертификату роли `expworker`. Разбор запроса и пределы
     соединений — дверь процесса P/03.4 Н1.7.
@@ -20,7 +20,7 @@ paths:
       - $ref: "#/components/parameters/Part"
       - $ref: "#/components/parameters/File"
     get:
-      summary: Файл части автору (V/13.4 Н1.2)
+      summary: Файл части автору (V/08.9 Н1.2)
       security: [{doorToken: []}]
       parameters:
         - $ref: "#/components/parameters/T"
@@ -33,7 +33,7 @@ paths:
         "410": {$ref: "#/components/responses/Refusal"}
         "416": {$ref: "#/components/responses/Unsatisfiable"}
     head:
-      summary: Заголовки файла без тела (V/13.4 Н1.2)
+      summary: Заголовки файла без тела (V/08.9 Н1.2)
       security: [{doorToken: []}]
       parameters:
         - $ref: "#/components/parameters/T"
@@ -44,7 +44,7 @@ paths:
         "410": {$ref: "#/components/responses/Refusal"}
   /parts/{part}/{file}:
     get:
-      summary: Файл части ведущей части того же заказа (V/13.4 Н1.3)
+      summary: Файл части ведущей части того же заказа (V/08.9 Н1.3)
       security: [{roleCertificate: []}]
       parameters:
         - $ref: "#/components/parameters/Part"
