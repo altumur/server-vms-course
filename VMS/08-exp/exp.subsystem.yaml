@@ -1,4 +1,4 @@
-# exp — export of footage and frames (V/13; ADR-0117 with addenda (1)–(6)). A unit is a PART: one camera, one recording
+# exp — export of footage and frames (V/08; ADR-0117 with addenda (1)–(6)). A unit is a PART: one camera, one recording
 # (or the live picture of one camera), its periods and the files it makes. An order of several cameras is several
 # parts written by `backend` in one batch; the lead part (its `name` equals `export`) carries the order, the others
 # copy what a door of theirs must judge alone (`by`, the order's settings; доп. (6) п. 4). No coordinator: `backend`
@@ -10,7 +10,7 @@ slot: {prefix: x, name_env: EXP_NAME}
 about: {sub: cam, field: cam}   # a part is about a camera: its grants, labels and events are the camera's
 unit:
   rows: parts                        # exp/parts/<name>
-  id: name                           # backend's: the lead's — the order's id; the others — <order>-<n> (V/13.1 Н1.1)
+  id: name                           # backend's: the lead's — the order's id; the others — <order>-<n> (V/08.6 Н1.1)
   fields:
     name:     {type: string, required: true}
     export:   {type: string, required: true, fixed: true}   # the order: the lead part's name; the lead's own name
@@ -53,8 +53,8 @@ unit:
     by:       {type: string, required: true, fixed: true}   # the author: a copy in each part (доп. (6) п. 4)
     comment:  {type: string}
     retry_of: {type: string, fixed: true}                    # the order this one retries the failed parts of
-    keep:     {type: int, required: true, fixed: true, schema: {minimum: 60}}   # seconds the files live after the part ends (EXPORT_KEEP; V/13.3 Н1.4)
-    labels:   {type: list, default: []}                      # ["gpu"] when the part transcodes (V/13.2 Н1.4)
+    keep:     {type: int, required: true, fixed: true, schema: {minimum: 60}}   # seconds the files live after the part ends (EXPORT_KEEP; V/08.8 Н1.4)
+    labels:   {type: list, default: []}                      # ["gpu"] when the part transcodes (V/08.7 Н1.4)
   state:
     cursor:
       type: object
@@ -115,7 +115,7 @@ display:
     export.read: файл скачан
     export.deleted: файлы удалены
 placement:
-  capacity:   {from: capacity, default: 64}     # parts a worker HOLDS, ready ones too until they expire: the memory of files; the work is limited by EXP_ACTIVE (V/13.1 Н1.2)
+  capacity:   {from: capacity, default: 64}     # parts a worker HOLDS, ready ones too until they expire: the memory of files; the work is limited by EXP_ACTIVE (V/08.6 Н1.2)
   headroom:   {from: headroom}
   constraint: labels-subset
   requires:   resource                           # it writes the camera's export lines into the resource of its server
@@ -141,8 +141,8 @@ events:
   older_epochs: earlier-run
 door:
   routes:
-    - files                          # a person's download: the door token of /exp/where/<part> (V/13.4)
-    - {name: parts, role: [expworker]}   # the lead part pulls the others' files for «one file» (V/13.4 Н1.3)
+    - files                          # a person's download: the door token of /exp/where/<part> (V/08.9)
+    - {name: parts, role: [expworker]}   # the lead part pulls the others' files for «one file» (V/08.9 Н1.3)
 parts: {files: {exec: /usr/lib/exp/files-part, volumes: true}}   # the volume of export files (ADR-0117 доп. (3) М)
 shares: {files: {kind: dir, part: files}}
 metrics:

@@ -1212,35 +1212,35 @@ adr	add	point	status	file	norm	note
 0117	3	п. 2	НОРМА	Platform/06-console/spec/06.4-console.norms.md; Platform/06-console/spec/06-console.api.openapi.yaml; Platform/06-console/acceptance/4/scenarios.tsv	P/06.4 Н1.2 marks, Н2 POST /marks; сц. 03 шаги 16–20	доля платформы: to — конец отрезка, только с occurred и не меньше его, иначе 400; поле to строки
 0117	4	-	НЕ НОРМА	-	-	доля платформы: нет — закрепления размещения после done в P/04 нет, предел VMS
 0117	6	п. 1	НЕ НОРМА	-	-	доля платформы: нет — worker.deletes [parts] P/02.1 как есть
-0117	0	§ 1 п. 1	НОРМА	VMS/13-exp/spec/13.1-exp.norms.md; VMS/13-exp/exp.subsystem.yaml	V/13.1 Н1.1	урок VMS/13-exp, строка lessons.tsv 13; единица — часть по доп. (4) п. 1, (5) п. 1
-0117	0	§ 1 п. 2	НОРМА	VMS/13-exp/spec/13.1-exp.norms.md; VMS/13-exp/exp.subsystem.yaml	V/13.1 Н1.2	near rec, labels gpu; capacity 64 держимых частей, работу ограничивает EXP_ACTIVE = 2 перекодирования (С1 ревью норм, слово «Архитектора»); нет сервера gpu — отказ backend до записи; координатора нет по доп. (4) п. 1
-0117	0	§ 1 п. 3	НОРМА	VMS/13-exp/spec/13.2-exp.norms.md; VMS/02-rec/rec.subsystem.yaml; VMS/02-rec/spec/02.5-rec.norms.md	V/13.2 Н1.1; V/02.5 Н2	двери rec /spans, /samples, track=audio, роль expworker
-0117	0	§ 1 п. 4	НОРМА	VMS/13-exp/spec/13.2-exp.norms.md; VMS/03-live/spec/03.3-live.norms.md; VMS/03-live/live.subsystem.yaml	V/13.2 Н1.2; V/03.3 Н1.5	заменён доп. (2) п. 3: маршрут /frame шлюза по роли expworker; решила: раздачу заводит exp worker.creates, FRAME_WAIT 10 с, JPEG 90
-0117	0	§ 1 п. 5	НОРМА	VMS/13-exp/spec/13.2-exp.norms.md	V/13.2 Н1.1	дыра — partial, без ожидания и удержания
+0117	0	§ 1 п. 1	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md; VMS/08-exp/exp.subsystem.yaml	V/08.6 Н1.1	урок VMS/08-exp (до ADR-0118 доп. (1) — VMS/13-exp), строка lessons.tsv 08; единица — часть по доп. (4) п. 1, (5) п. 1
+0117	0	§ 1 п. 2	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md; VMS/08-exp/exp.subsystem.yaml	V/08.6 Н1.2	near rec, labels gpu; capacity 64 держимых частей, работу ограничивает EXP_ACTIVE = 2 перекодирования (С1 ревью норм, слово «Архитектора»); нет сервера gpu — отказ backend до записи; координатора нет по доп. (4) п. 1
+0117	0	§ 1 п. 3	НОРМА	VMS/08-exp/spec/08.7-exp.norms.md; VMS/02-rec/rec.subsystem.yaml; VMS/02-rec/spec/02.5-rec.norms.md	V/08.7 Н1.1; V/02.5 Н2	двери rec /spans, /samples, track=audio, роль expworker
+0117	0	§ 1 п. 4	НОРМА	VMS/08-exp/spec/08.7-exp.norms.md; VMS/03-live/spec/03.3-live.norms.md; VMS/03-live/live.subsystem.yaml	V/08.7 Н1.2; V/03.3 Н1.5	заменён доп. (2) п. 3: маршрут /frame шлюза по роли expworker; решила: раздачу заводит exp worker.creates, FRAME_WAIT 10 с, JPEG 90
+0117	0	§ 1 п. 5	НОРМА	VMS/08-exp/spec/08.7-exp.norms.md	V/08.7 Н1.1	дыра — partial, без ожидания и удержания
 0117	0	§ 1 п. 6	НЕТ НОРМЫ	-	-	409 OTHER_CLUSTER даёт backend: доля V/11 — при закреплении контракта форка с /exports (V/11.14 Н1.3)
-0117	0	§ 1 п. 7	НОРМА	VMS/13-exp/spec/13.1-exp.norms.md; VMS/13-exp/exp.subsystem.yaml	V/13.1 Н1.2	том — часть files с volumes и долей files; no_space
-0117	0	§ 2	НОРМА	VMS/13-exp/spec/13.1-exp.norms.md; VMS/13-exp/spec/13.3-exp.norms.md	V/13.1 Н1.3; V/13.3	cursor ≤ 5 с, коды, отмена, повтор retry_of; перевод хода в поток — доля V/11 — при закреплении контракта форка с /exports (V/11.14 Н1.3)
-0117	0	§ 3	НОРМА	VMS/13-exp/spec/13.1-exp.norms.md	V/13.1 Н1.4	константы; reference.export.limits — доля V/11 — при закреплении контракта форка с /exports (V/11.14 Н1.3)
-0117	0	§ 4	НОРМА	VMS/13-exp/spec/13.1-exp.norms.md	V/13.1 Н1.5	права по рангам exp; перевод функций V/11.8 — доля V/11 — при закреплении контракта форка с /exports (V/11.14 Н1.3)
-0117	0	§ 5	НОРМА	VMS/13-exp/spec/13.1-exp.norms.md; VMS/13-exp/spec/13.4-exp.norms.md	V/13.1 Н1.6; V/13.4 Н1.2	шесть видов export.*; решила: export.issued — первый запрос с новым токеном у двери, refused — отказ держателя до работы
-0117	0	§ 6	НОРМА	VMS/13-exp/spec/13.4-exp.norms.md; VMS/13-exp/spec/13-exp.api.openapi.yaml	V/13.4 Н1.1, Н1.2	дверь части, attachment, Range 206 — правило двери exp (слово «Архитектора»); решила: несколько отрезков — 200 целиком
-0117	0	§ 7	НОРМА	VMS/13-exp/spec/13.2-exp.norms.md	V/13.2 Н1.3, Н1.4	перепаковка, перекодирование, кадр от ключевого, нарезка; решила: FRAME_BACK 10 с, имя файла
+0117	0	§ 1 п. 7	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md; VMS/08-exp/exp.subsystem.yaml	V/08.6 Н1.2	том — часть files с volumes и долей files; no_space
+0117	0	§ 2	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md; VMS/08-exp/spec/08.8-exp.norms.md	V/08.6 Н1.3; V/08.8	cursor ≤ 5 с, коды, отмена, повтор retry_of; перевод хода в поток — доля V/11 — при закреплении контракта форка с /exports (V/11.14 Н1.3)
+0117	0	§ 3	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md	V/08.6 Н1.4	константы; reference.export.limits — доля V/11 — при закреплении контракта форка с /exports (V/11.14 Н1.3)
+0117	0	§ 4	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md	V/08.6 Н1.5	права по рангам exp; перевод функций V/11.8 — доля V/11 — при закреплении контракта форка с /exports (V/11.14 Н1.3)
+0117	0	§ 5	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md; VMS/08-exp/spec/08.9-exp.norms.md	V/08.6 Н1.6; V/08.9 Н1.2	шесть видов export.*; решила: export.issued — первый запрос с новым токеном у двери, refused — отказ держателя до работы
+0117	0	§ 6	НОРМА	VMS/08-exp/spec/08.9-exp.norms.md; VMS/08-exp/spec/08-exp.api.openapi.yaml	V/08.9 Н1.1, Н1.2	дверь части, attachment, Range 206 — правило двери exp (слово «Архитектора»); решила: несколько отрезков — 200 целиком
+0117	0	§ 7	НОРМА	VMS/08-exp/spec/08.7-exp.norms.md	V/08.7 Н1.3, Н1.4	перепаковка, перекодирование, кадр от ключевого, нарезка; решила: FRAME_BACK 10 с, имя файла
 0117	0	§ 8	НЕТ НОРМЫ	-	-	контракт форка /exports, reference.export, коды, поток, возможности: доля V/11 — при закреплении контракта форка с /exports (V/11.14 Н1.3)
 0117	0	§ 9	НЕ НОРМА	-	-	оператор в контракте — отдельный ADR до этапа 4
 0117	0	§ 10, § 11, Consequences	НЕ НОРМА	-	-	вопросы владельцу (ответ доп. (1)) и объём
-0117	0	Confirmation	НОРМА	VMS/13-exp/spec/13.1-exp.norms.md; VMS/13-exp/spec/13.4-exp.norms.md	V/13.1 Н5; V/13.4 Н5	приёмка урока — веткой приёмки
-0117	1	п. 1	НОРМА	VMS/13-exp/spec/13.2-exp.norms.md; VMS/13-exp/spec/13.3-exp.norms.md	V/13.2 Н1.4, Н1.5; V/13.3 Н1.4	EXPORT_KEEP 24 ч, single_file только mkv, ZIP AES-256 и пароль PDF; треки, маска, супервизор — их ADR
+0117	0	Confirmation	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md; VMS/08-exp/spec/08.9-exp.norms.md	V/08.6 Н5; V/08.9 Н5	приёмка урока — веткой приёмки
+0117	1	п. 1	НОРМА	VMS/08-exp/spec/08.7-exp.norms.md; VMS/08-exp/spec/08.8-exp.norms.md	V/08.7 Н1.4, Н1.5; V/08.8 Н1.4	EXPORT_KEEP 24 ч, single_file только mkv, ZIP AES-256 и пароль PDF; треки, маска, супервизор — их ADR
 0117	1	п. 2	НЕТ НОРМЫ	-	-	закладка moment|span: P/06.4 (доп. (3) п. 2, «Спецификации»), затем V/02.7 и mapping
 0117	1	п. 3	НЕТ НОРМЫ	-	-	возможности exportSingleFile, exportPassword — доля V/11 — при закреплении контракта форка с /exports (V/11.14 Н1.3)
-0117	2	п. 1	НОРМА	VMS/13-exp/spec/13.3-exp.norms.md; VMS/13-exp/spec/13.4-exp.norms.md	V/13.3 Н1.4; V/13.4 Н1.4	держатель части держит файлы до срока, потерянный — expired (по доп. (4) п. 2)
-0117	2	п. 2	НОРМА	VMS/13-exp/spec/13.1-exp.norms.md	V/13.1 Н1.1	заменён доп. (4) п. 1, (5) п. 1: заказ в ведущей части
-0117	2	п. 3	НОРМА	VMS/13-exp/spec/13.2-exp.norms.md; VMS/03-live/spec/03.3-live.norms.md	V/13.2 Н1.2; V/03.3 Н1.5	маршрут кадра шлюза для роли expworker
-0117	2	п. 4	НОРМА	VMS/13-exp/spec/13.1-exp.norms.md	V/13.1 Н1.5	обязательная защита неисполнима — отказ backend до записи; проверка — доля V/11 — при закреплении контракта форка с /exports (V/11.14 Н1.3)
-0117	2	п. 5	НОРМА	VMS/13-exp/spec/13.1-exp.norms.md; VMS/13-exp/spec/13.4-exp.norms.md	V/13.1 Н1.5; V/13.4 Н1.2	только автор получает ссылку и байты
+0117	2	п. 1	НОРМА	VMS/08-exp/spec/08.8-exp.norms.md; VMS/08-exp/spec/08.9-exp.norms.md	V/08.8 Н1.4; V/08.9 Н1.4	держатель части держит файлы до срока, потерянный — expired (по доп. (4) п. 2)
+0117	2	п. 2	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md	V/08.6 Н1.1	заменён доп. (4) п. 1, (5) п. 1: заказ в ведущей части
+0117	2	п. 3	НОРМА	VMS/08-exp/spec/08.7-exp.norms.md; VMS/03-live/spec/03.3-live.norms.md	V/08.7 Н1.2; V/03.3 Н1.5	маршрут кадра шлюза для роли expworker
+0117	2	п. 4	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md	V/08.6 Н1.5	обязательная защита неисполнима — отказ backend до записи; проверка — доля V/11 — при закреплении контракта форка с /exports (V/11.14 Н1.3)
+0117	2	п. 5	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md; VMS/08-exp/spec/08.9-exp.norms.md	V/08.6 Н1.5; V/08.9 Н1.2	только автор получает ссылку и байты
 0117	2	п. 6	НЕ НОРМА	-	-	пароль, супервизор, треки — их ADR до генерации
 0117	3	п. 1	НЕТ НОРМЫ	-	-	заменён доп. (4) п. 4: функции в ранги exp — V/11.8, доля V/11 — при закреплении контракта форка с /exports (V/11.14 Н1.3)
-0117	3	п. 3	НОРМА	VMS/13-exp/spec/13.1-exp.norms.md	V/13.1 Н1.1	заменён доп. (4) п. 3: password_secret в строке части
-0117	3	п. 4	НОРМА	VMS/13-exp/spec/13.1-exp.norms.md; VMS/13-exp/spec/13.4-exp.norms.md; VMS/13-exp/exp.subsystem.yaml	V/13.1 Н1.4, Н1.6; V/13.4 Н1.1–Н1.3	токен where, export.read одна на скачивание, автор по by, том parts.volumes, маршрут exp → exp
-0117	4	пп. 1–5	НОРМА	VMS/13-exp/spec/13.1-exp.norms.md; VMS/13-exp/spec/13.2-exp.norms.md; VMS/13-exp/spec/13.3-exp.norms.md	V/13.1 Н1.1–Н1.5; V/13.2 Н1.5; V/13.3 Н1.4	единица — часть, файлы у частей, пароль до снятия части, функции в ранги exp, маска — только admin
-0117	5	пп. 1–4	НОРМА	VMS/13-exp/spec/13.1-exp.norms.md; VMS/13-exp/spec/13.3-exp.norms.md	V/13.1 Н1.1, Н1.5; V/13.3 Н1.1–Н1.4	заказ в ведущей части, отмена просьбой, admin только с EXPORT, снятие через state.end по сроку
-0117	6	пп. 1–4	НОРМА	VMS/13-exp/spec/13.1-exp.norms.md; VMS/13-exp/spec/13.3-exp.norms.md; VMS/13-exp/exp.subsystem.yaml	V/13.1 Н1.1, Н1.4; V/13.3 Н1.2–Н1.4	worker.deletes parts, отмена просьбой, общие поля в каждой части, per_person 64 (М ревью (6)); решила: ttl 600
+0117	3	п. 3	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md	V/08.6 Н1.1	заменён доп. (4) п. 3: password_secret в строке части
+0117	3	п. 4	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md; VMS/08-exp/spec/08.9-exp.norms.md; VMS/08-exp/exp.subsystem.yaml	V/08.6 Н1.4, Н1.6; V/08.9 Н1.1–Н1.3	токен where, export.read одна на скачивание, автор по by, том parts.volumes, маршрут exp → exp
+0117	4	пп. 1–5	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md; VMS/08-exp/spec/08.7-exp.norms.md; VMS/08-exp/spec/08.8-exp.norms.md	V/08.6 Н1.1–Н1.5; V/08.7 Н1.5; V/08.8 Н1.4	единица — часть, файлы у частей, пароль до снятия части, функции в ранги exp, маска — только admin
+0117	5	пп. 1–4	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md; VMS/08-exp/spec/08.8-exp.norms.md	V/08.6 Н1.1, Н1.5; V/08.8 Н1.1–Н1.4	заказ в ведущей части, отмена просьбой, admin только с EXPORT, снятие через state.end по сроку
+0117	6	пп. 1–4	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md; VMS/08-exp/spec/08.8-exp.norms.md; VMS/08-exp/exp.subsystem.yaml	V/08.6 Н1.1, Н1.4; V/08.8 Н1.2–Н1.4	worker.deletes parts, отмена просьбой, общие поля в каждой части, per_person 64 (М ревью (6)); решила: ttl 600

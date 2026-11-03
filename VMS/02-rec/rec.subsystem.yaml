@@ -332,7 +332,7 @@ door:
     - timeline
     - segment
     - keeps
-    - {name: spans, role: [recworker, detjobworker, expworker]}     # expworker: an export cuts the footage it reads (V/13.2)
+    - {name: spans, role: [recworker, detjobworker, expworker]}     # expworker: an export cuts the footage it reads (V/08.7)
     - {name: samples, role: [recworker, detjobworker, expworker]}
     - {name: ingest, role: [recworker, liveworker, detworker], domain: [stream, poll, upstream, ask]}
 # A REQUEST of this subsystem (the boundary's step 6: it was `POST /backfill`, the VMS's route on the console): a person
