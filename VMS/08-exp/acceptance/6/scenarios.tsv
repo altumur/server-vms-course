@@ -1,0 +1,15 @@
+scenario	step	request	expect
+# Приёмка V/08.6–V/08.9: строка части (дверь единиц консоли exp; манифесты cam, rec, live, exp) и работа частей на стенде. Формат — README.
+01-create	1	console2 POST /recordings {"name": "r7", "cam": "7"}	201 {"id": "r7"}
+01-create	2	console2 POST /recordings {"name": "r8", "cam": "8"}	201 {"id": "r8"}
+01-create	3	POST /parts {"name": "e1", "export": "e1", "cam": "7", "rec": "r7", "source": "archive", "mode": "video", "periods": [[1000, 1060]], "format": "mkv", "by": "root"}	201 {"id": "e1", "keep": 86400, "labels": [], "state": "@absent"}
+01-create	4	POST /parts {"name": "e1-1", "export": "e1", "cam": "7", "rec": "r8", "source": "archive", "mode": "video", "periods": [[1000, 1060]], "format": "mkv", "by": "root"}	409 {"error": "conflict", "fault": "must_match"}
+01-create	5	PUT /parts/e1 {"format": "mp4"}	400 {"error": "fixed", "field": "/format", "detail": "~format is fixed"}
+01-create	6	PUT /parts/e1 {"keep": 60}	400 {"error": "fixed", "field": "/keep", "detail": "~keep is fixed"}
+02-work	1	@manual стенд с держателем cam (файл door.mp4), регистратором rec (obsd) и воркером exp: часть e1 видео 60 с — phase running, cursor не реже 5 с, затем result done, files [f1] с size и sha256, result.expires = конец + keep; журнал камеры export.made (password false) и export.finished с sha256	manual
+02-work	2	@manual две камеры за два периода — две части, два файла; отрезок без кадров — done с partial; ни одного кадра — failed no_recording; регистратор молчит — failed unreachable	manual
+02-work	3	@manual кадр архива mode frame at — jpg; живой кадр source live при выключенном RTSP — часть заводит live/streams/<cam>, шлюз отдаёт GET /frame по роли expworker, jpg; ключевого кадра нет за FRAME_WAIT — failed offline	manual
+03-cancel	1	@manual просьба cancel идущей части — текущий кусок доигрывает, файлов нет, result canceled, export.deleted why cancel; cancel готовой — метка done nothing to cancel; просьба не автора без admin — refused not the author	manual
+03-cancel	2	@manual просьба delete — файлы удалены, export.deleted why delete, строки части нет; result.expires прошёл — то же с why expired; перезапуск держателя на том же сервере файлов не теряет	manual
+04-door	1	@manual ссылка — токен GET /exp/where/<part>: автору 200 с attachment и ETag "<sha256>", Range bytes=0-99 — 206 Content-Range bytes 0-99/<size>, вне файла — 416; не автор — 403 not the author; после 120 с — 403 forbidden; export.issued на новый токен, export.read один на скачивание; срок вышел — 410 expired	manual
+04-door	2	@manual single_file mkv двух камер: ведущая часть берёт файл прочей GET /parts/<part>/f1?for=<ведущая> по роли expworker; чужой for — 403 not the same export	manual
