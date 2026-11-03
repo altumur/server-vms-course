@@ -1226,6 +1226,7 @@ adr	add	point	status	file	norm	note
 0117	3	п. 2	НОРМА	Platform/06-console/spec/06.4-console.norms.md; Platform/06-console/spec/06-console.api.openapi.yaml; Platform/06-console/acceptance/4/scenarios.tsv	P/06.4 Н1.2 marks, Н2 POST /marks; сц. 03 шаги 16–20	доля платформы: to — конец отрезка, только с occurred и не меньше его, иначе 400; поле to строки
 0117	4	-	НЕ НОРМА	-	-	доля платформы: нет — закрепления размещения после done в P/04 нет, предел VMS
 0117	6	п. 1	НЕ НОРМА	-	-	доля платформы: нет — worker.deletes [parts] P/02.1 как есть
+0117	7	-	НЕ НОРМА	-	-	доля платформы: нет — area — поле схемы манифеста exp (массив 0…1 судит загрузчик как прежде), суммы x + w, y + h судит backend; запись частей мимо backend закрыта writes_via (ADR-0119 доп. (10))
 0117	0	§ 1 п. 1	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md; VMS/08-exp/exp.subsystem.yaml	V/08.6 Н1.1	урок VMS/08-exp (до ADR-0118 доп. (1) — VMS/13-exp), строка lessons.tsv 08; единица — часть по доп. (4) п. 1, (5) п. 1
 0117	0	§ 1 п. 2	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md; VMS/08-exp/exp.subsystem.yaml	V/08.6 Н1.2	near rec, labels gpu; capacity 64 держимых частей, работу ограничивает EXP_ACTIVE = 2 перекодирования (С1 ревью норм, слово «Архитектора»); нет сервера gpu — отказ backend до записи; координатора нет по доп. (4) п. 1
 0117	0	§ 1 п. 3	НОРМА	VMS/08-exp/spec/08.7-exp.norms.md; VMS/02-rec/rec.subsystem.yaml; VMS/02-rec/spec/02.5-rec.norms.md	V/08.7 Н1.1; V/02.5 Н2	двери rec /spans, /samples, track=audio, роль expworker
