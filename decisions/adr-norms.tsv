@@ -597,8 +597,11 @@ adr	add	point	status	file	norm	note
 0110	23	п. 3	НОРМА	VMS/08-page/spec/08.5-page.norms.md	V/08.5 Н1.2	свёрнутая камера — единицы `cam` члена с пустым `main`, потоки не отменяют
 0110	23	п. 1	НОРМА	Platform/08-domain/spec/08.4-domain.norms.md	P/08.4 Н1.3а	доля платформы: spread проходом держателя, шага при входе нет; предел VIEW_EVERY
 0110	23	п. 2	НОРМА	Platform/03-worker/spec/03.7-worker.norms.md	P/03.7 Н3 «проверить у получателя», Гонки	доля платформы: тот же jti — не просить до конца суток, журнал, для любого вида keep
-0110	24	-	НОРМА	Platform/common/contracts/keys.md; Platform/09-agent/spec/09.1-agent.norms.md; Platform/08-domain/spec/08.2-domain.norms.md	договор keys «Отзывы»; P/09.1 Н1.4; P/09.1 Н3; P/08.2 Н3 «смена после кражи»	доля платформы: запись набора с thefts выше прежнего любым путём — тем же пакетом domain/revoked := ""; нет набора — thefts 0
+0110	24	-	НОРМА	Platform/common/contracts/keys.md; Platform/09-agent/spec/09.1-agent.norms.md; Platform/08-domain/spec/08.2-domain.norms.md	договор keys «Отзывы»; P/09.1 Н1.4; P/09.1 Н3; P/08.2 Н3 «смена после кражи»	доля платформы: запись набора с thefts выше доверенного набора памяти любым путём — тем же пакетом domain/revoked := "", из ответа — "" ∪ его отзывы; «нет — 0» заменено доп. (25) п. 1
 0110	24	доля VMS	НЕ НОРМА	-	-	доля VMS: нет; норма платформы
+0110	25	п. 1	НОРМА	Platform/09-agent/spec/09.1-agent.norms.md; Platform/common/contracts/keys.md	P/09.1 Н1.4; договор keys «Отзывы»	доля платформы: thefts прежнего — из доверенного набора памяти
+0110	25	п. 2	ОТВЕРГНУТО	-	-	доля платформы: «заменяет» уточнено доп. (26): слить, при 413 заменить
+0110	26	-	НОРМА	Platform/09-agent/spec/09.1-agent.norms.md; Platform/common/contracts/keys.md; Platform/08-domain/spec/08.8-domain.norms.md	P/09.1 Н1.4; договор keys «Отзывы»; P/08.8 Н1.8	доля платформы: старт без памяти и с нечитаемой строкой — ждать ответа, слить, при 413 заменить; предел и журнал domain.revoked.replaced
 0112	0	п. 1	НОРМА	VMS/08-page/spec/08.1-page.norms.md; VMS/09-deploy/spec/09.1-deploy.norms.md	V/08.1; V/09.1 Н1.1	VMS/08-page/spec/08.1-page.norms.md:8, :24; VMS/09-deploy/spec/09.1-deploy.norms.md:27; закрыто vms/page-tab-2: V/08.1 под закладку формы
 0112	0	п. 1, конец	НЕ НОРМА	-	-	—
 0112	0	п. 2, а	НОРМА	VMS/08-page/spec/08.1-page.norms.md	V/08.1	VMS/08-page/spec/08.1-page.norms.md:8; 08-page.README.md:4; закрыто vms/page-tab-2
