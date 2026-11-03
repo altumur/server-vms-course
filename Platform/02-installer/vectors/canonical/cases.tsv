@@ -40,6 +40,8 @@ corpus-a113_book_stale_ok	Platform/02-installer/acceptance/1/cases/a113_book_sta
 corpus-a113_calls_book_part_ok	Platform/02-installer/acceptance/1/cases/a113_calls_book_part_ok.subsystem.yaml	expect/corpus-a113_calls_book_part_ok.json	принятый случай корпуса 2.1
 corpus-a113_stale_after_ok	Platform/02-installer/acceptance/1/cases/a113_stale_after_ok.subsystem.yaml	expect/corpus-a113_stale_after_ok.json	принятый случай корпуса 2.1
 corpus-a115_display_table_field_ok	Platform/02-installer/acceptance/1/cases/a115_display_table_field_ok.subsystem.yaml	expect/corpus-a115_display_table_field_ok.json	принятый случай корпуса 2.1
+corpus-a115_display_tables_list_ok	Platform/02-installer/acceptance/1/cases/a115_display_tables_list_ok.subsystem.yaml	expect/corpus-a115_display_tables_list_ok.json	принятый случай корпуса 2.1
+corpus-a115_display_tables_ok	Platform/02-installer/acceptance/1/cases/a115_display_tables_ok.subsystem.yaml	expect/corpus-a115_display_tables_ok.json	принятый случай корпуса 2.1
 corpus-a115_events_kinds_ok	Platform/02-installer/acceptance/1/cases/a115_events_kinds_ok.subsystem.yaml	expect/corpus-a115_events_kinds_ok.json	принятый случай корпуса 2.1
 corpus-a115_hidden_ok	Platform/02-installer/acceptance/1/cases/a115_hidden_ok.subsystem.yaml	expect/corpus-a115_hidden_ok.json	принятый случай корпуса 2.1
 corpus-a115_hidden_required_default_ok	Platform/02-installer/acceptance/1/cases/a115_hidden_required_default_ok.subsystem.yaml	expect/corpus-a115_hidden_required_default_ok.json	принятый случай корпуса 2.1

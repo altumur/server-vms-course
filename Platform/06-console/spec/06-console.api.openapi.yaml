@@ -1836,7 +1836,7 @@ paths:
       summary: 'Консоль: отметка оператора'
       responses:
         '400':
-          description: Тело/unit/note не по форме
+          description: Тело/unit/note/occurred/to не по форме; to без occurred или меньше его
           content:
             application/json:
               schema:
@@ -8791,6 +8791,10 @@ components:
           type: number
           minimum: 0
           description: Момент, о котором отметка; не больше 3 знаков дроби (глава 6.4 Н2; ADR-0112 доп. (13) п. 7).
+        to:
+          type: number
+          minimum: 0
+          description: Конец отрезка; только вместе с occurred и не меньше его, иначе 400; не больше 3 знаков дроби (глава 6.4 Н2; ADR-0117 доп. (3) п. 2).
       description: Лишние поля принимаются и игнорируются; note при отсутствии — пустая строка. Тип note проверяется, длина
         уроком не ограничена.
     MarkWritten:

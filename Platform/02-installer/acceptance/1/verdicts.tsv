@@ -935,3 +935,7 @@ a115_rel70_schema_enum_value	refused
 a115_rel158_status_table_field	refused
 a115_status_dot_ok	ok
 a115_unit_field_quoted_dot	refused
+a115_display_tables_ok	ok
+a115_display_tables_list_ok	ok
+a115_display_tables_bad_label	refused
+a115_rel159_display_tables_nosuch	refused
