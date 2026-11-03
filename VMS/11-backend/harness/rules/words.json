@@ -61,7 +61,7 @@
   "abandoned": "abandon|left behind|left object|unattended|оставлен|забыт|брошен",
   "crowd": "crowd|gathering|too many people|толп|скоплен|много людей",
   "silent": "silent|silence|lost contact|offline|замолч|молчит|на связи|пропад|пропал",
-  "segment.lost": "segment|recording.*lost|lost.*recording|куск|запис|(?:^|[^0-9a-zа-яё])los(?:es|t)\\s+(?:\\S+\\s+)?recording",
+  "segment.lost": "segment|recording.*lost|lost.*recording|куск|запис|(?:^|[^0-9a-zа-яё])los(?:e|es|t|ing)\\s+(?:\\S+\\s+)?recording",
   "io.input": "sensor|trips?(?:$|[^0-9a-zа-яё])|tripped|датчик|сработ|срабат|вход"
  },
  "actions": {

@@ -4934,6 +4934,90 @@
    },
    "errors": [],
    "known_gap": true
+  },
+  {
+   "id": "segment-lose",
+   "note": "«lose recording» — segment.lost (ревью норм (34) М1)",
+   "request": "If Dock Cam cameras lose recording, raise an alarm on Dock Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "rec",
+      "kind": "segment.lost",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "4"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "4"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "segment-losing",
+   "note": "«is losing recording» — segment.lost",
+   "request": "When Dock Cam is losing recording, raise an alarm on Dock Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "rec",
+      "kind": "segment.lost",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "4"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "4"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": []
   }
  ]
 }
