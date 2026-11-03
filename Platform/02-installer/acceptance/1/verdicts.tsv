@@ -948,3 +948,13 @@ a115_route_rank_domain	refused
 a115_route_rank_word	refused
 a119_calls_verify_ok	ok
 a119_calls_verify_get	refused
+a119_writes_via_ok	ok
+a119_writes_via_own_ok	ok
+a119_writes_via_empty	refused
+a119_writes_via_dup	refused
+a119_writes_via_bad_name	refused
+a119_writes_via_reserved	refused
+a119_writes_via_not_list	refused
+a119_writes_via_table_ok	ok
+a119_writes_via_table_service_false_ok	ok
+a119_writes_via_table_service	refused
