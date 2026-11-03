@@ -37,7 +37,9 @@ item]` и JSON Pointer секрета). Случай 12 — секрет кон�
 | Манифест | Файл | sha256 |
 |---|---|---|
 | `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a` |
-| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `38d5d4c49d10be2418a511115c38ec897ba6ea418c982c23eaf377ab96af5427` |
+| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `6e0ec30f7b8e5cb1de5258e64035e0e3ec58508c7af6a7d3f550717e7765d3e5` |
+
+Байты `testsub2` сменились 2026-11-04 (дорожная карта 4.5): добавлен вид токена `vault` с `keep: true` в `domain.tokens`; поля, от которых зависят ожидания этой таблицы, не тронуты — перепроверка оракулом не нужна.
 
 ## Файлы
 

@@ -40,3 +40,19 @@ scenario	step	request	expect
 06-topology-unreadable	3	member hold store POST /v1/write {"op": "put", "key": "domain/topology", "items": {"doc": "not json"}}	200
 06-topology-unreadable	4	token m2 testsubworker POST /tokens/testsub/tally {"request_id": "r1", "ref": "c1"}	200 {"request_id": "r1", "token": "@any"}
 06-topology-unreadable	5	token m1 testsubworker POST /tokens/testsub/probe {"request_id": "r2", "ref": "c1"}	503 {"error": "unavailable"}
+# 07-kept-token-revoked-word (ADR-0110 доп. (10)–(16); P/08.2 Н1.6а jti, door; P/08.7 Н1.3 body revoked; договор местной двери токенов): вид vault манифеста testsub2 с keep — jti постоянен для цели; просьба со словом revoked, равным jti строки, — так член, чей получатель отказал токену, а держатель отзыва не знает (копия старше DELETE), — кладёт jti в domain/revoked и выдаёт новый; неравное слово — просьба обычная; DELETE отзывает все токены цели
+07-kept-token-revoked-word	1	@domain	ok
+07-kept-token-revoked-word	2	holder PUT /domain/placement/testsub2/t1 {"cluster": "m1", "origin": "m2", "copies": []}	200
+07-kept-token-revoked-word	3	token m2 testsub2worker POST /tokens/testsub2/vault {"request_id": "r1", "ref": "t1"}	200 {"request_id": "r1", "token": "$t1", "exp": "@any"}
+07-kept-token-revoked-word	4	@verify m1 vault $t1	ok {"result": "ok", "payload": {"sub": "m2", "kind": "vault", "ref": "t1", "aud": ["m1"], "jti": "$j1"}}
+07-kept-token-revoked-word	5	token m2 testsub2worker POST /tokens/testsub2/vault {"request_id": "r2", "ref": "t1"}	200 {"request_id": "r2", "token": "$t2"}
+07-kept-token-revoked-word	6	@verify m1 vault $t2	ok {"result": "ok", "payload": {"jti": "$j1"}}
+07-kept-token-revoked-word	7	token m2 testsub2worker POST /tokens/testsub2/vault {"request_id": "r3", "ref": "t1", "revoked": "0000000000000000"}	200 {"request_id": "r3", "token": "$t3"}
+07-kept-token-revoked-word	8	@verify m1 vault $t3	ok {"result": "ok", "payload": {"jti": "$j1"}}
+07-kept-token-revoked-word	9	token m2 testsub2worker POST /tokens/testsub2/vault {"request_id": "r4", "ref": "t1", "revoked": "$j1"}	200 {"request_id": "r4", "token": "$t4"}
+07-kept-token-revoked-word	10	@verify m1 vault $t4	ok {"result": "ok", "payload": {"jti": "@not($j1)"}}
+07-kept-token-revoked-word	11	@until 60 @verify m1 vault $t1	ok {"result": "refused", "reason": "revoked"}
+07-kept-token-revoked-word	12	token m2 testsub2worker POST /tokens/testsub2/feed {"request_id": "r5", "ref": "t1", "revoked": "$j1"}	400
+07-kept-token-revoked-word	13	holder DELETE /domain/issued/testsub2/vault/t1	200 {"revoked": "@not($j1)"}
+07-kept-token-revoked-word	14	@until 60 @verify m1 vault $t4	ok {"result": "refused", "reason": "revoked"}
+07-kept-token-revoked-word	15	holder DELETE /domain/issued/testsub2/vault/t1	404
