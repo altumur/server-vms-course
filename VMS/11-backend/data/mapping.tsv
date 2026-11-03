@@ -450,7 +450,7 @@ Reference	capabilities.writableFields	—	{"channel":[],"storage":[],"mic":["nam
 Reference	eventKinds	—	["motion", "linecross", "lpr", "silent", "io.input", "text", "unit"]	const	варианты Device.alarmKinds: виды cam (V/01.2 Н1.5), det (V/04.2)
 Reference	serverLabels	GET /servers	метки серверов по порядку байтов без server:*	read	отказ чтения — [], строка лога
 Reference	ruleTriggers	—	data:VMS/11-backend/data/rule-catalog.json#triggers	const	что исполняет вычислитель (V/11.2 Н1.5)
-Reference	ruleActions	—	data:VMS/11-backend/data/rule-catalog.json#actions	const	email, tg, http, layout, wall, alarmclose не объявляются: предмета нет (ADR-0102, граница дерева DriverPack; ADR-0103 доп. (4)); duration event — конца события нет
+Reference	ruleActions	—	data:VMS/11-backend/data/rule-catalog.json#actions	const	email, tg, http, layout, wall, alarmclose не объявляются: предмета нет (ADR-0102 доп. (7) п. 9; ADR-0103 доп. (4)); duration event — конца события нет
 Reference	ruleConditions	—	data:VMS/11-backend/data/rule-catalog.json#conditions	const	online, recording, armed — состояние в момент решения (ADR-0105 п. 3)
 Reference	ruleControls	—	data:VMS/11-backend/data/rule-catalog.json#controls	const	ask, escalate с дверью ответа (V/11.4 Н1.10)
 Reference	ruleStarts	—	data:VMS/11-backend/data/rule-catalog.json#starts	const	V/07.1 start

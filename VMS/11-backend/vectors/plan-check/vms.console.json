@@ -309,7 +309,7 @@
     "options": {
      "live": {
       "always": "Держать всегда",
-      "on-demand": "Без потока"
+      "on-demand": "По требованию"
      },
      "type": {
       "camera": "Камера",

@@ -10,7 +10,7 @@ scenario	step	request	expect
 01-hold	8	PUT /cameras/$c1 {"enabled": true}	200 {"enabled": true}
 01-hold	9	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "running"}]}
 01-hold	10	PUT /cameras/$c1 {"live": "on-demand"}	200 {"live": "on-demand"}
-01-hold	11	@until 30 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "held", "live_url": "@absent", "live_shm": "@absent"}]}
+01-hold	11	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "running", "live_url": "~rtsp://127.0.0.1:"}]}
 01-hold	12	POST /cameras {"name": "box", "source": "driverpack://file/door.mp4?box", "type": "ipsrv"}	201 {"id": "$c2", "type": "ipsrv"}
 01-hold	13	@until 30 GET /cameras	200 {"rows": [{"id": "$c2", "phase": "held", "type": "ipsrv", "live_url": "@absent", "live_shm": "@absent"}]}
 01-hold	14	PUT /cameras/$c1 {"live": "always", "resolution": "1x1"}	200 {"resolution": "1x1"}
@@ -19,6 +19,8 @@ scenario	step	request	expect
 01-hold	17	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "running", "warning": "@absent"}]}
 01-hold	18	console2 DELETE /recordings/r1	200
 01-hold	19	@until 120 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "idle", "live_url": "@absent", "live_shm": "@absent", "size": "@any"}]}
+01-hold	20	PUT /cameras/$c1 {"live": "on-demand"}	200 {"live": "on-demand"}
+01-hold	21	@until 30 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "held", "live_url": "@absent", "live_shm": "@absent"}]}
 02-settings	1	@manual живой драйвер, у стенда файл: строка с resolution и fps открывает поток, драйвер получил оба значения; пусто и 0 — настройка устройства не тронута	manual
 02-settings	2	@manual живой драйвер, адрес ipint:// с src.resolution и непустое поле resolution: device_state refused, reason «settings: in the address and in the field: resolution», устройство не открывалось; то же для src.fps и fps	manual
 04-events	1	@manual подставной драйвер с textEventSource (в Drivers/Virtual текста нет): строка eventsrc — фаза held, адресов раздачи нет, EventData — строка text с lines, group, camera, occurred	manual
