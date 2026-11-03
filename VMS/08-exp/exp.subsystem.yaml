@@ -10,6 +10,7 @@ slot: {prefix: x, name_env: EXP_NAME}
 about: {sub: cam, field: cam}   # a part is about a camera: its grants, labels and events are the camera's
 unit:
   rows: parts                        # exp/parts/<name>
+  writes_via: [backend]              # only backend writes the parts (ADR-0119 доп. (10)): a session cannot forge supervised_by
   id: name                           # backend's: the lead's — the order's id; the others — <order>-<n> (V/08.6 Н1.1)
   fields:
     name:     {type: string, required: true}
