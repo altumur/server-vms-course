@@ -98,6 +98,31 @@ paths:
         "404": {$ref: "#/components/responses/Refusal"}
         "405": {$ref: "#/components/responses/Refusal"}
         "503": {$ref: "#/components/responses/Refusal"}
+  /frame/{cam}:
+    get:
+      summary: Кадр JPEG раздачи для выгрузки — только воркеру exp по сертификату роли (V/03.3 Н1.5)
+      security: [{roleCertificate: []}]
+      parameters:
+        - name: cam
+          in: path
+          required: true
+          description: id камеры — имя раздачи (V/03.1 Н1.1)
+          schema: {type: string, minLength: 1}
+        - name: stream
+          in: query
+          required: false
+          description: поток камеры; без него — основной
+          schema: {type: string}
+      responses:
+        "200":
+          description: следующий ключевой кадр потока, полный размер, JPEG
+          content:
+            image/jpeg:
+              schema: {type: string, contentEncoding: binary}
+        "401": {$ref: "#/components/responses/Refusal"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "504": {$ref: "#/components/responses/Refusal"}
   /talk/{cam}/{number}:
     post:
       summary: Оффер разговора — звук браузера к `spk` хозяина (V/03.3 Н1.2а)
@@ -303,6 +328,9 @@ components:
       type: http
       scheme: bearer
       description: токен двери консоли (договор токена двери); также ?t=
+    roleCertificate:
+      type: mutualTLS
+      description: лист роли expworker (договор сертификата роли, класс role)
   responses:
     WithPassword:
       description: учётка и её пароль — пароль только в этом ответе
