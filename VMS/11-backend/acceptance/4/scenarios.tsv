@@ -1047,7 +1047,7 @@ scenario	step	request	expect
 42-timeline	8	member m1 console2 GET /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/playback?at=1970-01-01T00:16:40Z	404 {"code": "NOT_FOUND"}
 42-timeline	9	member m1 console2 GET /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/playback?at=x	422 {"code": "VALIDATION_FAILED", "field": "at"}
 42-timeline	10	member m1 console2 GET /api/devices/00000000-0000-4000-8000-000000000000/timeline	404 {"code": "NOT_FOUND"}
-42-timeline	11	@manual шкала и куски: двери записей и мест по where, слияние, backupOnly, unavailable по словам, сетка 60 с, spanId чужой записи — 404, цена вызовов и door.issued: на стенде нет регистратора	manual
+42-timeline	11	@manual шкала и куски: двери записей и мест по where, слияние, backupOnly, unavailable по словам, сетка 60 с, spanId чужой записи — 404, цена вызовов и door.issued; запись другого кластера через GET /domain/at/<член>/rec/timeline/… с ?place=, 502 answer too large — окно пополам до TIMELINE_SPLITS на вызов, член без members[].url — 404 no console known (ADR-0112 доп. (14), (16), (17)): на стенде нет регистратора	manual
 43-holds	1	@domain m1	ok
 43-holds	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 43-holds	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}
