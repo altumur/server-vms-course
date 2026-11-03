@@ -662,5 +662,13 @@
    "overall"
   ],
   "expect": false
+ },
+ {
+  "fn": "said",
+  "args": [
+   "rights",
+   "You don’t have the rights to edit Gate-1"
+  ],
+  "expect": true
  }
 ]

@@ -56,6 +56,14 @@ adr	add	point	status	file	norm	note
 0093	31	п. 3	ПРЕДЕЛ	VMS/11-backend/spec/11.13-backend.norms.md; VMS/11-backend/harness/rules/words.json; VMS/11-backend/vectors/rules-words/cases.json	V/11.13 Н1.6	`running`, `start` пускают `auto runrule`; `runrule-running-gap`
 0093	31	п. 4	НЕ НОРМА	-	-	отчёт замера hold4 Пилота
 0093	31	ревью М2	ПРЕДЕЛ	VMS/11-backend/spec/11.13-backend.norms.md; VMS/11-backend/harness/rules/words.json; VMS/11-backend/vectors/rules-words/cases.json	V/11.13 Н1.6	«охран» где угодно в тексте; `disarm-guard-anywhere-gap`, `arm-from-disarm-gap`
+0093	32	п. 1	НЕ НОРМА	-	-	эталоны замера Пилота; норма не меняется
+0093	32	п. 2	НОРМА	VMS/11-backend/spec/11.13-backend.norms.md; VMS/11-backend/harness/rules/words.json; VMS/11-backend/vectors/rules-words/cases.json	V/11.13 Н1.6	`default_yes`: «нет ответа», «do raise», «yes», «да», «поднима»; `recording` — «пишет»; `ask-default-*`, `recording-ru`
+0093	33	п. 1	НОРМА	VMS/11-backend/spec/11.13-backend.norms.md; VMS/11-backend/harness/rules/words.json; VMS/11-backend/vectors/rules-words/cases.json	V/11.13 Н1.6	`default_no`: отрицание перед «поднима», `raise`; по-русски «поднима» с проверкой отрицания, по-английски «do raise» (ревью (33) М1); `ask-default-no-*`
+0093	33	п. 2	НОРМА	VMS/11-backend/spec/11.13-backend.norms.md; VMS/11-backend/harness/rules/words.json; VMS/11-backend/vectors/rules-words/cases.json	V/11.13 Н1.6	«да», «yes» с границами с обеих сторон; `ask-default-no-dalshe`
+0093	33	п. 3	ПРЕДЕЛ	VMS/11-backend/spec/11.13-backend.norms.md; VMS/11-backend/harness/rules/words.json; VMS/11-backend/vectors/rules-words/cases.json	V/11.13 Н1.6	«не пишет» пускает `recording`; `recording-ru-not-gap`
+0093	33	п. 4	НЕ НОРМА	-	-	пересчёт итогов замера Пилота
+0093	33	ревью М2	НОРМА	VMS/11-backend/spec/11.13-backend.norms.md; VMS/11-backend/harness/rules/words.json; VMS/11-backend/vectors/rules-words/cases.json	V/11.13 Н1.6	отрицание: `’` и `dont`, `won't`, `shouldn't`, одно слово между; `ask-default-no-curly`, `-between`, `-ru-between`
+0093	31	ревью норм М1	НОРМА	VMS/11-backend/spec/11.11-backend.norms.md; VMS/11-backend/spec/11.13-backend.norms.md; VMS/11-backend/vectors/plan-check/text.json; VMS/11-backend/vectors/rules-words/cases.json	V/11.11 Н1.2; V/11.13 Н1.6	апострофы ’ ‘ → ' до сверки; `said` rights «don’t», `ask-default-no-curly`, `ask-default-no-left-quote`
 0102	0	п. 1	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2	VMS/11-backend/spec/11.3-backend.norms.md:67
 0102	0	п. 2	ОТВЕРГНУТО	-	-	доп. (1) п. 1 (decisions/0102-устройства-по-дереву-driverpack.md:84, заменяет п. 2)
 0102	0	п. 3	ОТВЕРГНУТО	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.2	доп. (1) п. 1, доп. (6) п. 7; остаток (создания детей нет) — VMS/11-backend/spec/11.4-backend.norms.md:139
