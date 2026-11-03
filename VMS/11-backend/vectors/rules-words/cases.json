@@ -44,6 +44,14 @@
    {
     "id": "8",
     "name": "Warehouse"
+   },
+   {
+    "id": "9",
+    "name": "Store"
+   },
+   {
+    "id": "10",
+    "name": "Front Door Cam"
    }
   ],
   "children": [
@@ -150,6 +158,19 @@
     "type": "relay",
     "number": 1,
     "name": "Дверь"
+   },
+   {
+    "key": "9-relay-1",
+    "cam": "9",
+    "type": "relay",
+    "number": 1,
+    "name": "Store Door Lock"
+   },
+   {
+    "key": "10-relay-1",
+    "cam": "10",
+    "type": "relay",
+    "number": 1
    }
   ],
   "units": [
@@ -3322,7 +3343,7 @@
   },
   {
    "id": "open-other-number",
-   "note": "N — port шага: «relay 3» при port 2 не номер, реле не названо (ревью доп. (27) М1)",
+   "note": "N — port шага: «relay 3» при port 2 не номер, реле не названо (ревью доп. (27) М1); проход по последнему слову камеры Gate Cam — нет, вопрос (доп. (29) п. 5)",
    "request": "When the Gate Loop sensor trips, open relay 3 of Gate Cam.",
    "row": {
     "when": [
@@ -3347,7 +3368,8 @@
     ]
    },
    "errors": [
-    "then[0]: the request does not name Gate Light: Gate Barrier, Gate Light fit. ask_admin which one"
+    "then[0]: the request does not name Gate Light: Gate Barrier, Gate Light fit. ask_admin which one",
+    "then[0]: \"open\" for the relay Gate Light can mean turn it on or open the contact (off): ask_admin which"
    ]
   },
   {
@@ -3484,6 +3506,560 @@
       "action": "disable",
       "unit": "2",
       "minutes": 30
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "pass-lock-name",
+   "note": "lock в имени реле вырезан до слов состояния: open — глагол, реле прохода (доп. (29) п. 3)",
+   "request": "When the Gate Loop sensor trips, open the Store Door Lock.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "9",
+      "port": 1,
+      "state": "closed"
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "pass-steps-order",
+   "note": "конец «на N секунд» — open после closed и wait; план open, wait, closed свой open не освобождает (доп. (29) п. 4)",
+   "request": "When the Gate Loop sensor trips, open the Gate Barrier for 5 seconds.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 1,
+      "state": "open"
+     },
+     {
+      "control": "wait",
+      "sec": 5
+     },
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 1,
+      "state": "closed"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: to open Gate Barrier is to turn it on: state closed, or pulse with pulse_ms for a time"
+   ]
+  },
+  {
+   "id": "open-device-cam",
+   "note": "реле без имени, камера Front Door Cam: последнее слово Cam — не проход, вопрос (доп. (29) п. 5)",
+   "request": "When the Gate Loop sensor trips, open the Front Door Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "10",
+      "port": 1,
+      "state": "closed"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: \"open\" for the relay relay 1 of Front Door Cam can mean turn it on or open the contact (off): ask_admin which"
+   ]
+  },
+  {
+   "id": "ru-open-numero",
+   "note": "«реле № 2» — номер со знаком и пробелом (доп. (29) п. 6, ревью (29) М3)",
+   "request": "Когда сработает датчик Gate Loop, открой реле № 2 у Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 2,
+      "state": "closed"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: \"open\" for the relay Gate Light can mean turn it on or open the contact (off): ask_admin which"
+   ]
+  },
+  {
+   "id": "open-numero-hash",
+   "note": "«relay # 2» — номер со знаком",
+   "request": "When the Gate Loop sensor trips, open relay # 2 of Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 2,
+      "state": "closed"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: \"open\" for the relay Gate Light can mean turn it on or open the contact (off): ask_admin which"
+   ]
+  },
+  {
+   "id": "ru-open-numero-word",
+   "note": "«реле номер 2» — номер словом",
+   "request": "Когда сработает датчик Gate Loop, открой реле номер 2 у Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 2,
+      "state": "closed"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: \"open\" for the relay Gate Light can mean turn it on or open the contact (off): ask_admin which"
+   ]
+  },
+  {
+   "id": "open-numbered-nbsp",
+   "note": "неразрывный пробел в «relay 2» — в пробел до сверки (доп. (29) п. 7)",
+   "request": "When the Gate Loop sensor trips, open relay 2 of Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 2,
+      "state": "closed"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: \"open\" for the relay Gate Light can mean turn it on or open the contact (off): ask_admin which"
+   ]
+  },
+  {
+   "id": "runrule-runs",
+   "note": "«it runs Yard tour» — запуск правила (доп. (30) п. 1)",
+   "request": "When the Gate Loop sensor trips, it runs Yard tour.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "runrule",
+      "rule": 104
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "runrule-grant",
+   "note": "ran с границами: не в grant (доп. (31) п. 2)",
+   "request": "When the Gate Loop sensor trips, grant Yard tour.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "runrule",
+      "rule": 104
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: the request does not ask for auto runrule. Do not substitute a similar action: if the system cannot do what was asked, refuse"
+   ]
+  },
+  {
+   "id": "runrule-ru",
+   "note": "«запусти» — запуск правила, основа с границей в начале",
+   "request": "Когда сработает датчик Gate Loop, запусти правило Yard tour.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "runrule",
+      "rule": 104
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "runrule-running-gap",
+   "note": "предел Н1.6: running пускает runrule вместо записи (доп. (31) п. 3)",
+   "request": "When motion is seen on Lobby Cam while Yard tour is running, record it for 5 minutes.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "runrule",
+      "rule": 104
+     }
+    ]
+   },
+   "errors": [],
+   "known_gap": true
+  },
+  {
+   "id": "disarm-ru-ok",
+   "note": "«сними с охраны» — cam disarm",
+   "request": "Когда сработает датчик Gate Loop, сними Lobby Cam с охраны.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "disarm",
+      "unit": "2"
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "disarm-filming",
+   "note": "«снимает» без «охран» — съёмка, не снятие (доп. (31) п. 1)",
+   "request": "Когда сработает датчик Gate Loop, пусть Lobby Cam снимает двор.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "disarm",
+      "unit": "2"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: the request does not ask for cam disarm. Do not substitute a similar action: if the system cannot do what was asked, refuse"
+   ]
+  },
+  {
+   "id": "disarm-snyat",
+   "note": "«снять» без «охран» — съёмка (ревью доп. (31) М1)",
+   "request": "Когда сработает датчик Gate Loop, снять двор камерой Lobby Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "disarm",
+      "unit": "2"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: the request does not ask for cam disarm. Do not substitute a similar action: if the system cannot do what was asked, refuse"
+   ]
+  },
+  {
+   "id": "disarm-guard-anywhere-gap",
+   "note": "предел Н1.6: «охран» где угодно в тексте пускает cam disarm (ревью доп. (31) М2)",
+   "request": "Когда сработает датчик Gate Loop, пусть Lobby Cam снимает двор, а Dock Cam поставь на охрану.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "disarm",
+      "unit": "2"
+     },
+     {
+      "sub": "cam",
+      "action": "arm",
+      "unit": "4"
+     }
+    ]
+   },
+   "errors": [],
+   "known_gap": true
+  },
+  {
+   "id": "arm-from-disarm-gap",
+   "note": "предел Н1.6: «сними с охраны» пускает и cam arm (ревью доп. (31) М2)",
+   "request": "Когда сработает датчик Gate Loop, сними Lobby Cam с охраны.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "arm",
+      "unit": "2"
+     }
+    ]
+   },
+   "errors": [],
+   "known_gap": true
+  },
+  {
+   "id": "armed-false-ru",
+   "note": "«снята с охраны» — value false условия armed",
+   "request": "При движении на Lobby Cam записывай её 5 минут, только если Lobby Cam снята с охраны.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "rec",
+      "action": "record",
+      "cam": "2",
+      "minutes": 5
+     }
+    ],
+    "conditions": [
+     {
+      "kind": "armed",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "2"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      },
+      "value": false
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "relay-off-ru",
+   "note": "«отключи реле» — open реле (доп. (30) п. 1)",
+   "request": "Когда сработает датчик Gate Loop, отключи реле Gate Light.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 2,
+      "state": "open"
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "record-ru-pisat",
+   "note": "«писать» — rec record (доп. (30) п. 1)",
+   "request": "При движении на Lobby Cam писать её 5 минут.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "rec",
+      "action": "record",
+      "cam": "2",
+      "minutes": 5
      }
     ]
    },

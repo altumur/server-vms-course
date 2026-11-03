@@ -65,23 +65,25 @@
   "io.input": "sensor|trips?(?:$|[^0-9a-zа-яё])|tripped|датчик|сработ|срабат|вход"
  },
  "actions": {
-  "cam output": "relay|turn on|turn off|switch on|switch off|pulse|unlock|lock|light|siren|реле|включ|выключ|импульс|открой|свет|(?:^|[^0-9a-zа-яё])open",
+  "cam output": "relay|turn on|turn off|switch on|switch off|pulse|unlock|lock|light|siren|реле|включ|выключ|импульс|открой|свет|(?:^|[^0-9a-zа-яё])open|(?:^|[^0-9a-zа-яё])отключ",
   "cam preset": "preset|пресет",
-  "rec record": "record|пиш|запис",
+  "rec record": "record|пиш|запис|(?:^|[^0-9a-zа-яё])писат",
   "det detect": "detector|detection|детектор|детекц",
   "det scan": "scan|сканир|check\\s+\\S+\\s+archive|провер\\S*(\\s+\\S+)?\\s+архив",
   "cam arm": "(?:^|[^0-9a-zа-яё])(?:arm|arms|armed)(?:$|[^0-9a-zа-яё])|на охрану|охран",
-  "cam disarm": "disarm|снимай|сними|снять",
+  "cam disarm": "disarm",
   "cam disable": "disable|выключи|выключ|отключ|(?:^|[^0-9a-zа-яё])(?:switch|turn|shut|take)[0-9a-zа-яё]*\\s+(?:\\S+\\s+){0,3}off(?:$|[^0-9a-zа-яё])",
   "auto alarm": "alarm|тревог",
-  "auto runrule": "(?:^|[^0-9a-zа-яё])(?:run|start)(?:$|[^0-9a-zа-яё])|запусти"
+  "auto runrule": "(?:^|[^0-9a-zа-яё])(?:run|runs|running|ran|start|starts|started|launch|launched)(?:$|[^0-9a-zа-яё])|(?:^|[^0-9a-zа-яё])(?:запуск|запусти)"
  },
  "value_open": "normal|(?:^|[^0-9a-zа-яё])ends?(?:$|[^0-9a-zа-яё])|is over|clears?(?:$|[^0-9a-zа-яё])|(?:^|[^0-9a-zа-яё])back(?:$|[^0-9a-zа-яё])|норм|конец|закончи",
  "state_on": "(?:^|[^0-9a-zа-яё])on(?:$|[^0-9a-zа-яё])|включ|(?:^|[^0-9a-zа-яё])pulse(?:$|[^0-9a-zа-яё])|импульс|unlock|открой",
- "state_off": "(?:^|[^0-9a-zа-яё])off(?:$|[^0-9a-zа-яё])|выключ",
+ "state_off": "(?:^|[^0-9a-zа-яё])off(?:$|[^0-9a-zа-яё])|выключ|(?:^|[^0-9a-zа-яё])отключ",
  "whole": "whole cluster|entire cluster|whole domain|весь кластер|всего кластера|весь домен",
  "switched_on": "(?:^|[^0-9a-zа-яё])(?:enable|activate)(?:$|[^0-9a-zа-яё])|(?:switch|turn) on (?:the )?rule|(?:switch|turn) (?:it|the rule) on|включи правило|включить правило|запусти правило",
- "not_armed": "disarm|not armed|без охраны|снят",
+ "not_armed": "disarm|not armed|без охраны",
+ "disarm_ru": "(?:^|[^0-9a-zа-яё])(?:сним|снят)",
+ "guard": "(?:^|[^0-9a-zа-яё])охран",
  "conditions": {
   "armed": "armed|on guard|охран",
   "recording": "recording|is recorded|запись идёт|записыва",
@@ -92,5 +94,5 @@
  "passage": "(?:^|[^0-9a-zа-яё])(?:door|barrier|gate|lock|turnstile|двер|шлагбаум|ворот|замок|замк|турникет)",
  "open_word": "(?:^|[^0-9a-zа-яё])(?:open|откр)",
  "other_state": "(?:^|[^0-9a-zа-яё])(?:on|off|pulse|lock)(?:$|[^0-9a-zа-яё])|включ|выключ|отключ|импульс|unlock",
- "relay_n": "(?:^|[^0-9a-zа-яё])(?:relay|output|реле|выход)\\s*N(?:$|[^0-9a-zа-яё])"
+ "relay_n": "(?:^|[^0-9a-zа-яё])(?:relay|output|реле|выход)\\s*(?:#|№|no\\.?|number|номер)?\\s*N(?:$|[^0-9a-zа-яё])"
 }
