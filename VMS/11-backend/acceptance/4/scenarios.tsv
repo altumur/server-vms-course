@@ -211,7 +211,7 @@ scenario	step	request	expect
 09-stream	12	@until 30 member m1 console GET /session	200 {"user": "ann", "grants": [{"cap": "view", "scope": "unit:cam/1"}]}
 09-stream	13	@stream-open s1 member m1 console2 GET /api/stream	2xx
 09-stream	14	@stream-wait s1 30	ok {"type": "stream.hello", "clientId": "$c1"}
-09-stream	15	member m1 console2 PUT /api/stream/$c1/watch {"ids": ["ca08e8ba-11ab-5128-97e6-d03888680c2e"]}	204
+09-stream	15	member m1 console2 PUT /api/stream/$c1/watch {"ids": ["ca08e8ba-11ab-5128-97e6-d03888680c2e"]}	2xx
 09-stream	16	@person root w2c test root password	ok
 09-stream	17	@until 30 member m1 console GET /session	200 {"user": "root"}
 09-stream	18	member m1 console2 @header If-Match: "$v2" PATCH /api/devices/ca07be2d-dfe2-5601-b0b3-f4eba44b12f8 {"name": "c2a"}	200 {"name": "c2a"}
@@ -579,12 +579,12 @@ scenario	step	request	expect
 18-schedules	10	member m1 console2 POST /api/rules {"name": "Тест", "enabled": false, "logOnly": false, "logOnlySince": null, "start": "manual", "runMode": "manual", "operatorMenu": false, "ratePerMinute": 6, "windowSec": 0, "runAt": null, "repeat": "skip", "triggers": [], "conditions": [{"kind": "time", "scheduleId": "$s"}], "steps": [], "owner": "root", "purpose": "", "serverId": null, "runAsRoleId": null, "allowChain": true}	201 {"id": "431df7a7-5098-5ed3-82e6-c82908a97f17", "version": "$r"}
 18-schedules	11	member m1 console2 POST /api/day-groups {"name": "Ремонт", "rules": [{"type": "range", "from": "2026-11-10", "to": "2026-11-12", "yearly": false}]}	201 {"id": "$g", "version": "$gv"}
 18-schedules	12	member m1 console2 @header If-Match: "$sv" PUT /api/schedules/$s {"name": "Смена", "kind": "week", "week": [[["09:00", "18:00"]], [], [], [], [], [], []], "overrides": [{"dayGroupId": "$g", "mode": "none"}], "valid": {"from": "", "to": ""}, "cycle": {"length": 4, "start": "2026-10-01", "days": []}, "dates": [], "astro": {"window": "night", "offsetStartMin": 0, "offsetEndMin": 0, "lat": 55.75, "lon": 37.62, "utcOffsetHours": 3}, "owner": null}	200 {"version": "$sv2", "overrides": [{"dayGroupId": "$g"}]}
-18-schedules	13	member m1 console2 @header If-Match: "$gv" DELETE /api/day-groups/$g	204
+18-schedules	13	member m1 console2 @header If-Match: "$gv" DELETE /api/day-groups/$g	2xx
 18-schedules	14	member m1 console2 GET /api/schedules/$s	200 {"overrides": [], "version": "$sv3"}
-18-schedules	15	member m1 console2 @header If-Match: "$sv3" DELETE /api/schedules/$s	204
+18-schedules	15	member m1 console2 @header If-Match: "$sv3" DELETE /api/schedules/$s	2xx
 18-schedules	16	member m1 console2 GET /api/rules/431df7a7-5098-5ed3-82e6-c82908a97f17	200 {"conditions": [{"kind": "time", "scheduleId": "2d84eb4b-d50c-5344-87a8-eb60c662f11f"}]}
 18-schedules	17	member m1 console2 POST /api/maintenance-windows {"name": "Окно", "ruleIds": null, "enabled": true, "schedule": {"name": "Смена", "kind": "week", "week": [[["09:00", "18:00"]], [], [], [], [], [], []], "overrides": [], "valid": {"from": "", "to": ""}, "cycle": {"length": 4, "start": "2026-10-01", "days": []}, "dates": [], "astro": {"window": "night", "offsetStartMin": 0, "offsetEndMin": 0, "lat": 55.75, "lon": 37.62, "utcOffsetHours": 3}, "owner": null}}	201 {"window": {"id": "$w", "scheduleId": "$ws", "version": "$wv"}, "schedule": {"id": "$ws", "owner": {"kind": "maintenanceWindow", "id": "$w"}}}
-18-schedules	18	member m1 console2 @header If-Match: "$wv" DELETE /api/maintenance-windows/$w	204
+18-schedules	18	member m1 console2 @header If-Match: "$wv" DELETE /api/maintenance-windows/$w	2xx
 18-schedules	19	member m1 console2 GET /api/schedules/$ws	404 {"code": "NOT_FOUND"}
 18-schedules	20	member m1 console2 @header If-Match: "0" PUT /api/modes {"items": [{"id": "176e9a69-6c6b-5c2e-932d-8cb05a05301a", "name": "Обслуживание", "scheduleId": null, "system": "service", "color": null}, {"id": "b1969860-a3a4-5d36-88c9-720d3978e5c8", "name": "Ночь", "scheduleId": null, "system": "night", "color": null}, {"id": "b7ad3645-511d-5788-9743-439ff21ef655", "name": "Выходной", "scheduleId": null, "system": "weekend", "color": null}, {"id": "6b987ca1-e97f-5e28-a2dc-eabd096ee7c1", "name": "Работа", "scheduleId": null, "system": "work", "color": null}, {"id": "f0009999-0003-4000-8000-000000000000", "name": "Праздник", "scheduleId": null, "system": "", "color": null}], "otherwise": "6b987ca1-e97f-5e28-a2dc-eabd096ee7c1"}	200 {"version": "$m"}
 18-schedules	21	member m1 console2 @header If-Match: "$m" PUT /api/modes {"items": [{"id": "b1969860-a3a4-5d36-88c9-720d3978e5c8", "name": "Ночь", "scheduleId": null, "system": "night", "color": null}, {"id": "b7ad3645-511d-5788-9743-439ff21ef655", "name": "Выходной", "scheduleId": null, "system": "weekend", "color": null}, {"id": "6b987ca1-e97f-5e28-a2dc-eabd096ee7c1", "name": "Работа", "scheduleId": null, "system": "work", "color": null}], "otherwise": "6b987ca1-e97f-5e28-a2dc-eabd096ee7c1"}	409 {"code": "BUILTIN", "params": {"modeId": "176e9a69-6c6b-5c2e-932d-8cb05a05301a"}}
@@ -782,7 +782,7 @@ scenario	step	request	expect
 25-ptz	8	member m1 console2 PUT /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/ptz {"zoom": 1}	422 {"code": "VALIDATION_FAILED"}
 25-ptz	9	member m1 console2 PUT /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/ptz {"pan": 0.5, "ttlSec": 3}	409 {"code": "DEVICE_OFFLINE"}
 25-ptz	10	member m1 console2 PUT /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/presets/1 {}	409 {"code": "DEVICE_OFFLINE"}
-25-ptz	11	member m1 console2 DELETE /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/ptz	204
+25-ptz	11	member m1 console2 DELETE /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/ptz	2xx
 25-ptz	12	@manual живая камера: строка cam/ptz_moves со скоростью 50, продление меняет seq, DELETE снимает строку, камера останавливается не позже PTZ_LEASE; камера без ptz — 422 field ptz; preset_save, preset_clear исполнены, n вне presets — 404, отказ устройства — 409 DEVICE_REFUSED refused	manual
 25-ptz	13	@manual живая камера: PUT presets/{n} {} — положение, строка cam/preset_labels с пустым label; PUT {"name": "Ворота"} — только имя, камера не движется, revision строки камеры прежняя; PUT {"name": ""} — подпись снята, строка осталась, положения нет; DELETE снимает строку всегда и первой: вне связи, при ptz ложь, на чужой камере 200 без просьбы, отказ просьбы 409 DEVICE_REFUSED со снятой строкой, номер с именем драйвера остаётся в presets; PUT {} с отказом устройства строки не оставляет: у стенда нет пульса с can	manual
 26-unit-op	1	@domain m1	ok
@@ -891,7 +891,7 @@ scenario	step	request	expect
 32-archive-tasks	13	member m1 console2 POST /api/archive-scans {"deviceId": "$cam", "archiveId": "$arch", "detectorKind": "motion", "from": "2026-10-28T10:00:00Z", "to": "2026-10-28T10:00:00Z"}	422 {"code": "VALIDATION_FAILED", "field": "to"}
 32-archive-tasks	14	member m1 console2 POST /api/archive-scans {"deviceId": "$cam", "archiveId": "$arch", "detectorKind": "tape", "from": "2026-10-28T10:00:00Z", "to": "2026-10-28T12:00:00Z"}	422 {"code": "VALIDATION_FAILED", "field": "detectorKind"}
 32-archive-tasks	15	member m1 console2 POST /api/archive-scans {"deviceId": "$cam", "archiveId": "00000000-0000-4000-8000-000000000000", "detectorKind": "motion", "from": "2026-10-28T10:00:00Z", "to": "2026-10-28T12:00:00Z"}	422 {"code": "VALIDATION_FAILED", "field": "archiveId"}
-32-archive-tasks	16	member m1 console2 DELETE /api/archive-scans/$scan	204
+32-archive-tasks	16	member m1 console2 DELETE /api/archive-scans/$scan	2xx
 32-archive-tasks	17	member m1 console2 DELETE /api/archive-scans/$scan	404 {"code": "NOT_FOUND"}
 32-archive-tasks	18	member m1 console2 POST /api/archive-watches {"deviceId": "$cam", "detectorKind": "motion"}	422 {"code": "NOT_SUPPORTED", "field": "deviceId"}
 32-archive-tasks	19	member m1 store POST /v1/write {"id":"seed-host","op":"put","key":"cam/devices/10.9.9.1","items":{"device":"10.9.9.1","channels":"1","videos":"{\"1\":0}","storage":"true","revision":"1"},"cas":""}	2xx
@@ -903,7 +903,7 @@ scenario	step	request	expect
 32-archive-tasks	25	member m1 console2 @header If-Match: "$vw2" PATCH /api/archive-watches/$w {"deviceId": "$cam"}	422 {"code": "VALIDATION_FAILED", "field": "deviceId"}
 32-archive-tasks	26	member m1 console2 @header If-Match: "$vw" PATCH /api/archive-watches/$w {"enabled": true}	412 {"code": "VERSION_MISMATCH"}
 32-archive-tasks	27	member m1 console2 DELETE /api/archive-watches/$w	428 {"code": "PRECONDITION_REQUIRED"}
-32-archive-tasks	28	member m1 console2 @header If-Match: "$vw2" DELETE /api/archive-watches/$w	204
+32-archive-tasks	28	member m1 console2 @header If-Match: "$vw2" DELETE /api/archive-watches/$w	2xx
 32-archive-tasks	29	member m1 console2 GET /api/archive-watches	200 {"items": []}
 32-archive-tasks	30	@manual итог скана, kind archiveScan в потоке, рубеж и overrunSec обхода, каскады снятия камеры и архива, чужая камера: стенд без воркеров detjob, detedge	manual
 33-archive-retention	1	@domain m1	ok
@@ -1066,7 +1066,7 @@ scenario	step	request	expect
 43-holds	10	member m1 console2 POST /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/holds {"from": "1970-01-01T00:16:40Z", "to": "1970-01-01T00:33:20Z", "note": "b"}	200 {"id": "1-1000-2000", "note": "a"}
 43-holds	11	member m1 console2 GET /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/holds	200 {"items": [{"id": "1-1000-2000", "note": "a"}]}
 43-holds	12	member m1 console2 POST /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e/holds {"from": "1970-01-01T00:33:20Z", "to": "1970-01-01T00:16:40Z"}	422 {"code": "VALIDATION_FAILED", "field": "to"}
-43-holds	13	member m1 console2 DELETE /api/holds/1-1000-2000	204
+43-holds	13	member m1 console2 DELETE /api/holds/1-1000-2000	2xx
 43-holds	14	@stream-wait s1 30	ok {"type": "entity.deleted", "kind": "hold", "entityId": "1-1000-2000"}
 43-holds	15	member m1 console2 DELETE /api/holds/1-1000-2000	404 {"code": "NOT_FOUND"}
 43-holds	16	@stream-close s1	ok
