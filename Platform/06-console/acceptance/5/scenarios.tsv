@@ -19,6 +19,9 @@ scenario	step	request	expect
 02-manifest-and-mounts	6	GET /probe-x/manifest	200 {"name": "probe-x", "metrics": {"prefix": "probe_x"}, "workers_gauge": "probe_x_workers_live"}
 02-manifest-and-mounts	7	GET /metrics	200 ~w2c_requests_expired_total{sub="testsub"}
 02-manifest-and-mounts	8	GET /metrics	200 !contains w2c_requests_expired_total{sub="probe-x"}
+02-manifest-and-mounts	9	GET /manifest/testsub/source	200 {"name": "testsub", "rev": "@any", "sha256": "@any", "manifest": {"name": "testsub", "unit": {"rows": "counters"}}, "secret_defaults": []}
+02-manifest-and-mounts	10	GET /manifest/testsub2/source	200 {"name": "testsub2", "manifest": {"name": "testsub2", "tables": "@any"}}
+02-manifest-and-mounts	11	GET /manifest/nosuch/source	404 {"error": "refused"}
 03-snapshot	1	@start controller	ok
 03-snapshot	2	@start resource	ok
 03-snapshot	3	console POST /counters {"name": "s1", "start": 4, "labels": ["a"]}	201
@@ -176,7 +179,7 @@ scenario	step	request	expect
 24-where-door	4	POST /testsub2/shelves {"name": "s-1", "zone": "z", "server": "srv-a"}	201
 24-where-door	5	@until 30 @as testsub2worker store GET /v1/get?key=testsub2/holds/s-1	200 {"items": {"by": "t-1", "released": "false"}}
 24-where-door	6	POST /testsub2/tallies {"name": "ta", "of": "c1"}	201
-24-where-door	7	@until 30 GET /testsub2/where/ta	200 {"worker": "t-1", "door": {"token": "~door1.", "url": "@any"}}
+24-where-door	7	@until 30 GET /testsub2/where/ta	200 {"worker": "t-1", "door": {"token": "~door1.", "url": "@any", "routes": ["read", "play"]}}
 24-where-door	8	@as console store GET /v1/get?key=door/signer	200 {"items": {"kid": "$kid", "seed_secret": "~enc:v2:"}}
 24-where-door	9	store GET /v1/get?key=door/keys	200 {"items": "@any", "index": "$kv"}
 24-where-door	10	store POST /v1/write {"id":"b10","op":"put","key":"door/keys","items":{"$kid":"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},"cas":"$kv"}	200 {"index": "$kw"}
