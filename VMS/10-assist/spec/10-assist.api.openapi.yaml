@@ -128,7 +128,7 @@ components:
     StepId:
       type: string
       description: "<instance держателя>.<128 случайных бит, 32 строчных hex>; в экземпляре может быть точка — разбор по последней; в пути сегмент процент-кодирован (V/10.2 Н1.6)"
-      pattern: "^.+\\.[0-9a-f]{32}$"
+      pattern: "^(?:[\\s\\S]+\\.[0-9a-f]{32})$"
       examples: ["srv.a:1:abcdef.00000000000000000000000000000000"]
     ToolCall:
       type: object

@@ -1,0 +1,11 @@
+# Закрытый перечень слов error двери модели урока V/10: глава 10.2 (Н1.6, Н4). Перенос из Н4, нормы не меняет: при расхождении источник — норма в столбце norm.
+# door — chat: маршрут /chat/<name>/… держателя модели. Слова постоянные: подробности — в detail. field — «-»: поля нет.
+door	code	error	field	norm
+chat	400	bad step	-	10.2 Н1.6, Н4: тело, wait, путь
+chat	403	forbidden	-	10.2 Н4; договор токена двери
+chat	404	no such step	-	10.2 Н1.6, Н4: шага нет, чужой, забыт
+chat	410	gone	-	10.2 Н1.6, Н4: другой держатель или до перезапуска
+chat	429	too many steps	-	10.2 Н1.6, Н4: PER_USER
+chat	503	loading	-	10.2 Н1.6, Н4: модель грузится
+chat	503	model unavailable	-	10.2 Н1.6, Н4: failed, stopped
+chat	503	busy	-	10.2 Н1.6, Н4: очередь QUEUE; P/03.4 Н1.7 door_limits

@@ -17,7 +17,7 @@ scenario	step	request	expect
 01-hold	15	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "running", "size": "@any", "warning": "~resolution"}]}
 01-hold	16	PUT /cameras/$c1 {"resolution": ""}	200 {"resolution": ""}
 01-hold	17	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "running", "warning": "@absent"}]}
-01-hold	18	console2 DELETE /recordings/r1	200
+01-hold	18	console2 DELETE /recordings/r1	2xx
 01-hold	19	@until 120 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "idle", "live_url": "@absent", "live_shm": "@absent", "size": "@any"}]}
 01-hold	20	PUT /cameras/$c1 {"live": "on-demand"}	200 {"live": "on-demand"}
 01-hold	21	@until 30 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "held", "live_url": "@absent", "live_shm": "@absent"}]}

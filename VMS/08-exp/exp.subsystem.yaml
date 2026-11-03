@@ -53,7 +53,7 @@ unit:
     by:       {type: string, required: true, fixed: true}   # the author: a copy in each part (доп. (6) п. 4)
     comment:  {type: string}
     retry_of: {type: string, fixed: true}                    # the order this one retries the failed parts of
-    keep:     {type: int, required: true, fixed: true, schema: {minimum: 60}}   # seconds the files live after the part ends (EXPORT_KEEP; V/08.8 Н1.4)
+    keep:     {type: int, fixed: true, default: 86400, hidden: true, schema: {minimum: 60}}   # seconds the files live after the part ends (EXPORT_KEEP; V/08.8 Н1.4); a person sees result.expires
     labels:   {type: list, default: []}                      # ["gpu"] when the part transcodes (V/08.7 Н1.4)
   state:
     cursor:
@@ -105,7 +105,6 @@ display:
     by: Автор
     comment: Комментарий
     retry_of: Повтор выгрузки
-    keep: Хранить после готовности, с
     labels: Метки серверов
   kinds:
     export.made: выгрузка заказана
