@@ -2677,7 +2677,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConsoleDenied'
         '404':
-          description: Строки манифеста подсистемы нет — refused, «no such subsystem»; неизвестный путь — как у общего отказа
+          description: Подсистемы нет в каталоге, которым консоль служит с запуска — refused, «no such subsystem»; неизвестный путь — как у общего отказа
           content:
             application/json:
               schema:
@@ -2691,17 +2691,7 @@ paths:
         '429':
           $ref: '#/components/responses/RateLimited'
         '503':
-          description: Строка манифеста или его канонический вид не прочитаны или не подтверждены; rev строки не равна served; rev вида не равна rev строки — unavailable, Retry-After 1
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConsoleRefusal'
-          headers:
-            Retry-After:
-              description: При unavailable — 1.
-              schema:
-                type: string
-                const: '1'
+          $ref: '#/components/responses/GuardUnavailable'
     head:
       summary: 'HEAD: полная форма манифеста подсистемы'
       responses:
@@ -2718,7 +2708,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConsoleDenied'
         '404':
-          description: Строки манифеста подсистемы нет — refused, «no such subsystem»; неизвестный путь — как у общего отказа
+          description: Подсистемы нет в каталоге, которым консоль служит с запуска — refused, «no such subsystem»; неизвестный путь — как у общего отказа
           content:
             application/json:
               schema:
@@ -2732,17 +2722,7 @@ paths:
         '429':
           $ref: '#/components/responses/RateLimited'
         '503':
-          description: Строка манифеста или его канонический вид не прочитаны или не подтверждены; rev строки не равна served; rev вида не равна rev строки — unavailable, Retry-After 1
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ConsoleRefusal'
-          headers:
-            Retry-After:
-              description: При unavailable — 1.
-              schema:
-                type: string
-                const: '1'
+          $ref: '#/components/responses/GuardUnavailable'
   /{sub}/manifest:
     description: Глава 6.5 (06.5-console.norms.md).
     parameters:
@@ -6418,11 +6398,11 @@ components:
         rev:
           type: integer
           minimum: 1
-          description: Ревизия строки манифеста, прочитанной при запросе (P/02.3).
+          description: Ревизия строки манифеста в каталоге, которым консоль служит с запуска (P/02.3).
         served:
           type: integer
           minimum: 1
-          description: Ревизия подсистемы в каталоге, которым консоль служит с запуска; равна rev — иначе 503; установка ждёт 200 с served = своей rev (ADR-0115 доп. (20)).
+          description: Ревизия, которой консоль служит, — равна rev; установка ждёт 200 с served = своей rev (ADR-0115 доп. (20)).
         sha256:
           type: string
           pattern: ^(?:[0-9a-f]{64})$
@@ -6430,7 +6410,7 @@ components:
         manifest:
           type: object
           additionalProperties: true
-          description: Канонический вид P/02.2 той же ревизии (02.2-installer.view.schema.json); default полей *_secret — null.
+          description: Канонический вид P/02.2 манифеста каталога запуска (02.2-installer.view.schema.json); default полей *_secret — null.
         secret_defaults:
           type: array
           uniqueItems: true
