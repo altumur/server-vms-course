@@ -39,6 +39,16 @@
      "additionalProperties": {
       "$ref": "#/$defs/jsonSchemaLite"
      }
+    },
+    "writes_via": {
+     "description": "строки пишут только названные подсистемы по билету; сеанс, аварийный вход и прочие билеты — 403 writes via; запись правом следствий вне слова (P/06.1 Н1.1а, ADR-0119 доп. (10), (11))",
+     "x-owner": "P/06.1 Н1.1а",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/subName"
+     },
+     "minItems": 1,
+     "uniqueItems": true
     }
    },
    "additionalProperties": false,
@@ -3427,6 +3437,16 @@
      "type": "boolean",
      "x-default-text": "`false`"
     },
+    "writes_via": {
+     "description": "строки пишут только названные подсистемы по билету; сеанс, аварийный вход и прочие билеты — 403 writes via; запись правом следствий вне слова (P/06.1 Н1.1а, ADR-0119 доп. (10), (11))",
+     "x-owner": "P/06.1 Н1.1а",
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/subName"
+     },
+     "minItems": 1,
+     "uniqueItems": true
+    },
     "stamp": {
      "type": "array",
      "items": {
@@ -3459,7 +3479,37 @@
      "maximum": 9007199254740991
     }
    },
-   "additionalProperties": false
+   "additionalProperties": false,
+   "allOf": [
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "service"
+        ],
+        "properties": {
+         "service": {
+          "enum": [
+           true
+          ]
+         }
+        }
+       },
+       {
+        "required": [
+         "writes_via"
+        ]
+       }
+      ]
+     },
+     "then": false,
+     "description": "service уже пускает только билет своей подсистемы (P/06.1 Н1.6)"
+    }
+   ]
   },
   "tableField": {
    "type": "object",

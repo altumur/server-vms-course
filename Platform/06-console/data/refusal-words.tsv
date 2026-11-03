@@ -24,6 +24,7 @@ units	400	If-Match is a unit revision	-	6.1 Н2 «Версии»
 units	400	a sealed value is not taken from outside — give the password itself	/<поле>	6.2 Н4
 units	400	sealing key required	-	6.2 Н4
 units	400	refused	/<поле>	6.2 Н4
+units	403	writes via	-	6.1 Н1.1а
 units	404	no such unit	-	6.1 Н4
 units	404	no such path	-	6.5 Н2
 units	409	exists	/<поле>	6.1 Н4
@@ -34,6 +35,7 @@ units	413	row too large	-	6.1 Н4
 units	422	key reused	-	6.1 Н4
 units	503	store unavailable	-	6.1 Н4
 blobs	400	denied	-	6.1 Н4; 6.5 Н4
+blobs	403	writes via	-	6.1 Н1.1а
 blobs	404	no such unit	-	6.1 Н2
 blobs	404	no such blob field	-	6.1 Н2
 blobs	409	refused	-	6.1 Н4
@@ -55,6 +57,7 @@ tables	400	bad_id	/<поле>	6.1 Н4
 tables	400	a sealed value is not taken from outside — give the password itself	/<поле>	6.2 Н4
 tables	400	refused	/<поле>	6.2 Н4
 tables	403	denied	-	6.1 Н1.6
+tables	403	writes via	-	6.1 Н1.1а
 tables	404	no such row	-	6.1 Н4
 tables	404	no such path	-	6.5 Н2
 tables	405	method	-	6.1 Н2
@@ -87,6 +90,7 @@ batch	400	fixed	/writes/<номер>/fields/<поле>	договор прове
 batch	400	refused	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Пакетная дверь»
 batch	400	the body does not fill it in	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Пакетная дверь»
 batch	403	denied	-	6.1 Н4 «Пакетная дверь»
+batch	403	writes via	-	6.1 Н1.1а
 batch	404	no such unit	-	6.1 Н4 «Пакетная дверь»
 batch	404	no such row	-	6.1 Н4 «Пакетная дверь»
 batch	409	conflict	/writes/<номер>/fields/<поле>	договор проверки строки П5, Р3; 6.1 Н4 «Пакетная дверь»
