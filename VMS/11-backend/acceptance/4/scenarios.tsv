@@ -639,7 +639,7 @@ scenario	step	request	expect
 19-revert	40	@person ann ann-password-1	ok
 19-revert	41	@until 30 member m1 console GET /session	200 {"user": "ann"}
 19-revert	42	member m1 console2 POST /api/operations/$op4/revert	404 {"code": "NOT_FOUND"}
-19-revert	43	@manual откат тома, удаления, папок и смены bound_to — fail со словом; идущая операция — 409 running: шаги стенда идут быстрее двух запросов; UNDO_KEEP, UNDO_DAYS стенду не дождаться; одиночная правка — шаги 45–50	manual
+19-revert	43	@manual откат тома, удаления, папок и смены bound_to — fail со словом; идущая операция — 409 NOT_REVERTIBLE, reason: running (ADR-0106 доп. (5)): шаги стенда идут быстрее двух запросов; UNDO_KEEP, UNDO_DAYS стенду не дождаться; одиночная правка — шаги 45–50	manual
 19-revert	44	@manual откат с fail оставляет ряд открытым, повтор идёт, операция не закрыта; 50 правок и 50 откатов назад дошли до первой: стенд не держит столько шагов	manual
 19-revert	45	member m1 console2 GET /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e	200 {"name": "чужое имя", "version": "$v9"}
 19-revert	46	member m1 console2 @header If-Match: "$v9" PATCH /api/devices/ca08e8ba-11ab-5128-97e6-d03888680c2e {"name": "одна правка"}	200 {"name": "одна правка"}

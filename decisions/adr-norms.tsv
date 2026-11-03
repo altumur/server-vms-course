@@ -80,7 +80,7 @@ adr	add	point	status	file	norm	note
 0102	1	п. 3	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4а	VMS/01-cam/spec/01.4-cam.norms.md:200-201
 0102	1	п. 4	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3; V/11.3 Н1.2	VMS/11-backend/spec/11.3-backend.norms.md:235; VMS/11-backend/spec/11.3-backend.norms.md:102
 0102	1	п. 5	ОТВЕРГНУТО	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.1	доп. (5) п. 4 (decisions/0102-устройства-по-дереву-driverpack.md:134 «прежняя форма снята»); порт = `number` держится: VMS/01-cam/spec/01.4-cam.norms.md:39
-0102	1	п. 6	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md; VMS/01-cam/data/refusal-words.tsv; VMS/07-auto/spec/07.3-auto.norms.md	V/01.4 Н1.4а; refusal-words.tsv; V/07.3 Н1.2; V/07.3 Н4	VMS/01-cam/spec/01.4-cam.norms.md:234; VMS/01-cam/spec/01.4-cam.norms.md:233; VMS/01-cam/data/refusal-words.tsv:34; VMS/07-auto/spec/07.3-auto.norms.md:70; VMS/07-auto/spec/07.3-auto.norms.md:124; VMS/01-cam/spec/01.4-cam.norms.md:229
+0102	1	п. 6	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md; VMS/01-cam/data/refusal-words.tsv; VMS/07-auto/spec/07.3-auto.norms.md	V/01.4 Н1.4а; refusal-words.tsv; V/07.3 Н1.2; V/07.3 Н4	VMS/01-cam/spec/01.4-cam.norms.md:234; VMS/01-cam/spec/01.4-cam.norms.md:233; VMS/01-cam/data/refusal-words.tsv:34; VMS/07-auto/spec/07.3-auto.norms.md:70; VMS/07-auto/spec/07.3-auto.norms.md:124; VMS/01-cam/spec/01.4-cam.norms.md:229; правило — позднейшее слово по `at`, доп. (11) п. 2
 0102	1	п. 7	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/01-cam/spec/01.1-cam.norms.md; VMS/11-backend/spec/11.3-backend.norms.md; VMS/01-cam/spec/01.4-cam.norms.md	V/11.4 Н1.2; V/01.1 Н1.2а; V/11.3 Н1.3; V/01.4 Н1.4	VMS/11-backend/spec/11.4-backend.norms.md:139; VMS/01-cam/spec/01.1-cam.norms.md:246-248; VMS/11-backend/spec/11.3-backend.norms.md:249; VMS/01-cam/spec/01.4-cam.norms.md:153-154
 0102	1	п. 8	ОТВЕРГНУТО	VMS/11-backend/spec/11.2-backend.norms.md	V/11.2 Н1.5	доп. (6) п. 7; `foundDeviceTypes` — VMS/11-backend/spec/11.2-backend.norms.md:223
 0102	1	п. 9	ОТВЕРГНУТО	-	-	ADR-0103 п. 2, доп. (2) этого ADR
@@ -141,7 +141,7 @@ adr	add	point	status	file	norm	note
 0102	9	п. 3	НОРМА	VMS/01-cam/spec/01.7-cam.norms.md	V/01.7 Н1.2	VMS/01-cam/spec/01.7-cam.norms.md:56
 0102	9	п. 4	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/spec/01.4-cam.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/01.1 Н1.2б; V/01.4 Н1.4б; V/11.4 Н1.7	VMS/01-cam/spec/01.1-cam.norms.md:284; VMS/01-cam/spec/01.4-cam.norms.md:292; VMS/01-cam/spec/01.1-cam.norms.md:299; VMS/11-backend/spec/11.4-backend.norms.md:264
 0102	9	п. 5	НОРМА	VMS/01-cam/spec/01.2-cam.norms.md; VMS/01-cam/spec/01.4-cam.norms.md	V/01.2 Н1.5; V/01.4 Н1.2	VMS/01-cam/spec/01.2-cam.norms.md:215; VMS/01-cam/spec/01.2-cam.norms.md:210-211; VMS/01-cam/spec/01.4-cam.norms.md:75
-0102	9	п. 6	РАСХОДИТСЯ	VMS/03-live/spec/03.4-live.norms.md; VMS/08-page/spec/08.3-page.norms.md	V/03.4 Н1.3; V/08.3 Н1.2	VMS/03-live/spec/03.4-live.norms.md:59; VMS/08-page/spec/08.3-page.norms.md:95-98
+0102	9	п. 6	ПРЕДЕЛ	VMS/08-page/spec/08.1-page.norms.md; VMS/08-page/spec/08.3-page.norms.md; VMS/03-live/spec/03.4-live.norms.md	V/08.1 Н1.1; V/08.3 Н1.2; V/03.4 Н1.3	VMS/08-page/spec/08.1-page.norms.md:32; VMS/08-page/spec/08.3-page.norms.md:80; VMS/03-live/spec/03.4-live.norms.md:59 — титры рисует страница на живом, на кусках архива в форме нет (доп. (11) п. 3)
 0102	9	п. 7	НОРМА	VMS/03-live/spec/03.4-live.norms.md; VMS/02-rec/spec/02.4-rec.norms.md; VMS/02-rec/spec/02.1-rec.norms.md; VMS/01-cam/spec/01.4-cam.norms.md; VMS/03-live/spec/03.3-live.norms.md	V/03.4 Н1.5; V/02.4 Н1.2а; V/02.1 Н1.1; V/01.4 Н1.4а; V/03.3 Н1.2а	VMS/03-live/spec/03.4-live.norms.md:77-90; VMS/02-rec/spec/02.4-rec.norms.md:104; VMS/02-rec/spec/02.1-rec.norms.md:40; VMS/01-cam/spec/01.4-cam.norms.md:250-251; VMS/03-live/spec/03.3-live.norms.md:95-100
 0102	9	п. 8	НЕ НОРМА	-	-	работа продукта и вопрос владельцу, не поведение спецификации
 0102	9	п. 9	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н5	VMS/01-cam/spec/01.4-cam.norms.md:511
@@ -149,9 +149,10 @@ adr	add	point	status	file	norm	note
 0102	10	п. 1	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/cam.subsystem.yaml	V/01.1 Н1.1б; cam.subsystem.yaml	VMS/01-cam/spec/01.1-cam.norms.md:149; VMS/01-cam/cam.subsystem.yaml:233
 0102	10	п. 2	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:248
 0102	10	п. 3	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md	V/01.1 Н1.1б	VMS/01-cam/spec/01.1-cam.norms.md:164
-0102	10	п. 4 хозяин	РАСХОДИТСЯ	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4а	VMS/01-cam/spec/01.4-cam.norms.md:181
+0102	10	п. 4 хозяин	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md	V/01.4 Н1.4а	VMS/01-cam/spec/01.4-cam.norms.md:181 — индекс только при `channels` > 1 (доп. (11) п. 1)
 0102	10	п. 4 кадры	НОРМА	VMS/02-rec/spec/02.4-rec.norms.md; VMS/04-det/spec/04.2-det.norms.md; VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/spec/01.2-cam.norms.md	V/02.4 Н1.1; V/04.2 Н1.1; V/01.1 Н1.1б; V/01.2 Н1.1	VMS/02-rec/spec/02.4-rec.norms.md:69; VMS/04-det/spec/04.2-det.norms.md:55; VMS/01-cam/spec/01.1-cam.norms.md:153-160; VMS/01-cam/spec/01.2-cam.norms.md:40
 0102	10	п. 4 поток	ПРЕДЕЛ	VMS/01-cam/spec/01.1-cam.norms.md	V/01.1 Н1.1б	VMS/01-cam/spec/01.1-cam.norms.md:162-165
+0102	11	пп. 1–3	НОРМА	VMS/01-cam/spec/01.4-cam.norms.md; VMS/08-page/spec/08.1-page.norms.md	V/01.4 Н1.4а; V/08.1 Н1.1	индекс при `channels` > 1, позднейшее слово, предел титров архива — нормы были такими, ссылки на доп. (11) внесены
 0103	0	п. 1	НЕ НОРМА	-	-	порядок работ
 0103	0	п. 2	НЕ НОРМА	-	-	порядок работ
 0103	0	п. 3 устройства	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/spec/11.3-backend.norms.md; VMS/11-backend/data/mapping.tsv; VMS/01-cam/spec/01.4-cam.norms.md	V/11.2 Н1.5; V/11.3 Н1.2; mapping.tsv; V/01.4 Н1.4а	VMS/11-backend/spec/11.2-backend.norms.md:221; VMS/11-backend/spec/11.3-backend.norms.md:67; VMS/11-backend/data/mapping.tsv:440; VMS/01-cam/spec/01.4-cam.norms.md:184-195; закрыто ADR-0103 доп. (3), (4): граница одна, слово ADR
@@ -179,6 +180,7 @@ adr	add	point	status	file	norm	note
 0103	3	п. 2	ПРЕДЕЛ	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/data/mapping.tsv	V/11.4 Н1.9; mapping.tsv	`login`, `password` дальше тела не идут, предел V/01.8 Н1.3
 0103	4	п. 1	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/data/profile.tsv	V/11.2 Н1.2; profile.tsv	строки `NO_ROUTE` называют, кто делает (установщик); общая фраза Н1.2 «такой вещи у нас нет» уже формулы доп. (4) — слово нормы, не поведение
 0103	5	п. 1, п. 2	НОРМА	decisions/adr-norms.tsv	-	строки (1) п. 4 «один» — НОРМА, (0) п. 5 «вне» — пометка (5) п. 2; нормы V/11.4, V/01.8 не менялись
+0103	6	—	НЕ НОРМА	-	-	довод доп. (5) п. 1 уточнён, решение то же
 0104	0	п. 1	НОРМА	VMS/01-cam/spec/01.1-cam.norms.md	V/01.1 Н1.1а	VMS/01-cam/spec/01.1-cam.norms.md:100; VMS/01-cam/spec/01.1-cam.norms.md:101
 0104	0	п. 2	НОРМА	VMS/03-live/spec/03.3-live.norms.md	V/03.3 Н1.2	VMS/03-live/spec/03.3-live.norms.md:54; VMS/03-live/spec/03.3-live.norms.md:42-53
 0104	0	п. 3	НОРМА	VMS/01-cam/spec/01.2-cam.norms.md; VMS/01-cam/spec/01.1-cam.norms.md; VMS/01-cam/cam.subsystem.yaml	V/01.2 Н1.2а; V/01.1 Н1.1; cam.subsystem.yaml	VMS/01-cam/spec/01.2-cam.norms.md:87-88; VMS/01-cam/spec/01.1-cam.norms.md:56; VMS/01-cam/cam.subsystem.yaml:264
@@ -217,7 +219,7 @@ adr	add	point	status	file	norm	note
 0106	0	п. 3 (б)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:439
 0106	0	п. 3 (в)	ОТВЕРГНУТО	-	-	доп. (3) п. 2
 0106	0	п. 3 абз. 2 (а)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:441
-0106	0	п. 3 абз. 2 (б)	РАСХОДИТСЯ	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/consolem.openapi.json	V/11.4 Н1.12; V/11.4 Н4; consolem.openapi.json	VMS/11-backend/spec/11.4-backend.norms.md:441, VMS/11-backend/spec/11.4-backend.norms.md:662; VMS/11-backend/consolem.openapi.json `revertOperation`
+0106	0	п. 3 абз. 2 (б)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/consolem.openapi.json	V/11.4 Н1.12; V/11.4 Н4; consolem.openapi.json	VMS/11-backend/spec/11.4-backend.norms.md:441, VMS/11-backend/spec/11.4-backend.norms.md:662 — идущая: 409 `NOT_REVERTIBLE`, `reason: running` (доп. (5))
 0106	0	п. 4	ОТВЕРГНУТО	-	-	доп. (2) п. 2
 0106	0	п. 5, том	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:436
 0106	0	п. 5, удаление	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:436
@@ -230,7 +232,7 @@ adr	add	point	status	file	norm	note
 0106	1	п. 2	ОТВЕРГНУТО	-	-	доп. (2)
 0106	1	п. 3	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:439
 0106	1	п. 4	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:440, VMS/11-backend/spec/11.4-backend.norms.md:442
-0106	1	п. 5 (а)	РАСХОДИТСЯ	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:441
+0106	1	п. 5 (а)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:441 — `running`, не `BUSY` (доп. (5))
 0106	1	п. 5 (б)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:440
 0106	1	п. 6	ОТВЕРГНУТО	-	-	доп. (2)
 0106	1	п. 7	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:436
@@ -253,6 +255,7 @@ adr	add	point	status	file	norm	note
 0106	4	(г)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:449
 0106	4	(д)	НЕ НОРМА	-	-	—
 0106	4	ревью норм М1, М2	НОРМА	VMS/11-backend/acceptance/4/scenarios.tsv; decisions/adr-norms.tsv	V/11.4 Н1.12; приёмка 4 19-revert	ссылки `undo`, `UNDO_DAYS` — backend.subsystem.yaml:238, :241; одиночная правка `19-revert` — обычные шаги 45–50 через `GET /api/operations?limit=1` (V/11.2 № 100)
+0106	5	—	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/acceptance/4/scenarios.tsv	V/11.4 Н1.12; приёмка 4 19-revert	норма уже `NOT_REVERTIBLE` `running`; `@manual` 19-revert шаг 43 назван так же
 0107	0	п. 1	НОРМА	VMS/02-rec/spec/02.1-rec.norms.md; VMS/02-rec/rec.subsystem.yaml	V/02.1 Н1.1; rec.subsystem.yaml	VMS/02-rec/spec/02.1-rec.norms.md:48, VMS/02-rec/rec.subsystem.yaml:123
 0107	0	п. 2 (а)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.9	VMS/02-rec/spec/02.6-rec.norms.md:183
 0107	0	п. 2 (б)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.9	VMS/02-rec/spec/02.6-rec.norms.md:177, VMS/02-rec/spec/02.6-rec.norms.md:179
@@ -329,13 +332,14 @@ adr	add	point	status	file	norm	note
 0108	1	п. 4 (а)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.7	VMS/02-rec/spec/02.6-rec.norms.md:127, VMS/02-rec/spec/02.6-rec.norms.md:130
 0108	1	п. 4 (б)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md; VMS/01-cam/spec/01.6-cam.norms.md	V/02.6 Н1.7; V/01.6 Н1.7	VMS/02-rec/spec/02.6-rec.norms.md:129, VMS/02-rec/spec/02.6-rec.norms.md:130, VMS/01-cam/spec/01.6-cam.norms.md:205
 0108	1	п. 5	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md; VMS/02-rec/spec/02.4-rec.norms.md	V/02.6 Н1.7; V/02.4 Н1.1	VMS/02-rec/spec/02.6-rec.norms.md:141, VMS/02-rec/spec/02.4-rec.norms.md:66
-0108	1	п. 6 (а)	РАСХОДИТСЯ	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.7	VMS/01-cam/spec/01.6-cam.norms.md:209
-0108	1	п. 6 (б)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:196
+0108	1	п. 6 (а)	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.7	VMS/01-cam/spec/01.6-cam.norms.md:211 — `enabled: false` строки `cam-<cam>-<том>` дверью таблиц, форма — только чтение (доп. (3))
+0108	1	п. 6 (б)	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.3	VMS/11-backend/spec/11.3-backend.norms.md:197
 0108	2	п. 1	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.7	VMS/01-cam/spec/01.6-cam.norms.md:200, VMS/01-cam/spec/01.6-cam.norms.md:202, VMS/01-cam/spec/01.6-cam.norms.md:204
 0108	2	п. 2	НОРМА	VMS/02-rec/rec.subsystem.yaml; VMS/01-cam/spec/01.6-cam.norms.md	rec.subsystem.yaml; V/01.6 Н1.7	VMS/02-rec/rec.subsystem.yaml:60, VMS/01-cam/spec/01.6-cam.norms.md:207
 0108	2	п. 3 (а)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.7	VMS/02-rec/spec/02.6-rec.norms.md:129
 0108	2	п. 3 (б)	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md; VMS/02-rec/spec/02.6-rec.norms.md	V/01.6 Н1.7; V/02.6 Н1.7	VMS/01-cam/spec/01.6-cam.norms.md:205, VMS/02-rec/spec/02.6-rec.norms.md:129
 0108	2	п. 4	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.7	VMS/02-rec/spec/02.6-rec.norms.md:126
+0108	3	—	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md; VMS/11-backend/spec/11.3-backend.norms.md	V/01.6 Н1.7; V/11.3 Н1.3	ход нормы: выключение карты камере — `enabled: false` дверью таблиц, `extraArchives` `readOnly`, `recordMode: none`
 0109	0	п. 1	ОТВЕРГНУТО	-	-	доп. (2), ADR-0112 п. 1
 0109	0	п. 2	ОТВЕРГНУТО	-	-	ADR-0112 п. 2, доп. (13) п. 1
 0109	0	п. 3 (а)	НЕ НОРМА	-	-	—
@@ -568,6 +572,10 @@ adr	add	point	status	file	norm	note
 0110	20	п. 1	НЕ НОРМА	-	-	перенос P/08.8 Н1.8 шаг 7 снимает сверх потолка слова с наименьшим exp — доля «Спецификации»; V/01.6 не задета
 0110	20	п. 2	НЕ НОРМА	-	-	путь оператора — уточнён доп. (21), доля «Спецификации»
 0110	21	п. 1	НЕ НОРМА	-	-	смена после кражи P/08.2 Н3, журнал domain.revoked.full — доля «Спецификации»; V/01.6 «Предел кражи» не меняется
+0110	22	—	НЕ НОРМА	-	-	замена строки отзывов у члена после аварийного набора — договор набора ключей, P/09.1 `from_carry`, доля «Спецификации»
+0110	23	п. 1	НЕ НОРМА	-	-	рассылка грантов проходом держателя P/08.4 Н1.3а — доля «Спецификации»
+0110	23	п. 2	НОРМА	VMS/01-cam/spec/01.6-cam.norms.md	V/01.6 Н1.3	правило «тот же `jti` — не просить до конца суток» помечено общим, ссылка на P/03.7 Н3 «Гонки»; само правило в P/03.7 — доля «Спецификации»
+0110	23	п. 3	НОРМА	VMS/08-page/spec/08.5-page.norms.md	V/08.5 Н1.2	свёрнутая камера — единицы `cam` члена с пустым `main`, потоки не отменяют
 0112	0	п. 1	НОРМА	VMS/08-page/spec/08.1-page.norms.md; VMS/09-deploy/spec/09.1-deploy.norms.md	V/08.1; V/09.1 Н1.1	VMS/08-page/spec/08.1-page.norms.md:8, :24; VMS/09-deploy/spec/09.1-deploy.norms.md:27; закрыто vms/page-tab-2: V/08.1 под закладку формы
 0112	0	п. 1, конец	НЕ НОРМА	-	-	—
 0112	0	п. 2, а	НОРМА	VMS/08-page/spec/08.1-page.norms.md	V/08.1	VMS/08-page/spec/08.1-page.norms.md:8; 08-page.README.md:4; закрыто vms/page-tab-2
@@ -991,3 +999,4 @@ adr	add	point	status	file	norm	note
 0113	46	п. 2	НЕ НОРМА	-	-	платформа, P/04 Н3
 0113	46	п. 3	НЕ НОРМА	-	-	платформа, P/04 Н3
 0113	46	ревью норм ч. 2 М1–М3	НОРМА	VMS/02-rec/spec/02.9-rec.norms.md; VMS/01-cam/spec/01.7-cam.norms.md; decisions/adr-norms.tsv	V/02.9 Н1.6; V/01.7 Н1.2	сброс памяти — все вклады, и `rec/upstream`; добор «пока стоят отметка и запрос», как P/04 шаг 2; абзац V/01.7 Н1.2 «места» по строкам, ссылки note пересчитаны по цитатам сверки
+0113	47	—	НЕ НОРМА	-	-	пп. 1–8 — нормы платформы (P/08.3, accept, batches, carry, P/09.1, P/08.1, OpenAPI P/08, сборка книг, P/04), доля «Спецификации»; V/02.9 `stale_after` уже по порогу подсистемы
