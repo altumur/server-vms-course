@@ -1279,3 +1279,7 @@ adr	add	point	status	file	norm	note
 0119	6	п. 1	НЕТ НОРМЫ	-	-	X-W2C-Supervision у backend — доля V/11 (`POST /exports` с полем supervisor, X-W2C-Supervision, SUPERVISOR_REQUIRED/REJECTED, дайджест повторов без паролей, calls domain/verify) — при закреплении контракта форка с /exports (V/11.14 Н1.3)
 0119	7	п. 1	НЕТ НОРМЫ	-	-	POST /exports без заголовка — 503 у backend — доля V/11 (`POST /exports` с полем supervisor, X-W2C-Supervision, SUPERVISOR_REQUIRED/REJECTED, дайджест повторов без паролей, calls domain/verify) — при закреплении контракта форка с /exports (V/11.14 Н1.3)
 0119	8	п. 1	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.5	своя роль супервизоров допустима; 409 role referenced мимо backend — снимок устарел
+0119	9	—	ОТВЕРГНУТО	-	-	заменён доп. (10)
+0119	10	—	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.5, Н1.6	доля VMS: до writes_via платформы смена supervision на export: true — NOT_SUPPORTED, затем снять; writes_via: [backend] в манифесте exp — после ключа загрузчика P/02.1
+0119	11	п. 2	НЕТ НОРМЫ	-	-	уборка части без держателя — DELETE /exports администратора через backend: доля V/11 при закреплении контракта с /exports; V/08.8 «уборка под admin» — после writes_via
+0119	11	М	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.5	доля VMS: NOT_SUPPORTED только при смене supervision
