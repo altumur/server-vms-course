@@ -1,0 +1,29 @@
+scenario	step	request	expect
+# Приёмка V/12.4: установка, включение, сборка на работающем стенде; плагины psim-sdk c3d9ebb без правок. Формат — README.
+01-install	1	@psim install {psim}/camera	ok
+01-install	2	console GET /psim-camera/units/plugin	200 {"id": "plugin", "plugin": "plugin", "enabled": true, "version": "1.0.0", "owners": "@absent"}
+01-install	3	console GET /manifest/psim-camera/source	200 {"name": "psim-camera", "rev": "@any", "served": "@any", "manifest": {"name": "psim-camera", "unit": {"rows": "units", "id": "plugin"}}}
+01-install	4	POST /psim-camera/cam {"id": "c1", "name": "Cam 1", "ip_address": "10.0.0.1"}	201 {"id": "c1", "plugin": "plugin"}
+01-install	5	PUT /psim-camera/units/plugin {"enabled": false}	2xx
+01-install	6	@manual процесс плагина camera поднят адаптером: Authenticate, Register, RegisterResource ×4, SERVING, Configure, ChangeUnit INITIAL c1; журнал воркера несёт строки stdout плагина полем plugin	manual
+01-install	7	console GET /manifest/backend/source	200 {"name": "backend", "manifest": {"door": {"pass": {"calls": "@any"}}}}
+01-install	8	@manual calls собранного манифеста backend — канон и фрагмент psim-camera: части enabled (psim-camera/units, GET psim-camera/where, GET manifest/psim-camera/source) и objects (psim-camera/cam, psim-camera/requests); backend перезапущен, его пульс — новый instance	manual
+02-dependent	1	@psim install {psim}/security_controller	ok
+02-dependent	2	@psim install {psim}/camera	ok
+02-dependent	3	console GET /manifest/psim-security_controller/source	200 {"name": "psim-security_controller", "served": "@any"}
+02-dependent	4	@manual сборка шага 2 перестроила манифест psim-security_controller: worker.reads psim-camera/cam/, psim-camera/cam_events/, worker.requests [psim-camera]; у psim-camera появилось кольцо cam_events (тип CAM под чужим source); до шага 2 вызовы security_controller к CAM — PERMISSION_DENIED	manual
+02-dependent	5	POST /psim-camera/cam {"id": "c1", "name": "Cam 1", "ip_address": "10.0.0.1"}	201 {"id": "c1"}
+02-dependent	6	POST /psim-security_controller/controller {"id": "k1", "name": "Ctl 1", "ip_address": "10.0.0.2", "cameras": ["c1"]}	201 {"id": "k1", "mode": "auto", "enum_tags": ["cam"]}
+02-dependent	7	@manual событие MD_START камеры c1 (страница api плагина camera или вброс эмулятора): строка psim-camera/cam_events со следующим seq; security_controller получает его потоком PullEvents и шлёт SendCommand REC камере — просьба psim-camera/requests action cam.REC object c1, метка done	manual
+03-disable	1	@psim install {psim}/camera	ok
+03-disable	2	@psim disable psim-camera	ok
+03-disable	3	console GET /psim-camera/units/plugin	200 {"enabled": false}
+03-disable	4	@manual процесса плагина нет, единица держится; calls backend без части objects psim-camera, часть enabled осталась — плагин виден выключенным	manual
+03-disable	5	@psim enable psim-camera	ok
+03-disable	6	console GET /psim-camera/units/plugin	200 {"enabled": true}
+03-disable	7	@psim sync	ok
+03-disable	8	console GET /manifest/backend/source	200 {"name": "backend", "served": "@any"}
+04-page	1	@psim install {psim}/security_controller	ok
+04-page	2	console GET /psim-security_controller/where/plugin	200 {"url": "@any", "token": "@any"}
+04-page	3	@manual первый адрес <url>/setup/?t=<token> → 303 на тот же адрес без t и Set-Cookie psim_security_controller=…; HttpOnly; Secure; SameSite=Strict; Path=/setup/, без Domain; запрос с кукой — 200 страницы плагина, Cookie и Authorization запроса до плагина не дошли (журнал двери), Set-Cookie плагина в ответе нет	manual
+04-page	4	@manual GET <url>/static/i18n.js без токена — 200, байты psim_platform_emulator/webui/i18n.js с SHA-256 7ef4d865…5584, Content-Type application/javascript; charset=utf-8	manual
