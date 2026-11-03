@@ -5758,6 +5758,144 @@
     ]
    },
    "errors": []
+  },
+  {
+   "id": "lost-bag-start-recording",
+   "note": "«lost, start recording»: узкий segment_lost_phrase не режет голое lost о сумке (ревью норм (37)–(38) С1)",
+   "request": "If the bag on Lobby Cam is lost, start recording Lobby Cam for 5 minutes.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "disappeared",
+      "unit": "2-disappeared"
+     }
+    ],
+    "then": [
+     {
+      "sub": "rec",
+      "action": "record",
+      "cam": "2",
+      "minutes": 5
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "step-scan-dropped-ru",
+   "note": "«просканируй архив» — det scan, шага нет (вопрос Пилота)",
+   "request": "Когда сработает датчик Gate Loop, подними тревогу на Gate Cam и просканируй архив Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "1"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "then: the request asks for det scan, the plan has none: ask_admin"
+   ]
+  },
+  {
+   "id": "step-escalate-dropped-ru",
+   "note": "«эскалация» — шаг escalate, его нет (вопрос Пилота)",
+   "request": "Когда сработает датчик Gate Loop, подними тревогу на Gate Cam, эскалация Guards в клиенте.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "1"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "then: the request asks for escalate, the plan has none: ask_admin"
+   ]
+  },
+  {
+   "id": "lost-recording-drops",
+   "note": "M04 Пилота: «recording drops … the camera that lost it» — segment.lost, голое lost не пускает silent",
+   "request": "If recording drops on any camera in Building A, raise an alarm on the camera that lost it.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "silent",
+      "target": {
+       "include": [
+        {
+         "kind": "folder",
+         "id": "10"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [],
+       "exclude": [],
+       "gone": [],
+       "from_event": true
+      }
+     }
+    ]
+   },
+   "errors": [
+    "when[0]: the request does not speak of silent: the trigger must be the admin's event; if the catalog has no such event, refuse"
+   ]
   }
  ]
 }
