@@ -66,11 +66,12 @@
  },
  "lost_bare": "(?:^|[^0-9a-zа-яё])lost(?:$|[^0-9a-zа-яё])",
  "lost_contact": "(?:^|[^0-9a-zа-яё])lost contact(?:$|[^0-9a-zа-яё])",
+ "segment_lost_phrase": "(?:^|[^0-9a-zа-яё])los(?:e|es|t|ing)\\s+(?:\\S+\\s+)?recording(?:$|[^0-9a-zа-яё])|(?:^|[^0-9a-zа-яё])recording\\s+(?:\\S+\\s+){0,2}(?:lost|drop(?:s|ped)?)(?:$|[^0-9a-zа-яё])|(?:^|[^0-9a-zа-яё])stop(?:s|ped)?\\s+recording(?:$|[^0-9a-zа-яё])",
  "arm_put": "(?:^|[^0-9a-zа-яё])put\\s+(?:\\S+\\s+){0,3}on guard(?:$|[^0-9a-zа-яё])",
  "asks_step": {
-  "escalate": "(?:^|[^0-9a-zа-яё])(?:escalat|эскалир|позвать старшего)",
+  "escalate": "(?:^|[^0-9a-zа-яё])(?:escalat|эскал|позвать старшего)",
   "ask": "(?:^|[^0-9a-zа-яё])ask (?:the )?(?:operator|guard|security)|(?:^|[^0-9a-zа-яё])спроси",
-  "det scan": "(?:^|[^0-9a-zа-яё])scan(?:s|ned|ning)?\\s+(?:\\S+\\s+){0,2}archive|(?:^|[^0-9a-zа-яё])check\\s+\\S+\\s+archive|(?:^|[^0-9a-zа-яё])сканир\\S*\\s+(?:\\S+\\s+)?архив|(?:^|[^0-9a-zа-яё])провер\\S*(?:\\s+\\S+)?\\s+архив"
+  "det scan": "(?:^|[^0-9a-zа-яё])scan(?:s|ned|ning)?\\s+(?:\\S+\\s+){0,2}archive|(?:^|[^0-9a-zа-яё])check\\s+\\S+\\s+archive|(?:^|[^0-9a-zа-яё])(?:про)?сканир\\S*\\s+(?:\\S+\\s+)?архив|(?:^|[^0-9a-zа-яё])провер\\S*(?:\\s+\\S+)?\\s+архив"
  },
  "same_camera": "(?:^|[^0-9a-zа-яё])(?:(?:that|the) same camera|the camera that triggered|(?:эту|ту) же камер)",
  "actions": {
