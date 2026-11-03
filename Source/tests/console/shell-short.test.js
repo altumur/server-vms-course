@@ -1,4 +1,4 @@
-// Оболочка корня cam после замены страницы VMS (канон VMS/01-cam/cam.shell.html; V/08.1 Н1.1; ADR-0112 доп. (19)–(22)):
+// Оболочка корня cam после замены страницы VMS (канон VMS/01-cam/cam.shell.html; V/11.15 Н1.1; ADR-0112 доп. (19)–(22)):
 // ссылка «Консоль VMS» на /backend/, модуль платформы P/07 по /platform/console.js?v=1, один mount в #app с
 // sections [units, access, journal] и subsystems — подсистемы /mounts без подсистем VMS (cam, rec, live, det, detjob,
 // detedge, auto, assist, exp, backend, psim-*), по возрастанию; /mounts не прочитался или не объект — []; модуль не
