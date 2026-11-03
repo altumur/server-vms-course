@@ -52,6 +52,7 @@ unit:
     password_secret: {type: string}                         # ZIP AES-256 or the PDF's; gone with the row (доп. (4) п. 3)
     by:       {type: string, required: true, fixed: true}   # the author: a copy in each part (доп. (6) п. 4)
     comment:  {type: string}
+    supervised_by: {type: string, fixed: true}               # the name of the person who confirmed the order (ADR-0119 п. 5, доп. (1) п. 3)
     retry_of: {type: string, fixed: true}                    # the order this one retries the failed parts of
     keep:     {type: int, fixed: true, default: 86400, hidden: true, schema: {minimum: 60}}   # seconds the files live after the part ends (EXPORT_KEEP; V/08.8 Н1.4); a person sees result.expires
     labels:   {type: list, default: []}                      # ["gpu"] when the part transcodes (V/08.7 Н1.4)
@@ -104,6 +105,7 @@ display:
     password_secret: Пароль
     by: Автор
     comment: Комментарий
+    supervised_by: Подтвердил
     retry_of: Повтор выгрузки
     labels: Метки серверов
   kinds:
