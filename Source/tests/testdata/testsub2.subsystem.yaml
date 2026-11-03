@@ -1,7 +1,7 @@
-# testsub2.subsystem.yaml — the second subsystem that exists only for the platform's own tests (tests/test_boundary.py,
-# tests/test_spec_rule.py). testsub is the least a spec can say; this one says everything the platform reads in a spec,
+# testsub2.subsystem.yaml — the second subsystem that exists only for the platform's own tests (the boundary test
+# and the spec-rule test). testsub is the least a spec can say; this one says everything the platform reads in a spec,
 # each key once, so that every key and operator the platform implements is exercised by a subsystem that has nothing
-# to do with the product — and a key no spec uses is a key the platform does not need (`test_spec_rule.py`).
+# to do with the product — and a key no spec uses is a key the platform does not need (the spec-rule test).
 #
 # A unit is a TALLY about one of testsub's counters (`about`): it is kept on a shelf (a row of `shelves`, its place),
 # beside the worker that holds its counter (`near`), and a person may ask its holder to add to it (`requests`).
