@@ -209,7 +209,8 @@ unit:
     # `always` (the default) or `on-demand`. A channel of an NVR kept only for its archive needs no live
     # pipeline: the worker still HOLDS the device — its session, its playback, its coverage — and reports the
     # camera as `held`. Thirty-two channels imported for their footage would otherwise be thirty-two streams
-    # nobody watches.
+    # nobody watches. Any consumer opens the stream as for `always` — a viewer, a recording, a stream detector —
+    # and the camera falls back to `held` without one (V/01.2 Н1.2в; ADR-0103 доп. (7) п. 3, (8) п. 2).
     live:                  {type: string, default: "always", enum: [always, on-demand]}
     # WHAT THIS ROW IS, and the reason the field exists at all: not every device has a picture. A recorder as a box, a
     # relay board, a point of sale, a door controller are IP devices integrated the same way, through the same
@@ -713,7 +714,7 @@ display:
   options:
     live:
       always: Держать всегда
-      on-demand: Без потока
+      on-demand: По требованию
     type:
       camera: Камера
       ipsrv: IP-сервер
