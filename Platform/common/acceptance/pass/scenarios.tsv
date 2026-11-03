@@ -136,3 +136,69 @@ scenario	step	request	expect
 10-ticket-token-to-first-kind	10	@pass-answer b 200 application/json {"accounts": []}	200 {"accounts": []}
 10-ticket-token-to-first-kind	11	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t GET /probe-f/fthings	401 {"error": "denied", "detail": "ticket refused"}
 10-ticket-token-to-first-kind	12	@pass-answer a 200 application/json {"ok": true}	200 {"ok": true}
+# 11-verify-race-pair, 12-verify-race-author, 13-verify-race-name (ADR-0119 доп. (18); договор сторожевой «Предел попыток» verify answer, outcome, retry; P/08.4 Н1.2а, Н1.10; P/06.7 Н1.15): допуск проверки резервирует попытку в трёх ключах; два одновременных неверных у границ 4/19/9 — один 401, второй 429, счёт не больше 5/20/10; успех у границы бюджет не тратит
+11-verify-race-pair	1	@domain m1	ok
+11-verify-race-pair	2	@pass-worker m1 probe-p p-1	ok
+11-verify-race-pair	3	holder POST /domain/users {"name": "sup", "password": "sup password 1"}	201
+11-verify-race-pair	4	@pass-open a member m1 console GET /probe-p/api/x	ok {"ticket": "$t"}
+11-verify-race-pair	5	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "sup", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+11-verify-race-pair	6	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "sup", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+11-verify-race-pair	7	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "sup", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+11-verify-race-pair	8	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "sup", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+11-verify-race-pair	9	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "sup", "password": "sup password 1"}	200 {"user": "sup"}
+11-verify-race-pair	10	@together socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "sup", "password": "wrong password"} || socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "sup", "password": "wrong password"}	ok {"codes": [401, 429]}
+11-verify-race-pair	11	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "sup", "password": "sup password 1"}	429 {"error": "too many attempts"}
+11-verify-race-pair	12	@pass-answer a 200 application/json {"ok": true}	200 {"ok": true}
+12-verify-race-author	1	@domain m1	ok
+12-verify-race-author	2	@pass-worker m1 probe-p p-1	ok
+12-verify-race-author	3	holder POST /domain/users {"name": "sup", "password": "sup password 1"}	201
+12-verify-race-author	4	@pass-open a member m1 console GET /probe-p/api/x	ok {"ticket": "$t"}
+12-verify-race-author	5	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a1", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	6	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a1", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	7	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a1", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	8	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a1", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	9	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a2", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	10	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a2", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	11	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a2", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	12	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a2", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	13	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a3", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	14	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a3", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	15	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a3", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	16	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a3", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	17	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a4", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	18	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a4", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	19	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a4", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	20	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a4", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	21	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a5", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	22	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a5", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	23	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a5", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+12-verify-race-author	24	@together socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a6", "password": "wrong password"} || socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a6", "password": "wrong password"}	ok {"codes": [401, 429]}
+12-verify-race-author	25	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "a7", "password": "wrong password"}	429 {"error": "too many attempts"}
+12-verify-race-author	26	@pass-answer a 200 application/json {"ok": true}	200 {"ok": true}
+13-verify-race-name	1	@domain m1	ok
+13-verify-race-name	2	@pass-worker m1 probe-p p-1	ok
+13-verify-race-name	3	holder POST /domain/users {"name": "sup", "password": "sup password 1"}	201
+13-verify-race-name	4	@pass-open a member m1 console GET /probe-p/api/x	ok {"ticket": "$t"}
+13-verify-race-name	5	holder POST /domain/users {"name": "ann", "password": "ann password 1"}	201
+13-verify-race-name	6	holder POST /domain/users {"name": "bob", "password": "bob password 1"}	201
+13-verify-race-name	7	holder PUT /domain/grants/m1 {"lines": [{"subject": "root", "cap": "admin", "scope": "*"}, {"subject": "ann", "cap": "admin", "scope": "*"}, {"subject": "bob", "cap": "admin", "scope": "*"}]}	200
+13-verify-race-name	8	signer POST /api/login {"user": "ann", "password": "ann password 1"}	200 {"token": "$ka"}
+13-verify-race-name	9	signer POST /api/login {"user": "bob", "password": "bob password 1"}	200 {"token": "$kb"}
+13-verify-race-name	10	@until 30 member m1 console @header Authorization: Bearer $kb GET /session	200 {"user": "bob"}
+13-verify-race-name	11	@pass-open b member m1 console @header Authorization: Bearer $ka GET /probe-p/api/x	ok {"ticket": "$ta"}
+13-verify-race-name	12	@pass-open c member m1 console @header Authorization: Bearer $kb GET /probe-p/api/x	ok {"ticket": "$tb"}
+13-verify-race-name	13	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "sup", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+13-verify-race-name	14	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "sup", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+13-verify-race-name	15	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "sup", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+13-verify-race-name	16	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "sup", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+13-verify-race-name	17	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $ta POST /domain/verify {"user": "sup", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+13-verify-race-name	18	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $ta POST /domain/verify {"user": "sup", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+13-verify-race-name	19	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $ta POST /domain/verify {"user": "sup", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+13-verify-race-name	20	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $ta POST /domain/verify {"user": "sup", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+13-verify-race-name	21	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $tb POST /domain/verify {"user": "sup", "password": "wrong password"}	401 {"error": "refused", "detail": "~wrong user or password"}
+13-verify-race-name	22	@together socket m1 probe-pworker @header X-W2C-Pass-Ticket: $tb POST /domain/verify {"user": "sup", "password": "wrong password"} || socket m1 probe-pworker @header X-W2C-Pass-Ticket: $tb POST /domain/verify {"user": "sup", "password": "wrong password"}	ok {"codes": [401, 429]}
+13-verify-race-name	23	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $ta POST /domain/verify {"user": "sup", "password": "sup password 1"}	429 {"error": "too many attempts"}
+13-verify-race-name	24	socket m1 probe-pworker @header X-W2C-Pass-Ticket: $t POST /domain/verify {"user": "ann", "password": "ann password 1"}	200 {"user": "ann"}
+13-verify-race-name	25	@pass-answer a 200 application/json {"ok": true}	200 {"ok": true}
+13-verify-race-name	26	@pass-answer b 200 application/json {"ok": true}	200 {"ok": true}
+13-verify-race-name	27	@pass-answer c 200 application/json {"ok": true}	200 {"ok": true}

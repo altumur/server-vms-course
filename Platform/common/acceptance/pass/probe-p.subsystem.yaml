@@ -7,7 +7,7 @@ tables: {stash: {key: name, fields: {name: {type: string, required: true}, note:
 door:
   pass:
     routes: [api]
-    calls: [probe-p/things, probe-p/stash, probe-f/accounts, console/batch, changes, GET session, GET manifest]
+    calls: [probe-p/things, probe-p/stash, probe-f/accounts, console/batch, changes, GET session, GET manifest, domain/verify]
     stream: [api/stream]
     wait: {api/x: 300, api/slow: 2}
 worker: {exec: /usr/lib/probe-p/worker}

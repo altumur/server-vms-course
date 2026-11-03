@@ -712,13 +712,51 @@ paths:
       operationId: batchesRead
       summary: Партии приёма (глава 8.3 Н1.1б)
       responses:
-        '200': {description: Партии без токена}
+        '200':
+          description: 'Строки domain/batches/* как есть, по имени; закрытого ключа в строке нет (в ней открытый pub); нечитаемая строка — {unreadable: true} под своим именем'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [batches]
+                additionalProperties: false
+                properties:
+                  batches:
+                    type: object
+                    propertyNames: {$ref: '#/components/schemas/BatchName'}
+                    additionalProperties: {$ref: '#/components/schemas/BatchRow'}
+        '503': {$ref: '#/components/responses/Refused'}
     post:
       operationId: batchCreate
       summary: Новая партия; токен показан один раз
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, n]
+              additionalProperties: false
+              properties:
+                name: {$ref: '#/components/schemas/BatchName'}
+                via: {$ref: '#/components/schemas/MemberName'}
+                n: {type: integer, minimum: 1, maximum: 9007199254740991}
       responses:
-        '201': {description: '{name, token, until}'}
-        '400': {$ref: '#/components/responses/BodyRefused'}
+        '201':
+          description: 'Партия создана; token — закрытый ключ Ed25519 (зерно, 64 hex), показан один раз и нигде не хранится; until — at + 7 дней'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [name, token, until]
+                additionalProperties: false
+                properties:
+                  name: {$ref: '#/components/schemas/BatchName'}
+                  token: {type: string, pattern: "^(?:[0-9a-f]{64})$"}
+                  until: {type: number}
+        '400': {$ref: '#/components/responses/Refused'}
+        '409': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused'}
   /domain/issued/{sub}/{kind}/{ref}:
     parameters:
       - {name: sub, in: path, required: true, schema: {type: string}}
@@ -743,9 +781,23 @@ paths:
         schema: {type: string}
     delete:
       operationId: batchRevoke
-      summary: Отзыв партии
+      summary: Отзыв партии — новые приёмы закрыты, принятых не трогает
       responses:
-        '200': {description: Отозвана}
+        '200':
+          description: 'Строка партии с revoked: true; повтор по отозванной — тот же ответ, строка не меняется'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [batches]
+                additionalProperties: false
+                properties:
+                  batches:
+                    type: object
+                    propertyNames: {$ref: '#/components/schemas/BatchName'}
+                    additionalProperties: {$ref: '#/components/schemas/BatchRow'}
+        '404': {$ref: '#/components/responses/Refused'}
+        '503': {$ref: '#/components/responses/Refused'}
   /domain/edits:
     post:
       operationId: keptEdits
@@ -2278,6 +2330,14 @@ components:
     MemberName:
       type: string
       pattern: "^(?:[a-z0-9-]{1,64})$"
+    BatchName:
+      type: string
+      description: 'Имя партии (P/08.3 Н1.1б) — грамматика имени члена: последний сегмент ключа domain/batches/<имя>'
+      pattern: "^(?:[a-z0-9-]{1,64})$"
+    BatchRow:
+      type: object
+      description: 'Строка domain/batches/<имя> (P/08.3 Н1.1б; схема семьи — data/batches.schema.json) как есть, refused — отображение отпечаток → at; нечитаемая — {unreadable: true}'
+      additionalProperties: true
     Hex32:
       type: string
       pattern: "^(?:[0-9a-f]{64})$"

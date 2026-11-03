@@ -1302,6 +1302,7 @@ adr	add	point	status	file	norm	note
 0119	15	-	НЕ НОРМА	-	-	доля платформы: нет — п. 1 предел; п. 2 «401 во все три, 429 не в счёт, до сверки пароля» уже в договоре сторожевой verify
 0119	16	-	НЕ НОРМА	-	-	доля платформы: нет — «при нескольких — наибольший срок» уже в договоре сторожевой verify answer (нормы (14))
 0119	17	-	НЕ НОРМА	-	-	доля платформы: нет — п. 1 предел, п. 2 прочтение (15) п. 1; договор сторожевой verify совпадает
+0119	18	пп. 1, 2	НОРМА	Platform/common/contracts/gate-and-pass.md; Platform/08-domain/spec/08.4-domain.norms.md; Platform/common/acceptance/pass/scenarios.tsv; Platform/common/acceptance/README.md	договор сторожевой «Предел попыток» verify answer, outcome, retry; P/08.4 Н1.2а, Н1.10, P/08.4-17; стенд передачи сц. 11–13, @together	доля платформы: допуск с резервом идущих проверок по трём ключам атомарно под замком ключей (захват pair, name, author — решила), 401 — резерв в отказ, прочие исходы снимают, только резервы — Retry-After: 1; приёмка — гонка у границ 4/19/9, директива @together, domain/verify в calls probe-p
 0119	0	пп. 1–3	НЕ НОРМА	-	-	доля платформы
 0119	0	п. 4	НЕТ НОРМЫ	-	-	доля V/11 (`POST /exports` с полем supervisor, X-W2C-Supervision, SUPERVISOR_REQUIRED/REJECTED, дайджест повторов без паролей, calls domain/verify) — при закреплении контракта форка с /exports (V/11.14 Н1.3)
 0119	0	п. 5	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md; VMS/08-exp/exp.subsystem.yaml	V/08.6 Н1.1, Н1.5, Н1.6	supervised_by части (имя по доп. (1) п. 3), export.made его называет

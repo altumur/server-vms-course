@@ -9,3 +9,4 @@ date	sample	fix	languages
 2026-11-02	10-ticket-token-to-first-kind	новый сценарий: токен человека идёт воркеру двери первого вида (ADR-0112 доп. (3) п. 1), составлен чтением, сухого прогона реализацией нет	all
 2026-11-03	README «scenarios.tsv», установка на `hold`	вопрос раннера: `probe-f` на `hold` не ставится — запись `probe-f/accounts` в `calls` `probe-p` там отсрочка каталога (P/02.1 Н1.4), поведение не меняется	all
 2026-11-03	README «scenarios.tsv», probe-f	чтение серии раннера vms-psim: probe-f ставится на кластер сценария, у сц. 04 это hold; формулировка «только на m1» уточнена, поведение не меняется	all
+2026-11-04	11-verify-race-pair, 12-verify-race-author, 13-verify-race-name; probe-p calls domain/verify; @together	ADR-0119 доп. (18): гонка допуска verify у границ трёх ключей; составлено чтением, прогона реализацией нет	all

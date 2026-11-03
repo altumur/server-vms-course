@@ -1,5 +1,5 @@
 # Закрытый перечень слов error дверей процесса domain: главы 8.3, 8.4, 8.6–8.10 (ADR-0094 B5). Правила — глава 8.0 Н4; формат field — P/06.1 Н2.
-# door — двери: agents /api/member, /api/carry, /api/relay; tokens /api/tokens; login /api/login; verify /api/verify; people /domain/users…; groups /domain/groups…; roles /domain/roles…; batch /domain/batch;
+# door — двери: agents /api/member, /api/carry, /api/relay; tokens /api/tokens; login /api/login; verify /api/verify; people /domain/users…; groups /domain/groups…; roles /domain/roles…; batch /domain/batch; batches /domain/batches…;
 # grants /domain/grants/…; break-glass /domain/break-glass/…; revoke /domain/revoke; members /domain/members…; topology /domain/topology;
 # placement /domain/placement/…; edits /domain/<sub>/<rows>…; shared /domain/shared; move /api/prepare, /api/take, /domain/move;
 # handover /domain/handover; stranded /domain/stranded/apply; agent-tokens — местная дверь токенов агента (приёмка 8.7); * — каждая дверь процесса. У агентов слово уточняет reason (8.3 Н4, 8.7 Н4).
@@ -56,6 +56,10 @@ revoke	409	too many revocations	-	8.4 Н4
 members	400	refused	/name /fingerprint /ca /ca_certs	8.3 Н2, Н4
 members	404	refused	-	8.3 Н4
 members	409	refused	-	8.3 Н4, 8.10 Н4
+batches	400	refused	/name /via /n	8.3 Н1.1б
+batches	404	refused	-	8.3 Н1.1б
+batches	409	refused	-	8.3 Н1.1б
+batches	503	unavailable	-	8.3 Н1.1б
 topology	400	refused	/base_rev	8.3 Н4
 topology	409	refused	/base_rev /centre /star /via	8.3 Н4
 placement	400	refused	/<поле>	8.6 Н4
