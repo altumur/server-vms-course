@@ -5018,6 +5018,352 @@
     ]
    },
    "errors": []
+  },
+  {
+   "id": "silent-drops-off",
+   "note": "«drops off» — silent (доп. (35) п. 2)",
+   "request": "When Lobby Cam drops off, raise an alarm on Lobby Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "silent",
+      "unit": "2"
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "2"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "lost-bare-silent",
+   "note": "голое «lost» — silent (доп. (35) п. 2, (36))",
+   "request": "If Lobby Cam is lost, raise an alarm on Lobby Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "silent",
+      "unit": "2"
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "2"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "lost-bare-disappeared",
+   "note": "голое «lost» — и disappeared",
+   "request": "If the bag on Lobby Cam is lost, raise an alarm on Lobby Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "disappeared",
+      "unit": "2-disappeared"
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "2"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "lost-recording-not-silent",
+   "note": "«lost recording» — segment.lost, не silent (доп. (36))",
+   "request": "When Lobby Cam lost recording, raise an alarm on Lobby Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "silent",
+      "unit": "2"
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "2"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "when[0]: the request does not speak of silent: the trigger must be the admin's event; if the catalog has no such event, refuse"
+   ]
+  },
+  {
+   "id": "lost-contact-not-disappeared",
+   "note": "«lost contact» — silent, не disappeared (доп. (36))",
+   "request": "When Lobby Cam lost contact, raise an alarm on Lobby Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "disappeared",
+      "unit": "2-disappeared"
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "2"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "when[0]: the request does not speak of disappeared: the trigger must be the admin's event; if the catalog has no such event, refuse"
+   ]
+  },
+  {
+   "id": "lost-two-events",
+   "note": "предел Н1.6: потеря записи и «сумка lost» в одной просьбе — верный disappeared уходит в вопрос (ревью доп. (36) М1)",
+   "request": "If recording is lost on Dock Cam or the bag on Lobby Cam is lost, raise an alarm on Lobby Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "rec",
+      "kind": "segment.lost",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "4"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     },
+     {
+      "sub": "det",
+      "kind": "disappeared",
+      "unit": "2-disappeared"
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "2"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "when[1]: the request does not speak of disappeared: the trigger must be the admin's event; if the catalog has no such event, refuse"
+   ]
+  },
+  {
+   "id": "arm-put-on-guard",
+   "note": "«put … on guard» — cam arm (доп. (35) п. 3)",
+   "request": "When the Gate Loop sensor trips, put Lobby Cam on guard.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "arm",
+      "unit": "2"
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "role-other-language",
+   "note": "роль словом другого языка — вопрос: «охрана» не Guards (доп. (35) п. 4)",
+   "request": "Когда сработает датчик Gate Loop, спроси охрану в течение 60 секунд, поднять ли тревогу на Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "text": "Raise an alarm on Gate Cam?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "no",
+      "yes": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ],
+      "no": []
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: the request does not name the role Guards: ask_admin who answers"
+   ]
+  },
+  {
+   "id": "arm-put-on-guard-names",
+   "note": "«put Fence East and Fence West on guard»: по cut(t) между put и on guard одно слово (R22 Пилота)",
+   "request": "When the Gate Loop sensor trips, put Fence East and Fence West on guard.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "arm",
+      "unit": "12"
+     },
+     {
+      "sub": "cam",
+      "action": "arm",
+      "unit": "13"
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "arm-bare-on-guard",
+   "note": "голое «on guard» у cam arm — не слово постановки",
+   "request": "When the Gate Loop sensor trips and the guard is on guard, raise an alarm on Lobby Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "arm",
+      "unit": "2"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: the request does not ask for cam arm. Do not substitute a similar action: if the system cannot do what was asked, refuse"
+   ]
   }
  ]
 }
