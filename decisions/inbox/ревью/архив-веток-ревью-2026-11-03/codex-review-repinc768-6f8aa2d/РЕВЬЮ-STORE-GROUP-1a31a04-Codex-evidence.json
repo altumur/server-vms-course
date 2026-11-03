@@ -1,0 +1,120 @@
+{
+  "green": true,
+  "SUT": 0,
+  "manifest_sha256": "3fe30fd4a73a55cdd8c0bcf101083dd6955bb5f190deb3b8ff5c7931a1104ed4",
+  "package_files": 241,
+  "author_input_sha256": "5d6e13a45de1df687018ddc48ecbed4efc5dcf6a6c15b5ba86957b51f1aab434",
+  "source_sha_files": 2610,
+  "author_input_files": 2611,
+  "git_blobs": {
+    "before": 218,
+    "after": 219,
+    "main": 3,
+    "specs": 2348
+  },
+  "probe_sha256": "db7dd18cd2936f83c48482b2ee6a567b68f5fb3c8e6b275eef242efcb54789ba",
+  "changed_runtime_files": [
+    "runner/harness.py",
+    "runner/m11stand.py",
+    "runner/store_group.py",
+    "tests/test_m11_raw_and_agent_door.py",
+    "tests/test_store_group.py"
+  ],
+  "main_files_unchanged": 3,
+  "controls": {
+    "before": {
+      "chapter_role": {
+        "safety_pass": false,
+        "declared_default": "console",
+        "actual_default": "acc",
+        "explicit_as_works": true
+      },
+      "door_budget": {
+        "safety_pass": false,
+        "response_delay": 2.25,
+        "elapsed": 2.002
+      },
+      "admin_refused": {
+        "safety_pass": false,
+        "runner_green": true,
+        "published_request": "admin@s1 POST /v1/join {\"id\": \"s4\", \"raft\": \"{raft@s4}\", \"api\": \"{api@s4}\"}",
+        "published_expect": "409 {\"kind\": \"refused\"}",
+        "schema_errors": [
+          "body.error: missing"
+        ]
+      },
+      "admin_forbidden": {
+        "safety_pass": false,
+        "runner_green": true,
+        "published_request": "admin@s1 POST /v1/join {\"id\": \"s3\", \"raft\": \"{raft@s3}\", \"api\": \"{api@s3}\"}",
+        "published_expect": "403",
+        "schema_errors": [
+          "body.kind: missing",
+          "body.error: missing"
+        ]
+      },
+      "term_shell_child": {
+        "safety_pass": false,
+        "why": [],
+        "cleanup_signals": [
+          9
+        ],
+        "cleanup_used_sigkill": true,
+        "shell_exit": -15
+      }
+    },
+    "after": {
+      "chapter_role": {
+        "safety_pass": true,
+        "declared_default": "console",
+        "actual_default": "console",
+        "explicit_as_works": true
+      },
+      "door_budget": {
+        "safety_pass": true,
+        "response_delay": 2.25,
+        "elapsed": 2.25
+      },
+      "admin_refused": {
+        "safety_pass": true,
+        "runner_green": false,
+        "published_request": "admin@s1 POST /v1/join {\"id\": \"s4\", \"raft\": \"{raft@s4}\", \"api\": \"{api@s4}\"}",
+        "published_expect": "409 {\"kind\": \"refused\"}",
+        "schema_errors": [
+          "body.error: missing"
+        ]
+      },
+      "admin_forbidden": {
+        "safety_pass": true,
+        "runner_green": false,
+        "published_request": "admin@s1 POST /v1/join {\"id\": \"s3\", \"raft\": \"{raft@s3}\", \"api\": \"{api@s3}\"}",
+        "published_expect": "403",
+        "schema_errors": [
+          "body.kind: missing",
+          "body.error: missing"
+        ]
+      },
+      "term_shell_child": {
+        "safety_pass": true,
+        "why": [
+          "group member did not exit after signal"
+        ],
+        "cleanup_signals": [
+          15,
+          9
+        ],
+        "cleanup_used_sigkill": true,
+        "shell_exit": -15
+      }
+    }
+  },
+  "tests": {
+    "test_store_group": 15,
+    "test_assembly": 30,
+    "test_c_execution": 36,
+    "test_c_process": 7,
+    "test_m11_raw_and_agent_door": 9
+  },
+  "total_tests": 97,
+  "inputs_unchanged": true
+}

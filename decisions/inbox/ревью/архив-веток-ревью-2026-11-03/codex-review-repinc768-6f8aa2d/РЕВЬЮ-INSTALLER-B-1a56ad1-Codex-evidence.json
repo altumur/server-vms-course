@@ -1,0 +1,318 @@
+{
+  "green": true,
+  "SUT": 0,
+  "head": "1a56ad153c056b0f208254d9d554ef837c21c219",
+  "pin": "d389cf5e47db0902f8d660f7bb6f917eb1588925",
+  "manifest_sha256": "0c8226bceea341c400b49bbe8c051cd26959015e14602e9c0906ba5784a7bf2c",
+  "package_files": 304,
+  "author_input_sha256": "cc84609a5c63314ea9c0bdc814182f61ad9d9cf6a917385723c37c42958bbb3f",
+  "author_input_files": 2649,
+  "source_sha_files": 2648,
+  "git_blobs": {
+    "runtime": 223,
+    "specs": 2382,
+    "old_specs": 2355
+  },
+  "changed_export_files": [
+    "COURSE_COMMIT",
+    "Platform/02-installer/acceptance/1/README.md",
+    "Platform/02-installer/acceptance/1/cases/secrets_readers_exact_prefix_ok.subsystem.yaml",
+    "Platform/02-installer/acceptance/1/cases/secrets_readers_overlap.subsystem.yaml",
+    "Platform/02-installer/acceptance/1/cases/worker_writes_declared_list_ok.subsystem.yaml",
+    "Platform/02-installer/acceptance/1/cases/worker_writes_declared_ok.subsystem.yaml",
+    "Platform/02-installer/acceptance/1/cases/worker_writes_undeclared.subsystem.yaml",
+    "Platform/02-installer/acceptance/1/cases/worker_writes_unit_rows.subsystem.yaml",
+    "Platform/02-installer/acceptance/1/classes.tsv",
+    "Platform/02-installer/acceptance/1/verdicts.tsv",
+    "Platform/02-installer/acceptance/2/README.md",
+    "Platform/02-installer/acceptance/2/puts-ceiling.tsv",
+    "Platform/02-installer/acceptance/3/README.md",
+    "Platform/02-installer/acceptance/3/puts.tsv",
+    "Platform/02-installer/acceptance/3/puts/list-ok.subsystem.yaml",
+    "Platform/02-installer/acceptance/3/puts/list-other-a.subsystem.yaml",
+    "Platform/02-installer/acceptance/3/puts/list-other-b.subsystem.yaml",
+    "Platform/02-installer/acceptance/3/puts/list-self.subsystem.yaml",
+    "Platform/02-installer/acceptance/3/puts/paged.shell.html",
+    "Platform/02-installer/acceptance/3/puts/paged.subsystem.yaml",
+    "Platform/02-installer/acceptance/3/puts/pagedok-alt.shell.html",
+    "Platform/02-installer/acceptance/3/puts/pagedok.shell.html",
+    "Platform/02-installer/acceptance/3/puts/pagedok.subsystem.yaml",
+    "Platform/02-installer/acceptance/3/puts/revmax-a.subsystem.yaml",
+    "Platform/02-installer/acceptance/3/puts/revmax-b.subsystem.yaml",
+    "Platform/02-installer/acceptance/3/puts/toolarge-base.subsystem.yaml",
+    "Platform/02-installer/acceptance/3/puts/toolarge-big.subsystem.yaml",
+    "Platform/02-installer/acceptance/5/README.md",
+    "Platform/02-installer/acceptance/5/variants/v7-must-match/expect.tsv",
+    "Platform/02-installer/acceptance/5/variants/v7-must-match/va.subsystem.yaml",
+    "Platform/02-installer/acceptance/5/variants/v7-must-match/vb.subsystem.yaml",
+    "Platform/02-installer/acceptance/5/variants/v7-must-match/vc.subsystem.yaml",
+    "Platform/02-installer/spec/02-installer.README.md",
+    "Platform/02-installer/spec/02.1-installer.norms.md",
+    "Platform/02-installer/spec/02.2-installer.norms.md",
+    "Platform/02-installer/spec/02.3-installer.norms.md",
+    "Platform/02-installer/spec/02.5-installer.norms.md",
+    "Platform/02-installer/vectors/canonical/cases.tsv",
+    "Platform/02-installer/vectors/canonical/expect/corpus-secrets_readers_exact_prefix_ok.json",
+    "Platform/02-installer/vectors/canonical/expect/corpus-worker_writes_declared_list_ok.json",
+    "Platform/02-installer/vectors/canonical/expect/corpus-worker_writes_declared_ok.json",
+    "Platform/08-domain/acceptance/3/README.md",
+    "Platform/08-domain/acceptance/3/scenarios.tsv",
+    "Platform/08-domain/acceptance/6/README.md",
+    "Platform/08-domain/acceptance/6/scenarios.tsv",
+    "Platform/10-domain-console/spec/10-domain-console.norms.md"
+  ],
+  "padding_bytes": 524290,
+  "tests": {
+    "test_installer_audit_b": 9,
+    "test_c_installer": 33,
+    "test_c_exported_manifest": 1,
+    "test_c_execution": 36,
+    "test_c_domain_pin": 10,
+    "test_diagnostic_secrets": 14,
+    "test_c_process": 7,
+    "test_runner": 9
+  },
+  "total_tests": 119,
+  "probe_sha256": "dc110c66ad2f92a48c81ca7892667569788dcd91d1656e010e7cf30212dfa5fc",
+  "controls": {
+    "ok-976": {
+      "safety_pass": true,
+      "observed": "proven",
+      "events": [
+        {
+          "launch": true,
+          "ceiling": 976,
+          "mode": "ok",
+          "literal": "{row_ceiling}"
+        },
+        {
+          "method": "GET",
+          "path": "/v1/status"
+        },
+        {
+          "method": "POST",
+          "op": "put",
+          "key": "acc/_probe/installer-ceiling",
+          "weight": 976
+        },
+        {
+          "method": "POST",
+          "op": "put",
+          "key": "acc/_probe/installer-ceiling",
+          "weight": 977
+        },
+        {
+          "method": "POST",
+          "op": "delete",
+          "key": "acc/_probe/installer-ceiling"
+        }
+      ]
+    },
+    "ok-977": {
+      "safety_pass": true,
+      "observed": "proven",
+      "events": [
+        {
+          "launch": true,
+          "ceiling": 977,
+          "mode": "ok",
+          "literal": "{row_ceiling}"
+        },
+        {
+          "method": "GET",
+          "path": "/v1/status"
+        },
+        {
+          "method": "POST",
+          "op": "put",
+          "key": "acc/_probe/installer-ceiling",
+          "weight": 977
+        },
+        {
+          "method": "POST",
+          "op": "put",
+          "key": "acc/_probe/installer-ceiling",
+          "weight": 978
+        },
+        {
+          "method": "POST",
+          "op": "delete",
+          "key": "acc/_probe/installer-ceiling"
+        }
+      ]
+    },
+    "status-976": {
+      "safety_pass": true,
+      "observed": "not_executed",
+      "events": [
+        {
+          "launch": true,
+          "ceiling": 976,
+          "mode": "status",
+          "literal": "{row_ceiling}"
+        },
+        {
+          "method": "GET",
+          "path": "/v1/status"
+        }
+      ]
+    },
+    "at-976": {
+      "safety_pass": true,
+      "observed": "not_executed",
+      "events": [
+        {
+          "launch": true,
+          "ceiling": 976,
+          "mode": "at",
+          "literal": "{row_ceiling}"
+        },
+        {
+          "method": "GET",
+          "path": "/v1/status"
+        },
+        {
+          "method": "POST",
+          "op": "put",
+          "key": "acc/_probe/installer-ceiling",
+          "weight": 976
+        }
+      ]
+    },
+    "over-976": {
+      "safety_pass": true,
+      "observed": "not_executed",
+      "events": [
+        {
+          "launch": true,
+          "ceiling": 976,
+          "mode": "over",
+          "literal": "{row_ceiling}"
+        },
+        {
+          "method": "GET",
+          "path": "/v1/status"
+        },
+        {
+          "method": "POST",
+          "op": "put",
+          "key": "acc/_probe/installer-ceiling",
+          "weight": 976
+        },
+        {
+          "method": "POST",
+          "op": "put",
+          "key": "acc/_probe/installer-ceiling",
+          "weight": 977
+        }
+      ]
+    },
+    "limit-976": {
+      "safety_pass": true,
+      "observed": "not_executed",
+      "events": [
+        {
+          "launch": true,
+          "ceiling": 976,
+          "mode": "limit",
+          "literal": "{row_ceiling}"
+        },
+        {
+          "method": "GET",
+          "path": "/v1/status"
+        },
+        {
+          "method": "POST",
+          "op": "put",
+          "key": "acc/_probe/installer-ceiling",
+          "weight": 976
+        },
+        {
+          "method": "POST",
+          "op": "put",
+          "key": "acc/_probe/installer-ceiling",
+          "weight": 977
+        }
+      ]
+    },
+    "transport-976": {
+      "safety_pass": true,
+      "observed": "transport",
+      "events": [
+        {
+          "launch": true,
+          "ceiling": 976,
+          "mode": "transport",
+          "literal": "{row_ceiling}"
+        },
+        {
+          "method": "GET",
+          "path": "/v1/status"
+        }
+      ]
+    },
+    "bridge_finalize": {
+      "safety_pass": true,
+      "code": 1,
+      "cases": [
+        0,
+        2
+      ],
+      "coverage": {
+        "expected_steps": 0,
+        "actual_step_results": 0,
+        "manual_not_executed": 0,
+        "errors": []
+      },
+      "negative": {
+        "green": [
+          "case identities/execution differ from inventory"
+        ],
+        "ordinary": [
+          "case identities/execution differ from inventory"
+        ],
+        "code": [
+          "case identities/execution differ from inventory"
+        ],
+        "no_ceiling": [
+          "case identities/execution differ from inventory"
+        ]
+      }
+    },
+    "native_shell_bytes": {
+      "safety_pass": true,
+      "calls": 4,
+      "shell_sizes": [
+        null,
+        203,
+        230,
+        null
+      ]
+    },
+    "rev_max_conflict": {
+      "safety_pass": true,
+      "writes": [
+        {
+          "op": "put",
+          "key": "platform/manifest/revmax",
+          "cas": "10",
+          "items": {
+            "rev": "9007199254740991",
+            "untouched": "  exact bytes\n"
+          }
+        },
+        {
+          "op": "put",
+          "key": "platform/manifest/revmax/rev",
+          "cas": "11",
+          "items": {
+            "rev": "9007199254740991",
+            "untouched": "  exact bytes\n"
+          }
+        }
+      ],
+      "install_count": 1
+    }
+  },
+  "inputs_unchanged": true
+}

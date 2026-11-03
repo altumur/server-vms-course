@@ -1,0 +1,58 @@
+{
+  "manifest_files": 6357,
+  "git_source_files": 204,
+  "targeted_tests": 36,
+  "controls": {
+    "before": {
+      "missing_after_clock": {
+        "lookup": 102,
+        "signals": [
+          [
+            102,
+            9
+          ]
+        ],
+        "failure": null,
+        "reply": [],
+        "both_alive": false
+      },
+      "late_relay": {
+        "failure": null,
+        "processes_added": 3,
+        "signals_added": 2,
+        "proxies_added": 4,
+        "members_alive": false,
+        "urls_unchanged": false,
+        "relay_copies": 3
+      }
+    },
+    "after": {
+      "missing_after_clock": {
+        "lookup": null,
+        "signals": [],
+        "failure": "process copy does not exist or has exited: agent#3",
+        "reply": null,
+        "both_alive": true
+      },
+      "late_relay": {
+        "failure": "\u043a\u043e\u043f\u0438\u0438 \u0440\u0435\u0442\u0440\u0430\u043d\u0441\u043b\u044f\u0442\u043e\u0440\u0430 \u2014 \u0434\u043e \u0447\u043b\u0435\u043d\u043e\u0432 \u0437\u0430 \u043d\u0438\u043c",
+        "processes_added": 0,
+        "signals_added": 0,
+        "proxies_added": 0,
+        "members_alive": true,
+        "urls_unchanged": true,
+        "relay_copies": 2
+      }
+    }
+  },
+  "extra": {
+    "after_clock_env_identity": true,
+    "signal_after_procs_reorder": true,
+    "missing_signal_no_syscall": true,
+    "live_number2_only": true,
+    "dead_token_no_door": true,
+    "first_alias_dead_no_door": true
+  },
+  "inputs_unchanged": true,
+  "SUT": 0
+}

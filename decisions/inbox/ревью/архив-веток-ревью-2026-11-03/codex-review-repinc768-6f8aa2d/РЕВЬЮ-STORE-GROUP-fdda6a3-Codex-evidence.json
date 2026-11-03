@@ -1,0 +1,79 @@
+{
+  "green": false,
+  "SUT": 0,
+  "manifest_sha256": "fe205606096081cc9ec7d79f4a42b36ebf188fe266b71495bbe00d14d22bff6e",
+  "package_files": 951,
+  "author_input_sha256": "588b6de8e989b7af25207f52df041cdd0b5834d9f5ab058ea2933c4101bc2521",
+  "source_sha_files": 2609,
+  "author_input_files": 2610,
+  "runtime_git_blobs": 218,
+  "spec_git_blobs": 2348,
+  "tests": {
+    "test_store_group": [
+      "----------------------------------------------------------------------",
+      "Ran 12 tests in 3.068s",
+      "",
+      "OK"
+    ],
+    "test_assembly": [
+      "----------------------------------------------------------------------",
+      "Ran 30 tests in 0.133s",
+      "",
+      "OK"
+    ],
+    "test_c_execution": [
+      "----------------------------------------------------------------------",
+      "Ran 36 tests in 10.329s",
+      "",
+      "OK"
+    ],
+    "test_c_process": [
+      "----------------------------------------------------------------------",
+      "Ran 7 tests in 0.618s",
+      "",
+      "OK"
+    ]
+  },
+  "controls": {
+    "chapter_role": {
+      "safety_pass": false,
+      "declared_default": "console",
+      "actual_default": "acc",
+      "explicit_as_works": true
+    },
+    "door_budget": {
+      "safety_pass": false,
+      "response_delay": 2.25,
+      "elapsed": 2.005
+    },
+    "admin_refused": {
+      "safety_pass": false,
+      "runner_green": true,
+      "published_request": "admin@s1 POST /v1/join {\"id\": \"s4\", \"raft\": \"{raft@s4}\", \"api\": \"{api@s4}\"}",
+      "published_expect": "409 {\"kind\": \"refused\"}",
+      "schema_errors": [
+        "body.error: missing"
+      ]
+    },
+    "admin_forbidden": {
+      "safety_pass": false,
+      "runner_green": true,
+      "published_request": "admin@s1 POST /v1/join {\"id\": \"s3\", \"raft\": \"{raft@s3}\", \"api\": \"{api@s3}\"}",
+      "published_expect": "403",
+      "schema_errors": [
+        "body.kind: missing",
+        "body.error: missing"
+      ]
+    },
+    "term_shell_child": {
+      "safety_pass": false,
+      "why": [],
+      "cleanup_signals": [
+        9
+      ],
+      "cleanup_used_sigkill": true,
+      "shell_exit": -15
+    }
+  },
+  "inputs_unchanged": true
+}

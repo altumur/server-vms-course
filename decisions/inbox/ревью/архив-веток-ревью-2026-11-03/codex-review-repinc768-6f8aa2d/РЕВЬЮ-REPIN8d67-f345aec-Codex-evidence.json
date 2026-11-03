@@ -1,0 +1,177 @@
+{
+  "head": "f345aec2763c64618d82f70bdbc984b6133eb76a",
+  "base": "4d196d88fa2e3c7eef4aa366e82806ba2f795e50",
+  "pin": "8d67ccdeddeb044e1d6e75fcd2c071b3cc60df22",
+  "manifest_sha256": "e7e0c550069d9a6d4ce64a401dd251e1dc6b191288048b546bb77cee1f4dda23",
+  "manifest_files": 2877,
+  "source_files": 211,
+  "base_source_files": 211,
+  "runtime_unchanged": true,
+  "source_delta": [
+    "README.md",
+    "SPEC_VERSION",
+    "runner/vms-jsdom/README.txt",
+    "runner/vms-jsdom/SPEC_VERSION",
+    "tests/test_vms_assist.py",
+    "tests/test_vms_repin.py"
+  ],
+  "spec_files": 2345,
+  "jsdom_spec_files": 39,
+  "export_delta": [
+    "COURSE_COMMIT",
+    "VMS/01-cam/cam.shell.html",
+    "VMS/08-page/spec/08.1-page.norms.md",
+    "VMS/10-assist/10-assist.md",
+    "VMS/10-assist/acceptance/2/README.md",
+    "VMS/10-assist/acceptance/2/scenarios.tsv",
+    "VMS/10-assist/spec/10-assist.README.md",
+    "VMS/10-assist/spec/10-assist.api.openapi.yaml",
+    "VMS/10-assist/spec/10.1-assist.norms.md",
+    "VMS/10-assist/spec/10.2-assist.norms.md",
+    "VMS/10-assist/spec/10.4-assist.norms.md",
+    "VMS/11-backend/backend.subsystem.yaml",
+    "VMS/11-backend/spec/11.1-backend.norms.md",
+    "VMS/11-backend/spec/11.4-backend.norms.md",
+    "VMS/11-backend/spec/11.5-backend.norms.md",
+    "VMS/11-backend/spec/11.7-backend.norms.md",
+    "VMS/common/id-map.tsv"
+  ],
+  "changed_tables": [
+    "VMS/10-assist/acceptance/2/scenarios.tsv"
+  ],
+  "Platform_unchanged": true,
+  "OpenAPI_delta": [
+    {
+      "path": [
+        "components",
+        "schemas",
+        "StepRequest",
+        "properties",
+        "max_tokens",
+        "description"
+      ],
+      "before": null,
+      "after": "верхняя граница — context строки модели (V/10.2 Н1.2): больше — 400 bad step"
+    }
+  ],
+  "targeted": {
+    "tests": 56,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0
+  },
+  "jsdom_cases": 257,
+  "wire_cases": [
+    {
+      "code": 400,
+      "accepted": true,
+      "request_unchanged": true
+    },
+    {
+      "code": 410,
+      "accepted": false,
+      "request_unchanged": true
+    },
+    {
+      "code": 400,
+      "accepted": false,
+      "request_unchanged": true
+    }
+  ],
+  "shell_probe": {
+    "before": {
+      "units": [
+        "testsub2/Z",
+        "testsub2/a",
+        "testsub2/𐀀",
+        "testsub2/"
+      ],
+      "values": [
+        "a",
+        "𐀀",
+        "",
+        -1,
+        10,
+        2,
+        false,
+        true
+      ],
+      "reads": [
+        {
+          "method": "GET",
+          "path": "/tallies"
+        },
+        {
+          "method": "GET",
+          "path": "/testsub/counters"
+        },
+        {
+          "method": "GET",
+          "path": "/tallies"
+        },
+        {
+          "method": "GET",
+          "path": "/testsub/counters"
+        }
+      ]
+    },
+    "after": {
+      "units": [
+        "testsub2/Z",
+        "testsub2/a",
+        "testsub2/",
+        "testsub2/𐀀"
+      ],
+      "values": [
+        "a",
+        "",
+        "𐀀",
+        -1,
+        2,
+        10,
+        false,
+        true
+      ],
+      "reads": [
+        {
+          "method": "GET",
+          "path": "/tallies"
+        },
+        {
+          "method": "GET",
+          "path": "/testsub/counters"
+        },
+        {
+          "method": "GET",
+          "path": "/tallies"
+        },
+        {
+          "method": "GET",
+          "path": "/testsub/counters"
+        }
+      ]
+    },
+    "unicode_id_order": true,
+    "unicode_string_order": true,
+    "numeric_value_order": true,
+    "mixed_json_type_order": true,
+    "boolean_order": true
+  },
+  "plans": 230,
+  "ready": 230,
+  "inventory_tables": 174,
+  "VMS": {
+    "chapters": 16,
+    "scenarios": 37,
+    "steps": 278
+  },
+  "shell_sha256": "fd5eb9cae8d38721e026188b104871f6395fa49c9a8ff6f972fd520c7bbae8d9",
+  "cam_shell_plans": 14,
+  "author_job": "20261030T041351Z-repin8d67-full",
+  "author_tests": 1004,
+  "author_modules": 85,
+  "author_skips": 9,
+  "author_seconds": 319.2,
+  "inputs_unchanged": true,
+  "SUT": 0
+}

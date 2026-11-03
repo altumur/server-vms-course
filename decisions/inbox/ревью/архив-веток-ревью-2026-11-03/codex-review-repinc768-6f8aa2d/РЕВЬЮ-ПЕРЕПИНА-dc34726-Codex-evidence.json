@@ -1,0 +1,21 @@
+{
+  "manifest_files": 5072,
+  "runtime_files_equal_base": 103,
+  "inventory_tables_equal": 174,
+  "auto_sha256": "757051445204fbef06ed669d57262ba9ba6305491624d252433821425d08f8f4",
+  "old_auto_bytes_verified": true,
+  "new_auto_bytes_different": true,
+  "affected_plans": [
+    "P/V04.1/stand",
+    "P/V04.4/stand",
+    "P/V05.1/stand",
+    "P/V07.1/stand"
+  ],
+  "tests": 25,
+  "failures": 0,
+  "errors": 0,
+  "VMS_chapters": 16,
+  "VMS_scenarios": 37,
+  "VMS_steps": 277,
+  "SUT": 0
+}

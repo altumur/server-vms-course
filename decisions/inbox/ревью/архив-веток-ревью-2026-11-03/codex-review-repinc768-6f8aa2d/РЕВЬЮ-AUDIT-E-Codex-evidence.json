@@ -1,0 +1,427 @@
+{
+  "verified": true,
+  "head": "f30caad1f183d1e1af332b14c9336e3740fa2dc0",
+  "base": "4dbe5d20d563e6b22cbec695dcdceb38c0eb59de",
+  "pin": "f1139f29118c196d3bcbd280a48f74403d94feec",
+  "manifest_sha256": "63aaf07367205c3b7e2a86b8cdc98bfaa650b0cf50f180a8a4c564893cdc46d7",
+  "package_files": 79,
+  "git_blobs": {
+    "runtime": 230,
+    "old-runtime": 229,
+    "specs": 2385
+  },
+  "changed_files": [
+    "README.md",
+    "runner/l03.py",
+    "runner/l09.py",
+    "tests/test_audit_e.py"
+  ],
+  "author_input_files": 2659,
+  "author_input_sha256": "0a64f19671f147ef6e5edc31a45280fe47412aee94e10a2dc5651de5cd88316f",
+  "inputs_unchanged": true,
+  "archived_result_files": {
+    "v7": 210,
+    "sut": 13297
+  },
+  "author_full_v7": {
+    "modules": 98,
+    "tests": 1129,
+    "skipped": 8
+  },
+  "author_dry_sut": {
+    "commit": "059d33d19b1ab45d9852d3ff90fbf1e1193e9a50",
+    "profile_pin": "143084e0f431945c716761fd6b44f0a49d1c2c1f",
+    "scenarios": 17,
+    "steps": 134
+  },
+  "own_SUT": 0,
+  "tests": {
+    "test_audit_e": 4,
+    "test_c_shared_engines": 23,
+    "test_request_correlation": 11,
+    "test_transport_diagnostics": 10,
+    "test_c_execution": 36
+  },
+  "total_tests": 84,
+  "controls": {
+    "old": {
+      "duplicate_controls": [
+        {
+          "request": "GET /metrics",
+          "reordered": false,
+          "second_value": "-1",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is there twice"
+          ]
+        },
+        {
+          "request": "GET /metrics",
+          "reordered": false,
+          "second_value": "0",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is there twice",
+            "metrics: testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is [0.0], want -1"
+          ]
+        },
+        {
+          "request": "GET /metrics",
+          "reordered": true,
+          "second_value": "-1",
+          "rejected": false,
+          "why": []
+        },
+        {
+          "request": "GET /metrics",
+          "reordered": true,
+          "second_value": "0",
+          "rejected": false,
+          "why": []
+        },
+        {
+          "request": "GET /metrics",
+          "reordered": true,
+          "second_value": "-1",
+          "rejected": false,
+          "why": []
+        },
+        {
+          "request": "GET /metrics",
+          "reordered": true,
+          "second_value": "0",
+          "rejected": false,
+          "why": []
+        },
+        {
+          "request": "GET /metrics",
+          "reordered": false,
+          "second_value": "-1",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{worker=\"w-1\",kind=\"last\"} is there twice"
+          ]
+        },
+        {
+          "request": "GET /metrics",
+          "reordered": false,
+          "second_value": "0",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{worker=\"w-1\",kind=\"last\"} is there twice",
+            "metrics: testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is [0.0], want -1"
+          ]
+        },
+        {
+          "request": "console GET /metrics",
+          "reordered": false,
+          "second_value": "-1",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is there twice"
+          ]
+        },
+        {
+          "request": "console GET /metrics",
+          "reordered": false,
+          "second_value": "0",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is there twice",
+            "metrics: testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is [0.0], want -1"
+          ]
+        },
+        {
+          "request": "console GET /metrics",
+          "reordered": true,
+          "second_value": "-1",
+          "rejected": false,
+          "why": []
+        },
+        {
+          "request": "console GET /metrics",
+          "reordered": true,
+          "second_value": "0",
+          "rejected": false,
+          "why": []
+        },
+        {
+          "request": "console GET /metrics",
+          "reordered": true,
+          "second_value": "-1",
+          "rejected": false,
+          "why": []
+        },
+        {
+          "request": "console GET /metrics",
+          "reordered": true,
+          "second_value": "0",
+          "rejected": false,
+          "why": []
+        },
+        {
+          "request": "console GET /metrics",
+          "reordered": false,
+          "second_value": "-1",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{worker=\"w-1\",kind=\"last\"} is there twice"
+          ]
+        },
+        {
+          "request": "console GET /metrics",
+          "reordered": false,
+          "second_value": "0",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{worker=\"w-1\",kind=\"last\"} is there twice",
+            "metrics: testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is [0.0], want -1"
+          ]
+        }
+      ],
+      "legal_distinct_series": 4,
+      "legacy_malformed": {
+        "accepted": true,
+        "parsed": [
+          [
+            [
+              "x",
+              "{kind=last}"
+            ],
+            1.0
+          ]
+        ]
+      },
+      "writer_controls": [
+        {
+          "read_failed": false,
+          "events": [
+            "shutdown",
+            "close",
+            "join",
+            "writer_done"
+          ],
+          "correct_order": false
+        },
+        {
+          "read_failed": true,
+          "events": [
+            "shutdown",
+            "close",
+            "join",
+            "writer_done"
+          ],
+          "correct_order": false
+        }
+      ],
+      "native": [
+        {
+          "reply": true,
+          "outcome": "413"
+        },
+        {
+          "reply": false,
+          "outcome": "transport"
+        }
+      ]
+    },
+    "new": {
+      "duplicate_controls": [
+        {
+          "request": "GET /metrics",
+          "reordered": false,
+          "second_value": "-1",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is there twice"
+          ]
+        },
+        {
+          "request": "GET /metrics",
+          "reordered": false,
+          "second_value": "0",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is there twice",
+            "metrics: testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is [0.0], want -1"
+          ]
+        },
+        {
+          "request": "GET /metrics",
+          "reordered": true,
+          "second_value": "-1",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{worker=\"w-1\",kind=\"last\"} is there twice"
+          ]
+        },
+        {
+          "request": "GET /metrics",
+          "reordered": true,
+          "second_value": "0",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{worker=\"w-1\",kind=\"last\"} is there twice"
+          ]
+        },
+        {
+          "request": "GET /metrics",
+          "reordered": true,
+          "second_value": "-1",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is there twice"
+          ]
+        },
+        {
+          "request": "GET /metrics",
+          "reordered": true,
+          "second_value": "0",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is there twice"
+          ]
+        },
+        {
+          "request": "GET /metrics",
+          "reordered": false,
+          "second_value": "-1",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{worker=\"w-1\",kind=\"last\"} is there twice"
+          ]
+        },
+        {
+          "request": "GET /metrics",
+          "reordered": false,
+          "second_value": "0",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{worker=\"w-1\",kind=\"last\"} is there twice",
+            "metrics: testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is [0.0], want -1"
+          ]
+        },
+        {
+          "request": "console GET /metrics",
+          "reordered": false,
+          "second_value": "-1",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is there twice"
+          ]
+        },
+        {
+          "request": "console GET /metrics",
+          "reordered": false,
+          "second_value": "0",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is there twice",
+            "metrics: testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is [0.0], want -1"
+          ]
+        },
+        {
+          "request": "console GET /metrics",
+          "reordered": true,
+          "second_value": "-1",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{worker=\"w-1\",kind=\"last\"} is there twice"
+          ]
+        },
+        {
+          "request": "console GET /metrics",
+          "reordered": true,
+          "second_value": "0",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{worker=\"w-1\",kind=\"last\"} is there twice"
+          ]
+        },
+        {
+          "request": "console GET /metrics",
+          "reordered": true,
+          "second_value": "-1",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is there twice"
+          ]
+        },
+        {
+          "request": "console GET /metrics",
+          "reordered": true,
+          "second_value": "0",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is there twice"
+          ]
+        },
+        {
+          "request": "console GET /metrics",
+          "reordered": false,
+          "second_value": "-1",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{worker=\"w-1\",kind=\"last\"} is there twice"
+          ]
+        },
+        {
+          "request": "console GET /metrics",
+          "reordered": false,
+          "second_value": "0",
+          "rejected": true,
+          "why": [
+            "metrics: the series testsub_failover_seconds{worker=\"w-1\",kind=\"last\"} is there twice",
+            "metrics: testsub_failover_seconds{kind=\"last\",worker=\"w-1\"} is [0.0], want -1"
+          ]
+        }
+      ],
+      "legal_distinct_series": 4,
+      "legacy_malformed": {
+        "accepted": true,
+        "parsed": [
+          [
+            [
+              "x",
+              "{kind=last}"
+            ],
+            1.0
+          ]
+        ]
+      },
+      "writer_controls": [
+        {
+          "read_failed": false,
+          "events": [
+            "shutdown",
+            "join",
+            "writer_done",
+            "close"
+          ],
+          "correct_order": true
+        },
+        {
+          "read_failed": true,
+          "events": [
+            "shutdown",
+            "join",
+            "writer_done",
+            "close"
+          ],
+          "correct_order": true
+        }
+      ],
+      "native": [
+        {
+          "reply": true,
+          "outcome": "413"
+        },
+        {
+          "reply": false,
+          "outcome": "transport"
+        }
+      ]
+    }
+  },
+  "probe_sha256": "fce481ee2005a8b00a5473a7d08140ca093d308de4fd13d1481f6e53d91f4503"
+}

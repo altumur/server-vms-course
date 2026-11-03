@@ -1,0 +1,50 @@
+{
+  "manifest_files": 5725,
+  "head_git_files": 208,
+  "base_git_files": 206,
+  "source_sha_files": 5106,
+  "spec_counts": {
+    "specs": 2345,
+    "vms-jsdom-specs": 2345
+  },
+  "prior_job": "20261030T020640Z-rv-judge-b2b332d",
+  "targeted_green": 79,
+  "comparisons": 84,
+  "comparative_identical": true,
+  "independent_exit_codes": {
+    "baseline": 0,
+    "runner": 1
+  },
+  "independent": {
+    "baseline": {
+      "standard_base64_unpadded": {
+        "encoded_value_exported": false,
+        "encoded_value_survives_finalize": false
+      },
+      "mixed_case_hex": {
+        "encoded_value_exported": false,
+        "encoded_value_survives_finalize": false
+      },
+      "late_refresh": true,
+      "real_transport_preserved": true,
+      "forged_projection_rejected": true
+    },
+    "runner": {
+      "standard_base64_unpadded": {
+        "encoded_value_exported": true,
+        "encoded_value_survives_finalize": true
+      },
+      "mixed_case_hex": {
+        "encoded_value_exported": true,
+        "encoded_value_survives_finalize": true
+      },
+      "late_refresh": true,
+      "real_transport_preserved": true,
+      "forged_projection_rejected": true
+    }
+  },
+  "author_modules": 83,
+  "author_tests": 985,
+  "author_skips": 9,
+  "SUT": 0
+}

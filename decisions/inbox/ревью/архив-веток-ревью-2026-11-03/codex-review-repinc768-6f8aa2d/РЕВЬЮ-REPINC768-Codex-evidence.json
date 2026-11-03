@@ -1,0 +1,247 @@
+{
+  "verified": true,
+  "head": "6f8aa2d45f31cfac180df24da2ab4a30f396ec17",
+  "base": "f30caad1f183d1e1af332b14c9336e3740fa2dc0",
+  "pin": "c768d17f8fc56e831b9cc5130e9e88606bd1cce8",
+  "manifest_sha256": "5f799453d24ffa6fd5b246cbe2892ef4bd477c0c3af167aaedcf33783062c3a5",
+  "package_files": 127,
+  "git_blobs": {
+    "runtime": 230,
+    "old-runtime": 230,
+    "bridge-runtime": 230,
+    "specs": 2393,
+    "old-specs": 2385,
+    "bridge-specs": 2393
+  },
+  "changed_files": [
+    "README.md",
+    "SPEC_VERSION",
+    "runner/l09.py",
+    "tests/test_stand_0106_audit.py",
+    "tests/test_store_audit.py",
+    "tests/test_store_group.py"
+  ],
+  "export_files": 25,
+  "reused_equal_data": 2029,
+  "bridge_code_equal": true,
+  "selected_result_files": {
+    "20261030T184850Z-repinc768-V7": 5,
+    "20261030T183121Z-repin340-Go": 22,
+    "20261030T184857Z-repinc768-Go": 16
+  },
+  "author_input_sha256": "1563240c9d54d8945a931b018517cf754c916146c2ca23b71ddd8d59ed626b6d",
+  "author_input_files": 2668,
+  "inputs_unchanged": true,
+  "own_SUT": 0,
+  "tests": {
+    "test_store_audit": 18,
+    "test_store_group": 16,
+    "test_stand_0106_audit": 7,
+    "test_audit_e": 4,
+    "test_c_shared_engines": 23,
+    "test_c_execution": 36
+  },
+  "total_tests": 104,
+  "controls": {
+    "old": {
+      "label_controls": [
+        {
+          "labels": "kind=last",
+          "request": "GET /metrics",
+          "rejected": false
+        },
+        {
+          "labels": "kind=last",
+          "request": "console GET /metrics",
+          "rejected": false
+        },
+        {
+          "labels": "kind=\"last\" junk",
+          "request": "GET /metrics",
+          "rejected": false
+        },
+        {
+          "labels": "kind=\"last\" junk",
+          "request": "console GET /metrics",
+          "rejected": false
+        },
+        {
+          "labels": "kind=\"last\",junk",
+          "request": "GET /metrics",
+          "rejected": false
+        },
+        {
+          "labels": "kind=\"last\",junk",
+          "request": "console GET /metrics",
+          "rejected": false
+        },
+        {
+          "labels": "kind=\"last\"worker=\"w-1\"",
+          "request": "GET /metrics",
+          "rejected": false
+        },
+        {
+          "labels": "kind=\"last\"worker=\"w-1\"",
+          "request": "console GET /metrics",
+          "rejected": false
+        },
+        {
+          "labels": "kind=\"last\",,worker=\"w-1\"",
+          "request": "GET /metrics",
+          "rejected": false
+        },
+        {
+          "labels": "kind=\"last\",,worker=\"w-1\"",
+          "request": "console GET /metrics",
+          "rejected": false
+        }
+      ],
+      "valid_forms": 7,
+      "duplicate_forms": 2
+    },
+    "new": {
+      "label_controls": [
+        {
+          "labels": "kind=last",
+          "request": "GET /metrics",
+          "rejected": true
+        },
+        {
+          "labels": "kind=last",
+          "request": "console GET /metrics",
+          "rejected": true
+        },
+        {
+          "labels": "kind=\"last\" junk",
+          "request": "GET /metrics",
+          "rejected": true
+        },
+        {
+          "labels": "kind=\"last\" junk",
+          "request": "console GET /metrics",
+          "rejected": true
+        },
+        {
+          "labels": "kind=\"last\",junk",
+          "request": "GET /metrics",
+          "rejected": true
+        },
+        {
+          "labels": "kind=\"last\",junk",
+          "request": "console GET /metrics",
+          "rejected": true
+        },
+        {
+          "labels": "kind=\"last\"worker=\"w-1\"",
+          "request": "GET /metrics",
+          "rejected": true
+        },
+        {
+          "labels": "kind=\"last\"worker=\"w-1\"",
+          "request": "console GET /metrics",
+          "rejected": true
+        },
+        {
+          "labels": "kind=\"last\",,worker=\"w-1\"",
+          "request": "GET /metrics",
+          "rejected": true
+        },
+        {
+          "labels": "kind=\"last\",,worker=\"w-1\"",
+          "request": "console GET /metrics",
+          "rejected": true
+        }
+      ],
+      "valid_forms": 7,
+      "duplicate_forms": 2,
+      "plan_counts": {
+        "P/01.1/door": [
+          32,
+          220
+        ],
+        "P/01.2/rights": [
+          10,
+          54
+        ],
+        "P/01.3/daemon": [
+          14,
+          111
+        ],
+        "P/01.3/group": [
+          8,
+          153
+        ]
+      },
+      "group_scenarios": [
+        "07-group-size",
+        "17-group-members",
+        "18-group-recover",
+        "25-group-door-status",
+        "26-group-door-role",
+        "27-group-import-door-row",
+        "28-group-recover-peers",
+        "29-group-import-clock"
+      ],
+      "build_status": {
+        "raft": "ready",
+        "box": "not_applicable",
+        "None": "not_executed"
+      },
+      "key_byte_lengths": [
+        1025,
+        1025,
+        1025
+      ],
+      "qualified": {
+        "P/01.1/door": {
+          "check": "20261030T184857Z-repinc768-Go",
+          "counts": [
+            32,
+            220
+          ],
+          "coverage_errors": []
+        },
+        "P/01.2/rights": {
+          "check": "20261030T183121Z-repin340-Go",
+          "counts": [
+            10,
+            54
+          ],
+          "coverage_errors": []
+        },
+        "P/01.3/daemon": {
+          "check": "20261030T183121Z-repin340-Go",
+          "counts": [
+            14,
+            111
+          ],
+          "coverage_errors": []
+        },
+        "P/01.3/group": {
+          "check": "20261030T183121Z-repin340-Go",
+          "counts": [
+            8,
+            153
+          ],
+          "coverage_errors": []
+        }
+      },
+      "qualified_total": [
+        64,
+        538
+      ],
+      "raw_http": 34,
+      "rights_evaluator": 22,
+      "vector_counts": {
+        "P/01/vectors-store-client": 20,
+        "P/02/vectors-store-client": 20,
+        "P/03/vectors-store-client": 20,
+        "P/04/vectors-store-client": 20,
+        "P/05/vectors-store-client": 20,
+        "P/06/vectors-store-client": 20
+      },
+      "old_vector_failure_only_pin": true
+    }
+  },
+  "probe_sha256": "5617eb9380567e9f1967c0e1d25e5e950d4064f293ab4a6d856ae9b49547b607"
+}

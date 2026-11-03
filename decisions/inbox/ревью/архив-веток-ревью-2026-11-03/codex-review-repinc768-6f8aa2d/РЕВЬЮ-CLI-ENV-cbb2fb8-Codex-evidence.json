@@ -1,0 +1,55 @@
+{
+  "head": "cbb2fb8333c563386bf3582e0d006f5b1872eed7",
+  "manifest_sha256": "6c1ea9baa39c0b9e4d79d5e021c27a43e73d5060016f86d2cfe755047d9a463c",
+  "manifest_files": 5182,
+  "git_source_files": 211,
+  "base_git_files": 210,
+  "source_sha_files": 4902,
+  "spec_counts": {
+    "specs": 2345,
+    "vms-jsdom-specs": 2345
+  },
+  "targeted_tests": 66,
+  "targeted_green": true,
+  "differential_cases": 9,
+  "behaviour_identical": true,
+  "independent_exit_codes": {
+    "a656df5": 0,
+    "cbb2fb8": 1
+  },
+  "independent": {
+    "a656df5": {
+      "controls": {
+        "foreign_metadata_not_blessed": true,
+        "foreign_encoded_label_absent": true
+      },
+      "attack": {
+        "copied": false,
+        "valid_metadata": false,
+        "encoded_exported": false,
+        "encoded_after_finalize": false
+      }
+    },
+    "cbb2fb8": {
+      "controls": {
+        "nine_sidecars_match_attempts_and_started": true,
+        "modified_copy_rejected": false,
+        "exact_copy_trusted": true,
+        "late_known_value_removed_from_labels": true,
+        "foreign_metadata_not_blessed": false,
+        "foreign_encoded_label_absent": false
+      },
+      "attack": {
+        "copied": true,
+        "valid_metadata": true,
+        "encoded_exported": true,
+        "encoded_after_finalize": true
+      }
+    }
+  },
+  "author_modules": 85,
+  "author_tests": 1002,
+  "author_skips": 9,
+  "author_full_seconds": 334.7,
+  "SUT": 0
+}

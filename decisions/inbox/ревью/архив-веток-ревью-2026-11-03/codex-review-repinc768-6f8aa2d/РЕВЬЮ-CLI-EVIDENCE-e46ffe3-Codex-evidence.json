@@ -1,0 +1,245 @@
+{
+  "manifest_files": 5686,
+  "source_git_files": 206,
+  "preflight_tests": 38,
+  "preflight_green": true,
+  "differential_cases": 19,
+  "verdict_bindings_classification_unchanged": true,
+  "raw_token_judge_unchanged": true,
+  "snapshots": {
+    "before": [
+      {
+        "name": "move_empty",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_whitespace",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_not_utf8",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_no_prefix",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_short_code",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_bad_json",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_array",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_ok_exit_ignored",
+        "ok": true,
+        "bound": null,
+        "classification": null
+      },
+      {
+        "name": "move_semantic",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_binding",
+        "ok": true,
+        "bound": null,
+        "classification": null
+      },
+      {
+        "name": "move_raw_token",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_refusal",
+        "ok": true,
+        "bound": null,
+        "classification": null
+      },
+      {
+        "name": "vector_ok",
+        "ok": true,
+        "bound": null,
+        "classification": null
+      },
+      {
+        "name": "vector_semantic",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "vector_duplicate",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "vector_not_object",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "vector_exit_ok",
+        "ok": true,
+        "bound": null,
+        "classification": null
+      },
+      {
+        "name": "vector_exit_wrong",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "vector_timeout",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      }
+    ],
+    "after": [
+      {
+        "name": "move_empty",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_whitespace",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_not_utf8",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_no_prefix",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_short_code",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_bad_json",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_array",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_ok_exit_ignored",
+        "ok": true,
+        "bound": null,
+        "classification": null
+      },
+      {
+        "name": "move_semantic",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_binding",
+        "ok": true,
+        "bound": null,
+        "classification": null
+      },
+      {
+        "name": "move_raw_token",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "move_refusal",
+        "ok": true,
+        "bound": null,
+        "classification": null
+      },
+      {
+        "name": "vector_ok",
+        "ok": true,
+        "bound": null,
+        "classification": null
+      },
+      {
+        "name": "vector_semantic",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "vector_duplicate",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "vector_not_object",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "vector_exit_ok",
+        "ok": true,
+        "bound": null,
+        "classification": null
+      },
+      {
+        "name": "vector_exit_wrong",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      },
+      {
+        "name": "vector_timeout",
+        "ok": false,
+        "bound": null,
+        "classification": "implementation"
+      }
+    ]
+  },
+  "inputs_unchanged": true,
+  "SUT": 0
+}

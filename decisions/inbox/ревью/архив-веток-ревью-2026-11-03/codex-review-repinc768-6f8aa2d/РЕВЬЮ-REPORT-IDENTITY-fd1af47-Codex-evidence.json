@@ -1,0 +1,271 @@
+{
+  "green": false,
+  "SUT": 0,
+  "manifest_sha256": "a2215170882bf4185fcec5cc8a86281fd5d6c66fc5849b080fd0e719a3f6db27",
+  "package_files": 14,
+  "git_blobs": {
+    "old": 224,
+    "new": 224
+  },
+  "probe_sha256": "1d3ec87223b0b15a071586e789b265a1a953b9ebc74eaee315bb5f6f85dc1f6d",
+  "extra_sha256": "820c476f3c26a546930657f5bd58f915aacb3455e8bb212d43387537d1334cc6",
+  "tests": {
+    "test_report_identity_secrets": 3,
+    "test_diagnostic_secrets": 14,
+    "test_judge_diagnostics": 14
+  },
+  "controls": {
+    "old": {
+      "report_identity": {
+        "safety_pass": true,
+        "keys": [
+          "01-token-and-audience",
+          "02-refusals"
+        ],
+        "learned": []
+      },
+      "scenarios-object": {
+        "safety_pass": false,
+        "learned_before_finalize": false,
+        "learned_after_finalize": false,
+        "log": "native echo: own-issued-scenarios-credential-042\n",
+        "body_exported": false
+      },
+      "scenarios-json": {
+        "safety_pass": false,
+        "learned_before_finalize": false,
+        "learned_after_finalize": false,
+        "log": "native echo: own-issued-scenarios-credential-042\n",
+        "body_exported": false
+      },
+      "cases-object": {
+        "safety_pass": false,
+        "learned_before_finalize": false,
+        "learned_after_finalize": false,
+        "log": "native echo: own-issued-cases-credential-042\n",
+        "body_exported": false
+      },
+      "cases-json": {
+        "safety_pass": false,
+        "learned_before_finalize": false,
+        "learned_after_finalize": false,
+        "log": "native echo: own-issued-cases-credential-042\n",
+        "body_exported": false
+      },
+      "variants-object": {
+        "safety_pass": false,
+        "learned_before_finalize": false,
+        "learned_after_finalize": false,
+        "log": "native echo: own-issued-variants-credential-042\n",
+        "body_exported": false
+      },
+      "variants-json": {
+        "safety_pass": false,
+        "learned_before_finalize": false,
+        "learned_after_finalize": false,
+        "log": "native echo: own-issued-variants-credential-042\n",
+        "body_exported": false
+      },
+      "probes-object": {
+        "safety_pass": false,
+        "learned_before_finalize": false,
+        "learned_after_finalize": false,
+        "log": "native echo: own-issued-probes-credential-042\n",
+        "body_exported": false
+      },
+      "probes-json": {
+        "safety_pass": false,
+        "learned_before_finalize": false,
+        "learned_after_finalize": false,
+        "log": "native echo: own-issued-probes-credential-042\n",
+        "body_exported": false
+      },
+      "ordinary-token": {
+        "safety_pass": true,
+        "learned": [
+          "denied"
+        ]
+      },
+      "ordinary-auth": {
+        "safety_pass": true,
+        "learned": [
+          "Bearer a.b/c~d",
+          "a.b/c~d"
+        ]
+      }
+    },
+    "new": {
+      "report_identity": {
+        "safety_pass": true,
+        "keys": [
+          "01-token-and-audience",
+          "02-refusals"
+        ],
+        "learned": []
+      },
+      "scenarios-object": {
+        "safety_pass": false,
+        "learned_before_finalize": false,
+        "learned_after_finalize": true,
+        "log": "native echo: <redacted>\n",
+        "body_exported": false
+      },
+      "scenarios-json": {
+        "safety_pass": true,
+        "learned_before_finalize": true,
+        "learned_after_finalize": true,
+        "log": "native echo: <redacted>\n",
+        "body_exported": false
+      },
+      "cases-object": {
+        "safety_pass": false,
+        "learned_before_finalize": false,
+        "learned_after_finalize": true,
+        "log": "native echo: <redacted>\n",
+        "body_exported": false
+      },
+      "cases-json": {
+        "safety_pass": true,
+        "learned_before_finalize": true,
+        "learned_after_finalize": true,
+        "log": "native echo: <redacted>\n",
+        "body_exported": false
+      },
+      "variants-object": {
+        "safety_pass": false,
+        "learned_before_finalize": false,
+        "learned_after_finalize": true,
+        "log": "native echo: <redacted>\n",
+        "body_exported": false
+      },
+      "variants-json": {
+        "safety_pass": true,
+        "learned_before_finalize": true,
+        "learned_after_finalize": true,
+        "log": "native echo: <redacted>\n",
+        "body_exported": false
+      },
+      "probes-object": {
+        "safety_pass": false,
+        "learned_before_finalize": false,
+        "learned_after_finalize": true,
+        "log": "native echo: <redacted>\n",
+        "body_exported": false
+      },
+      "probes-json": {
+        "safety_pass": true,
+        "learned_before_finalize": true,
+        "learned_after_finalize": true,
+        "log": "native echo: <redacted>\n",
+        "body_exported": false
+      },
+      "ordinary-token": {
+        "safety_pass": true,
+        "learned": [
+          "denied"
+        ]
+      },
+      "ordinary-auth": {
+        "safety_pass": true,
+        "learned": [
+          "Bearer a.b/c~d",
+          "a.b/c~d"
+        ]
+      }
+    }
+  },
+  "extra": {
+    "old": {
+      "scenarios": {
+        "safety_pass": false,
+        "learned_at_entry": {
+          "learn_received": false,
+          "body": false
+        },
+        "learned_before_write": false,
+        "learned_after_finalize": false,
+        "log": "native exact echo own-direct-scenarios-credential-042\n",
+        "raw_body_exported": false
+      },
+      "cases": {
+        "safety_pass": false,
+        "learned_at_entry": {
+          "learn_received": false,
+          "body": false
+        },
+        "learned_before_write": false,
+        "learned_after_finalize": false,
+        "log": "native exact echo own-direct-cases-credential-042\n",
+        "raw_body_exported": false
+      },
+      "variants": {
+        "safety_pass": false,
+        "learned_at_entry": {
+          "learn_received": false,
+          "body": false
+        },
+        "learned_before_write": false,
+        "learned_after_finalize": false,
+        "log": "native exact echo own-direct-variants-credential-042\n",
+        "raw_body_exported": false
+      },
+      "probes": {
+        "safety_pass": false,
+        "learned_at_entry": {
+          "learn_received": false,
+          "body": false
+        },
+        "learned_before_write": false,
+        "learned_after_finalize": false,
+        "log": "native exact echo own-direct-probes-credential-042\n",
+        "raw_body_exported": false
+      }
+    },
+    "new": {
+      "scenarios": {
+        "safety_pass": false,
+        "learned_at_entry": {
+          "learn_received": false,
+          "body": false
+        },
+        "learned_before_write": false,
+        "learned_after_finalize": false,
+        "log": "native exact echo own-direct-scenarios-credential-042\n",
+        "raw_body_exported": false
+      },
+      "cases": {
+        "safety_pass": false,
+        "learned_at_entry": {
+          "learn_received": false,
+          "body": false
+        },
+        "learned_before_write": false,
+        "learned_after_finalize": false,
+        "log": "native exact echo own-direct-cases-credential-042\n",
+        "raw_body_exported": false
+      },
+      "variants": {
+        "safety_pass": false,
+        "learned_at_entry": {
+          "learn_received": false,
+          "body": false
+        },
+        "learned_before_write": false,
+        "learned_after_finalize": false,
+        "log": "native exact echo own-direct-variants-credential-042\n",
+        "raw_body_exported": false
+      },
+      "probes": {
+        "safety_pass": false,
+        "learned_at_entry": {
+          "learn_received": false,
+          "body": false
+        },
+        "learned_before_write": false,
+        "learned_after_finalize": false,
+        "log": "native exact echo own-direct-probes-credential-042\n",
+        "raw_body_exported": false
+      }
+    }
+  }
+}

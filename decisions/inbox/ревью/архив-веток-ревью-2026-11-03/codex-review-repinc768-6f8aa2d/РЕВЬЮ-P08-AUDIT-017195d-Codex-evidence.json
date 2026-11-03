@@ -1,0 +1,136 @@
+{
+  "verified": true,
+  "SUT": 0,
+  "head": "017195d3919019d62e1e68c0eb1f586e7ce6e4df",
+  "pin": "a4d0d926c9e5579fe55dca978c5f670e900d51b6",
+  "manifest_sha256": "1b5c455e76a2819f884e89cb692967913bf8b836e094b51813a09b7088f1e465",
+  "package_files": 14,
+  "git_blobs": {
+    "runtime": 228,
+    "specs": 2384
+  },
+  "author_input_sha256": "7a868a1e199951783b63c67ad8ff7543024aad8d1dc1d504284628ee7107fb04",
+  "author_input_files": 4958,
+  "changed_export_files": [
+    "COURSE_COMMIT",
+    "Platform/08-domain/08-domain.md",
+    "Platform/08-domain/acceptance/10/README.md",
+    "Platform/08-domain/acceptance/10/scenarios.tsv",
+    "Platform/08-domain/acceptance/3/README.md",
+    "Platform/08-domain/acceptance/3/inputs/member-reported-rev-2pow53.json",
+    "Platform/08-domain/acceptance/3/scenarios.tsv",
+    "Platform/08-domain/acceptance/4/README.md",
+    "Platform/08-domain/acceptance/4/scenarios.tsv",
+    "Platform/08-domain/acceptance/6/README.md",
+    "Platform/08-domain/acceptance/6/scenarios.tsv",
+    "Platform/08-domain/acceptance/7/README.md",
+    "Platform/08-domain/acceptance/7/scenarios.tsv",
+    "Platform/08-domain/acceptance/8/README.md",
+    "Platform/08-domain/acceptance/8/scenarios.tsv",
+    "Platform/08-domain/acceptance/9/README.md",
+    "Platform/08-domain/acceptance/9/scenarios.tsv",
+    "Platform/08-domain/spec/08-domain.README.md",
+    "Platform/08-domain/spec/08.1-domain.norms.md",
+    "Platform/08-domain/spec/08.10-domain.norms.md",
+    "Platform/08-domain/spec/08.2-domain.norms.md",
+    "Platform/08-domain/spec/08.3-domain.norms.md",
+    "Platform/08-domain/spec/08.4-domain.norms.md",
+    "Platform/08-domain/spec/08.6-domain.norms.md",
+    "Platform/08-domain/spec/08.7-domain.norms.md",
+    "Platform/08-domain/spec/08.8-domain.norms.md",
+    "Platform/08-domain/spec/08.9-domain.norms.md",
+    "Platform/common/acceptance/README.md"
+  ],
+  "tests": {},
+  "total_tests": 0,
+  "controls": {
+    "public_domainconsole": {
+      "safety_pass": false,
+      "cases": {
+        "domainconsole": {
+          "preflight": [],
+          "freeze_errors": [
+            "freeze: no such live process"
+          ],
+          "stopped": false,
+          "thaw_errors": [
+            "thaw: no such process"
+          ],
+          "resumed": true
+        },
+        "domainconsole#1": {
+          "preflight": [],
+          "freeze_errors": [
+            "freeze: no such live process"
+          ],
+          "stopped": false,
+          "thaw_errors": [
+            "thaw: no such process"
+          ],
+          "resumed": true
+        },
+        "domainconsole#2": {
+          "preflight": [],
+          "freeze_errors": [
+            "freeze: no such live process"
+          ],
+          "stopped": false,
+          "thaw_errors": [
+            "thaw: no such process"
+          ],
+          "resumed": true
+        }
+      },
+      "startup_names": [
+        "domain-console",
+        "domain-console",
+        "domain"
+      ]
+    },
+    "internal_name_and_existing_signal": {
+      "safety_pass": true,
+      "mapped_targets": [
+        "domain-console#1"
+      ]
+    },
+    "native_domain_end": {
+      "safety_pass": true,
+      "observed_paused": [
+        false,
+        false
+      ],
+      "row": {
+        "step": "1",
+        "line": 1,
+        "ok": false,
+        "why": [
+          {
+            "classification": "data",
+            "reason": "freeze_not_thawed"
+          }
+        ],
+        "got": null,
+        "classification": "data"
+      }
+    },
+    "preflight_classification": {
+      "safety_pass": false,
+      "code": 1,
+      "final_classification": "implementation",
+      "report_classification": null,
+      "row_classification": "data",
+      "row_executed": false,
+      "stand_constructors": 0,
+      "row_why": [
+        {
+          "content_type": null,
+          "length": 51,
+          "sha256": "d966dc6055c5d1731559f7e87b170f567e5fc291b1cc500a6971fbee42bb2d72",
+          "body_omitted": true
+        }
+      ]
+    }
+  },
+  "probe_sha256": "40388117786d6eeed8fc9009a73711649f3bbdf2a952278b5fc278c72f89a167",
+  "inputs_unchanged": true
+}

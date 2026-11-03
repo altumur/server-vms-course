@@ -1,0 +1,253 @@
+{
+  "green": true,
+  "SUT": 0,
+  "old": "dd67722c4c986ab5e76c06ef778d45a3bd033220",
+  "new": "55a6c9e5fef422a4394d519ffbab7f043a55d02a",
+  "pin": "d389cf5e47db0902f8d660f7bb6f917eb1588925",
+  "manifest_sha256": "3898f1224672b8bc7a80384a06aada8b13929137a4f650fb3984bd763597d9f5",
+  "package_files": 13,
+  "git_blobs": {
+    "specs": 2382,
+    "old": 224,
+    "new": 224
+  },
+  "probe_sha256": "30870c242bef4da61ed911290cbc7feff41e84298df66a5112d6d4c2483015d6",
+  "tests": {
+    "test_c_domain_stand": 15,
+    "test_c_pinned_vector_tables": 8,
+    "test_c_role_packages": 7,
+    "test_c_vector_protocol": 10,
+    "test_c_value_vectors": 18
+  },
+  "controls": {
+    "old": {
+      "green": false,
+      "snapshot": {
+        "vector-agent-sig:08-domain": {
+          "rows": 22,
+          "sha256": "8dd7862ce9917902d5c9c956665c0aa6ba0baea50c034364784a7ac7671e1ddb"
+        },
+        "vector-agent-sig:09-agent": {
+          "rows": 22,
+          "sha256": "2aeb6778184e91db7cb087ea349912b80692df008aac97a600b328e293654275"
+        },
+        "vector-ask-sig:08-domain": {
+          "rows": 2,
+          "sha256": "cb073c5037e83840dee7d79ac36b924493869afb0407f7f39f0cd41fb9fbe1f0"
+        },
+        "vector-keys:08-domain": {
+          "rows": 21,
+          "sha256": "ebd3bc8b8d87472f2505918d4da5592ddea7c9f12c4ae50453774821311f648a"
+        },
+        "vector-keys:09-agent": {
+          "rows": 28,
+          "sha256": "21f9f18f0b6d023bcbbe53c64ecf5fc75b8f766f8833e5878f334756b248fd1d"
+        },
+        "vector-may:08-domain": {
+          "rows": 26,
+          "sha256": "672dc5083b3a0c8aaebbcc74cb76ef5b6de9b457eb3113987fdf8188fdbd8202"
+        },
+        "vector-may:10-domain-console": {
+          "rows": 35,
+          "sha256": "90103bf685c83ad8c1773a5f927da21f3ff6eaea12b45edccee21a335d15ec70"
+        },
+        "vector-peer:08-domain": {
+          "rows": 26,
+          "sha256": "c8aaaec13616f6a811d3fc6a48c2d412cafa8bb8d468e566bbdbf408aab0d213"
+        },
+        "vector-peer:09-agent": {
+          "rows": 26,
+          "sha256": "86450b3015278334336c5f1bae28612be36891b35e3141cf754b36c5ad85e055"
+        },
+        "vector-peer:10-domain-console": {
+          "rows": 4,
+          "sha256": "67dee3f704c1a056521083b532d599c10d7c4c86c8c202c34830cdc66b8e79e2"
+        },
+        "vector-record:08-domain": {
+          "rows": 35,
+          "sha256": "9636c8532a8dad0a19c37873d20fd78903a39a1780c40ecec059fc97e1e89e96"
+        },
+        "vector-record:09-agent": {
+          "rows": 42,
+          "sha256": "e79e237b2b75bc7e8f04e87d69932de126d621709cab26e11a43380674284079"
+        },
+        "vector-accept:08-domain": {
+          "rows": 62,
+          "sha256": "aace87a6c5d29273be2b7a90ee6a51d8bc0263f4bea9f3bf192e5fafa27b6e39"
+        },
+        "vector-accept:09-agent": {
+          "rows": 62,
+          "sha256": "0b8a730a660a2b68c24ab6bd28f6c8ef8303549844a39ffe95190accafc52003"
+        },
+        "vector-alarm-history:08-domain": {
+          "rows": 13,
+          "sha256": "224131c29185c5ae5d9d281635256cb2a51e81f1ea120238e82f52c1acbcc966"
+        },
+        "vector-alarm-history:10-domain-console": {
+          "rows": 9,
+          "sha256": "c61b3a652a3e72c3c01b38423e1ef608be8377fdc80e9b6bffb2c107e15eadce"
+        },
+        "vector-trust-set:10-domain-console": {
+          "rows": 12,
+          "sha256": "24f349b2c526084f858445f69a7bb98a43dad2d8def403464eabdcb929c7c667"
+        },
+        "vector-domain-envelopes:08-domain": {
+          "rows": 19,
+          "sha256": "f7e6e5c16539b40e4b0926fbd44ef3cdbe68d1be54d50154c8ff4593a11a1daa"
+        },
+        "vector-domain-envelopes:09-agent": {
+          "rows": 13,
+          "sha256": "7f0f2206c8d2828573c6b7543e43dcaf13b804968a033932f85d3f95082c1f7a"
+        }
+      },
+      "accept": {
+        "08-domain": {
+          "rows": 62,
+          "exact_files": false,
+          "independent_row_maps": false
+        },
+        "09-agent": {
+          "rows": 62,
+          "exact_files": false,
+          "independent_row_maps": false
+        }
+      },
+      "fixture_sha256": {
+        "testsub.subsystem.yaml": "f529f2d9d9d3cdc02aa7639071626ab7005554e51f0421b6eda85e16b254d87d",
+        "testsub2.subsystem.yaml": "af4ff2fff234f2ed7bb172048252c700c3cf7fe90124de9ef20daf15b5d9d3b2"
+      },
+      "sources": [
+        "Platform/common/vectors/accept/cases.tsv",
+        "Platform/common/vectors/accept/README.md"
+      ],
+      "controls": {
+        "all_frames_08-domain": false,
+        "all_frames_09-agent": false,
+        "fixtures_in_sources": false,
+        "plan_P/08/vectors-accept": false,
+        "plan_P/09/vectors-accept": false,
+        "native_profile_08-domain": false,
+        "native_profile_09-agent": false,
+        "bad_fixture_missing": false,
+        "bad_fixture_empty": false,
+        "bad_fixture_non_utf8": false
+      }
+    },
+    "new": {
+      "green": true,
+      "snapshot": {
+        "vector-agent-sig:08-domain": {
+          "rows": 22,
+          "sha256": "8dd7862ce9917902d5c9c956665c0aa6ba0baea50c034364784a7ac7671e1ddb"
+        },
+        "vector-agent-sig:09-agent": {
+          "rows": 22,
+          "sha256": "2aeb6778184e91db7cb087ea349912b80692df008aac97a600b328e293654275"
+        },
+        "vector-ask-sig:08-domain": {
+          "rows": 2,
+          "sha256": "cb073c5037e83840dee7d79ac36b924493869afb0407f7f39f0cd41fb9fbe1f0"
+        },
+        "vector-keys:08-domain": {
+          "rows": 21,
+          "sha256": "ebd3bc8b8d87472f2505918d4da5592ddea7c9f12c4ae50453774821311f648a"
+        },
+        "vector-keys:09-agent": {
+          "rows": 28,
+          "sha256": "21f9f18f0b6d023bcbbe53c64ecf5fc75b8f766f8833e5878f334756b248fd1d"
+        },
+        "vector-may:08-domain": {
+          "rows": 26,
+          "sha256": "672dc5083b3a0c8aaebbcc74cb76ef5b6de9b457eb3113987fdf8188fdbd8202"
+        },
+        "vector-may:10-domain-console": {
+          "rows": 35,
+          "sha256": "90103bf685c83ad8c1773a5f927da21f3ff6eaea12b45edccee21a335d15ec70"
+        },
+        "vector-peer:08-domain": {
+          "rows": 26,
+          "sha256": "c8aaaec13616f6a811d3fc6a48c2d412cafa8bb8d468e566bbdbf408aab0d213"
+        },
+        "vector-peer:09-agent": {
+          "rows": 26,
+          "sha256": "86450b3015278334336c5f1bae28612be36891b35e3141cf754b36c5ad85e055"
+        },
+        "vector-peer:10-domain-console": {
+          "rows": 4,
+          "sha256": "67dee3f704c1a056521083b532d599c10d7c4c86c8c202c34830cdc66b8e79e2"
+        },
+        "vector-record:08-domain": {
+          "rows": 35,
+          "sha256": "9636c8532a8dad0a19c37873d20fd78903a39a1780c40ecec059fc97e1e89e96"
+        },
+        "vector-record:09-agent": {
+          "rows": 42,
+          "sha256": "e79e237b2b75bc7e8f04e87d69932de126d621709cab26e11a43380674284079"
+        },
+        "vector-accept:08-domain": {
+          "rows": 62,
+          "sha256": "aace87a6c5d29273be2b7a90ee6a51d8bc0263f4bea9f3bf192e5fafa27b6e39"
+        },
+        "vector-accept:09-agent": {
+          "rows": 62,
+          "sha256": "0b8a730a660a2b68c24ab6bd28f6c8ef8303549844a39ffe95190accafc52003"
+        },
+        "vector-alarm-history:08-domain": {
+          "rows": 13,
+          "sha256": "224131c29185c5ae5d9d281635256cb2a51e81f1ea120238e82f52c1acbcc966"
+        },
+        "vector-alarm-history:10-domain-console": {
+          "rows": 9,
+          "sha256": "c61b3a652a3e72c3c01b38423e1ef608be8377fdc80e9b6bffb2c107e15eadce"
+        },
+        "vector-trust-set:10-domain-console": {
+          "rows": 12,
+          "sha256": "24f349b2c526084f858445f69a7bb98a43dad2d8def403464eabdcb929c7c667"
+        },
+        "vector-domain-envelopes:08-domain": {
+          "rows": 19,
+          "sha256": "f7e6e5c16539b40e4b0926fbd44ef3cdbe68d1be54d50154c8ff4593a11a1daa"
+        },
+        "vector-domain-envelopes:09-agent": {
+          "rows": 13,
+          "sha256": "7f0f2206c8d2828573c6b7543e43dcaf13b804968a033932f85d3f95082c1f7a"
+        }
+      },
+      "accept": {
+        "08-domain": {
+          "rows": 62,
+          "exact_files": true,
+          "independent_row_maps": true
+        },
+        "09-agent": {
+          "rows": 62,
+          "exact_files": true,
+          "independent_row_maps": true
+        }
+      },
+      "fixture_sha256": {
+        "testsub.subsystem.yaml": "f529f2d9d9d3cdc02aa7639071626ab7005554e51f0421b6eda85e16b254d87d",
+        "testsub2.subsystem.yaml": "af4ff2fff234f2ed7bb172048252c700c3cf7fe90124de9ef20daf15b5d9d3b2"
+      },
+      "sources": [
+        "Platform/common/vectors/accept/cases.tsv",
+        "Platform/common/vectors/accept/README.md",
+        "Source/tests/testdata/testsub.subsystem.yaml",
+        "Source/tests/testdata/testsub2.subsystem.yaml"
+      ],
+      "controls": {
+        "all_frames_08-domain": true,
+        "all_frames_09-agent": true,
+        "fixtures_in_sources": true,
+        "plan_P/08/vectors-accept": true,
+        "plan_P/09/vectors-accept": true,
+        "native_profile_08-domain": true,
+        "native_profile_09-agent": true,
+        "bad_fixture_missing": true,
+        "bad_fixture_empty": true,
+        "bad_fixture_non_utf8": true
+      }
+    }
+  },
+  "inputs_unchanged": true
+}

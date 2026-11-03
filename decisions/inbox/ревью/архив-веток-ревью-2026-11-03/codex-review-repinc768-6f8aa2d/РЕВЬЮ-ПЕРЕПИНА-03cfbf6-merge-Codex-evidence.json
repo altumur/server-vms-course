@@ -1,0 +1,31 @@
+{
+  "head": "e2925c813dfefb9fff76d35fb3807040d0de361b",
+  "manifest_sha256": "b25642e1034bb704a658d38fab7fc59db618e2e15abece6a2dbff68e9db137cf",
+  "manifest_files": 2865,
+  "git_source_files": 206,
+  "reverse_patch_git_blobs": {
+    "94b3174": 204,
+    "e46ffe3": 206
+  },
+  "own_delta": [
+    "README.md",
+    "SPEC_VERSION",
+    "tests/test_vms_stand.py"
+  ],
+  "own_SPEC_and_fixture_unchanged": true,
+  "specs_git_blobs": 2345,
+  "jsdom_git_files": 39,
+  "tables_unchanged": 174,
+  "author_modules": 82,
+  "author_tests": 974,
+  "author_skips": 9,
+  "author_plans_ready": 230,
+  "author_jsdom_cases": 257,
+  "author_full_seconds": 336.6,
+  "author_input_sha256": "9afb28f11e3ceedf40285bd2f360602a6730c3f2cee90b3c0430125c7c7d8a3d",
+  "live_sha256": "137d9c20a145a2653c7fd9385e4616e47cbe7a71ade622e2f7ef64e5383d6a10",
+  "live_shell_absent": true,
+  "shell_sha256": "1ace3adb87763256e89d7e45fc3fc3453820707278f5f1e5eb0aa7b8fb9703d0",
+  "shell_plans": 14,
+  "SUT": 0
+}

@@ -1,0 +1,104 @@
+{
+  "green": true,
+  "SUT": 0,
+  "manifest_sha256": "2dfcad288324d2bdcf0773e1cc523297e2cb7b8ccb6e56563fbd6498a514341b",
+  "package_files": 11,
+  "author_input_sha256": "0ec8371ed5ca341eb6ec249982f1c4353af57d778f1ec4e52720f5e128a35bce",
+  "author_input_files": 4907,
+  "inputs_unchanged": true,
+  "git_blobs": {
+    "before": 215,
+    "after": 216
+  },
+  "controls": {
+    "before": [
+      {
+        "requested_behavior": "RED",
+        "outcomes": [
+          [
+            "the directive failed"
+          ],
+          [
+            "the directive failed"
+          ]
+        ],
+        "signal_calls": [
+          [
+            "m1",
+            "event",
+            15
+          ],
+          [
+            "m1",
+            "event",
+            15
+          ]
+        ],
+        "events": {}
+      },
+      {
+        "requested_behavior": "RED",
+        "outcomes": [
+          [
+            "the directive failed"
+          ],
+          [
+            "the directive failed"
+          ]
+        ],
+        "signal_calls": [
+          [
+            "m1",
+            "event",
+            15
+          ],
+          [
+            "m1",
+            "event",
+            15
+          ]
+        ],
+        "events": {}
+      }
+    ],
+    "after": [
+      {
+        "requested_behavior": "GREEN",
+        "published_steps": 2,
+        "clock": 1712345678.125,
+        "events": {
+          "m1/events/testsub/c1/e1/20240405T193000Z.events.jsonl": "{\"id\": \"ev-tick-c1\", \"t\": 1712345678.125, \"kind\": \"tick\", \"of\": \"testsub/c1\"}\n",
+          "m1/events/testsub/c2/e1/20240405T193000Z.events.jsonl": "{\"id\": \"ev-alarm-c2\", \"t\": 1712345678.125, \"kind\": \"jam\", \"class\": \"alarm\", \"of\": \"testsub/c2\"}\n"
+        },
+        "append_preserves_bytes": true,
+        "cluster_isolation": true,
+        "clock_window_rollover": true,
+        "missing_text_value_error": true,
+        "bad_references_no_write": 4,
+        "signal_calls": [],
+        "object_calls": []
+      },
+      {
+        "requested_behavior": "GREEN",
+        "published_steps": 2,
+        "clock": 1712345999.875,
+        "events": {
+          "m1/events/testsub/c1/e1/20240405T193000Z.events.jsonl": "{\"id\": \"ev-tick-c1\", \"t\": 1712345999.875, \"kind\": \"tick\", \"of\": \"testsub/c1\"}\n",
+          "m1/events/testsub/c2/e1/20240405T193000Z.events.jsonl": "{\"id\": \"ev-alarm-c2\", \"t\": 1712345999.875, \"kind\": \"jam\", \"class\": \"alarm\", \"of\": \"testsub/c2\"}\n"
+        },
+        "append_preserves_bytes": true,
+        "cluster_isolation": true,
+        "clock_window_rollover": true,
+        "missing_text_value_error": true,
+        "bad_references_no_write": 4,
+        "signal_calls": [],
+        "object_calls": []
+      }
+    ]
+  },
+  "tests": {
+    "test_on_append_event": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.001s\n\nOK",
+    "test_c_domain_stand": "..............\n----------------------------------------------------------------------\nRan 14 tests in 2.882s\n\nOK",
+    "test_runner": ".........\n----------------------------------------------------------------------\nRan 9 tests in 0.050s\n\nOK"
+  }
+}

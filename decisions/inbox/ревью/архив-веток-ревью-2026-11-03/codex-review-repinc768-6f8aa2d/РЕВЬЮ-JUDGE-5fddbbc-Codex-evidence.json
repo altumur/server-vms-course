@@ -1,0 +1,64 @@
+{
+  "head": "5fddbbc96f36bd0ebf0ad521084b786f1ce67cc4",
+  "manifest_sha256": "82e2021d4876d977febf8523b1f26814216d3ad1fb38cba22cae62d4fbc3ba24",
+  "manifest_files": 6086,
+  "head_git_files": 208,
+  "base_git_files": 206,
+  "prior_git_files": 208,
+  "source_sha_files": 5106,
+  "spec_counts": {
+    "specs": 2345,
+    "vms-jsdom-specs": 2345
+  },
+  "targeted_tests": 82,
+  "targeted_green": true,
+  "comparisons": 84,
+  "comparative_identical": true,
+  "encoding_exit_codes": {
+    "b2b332d": 1,
+    "5fddbbc": 0
+  },
+  "encoding": {
+    "b2b332d": {
+      "standard_base64_unpadded": {
+        "encoded_value_exported": true,
+        "encoded_value_survives_finalize": true
+      },
+      "mixed_case_hex": {
+        "encoded_value_exported": true,
+        "encoded_value_survives_finalize": true
+      },
+      "late_refresh": true,
+      "real_transport_preserved": true,
+      "forged_projection_rejected": true
+    },
+    "5fddbbc": {
+      "standard_base64_unpadded": {
+        "encoded_value_exported": false,
+        "encoded_value_survives_finalize": false
+      },
+      "mixed_case_hex": {
+        "encoded_value_exported": false,
+        "encoded_value_survives_finalize": false
+      },
+      "late_refresh": true,
+      "real_transport_preserved": true,
+      "forged_projection_rejected": true
+    }
+  },
+  "dictionary": {
+    "chapter_only": true,
+    "schema_enum_const_only": true,
+    "received_cannot_extend_dictionary": true,
+    "keys_follow_dictionary": true,
+    "unknown_encodings_opaque_before_secret_learn": true,
+    "late_public_secret_removed": true,
+    "tampered_writer_rejected": true,
+    "pinned_export_dictionary": true
+  },
+  "author_modules": 83,
+  "author_tests": 988,
+  "author_skips": 9,
+  "author_full_seconds": 347.9,
+  "SUT": 0
+}

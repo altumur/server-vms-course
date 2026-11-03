@@ -1,0 +1,116 @@
+{
+  "SUT": 0,
+  "drain_bytes": 2097152,
+  "drain_seconds": 5,
+  "request_bytes": 1048577,
+  "probe_sha256": "a1211d95b00ccc5c3a37ab6974c0ed03e7bc903d2a21ecd825e57dd1107353d7",
+  "controls": {
+    "old": {
+      "safety_pass": true,
+      "direct": [
+        {
+          "ok": true,
+          "status": 413,
+          "error": null,
+          "response_bytes": 162,
+          "request_eof": true,
+          "drained": 219144
+        },
+        {
+          "ok": true,
+          "status": 413,
+          "error": null,
+          "response_bytes": 162,
+          "drained": 1048577
+        },
+        {
+          "ok": true,
+          "status": 413,
+          "error": null,
+          "response_bytes": 162,
+          "drained": 1048577
+        }
+      ],
+      "proxied": [
+        {
+          "ok": true,
+          "status": 413,
+          "error": null,
+          "response_bytes": 162,
+          "request_eof": true,
+          "drained": 255688
+        },
+        {
+          "ok": true,
+          "status": 413,
+          "error": null,
+          "response_bytes": 162,
+          "request_eof": true,
+          "drained": 415752
+        },
+        {
+          "ok": true,
+          "status": 413,
+          "error": null,
+          "response_bytes": 162,
+          "request_eof": true,
+          "drained": 327560
+        }
+      ]
+    },
+    "new": {
+      "safety_pass": true,
+      "direct": [
+        {
+          "ok": true,
+          "status": 413,
+          "error": null,
+          "response_bytes": 162,
+          "request_eof": true,
+          "drained": 219144
+        },
+        {
+          "ok": true,
+          "status": 413,
+          "error": null,
+          "response_bytes": 162,
+          "drained": 1048577
+        },
+        {
+          "ok": true,
+          "status": 413,
+          "error": null,
+          "response_bytes": 162,
+          "request_eof": true,
+          "drained": 438408
+        }
+      ],
+      "proxied": [
+        {
+          "ok": true,
+          "status": 413,
+          "error": null,
+          "response_bytes": 162,
+          "request_eof": true,
+          "drained": 219144
+        },
+        {
+          "ok": true,
+          "status": 413,
+          "error": null,
+          "response_bytes": 162,
+          "request_eof": true,
+          "drained": 219144
+        },
+        {
+          "ok": true,
+          "status": 413,
+          "error": null,
+          "response_bytes": 162,
+          "request_eof": true,
+          "drained": 219144
+        }
+      ]
+    }
+  }
+}

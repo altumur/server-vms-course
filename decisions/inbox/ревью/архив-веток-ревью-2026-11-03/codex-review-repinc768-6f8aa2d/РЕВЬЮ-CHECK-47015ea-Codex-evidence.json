@@ -1,0 +1,292 @@
+{
+  "manifest_sha256": "de5411b19f52e9f2f03bfd46c994b5b543af3cd3cbe82d067af21d875abd1f5b",
+  "package_files": 192,
+  "input_sha256": "b0576d501b90ad258e9b4dde611ac6d3ac087ad17ab9ba49c0f8270cee0c51b4",
+  "source_files": 2561,
+  "new_blobs": 214,
+  "old_blobs": 214,
+  "tests": [
+    {
+      "module": "test_check.py",
+      "code": 0
+    },
+    {
+      "module": "test_portable.py",
+      "code": 0
+    }
+  ],
+  "traces": {
+    "old": [
+      {
+        "mode": "normal",
+        "events": [
+          "launch",
+          "sha",
+          "fetch",
+          "clean"
+        ],
+        "at_clean": [
+          {
+            "outbox": true,
+            "active": false,
+            "archived": true
+          }
+        ],
+        "outbox_retained": false,
+        "active_work_retained": false,
+        "input_retained": false,
+        "failed": false,
+        "reason": null,
+        "published": 3,
+        "safety_pass": true
+      },
+      {
+        "mode": "normal_fetch",
+        "events": [
+          "launch",
+          "sha",
+          "fetch",
+          "clean"
+        ],
+        "at_clean": [
+          {
+            "outbox": true,
+            "active": false,
+            "archived": false
+          }
+        ],
+        "outbox_retained": false,
+        "active_work_retained": false,
+        "input_retained": false,
+        "failed": true,
+        "reason": "RuntimeError: SSH lost after a partial result download\n",
+        "published": null,
+        "safety_pass": false
+      },
+      {
+        "mode": "normal_sha",
+        "events": [
+          "launch",
+          "sha",
+          "clean"
+        ],
+        "at_clean": [
+          {
+            "outbox": true,
+            "active": false,
+            "archived": false
+          }
+        ],
+        "outbox_retained": false,
+        "active_work_retained": false,
+        "input_retained": false,
+        "failed": true,
+        "reason": "RuntimeError: SSH lost while reading result SHA\n",
+        "published": null,
+        "safety_pass": false
+      },
+      {
+        "mode": "normal_short",
+        "events": [
+          "launch",
+          "sha",
+          "fetch",
+          "clean"
+        ],
+        "at_clean": [
+          {
+            "outbox": true,
+            "active": false,
+            "archived": false
+          }
+        ],
+        "outbox_retained": false,
+        "active_work_retained": false,
+        "input_retained": false,
+        "failed": true,
+        "reason": "RuntimeError: returned result differs from the machine sha256\n",
+        "published": null,
+        "safety_pass": false
+      },
+      {
+        "mode": "recovered_fetch",
+        "events": [
+          "launch",
+          "clean"
+        ],
+        "at_clean": [
+          {
+            "outbox": true,
+            "active": false,
+            "archived": false
+          }
+        ],
+        "outbox_retained": false,
+        "active_work_retained": false,
+        "input_retained": false,
+        "failed": true,
+        "reason": "RuntimeError: SSH wait lost after the unit completed\n",
+        "published": null,
+        "safety_pass": false
+      },
+      {
+        "mode": "late_launch",
+        "events": [
+          "launch",
+          "clean"
+        ],
+        "at_clean": [
+          {
+            "outbox": false,
+            "active": false,
+            "archived": false
+          }
+        ],
+        "outbox_retained": false,
+        "active_work_retained": false,
+        "input_retained": false,
+        "failed": true,
+        "reason": "RuntimeError: SSH lost: launch outcome unknown\n",
+        "published": null,
+        "safety_pass": false
+      }
+    ],
+    "new": [
+      {
+        "mode": "normal",
+        "events": [
+          "launch",
+          "sha",
+          "fetch",
+          "clean"
+        ],
+        "at_clean": [
+          {
+            "outbox": true,
+            "active": false,
+            "archived": true
+          }
+        ],
+        "outbox_retained": false,
+        "active_work_retained": false,
+        "input_retained": false,
+        "failed": false,
+        "reason": null,
+        "published": 3,
+        "safety_pass": true
+      },
+      {
+        "mode": "normal_fetch",
+        "events": [
+          "launch",
+          "sha",
+          "fetch",
+          "clean"
+        ],
+        "at_clean": [
+          {
+            "outbox": true,
+            "active": false,
+            "archived": false
+          }
+        ],
+        "outbox_retained": false,
+        "active_work_retained": false,
+        "input_retained": false,
+        "failed": true,
+        "reason": "RuntimeError: SSH lost after a partial result download\n",
+        "published": null,
+        "safety_pass": false
+      },
+      {
+        "mode": "normal_sha",
+        "events": [
+          "launch",
+          "sha",
+          "clean"
+        ],
+        "at_clean": [
+          {
+            "outbox": true,
+            "active": false,
+            "archived": false
+          }
+        ],
+        "outbox_retained": false,
+        "active_work_retained": false,
+        "input_retained": false,
+        "failed": true,
+        "reason": "RuntimeError: SSH lost while reading result SHA\n",
+        "published": null,
+        "safety_pass": false
+      },
+      {
+        "mode": "normal_short",
+        "events": [
+          "launch",
+          "sha",
+          "fetch",
+          "clean"
+        ],
+        "at_clean": [
+          {
+            "outbox": true,
+            "active": false,
+            "archived": false
+          }
+        ],
+        "outbox_retained": false,
+        "active_work_retained": false,
+        "input_retained": false,
+        "failed": true,
+        "reason": "RuntimeError: returned result differs from the machine sha256\n",
+        "published": null,
+        "safety_pass": false
+      },
+      {
+        "mode": "recovered_fetch",
+        "events": [
+          "launch",
+          "status",
+          "outbox-probe",
+          "sha",
+          "fetch"
+        ],
+        "at_clean": [],
+        "outbox_retained": true,
+        "active_work_retained": false,
+        "input_retained": true,
+        "failed": true,
+        "reason": "RuntimeError: SSH lost after a partial result download\nremote cleanup withheld: unit/outbox may still contain the result\n",
+        "published": null,
+        "safety_pass": true
+      },
+      {
+        "mode": "late_launch",
+        "events": [
+          "launch",
+          "status",
+          "outbox-probe",
+          "original-launch-takes-effect",
+          "clean"
+        ],
+        "at_clean": [
+          {
+            "outbox": false,
+            "active": true,
+            "archived": false
+          }
+        ],
+        "outbox_retained": false,
+        "active_work_retained": false,
+        "input_retained": false,
+        "failed": true,
+        "reason": "FinishedWithoutResult: acceptance-check-20261030t061208z-late_launch ended without outbox /home/acceptance/checks/outbox/20261030T061208Z-late_launch.tar.gz: {\"ActiveState\": \"inactive\", \"LoadState\": \"not-found\"}\n",
+        "published": null,
+        "safety_pass": false
+      }
+    ]
+  },
+  "inputs_unchanged": true,
+  "SUT": 0
+}

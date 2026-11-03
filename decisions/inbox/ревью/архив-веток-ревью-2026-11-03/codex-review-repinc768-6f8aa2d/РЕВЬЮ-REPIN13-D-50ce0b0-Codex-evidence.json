@@ -1,0 +1,280 @@
+{
+  "verified": true,
+  "SUT": 0,
+  "head": "50ce0b0bacc14eec60f384fef1aa38eb089b34d5",
+  "pin": "13a30dcbf6a17c7023b518c20bdae96a100058cd",
+  "manifest_sha256": "6229ccd0320a5e7c9fce2cacbfa72fe05ff02b23cf7db2106893697c8d60ad7f",
+  "package_files": 327,
+  "git_blobs": {
+    "runtime": 227,
+    "specs": 2383,
+    "old_specs": 2382
+  },
+  "author_input_sha256": "c2a508afd4cce5afe1ba4ec0d07b591bba619f8c241bf0d90f4ace07ff6eb302",
+  "source_sha_files": 2611,
+  "author_input_files": 2612,
+  "changed_export_files": [
+    "COURSE_COMMIT",
+    "Platform/01-store/acceptance/3/README.md",
+    "Platform/01-store/acceptance/3/scenarios.tsv",
+    "Platform/01-store/spec/01.3-store.norms.md",
+    "Platform/02-installer/acceptance/3/README.md",
+    "Platform/03-worker/acceptance/2/README.md",
+    "Platform/03-worker/acceptance/2/scenarios.tsv",
+    "Platform/03-worker/spec/03-worker.README.md",
+    "Platform/03-worker/spec/03.2-worker.norms.md",
+    "Platform/04-controller/04-controller.md",
+    "Platform/04-controller/acceptance/README.md",
+    "Platform/04-controller/acceptance/scenarios.tsv",
+    "Platform/04-controller/spec/04-controller.README.md",
+    "Platform/04-controller/spec/04-controller.norms.md",
+    "Platform/05-resource/acceptance/README.md",
+    "Platform/05-resource/acceptance/scenarios.tsv",
+    "Platform/05-resource/spec/05-resource.README.md",
+    "Platform/05-resource/spec/05-resource.norms.md",
+    "Platform/06-console/06-console.md",
+    "Platform/06-console/acceptance/1/README.md",
+    "Platform/06-console/acceptance/1/scenarios.tsv",
+    "Platform/06-console/acceptance/2/README.md",
+    "Platform/06-console/acceptance/2/scenarios.tsv",
+    "Platform/06-console/acceptance/5/README.md",
+    "Platform/06-console/acceptance/5/inputs/hb-w-1-future.json",
+    "Platform/06-console/acceptance/5/probe-x.subsystem.yaml",
+    "Platform/06-console/acceptance/5/scenarios.tsv",
+    "Platform/06-console/spec/06-console.README.md",
+    "Platform/06-console/spec/06.1-console.norms.md",
+    "Platform/06-console/spec/06.2-console.norms.md",
+    "Platform/06-console/spec/06.5-console.norms.md",
+    "Platform/common/acceptance/README.md",
+    "Platform/common/contracts/schema.md"
+  ],
+  "tests": {
+    "test_scenario_control": 8,
+    "test_store_group": 16,
+    "test_proxy": 3,
+    "test_transport_diagnostics": 10,
+    "test_process_audit_c": 7,
+    "test_stand_setup": 19,
+    "test_c_worker": 24,
+    "test_c_controller": 8,
+    "test_c_shared_engines": 23,
+    "test_console_resource_start": 8,
+    "test_cli_environment": 10,
+    "test_c_process": 7,
+    "test_c_execution": 36,
+    "test_diagnostic_secrets": 14,
+    "test_platform": 21,
+    "test_request_correlation": 11,
+    "test_vms_stand": 26
+  },
+  "total_tests": 251,
+  "controls": {
+    "http_close_small": {
+      "direct": [
+        {
+          "ok": true,
+          "status": 200,
+          "body_bytes": 1024,
+          "error": null,
+          "request_bytes": 63,
+          "response_bytes": 1124,
+          "server_error": null
+        },
+        {
+          "ok": true,
+          "status": 200,
+          "body_bytes": 1024,
+          "error": null,
+          "request_bytes": 63,
+          "response_bytes": 1124,
+          "server_error": null
+        },
+        {
+          "ok": true,
+          "status": 200,
+          "body_bytes": 1024,
+          "error": null,
+          "request_bytes": 63,
+          "response_bytes": 1124,
+          "server_error": null
+        }
+      ],
+      "proxied": [
+        {
+          "ok": false,
+          "status": null,
+          "body_bytes": null,
+          "error": "connection closed without a response",
+          "request_bytes": 63,
+          "response_bytes": 1124,
+          "server_error": null
+        },
+        {
+          "ok": false,
+          "status": null,
+          "body_bytes": null,
+          "error": "connection closed without a response",
+          "request_bytes": 63,
+          "response_bytes": 1124,
+          "server_error": null
+        },
+        {
+          "ok": false,
+          "status": null,
+          "body_bytes": null,
+          "error": "connection closed without a response",
+          "request_bytes": 63,
+          "response_bytes": 1124,
+          "server_error": null
+        }
+      ],
+      "safety_pass": false
+    },
+    "http_close_large": {
+      "direct": [
+        {
+          "ok": true,
+          "status": 200,
+          "body_bytes": 200000,
+          "error": null,
+          "request_bytes": 63,
+          "response_bytes": 200102,
+          "server_error": null
+        },
+        {
+          "ok": true,
+          "status": 200,
+          "body_bytes": 200000,
+          "error": null,
+          "request_bytes": 63,
+          "response_bytes": 200102,
+          "server_error": null
+        },
+        {
+          "ok": true,
+          "status": 200,
+          "body_bytes": 200000,
+          "error": null,
+          "request_bytes": 63,
+          "response_bytes": 200102,
+          "server_error": null
+        }
+      ],
+      "proxied": [
+        {
+          "ok": false,
+          "status": null,
+          "body_bytes": null,
+          "error": "truncated response body",
+          "request_bytes": 63,
+          "response_bytes": 200102,
+          "server_error": null
+        },
+        {
+          "ok": false,
+          "status": null,
+          "body_bytes": null,
+          "error": "truncated response body",
+          "request_bytes": 63,
+          "response_bytes": 200102,
+          "server_error": null
+        },
+        {
+          "ok": false,
+          "status": null,
+          "body_bytes": null,
+          "error": "truncated response body",
+          "request_bytes": 63,
+          "response_bytes": 200102,
+          "server_error": null
+        }
+      ],
+      "safety_pass": false
+    },
+    "client_half_close": {
+      "direct": [
+        {
+          "ok": true,
+          "status": 200,
+          "body_bytes": 1024,
+          "error": null,
+          "request_bytes": 63,
+          "response_bytes": 1124,
+          "server_error": null
+        },
+        {
+          "ok": true,
+          "status": 200,
+          "body_bytes": 1024,
+          "error": null,
+          "request_bytes": 63,
+          "response_bytes": 1124,
+          "server_error": null
+        },
+        {
+          "ok": true,
+          "status": 200,
+          "body_bytes": 1024,
+          "error": null,
+          "request_bytes": 63,
+          "response_bytes": 1124,
+          "server_error": null
+        }
+      ],
+      "proxied": [
+        {
+          "ok": false,
+          "status": null,
+          "body_bytes": null,
+          "error": "connection closed without a response",
+          "request_bytes": 0,
+          "response_bytes": 0,
+          "server_error": null
+        },
+        {
+          "ok": false,
+          "status": null,
+          "body_bytes": null,
+          "error": "connection closed without a response",
+          "request_bytes": 0,
+          "response_bytes": 0,
+          "server_error": "OSError"
+        },
+        {
+          "ok": false,
+          "status": null,
+          "body_bytes": null,
+          "error": "connection closed without a response",
+          "request_bytes": 0,
+          "response_bytes": 0,
+          "server_error": null
+        }
+      ],
+      "safety_pass": false
+    },
+    "stale_watchdog": {
+      "safety_pass": true,
+      "signals": [
+        19,
+        18,
+        19,
+        18
+      ]
+    },
+    "forgotten_pause": {
+      "safety_pass": true,
+      "row": {
+        "ok": false,
+        "why": [
+          {
+            "classification": "data",
+            "reason": "freeze_not_thawed"
+          }
+        ],
+        "classification": "data"
+      }
+    }
+  },
+  "probe_sha256": "6e4e111ae7164f8bbd91a158d24c7cb06221e6c939635401375f28cab61cfcbf",
+  "inputs_unchanged": true
+}
