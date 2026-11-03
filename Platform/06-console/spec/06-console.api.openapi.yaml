@@ -2671,7 +2671,11 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
-          $ref: '#/components/responses/Denied'
+          description: Нет admin на * и нет билета с записью GET manifest/<s>/source — denied (ADR-0116 доп. (7))
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsoleDenied'
         '404':
           description: Строки манифеста подсистемы нет — refused, «no such subsystem»; неизвестный путь — как у общего отказа
           content:
@@ -2708,7 +2712,11 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthenticated'
         '403':
-          $ref: '#/components/responses/Denied'
+          description: Нет admin на * и нет билета с записью GET manifest/<s>/source — denied (ADR-0116 доп. (7))
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsoleDenied'
         '404':
           description: Строки манифеста подсистемы нет — refused, «no such subsystem»; неизвестный путь — как у общего отказа
           content:
@@ -6398,6 +6406,7 @@ components:
       required:
       - name
       - rev
+      - served
       - sha256
       - manifest
       - secret_defaults
@@ -6409,7 +6418,13 @@ components:
         rev:
           type: integer
           minimum: 1
-          description: Ревизия строки манифеста (P/02.3).
+          description: Ревизия строки манифеста, прочитанной при запросе (P/02.3).
+        served:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+          description: Ревизия подсистемы в каталоге, которым консоль служит с запуска; подсистемы в нём нет — null; установка ждёт served = rev (ADR-0115 доп. (20)).
         sha256:
           type: string
           pattern: ^(?:[0-9a-f]{64})$

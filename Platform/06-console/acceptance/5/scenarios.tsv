@@ -19,7 +19,7 @@ scenario	step	request	expect
 02-manifest-and-mounts	6	GET /probe-x/manifest	200 {"name": "probe-x", "metrics": {"prefix": "probe_x"}, "workers_gauge": "probe_x_workers_live"}
 02-manifest-and-mounts	7	GET /metrics	200 ~w2c_requests_expired_total{sub="testsub"}
 02-manifest-and-mounts	8	GET /metrics	200 !contains w2c_requests_expired_total{sub="probe-x"}
-02-manifest-and-mounts	9	GET /manifest/testsub/source	200 {"name": "testsub", "rev": "@any", "sha256": "@any", "manifest": {"name": "testsub", "unit": {"rows": "counters"}}, "secret_defaults": []}
+02-manifest-and-mounts	9	GET /manifest/testsub/source	200 {"name": "testsub", "rev": "@any", "served": "@any", "sha256": "@any", "manifest": {"name": "testsub", "unit": {"rows": "counters"}}, "secret_defaults": []}
 02-manifest-and-mounts	10	GET /manifest/testsub2/source	200 {"name": "testsub2", "manifest": {"name": "testsub2", "tables": "@any"}}
 02-manifest-and-mounts	11	GET /manifest/nosuch/source	404 {"error": "refused"}
 03-snapshot	1	@start controller	ok
