@@ -143,6 +143,32 @@
       "fenced",
       "earlier-run"
      ]
+    },
+    "kinds": {
+     "description": "вид события → `{severity}`; подпись вида — `display.kinds` (ADR-0115 доп. (3) п. 6, доп. (4) п. 2)",
+     "x-owner": "P/03.6 Н1.2",
+     "type": "object",
+     "propertyNames": {
+      "type": "string"
+     },
+     "additionalProperties": {
+      "type": "object",
+      "properties": {
+       "severity": {
+        "enum": [
+         "info",
+         "warning",
+         "error",
+         "critical",
+         "alarm"
+        ]
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "severity"
+      ]
+     }
     }
    },
    "additionalProperties": false
@@ -823,11 +849,11 @@
    "properties": {
     "unit": {
      "default": "единица",
-     "type": "string"
+     "$ref": "#/$defs/label"
     },
     "units": {
      "default": "единица",
-     "type": "string"
+     "$ref": "#/$defs/label"
     },
     "units_count": {
      "default": "единица",
@@ -840,21 +866,21 @@
      "type": "string"
     },
     "fields": {
-     "$ref": "#/$defs/strMap",
-     "description": "имя поля → подпись"
+     "$ref": "#/$defs/labelMap",
+     "description": "имя поля → подпись; поле таблицы — `<т>.<поле>` (ADR-0115 доп. (3) п. 3)"
     },
     "field_help": {
-     "$ref": "#/$defs/strMap",
-     "description": "имя поля → подсказка"
+     "$ref": "#/$defs/labelMap",
+     "description": "имя поля → подсказка; поле таблицы — `<т>.<поле>`"
     },
     "options": {
-     "description": "поле → `{значение: строка}`",
+     "description": "поле → `{значение: подпись}`; поле таблицы — `<т>.<поле>` (ADR-0115 доп. (4) п. 1)",
      "type": "object",
      "propertyNames": {
       "type": "string"
      },
      "additionalProperties": {
-      "$ref": "#/$defs/strMap"
+      "$ref": "#/$defs/labelMap"
      }
     },
     "form": {
@@ -910,7 +936,7 @@
      "type": "boolean"
     },
     "kinds": {
-     "$ref": "#/$defs/strMap",
+     "$ref": "#/$defs/labelMap",
      "description": "вид события → строка"
     },
     "keys": {
@@ -1061,6 +1087,9 @@
        }
       }
      ]
+    },
+    "langs": {
+     "$ref": "#/$defs/langs"
     }
    },
    "additionalProperties": false
@@ -1488,6 +1517,59 @@
     ]
    },
    "additionalProperties": {}
+  },
+  "label": {
+   "description": "строка или `{key, text}`: ключ перевода по `display.langs` и текст, если перевода нет (ADR-0115 доп. (2) п. 3)",
+   "x-owner": "P/06.5 Н1.2",
+   "type": [
+    "object",
+    "string"
+   ],
+   "allOf": [
+    {
+     "if": {
+      "type": "object"
+     },
+     "then": {
+      "type": "object",
+      "properties": {
+       "key": {
+        "type": "string",
+        "minLength": 1
+       },
+       "text": {
+        "type": "string"
+       }
+      },
+      "additionalProperties": false,
+      "required": [
+       "key",
+       "text"
+      ]
+     }
+    }
+   ]
+  },
+  "labelMap": {
+   "type": "object",
+   "propertyNames": {
+    "type": "string"
+   },
+   "additionalProperties": {
+    "$ref": "#/$defs/label"
+   }
+  },
+  "langs": {
+   "description": "язык → `{ключ: текст}`; генератор кладёт сюда переводы; ключа нет в языке — действует `text` подписи (ADR-0115 доп. (2) п. 3)",
+   "x-owner": "P/06.5 Н1.2",
+   "type": "object",
+   "propertyNames": {
+    "type": "string",
+    "pattern": "^(?:[a-z]{2,3}(?:-[A-Za-z0-9]{1,8})*)$"
+   },
+   "additionalProperties": {
+    "$ref": "#/$defs/strMap"
+   }
   },
   "metrics": {
    "type": "array",
@@ -3345,6 +3427,31 @@
     },
     "schemes": {
      "$ref": "#/$defs/schemes"
+    },
+    "hidden": {
+     "description": "поле не показывается формой; значение пишет и отдаёт дверь, как прочие (ADR-0115 п. 2.2)",
+     "x-owner": "P/06.5 Н1.2",
+     "type": "boolean"
+    },
+    "items": {
+     "description": "у `type: list`: `ref` каждого элемента — подсказка формы, перечень значений берётся чтением семьи; значение платформа по ней не судит (ADR-0115 доп. (2) п. 5, доп. (3) п. 5)",
+     "x-owner": "P/06.5 Н1.2",
+     "type": "object",
+     "properties": {
+      "ref": {
+       "$ref": "#/$defs/refTarget"
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "ref"
+     ]
+    },
+    "ref_label": {
+     "description": "имя поля строки цели `ref` или `items.ref` — подпись значения в форме; поле цели загрузчик не ищет (ADR-0115 доп. (5) п. 2, доп. (6) п. 2)",
+     "x-owner": "P/06.5 Н1.2",
+     "type": "string",
+     "minLength": 1
     }
    },
    "additionalProperties": false,
@@ -3715,6 +3822,134 @@
         "not": {}
        },
        "schemes": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "hidden"
+        ],
+        "properties": {
+         "hidden": {
+          "enum": [
+           true
+          ]
+         }
+        }
+       },
+       {
+        "required": [
+         "required"
+        ],
+        "properties": {
+         "required": {
+          "enum": [
+           true
+          ]
+         }
+        }
+       },
+       {
+        "not": {
+         "required": [
+          "default"
+         ]
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "hidden": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "not": {
+         "required": [
+          "type"
+         ],
+         "properties": {
+          "type": {
+           "enum": [
+            "list"
+           ]
+          }
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "items": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "ref"
+        ]
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "items": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "not": {
+         "required": [
+          "ref"
+         ]
+        }
+       },
+       {
+        "not": {
+         "required": [
+          "items"
+         ]
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "ref_label": {
         "not": {}
        }
       }
@@ -4131,6 +4366,31 @@
     },
     "schemes": {
      "$ref": "#/$defs/schemes"
+    },
+    "hidden": {
+     "description": "поле не показывается формой; значение пишет и отдаёт дверь, как прочие (ADR-0115 п. 2.2)",
+     "x-owner": "P/06.5 Н1.2",
+     "type": "boolean"
+    },
+    "items": {
+     "description": "у `type: list`: `ref` каждого элемента — подсказка формы, перечень значений берётся чтением семьи; значение платформа по ней не судит (ADR-0115 доп. (2) п. 5, доп. (3) п. 5)",
+     "x-owner": "P/06.5 Н1.2",
+     "type": "object",
+     "properties": {
+      "ref": {
+       "$ref": "#/$defs/refTarget"
+      }
+     },
+     "additionalProperties": false,
+     "required": [
+      "ref"
+     ]
+    },
+    "ref_label": {
+     "description": "имя поля строки цели `ref` или `items.ref` — подпись значения в форме; поле цели загрузчик не ищет (ADR-0115 доп. (5) п. 2, доп. (6) п. 2)",
+     "x-owner": "P/06.5 Н1.2",
+     "type": "string",
+     "minLength": 1
     }
    },
    "additionalProperties": false,
@@ -4823,13 +5083,141 @@
        }
       }
      }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "hidden"
+        ],
+        "properties": {
+         "hidden": {
+          "enum": [
+           true
+          ]
+         }
+        }
+       },
+       {
+        "required": [
+         "required"
+        ],
+        "properties": {
+         "required": {
+          "enum": [
+           true
+          ]
+         }
+        }
+       },
+       {
+        "not": {
+         "required": [
+          "default"
+         ]
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "hidden": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "not": {
+         "required": [
+          "type"
+         ],
+         "properties": {
+          "type": {
+           "enum": [
+            "list"
+           ]
+          }
+         }
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "items": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "required": [
+         "ref"
+        ]
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "items": {
+        "not": {}
+       }
+      }
+     }
+    },
+    {
+     "if": {
+      "allOf": [
+       {
+        "type": "object"
+       },
+       {
+        "not": {
+         "required": [
+          "ref"
+         ]
+        }
+       },
+       {
+        "not": {
+         "required": [
+          "items"
+         ]
+        }
+       }
+      ]
+     },
+     "then": {
+      "properties": {
+       "ref_label": {
+        "not": {}
+       }
+      }
+     }
     }
    ]
   },
   "unitFields": {
    "type": "object",
    "propertyNames": {
-    "description": "не из `platform_fields` P/06.1 Н1.2",
+    "description": "не из `platform_fields` P/06.1 Н1.2; без точки: имя `<т>.<поле>` в `display` — поле таблицы (ADR-0115 доп. (4) п. 1)",
     "type": "string",
     "not": {
      "enum": [
@@ -4845,7 +5233,8 @@
       "made",
       "index"
      ]
-    }
+    },
+    "pattern": "^(?:[^.]*)$"
    },
    "additionalProperties": {
     "$ref": "#/$defs/unitField"
