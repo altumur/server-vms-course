@@ -210,6 +210,12 @@ domain:
       grant: [testsub2worker]
       placement: {sub: testsub2, caller: origin, ref_claim: ref, target_fields: [cluster, copies], audience_claim: aud}
       unit: {sub: testsub, caller: poll_home, ref_claim: ref, target_fields: [centre], audience_claim: aud}
+    vault:                             # a kept token: the domain remembers its jti per unit, DELETE revokes it (P/08.2 Н1.6а)
+      lifetime: 600
+      keep: true
+      claims: [aud, ref]
+      grant: [testsub2worker]
+      placement: {sub: testsub2, caller: origin, ref_claim: ref, target_fields: [cluster, copies], audience_claim: aud}
     tally2:
       lifetime: 60
       claims: [ref, by, acts, up, aud]
