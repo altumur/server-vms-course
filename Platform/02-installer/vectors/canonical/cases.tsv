@@ -53,8 +53,10 @@ corpus-a115_option_label_key_ok	Platform/02-installer/acceptance/1/cases/a115_op
 corpus-a115_options_schema_enum_ok	Platform/02-installer/acceptance/1/cases/a115_options_schema_enum_ok.subsystem.yaml	expect/corpus-a115_options_schema_enum_ok.json	принятый случай корпуса 2.1
 corpus-a115_options_table_ok	Platform/02-installer/acceptance/1/cases/a115_options_table_ok.subsystem.yaml	expect/corpus-a115_options_table_ok.json	принятый случай корпуса 2.1
 corpus-a115_ref_label_ok	Platform/02-installer/acceptance/1/cases/a115_ref_label_ok.subsystem.yaml	expect/corpus-a115_ref_label_ok.json	принятый случай корпуса 2.1
+corpus-a115_route_rank_ok	Platform/02-installer/acceptance/1/cases/a115_route_rank_ok.subsystem.yaml	expect/corpus-a115_route_rank_ok.json	принятый случай корпуса 2.1
 corpus-a115_status_dot_ok	Platform/02-installer/acceptance/1/cases/a115_status_dot_ok.subsystem.yaml	expect/corpus-a115_status_dot_ok.json	принятый случай корпуса 2.1
 corpus-a115_table_hidden_items_ok	Platform/02-installer/acceptance/1/cases/a115_table_hidden_items_ok.subsystem.yaml	expect/corpus-a115_table_hidden_items_ok.json	принятый случай корпуса 2.1
+corpus-a116_calls_manifest_source_ok	Platform/02-installer/acceptance/1/cases/a116_calls_manifest_source_ok.subsystem.yaml	expect/corpus-a116_calls_manifest_source_ok.json	принятый случай корпуса 2.1
 corpus-a86_sub_manifest2	Platform/02-installer/acceptance/1/cases/a86_sub_manifest2.subsystem.yaml	expect/corpus-a86_sub_manifest2.json	принятый случай корпуса 2.1
 corpus-a91_affinity_exclusive_ok	Platform/02-installer/acceptance/1/cases/a91_affinity_exclusive_ok.subsystem.yaml	expect/corpus-a91_affinity_exclusive_ok.json	принятый случай корпуса 2.1
 corpus-a91_creates_ok	Platform/02-installer/acceptance/1/cases/a91_creates_ok.subsystem.yaml	expect/corpus-a91_creates_ok.json	принятый случай корпуса 2.1

@@ -784,6 +784,9 @@ adr	add	point	status	file	norm	note
 0112	17	-	НОРМА	Platform/06-console/spec/06.7-console.norms.md	P/06.7 Н1.6	доля платформы: only: маршрут двери другим методом, POST сверки удержания, через /domain/at не идёт
 0112	18	-	НЕ НОРМА	-	-	доля платформы: нет, норма V/11.4
 0112	18	—	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.8	норма уже такова: `OperationItem.params` у `BUSY` и отката папок
+0112	19	п. 3	НОРМА	Source/tests/console/boot.js; Source/tests/console/shell-short.test.js	тесты консоли на свидетеле	доля платформы: тесты консоли — на свидетеле Source/vms/cam.shell.html, 13 shell-* сняты
+0112	20	М	НОРМА	Source/tests/console/boot.js; Source/tests/console/shell-short.test.js	тесты консоли	доля платформы: на свидетель — только зелёные на нём
+0112	22	-	НОРМА	Source/tests/console/shell-short.test.js	тест оболочки корня	доля платформы: тест короткой оболочки — ссылка /backend/, mount один раз, sections, subsystems без VMS; модуль P/07 без правок
 0113	0	п. 1	ОТВЕРГНУТО	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1	decisions/0113-раскладка-членов-домена.md:57; Platform/08-domain/spec/08.3-domain.norms.md:70
 0113	0	п. 2 а	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1	Platform/08-domain/spec/08.3-domain.norms.md:72
 0113	0	п. 2 б	НОРМА	Platform/common/contracts/accept.md	договор accept «Список членов отставшему»	Platform/common/contracts/accept.md:203
@@ -1147,7 +1150,11 @@ adr	add	point	status	file	norm	note
 0115	13	-	НЕ НОРМА	-	-	доля платформы: нет — кольцо <т>_events — worker.writes как есть
 0115	14	-	НЕ НОРМА	-	-	доля платформы: нет — длина вида — генератор
 0115	15	-	НЕ НОРМА	-	-	доля платформы: нет — воркер строк worker.writes не удаляет: каталог delete= console (P/06.1), как есть
-0116	0	-	НЕ НОРМА	-	-	доля платформы: нет — платформа без правок сверх ADR-0115 (ключи загрузчика P/02.1); kinds.changed — перезапуск по метке P/02.3, «наблюдается» — state и пульс, как есть; область гранта «по виду» — отдельный ADR до этапа 4
+0115	16	-	НЕ НОРМА	-	-	доля платформы: нет — заголовки и право страницы у двери адаптера
+0115	17	-	НЕ НОРМА	-	-	доля платформы: нет — сирота _seen, предел
+0115	18	п. 2	ОТВЕРГНУТО	-	-	доля платформы: «по rights.routes» заменено доп. (19) п. 1 — rank
+0115	19	п. 1	НОРМА	Platform/02-installer/spec/02.1-installer.schema.json; Platform/02-installer/spec/02.2-installer.view.schema.json; Platform/06-console/spec/06.5-console.norms.md; Platform/common/contracts/door-token.md; Platform/06-console/spec/06-console.api.openapi.yaml	P/02.1 door.routes[].rank; P/06.5 Н3 «/where/<id>», «/where/<table>/<place>»; договор токена двери routes	доля платформы: rank view|edit|admin, нет — view; с role или domain — отказ формы; токен — маршруты с may(need = rank)
+0116	0	-	НЕ НОРМА	-	-	доля платформы: §1 п. 4 kinds.changed снят доп. (3); правка платформы — GET /manifest/<sub>/source (доп. (6)) и загрузчик ADR-0115
 0116	0	Drivers	НЕ НОРМА	-	-	—
 0116	0	Options 2–4	ОТВЕРГНУТО	-	-	выбран вариант 1, гибрид этапами
 0116	0	§1 п. 1	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1	таблица видов — данные `data/kinds.tsv` (решила: имя файла и колонки `kind`, `from`, `write`, `implements`, `actions`, `events`); файл и строки — с контрактом этапа 1; закрытая таблица V/11.3 Н1.2 и `mapping.tsv` судят старые пути до этапа 5
@@ -1174,7 +1181,11 @@ adr	add	point	status	file	norm	note
 0116	2	п. 5	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1, Н4	чужой кластер путём ядра — исходы V/11.4 Н1.13: `409 SERVER_OFFLINE`, у камеры `kept`
 0116	2	п. 6	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1, Н1.3	`vms.cam` с `implements: [vms.camera/1]`, камеры плагинов — свои `kind`; закреплений шесть
 0116	1	-	НЕ НОРМА	-	-	доля платформы: нет — слово владельца о наборе
-0116	2	-	НЕ НОРМА	-	-	доля платформы: нет — ETag по каталогу манифестов — метка rev P/02.3 как есть; uid, публикация видов, этап 5 — V/11 и форк
+0116	2	-	ОТВЕРГНУТО	-	-	доля платформы: ETag по каталогу заменён доп. (3), (4) — набор rev из GET /manifest/<sub>/source
+0116	3	-	НЕ НОРМА	-	-	доля платформы: нет — SHA-256 ответов заменён доп. (4)
+0116	4	п. 1	ОТВЕРГНУТО	-	-	доля платформы: «GET /manifest отдаёт полный манифест» заменено доп. (6) — отдельной формой
+0116	5	-	НОРМА	Platform/06-console/spec/06.5-console.norms.md; Platform/06-console/spec/06-console.api.openapi.yaml; Platform/06-console/spec/06.3-console.norms.md; Platform/02-installer/spec/02.1-installer.schema.json; Platform/06-console/acceptance/5/scenarios.tsv	P/06.5 Н2 «GET /manifest/<sub>/source» secret_defaults	доля платформы: default *_secret — null, признак «задано» — secret_defaults (решила)
+0116	6	п. 1	НОРМА	Platform/06-console/spec/06.5-console.norms.md; Platform/06-console/spec/06-console.api.openapi.yaml; Platform/06-console/spec/06.3-console.norms.md; Platform/02-installer/spec/02.1-installer.schema.json; Platform/06-console/acceptance/5/scenarios.tsv	P/06.5 Н2 «GET /manifest/<sub>/source»; P/06.3 Н1.9; P/02.1 passCall; сц. 02 шаги 9–11	доля платформы: GET /manifest/<sub>/source → {name, rev, sha256, manifest, secret_defaults}; GET manifest/<s>/source в calls; 404, 503
 0117	0	-	НЕ НОРМА	-	-	доля платформы: нет — супервизор отдельным ADR
 0117	3	п. 2	НОРМА	Platform/06-console/spec/06.4-console.norms.md; Platform/06-console/spec/06-console.api.openapi.yaml; Platform/06-console/acceptance/4/scenarios.tsv	P/06.4 Н1.2 marks, Н2 POST /marks; сц. 03 шаги 16–20	доля платформы: to — конец отрезка, только с occurred и не меньше его, иначе 400; поле to строки
 0117	4	-	НЕ НОРМА	-	-	доля платформы: нет — закрепления размещения после done в P/04 нет, предел VMS

@@ -2647,6 +2647,94 @@ paths:
               schema:
                 type: string
                 const: '1'
+  /manifest/{sub}/source:
+    description: Глава 6.5 Н2 «GET /manifest/<sub>/source» — полная форма манифеста для описания вида backend VMS (ADR-0116 доп. (4)–(6)); ManifestView не меняется.
+    parameters:
+    - name: sub
+      in: path
+      required: true
+      description: Имя подсистемы каталога кластера (P/02.1 Н1.2).
+      schema:
+        type: string
+        pattern: ^(?:[a-z][a-z0-9_-]{0,31})$
+    get:
+      summary: полная форма манифеста подсистемы — канонический вид P/02.2 с ревизией, секретные умолчания замаскированы
+      responses:
+        '200':
+          description: Полная форма манифеста.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManifestSource'
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Строки манифеста подсистемы нет — refused, «no such subsystem»; неизвестный путь — как у общего отказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsoleRefusal'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          description: Строка манифеста или его канонический вид не прочитаны или не подтверждены; rev вида не равна rev строки — unavailable, Retry-After 1
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsoleRefusal'
+          headers:
+            Retry-After:
+              description: При unavailable — 1.
+              schema:
+                type: string
+                const: '1'
+    head:
+      summary: 'HEAD: полная форма манифеста подсистемы'
+      responses:
+        '200':
+          description: Полная форма манифеста; HEAD не содержит тела
+        '400':
+          $ref: '#/components/responses/BadBody'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          description: Строки манифеста подсистемы нет — refused, «no such subsystem»; неизвестный путь — как у общего отказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsoleRefusal'
+        '405':
+          $ref: '#/components/responses/Method'
+        '408':
+          $ref: '#/components/responses/SlowBody'
+        '413':
+          $ref: '#/components/responses/LargeBody'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          description: Строка манифеста или его канонический вид не прочитаны или не подтверждены; rev вида не равна rev строки — unavailable, Retry-After 1
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsoleRefusal'
+          headers:
+            Retry-After:
+              description: При unavailable — 1.
+              schema:
+                type: string
+                const: '1'
   /{sub}/manifest:
     description: Глава 6.5 (06.5-console.norms.md).
     parameters:
@@ -6304,6 +6392,38 @@ components:
         type: string
         pattern: "^(?:[a-z][a-z0-9_-]{0,31})$"
   schemas:
+    ManifestSource:
+      type: object
+      description: Глава 6.5 Н2 «GET /manifest/<sub>/source» (ADR-0116 доп. (6)).
+      required:
+      - name
+      - rev
+      - sha256
+      - manifest
+      - secret_defaults
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          pattern: ^(?:[a-z][a-z0-9_-]{0,31})$
+        rev:
+          type: integer
+          minimum: 1
+          description: Ревизия строки манифеста (P/02.3).
+        sha256:
+          type: string
+          pattern: ^(?:[0-9a-f]{64})$
+          description: SHA-256 байтов yaml манифеста (P/02.3).
+        manifest:
+          type: object
+          additionalProperties: true
+          description: Канонический вид P/02.2 той же ревизии (02.2-installer.view.schema.json); default полей *_secret — null.
+        secret_defaults:
+          type: array
+          uniqueItems: true
+          description: Имена полей *_secret, у которых манифест задал default, — <поле> или <т>.<поле>, по возрастанию байтов; значение не выдаётся (ADR-0116 доп. (5)).
+          items:
+            type: string
     ManifestView:
       type: object
       required:
@@ -6913,6 +7033,8 @@ components:
             разбор ревью стадии B 6–7, № 10).
         routes:
           type: array
+          minItems: 1
+          description: Маршруты door.routes с допуском token и rank, разрешённым человеку на единице (глава 6.5 Н3; ADR-0115 доп. (19)); ни одного — поля door нет.
           items:
             type: string
             minLength: 1

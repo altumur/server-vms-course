@@ -939,3 +939,10 @@ a115_display_tables_ok	ok
 a115_display_tables_list_ok	ok
 a115_display_tables_bad_label	refused
 a115_rel159_display_tables_nosuch	refused
+a116_calls_manifest_source_ok	ok
+a116_calls_manifest_source_write	refused
+a116_calls_manifest_source_other	refused
+a115_route_rank_ok	ok
+a115_route_rank_role	refused
+a115_route_rank_domain	refused
+a115_route_rank_word	refused
