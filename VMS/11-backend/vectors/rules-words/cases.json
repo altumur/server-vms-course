@@ -5896,6 +5896,44 @@
    "errors": [
     "when[0]: the request does not speak of silent: the trigger must be the admin's event; if the catalog has no such event, refuse"
    ]
+  },
+  {
+   "id": "step-scan-dropped-ot",
+   "note": "«отсканируй архив» — det scan, шага нет (ревью норм words-93j М1)",
+   "request": "Когда сработает датчик Gate Loop, подними тревогу на Gate Cam и отсканируй архив Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "1"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "then: the request asks for det scan, the plan has none: ask_admin"
+   ]
   }
  ]
 }

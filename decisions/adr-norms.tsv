@@ -80,6 +80,7 @@ adr	add	point	status	file	norm	note
 0093	38	пп. 1, 2	НОРМА	VMS/11-backend/spec/11.13-backend.norms.md; VMS/11-backend/harness/rules/words.json; VMS/11-backend/vectors/rules-words/cases.json	V/11.13 Н1.6	`asks_step` узко: `escalate`, `ask`, `det scan`; при одной названной камере шаг на неё — верно; ревью (38) М1 — узкие слова ask, scan; М2 — `cam` без `unit` широкий
 0093	38	ревью норм С1	НОРМА	VMS/11-backend/spec/11.13-backend.norms.md; VMS/11-backend/harness/rules/words.json; VMS/11-backend/vectors/rules-words/cases.json	V/11.13 Н1.6	исполнение (36): исключение голого lost — узкий `segment_lost_phrase`, без `.*` и «запис»; `lost-bag-start-recording`; «recording … drops» — по набору Пилота M04, `lost-recording-drops`
 0093	38	вопрос Пилота М1, М2	НОРМА	VMS/11-backend/harness/rules/words.json; VMS/11-backend/spec/11.13-backend.norms.md; VMS/11-backend/vectors/rules-words/cases.json	V/11.13 Н1.6	решила: `asks_step` det scan — `(?:про)?сканир`, escalate — основа «эскал»; `step-scan-dropped-ru`, `step-escalate-dropped-ru`
+0093	38	ревью норм words-93j М1, М2	НОРМА	VMS/11-backend/harness/rules/words.json; VMS/11-backend/spec/11.13-backend.norms.md; VMS/11-backend/vectors/rules-words/cases.json	V/11.13 Н1.6	`asks_step` det scan — `(?:про|от)?сканир`; предел: прямое `actions["det scan"]` широко; `step-scan-dropped-ot`
 0102	0	п. 1	НОРМА	VMS/11-backend/spec/11.3-backend.norms.md	V/11.3 Н1.2	VMS/11-backend/spec/11.3-backend.norms.md:67
 0102	0	п. 2	ОТВЕРГНУТО	-	-	доп. (1) п. 1 (decisions/0102-устройства-по-дереву-driverpack.md:84, заменяет п. 2)
 0102	0	п. 3	ОТВЕРГНУТО	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.2	доп. (1) п. 1, доп. (6) п. 7; остаток (создания детей нет) — VMS/11-backend/spec/11.4-backend.norms.md:139
@@ -613,6 +614,8 @@ adr	add	point	status	file	norm	note
 0110	27	п. 1	НОРМА	Platform/09-agent/spec/09.1-agent.norms.md; Platform/common/contracts/keys.md; Platform/08-domain/spec/08.8-domain.norms.md	P/09.1 Н1.4; договор keys «Отзывы»; P/08.8 Н1.8	доля платформы: любое 413 слияния — замена строкой ответа, журнал domain.revoked.replaced; предел при любом 413
 0110	27	п. 2	ОТВЕРГНУТО	Platform/09-agent/spec/09.1-agent.norms.md	P/09.1 Н1.4	доля платформы: «keys ответа не применяется» заменено доп. (28)
 0110	28	-	НОРМА	Platform/09-agent/spec/09.1-agent.norms.md; Platform/08-domain/data/keys.outcomes.tsv; Platform/08-domain/spec/08.2-domain.norms.md; Platform/common/contracts/keys.md	P/09.1 Н1.4; keys.outcomes.tsv; P/08.2 «Семьи данных» domain/keys; договор keys «Функция keys»	доля платформы: без памяти — keys(pinned, null, offered), took записывается; предел отката, худший — набор до кражи до следующего ответа
+0110	27	п. 2	НОРМА	Platform/09-agent/spec/09.1-agent.norms.md	P/09.1 Н1.4	доля платформы: без памяти не применяется только keys ответа, revoked — путём старта
+0110	27	доля VMS	НЕ НОРМА	-	-	доля VMS: нет; норма платформы
 0112	0	п. 1	НОРМА	VMS/08-page/spec/08.1-page.norms.md; VMS/09-deploy/spec/09.1-deploy.norms.md	V/08.1; V/09.1 Н1.1	VMS/08-page/spec/08.1-page.norms.md:8, :24; VMS/09-deploy/spec/09.1-deploy.norms.md:27; закрыто vms/page-tab-2: V/08.1 под закладку формы
 0112	0	п. 1, конец	НЕ НОРМА	-	-	—
 0112	0	п. 2, а	НОРМА	VMS/08-page/spec/08.1-page.norms.md	V/08.1	VMS/08-page/spec/08.1-page.norms.md:8; 08-page.README.md:4; закрыто vms/page-tab-2
