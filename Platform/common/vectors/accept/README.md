@@ -29,9 +29,9 @@ Kimi SB810-06): у строк уроков 3 и 4 `catalog` — `["testsub"]`, �
 | Манифест | Файл | sha256 |
 |---|---|---|
 | `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a` |
-| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `6e0ec30f7b8e5cb1de5258e64035e0e3ec58508c7af6a7d3f550717e7765d3e5` |
+| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `813a807f3472bdc64e279c94c12bfe3b00ebaaa8ebda0c996d2a50161043e6eb` |
 
-Байты `testsub2` сменились 2026-11-04 (дорожная карта 4.5): добавлен вид токена `vault` с `keep: true` в `domain.tokens`; поля, от которых зависят ожидания этой таблицы, не тронуты — перепроверка оракулом не нужна.
+Байты `testsub2` сменились 2026-11-04 (дорожная карта 4.5): добавлен вид токена `vault` с `keep: true` в `domain.tokens`, затем переписаны комментарии шапки без имён файлов тестов; поля, от которых зависят ожидания этой таблицы, не тронуты — перепроверка оракулом не нужна.
 
 Смена этих байтов — повод перепроверить таблицу.
 Кто исполняет — держатель (`08-domain`, процесс `domain`: P/08.3 Н3 «принять» на `POST /api/member/<член>` и пакет ретранслятора с `via`) и ретранслятор (`09-agent`, дверь над своей памятью, P/09.2 Н2) — все строки. Только читают готовое: агент члена (сторона P/09.1 — ответ `carry` и 409 держателя, Н3 «проход агента») и консоль домена (`10-domain-console` — метку `reported`, P/10 Н3 `alarms`) (ACC-VECTORS-CONNECT-03: строку исполняет роль, чья норма вызывает её функцию; решение «Архитектора» 2026-10-27).
