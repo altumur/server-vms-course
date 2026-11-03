@@ -1174,7 +1174,7 @@ adr	add	point	status	file	norm	note
 0115	19	п. 1	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md; VMS/12-psim/spec/12.3-psim.norms.md	V/12.1 Н1.6; V/12.3 Н1.6	маршрут страницы rank: edit; ключ rank — P/02.1, P/06.5 «Спецификации»
 0115	19	п. 2	НОРМА	VMS/12-psim/spec/12.3-psim.norms.md; VMS/12-psim/spec/12-psim.api.openapi.yaml	V/12.3 Н1.6	все Set-Cookie плагина сняты, своя кука без Domain
 0115	19	п. 3	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md; VMS/12-psim/spec/12.3-psim.norms.md	V/12.1 Н1.2; V/12.3 Н1.4	на NEW <т>_seen того же ключа перезаписывается
-0115	20	п. 1	НОРМА	Platform/06-console/spec/06.5-console.norms.md; Platform/06-console/spec/06-console.api.openapi.yaml; Platform/06-console/acceptance/5/scenarios.tsv	P/06.5 Н2 «GET /manifest/<sub>/source» served	доля платформы: served — rev каталога, которым консоль служит с запуска, нет — null; установка ждёт served = rev
+0115	20	п. 1	НОРМА	Platform/06-console/spec/06.5-console.norms.md; Platform/06-console/spec/06-console.api.openapi.yaml; Platform/06-console/acceptance/5/scenarios.tsv	P/06.5 Н2 «GET /manifest/<sub>/source» served	доля платформы: тело и served — каталог запуска в памяти консоли, хранилище при запросе не читается; served = rev; подсистемы нет в каталоге запуска — 404
 0115	20	п. 1	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md	V/12.4 Н1.2, Н1.3	доля VMS: ждать served = новой rev у /manifest/<sub>/source после put манифеста и после сборки backend
 0115	20	п. 2	НЕ НОРМА	-	-	доля платформы: нет — owners выключенного плагина, V/12
 0115	20	п. 2	НОРМА	VMS/12-psim/spec/12.2-psim.norms.md	V/12.2 Н1.2	доля VMS: owners выключенного плагина не судятся
