@@ -24,6 +24,7 @@ scenario	step	request	expect
 03-disable	7	@psim sync	ok
 03-disable	8	console GET /manifest/backend/source	200 {"name": "backend", "served": "@any"}
 04-page	1	@psim install {psim}/security_controller	ok
-04-page	2	console GET /psim-security_controller/where/plugin	200 {"url": "@any", "token": "@any"}
-04-page	3	@manual первый адрес <url>/setup/?t=<token> → 303 на тот же адрес без t и Set-Cookie psim_security_controller=…; HttpOnly; Secure; SameSite=Strict; Path=/setup/, без Domain; запрос с кукой — 200 страницы плагина, Cookie и Authorization запроса до плагина не дошли (журнал двери), Set-Cookie плагина в ответе нет	manual
-04-page	4	@manual GET <url>/static/i18n.js без токена — 200, байты psim_platform_emulator/webui/i18n.js с SHA-256 7ef4d865…5584, Content-Type application/javascript; charset=utf-8	manual
+04-page	2	@start worker psim-security_controller w-srv-a-1 on srv-a	ok
+04-page	3	@until 60 console GET /psim-security_controller/where/plugin	200 {"url": "@any", "token": "@any"}
+04-page	4	@manual первый адрес <url>/setup/?t=<token> → 303 на тот же адрес без t и Set-Cookie psim_security_controller=…; HttpOnly; Secure; SameSite=Strict; Path=/setup/, без Domain; запрос с кукой — 200 страницы плагина, Cookie и Authorization запроса до плагина не дошли (журнал двери), Set-Cookie плагина в ответе нет	manual
+04-page	5	@manual GET <url>/static/i18n.js без токена — 200, байты psim_platform_emulator/webui/i18n.js с SHA-256 7ef4d865…5584, Content-Type application/javascript; charset=utf-8	manual
