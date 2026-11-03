@@ -613,6 +613,7 @@ adr	add	point	status	file	norm	note
 0110	26	доля VMS	НЕ НОРМА	-	-	доля VMS: нет; норма платформы
 0110	27	п. 1	НОРМА	Platform/09-agent/spec/09.1-agent.norms.md; Platform/common/contracts/keys.md; Platform/08-domain/spec/08.8-domain.norms.md	P/09.1 Н1.4; договор keys «Отзывы»; P/08.8 Н1.8	доля платформы: любое 413 слияния — замена строкой ответа, журнал domain.revoked.replaced; предел при любом 413
 0110	27	п. 2	НОРМА	Platform/09-agent/spec/09.1-agent.norms.md	P/09.1 Н1.4	доля платформы: без памяти не применяется только keys ответа, revoked — путём старта
+0110	27	доля VMS	НЕ НОРМА	-	-	доля VMS: нет; норма платформы
 0112	0	п. 1	НОРМА	VMS/08-page/spec/08.1-page.norms.md; VMS/09-deploy/spec/09.1-deploy.norms.md	V/08.1; V/09.1 Н1.1	VMS/08-page/spec/08.1-page.norms.md:8, :24; VMS/09-deploy/spec/09.1-deploy.norms.md:27; закрыто vms/page-tab-2: V/08.1 под закладку формы
 0112	0	п. 1, конец	НЕ НОРМА	-	-	—
 0112	0	п. 2, а	НОРМА	VMS/08-page/spec/08.1-page.norms.md	V/08.1	VMS/08-page/spec/08.1-page.norms.md:8; 08-page.README.md:4; закрыто vms/page-tab-2
