@@ -29,7 +29,7 @@ def arguments():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("lessons", nargs="*",
                         help="module/NN-slug.md; only the new shared-spec layout; none — every Platform lesson of "
-                             "Platform/lessons.tsv (one result for one tree, whatever the shell globs)")
+                             "Platform/lessons.tsv and every VMS/NN-*/NN-*.md lesson, strictly (one result for one tree, whatever the shell globs)")
     parser.add_argument("--root", type=Path, default=Path.cwd(), help="repository root, default cwd")
     parser.add_argument("--exceptions", type=Path, default=EXCEPTIONS,
                         help="registry of allowed deviations, default the skill's exceptions.tsv")
@@ -2755,6 +2755,14 @@ def main():
         check.error(check.root / LESSONS, "no lessons: name them or keep Platform/lessons.tsv")
     for name in names:
         check.lesson((check.root / name).resolve())
+    if not args.lessons:                                   # уроки VMS — тем же проходом, строго (2026-11-03: без них ошибки формы копились)
+        vms = Check(args.root, args.exceptions, True)
+        lessons = [d / f"{d.name}.md" for d in sorted((check.root / "VMS").glob("[0-9][0-9]-*")) if (d / f"{d.name}.md").is_file()]
+        for path in lessons:
+            vms.lesson(path.resolve())
+        check.errors.extend(e for e in vms.errors if e not in check.errors)
+        check.excepted.extend(e for e in vms.excepted if e not in check.excepted)
+        check.stats["vms_lessons_checked"] = len(lessons)
     check.vms_module()
     check.vector_hashes()
     check.vms_frozen()
