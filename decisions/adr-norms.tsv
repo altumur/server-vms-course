@@ -1195,6 +1195,7 @@ adr	add	point	status	file	norm	note
 0115	25	п. 4 (а)	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md	V/12.4 Н1.2, Н1.3	served работающих ждать после manifest put; psim-<id> — в finish
 0115	25	п. 4 (б)	ПРЕДЕЛ	VMS/12-psim/spec/12.4-psim.norms.md	V/12.4 Н1.2	backend с calls нового плагина до консолей — переходные 404 и 401
 0115	25	п. 4 (в)	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md	V/12.4 Н1.2	сервер лидера последним с -last
+0115	26	—	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md; VMS/common/acceptance/README.md	V/12.4 Н1.2; словарь @traverse	доля VMS: manifest get заменяет файлы, названные строкой (backend, зависимые, владельцы), стенд — так же; повтор <sub> в наборе — провал @traverse (решила, принято)
 0116	0	Drivers	НЕ НОРМА	-	-	—
 0116	0	Options 2–4	ОТВЕРГНУТО	-	-	выбран вариант 1, гибрид этапами
 0116	0	§1 п. 1	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1	таблица видов — данные `data/kinds.tsv` (решила: имя файла и колонки `kind`, `from`, `write`, `implements`, `actions`, `events`); файл и строки — с контрактом этапа 1; закрытая таблица V/11.3 Н1.2 и `mapping.tsv` судят старые пути до этапа 5
