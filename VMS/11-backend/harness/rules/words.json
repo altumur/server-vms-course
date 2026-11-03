@@ -60,10 +60,13 @@
   "disappeared": "disappear|missing|taken away|removed|пропал|пропаж|исчез|унесл|пропад",
   "abandoned": "abandon|left behind|left object|unattended|оставлен|забыт|брошен",
   "crowd": "crowd|gathering|too many people|толп|скоплен|много людей",
-  "silent": "silent|silence|lost contact|offline|замолч|молчит|на связи|пропад|пропал",
+  "silent": "silent|silence|lost contact|offline|замолч|молчит|на связи|пропад|пропал|(?:^|[^0-9a-zа-яё])drop(?:s|ped|ping)? off(?:$|[^0-9a-zа-яё])",
   "segment.lost": "segment|recording.*lost|lost.*recording|куск|запис|(?:^|[^0-9a-zа-яё])los(?:e|es|t|ing)\\s+(?:\\S+\\s+)?recording",
   "io.input": "sensor|trips?(?:$|[^0-9a-zа-яё])|tripped|датчик|сработ|срабат|вход"
  },
+ "lost_bare": "(?:^|[^0-9a-zа-яё])lost(?:$|[^0-9a-zа-яё])",
+ "lost_contact": "(?:^|[^0-9a-zа-яё])lost contact(?:$|[^0-9a-zа-яё])",
+ "arm_put": "(?:^|[^0-9a-zа-яё])put\\s+(?:\\S+\\s+){0,3}on guard(?:$|[^0-9a-zа-яё])",
  "actions": {
   "cam output": "relay|turn on|turn off|switch on|switch off|pulse|unlock|lock|light|siren|реле|включ|выключ|импульс|открой|свет|(?:^|[^0-9a-zа-яё])open|(?:^|[^0-9a-zа-яё])отключ",
   "cam preset": "preset|пресет",
