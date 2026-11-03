@@ -97,6 +97,7 @@ gate:
                                        тела — точно на единицу тела; у сторожевой домена до тела — edit на "*" (body_unit)
     DELETE /{sub}/asked/*            → admin на *
     метки сервера, вывод, policy, drain, schema PUT → admin на *
+    GET /manifest/<sub>/source       → admin на * или билет с записью GET manifest/<s>/source в calls (P/06.5 Н2; ADR-0116 доп. (7))
     GET /drain                       → view на * (не «любой грант»): дренаж — состояние всего кластера, частичной видимости нет;
                                        грант уже (unit:…, labels:…) — 403 по refusal, без выдачи (C06-DRAIN-VISIBILITY-33-01)
     POST /domain/move                → шаг 1 или шаг 4а договора права по таблице ролей этого кластера: аварийная сессия или
