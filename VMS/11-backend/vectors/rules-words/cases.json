@@ -4617,6 +4617,146 @@
    "errors": [
     "then[0]: default yes is not in the request: with no answer the rule goes the no way"
    ]
+  },
+  {
+   "id": "ask-default-yes-podnimi",
+   "note": "«подними тревогу» — default yes, основа «подним» (ревью норм (32), (33) М1)",
+   "request": "Когда сработает датчик Gate Loop, спроси Guards в течение 60 секунд, поднять ли тревогу на Gate Cam; нет ответа — подними тревогу.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "text": "Raise an alarm on Gate Cam?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "yes",
+      "yes": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ],
+      "no": []
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "ask-default-yes-podnyat",
+   "note": "«поднять тревогу» — default yes, основа «подня»",
+   "request": "Когда сработает датчик Gate Loop, спроси Guards в течение 60 секунд, поднять ли тревогу на Gate Cam; нет ответа — поднять тревогу.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "text": "Raise an alarm on Gate Cam?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "yes",
+      "yes": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ],
+      "no": []
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "ask-default-no-zabud",
+   "note": "«не забудь поднять» — отрицание через слово: вопрос вместо default yes, предел Н1.6",
+   "request": "Когда сработает датчик Gate Loop, спроси Guards в течение 60 секунд, поднять ли тревогу на Gate Cam; нет ответа — не забудь поднять тревогу.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "text": "Raise an alarm on Gate Cam?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "yes",
+      "yes": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ],
+      "no": []
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: default yes is not in the request: with no answer the rule goes the no way"
+   ]
   }
  ]
 }
