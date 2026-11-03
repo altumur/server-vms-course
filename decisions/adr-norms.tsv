@@ -784,7 +784,7 @@ adr	add	point	status	file	norm	note
 0113	1	п. 4 м	НОРМА	Platform/08-domain/spec/08.8-domain.norms.md	P/08.8 Н1.5	Platform/08-domain/spec/08.8-domain.norms.md:167
 0113	1	п. 4 н	НЕ НОРМА	-	-	—
 0113	1	п. 5	НЕ НОРМА	-	-	—
-0113	2	п. 1 а	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1б	Platform/08-domain/spec/08.3-domain.norms.md:123
+0113	2	п. 1 а	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1б	Platform/08-domain/spec/08.3-domain.norms.md:123; кластер записи в токене партии снят доп. (47) п. 2: поля record у POST /domain/batches нет, кластер записи выбирает назначение
 0113	2	п. 1 б	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1б	Platform/08-domain/spec/08.3-domain.norms.md:117
 0113	2	п. 1 в	ОТВЕРГНУТО	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1б	decisions/0113-раскладка-членов-домена.md:83; Platform/08-domain/spec/08.3-domain.norms.md:117
 0113	2	п. 2	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md; Platform/09-agent/spec/09.1-agent.norms.md	P/08.3 Н1.1б; P/09.1 Н1.1	Platform/08-domain/spec/08.3-domain.norms.md:117; Platform/09-agent/spec/09.1-agent.norms.md:139
@@ -851,7 +851,7 @@ adr	add	point	status	file	norm	note
 0113	9	п. 1 б	ОТВЕРГНУТО	Platform/common/contracts/accept.md	договор accept «Публикация члена»	decisions/0113-раскладка-членов-домена.md:163; Platform/common/contracts/accept.md:101
 0113	9	п. 1 в	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:105
 0113	9	п. 1 г	НОРМА	Platform/02-installer/spec/02.1-installer.norms.md	P/02.1 Н3	Platform/02-installer/spec/02.1-installer.norms.md:1109
-0113	9	п. 1 д	РАСХОДИТСЯ	Platform/02-installer/spec/02.1-installer.norms.md; Platform/08-domain/spec/08.5-domain.norms.md	P/02.1 Н3 «загрузить_каталог»; P/08.5 Н1.3	перепроверено на f9ed198b3: 02.1:1112 «Секрет такого входа манифест не называет: его судит сборка, `bad_contribution`»; 08.5:73; ADR «отказ каталога»; `grant` и `pick: unique` — отказ каталога есть; поведение безопасно, слово ADR не поправлено
+0113	9	п. 1 д	ОТВЕРГНУТО	Platform/02-installer/spec/02.1-installer.norms.md; Platform/08-domain/spec/08.5-domain.norms.md	P/02.1 Н3 «загрузить_каталог»; P/08.5 Н1.3	в части секрета заменён доп. (47) п. 6: секрет входа книги to "*" судит сборка, bad_contribution (P/02.1 Н3 «загрузить_каталог», P/08.5 Н1.3); grant — по-прежнему каталог
 0113	9	п. 2 а	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	Platform/08-domain/spec/08.5-domain.norms.md:93
 0113	9	п. 2 б	НОРМА	VMS/03-live/spec/03.6-live.norms.md	V/03.6 Н1.3	VMS/03-live/spec/03.6-live.norms.md:122
 0113	9	п. 3	НОРМА	VMS/07-auto/auto.subsystem.yaml	auto.subsystem.yaml	VMS/07-auto/auto.subsystem.yaml:640
@@ -968,6 +968,7 @@ adr	add	point	status	file	norm	note
 0113	27	п. 3	ПРЕДЕЛ	VMS/02-rec/spec/02.9-rec.norms.md	V/02.9 Н1.6	503 до первой головы срока, у `primaries` до 20 мин после переноса
 0113	28	п. 1	НЕ НОРМА	-	-	не VMS: платформа, P/08.5 Н1.3 `rev` головы
 0113	28	п. 2	ПРЕДЕЛ	VMS/02-rec/spec/02.9-rec.norms.md	V/02.9 Н1.6	падение одной записи, числа доп. (34): 175–450 с
+0113	28	п. 1	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	доля платформы: head — rev растёт при смене состава class server в missing
 0113	29	п. 1	НОРМА	VMS/02-rec/spec/02.9-rec.norms.md	V/02.9 Н1.6	элемент `primaries` называет сервер, резерв судит элемент и `stale` головы `ingest` вместе; уточнён доп. (30)
 0113	29	-	ОТВЕРГНУТО	-	-	доля платформы: ключ на регистратор в книге primaries — заменён доп. (30) п. 1: отдельная книга ingest; доля VMS
 0113	30	п. 1	НОРМА	VMS/02-rec/spec/02.9-rec.norms.md; VMS/02-rec/rec.subsystem.yaml; VMS/01-cam/spec/01.6-cam.norms.md	V/02.9 Н1.6; V/01.6 Н1.4	книга `ingest` по кластеру, `to: "*"`, толкатель берёт адреса
@@ -1047,3 +1048,16 @@ adr	add	point	status	file	norm	note
 0113	46	п. 2	НОРМА	Platform/04-controller/spec/04-controller.norms.md	P/04 Н3	доля платформы: версия стража из ответа пакета отдачи
 0113	46	п. 3	НОРМА	Platform/04-controller/spec/04-controller.norms.md	P/04 Н3	доля платформы: отказ пакета отдачи — весь пакет следующим проходом
 0113	47	—	НЕ НОРМА	-	-	пп. 1–8 — нормы платформы (P/08.3, accept, batches, carry, P/09.1, P/08.1, OpenAPI P/08, сборка книг, P/04), доля «Спецификации»; V/02.9 `stale_after` уже по порогу подсистемы
+0113	47	п. 1	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md; Platform/common/contracts/accept.md; Platform/08-domain/spec/08-domain.api.openapi.yaml	P/08.3 Н2; договор accept; 08-domain.api.openapi.yaml	доля платформы: дверь книги — 503, пока голова /* срока не записана; 404 empty_part только после головы; book_stale так же
+0113	47	п. 2	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1б	доля платформы: POST /domain/batches без record (82e6cfd09)
+0113	47	п. 3	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md; Platform/09-agent/spec/09.1-agent.norms.md; Platform/09-agent/spec/09.2-agent.norms.md; Platform/common/contracts/accept.md; Platform/08-domain/spec/08-domain.api.openapi.yaml	P/08.3 Н1.2; P/09.1 «Семьи данных» domain/member-topology; P/09.2 Н2; договор accept; 08-domain.api.openapi.yaml	доля платформы: carry.topology {at, sha256}, тело GET /api/topology/<член> при новом sha256 — решила
+0113	47	п. 4	НОРМА	Platform/09-agent/spec/09.1-agent.norms.md; Platform/08-domain/spec/08.1-domain.norms.md	P/09.1 Н1.4; P/08.1 Н1.4	доля платформы: fresh и stale вида — порог подсистемы, LOST_AFTER без ключа
+0113	47	п. 5	НОРМА	Platform/08-domain/spec/08-domain.api.openapi.yaml	08-domain.api.openapi.yaml	доля платформы: 409 приёма — слова шагов 5а, 5б, 6
+0113	47	п. 6	НОРМА	Platform/02-installer/spec/02.1-installer.norms.md; Platform/08-domain/spec/08.5-domain.norms.md	P/02.1 Н3 «загрузить_каталог»; P/08.5 Н1.3	доля платформы: секрет входа to "*" — сборка, bad_contribution
+0113	47	п. 7	ПРЕДЕЛ	Platform/04-controller/spec/04-controller.norms.md	P/04 Н1.3б	доля платформы: потолка снимков на домен нет, сумма членов, около 19 ГиБ
+0113	47	п. 8 М1	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.8	доля платформы: дерево целиком только отставшему больше кольца folder-log
+0113	47	п. 8 М2	НОРМА	Platform/08-domain/spec/08.5-domain.norms.md	P/08.5 Н1.3	доля платформы: условия rev головы в одном месте
+0113	47	п. 8 М3	НЕ НОРМА	-	-	доля платформы: норма P/08.8 согласна с (16), (17), правка слова ADR
+0113	47	п. 8 М4	ПРЕДЕЛ	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1а	доля платформы: выключение domain/disabled у камеры — с периодом
+0113	47	п. 8 М5	НОРМА	-	-	доля платформы: строки adr-norms (9) п. 1 д, (2) п. 1 а, (28) п. 1, (29)–(47)
+0113	47	п. 8 М6	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н3	доля платформы: collecting в ответе пакета уже есть (шаг 4); слово ADR доп. (5) п. 5 — «новее»

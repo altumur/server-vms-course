@@ -303,7 +303,7 @@ paths:
         '404':
           $ref: '#/components/responses/Refused'
         '409':
-          description: 'Н3 «принять члена» шаги 1–6; список полон — detail «too many members: the list holds 500»; Entry больше 820 байт — «the entry of <name> would exceed 1240 bytes» (P/08.10 Н1.5; добавлено М11/12); deposed (P/08.8 Н1.6)'
+          description: 'Н3 «принять члена» шаги 1–6, detail — слова шагов (P/08.3 Н3): шаг 5а — «this name''s row is full: pick another name», «too many servers», «this name''s section is near the book ceiling: pick another name»; шаг 5б — «a domain of this size needs <n> backup holders: add a server first», relay full; шаг 6 — «the entry of <name> would exceed 1240 bytes» (ENTRY_MAX, P/08.10 Н1.5), «the list of members kept changing; look again»; deposed (P/08.8 Н1.6); ADR-0113 доп. (47) п. 5'
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Refusal'}
@@ -619,11 +619,12 @@ paths:
       responses:
         '200': {description: '{items}'}
         '404':
-          description: 'reason: empty_part — строки раздела нет, копия снимается; not_a_book — книга не to "*"; без reason — не член (P/08.3 Н2).'
+          description: 'reason: empty_part — строки раздела нет, голова текущего срока записана, копия снимается; голова не записана — 503 unavailable, копия держится (ADR-0113 доп. (47) п. 1); not_a_book — книга не to "*"; без reason — не член (P/08.3 Н2).'
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Refusal'}
         '429': {$ref: '#/components/responses/Busy'}
+        '503': {$ref: '#/components/responses/StandbyOrUnavailable'}
   /api/backup-part/{member}/{part}:
     parameters:
       - {$ref: '#/components/parameters/Member'}
@@ -647,6 +648,16 @@ paths:
       summary: Тело сводки anywhere (глава 8.4 Н1.3)
       responses:
         '200': {description: '{doc, as_of}'}
+        '429': {$ref: '#/components/responses/Busy'}
+  /api/topology/{member}:
+    parameters:
+      - {$ref: '#/components/parameters/Member'}
+      - {$ref: '#/components/parameters/AgentSignature'}
+    get:
+      operationId: topologyBody
+      summary: Тело топологии члена {doc, via} при новом sha256 поля topology ответа (глава 8.3 Н1.2 carry; ADR-0113 доп. (47) п. 3)
+      responses:
+        '200': {description: '{doc, via}'}
         '429': {$ref: '#/components/responses/Busy'}
   /domain/partial/close:
     post:
