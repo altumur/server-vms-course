@@ -6275,7 +6275,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/VerifyAnswer'
         '400':
-          description: 'Тело не по форме (user, password — строки; need — cap, sub, units непустые без повторов, не больше VERIFY_UNITS_MAX); до пересылки, не в счёт предела. Ответ процесса domain с кодом 400 — как пришёл.'
+          description: 'Тело не по форме (user, password — строки; need — cap, sub, units непустые без повторов по шаблону <sub>/<id>, не больше VERIFY_UNITS_MAX); до пересылки, не в счёт предела. Ответ процесса domain с кодом 400 — как пришёл.'
           content:
             application/json:
               schema:
@@ -6294,6 +6294,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConsoleDenied'
+        '409':
+          description: 'Ответ процесса domain как пришёл: смещённый держатель — deposed (P/08.4 Н1.2а check; глава 8.10 Н1.7).'
+          content:
+            application/json:
+              schema:
+                $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
+        '413':
+          description: 'Тело больше LOGIN_BODY — ответ процесса domain как пришёл (too large, P/08.4 Н1.2а door), или общий отказ разбора консоли (глава 6.5 Н4).'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
         '429':
           $ref: '#/components/responses/RateLimited'
         '503':
@@ -6462,7 +6476,8 @@ components:
               uniqueItems: true
               items:
                 type: string
-                minLength: 3
+                description: '<sub>/<id>: имя подсистемы, «/», id — один непустой сегмент без «/» (ADR-0119 доп. (13) п. 2)'
+                pattern: ^(?:[a-z][a-z0-9_-]{0,31}/[^/]+)$
     VerifyAnswer:
       type: object
       description: Глава 6.7 Н1.15 (ADR-0119); need и supervision — только при need запроса.
