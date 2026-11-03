@@ -1059,7 +1059,7 @@ adr	add	point	status	file	norm	note
 0113	46	п. 1	НОРМА	Platform/04-controller/spec/04-controller.norms.md	P/04 Н3	доля платформы: в пакете отдачи вклады под cas слота
 0113	46	п. 2	НОРМА	Platform/04-controller/spec/04-controller.norms.md	P/04 Н3	доля платформы: версия стража из ответа пакета отдачи
 0113	46	п. 3	НОРМА	Platform/04-controller/spec/04-controller.norms.md	P/04 Н3	доля платформы: отказ пакета отдачи — весь пакет следующим проходом
-0113	47	—	НЕ НОРМА	-	-	пп. 1–8 — нормы платформы (P/08.3, accept, batches, carry, P/09.1, P/08.1, OpenAPI P/08, сборка книг, P/04), доля «Спецификации»; V/02.9 `stale_after` уже по порогу подсистемы
+0113	47	доля VMS	НЕ НОРМА	-	-	нормы VMS доп. (47) не задевает: V/02.9 `stale_after` уже по порогу подсистемы; пп. 1–8 — строки платформы
 0113	47	п. 1	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md; Platform/common/contracts/accept.md; Platform/08-domain/spec/08-domain.api.openapi.yaml	P/08.3 Н2; договор accept; 08-domain.api.openapi.yaml	доля платформы: дверь книги — 503, пока голова /* срока не записана; 404 empty_part только после головы; book_stale так же
 0113	47	п. 2	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md	P/08.3 Н1.1б	доля платформы: POST /domain/batches без record (82e6cfd09)
 0113	47	п. 3	НОРМА	Platform/08-domain/spec/08.3-domain.norms.md; Platform/09-agent/spec/09.1-agent.norms.md; Platform/09-agent/spec/09.2-agent.norms.md; Platform/common/contracts/accept.md; Platform/08-domain/spec/08-domain.api.openapi.yaml	P/08.3 Н1.2; P/09.1 «Семьи данных» domain/member-topology; P/09.2 Н2; договор accept; 08-domain.api.openapi.yaml	доля платформы: carry.topology {at, sha256}, тело GET /api/topology/<член> при новом sha256 — решила
