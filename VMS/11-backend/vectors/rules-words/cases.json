@@ -5364,6 +5364,400 @@
    "errors": [
     "then[0]: the request does not ask for cam arm. Do not substitute a similar action: if the system cannot do what was asked, refuse"
    ]
+  },
+  {
+   "id": "step-escalate-dropped",
+   "note": "эскалация названа, шага нет — S20 (доп. (37) п. 1)",
+   "request": "When the Gate Loop sensor trips, raise an alarm on Gate Cam and escalate to the Guards.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "1"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "then: the request asks for escalate, the plan has none: ask_admin"
+   ]
+  },
+  {
+   "id": "step-ask-dropped",
+   "note": "«ask the guard» — шаг ask, его нет",
+   "request": "When the Gate Loop sensor trips, ask the guard and raise an alarm on Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "1"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "then: the request asks for ask, the plan has none: ask_admin"
+   ]
+  },
+  {
+   "id": "step-ask-polite",
+   "note": "«I ask you» — вежливость, не шаг ask (ревью (38) М1)",
+   "request": "I ask you: on motion on Lobby Cam record it for 5 minutes.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "rec",
+      "action": "record",
+      "cam": "2",
+      "minutes": 5
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "step-scan-plate",
+   "note": "«plate is scanned» — lpr, не det scan (ревью (38) М1)",
+   "request": "When a plate is scanned on Gate Cam, raise an alarm on Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "lpr",
+      "unit": "1-lpr"
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "1"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "step-scan-dropped",
+   "note": "скан архива назван, шага det scan нет",
+   "request": "When the Gate Loop sensor trips, raise an alarm on Gate Cam and scan the archive of Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "1"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "then: the request asks for det scan, the plan has none: ask_admin"
+   ]
+  },
+  {
+   "id": "same-cam-folder-ok",
+   "note": "широкий триггер-папка: та же камера — from_event (доп. (37) п. 2)",
+   "request": "When motion is seen in Perimeter, record that same camera for 5 minutes.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "target": {
+       "include": [
+        {
+         "kind": "folder",
+         "id": "30"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "rec",
+      "action": "record",
+      "target": {
+       "include": [],
+       "exclude": [],
+       "gone": [],
+       "from_event": true
+      },
+      "minutes": 5
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "same-cam-folder-list",
+   "note": "широкий триггер-папка, шаг на камеру списком — ошибка (S24)",
+   "request": "When motion is seen in Perimeter, record that same camera for 5 minutes.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "target": {
+       "include": [
+        {
+         "kind": "folder",
+         "id": "30"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "rec",
+      "action": "record",
+      "cam": "12",
+      "minutes": 5
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: the request does not name Fence East. A camera must be named; a whole folder is a target with kind folder. If it is unclear which device, ask_admin",
+    "then[0]: the request says the same camera: use from_event"
+   ]
+  },
+  {
+   "id": "same-cam-single-named",
+   "note": "одна названная камера-триггер, шаг на неё по id — верно (доп. (38) п. 2)",
+   "request": "When motion is seen on Lobby Cam, record that same camera for 5 minutes.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "rec",
+      "action": "record",
+      "cam": "2",
+      "minutes": 5
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "same-cam-other",
+   "note": "шаг на другую камеру — ошибка",
+   "request": "When motion is seen on Lobby Cam, record that same camera for 5 minutes.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "rec",
+      "action": "record",
+      "cam": "4",
+      "minutes": 5
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: the request does not name Dock Cam. A camera must be named; a whole folder is a target with kind folder. If it is unclear which device, ask_admin",
+    "then[0]: the request says the same camera: use from_event"
+   ]
+  },
+  {
+   "id": "same-cam-any-camera",
+   "note": "триггер cam без unit — широкий, нужен from_event (ревью (38) М2)",
+   "request": "When any camera goes silent, raise an alarm on that same camera.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "silent"
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "2"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: the request does not name Lobby Cam. A camera must be named; a whole folder is a target with kind folder. If it is unclear which device, ask_admin",
+    "then[0]: the request says the same camera: use from_event"
+   ]
+  },
+  {
+   "id": "runrule-kick-off",
+   "note": "«kick off» — запуск правила (доп. (37) п. 3)",
+   "request": "When the Gate Loop sensor trips, kick off Yard tour.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "runrule",
+      "rule": 104
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "segment-stops-recording",
+   "note": "«stops recording» — segment.lost (доп. (37) п. 3)",
+   "request": "When Dock Cam stops recording, raise an alarm on Dock Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "rec",
+      "kind": "segment.lost",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "4"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "4"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": []
   }
  ]
 }

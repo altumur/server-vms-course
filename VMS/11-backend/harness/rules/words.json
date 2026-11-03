@@ -61,12 +61,18 @@
   "abandoned": "abandon|left behind|left object|unattended|оставлен|забыт|брошен",
   "crowd": "crowd|gathering|too many people|толп|скоплен|много людей",
   "silent": "silent|silence|lost contact|offline|замолч|молчит|на связи|пропад|пропал|(?:^|[^0-9a-zа-яё])drop(?:s|ped|ping)? off(?:$|[^0-9a-zа-яё])",
-  "segment.lost": "segment|recording.*lost|lost.*recording|куск|запис|(?:^|[^0-9a-zа-яё])los(?:e|es|t|ing)\\s+(?:\\S+\\s+)?recording",
+  "segment.lost": "segment|recording.*lost|lost.*recording|куск|запис|(?:^|[^0-9a-zа-яё])los(?:e|es|t|ing)\\s+(?:\\S+\\s+)?recording|(?:^|[^0-9a-zа-яё])stop(?:s|ped)? recording(?:$|[^0-9a-zа-яё])",
   "io.input": "sensor|trips?(?:$|[^0-9a-zа-яё])|tripped|датчик|сработ|срабат|вход"
  },
  "lost_bare": "(?:^|[^0-9a-zа-яё])lost(?:$|[^0-9a-zа-яё])",
  "lost_contact": "(?:^|[^0-9a-zа-яё])lost contact(?:$|[^0-9a-zа-яё])",
  "arm_put": "(?:^|[^0-9a-zа-яё])put\\s+(?:\\S+\\s+){0,3}on guard(?:$|[^0-9a-zа-яё])",
+ "asks_step": {
+  "escalate": "(?:^|[^0-9a-zа-яё])(?:escalat|эскалир|позвать старшего)",
+  "ask": "(?:^|[^0-9a-zа-яё])ask (?:the )?(?:operator|guard|security)|(?:^|[^0-9a-zа-яё])спроси",
+  "det scan": "(?:^|[^0-9a-zа-яё])scan(?:s|ned|ning)?\\s+(?:\\S+\\s+){0,2}archive|(?:^|[^0-9a-zа-яё])check\\s+\\S+\\s+archive|(?:^|[^0-9a-zа-яё])сканир\\S*\\s+(?:\\S+\\s+)?архив|(?:^|[^0-9a-zа-яё])провер\\S*(?:\\s+\\S+)?\\s+архив"
+ },
+ "same_camera": "(?:^|[^0-9a-zа-яё])(?:(?:that|the) same camera|the camera that triggered|(?:эту|ту) же камер)",
  "actions": {
   "cam output": "relay|turn on|turn off|switch on|switch off|pulse|unlock|lock|light|siren|реле|включ|выключ|импульс|открой|свет|(?:^|[^0-9a-zа-яё])open|(?:^|[^0-9a-zа-яё])отключ",
   "cam preset": "preset|пресет",
@@ -77,7 +83,7 @@
   "cam disarm": "disarm|(?:^|[^0-9a-zа-яё])off guard(?:$|[^0-9a-zа-яё])",
   "cam disable": "disable|выключи|выключ|отключ|(?:^|[^0-9a-zа-яё])(?:switch|turn|shut|take)[0-9a-zа-яё]*\\s+(?:\\S+\\s+){0,3}off(?:$|[^0-9a-zа-яё])",
   "auto alarm": "alarm|тревог",
-  "auto runrule": "(?:^|[^0-9a-zа-яё])(?:run|runs|running|ran|start|starts|started|launch|launched)(?:$|[^0-9a-zа-яё])|(?:^|[^0-9a-zа-яё])(?:запуск|запусти)"
+  "auto runrule": "(?:^|[^0-9a-zа-яё])(?:run|runs|running|ran|start|starts|started|launch|launched)(?:$|[^0-9a-zа-яё])|(?:^|[^0-9a-zа-яё])(?:запуск|запусти)|(?:^|[^0-9a-zа-яё])kick(?:s|ed|ing)? off(?:$|[^0-9a-zа-яё])"
  },
  "value_open": "normal|(?:^|[^0-9a-zа-яё])ends?(?:$|[^0-9a-zа-яё])|is over|clears?(?:$|[^0-9a-zа-яё])|(?:^|[^0-9a-zа-яё])back(?:$|[^0-9a-zа-яё])|норм|конец|закончи",
  "state_on": "(?:^|[^0-9a-zа-яё])on(?:$|[^0-9a-zа-яё])|включ|(?:^|[^0-9a-zа-яё])pulse(?:$|[^0-9a-zа-яё])|импульс|unlock|открой",
