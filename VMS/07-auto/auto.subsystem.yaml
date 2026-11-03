@@ -226,7 +226,7 @@ unit:
                 sub: {const: auto}
                 action: {const: runrule}
                 rule: {type: [string, integer], maximum: 9007199254740991}
-            # No subject in the VMS (ADR-0102 доп. (7) п. 9; ADR-0103 доп. (4)): a switched-off scenario keeps the step as data, a switched-on one is refused (V/07.3).
+            # No subject in the VMS (ADR-0103 доп. (4)): a switched-off scenario keeps the step as data, a switched-on one is refused (V/07.3).
             - type: object
               required: [sub, action]
               properties:
