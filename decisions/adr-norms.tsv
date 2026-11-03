@@ -1175,7 +1175,9 @@ adr	add	point	status	file	norm	note
 0115	19	п. 2	НОРМА	VMS/12-psim/spec/12.3-psim.norms.md; VMS/12-psim/spec/12-psim.api.openapi.yaml	V/12.3 Н1.6	все Set-Cookie плагина сняты, своя кука без Domain
 0115	19	п. 3	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md; VMS/12-psim/spec/12.3-psim.norms.md	V/12.1 Н1.2; V/12.3 Н1.4	на NEW <т>_seen того же ключа перезаписывается
 0115	20	п. 1	НОРМА	Platform/06-console/spec/06.5-console.norms.md; Platform/06-console/spec/06-console.api.openapi.yaml; Platform/06-console/acceptance/5/scenarios.tsv	P/06.5 Н2 «GET /manifest/<sub>/source» served	доля платформы: served — rev каталога, которым консоль служит с запуска, нет — null; установка ждёт served = rev
+0115	20	п. 1	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md	V/12.4 Н1.2, Н1.3	доля VMS: ждать served = новой rev у /manifest/<sub>/source после put манифеста и после сборки backend
 0115	20	п. 2	НЕ НОРМА	-	-	доля платформы: нет — owners выключенного плагина, V/12
+0115	20	п. 2	НОРМА	VMS/12-psim/spec/12.2-psim.norms.md	V/12.2 Н1.2	доля VMS: owners выключенного плагина не судятся
 0116	0	Drivers	НЕ НОРМА	-	-	—
 0116	0	Options 2–4	ОТВЕРГНУТО	-	-	выбран вариант 1, гибрид этапами
 0116	0	§1 п. 1	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1	таблица видов — данные `data/kinds.tsv` (решила: имя файла и колонки `kind`, `from`, `write`, `implements`, `actions`, `events`); файл и строки — с контрактом этапа 1; закрытая таблица V/11.3 Н1.2 и `mapping.tsv` судят старые пути до этапа 5
@@ -1205,9 +1207,19 @@ adr	add	point	status	file	norm	note
 0116	2	-	ОТВЕРГНУТО	-	-	доля платформы: ETag по каталогу заменён доп. (3), (4) — набор rev из GET /manifest/<sub>/source
 0116	3	-	НЕ НОРМА	-	-	доля платформы: нет — SHA-256 ответов заменён доп. (4)
 0116	4	п. 1	ОТВЕРГНУТО	-	-	доля платформы: «GET /manifest отдаёт полный манифест» заменено доп. (6) — отдельной формой
+0116	4	п. 1	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1	доля VMS: ETag — набор ревизий served, включая свой; полный манифест — форма /source по доп. (6)
 0116	5	-	НОРМА	Platform/06-console/spec/06.5-console.norms.md; Platform/06-console/spec/06-console.api.openapi.yaml; Platform/06-console/spec/06.3-console.norms.md; Platform/02-installer/spec/02.1-installer.schema.json; Platform/06-console/acceptance/5/scenarios.tsv	P/06.5 Н2 «GET /manifest/<sub>/source» secret_defaults	доля платформы: default *_secret — null, признак «задано» — secret_defaults (решила)
 0116	6	п. 1	НОРМА	Platform/06-console/spec/06.5-console.norms.md; Platform/06-console/spec/06-console.api.openapi.yaml; Platform/06-console/spec/06.3-console.norms.md; Platform/02-installer/spec/02.1-installer.schema.json; Platform/06-console/acceptance/5/scenarios.tsv	P/06.5 Н2 «GET /manifest/<sub>/source»; P/06.3 Н1.9; P/02.1 passCall; сц. 02 шаги 9–11	доля платформы: GET /manifest/<sub>/source → {name, rev, sha256, manifest, secret_defaults}; GET manifest/<s>/source в calls; 404, 503
+0116	6	п. 1	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md; VMS/12-psim/spec/12.2-psim.norms.md	V/11.14 Н1.1; V/12.2 Н1.2	доля VMS: GET manifest/<sub>/source в calls; у плагина — во фрагменте
 0116	7	-	НОРМА	Platform/06-console/spec/06.5-console.norms.md; Platform/06-console/spec/06-console.api.openapi.yaml; Platform/common/contracts/gate-and-pass.md	P/06.5 Н2 «GET /manifest/<sub>/source» право; договор сторожевой «Сторожевая»	доля платформы: /source — admin на * или билет с записью в calls, иначе 403
+0116	3	п. 1	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1	kinds.changed нет: stream.reset и перечитывание; ETag по ответам заменён доп. (4) п. 1
+0116	3	п. 2	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1	uid строки — UUID v5 от <kind>:<кластер>/<sub>/<таблица>/<ключ>; обратная таблица заменена доп. (4) п. 2
+0116	3	п. 3	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1	<т>_seen — status вида <т>
+0116	4	п. 2	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1	обратный путь uid по перечням, промах — предел
+0116	4	п. 3	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1	Vary: Accept-Language, свой манифест, канонический порядок
+0116	5	—	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1	секретные default — null, secret_defaults, в описание вида не попадают
+0116	6	п. 2	НЕ НОРМА	-	-	строки adr-norms 0116 (0) о платформе — доля «Спецификации»
+0116	7	—	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1	/source только по билету backend или admin; ответ — ревизии served (ADR-0115 доп. (20))
 0117	0	-	НЕ НОРМА	-	-	доля платформы: нет — супервизор отдельным ADR
 0117	3	п. 2	НОРМА	Platform/06-console/spec/06.4-console.norms.md; Platform/06-console/spec/06-console.api.openapi.yaml; Platform/06-console/acceptance/4/scenarios.tsv	P/06.4 Н1.2 marks, Н2 POST /marks; сц. 03 шаги 16–20	доля платформы: to — конец отрезка, только с occurred и не меньше его, иначе 400; поле to строки
 0117	4	-	НЕ НОРМА	-	-	доля платформы: нет — закрепления размещения после done в P/04 нет, предел VMS
