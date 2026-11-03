@@ -1,0 +1,129 @@
+openapi: 3.1.0
+info:
+  title: V/13 — дверь части выгрузки
+  version: 1.0.0
+  description: |
+    HTTP-контракт двери процесса воркера `exp` — глава V/13.4 урока «Выгрузка» модуля VMS. Канон —
+    [нормы главы 4](13.4-exp.norms.md); этот файл их выражает и не добавляет требований. Маршрут `files` — человеку по
+    токену двери консоли (`GET /exp/where/<part>`, договор токена двери; `?t=` или `Authorization: Bearer`), только автору
+    части. Маршрут `parts` — ведущей части того же заказа по сертификату роли `expworker`. Разбор запроса и пределы
+    соединений — дверь процесса P/03.4 Н1.7.
+servers:
+  - url: https://{server}:{port}
+    description: дверь процесса воркера exp с комплектом роли — адрес SERVER_NAME (P/03.4 Н1.7 kit)
+    variables:
+      server: {default: "srv-a"}
+      port: {default: "0"}
+paths:
+  /files/{part}/{file}:
+    parameters:
+      - $ref: "#/components/parameters/Part"
+      - $ref: "#/components/parameters/File"
+    get:
+      summary: Файл части автору (V/13.4 Н1.2)
+      security: [{doorToken: []}]
+      parameters:
+        - $ref: "#/components/parameters/T"
+        - $ref: "#/components/parameters/Range"
+      responses:
+        "200": {$ref: "#/components/responses/Bytes"}
+        "206": {$ref: "#/components/responses/Partial"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "410": {$ref: "#/components/responses/Refusal"}
+        "416": {$ref: "#/components/responses/Unsatisfiable"}
+    head:
+      summary: Заголовки файла без тела (V/13.4 Н1.2)
+      security: [{doorToken: []}]
+      parameters:
+        - $ref: "#/components/parameters/T"
+      responses:
+        "200": {description: заголовки ответа 200 без тела}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "410": {$ref: "#/components/responses/Refusal"}
+  /parts/{part}/{file}:
+    get:
+      summary: Файл части ведущей части того же заказа (V/13.4 Н1.3)
+      security: [{roleCertificate: []}]
+      parameters:
+        - $ref: "#/components/parameters/Part"
+        - $ref: "#/components/parameters/File"
+        - name: for
+          in: query
+          required: true
+          description: ведущая часть вызывающего воркера
+          schema: {type: string, minLength: 1}
+        - $ref: "#/components/parameters/Range"
+      responses:
+        "200": {$ref: "#/components/responses/Bytes"}
+        "206": {$ref: "#/components/responses/Partial"}
+        "401": {$ref: "#/components/responses/Refusal"}
+        "403": {$ref: "#/components/responses/Refusal"}
+        "404": {$ref: "#/components/responses/Refusal"}
+        "410": {$ref: "#/components/responses/Refusal"}
+        "416": {$ref: "#/components/responses/Unsatisfiable"}
+components:
+  parameters:
+    Part:
+      name: part
+      in: path
+      required: true
+      description: name строки части
+      schema: {type: string, minLength: 1}
+    File:
+      name: file
+      in: path
+      required: true
+      description: id файла из result.files
+      schema: {type: string, pattern: "^(?:f[0-9]{1,4})$"}
+    T:
+      name: t
+      in: query
+      required: false
+      description: токен двери консоли
+      schema: {type: string}
+    Range:
+      name: Range
+      in: header
+      required: false
+      description: один отрезок байт; несколько — ответ 200 целиком
+      schema: {type: string}
+  securitySchemes:
+    doorToken:
+      type: http
+      scheme: bearer
+      description: токен двери консоли (договор токена двери); также ?t=
+    roleCertificate:
+      type: mutualTLS
+      description: лист роли expworker (договор сертификата роли, класс role)
+  responses:
+    Bytes:
+      description: файл целиком; Content-Disposition attachment, Accept-Ranges bytes, ETag — "<sha256>"
+      headers:
+        Content-Disposition: {schema: {type: string}}
+        ETag: {schema: {type: string}}
+      content:
+        application/octet-stream:
+          schema: {type: string, contentEncoding: binary}
+    Partial:
+      description: один отрезок файла
+      headers:
+        Content-Range: {schema: {type: string}}
+      content:
+        application/octet-stream:
+          schema: {type: string, contentEncoding: binary}
+    Unsatisfiable:
+      description: отрезок вне файла; Content-Range bytes */size
+      headers:
+        Content-Range: {schema: {type: string}}
+    Refusal:
+      description: "отказ двери: объект с полем error — слово отказа"
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            additionalProperties: false
+            properties:
+              error: {type: string}

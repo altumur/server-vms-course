@@ -5,7 +5,7 @@ info:
   description: |
     HTTP-контракт двери архива регистратора `recworker` — глава V/02.5 урока «Запись» модуля VMS. Канон —
     [нормы главы 5](02.5-rec.norms.md); файл их выражает и не добавляет требований. Класс `mixed` договора
-    сертификата роли (Н2): процессам — `/spans`, `/samples` (сертификат роли `recworker`, `detjobworker`; слова класса
+    сертификата роли (Н2): процессам — `/spans`, `/samples` (сертификат роли `recworker`, `detjobworker`, `expworker`; слова класса
     `role`); странице — `/timeline`, `/segment`, `/keeps` (токен двери консоли, договор токена двери; нет или неверен —
     403 `forbidden`). Разбор запроса — P/01.1 Н2.1 с отступлениями Н2; порядок: путь (404) → метод (405) → допуск
     (401, 403) → query (400) → тома нет (503). Цепочка, отвергнутая TLS, — отказ рукопожатия без HTTP-ответа (в
@@ -281,7 +281,7 @@ components:
       type: mutualTLS
       description: |
         сертификат роли клиента (класс `mixed`, маршруты `role` договора сертификата роли): допущены recworker,
-        detjobworker; набор доверия — ca.pem, ca.next.pem своего кластера (V/02.5 Н2)
+        detjobworker, expworker; набор доверия — ca.pem, ca.next.pem своего кластера (V/02.5 Н2)
     doorToken:
       type: http
       scheme: bearer

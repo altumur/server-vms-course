@@ -48,7 +48,7 @@ unit:
             maxItems: 4
           single_file: {type: boolean}
           file_mb:    {type: integer, minimum: 100, maximum: 4000}
-          chapters:   {type: array, maxItems: 256, items: {type: array, items: [{type: number}, {type: string, maxLength: 128}], minItems: 2, maxItems: 2}}
+          chapters:   {type: array, maxItems: 256, items: {type: object, required: [at, title], additionalProperties: false, properties: {at: {type: number}, title: {type: string, maxLength: 128}}}}
     password_secret: {type: string}                         # ZIP AES-256 or the PDF's; gone with the row (доп. (4) п. 3)
     by:       {type: string, required: true, fixed: true}   # the author: a copy in each part (доп. (6) п. 4)
     comment:  {type: string}
@@ -131,6 +131,9 @@ requests:
     properties:
       unit:   {type: string}
       action: {enum: [cancel, delete]}
+  valid_for: 30
+  most_valid: 600
+  ttl: 600                           # a cancel or a delete older than this is closed by the reaper (P/06.4 Н3)
   per_person: 64                     # EXPORT_CAMERAS_MAX × EXPORT_ACTIVE_PER_USER, cancel and delete together (М ревью доп. (6))
   stamp: [by, at]
 events:
