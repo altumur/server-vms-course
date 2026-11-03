@@ -1279,3 +1279,4 @@ adr	add	point	status	file	norm	note
 0119	6	п. 1	НЕТ НОРМЫ	-	-	X-W2C-Supervision у backend — доля V/11 (`POST /exports` с полем supervisor, X-W2C-Supervision, SUPERVISOR_REQUIRED/REJECTED, дайджест повторов без паролей, calls domain/verify) — при закреплении контракта форка с /exports (V/11.14 Н1.3)
 0119	7	п. 1	НЕТ НОРМЫ	-	-	POST /exports без заголовка — 503 у backend — доля V/11 (`POST /exports` с полем supervisor, X-W2C-Supervision, SUPERVISOR_REQUIRED/REJECTED, дайджест повторов без паролей, calls domain/verify) — при закреплении контракта форка с /exports (V/11.14 Н1.3)
 0119	8	п. 1	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.5	своя роль супервизоров допустима; 409 role referenced мимо backend — снимок устарел
+0119	9	—	НОРМА	VMS/11-backend/spec/11.8-backend.norms.md	V/11.8 Н1.5, Н1.6	доля VMS: export: true — NOT_SUPPORTED до надзора у двери строк консоли (P/06.1, P/06.7 «Спецификации»), затем снять
