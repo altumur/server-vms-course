@@ -4757,6 +4757,183 @@
    "errors": [
     "then[0]: default yes is not in the request: with no answer the rule goes the no way"
    ]
+  },
+  {
+   "id": "segment-loses",
+   "note": "«loses its recording» — segment.lost (доп. (34), ревью (34) М1)",
+   "request": "When Dock Cam loses its recording, raise an alarm on Dock Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "rec",
+      "kind": "segment.lost",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "4"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "4"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "disarm-off-guard",
+   "note": "«off guard» — cam disarm (доп. (34))",
+   "request": "When the Gate Loop sensor trips, put Lobby Cam off guard.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "disarm",
+      "unit": "2"
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "armed-off-guard",
+   "note": "«off guard» — value false условия armed (ревью (34) М2)",
+   "request": "On motion on Lobby Cam record it for 5 minutes, only if Lobby Cam is off guard.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "rec",
+      "action": "record",
+      "cam": "2",
+      "minutes": 5
+     }
+    ],
+    "conditions": [
+     {
+      "kind": "armed",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "2"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      },
+      "value": false
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "armed-off-guard-true",
+   "note": "«off guard» при armed: true — полярность",
+   "request": "On motion on Lobby Cam record it for 5 minutes, only if Lobby Cam is off guard.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "rec",
+      "action": "record",
+      "cam": "2",
+      "minutes": 5
+     }
+    ],
+    "conditions": [
+     {
+      "kind": "armed",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "2"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      },
+      "value": true
+     }
+    ]
+   },
+   "errors": [
+    "conditions[0]: value true: the request says otherwise"
+   ]
+  },
+  {
+   "id": "disarm-caught-off-guard-gap",
+   "note": "предел Н1.6: «caught off guard» пускает cam disarm (доп. (34))",
+   "request": "When the Gate Loop sensor trips, so that no one is caught off guard, raise an alarm on Lobby Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "disarm",
+      "unit": "2"
+     }
+    ]
+   },
+   "errors": [],
+   "known_gap": true
   }
  ]
 }
