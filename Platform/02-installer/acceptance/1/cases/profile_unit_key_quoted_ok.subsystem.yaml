@@ -23,7 +23,7 @@ unit:
       type: string
     'null':
       type: string
-    '1.5':
+    '1e5':
       type: string
 placement:
   capacity:
