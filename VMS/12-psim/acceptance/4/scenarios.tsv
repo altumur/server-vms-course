@@ -26,14 +26,13 @@ scenario	step	request	expect
 03-disable	3	@psim finish {psim}/camera	ok
 03-disable	4	@psim disable psim-camera	ok
 03-disable	5	@traverse	ok
-03-disable	6	@psim sync	ok
+03-disable	6	@manual набор обхода шага 4 — только backend; @traverse шага 5 — rollout «already done», перезапусков нет: файл прав прежний (V/12.4 Н1.5; ADR-0115 доп. (25) п. 3)	manual
 03-disable	7	console GET /psim-camera/units/plugin	200 {"enabled": false}
 03-disable	8	@manual процесса плагина нет, единица держится; calls backend без части objects psim-camera, часть enabled осталась — плагин виден выключенным	manual
 03-disable	9	@psim enable psim-camera	ok
 03-disable	10	@traverse	ok
-03-disable	11	@psim sync	ok
-03-disable	12	console GET /psim-camera/units/plugin	200 {"enabled": true}
-03-disable	13	console GET /manifest/backend/source	200 {"name": "backend", "served": "@any"}
+03-disable	11	console GET /psim-camera/units/plugin	200 {"enabled": true}
+03-disable	12	console GET /manifest/backend/source	200 {"name": "backend", "served": "@any"}
 04-page	1	@psim install {psim}/security_controller	ok
 04-page	2	@traverse	ok
 04-page	3	@psim finish {psim}/security_controller	ok

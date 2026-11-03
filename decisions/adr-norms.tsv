@@ -1188,8 +1188,13 @@ adr	add	point	status	file	norm	note
 0115	21	п. 3	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md; VMS/common/acceptance/README.md; VMS/12-psim/acceptance/4/scenarios.tsv	V/12.4 Н1.2, Н1.3	доля VMS: добавление psim-<id> — порядок платформы add; манифест на прочих серверах — manifest get, пакет несёт код; served — после перезапуска консоли
 0115	22	п. 2	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md; VMS/common/acceptance/README.md; VMS/12-psim/acceptance/4/scenarios.tsv	V/12.4 Н1.2	доля VMS: обход по всем изменённым манифестам набора; включение после всех серверов; строка plugin — после обхода
 0115	23	п. 3	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md; VMS/common/acceptance/README.md; VMS/12-psim/acceptance/4/scenarios.tsv	V/12.4 Н1.2, Н1.3, Н1.5	доля VMS: (а) install до обхода со сборкой, плагин учтён включённым; (б) обход; (в) served; (г) install без W2C_HOLD; (д) finish — строка plugin с enabled: true, второго обхода нет; решила: шаг — две команды install и finish, значения и секрет в finish заново; стенд — @traverse
-0115	23	п. 5	ПРЕДЕЛ	VMS/12-psim/spec/12.4-psim.norms.md; VMS/common/acceptance/README.md; VMS/12-psim/acceptance/4/scenarios.tsv	V/12.4 Н1.3, Н1.5	выключение, включение, sync с изменением — обход
 0115	24	п. 2	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md; VMS/common/acceptance/README.md; VMS/12-psim/acceptance/4/scenarios.tsv	V/12.4 Н1.2	доля VMS: обход — w2cctl rollout <sub>=<sha256>… [-allow-downtime]; набор install — его аргументы; стенд — rollout -allow-downtime
+0115	21	п. 3 пакет	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md	V/12.4 Н1.1	пакет плагина несёт код, не манифест; файл манифеста на прочие серверы — manifest get в rollout
+0115	25	п. 1	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md	V/12.4 Н1.2	сервер с дверью хранилища — по режиму rollout; доля VMS ссылкой
+0115	25	п. 3	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md; VMS/12-psim/acceptance/4/scenarios.tsv	V/12.4 Н1.3, Н1.5	включение и выключение без перезапусков: rollout сверяет права сам; повтора sync нет; приёмка 4 сц. 03; заменил (23) п. 5 (обход с перезапусками при выключении)
+0115	25	п. 4 (а)	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md	V/12.4 Н1.2, Н1.3	served работающих ждать после manifest put; psim-<id> — в finish
+0115	25	п. 4 (б)	ПРЕДЕЛ	VMS/12-psim/spec/12.4-psim.norms.md	V/12.4 Н1.2	backend с calls нового плагина до консолей — переходные 404 и 401
+0115	25	п. 4 (в)	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md	V/12.4 Н1.2	сервер лидера последним с -last
 0116	0	Drivers	НЕ НОРМА	-	-	—
 0116	0	Options 2–4	ОТВЕРГНУТО	-	-	выбран вариант 1, гибрид этапами
 0116	0	§1 п. 1	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1	таблица видов — данные `data/kinds.tsv` (решила: имя файла и колонки `kind`, `from`, `write`, `implements`, `actions`, `events`); файл и строки — с контрактом этапа 1; закрытая таблица V/11.3 Н1.2 и `mapping.tsv` судят старые пути до этапа 5
