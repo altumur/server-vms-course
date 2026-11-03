@@ -610,3 +610,5 @@
 - «Сборке»: V/02.5 — дверь `/timeline` и `.device.mp4` не отдаёт `device` записи с `stream`; V/01.5 — заголовок `X-Coverage-From` ответа `/playback`; V/10 — шаг `%3A` у двери модели.
 - «Сборке»: `cam/cameras.type` вместо `kind`, `lat`, `lon`, `azimuth`, `short`, `mac`, `resolution`, `fps`; `grid`, `full` сняты; `cam/devices` + `videos`, `resolutions`; `can` — списки; `cam/children` + `mic`, `spk`; `child_settings.norm`; `io.input.value` — `open`, `closed`.
 - «Сборке»: V/03 `POST /whep/<cam>?width=&height=`, поток по размеру; `backend`: дерево `ipsrv`, `channel`, адрес из `rtspUrl` или `vendor`, `model`, `firmware`, файл пакета `device-models.json`; `det` — поле `title`; `rec` `unit_mb` 41.
+
+- 2026-11-03: `cam.shell.html` — оболочка корня (ADR-0112 доп. (19)–(22)): ссылка на `/backend/` и модуль P/07 `sections: [units, access, journal]`, `subsystems` — `/mounts` без подсистем VMS и `psim-*`; прежняя страница — свидетель `Source/vms/cam.shell.html`; V/08.1 Н1.5 и V/08.5 держатся тестами, переведёнными на свидетеля («Спецификация»), и снимаются с последним из них.
