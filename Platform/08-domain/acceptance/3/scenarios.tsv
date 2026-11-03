@@ -207,13 +207,15 @@ scenario	step	request	expect
 # 29-batch-admission (ADR-0113 доп. (2)–(4); P/08.3 Н1.1б, договор приёма отчёта «Стук партии»; P/09.1 Н1.1 join batch): партия приёма — коробка m2 с токеном партии принимается без человека классом camera; исключённая коробка тем же токеном не возвращается (refused партии), её стук ждёт человека
 29-batch-admission	1	@domain m1	ok
 29-batch-admission	2	holder POST /domain/batches {"name": "b1", "n": 2}	201 {"name": "b1", "token": "$k", "until": "@any"}
-29-batch-admission	3	@join m2 batch=b1 $k	ok
-29-batch-admission	4	@start agent m2	ok
-29-batch-admission	5	@until 60 holder GET /domain/members	200 {"members": {"m2": {"how": "admitted", "class": "camera", "batch": "b1", "key": "$m2k"}}, "knocking": []}
-29-batch-admission	6	holder DELETE /domain/members/m2	200 {"members": {"m2": "@absent"}}
-29-batch-admission	7	@until 60 holder GET /domain/members	200 {"members": {"m2": "@absent"}, "knocking": [{"name": "m2", "class": "camera", "batch": "b1", "key": "$m2k", "fingerprint": "$fp"}]}
-29-batch-admission	8	@sleep 30	ok
-29-batch-admission	9	holder GET /domain/members	200 {"members": {"m2": "@absent"}, "knocking": [{"name": "m2", "batch": "b1"}]}
-29-batch-admission	10	holder DELETE /domain/batches/b1	200
-29-batch-admission	11	holder POST /domain/members {"name": "m2", "fingerprint": "$fp"}	200 {"members": {"m2": {"how": "admitted", "key": "$m2k"}}}
-29-batch-admission	12	@until 30 holder GET /domain/members	200 {"knocking": []}
+29-batch-admission	3	holder POST /domain/batches {"name": "b1", "n": 1}	409 {"error": "refused", "detail": "~batch exists"}
+29-batch-admission	4	@join m2 batch=b1 $k	ok
+29-batch-admission	5	@start agent m2	ok
+29-batch-admission	6	@until 60 holder GET /domain/members	200 {"members": {"m2": {"how": "admitted", "class": "camera", "batch": "b1", "key": "$m2k"}}, "knocking": []}
+29-batch-admission	7	holder DELETE /domain/members/m2	200 {"members": {"m2": "@absent"}}
+29-batch-admission	8	@until 60 holder GET /domain/members	200 {"members": {"m2": "@absent"}, "knocking": [{"name": "m2", "class": "camera", "batch": "b1", "key": "$m2k", "fingerprint": "$fp"}]}
+29-batch-admission	9	@sleep 30	ok
+29-batch-admission	10	holder GET /domain/members	200 {"members": {"m2": "@absent"}, "knocking": [{"name": "m2", "batch": "b1"}]}
+29-batch-admission	11	holder DELETE /domain/batches/b1	200
+29-batch-admission	12	holder GET /domain/batches	200 {"batches": {"b1": {"n": 2, "used": 1, "revoked": true}}}
+29-batch-admission	13	holder POST /domain/members {"name": "m2", "fingerprint": "$fp"}	200 {"members": {"m2": {"how": "admitted", "key": "$m2k"}}}
+29-batch-admission	14	@until 30 holder GET /domain/members	200 {"knocking": []}
