@@ -1117,6 +1117,30 @@ adr	add	point	status	file	norm	note
 0115	4	п. 1	НОРМА	Platform/02-installer/spec/02.1-installer.schema.json; Platform/02-installer/spec/02.1-installer.relations.json; Platform/02-installer/spec/02.1-installer.norms.md; Platform/02-installer/spec/02.2-installer.view.schema.json	P/02.1 Н1.4 связи № 67–70; unit.fields имя без точки	доля платформы: <т>.<поле> в display.fields, field_help, options (enum и schema.enum); точка в имени поля единицы — отказ
 0115	5	п. 2	НОРМА	Platform/02-installer/spec/02.1-installer.schema.json; Platform/02-installer/spec/02.1-installer.relations.json; Platform/02-installer/spec/02.1-installer.norms.md; Platform/02-installer/spec/02.2-installer.view.schema.json; Platform/06-console/spec/06.5-console.norms.md	P/02.1 unit.fields.<имя>.ref_label, tables.<т>.fields.<имя>.ref_label	доля платформы: ref_label только при ref или items.ref; поле цели не ищется
 0115	6	п. 3	НОРМА	Platform/02-installer/spec/02.1-installer.schema.json; Platform/02-installer/spec/02.1-installer.relations.json; Platform/02-installer/spec/02.1-installer.norms.md	P/02.1 Н1.4 связь № 158	доля платформы: путь status, равный <т>.<поле>, — отказ
+0115	0	§1 п. 1	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md; VMS/12-psim/spec/12.2-psim.norms.md	V/12.1 Н1.1; V/12.2	урок VMS/12-psim, подсистема psim-<id>, генератор с проверкой по plugin.schema.json c3d9ebb
+0115	0	§1 п. 2	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md	V/12.1 Н1.2	заменён доп. (1) п. 2, (3) п. 1: один манифест, вид — таблица
+0115	0	§1 п. 3	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md	V/12.1 Н1.6	сборный вид VMS строит backend — V/11.14 Н1.1
+0115	0	§2	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md	V/12.1 Н1.3, Н1.4	ключи манифеста — по доп. (2)–(5), (11); ключи загрузчика — доля «Спецификации»
+0115	0	§3	НЕТ НОРМЫ	-	-	доля V/11: GET /kinds, /units для origin: plugin — веткой V/11 при закреплении контракта этапа 1 (V/11.14 Н1.3)
+0115	0	§4	НОРМА	VMS/12-psim/spec/12.3-psim.norms.md	V/12.3 Н1.6	страница плагина — дверь адаптера; mode tab; iframe — этап 2 контракта
+0115	0	§5, §6	НЕ НОРМА	-	-	обоснование и объём
+0115	1	п. 1	НОРМА	VMS/12-psim/spec/12.3-psim.norms.md	V/12.3 Н1.6	другое происхождение — дверь адаптера; токен в # заменён доп. (2) п. 8
+0115	1	п. 3	ОТВЕРГНУТО	-	-	kinds.changed заменён доп. (5) п. 1: перезапуск backend
+0115	1	п. 4	НОРМА	VMS/12-psim/spec/12.3-psim.norms.md	V/12.3 Н1.6	?type=&id=&lang= — параметры страницы psim; адрес строит backend (V/11)
+0115	2	пп. 1–8	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md; VMS/12-psim/spec/12.3-psim.norms.md	V/12.1 Н1.1–Н1.5; V/12.3 Н1.6	readonly — unit.state, имя psim-<id>, подписи, *_secret, items.ref, events.kinds, вход ?t= → куки
+0115	3	пп. 1–6	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md	V/12.1 Н1.1–Н1.5	единица — плагин, вид — таблица, <т>_seen, подписи <т>.<поле>, события бакетом единицы, rights.unit_of
+0115	4	пп. 1, 2	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md	V/12.1 Н1.2–Н1.5	<т>.<поле>, запреты имён; <т> ≤ 25 по доп. (14)
+0115	5	пп. 1–4	НОРМА	VMS/12-psim/spec/12.2-psim.norms.md; VMS/12-psim/spec/12.4-psim.norms.md	V/12.2 Н1.2; V/12.4 Н1.2, Н1.3	фрагмент calls и пересборка backend, ref_label, <таблица>.<event_id>, строка plugin установкой
+0115	6	пп. 1–3	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md; VMS/12-psim/spec/12.1-psim.norms.md	V/12.4 Н1.3; V/12.1 Н1.2	сборщик из канона и фрагментов, ref_label — имя поля, снятие <т>_seen
+0115	7	пп. 1–5	НОРМА	VMS/12-psim/spec/12.2-psim.norms.md; VMS/12-psim/spec/12.4-psim.norms.md	V/12.2 Н1.2; V/12.4 Н1.3, Н1.5	<s>/<unit.rows> во фрагменте, строка plugin, фрагменты из каталога, снятие — выключение, префикс plugin.
+0115	8	пп. 1–3	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md; VMS/12-psim/spec/12.3-psim.norms.md	V/12.4 Н1.4, Н1.5; V/12.3 Н1.1	начальные значения, вкл/выкл шагом, enabled в форме только чтение (V/11 — М1 ревью (8))
+0115	9	—	НОРМА	VMS/12-psim/spec/12.4-psim.norms.md	V/12.4 Н1.4	readonly не спрашиваются
+0115	10	пп. 1–3	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md; VMS/12-psim/spec/12.3-psim.norms.md; VMS/12-psim/spec/12.4-psim.norms.md	V/12.1 Н1.3, Н1.5, Н1.6; V/12.3 Н1.2, Н1.5; V/12.4 Н1.3	межплагинные по source, учётка в памяти, static i18n.js, класс по severity, UpdateObject → <т>_seen
+0115	11	—	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md	V/12.1 Н1.4	display.tables.<т>; <т>_seen — не вид; ключ загрузчика — «Спецификации»
+0115	12	пп. 1, 2	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md; VMS/12-psim/spec/12.3-psim.norms.md	V/12.1 Н1.3, Н1.6; V/12.3 Н1.2	свой тип — свой адаптер; владельца нет — PERMISSION_DENIED; камеры VMS не владелец CAM — предел
+0115	13	пп. 1, 2	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md; VMS/12-psim/spec/12.3-psim.norms.md; VMS/12-psim/spec/12.4-psim.norms.md	V/12.1 Н1.2, Н1.6; V/12.3 Н1.5; V/12.4 Н1.3	кольцо <т>_events, PSIM_EVENTS_RING = 1000, предел — кольцо
+0115	14	—	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md; VMS/12-psim/spec/12.2-psim.norms.md; VMS/12-psim/spec/12.4-psim.norms.md	V/12.1 Н1.2; V/12.2 Н0; V/12.4 Н1.3	<т> ≤ 25; кольцо только у видов под чужим source; enabled мимо шага — до следующего шага
+0115	15	—	НОРМА	VMS/12-psim/spec/12.1-psim.norms.md; VMS/12-psim/spec/12.3-psim.norms.md	V/12.1 Н1.2; V/12.3 Н1.5	слот seq mod PSIM_EVENTS_RING, seq монотонно, удалений нет; М ревью (15): после перезапуска max(seq) + 1, пусто — 0; разрыв больше RING — вытеснение, счётчик пульса ring_lost (решила: имя)
 0116	0	-	НЕ НОРМА	-	-	доля платформы: нет — платформа без правок сверх ADR-0115 (ключи загрузчика P/02.1); kinds.changed — перезапуск по метке P/02.3, «наблюдается» — state и пульс, как есть; область гранта «по виду» — отдельный ADR до этапа 4
 0116	0	Drivers	НЕ НОРМА	-	-	—
 0116	0	Options 2–4	ОТВЕРГНУТО	-	-	выбран вариант 1, гибрид этапами
