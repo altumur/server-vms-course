@@ -28,7 +28,7 @@ from tests.productdir import SOURCE, product_file
 CORE = ("whereAt", "doorOf", "doorFetch", "yieldCut", "loadTimeline", "segmentURL", "play", "playNext",
         "negotiateLive", "stopLive")
 PRODUCT = "vmsworker/vms/cam.shell.html"
-OURS = os.path.join(SOURCE, "vms", "cam.shell.html")   # the frozen witness; the canon page VMS/01-cam/cam.shell.html is not compared (V/08.1 «Соответствие»)
+OURS = os.path.join(SOURCE, "vms", "cam.shell.html")   # the frozen witness; the canon page VMS/01-cam/cam.shell.html is not compared (V/11.15 «Соответствие»)
 BEGIN, END = "// ── core: COPY WITH A CHECK", "// ── end of core"
 DEBT = os.path.join(SOURCE, "tests", "testdata", "shell_core_debt.txt")
 HEAD = ("# shell_core_debt.txt — the lines the core of the course's VMS page (vms/cam.shell.html) differs from the product's by\n"
