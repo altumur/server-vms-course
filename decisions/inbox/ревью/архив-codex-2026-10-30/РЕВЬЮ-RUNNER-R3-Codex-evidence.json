@@ -1,0 +1,604 @@
+{
+  "SUT": 0,
+  "commits": {
+    "D": "f1a1af309994023dac4b57973979edddf9ca2cfe",
+    "D-ce8": "ce8d1fd60be061ca9288924154f46f37399fed84",
+    "D-main": "9dca23bdedbace1ddf83b9af08503230976ddfd6",
+    "D-old": "50ce0b0bacc14eec60f384fef1aa38eb089b34d5",
+    "D-specs": "13a30dcbf6a17c7023b518c20bdae96a100058cd",
+    "p08": "4b50e7fbd02ddbe5052765df7e9ce214bf238310",
+    "p08-old": "6e03664a61d900a61b4e377e5f8a7c19be420e1d",
+    "p08-specs": "82490f29dcc5bd47e98f6b806e9b115d7a930e32"
+  },
+  "series": {
+    "D": {
+      "manifest_sha256": "1e32989d383ed8a4b396223faa412968a25f1e552aacedac0d917cd399624d37",
+      "package_files": 293,
+      "author_input_sha256": "93c176a8a2ae047cd7c73419350f94d16637ad34e33e28543e591a3bcfe8e1fb",
+      "author_input_files": 2885,
+      "inputs_unchanged": true,
+      "tests": {
+        "test_scenario_control": 10,
+        "test_l04_store": 3,
+        "test_transport_diagnostics": 10,
+        "test_request_correlation": 11,
+        "test_c_shared_engines": 23,
+        "test_console": 1,
+        "test_report_identity_secrets": 5,
+        "test_installer_audit_b": 11
+      },
+      "total_tests": 74,
+      "controls": {
+        "old": {
+          "EOF": {
+            "http_close_small": {
+              "direct": [
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                }
+              ],
+              "proxied": [
+                {
+                  "ok": false,
+                  "status": null,
+                  "body_bytes": null,
+                  "error": "connection closed without a response",
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                },
+                {
+                  "ok": false,
+                  "status": null,
+                  "body_bytes": null,
+                  "error": "connection closed without a response",
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                },
+                {
+                  "ok": false,
+                  "status": null,
+                  "body_bytes": null,
+                  "error": "connection closed without a response",
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                }
+              ],
+              "safety_pass": false
+            },
+            "http_close_large": {
+              "direct": [
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 200000,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 200102,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 200000,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 200102,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 200000,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 200102,
+                  "server_error": null
+                }
+              ],
+              "proxied": [
+                {
+                  "ok": false,
+                  "status": null,
+                  "body_bytes": null,
+                  "error": "truncated response body",
+                  "request_bytes": 63,
+                  "response_bytes": 200102,
+                  "server_error": null
+                },
+                {
+                  "ok": false,
+                  "status": null,
+                  "body_bytes": null,
+                  "error": "truncated response body",
+                  "request_bytes": 63,
+                  "response_bytes": 200102,
+                  "server_error": null
+                },
+                {
+                  "ok": false,
+                  "status": null,
+                  "body_bytes": null,
+                  "error": "truncated response body",
+                  "request_bytes": 63,
+                  "response_bytes": 200102,
+                  "server_error": null
+                }
+              ],
+              "safety_pass": false
+            },
+            "client_half_close": {
+              "direct": [
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                }
+              ],
+              "proxied": [
+                {
+                  "ok": false,
+                  "status": null,
+                  "body_bytes": null,
+                  "error": "connection closed without a response",
+                  "request_bytes": 0,
+                  "response_bytes": 0,
+                  "server_error": null
+                },
+                {
+                  "ok": false,
+                  "status": null,
+                  "body_bytes": null,
+                  "error": "connection closed without a response",
+                  "request_bytes": 0,
+                  "response_bytes": 0,
+                  "server_error": null
+                },
+                {
+                  "ok": false,
+                  "status": null,
+                  "body_bytes": null,
+                  "error": "connection closed without a response",
+                  "request_bytes": 0,
+                  "response_bytes": 0,
+                  "server_error": null
+                }
+              ],
+              "safety_pass": false
+            },
+            "stale_watchdog": {
+              "safety_pass": true,
+              "signals": [
+                19,
+                18,
+                19,
+                18
+              ]
+            },
+            "forgotten_pause": {
+              "safety_pass": true,
+              "row": {
+                "ok": false,
+                "why": [
+                  {
+                    "classification": "data",
+                    "reason": "freeze_not_thawed"
+                  }
+                ],
+                "classification": "data"
+              }
+            }
+          },
+          "TCP": [
+            {
+              "reply_sent": true,
+              "code": null,
+              "error": "OSError"
+            },
+            {
+              "reply_sent": true,
+              "code": null,
+              "error": "OSError"
+            },
+            {
+              "reply_sent": true,
+              "code": null,
+              "error": "OSError"
+            },
+            {
+              "reply_sent": false,
+              "code": null,
+              "error": "OSError"
+            }
+          ]
+        },
+        "new": {
+          "EOF": {
+            "http_close_small": {
+              "direct": [
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                }
+              ],
+              "proxied": [
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                }
+              ],
+              "safety_pass": true
+            },
+            "http_close_large": {
+              "direct": [
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 200000,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 200102,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 200000,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 200102,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 200000,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 200102,
+                  "server_error": null
+                }
+              ],
+              "proxied": [
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 200000,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 200102,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 200000,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 200102,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 200000,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 200102,
+                  "server_error": null
+                }
+              ],
+              "safety_pass": true
+            },
+            "client_half_close": {
+              "direct": [
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                }
+              ],
+              "proxied": [
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                },
+                {
+                  "ok": true,
+                  "status": 200,
+                  "body_bytes": 1024,
+                  "error": null,
+                  "request_bytes": 63,
+                  "response_bytes": 1124,
+                  "server_error": null
+                }
+              ],
+              "safety_pass": true
+            },
+            "stale_watchdog": {
+              "safety_pass": true,
+              "signals": [
+                19,
+                18,
+                19,
+                18
+              ]
+            },
+            "forgotten_pause": {
+              "safety_pass": true,
+              "row": {
+                "ok": false,
+                "why": [
+                  {
+                    "classification": "data",
+                    "reason": "freeze_not_thawed"
+                  }
+                ],
+                "classification": "data"
+              }
+            }
+          },
+          "TCP": [
+            {
+              "reply_sent": true,
+              "code": 413,
+              "error": null
+            },
+            {
+              "reply_sent": true,
+              "code": 413,
+              "error": null
+            },
+            {
+              "reply_sent": true,
+              "code": 413,
+              "error": null
+            },
+            {
+              "reply_sent": false,
+              "code": null,
+              "error": "OSError"
+            }
+          ]
+        }
+      }
+    },
+    "p08": {
+      "manifest_sha256": "4deaa0dc19812cf181719c8aa9ed58fb450d61d67a89e2eaaccf8312f5312311",
+      "package_files": 14,
+      "author_input_sha256": "a41322ba350f7b8ba21ac92b326d2bacbfff761c4c3e7d7a759cbe3b760e25a6",
+      "author_input_files": 4959,
+      "inputs_unchanged": true,
+      "tests": {
+        "test_domain_freeze": 11,
+        "test_c_domain_pin": 10,
+        "test_scenario_control": 9,
+        "test_c_execution": 36,
+        "test_c_domain_stand": 14
+      },
+      "total_tests": 80,
+      "controls": {
+        "old": {
+          "error": "KeyError('relay')",
+          "code": null,
+          "report_exists": false,
+          "report": null,
+          "safety_pass": false,
+          "identity": {
+            "raw_keys": [
+              "16-plain"
+            ],
+            "wrapped_keys": [
+              "16-plain",
+              "17-token-wait",
+              "01-token-and-audience"
+            ],
+            "safety_pass": false
+          }
+        },
+        "new": {
+          "error": null,
+          "code": 1,
+          "report_exists": true,
+          "report": {
+            "scenarios": {
+              "01-error": [
+                {
+                  "step": "1",
+                  "line": 2,
+                  "ok": false,
+                  "why": [
+                    {
+                      "content_type": null,
+                      "length": 25,
+                      "sha256": "2fc708c6b71fd9ea61ae016512e72680a699fcbc0a695d74213061be274c44df",
+                      "body_omitted": true
+                    }
+                  ],
+                  "got": null,
+                  "classification": "runner",
+                  "executed": false
+                },
+                {
+                  "step": "2",
+                  "line": 3,
+                  "ok": false,
+                  "why": [
+                    "not run: an earlier directive failed"
+                  ],
+                  "got": null
+                }
+              ],
+              "02-good": [
+                {
+                  "step": "1",
+                  "line": 4,
+                  "ok": true,
+                  "why": [],
+                  "got": null
+                }
+              ]
+            },
+            "passed_steps": 1,
+            "total_steps": 3,
+            "green": false,
+            "classification": "runner"
+          },
+          "safety_pass": true,
+          "identity": {
+            "raw_keys": [
+              "16-plain"
+            ],
+            "wrapped_keys": [
+              "16-plain",
+              "17-token-wait",
+              "01-token-and-audience"
+            ],
+            "safety_pass": false
+          }
+        }
+      }
+    }
+  },
+  "git_blobs": {
+    "D": 228,
+    "D-ce8": 227,
+    "D-main": 226,
+    "D-old": 227,
+    "D-specs": 2383,
+    "p08": 228,
+    "p08-old": 228,
+    "p08-specs": 2385
+  },
+  "verified": true
+}

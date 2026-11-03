@@ -1,0 +1,16 @@
+{
+  "manifest_sha256": "df5019ecaac59c3a734abcf64a1d204e3878f18ea935259bfd525cad93cb6b82",
+  "manifest_files": 2858,
+  "source_git_files": 204,
+  "unchanged_files": 201,
+  "specs_git_blobs": 2345,
+  "jsdom_git_files": 39,
+  "live_sha256": "137d9c20a145a2653c7fd9385e4616e47cbe7a71ade622e2f7ef64e5383d6a10",
+  "only_comments_changed": true,
+  "live_shell_absent": true,
+  "targeted_tests": 2,
+  "targeted_green": true,
+  "tables_unchanged": 174,
+  "plans_ready": 230,
+  "SUT": 0
+}

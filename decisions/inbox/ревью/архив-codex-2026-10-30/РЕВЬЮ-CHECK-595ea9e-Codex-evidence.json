@@ -1,0 +1,337 @@
+{
+  "manifest_sha256": "97c47ac2fe020ce919e7ba3951a9f0da3cd1430d9a832d04f400154ef57a70eb",
+  "package_files": 197,
+  "input_sha256": "14ced736ee8486d3b5a80c21e70dd55db3c28c9a9ec69b26a841755cb435ed3e",
+  "source_files": 2563,
+  "blobs": {
+    "old": 214,
+    "new": 214
+  },
+  "trees": {
+    "old": "1a1316b0033625d09ee2499c021f4f5cc178a729",
+    "new": "50dc9f14146d4a719ffbc5847d878111cafe0981"
+  },
+  "original_probe_blob": "b863e38b1fd4f36d527d45a448ecb3aee5612de9",
+  "tests": [
+    {
+      "module": "test_check.py",
+      "code": 0
+    },
+    {
+      "module": "test_portable.py",
+      "code": 0
+    }
+  ],
+  "traces": {
+    "old": {
+      "original": [
+        {
+          "mode": "normal",
+          "events": [
+            "launch",
+            "sha",
+            "fetch",
+            "clean"
+          ],
+          "at_clean": [
+            {
+              "outbox": true,
+              "active": false,
+              "archived": true
+            }
+          ],
+          "outbox_retained": false,
+          "active_work_retained": false,
+          "input_retained": false,
+          "failed": false,
+          "reason": null,
+          "published": 3,
+          "safety_pass": true
+        },
+        {
+          "mode": "normal_fetch",
+          "events": [
+            "launch",
+            "sha",
+            "fetch",
+            "clean"
+          ],
+          "at_clean": [
+            {
+              "outbox": true,
+              "active": false,
+              "archived": false
+            }
+          ],
+          "outbox_retained": false,
+          "active_work_retained": false,
+          "input_retained": false,
+          "failed": true,
+          "reason": "RuntimeError: SSH lost after a partial result download\n",
+          "published": null,
+          "safety_pass": false
+        },
+        {
+          "mode": "normal_sha",
+          "events": [
+            "launch",
+            "sha",
+            "clean"
+          ],
+          "at_clean": [
+            {
+              "outbox": true,
+              "active": false,
+              "archived": false
+            }
+          ],
+          "outbox_retained": false,
+          "active_work_retained": false,
+          "input_retained": false,
+          "failed": true,
+          "reason": "RuntimeError: SSH lost while reading result SHA\n",
+          "published": null,
+          "safety_pass": false
+        },
+        {
+          "mode": "normal_short",
+          "events": [
+            "launch",
+            "sha",
+            "fetch",
+            "clean"
+          ],
+          "at_clean": [
+            {
+              "outbox": true,
+              "active": false,
+              "archived": false
+            }
+          ],
+          "outbox_retained": false,
+          "active_work_retained": false,
+          "input_retained": false,
+          "failed": true,
+          "reason": "RuntimeError: returned result differs from the machine sha256\n",
+          "published": null,
+          "safety_pass": false
+        },
+        {
+          "mode": "recovered_fetch",
+          "events": [
+            "launch",
+            "status",
+            "outbox-probe",
+            "sha",
+            "fetch"
+          ],
+          "at_clean": [],
+          "outbox_retained": true,
+          "active_work_retained": false,
+          "input_retained": true,
+          "failed": true,
+          "reason": "RuntimeError: SSH lost after a partial result download\nremote cleanup withheld: unit/outbox may still contain the result\n",
+          "published": null,
+          "safety_pass": true
+        },
+        {
+          "mode": "late_launch",
+          "events": [
+            "launch",
+            "status",
+            "outbox-probe",
+            "original-launch-takes-effect",
+            "clean"
+          ],
+          "at_clean": [
+            {
+              "outbox": false,
+              "active": true,
+              "archived": false
+            }
+          ],
+          "outbox_retained": false,
+          "active_work_retained": false,
+          "input_retained": false,
+          "failed": true,
+          "reason": "FinishedWithoutResult: acceptance-check-20261030t063615z-late_launch ended without outbox /home/acceptance/checks/outbox/20261030T063615Z-late_launch.tar.gz: {\"ActiveState\": \"inactive\", \"LoadState\": \"not-found\"}\n",
+          "published": null,
+          "safety_pass": false
+        }
+      ],
+      "loaded": [
+        {
+          "mode": "late_launch",
+          "events": [
+            "launch",
+            "status",
+            "outbox-probe",
+            "original-launch-takes-effect",
+            "clean"
+          ],
+          "at_clean": [
+            {
+              "outbox": false,
+              "active": true,
+              "archived": false
+            }
+          ],
+          "outbox_retained": false,
+          "active_work_retained": false,
+          "input_retained": false,
+          "failed": true,
+          "reason": "FinishedWithoutResult: acceptance-check-20261030t063615z-late_launch ended without outbox /home/acceptance/checks/outbox/20261030T063615Z-late_launch.tar.gz: {\"ActiveState\": \"inactive\", \"LoadState\": \"loaded\", \"Result\": \"success\"}\n",
+          "published": null,
+          "safety_pass": false
+        }
+      ]
+    },
+    "new": {
+      "original": [
+        {
+          "mode": "normal",
+          "events": [
+            "launch",
+            "sha",
+            "fetch",
+            "clean"
+          ],
+          "at_clean": [
+            {
+              "outbox": true,
+              "active": false,
+              "archived": true
+            }
+          ],
+          "outbox_retained": false,
+          "active_work_retained": false,
+          "input_retained": false,
+          "failed": false,
+          "reason": null,
+          "published": 3,
+          "safety_pass": true
+        },
+        {
+          "mode": "normal_fetch",
+          "events": [
+            "launch",
+            "sha",
+            "fetch"
+          ],
+          "at_clean": [],
+          "outbox_retained": true,
+          "active_work_retained": false,
+          "input_retained": true,
+          "failed": true,
+          "reason": "remote kept: RuntimeError: SSH lost after a partial result download\n",
+          "published": null,
+          "safety_pass": true
+        },
+        {
+          "mode": "normal_sha",
+          "events": [
+            "launch",
+            "sha"
+          ],
+          "at_clean": [],
+          "outbox_retained": true,
+          "active_work_retained": false,
+          "input_retained": true,
+          "failed": true,
+          "reason": "remote kept: RuntimeError: SSH lost while reading result SHA\n",
+          "published": null,
+          "safety_pass": true
+        },
+        {
+          "mode": "normal_short",
+          "events": [
+            "launch",
+            "sha",
+            "fetch"
+          ],
+          "at_clean": [],
+          "outbox_retained": true,
+          "active_work_retained": false,
+          "input_retained": true,
+          "failed": true,
+          "reason": "remote kept: RuntimeError: returned result differs from the machine sha256\n",
+          "published": null,
+          "safety_pass": true
+        },
+        {
+          "mode": "recovered_fetch",
+          "events": [
+            "launch",
+            "status",
+            "outbox-probe",
+            "sha",
+            "fetch"
+          ],
+          "at_clean": [],
+          "outbox_retained": true,
+          "active_work_retained": false,
+          "input_retained": true,
+          "failed": true,
+          "reason": "remote kept: RuntimeError: SSH lost after a partial result download\n",
+          "published": null,
+          "safety_pass": true
+        },
+        {
+          "mode": "late_launch",
+          "events": [
+            "launch",
+            "status",
+            "outbox-probe",
+            "original-launch-takes-effect"
+          ],
+          "at_clean": [],
+          "outbox_retained": false,
+          "active_work_retained": true,
+          "input_retained": true,
+          "failed": true,
+          "reason": "remote kept: unit state unknown: acceptance-check-20261030t063616z-late_launch: {\"ActiveState\": \"inactive\", \"LoadState\": \"not-found\"}; outbox absent\n",
+          "published": null,
+          "safety_pass": true
+        }
+      ],
+      "loaded": [
+        {
+          "mode": "late_launch",
+          "events": [
+            "launch",
+            "status",
+            "outbox-probe",
+            "original-launch-takes-effect",
+            "clean"
+          ],
+          "at_clean": [
+            {
+              "outbox": false,
+              "active": true,
+              "archived": false
+            }
+          ],
+          "outbox_retained": false,
+          "active_work_retained": false,
+          "input_retained": false,
+          "failed": true,
+          "reason": "FinishedWithoutResult: acceptance-check-20261030t063616z-late_launch ended without outbox /home/acceptance/checks/outbox/20261030T063616Z-late_launch.tar.gz: {\"ActiveState\": \"inactive\", \"LoadState\": \"loaded\", \"Result\": \"success\"}\n",
+          "published": null,
+          "safety_pass": false
+        }
+      ]
+    }
+  },
+  "native": {
+    "command": [
+      "systemctl",
+      "show",
+      "getty@65530.service"
+    ],
+    "code": 0,
+    "stdout": "Result=success\nExecMainStartTimestampMonotonic=0\nExecMainExitTimestampMonotonic=0\nLoadState=loaded\nActiveState=inactive\nJob=\n",
+    "stderr": ""
+  },
+  "inputs_unchanged": true,
+  "SUT": 0
+}

@@ -1,0 +1,114 @@
+{
+  "green": false,
+  "SUT": 0,
+  "manifest_sha256": "6432196225660c13f69d565ca43c394059102248c2a2ccca884cb76b1fda18b3",
+  "package_files": 272,
+  "author_input_sha256": "4b114a2b5e681c0c866d2311f0088aad482ab0d5d01355e31ee326c1b320284f",
+  "author_input_files": 2620,
+  "source_sha_files": 2619,
+  "git_blobs": {
+    "runtime": 221,
+    "specs": 2355
+  },
+  "tests": {
+    "test_store_audit": 14,
+    "test_store_group": 15,
+    "test_c_process": 7,
+    "test_c_execution": 36,
+    "test_assembly": 30,
+    "test_role_readiness": 9,
+    "test_m11_raw_and_agent_door": 9,
+    "test_proxy": 3
+  },
+  "total_tests": 123,
+  "controls": {
+    "rights_prelude_separate": {
+      "safety_pass": false,
+      "scenario_reason": null,
+      "attempts": {
+        "none": {
+          "safety_pass": false,
+          "actual_argv_unchanged": true,
+          "unrelated_prelude_changed": true,
+          "actual_argv": [
+            "--implicit-rights",
+            "/actual rights"
+          ],
+          "rewritten": "printf \"%s\\n\"  > /tmp/ck-zudkim1k/rights-review-8q4q6d3x/separate.prelude && exec /opt/check-env/lesson-spec/bin/python3.12 -I -B /tmp/ck-zudkim1k/rights-review-8q4q6d3x/observe.py /tmp/ck-zudkim1k/rights-review-8q4q6d3x/separate.argv --implicit-rights '/actual rights'"
+        },
+        "file": {
+          "safety_pass": false,
+          "actual_argv_unchanged": true,
+          "unrelated_prelude_changed": true,
+          "actual_argv": [
+            "--implicit-rights",
+            "/actual rights"
+          ],
+          "rewritten": "printf \"%s\\n\" -rights '/replacement rights' > /tmp/ck-zudkim1k/rights-review-8q4q6d3x/separate.prelude && exec /opt/check-env/lesson-spec/bin/python3.12 -I -B /tmp/ck-zudkim1k/rights-review-8q4q6d3x/observe.py /tmp/ck-zudkim1k/rights-review-8q4q6d3x/separate.argv --implicit-rights '/actual rights'"
+        }
+      }
+    },
+    "rights_prelude_equal": {
+      "safety_pass": false,
+      "scenario_reason": null,
+      "attempts": {
+        "none": {
+          "safety_pass": false,
+          "actual_argv_unchanged": true,
+          "unrelated_prelude_changed": true,
+          "actual_argv": [
+            "--implicit-rights",
+            "/actual rights"
+          ],
+          "rewritten": "printf \"%s\\n\"  > /tmp/ck-zudkim1k/rights-review-8q4q6d3x/equal.prelude && exec /opt/check-env/lesson-spec/bin/python3.12 -I -B /tmp/ck-zudkim1k/rights-review-8q4q6d3x/observe.py /tmp/ck-zudkim1k/rights-review-8q4q6d3x/equal.argv --implicit-rights '/actual rights'"
+        },
+        "file": {
+          "safety_pass": false,
+          "actual_argv_unchanged": true,
+          "unrelated_prelude_changed": true,
+          "actual_argv": [
+            "--implicit-rights",
+            "/actual rights"
+          ],
+          "rewritten": "printf \"%s\\n\" -rights='/replacement rights' > /tmp/ck-zudkim1k/rights-review-8q4q6d3x/equal.prelude && exec /opt/check-env/lesson-spec/bin/python3.12 -I -B /tmp/ck-zudkim1k/rights-review-8q4q6d3x/observe.py /tmp/ck-zudkim1k/rights-review-8q4q6d3x/equal.argv --implicit-rights '/actual rights'"
+        }
+      }
+    },
+    "exported_skip_coverage": {
+      "safety_pass": false,
+      "bridge_code": 1,
+      "expected_reason": "store command must name exactly one argv -rights flag",
+      "exported_skip": {
+        "13-rights-file": {
+          "content_type": null,
+          "length": 53,
+          "sha256": "9eda0d6333363e6b7ee22e64cf6f433ec20ed4e56eb0987e63ab38340d3a937c",
+          "body_omitted": true
+        }
+      },
+      "coverage": {
+        "expected_steps": 0,
+        "actual_step_results": 0,
+        "manual_not_executed": 0,
+        "errors": [
+          "not-executed scenarios differ from the capability plan"
+        ]
+      }
+    },
+    "opaque_proxy": {
+      "safety_pass": true,
+      "echoed": true,
+      "old_closed": true,
+      "new_closed": true,
+      "direct_ok": true,
+      "mend_ok": true,
+      "remember_calls": 0,
+      "bytes": {
+        "client_to_upstream": 85000,
+        "upstream_to_client": 85000
+      },
+      "payload_length": 85000
+    }
+  },
+  "inputs_unchanged": true
+}

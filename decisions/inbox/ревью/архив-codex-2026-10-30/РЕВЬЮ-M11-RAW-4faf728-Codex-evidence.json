@@ -1,0 +1,177 @@
+{
+  "green": false,
+  "findings": [
+    "json_literal_marker",
+    "store_raw"
+  ],
+  "SUT": 0,
+  "controls": {
+    "before": {
+      "published_4097": {
+        "safety_pass": false,
+        "body_matches": false,
+        "body_length": 4,
+        "expected_length": 4097,
+        "content_types": [
+          "application/json"
+        ],
+        "content_lengths": [
+          "4"
+        ],
+        "body_prefix": "@raw",
+        "valid_json": false
+      },
+      "json_literal_marker": {
+        "safety_pass": true,
+        "body_matches": true,
+        "body_length": 46,
+        "expected_length": 46,
+        "content_types": [
+          "application/json"
+        ],
+        "content_lengths": [
+          "46"
+        ],
+        "body_prefix": "{\"request_id\": \"j1\", \"ref\": \"value @raw tail\"}",
+        "valid_json": true
+      },
+      "store_raw": {
+        "safety_pass": false,
+        "body_matches": false,
+        "body_length": 4,
+        "expected_length": 7,
+        "content_types": [
+          "application/json"
+        ],
+        "content_lengths": [
+          "4"
+        ],
+        "body_prefix": "@raw",
+        "valid_json": false
+      },
+      "raw_utf8_spaces": {
+        "safety_pass": false,
+        "body_matches": false,
+        "body_length": 4,
+        "expected_length": 22,
+        "content_types": [
+          "application/json"
+        ],
+        "content_lengths": [
+          "4"
+        ],
+        "body_prefix": "@raw",
+        "valid_json": false
+      },
+      "custom_type": {
+        "safety_pass": false,
+        "body_matches": true,
+        "body_length": 2,
+        "expected_length": 2,
+        "content_types": [
+          "application/custom",
+          "application/json"
+        ],
+        "content_lengths": [
+          "2"
+        ],
+        "body_prefix": "{}",
+        "valid_json": true
+      },
+      "delayed_listener": {
+        "safety_pass": false,
+        "transport": "cannot connect to unix:/tmp/ready-wire-sdg5rzoh/door.sock"
+      }
+    },
+    "after": {
+      "published_4097": {
+        "safety_pass": true,
+        "body_matches": true,
+        "body_length": 4097,
+        "expected_length": 4097,
+        "content_types": [
+          "application/octet-stream"
+        ],
+        "content_lengths": [
+          "4097"
+        ],
+        "body_prefix": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "valid_json": false
+      },
+      "json_literal_marker": {
+        "safety_pass": false,
+        "body_matches": false,
+        "body_length": 34,
+        "expected_length": 46,
+        "content_types": [
+          "application/octet-stream"
+        ],
+        "content_lengths": [
+          "34"
+        ],
+        "body_prefix": "{\"request_id\": \"j1\", \"ref\": \"value",
+        "valid_json": false
+      },
+      "store_raw": {
+        "safety_pass": false,
+        "body_matches": true,
+        "body_length": 7,
+        "expected_length": 7,
+        "content_types": [
+          "application/json"
+        ],
+        "content_lengths": [
+          "7"
+        ],
+        "body_prefix": "abc def",
+        "valid_json": false
+      },
+      "raw_utf8_spaces": {
+        "safety_pass": true,
+        "body_matches": true,
+        "body_length": 22,
+        "expected_length": 22,
+        "content_types": [
+          "application/octet-stream"
+        ],
+        "content_lengths": [
+          "22"
+        ],
+        "body_prefix": "Привет  мир  ",
+        "valid_json": false
+      },
+      "custom_type": {
+        "safety_pass": true,
+        "body_matches": true,
+        "body_length": 2,
+        "expected_length": 2,
+        "content_types": [
+          "application/custom"
+        ],
+        "content_lengths": [
+          "2"
+        ],
+        "body_prefix": "{}",
+        "valid_json": true
+      },
+      "delayed_listener": {
+        "safety_pass": true,
+        "status": 200
+      }
+    }
+  },
+  "tests": {
+    "test_m11_raw_and_agent_door": ".......\n----------------------------------------------------------------------\nRan 7 tests in 0.821s\n\nOK",
+    "test_c_domain_stand": "..............\n----------------------------------------------------------------------\nRan 14 tests in 3.123s\n\nOK",
+    "test_runner": ".........\n----------------------------------------------------------------------\nRan 9 tests in 0.051s\n\nOK"
+  },
+  "package_files": 12,
+  "manifest_sha256": "b7e014faec9cf5ca3cf73e8e3abb4abcac0f22a3a2908aa1db0342bd18ed5176",
+  "author_input_sha256": "d9364b991b275ab102ce6fc34c8a7af5a39f7a7ab72ac7d1dad3ccdf5524910c",
+  "author_input_files": 4908,
+  "inputs_unchanged": true,
+  "git_blobs": {
+    "before": 216,
+    "after": 217
+  }
+}

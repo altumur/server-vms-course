@@ -1,0 +1,7 @@
+{
+  "case": "malformed JSON with a token field and echoed credential",
+  "body": "{\"token\":\"issued-fixture-secret\",\"detail\":\"issued-fixture-secret\",\"broken\"",
+  "diagnostic": "\"{\\\"[redacted],\\\"detail\\\":\\\"issued-fixture-secret\\\",\\\"broken\\\"\"",
+  "leaked": true,
+  "author_tests": 14
+}

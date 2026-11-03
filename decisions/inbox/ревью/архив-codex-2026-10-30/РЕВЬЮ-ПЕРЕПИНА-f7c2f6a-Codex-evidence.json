@@ -1,0 +1,107 @@
+{
+  "manifest_files": 5070,
+  "runtime_files_equal_base": 103,
+  "inventory_tables": 174,
+  "changed_tables": [
+    "VMS/06-detedge/acceptance/1/scenarios.tsv"
+  ],
+  "openapi_only_optional_stranded": true,
+  "tests": 30,
+  "failures": 0,
+  "errors": 0,
+  "handover": [
+    {
+      "scenario": "04-planned-handover",
+      "form": "absent",
+      "accepted": false
+    },
+    {
+      "scenario": "04-planned-handover",
+      "form": "empty",
+      "accepted": true
+    },
+    {
+      "scenario": "04-planned-handover",
+      "form": "nonempty",
+      "accepted": false
+    },
+    {
+      "scenario": "04-planned-handover",
+      "form": "null",
+      "accepted": false
+    },
+    {
+      "scenario": "04-planned-handover",
+      "form": "extra",
+      "accepted": false
+    },
+    {
+      "scenario": "04-planned-handover",
+      "form": "missing-rev",
+      "accepted": false
+    },
+    {
+      "scenario": "04-planned-handover",
+      "form": "bool-term",
+      "accepted": false
+    },
+    {
+      "scenario": "12-handover-then-move",
+      "form": "absent",
+      "accepted": true
+    },
+    {
+      "scenario": "12-handover-then-move",
+      "form": "empty",
+      "accepted": true
+    },
+    {
+      "scenario": "12-handover-then-move",
+      "form": "nonempty",
+      "accepted": true
+    },
+    {
+      "scenario": "12-handover-then-move",
+      "form": "null",
+      "accepted": false
+    },
+    {
+      "scenario": "12-handover-then-move",
+      "form": "extra",
+      "accepted": false
+    },
+    {
+      "scenario": "12-handover-then-move",
+      "form": "missing-rev",
+      "accepted": false
+    },
+    {
+      "scenario": "12-handover-then-move",
+      "form": "bool-term",
+      "accepted": false
+    }
+  ],
+  "enabled": [
+    {
+      "value": true,
+      "accepted": true
+    },
+    {
+      "value": false,
+      "accepted": false
+    },
+    {
+      "value": null,
+      "accepted": false
+    },
+    {
+      "value": 1,
+      "accepted": false
+    },
+    {
+      "value": "true",
+      "accepted": false
+    }
+  ],
+  "SUT": 0
+}

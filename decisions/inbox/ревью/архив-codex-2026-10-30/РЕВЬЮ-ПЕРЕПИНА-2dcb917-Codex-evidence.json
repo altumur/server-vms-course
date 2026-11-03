@@ -1,0 +1,18 @@
+{
+  "manifest_files": 5077,
+  "runtime_unchanged": 103,
+  "specs_git_blobs": 2345,
+  "inventory_tables": 174,
+  "changed_inventory_tables": [
+    "Platform/09-agent/acceptance/1/scenarios.tsv"
+  ],
+  "unit_tests": 10,
+  "unit_green": true,
+  "plans_ready": 230,
+  "agent_scenarios": 11,
+  "agent_steps": 124,
+  "domain_chapters": 13,
+  "domain_scenarios": 73,
+  "domain_steps": 856,
+  "SUT": 0
+}

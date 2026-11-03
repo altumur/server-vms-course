@@ -1,0 +1,279 @@
+{
+  "green": false,
+  "SUT": 0,
+  "old": "dd67722c4c986ab5e76c06ef778d45a3bd033220",
+  "new": "5fd65fa25350db1664c7706a4e363675905b949e",
+  "pin": "d389cf5e47db0902f8d660f7bb6f917eb1588925",
+  "bd": "bd3282636f2d5b423b5f07ec4739d82a2bff194e",
+  "restored_spec_tree": "028db780ac7ebaec1ac521d52b9c31eabcf34ae2",
+  "manifest_sha256": "1bba0158236bea13487ff78bf834c25517a3d43559060c7101c0ce9a4fecd524",
+  "package_files": 14,
+  "git_blobs": {
+    "specs": 2382,
+    "bd": 2383,
+    "old": 224,
+    "new": 224
+  },
+  "probe_sha256": "71de8b25144daf07d019b80b346f7cdca7accd7d17477c35bfac412d37450552",
+  "tests": {
+    "test_installer_audit_b": 10,
+    "test_c_installer": 33,
+    "test_console.Boundaries": 5,
+    "test_c_shared_engines": 23
+  },
+  "controls": {
+    "old": {
+      "shell": {
+        "published-shell": {
+          "safety_pass": false,
+          "errors": [
+            "refusal stderr does not name file"
+          ],
+          "expected_accepted": true,
+          "html": "<!doctype html>\n<html lang=\"ru\">\n<head><meta charset=\"utf-8\"><title>Счётчики</title></head>\n<body>\n<h1>Счётчики</h1>\n<p onmouseover=\"showHint()\">Страница подсистемы paged.</p>\n<button>Обновить</button>\n</body>\n</html>\n",
+          "stderr_name": "shell",
+          "native_launches": 2,
+          "parsed_handler_attributes": [
+            "onmouseover"
+          ],
+          "invalid_manifest": false
+        },
+        "published-wrong-manifest": {
+          "safety_pass": false,
+          "errors": [],
+          "expected_accepted": false,
+          "html": "<!doctype html>\n<html lang=\"ru\">\n<head><meta charset=\"utf-8\"><title>Счётчики</title></head>\n<body>\n<h1>Счётчики</h1>\n<p onmouseover=\"showHint()\">Страница подсистемы paged.</p>\n<button>Обновить</button>\n</body>\n</html>\n",
+          "stderr_name": "manifest",
+          "native_launches": 2,
+          "parsed_handler_attributes": [
+            "onmouseover"
+          ],
+          "invalid_manifest": false
+        },
+        "published-missing-name": {
+          "safety_pass": true,
+          "errors": [
+            "refusal stderr does not name file"
+          ],
+          "expected_accepted": false,
+          "html": "<!doctype html>\n<html lang=\"ru\">\n<head><meta charset=\"utf-8\"><title>Счётчики</title></head>\n<body>\n<h1>Счётчики</h1>\n<p onmouseover=\"showHint()\">Страница подсистемы paged.</p>\n<button>Обновить</button>\n</body>\n</html>\n",
+          "stderr_name": "missing",
+          "native_launches": 2,
+          "parsed_handler_attributes": [
+            "onmouseover"
+          ],
+          "invalid_manifest": false
+        },
+        "plain-value": {
+          "safety_pass": true,
+          "errors": [],
+          "expected_accepted": true,
+          "html": "<p title=\"onclick=\">page</p>\n",
+          "stderr_name": "manifest",
+          "native_launches": 2,
+          "parsed_handler_attributes": [],
+          "invalid_manifest": true
+        },
+        "quoted-space": {
+          "safety_pass": true,
+          "errors": [],
+          "expected_accepted": true,
+          "html": "<p title=\"look onload=literal\">page</p>\n",
+          "stderr_name": "manifest",
+          "native_launches": 2,
+          "parsed_handler_attributes": [],
+          "invalid_manifest": true
+        },
+        "comment": {
+          "safety_pass": true,
+          "errors": [],
+          "expected_accepted": true,
+          "html": "<!-- onload=literal -->\n<p>page</p>\n",
+          "stderr_name": "manifest",
+          "native_launches": 2,
+          "parsed_handler_attributes": [],
+          "invalid_manifest": true
+        },
+        "quoted-gt-handler": {
+          "safety_pass": false,
+          "errors": [
+            "refusal stderr does not name file"
+          ],
+          "expected_accepted": true,
+          "html": "<p title=\">\" onload=\"hint()\">page</p>\n",
+          "stderr_name": "shell",
+          "native_launches": 2,
+          "parsed_handler_attributes": [
+            "onload"
+          ],
+          "invalid_manifest": false
+        }
+      },
+      "console": {
+        "pinned": {
+          "safety_pass": true,
+          "scenarios": 19,
+          "mismatches": []
+        },
+        "bd32826": {
+          "safety_pass": false,
+          "scenarios": 23,
+          "mismatches": [
+            {
+              "scenario": "20-failover-measured",
+              "actual": [
+                "testsub",
+                "testsub2"
+              ],
+              "expected": [
+                "testsub",
+                "testsub2",
+                "/tmp/ck-x0r4ds26/rv-shell-name-1fduxes2/bd/Platform/06-console/acceptance/5/probe-x.subsystem.yaml"
+              ]
+            },
+            {
+              "scenario": "21-failover-unmeasured",
+              "actual": [
+                "testsub",
+                "testsub2"
+              ],
+              "expected": [
+                "testsub",
+                "testsub2",
+                "/tmp/ck-x0r4ds26/rv-shell-name-1fduxes2/bd/Platform/06-console/acceptance/5/probe-x.subsystem.yaml"
+              ]
+            },
+            {
+              "scenario": "22-numeric-id",
+              "actual": [
+                "testsub",
+                "testsub2"
+              ],
+              "expected": [
+                "testsub",
+                "testsub2",
+                "/tmp/ck-x0r4ds26/rv-shell-name-1fduxes2/bd/Platform/06-console/acceptance/5/probe-x.subsystem.yaml"
+              ]
+            },
+            {
+              "scenario": "23-weight-field",
+              "actual": [
+                "testsub",
+                "testsub2"
+              ],
+              "expected": [
+                "testsub",
+                "testsub2",
+                "/tmp/ck-x0r4ds26/rv-shell-name-1fduxes2/bd/Platform/06-console/acceptance/5/probe-x.subsystem.yaml"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "new": {
+      "shell": {
+        "published-shell": {
+          "safety_pass": true,
+          "errors": [],
+          "expected_accepted": true,
+          "html": "<!doctype html>\n<html lang=\"ru\">\n<head><meta charset=\"utf-8\"><title>Счётчики</title></head>\n<body>\n<h1>Счётчики</h1>\n<p onmouseover=\"showHint()\">Страница подсистемы paged.</p>\n<button>Обновить</button>\n</body>\n</html>\n",
+          "stderr_name": "shell",
+          "native_launches": 2,
+          "parsed_handler_attributes": [
+            "onmouseover"
+          ],
+          "invalid_manifest": false
+        },
+        "published-wrong-manifest": {
+          "safety_pass": true,
+          "errors": [
+            "refusal stderr does not name file"
+          ],
+          "expected_accepted": false,
+          "html": "<!doctype html>\n<html lang=\"ru\">\n<head><meta charset=\"utf-8\"><title>Счётчики</title></head>\n<body>\n<h1>Счётчики</h1>\n<p onmouseover=\"showHint()\">Страница подсистемы paged.</p>\n<button>Обновить</button>\n</body>\n</html>\n",
+          "stderr_name": "manifest",
+          "native_launches": 2,
+          "parsed_handler_attributes": [
+            "onmouseover"
+          ],
+          "invalid_manifest": false
+        },
+        "published-missing-name": {
+          "safety_pass": true,
+          "errors": [
+            "refusal stderr does not name file"
+          ],
+          "expected_accepted": false,
+          "html": "<!doctype html>\n<html lang=\"ru\">\n<head><meta charset=\"utf-8\"><title>Счётчики</title></head>\n<body>\n<h1>Счётчики</h1>\n<p onmouseover=\"showHint()\">Страница подсистемы paged.</p>\n<button>Обновить</button>\n</body>\n</html>\n",
+          "stderr_name": "missing",
+          "native_launches": 2,
+          "parsed_handler_attributes": [
+            "onmouseover"
+          ],
+          "invalid_manifest": false
+        },
+        "plain-value": {
+          "safety_pass": true,
+          "errors": [],
+          "expected_accepted": true,
+          "html": "<p title=\"onclick=\">page</p>\n",
+          "stderr_name": "manifest",
+          "native_launches": 2,
+          "parsed_handler_attributes": [],
+          "invalid_manifest": true
+        },
+        "quoted-space": {
+          "safety_pass": false,
+          "errors": [
+            "refusal stderr does not name file"
+          ],
+          "expected_accepted": true,
+          "html": "<p title=\"look onload=literal\">page</p>\n",
+          "stderr_name": "manifest",
+          "native_launches": 2,
+          "parsed_handler_attributes": [],
+          "invalid_manifest": true
+        },
+        "comment": {
+          "safety_pass": false,
+          "errors": [
+            "refusal stderr does not name file"
+          ],
+          "expected_accepted": true,
+          "html": "<!-- onload=literal -->\n<p>page</p>\n",
+          "stderr_name": "manifest",
+          "native_launches": 2,
+          "parsed_handler_attributes": [],
+          "invalid_manifest": true
+        },
+        "quoted-gt-handler": {
+          "safety_pass": false,
+          "errors": [
+            "refusal stderr does not name file"
+          ],
+          "expected_accepted": true,
+          "html": "<p title=\">\" onload=\"hint()\">page</p>\n",
+          "stderr_name": "shell",
+          "native_launches": 2,
+          "parsed_handler_attributes": [
+            "onload"
+          ],
+          "invalid_manifest": false
+        }
+      },
+      "console": {
+        "pinned": {
+          "safety_pass": true,
+          "scenarios": 19,
+          "mismatches": []
+        },
+        "bd32826": {
+          "safety_pass": true,
+          "scenarios": 23,
+          "mismatches": []
+        }
+      }
+    }
+  }
+}

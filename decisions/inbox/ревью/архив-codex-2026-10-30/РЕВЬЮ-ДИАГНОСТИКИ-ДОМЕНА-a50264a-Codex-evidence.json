@@ -1,0 +1,16 @@
+{
+  "manifest_files": 6321,
+  "tests": 100,
+  "failures": 0,
+  "errors": 0,
+  "oracle_rejects_raw_wrapped": true,
+  "A_metadata_only": true,
+  "B_exact_only": true,
+  "raw_bytes_judge_preserved": true,
+  "classification_counters_preserved": true,
+  "metadata_digest_stable": true,
+  "forged_metadata_rehashed": true,
+  "changed_snapshot_rechecked": true,
+  "transport_metadata_only": true,
+  "SUT": 0
+}

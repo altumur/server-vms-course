@@ -1,0 +1,122 @@
+{
+  "green": true,
+  "SUT": 0,
+  "manifest_sha256": "daf6dba61c7d70ca5af83c160a9c45ac4d3510ac4e1a2c99b4188b22a25914fd",
+  "package_files_verified": 609,
+  "source_files_verified": 2604,
+  "author_input_sha256": "34fa239b98a8b04aa83a2fb4eb246526efc4ea1645cc0ea119950b4b43272133",
+  "inputs_unchanged": true,
+  "archive_blobs": {
+    "runner-before": 214,
+    "runner-after": 215,
+    "specs-before": 2345
+  },
+  "changed_runner_files": [
+    "README.md",
+    "SPEC_VERSION",
+    "tests/test_repin_ee172a0.py"
+  ],
+  "export_delta_files": [
+    "COURSE_COMMIT",
+    "Platform/04-controller/spec/04-controller.norms.md",
+    "Platform/05-resource/spec/05-resource.norms.md",
+    "Platform/06-console/spec/06.5-console.norms.md",
+    "Platform/06-console/spec/06.7-console.norms.md",
+    "Platform/06-console/vectors/metrics/README.md",
+    "Platform/06-console/vectors/metrics/cases.tsv",
+    "Platform/08-domain/spec/08.6-domain.norms.md",
+    "Platform/08-domain/spec/08.8-domain.norms.md",
+    "Platform/09-agent/spec/09.1-agent.norms.md",
+    "Platform/common/acceptance/README.md",
+    "Platform/common/contracts/observation.md",
+    "Platform/common/contracts/tombstone.md",
+    "Platform/common/vectors/tombstone/cases.tsv"
+  ],
+  "probes": {
+    "before": {
+      "tables": 174,
+      "ready": 230,
+      "existing_execution_cases": 18038,
+      "added_execution_cases": [
+        {
+          "spec_version": "ee172a0f4b54bc88cf1178e0fb8d73a2be390a27",
+          "package": "06-console/metrics",
+          "owner": "06-console",
+          "source": "Platform/06-console/vectors/metrics/cases.tsv",
+          "table_sha256": "f828a2abae0b4291e974e3d20ae04f445290fa65df1a01dd32e668c8ebfdf232",
+          "case": "garbled-two-elements",
+          "variant": "",
+          "line": 32
+        },
+        {
+          "spec_version": "ee172a0f4b54bc88cf1178e0fb8d73a2be390a27",
+          "package": "common/tombstone",
+          "owner": "05-resource",
+          "source": "Platform/common/vectors/tombstone/cases.tsv",
+          "table_sha256": "8243681d988668768d4c1839f191d8ce0de2e369ee36e4421c2fa6cfbb8b91a8",
+          "case": "remove-garbled-rewritten",
+          "variant": "",
+          "line": 24
+        }
+      ],
+      "new_case_checks": [
+        {
+          "case": "remove-garbled-rewritten",
+          "owner": "05-resource",
+          "negative_answers": 4
+        },
+        {
+          "case": "garbled-two-elements",
+          "owner": "06-console",
+          "negative_answers": 5
+        }
+      ]
+    },
+    "after": {
+      "tables": 174,
+      "ready": 230,
+      "existing_execution_cases": 18038,
+      "added_execution_cases": [
+        {
+          "spec_version": "ee172a0f4b54bc88cf1178e0fb8d73a2be390a27",
+          "package": "06-console/metrics",
+          "owner": "06-console",
+          "source": "Platform/06-console/vectors/metrics/cases.tsv",
+          "table_sha256": "f828a2abae0b4291e974e3d20ae04f445290fa65df1a01dd32e668c8ebfdf232",
+          "case": "garbled-two-elements",
+          "variant": "",
+          "line": 32
+        },
+        {
+          "spec_version": "ee172a0f4b54bc88cf1178e0fb8d73a2be390a27",
+          "package": "common/tombstone",
+          "owner": "05-resource",
+          "source": "Platform/common/vectors/tombstone/cases.tsv",
+          "table_sha256": "8243681d988668768d4c1839f191d8ce0de2e369ee36e4421c2fa6cfbb8b91a8",
+          "case": "remove-garbled-rewritten",
+          "variant": "",
+          "line": 24
+        }
+      ],
+      "new_case_checks": [
+        {
+          "case": "remove-garbled-rewritten",
+          "owner": "05-resource",
+          "negative_answers": 4
+        },
+        {
+          "case": "garbled-two-elements",
+          "owner": "06-console",
+          "negative_answers": 5
+        }
+      ]
+    }
+  },
+  "tests": {
+    "test_repin_ee172a0": "...\n----------------------------------------------------------------------\nRan 3 tests in 1.368s\n\nOK",
+    "test_c_resource_vectors": ".............\n----------------------------------------------------------------------\nRan 13 tests in 1.637s\n\nOK",
+    "test_c_console_vectors": ".........\n----------------------------------------------------------------------\nRan 9 tests in 0.224s\n\nOK",
+    "test_c_vector_protocol": "..........\n----------------------------------------------------------------------\nRan 10 tests in 0.003s\n\nOK",
+    "test_c_pinned_vector_tables": "........\n----------------------------------------------------------------------\nRan 8 tests in 0.447s\n\nOK"
+  }
+}

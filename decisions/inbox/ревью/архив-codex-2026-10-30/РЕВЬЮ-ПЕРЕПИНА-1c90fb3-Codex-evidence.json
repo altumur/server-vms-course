@@ -1,0 +1,15 @@
+{
+  "manifest_files": 5079,
+  "unchanged_source_files": 201,
+  "specs_git_blobs": 2345,
+  "changed_spec_files": [
+    "COURSE_COMMIT",
+    "Platform/08-domain/spec/08.6-domain.norms.md",
+    "Platform/08-domain/spec/08.8-domain.norms.md"
+  ],
+  "inventory_tables": 174,
+  "inventory_unchanged": true,
+  "author_modules": 80,
+  "author_tests": 952,
+  "SUT": 0
+}

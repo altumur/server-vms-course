@@ -1,0 +1,824 @@
+{
+  "verified": true,
+  "SUT": 0,
+  "head": "4dbe5d20d563e6b22cbec695dcdceb38c0eb59de",
+  "previous": "4b50e7fbd02ddbe5052765df7e9ce214bf238310",
+  "pin": "f1139f29118c196d3bcbd280a48f74403d94feec",
+  "manifest_sha256": "43438c16ff7a9b1996e16d1714447a9f0866b507961defc29b6d2d6873f7d3fa",
+  "package_files": 18,
+  "git_blobs": {
+    "runtime": 229,
+    "old-runtime": 228,
+    "specs": 2385,
+    "old-specs": 2385
+  },
+  "merge_delta_identical": true,
+  "author_input_sha256": "9585021bc4f4b71ef93f07c3923a90890c5a4c5fce8883940cbaf309cc4ecde1",
+  "author_input_files": 4960,
+  "inputs_unchanged": true,
+  "tests": {
+    "test_domain_freeze": 15,
+    "test_c_domain_pin": 10,
+    "test_openapi_refs": 14,
+    "test_scenario_control": 10,
+    "test_c_domain_stand": 15,
+    "test_c_execution": 36,
+    "test_report_identity_secrets": 5,
+    "test_diagnostic_secrets": 14,
+    "test_c_shared_engines": 23
+  },
+  "total_tests": 142,
+  "tls_changed_test": 1,
+  "controls": {
+    "old": {
+      "original": {
+        "error": null,
+        "code": 1,
+        "report_exists": true,
+        "report": {
+          "scenarios": {
+            "01-error": [
+              {
+                "step": "1",
+                "line": 2,
+                "ok": false,
+                "why": [
+                  {
+                    "content_type": null,
+                    "length": 25,
+                    "sha256": "2fc708c6b71fd9ea61ae016512e72680a699fcbc0a695d74213061be274c44df",
+                    "body_omitted": true
+                  }
+                ],
+                "got": null,
+                "classification": "runner",
+                "executed": false
+              },
+              {
+                "step": "2",
+                "line": 3,
+                "ok": false,
+                "why": [
+                  "not run: an earlier directive failed"
+                ],
+                "got": null
+              }
+            ],
+            "02-good": [
+              {
+                "step": "1",
+                "line": 4,
+                "ok": true,
+                "why": [],
+                "got": null
+              }
+            ]
+          },
+          "passed_steps": 1,
+          "total_steps": 3,
+          "green": false,
+          "classification": "runner"
+        },
+        "safety_pass": true
+      },
+      "raw_identity": {
+        "raw_keys": [
+          "16-plain"
+        ],
+        "wrapped_keys": [
+          "16-plain",
+          "17-token-wait",
+          "01-token-and-audience"
+        ],
+        "safety_pass": false
+      },
+      "boundary": {
+        "names_main_finalize_coverage": {
+          "P/09.1/stand": {
+            "safety_pass": false,
+            "code": 0,
+            "required": "17-token-wait",
+            "actual_names": [
+              "01-quiet-member",
+              "03-unreadable-member-key",
+              "04-conflict",
+              "05-unsigned-document",
+              "06-fresh-and-unchanged",
+              "07-outcome-refused",
+              "08-unit-door-window",
+              "11-revoked-not-revived",
+              "13-slot-liveness",
+              "14-pointer-checksum",
+              "15-one-agent",
+              "16-holder-self-edit",
+              "18-break-glass-copy",
+              "19-backup-refused"
+            ],
+            "coverage_errors": [
+              "scenario identities differ from inventory",
+              "17-token-wait: step identities/order differ from inventory",
+              "passed_steps differs from actual step results"
+            ],
+            "total": 156,
+            "reported": 149
+          },
+          "P/08.7/stand": {
+            "safety_pass": false,
+            "code": 0,
+            "required": "01-token-and-audience",
+            "actual_names": [
+              "02-refusals",
+              "03-framing",
+              "04-holder-body-limit"
+            ],
+            "coverage_errors": [
+              "scenario identities differ from inventory",
+              "01-token-and-audience: step identities/order differ from inventory",
+              "passed_steps differs from actual step results"
+            ],
+            "total": 30,
+            "reported": 23
+          }
+        },
+        "object_commands": {
+          "P/08.3/stand": {
+            "safety_pass": false,
+            "expected": [
+              "object-put",
+              "object-spoil"
+            ],
+            "declared": [
+              "object-put"
+            ],
+            "passed": 2,
+            "total": 3,
+            "actual_commands": [
+              {
+                "kind": "object-put",
+                "key": "domain/view",
+                "file": "/tmp/ck-l9c42v1l/rv-r4-boundary-6gtqe4s1/fixture-domain-3/inputs/view-member-list-ghost.json",
+                "exists": true
+              },
+              {
+                "kind": "object-put",
+                "key": "domain/members/m1/reported",
+                "file": "/tmp/ck-l9c42v1l/rv-r4-boundary-6gtqe4s1/fixture-domain-3/inputs/member-reported-rev-2pow53.json",
+                "exists": true
+              }
+            ],
+            "bridge_arguments": [
+              {
+                "object-put": true,
+                "object-spoil": false
+              },
+              {
+                "object-put": true,
+                "object-spoil": false
+              },
+              {
+                "object-put": true,
+                "object-spoil": false
+              }
+            ]
+          },
+          "P/09.1/stand": {
+            "safety_pass": true,
+            "expected": [
+              "object-put"
+            ],
+            "declared": [
+              "object-put"
+            ],
+            "passed": 3,
+            "total": 3,
+            "actual_commands": [
+              {
+                "kind": "object-put",
+                "key": "domain/shared-docs/rev-1",
+                "file": "/tmp/ck-l9c42v1l/rv-r4-boundary-6gtqe4s1/fixture-agent-1/inputs/shared-doc-unknown-issuer.json",
+                "exists": true
+              },
+              {
+                "kind": "object-put",
+                "key": "domain/shared-docs/rev-1",
+                "file": "/tmp/ck-l9c42v1l/rv-r4-boundary-6gtqe4s1/fixture-agent-1/inputs/shared-doc-unknown-issuer.json",
+                "exists": true
+              },
+              {
+                "kind": "object-put",
+                "key": "domain/backup",
+                "file": "/tmp/ck-l9c42v1l/rv-r4-boundary-6gtqe4s1/fixture-agent-1/inputs/backup-foreign-term.json",
+                "exists": true
+              }
+            ],
+            "bridge_arguments": [
+              {
+                "object-put": true,
+                "object-spoil": false
+              },
+              {
+                "object-put": true,
+                "object-spoil": false
+              },
+              {
+                "object-put": true,
+                "object-spoil": false
+              }
+            ]
+          },
+          "P/10/stand": {
+            "safety_pass": false,
+            "expected": [
+              "object-spoil"
+            ],
+            "declared": [],
+            "passed": 0,
+            "total": 2,
+            "actual_commands": [],
+            "bridge_arguments": [
+              {
+                "object-put": false,
+                "object-spoil": false
+              }
+            ]
+          }
+        },
+        "outside_faults": {
+          "constructor": {
+            "safety_pass": false,
+            "code": null,
+            "error": "RuntimeError",
+            "report": null
+          },
+          "bind": {
+            "safety_pass": false,
+            "code": null,
+            "error": "RuntimeError",
+            "report": null
+          },
+          "transport_evidence": {
+            "safety_pass": false,
+            "code": null,
+            "error": "OSError",
+            "report": null
+          },
+          "close": {
+            "safety_pass": false,
+            "code": null,
+            "error": "OSError",
+            "report": null
+          },
+          "clean": {
+            "safety_pass": false,
+            "code": null,
+            "error": "TypeError",
+            "report": null
+          }
+        },
+        "tls_names": {
+          "safety_pass": false,
+          "code": 1,
+          "names": [
+            "03-plain"
+          ],
+          "aborted": [
+            {
+              "content_type": null,
+              "length": 15,
+              "sha256": "3bd71fc6c3fd2e97b76e83a293d756b0fb4a41233cc71c5db5d84d9bb4ee0e78",
+              "body_omitted": true
+            }
+          ],
+          "ancillary_aborted_names_preserved": false
+        }
+      }
+    },
+    "new": {
+      "original": {
+        "error": null,
+        "code": 1,
+        "report_exists": true,
+        "report": {
+          "scenarios": {
+            "01-error": [
+              {
+                "step": "1",
+                "line": 2,
+                "ok": false,
+                "why": [
+                  {
+                    "content_type": null,
+                    "length": 25,
+                    "sha256": "2fc708c6b71fd9ea61ae016512e72680a699fcbc0a695d74213061be274c44df",
+                    "body_omitted": true
+                  }
+                ],
+                "got": null,
+                "classification": "runner",
+                "executed": false
+              },
+              {
+                "step": "2",
+                "line": 3,
+                "ok": false,
+                "why": [
+                  "not run: an earlier directive failed"
+                ],
+                "got": null
+              }
+            ],
+            "02-good": [
+              {
+                "step": "1",
+                "line": 4,
+                "ok": true,
+                "why": [],
+                "got": null
+              }
+            ]
+          },
+          "passed_steps": 1,
+          "total_steps": 3,
+          "green": false,
+          "classification": "runner"
+        },
+        "safety_pass": true
+      },
+      "raw_identity": {
+        "raw_keys": [
+          "16-plain"
+        ],
+        "wrapped_keys": [
+          "16-plain",
+          "17-token-wait",
+          "01-token-and-audience"
+        ],
+        "safety_pass": false
+      },
+      "boundary": {
+        "names_main_finalize_coverage": {
+          "P/09.1/stand": {
+            "safety_pass": true,
+            "code": 0,
+            "required": "17-token-wait",
+            "actual_names": [
+              "01-quiet-member",
+              "03-unreadable-member-key",
+              "04-conflict",
+              "05-unsigned-document",
+              "06-fresh-and-unchanged",
+              "07-outcome-refused",
+              "08-unit-door-window",
+              "11-revoked-not-revived",
+              "13-slot-liveness",
+              "14-pointer-checksum",
+              "15-one-agent",
+              "16-holder-self-edit",
+              "17-token-wait",
+              "18-break-glass-copy",
+              "19-backup-refused"
+            ],
+            "coverage_errors": [],
+            "total": 156,
+            "reported": 156
+          },
+          "P/08.7/stand": {
+            "safety_pass": true,
+            "code": 0,
+            "required": "01-token-and-audience",
+            "actual_names": [
+              "01-token-and-audience",
+              "02-refusals",
+              "03-framing",
+              "04-holder-body-limit"
+            ],
+            "coverage_errors": [],
+            "total": 30,
+            "reported": 30
+          }
+        },
+        "object_commands": {
+          "P/08.3/stand": {
+            "safety_pass": true,
+            "expected": [
+              "object-put",
+              "object-spoil"
+            ],
+            "declared": [
+              "object-put",
+              "object-spoil"
+            ],
+            "passed": 3,
+            "total": 3,
+            "actual_commands": [
+              {
+                "kind": "object-put",
+                "key": "domain/view",
+                "file": "/tmp/ck-l9c42v1l/rv-r4-boundary-sjf_lop9/fixture-domain-3/inputs/view-member-list-ghost.json",
+                "exists": true
+              },
+              {
+                "kind": "object-spoil",
+                "key": "domain/members/m1/reported"
+              },
+              {
+                "kind": "object-put",
+                "key": "domain/members/m1/reported",
+                "file": "/tmp/ck-l9c42v1l/rv-r4-boundary-sjf_lop9/fixture-domain-3/inputs/member-reported-rev-2pow53.json",
+                "exists": true
+              }
+            ],
+            "bridge_arguments": [
+              {
+                "object-put": true,
+                "object-spoil": true
+              },
+              {
+                "object-put": true,
+                "object-spoil": true
+              },
+              {
+                "object-put": true,
+                "object-spoil": true
+              }
+            ]
+          },
+          "P/09.1/stand": {
+            "safety_pass": true,
+            "expected": [
+              "object-put"
+            ],
+            "declared": [
+              "object-put"
+            ],
+            "passed": 3,
+            "total": 3,
+            "actual_commands": [
+              {
+                "kind": "object-put",
+                "key": "domain/shared-docs/rev-1",
+                "file": "/tmp/ck-l9c42v1l/rv-r4-boundary-sjf_lop9/fixture-agent-1/inputs/shared-doc-unknown-issuer.json",
+                "exists": true
+              },
+              {
+                "kind": "object-put",
+                "key": "domain/shared-docs/rev-1",
+                "file": "/tmp/ck-l9c42v1l/rv-r4-boundary-sjf_lop9/fixture-agent-1/inputs/shared-doc-unknown-issuer.json",
+                "exists": true
+              },
+              {
+                "kind": "object-put",
+                "key": "domain/backup",
+                "file": "/tmp/ck-l9c42v1l/rv-r4-boundary-sjf_lop9/fixture-agent-1/inputs/backup-foreign-term.json",
+                "exists": true
+              }
+            ],
+            "bridge_arguments": [
+              {
+                "object-put": true,
+                "object-spoil": false
+              },
+              {
+                "object-put": true,
+                "object-spoil": false
+              },
+              {
+                "object-put": true,
+                "object-spoil": false
+              }
+            ]
+          },
+          "P/10/stand": {
+            "safety_pass": true,
+            "expected": [
+              "object-spoil"
+            ],
+            "declared": [
+              "object-spoil"
+            ],
+            "passed": 2,
+            "total": 2,
+            "actual_commands": [
+              {
+                "kind": "object-spoil",
+                "key": "domain/view"
+              },
+              {
+                "kind": "object-spoil",
+                "key": "domain/shadow"
+              }
+            ],
+            "bridge_arguments": [
+              {
+                "object-put": false,
+                "object-spoil": true
+              }
+            ]
+          }
+        },
+        "outside_faults": {
+          "constructor": {
+            "safety_pass": true,
+            "code": 1,
+            "error": null,
+            "report": {
+              "scenarios": {
+                "bad": [
+                  {
+                    "step": "1",
+                    "line": 2,
+                    "ok": false,
+                    "why": [
+                      {
+                        "content_type": null,
+                        "length": 35,
+                        "sha256": "89f235d79da08e0ea2462ee6bcfcf479fdc776473de3f6960453a9a7c0ffbe67",
+                        "body_omitted": true
+                      }
+                    ],
+                    "got": null,
+                    "classification": "runner",
+                    "executed": false
+                  },
+                  {
+                    "step": "2",
+                    "line": 3,
+                    "ok": false,
+                    "why": [
+                      {
+                        "content_type": null,
+                        "length": 35,
+                        "sha256": "89f235d79da08e0ea2462ee6bcfcf479fdc776473de3f6960453a9a7c0ffbe67",
+                        "body_omitted": true
+                      }
+                    ],
+                    "got": null,
+                    "classification": "runner",
+                    "executed": false
+                  }
+                ],
+                "good": [
+                  {
+                    "step": "1",
+                    "line": 4,
+                    "ok": true,
+                    "why": [],
+                    "got": null
+                  }
+                ]
+              },
+              "passed_steps": 1,
+              "total_steps": 3,
+              "green": false,
+              "classification": "runner"
+            }
+          },
+          "bind": {
+            "safety_pass": true,
+            "code": 1,
+            "error": null,
+            "report": {
+              "scenarios": {
+                "bad": [
+                  {
+                    "step": "1",
+                    "line": 2,
+                    "ok": false,
+                    "why": [
+                      {
+                        "content_type": null,
+                        "length": 35,
+                        "sha256": "89f235d79da08e0ea2462ee6bcfcf479fdc776473de3f6960453a9a7c0ffbe67",
+                        "body_omitted": true
+                      }
+                    ],
+                    "got": null,
+                    "classification": "runner",
+                    "executed": false
+                  },
+                  {
+                    "step": "2",
+                    "line": 3,
+                    "ok": false,
+                    "why": [
+                      {
+                        "content_type": null,
+                        "length": 35,
+                        "sha256": "89f235d79da08e0ea2462ee6bcfcf479fdc776473de3f6960453a9a7c0ffbe67",
+                        "body_omitted": true
+                      }
+                    ],
+                    "got": null,
+                    "classification": "runner",
+                    "executed": false
+                  }
+                ],
+                "good": [
+                  {
+                    "step": "1",
+                    "line": 4,
+                    "ok": true,
+                    "why": [],
+                    "got": null
+                  }
+                ]
+              },
+              "passed_steps": 1,
+              "total_steps": 3,
+              "green": false,
+              "classification": "runner"
+            }
+          },
+          "transport_evidence": {
+            "safety_pass": true,
+            "code": 1,
+            "error": null,
+            "report": {
+              "scenarios": {
+                "bad": [
+                  {
+                    "step": "1",
+                    "line": 2,
+                    "ok": false,
+                    "why": [
+                      {
+                        "content_type": null,
+                        "length": 30,
+                        "sha256": "5ff52cfa27934a30b5ef6ce40937364adcd150fb21d108f5fb285d15b1a4b0a9",
+                        "body_omitted": true
+                      }
+                    ],
+                    "got": null,
+                    "classification": "runner",
+                    "executed": false
+                  },
+                  {
+                    "step": "2",
+                    "line": 3,
+                    "ok": false,
+                    "why": [
+                      {
+                        "content_type": null,
+                        "length": 30,
+                        "sha256": "5ff52cfa27934a30b5ef6ce40937364adcd150fb21d108f5fb285d15b1a4b0a9",
+                        "body_omitted": true
+                      }
+                    ],
+                    "got": null,
+                    "classification": "runner",
+                    "executed": false
+                  }
+                ],
+                "good": [
+                  {
+                    "step": "1",
+                    "line": 4,
+                    "ok": true,
+                    "why": [],
+                    "got": null
+                  }
+                ]
+              },
+              "passed_steps": 1,
+              "total_steps": 3,
+              "green": false,
+              "classification": "runner"
+            }
+          },
+          "close": {
+            "safety_pass": true,
+            "code": 1,
+            "error": null,
+            "report": {
+              "scenarios": {
+                "bad": [
+                  {
+                    "step": "1",
+                    "line": 2,
+                    "ok": false,
+                    "why": [
+                      {
+                        "content_type": null,
+                        "length": 30,
+                        "sha256": "5ff52cfa27934a30b5ef6ce40937364adcd150fb21d108f5fb285d15b1a4b0a9",
+                        "body_omitted": true
+                      }
+                    ],
+                    "got": null,
+                    "classification": "runner",
+                    "executed": false
+                  },
+                  {
+                    "step": "2",
+                    "line": 3,
+                    "ok": false,
+                    "why": [
+                      {
+                        "content_type": null,
+                        "length": 30,
+                        "sha256": "5ff52cfa27934a30b5ef6ce40937364adcd150fb21d108f5fb285d15b1a4b0a9",
+                        "body_omitted": true
+                      }
+                    ],
+                    "got": null,
+                    "classification": "runner",
+                    "executed": false
+                  }
+                ],
+                "good": [
+                  {
+                    "step": "1",
+                    "line": 4,
+                    "ok": true,
+                    "why": [],
+                    "got": null
+                  }
+                ]
+              },
+              "passed_steps": 1,
+              "total_steps": 3,
+              "green": false,
+              "classification": "runner"
+            }
+          },
+          "clean": {
+            "safety_pass": true,
+            "code": 1,
+            "error": null,
+            "report": {
+              "scenarios": {
+                "bad": [
+                  {
+                    "step": "1",
+                    "line": 2,
+                    "ok": false,
+                    "why": [
+                      {
+                        "content_type": null,
+                        "length": 32,
+                        "sha256": "b12b7932ebe0b3e3ffff5620ff911352b65f180117a38bedaea6ec33ed4392b0",
+                        "body_omitted": true
+                      }
+                    ],
+                    "got": null,
+                    "classification": "runner",
+                    "executed": false
+                  },
+                  {
+                    "step": "2",
+                    "line": 3,
+                    "ok": false,
+                    "why": [
+                      {
+                        "content_type": null,
+                        "length": 32,
+                        "sha256": "b12b7932ebe0b3e3ffff5620ff911352b65f180117a38bedaea6ec33ed4392b0",
+                        "body_omitted": true
+                      }
+                    ],
+                    "got": null,
+                    "classification": "runner",
+                    "executed": false
+                  }
+                ],
+                "good": [
+                  {
+                    "step": "1",
+                    "line": 4,
+                    "ok": true,
+                    "why": [],
+                    "got": null
+                  }
+                ]
+              },
+              "passed_steps": 1,
+              "total_steps": 3,
+              "green": false,
+              "classification": "runner"
+            }
+          }
+        },
+        "tls_names": {
+          "safety_pass": true,
+          "code": 1,
+          "names": [
+            "01-token-good",
+            "02-broken-token",
+            "03-plain"
+          ],
+          "aborted": [
+            {
+              "content_type": null,
+              "length": 15,
+              "sha256": "3bd71fc6c3fd2e97b76e83a293d756b0fb4a41233cc71c5db5d84d9bb4ee0e78",
+              "body_omitted": true
+            }
+          ],
+          "ancillary_aborted_names_preserved": false
+        }
+      }
+    }
+  },
+  "probe_sha256": "d856f5f9ed182b0a19a77148adb00c20bd9f890ced33ebc336c597979ff5ee3b",
+  "original_probe_sha256": "ef6518d9ca41bb7a934fc55abef6c82626d80b3fa85b39f9bb5bb2a5c3c72a3a"
+}

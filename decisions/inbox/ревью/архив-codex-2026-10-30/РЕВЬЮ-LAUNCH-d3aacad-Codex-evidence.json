@@ -1,0 +1,998 @@
+{
+  "head": "d3aacadecb9fa543ce33521d61b6792bf94bbfc7",
+  "base": "61a09223d3c88a56083ec8acb23665283177c237",
+  "manifest_sha256": "1ab9920a3c4d2c3aec02ef1b7ad2693c271f34ec45cd82d27819f64c109e094b",
+  "manifest_files": 5571,
+  "source_files": 214,
+  "restored_git_files": {
+    "61a0922": 212,
+    "d3aacad": 214
+  },
+  "source_sha_files": 5117,
+  "spec_counts": {
+    "specs": 2345,
+    "vms-jsdom-specs": 2345
+  },
+  "source_delta": [
+    "README.md",
+    "runner/c_store.py",
+    "runner/cli_evidence.py",
+    "runner/launch_environment.py",
+    "runner/m11stand.py",
+    "runner/stand.py",
+    "tests/test_launch_environment.py"
+  ],
+  "targeted": {
+    "tests": 87,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0
+  },
+  "targeted_job": "20261030T050013Z-rv-launch-d3aacad",
+  "independent_probe_exit_codes": {
+    "61a0922": 0,
+    "d3aacad": 0
+  },
+  "independent_probe": {
+    "61a0922": {
+      "changed": false,
+      "controls": {
+        "signer_error_identity_preserved": true,
+        "not_started_has_no_present_overlay": false,
+        "vector_post_filter_presence": false,
+        "native_timeout_post_filter_presence": false,
+        "metadata_matches_after_finalize": false,
+        "same_length_current_credential_reaches_move": false,
+        "other_roles_have_no_credential": true,
+        "direct_checker_observes_exact_supplied_env": true
+      },
+      "cases": {
+        "cached": {
+          "child": {
+            "credential": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            },
+            "cluster": {
+              "present": true,
+              "length": 2,
+              "sha256": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+            },
+            "tls": {
+              "present": true,
+              "length": 16,
+              "sha256": "1395fdc2b41da1962b77a71503c462c7c15702f2d5fd2b89ec2a799c44ecc7f3"
+            },
+            "private": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            }
+          },
+          "metadata": {
+            "role": "move",
+            "exit_code": 0,
+            "output_form": "ok",
+            "started": true,
+            "metadata_file": "move-1.cli.json",
+            "environment": [
+              {
+                "name": "CLUSTER",
+                "present": true,
+                "length": 2
+              },
+              {
+                "name": "W2C_TLS_DIR",
+                "present": true,
+                "length": 16
+              },
+              {
+                "name": "W2C_TOKEN",
+                "present": true,
+                "length": 17,
+                "identity": {
+                  "name": "alice",
+                  "source": "current_person",
+                  "attempts": []
+                }
+              }
+            ],
+            "unlisted": 0,
+            "stdout_file": "move-1.cli.stdout",
+            "stderr_file": "move-1.cli.stderr"
+          },
+          "login_calls": 0
+        },
+        "fresh": {
+          "child": {
+            "credential": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            },
+            "cluster": {
+              "present": true,
+              "length": 2,
+              "sha256": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+            },
+            "tls": {
+              "present": true,
+              "length": 16,
+              "sha256": "1395fdc2b41da1962b77a71503c462c7c15702f2d5fd2b89ec2a799c44ecc7f3"
+            },
+            "private": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            }
+          },
+          "metadata": {
+            "role": "move",
+            "exit_code": 0,
+            "output_form": "ok",
+            "started": true,
+            "metadata_file": "move-1.cli.json",
+            "environment": [
+              {
+                "name": "CLUSTER",
+                "present": true,
+                "length": 2
+              },
+              {
+                "name": "W2C_TLS_DIR",
+                "present": true,
+                "length": 16
+              },
+              {
+                "name": "W2C_TOKEN",
+                "present": true,
+                "length": 17,
+                "identity": {
+                  "name": "alice",
+                  "source": "current_person",
+                  "attempts": [
+                    {
+                      "signer": "signer@hold",
+                      "success": true,
+                      "status": 200
+                    }
+                  ]
+                }
+              }
+            ],
+            "unlisted": 0,
+            "stdout_file": "move-1.cli.stdout",
+            "stderr_file": "move-1.cli.stderr"
+          },
+          "login_calls": 1
+        },
+        "expired_refused": {
+          "child": {
+            "credential": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            },
+            "cluster": {
+              "present": true,
+              "length": 2,
+              "sha256": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+            },
+            "tls": {
+              "present": true,
+              "length": 16,
+              "sha256": "1395fdc2b41da1962b77a71503c462c7c15702f2d5fd2b89ec2a799c44ecc7f3"
+            },
+            "private": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            }
+          },
+          "metadata": {
+            "role": "move",
+            "exit_code": 0,
+            "output_form": "ok",
+            "started": true,
+            "metadata_file": "move-1.cli.json",
+            "environment": [
+              {
+                "name": "CLUSTER",
+                "present": true,
+                "length": 2
+              },
+              {
+                "name": "W2C_TLS_DIR",
+                "present": true,
+                "length": 16
+              },
+              {
+                "name": "W2C_TOKEN",
+                "present": true,
+                "length": 17,
+                "identity": {
+                  "name": "alice",
+                  "source": "current_person",
+                  "attempts": [
+                    {
+                      "signer": "signer@hold",
+                      "success": false,
+                      "status": 503
+                    },
+                    {
+                      "signer": "signer@hold",
+                      "success": false,
+                      "status": 503
+                    }
+                  ]
+                }
+              }
+            ],
+            "unlisted": 0,
+            "stdout_file": "move-1.cli.stdout",
+            "stderr_file": "move-1.cli.stderr"
+          },
+          "login_calls": 2
+        },
+        "no_person": {
+          "child": {
+            "credential": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            },
+            "cluster": {
+              "present": true,
+              "length": 2,
+              "sha256": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+            },
+            "tls": {
+              "present": true,
+              "length": 16,
+              "sha256": "1395fdc2b41da1962b77a71503c462c7c15702f2d5fd2b89ec2a799c44ecc7f3"
+            },
+            "private": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            }
+          },
+          "metadata": {
+            "role": "move",
+            "exit_code": 0,
+            "output_form": "ok",
+            "started": true,
+            "metadata_file": "move-1.cli.json",
+            "environment": [
+              {
+                "name": "CLUSTER",
+                "present": true,
+                "length": 2
+              },
+              {
+                "name": "W2C_TLS_DIR",
+                "present": true,
+                "length": 16
+              },
+              {
+                "name": "W2C_TOKEN",
+                "present": true,
+                "length": 17,
+                "identity": {
+                  "name": null,
+                  "source": "cluster_environment",
+                  "attempts": []
+                }
+              }
+            ],
+            "unlisted": 0,
+            "stdout_file": "move-1.cli.stdout",
+            "stderr_file": "move-1.cli.stderr"
+          },
+          "login_calls": 0
+        },
+        "fresh_refused": {
+          "child": {
+            "credential": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            },
+            "cluster": {
+              "present": true,
+              "length": 2,
+              "sha256": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+            },
+            "tls": {
+              "present": true,
+              "length": 16,
+              "sha256": "1395fdc2b41da1962b77a71503c462c7c15702f2d5fd2b89ec2a799c44ecc7f3"
+            },
+            "private": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            }
+          },
+          "metadata": {
+            "role": "move",
+            "exit_code": 0,
+            "output_form": "ok",
+            "started": true,
+            "metadata_file": "move-1.cli.json",
+            "environment": [
+              {
+                "name": "CLUSTER",
+                "present": true,
+                "length": 2
+              },
+              {
+                "name": "W2C_TLS_DIR",
+                "present": true,
+                "length": 16
+              },
+              {
+                "name": "W2C_TOKEN",
+                "present": true,
+                "length": 17,
+                "identity": {
+                  "name": "alice",
+                  "source": "cluster_environment",
+                  "attempts": [
+                    {
+                      "signer": "signer@hold",
+                      "success": false,
+                      "status": 503
+                    }
+                  ]
+                }
+              }
+            ],
+            "unlisted": 0,
+            "stdout_file": "move-1.cli.stdout",
+            "stderr_file": "move-1.cli.stderr"
+          },
+          "login_calls": 1
+        },
+        "signer_error": {
+          "child": null,
+          "metadata": {
+            "role": "move",
+            "exit_code": null,
+            "output_form": "empty",
+            "started": false,
+            "metadata_file": "move-1.cli.json",
+            "environment": [
+              {
+                "name": "CLUSTER",
+                "present": true,
+                "length": 2
+              },
+              {
+                "name": "W2C_TLS_DIR",
+                "present": true,
+                "length": 16
+              },
+              {
+                "name": "W2C_TOKEN",
+                "present": true,
+                "length": 17,
+                "identity": {
+                  "name": "alice",
+                  "source": "cluster_environment",
+                  "attempts": [
+                    {
+                      "signer": "signer@hold",
+                      "success": false,
+                      "status": null
+                    }
+                  ]
+                }
+              }
+            ],
+            "unlisted": 0,
+            "stdout_file": "move-1.cli.stdout",
+            "stderr_file": "move-1.cli.stderr"
+          },
+          "login_calls": 1
+        },
+        "join": {
+          "child": {
+            "credential": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            },
+            "cluster": {
+              "present": true,
+              "length": 2,
+              "sha256": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+            },
+            "tls": {
+              "present": true,
+              "length": 16,
+              "sha256": "1395fdc2b41da1962b77a71503c462c7c15702f2d5fd2b89ec2a799c44ecc7f3"
+            },
+            "private": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            }
+          },
+          "metadata": {
+            "role": "join",
+            "exit_code": 0,
+            "output_form": "ok",
+            "started": true,
+            "metadata_file": "join-1.cli.json",
+            "environment": [
+              {
+                "name": "CLUSTER",
+                "present": true,
+                "length": 2
+              },
+              {
+                "name": "W2C_TLS_DIR",
+                "present": true,
+                "length": 16
+              },
+              {
+                "name": "W2C_TOKEN",
+                "present": true,
+                "length": 17,
+                "identity": {
+                  "name": null,
+                  "source": "cluster_environment",
+                  "attempts": []
+                }
+              }
+            ],
+            "unlisted": 0,
+            "stdout_file": "join-1.cli.stdout",
+            "stderr_file": "join-1.cli.stderr"
+          }
+        },
+        "vector": {
+          "role": "view",
+          "exit_code": 0,
+          "output_form": "ok",
+          "started": true,
+          "metadata_file": "view-1.cli.json",
+          "environment": [
+            {
+              "name": "W2C_TOKEN",
+              "present": true,
+              "length": 17,
+              "identity": {
+                "name": null,
+                "source": "inherited_environment",
+                "attempts": []
+              }
+            }
+          ],
+          "unlisted": 0,
+          "stdout_file": "view-1.cli.stdout",
+          "stderr_file": "view-1.cli.stderr"
+        }
+      }
+    },
+    "d3aacad": {
+      "changed": true,
+      "controls": {
+        "signer_error_identity_preserved": true,
+        "not_started_has_no_present_overlay": true,
+        "vector_post_filter_presence": true,
+        "native_timeout_post_filter_presence": true,
+        "metadata_matches_after_finalize": true,
+        "same_length_current_credential_reaches_move": true,
+        "other_roles_have_no_credential": true,
+        "direct_checker_observes_exact_supplied_env": true
+      },
+      "cases": {
+        "cached": {
+          "child": {
+            "credential": {
+              "present": true,
+              "length": 17,
+              "sha256": "875bf23560a7d3228abe653761294d20ede2aa8028eb52a08feecaebb3b0144d"
+            },
+            "cluster": {
+              "present": true,
+              "length": 2,
+              "sha256": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+            },
+            "tls": {
+              "present": true,
+              "length": 16,
+              "sha256": "1395fdc2b41da1962b77a71503c462c7c15702f2d5fd2b89ec2a799c44ecc7f3"
+            },
+            "private": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            }
+          },
+          "metadata": {
+            "role": "move",
+            "exit_code": 0,
+            "output_form": "ok",
+            "started": true,
+            "metadata_file": "move-1.cli.json",
+            "environment": [
+              {
+                "name": "CLUSTER",
+                "present": true,
+                "length": 2
+              },
+              {
+                "name": "W2C_TLS_DIR",
+                "present": true,
+                "length": 16
+              },
+              {
+                "name": "W2C_TOKEN",
+                "present": true,
+                "length": 17,
+                "identity": {
+                  "name": "alice",
+                  "source": "current_person",
+                  "attempts": []
+                }
+              }
+            ],
+            "unlisted": 0,
+            "stdout_file": "move-1.cli.stdout",
+            "stderr_file": "move-1.cli.stderr"
+          },
+          "login_calls": 0
+        },
+        "fresh": {
+          "child": {
+            "credential": {
+              "present": true,
+              "length": 17,
+              "sha256": "875bf23560a7d3228abe653761294d20ede2aa8028eb52a08feecaebb3b0144d"
+            },
+            "cluster": {
+              "present": true,
+              "length": 2,
+              "sha256": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+            },
+            "tls": {
+              "present": true,
+              "length": 16,
+              "sha256": "1395fdc2b41da1962b77a71503c462c7c15702f2d5fd2b89ec2a799c44ecc7f3"
+            },
+            "private": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            }
+          },
+          "metadata": {
+            "role": "move",
+            "exit_code": 0,
+            "output_form": "ok",
+            "started": true,
+            "metadata_file": "move-1.cli.json",
+            "environment": [
+              {
+                "name": "CLUSTER",
+                "present": true,
+                "length": 2
+              },
+              {
+                "name": "W2C_TLS_DIR",
+                "present": true,
+                "length": 16
+              },
+              {
+                "name": "W2C_TOKEN",
+                "present": true,
+                "length": 17,
+                "identity": {
+                  "name": "alice",
+                  "source": "current_person",
+                  "attempts": [
+                    {
+                      "signer": "signer@hold",
+                      "success": true,
+                      "status": 200
+                    }
+                  ]
+                }
+              }
+            ],
+            "unlisted": 0,
+            "stdout_file": "move-1.cli.stdout",
+            "stderr_file": "move-1.cli.stderr"
+          },
+          "login_calls": 1
+        },
+        "expired_refused": {
+          "child": {
+            "credential": {
+              "present": true,
+              "length": 17,
+              "sha256": "7123208e2cb2b68b189aab0fc7134b94ca542536752ab4c90c695e5905af3749"
+            },
+            "cluster": {
+              "present": true,
+              "length": 2,
+              "sha256": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+            },
+            "tls": {
+              "present": true,
+              "length": 16,
+              "sha256": "1395fdc2b41da1962b77a71503c462c7c15702f2d5fd2b89ec2a799c44ecc7f3"
+            },
+            "private": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            }
+          },
+          "metadata": {
+            "role": "move",
+            "exit_code": 0,
+            "output_form": "ok",
+            "started": true,
+            "metadata_file": "move-1.cli.json",
+            "environment": [
+              {
+                "name": "CLUSTER",
+                "present": true,
+                "length": 2
+              },
+              {
+                "name": "W2C_TLS_DIR",
+                "present": true,
+                "length": 16
+              },
+              {
+                "name": "W2C_TOKEN",
+                "present": true,
+                "length": 17,
+                "identity": {
+                  "name": "alice",
+                  "source": "current_person",
+                  "attempts": [
+                    {
+                      "signer": "signer@hold",
+                      "success": false,
+                      "status": 503
+                    },
+                    {
+                      "signer": "signer@hold",
+                      "success": false,
+                      "status": 503
+                    }
+                  ]
+                }
+              }
+            ],
+            "unlisted": 0,
+            "stdout_file": "move-1.cli.stdout",
+            "stderr_file": "move-1.cli.stderr"
+          },
+          "login_calls": 2
+        },
+        "no_person": {
+          "child": {
+            "credential": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            },
+            "cluster": {
+              "present": true,
+              "length": 2,
+              "sha256": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+            },
+            "tls": {
+              "present": true,
+              "length": 16,
+              "sha256": "1395fdc2b41da1962b77a71503c462c7c15702f2d5fd2b89ec2a799c44ecc7f3"
+            },
+            "private": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            }
+          },
+          "metadata": {
+            "role": "move",
+            "exit_code": 0,
+            "output_form": "ok",
+            "started": true,
+            "metadata_file": "move-1.cli.json",
+            "environment": [
+              {
+                "name": "CLUSTER",
+                "present": true,
+                "length": 2
+              },
+              {
+                "name": "W2C_TLS_DIR",
+                "present": true,
+                "length": 16
+              },
+              {
+                "name": "W2C_TOKEN",
+                "present": false,
+                "length": null,
+                "identity": {
+                  "name": null,
+                  "source": "cluster_environment",
+                  "attempts": []
+                }
+              }
+            ],
+            "unlisted": 0,
+            "stdout_file": "move-1.cli.stdout",
+            "stderr_file": "move-1.cli.stderr"
+          },
+          "login_calls": 0
+        },
+        "fresh_refused": {
+          "child": {
+            "credential": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            },
+            "cluster": {
+              "present": true,
+              "length": 2,
+              "sha256": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+            },
+            "tls": {
+              "present": true,
+              "length": 16,
+              "sha256": "1395fdc2b41da1962b77a71503c462c7c15702f2d5fd2b89ec2a799c44ecc7f3"
+            },
+            "private": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            }
+          },
+          "metadata": {
+            "role": "move",
+            "exit_code": 0,
+            "output_form": "ok",
+            "started": true,
+            "metadata_file": "move-1.cli.json",
+            "environment": [
+              {
+                "name": "CLUSTER",
+                "present": true,
+                "length": 2
+              },
+              {
+                "name": "W2C_TLS_DIR",
+                "present": true,
+                "length": 16
+              },
+              {
+                "name": "W2C_TOKEN",
+                "present": false,
+                "length": null,
+                "identity": {
+                  "name": "alice",
+                  "source": "cluster_environment",
+                  "attempts": [
+                    {
+                      "signer": "signer@hold",
+                      "success": false,
+                      "status": 503
+                    }
+                  ]
+                }
+              }
+            ],
+            "unlisted": 0,
+            "stdout_file": "move-1.cli.stdout",
+            "stderr_file": "move-1.cli.stderr"
+          },
+          "login_calls": 1
+        },
+        "signer_error": {
+          "child": null,
+          "metadata": {
+            "role": "move",
+            "exit_code": null,
+            "output_form": "empty",
+            "started": false,
+            "metadata_file": "move-1.cli.json",
+            "environment": [
+              {
+                "name": "CLUSTER",
+                "present": false,
+                "length": null
+              },
+              {
+                "name": "W2C_TLS_DIR",
+                "present": false,
+                "length": null
+              },
+              {
+                "name": "W2C_TOKEN",
+                "present": false,
+                "length": null,
+                "identity": {
+                  "name": "alice",
+                  "source": "cluster_environment",
+                  "attempts": [
+                    {
+                      "signer": "signer@hold",
+                      "success": false,
+                      "status": null
+                    }
+                  ]
+                }
+              }
+            ],
+            "unlisted": 0,
+            "stdout_file": "move-1.cli.stdout",
+            "stderr_file": "move-1.cli.stderr"
+          },
+          "login_calls": 1
+        },
+        "join": {
+          "child": {
+            "credential": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            },
+            "cluster": {
+              "present": true,
+              "length": 2,
+              "sha256": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+            },
+            "tls": {
+              "present": true,
+              "length": 16,
+              "sha256": "1395fdc2b41da1962b77a71503c462c7c15702f2d5fd2b89ec2a799c44ecc7f3"
+            },
+            "private": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            }
+          },
+          "metadata": {
+            "role": "join",
+            "exit_code": 0,
+            "output_form": "ok",
+            "started": true,
+            "metadata_file": "join-1.cli.json",
+            "environment": [
+              {
+                "name": "CLUSTER",
+                "present": true,
+                "length": 2
+              },
+              {
+                "name": "W2C_TLS_DIR",
+                "present": true,
+                "length": 16
+              },
+              {
+                "name": "W2C_TOKEN",
+                "present": false,
+                "length": null,
+                "identity": {
+                  "name": null,
+                  "source": "cluster_environment",
+                  "attempts": []
+                }
+              }
+            ],
+            "unlisted": 0,
+            "stdout_file": "join-1.cli.stdout",
+            "stderr_file": "join-1.cli.stderr"
+          }
+        },
+        "vector": {
+          "role": "view",
+          "exit_code": 0,
+          "output_form": "ok",
+          "started": true,
+          "metadata_file": "view-1.cli.json",
+          "environment": [
+            {
+              "name": "W2C_TOKEN",
+              "present": false,
+              "length": null,
+              "identity": {
+                "name": null,
+                "source": "absent",
+                "attempts": []
+              }
+            }
+          ],
+          "unlisted": 0,
+          "stdout_file": "view-1.cli.stdout",
+          "stderr_file": "view-1.cli.stderr"
+        },
+        "agent": {
+          "child": {
+            "credential": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            },
+            "cluster": {
+              "present": true,
+              "length": 2,
+              "sha256": "ca0df2c95aa144c1d0ff2ff3c8f967fdc1de9ef0c4120b3726416701b519d619"
+            },
+            "tls": {
+              "present": true,
+              "length": 16,
+              "sha256": "1395fdc2b41da1962b77a71503c462c7c15702f2d5fd2b89ec2a799c44ecc7f3"
+            },
+            "private": {
+              "present": false,
+              "length": null,
+              "sha256": null
+            }
+          },
+          "record": {
+            "role": "agent",
+            "name": "agent#1",
+            "pid": 2978222,
+            "log": "agent#1-0.log",
+            "copy_name": "agent",
+            "copy_number": 1,
+            "started_at": 1793336655.2563474,
+            "stops": [],
+            "environment": [
+              {
+                "name": "AGENT_TOKEN_DIR",
+                "present": true,
+                "length": 35
+              },
+              {
+                "name": "CLUSTER",
+                "present": true,
+                "length": 2
+              },
+              {
+                "name": "CONSOLE_ROOT",
+                "present": true,
+                "length": 7
+              },
+              {
+                "name": "W2C_TLS_DIR",
+                "present": true,
+                "length": 16
+              },
+              {
+                "name": "W2C_TOKEN",
+                "present": false,
+                "length": null,
+                "identity": {
+                  "name": null,
+                  "source": "absent",
+                  "attempts": []
+                }
+              }
+            ],
+            "environment_unlisted": 0
+          }
+        }
+      }
+    }
+  },
+  "login_counts_unchanged": true,
+  "author_modules": 87,
+  "author_tests": 1016,
+  "author_skips": 9,
+  "author_seconds": 343.0,
+  "inputs_unchanged": true,
+  "SUT": 0
+}

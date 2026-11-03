@@ -1,0 +1,171 @@
+{
+  "verified": true,
+  "head": "9a90a2d4c16f1546793e61b107b9848fc179d566",
+  "base": "55a6c9e5fef422a4394d519ffbab7f043a55d02a",
+  "pin": "d389cf5e47db0902f8d660f7bb6f917eb1588925",
+  "manifest_sha256": "32c1db76d5ddb1b597eeebf0bd95a5077c511dc3c82105593c6ad9acde4ebd22",
+  "package_files": 13,
+  "git_blobs": {
+    "runtime": 225,
+    "old-runtime": 224,
+    "specs": 2382
+  },
+  "changed_files": [
+    "runner/m11stand.py",
+    "tests/test_p087_token_names.py"
+  ],
+  "author_input_sha256": "02ccdd283319e149954f40747c7bdd9eba4ef1b10aa9e71f40ae00bdb4016749",
+  "author_input_files": 4953,
+  "inputs_unchanged": true,
+  "SUT": 0,
+  "tests": {
+    "test_p087_token_names": 1,
+    "test_report_identity_secrets": 5,
+    "test_diagnostic_secrets": 14
+  },
+  "total_tests": 20,
+  "controls": {
+    "old": {
+      "none": {
+        "safety_pass": false,
+        "names": [
+          "02-refusals",
+          "03-framing"
+        ],
+        "counts": [
+          27,
+          27
+        ],
+        "reported_steps": 20,
+        "coverage_errors": [
+          "scenario identities differ from inventory",
+          "01-token-and-audience: step identities/order differ from inventory",
+          "passed_steps differs from actual step results"
+        ],
+        "foreign_secret_learned": false,
+        "process_log": null
+      },
+      "nested": {
+        "safety_pass": false,
+        "names": [
+          "02-refusals",
+          "03-framing"
+        ],
+        "counts": [
+          27,
+          27
+        ],
+        "reported_steps": 20,
+        "coverage_errors": [
+          "scenario identities differ from inventory",
+          "01-token-and-audience: step identities/order differ from inventory",
+          "passed_steps differs from actual step results"
+        ],
+        "foreign_secret_learned": true,
+        "process_log": "early stdout <redacted>\n"
+      },
+      "json": {
+        "safety_pass": false,
+        "names": [
+          "02-refusals",
+          "03-framing"
+        ],
+        "counts": [
+          27,
+          27
+        ],
+        "reported_steps": 20,
+        "coverage_errors": [
+          "scenario identities differ from inventory",
+          "01-token-and-audience: step identities/order differ from inventory",
+          "passed_steps differs from actual step results"
+        ],
+        "foreign_secret_learned": true,
+        "process_log": "early stdout <redacted>\n"
+      },
+      "c594p": {
+        "names": [
+          "02-refusals",
+          "03-framing"
+        ],
+        "counts": [
+          27,
+          27
+        ],
+        "reported_steps": 20,
+        "coverage_errors": [
+          "scenario identities differ from inventory",
+          "01-token-and-audience: step identities/order differ from inventory",
+          "passed_steps differs from actual step results"
+        ]
+      }
+    },
+    "new": {
+      "none": {
+        "safety_pass": true,
+        "names": [
+          "01-token-and-audience",
+          "02-refusals",
+          "03-framing"
+        ],
+        "counts": [
+          27,
+          27
+        ],
+        "reported_steps": 27,
+        "coverage_errors": [],
+        "foreign_secret_learned": false,
+        "process_log": null
+      },
+      "nested": {
+        "safety_pass": true,
+        "names": [
+          "01-token-and-audience",
+          "02-refusals",
+          "03-framing"
+        ],
+        "counts": [
+          27,
+          27
+        ],
+        "reported_steps": 27,
+        "coverage_errors": [],
+        "foreign_secret_learned": true,
+        "process_log": "early stdout <redacted>\n"
+      },
+      "json": {
+        "safety_pass": true,
+        "names": [
+          "01-token-and-audience",
+          "02-refusals",
+          "03-framing"
+        ],
+        "counts": [
+          27,
+          27
+        ],
+        "reported_steps": 27,
+        "coverage_errors": [],
+        "foreign_secret_learned": true,
+        "process_log": "early stdout <redacted>\n"
+      },
+      "c594p": {
+        "names": [
+          "02-refusals",
+          "03-framing"
+        ],
+        "counts": [
+          27,
+          27
+        ],
+        "reported_steps": 20,
+        "coverage_errors": [
+          "scenario identities differ from inventory",
+          "01-token-and-audience: step identities/order differ from inventory",
+          "passed_steps differs from actual step results"
+        ]
+      }
+    }
+  },
+  "probe_sha256": "90c1a9be5b72e5072800948653b1ab02167a52e314b92ecffd89ea701b49f3a0"
+}

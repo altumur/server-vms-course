@@ -1,0 +1,285 @@
+{
+  "verified": true,
+  "SUT": 0,
+  "head": "6e03664a61d900a61b4e377e5f8a7c19be420e1d",
+  "original_head": "017195d3919019d62e1e68c0eb1f586e7ce6e4df",
+  "pin": "9918a61d022f1a061f04cb0e104fe1fb19483620",
+  "manifest_sha256": "0cfa5ee1b6bc615f77dd915d3049c8f19293bbb61a72cc3b81da392db6aa19a7",
+  "package_files": 16,
+  "git_blobs": {
+    "runtime": 228,
+    "old-runtime": 228,
+    "specs": 2385
+  },
+  "author_input_sha256": "ac3504b8dac95e1477f7d2a9ebf6d4b41ffbf4dbb8b58a081b5047c8387c0e01",
+  "author_input_files": 4959,
+  "tests": {
+    "test_domain_freeze": 10,
+    "test_c_domain_pin": 10,
+    "test_openapi_refs": 14,
+    "test_scenario_control": 9,
+    "test_domain_signals": 4,
+    "test_c_domain_stand": 14,
+    "test_domain_agent_copies": 12,
+    "test_agent_tokens": 4,
+    "test_request_correlation": 11,
+    "test_proxy": 3
+  },
+  "total_tests": 91,
+  "controls": {
+    "old": {
+      "public": {
+        "public_domainconsole": {
+          "safety_pass": false,
+          "cases": {
+            "domainconsole": {
+              "preflight": [],
+              "freeze_errors": [
+                "freeze: no such live process"
+              ],
+              "stopped": false,
+              "thaw_errors": [
+                "thaw: no such process"
+              ],
+              "resumed": true
+            },
+            "domainconsole#1": {
+              "preflight": [],
+              "freeze_errors": [
+                "freeze: no such live process"
+              ],
+              "stopped": false,
+              "thaw_errors": [
+                "thaw: no such process"
+              ],
+              "resumed": true
+            },
+            "domainconsole#2": {
+              "preflight": [],
+              "freeze_errors": [
+                "freeze: no such live process"
+              ],
+              "stopped": false,
+              "thaw_errors": [
+                "thaw: no such process"
+              ],
+              "resumed": true
+            }
+          },
+          "startup_names": [
+            "domain-console",
+            "domain-console",
+            "domain"
+          ]
+        },
+        "internal_name_and_existing_signal": {
+          "safety_pass": true,
+          "mapped_targets": [
+            "domain-console#1"
+          ]
+        },
+        "native_domain_end": {
+          "safety_pass": true,
+          "observed_paused": [
+            false,
+            false
+          ],
+          "row": {
+            "step": "1",
+            "line": 1,
+            "ok": false,
+            "why": [
+              {
+                "classification": "data",
+                "reason": "freeze_not_thawed"
+              }
+            ],
+            "got": null,
+            "classification": "data"
+          }
+        },
+        "preflight_classification": {
+          "safety_pass": false,
+          "code": 1,
+          "final_classification": "implementation",
+          "report_classification": null,
+          "row_classification": "data",
+          "row_executed": false,
+          "stand_constructors": 0,
+          "row_why": [
+            {
+              "content_type": null,
+              "length": 51,
+              "sha256": "d966dc6055c5d1731559f7e87b170f567e5fc291b1cc500a6971fbee42bb2d72",
+              "body_omitted": true
+            }
+          ]
+        }
+      },
+      "relay": {
+        "safety_pass": false,
+        "SUT": 0,
+        "published_first_step": [
+          "21-view-relay-refused",
+          "1",
+          "@domain m1 relay",
+          "ok"
+        ],
+        "cases": {
+          "15-topology": {
+            "clusters": [
+              "hold",
+              "m1",
+              "m2",
+              "relay"
+            ],
+            "started": true,
+            "failure": null
+          },
+          "16-second-road": {
+            "clusters": [
+              "hold",
+              "m1",
+              "m2",
+              "relay"
+            ],
+            "started": true,
+            "failure": null
+          },
+          "21-view-relay-refused": {
+            "clusters": [
+              "hold",
+              "m1",
+              "m2"
+            ],
+            "started": false,
+            "failure": "KeyError: 'relay'"
+          }
+        }
+      }
+    },
+    "new": {
+      "public": {
+        "public_domainconsole": {
+          "safety_pass": true,
+          "cases": {
+            "domainconsole": {
+              "preflight": [],
+              "freeze_errors": [],
+              "stopped": true,
+              "thaw_errors": [],
+              "resumed": true
+            },
+            "domainconsole#1": {
+              "preflight": [],
+              "freeze_errors": [],
+              "stopped": true,
+              "thaw_errors": [],
+              "resumed": true
+            },
+            "domainconsole#2": {
+              "preflight": [],
+              "freeze_errors": [],
+              "stopped": true,
+              "thaw_errors": [],
+              "resumed": true
+            }
+          },
+          "startup_names": [
+            "domain-console",
+            "domain-console",
+            "domain"
+          ]
+        },
+        "internal_name_and_existing_signal": {
+          "safety_pass": true,
+          "mapped_targets": [
+            "domain-console#1"
+          ]
+        },
+        "native_domain_end": {
+          "safety_pass": true,
+          "observed_paused": [
+            false,
+            false
+          ],
+          "row": {
+            "step": "1",
+            "line": 1,
+            "ok": false,
+            "why": [
+              {
+                "classification": "data",
+                "reason": "freeze_not_thawed"
+              }
+            ],
+            "got": null,
+            "classification": "data"
+          }
+        },
+        "preflight_classification": {
+          "safety_pass": true,
+          "code": 1,
+          "final_classification": "data",
+          "report_classification": "data",
+          "row_classification": "data",
+          "row_executed": false,
+          "stand_constructors": 0,
+          "row_why": [
+            {
+              "content_type": null,
+              "length": 51,
+              "sha256": "d966dc6055c5d1731559f7e87b170f567e5fc291b1cc500a6971fbee42bb2d72",
+              "body_omitted": true
+            }
+          ]
+        }
+      },
+      "relay": {
+        "safety_pass": true,
+        "SUT": 0,
+        "published_first_step": [
+          "21-view-relay-refused",
+          "1",
+          "@domain m1 relay",
+          "ok"
+        ],
+        "cases": {
+          "15-topology": {
+            "clusters": [
+              "hold",
+              "m1",
+              "m2",
+              "relay"
+            ],
+            "started": true,
+            "failure": null
+          },
+          "16-second-road": {
+            "clusters": [
+              "hold",
+              "m1",
+              "m2",
+              "relay"
+            ],
+            "started": true,
+            "failure": null
+          },
+          "21-view-relay-refused": {
+            "clusters": [
+              "hold",
+              "m1",
+              "m2",
+              "relay"
+            ],
+            "started": true,
+            "failure": null
+          }
+        }
+      }
+    }
+  },
+  "probe_sha256": "40388117786d6eeed8fc9009a73711649f3bbdf2a952278b5fc278c72f89a167",
+  "relay_probe_sha256": "3f8404eaa37b0f9778638066ffe4e5748a7f83abdea226ec351bfa77c7013a7e",
+  "inputs_unchanged": true
+}

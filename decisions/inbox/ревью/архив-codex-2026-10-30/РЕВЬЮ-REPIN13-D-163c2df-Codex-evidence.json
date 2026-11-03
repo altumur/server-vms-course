@@ -1,0 +1,618 @@
+{
+  "verified": true,
+  "SUT": 0,
+  "head": "163c2df6e5708c6640ef48e18843e666884a6431",
+  "base": "50ce0b0bacc14eec60f384fef1aa38eb089b34d5",
+  "pin": "13a30dcbf6a17c7023b518c20bdae96a100058cd",
+  "manifest_sha256": "12d5b5bfa5aeff21379e53aa954cc588c9680c7ff2c54e27d351f5750a79b1ec",
+  "package_files": 266,
+  "git_blobs": {
+    "runtime": 227,
+    "old_runtime": 227,
+    "specs": 2383
+  },
+  "source_sha_files": 2840,
+  "author_input_sha256": "ba997b6554f164dcaeba3b937cecc41a6177b8a425fccaf71eee5c859ed52f94",
+  "author_input_files": 2841,
+  "changed_files": [
+    "runner/m11stand.py",
+    "tests/test_scenario_control.py"
+  ],
+  "controls": {
+    "old": {
+      "original": {
+        "http_close_small": {
+          "direct": [
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            }
+          ],
+          "proxied": [
+            {
+              "ok": false,
+              "status": null,
+              "body_bytes": null,
+              "error": "connection closed without a response",
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            },
+            {
+              "ok": false,
+              "status": null,
+              "body_bytes": null,
+              "error": "connection closed without a response",
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            },
+            {
+              "ok": false,
+              "status": null,
+              "body_bytes": null,
+              "error": "connection closed without a response",
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            }
+          ],
+          "safety_pass": false
+        },
+        "http_close_large": {
+          "direct": [
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 200000,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 200102,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 200000,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 200102,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 200000,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 200102,
+              "server_error": null
+            }
+          ],
+          "proxied": [
+            {
+              "ok": false,
+              "status": null,
+              "body_bytes": null,
+              "error": "truncated response body",
+              "request_bytes": 63,
+              "response_bytes": 200102,
+              "server_error": null
+            },
+            {
+              "ok": false,
+              "status": null,
+              "body_bytes": null,
+              "error": "truncated response body",
+              "request_bytes": 63,
+              "response_bytes": 200102,
+              "server_error": null
+            },
+            {
+              "ok": false,
+              "status": null,
+              "body_bytes": null,
+              "error": "truncated response body",
+              "request_bytes": 63,
+              "response_bytes": 200102,
+              "server_error": null
+            }
+          ],
+          "safety_pass": false
+        },
+        "client_half_close": {
+          "direct": [
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            }
+          ],
+          "proxied": [
+            {
+              "ok": false,
+              "status": null,
+              "body_bytes": null,
+              "error": "connection closed without a response",
+              "request_bytes": 0,
+              "response_bytes": 0,
+              "server_error": null
+            },
+            {
+              "ok": false,
+              "status": null,
+              "body_bytes": null,
+              "error": "connection closed without a response",
+              "request_bytes": 0,
+              "response_bytes": 0,
+              "server_error": null
+            },
+            {
+              "ok": false,
+              "status": null,
+              "body_bytes": null,
+              "error": "connection closed without a response",
+              "request_bytes": 0,
+              "response_bytes": 0,
+              "server_error": null
+            }
+          ],
+          "safety_pass": false
+        },
+        "stale_watchdog": {
+          "safety_pass": true,
+          "signals": [
+            19,
+            18,
+            19,
+            18
+          ]
+        },
+        "forgotten_pause": {
+          "safety_pass": true,
+          "row": {
+            "ok": false,
+            "why": [
+              {
+                "classification": "data",
+                "reason": "freeze_not_thawed"
+              }
+            ],
+            "classification": "data"
+          }
+        }
+      },
+      "early": {
+        "safety_pass": false,
+        "direct": [
+          {
+            "ok": true,
+            "status": 413,
+            "error": null,
+            "request_bytes": 4096,
+            "response_bytes": 162
+          },
+          {
+            "ok": true,
+            "status": 413,
+            "error": null,
+            "request_bytes": 4096,
+            "response_bytes": 162
+          },
+          {
+            "ok": true,
+            "status": 413,
+            "error": null,
+            "request_bytes": 4096,
+            "response_bytes": 162
+          },
+          {
+            "ok": true,
+            "status": 413,
+            "error": null,
+            "request_bytes": 4096,
+            "response_bytes": 162
+          },
+          {
+            "ok": true,
+            "status": 413,
+            "error": null,
+            "request_bytes": 4096,
+            "response_bytes": 162
+          }
+        ],
+        "proxied": [
+          {
+            "ok": false,
+            "status": null,
+            "error": "reading response: [Errno 104] Connection reset by peer",
+            "request_bytes": 4096,
+            "response_bytes": 162
+          },
+          {
+            "ok": false,
+            "status": null,
+            "error": "reading response: [Errno 104] Connection reset by peer",
+            "request_bytes": 4096,
+            "response_bytes": 162
+          },
+          {
+            "ok": false,
+            "status": null,
+            "error": "reading response: [Errno 104] Connection reset by peer",
+            "request_bytes": 4096,
+            "response_bytes": 162
+          },
+          {
+            "ok": false,
+            "status": null,
+            "error": "reading response: [Errno 104] Connection reset by peer",
+            "request_bytes": 4096,
+            "response_bytes": 162
+          },
+          {
+            "ok": false,
+            "status": null,
+            "error": "reading response: [Errno 104] Connection reset by peer",
+            "request_bytes": 4096,
+            "response_bytes": 162
+          }
+        ]
+      }
+    },
+    "new": {
+      "original": {
+        "http_close_small": {
+          "direct": [
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            }
+          ],
+          "proxied": [
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            }
+          ],
+          "safety_pass": true
+        },
+        "http_close_large": {
+          "direct": [
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 200000,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 200102,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 200000,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 200102,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 200000,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 200102,
+              "server_error": null
+            }
+          ],
+          "proxied": [
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 200000,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 200102,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 200000,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 200102,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 200000,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 200102,
+              "server_error": null
+            }
+          ],
+          "safety_pass": true
+        },
+        "client_half_close": {
+          "direct": [
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            }
+          ],
+          "proxied": [
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            },
+            {
+              "ok": true,
+              "status": 200,
+              "body_bytes": 1024,
+              "error": null,
+              "request_bytes": 63,
+              "response_bytes": 1124,
+              "server_error": null
+            }
+          ],
+          "safety_pass": true
+        },
+        "stale_watchdog": {
+          "safety_pass": true,
+          "signals": [
+            19,
+            18,
+            19,
+            18
+          ]
+        },
+        "forgotten_pause": {
+          "safety_pass": true,
+          "row": {
+            "ok": false,
+            "why": [
+              {
+                "classification": "data",
+                "reason": "freeze_not_thawed"
+              }
+            ],
+            "classification": "data"
+          }
+        }
+      },
+      "early": {
+        "safety_pass": false,
+        "direct": [
+          {
+            "ok": true,
+            "status": 413,
+            "error": null,
+            "request_bytes": 4096,
+            "response_bytes": 162
+          },
+          {
+            "ok": true,
+            "status": 413,
+            "error": null,
+            "request_bytes": 4096,
+            "response_bytes": 162
+          },
+          {
+            "ok": true,
+            "status": 413,
+            "error": null,
+            "request_bytes": 4096,
+            "response_bytes": 162
+          },
+          {
+            "ok": true,
+            "status": 413,
+            "error": null,
+            "request_bytes": 4096,
+            "response_bytes": 162
+          },
+          {
+            "ok": true,
+            "status": 413,
+            "error": null,
+            "request_bytes": 4096,
+            "response_bytes": 162
+          }
+        ],
+        "proxied": [
+          {
+            "ok": false,
+            "status": null,
+            "error": "reading response: [Errno 104] Connection reset by peer",
+            "request_bytes": 4096,
+            "response_bytes": 162
+          },
+          {
+            "ok": false,
+            "status": null,
+            "error": "reading response: [Errno 104] Connection reset by peer",
+            "request_bytes": 4096,
+            "response_bytes": 162
+          },
+          {
+            "ok": false,
+            "status": null,
+            "error": "reading response: [Errno 104] Connection reset by peer",
+            "request_bytes": 4096,
+            "response_bytes": 162
+          },
+          {
+            "ok": false,
+            "status": null,
+            "error": "reading response: [Errno 104] Connection reset by peer",
+            "request_bytes": 4096,
+            "response_bytes": 162
+          },
+          {
+            "ok": false,
+            "status": null,
+            "error": "reading response: [Errno 104] Connection reset by peer",
+            "request_bytes": 4096,
+            "response_bytes": 162
+          }
+        ]
+      }
+    }
+  },
+  "tests": {
+    "test_scenario_control": 9,
+    "test_store_group": 16,
+    "test_proxy": 3,
+    "test_transport_diagnostics": 10,
+    "test_process_audit_c": 7,
+    "test_stand_setup": 19,
+    "test_c_worker": 24,
+    "test_c_controller": 8,
+    "test_c_shared_engines": 23,
+    "test_console_resource_start": 8,
+    "test_cli_environment": 10,
+    "test_c_process": 7,
+    "test_c_execution": 36,
+    "test_diagnostic_secrets": 14,
+    "test_platform": 21,
+    "test_request_correlation": 11,
+    "test_vms_stand": 26
+  },
+  "total_tests": 252,
+  "probe_sha256": "6e4e111ae7164f8bbd91a158d24c7cb06221e6c939635401375f28cab61cfcbf",
+  "early_probe_sha256": "aacd1b3f630d04e2e1cff93dc7bd78dfaf279f13a95077b629357c5fe4287c1b",
+  "inputs_unchanged": true
+}

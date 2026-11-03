@@ -1,0 +1,20 @@
+{
+  "manifest_sha256": "f478e159862a64fddbbc4e996351b0de13ae96fe9a745a34f7c53ef92498c28f",
+  "manifest_files": 2862,
+  "git_source_files": 204,
+  "reverse_patch_git_blobs": {
+    "fcd4758": 203,
+    "123b6f0": 204
+  },
+  "specs_git_blobs": 2345,
+  "jsdom_git_files": 39,
+  "tables_unchanged": 174,
+  "author_modules": 81,
+  "author_tests": 964,
+  "author_skips": 9,
+  "author_plans_ready": 230,
+  "author_jsdom_cases": 257,
+  "shell_sha256": "1ace3adb87763256e89d7e45fc3fc3453820707278f5f1e5eb0aa7b8fb9703d0",
+  "shell_plans": 14,
+  "SUT": 0
+}
