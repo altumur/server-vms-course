@@ -2691,7 +2691,7 @@ paths:
         '429':
           $ref: '#/components/responses/RateLimited'
         '503':
-          description: Строка манифеста или его канонический вид не прочитаны или не подтверждены; rev вида не равна rev строки — unavailable, Retry-After 1
+          description: Строка манифеста или его канонический вид не прочитаны или не подтверждены; rev строки не равна served; rev вида не равна rev строки — unavailable, Retry-After 1
           content:
             application/json:
               schema:
@@ -2732,7 +2732,7 @@ paths:
         '429':
           $ref: '#/components/responses/RateLimited'
         '503':
-          description: Строка манифеста или его канонический вид не прочитаны или не подтверждены; rev вида не равна rev строки — unavailable, Retry-After 1
+          description: Строка манифеста или его канонический вид не прочитаны или не подтверждены; rev строки не равна served; rev вида не равна rev строки — unavailable, Retry-After 1
           content:
             application/json:
               schema:
@@ -6420,11 +6420,9 @@ components:
           minimum: 1
           description: Ревизия строки манифеста, прочитанной при запросе (P/02.3).
         served:
-          type:
-          - integer
-          - 'null'
+          type: integer
           minimum: 1
-          description: Ревизия подсистемы в каталоге, которым консоль служит с запуска; подсистемы в нём нет — null; установка ждёт served = rev (ADR-0115 доп. (20)).
+          description: Ревизия подсистемы в каталоге, которым консоль служит с запуска; равна rev — иначе 503; установка ждёт 200 с served = своей rev (ADR-0115 доп. (20)).
         sha256:
           type: string
           pattern: ^(?:[0-9a-f]{64})$
