@@ -24,6 +24,26 @@
    {
     "id": "13",
     "name": "Fence West"
+   },
+   {
+    "id": "6",
+    "name": "Rear Gate"
+   },
+   {
+    "id": "7",
+    "name": "Till 1",
+    "words": [
+     {
+      "msg": "VOID"
+     },
+     {
+      "msg": "REFUND"
+     }
+    ]
+   },
+   {
+    "id": "8",
+    "name": "Warehouse"
    }
   ],
   "children": [
@@ -117,6 +137,41 @@
     "type": "sensor",
     "number": 1,
     "name": "Fence Tamper West"
+   },
+   {
+    "key": "6-relay-1",
+    "cam": "6",
+    "type": "relay",
+    "number": 1
+   },
+   {
+    "key": "8-relay-1",
+    "cam": "8",
+    "type": "relay",
+    "number": 1,
+    "name": "Дверь"
+   }
+  ],
+  "units": [
+   {
+    "key": "6-1",
+    "camera": "6",
+    "n": 1,
+    "type": "acfa_sensor",
+    "title": "Rear Gate Reader"
+   },
+   {
+    "key": "6-2",
+    "camera": "6",
+    "n": 2,
+    "type": "acfa_lock",
+    "title": "Rear Gate Lock"
+   },
+   {
+    "key": "6-3",
+    "camera": "6",
+    "n": 3,
+    "type": "acfa_sensor"
    }
   ],
   "folders": [
@@ -1547,14 +1602,14 @@
   },
   {
    "id": "text-trigger",
-   "note": "вид каталога без слов",
-   "request": "When the word fire comes, raise an alarm on Gate Cam.",
+   "note": "слово не из words строки eventsrc (ADR-0093 доп. (20) п. 1)",
+   "request": "When the word fire comes on Till 1, raise an alarm on Gate Cam.",
    "row": {
     "when": [
      {
       "sub": "cam",
       "kind": "text",
-      "unit": "1",
+      "unit": "7",
       "match": {
        "word": "fire"
       }
@@ -1579,7 +1634,7 @@
     ]
    },
    "errors": [
-    "when[0]: text has no words in the check: refuse"
+    "when[0]: Till 1 has no word fire: its words are VOID, REFUND. ask_admin which"
    ]
   },
   {
@@ -2522,6 +2577,917 @@
    "errors": [
     "edits: the schedule @s1 is used by no rule or window: the plan has no rule"
    ]
+  },
+  {
+   "id": "wait-still",
+   "note": "«give it N seconds …; if still» — wait_event, sec N, ветка no (ADR-0093 доп. (19) п. 1)",
+   "request": "When the Gate Loop sensor trips, give it 60 seconds for a line cross on Fence West; if still none, raise an alarm on Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "wait_event",
+      "event": {
+       "sub": "det",
+       "kind": "linecross",
+       "unit": "13-linecross"
+      },
+      "sec": 60,
+      "yes": [],
+      "no": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "wait-still-yes",
+   "note": "предел Н1.6: ветку wait_event слой не судит, «if still» в yes проходит",
+   "request": "When the Gate Loop sensor trips, give it 60 seconds for a line cross on Fence West; if still none, raise an alarm on Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "wait_event",
+      "event": {
+       "sub": "det",
+       "kind": "linecross",
+       "unit": "13-linecross"
+      },
+      "sec": 60,
+      "yes": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ],
+      "no": []
+     }
+    ]
+   },
+   "errors": [],
+   "known_gap": true
+  },
+  {
+   "id": "pass-pulse",
+   "note": "open у реле прохода (последнее слово Barrier) — включить, for N s — pulse (доп. (20) п. 3, (21) п. 2)",
+   "request": "When the Gate Loop sensor trips, open the Gate Barrier for 5 seconds.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 1,
+      "state": "pulse",
+      "pulse_ms": 5000
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "pass-two-steps",
+   "note": "for N s второй формой: closed, wait N, open того же реле — open не судится (доп. (21) п. 3)",
+   "request": "When the Gate Loop sensor trips, open the Gate Barrier for 5 seconds.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 1,
+      "state": "closed"
+     },
+     {
+      "control": "wait",
+      "sec": 5
+     },
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 1,
+      "state": "open"
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "pass-open-state",
+   "note": "open у реле прохода записан размыканием",
+   "request": "When the Gate Loop sensor trips, open the Gate Barrier.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 1,
+      "state": "open"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: to open Gate Barrier is to turn it on: state closed, or pulse with pulse_ms for a time"
+   ]
+  },
+  {
+   "id": "open-light",
+   "note": "open у реле не прохода (последнее слово Light) — вопрос",
+   "request": "When the Gate Loop sensor trips, open the Gate Light.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 2,
+      "state": "closed"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: \"open\" for the relay Gate Light can mean turn it on or open the contact (off): ask_admin which"
+   ]
+  },
+  {
+   "id": "open-numbered",
+   "note": "open у реле, названного номером, — вопрос, хотя это Gate Barrier (доп. (22) п. 1, (23))",
+   "request": "When the Gate Loop sensor trips, open relay 1 of Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 1,
+      "state": "closed"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: \"open\" for the relay Gate Barrier can mean turn it on or open the contact (off): ask_admin which"
+   ]
+  },
+  {
+   "id": "on-numbered",
+   "note": "turn on у реле номером — без вопроса (доп. (23))",
+   "request": "When the Gate Loop sensor trips, turn on relay 2 of Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 2,
+      "state": "closed"
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "open-device",
+   "note": "реле без имени: вид прохода по имени устройства Rear Gate (доп. (21) п. 2)",
+   "request": "When the Gate Loop sensor trips, open the Rear Gate for 10 seconds.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "6",
+      "port": 1,
+      "state": "pulse",
+      "pulse_ms": 10000
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "disable-switch-off",
+   "note": "switch … off — выключение камеры (доп. (20) п. 4)",
+   "request": "When the Gate Loop sensor trips, switch Lobby Cam off for 30 minutes.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "disable",
+      "unit": "2",
+      "minutes": 30
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "disable-ru-gap",
+   "note": "предел Н1.6: «выключи камеру» пропускает и выключенное правило",
+   "request": "Когда сработает датчик Gate Loop, выключи камеру Lobby Cam на 30 минут.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "disable",
+      "unit": "2",
+      "minutes": 30
+     }
+    ],
+    "enabled": false
+   },
+   "errors": [],
+   "known_gap": true
+  },
+  {
+   "id": "vanish-bag",
+   "note": "«пропадёт» у предмета — disappeared (доп. (20) п. 2)",
+   "request": "Если сумка пропадёт со стойки у Lobby Cam, подними тревогу на Lobby Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "disappeared",
+      "unit": "2-disappeared"
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "2"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "vanish-silent-gap",
+   "note": "предел Н1.6: «пропад» пропускает и silent, подмену ловят показ и наблюдение",
+   "request": "Если сумка пропадёт со стойки у Lobby Cam, подними тревогу на Lobby Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "silent",
+      "unit": "2"
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "2"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [],
+   "known_gap": true
+  },
+  {
+   "id": "unit-ok",
+   "note": "триггер unit: title единицы и слово события в тексте (доп. (20) п. 1, (21) п. 1)",
+   "request": "When the Rear Gate Reader reports card, raise an alarm on Rear Gate.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "unit",
+      "unit": "6",
+      "match": {
+       "unit": "6-1",
+       "event": "card"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "6"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "unit-event-unsaid",
+   "note": "слова события в тексте нет — вопрос без списка (доп. (21) п. 1)",
+   "request": "When someone swipes at the Rear Gate Reader, raise an alarm on Rear Gate.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "unit",
+      "unit": "6",
+      "match": {
+       "unit": "6-1",
+       "event": "card"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "6"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "when[0]: the request does not name the event card: ask_admin which event"
+   ]
+  },
+  {
+   "id": "unit-title-unnamed",
+   "note": "взята не та единица: Rear Gate Lock не названа",
+   "request": "When Rear Gate reports card, raise an alarm on Rear Gate.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "unit",
+      "unit": "6",
+      "match": {
+       "unit": "6-2",
+       "event": "card"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "6"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "when[0]: the request does not name Rear Gate Lock: ask_admin which unit"
+   ]
+  },
+  {
+   "id": "unit-no-title",
+   "note": "единица без title — имя не судится, только слово события (доп. (21) п. 4)",
+   "request": "When Rear Gate reports forced, raise an alarm on Rear Gate.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "unit",
+      "unit": "6",
+      "match": {
+       "unit": "6-3",
+       "event": "forced"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "6"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "text-ok",
+   "note": "триггер text: слово из words строки eventsrc, в тексте",
+   "request": "When Till 1 prints VOID, raise an alarm on Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "text",
+      "unit": "7",
+      "match": {
+       "word": "VOID"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "1"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "text-unsaid",
+   "note": "слова строки в тексте нет — вопрос со списком words",
+   "request": "When Till 1 prints something odd, raise an alarm on Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "text",
+      "unit": "7",
+      "match": {
+       "word": "VOID"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "1"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "when[0]: the request does not name the word VOID: ask_admin which word of Till 1: VOID, REFUND"
+   ]
+  },
+  {
+   "id": "ru-open-numbered",
+   "note": "«открой» у реле номером — вопрос (доп. (24)); основы «откр», «реле» с границей (доп. (25))",
+   "request": "Когда сработает датчик Gate Loop, открой реле 1 у Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 1,
+      "state": "closed"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: \"open\" for the relay Gate Barrier can mean turn it on or open the contact (off): ask_admin which"
+   ]
+  },
+  {
+   "id": "ru-open-output",
+   "note": "«открой выход N» — вопрос; основа «выход»",
+   "request": "Когда сработает датчик Gate Loop, открой выход 2 у Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 2,
+      "state": "closed"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: \"open\" for the relay Gate Light can mean turn it on or open the contact (off): ask_admin which"
+   ]
+  },
+  {
+   "id": "ru-pass-door",
+   "note": "«открой» у реле прохода (последнее слово «Дверь», основа «двер») — включить, на N секунд — pulse",
+   "request": "Когда сработает датчик Gate Loop, открой дверь у Warehouse на 5 секунд.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "8",
+      "port": 1,
+      "state": "pulse",
+      "pulse_ms": 5000
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "open-other-number",
+   "note": "N — port шага: «relay 3» при port 2 не номер, реле не названо (ревью доп. (27) М1)",
+   "request": "When the Gate Loop sensor trips, open relay 3 of Gate Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "output",
+      "unit": "1",
+      "port": 2,
+      "state": "closed"
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: the request does not name Gate Light: Gate Barrier, Gate Light fit. ask_admin which one"
+   ]
+  },
+  {
+   "id": "unit-event-discard",
+   "note": "слово события с границами: card не в discard (ревью доп. (27) М2)",
+   "request": "When the Rear Gate Reader reports a discard, raise an alarm on Rear Gate.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "unit",
+      "unit": "6",
+      "match": {
+       "unit": "6-1",
+       "event": "card"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "6"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "when[0]: the request does not name the event card: ask_admin which event"
+   ]
+  },
+  {
+   "id": "unit-event-dot",
+   "note": "слово события с точкой — как есть, точка экранирована",
+   "request": "When the Rear Gate Reader reports door.forced, raise an alarm on Rear Gate.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "unit",
+      "unit": "6",
+      "match": {
+       "unit": "6-1",
+       "event": "door.forced"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "6"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "unit-event-dot-other",
+   "note": "экранированная точка: doorXforced — не door.forced",
+   "request": "When the Rear Gate Reader reports doorXforced, raise an alarm on Rear Gate.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "unit",
+      "unit": "6",
+      "match": {
+       "unit": "6-1",
+       "event": "door.forced"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "auto",
+      "action": "alarm",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "6"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      }
+     }
+    ]
+   },
+   "errors": [
+    "when[0]: the request does not name the event door.forced: ask_admin which event"
+   ]
+  },
+  {
+   "id": "disable-cyrillic-name",
+   "note": "«switch … off» с кириллицей и знаками в имени между (доп. (26), (27) п. 1)",
+   "request": "When the Gate Loop sensor trips, switch Лобби Cam (east) off for 30 minutes on Lobby Cam.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "sub": "cam",
+      "action": "disable",
+      "unit": "2",
+      "minutes": 30
+     }
+    ]
+   },
+   "errors": []
   }
  ]
 }
