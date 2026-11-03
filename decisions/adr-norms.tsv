@@ -312,7 +312,10 @@ adr	add	point	status	file	norm	note
 0107	2	п. 7 (б)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.9	VMS/02-rec/spec/02.6-rec.norms.md:169
 0107	2	п. 7 (в)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md; VMS/02-rec/spec/02.1-rec.norms.md	V/02.6 Н1.9; V/02.1 Н1.1	VMS/02-rec/spec/02.6-rec.norms.md:187, VMS/02-rec/spec/02.1-rec.norms.md:48
 0107	2	п. 7 (г)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.9	VMS/02-rec/spec/02.6-rec.norms.md:197
-0107	2	ревью норм М2, М3	НОРМА	decisions/adr-norms.tsv	-	ссылки note сдвинуты по срезу сверки 9e5330946; М3 (слова `ipint_analytics_*`, `ipint_telemetry_*` в ADR) — текст ADR, «Архитектору»
+0107	2	ревью норм М2	НОРМА	decisions/adr-norms.tsv	-	ссылки note сдвинуты по срезу сверки 9e5330946
+0107	0	п. 8 `ipint_analytics_*`	НЕ НОРМА	-	-	имена работы `ipintd`; нормы называют вызов DriverPack `CreateVideoAnalytics` (V/01.4 Н1.4в) — доп. (3)
+0107	0	п. 9 `ipint_telemetry_*`	НЕ НОРМА	-	-	имена работы `ipintd`; нормы называют вызов DriverPack `CreateTelemetryChannel` (V/01.4 Н1.4г) — доп. (3)
+0107	3	—	НЕ НОРМА	-	-	`ipint_*` — работа `ipintd`, норм нет; ревью норм М3
 0108	0	п. 1 (а)	НОРМА	VMS/02-rec/spec/02.1-rec.norms.md; VMS/02-rec/rec.subsystem.yaml	V/02.1 Н1.2; rec.subsystem.yaml	VMS/02-rec/spec/02.1-rec.norms.md:76, VMS/02-rec/rec.subsystem.yaml:279
 0108	0	п. 1 (б)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.7	VMS/02-rec/spec/02.6-rec.norms.md:141
 0108	0	п. 1 (в)	НОРМА	VMS/02-rec/spec/02.6-rec.norms.md	V/02.6 Н1.2; V/02.6 Н1.7	VMS/02-rec/spec/02.6-rec.norms.md:49, VMS/02-rec/spec/02.6-rec.norms.md:118
