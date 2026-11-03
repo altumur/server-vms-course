@@ -20,6 +20,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 OPEN = ("VMS/", "М10B_ServerVMS/", "М12A_Domain/", "М12B_DomainVMS/", "М13_Observability/", "М14_VendorVMS/")
 INBOX = re.compile(r"decisions/inbox/[0-9]{4}-[0-9]{2}-[0-9]{2}-(?:запрос-vms|решение-владельца-vms)-[^/]+\.md")
+REVIEW = re.compile(r"decisions/inbox/ревью/РЕВЬЮ-[^/]+-spec-vms\.md")   # отчёты второго ревьювера «Спецификации VMS» (2026-11-03)
 FROZEN = "Source/vms/"
 
 
@@ -46,7 +47,7 @@ def own_log(session):
 def allowed(path, session):
     """Путь, который сессия VMS вправе менять (белый список доп. (1) с правками доп. (2), (6) п. 8)."""
     path = nfc(path)
-    return path.startswith(OPEN) or path == own_log(session) or path in ("decisions/adr-pipeline.tsv", "decisions/adr-norms.tsv") or bool(INBOX.fullmatch(path))
+    return path.startswith(OPEN) or path == own_log(session) or path in ("decisions/adr-pipeline.tsv", "decisions/adr-norms.tsv") or bool(INBOX.fullmatch(path)) or bool(REVIEW.fullmatch(path))
 
 
 def paths_of(diff):
