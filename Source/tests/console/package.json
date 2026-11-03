@@ -1,7 +1,7 @@
 {
   "name": "course-console-tests",
   "private": true,
-  "description": "Тесты консоли курса в jsdom: модуль платформы (w2cplatform/console.js), платформенная страница, страница VMS (канон VMS/01-cam/cam.shell.html)",
+  "description": "Тесты консоли курса в jsdom: модуль платформы (w2cplatform/console.js), платформенная страница, страница VMS (свидетель Source/vms/cam.shell.html; ADR-0112 доп. (19)–(22))",
   "scripts": { "test": "sh run.sh" },
   "devDependencies": { "jsdom": "^30.1.1" }
 }
