@@ -4064,6 +4064,559 @@
     ]
    },
    "errors": []
+  },
+  {
+   "id": "ask-default-do-raise",
+   "note": "«with no answer, do raise it» — default yes (доп. (32) п. 2, (33) п. 1)",
+   "request": "When the Gate Loop sensor trips, ask the Guards within a minute whether to raise an alarm on Gate Cam; with no answer, do raise it.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "text": "Raise an alarm on Gate Cam?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "yes",
+      "yes": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ],
+      "no": []
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "ask-default-counts-yes",
+   "note": "«no answer counts as yes» — yes с границами",
+   "request": "When the Gate Loop sensor trips, ask the Guards within a minute whether to raise an alarm on Gate Cam; no answer counts as yes.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "text": "Raise an alarm on Gate Cam?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "yes",
+      "yes": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ],
+      "no": []
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "ask-default-yes-ru",
+   "note": "«нет ответа — поднимай» — default yes",
+   "request": "Когда сработает датчик Gate Loop, спроси Guards в течение 60 секунд, поднять ли тревогу на Gate Cam; нет ответа — поднимай.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "text": "Raise an alarm on Gate Cam?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "yes",
+      "yes": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ],
+      "no": []
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "ask-default-yes-da",
+   "note": "«нет ответа считается да» — да с границами",
+   "request": "Когда сработает датчик Gate Loop, спроси Guards в течение 60 секунд, поднять ли тревогу на Gate Cam; нет ответа считается да.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "text": "Raise an alarm on Gate Cam?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "yes",
+      "yes": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ],
+      "no": []
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "ask-default-no-ru",
+   "note": "«нет ответа — не поднимай»: отрицание перед поднима (доп. (33) п. 1)",
+   "request": "Когда сработает датчик Gate Loop, спроси Guards в течение 60 секунд, поднять ли тревогу на Gate Cam; нет ответа — не поднимай.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "text": "Raise an alarm on Gate Cam?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "yes",
+      "yes": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ],
+      "no": []
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: default yes is not in the request: with no answer the rule goes the no way"
+   ]
+  },
+  {
+   "id": "ask-default-no-ru-between",
+   "note": "«не надо поднимать»: одно слово между (ревью (33) М2)",
+   "request": "Когда сработает датчик Gate Loop, спроси Guards в течение 60 секунд, поднять ли тревогу на Gate Cam; нет ответа — не надо поднимать.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "text": "Raise an alarm on Gate Cam?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "yes",
+      "yes": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ],
+      "no": []
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: default yes is not in the request: with no answer the rule goes the no way"
+   ]
+  },
+  {
+   "id": "ask-default-no-curly",
+   "note": "«don’t» с апострофом U+2019 — в ' до сверки (ревью (33) М2, ревью норм (28)–(31) М1)",
+   "request": "When the Gate Loop sensor trips, ask the Guards within a minute whether to raise an alarm on Gate Cam; if nobody answers, don’t raise it anyway.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "text": "Raise an alarm on Gate Cam?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "yes",
+      "yes": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ],
+      "no": []
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: default yes is not in the request: with no answer the rule goes the no way"
+   ]
+  },
+  {
+   "id": "ask-default-no-between",
+   "note": "«do not ever raise»: одно слово между",
+   "request": "When the Gate Loop sensor trips, ask the Guards within a minute whether to raise an alarm on Gate Cam; if nobody answers, do not ever raise it anyway.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "text": "Raise an alarm on Gate Cam?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "yes",
+      "yes": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ],
+      "no": []
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: default yes is not in the request: with no answer the rule goes the no way"
+   ]
+  },
+  {
+   "id": "ask-default-no-dalshe",
+   "note": "«дальше» — не «да» (доп. (33) п. 2)",
+   "request": "Когда сработает датчик Gate Loop, спроси Guards в течение 60 секунд, поднять ли тревогу на Gate Cam; нет ответа — дальше по сценарию.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "text": "Raise an alarm on Gate Cam?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "yes",
+      "yes": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ],
+      "no": []
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: default yes is not in the request: with no answer the rule goes the no way"
+   ]
+  },
+  {
+   "id": "recording-ru",
+   "note": "«пишет» — условие recording (доп. (32) п. 2)",
+   "request": "При движении на Lobby Cam писать её 5 минут, только если Dock Cam пишет.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "rec",
+      "action": "record",
+      "cam": "2",
+      "minutes": 5
+     }
+    ],
+    "conditions": [
+     {
+      "kind": "recording",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "4"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      },
+      "value": true
+     }
+    ]
+   },
+   "errors": []
+  },
+  {
+   "id": "recording-ru-not-gap",
+   "note": "предел Н1.6: «не пишет» пускает recording true (доп. (33) п. 3)",
+   "request": "При движении на Lobby Cam писать её 5 минут, только если Dock Cam не пишет.",
+   "row": {
+    "when": [
+     {
+      "sub": "det",
+      "kind": "motion",
+      "unit": "2-motion"
+     }
+    ],
+    "then": [
+     {
+      "sub": "rec",
+      "action": "record",
+      "cam": "2",
+      "minutes": 5
+     }
+    ],
+    "conditions": [
+     {
+      "kind": "recording",
+      "target": {
+       "include": [
+        {
+         "kind": "device",
+         "id": "4"
+        }
+       ],
+       "exclude": [],
+       "gone": [],
+       "from_event": false
+      },
+      "value": true
+     }
+    ]
+   },
+   "errors": [],
+   "known_gap": true
+  },
+  {
+   "id": "ask-default-no-left-quote",
+   "note": "‘ (U+2018) вместо апострофа: «won‘t raise» — в ' до сверки",
+   "request": "When the Gate Loop sensor trips, ask the Guards within a minute whether to raise an alarm on Gate Cam; if nobody answers, it won‘t raise it anyway.",
+   "row": {
+    "when": [
+     {
+      "sub": "cam",
+      "kind": "io.input",
+      "unit": "1",
+      "match": {
+       "port": 1,
+       "value": "active"
+      }
+     }
+    ],
+    "then": [
+     {
+      "control": "ask",
+      "text": "Raise an alarm on Gate Cam?",
+      "role": "Guards",
+      "sec": 60,
+      "default": "yes",
+      "yes": [
+       {
+        "sub": "auto",
+        "action": "alarm",
+        "target": {
+         "include": [
+          {
+           "kind": "device",
+           "id": "1"
+          }
+         ],
+         "exclude": [],
+         "gone": [],
+         "from_event": false
+        }
+       }
+      ],
+      "no": []
+     }
+    ]
+   },
+   "errors": [
+    "then[0]: default yes is not in the request: with no answer the rule goes the no way"
+   ]
   }
  ]
 }

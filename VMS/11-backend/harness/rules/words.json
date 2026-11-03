@@ -86,10 +86,11 @@
  "guard": "(?:^|[^0-9a-zа-яё])охран",
  "conditions": {
   "armed": "armed|on guard|охран",
-  "recording": "recording|is recorded|запись идёт|записыва",
+  "recording": "recording|is recorded|запись идёт|записыва|(?:^|[^0-9a-zа-яё])пишет",
   "online": "online|on line|на связи"
  },
- "default_yes": "(?:no answer|nobody answers|no one answers|not answered|без ответа|не ответ[0-9a-zа-яё]*).{0,40}(?:anyway|still|go ahead|do it|всё равно|все равно|выполн)",
+ "default_yes": "(?:no answer|nobody answers|no one answers|not answered|без ответа|нет ответа|не ответ[0-9a-zа-яё]*).{0,40}(?:anyway|still|go ahead|do it|(?:^|[^0-9a-zа-яё])do raise(?:$|[^0-9a-zа-яё])|(?:^|[^0-9a-zа-яё])yes(?:$|[^0-9a-zа-яё])|всё равно|все равно|выполн|(?:^|[^0-9a-zа-яё])поднима|(?:^|[^0-9a-zа-яё])да(?:$|[^0-9a-zа-яё]))",
+ "default_no": "(?:^|[^0-9a-zа-яё])(?:не|don'?t|do not|never|won'?t|shouldn'?t)\\s+(?:\\S+\\s+)?(?:поднима|raise)",
  "reset": "back to normal|returns? to normal|when (it|the event) ends|reset|вернётся в норм|вернется в норм|в норму|кончится|закончится|сброс",
  "passage": "(?:^|[^0-9a-zа-яё])(?:door|barrier|gate|lock|turnstile|двер|шлагбаум|ворот|замок|замк|турникет)",
  "open_word": "(?:^|[^0-9a-zа-яё])(?:open|откр)",
