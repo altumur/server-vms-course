@@ -47,6 +47,7 @@ break-glass	413	too large	-	8.4 Н4
 revoke	400	bad body	/token	8.4 Н4
 revoke	401	refused	-	8.4 Н4
 revoke	413	too large	-	8.4 Н4
+revoke	409	too many revocations	-	8.4 Н4
 members	400	refused	/name /fingerprint /ca /ca_certs	8.3 Н2, Н4
 members	404	refused	-	8.3 Н4
 members	409	refused	-	8.3 Н4, 8.10 Н4

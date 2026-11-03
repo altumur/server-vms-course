@@ -692,6 +692,11 @@ paths:
       responses:
         '200': {description: '{revoked}'}
         '404': {$ref: '#/components/responses/Refused'}
+        '409':
+          description: 'too many revocations — строка domain/revoked полна, ничего не записано, строка domain/issued остаётся (глава 8.2 Н1.6а; ADR-0110 доп. (19) п. 1)'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Refusal'}
   /domain/batches/{batch}:
     parameters:
       - name: batch
@@ -1576,7 +1581,11 @@ paths:
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Refusal'}
-        '409': {$ref: '#/components/responses/Refused'}
+        '409':
+          description: 'too many revocations — строка domain/revoked полна, ничего не записано (Н1.2 revoke; глава 8.2 Н1.6а; ADR-0110 доп. (19) п. 1); deposed'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Refusal'}
         '413': {$ref: '#/components/responses/Refused'}
         '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /api/prepare:
