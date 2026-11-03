@@ -53,7 +53,7 @@ unit:
     by:       {type: string, required: true, fixed: true}   # the author: a copy in each part (доп. (6) п. 4)
     comment:  {type: string}
     retry_of: {type: string, fixed: true}                    # the order this one retries the failed parts of
-    expires:  {type: float, required: true, fixed: true}    # unix seconds: the files' end and the row's (V/13.3 Н1.4)
+    keep:     {type: int, required: true, fixed: true, schema: {minimum: 60}}   # seconds the files live after the part ends (EXPORT_KEEP; V/13.3 Н1.4)
     labels:   {type: list, default: []}                      # ["gpu"] when the part transcodes (V/13.2 Н1.4)
   state:
     cursor:
@@ -71,6 +71,7 @@ unit:
       additionalProperties: false
       properties:
         end:     {enum: [done, failed, canceled, expired]}
+        expires: {type: number}                            # when the part ended + keep: the files' end and the row's
         code:    {enum: [no_recording, unreachable, no_space, limit, offline]}
         partial: {type: array, items: {type: array, items: {type: number}, minItems: 2, maxItems: 2}}   # holes
         files:
@@ -104,7 +105,7 @@ display:
     by: Автор
     comment: Комментарий
     retry_of: Повтор выгрузки
-    expires: Хранится до
+    keep: Хранить после готовности, с
     labels: Метки серверов
   kinds:
     export.made: выгрузка заказана
@@ -114,7 +115,7 @@ display:
     export.read: файл скачан
     export.deleted: файлы удалены
 placement:
-  capacity:   {from: capacity, default: 2}      # parts a worker carries at once, ready ones too until they expire (доп. (4) п. 2)
+  capacity:   {from: capacity, default: 64}     # parts a worker HOLDS, ready ones too until they expire: the memory of files; the work is limited by EXP_ACTIVE (V/13.1 Н1.2)
   headroom:   {from: headroom}
   constraint: labels-subset
   requires:   resource                           # it writes the camera's export lines into the resource of its server
@@ -148,4 +149,4 @@ metrics:
   - {name: parts_running, from: status.phase, agg: count, equals: running, live: true}
 console:
   running: parts_running
-worker: {exec: /usr/lib/exp/worker, reads: [rec/heartbeats/, rec/recordings/, rec/volumes/, live/heartbeats/, cam/cameras/], deletes: [parts], creates: [{sub: live, rows: streams, key: "{cam}"}], uses: [exp.files]}
+worker: {exec: /usr/lib/exp/worker, reads: [rec/heartbeats/, rec/recordings/, rec/volumes/, live/heartbeats/, cam/cameras/, exp/heartbeats/, exp/placement/], deletes: [parts], creates: [{sub: live, rows: streams, key: "{cam}"}], uses: [exp.files]}
