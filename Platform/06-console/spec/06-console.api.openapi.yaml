@@ -6255,6 +6255,53 @@ paths:
                 anyOf:
                 - $ref: '#/components/schemas/GuardUnavailable'
                 - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
+  /domain/verify:
+    description: 'Глава 6.7 Н1.15 (ADR-0119) — проверка учётных данных второго человека без входа: только по билету с записью
+      domain/verify в calls; консоль пересылает процессу domain ровно {user, password} (POST /api/verify урока P/08), затем судит need
+      проверенного по своей копии грантов и ролей и надзор (договор сторожевой и передачи «Надзор»).'
+    post:
+      summary: 'Проверка без входа: пароль у домена, право и надзор у консоли кластера'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyInput'
+      responses:
+        '200':
+          description: Пароль сверился; need и supervision — при need
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyAnswer'
+        '400':
+          description: 'Тело не по форме (user, password — строки; need — cap, sub, units непустые без повторов, не больше VERIFY_UNITS_MAX); до пересылки, не в счёт предела. Ответ процесса domain с кодом 400 — как пришёл.'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/ConsoleRefusal'
+                - $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
+        '401':
+          description: 'Ответ процесса domain как пришёл: refused «wrong user or password» (P/08.4 Н1.2а).'
+          content:
+            application/json:
+              schema:
+                $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/Refusal'
+        '403':
+          description: 'Сеанс человека без билета, билет без записи domain/verify или без человека — denied; ответ процесса domain с кодом 403 — как пришёл.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsoleDenied'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          description: 'Хоть одна единица need — unavailable (копия грантов или ролей не читается, устарела, строка единицы не читается) — 503 unavailable целиком; ответ процесса domain с кодом 503 — как пришёл.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsoleRefusal'
   /domain/move:
     description: 'Глава 6.7 Н1.8 (из М11/8 Н1.9; P/06.7-17) — аварийный перенос сюда: консоль кластера цели спрашивает
       личность и грант admin этого кластера (сторожевая по режиму консоли; need договора сторожевой: POST /domain/move →
@@ -6380,6 +6427,79 @@ components:
         type: string
         pattern: "^(?:[a-z][a-z0-9_-]{0,31})$"
   schemas:
+    VerifyInput:
+      type: object
+      description: Глава 6.7 Н1.15 (ADR-0119).
+      required:
+      - user
+      - password
+      additionalProperties: false
+      properties:
+        user:
+          type: string
+        password:
+          type: string
+        need:
+          type: object
+          required:
+          - cap
+          - sub
+          - units
+          additionalProperties: false
+          properties:
+            cap:
+              enum:
+              - view
+              - edit
+              - admin
+            sub:
+              type: string
+              pattern: ^(?:[a-z][a-z0-9_-]{0,31})$
+            units:
+              type: array
+              minItems: 1
+              maxItems: 256
+              uniqueItems: true
+              items:
+                type: string
+                minLength: 3
+    VerifyAnswer:
+      type: object
+      description: Глава 6.7 Н1.15 (ADR-0119); need и supervision — только при need запроса.
+      required:
+      - user
+      additionalProperties: false
+      properties:
+        user:
+          type: string
+        need:
+          type: array
+          items:
+            type: object
+            required:
+            - unit
+            - may
+            additionalProperties: false
+            properties:
+              unit:
+                type: string
+              may:
+                enum:
+                - allow
+                - deny
+        supervision:
+          type: object
+          required:
+          - required
+          - ok
+          additionalProperties: false
+          properties:
+            required:
+              type: boolean
+            ok:
+              type: boolean
+            unreadable:
+              type: boolean
     ManifestSource:
       type: object
       description: Глава 6.5 Н2 «GET /manifest/<sub>/source» (ADR-0116 доп. (6)).

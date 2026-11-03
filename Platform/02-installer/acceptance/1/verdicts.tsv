@@ -946,3 +946,5 @@ a115_route_rank_ok	ok
 a115_route_rank_role	refused
 a115_route_rank_domain	refused
 a115_route_rank_word	refused
+a119_calls_verify_ok	ok
+a119_calls_verify_get	refused

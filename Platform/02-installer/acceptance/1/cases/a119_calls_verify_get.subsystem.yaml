@@ -1,0 +1,6 @@
+# GET domain/verify — вне перечня: дверь только запись (ADR-0119)
+name: probe
+unit: {rows: things, id: name, fields: {name: {type: string, required: true}}}
+placement: {capacity: {default: 1}}
+worker: {exec: /usr/lib/probe/worker}
+door: {pass: {routes: [api], calls: ["GET domain/verify"]}}

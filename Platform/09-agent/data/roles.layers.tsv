@@ -20,3 +20,7 @@ place	layer	word	value
 /properties/doc_sha256	3	x-codec	["string"]
 /properties/groups	3	x-codec	["object"]
 /properties/groups	3	x-encoding	"jcs"
+/properties/supervision	3	x-codec	["object"]
+/properties/supervision	3	x-encoding	"jcs"
+/properties/unreadable	3	x-codec	["object"]
+/properties/unreadable	3	x-encoding	"jcs"
