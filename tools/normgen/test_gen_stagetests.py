@@ -1,12 +1,13 @@
-"""Тесты тестов этапов из сценариев (tools/normgen/gen_stagetests.py; ADR-0125 доп. (3), (4)).
+"""Тесты тестов этапов из сценариев (tools/normgen/gen_stagetests.py; ADR-0125 доп. (3), (4); ADR-0126 доп. (7)).
 
 Запуск: python3 tools/normgen/test_gen_stagetests.py [-v]  (go 1.22 в PATH).
 
-- выход out/p01-1/go/stagetests и coreadapter — свежая генерация; опись главы 1.1 — все шаги объявленных сценариев;
-- перевод префиксом: шаг-директива отсекает остаток сценария (в описи — исключён с причиной); пустая проекция и
-  сценарий вне объявления gate — отказ генератора; форма gate tests:<этап>:<глава>:<сценарии> берётся раньше объявления;
-- движок (перенос runner/run.py) на подставном ядре: связывание $имён, тип числа, лишние поля, error у отказа,
-  !contains, порядок ключей /v1/list, ASSERT, несвязанное имя в запросе, класс статуса 4xx — исход каждого подтеста.
+- выход out/p01-1/go/stagetests и coreadapter — свежая генерация; опись — все шаги выбранных сценариев;
+- выбор: элементы gate `tests:<глава>:<сценарии|*>[:seams]` (список через `;`) раньше переходного объявления;
+- перевод префиксом: директива стенда и отказ позднего этапа (403 по файлу прав — P/01.2) отсекают остаток; пустая
+  проекция, сценарий вне файла, одно имя в scenarios.tsv и seams.tsv, новое $имя в each/rest — отказ генератора;
+- движок (перенос runner/run.py) на подставном ядре: связывание, тип числа, лишние поля, error отказа, !contains,
+  порядок ключей /v1/list, ASSERT, несвязанное имя, класс статуса; швы — @clock ±N, @reopen, @parallel each | one…rest.
 Внешний судья на коде реализации — scenario_judge.py (раннер на том же коде).
 """
 import json
@@ -25,9 +26,10 @@ import gen_tests  # noqa: E402
 
 OUT = HERE / "out/p01-1"
 STAGES = (ROOT / "Platform/01-store/forms/stages.tsv").read_text(encoding="utf-8")
+REFUSALS = (ROOT / "Platform/01-store/forms/refusals.tsv").read_text(encoding="utf-8")
 
-# Синтетические сценарии: (сценарий, шаг, запрос, ожидание) и ответ подставного ядра на запрос; ожидаемый исход.
-CASES = [
+# (сценарий, шаг, запрос, ожидание, ответ подставного ядра (код, тело) | None, исход подтеста | None — не переведён)
+SCEN = [
     ("s1-bind", "1", 'POST /b1 {"a":1}', '200 {"index":"$a"}', (200, '{"index":"7"}'), "pass"),
     ("s1-bind", "2", "GET /b2", '200 {"index":"$a"}', (200, '{"index":"7"}'), "pass"),
     ("s1-bind", "3", "GET /b3", '200 {"index":"$a"}', (200, '{"index":"8"}'), "fail"),
@@ -53,11 +55,59 @@ CASES = [
     ("s9-prefix", "1", "GET /x1", '200 {"a":"1"}', (200, '{"a":"1"}'), "pass"),
     ("s9-prefix", "2", "@restart store", "ok", None, None),
     ("s9-prefix", "3", "GET /x3", '200 {"a":"1"}', (200, '{"a":"1"}'), None),
+    ("s10-late", "1", "GET /l1", '200 {"a":"1"}', (200, '{"a":"1"}'), "pass"),
+    ("s10-late", "2", "GET /l2", '403 {"kind":"forbidden"}', (403, '{"kind":"forbidden","error":"e"}'), None),
+]
+SEAMS = [
+    ("m1-clock", "1", "GET /now", '200 {"now":"2000000000"}', None, "pass"),
+    ("m1-clock", "2", "@clock +60", "ok", None, "pass"),
+    ("m1-clock", "3", "GET /now", '200 {"now":"2000000060"}', None, "pass"),
+    ("m1-clock", "4", "@clock -10", "ok", None, "pass"),
+    ("m1-clock", "5", "GET /now", '200 {"now":"2000000050"}', None, "pass"),
+    ("m1-clock", "6", "GET /now", '200 {"now":"2000000000"}', None, "fail"),
+    ("m2-reopen", "1", "GET /opens", '200 {"n":"1"}', None, "pass"),
+    ("m2-reopen", "2", "@clock +5", "ok", None, "pass"),
+    ("m2-reopen", "3", "@reopen", "ok", None, "pass"),
+    ("m2-reopen", "4", "GET /opens", '200 {"n":"2"}', None, "pass"),
+    ("m2-reopen", "5", "GET /now", '200 {"now":"2000000005"}', None, "pass"),
+    ("m3-par", "1", "@parallel 4", "ok", None, "pass"),
+    ("m3-par", "2", "POST /race1 {}", 'one 200 {"index":"$b"}; rest 409 {"kind":"conflict","index":"$b"}', None, "pass"),
+    ("m3-par", "3", "GET /five", '200 {"index":"$b"}', None, "pass"),
+    ("m3-par", "4", "@parallel 3", "ok", None, "pass"),
+    ("m3-par", "5", "GET /same", 'each 200 {"a":"1"}', None, "pass"),
+    ("m3-par", "6", "@parallel 3", "ok", None, "pass"),
+    ("m3-par", "7", "POST /race2 {}", 'each 200 {"index":"5"}', None, "fail"),
+    ("m3-par", "8", "@parallel 2", "ok", None, "pass"),
+    ("m3-par", "9", "GET /same", 'one 200 {"a":"1"}; rest 409 {"kind":"conflict"}', None, "fail"),
 ]
 
-FAKE = '''package coreadapter
+FAKE = '''package stagetests
 
-type fake struct{}
+import (
+	"fmt"
+	"strings"
+	"sync"
+
+	"normgen/p01-1/apidoor"
+	"normgen/p01-1/coreadapter"
+)
+
+type fakeCore struct{ coreadapter.NotInStage }
+
+func (fakeCore) Get(coreadapter.Ctx, apidoor.GetQuery) apidoor.Answer   { return apidoor.Answer{} }
+func (fakeCore) List(coreadapter.Ctx, apidoor.ListQuery) apidoor.Answer { return apidoor.Answer{} }
+func (fakeCore) Write(coreadapter.Ctx, []byte) apidoor.Answer           { return apidoor.Answer{} }
+func (fakeCore) QueryRefused(coreadapter.Ctx, apidoor.Op, *apidoor.QueryError) apidoor.Answer {
+	return apidoor.Answer{}
+}
+func (fakeCore) Context(c coreadapter.Call, h map[string]string) coreadapter.Ctx { return nil }
+func (fakeCore) Close()                                                        {}
+
+var (
+	mu    sync.Mutex
+	opens = map[string]int{}
+	races = map[string]int{}
+)
 
 var replies = map[string]struct {
 	code int
@@ -65,28 +115,70 @@ var replies = map[string]struct {
 }{
 %s}
 
-func Open(cfg Config) (Core, error) { return fake{}, nil }
-
-func (fake) Handle(c Call, method, target string, h map[string]string, b []byte) (int, map[string]string, []byte) {
-	r, ok := replies[method+" "+target]
-	if !ok {
-		return 599, nil, []byte(`{"error":"no reply"}`)
+func init() {
+	openCore = func(cfg coreadapter.Config) (coreadapter.Core, error) {
+		mu.Lock()
+		opens[cfg.DataDir]++
+		mu.Unlock()
+		return fakeCore{}, nil
 	}
-	return r.code, nil, []byte(r.body)
+	handleCall = func(c coreadapter.Core, cfg coreadapter.Config, call coreadapter.Call, method, target string,
+		h map[string]string, b []byte) (int, map[string]string, []byte) {
+		switch {
+		case target == "/now":
+			return 200, nil, []byte(fmt.Sprintf(`{"now":"%%d"}`, cfg.Now().Unix()))
+		case target == "/opens":
+			mu.Lock()
+			defer mu.Unlock()
+			return 200, nil, []byte(fmt.Sprintf(`{"n":"%%d"}`, opens[cfg.DataDir]))
+		case target == "/five":
+			return 200, nil, []byte(`{"index":"5"}`)
+		case target == "/same":
+			return 200, nil, []byte(`{"a":"1"}`)
+		case strings.HasPrefix(target, "/race"):
+			mu.Lock()
+			races[cfg.DataDir+target]++
+			n := races[cfg.DataDir+target]
+			mu.Unlock()
+			if n == 1 {
+				return 200, nil, []byte(`{"index":"5"}`)
+			}
+			return 409, nil, []byte(`{"kind":"conflict","index":"5","error":"e"}`)
+		}
+		r, ok := replies[method+" "+target]
+		if !ok {
+			return 599, nil, []byte(`{"error":"no reply"}`)
+		}
+		return r.code, nil, []byte(r.body)
+	}
 }
-
-func (fake) Close() error { return nil }
 '''
 
 
-def synthetic_root(tmp, rows):
+def synthetic_root(tmp, scen, seams=None):
     root = Path(tmp) / "root"
-    (root / "Platform/01-store/acceptance/1").mkdir(parents=True)
+    acc = root / "Platform/01-store/acceptance/1"
+    acc.mkdir(parents=True)
     (root / "Platform/01-store/forms").mkdir(parents=True)
     (root / "Platform/01-store/forms/stages.tsv").write_text(STAGES, encoding="utf-8")
-    lines = ["scenario\tstep\trequest\texpect"] + ["\t".join(r) for r in rows]
-    (root / "Platform/01-store/acceptance/1/scenarios.tsv").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (root / "Platform/01-store/forms/refusals.tsv").write_text(REFUSALS, encoding="utf-8")
+    head = ["scenario\tstep\trequest\texpect"]
+    (acc / "scenarios.tsv").write_text("\n".join(head + ["\t".join(r) for r in scen]) + "\n", encoding="utf-8")
+    if seams is not None:
+        (acc / "seams.tsv").write_text("\n".join(head + ["\t".join(r) for r in seams]) + "\n", encoding="utf-8")
     return root
+
+
+def with_gate(gate):
+    lines = []
+    for line in STAGES.split("\n"):
+        cells = line.split("\t")
+        if len(cells) > 4 and cells[1] == "store_core":
+            cells[4] = gate
+        elif len(cells) > 4 and cells[0] != "n":       # прочие этапы — без tests: (их сценариев нет в синтетике)
+            cells[4] = ";".join(p for p in cells[4].split(";") if not p.strip().startswith("tests:")) or "build"
+        lines.append("\t".join(cells))
+    return "\n".join(lines)
 
 
 class StageTests(unittest.TestCase):
@@ -98,42 +190,74 @@ class StageTests(unittest.TestCase):
     def tearDownClass(cls):
         cls.tmp.cleanup()
 
+    def sub(self, name):
+        return Path(self.tmp.name) / name
+
     def test_out_is_fresh_and_inventory_whole(self):
         files, inventory = gen_stagetests.build(ROOT)
         for rel, text in files.items():
             want = gen_tests.gofmt(text) if rel.endswith(".go") else text
             self.assertEqual((OUT / rel).read_text(encoding="utf-8"), want, f"{rel}: run gen_tests.py")
-        scenarios, _, _ = gen_stagetests.read_scenarios(ROOT, "1.1")
-        want = sum(len(scenarios[n]) for _, (_, names) in gen_stagetests.STAGE_SCENARIOS.items() for n in names)
-        self.assertEqual(len(inventory), want)
-        self.assertTrue(all(r[3] == "translated" for r in inventory), "chapter 1.1 runs whole in process")
+        scenarios, _, _ = gen_stagetests.read_table(ROOT, "1.1", "scenarios.tsv")
+        want = sum(len(scenarios[n]) for _, items in gen_stagetests.TRANSITIONAL.items() for _, ns, _ in items for n in ns)
+        if "tests:1.1:" not in STAGES:                     # переходное объявление, пока форма без tests:<глава>
+            self.assertEqual(len(inventory), want)
+        self.assertTrue(all(len(r) == 6 for r in inventory))
+        seams, _, _ = gen_stagetests.read_table(ROOT, "1.1", "seams.tsv")
+        listed = {r[0].split("/")[2] for r in inventory if r[0].split("/")[1] == "seams.tsv"}
+        if seams:                                        # каждый сценарий швов формы — в описи, шаг в шаг
+            self.assertEqual(listed, {n for n in seams if any(n in r[0] for r in inventory)})
+            self.assertEqual(sum(1 for r in inventory if r[0].split("/")[1] == "seams.tsv"),
+                             sum(len(seams[n]) for n in listed))
+        stages = {r[1] for r in inventory}
+        for line in STAGES.split("\n"):
+            cells = line.split("\t")
+            if len(cells) > 4 and "tests:" in cells[4]:
+                self.assertIn(cells[1], stages, "a stage with tests: has its projection")
 
-    def test_prefix_and_projection(self):
-        rows = [c[:4] for c in CASES]
-        root = synthetic_root(Path(self.tmp.name) / "p", rows)
-        files, inventory = gen_stagetests.build(root, declaration={"http": ("1.1", ["s9-prefix"])})
-        status = {r[0]: (r[3], r[4]) for r in inventory}
-        self.assertEqual(status["1.1/s9-prefix/1"][0], "translated")
-        self.assertEqual([status[f"1.1/s9-prefix/{k}"][0] for k in "23"], ["excluded", "excluded"])
-        self.assertIn("step 2", status["1.1/s9-prefix/3"][1])
-        self.assertIn("[:1]", files["go/stagetests/http_test.go"])
-        with self.assertRaises(gen_stagetests.GenError):          # пустая проекция
-            gen_stagetests.build(synthetic_root(Path(self.tmp.name) / "e", [("s0", "1", "@restart store", "ok")]),
-                                 declaration={"http": ("1.1", ["s0"])})
-        with self.assertRaises(gen_stagetests.GenError):          # сценария нет
-            gen_stagetests.build(root, declaration={"http": ("1.1", ["s99"])})
-        with self.assertRaises(gen_stagetests.GenError):          # вне gate accept:1.1:01-absent
-            gen_stagetests.build(root, declaration={"launch": ("1.1", ["s1-bind"])})
-        form = STAGES.replace("accept:1.1:01-absent", "tests:launch:1.1:s1-bind")
-        files, inventory = gen_stagetests.build(root, stages_text=form, declaration={"launch": ("1.1", ["s9-prefix"])})
-        self.assertEqual({r[0].split("/")[1] for r in inventory}, {"s1-bind"})   # форма раньше объявления
+    def test_selection_prefix_and_refusals(self):
+        root = synthetic_root(self.sub("p"), [c[:4] for c in SCEN], [c[:4] for c in SEAMS])
+        files, inv = gen_stagetests.build(root, stages_text=with_gate("tests:1.1:s9-prefix,s10-late; tests:1.1:m3-par:seams"),
+                                          transitional={})
+        status = {r[0]: r for r in inv}
+        self.assertEqual(status["1.1/scenarios.tsv/s9-prefix/1"][3], "translated")
+        self.assertEqual([status[f"1.1/scenarios.tsv/s9-prefix/{k}"][3] for k in "23"], ["excluded", "excluded"])
+        self.assertIn("step 2", status["1.1/scenarios.tsv/s9-prefix/3"][5])
+        self.assertEqual(status["1.1/scenarios.tsv/s10-late/2"][3], "excluded")     # 403 по правам — этап rights
+        self.assertIn("later stage", status["1.1/scenarios.tsv/s10-late/2"][5])
+        self.assertEqual(status["1.1/seams.tsv/m3-par/2"][4], "yes")                 # -race у теста с @parallel
+        self.assertEqual(status["1.1/scenarios.tsv/s9-prefix/1"][4], "no")
+        self.assertIn("TestStoreCore_S9Prefix", files["go/stagetests/store_core_test.go"])
+        bad = [
+            ("tests:1.1:s99", {}),                                            # сценария нет
+            ("tests:1.1:s9-prefix,s9-prefix", {}),                            # повтор
+            ("tests:store_core:1.1:s1-bind", {}),                             # вид не по доп. (7) п. 2
+        ]
+        for gate, tr in bad:
+            with self.subTest(gate=gate), self.assertRaises(gen_stagetests.GenError):
+                gen_stagetests.build(root, stages_text=with_gate(gate), transitional=tr)
+        empty = synthetic_root(self.sub("e"), [("s0", "1", "@restart store", "ok")])
+        with self.assertRaises(gen_stagetests.GenError):                   # пустая проекция
+            gen_stagetests.build(empty, stages_text=with_gate("tests:1.1:s0"), transitional={})
+        clash = synthetic_root(self.sub("c"), [("m1-clock", "1", "GET /x", "200 {}")], [c[:4] for c in SEAMS])
+        with self.assertRaises(gen_stagetests.GenError):                   # одно имя в двух файлах
+            gen_stagetests.build(clash, stages_text=with_gate("tests:1.1:m1-clock:seams"), transitional={})
+        for seams in ([("p1", "1", "@parallel 2", "ok"), ("p1", "2", "GET /x", 'each 200 {"i":"$new"}')],
+                      [("p1", "1", "@parallel 2", "ok"), ("p1", "2", "GET /x", 'one 200 {}; rest 200 {"i":"$new"}')],
+                      [("p1", "1", "GET /x", 'each 200 {}')],
+                      [("p1", "1", "@parallel 2", "ok")],
+                      [("p1", "1", "@clock +5", "200 {}")]):
+            r = synthetic_root(self.sub(f"b{len(list(self.sub('.').glob('b*')))}"), [("s", "1", "GET /x", "200 {}")], seams)
+            with self.subTest(seams=seams), self.assertRaises(gen_stagetests.GenError):
+                gen_stagetests.build(r, stages_text=with_gate("tests:1.1:p1:seams"), transitional={})
 
     def test_engine_on_fake_core(self):
-        rows = [c[:4] for c in CASES]
-        root = synthetic_root(Path(self.tmp.name) / "g", rows)
-        names = sorted({c[0] for c in CASES})
-        files, _ = gen_stagetests.build(root, declaration={"http": ("1.1", names)})
-        mod = Path(self.tmp.name) / "mod"
+        root = synthetic_root(self.sub("g"), [c[:4] for c in SCEN], [c[:4] for c in SEAMS])
+        names = ",".join(sorted({c[0] for c in SCEN}))
+        seams = ",".join(sorted({c[0] for c in SEAMS}))
+        files, _ = gen_stagetests.build(root, stages_text=with_gate(f"tests:1.1:{names}; tests:1.1:{seams}:seams"),
+                                        transitional={})
+        mod = self.sub("mod")
         shutil.copytree(OUT / "go", mod)
         shutil.rmtree(mod / "stagetests")
         for rel, text in files.items():
@@ -141,18 +265,22 @@ class StageTests(unittest.TestCase):
                 (mod / rel[3:]).parent.mkdir(parents=True, exist_ok=True)
                 (mod / rel[3:]).write_text(text, encoding="utf-8")
         replies = "".join(f'\t{json.dumps(c[2].split(" ")[0] + " " + c[2].split(" ")[1])}: {{{c[4][0]}, {json.dumps(c[4][1])}}},\n'
-                          for c in CASES if c[4])
-        (mod / "coreadapter/open.go").write_text(FAKE % replies, encoding="utf-8")
-        done = subprocess.run(["go", "test", "-count=1", "-json", "./stagetests"], cwd=mod, capture_output=True,
+                          for c in SCEN if c[4])
+        (mod / "stagetests/fake_test.go").write_text(FAKE % replies, encoding="utf-8")
+        done = subprocess.run(["go", "test", "-count=1", "-race", "-json", "./stagetests"], cwd=mod, capture_output=True,
                               text=True)
         got = {}
         for line in done.stdout.splitlines():
-            e = json.loads(line)
+            try:
+                e = json.loads(line)
+            except ValueError:
+                continue
             if e.get("Action") in ("pass", "fail") and "/" in (e.get("Test") or ""):
                 got[e["Test"]] = e["Action"]
         self.assertTrue(got, done.stdout[-2000:] + done.stderr[-2000:])
-        for sc, step, req, _, _, want in CASES:
-            name = f"TestHttp_{gen_stagetests.camel_name(sc)}/{step}"
+        self.assertNotIn("DATA RACE", done.stdout)
+        for sc, step, req, _, _, want in SCEN + SEAMS:
+            name = f"TestStoreCore_{gen_stagetests.camel_name(sc)}/{step}"
             with self.subTest(step=f"{sc}/{step} {req}"):
                 self.assertEqual(got.get(name), want, name)
 

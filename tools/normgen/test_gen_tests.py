@@ -386,13 +386,14 @@ class GenTests(unittest.TestCase):
                     self.assertEqual((done.returncode, done.stdout), (2, b""), (doc, done.stderr))
 
     def test_kit_part(self):
-        """build_kit --part tests: пути импорта переписаны, go vet в пустом модуле, манифест — origin generated, часть
-        tests; адаптер реализации при повторной сборке не трогается; без части — каталогов tests нет."""
+        """build_kit --part vectors, --part stagetests (ADR-0126 доп. (7) п. 4): пути импорта переписаны, go vet в пустом
+        модуле, манифест — origin generated, части порознь; своё у реализации при повторной сборке не трогается;
+        без части — её каталогов нет; stagetests без door — отказ."""
         sys.path.insert(0, str(HERE / "kit"))
         import build_kit
         module = "example.com/w2c/store"
         dst = Path(self.tmp.name) / "kit"
-        m = build_kit.build(dst, module, ["door", "tests"])
+        m = build_kit.build(dst, module, ["door", "vectors", "stagetests"])
         store = dst / "01-store"
         (store / "go.mod").write_text(f"module {module}\n\ngo 1.22\n", encoding="utf-8")
         (store / "cmd/store").mkdir(parents=True)
@@ -400,10 +401,12 @@ class GenTests(unittest.TestCase):
                                                  encoding="utf-8")
         done = go(["vet", "./..."], store)
         self.assertEqual(done.returncode, 0, done.stderr)
-        self.assertEqual(m["parts"], ["writecheck", "door", "tests"])
-        tests = [f for f in m["files"] if f["component"] == "tests"]
-        self.assertEqual(sorted({f["path"].split("/")[2] for f in tests}),
-                         ["coreadapter", "stagetests", "vectoradapter", "vectorcmd", "vectors", "vectortests"])
+        self.assertEqual(m["parts"], ["writecheck", "door", "stagetests", "vectors"])
+        tests = [f for f in m["files"] if f["component"] in ("vectors", "stagetests")]
+        self.assertEqual(sorted({f["path"].split("/")[2] for f in tests if f["component"] == "vectors"}),
+                         ["vectoradapter", "vectorcmd", "vectors", "vectortests"])
+        self.assertEqual(sorted({f["path"].split("/")[2] for f in tests if f["component"] == "stagetests"}),
+                         ["coreadapter", "stagetests"])
         self.assertIn("01-store/cmd/vectors/main.go", [f["path"] for f in tests])   # бинарь векторов (ADR-0126 доп. (5))
         done = go(["build", "-o", str(Path(self.tmp.name) / "kit-vectors"), "./cmd/vectors"], store)
         self.assertEqual(done.returncode, 0, done.stderr)
@@ -414,7 +417,7 @@ class GenTests(unittest.TestCase):
         self.assertIn("TestRightsEval_Line", (dst / "KIT.md").read_text(encoding="utf-8"))
         own = store / "internal/vectoradapter/vectoradapter.go"
         own.write_text(own.read_text(encoding="utf-8") + "\n// mine\n", encoding="utf-8")
-        m = build_kit.build(dst, module, ["door", "tests"])
+        m = build_kit.build(dst, module, ["door", "vectors", "stagetests"])
         self.assertTrue(own.read_text(encoding="utf-8").endswith("// mine\n"))
         self.assertNotIn("internal/vectoradapter", [f["path"].rsplit("/", 1)[0][len("01-store/"):] for f in m["files"]])
         other = Path(self.tmp.name) / "kit-plain"
@@ -423,6 +426,8 @@ class GenTests(unittest.TestCase):
         self.assertFalse((other / "01-store/internal/vectortests").exists())
         with self.assertRaises(build_kit.KitError):
             build_kit.build(other, module, ["door-x"])
+        with self.assertRaises(build_kit.KitError):
+            build_kit.build(other, module, ["stagetests"])
 
     def test_write_checks_binary(self):
         """cmd/vectors на пробах write-checks.probes.tsv — зелёный у vector_judge; мутант провода — красный."""

@@ -725,28 +725,33 @@ def render(root=ROOT):
 
 # ---------------------------------------------------------------- часть пакета Б `tests` (ADR-0126 доп. (2) п. 1)
 
-KIT_DIRS = ("vectortests", "vectorcmd", "../cmd/vectors", "stagetests")   # заменяются целиком (../cmd/vectors — <dst>/01-store/cmd/vectors);
-# vectoradapter — реализации, кладётся, только если нет
+# Части пакета Б (ADR-0126 доп. (7) п. 4): vectors — тесты векторов и команда векторов; stagetests — тесты этапов из
+# сценариев и адаптер ядра. Каталоги частей заменяются целиком (../cmd/vectors — <dst>/01-store/cmd/vectors); своё у
+# реализации (vectoradapter/, coreadapter/open.go) кладётся, только если его нет.
+PART_DIRS = {"vectors": ("vectortests", "vectorcmd", "../cmd/vectors"), "stagetests": ("stagetests",)}
+PART_OWN_DIRS = {"vectors": ("vectoradapter",), "stagetests": ("coreadapter",)}
+KIT_DIRS = PART_DIRS["vectors"] + PART_DIRS["stagetests"]
 KIT_IMPORT = f'"{GO_MODULE}/'
 
 
-def kit_files(module, out=DEFAULT_OUT):
-    """→ [(каталог в internal, имя, байты, происхождение, источник, своё у реализации)]; GenError — out устарел."""
+def kit_files(module, part="vectors", out=DEFAULT_OUT):
+    """→ [(каталог в internal, имя, байты, происхождение, источник, своё у реализации)] части; GenError — out устарел."""
     fresh = render(ROOT)
+    dirs = {"cmd/vectors" if d == "../cmd/vectors" else d for d in PART_DIRS[part] + PART_OWN_DIRS[part]}
     parts = []
     for rel in sorted(fresh):
-        if rel == "go/cmd/vectors/main.go":
-            pass
-        elif not rel.startswith("go/") or rel.split("/")[1] not in KIT_DIRS + ("vectoradapter", "coreadapter"):
+        if not rel.startswith("go/"):
+            continue
+        sub_rel = rel[3:].rsplit("/", 1)[0]
+        if sub_rel not in dirs:
             continue
         kept = Path(out) / rel
         if not kept.is_file() or kept.read_bytes() != fresh[rel]:
             raise GenError(f"{kept} is stale: run tools/normgen/gen_tests.py")
         data = fresh[rel].replace(KIT_IMPORT.encode(), f'"{module}/internal/'.encode())
-        sub, name = rel.split("/")[1], rel.split("/")[2]
-        if rel == "go/cmd/vectors/main.go":
-            sub, name = "../cmd/vectors", "main.go"   # <dst>/01-store/cmd/vectors — бинарь векторов (доп. (5) ADR-0126)
-        own = sub == "vectoradapter" or rel == "go/coreadapter/open.go"   # своё у реализации: кладётся, только если нет
+        name = rel.rsplit("/", 1)[1]
+        sub = "../cmd/vectors" if sub_rel == "cmd/vectors" else sub_rel
+        own = sub == "vectoradapter" or rel == "go/coreadapter/open.go"
         parts.append((sub, name, data, "generated", str(kept.relative_to(ROOT)), own))
     return parts
 
@@ -791,26 +796,41 @@ subcommand.
 - `vectors:jcs`, `vectors:rights-evaluator` — your adapter `internal/vectoradapter` (`Canonical`, `LoadRights`):
   until you connect it they answer «not implemented».
 
-### Stage tests from the scenarios (`internal/stagetests`, `internal/coreadapter`)
+"""
 
-`internal/stagetests` — generated from `acceptance/1/scenarios.tsv` (ADR-0125 addenda (3), (4)): one test
-`Test<Stage>_<Scenario>` per scenario, its steps are subtests in order on one fresh core; the comparison is the
-runner's (status, the body by value with `$names` bound, `ASSERT`). `inventory.tsv` lists every step: translated or
-excluded with the reason (the runner judges the excluded ones). Run one stage: `go test -run '^TestHttp_' ./internal/stagetests`.
+KIT_MD_STAGETESTS = """
+## Part `stagetests`: stage tests from the scenarios (`internal/stagetests`, `internal/coreadapter`)
 
-You write two things in `internal/coreadapter`:
+`internal/stagetests` — generated from `acceptance/1/scenarios.tsv` and `seams.tsv` by the `tests:` gates of
+`forms/stages.tsv` (ADR-0125 addenda (3), (4); ADR-0126 addendum (7)): one test `Test<Stage>_<Scenario>` per scenario,
+its steps are subtests in order on one core; the comparison is the runner's (status, the body by value with `$names`
+bound, `ASSERT`). `inventory.tsv` lists every step: translated or excluded with the reason; `race yes` — the test has
+`@parallel` and is judged with `-race`. Run one stage: `go test -run '^TestStoreCore_' ./internal/stagetests`. Your own
+tests with the same prefix do not close a stage: the judge runs only `internal/stagetests` by its inventory.
+
+The kit's `coreadapter.go`: `Config`, `Call`, `Core`, `Handle` (the body limit — 413 before the route,
+`apidoor.Route`, `apidoor.Dispatch` to your Core, `apidoor.Encode`) and `NotInStage`. Yours — `open.go`:
 
 ```go
-// open.go — yours: a fresh core for one scenario.
-func Open(cfg coreadapter.Config) (coreadapter.Core, error) // return coreadapter.Wrap(cfg, yourHandler, yourClose), nil
-type Config struct { BodyLimit, RowCeiling int64; Rights []byte }   // the stand: 1048576, 524288, the role acc on acc/*
-// yourHandler implements apidoor.Handler[*coreadapter.Request]; Request{Call{Sock}, Header} — the socket ("acc",
-// "admin") apart from the headers (a forged role header is the scenario's check).
+type Ctx = *coreadapter.Request          // or your own type: what Context gives each request
+func Open(cfg Config) (Core, error)      // a fresh core: your store in cfg.DataDir, clock cfg.Now, rights cfg.Rights
+type Config struct {
+    BodyLimit, RowCeiling int64          // the stand: 1048576, 524288
+    Rights  []byte                       // the role acc with read, write, delete on acc/*
+    Now     func() time.Time             // take every time of the core from it
+    DataDir string                       // fresh per scenario; @reopen opens the same directory again
+}
+type Core interface {                    // your value
+    apidoor.Handler[Ctx]                 // Get, List, Write, QueryRefused — your core of Н3; embed coreadapter.NotInStage
+                                         // for Rights, Status, Join, Leave, Metrics (503 «not in this stage»)
+    Context(call Call, header map[string]string) Ctx // Call{Sock}: "acc" — the role socket, "admin" — admin.sock
+    Close()
+}
 ```
 
-`coreadapter.go` is the kit's: `Wrap` gives the body limit (413 before the route), `apidoor.Route`, `apidoor.Dispatch`
-to your Handler and `apidoor.Encode`. Your own tests with the same `Test<Stage>_` prefix do not close a stage: the
-judge runs only `internal/stagetests` by its inventory.
+`Handle` may be called concurrently (`@parallel`): the core must hold that. The seams of `seams.tsv`: `@clock ±N` —
+the test clock moves N seconds (from 2000000000 at the first Open), `@reopen` — Close and Open on the same DataDir and
+clock (what was written must read back), `@parallel K` — the next request K times at once.
 """
 
 
@@ -822,7 +842,8 @@ def counts(root=ROOT):
 def generate(root=ROOT, out=DEFAULT_OUT):
     out = Path(out)
     files = render(root)
-    for sub in ("go/vectoradapter", "go/vectortests", "go/vectorcmd", "vectors"):
+    for sub in ("go/vectoradapter", "go/vectortests", "go/vectorcmd", "go/cmd/vectors", "go/stagetests", "go/coreadapter",
+                "vectors"):
         target = out / sub
         if target.exists():
             for p in sorted(target.rglob("*"), reverse=True):

@@ -683,7 +683,7 @@ class Kit(unittest.TestCase):
 
     def test_parts(self):
         bk = self.build_kit
-        for parts in (("door",), ("tests", "door")):
+        for parts in (("door",), ("vectors", "door")):
             dst = Path(self.tmp.name) / "-".join(parts)
             m = bk.build(dst, "kittest", parts)
             store = dst / "01-store"
