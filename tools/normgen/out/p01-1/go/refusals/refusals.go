@@ -26,7 +26,7 @@ type Spec struct {
 	Kind       string      // http — слово kind на проводе; иначе ""
 	Fields     []Field     // http — поля тела помимо kind и error
 	Headers    [][2]string // http — заголовки ответа
-	RetryAfter bool        // среди Headers есть Retry-After (для door.Answer.RetryAfter)
+	RetryAfter bool        // среди Headers есть Retry-After (для apidoor.Answer.RetryAfter)
 	Log        []string    // start, cli — значения, которые называет лог
 	Words      []string    // start, cli — слова, которые лог несёт дословно
 	Norm       string
@@ -36,7 +36,7 @@ type Spec struct {
 func ByName(name string) *Spec { return byName[name] }
 
 // Check — набор полей тела отказа http: все обязательные есть, лишних нет, значения — целое (int, int64) или строка.
-// Тело кодирует door.Refuse(op, s.Code, s.Kind, msg, values) по схеме *Fault OpenAPI.
+// Тело кодирует apidoor.Refuse(op, s.Code, s.Kind, msg, values) по схеме *Fault OpenAPI.
 func (s *Spec) Check(values map[string]any) error {
 	if s.Surface != "http" {
 		return fmt.Errorf("refusal %s: surface %s has no body", s.Name, s.Surface)

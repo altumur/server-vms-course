@@ -1,4 +1,4 @@
-// Обвес судьи tools/normgen/refusal_judge.py (ADR-0125 № 4): каталог refusals.All одним JSON и пробы door.Refuse —
+// Обвес судьи tools/normgen/refusal_judge.py (ADR-0125 № 4): каталог refusals.All одним JSON и пробы apidoor.Refuse —
 // тело каждой строки http в объявленную схему OpenAPI хотя бы одной операции (две генерации согласны).
 package main
 
@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"normgen/p01-1/door"
+	"normgen/p01-1/apidoor"
 	"normgen/p01-1/refusals"
 )
 
@@ -70,16 +70,16 @@ func try(s *refusals.Spec, set []string) probe {
 			continue
 		}
 		p := probe{Fields: set, Ints: ints, Ops: []string{}}
-		for _, op := range door.Operations {
-			a, err := door.Refuse(op.Op, s.Code, s.Kind, "x", values)
+		for _, op := range apidoor.Operations {
+			a, err := apidoor.Refuse(op.Op, s.Code, s.Kind, "x", values)
 			if err != nil {
 				continue
 			}
 			a.RetryAfter = s.RetryAfter
-			resp, err := door.Encode(op.Op, a)
+			resp, err := apidoor.Encode(op.Op, a)
 			if err != nil {
 				a.RetryAfter = false
-				if resp, err = door.Encode(op.Op, a); err != nil {
+				if resp, err = apidoor.Encode(op.Op, a); err != nil {
 					continue
 				}
 			} else if s.RetryAfter {

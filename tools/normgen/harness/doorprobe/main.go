@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"os"
 
-	"normgen/p01-1/door"
+	"normgen/p01-1/apidoor"
 )
 
 type request struct {
@@ -45,8 +45,8 @@ func decode(text string) (any, error) {
 	return v, err
 }
 
-func opByName(name string) door.Op {
-	for _, o := range door.Operations {
+func opByName(name string) apidoor.Op {
+	for _, o := range apidoor.Operations {
 		if o.Op.String() == name {
 			return o.Op
 		}
@@ -54,14 +54,14 @@ func opByName(name string) door.Op {
 	return 0
 }
 
-func response(r *door.Response) any {
+func response(r *apidoor.Response) any {
 	if r == nil {
 		return nil
 	}
 	return map[string]any{"code": r.Code, "header": r.Header, "body": base64.StdEncoding.EncodeToString(r.Body)}
 }
 
-func violation(e *door.Violation) any {
+func violation(e *apidoor.Violation) any {
 	if e == nil {
 		return nil
 	}
@@ -72,7 +72,7 @@ func violation(e *door.Violation) any {
 type record struct {
 	method string
 	query  map[string]any
-	qerr   *door.QueryError
+	qerr   *apidoor.QueryError
 }
 
 type probe struct{}
@@ -90,32 +90,32 @@ func b64(v any) any {
 	return nil
 }
 
-func (probe) Get(c *record, q door.GetQuery) door.Answer {
+func (probe) Get(c *record, q apidoor.GetQuery) apidoor.Answer {
 	c.method, c.query = "Get", map[string]any{"key": b64(q.Key)}
-	return door.Answer{}
+	return apidoor.Answer{}
 }
-func (probe) List(c *record, q door.ListQuery) door.Answer {
+func (probe) List(c *record, q apidoor.ListQuery) apidoor.Answer {
 	c.method, c.query = "List", map[string]any{"prefix": b64(q.Prefix)}
-	return door.Answer{}
+	return apidoor.Answer{}
 }
-func (probe) Write(c *record, body []byte) door.Answer { c.method = "Write"; return door.Answer{} }
-func (probe) Rights(c *record) door.Answer             { c.method = "Rights"; return door.Answer{} }
-func (probe) Status(c *record) door.Answer             { c.method = "Status"; return door.Answer{} }
-func (probe) Join(c *record, body []byte) door.Answer  { c.method = "Join"; return door.Answer{} }
-func (probe) Leave(c *record, body []byte) door.Answer { c.method = "Leave"; return door.Answer{} }
-func (probe) Metrics(c *record) door.Answer            { c.method = "Metrics"; return door.Answer{} }
-func (probe) QueryRefused(c *record, op door.Op, e *door.QueryError) door.Answer {
+func (probe) Write(c *record, body []byte) apidoor.Answer { c.method = "Write"; return apidoor.Answer{} }
+func (probe) Rights(c *record) apidoor.Answer             { c.method = "Rights"; return apidoor.Answer{} }
+func (probe) Status(c *record) apidoor.Answer             { c.method = "Status"; return apidoor.Answer{} }
+func (probe) Join(c *record, body []byte) apidoor.Answer  { c.method = "Join"; return apidoor.Answer{} }
+func (probe) Leave(c *record, body []byte) apidoor.Answer { c.method = "Leave"; return apidoor.Answer{} }
+func (probe) Metrics(c *record) apidoor.Answer            { c.method = "Metrics"; return apidoor.Answer{} }
+func (probe) QueryRefused(c *record, op apidoor.Op, e *apidoor.QueryError) apidoor.Answer {
 	c.method, c.qerr = "QueryRefused", e
-	return door.Answer{}
+	return apidoor.Answer{}
 }
 
 func run(req request) any {
 	switch req.Cmd {
 	case "table":
 		ops := []any{}
-		for _, o := range door.Operations {
+		for _, o := range apidoor.Operations {
 			declared := map[string]any{}
-			for code, d := range door.Declared(o.Op) {
+			for code, d := range apidoor.Declared(o.Op) {
 				declared[fmt.Sprint(code)] = map[string]any{"schemas": d[0], "headers": d[1]}
 			}
 			ops = append(ops, map[string]any{"op": o.Op.String(), "method": o.Method, "path": o.Path, "query": o.Query,
@@ -123,7 +123,7 @@ func run(req request) any {
 		}
 		return map[string]any{"ops": ops}
 	case "route":
-		op, query, refusal := door.Route(req.Method, req.Target)
+		op, query, refusal := apidoor.Route(req.Method, req.Target)
 		name := ""
 		if op != 0 {
 			name = op.String()
@@ -134,7 +134,7 @@ func run(req request) any {
 		if err != nil {
 			return map[string]any{"error": err.Error()}
 		}
-		e, known := door.CheckSchema(req.Schema, v)
+		e, known := apidoor.CheckSchema(req.Schema, v)
 		return map[string]any{"known": known, "violation": violation(e)}
 	case "answer":
 		v, err := decode(req.JSON)
@@ -145,12 +145,12 @@ func run(req request) any {
 		if req.ViaOp != "" {
 			via, code = req.ViaOp, req.ViaCode
 		}
-		a, err := door.AnswerOf(opByName(via), code, v)
+		a, err := apidoor.AnswerOf(opByName(via), code, v)
 		if err != nil {
 			return map[string]any{"answer_error": err.Error()}
 		}
 		a.Code, a.RetryAfter = req.Code, req.Retry
-		r, err := door.Encode(opByName(req.Op), a)
+		r, err := apidoor.Encode(opByName(req.Op), a)
 		if err != nil {
 			return map[string]any{"encode_error": err.Error(), "schema": a.Body.SchemaName()}
 		}
@@ -164,18 +164,18 @@ func run(req request) any {
 			}
 			fields = v.(map[string]any)
 		}
-		a, err := door.Refuse(opByName(req.Op), req.Code, req.Kind, req.Msg, fields)
+		a, err := apidoor.Refuse(opByName(req.Op), req.Code, req.Kind, req.Msg, fields)
 		if err != nil {
 			return map[string]any{"answer_error": err.Error()}
 		}
-		r, err := door.Encode(opByName(req.Op), a)
+		r, err := apidoor.Encode(opByName(req.Op), a)
 		if err != nil {
 			return map[string]any{"encode_error": err.Error()}
 		}
 		return map[string]any{"resp": response(r), "schema": a.Body.SchemaName()}
 	case "dispatch":
 		var c record
-		door.Dispatch[*record](probe{}, &c, opByName(req.Op), req.Query, nil)
+		apidoor.Dispatch[*record](probe{}, &c, opByName(req.Op), req.Query, nil)
 		var qerr any
 		if c.qerr != nil {
 			qerr = map[string]any{"param": c.qerr.Param, "reason": int(c.qerr.Reason), "schema": c.qerr.Schema,
@@ -188,14 +188,14 @@ func run(req request) any {
 			return map[string]any{"error": err.Error()}
 		}
 		var out any
-		var e *door.Violation
+		var e *apidoor.Violation
 		switch req.Schema {
 		case "FloorCmd":
-			out, e = door.DecodeFloorCmd(v)
+			out, e = apidoor.DecodeFloorCmd(v)
 		case "Join":
-			out, e = door.DecodeJoin(v)
+			out, e = apidoor.DecodeJoin(v)
 		case "Leave":
-			out, e = door.DecodeLeave(v)
+			out, e = apidoor.DecodeLeave(v)
 		default:
 			return map[string]any{"error": "no decoder " + req.Schema}
 		}

@@ -35,7 +35,7 @@ import vector_judge  # noqa: E402
 from gen_checks import go_str  # noqa: E402
 
 OUT = HERE / "out/p01-1"
-PARTS = ("go/vectoradapter", "go/vectortests", "go/vectorcmd", "vectors")
+PARTS = ("go/vectoradapter", "go/vectortests", "go/vectorcmd", "go/cmd/vectors", "go/jsonstrict", "go/writecheck", "vectors")
 GOENV = dict(os.environ, GOPROXY="off", GOFLAGS="-mod=mod", GOWORK="off", GOTOOLCHAIN="local")
 MAX_RSS = 1 << 30
 JCS = "Platform/01-store/vectors/jcs/canonical_json.tsv"
@@ -164,6 +164,8 @@ class GenTests(unittest.TestCase):
             target = Path(mod) / rel[3:]
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(data)
+        if not only_tests and not (Path(mod) / "checks").exists():   # writecheck (провод write-checks) импортирует checks
+            shutil.copytree(HERE / "out/p01-1/go/checks", Path(mod) / "checks")
 
     def run_tests(self, mod, mode=""):
         done = go(["test", "-count=1", "-json", "./vectortests"], mod, {"FAKE_MODE": mode})
@@ -399,7 +401,10 @@ class GenTests(unittest.TestCase):
         self.assertEqual(m["parts"], ["writecheck", "tests"])
         tests = [f for f in m["files"] if f["component"] == "tests"]
         self.assertEqual(sorted(f["path"].split("/")[2] for f in tests),
-                         ["vectoradapter", "vectorcmd", "vectortests", "vectortests", "vectortests"])
+                         ["vectoradapter", "vectorcmd", "vectors", "vectortests", "vectortests", "vectortests"])
+        self.assertIn("01-store/cmd/vectors/main.go", [f["path"] for f in tests])   # бинарь векторов (ADR-0126 доп. (5))
+        done = go(["build", "-o", str(Path(self.tmp.name) / "kit-vectors"), "./cmd/vectors"], store)
+        self.assertEqual(done.returncode, 0, done.stderr)
         for f in tests:
             self.assertEqual(f["origin"], "generated")
             self.assertEqual(f.get("editable", False), "/vectoradapter/" in f["path"])
@@ -416,6 +421,23 @@ class GenTests(unittest.TestCase):
         self.assertFalse((other / "01-store/internal/vectortests").exists())
         with self.assertRaises(build_kit.KitError):
             build_kit.build(other, module, ["door-x"])
+
+    def test_write_checks_binary(self):
+        """cmd/vectors на пробах write-checks.probes.tsv — зелёный у vector_judge; мутант провода — красный."""
+        mod = Path(self.tmp.name) / "wc"
+        shutil.copytree(OUT / "go", mod)
+        exe = Path(self.tmp.name) / "wc-vectors"
+        done = go(["build", "-o", str(exe), "./cmd/vectors"], mod)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        judge = [sys.executable, str(HERE / "vector_judge.py"), "--package", "write-checks", "--cmd", f"{exe} {{input}}"]
+        done = subprocess.run(judge, capture_output=True, text=True, timeout=600)
+        self.assertEqual(done.returncode, 0, done.stdout[-2000:] + done.stderr[-2000:])
+        self.assertRegex(done.stdout, r"write-checks: (\d+)/\1 PASS")
+        edit(mod / "vectorcmd/vectorcmd.go", '"n": ref.N, "code"', '"n": ref.N + 1, "code"')
+        done = go(["build", "-o", str(exe), "./cmd/vectors"], mod)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        done = subprocess.run(judge, capture_output=True, text=True, timeout=600)
+        self.assertEqual(done.returncode, 1, done.stdout[-500:])
 
     def test_zz_memory(self):
         rss = max(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss, resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss)

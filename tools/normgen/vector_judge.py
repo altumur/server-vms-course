@@ -30,7 +30,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 CASES_ROOT = HERE / "out/p01-1/vectors"
-ALIASES = {"jcs": "01-store/jcs", "rights-evaluator": "01-store/rights-evaluator"}
+ALIASES = {"jcs": "01-store/jcs", "rights-evaluator": "01-store/rights-evaluator", "write-checks": "01-store/write-checks"}
 ENVELOPE = {"exit_code", "stdout_b64", "stderr_b64"}
 
 

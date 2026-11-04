@@ -13,7 +13,9 @@
 Выход в `tools/normgen/out/p01-1` (модуль `normgen/p01-1`, Go 1.22, только stdlib):
 - `go/vectoradapter/vectoradapter.go` — заглушка адаптера: договор, который реализует реализация (или свидетель);
 - `go/vectortests/` — тесты `Test<Этап>_Line<N>`, по одному на строку вектора; зовут только адаптер;
-- `go/vectorcmd/vectorcmd.go` — единый провод команды векторов поверх того же адаптера (`<бинарь> vectors {input}`);
+- `go/vectorcmd/vectorcmd.go` — единый провод команды векторов: jcs, rights-evaluator — через адаптер, write-checks —
+  через writecheck (пробы `forms/write-checks.probes.tsv`); `go/cmd/vectors/main.go` — бинарь `bin/vectors {input}`
+  (ADR-0126 доп. (5)); `go/jsonstrict`, `go/writecheck` — копии ручного `kit/go`, чтобы модуль выхода собирался;
 - `vectors/<пакет>/line-<N>.json` и `cases.tsv` — входы команды векторов и ожидаемый нативный исход для судьи
   `tools/normgen/vector_judge.py` (gate `vectors:<пакет>` без Go-тестов).
 Путь импорта `"normgen/p01-1/` в пакете Б заменяет `tools/normgen/kit/build_kit.py` на `"<module>/internal/`.
@@ -50,6 +52,13 @@ PACKAGES = {
     "rights-evaluator": {"package": "01-store/rights-evaluator", "dir": "Platform/01-store/vectors/rights-evaluator",
                          "table": "expect.tsv", "inputs": ["role", "action", "key"], "files": ["rights.json"],
                          "native": "code 0, \"allow\" | \"deny\""},
+    # write-checks — пробы таблицы проверок (ADR-0126 доп. (5)): провод драйвера раннера P/01/vectors-write-checks —
+    # cells {sock, body, lim, allow}: body — ячейка как есть, lim — объект #lim, allow — строки #allow; строки nopair
+    # (тело — проза) не входят; нативно {"n": 0} или {"n", "code", "kind"} первой нарушенной строки write-checks.tsv.
+    # Исполняет пакет (writecheck.Check: разбор Н2.1 + проверки checks), не адаптер модели.
+    "write-checks": {"package": "01-store/write-checks", "dir": "Platform/01-store/forms",
+                     "table": "write-checks.probes.tsv", "inputs": ["sock", "body", "lim", "allow"], "files": [],
+                     "native": "code 0, {\"n\": 0} | {\"n\", \"code\", \"kind\"} of the first violated row"},
 }
 
 
@@ -177,6 +186,60 @@ def read_rights(root):
     if not rows:
         raise GenError(f"{src.rel}: no vectors")
     return rows, src, rights
+
+
+def read_probes(root):
+    """write-checks.probes.tsv + write-checks.tsv → ([(строка, sock, body, ожидание)], lim, allow, [Source])."""
+    decl = PACKAGES["write-checks"]
+    src = Source(root, f"{decl['dir']}/{decl['table']}")
+    table = Source(root, f"{decl['dir']}/write-checks.tsv")
+    trows = [line.split("\t") for line in table.text.split("\n") if line and not line.startswith("#")]
+    if not trows or not {"n", "code", "kind"} <= set(trows[0]):
+        raise GenError(f"{table.rel}: no header with n, code, kind")
+    head = trows[0]
+    checks = {}
+    for cells in trows[1:]:
+        row = dict(zip(head, cells))
+        if not re.fullmatch(r"[1-9][0-9]*", row["n"]) or int(row["n"]) != len(checks) + 1 or \
+                not re.fullmatch(r"[1-5][0-9]{2}", row["code"]) or not re.fullmatch(r"[a-z]+", row["kind"]):
+            raise GenError(f"{table.rel}: n {row.get('n')!r}: n from 1, a code NNN, a kind")
+        checks[int(row["n"])] = (int(row["code"]), row["kind"])
+    lim, allow, rows, header = {}, [], [], None
+    for no, line in enumerate(src.text.split("\n"), 1):
+        where = f"{src.rel}:{no}"
+        if line.startswith("#lim "):
+            m = re.fullmatch(r"#lim ([A-Z][A-Z0-9_]*) (0|[1-9][0-9]*)", line)
+            if not m or m[1] in lim:
+                raise GenError(f"{where}: #lim NAME <integer>, once per name")
+            lim[m[1]] = int(m[2])
+            continue
+        if line.startswith("#allow "):
+            if not re.fullmatch(r"#allow \S+ \S+( \S+)?", line):
+                raise GenError(f"{where}: #allow <sock> <op|*> [<prefix>]")
+            allow.append(line[len("#allow "):])
+            continue
+        if not line or line.startswith("#"):
+            continue
+        cells = line.split("\t")
+        if header is None:
+            if cells != ["n", "case", "sock", "body"]:
+                raise GenError(f"{where}: header must be n, case, sock, body")
+            header = cells
+            continue
+        if len(cells) != 4:
+            raise GenError(f"{where}: {len(cells)} cells, expected 4")
+        n, kind, sock, body = cells
+        if kind not in ("only", "pair", "nopair", "pass") or not re.fullmatch(r"0|[1-9][0-9]*", n) or not sock:
+            raise GenError(f"{where}: n, only|pair|nopair|pass, a socket")
+        n = int(n)
+        if (kind == "pass") != (n == 0) or (n and n not in checks):
+            raise GenError(f"{where}: pass is n 0, any other case names a row of {table.rel}")
+        if kind == "nopair":
+            continue
+        rows.append((no, sock, body, {"n": 0} if n == 0 else {"n": n, "code": checks[n][0], "kind": checks[n][1]}))
+    if not rows or not lim or not allow:
+        raise GenError(f"{src.rel}: no probes, #lim or #allow")
+    return rows, lim, allow, [src, table]
 
 
 # ---------------------------------------------------------------- Go
@@ -335,10 +398,11 @@ def go_rights_tests(rows, src, rights, stages_src, prefix):
 
 VECTORCMD_GO = '''// Package vectorcmd — the unified command of a vector package (the common acceptance README, «The unified command of a
 // vector package»; the wire of the runner cammeta-acceptance, «Единая команда пакета векторов») for the packages of
-// P/01, on top of package vectoradapter. Generated by tools/normgen/gen_tests.py (ADR-0125 № 6).
+// P/01, on top of package vectoradapter (jcs, rights-evaluator — the model's code) and package writecheck (write-checks —
+// the kit's checks). Generated by tools/normgen/gen_tests.py (ADR-0125 № 6).
 //
-// Use: the implementation's subcommand `<binary> vectors {input}` calls os.Exit(vectorcmd.Main(os.Args[2:], os.Stdout,
-// os.Stderr)). {input} is a JSON file {format, package, table, case, variant, cells, files}; the answer on stdout is
+// Use: the binary cmd/vectors of the kit (ADR-0126 addendum (5)), built by the profile's build into bin/vectors; the
+// vector command is `bin/vectors {input}`; its main is os.Exit(vectorcmd.Main(os.Args[1:], os.Stdout, os.Stderr)). {input} is a JSON file {format, package, table, case, variant, cells, files}; the answer on stdout is
 // {exit_code, stdout_b64, stderr_b64} of the native outcome, the outer code is 0; an input out of the wire — outer
 // code 2, empty stdout.
 //
@@ -359,6 +423,7 @@ import (
 	"strings"
 
 	"%(module)s/vectoradapter"
+	"%(module)s/writecheck"
 )
 
 type input struct {
@@ -494,6 +559,41 @@ VECTORCMD_CASES = {
 		h := sha256.Sum256(c)
 		value = map[string]string{"canonical": string(c), "sha256": hex.EncodeToString(h[:])}
 ''',
+    "write-checks": '''	case %(key)s:
+		var lim map[string]int64
+		if err := json.Unmarshal([]byte(cell("lim")), &lim); err != nil {
+			return 0, nil, nil, fmt.Errorf("cells.lim: %%v", err)
+		}
+		var allow []string
+		if err := json.Unmarshal([]byte(cell("allow")), &allow); err != nil {
+			return 0, nil, nil, fmt.Errorf("cells.allow: %%v", err)
+		}
+		var rules [][3]string
+		for _, a := range allow {
+			f := strings.Fields(a)
+			if len(f) != 2 && len(f) != 3 {
+				return 0, nil, nil, fmt.Errorf("cells.allow: %%q is not <sock> <op|*> [<prefix>]", a)
+			}
+			rules = append(rules, [3]string{f[0], f[1], strings.Join(f[2:], "")})
+		}
+		allowed := func(sock, op, key string) bool {
+			for _, r := range rules {
+				if r[0] == sock && (r[1] == "*" || r[1] == op) && strings.HasPrefix(key, r[2]) {
+					return true
+				}
+			}
+			return false
+		}
+		ref, _ := writecheck.Check([]byte(cell("body")), cell("sock"), lim, allowed)
+		switch {
+		case ref == nil:
+			value = map[string]any{"n": 0}
+		case ref.N == 0:
+			return 1, nil, []byte("the body is not JSON by H2.1: " + ref.Reason + "\\n"), nil
+		default:
+			value = map[string]any{"n": ref.N, "code": ref.Code, "kind": ref.Kind}
+		}
+''',
     "rights-evaluator": '''	case %(key)s:
 		allowed, err := vectoradapter.LoadRights(files["rights.json"])
 		if err != nil {
@@ -509,6 +609,19 @@ VECTORCMD_CASES = {
 		}
 ''',
 }
+
+
+MAIN_GO = '''// Command vectors — the vector command of the kit (ADR-0126 addendum (5)): `bin/vectors {input}`.
+package main
+
+import (
+	"os"
+
+	"%(module)s/vectorcmd"
+)
+
+func main() { os.Exit(vectorcmd.Main(os.Args[1:], os.Stdout, os.Stderr)) }
+'''
 
 
 def go_vectorcmd(sources):
@@ -553,6 +666,7 @@ def render(root=ROOT):
     """→ {путь относительно каталога выхода: байты}; GenError — источник вне формы."""
     root = Path(root)
     stages, stages_src = read_stages(root)
+    probes, probe_lim, probe_allow, probe_srcs = read_probes(root)
     jcs, jcs_src = read_jcs(root)
     rights, rights_src, rights_file = read_rights(root)
     files = {
@@ -563,8 +677,16 @@ def render(root=ROOT):
                                                    test_prefix(stages, "jcs")).encode("utf-8"),
         "go/vectortests/rights_eval_test.go": go_rights_tests(rights, rights_src, rights_file, stages_src,
                                                               test_prefix(stages, "rights-evaluator")).encode("utf-8"),
-        "go/vectorcmd/vectorcmd.go": go_vectorcmd([jcs_src, rights_src]).encode("utf-8"),
+        "go/vectorcmd/vectorcmd.go": go_vectorcmd([jcs_src, rights_src] + probe_srcs).encode("utf-8"),
+        "go/cmd/vectors/main.go": gofmt(go_head([]) + "\n" + MAIN_GO % {"module": GO_MODULE}).encode("utf-8"),
     }
+    # Копии ручного пакета kit/go (jsonstrict, writecheck): модуль выхода собирается сам по себе (vectorcmd импортирует
+    # writecheck); в пакет Б они идут из kit/go частью writecheck, не частью tests.
+    for sub in ("jsonstrict", "writecheck"):
+        text = (HERE / "kit/go" / sub / f"{sub}.go").read_text(encoding="utf-8")
+        text = text.replace('"kitmodule/internal/', f'"{GO_MODULE}/')
+        files[f"go/{sub}/{sub}.go"] = gofmt(f"// Code generated by tools/normgen/gen_tests.py: copy of tools/normgen/kit/go/"
+                                            f"{sub}/{sub}.go; DO NOT EDIT.\n\n" + text).encode("utf-8")
     decl = PACKAGES["jcs"]
     base = f"vectors/{decl['package']}"
     case_rows = []
@@ -582,12 +704,22 @@ def render(root=ROOT):
                                              {"rights.json": rights_file.data})
         case_rows.append((f"line-{no}", name, 0, compact("allow" if allow else "deny")))
     files[f"{base}/cases.tsv"] = cases_tsv(decl, [rights_src, rights_file], case_rows)
+    decl = PACKAGES["write-checks"]
+    base = f"vectors/{decl['package']}"
+    case_rows = []
+    shared = {"lim": compact(probe_lim), "allow": compact(probe_allow)}
+    for no, sock, body, want in probes:
+        name = f"line-{no}.json"
+        files[f"{base}/{name}"] = wire_input(decl, no, {"sock": sock, "body": body, **shared}, {})
+        case_rows.append((f"line-{no}", name, 0, compact(want)))
+    files[f"{base}/cases.tsv"] = cases_tsv(decl, probe_srcs, case_rows)
     return files
 
 
 # ---------------------------------------------------------------- часть пакета Б `tests` (ADR-0126 доп. (2) п. 1)
 
-KIT_DIRS = ("vectortests", "vectorcmd")      # заменяются целиком; vectoradapter — реализации, кладётся, только если нет
+KIT_DIRS = ("vectortests", "vectorcmd", "../cmd/vectors")   # заменяются целиком (../cmd/vectors — <dst>/01-store/cmd/vectors);
+# vectoradapter — реализации, кладётся, только если нет
 KIT_IMPORT = f'"{GO_MODULE}/'
 
 
@@ -596,13 +728,17 @@ def kit_files(module, out=DEFAULT_OUT):
     fresh = render(ROOT)
     parts = []
     for rel in sorted(fresh):
-        if not rel.startswith("go/") or rel.split("/")[1] not in KIT_DIRS + ("vectoradapter",):
+        if rel == "go/cmd/vectors/main.go":
+            pass
+        elif not rel.startswith("go/") or rel.split("/")[1] not in KIT_DIRS + ("vectoradapter",):
             continue
         kept = Path(out) / rel
         if not kept.is_file() or kept.read_bytes() != fresh[rel]:
             raise GenError(f"{kept} is stale: run tools/normgen/gen_tests.py")
         data = fresh[rel].replace(KIT_IMPORT.encode(), f'"{module}/internal/'.encode())
         sub, name = rel.split("/")[1], rel.split("/")[2]
+        if rel == "go/cmd/vectors/main.go":
+            sub, name = "../cmd/vectors", "main.go"   # <dst>/01-store/cmd/vectors — бинарь векторов (доп. (5) ADR-0126)
         parts.append((sub, name, data, "generated", str(kept.relative_to(ROOT)), sub == "vectoradapter"))
     return parts
 
@@ -615,6 +751,7 @@ KIT_MD = """
 | `vectoradapter` | `{module}/internal/vectoradapter` | **yours**: a generated stub you edit (the kit never overwrites it) |
 | `vectortests` | `{module}/internal/vectortests` | generated from `vectors/jcs`, `vectors/rights-evaluator`, `forms/stages.tsv` — Go tests only |
 | `vectorcmd` | `{module}/internal/vectorcmd` | generated: the wire of the unified vector command |
+| `cmd/vectors` | `{module}/cmd/vectors` | generated: the vector binary, `main` is `vectorcmd.Main` |
 
 ### The adapter — `internal/vectoradapter` (you write it)
 
@@ -635,11 +772,16 @@ tests fail with «not implemented» until you connect your code.
   `LoadRights(rights.json)`, then `allowed(role, action, key)` is `expect` (`allow` = true).
 - Run one stage: `go test -run '^TestJcs_' ./...`, `go test -run '^TestRightsEval_' ./...`.
 
-### The vector command (`internal/vectorcmd`)
+### The vector command (`cmd/vectors`, `internal/vectorcmd`)
 
-The gates `vectors:jcs` and `vectors:rights-evaluator` run your binary as `<binary> vectors {input}` (the exact command
-is in your task). Add the subcommand: `os.Exit(vectorcmd.Main(os.Args[2:], os.Stdout, os.Stderr))`. It reads the
-input file, calls the same adapter and prints the answer; you write nothing else for it.
+The kit's own binary `cmd/vectors` is the vector command of all three packages. The profile builds it in `build`
+(`go build -o bin/vectors ./cmd/vectors` next to your daemon, artifact `vectors: bin/vectors`); the vector command is
+`bin/vectors {input}` (nothing is built during acceptance: the tree is sealed). Your daemon needs no `vectors`
+subcommand.
+
+- `vectors:write-checks` (stage `model`) — the kit's checks (`writecheck.Check`), none of your code;
+- `vectors:jcs`, `vectors:rights-evaluator` — your adapter `internal/vectoradapter` (`Canonical`, `LoadRights`):
+  until you connect it they answer «not implemented».
 """
 
 
