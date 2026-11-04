@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "born": {
-   "description": "born строки единицы при запуске держателя (договор проверки строки, born); пустая строка — строка единицы без born",
+   "description": "born of the unit row at the start of the holder (the row check contract, born); an empty string — a unit row without born",
    "type": "string",
    "pattern": "^(?:([0-9a-f]{32})?)$",
    "x-codec": [
@@ -12,7 +12,7 @@
   },
   "revision": {
    "$ref": "#/$defs/common.pos53",
-   "description": "revision строки единицы при запуске держателя; десятичное целое ≥ 1",
+   "description": "revision of the unit row at the start of the holder; a decimal integer ≥ 1",
    "x-whole": true,
    "x-codec": [
     "integer"
@@ -20,14 +20,14 @@
   },
   "epoch": {
    "$ref": "#/$defs/common.pos53",
-   "description": "эпоха держателя, под которой записано (P/03.2 Н1.5); при чтении не сверяется",
+   "description": "the holder's epoch under which it was written (P/03.2 Н1.5); not checked on reading",
    "x-whole": true,
    "x-codec": [
     "integer"
    ]
   },
   "value": {
-   "description": "канонический JSON значения по схеме unit.state.<имя> манифеста; не по схеме — состояние не действует (P/03.6 Н1.7 unreadable)",
+   "description": "the canonical JSON of the value by the schema unit.state.<имя> of the manifest; not by the schema — the state does not take effect (P/03.6 Н1.7 unreadable)",
    "x-encoding": "jcs",
    "x-codec": [
     "any"

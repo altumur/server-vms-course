@@ -38,7 +38,7 @@ CYR = re.compile(r"[А-Яа-яЁё]")
 ALLOWED_CYR = [SPAN, re.compile(r"«[^»\n]*»"), NORM_NO, LINK,
                re.compile(r"[\wА-Яа-яЁё.-]*[А-Яа-яЁё][\wА-Яа-яЁё.-]*\.(?:md|tsv|yaml|json)\b"),   # имена файлов
                re.compile(r"(?<![\w])М[0-9]+[A-Z]?(?:_[A-Za-z]+)?(?:/[0-9]+)?"),
-               re.compile(r"(?<![\w])[А-ЯЁ][0-9]+(?![\w])"),
+               re.compile(r"(?<![\w-])[А-ЯЁ]-?[0-9]+[а-я]?(?![\w])|(?<![\w])[0-9]+[а-я](?![\w])"),   # id ревью А1, С-1; шаги 3б, 4а
                re.compile(r"<[а-яё][а-яё_-]*>")]               # заполнители кода — те же, что в русском: <роль>, <форма>, <т>   # id находок ревью по-русски: А1, А10
 
 
@@ -77,7 +77,10 @@ def links(body, base, root):
     out = set()
     for target in LINK.findall(FENCE.sub("", body)):
         path = target.split("#", 1)[0]
-        if not path or re.match(r"[a-z]+:", path):
+        if not path:                                   # a heading of the same file: its anchor follows the language
+            out.add("#")
+            continue
+        if re.match(r"[a-z]+:", path):
             out.add(target)
             continue
         whole = os.path.normpath(base / path)

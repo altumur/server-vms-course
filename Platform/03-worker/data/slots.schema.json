@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "holder": {
-   "description": "экземпляр держателя `<коробка>:<pid>:<6 hex случайности>` или \"\"; коробка держателя — часть до первого «:»; поля нет — как \"\" (разбор ревью стадии B 3–5, № 6)",
+   "description": "the holder's instance `<коробка>:<pid>:<6 hex случайности>` or \"\"; the holder's box — the part before the first «:»; no field — as \"\" (analysis of review of stage B 3–5, № 6)",
    "type": "string",
    "x-codec": [
     "string"
@@ -11,20 +11,20 @@
   },
   "until": {
    "$ref": "#/$defs/common.time",
-   "description": "часы писателя + 45; показ и расхождение, не свежесть: held и lapsed — по возрасту наблюдаемой версии у судьи; конечный until в прошлом или будущем не делает строку порванной",
+   "description": "the writer's clock + 45; display and divergence, not freshness: held and lapsed — by the age of the observed version at the judge; a finite until in the past or in the future does not make the row torn",
    "x-codec": [
     "time"
    ]
   },
   "released": {
-   "description": "\"true\" | \"false\" | \"taking\" — первая запись захвата (Н3 «захватить» шаг 3); всякое «released» без значения — released ≠ \"false\"; поля нет — как released ≠ \"false\": не held, для захвата — как released (разбор ревью стадии B 3–5, № 6)",
+   "description": "\"true\" | \"false\" | \"taking\" — the first write of a capture (Н3 «capture» step 3); any «released» without a value — released ≠ \"false\"; no field — as released ≠ \"false\": not held, for a capture — as released (analysis of review of stage B 3–5, № 6)",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "gen": {
-   "description": "поколение: у отсутствующей строки исходное — 0, +1 на каждый захват, никогда не убывает; у существующей строки отсутствие или недопустимость не заменяются нулём",
+   "description": "the generation: for an absent row the initial one is 0, +1 for each capture, never decreases; for an existing row, absence or invalidity is not replaced by zero",
    "x-whole": true,
    "type": "integer",
    "x-integer": true,
@@ -34,7 +34,7 @@
    ]
   },
   "server": {
-   "description": "сервер держателя, пишется при каждом захвате и продлении; \"\" — сервер неизвестен (глава 3.4 Н1.1, ADR-0029); \"\" — допуск читателя: воркер с SERVER_NAME по P/02.4 Н1.2 его не пишет (W03-G01)",
+   "description": "the holder's server, written at each capture and renewal; \"\" — the server is unknown (chapter 3.4 Н1.1, ADR-0029); \"\" — a reader's tolerance: a worker with SERVER_NAME by P/02.4 Н1.2 does not write it (W03-G01)",
    "type": "string",
    "x-codec": [
     "string"
@@ -58,7 +58,7 @@
   ]
  },
  "additionalProperties": {
-  "description": "поля сверх Н1.4: норма их не называет; захват пишет ровно пять полей Н1.4, продление и отдача переписывают строку с прочими полями ({…строка, …}, Н3 «продлить», «отдать»)",
+  "description": "fields beyond Н1.4: the norm does not name them; a capture writes exactly the five fields of Н1.4, renewal and release rewrite the row with the other fields ({…строка, …}, Н3 «renew», «release»)",
   "x-codec": [
    "any"
   ]

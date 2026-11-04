@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/03.2: стенд testsub под раннером — слот, никто, имя. Перенесено из М10/05 (стадия B). Формат и директивы — README.
+# Acceptance of P/03.2: the testsub stand under the runner — slot, nobody, name. Moved from М10/05 (stage B). Format and directives — README.
 01-start	1	@start controller	ok
 01-start	2	@start worker w-1	ok
 01-start	3	@until 20 store GET /v1/get?key=testsub/slots/w-1	200 {"items": {"holder": "$h1", "until": "$u0", "released": "false", "gen": "1", "server": "srv-a"}}
@@ -64,7 +64,7 @@ scenario	step	request	expect
 11-labels-off-alphabet	3	store GET /v1/get?key=testsub/slots/w-1	200 {"items": null}
 11-labels-off-alphabet	4	@start worker w-2 labels=a,b	ok
 11-labels-off-alphabet	5	@until 20 store GET /v1/get?key=testsub/slots/w-2	200 {"items": {"released": "false"}}
-# 14–23 (аудит покрытия P/03, 2026-10-30): края строки слота, эпоха, схема, выведенный сервер, отказы старта, порванная строка места. Подготовка строк мимо писателя — дверь admin.
+# 14–23 (coverage audit P/03, 2026-10-30): edges of the slot row, epoch, schema, a decommissioned server, start refusals, a torn place row. Rows are prepared bypassing the writer — the admin door.
 14-slot-gen-unreadable	1	admin POST /v1/write {"id":"e14a","op":"put","key":"testsub/slots/w-1","items":{"holder":"","until":"4102444800","released":"true","gen":"x"},"cas":""}	200 {"index": "$v"}
 14-slot-gen-unreadable	2	@start resource	ok
 14-slot-gen-unreadable	3	@start worker w-1	ok
@@ -150,7 +150,7 @@ scenario	step	request	expect
 23-own-place-torn-hold	11	@sleep 60	ok
 23-own-place-torn-hold	12	store GET /v1/get?key=testsub2/holds/sh1	200 {"index": "$v", "items": {"gen": "x"}}
 23-own-place-torn-hold	13	resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"shelf": "sh1"}
-# 24-store-silence (аудит покрытия P/03, C11): хранилище молчит роли testsubworker 10 с (дольше шага аренды, короче окна аренды) — слот за воркером; после — продление тем же держателем, аренда подтверждена, эпоха и размещение прежние
+# 24-store-silence (coverage audit P/03, C11): the store is silent to the role testsubworker for 10 s (longer than the lease step, shorter than the lease window) — the slot stays with the worker; afterwards — renewal by the same holder, the lease is confirmed, the epoch and the placement are as before
 24-store-silence	1	@start resource	ok
 24-store-silence	2	@start controller	ok
 24-store-silence	3	@start worker w-1	ok
@@ -166,7 +166,7 @@ scenario	step	request	expect
 24-store-silence	13	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"status": [{"id": "c24", "phase": "running", "lease": "@absent"}]}
 24-store-silence	14	store GET /v1/get?key=testsub/epoch/c24	200 {"index": "$e1", "items": {"epoch": "1"}}
 24-store-silence	15	store GET /v1/get?key=testsub/placement/c24	200 {"items": {"worker": "w-1"}}
-# 26–34 (аудит покрытия P/03, второй проход Gemini, 2026-10-30): пол эпох, метки соперника, свободные формы слота, вывод сервера, чистка вкладов, порванное чужое место. Подготовка строк мимо писателя — дверь admin.
+# 26–34 (coverage audit P/03, second pass of Gemini, 2026-10-30): the epoch floor, contender marks, free forms of the slot, server decommission, cleanup of contributions, a torn place of another. Rows are prepared bypassing the writer — the admin door.
 26-epoch-floor	1	@start resource	ok
 26-epoch-floor	2	@start controller	ok
 26-epoch-floor	3	admin POST /v1/write {"op":"floor","floor":4294967296,"id":"f26a"}	200

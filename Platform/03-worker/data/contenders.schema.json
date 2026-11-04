@@ -3,42 +3,42 @@
  "type": "object",
  "properties": {
   "name": {
-   "description": "искомое имя; при поиске без заданного имени — \"-\"",
+   "description": "the name sought; in a search without a given name — \"-\"",
    "type": "string"
   },
   "state": {
-   "description": "refused — NameOnAnotherBox по таблице захвата Н3 «захватить», включая занятую неотданную lapsed-строку другой коробки; nameless — своего прежнего захвата больше нет; waiting — своего захвата ещё не было и кандидата нет без NameOnAnotherBox; приоритет refused выше двух остальных",
+   "description": "refused — NameOnAnotherBox by the capture table of Н3 «capture», including an occupied, not released lapsed row of another box; nameless — its own former capture is no longer there; waiting — there has been no own capture yet and there is no candidate without NameOnAnotherBox; refused has priority over the other two",
    "type": "string"
   },
   "box": {
-   "description": "коробка воркера (Н3 «старт()» шаг 2)",
+   "description": "the worker's box (Н3 «start()» step 2)",
    "type": "string"
   },
   "hostname": {
-   "description": "имя узла воркера",
+   "description": "the name of the worker's node",
    "type": "string"
   },
   "server": {
-   "description": "сервер воркера",
+   "description": "the worker's server",
    "type": "string"
   },
   "instance": {
-   "description": "экземпляр воркера `<коробка>:<pid>:<6 hex>`",
+   "description": "the worker instance `<коробка>:<pid>:<6 hex>`",
    "type": "string"
   },
   "holder": {
-   "description": "текущий держатель искомого имени; при поиске без заданного имени — \"\"",
+   "description": "the current holder of the name sought; in a search without a given name — \"\"",
    "type": "string"
   },
   "holder_box": {
-   "description": "коробка текущего держателя",
+   "description": "the box of the current holder",
    "type": "string"
   },
   "since": {
-   "description": "момент входа в состояние; сохраняется в пределах одного состояния; форма времени нормой «Время» не названа"
+   "description": "the moment of entering the state; kept within one state; the form of the time is not named by the norm «Время»"
   },
   "at": {
-   "description": "момент записи метки (переписывается каждые CONTEND_EVERY); у читателя — показ, свежесть по версии (договор наблюдения «Свежесть метки соперника»); форма времени нормой «Время» не названа"
+   "description": "the moment the mark was written (rewritten every CONTEND_EVERY); for the reader — display, freshness by version (the observation contract «Свежесть метки соперника»); the form of the time is not named by the norm «Время»"
   }
  },
  "propertyNames": {
@@ -63,7 +63,7 @@
   ]
  },
  "additionalProperties": {
-  "description": "поля сверх Н1.4а: норма их не называет; писатель пишет ровно поля Н1.4а"
+  "description": "fields beyond Н1.4а: the norm does not name them; the writer writes exactly the fields of Н1.4а"
  },
  "$defs": {
   "common.book_missing": {

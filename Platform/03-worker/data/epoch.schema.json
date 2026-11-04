@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "epoch": {
-   "description": "десятичное целое ≥ 1, < 2^53 (ADR-0070); растёт на 1 при каждом взятии единицы воркером: max(текущая, floor) + 1 с cas, при max = 2^53 − 1 — отказ выдачи до записи (разбор ревью стадии B 3–5, № 8); перезапуск той же единицы тем же держателем по смене revision эпоху не меняет; строка не удаляется",
+   "description": "a decimal integer ≥ 1, < 2^53 (ADR-0070); grows by 1 each time a worker takes the unit: max(current, floor) + 1 with cas, at max = 2^53 − 1 — the issue is refused before the write (analysis of review of stage B 3–5, № 8); a restart of the same unit by the same holder on a change of revision does not change the epoch; the row is not deleted",
    "x-whole": true,
    "type": "integer",
    "x-integer": true,

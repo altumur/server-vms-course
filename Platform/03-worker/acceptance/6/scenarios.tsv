@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/03.6: стенд testsub с ресурсом srv-a; сценарии 05 и 07 перенесены из М10/08 (стадия B). Формат — README.
+# Acceptance of P/03.6: the testsub stand with the resource srv-a; scenarios 05 and 07 moved from М10/08 (stage B). Format — README.
 05-request-performed	1	@start controller	ok
 05-request-performed	2	@start worker w-1	ok
 05-request-performed	3	console POST /counters {"name": "c5", "start": 1}	201
@@ -52,7 +52,7 @@ scenario	step	request	expect
 07-append-by-data	34	console POST /testsub2/requests {"unit": "t1", "from": 8, "to": 8, "action": "recount"}	@oneof 202 {"queued": "t1-8-8"} | 200 {"answered": "@any"}
 07-append-by-data	35	@until 30 store GET /v1/get?key=objects/testsub2/marks/t1	200 {"items": {"count": "6", "ranges": "0-3,7-8"}}
 07-append-by-data	36	@until 90 store GET /v1/get?key=testsub2/requests/t1-8-8	200 {"items": null}
-# 08-orders (ADR-0091 п. 1): учебный заказчик testsub (Н5) — счётчик со start ≥ 1000 заказывает testsub2/tallies/testsub-<id>; занятая строка не пишется; перезапуск воркера — новое событие, продление; исходы в пульсе
+# 08-orders (ADR-0091 item 1): the training customer testsub (Н5) — a counter with start ≥ 1000 orders testsub2/tallies/testsub-<id>; an occupied row is not written; a restart of the worker — a new event, renewal; outcomes in the heartbeat
 08-orders	1	@start controller	ok
 08-orders	2	@start worker w-1	ok
 08-orders	3	@as console store POST /v1/write {"id":"a3","op":"put","key":"testsub2/tallies/testsub-c9","items":{"id":"testsub-c9","revision":"1","name":"testsub-c9","of":"c9"},"cas":""}	200
@@ -68,7 +68,7 @@ scenario	step	request	expect
 08-orders	13	@start worker w-1	ok
 08-orders	14	@until 60 store GET /v1/get?key=testsub2/tallies/testsub-c8	200 {"items": {"revision": "2", "made": "~\"by\":\"testsub\""}}
 08-orders	15	@until 30 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"creates": {"extended": 1, "taken": 1}}
-# 09-state (ADR-0091 п. 3): учебный держатель testsub2 при запуске пишет состояние result {state: open} под своей эпохой; консоль показывает действующее
+# 09-state (ADR-0091 item 3): the training holder testsub2 at start writes the state result {state: open} under its own epoch; the console shows the effective one
 09-state	1	@start controller testsub2	ok
 09-state	2	@start worker testsub2 t-1	ok
 09-state	3	@as console store POST /v1/write {"id":"b3","op":"put","key":"testsub2/shelves/sh1","items":{"name":"sh1","zone":"z1","server":"srv-a","kind":"plain","admits":"true","enabled":"true","size":"1"},"cas":""}	200
@@ -77,7 +77,7 @@ scenario	step	request	expect
 09-state	6	@until 60 @as testsub2worker store GET /v1/get?key=testsub2/epoch/t1	200 {"items": {"epoch": "1"}}
 09-state	7	@until 30 store GET /v1/get?key=testsub2/state/result/t1	200 {"items": {"revision": "1", "epoch": "1", "born": "~", "value": "{\"state\":\"open\"}"}}
 09-state	8	console2 GET /tallies	200 {"configured": [{"name": "t1", "state": {"result": {"state": "open"}}}]}
-# 10-slot-swap (аудит покрытия P/03, 2026-10-30): строку слота держателя переписывают на чужой holder дверью admin (без cas) — воркер теряет имя: одна name_taken, пульса и записей больше нет, строка состояния прежняя
+# 10-slot-swap (coverage audit P/03, 2026-10-30): the holder's slot row is rewritten to another holder by the admin door (without cas) — the worker loses the name: one name_taken, no more heartbeat and writes, the state row is as before
 10-slot-swap	1	@start controller testsub2	ok
 10-slot-swap	2	@start worker testsub2 t-1	ok
 10-slot-swap	3	admin POST /v1/write {"id":"e10a","op":"put","key":"testsub2/shelves/sh1","items":{"name":"sh1","zone":"z1","server":"srv-a","kind":"plain","admits":"true","enabled":"true","size":"1"},"cas":""}	200
@@ -94,7 +94,7 @@ scenario	step	request	expect
 10-slot-swap	14	resource GET /v1/objects/testsub2/heartbeats/t-1?scope=local	200 {"ts": "$t"}
 10-slot-swap	15	store GET /v1/get?key=testsub2/state/result/t1	200 {"index": "$s", "items": {"epoch": "1"}}
 10-slot-swap	16	console GET /events?unit=audit/testsub2worker&kind=worker.name_taken	200 {"events": [{"kind": "worker.name_taken", "class": "alarm"}]}
-# 38–43 (аудит покрытия P/03, второй проход Gemini, 2026-10-30): взгляд держателя до вызова (срок вышел, срок дальше most_valid, нечитаемая строка просьбы), заказ над надгробием и без перемен, нечитаемое состояние. Строки просьб, надгробия и состояние — дверью admin.
+# 38–43 (coverage audit P/03, second pass of Gemini, 2026-10-30): the holder's view before the call (the deadline has passed, the deadline beyond most_valid, an unreadable request row), an order over a tombstone and without changes, an unreadable state. Request rows, tombstones and the state — by the admin door.
 38-request-expired-holder	1	@start resource	ok
 38-request-expired-holder	2	@start controller	ok
 38-request-expired-holder	3	@start worker w-1	ok
