@@ -1,95 +1,95 @@
 case	func	arg	tz	t	expect	why
-w-open	in_effect	office	UTC	2026-11-02T09:00:00Z	true	понедельник, начало входит
-w-before	in_effect	office	UTC	2026-11-02T08:59:59Z	false	минута раньше начала
-w-last-sec	in_effect	office	UTC	2026-11-02T17:59:59.9Z	true	дробь секунды и секунды отбрасываются
-w-close	in_effect	office	UTC	2026-11-02T18:00:00Z	false	конец не входит
-w-gap	in_effect	office	UTC	2026-11-03T12:30:00Z	false	разрыв между интервалами вторника
-w-empty-day	in_effect	office	UTC	2026-11-04T10:00:00Z	false	среда пуста
-w-sunday	in_effect	holidays	UTC	2026-11-08T10:30:00Z	true	воскресенье — седьмой день
-n-evening	in_effect	night-shift	UTC	2026-11-04T23:00:00Z	true	среда, до полуночи
-n-carry	in_effect	night-shift	UTC	2026-11-05T05:59:00Z	true	четверг: хвост интервала среды
-n-carry-end	in_effect	night-shift	UTC	2026-11-05T06:00:00Z	false	хвост кончился
-n-no-carry	in_effect	night-shift	UTC	2026-11-04T05:00:00Z	false	среда утром: у вторника интервала нет
-d-24	in_effect	whole-day	UTC	2026-11-05T23:59:00Z	true	24:00 — конец суток
-d-equal	in_effect	whole-day	UTC	2026-11-07T07:59:00Z	true	«до» равно «с» — 24 часа, суббота: хвост пятницы
-d-equal-end	in_effect	whole-day	UTC	2026-11-07T08:00:00Z	false	хвост равных границ кончился
+w-open	in_effect	office	UTC	2026-11-02T09:00:00Z	true	Monday, the start is included
+w-before	in_effect	office	UTC	2026-11-02T08:59:59Z	false	a minute before the start
+w-last-sec	in_effect	office	UTC	2026-11-02T17:59:59.9Z	true	the fraction of a second and the seconds are dropped
+w-close	in_effect	office	UTC	2026-11-02T18:00:00Z	false	the end is not included
+w-gap	in_effect	office	UTC	2026-11-03T12:30:00Z	false	the gap between Tuesday's intervals
+w-empty-day	in_effect	office	UTC	2026-11-04T10:00:00Z	false	Wednesday is empty
+w-sunday	in_effect	holidays	UTC	2026-11-08T10:30:00Z	true	Sunday is the seventh day
+n-evening	in_effect	night-shift	UTC	2026-11-04T23:00:00Z	true	Wednesday, before midnight
+n-carry	in_effect	night-shift	UTC	2026-11-05T05:59:00Z	true	Thursday: the tail of Wednesday's interval
+n-carry-end	in_effect	night-shift	UTC	2026-11-05T06:00:00Z	false	the tail is over
+n-no-carry	in_effect	night-shift	UTC	2026-11-04T05:00:00Z	false	Wednesday morning: Tuesday has no interval
+d-24	in_effect	whole-day	UTC	2026-11-05T23:59:00Z	true	24:00 is the end of the day
+d-equal	in_effect	whole-day	UTC	2026-11-07T07:59:00Z	true	«to» equals «from» — 24 hours, Saturday: the tail of Friday
+d-equal-end	in_effect	whole-day	UTC	2026-11-07T08:00:00Z	false	the tail of equal bounds is over
 b-always	in_effect	always	UTC	2026-11-02T03:00:00Z	true	
 b-never	in_effect	never	UTC	2026-11-02T03:00:00Z	false	
-b-never-override	in_effect	never-but-sanitary	UTC	2026-06-11T03:00:00Z	true	особый день сильнее вида, даже never
-g-range-wrap-a	in_effect	holidays	UTC	2026-12-31T10:30:00Z	false	ежегодный диапазон через новый год, декабрь
-g-range-wrap-b	in_effect	holidays	UTC	2027-01-02T10:30:00Z	false	тот же диапазон, январь другого года
-g-range-out	in_effect	holidays	UTC	2027-01-03T10:30:00Z	true	диапазон кончился, обычный день
-g-range-full	in_effect	holidays	UTC	2026-06-11T03:00:00Z	true	разовый диапазон, full
-g-range-year	in_effect	holidays	UTC	2027-06-11T03:00:00Z	false	разовый диапазон другого года не действует
-g-to-empty	in_effect	holidays	UTC	2026-07-01T12:30:00Z	true	пустое to — один день, custom
-g-to-empty-next	in_effect	holidays	UTC	2026-07-02T12:30:00Z	false	следующий день не в группе
-g-same	in_effect	holidays	UTC	2026-11-13T10:30:00Z	true	вторая пятница, same dow=1: неделя понедельника
-g-ord-not	in_effect	holidays	UTC	2026-11-20T10:30:00Z	true	третья пятница не в группе — обычные интервалы
-g-last-custom	in_effect	holidays	UTC	2026-03-29T23:30:00Z	true	последнее воскресенье марта, custom через полночь
-g-last-carry	in_effect	holidays	UTC	2026-03-30T00:30:00Z	true	хвост особого дня идёт на следующий день
-g-last-not	in_effect	holidays	UTC	2026-03-22T23:30:00Z	false	предпоследнее воскресенье
-g-fifth	in_effect	holidays	UTC	2026-11-30T10:30:00Z	false	пятый понедельник ноября 2026, none
+b-never-override	in_effect	never-but-sanitary	UTC	2026-06-11T03:00:00Z	true	a special day is stronger than the kind, even never
+g-range-wrap-a	in_effect	holidays	UTC	2026-12-31T10:30:00Z	false	a yearly range across the new year, December
+g-range-wrap-b	in_effect	holidays	UTC	2027-01-02T10:30:00Z	false	the same range, January of another year
+g-range-out	in_effect	holidays	UTC	2027-01-03T10:30:00Z	true	the range is over, an ordinary day
+g-range-full	in_effect	holidays	UTC	2026-06-11T03:00:00Z	true	a one-off range, full
+g-range-year	in_effect	holidays	UTC	2027-06-11T03:00:00Z	false	a one-off range of another year does not apply
+g-to-empty	in_effect	holidays	UTC	2026-07-01T12:30:00Z	true	an empty to — one day, custom
+g-to-empty-next	in_effect	holidays	UTC	2026-07-02T12:30:00Z	false	the next day is not in the group
+g-same	in_effect	holidays	UTC	2026-11-13T10:30:00Z	true	the second Friday, same dow=1: Monday's week
+g-ord-not	in_effect	holidays	UTC	2026-11-20T10:30:00Z	true	the third Friday is not in the group — the ordinary intervals
+g-last-custom	in_effect	holidays	UTC	2026-03-29T23:30:00Z	true	the last Sunday of March, custom across midnight
+g-last-carry	in_effect	holidays	UTC	2026-03-30T00:30:00Z	true	the tail of a special day goes on to the next day
+g-last-not	in_effect	holidays	UTC	2026-03-22T23:30:00Z	false	the second-to-last Sunday
+g-fifth	in_effect	holidays	UTC	2026-11-30T10:30:00Z	false	the fifth Monday of November 2026, none
 t-date	in_effect	days	UTC	2026-05-09T21:00:00Z	true	
-t-date-carry	in_effect	days	UTC	2026-05-10T01:00:00Z	true	хвост даты
+t-date-carry	in_effect	days	UTC	2026-05-10T01:00:00Z	true	the tail of the date
 t-date-other	in_effect	days	UTC	2026-05-11T21:00:00Z	false	
-c-first	in_effect	shifts	UTC	2026-10-01T09:00:00Z	true	день 0 цикла
-c-second-carry	in_effect	shifts	UTC	2026-10-03T07:00:00Z	true	день 2 цикла: хвост дня 1
-c-empty	in_effect	shifts	UTC	2026-10-04T09:00:00Z	false	день 3 пуст
-c-wrap	in_effect	shifts	UTC	2026-10-05T09:00:00Z	true	снова день 0
-c-before-start	in_effect	shifts	UTC	2026-09-27T09:00:00Z	true	до start: остаток по модулю положителен, день 0
-v-before	in_effect	limited	UTC	2026-02-09T23:00:00Z	false	до срока
+c-first	in_effect	shifts	UTC	2026-10-01T09:00:00Z	true	day 0 of the cycle
+c-second-carry	in_effect	shifts	UTC	2026-10-03T07:00:00Z	true	day 2 of the cycle: the tail of day 1
+c-empty	in_effect	shifts	UTC	2026-10-04T09:00:00Z	false	day 3 is empty
+c-wrap	in_effect	shifts	UTC	2026-10-05T09:00:00Z	true	day 0 again
+c-before-start	in_effect	shifts	UTC	2026-09-27T09:00:00Z	true	before start: the remainder modulo is positive, day 0
+v-before	in_effect	limited	UTC	2026-02-09T23:00:00Z	false	before the validity period
 v-first	in_effect	limited	UTC	2026-02-10T23:00:00Z	true	
-v-no-carry-in	in_effect	limited	UTC	2026-02-10T01:00:00Z	false	хвост дня до срока не приходит
-v-last-carry	in_effect	limited	UTC	2026-02-13T01:00:00Z	true	день после срока: хвост последнего дня срока приходит
-v-after	in_effect	limited	UTC	2026-02-13T23:00:00Z	false	после срока
-z-msk	in_effect	office	Europe/Moscow	2026-11-02T06:00:00Z	true	09:00 по Москве
-z-msk-out	in_effect	office	Europe/Moscow	2026-11-02T15:00:00Z	false	18:00 по Москве
-z-half	in_effect	office	Asia/Kolkata	2026-11-02T03:30:00Z	true	сдвиг +5:30
-z-day-edge	in_effect	office	Pacific/Auckland	2026-11-01T20:00:00Z	true	UTC воскресенье, местный понедельник 09:00
+v-no-carry-in	in_effect	limited	UTC	2026-02-10T01:00:00Z	false	the tail of the day before the validity period does not come in
+v-last-carry	in_effect	limited	UTC	2026-02-13T01:00:00Z	true	the day after the validity period: the tail of its last day comes in
+v-after	in_effect	limited	UTC	2026-02-13T23:00:00Z	false	after the validity period
+z-msk	in_effect	office	Europe/Moscow	2026-11-02T06:00:00Z	true	09:00 Moscow time
+z-msk-out	in_effect	office	Europe/Moscow	2026-11-02T15:00:00Z	false	18:00 Moscow time
+z-half	in_effect	office	Asia/Kolkata	2026-11-02T03:30:00Z	true	offset +5:30
+z-day-edge	in_effect	office	Pacific/Auckland	2026-11-01T20:00:00Z	true	Sunday in UTC, local Monday 09:00
 s-gap-before	in_effect	dst-gap	America/New_York	2026-03-08T06:59:00Z	false	01:59 EST
-s-gap-a	in_effect	dst-gap	America/New_York	2026-03-08T07:00:00Z	false	стрелки на 03:00: 02:15–02:45 в этот день нет
+s-gap-a	in_effect	dst-gap	America/New_York	2026-03-08T07:00:00Z	false	clocks jump to 03:00: 02:15–02:45 do not exist on this day
 s-gap-b	in_effect	dst-gap	America/New_York	2026-03-08T07:30:00Z	false	03:30 EDT
-s-gap-next	in_effect	dst-gap	America/New_York	2026-03-09T06:30:00Z	true	назавтра 02:30 есть
-s-over-first	in_effect	dst-overlap	America/New_York	2026-11-01T05:30:00Z	true	01:30 EDT — первый раз
-s-over-second	in_effect	dst-overlap	America/New_York	2026-11-01T06:30:00Z	true	01:30 EST — второй раз, интервал действует снова
-s-over-between	in_effect	dst-overlap	America/New_York	2026-11-01T06:00:00Z	false	01:00 EST: стенные 01:00 вне интервала
-s-msk-none	in_effect	office	Europe/Moscow	2026-03-30T06:00:00Z	true	пояс без переходов
-a-msk-rise	sun	{"date":"2026-06-21","lat":55.75,"lon":37.62,"utc_offset_hours":3,"event":"rise"}	-	-	224	Москва, солнцестояние
+s-gap-next	in_effect	dst-gap	America/New_York	2026-03-09T06:30:00Z	true	the next day 02:30 exists
+s-over-first	in_effect	dst-overlap	America/New_York	2026-11-01T05:30:00Z	true	01:30 EDT — the first time
+s-over-second	in_effect	dst-overlap	America/New_York	2026-11-01T06:30:00Z	true	01:30 EST — the second time, the interval applies again
+s-over-between	in_effect	dst-overlap	America/New_York	2026-11-01T06:00:00Z	false	01:00 EST: wall-clock 01:00 is outside the interval
+s-msk-none	in_effect	office	Europe/Moscow	2026-03-30T06:00:00Z	true	a zone without clock changes
+a-msk-rise	sun	{"date":"2026-06-21","lat":55.75,"lon":37.62,"utc_offset_hours":3,"event":"rise"}	-	-	224	Moscow, solstice
 a-msk-set	sun	{"date":"2026-06-21","lat":55.75,"lon":37.62,"utc_offset_hours":3,"event":"set"}	-	-	1278	
 a-msk-rise-w	sun	{"date":"2026-12-21","lat":55.75,"lon":37.62,"utc_offset_hours":3,"event":"rise"}	-	-	537	
 a-msk-set-w	sun	{"date":"2026-12-21","lat":55.75,"lon":37.62,"utc_offset_hours":3,"event":"set"}	-	-	958	
-a-eq-rise	sun	{"date":"2026-03-20","lat":0,"lon":0,"utc_offset_hours":0,"event":"rise"}	-	-	364	экватор, равноденствие
+a-eq-rise	sun	{"date":"2026-03-20","lat":0,"lon":0,"utc_offset_hours":0,"event":"rise"}	-	-	364	equator, equinox
 a-eq-set	sun	{"date":"2026-03-20","lat":0,"lon":0,"utc_offset_hours":0,"event":"set"}	-	-	1091	
-a-south	sun	{"date":"2026-01-15","lat":-33.87,"lon":151.21,"utc_offset_hours":11,"event":"rise"}	-	-	359	южное полушарие, Сидней
-a-west	sun	{"date":"2026-07-04","lat":40.71,"lon":-74.01,"utc_offset_hours":-4,"event":"set"}	-	-	1231	западная долгота
-a-leap	sun	{"date":"2028-12-31","lat":55.75,"lon":37.62,"utc_offset_hours":3,"event":"rise"}	-	-	539	високосный год, день 366
-a-polar-day	sun	{"date":"2026-06-21","lat":78.22,"lon":15.65,"utc_offset_hours":1,"event":"rise"}	-	-	day	полярный день
-a-polar-night	sun	{"date":"2026-12-21","lat":78.22,"lon":15.65,"utc_offset_hours":1,"event":"set"}	-	-	night	полярная ночь
-a-day-in	in_effect	day-msk	Europe/Moscow	2026-06-21T09:00:00Z	true	полдень
+a-south	sun	{"date":"2026-01-15","lat":-33.87,"lon":151.21,"utc_offset_hours":11,"event":"rise"}	-	-	359	southern hemisphere, Sydney
+a-west	sun	{"date":"2026-07-04","lat":40.71,"lon":-74.01,"utc_offset_hours":-4,"event":"set"}	-	-	1231	western longitude
+a-leap	sun	{"date":"2028-12-31","lat":55.75,"lon":37.62,"utc_offset_hours":3,"event":"rise"}	-	-	539	leap year, day 366
+a-polar-day	sun	{"date":"2026-06-21","lat":78.22,"lon":15.65,"utc_offset_hours":1,"event":"rise"}	-	-	day	polar day
+a-polar-night	sun	{"date":"2026-12-21","lat":78.22,"lon":15.65,"utc_offset_hours":1,"event":"set"}	-	-	night	polar night
+a-day-in	in_effect	day-msk	Europe/Moscow	2026-06-21T09:00:00Z	true	noon
 a-day-out	in_effect	day-msk	Europe/Moscow	2026-12-21T21:00:00Z	false	
 a-night-in	in_effect	night-msk	Europe/Moscow	2026-12-21T21:00:00Z	true	
-a-night-carry	in_effect	night-msk	Europe/Moscow	2026-12-22T02:00:00Z	true	ночь предыдущего дня до восхода
+a-night-carry	in_effect	night-msk	Europe/Moscow	2026-12-22T02:00:00Z	true	the night of the previous day until sunrise
 a-night-out	in_effect	night-msk	Europe/Moscow	2026-06-21T09:00:00Z	false	
-a-shift-start	in_effect	night-msk-shift	Europe/Moscow	2026-12-21T12:50:00Z	true	закат минус 30 минут
-a-shift-end	in_effect	night-msk-shift	Europe/Moscow	2026-12-22T06:30:00Z	true	восход плюс 45 минут
-a-polar-day-window	in_effect	day-polar	UTC	2026-06-21T00:00:00Z	true	окно day в полярный день — сутки
-a-polar-night-day	in_effect	day-polar	UTC	2026-12-21T12:00:00Z	false	окно day в полярную ночь — пусто
-a-polar-night-window	in_effect	night-polar	UTC	2026-12-21T12:00:00Z	true	окно night в полярную ночь — сутки
-a-polar-day-night	in_effect	night-polar	UTC	2026-06-21T00:00:00Z	false	окно night в полярный день — пусто
-m-first	object_mode	-	UTC	2026-11-05T02:00:00Z	night	первый по порядку с действующим расписанием
+a-shift-start	in_effect	night-msk-shift	Europe/Moscow	2026-12-21T12:50:00Z	true	sunset minus 30 minutes
+a-shift-end	in_effect	night-msk-shift	Europe/Moscow	2026-12-22T06:30:00Z	true	sunrise plus 45 minutes
+a-polar-day-window	in_effect	day-polar	UTC	2026-06-21T00:00:00Z	true	the window day on a polar day — the whole day
+a-polar-night-day	in_effect	day-polar	UTC	2026-12-21T12:00:00Z	false	the window day on a polar night — empty
+a-polar-night-window	in_effect	night-polar	UTC	2026-12-21T12:00:00Z	true	the window night on a polar night — the whole day
+a-polar-day-night	in_effect	night-polar	UTC	2026-06-21T00:00:00Z	false	the window night on a polar day — empty
+m-first	object_mode	-	UTC	2026-11-05T02:00:00Z	night	the first in order with a schedule in effect
 m-work	object_mode	-	UTC	2026-11-02T10:00:00Z	work	
-m-order	object_mode	-	UTC	2026-11-05T05:00:00Z	night	действуют night и whole: первый в списке
-m-otherwise	object_mode	-	UTC	2026-11-03T20:00:00Z	rest	ни одно не действует — otherwise
-m-no-schedule	object_mode	-	UTC	2026-11-02T20:00:00Z	rest	режим без расписания и со снятым расписанием не включается сам
-m-manual	object_mode	{"mode":"00000000-0000-4000-8000-000000000201","until":null,"at":0}	UTC	2026-11-02T10:00:00Z	service	вручную до отмены, сильнее расписания
-m-until	object_mode	{"mode":"00000000-0000-4000-8000-000000000201","until":1793617200,"at":0}	UTC	2026-11-02T10:00:00Z	service	вручную до срока
-m-until-over	object_mode	{"mode":"00000000-0000-4000-8000-000000000201","until":1793617200,"at":0}	UTC	2026-11-02T11:00:00Z	work	срок вышел: until не входит
-m-unknown	object_mode	{"mode":"00000000-0000-4000-8000-000000000777","until":null,"at":0}	UTC	2026-11-02T10:00:00Z	work	режима нет в списке — по расписаниям
-m-before-at	object_mode	{"mode":"00000000-0000-4000-8000-000000000201","until":null,"at":1793613605}	UTC	2026-11-02T10:00:00Z	work	момент раньше at строки — по расписаниям
-u-tail	in_effect	u-tail	UTC	2026-11-04T01:30:00Z	unknown	день решён, канун нет: хвост кануна неизвестен
-u-known-true	in_effect	u-known-true	UTC	2026-11-04T01:30:00Z	true	известный true сильнее нерешённого кануна
-u-both-decided	in_effect	u-both-decided	UTC	2026-11-04T01:30:00Z	false	оба дня решены раньше нечитаемой группы
-u-first	in_effect	u-first	UTC	2026-11-02T10:00:00Z	unknown	нечитаемая группа первой: день не решён
-e-no-week	in_effect	e-no-week	UTC	2026-11-02T10:00:00Z	false	строка только с id, title, kind: поля week нет, пустая форма
-e-no-dates	in_effect	e-no-dates	UTC	2026-11-02T10:00:00Z	false	поля dates нет
-e-always	in_effect	e-always	UTC	2026-11-02T10:00:00Z	true	нет overrides и valid: вид решает
+m-order	object_mode	-	UTC	2026-11-05T05:00:00Z	night	night and whole are in effect: the first in the list
+m-otherwise	object_mode	-	UTC	2026-11-03T20:00:00Z	rest	none is in effect — otherwise
+m-no-schedule	object_mode	-	UTC	2026-11-02T20:00:00Z	rest	a mode without a schedule and with a removed schedule does not switch on by itself
+m-manual	object_mode	{"mode":"00000000-0000-4000-8000-000000000201","until":null,"at":0}	UTC	2026-11-02T10:00:00Z	service	manually until cancelled, stronger than the schedule
+m-until	object_mode	{"mode":"00000000-0000-4000-8000-000000000201","until":1793617200,"at":0}	UTC	2026-11-02T10:00:00Z	service	manually until the deadline
+m-until-over	object_mode	{"mode":"00000000-0000-4000-8000-000000000201","until":1793617200,"at":0}	UTC	2026-11-02T11:00:00Z	work	the deadline has passed: until is not included
+m-unknown	object_mode	{"mode":"00000000-0000-4000-8000-000000000777","until":null,"at":0}	UTC	2026-11-02T10:00:00Z	work	the mode is not in the list — by the schedules
+m-before-at	object_mode	{"mode":"00000000-0000-4000-8000-000000000201","until":null,"at":1793613605}	UTC	2026-11-02T10:00:00Z	work	the moment is earlier than at of the row — by the schedules
+u-tail	in_effect	u-tail	UTC	2026-11-04T01:30:00Z	unknown	the day is decided, the eve is not: the tail of the eve is unknown
+u-known-true	in_effect	u-known-true	UTC	2026-11-04T01:30:00Z	true	a known true is stronger than an undecided eve
+u-both-decided	in_effect	u-both-decided	UTC	2026-11-04T01:30:00Z	false	both days are decided before the unreadable group
+u-first	in_effect	u-first	UTC	2026-11-02T10:00:00Z	unknown	the unreadable group is first: the day is not decided
+e-no-week	in_effect	e-no-week	UTC	2026-11-02T10:00:00Z	false	a row with only id, title, kind: no week field, the empty form
+e-no-dates	in_effect	e-no-dates	UTC	2026-11-02T10:00:00Z	false	no dates field
+e-always	in_effect	e-always	UTC	2026-11-02T10:00:00Z	true	no overrides and valid: the kind decides

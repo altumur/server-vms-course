@@ -1,12 +1,12 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "value элемента книги domain/auto/asks (копия у члена) и domain/auto/asks/<член> (у держателя домена), V/07.5 Н1.3: дорога к камере-цели — у каких приёмников она держит опрос; поля без значения опускаются",
+ "description": "value of an element of the book domain/auto/asks (the copy at a member) and domain/auto/asks/<member> (at the domain holder), V/07.5 Н1.3: a road to the target camera — at which receivers it holds the poll; fields without a value are omitted",
  "type": "object",
  "properties": {
   "target": {
    "type": "string",
    "minLength": 1,
-   "description": "ref камеры-цели — ключ книги"
+   "description": "ref of the target camera — the book key"
   },
   "by": {
    "type": "array",
@@ -15,7 +15,7 @@
     "type": "string",
     "minLength": 1
    },
-   "description": "ref камер-триггеров документа с этой целью"
+   "description": "refs of the trigger cameras of the document with this target"
   },
   "acts": {
    "type": "array",
@@ -27,7 +27,7 @@
      "output"
     ]
    },
-   "description": "действия документа к этой цели (сценарии между камерами — только пресет или выход, канон auto)"
+   "description": "the document's actions on this target (scenarios between cameras — only a preset or an output, the auto canon)"
   },
   "urls": {
    "type": "array",
@@ -35,11 +35,11 @@
     "type": "string",
     "pattern": "^(?:https?://[\\s\\S]*)$"
    },
-   "description": "ingest регистраторов своего кластера, услышанных за 30 с, по имени слота"
+   "description": "ingest of the recorders of its own cluster heard within 30 s, by slot name"
   },
   "up": {
    "const": true,
-   "description": "дорога в свой ретранслятор для подъёма к центру"
+   "description": "a road into its own relay, to go up to the centre"
   }
  },
  "required": [
