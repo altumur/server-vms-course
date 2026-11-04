@@ -1,5 +1,7 @@
 # Векторы: слияние журнала событий
 
+Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
+
 Владелец — [договор слияния журнала событий](../../contracts/events-merge.md) (урок P/06, глава 6.4; ADR-0091 доп. (21) п. 3).
 Участники — консоль кластера (`GET /events`, [P/06.4](../../../06-console/spec/06.4-console.norms.md)) и воркер подсистемы,
 сливающий журнал сам. Байты пишет «Спецификация»; строки составлены по тексту договора и проверены его оракулом, не кодом
@@ -15,11 +17,11 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 |---|---|
 | `participant` | `"console"` или `{"worker": [<sub>…]}` — подсистемы, чьи строки эпох объявлены в `worker.reads` |
 | `query` | `{limit?, keep?}` — как у запроса P/05 Н1.3 (умолчания 1000, `newest`); нет — умолчания |
-| `policies` | `{<sub>: fenced | earlier-run}` — `older_epochs` манифеста; нет — `fenced` |
-| `epochs` | `{<sub>: {<id единицы>: <эпоха>} | "did not answer"}` — что участник прочёл в `<sub>/epoch/*`; у воркера — только объявленные |
+| `policies` | `{<sub>: fenced \| earlier-run}` — `older_epochs` манифеста; нет — `fenced` |
+| `epochs` | `{<sub>: {<id единицы>: <эпоха>} \| "did not answer"}` — что участник прочёл в `<sub>/epoch/*`; у воркера — только объявленные |
 | `grant` | области `view` вызывающего консоли — `*`, `unit:<sub>/<id>`, `labels:<метка>[,…]` (договор `may` шаг 7); нет — `["*"]` |
 | `units` | `{<sub>/<id>: [<метка>…] \| "@unreadable"}` — метки строк единиц, как прочитаны (поле `labels`, объявленное в `unit.fields`; `"@unreadable"` — строка нечитаема или чтение не подтверждено); единицы нет — меток нет (`[]`) |
-| `resources` | `{<сервер>: <ответ ресурса> | "did not answer" | "silent" | {"said": <state>}}` — живые ресурсы и их исходы; ответ — `{events, state, truncated, partial?, lines_garbled?}` P/05 Н1.3 |
+| `resources` | `{<сервер>: <ответ ресурса> \| "did not answer" \| "silent" \| {"said": <state>}}` — живые ресурсы и их исходы; ответ — `{events, state, truncated, partial?, lines_garbled?}` P/05 Н1.3 |
 
 **Выход** — ответ договора `{events, state, truncated, partial?, lines_garbled?, complete, incomplete, withheld?}`. `expect` — подмножество:
 `events` — массив строк в порядке выдачи, у каждой сравниваются перечисленные поля (`id`, `epoch_is`, `fenced`; `"@absent"` —

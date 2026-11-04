@@ -2567,7 +2567,7 @@
     },
     "elsewhere": {
      "$ref": "#/$defs/strList",
-     "description": "actions are the values of the body field `action` (the mark contract, «Просьба» `action`); the loader does not check them against `requests.schema` — the check is the manifest author's: the checklist and `check_spec` for the manifests of the course (the Architect's decision, review of stage B 6–7, № 17)"
+     "description": "actions are the values of the body field `action` (the mark contract, «Request» `action`); the loader does not check them against `requests.schema` — the check is the manifest author's: the checklist and `check_spec` for the manifests of the course (the Architect's decision, review of stage B 6–7, № 17)"
     },
     "free": {
      "default": false,
@@ -2705,7 +2705,7 @@
       },
       "requests": {
        "$ref": "#/$defs/strList",
-       "description": "actions are the values of the body field `action` (the mark contract, «Просьба» `action`); the loader does not check them against `requests.schema` — the check is the manifest author's: the checklist and `check_spec` for the manifests of the course (the Architect's decision, review of stage B 6–7, № 17)"
+       "description": "actions are the values of the body field `action` (the mark contract, «Request» `action`); the loader does not check them against `requests.schema` — the check is the manifest author's: the checklist and `check_spec` for the manifests of the course (the Architect's decision, review of stage B 6–7, № 17)"
       }
      },
      "additionalProperties": false
@@ -2931,8 +2931,8 @@
    "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
   },
   "schemes": {
-   "description": "scheme name → `{host?, fragment?, none?}`; the meaning is the address contract «Схемы» (URLC-HOST-01)",
-   "x-owner": "договор адреса url-credentials «Схемы»; P/06.2 Н1.1",
+   "description": "scheme name → `{host?, fragment?, none?}`; the meaning is the address contract «Schemes» (URLC-HOST-01)",
+   "x-owner": "договор адреса url-credentials «Schemes»; P/06.2 Н1.1",
    "type": "object",
    "propertyNames": {
     "type": "string",
@@ -2958,7 +2958,7 @@
      },
      "none": {
       "$ref": "#/$defs/strList",
-      "description": "values of the authority component that mean «no host» (`mirror://local/…` — the own copy); the path is required only with `host: path` — the address contract «Схемы»"
+      "description": "values of the authority component that mean «no host» (`mirror://local/…` — the own copy); the path is required only with `host: path` — the address contract «Schemes»"
      }
     },
     "additionalProperties": false

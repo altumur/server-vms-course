@@ -23,7 +23,7 @@ The absence of a field (`term` at `stay` without its own record that passed `rec
 ## Keys
 
 The keys of the issuer and the set are bytes in the inputs (`keys.issuing`, `doc.issuer`). The seeds are `sha256("w2c test <слово>")`, as
-in the package [`record`](../../../../common/vectors/record/README.md) «Ключи» (the root `root 1`, the token key `token key 1`, the issuers
+in the package [`record`](../../../../common/vectors/record/README.md) «Keys» (the root `root 1`, the token key `token key 1`, the issuers
 `issuing key 1`, `issuing key 0` — in `revoked_issuing`, `issuing key 9` — a foreign one, the members `member m1`, `member m2`). The set `keys`
 of rows 01–12 is one: `domain: acme`, `rev: 2`, the root signature; rows 13–21 change in it only what their `note` names
 (`keys` null, no `revoked_issuing`, `issuing` not a list, `sig` — 64 zero bytes).

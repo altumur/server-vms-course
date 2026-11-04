@@ -14,7 +14,7 @@ UTF-8, LF, fields separated by TAB; rows with `#` and empty ones are skipped, th
 
 ## Stand command `exec`
 
-The key `stand` of the profile `02-installer` (the section «Раскладка по процессам» of [the common acceptance README](../../../../common/acceptance/README.md)),
+The key `stand` of the profile `02-installer` (the section «Layout by processes» of [the common acceptance README](../../../../common/acceptance/README.md)),
 following the pattern of `door-token-verify` ([the door-token vectors](../../../../common/vectors/door-token/README.md)): a template with `{input}` —
 the path of the file into which the runner writes the bytes of the cell `exec` of the row as they are. stdout — exactly one JSON object in UTF-8 and LF,
 code 0: `{"result":"ok","argv":[…]}` — compared with `expect` by JSON value, — or `{"result":"refused"}` (`expect` — `@refuse`). An input not by

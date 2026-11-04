@@ -21,7 +21,7 @@ before changes. Comparison — JSON by value.
 
 ## Stand command `install-order`
 
-The key `stand` of the profile `02-installer` (the section «Раскладка по процессам» of [the common acceptance README](../../../../common/acceptance/README.md)),
+The key `stand` of the profile `02-installer` (the section «Layout by processes» of [the common acceptance README](../../../../common/acceptance/README.md)),
 following the pattern of `door-token-verify` ([the door-token vectors](../../../../common/vectors/door-token/README.md)): a template with `{input}` —
 the path of the file into which the runner writes the bytes of the cell `input` of the row as they are. stdout — exactly one JSON object in UTF-8 and LF,
 code 0: `{"result":"ok","order":[…]}` — compared with `expect` by JSON value, — or `{"result":"refused"}` (`expect` — `@exit 2`). An input not by

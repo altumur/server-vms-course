@@ -27,7 +27,7 @@ the late layer of the cluster console — [chapter 6.7](../../../06-console/spec
   the refusals of Н4. The input and the output of the acceptance commands — Н5 of the chapters.
 - The common algorithms are contracts; the chapters refer to them and do not repeat them: [the agent signature](../../../common/contracts/agent-signature.md)
   (the agent signs — chapter 9.1, the owner; the relay verifies — chapter 9.2),
-  [the local token door](../../../common/contracts/local-token-door.md) (the role socket, the body, the answer, the refusals, «Вызов в процессе»
+  [the local token door](../../../common/contracts/local-token-door.md) (the role socket, the body, the answer, the refusals, «The call in the process»
   — chapter 9.1, the owner), [`peer`](../../../common/contracts/peer.md) (the client, the first contact, the function `peer` — chapter 9.1,
   the owner), [the key set](../../../common/contracts/keys.md) (the function `keys`, merge and prune of `domain/revoked` — chapter 9.1;
   `keys` of the package answer — chapter 9.2), [the domain envelopes](../../../common/contracts/domain-envelopes.md) (the agent seals
@@ -46,7 +46,7 @@ the late layer of the cluster console — [chapter 6.7](../../../06-console/spec
   a holder row and its copy at the agent — the common definitions (`common/data/common.schema.json` for reference; each
   family schema is self-contained, ADR-0092).
 - The acceptance of the chapters checks the norms: [9.1](../../acceptance/1/README.md), [9.2](../../acceptance/2/README.md). The stand of several
-  clusters, the directives and the doors — [the common acceptance README](../../../common/acceptance/README.md#стенд-домена), the section «Стенд домена».
+  clusters, the directives and the doors — [the common acceptance README](../../../common/acceptance/README.md#стенд-домена), the section «Domain stand».
   The vectors of the lesson — [`follow`](../../vectors/follow/README.md) (9.1); the common ones — [`agent-sig`](../../../common/vectors/agent-sig/README.md),
   [`peer`](../../../common/vectors/peer/README.md) (9.1), [`accept`](../../../common/vectors/accept/README.md) (9.2). Flags,
   environment, exit codes — [`../lifecycle.md`](../../lifecycle.md).
@@ -54,7 +54,7 @@ the late layer of the cluster console — [chapter 6.7](../../../06-console/spec
 
 The internal interfaces, types, error classes, libraries and the split into components are chosen by the implementation. The acceptance commands
 `peer` and `follow` call the functions of the contract `peer` and of Н3 of chapter 9.1 without a store and a network; the command `agent-sig` is shared with
-chapter 8.3. Their names and call templates are the items «Решает реализация» of the chapters.
+chapter 8.3. Their names and call templates are the items «Implementation decides» of the chapters.
 
 **On a discrepancy.** Name the norm id, the input, the initial state, the expected and the obtained outcome. First check which
 chapter or lesson the rule belongs to: the agent of a member — chapter 9.1 and its contracts; the relay — chapter 9.2; the acceptance, the answer and
@@ -84,12 +84,12 @@ Record a change of the acceptance in `corrections.tsv` of its catalogue.
 - **9.1.** `members_rev` and `sign_failures` in the publication; the home row — only on a difference; the row `domain/agent`; a delta
   always with `base > 0`, do not send a whole larger than the limit; 503 `standby` — the next pass. A cluster of one: the agent in the
   process without the kit of the role — the client only to the doors of the holder and of the relay; the local door is a call (the local token
-  door contract, «Вызов в процессе»).
+  door contract, «The call in the process»).
 - **9.2.** At the agent: the relay door (`RELAY=1`) with `POST /api/member/<член>`, `GET /api/carry/<член>`,
   `POST /api/tokens/<член>/<sub>/<вид>` (byte for byte, 502 `did not answer`); the relay pass of Н3. The HTTP form —
   [the OpenAPI of the lesson](../09-agent.api.openapi.yaml), the tag `relay`.
-- The commands of the vectors `peer`, `follow` (`agent-sig` — chapter 8.3) and the description of all the choices of the sections «Решает реализация» of the chapters —
-  11 items «Решает реализация» in all — and the means of running the acceptance: the commands of the vectors and the stand directives.
+- The commands of the vectors `peer`, `follow` (`agent-sig` — chapter 8.3) and the description of all the choices of the sections «Implementation decides» of the chapters —
+  11 items «Implementation decides» in all — and the means of running the acceptance: the commands of the vectors and the stand directives.
 
 ## Order of work
 
@@ -182,18 +182,18 @@ the TLS stand either ([`common/acceptance/tls/`](../../../common/acceptance/tls/
 
 ## Done when
 
-All the choices of the implementation are described (the items «Решает реализация» of both chapters), all the norms of the checklists of the chapters are fulfilled and
+All the choices of the implementation are described (the items «Implementation decides» of both chapters), all the norms of the checklists of the chapters are fulfilled and
 the ways of checking are recorded: for each id — a specific piece of evidence or an unchecked dependency. State the slice,
 the commands and the stand, the observations and the limitations. The data of past runs do not replace the preparation of a new one.
 
 - **9.1.** The acceptance scenarios of the chapter (`acceptance/1/`: 01, 03–08, 11, 13–25, 27) pass; the packages `agent-sig`, `peer`,
   `follow` give their rows; the agent side in the scenarios of chapters 8.3–8.10 and 9.2 («Соседи на стенде» of Н5) — too. The description of the
-  implementation names items 1–10 «Решает реализация» of the chapter: the commands `peer`, `follow`; `join` and the launch of the agent;
+  implementation names items 1–10 «Implementation decides» of the chapter: the commands `peer`, `follow`; `join` and the launch of the agent;
   `W2C_WALL_OFFSET`; the networks `domain/reaches`; the envelope memory; the holder's edits at itself; the assembly of the alarm page; the TLS client;
   the components of the process of a cluster of one; the writes to the medium per day. The checklist P/09.1-01…36 is closed; the items
   «проверяется чтением» are named separately.
 - **9.2.** The acceptance scenarios of the chapter 02–06 pass. The description of the implementation names the relay door and the memory
-  («Решает реализация» of the chapter, item 1). The checklist P/09.2-01…09 is closed; the items «проверяется чтением» (P/09.2-04, -05, -07;
+  («Implementation decides» of the chapter, item 1). The checklist P/09.2-01…09 is closed; the items «проверяется чтением» (P/09.2-04, -05, -07;
   the memory after a restart) are named separately.
 
 The success of a TSV confirms only the branches it observes. It does not prove TLS between clusters, the agent in the process, a race of

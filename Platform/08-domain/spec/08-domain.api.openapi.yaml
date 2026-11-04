@@ -12,7 +12,7 @@
 # to the process — 33 and 4 HEAD (the domain console — 30 and HEAD at GET /domain/users, /domain/groups, /domain/roles, /domain/break-glass; the cluster console — 3:
 # /api/prepare, /api/take, POST /domain/move; chapter 8.0 Н2; analysis of review of stage B 8–10, № 22: М-6); every operation has an operationId: the OpenAPI of lesson 10 refers to the answers of these operations (decision
 # of the Architect of 2026-10-20 on plans 8–10, item 9). The contract carries only the codes of the process (transition 3 of the forwarding contract
-# Platform/common/contracts/forwarding.md «Отказы по переходам»; analysis of review of stage A 8–10, decision 3): the codes of the Н3 doors,
+# Platform/common/contracts/forwarding.md «Refusals by transition»; analysis of review of stage A 8–10, decision 3): the codes of the Н3 doors,
 # 401/403 of its own check of identity and grant (chapter 8.4 Н1.5), 409 deposed (chapter 8.8), 503 frozen (chapter 8.8) and standby
 # (chapter 8.10); the codes of transitions 1 and 2 (forwarding by the cluster console, acceptance and passing by the domain console: 404, 502, 400/408/413
 # of reading the body, the gate of the console) — OpenAPI 06 (chapter 6.7) and 10, not listed here; there is no Forwarded answer.
@@ -152,7 +152,7 @@ paths:
       operationId: relayBatch
       summary: Relay batch — the reports of the members behind it and knocks
       description: 'Order of refusals (Н2; C08-G06): 413 body larger than BATCH_LIMIT — before parsing (the report intake contract
-        «Пакет ретранслятора: пределы»; C08-G05); 400 not a batch; 404 the relay is not a member — without a signature check and without a knock; 403
+        «The relay batch: limits»; C08-G05); 400 not a batch; 404 the relay is not a member — without a signature check and without a knock; 403
         a member without key in Entry («the key is not in the entry»); 403 the key is wrong or revoked; 401 the signature by the key of the entry; 409 deposed;
         503 standby.'
       parameters:
@@ -223,7 +223,7 @@ paths:
         '503': {$ref: '#/components/responses/StandbyFrozenOrUnavailable'}
   /api/verify:
     description: 'Chapter 8.4 (08.4-domain.norms.md) Н1.2а, Н1.10 verify, Н2 (ADR-0119); passed by the domain console — POST /domain/verify
-      of the list of domain doors, only by ticket (the forwarding contract «Билет на пересылке»). There is no token, cookie or session.'
+      of the list of domain doors, only by ticket (the forwarding contract «Ticket on forwarding»). There is no token, cookie or session.'
     post:
       operationId: verify
       summary: Check of credentials without login (Н1.2а)
@@ -1850,7 +1850,7 @@ paths:
   /domain/stranded/apply:
     description: 'Chapter 8.8 Н1.6 apply, Н2; passed to the process of the displaced holder by the domain console (chapter 8.0 Н1.8). The answer of the door of chapter 8.6
       of the new holder (operations editCreate, editUpdate, editDelete) and the codes of forwarding to it (the forwarding contract
-      «Отказы по переходам») arrive as they came and are not listed here; below — the codes of this process.'
+      «Refusals by transition») arrive as they came and are not listed here; below — the codes of this process.'
     post:
       operationId: strandedApply
       summary: Repeat an abandoned edit at the new holder (Н1.6 apply)
@@ -1936,7 +1936,7 @@ components:
       description: >-
         TCP peer address of the client: set by the domain console when passing an edit to the process domain; the process reads it only on a
         connection of the role domainconsole, on the others it does not read it (P/08.0 Н1.8; Platform/common/contracts/forwarding.md
-        «Адрес клиента»; review analysis of stage A 8–10, № 23).
+        «Client address»; review analysis of stage A 8–10, № 23).
       schema: {type: string, minLength: 1}
     XW2CUser:
       name: X-W2C-User
@@ -2075,7 +2075,7 @@ components:
     Denied:
       description: 'Identity and grant at the door of the process (P/08.4 Н1.5): no token or it did not pass — 401, may — deny — 403; form
         {error: denied, detail} — P/06.3 Н4 denied (the gate-and-pass contract, common form Denied); nothing to check with — not 401
-        and not 403, but 503 unavailable (rule «Нечитаемая строка», form Unavailable — in the 503 answer of the door)'
+        and not 403, but 503 unavailable (rule «Unreadable row», form Unavailable — in the 503 answer of the door)'
       content:
         application/json:
           schema: {$ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Denied'}
@@ -2094,7 +2094,7 @@ components:
               - {$ref: '#/components/schemas/FrozenBody'}
     StandbyOrUnavailable:
       description: 'standby of the process domain (P/08.10 Н1.7) or unavailable — a row without which the door does not answer exists, but is not
-        readable: at doors with the gate — the access check row (P/08.4 Н1.5; rule «Нечитаемая строка» of the gate-and-pass
+        readable: at doors with the gate — the access check row (P/08.4 Н1.5; rule «Unreadable row» of the gate-and-pass
         contract); /api/login — the row of the person (P/08.4 Н1.2 check); /api/tokens — the topology (P/08.7 Н3
         «выдать» step 4а); /api/carry — the member list, the mark, the key set, the revocations (P/08.3 Н3 «принять»); /api/relay — the rows of the relay batch (P/08.3 Н3 «держатель на POST /api/relay» step 0); form Unavailable of the contract'
       content:
@@ -2106,7 +2106,7 @@ components:
     StandbyFrozenOrUnavailable:
       description: 'standby of the process domain (P/08.10 Н1.7), frozen — a planned handover is under way (P/08.8 Н1.7 order step 1) or
         unavailable — nothing to check with: the access check row (at POST /domain/revoke — the key set or domain/revoked,
-        no_revocations, P/08.4 Н1.2 revoke) exists, but is not readable (P/08.4 Н1.5; rule «Нечитаемая строка» of the
+        no_revocations, P/08.4 Н1.2 revoke) exists, but is not readable (P/08.4 Н1.5; rule «Unreadable row» of the
         gate-and-pass contract, form Unavailable)'
       content:
         application/json:
@@ -2119,7 +2119,7 @@ components:
       description: '503 of the door (its Н3: the assignment counter was not written, edit — ref not found with an incomplete answer, or contested
         (P/08.6); names unknown (P/08.4); the former shared document is not readable (P/08.9 Н1.3 step 5); «a move is under way here
         already», «a handover is under way already» (P/08.8 Н1.7, Н1.8)), frozen (P/08.8 Н1.7) or standby of the process domain
-        (P/08.10 Н1.7); at doors with an access check — also unavailable of the gate (P/08.4 Н1.5; rule «Нечитаемая строка»;
+        (P/08.10 Н1.7); at doors with an access check — also unavailable of the gate (P/08.4 Н1.5; rule «Unreadable row»;
         the body passes NotStandby)'
       content:
         application/json:
@@ -2143,7 +2143,7 @@ components:
                     required: [reason, detail]
               - {$ref: '../../common/contracts/gate-and-pass.api.openapi.yaml#/components/schemas/Unavailable'}
     Busy:
-      description: 'Busy: report intake contract «Занято» (ADR-0113): only class camera, after the signature, nothing is written'
+      description: 'Busy: report intake contract «Busy» (ADR-0113): only class camera, after the signature, nothing is written'
       content:
         application/json:
           schema:
@@ -2322,7 +2322,7 @@ components:
         - properties:
             error: {const: refused}
             reason:
-              description: 'the words of P/08.7 Н3 «выдать»; at 401 — the words of the agent signature contract «Слова отказа» (no_signature, not_a_signature, out_of_window, bad_signature; added by run 41)'
+              description: 'the words of P/08.7 Н3 «выдать»; at 401 — the words of the agent signature contract «Refusal words» (no_signature, not_a_signature, out_of_window, bad_signature; added by run 41)'
               enum: [bad_request, by_misplaced, not_granted, assignment_unreadable, no_assignment, outside_scope,
                      unit_not_unique, not_poll_home, trigger_not_reported, no_shared_doc, no_item, no_home, no_audience,
                      no_centre, no_signature, not_a_signature, out_of_window, bad_signature]
@@ -2607,7 +2607,7 @@ components:
                     silent_after:
                       type: number
                       minimum: 0
-                      description: 'Silence period of the member (observation contract «Свежесть члена домена»); absent — LOST_AFTER.'
+                      description: 'Silence period of the member (observation contract «Freshness of a domain member»); absent — LOST_AFTER.'
                     stale:
                       type: array
                       items: {type: string}
@@ -2711,7 +2711,7 @@ components:
         class:
           description: 'Outside the delta: form — server | camera (P/09.1 Н1.1 domain/join); not in it — the field is not taken, server.'
         batch:
-          description: 'Outside the delta: form — {name, sig}, sig — 128 hex (report intake contract «Стук партии»); not in it — the field is not taken, an ordinary knock.'
+          description: 'Outside the delta: form — {name, sig}, sig — 128 hex (report intake contract «The batch knock»); not in it — the field is not taken, an ordinary knock.'
     Carry:
       type: object
       description: 'Answer of the holder to the agent (P/08.3 Н1.5). Fields of chapters 8.3 Н1.2, 8.6, 8.8, 8.9 — their norms; what is secret to the member (books
@@ -2901,7 +2901,7 @@ components:
         pinned: {enum: [this, another, none]}
         keys_rev: {type: ['integer', 'null'], minimum: 1}
         class: {enum: [server, camera]}
-        batch: {type: string, description: 'Batch: a knock with a correct batch signature (report intake contract «Стук партии»).'}
+        batch: {type: string, description: 'Batch: a knock with a correct batch signature (report intake contract «The batch knock»).'}
     MembersView:
       type: object
       required: [members, parts, knocking]
@@ -3102,7 +3102,7 @@ components:
           type: object
           additionalProperties: {type: number, minimum: 0}
           description: Summary of P/08.4 Н1.3 anywhere; only step 6 of the may contract.
-        as_role: {type: string, description: 'Check of acting as a role, may contract «Действие от роли».'}
+        as_role: {type: string, description: 'Check of acting as a role, may contract «Action as a role».'}
         as_of: {type: ['number', 'null']}
         disabled:
           type: array

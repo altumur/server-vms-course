@@ -1,5 +1,7 @@
 # Векторы: чтение пульса ресурса и воркера по форме семьи
 
+Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
+
 Владелец — [договор наблюдения](../../contracts/observation.md) «Форма», «Состояние ресурса» (догадка стадии C
 C04-DEP-OBS-HEARTBEAT-01, решение «Архитектора» 2026-10-25). Форма — `Platform/05-resource/data/resource-heartbeat.schema.json`,
 исходы — `Platform/05-resource/data/resource-heartbeat.outcomes.tsv` (семья `platform/resources/<server>/heartbeat` урока

@@ -75,7 +75,8 @@ def code_parts(body):
 
 def links(body, base, root):
     out = set()
-    for target in LINK.findall(FENCE.sub("", body)):
+    text = SPAN.sub(lambda m: m.group(0) if m.string.startswith("](", m.end()) else " ", FENCE.sub("", body))   # «](…)» внутри кода — не ссылка
+    for target in LINK.findall(text):
         path = target.split("#", 1)[0]
         if not path:                                   # a heading of the same file: its anchor follows the language
             out.add("#")
@@ -256,9 +257,10 @@ def compare(ru_text, en_text, ru_path, en_path, root):
 
 def pairs(root):
     """English sources → (ru, en): `<каталог>/en/<имя>.en.md` ↔ `<каталог>/<имя>.md` (ADR-0121 п. 1: нормы в `spec/en/`,
-    у прочих каталогов — `en/` рядом), в Platform/ и VMS/."""
+    у прочих каталогов — `en/` рядом), в Platform/ и VMS/; корневые НОРМАТИВНЫЕ-СЛОВА и КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ — `en/` в корне
+    (ADR-0124 доп. (1) п. 4)."""
     root = Path(root)
-    for en in sorted([*root.glob("Platform/**/en/*.en.md"), *root.glob("VMS/**/en/*.en.md")]):
+    for en in sorted([*root.glob("Platform/**/en/*.en.md"), *root.glob("VMS/**/en/*.en.md"), *root.glob("en/*.en.md")]):
         yield en.parent.parent / en.name.replace(".en.md", ".md"), en
 
 

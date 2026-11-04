@@ -19,7 +19,7 @@ The refusals of the declaration of a book and of the index of names are the case
 
 As the preparation of the stand of chapter 8.3 ([the acceptance of chapter 8.3](../../3/README.md); before the move — the acceptance README of
 М11/03, «Подготовка каждого сценария 01–09») with
-differences: the catalogue of each cluster is `testsub` and `testsub2` (the order — the «Стенд» of the common acceptance README); on each cluster
+differences: the catalogue of each cluster is `testsub` and `testsub2` (the order — the «Stand» of the common acceptance README); on each cluster
 there run the controllers of both, the worker `w-1` of the manifest `testsub`, the worker `t-1` of the manifest `testsub2` (with the training writer of contributions, Н5
 of the chapter) and the resource of its own server `srv-<кластер>`; before the steps the store of each cluster has the counter `testsub` `c1-<кластер>`
 (its own ref at each: a common `c1` would be contested, and `@domain` would not wait for `complete: true`) and the shelf `testsub2` `sh1`
@@ -33,7 +33,7 @@ Sc. 11 has people too (the former stand of the acceptance of М11/09):
 
 ## scenarios.tsv
 
-The format is the dictionary of the «Стенд» and the domain dictionary; the expectation is a subset of fields. In sc. 01 the rows of the book at the member and at the holder
+The format is the dictionary of the «Stand» and the domain dictionary; the expectation is a subset of fields. In sc. 01 the rows of the book at the member and at the holder
 are checked for the ring envelope (`~enc:v2:`) and for the absence of the value of the secret (`!contains`); the log — by reading
 ([P/06.2](../../../../06-console/spec/06.2-console.norms.md) Н1.4).
 

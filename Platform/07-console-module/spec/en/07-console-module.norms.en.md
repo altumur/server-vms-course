@@ -32,7 +32,7 @@ and [P/06.5](../../../06-console/spec/06.5-console.norms.md).
 the doors of lesson 6, in the late layer (Н1.6) also the doors of the domain: `/domain/*` and the login `login_url` (`POST /api/login`) — the doors
 of the domain console ([lesson P/10](../../../10-domain-console/spec/10-domain-console.norms.md); the process `domain` — [lesson
 P/08](../../../08-domain/spec/08-domain.api.openapi.yaml)), which the cluster console forwards
-([chapter P/06.7](../../../06-console/spec/06.7-console.norms.md); the [forwarding contract](../../../common/contracts/forwarding.md) «Двери домена»),
+([chapter P/06.7](../../../06-console/spec/06.7-console.norms.md); the [forwarding contract](../../../common/contracts/forwarding.md) «Domain doors»),
 and the own doors of the cluster console `/api/held`, `/domain/shared/<sub>` (chapter P/06.7) (review analysis of stage B 6–7,
 № 30; Claude M-5); the forms — the [contract of lesson 6](../../../06-console/spec/06-console.api.openapi.yaml), in the late layer — the contracts
 of lessons 8 and 10; the owners of the rows — the chapters of lessons 6, 8 and their catalogue.
@@ -42,9 +42,9 @@ of lessons 8 and 10; the owners of the rows — the chapters of lessons 6, 8 and
 ```yaml
 reads:   /session, /manifest, /<sub>/manifest, /mounts, /changes, /<rows>, /<sub>/<rows>, /<sub>/<table> (only from servers.show; added by М10/10),
          /where/<id>, /<sub>/where/<id>, /servers, /unplaceable, /<sub>/unplaceable, /policy, /drain, /schema (added by М10/10),
-         /events, /metrics (only running_gauge and workers_gauge), /domain/* (forwarding contract «Двери домена»), /api/held (P/06.7-14), /domain/shared/<sub> (P/06.7-15), /folders (only with display.tree.folders)
+         /events, /metrics (only running_gauge and workers_gauge), /domain/* (forwarding contract «Domain doors»), /api/held (P/06.7-14), /domain/shared/<sub> (P/06.7-15), /folders (only with display.tree.folders)
 writes:  POST/PUT/DELETE /<rows>[/<id>] and /<sub>/<rows>[/<id>], POST /folders, PUT/DELETE /folders/<id> (only with display.tree.folders), POST /marks, PUT /policy, POST/DELETE /drain, GET/PUT/DELETE /servers/<s>/labels,
-         POST/DELETE /servers/<s>/decommission, /domain/* (forwarding contract «Двери домена»), POST/DELETE /session, /session/break-glass, login_url
+         POST/DELETE /servers/<s>/decommission, /domain/* (forwarding contract «Domain doors»), POST/DELETE /session, /session/break-glass, login_url
 never:   /{sub}/requests, /api/backup (P/06.7-16), /resources, /{sub}/{table} outside show, the doors of the holders (door from where — only to the shell)
 order:   /session → /manifest → /mounts → /changes (only on mounting) → per subsystem /<rows> → /folders (if at least one subsystem declared display.tree.folders) → /servers → /unplaceable → /domain/shared/<sub> (P/06.7-15) → /drain → /schema
          → /domain (+ /domain/alarms; P/10-06) → /api/held (P/06.7-14) → /metrics; polling every poll_s; /events?unit= of the selected one — every 5 s
@@ -116,7 +116,7 @@ writes_via: a unit of a subsystem whose manifest (view P/02.2) carries unit.writ
 may:       console.may(cap, ref, sub?) → bool by the grants of the session and the scope rule P/06.3 Н1.3 (* | unit:<sub>/<id> | labels:<…> | folder:<id>;
            a grant on the unit or on its about unit; the rank of cap — none < view < edit < admin, the right contract common/contracts/may.md);
            no sub — null: a row of any sub fits; the elements of grants with role are role groups, counted by the tiers of the right contract
-           («Уровень группы роли»), without role — a direct group; the folder chains of the unit and of its about the module gathers by a reverse walk
+           («The level of a role group»), without role — a direct group; the folder chains of the unit and of its about the module gathers by a reverse walk
            of the member lists from GET /folders; not gathered — the input is unknown, as at the server, not empty: a group with such an input gives no level, a row
            folder: of a direct group does not cover it (ADR-0097 §4, ADR-0099 §6); admin: true of the session (step 4а) — true, the module hides nothing
            by it (ADR-0100 §1); via: break-glass (grants []) — true, as the server for an emergency session (the right contract common/contracts/may.md step 1,
@@ -172,11 +172,11 @@ about the module from М11/8 Н1.8 `module`, М11/11 Н1.6 `declared` and the mo
 and `/domain/shared/<sub>` at the cluster console — [chapter P/06.7](../../../06-console/spec/06.7-console.norms.md).
 
 ```yaml
-reads:     /domain/* (forwarding contract «Двери домена»; the cluster console forwards them to the domain console — P/06.7-02…05),
+reads:     /domain/* (forwarding contract «Domain doors»; the cluster console forwards them to the domain console — P/06.7-02…05),
            /api/held (P/06.7-14; the term record and the backup pair — P/08.8), /domain/shared/<sub> (P/06.7-15)
-writes:    /domain/* (forwarding contract «Двери домена»); login_url — POST {user, password} to the address login_url from /session:
+writes:    /domain/* (forwarding contract «Domain doors»); login_url — POST {user, password} to the address login_url from /session:
            the domain door POST /api/login (P/08.4 Н1.2; login_url — the gate and pass contract «Сторожевая»; the cluster
-           console forwards it to the domain — «Двери домена»)
+           console forwards it to the domain — «Domain doors»)
 order:     /domain/shared/<sub>, /domain (+ /domain/alarms — P/10-06), /api/held
 never:     /api/backup (P/06.7-16)
 objects:   member:<m>, domain, person:<name>
@@ -190,7 +190,7 @@ domain:    not a section of the section strip, but the root of the layout «По
            no/yes → POST /domain/move {recovery[, stolen: true]}; without the file the request does not go), the alarms (in the card one
            row per kind and of: the last one, «×N (с …)», the list of members), keys-view; the domain card carries the term and the handover,
            «применить заново», the units by subsystems, the shared settings by declared and the edits for clusters (pending and outcomes)
-access:    people, grants, break-glass — /domain/users, /domain/grants, /domain/break-glass (forwarding contract «Двери домена»)
+access:    people, grants, break-glass — /domain/users, /domain/grants, /domain/break-glass (forwarding contract «Domain doors»)
 held:      GET /api/held — the only door of the processes that the module reads: the signed public record of the holder
            {cluster, holder, term, keys, backup: {term, rev}} at the cluster console; backup — a pointer to the last copy at this
            member, comparable only by the pair {term, rev}; at a member the module shows «старая копия» when its pair lags behind

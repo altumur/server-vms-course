@@ -27,7 +27,7 @@ of units, tombstones, the counter and the claims `testsub/idem/`; the replay mem
 The installation rows `platform/manifest/testsub` and the marks are admitted. The controller and the workers are not started:
 they are not to change or delete rows during these scenarios.
 
-The instance is started by the section «Стенд» of the common acceptance README (the substitutions `{data}`, `{port}`, `{manifest}`).
+The instance is started by the section «Stand» of the common acceptance README (the substitutions `{data}`, `{port}`, `{manifest}`).
 The preparation, the rights and the path to the door are provided by the runner before the requests. All the steps are called by one and the same
 identity with the right to create, read, edit and delete units; in the variant without a domain the requests come from the loopback
 by [chapter 6.3](../../../spec/06.3-console.norms.md) Н1.3 `open` (only from the loopback, otherwise 403). The runner records the address of the door, the way of preparation and the declared body limit;
@@ -101,7 +101,7 @@ scenarios 15, 16 and 18 the runner creates the counter `c1` in `testsub` (for `o
 its own `Idempotency-Key`, before the first step; in the other scenarios there is no `c1`. The resource is started by the command of the resource role
 of the server `srv-a` (the substitutions `{data}`, `{socket}`, `{manifest}`, `{rport}`); it is ready when it listens on `{rport}` and there is the row
 `platform/doors/srv-a`. `console …` and `console2 …` are one console on `{port}`, the second is the prefix `/testsub2`. `store …` is
-the store door by a role with full rights on the prefix of the subsystem (the common acceptance README «Стенд»).
+the store door by a role with full rights on the prefix of the subsystem (the common acceptance README «Stand»).
 
 Before each scenario stop the processes of the previous one, create separate empty row/object stores and clear
 the variables/the replay memory. Load the unchanged testsub and testsub2; root is testsub, the second is available under /testsub2;
@@ -129,7 +129,7 @@ of `tallies` is a string, it does not require the counter to exist; likewise sc.
   the listing; the same row with a `value` by the schema acts (Н2 «Состояние в ответе»).
 - Sc. 27 — PUT of `marks` of one element of 524288 bytes: the body ≈ 524310 bytes is less than the body limit of the stand (1 MiB), the weight
   of the prepared row is greater than the ceiling 524288 — 413 `row too large` without `fault`, the row and the `revision` are the former ones (Н3 «edit»
-  step 6, Н4). The words of `detail` are a choice of the implementation («Решает реализация» item 4), the TSV does not compare them.
+  step 6, Н4). The words of `detail` are a choice of the implementation («Implementation decides» item 4), the TSV does not compare them.
 
 ### Coverage audit of P/06, second pass (Gemini)
 
@@ -137,12 +137,12 @@ Scenarios 28–32 (`audit-coverage-gemini` 0a5ae79f9) — likewise, each on its 
 the controller and the domain; the resource `srv-a` — as the first step of sc. 28, 29, 30, 32 (`GET /{rows}`, the bytes door, `/metrics`). The rows
 past the writer — through the store door, as sc. 20, 26: the state and the hold — by the holder role `@as testsub2worker`, the cleanup list
 — by the role `console`.
-- Sc. 28 — the cursor (`unit.state.cursor`) is reconciled only by `born` (the row check contract «Состояние единицы» `acts`;
+- Sc. 28 — the cursor (`unit.state.cursor`) is reconciled only by `born` (the row check contract «Unit state» `acts`;
   P/03.6 Н1.7 `cursor`): both state rows with `born` and `revision` of the live row act (step 6); an edit of the row (`revision`
   2) removes the `result` of the former `revision`, the cursor stays (step 8); a cursor with another `born` does not act — there is no `state` (step 10).
 - Sc. 29 — an edit of the fields removes the blob digest by an empty string (the row check contract `values_by_type` blob:
   «лишь прежний дайджест строки или "" (снять)»): 200, `revision` + 1, `""` in the row; the former digest after the removal is no longer the former
-  digest of the row, 400 (Р2; Н3 «edit», «Гонки»).
+  digest of the row, 400 (Р2; Н3 «edit», «Races»).
 - Sc. 30 — the bytes door removes the digest of its bytes from the list `testsub2/sweep` (Н3 «put_body» step 2), the second
   mark stays; the list is unreadable as a whole (`digests` not by the form, the outcome of the row `console` of the family `sweep`) — the door does not
   rewrite it (the version is the former one) and answers 200. Step 3 reads the version of the list, step 4 writes a non-empty batch by it: a background
@@ -179,7 +179,7 @@ the common body limit. The deletion of a blob, maintenance windows and fsync are
 
 Tab-separated: `scenario`, `step`, `request`, `expect`. Rows with `#` are notes.
 
-The format is [the dictionary of directives and doors of the «Стенд» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей): a door without a prefix is the console; `@key`/`@nokey`, a subset of fields, `$имя` (here they bind `revision` and the digest `$d`).
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей): a door without a prefix is the console; `@key`/`@nokey`, a subset of fields, `$имя` (here they bind `revision` and the digest `$d`).
 Its own: the field `bytes` of the answer of the bytes door — Н2 «Doors of bodies and tables» of the chapter; the code is always compared.
 
 Partial expectations of the TSV do not cancel the forms of the full answer: the mandatory fields, the JSON types and the restrictions
@@ -214,7 +214,7 @@ and a store with a full key limit of 1024 UTF-8 bytes; there is no narrower file
 |---|---|
 | POST /counters with a correct body, an Idempotency-Key of 187, 188, 200 ASCII letters; each case separately (200 — in the TSV, sc. 13) | The claim key is a digest of a constant length, all three cases pass the limit; 201 with the full row; a repeat returns the same result |
 | The same POST with 201 ASCII letters; separately 100/101 Cyrillic characters (200/202 UTF-8 bytes) — in the TSV, sc. 13 | 201 and 202 bytes of the component — 400 before pending; 200 bytes of the component are admitted |
-| A named id of 1007/1008 ASCII letters (testsub/counters/ has 17 bytes); separately Cyrillic/four-byte characters with the same full lengths | 1024 — 201 at any implementation (the file names are encoded by the implementation, the event log contract «Имена файлов в общих деревьях»); 1025 — 400 badkey; a POST after its own pending keeps the refusal by step 9, the unit is not written; PUT/DELETE do not change the row/revision |
+| A named id of 1007/1008 ASCII letters (testsub/counters/ has 17 bytes); separately Cyrillic/four-byte characters with the same full lengths | 1024 — 201 at any implementation (the file names are encoded by the implementation, the event log contract «File names in shared trees»); 1025 — 400 badkey; a POST after its own pending keeps the refusal by step 9, the unit is not written; PUT/DELETE do not change the row/revision |
 | A badkey refusal on the write of the initial pending; separately on the write of the unit, then on the saving of the answer | Before pending — 400 without a claim; after pending — 400 only after a confirmed saving of the refusal; on a failure of the saving — 503, the rules of pending and of a foreign guard are kept |
 
 The rows of the table R29 about the slot, the epoch, the guard and holds are the acceptance of [chapter P/03.2](../../../../03-worker/acceptance/2/README.md) (the
@@ -237,7 +237,7 @@ owner form; the presence of a file does not prove the correctness of the referen
 
 The status of all the checks of the README outside `scenarios.tsv` (this section, «Additional checks», the counterexamples of runs) is
 «проверяется чтением»: the subject is the transitions of the implementation under a named intervention; the evidence is a test of the implementation
-with controlled clocks and two consoles on a common store of P/01.1, or a code analysis. The stand of the section «Стенд»
+with controlled clocks and two consoles on a common store of P/01.1, or a code analysis. The stand of the section «Stand»
 of the common acceptance README does not execute them: it has no controlled clocks and no two consoles.
 
 Н5 requires separate evidence of reading or a controlled stand for races.
@@ -377,7 +377,7 @@ The bounds of :int by P/02.1: binary64, the absolute value not greater than 2^53
 a language coercion. Check ±0.5, ±7.9, ±(2^53−1), 1e16, 1e21 and the canonical decimal result without an exponent.
 
 The cleanup with grace — the phases of Н3 and the codes of the window command of Н2: without `--writers-stopped` nothing is deleted, the grace of 300 s of an unchanged
-version, an object newer than the mark is not touched (controlled clocks are needed, the common acceptance README «Стенд»). They are checked by reading (reconciliation of python and go
+version, an object newer than the mark is not touched (controlled clocks are needed, the common acceptance README «Stand»). They are checked by reading (reconciliation of python and go
 М10/6–11): T16 — `null` at a json field of a table and T23 — `made_at` (the tables of `testsub2` have no json field and no `made_at`).
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)

@@ -18,7 +18,7 @@ by the move of lesson 8 (the directory М11/01 is removed): the table is the onl
 ## Run
 
 Without a stand: the command `view` of an implementation gets the input (the column `input`) and prints the JSON `{view, shadow}`; `expect` is
-a subset of the fields of the output by the dictionary of the «Стенд» ([the common acceptance README](../../../../common/acceptance/README.md), `<код>
+a subset of the fields of the output by the dictionary of the «Stand» ([the common acceptance README](../../../../common/acceptance/README.md), `<код>
 <JSON>`: the named fields exist and are equal, an array — by length, order and elements, a number — by value) or `@exit 2` (an input not
 of the form `ViewInput`). Each row is a separate run on a fresh state: the memory of the shadow report does not pass between rows.
 The `as_of` of the output is the wall seconds of the command process, it is not compared.

@@ -56,7 +56,7 @@ channel»).
 | `/etc/w2c/configstore-rights.json` | the rights file, equal by meaning to the derivation; otherwise the installation is refused | P/02.5 Н3 «install» |
 | the rows `platform/manifest/<sub>`, `platform/manifest/<sub>/rev` | the manifest row and the mark | [catalogue](../../common/data/catalog.tsv), P/02.3 Н1.5 |
 | `/etc/w2c/tls/ca.pem`, `ca.next.pem`, `revoked`, `crl.pem`, `<роль>/server.pem`, `<роль>/server.key` | the center and the role kits | [catalogue](../../common/data/catalog.tsv), P/02.4 Н1.6 |
-| `/etc/w2c/secrets/platform.key` | the ring: `secrets new` creates it, `rotate` appends on top | [catalogue](../../common/data/catalog.tsv), [sealing contract](../../common/contracts/sealing.md) «Файл кольца» |
+| `/etc/w2c/secrets/platform.key` | the ring: `secrets new` creates it, `rotate` appends on top | [catalogue](../../common/data/catalog.tsv), [sealing contract](../../common/contracts/sealing.md) «Ring file» |
 | the units of Н1.1 and the socket units `configstore-*.socket` | written by `install.sh` | P/02.4 Н1.1 |
 
 ## Exit codes
@@ -79,7 +79,7 @@ from the highest number (P/02.4 Н1.5 rules 3).
 
 ## Stand
 
-«Стенд» — the [common acceptance README](../../common/acceptance/README.md) (analysis of the review of stage B 3–5, № 33):
+«Stand» — the [common acceptance README](../../common/acceptance/README.md) (analysis of the review of stage B 3–5, № 33):
 - the command that loads one manifest file — `{file}` (P/02.1, the corpus `verdicts.tsv`);
 - `manifest-put {socket} {file}` — through `admin.sock`, the stand's manifests one by one before the first `@start`;
 - the rights derivation command — `{manifests}`, `{deployment}` (`dep`), `{file}`: `{rights}` of the acceptances moved from М10/4–11 (analysis of the review of stage B 3–5, № 34), and the variants of chapter 2.5.

@@ -19,7 +19,7 @@ Install the current testsub from the common testdata with its service mark using
 rights. There are no units and no user rows yet. The preparation is not a transfer of the state of
 the previous scenario and not a check of the installer.
 
-Start the store, a new console testsub and the resource srv-a per the section «Стенд» of the common acceptance README. Their doors must be ready;
+Start the store, a new console testsub and the resource srv-a per the section «Stand» of the common acceptance README. Their doors must be ready;
 the resource is registered and available to the console before the first step (in sc. 38–43 the resource is not started before the first step: step 1 `@start resource` starts it, as in the acceptance of P/05). All the processes of this box
 use one BOX_ID and server=srv-a; each new process gets a new instance.
 Initially there is no controller and no workers: the scenarios start them by the directives @start.
@@ -33,7 +33,7 @@ these scenarios do not replace the check of TLS refusals.
 Do not accelerate the deadlines and parameters of testsub: valid_for=30, most_valid=600; the ordinary
 ticks of the holder and the reaper are expected, settle=60 by default.
 
-**Scenario 07** (the append) installs the catalogue `testsub` and `testsub2` (the order — «Стенд» of the common acceptance README) and starts the controllers and
+**Scenario 07** (the append) installs the catalogue `testsub` and `testsub2` (the order — «Stand» of the common acceptance README) and starts the controllers and
 the workers of both by directives; `store` also reads `testsub2/` and `objects/testsub2/`. The shelves `sh1`
 (step 6) and `sh2` (step 19) are put as a store row by the role `console` (`@as console store`), not through the tables door of P/06.1 (Н1.6):
 the acceptance of the chapter does not depend on the tables door (the log of cammeta-go, lesson 8 № 1). `@as` acts on the step and the following
@@ -47,7 +47,7 @@ the heartbeat names by the hash `#<20 hex>`, the row is removed all the same (a 
 
 ## scenarios.tsv
 
-The format is the dictionary of directives and doors of the «Стенд» of the common acceptance README: the doors `console`, `console2`, `resource`, `store`,
+The format is the dictionary of directives and doors of the «Stand» of the common acceptance README: the doors `console`, `console2`, `resource`, `store`,
 `admin` (sc. 10, 38–43), the directives `@start`, `@until`, `@as`, `@key`, `@sleep`, `@sigterm` (in sc. 38 — also of the console), `ASSERT` (sc. 40). Sc. 05 and 07 — 52 steps: 44 HTTP (with @until, @as and @key), six
 @start, @sleep and @sigterm; sc. 08 and 09 (ADR-0091) — 23 steps; sc. 10 (coverage audit of P/03) — 16 steps; sc. 38–43 (the second pass of the coverage audit) — 58 steps; in total 11 scenarios / 149 steps (step 05/16 — the event `command` of the base, the VMS request «команды и строка устройства»; step 39/9 — `command.failed` of a refusal before the call, C03-REFUSED-BEFORE-CALL-EVENT-01) (steps 07/34–36 — (the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7)). Steps 05/7–8 — the row stands 20 s after `performed`
 (the lower bound of settle with a margin); 05/11–13 — the heartbeat through the objects door: the mandatory fields and the last heartbeat on SIGTERM
@@ -194,7 +194,7 @@ the form of the family `requests` (P/06.4 Н1.5): `unit`, the body field `add` a
   rewrites the state row not by the form (without `cas`); the worker `t-1` is restarted — the new holder under epoch 2 reads
   the unreadable state as absent and writes `result` anew (`state.outcomes.tsv` `<s>worker`; the norms of the chapter, Н5
   `tally_result`: «если действующего result нет»). Without spoiling, the state in effect survives the move and would not
-  be rewritten (the row check contract «Состояние единицы» `acts`).
+  be rewritten (the row check contract «Unit state» `acts`).
 
 Not taken from the second pass: the closing by the holder of a foreign `begun` without an outcome (the deadline of the request row relative to the clock of
 the stand cannot be set: a far deadline runs into `most_valid`, a passed one — into the reaper; the order of the checks is now set by the norm —

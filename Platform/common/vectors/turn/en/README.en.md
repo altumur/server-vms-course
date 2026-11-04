@@ -1,0 +1,53 @@
+# Vectors: the writer turn — sequences over the turn row
+
+This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+
+The owner is [the writer turn contract](../../../contracts/turn.md) (lesson P/04 Н1.5, Н3; C08-TURN-SELF-99, the Architect's decision
+2026-10-26). The participants are the controller (`<sub>/controller/placement_turn`, P/04) and the process `domain` of the holder
+(`domain/signer-turn`, [P/08.10](../../../../08-domain/spec/08.10-domain.norms.md) Н1.7, Н3). The bytes are written by «Спецификация»; the rows are
+by the text of the contract and P/08.10 Н3 «the turn of the domain process», the norms do not change.
+
+## `cases.tsv`
+
+UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, the first line not skipped is the header `case<TAB>input<TAB>expect<TAB>note`.
+A row is one sequence of events of one side; `expect` is the array of its actions, one per event, in order.
+
+**Input** — `{kind, turn, me, steps}`: `kind` — `placement` (the turn of a subsystem) or `signer` (the turn of the process `domain`; the turn of the agent of a member `domain/agent-turn` —
+by the same rule, its cases are the `signer` rows, P/09.1 Н1.13);
+`turn` — the key of the turn row (the guard key); `me` — its own: the `manifest_rev` of the controller or `holder` — the instance of the process
+`domain` ([the instance contract](../../../contracts/instance.md)); `steps` — the events:
+
+| Event | Meaning |
+|---|---|
+| `{read, version?, seen}` | the turn row is read (steps 1–3): `read` — the row (`null` — there is no row, `"@unreadable"` — it does not read by the form); `version` — its version; `seen` — how many seconds this version has been unchanged on my monotonic clock (the first look — 0) |
+| `{reply: ok, version}` / `{reply: conflict}` / `{reply: none}` | the answer to my write of the turn row: confirmed with a new version, a `cas` conflict, no answer |
+| `{renew: true}` | the term `TURN_RENEW`: renew (step 4) |
+| `{target: true, age}` | a changing write of the participant; `age` — the age of its own confirmed turn request, s |
+| `{target_reply: "412"}` / `{target_reply: "none"}` | the guard refused / a changing write without an answer |
+| `{end: true}` | the end of the pass (`placement`, step 6) or `SIGTERM` at the active one (`signer`, P/08.10 Н1.7 `release`) |
+
+**Actions**: `{write, cas}` — write the turn row `write` by `cas` (`""` — there is no row, otherwise the version); in `write` at
+`placement` `holder` is `"@new"` (a new unique mark of this attempt, not equal to the former ones) or `"@same"` (the mark of its own
+attempt), `manifest_rev` — mine; at `signer` — `{holder: <я>}` or `{holder: ""}`; `held` — the turn is its own, the version is remembered;
+`not_held` — not obtained (including after `reread`: the row does not name this attempt) (at `signer` — a waiting one); `busy` — occupied; `refused` — a refusal of the step (the row is unreadable; at `signer` —
+a waiting one); `manifest_behind` — step 1; `{guard: {key, index}}` — the write goes with the guard; `wait` — its own term has expired, do not
+write until a confirmed renewal; `stop` — cease the writes; `reread` — re-read (the barrier is confirmed at `placement`:
+intent and the rows; an unknown outcome of the write of its own turn row: the turn, and in `read` `holder` `"@same"` — the mark of this attempt); `done` — the release is complete, the conflict does not repeat.
+
+33 rows: `placement` — take an empty one, a released one, a foreign one older than `TURN_TERM` (45; 44.999 — occupied), the first look, below and above
+`manifest_rev` (10 > 9 as a number), an unreadable one, a capture conflict, a renewal and its conflict, the guard before and after `TURN_TERM`, 412,
+the barrier (confirmed, without an answer, a conflict), the release `holder ""`, an unknown outcome of the taking (applied, no row, a foreign one) and
+of the renewal; `signer` — take an empty one, its own row (`held`, not `busy`) and its
+conflict, a foreign live one and one older than `TURN_TERM`, a released one, an unreadable one, the guard, the renewal, `SIGTERM`, an unknown outcome of the taking (its own, a foreign one),
+the barrier of a write with the guard.
+
+The release of `placement` writes `manifest_rev` with its own revision (the form `placement-turn` requires the field); an unknown outcome of the write
+of its own turn row — the contract «An unknown outcome of a write of one's own turn row» (both answers — C08-TURN-SELF-99, the decision
+of «Архитектора» 2026-10-26).
+
+## Run
+
+Without a stand: a side gives the events to its turn algorithm (the store and the clock are replaced by the events) and reconciles the actions;
+`"@new"` — any new mark not equal to the former marks of this side, `"@same"` — the mark of its current attempt. The lexemes `"@new"`, `"@same"` are written only in the table (`expect` and `read` of the input); in the input the side substitutes its current mark, and in the output it writes the real marks, and the judge reconciles them by this rule. A lexeme given as a string is judged as a mark: `"@same"` after `"@new"` is another mark, red (C04-TURN-LABEL-LEXEME-01, the decision of the Specification). The races of two
+contenders and the late writes of an old holder — the acceptance scenarios of P/04, P/08.10 and reading.
+Who performs it — by `kind`: `placement` — the controller (`04-controller`, P/04 Н3 «get and hold the placement turn», the row `placement_turn`); `signer` — the process `domain` of the holder (`08-domain`, P/08.10 Н1.7, Н3 «the turn of the domain process») and the agent of a member (`09-agent`, P/09.1 Н1.13, Н3 «the agent turn» — `domain/agent-turn` by the same rule). The console (`06-console`) only names the key `placement_turn` in the layout (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).

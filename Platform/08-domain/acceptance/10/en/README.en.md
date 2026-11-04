@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are [the common acceptance README](../../../../common/acceptance/README.md), the section [«Стенд домена»](../../../../common/acceptance/README.md#стенд-домена)
+The stand and the dictionary of directives and doors are [the common acceptance README](../../../../common/acceptance/README.md), the section [«Domain stand»](../../../../common/acceptance/README.md#стенд-домена)
 (a stand of several clusters; formerly the dictionary of the М11 README of the acceptance М11/01). The norm of the chapter is
 [`08.10-domain.norms.md`](../../../spec/08.10-domain.norms.md) Н5. The scenarios were moved from the acceptance of М11/12 (04, 05) (stage B,
 ADR-0083 addendum (1): without a change of behaviour); the numbers, the names of the scenarios and the steps are the former ones. The other scenarios of М11/12: 01, 03,
@@ -14,7 +14,7 @@ the coverage audit of P/08; 09, 10 — the coverage audit of P/08, the second pa
 The preparation is as the «Подготовка каждого сценария» of the acceptance of [chapter 8.3](../../3/README.md) (formerly the acceptance README of М11/03,
 «Подготовка каждого сценария 01–09»), the catalog `testsub`. The doors `holder`, `member`, `resource`, `signer`, `signer2` and
 the directives `@domain`, `@start domain`, `@start agent`, `@install domain`, `@start domain second`, `@on`, `@freeze`, `@thaw` are the dictionary of the
-«Стенд домена» and the common dictionary of directives of the common acceptance README. The runner goes as the human `root` (chapter 8.4). The clock is not accelerated: `LOST_AFTER` 45 s,
+«Domain stand» and the common dictionary of directives of the common acceptance README. The runner goes as the human `root` (chapter 8.4). The clock is not accelerated: `LOST_AFTER` 45 s,
 `REPORT_EVERY` 5 s, `MARK_REFRESH` 22.5 s, `TURN_TERM` 45 s.
 
 - **Scenario 04.** The second copy of the process `domain` on `hold` is a standby one: the login answers 503 `standby`. The first is stopped by
@@ -31,7 +31,7 @@ the directives `@domain`, `@start domain`, `@start agent`, `@install domain`, `@
   the accepted one, Н1.5 — the member with the large Entry), `m1` is not written; the leaving of `f01991` (the record without it passes the check) — 200; the acceptance of
   `m1` — 200.
 - **Scenario 08** (the coverage audit of P/08). The freshness of the queue (Н1.7 `fresh_turn`): without agents, two copies of `domain`; the first
-  is frozen by `@on hold @freeze domain#1` (SIGSTOP; the freeze limit of 120 s is the dictionary of the «Стенд»). After 20 s the second is still
+  is frozen by `@on hold @freeze domain#1` (SIGSTOP; the freeze limit of 120 s is the dictionary of the «Stand»). After 20 s the second is still
   standby: the last renewal of the first is no earlier than `TURN_RENEW` (10 s) before the freeze, and an unchanged version is no more than 30 s, with
   a margin against `TURN_TERM` 45 s. Then the second takes the queue (`@until 60`: no later than 45 s from the first look at the version plus
   the `TURN_RENEW` of its polling — about 65 s from the freeze in the worst case). After `@thaw` the door `signer` leads to the first copy
@@ -57,7 +57,7 @@ the price (Н1.9).
 
 ## scenarios.tsv
 
-The format is the dictionary of the «Стенд» of the common acceptance README and its section «Стенд домена»; the expectation of `@carry` is `ok <JSON>`.
+The format is the dictionary of the «Stand» of the common acceptance README and its section «Domain stand»; the expectation of `@carry` is `ok <JSON>`.
 
 In total 6 scenarios / 56 steps.
 

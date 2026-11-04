@@ -79,7 +79,7 @@ scenario	step	request	expect
 12-shared-and-members-unreadable	3	member hold store POST /v1/write {"op": "put", "key": "domain/shared", "items": {"doc": "not json"}}	200
 12-shared-and-members-unreadable	4	holder GET /domain/shared	503 {"error": "unavailable"}
 12-shared-and-members-unreadable	5	holder GET /domain/members	200 {"members": {"hold": {"how": "holder"}}}
-12-shared-and-members-unreadable	6	member hold store POST /v1/write {"op": "put", "key": "domain/members", "items": {"doc": "not json"}}	200
+12-shared-and-members-unreadable	6	member hold store POST /v1/write {"op": "put", "key": "domain/member-rows/3723", "items": {"doc": "not json"}}	200
 12-shared-and-members-unreadable	7	holder GET /domain/members	503 {"error": "unavailable"}
 12-shared-and-members-unreadable	8	holder GET /domain/alarms	503 {"error": "unavailable"}
 13-alarms-query-lexemes	1	@domain	ok

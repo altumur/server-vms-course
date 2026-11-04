@@ -21,7 +21,7 @@ Install the current testsub from the common testdata with its service mark using
 rights. There are no units and no user rows yet. The preparation is not a transfer of the state of
 the previous scenario and not a check of the installer.
 
-Start the store, a new console testsub and the resource srv-a per the section «Стенд» of the common acceptance README. Their doors must be ready;
+Start the store, a new console testsub and the resource srv-a per the section «Stand» of the common acceptance README. Their doors must be ready;
 the resource is registered and available to the console before the first step. All the processes of this box
 use one BOX_ID and server=srv-a; each new process gets a new instance.
 There is no controller and no workers: the scenarios do not start them. There are no third-party daemons and timers able to start a holder in scenario 04.
@@ -37,7 +37,7 @@ ticks of the holder and the reaper are expected, settle=60 by default.
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Стенд» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей): the doors `console`, `console2` (sc. 07, 08, 11, 12), `resource`, `store` (with `@as` — sc. 08, 09), `admin` (sc. 11, 12), the directives `@until`, `@sleep`, the request form `@header`. In total 9 scenarios / 120 steps (sc. 03 steps 16–20 — the segment note `to`, ADR-0117 addendum (3) item 2; sc. 04 steps 16–21 — a submitted deadline -1, 1e-12, 1000.1234: 202 and a write truncated downwards to ms, a negative one — 0, C06-DEADLINE-PRECISION-33-01; sc. 07 `07-request-gone` — 11 steps, ADR-0091 addendum (11) item 4: requests of `testsub2` with `per_person` 3, the deletion of the addressee unit — the outcome `gone` of the reaper, the row is removed, the reserve is released: the fourth request is 429 before and 202 after; sc. 11 `11-request-expired` — 15 steps, below); all HTTP (with @until and @key).
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей): the doors `console`, `console2` (sc. 07, 08, 11, 12), `resource`, `store` (with `@as` — sc. 08, 09), `admin` (sc. 11, 12), the directives `@until`, `@sleep`, the request form `@header`. In total 9 scenarios / 120 steps (sc. 03 steps 16–20 — the segment note `to`, ADR-0117 addendum (3) item 2; sc. 04 steps 16–21 — a submitted deadline -1, 1e-12, 1000.1234: 202 and a write truncated downwards to ms, a negative one — 0, C06-DEADLINE-PRECISION-33-01; sc. 07 `07-request-gone` — 11 steps, ADR-0091 addendum (11) item 4: requests of `testsub2` with `per_person` 3, the deletion of the addressee unit — the outcome `gone` of the reaper, the row is removed, the reserve is released: the fourth request is 429 before and 202 after; sc. 11 `11-request-expired` — 15 steps, below); all HTTP (with @until and @key).
 
 Steps of the reconciliation of python and go М10/6–11 (2026-10-18):
 - **03/9** — `user: operator` of the note (E60).
@@ -71,7 +71,7 @@ Sc. 08–10 (`audit-coverage-gemini` 0a5ae79f9) — likewise, each on its own em
   `r-7c4c0556d5a0c07c`, `acc-answered` — `r-bebf2f46796986bd`; the digest of the body `{"unit": "c4", "add": 1}` of the kind client is
   sha256 JCS `{"add":1,"unit":"c4"}` = `e83c1a0bfffbff5eb0a0de9119b1ab36a9591b374b4a655621da34e02f85a969` (the rule — the vectors
   `request-digest`).
-- Sc. 10 — the numeric query parameters of `GET /events` of the console (the guard and transfer contract «Числовые параметры query»,
+- Sc. 10 — the numeric query parameters of `GET /events` of the console (the guard and transfer contract «Numeric query parameters»,
   C06-EVENTS-QUERY-LEXEME-162-01): after URL decoding `limit` is an integer lexeme `^-?(0|[1-9][0-9]*)$`, then 1…10000 (the OpenAPI
   of the lesson); `from`, `to` — time `^(0|[1-9][0-9]*)(\.[0-9]+)?$`; otherwise 400 with `detail` — the name of the parameter; `limit=%31` and
   `to=1.5` — 200. The lexemes of `from` (`+1`, `%2B1`, `%201`, `1e3`, `%31`) — sc. 02 of [the acceptance of P/05](../../../../05-resource/acceptance/README.md).

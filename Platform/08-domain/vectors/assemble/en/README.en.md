@@ -18,7 +18,7 @@ its inputs were removed by the move of lesson 8 (the row of `corrections.tsv` of
 ## Run
 
 Without a stand: the command `assemble` of an implementation gets the input (the column `input`) and prints the JSON `{rows, report}`; `expect` is
-a subset of the fields of the output by the dictionary of the «Стенд» ([the common acceptance README](../../../../common/acceptance/README.md), `<код>
+a subset of the fields of the output by the dictionary of the «Stand» ([the common acceptance README](../../../../common/acceptance/README.md), `<код>
 <JSON>`: the named fields exist and are equal, `"@absent"` — there is no field, an array — by length, order and elements) or `@exit 2` (an input
 not of the form of Н5: the keys of `copies` are not exactly `members`; `grants` without `now`). Each row is a separate run.
 
@@ -26,7 +26,7 @@ not of the form of Н5: the keys of `copies` are not exactly `members`; `grants`
 
 The input is Н5 of the chapter: `book` is `testsub2/notes` (`pick: unique`, the names index `notes/` with `grant: view`) or `testsub2/rolls`
 (`pick: all`), `members` is the list of members, `book_seal_seed` is the `seed_secret` of the book acceptance key (`book seal 1`,
-[the README of the package `domain-token`](../../../../common/vectors/domain-token/README.md#ключи) «Ключи»), `copies` is the state and the objects of the copy
+[the README of the package `domain-token`](../../../../common/vectors/domain-token/README.md#ключи) «Keys»), `copies` is the state and the objects of the copy
 of each member (`null` — there is no copy), `grants` and `now` are the grant rows of the receivers for the rule Н1.3 `grant`. The secrets of the
 inputs are envelopes `x25519:v1` to `book seal 1` (in case 07 — to `book seal 2`: it does not open), `eph 1`, `nonce` 0…11
 ([the domain envelopes contract](../../../../common/contracts/domain-envelopes.md) «Конверт `x25519:v1`», the AAD is `[член, ключ строки,

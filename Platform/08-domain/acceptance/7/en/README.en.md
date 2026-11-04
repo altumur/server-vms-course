@@ -24,7 +24,7 @@ the local door (400 `request_id`, 413 `TOKEN_BODY`, 404 `<sub>` not from the cat
 
 As the stand preparation of chapter 8.3 ([the acceptance of chapter 8.3](../../3/README.md); before the move, the acceptance README of
 М11/03, «Подготовка каждого сценария 01–09») with one
-difference: the catalog of each cluster is `testsub` and `testsub2`, like the stand of chapter 8.5 (the order is the «Стенд» of the common acceptance
+difference: the catalog of each cluster is `testsub` and `testsub2`, like the stand of chapter 8.5 (the order is the «Stand» of the common acceptance
 README); on each cluster the controller of `testsub2` works too (without its snapshot shard the agent does not report — [chapter 9.1](../../../../09-agent/spec/09.1-agent.norms.md)
 Н1.2 `ready`), the worker of `testsub2` is not needed. The kind `tally` of the manifest `testsub` is the scope `placement`,
 `caller: origin`, `target_fields: [cluster, copies]`. The role `testsub2worker` of the stand is a real identity (a role socket or a kit), and
@@ -35,7 +35,7 @@ of the named cluster and with its name in `expect`.
 
 ## scenarios.tsv
 
-The format is the dictionary of the «Стенд» and the dictionary of the domain; an expectation is a subset of fields. `$tok` is the token from the answer of the local door.
+The format is the dictionary of the «Stand» and the dictionary of the domain; an expectation is a subset of fields. `$tok` is the token from the answer of the local door.
 
 - Sc. 02 steps 7–8 — the body limit: 4096 bytes at the local door pass to the holder (`no_assignment`), 4097 — 413 at the local
   door; `TOKEN_HOLDER_BODY` 4608 at the holder's door — sc. 04.
