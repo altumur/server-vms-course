@@ -11,7 +11,7 @@
 - Канон — нормы глав `01.K-cam.norms.md` (Н1–Н5 каждой главы; адреса `V/01.K Н…`).
 - Канон манифеста — [`cam.subsystem.yaml`](../../cam.subsystem.yaml): байты как есть.
 - [Контракт](../../spec/01-cam.api.openapi.yaml) выражает формы HTTP-входов канона.
-- Приёмка — [глава 1](../acceptance/1/README.md), [глава 2](../acceptance/2/README.md), [глава 3](../acceptance/3/README.md), [глава 4](../acceptance/4/README.md), [глава 5](../acceptance/5/README.md), [глава 8](../acceptance/8/README.md); стенд и словарь — [общий README приёмки VMS](../../../common/acceptance/README.md); новых требований приёмка не вводит.
+- Приёмка — [глава 1](../acceptance/1/README.md), [глава 2](../acceptance/2/README.md), [глава 3](../acceptance/3/README.md), [глава 4](../acceptance/4/README.md), [глава 5](../acceptance/5/README.md), [глава 8](../acceptance/8/README.md); стенд и словарь — [общий README приёмки VMS](../../../common/ru/acceptance/README.md); новых требований приёмка не вводит.
 - Лекция (`ru/01-cam.md`, для человека, в выгрузку не входит) объясняет причины; платформа — нормы выгрузки пина VMS по адресам `P/…` (их правит не VMS).
 
 Противоречие записать с местом и контрпримером (раздел «При расхождении»); произвольный отказ не заменяет

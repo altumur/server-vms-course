@@ -9,7 +9,7 @@
 
 - Канон — нормы глав `04.K-det.norms.md` (Н1–Н5 каждой главы; адреса `V/04.K Н…`).
 - Канон манифеста — [`det.subsystem.yaml`](../../det.subsystem.yaml): байты как есть.
-- Приёмка — [глава 1](../acceptance/1/README.md), [глава 4](../acceptance/4/README.md); стенд и словарь — [общий README приёмки VMS](../../../common/acceptance/README.md); новых требований приёмка не вводит.
+- Приёмка — [глава 1](../acceptance/1/README.md), [глава 4](../acceptance/4/README.md); стенд и словарь — [общий README приёмки VMS](../../../common/ru/acceptance/README.md); новых требований приёмка не вводит.
 - Векторы — [`mask`](../vectors/mask/README.md) (команда пакета).
 - Лекция (`ru/04-det.md`, для человека, в выгрузку не входит) объясняет причины; платформа — нормы выгрузки пина VMS по адресам `P/…` (их правит не VMS).
 

@@ -1,7 +1,7 @@
 # Приёмка V/07.6 — расписания, режимы, окна
 
 Норма главы — [`07.6-auto.norms.md`](../../spec/07.6-auto.norms.md) Н5. Стенд и словарь — [общий README приёмки
-VMS](../../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `7a875c75`).
+VMS](../../../../common/ru/acceptance/README.md) поверх общего README платформы (выгрузка `7a875c75`).
 
 Текст производный от `acceptance/6/README.md`, руками не правится: источник — английский [`acceptance/6/README.md`](../../../acceptance/6/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 

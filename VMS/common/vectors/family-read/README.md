@@ -1,6 +1,6 @@
 # VMS family vectors (family-read)
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/family-read/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 A table `NN.tsv` per VMS lesson that owns families of `VMS/common/data/catalog.tsv` (the Architect's decision on the VMS request
 «семьи в открытых местах», option A). A row: the family (`family`, `kind`, `place` — a row of the VMS catalog), a concrete key,

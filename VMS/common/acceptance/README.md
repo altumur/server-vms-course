@@ -1,8 +1,8 @@
 # VMS module acceptance — the common stand and directives
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-Common to the acceptances of the VMS lessons (`VMS/NN-<имя>/acceptance/K/`). The basis is the [common platform acceptance README](../../../../Platform/common/acceptance/README.md)
+Common to the acceptances of the VMS lessons (`VMS/NN-<имя>/acceptance/K/`). The basis is the [common platform acceptance README](../../../Platform/common/acceptance/README.md)
 (the export the module stands on; the dictionary of directives, doors, requests and expectations, the format of `scenarios.tsv`, the section «Стенд»):
 the VMS acceptance uses its forms and adds only what is below. The run — after the first stage C generation that has passed
 the platform acceptance (ADR-0090 addenda (8), (9)); until then the scenarios are norm text. A lesson README names its stand by a link
@@ -114,7 +114,7 @@ the VMS expectations (checked over all `scenarios.tsv` on 2026-11-03). Should it
 
 **The subsystem file on the stand.** The keys of the subsystem file (`/etc/<sub>/<sub>.env`) that the lesson README names (per scenario as
 well) the stand writes into the file `{data}/etc/<sub>/<sub>.env` of its own instance and gives the subsystem worker its path in
-`W2C_SUB_ENV` (P/02.4 Н1.2; [the environment file contract](../../../../Platform/common/contracts/env-file.md)) — before `@start
+`W2C_SUB_ENV` (P/02.4 Н1.2; [the environment file contract](../../../Platform/common/contracts/env-file.md)) — before `@start
 worker`; the file is its own per scenario. VMS substitutions beyond the common README: `{model_stub}` — the runner program `model-stub`
 (the model stub, V/10.2 Н5); `{spec}` — the specification root (the directory with `Platform/` and `VMS/`); `{hport}` — the port of the camera
 holder door (above); `{obsd}` — the binary file of the `obsd` engine (above).

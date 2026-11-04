@@ -1,7 +1,7 @@
 # Приёмка V/03.3 — дверь WHEP: выбор потока по размеру
 
 Норма главы — [`03.3-live.norms.md`](../../spec/03.3-live.norms.md) Н5. Стенд и словарь — [общий README приёмки
-VMS](../../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `7a875c75`).
+VMS](../../../../common/ru/acceptance/README.md) поверх общего README платформы (выгрузка `7a875c75`).
 
 Текст производный от `acceptance/3/README.md`, руками не правится: источник — английский [`acceptance/3/README.md`](../../../acceptance/3/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 

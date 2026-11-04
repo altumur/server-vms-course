@@ -1,6 +1,6 @@
 # Common to all VMS lessons
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 ```text
 lessons.tsv        the lesson map: number (address V/NN), directory, title, subsystem (manifest name or «-»), status

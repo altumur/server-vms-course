@@ -1,6 +1,6 @@
 # Inventory of the VMS layer: chapters М10B, М12A, М12B → lessons `VMS/` and the platform
 
-This English text is the source; the Russian [`inventory.md`](../inventory.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/inventory.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The first task of «Спецификация VMS» (ADR-0090 addendum (4)); «Архитектор» checks it. The platform is the export `cammeta-specs`
 `afb1c88` (course `0d0b393de`; compiled against `c9447b3`, no difference for VMS — «ХОД»); the addresses `P/NN.K Нx.y` were checked by search, `Platform/` of the course was not read. The
