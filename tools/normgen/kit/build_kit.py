@@ -13,7 +13,7 @@
 Часть `refusals` (--part refusals; генератор № 4 ADR-0125 tools/normgen/gen_refusals.py, судья refusal_judge.py):
 refusals/ (заменяется целиком), паспорт — в provenance.
 Часть `vectors` (--part vectors; ADR-0126 доп. (7) п. 4, генератор № 6 ADR-0125 tools/normgen/gen_tests.py): vectortests/,
-vectorcmd/, cmd/vectors (заменяются целиком) и заглушка адаптера vectoradapter/ — её реализация правит, кладётся, только если её нет.
+vectorcmd/, cmd/vectors (заменяются целиком) и заглушки адаптера vectoradapter/ (canonical.go, rights.go — по файлу на функцию) — их реализация правит; заглушка кладётся, только если её файла нет и её имя не объявлено в пакете.
 Часть `stagetests` (--part stagetests, нужна часть door; ADR-0125 доп. (3), (4), ADR-0126 доп. (7), gen_stagetests.py, судья
 scenario_judge.py): stagetests/ (заменяется целиком) и coreadapter/ — coreadapter.go пакета, open.go реализации (кладётся один раз).
 Часть `door` (--part door; генератор № 2 ADR-0125 tools/normgen/gen_door.py): door/ (заменяется целиком) — дверь из
@@ -198,6 +198,27 @@ def provenance(parts, files, judged):
     return out
 
 
+DECL = re.compile(rb"^(?:func (?:\(\w+ \*?(\w+)\) )?(\w+)\(|type (\w+) )", re.M)
+
+
+def declarations(data):
+    """Имена верхнего уровня Go-файла: функции, методы (Тип.имя), типы."""
+    return {(f"{m[1].decode()}." if m[1] else "") + (m[2] or m[3]).decode() for m in DECL.finditer(data)}
+
+
+def own_taken(target, data):
+    """Заглушка реализации не кладётся, если её файл есть или её имя уже объявлено в другом файле пакета (реализация
+    перенесла функцию или собрала заглушки в один файл, как пакеты до разнесения по файлам): иначе — двойное
+    объявление, сборка ломается."""
+    if target.exists():
+        return True
+    mine = declarations(data)
+    for f in target.parent.glob("*.go") if target.parent.is_dir() else ():
+        if not f.name.endswith("_test.go") and mine & declarations(f.read_bytes()):
+            return True
+    return False
+
+
 def build(dst, module, parts=(), judged=None):
     dst = Path(dst)
     if set(judged or {}) - set(("writecheck",) + PARTS):
@@ -260,7 +281,7 @@ def build(dst, module, parts=(), judged=None):
     for (sub, name, data, origin, source, own), component in tests:
         if core_files and (sub, name) == ("coreadapter", "open.go"):
             continue                    # open.go — у части core: Open уже возвращает её ядро
-        if own and (internal / sub / name).exists():
+        if own and own_taken(Path(os.path.normpath(internal / sub / name)), data):
             continue                    # адаптер реализации не трогается
         put(sub, name, data, origin, component, source)
         if own:
@@ -279,7 +300,7 @@ def build(dst, module, parts=(), judged=None):
         if own:
             files[-1]["editable"] = True
     for sub, name, data, origin, source, own in core_files:
-        if (internal / sub / name).exists():
+        if own_taken(internal / sub / name, data):
             continue                    # ядро реализации не трогается
         put(sub, name, data, origin, "core", source)
         files[-1]["editable"] = True

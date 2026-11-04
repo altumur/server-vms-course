@@ -9,9 +9,9 @@
 | 2 | `gen_door.py` | `spec/01-store.api.openapi.yaml` | `door/` | `door` | раннер P/01.1 на заглушке `kit/build_stub.py` → `door_judge.py` |
 | 3 | `gen_flags.py` | `forms/daemon-flags.tsv` | `flags/` | `flags` | `flag_judge.py` — пробы запуска демона |
 | 4 | `gen_refusals.py` | `forms/refusals.tsv` | `refusals/` | `refusals` | `refusal_judge.py` — приёмка и `door.Refuse` |
-| 6 | `gen_tests.py` | `vectors/jcs`, `vectors/rights-evaluator`, `forms/stages.tsv` | `vectortests/`, `vectorcmd/`, `vectoradapter/` | `tests` | `vector_judge.py` |
+| 6 | `gen_tests.py` | `vectors/jcs`, `vectors/rights-evaluator`, `forms/stages.tsv` | `vectortests/`, `vectorcmd/`, `vectoradapter/` (`canonical.go`, `rights.go` — заглушки реализации по файлу на функцию) | `tests` | `vector_judge.py` |
 | 2 + 3 | `gen_launch.py` | `forms/daemon-flags.tsv`, OpenAPI (через части `flags`, `door`) | `launch/`, `cmd/configstore/` | `launch` (нужны `door`, `flags`, `stagetests`) | раннер P/01.1 на пакете как есть (пустое ядро `launch.Empty` на заглушке `coreadapter.Open`) → `launch_judge.py` (этап `launch`: `01-absent`) |
-| 2 + Н3 | `gen_core.py` | `apidoor.Handler` (выход `gen_door`), `spec/01.1-store.norms.md` (якоря req разделов Н3, Н2.1) | `out/p01-1/core/coreadapter/` (`core.go`, `open.go` — **реализации**, кладутся один раз) | `core` (нужны `door`, `stagetests`) | `test_gen_core.py` (сборка, заглушки, тесты этапов красные без паники) и раннер на пакете (этап `launch` остаётся закрытым: `Get` заглушки — пустое хранилище) |
+| 2 + Н3 | `gen_core.py` | `apidoor.Handler` (выход `gen_door`), `spec/01.1-store.norms.md` (якоря req разделов Н3, Н2.1) | `out/p01-1/core/coreadapter/` (`core.go`, `open.go` и по файлу на метод `apidoor.Handler` — **реализации**, кладутся один раз; заглушка не кладётся, если её имя уже объявлено в пакете) | `core` (нужны `door`, `stagetests`) | `test_gen_core.py` (сборка, заглушки, тесты этапов красные без паники) и раннер на пакете (этап `launch` остаётся закрытым: `Get` заглушки — пустое хранилище) |
 
 Ручное — один раз на словарь: среда CEL `runtime/`, примитивы `#fn` `prims/` (Go и Python), типы флагов
 `flags/go/flagtypes.go`, среда двери `doorrt/`, пакет `kit/go` (`jsonstrict`, `writecheck`).
