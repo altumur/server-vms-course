@@ -115,7 +115,7 @@ class GenFlags(unittest.TestCase):
         dst = Path(self.tmp.name) / "kit"
         manifest = build_kit.build(dst, "example.com/attempt/01-store", ["flags"])
         self.assertEqual(manifest["parts"], ["writecheck", "flags"])
-        self.assertEqual(set(manifest["provenance"]["flags"]), {"form", "generator", "judge"})
+        self.assertEqual(set(manifest["provenance"]["flags"]), {"form", "generator", "judge", "output", "judged"})
         self.assertTrue(any(f["path"].endswith("internal/flags/flags.go") and f["origin"] == "generated"
                             for f in manifest["files"]))
         (dst / "01-store/go.mod").write_text("module example.com/attempt/01-store\n\ngo 1.22\n", encoding="utf-8")

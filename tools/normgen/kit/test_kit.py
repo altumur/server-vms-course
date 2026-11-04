@@ -459,5 +459,75 @@ class Kit(unittest.TestCase):
         self.outcome(self.PUT + b',"x":[' + b",".join([b"1.5", b'"s"', b"null", b"{}"] * 50000) + b"]}", 0)
 
 
+class Fresh(unittest.TestCase):
+    """Свежесть № 1 и № 2 (ревью Codex С2): сборка сверяет копируемый выход со свежей генерацией, не с шапкой."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix="normgen-fresh-"))
+        self.patches = []
+
+    def tearDown(self):
+        for obj, name, old in reversed(self.patches):
+            setattr(obj, name, old)
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def patch(self, obj, name, new):
+        self.patches.append((obj, name, getattr(obj, name)))
+        setattr(obj, name, new)
+
+    def refuses(self, parts=("door",)):
+        with self.assertRaises(build_kit.KitError) as ctx:
+            build_kit.build(self.tmp / "dst", MODULE, list(parts))
+        self.assertIn("fresh run", str(ctx.exception))
+
+    def test_green(self):
+        m = build_kit.build(self.tmp / "dst", MODULE, ["door"])
+        for part in ("writecheck", "door"):
+            prov = m["provenance"][part]
+            self.assertTrue(prov["generator"]["sha256"] and prov["judge"]["sha256"] and prov["output"], part)
+            self.assertIsNone(prov["judged"])
+
+    def test_out_edited_header_kept(self):
+        """Подмена в out при прежней шапке (проба ревью: отказы отключены)."""
+        copy = self.tmp / "normgen"
+        shutil.copytree(NORMGEN / "out", copy / "out")
+        f = copy / "out/p01-1/go/checks/checks.go"
+        text = f.read_text(encoding="utf-8")
+        self.assertIn("hit == nil && isTrue(v)", text)
+        f.write_text(text.replace("hit == nil && isTrue(v)", "false"), encoding="utf-8")
+        self.patch(build_kit, "NORMGEN", copy)
+        self.refuses(())
+
+    def test_environment_only(self):
+        """Изменилась только ручная среда (runtime.go checks, doorrt) — форма и генератор прежние."""
+        import gen_checks
+        import gen_door
+        env = self.tmp / "env"
+        shutil.copytree(NORMGEN / "runtime", env / "runtime")
+        shutil.copytree(NORMGEN / "prims", env / "prims")
+        rt = env / "runtime/go/runtime.go"
+        rt.write_text(rt.read_text(encoding="utf-8") + "\nvar envChanged = 1\n", encoding="utf-8")
+        self.patch(gen_checks, "HERE", env)
+        self.refuses(())
+        setattr(gen_checks, "HERE", NORMGEN)
+        door_rt = env / "doorrt.go"
+        door_rt.write_text(gen_door.RUNTIME.read_text(encoding="utf-8") + "\nvar envChanged = 1\n", encoding="utf-8")
+        self.patch(gen_door, "RUNTIME", door_rt)
+        self.patch(gen_door, "HERE", env)
+        self.refuses()
+
+    def test_generator_only(self):
+        """Изменилась только логика генератора."""
+        import gen_checks
+        import gen_door
+        old = gen_checks.go_module
+        self.patch(gen_checks, "go_module", lambda *a: old(*a) + "\nvar genChanged = 1\n")
+        self.refuses(())
+        setattr(gen_checks, "go_module", old)
+        old_door = gen_door.build_go
+        self.patch(gen_door, "build_go", lambda *a: (old_door(*a)[0] + "\nvar genChanged = 1\n", old_door(*a)[1]))
+        self.refuses()
+
+
 if __name__ == "__main__":
     unittest.main()

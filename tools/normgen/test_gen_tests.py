@@ -224,9 +224,25 @@ class GenTests(unittest.TestCase):
             files = gen_tests.render(root)
             names = [n for n, _ in go_funcs(files["go/vectortests/rights_eval_test.go"].decode())]
             self.assertTrue(names and all(n.startswith("TestRightsCheck_Line") for n in names), names)
-            edit(root / gen_tests.STAGES, "vectors:jcs", "tests:jcs")
+            edit(root / gen_tests.STAGES, "vectors:jcs", "build")
             with self.assertRaisesRegex(gen_tests.GenError, "no stage with gate vectors:jcs"):
                 gen_tests.render(root)
+
+    def test_gate_list(self):
+        """vectors: — элемент списка gate (ADR-0126 доп. (7) п. 3; ревью Codex С4): с build, в любом порядке."""
+        for gate_text in ("vectors:jcs;build", "build;vectors:jcs", "accept:1.1:01-absent;vectors:jcs;build"):
+            with self.subTest(gate=gate_text), tempfile.TemporaryDirectory() as d:
+                root = copy_root(d)
+                edit(root / gen_tests.STAGES, "\tvectors:jcs\t", f"\t{gate_text}\t")
+                stages, _ = gen_tests.read_stages(root)
+                self.assertEqual(stages["jcs"], "jcs")
+                self.assertEqual(gen_tests.test_prefix(stages, "jcs"), "TestJcs_")
+        for gate_text in ("vectors:jcs; build", "vectors:jcs;", "vectors:jcs;;build", "vectors:jcs;vectors:jcs"):
+            with self.subTest(gate=gate_text), tempfile.TemporaryDirectory() as d:
+                root = copy_root(d)
+                edit(root / gen_tests.STAGES, "\tvectors:jcs\t", f"\t{gate_text}\t")
+                with self.assertRaises(gen_tests.GenError):
+                    gen_tests.read_stages(root)
 
     def mutated(self, d, which):
         """Корень с одной мутированной строкой → (корень, имя теста, case)."""

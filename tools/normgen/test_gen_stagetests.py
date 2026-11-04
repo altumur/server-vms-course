@@ -217,7 +217,7 @@ class StageTests(unittest.TestCase):
 
     def test_selection_prefix_and_refusals(self):
         root = synthetic_root(self.sub("p"), [c[:4] for c in SCEN], [c[:4] for c in SEAMS])
-        files, inv = gen_stagetests.build(root, stages_text=with_gate("tests:1.1:s9-prefix,s10-late; tests:1.1:m3-par:seams"),
+        files, inv = gen_stagetests.build(root, stages_text=with_gate("tests:1.1:s9-prefix,s10-late;tests:1.1:m3-par:seams"),
                                           transitional={})
         status = {r[0]: r for r in inv}
         self.assertEqual(status["1.1/scenarios.tsv/s9-prefix/1"][3], "translated")
@@ -232,6 +232,8 @@ class StageTests(unittest.TestCase):
             ("tests:1.1:s99", {}),                                            # сценария нет
             ("tests:1.1:s9-prefix,s9-prefix", {}),                            # повтор
             ("tests:store_core:1.1:s1-bind", {}),                             # вид не по доп. (7) п. 2
+            ("tests:1.1:s9-prefix; tests:1.1:m3-par:seams", {}),              # пробел после «;» (шапка формы)
+            ("tests:1.1:s9-prefix;", {}),                                     # пустой элемент
         ]
         for gate, tr in bad:
             with self.subTest(gate=gate), self.assertRaises(gen_stagetests.GenError):
@@ -251,11 +253,36 @@ class StageTests(unittest.TestCase):
             with self.subTest(seams=seams), self.assertRaises(gen_stagetests.GenError):
                 gen_stagetests.build(r, stages_text=with_gate("tests:1.1:p1:seams"), transitional={})
 
+    def test_at_is_data(self):
+        """«@» в ключах, значениях и ожидаемом теле — данные; директивы — по грамматике и позиции (ревью Codex С5)."""
+        scen = [
+            ("a1", "1", 'POST /v1/write {"op":"put","key":"acc/a1/x@y","items":{"mail":"a@b.example"}}', '200 {"index":"$a"}'),
+            ("a1", "2", "GET /v1/get?key=acc/a1/x@y", '200 {"items":{"mail":"a@b.example"},"index":"$a"}'),
+            ("a1", "3", 'POST /v1/write {"op":"put","key":"acc/a1/@big(3)@z","items":{"@":"@"}}', '200 {"index":"$b"}'),
+            ("a1", "4", "GET /v1/get?key=acc/a1/x@y", '200 {"items":{"at":"@time"},"index":"$a"}'),
+            ("a1", "5", "GET /v1/get?key=acc/a1/x@y", '200 {"index":"$a"}'),
+            ("a2", "1", "GET /v1/get?key=acc/a2/c", '@oneof 200 {"index":""} | 503 {"kind":"unavailable"}'),
+            ("a3", "1", "GET /v1/get?key=acc/a3/c", '200 {"items":"@any","index":""}'),
+            ("a3", "2", "GET /v1/get?key=acc/a3/c", '200 {"items":null,"index":""}'),
+        ]
+        root = synthetic_root(self.sub("at"), scen)
+        _, inv = gen_stagetests.build(root, stages_text=with_gate("tests:1.1:a1,a3"), transitional={})
+        status = {r[0].split("/", 2)[2]: r for r in inv}
+        for k in ("a1/1", "a1/2", "a1/3"):
+            self.assertEqual(status[k][3], "translated", k)
+        self.assertEqual(status["a1/4"][3], "excluded")
+        self.assertIn("@time", status["a1/4"][5])
+        self.assertEqual(status["a1/5"][3], "excluded")                      # хвост после директивы
+        self.assertEqual(status["a3/1"][3], "excluded")
+        self.assertIn("@any", status["a3/1"][5])
+        with self.assertRaises(gen_stagetests.GenError):                     # @oneof первым шагом — пустая проекция
+            gen_stagetests.build(root, stages_text=with_gate("tests:1.1:a2"), transitional={})
+
     def test_engine_on_fake_core(self):
         root = synthetic_root(self.sub("g"), [c[:4] for c in SCEN], [c[:4] for c in SEAMS])
         names = ",".join(sorted({c[0] for c in SCEN}))
         seams = ",".join(sorted({c[0] for c in SEAMS}))
-        files, _ = gen_stagetests.build(root, stages_text=with_gate(f"tests:1.1:{names}; tests:1.1:{seams}:seams"),
+        files, _ = gen_stagetests.build(root, stages_text=with_gate(f"tests:1.1:{names};tests:1.1:{seams}:seams"),
                                         transitional={})
         mod = self.sub("mod")
         shutil.copytree(OUT / "go", mod)

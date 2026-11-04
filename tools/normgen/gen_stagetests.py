@@ -24,8 +24,13 @@ TRANSITIONAL (параметр генератора), только для эта
 `stagetests/inventory.tsv`.
 """
 import hashlib
+import json
 import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import gate  # noqa: E402 — общий разбор gate (ревью Codex С4)
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
@@ -35,8 +40,6 @@ ENGINES = {"1.1": "runner/run.py"}          # главы с перенесённ
 TRANSITIONAL = {}       # форма P/01 несёт tests:<глава>:… (дельта 0125-p01-stages-seams, main 322d2cfb8)
 METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD")
 VAR = re.compile(r"\$[A-Za-z0-9_]+")
-BIG = re.compile(r"@big\((\d+)\)")
-TESTS_ITEM = re.compile(r"tests:([0-9]+\.[0-9]+):(\*|[a-z0-9][a-z0-9,-]*)(:seams)?")
 CLOCK = re.compile(r"@clock [+-](0|[1-9][0-9]*)")
 PARALLEL = re.compile(r"@parallel ([2-9]|[1-9][0-9]+)")
 ONE_REST = re.compile(r"one (.+?); rest (.+)")
@@ -112,16 +115,43 @@ def step_blocker(chapter, step, seams, late, stage_n):
     method = req.split(" ", 1)[0]
     if method not in METHODS:
         return f"step {st}: the stand directive or door {method!r}"
-    rest = BIG.sub("", req)
-    if "@" in rest:
-        return f"step {st}: a request directive outside @big ({rest[rest.index('@'):][:20]!r})"
+    # в запросе директива одна — @big(N) (раннер run.py, README 01); прочий «@» — данные (ревью Codex С5)
     for e in (ONE_REST.fullmatch(exp).groups() if seams and ONE_REST.fullmatch(exp) else
               [exp[5:]] if seams and exp.startswith("each ") else [exp]):
-        if "@" in e or e[4:5] == "~":
-            return f"step {st}: an expectation form the engine does not port ({e[:30]!r})"
+        mark = expect_directive(e)
+        if mark:
+            return f"step {st}: an expectation form the engine does not port ({mark!r} in {e[:30]!r})"
         m = re.match(r"([1-5][0-9]{2}) \{.*\"kind\":\s*\"([a-z]+)\"", e)
         if m and late.get((int(m[1]), m[2]), 0) > stage_n:
             return f"step {st}: a refusal of a later stage ({m[1]} {m[2]}, stage n {late[int(m[1]), m[2]]})"
+    return None
+
+
+VALUE_MARK = re.compile(r"@[a-z]+")
+
+
+def expect_directive(e):
+    """Директива ожидания по грамматике и позиции (None — нет): вся ячейка с «@» (@oneof, @exit, @empty…), тело с «@»
+    или «~» (http_expect), строковое значение JSON целиком вида @имя (@time, @any, @absent — README 01). Строка с «@»
+    внутри («a@b», почта) — данные, движок сличает её как есть."""
+    if e.startswith("@"):
+        return e.split(" ", 1)[0]
+    body = e[4:]
+    if body.startswith(("@", "~")):
+        return body.split(" ", 1)[0]
+    try:
+        value = json.loads(body) if body else None
+    except ValueError:
+        return None
+    todo = [value]
+    while todo:
+        v = todo.pop()
+        if isinstance(v, str) and VALUE_MARK.fullmatch(v):
+            return v
+        if isinstance(v, dict):
+            todo += v.values()
+        elif isinstance(v, list):
+            todo += v
     return None
 
 
@@ -177,17 +207,13 @@ def go_raw(s):
     return "".join(out) + '"'
 
 
-def stage_items(stage, gate, transitional):
-    """→ [(глава, [сценарии] | '*', seams)] — элементы tests: формы, иначе переходное объявление."""
-    items = []
-    for part in [p.strip() for p in gate.split(";") if p.strip()]:
-        if part.startswith("tests:"):
-            m = TESTS_ITEM.fullmatch(part)
-            if not m:
-                if part == f"tests:{stage}":
-                    continue                           # прежний вид без сценариев (до дельты)
-                raise GenError(f"stage {stage}: gate item {part!r} is not tests:<chapter>:<scenarios|*>[:seams]")
-            items.append((m[1], "*" if m[2] == "*" else m[2].split(","), bool(m[3])))
+def stage_items(stage, gate_text, transitional):
+    """→ [(глава, [сценарии] | '*', seams)] — элементы tests: формы (общий разбор gate.py), иначе переходное объявление."""
+    try:
+        checks = gate.parse(gate_text, f"stage {stage}")
+    except gate.GateError as exc:
+        raise GenError(str(exc)) from None
+    items = [(c.chapter, "*" if c.names is None else list(c.names), c.seams) for c in checks if c.kind == "tests"]
     if not items and stage in transitional:
         items = [(ch, names, seams) for ch, names, seams in transitional[stage]]
     return items

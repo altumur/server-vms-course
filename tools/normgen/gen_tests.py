@@ -35,6 +35,7 @@ sys.path.insert(0, str(HERE))
 
 from gen_checks import camel, go_str, gofmt  # noqa: E402 — общие кирпичи генератора № 1
 import gen_stagetests  # noqa: E402 — тесты этапов из сценариев (ADR-0125 доп. (3))
+import gate  # noqa: E402 — общий разбор gate (ревью Codex С4)
 
 DEFAULT_OUT = HERE / "out/p01-1"
 GO_MODULE = "normgen/p01-1"
@@ -113,11 +114,16 @@ def read_stages(root):
         row = dict(zip(head, cells))
         if not re.fullmatch(r"[a-z][a-z0-9_]*", row.get("stage", "")):
             raise GenError(f"{STAGES}: stage {row.get('stage')!r} — a Latin name")
-        m = re.fullmatch(r"vectors:([a-z0-9][a-z0-9-]*)", row.get("gate", ""))
-        if m:
-            if m[1] in by_pkg:
-                raise GenError(f"{STAGES}: two stages judge vectors:{m[1]}")
-            by_pkg[m[1]] = row["stage"]
+        try:
+            checks = gate.parse(row.get("gate", ""), f"{STAGES}: {row['stage']}")
+        except gate.GateError as exc:
+            raise GenError(str(exc)) from None
+        for c in checks:                       # элементы vectors: списка gate (ADR-0126 доп. (7) п. 3)
+            if c.kind != "vectors":
+                continue
+            if c.package in by_pkg:
+                raise GenError(f"{STAGES}: two stages judge vectors:{c.package}")
+            by_pkg[c.package] = row["stage"]
     return by_pkg, src
 
 
