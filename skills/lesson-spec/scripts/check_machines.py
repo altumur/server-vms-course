@@ -1,12 +1,16 @@
-"""Автомат нормы (ADR-0120 п. 2 (б)): `Platform/NN-*/data/<имя>.machine.yaml` и трассы `<имя>.traces.tsv`.
+"""Machines of the norms (ADR-0120 item 2 (b), addendum (5) items 4, 6): `Platform/NN-*/data/<name>.machine.yaml` with
+traces `<name>.traces.tsv`.
 
-Проверка:
-- форма: состояния, события, таймеры, действия, функции — закрытые наборы; каждый переход называет событие из events,
-  действия из actions, `to` — состояние; таймер даёт событие из events; `if` и аргументы действий компилируются в CEL;
-- трассы: каждая трасса — шаг 0 `input {...}`, затем события; после каждого шага сверяются утверждения колонки expect
-  прогоном эталонного исполнителя (ниже): state, alive, need, replied, target.<v>, reads, did (действие, которое
-  изменило состояние на этом шаге).
-Исполнитель — эталон для сверки трасс, не реализация: действия — по их описанию в actions автомата rollout-poll.
+The check:
+- form: states, events, timers, actions, functions are closed sets; a transition names an event of events, actions of
+  actions with the right number of arguments, `to` — a state; every expression — `if`, the arguments of actions, `set:`,
+  `emit:`, `invariants:` — compiles in CEL when the machine loads, not when a trace reaches it;
+- traces: step 0 of a trace is `input {...}` (it may override const: `{"const": {...}}`), then external events at times
+  of virtual clocks; the executor raises the timer events itself (tick, the reply deadlines, the read deadlines,
+  wait_expired) in the order of env, runs the transitions, checks the invariants after every event and then the
+  assertions of the step.
+The executor is the reference for the traces, not an implementation; `check_machines.py` is a tool of check_spec, not a norm
+(ADR-0120 addendum (5) item 6). The timer semantics below are those of rollout-poll's timers: section.
 """
 import json
 import re
@@ -15,7 +19,8 @@ from pathlib import Path
 import yaml
 
 CALL = re.compile(r"^([a-z_]+)(?:\((.*)\))?$", re.S)
-EVENT_LINE = re.compile(r"^(input|tick|self|status|commit|wait)(?: (.*))?$", re.S)
+EVENT_LINE = re.compile(r"^(input|advance|self|status|commit)(?: (.*))?$", re.S)
+BUILTINS = {"has", "size", "all", "exists", "exists_one", "map", "filter", "in", "string", "int", "double", "type"}
 
 
 def split_args(text):
@@ -47,24 +52,31 @@ class Machine:
         self.path = Path(path)
         self.errors = []
         self.doc = yaml.safe_load(self.path.read_text(encoding="utf-8"))
+        self.compiled = {}
         self.form()
+        if not self.errors:
+            self.compile()
 
     def error(self, message):
         self.errors.append(f"{self.path.name}: {message}")
 
     def form(self):
         d = self.doc
-        for key in ("machine", "norm", "states", "initial", "input", "const", "vars", "timers", "events", "functions",
-                    "actions", "transitions"):
+        for key in ("machine", "norm", "states", "initial", "input", "const", "vars", "timers", "events", "env",
+                    "functions", "actions", "invariants", "transitions"):
             if key not in d:
                 self.error(f"no section {key}")
         if self.errors:
             return
         if d["initial"] not in d["states"]:
             self.error(f"initial {d['initial']} is not a state")
-        for name, timer in d["timers"].items():
-            if timer.get("event") not in d["events"]:
-                self.error(f"timer {name}: event {timer.get('event')} is not in events")
+        for name, action in d["actions"].items():
+            unknown = set(action) - {"args", "set", "emit", "io"}
+            if unknown:
+                self.error(f"action {name}: unknown keys {sorted(unknown)}")
+            for var in action.get("set", {}):
+                if var not in d["vars"]:
+                    self.error(f"action {name}: set {var} is not a variable")
         self.calls = []
         for k, t in enumerate(d["transitions"], 1):
             where = f"transition {k}"
@@ -80,132 +92,172 @@ class Machine:
                 if not m or m[1] not in d["actions"]:
                     self.error(f"{where}: action {action!r} is not in actions")
                     continue
-                self.calls.append((k, m[1], split_args(m[2]) if m[2] else []))
-            for name in re.findall(r"(?<![\w.'])([a-z_][A-Za-z_]*)\s*\(", t.get("if", "")):
-                if name not in {"has", "size", "all", "exists", "in"} and name not in d["functions"]:
-                    self.error(f"{where}: if calls {name}(), not in functions")
+                args = split_args(m[2]) if m[2] else []
+                if len(args) != len(d["actions"][m[1]].get("args", [])):
+                    self.error(f"{where}: {m[1]} takes {len(d['actions'][m[1]].get('args', []))} arguments, given {len(args)}")
+                self.calls.append((k, t["event"], m[1], args))
+        if self.errors:
+            return
+        for where, expr, _ in self.expressions():
+            for name in re.findall(r"(?<![\w.'])([a-z_][A-Za-z_]*)\s*\(", expr):
+                if name not in BUILTINS and name not in d["functions"]:
+                    self.error(f"{where}: calls {name}(), not in functions")
 
+    def expressions(self):
+        """[(where, expression, extra variable names)] — everything that compiles at load."""
+        d, out = self.doc, []
+        for k, t in enumerate(d["transitions"], 1):
+            if "if" in t:
+                out.append((f"transition {k} if", t["if"], d["events"][t["event"]]))
+        for k, event, name, args in self.calls:
+            for a in args:
+                out.append((f"transition {k} {name} argument", a, d["events"][event]))
+        for name, action in d["actions"].items():
+            for var, expr in action.get("set", {}).items():
+                out.append((f"action {name} set {var}", expr, action.get("args", [])))
+            if "emit" in action:
+                out.append((f"action {name} emit", action["emit"], action.get("args", [])))
+        for name, expr in d["invariants"].items():
+            out.append((f"invariant {name}", expr, []))
+        return out
 
-class Run:
-    """The reference executor of rollout-poll: transitions by the file, actions by their descriptions."""
-
-    def __init__(self, machine, inp):
+    def compile(self):
         from cel_expr_python import cel
-        self.cel, self.m, self.input = cel, machine, inp
+        self.cel = cel
         T = cel.Type
         cfg = cel.NewEnvConfigFromYaml("name: machine\nextensions:\n  - name: strings\n  - name: two-var-comprehensions\n")
         fns = [cel.FunctionDecl("same_set", [cel.Overload("same_set_list_list", T.BOOL, [T.List(T.DYN), T.List(T.DYN)],
                                                           impl=lambda a, b: sorted(map(str, a)) == sorted(map(str, b)))])]
-        names = {"input", "vars", "const", "k", "v", "r", "n", "c", *machine.doc["vars"]}
+        names = {"input", "vars", "const", *self.doc["vars"]}
+        for params in self.doc["events"].values():
+            names |= set(params)
+        for action in self.doc["actions"].values():
+            names |= set(action.get("args", []))
+        self.names = names
         self.env = cel.NewEnv(config=cfg, variables={x: T.DYN for x in names}, functions=fns)
-        self.cache = {}
-        self.state = machine.doc["initial"]
-        self.vars = {name: json.loads(json.dumps(spec["init"])) for name, spec in machine.doc["vars"].items()}
-        self.did = []
+        for where, expr, _ in self.expressions():
+            try:
+                self.compiled[expr] = self.env.compile(expr)
+            except Exception as exc:                          # noqa: BLE001 — the message names the place
+                self.error(f"{where} does not compile: {exc}")
+
+
+class Run:
+    """The reference executor: transitions by the file, actions by set/emit/io, timers on virtual clocks."""
+
+    def __init__(self, machine, inp):
+        self.m, self.d = machine, machine.doc
+        self.const = {**self.d["const"], **inp.pop("const", {})}
+        self.input = inp
+        self.state = self.d["initial"]
+        self.vars = {name: json.loads(json.dumps(spec["init"])) for name, spec in self.d["vars"].items()}
+        self.now, self.next_tick, self.wait = 0.0, 0, self.const["ROLLOUT_WAIT"]
+        self.pending = {}            # (k, who) → deadline of a reply read of batch k
+        self.reads = {}              # n → deadline of a target read
+        self.did, self.violations = [], []
 
     def ev(self, expr, params):
-        if expr not in self.cache:
-            self.cache[expr] = self.env.compile(expr)
-        data = {**self.vars, "vars": self.vars, "input": self.input, "const": self.m.doc["const"],
-                "k": None, "v": None, "r": None, "n": None, "c": None, **params}
-        out = self.cache[expr].eval(data=data)
-        if out.type() == self.cel.Type.ERROR:
+        data = {x: None for x in self.m.names}
+        data.update(self.vars, vars=self.vars, input=self.input, const=self.const, **params)
+        out = self.m.compiled[expr].eval(data=data)
+        if out.type() == self.m.cel.Type.ERROR:
             raise RuntimeError(f"CEL error in {expr!r}: {out.value()}")
         return out.plain_value()
 
     def event(self, kind, params):
         if self.state != "polling":
             return
-        for t in self.m.doc["transitions"]:
+        for t in self.d["transitions"]:
             if t["event"] != kind:
                 continue
             if "if" in t and not self.ev(t["if"], params):
                 continue
-            for action in t.get("do", []):
-                name, args = CALL.match(action)[1], CALL.match(action)[2]
-                values = [self.ev(a, params) for a in split_args(args)] if args else []
-                getattr(self, "a_" + name)(*values, params=params)
+            for call in t.get("do", []):
+                m = CALL.match(call)
+                values = [self.ev(a, params) for a in split_args(m[2])] if m[2] else []
+                self.act(m[1], values)
             if "to" in t:
                 self.state = t["to"]
                 return
             if t.get("stop"):
                 return
 
-    # actions (rollout-poll actions:)
-    def a_send_status(self, k, params):
-        self.did.append(f"send_status {k}")
+    def act(self, name, values):
+        action = self.d["actions"][name]
+        params = dict(zip(action.get("args", []), values))
+        new = {var: self.ev(expr, params) for var, expr in action.get("set", {}).items()}
+        emitted = self.ev(action["emit"], params) if "emit" in action else []
+        if name == "send_status":                          # io: the reads of batch k and their reply deadlines
+            k = values[0]
+            for who in ["self"] + [v for v in self.input["voters"] if v != self.input["self"]]:
+                self.pending[(k, who)] = (k + 1) * self.const["BATCH"]
+            self.did.append(f"send_status {k}")
+        if name == "read_commit":                          # io: the read next_read and its deadline
+            self.reads[self.vars["next_read"]] = self.now + self.const["READ"]
+            self.did.append(f"read_commit {self.vars['next_read']} {','.join(sorted(self.vars['need']))}")
+        if name == "pass":
+            self.did.append("pass")
+        if name == "refuse":
+            self.did.append(f"refuse {values[0]} {values[1]}")
+        self.vars.update(new)
+        for e in emitted:
+            kind = e.pop("event")
+            self.event(kind, e)
 
-    def a_new_partition(self, k, params):
-        self.vars.update(k=k, leader=None, leader_id=None, self_replied=False, leaderless=False, read_done=False,
-                         replied=[], held=[], alive=[], need=[])
-
-    def a_rupture_unanswered(self, params):
-        if not self.vars["self_replied"]:
-            self.a_rupture_all(params)
-        for v in self.input["voters"]:
-            if v not in self.vars["replied"]:
-                self.a_rupture(v, params)
-
-    def a_rupture(self, v, params):
-        x = self.vars
-        x["target"].pop(v, None)
-        x["need"] = [u for u in x["need"] if u != v]
-        x["alive"] = [u for u in x["alive"] if u != v]
-        x["reads"] = {n: [u for u in who if u != v] for n, who in x["reads"].items()}
-
-    def a_rupture_all(self, params):
-        self.vars["leaderless"] = True
-        for v in self.input["voters"]:
-            self.a_rupture(v, params)
-
-    def a_set_leader(self, r, params):
-        self.vars.update(leader=r.get("leader"), leader_id=r.get("leader_id"), self_replied=True)
-
-    def a_hold(self, v, r, params):
-        self.vars["held"].append({"v": v, "r": r})
-
-    def a_release_held(self, params):
-        held, self.vars["held"] = self.vars["held"], []
-        self.vars["self_replied"] = True
-        for item in held:
-            self.event("status", {"k": self.vars["k"], "v": item["v"], "r": item["r"]})
-
-    def a_as_voter(self, r, params):
-        self.event("status", {"k": self.vars["k"], "v": self.input["self"], "r": r})
-
-    def a_mark_replied(self, v, params):
-        if v not in self.vars["replied"]:
-            self.vars["replied"].append(v)
-
-    def a_mark_need(self, v, params):
-        if v not in self.vars["need"]:
-            self.vars["need"].append(v)
-
-    def a_mark_alive(self, v, params):
-        if v not in self.vars["alive"]:
-            self.vars["alive"].append(v)
-
-    def a_read_commit(self, params):
-        x = self.vars
-        if not x["need"] or x["read_done"]:
+    def deliver(self, kind, params, label):
+        if self.state != "polling":                        # passed and refused take no events
             return
-        n = x["next_read"]
-        x["reads"][n] = sorted(x["need"])
-        x["need"], x["next_read"], x["read_done"] = [], n + 1, True
-        self.did.append(f"read_commit {n} {','.join(x['reads'][n])}")
+        self.did.append(label)
+        self.event(kind, params)
+        if self.state == "polling":
+            for name, expr in self.d["invariants"].items():
+                if not self.ev(expr, {}):
+                    self.violations.append(f"invariant {name} broken after {label}")
 
-    def a_set_targets(self, n, c, params):
-        for v in self.vars["reads"].pop(n, []):
-            self.vars["target"][v] = c
+    def voter_order(self, who):
+        return -1 if who == "self" else self.input["voters"].index(who)
 
-    def a_drop_read(self, n, params):
-        self.vars["reads"].pop(n, None)
+    def due(self, until):
+        """Raise the timer events up to `until`, one instant at a time, in the order of env."""
+        while self.state == "polling":
+            times = list(self.reads.values()) + list(self.pending.values()) + [self.next_tick * self.const["BATCH"]]
+            if self.wait is not None:
+                times.append(self.wait)
+            t = min(times)
+            if t > until:
+                return
+            self.now = t
+            for n in sorted(n for n, at in self.reads.items() if at == t):
+                del self.reads[n]
+                self.deliver("commit", {"n": n, "c": None}, f"commit {n} null")
+            for k, who in sorted((key for key, at in self.pending.items() if at == t),
+                                 key=lambda x: (x[0], self.voter_order(x[1]))):
+                del self.pending[(k, who)]
+                if who == "self":
+                    self.deliver("self_status", {"k": k, "r": None}, f"self_status {k} null")
+                else:
+                    self.deliver("status", {"k": k, "v": who, "r": None}, f"status {k} {who} null")
+            if self.next_tick * self.const["BATCH"] == t:
+                k = self.next_tick
+                self.next_tick += 1
+                self.deliver("tick", {"k": k}, f"tick {k}")
+            if self.wait == t:
+                self.wait = None
+                self.deliver("wait_expired", {}, "wait_expired")
 
-    def a_refuse(self, code, word, params):
-        self.did.append(f"refuse {code} {word}")
-
-    def a_pass(self, params):
-        self.did.append("pass")
+    def external(self, t, kind, params):
+        self.due(t)
+        self.now = max(self.now, t)
+        if kind == "advance":
+            return
+        if kind == "self_status":
+            self.pending.pop((params["k"], "self"), None)
+        if kind == "status":
+            self.pending.pop((params["k"], params["v"]), None)
+        if kind == "commit":
+            self.reads.pop(params["n"], None)
+        label = {"self_status": "self", "status": "status", "commit": "commit"}[kind]
+        self.deliver(kind, params, f"{label} {params.get('k', params.get('n'))}")
 
 
 def parse_event(text):
@@ -215,10 +267,8 @@ def parse_event(text):
     kind, rest = m[1], m[2] or ""
     if kind == "input":
         return "input", json.loads(rest)
-    if kind == "tick":
-        return "tick", {"k": int(rest)}
-    if kind == "wait":
-        return "wait_expired", {}
+    if kind == "advance":
+        return "advance", {}
     if kind == "self":
         k, body = rest.split(" ", 1)
         return "self_status", {"k": int(k), "r": json.loads(body)}
@@ -230,7 +280,6 @@ def parse_event(text):
 
 
 def assertions(run, expect):
-    """→ list of mismatches of `key=value; …`."""
     bad = []
     for item in [x.strip() for x in expect.split(";") if x.strip()]:
         key, _, want = item.partition("=")
@@ -239,13 +288,17 @@ def assertions(run, expect):
         elif key in ("alive", "need", "replied"):
             got, want = ",".join(sorted(run.vars[key])), ",".join(sorted(w for w in want.split(",") if w))
         elif key.startswith("target."):
-            got = str(run.vars["target"].get(key[7:], "-"))
+            got = str(next((t["c"] for t in run.vars["target"] if t["v"] == key[7:]), "-"))
         elif key == "reads":
-            got = " ".join(f"{n}:{','.join(who)}" for n, who in sorted(run.vars["reads"].items()))
+            got = " ".join(f"{x['n']}:{','.join(sorted(x['who']))}" for x in sorted(run.vars["reads"], key=lambda x: x["n"]))
         elif key == "did":
-            got = "|".join(run.did)
-            if want in run.did or (want == "" and not run.did):
+            if want in run.did:
                 continue
+            got = "|".join(run.did)
+        elif key == "not":
+            if want not in run.did:
+                continue
+            got, want = "|".join(run.did), f"no {want}"
         else:
             bad.append(f"unknown assertion {key}")
             continue
@@ -262,15 +315,15 @@ def check(path):
     if not traces.is_file():
         return [f"{machine.path.name}: no traces {traces.name}"], {}
     lines = [line for line in traces.read_text(encoding="utf-8").splitlines() if not line.startswith("#")]
-    if not lines or lines[0].split("\t") != ["trace", "step", "event", "expect"]:
-        return [f"{traces.name}: columns must be trace, step, event, expect"], {}
+    if not lines or lines[0].split("\t") != ["trace", "step", "t", "event", "expect"]:
+        return [f"{traces.name}: columns must be trace, step, t, event, expect"], {}
     runs, count, errors = {}, 0, []
     for no, line in enumerate(lines[1:], 2):
         cells = line.split("\t")
-        if len(cells) != 4:
-            errors.append(f"{traces.name} row {no}: 4 cells")
+        if len(cells) != 5:
+            errors.append(f"{traces.name} row {no}: 5 cells")
             continue
-        trace, step, text, expect = cells
+        trace, step, t, text, expect = cells
         where = f"{traces.name} {trace} step {step}"
         try:
             kind, params = parse_event(text)
@@ -285,14 +338,17 @@ def check(path):
         if run is None:
             errors.append(f"{where}: no step 0 input")
             continue
-        run.did = []
+        if float(t) < run.now:
+            errors.append(f"{where}: time {t} is before {run.now}")
+            continue
+        run.did, run.violations = [], []
         try:
-            run.event(kind, params)
+            run.external(float(t), kind, params)
         except RuntimeError as exc:
             errors.append(f"{where}: {exc}")
             continue
-        errors.extend(f"{where}: {m}" for m in assertions(run, expect))
-    used = {name for _, name, _ in machine.calls}
+        errors.extend(f"{where}: {m}" for m in run.violations + assertions(run, expect))
+    used = {name for _, _, name, _ in machine.calls}
     unused = set(machine.doc["actions"]) - used
     if unused:
         errors.append(f"{machine.path.name}: actions never used by a transition: {sorted(unused)}")

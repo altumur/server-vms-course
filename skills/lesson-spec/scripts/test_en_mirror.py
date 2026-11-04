@@ -72,6 +72,25 @@ class Mirror(unittest.TestCase):
         self.assertTrue(any("Cyrillic" in e for e in errors), errors)
         self.mutated("# A store row. The store", "# Строка хранилища. The store")
 
+    def test_code_block_value(self):                    # ADR-0120 доп. (5) п. 7: значение без смены размеров
+        self.mutated("    ceiling: 524288          # 512 KiB", "    ceiling: 524289          # 512 KiB")
+        self.mutated("BATCH_WRITES: 64             # the limit", "BATCH_WRITES: 65             # the limit")
+
+    def test_code_block_untranslated_part(self):        # вне комментария — только перевод русской прозы
+        self.mutated("      - does not start with \"/\"", "      - does not start with \"\\\\\"")
+        self.mutated("BATCH_WRITES: 64             # the limit", "BATCH_LIMIT: 64              # the limit")
+
+    def test_code_block_comment_free(self):             # комментарий переводится свободно
+        text = self.en.replace("# the limit of batch writes;", "# how many writes a batch carries;")
+        self.assertEqual(self.compare(en=text), [])
+
+    def test_table_cell_value(self):
+        self.mutated("| 22 | a body over 1048576 bytes", "| 22 | a body over 1048577 bytes")
+        self.mutated("| 02 | a creation with", "| 03 | a creation with")
+
+    def test_prose_number(self):
+        self.mutated("`JSON_DEPTH` = 128 nested", "`JSON_DEPTH` = 127 nested")
+
     def test_mark(self):
         errors = self.mutated(en_mirror.MARK, "производный", which="ru")
         self.assertTrue(any("mark" in e for e in errors), errors)
