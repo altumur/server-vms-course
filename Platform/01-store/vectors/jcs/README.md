@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/jcs/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is lesson P/01 (the module design note, «Векторы»: the first contract that writes a JSON text is the store); the norm is ADR-0072
+The owner is lesson P/01 (the module design note, «Vectors»: the first contract that writes a JSON text is the store); the norm is ADR-0072
 (the canon of a signed document is RFC 8785 in full). It is read by everyone who signs or compares a JSON text by bytes: the body
 of a request and the digest ([P/06.4](../../../06-console/spec/06.4-console.norms.md) Н1.5), the door token, the signatures of the domain (lessons М11).
 
@@ -14,7 +14,7 @@ analysis of stage B 3–5, В5); the bytes of the table are as before.
 No header; three fields separated by TAB: `raw` — a JSON text as it may arrive; `canonical` — its RFC 8785 form; `sha256` —
 the sha256 of the UTF-8 of this form (hex). The implementation reads each input, brings it to the canon and compares both columns. Lines with `#` are
 notes (including the mandatory cases of ADR-0072). The input of the single command `vectors` is `cells: {raw}`; the native outcome is code 0
-and an object `{canonical, sha256}` with JSON strings, compared by value (the common rule «Векторы» of the common acceptance README;
+and an object `{canonical, sha256}` with JSON strings, compared by value (the common rule «Vectors» of the common acceptance README;
 inventory C04/C06-NEXT-167, the Architect's decision of 2026-10-27).
 
 ## Who executes

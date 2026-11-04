@@ -36,10 +36,10 @@ The order of the runner's environment files — the unit's values → `roles/<W2
 
 ## Flags
 
-The closed table «Daemon flags» — [P/01.3 Н1.3](spec/01.3-store.norms.md):
+The closed table «Daemon flags» — [P/01.3 Н1.3](spec/01.3-store.norms.md), machine form [`forms/daemon-flags.tsv`](forms/daemon-flags.tsv):
 `-dir` (required), `-id`, `-sockets`, `-rights`, `-tls`, `-raft`, `-raft-bind`, `-api`, `-bootstrap`, `-join`,
-`-group-size`, `-force`, `-door`, `-voters`, `-tuning`, `-leader-wait`, `-max-value`, `-max-body`, `-max-conns`,
-`-api-conns`, `-api-per-address`, `-index-base`. A flag outside the table is a start refusal, code 2. The administrative commands —
+`-group-size`, `-force`, `-isolated`, `-upper`, `-peers` (the last three — only for `recover`), `-door`, `-voters`, `-tuning`, `-leader-wait`, `-max-value`, `-max-body`, `-max-conns`,
+`-api-conns`, `-api-per-address`, `-index-base`, `-groups` (only for `rights`), `--from` (only for `restore`, `import`). A flag outside the table is a start refusal, code 2. The administrative commands —
 `configstore status | join | leave | admit | backup | restore | import | recover | rights` (P/01.3 Н1.3 `admin_ops`,
 Н1.9).
 
@@ -77,12 +77,12 @@ The closed table «Daemon flags» — [P/01.3 Н1.3](spec/01.3-store.norms.md):
 
 ## Stand
 
-«Стенд» — the [common acceptance README](../common/acceptance/README.md) (analysis of the review of stage B 3–5, № 33):
+«Stand» — the [common acceptance README](../common/acceptance/README.md) (analysis of the review of stage B 3–5, № 33):
 - the store command gets `{data}` (`PLATFORM_DIR`, the store — `{data}/configstore`), `{socket}` (`admin.sock`,
   the role sockets next to it), `{rights}`, `{body_limit}` → `-max-body`, `{row_ceiling}` → `-max-value`; it puts no manifests;
 - `{rights}`: in P/01.1 — the file of the role `acc`, in the acceptances moved from М10/4–11 — the rights derived from the stand's manifests by the rights derivation command;
 - the directives `@restart store`, `@foreign store`, `@backup store`, `@import store`, the door `restored`;
-- a stand flag that switches off the barriers for speed is named by the implementation in its «Стенд» command.
+- a stand flag that switches off the barriers for speed is named by the implementation in its «Stand» command.
 
 ## Open
 

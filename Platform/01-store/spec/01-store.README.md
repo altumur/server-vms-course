@@ -23,6 +23,7 @@ the cluster; show the loaded rights file only to admin.
 
 Rules:
 
+- Read the norms of the chapters in full before the first stage; write draft answers to «Implementation decides» into the implementation description.
 - Do not add behaviour that is not in the norms of the chapters. Do not «improve» the semantics: normalization of keys, comparison of versions by greater/less, a blind repeat of an earlier command with an old guard (`guard`), new codes and kinds of refusals are forbidden. A new attempt after re-reading the condition and checking the right to it is allowed (Н3 «write»: «The caller re-reads the condition and decides anew whether it has the right to repeat»; [P/03.2-05](../../03-worker/spec/03.2-worker.norms.md)).
 - If the norms of the chapters are silent or contradict themselves, do not guess. Write a question into the implementation's `QUESTIONS.md` with a reference to the section and choose the most conservative behaviour (a refusal, not an assumption). The lesson has no open questions as of 2026-10-15: all known ones are closed in the norms.
 - For ease of checking, comments may refer to the norms: `// P/01.1 Н3 записать, шаг 7` or `// P/01.1-10` at the place that carries out the norm.
@@ -46,15 +47,16 @@ The mandatory behaviour is set by the norms of the chapters. The internal interf
 
 ## Order of work
 
-Below is one possible order. The split into functions, the internal interfaces and the chosen kinds of store may be arranged otherwise, keeping the behaviour of the canon.
+The stages of the implementation are the table [`forms/stages.tsv`](../forms/stages.tsv) (ADR-0126): the goal, the norms, the gate (own tests, vectors, scenarios of acceptance), the weight and the dependencies of each stage. It is one possible order, a plan and not a norm: the split into functions, the internal interfaces and the chosen kinds of store may be arranged otherwise, keeping the behaviour of the canon. Below is the advice to the stages by chapter; the checklists are in «Done when».
 
-1. Read the norms of the chapters in full. Write draft answers to «Implementation decides» into the implementation description.
-2. The data model of Н1: the checks of `key`, `items`, `cas`, `guard`, `id` as separate pure functions. These are the first tests.
-3. The chosen store (for example, in memory): the procedures of Н3 strictly step by step, with the same order of checks (the guard before CAS).
-4. The HTTP layer and the mapping of the refusals of Н4.
-5. Prepare instances per the acceptance README of chapter 1.1: the row ceiling 524288 bytes, the body limit 1048576 bytes. Run the scenarios of chapter 1.1. Check each failure against the norms of the chapters and fix the **code**.
-6. If a file-based store is chosen: check indivisibility, versions, durability barriers, a damaged row (`Row.unreadable`). Run the scenarios again.
-7. Go through the checklist of chapter 1.1 (P/01.1-01…23); for the items «checked by reading», state in the implementation description where in the code this is ensured.
+### Chapter 1.1 — the store doors
+
+1. The data model of Н1: the checks of `key`, `items`, `cas`, `guard`, `id` as separate pure functions. These are the first tests (the stage `model`).
+2. The chosen store (for example, in memory): the procedures of Н3 strictly step by step, with the same order of checks (the guard before CAS).
+3. The HTTP layer and the mapping of the refusals of Н4 ([`forms/refusals.tsv`](../forms/refusals.tsv)).
+4. Prepare instances per the acceptance README of chapter 1.1: the row ceiling 524288 bytes, the body limit 1048576 bytes. Run the scenarios of chapter 1.1. Check each failure against the norms of the chapters and fix the **code**.
+5. If a file-based store is chosen: check indivisibility, versions, durability barriers, a damaged row (`Row.unreadable`). Run the scenarios again.
+6. Go through the checklist of chapter 1.1 (P/01.1-01…23); for the items «checked by reading», state in the implementation description where in the code this is ensured.
 
 ### Chapter 1.2 — the rights file and the evaluator
 
@@ -84,7 +86,7 @@ References «Н…» are norms of chapter 1.3; rights are chapter 1.2.
 
 2. On a separate model check all phases of restore/import/recover: isolation, a reliable upper, the uint64 bounds, one raise of the floor, a partial transfer and continuation of the same attempt. Force does not allow a lowering or two operators (Н3).
 
-3. Run the automatic 04, 08, 10–12, 14, 15 (steps 1–8), 16, 19–24, 30 on a fresh stand with schema 1 (08, 19, 30 with a durable store; 20, 22 with the spoiling command `spoil-row`); 07, 17, 18, 25–29, 31 on the store group stand (the common acceptance README, «Стенд группы хранилища»; for the box build `keys.store_build: box` — not_applicable).
+3. Run the automatic 04, 08, 10–12, 14, 15 (steps 1–8), 16, 19–24, 30 on a fresh stand with schema 1 (08, 19, 30 with a durable store; 20, 22 with the spoiling command `spoil-row`); 07, 17, 18, 25–29, 31 on the store group stand (the common acceptance README, «Store group stand»; for the box build `keys.store_build: box` — not_applicable).
 
 ## Language-dependent pitfalls
 

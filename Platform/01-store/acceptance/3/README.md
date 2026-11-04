@@ -10,7 +10,7 @@ behaviour); the numbers of scenarios and steps are the former ones.
 Directives and doors: `admin`, `store`, `@as`, `@big`, `@restart store`, `@foreign store` (sc. 10), `@backup store`,
 `@import store` and the door `restored` (sc. 11, 12, 14); the store group stand — `@group-setup`, `@store-start`,
 `@restart store@<id>`, `@sigterm`/`@sigkill store@<id>`, `@store-op`, the doors `store@<id>`, `admin@<id>`, the probe `@tls` to
-`api@<id>` (sc. 07, 17, 18, 25–29, 31; the section «Стенд группы хранилища» of the common README). The stand store is durable — it survives a restart (the directory `{data}`); sc. 08 relies on this. An implementation with
+`api@<id>` (sc. 07, 17, 18, 25–29, 31; the section «Store group stand» of the common README). The stand store is durable — it survives a restart (the directory `{data}`); sc. 08 relies on this. An implementation with
 a non-durable training store (the norms of chapter 1.3, «Implementation decides» item 2) does not run sc. 08 and says so in the description.
 
 ## Stand
@@ -94,7 +94,7 @@ the map of a single member of a box is `{}` (Н1.3 `-api`, `box`; Н2 `GET /v1/s
 
 ## The store group (sc. 07, 17, 18, 25–29, 31)
 
-The group stand is the section «Стенд группы хранилища» of the common README: the members `s1`…`s5`, `d1`, `d2` on the loopback, the kits are
+The group stand is the section «Store group stand» of the common README: the members `s1`…`s5`, `d1`, `d2` on the loopback, the kits are
 [`inputs/group.json`](inputs/group.json) (one centre, the server name of a leaf is the `<id>` of the member), the scenario role at the doors `store@<id>` is `console`
 (the stand rights file). These scenarios do not need the stand store of the chapter. Formerly sc. 07 was a `@manual` drill on a real
 cluster; by ПРАВИЛА-РАБОТЫ.md § 4 it and the drills of the checklist items of the chapter (the door, size and membership, the floor of epochs, the metrics row of doors) became scenarios (the plan
@@ -102,7 +102,7 @@ cluster; by ПРАВИЛА-РАБОТЫ.md § 4 it and the drills of the checkli
 of the pilot comparison — `decisions/inbox/ревью/РЕВЬЮ-СРАВНЕНИЕ-P01-Claude.md`, `П-1`…`П-6`, where they are visible from outside). The norms do not
 change. The leader after `-bootstrap` and the joins is `s1` (step 5 of each scenario checks this as well). The assembly 1→2→3: the second member joins with `-force` (a group of two is a transitional parity, P/01.3 Н1.3 `join`), the third without it (C01-GROUP-BOOTSTRAP-EVEN-01). The box store build
 (`keys.store_build: box`, P/01.3 Н1.3 `box`) has no group: sc. 07, 17, 18, 25–29, 31 are not_applicable for it, not red; without
-the marker they are not executed (common README, «Стенд группы хранилища»).
+the marker they are not executed (common README, «Store group stand»).
 
 - **Sc. 31 — a batch in the group (ADR-0094 B9).** The role `console`; the door `d1` forwards the batch whole: steps 8–10 read both rows on the followers with one
   version, steps 11–12 — a replay by `id` through a voter and through the door, step 13 — a stale `cas` of the second row, step 14 sees that the first one is not written.
