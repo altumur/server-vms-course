@@ -255,7 +255,7 @@ class TestTree(unittest.TestCase):
     def test_manifest_clean(self):
         errors, stats = self.manifest(TREE)
         self.assertEqual(errors, [])
-        self.assertEqual(stats["form_cases"], 684)
+        self.assertEqual(stats["form_cases"], 946)                 # случаи P/02 на 2026-11-04
         self.assertGreaterEqual(stats["form_rows_held"], 120)
 
     def test_strict_coverage_implied(self):  # noqa: C901
@@ -352,9 +352,9 @@ class TestTree(unittest.TestCase):
         from v7 import vectors
         ch = vectors.Chapter(TREE, strict=True).run()
         self.assertEqual(ch.errors, [])
-        self.assertEqual(ch.stats["canonical_vectors"], 159)
+        self.assertEqual(ch.stats["canonical_vectors"], 219)      # на 2026-11-04
         self.assertEqual(ch.stats["canonical_mutants_killed"], ch.stats["canonical_mutants"])
-        self.assertEqual(ch.stats["canonical_mutants"], 62)              # и default у корня определения (Б-1)
+        self.assertEqual(ch.stats["canonical_mutants"], 67)              # и default у корня определения (Б-1); на 2026-11-04
         root = self.copy()
         e = sorted((root / vectors.VECTORS / "expect").glob("corpus-*.json"))[0]
         e.write_bytes(e.read_bytes().replace(b"}", b" }", 1))
@@ -400,7 +400,7 @@ class TestTree(unittest.TestCase):
         cat = spec.read_catalog(root)
         errors, _ = spec.family_read(root, cat)
         self.assertTrue(any("V7 stack gives refused ['']" in m for _, m in errors), errors[:2])
-        readme = root / spec.KEYS_README
+        readme = root / "Platform/common/ru" / spec.KEYS_README.relative_to("Platform/common")   # таблица — у ru/ (ADR-0124)
         readme.write_text("\n".join(ln for ln in readme.read_text(encoding="utf-8").split("\n")
                                      if not ln.startswith("| `<sub>`")), encoding="utf-8")
         errors, _ = spec.family_read(root, cat)
@@ -475,7 +475,10 @@ class TestTree(unittest.TestCase):
                 self.assertEqual(len(cols), 7, ln[:80])
                 reg[tuple(cols[:4])] = cols[4:]
         cells = {"need": 0, "owner": 1, "desc": 2}
-        diff, used, n = [], {}, 0
+        diff, used, n, translated = [], {}, 0, 0
+
+        def neutral(text):                      # что перевод не меняет: код, числа, ссылки на нормы
+            return sorted(re.findall(r"`[^`]*`|Н[0-9.]+[а-я]?|P/[0-9.]+|ADR-[0-9]+|[0-9]+", text))
         for f in files:
             a = rows(git("show", "%s:%s" % (tag, f)))
             if not a:
@@ -494,6 +497,9 @@ class TestTree(unittest.TestCase):
                         was, became, _ = reg[place]
                         used[place] = w[2 + i] in (became, was) and old[i] == was
                     elif old[i] != w[2 + i]:
+                        if re.search("[А-Яа-яЁё]", old[i]) and neutral(old[i]) == neutral(w[2 + i]):
+                            translated += 1        # перевод ADR-0121: код, числа и ссылки те же; смысл — ревью перевода
+                            continue
                         diff.append((f, section_, k[2], col, old[i][:80], w[2 + i][:80]))
         self.assertGreater(n, 1500)
         self.assertEqual(diff, [], "расхождение смысла без строки v7/sections-meaning-deltas.tsv")
@@ -540,13 +546,13 @@ class TestTree(unittest.TestCase):
         без шума «stale exception implied»."""
         import subprocess
         root = self.copy()
-        (root / "Platform/07-console-module/07-console-module.md").unlink()
+        (root / "Platform/07-console-module/ru/07-console-module.md").unlink()     # лекция — ru/ (ADR-0124)
         (root / "Platform/02-installer/spec/02.1-installer.schema.json").write_text("{not json", encoding="utf-8")
         reg = root / "exceptions.tsv"
         reg.write_text("P/02\timplied\t18:tables.$t.fields.name\tрешение\n", encoding="utf-8")
         out = subprocess.run([sys.executable, "-B", str(HERE.parent / "check_spec.py"), "--root", str(root),
                               "--exceptions", str(reg)], capture_output=True, text=True).stdout
-        self.assertIn("has no file Platform/07-console-module/07-console-module.md", out)
+        self.assertIn("lesson 07 has no file Platform/07-console-module/07-console-module.md (or ru/ by ADR-0124)", out)
         self.assertIn("02.1-installer.schema.json", out)
         self.assertNotIn("stale exception implied", out)
 
@@ -617,7 +623,7 @@ class TestTree(unittest.TestCase):
         sys.path.insert(0, str(HERE.parent))
         import check_spec
         root = self.copy()
-        target = root / check_spec.Check.LIBRARY_DEFECTS
+        target = check_spec.human_text(root / check_spec.Check.LIBRARY_DEFECTS, root)   # столбец «Вектор» — текст для человека
 
         def errors():
             check = check_spec.Check(root, None, False)
@@ -635,7 +641,7 @@ class TestTree(unittest.TestCase):
         self.assertTrue(any("D99 is not a library defect" in e for e in got), got)
         self.assertTrue(any("D25 (" in e and "is not in the list" in e for e in got), got)
         target.unlink()
-        layers = root / "Platform/common/LAYERS.md"
+        layers = check_spec.human_text(root / "Platform/common/LAYERS.md", root)
         if "versions/DEFECTS.md" not in layers.read_text(encoding="utf-8"):
             layers.write_text(layers.read_text(encoding="utf-8") + "\n[перечень](versions/DEFECTS.md)\n",
                               encoding="utf-8")
