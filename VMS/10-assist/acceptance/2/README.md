@@ -1,9 +1,9 @@
 # Acceptance V/10.2 — the model door
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/2/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`10.2-assist.norms.md`](../../../spec/10.2-assist.norms.md) Н5 (and the model process, the heartbeat — [`10.1-assist.norms.md`](../../../spec/10.1-assist.norms.md)
-Н1.3, Н1.4). The stand and the vocabulary are [the common VMS acceptance README](../../../../common/acceptance/README.md) over the common
+The norm of the chapter is [`10.2-assist.norms.md`](../../spec/10.2-assist.norms.md) Н5 (and the model process, the heartbeat — [`10.1-assist.norms.md`](../../spec/10.1-assist.norms.md)
+Н1.3, Н1.4). The stand and the vocabulary are [the common VMS acceptance README](../../../common/acceptance/README.md) over the common
 platform README (export `7a875c75`).
 
 ## Preparation
@@ -15,7 +15,7 @@ labels=assist-a` with the implementation's «Стенд» command (the section �
 **The model stub.** The stand writes the subsystem file of `assist` per scenario (the common VMS acceptance README, «Файл подсистемы на стенде»)
 before the holder starts: `MODEL_COMMAND={model_stub} {spec}/VMS/10-assist/vectors/model-stub/<сценарий>.tsv` —
 the answers file by the scenario name. `{model_stub}` is the runner program `model-stub` by the protocol of V/10.2 Н5, `{spec}` is the root
-of the specification; the files — [`vectors/model-stub/`](../../../vectors/model-stub/README.md). Transitional states are held by barriers
+of the specification; the files — [`vectors/model-stub/`](../../vectors/model-stub/README.md). Transitional states are held by barriers
 of the answers file, not by the speed of the stand: `loading` — `load hang` (`01-loading`); `queued` of the second step — after the observed
 `running` of the first one, which is held by `hang` (`03-limits`). There are no weights and no model server on the stand.
 

@@ -1,18 +1,18 @@
 # V/10 Assistant
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 Status: **translated** — chapters V/10.1, V/10.2 (2026-10-29; started 2026-10-28, «Спецификация VMS»). The lesson plan is accepted by «Архитектор» — ADR-0093 addendum (1).
 The norms — the export `35582ba`. The loop, the tools, the check, the application and the rules as text moved to V/11, chapters 9–13
 (ADR-0093 addendum (8) items 2, 3; 2026-11-02). The basis is ADR-0093; the assistant pilot (outside the export) (reference, not canon).
-The platform is the export `cammeta-specs` `7a875c75` (the VMS pin). The manifest is [`assist.subsystem.yaml`](../assist.subsystem.yaml)
+The platform is the export `cammeta-specs` `7a875c75` (the VMS pin). The manifest is [`assist.subsystem.yaml`](assist.subsystem.yaml)
 (the canon; ADR-0090 addendum (6) item 8).
 
 ## What lesson V/10 is
 
 The subsystem `assist` is a service of a local model without rights. The unit is an instance of the model on a server with memory for it,
 the holder is a platform worker with the model server as a child process. The door answers one model step; the flow, the tools,
-the plan check and the display are run by `backend` ([V/11](../../11-backend/README.md), chapters 7, 9–13). The model process is not part of `backend`:
+the plan check and the display are run by `backend` ([V/11](../11-backend/README.md), chapters 7, 9–13). The model process is not part of `backend`:
 a substitution in the text of a request would end up next to the tickets, and their placement differs. There is no external model in a real installation:
 the subsystem is required for the assistant (ADR-0093 addendum (9) item 2, it lifts addendum (8) item 3 about an external model); the demo page of the fork with an external model is demo data, it does not concern the lesson.
 
@@ -31,7 +31,7 @@ the subsystem is required for the assistant (ADR-0093 addendum (9) item 2, it li
 3. **The model on a server** is a child process of the holder (unix socket 0700, shuts down on `fenced` and on giving up the holding, a loading
    phase); one model per server — by the label and the capacity; the memory numbers — from the package measurements, in V/09 (V/10.1).
 
-The other items of addenda (1)–(5) are in [V/11](../../11-backend/README.md#ассистент-решения): they are about the loop and the plan.
+The other items of addenda (1)–(5) are in [V/11](../11-backend/README.md#ассистент-решения): they are about the loop and the plan.
 
 **ADR-0093 addendum (2)** (Kimi's review): the model door — the door token by `view` on the model row; `rights.routes` is not needed (clarified
 by the norms review, Claude С-3); the door is open to any client with `view`, the step — to its owner (V/10.1 Н1.1, V/10.2 Н1.1).
@@ -40,13 +40,13 @@ by the norms review, Claude С-3); the door is open to any client with `view`, t
 
 - **Rows and objects:** `assist/models/<name>`, the heartbeat `assist/heartbeats/<воркер>`, the snapshot `assist/snapshot/*`; the door log
   `audit/assistworker/e1` (`assist.step`).
-- **Doors:** the model rows — the units door of the console (P/06.1); the model door — the holder's route `chat` ([the lesson's OpenAPI](../spec/10-assist.api.openapi.yaml));
+- **Doors:** the model rows — the units door of the console (P/06.1); the model door — the holder's route `chat` ([the lesson's OpenAPI](spec/10-assist.api.openapi.yaml));
   the address and the token — `/assist/where/<name>` of the console (P/06.5); `backend` — the route `/assist/chat/<имя>/…` by ticket (V/11.7 Н1.2).
 
 ## Acceptance
 
-- [Acceptance 1](../acceptance/1/README.md) — the units door of the console: the model row, form refusals (V/10.1).
-- [Acceptance 2](../acceptance/2/README.md) — a stand with the model holder and the stub `model-stub` (V/10.1 Н1.3, V/10.2).
+- [Acceptance 1](acceptance/1/README.md) — the units door of the console: the model row, form refusals (V/10.1).
+- [Acceptance 2](acceptance/2/README.md) — a stand with the model holder and the stub `model-stub` (V/10.1 Н1.3, V/10.2).
 - The model evaluation suite is not acceptance: the lesson's information from the handover package.
 
 ## Edits of other lessons

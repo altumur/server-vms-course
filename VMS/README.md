@@ -27,7 +27,7 @@
 | 07 | [`07-auto/`](07-auto/ru/README.md) | `auto` | переведён |
 | 08 | [`08-exp/`](08-exp/ru/README.md) | `exp` — выгрузка, главы V/08.6–V/08.9 | переведён |
 | 09 | [`09-deploy/`](09-deploy/ru/README.md) | развёртывание VMS | переведён |
-| 10 | [`10-assist/`](10-assist/README.md) | `assist` | переведён |
+| 10 | [`10-assist/`](10-assist/ru/README.md) | `assist` | переведён |
 | 11 | [`11-backend/`](11-backend/README.md) | `backend` | переведён |
 | 12 | [`12-psim/`](12-psim/README.md) | плагины psim, `psim-<id>` | переведён |
 

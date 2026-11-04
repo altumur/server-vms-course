@@ -1,6 +1,6 @@
 # V/10 Assistant — instructions for an implementation
 
-This English text is the source; the Russian [`10-assist.README.md`](../10-assist.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/10-assist.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 What an implementation of the subsystem `assist` does and how to check the result. The canon is the norms of the chapters `10.K-assist.norms.md`; these
 instructions do not add to them. The platform is the export `cammeta-specs` `7a875c75`
@@ -9,11 +9,11 @@ instructions do not add to them. The platform is the export `cammeta-specs` `7a8
 ## Inputs and their priority
 
 - The canon: the norms of the chapters `10.K-assist.norms.md` (Н1–Н5 of each chapter; the addresses `V/10.K Н…`).
-- The canon of the manifest: [`assist.subsystem.yaml`](../../assist.subsystem.yaml): the bytes as they are.
-- [The contract](../10-assist.api.openapi.yaml) expresses the forms of the HTTP inputs of the canon.
-- Acceptance: [chapter 1](../../acceptance/1/README.md), [chapter 2](../../acceptance/2/README.md); the stand and the vocabulary — [the common VMS acceptance README](../../../common/acceptance/README.md); acceptance introduces no new requirements.
-- Vectors: [`vectors/`](../../vectors/) (the model stub).
-- [The lecture](../../10-assist.md) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
+- The canon of the manifest: [`assist.subsystem.yaml`](../assist.subsystem.yaml): the bytes as they are.
+- [The contract](10-assist.api.openapi.yaml) expresses the forms of the HTTP inputs of the canon.
+- Acceptance: [chapter 1](../acceptance/1/README.md), [chapter 2](../acceptance/2/README.md); the stand and the vocabulary — [the common VMS acceptance README](../../common/acceptance/README.md); acceptance introduces no new requirements.
+- Vectors: [`vectors/`](../vectors/) (the model stub).
+- The lecture (`ru/10-assist.md`, for people, not in the export) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
 
 Record a contradiction with its place and a counterexample (the section «On a divergence»); an arbitrary refusal does not replace an
 absent norm. The structure of the code is left to the implementation within the canon.
@@ -22,8 +22,8 @@ absent norm. The structure of the code is left to the implementation within the 
 
 | Chapter | What the implementation has | Check |
 |---|---|---|
-| V/10.1 | the manifest `VMS/10-assist/assist.subsystem.yaml` loads with the strict loader without edits (the VMS catalogue as a whole); the holder of the model row brings up the model process by the command `MODEL_COMMAND` on a unix socket 0700, runs the phases `loading`, `running`, `failed`, `stopped`, shuts the process down before giving up the slot; the heartbeat and series | [acceptance 1](../../acceptance/1/README.md), [acceptance 2](../../acceptance/2/README.md) and by reading |
-| V/10.2 | the holder's door `chat`: the door token, a step `202` → the state by a long poll → cancellation, the step owner — `user` of the token, the queue, the step timeouts, the log `assist.step` without texts | [acceptance 2](../../acceptance/2/README.md) and by reading |
+| V/10.1 | the manifest `VMS/10-assist/assist.subsystem.yaml` loads with the strict loader without edits (the VMS catalogue as a whole); the holder of the model row brings up the model process by the command `MODEL_COMMAND` on a unix socket 0700, runs the phases `loading`, `running`, `failed`, `stopped`, shuts the process down before giving up the slot; the heartbeat and series | [acceptance 1](../acceptance/1/README.md), [acceptance 2](../acceptance/2/README.md) and by reading |
+| V/10.2 | the holder's door `chat`: the door token, a step `202` → the state by a long poll → cancellation, the step owner — `user` of the token, the queue, the step timeouts, the log `assist.step` without texts | [acceptance 2](../acceptance/2/README.md) and by reading |
 
 The manifest is specification data: the implementation reads its bytes as they are (ADR-0090 addendum (6) item 8). The subsystem package carries
 the command `/usr/lib/assist/model-server` and the weights of the pair (`model`, `quant`) of the manifest (V/09).

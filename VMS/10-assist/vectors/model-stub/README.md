@@ -1,10 +1,10 @@
 # Answers files of the model stub — acceptance 2
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/model-stub/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is lesson V/10 ([the norms of chapter 2](../../../spec/10.2-assist.norms.md) Н5 «Заглушка модели»). They are read by the runner program
+The owner is lesson V/10 ([the norms of chapter 2](../../spec/10.2-assist.norms.md) Н5 «Заглушка модели»). They are read by the runner program
 `model-stub`: the stand of acceptance 2 names the scenario file in `MODEL_COMMAND` (`{model_stub} {spec}/VMS/10-assist/vectors/model-stub/<сценарий>.tsv` — the file by the scenario name,
-[the README of acceptance 2](../../../acceptance/2/README.md)). The file is not an expectation: it sets what the «model» will answer; the expectations are in
+[the README of acceptance 2](../../acceptance/2/README.md)). The file is not an expectation: it sets what the «model» will answer; the expectations are in
 `scenarios.tsv` of the acceptance.
 
 The file form — UTF-8, LF, the fields separated by TAB, lines with `#` are explanations:
