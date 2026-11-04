@@ -2191,7 +2191,7 @@
        "exclusiveMinimum": 0
       },
       "base_mb": {
-       "description": "the memory budget is the one formula of P/03.4 Н1.2 `memory`, the check is P/03.4 Н3 «старт() — шаг бюджета»",
+       "description": "the memory budget is the one formula of P/03.4 Н1.2 `memory`, the check is P/03.4 Н3 «start() — the budget step»",
        "default": 0,
        "x-owner": "P/03.4 Н1.2",
        "type": "number",

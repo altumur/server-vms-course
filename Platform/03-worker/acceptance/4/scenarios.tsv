@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/03.4: остановка по SIGTERM, стенд testsub под раннером. Перенесено из М10/05 (стадия B). Формат — README.
+# Acceptance of P/03.4: the stop by SIGTERM, the testsub stand under the runner. Moved from М10/05 (stage B). Format — README.
 03-sigterm	1	@start resource	ok
 03-sigterm	2	@start controller	ok
 03-sigterm	3	@start worker w-1	ok
@@ -18,7 +18,7 @@ scenario	step	request	expect
 13-pulse-counters	7	console GET /metrics	200 ~testsub_worker_store_errors{worker="w-1"} 0
 13-pulse-counters	8	console GET /metrics	200 ~testsub_worker_pass_failures{worker="w-1"} 0
 13-pulse-counters	9	console GET /metrics	200 ~testsub_worker_unconfirmed{worker="w-1"} 0
-# 36, 37 (аудит покрытия P/03, второй проход Gemini): поля previous_* пульса; место отпускается при SIGTERM.
+# 36, 37 (coverage audit P/03, second pass of Gemini): the previous_* fields of the heartbeat; the place is let go at SIGTERM.
 36-previous-heartbeat	1	@start resource	ok
 36-previous-heartbeat	2	@start worker w-1	ok
 36-previous-heartbeat	3	@until 20 resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200 {"worker": "w-1", "instance": "$i1", "server": "srv-a", "ts": "@time"}

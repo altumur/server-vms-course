@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "holder": {
-   "description": "как у слота: экземпляр держателя `<коробка>:<pid>:<6 hex случайности>` или \"\"",
+   "description": "as in the slot: the holder's instance `<коробка>:<pid>:<6 hex случайности>` or \"\"",
    "type": "string",
    "x-codec": [
     "string"
@@ -11,20 +11,20 @@
   },
   "until": {
    "$ref": "#/$defs/common.time",
-   "description": "как у слота: часы писателя + 45; показ, не свежесть — чужое место свободно, простояв без изменений 45 + HOLD_SKEW по часам судьи",
+   "description": "as in the slot: the writer's clock + 45; display, not freshness — another's place is free after standing unchanged for 45 + HOLD_SKEW by the judge's clock",
    "x-codec": [
     "time"
    ]
   },
   "released": {
-   "description": "как у слота; отпустить — \"true\" (только упорядоченная остановка, под стражем своего слота до его отдачи — разбор ревью стадии B 3–5, № 4)",
+   "description": "as in the slot; to let go — \"true\" (only an orderly stop, under the guard of its own slot before giving it up — analysis of review of stage B 3–5, № 4)",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "gen": {
-   "description": "как у слота: поколение, не убывает",
+   "description": "as in the slot: the generation, does not decrease",
    "x-whole": true,
    "type": "integer",
    "x-integer": true,
@@ -34,7 +34,7 @@
    ]
   },
   "by": {
-   "description": "имя слота держателя — чьё место (Н1.3); по нему место «следует за именем» (Н3 «место»)",
+   "description": "the name of the holder's slot — whose place it is (Н1.3); by it the place «follows the name» (Н3 «место»)",
    "type": "string",
    "x-codec": [
     "string"
@@ -58,7 +58,7 @@
   ]
  },
  "additionalProperties": {
-  "description": "поля сверх Н1.3: норма их не называет",
+  "description": "fields beyond Н1.3: the norm does not name them",
   "x-codec": [
    "any"
   ]
