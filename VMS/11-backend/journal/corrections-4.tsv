@@ -59,3 +59,4 @@ date	sample	fix	languages
 2026-11-02	4/scenarios.tsv: 20-motion шаг 10	sched без расписания — 422 field recordScheduleId, строка Н4 «sched 422» снята, сверка С6	all
 2026-11-02	4/scenarios.tsv: 42-timeline шаг 7	книга primaries всем: до первой головы срока дверь раздела 503, шкала называет его в unavailable, шаг ждёт голову	all
 2026-11-03	4/scenarios.tsv: 39-recording-target шаги 7, 8, 10, новый 11	контракт b09cdf8: copies — список serverId, число — 422 field copies	all
+2026-11-04	4/scenarios.tsv: новый 45-export	V/11.20: операции выгрузки без теста форка — свой набор (V/11.6 Н1.2); на стенде манифесты live и exp без воркера exp, держатель, регистратор и надзор — @manual	all
