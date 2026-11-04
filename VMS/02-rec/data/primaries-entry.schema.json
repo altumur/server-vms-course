@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "value элемента книги domain/rec/primaries/*/<раздел>, ключи одни у держателя и у копии, V/02.9 Н1.6; поля «пусто, ложь, нет» отсутствуют, кроме running",
+ "description": "value of an element of the book domain/rec/primaries/*/<section>, the keys are the same at the holder and at the copy, V/02.9 Н1.6; the fields «empty, false, none» are absent, except running",
  "type": "object",
  "properties": {
   "ref": {

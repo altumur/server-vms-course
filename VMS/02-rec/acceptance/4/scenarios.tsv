@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/02.4: регистратор пишет камеру-файл в том своего сервера (держатель V/01, живой obsd). Формат — README.
+# Acceptance of V/02.4: the recorder writes a file camera into the volume of its own server (the holder V/01, a live obsd). Format — README.
 01-record	1	@start worker cam w-srv-a-1 on srv-a	ok
 01-record	2	@start worker rec r-srv-a-1 on srv-a	ok
 01-record	3	console2 POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
