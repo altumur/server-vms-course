@@ -1,6 +1,6 @@
-# Исходы нечитаемой строки <sub>/workers/<имя> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable row <sub>/workers/<имя> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	<s>controller	строка целиком нечитаема: воркер не в пуле, в garbled отчёта прохода не входит (Н4 «пульс/слот/назначение не читается»; ответ «Архитектора» 2026-10-25 на вопросы этапа 3, Г-08)	0	строка	P/04 Н4
-	<s>worker	строка целиком нечитаема: воркер, читающий своё назначение, набор единиц не меняет (новых не берёт, держимых по этой строке не отдаёт), журнал (ответ «Архитектора» 2026-10-25 на вопросы этапа 3, Г-08)	0	строка	P/03.3 Н3 «цикл()» шаг 2
-	console	строка целиком нечитаема: дренаж — `GET /drain` 503 `unavailable` (ответ «Архитектора» 2026-10-25 на вопросы этапа 3, Г-08)	0	строка	P/06.6 Н1.2
+	<s>controller	the whole row is unreadable: the worker is not in the pool, does not enter garbled of the pass report (Н4 «пульс/слот/назначение не читается»; the Architect's answer of 2026-10-25 to the questions of stage 3, Г-08)	0	строка	P/04 Н4
+	<s>worker	the whole row is unreadable: the worker reading its own assignment does not change its set of units (takes no new ones, does not give away the ones held by this row), the log (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-08)	0	строка	P/03.3 Н3 «цикл()» шаг 2
+	console	the whole row is unreadable: drain — `GET /drain` 503 `unavailable` (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-08)	0	строка	P/06.6 Н1.2

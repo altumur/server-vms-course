@@ -1,5 +1,5 @@
-# Исходы нечитаемой строки <sub>/want/<сервер> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable row <sub>/want/<сервер> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	<s>controller	строка целиком нечитаема: нечитаемое не подменяется отсутствием и не переписывается: ошибка шага 9 (failures + 1), правила заказа (retiring, «номер выше want») к процессам сервера не применяются (договор пула want_rule), причина — в журнал прохода (аудит раскладки, Г-07; правило DF-OUTCOMES-109, решение «Архитектора» 2026-10-25)	0	строка	P/04 Н3 «проход()»; договор пула want_rule
-	console	строка целиком нечитаема: ряда workers_wanted{server} этого сервера нет, скрипт сервера по нему ничего не запускает и не останавливает (P/02.4 Н1.5; аудит раскладки, Г-07)	0	строка	P/06.5 Н3 «/metrics — текст»
+	<s>controller	the whole row is unreadable: the unreadable is not replaced by absence and is not rewritten: an error of step 9 (failures + 1), the order rules (retiring, «number above want») are not applied to the processes of the server (the pool contract want_rule), the cause goes to the pass log (layout audit, Г-07; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)	0	строка	P/04 Н3 «pass()»; договор пула want_rule
+	console	the whole row is unreadable: there is no series workers_wanted{server} of this server, the server's script starts and stops nothing by it (P/02.4 Н1.5; layout audit, Г-07)	0	строка	P/06.5 Н3 «/metrics — текст»

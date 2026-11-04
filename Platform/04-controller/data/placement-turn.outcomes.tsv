@@ -1,4 +1,4 @@
-# Исходы нечитаемой строки <sub>/controller/placement_turn (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable row <sub>/controller/placement_turn (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	<s>controller	строка целиком нечитаема: отказ изменения размещения с failures и причиной, не пустая строка; без нового допуска; восстановить служебную строку	0	строка	P/04 Н1.5, Н3 «получить и удерживать очередь размещения» шаг 1, Н4
+	<s>controller	the whole row is unreadable: a refusal of the placement change with failures and a cause, not an empty row; without a new admission; restore the service row	0	строка	P/04 Н1.5, Н3 «get and hold the placement turn» шаг 1, Н4

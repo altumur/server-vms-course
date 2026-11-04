@@ -3,11 +3,11 @@
  "type": "object",
  "properties": {
   "units": {
-   "description": "id назначенных единиц по правилу списка P/06.1 Н1.2 (через запятую, иначе массив JSON; кодек array), отсортирован; \"\" — ни одной",
+   "description": "ids of the assigned units by the list rule of P/06.1 Н1.2 (comma-separated, otherwise a JSON array; codec array), sorted; \"\" — none",
    "type": "array",
    "items": {
     "$ref": "#/$defs/common.named_id",
-    "description": "id единицы (P/06.1 Н1.3); числовой id — тоже по этой грамматике"
+    "description": "the unit id (P/06.1 Н1.3); a numeric id — also by this grammar"
    },
    "uniqueItems": true,
    "x-codec": [
@@ -15,7 +15,7 @@
    ]
   },
   "rev": {
-   "description": "десятичное целое ≥ 1; +1 только при изменении списка",
+   "description": "a decimal integer ≥ 1; +1 only when the list changes",
    "type": "string",
    "pattern": "^(?:[1-9][0-9]*)$",
    "x-codec": [

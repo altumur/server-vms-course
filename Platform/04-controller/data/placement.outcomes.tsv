@@ -1,5 +1,5 @@
-# Исходы нечитаемой строки <sub>/placement/<id> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable row <sub>/placement/<id> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	<s>controller	строка целиком нечитаема: контроллер — ошибка шага прохода (failures + 1), нечитаемое не подменяется отсутствием и не переписывается как неразмещённая (Н3 «проход()»: «данные по такому чтению не подменяются пустыми»); причина — в журнал (аудит раскладки, Г-04; правило DF-OUTCOMES-109, решение «Архитектора» 2026-10-25)	0	строка	P/04 Н3 «проход()»
-	console	строка целиком нечитаема: эффективное размещение (/where, /unplaceable, прогнозы меток) — неподтверждённое чтение, не «не размещена» (аудит раскладки, Г-04)	0	строка	P/04 Н1.5
+	<s>controller	the whole row is unreadable: the controller — an error of a pass step (failures + 1), the unreadable is not replaced by absence and is not rewritten as unplaced (Н3 «pass()»: «data from such a read are not replaced by empty ones»); the cause goes to the log (layout audit, Г-04; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)	0	строка	P/04 Н3 «pass()»
+	console	the whole row is unreadable: the effective placement (/where, /unplaceable, label forecasts) — an unconfirmed read, not «not placed» (layout audit, Г-04)	0	строка	P/04 Н1.5

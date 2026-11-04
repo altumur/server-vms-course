@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "worker": {
-   "description": "имя воркера — имя слота P/03.2 Н1.4 (`<prefix>-<суффикс>`; prefix своего манифеста — проверка урока, не формы); \"\" — не размещена",
+   "description": "the worker name — a slot name, P/03.2 Н1.4 (`<prefix>-<суффикс>`; prefix of its own manifest — a check of the lesson, not of the form); \"\" — not placed",
    "type": "string",
    "pattern": "^(?:([a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)?)$",
    "x-codec": [
@@ -11,7 +11,7 @@
    ]
   },
   "reason": {
-   "description": "причина для человека; непустая (Н3 «Причина», P/04-18)",
+   "description": "a reason for a human; non-empty (Н3 «Причина», P/04-18)",
    "type": "string",
    "x-codec": [
     "string"
@@ -19,13 +19,13 @@
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды контроллера в момент решения",
+   "description": "the controller's wall-clock seconds at the moment of the decision",
    "x-codec": [
     "time"
    ]
   },
   "rev": {
-   "description": "десятичное целое ≥ 1; +1 на каждую запись строки",
+   "description": "a decimal integer ≥ 1; +1 for each write of the row",
    "type": "string",
    "pattern": "^(?:[1-9][0-9]*)$",
    "x-codec": [
@@ -33,7 +33,7 @@
    ]
   },
   "manifest_rev": {
-   "description": "ревизия манифеста (P/02.3 Н1.5 rev), под которой принято решение; ДОЛЖЕН у реализации с хранением манифеста в строке; строки без него штампует проход (Н3 «проход()» шаг 1)",
+   "description": "the manifest revision (P/02.3 Н1.5 rev) under which the decision was made; MUST for an implementation that keeps the manifest in the row; rows without it are stamped by the pass (Н3 «pass()» step 1)",
    "type": "string",
    "pattern": "^(?:[1-9][0-9]*)$",
    "x-codec": [

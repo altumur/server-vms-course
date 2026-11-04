@@ -4,14 +4,14 @@
  "properties": {
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "момент конца прохода"
+   "description": "the moment of the end of the pass"
   },
   "ok": {
-   "description": "true — проход дошёл до конца, все входы читались и ни одна запись не отказана; иначе false",
+   "description": "true — the pass reached the end, all inputs were read and no write was refused; otherwise false",
    "type": "boolean"
   },
   "error": {
-   "description": "текст последней ошибки или пустая строка",
+   "description": "the text of the last error or an empty string",
    "type": "string"
   },
   "failures": {
@@ -19,15 +19,15 @@
   },
   "last_success": {
    "$ref": "#/$defs/common.time",
-   "description": "момент конца последнего успешного прохода"
+   "description": "the moment of the end of the last successful pass"
   },
   "seconds": {
-   "description": "длительность прохода",
+   "description": "the duration of the pass",
    "type": "number",
    "minimum": 0
   },
   "manifest_rev": {
-   "description": "ревизия манифеста контроллера",
+   "description": "the manifest revision of the controller",
    "type": [
     "string",
     "integer"
@@ -36,16 +36,16 @@
   },
   "manifest_behind": {
    "$ref": "#/$defs/count",
-   "description": "строк этого прохода, запись которых отложена из-за отставшего манифеста; строка — один раз за проход"
+   "description": "rows of this pass whose write was postponed because of a lagging manifest; a row — once per pass"
   },
   "names_given": {
-   "description": "имена, отданные судьбой; читает воркер при захвате (P/03.2 Н3 «захватить»)",
+   "description": "names given away by the fate; the worker reads them at capture (P/03.2 Н3 «capture»)",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/slot_name"
    },
    "additionalProperties": {
-    "description": "версия строки слота (index P/01.1 Н1, непрозрачная строка), при которой имя отдано (Н3 «судьба» names_given)",
+    "description": "the version of the slot row (index P/01.1 Н1, an opaque string) at which the name was given away (Н3 «fate» names_given)",
     "type": "string",
     "not": {
      "enum": [
@@ -55,12 +55,12 @@
    }
   },
   "hung_move_after": {
-   "description": "секунды предела зависания, действующего у этого контроллера (Н1.4 HUNG_MOVE_AFTER); читает воркер",
+   "description": "seconds of the hang limit in force at this controller (Н1.4 HUNG_MOVE_AFTER); the worker reads it",
    "type": "number",
    "minimum": 0
   },
   "fates": {
-   "description": "только занятые неотданные слоты (holder непуст, released false)",
+   "description": "only taken slots not given away (holder non-empty, released false)",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/slot_name"
@@ -88,7 +88,7 @@
       "type": "string"
      },
      "rev": {
-      "description": "версия суждения о слоте",
+      "description": "the version of the judgment about the slot",
       "type": [
        "string",
        "integer"
@@ -97,7 +97,7 @@
      },
      "since": {
       "$ref": "#/$defs/common.time",
-      "description": "момент входа слота в этот fate на часах контроллера"
+      "description": "the moment the slot entered this fate by the controller's clock"
      }
     },
     "additionalProperties": false,
@@ -155,7 +155,7 @@
     "$ref": "#/$defs/common.named_id"
    },
    "additionalProperties": {
-    "description": "непустая причина — why /unplaceable и reason 404 `/where/<id>`",
+    "description": "a non-empty reason — why of /unplaceable and reason of 404 `/where/<id>`",
     "type": "string",
     "not": {
      "enum": [
@@ -165,7 +165,7 @@
    }
   },
   "short": {
-   "description": "только при placement.grows true",
+   "description": "only when placement.grows true",
    "type": "array",
    "items": {
     "type": "object",
@@ -175,22 +175,22 @@
      },
      "units": {
       "$ref": "#/$defs/count",
-      "description": "ждущих единиц веса"
+      "description": "waiting units of weight"
      },
      "workers": {
       "$ref": "#/$defs/count",
-      "description": "нужно процессов сверх живых и ёмкости в пути"
+      "description": "processes needed beyond the live ones and the capacity in flight"
      },
      "groups": {
       "$ref": "#/$defs/count",
-      "description": "ждущих групп; всегда, 0 тоже (разбор ревью стадии B 3–5, № 13)"
+      "description": "waiting groups; always, 0 too (analysis of review of stage B 3–5, № 13)"
      },
      "ordered": {
       "$ref": "#/$defs/count",
-      "description": "заказано этим проходом"
+      "description": "ordered by this pass"
      },
      "withheld": {
-      "description": "слова, почему не заказано",
+      "description": "words for why it was not ordered",
       "type": "string"
      }
     },
@@ -205,7 +205,7 @@
    }
   },
   "wants": {
-   "description": "только при placement.grows true",
+   "description": "only when placement.grows true",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/server_name"
@@ -221,11 +221,11 @@
      },
      "live": {
       "$ref": "#/$defs/count",
-      "description": "живые процессы роли сервера"
+      "description": "live processes of the role of the server"
      },
      "pending": {
       "$ref": "#/$defs/count",
-      "description": "ёмкость в пути"
+      "description": "capacity in flight"
      },
      "retiring": {
       "$ref": "#/$defs/slot_name"
@@ -263,11 +263,11 @@
     "properties": {
      "since": {
       "$ref": "#/$defs/common.time",
-      "description": "момент снятия заказа"
+      "description": "the moment the order was removed"
      },
      "times": {
       "$ref": "#/$defs/count",
-      "description": "отказов подряд"
+      "description": "refusals in a row"
      }
     },
     "additionalProperties": false,
@@ -278,7 +278,7 @@
    }
   },
   "near_waiting": {
-   "description": "подсистемы placement.near.sub, которых нет в каталоге манифестов этого прохода: сродство ждёт их установки (Н1.3 near; ADR-0091 доп. (27) п. 6); иначе поля нет",
+   "description": "the subsystems of placement.near.sub that are not in the manifest catalog of this pass: the affinity waits for their installation (Н1.3 near; ADR-0091 addendum (27) item 6); otherwise there is no field",
    "type": "array",
    "items": {
     "type": "string",
@@ -328,7 +328,7 @@
   ]
  },
  "additionalProperties": {
-  "description": "свои счётчики реализации (Н1.2 — МОЖЕТ добавлять)"
+  "description": "the implementation's own counters (Н1.2 — MAY add)"
  },
  "required": [
   "at",
@@ -1162,22 +1162,22 @@
   },
   "count": {
    "$ref": "#/$defs/common.uint53",
-   "description": "счётчик ≥ 0"
+   "description": "a counter ≥ 0"
   },
   "labels": {
-   "description": "набор меток — каноническая запись по возрастанию (Н3 «порядок наборов»)",
+   "description": "the label set — the canonical notation in ascending order (Н3 «порядок наборов»)",
    "type": "array",
    "items": {
     "type": "string"
    }
   },
   "server_name": {
-   "description": "имя сервера — грамматика SERVER_NAME (P/02.4 Н1.2)",
+   "description": "the server name — the grammar of SERVER_NAME (P/02.4 Н1.2)",
    "type": "string",
    "pattern": "^(?:[a-z0-9]+(-[a-z0-9]+)*)$"
   },
   "slot_name": {
-   "description": "имя слота P/03.2 Н1.4",
+   "description": "a slot name, P/03.2 Н1.4",
    "type": "string",
    "pattern": "^(?:[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)$"
   }

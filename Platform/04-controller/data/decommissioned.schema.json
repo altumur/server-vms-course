@@ -4,23 +4,23 @@
  "properties": {
   "asked_at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды запроса консоли (`platform/decommission/<сервер>` at)",
+   "description": "wall-clock seconds of the console request (`platform/decommission/<сервер>` at)",
    "x-codec": [
     "time"
    ]
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды отметки контроллера",
+   "description": "wall-clock seconds of the controller's mark",
    "x-codec": [
     "time"
    ]
   },
   "slots": {
-   "description": "имена отданных слотов по правилу списка P/06.1 Н1.2; \"\" — ни одного; имена, не число (Д7)",
+   "description": "names of the given-away slots by the list rule of P/06.1 Н1.2; \"\" — none; names, not a number (Д7)",
    "type": "array",
    "items": {
-    "description": "имя отданного слота P/03.2 Н1.4",
+    "description": "the name of the given-away slot, P/03.2 Н1.4",
     "type": "string",
     "pattern": "^(?:[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)$"
    },
@@ -29,21 +29,21 @@
    ]
   },
   "units": {
-   "description": "id снятых единиц по правилу списка P/06.1 Н1.2; \"\" — ни одной",
+   "description": "ids of the removed units by the list rule of P/06.1 Н1.2; \"\" — none",
    "type": "array",
    "items": {
     "$ref": "#/$defs/common.named_id",
-    "description": "id снятой единицы P/06.1 Н1.3"
+    "description": "the id of the removed unit, P/06.1 Н1.3"
    },
    "x-codec": [
     "array"
    ]
   },
   "holds": {
-   "description": "места удержаний по правилу списка P/06.1 Н1.2; \"\" — ни одного",
+   "description": "the hold places by the list rule of P/06.1 Н1.2; \"\" — none",
    "type": "array",
    "items": {
-    "description": "имя места удержания P/03.2 Н1.3 (`<sub>/holds/<место>`)",
+    "description": "the name of the hold place, P/03.2 Н1.3 (`<sub>/holds/<место>`)",
     "type": "string"
    },
    "x-codec": [
