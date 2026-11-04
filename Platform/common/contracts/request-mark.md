@@ -257,7 +257,7 @@ limits:      FETCHED_COUNT, FETCHED_BYTES — предел длины fetched в
 запись присланного срока `valid_until` — векторы [`deadline`](../vectors/deadline/README.md) (C47-DEADLINE-VECTORS-01).
 Пакеты — у владельца (P/06.4); прочие состояния и `kept` векторов не имеют — шаги приёмки глав 6.4 и 3.6 и чтение.
 
-Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../../01-store/vectors/jcs/README.md)
+Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../../01-store/ru/vectors/jcs/README.md)
 урока P/01 (`canonical_json.tsv`: вход → форма RFC 8785 → sha256; ADR-0083 доп. (33) п. 2).
 
 ## Соответствие прежним урокам

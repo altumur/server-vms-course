@@ -378,13 +378,13 @@ From P/06.3 Н1.8 (the late layer, introduced by lesson P/08; guess of stage C G
 is the section «The gate with grants» above.
 
 The states `on`, `open`, `shut` of the console gate are Н1.3. «Keys exist» means the row `domain/keys` reads and is accepted
-by the function `keys` ([domain key set contract](../../../common/contracts/keys.md); analysis of review of stage A 8–10, № 13) with the pinned root. «A trace of the domain» is any of the rows `domain/root`, `domain/member`, `domain/revoked`,
+by the function `keys` ([domain key set contract](../keys.md); analysis of review of stage A 8–10, № 13) with the pinned root. «A trace of the domain» is any of the rows `domain/root`, `domain/member`, `domain/revoked`,
 `domain/grants/*`, `domain/break-glass/*`, or this console process has already seen keys: then without keys — `shut` (503), not `open`.
 
-In the state `on` the identity goes by the order of Н1.3 `identity`: the agent signature — [agent signature contract](../../../common/contracts/agent-signature.md); the token — the function `token` of the
-[domain token contract](../../../common/contracts/domain-token.md) «Проверка» (owner P/08.2; analysis of review of stage B 3–5, В1) by the set of this cluster with `expect {kind: person, cluster: null}` (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10); the grants of a person and the entry — P/08.4. Without an identity — 401, not 503: 503 is only `shut`. In `on`
+In the state `on` the identity goes by the order of Н1.3 `identity`: the agent signature — [agent signature contract](../agent-signature.md); the token — the function `token` of the
+[domain token contract](../domain-token.md) «Проверка» (owner P/08.2; analysis of review of stage B 3–5, В1) by the set of this cluster with `expect {kind: person, cluster: null}` (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10); the grants of a person and the entry — P/08.4. Without an identity — 401, not 503: 503 is only `shut`. In `on`
 a person is admitted only by the entry and the grants (section «The gate with grants»); «loopback — operator» is only `open`; the agent of its own cluster passes by
-the signature ([agent signature contract](../../../common/contracts/agent-signature.md); analysis of review of stage A 8–10, № 13).
+the signature ([agent signature contract](../agent-signature.md); analysis of review of stage A 8–10, № 13).
 
 ```yaml
 loopback:  «loopback — operator» — only the state open (no domain, Н1.3); in the state on — only «The gate with grants» above

@@ -23,7 +23,7 @@ Who performs is by the table: `issue.tsv` — the console (`06-console`, issues 
 
 ## Stand command `door-token-issue`
 
-The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../../../common/acceptance/README.md);
+The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../../acceptance/README.md);
 chapter 6.5 Н3): a template with `{input}` — the path of a file with an object of exactly `{seed_hex, kid, now, claims}` of a row of `issue.tsv`:
 `seed_hex`, `kid` — the strings of the cells, `now` — the number of the cell, `claims` — the lexeme of the cell as it is (the order of fields, `routes` and
 the numeric lexemes are not re-derived; the row `number_form` with an exponent at `expires` is a valid input of issuing, the form of the checking
@@ -34,7 +34,7 @@ of issuing with code 0 — the published rows are computable. stdout is exactly 
 
 ## Stand command `door-token-verify`
 
-The key `stand` of the profile `03-worker` (the section «Layout by processes» of [the common acceptance README](../../../../common/acceptance/README.md);
+The key `stand` of the profile `03-worker` (the section «Layout by processes» of [the common acceptance README](../../../acceptance/README.md);
 P/03.4 Н5): a template with `{input}` — the path of a file into which the runner writes one JSON object of the input of a row: for `verify.tsv` —
 `{keys, authorization, now, unit, holder, path}` (`keys` — the value of the column as JSON, `authorization` and `path` — strings
 byte for byte, an empty string `authorization` — there is no header, `now` — a number), for `place.tsv` — the cell `input` as it is

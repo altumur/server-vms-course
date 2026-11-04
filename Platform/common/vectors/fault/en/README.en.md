@@ -45,7 +45,7 @@ their doors and functions speak: the doors of the domain
 
 ## Stand command `fault`
 
-The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../../../common/acceptance/README.md));
+The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../../acceptance/README.md));
 a template with `{input}` — the path of a file with an object of exactly `{}`. One call per table: the answer is the full map of its own dictionary
 of refusals `{<слово>: <код HTTP>}`, the code is a JSON integer (not a string, not a bool); the set of words and every code equal `fault.tsv`,
 the order of fields does not matter; a word beyond the table or a missing one — FAIL. An input not of the form: not an object or a non-empty object.

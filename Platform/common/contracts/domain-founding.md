@@ -122,5 +122,5 @@ claim_1:     процесс domain держателя при первом ста
 
 Пакет [`domain-founding`](../vectors/domain-founding/README.md): основание домена — корень, файл восстановления, закрепление. (ADR-0083 доп. (32) п. 2)
 
-Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../../01-store/vectors/jcs/README.md)
+Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../../01-store/ru/vectors/jcs/README.md)
 урока P/01 (`canonical_json.tsv`: вход → форма RFC 8785 → sha256; ADR-0083 доп. (33) п. 2).

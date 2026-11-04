@@ -1,25 +1,33 @@
 """Move a lesson to the layout of ADR-0124 (and its addendum (1)): the English source on the canonical path, the Russian
 text as a mirror in `ru/`, forms in `forms/`, logs in `journal/`.
 
-    python tools/layout/migrate.py <урок> --phase ru      # 1st commit: Russian X → ru/X, the lecture → ru/; moves.tsv
-    python tools/layout/migrate.py <урок> --phase en      # 2nd commit: en/<имя>.en.md → X; forms/, journal/
-    python tools/layout/migrate.py <урок> --phase links   # 3rd commit: links by meaning over the course, heads of pairs
-    python tools/layout/migrate.py <урок> --phase plan    # print the table, change nothing
+    python tools/layout/migrate.py <урок> --phase plan     # print the table, change nothing
+    python tools/layout/migrate.py <урок> --phase ru       # 1st commit: Russian X → ru/X, the lecture → ru/; moves.tsv
+    python tools/layout/migrate.py <урок> --phase en       # 2nd commit: en/<имя>.en.md → X; forms/, journal/
+    python tools/layout/migrate.py <урок> --phase links    # 3rd commit: links over the course, heads of pairs (once)
+    python tools/layout/migrate.py --phase relink          # any time: links into moved lessons by meaning (idempotent)
 
 `<урок>` — `Platform/NN-<имя>`, `VMS/NN-<имя>`, `Platform/common` or `VMS/common`. Run from the root of the course. Each
 phase stages its own paths only (`git mv`, `git add <путь>`), the commit is the operator's. The table of moves is kept for
-good in `tools/layout/moves.tsv`: a reader of an old ADR finds the new place by it.
+good in `tools/layout/moves.tsv`: a reader of an old ADR finds the new place by it. Machine Markdown (`harness/**` — the
+bytes of a product prompt, ADR-0124 доп. (1) п. 4) is not moved, not translated and not rewritten.
 
-Links (ADR-0124 addendum (1) item 3), the class of the linking file decides:
+`links` = the table step and the meaning step; it runs once per lesson right after `en` (moves.tsv keeps the mark
+`linked`): the table step resolves the links of a moved file from its former place. `relink` is the meaning step alone,
+over every moved lesson; run it after merging texts written by the former habit. Every problem — a syntax the rewriter
+cannot read (`links.missed`), a Russian anchor without its English pair, a link that must become text but is a
+definition — is found before anything is written, and the phase exits 1.
+
+The meaning step (ADR-0124 addendum (1) item 3), by the class of the linking file:
 - source (English: a file of a moved lesson outside `ru/` and `journal/`, or `en/*.en.md` of a lesson in the former
-  layout) — into the source; a link into `ru/` (the lecture) or `journal/` becomes text: a code span of the path from the
-  root of the lesson, «(for people, not in the export)»; a Russian anchor of a source target becomes the English one by
-  the pairs of headings (one to one);
+  layout) — into the source `Y` with the English anchor; a link into `ru/` without a source (the lecture) or into
+  `journal/` becomes text: a code span of the path from the root of the lesson, «(for people, not in the export)»;
 - translation (Russian under `ru/` of a moved lesson, or a derived Russian text of a lesson in the former layout) — into
-  translations (`ru/X`, the Russian anchor stays), into the source for machine files; within the moved lesson a link to
-  the lecture or the journal becomes text as in its source;
-- history (`decisions/**`: ADR, notes, review archives) — only links to paths that are no more, mechanically by the table;
-- any other text (lectures and Russian sources of other lessons, notes, rules) — into the source with the English anchor.
+  translations `ru/Y` (the Russian anchor), into the source for machine files and for its own source; within the moved
+  lesson a link to the lecture or the journal becomes text as in its source;
+- history (`decisions/**`, root `РЕВЬЮ-*.md`, `ХОД-*.md`, `windows/**`) — only links to paths that are no more, by the
+  table;
+- any other text (lectures and Russian sources of other lessons, notes, rules) — as a source, but links stay links.
 """
 import argparse
 import os
@@ -27,6 +35,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import unquote
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -36,7 +45,8 @@ MOVES = HERE / "moves.tsv"
 HEADER = "# lesson\told\tnew\tkind"
 OLD_MARK = "производный от en, руками не правится"
 FORM = re.compile(r"data/([^/]+-checks(?:\.probes)?\.tsv|[^/]+\.machine\.yaml|[^/]+\.traces\.tsv)")
-HISTORY = ("decisions/",)
+MACHINE_MD = re.compile(r"(?:^|/)harness/")
+HISTORY = re.compile(r"^(?:decisions/|windows/|РЕВЬЮ-[^/]*\.md$|ХОД-[^/]*\.md$)")
 LIVE_TABLES = ("decisions/adr-norms.tsv", "decisions/adr-pipeline.tsv")
 NOTE = {"en": "for people, not in the export", "ru": "для человека, в выгрузку не входит"}
 JOURNAL_NOTE = {"en": "a log, not in the export", "ru": "журнал, в выгрузку не входит"}
@@ -67,7 +77,7 @@ def plan(home):
             sources[(m.group(1) + "/" if m.group(1) else "") + m.group(2) + ".md"] = r
     rows, missing = [], []
     for r in sorted(rel):
-        if re.search(r"(?:^|/)en/[^/]+\.en\.md$", r):
+        if re.search(r"(?:^|/)en/[^/]+\.en\.md$", r) or MACHINE_MD.search(r):
             continue
         if r.endswith(".md"):
             if r == f"{name}.md":
@@ -99,16 +109,15 @@ def read_moves():
 
 
 def lesson_moves(home):
-    return [(o, n, k) for lesson, o, n, k in read_moves() if lesson == home]
+    return [(o, n, k) for lesson, o, n, k in read_moves() if lesson == home and k != "linked"]
 
 
-def write_moves(home, rows):
-    kept = [r for r in read_moves() if r[0] != home]
-    lines = [HEADER] + ["\t".join(r) for r in kept] + ["\t".join((home, o, n, k)) for o, n, k in rows]
+def write_moves(rows):
+    lines = [HEADER] + ["\t".join(r) for r in rows]
     head = ("# Таблица переноса уроков в раскладку ADR-0124 (доп. (1) п. 5): старый путь → новый. Постоянная: читатель "
             "старого ADR находит по ней новое место.\n# kind: translation — русский производный X → ru/X; source — "
             "английский en/<имя>.en.md → X; lecture — лекция → ru/; form — формы ADR-0120 → forms/; journal — "
-            "corrections.tsv → journal/.\n")
+            "corrections.tsv → journal/; linked — фаза ссылок урока сделана (пути «-»).\n")
     MOVES.write_text(head + "\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -123,7 +132,7 @@ def prune_empty(home):
             d.rmdir()
 
 
-# ---- classes of files and targets --------------------------------------------------------------------------------
+# ---- classes of files ---------------------------------------------------------------------------------------------
 
 def home_of(path):
     parts = Path(path).parts
@@ -135,9 +144,11 @@ def moved_homes():
 
 
 def file_class(path, text, homes):
-    """source, translation, history or other — of the linking file by its new path."""
-    if path.startswith(HISTORY):
+    """source, translation, history, machine or other — of the linking file by its path now."""
+    if HISTORY.search(path):
         return "history"
+    if MACHINE_MD.search(path):
+        return "machine"
     home = home_of(path)
     if home in homes:
         rest = path[len(home) + 1:]
@@ -151,128 +162,172 @@ def file_class(path, text, homes):
     return "other"
 
 
-def heading_pairs(source, translation):
-    """Russian anchor → English anchor by the headings of a pair, one to one; {} if they are not one to one."""
+def heading_map(a, b):
+    """Anchors of `a` → anchors of `b` by the headings in order, one to one; None if the levels differ."""
     try:
-        en = L.headings(Path(source).read_text(encoding="utf-8"))
-        ru = L.headings(Path(translation).read_text(encoding="utf-8"))
+        ha, hb = L.headings(Path(a).read_text(encoding="utf-8")), L.headings(Path(b).read_text(encoding="utf-8"))
     except OSError:
-        return {}
-    if [lv for lv, _ in en] != [lv for lv, _ in ru]:
-        return {}
-    return {r: e for (_, r), (_, e) in zip(ru, en)}
+        return None
+    if [lv for lv, _ in ha] != [lv for lv, _ in hb]:
+        return None
+    return {x: y for (_, x), (_, y) in zip(ha, hb)}
 
 
 class Rewriter:
-    def __init__(self, root, homes, moves):
+    """`moves` — of the lesson being moved (the table step); `homes` — every moved lesson (the meaning step)."""
+
+    def __init__(self, root, homes, moves=()):
         self.root = Path(root)
         self.homes = homes
         self.new_of = {o: n for o, n, _ in moves}
         self.old_of = {n: o for o, n, _ in moves}
         self.kind = {o: k for o, n, k in moves}
-        self.source_of_translation = {}     # old Russian X (= source path now) → its translation ru/X
-        for o, n, k in moves:
-            if k == "translation":
-                self.source_of_translation[o] = n
-        self.pairs = {}
+        self.gone = {o: n for lesson, o, n, k in read_moves() if k in ("source", "lecture", "form", "journal")}
+        self.maps = {}
         self.stats = {"files": 0, "links": 0, "texted": 0, "anchors": 0, "by_class": {}}
-        self.unmapped = []
+        self.problems, self.warnings = [], []
 
-    def anchor_en(self, x, anchor):
-        if anchor is None:
-            return None
-        if x not in self.pairs:
-            self.pairs[x] = heading_pairs(self.root / x, self.root / self.source_of_translation[x])
-        if anchor in self.pairs[x]:
-            return self.pairs[x][anchor]
-        if anchor in L.anchors(self.root / x):
+    def exists(self, rel):
+        return (self.root / rel).exists()
+
+    def anchor(self, frm, to, anchor, where):
+        """An anchor of `frm` → the anchor of its pair `to` (both paths from the root)."""
+        if anchor is None or anchor == "":
             return anchor
-        self.unmapped.append((x, anchor))
+        if anchor in L.anchors(self.root / to):
+            return anchor
+        if (frm, to) not in self.maps:
+            self.maps[(frm, to)] = heading_map(self.root / frm, self.root / to)
+        mapping = self.maps[(frm, to)]
+        if anchor in L.anchors(self.root / frm):
+            if mapping and anchor in mapping:
+                return mapping[anchor]
+            self.problems.append(f"{where}: anchor #{anchor} of {frm} has no pair in {to} (headings not one to one)")
+            return anchor
+        self.warnings.append(f"{where}: anchor #{anchor} is in neither {frm} nor {to} (broken before)")
         return anchor
 
-    def target(self, cls, new_file, old_target_abs, anchor):
-        """→ (new absolute target, anchor, how): how — 'link' or 'text' (a link that becomes text)."""
-        a = old_target_abs
-        kind = self.kind.get(a)
-        if cls == "history":
-            return (self.new_of[a] if kind in ("source", "lecture", "form", "journal") else a), anchor, "link"
-        if kind == "translation":                       # the former Russian X: now the source X, the translation ru/X
-            if cls == "translation":
-                return self.new_of[a], anchor, "link"
-            new_anchor = self.anchor_en(a, anchor)
-            return a, new_anchor, "link"
-        if kind == "source":
-            return self.new_of[a], anchor, "link"
-        if kind in ("lecture", "journal"):
-            new = self.new_of[a]
-            same_lesson = home_of(new_file) == home_of(new)
-            if cls == "source" or (cls == "translation" and same_lesson):
-                return new, anchor, "text"
-            return new, anchor, "link"
-        if kind == "form":
-            return self.new_of[a], anchor, "link"
-        return a, anchor, "link"
+    def table_step(self, path, old_path, p):
+        """The target of a link as written for the former place of the file → its target by the table (from root)."""
+        old_abs = os.path.normpath(os.path.join(os.path.dirname(old_path), p))
+        if self.kind.get(old_abs) in ("source", "lecture", "form", "journal"):
+            return self.new_of[old_abs]
+        here = os.path.normpath(os.path.join(os.path.dirname(path), p))
+        if old_path != path and old_abs not in self.kind and not self.exists(old_abs) and self.exists(here):
+            return here                                  # written for the new place (a built block copied from ru)
+        return old_abs
 
-    def rewrite(self, path):
+    def meaning_step(self, cls, path, target, anchor, where):
+        """→ (target, anchor, how): how — 'link' or 'text'."""
+        if target in self.gone:                         # a path that is no more (history: only this)
+            target = self.gone[target]
+        if cls == "history":
+            return target, anchor, "link"
+        home = home_of(target)
+        if home not in self.homes:
+            return target, anchor, "link"
+        rest = target[len(home) + 1:]
+        own = home_of(path) == home
+        if rest.startswith("ru/"):
+            source = f"{home}/{rest[3:]}"
+            if self.exists(source) and target.endswith(".md"):
+                if cls == "translation":
+                    return target, self.anchor(source, target, anchor, where), "link"
+                return source, self.anchor(target, source, anchor, where), "link"
+            if cls == "source" or (cls == "translation" and own):
+                return target, anchor, "text"           # the lecture: for people only
+            return target, anchor, "link"
+        if rest.startswith("journal/"):
+            return target, anchor, ("text" if cls == "source" or (cls == "translation" and own) else "link")
+        translation = f"{home}/ru/{rest}"
+        if target.endswith(".md") and self.exists(translation):
+            mine = path == translation                    # a translation names its own source
+            if cls == "translation" and not mine:
+                return translation, self.anchor(target, translation, anchor, where), "link"
+            return target, self.anchor(translation, target, anchor, where), "link"
+        return target, anchor, "link"
+
+    def rewrite(self, path, table=True):
+        """→ the new text of a file or None (unchanged); problems are collected, nothing is written."""
         text = (self.root / path).read_text(encoding="utf-8")
         cls = file_class(path, text, self.homes)
-        old_path = self.old_of.get(path, path)
+        if cls == "machine":
+            return None
+        for href in L.missed(text):
+            self.problems.append(f"{path}: a link the rewriter cannot read: {href}")
+        old_path = self.old_of.get(path, path) if table else path
         lang = "en" if cls == "source" else "ru"
         out, at, changed = [], 0, 0
-        for m in L.links(text):
-            target = m.group(3)
-            p, _, a = target.partition("#")
-            anchor = a if "#" in target else None
+        for t in L.targets(text):
+            p, _, a = t.dest.partition("#")
+            anchor = a if "#" in t.dest else None
             if not p:
                 continue                                # an anchor of the same file
-            old_abs = os.path.normpath(os.path.join(os.path.dirname(old_path), p))
-            if cls == "history" and old_abs not in self.kind:
+            where = f"{path}: {t.dest}"
+            p = unquote(p)
+            target = self.table_step(path, old_path, p) if table else os.path.normpath(os.path.join(os.path.dirname(path), p))
+            if cls == "history" and target == os.path.normpath(os.path.join(os.path.dirname(path), p)) \
+                    and target not in self.gone:
                 continue
-            here = os.path.normpath(os.path.join(os.path.dirname(path), p))
-            if old_abs not in self.kind and not (self.root / old_abs).exists() and (self.root / here).exists():
-                continue                                # written for the new place (a built block copied from ru)
-            new_abs, new_anchor, how = self.target(cls, path, old_abs, anchor)
-            if new_abs == old_abs and new_anchor == anchor and path == old_path:
-                continue
+            target, new_anchor, how = self.meaning_step(cls, path, target, anchor, where)
             if how == "text":
-                home = home_of(new_abs)
-                name = new_abs[len(home) + 1:] if home_of(path) == home else new_abs
-                note = (JOURNAL_NOTE if self.kind.get(old_abs) == "journal" else NOTE)[lang]
-                inner = m.group(2)
-                if re.fullmatch(r"`[^`]+`", inner):
-                    rep = f"`{name}` ({note})"
-                else:
-                    rep = f"{inner} (`{name}`, {note})"
+                if t.whole is None:
+                    self.problems.append(f"{where}: a link definition must become text — edit by hand")
+                    continue
+                home = home_of(target)
+                name = target[len(home) + 1:] if home_of(path) == home else target
+                note = (JOURNAL_NOTE if "/journal/" in target else NOTE)[lang]
+                inner = t.text
+                rep = f"`{name}` ({note})" if re.fullmatch(r"`[^`]+`", inner) else f"{inner} (`{name}`, {note})"
+                start, end = t.whole
                 self.stats["texted"] += 1
             else:
-                rel = os.path.relpath(new_abs, os.path.dirname(path))
+                rel = os.path.relpath(target, os.path.dirname(path))
                 if p.endswith("/") and not rel.endswith("/"):
                     rel += "/"
                 if p.startswith("./") and not rel.startswith("."):
                     rel = "./" + rel
-                rep = f"{m.group(1)}[{m.group(2)}]({rel}{'#' + new_anchor if new_anchor is not None else ''})"
+                if unquote(t.dest.split("#")[0]) == rel and new_anchor == anchor:
+                    continue
                 if new_anchor != anchor:
                     self.stats["anchors"] += 1
-                if rep == m.group(0):
-                    continue
-            out.append(text[at:m.start()])
-            out.append(rep)
-            at = m.end()
+                rep = rel.replace(" ", "%20") + ("#" + new_anchor if new_anchor is not None else "")
+                start, end = t.start, t.end
+            out += [text[at:start], rep]
+            at = end
             changed += 1
         if not changed:
-            return 0
+            return None
         out.append(text[at:])
-        (self.root / path).write_text("".join(out), encoding="utf-8")
         self.stats["files"] += 1
         self.stats["links"] += changed
         self.stats["by_class"][cls] = self.stats["by_class"].get(cls, 0) + changed
-        return changed
+        return "".join(out)
+
+
+def rewrite_course(rw, table):
+    """Plan every rewrite, stop before writing if anything is wrong; → the changed paths."""
+    plans = {}
+    for path in tracked():
+        if path.endswith(".md"):
+            new = rw.rewrite(path, table=table)
+            if new is not None:
+                plans[path] = new
+    for w in sorted(set(rw.warnings)):
+        print("WARNING", w)
+    if rw.problems:
+        for p in sorted(set(rw.problems)):
+            print("PROBLEM", p)
+        raise SystemExit(f"{len(set(rw.problems))} problems: nothing written")
+    for path, text in plans.items():
+        Path(path).write_text(text, encoding="utf-8")
+    return sorted(plans)
 
 
 # ---- heads of pairs and text mentions of paths that are no more --------------------------------------------------
 
 EN_HEAD = re.compile(r"the Russian(?: text)?\s+\[`[^`]*`\]\([^)]*\)(\s+is derived from it)")
-RU_HEAD = re.compile(r"Текст производный от en, руками не правится: источник( P/[0-9.]+)? — английский \[`[^`]*`\]\([^)]*\)")
+RU_HEAD = re.compile(r"Текст производный от en, руками не правится: источник( P/[0-9.]+| V/[0-9.]+)? — английский \[`[^`]*`\]\([^)]*\)")
 
 
 def heads(home, moves):
@@ -305,7 +360,7 @@ def mentions(moves):
     pattern = re.compile("|".join(re.escape(o) for o in sorted(gone, key=len, reverse=True)) + r"(?![\w.-])")
     out = []
     for path in tracked():
-        if path.startswith(HISTORY) and path not in LIVE_TABLES or Path(path).resolve() == MOVES:
+        if (HISTORY.search(path) and path not in LIVE_TABLES) or Path(path).resolve() == MOVES or MACHINE_MD.search(path):
             continue
         if not path.endswith((".md", ".tsv", ".yaml", ".json", ".txt")):
             continue
@@ -320,12 +375,24 @@ def mentions(moves):
     return out
 
 
+def report(rw):
+    s = rw.stats
+    print(f"links: {s['links']} in {s['files']} files {s['by_class']}; to text {s['texted']}; anchors {s['anchors']}")
+
+
 def main(argv):
     ap = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
-    ap.add_argument("lesson")
-    ap.add_argument("--phase", required=True, choices=["plan", "ru", "en", "links"])
+    ap.add_argument("lesson", nargs="?")
+    ap.add_argument("--phase", required=True, choices=["plan", "ru", "en", "links", "relink"])
     args = ap.parse_args(argv)
-    home = args.lesson.rstrip("/")
+    if args.phase == "relink":
+        rw = Rewriter(Path.cwd(), moved_homes())
+        touched = rewrite_course(rw, table=False)
+        for p in touched:
+            git("add", p)
+        report(rw)
+        return 0
+    home = (args.lesson or "").rstrip("/")
     if not Path(home).is_dir() or home_of(home) != home:
         raise SystemExit(f"{home}: not a lesson directory (Platform/NN-<имя>, VMS/NN-<имя>, */common)")
     if args.phase == "plan":
@@ -337,7 +404,7 @@ def main(argv):
         for old, new, kind in rows:
             if kind in ("translation", "lecture"):
                 git_mv(old, new)
-        write_moves(home, [(o, n, k) for o, n, k in rows])
+        write_moves([r for r in read_moves() if r[0] != home] + [(home, o, n, k) for o, n, k in rows])
         git("add", str(MOVES.relative_to(Path.cwd().resolve())))
         print(f"{home}: {sum(k in ('translation', 'lecture') for _, _, k in rows)} Russian files → ru/; table {MOVES.name}")
         return 0
@@ -353,22 +420,20 @@ def main(argv):
         prune_empty(home)
         print(f"{home}: {n} files → canonical paths, forms/, journal/")
         return 0
-    homes = moved_homes()                               # classes of files: every lesson moved so far
-    rw = Rewriter(Path.cwd(), homes, rows)              # places and targets: this lesson only — the links of lessons moved
-    #                                                     before are already by the new layout (run once per lesson)
-    touched = []
-    for path in tracked():
-        if path.endswith(".md") and rw.rewrite(path):
-            touched.append(path)
+    if any(r[0] == home and r[3] == "linked" for r in read_moves()):
+        raise SystemExit(f"{home}: links already done — use --phase relink")
+    rw = Rewriter(Path.cwd(), moved_homes(), rows)
+    touched = rewrite_course(rw, table=True)
     head = heads(home, rows)
     ment = mentions(rows)
-    for p in sorted(set(touched) | set(head) | {p for p, _ in ment}):
+    rw2 = Rewriter(Path.cwd(), moved_homes())         # the meaning step once more: idempotent, after heads
+    touched2 = rewrite_course(rw2, table=False)
+    write_moves(read_moves() + [(home, "-", "-", "linked")])
+    for p in sorted(set(touched) | set(touched2) | set(head) | {p for p, _ in ment}) + ["tools/layout/moves.tsv"]:
         git("add", p)
-    s = rw.stats
-    print(f"links: {s['links']} in {s['files']} files {s['by_class']}; to text {s['texted']}; anchors {s['anchors']}")
-    print(f"heads of pairs: {len(head)}; text mentions of gone paths: {sum(n for _, n in ment)} in {len(ment)} files")
-    for x, a in sorted(set(rw.unmapped)):
-        print(f"UNMAPPED anchor {x}#{a}")
+    report(rw)
+    print(f"heads of pairs: {len(head)}; text mentions of gone paths: {sum(n for _, n in ment)} in {len(ment)} files; "
+          f"after heads: {rw2.stats['links']} links")
     return 0
 
 

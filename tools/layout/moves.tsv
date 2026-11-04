@@ -1,5 +1,5 @@
 # Таблица переноса уроков в раскладку ADR-0124 (доп. (1) п. 5): старый путь → новый. Постоянная: читатель старого ADR находит по ней новое место.
-# kind: translation — русский производный X → ru/X; source — английский en/<имя>.en.md → X; lecture — лекция → ru/; form — формы ADR-0120 → forms/; journal — corrections.tsv → journal/.
+# kind: translation — русский производный X → ru/X; source — английский en/<имя>.en.md → X; lecture — лекция → ru/; form — формы ADR-0120 → forms/; journal — corrections.tsv → journal/; linked — фаза ссылок урока сделана (пути «-»).
 # lesson	old	new	kind
 Platform/01-store	Platform/01-store/01-store.md	Platform/01-store/ru/01-store.md	lecture
 Platform/01-store	Platform/01-store/README.md	Platform/01-store/ru/README.md	translation
@@ -29,3 +29,4 @@ Platform/01-store	Platform/01-store/spec/en/01.2-store.norms.en.md	Platform/01-s
 Platform/01-store	Platform/01-store/spec/en/01.3-store.norms.en.md	Platform/01-store/spec/01.3-store.norms.md	source
 Platform/01-store	Platform/01-store/vectors/jcs/en/README.en.md	Platform/01-store/vectors/jcs/README.md	source
 Platform/01-store	Platform/01-store/vectors/rights-evaluator/en/README.en.md	Platform/01-store/vectors/rights-evaluator/README.md	source
+Platform/01-store	-	-	linked

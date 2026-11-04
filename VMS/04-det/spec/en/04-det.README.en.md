@@ -10,7 +10,7 @@ instructions do not add to them. The platform is the export `cammeta-specs` `7a8
 - The canon: the norms of the chapters `04.K-det.norms.md` (Н1–Н5 of each chapter; the addresses `V/04.K Н…`).
 - The canon of the manifest: [`det.subsystem.yaml`](../../det.subsystem.yaml): the bytes as they are.
 - Acceptance: [chapter 1](../../acceptance/1/README.md), [chapter 4](../../acceptance/4/README.md); the stand and the vocabulary — [the common VMS acceptance README](../../../common/acceptance/README.md); acceptance introduces no new requirements.
-- Vectors: [`mask`](../../../04-det/vectors/mask/README.md) (the package command).
+- Vectors: [`mask`](../../vectors/mask/README.md) (the package command).
 - [The lecture](../../04-det.md) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
 
 Record a contradiction with its place and a counterexample (the section «On a divergence»); an arbitrary refusal does not replace an

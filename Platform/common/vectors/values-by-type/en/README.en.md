@@ -52,7 +52,7 @@ columns of this half as written: at `write` — `{type, json}`, at `read` — `{
 the expectation is not passed (`row` at `write`, `json` at `read`); the native object below is built by the command (C-VBT-FRAME-01, the decision
 of the Specification).
 
-The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../../../common/acceptance/README.md));
+The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../../acceptance/README.md));
 a template with `{input}` — the path of a file with one JSON object. The runner gives a `both` row by two independent calls `write` and
 `read`; `both` never occurs in the input; the command does not get the expected result.
 

@@ -1,47 +1,104 @@
-"""Markdown links of the course: parse, resolve, check targets and anchors (ADR-0124; ADR-0124 addendum (1) item 7).
+"""Markdown links of the course: find, resolve, judge targets and anchors (ADR-0124; ADR-0124 addendum (1) item 7).
 
-    python tools/layout/links.py <каталог> [--only <префикс>]
+    python tools/layout/links.py <каталог> [--only <префикс>] [--base <файл прежнего итога>]
 
-Checks every local link `[text](target)` of every `*.md` under the directory (outside code blocks): the target file or
-directory exists, and an anchor `#…` names a heading of the target Markdown file (anchors as GitHub builds them).
-Exit code 1 if a link is broken. The migration (`migrate.py`) and the export probe use the same functions.
+Two readers on purpose:
+- `targets()` — the rewriter's reader: the destinations of inline links `[text](dest "title")`, `[text](<dest>)` and of
+  link definitions `[label]: dest "title"`, with their positions, outside code blocks and code spans;
+- `judged()` — the judge's reader, independent: markdown-it (CommonMark) tokens, reference links resolved.
+`missed()` names a local destination the judge sees and the rewriter does not: a syntax the migration cannot rewrite —
+the migration stops on it. The check of a tree judges every local link of every `*.md`: the target exists, an anchor
+`#…` names a heading of the target Markdown file (anchors as GitHub builds them). With `--base` it prints only broken
+links that are not in the former result (a file of «file<TAB>target<TAB>why» lines, as `--tsv` prints). Exit 1 if any.
 """
 import os
 import re
 import sys
 import unicodedata
 from pathlib import Path
+from urllib.parse import unquote
 
-FENCE = re.compile(r"^(`{3,}|~{3,})[^\n]*\n.*?^\1[ \t]*$", re.M | re.S)
-LINK = re.compile(r"(!?)\[((?:[^\[\]\n]|\n(?![ \t]*\n)|\[[^\[\]\n]*\])*)\]\(([^()\s]+)\)")   # text may wrap a line
-HEADING = re.compile(r"^(#{1,6})[ \t]+(.+?)[ \t#]*$", re.M)
-SCHEME = re.compile(r"[a-z][a-z0-9+.-]*:")
-
-
-def outside_fences(text):
-    """[(start, end)] of the parts of the text outside fenced code blocks."""
-    out, at = [], 0
-    for m in FENCE.finditer(text):
-        out.append((at, m.start()))
-        at = m.end()
-    out.append((at, len(text)))
-    return out
+FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})[^\n]*\n.*?^ {0,3}\1[ \t]*$", re.M | re.S)
+SPAN = re.compile(r"(?<!`)(`+)(?!`)((?:(?!\n[ \t]*\n).)+?)(?<!`)\1(?!`)", re.S)   # within a paragraph
+TEXT = r"((?:[^\[\]\n]|\n(?![ \t]*\n)|\[[^\[\]\n]*\])*)"            # link text; it may wrap a line
+DEST = r"(<[^<>\n]*>|[^()\s<>]+)"
+TITLE = r"""(?:[ \t\n]+(?:"[^"\n]*"|'[^'\n]*'|\([^()\n]*\)))?"""
+INLINE = re.compile(r"(!?)\[" + TEXT + r"\]\([ \t]*" + DEST + TITLE + r"[ \t]*\)")
+DEFINITION = re.compile(r"^ {0,3}\[([^\]\n]+)\]:[ \t]*" + DEST + TITLE + r"[ \t]*$", re.M)
+SCHEME = re.compile(r"[a-zA-Z][a-zA-Z0-9+.-]*:")
 
 
-def links(text):
-    """Local links of a Markdown text outside code blocks → [(match)] (group 2 — text, group 3 — target)."""
+class Target:
+    """A destination in a text: `start`, `end` — of the destination only (without `<>`); `whole` — the inline link
+    (start, end) or None for a definition; `text` — the link text of an inline link."""
+
+    def __init__(self, m, kind):
+        g = 3 if kind == "inline" else 2
+        raw, self.kind = m.group(g), kind
+        angle = raw.startswith("<")
+        self.start, self.end = m.start(g) + angle, m.end(g) - angle
+        self.dest = raw[1:-1] if angle else raw
+        self.whole = (m.start(), m.end()) if kind == "inline" else None
+        self.text = m.group(2) if kind == "inline" else None
+        self.image = kind == "inline" and m.group(1) == "!"
+
+    @property
+    def local(self):
+        return bool(self.dest) and not SCHEME.match(self.dest) and not self.dest.startswith("//")
+
+
+def code_ranges(text):
+    """[(start, end)] of fenced blocks and of code spans outside them."""
+    out = [(m.start(), m.end()) for m in FENCE.finditer(text)]
+    at = 0
+    for a, b in sorted(out) + [(len(text), len(text))]:
+        out += [(at + m.start(), at + m.end()) for m in SPAN.finditer(text[at:a])]
+        at = b
+    return sorted(out)
+
+
+def targets(text):
+    """Every local destination of a text outside code, in order."""
+    code = code_ranges(text)
+
+    def in_code(pos):
+        return any(a <= pos < b for a, b in code)
+
     out = []
-    for a, b in outside_fences(text):
-        for m in LINK.finditer(text, a, b):
-            target = m.group(3)
-            if SCHEME.match(target) or target.startswith("//"):
-                continue
-            out.append(m)
-    return out
+    for m in INLINE.finditer(text):
+        if not in_code(m.start()):
+            out.append(Target(m, "inline"))
+    for m in DEFINITION.finditer(text):
+        if not in_code(m.start()):
+            out.append(Target(m, "definition"))
+    return sorted((t for t in out if t.local), key=lambda t: t.start)
+
+
+def judged(text):
+    """Local hrefs of a text by markdown-it (CommonMark), reference links resolved; raw HTML is not a link here."""
+    from markdown_it import MarkdownIt
+    hrefs = []
+
+    def walk(tokens):
+        for tok in tokens:
+            if tok.type == "link_open":
+                hrefs.append(tok.attrGet("href"))
+            elif tok.type == "image":
+                hrefs.append(tok.attrGet("src"))
+            if tok.children:
+                walk(tok.children)
+
+    walk(MarkdownIt("commonmark").parse(text))
+    return [unquote(h) for h in hrefs if h and not SCHEME.match(h) and not h.startswith("//")]
+
+
+def missed(text):
+    """Local destinations the judge sees and `targets()` does not."""
+    mine = {unquote(t.dest) for t in targets(text)}
+    return sorted({h for h in judged(text) if h not in mine})
 
 
 def heading_text(raw):
-    """The text of a heading as rendered: code spans, links, emphasis and HTML stripped to their text."""
     raw = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", raw)
     raw = re.sub(r"<[^>]+>", "", raw)
     raw = re.sub(r"(`+)(.+?)\1", r"\2", raw)
@@ -50,85 +107,90 @@ def heading_text(raw):
 
 
 def slug(text):
-    """GitHub's anchor of a heading text (github-slugger): lower case, letters, digits, marks, `-`, `_` and spaces kept,
-    spaces → `-`."""
-    keep = []
-    for ch in text.lower():
-        cat = unicodedata.category(ch)
-        if ch in "-_" or cat[0] in "LNM":
-            keep.append(ch)
-        elif ch == " ":
-            keep.append("-")
-    return "".join(keep)
+    """GitHub's anchor of a heading text (github-slugger): lower case; letters, digits, marks, `-`, `_` kept; spaces →
+    `-`."""
+    return "".join("-" if ch == " " else ch for ch in text.lower()
+                   if ch in "-_ " or unicodedata.category(ch)[0] in "LNM")
 
 
 def headings(text):
-    """[(level, anchor)] of the ATX headings of a text outside code blocks, in order; repeated anchors get -1, -2…"""
-    seen, out = {}, []
-    for a, b in outside_fences(text):
-        for m in HEADING.finditer(text, a, b):
-            base = slug(heading_text(m.group(2)))
+    """[(level, anchor)] of the headings of a text by markdown-it, in order; a repeated anchor gets -1, -2…"""
+    from markdown_it import MarkdownIt
+    seen, out, level = {}, [], None
+    for tok in MarkdownIt("commonmark").parse(text):
+        if tok.type == "heading_open":
+            level = int(tok.tag[1:])
+        elif tok.type == "inline" and level is not None:
+            words = "".join(c.content for c in (tok.children or []) if c.type in ("text", "code_inline"))
+            base = slug(words.strip())
             n = seen.get(base, 0)
             seen[base] = n + 1
-            out.append((len(m.group(1)), base if n == 0 else f"{base}-{n}"))
+            out.append((level, base if n == 0 else f"{base}-{n}"))
+            level = None
     return out
 
 
-def anchors(path, cache={}):  # noqa: B006 — a cache of anchors by file
+_ANCHORS = {}
+
+
+def anchors(path):
     path = Path(path)
-    if path not in cache:
+    if path not in _ANCHORS:
         try:
-            cache[path] = {a for _, a in headings(path.read_text(encoding="utf-8"))}
+            _ANCHORS[path] = {a for _, a in headings(path.read_text(encoding="utf-8"))}
         except (OSError, UnicodeError):
-            cache[path] = set()
-    return cache[path]
+            _ANCHORS[path] = set()
+    return _ANCHORS[path]
 
 
-def resolve(source, target):
-    """A link target of the file `source` → (path, anchor or None); the path is normalized, not resolved by symlinks."""
-    path, _, anchor = target.partition("#")
-    from urllib.parse import unquote
-    whole = Path(os.path.normpath(Path(source).parent / unquote(path))) if path else Path(source)
-    return whole, (unquote(anchor) if "#" in target else None)
+def forget():
+    _ANCHORS.clear()
 
 
-def broken(source, target):
-    """Why the link is broken, or None."""
-    path, anchor = resolve(source, target)
-    if target.startswith("/"):
+def broken(source, href):
+    """Why a local href of the file `source` is broken, or None."""
+    path, _, anchor = href.partition("#")
+    if href.startswith("/"):
         return "absolute link"
-    if not path.exists():
+    whole = Path(os.path.normpath(Path(source).parent / path)) if path else Path(source)
+    if not whole.exists():
         return "no target"
-    if anchor and path.suffix == ".md" and path.is_file() and anchor not in anchors(path):
+    if "#" in href and anchor and whole.suffix == ".md" and whole.is_file() and anchor not in anchors(whole):
         return "no anchor"
     return None
 
 
 def check_tree(root, only=None):
-    """→ [(file, target, why)] of broken links of every *.md under the root (or under root/only)."""
+    """→ ([(file, href, why)] broken, total) over every *.md under the root (or root/only), by the judge's reader."""
     root = Path(root)
     out, total = [], 0
     for md in sorted((root / only if only else root).rglob("*.md")):
-        text = md.read_text(encoding="utf-8")
-        for m in links(text):
+        for href in judged(md.read_text(encoding="utf-8")):
             total += 1
-            why = broken(md, m.group(3))
+            why = broken(md, href)
             if why:
-                out.append((md.relative_to(root).as_posix(), m.group(3), why))
+                out.append((md.relative_to(root).as_posix(), href, why))
     return out, total
 
 
 def main(argv):
     if not argv:
         sys.exit(__doc__)
-    only = None
-    if "--only" in argv:
-        k = argv.index("--only")
-        only, argv = argv[k + 1], argv[:k] + argv[k + 2:]
-    bad, total = check_tree(argv[0], only)
+    opts = {}
+    for flag in ("--only", "--base"):
+        if flag in argv:
+            k = argv.index(flag)
+            opts[flag], argv = argv[k + 1], argv[:k] + argv[k + 2:]
+    tsv = "--tsv" in argv
+    argv = [a for a in argv if a != "--tsv"]
+    bad, total = check_tree(argv[0], opts.get("--only"))
+    if "--base" in opts:
+        base = set(Path(opts["--base"]).read_text(encoding="utf-8").splitlines())
+        bad = [b for b in bad if "\t".join(b) not in base]
     for f, t, why in bad:
-        print(f"{f}: {why}: {t}")
-    print(f"links {total}, broken {len(bad)}")
+        print(f"{f}\t{t}\t{why}" if tsv else f"{f}: {why}: {t}")
+    if not tsv:
+        print(f"links {total}, broken {len(bad)}" + (" (not in the base)" if "--base" in opts else ""))
     return 1 if bad else 0
 
 
