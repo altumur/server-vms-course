@@ -1,0 +1,3 @@
+# Реестр комплектов правок ADR-0122 (доп. (1) п. 6): автор пишет draft и review, «Архитектор» — accepted и applied.
+change	lesson	share	rev	state	sha	reviews	model
+0125-p01-flags-writing	P/01	Спецификация	1	review	-	-	-
