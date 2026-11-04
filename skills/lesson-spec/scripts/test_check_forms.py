@@ -64,6 +64,11 @@ class Forms(unittest.TestCase):
         self.edit("forms/daemon-flags.tsv", "--from\tfile\t", "--input\tfile\t")
         self.assertTrue(self.flags())
 
+    def test_stage_kit_parts(self):                     # kit и parts — только части перечня
+        self.assertEqual(check_forms.check_stage_parts(self.lesson / "forms/stages.tsv")[0], [])
+        self.edit("forms/stages.tsv", "\t-\tdoor,refusals\t", "\t-\tdoor,shell\t")
+        self.assertTrue(check_forms.check_stage_parts(self.lesson / "forms/stages.tsv")[0])
+
     def test_refusal_code_kind(self):
         self.edit("forms/refusals.tsv", "1.1\t9\tguard_mismatch\thttp\t412\t", "1.1\t9\tguard_mismatch\thttp\t409\t")
         self.assertTrue(self.refusals())
