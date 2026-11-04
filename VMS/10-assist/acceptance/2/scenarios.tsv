@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/10.2: дверь модели (консоль assist, контроллер assist, ресурс и держатель на srv-a, заглушка модели — файл ответов по имени сценария). Формат — README.
+# Acceptance of V/10.2: the model door (the console assist, the controller assist, the resource and the holder on srv-a, the model stub — the answers file by the scenario name). Format — README.
 01-loading	1	@start worker assist m-srv-a-1 on srv-a labels=assist-a	ok
 01-loading	2	POST /models {"name": "m1", "labels": ["assist-a"]}	201 {"id": "m1"}
 01-loading	3	@until 60 GET /models	200 {"rows": [{"id": "m1", "phase": "loading"}]}

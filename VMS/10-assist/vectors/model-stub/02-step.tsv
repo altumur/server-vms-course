@@ -1,4 +1,4 @@
-# Заглушка модели сценария 02-step (V/10.2 Н5): загружена сразу, затем строка на запрос по порядку.
+# The model stub of scenario 02-step (V/10.2 Н5): loaded at once, then a line per request in order.
 load 0
 0	200	{"choices": [{"message": {"role": "assistant", "content": "готово"}, "finish_reason": "stop"}], "usage": {"prompt_tokens": 12, "completion_tokens": 3}}
 hang	200	{}

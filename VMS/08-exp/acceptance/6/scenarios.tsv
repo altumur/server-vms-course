@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/08.6–V/08.9: строка части (дверь единиц консоли exp; манифесты cam, rec, live, exp) и работа частей на стенде. Формат — README.
+# Acceptance of V/08.6–V/08.9: the part row (the units door of the console exp; the manifests cam, rec, live, exp) and the work of the parts on the stand. Format — README.
 01-create	1	console2 POST /recordings {"name": "r7", "cam": "7"}	201 {"id": "r7"}
 01-create	2	console2 POST /recordings {"name": "r8", "cam": "8"}	201 {"id": "r8"}
 01-create	3	POST /parts {"name": "e1", "export": "e1", "cam": "7", "rec": "r7", "source": "archive", "mode": "video", "periods": [[1000, 1060]], "format": "mkv", "by": "root"}	201 {"id": "e1", "keep": 86400, "labels": [], "state": "@absent"}

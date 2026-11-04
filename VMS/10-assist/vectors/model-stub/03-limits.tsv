@@ -1,4 +1,4 @@
-# Заглушка модели сценария 03-limits: модель «думает вечно», пока держатель не оборвёт запрос; во время шага /health — 503 (busy).
+# The model stub of scenario 03-limits: the model «thinks forever» until the holder cuts off the request; during a step /health — 503 (busy).
 load 0
 busy
 hang	200	{}

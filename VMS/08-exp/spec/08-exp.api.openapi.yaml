@@ -1,16 +1,16 @@
 openapi: 3.1.0
 info:
-  title: V/08 — дверь части выгрузки
+  title: V/08 — the door of an export part
   version: 1.0.0
   description: |
-    HTTP-контракт двери процесса воркера `exp` — глава V/08.9 урока «Выгрузка» модуля VMS. Канон —
-    [нормы главы 4](08.9-exp.norms.md); этот файл их выражает и не добавляет требований. Маршрут `files` — человеку по
-    токену двери консоли (`GET /exp/where/<part>`, договор токена двери; `?t=` или `Authorization: Bearer`), только автору
-    части. Маршрут `parts` — ведущей части того же заказа по сертификату роли `expworker`. Разбор запроса и пределы
-    соединений — дверь процесса P/03.4 Н1.7.
+    The HTTP contract of the process door of the worker `exp` — chapter V/08.9 of the lesson «Выгрузка» of the VMS module. The canon is
+    [the norms of chapter 4](08.9-exp.norms.md); this file expresses them and adds no requirements. The route `files` is for a person by
+    the console door token (`GET /exp/where/<part>`, the door token contract; `?t=` or `Authorization: Bearer`), only for the author
+    of the part. The route `parts` is for the leading part of the same order by the role certificate `expworker`. Request parsing and the
+    connection limits — the process door of P/03.4 Н1.7.
 servers:
   - url: https://{server}:{port}
-    description: дверь процесса воркера exp с комплектом роли — адрес SERVER_NAME (P/03.4 Н1.7 kit)
+    description: the process door of the worker exp with the role kit — the address SERVER_NAME (P/03.4 Н1.7 kit)
     variables:
       server: {default: "srv-a"}
       port: {default: "0"}
@@ -20,7 +20,7 @@ paths:
       - $ref: "#/components/parameters/Part"
       - $ref: "#/components/parameters/File"
     get:
-      summary: Файл части автору (V/08.9 Н1.2)
+      summary: A file of a part to its author (V/08.9 Н1.2)
       security: [{doorToken: []}]
       parameters:
         - $ref: "#/components/parameters/T"
@@ -33,18 +33,18 @@ paths:
         "410": {$ref: "#/components/responses/Refusal"}
         "416": {$ref: "#/components/responses/Unsatisfiable"}
     head:
-      summary: Заголовки файла без тела (V/08.9 Н1.2)
+      summary: The headers of a file without the body (V/08.9 Н1.2)
       security: [{doorToken: []}]
       parameters:
         - $ref: "#/components/parameters/T"
       responses:
-        "200": {description: заголовки ответа 200 без тела}
+        "200": {description: the headers of the answer 200 without the body}
         "403": {$ref: "#/components/responses/Refusal"}
         "404": {$ref: "#/components/responses/Refusal"}
         "410": {$ref: "#/components/responses/Refusal"}
   /parts/{part}/{file}:
     get:
-      summary: Файл части ведущей части того же заказа (V/08.9 Н1.3)
+      summary: A file of a part to the leading part of the same order (V/08.9 Н1.3)
       security: [{roleCertificate: []}]
       parameters:
         - $ref: "#/components/parameters/Part"
@@ -52,7 +52,7 @@ paths:
         - name: for
           in: query
           required: true
-          description: ведущая часть вызывающего воркера
+          description: the leading part of the calling worker
           schema: {type: string, minLength: 1}
         - $ref: "#/components/parameters/Range"
       responses:
@@ -69,37 +69,37 @@ components:
       name: part
       in: path
       required: true
-      description: name строки части
+      description: name of the part row
       schema: {type: string, minLength: 1}
     File:
       name: file
       in: path
       required: true
-      description: id файла из result.files
+      description: the file id from result.files
       schema: {type: string, pattern: "^(?:f[0-9]{1,4})$"}
     T:
       name: t
       in: query
       required: false
-      description: токен двери консоли
+      description: the console door token
       schema: {type: string}
     Range:
       name: Range
       in: header
       required: false
-      description: один отрезок байт; несколько — ответ 200 целиком
+      description: one segment of bytes; several — the answer 200, the whole file
       schema: {type: string}
   securitySchemes:
     doorToken:
       type: http
       scheme: bearer
-      description: токен двери консоли (договор токена двери); также ?t=
+      description: the console door token (the door token contract); also ?t=
     roleCertificate:
       type: mutualTLS
-      description: лист роли expworker (договор сертификата роли, класс role)
+      description: the role leaf expworker (the role certificate contract, class role)
   responses:
     Bytes:
-      description: файл целиком; Content-Disposition attachment, Accept-Ranges bytes, ETag — "<sha256>"
+      description: the whole file; Content-Disposition attachment, Accept-Ranges bytes, ETag — "<sha256>"
       headers:
         Content-Disposition: {schema: {type: string}}
         ETag: {schema: {type: string}}
@@ -107,18 +107,18 @@ components:
         application/octet-stream:
           schema: {type: string, contentEncoding: binary}
     Partial:
-      description: один отрезок файла
+      description: one segment of the file
       headers:
         Content-Range: {schema: {type: string}}
       content:
         application/octet-stream:
           schema: {type: string, contentEncoding: binary}
     Unsatisfiable:
-      description: отрезок вне файла; Content-Range bytes */size
+      description: a segment outside the file; Content-Range bytes */size
       headers:
         Content-Range: {schema: {type: string}}
     Refusal:
-      description: "отказ двери: объект с полем error — слово отказа"
+      description: "a door refusal: an object with the field error — the refusal word"
       content:
         application/json:
           schema:

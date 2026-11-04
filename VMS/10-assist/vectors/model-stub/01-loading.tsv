@@ -1,2 +1,2 @@
-# Заглушка модели сценария 01-loading (V/10.2 Н5): модель не загружается никогда — барьер файла ответов держит loading.
+# The model stub of scenario 01-loading (V/10.2 Н5): the model never loads — the barrier of the answers file holds loading.
 load hang
