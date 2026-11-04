@@ -30,6 +30,9 @@ import re
 from pathlib import Path
 
 MARK = "производный от en, руками не правится"      # прежняя раскладка (ADR-0121)
+# Машинный Markdown: байты продукта (промпты ассистента V/11 `harness/**`), уже английские, без перевода и вне пар
+# (ADR-0124 доп. (1) п. 4; tools/layout/migrate.py — то же правило).
+MACHINE_MD = re.compile(r"(?:^|/)harness/")
 
 
 def mark(rel):
@@ -376,7 +379,7 @@ def pairs(root):
     for home in homes:
         for x in sorted(home.rglob("*.md")):
             rel = x.relative_to(home)
-            if rel.parts[0] not in ("ru", "journal"):
+            if rel.parts[0] not in ("ru", "journal") and not MACHINE_MD.search(rel.as_posix()):
                 out.append((home / "ru" / rel, x))
     for en in sorted([*root.glob("Platform/**/en/*.en.md"), *root.glob("VMS/**/en/*.en.md"), *root.glob("en/*.en.md")]):
         if not any(en.is_relative_to(h) for h in homes):

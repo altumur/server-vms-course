@@ -131,6 +131,7 @@ class Layouts(unittest.TestCase):
                             or "ru" in ru.relative_to(ROOT).parts and en.name == ru.name, (ru, en))
         self.assertFalse([p for p in pairs if "/01-store/" in str(p[1]) and "/en/" in str(p[1])])
         self.assertFalse([p for p in pairs if p[1].name == "01-store.md"])     # лекция — без пары, только для человека
+        self.assertFalse([p for p in pairs if "harness" in p[1].parts])       # машинный текст V/11 — без пары
 
     def test_translation_links_translation(self):       # ru/…#русский якорь ≡ …#английский якорь по парам заголовков
         self.assertEqual(self.compare3(), [])
