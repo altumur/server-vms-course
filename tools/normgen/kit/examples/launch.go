@@ -15,10 +15,10 @@ func runDaemon() int {
 	})
 }
 
-// runWithoutCore — before your core exists: every method answers 503 «not implemented».
-func runWithoutCore() int {
+// runEmpty — the empty core explicitly (the frame takes it itself while coreadapter.Open is the kit's stub).
+func runEmpty() int {
 	return launch.Main(os.Args[1:], os.Getenv, launch.App{
 		Mark: launch.Mark{Format: "configstore", Version: 1, Impl: "configstore"},
-		Open: func(coreadapter.Config) (coreadapter.Core, error) { return launch.NotImplemented{}, nil },
+		Open: func(coreadapter.Config) (coreadapter.Core, error) { return launch.Empty{}, nil },
 	})
 }

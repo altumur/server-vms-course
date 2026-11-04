@@ -147,6 +147,14 @@ func Start(f *flags.Flags, getenv func(string) string, app App) (*Daemon, error)
 		return nil, errors.New("launch: App.Open is nil")
 	}
 	c, err := app.Open(cfg)
+	if errors.Is(err, coreadapter.ErrNotImplemented) { // no core yet: the empty store of the frame
+		log := app.Log
+		if log == nil {
+			log = os.Stderr
+		}
+		fmt.Fprintln(log, "configstore: coreadapter.Open is not implemented: the empty core of the kit (every key absent)")
+		c, err = Empty{}, nil
+	}
 	if err != nil {
 		closeAll(ls, created)
 		return nil, fmt.Errorf("open the core: %w", err)
@@ -410,6 +418,18 @@ func clip(b []byte) string {
 		b = b[:200]
 	}
 	return string(b)
+}
+
+// Empty — the empty core of the frame: an empty store (GET /v1/get — every key absent, 200 {"items":null,"index":""});
+// the rest — 503 «not implemented». Start uses it while coreadapter.Open returns coreadapter.ErrNotImplemented.
+type Empty struct{ NotImplemented }
+
+func (Empty) Get(coreadapter.Ctx, apidoor.GetQuery) apidoor.Answer {
+	a, err := apidoor.AnswerOf(apidoor.OpGet, 200, map[string]any{"items": nil, "index": ""})
+	if err != nil {
+		return notImplemented(apidoor.OpGet)
+	}
+	return a
 }
 
 // NotImplemented — a Core whose every method answers 503 «not implemented»: a start for Open before your core

@@ -1,12 +1,12 @@
-"""Судья части `launch` (ADR-0083 доп. (95) п. 3): каркас демона пакета с пустым ядром под раннером P/01.1.
+"""Судья части `launch` (ADR-0083 доп. (95) п. 3): пакет как есть (каркас и его пустое ядро) под раннером P/01.1.
 
   python3 tools/normgen/launch_judge.py stand <dst> --spec-version <SHA выгрузки>   # каталог реализации для раннера
   python3 tools/normgen/launch_judge.py job <in> --spec-version <SHA> [--acceptance <клон раннера>] [--specs <клон выгрузки>]
   python3 tools/normgen/launch_judge.py judge <out/report> [--json итог]
 
-stand — пакет Б с частями door, flags, stagetests, launch (build_kit.build), cmd/configstore/main.go — сгенерированный
-каркас как есть (не правится), internal/coreadapter/open.go — пустое ядро tools/normgen/launch/stubcore (Get — всегда
-отсутствующая строка, прочее — 503), профиль 01-store/acceptance.yaml по справке KIT.md части launch (build
+stand — пакет Б с частями door, flags, stagetests, launch (build_kit.build) как есть, ничего не правится:
+cmd/configstore/main.go — сгенерированный каркас, internal/coreadapter/open.go — заглушка пакета (ErrNotImplemented),
+на ней каркас отвечает своим пустым ядром launch.Empty (Get — всегда отсутствующая строка, прочее — 503); профиль 01-store/acceptance.yaml по справке KIT.md части launch (build
 `go build -o bin/configstore ./cmd/configstore`, store — `-id store1 -dir {data} -sockets {rundir} -rights {rights} -max-body
 {body_limit} -max-value {row_ceiling}`), assembly.yaml, SPEC_VERSION; <dst> — репозиторий Git (коммит делает stand).
 job — вход очереди CT 103: RUN.py (раннер all.py --only P/01.1 --build), acceptance, specs на --spec-version, impl.
@@ -29,7 +29,7 @@ MODULE = "p01store/01-store"
 GATE = ("01-absent",)                      # forms/stages.tsv: launch — accept:1.1:01-absent
 PARTS = ("door", "flags", "stagetests", "launch")
 
-PROFILE = """# Судья части launch (tools/normgen/launch_judge.py, ADR-0083 доп. (95) п. 3): каркас пакета, пустое ядро.
+PROFILE = """# Судья части launch (tools/normgen/launch_judge.py, ADR-0083 доп. (95) п. 3): пакет как есть, пустое ядро каркаса.
 format: 2
 implementation: normgen-launch-frame
 module: 01-store
@@ -75,9 +75,6 @@ def stand(dst, spec):
     manifest = build_kit.build(dst, MODULE, PARTS)
     store = dst / "01-store"
     (store / "go.mod").write_text(f"module {MODULE}\n\ngo 1.22\n", encoding="utf-8")
-    stub = (HERE / "launch/stubcore/open.go").read_text(encoding="utf-8")
-    (store / "internal/coreadapter/open.go").write_text(stub.replace('"kitmodule/internal/', f'"{MODULE}/internal/'),
-                                                       encoding="utf-8")
     (store / "acceptance.yaml").write_text(PROFILE.format(spec=spec), encoding="utf-8")
     (dst / "assembly.yaml").write_text(ASSEMBLY, encoding="utf-8")
     (dst / "SPEC_VERSION").write_text(spec + "\n", encoding="utf-8")

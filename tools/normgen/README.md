@@ -10,7 +10,7 @@
 | 3 | `gen_flags.py` | `forms/daemon-flags.tsv` | `flags/` | `flags` | `flag_judge.py` — пробы запуска демона |
 | 4 | `gen_refusals.py` | `forms/refusals.tsv` | `refusals/` | `refusals` | `refusal_judge.py` — приёмка и `door.Refuse` |
 | 6 | `gen_tests.py` | `vectors/jcs`, `vectors/rights-evaluator`, `forms/stages.tsv` | `vectortests/`, `vectorcmd/`, `vectoradapter/` | `tests` | `vector_judge.py` |
-| 2 + 3 | `gen_launch.py` | `forms/daemon-flags.tsv`, OpenAPI (через части `flags`, `door`) | `launch/`, `cmd/configstore/` | `launch` (нужны `door`, `flags`, `stagetests`) | раннер P/01.1 на пустом ядре `launch/stubcore` → `launch_judge.py` (этап `launch`: `01-absent`) |
+| 2 + 3 | `gen_launch.py` | `forms/daemon-flags.tsv`, OpenAPI (через части `flags`, `door`) | `launch/`, `cmd/configstore/` | `launch` (нужны `door`, `flags`, `stagetests`) | раннер P/01.1 на пакете как есть (пустое ядро `launch.Empty` на заглушке `coreadapter.Open`) → `launch_judge.py` (этап `launch`: `01-absent`) |
 
 Ручное — один раз на словарь: среда CEL `runtime/`, примитивы `#fn` `prims/` (Go и Python), типы флагов
 `flags/go/flagtypes.go`, среда двери `doorrt/`, пакет `kit/go` (`jsonstrict`, `writecheck`).

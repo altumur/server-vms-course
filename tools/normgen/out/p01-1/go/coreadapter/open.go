@@ -2,8 +2,6 @@
 // overwrites it.
 package coreadapter
 
-import "errors"
-
 // Ctx — the context type of your Handler: what Context(call, header) gives each request. Request is ready to use;
 // replace the alias with your own type if you need more.
 type Ctx = *Request
@@ -12,5 +10,5 @@ type Ctx = *Request
 // value that implements Core: Context, Close and apidoor.Handler[Ctx] (Get, List, Write, QueryRefused over your core
 // of Н3; embed NotInStage for Rights, Status, Join, Leave, Metrics until your stage needs them).
 func Open(cfg Config) (Core, error) {
-	return nil, errors.New("coreadapter: not implemented")
+	return nil, ErrNotImplemented
 }

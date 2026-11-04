@@ -321,10 +321,15 @@ package coreadapter
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	"normgen/p01-1/apidoor"
 )
+
+// ErrNotImplemented — what the kit's open.go stub returns until your Open exists; the daemon frame (part launch)
+// answers with its empty core then (every key absent), the stage tests fail.
+var ErrNotImplemented = errors.New("coreadapter: not implemented")
 
 // Config — the stand of one scenario.
 type Config struct {
@@ -407,8 +412,6 @@ OPEN_GO = '''// Package coreadapter: Open and Ctx — yours (ADR-0126 addendum (
 // overwrites it.
 package coreadapter
 
-import "errors"
-
 // Ctx — the context type of your Handler: what Context(call, header) gives each request. Request is ready to use;
 // replace the alias with your own type if you need more.
 type Ctx = *Request
@@ -417,7 +420,7 @@ type Ctx = *Request
 // value that implements Core: Context, Close and apidoor.Handler[Ctx] (Get, List, Write, QueryRefused over your core
 // of Н3; embed NotInStage for Rights, Status, Join, Leave, Metrics until your stage needs them).
 func Open(cfg Config) (Core, error) {
-	return nil, errors.New("coreadapter: not implemented")
+	return nil, ErrNotImplemented
 }
 '''
 
