@@ -3,14 +3,14 @@
  "type": "object",
  "properties": {
   "enabled": {
-   "description": "false — ресурс снимает свою строку free-* (E45); строки нет — включено с порогами 0.85/0.75",
+   "description": "false — the resource removes its own free-* row (E45); no row — enabled with thresholds 0.85/0.75",
    "type": "boolean",
    "x-codec": [
     "boolean"
    ]
   },
   "high": {
-   "description": "доля used/total, выше которой ресурс просит освободить; умолчание 0.85",
+   "description": "the used/total fraction above which the resource asks to free space; default 0.85",
    "type": "number",
    "minimum": 0,
    "maximum": 1,
@@ -19,7 +19,7 @@
    ]
   },
   "low": {
-   "description": "доля, до которой просят освободить; умолчание 0.75",
+   "description": "the fraction down to which freeing space is asked; default 0.75",
    "type": "number",
    "minimum": 0,
    "maximum": 1,

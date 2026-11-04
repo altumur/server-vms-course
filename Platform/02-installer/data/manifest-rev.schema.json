@@ -4,7 +4,7 @@
  "properties": {
   "rev": {
    "$ref": "#/$defs/common.pos53",
-   "description": "то же число, что rev строки; пишется после строки, никогда не понижается",
+   "description": "the same number as rev of the row; written after the row, never lowered",
    "x-whole": true,
    "x-codec": [
     "integer"
@@ -12,7 +12,7 @@
   },
   "sha256": {
    "$ref": "#/$defs/common.sha256_hex",
-   "description": "тот же дайджест, что у строки",
+   "description": "the same digest as the row's",
    "x-codec": [
     "string"
    ]
@@ -32,7 +32,7 @@
   ]
  },
  "additionalProperties": {
-  "description": "лишние поля: читатель их не читает и ими не отказывает, писатель их не пишет (P/02.3 Н1.5 rules; ADR-0088 стр. 66–67; решение «Архитектора» по 1bd77782b)",
+  "description": "extra fields: the reader does not read them and does not refuse because of them, the writer does not write them (P/02.3 Н1.5 rules; ADR-0088 lines 66–67; the Architect's decision on 1bd77782b)",
   "x-codec": [
    "any"
   ]

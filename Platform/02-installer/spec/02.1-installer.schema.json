@@ -1,7 +1,7 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "title": "form of a subsystem manifest, P/02.1",
- "description": "корень — отображение с закрытым набором разделов",
+ "description": "the root is a mapping with a closed set of sections",
  "x-owner": "P/02.1 Н1.2",
  "type": "object",
  "properties": {
@@ -19,7 +19,7 @@
      "x-owner": "P/06.1 Н1.1"
     },
     "id": {
-     "description": "`numeric` или несекретное поле типа string (Н1.4)",
+     "description": "`numeric` or a non-secret field of type string (Н1.4)",
      "x-owner": "P/06.1 Н1.3",
      "type": "string"
     },
@@ -29,9 +29,9 @@
      "x-owner": "P/06.1 Н1.2"
     },
     "state": {
-     "description": "состояние единицы — имя → схема строки `<sub>/state/<имя>/<unit>` (ADR-0091 п. 3); `cursor` — курсор единицы",
+     "description": "unit state — name → schema of the row `<sub>/state/<имя>/<unit>` (ADR-0091 item 3); `cursor` — the cursor of the unit",
      "x-owner": "P/03.6 Н1.7",
-     "x-default-text": "состояния нет",
+     "x-default-text": "no state",
      "type": "object",
      "propertyNames": {
       "$ref": "#/$defs/name"
@@ -41,7 +41,7 @@
      }
     },
     "writes_via": {
-     "description": "строки пишут только названные подсистемы по билету; сеанс, аварийный вход и прочие билеты — 403 writes via; запись правом следствий вне слова (P/06.1 Н1.1а, ADR-0119 доп. (10), (11))",
+     "description": "the rows are written only by the named subsystems with a ticket; a session, the emergency login and other tickets — 403 writes via; a write by the right of consequences is outside the word (P/06.1 Н1.1а, ADR-0119 addendum (10), (11))",
      "x-owner": "P/06.1 Н1.1а",
      "type": "array",
      "items": {
@@ -65,39 +65,39 @@
    "$ref": "#/$defs/tables",
    "default": {},
    "x-owner": "P/06.1 Н1.6",
-   "x-default-text": "таблиц нет"
+   "x-default-text": "no tables"
   },
   "requests": {
    "$ref": "#/$defs/requests",
    "x-owner": "P/06.4 Н1.5"
   },
   "holds": {
-   "description": "все ключи необязательны",
+   "description": "all keys are optional",
    "x-owner": "P/06.4 Н1.5",
    "type": "object",
    "properties": {
     "table": {
-     "description": "таблица",
+     "description": "table",
      "type": "string"
     },
     "unit": {
-     "description": "поле таблицы",
+     "description": "table field",
      "type": "string"
     },
     "since": {
-     "description": "поле таблицы",
+     "description": "table field",
      "type": "string"
     },
     "until": {
-     "description": "поле таблицы",
+     "description": "table field",
      "type": "string"
     },
     "released": {
-     "description": "поле таблицы",
+     "description": "table field",
      "type": "string"
     },
     "longest": {
-     "description": "секунды",
+     "description": "seconds",
      "type": "number",
      "exclusiveMinimum": 0
     }
@@ -110,7 +110,7 @@
    "type": "object",
    "properties": {
     "suppress": {
-     "description": "вид события → правило подавления",
+     "description": "event kind → suppression rule",
      "type": "object",
      "propertyNames": {
       "type": "string"
@@ -119,12 +119,12 @@
       "type": "object",
       "properties": {
        "window": {
-        "description": "секунды",
+        "description": "seconds",
         "type": "number",
         "exclusiveMinimum": 0
        },
        "by": {
-        "x-default-text": "все поля строки, кроме этих",
+        "x-default-text": "all fields of the row except these",
         "type": "array",
         "items": {
          "type": "string",
@@ -155,7 +155,7 @@
      ]
     },
     "kinds": {
-     "description": "вид события → `{severity}`; подпись вида — `display.kinds` (ADR-0115 доп. (3) п. 6, доп. (4) п. 2)",
+     "description": "event kind → `{severity}`; the label of the kind is `display.kinds` (ADR-0115 addendum (3) item 6, addendum (4) item 2)",
      "x-owner": "P/03.6 Н1.2",
      "type": "object",
      "propertyNames": {
@@ -189,10 +189,10 @@
    "properties": {
     "sub": {
      "$ref": "#/$defs/name",
-     "description": "имя подсистемы по грамматике `name`; существование — не проверка загрузчика"
+     "description": "subsystem name by the `name` grammar; existence is not a check of the loader"
     },
     "field": {
-     "description": "поле с `fixed: true`",
+     "description": "a field with `fixed: true`",
      "type": "string"
     }
    },
@@ -203,9 +203,9 @@
    ]
   },
   "snapshot": {
-   "description": "список полей без `*_secret`, blob и `server` и состояний `state.<имя>`; `[]` — ни одного",
+   "description": "list of fields without `*_secret`, blob and `server` and the states `state.<имя>`; `[]` — none",
    "x-owner": "P/04 Н1.3а",
-   "x-default-text": "все поля, кроме этих, и все состояния, кроме `cursor`",
+   "x-default-text": "all fields except these, and all states except `cursor`",
    "type": "array",
    "items": {
     "type": "string"
@@ -227,51 +227,51 @@
    "properties": {
     "exec": {
      "$ref": "#/$defs/execLine",
-     "description": "программа воркера подсистемы — юнит воркера кластера и воркера на домене исполняет её раннером (`w2c-run.sh worker`, `domainworker`; P/02.4 Н1.1, Н1.12), слот — последним аргументом у кластера (ADR-0091 доп. (4), (5))",
+     "description": "the program of the subsystem's worker — the service unit of the cluster worker and of the worker on the domain runs it through the runner (`w2c-run.sh worker`, `domainworker`; P/02.4 Н1.1, Н1.12), the slot is the last argument for the cluster (ADR-0091 addendum (4), (5))",
      "x-owner": "P/02.4 Н1.1"
     },
     "writes": {
      "$ref": "#/$defs/strList",
-     "description": "собственные таблицы, не `unit.rows`; таблица с объявленным полем `*_secret` — отказ: её строки пишет только воркер, у консоли на них нет записи, и кольцо консоли их не видит: смена кольца оставила бы их под старым ключом (P/06.2 Н3 «перезапечатать при старте»); списочная форма полей не объявляет, её секреты перезапечатывает сам воркер (P/03.4 Н1.6 `list_secret`)",
+     "description": "own tables, not `unit.rows`; a table with a declared `*_secret` field — refusal: its rows are written only by the worker, the console has no write to them, and the console ring does not see them: a change of the ring would leave them under the old key (P/06.2 Н3 «перезапечатать при старте»); the list form declares no fields, its secrets are resealed by the worker itself (P/03.4 Н1.6 `list_secret`)",
      "default": [],
      "x-owner": "P/02.5 Н1.4",
-     "x-default-text": "таблиц воркера нет"
+     "x-default-text": "no worker tables"
     },
     "reads": {
      "$ref": "#/$defs/grantList",
-     "description": "`<семья>/<имя>` или префиксы с `/`",
+     "description": "`<семья>/<имя>` or prefixes with `/`",
      "x-owner": "P/02.5 Н1.4"
     },
     "requests": {
      "$ref": "#/$defs/strList",
-     "description": "другие подсистемы (своя — отказ; принимает ли — каталог, Н3)",
+     "description": "other subsystems (the own one — refusal; whether it accepts — catalogue, Н3)",
      "x-owner": "P/06.4 Н1.5"
     },
     "deletes": {
      "$ref": "#/$defs/strList",
-     "description": "семьи единиц этого манифеста — только `unit.rows` (ADR-0067 доп. 2026-10-17)",
+     "description": "families of the units of this manifest — only `unit.rows` (ADR-0067 addendum 2026-10-17)",
      "default": [],
      "x-owner": "P/02.5 Н1.4",
-     "x-default-text": "строки единиц воркер не удаляет"
+     "x-default-text": "the worker does not delete unit rows"
     },
     "creates": {
-     "description": "строки единиц другой подсистемы, которые заводит и продлевает воркер этой (ADR-0091 п. 1); адресат, его `unit.rows` и поля `key` — проверка каталога (Н3)",
+     "description": "unit rows of another subsystem that the worker of this one creates and renews (ADR-0091 item 1); the addressee, its `unit.rows` and the `key` fields — a catalogue check (Н3)",
      "x-owner": "P/03.6 Н1.6",
-     "x-default-text": "чужих строк воркер не заводит",
+     "x-default-text": "the worker creates no foreign rows",
      "type": "array",
      "items": {
       "type": "object",
       "properties": {
        "sub": {
         "$ref": "#/$defs/name",
-        "description": "подсистема-адресат; своя — отказ"
+        "description": "the addressee subsystem; the own one — refusal"
        },
        "rows": {
         "$ref": "#/$defs/name",
-        "description": "`unit.rows` адресата"
+        "description": "`unit.rows` of the addressee"
        },
        "key": {
-        "description": "подстановки `{поле}` адресата через `-`, без `:int` (P/03.6 Н1.6 `key`)",
+        "description": "substitutions `{поле}` of the addressee joined by `-`, without `:int` (P/03.6 Н1.6 `key`)",
         "type": "string",
         "pattern": "^(?:\\{[^{}:]+\\}(-\\{[^{}:]+\\})*)$"
        }
@@ -285,9 +285,9 @@
      }
     },
     "uses": {
-     "description": "доли других подсистем `<подсистема>.<доля>` (их `shares`; каталог, Н3) — группа доли в юните воркера",
+     "description": "shares of other subsystems `<подсистема>.<доля>` (their `shares`; catalogue, Н3) — the group of the share in the service unit of the worker",
      "x-owner": "P/02.4 Н1.1",
-     "x-default-text": "чужих долей нет",
+     "x-default-text": "no foreign shares",
      "type": "array",
      "items": {
       "type": "string",
@@ -296,7 +296,7 @@
      "uniqueItems": true
     },
     "stop_timeout": {
-     "description": "секунды остановки юнита воркера — `TimeoutStopSec` (macOS — `ExitTimeOut`); верх 50 — единое правило для всех воркеров (ADR-0091 доп. (2) п. 1, доп. (3) п. 4)",
+     "description": "stop seconds of the worker's service unit — `TimeoutStopSec` (macOS — `ExitTimeOut`); the upper bound 50 is one rule for all workers (ADR-0091 addendum (2) item 1, addendum (3) item 4)",
      "default": 20,
      "x-owner": "P/02.4 Н1.1",
      "type": "integer",
@@ -321,7 +321,7 @@
      "pattern": "^(?:[a-z]{1,8})$"
     },
     "name_env": {
-     "x-default-text": "имя не берётся из окружения",
+     "x-default-text": "the name is not taken from the environment",
      "type": "string",
      "pattern": "^(?:[A-Z][A-Z0-9_]*)$"
     }
@@ -378,9 +378,9 @@
    "type": "object",
    "properties": {
     "strings": {
-     "description": "имена полей пульса, не из `platform_strings` P/03.4 Н1.1",
+     "description": "names of heartbeat fields, not from `platform_strings` of P/03.4 Н1.1",
      "default": [],
-     "x-default-text": "строковых полей нет",
+     "x-default-text": "no string fields",
      "type": "array",
      "items": {
       "type": "string",
@@ -398,7 +398,7 @@
      }
     },
     "door": {
-     "description": "поля пульса, которые отдаёт дверь `GET /<sub>/heartbeats` (P/06.7 Н1.6 pulse): поля подсистемы, не семьи пульса P/03.4 Н1.1 и не секрет; нет ключа — двери нет",
+     "description": "heartbeat fields that the door `GET /<sub>/heartbeats` returns (P/06.7 Н1.6 pulse): fields of the subsystem, not of the heartbeat family of P/03.4 Н1.1 and not secret; no key — no door",
      "type": "array",
      "items": {
       "type": "string",
@@ -454,7 +454,7 @@
      "x-owner": "P/06.7 Н1.6"
     },
     "stale_after": {
-     "description": "порог stale пульсов подсистемы у агента, с (P/09.1 Н1.2 stale): не меньше трёх периодов пульса HEARTBEAT_EVERY 10 с (P/03.4 Н1.1); нет ключа — LOST_AFTER 45 с",
+     "description": "the stale threshold of the subsystem's heartbeats at the agent, s (P/09.1 Н1.2 stale): not less than three heartbeat periods HEARTBEAT_EVERY 10 s (P/03.4 Н1.1); no key — LOST_AFTER 45 s",
      "type": "integer",
      "x-integer": true,
      "minimum": 30,
@@ -469,19 +469,19 @@
    "properties": {
     "rows": {
      "$ref": "#/$defs/strList",
-     "description": "семьи строк-объектов"
+     "description": "families of object rows"
     },
     "door": {
      "$ref": "#/$defs/strList",
-     "description": "семьи двери объектов"
+     "description": "families of the objects door"
     }
    },
    "additionalProperties": false
   },
   "shares": {
-   "description": "общие части подсистемы для воркеров других подсистем (ADR-0091 п. 5): имя → вид",
+   "description": "shared parts of the subsystem for workers of other subsystems (ADR-0091 item 5): name → kind",
    "x-owner": "P/02.4 Н1.1",
-   "x-default-text": "долей нет",
+   "x-default-text": "no shares",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/name"
@@ -497,7 +497,7 @@
      },
      "part": {
       "$ref": "#/$defs/name",
-      "description": "часть из `parts` этой подсистемы — производитель доли: каталог и сокет — пользователя и группы части (ADR-0091 доп. (2) п. 4)"
+      "description": "a part from `parts` of this subsystem — the producer of the share: the directory and the socket belong to the user and group of the part (ADR-0091 addendum (2) item 4)"
      }
     },
     "additionalProperties": false,
@@ -507,9 +507,9 @@
    }
   },
   "parts": {
-   "description": "части подсистемы со своей службой и пользователем (ADR-0091 п. 5): имя → служба",
+   "description": "parts of the subsystem with their own service and user (ADR-0091 item 5): name → service",
    "x-owner": "P/02.4 Н1.1",
-   "x-default-text": "частей нет",
+   "x-default-text": "no parts",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/name"
@@ -519,15 +519,15 @@
     "properties": {
      "exec": {
       "$ref": "#/$defs/execLine",
-      "description": "команда службы части — та же грамматика, что `worker.exec` (ADR-0091 доп. (5) п. 2)"
+      "description": "command of the part's service — the same grammar as `worker.exec` (ADR-0091 addendum (5) item 2)"
      },
      "volumes": {
-      "description": "тома: точки монтирования `…/<часть>/volumes/<n>` (ADR-0091 п. 4)",
+      "description": "volumes: mount points `…/<часть>/volumes/<n>` (ADR-0091 item 4)",
       "default": false,
       "type": "boolean"
      },
      "stop_timeout": {
-      "description": "секунды остановки юнита части — `TimeoutStopSec` (macOS — `ExitTimeOut`; ADR-0091 доп. (2) п. 1, доп. (3) п. 4)",
+      "description": "stop seconds of the part's service unit — `TimeoutStopSec` (macOS — `ExitTimeOut`; ADR-0091 addendum (2) item 1, addendum (3) item 4)",
       "default": 20,
       "type": "integer",
       "x-integer-place": true,
@@ -547,10 +547,10 @@
    "type": "object",
    "properties": {
     "routes": {
-     "description": "маршруты двери процесса — первый сегмент пути запроса байт в байт (договор токена двери; решение «Архитектора» 2026-10-20); элемент — имя (допуск `token`: токен двери) или `{name, role?, domain?, rank?}` (допуск по сертификату роли, класс `mixed` договора сертификата роли, и/или по токену домена; ADR-0091 доп. (7), (8), (14))",
+     "description": "routes of the process door — the first segment of the request path, byte for byte (the door token contract; the Architect's decision of 2026-10-20); an element is a name (admission `token`: a door token) or `{name, role?, domain?, rank?}` (admission by a role certificate, class `mixed` of the role certificate contract, and/or by a domain token; ADR-0091 addendum (7), (8), (14))",
      "default": [],
      "x-owner": "P/06.5 Н3; P/03.4 Н1.7",
-     "x-default-text": "двери нет",
+     "x-default-text": "no door",
      "type": "array",
      "items": {
       "type": [
@@ -564,7 +564,7 @@
         },
         "then": {
          "$ref": "#/$defs/name",
-         "description": "маршрут с допуском `token` — по грамматике `name` (без «/»)"
+         "description": "a route with admission `token` — by the `name` grammar (without «/»)"
         }
        },
        {
@@ -576,10 +576,10 @@
          "properties": {
           "name": {
            "$ref": "#/$defs/name",
-           "description": "маршрут"
+           "description": "route"
           },
           "role": {
-           "description": "роли, чей предъявленный сертификат допускает к маршруту",
+           "description": "roles whose presented certificate admits to the route",
            "type": "array",
            "items": {
             "type": "string",
@@ -589,7 +589,7 @@
            "uniqueItems": true
           },
           "domain": {
-           "description": "виды токена домена, допускающие к маршруту (P/03.4 Н1.7 door_admission domain); каждый вид объявлен в domain.tokens подсистемы каталога, иначе `refused:catalogue` (Н3; ADR-0091 доп. (14) п. 1)",
+           "description": "kinds of domain tokens that admit to the route (P/03.4 Н1.7 door_admission domain); each kind is declared in domain.tokens of a subsystem of the catalogue, otherwise `refused:catalogue` (Н3; ADR-0091 addendum (14) item 1)",
            "type": "array",
            "items": {
             "type": "string",
@@ -604,7 +604,7 @@
            "uniqueItems": true
           },
           "rank": {
-           "description": "ранг маршрута: токен двери `/where` несёт маршрут, только если ранг человека на единице не ниже (P/06.5 Н3); нет ключа — `view`; только у маршрута с допуском `token` — без `role` и `domain` (ADR-0115 доп. (19) п. 1)",
+           "description": "route rank: the token of the door `/where` carries the route only if the person's rank on the unit is not lower (P/06.5 Н3); no key — `view`; only for a route with admission `token` — without `role` and `domain` (ADR-0115 addendum (19) item 1)",
            "x-owner": "P/06.5 Н3",
            "enum": [
             "view",
@@ -669,7 +669,7 @@
     "pass": {
      "default": [],
      "x-owner": "P/06.5 Н1.8",
-     "x-default-text": "передачи нет",
+     "x-default-text": "no pass",
      "type": [
       "array",
       "object"
@@ -681,7 +681,7 @@
        },
        "then": {
         "$ref": "#/$defs/strList",
-        "description": "вид первый: первые сегменты пути"
+        "description": "the first kind: the first segments of the path"
        }
       },
       {
@@ -711,21 +711,21 @@
    "type": "object",
    "properties": {
     "running": {
-     "description": "`name` метрики из `metrics[]`",
+     "description": "`name` of a metric from `metrics[]`",
      "x-default-text": "`running_gauge: null`",
      "type": "string"
     },
     "shell": {
-     "description": "`true` — консоль отдаёт оболочку `<sub>.shell.html` этой подсистемы и смонтированной (P/06.5 Н1.1 `mounted`); файла рядом с манифестом нет — отказ `manifest put` (P/02.3 Н4)",
+     "description": "`true` — the console serves the shell `<sub>.shell.html` of this subsystem, a mounted one (P/06.5 Н1.1 `mounted`); no file next to the manifest — `manifest put` refusal (P/02.3 Н4)",
      "x-default-text": "`false`",
      "type": "boolean"
     },
     "files": {
-     "description": "статические файлы подсистемы: пути относительно каталога файла манифеста, адрес консоли `/<sub>/<путь>` (P/06.5 Н2 «Статические файлы»); файл не прочитан — отказ `manifest put` (P/02.3 Н4)",
-     "x-default-text": "файлов нет",
+     "description": "static files of the subsystem: paths relative to the directory of the manifest file, console address `/<sub>/<путь>` (P/06.5 Н2 «Статические файлы»); a file not read — `manifest put` refusal (P/02.3 Н4)",
+     "x-default-text": "no files",
      "type": "array",
      "items": {
-      "description": "сегменты через `/`, каждый начинается с буквы, цифры или `_` (потому нет `..`, абсолютного пути и пустого сегмента); расширение — из закрытого перечня, без `html`; не под `api/` — это пространство маршрутов смонтированной подсистемы (ADR-0094 доп. (4) п. 2, доп. (8) п. 2)",
+      "description": "segments separated by `/`, each starts with a letter, a digit or `_` (hence no `..`, no absolute path and no empty segment); the extension is from a closed list, without `html`; not under `api/` — that is the route space of the mounted subsystem (ADR-0094 addendum (4) item 2, addendum (8) item 2)",
       "type": "string",
       "pattern": "^(?:(?:[A-Za-z0-9_][A-Za-z0-9._-]*/)*[A-Za-z0-9_][A-Za-z0-9._-]*\\.(?:js|css|json|woff2|woff|ttf|png|svg))$",
       "not": {
@@ -755,16 +755,16 @@
  ],
  "$defs": {
   "book": {
-   "description": "`{}` — переносимая книга: пишет воркер подсистемы на домене (P/03.7 Н1.6); `{show}` — она же с показом; `{from, key, pick, to, show?, stale?}` — собираемая книга из строк членов",
+   "description": "`{}` — a portable book: written by the worker of the subsystem on the domain (P/03.7 Н1.6); `{show}` — the same book with showing; `{from, key, pick, to, show?, stale?}` — a book assembled from the rows of members",
    "type": "object",
    "properties": {
     "from": {
-     "description": "`<sub>/<строка>` — одиночная строка или `<sub>/<строка>/` — семья строк под слотами; `<sub>` — своя подсистема",
+     "description": "`<sub>/<строка>` — a single row, or `<sub>/<строка>/` — a family of rows under slots; `<sub>` is the own subsystem",
      "type": "string",
      "pattern": "^(?:[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31}/?)$"
     },
     "key": {
-     "description": "имя несекретного поля входа по грамматике `name`: значение — непустая строка, ключ книги (разбор ревью стадии A 8–10, № 42; решение «Архитектора» 2026-10-20)",
+     "description": "name of a non-secret input field by the `name` grammar: the value is a non-empty string, the key of the book (review of stage A 8–10, № 42; the Architect's decision of 2026-10-20)",
      "type": "string",
      "not": {
       "type": "string",
@@ -779,7 +779,7 @@
      ]
     },
     "to": {
-     "description": "имя несекретного поля входа по грамматике `name`, не `key`: член или список членов — получатели элемента; \"*\" — книга всем (P/08.5 Н1.3 to_all) (разбор ревью стадии A 8–10, № 42; решение «Архитектора» 2026-10-20)",
+     "description": "name of a non-secret input field by the `name` grammar, not `key`: a member or a list of members — the recipients of the element; \"*\" — a book for all (P/08.5 Н1.3 to_all) (review of stage A 8–10, № 42; the Architect's decision of 2026-10-20)",
      "type": "string",
      "not": {
       "type": "string",
@@ -788,7 +788,7 @@
      "pattern": "^(?:\\*|[a-z][a-z0-9_-]{0,31})$"
     },
     "show": {
-     "description": "что видит дверь (P/06.7 Н1.1)",
+     "description": "what the door sees (P/06.7 Н1.1)",
      "type": "array",
      "items": {
       "type": "string",
@@ -801,7 +801,7 @@
      "uniqueItems": true
     },
     "stale": {
-     "description": "книга to: \"*\": голова несёт серверы, чей воркер этой подсистемы молчит (P/08.5 Н1.3 head; ADR-0113 доп. (31)–(33))",
+     "description": "book to: \"*\": the head carries the servers whose worker of this subsystem is silent (P/08.5 Н1.3 head; ADR-0113 addendum (31)–(33))",
      "type": "boolean"
     }
    },
@@ -860,7 +860,7 @@
    ]
   },
   "boundTo": {
-   "description": "имя поля или список имён полей этой строки, не секретов",
+   "description": "a field name or a list of field names of this row, not secrets",
    "x-owner": "P/06.2 Н1.1",
    "type": [
     "array",
@@ -893,11 +893,11 @@
    "type": "object",
    "properties": {
     "login": {
-     "description": "поле строки не url и не секрет",
+     "description": "a row field that is neither url nor secret",
      "type": "string"
     },
     "secret": {
-     "description": "поле `*_secret`",
+     "description": "a `*_secret` field",
      "type": "string"
     }
    },
@@ -930,14 +930,14 @@
     },
     "fields": {
      "$ref": "#/$defs/labelMap",
-     "description": "имя поля → подпись; поле таблицы — `<т>.<поле>` (ADR-0115 доп. (3) п. 3)"
+     "description": "field name → label; a table field — `<т>.<поле>` (ADR-0115 addendum (3) item 3)"
     },
     "field_help": {
      "$ref": "#/$defs/labelMap",
-     "description": "имя поля → подсказка; поле таблицы — `<т>.<поле>`"
+     "description": "field name → hint; a table field — `<т>.<поле>`"
     },
     "options": {
-     "description": "поле → `{значение: подпись}`; поле таблицы — `<т>.<поле>` (ADR-0115 доп. (4) п. 1)",
+     "description": "field → `{значение: подпись}`; a table field — `<т>.<поле>` (ADR-0115 addendum (4) item 1)",
      "type": "object",
      "propertyNames": {
       "type": "string"
@@ -947,7 +947,7 @@
      }
     },
     "form": {
-     "x-default-text": "один блок со всеми полями",
+     "x-default-text": "one block with all fields",
      "type": "array",
      "items": {
       "type": "object",
@@ -963,7 +963,7 @@
        },
        "fields": {
         "$ref": "#/$defs/strList",
-        "description": "поля и платформенные имена"
+        "description": "fields and platform names"
        },
        "note": {
         "type": "string"
@@ -995,15 +995,15 @@
     },
     "events": {
      "default": true,
-     "x-default-text": "вкладка есть",
+     "x-default-text": "the tab is present",
      "type": "boolean"
     },
     "kinds": {
      "$ref": "#/$defs/labelMap",
-     "description": "вид события → строка"
+     "description": "event kind → string"
     },
     "keys": {
-     "description": "id семьи ключей домена → подписи",
+     "description": "id of a domain key family → label",
      "x-owner": "P/06.7 Н1.11",
      "type": "object",
      "propertyNames": {
@@ -1033,15 +1033,15 @@
      "type": "object",
      "properties": {
       "group_by": {
-       "description": "поле",
+       "description": "field",
        "type": "string"
       },
       "nested_by": {
-       "description": "строка-разделитель",
+       "description": "separator row",
        "type": "string"
       },
       "folders": {
-       "description": "`true` — дерево страницы строится по папкам кластера, а единицы `unit.rows` бывают их членами (P/06.8 Н1.1; P/06.5 Н1.2 `tree`)",
+       "description": "`true` — the page tree is built by the folders of the cluster, and the units of `unit.rows` can be their members (P/06.8 Н1.1; P/06.5 Н1.2 `tree`)",
        "x-default-text": "`false`",
        "type": "boolean"
       },
@@ -1051,7 +1051,7 @@
         "type": "object",
         "properties": {
          "field": {
-          "description": "поле или платформенное имя",
+          "description": "a field or a platform name",
           "type": "string"
          },
          "title": {
@@ -1155,7 +1155,7 @@
      "$ref": "#/$defs/langs"
     },
     "tables": {
-     "description": "имя таблицы → подпись вида (`name_key` psim): строка или `{key, text}`, переводы — `display.langs`; имя — таблица `tables` (ADR-0115 доп. (11))",
+     "description": "table name → label of the kind (`name_key` psim): a string or `{key, text}`, translations — `display.langs`; the name is a table of `tables` (ADR-0115 addendum (11))",
      "x-owner": "P/06.5 Н1.2",
      "type": "object",
      "propertyNames": {
@@ -1200,7 +1200,7 @@
       }
      ],
      "x-owner": "P/08.1 Н1.4",
-     "description": "поля пульса; `stale` — слово платформы в `pulse.<sub>` вида (P/08.1 Н1.4)"
+     "description": "heartbeat fields; `stale` is a platform word in `pulse.<sub>` of the view (P/08.1 Н1.4)"
     },
     "view_tables": {
      "x-owner": "P/08.1 Н1.4а",
@@ -1253,7 +1253,7 @@
     },
     "kept_read": {
      "$ref": "#/$defs/strList",
-     "description": "строки domain.kept, которые читает дверь консоли домена: точные имена, не семьи",
+     "description": "domain.kept rows that the domain console door reads: exact names, not families",
      "x-owner": "P/10 Н1.2а"
     },
     "tables": {
@@ -1265,7 +1265,7 @@
      "x-owner": "P/09.1 Н1.2"
     },
     "shared": {
-     "description": "элемент — имя поля единицы (не секрет; наследует или это `display.tree.group_by`) или документ `{name, type: json, schema}`: name — не имя поля единицы, значение документа проверяется по schema",
+     "description": "an element is a name of a unit field (not a secret; it inherits or is `display.tree.group_by`) or a document `{name, type: json, schema}`: name is not a name of a unit field, the value of the document is checked by schema",
      "x-owner": "P/08.9 Н1.2",
      "x-class": "value",
      "type": "array",
@@ -1409,7 +1409,7 @@
      "x-class": "value",
      "type": "object",
      "propertyNames": {
-      "description": "вид токена; вид уникален в каталоге (Н3, `refused:catalogue`)",
+      "description": "token kind; the kind is unique in the catalogue (Н3, `refused:catalogue`)",
       "type": "string",
       "not": {
        "enum": [
@@ -1430,7 +1430,7 @@
        "type": "string"
       },
       "member_field": {
-       "description": "fixed-поле единицы, несущее имя члена",
+       "description": "the fixed field of the unit that carries the name of the member",
        "type": "string"
       }
      },
@@ -1444,12 +1444,12 @@
    "additionalProperties": false
   },
   "execLine": {
-   "description": "командная строка без оболочки: слова через один пробел U+0020, пустых слов нет; первое — абсолютный путь; в словах — печатные ASCII без \" ' \\ % $ ` ; | & < > * ? ( ) { } [ ] ~ # !; argv — разбиение по пробелу (ADR-0091 доп. (5) п. 2)",
+   "description": "command line without a shell: words separated by one space U+0020, no empty words; the first word is an absolute path; in words — printable ASCII without \" ' \\ % $ ` ; | & < > * ? ( ) { } [ ] ~ # !; argv is the split by space (ADR-0091 addendum (5) item 2)",
    "type": "string",
    "pattern": "^(?:/[A-Za-z0-9+,./:=@^_\\-]*( [A-Za-z0-9+,./:=@^_\\-]+)*)$"
   },
   "fieldEnum": {
-   "description": "значения типа поля; только у string и bool",
+   "description": "values of the field type; only for string and bool",
    "x-owner": "P/06.1 Н3",
    "type": "array",
    "minItems": 1,
@@ -1460,7 +1460,7 @@
    "pattern": "^(?:[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*)$"
   },
   "fieldType": {
-   "description": "поле `*_secret` — только string",
+   "description": "a `*_secret` field — only string",
    "default": "string",
    "x-owner": "P/06.1 Н1.2",
    "enum": [
@@ -1477,7 +1477,7 @@
   "grantList": {
    "type": "array",
    "items": {
-    "description": "с `/`; без буквального `*`, начального `!` и `delete:`",
+    "description": "with `/`; without a literal `*`, a leading `!` and `delete:`",
     "type": "string",
     "not": {
      "type": "string",
@@ -1487,7 +1487,7 @@
    }
   },
   "grantName": {
-   "description": "без буквального `*`, начального `!` и `delete:`",
+   "description": "without a literal `*`, a leading `!` and `delete:`",
    "type": "string",
    "not": {
     "type": "string",
@@ -1495,7 +1495,7 @@
    }
   },
   "jsonSchemaLite": {
-   "description": "JSON Schema 2020-12; ключевые слова — перечень `names.key` этого определения (иное — value), глубина ≤ 32 (разбор ревью стадии A 6–7, № 11)",
+   "description": "JSON Schema 2020-12; the keywords are the list `names.key` of this definition (anything else is value), depth ≤ 32 (review of stage A 6–7, № 11)",
    "x-owner": "P/02.1 Н1.2",
    "type": "object",
    "properties": {
@@ -1593,7 +1593,7 @@
    "additionalProperties": {}
   },
   "label": {
-   "description": "строка или `{key, text}`: ключ перевода по `display.langs` и текст, если перевода нет (ADR-0115 доп. (2) п. 3)",
+   "description": "a string or `{key, text}`: the translation key by `display.langs` and the text if there is no translation (ADR-0115 addendum (2) item 3)",
    "x-owner": "P/06.5 Н1.2",
    "type": [
     "object",
@@ -1634,7 +1634,7 @@
    }
   },
   "langs": {
-   "description": "язык → `{ключ: текст}`; генератор кладёт сюда переводы; ключа нет в языке — действует `text` подписи (ADR-0115 доп. (2) п. 3)",
+   "description": "language → `{ключ: текст}`; the generator puts translations here; a key absent in the language — the `text` of the label applies (ADR-0115 addendum (2) item 3)",
    "x-owner": "P/06.5 Н1.2",
    "type": "object",
    "propertyNames": {
@@ -1651,7 +1651,7 @@
     "type": "object",
     "properties": {
      "name": {
-      "description": "повтор допустим",
+      "description": "a repeat is admissible",
       "type": "string",
       "pattern": "^(?:[a-z][a-z0-9_]*)$"
      },
@@ -1740,7 +1740,7 @@
       "pattern": "^(?:table [a-z][a-z0-9_-]{0,31})$"
      },
      "where": {
-      "description": "ключи — поля, при `count` — поля таблицы",
+      "description": "the keys are fields; with `count` — table fields",
       "type": "object",
       "x-opaque": true
      },
@@ -1925,7 +1925,7 @@
    }
   },
   "mustMatch": {
-   "description": "`{<поле цели>: <поле этой строки>}`; ключи не проверяются",
+   "description": "`{<поле цели>: <поле этой строки>}`; the keys are not checked",
    "x-owner": "P/06.1 Н1.3",
    "type": "object",
    "propertyNames": {
@@ -1950,7 +1950,7 @@
    }
   },
   "passCall": {
-   "description": "дверь обратного вызова по закрытому перечню P/06.3 Н1.9: `<s>/<имя>` — строки единиц, таблица, `policy`, `next_id` или маршрут двери подсистемы `<s>`; приставка `GET ` — только чтение; `console/batch`, `changes`, `folders`; `<s>/operations`; `<s>/requests`; `marks`; `GET <s>/where`; `GET <s>/heartbeats`; дверь `door.pass` первого вида; `servers/labels`; `GET manifest|servers|events|session|schema`; `GET manifest/<s>/source` (ADR-0116 доп. (6)); двери домена: `GET domain/users|groups|roles|grants`, `domain/batch`, `domain/verify` (ADR-0119), `domain/shared`, `GET domain/shared/<s>`, `GET domain/topology`; дверь книги: `GET domain/<s>/books/<книга>`; раздел книги всем: `GET domain/<s>/books/<книга>/*`; строка kept: `GET domain/<s>/kept/<имя>`",
+   "description": "a callback door from the closed list of P/06.3 Н1.9: `<s>/<имя>` — unit rows, a table, `policy`, `next_id` or a door route of subsystem `<s>`; the prefix `GET ` — read only; `console/batch`, `changes`, `folders`; `<s>/operations`; `<s>/requests`; `marks`; `GET <s>/where`; `GET <s>/heartbeats`; the door `door.pass` of the first kind; `servers/labels`; `GET manifest|servers|events|session|schema`; `GET manifest/<s>/source` (ADR-0116 addendum (6)); domain doors: `GET domain/users|groups|roles|grants`, `domain/batch`, `domain/verify` (ADR-0119), `domain/shared`, `GET domain/shared/<s>`, `GET domain/topology`; the book door: `GET domain/<s>/books/<книга>`; a book section for all: `GET domain/<s>/books/<книга>/*`; a kept row: `GET domain/<s>/kept/<имя>`",
    "type": "string",
    "anyOf": [
     {
@@ -2019,16 +2019,16 @@
    ]
   },
   "passRoute": {
-   "description": "путь маршрута: сегменты по грамматике `name` через `/`; совпадает с началом пути целыми сегментами",
+   "description": "route path: segments by the `name` grammar separated by `/`; matches the start of the path by whole segments",
    "type": "string",
    "pattern": "^(?:[a-z][a-z0-9_-]{0,31}(?:/[a-z][a-z0-9_-]{0,31})*)$"
   },
   "passTicket": {
-   "description": "вид второй: билет на запрос вместо удостоверения человека (P/06.5 Н1.8, договор сторожевой и передачи)",
+   "description": "the second kind: a ticket per request instead of a person's credential (P/06.5 Н1.8, the guard and pass contract)",
    "type": "object",
    "properties": {
     "routes": {
-     "description": "передаваемые маршруты; первый сегмент — как у вида первого",
+     "description": "passed routes; the first segment — as in the first kind",
      "type": "array",
      "items": {
       "$ref": "#/$defs/passRoute"
@@ -2037,9 +2037,9 @@
      "uniqueItems": true
     },
     "calls": {
-     "description": "двери консоли, которые воркер зовёт обратно по билету",
+     "description": "console doors that the worker calls back with a ticket",
      "default": [],
-     "x-default-text": "обратного вызова нет",
+     "x-default-text": "no callback",
      "type": "array",
      "items": {
       "$ref": "#/$defs/passCall"
@@ -2047,9 +2047,9 @@
      "uniqueItems": true
     },
     "stream": {
-     "description": "маршруты, передаваемые потоком; каждый лежит под маршрутом `routes`",
+     "description": "routes passed as a stream; each lies under a route of `routes`",
      "default": [],
-     "x-default-text": "потоков нет",
+     "x-default-text": "no streams",
      "type": "array",
      "items": {
       "$ref": "#/$defs/passRoute"
@@ -2057,9 +2057,9 @@
      "uniqueItems": true
     },
     "wait": {
-     "description": "предел ожидания маршрута, секунды; ключ лежит под маршрутом `routes`, выигрывает самый длинный; потолок — `PASS_WAIT_MAX`",
+     "description": "wait limit of the route, seconds; the key lies under a route of `routes`, the longest one wins; the ceiling is `PASS_WAIT_MAX`",
      "default": {},
-     "x-default-text": "`PASS_WAIT`, у потока — до конца запроса",
+     "x-default-text": "`PASS_WAIT`; for a stream — until the end of the request",
      "type": "object",
      "propertyNames": {
       "$ref": "#/$defs/passRoute"
@@ -2071,7 +2071,7 @@
      }
     },
     "refusals": {
-     "description": "форма отказов консоли на этих маршрутах; нет ключа — ConsoleRefusal",
+     "description": "the form of console refusals on these routes; no key — ConsoleRefusal",
      "type": "object",
      "properties": {
       "form": {
@@ -2082,7 +2082,7 @@
        ]
       },
       "codes": {
-       "description": "статус консоли → `code`; ключ в кавычках; статуса нет в карте — ConsoleRefusal",
+       "description": "console status → `code`; the key in quotes; a status not in the map — ConsoleRefusal",
        "type": "object",
        "propertyNames": {
         "enum": [
@@ -2109,39 +2109,39 @@
      ]
     },
     "operations": {
-     "description": "групповые операции подсистемы (P/06.9 Н1.1): маршрут вызова шага, свои пределы, служебная таблица",
+     "description": "group operations of the subsystem (P/06.9 Н1.1): the step call route, own limits, a service table",
      "type": "object",
      "properties": {
       "step": {
        "$ref": "#/$defs/passRoute",
-       "description": "маршрут вызова шага; не лежит под `routes`: браузеру недоступен"
+       "description": "the step call route; does not lie under `routes`: unavailable to the browser"
       },
       "limits": {
-       "description": "свои пределы, не выше потолков P/06.9 Н1.6",
+       "description": "own limits, not above the ceilings of P/06.9 Н1.6",
        "default": {},
-       "x-default-text": "потолки P/06.9 Н1.6",
+       "x-default-text": "the ceilings of P/06.9 Н1.6",
        "type": "object",
        "properties": {
         "steps": {
-         "description": "шагов в операции",
+         "description": "steps in an operation",
          "type": "integer",
          "minimum": 1,
          "maximum": 1000
         },
         "active": {
-         "description": "незавершённых операций",
+         "description": "unfinished operations",
          "type": "integer",
          "minimum": 1,
          "maximum": 64
         },
         "per_person": {
-         "description": "незавершённых операций человека",
+         "description": "unfinished operations of a person",
          "type": "integer",
          "minimum": 1,
          "maximum": 8
         },
         "parallel": {
-         "description": "одновременно ведомых операций",
+         "description": "operations conducted at the same time",
          "type": "integer",
          "minimum": 1,
          "maximum": 4
@@ -2150,7 +2150,7 @@
        "additionalProperties": false
       },
       "service": {
-       "description": "таблица операций служебная: двери только по билету, человек видит свою операцию (P/06.9 Н2)",
+       "description": "the operations table is a service table: doors only with a ticket, a person sees their own operation (P/06.9 Н2)",
        "default": false,
        "x-default-text": "`false`",
        "type": "boolean"
@@ -2174,7 +2174,7 @@
      "type": "object",
      "properties": {
       "from": {
-       "description": "поле пульса",
+       "description": "heartbeat field",
        "default": "capacity",
        "type": "string"
       },
@@ -2186,12 +2186,12 @@
       },
       "unit_mb": {
        "x-owner": "P/03.4 Н1.2",
-       "x-default-text": "бюджет памяти не проверяется (P/03.4 Н1.2 `memory`)",
+       "x-default-text": "the memory budget is not checked (P/03.4 Н1.2 `memory`)",
        "type": "number",
        "exclusiveMinimum": 0
       },
       "base_mb": {
-       "description": "бюджет памяти — одна формула P/03.4 Н1.2 `memory`, проверка — P/03.4 Н3 «старт() — шаг бюджета»",
+       "description": "the memory budget is the one formula of P/03.4 Н1.2 `memory`, the check is P/03.4 Н3 «старт() — шаг бюджета»",
        "default": 0,
        "x-owner": "P/03.4 Н1.2",
        "type": "number",
@@ -2208,7 +2208,7 @@
      "type": "object",
      "properties": {
       "from": {
-       "description": "поле пульса",
+       "description": "heartbeat field",
        "default": "headroom",
        "type": "string"
       }
@@ -2216,13 +2216,13 @@
      "additionalProperties": false
     },
     "weight": {
-     "description": "без `field` вес — `default`, без `default` — 1",
+     "description": "without `field` the weight is `default`, without `default` — 1",
      "default": {},
-     "x-default-text": "вес 1 у всех",
+     "x-default-text": "weight 1 for all",
      "type": "object",
      "properties": {
       "field": {
-       "description": "поле типа int",
+       "description": "a field of type int",
        "type": "string"
       },
       "default": {
@@ -2256,7 +2256,7 @@
      ]
     },
     "place_by": {
-     "description": "`server` или поле пульса",
+     "description": "`server` or a heartbeat field",
      "default": "server",
      "type": "string"
     },
@@ -2264,16 +2264,16 @@
      "type": "object",
      "properties": {
       "table": {
-       "description": "таблица",
+       "description": "table",
        "type": "string"
       },
       "where": {
-       "description": "ключи — поля таблицы",
+       "description": "the keys are table fields",
        "type": "object",
        "x-opaque": true
       },
       "server_field": {
-       "description": "поле таблицы",
+       "description": "table field",
        "type": "string"
       },
       "lease": {
@@ -2282,7 +2282,7 @@
        ]
       },
       "wanted": {
-       "description": "таблица: строка с именем места — месту нужен держатель (P/04 Н3 «нехватка()»)",
+       "description": "table: a row with the name of the place — the place needs a holder (P/04 Н3 «нехватка()»)",
        "type": "string"
       }
      },
@@ -2292,18 +2292,18 @@
      ]
     },
     "spread_by": {
-     "description": "поле",
+     "description": "field",
      "type": "string"
     },
     "group_by": {
      "type": "object",
      "properties": {
       "field": {
-       "description": "поле",
+       "description": "field",
        "type": "string"
       },
       "cut_at": {
-       "description": "только у поля url: у поля иного типа — `refused:reference` (тип — свойство цели `group_by.field`, как у `unit.id`)",
+       "description": "only for a url field: for a field of another type — `refused:reference` (the type is a property of the target `group_by.field`, as for `unit.id`)",
        "enum": [
         "host"
        ]
@@ -2318,19 +2318,19 @@
      "type": "object",
      "properties": {
       "sub": {
-       "description": "подсистема (каталог)",
+       "description": "subsystem (catalogue)",
        "type": "string"
       },
       "by": {
-       "description": "поле этой единицы",
+       "description": "a field of this unit",
        "type": "string"
       },
       "of": {
-       "description": "поле соседа",
+       "description": "field of the neighbour",
        "type": "string"
       },
       "prefer": {
-       "description": "поля соседа (каталог)",
+       "description": "fields of the neighbour (catalogue)",
        "type": "object",
        "x-opaque": true
       }
@@ -2341,31 +2341,31 @@
      ]
     },
     "home": {
-     "description": "поле или слово `near` (тогда `near` обязателен)",
+     "description": "a field or the word `near` (then `near` is required)",
      "type": "string"
     },
     "affinity": {
      "type": "object",
      "properties": {
       "field": {
-       "description": "поле",
+       "description": "field",
        "type": "string"
       },
       "table": {
-       "description": "таблица",
+       "description": "table",
        "type": "string"
       },
       "server_field": {
-       "description": "поле таблицы",
+       "description": "table field",
        "type": "string"
       },
       "strict": {
-       "description": "ключи — поля таблицы",
+       "description": "the keys are table fields",
        "type": "object",
        "x-opaque": true
       },
       "exclusive": {
-       "description": "исключительное место: держатель связывающего места (по `strict`) принимает только единицы, связанные с ним, и других мест не берёт (P/04 Н1.3, P/03.2 Н3; ADR-0091 доп. (9) п. 6, доп. (10) пп. 1–2)",
+       "description": "exclusive place: the holder of a binding place (by `strict`) accepts only units bound to it and takes no other places (P/04 Н1.3, P/03.2 Н3; ADR-0091 addendum (9) item 6, addendum (10) items 1–2)",
        "default": false,
        "type": "boolean"
       }
@@ -2408,7 +2408,7 @@
      ]
     },
     "grows": {
-     "description": "роль растёт по требованию (ADR-0084)",
+     "description": "the role grows on demand (ADR-0084)",
      "default": false,
      "type": "boolean"
     },
@@ -2416,21 +2416,21 @@
      "type": "object",
      "properties": {
       "state": {
-       "description": "имя `unit.state`: поле — его (ADR-0091 п. 3)",
-       "x-default-text": "поле — строки единицы",
+       "description": "name of a `unit.state`: the field is its (ADR-0091 item 3)",
+       "x-default-text": "the field is of the unit rows",
        "type": "string"
       },
       "field": {
-       "description": "поле строки единицы или, при `state`, поле этого состояния",
+       "description": "a field of the unit row or, with `state`, a field of that state",
        "type": "string"
       },
       "in": {
-       "description": "список значений",
+       "description": "list of values",
        "type": "array"
       },
       "delete_after": {
-       "description": "секунды от снятия до физического удаления строки (ADR-0091 п. 1)",
-       "x-default-text": "не удалять",
+       "description": "seconds from retirement to physical deletion of the row (ADR-0091 item 1)",
+       "x-default-text": "do not delete",
        "type": "integer",
        "x-integer-place": true,
        "minimum": 1,
@@ -2444,16 +2444,16 @@
      ]
     },
     "ends": {
-     "description": "срок единицы: поле ≠ `never` и не позже часов контроллера — снять и удалить (ADR-0091 п. 2)",
-     "x-default-text": "срока нет",
+     "description": "unit term: the field ≠ `never` and not later than the controller's clock — retire and delete (ADR-0091 item 2)",
+     "x-default-text": "no term",
      "type": "object",
      "properties": {
       "field": {
-       "description": "поле типа int или float — секунды Unix",
+       "description": "a field of type int or float — Unix seconds",
        "type": "string"
       },
       "never": {
-       "description": "значение «без срока»",
+       "description": "the value «no term»",
        "default": 0,
        "type": "number"
       }
@@ -2476,11 +2476,11 @@
      "additionalProperties": false
     },
     "unplaced": {
-     "x-default-text": "не удалять",
+     "x-default-text": "do not delete",
      "type": "object",
      "properties": {
       "delete_after": {
-       "description": "только с named id, без fixed-полей кроме id, `about` — только по id (ADR-0067)",
+       "description": "only with named id, without fixed fields except id, `about` — only by id (ADR-0067)",
        "type": "integer",
        "x-integer-place": true,
        "minimum": 1,
@@ -2499,7 +2499,7 @@
    ]
   },
   "refTarget": {
-   "description": "`<подсистема>/<семья>`, обе части — имя по Н1.2; цель загрузчик не ищет",
+   "description": "`<подсистема>/<семья>`, both parts are names by Н1.2; the loader does not look for the target",
    "x-owner": "P/06.1 Н1.3",
    "type": "string",
    "pattern": "^(?:[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31})$"
@@ -2519,31 +2519,31 @@
      "minimum": 0
     },
     "per_person": {
-     "x-default-text": "предела нет",
+     "x-default-text": "no limit",
      "type": "integer",
      "x-integer-place": true,
      "minimum": 1,
      "maximum": 9007199254740991
     },
     "settle": {
-     "description": "секунды",
+     "description": "seconds",
      "default": 60,
      "type": "number",
      "minimum": 0
     },
     "ttl": {
-     "description": "0 — без предела",
+     "description": "0 — no limit",
      "type": "number",
      "minimum": 0
     },
     "key": {
-     "description": "шаблон rid хотя бы с одним `{…}` (Н1.4): без подстановки все просьбы получили бы один id",
+     "description": "rid template with at least one `{…}` (Н1.4): without a substitution all requests would get one id",
      "x-default-text": "`r-<sha16(Idempotency-Key)>`",
      "type": "string",
      "pattern": "^(?:[\\s\\S]*\\{[^{}]+\\}[\\s\\S]*)$"
     },
     "outcome": {
-     "description": "смысл — P/06.4 Н1.5 (`mark`), глава 3.6 (дозапись `fetched`), ADR-0054 доп. 2026-10-17; `fetched` требует `requests.key` (Н1.4)",
+     "description": "the meaning is P/06.4 Н1.5 (`mark`), chapter 3.6 (the append of `fetched`), ADR-0054 addendum 2026-10-17; `fetched` requires `requests.key` (Н1.4)",
      "default": "mark",
      "enum": [
       "mark",
@@ -2562,12 +2562,12 @@
      }
     },
     "journal": {
-     "description": "вид журнала",
+     "description": "the journal kind",
      "type": "string"
     },
     "elsewhere": {
      "$ref": "#/$defs/strList",
-     "description": "действия — значения поля `action` тела (договор метки, «Просьба» `action`); против `requests.schema` загрузчик их не сверяет — сверка автора манифеста: чеклист и `check_spec` для манифестов курса (решение «Архитектора», разбор ревью стадии B 6–7, № 17)"
+     "description": "actions are the values of the body field `action` (the mark contract, «Просьба» `action`); the loader does not check them against `requests.schema` — the check is the manifest author's: the checklist and `check_spec` for the manifests of the course (the Architect's decision, review of stage B 6–7, № 17)"
     },
     "free": {
      "default": false,
@@ -2666,16 +2666,16 @@
    "properties": {
     "routes": {
      "default": {},
-     "x-default-text": "записи требуют `admin`",
+     "x-default-text": "writes require `admin`",
      "type": "object",
      "properties": {
       "view": {
        "$ref": "#/$defs/strList",
-       "description": "семьи"
+       "description": "families"
       },
       "edit": {
        "$ref": "#/$defs/strList",
-       "description": "семьи"
+       "description": "families"
       }
      },
      "additionalProperties": false
@@ -2705,7 +2705,7 @@
       },
       "requests": {
        "$ref": "#/$defs/strList",
-       "description": "действия — значения поля `action` тела (договор метки, «Просьба» `action`); против `requests.schema` загрузчик их не сверяет — сверка автора манифеста: чеклист и `check_spec` для манифестов курса (решение «Архитектора», разбор ревью стадии B 6–7, № 17)"
+       "description": "actions are the values of the body field `action` (the mark contract, «Просьба» `action`); the loader does not check them against `requests.schema` — the check is the manifest author's: the checklist and `check_spec` for the manifests of the course (the Architect's decision, review of stage B 6–7, № 17)"
       }
      },
      "additionalProperties": false
@@ -2728,27 +2728,27 @@
         "type": "string"
        },
        "action": {
-        "description": "ключ объекта: действие просьбы к единице (договор сторожевой и передачи names)",
+        "description": "object key: the action of a request to a unit (the guard and pass contract, names)",
         "type": "string"
        },
        "at": {
-        "description": "путь внутри значения поля: ключи через точку, [] — каждый элемент (договор сторожевой и передачи names)",
+        "description": "a path inside the field value: keys separated by dots, [] — each element (the guard and pass contract, names)",
         "type": "string",
         "pattern": "^(?:[a-z_][a-z0-9_]*(\\[\\])?(\\.[a-z_][a-z0-9_]*(\\[\\])?)*)$"
        },
        "walk": {
-        "description": "ключи вложенных веток",
+        "description": "keys of nested branches",
         "type": "array",
         "items": {
          "type": "string"
         }
        },
        "kind": {
-        "description": "ключ объекта: вид цели",
+        "description": "object key: target kind",
         "type": "string"
        },
        "kinds": {
-        "description": "вид цели → подсистема, папка или сервер",
+        "description": "target kind → subsystem, folder or server",
         "type": "object",
         "additionalProperties": {
          "type": "object",
@@ -2789,7 +2789,7 @@
         }
        },
        "quiet": {
-        "description": "ключи объекта без цели (договор сторожевой и передачи names)",
+        "description": "keys of an object without a target (the guard and pass contract, names)",
         "type": "array",
         "items": {
          "type": "string"
@@ -2869,7 +2869,7 @@
    "additionalProperties": false
   },
   "rowsName": {
-   "description": "имя по Н1.2, не из перечня запрещённых имён таблиц и не `cluster`, `worker`, `ts`",
+   "description": "a name by Н1.2, not from the list of forbidden table names and not `cluster`, `worker`, `ts`",
    "type": "string",
    "not": {
     "enum": [
@@ -2931,7 +2931,7 @@
    "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
   },
   "schemes": {
-   "description": "имя схемы → `{host?, fragment?, none?}`; смысл — договор адреса «Схемы» (URLC-HOST-01)",
+   "description": "scheme name → `{host?, fragment?, none?}`; the meaning is the address contract «Схемы» (URLC-HOST-01)",
    "x-owner": "договор адреса url-credentials «Схемы»; P/06.2 Н1.1",
    "type": "object",
    "propertyNames": {
@@ -2942,7 +2942,7 @@
     "type": "object",
     "properties": {
      "host": {
-      "description": "`authority` — хост — узел authority; `path` — хост — первый сегмент пути, узел authority — хаб (`mirror://<hub>/<host>/…`)",
+      "description": "`authority` — the host is the authority component; `path` — the host is the first path segment, the authority component is the hub (`mirror://<hub>/<host>/…`)",
       "default": "authority",
       "enum": [
        "authority",
@@ -2950,15 +2950,15 @@
       ]
      },
      "fragment": {
-      "description": "`none`: `#` — обычный знак, не начало фрагмента (P/06.2 Н1.1а А2)",
-      "x-default-text": "`#` начинает фрагмент",
+      "description": "`none`: `#` is an ordinary character, not the start of a fragment (P/06.2 Н1.1а А2)",
+      "x-default-text": "`#` starts a fragment",
       "enum": [
        "none"
       ]
      },
      "none": {
       "$ref": "#/$defs/strList",
-      "description": "значения узла authority, означающие «хоста нет» (`mirror://local/…` — своя копия); путь обязателен только при `host: path` — договор адреса «Схемы»"
+      "description": "values of the authority component that mean «no host» (`mirror://local/…` — the own copy); the path is required only with `host: path` — the address contract «Схемы»"
      }
     },
     "additionalProperties": false
@@ -2968,7 +2968,7 @@
    "x-owner": "P/06.2 Н1.1",
    "type": "array",
    "items": {
-    "description": "элемент ровно одного вида: `{param, login?}`, `{regex, in?, schemes?, decoded?}` или `{nested}`",
+    "description": "an element of exactly one kind: `{param, login?}`, `{regex, in?, schemes?, decoded?}` or `{nested}`",
     "type": "object",
     "properties": {
      "param": {
@@ -3172,9 +3172,9 @@
    "type": "object",
    "properties": {
     "readers": {
-     "description": "точное имя строки или префикс с `/` → роли",
+     "description": "exact row name or prefix with `/` → roles",
      "default": {},
-     "x-default-text": "своих секретных строк нет",
+     "x-default-text": "no own secret rows",
      "type": "object",
      "propertyNames": {
       "$ref": "#/$defs/grantName"
@@ -3198,7 +3198,7 @@
     },
     "reads": {
      "$ref": "#/$defs/grantList",
-     "description": "`<семья>/<имя>` или префиксы с `/`, как `worker.reads`"
+     "description": "`<семья>/<имя>` or prefixes with `/`, as in `worker.reads`"
     }
    },
    "additionalProperties": false
@@ -3212,11 +3212,11 @@
       "type": "object",
       "properties": {
        "table": {
-        "description": "таблица",
+        "description": "table",
         "type": "string"
        },
        "by": {
-        "description": "поле таблицы",
+        "description": "table field",
         "type": "string"
        },
        "title": {
@@ -3224,7 +3224,7 @@
        },
        "columns": {
         "$ref": "#/$defs/strList",
-        "description": "поля таблицы"
+        "description": "table fields"
        }
       },
       "additionalProperties": false,
@@ -3240,7 +3240,7 @@
       "type": "object",
       "properties": {
        "field": {
-        "description": "путь в пульсе, первый сегмент не ключ пульса платформы (P/03.4 Н1.1)",
+        "description": "a path in the heartbeat; the first segment is not a heartbeat key of the platform (P/03.4 Н1.1)",
         "type": "string",
         "not": {
          "type": "string",
@@ -3251,7 +3251,7 @@
         "type": "string"
        },
        "of": {
-        "description": "таблица",
+        "description": "table",
         "type": "string"
        }
       },
@@ -3280,7 +3280,7 @@
    }
   },
   "subName": {
-   "description": "не из 36 зарезервированных слов и не начинается с `free-` (rid подателя `<подсистема>.<ключ>` иначе начался бы с `free-`, который грамматика rid запрещает; ADR-0091 доп. (24) п. 5); имя — первый сегмент всех ключей подсистемы `<name>/…` и её места на домене",
+   "description": "not one of the 36 reserved words and does not start with `free-` (the submitter's rid `<подсистема>.<ключ>` would otherwise start with `free-`, which the rid grammar forbids; ADR-0091 addendum (24) item 5); the name is the first segment of all keys of the subsystem `<name>/…` and of its place on the domain",
    "type": "string",
    "not": {
     "anyOf": [
@@ -3360,11 +3360,11 @@
    "type": "object",
    "properties": {
     "key": {
-     "description": "несекретное поле string или шаблон `{поле}` / `{поле:int}` (Н1.4)",
+     "description": "a non-secret string field or a template `{поле}` / `{поле:int}` (Н1.4)",
      "type": "string"
     },
     "fields": {
-     "description": "поле по таблице «Поле»; поля `held_by`, `garbled`, `by`, `at`, `made_at`, `revision`, `index` запрещены",
+     "description": "a field by the table «Поле»; the fields `held_by`, `garbled`, `by`, `at`, `made_at`, `revision`, `index` are forbidden",
      "default": {},
      "type": "object",
      "propertyNames": {
@@ -3433,12 +3433,12 @@
      "$ref": "#/$defs/jsonSchemaLite"
     },
     "service": {
-     "description": "служебная таблица воркера: только по билету (P/06.1 Н1.6 `service`)",
+     "description": "service table of the worker: only with a ticket (P/06.1 Н1.6 `service`)",
      "type": "boolean",
      "x-default-text": "`false`"
     },
     "writes_via": {
-     "description": "строки пишут только названные подсистемы по билету; сеанс, аварийный вход и прочие билеты — 403 writes via; запись правом следствий вне слова (P/06.1 Н1.1а, ADR-0119 доп. (10), (11))",
+     "description": "the rows are written only by the named subsystems with a ticket; a session, the emergency login and other tickets — 403 writes via; a write by the right of consequences is outside the word (P/06.1 Н1.1а, ADR-0119 addendum (10), (11))",
      "x-owner": "P/06.1 Н1.1а",
      "type": "array",
      "items": {
@@ -3471,8 +3471,8 @@
      "additionalProperties": false
     },
     "delete_after": {
-     "description": "срок строки в секундах; строку снимает жнец консоли (P/06.4 Н3 `tables`)",
-     "x-default-text": "срока нет",
+     "description": "row term in seconds; the console reaper removes the row (P/06.4 Н3 `tables`)",
+     "x-default-text": "no term",
      "type": "integer",
      "x-integer-place": true,
      "minimum": 1,
@@ -3507,7 +3507,7 @@
       ]
      },
      "then": false,
-     "description": "service уже пускает только билет своей подсистемы (P/06.1 Н1.6)"
+     "description": "service already admits only a ticket of its own subsystem (P/06.1 Н1.6)"
     }
    ]
   },
@@ -3547,12 +3547,12 @@
      "$ref": "#/$defs/schemes"
     },
     "hidden": {
-     "description": "поле не показывается формой; значение пишет и отдаёт дверь, как прочие (ADR-0115 п. 2.2)",
+     "description": "the field is not shown by the form; the door writes and returns the value like the others (ADR-0115 item 2.2)",
      "x-owner": "P/06.5 Н1.2",
      "type": "boolean"
     },
     "items": {
-     "description": "у `type: list`: `ref` каждого элемента — подсказка формы, перечень значений берётся чтением семьи; значение платформа по ней не судит (ADR-0115 доп. (2) п. 5, доп. (3) п. 5)",
+     "description": "for `type: list`: `ref` of each element is a form hint, the list of values is taken by reading the family; the platform does not judge the value by it (ADR-0115 addendum (2) item 5, addendum (3) item 5)",
      "x-owner": "P/06.5 Н1.2",
      "type": "object",
      "properties": {
@@ -3566,7 +3566,7 @@
      ]
     },
     "ref_label": {
-     "description": "имя поля строки цели `ref` или `items.ref` — подпись значения в форме; поле цели загрузчик не ищет (ADR-0115 доп. (5) п. 2, доп. (6) п. 2)",
+     "description": "name of a field of the target row of `ref` or `items.ref` — the label of the value in the form; the loader does not look for the target field (ADR-0115 addendum (5) item 2, addendum (6) item 2)",
      "x-owner": "P/06.5 Н1.2",
      "type": "string",
      "minLength": 1
@@ -3618,7 +3618,7 @@
       ]
      },
      "then": false,
-     "description": "blob — только в unit.fields"
+     "description": "blob — only in unit.fields"
     },
     {
      "if": {
@@ -4076,7 +4076,7 @@
    ]
   },
   "tableName": {
-   "description": "имя по Н1.2, не из перечня запрещённых имён таблиц",
+   "description": "a name by Н1.2, not from the list of forbidden table names",
    "type": "string",
    "not": {
     "enum": [
@@ -4134,7 +4134,7 @@
    "pattern": "^(?:[a-z][a-z0-9_-]{0,31})$"
   },
   "tables": {
-   "description": "отображение named (имя → таблица) или список имён",
+   "description": "a named mapping (name → table) or a list of names",
    "type": [
     "object",
     "array"
@@ -4153,12 +4153,12 @@
    "type": "object",
    "properties": {
     "lifetime": {
-     "description": "секунды",
+     "description": "seconds",
      "type": "number",
      "exclusiveMinimum": 0
     },
     "keep": {
-     "description": "токен лежит запечатанным на носителе воркера (P/03.7 Н1.5 keep; ADR-0110 доп. (9))",
+     "description": "the token lies sealed on the worker's medium (P/03.7 Н1.5 keep; ADR-0110 addendum (9))",
      "type": "boolean",
      "x-owner": "P/03.7 Н1.5"
     },
@@ -4181,7 +4181,7 @@
      "uniqueItems": true
     },
     "grant": {
-     "description": "роли воркеров, которым вид выдаётся",
+     "description": "roles of the workers to which the kind is issued",
      "type": "array",
      "items": {
       "type": "string"
@@ -4193,11 +4193,11 @@
      "type": "object",
      "properties": {
       "sub": {
-       "description": "подсистема записей назначения (P/08.6 Н1.1)",
+       "description": "subsystem of the assignment records (P/08.6 Н1.1)",
        "type": "string"
       },
       "caller": {
-       "description": "поле записи, где должен стоять член-заявитель",
+       "description": "the field of the record where the applicant member must stand",
        "enum": [
         "cluster",
         "origin",
@@ -4208,7 +4208,7 @@
        "type": "string"
       },
       "target_fields": {
-       "description": "откуда аудитория",
+       "description": "where the audience comes from",
        "type": "array",
        "items": {
         "enum": [
@@ -4238,7 +4238,7 @@
      "type": "object",
      "properties": {
       "sub": {
-       "description": "подсистема единицы; нет — своя (своя требует `domain.ref`)",
+       "description": "subsystem of the unit; none — the own one (the own one requires `domain.ref`)",
        "type": "string"
       },
       "caller": {
@@ -4276,11 +4276,11 @@
      "type": "object",
      "properties": {
       "doc": {
-       "description": "подсистема общего документа (P/08.9 Н1.2: `shared.<doc>`)",
+       "description": "subsystem of the shared document (P/08.9 Н1.2: `shared.<doc>`)",
        "type": "string"
       },
       "items": {
-       "description": "имя массива в документе",
+       "description": "name of the array in the document",
        "type": "string",
        "pattern": "^(?:[a-z][a-z0-9_]*)$"
       },
@@ -4303,7 +4303,7 @@
        "$ref": "#/$defs/fieldPath"
       },
       "placement": {
-       "description": "подсистема, чьи записи назначения называют дом цели",
+       "description": "the subsystem whose assignment records name the home of the target",
        "type": "string"
       },
       "ref_claim": {
@@ -4413,15 +4413,15 @@
      "type": "boolean"
     },
     "default": {
-     "description": "одно значение типа поля: у float допустимо целое, list — список строк, json — любое значение JSON (отображение у string — отказ); null — нет умолчания; из `enum`, если он есть",
+     "description": "one value of the field type: for float an integer is admissible, list — a list of strings, json — any JSON value (a mapping for string — refusal); null — no default; from `enum`, if there is one",
      "x-owner": "P/06.1 Н1.2"
     },
     "inherit": {
-     "description": "как `default`; последнее звено цепи наследования; только у поля единицы",
+     "description": "like `default`; the last link of the inheritance chain; only for a unit field",
      "x-owner": "P/06.1 Н1.2"
     },
     "merge": {
-     "description": "сведение цепи наследования; только с `inherit`; `union` — только у `type: list`",
+     "description": "reduction of the inheritance chain; only with `inherit`; `union` — only for `type: list`",
      "x-owner": "P/06.7 Н1.14",
      "enum": [
       "union",
@@ -4432,7 +4432,7 @@
      "$ref": "#/$defs/fieldEnum"
     },
     "unique": {
-     "description": "`canonical` — сравнение по канонической форме URL (P/06.1 Н1.3), только у url; не у list",
+     "description": "`canonical` — comparison by the canonical form of the URL (P/06.1 Н1.3), only for url; not for list",
      "x-owner": "P/06.1 Н1.3",
      "type": [
       "string",
@@ -4486,12 +4486,12 @@
      "$ref": "#/$defs/schemes"
     },
     "hidden": {
-     "description": "поле не показывается формой; значение пишет и отдаёт дверь, как прочие (ADR-0115 п. 2.2)",
+     "description": "the field is not shown by the form; the door writes and returns the value like the others (ADR-0115 item 2.2)",
      "x-owner": "P/06.5 Н1.2",
      "type": "boolean"
     },
     "items": {
-     "description": "у `type: list`: `ref` каждого элемента — подсказка формы, перечень значений берётся чтением семьи; значение платформа по ней не судит (ADR-0115 доп. (2) п. 5, доп. (3) п. 5)",
+     "description": "for `type: list`: `ref` of each element is a form hint, the list of values is taken by reading the family; the platform does not judge the value by it (ADR-0115 addendum (2) item 5, addendum (3) item 5)",
      "x-owner": "P/06.5 Н1.2",
      "type": "object",
      "properties": {
@@ -4505,7 +4505,7 @@
      ]
     },
     "ref_label": {
-     "description": "имя поля строки цели `ref` или `items.ref` — подпись значения в форме; поле цели загрузчик не ищет (ADR-0115 доп. (5) п. 2, доп. (6) п. 2)",
+     "description": "name of a field of the target row of `ref` or `items.ref` — the label of the value in the form; the loader does not look for the target field (ADR-0115 addendum (5) item 2, addendum (6) item 2)",
      "x-owner": "P/06.5 Н1.2",
      "type": "string",
      "minLength": 1
@@ -5335,7 +5335,7 @@
   "unitFields": {
    "type": "object",
    "propertyNames": {
-    "description": "не из `platform_fields` P/06.1 Н1.2; без точки: имя `<т>.<поле>` в `display` — поле таблицы (ADR-0115 доп. (4) п. 1)",
+    "description": "not from `platform_fields` of P/06.1 Н1.2; without a dot: the name `<т>.<поле>` in `display` is a table field (ADR-0115 addendum (4) item 1)",
     "type": "string",
     "not": {
      "enum": [
@@ -5425,7 +5425,7 @@
         ]
        },
        "then": false,
-       "description": "имя blob — 1–64 ASCII [A-Za-z_][A-Za-z0-9_]*"
+       "description": "blob name — 1–64 ASCII [A-Za-z_][A-Za-z0-9_]*"
       }
      ],
      "x-complement-of": "^(?:[A-Za-z_][A-Za-z0-9_]{0,63})$"

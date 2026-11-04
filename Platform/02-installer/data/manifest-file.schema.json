@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "data": {
-   "description": "одна часть файла: base64 (RFC 4648 § 4, с дополнением) байтов части; часть — до FILE_PART байтов, по порядку, последняя короче (P/02.3 Н1.5)",
+   "description": "one part of the file: base64 (RFC 4648 § 4, with padding) of the part's bytes; a part is up to FILE_PART bytes, in order, the last one is shorter (P/02.3 Н1.5)",
    "type": "string",
    "pattern": "^(?:[A-Za-z0-9+/]+={0,2})$",
    "x-codec": [
@@ -24,7 +24,7 @@
   ]
  },
  "additionalProperties": {
-  "description": "лишние поля: читатель их не читает и ими не отказывает, писатель их не пишет (терпимый читатель, как строка манифеста P/02.3 Н1.5)",
+  "description": "extra fields: the reader does not read them and does not refuse because of them, the writer does not write them (a tolerant reader, like the manifest row P/02.3 Н1.5)",
   "x-codec": [
    "any"
   ]

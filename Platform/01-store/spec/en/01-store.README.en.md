@@ -61,7 +61,7 @@ Below is one possible order. The split into functions, the internal interfaces a
 1. Load the form of Н1.2 in full. Distinguish the absence of delete from an explicit empty list.
    The file has no internal roles, no JSON syntax comments and no unknown fields.
    The optional string comment is metadata; a change of its text does not change the rights
-   and is not compared by --check (comparison by meaning — P/02.5 Н3 «установить»); /v1/rights returns it.
+   and is not compared by --check (comparison by meaning — P/02.5 Н3 «install»); /v1/rights returns it.
 2. Implement the priority of the check from Н3: identity, the special operation list, never,
    the permission of admin/internal roles, the evaluator of an ordinary role, the read right of the guard.
    Check a denial when a permission matched, and the prohibitions on each action separately,

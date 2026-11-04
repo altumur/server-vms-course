@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "yaml": {
-   "description": "байты файла манифеста как есть; загружаются по главе 2.1 (Н3 «загрузить»)",
+   "description": "the bytes of the manifest file as is; loaded by chapter 2.1 (Н3 «load»)",
    "type": "string",
    "x-codec": [
     "string"
@@ -11,40 +11,40 @@
   },
   "sha256": {
    "$ref": "#/$defs/common.sha256_hex",
-   "description": "дайджест байтов yaml; читатель сравнивает запись как есть — иная запись (заглавные) не совпадает: «sha256 не совпадает», не старт (Н4; ревью стадии A 2)",
+   "description": "digest of the yaml bytes; the reader compares the notation as is — a different notation (upper case) does not match: «sha256 does not match», no start (Н4; review of stage A 2)",
    "x-codec": [
     "string"
    ]
   },
   "rev": {
    "$ref": "#/$defs/common.pos53",
-   "description": "десятичное целое ≥ 1 — ревизия правила; первая установка — 1, затем +1 записью с cas по строке",
+   "description": "a decimal integer ≥ 1 — the revision of the rule; the first installation — 1, then +1 by a write with cas on the row",
    "x-whole": true,
    "x-codec": [
     "integer"
    ]
   },
   "shell": {
-   "description": "страница подсистемы (P/06.5 Н1.1) или пусто; источник — файл `<sub>.shell.html` рядом с файлом манифеста, файла нет — поле не пишется; отсутствие поля и пустое — одно «страницы нет»; МОЖЕТ отсутствовать у реализации без страниц",
+   "description": "the page of the subsystem (P/06.5 Н1.1) or empty; the source is the file `<sub>.shell.html` next to the manifest file, no file — the field is not written; an absent field and an empty one are the same «no page»; MAY be absent in an implementation without pages",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "files": {
-   "description": "статические файлы подсистемы (P/02.1 `console.files`): путь → размер и SHA-256 байтов; ключи — ровно перечень манифеста; нет перечня или он пуст — поля нет. Байты — строки `platform/manifest/<sub>/files/<sha256>/<n>` (P/02.3 Н1.5)",
+   "description": "static files of the subsystem (P/02.1 `console.files`): path → size and SHA-256 of the bytes; the keys are exactly the list of the manifest; no list or it is empty — no field. The bytes are the rows `platform/manifest/<sub>/files/<sha256>/<n>` (P/02.3 Н1.5)",
    "type": "object",
    "additionalProperties": {
-    "description": "файл: `size` — байтов, `sha256` — hex; число частей выводится: size / FILE_PART вверх",
+    "description": "file: `size` — bytes, `sha256` — hex; the number of parts is derived: size / FILE_PART rounded up",
     "type": "object",
     "properties": {
      "sha256": {
       "$ref": "#/$defs/common.sha256_hex",
-      "description": "дайджест байтов файла"
+      "description": "digest of the file bytes"
      },
      "size": {
       "$ref": "#/$defs/common.uint53",
-      "description": "байтов в файле, не больше FILE_MAX (P/02.3 Н1.5)",
+      "description": "bytes in the file, at most FILE_MAX (P/02.3 Н1.5)",
       "maximum": 8388608
      }
     },
@@ -77,7 +77,7 @@
   ]
  },
  "additionalProperties": {
-  "description": "лишние поля: читатель их не читает и ими не отказывает, писатель их не пишет (P/02.3 Н1.5 rules; ADR-0088 стр. 66–67; решение «Архитектора» по 1bd77782b)",
+  "description": "extra fields: the reader does not read them and does not refuse because of them, the writer does not write them (P/02.3 Н1.5 rules; ADR-0088 lines 66–67; the Architect's decision on 1bd77782b)",
   "x-codec": [
    "any"
   ]
