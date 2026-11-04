@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "asbuilt/header",
+  "title": "Snapshot header (ADR-0123 доп. (1) п. 2)",
+  "description": "Passport of a static snapshot. commit: implementation HEAD; dirty: the lesson tree had uncommitted changes; spec: full SHA of the export at the implementation's own pin (SPEC_VERSION), empty when no export repository was given.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["commit", "dirty", "extractor", "implementation", "lesson", "module", "source", "spec"],
+  "properties": {
+    "commit": {"type": "string"},
+    "dirty": {"type": "boolean"},
+    "extractor": {"type": "string", "description": "asbuilt/<n>+goextract/<n>"},
+    "implementation": {"type": "string"},
+    "lesson": {"type": "string"},
+    "module": {"type": "string"},
+    "source": {"const": "static"},
+    "spec": {"type": "string"}
+  }
+}

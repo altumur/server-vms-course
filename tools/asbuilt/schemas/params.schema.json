@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "asbuilt/params",
+  "title": "params — flags, environment names, top-level constants, -h output",
+  "description": "Normalisation: lists sorted (flags by name, set, at; env by name, at; consts by pkg, name, at; help by package); host paths in defaults, usages and values are masked as <path:sha256[:12]>; environment values are never read, only names. `at` is file:line relative to the module root.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["header", "consts", "env", "flags", "help", "unresolved"],
+  "properties": {
+    "header": {"$ref": "header.schema.json"},
+    "flags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["at", "bound", "default", "expr", "func", "method", "name", "set", "type", "usage"],
+        "properties": {
+          "at": {"type": "string"},
+          "bound": {"type": "boolean", "description": "false: the flag is declared but its value is discarded"},
+          "default": {"type": ["string", "null"], "description": "evaluated default; null when not a constant"},
+          "expr": {"type": "string", "description": "default as written in code"},
+          "func": {"type": "string"},
+          "method": {"type": "string", "description": "flag.FlagSet method, e.g. String, DurationVar"},
+          "name": {"type": "string"},
+          "set": {"type": "string", "description": "FlagSet name; <expr> when the name is not a constant; <commandline> for package flag"},
+          "type": {"type": "string"},
+          "usage": {"type": "string"}
+        }
+      }
+    },
+    "env": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["at", "call", "func", "name"],
+        "properties": {
+          "at": {"type": "string"},
+          "call": {"type": "string"},
+          "func": {"type": "string"},
+          "name": {"type": "string"}
+        }
+      }
+    },
+    "consts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["at", "exported", "expr", "name", "pkg", "scope", "type", "value"],
+        "properties": {
+          "at": {"type": "string"},
+          "exported": {"type": "boolean"},
+          "expr": {"type": "string"},
+          "name": {"type": "string"},
+          "pkg": {"type": "string"},
+          "scope": {"enum": ["lesson", "shared"]},
+          "type": {"type": ["string", "null"]},
+          "value": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "help": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["exit", "flags", "package", "set", "status"],
+        "properties": {
+          "exit": {"type": ["integer", "null"]},
+          "package": {"type": "string"},
+          "set": {"type": ["string", "null"]},
+          "status": {"enum": ["ok", "build-failed", "help-timeout", "help-crashed"]},
+          "flags": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["default", "name", "type", "usage"],
+              "properties": {
+                "default": {"type": ["string", "null"]},
+                "name": {"type": "string"},
+                "type": {"type": "string"},
+                "usage": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "unresolved": {"$ref": "unresolved.schema.json"}
+  }
+}

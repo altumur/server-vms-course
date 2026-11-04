@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "asbuilt/refusals",
+  "title": "refusals — HTTP refusal literals, error words, process exits",
+  "description": "A constructor is any function called with (literal 4xx/5xx, literal kind). http: each call site (one record per code when the code is resolved from local assignments). wrappers: straight-line helpers `f := ctor(lit, lit); f.X[k] = …; return f`, their callers appear in http with resolved=wrapper. words: {expr} marks a non-constant part. Lists sorted: http by code, kind, at; errors by scope, at; exits by at.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["header", "errors", "exits", "http", "pairs", "unresolved", "wrappers"],
+  "$defs": {
+    "http": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "code", "fields", "func", "kind", "pkg", "resolved", "scope", "via", "word_source", "words"],
+      "properties": {
+        "at": {"type": "string"},
+        "code": {"type": "integer"},
+        "fields": {"type": "array", "items": {"type": "string"}, "description": "body fields besides kind and error"},
+        "func": {"type": "string"},
+        "kind": {"type": "string"},
+        "pkg": {"type": "string"},
+        "resolved": {"enum": ["literal", "local-assign", "wrapper", "code-unresolved"]},
+        "scope": {"enum": ["lesson", "shared"]},
+        "via": {"type": "string"},
+        "word_source": {"enum": ["assigned", "constructor", "constructor-default", "literal", "none"]},
+        "words": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  },
+  "properties": {
+    "header": {"$ref": "header.schema.json"},
+    "http": {"type": "array", "items": {"$ref": "#/$defs/http"}},
+    "wrappers": {"type": "array", "items": {"$ref": "#/$defs/http"}},
+    "pairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["pair", "sites"],
+        "properties": {"pair": {"type": "string"}, "sites": {"type": "integer"}}
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["at", "func", "pkg", "scope", "via", "words"],
+        "properties": {
+          "at": {"type": "string"},
+          "func": {"type": "string"},
+          "pkg": {"type": "string"},
+          "scope": {"enum": ["lesson", "shared"]},
+          "via": {"type": "string"},
+          "words": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "exits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["at", "call", "code", "func", "pkg"],
+        "properties": {
+          "at": {"type": "string"},
+          "call": {"type": "string"},
+          "code": {"type": "integer"},
+          "func": {"type": "string"},
+          "pkg": {"type": "string"}
+        }
+      }
+    },
+    "unresolved": {"$ref": "unresolved.schema.json"}
+  }
+}
