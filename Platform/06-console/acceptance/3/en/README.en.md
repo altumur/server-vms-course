@@ -12,13 +12,13 @@ doors belong to their owners; the common codes and the parsing of a console requ
 
 The session door of the console `testsub` (root) with `testsub2` mounted, without workers, without a domain (the console is open, the runner
 calls from the loopback). Before the scenario, stop the processes of the previous one, create separate empty row/object stores and
-clear the variables/the replay memory. Load the unchanged testsub and testsub2 by the section «Стенд» of the common acceptance README;
+clear the variables/the replay memory. Load the unchanged testsub and testsub2 by the section «Stand» of the common acceptance README;
 root is testsub, the second is available under /testsub2. There is no domain, the calls come from the loopback. The background controller/resource/worker do not
 run. The third manifest of the stand of chapter 6.5 (`probe-x`) is not needed by this scenario.
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Стенд» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей):
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей):
 a door without a prefix is the console; a subset of fields, `@header` in the expectation. In all, 1 scenario / 5 steps.
 
 A subset expect does not replace the check of the full HTTP form of the OpenAPI of the lesson: check the mandatory fields, the types, Content-Type,

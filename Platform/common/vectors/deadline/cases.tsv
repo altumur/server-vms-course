@@ -1,16 +1,16 @@
-# Запись присланного срока valid_until (договор просьбы и её метки «Просьба» valid_until; P/06.4 Н3 «подать просьбу» шаг 1).
-# Строка: case<TAB>input<TAB>expect<TAB>note. input — текст значения valid_until из тела (JSON); expect — {"written": <текст Н0>} или {"status": 400, "error": "bad deadline"}.
+# The record of the sent deadline valid_until (the contract of the request and its mark «Request» valid_until; P/06.4 Н3 «file a request» step 1).
+# A row: case<TAB>input<TAB>expect<TAB>note. input — the text of the value valid_until from the body (JSON); expect — {"written": <text Н0>} or {"status": 400, "error": "bad deadline"}.
 case	input	expect	note
-zero	0	{"written":"0"}	срок 0 — уже вышел, записан 0 (C47-DEADLINE-VECTORS-01)
-minus-one	-1	{"written":"0"}	отрицательное — 0 (C47-DEADLINE-VECTORS-01)
-minus-half	-0.5	{"written":"0"}	отрицательное — 0 (C47-DEADLINE-VECTORS-01)
-tiny	1e-12	{"written":"0"}	усечение вниз до мс — 0 (C47-DEADLINE-VECTORS-01)
-four-digits	1000.1234	{"written":"1000.123"}	усечение вниз до мс — 1000.123 (C47-DEADLINE-VECTORS-01)
-round-down	1.2349	{"written":"1.234"}	вниз, не к ближайшему — 1.234 (C47-DEADLINE-VECTORS-01)
-whole	1000	{"written":"1000"}	целое — без дробной части (C47-DEADLINE-VECTORS-01)
-exponent	1e3	{"written":"1000"}	число по значению — 1000 (C47-DEADLINE-VECTORS-01)
-null	null	{"status":400,"error":"bad deadline"}	не число — 400 (C47-DEADLINE-VECTORS-01)
-string	"5"	{"status":400,"error":"bad deadline"}	строка — 400, хотя и цифры (C47-DEADLINE-VECTORS-01)
+zero	0	{"written":"0"}	deadline 0 — already passed, written 0 (C47-DEADLINE-VECTORS-01)
+minus-one	-1	{"written":"0"}	negative — 0 (C47-DEADLINE-VECTORS-01)
+minus-half	-0.5	{"written":"0"}	negative — 0 (C47-DEADLINE-VECTORS-01)
+tiny	1e-12	{"written":"0"}	truncation down to ms — 0 (C47-DEADLINE-VECTORS-01)
+four-digits	1000.1234	{"written":"1000.123"}	truncation down to ms — 1000.123 (C47-DEADLINE-VECTORS-01)
+round-down	1.2349	{"written":"1.234"}	down, not to the nearest — 1.234 (C47-DEADLINE-VECTORS-01)
+whole	1000	{"written":"1000"}	whole — without a fractional part (C47-DEADLINE-VECTORS-01)
+exponent	1e3	{"written":"1000"}	a number by value — 1000 (C47-DEADLINE-VECTORS-01)
+null	null	{"status":400,"error":"bad deadline"}	not a number — 400 (C47-DEADLINE-VECTORS-01)
+string	"5"	{"status":400,"error":"bad deadline"}	a string — 400, even though digits (C47-DEADLINE-VECTORS-01)
 bool	true	{"status":400,"error":"bad deadline"}	bool — 400 (C47-DEADLINE-VECTORS-01)
-array	[]	{"status":400,"error":"bad deadline"}	список — 400 (C47-DEADLINE-VECTORS-01)
-overflow	1e400	{"status":400,"error":"bad deadline"}	число вне binary64 (переполнение) — записать временем нельзя: 400 (канон P/01.1 Н0, MAY-UNTIL-D8-01; C137-SCHEMA-TIME-01)
+array	[]	{"status":400,"error":"bad deadline"}	a list — 400 (C47-DEADLINE-VECTORS-01)
+overflow	1e400	{"status":400,"error":"bad deadline"}	a number outside binary64 (overflow) — cannot be written as a time: 400 (the canon P/01.1 Н0, MAY-UNTIL-D8-01; C137-SCHEMA-TIME-01)

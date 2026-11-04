@@ -701,7 +701,7 @@ components:
       pattern: "^(?:(?:[^/.\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]*|\\.[^/.\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]*|\\.\\.[^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+)(?:/(?:[^/.\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]*|\\.[^/.\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]*|\\.\\.[^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+))*)$"
       description: A non-empty relative key; each segment is non-empty and not a dot or two dots. The check of the meaning of the key
         — Н1.1; the schema does not check the symbolic links of the disk. All components and the full path with the root must fit
-        into the declared file profile (the event log contract «Имена файлов в общих деревьях»); otherwise 400 before the file operation.
+        into the declared file profile (the event log contract «File names in shared trees»); otherwise 400 before the file operation.
     UnitRef:
       type: string
       minLength: 3

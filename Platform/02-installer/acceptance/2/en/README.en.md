@@ -12,7 +12,7 @@ the vectors [`canonical`](../../../vectors/canonical/README.md); here — the wr
 ## puts.tsv
 
 The format of `puts.tsv` of [chapter 2.3](../../3/README.md) with a fourth column `canonical` and with directives between files. The installation is
-the command `manifest-put {socket} {file}` of the section «Стенд» of the common acceptance README; the store is an instance of the «Стенд» with a row ceiling of
+the command `manifest-put {socket} {file}` of the section «Stand» of the common acceptance README; the store is an instance of the «Stand» with a row ceiling of
 524288 bytes (common README, «Параметры каждого экземпляра»).
 
 **The form of the file.** UTF-8, lines separated by LF, fields by TAB. Lines starting with `#` and empty lines are skipped. The first
@@ -26,7 +26,7 @@ line not skipped is the header `case<TAB>puts<TAB>expect<TAB>canonical`, then on
 - `canonical` — the case name of [`vectors/canonical/cases.tsv`](../../../vectors/canonical/cases.tsv), whose bytes `expect/<case>.json`
   are the expected field `manifest` of the view row; `-` — there is no view row.
 
-**Directives** (between installations, through `admin.sock` of the instance — `{socket}` of the «Стенд», the operations of P/01.1; `<name>` is the `name`
+**Directives** (between installations, through `admin.sock` of the instance — `{socket}` of the «Stand», the operations of P/01.1; `<name>` is the `name`
 of the file before the directive):
 - `@view-delete` — `delete` of the row `platform/manifest/<name>/canonical/1`;
 - `@view-spoil` — read the row `platform/manifest/<name>/canonical/1` and write it back with `cas` by the version read, but with
@@ -77,7 +77,7 @@ The view ceiling is `max_value` of the answer of `GET /v1/status` of the store, 
 A pair of cases is a separate file `puts-ceiling.tsv` (the coverage audit P/02, B00; `puts.tsv` does not change its form; the form
 of the check — check_spec 0021baa83): the form is
 `case<TAB>puts<TAB>expect<TAB>canonical<TAB>ceiling`, the first four fields and the comparison are as in `puts.tsv`; `ceiling` is the row
-ceiling of the new instance of this line (`{row_ceiling}` of the start command of the «Стенд»). Before the case the runner verifies the parameter:
+ceiling of the new instance of this line (`{row_ceiling}` of the start command of the «Stand»). Before the case the runner verifies the parameter:
 `GET /v1/status` → `max_value` = `ceiling`, and by behaviour — `items` of weight exactly `ceiling` is written, one byte more — 413
 `toolarge` with `limit` = `ceiling`; if it does not match, the run is not performed. The file `probe` (the manifest row
 265 bytes, the mark 74, the view row `87 + 890` = 977; the numbers are after `worker.exec`, ADR-0091 addendum (5), finding of cammeta-c-go I02-G01):

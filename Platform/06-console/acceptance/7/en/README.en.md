@@ -3,7 +3,7 @@
 This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей),
-the section [«Стенд домена»](../../../../common/acceptance/README.md#стенд-домена) (a stand of several clusters). The norm of the chapter is
+the section [«Domain stand»](../../../../common/acceptance/README.md#стенд-домена) (a stand of several clusters). The norm of the chapter is
 [`06.7-console.norms.md`](../../../spec/06.7-console.norms.md) Н5. The scenarios were moved from the acceptances of М11/08 (01, 02, 03),
 М11/09 (06; 03 → 14), М11/05 (02 → 13) and М11/10 (01 → 15) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers,
 the names and the steps are the former ones, except `13-notes-unique` (in М11/05 — `02-notes-unique`), `14-break-glass` (in М11/09 —
@@ -25,9 +25,9 @@ one `id` in several manifests, the order; on the stand there is one manifest wit
 ## Stand
 
 **Scenarios 01–03, 15** (from the READMEs of the acceptances of М11/08 and М11/10). The preparation is as in the acceptance of [chapter 8.3](../../../../08-domain/acceptance/3/README.md)
-(«Стенд», «Подготовка каждого сценария»): the clusters `hold`, `m1`, `m2`, the catalogue `testsub`. The doors `holder`,
+(«Stand», «Подготовка каждого сценария»): the clusters `hold`, `m1`, `m2`, the catalogue `testsub`. The doors `holder`,
 `holder@<кластер>`, `member <кластер> console`, `signer` and the directives `@domain`, `@person`, `@env`, `@start domain on`,
-`@stop domain`, `@move` — the section «Стенд домена» of the common acceptance README; the forwarding environment is there too (`CLUSTERS` of the consoles,
+`@stop domain`, `@move` — the section «Domain stand» of the common acceptance README; the forwarding environment is there too (`CLUSTERS` of the consoles,
 `DOMAIN_CONSOLE_URL` of the process `domain`, `SIGNER_URL` only at `hold`). The runner goes as the person `root` (chapter 8.4).
 
 - `member hold console` is the console of the holder's cluster: `GET /domain` at it is also a forwarding (into the domain console of its own
@@ -64,7 +64,7 @@ an invalid token: the identity is not proved (step 5); `HEAD` and a file — `40
 A logged-in person without a grant (`403`) — by reading.
 
 **Scenarios 06, 13, 14** (from the READMEs of the acceptances of М11/05 and М11/09). The preparation is as in the acceptance of [chapter 8.5](../../../../08-domain/acceptance/5/README.md)
-(«Подготовка»): the catalogue of each cluster is `testsub` and `testsub2`; on each cluster the controllers of both work, the worker
+(«Preparation»): the catalogue of each cluster is `testsub` and `testsub2`; on each cluster the controllers of both work, the worker
 `w-1` of the manifest `testsub`, the worker `t-1` of the manifest `testsub2` (with the training writer of contributions — [chapter 8.5](../../../../08-domain/spec/08.5-domain.norms.md) Н5) and
 the resource of its own server `srv-<кластер>`; before the steps the store of each cluster has the counter `testsub` `c1-<кластер>` and the shelf
 `testsub2` `sh1` `{zone: z1, server: srv-<кластер>}`. `console2` at `member` is the prefix `/testsub2`.
@@ -83,11 +83,11 @@ An equal answer time to an unknown and to a wrong one, the journal and the limit
 
 `answer too large`, `answer broke off`, the recognition of `X-Operator: console` by the role and the journal `domain.forwarded` the stand does not
 cause: they are checked by reading (Н5 of the chapter). How the runner passes the environment and restarts the console and the agent of a cluster with
-a variable (`@env`) — «Решает реализация» item 2 of the chapter.
+a variable (`@env`) — «Implementation decides» item 2 of the chapter.
 
 ## scenarios.tsv
 
-The format is the dictionary of the «Стенд» of the common acceptance README and the section «Стенд домена»; the expectation is a subset of fields. In total 10
+The format is the dictionary of the «Stand» of the common acceptance README and the section «Domain stand»; the expectation is a subset of fields. In total 10
 scenarios / 106 steps.
 
 ## corrections.tsv

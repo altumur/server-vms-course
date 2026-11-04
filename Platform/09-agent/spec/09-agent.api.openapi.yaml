@@ -10,7 +10,7 @@
 # AgentSignature, the answer TokenRefused. This contract does not list the codes of the holder's transitions (analysis of review of stage A 8–10,
 # decision 3): at the token door of the relay they are the operation holderToken of OpenAPI 08; at the local door the agent returns the code and body
 # of the holder as they came — their forms by a reference to OpenAPI 08. The relay door's own codes — P/09.2 Н2, the body — the common Refusal
-# of OpenAPI 08 (without narrowing). The refusals of the local door — the contract «Отказы» and P/09.1 Н4.
+# of OpenAPI 08 (without narrowing). The refusals of the local door — the contract «Refusals» and P/09.1 Н4.
 # From the contract М11/7 (07-worker-tokens.api.openapi.yaml) the path /tokens/{sub}/{kind} is moved with the schemas LocalAsk, Given,
 # the answers Unavailable, InvalidReply — stage B, without a change of behaviour; Sub, Kind, RequestId — by a reference to OpenAPI 08
 # (the same form); the copy of Refusal of М11/7 (the reason list) is replaced by a reference to TokenRefusal, Deposed, StandbyBody of OpenAPI 08 and
@@ -23,7 +23,7 @@ info:
   description: 'Canon — the norms of chapters 09.1-agent.norms.md (Н1.6, Н2, Н4) and 09.2-agent.norms.md (Н1.1, Н1.4, Н1.6, Н2, Н4),
     the local token door contract. Request parsing — P/01.1 Н2.1 (at the relay door — with the deviations of P/06.5 Н2).
     The agent in the platform process (P/09.1 Н1.11) does not listen on the local door: a call, not a door — the body, answer and refusals are the same
-    (the local token door contract «Вызов в процессе»). The doors that the agent calls as a client are with their owners: the holder
+    (the local token door contract «The call in the process»). The doors that the agent calls as a client are with their owners: the holder
     POST /api/member, GET /api/carry, POST /api/tokens, POST /api/relay — OpenAPI of lesson 8; GET /api/held — OpenAPI of lesson 6 (chapter 6.7); the doors
     of units and /events — OpenAPI of lesson 6. The internal API is not normed; the contract does not claim that any implementation
     has been checked against it.'
@@ -43,8 +43,8 @@ paths:
         description: 'The local door of the agent: the Unix socket of the stream <AGENT_TOKEN_DIR>/<роль>.sock (AGENT_TOKEN_DIR, default
           /run/w2c/domainagent; <роль> — <sub>worker), HTTP/1.1 over it; the identity of the connection — the role of the socket, the body does not
           name the role. OpenAPI 3.1 does not express a socket: url — an example, not an address. Canon — Platform/common/contracts/local-token-door.md
-          «Сокет роли», «Дверь».'
-    description: 'Chapter 9.1 Н1.6, Н2; the local token door contract «Дверь», «Отказы». The agent signs the request with the member key
+          «The role socket», «The door».'
+    description: 'Chapter 9.1 Н1.6, Н2; the local token door contract «The door», «Refusals». The agent signs the request with the member key
       (P/09.1 Н1.3) and carries it to the holder (P/08.7) or through a relay (chapter 9.2) byte for byte; the holder''s answer it opens
       itself (P/09.1 Н1.6 agent).'
     parameters:
@@ -56,7 +56,7 @@ paths:
       summary: A worker asks the agent of its cluster for a token
       requestBody:
         required: true
-        description: 'Larger than TOKEN_BODY (4 KiB, the bytes of the body as they came) — 413; the header Transfer-Encoding — 400 (the contract «Дверь»
+        description: 'Larger than TOKEN_BODY (4 KiB, the bytes of the body as they came) — 413; the header Transfer-Encoding — 400 (the contract «The door»
           body, request, TOKEN_BODY).'
         content:
           application/json:
@@ -64,18 +64,18 @@ paths:
       responses:
         '200':
           description: 'The token — only to this connection: m1 of the holder''s answer is opened, request_id is the same, exp > now (the contract
-            «Дверь» answer; P/09.1 Н1.6 agent)'
+            «The door» answer; P/09.1 Н1.6 agent)'
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Given'}
         '400':
-          description: 'At the agent: the body is out of form, the header Transfer-Encoding (the contract «Дверь» request, «Отказы»); or the code and
+          description: 'At the agent: the body is out of form, the header Transfer-Encoding (the contract «The door» request, «Refusals»); or the code and
             body of the holder as they came (P/08.7 Н4)'
           content:
             application/json:
               schema: {$ref: '#/components/schemas/AgentOrHolderRefusal'}
         '401':
-          description: 'At the agent: there is no role identity (the contract «Отказы»); or the code and body of the holder as they came — the words of the agent
+          description: 'At the agent: there is no role identity (the contract «Refusals»); or the code and body of the holder as they came — the words of the agent
             signature contract (P/08.7 Н4)'
           content:
             application/json:
@@ -83,8 +83,8 @@ paths:
         '403':
           $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/responses/TokenRefused'
         '404':
-          description: 'At the agent: no route — the <sub> of the path is not a manifest of the catalogue, the request does not go to the holder (the contract «Дверь»
-            request, «Отказы»); or the code and body of the holder as they came (P/08.7 Н4)'
+          description: 'At the agent: no route — the <sub> of the path is not a manifest of the catalogue, the request does not go to the holder (the contract «The door»
+            request, «Refusals»); or the code and body of the holder as they came (P/08.7 Н4)'
           content:
             application/json:
               schema: {$ref: '#/components/schemas/AgentOrHolderRefusal'}
@@ -106,7 +106,7 @@ paths:
           $ref: '#/components/responses/InvalidReply'
         '503':
           description: 'At the agent: upstream did not answer within TOKEN_WAIT (the holder or the relay; 502 did not answer of the relay — also
-            503) — unavailable (the contract «Дверь» no_queue; the worker asks again);
+            503) — unavailable (the contract «The door» no_queue; the worker asks again);
             or standby of the holder as it came (P/08.10 Н1.7)'
           content:
             application/json:
@@ -241,7 +241,7 @@ paths:
               schema:
                 $ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/TokenSealed'
         '502':
-          description: 'The holder did not answer — did not answer, as forwarding does (the forwarding contract «Пересылка — одна функция»
+          description: 'The holder did not answer — did not answer, as forwarding does (the forwarding contract «Forwarding is one function»
             answer; the Architect''s decision on the М11 check, Y8; P/09.2 Н2, Н4)'
           content:
             application/json:
@@ -249,7 +249,7 @@ paths:
 components:
   responses:
     InvalidReply:
-      description: 'At the agent: m1 did not open, not the same request_id or exp ≤ now (P/09.1 Н1.6 agent; the contract «Отказы»)'
+      description: 'At the agent: m1 did not open, not the same request_id or exp ≤ now (P/09.1 Н1.6 agent; the contract «Refusals»)'
       content:
         application/json:
           schema:
@@ -293,17 +293,17 @@ components:
       type: object
       required: [request_id, ref]
       additionalProperties: false
-      description: 'The body of the local door (the contract «Дверь» body); the body does not name the role.'
+      description: 'The body of the local door (the contract «The door» body); the body does not name the role.'
       properties:
         request_id: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/RequestId'}
         ref: {type: string, minLength: 1}
         by: {type: string, minLength: 1}
-        revoked: {type: string, pattern: '^(?:[0-9a-f]{16})$', description: 'jti of the token that the recipient refused with the word revoked (the contract «Дверь» body).'}
+        revoked: {type: string, pattern: '^(?:[0-9a-f]{16})$', description: 'jti of the token that the recipient refused with the word revoked (the contract «The door» body).'}
     Given:
       type: object
       required: [request_id, token, exp]
       additionalProperties: false
-      description: 'The answer of the local door (the contract «Дверь» answer) — the JSON text from m1 of the holder''s answer (P/08.7 Н1.3 answer).'
+      description: 'The answer of the local door (the contract «The door» answer) — the JSON text from m1 of the holder''s answer (P/08.7 Н1.3 answer).'
       properties:
         request_id: {$ref: '../../08-domain/spec/08-domain.api.openapi.yaml#/components/schemas/RequestId'}
         token: {type: string, minLength: 1}
@@ -312,7 +312,7 @@ components:
       type: object
       required: [error]
       additionalProperties: false
-      description: 'A refusal of the agent itself at the local door (the contract «Отказы»; LTD-E02): 400 bad request, 401 unauthorized, 404 not
+      description: 'A refusal of the agent itself at the local door (the contract «Refusals»; LTD-E02): 400 bad request, 401 unauthorized, 404 not
         found, 413 refused (P/08.7 Н4), 502 invalid token reply, 503 unavailable; the code and error are normative, detail — the words of the implementation'
       properties:
         error: {type: string, enum: [bad request, unauthorized, not found, refused, invalid token reply, unavailable]}
@@ -327,7 +327,7 @@ components:
       required: [error]
       additionalProperties: false
       description: 'At the agent: upstream did not answer within TOKEN_WAIT — the holder or the relay; 502 did not answer of the relay
-        — also 503 (the contract «Дверь» no_queue, «Отказы»; analysis of review of stage B 8–10, № 22, Claude М-4)'
+        — also 503 (the contract «The door» no_queue, «Refusals»; analysis of review of stage B 8–10, № 22, Claude М-4)'
       properties:
         error: {const: unavailable}
         detail: {type: string}

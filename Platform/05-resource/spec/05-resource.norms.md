@@ -407,8 +407,8 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `server` | строка; целиком `[a-z0-9]+(-[a-z0-9]+)*` | обязателен |  | its own server — SERVER_NAME by the grammar of the environment file contract «Переменные окружения», as for the presence lock (stage C guess R05-G07, the Architect's decision of 2026-10-23); not by it or not equal to the server of the key — the heartbeat is unreadable (P/06.5 Н2) |
-| `box` | строка | необязателен |  | the box (BOX_ID, the environment file contract «Переменные окружения») |
+| `server` | строка; целиком `[a-z0-9]+(-[a-z0-9]+)*` | обязателен |  | its own server — SERVER_NAME by the grammar of the environment file contract «Environment variables», as for the presence lock (stage C guess R05-G07, the Architect's decision of 2026-10-23); not by it or not equal to the server of the key — the heartbeat is unreadable (P/06.5 Н2) |
+| `box` | строка | необязателен |  | the box (BOX_ID, the environment file contract «Environment variables») |
 | `ts` | время (P/01.1 Н0 «Время в строке») | обязателен |  | wall-clock seconds of the heartbeat; written every 10 s |
 | `url` | строка | обязателен |  | the address of the resource door |
 | `schema` | целое; ≥ 1; ≤ 9007199254740991; целый знак и у читателя (x-whole) | обязателен |  | SCHEMA of the build (P/06.6 Н1.1а heartbeat): a JSON integer without a fractional part and exponent, ≥ 1; `1.0`, `1e0`, `-1`, a string, null — the process schema is unknown |
@@ -428,13 +428,13 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 | `instances.<имя>` | строка; целиком `[\s\S]+` | необязателен |  |  |
 | `short` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | how many bytes the mark asked to free and could not (P/06.5 Н3 /metrics w2c_resource_short_bytes): Σ over the volumes of the largest need (> 0) among the effective own `free-<server>-<volume>` of this relieve pass — subsystems on one volume are not summed; need — by Н3 relieve, rounded up to a whole byte, saturation 2^53−1; platform/space disabled, no requests, need ≤ 0 — 0; the pass input was not read — the previous value (stage C guess R05-G03, the Architect's decision of 2026-10-23) |
 | `waits` | отображение `{waiting, held, full, replaced, max}` | необязателен |  | counters of the /events/wait waits (Н1.6); in every heartbeat (E39) |
-| `waits.waiting` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
-| `waits.held` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
-| `waits.full` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
-| `waits.replaced` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
-| `waits.max` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
+| `waits.waiting` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | an integer from 0 to 2^53 − 1 |
+| `waits.held` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | an integer from 0 to 2^53 − 1 |
+| `waits.full` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | an integer from 0 to 2^53 − 1 |
+| `waits.replaced` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | an integer from 0 to 2^53 − 1 |
+| `waits.max` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | an integer from 0 to 2^53 − 1 |
 | `mirrors` | отображение имена автора: имя — строка, значение — целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | `{<сервер>: n}` — copies of neighbours in .mirror/ |
-| `mirrors.<имя>` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | целое от 0 до 2^53 − 1 |
+| `mirrors.<имя>` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | an integer from 0 to 2^53 − 1 |
 | `pass_started` | время (P/01.1 Н0 «Время в строке») | необязателен |  | the start of the current pass (Н3 «проход ресурса») |
 | `pass_stalled` | число; ≥ 0 | необязателен |  | seconds, only while the pass is hung (PULSE_LIMIT) |
 | `volumes_stuck` | отображение имена автора: имя — строка, значение — число | необязателен |  | volumes whose probe did not answer (P/06.5 ResourceRow) |
@@ -444,7 +444,7 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 | `door.mode` | строка; одно из: `loopback`, `mtls` | обязателен |  | loopback — without RESOURCE_TLS, loopback only; mtls — RESOURCE_TLS=1, mutual TLS (ADR-0075) |
 | `door.cert_until` | число | необязателен |  | wall-clock seconds of the expiry of the server certificate of its own set (W2C_TLS_DIR); with mtls |
 | `garbled_rows` | отображение имена автора: имя — строка, значение — целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | unreadable rows of the tables read by the resource (holds), per table |
-| `garbled_rows.<имя>` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | целое от 0 до 2^53 − 1 |
+| `garbled_rows.<имя>` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | an integer from 0 to 2^53 − 1 |
 | `retention_garbled` | список, не короче 1, без повторов, элемент — строка; целиком `[a-z][a-z0-9_-]{0,31}` | необязателен |  | subsystems where any term (`<sub>/retention` or `<sub>/alarms_retention`) has a wrong days (P/05 Н1.3 retention rule), regardless of retention_withheld (R05-RETENTION-MIXED-51-01), in ascending byte order; none such — the field is absent (P/05 Н3 retain, Н4; stage C guess C05-RETENTION-PULSE-33, the Architect's decision of 2026-10-25) |
 | `retention_garbled[]` | строка; целиком `[a-z][a-z0-9_-]{0,31}` | необязателен |  |  |
 | `retention_withheld` | отображение имена автора: имя — строка; целиком `[a-z][a-z0-9_-]{0,31}`, значение — строка; одно из: `days_garbled`, `unknown`, `holds_unread` | необязателен |  | why a dependent tree of the subsystem was not cleaned up by term in this pass — a closed list: days_garbled — a wrong days, unknown — the term row was not read (the store did not answer), holds_unread — the holds were not read (the holds contract); a subsystem has one cause, in the order unknown → days_garbled → holds_unread; each tree is held by its own term (R05-G08, R05-RETENTION-MIXED-51-01); no cause — the field is absent (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33) |
@@ -459,19 +459,19 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 | `restore.<имя>.last_error` | строка | необязателен |  |  |
 | `restore.<имя>.error_at` | число | необязателен |  |  |
 | `restore.<имя>.restored` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | only the buckets actually pulled from this neighbour; a bucket already lying on the volume is not counted (Н1.4 «Восстановление бакетов») |
-| `restore.<имя>.missing` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
-| `restore.<имя>.failures` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
-| `restore.<имя>.lines_garbled` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | целое от 0 до 2^53 − 1 |
+| `restore.<имя>.missing` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | an integer from 0 to 2^53 − 1 |
+| `restore.<имя>.failures` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | an integer from 0 to 2^53 − 1 |
+| `restore.<имя>.lines_garbled` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | an integer from 0 to 2^53 − 1 |
 | `restore.<имя>.next` | число | необязателен |  |  |
 | `mirror` | отображение `{skipped, failed, peer_errors, lines_garbled, sum_refused?, peer_sum_refused?, pull_sum_bad?, unsummed?}` | необязателен |  | mirror counters (Н1.4 mirror; skipped — buckets larger than 64 MiB); in every heartbeat (E39) |
-| `mirror.skipped` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
-| `mirror.failed` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
-| `mirror.peer_errors` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
-| `mirror.lines_garbled` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
-| `mirror.sum_refused` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | целое от 0 до 2^53 − 1 |
-| `mirror.peer_sum_refused` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | целое от 0 до 2^53 − 1 |
-| `mirror.pull_sum_bad` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | целое от 0 до 2^53 − 1 |
-| `mirror.unsummed` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | целое от 0 до 2^53 − 1 |
+| `mirror.skipped` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | an integer from 0 to 2^53 − 1 |
+| `mirror.failed` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | an integer from 0 to 2^53 − 1 |
+| `mirror.peer_errors` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | an integer from 0 to 2^53 − 1 |
+| `mirror.lines_garbled` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | an integer from 0 to 2^53 − 1 |
+| `mirror.sum_refused` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | an integer from 0 to 2^53 − 1 |
+| `mirror.peer_sum_refused` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | an integer from 0 to 2^53 − 1 |
+| `mirror.pull_sum_bad` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | an integer from 0 to 2^53 − 1 |
+| `mirror.unsummed` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | an integer from 0 to 2^53 − 1 |
 
 **`disk`**
 
@@ -684,7 +684,7 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| файл целиком | `resource` | the content is empty or out of form (not a JSON object, a field missing, a field out of form, an extra field): the lock is busy — a live process without a number: it enters `room.<sub>`, does not enter workers, running, `live.<sub>`; the lock is taken by the resource and the check matched — gone by the file, there is no key `<sub>/<worker>`, the file MAY be deleted; unknown — a file that cannot be read (an open or read error), and an flock or fstat/stat error, except «busy» and ENOENT at stat (the Architect's decision of 2026-10-20, analysis of review of stage B 6–7), not its content (analysis of review of stage B 3–5, № 23) | 0 | строка | договор замка присутствия «Замок», «Счёт room»; P/05 Н1.4 workers, room |
+| файл целиком | `resource` | the content is empty or out of form (not a JSON object, a field missing, a field out of form, an extra field): the lock is busy — a live process without a number: it enters `room.<sub>`, does not enter workers, running, `live.<sub>`; the lock is taken by the resource and the check matched — gone by the file, there is no key `<sub>/<worker>`, the file MAY be deleted; unknown — a file that cannot be read (an open or read error), and an flock or fstat/stat error, except «busy» and ENOENT at stat (the Architect's decision of 2026-10-20, analysis of review of stage B 6–7), not its content (analysis of review of stage B 3–5, № 23) | 0 | строка | договор замка присутствия «Lock», «Счёт room»; P/05 Н1.4 workers, room |
 
 #### `.gone/<ключ>` — объект
 

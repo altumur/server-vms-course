@@ -1,34 +1,34 @@
-# Азбука меток (договор common/contracts/labels.md; догадки стадии C L01–L03): метка, вывод набора, чтение текста списка. Форма — README.
+# The alphabet of labels (the contract common/contracts/labels.md; the guesses of stage C L01–L03): a label, the output of a set, the reading of a list's text. The form — README.
 case	op	input	expect	note
-word	label	"gpu"	ok	буква и буквы
-all_signs	label	"vlan:cctv-a.b_1"	ok	`_`, `.`, `:`, `-` после первого знака
-first_digit	label	"1a"	ok	первая — цифра
-upper	label	"GPU"	ok	регистр различается, оба допустимы
-len_64	label	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	ok	64 знака
-len_65	label	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	@refuse	65 знаков
-empty	label	""	@refuse	пустая — не метка
-first_underscore	label	"_a"	@refuse	первая — не буква и не цифра
-first_colon	label	":a"	@refuse	первая — не буква и не цифра
-space	label	"vlan a"	@refuse	пробел (P/06.6 сц. 05 шаг 2)
-comma	label	"a,b"	@refuse	запятая
-bracket	label	"[a"	@refuse	`[` — не знак азбуки
-newline	label	"a\n"	@refuse	перевод строки
-non_ascii	label	"é"	@refuse	знак вне ASCII
-bang	label	"gpu!"	@refuse	знак вне азбуки
-out_bytes	set_write	["vlan:b","Vlan:a","gpu"]	"Vlan:a,gpu,vlan:b"	по возрастанию байтов: заглавные раньше строчных (L01)
-out_not_numeric	set_write	["a9","a10"]	"a10,a9"	байты, не числа (L01)
-out_one	set_write	["gpu"]	"gpu"	один элемент без запятой
-out_empty	set_write	[]	""	ни одной метки
-out_repeat	set_write	["vlan:a","vlan:a"]	@refuse	повтор — отказ, не сжатие (P/06.6 сц. 05 шаг 5)
-out_case_distinct	set_write	["a","A"]	"A,a"	регистр различается: две метки
-read_commas	text_read	"b,a"	["a","b"]	через запятую; набор — по байтам
-read_empty	text_read	""	[]	"" — ни одной метки
-read_json	text_read	"[\"b\",\"a\"]"	["a","b"]	ведущий `[` — массив JSON (L03)
-read_json_spaced	text_read	"[ \"a\", \"b\" ]"	["a","b"]	пробелы между лексемами допустимы (L02, L03)
-read_bracket_inside	text_read	"a,[b"	@refuse	`[` не первым знаком — знак метки, отказ азбуки (L03)
-read_empty_item	text_read	"a,,b"	@refuse	пустой элемент у меток недопустим
-read_json_bad_label	text_read	"[\"a b\"]"	@refuse	элемент массива — тоже по азбуке
-read_repeat	text_read	"a,a"	@refuse	повтор — отказ (P/06.6 сц. 05 шаг 6, query пробы)
-env_repeat	env_labels	"a,a"	["a"]	LABELS окружения: повтор — не отказ, метки узла набором (ENV54-02)
-env_order	env_labels	"b,a"	["a","b"]	набор по output — по возрастанию байтов
-env_bad	env_labels	"a,b@c"	@refuse	слово вне азбуки — отказ старта, код 2 (P/03.2 Н3 «старт()» шаг 2)
+word	label	"gpu"	ok	a letter and letters
+all_signs	label	"vlan:cctv-a.b_1"	ok	`_`, `.`, `:`, `-` after the first character
+first_digit	label	"1a"	ok	the first is a digit
+upper	label	"GPU"	ok	case differs, both are allowed
+len_64	label	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	ok	64 characters
+len_65	label	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	@refuse	65 characters
+empty	label	""	@refuse	empty — not a label
+first_underscore	label	"_a"	@refuse	the first is neither a letter nor a digit
+first_colon	label	":a"	@refuse	the first is neither a letter nor a digit
+space	label	"vlan a"	@refuse	a space (P/06.6 sc. 05 step 2)
+comma	label	"a,b"	@refuse	a comma
+bracket	label	"[a"	@refuse	`[` — not a character of the alphabet
+newline	label	"a\n"	@refuse	a line feed
+non_ascii	label	"é"	@refuse	a character outside ASCII
+bang	label	"gpu!"	@refuse	a character outside the alphabet
+out_bytes	set_write	["vlan:b","Vlan:a","gpu"]	"Vlan:a,gpu,vlan:b"	in ascending bytes: uppercase before lowercase (L01)
+out_not_numeric	set_write	["a9","a10"]	"a10,a9"	bytes, not numbers (L01)
+out_one	set_write	["gpu"]	"gpu"	one element without a comma
+out_empty	set_write	[]	""	not a single label
+out_repeat	set_write	["vlan:a","vlan:a"]	@refuse	a repeat — a refusal, not a compression (P/06.6 sc. 05 step 5)
+out_case_distinct	set_write	["a","A"]	"A,a"	case differs: two labels
+read_commas	text_read	"b,a"	["a","b"]	separated by commas; the set — by bytes
+read_empty	text_read	""	[]	"" — not a single label
+read_json	text_read	"[\"b\",\"a\"]"	["a","b"]	a leading `[` — a JSON array (L03)
+read_json_spaced	text_read	"[ \"a\", \"b\" ]"	["a","b"]	spaces between tokens are allowed (L02, L03)
+read_bracket_inside	text_read	"a,[b"	@refuse	`[` not as the first character — a label character, an alphabet refusal (L03)
+read_empty_item	text_read	"a,,b"	@refuse	an empty element is not allowed for labels
+read_json_bad_label	text_read	"[\"a b\"]"	@refuse	an element of the array — also by the alphabet
+read_repeat	text_read	"a,a"	@refuse	a repeat — a refusal (P/06.6 sc. 05 step 6, query of the probe)
+env_repeat	env_labels	"a,a"	["a"]	LABELS of the environment: a repeat — not a refusal, the node's labels as a set (ENV54-02)
+env_order	env_labels	"b,a"	["a","b"]	the set by output — in ascending bytes
+env_bad	env_labels	"a,b@c"	@refuse	a word outside the alphabet — a start refusal, code 2 (P/03.2 Н3 «start()» step 2)

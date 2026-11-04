@@ -13,7 +13,7 @@ The scenarios and the manifest variants were moved from the acceptance of М10/6
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Стенд» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей): a door without a prefix is the store, `@as <роль>`, `@header` before the method, `$имя`, `ASSERT`;
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей): a door without a prefix is the store, `@as <роль>`, `@header` before the method, `$имя`, `ASSERT`;
 the expectation is a subset of fields, `index` may be omitted. Own additions:
 
 - `expect` without a body at the code `403` — the full form `{kind: forbidden, error: …}`. For a refusal of an operation on a row, error names the role, the action and the key.
@@ -60,7 +60,7 @@ line per probe: a role of the rights file (P/01.2 Н1.1), the action `read` | `w
 
 **Execution.** For each variant the runner:
 1. calls the rights derivation tool of the implementation (Н2, «Implementation decides» item 1) on the catalogue of the variant with the deployment `dep` —
-   by the rights derivation command of the «Стенд» of the common acceptance README; code ≠ 0 — a mismatch of the variant;
+   by the rights derivation command of the «Stand» of the common acceptance README; code ≠ 0 — a mismatch of the variant;
 2. starts a fresh store instance with this file (`{rights}`);
 3. for each line calls through the role socket: `read` — `GET /v1/get?key=<ключ>`, `write` — `put` with `items: {"p": "1"}`, `delete`
    — `delete`, without `cas` and a guard. The rule is as in the evaluator vector (`Platform/01-store/vectors/rights-evaluator`):

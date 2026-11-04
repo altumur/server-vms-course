@@ -25,7 +25,7 @@ Install the current testsub from the common testdata with its service mark with 
 rights. There are no units and no user rows yet. The preparation is not a transfer of the state of
 the previous scenario and not a check of the installer.
 
-Start the store, a new console testsub and the resource srv-a per the section «Стенд» of the common acceptance README. Their doors must be ready;
+Start the store, a new console testsub and the resource srv-a per the section «Stand» of the common acceptance README. Their doors must be ready;
 the resource is registered and available to the console before the first step. Sc. `09-resource-door`, `10-body-copy`, `16-presence-lock`, 17–28, 31 and
 37–41 do not start the resource before the first step: a step of the scenario raises it (`@start resource`; in sc. 17 and 18 — step 2, in 24–28 — after
 the worker, in 31 — after the resource `srv-b`, in 37–41 — after the rows its first pass reads). All the processes of this box
@@ -33,11 +33,11 @@ use one BOX_ID and server=srv-a; each new process gets a new instance.
 There is no controller, except sc. 42 (`@start controller` — by a step); there are no workers, except `w-1` (`testsub`) of sc. 16-presence-lock,
 19-service-names, 42 and 43, `t-srv-a-2`, `t-1`, `t-srv-a-1` (`testsub2`) of sc. 20-door-room and `t-srv-a-1` of sc. 24–28, which their
 steps start. There is no second server, except the resource `srv-b` of sc. 31 (`@start resource on srv-b` — its own `PLATFORM_DIR`, its own door, the same
-store; «Стенд»). platform/mirror and platform/space are not set, except sc. 24–28, 39–41, where a step writes them through the door `admin`; free
+store; «Stand»). platform/mirror and platform/space are not set, except sc. 24–28, 39–41, where a step writes them through the door `admin`; free
 requests and copies are not prepared. The build is schema 1.
 
 Sc. `20-door-room`, `23-object-ceiling`, 24–31, 37–41, 44 and 45 install the catalogue `testsub` and `testsub2` the same way as `10-body-copy` (the order —
-«Стенд»; the runner installs `testsub2` when a step of the scenario names it).
+«Stand»; the runner installs `testsub2` when a step of the scenario names it).
 Sc. `10-body-copy` (the body copy at the resource, from М10/10; T10, T11) installs the catalogue `testsub` and `testsub2` (the order — «Стенд»;
 `testsub2` declares a blob field, `testsub` does not), starts the resource by step 1 (`@start resource`); the resource door `resource` with
 an admissible identity of a neighbour; the digest `sha256-190267417aed…` — of the bytes `peer-copy`. It needs neither the console nor the controller.
@@ -51,7 +51,7 @@ these scenarios do not replace the check of the TLS refusals.
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Стенд» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
 In total 35 scenarios / 292 steps; sc. 29–45 (the second pass of the audit, below) — 128 steps; sc. 24–28 (the edges of `free_ask`, below) — 49 steps; the other 115: 86 HTTP (with @until; the Architect's decision of 2026-11-04 — by scenarios.tsv), four `@append event`, `@append event-raw`, 18 `@start`, `@sigkill`,
 `@cut`, `@mend`, `@sleep` and two ASSERT.
 
@@ -62,7 +62,7 @@ Steps of the reconciliation of python and go М10/6–11 (2026-10-18):
 - **02/7–12, 17–23** — the grammar of `unit`, `from`, `limit`, an empty and a repeated parameter, an unknown parameter and a non-ASCII
   `since` of the hint — 400; `from=1_0` — a number; `POST /events` at the resource — 405 without a body (E12–E17).
 - **02/13–16** — the console: `from` by the grammar of the time reader ([the gate and pass contract](../../../common/contracts/gate-and-pass.md)
-  «Числовые параметры query»): `%2B1`, `%201`, `1e3` — 400, `%31` (= `1`) — 200 (C06-EVENTS-QUERY-LEXEME-162-01, the Architect's decision of 2026-10-27).
+  «Numeric query parameters»): `%2B1`, `%201`, `1e3` — 400, `%31` (= `1`) — 200 (C06-EVENTS-QUERY-LEXEME-162-01, the Architect's decision of 2026-10-27).
 - **08** — the resource paths: `..`, `%2F` and a foreign tree in `/mirrored`, `/mirror`, `/events/{path}` — 404/400 (the write does not
   happen), `GET` on `/mirror/…` — 405, `/buckets` not of two segments — 404 (E26, E27, E29–E31, E36). The body of `PUT` is
   `@raw {}`, `X-Sum` — its SHA-256.
@@ -81,7 +81,7 @@ From the acceptance of М10/11 (the second pilot, Н-1; catches Б1): the resour
 `@sigkill w-1` — the lock is free, `running: []`; a new start of the same name — `running` again. The norm is
 [the presence lock contract](../../../common/contracts/presence-lock.md) (the owner is lesson P/05) and Н1.4 `presence`; the heartbeat
 of the resource is read through the objects door (`resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local`). Step 1
-starts the resource, step 2 — the worker `w-1` per the section «Стенд» of the common acceptance README (`BOX_ID` of the stand, `SERVER_NAME=srv-a`);
+starts the resource, step 2 — the worker `w-1` per the section «Stand» of the common acceptance README (`BOX_ID` of the stand, `SERVER_NAME=srv-a`);
 `@sigkill` waits for the confirmed termination of the process.
 
 ## Time in a row (sc. 09-resource-door; `@time`)
@@ -94,7 +94,7 @@ reads the time field written by the resource — the door row `platform/doors/sr
 The scenarios of the coverage audit of P/05 (2026-10-30); each expectation is from the norm:
 
 - sc. 17-schema-refusal — the check of the schema at start (Н3 «resource start — schema check»; [the schema contract](../../../common/contracts/schema.md)
-  «Проверка при старте», «Граница»): `platform/schema` with `version` 2 (above SCHEMA 1) and `x` (not an integer) — `@start resource`
+  «Check at start», «Boundary»): `platform/schema` with `version` 2 (above SCHEMA 1) and `x` (not an integer) — `@start resource`
   exits with code 2; there is no door row `platform/doors/srv-a` — the check of the schema goes before the first write (lifecycle
   «Порядок старта»); with `version` 1 — the resource starts and writes the door row. The row is written by the door `admin` (the writer is the console by the role admin,
   P/06.6 Н1.1а); the values of a store row are strings (P/01.1);
@@ -104,16 +104,16 @@ The scenarios of the coverage audit of P/05 (2026-10-30); each expectation is fr
   appears without a new `@start` (the deadline 90 s — the norm does not limit the repeat of the reading by a step). A resource that exited on a read
   error will not write the door row;
 - sc. 19-service-names — the service names (Н1.1 `disk`; [the event journal contract](../../../common/contracts/event-journal.md)
-  «Имена файлов в общих деревьях»): the write of the heartbeat of the worker `w-1` goes by temp + rename under the lock of the directory
+  «File names in shared trees»): the write of the heartbeat of the worker `w-1` goes by temp + rename under the lock of the directory
   `objects/testsub/heartbeats/~lock`, the lock file is not removed; the traversal of the tree skips the names with `~` — there is no
   `testsub/heartbeats/~lock` in the listing of the key; the key `~lock` is encoded into `%7elock` — the reading of the key is 404, not the lock file (a service name does not
   coincide with a key). The heartbeat of `w-1` in the listing is the control that the directory is the right one;
 - sc. 20-door-room — the heartbeat of the resource (Н1.4 `heartbeat`): the field `door` with `addr` and `mode` (`loopback` without `RESOURCE_TLS`, `mtls`
-  with it — «Стенд» does not set `RESOURCE_TLS`, the branch `mtls` is for a deployment with TLS); the door row (Н1.4 `door_row`,
-  [the presence lock contract](../../../common/contracts/presence-lock.md) «Счёт `room`»): for `testsub2` (`grows: true`, the role file
-  `testsub2worker.env` with `HOST_MEMORY_MB=4096`, `WORKER_MEMORY_MB=256` is put by the runner — «Стенд») `room` =
+  with it — «Stand» does not set `RESOURCE_TLS`, the branch `mtls` is for a deployment with TLS); the door row (Н1.4 `door_row`,
+  [the presence lock contract](../../../common/contracts/presence-lock.md) «Count `room`»): for `testsub2` (`grows: true`, the role file
+  `testsub2worker.env` with `HOST_MEMORY_MB=4096`, `WORKER_MEMORY_MB=256` is put by the runner — «Stand») `room` =
   min(16 − the live ones, 98 − the live ones with a number n ≥ 2): without workers — 16 and `live` ""; `t-srv-a-2` (n = 2) — 15 and "2"; `t-1`
-  (a name without a server — without a number, [the slot name contract](../../../common/contracts/slot-name.md) «Имя процесса роли и его номер»)
+  (a name without a server — without a number, [the slot name contract](../../../common/contracts/slot-name.md) «Role process name and its number»)
   — 14, does not enter `live`; `t-srv-a-1` (n = 1, the base one) — 13, does not enter `live`. `testsub` has no role file — there are no elements
   `room.testsub`, `live.testsub`, they are not expected;
 - sc. 21-events-wait — the hint (Н1.6): there are no rows under `want` — the wait answers by the deadline `{changed: false, seq}`; the row
@@ -132,7 +132,7 @@ The scenarios of the coverage audit of P/05 (2026-10-30); each expectation is fr
 
 Not accepted from the drafts of the audit: F02 sc. 01 (`.tmp` is not a service name of the current norm: the component `w-9.tmp` is encoded as
 it is, it is a key; the service names are with `~`, ADR-0083 addendum (16)) and the directive `@plant object` (a service name is given by the lock `~lock`
-of a real write, sc. 19; the bytes of the file of an ordinary object are the implementation's own, «Решает реализация» item 9); `@freeze store` (the store is not a name for `@sigkill`/`@freeze`; a read error — `@cut role` of sc. 18). F04 (the edges of `free_ask`) was accepted later — sc. 24–28 after C05-PASS-FIRST-AT-START-01, the section [«Edges of `free_ask` on the first pass»](#edges-of-free_ask-on-the-first-pass-sc-2428) (the Architect's decision of 2026-11-04).
+of a real write, sc. 19; the bytes of the file of an ordinary object are the implementation's own, «Implementation decides» item 9); `@freeze store` (the store is not a name for `@sigkill`/`@freeze`; a read error — `@cut role` of sc. 18). F04 (the edges of `free_ask`) was accepted later — sc. 24–28 after C05-PASS-FIRST-AT-START-01, the section [«Edges of `free_ask` on the first pass»](#edges-of-free_ask-on-the-first-pass-sc-2428) (the Architect's decision of 2026-11-04).
 
 ## Coverage audit of P/05, second pass (Gemini) (sc. 29–45)
 
@@ -180,7 +180,7 @@ against the report of the first pass, not against the acceptance); large bundles
   0; the share of the occupied space between `low` 1e-8 and `high` 0.99999999, `need > 0` — the row stands as it is (the same version, the same `free`);
 - sc. 42-heartbeat-units (G08 part 1) — `units` of the heartbeat of the resource (Н1.4, E39): the controller puts `c2` and `c1` to the worker `w-1`; `units.testsub`
   — `[c1, c2]` in ascending order of bytes, not in the order of creation (`instances` is not mandatory by the form of the heartbeat — it is not expected);
-- sc. 43-spoiled-object-door (G08 part 2) — the spoiling of an object (Н1.1 `door`, «Решает реализация» item 8; C05-SPOIL-OBJECT-BYTES-01): the heartbeat of
+- sc. 43-spoiled-object-door (G08 part 2) — the spoiling of an object (Н1.1 `door`, «Implementation decides» item 8; C05-SPOIL-OBJECT-BYTES-01): the heartbeat of
   `w-1` after `@sigkill w-1` is spoiled by `@spoil object` — the objects door gives it out as it is: in the listing with `written`, `server`, `size`,
   `GET` 200, not 503;
 - sc. 44-objects-door-family (G01 item 1) — `objects.door` of the manifest (Н1.1 `door`): `testsub2` declares `door: [tickets/*]` —
@@ -195,7 +195,7 @@ against the report of the first pass, not against the acceptance); large bundles
   (the Architect's decision of 2026-10-30, P/05 item 1): the listing `prefix=.gone/` — `{}`, `GET` of the tombstone — 404, without a sleep and `@until`.
 
 Not accepted from the drafts of the second pass (in detail — the report of the analysis):
-G04 `PUT /mirror/<свой сервер>/…` — the norm does not require 400: to accept or to refuse is «Решает реализация» item 11 (C05-MIRROR-PUT-SELF-01,
+G04 `PUT /mirror/<свой сервер>/…` — the norm does not require 400: to accept or to refuse is «Implementation decides» item 11 (C05-MIRROR-PUT-SELF-01,
 the Architect's decision of 2026-10-30, P/05 item 2), the acceptance does not check this; G05 `/buckets/testsub/c1` with the type and the fields in one expectation, `X-Sum` without a value — the dictionary does not express it (the type — sc. 04
 of chapter 6.4); G06 `short: 0` with an unreadable `platform/space` (R05-G03: the input of the pass is not read — the former `short`) and `copies: "bad"` as
 an unreadable `platform/mirror` (by the field — `copies` 1, the row is read); G08 `units: {}` after the spoiling of the heartbeat of the frozen `w-1` (the spoiling is
@@ -266,7 +266,7 @@ An additional check by reading R36-07: the pairs server=a-b/volume=c and server=
 
 By reading (run 36, Kimi): PULSE_LIMIT is a declared finite positive profile; an excess is diagnostic. The listing of objects has both 403.
 
-Each writing participant encodes the file names itself (the event journal contract «Имена файлов в общих деревьях»): any permitted name is representable, different keys are different paths, including the temporary names and the mirrors (R37, Codex).
+Each writing participant encodes the file names itself (the event journal contract «File names in shared trees»): any permitted name is representable, different keys are different paths, including the temporary names and the mirrors (R37, Codex).
 
 This is a subject of a manual check of the specification and of a future check of an implementation. Prepared requests, a reading and the author's finite models are not a performed stand test.
 

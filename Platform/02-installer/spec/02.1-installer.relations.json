@@ -1417,7 +1417,7 @@
    "path": "domain.view_tables.{}",
    "relation": "поле rights.unit_of таблицы — в списке этой таблицы",
    "class": "reference",
-   "norm": "договор права «Суд по цели»",
+   "norm": "договор права «Judgement by target»",
    "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"view_tables\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"view_tables\"]) == map ? dyn(doc[\"domain\"][\"view_tables\"]).map(k1, (((type(doc) == map && \"rights\" in doc && type(doc[\"rights\"]) == map && \"unit_of\" in doc[\"rights\"] && type(doc[\"rights\"][\"unit_of\"]) == map && k1 in doc[\"rights\"][\"unit_of\"]) && type(doc[\"domain\"][\"view_tables\"][k1]) == list && !dyn(doc[\"domain\"][\"view_tables\"][k1]).exists(e4, e4 == doc[\"rights\"][\"unit_of\"][k1])) ? [{\"p\": [\"domain\", \"view_tables\", k1]}] : [])) : []) : []) : [])",
    "own": []
   },

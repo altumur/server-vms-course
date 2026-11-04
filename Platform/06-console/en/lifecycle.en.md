@@ -45,7 +45,7 @@ the subsystem file, what is read earlier wins; the files are read by parsing, no
 | `OBJECTS` / `PLATFORM_OBJECTS` | the objects: the bodies `blob`, the cleanup marks | `<PLATFORM_DIR>/objects`; `cluster://` with configstore | [P/02.4] Н1.2 |
 | `CONSOLE_ROOT` | the subsystem whose shell is served on `/`; empty or not from the catalogue — code 2 | — | [P/06.5] Н1.1 `root` |
 | `CONSOLE_HOST`, `CONSOLE_PORT` | the console address — from `w2c.env` (written by the installer, the unit does not set it; one per box — the clients of their own console build the URL by it as well, [the role certificate contract](../../common/contracts/role-certificate.md) `own_url`); TLS — by the role kit (`kit`) and on the loopback too, HTTP is not opened when there is a kit; `::1` — only by an explicit entry; the browser origin with a kit — `https://<SERVER_NAME>:<порт>` in `CONSOLE_ORIGINS` (ADR-0075 addendum 2026-10-26 (2) item 3, (3) items 3–4, (5) item 2) | `127.0.0.1`, `8080` | [P/02.4] Н1.2, Н1.6 `console`, Н1.7 `w2c_env` |
-| `CONSOLE_CALL_PORT` | the port of the callback listener, only with a kit and a manifest with `door.pass.calls`, [the role certificate contract](../../common/contracts/role-certificate.md) «Лист обратного вызова» | 8081 | [P/02.4] Н1.7 `w2c_env`, ADR-0094 addendum (16) |
+| `CONSOLE_CALL_PORT` | the port of the callback listener, only with a kit and a manifest with `door.pass.calls`, [the role certificate contract](../../common/contracts/role-certificate.md) «The callback leaf» | 8081 | [P/02.4] Н1.7 `w2c_env`, ADR-0094 addendum (16) |
 | `SECRETS_KEY` | the ring path; set empty — unreadable, 503 | — (the installer layout: for the unit — `<PLATFORM_DIR>/etc/secrets/platform.key`; not set for the process — the development mode with a loud line, review analysis of stage A 6–7, № 19) | [P/06.2] Н1.2, [P/02.4] Н1.1 `dirs` |
 | `SERVER_NAME` | the server | the short hostname (`%l`) | [P/02.4] Н1.2 |
 | `BOX_ID` | the box; the instance `<коробка>:<pid>:<6 hex>` | `BOX_ID`, otherwise `/etc/machine-id`, otherwise the hostname | [P/02.4] Н1.2, [P/03.2] Н3 «start()» step 2 |
@@ -95,7 +95,7 @@ An unreadable family row during the resealing at start — a log line, the start
 
 ## The cleanup window command
 
-The deletion of bodies — by a separate command of the implementation with the flag `--writers-stopped` (the command name — [P/06.1] «Решает реализация»
+The deletion of bodies — by a separate command of the implementation with the flag `--writers-stopped` (the command name — [P/06.1] «Implementation decides»
 item 9), not by the process `console`: the operator runs it in an exclusive window, when the writers are stopped. The codes —
 [P/06.1] Н2 «Sweep window command» (review analysis of stage A 6–7, № 8):
 
@@ -117,11 +117,11 @@ item 9), not by the process `console`: the operator runs it in an exclusive wind
 ## Stand
 
 The roots `{data}/config`, `objects`, `events` are created before the process start by the role start command of the profile — [the common
-acceptance README](../../common/acceptance/README.md) «Стенд без root»; the process does not create the roots ([P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
+acceptance README](../../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
 
-- The command of the «Стенд» with the substitution `{port}`; `{data}` is `PLATFORM_DIR`: the stand sets `PLATFORM_DIR={data}`,
+- The command of the «Stand» with the substitution `{port}`; `{data}` is `PLATFORM_DIR`: the stand sets `PLATFORM_DIR={data}`,
   `CONSOLE_PORT={port}`, `PLATFORM_STORE` — the role socket, `SECRETS_KEY={data}/etc/secrets/platform.key` — the ring, which the runner creates
-  by the «Стенд» command `ring {file}` before the first process, `BOX_ID`,
+  by the «Stand» command `ring {file}` before the first process, `BOX_ID`,
   `SERVER_NAME` ([Stand] «Один каталог данных»); `CONSOLE_CALL_PORT={cport}` — on the stand with the kit of [the second kind of pass](../../common/acceptance/pass/README.md).
 - `CONSOLE_ROOT` is named by the acceptance README of the chapter: chapter 6.2 — `testsub2`, the others — `testsub` ([Stand]).
 

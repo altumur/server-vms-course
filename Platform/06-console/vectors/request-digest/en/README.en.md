@@ -34,10 +34,10 @@ server field that the client is entitled to send. `unit` stays.
 - `unit`;
 - `valid_until`;
 - the stamps `by`, `at`, `group` and the field `about` (for `testsub2` — `of`);
-- `filed` — not a body field: the filer's instance, a row field that the worker writes (the contract of the request and its mark «Просьба» `filed`); the «поля тела строки»
+- `filed` — not a body field: the filer's instance, a row field that the worker writes (the contract of the request and its mark «Request» `filed`); the «поля тела строки»
   of the norm do not include it (review of stage A: SA1-27, Gemini 4.4).
 
-**The two kinds of digest are not compared with each other.** A repeat is recognized by the digest of its own kind (the contract of the request and its mark «Просьба» `digest`).
+**The two kinds of digest are not compared with each other.** A repeat is recognized by the digest of its own kind (the contract of the request and its mark «Request» `digest`).
 
 **A target with `requests.key` — the kind `worker` for both writers** (the third rule; ADR-0091 addendum (24) item 3, addendum (25) item 3): one name
 `rid` is given by the door and by the worker, therefore the door computes the digest of the kind `worker` from the fields of the row body as it will write them (as text:
@@ -47,7 +47,7 @@ only for repeats of one client by `Idempotency-Key` at a target without `request
 
 ## The stand command `request-digest`
 
-The key `stand` of the profile `06-console` (the section «Раскладка по процессам» of [the common acceptance README](../../../../common/acceptance/README.md));
+The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../../../common/acceptance/README.md));
 a template with `{input}` — the path of a file with one JSON object `{"sender": "client" | "worker", "input": <исходный текст ячейки input
 строкой JSON>}`: the text of the cell is escaped only for the outer string — the number lexemes, the order of fields and the characters are preserved,
 the runner does not parse the cell and does not re-serialize it. The answer is `{"canonical": <текст JCS>, "sha256": <64 строчных hex>}`: `canonical`

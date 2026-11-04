@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are the section «Стенд домена» of [the common acceptance README](../../../../common/acceptance/README.md#стенд-домена)
+The stand and the dictionary of directives and doors are the section «Domain stand» of [the common acceptance README](../../../../common/acceptance/README.md#стенд-домена)
 (before the merge, the dictionary of the М11 README of the acceptance М11/01).
 The norm of the chapter is [`08.8-domain.norms.md`](../../../spec/08.8-domain.norms.md) Н5. The scenarios and the text below were moved from the acceptance of
 М11/10 (stage B, ADR-0083 addendum (1): without
@@ -16,7 +16,7 @@ the packages [`common/vectors/record`](../../../../common/vectors/record/README.
 
 The preparation is as the acceptance README of [chapter 8.3](../../3/README.md) («Подготовка каждого сценария»; from the acceptance README of М11/03).
 The doors `holder`, `holder@<кластер>`, `member`, `signer` and the directives `@domain`, `@start domain on`, `@stop domain`, `@move` are
-the dictionary of the «Стенд домена». The runner goes as the human `root` (chapter 8.4).
+the dictionary of the «Domain stand». The runner goes as the human `root` (chapter 8.4).
 
 - **Scenario 02.**
   - The grant is issued to the human `ann`, who is created first (chapter 8.4: the subject of a grant is a human). An edit of the grants changes
@@ -62,7 +62,7 @@ the package [`follow`](../../../../09-agent/vectors/follow/README.md).
 
 ## scenarios.tsv
 
-The format is the dictionary of the «Стенд домена»; the directives `@move` are `<код> <JSON>`.
+The format is the dictionary of the «Domain stand»; the directives `@move` are `<код> <JSON>`.
 
 Sc. 15–17 (the coverage audit of P/08, the second pass of Gemini, the draft G09 `e32df6f8b`, rewritten):
 - sc. 15 — `POST /domain/stranded/apply` (Н1.6 `apply`): at the acting holder — 409; after a handover to `m1` (`stranded`

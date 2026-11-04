@@ -59,7 +59,7 @@ P/06.4-01…11, P/06.5-01…19, P/06.6-01…08, P/06.7-01…19, P/06.8-01…18, 
 - `door.pass` (`/{pass}`, chapter 6.5): the contract describes only the local refusals of the console (400/401/403/408/413/429, 502,
   503, for the second kind also 504 and `ProblemRefusal`); the worker's answer is passed on as received and is not checked by the form of the contract.
 - Forwarding (`/domain`, `/domain/{route}`, chapter 6.7): the contract carries only the codes of transitions 1–2 (`ForwardBadRequest`,
-  `ForwardNotFound`, `ForwardFailed`, `ForwardUnavailable`; the forwarding contract «Отказы по переходам»); the answer of the domain console —
+  `ForwardNotFound`, `ForwardFailed`, `ForwardUnavailable`; the forwarding contract «Refusals by transition»); the answer of the domain console —
   `ForwardAnswer`, as it came, its forms — the OpenAPI of the lessons P/10 and P/08. The forwarding to the signer (`/api/prepare`, `/api/take`,
   `/domain/move`) — the codes of the forwarding cluster console and the answers of the process, `$ref` to the operations of the OpenAPI of P/08; the term records, the pairs and the member names —
   `$ref` to the schemas of P/08.
@@ -114,7 +114,7 @@ in `corrections.tsv`; do not leave a new rule only in the instructions.
   of the module (Н1.1 `module`) as they are. Its own HTTP doors per Н1–Н2; the observations `/servers`, `/resources`, `/where`.
   Full answers and safe output, including separate checks of CSP, media type and HEAD without a body. **The representation
   `ManifestView` for `GET /manifest`** (Н2 «GET /manifest»); the built-in load procedure (P/02.1) gets no new HTTP route.
-  The forwarding of `door.pass` to a live worker with a door (Н1.8), the second kind: the ticket, the headers, the answer types, the stream — the gate-and-pass contract «Передача второго вида»; the callback — chapter 6.3 Н1.9.
+  The forwarding of `door.pass` to a live worker with a door (Н1.8), the second kind: the ticket, the headers, the answer types, the stream — the gate-and-pass contract «Pass of the second kind»; the callback — chapter 6.3 Н1.9.
 - **6.6.** The operator doors of the console: of the policy, the drain, the labels, the server decommission, `/unplaceable` and `/where` — the HTTP doors
   of Н2 of chapter 6.6 and the evidence of the fulfilment of the items P/06.6-01, -02, -03. The check of the schema and the versions before the console start, the raise
   of the schema and the door `/schema`; the observation of the drain by the given freshness bounds ([the observation
@@ -123,7 +123,7 @@ in `corrections.tsv`; do not leave a new rule only in the instructions.
   the console of another cluster with the `peer` check; the forwarding to the signer in the order of Н1.8; `may` by the copy of grants and `grants` in
   `/session` (Н1.9); the emergency entry door in order with its own limit (Н1.10); the doors `/domain/keys`, `/api/held`,
   `/api/backup`, the book door and `GET /domain/shared/<sub>` with the function `resolve` and a command for its vectors.
-- The description of all the choices of the sections «Решает реализация» of the chapters — 37 items «Решает реализация» in all — and the means of executing
+- The description of all the choices of the sections «Implementation decides» of the chapters — 37 items «Implementation decides» in all — and the means of executing
   the acceptance.
 
 ## Order of work
@@ -259,7 +259,7 @@ This is a suggested order, not a mandatory structure of the code.
 4. Reconcile the successful answer of `GET /manifest` with the schema `ManifestView`, and the common refusals of the console — with the schemas of their code.
    The load diagnostics and the stderr of the installer do not become bodies of this GET.
 5. Check separately the page, the publication of the module and CSP; a stand with a holder is needed for the branches absent from the TSV.
-   Record the chosen limits/lanes/timeouts from the section «Решает реализация». Check the constraints of `door.pass` on
+   Record the chosen limits/lanes/timeouts from the section «Implementation decides». Check the constraints of `door.pass` on
    a separate test door of a subsystem.
 
 ### Chapter 6.6 — the control doors
@@ -290,14 +290,14 @@ This is a suggested order, not a mandatory structure of the code.
 
 A chapter of the late layer: it is done after the lessons P/08–P/10, with the domain stand.
 
-1. Build the forwarding function by [the forwarding contract](../../../common/contracts/forwarding.md) «Пересылка — одна функция»
-   and the table «Двери домена»; Н3 «forward» — in order: a path outside the table — 404 before the identity and without a call. Give the answer
+1. Build the forwarding function by [the forwarding contract](../../../common/contracts/forwarding.md) «Forwarding is one function»
+   and the table «Domain doors»; Н3 «forward» — in order: a path outside the table — 404 before the identity and without a call. Give the answer
    as it came, without parsing it ([chapter 6.7](../06.7-console.norms.md) Н1.2–Н1.5).
 2. The `https://` client to the console of another cluster — the role `console`, the check of the server by the function `peer` by `Entry.ca` of the
    destination member ([the `peer` contract](../../../common/contracts/peer.md); the vectors `common/vectors/peer`).
 3. The forwarding to the signer (Н1.8) and its own doors `/api/held`, `/api/backup` (Н1.12, Н1.13; the signature — the vectors
    `common/vectors/ask-sig`).
-4. The guard with grants (Н1.9; the function `may` — the vectors `common/vectors/may`), the emergency entry in order (Н1.10) with its own
+4. The gate with grants (Н1.9; the function `may` — the vectors `common/vectors/may`), the emergency entry in order (Н1.10) with its own
    limit count, `/domain/keys` (Н1.11), the book door (Н1.1), the value on reading (Н1.14) and the command `resolve`.
 5. Pass the vectors [`resolve`](../../vectors/resolve/README.md), [`key-families`](../../vectors/key-families/README.md) and the acceptance of [chapter 6.7](../../acceptance/7/README.md) on the domain
    stand; the steps of the cluster console in the acceptance of the chapters of lesson P/08 — there it is a neighbour on the stand. TLS between clusters and the branches
@@ -460,7 +460,7 @@ of the corresponding worker are checked by meaning, not by one schema validator.
 
 ## Done when
 
-All the choices of the implementation are described (the items «Решает реализация» of all chapters; the renewal step and the retries of capture and epoch — chapter
+All the choices of the implementation are described (the items «Implementation decides» of all chapters; the renewal step and the retries of capture and epoch — chapter
 P/03.2), all the norms of the checklists of the chapters are fulfilled and the ways of checking are recorded: for each id — a specific piece of evidence
 or an unchecked dependency. State the slice, the commands/stand, the observations and the limitations. The data of past runs do not replace
 the preparation of a new one.

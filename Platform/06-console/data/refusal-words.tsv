@@ -195,9 +195,9 @@ operations	409	nothing to retry	-	6.9 Н4
 operations	412	row moved	/memory/cas	6.9 Н4
 operations	413	batch too large	-	6.9 Н4
 operations	503	store unavailable	-	6.9 Н4
-pass	502	denied	-	6.5 Н4; договор сторожевой и передачи «Передача `door.pass`»
-pass	504	denied	-	6.5 Н4; договор сторожевой и передачи «Передача второго вида»
-*	400	refused	-	договор сторожевой и передачи «Разбор запроса и порядок проверок»
+pass	502	denied	-	6.5 Н4; договор сторожевой и передачи «Pass of `door.pass`»
+pass	504	denied	-	6.5 Н4; договор сторожевой и передачи «Pass of the second kind»
+*	400	refused	-	договор сторожевой и передачи «Request parsing and the order of checks»
 *	400	denied	-	6.5 Н4
 *	401	denied	-	договор сторожевой и передачи
 *	403	denied	-	договор сторожевой и передачи
@@ -209,7 +209,7 @@ pass	504	denied	-	6.5 Н4; договор сторожевой и передач
 *	503	busy	-	6.5 Н4
 *	503	denied	-	6.5 Н4
 *	503	unavailable	-	6.5 Н4
-session	400	this console is open	-	договор сторожевой и передачи «Отказы сторожевой»
+session	400	this console is open	-	договор сторожевой и передачи «Refusals of the gate»
 domain-forward	400	one hop	-	6.7 Н1.8
 domain-forward	404	no console known	-	6.7 Н4
 domain-forward	404	no signer here	-	6.7 Н1.8

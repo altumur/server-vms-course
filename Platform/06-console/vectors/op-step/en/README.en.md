@@ -33,4 +33,4 @@ UTF-8, LF, fields separated by TAB; the first row is the header `case<TAB>input<
 
 ## Run
 
-The side checks both tables with its own function: the command is the entry `vectors/06-console/op-step` of the profile (the section «Раскладка по процессам» of [the common acceptance README](../../../../common/acceptance/README.md)). The native outcome is code 0 and the value `expect`; an input not in form — code 2. The form of the command is the same as for the neighbouring packages.
+The side checks both tables with its own function: the command is the entry `vectors/06-console/op-step` of the profile (the section «Layout by processes» of [the common acceptance README](../../../../common/acceptance/README.md)). The native outcome is code 0 and the value `expect`; an input not in form — code 2. The form of the command is the same as for the neighbouring packages.

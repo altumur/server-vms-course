@@ -1,6 +1,6 @@
-# Конверт enc:v2 (договор запечатывания): seal(ключ, kid, nonce, ключ строки, путь, значение) → envelope; open(envelope) с тем же
-# ключом и тем же AAD → значение. Ключ — 32 байта sha256("w2c test <слово>"), nonce — первые 12 байт sha256("w2c test <слово>").
-# Строка: case<TAB>key_hex<TAB>kid<TAB>nonce_b64url<TAB>row_key<TAB>pointer<TAB>plaintext (JSON-строка)<TAB>envelope.
+# The envelope enc:v2 (the sealing contract): seal(key, kid, nonce, row key, path, value) → envelope; open(envelope) with the same
+# key and the same AAD → the value. The key — 32 bytes sha256("w2c test <слово>"), nonce — the first 12 bytes of sha256("w2c test <слово>").
+# A row: case<TAB>key_hex<TAB>kid<TAB>nonce_b64url<TAB>row_key<TAB>pointer<TAB>plaintext (a JSON string)<TAB>envelope.
 case	key_hex	kid	nonce_b64url	row_key	pointer	plaintext	envelope
 top	29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea	k1	ikNeujSOpkp66hql	testsub2/tallies/t1	/feed_secret	"hunter2"	enc:v2:k1:ikNeujSOpkp66hql:fk441dK8AoBEOw-1P8ktkqbnUjsQkZE
 nested	29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea	k1	-G9vH369MoCFS3aJ	testsub2/tallies/t1	/settings/a~1b/0/password_secret	"s3cret:with:colons"	enc:v2:k1:-G9vH369MoCFS3aJ:mPhe9Fr2hbquiyiil29xxZTJOsThxVOIDbsMw9C4yOqeeA

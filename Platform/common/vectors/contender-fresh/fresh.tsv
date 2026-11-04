@@ -1,8 +1,8 @@
-# Свежесть метки соперника: возраст наблюдаемой версии → свежа при CONTENDER_FRESH = 300 с (договор наблюдения «Свежесть метки соперника»; C06-CONTENDER-FRESH-33-01). Форма — README рядом.
+# The freshness of a contender's mark: the age of the observed version → fresh at CONTENDER_FRESH = 300 s (the observation contract «Свежесть метки соперника»; C06-CONTENDER-FRESH-33-01). The form — README beside it.
 case	age	fresh	note
-first-look	0	true	первый взгляд — возраст 0: свежа (поле at не вход)
-below-int	299	true	CONTENDER_FRESH − 1: свежа
-equal-int	300	true	ровно CONTENDER_FRESH: свежа — отношение ≤
-equal-fraction	300.0	true	ровно CONTENDER_FRESH дробной записью: то же число, свежа
-above-milli	300.001	false	больше CONTENDER_FRESH на миллисекунду: не учитывается
-above-int	301	false	CONTENDER_FRESH + 1: не учитывается
+first-look	0	true	first look — age 0: fresh (the field at is not an input)
+below-int	299	true	CONTENDER_FRESH − 1: fresh
+equal-int	300	true	exactly CONTENDER_FRESH: fresh — the relation ≤
+equal-fraction	300.0	true	exactly CONTENDER_FRESH in a fractional record: the same number, fresh
+above-milli	300.001	false	greater than CONTENDER_FRESH by a millisecond: not counted
+above-int	301	false	CONTENDER_FRESH + 1: not counted

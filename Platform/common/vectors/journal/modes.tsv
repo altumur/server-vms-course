@@ -1,11 +1,11 @@
-# Режимы корня событий, замков присутствия и бакетов (договор журнала событий bucket modes, договор замка присутствия modes; EJ-L02, PL-G02, PL-G03): путь → вид, режим, владелец (если назван), группа. Форма — README.
+# The modes of the events root, the presence locks and the buckets (the event journal contract bucket modes, the presence lock contract modes; EJ-L02, PL-G02, PL-G03): a path → the kind, the mode, the owner (if named), the group. The form — README.
 case	path	kind	mode	owner	group	note
-events-root	<PLATFORM_DIR>/events	dir	2771	w2c	w2c-events	корень событий — проход прочим без чтения (путь скрипта воркеров к замкам; PL-G03)
-resource-root	<RESOURCE_ROOT>	dir	2771	w2c	w2c-events	RESOURCE_ROOT, заданный явно, — сам корень событий: те же 2771, деревья под ним — 2770/2750 (EJ-G12)
-workers-dir	<PLATFORM_DIR>/events/.workers	dir	2771	-	w2c-events	путь к замкам — проход прочим без чтения (PL-G03)
-workers-sub	<PLATFORM_DIR>/events/.workers/testsub	dir	2775	-	w2c-events	каталог замков подсистемы — перечень и чтение прочим (скрипт воркеров), группа пишет (PL-G02)
-lock-file	<PLATFORM_DIR>/events/.workers/testsub/<экземпляр>.lock	file	0644	<пользователь воркера>	w2c-events	файл замка — чтение прочим (PL-G02)
-tree-dir	<PLATFORM_DIR>/events/testsub	dir	2770	-	w2c-events	каталог дерева — пишет и удаляет больше одного пользователя группы (EJ-L02)
-unit-dir	<PLATFORM_DIR>/events/testsub/c1	dir	2770	-	w2c-events	каталог единицы — создаёт писатель, удаляет ресурс
-bucket-one-writer	<PLATFORM_DIR>/events/testsub/c1/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	0640	<пользователь воркера>	w2c-events	бакет единицы — один писатель
-audit-bucket	<PLATFORM_DIR>/events/audit/console/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	0640	w2c	w2c-events	журнал роли — процессы одного пользователя
+events-root	<PLATFORM_DIR>/events	dir	2771	w2c	w2c-events	the events root — passage for others without reading (the path of the workers' script to the locks; PL-G03)
+resource-root	<RESOURCE_ROOT>	dir	2771	w2c	w2c-events	RESOURCE_ROOT set explicitly is itself the events root: the same 2771, the trees under it — 2770/2750 (EJ-G12)
+workers-dir	<PLATFORM_DIR>/events/.workers	dir	2771	-	w2c-events	the path to the locks — passage for others without reading (PL-G03)
+workers-sub	<PLATFORM_DIR>/events/.workers/testsub	dir	2775	-	w2c-events	the subsystem's directory of locks — listing and reading for others (the workers' script), the group writes (PL-G02)
+lock-file	<PLATFORM_DIR>/events/.workers/testsub/<экземпляр>.lock	file	0644	<пользователь воркера>	w2c-events	the lock file — reading for others (PL-G02)
+tree-dir	<PLATFORM_DIR>/events/testsub	dir	2770	-	w2c-events	the tree's directory — more than one user of the group writes and deletes (EJ-L02)
+unit-dir	<PLATFORM_DIR>/events/testsub/c1	dir	2770	-	w2c-events	the unit's directory — the writer creates, the resource deletes
+bucket-one-writer	<PLATFORM_DIR>/events/testsub/c1/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	0640	<пользователь воркера>	w2c-events	the unit's bucket — one writer
+audit-bucket	<PLATFORM_DIR>/events/audit/console/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl	file	0640	w2c	w2c-events	the role's journal — the processes of one user

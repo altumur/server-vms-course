@@ -1,11 +1,11 @@
-# Проверка схемы при старте: строка platform/schema и SCHEMA сборки (договор common/contracts/schema.md check; C06-SCHEMA-WIDE-32-01). Форма — README.
+# The schema check at start: the row platform/schema and the build's SCHEMA (the schema contract common/contracts/schema.md check; C06-SCHEMA-WIDE-32-01). The form — README.
 case	input	expect	note
-version-1	{"SCHEMA":3,"row":{"version":"1","at":"1700000000"}}	{"start":true,"version":"1"}	1 ≤ SCHEMA — старт
-version-schema	{"SCHEMA":3,"row":{"version":"3","at":"1700000000"}}	{"start":true,"version":"3"}	ровно SCHEMA — старт
-version-schema-plus-1	{"SCHEMA":3,"row":{"version":"4","at":"1700000000"}}	{"refuse":"too_new","n":"4"}	SCHEMA + 1 — схема новее, отказ старта, код 2, в журнале N
-version-2-63	{"SCHEMA":3,"row":{"version":"9223372036854775808","at":"1700000000"}}	{"refuse":"too_new","n":"9223372036854775808"}	2^63 — читается точным целым без переполнения: схема новее с точным N
-version-0	{"SCHEMA":3,"row":{"version":"0","at":"1700000000"}}	{"refuse":"not_a_form"}	0 < 1 — не по форме, отказ старта, код 2
-version-fraction	{"SCHEMA":3,"row":{"version":"1.5","at":"1700000000"}}	{"refuse":"not_a_form"}	1.5 — не целое, не по форме
-row-absent	{"SCHEMA":3,"row":null}	{"start":true,"version":"3"}	строки нет — своя SCHEMA (свежая установка)
-at-binary64-max	{"SCHEMA":3,"row":{"version":"1","at":"100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}}	{"start":true,"version":"1"}	at порядка 1e308 (309 цифр) — время читается, старт (канон P/01.1 Н0: конечно в binary64; C137-SCHEMA-TIME-01)
-at-binary64-overflow	{"SCHEMA":3,"row":{"version":"1","at":"200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}}	{"refuse":"not_a_form"}	at «2» и 308 нулей — переполнение binary64: строка не по форме, отказ старта, код 2 (Г-17; MAY-UNTIL-D8-01)
+version-1	{"SCHEMA":3,"row":{"version":"1","at":"1700000000"}}	{"start":true,"version":"1"}	1 ≤ SCHEMA — start
+version-schema	{"SCHEMA":3,"row":{"version":"3","at":"1700000000"}}	{"start":true,"version":"3"}	exactly SCHEMA — start
+version-schema-plus-1	{"SCHEMA":3,"row":{"version":"4","at":"1700000000"}}	{"refuse":"too_new","n":"4"}	SCHEMA + 1 — the schema is newer, start refused, code 2, N in the journal
+version-2-63	{"SCHEMA":3,"row":{"version":"9223372036854775808","at":"1700000000"}}	{"refuse":"too_new","n":"9223372036854775808"}	2^63 — read as an exact integer without overflow: the schema is newer with the exact N
+version-0	{"SCHEMA":3,"row":{"version":"0","at":"1700000000"}}	{"refuse":"not_a_form"}	0 < 1 — out of form, start refused, code 2
+version-fraction	{"SCHEMA":3,"row":{"version":"1.5","at":"1700000000"}}	{"refuse":"not_a_form"}	1.5 — not an integer, out of form
+row-absent	{"SCHEMA":3,"row":null}	{"start":true,"version":"3"}	no row — its own SCHEMA (a fresh installation)
+at-binary64-max	{"SCHEMA":3,"row":{"version":"1","at":"100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}}	{"start":true,"version":"1"}	at of the order 1e308 (309 digits) — the time is read, start (the canon P/01.1 Н0: finite in binary64; C137-SCHEMA-TIME-01)
+at-binary64-overflow	{"SCHEMA":3,"row":{"version":"1","at":"200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}}	{"refuse":"not_a_form"}	at «2» and 308 zeros — binary64 overflow: the row is out of form, start refused, code 2 (Г-17; MAY-UNTIL-D8-01)

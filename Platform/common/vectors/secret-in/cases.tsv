@@ -5,7 +5,7 @@
 # spellings, the final form), then the product's (its tables before it — secret-keys.tsv, a
 # name in http://10.0.0.5/videostream.cgi?channel=1&<name>=hunter2xyz, and secret-sources.tsv, which ipintd still
 # reads — and its tests of the rule). Addresses only: a text that is no field's value is testdata/log_mask.tsv.
-# Owner: «Спецификация»; the product's conformance — its own acceptance against this table (ADR-0080 доп. 16, ADR-0083).
+# Owner: «Спецификация»; the product's conformance — its own acceptance against this table (ADR-0080 addendum 16, ADR-0083).
 # The norm — М10/7 Н1.1а (А1–А15).
 #
 # A cell is read byte for byte between TABs, nothing is unescaped: a TAB or a line break inside a value cannot be
@@ -17,7 +17,7 @@
 #   masked  what is shown of it: every password masked as *** where it stands; a login — a userinfo's, a pair's, a
 #           spelling's — shown as written (admin:***@h, ?usr=admin&pwd=***)
 #   fault   what refusing raw as the field's value says about its credentials: empty — no credential refuses it (a refusal
-#           by the url rule itself — bad_url: no host, url-credentials «Схемы» — is group_of.tsv's, not this table's,
+#           by the url rule itself — bad_url: no host, url-credentials «Schemes» — is group_of.tsv's, not this table's,
 #           stage A review Gemini 4.2); otherwise refused, and the refusal names
 #           the field it sends the value to by the field's `credentials`: its secret (cred_secret, access_secret — a
 #           password) or its login (cred_username, access_key — a login and no password)
@@ -459,8 +459,8 @@ cam.source	http://10.0.0.5/videostream.cgi?usr=admin&pwd=	http://10.0.0.5/videos
 cam.source	rtsp://10.0.0.5/live?pass%3Dhunter2xyz=1	rtsp://10.0.0.5/live?***	cred_secret	a name that decodes holding «=» is read as a pair: the name goes with the value (А7)
 cam.source	rtsp://10.0.0.5/x%3A//admin%3Ahunter2xyz%40h/s	rtsp://10.0.0.5/***	cred_secret	a segment that decodes ending in «:» before «//» starts a nested address to «?»: masked whole (А8 (4))
 cam.source	rtsp://10.0.0.5/live?pwd=ab%zz	rtsp://10.0.0.5/live?pwd=***	cred_secret	a «%» without two hex digits stays a character: the pair is still a password, shown *** (А4 step 1; URLC-UTF8-01)
-cam.source	rtsp://10.0.0.5/live?p%FFwd=x	rtsp://10.0.0.5/live?p%FFwd=x		invalid UTF-8 after decoding reads as U+FFFD: «p\uFFFDwd» is no password name (А4 step 1; URLC-UTF8-01)
-cam.source	cfw://local	cfw://local		host: authority with none: [local] needs no path (url-credentials «Схемы»; URLC-HOST-01)
-cam.source	driverpack://file	driverpack://file		no credentials in it: fault empty; its bad_url (host: path needs a path) is by url-credentials «Схемы», outside this table (URLC-HOST-01, URLC-VECTORS-02)
+cam.source	rtsp://10.0.0.5/live?p%FFwd=x	rtsp://10.0.0.5/live?p%FFwd=x		invalid UTF-8 after decoding reads as U+FFFD: «p�wd» is no password name (А4 step 1; URLC-UTF8-01)
+cam.source	cfw://local	cfw://local		host: authority with none: [local] needs no path (url-credentials «Schemes»; URLC-HOST-01)
+cam.source	driverpack://file	driverpack://file		no credentials in it: fault empty; its bad_url (host: path needs a path) is by url-credentials «Schemes», outside this table (URLC-HOST-01, URLC-VECTORS-02)
 cam.source	rtsp://10.0.0.5:99999/live	rtsp://10.0.0.5:99999/live		a port is *DIGIT, no TCP bound (URLC-HOST-01)
 cam.source	cfw://local:80	cfw://local:80		a node with a port is no none node: the host is local, accepted; no credentials (URLC-SCHEMES-01, revised)
