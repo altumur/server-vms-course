@@ -1,10 +1,10 @@
-# Каталог данных модуля VMS (ADR-0090 доп. (2)); форма — как Platform/common/data/catalog.tsv (ADR-0083) плюс колонка place
-# (решение «Архитектора» А по запросу «семьи в открытых местах», 2026-10-29; форма строки согласована с «Генератором В7»,
-# навык судит её с ветки v7/vms-families). Строка — значение открытого места семьи платформы: key и kind — экземпляр
-# ровно одной строки каталога платформы того же kind (литерал или плейсхолдер, <sub> — подсистема урока-владельца);
-# place — JSON Pointer со «*» по схеме платформы (место есть и открыто); owner — V/NN[.K]; schema — схема значения в месте,
-# исходы — <имя>.outcomes.tsv рядом, пути — от значения в месте. Векторы — построитель family-read
-# (VMS/common/vectors/family-read/NN.tsv), вручную не пишутся.
+# The data catalog of the VMS module (ADR-0090 addendum (2)); the form is as Platform/common/data/catalog.tsv (ADR-0083) plus the column place
+# (the Architect's decision А on the request on families in open places, 2026-10-29; the row form is agreed with «Генератор В7»,
+# the skill judges it from the branch v7/vms-families). A row is the value of an open place of a Platform family: key and kind are an instance of
+# exactly one row of the Platform catalog of the same kind (a literal or a placeholder, <sub> — the subsystem of the owner lesson);
+# place — a JSON Pointer with «*» by the Platform schema (the place exists and is open); owner — V/NN[.K]; schema — the schema of the value in the place,
+# outcomes — <name>.outcomes.tsv beside it, paths — from the value in the place. Vectors — the builder family-read
+# (VMS/common/vectors/family-read/NN.tsv), not written by hand.
 key	kind	owner	ops	readers	when	version	schema	norm	place
 cam/heartbeats/<имя>	object	V/01.2	put=camworker(свой пульс, P/03.4 Н1.1)	recworker, detworker, liveworker, detjobworker, detedgeworker, autoworker	-	1	VMS/01-cam/data/cam-heartbeat-words.schema.json	V/01.2 Н1.4	
 domain/cam/sources	row	V/01.6	cas=domainagent(копия у члена, P/09.1 Н1.4)	recworker	domain.books	1	VMS/01-cam/data/sources-entry.schema.json#copy	V/01.6 Н1.2	/*/entries/*/value

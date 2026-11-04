@@ -1,5 +1,5 @@
-# Уроки модуля VMS (ADR-0090 доп. (2)): номер — адрес владельца (V/NN), каталог — NN-<имя>; subsystem — имя манифеста
-# урока (<sub>.subsystem.yaml в его каталоге) или «-»; status — переведён | не переведён. Читает check_spec.
+# Lessons of the VMS module (ADR-0090 addendum (2)): the number is the owner's address (V/NN), the directory — NN-<name>; subsystem — the name of the
+# lesson's manifest (<sub>.subsystem.yaml in its directory) or «-»; status — переведён | не переведён (moved to the module or not; the values stay as written). Read by check_spec.
 # lesson	dir	title	subsystem	status
 01	01-cam	Камера	cam	переведён
 02	02-rec	Запись	rec	переведён
