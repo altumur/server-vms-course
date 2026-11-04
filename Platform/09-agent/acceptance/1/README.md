@@ -16,11 +16,11 @@
 cc36de538, черновики G03, G04; ниже); 21 — сц. 27 `roles-copy` (ADR-0098 §4).
 
 Остальные сценарии источников — у глав своего исхода (ADR-0083 доп. (13); приложение плана переноса урока 8): М11/05
-сц. 01, 03, 05 — [глава 8.5](../../../08-domain/acceptance/5/README.md), 02 — [приёмка главы 6.7](../../../06-console/acceptance/7/README.md) (13); М11/06 сц. 01, 02,
+сц. 01, 03, 05 — [глава 8.5](../../../08-domain/acceptance/5/README.md), 02 — [приёмка главы 6.7](../../../06-console/ru/acceptance/7/README.md) (13); М11/06 сц. 01, 02,
 03, 05, 09 — [глава 8.6](../../../08-domain/acceptance/6/README.md), 06 — [глава 8.1](../../../08-domain/acceptance/1/README.md)
 (сц. 15); М11/10 сц. 01 — приёмка главы 6.7 (15), 02–04, 08–10, 12 — [глава 8.8](../../../08-domain/acceptance/8/README.md),
 06 — пакет векторов [`follow`](../../vectors/follow/README.md); М11/11 сц. 01 — [глава 8.9](../../../08-domain/acceptance/9/README.md),
-02 — [приёмка урока P/10](../../../10-domain-console/acceptance/README.md), 04 — вектор [`alarms`](../../../10-domain-console/vectors/alarms/README.md), 03 — векторы [`resolve`](../../../06-console/vectors/resolve/README.md); М11/12 сц. 02 — [глава 8.3](../../../08-domain/acceptance/3/README.md) (сц. 17), 04,
+02 — [приёмка урока P/10](../../../10-domain-console/acceptance/README.md), 04 — вектор [`alarms`](../../../10-domain-console/vectors/alarms/README.md), 03 — векторы [`resolve`](../../../06-console/ru/vectors/resolve/README.md); М11/12 сц. 02 — [глава 8.3](../../../08-domain/acceptance/3/README.md) (сц. 17), 04,
 05 — [глава 8.10](../../../08-domain/acceptance/10/README.md). Сторону агента в сценариях других глав — список «Соседи на
 стенде» нормы главы, Н5.
 
@@ -62,7 +62,7 @@ cc36de538, черновики G03, G04; ниже); 21 — сц. 27 `roles-copy` 
   name`. Двери `holder`, `member` и директивы `@domain`, `@cut`, `@mend`, `@clock` — словарь «Стенда домена»; у двери
   `holder` раннер ставит `Idempotency-Key` и у `PUT`/`DELETE`. `$id` — id хранимой правки из ответа 202. Правку держатель
   хранит (глава 8.6), применяет её агент `m1` (Н1.5) после `@mend`; условие `If-Match` двери единиц — сц. 14 приёмки
-  [P/06.1](../../../06-console/acceptance/1/README.md). Сц. 08: `@clock m1 +90` — часы агента вне окна двери единиц
+  [P/06.1](../../../06-console/ru/acceptance/1/README.md). Сц. 08: `@clock m1 +90` — часы агента вне окна двери единиц
   `UNIT_WINDOW` 60 с ([договор подписи агента](../../../common/contracts/agent-signature.md)); шаг 10 возвращает часы.
 - **Сценарий 11** (из README приёмки М11/10; модель Quint М11, сценарий Q3). Стенд с подписантом и на `m1`: двери
   `holder`, `member`, `signer` и директивы `@domain`, `@start domain on`, `@stop domain`, `@move` — словарь «Стенда
@@ -79,7 +79,7 @@ cc36de538, черновики G03, G04; ниже); 21 — сц. 27 `roles-copy` 
   кладёт объектом и указателем мимо правки (C09-SHARED-ACCEPT-01; решение «Архитектора» 2026-10-29: исходы семьи `shared-docs` —
   нечитаемое держатель не рассылает): сц. 05 — с его суммой: держатель шлёт документ, член не берёт его — `record`
   отказывает `unknown_issuer` (Н3 «взять документ» шаг 4), строки `domain/shared` у члена нет; консоль держателя — `record`
-  не прошёл, значения без домена (`from: manifest`, [P/06.7](../../../06-console/spec/06.7-console.norms.md) Н1.14; сосед
+  не прошёл, значения без домена (`from: manifest`, [P/06.7](../../../06-console/ru/spec/06.7-console.norms.md) Н1.14; сосед
   на стенде). Сц. 14 — с чужой суммой: объект не с `sha256` указателя — для держателя нечитаем (исходы `shared-docs`):
   консоль держателя — 503 `unavailable`, документ члену не посылается, строки `domain/shared` у члена нет. Отказ агента
   «does not match the pointer» (Н3 «взять документ» шаг 3) стенд не достаёт — держатель такой документ не шлёт, а

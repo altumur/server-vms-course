@@ -1,12 +1,12 @@
 # Vectors of the value on read
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/resolve/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 Vectors of the function `resolve(field, unit, domain)` of the cluster console — the value of a shared field for a unit on read: the unit →
 the domain → `inherit` of the manifest; a document field and a grouping field come only from the domain. The owner is lesson P/06, chapter 6.7 of the late
-layer ([P/06.7](../../../spec/06.7-console.norms.md) Н1.14, Н3 `resolve`, Н5 `resolve`); it is executed by the cluster console at the door
-`GET /domain/shared/<sub>`. The declaration `domain.shared` and `merge` are [P/02.1 Н1.2б](../../../../02-installer/spec/02.1-installer.norms.md),
-the shared document is [P/08.9](../../../../08-domain/spec/08.9-domain.norms.md) Н1.2. The bytes are written by the Specification (ADR-0083);
+layer ([P/06.7](../../spec/06.7-console.norms.md) Н1.14, Н3 `resolve`, Н5 `resolve`); it is executed by the cluster console at the door
+`GET /domain/shared/<sub>`. The declaration `domain.shared` and `merge` are [P/02.1 Н1.2б](../../../02-installer/spec/02.1-installer.norms.md),
+the shared document is [P/08.9](../../../08-domain/spec/08.9-domain.norms.md) Н1.2. The bytes are written by the Specification (ADR-0083);
 the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
 
 The rows were transferred from the inputs of the command `resolve` of the acceptance М11/11 (`inputs/resolve-*.json`, sc. 03) without a change of bytes: only
@@ -32,7 +32,7 @@ of the acceptance М11.
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](../cases.tsv), 14 rows: 10 computed, 4 `@exit 2` | `input` — the input of the command `resolve` as JSON text (`field` — `{name, type, inherit?, merge?, document?, group_by?}`, `unit` — the value of the unit row, no key — no value, `domain` — `{term, rev, value}` or `null`) → `expect`: `{"value":…,"from":…}` — own (`unit`), of the domain (`domain term T rev R`), of the manifest (`manifest`), the union `union` (`unit + domain term T rev R`), a document and its absence (`none`), `override` for a list; `{"groups":…,"from":…}` — a grouping field |
+| [`cases.tsv`](cases.tsv), 14 rows: 10 computed, 4 `@exit 2` | `input` — the input of the command `resolve` as JSON text (`field` — `{name, type, inherit?, merge?, document?, group_by?}`, `unit` — the value of the unit row, no key — no value, `domain` — `{term, rev, value}` or `null`) → `expect`: `{"value":…,"from":…}` — own (`unit`), of the domain (`domain term T rev R`), of the manifest (`manifest`), the union `union` (`unit + domain term T rev R`), a document and its absence (`none`), `override` for a list; `{"groups":…,"from":…}` — a grouping field |
 
 The vectors were checked by the runs of the implementations of the acceptance М11/11 (run 41, reconciliation М11 09–12) and by the text of the norms; on a divergence
 the norm is right, the vector is corrected by the Specification.
@@ -40,7 +40,7 @@ the norm is right, the vector is corrected by the Specification.
 ## Source log
 
 The rows of `corrections.tsv` of the acceptance М11/11 about sc. 03 (the paths and numbers are the former ones, they are resolved by
-[`id-map.tsv`](../../../../common/id-map.tsv)):
+[`id-map.tsv`](../../../common/id-map.tsv)):
 
 | date | sample | fix |
 |---|---|---|

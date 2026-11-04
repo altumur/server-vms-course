@@ -1,8 +1,8 @@
 # Acceptance P/06.8 — cluster folders (stand)
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/8/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`06.8-console.norms.md`](../../../spec/06.8-console.norms.md) Н5. The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The norm of the chapter is [`06.8-console.norms.md`](../../spec/06.8-console.norms.md) Н5. The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
 In total 12 scenarios / 189 steps.
 
 **There is no dry run by an implementation.** The scenarios are composed by reading the norms and the contract; `index` and other values of the store the scenario binds from the answer and does not compute in advance. The chapter is part of the rights increment and waits for the credit of increment B.
@@ -10,13 +10,13 @@ In total 12 scenarios / 189 steps.
 ## Preparation
 
 A console with the manifests `testsub` (declares `display.tree.folders: true`) and `testsub2` (does not declare it: it stands in sc. 03 as a subsystem without folders), there is no domain, the requests come from one caller with the needed rights. Each scenario begins with
-an empty store on its own instance: `GET /folders` reconciles the whole list, so a foreign folder changes the expectation. A door without a prefix is the console. The role of the door `store` is `console`: it reads `platform/*` and the rows of the subsystems ([P/02.5](../../../../02-installer/spec/02.5-installer.norms.md) Н1.4).
+an empty store on its own instance: `GET /folders` reconciles the whole list, so a foreign folder changes the expectation. A door without a prefix is the console. The role of the door `store` is `console`: it reads `platform/*` and the rows of the subsystems ([P/02.5](../../../02-installer/spec/02.5-installer.norms.md) Н1.4).
 
 The folder reaper on the stand works with the period of the norm `FOLDERS_REAP_EVERY` 60 s: scenarios 06 and 10 wait for it with `@until 90`. This deadline is an upper bound: the step ends as soon as the sign is there. There are no sleeps (`@sleep`).
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors](../../../../common/acceptance/README.md#словарь-директив-и-дверей). A subset of fields, `$имя`, `@any`, `@big(N)`, `@header`, `@key`, `@as`, `@until`, `ASSERT` — as there. The record `{"items": null}` means: there is no row.
+The format is [the dictionary of directives and doors](../../../common/acceptance/README.md#словарь-директив-и-дверей). A subset of fields, `$имя`, `@any`, `@big(N)`, `@header`, `@key`, `@as`, `@until`, `ASSERT` — as there. The record `{"items": null}` means: there is no row.
 
 - `$f`, `$g` and the like bind the folder id from the answer `201`. The scenario does not set the value of the id: the console chooses 128 random bits.
 - `$i`, `$j` bind `index`: they are compared only for equality. The `index` of the answer of `PUT` equals the index of the row in the store — sc. 02 steps 4–5.
@@ -38,7 +38,7 @@ The format is [the dictionary of directives and doors](../../../../common/accept
 | an unconfirmed read: 503, the reaper removes nothing | a refusal of the store on the read of a particular key is needed |
 | a member from a second subsystem | `testsub2` holds `display.tree.group_by`, and `display.tree.folders` next to it is forbidden; the code is one, only the prefix of the reference differs |
 
-The plan of the rights scenarios, when the norm `may` is entered (a domain stand, `@person`, grants rows — as in [the acceptance of chapter 8.4](../../../../08-domain/acceptance/4/README.md)):
+The plan of the rights scenarios, when the norm `may` is entered (a domain stand, `@person`, grants rows — as in [the acceptance of chapter 8.4](../../../08-domain/acceptance/4/README.md)):
 
 1. a person with `edit` on a unit without `admin`, the unit is in a folder: `DELETE` of the unit — 200, the folder is without it;
 2. the creation of a unit with a folder row without `admin` over the folder — 403, nothing is written;

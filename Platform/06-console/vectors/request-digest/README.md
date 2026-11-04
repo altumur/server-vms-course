@@ -1,8 +1,8 @@
 # Vectors: the request digest
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/request-digest/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter P/06.4 ([norms](../../../spec/06.4-console.norms.md) Н1.5 `digest`, Н3 «file a request» step 1). The participants:
+The owner is chapter P/06.4 ([norms](../../spec/06.4-console.norms.md) Н1.5 `digest`, Н3 «file a request» step 1). The participants:
 - `console` — a request filed through the door;
 - `<s>worker` — a request that the worker writes itself (`worker.requests`).
 
@@ -10,7 +10,7 @@ The bytes of the table are written by the Specification (ADR-0083, stage A). The
 (ADR-0080 addendum 16).
 
 The bytes of the table did not change in the move of lesson 6 (stage B, ADR-0083 addendum (1)), including
-the header comment (its «М10/8 Н1.5», «lesson-owner М10/8» are the former address of the norm, now [the contract of the request and its mark](../../../../common/contracts/request-mark.md) (review analysis of stage B 6–7, № 24); the product copy
+the header comment (its «М10/8 Н1.5», «lesson-owner М10/8» are the former address of the norm, now [the contract of the request and its mark](../../../common/contracts/request-mark.md) (review analysis of stage B 6–7, № 24); the product copy
 is checked against these bytes).
 
 ## `digest.tsv`
@@ -41,13 +41,13 @@ server field that the client is entitled to send. `unit` stays.
 
 **A target with `requests.key` — the kind `worker` for both writers** (the third rule; ADR-0091 addendum (24) item 3, addendum (25) item 3): one name
 `rid` is given by the door and by the worker, therefore the door computes the digest of the kind `worker` from the fields of the row body as it will write them (as text:
-a string — as is, anything else — JCS; the vectors [`requests-body`](../../requests-body/README.md)), without `unit`, `valid_until` and the stamps;
+a string — as is, anything else — JCS; the vectors [`requests-body`](../requests-body/README.md)), without `unit`, `valid_until` and the stamps;
 a repeat checks `unit` and this digest, the mark copies it. The `worker` rows of the table apply to both writers; the kind `client` is
 only for repeats of one client by `Idempotency-Key` at a target without `requests.key`.
 
 ## The stand command `request-digest`
 
-The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../../../common/acceptance/README.md));
+The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../../common/acceptance/README.md));
 a template with `{input}` — the path of a file with one JSON object `{"sender": "client" | "worker", "input": <исходный текст ячейки input
 строкой JSON>}`: the text of the cell is escaped only for the outer string — the number lexemes, the order of fields and the characters are preserved,
 the runner does not parse the cell and does not re-serialize it. The answer is `{"canonical": <текст JCS>, "sha256": <64 строчных hex>}`: `canonical`

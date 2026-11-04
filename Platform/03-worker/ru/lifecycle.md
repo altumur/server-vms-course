@@ -11,7 +11,7 @@
 (Н1.2 события);
 [P/02.4](../../02-installer/ru/spec/02.4-installer.norms.md) (Н1.1 юниты, Н1.2 окружение, Н1.5
 воркеры по заказу), [P/02.3](../../02-installer/ru/spec/02.3-installer.norms.md) (Н3 «Старт процесса», «Смена
-манифеста»), [P/06.6](../../06-console/spec/06.6-console.norms.md) (Н1.1а строка схемы),
+манифеста»), [P/06.6](../../06-console/ru/spec/06.6-console.norms.md) (Н1.1а строка схемы),
 [договор замка присутствия](../../common/contracts/presence-lock.md), [договор журнала событий](../../common/contracts/event-journal.md) (бакеты),
 [договор местной двери токенов](../../common/contracts/local-token-door.md) (просьба токена, глава 3.7).
 

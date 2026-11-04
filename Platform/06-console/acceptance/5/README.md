@@ -1,14 +1,14 @@
 # Acceptance P/06.5 — observations of the console
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/5/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей).
-The norm of the chapter is [`06.5-console.norms.md`](../../../spec/06.5-console.norms.md) Н5. The scenarios were moved from the acceptance of
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The norm of the chapter is [`06.5-console.norms.md`](../../spec/06.5-console.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/09 (01, 02, 04–12; 03 — the session — into
-[the acceptance of chapter 6.3](../../3/README.md)) and of М10/11
+[the acceptance of chapter 6.3](../3/README.md)) and of М10/11
 (02 → 14, 09 → 16, 13, 15 step 1), and from М10/10 —
 03 and 08 → 17 whole (the step `/metrics` of the console; analysis of the review of stage A 6–7, № 32) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers, the names of the scenarios and the steps are
-the former ones (sc. 08 and 19 — the first step `@start resource`: the console reads the heartbeats of the workers through the objects door of the resource of its own server, without the resource «не известно», [the object store client contract](../../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27), except `14-resource-silent` (in М10/11 — `02-resource-silent`) and `16-resource-unreadable-heartbeat` (in М10/11 —
+the former ones (sc. 08 and 19 — the first step `@start resource`: the console reads the heartbeats of the workers through the objects door of the resource of its own server, without the resource «не известно», [the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27), except `14-resource-silent` (in М10/11 — `02-resource-silent`) and `16-resource-unreadable-heartbeat` (in М10/11 —
 `09-resource-unreadable-heartbeat`) and `17-snapshot-garbled` (in М10/10 — `08-snapshot-garbled`): the numbers 02, 08 and 09 are taken
 by the scenarios of М10/09. In total 33 scenarios / 324 steps: 12 — sc. 33 (a write only by the ticket writes_via, ADR-0119 addendum (10)), 11 — sc. 32 (a pass of the second kind without a worker, ADR-0094 B1), 9 — sc. 31 (the feed series, ADR-0094 B2), 14 — sc. 30 (the counter door, ADR-0094 B4), 15 — sc. 29 (the counter of the batch door, ADR-0094 B9), 72 — sc. 26–28 (static files and the shell of a mounted subsystem, ADR-0094 B7), 23 — sc. 24–25 (the second pass of the coverage audit of P/06, Gemini), 30 — sc. 20–23 (the coverage audit of P/06), 8 — sc. 19 `19-place-held-no-row` (C06-WHERE-PLACE-SERVER-33-01), 5 — sc. 18 `18-id-default` (`{id}` in the default, VMS request № 1), 85 in the scenarios of М10/09 (the steps 04/8 and 12/12–13 were added — analysis of the review of stage B 6–7, № 19,
 № 20), 23 from М10/11, 14 from М10/10.
@@ -29,7 +29,7 @@ Before each automatic scenario stop the processes of the previous one, create se
 
 Without workers there is no placement; the counter c4 is created only in 04. The domain login, closed grants, CSP and a repeat of a logical action are checked by a separate stand/module test, not by this TSV.
 
-- **A pass of the second kind (sc. 32; ADR-0094 B1).** `probe-x` declares `door.pass` of the second kind, it has no worker. Steps 1–2 — a refusal of the console by the form of the manifest: `no worker…` becomes `{code, message}`; step 3 — the first segment of the route, while the path is outside `api/v1`; step 4 — `apix`: the comparison is by whole segments. Steps 5–8 — there is no ticket with such a value: the console is open, and still the identity is only the ticket, 401, no write. Step 9 — an open route does not read the ticket. A live ticket — [the stand of the pass of the second kind](../../../../common/acceptance/pass/README.md).
+- **A pass of the second kind (sc. 32; ADR-0094 B1).** `probe-x` declares `door.pass` of the second kind, it has no worker. Steps 1–2 — a refusal of the console by the form of the manifest: `no worker…` becomes `{code, message}`; step 3 — the first segment of the route, while the path is outside `api/v1`; step 4 — `apix`: the comparison is by whole segments. Steps 5–8 — there is no ticket with such a value: the console is open, and still the identity is only the ticket, 401, no write. Step 9 — an open route does not read the ticket. A live ticket — [the stand of the pass of the second kind](../../../common/acceptance/pass/README.md).
 - **Processes.** Sc. 08–10 bring up processes by the directives of the «Stand» (`@start worker`, `@start resource`,
   `@start controller testsub2`); before `@start` there are no background processes. The worker is `w-1` of the subsystem `testsub` on `srv-a`.
 - **The store door.** Sc. 07 writes an intent row bypassing the controller: `@as testsubcontroller store` — the role socket of the
@@ -77,7 +77,7 @@ Without workers there is no placement; the counter c4 is created only in 04. The
   `data.json` it deletes; `@restart console` — because the console is entitled to keep the checked bytes in memory (Н2). The restart does not refuse:
   a file without bytes is an outcome of the door, not of the start.
 - **The holder's door in `/where` (sc. 24; the second pass of the coverage audit of P/06, Gemini).** The preparation is as in sc. 11 of the acceptance of
-  [P/04](../../../../04-controller/acceptance/README.md): the controller `testsub2`, the worker `t-1`, the shelf `s-1` on `srv-a` (step 5 waits for
+  [P/04](../../../04-controller/acceptance/README.md): the controller `testsub2`, the worker `t-1`, the shelf `s-1` on `srv-a` (step 5 waits for
   the hold), the unit `ta` — the controller puts it on `t-1`. `testsub2` has `door: {routes: [read, play]}`: `/where/ta` gives
   the field `door` with the token `door1.…` (Н3 «`/where/<id>`»), the console at the first issue creates `door/signer` — `seed_secret`
   in an envelope of the stand ring, and writes its kid into `door/keys`. Step 10 rewrites `door/keys` by the role `console` (`$kid` → 64 `f`,
@@ -102,8 +102,8 @@ Without workers there is no placement; the counter c4 is created only in 04. The
 
 Heartbeats of a given form are put by `@put object <ключ> inputs/<файл>` bypassing the writer (the exception `P/06 acceptance-entry
 5/inputs`). There are no workers in these scenarios; the resource `srv-a` — the first step `@start resource`: the console reads the heartbeats through the objects door of the resource of its own server (C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29). The first look of the console at a heartbeat is fresh
-([the observation contract](../../../../common/contracts/observation.md): `resource_state`, the first observation; `worker_state` —
-[chapter 6.1](../../../spec/06.1-console.norms.md) Н2).
+([the observation contract](../../../common/contracts/observation.md): `resource_state`, the first observation; `worker_state` —
+[chapter 6.1](../../spec/06.1-console.norms.md) Н2).
 
 | File | Key | What is in it |
 |---|---|---|
@@ -127,7 +127,7 @@ Sc. 12 step 7: two unreadable heartbeats (`w-7`, `W-9`) — `testsub_heartbeats_
 
 The stand of sc. 13–16 with the controller `testsub` (`@start controller`) and the resource (`@start resource`); a catalogue of two manifests.
 The steps before `/metrics` of the console are preparation: the controller writes the snapshot shard `testsub/snapshot/unplaced`, the resource gives it out
-through the objects door (`@until 20`, `@time` — the dictionary of the «Stand»); their subject is the acceptance of [P/04](../../../../04-controller/acceptance/README.md)
+through the objects door (`@until 20`, `@time` — the dictionary of the «Stand»); their subject is the acceptance of [P/04](../../../04-controller/acceptance/README.md)
 (sc. 03, 08 with the same steps). The subject of the chapter: sc. 03 step 5 — the series `testsub_snapshot_age_seconds` (Н1.3 `age`); sc. 17 steps
 7–9 — the controller is stopped, the shard is spoiled (`@spoil object`), `/metrics` 200 with `testsub_snapshot_garbled_shards 1` (Н1.3
 `metrics`; Н0 P/01.1 «Stability of output»). The row `testsub/counters/s7` with `start: notint` sc. 17 writes bypassing the console by the role
@@ -143,11 +143,11 @@ the processes, resets the store and the variables.
 - **Time in a row (sc. 13).** The rule of Н0 P/01.1 «Time in a row» (the Architect's decision of 2026-10-18), the reader side:
   the same course as sc. 16, but the door row is written with `at` with 6 fraction digits (`901.123456`, `906.654321`) — a write of a form
   that the reader accepts and the writer does not write; the outcome is the same.
-- **Sc. 15 step 1** (the former step 9 of sc. 15 of М10/11; steps 1–8 — in [the acceptance of P/01.3](../../../../01-store/acceptance/3/README.md)):
+- **Sc. 15 step 1** (the former step 9 of sc. 15 of М10/11; steps 1–8 — in [the acceptance of P/01.3](../../../01-store/acceptance/3/README.md)):
   `door.pass` of `testsub2` (`pass: [entries]`) without a worker with a door — 503 `{"error": "denied"}` (Н1.8; reconciliation of python and go М10/6–11, B26; the word — GP-L03, the Architect's decision of 2026-10-28); the door
   `console2` is the same console with the prefix `/testsub2`.
 - **Sc. 16** (reconciliation of python and go 2026-10-18): the heartbeat of the resource is spoiled (`@spoil object`), while the door row is fresh — the state
-  `unreachable` (`resource_state` of [the observation contract](../../../../common/contracts/observation.md): the rules in order,
+  `unreachable` (`resource_state` of [the observation contract](../../../common/contracts/observation.md): the rules in order,
   an unreadable heartbeat does not confirm life). The resource is stopped before the spoiling so that it does not rewrite the heartbeat; the runner
   changes the door row itself by the role `resource`.
 - **The deadline of 90 s** of sc. 14 is the waiting limit of exactly this stand; after `@sigkill` the heartbeat seen earlier is used.
@@ -160,15 +160,15 @@ the processes, resets the store and the variables.
 
 ## Full form and reproducibility
 
-A subset of expect does not replace the check of the full HTTP form of [the contract of the lesson](../../../spec/06-console.api.openapi.yaml): check the mandatory fields, types, Content-Type, special headers and the absence of a body for HEAD/204. In expectation lines `$имя` is first bound only after a successful match of the whole answer; the following uses compare, and requests use only values already bound. A failed attempt of @until does not change the variables. @until repeats a read until the given local deadline, not a mutation; after it expires — FAIL with the last answer. @any admits any value of a present field, @absent requires absence; they do not replace the types of the full schema. A JSON object is compared by subset (`{}` at any level is exactly an empty object: the dictionary of the common README, ACC-EMPTY-OBJECT-01), an array by length and order. Raw HTML/text is compared as UTF-8 bytes with the given substring, it is not parsed as JSON.
+A subset of expect does not replace the check of the full HTTP form of [the contract of the lesson](../../spec/06-console.api.openapi.yaml): check the mandatory fields, types, Content-Type, special headers and the absence of a body for HEAD/204. In expectation lines `$имя` is first bound only after a successful match of the whole answer; the following uses compare, and requests use only values already bound. A failed attempt of @until does not change the variables. @until repeats a read until the given local deadline, not a mutation; after it expires — FAIL with the last answer. @any admits any value of a present field, @absent requires absence; they do not replace the types of the full schema. A JSON object is compared by subset (`{}` at any level is exactly an empty object: the dictionary of the common README, ACC-EMPTY-OBJECT-01), an array by length and order. Raw HTML/text is compared as UTF-8 bytes with the given substring, it is not parsed as JSON.
 
-A successful open /session contains login_url (the session scenario — [the acceptance of chapter 6.3](../../3/README.md)).
+A successful open /session contains login_url (the session scenario — [the acceptance of chapter 6.3](../3/README.md)).
 
 ## Additional check by reading
 
 R36-08: a stable active intent directs u to w-2 with placement=w-1 or with its absence — /where uses w-2; target="" gives 404 with the reason intent. A foreign id/idle use placement. A change of the intent version requires repeating the read, a non-answer of any mandatory read — 503. The heartbeat is read after the effective decision; the absence of a door does not turn into null. Scenario 04 checks only the absence of a placement, active/interleavings are not executed in the current TSV.
 
-Run 36 (Kimi): check both outcomes of the absence of v and the mounted /servers, /unplaceable, /where, /metrics and the page. For where(table,place): an unknown table 404 before unit; then the form/view, a confirmed hold and the heartbeat, a read error 503, the absence of a hold 404 with X-Unreachable. door is optional and appears only with a confirmed addressee/holder/signer; the issue is journaled. Sc.04/6 sees empty resources and does not check the fields of ResourceRow. (The loopback, trust, Origin and the emergency login — [the acceptance of chapter 6.3](../../3/README.md).)
+Run 36 (Kimi): check both outcomes of the absence of v and the mounted /servers, /unplaceable, /where, /metrics and the page. For where(table,place): an unknown table 404 before unit; then the form/view, a confirmed hold and the heartbeat, a read error 503, the absence of a hold 404 with X-Unreachable. door is optional and appears only with a confirmed addressee/holder/signer; the issue is journaled. Sc.04/6 sees empty resources and does not check the fields of ResourceRow. (The loopback, trust, Origin and the emergency login — [the acceptance of chapter 6.3](../3/README.md).)
 
 R37 (Codex): check the root/mount catalogues: the name where is not loaded; two separate correct manifests with mount b and the family root b do not form an admissible catalogue. Repeat for unit.rows and a table (including a list table), both directions of the pair and root of each choice. For GET/HEAD of both mounted pages the sets of codes are the same, 200 is absent. The delegation list does not add GET of a single unit to the owner (chapter 6.1).
 

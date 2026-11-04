@@ -1,18 +1,18 @@
 # Acceptance P/06.2 — the write of secrets
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/2/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей).
-The norm of the chapter is [`06.2-console.norms.md`](../../../spec/06.2-console.norms.md) Н5. The scenarios, the fields file and the text below were moved from
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The norm of the chapter is [`06.2-console.norms.md`](../../spec/06.2-console.norms.md) Н5. The scenarios, the fields file and the text below were moved from
 the acceptance of М10/07 whole (stage B, ADR-0083 addendum (1):
 without a change of behaviour); the numbers of the scenarios and the steps are the former ones; the common tables `secret_in.tsv` and `log_mask.tsv` are the vectors
-of the chapter [`secret-in`](../../../../common/vectors/secret-in/README.md) and [`log-mask`](../../../../common/vectors/log-mask/README.md). Two vector tables,
+of the chapter [`secret-in`](../../../common/vectors/secret-in/README.md) and [`log-mask`](../../../common/vectors/log-mask/README.md). Two vector tables,
 the fields file and the scenario file; the chapter adds no paths of its own — the units door of chapter 6.1 and the store door.
 
 ## The vectors `secret-in` and `log-mask`
 
-The common tables [`../../../common/vectors/secret-in/cases.tsv`](../../../../common/vectors/secret-in/cases.tsv) and
-[`../../../common/vectors/log-mask/cases.tsv`](../../../../common/vectors/log-mask/cases.tsv) are one source of the course and of the product (ADR-0003; the product
+The common tables [`../../../common/vectors/secret-in/cases.tsv`](../../../common/vectors/secret-in/cases.tsv) and
+[`../../../common/vectors/log-mask/cases.tsv`](../../../common/vectors/log-mask/cases.tsv) are one source of the course and of the product (ADR-0003; the product
 takes them by `sync-course.sh`), there is no copy here. The format is in the header of each and in the README of the package. The runner: `secret-in` —
 each row is read by the rule of the named field from the section below: the display equals `masked`,
 the refusal is empty or names the field from `fault`, the text of the refusal does not contain the raw value of the password.
@@ -26,12 +26,12 @@ coincide with the fields `unit.fields.source` of the manifest `cam` and `tables.
 the catalogue rule for nested addresses and for `log-mask` is the union of the rules of these two fields with the common
 dictionary (Н1.1 of the chapter). The form of each key is the summary table of P/02.1 Н1.2а and Н1.1 of chapter 6.2.
 
-The declarations are the vector file [`fields.yaml`](../../../../common/vectors/secret-in/fields.yaml) (moved from this acceptance; the stage C guess URLC-SOURCE-01, the Architect's decision of 2026-10-23): the key is the name of a field from the column `field`
+The declarations are the vector file [`fields.yaml`](../../../common/vectors/secret-in/fields.yaml) (moved from this acceptance; the stage C guess URLC-SOURCE-01, the Architect's decision of 2026-10-23): the key is the name of a field from the column `field`
 of `secret-in`, the value is the declaration of the field in the form of P/02.1.
 
 ## scenarios.tsv
 
-The units door of `testsub2` (the rows `tallies`; the tables door `shelves` — sc. 10; the console root `CONSOLE_ROOT=testsub2`, the common acceptance README «Stand») and the store door; the format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей) (`console`, `store`, `@key`, `@as`, a subset of fields). The implementation is started with a key ring (`SECRETS_KEY`), the manifests `testsub` and `testsub2`, an empty store; the resource `srv-a` is the first step of sc. 01, 05, 09 (the processes are restarted between scenarios; `@start resource`: `GET /tallies` reads the heartbeats through the objects door of the resource of its server; C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29); the store rows are read by a role with the right to read `testsub2/` (for example, `testsub2worker`), sc. 06 — by a role without the right (`testsubworker`). The field `of` of `tallies` is the name of a counter of `testsub`; before the scenarios the runner creates the counter `c1` in `testsub`.
+The units door of `testsub2` (the rows `tallies`; the tables door `shelves` — sc. 10; the console root `CONSOLE_ROOT=testsub2`, the common acceptance README «Stand») and the store door; the format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей) (`console`, `store`, `@key`, `@as`, a subset of fields). The implementation is started with a key ring (`SECRETS_KEY`), the manifests `testsub` and `testsub2`, an empty store; the resource `srv-a` is the first step of sc. 01, 05, 09 (the processes are restarted between scenarios; `@start resource`: `GET /tallies` reads the heartbeats through the objects door of the resource of its server; C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29); the store rows are read by a role with the right to read `testsub2/` (for example, `testsub2worker`), sc. 06 — by a role without the right (`testsubworker`). The field `of` of `tallies` is the name of a counter of `testsub`; before the scenarios the runner creates the counter `c1` in `testsub`.
 
 ## corrections.tsv
 
@@ -52,8 +52,8 @@ The keys `Idempotency-Key` and `@key(N)` are by the dictionary, the body is take
 does not replace the reset of the claim memory in the store on a new full run. The token/role of the console
 has rights to the units used, the login restrictions are set so as not to hinder the scenario.
 
-The list `configured` is checked without order — the rule of arrays without a normed order of the dictionary of [the common acceptance README](../../../../common/acceptance/README.md) (`<код> <JSON>`). A subset of
-the fields of an expectation does not cancel the full form of the answer by the contract of the units door (chapter 6.1, [`06-console.api.openapi.yaml`](../../../spec/06-console.api.openapi.yaml)). The forms of an expectation are by the dictionary. The store role
+The list `configured` is checked without order — the rule of arrays without a normed order of the dictionary of [the common acceptance README](../../../common/acceptance/README.md) (`<код> <JSON>`). A subset of
+the fields of an expectation does not cancel the full form of the answer by the contract of the units door (chapter 6.1, [`06-console.api.openapi.yaml`](../../spec/06-console.api.openapi.yaml)). The forms of an expectation are by the dictionary. The store role
 by default is set anew for each scenario; an explicit @as acts on the subsequent
 store requests of this scenario. ASSERT does not perform an HTTP request.
 

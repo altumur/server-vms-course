@@ -24,7 +24,7 @@
 - **[Урок 10](10-recworker.md)** — дверь архива регистратора между процессами: `/samples/<запись>?from&to`.
 - **[Урок 12](12-the-vms-console.md)** — страница VMS `vms/cam.shell.html` над модулем консоли и двери держателей: `/rec/where/<запись>` даёт дверь записи с токеном, у неё — `/timeline/<запись>` и `/segment/…`, с журналом `archive.read`.
 - **[Урок 13](13-live-video.md)** — почему видео не перекодируют и откуда берётся `profile-level-id`.
-- **[P/06](../Platform/06-console/06-console.md)**, глава 6.5 (прежде М10/9, шаг 12) — дверь держателя: `/where`, токен, маршруты из `door.routes` манифеста.
+- **[P/06](../Platform/06-console/ru/06-console.md)**, глава 6.5 (прежде М10/9, шаг 12) — дверь держателя: `/where`, токен, маршруты из `door.routes` манифеста.
 
 ## Чему вы научитесь
 
@@ -227,7 +227,7 @@ SKIP = {"stsd": 8, "avc1": 78}
 
 ## Шаг 8 — Что дверь обещает муксеру
 
-Кусок интервала браузер берёт не у консоли: байты идут мимо неё (ADR 0015). Консоль только говорит, где дверь держателя записи, и даёт к ней токен — `GET /rec/where/<запись>` → `door: {url, token, expires, routes}` ([P/06](../Platform/06-console/06-console.md), глава 6.5), — а маршруты двери объявляет манифест `rec`: `door: {routes: [timeline, segment, keeps]}` (`keeps` — сверка печати метки, урок 18, шаг 7). Сам маршрут куска — у регистратора, в `vms/footage.py`:
+Кусок интервала браузер берёт не у консоли: байты идут мимо неё (ADR 0015). Консоль только говорит, где дверь держателя записи, и даёт к ней токен — `GET /rec/where/<запись>` → `door: {url, token, expires, routes}` ([P/06](../Platform/06-console/ru/06-console.md), глава 6.5), — а маршруты двери объявляет манифест `rec`: `door: {routes: [timeline, segment, keeps]}` (`keeps` — сверка печати метки, урок 18, шаг 7). Сам маршрут куска — у регистратора, в `vms/footage.py`:
 
 ```
 GET /segment/<recording>/e<epoch>/<fromMs>-<toMs>.mp4      one piece of it as a fragmented MP4; `.backfill.mp4` the

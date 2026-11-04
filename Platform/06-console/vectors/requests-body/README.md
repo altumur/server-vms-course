@@ -1,18 +1,18 @@
 # Vectors: writing a body value into a row and canonical JSON
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/requests-body/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter P/06.4 ([norms](../../../spec/06.4-console.norms.md) Н1.5 `<поля тела>`: «строка — как есть, иное значение — канонический JSON (JCS, ADR-0072)»;
+The owner is chapter P/06.4 ([norms](../../spec/06.4-console.norms.md) Н1.5 `<поля тела>`: «строка — как есть, иное значение — канонический JSON (JCS, ADR-0072)»;
 Н2: the `fault` of the requests door is only `too_long`). The participants are the units and tables door of
-[chapter 6.1](../../../spec/06.1-console.norms.md) (a field of type `json`: the value as is, the ceiling `JSON_CEILING`, `not_json`) and
-the worker that writes a request itself ([chapter 3.6](../../../../03-worker/spec/03.6-worker.norms.md) Н1.5: the fields of the row body
+[chapter 6.1](../../spec/06.1-console.norms.md) (a field of type `json`: the value as is, the ceiling `JSON_CEILING`, `not_json`) and
+the worker that writes a request itself ([chapter 3.6](../../../03-worker/spec/03.6-worker.norms.md) Н1.5: the fields of the row body
 as text). The bytes are written by the Specification (ADR-0083, stage B; the rules — the Architect, 2026-10-05/06, the numbers by JCS — stage A
 ADR-0083, 2026-10-18); the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
 
 The package was moved from `Source/tests/testdata/requests_body.tsv` (stage A) together with lesson 6 (stage B, ADR-0083 addendum (1));
 the bytes of the table are the same, including the header comment (its «М10/3», «М10/8» are the former addresses of the norms, now chapter 6.1 and
 chapter 6.4; the product copy is checked against these bytes). The `fault` words of the table are from the dictionary
-[`fault`](../../../../common/vectors/fault/README.md) (chapter 6.1).
+[`fault`](../../../common/vectors/fault/README.md) (chapter 6.1).
 
 ## `requests_body.tsv`
 

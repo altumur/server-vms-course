@@ -3,21 +3,21 @@
 The lifecycle contract of the process `console` (ADR-0083 addendum (2) item 1). The rows refer to the chapters of the lesson and do not
 retell them (stage B, the move of lesson 6).
 
-This English text is the source; the Russian [`lifecycle.md`](../lifecycle.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 2).
+This English text is the source; the Russian translation `ru/lifecycle.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 2).
 
-[P/02.3]: ../../02-installer/spec/02.3-installer.norms.md
-[P/02.4]: ../../02-installer/spec/02.4-installer.norms.md
-[P/03.2]: ../../03-worker/spec/03.2-worker.norms.md
-[P/06.1]: ../spec/06.1-console.norms.md
-[P/06.2]: ../spec/06.2-console.norms.md
-[P/06.3]: ../spec/06.3-console.norms.md
-[P/06.4]: ../spec/06.4-console.norms.md
-[P/06.5]: ../spec/06.5-console.norms.md
-[P/06.6]: ../spec/06.6-console.norms.md
-[P/06.8]: ../spec/06.8-console.norms.md
-[P/06.9]: ../spec/06.9-console.norms.md
-[Stand]: ../../common/acceptance/README.md
-[catalogue]: ../../common/data/catalog.tsv
+[P/02.3]: ../02-installer/spec/02.3-installer.norms.md
+[P/02.4]: ../02-installer/spec/02.4-installer.norms.md
+[P/03.2]: ../03-worker/spec/03.2-worker.norms.md
+[P/06.1]: spec/06.1-console.norms.md
+[P/06.2]: spec/06.2-console.norms.md
+[P/06.3]: spec/06.3-console.norms.md
+[P/06.4]: spec/06.4-console.norms.md
+[P/06.5]: spec/06.5-console.norms.md
+[P/06.6]: spec/06.6-console.norms.md
+[P/06.8]: spec/06.8-console.norms.md
+[P/06.9]: spec/06.9-console.norms.md
+[Stand]: ../common/acceptance/README.md
+[catalogue]: ../common/data/catalog.tsv
 
 ## Launch
 
@@ -34,7 +34,7 @@ This English text is the source; the Russian [`lifecycle.md`](../lifecycle.md) i
 ## Environment
 
 The environment is assembled by the runner `w2c-run.sh` in the order of P/02.4 Н1.2: the unit values → `roles/<W2C_ROLE>.env` → `w2c.env` →
-the subsystem file, what is read earlier wins; the files are read by parsing, not by `source` ([the environment file contract](../../common/contracts/env-file.md); [02-installer/lifecycle.md](../../02-installer/lifecycle.md)).
+the subsystem file, what is read earlier wins; the files are read by parsing, not by `source` ([the environment file contract](../common/contracts/env-file.md); [02-installer/lifecycle.md](../02-installer/lifecycle.md)).
 
 | Variable | Meaning | Default | Norm |
 |---|---|---|---|
@@ -44,16 +44,16 @@ the subsystem file, what is read earlier wins; the files are read by parsing, no
 | `RESOURCE_ROOT` / `EVENTS` | the events root of its own server: the journal `audit/console` and the marks `console/<экземпляр>` | `<PLATFORM_DIR>/events` | [P/02.4] Н1.2, [P/06.4] Н1.2 `writer` |
 | `OBJECTS` / `PLATFORM_OBJECTS` | the objects: the bodies `blob`, the cleanup marks | `<PLATFORM_DIR>/objects`; `cluster://` with configstore | [P/02.4] Н1.2 |
 | `CONSOLE_ROOT` | the subsystem whose shell is served on `/`; empty or not from the catalogue — code 2 | — | [P/06.5] Н1.1 `root` |
-| `CONSOLE_HOST`, `CONSOLE_PORT` | the console address — from `w2c.env` (written by the installer, the unit does not set it; one per box — the clients of their own console build the URL by it as well, [the role certificate contract](../../common/contracts/role-certificate.md) `own_url`); TLS — by the role kit (`kit`) and on the loopback too, HTTP is not opened when there is a kit; `::1` — only by an explicit entry; the browser origin with a kit — `https://<SERVER_NAME>:<порт>` in `CONSOLE_ORIGINS` (ADR-0075 addendum 2026-10-26 (2) item 3, (3) items 3–4, (5) item 2) | `127.0.0.1`, `8080` | [P/02.4] Н1.2, Н1.6 `console`, Н1.7 `w2c_env` |
-| `CONSOLE_CALL_PORT` | the port of the callback listener, only with a kit and a manifest with `door.pass.calls`, [the role certificate contract](../../common/contracts/role-certificate.md) «The callback leaf» | 8081 | [P/02.4] Н1.7 `w2c_env`, ADR-0094 addendum (16) |
+| `CONSOLE_HOST`, `CONSOLE_PORT` | the console address — from `w2c.env` (written by the installer, the unit does not set it; one per box — the clients of their own console build the URL by it as well, [the role certificate contract](../common/contracts/role-certificate.md) `own_url`); TLS — by the role kit (`kit`) and on the loopback too, HTTP is not opened when there is a kit; `::1` — only by an explicit entry; the browser origin with a kit — `https://<SERVER_NAME>:<порт>` in `CONSOLE_ORIGINS` (ADR-0075 addendum 2026-10-26 (2) item 3, (3) items 3–4, (5) item 2) | `127.0.0.1`, `8080` | [P/02.4] Н1.2, Н1.6 `console`, Н1.7 `w2c_env` |
+| `CONSOLE_CALL_PORT` | the port of the callback listener, only with a kit and a manifest with `door.pass.calls`, [the role certificate contract](../common/contracts/role-certificate.md) «The callback leaf» | 8081 | [P/02.4] Н1.7 `w2c_env`, ADR-0094 addendum (16) |
 | `SECRETS_KEY` | the ring path; set empty — unreadable, 503 | — (the installer layout: for the unit — `<PLATFORM_DIR>/etc/secrets/platform.key`; not set for the process — the development mode with a loud line, review analysis of stage A 6–7, № 19) | [P/06.2] Н1.2, [P/02.4] Н1.1 `dirs` |
 | `SERVER_NAME` | the server | the short hostname (`%l`) | [P/02.4] Н1.2 |
 | `BOX_ID` | the box; the instance `<коробка>:<pid>:<6 hex>` | `BOX_ID`, otherwise `/etc/machine-id`, otherwise the hostname | [P/02.4] Н1.2, [P/03.2] Н3 «start()» step 2 |
 | `CLUSTER` | the cluster name | `local` | [P/02.4] Н1.2 |
-| `TIMEZONE` | the time zone of the cluster: the value `timezone` in `/session`; from `w2c.env` (written by the installer); empty or out of form — code 2 | `UTC` | [the environment file contract](../../common/contracts/env-file.md); [P/06.3] Н2 |
+| `TIMEZONE` | the time zone of the cluster: the value `timezone` in `/session`; from `w2c.env` (written by the installer); empty or out of form — code 2 | `UTC` | [the environment file contract](../common/contracts/env-file.md); [P/06.3] Н2 |
 | `BUILD` | the build word in `/schema` | `dev` | [P/02.4] Н1.2, [P/06.6] Н2.3 |
 | `W2C_TLS_DIR` | the root of the kits; its own kit — `<W2C_TLS_DIR>/console` | `/etc/w2c/tls` | [P/02.4] Н1.2, Н1.6 |
-| `LOGIN_URL`, `SIGNER_URL`, `DOMAIN_*`, `CLUSTERS` | the domain (the late layer of lesson 6 — [chapter 6.7](../spec/06.7-console.norms.md): `CLUSTERS` — Н1.4, `SIGNER_URL` — Н1.8, `DOMAIN_CA`/`RELAY_CA` — the peer contract; `LOGIN_URL` — the guard contract `login_url`) | — | [P/02.4] Н1.2 |
+| `LOGIN_URL`, `SIGNER_URL`, `DOMAIN_*`, `CLUSTERS` | the domain (the late layer of lesson 6 — [chapter 6.7](spec/06.7-console.norms.md): `CLUSTERS` — Н1.4, `SIGNER_URL` — Н1.8, `DOMAIN_CA`/`RELAY_CA` — the peer contract; `LOGIN_URL` — the guard contract `login_url`) | — | [P/02.4] Н1.2 |
 | `W2C_ENV` | the file of common settings | `/etc/w2c/w2c.env` | [P/02.4] Н1.2 |
 
 ## Flags
@@ -64,16 +64,16 @@ None: the setting channel is the environment only ([P/02.4] Н1.2 «The setting 
 
 - **The ring** — the file `SECRETS_KEY` (the path is set for the unit by the installer — `/etc/w2c/secrets/platform.key` by the layout
   `<PLATFORM_DIR>/etc/secrets/platform.key`, [P/02.4] Н1.1 `dirs`), outside the store directory, the objects root and the events root; the console reads it, only `w2cctl secrets` writes it ([P/06.2] Н1.2, [P/02.4] Н1.2, [catalogue]).
-  On reading, the console checks the placement of the ring ([the secret files contract](../../common/contracts/secret-files.md) `forbidden`, `daemon`)
+  On reading, the console checks the placement of the ring ([the secret files contract](../common/contracts/secret-files.md) `forbidden`, `daemon`)
   against the roots it knows itself from the environment: the store directory with `PLATFORM_STORE=file://…`, the objects root
   (`OBJECTS`), the events root (`RESOURCE_ROOT` / `EVENTS`). With the store door through the daemon socket (`configstore://…`)
   the `-dir` of the daemon and the directories of its copies are not known to the console — the installation excludes them (the layout of P/02.4 Н1.1); there are no new
   variables (C08-RING-FORBIDDEN-ROOTS-01, the decision of the Domain Specification; the class in P/06 — the decision of the Specification).
 - **The events root of its own server** — the journal `audit/console/e1/…` under an exclusive file lock and the operator
-  marks `console/<экземпляр>/e1/…`; the names — one `%XX` encoding ([the event journal contract](../../common/contracts/event-journal.md),
+  marks `console/<экземпляр>/e1/…`; the names — one `%XX` encoding ([the event journal contract](../common/contracts/event-journal.md),
   [P/06.4] Н1.2 `writer`, `marks`).
 - **The objects root** — the bodies `<sub>/blobs/sha256-<hex>` ([P/06.1] Н1.5); the tombstones `.gone/<ключ>` — a resource row, the console
-  is a participant `put` in it ([P/05](../../05-resource/spec/05-resource.norms.md) Н1.1 «Tombstones»; review analysis of stage A 6–7, № 17).
+  is a participant `put` in it ([P/05](../05-resource/spec/05-resource.norms.md) Н1.1 «Tombstones»; review analysis of stage A 6–7, № 17).
 - **Store rows** — the doors of units and tables, the requests and their accounting, the cleanup marks, the drain, the policy, the server labels,
   the decommission of servers, the schema ([catalogue]: the rows where the participant is `console`).
 
@@ -86,7 +86,7 @@ None: the setting channel is the environment only ([P/02.4] Н1.2 «The setting 
 | 2 | the store schema is above its own or not a number | [P/06.6] Н3 «console start — schema check» |
 | 2 | the manifest is not read or is refused | [P/02.3] Н3 «Process start» |
 | 2 | `CONSOLE_ROOT` is empty or not from the catalogue | [P/06.5] Н1.1 `root`, Н4 |
-| 2 | `TIMEZONE` is empty or out of form | [P/06.5] Н4; [the environment file contract](../../common/contracts/env-file.md) |
+| 2 | `TIMEZONE` is empty or out of form | [P/06.5] Н4; [the environment file contract](../common/contracts/env-file.md) |
 | 2 | the environment file is not by the grammar; `SERVER_NAME` is not by the grammar; `W2C_ROLE` is not the role of the command | [P/02.4] Н1.2, Н4 |
 | ≠ 0 | outside the loopback without a kit; another start refusal — a log line names the source | [P/02.4] Н1.6, [P/02.3] Н3 |
 
@@ -117,15 +117,15 @@ item 9), not by the process `console`: the operator runs it in an exclusive wind
 ## Stand
 
 The roots `{data}/config`, `objects`, `events` are created before the process start by the role start command of the profile — [the common
-acceptance README](../../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
+acceptance README](../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
 
 - The command of the «Stand» with the substitution `{port}`; `{data}` is `PLATFORM_DIR`: the stand sets `PLATFORM_DIR={data}`,
   `CONSOLE_PORT={port}`, `PLATFORM_STORE` — the role socket, `SECRETS_KEY={data}/etc/secrets/platform.key` — the ring, which the runner creates
   by the «Stand» command `ring {file}` before the first process, `BOX_ID`,
-  `SERVER_NAME` ([Stand] «Один каталог данных»); `CONSOLE_CALL_PORT={cport}` — on the stand with the kit of [the second kind of pass](../../common/acceptance/pass/README.md).
+  `SERVER_NAME` ([Stand] «Один каталог данных»); `CONSOLE_CALL_PORT={cport}` — on the stand with the kit of [the second kind of pass](../common/acceptance/pass/README.md).
 - `CONSOLE_ROOT` is named by the acceptance README of the chapter: chapter 6.2 — `testsub2`, the others — `testsub` ([Stand]).
 
 ## Open
 
 - None. The stand ring — one path `{data}/etc/secrets/platform.key` (above, «Stand»); `BOX_ID` — by [P/02.4] Н1.2;
-  an instance with `:` in the name is representable by the name encoding ([the event journal contract](../../common/contracts/event-journal.md)).
+  an instance with `:` in the name is representable by the name encoding ([the event journal contract](../common/contracts/event-journal.md)).

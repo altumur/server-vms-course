@@ -27,7 +27,7 @@
   выпуск `w2c-ca.sh`.
 
 Своего HTTP-контракта у урока нет: дверь `GET /manifest` и форма `ManifestView` — у главы P/06.5
-([нормы](../../../06-console/spec/06.5-console.norms.md), [инструкция](../../../06-console/spec/06-console.README.md), [контракт](../../../06-console/spec/06-console.api.openapi.yaml)).
+([нормы](../../../06-console/ru/spec/06.5-console.norms.md), [инструкция](../../../06-console/ru/spec/06-console.README.md), [контракт](../../../06-console/spec/06-console.api.openapi.yaml)).
 
 ## Входы и их приоритет
 

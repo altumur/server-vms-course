@@ -1,8 +1,8 @@
 # Acceptance P/06.9 — group operations (stand)
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/9/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`06.9-console.norms.md`](../../../spec/06.9-console.norms.md) Н5. The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The norm of the chapter is [`06.9-console.norms.md`](../../spec/06.9-console.norms.md) Н5. The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
 In total 2 scenarios / 8 steps.
 
 **There is no dry run by an implementation.** The chapter is part of the rights increment and waits for the credit of increment B.
@@ -13,11 +13,11 @@ A console with the manifest `testsub`, it declares no operations. A door without
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors](../../../../common/acceptance/README.md#словарь-директив-и-дверей). The scenarios check only what is executable without a declaration: the subsystem has no operation doors, rows do not appear, there is no rollback as a path.
+The format is [the dictionary of directives and doors](../../../common/acceptance/README.md#словарь-директив-и-дверей). The scenarios check only what is executable without a declaration: the subsystem has no operation doors, rows do not appear, there is no rollback as a path.
 
 ## Plan of scenarios after ADR-0094 B1
 
-A step of an operation requires a manifest with `door.pass.operations` and a worker with a route of the step call. The test worker is in the dictionary, the data lie in [`common/acceptance/ops`](../../../../common/acceptance/ops/README.md): sc. 03 and 07 are written there, the other rows of the table are by reading for now.
+A step of an operation requires a manifest with `door.pass.operations` and a worker with a route of the step call. The test worker is in the dictionary, the data lie in [`common/acceptance/ops`](../../../common/acceptance/ops/README.md): sc. 03 and 07 are written there, the other rows of the table are by reading for now.
 
 | № | Scenario | Norms |
 |---|---|---|
@@ -35,7 +35,7 @@ A step of an operation requires a manifest with `door.pass.operations` and a wor
 
 ## What is checked by reading
 
-Sc. 04–06, 08–13 of the plan table — by reading, the change of the ring of sc. 11 — for good: there is no directive; the form of the key — the cases `a95_*` of the corpus of P/02.1. The algorithms without a stand are checked by the vectors [`op-step`](../../../vectors/op-step/README.md): `step_key` and the expected version along the chain of the root.
+Sc. 04–06, 08–13 of the plan table — by reading, the change of the ring of sc. 11 — for good: there is no directive; the form of the key — the cases `a95_*` of the corpus of P/02.1. The algorithms without a stand are checked by the vectors [`op-step`](../../vectors/op-step/README.md): `step_key` and the expected version along the chain of the root.
 
 ## corrections.tsv
 

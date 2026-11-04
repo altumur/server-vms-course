@@ -1,10 +1,10 @@
 # Vectors: the key families of the domain `families`
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/key-families/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter P/06.7 ([norms](../../../spec/06.7-console.norms.md) Н1.11 `families`; stage C guess
+The owner is chapter P/06.7 ([norms](../../spec/06.7-console.norms.md) Н1.11 `families`; stage C guess
 C06-DOMAIN-KEY-FAMILIES-168-21, the Architect's decision of 2026-10-27). The participant is the cluster console (the door `GET /domain/keys`).
-The declaration `domain.keys` and its load refusals are [P/02.1 Н1.2б](../../../../02-installer/spec/02.1-installer.norms.md)
+The declaration `domain.keys` and its load refusals are [P/02.1 Н1.2б](../../../02-installer/spec/02.1-installer.norms.md)
 (the cases `m59_keys_*`). The bytes are written by the Specification; the rows follow the text of the norm, the rule is there, not here.
 
 ## `cases.tsv`
@@ -27,7 +27,7 @@ manifests — the union, the same answer with another order of the manifests, ke
 
 Without a stand: the side gives the input to its own computation of `families` of the door `GET /domain/keys` (the catalogue manifests and the read of the rows under
 `domain/` are replaced by the input). The native outcome is code 0 and the value `families` (one expectation column — the common rule «Vectors»
-of [the common acceptance README](../../../../common/acceptance/README.md)); the input is `cells` `decls`, `present`.
+of [the common acceptance README](../../../common/acceptance/README.md)); the input is `cells` `decls`, `present`.
 Who executes it is the cluster console (`06-console`, P/06.7 Н1.11 `families`). The console module (`07-console-module`) takes
 `families` ready-made: the subsystem page selects its own keys by prefix (ACC-VECTORS-CONNECT-03: a row is executed by the role whose
 norm calls its function; the Architect's decision of 2026-10-27).

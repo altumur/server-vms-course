@@ -1,12 +1,12 @@
 # Векторы значения при чтении
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+Текст производный от `vectors/resolve/README.md`, руками не правится: источник — английский [`vectors/resolve/README.md`](../../../vectors/resolve/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
 Векторы функции `resolve(field, unit, domain)` консоли кластера — значение общего поля для единицы при чтении: единица →
 домен → `inherit` манифеста; поле-документ и поле группировки — только из домена. Владелец — урок P/06, глава 6.7 позднего
 слоя ([P/06.7](../../spec/06.7-console.norms.md) Н1.14, Н3 `resolve`, Н5 `resolve`); исполняет консоль кластера у двери
-`GET /domain/shared/<sub>`. Объявление `domain.shared` и `merge` — [P/02.1 Н1.2б](../../../02-installer/ru/spec/02.1-installer.norms.md),
-общий документ — [P/08.9](../../../08-domain/spec/08.9-domain.norms.md) Н1.2. Байты пишет «Спецификация» (ADR-0083);
+`GET /domain/shared/<sub>`. Объявление `domain.shared` и `merge` — [P/02.1 Н1.2б](../../../../02-installer/ru/spec/02.1-installer.norms.md),
+общий документ — [P/08.9](../../../../08-domain/spec/08.9-domain.norms.md) Н1.2. Байты пишет «Спецификация» (ADR-0083);
 соответствие продукта — его приёмкой по этой таблице (ADR-0080 доп. 16).
 
 Строки переложены из входов команды `resolve` приёмки М11/11 (`inputs/resolve-*.json`, сц. 03) без изменения байтов: сняты
@@ -32,7 +32,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 14 строк: 10 вычислено, 4 `@exit 2` | `input` — вход команды `resolve` текстом JSON (`field` — `{name, type, inherit?, merge?, document?, group_by?}`, `unit` — значение строки единицы, нет ключа — значения нет, `domain` — `{term, rev, value}` или `null`) → `expect`: `{"value":…,"from":…}` — своё (`unit`), домена (`domain term T rev R`), манифеста (`manifest`), объединение `union` (`unit + domain term T rev R`), документ и его отсутствие (`none`), `override` у списка; `{"groups":…,"from":…}` — поле группировки |
+| [`cases.tsv`](../../../vectors/resolve/cases.tsv), 14 строк: 10 вычислено, 4 `@exit 2` | `input` — вход команды `resolve` текстом JSON (`field` — `{name, type, inherit?, merge?, document?, group_by?}`, `unit` — значение строки единицы, нет ключа — значения нет, `domain` — `{term, rev, value}` или `null`) → `expect`: `{"value":…,"from":…}` — своё (`unit`), домена (`domain term T rev R`), манифеста (`manifest`), объединение `union` (`unit + domain term T rev R`), документ и его отсутствие (`none`), `override` у списка; `{"groups":…,"from":…}` — поле группировки |
 
 Векторы проверены прогонами реализаций приёмки М11/11 (прогон 41, сверка М11 09–12) и по тексту норм; при расхождении
 прав норма, вектор правит «Спецификация».
@@ -40,7 +40,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 ## Журнал источника
 
 Строки `corrections.tsv` приёмки М11/11 о сц. 03 (пути и номера — прежние, их разрешает
-[`id-map.tsv`](../../../common/id-map.tsv)):
+[`id-map.tsv`](../../../../common/id-map.tsv)):
 
 | date | sample | fix |
 |---|---|---|

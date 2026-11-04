@@ -1,11 +1,11 @@
 # Векторы: проекция меток соперника в `name_conflict` и `name_conflicts`
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+Текст производный от `vectors/contender-projection/README.md`, руками не правится: источник — английский [`vectors/contender-projection/README.md`](../../../vectors/contender-projection/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
 Владелец — глава P/06.5 ([нормы](../../spec/06.5-console.norms.md) Н3 «/servers» «Соперники»; догадка стадии C
 C06-CONTENDER-PROJECTION-33-01, решение «Архитектора» 2026-10-25). Участник — консоль кластера (`/servers`
-`WorkerRow.name_conflict`, ряд `<sub>_name_conflicts` `/metrics`). Свежесть метки — [договор наблюдения](../../../common/contracts/observation.md)
-«Свежесть метки соперника» (граница — пакет [`contender-fresh`](../../../common/vectors/contender-fresh/README.md)). Байты
+`WorkerRow.name_conflict`, ряд `<sub>_name_conflicts` `/metrics`). Свежесть метки — [договор наблюдения](../../../../common/contracts/observation.md)
+«Свежесть метки соперника» (граница — пакет [`contender-fresh`](../../../../common/vectors/contender-fresh/README.md)). Байты
 пишет «Спецификация»; строки — по тексту нормы, правило — там, не здесь.
 
 ## `cases.tsv`

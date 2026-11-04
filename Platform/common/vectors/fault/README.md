@@ -2,10 +2,10 @@
 
 Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
 
-Владелец — глава P/06.1 ([нормы](../../../06-console/spec/06.1-console.norms.md) Н2: ответ-отказ `{detail, error, fault?}`; Н4: причины
+Владелец — глава P/06.1 ([нормы](../../../06-console/ru/spec/06.1-console.norms.md) Н2: ответ-отказ `{detail, error, fault?}`; Н4: причины
 с `fault` — `not_json`, `not_number`, `too_long`, `bad_url`, `unique`, `must_match`, `garbled`). Участники — двери, которые
-говорят этими словами: дверь таблиц (P/06.1 Н4 «Тела, таблицы…»), дверь просьб ([глава 6.4](../../../06-console/spec/06.4-console.norms.md);
-вектор [`requests-body`](../../../06-console/vectors/requests-body/README.md)), запечатывание консолью ([глава 6.2](../../../06-console/spec/06.2-console.norms.md): `bad_url` у адреса с
+говорят этими словами: дверь таблиц (P/06.1 Н4 «Тела, таблицы…»), дверь просьб ([глава 6.4](../../../06-console/ru/spec/06.4-console.norms.md);
+вектор [`requests-body`](../../../06-console/ru/vectors/requests-body/README.md)), запечатывание консолью ([глава 6.2](../../../06-console/ru/spec/06.2-console.norms.md): `bad_url` у адреса с
 паролем), дверь единиц консоли и библиотека заказчика (`06-console`, `03-worker`: слово `bad_url` вектора
 [`group-of`](../group-of/) — отсюда; контроллер, [P/04](../../../04-controller/ru/spec/04-controller.norms.md) `group_by`, только считает
 группу и слов отказа не говорит — C04-VECTOR-FAULT-167, решение «Архитектора» 2026-10-27), двери домена (уроки 8–10). Байты пишет

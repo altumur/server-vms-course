@@ -1,8 +1,8 @@
 # P/06 — instructions for an implementation
 
-This English text is the source; the Russian [`06-console.README.md`](../06-console.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/06-console.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is [`../06-console.md`](../../06-console.md).
+This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/06-console.md` (for people, not in the export).
 
 ## Task
 
@@ -13,46 +13,46 @@ P/06.2-01…-06 and P/06.2-08…-11 (the number 07 is empty: the former norm wen
 P/06.4-01…11, P/06.5-01…19, P/06.6-01…08, P/06.7-01…19, P/06.8-01…18, P/06.9-01…18.
 
 - **6.1.** The unit row and the operations on it — the units door of the console; the bounded blob door, the tables and the maintained
-  cleanup — [chapter 6.1](../06.1-console.norms.md). The maintenance windows of Н3 are a mandatory condition of an admissible execution, not an
-  additional locking mechanism. The slot, the epoch and the lease — [chapter P/03.2](../../../03-worker/spec/03.2-worker.norms.md) and
-  the steps of [the instructions of lesson P/03](../../../03-worker/spec/03-worker.README.md).
+  cleanup — [chapter 6.1](06.1-console.norms.md). The maintenance windows of Н3 are a mandatory condition of an admissible execution, not an
+  additional locking mechanism. The slot, the epoch and the lease — [chapter P/03.2](../../03-worker/spec/03.2-worker.norms.md) and
+  the steps of [the instructions of lesson P/03](../../03-worker/spec/03-worker.README.md).
 - **6.2.** Keep secrets in envelopes, give them out by a mask, refuse a password in an address; keep the binding to the row/field,
-  reseal at start and keep the ring in the declared maintenance area — [chapter 6.2](../06.2-console.norms.md).
-  The opening of an envelope by the recipient — [P/03.5](../../../03-worker/spec/03.5-worker.norms.md); the commands `w2cctl secrets` —
-  [P/02.4 Н1.9](../../../02-installer/spec/02.4-installer.norms.md).
-- **6.3.** The guard, `/session` and the keys `rights:` of the manifest ([chapter 6.3](../06.3-console.norms.md) Н1.3, Н1.5) at the console on
+  reseal at start and keep the ring in the declared maintenance area — [chapter 6.2](06.2-console.norms.md).
+  The opening of an envelope by the recipient — [P/03.5](../../03-worker/spec/03.5-worker.norms.md); the commands `w2cctl secrets` —
+  [P/02.4 Н1.9](../../02-installer/spec/02.4-installer.norms.md).
+- **6.3.** The guard, `/session` and the keys `rights:` of the manifest ([chapter 6.3](06.3-console.norms.md) Н1.3, Н1.5) at the console on
   an edit by people.
-- **6.4.** The merge of the resource answers, the submission of requests, the accounting and the reaper — [chapter 6.4](../06.4-console.norms.md). The holder
+- **6.4.** The merge of the resource answers, the submission of requests, the accounting and the reaper — [chapter 6.4](06.4-console.norms.md). The holder
   side (the execution of a request with a mark before the call and an explicit unknown outcome, the append) and the suppression of events — chapter
-  [3.6](../../../03-worker/spec/03.6-worker.norms.md) and its steps of the instructions of lesson P/03.
-- **6.5.** The console process and the shell boundary per Н1 of [chapter 6.5](../06.5-console.norms.md); the common module — the published
-  files Н1.1 `module`, they are served byte for byte, not written (what the module calls and gives the shell — [lesson P/07](../../../07-console-module/spec/07-console-module.norms.md)).
+  [3.6](../../03-worker/spec/03.6-worker.norms.md) and its steps of the instructions of lesson P/03.
+- **6.5.** The console process and the shell boundary per Н1 of [chapter 6.5](06.5-console.norms.md); the common module — the published
+  files Н1.1 `module`, they are served byte for byte, not written (what the module calls and gives the shell — [lesson P/07](../../07-console-module/spec/07-console-module.norms.md)).
   Its own HTTP doors and all refusals — Н2; the domain, unit and event doors are connected by their owners (chapters
   6.1, 6.4, 6.6, 6.7), not defined anew here. `door.pass` — Н1.8.
 - **6.6.** The operator doors: the policy, the drain, the labels, the server decommission, `/unplaceable` and `/where`; the schema row, its
-  check at the console start, the raise and the door `/schema` — [chapter 6.6](../06.6-console.norms.md).
-- **6.7.** The cluster console as the door of the cluster to the domain — [chapter 6.7](../06.7-console.norms.md) (the late layer): the door of the book
-  of this member, the forwarding of `/domain/*` by [the forwarding contract](../../../common/contracts/forwarding.md) (transitions 1–2) and the `where`
-  of a member, the TLS client to another cluster by [the `peer` contract](../../../common/contracts/peer.md), the forwarding to the signer of the
-  move doors, `may` by the copy of grants at the guard ([the right contract](../../../common/contracts/may.md)), the order of the emergency
-  entry, `/domain/keys`, `/api/held`, `/api/backup` ([the request signature contract](../../../common/contracts/ask-sig.md)),
+  check at the console start, the raise and the door `/schema` — [chapter 6.6](06.6-console.norms.md).
+- **6.7.** The cluster console as the door of the cluster to the domain — [chapter 6.7](06.7-console.norms.md) (the late layer): the door of the book
+  of this member, the forwarding of `/domain/*` by [the forwarding contract](../../common/contracts/forwarding.md) (transitions 1–2) and the `where`
+  of a member, the TLS client to another cluster by [the `peer` contract](../../common/contracts/peer.md), the forwarding to the signer of the
+  move doors, `may` by the copy of grants at the guard ([the right contract](../../common/contracts/may.md)), the order of the emergency
+  entry, `/domain/keys`, `/api/held`, `/api/backup` ([the request signature contract](../../common/contracts/ask-sig.md)),
   the value on reading (`resolve`). What the domain console and the process `domain` do with the forwarding — lessons
-  [P/10](../../../10-domain-console/spec/10-domain-console.norms.md) and [P/08](../../../08-domain/spec/08.0-domain.norms.md).
-- **6.8.** Cluster folders: the rows of a folder and of membership, the chain to the root, the removal of a unit from the folders by the same batch, the folder reaper — [chapter 6.8](../06.8-console.norms.md).
-- **6.9.** Group operations: the reception, the leader under the queue and the generation, the step ticket, the pause, the token term, the operations reaper — [chapter 6.9](../06.9-console.norms.md). The chapter stands on the ticket of ADR-0094 B1: without it a step is not executed.
+  [P/10](../../10-domain-console/spec/10-domain-console.norms.md) and [P/08](../../08-domain/spec/08.0-domain.norms.md).
+- **6.8.** Cluster folders: the rows of a folder and of membership, the chain to the root, the removal of a unit from the folders by the same batch, the folder reaper — [chapter 6.8](06.8-console.norms.md).
+- **6.9.** Group operations: the reception, the leader under the queue and the generation, the step ticket, the pause, the token term, the operations reaper — [chapter 6.9](06.9-console.norms.md). The chapter stands on the ticket of ADR-0094 B1: without it a step is not executed.
 
 ## Inputs and their priority
 
-- The canon is the norms of chapters [6.1](../06.1-console.norms.md), [6.2](../06.2-console.norms.md), [6.3](../06.3-console.norms.md),
-  [6.4](../06.4-console.norms.md), [6.5](../06.5-console.norms.md), [6.6](../06.6-console.norms.md), [6.7](../06.7-console.norms.md),
-  [6.8](../06.8-console.norms.md), [6.9](../06.9-console.norms.md), including Н0, the order of Н3 and the refusals of Н4. The bytes of the envelope, the AAD and the ring file — [the sealing contract](../../../common/contracts/sealing.md); freshness, the state
-  of a resource and the reading of the decision intent → placement → intent — [the observation contract](../../../common/contracts/observation.md).
-- [OpenAPI](../06-console.api.openapi.yaml) expresses the HTTP forms of the canon of all chapters of the lesson: one door of a process — one
+- The canon is the norms of chapters [6.1](06.1-console.norms.md), [6.2](06.2-console.norms.md), [6.3](06.3-console.norms.md),
+  [6.4](06.4-console.norms.md), [6.5](06.5-console.norms.md), [6.6](06.6-console.norms.md), [6.7](06.7-console.norms.md),
+  [6.8](06.8-console.norms.md), [6.9](06.9-console.norms.md), including Н0, the order of Н3 and the refusals of Н4. The bytes of the envelope, the AAD and the ring file — [the sealing contract](../../common/contracts/sealing.md); freshness, the state
+  of a resource and the reading of the decision intent → placement → intent — [the observation contract](../../common/contracts/observation.md).
+- [OpenAPI](06-console.api.openapi.yaml) expresses the HTTP forms of the canon of all chapters of the lesson: one door of a process — one
   contract; the description of each path names the chapter. The common answers (`BadBody`, `Unauthenticated`, `Denied`, `NoRoute`,
   `Method`, `SlowBody`, `LargeBody`, `RateLimited`) — the same for all doors; 503 — by door: `Unavailable` (`busy`,
   `denied`, `unavailable` — the doors of 6.6 and the observations of 6.5), `GuardUnavailable` (`GET /manifest`), `UnitUnavailable` and
   `WriteUnavailable` (the units door of 6.1), `ConsoleUnavailable` (the others). The schemas of the event rows and `SubsystemName` —
-  `$ref` to [the contract of P/05](../../../05-resource/spec/05-resource.api.openapi.yaml); the implementation reads them there.
+  `$ref` to [the contract of P/05](../../05-resource/spec/05-resource.api.openapi.yaml); the implementation reads them there.
 - One path segment distinguishes the loaded manifest: `unit.rows` — `/{rows}`, `tables` — `/{table}`, `door.pass` —
   `/{pass}`; the loader of P/02.1 guarantees that the names do not intersect. In OpenAPI these are three paths with an equal template —
   the router of the implementation chooses the door by the manifest, not by the order of the paths in the contract.
@@ -64,25 +64,25 @@ P/06.4-01…11, P/06.5-01…19, P/06.6-01…08, P/06.7-01…19, P/06.8-01…18, 
   `/domain/move`) — the codes of the forwarding cluster console and the answers of the process, `$ref` to the operations of the OpenAPI of P/08; the term records, the pairs and the member names —
   `$ref` to the schemas of P/08.
 - Secrets (6.2) create no separate paths: the HTTP inputs — the units door of chapter 6.1 and [the store
-  P/01.1](../../../01-store/spec/01-store.api.openapi.yaml); the application of the bodies — Н2 of chapter 6.2; the CLI, HTTP and the unit state
+  P/01.1](../../01-store/spec/01-store.api.openapi.yaml); the application of the bodies — Н2 of chapter 6.2; the CLI, HTTP and the unit state
   have different outcome forms.
-- Objects and marks use the store vocabulary of P/01.1, the roles — [P/02.4 Н1.6](../../../02-installer/spec/02.4-installer.norms.md).
+- Objects and marks use the store vocabulary of P/01.1, the roles — [P/02.4 Н1.6](../../02-installer/spec/02.4-installer.norms.md).
   The resource doors, `PUT /v1/objects/<sub>/blobs/<digest>` and `restore` (`GET /mirrored/<server>`) —
-  [P/05](../../../05-resource/spec/05-resource.norms.md).
-- The acceptance of the chapters checks the norms: [6.1](../../acceptance/1/README.md), [6.2](../../acceptance/2/README.md) (the scenarios and the
-  fields file), [6.3](../../acceptance/3/README.md), [6.4](../../acceptance/4/README.md), [6.5](../../acceptance/5/README.md),
-  [6.6](../../acceptance/6/README.md), [6.7](../../acceptance/7/README.md) (the domain stand), [6.8](../../acceptance/8/README.md), [6.9](../../acceptance/9/README.md); the stand — [the common acceptance
-  README](../../../common/acceptance/README.md). The vectors of the lesson —
-  [`values-by-type`](../../../common/vectors/values-by-type/README.md), [`fault`](../../../common/vectors/fault/README.md) (6.1),
-  [`secret-in`](../../../common/vectors/secret-in/README.md), [`log-mask`](../../../common/vectors/log-mask/README.md) (6.2),
-  [`rid`](../../vectors/rid/README.md), [`requests-body`](../../vectors/requests-body/README.md),
-  [`request-digest`](../../vectors/request-digest/README.md) (6.4), [`resolve`](../../vectors/resolve/README.md),
-  [`key-families`](../../vectors/key-families/README.md) (6.7), [`op-step`](../../vectors/op-step/README.md) (6.9); the common
+  [P/05](../../05-resource/spec/05-resource.norms.md).
+- The acceptance of the chapters checks the norms: [6.1](../acceptance/1/README.md), [6.2](../acceptance/2/README.md) (the scenarios and the
+  fields file), [6.3](../acceptance/3/README.md), [6.4](../acceptance/4/README.md), [6.5](../acceptance/5/README.md),
+  [6.6](../acceptance/6/README.md), [6.7](../acceptance/7/README.md) (the domain stand), [6.8](../acceptance/8/README.md), [6.9](../acceptance/9/README.md); the stand — [the common acceptance
+  README](../../common/acceptance/README.md). The vectors of the lesson —
+  [`values-by-type`](../../common/vectors/values-by-type/README.md), [`fault`](../../common/vectors/fault/README.md) (6.1),
+  [`secret-in`](../../common/vectors/secret-in/README.md), [`log-mask`](../../common/vectors/log-mask/README.md) (6.2),
+  [`rid`](../vectors/rid/README.md), [`requests-body`](../vectors/requests-body/README.md),
+  [`request-digest`](../vectors/request-digest/README.md) (6.4), [`resolve`](../vectors/resolve/README.md),
+  [`key-families`](../vectors/key-families/README.md) (6.7), [`op-step`](../vectors/op-step/README.md) (6.9); the common
   vectors of the contracts `peer`, `may`, `ask-sig`, `record` (`Platform/common/vectors/`) — a participant of 6.7. Flags, environment, exit
-  codes — [`../lifecycle.md`](../../lifecycle.md).
-- The [lecture](../../06-console.md) explains the mechanism and the examples.
+  codes — [`../lifecycle.md`](../lifecycle.md).
+- The lecture (`ru/06-console.md`, for people, not in the export) explains the mechanism and the examples.
 
-The unit fields need a loaded manifest per [P/02.1](../../../02-installer/spec/02.1-installer.norms.md).
+The unit fields need a loaded manifest per [P/02.1](../../02-installer/spec/02.1-installer.norms.md).
 The static HTTP schema does not know an arbitrary set of `unit.fields`: perform the check of the names, types, obligatoriness,
 references and constraints of a field by the manifest and Н3. Conformance to the common schema alone does not mean an admissible request.
 The internal interfaces, types, error classes, functions, libraries, the way the handlers are placed and the split into
@@ -107,7 +107,7 @@ in `corrections.tsv`; do not leave a new rule only in the instructions.
 - **6.2.** The recognition and masking of secrets, the sealing on write and the resealing at start per Н1.2 and Н3,
   the check of `bound_to`, the handling of addresses by the manifest and their diagnostics. The row readers and the rights generator — P/02.5; the replay
   memory — chapter 6.1; the commands `new|seal|rotate|status` — P/02.4.
-- **6.3.** Sessions and grants per [chapter 6.3](../06.3-console.norms.md) Н1.3 (the guard, `/session`); the keys `rights:` Н1.5.
+- **6.3.** Sessions and grants per [chapter 6.3](06.3-console.norms.md) Н1.3 (the guard, `/session`); the keys `rights:` Н1.5.
 - **6.4.** The console merge; the submission of a request, the accounting and the reaper. A whole copy of a file, a source that answered, a confirmed mark
   and a published outcome are different boundaries of confirmation, one does not prove another.
 - **6.5.** The console process and the shell boundary that respect the root and mounted routes; the serving of the published files
@@ -118,7 +118,7 @@ in `corrections.tsv`; do not leave a new rule only in the instructions.
 - **6.6.** The operator doors of the console: of the policy, the drain, the labels, the server decommission, `/unplaceable` and `/where` — the HTTP doors
   of Н2 of chapter 6.6 and the evidence of the fulfilment of the items P/06.6-01, -02, -03. The check of the schema and the versions before the console start, the raise
   of the schema and the door `/schema`; the observation of the drain by the given freshness bounds ([the observation
-  contract](../../../common/contracts/observation.md)) — P/06.6-04…06.
+  contract](../../common/contracts/observation.md)) — P/06.6-04…06.
 - **6.7.** The forwarding by one function per the forwarding contract (transitions 1–2) and its refusals Н4; the `where` of a member; the `https://` client to
   the console of another cluster with the `peer` check; the forwarding to the signer in the order of Н1.8; `may` by the copy of grants and `grants` in
   `/session` (Н1.9); the emergency entry door in order with its own limit (Н1.10); the doors `/domain/keys`, `/api/held`,
@@ -160,7 +160,7 @@ This is a suggested order, not a mandatory structure of the code.
    12 — in the order of the file on one. The scenarios are linked: 04 and 11 use `c2` created by scenario 02; this
    instance must not be reset between them (review analysis of stage A 3–5, № 10). Scenarios 15–20: a fresh stand for each — the build schema
    1, the body 1 MiB, testsub/testsub2, c1 only in 15/16/18; in 20 the runner puts the order and state rows bypassing the writer. Then separate probes of the maintenance window and of the full answer; the copy
-   of the body at the resource and its refusals — [the instructions of P/05](../../../05-resource/spec/05-resource.README.md).
+   of the body at the resource and its refusals — [the instructions of P/05](../../05-resource/spec/05-resource.README.md).
 7. Check Н2 separately from the partial expectations of the TSV: the mandatory fields and types of the full answers, the masks,
    `worker: null` on creation, the same full answer on a POST retry, the form of the deletion and of the refusals.
    The values `a/b` and `..`, inadmissible for any unit.id, are rejected by the schema; the chosen kind of id is checked separately.
@@ -171,7 +171,7 @@ This is a suggested order, not a mandatory structure of the code.
    done claim with the full answer: the success of a unit must not make a retry non-storable.
 8. Fill all the items of the checklist of chapter P/06.1. For the parts outside the TSV attach the reading evidence by the table of subjects of Н5
    (for each subject a scenario or an exercise of the owner lesson is named there) or the result of the corresponding stand
-   [P/04](../../../04-controller/spec/04-controller.norms.md), [P/05](../../../05-resource/spec/05-resource.norms.md), chapters 6.2–6.6
+   [P/04](../../04-controller/spec/04-controller.norms.md), [P/05](../../05-resource/spec/05-resource.norms.md), chapters 6.2–6.6
    and lessons М11. A reference to a future stand is not a check by itself.
 
 ### Chapter 6.2 — the write of secrets
@@ -184,8 +184,8 @@ This is a suggested order, not a mandatory structure of the code.
    do not substitute them by the rules of testsub2. Compare the full display and the absence of a leak in a refusal.
 3. Implement the sealing by the sealing contract, the ring and the states of an absent/unreadable key per Н1.2.
    An empty/damaged file does not turn on the development mode. The opening with a wrong
-   key, kid, row and field — at the worker, chapter [P/03.5](../../../03-worker/spec/03.5-worker.norms.md), and the vectors
-   [`common/vectors/sealing/`](../../../common/vectors/sealing/README.md); a visible prefix enc:v2 does not prove a successful encryption.
+   key, kid, row and field — at the worker, chapter [P/03.5](../../03-worker/spec/03.5-worker.norms.md), and the vectors
+   [`common/vectors/sealing/`](../../common/vectors/sealing/README.md); a visible prefix enc:v2 does not prove a successful encryption.
    Check the ring comments: # at the beginning of a kid is forbidden, inside it is admissible; a comment
    on a separate line, after a key entry — a refusal. In the diagnostics the actual kid is substituted.
 4. Embed the write into the existing POST/PUT of chapter 6.1. Before the POST claim check the constraint
@@ -214,14 +214,14 @@ This is a suggested order, not a mandatory structure of the code.
 
 1. Compose a closed list of routes, methods, lanes and maximal bodies. Parse /session before the ordinary admission, but
    erase X-User before any branch. For a body-dependent grant obtain the required capability in advance, the specific units —
-   after a bounded read; the write only after all checks ([chapter 6.3](../06.3-console.norms.md) Н1.3,
-   [chapter 6.5](../06.5-console.norms.md) Н3).
+   after a bounded read; the write only after all checks ([chapter 6.3](06.3-console.norms.md) Н1.3,
+   [chapter 6.5](06.5-console.norms.md) Н3).
 2. Connect the three session states (`open`, closed to an anonymous one, a proven identity with `via` and `grants`;
-   [chapter 6.3](../06.3-console.norms.md) Н1.3 `session`). The closed `may` of the module — [lesson P/07](../../../07-console-module/spec/07-console-module.README.md).
-3. For the keys `rights:` — reconcile the console test of the implementation line by line with [chapter 6.3](../06.3-console.norms.md) Н1.5 (`routes`,
+   [chapter 6.3](06.3-console.norms.md) Н1.3 `session`). The closed `may` of the module — [lesson P/07](../../07-console-module/spec/07-console-module.README.md).
+3. For the keys `rights:` — reconcile the console test of the implementation line by line with [chapter 6.3](06.3-console.norms.md) Н1.5 (`routes`,
    `cluster_rows`, `unit_of`, `reach`, `names`); the action `reach.requests` — the field `action` of the request body
-   ([chapter 6.4](../06.4-console.norms.md) Н1.5 `action`).
-4. Pass the acceptance of [chapter 6.3](../../acceptance/3/README.md) — scenario 03, in isolation. Check separately the grants with the domain
+   ([chapter 6.4](06.4-console.norms.md) Н1.5 `action`).
+4. Pass the acceptance of [chapter 6.3](../acceptance/3/README.md) — scenario 03, in isolation. Check separately the grants with the domain
    stand (М11): the guard branches 401/403/503, the order of `identity`, Origin by the cookie are not executed in the acceptance TSV.
 
 ### Chapter 6.4 — requests and events
@@ -229,18 +229,18 @@ This is a suggested order, not a mandatory structure of the code.
 1. Merge the resources with deduplication and a bounded wait. Distinguish complete, partial
    and truncated; name the loss of a source in incomplete. A late answer is not appended
    to an already sent JSON. Do not promise a common snapshot of the resources. A live resource — a door row fresh by
-   [the observation contract](../../../common/contracts/observation.md) (`≤ LOST_AFTER`).
-2. An ordinary request contains unit, free_ask does not ([chapter 6.4](../06.4-console.norms.md) Н1.5).
+   [the observation contract](../../common/contracts/observation.md) (`≤ LOST_AFTER`).
+2. An ordinary request contains unit, free_ask does not ([chapter 6.4](06.4-console.norms.md) Н1.5).
 3. Separate ordinary requests, the append of ADR-0054, elsewhere and free_ask per Н3. The append creates no mark: fetched, the removal
    of the row and the release of asked; a retry decides by the data. For the ordinary profile perform the table: the admission and the term,
-   a confirmed begun, the single call (the holder side — [chapter 3.6](../../../03-worker/spec/03.6-worker.norms.md)).
+   a confirmed begun, the single call (the holder side — [chapter 3.6](../../03-worker/spec/03.6-worker.norms.md)).
    Check a conflict and an unknown outcome of every read/change. The presence of begun does not yet prove the call of the external
    action. The action of a request (for `elsewhere`) — the field `action` of the body.
 4. Close the lifecycle: the result of the one that began wins over the closing of a foreign begun; the reaper writes
    by index and then removes the row not earlier than the local age settle. Check clear, sweep and a late submission; after
    a restart the count is new. The accounting is updated by CAS. The mark is deleted only by the holder
    after the disappearance of the row and kept. The boundary of the replay memory is reported to the client.
-5. Pass the acceptance of [chapter 6.4](../../acceptance/4/README.md) — scenarios 03, 04, 06–12, each in isolation (the step count — in the
+5. Pass the acceptance of [chapter 6.4](../acceptance/4/README.md) — scenarios 03, 04, 06–12, each in isolation (the step count — in the
    acceptance README). Check the full answers by the owner of the form, even when only a code is expected in the TSV. For each checklist item
    name a separate observation; the probes outside the TSV are listed in the acceptance README. The vectors `rid`, `requests-body` and
    `request-digest` — one function of the side at the door and at the worker.
@@ -249,10 +249,10 @@ This is a suggested order, not a mandatory structure of the code.
 
 1. Implement the observations /servers, /resources and /where. Keep the age of the seen changes on the local monotonic clock.
    Return the unavailability of a mandatory read as a refusal; never replace a proven absence by it (Н3). The liveness
-   boundary — `≤ LOST_AFTER` by [the observation contract](../../../common/contracts/observation.md).
+   boundary — `≤ LOST_AFTER` by [the observation contract](../../common/contracts/observation.md).
 2. Do not update the age of a snapshot shard at the console after a failed read (Н1.3 `age`).
 3. Prepare a fresh stand testsub/testsub2 without the domain and background processes (sc. 08–10 raise them by the directives
-   `@start`). Run scenarios 01–17 by [the acceptance README](../../acceptance/5/README.md). The console module — in the console build,
+   `@start`). Run scenarios 01–17 by [the acceptance README](../acceptance/5/README.md). The console module — in the console build,
    not from the export catalogue (Н1.1); one unreadable record (a heartbeat, a shortage) does not bring down `/servers` and `/metrics` (Н0 P/01.1
    «Stability of output»). For each own answer check the full contract and the media type, not only
    the subset of the TSV.
@@ -270,7 +270,7 @@ This is a suggested order, not a mandatory structure of the code.
 2. Take the full forms of drain (Н2.2). Distinguish safe by observations from a confirmed rest before the shutdown;
    missing/stale pending — unknown, not zero (Н1.2).
 3. Make the doors per Н2. The policy and where belong to the subsystem; drain and servers — to the console root.
-   In UnitRef and both maps of drain the subsystem name follows [Н1.2 P/02.1](../../../02-installer/spec/02.1-installer.norms.md#н12-document):
+   In UnitRef and both maps of drain the subsystem name follows [Н1.2 P/02.1](../../02-installer/spec/02.1-installer.norms.md#н12-document):
    the whole closed list of reserved names applies both to the reference prefix and to the map keys.
    The field subsystem has the same grammar; the agreement of the map keys,
    the values of subsystem and the visibility are checked separately from the schema.
@@ -284,22 +284,22 @@ This is a suggested order, not a mandatory structure of the code.
    means {}, not the absence of a body. For drain check separately the agreement of the maps, the counters and safe;
    for where — the rights to door, the reason and the admissible lag of directory. The schema does not prove these relations.
 6. The evidence of Н5 for P/06.6-01, -02, -03 — the table «Evidence outside TSV»; the reading evidence of the controller branches —
-   [the instructions of P/04](../../../04-controller/spec/04-controller.README.md) «Order of work», step 8.
+   [the instructions of P/04](../../04-controller/spec/04-controller.README.md) «Order of work», step 8.
 
 ### Chapter 6.7 — the cluster console in the domain
 
 A chapter of the late layer: it is done after the lessons P/08–P/10, with the domain stand.
 
-1. Build the forwarding function by [the forwarding contract](../../../common/contracts/forwarding.md) «Forwarding is one function»
+1. Build the forwarding function by [the forwarding contract](../../common/contracts/forwarding.md) «Forwarding is one function»
    and the table «Domain doors»; Н3 «forward» — in order: a path outside the table — 404 before the identity and without a call. Give the answer
-   as it came, without parsing it ([chapter 6.7](../06.7-console.norms.md) Н1.2–Н1.5).
+   as it came, without parsing it ([chapter 6.7](06.7-console.norms.md) Н1.2–Н1.5).
 2. The `https://` client to the console of another cluster — the role `console`, the check of the server by the function `peer` by `Entry.ca` of the
-   destination member ([the `peer` contract](../../../common/contracts/peer.md); the vectors `common/vectors/peer`).
+   destination member ([the `peer` contract](../../common/contracts/peer.md); the vectors `common/vectors/peer`).
 3. The forwarding to the signer (Н1.8) and its own doors `/api/held`, `/api/backup` (Н1.12, Н1.13; the signature — the vectors
    `common/vectors/ask-sig`).
 4. The gate with grants (Н1.9; the function `may` — the vectors `common/vectors/may`), the emergency entry in order (Н1.10) with its own
    limit count, `/domain/keys` (Н1.11), the book door (Н1.1), the value on reading (Н1.14) and the command `resolve`.
-5. Pass the vectors [`resolve`](../../vectors/resolve/README.md), [`key-families`](../../vectors/key-families/README.md) and the acceptance of [chapter 6.7](../../acceptance/7/README.md) on the domain
+5. Pass the vectors [`resolve`](../vectors/resolve/README.md), [`key-families`](../vectors/key-families/README.md) and the acceptance of [chapter 6.7](../acceptance/7/README.md) on the domain
    stand; the steps of the cluster console in the acceptance of the chapters of lesson P/08 — there it is a neighbour on the stand. TLS between clusters and the branches
    that the stand does not call — by reading (Н5 of the chapter).
 
@@ -309,7 +309,7 @@ A chapter of the late layer: it is done after the lessons P/08–P/10, with the 
 2. Every write is one batch `op: batch`: the folder row, the membership rows, the guards of the ancestors and of the added units. No write changes one side of a link without the other.
 3. Insert the removal from folders into the deletion of a unit and into `delete` of the batch door, insert the parsing of the folder rows into the pass «batch» of chapter 6.1.
 4. The folder reaper is its own work: not in the maintenance window, `cas`, an unknown read removes nothing.
-5. Pass the acceptance of [chapter 6.8](../../acceptance/8/README.md); the rights and strict races — by reading per its README.
+5. Pass the acceptance of [chapter 6.8](../acceptance/8/README.md); the rights and strict races — by reading per its README.
 
 ### Chapter 6.9 — group operations
 
@@ -319,7 +319,7 @@ The chapter is done after the ticket and the second kind of pass of ADR-0094 B1.
 2. The leader: the queue by the contract, the generation right after the take, a traversal on every tick, including on pause.
 3. The step: read the result before the call; a ticket for one call; `step_key` on every retry.
 4. The completion by one batch; the rebinding; `retry-failed`; the operations reaper; the step rows in the resealing.
-5. Pass the vectors [`op-step`](../../vectors/op-step/README.md) and the acceptance of [chapter 6.9](../../acceptance/9/README.md); the plan of its other scenarios — the acceptance README.
+5. Pass the vectors [`op-step`](../vectors/op-step/README.md) and the acceptance of [chapter 6.9](../acceptance/9/README.md); the plan of its other scenarios — the acceptance README.
 
 ### The whole lesson
 
@@ -363,7 +363,7 @@ with the evidence from Н5 of the chapters.
 | 6.6 Н2.1: labels | the anchor $ lets through a trailing newline | check a, vlan:a and a\n as different cases |
 | 6.6 Н2: counters | true is taken for 1 | JSON booleans are not numbers |
 | 6.6 Н1.2: drain | would_strand is taken for the negation of safe | an unplaced unit can be in the probe with safe: true |
-| 6.6, 6.5: freshness | «changed < 45 s» instead of «in the last LOST_AFTER» | an age of exactly LOST_AFTER is fresh ([the observation contract](../../../common/contracts/observation.md); review analysis of stage A 6–7, № 1); the boundary — the vector [`fresh-age`](../../../common/vectors/fresh-age/README.md) (review analysis of stage B 6–7, № 20) |
+| 6.6, 6.5: freshness | «changed < 45 s» instead of «in the last LOST_AFTER» | an age of exactly LOST_AFTER is fresh ([the observation contract](../../common/contracts/observation.md); review analysis of stage A 6–7, № 1); the boundary — the vector [`fresh-age`](../../common/vectors/fresh-age/README.md) (review analysis of stage B 6–7, № 20) |
 
 ## Boundary checks
 
@@ -373,7 +373,7 @@ For the subsystem paths the contract sets two standard servers: the console orig
 origin/{sub}. A path of paths is appended to the first or the second; origin has no
 trailing slash. localhost/testsub — substituted examples, not launch settings.
 The short path is chosen by CONSOLE_ROOT, the prefixed one — by the named loaded manifest.
-Reconcile both URLs, the methods, the codes and the bodies with Н2 of chapters 6.1, 6.6 and [chapter 6.5](../06.5-console.norms.md) («Полные формы и границы Н2»:
+Reconcile both URLs, the methods, the codes and the bodies with Н2 of chapters 6.1, 6.6 and [chapter 6.5](06.5-console.norms.md) («Полные формы и границы Н2»:
 origin without a trailing `/` or origin/{sub}; the common `404 NoRoute`, `405 {detail: method, error: method}`). The common doors (`/drain`, `/schema`, `/changes`, `/servers/{server}/…`) and the resource door (P/05) do not get a prefix from a neighbouring path item.
 Read the existing scenarios root and testsub2 as a control of routing; structural validity does not execute HTTP.
 
@@ -449,7 +449,7 @@ of the neighbouring enum: it is reconciled separately with the loaded manifest. 
 because of a successful JSON parse or a check of only the list of types.
 
 HTTP Where without a reliable door has no field door, rather than containing null; check also the negative HTTP example
-door:null. The conversion of absence into null by the library for the shell — [the instructions of P/07](../../../07-console-module/spec/07-console-module.README.md).
+door:null. The conversion of absence into null by the library for the shell — [the instructions of P/07](../../07-console-module/spec/07-console-module.README.md).
 
 ### Chapter 6.6: slot names in answers
 

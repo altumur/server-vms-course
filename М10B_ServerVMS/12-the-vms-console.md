@@ -24,8 +24,8 @@
 
 ## Что нужно знать заранее
 
-- **М10A, [P/07](../Platform/07-console-module/07-console-module.md)** — модуль консоли, его вызовы; CSP по хешу — [P/06](../Platform/06-console/06-console.md), глава 6.5.
-- **[P/06](../Platform/06-console/06-console.md)**, глава 6.5 (прежде М10/9, шаги 12, 14) — что подсистема объявляет, и дверь держателя (`/where/<id>`, `/where/<table>/<place>`, токен двери), `Mount`.
+- **М10A, [P/07](../Platform/07-console-module/07-console-module.md)** — модуль консоли, его вызовы; CSP по хешу — [P/06](../Platform/06-console/ru/06-console.md), глава 6.5.
+- **[P/06](../Platform/06-console/ru/06-console.md)**, глава 6.5 (прежде М10/9, шаги 12, 14) — что подсистема объявляет, и дверь держателя (`/where/<id>`, `/where/<table>/<place>`, токен двери), `Mount`.
 - **[Урок 8](08-visibility-retention-timeline.md)** — дверь архива регистратора между процессами, отсечённые эпохи, правило «момент — старшей эпохе».
 - **[Урок 10](10-recworker.md)** — регистратор держит один том и объявляет в heartbeat'е `url` и `volume`.
 - **[Урок 24](24-an-interval-in-the-browser.md)** — фрагментированный MP4 и куски; **[урок 27](27-volumes.md)** — тома; **[урок 25](25-automation.md)** — сценарии.

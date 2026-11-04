@@ -11,7 +11,7 @@
 |---|---|---|
 | держатель — процесс `domain` ([P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н2, [P/08.7](../../08-domain/spec/08.7-domain.norms.md) Н1.3) | `POST /api/member/<член>`, `GET /api/carry/<член>`, `POST /api/tokens/<член>/…` | `MEMBER_WINDOW` |
 | ретранслятор ([P/09.2](../../09-agent/spec/09.2-agent.norms.md) Н2) | двери ретранслятора для членов за ним; пакет ретранслятора держателю подписан им же | `MEMBER_WINDOW` |
-| консоль кластера своего члена ([P/06.3](../../06-console/spec/06.3-console.norms.md) Н1.3 `identity` шаг 2) | двери единиц, таблиц `domain.edit_tables`, `POST /console/batch`, `GET /events?class=alarm` | `UNIT_WINDOW` |
+| консоль кластера своего члена ([P/06.3](../../06-console/ru/spec/06.3-console.norms.md) Н1.3 `identity` шаг 2) | двери единиц, таблиц `domain.edit_tables`, `POST /console/batch`, `GET /events?class=alarm` | `UNIT_WINDOW` |
 
 Перенесено из М11/3 Н1.4 (блок `header`, `window`, `replay` и абзац о проверке и словах отказа) без изменения поведения.
 Ключ члена, его рождение и закрепление в записи члена — P/09.1 Н1.1 `pub`, `born` (P/09.1-01); что дверь делает после

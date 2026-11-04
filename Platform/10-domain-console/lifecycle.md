@@ -44,7 +44,7 @@
   читатель `domainconsole`.
 - Кольца нет ([P/02.4 Н1.12](../02-installer/ru/spec/02.4-installer.norms.md)).
 - Страница держателя — та же страница модуля консоли, `sections: [domain]` ([P/10 Н1.7](spec/10-domain-console.norms.md));
-  поставка модуля — с бинарником консоли, не из `$CAMMETA_SPECS` ([P/06.5](../06-console/spec/06.5-console.norms.md) Н1.1 `module`).
+  поставка модуля — с бинарником консоли, не из `$CAMMETA_SPECS` ([P/06.5](../06-console/ru/spec/06.5-console.norms.md) Н1.1 `module`).
 - Журнал роли — `<корень событий>/audit/domainconsole/e1/…`, тревога `session.debug_open` — `audit.alarms/domainconsole`
   ([договор журнала событий](../common/contracts/event-journal.md) `journal`).
 

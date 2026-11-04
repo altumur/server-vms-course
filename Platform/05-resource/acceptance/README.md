@@ -43,7 +43,7 @@ Sc. `10-body-copy` (the body copy at the resource, from М10/10; T10, T11) insta
 an admissible identity of a neighbour; the digest `sha256-190267417aed…` — of the bytes `peer-copy`. It needs neither the console nor the controller.
 
 console — the console door testsub from the loopback, access to the operations and the units is permitted (the console is needed by the steps 02/6, 8, 12–16, 08/14 —
-the same door at the merge, and 09-resource-door/6–7 — `/servers`, `/metrics`; the console — [P/06](../../06-console/06-console.md));
+the same door at the merge, and 09-resource-door/6–7 — `/servers`, `/metrics`; the console — P/06 (`Platform/06-console/ru/06-console.md`, for people, not in the export));
 resource — the resource door srv-a with an admissible identity; store — the store door with reading of
 testsub/ and `platform/doors/`; admin — the door `admin.sock` (the row `platform/schema` of sc. 17, the console writes it by the role admin, P/06.6 Н1.1а). If the deployment uses TLS, issue the corresponding
 certificates and roles per P/02.4 Н1.6 (`w2c-ca.sh issue <server> <роль>`, the kit `kit`) and the address rule of P/02.4 Н1.6;
@@ -279,7 +279,7 @@ the last step, wait for the stop of all the created processes, then remove the s
 
 The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
 of the acceptances of М10/10 and М10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
-resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (analysis of the review of stage B 6–7, № 18). The log of М10/08 is moved as a whole into [the acceptance of chapter 6.4](../../06-console/acceptance/4/corrections.tsv).
+resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (analysis of the review of stage B 6–7, № 18). The log of М10/08 is moved as a whole into the acceptance of chapter 6.4 (`Platform/06-console/journal/corrections-4.tsv`, a log, not in the export).
 
 ## Edges of `free_ask` on the first pass (sc. 24–28)
 

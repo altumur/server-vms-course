@@ -1,9 +1,9 @@
 # Acceptance P/06.1 — the units door, bodies, tables (stand)
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей).
-The norm of the chapter is [`06.1-console.norms.md`](../../../spec/06.1-console.norms.md) Н5. The scenarios were moved from the acceptance of
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The norm of the chapter is [`06.1-console.norms.md`](../../spec/06.1-console.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/03 (01–14, all) and
 М10/10 (04, 05, 06, 07, 11 → 15–19) (stage B,
 ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones, except the scenarios of М10/10: their numbers 04–07 and 11 are taken
@@ -12,9 +12,9 @@ by scenarios of М10/03, they got the next free ones (`15-blob`, `16-ceilings`, 
 tables (15–19), 16 — the order row and the unit state (20, ADR-0091), 6 — the deletion of a row of a worker table (21, the VMS request «команды и строка устройства»),
 48 — the coverage audit of P/06 (22–27, below), 38 — its second pass (Gemini; 28–32, below).
 
-The full forms of the answers are [the OpenAPI of the lesson](../../../spec/06-console.api.openapi.yaml) (the paths `/{rows}`, `/{rows}/{id}`,
+The full forms of the answers are [the OpenAPI of the lesson](../../spec/06-console.api.openapi.yaml) (the paths `/{rows}`, `/{rows}/{id}`,
 `/{rows}/{id}/{blob_field}`, `/{table}`, `/{table}/{name}`). The state of the slot, the epoch and the lease is not checked here — that is
-the acceptance of [chapter P/03.2](../../../../03-worker/acceptance/2/README.md).
+the acceptance of [chapter P/03.2](../../../03-worker/acceptance/2/README.md).
 
 ## Preparation and order: scenarios 01–14 (the units door)
 
@@ -30,7 +30,7 @@ they are not to change or delete rows during these scenarios.
 The instance is started by the section «Stand» of the common acceptance README (the substitutions `{data}`, `{port}`, `{manifest}`).
 The preparation, the rights and the path to the door are provided by the runner before the requests. All the steps are called by one and the same
 identity with the right to create, read, edit and delete units; in the variant without a domain the requests come from the loopback
-by [chapter 6.3](../../../spec/06.3-console.norms.md) Н1.3 `open` (only from the loopback, otherwise 403). The runner records the address of the door, the way of preparation and the declared body limit;
+by [chapter 6.3](../../spec/06.3-console.norms.md) Н1.3 `open` (only from the loopback, otherwise 403). The runner records the address of the door, the way of preparation and the declared body limit;
 the table requests are to fit in it. The limit itself stays a choice of the implementation by the norms of the chapter Н4 and of chapter 6.3 Н1.3 `body` (≥ 1 MiB).
 
 Scenarios 01–14 are 100 steps. Scenarios 03 and 14 run **each on its own clean instance** (the preparation above): their steps 03/8 and
@@ -49,7 +49,7 @@ If the initial state, the rights or the absence of background changes are not pr
 `POST /console/batch` (Н2 «Batch door», Н3 «batch») by an open console, the stand and an empty store are as for scenarios 15–32 below; the scenarios create the unit `c1` themselves. The indices
 of rows are given by the console doors (Н2 «Версии»): the element `configured`, `GET` of a table row, a tombstone — `?deleted=1&about=`; `GET /{rows}` reads the heartbeats, so sc. 33–35, 37 begin with `@start resource`. The store door stayed where the scenario looks at the row itself. The replay key is by the dictionary: the runner sets its own, `@key(N)` repeats it, `@nokey` removes it.
 
-- Sc. 46 — the table `stash` of the manifest `testsub2` (`service: true`, P/06.1 Н1.6 `service`). Steps 2–6 — the human door and a batch row are closed, the row has not appeared (step 7). Step 8 puts a row past the door by the role `console`: the door is closed for a live row too (step 9), and the rows feed does not give out this table: `changes` of step 11 is only `c1`. Reading and writing by a ticket — [the stand of the transfer of the second kind](../../../../common/acceptance/pass/README.md).
+- Sc. 46 — the table `stash` of the manifest `testsub2` (`service: true`, P/06.1 Н1.6 `service`). Steps 2–6 — the human door and a batch row are closed, the row has not appeared (step 7). Step 8 puts a row past the door by the role `console`: the door is closed for a live row too (step 9), and the rows feed does not give out this table: `changes` of step 11 is only `c1`. Reading and writing by a ticket — [the stand of the transfer of the second kind](../../../common/acceptance/pass/README.md).
 - Sc. 33 — the anchor row: `tallies` is a part of `counters` (`about: {sub: testsub, field: of}` of the manifest `testsub2`). Step 4 — a part without an anchor; steps 6–8 — a unit and a part, one index; steps 9–11 — an edit of the part raises
   the `revision` of the anchor; steps 12–13 — a stale `cas` of the second row, the first one is not written; steps 14–15 — the removal of the part is a tombstone, its index is read by `?deleted=1&about=`; step 16 — the anchor is judged at the removal too, the value `of` from the read row; steps 18–19 — a write over the tombstone by its index, the `revision` of the tombstone + 1.
 - Sc. 34 — guards: step 6 — the guard row is not written; steps 10–12 — a number in `field`, the guards before `cas`.
@@ -82,7 +82,7 @@ The tick is asynchronous to the write: a message is waited for by `@until`, not 
 - Sc. 44 — eviction: four batches of 64 rows — exactly `CHANGES_HISTORY`, the number `$p` stands before the oldest message and is still good (step 6, all 256 keys in order); one row beyond evicts it (step 8, a reset). Step 9 — a number inside the history works as before.
 - Sc. 45 — restart: step 5 — a reset, step 6 — the new number is not equal to the former one, steps 8–9 — the feed goes on, the memory of the first tick knows the row `c1`; steps 10–11 — a value not by the form and a number of the former instance.
 
-A change of a grant and of labels, the filter `view` — the acceptance [P/08.4](../../../../08-domain/acceptance/4/README.md), sc. 21, 22: the stand of the chapter has no grants. The series `w2c_changes_*` — sc. 31 of [the acceptance of 6.5](../../5/README.md).
+A change of a grant and of labels, the filter `view` — the acceptance [P/08.4](../../../08-domain/acceptance/4/README.md), sc. 21, 22: the stand of the chapter has no grants. The series `w2c_changes_*` — sc. 31 of [the acceptance of 6.5](../5/README.md).
 
 ## Preparation and order: scenarios 15–32 (bodies, tables, the order row, the worker table, the coverage audit)
 
@@ -179,7 +179,7 @@ the common body limit. The deletion of a blob, maintenance windows and fsync are
 
 Tab-separated: `scenario`, `step`, `request`, `expect`. Rows with `#` are notes.
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей): a door without a prefix is the console; `@key`/`@nokey`, a subset of fields, `$имя` (here they bind `revision` and the digest `$d`).
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей): a door without a prefix is the console; `@key`/`@nokey`, a subset of fields, `$имя` (here they bind `revision` and the digest `$d`).
 Its own: the field `bytes` of the answer of the bytes door — Н2 «Doors of bodies and tables» of the chapter; the code is always compared.
 
 Partial expectations of the TSV do not cancel the forms of the full answer: the mandatory fields, the JSON types and the restrictions
@@ -217,7 +217,7 @@ and a store with a full key limit of 1024 UTF-8 bytes; there is no narrower file
 | A named id of 1007/1008 ASCII letters (testsub/counters/ has 17 bytes); separately Cyrillic/four-byte characters with the same full lengths | 1024 — 201 at any implementation (the file names are encoded by the implementation, the event log contract «File names in shared trees»); 1025 — 400 badkey; a POST after its own pending keeps the refusal by step 9, the unit is not written; PUT/DELETE do not change the row/revision |
 | A badkey refusal on the write of the initial pending; separately on the write of the unit, then on the saving of the answer | Before pending — 400 without a claim; after pending — 400 only after a confirmed saving of the refusal; on a failure of the saving — 503, the rules of pending and of a foreign guard are kept |
 
-The rows of the table R29 about the slot, the epoch, the guard and holds are the acceptance of [chapter P/03.2](../../../../03-worker/acceptance/2/README.md) (the
+The rows of the table R29 about the slot, the epoch, the guard and holds are the acceptance of [chapter P/03.2](../../../03-worker/acceptance/2/README.md) (the
 branches of the worker of full keys, stage B).
 
 For unique a separate manifest with `tag: {type: string, unique: true}` and two live units
@@ -229,7 +229,7 @@ for equivalent URLs by ADR-0057 and with a change/deletion of the linked row bet
 of must_match and the write. The presence of ref without must_match does not mean must_exist. An analysis
 of the real reads/writes is required; this README does not claim that any implementation was run.
 
-Reconcile the reference holds not only for the existence of the lesson: its Н1.3 is in the norms of [P/03.2](../../../../03-worker/spec/03.2-worker.norms.md)
+Reconcile the reference holds not only for the existence of the lesson: its Н1.3 is in the norms of [P/03.2](../../../03-worker/spec/03.2-worker.norms.md)
 and sets the form of the slot without server, plus by. Reconcile the other references of the key layout with the concrete
 owner form; the presence of a file does not prove the correctness of the reference.
 
@@ -246,7 +246,7 @@ The author of the implementation names the place of the check and the actual res
 `unit.id: numeric` is needed; for the check of required+default — a separate instance with a copy of the current testsub,
 where only the field start has required: true added, and default: 0 is kept. A POST with name without start
 is to get 400, with an explicitly passed start: 0 — 201. The counterexamples of run 23 about the slot (P/03.2-01, 02, 05, 07, 08) are
-the acceptance of [chapter P/03.2](../../../../03-worker/acceptance/2/README.md).
+the acceptance of [chapter P/03.2](../../../03-worker/acceptance/2/README.md).
 
 | Norm | Initial state and intervention | Expected observation |
 |---|---|---|
@@ -280,7 +280,7 @@ so its actual bytes and the chosen ceiling are attached by the owner of the impl
 
 ## Additional checks of run 25
 
-In the TSV — sc. 23 of [the acceptance of chapter 6.5](../../5/README.md): the field `cost` and `placement.weight` are declared at `probe-x`.
+In the TSV — sc. 23 of [the acceptance of chapter 6.5](../5/README.md): the field `cost` and `placement.weight` are declared at `probe-x`.
 These checks go separately from the TSV, on an isolated copy of testsub.
 Add the field cost: {type: int, default: 1} and placement.weight: {field: cost, default: 1};
 do not change the other keys. For POST use a separate name and key for each case.
@@ -296,11 +296,11 @@ A refused POST does not create a unit, its repeat returns the saved answer whole
 On a refused PUT the former fields/revision are kept; after a successful PUT revision grows by 1.
 Read the row before and after the refusal; one HTTP code does not prove the absence of a write.
 
-The deadlines of the slot (the first look of the judge, until with shifts) are the acceptance of [chapter P/03.2](../../../../03-worker/acceptance/2/README.md).
+The deadlines of the slot (the first look of the judge, until with shifts) are the acceptance of [chapter P/03.2](../../../03-worker/acceptance/2/README.md).
 
 ## Checks of the full answer `GET /{rows}`
 
-RunningUnit.worker have the form of a slot name of [P/03.2 Н1.4](../../../../03-worker/spec/03.2-worker.norms.md).
+RunningUnit.worker have the form of a slot name of [P/03.2 Н1.4](../../../03-worker/spec/03.2-worker.norms.md).
 Admissible are `w-1`, `w-server-12`, a prefix of eight letters and a long admissible suffix;
 not admitted are `""`, `w`, `w-`, `w--1`, `W-1`, `w/1`, `w_1` and a final line feed.
 The schema checks the common grammar; the correspondence to slot.prefix of a concrete manifest is checked
@@ -334,7 +334,7 @@ The probes of the README are `decisions/inbox/2026-10-18-сверка-python-go-
 | a heartbeat with an element `status` without the id grammar or with a fractional `epoch` | the element is not in `rows`; `worker` — from the key of the heartbeat |
 | the names `A`, `é`, `.a` by the grammar | 201 at any implementation (Н1.3: there is no file profile) |
 
-`rows` with a live worker (`phase: running`, `worker`, `worker_state: live`) — the steps of the acceptances of [P/03.3](../../../../03-worker/acceptance/3/README.md) (sc. 02) and [P/03.2](../../../../03-worker/acceptance/2/README.md) (sc. 08) on a catalogue of two manifests.
+`rows` with a live worker (`phase: running`, `worker`, `worker_state: live`) — the steps of the acceptances of [P/03.3](../../../03-worker/acceptance/3/README.md) (sc. 02) and [P/03.2](../../../03-worker/acceptance/2/README.md) (sc. 08) on a catalogue of two manifests.
 
 ## Bodies and tables: probes outside TSV
 

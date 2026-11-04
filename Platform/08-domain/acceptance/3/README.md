@@ -19,7 +19,7 @@
 [`agent-sig`](../../../common/vectors/agent-sig/README.md), [`domain-envelopes`](../../../common/vectors/domain-envelopes/README.md)
 (`m1-open.tsv`, `m1-round.tsv`) и [`accept`](../../../common/vectors/accept/README.md); их входы сняты вместе с шагами (строка
 `corrections.tsv`). Остальные сценарии М11/03 — приёмка [главы 8.1](../1/README.md) (04, 06–09); М11/04 сц. 02–04 —
-[глава 9.2](../../../09-agent/acceptance/2/README.md), М11/08 — [глава 6.7](../../../06-console/acceptance/7/README.md) (01–03), [урок P/10](../../../10-domain-console/acceptance/README.md) (05), векторы `peer` (06), М11/12 — главы 8.10 и [9.1](../../../09-agent/acceptance/1/README.md).
+[глава 9.2](../../../09-agent/acceptance/2/README.md), М11/08 — [глава 6.7](../../../06-console/ru/acceptance/7/README.md) (01–03), [урок P/10](../../../10-domain-console/acceptance/README.md) (05), векторы `peer` (06), М11/12 — главы 8.10 и [9.1](../../../09-agent/acceptance/1/README.md).
 
 ## Стенд
 

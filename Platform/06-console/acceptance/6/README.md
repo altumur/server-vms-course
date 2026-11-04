@@ -1,26 +1,26 @@
 # Acceptance P/06.6 — control doors
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/6/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей).
-The norm of the chapter is [`06.6-console.norms.md`](../../../spec/06.6-console.norms.md) Н5. The scenarios were moved from the acceptances of
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The norm of the chapter is [`06.6-console.norms.md`](../../spec/06.6-console.norms.md) Н5. The scenarios were moved from the acceptances of
 М10/04 (01–07),
 М10/10 (01 → 08, 02 → 10, 09, 12) and
 М10/11 (03 → 11) (stage B, ADR-0083 addendum (1): without
 a change of behaviour); the numbers and the steps are the former ones, except the coinciding numbers: `08-schema` (in М10/10 — `01-schema`; the number 01
 is taken by `01-unplaced` from М10/04), `10-drain-strand` (in М10/10 — `02-drain-strand`; 02 is taken by `02-unplaceable`),
-`11-schema-processes` (in М10/11 — `03-schema-processes`; 03 is taken by `03-policy`). 17 scenarios / 195 steps (sc. 17 — versions of the settings snapshots, ADR-0094 B4; sc. 13–16 — the second pass of the coverage audit of P/06, Gemini; sc. 01, 08, 10, 12 — the first step `@start resource` by C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29; sc. 09 — the first step `@start resource`: the console and the controller read the heartbeat of the worker through the objects door of the resource of their own server, without the resource «не известно», [the object store client contract](../../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27; the steps 04/14 and 05/6 — the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7; the step 05/5 — analysis of the review of stage B 6–7, № 40; sc. 12: steps 9–10,
+`11-schema-processes` (in М10/11 — `03-schema-processes`; 03 is taken by `03-policy`). 17 scenarios / 195 steps (sc. 17 — versions of the settings snapshots, ADR-0094 B4; sc. 13–16 — the second pass of the coverage audit of P/06, Gemini; sc. 01, 08, 10, 12 — the first step `@start resource` by C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29; sc. 09 — the first step `@start resource`: the console and the controller read the heartbeat of the worker through the objects door of the resource of their own server, without the resource «не известно», [the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27; the steps 04/14 and 05/6 — the Architect's decision of 2026-10-20, analysis of the review of stage B 6–7; the step 05/5 — analysis of the review of stage B 6–7, № 40; sc. 12: steps 9–10,
 13–14, 17–18 were added — analysis of the review of stage B 6–7, № 21).
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей):
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей):
 the doors `console`, `console2`, `resource`, `store`; the directives `@start controller`, `@start resource`, `@as`, `@put object`,
 `@spoil object`, `@until`, `@sleep` (sc. 13), `@big(N)`; the expectation is an exact code or `2xx`/`4xx` and a subset of fields. A request without a door
 prefix (sc. 01–07, the former acceptance of М10/04) goes to the console `testsub` — the door of the lesson P/06; `Idempotency-Key` — per the dictionary,
 a repeat of a transport attempt — the same key and body.
 
-Full answers are additionally checked by [the contract of the lesson](../../../spec/06-console.api.openapi.yaml): the mandatory fields,
+Full answers are additionally checked by [the contract of the lesson](../../spec/06-console.api.openapi.yaml): the mandatory fields,
 their types and the absence of extra fields; for `POST /counters` — by chapter 6.1. `2xx` does not widen the normative list of codes:
 the drain operations by Н2 return 200. The success of the deletion of labels/decommission `{}` is not equal to the absence of a body. For the codes without a body in
 the table the form of the full answer of Н2 is checked all the same.
@@ -72,7 +72,7 @@ The start interface is the section «Stand» of the common acceptance README, wi
 `@start resource` are the role commands of the controller `testsub` and of the resource of the server `srv-a` (the substitutions `{data}`, `{socket}`,
 `{manifest}`, at the resource `{rport}`); the resource is ready when it listens on `{rport}` and there is the row `platform/doors/srv-a`.
 `console …` and `console2 …` are one console on `{port}`, the second is the prefix `/testsub2`. `store …` without `@as` is the store door
-`admin.sock` (`{socket}` — the door with full rights, [the common acceptance README](../../../../common/acceptance/README.md) «Сокеты ролей»):
+`admin.sock` (`{socket}` — the door with full rights, [the common acceptance README](../../../common/acceptance/README.md) «Сокеты ролей»):
 step 14 of sc. 04 and step 10 of sc. 05 read `platform/drain` and `platform/servers/srv-a` outside the subsystem prefix; `@as <роль>` — the role socket until the end of the scenario.
 
 Before each scenario stop the processes of the previous one, create separate empty row/object stores and clear
@@ -91,7 +91,7 @@ Reconciliation of python and go М10/6–11 (sc. 08–12 and the added steps):
   (`hb-w-1-pending-0.json` — the reference: `safe: true`; `-pending-missing`, `-pending-fraction` (`1000.0`), `-pending-minus-zero`,
   `-pending-2p63` — `pending_unsaid`; `-schema-fraction` (`1.0`) — `schema: null`; `-build-number` (`5`) — `build: null`, not known, П1; В7 item 3 row 14).
   Each `@put object` changes the version of the heartbeat — the console sees it alive (Н1.2: a stale heartbeat would also give
-  `pending_unsaid`, so steps 4 and 21 are the reference of freshness; freshness — [the observation contract](../../../../common/contracts/observation.md))
+  `pending_unsaid`, so steps 4 and 21 are the reference of freshness; freshness — [the observation contract](../../../common/contracts/observation.md))
   (reconciliation of python and go М10/6–11, T1, T3, T4, T27). Before each input not by the form, except the first one, — again
   `-pending-0` and `@until` until `safe: true` (steps 8–9, 12–13, 16–17): otherwise the expectation `pending_unsaid` of the next input
   would coincide with the earlier state, and a console that sees a new heartbeat with a delay would pass the step by the old heartbeat
@@ -137,7 +137,7 @@ The heartbeats of the worker `w-1` for `@put object` (the object write command o
 - `POST /drain` with server=srv-a: the full answer `{draining: "srv-a"}`; `DELETE`: `{draining: ""}`.
   The opposite bodies do not pass the schema even with a correct following GET.
 - The full answers of labels and drain are checked by the whole grammar of a subsystem name
-  [P/02.1 Н1.2](../../../../02-installer/spec/02.1-installer.norms.md#н12-document),
+  [P/02.1 Н1.2](../../../02-installer/spec/02.1-installer.norms.md#н12-document),
   including the whole closed list of reserved names. For each word check the refusal
   in the prefix of UnitRef (would_move and will_move), in the key of each of the maps would_strand/subsystems
   and in the field subsystem; for example, platform/u1, domain/u1, events/u1 and the key events are inadmissible.
@@ -151,7 +151,7 @@ The heartbeats of the worker `w-1` for `@put object` (the object write command o
   or `""`: `a/b` and a backslash are rejected by the schema, `box-a` and an empty string are admissible.
   This does not change POST (only a non-empty name) and DELETE (only an empty string).
 - Where.worker, a non-null Where.directory and each element of SubsystemDrain.pending_unsaid have the form of a slot name
-  [P/03.2 Н1.4](../../../../03-worker/spec/03.2-worker.norms.md).
+  [P/03.2 Н1.4](../../../03-worker/spec/03.2-worker.norms.md).
   Admissible are `w-1`, `w-server-12`, a prefix of eight letters and a long admissible suffix;
   not admitted are `""`, `w`, `w-`, `w--1`, `W-1`, `w/1`, `w_1` and a final line feed.
   The schema checks the common grammar; the correspondence to slot.prefix of a particular manifest is checked
@@ -162,7 +162,7 @@ of the author are not a performed stand test.
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
-One sleep: sc. 13 step 7, 46 s — time before an action: the version of the slot `srv-b` does not change for longer than LOST_AFTER 45 s ([the observation contract](../../../../common/contracts/observation.md) «Свежесть»), only then the server is not «слышен» and `may_confirm_gone` can be `true` (Н3 «decommission_server»). Waiting for an event is `@until`: sc. 02 step 2 (the reason in `/unplaceable` after a pass), 07 steps 4–5, 09 step 6
+One sleep: sc. 13 step 7, 46 s — time before an action: the version of the slot `srv-b` does not change for longer than LOST_AFTER 45 s ([the observation contract](../../../common/contracts/observation.md) «Свежесть»), only then the server is not «слышен» and `may_confirm_gone` can be `true` (Н3 «decommission_server»). Waiting for an event is `@until`: sc. 02 step 2 (the reason in `/unplaceable` after a pass), 07 steps 4–5, 09 step 6
 (the assignment by a pass of the controller), 10 step 8 (the journal in the index of the resource), 11 step 3 (the heartbeat of the resource in `processes`), 12
 steps 4, 5 and the odd 7–25 (the console sees the new heartbeat; the even 6–24 — `@put object`; analysis of the review of stage B 6–7, № 21, № 22), 13 steps 2, 15, 16 (a live resource, the decommission journal in the index of the resource), 16 step 3 (`/servers` by the labels row).
 

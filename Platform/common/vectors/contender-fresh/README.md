@@ -5,7 +5,7 @@
 Владелец — [договор наблюдения](../../contracts/observation.md) «Свежесть метки соперника: `CONTENDER_FRESH`» (догадка
 стадии C C06-CONTENDER-FRESH-33-01, решение «Архитектора» 2026-10-25). Писатель метки — воркер
 ([P/03.2](../../../03-worker/ru/spec/03.2-worker.norms.md) Н1.4а, `CONTEND_EVERY`); читатель — консоль (`WorkerRow.name_conflict`
-`/servers`, ряд `name_conflicts`, [глава 6.5](../../../06-console/spec/06.5-console.norms.md)). Байты пишет «Спецификация»;
+`/servers`, ряд `name_conflicts`, [глава 6.5](../../../06-console/ru/spec/06.5-console.norms.md)). Байты пишет «Спецификация»;
 строки — по тексту договора.
 
 ## Правило

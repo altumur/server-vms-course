@@ -1,8 +1,8 @@
 # Vectors: the step package key and the expected version of a step
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/op-step/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter P/06.9 ([norms](../../../spec/06.9-console.norms.md) Н1.4, Н2 «Пакет шага»; ADR-0095). The participants are the console leader (the expected version in the step call) and the subsystem (the step package key). The bytes are written by the Specification; the values were computed by the text of the norm, not by the code of implementations.
+The owner is chapter P/06.9 ([norms](../../spec/06.9-console.norms.md) Н1.4, Н2 «Пакет шага»; ADR-0095). The participants are the console leader (the expected version in the step call) and the subsystem (the step package key). The bytes are written by the Specification; the values were computed by the text of the norm, not by the code of implementations.
 There is no dry run by an implementation.
 
 ## `key.tsv`
@@ -33,4 +33,4 @@ UTF-8, LF, fields separated by TAB; the first row is the header `case<TAB>input<
 
 ## Run
 
-The side checks both tables with its own function: the command is the entry `vectors/06-console/op-step` of the profile (the section «Layout by processes» of [the common acceptance README](../../../../common/acceptance/README.md)). The native outcome is code 0 and the value `expect`; an input not in form — code 2. The form of the command is the same as for the neighbouring packages.
+The side checks both tables with its own function: the command is the entry `vectors/06-console/op-step` of the profile (the section «Layout by processes» of [the common acceptance README](../../../common/acceptance/README.md)). The native outcome is code 0 and the value `expect`; an input not in form — code 2. The form of the command is the same as for the neighbouring packages.

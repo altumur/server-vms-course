@@ -40,9 +40,9 @@
 | состояние ресурса по истории наблюдения (`resource_state`, неответ и отсутствие) | [`resource-state/`](resource-state/README.md) | common (договор наблюдения) | [договор наблюдения](../contracts/observation.md) «Наблюдение версии», «Состояние ресурса» (OBS-001) |
 | слияние журнала событий (консоль и воркер: дубли, `cut`, эпохи, `unknown`, полнота) | [`events-merge/`](events-merge/README.md) | P/06.4 (участник — воркер) | [договор слияния журнала событий](../contracts/events-merge.md) (ADR-0091 доп. (21)) |
 | чтение пульса ресурса и воркера по форме и исходам семьи | [`heartbeat-read/`](heartbeat-read/README.md) | common (договор наблюдения) | [договор наблюдения](../contracts/observation.md) «Форма» (C04-DEP-OBS-HEARTBEAT-01, C08-HEARTBEAT-READER-99-VECTORS) |
-| жнец над просьбой дозаписи: метки `gone` и `expired`, `settle`, без снятия по одному `ttl` | [`06-console/vectors/reap/`](../../06-console/vectors/reap/README.md) | P/06.4 | договор просьбы и её метки «Состояния…» (C06-GONE-FETCHED-33-01) |
-| ключ пакета шага и ожидаемая версия шага | [`06-console/vectors/op-step/`](../../06-console/vectors/op-step/README.md) | P/06.9 | P/06.9 Н1.4, Н2 «Пакет шага» (ADR-0095) |
-| ряды манифеста `metrics[]` на `/metrics` | [`06-console/vectors/metrics/`](../../06-console/vectors/metrics/README.md) | P/06.5 | P/06.5 Н3 «Ряды манифеста metrics[]» (C06-METRICS-DSL-33-01) |
+| жнец над просьбой дозаписи: метки `gone` и `expired`, `settle`, без снятия по одному `ttl` | [`06-console/vectors/reap/`](../../06-console/ru/vectors/reap/README.md) | P/06.4 | договор просьбы и её метки «Состояния…» (C06-GONE-FETCHED-33-01) |
+| ключ пакета шага и ожидаемая версия шага | [`06-console/vectors/op-step/`](../../06-console/ru/vectors/op-step/README.md) | P/06.9 | P/06.9 Н1.4, Н2 «Пакет шага» (ADR-0095) |
+| ряды манифеста `metrics[]` на `/metrics` | [`06-console/vectors/metrics/`](../../06-console/ru/vectors/metrics/README.md) | P/06.5 | P/06.5 Н3 «Ряды манифеста metrics[]» (C06-METRICS-DSL-33-01) |
 | запись присланного срока `valid_until` | [`deadline/`](deadline/README.md) | P/06.4 (договор просьбы) | договор просьбы и её метки «Просьба» `valid_until` (C47-DEADLINE-VECTORS-01) |
 | пул, хранитель места, `idle_by_policy`, `placeable` | [`pool/`](pool/README.md) | P/04 (участник — консоль P/06.5) | [договор пула](../contracts/pool.md) (C06-SERVER-POLICY-33-01) |
 | имя слота: слотовый порядок, следующий номер, номер процесса роли | [`slot-name/`](slot-name/README.md) | P/03.2 | [договор имени слота](../contracts/slot-name.md) (POOL-ORDER-51-01) |
@@ -60,7 +60,7 @@
 | свежесть метки соперника: возраст → свежа (`≤ CONTENDER_FRESH`) | [`contender-fresh/`](contender-fresh/README.md) | common (договор наблюдения) | [договор наблюдения](../contracts/observation.md) «Свежесть метки соперника» (C06-CONTENDER-FRESH-33-01) |
 | SaidID: имя просьбы в `fetched` и его чтение | [`said-id/`](said-id/README.md) | P/03.4 (участник 6.4) | [P/03.4](../../03-worker/ru/spec/03.4-worker.norms.md) Н1.1 `said_id` |
 | токен двери `door1`: выпуск (JCS, Ed25519) и проверка у держателя по `door/keys` | [`door-token/`](door-token/README.md) | P/06.5 (участник 3.4) | [договор токена двери](../contracts/door-token.md); P/06.5-05, P/03.4-08 |
-| «принять консолью» | векторов нет — шаги приёмки [главы 6.7](../../06-console/acceptance/7/README.md) (сц. 01, 02) | P/06 | [договор пересылки](../contracts/forwarding.md) «Принять консолью» |
+| «принять консолью» | векторов нет — шаги приёмки [главы 6.7](../../06-console/ru/acceptance/7/README.md) (сц. 01, 02) | P/06 | [договор пересылки](../contracts/forwarding.md) «Принять консолью» |
 | конверты домена `x25519:v1` и `m1`: открытие и круг (`seal`, `seal-round`, `seal-member`, `seal-member-round` приёмки М11) | [`domain-envelopes/`](domain-envelopes/README.md) | common (владелец P/08, главы 8.2, 8.3) | [договор конвертов домена](../contracts/domain-envelopes.md); разбор ревью стадии A 8–10, № 12 |
 | подпись агента `X-Agent-Signature`: проверка `agent-sig` (окна, байты, формы) | [`agent-sig/`](agent-sig/README.md) | common (владелец P/09, глава 9.1) | [договор подписи агента](../contracts/agent-signature.md); разбор ревью стадии A 8–10, № 13 |
 | набор ключей домена: функция `keys` | [`keys/`](keys/README.md) | common (владелец P/08, глава 8.2) | [договор набора ключей домена](../contracts/keys.md); разбор ревью стадии A 8–10, № 13 |
@@ -77,7 +77,7 @@
 | сборка книги: функция `assemble` | [`08-domain/vectors/assemble/`](../../08-domain/vectors/assemble/README.md) | P/08.5 | [P/08.5](../../08-domain/spec/08.5-domain.norms.md) Н1.3, Н3 |
 | выдача токена воркера: функция `issue` | [`08-domain/vectors/issue/`](../../08-domain/vectors/issue/README.md) | P/08.7 | [P/08.7](../../08-domain/spec/08.7-domain.norms.md) Н3 |
 | следование: функция `follow` | [`09-agent/vectors/follow/`](../../09-agent/vectors/follow/README.md) | P/09.1 | [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н3 «следовать» |
-| значение при чтении: функция `resolve` | [`06-console/vectors/resolve/`](../../06-console/vectors/resolve/README.md) (14 строк; 11 из М11/11 сц. 03) | P/06.7 | [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.14, Н3 `resolve` |
+| значение при чтении: функция `resolve` | [`06-console/vectors/resolve/`](../../06-console/ru/vectors/resolve/README.md) (14 строк; 11 из М11/11 сц. 03) | P/06.7 | [P/06.7](../../06-console/ru/spec/06.7-console.norms.md) Н1.14, Н3 `resolve` |
 | список тревог: функция `alarms` | [`10-domain-console/vectors/alarms/`](../../10-domain-console/vectors/alarms/README.md) (27 строк; 15 из М11/11 сц. 04; 17–27 — аудит покрытия Gemini P/10) | P/10 | [P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.8, Н3 `alarms` |
 | нехватка набора меток и заказ по серверам (`в пути`, `per`, кандидаты, раздача) | [`04-controller/vectors/order/`](../../04-controller/vectors/order/) | P/04 | P/04 Н3 «нехватка(), заказать()»; ADR-0084 доп. (1)–(3) |
 | жертва сокращения | [`04-controller/vectors/shrink-victim/`](../../04-controller/vectors/shrink-victim/) | P/04 | P/04 Н3 «сократить()», Р4, Р22 |

@@ -9,7 +9,7 @@
 [P/02.4]: ../../02-installer/ru/spec/02.4-installer.norms.md
 [P/02.5]: ../../02-installer/ru/spec/02.5-installer.norms.md
 [P/04]: spec/04-controller.norms.md
-[P/06.6]: ../../06-console/spec/06.6-console.norms.md
+[P/06.6]: ../../06-console/ru/spec/06.6-console.norms.md
 [Стенд]: ../../common/acceptance/README.md
 [каталог]: ../../common/data/catalog.tsv
 

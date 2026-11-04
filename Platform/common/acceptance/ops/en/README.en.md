@@ -65,7 +65,7 @@ There is no `@sleep`. `@pass-step-none` counts as a sleep ([the dictionary](../.
 
 ## The other scenarios of the plan
 
-Sc. 04–06, 08–13 of the [plan](../../../../06-console/acceptance/9/README.md#план-сценариев-после-adr-0094-b1) — by reading for now, the meaning is the former one:
+Sc. 04–06, 08–13 of the [plan](../../../../06-console/acceptance/9/README.md#plan-of-scenarios-after-adr-0094-b1) — by reading for now, the meaning is the former one:
 
 | № | Scenario | Norms |
 |---|---|---|

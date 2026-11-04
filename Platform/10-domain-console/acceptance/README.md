@@ -106,7 +106,7 @@
 `GET /domain/relays/<ретранслятор>` (журнал `corrections.tsv`, 2026-11-02); номера — после сц. 16.
 
 - **Сценарий 17** — версия строки у дверей чтения (Н1.2; [P/08.0](../../08-domain/spec/08.0-domain.norms.md) Н1.9): индекс `versions` и записи равен индексу строки хранилища (шаги 10–13); шаги 14–18 идут дверью `member m1 console`: `If-Match`, `Idempotency-Key` и `ETag` проходят консоль кластера и консоль домена ([договор пересылки](../../common/contracts/forwarding.md) `pass`, `answer`). Шаг 14 ждёт (`@until 30`), пока `GET /domain/topology` дверью `member m1 console` не даст 200 `rev: 1`. Значение `ETag` стенд не связывает: судит кавычки заголовка.
-- **Сценарий 18** — дверь строки `kept` (Н1.2а; [P/06.2](../../06-console/spec/06.2-console.norms.md) Н1.4): строку
+- **Сценарий 18** — дверь строки `kept` (Н1.2а; [P/06.2](../../06-console/ru/spec/06.2-console.norms.md) Н1.4): строку
   `domain/testsub/ledger` раннер пишет дверью `member hold store` (шаг 2), `ledger` — элемент `domain.kept_read` манифеста
   `testsub`. Маска вглубь: `plain_secret`, конверт `enc:` (`sealed`) и поле `token_secret` в значении JSON (`inner`) —
   `"***"`, `note` — как есть (шаг 6); семья `badges/` и необъявленное имя — 404 (шаги 7, 8); дверью `member m1 console` —

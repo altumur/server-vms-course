@@ -10,7 +10,7 @@
 
 ## Что нужно знать заранее
 
-- **[P/06](../Platform/06-console/06-console.md)**, глава 6.2 (прежде М10/7; правило суффикса и отказ снимку — [P/02](../Platform/02-installer/ru/02-installer.md), глава 2.1) — правило суффикса, маскирование, отказ снимку, тип `url`, `secret_in` и `mask_text`, `bound_to`.
+- **[P/06](../Platform/06-console/ru/06-console.md)**, глава 6.2 (прежде М10/7; правило суффикса и отказ снимку — [P/02](../Platform/02-installer/ru/02-installer.md), глава 2.1) — правило суффикса, маскирование, отказ снимку, тип `url`, `secret_in` и `mask_text`, `bound_to`.
 - **[М10B, урок 5](05-driverpacksrc.md)** — `driverpacksrc` и `driverpack://file/<name>`.
 - **[М10B, урок 9](09-actuators-and-the-fan-out.md)** — актуатор: `Gst.parse_launch(DESC)` и что такое строка запуска.
 - **[М10B, урок 2](02-the-reconcile-loop.md)** — ревизия строки и то, что новая ревизия перезапускает конвейер.

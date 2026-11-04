@@ -9,10 +9,10 @@ P/08, [глава 8.4](../../08-domain/spec/08.4-domain.norms.md) (Н1.4 — у�
 
 | Кто | Где | `grants`, `as_of`, `disabled` |
 |---|---|---|
-| консоль кластера ([P/06.3](../../06-console/spec/06.3-console.norms.md) Н1.3 `identity` шаг 3, `need`; глава 6.7 — сессия с грантами) | [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.9 `cluster`, `session` (действующие строки — шаг 5) | копия `domain/grants` этого кластера и её `as_of`; `domain/disabled` этого хранилища |
+| консоль кластера ([P/06.3](../../06-console/ru/spec/06.3-console.norms.md) Н1.3 `identity` шаг 3, `need`; глава 6.7 — сессия с грантами) | [P/06.7](../../06-console/ru/spec/06.7-console.norms.md) Н1.9 `cluster`, `session` (действующие строки — шаг 5) | копия `domain/grants` этого кластера и её `as_of`; `domain/disabled` этого хранилища |
 | консоль домена ([урок P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.5) и процесс `domain` (8.4) | [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.5 `domain`; Н3 «дверь людей» шаг 2, «гранты» шаг 1 | `domain/grants/domain`, `as_of` — `null`; `roles` — из строк ролей и групп держателя (P/08.4 Н1.3 `roles_at_holder`) |
 
-Откуда у консоли кластера вход `roles` — копия таблицы ролей `domain/roles` и связь с копией грантов: [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.9 `cluster`, [договор сторожевой и передачи](gate-and-pass.md) «Сторожевая с грантами» (ADR-0098 §4).
+Откуда у консоли кластера вход `roles` — копия таблицы ролей `domain/roles` и связь с копией грантов: [P/06.7](../../06-console/ru/spec/06.7-console.norms.md) Н1.9 `cluster`, [договор сторожевой и передачи](gate-and-pass.md) «Сторожевая с грантами» (ADR-0098 §4).
 
 Шаг 5 (действующие строки) читают ещё доставка книги по гранту ([P/08.5](../../08-domain/spec/08.5-domain.norms.md)
 Н1.3 `grant`) и индекс имён (P/08.5 Н1.7 `delivery`): `sub` — подсистема книги, только прямая группа, строки `role:` и

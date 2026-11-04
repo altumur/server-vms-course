@@ -10,7 +10,7 @@
 пакетах [`common/vectors/record`](../../../common/vectors/record/README.md) и
 [`common/vectors/ask-sig`](../../../common/vectors/ask-sig/README.md) (план переноса урока 8, В1); сценарий 06 (`follow`) снят — пакет
 [`follow`](../../../09-agent/vectors/follow/README.md), 11 — [приёмка главы 9.1](../../../09-agent/acceptance/1/README.md); 01 —
-[приёмка главы 6.7](../../../06-console/acceptance/7/README.md) сц. 15.
+[приёмка главы 6.7](../../../06-console/ru/acceptance/7/README.md) сц. 15.
 
 ## Стенд
 

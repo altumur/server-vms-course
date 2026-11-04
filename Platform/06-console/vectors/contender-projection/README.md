@@ -1,11 +1,11 @@
 # Vectors: projection of the contender marks into `name_conflict` and `name_conflicts`
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/contender-projection/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter P/06.5 ([norms](../../../spec/06.5-console.norms.md) Н3 «/servers» «Соперники»; stage C guess
+The owner is chapter P/06.5 ([norms](../../spec/06.5-console.norms.md) Н3 «/servers» «Соперники»; stage C guess
 C06-CONTENDER-PROJECTION-33-01, the Architect's decision of 2026-10-25). The participant is the cluster console (`/servers`
-`WorkerRow.name_conflict`, the series `<sub>_name_conflicts` of `/metrics`). The freshness of a mark is the [observation contract](../../../../common/contracts/observation.md)
-«Свежесть метки соперника» (the boundary is the package [`contender-fresh`](../../../../common/vectors/contender-fresh/README.md)). The bytes
+`WorkerRow.name_conflict`, the series `<sub>_name_conflicts` of `/metrics`). The freshness of a mark is the [observation contract](../../../common/contracts/observation.md)
+«Свежесть метки соперника» (the boundary is the package [`contender-fresh`](../../../common/vectors/contender-fresh/README.md)). The bytes
 are written by the Specification; the rows follow the text of the norm, the rule is there, not here.
 
 ## `cases.tsv`
