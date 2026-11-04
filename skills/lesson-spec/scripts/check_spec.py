@@ -2115,6 +2115,21 @@ class Check:
                 self.error(path, message)
             self.stats.update(stats)
 
+    def check_forms(self):
+        """ADR-0125 п. 2, доп. (1) п. 5: `forms/daemon-flags.tsv` и `forms/refusals.tsv` урока — форма и согласие с таблицами
+        прозы (флаги, Н4), с `*Fault` OpenAPI и с `forms/*-checks.tsv` (`check_forms`)."""
+        import check_forms
+        for path in check_forms.flag_forms(self.root):
+            errors, stats = check_forms.check_flags(path)
+            for message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
+        for path in check_forms.refusal_forms(self.root):
+            errors, stats = check_forms.check_refusals(path)
+            for message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
+
     def library_defects(self):
         if not self.v7:
             return
@@ -2939,6 +2954,7 @@ def main():
     check.english_mirrors()
     check.check_tables()
     check.check_machines()
+    check.check_forms()
     for error in check.errors:
         print("ERROR", error)
     for line in check.excepted:
