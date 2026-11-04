@@ -125,7 +125,9 @@ class Layouts(unittest.TestCase):
         pairs = list(en_mirror.pairs(ROOT))
         self.assertIn((RU3, EN3), pairs)
         self.assertIn((ROOT / "Platform/01-store/ru/lifecycle.md", ROOT / "Platform/01-store/lifecycle.md"), pairs)
-        self.assertIn((ROOT / "VMS/README.md", ROOT / "VMS/en/README.en.md"), pairs)   # прежняя раскладка: README модуля
+        self.assertIn((ROOT / "VMS/ru/README.md", ROOT / "VMS/README.md"), pairs)   # мелкий дом: README модуля
+        self.assertIn((ROOT / "ru/НОРМАТИВНЫЕ-СЛОВА.md", ROOT / "НОРМАТИВНЫЕ-СЛОВА.md"), pairs)   # мелкий дом: корень
+        self.assertFalse([p for p in pairs if p[1].parent == ROOT and p[1].name.startswith("ГРАНИЦА")])   # записки — не пары
         for ru, en in pairs:                           # каждая пара — одной из двух раскладок
             self.assertTrue(en.parent.name == "en" and en.name.endswith(".en.md") and ru.name == en.name[:-6] + ".md"
                             or "ru" in ru.relative_to(ROOT).parts and en.name == ru.name, (ru, en))
@@ -148,6 +150,10 @@ class Layouts(unittest.TestCase):
                          "Platform/01-store/spec/01.1-store.norms.md#time-in-a-row")
         self.assertEqual(en_mirror.as_source("Platform/02-installer/spec/02.1-installer.norms.md#x", ROOT),
                          "Platform/02-installer/spec/02.1-installer.norms.md#x")
+        self.assertEqual(en_mirror.as_source("ru/НОРМАТИВНЫЕ-СЛОВА.md", ROOT), "НОРМАТИВНЫЕ-СЛОВА.md")
+        self.assertEqual(en_mirror.as_source("VMS/ru/README.md", ROOT), "VMS/README.md")
+        self.assertIsNone(en_mirror.home_of(ROOT / "ARCHITECTURE.md", ROOT))         # записка курса — не источник
+        self.assertIsNone(en_mirror.home_of(ROOT / "Platform/README.md", ROOT))      # модуль без ru/ — прежняя раскладка
 
     def test_built_block_by_targets(self):              # блок источника и перевода — тот же, глубина путей разная
         ru = RU3.read_text(encoding="utf-8")
