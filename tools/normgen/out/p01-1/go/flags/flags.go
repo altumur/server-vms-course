@@ -220,10 +220,16 @@ func Parse(cmd string, args []string, getenv func(string) string) (*Flags, *Refu
 	for k := 0; k < len(args); k++ {
 		tok := args[k]
 		if tok == "--" {
+			if cmd == "daemon" && k+1 < len(args) {
+				return nil, refuse(args[k+1], "the daemon takes no positional words")
+			}
 			fl.Args = append(fl.Args, args[k+1:]...)
 			break
 		}
 		if len(tok) < 2 || tok[0] != '-' {
+			if cmd == "daemon" {
+				return nil, refuse(tok, "the daemon takes no positional words")
+			}
 			fl.Args = append(fl.Args, tok)
 			continue
 		}

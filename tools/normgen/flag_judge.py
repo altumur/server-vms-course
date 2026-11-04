@@ -18,6 +18,8 @@
 
 Исход пробы на демоне: отказ — код 2 не позже 10 с; запуск — через `--ok-wait` с процесс жив или вышел с кодом ≠ 2
 (его снимает SIGTERM, затем SIGKILL). С `--stub` (заглушка tools/normgen/flags/stub) — ещё флаг отказа и все поля Flags.
+`--box` — сборка без raft (ключ профиля store_build: box): проба запуска с флагами группы (-join, -door, -voters,
+-bootstrap, -raft, -raft-bind, -group-size 3|5) может кончиться кодом 2 (Н4 1.3 box_no_raft).
 Пробы с `-rights` / `-tls` на демоне требуют `--rights-file` / `--tls-dir` (содержимое — не форма), иначе пропущены.
 Итог: `flags: P/N PASS|FAIL` (пропуски — отдельно); код 0 — все прошли, 1 — нет, 2 — ошибка запуска судьи.
 """
@@ -217,9 +219,13 @@ class Model:
         while k < len(args):
             tok = args[k]
             if tok == "--":
+                if cmd == "daemon" and args[k + 1:]:
+                    return "refuse", args[k + 1]
                 pos += args[k + 1:]
                 break
             if len(tok) < 2 or tok[0] != "-":
+                if cmd == "daemon":
+                    return "refuse", tok
                 pos.append(tok)
                 k += 1
                 continue
@@ -497,7 +503,16 @@ class Probes:
 
 # ---------------------------------------------------------------- исполнение
 
-def run(cmd, cwd, probe, stub, ok_wait):
+RAFT = ("-join", "-door", "-voters", "-bootstrap", "-raft", "-raft-bind")
+
+
+def raft_flags(argv):
+    """Проба с флагами группы: сборка без raft (store_build box) отказывает её кодом 2 (Н4 1.3 box_no_raft)."""
+    gs = [argv[k + 1] for k, a in enumerate(argv[:-1]) if a == "-group-size"]
+    return any(a.split("=")[0] in RAFT for a in argv) or any(v in ("3", "5") for v in gs)
+
+
+def run(cmd, cwd, probe, stub, ok_wait, box=False):
     argv = shlex.split(cmd) + probe["argv"]
     env = {k: v for k, v in os.environ.items() if k != "SERVER_NAME"}
     env.update(probe["env"])
@@ -523,7 +538,7 @@ def run(cmd, cwd, probe, stub, ok_wait):
     if probe["expect"] == "refuse":
         if code != 2:
             return f"want a start refusal (code 2 within 10 s), got {'alive' if alive else f'code {code}'}"
-    elif code == 2:
+    elif code == 2 and not (box and raft_flags(probe["argv"])):
         return f"want a start, got code 2: {err.decode(errors='replace').strip()[:300]}"
     if not stub:
         return None
@@ -554,6 +569,8 @@ def main(argv=None):
     ap.add_argument("--rights-file")
     ap.add_argument("--tls-dir")
     ap.add_argument("--ok-wait", type=float, default=2.0)
+    ap.add_argument("--box", action="store_true", help="a build without raft (profile store_build: box): a start "
+                    "probe with group flags may end with code 2 (P/01.3 box_no_raft)")
     ap.add_argument("--fuzz", type=int, default=0)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--table", default=str(TABLE))
@@ -573,7 +590,7 @@ def main(argv=None):
                     a.rights_file if "-rights" in p["argv"] else a.tls_dir)):
                 skipped += 1
                 continue
-            why = run(a.cmd, a.cwd, p, a.stub, a.ok_wait if not a.stub else 10)
+            why = run(a.cmd, a.cwd, p, a.stub, a.ok_wait if not a.stub else 10, a.box)
             results.append({"name": p["name"], "argv": p["argv"], "expect": p["expect"], "ok": why is None,
                             "why": why})
             if why:
