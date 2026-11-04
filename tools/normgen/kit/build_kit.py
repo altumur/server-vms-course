@@ -41,6 +41,7 @@ import gen_flags  # noqa: E402 — часть flags
 import gen_refusals  # noqa: E402 — часть refusals
 import gen_checks  # noqa: E402 — свежесть writecheck
 import gen_door  # noqa: E402 — свежесть door
+import gen_launch  # noqa: E402 — часть launch
 TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"
 GENERATED = ROOT / "tools/normgen/out/p01-1/go/checks"
 HANDWRITTEN = HERE / "go"
@@ -115,7 +116,49 @@ def git_head():
         return None
 
 
-PARTS = ("vectors", "stagetests", "door", "flags", "refusals")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
+PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
+
+
+EXAMPLES = HERE / "examples"                # пример подключения на часть: Go-файл, его собирает kit/test_kit.py
+EXAMPLE_ORDER = ("writecheck", "door", "flags", "refusals", "vectors", "stagetests", "launch")
+
+
+def connect_md(parts, module):
+    """Справка подключения (ADR-0083 доп. (95) п. 2): по примеру на часть — файл kit/examples/<часть>.go, дословно."""
+    out = ["", "## Connect: one example per part", "",
+           "Read this, not the generated bodies: the signatures above and these examples are the whole API you need. "
+           "Each example compiles against this kit (the kit's own test builds them).", ""]
+    for part in EXAMPLE_ORDER:
+        if part not in parts:
+            continue
+        text = (EXAMPLES / f"{part}.go").read_text(encoding="utf-8")
+        text = text.replace('"kitmodule/internal/', f'"{module}/internal/').split("\n", 2)[2]   # без package example
+        out += [f"### `{part}`", "", "```go", text.rstrip("\n"), "```", ""]
+    return "\n".join(out)
+
+
+EXPORTED = re.compile(r"^(?:func ([A-Z]\w*)|func \([^)]*\) [A-Z]\w*|type ([A-Z]\w*)|(?:var|const) ([A-Z]\w*))", re.M)
+BLOCK = re.compile(r"^(?:var|const) \(\n(.*?)^\)", re.M | re.S)
+
+
+def exported_md(internal, dst, module):
+    """Экспортируемые имена каждого пакета пакета Б (по исходникам, не по памяти): функции, типы, переменные, константы."""
+    out = ["## Exported names (by package)", ""]
+    for pkg in sorted({p.parent for p in Path(dst).rglob("*.go") if not p.name.endswith("_test.go")}):
+        names = set()
+        for f in pkg.glob("*.go"):
+            if f.name.endswith("_test.go"):
+                continue
+            text = f.read_text(encoding="utf-8")
+            for m in EXPORTED.finditer(text):
+                names.add(next(g for g in m.groups() if g) if any(m.groups()) else None)
+            for b in BLOCK.finditer(text):
+                names |= set(re.findall(r"^\t([A-Z]\w*)", b[1], re.M))
+        names.discard(None)
+        if names:
+            rel = pkg.relative_to(Path(dst) / "01-store")
+            out.append(f"- `{module}/{rel}`: " + ", ".join(f"`{n}`" for n in sorted(names)))
+    return "\n".join(out) + "\n"
 
 
 def provenance(parts, files, judged):
@@ -142,8 +185,8 @@ def provenance(parts, files, judged):
     }
     out = {}
     for part in parts:
-        if part in ("flags", "refusals"):
-            mod = gen_flags if part == "flags" else gen_refusals
+        if part in ("flags", "refusals", "launch"):
+            mod = {"flags": gen_flags, "refusals": gen_refusals, "launch": gen_launch}[part]
             out[part] = {**mod.provenance(), "output": output(part)}
         else:
             component, t = table[part]
@@ -167,6 +210,9 @@ def build(dst, module, parts=(), judged=None):
     if "stagetests" in parts and "door" not in parts:
         raise KitError("--part stagetests needs --part door: the stage tests go through coreadapter over apidoor "
                        "(ADR-0126 addendum (7) item 5)")
+    if "launch" in parts and not {"door", "flags", "stagetests"} <= set(parts):
+        raise KitError("--part launch needs --part door, --part flags and --part stagetests: the frame parses by flags "
+                       "and serves coreadapter.Handle over apidoor (ADR-0083 addendum (95) item 3)")
     kit_parts = ["writecheck", *sorted(set(parts))]
     parts_set = list(kit_parts)
     try:
@@ -174,7 +220,8 @@ def build(dst, module, parts=(), judged=None):
         tests += [(f, "stagetests") for f in gen_tests.kit_files(module, "stagetests")] if "stagetests" in parts else []
         flag_files = gen_flags.kit_files() if "flags" in parts else []
         refusal_files = gen_refusals.kit_files() if "refusals" in parts else []
-    except (gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError) as exc:
+        launch_files = gen_launch.kit_files(module) if "launch" in parts else []
+    except (gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError, gen_launch.GenError) as exc:
         raise KitError(str(exc)) from None
     openapi_sha = sha256(OPENAPI.read_bytes()) if "door" in parts else None
     if openapi_sha:
@@ -191,7 +238,7 @@ def build(dst, module, parts=(), judged=None):
 
     for sub in ("checks", "jsonstrict", "writecheck") + sum((gen_tests.PART_DIRS[p] for p in ("vectors", "stagetests") if p in parts), ()) + \
             (("apidoor",) if openapi_sha else ()) + (gen_flags.KIT_DIRS if flag_files else ()) + \
-            (gen_refusals.KIT_DIRS if refusal_files else ()):
+            (gen_refusals.KIT_DIRS if refusal_files else ()) + (("launch",) if launch_files else ()):
         if Path(os.path.normpath(internal / sub)).exists():
             shutil.rmtree(os.path.normpath(internal / sub))
     for name, origin, source in CHECKS_FILES:
@@ -217,9 +264,17 @@ def build(dst, module, parts=(), judged=None):
         put(sub, name, data, origin, "flags", source)
     for sub, name, data, origin, source in refusal_files:
         put(sub, name, data, origin, "refusals", source)
+    for sub, name, data, origin, source, own in launch_files:
+        if own and Path(os.path.normpath(internal / sub / name)).exists():
+            continue                    # main.go реализации не трогается
+        put(sub, name, data, origin, "launch", source)
+        if own:
+            files[-1]["editable"] = True
     doc = (KIT_MD + (gen_tests.KIT_MD if "vectors" in parts else "")
            + (gen_tests.KIT_MD_STAGETESTS if "stagetests" in parts else "") + (KIT_DOOR_MD if openapi_sha else "")
-           + (gen_flags.KIT_MD if flag_files else "") + (gen_refusals.KIT_MD if refusal_files else "")).replace("{module}", module).encode("utf-8")
+           + (gen_flags.KIT_MD if flag_files else "") + (gen_refusals.KIT_MD if refusal_files else "")
+           + (gen_launch.KIT_MD if launch_files else "")).replace("{module}", module)
+    doc = (doc + connect_md(kit_parts, module) + exported_md(internal, dst, module)).encode("utf-8")
     (dst / "KIT.md").write_bytes(doc)
     # Паспорт попытки (доп. (86) п. 3) считает порознь: по происхождению (generated | handwritten) и по части
     # (normgen — генератор с его ручной средой runtime.go, prims.go; kit — ручной пакет jsonstrict, writecheck).

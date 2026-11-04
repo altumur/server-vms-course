@@ -10,6 +10,7 @@
 | 3 | `gen_flags.py` | `forms/daemon-flags.tsv` | `flags/` | `flags` | `flag_judge.py` — пробы запуска демона |
 | 4 | `gen_refusals.py` | `forms/refusals.tsv` | `refusals/` | `refusals` | `refusal_judge.py` — приёмка и `door.Refuse` |
 | 6 | `gen_tests.py` | `vectors/jcs`, `vectors/rights-evaluator`, `forms/stages.tsv` | `vectortests/`, `vectorcmd/`, `vectoradapter/` | `tests` | `vector_judge.py` |
+| 2 + 3 | `gen_launch.py` | `forms/daemon-flags.tsv`, OpenAPI (через части `flags`, `door`) | `launch/`, `cmd/configstore/` | `launch` (нужны `door`, `flags`, `stagetests`) | раннер P/01.1 на пустом ядре `launch/stubcore` → `launch_judge.py` (этап `launch`: `01-absent`) |
 
 Ручное — один раз на словарь: среда CEL `runtime/`, примитивы `#fn` `prims/` (Go и Python), типы флагов
 `flags/go/flagtypes.go`, среда двери `doorrt/`, пакет `kit/go` (`jsonstrict`, `writecheck`).
@@ -23,6 +24,10 @@ sha256 набора её файлов, `judged` — ссылка на суд э�
 сверяется со свежим прогоном своего генератора (№ 1, № 2 — тоже, не по шапке): отставший от формы, генератора или
 ручной среды — отказ сборки, сначала перегенерировать.
 
+KIT.md — справка подключения (ADR-0083 доп. (95) п. 2): сигнатуры частей, по примеру подключения на часть
+(`kit/examples/<часть>.go` дословно; `test_gen_launch.py` собирает их в пакете) и экспортируемые имена каждого пакета
+(по исходникам). Справка идёт в голову задания вместо тела сгенерированного кода.
+
 ## Тесты и судьи — на Linux (CT 103)
 
 Тесты normgen и судьи идут на Linux, на CT 103 (пользователь `pilot`), не на маке: Go 1.22 на macOS собирает с
@@ -30,7 +35,7 @@ sha256 набора её файлов, `judged` — ссылка на суд э�
 
 - Python с `cel_expr_python` (оракул CEL для `test_gen_checks.py` и `flag_judge.py`) — `/opt/check-env/lesson-spec/bin/python`.
 - Набор: `test_gen_checks.py`, `test_gen_tests.py`, `test_gen_door.py`, `test_gen_flags.py`, `test_gen_refusals.py`,
-  `test_gen_stagetests.py`, `test_gate.py`, `test_judges.py`, `kit/test_kit.py`; затем `skills/lesson-spec/scripts/check_spec.py`.
+  `test_gen_stagetests.py`, `test_gate.py`, `test_judges.py`, `test_gen_launch.py`, `kit/test_kit.py`; затем `skills/lesson-spec/scripts/check_spec.py`.
 - `gate.py` — общий разбор списка `gate` формы stages.tsv для генераторов (грамматика шапки формы, как у `check_forms`).
 - Судьи: отсутствие исполнения — отрицательный исход. Ожидаемый набор шагов — из сценариев и проекции, не из отчёта;
   шаг без исхода, пустой или обрезанный отчёт, незавершённый `go test` — провал. Запуск демона у `flag_judge.py` —
@@ -40,3 +45,5 @@ sha256 набора её файлов, `judged` — ссылка на суд э�
 - Судья двери — раннер через очередь CT 103 (`/srv/cammeta-checks`, `check.py submit --env go --with-git`): во входе
   `RUN.py`, раннер, клон выгрузки на коммите `--spec-version` и каталог `build_stub.py` как репозиторий Git; итог —
   `door_judge.py <out/report>`.
+- Судья части `launch`: `launch_judge.py job <вход> --spec-version <SHA>` → очередь (`check.py submit … -- python3.12 RUN.py`)
+  → `launch_judge.py judge <out/report>`.
