@@ -91,6 +91,12 @@ class Mirror(unittest.TestCase):
     def test_prose_number(self):
         self.mutated("`JSON_DEPTH` = 128 nested", "`JSON_DEPTH` = 127 nested")
 
+    def test_number_notation(self):                     # «0,5» ≡ «0.5», «250 000» ≡ «250,000» ≡ «250000»
+        self.assertEqual(en_mirror.numbers("0,5 с, 250 000 записей", "ru"), ["0.5", "250000"])
+        self.assertEqual(en_mirror.numbers("0.5 s, 250,000 writes, 250 000", "en"), ["0.5", "250000", "250000"])
+        self.assertEqual(en_mirror.numbers("0.25 s", "en"), ["0.25"])
+        self.assertNotEqual(en_mirror.numbers("0,6", "ru"), en_mirror.numbers("0.5", "en"))
+
     def test_mark(self):
         errors = self.mutated(en_mirror.MARK, "производный", which="ru")
         self.assertTrue(any("mark" in e for e in errors), errors)
