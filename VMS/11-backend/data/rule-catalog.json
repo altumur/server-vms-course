@@ -1,5 +1,5 @@
 {
- "_note": "Каталог событий, шагов, условий, управления, запусков и целей правил: данные урока V/10 (глава 7 Н1.3). Слова контракта; канон строки V/07 у входа — closed, open, перевод V/11.3 Н1.3. assist_omit — чего харнес правил не предлагает: отказ Н1.5; пуст с ADR-0093 доп. (9).",
+ "_note": "The catalog of events, steps, conditions, controls, starts and targets of rules: data of lesson V/10 (chapter 7 Н1.3). Words of the contract; the canon of the V/07 row at the input — closed, open, translation V/11.3 Н1.3. assist_omit — what the rules harness does not offer: refusal Н1.5; empty since ADR-0093 addendum (9).",
  "triggers": [
   {
    "source": "vms",

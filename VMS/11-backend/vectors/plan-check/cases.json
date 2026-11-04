@@ -2,7 +2,7 @@
  {
   "id": "tools-short-forms",
   "console": "stand3",
-  "rule": "V/11.10 Н1.5 find_units: короткие записи условий",
+  "rule": "V/11.10 Н1.5 find_units: short forms of conditions",
   "source": "lesson",
   "texts": [
    "x"
@@ -36,7 +36,7 @@
  {
   "id": "tools-condition-errors",
   "console": "stand3",
-  "rule": "V/11.10 Н1.5 find_units: ошибки условий",
+  "rule": "V/11.10 Н1.5 find_units: condition errors",
   "source": "lesson",
   "texts": [
    "x"
@@ -138,7 +138,7 @@
  {
   "id": "tools-ops",
   "console": "stand3",
-  "rule": "V/11.10 Н1.5 сравнение: каждый op",
+  "rule": "V/11.10 Н1.5 comparison: every op",
   "source": "lesson",
   "texts": [
    "x"
@@ -427,7 +427,7 @@
  {
   "id": "tools-in-scalar",
   "console": "stand3",
-  "rule": "V/11.10 Н1.5 in, not_in: значение не список — как список из одного",
+  "rule": "V/11.10 Н1.5 in, not_in: a value that is not a list — as a list of one",
   "source": "lesson",
   "texts": [
    "x"
@@ -472,7 +472,7 @@
  {
   "id": "tools-empty-list",
   "console": "stand3",
-  "rule": "V/11.10 Н1.5 пустой список и inherit",
+  "rule": "V/11.10 Н1.5 an empty list and inherit",
   "source": "lesson",
   "texts": [
    "x"
@@ -518,7 +518,7 @@
  {
   "id": "tools-about",
   "console": "stand3",
-  "rule": "V/11.10 Н1.5 about.<поле>, inherited связанной",
+  "rule": "V/11.10 Н1.5 about.<поле>, inherited of the linked one",
   "source": "lesson",
   "texts": [
    "x"
@@ -555,7 +555,7 @@
  {
   "id": "tools-hints",
   "console": "stand3",
-  "rule": "V/11.10 Н1.5 подсказки 1–4",
+  "rule": "V/11.10 Н1.5 hints 1–4",
   "source": "lesson",
   "texts": [
    "x"
@@ -641,7 +641,7 @@
  {
   "id": "tools-hint-unreadable",
   "console": "stand3",
-  "rule": "V/11.10 Н1.2 нечитаемая другая подсистема — подсказка 5",
+  "rule": "V/11.10 Н1.2 an unreadable other subsystem — hint 5",
   "source": "lesson",
   "texts": [
    "x"
@@ -669,7 +669,7 @@
  {
   "id": "tools-about-unreadable",
   "console": "stand3",
-  "rule": "V/11.10 Н1.2 нечитаемая связанная подсистема — ошибка вызова",
+  "rule": "V/11.10 Н1.2 an unreadable linked subsystem — a call error",
   "source": "lesson",
   "texts": [
    "x"
@@ -697,7 +697,7 @@
  {
   "id": "tools-read-error",
   "console": "stand3",
-  "rule": "V/11.10 Н1.2 ошибка чтения — ошибка, не пустой результат",
+  "rule": "V/11.10 Н1.2 a read error — an error, not an empty result",
   "source": "lesson",
   "texts": [
    "x"
@@ -719,7 +719,7 @@
  {
   "id": "tools-can-edit",
   "console": "stand3",
-  "rule": "V/11.10 Н1.2 can_edit — may с возможностью admin",
+  "rule": "V/11.10 Н1.2 can_edit — may with the capability admin",
   "source": "lesson",
   "texts": [
    "x"
@@ -763,7 +763,7 @@
  {
   "id": "tools-break-glass",
   "console": "stand3",
-  "rule": "V/11.10 Н1.2 аварийная сессия — may: право есть",
+  "rule": "V/11.10 Н1.2 a break-glass session — may: the right is there",
   "source": "lesson",
   "texts": [
    "x"
@@ -841,7 +841,7 @@
  {
   "id": "tools-ask",
   "console": "stand3",
-  "rule": "V/11.10 Н1.6 ask_admin, refuse — пустые",
+  "rule": "V/11.10 Н1.6 ask_admin, refuse — empty",
   "source": "lesson",
   "texts": [
    "x"
@@ -873,7 +873,7 @@
  {
   "id": "plan-valid",
   "console": "stand3",
-  "rule": "V/11.11 Н1.6 valid: true и diff",
+  "rule": "V/11.11 Н1.6 valid: true and diff",
   "source": "lesson",
   "texts": [
    "Switch tally Gate-1 to \"loud\" mode."
@@ -906,7 +906,7 @@
  {
   "id": "plan-form",
   "console": "stand3",
-  "rule": "V/11.11 Н1.3 форма: объект, ключи, unit, единица, поле, имя, fixed, blob, тип, enum, required, why",
+  "rule": "V/11.11 Н1.3 form: object, keys, unit, the unit, field, name, fixed, blob, type, enum, required, why",
   "source": "lesson",
   "texts": [
    "Gate-1 mode loud, of Oak, name G, mask, step 3, why"
@@ -990,7 +990,7 @@
  {
   "id": "plan-coerce",
   "console": "stand3",
-  "rule": "V/11.11 Н1.3 приведение строк к типу",
+  "rule": "V/11.11 Н1.3 coercing strings to the type",
   "source": "lesson",
   "texts": [
    "Set step of Gate-1 to 3 and turn off Gate-1"
@@ -1030,7 +1030,7 @@
  {
   "id": "plan-from-empty",
   "console": "stand3",
-  "rule": "V/11.11 Н1.3 from: не то, пустой список, inherit",
+  "rule": "V/11.11 Н1.3 from: the wrong one, an empty list, inherit",
   "source": "lesson",
   "texts": [
    "Set keep days of Gate-1 to 10 and step 2, add flag audit"
@@ -1079,7 +1079,7 @@
  {
   "id": "plan-empty-edit",
   "console": "stand3",
-  "rule": "V/11.11 Н1.3 пустая правка",
+  "rule": "V/11.11 Н1.3 an empty edit",
   "source": "lesson",
   "texts": [
    "Set Gate-2 to loud mode"
@@ -1111,7 +1111,7 @@
  {
   "id": "plan-twice",
   "console": "stand3",
-  "rule": "V/11.11 Н1.3 поле дважды в строке",
+  "rule": "V/11.11 Н1.3 a field twice in a row",
   "source": "lesson",
   "texts": [
    "Set Gate-1 to loud mode"
@@ -1149,7 +1149,7 @@
  {
   "id": "plan-rights",
   "console": "stand3",
-  "rule": "V/11.11 Н1.3 право записи — возможность admin",
+  "rule": "V/11.11 Н1.3 the write right — the capability admin",
   "source": "lesson",
   "texts": [
    "Set Yard-1 to plain mode"
@@ -1181,7 +1181,7 @@
  {
   "id": "plan-secret-ok",
   "console": "stand3",
-  "rule": "V/11.12 Н1.3 метка секрета — целиком в to поля *_secret",
+  "rule": "V/11.12 Н1.3 a secret label — whole in to of a field *_secret",
   "source": "lesson",
   "texts": [
    "For tally Office-2 change the feed password."
@@ -1219,7 +1219,7 @@
  {
   "id": "plan-secret-bad",
   "console": "stand3",
-  "rule": "V/11.12 Н1.3 метка секрета: значение, номер не введён, не *_secret, в why, в summary, две разные поля, слот пилота",
+  "rule": "V/11.12 Н1.3 a secret label: a value, the number not entered, not *_secret, in why, in summary, two different fields, the pilot slot",
   "source": "lesson",
   "texts": [
    "For tally Office-2 change the feed password and the secret note and the feed login."
@@ -1423,7 +1423,7 @@
  {
   "id": "plan-no-selection",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 1 нет отбора — вопрос",
+  "rule": "V/11.11 Н1.4 item 1 no selection — a question",
   "source": "lesson",
   "texts": [
    "Switch Gate-1 to loud mode"
@@ -1452,7 +1452,7 @@
  {
   "id": "plan-named-not-said",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 1 имя named — имя в тексте",
+  "rule": "V/11.11 Н1.4 item 1 a named name — the name in the text",
   "source": "lesson",
   "texts": [
    "Remove the label floor2 from all counters."
@@ -1487,7 +1487,7 @@
  {
   "id": "plan-edit-sub",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 2 edit_sub",
+  "rule": "V/11.11 Н1.4 item 2 edit_sub",
   "source": "lesson",
   "texts": [
    "Switch Gate-1 and Spruce"
@@ -1545,7 +1545,7 @@
  {
   "id": "plan-value-not-named",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 4 значение не названо; ответ «да» не называет",
+  "rule": "V/11.11 Н1.4 item 4 the value is not named; the answer «да» does not name it",
   "source": "lesson",
   "texts": [
    "Change the mode of Gate-1",
@@ -1578,7 +1578,7 @@
  {
   "id": "plan-value-in-answer",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 4 значение названо ответом админа",
+  "rule": "V/11.11 Н1.4 item 4 the value is named by the admin's answer",
   "source": "lesson",
   "texts": [
    "Change the mode of Gate-1",
@@ -1611,7 +1611,7 @@
  {
   "id": "plan-value-enum-label",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 4 строка подписью варианта",
+  "rule": "V/11.11 Н1.4 item 4 a string by an option caption",
   "source": "lesson",
   "texts": [
    "Make Gate-2 quiet (mode)"
@@ -1643,7 +1643,7 @@
  {
   "id": "plan-value-name-in",
   "console": "stand3",
-  "rule": "V/11.11 Н1.2 имя в тексте: z2 не в z21",
+  "rule": "V/11.11 Н1.2 a name in the text: z2 not in z21",
   "source": "lesson",
   "texts": [
    "Move Gate-1 to zone z21"
@@ -1696,7 +1696,7 @@
  {
   "id": "plan-number",
   "console": "stand3",
-  "rule": "V/11.11 Н1.2 числа текста без имён единиц",
+  "rule": "V/11.11 Н1.2 numbers of the text without unit names",
   "source": "lesson",
   "texts": [
    "Set the step of Store-2 to 2"
@@ -1728,7 +1728,7 @@
  {
   "id": "plan-number-in-name",
   "console": "stand3",
-  "rule": "V/11.11 Н1.2 число внутри имени единицы не называет",
+  "rule": "V/11.11 Н1.2 a number inside a unit name does not name it",
   "source": "lesson",
   "texts": [
    "Set the step of Store-2"
@@ -1760,7 +1760,7 @@
  {
   "id": "plan-like-unit",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 4 как у единицы",
+  "rule": "V/11.11 Н1.4 item 4 as the unit's",
   "source": "lesson",
   "texts": [
    "Set the step of Gate-1 like Store-1"
@@ -1792,7 +1792,7 @@
  {
   "id": "plan-like-related",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 4 как у связанной",
+  "rule": "V/11.11 Н1.4 item 4 as the linked one's",
   "source": "lesson",
   "texts": [
    "Set the step of Shop-2 to its counter's step"
@@ -1824,7 +1824,7 @@
  {
   "id": "plan-bool-polarity",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 4 bool полярностью: есть, нет слова, обе",
+  "rule": "V/11.11 Н1.4 item 4 bool by polarity: present, no word, both",
   "source": "lesson",
   "texts": [
    "Turn off tally Gate-1"
@@ -1856,7 +1856,7 @@
  {
   "id": "plan-bool-no-word",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 4 bool без слова полярности",
+  "rule": "V/11.11 Н1.4 item 4 bool without a polarity word",
   "source": "lesson",
   "texts": [
    "Change active of tally Gate-1"
@@ -1888,7 +1888,7 @@
  {
   "id": "plan-bool-both",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 4 bool с обеими полярностями",
+  "rule": "V/11.11 Н1.4 item 4 bool with both polarities",
   "source": "lesson",
   "texts": [
    "Turn off tally Gate-1 and turn on Store-1"
@@ -1920,7 +1920,7 @@
  {
   "id": "plan-clear",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 4 снятие значения словом clear",
+  "rule": "V/11.11 Н1.4 item 4 clearing a value by the word clear",
   "source": "lesson",
   "texts": [
    "Clear the zone of Gate-1"
@@ -1973,7 +1973,7 @@
  {
   "id": "plan-field-not-named",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 6 поле не названо; слово selection.fields",
+  "rule": "V/11.11 Н1.4 item 6 the field is not named; the word selection.fields",
   "source": "lesson",
   "texts": [
    "Set Gate-1 to 7"
@@ -2032,7 +2032,7 @@
  {
   "id": "plan-short-words",
   "console": "stand3",
-  "rule": "V/11.11 Н1.2 короткое слово: tag ~ tags",
+  "rule": "V/11.11 Н1.2 a short word: tag ~ tags",
   "source": "lesson",
   "texts": [
    "Add the tag vip to tally Office-1."
@@ -2066,7 +2066,7 @@
  {
   "id": "plan-list-verb",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 5 правка списка без глагола",
+  "rule": "V/11.11 Н1.4 item 5 a list edit without a verb",
   "source": "lesson",
   "texts": [
    "Make all tallies tagged night loud"
@@ -2115,7 +2115,7 @@
  {
   "id": "plan-condition-not-named",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 7 условие не названо",
+  "rule": "V/11.11 Н1.4 item 7 the condition is not named",
   "source": "lesson",
   "texts": [
    "Set mode loud for the tallies on the second floor"
@@ -2151,7 +2151,7 @@
  {
   "id": "plan-condition-named",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 7 условие названо кодом метки, all — exists по имени",
+  "rule": "V/11.11 Н1.4 item 7 the condition is named by a label code, all — exists by name",
   "source": "lesson",
   "texts": [
    "Set mode loud for all tallies of counters on floor2"
@@ -2187,7 +2187,7 @@
  {
   "id": "plan-condition-all",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 7 all — условие exists по имени",
+  "rule": "V/11.11 Н1.4 item 7 all — the condition exists by name",
   "source": "lesson",
   "texts": [
    "Set the step of all counters to 3"
@@ -2241,7 +2241,7 @@
  {
   "id": "plan-extra-missed",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 пп. 8–10 лишние, пропущенные, неизвестное имя, не связаны",
+  "rule": "V/11.11 Н1.4 items 8–10 extra, missing, an unknown name, not linked",
   "source": "lesson",
   "texts": [
    "Set mode loud for all tallies in zone z2 and Gate-1 and Nope-9"
@@ -2305,7 +2305,7 @@
  {
   "id": "plan-about-selection",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 8 отбор в связанной подсистеме",
+  "rule": "V/11.11 Н1.4 item 8 selection in a linked subsystem",
   "source": "lesson",
   "texts": [
    "Set mode loud for the tallies of counter Spruce"
@@ -2338,8 +2338,8 @@
  {
   "id": "passes-but-wrong-negation",
   "console": "stand3",
-  "rule": "V/11.11 Н5 нарушено, но проходит: отрицание просьбы сверка слов не видит",
-  "violates": "админ сказал, что Gate-2 остаётся plain (не трогать), а план его правит; все слова названы",
+  "rule": "V/11.11 Н5 violated, but passes: the reconciliation of words does not see a negation in the request",
+  "violates": "the admin said that Gate-2 stays plain (do not touch), and the plan edits it; all words are named",
   "source": "lesson",
   "texts": [
    "Set Gate-1 to loud mode; Gate-2 stays plain"
@@ -2378,7 +2378,7 @@
  {
   "id": "refuse-rights-forms",
   "console": "stand3",
-  "rule": "V/11.11 Н1.5 «нет прав» при праве у всех найденных — каждая форма",
+  "rule": "V/11.11 Н1.5 «нет прав» with the right on all found — every form",
   "source": "lesson",
   "texts": [
    "Turn off Gate-1"
@@ -2487,7 +2487,7 @@
  {
   "id": "refuse-fixed-accepted",
   "console": "stand3",
-  "rule": "V/11.11 Н1.5 отказ по fixed — не «нет прав», принят",
+  "rule": "V/11.11 Н1.5 a refusal by fixed — not «нет прав», accepted",
   "source": "lesson",
   "texts": [
    "Move Gate-1 to counter Oak"
@@ -2519,7 +2519,7 @@
  {
   "id": "refuse-fixed-ru",
   "console": "stand3",
-  "rule": "V/11.11 Н1.5 «правка невозможна» — принят",
+  "rule": "V/11.11 Н1.5 «правка невозможна» — accepted",
   "source": "lesson",
   "texts": [
    "Move Gate-1 to counter Oak"
@@ -2551,7 +2551,7 @@
  {
   "id": "refuse-rights-nothing-found",
   "console": "stand3",
-  "rule": "V/11.11 Н1.5 «нет прав» без найденных единиц",
+  "rule": "V/11.11 Н1.5 «нет прав» without found units",
   "source": "lesson",
   "texts": [
    "Turn off Yard-1"
@@ -2569,7 +2569,7 @@
  {
   "id": "refuse-rights-real",
   "console": "stand3",
-  "rule": "V/11.11 Н1.5 «нет прав», и права действительно нет — принят",
+  "rule": "V/11.11 Н1.5 «нет прав», and the right is really missing — accepted",
   "source": "lesson",
   "texts": [
    "Turn off Yard-1"
@@ -2601,7 +2601,7 @@
  {
   "id": "refuse-not-found",
   "console": "stand3",
-  "rule": "V/11.11 Н1.5 «не найдено» при названной единице — раз за ход",
+  "rule": "V/11.11 Н1.5 «не найдено» with a named unit — once per turn",
   "source": "lesson",
   "texts": [
    "Change tallies on shelf Store-2"
@@ -2626,7 +2626,7 @@
  {
   "id": "refuse-not-found-unreadable",
   "console": "stand3",
-  "rule": "V/11.11 Н1.5 нечитаемая подсистема пропускается",
+  "rule": "V/11.11 Н1.5 an unreadable subsystem is skipped",
   "source": "lesson",
   "texts": [
    "Change counter Spruce"
@@ -2647,7 +2647,7 @@
  {
   "id": "vms-live-enum",
   "console": "vms",
-  "rule": "V/11.11 Н1.4 пп. 4, 6 подпись варианта и поля по-русски",
+  "rule": "V/11.11 Н1.4 items 4, 6 the option and field captions in Russian",
   "source": "lesson",
   "texts": [
    "Переключи живой поток камеры Вход на «по требованию»"
@@ -2684,7 +2684,7 @@
  {
   "id": "vms-retention-about",
   "console": "vms",
-  "rule": "V/11.11 Н1.4 п. 8 отбор по связанной (about.name), число — дни; поле без подписи — пробел",
+  "rule": "V/11.11 Н1.4 item 8 selection by the linked one (about.name), the number is days; a field without a caption — a space",
   "source": "lesson",
   "texts": [
    "Храни записи камеры Вход 14 дней"
@@ -2726,7 +2726,7 @@
  {
   "id": "vms-named-id",
   "console": "vms",
-  "rule": "V/11.11 Н1.4 п. 1 named — id единицы, а не её имя",
+  "rule": "V/11.11 Н1.4 item 1 named — the unit id, not its name",
   "source": "lesson",
   "texts": [
    "Храни записи камеры Вход 14 дней"
@@ -2765,7 +2765,7 @@
  {
   "id": "vms-off-named",
   "console": "vms",
-  "rule": "V/11.11 Н1.4 пп. 4, 6 «выключи» называет «Включена» словами операторов words.json, значение — полярностью",
+  "rule": "V/11.11 Н1.4 items 4, 6 «выключи» names «Включена» by the operator words of words.json, the value — by polarity",
   "source": "lesson",
   "texts": [
    "Выключи камеру Вход"
@@ -2801,7 +2801,7 @@
  {
   "id": "vms-on-polarity",
   "console": "vms",
-  "rule": "V/11.11 Н1.4 п. 4 bool полярностью по-русски (поле rec.enabled без подписи)",
+  "rule": "V/11.11 Н1.4 item 4 bool by polarity in Russian (the field rec.enabled without a caption)",
   "source": "lesson",
   "texts": [
    "Включи запись parking"
@@ -2833,7 +2833,7 @@
  {
   "id": "vms-secret",
   "console": "vms",
-  "rule": "V/11.12 Н1.3 пароль устройства — метка секрета",
+  "rule": "V/11.12 Н1.3 the device password — a secret label",
   "source": "lesson",
   "texts": [
    "Смени пароль устройства камеры Вход"
@@ -2875,7 +2875,7 @@
  {
   "id": "vms-stream-fixed",
   "console": "vms",
-  "rule": "V/11.11 Н1.3 fixed (main потока); отказ «неизменяема — правка невозможна» принят",
+  "rule": "V/11.11 Н1.3 fixed (main of a stream); the refusal «неизменяема — правка невозможна» is accepted",
   "source": "lesson",
   "texts": [
    "Сделай поток Вход малый потоком камеры Парковка"
@@ -2931,7 +2931,7 @@
  {
   "id": "vms-out-of-scope",
   "console": "vms",
-  "rule": "V/11.10 Н0, Н1.5 охват — подсистемы страницы (ADR-0093 доп. (5))",
+  "rule": "V/11.10 Н0, Н1.5 scope — the subsystems of the page (ADR-0093 addendum (5))",
   "source": "lesson",
   "texts": [
    "Храни записи камеры Вход 14 дней"
@@ -2982,7 +2982,7 @@
  {
   "id": "vms-wrong-field",
   "console": "vms",
-  "rule": "V/11.11 Н1.4 п. 6 подмена поля: «выключи» не называет «Живой поток»",
+  "rule": "V/11.11 Н1.4 item 6 field substitution: «выключи» does not name «Живой поток»",
   "source": "lesson",
   "texts": [
    "Выключи камеру Вход"
@@ -3018,8 +3018,8 @@
  {
   "id": "vms-passes-days",
   "console": "vms",
-  "rule": "V/11.11 Н5 нарушено, но проходит: «дней» называет и retention_days, и min_depth_days",
-  "violates": "админ просил хранить 14 дней, план ставит глубину не меньше 14 дней — оба поля названы словом «дней»",
+  "rule": "V/11.11 Н5 violated, but passes: «дней» names both retention_days and min_depth_days",
+  "violates": "the admin asked to keep 14 days, the plan sets a depth of at least 14 days — both fields are named by the word «дней»",
   "source": "lesson",
   "texts": [
    "Храни записи камеры Вход 14 дней"
@@ -3061,7 +3061,7 @@
  {
   "id": "tools-prototype-names",
   "console": "stand3",
-  "rule": "V/11.10 Н1.1 закрытый набор: имя из прототипа — не инструмент (RVP-06)",
+  "rule": "V/11.10 Н1.1 a closed set: a name from the prototype is not a tool (RVP-06)",
   "source": "lesson",
   "texts": [
    "x"
@@ -3094,7 +3094,7 @@
  {
   "id": "plan-prototype-field",
   "console": "stand3",
-  "rule": "V/11.11 Н1.3 поле с именем из прототипа — нет поля (RVP-06)",
+  "rule": "V/11.11 Н1.3 a field with a name from the prototype — no field (RVP-06)",
   "source": "lesson",
   "texts": [
    "Set Gate-1 constructor to loud"
@@ -3150,7 +3150,7 @@
  {
   "id": "plan-form-list",
   "console": "stand3",
-  "rule": "V/11.11 Н1.3, Н1.6 неверная форма списка — ошибка проверки, не исключение (RVP-04)",
+  "rule": "V/11.11 Н1.3, Н1.6 a wrong list form — a check error, not an exception (RVP-04)",
   "source": "lesson",
   "texts": [
    "Set Gate-1 tags to blue"
@@ -3229,7 +3229,7 @@
  {
   "id": "plan-missed-per-field",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 10 пропущенные — по каждому полю: правка другого поля единицу не извиняет (RVP-02)",
+  "rule": "V/11.11 Н1.4 item 10 missing — per field: an edit of another field does not excuse the unit (RVP-02)",
   "source": "lesson",
   "texts": [
    "For Gate-1 and Office-1 set mode loud and step 9"
@@ -3277,7 +3277,7 @@
  {
   "id": "plan-missed-per-field-control",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 10 положительный контроль: у единицы значение уже стоит — правки не нужно (RVP-02)",
+  "rule": "V/11.11 Н1.4 item 10 positive control: the unit already has the value — no edit is needed (RVP-02)",
   "source": "lesson",
   "texts": [
    "For Gate-1 and Gate-2 set mode loud and step 9"
@@ -3325,7 +3325,7 @@
  {
   "id": "plan-astral-name",
   "console": "stand3",
-  "rule": "V/11.11 Н1.2 граница имени — кодовые точки целиком: 𐐀Gate-1𐐀 не называет Gate-1 (RVP-03)",
+  "rule": "V/11.11 Н1.2 a name boundary — whole code points: 𐐀Gate-1𐐀 does not name Gate-1 (RVP-03)",
   "source": "lesson",
   "texts": [
    "Switch 𐐀Gate-1𐐀 to loud mode"
@@ -3357,7 +3357,7 @@
  {
   "id": "plan-astral-name-control",
   "console": "stand3",
-  "rule": "V/11.11 Н1.2 положительный контроль: 𐐀 через пробел — граница есть (RVP-03)",
+  "rule": "V/11.11 Н1.2 positive control: 𐐀 with a space — there is a boundary (RVP-03)",
   "source": "lesson",
   "texts": [
    "Switch 𐐀 Gate-1 𐐀 to loud mode"
@@ -3389,7 +3389,7 @@
  {
   "id": "plan-reverse-about",
   "console": "stand3",
-  "rule": "V/11.11 Н1.4 п. 8 отбор в дочерней подсистеме, правка — в связанной (обратный about; RVP-05)",
+  "rule": "V/11.11 Н1.4 item 8 selection in a child subsystem, the edit in the linked one (reverse about; RVP-05)",
   "source": "lesson",
   "texts": [
    "For tallies with loud mode set step 9"
@@ -3438,7 +3438,7 @@
  {
   "id": "tools-list-max-5000",
   "console": "stand3",
-  "rule": "V/11.10 Н1.2 LIST_MAX: 5000 строк читаются",
+  "rule": "V/11.10 Н1.2 LIST_MAX: 5000 rows are read",
   "source": "lesson",
   "texts": [
    "x"
@@ -3469,7 +3469,7 @@
  {
   "id": "tools-list-max-5001",
   "console": "stand3",
-  "rule": "V/11.10 Н1.2 LIST_MAX: 5001 строка — ошибка, не усечённый отбор",
+  "rule": "V/11.10 Н1.2 LIST_MAX: 5001 rows — an error, not a truncated selection",
   "source": "lesson",
   "texts": [
    "x"
@@ -3500,7 +3500,7 @@
  {
   "id": "pilot-R01",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R01 (plan)",
+  "rule": "replay of the pilot base: loop R01 (plan)",
   "source": "pilot loop R01",
   "texts": [
    "Switch tally Gate-1 to \"loud\" mode."
@@ -3555,7 +3555,7 @@
  {
   "id": "pilot-R02",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R02 (plan)",
+  "rule": "replay of the pilot base: loop R02 (plan)",
   "source": "pilot loop R02",
   "texts": [
    "Set step 3 on tally Office-1."
@@ -3682,7 +3682,7 @@
  {
   "id": "pilot-R03",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R03 (plan)",
+  "rule": "replay of the pilot base: loop R03 (plan)",
   "source": "pilot loop R03",
   "texts": [
    "Turn off tally Shop-1."
@@ -3737,7 +3737,7 @@
  {
   "id": "pilot-R04",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R04 (plan)",
+  "rule": "replay of the pilot base: loop R04 (plan)",
   "source": "pilot loop R04",
   "texts": [
    "Tally Store-1: mode loud, step 4 and weight 1.5."
@@ -3806,7 +3806,7 @@
  {
   "id": "pilot-R05",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R05 (plan)",
+  "rule": "replay of the pilot base: loop R05 (plan)",
   "source": "pilot loop R05",
   "texts": [
    "On Store-2 set weight 2 and retention 21 days."
@@ -3907,7 +3907,7 @@
  {
   "id": "pilot-R06",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R06 (plan)",
+  "rule": "replay of the pilot base: loop R06 (plan)",
   "source": "pilot loop R06",
   "texts": [
    "For counter Spruce set the start value to 100 and the step to 5."
@@ -3978,7 +3978,7 @@
  {
   "id": "pilot-R07",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R07 (plan)",
+  "rule": "replay of the pilot base: loop R07 (plan)",
   "source": "pilot loop R07",
   "texts": [
    "Turn on all tallies that are turned off."
@@ -4077,7 +4077,7 @@
  {
   "id": "pilot-R08",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R08 (plan)",
+  "rule": "replay of the pilot base: loop R08 (plan)",
   "source": "pilot loop R08",
   "texts": [
    "For all tallies on shelf Row-3 set retention to 10 days."
@@ -4155,7 +4155,7 @@
  {
   "id": "pilot-R09",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R09 (plan)",
+  "rule": "replay of the pilot base: loop R09 (plan)",
   "source": "pilot loop R09",
   "texts": [
    "For all quiet tallies in zone z2 with a step greater than 1, set the step to 1."
@@ -4240,7 +4240,7 @@
  {
   "id": "pilot-R10",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R10 (plan)",
+  "rule": "replay of the pilot base: loop R10 (plan)",
   "source": "pilot loop R10",
   "texts": [
    "Switch the tallies tagged vip in zone z2 to loud mode."
@@ -4310,7 +4310,7 @@
  {
   "id": "pilot-R11",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R11 (plan)",
+  "rule": "replay of the pilot base: loop R11 (plan)",
   "source": "pilot loop R11",
   "texts": [
    "Add the label monitored to the counters labeled floor3."
@@ -4397,7 +4397,7 @@
  {
   "id": "pilot-R12",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R12 (plan)",
+  "rule": "replay of the pilot base: loop R12 (plan)",
   "source": "pilot loop R12",
   "texts": [
    "Set retention to 14 days for all tallies of counters labeled east."
@@ -4508,7 +4508,7 @@
  {
   "id": "pilot-R13",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R13 (plan)",
+  "rule": "replay of the pilot base: loop R13 (plan)",
   "source": "pilot loop R13",
   "texts": [
    "On counter Linden replace the label floor1 with floor2."
@@ -4568,7 +4568,7 @@
  {
   "id": "pilot-R14",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R14 (plan)",
+  "rule": "replay of the pilot base: loop R14 (plan)",
   "source": "pilot loop R14",
   "texts": [
    "Switch the tallies of the western third-floor counters that are currently in quiet mode to loud."
@@ -4789,7 +4789,7 @@
  {
   "id": "pilot-R15",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R15 (clarify)",
+  "rule": "replay of the pilot base: loop R15 (clarify)",
   "source": "pilot loop R15",
   "texts": [
    "Change the step of the tally to 5."
@@ -4807,7 +4807,7 @@
  {
   "id": "pilot-R16",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R16 (clarify)",
+  "rule": "replay of the pilot base: loop R16 (clarify)",
   "source": "pilot loop R16",
   "texts": [
    "Move Office-1 to another shelf."
@@ -4844,7 +4844,7 @@
  {
   "id": "pilot-R17",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R17 (refuse)",
+  "rule": "replay of the pilot base: loop R17 (refuse)",
   "source": "pilot loop R17",
   "texts": [
    "Switch tally Yard-1 to quiet mode."
@@ -4879,7 +4879,7 @@
  {
   "id": "pilot-R18",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R18 (refuse)",
+  "rule": "replay of the pilot base: loop R18 (refuse)",
   "source": "pilot loop R18",
   "texts": [
    "Set the priority of tally Gate-2 to \"high\"."
@@ -4921,7 +4921,7 @@
  {
   "id": "pilot-R19",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R19 (refuse)",
+  "rule": "replay of the pilot base: loop R19 (refuse)",
   "source": "pilot loop R19",
   "texts": [
    "Attach tally Office-1 to counter Alder."
@@ -4958,7 +4958,7 @@
  {
   "id": "pilot-R20",
   "console": "stand3",
-  "rule": "переигровка основы пилота: loop R20 (plan)",
+  "rule": "replay of the pilot base: loop R20 (plan)",
   "source": "pilot loop R20",
   "texts": [
    "For tally Office-2 change the feed login to feeder and the feed password."
@@ -5022,7 +5022,7 @@
  {
   "id": "pilot-H01",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout H01 (plan)",
+  "rule": "replay of the pilot base: holdout H01 (plan)",
   "source": "pilot holdout H01",
   "texts": [
    "Make all tallies tagged night loud."
@@ -5277,7 +5277,7 @@
  {
   "id": "pilot-H02",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout H02 (plan)",
+  "rule": "replay of the pilot base: holdout H02 (plan)",
   "source": "pilot holdout H02",
   "texts": [
    "Set weight 3 on the tallies on the second floor."
@@ -5303,7 +5303,7 @@
  {
   "id": "pilot-H03",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout H03 (plan)",
+  "rule": "replay of the pilot base: holdout H03 (plan)",
   "source": "pilot holdout H03",
   "texts": [
    "Add the tag vip to tally Office-1."
@@ -5359,7 +5359,7 @@
  {
   "id": "pilot-H04",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout H04 (refuse)",
+  "rule": "replay of the pilot base: holdout H04 (refuse)",
   "source": "pilot holdout H04",
   "texts": [
    "Set step 3 on counter Pine."
@@ -5394,7 +5394,7 @@
  {
   "id": "pilot-H05",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout H05 (clarify)",
+  "rule": "replay of the pilot base: holdout H05 (clarify)",
   "source": "pilot holdout H05",
   "texts": [
    "Set tally Shop-1 to 5."
@@ -5447,7 +5447,7 @@
  {
   "id": "pilot-H06",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout H06 (refuse)",
+  "rule": "replay of the pilot base: holdout H06 (refuse)",
   "source": "pilot holdout H06",
   "texts": [
    "Restart server Node-1."
@@ -5499,7 +5499,7 @@
  {
   "id": "pilot-H07",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout H07 (plan)",
+  "rule": "replay of the pilot base: holdout H07 (plan)",
   "source": "pilot holdout H07",
   "texts": [
    "Remove the label floor3 from all western counters."
@@ -5572,7 +5572,7 @@
  {
   "id": "pilot-H08",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout H08 (plan)",
+  "rule": "replay of the pilot base: holdout H08 (plan)",
   "source": "pilot holdout H08",
   "texts": [
    "Switch tallies with retention over 10 days to quiet mode."
@@ -5637,7 +5637,7 @@
  {
   "id": "pilot-K01",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout2 K01 (plan)",
+  "rule": "replay of the pilot base: holdout2 K01 (plan)",
   "source": "pilot holdout2 K01",
   "texts": [
    "Set loud mode on the tallies that have no tags."
@@ -5744,7 +5744,7 @@
  {
   "id": "pilot-K02",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout2 K02 (plan)",
+  "rule": "replay of the pilot base: holdout2 K02 (plan)",
   "source": "pilot holdout2 K02",
   "texts": [
    "Remove the tag night from all tallies of the eastern counters."
@@ -5839,7 +5839,7 @@
  {
   "id": "pilot-K03",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout2 K03 (none)",
+  "rule": "replay of the pilot base: holdout2 K03 (none)",
   "source": "pilot holdout2 K03",
   "texts": [
    "Turn on all tallies in zone z5."
@@ -5905,7 +5905,7 @@
  {
   "id": "pilot-K04",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout2 K04 (plan)",
+  "rule": "replay of the pilot base: holdout2 K04 (plan)",
   "source": "pilot holdout2 K04",
   "texts": [
    "Turn off tallies Gate-1 and Office-1."
@@ -6014,7 +6014,7 @@
  {
   "id": "pilot-K05",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout2 K05 (plan)",
+  "rule": "replay of the pilot base: holdout2 K05 (plan)",
   "source": "pilot holdout2 K05",
   "texts": [
    "Set weight 0.75 on tally Shop-2."
@@ -6088,7 +6088,7 @@
  {
   "id": "pilot-K06",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout2 K06 (clarify)",
+  "rule": "replay of the pilot base: holdout2 K06 (clarify)",
   "source": "pilot holdout2 K06",
   "texts": [
    "Change the zone of tally Store-1."
@@ -6124,7 +6124,7 @@
  {
   "id": "pilot-K07",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout2 K07 (clarify)",
+  "rule": "replay of the pilot base: holdout2 K07 (clarify)",
   "source": "pilot holdout2 K07",
   "texts": [
    "Give tally Shop-1 a bigger step."
@@ -6161,7 +6161,7 @@
  {
   "id": "pilot-K08",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout2 K08 (refuse)",
+  "rule": "replay of the pilot base: holdout2 K08 (refuse)",
   "source": "pilot holdout2 K08",
   "texts": [
    "Delete all tallies on shelf Row-1."
@@ -6179,7 +6179,7 @@
  {
   "id": "pilot-L01",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout3 L01 (plan)",
+  "rule": "replay of the pilot base: holdout3 L01 (plan)",
   "source": "pilot holdout3 L01",
   "texts": [
    "Set weight 2 on the tallies whose counters start from zero."
@@ -6259,7 +6259,7 @@
  {
   "id": "pilot-L02",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout3 L02 (plan)",
+  "rule": "replay of the pilot base: holdout3 L02 (plan)",
   "source": "pilot holdout3 L02",
   "texts": [
    "Add the tag night to all tallies on shelf Row-3."
@@ -6344,7 +6344,7 @@
  {
   "id": "pilot-L03",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout3 L03 (none)",
+  "rule": "replay of the pilot base: holdout3 L03 (none)",
   "source": "pilot holdout3 L03",
   "texts": [
    "Turn off the tallies on shelf Row-4."
@@ -6389,7 +6389,7 @@
  {
   "id": "pilot-L04",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout3 L04 (refuse)",
+  "rule": "replay of the pilot base: holdout3 L04 (refuse)",
   "source": "pilot holdout3 L04",
   "texts": [
    "Set weight 1 on tally Yard-2."
@@ -6424,7 +6424,7 @@
  {
   "id": "pilot-L05",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout3 L05 (plan)",
+  "rule": "replay of the pilot base: holdout3 L05 (plan)",
   "source": "pilot holdout3 L05",
   "texts": [
    "Set the step of the tallies on shelf Row-2 to the same as tally Gate-2."
@@ -6502,7 +6502,7 @@
  {
   "id": "pilot-L06",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout3 L06 (clarify)",
+  "rule": "replay of the pilot base: holdout3 L06 (clarify)",
   "source": "pilot holdout3 L06",
   "texts": [
    "Add a tag to tally Shop-2."
@@ -6537,7 +6537,7 @@
  {
   "id": "pilot-L07",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout3 L07 (plan)",
+  "rule": "replay of the pilot base: holdout3 L07 (plan)",
   "source": "pilot holdout3 L07",
   "texts": [
    "Remove the label floor2 from all counters."
@@ -6593,7 +6593,7 @@
  {
   "id": "pilot-L08",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout3 L08 (plan)",
+  "rule": "replay of the pilot base: holdout3 L08 (plan)",
   "source": "pilot holdout3 L08",
   "texts": [
    "For the tallies of the western counters that have the default retention, set retention to 20 days."
@@ -6746,7 +6746,7 @@
  {
   "id": "pilot-M01",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout4 M01 (plan)",
+  "rule": "replay of the pilot base: holdout4 M01 (plan)",
   "source": "pilot holdout4 M01",
   "texts": [
    "Turn on all tallies on shelf Row-3."
@@ -6869,7 +6869,7 @@
  {
   "id": "pilot-M02",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout4 M02 (plan)",
+  "rule": "replay of the pilot base: holdout4 M02 (plan)",
   "source": "pilot holdout4 M02",
   "texts": [
    "Switch all tallies of the western counters to quiet mode."
@@ -6936,7 +6936,7 @@
  {
   "id": "pilot-M03",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout4 M03 (plan)",
+  "rule": "replay of the pilot base: holdout4 M03 (plan)",
   "source": "pilot holdout4 M03",
   "texts": [
    "Set step 3 on all tallies in zone z1."
@@ -7011,7 +7011,7 @@
  {
   "id": "pilot-M04",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout4 M04 (none)",
+  "rule": "replay of the pilot base: holdout4 M04 (none)",
   "source": "pilot holdout4 M04",
   "texts": [
    "Remove the tag vip from the tallies on shelf Row-1."
@@ -7071,7 +7071,7 @@
  {
   "id": "pilot-M05",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout4 M05 (refuse)",
+  "rule": "replay of the pilot base: holdout4 M05 (refuse)",
   "source": "pilot holdout4 M05",
   "texts": [
    "Add the label floor1 to counter Pine."
@@ -7114,7 +7114,7 @@
  {
   "id": "pilot-M06",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout4 M06 (clarify)",
+  "rule": "replay of the pilot base: holdout4 M06 (clarify)",
   "source": "pilot holdout4 M06",
   "texts": [
    "Increase the weight of tally Shop-1."
@@ -7146,7 +7146,7 @@
  {
   "id": "pilot-M07",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout4 M07 (plan)",
+  "rule": "replay of the pilot base: holdout4 M07 (plan)",
   "source": "pilot holdout4 M07",
   "texts": [
    "Add the tag heavy to the tallies with weight greater than 1."
@@ -7214,7 +7214,7 @@
  {
   "id": "pilot-M08",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout4 M08 (plan)",
+  "rule": "replay of the pilot base: holdout4 M08 (plan)",
   "source": "pilot holdout4 M08",
   "texts": [
    "Set the step of tally Shop-2 to that of its counter."
@@ -7285,7 +7285,7 @@
  {
   "id": "pilot-N01",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout5 N01 (plan)",
+  "rule": "replay of the pilot base: holdout5 N01 (plan)",
   "source": "pilot holdout5 N01",
   "texts": [
    "For the tallies on shelf Row-1 set the retention the same as tally Office-2."
@@ -7368,7 +7368,7 @@
  {
   "id": "pilot-N02",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout5 N02 (plan)",
+  "rule": "replay of the pilot base: holdout5 N02 (plan)",
   "source": "pilot holdout5 N02",
   "texts": [
    "For each tally of counter Spruce set the step equal to that counter's step."
@@ -7429,7 +7429,7 @@
  {
   "id": "pilot-N03",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout5 N03 (refuse)",
+  "rule": "replay of the pilot base: holdout5 N03 (refuse)",
   "source": "pilot holdout5 N03",
   "texts": [
    "Turn off tally Yard-1."
@@ -7466,7 +7466,7 @@
  {
   "id": "pilot-N04",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout5 N04 (none)",
+  "rule": "replay of the pilot base: holdout5 N04 (none)",
   "source": "pilot holdout5 N04",
   "texts": [
    "Remove the flag audit from all tallies."
@@ -7501,7 +7501,7 @@
  {
   "id": "pilot-N05",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout5 N05 (clarify)",
+  "rule": "replay of the pilot base: holdout5 N05 (clarify)",
   "source": "pilot holdout5 N05",
   "texts": [
    "Move tally Gate-2 to another shelf."
@@ -7539,7 +7539,7 @@
  {
   "id": "pilot-N06",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout5 N06 (plan)",
+  "rule": "replay of the pilot base: holdout5 N06 (plan)",
   "source": "pilot holdout5 N06",
   "texts": [
    "Remove the tag night from all eastern tallies."
@@ -7612,7 +7612,7 @@
  {
   "id": "pilot-N07",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout5 N07 (plan)",
+  "rule": "replay of the pilot base: holdout5 N07 (plan)",
   "source": "pilot holdout5 N07",
   "texts": [
    "Set step 4 on the tallies with a step greater than 4."
@@ -7677,7 +7677,7 @@
  {
   "id": "pilot-N08",
   "console": "stand3",
-  "rule": "переигровка основы пилота: holdout5 N08 (plan)",
+  "rule": "replay of the pilot base: holdout5 N08 (plan)",
   "source": "pilot holdout5 N08",
   "texts": [
    "Set loud mode on the tallies whose counters have the default step."

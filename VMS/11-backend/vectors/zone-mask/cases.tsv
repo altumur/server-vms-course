@@ -1,7 +1,7 @@
 case	shape	points	count	sha256	note
-full	rect	[[0, 0], [1, 1]]	65536	6cd016117870de968815a1e6e82d4eb0767134b77c4e002fef0d37cf33ebb0da	весь кадр
-left-half	rect	[[0, 0], [0.5, 1]]	32768	f122ec692cc226f5bf083c1e8290be961c359864aa059ad11b597aea89adfb20	левая половина
-reversed	rect	[[0.75, 0.75], [0.25, 0.25]]	16384	14064e6c570579d2e8014e018d450a90f7c02df0a6bdf0da54ffe82b7ab21608	точки в обратном порядке, та же фигура
-triangle	polygon	[[0.01, 0.01], [0.97, 0.03], [0.02, 0.99]]	30824	6f3540cc90000487e2a6eae10df998563d850c5ee1aa543efe5d302e5045b621	треугольник
-concave	polygon	[[0.1, 0.1], [0.9, 0.1], [0.9, 0.9], [0.5, 0.3], [0.1, 0.9]]	26010	12a0d0a948ab01cb37860254d539685b2f4de78b1823494843a9edd2ad786535	вогнутый
-crossed	polygon	[[0.21, 0.23], [0.81, 0.79], [0.83, 0.19], [0.17, 0.77]]	11788	788e5ad6e78d81432cead5be0fcc855df4ab597a8dcebac6101a0929a69915c9	самопересечение: чёт-нечет
+full	rect	[[0, 0], [1, 1]]	65536	6cd016117870de968815a1e6e82d4eb0767134b77c4e002fef0d37cf33ebb0da	the whole frame
+left-half	rect	[[0, 0], [0.5, 1]]	32768	f122ec692cc226f5bf083c1e8290be961c359864aa059ad11b597aea89adfb20	the left half
+reversed	rect	[[0.75, 0.75], [0.25, 0.25]]	16384	14064e6c570579d2e8014e018d450a90f7c02df0a6bdf0da54ffe82b7ab21608	points in reverse order, the same shape
+triangle	polygon	[[0.01, 0.01], [0.97, 0.03], [0.02, 0.99]]	30824	6f3540cc90000487e2a6eae10df998563d850c5ee1aa543efe5d302e5045b621	a triangle
+concave	polygon	[[0.1, 0.1], [0.9, 0.1], [0.9, 0.9], [0.5, 0.3], [0.1, 0.9]]	26010	12a0d0a948ab01cb37860254d539685b2f4de78b1823494843a9edd2ad786535	concave
+crossed	polygon	[[0.21, 0.23], [0.81, 0.79], [0.83, 0.19], [0.17, 0.77]]	11788	788e5ad6e78d81432cead5be0fcc855df4ab597a8dcebac6101a0929a69915c9	self-intersection: even-odd

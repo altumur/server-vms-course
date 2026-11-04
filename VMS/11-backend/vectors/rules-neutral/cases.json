@@ -296,7 +296,7 @@
  "cases": [
   {
    "id": "sensor-relay",
-   "note": "датчик и реле по имени, value как есть, source из вида и действия",
+   "note": "a sensor and a relay by name, value as is, source from the kind and the action",
    "plan": [
     {
      "op": "createRule",
@@ -370,7 +370,7 @@
   },
   {
    "id": "folder-except",
-   "note": "папка с исключением в триггере, цель события в шаге",
+   "note": "a folder with an exception in the trigger, the event target in the step",
    "plan": [
     {
      "op": "createRule",
@@ -441,7 +441,7 @@
   },
   {
    "id": "name-list",
-   "note": "список имён, регистр не важен",
+   "note": "a list of names, case does not matter",
    "plan": [
     {
      "op": "createRule",
@@ -524,7 +524,7 @@
   },
   {
    "id": "runrule-conditions",
-   "note": "правило, расписание и режимы по имени",
+   "note": "a rule, a schedule and modes by name",
    "plan": [
     {
      "op": "createRule",
@@ -609,7 +609,7 @@
   },
   {
    "id": "update-set",
-   "note": "правка по имени правила, только изменённое",
+   "note": "an edit by the rule name, only what changed",
    "plan": [
     {
      "op": "updateRule",
@@ -633,7 +633,7 @@
   },
   {
    "id": "schedule-window",
-   "note": "новое расписание и окно ссылкой @ref",
+   "note": "a new schedule and a window by the reference @ref",
    "plan": [
     {
      "op": "createSchedule",
@@ -704,7 +704,7 @@
   },
   {
    "id": "window-all",
-   "note": "окно без rules — все правила",
+   "note": "a window without rules — all rules",
    "plan": [
     {
      "op": "createSchedule",
@@ -770,7 +770,7 @@
   },
   {
    "id": "ask-escalate",
-   "note": "роль по имени в roleId, ветки переводятся",
+   "note": "a role by name in roleId, the branches are translated",
    "plan": [
     {
      "op": "createRule",
@@ -886,7 +886,7 @@
   },
   {
    "id": "no-device",
-   "note": "имени нет",
+   "note": "there is no name",
    "plan": [
     {
      "op": "createRule",
@@ -915,7 +915,7 @@
   },
   {
    "id": "no-folder",
-   "note": "папки нет",
+   "note": "there is no folder",
    "plan": [
     {
      "op": "createRule",
@@ -945,7 +945,7 @@
   },
   {
    "id": "no-role",
-   "note": "роли нет",
+   "note": "there is no role",
    "plan": [
     {
      "op": "createRule",
@@ -979,7 +979,7 @@
   },
   {
    "id": "no-rule",
-   "note": "правила нет",
+   "note": "there is no rule",
    "plan": [
     {
      "op": "updateRule",
@@ -996,7 +996,7 @@
   },
   {
    "id": "empty",
-   "note": "план пуст",
+   "note": "the plan is empty",
    "plan": [],
    "body": null,
    "errors": [
@@ -1005,7 +1005,7 @@
   },
   {
    "id": "bad-op",
-   "note": "op не из четырёх",
+   "note": "op not one of the four",
    "plan": [
     {
      "op": "deleteRule",
@@ -1019,7 +1019,7 @@
   },
   {
    "id": "same-children",
-   "note": "одинаковые имена детей у двух камер: имя с камерой",
+   "note": "the same child names on two cameras: the name with the camera",
    "plan": [
     {
      "op": "createRule",
@@ -1093,7 +1093,7 @@
   },
   {
    "id": "child-bare",
-   "note": "имя ребёнка без камеры",
+   "note": "a child name without the camera",
    "plan": [
     {
      "op": "createRule",
@@ -1122,7 +1122,7 @@
   },
   {
    "id": "several-cameras",
-   "note": "две камеры одного имени",
+   "note": "two cameras of one name",
    "plan": [
     {
      "op": "createRule",
@@ -1152,7 +1152,7 @@
   },
   {
    "id": "several-rules",
-   "note": "два правила одного имени: не последнее побеждает, вопрос",
+   "note": "two rules of one name: not the last one wins, a question",
    "plan": [
     {
      "op": "updateRule",
@@ -1169,7 +1169,7 @@
   },
   {
    "id": "folder-path",
-   "note": "папка путём от корня",
+   "note": "a folder by the path from the root",
    "plan": [
     {
      "op": "createRule",
@@ -1235,7 +1235,7 @@
   },
   {
    "id": "folder-bare",
-   "note": "папка не путём",
+   "note": "a folder not by a path",
    "plan": [
     {
      "op": "createRule",
@@ -1265,7 +1265,7 @@
   },
   {
    "id": "via-default",
-   "note": "via нет — client",
+   "note": "no via — client",
    "plan": [
     {
      "op": "createRule",
@@ -1339,7 +1339,7 @@
   },
   {
    "id": "ask-no-role",
-   "note": "вопрос без роли: V/07.3 судил бы негодным",
+   "note": "a question without a role: V/07.3 would judge it unfit",
    "plan": [
     {
      "op": "createRule",
@@ -1372,7 +1372,7 @@
   },
   {
    "id": "default-stop-as-is",
-   "note": "default yes, stop reset переводчик несёт как есть: суд слов — rules-words",
+   "note": "default yes, stop reset the translator carries as is: the judgment of words — rules-words",
    "plan": [
     {
      "op": "createRule",
@@ -1465,7 +1465,7 @@
   },
   {
    "id": "via-email-as-is",
-   "note": "via email переводчик не судит: отказ — слой extra, rules-words escalate-email",
+   "note": "via email the translator does not judge: the refusal — the layer extra, rules-words escalate-email",
    "plan": [
     {
      "op": "createRule",
