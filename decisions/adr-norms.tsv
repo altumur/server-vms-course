@@ -1243,6 +1243,9 @@ adr	add	point	status	file	norm	note
 0116	5	—	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1	секретные default — null, secret_defaults, в описание вида не попадают
 0116	6	п. 2	НЕ НОРМА	-	-	строки adr-norms 0116 (0) о платформе — доля «Спецификации»
 0116	7	—	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1	/source только по билету backend или admin; ответ — ревизии served (ADR-0115 доп. (20))
+0116	8	п. 1	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.3; Н1.4	этап 4 для администратора: objectAccess и kindAccess — «разрешено всё», правила из описаний видов
+0116	8	п. 2	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.3; Н1.4	ADR об области гранта «по виду» перед этапом 4 не нужен
+0116	8	п. 3	НЕ НОРМА	-	-	оператор в контракте форка — отдельное решение владельца после экранов администратора
 0117	0	-	НЕ НОРМА	-	-	доля платформы: нет — супервизор отдельным ADR
 0117	3	п. 2	НОРМА	Platform/06-console/spec/06.4-console.norms.md; Platform/06-console/spec/06-console.api.openapi.yaml; Platform/06-console/acceptance/4/scenarios.tsv	P/06.4 Н1.2 marks, Н2 POST /marks; сц. 03 шаги 16–20	доля платформы: to — конец отрезка, только с occurred и не меньше его, иначе 400; поле to строки
 0117	4	-	НЕ НОРМА	-	-	доля платформы: нет — закрепления размещения после done в P/04 нет, предел VMS
@@ -1262,7 +1265,7 @@ adr	add	point	status	file	norm	note
 0117	0	§ 6	НОРМА	VMS/08-exp/spec/08.9-exp.norms.md; VMS/08-exp/spec/08-exp.api.openapi.yaml	V/08.9 Н1.1, Н1.2	дверь части, attachment, Range 206 — правило двери exp (слово «Архитектора»); решила: несколько отрезков — 200 целиком
 0117	0	§ 7	НОРМА	VMS/08-exp/spec/08.7-exp.norms.md	V/08.7 Н1.3, Н1.4	перепаковка, перекодирование, кадр от ключевого, нарезка; решила: FRAME_BACK 10 с, имя файла
 0117	0	§ 8	НЕТ НОРМЫ	-	-	контракт форка /exports, reference.export, коды, поток, возможности: доля V/11 — при закреплении контракта форка с /exports (V/11.14 Н1.3)
-0117	0	§ 9	НЕ НОРМА	-	-	оператор в контракте — отдельный ADR до этапа 4
+0117	0	§ 9	НЕ НОРМА	-	-	оператор в контракте — отдельное решение после экранов администратора (ADR-0116 доп. (8) п. 3)
 0117	0	§ 10, § 11, Consequences	НЕ НОРМА	-	-	вопросы владельцу (ответ доп. (1)) и объём
 0117	0	Confirmation	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md; VMS/08-exp/spec/08.9-exp.norms.md	V/08.6 Н5; V/08.9 Н5	приёмка урока — веткой приёмки
 0117	1	п. 1	НОРМА	VMS/08-exp/spec/08.7-exp.norms.md; VMS/08-exp/spec/08.8-exp.norms.md	V/08.7 Н1.4, Н1.5; V/08.8 Н1.4	EXPORT_KEEP 24 ч, single_file только mkv, ZIP AES-256 и пароль PDF; треки, маска, супервизор — их ADR
