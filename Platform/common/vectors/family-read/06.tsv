@@ -1053,36 +1053,6 @@ case	family	key	kind	mode	who	text	verdict	paths	outcome	note
 06-p0002	platform/servers/<сервер>	platform/servers/srv-a	row	reader	["<s>controller", "console"]	{"labels":"A,A,A"}	refused	["/labels/1", "/labels/2"]	{"<s>controller": [""], "console": [""]}	labels: three equal items (uniqueItems: each item equal to an earlier one)
 06-p0003	objects/<sub>/commands/<rid>	objects/testsub/commands/r-0123456789abcdef	row	writer	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a","outcome":"performed","ended_at":"1","error":"x"}	refused	["/error"]	[]	error: forbidden by outcome performed (schema false under then — place of the key, D3)
 06-p0004	objects/<sub>/commands/<rid>	objects/testsub/commands/r-0123456789abcdef	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a","outcome":"performed","ended_at":"1","error":"x"}	refused	["/error"]	{"<s>worker": [""], "console": [""]}	error: forbidden by outcome performed (schema false under then — place of the key, D3)
-06-k0001	<sub>/policy	/policy	row	writer	["console"]	{"servers":"shared"}	refused	[""]	[]	catalog key: <sub> ""
-06-k0002	<sub>/policy	/policy	row	reader	["<s>controller", "console"]	{"servers":"shared"}	refused	[""]	{"<s>controller": [""], "console": [""]}	catalog key: <sub> ""
-06-k0003	platform/servers/<сервер>	platform/servers/	row	writer	["console"]	{"labels":"A"}	refused	[""]	[]	catalog key: <сервер> ""
-06-k0004	platform/servers/<сервер>	platform/servers/	row	reader	["<s>controller", "console"]	{"labels":"A"}	refused	[""]	{"<s>controller": [""], "console": [""]}	catalog key: <сервер> ""
-06-k0005	platform/drain	platform/drainx	row	writer	["console"]	{"server":"","at":"1"}	refused	[""]	[]	catalog key: literal
-06-k0006	platform/drain	platform/drainx	row	reader	["<s>controller", "console"]	{"server":"","at":"1"}	refused	[""]	{"<s>controller": [""], "console": [""]}	catalog key: literal
-06-k0007	platform/decommission/<сервер>	platform/decommission/	row	writer	["console"]	{"by":"a","at":"1","why":"a"}	refused	[""]	[]	catalog key: <сервер> ""
-06-k0008	platform/decommission/<сервер>	platform/decommission/	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a"}	refused	[""]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	catalog key: <сервер> ""
-06-k0009	door/signer	door/signerx	row	writer	["console", "admin"]	{"kid":"a","seed_secret":"a"}	refused	[""]	[]	catalog key: literal
-06-k0010	door/signer	door/signerx	row	reader	["admin", "console"]	{"kid":"a","seed_secret":"a"}	refused	[""]	{"admin": [""], "console": [""]}	catalog key: literal
-06-k0011	door/keys	door/keysx	row	writer	["console"]	{}	refused	[""]	[]	catalog key: literal
-06-k0012	door/keys	door/keysx	row	reader	["<s>worker", "console"]	{}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: literal
-06-k0013	<sub>/next_id	/next_id	row	writer	["console"]	{"n":"1"}	refused	[""]	[]	catalog key: <sub> ""
-06-k0014	<sub>/next_id	/next_id	row	reader	["console"]	{"n":"1"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
-06-k0015	<sub>/requests/<rid>	/requests/r-0123456789abcdef	row	writer	["console", "<s>worker"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	[]	catalog key: <sub> ""
-06-k0016	<sub>/requests/<rid>	testsub/requests/	row	writer	["console", "<s>worker"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	[]	catalog key: <rid> ""
-06-k0017	<sub>/requests/<rid>	/requests/r-0123456789abcdef	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: <sub> ""
-06-k0018	<sub>/requests/<rid>	testsub/requests/	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: <rid> ""
-06-k0019	<sub>/asked/<sha16(имя)>	/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	[]	catalog key: <sub> ""
-06-k0020	<sub>/asked/<sha16(имя)>	testsub/asked/	row	writer	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	[]	catalog key: <sha16(имя)> ""
-06-k0021	<sub>/asked/<sha16(имя)>	/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
-06-k0022	<sub>/asked/<sha16(имя)>	testsub/asked/	row	reader	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	{"console": [""]}	catalog key: <sha16(имя)> ""
-06-k0023	objects/<sub>/commands/<rid>	objects//commands/r-0123456789abcdef	row	writer	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	[]	catalog key: <sub> ""
-06-k0024	objects/<sub>/commands/<rid>	objects/testsub/commands/	row	writer	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	[]	catalog key: <rid> ""
-06-k0025	objects/<sub>/commands/<rid>	objects//commands/r-0123456789abcdef	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: <sub> ""
-06-k0026	objects/<sub>/commands/<rid>	objects/testsub/commands/	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: <rid> ""
-06-k0027	platform/schema	platform/schemax	row	writer	["console"]	{"version":"1","at":"1"}	refused	[""]	[]	catalog key: literal
-06-k0028	platform/schema	platform/schemax	row	reader	["<s>controller", "<s>domain", "<s>worker", "console", "domainconsole", "resource"]	{"version":"1","at":"1"}	refused	[""]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""], "domainconsole": [""], "resource": [""]}	catalog key: literal
-06-k0029	<sub>/sweep	/sweep	row	writer	["console"]	{"digests":"sha256-0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	[]	catalog key: <sub> ""
-06-k0030	<sub>/sweep	/sweep	row	reader	["console"]	{"digests":"sha256-0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
 a94_revision.001	<sub>/policy	testsub/policy	row	writer	["console"]	{"servers":"shared","revision":"1"}	ok	[]	[]	add: revision 1
 a94_revision.002	<sub>/policy	testsub/policy	row	reader	["<s>controller", "console"]	{"servers":"shared","revision":"1"}	ok	[]	{"<s>controller": [], "console": []}	add: revision 1
 a94_revision.003	<sub>/policy	testsub/policy	row	writer	["console"]	{"servers":"shared","revision":"7"}	ok	[]	[]	add: revision 7
@@ -1145,8 +1115,6 @@ a94_revision.040	platform/schema	platform/schema	row	reader	["<s>controller", "<
 06-rights-8020	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"parent":"","members":"testsub/counters/c1"}	refused	["/name"]	{"console": [""], "domainagent": [""]}	/name: absent
 06-rights-8021	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	writer	["console", "domainagent"]	{"name":"Подъезд","parent":""}	refused	["/members"]	[]	/members: absent
 06-rights-8022	platform/folders/<id>	platform/folders/0123456789abcdef0123456789abcdef	row	reader	["console", "domainagent"]	{"name":"Подъезд","parent":""}	refused	["/members"]	{"console": [""], "domainagent": [""]}	/members: absent
-06-rights-8023	platform/folders/<id>	platform/folders/	row	writer	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"testsub/counters/c1"}	refused	[""]	[]	catalog key: <id> ""
-06-rights-8024	platform/folders/<id>	platform/folders/	row	reader	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"testsub/counters/c1"}	refused	[""]	{"console": [""], "domainagent": [""]}	catalog key: <id> ""
 06-rights-8025	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub/counters/c1	row	writer	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	ok	[]	[]	base
 06-rights-8026	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub/counters/c1	row	reader	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	ok	[]	{"console": [], "domainagent": []}	base
 06-rights-8027	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub/counters/c1	row	writer	["console", "domainagent"]	{"folders":""}	refused	["/folders"]	[]	/folders: empty
@@ -1161,12 +1129,6 @@ a94_revision.040	platform/schema	platform/schema	row	reader	["<s>controller", "<
 06-rights-8036	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub/counters/c1	row	reader	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef","x":"1"}	refused	["/x"]	{"console": [""], "domainagent": [""]}	an extra key
 06-rights-8037	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub/counters/c1	row	writer	["console", "domainagent"]	{}	refused	["/folders"]	[]	/folders: absent
 06-rights-8038	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub/counters/c1	row	reader	["console", "domainagent"]	{}	refused	["/folders"]	{"console": [""], "domainagent": [""]}	/folders: absent
-06-rights-8039	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof//counters/t1	row	writer	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <sub> ""
-06-rights-8040	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof//counters/t1	row	reader	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	refused	[""]	{"console": [""], "domainagent": [""]}	catalog key: <sub> ""
-06-rights-8041	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub//t1	row	writer	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <manifest:unit.rows> ""
-06-rights-8042	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub//t1	row	reader	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	refused	[""]	{"console": [""], "domainagent": [""]}	catalog key: <manifest:unit.rows> ""
-06-rights-8043	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub/counters/	row	writer	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <id> ""
-06-rights-8044	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub/counters/	row	reader	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	refused	[""]	{"console": [""], "domainagent": [""]}	catalog key: <id> ""
 06-rights-8045	<sub>/operations/<id>	testsub/operations/0123456789abcdef0123456789abcdef	row	writer	["console"]	{"by":"ann","jti":"j1","kid":"k1","exp":"1760700000","created_at":"1760690000","state":"running","paused":"false","expired":"false","cancel":"false","total":"2","iat":"1760700000"}	ok	[]	[]	base
 06-rights-8046	<sub>/operations/<id>	testsub/operations/0123456789abcdef0123456789abcdef	row	reader	["console"]	{"by":"ann","jti":"j1","kid":"k1","exp":"1760700000","created_at":"1760690000","state":"running","paused":"false","expired":"false","cancel":"false","total":"2","iat":"1760700000"}	ok	[]	{"console": []}	base
 06-rights-8047	<sub>/operations/<id>	testsub/operations/0123456789abcdef0123456789abcdef	row	writer	["console"]	{"by":"ann","jti":"j1","kid":"k1","exp":"1760700000","created_at":"1760690000","state":"done","paused":"false","expired":"false","cancel":"false","total":"2","finished_at":"1760700100","retry_of":"fedcba9876543210fedcba9876543210","iat":"1760700000"}	ok	[]	[]	finished, a repeat
@@ -1187,10 +1149,6 @@ a94_revision.040	platform/schema	platform/schema	row	reader	["<s>controller", "<
 06-rights-8062	<sub>/operations/<id>	testsub/operations/0123456789abcdef0123456789abcdef	row	reader	["console"]	{"jti":"j1","kid":"k1","exp":"1760700000","created_at":"1760690000","state":"running","paused":"false","expired":"false","cancel":"false","total":"2","iat":"1760700000"}	refused	["/by"]	{"console": [""]}	/by: absent
 06-rights-8063	<sub>/operations/<id>	testsub/operations/0123456789abcdef0123456789abcdef	row	writer	["console"]	{"by":"ann","jti":"j1","kid":"k1","exp":"1760700000","created_at":"1760690000","state":"running","paused":"false","expired":"false","cancel":"false","iat":"1760700000"}	refused	["/total"]	[]	/total: absent
 06-rights-8064	<sub>/operations/<id>	testsub/operations/0123456789abcdef0123456789abcdef	row	reader	["console"]	{"by":"ann","jti":"j1","kid":"k1","exp":"1760700000","created_at":"1760690000","state":"running","paused":"false","expired":"false","cancel":"false","iat":"1760700000"}	refused	["/total"]	{"console": [""]}	/total: absent
-06-rights-8065	<sub>/operations/<id>	/operations/t1	row	writer	["console"]	{"by":"ann","jti":"j1","kid":"k1","exp":"1760700000","created_at":"1760690000","state":"running","paused":"false","expired":"false","cancel":"false","total":"2","iat":"1760700000"}	refused	[""]	[]	catalog key: <sub> ""
-06-rights-8066	<sub>/operations/<id>	/operations/t1	row	reader	["console"]	{"by":"ann","jti":"j1","kid":"k1","exp":"1760700000","created_at":"1760690000","state":"running","paused":"false","expired":"false","cancel":"false","total":"2","iat":"1760700000"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
-06-rights-8067	<sub>/operations/<id>	testsub/operations/	row	writer	["console"]	{"by":"ann","jti":"j1","kid":"k1","exp":"1760700000","created_at":"1760690000","state":"running","paused":"false","expired":"false","cancel":"false","total":"2","iat":"1760700000"}	refused	[""]	[]	catalog key: <id> ""
-06-rights-8068	<sub>/operations/<id>	testsub/operations/	row	reader	["console"]	{"by":"ann","jti":"j1","kid":"k1","exp":"1760700000","created_at":"1760690000","state":"running","paused":"false","expired":"false","cancel":"false","total":"2","iat":"1760700000"}	refused	[""]	{"console": [""]}	catalog key: <id> ""
 06-rights-8069	<sub>/opsteps/<id>/<i>	testsub/opsteps/0123456789abcdef0123456789abcdef/0	row	writer	["console"]	{"body":"{\"set\":{\"name\":\"a\"}}","root":"testsub.c1","expected":"{\"c1\":\"7\"}"}	ok	[]	[]	base
 06-rights-8070	<sub>/opsteps/<id>/<i>	testsub/opsteps/0123456789abcdef0123456789abcdef/0	row	reader	["console"]	{"body":"{\"set\":{\"name\":\"a\"}}","root":"testsub.c1","expected":"{\"c1\":\"7\"}"}	ok	[]	{"console": []}	base
 06-rights-8071	<sub>/opsteps/<id>/<i>	testsub/opsteps/0123456789abcdef0123456789abcdef/0	row	writer	["console"]	{"body":"{\"set\":{\"name\":\"a\"}}","root":"testsub.c1","expected":"{\"c1\":\"7\"}","password_secret":"enc:v2:k1:AAAA:BBBB"}	ok	[]	[]	with a sealed value
@@ -1211,12 +1169,6 @@ a94_revision.040	platform/schema	platform/schema	row	reader	["<s>controller", "<
 06-rights-8086	<sub>/opsteps/<id>/<i>	testsub/opsteps/0123456789abcdef0123456789abcdef/0	row	reader	["console"]	{"body":"{\"set\":{\"name\":\"a\"}}","expected":"{\"c1\":\"7\"}"}	refused	["/root"]	{"console": [""]}	/root: absent
 06-rights-8087	<sub>/opsteps/<id>/<i>	testsub/opsteps/0123456789abcdef0123456789abcdef/0	row	writer	["console"]	{"root":"testsub.c1","expected":"{\"c1\":\"7\"}"}	refused	["/body"]	[]	/body: absent
 06-rights-8088	<sub>/opsteps/<id>/<i>	testsub/opsteps/0123456789abcdef0123456789abcdef/0	row	reader	["console"]	{"root":"testsub.c1","expected":"{\"c1\":\"7\"}"}	refused	["/body"]	{"console": [""]}	/body: absent
-06-rights-8089	<sub>/opsteps/<id>/<i>	/opsteps/t1/0	row	writer	["console"]	{"body":"{\"set\":{\"name\":\"a\"}}","root":"testsub.c1","expected":"{\"c1\":\"7\"}"}	refused	[""]	[]	catalog key: <sub> ""
-06-rights-8090	<sub>/opsteps/<id>/<i>	/opsteps/t1/0	row	reader	["console"]	{"body":"{\"set\":{\"name\":\"a\"}}","root":"testsub.c1","expected":"{\"c1\":\"7\"}"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
-06-rights-8091	<sub>/opsteps/<id>/<i>	testsub/opsteps//0	row	writer	["console"]	{"body":"{\"set\":{\"name\":\"a\"}}","root":"testsub.c1","expected":"{\"c1\":\"7\"}"}	refused	[""]	[]	catalog key: <id> ""
-06-rights-8092	<sub>/opsteps/<id>/<i>	testsub/opsteps//0	row	reader	["console"]	{"body":"{\"set\":{\"name\":\"a\"}}","root":"testsub.c1","expected":"{\"c1\":\"7\"}"}	refused	[""]	{"console": [""]}	catalog key: <id> ""
-06-rights-8093	<sub>/opsteps/<id>/<i>	testsub/opsteps/t1/	row	writer	["console"]	{"body":"{\"set\":{\"name\":\"a\"}}","root":"testsub.c1","expected":"{\"c1\":\"7\"}"}	refused	[""]	[]	catalog key: <i> ""
-06-rights-8094	<sub>/opsteps/<id>/<i>	testsub/opsteps/t1/	row	reader	["console"]	{"body":"{\"set\":{\"name\":\"a\"}}","root":"testsub.c1","expected":"{\"c1\":\"7\"}"}	refused	[""]	{"console": [""]}	catalog key: <i> ""
 06-rights-8095	<sub>/opdone/<id>/<i>	testsub/opdone/0123456789abcdef0123456789abcdef/0	row	writer	["console"]	{"state":"ok","version":"7","versions":"{\"c1\":\"8\"}"}	ok	[]	[]	base
 06-rights-8096	<sub>/opdone/<id>/<i>	testsub/opdone/0123456789abcdef0123456789abcdef/0	row	reader	["console"]	{"state":"ok","version":"7","versions":"{\"c1\":\"8\"}"}	ok	[]	{"console": []}	base
 06-rights-8097	<sub>/opdone/<id>/<i>	testsub/opdone/0123456789abcdef0123456789abcdef/0	row	writer	["console"]	{"state":"fail","code":"not_run"}	ok	[]	[]	fail
@@ -1233,12 +1185,6 @@ a94_revision.040	platform/schema	platform/schema	row	reader	["<s>controller", "<
 06-rights-8108	<sub>/opdone/<id>/<i>	testsub/opdone/0123456789abcdef0123456789abcdef/0	row	reader	["console"]	{"state":"ok","version":"7","versions":"{\"c1\":\"8\"}","x":"1"}	refused	["/x"]	{"console": [""]}	an extra key
 06-rights-8109	<sub>/opdone/<id>/<i>	testsub/opdone/0123456789abcdef0123456789abcdef/0	row	writer	["console"]	{"version":"7","versions":"{\"c1\":\"8\"}"}	refused	["/state"]	[]	/state: absent
 06-rights-8110	<sub>/opdone/<id>/<i>	testsub/opdone/0123456789abcdef0123456789abcdef/0	row	reader	["console"]	{"version":"7","versions":"{\"c1\":\"8\"}"}	refused	["/state"]	{"console": [""]}	/state: absent
-06-rights-8111	<sub>/opdone/<id>/<i>	/opdone/t1/0	row	writer	["console"]	{"state":"ok","version":"7","versions":"{\"c1\":\"8\"}"}	refused	[""]	[]	catalog key: <sub> ""
-06-rights-8112	<sub>/opdone/<id>/<i>	/opdone/t1/0	row	reader	["console"]	{"state":"ok","version":"7","versions":"{\"c1\":\"8\"}"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
-06-rights-8113	<sub>/opdone/<id>/<i>	testsub/opdone//0	row	writer	["console"]	{"state":"ok","version":"7","versions":"{\"c1\":\"8\"}"}	refused	[""]	[]	catalog key: <id> ""
-06-rights-8114	<sub>/opdone/<id>/<i>	testsub/opdone//0	row	reader	["console"]	{"state":"ok","version":"7","versions":"{\"c1\":\"8\"}"}	refused	[""]	{"console": [""]}	catalog key: <id> ""
-06-rights-8115	<sub>/opdone/<id>/<i>	testsub/opdone/t1/	row	writer	["console"]	{"state":"ok","version":"7","versions":"{\"c1\":\"8\"}"}	refused	[""]	[]	catalog key: <i> ""
-06-rights-8116	<sub>/opdone/<id>/<i>	testsub/opdone/t1/	row	reader	["console"]	{"state":"ok","version":"7","versions":"{\"c1\":\"8\"}"}	refused	[""]	{"console": [""]}	catalog key: <i> ""
 06-rights-8117	<sub>/opcount/<id>	testsub/opcount/0123456789abcdef0123456789abcdef	row	writer	["console"]	{"done":"2","ok":"1","failed":"1","cancelled":"0"}	ok	[]	[]	base
 06-rights-8118	<sub>/opcount/<id>	testsub/opcount/0123456789abcdef0123456789abcdef	row	reader	["console"]	{"done":"2","ok":"1","failed":"1","cancelled":"0"}	ok	[]	{"console": []}	base
 06-rights-8119	<sub>/opcount/<id>	testsub/opcount/0123456789abcdef0123456789abcdef	row	writer	["console"]	{"done":"x","ok":"1","failed":"1","cancelled":"0"}	refused	["/done"]	[]	/done: not whole
@@ -1249,10 +1195,6 @@ a94_revision.040	platform/schema	platform/schema	row	reader	["<s>controller", "<
 06-rights-8124	<sub>/opcount/<id>	testsub/opcount/0123456789abcdef0123456789abcdef	row	reader	["console"]	{"done":"2","ok":"1","failed":"1","cancelled":"0","x":"1"}	refused	["/x"]	{"console": [""]}	an extra key
 06-rights-8125	<sub>/opcount/<id>	testsub/opcount/0123456789abcdef0123456789abcdef	row	writer	["console"]	{"done":"2","ok":"1","cancelled":"0"}	refused	["/failed"]	[]	/failed: absent
 06-rights-8126	<sub>/opcount/<id>	testsub/opcount/0123456789abcdef0123456789abcdef	row	reader	["console"]	{"done":"2","ok":"1","cancelled":"0"}	refused	["/failed"]	{"console": [""]}	/failed: absent
-06-rights-8127	<sub>/opcount/<id>	/opcount/t1	row	writer	["console"]	{"done":"2","ok":"1","failed":"1","cancelled":"0"}	refused	[""]	[]	catalog key: <sub> ""
-06-rights-8128	<sub>/opcount/<id>	/opcount/t1	row	reader	["console"]	{"done":"2","ok":"1","failed":"1","cancelled":"0"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
-06-rights-8129	<sub>/opcount/<id>	testsub/opcount/	row	writer	["console"]	{"done":"2","ok":"1","failed":"1","cancelled":"0"}	refused	[""]	[]	catalog key: <id> ""
-06-rights-8130	<sub>/opcount/<id>	testsub/opcount/	row	reader	["console"]	{"done":"2","ok":"1","failed":"1","cancelled":"0"}	refused	[""]	{"console": [""]}	catalog key: <id> ""
 06-rights-8131	<sub>/opbusy/<корень>	testsub/opbusy/testsub.c1	row	writer	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	ok	[]	[]	base
 06-rights-8132	<sub>/opbusy/<корень>	testsub/opbusy/testsub.c1	row	reader	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	ok	[]	{"console": []}	base
 06-rights-8133	<sub>/opbusy/<корень>	testsub/opbusy/testsub.c1	row	writer	["console"]	{"operation":"o1"}	refused	["/operation"]	[]	/operation: not an id
@@ -1261,18 +1203,12 @@ a94_revision.040	platform/schema	platform/schema	row	reader	["<s>controller", "<
 06-rights-8136	<sub>/opbusy/<корень>	testsub/opbusy/testsub.c1	row	reader	["console"]	{"operation":"0123456789abcdef0123456789abcdef","x":"1"}	refused	["/x"]	{"console": [""]}	an extra key
 06-rights-8137	<sub>/opbusy/<корень>	testsub/opbusy/testsub.c1	row	writer	["console"]	{}	refused	["/operation"]	[]	/operation: absent
 06-rights-8138	<sub>/opbusy/<корень>	testsub/opbusy/testsub.c1	row	reader	["console"]	{}	refused	["/operation"]	{"console": [""]}	/operation: absent
-06-rights-8139	<sub>/opbusy/<корень>	/opbusy/testsub.c1	row	writer	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <sub> ""
-06-rights-8140	<sub>/opbusy/<корень>	/opbusy/testsub.c1	row	reader	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
-06-rights-8141	<sub>/opbusy/<корень>	testsub/opbusy/	row	writer	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <корень> ""
-06-rights-8142	<sub>/opbusy/<корень>	testsub/opbusy/	row	reader	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	refused	[""]	{"console": [""]}	catalog key: <корень> ""
 06-rights-8143	<sub>/operations-turn	testsub/operations-turn	row	writer	["console"]	{"holder":"box-a:42:0a1b2c-1"}	ok	[]	[]	base
 06-rights-8144	<sub>/operations-turn	testsub/operations-turn	row	reader	["console"]	{"holder":"box-a:42:0a1b2c-1"}	ok	[]	{"console": []}	base
 06-rights-8145	<sub>/operations-turn	testsub/operations-turn	row	writer	["console"]	{"holder":"box-a:42:0a1b2c-1","x":"1"}	refused	["/x"]	[]	an extra key
 06-rights-8146	<sub>/operations-turn	testsub/operations-turn	row	reader	["console"]	{"holder":"box-a:42:0a1b2c-1","x":"1"}	refused	["/x"]	{"console": [""]}	an extra key
 06-rights-8147	<sub>/operations-turn	testsub/operations-turn	row	writer	["console"]	{}	refused	["/holder"]	[]	/holder: absent
 06-rights-8148	<sub>/operations-turn	testsub/operations-turn	row	reader	["console"]	{}	refused	["/holder"]	{"console": [""]}	/holder: absent
-06-rights-8149	<sub>/operations-turn	/operations-turn	row	writer	["console"]	{"holder":"box-a:42:0a1b2c-1"}	refused	[""]	[]	catalog key: <sub> ""
-06-rights-8150	<sub>/operations-turn	/operations-turn	row	reader	["console"]	{"holder":"box-a:42:0a1b2c-1"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
 06-rights-8151	<sub>/operations-epoch	testsub/operations-epoch	row	writer	["console"]	{"n":"1"}	ok	[]	[]	base
 06-rights-8152	<sub>/operations-epoch	testsub/operations-epoch	row	reader	["console"]	{"n":"1"}	ok	[]	{"console": []}	base
 06-rights-8153	<sub>/operations-epoch	testsub/operations-epoch	row	writer	["console"]	{"n":"0"}	refused	["/n"]	[]	/n: zero
@@ -1281,11 +1217,81 @@ a94_revision.040	platform/schema	platform/schema	row	reader	["<s>controller", "<
 06-rights-8156	<sub>/operations-epoch	testsub/operations-epoch	row	reader	["console"]	{"n":"1","x":"1"}	refused	["/x"]	{"console": [""]}	an extra key
 06-rights-8157	<sub>/operations-epoch	testsub/operations-epoch	row	writer	["console"]	{}	refused	["/n"]	[]	/n: absent
 06-rights-8158	<sub>/operations-epoch	testsub/operations-epoch	row	reader	["console"]	{}	refused	["/n"]	{"console": [""]}	/n: absent
-06-rights-8159	<sub>/operations-epoch	/operations-epoch	row	writer	["console"]	{"n":"1"}	refused	[""]	[]	catalog key: <sub> ""
-06-rights-8160	<sub>/operations-epoch	/operations-epoch	row	reader	["console"]	{"n":"1"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
 c06_memberof_gone.001	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub/counters/c1	row	writer	["console", "domainagent"]	{}	ok	[]	[]	base
 c06_memberof_gone.002	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub/counters/c1	row	reader	["domainagent"]	{}	ok	[]	{"domainagent": []}	base
 c06_memberof_gone.003	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub/counters/c1	row	writer	["console", "domainagent"]	null	refused	[""]	[]	root null
 c06_memberof_gone.004	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub/counters/c1	row	reader	["domainagent"]	null	refused	[""]	{"domainagent": [""]}	root null
 c06_memberof_gone.005	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub/counters/c1	row	writer	["console", "domainagent"]	{	refused	[""]	[]	not JSON
 c06_memberof_gone.006	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub/counters/c1	row	reader	["domainagent"]	{	refused	[""]	{"domainagent": [""]}	not JSON
+06-k0001	<sub>/policy	/policy	row	writer	["console"]	{"servers":"shared"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0002	<sub>/policy	/policy	row	reader	["<s>controller", "console"]	{"servers":"shared"}	refused	[""]	{"<s>controller": [""], "console": [""]}	catalog key: <sub> ""
+06-k0003	platform/servers/<сервер>	platform/servers/	row	writer	["console"]	{"labels":"A"}	refused	[""]	[]	catalog key: <сервер> ""
+06-k0004	platform/servers/<сервер>	platform/servers/	row	reader	["<s>controller", "console"]	{"labels":"A"}	refused	[""]	{"<s>controller": [""], "console": [""]}	catalog key: <сервер> ""
+06-k0005	platform/drain	platform/drainx	row	writer	["console"]	{"server":"","at":"1"}	refused	[""]	[]	catalog key: literal
+06-k0006	platform/drain	platform/drainx	row	reader	["<s>controller", "console"]	{"server":"","at":"1"}	refused	[""]	{"<s>controller": [""], "console": [""]}	catalog key: literal
+06-k0007	platform/decommission/<сервер>	platform/decommission/	row	writer	["console"]	{"by":"a","at":"1","why":"a"}	refused	[""]	[]	catalog key: <сервер> ""
+06-k0008	platform/decommission/<сервер>	platform/decommission/	row	reader	["<s>controller", "<s>worker", "console", "resource"]	{"by":"a","at":"1","why":"a"}	refused	[""]	{"<s>controller": [""], "<s>worker": [""], "console": [""], "resource": [""]}	catalog key: <сервер> ""
+06-k0009	door/signer	door/signerx	row	writer	["console", "admin"]	{"kid":"a","seed_secret":"a"}	refused	[""]	[]	catalog key: literal
+06-k0010	door/signer	door/signerx	row	reader	["admin", "console"]	{"kid":"a","seed_secret":"a"}	refused	[""]	{"admin": [""], "console": [""]}	catalog key: literal
+06-k0011	door/keys	door/keysx	row	writer	["console"]	{}	refused	[""]	[]	catalog key: literal
+06-k0012	door/keys	door/keysx	row	reader	["<s>worker", "console"]	{}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: literal
+06-k0013	<sub>/next_id	/next_id	row	writer	["console"]	{"n":"1"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0014	<sub>/next_id	/next_id	row	reader	["console"]	{"n":"1"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
+06-k0015	<sub>/requests/<rid>	/requests/r-0123456789abcdef	row	writer	["console", "<s>worker"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0016	<sub>/requests/<rid>	testsub/requests/	row	writer	["console", "<s>worker"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	[]	catalog key: <rid> ""
+06-k0017	<sub>/requests/<rid>	/requests/r-0123456789abcdef	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: <sub> ""
+06-k0018	<sub>/requests/<rid>	testsub/requests/	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: <rid> ""
+06-k0019	<sub>/asked/<sha16(имя)>	/asked/0123456789abcdef	row	writer	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0020	<sub>/asked/<sha16(имя)>	testsub/asked/	row	writer	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	[]	catalog key: <sha16(имя)> ""
+06-k0021	<sub>/asked/<sha16(имя)>	/asked/0123456789abcdef	row	reader	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
+06-k0022	<sub>/asked/<sha16(имя)>	testsub/asked/	row	reader	["console"]	{"rids":"a","by":"a","at":"1"}	refused	[""]	{"console": [""]}	catalog key: <sha16(имя)> ""
+06-k0023	objects/<sub>/commands/<rid>	objects//commands/r-0123456789abcdef	row	writer	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0024	objects/<sub>/commands/<rid>	objects/testsub/commands/	row	writer	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	[]	catalog key: <rid> ""
+06-k0025	objects/<sub>/commands/<rid>	objects//commands/r-0123456789abcdef	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: <sub> ""
+06-k0026	objects/<sub>/commands/<rid>	objects/testsub/commands/	row	reader	["<s>worker", "console"]	{"unit":"a","digest":"0000000000000000000000000000000000000000000000000000000000000000","at":"1","instance":"a","slot":"a"}	refused	[""]	{"<s>worker": [""], "console": [""]}	catalog key: <rid> ""
+06-k0027	platform/schema	platform/schemax	row	writer	["console"]	{"version":"1","at":"1"}	refused	[""]	[]	catalog key: literal
+06-k0028	platform/schema	platform/schemax	row	reader	["<s>controller", "<s>domain", "<s>worker", "console", "domainconsole", "resource"]	{"version":"1","at":"1"}	refused	[""]	{"<s>controller": [""], "<s>domain": [""], "<s>worker": [""], "console": [""], "domainconsole": [""], "resource": [""]}	catalog key: literal
+06-k0029	<sub>/sweep	/sweep	row	writer	["console"]	{"digests":"sha256-0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0030	<sub>/sweep	/sweep	row	reader	["console"]	{"digests":"sha256-0000000000000000000000000000000000000000000000000000000000000000"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
+06-k0031	platform/folders/<id>	platform/folders/	row	writer	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"testsub/counters/c1"}	refused	[""]	[]	catalog key: <id> ""
+06-k0032	platform/folders/<id>	platform/folders/	row	reader	["console", "domainagent"]	{"name":"Подъезд","parent":"","members":"testsub/counters/c1"}	refused	[""]	{"console": [""], "domainagent": [""]}	catalog key: <id> ""
+06-k0033	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof//counters/t1	row	writer	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0034	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub//t1	row	writer	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <manifest:unit.rows> ""
+06-k0035	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub/counters/	row	writer	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <id> ""
+06-k0036	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof//counters/t1	row	reader	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	refused	[""]	{"console": [""], "domainagent": [""]}	catalog key: <sub> ""
+06-k0037	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub//t1	row	reader	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	refused	[""]	{"console": [""], "domainagent": [""]}	catalog key: <manifest:unit.rows> ""
+06-k0038	platform/memberof/<sub>/<manifest:unit.rows>/<id>	platform/memberof/testsub/counters/	row	reader	["console", "domainagent"]	{"folders":"0123456789abcdef0123456789abcdef"}	refused	[""]	{"console": [""], "domainagent": [""]}	catalog key: <id> ""
+06-k0039	<sub>/operations/<id>	/operations/t1	row	writer	["console"]	{"by":"ann","jti":"j1","kid":"k1","exp":"1760700000","created_at":"1760690000","state":"running","paused":"false","expired":"false","cancel":"false","total":"2","iat":"1760700000"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0040	<sub>/operations/<id>	testsub/operations/	row	writer	["console"]	{"by":"ann","jti":"j1","kid":"k1","exp":"1760700000","created_at":"1760690000","state":"running","paused":"false","expired":"false","cancel":"false","total":"2","iat":"1760700000"}	refused	[""]	[]	catalog key: <id> ""
+06-k0041	<sub>/operations/<id>	/operations/t1	row	reader	["console"]	{"by":"ann","jti":"j1","kid":"k1","exp":"1760700000","created_at":"1760690000","state":"running","paused":"false","expired":"false","cancel":"false","total":"2","iat":"1760700000"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
+06-k0042	<sub>/operations/<id>	testsub/operations/	row	reader	["console"]	{"by":"ann","jti":"j1","kid":"k1","exp":"1760700000","created_at":"1760690000","state":"running","paused":"false","expired":"false","cancel":"false","total":"2","iat":"1760700000"}	refused	[""]	{"console": [""]}	catalog key: <id> ""
+06-k0043	<sub>/opsteps/<id>/<i>	/opsteps/t1/0	row	writer	["console"]	{"body":"{\"set\":{\"name\":\"a\"}}","root":"testsub.c1","expected":"{\"c1\":\"7\"}"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0044	<sub>/opsteps/<id>/<i>	testsub/opsteps//0	row	writer	["console"]	{"body":"{\"set\":{\"name\":\"a\"}}","root":"testsub.c1","expected":"{\"c1\":\"7\"}"}	refused	[""]	[]	catalog key: <id> ""
+06-k0045	<sub>/opsteps/<id>/<i>	testsub/opsteps/t1/	row	writer	["console"]	{"body":"{\"set\":{\"name\":\"a\"}}","root":"testsub.c1","expected":"{\"c1\":\"7\"}"}	refused	[""]	[]	catalog key: <i> ""
+06-k0046	<sub>/opsteps/<id>/<i>	/opsteps/t1/0	row	reader	["console"]	{"body":"{\"set\":{\"name\":\"a\"}}","root":"testsub.c1","expected":"{\"c1\":\"7\"}"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
+06-k0047	<sub>/opsteps/<id>/<i>	testsub/opsteps//0	row	reader	["console"]	{"body":"{\"set\":{\"name\":\"a\"}}","root":"testsub.c1","expected":"{\"c1\":\"7\"}"}	refused	[""]	{"console": [""]}	catalog key: <id> ""
+06-k0048	<sub>/opsteps/<id>/<i>	testsub/opsteps/t1/	row	reader	["console"]	{"body":"{\"set\":{\"name\":\"a\"}}","root":"testsub.c1","expected":"{\"c1\":\"7\"}"}	refused	[""]	{"console": [""]}	catalog key: <i> ""
+06-k0049	<sub>/opdone/<id>/<i>	/opdone/t1/0	row	writer	["console"]	{"state":"ok","version":"7","versions":"{\"c1\":\"8\"}"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0050	<sub>/opdone/<id>/<i>	testsub/opdone//0	row	writer	["console"]	{"state":"ok","version":"7","versions":"{\"c1\":\"8\"}"}	refused	[""]	[]	catalog key: <id> ""
+06-k0051	<sub>/opdone/<id>/<i>	testsub/opdone/t1/	row	writer	["console"]	{"state":"ok","version":"7","versions":"{\"c1\":\"8\"}"}	refused	[""]	[]	catalog key: <i> ""
+06-k0052	<sub>/opdone/<id>/<i>	/opdone/t1/0	row	reader	["console"]	{"state":"ok","version":"7","versions":"{\"c1\":\"8\"}"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
+06-k0053	<sub>/opdone/<id>/<i>	testsub/opdone//0	row	reader	["console"]	{"state":"ok","version":"7","versions":"{\"c1\":\"8\"}"}	refused	[""]	{"console": [""]}	catalog key: <id> ""
+06-k0054	<sub>/opdone/<id>/<i>	testsub/opdone/t1/	row	reader	["console"]	{"state":"ok","version":"7","versions":"{\"c1\":\"8\"}"}	refused	[""]	{"console": [""]}	catalog key: <i> ""
+06-k0055	<sub>/opcount/<id>	/opcount/t1	row	writer	["console"]	{"done":"2","ok":"1","failed":"1","cancelled":"0"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0056	<sub>/opcount/<id>	testsub/opcount/	row	writer	["console"]	{"done":"2","ok":"1","failed":"1","cancelled":"0"}	refused	[""]	[]	catalog key: <id> ""
+06-k0057	<sub>/opcount/<id>	/opcount/t1	row	reader	["console"]	{"done":"2","ok":"1","failed":"1","cancelled":"0"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
+06-k0058	<sub>/opcount/<id>	testsub/opcount/	row	reader	["console"]	{"done":"2","ok":"1","failed":"1","cancelled":"0"}	refused	[""]	{"console": [""]}	catalog key: <id> ""
+06-k0059	<sub>/opbusy/<корень>	/opbusy/testsub.c1	row	writer	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0060	<sub>/opbusy/<корень>	testsub/opbusy/	row	writer	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	refused	[""]	[]	catalog key: <корень> ""
+06-k0061	<sub>/opbusy/<корень>	/opbusy/testsub.c1	row	reader	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
+06-k0062	<sub>/opbusy/<корень>	testsub/opbusy/	row	reader	["console"]	{"operation":"0123456789abcdef0123456789abcdef"}	refused	[""]	{"console": [""]}	catalog key: <корень> ""
+06-k0063	<sub>/operations-turn	/operations-turn	row	writer	["console"]	{"holder":"box-a:42:0a1b2c-1"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0064	<sub>/operations-turn	/operations-turn	row	reader	["console"]	{"holder":"box-a:42:0a1b2c-1"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
+06-k0065	<sub>/operations-epoch	/operations-epoch	row	writer	["console"]	{"n":"1"}	refused	[""]	[]	catalog key: <sub> ""
+06-k0066	<sub>/operations-epoch	/operations-epoch	row	reader	["console"]	{"n":"1"}	refused	[""]	{"console": [""]}	catalog key: <sub> ""
+06-k0067	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone//counters/t1	row	writer	["console", "domainagent"]	{}	refused	[""]	[]	catalog key: <sub> ""
+06-k0068	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub//t1	row	writer	["console", "domainagent"]	{}	refused	[""]	[]	catalog key: <manifest:unit.rows> ""
+06-k0069	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub/counters/	row	writer	["console", "domainagent"]	{}	refused	[""]	[]	catalog key: <id> ""
+06-k0070	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone//counters/t1	row	reader	["domainagent"]	{}	refused	[""]	{"domainagent": [""]}	catalog key: <sub> ""
+06-k0071	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub//t1	row	reader	["domainagent"]	{}	refused	[""]	{"domainagent": [""]}	catalog key: <manifest:unit.rows> ""
+06-k0072	platform/memberof-gone/<sub>/<manifest:unit.rows>/<id>	platform/memberof-gone/testsub/counters/	row	reader	["domainagent"]	{}	refused	[""]	{"domainagent": [""]}	catalog key: <id> ""

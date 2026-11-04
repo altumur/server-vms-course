@@ -1,18 +1,20 @@
-# Платформа
+# Platform
 
-Модуль уроков-спецификаций платформы, нарезанный по микромодулям: один урок — один процесс или библиотека (ADR-0083).
-Каталог урока — `NN-<процесс>`; номер урока — адрес владельца (`P/NN`), карта — [`lessons.tsv`](lessons.tsv).
-Общее для всех — [`common/`](common/README.md); слои В7 — [`common/LAYERS.md`](common/LAYERS.md), закреплённые версии библиотек — [`common/versions/`](common/versions/README.md). Проектная записка — [`module-design.md`](module-design.md).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-| P | Каталог | Микромодуль |
+The module of specification lessons of the platform, sliced by micromodules: one lesson — one process or library (ADR-0083).
+The catalogue of a lesson is `NN-<процесс>`; the lesson number is the address of the owner (`P/NN`), the map — [`lessons.tsv`](lessons.tsv).
+Common to all — [`common/`](common/README.md); the layers of В7 — [`common/LAYERS.md`](common/LAYERS.md), the pinned versions of the libraries — [`common/versions/`](common/versions/README.md). The design note — `Platform/module-design.md` (for people, not in the export).
+
+| P | Catalogue | Micromodule |
 |---|---|---|
-| 01 | [`01-store/`](01-store/README.md) | Хранилище |
-| 02 | [`02-installer/`](02-installer/README.md) | Манифест и установщик |
-| 03 | [`03-worker/`](03-worker/README.md) | Воркер (SDK) |
-| 04 | [`04-controller/`](04-controller/README.md) | Контроллер |
-| 05 | [`05-resource/`](05-resource/README.md) | Ресурс |
-| 06 | [`06-console/`](06-console/README.md) | Консоль кластера |
-| 07 | [`07-console-module/`](07-console-module/README.md) | Модуль консоли |
-| 08 | [`08-domain/`](08-domain/README.md) | Процесс domain |
-| 09 | [`09-agent/`](09-agent/README.md) | Агент (9.1) и режим ретранслятора (9.2) |
-| 10 | [`10-domain-console/`](10-domain-console/README.md) | Консоль домена |
+| 01 | [`01-store/`](01-store/README.md) | Store |
+| 02 | [`02-installer/`](02-installer/README.md) | Manifest and installer |
+| 03 | [`03-worker/`](03-worker/README.md) | Worker (SDK) |
+| 04 | [`04-controller/`](04-controller/README.md) | Controller |
+| 05 | [`05-resource/`](05-resource/README.md) | Resource |
+| 06 | [`06-console/`](06-console/README.md) | Cluster console |
+| 07 | [`07-console-module/`](07-console-module/README.md) | Console module |
+| 08 | [`08-domain/`](08-domain/README.md) | The process domain |
+| 09 | [`09-agent/`](09-agent/README.md) | The agent (9.1) and the relay mode (9.2) |
+| 10 | [`10-domain-console/`](10-domain-console/README.md) | The domain console |
