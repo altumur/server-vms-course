@@ -197,6 +197,75 @@ class Launch(unittest.TestCase):
         s.close()
 
 
+class Frame(unittest.TestCase):
+    """Рамка HTTP — файл реализации internal/frame/frame.go (ADR-0125 доп. (1) п. 2): launch без net/http; рамка
+    временная (пометка в шапке и KIT.md, якоря Н2.1); правка рамки работает в демоне и не перетирается; без
+    App.Frame — выход 1."""
+    MOD = "example.com/w2c/store"
+
+    def test_frame_is_yours(self):
+        with tempfile.TemporaryDirectory(prefix="nlf-", dir="/tmp") as t:
+            dst = Path(t)
+            m = build_kit.build(dst, self.MOD, ["door", "flags", "refusals", "stagetests", "launch"])
+            own = {f["path"] for f in m["files"] if f.get("editable")}
+            self.assertIn("01-store/internal/frame/frame.go", own)
+            self.assertIn("01-store/cmd/configstore/main.go", own)
+            self.assertNotIn("01-store/internal/launch/launch.go", own)
+            store = dst / "01-store"
+            launch_go = (store / "internal/launch/launch.go").read_text(encoding="utf-8")
+            self.assertNotIn('"net/http"', launch_go)
+            frame = store / "internal/frame/frame.go"
+            text = frame.read_text(encoding="utf-8")
+            self.assertIn("TEMPORARY FRAME ON net/http — REPLACE IT", text)
+            self.assertNotIn("DO NOT EDIT", text)
+            for a in ("P/01.1-R049", "P/01.1-R050", "P/01.1-R052", "P/01.1-R053", "P/01.1-R054"):
+                self.assertIn(f"req: {a}", text)
+            doc = (dst / "KIT.md").read_text(encoding="utf-8")
+            self.assertIn("is a temporary frame on `net/http`; the raw HTTP acceptance requires the strict parse of\n> "
+                          "Н2.1 — replace it.", doc)
+            # правка рамки: свой заголовок на каждом ответе — демон отвечает рамкой реализации
+            frame.write_text(text.replace("\t\tw.WriteHeader(code)", '\t\tw.Header().Set("X-Frame", "mine")\n\t\tw.WriteHeader(code)'),
+                             encoding="utf-8")
+            build_kit.build(dst, self.MOD, ["door", "flags", "refusals", "stagetests", "launch"])
+            self.assertIn("X-Frame", frame.read_text(encoding="utf-8"))
+            (store / "go.mod").write_text(f"module {self.MOD}\n\ngo 1.22\n", encoding="utf-8")
+            done = subprocess.run(["go", "build", "-o", str(dst / "cs"), "./cmd/configstore"], cwd=store,
+                                  capture_output=True, text=True)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            (dst / "rights.json").write_text(json.dumps(RIGHTS), encoding="utf-8")
+            run = dst / "run"
+            p = subprocess.Popen([str(dst / "cs"), "-id", "s1", "-dir", str(dst / "data"), "-sockets", str(run),
+                                  "-rights", str(dst / "rights.json")], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            try:
+                for _ in range(200):
+                    if (run / "acc.sock").exists() or p.poll() is not None:
+                        break
+                    time.sleep(0.02)
+                c = UnixHTTP(str(run / "acc.sock"))
+                c.request("GET", "/v1/get?key=acc/x")
+                r = c.getresponse()
+                self.assertEqual((r.status, r.getheader("X-Frame")), (200, "mine"))
+                r.read()
+                c.close()
+            finally:
+                p.terminate()
+                self.assertEqual(p.wait(10), 0)
+                p.stdout.close()
+                p.stderr.close()
+            # без App.Frame — выход 1 с причиной
+            main = store / "cmd/configstore/main.go"
+            src = main.read_text(encoding="utf-8")
+            start, end = src.index("\t\tFrame: func("), src.index("\t\t},\n", src.index("\t\tFrame: func(")) + 5
+            main.write_text((src[:start] + src[end:]).replace(f'\t"{self.MOD}/internal/frame"\n', ""), encoding="utf-8")
+            done = subprocess.run(["go", "build", "-o", str(dst / "cs0"), "./cmd/configstore"], cwd=store,
+                                  capture_output=True, text=True)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            done = subprocess.run([str(dst / "cs0"), "-id", "s1", "-dir", str(dst / "data0"), "-sockets", str(dst / "run0")],
+                                  capture_output=True, text=True, timeout=10)
+            self.assertEqual(done.returncode, 1)
+            self.assertIn("App.Frame is nil", done.stderr)
+
+
 class Connect(unittest.TestCase):
     def test_examples_compile(self):
         """Примеры справки KIT.md собираются в пакете со всеми частями."""

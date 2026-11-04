@@ -1,7 +1,8 @@
 // Package launch — the daemon frame of the store (kit part launch; ADR-0083 addendum (95) item 3, ADR-0125): the
 // command line by forms/daemon-flags.tsv (package flags), the FORMAT mark (P/01.3 Н1.3 format), the flat sockets
-// (Н1.3 sockets), HTTP on every socket through coreadapter.Handle over your Core (the same Open as the stage tests),
-// SIGTERM — a clean stop. Yours: coreadapter.Open (the core) and cmd/configstore/main.go (the mark, the hooks).
+// (Н1.3 sockets), on every socket your HTTP frame (App.Frame: internal/frame — yours, ADR-0125 addendum (1) item 2) over
+// your Core (the same Open as the stage tests), SIGTERM — a clean stop. Yours: coreadapter.Open (the core),
+// internal/frame (the HTTP frame and the limits of Н2.1) and cmd/configstore/main.go (the mark, the hooks).
 package launch
 
 import (
@@ -12,7 +13,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -45,6 +45,9 @@ type App struct {
 	// Open — a fresh core (coreadapter.Open): DataDir = -dir, Rights = the bytes of -rights (nil without it),
 	// BodyLimit = -max-body, RowCeiling = -max-value, Now = time.Now.
 	Open func(coreadapter.Config) (coreadapter.Core, error)
+	// Frame — the HTTP frame of one socket (yours: internal/frame, frame.New): sock is "admin" or the role — the
+	// identity of every request on it (Call.Sock); the frame calls coreadapter.Handle(c, cfg, Call{Sock: sock}, …).
+	Frame func(c coreadapter.Core, cfg coreadapter.Config, sock string) Frame
 	// Raft — the build has raft; false (a box): -group-size 3|5, -join, -door — code 2 «this build has no raft»
 	// (P/01.3 Н1.3 box).
 	Raft bool
@@ -54,6 +57,14 @@ type App struct {
 	Admin func(f *flags.Flags) int
 	// Log — the daemon log; nil — os.Stderr.
 	Log io.Writer
+}
+
+// Frame — the HTTP frame of one socket: Serve serves l until Shutdown (then it returns nil; any other return is a
+// failure of the socket, the daemon stops with exit 1); Shutdown stops accepting and waits for the requests in flight
+// until ctx is done.
+type Frame interface {
+	Serve(l net.Listener) error
+	Shutdown(ctx context.Context) error
 }
 
 // Refusal — a start refusal: exit code 2, Reason goes to the log.
@@ -109,7 +120,7 @@ type Daemon struct {
 	Core      coreadapter.Core
 	Listeners map[string]net.Listener // "admin" and the roles → the listener
 	Failed    chan error              // a socket stopped serving
-	servers   []*http.Server
+	servers   []Frame
 	created   []string
 	stop      func()
 	once      sync.Once
@@ -144,6 +155,10 @@ func Start(f *flags.Flags, getenv func(string) string, app App) (*Daemon, error)
 		closeAll(ls, created)
 		return nil, errors.New("launch: App.Open is nil")
 	}
+	if app.Frame == nil {
+		closeAll(ls, created)
+		return nil, errors.New("launch: App.Frame is nil (cmd/configstore/main.go: Frame — your internal/frame)")
+	}
 	c, err := app.Open(cfg)
 	if errors.Is(err, coreadapter.ErrNotImplemented) { // no core yet: the empty store of the frame
 		log := app.Log
@@ -159,10 +174,10 @@ func Start(f *flags.Flags, getenv func(string) string, app App) (*Daemon, error)
 	}
 	d := &Daemon{Core: c, Listeners: ls, Failed: make(chan error, len(ls)), created: created}
 	for name, l := range ls {
-		srv := &http.Server{Handler: handler(c, cfg, name), ReadHeaderTimeout: 10 * time.Second, MaxHeaderBytes: 1 << 16}
+		srv := app.Frame(c, cfg, name)
 		d.servers = append(d.servers, srv)
 		go func(name string, l net.Listener) {
-			if err := srv.Serve(l); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			if err := srv.Serve(l); err != nil {
 				d.Failed <- fmt.Errorf("socket %s: %w", name, err)
 			}
 		}(name, l)
@@ -193,32 +208,6 @@ func (d *Daemon) Stop() {
 		for _, p := range d.created {
 			_ = os.Remove(p)
 		}
-	})
-}
-
-// handler — one socket: the identity is the socket (Call.Sock — "admin" or the role), the request goes to
-// coreadapter.Handle (the body limit 413 → apidoor.Route → Dispatch → Encode). The HTTP frame is net/http.
-func handler(c coreadapter.Core, cfg coreadapter.Config, sock string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var body []byte
-		if r.Body != nil && r.Body != http.NoBody {
-			b, err := io.ReadAll(io.LimitReader(r.Body, cfg.BodyLimit+1))
-			if err != nil {
-				http.Error(w, `{"kind":"badrequest","error":"the body is not read"}`, http.StatusBadRequest)
-				return
-			}
-			body = b
-		}
-		header := make(map[string]string, len(r.Header))
-		for k, v := range r.Header {
-			header[k] = strings.Join(v, ", ")
-		}
-		code, hdr, out := coreadapter.Handle(c, cfg, coreadapter.Call{Sock: sock}, r.Method, r.RequestURI, header, body)
-		for k, v := range hdr {
-			w.Header().Set(k, v)
-		}
-		w.WriteHeader(code)
-		_, _ = w.Write(out)
 	})
 }
 
@@ -445,10 +434,16 @@ func notImplemented(op apidoor.Op) apidoor.Answer {
 func (NotImplemented) Context(call coreadapter.Call, header map[string]string) coreadapter.Ctx {
 	return &coreadapter.Request{Call: call, Header: header}
 }
-func (NotImplemented) Close()                                    {}
-func (NotImplemented) Get(coreadapter.Ctx, apidoor.GetQuery) apidoor.Answer   { return notImplemented(apidoor.OpGet) }
-func (NotImplemented) List(coreadapter.Ctx, apidoor.ListQuery) apidoor.Answer { return notImplemented(apidoor.OpList) }
-func (NotImplemented) Write(coreadapter.Ctx, []byte) apidoor.Answer           { return notImplemented(apidoor.OpWrite) }
+func (NotImplemented) Close() {}
+func (NotImplemented) Get(coreadapter.Ctx, apidoor.GetQuery) apidoor.Answer {
+	return notImplemented(apidoor.OpGet)
+}
+func (NotImplemented) List(coreadapter.Ctx, apidoor.ListQuery) apidoor.Answer {
+	return notImplemented(apidoor.OpList)
+}
+func (NotImplemented) Write(coreadapter.Ctx, []byte) apidoor.Answer {
+	return notImplemented(apidoor.OpWrite)
+}
 func (NotImplemented) QueryRefused(_ coreadapter.Ctx, op apidoor.Op, _ *apidoor.QueryError) apidoor.Answer {
 	return notImplemented(op)
 }
