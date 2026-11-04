@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "слова подсистемы detjob в строке события бакета задачи скана (открытое место семьи платформы events-unit — корень строки); тип поля задаёт пишущий урок — V/05.3 Н1.3 (учебная tick в медийном времени), V/05.4 Н1.2, Н1.4 (scan.partial — при выходе waited или fetch_waited); поля прочих моделей — реестр воркера, семьёй не судятся; читают консоль (как есть) и сценарии auto (V/07.2 Н1.3 — строго)",
+ "description": "the words of the subsystem detjob in an event row of a scan job bucket (the open place of the Platform family events-unit — the root of the row); the field type is set by the writing lesson — V/05.3 Н1.3 (the teaching tick in media time), V/05.4 Н1.2, Н1.4 (scan.partial — when waited or fetch_waited runs out); the fields of other models — the worker's registry, not judged by the family; read by the console (as is) and the auto scenarios (V/07.2 Н1.3 — strictly)",
  "type": "object",
  "allOf": [
   {
@@ -20,7 +20,7 @@
       "type": "integer",
       "minimum": 3,
       "x-integer": true,
-      "description": "номер взгляда k на сетке интервала, кратный 3 (V/05.3 Н1.3)"
+      "description": "the number k of the look on the interval grid, a multiple of 3 (V/05.3 Н1.3)"
      }
     },
     "required": [
@@ -48,12 +48,12 @@
        "minLength": 1,
        "pattern": "^(?:[^@]+@[^@]+|device:[0-9]+-[0-9]+)$"
       },
-      "description": "то, чего не дождались, — те же элементы, что partial итога: <том>@<сервер> и device:<from>-<to> (V/05.4 Н1.2, Н1.4)"
+      "description": "what was not waited for — the same elements as partial of the result: <volume>@<server> and device:<from>-<to> (V/05.4 Н1.2, Н1.4)"
      },
      "waited": {
       "type": "number",
       "minimum": 0,
-      "description": "значение вышедшего счётчика waited или fetch_waited, накопленные секунды; вышли оба — большее (V/05.4 Н1.2, Н1.4)"
+      "description": "the value of the counter waited or fetch_waited that ran out, accumulated seconds; both ran out — the larger (V/05.4 Н1.2, Н1.4)"
      }
     },
     "required": [

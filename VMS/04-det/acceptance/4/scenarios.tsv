@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/04.4: детектор на стенде (хранилище, консоль det, контроллеры cam и det, ресурс, держатель и воркер детекции на srv-a). Формат — README.
+# Acceptance of V/04.4: the detector on the stand (the store, the console det, the controllers cam and det, the resource, the holder and the detection worker on srv-a). Format — README.
 01-detect	1	@start worker cam w-srv-a-1 on srv-a	ok
 01-detect	2	@start worker det d-srv-a-1 on srv-a	ok
 01-detect	3	console2 POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}

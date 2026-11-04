@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/04.1: детектор — единица (дверь единиц консоли det; манифесты cam, det, auto). Формат — README.
+# Acceptance of V/04.1: the detector is a unit (the units door of the console det; the manifests cam, det, auto). Format — README.
 01-create	1	@start resource	ok
 01-create	2	POST /units {"name": "7-linecross", "cam": "7", "kind": "linecross", "params": "{\"zone\": {\"shape\": \"line\", \"points\": [[0, 0.5], [1, 0.5]]}}"}	201 {"id": "7-linecross", "labels": ["gpu"], "alarms": ["linecross", "lpr"], "until": 0, "enabled": true, "revision": 1}
 01-create	3	POST /units {"name": "7-x", "cam": "7"}	400 {"error": "@any"}

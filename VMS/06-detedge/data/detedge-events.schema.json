@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "слова подсистемы detedge в строке события бакета обхода (открытое место семьи платформы events-unit — корень строки); тип поля задаёт пишущий урок — V/06.3 Н1.3 (detedge.overrun, detedge.rewound), Н1.4 (tick на абсолютной сетке); поля прочих моделей — реестр воркера, семьёй не судятся; читают консоль (как есть) и сценарии auto (V/07.2 Н1.3 — строго)",
+ "description": "the words of the subsystem detedge in an event row of a traversal bucket (the open place of the Platform family events-unit — the root of the row); the field type is set by the writing lesson — V/06.3 Н1.3 (detedge.overrun, detedge.rewound), Н1.4 (tick on the absolute grid); the fields of other models — the worker's registry, not judged by the family; read by the console (as is) and the auto scenarios (V/07.2 Н1.3 — strictly)",
  "type": "object",
  "allOf": [
   {
@@ -20,7 +20,7 @@
       "type": "integer",
       "minimum": 0,
       "x-integer": true,
-      "description": "n сетки t_n = n × STEP, кратное 3"
+      "description": "n of the grid t_n = n × STEP, a multiple of 3"
      }
     },
     "required": [
@@ -44,12 +44,12 @@
      "from": {
       "type": "number",
       "x-time": true,
-      "description": "начало стёртого: прежний рубеж, внутри чтения — его начало"
+      "description": "the start of the erased part: the previous frontier, inside a read — the read's start"
      },
      "to": {
       "type": "number",
       "x-time": true,
-      "description": "конец стёртого: oldest архива, внутри чтения — конец стёртого"
+      "description": "the end of the erased part: oldest of the archive, inside a read — the end of the erased part"
      }
     },
     "required": [
@@ -74,12 +74,12 @@
      "from": {
       "type": "number",
       "x-time": true,
-      "description": "прежний рубеж"
+      "description": "the previous frontier"
      },
      "to": {
       "type": "number",
       "x-time": true,
-      "description": "новый рубеж"
+      "description": "the new frontier"
      }
     },
     "required": [
