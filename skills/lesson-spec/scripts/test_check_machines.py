@@ -8,7 +8,7 @@ from pathlib import Path
 import check_machines
 
 ROOT = Path(__file__).resolve().parents[3]
-MACHINE = ROOT / "Platform/02-installer/data/rollout-poll.machine.yaml"
+MACHINE = ROOT / "Platform/02-installer/forms/rollout-poll.machine.yaml"     # раскладка ADR-0124: формы — в forms/
 TRACES = MACHINE.with_name("rollout-poll.traces.tsv")
 
 

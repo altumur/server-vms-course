@@ -125,8 +125,10 @@ class Layouts(unittest.TestCase):
         pairs = list(en_mirror.pairs(ROOT))
         self.assertIn((RU3, EN3), pairs)
         self.assertIn((ROOT / "Platform/01-store/ru/lifecycle.md", ROOT / "Platform/01-store/lifecycle.md"), pairs)
-        self.assertIn((ROOT / "Platform/02-installer/spec/02.1-installer.norms.md",
-                       ROOT / "Platform/02-installer/spec/en/02.1-installer.norms.en.md"), pairs)
+        self.assertIn((ROOT / "VMS/README.md", ROOT / "VMS/en/README.en.md"), pairs)   # прежняя раскладка: README модуля
+        for ru, en in pairs:                           # каждая пара — одной из двух раскладок
+            self.assertTrue(en.parent.name == "en" and en.name.endswith(".en.md") and ru.name == en.name[:-6] + ".md"
+                            or "ru" in ru.relative_to(ROOT).parts and en.name == ru.name, (ru, en))
         self.assertFalse([p for p in pairs if "/01-store/" in str(p[1]) and "/en/" in str(p[1])])
         self.assertFalse([p for p in pairs if p[1].name == "01-store.md"])     # лекция — без пары, только для человека
 

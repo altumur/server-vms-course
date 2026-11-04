@@ -514,12 +514,12 @@ class TestTree(unittest.TestCase):
                                    "P/02\timplied\t99:nowhere\tлишнее"]) + "\n", encoding="utf-8")
         check = check_spec.Check(root, reg, False)
         with contextlib.redirect_stdout(io.StringIO()):
-            check.lesson((root / "Platform/03-worker/03-worker.md").resolve())     # прогон без главы 02
+            check.lesson(check_spec.lecture_of(root / "Platform/03-worker").resolve())     # прогон без главы 02
             check.family_read()
         self.assertTrue(any("P/08 family-read 08.tsv" in x for x in check.excepted))   # пакет — и без 02 (Kimi М-4)
         check = check_spec.Check(root, reg, False)
         with contextlib.redirect_stdout(io.StringIO()):
-            check.lesson((root / "Platform/02-installer/02-installer.md").resolve())
+            check.lesson(check_spec.lecture_of(root / "Platform/02-installer").resolve())
             check.family_read()
         errors = "\n".join(map(str, check.errors))
         self.assertIn("stale exception family-read P/03 03.tsv", errors)
@@ -530,7 +530,7 @@ class TestTree(unittest.TestCase):
         shutil.rmtree(root / spec.FAMILY_READ)
         check = check_spec.Check(root, None, False)
         with contextlib.redirect_stdout(io.StringIO()):
-            check.lesson((root / "Platform/02-installer/02-installer.md").resolve())
+            check.lesson(check_spec.lecture_of(root / "Platform/02-installer").resolve())
             check.family_read()
         missing = [e for e in map(str, check.errors) if "family-read: no table" in e]
         self.assertGreaterEqual(len(missing), 6)
@@ -603,7 +603,7 @@ class TestTree(unittest.TestCase):
                      len(whole.split("\t")[1]):] + "\n", encoding="utf-8")
         check = check_spec.Check(root, None, False)
         with contextlib.redirect_stdout(io.StringIO()):
-            check.lesson((root / "Platform/03-worker/03-worker.md").resolve())
+            check.lesson(check_spec.lecture_of(root / "Platform/03-worker").resolve())
             check.outcome_readers()
         errors = [str(e) for e in check.errors]
         self.assertTrue(any("slots.probe.outcomes.tsv" in e and "resource is not a reader" in e for e in errors),
