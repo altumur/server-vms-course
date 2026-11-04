@@ -306,3 +306,17 @@ Platform/09-agent	Platform/09-agent/spec/en/09.1-agent.norms.en.md	Platform/09-a
 Platform/09-agent	Platform/09-agent/spec/en/09.2-agent.norms.en.md	Platform/09-agent/spec/09.2-agent.norms.md	source
 Platform/09-agent	Platform/09-agent/vectors/follow/en/README.en.md	Platform/09-agent/vectors/follow/README.md	source
 Platform/09-agent	-	-	linked
+Platform/10-domain-console	Platform/10-domain-console/10-domain-console.md	Platform/10-domain-console/ru/10-domain-console.md	lecture
+Platform/10-domain-console	Platform/10-domain-console/README.md	Platform/10-domain-console/ru/README.md	translation
+Platform/10-domain-console	Platform/10-domain-console/acceptance/README.md	Platform/10-domain-console/ru/acceptance/README.md	translation
+Platform/10-domain-console	Platform/10-domain-console/acceptance/corrections.tsv	Platform/10-domain-console/journal/corrections.tsv	journal
+Platform/10-domain-console	Platform/10-domain-console/lifecycle.md	Platform/10-domain-console/ru/lifecycle.md	translation
+Platform/10-domain-console	Platform/10-domain-console/spec/10-domain-console.README.md	Platform/10-domain-console/ru/spec/10-domain-console.README.md	translation
+Platform/10-domain-console	Platform/10-domain-console/spec/10-domain-console.norms.md	Platform/10-domain-console/ru/spec/10-domain-console.norms.md	translation
+Platform/10-domain-console	Platform/10-domain-console/vectors/alarms/README.md	Platform/10-domain-console/ru/vectors/alarms/README.md	translation
+Platform/10-domain-console	Platform/10-domain-console/en/README.en.md	Platform/10-domain-console/README.md	source
+Platform/10-domain-console	Platform/10-domain-console/acceptance/en/README.en.md	Platform/10-domain-console/acceptance/README.md	source
+Platform/10-domain-console	Platform/10-domain-console/en/lifecycle.en.md	Platform/10-domain-console/lifecycle.md	source
+Platform/10-domain-console	Platform/10-domain-console/spec/en/10-domain-console.README.en.md	Platform/10-domain-console/spec/10-domain-console.README.md	source
+Platform/10-domain-console	Platform/10-domain-console/spec/en/10-domain-console.norms.en.md	Platform/10-domain-console/spec/10-domain-console.norms.md	source
+Platform/10-domain-console	Platform/10-domain-console/vectors/alarms/en/README.en.md	Platform/10-domain-console/vectors/alarms/README.md	source
