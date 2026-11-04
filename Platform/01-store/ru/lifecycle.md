@@ -39,7 +39,7 @@
 Закрытая таблица «Флаги демона» — [P/01.3 Н1.3](spec/01.3-store.norms.md), машинная форма [`forms/daemon-flags.tsv`](../forms/daemon-flags.tsv):
 `-dir` (обязателен), `-id`, `-sockets`, `-rights`, `-tls`, `-raft`, `-raft-bind`, `-api`, `-bootstrap`, `-join`,
 `-group-size`, `-force`, `-isolated`, `-upper`, `-peers` (три последних — только у `recover`), `-door`, `-voters`, `-tuning`, `-leader-wait`, `-max-value`, `-max-body`, `-max-conns`,
-`-api-conns`, `-api-per-address`, `-index-base`, `-groups` (только у `rights`). Флаг вне таблицы — отказ старта, код 2. Административные команды —
+`-api-conns`, `-api-per-address`, `-index-base`, `-groups` (только у `rights`), `--from` (только у `restore`, `import`). Флаг вне таблицы — отказ старта, код 2. Административные команды —
 `configstore status | join | leave | admit | backup | restore | import | recover | rights` (P/01.3 Н1.3 `admin_ops`,
 Н1.9).
 

@@ -60,6 +60,10 @@ class Forms(unittest.TestCase):
         self.edit("forms/daemon-flags.tsv", "\trecover\t\tP/01.3 Н3 recover", "\tdaemon\t\tP/01.3 Н3 recover")
         self.assertTrue(self.flags())
 
+    def test_two_hyphens_only_from(self):               # --from — имя прозы; иное с двумя дефисами — отказ
+        self.edit("forms/daemon-flags.tsv", "--from\tfile\t", "--input\tfile\t")
+        self.assertTrue(self.flags())
+
     def test_refusal_code_kind(self):
         self.edit("forms/refusals.tsv", "1.1\t9\tguard_mismatch\thttp\t412\t", "1.1\t9\tguard_mismatch\thttp\t409\t")
         self.assertTrue(self.refusals())

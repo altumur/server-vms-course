@@ -24,6 +24,7 @@ COMMANDS = {"daemon", "status", "join", "leave", "admit", "backup", "restore", "
 UNITS = {"KiB": 1024, "MiB": 1024 ** 2, "GiB": 1024 ** 3}
 FAULT_KIND = {"BadRequestFault": "badrequest", "BodyTooLargeFault": "toolarge", "ForbiddenFault": "forbidden"}
 CELL = re.compile(r"(?<!\\)\|")
+TWO_HYPHENS = {"--from"}      # the name of the prose admin_ops; a rename is a change of the norms (ADR-0125 доп. (2) п. 1)
 
 
 def flag_forms(root):
@@ -93,7 +94,7 @@ def check_flags(path):
     seen = set()
     for r in rows:
         where = f"{path.name}: {r['flag']}"
-        if not re.fullmatch(r"-[a-z][a-z-]*", r["flag"]) or r["flag"] in seen:
+        if not (re.fullmatch(r"-[a-z][a-z-]*", r["flag"]) or r["flag"] in TWO_HYPHENS) or r["flag"] in seen:
             errors.append(f"{where}: the flag is not -name or repeats")
         seen.add(r["flag"])
         if not TYPE.fullmatch(r["type"]):
@@ -116,7 +117,7 @@ def check_flags(path):
     prose = {}
     order = []
     for c in prose_table(text, start):
-        for flag in re.findall(r"`(-[a-z][a-z-]*)`", c[0]):
+        for flag in re.findall(r"`(--from|-[a-z][a-z-]*)`", c[0]):
             prose[flag] = c
             order.append(flag)
     if order != [r["flag"] for r in rows]:

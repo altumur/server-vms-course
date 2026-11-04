@@ -1,5 +1,5 @@
 # The daemon flags of the store (P/01.3 Н1.3 «Daemon flags»; ADR-0125 item 2, addendum (1) item 5). A closed set: a flag outside the table or not of its command is a start refusal, code 2 (P/01.3 Н4).
-# Rows in the order of the prose table; one prose row of three connection limits is three rows. An empty cell is -.
+# The flag names are those of the prose (--from with two hyphens, as admin_ops writes it). Rows in the order of the prose table; one prose row of three connection limits is three rows. An empty cell is -.
 # type — a closed vocabulary: path, dir (directory path), file (file path), addr (host:port), id (member id, P/01.3 Н2), bool (no value),
 # enum:<a>|<b>…, int:<min>..<max> (max may be empty), bytes:>0 (an integer of bytes, > 0), duration, list:id@addr, list:id@addr/addr.
 # default — the default as a machine value (bytes — an integer of bytes; -raft-bind =-raft — the value of another flag; $SERVER_NAME —
@@ -37,3 +37,4 @@ flag	type	default	default_text	required	commands	bad	norm
 -api-per-address	int:1..	8	8	false	daemon		P/01.1 Н4
 -index-base	int:0..	0	0	false	import		P/01.3 Н1.3 import
 -groups	bool	false	off	false	rights		P/01.3 Н1.3 admin_ops; ADR-0125 addendum (2) item 1
+--from	file	-	-	true	restore,import		P/01.3 Н1.3 admin_ops; ADR-0125 addendum (2) item 1
