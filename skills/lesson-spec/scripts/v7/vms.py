@@ -623,7 +623,7 @@ def check_tables(root, judges):
         errors.append((FAMILY_READ, "family-read VMS: the package needs README.md"))
     templates, _ = keys(root, judges)
     for p in sorted(d.iterdir()):
-        if p.name in ("README.md", ".DS_Store"):
+        if p.name in ("README.md", ".DS_Store", "en"):            # en — английский источник README (ADR-0121)
             continue
         m = re.fullmatch(r"([0-9]{2})\.tsv", p.name)
         if not m:

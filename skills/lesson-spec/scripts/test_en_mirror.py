@@ -84,6 +84,11 @@ class Mirror(unittest.TestCase):
         text = self.en.replace("# the limit of batch writes;", "# how many writes a batch carries;")
         self.assertEqual(self.compare(en=text), [])
 
+    def test_link_inside_code_span(self):               # «](…)» в регулярке внутри кода — не ссылка
+        ru = self.ru + "\nШаблон `[a-z](?:[a-z0-9]{0,61})` — имя.\n"
+        en = self.en + "\nThe template `[a-z](?:[a-z0-9]{0,61})` is a name.\n"
+        self.assertEqual(self.compare(ru=ru, en=en), [])
+
     def test_table_cell_value(self):
         self.mutated("| 22 | a body over 1048576 bytes", "| 22 | a body over 1048577 bytes")
         self.mutated("| 02 | a creation with", "| 03 | a creation with")

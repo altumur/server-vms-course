@@ -75,7 +75,8 @@ def code_parts(body):
 
 def links(body, base, root):
     out = set()
-    for target in LINK.findall(FENCE.sub("", body)):
+    text = SPAN.sub(lambda m: m.group(0) if m.string.startswith("](", m.end()) else " ", FENCE.sub("", body))   # «](…)» внутри кода — не ссылка
+    for target in LINK.findall(text):
         path = target.split("#", 1)[0]
         if not path:                                   # a heading of the same file: its anchor follows the language
             out.add("#")
