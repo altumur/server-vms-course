@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "asbuilt/deps",
+  "title": "deps — package import graph (reference only, no comparison: ADR-0123 доп. (1) п. 1)",
+  "description": "Packages of the lesson plus every module package they import transitively; test files excluded. internal: imports of the same module; stdlib: no dot in the first path element; external: with the required module that provides them (null when go.mod requires none). cross_lesson: a lesson package importing another NN-* lesson of the module.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["header", "cross_lesson", "modules", "packages", "summary"],
+  "properties": {
+    "header": {"$ref": "header.schema.json"},
+    "cross_lesson": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to"],
+        "properties": {"from": {"type": "string"}, "to": {"type": "string"}}
+      }
+    },
+    "modules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "used"],
+      "properties": {
+        "required": {"type": "array", "items": {"type": "string"}},
+        "used": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "packages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["dir", "external", "files", "internal", "name", "path", "scope", "stdlib"],
+        "properties": {
+          "dir": {"type": "string"},
+          "external": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["module", "path"],
+              "properties": {"module": {"type": ["string", "null"]}, "path": {"type": "string"}}
+            }
+          },
+          "files": {"type": "integer"},
+          "internal": {"type": "array", "items": {"type": "string"}},
+          "name": {"type": "string"},
+          "path": {"type": "string"},
+          "scope": {"enum": ["lesson", "shared"]},
+          "stdlib": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["external", "internal_edges", "packages", "stdlib"],
+      "properties": {
+        "external": {"type": "integer"},
+        "internal_edges": {"type": "integer"},
+        "packages": {"type": "integer"},
+        "stdlib": {"type": "integer"}
+      }
+    }
+  }
+}

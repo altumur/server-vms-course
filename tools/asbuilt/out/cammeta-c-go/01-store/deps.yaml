@@ -1,0 +1,218 @@
+header:
+  commit: "b3c054d8b91b960ab649e9e395076ef1a9a08e59"
+  dirty: false
+  extractor: "asbuilt/1+goextract/1"
+  implementation: "cammeta-c-go"
+  lesson: "01-store"
+  module: "cammeta-c-go"
+  source: "static"
+  spec: "56fc448769ee65573e6dbba09372a6e72a47763f"
+cross_lesson: []
+modules:
+  required:
+    - "github.com/santhosh-tekuri/jsonschema/v5"
+    - "golang.org/x/sys"
+    - "golang.org/x/text"
+    - "gopkg.in/yaml.v3"
+  used: []
+packages:
+  - dir: "01-store/cmd/configstore"
+    external: []
+    files: 1
+    internal:
+      - "cammeta-c-go/01-store/internal/store"
+      - "cammeta-c-go/common/httpwire"
+      - "cammeta-c-go/common/jcs"
+      - "cammeta-c-go/common/storeclient"
+    name: "main"
+    path: "cammeta-c-go/01-store/cmd/configstore"
+    scope: "lesson"
+    stdlib:
+      - "context"
+      - "crypto/sha256"
+      - "crypto/tls"
+      - "encoding/json"
+      - "errors"
+      - "flag"
+      - "fmt"
+      - "net"
+      - "os"
+      - "os/signal"
+      - "path/filepath"
+      - "sort"
+      - "strconv"
+      - "strings"
+      - "syscall"
+      - "time"
+  - dir: "01-store/internal/store"
+    external: []
+    files: 7
+    internal:
+      - "cammeta-c-go/common/httpwire"
+      - "cammeta-c-go/common/jsonwire"
+      - "cammeta-c-go/common/role-certificate"
+      - "cammeta-c-go/common/storeclient"
+    name: "store"
+    path: "cammeta-c-go/01-store/internal/store"
+    scope: "lesson"
+    stdlib:
+      - "bufio"
+      - "bytes"
+      - "context"
+      - "crypto/sha256"
+      - "crypto/tls"
+      - "crypto/x509"
+      - "encoding/hex"
+      - "encoding/json"
+      - "errors"
+      - "fmt"
+      - "log"
+      - "math"
+      - "os"
+      - "path/filepath"
+      - "regexp"
+      - "sort"
+      - "strconv"
+      - "strings"
+      - "syscall"
+      - "time"
+      - "unicode/utf8"
+  - dir: "common/httpwire"
+    external: []
+    files: 1
+    internal: []
+    name: "httpwire"
+    path: "cammeta-c-go/common/httpwire"
+    scope: "shared"
+    stdlib:
+      - "bufio"
+      - "bytes"
+      - "crypto/tls"
+      - "crypto/x509"
+      - "errors"
+      - "fmt"
+      - "io"
+      - "net"
+      - "strconv"
+      - "strings"
+      - "sync"
+      - "time"
+  - dir: "common/jcs"
+    external: []
+    files: 1
+    internal:
+      - "cammeta-c-go/common/jsonwire"
+    name: "jcs"
+    path: "cammeta-c-go/common/jcs"
+    scope: "shared"
+    stdlib:
+      - "encoding/json"
+      - "errors"
+      - "math"
+      - "sort"
+      - "strconv"
+      - "strings"
+  - dir: "common/jsonwire"
+    external: []
+    files: 1
+    internal: []
+    name: "jsonwire"
+    path: "cammeta-c-go/common/jsonwire"
+    scope: "shared"
+    stdlib:
+      - "encoding/json"
+      - "errors"
+      - "strconv"
+      - "strings"
+      - "unicode/utf16"
+      - "unicode/utf8"
+  - dir: "common/role-certificate"
+    external: []
+    files: 6
+    internal:
+      - "cammeta-c-go/common/roletls"
+    name: "rolecertificate"
+    path: "cammeta-c-go/common/role-certificate"
+    scope: "shared"
+    stdlib:
+      - "bytes"
+      - "crypto/ecdsa"
+      - "crypto/ed25519"
+      - "crypto/elliptic"
+      - "crypto/rsa"
+      - "crypto/sha256"
+      - "crypto/tls"
+      - "crypto/x509"
+      - "encoding/asn1"
+      - "encoding/base64"
+      - "encoding/hex"
+      - "encoding/json"
+      - "encoding/pem"
+      - "errors"
+      - "fmt"
+      - "log"
+      - "net/http"
+      - "net/netip"
+      - "os"
+      - "path/filepath"
+      - "runtime"
+      - "sort"
+      - "strings"
+      - "sync/atomic"
+      - "time"
+  - dir: "common/roletls"
+    external: []
+    files: 2
+    internal: []
+    name: "roletls"
+    path: "cammeta-c-go/common/roletls"
+    scope: "shared"
+    stdlib:
+      - "bytes"
+      - "crypto/ecdsa"
+      - "crypto/ed25519"
+      - "crypto/rsa"
+      - "crypto/sha256"
+      - "crypto/tls"
+      - "crypto/x509"
+      - "encoding/asn1"
+      - "encoding/pem"
+      - "errors"
+      - "fmt"
+      - "log"
+      - "math/big"
+      - "os"
+      - "path/filepath"
+      - "regexp"
+      - "sort"
+      - "strings"
+      - "sync/atomic"
+      - "time"
+      - "unicode/utf8"
+  - dir: "common/storeclient"
+    external: []
+    files: 1
+    internal:
+      - "cammeta-c-go/common/jsonwire"
+    name: "storeclient"
+    path: "cammeta-c-go/common/storeclient"
+    scope: "shared"
+    stdlib:
+      - "bytes"
+      - "context"
+      - "crypto/rand"
+      - "encoding/hex"
+      - "encoding/json"
+      - "errors"
+      - "io"
+      - "net"
+      - "net/http"
+      - "net/url"
+      - "regexp"
+      - "strings"
+      - "time"
+summary:
+  external: 0
+  internal_edges: 11
+  packages: 8
+  stdlib: 41

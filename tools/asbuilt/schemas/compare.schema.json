@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "asbuilt/compare-row",
+  "title": "One row of compare.tsv (columns in this order)",
+  "description": "Rows sorted by snapshot, status (match, extra, absent, differs, out_of_scope), fuzzy, unit. Units: flag:-<name>, env:<NAME>, const:<pkg>.<Name>, help:-<name> (static vs -h), pair:<code> <kind>, fields:<code> <kind> <schema>, word:<word>, reason:<norm ref>/<n> (sub-reason of a Н4 row), error:<word>, row:<norm ref>.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["snapshot", "unit", "status", "fuzzy", "spec_ref", "spec", "code_ref", "code", "note"],
+  "properties": {
+    "snapshot": {"enum": ["params", "refusals"]},
+    "unit": {"type": "string"},
+    "status": {"enum": ["match", "extra", "absent", "differs", "out_of_scope"]},
+    "fuzzy": {"enum": ["0", "1"], "description": "1: the pairing is a heuristic (prose, tokens, partial word)"},
+    "spec_ref": {"type": "string", "description": "P/NN.N Нk #row, or openapi METHOD path code"},
+    "spec": {"type": "string"},
+    "code_ref": {"type": "string", "description": "file:line relative to the module root"},
+    "code": {"type": "string"},
+    "note": {"type": "string"}
+  }
+}

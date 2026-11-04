@@ -1,0 +1,255 @@
+snapshot	unit	status	fuzzy	spec_ref	spec	code_ref	code	note
+params	flag:-api	match	0	P/01.3 Н1.3 «Флаги демона» #8	type=`host:port` default=нет: без него служебной HTTP-двери для партнёров нет	01-store/cmd/configstore/main.go:318	type=string default= set=<command>	also in sets: configstore
+params	flag:-api-conns	match	0	P/01.3 Н1.3 «Флаги демона» #22	type=целое > 0 default=32	01-store/cmd/configstore/main.go:74	type=int default=32 set=configstore	
+params	flag:-api-per-address	match	0	P/01.3 Н1.3 «Флаги демона» #22	type=целое > 0 default=8	01-store/cmd/configstore/main.go:75	type=int default=8 set=configstore	
+params	flag:-bootstrap	match	0	P/01.3 Н1.3 «Флаги демона» #9	type=без значения default=выключен	01-store/cmd/configstore/main.go:63	type=bool default=false set=configstore	
+params	flag:-dir	match	0	P/01.3 Н1.3 «Флаги демона» #1	type=путь default=нет: обязателен, без него отказ старта, код 2	01-store/cmd/configstore/main.go:308	type=string default= set=<command>	also in sets: configstore
+params	flag:-door	match	0	P/01.3 Н1.3 «Флаги демона» #16	type=без значения default=выключен	01-store/cmd/configstore/main.go:67	type=bool default=false set=configstore	
+params	flag:-force	match	0	P/01.3 Н1.3 «Флаги демона» #12	type=без значения default=выключен	01-store/cmd/configstore/main.go:313	type=bool default=false set=<command>	declared but value discarded in set configstore; also in sets: configstore
+params	flag:-group-size	match	0	P/01.3 Н1.3 «Флаги демона» #11	type=`1` | `3` | `5` default=`1`	01-store/cmd/configstore/main.go:65	type=int default=1 set=configstore	
+params	flag:-index-base	match	0	P/01.3 Н1.3 «Флаги демона» #23	type=целое ≥ 0 default=0	01-store/cmd/configstore/main.go:312	type=uint64 default=0 set=<command>	declared but value discarded in set configstore; also in sets: configstore
+params	flag:-join	match	0	P/01.3 Н1.3 «Флаги демона» #10	type=`host:port` default=нет	01-store/cmd/configstore/main.go:64	type=string default= set=configstore	
+params	flag:-leader-wait	match	0	P/01.3 Н1.3 «Флаги демона» #19	type=срок default=`5s`	01-store/cmd/configstore/main.go:70	type=duration default=5s set=configstore	
+params	flag:-max-body	match	0	P/01.3 Н1.3 «Флаги демона» #21	type=байты, > 0 (как `-max-value`) default=`1MiB`	01-store/cmd/configstore/main.go:72	type=string default=1MiB set=configstore	size parsed from string
+params	flag:-max-conns	match	0	P/01.3 Н1.3 «Флаги демона» #22	type=целое > 0 default=64	01-store/cmd/configstore/main.go:73	type=int default=64 set=configstore	
+params	flag:-max-value	match	0	P/01.3 Н1.3 «Флаги демона» #20	type=байты, > 0 (`0` и не число — отказ старта, код 2; сверка python и go М10/6–11, B7) default=`512KiB`	01-store/cmd/configstore/main.go:315	type=string default=512KiB set=<command>	also in sets: configstore; size parsed from string
+params	flag:-raft	match	0	P/01.3 Н1.3 «Флаги демона» #6	type=`host:port` default=нет	01-store/cmd/configstore/main.go:317	type=string default= set=<command>	also in sets: configstore
+params	flag:-rights	match	0	P/01.3 Н1.3 «Флаги демона» #4	type=путь файла default=нет: без него — только `admin.sock` (глава 1.2 Н1.2)	01-store/cmd/configstore/main.go:58	type=string default= set=configstore	
+params	flag:-sockets	match	0	P/01.3 Н1.3 «Флаги демона» #3	type=путь каталога default=`<path:b2c618ae0b6d>	01-store/cmd/configstore/main.go:309	type=string default=<path:aece64304516> set=<command>	also in sets: configstore
+params	flag:-tls	match	0	P/01.3 Н1.3 «Флаги демона» #5	type=путь каталога default=нет: без него адрес вне петли — отказ старта	01-store/cmd/configstore/main.go:59	type=string default= set=configstore	
+params	flag:-tuning	match	0	P/01.3 Н1.3 «Флаги демона» #18	type=`default` | `lan` | `slow` default=`default`	01-store/cmd/configstore/main.go:69	type=string default=default set=configstore	
+params	flag:-voters	match	0	P/01.3 Н1.3 «Флаги демона» #17	type=список `id@host:port` через запятую default=нет	01-store/cmd/configstore/main.go:68	type=string default= set=configstore	declared but value discarded in set configstore
+params	help:-api	match	0			01-store/cmd/configstore/main.go:62	static= -h=None	static vs -h of the built binary
+params	help:-api-conns	match	0			01-store/cmd/configstore/main.go:74	static=32 -h=32	static vs -h of the built binary
+params	help:-api-per-address	match	0			01-store/cmd/configstore/main.go:75	static=8 -h=8	static vs -h of the built binary
+params	help:-bootstrap	match	0			01-store/cmd/configstore/main.go:63	static=false -h=None	static vs -h of the built binary
+params	help:-dir	match	0			01-store/cmd/configstore/main.go:55	static= -h=None	static vs -h of the built binary
+params	help:-door	match	0			01-store/cmd/configstore/main.go:67	static=false -h=None	static vs -h of the built binary
+params	help:-force	match	0			01-store/cmd/configstore/main.go:66	static=false -h=None	static vs -h of the built binary
+params	help:-group-size	match	0			01-store/cmd/configstore/main.go:65	static=1 -h=1	static vs -h of the built binary
+params	help:-id	match	0			01-store/cmd/configstore/main.go:56	static= -h=None	static vs -h of the built binary
+params	help:-index-base	match	0			01-store/cmd/configstore/main.go:76	static=0 -h=None	static vs -h of the built binary
+params	help:-join	match	0			01-store/cmd/configstore/main.go:64	static= -h=None	static vs -h of the built binary
+params	help:-leader-wait	match	0			01-store/cmd/configstore/main.go:70	static=5s -h=5s	static vs -h of the built binary
+params	help:-max-body	match	0			01-store/cmd/configstore/main.go:72	static=1MiB -h=1MiB	static vs -h of the built binary
+params	help:-max-conns	match	0			01-store/cmd/configstore/main.go:73	static=64 -h=64	static vs -h of the built binary
+params	help:-max-value	match	0			01-store/cmd/configstore/main.go:71	static=512KiB -h=512KiB	static vs -h of the built binary
+params	help:-raft	match	0			01-store/cmd/configstore/main.go:60	static= -h=None	static vs -h of the built binary
+params	help:-raft-bind	match	0			01-store/cmd/configstore/main.go:61	static= -h=None	static vs -h of the built binary
+params	help:-rights	match	0			01-store/cmd/configstore/main.go:58	static= -h=None	static vs -h of the built binary
+params	help:-sockets	match	0			01-store/cmd/configstore/main.go:57	static=<path:aece64304516> -h=<path:aece64304516>	static vs -h of the built binary
+params	help:-tls	match	0			01-store/cmd/configstore/main.go:59	static= -h=None	static vs -h of the built binary
+params	help:-tuning	match	0			01-store/cmd/configstore/main.go:69	static=default -h=default	static vs -h of the built binary
+params	help:-voters	match	0			01-store/cmd/configstore/main.go:68	static= -h=None	static vs -h of the built binary
+params	env:LISTEN_FDNAMES	match	1	P/01.3 Н1.3	named in norms	01-store/cmd/configstore/main.go:278	os.Getenv	name only; norms prose, not a table
+params	env:LISTEN_FDS	match	1	P/01.3 Н1.3	named in norms	01-store/cmd/configstore/main.go:268	os.Getenv	name only; norms prose, not a table
+params	env:SERVER_NAME	match	1	P/01.3 Н1.3	named in norms	01-store/cmd/configstore/main.go:99	os.Getenv	name only; norms prose, not a table
+params	flag:-id	match	1	P/01.3 Н1.3 «Флаги демона» #2	type=id участника (Н2) default=в группе (`-join`, `-door`, `-group-size 3` или `5`) нет: обязателен; иначе — `SERVER_NAME` (P/02.4 Н1.2)	01-store/cmd/configstore/main.go:316	type=string default= set=<command>	also in sets: configstore; spec default is prose
+params	flag:-raft-bind	match	1	P/01.3 Н1.3 «Флаги демона» #7	type=`host:port` default=`-raft`	01-store/cmd/configstore/main.go:61	type=string default= set=configstore	spec default refers to -raft
+params	flag:-input	extra	0			01-store/cmd/configstore/main.go:311	type=string default= set=<command>	
+params	flag:-from	extra	1			01-store/cmd/configstore/main.go:310	type=string default= set=<command>	named in norms prose, not in the flags table
+params	flag:-groups	extra	1			01-store/cmd/configstore/main.go:314	type=bool default=false set=<command>	named in norms prose, not in the flags table
+params	flag:-isolated	absent	0	P/01.3 Н1.3 «Флаги демона» #13	type=без значения default=выключен			
+params	flag:-peers	absent	0	P/01.3 Н1.3 «Флаги демона» #15	type=список `id@<raft host:port>/<api host:port>` через запятую default=нет: у `recover` обязателен			
+params	flag:-upper	absent	0	P/01.3 Н1.3 «Флаги демона» #14	type=целое 0 … 2^53 − 1 default=нет			
+params	const:httpwire.DrainBytes	out_of_scope	0			common/httpwire/server.go:21	untyped int = 1048576	no #lim form at the pin; value occurs in pinned spec text
+params	const:httpwire.DrainTimeout	out_of_scope	0			common/httpwire/server.go:22	time.Duration = 2s	no #lim form at the pin
+params	const:httpwire.HeaderBytes	out_of_scope	0			common/httpwire/server.go:19	untyped int = 65536	no #lim form at the pin; value occurs in pinned spec text
+params	const:httpwire.ReadTimeout	out_of_scope	0			common/httpwire/server.go:23	time.Duration = 10s	no #lim form at the pin
+params	const:httpwire.RequestLineBytes	out_of_scope	0			common/httpwire/server.go:20	untyped int = 8192	no #lim form at the pin
+params	const:jsonwire.arrayComma	out_of_scope	0			common/jsonwire/json.go:45	untyped int = 2	no #lim form at the pin
+params	const:jsonwire.arrayFirst	out_of_scope	0			common/jsonwire/json.go:43	untyped int = 0	no #lim form at the pin
+params	const:jsonwire.arrayValue	out_of_scope	0			common/jsonwire/json.go:44	untyped int = 1	no #lim form at the pin
+params	const:jsonwire.objectComma	out_of_scope	0			common/jsonwire/json.go:49	untyped int = 6	no #lim form at the pin
+params	const:jsonwire.objectFirst	out_of_scope	0			common/jsonwire/json.go:46	untyped int = 3	no #lim form at the pin
+params	const:jsonwire.objectKey	out_of_scope	0			common/jsonwire/json.go:47	untyped int = 4	no #lim form at the pin
+params	const:jsonwire.objectValue	out_of_scope	0			common/jsonwire/json.go:48	untyped int = 5	no #lim form at the pin
+params	const:role-certificate.Mixed	out_of_scope	0			common/role-certificate/tls.go:166	SignedMode = 2	no #lim form at the pin
+params	const:role-certificate.RoleConsole	out_of_scope	0			common/role-certificate/kit.go:19	untyped string = console	no #lim form at the pin
+params	const:role-certificate.RoleDomain	out_of_scope	0			common/role-certificate/kit.go:16	untyped string = domain	no #lim form at the pin
+params	const:role-certificate.RoleDomainAgent	out_of_scope	0			common/role-certificate/kit.go:18	untyped string = domainagent	no #lim form at the pin
+params	const:role-certificate.RoleDomainConsole	out_of_scope	0			common/role-certificate/kit.go:17	untyped string = domainconsole	no #lim form at the pin
+params	const:role-certificate.Signer	out_of_scope	0			common/role-certificate/tls.go:161	SignedMode = 0	no #lim form at the pin
+params	const:role-certificate.Unasked	out_of_scope	0			common/role-certificate/tls.go:163	SignedMode = 1	no #lim form at the pin
+params	const:store.DiskFormat	out_of_scope	0			01-store/internal/store/engine.go:17	untyped string = cammeta-c-go-store	no #lim form at the pin
+params	const:store.MaxFloor	out_of_scope	0			01-store/internal/store/model.go:35	uint64 = 9007194959773696	no #lim form at the pin; value occurs in pinned spec text
+refusals	fields:409 conflict ConflictFault	match	0	openapi ConflictFault required	index	01-store/internal/store/engine.go:317	index	
+refusals	fields:412 guard GuardFault	match	0	openapi GuardFault required	index,key	01-store/internal/store/engine.go:310	index,key	
+refusals	fields:413 toolarge BodyTooLargeFault	match	0	openapi BodyTooLargeFault required	limit	01-store/internal/store/model.go:193	key,limit,size	
+refusals	fields:413 toolarge RowTooLargeFault	match	0	openapi RowTooLargeFault required	key,limit,size	01-store/internal/store/model.go:193	key,limit,size	
+refusals	pair:400 badkey	match	0	P/01.1 Н4 #1; openapi GET /v1/get 400; openapi POST /v1/write 400	400 badkey	01-store/internal/store/engine.go:221	5 sites	
+refusals	pair:400 badrequest	match	0	P/01.1 Н4 #2; P/01.2 Н4 #1; P/01.3 Н4 #1; P/01.3 Н4 #16; openapi GET /metrics 400; openapi GET /v1/get 400 (+5)	400 badrequest	01-store/internal/store/engine.go:278	26 sites	
+refusals	pair:403 forbidden	match	0	P/01.1 Н4 #4; P/01.1 Н4 #5; P/01.2 Н4 #3; P/01.2 Н4 #4; P/01.2 Н4 #5; P/01.2 Н4 #6 (+14)	403 forbidden	01-store/internal/store/engine.go:224	8 sites	
+refusals	pair:404 badrequest	match	0	P/01.1 Н4 #3; P/01.2 Н4 #10; P/01.2 Н4 #2; P/01.3 Н4 #3; openapi GET /metrics 404; openapi GET /v1/get 404 (+6)	404 badrequest	01-store/internal/store/handler.go:119	4 sites	
+refusals	pair:405 badrequest	match	0	P/01.3 Н4 #4; openapi GET /metrics 405; openapi GET /v1/status 405; openapi POST /v1/join 405; openapi POST /v1/leave 405	405 badrequest	01-store/internal/store/handler.go:93	1 sites	
+refusals	pair:409 conflict	match	0	P/01.1 Н4 #6; openapi POST /v1/write 409	409 conflict	01-store/internal/store/engine.go:317	1 sites	
+refusals	pair:409 early	match	0	P/01.1 Н4 #8; openapi POST /v1/write 409	409 early	01-store/internal/store/engine.go:305	1 sites	
+refusals	pair:409 expired	match	0	P/01.1 Н4 #7; openapi POST /v1/write 409	409 expired	01-store/internal/store/engine.go:302	1 sites	
+refusals	pair:409 refused	match	0	P/01.1 Н4 #13; P/01.3 Н4 #10; P/01.3 Н4 #21; P/01.3 Н4 #9; openapi POST /v1/join 409; openapi POST /v1/leave 409 (+1)	409 refused	01-store/internal/store/engine.go:327	4 sites	
+refusals	pair:412 guard	match	0	P/01.1 Н4 #9; openapi POST /v1/write 412	412 guard	01-store/internal/store/engine.go:310	1 sites	
+refusals	pair:413 toolarge	match	0	P/01.1 Н4 #10; P/01.1 Н4 #11; P/01.3 Н4 #2; openapi POST /v1/join 413; openapi POST /v1/leave 413; openapi POST /v1/write 413	413 toolarge	01-store/internal/store/model.go:193	2 sites	
+refusals	pair:503 ambiguous	match	0	P/01.1 Н4 #14; P/01.1 Н4 #15; P/01.1 Н4 #16; P/01.3 Н4 #18; openapi POST /v1/join 503; openapi POST /v1/leave 503 (+1)	503 ambiguous	01-store/internal/store/engine.go:167	2 sites	
+refusals	pair:503 unavailable	match	0	P/01.1 Н4 #12; P/01.2 Н4 #2; P/01.3 Н4 #17; P/01.3 Н4 #19; openapi GET /metrics 503; openapi GET /v1/get 503 (+6)	503 unavailable	01-store/internal/store/engine.go:158	7 sites	
+refusals	word:<роль> may not read <ключ>	match	0	P/01.2 Н4 #3	403 forbidden	01-store/internal/store/engine.go:224	{role} may not read {key}	
+refusals	word:the last voter	match	0	P/01.3 Н4 #9	409 refused	01-store/internal/store/handler.go:150	the last voter	
+refusals	word:this build has no raft	match	0	P/01.3 Н4 #15	exit 2	01-store/cmd/configstore/main.go:302	this build has no raft	main exits 2
+refusals	word:this build has no raft	match	0	P/01.3 Н4 #8	exit 2	01-store/cmd/configstore/main.go:302	this build has no raft	main exits 2
+refusals	pair:403 ?	match	1	P/01.3 Н4 #11	code 403, kind not named		403 forbidden	kind not named in spec row
+refusals	reason:P/01.3 Н4 #23/1	match	1	P/01.3 Н4 #23	exit refusal: вход не по форме `copy` Н1.3	01-store/internal/store/copy.go:33	copy validation failed	matched by weak tokens copy (shortest of 2 candidates)
+refusals	reason:P/01.3 Н4 #24/1	match	1	P/01.3 Н4 #24	exit refusal: часы раньше `generation_at`	01-store/internal/store/copy.go:205	validation: clocks before generation_at	matched by strong tokens generation_at (shortest of 1 candidates)
+refusals	reason:P/01.3 Н4 #5/1	match	1	P/01.3 Н4 #5	exit 2: `-bootstrap` с `-join`	01-store/cmd/configstore/main.go:90	-bootstrap with -join	matched by strong tokens -bootstrap,-join (shortest of 1 candidates); main exits 2
+refusals	reason:P/01.3 Н4 #5/3	match	1	P/01.3 Н4 #5	exit 2: адрес вне петли без `-tls`	01-store/cmd/configstore/main.go:142	-api requires -tls	matched by strong tokens -tls (shortest of 1 candidates); main exits 2
+refusals	reason:P/01.3 Н4 #6/1	match	1	P/01.3 Н4 #6	exit 2: нет `-dir`	01-store/cmd/configstore/main.go:84	-dir required	matched by strong tokens -dir (shortest of 3 candidates); main exits 2
+refusals	reason:P/01.3 Н4 #6/2	match	1	P/01.3 Н4 #6	exit 2: нет `-id` в группе	01-store/cmd/configstore/main.go:106	invalid -id	matched by strong tokens -id (shortest of 2 candidates); main exits 2
+refusals	reason:P/01.3 Н4 #6/4	match	1	P/01.3 Н4 #6	exit 2: унаследованный сокет с именем не `admin` и не роли файла прав (Н1.3)	01-store/cmd/configstore/main.go:382	-dir does not match the live admin socket	matched by weak tokens admin (shortest of 1 candidates); main exits 2
+refusals	reason:P/01.3 Н4 #7/1	match	1	P/01.3 Н4 #7	exit 2: каталог данных не пуст, а метки `FORMAT` нет	01-store/internal/store/engine.go:102	{dir} invalid FORMAT {b}	matched by strong tokens FORMAT (shortest of 3 candidates)
+refusals	reason:P/01.3 Н4 #7/3	match	1	P/01.3 Н4 #7	exit 2: `FORMAT` не по форме (Н1.3 `format`)	01-store/internal/store/engine.go:102	{dir} invalid FORMAT {b}	matched by strong tokens FORMAT,format (shortest of 3 candidates)
+refusals	word:<роль> may not write|delete <ключ>	match	1	P/01.2 Н4 #4	403 forbidden	01-store/internal/store/engine.go:260	{role} may not {action} {c.Key}	
+refusals	error:-group-size must be 1,3,5	extra	0			01-store/cmd/configstore/main.go:87	run	error word in the lesson code, no spec row names it
+refusals	error:-id required in group	extra	0			01-store/cmd/configstore/main.go:93	run	error word in the lesson code, no spec row names it
+refusals	error:-max-body: {e}	extra	0			01-store/cmd/configstore/main.go:120	run	error word in the lesson code, no spec row names it
+refusals	error:-max-value: {e}	extra	0			01-store/cmd/configstore/main.go:116	run	error word in the lesson code, no spec row names it
+refusals	error:LISTEN_FDNAMES count mismatch	extra	0			01-store/cmd/configstore/main.go:280	inheritedListeners	error word in the lesson code, no spec row names it
+refusals	error:backup path must be outside data directory {dir}	extra	0			01-store/internal/store/backup_door.go:26	BackupDoor	error word in the lesson code, no spec row names it
+refusals	error:backup path must be outside data directory {dir}	extra	0			01-store/internal/store/copy.go:171	Backup	error word in the lesson code, no spec row names it
+refusals	error:backup publication: {e}; previous backup retained at {oldLink}: {restore}	extra	0			01-store/internal/store/copy.go:295	publishBackup	error word in the lesson code, no spec row names it
+refusals	error:backup publication: {e}; rollback: {restore}	extra	0			01-store/internal/store/copy.go:300	publishBackup	error word in the lesson code, no spec row names it
+refusals	error:backup requires a destination file	extra	0			01-store/cmd/configstore/main.go:363	admin	error word in the lesson code, no spec row names it
+refusals	error:client certificate required	extra	0			01-store/internal/store/tls.go:41	TLSConfig	error word in the lesson code, no spec row names it
+refusals	error:complete: import already finished	extra	0			01-store/internal/store/copy.go:223	Import	error word in the lesson code, no spec row names it
+refusals	error:connection limits and leader-wait must be positive	extra	0			01-store/cmd/configstore/main.go:112	run	error word in the lesson code, no spec row names it
+refusals	error:group required	extra	0			01-store/internal/store/rights.go:68	ParseRights	error word in the lesson code, no spec row names it
+refusals	error:import/restore requires -dir and --from	extra	0			01-store/cmd/configstore/main.go:388	admin	error word in the lesson code, no spec row names it
+refusals	error:invalid -tuning	extra	0			01-store/cmd/configstore/main.go:109	run	error word in the lesson code, no spec row names it
+refusals	error:invalid LISTEN_FDS	extra	0			01-store/cmd/configstore/main.go:273	inheritedListeners	error word in the lesson code, no spec row names it
+refusals	error:invalid comment	extra	0			01-store/internal/store/rights.go:44	ParseRights	error word in the lesson code, no spec row names it
+refusals	error:invalid inherited socket name: {name}	extra	0			01-store/cmd/configstore/main.go:288	inheritedListeners	error word in the lesson code, no spec row names it
+refusals	error:invalid key in backup listing	extra	0			01-store/internal/store/backup_door.go:48	BackupDoor	error word in the lesson code, no spec row names it
+refusals	error:invalid local role certificate	extra	0			01-store/internal/store/tls.go:31	TLSConfig	error word in the lesson code, no spec row names it
+refusals	error:invalid pattern	extra	0			01-store/internal/store/rights.go:84	ParseRights	error word in the lesson code, no spec row names it
+refusals	error:invalid replay metadata	extra	0			01-store/internal/store/engine.go:398	decodeState	error word in the lesson code, no spec row names it
+refusals	error:invalid role	extra	0			01-store/internal/store/rights.go:55	ParseRights	error word in the lesson code, no spec row names it
+refusals	error:invalid role rights	extra	0			01-store/internal/store/rights.go:59	ParseRights	error word in the lesson code, no spec row names it
+refusals	error:invalid row metadata	extra	0			01-store/internal/store/engine.go:393	decodeState	error word in the lesson code, no spec row names it
+refusals	error:invalid state JSON	extra	0			01-store/internal/store/engine.go:376	decodeState	error word in the lesson code, no spec row names it
+refusals	error:invalid state metadata	extra	0			01-store/internal/store/engine.go:382	decodeState	error word in the lesson code, no spec row names it
+refusals	error:jcs requires -input	extra	0			01-store/cmd/configstore/main.go:350	admin	error word in the lesson code, no spec row names it
+refusals	error:line {i + 1}: {fail}	extra	0			01-store/internal/store/copy.go:45	ParseCopy	error word in the lesson code, no spec row names it
+refusals	error:local role certificate missing	extra	0			01-store/internal/store/tls.go:23	TLSConfig	error word in the lesson code, no spec row names it
+refusals	error:max-value must be positive	extra	0			01-store/internal/store/engine.go:113	Open	error word in the lesson code, no spec row names it
+refusals	error:missing flag value	extra	0			01-store/cmd/configstore/main.go:328	admin	error word in the lesson code, no spec row names it
+refusals	error:new floor: {f}	extra	0			01-store/internal/store/copy.go:241	Import	error word in the lesson code, no spec row names it
+refusals	error:peer role not allowed	extra	0			01-store/internal/store/tls.go:69	peerRole	error word in the lesson code, no spec row names it
+refusals	error:rights list required	extra	0			01-store/internal/store/rights.go:78	ParseRights	error word in the lesson code, no spec row names it
+refusals	error:rights must be object	extra	0			01-store/internal/store/rights.go:36	ParseRights	error word in the lesson code, no spec row names it
+refusals	error:rights: {e}	extra	0			01-store/cmd/configstore/main.go:126	run	error word in the lesson code, no spec row names it
+refusals	error:role CN mismatch	extra	0			01-store/internal/store/tls.go:73	peerRole	error word in the lesson code, no spec row names it
+refusals	error:role DNS mismatch	extra	0			01-store/internal/store/tls.go:81	peerRole	error word in the lesson code, no spec row names it
+refusals	error:roles required	extra	0			01-store/internal/store/rights.go:50	ParseRights	error word in the lesson code, no spec row names it
+refusals	error:size must be positive bytes	extra	0			01-store/cmd/configstore/main.go:46	size	error word in the lesson code, no spec row names it
+refusals	error:socket already serving: {path}	extra	0			01-store/cmd/configstore/main.go:195	run	error word in the lesson code, no spec row names it
+refusals	error:socket path is not a socket: {path}	extra	0			01-store/cmd/configstore/main.go:191	run	error word in the lesson code, no spec row names it
+refusals	error:store already open	extra	0			01-store/internal/store/engine.go:124	Open	error word in the lesson code, no spec row names it
+refusals	error:transfer: another immutable input or base	extra	0			01-store/internal/store/copy.go:230	Import	error word in the lesson code, no spec row names it
+refusals	error:transfer: {f}	extra	0			01-store/internal/store/copy.go:254	Import	error word in the lesson code, no spec row names it
+refusals	error:unexpected arguments	extra	0			01-store/cmd/configstore/main.go:81	run	error word in the lesson code, no spec row names it
+refusals	error:unfinished import: resume same immutable input before starting daemon	extra	0			01-store/cmd/configstore/main.go:164	run	error word in the lesson code, no spec row names it
+refusals	error:unknown command {command}	extra	0			01-store/cmd/configstore/main.go:429	admin	error word in the lesson code, no spec row names it
+refusals	error:unknown rights field	extra	0			01-store/internal/store/rights.go:40	ParseRights	error word in the lesson code, no spec row names it
+refusals	error:unknown role field	extra	0			01-store/internal/store/rights.go:63	ParseRights	error word in the lesson code, no spec row names it
+refusals	error:validation {source}: {e}	extra	0			01-store/internal/store/copy.go:194	Import	error word in the lesson code, no spec row names it
+refusals	error:validation: destination must be fresh	extra	0			01-store/internal/store/copy.go:226	Import	error word in the lesson code, no spec row names it
+refusals	error:validation: floor overflow	extra	0			01-store/internal/store/copy.go:213	Import	error word in the lesson code, no spec row names it
+refusals	error:validation: index-base below copy or overflow	extra	0			01-store/internal/store/copy.go:200	Import	error word in the lesson code, no spec row names it
+refusals	error:{dir} FORMAT missing or unreadable	extra	0			01-store/internal/store/engine.go:97	checkFormat	error word in the lesson code, no spec row names it
+refusals	error:{dir} foreign FORMAT {b}	extra	0			01-store/internal/store/engine.go:107	checkFormat	error word in the lesson code, no spec row names it
+refusals	word:body limit	extra	0			common/httpwire/server.go:354	413 toolarge	word of an HTTP refusal; words are not normative
+refusals	word:{role} may not change {path} admin required	extra	0			01-store/internal/store/handler.go:135	403 forbidden	word of an HTTP refusal; words are not normative
+refusals	word:{role} may not floor admin required	extra	0			01-store/internal/store/model.go:101	403 forbidden	word of an HTTP refusal; words are not normative
+refusals	word:{role} may not use forwarded role header on box socket	extra	0			01-store/internal/store/handler.go:96	403 forbidden	word of an HTTP refusal; words are not normative
+refusals	word:{role} may not use invalid peer role	extra	0			01-store/internal/store/handler.go:75	403 forbidden	word of an HTTP refusal; words are not normative
+refusals	reason:P/01.2 Н4 #11/1	absent	1	P/01.2 Н4 #11	exit refusal: файл прав не по форме			no literal token to match by
+refusals	reason:P/01.2 Н4 #11/2	absent	1	P/01.2 Н4 #11	exit refusal: называет `admin`/`configstore`/`configstore-door`			no lesson error word carries tokens admin,configstore,configstore-door
+refusals	reason:P/01.2 Н4 #11/3	absent	1	P/01.2 Н4 #11	exit refusal: роль не по грамматике			no literal token to match by
+refusals	reason:P/01.3 Н4 #13/1	absent	1	P/01.3 Н4 #13	exit nonzero: `backup` в файл внутри `-dir` демона			no lesson error word carries tokens backup,-dir
+refusals	reason:P/01.3 Н4 #23/2	absent	1	P/01.3 Н4 #23	exit refusal: база меньше наибольшей версии			no literal token to match by
+refusals	reason:P/01.3 Н4 #23/3	absent	1	P/01.3 Н4 #23	exit refusal: строка больше 512 КиБ			no literal token to match by
+refusals	reason:P/01.3 Н4 #23/4	absent	1	P/01.3 Н4 #23	exit refusal: эпоха или пол не десятичные			no literal token to match by
+refusals	reason:P/01.3 Н4 #23/5	absent	1	P/01.3 Н4 #23	exit refusal: нечитаемая			no literal token to match by
+refusals	reason:P/01.3 Н4 #25/1	absent	1	P/01.3 Н4 #25	exit refusal: неизвестен upper, не отсечена старая группа, переполнение			no literal token to match by
+refusals	reason:P/01.3 Н4 #27/1	absent	1	P/01.3 Н4 #27	exit nonzero: N не целое 0 … 2^53 − 1 или ниже вычисленного upper			no literal token to match by
+refusals	reason:P/01.3 Н4 #28/1	absent	1	P/01.3 Н4 #28	exit nonzero: элемент не `id@<raft host:port>/<api host:port>`, пустой элемент, повтор id или нет `-id` среди них (Н2 `-peers`; догадк			no lesson error word carries tokens id@<raft,-id,-peers
+refusals	reason:P/01.3 Н4 #5/2	absent	1	P/01.3 Н4 #5	exit 2: размер не 1/3/5			no literal token to match by
+refusals	reason:P/01.3 Н4 #5/4	absent	1	P/01.3 Н4 #5	exit 2: сертификат двери у голосующего			no literal token to match by
+refusals	reason:P/01.3 Н4 #6/3	absent	1	P/01.3 Н4 #6	exit 2: флаг вне таблицы «Флаги демона»			no literal token to match by
+refusals	reason:P/01.3 Н4 #7/2	absent	1	P/01.3 Н4 #7	exit 2: чужие `format` или `version`			no lesson error word carries tokens format,version
+refusals	word:-isolated	absent	1	P/01.3 Н4 #26	exit nonzero			no code literal carries this word (words of HTTP refusals are not normative)
+refusals	word:Готово	absent	1	P/01.3 Н4 #14	exit nonzero			no code literal carries this word (words of HTTP refusals are not normative)
+refusals	error:CA publication certificate mismatch	out_of_scope	0			common/role-certificate/kit.go:115	ValidatePublication	shared package; its pair is in the lesson that owns it
+refusals	error:CA publication lengths differ	out_of_scope	0			common/role-certificate/kit.go:110	ValidatePublication	shared package; its pair is in the lesson that owns it
+refusals	error:JCS invalid string	out_of_scope	0			common/jcs/jcs.go:127	appendValue	shared package; its pair is in the lesson that owns it
+refusals	error:JCS invalid value	out_of_scope	0			common/jcs/jcs.go:133	appendValue	shared package; its pair is in the lesson that owns it
+refusals	error:JCS nonfinite number	out_of_scope	0			common/jcs/jcs.go:106	appendValue	shared package; its pair is in the lesson that owns it
+refusals	error:bad ordered chain	out_of_scope	0			common/roletls/tls.go:188	orderedPath	shared package; its pair is in the lesson that owns it
+refusals	error:bad_chain	out_of_scope	0			common/role-certificate/certificate.go:176	checkPath	shared package; its pair is in the lesson that owns it
+refusals	error:bad_chain	out_of_scope	0			common/role-certificate/certificate.go:196	VerifyPeer	shared package; its pair is in the lesson that owns it
+refusals	error:bad_chain	out_of_scope	0			common/role-certificate/certificate.go:202	VerifyPeer	shared package; its pair is in the lesson that owns it
+refusals	error:bad_chain	out_of_scope	0			common/role-certificate/tls.go:130	localPath	shared package; its pair is in the lesson that owns it
+refusals	error:bad_chain	out_of_scope	0			common/role-certificate/tls.go:134	localPath	shared package; its pair is in the lesson that owns it
+refusals	error:bad_chain	out_of_scope	0			common/role-certificate/tls.go:279	Kit.server	shared package; its pair is in the lesson that owns it
+refusals	error:client certificate required	out_of_scope	0			common/roletls/tls.go:222	Server	shared package; its pair is in the lesson that owns it
+refusals	error:clientAuth missing from EKU	out_of_scope	0			common/role-certificate/tls.go:244	Kit.server	shared package; its pair is in the lesson that owns it
+refusals	error:clientAuth missing from EKU	out_of_scope	0			common/role-certificate/tls.go:261	Kit.server	shared package; its pair is in the lesson that owns it
+refusals	error:clientAuth missing from EKU	out_of_scope	0			common/roletls/tls.go:248	Server	shared package; its pair is in the lesson that owns it
+refusals	error:crl.pem: {err}	out_of_scope	0			common/role-certificate/revocation.go:68	ParseRevocations	shared package; its pair is in the lesson that owns it
+refusals	error:empty CRL file	out_of_scope	0			common/role-certificate/revocation.go:40	ParseCRLs	shared package; its pair is in the lesson that owns it
+refusals	error:expected one or two CA fingerprints	out_of_scope	0			common/role-certificate/kit.go:92	ValidateFingerprints	shared package; its pair is in the lesson that owns it
+refusals	error:expired	out_of_scope	0			common/role-certificate/certificate.go:181	checkPath	shared package; its pair is in the lesson that owns it
+refusals	error:expired certificate	out_of_scope	0			common/roletls/tls.go:183	orderedPath	shared package; its pair is in the lesson that owns it
+refusals	error:foreign CA	out_of_scope	0			common/roletls/tls.go:178	orderedPath	shared package; its pair is in the lesson that owns it
+refusals	error:foreign_ca	out_of_scope	0			common/role-certificate/certificate.go:216	VerifyPeer	shared package; its pair is in the lesson that owns it
+refusals	error:foreign_ca	out_of_scope	0			common/role-certificate/tls.go:152	localPath	shared package; its pair is in the lesson that owns it
+refusals	error:invalid CA	out_of_scope	0			common/roletls/tls.go:85	roots	shared package; its pair is in the lesson that owns it
+refusals	error:invalid CA PEM	out_of_scope	0			common/roletls/tls.go:81	roots	shared package; its pair is in the lesson that owns it
+refusals	error:invalid CA fingerprint order or form	out_of_scope	0			common/role-certificate/kit.go:97	ValidateFingerprints	shared package; its pair is in the lesson that owns it
+refusals	error:invalid PEM base64	out_of_scope	0			common/role-certificate/certificate.go:36	decodePEM	shared package; its pair is in the lesson that owns it
+refusals	error:invalid PEM base64 line	out_of_scope	0			common/role-certificate/certificate.go:41	decodePEM	shared package; its pair is in the lesson that owns it
+refusals	error:invalid PEM block	out_of_scope	0			common/role-certificate/certificate.go:28	decodePEM	shared package; its pair is in the lesson that owns it
+refusals	error:invalid certificate DER: {err}	out_of_scope	0			common/role-certificate/certificate.go:57	ParseCertificate	shared package; its pair is in the lesson that owns it
+refusals	error:invalid certificate PEM	out_of_scope	0			common/role-certificate/certificate.go:53	ParseCertificate	shared package; its pair is in the lesson that owns it
+refusals	error:invalid kit role	out_of_scope	0			common/role-certificate/mixed.go:50	Kit.MixedServer	shared package; its pair is in the lesson that owns it
+refusals	error:invalid kit role	out_of_scope	0			common/role-certificate/tls.go:195	Kit.server	shared package; its pair is in the lesson that owns it
+refusals	error:invalid kit role	out_of_scope	0			common/role-certificate/tls.go:52	Kit.ClientWithRole	shared package; its pair is in the lesson that owns it
+refusals	error:invalid local client role	out_of_scope	0			common/role-certificate/tls.go:73	Kit.ClientWithRole	shared package; its pair is in the lesson that owns it
+refusals	error:invalid local role certificate	out_of_scope	0			common/roletls/tls.go:210	Server	shared package; its pair is in the lesson that owns it
+refusals	error:invalid local server role or serverAuth	out_of_scope	0			common/role-certificate/tls.go:215	Kit.server	shared package; its pair is in the lesson that owns it
+refusals	error:invalid revoked line	out_of_scope	0			common/roletls/tls.go:301	ParseRevoked	shared package; its pair is in the lesson that owns it
+refusals	error:invalid revoked value	out_of_scope	0			common/roletls/tls.go:305	ParseRevoked	shared package; its pair is in the lesson that owns it
+refusals	error:ip_address	out_of_scope	0			common/role-certificate/certificate.go:193	VerifyPeer	shared package; its pair is in the lesson that owns it
+refusals	error:ip_address	out_of_scope	0			common/role-certificate/tls.go:90	Kit.Client	shared package; its pair is in the lesson that owns it
+refusals	error:missing PEM end	out_of_scope	0			common/role-certificate/certificate.go:45	decodePEM	shared package; its pair is in the lesson that owns it
+refusals	error:multiple roles	out_of_scope	0			common/roletls/tls.go:48	Role	shared package; its pair is in the lesson that owns it
+refusals	error:no revoked or crl.pem	out_of_scope	0			common/role-certificate/revocation.go:55	ParseRevocations	shared package; its pair is in the lesson that owns it
+refusals	error:no_role	out_of_scope	0			common/role-certificate/certificate.go:103	Role	shared package; its pair is in the lesson that owns it
+refusals	error:no_role	out_of_scope	0			common/role-certificate/certificate.go:110	Role	shared package; its pair is in the lesson that owns it
+refusals	error:no_role	out_of_scope	0			common/role-certificate/certificate.go:123	Role	shared package; its pair is in the lesson that owns it
+refusals	error:no_role	out_of_scope	0			common/role-certificate/certificate.go:91	Role	shared package; its pair is in the lesson that owns it
+refusals	error:put items required	out_of_scope	0			common/storeclient/client.go:142	Client.Write	shared package; its pair is in the lesson that owns it
+refusals	error:revoked certificate	out_of_scope	0			common/role-certificate/tls.go:118	Kit.Client	shared package; its pair is in the lesson that owns it
+refusals	error:revoked certificate	out_of_scope	0			common/roletls/tls.go:266	Server	shared package; its pair is in the lesson that owns it
+refusals	error:revoked is not UTF-8	out_of_scope	0			common/roletls/tls.go:293	ParseRevoked	shared package; its pair is in the lesson that owns it
+refusals	error:revoked: {err}	out_of_scope	0			common/role-certificate/revocation.go:62	ParseRevocations	shared package; its pair is in the lesson that owns it
+refusals	error:role CN mismatch	out_of_scope	0			common/roletls/tls.go:54	Role	shared package; its pair is in the lesson that owns it
+refusals	error:role DNS mismatch	out_of_scope	0			common/roletls/tls.go:64	Role	shared package; its pair is in the lesson that owns it
+refusals	error:role and server name required	out_of_scope	0			common/role-certificate/tls.go:87	Kit.Client	shared package; its pair is in the lesson that owns it
+refusals	error:role {r} not allowed	out_of_scope	0			common/roletls/tls.go:262	Server	shared package; its pair is in the lesson that owns it
+refusals	error:server leaf has no configured issuing center	out_of_scope	0			common/role-certificate/tls.go:233	Kit.server	shared package; its pair is in the lesson that owns it
+refusals	error:too many CRL blocks	out_of_scope	0			common/role-certificate/revocation.go:36	ParseCRLs	shared package; its pair is in the lesson that owns it
+refusals	error:unknown signed listener mode	out_of_scope	0			common/role-certificate/tls.go:198	Kit.server	shared package; its pair is in the lesson that owns it
+refusals	error:unsupported certificate	out_of_scope	0			common/roletls/tls.go:228	Server	shared package; its pair is in the lesson that owns it
+refusals	error:wrong_name	out_of_scope	0			common/role-certificate/certificate.go:166	checkIdentity	shared package; its pair is in the lesson that owns it
+refusals	error:wrong_role	out_of_scope	0			common/role-certificate/certificate.go:159	checkIdentity	shared package; its pair is in the lesson that owns it
+refusals	error:wrong_role	out_of_scope	0			common/role-certificate/tls.go:272	Kit.server	shared package; its pair is in the lesson that owns it
+refusals	error:{name}: invalid CA certificate	out_of_scope	0			common/role-certificate/kit.go:48	LoadAuthorities	shared package; its pair is in the lesson that owns it
+refusals	error:{name}: {err}	out_of_scope	0			common/role-certificate/kit.go:44	LoadAuthorities	shared package; its pair is in the lesson that owns it
+refusals	row:P/01.2 Н4 #12	out_of_scope	0	P/01.2 Н4 #12	no code, exit or refusal outcome			Н4 row is not a refusal outcome
