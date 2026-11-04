@@ -1,0 +1,145 @@
+package flags
+
+// Закрытый словарь типов таблицы флагов (шапка forms/daemon-flags.tsv; ADR-0125 № 3), написан руками один раз;
+// генератор tools/normgen/gen_flags.py копирует файл в пакет рядом с flags.go. Каждый тип — разбор слова командной
+// строки в значение CEL (f[...] в required и bad) и в типизированное значение поля Flags.
+//
+// Значения CEL: path, dir, file, addr, id, duration, list:… — строка как дана; int:…, bytes:>0 и enum из одних целых —
+// int64; прочий enum — строка; bool — true.
+
+import (
+	"errors"
+	"net"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
+)
+
+// Member — элемент списка id@addr или id@addr/addr: id и адреса по порядку записи.
+type Member struct {
+	ID    string
+	Addrs []string
+}
+
+var memberID = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$`) // P/01.3 Н2: 1–128 ASCII, первый — буква или цифра
+
+func valNonEmpty(raw string) (string, error) {
+	if raw == "" {
+		return "", errors.New("empty value")
+	}
+	return raw, nil
+}
+
+// typeAddr — host:port: порт — десятичное 0…65535; хост может быть пуст (все адреса), IPv6 — в скобках.
+func valAddr(raw string) (string, error) {
+	_, port, err := net.SplitHostPort(raw)
+	if err != nil {
+		return "", errors.New("not host:port")
+	}
+	if !digits(port) || len(port) > 5 {
+		return "", errors.New("the port is not a decimal number")
+	}
+	if n, _ := strconv.Atoi(port); n > 65535 {
+		return "", errors.New("the port is above 65535")
+	}
+	return raw, nil
+}
+
+func valID(raw string) (string, error) {
+	if !memberID.MatchString(raw) {
+		return "", errors.New("not a member id (1–128 ASCII: a letter or a digit, then letters, digits, _ . -)")
+	}
+	return raw, nil
+}
+
+// typeInt — десятичное целое со знаком минус или без знака, без ведущих нулей, в границах [min, max] (hasMax — есть ли max).
+func valInt(raw string, min, max int64, hasMax bool) (int64, error) {
+	body := strings.TrimPrefix(raw, "-")
+	if !digits(body) || (len(body) > 1 && body[0] == '0') {
+		return 0, errors.New("not a decimal integer")
+	}
+	n, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil {
+		return 0, errors.New("the integer is out of int64")
+	}
+	if n < min || (hasMax && n > max) {
+		return 0, errors.New("the integer is out of range")
+	}
+	return n, nil
+}
+
+// typeBytes — bytes:>0: целое число байт > 0, десятичное, без суффиксов.
+func valBytes(raw string) (int64, error) {
+	n, err := valInt(raw, 1, 0, false)
+	if err != nil {
+		return 0, errors.New("not an integer of bytes > 0")
+	}
+	return n, nil
+}
+
+// typeDuration — длительность Go (5s, 250ms, 1m30s), не отрицательная.
+func valDuration(raw string) (time.Duration, error) {
+	d, err := time.ParseDuration(raw)
+	if err != nil {
+		return 0, errors.New("not a duration (5s, 250ms)")
+	}
+	if d < 0 {
+		return 0, errors.New("a negative duration")
+	}
+	return d, nil
+}
+
+// typeEnum — одно из значений; ints — все значения целые: значение CEL — int64.
+func valEnum(raw string, values []string, ints bool) (any, error) {
+	for _, v := range values {
+		if raw == v {
+			if ints {
+				n, _ := strconv.ParseInt(v, 10, 64)
+				return n, nil
+			}
+			return raw, nil
+		}
+	}
+	return nil, errors.New("not one of " + strings.Join(values, " | "))
+}
+
+// typeList — list:id@addr (addrs = 1) и list:id@addr/addr (addrs = 2): через запятую, не пуст, каждый элемент полный.
+func valList(raw string, addrs int) ([]Member, error) {
+	if raw == "" {
+		return nil, errors.New("an empty list")
+	}
+	var out []Member
+	for _, el := range strings.Split(raw, ",") {
+		id, rest, ok := strings.Cut(el, "@")
+		if !ok {
+			return nil, errors.New("the element " + strconv.Quote(el) + " is not id@address")
+		}
+		if _, err := valID(id); err != nil {
+			return nil, errors.New("the element " + strconv.Quote(el) + ": " + err.Error())
+		}
+		parts := strings.Split(rest, "/")
+		if len(parts) != addrs {
+			return nil, errors.New("the element " + strconv.Quote(el) + " has not " + strconv.Itoa(addrs) + " address(es)")
+		}
+		for _, a := range parts {
+			if _, err := valAddr(a); err != nil {
+				return nil, errors.New("the element " + strconv.Quote(el) + ": " + err.Error())
+			}
+		}
+		out = append(out, Member{ID: id, Addrs: parts})
+	}
+	return out, nil
+}
+
+func digits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for i := 0; i < len(s); i++ {
+		if s[i] < '0' || s[i] > '9' {
+			return false
+		}
+	}
+	return true
+}
