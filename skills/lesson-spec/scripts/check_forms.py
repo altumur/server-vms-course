@@ -252,3 +252,32 @@ def check_refusals(path):
                 errors.append(f"{path.name}: {r['name']}: {r['code']} {r['kind']}, {table.name} says {w['code']} {w['kind']}")
     stats["refusal_chapters"] = len({r["chapter"] for r in rows})
     return errors, stats
+
+
+KIT_PARTS = {"writecheck", "door", "flags", "refusals", "tests"}     # генераторы ADR-0125 (ADR-0126 доп. (2) п. 1)
+
+
+def stage_forms(root):
+    return sorted(Path(root).glob("Platform/*/forms/stages.tsv"))
+
+
+def check_stage_parts(path):
+    """ADR-0126 доп. (4) п. 13: колонки `kit` (этап закрыт пакетом целиком) и `parts` (части, которыми этап пользуется) —
+    `-` или перечень через запятую из KIT_PARTS; часть не названа дважды в одной строке. Прочую сверку формы этапов
+    ведёт `check_spec` («Архитектор»)."""
+    path = Path(path)
+    lines = [line for line in path.read_text(encoding="utf-8").splitlines() if not line.startswith("#")]
+    head = lines[0].split("\t") if lines else []
+    errors = [f"{path.name}: no column {c}" for c in ("stage", "kit", "parts") if c not in head]
+    if errors:
+        return errors, {}
+    for line in lines[1:]:
+        r = dict(zip(head, line.split("\t")))
+        for column in ("kit", "parts"):
+            if r[column] == "-":
+                continue
+            names = r[column].split(",")
+            if not set(names) <= KIT_PARTS or len(names) != len(set(names)):
+                errors.append(f"{path.name}: {r['stage']}: {column} {r[column]!r} — not a list of {sorted(KIT_PARTS)}")
+    return errors, {"stage_rows": len(lines) - 1}
+
