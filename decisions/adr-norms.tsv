@@ -1380,3 +1380,5 @@ adr	add	point	status	file	norm	note
 0121	0	пп. 1, 3 (V/02, V/03)	НОРМА	VMS/02-rec/**/en/*.en.md; VMS/03-live/**/en/*.en.md; их OpenAPI и data/	V/02, V/03 все главы	английский источник V/02 (a43998064) и V/03; машинные файлы на месте (В1)
 0121	0	пп. 1, 3 (V/04–V/06)	НОРМА	VMS/04-det/**/en/*.en.md; VMS/05-detjob/**/en/*.en.md; VMS/06-detedge/**/en/*.en.md; их data/ и векторы	V/04–V/06 все главы	английский источник V/04–V/06; машинные файлы на месте (В1)
 0121	0	пп. 1, 3 (V/07)	НОРМА	VMS/07-auto/**/en/*.en.md; VMS/07-auto/data/*; VMS/07-auto/vectors/moment/cases.tsv	V/07 все главы	английский источник V/07; машинные файлы на месте (В1)
+0121	0	P/03.2-15	НОРМА	Platform/03-worker/spec/en/03.2-worker.norms.en.md; Platform/03-worker/spec/03.2-worker.norms.md	P/03.2-15	после продления «не число» — отсечь, код 2; ошибка чтения схемы — продолжать (решение «Архитектора» 2026-11-04, по Н3, Н4, P/06.6 Н1.1а)
+0121	0	P/03.6-06	НОРМА	Platform/03-worker/spec/en/03.6-worker.norms.en.md; Platform/03-worker/spec/03.6-worker.norms.md	P/03.6-06	состояние держателя — сц. 09, как Н5 (решение «Архитектора» 2026-11-04)
