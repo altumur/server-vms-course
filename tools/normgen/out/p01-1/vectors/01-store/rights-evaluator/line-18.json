@@ -1,0 +1,15 @@
+{
+ "format": 1,
+ "package": "01-store/rights-evaluator",
+ "table": "expect.tsv",
+ "case": "line-18",
+ "variant": "",
+ "cells": {
+  "role": "acc",
+  "action": "read",
+  "key": "acc/pre/secret"
+ },
+ "files": {
+  "rights.json": "eyJjb21tZW50IjogItCy0LXQutGC0L7RgCDQvtGG0LXQvdGJ0LjQutCwINC/0YDQsNCyICjQnDEwLzYg0J0xLjLigJPQnTEuMyk6INCx0YPQutCy0LDQu9GM0L3Ri9C1INC+0LHRgNCw0LfRhtGLINC4INC/0YDQtdGE0LjQutGBIiwgInJvbGVzIjogeyJhY2MiOiB7Imdyb3VwIjogImFjYyIsICJyZWFkIjogWyIhYWNjL3ByZS9zZWNyZXQvKiIsICJhY2MvZXhhY3QiLCAiYWNjL3ByZS8qIiwgImFjYy9hKmIiLCAiYWNjL3AvIXgiLCAiISJdLCAid3JpdGUiOiBbImFjYy93LyoiXSwgImRlbGV0ZSI6IFsiYWNjL3ByZS8qIl19LCAibm9uZSI6IHsiZ3JvdXAiOiAibm9uZSIsICJyZWFkIjogWyJhY2MvKiIsICIhKiJdLCAid3JpdGUiOiBbXSwgImRlbGV0ZSI6IFtdfX19Cg=="
+ }
+}

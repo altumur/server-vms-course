@@ -1,0 +1,27 @@
+# Inputs of the vector command for 01-store/rights-evaluator expect.tsv (tools/normgen/gen_tests.py, ADR-0125 № 6).
+# Native outcome: code 0, "allow" | "deny"; stdout is compared as one JSON value by value (tools/normgen/vector_judge.py).
+# source Platform/01-store/vectors/rights-evaluator/expect.tsv sha256 d8326e06b5746688f43ef24f51cd4dfa2826a90298ec0c32f7affecd6f0eb8c7
+# source Platform/01-store/vectors/rights-evaluator/rights.json sha256 dc73bdfed36248bb51bfdb4ce7eb56952fb0922718e334e19c4870e0bf6b0a67
+case	input	exit	stdout
+line-5	line-5.json	0	"allow"
+line-6	line-6.json	0	"deny"
+line-7	line-7.json	0	"allow"
+line-8	line-8.json	0	"allow"
+line-9	line-9.json	0	"deny"
+line-10	line-10.json	0	"allow"
+line-11	line-11.json	0	"deny"
+line-12	line-12.json	0	"deny"
+line-13	line-13.json	0	"deny"
+line-14	line-14.json	0	"allow"
+line-15	line-15.json	0	"deny"
+line-16	line-16.json	0	"deny"
+line-17	line-17.json	0	"deny"
+line-18	line-18.json	0	"allow"
+line-19	line-19.json	0	"deny"
+line-20	line-20.json	0	"deny"
+line-21	line-21.json	0	"deny"
+line-22	line-22.json	0	"allow"
+line-23	line-23.json	0	"allow"
+line-24	line-24.json	0	"deny"
+line-25	line-25.json	0	"deny"
+line-26	line-26.json	0	"deny"

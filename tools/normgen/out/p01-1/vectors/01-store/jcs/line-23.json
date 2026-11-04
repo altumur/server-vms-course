@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "01-store/jcs",
+ "table": "canonical_json.tsv",
+ "case": "line-23",
+ "variant": "",
+ "cells": {
+  "raw": "{\"s\":\"é€  x\",\"€\":\"euro\"}"
+ },
+ "files": {}
+}
