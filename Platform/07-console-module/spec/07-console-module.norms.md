@@ -1,40 +1,40 @@
 # P/07 — Console module: norms
 
-This English text is the source; the Russian [`07-console-module.norms.md`](../07-console-module.norms.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/07-console-module.norms.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The canon of the lesson. [Lecture](../../07-console-module.md), [instructions](../07-console-module.README.md). The lesson has no HTTP contract
+The canon of the lesson. Lecture (`ru/07-console-module.md`, for people, not in the export), [instructions](07-console-module.README.md). The lesson has no HTTP contract
 of its own: the module is a library in the browser, it has no door of its own (Н2); the doors it calls are the [contract of lesson
-6](../../../06-console/spec/06-console.api.openapi.yaml), in the late layer (Н1.6) also the contracts of lessons
-[8](../../../08-domain/spec/08-domain.api.openapi.yaml) and [10](../../../10-domain-console/spec/10-domain-console.api.openapi.yaml). The lesson has no acceptance catalogue (Н5); it has no life cycle: a library has no process,
-environment or exit codes; the publication of the module is [chapter 6.5](../../../06-console/spec/06.5-console.norms.md)
+6](../../06-console/spec/06-console.api.openapi.yaml), in the late layer (Н1.6) also the contracts of lessons
+[8](../../08-domain/spec/08-domain.api.openapi.yaml) and [10](../../10-domain-console/spec/10-domain-console.api.openapi.yaml). The lesson has no acceptance catalogue (Н5); it has no life cycle: a library has no process,
+environment or exit codes; the publication of the module is [chapter 6.5](../../06-console/spec/06.5-console.norms.md)
 (the move plan of lesson 7, В4). The lesson is moved from М10/9 (stage B,
 ADR-0083 addendum (1): without a change of behaviour): Н1.4 and Н1.5 (the numbers of the subsections are the former numbers of М10/9), the row of Н5 «модуль — по контракту»,
 the checklist items М10/9-06, -07. The late layer — the domain section, `sections: [domain]` of the call `mount`, the
 holder mode — is Н1.6, without ids of its own (plan, В5); its text was moved by the move of lessons 8–10 (stage B, commit 10; the move plan
 of lesson 8, § 5, row P/07 Н1.6) from М11/8 Н1.8 `module`, М11/11 Н1.6 `declared` and the module description § 7, § 10a. The canon of the module is the norms Н1.5 (review analysis of stage A 6–7, № 6): the published
-bytes of `console.js`, `console.html` and the description [`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`](../../../../КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md) were brought
+bytes of `console.js`, `console.html` and the description [`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`](../../../КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md) were brought
 to it by a change of behaviour after the commit of the lesson («Implementation decides» item 1, closed; the Architect's decision of 2026-10-21). The three parts of the console, the mounting
-`PlatformConsole.mount(root, opts)`, `opts`, `never` of the module and `may`/`may_not` of the shell — [P/06.5 Н1.1](../../../06-console/spec/06.5-console.norms.md)
+`PlatformConsole.mount(root, opts)`, `opts`, `never` of the module and `may`/`may_not` of the shell — [P/06.5 Н1.1](../../06-console/spec/06.5-console.norms.md)
 `module`, `shell`. A reference «lesson N» without a chapter is the module lesson P/NN (М10 and М11 were moved whole; review analysis of stage B 3–5, № 34); «P/06.K», «P/08.K» are the chapters of lessons 6 and 8;
-«P/10» is the lesson of the domain console. Norm ids are `P/07-MM`; the map to former ids is [`id-map.tsv`](../../../common/id-map.tsv).
+«P/10» is the lesson of the domain console. Norm ids are `P/07-MM`; the map to former ids is [`id-map.tsv`](../../common/id-map.tsv).
 
 ## Н0 Vocabulary
 
-Normative words follow the [course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md). The rules of the module are [P/01.1 Н0](../../../01-store/spec/01.1-store.norms.md#н0-vocabulary).
+Normative words follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md). The rules of the module are [P/01.1 Н0](../../01-store/spec/01.1-store.norms.md#н0-vocabulary).
 
 ## Н1 Form
 
 **Time.** The lesson has no time fields in rows and objects: the module writes no rows and no objects (below). Time in the answers of the doors
-that it shows (`until` of the session, `expires` of the door from `where()`) has the form of [P/06.3](../../../06-console/spec/06.3-console.norms.md)
-and [P/06.5](../../../06-console/spec/06.5-console.norms.md).
+that it shows (`until` of the session, `expires` of the door from `where()`) has the form of [P/06.3](../../06-console/spec/06.3-console.norms.md)
+and [P/06.5](../../06-console/spec/06.5-console.norms.md).
 
 **Data.** The lesson has no rows, objects or files of its own: the module reads and writes only through the doors of the closed list Н1.4 —
 the doors of lesson 6, in the late layer (Н1.6) also the doors of the domain: `/domain/*` and the login `login_url` (`POST /api/login`) — the doors
-of the domain console ([lesson P/10](../../../10-domain-console/spec/10-domain-console.norms.md); the process `domain` — [lesson
-P/08](../../../08-domain/spec/08-domain.api.openapi.yaml)), which the cluster console forwards
-([chapter P/06.7](../../../06-console/spec/06.7-console.norms.md); the [forwarding contract](../../../common/contracts/forwarding.md) «Domain doors»),
+of the domain console ([lesson P/10](../../10-domain-console/spec/10-domain-console.norms.md); the process `domain` — [lesson
+P/08](../../08-domain/spec/08-domain.api.openapi.yaml)), which the cluster console forwards
+([chapter P/06.7](../../06-console/spec/06.7-console.norms.md); the [forwarding contract](../../common/contracts/forwarding.md) «Domain doors»),
 and the own doors of the cluster console `/api/held`, `/domain/shared/<sub>` (chapter P/06.7) (review analysis of stage B 6–7,
-№ 30; Claude M-5); the forms — the [contract of lesson 6](../../../06-console/spec/06-console.api.openapi.yaml), in the late layer — the contracts
+№ 30; Claude M-5); the forms — the [contract of lesson 6](../../06-console/spec/06-console.api.openapi.yaml), in the late layer — the contracts
 of lessons 8 and 10; the owners of the rows — the chapters of lessons 6, 8 and their catalogue.
 
 ### Н1.4 What the module calls — a closed list
@@ -63,7 +63,7 @@ changes: the feed GET /changes (P/06.1 Н2 «Change feed»; ADR-0094 B2): the mo
 
 The list is about the module's own calls: `never` forbids them to the module, not to the page; a call of the page through `console.api`
 (the VMS page — `POST /<sub>/requests`, the requests door P/06.4) is its call, not the module's (C07-API-RETRY-UNITS-ONLY-01).
-The words `servers.show`, `console.running` (`running_gauge`, `workers_gauge`) and `poll_s` — [P/06.5](../../../06-console/spec/06.5-console.norms.md)
+The words `servers.show`, `console.running` (`running_gauge`, `workers_gauge`) and `poll_s` — [P/06.5](../../06-console/spec/06.5-console.norms.md)
 Н1.1, Н1.2. The parts of the list that the domain introduces (`/domain/*`, `/api/held`, `/domain/shared/<sub>`, `/domain/alarms`,
 `login_url`) are the late layer Н1.6.
 
@@ -158,7 +158,7 @@ commands:  the kind command / command.failed — the word and the note of the mo
            outcome, action, by, late, error, reply are written by the worker base (P/03.6 Н3 «holder's look»)
 ```
 
-The session, the grants and the login by which `may` judges — [P/06.3](../../../06-console/spec/06.3-console.norms.md) (the gate,
+The session, the grants and the login by which `may` judges — [P/06.3](../../06-console/spec/06.3-console.norms.md) (the gate,
 `/session`); the server checks every request regardless of `may`. The words `display` — P/06.5 Н1.2.
 
 ### Н1.6 The domain section — the late layer: introduced by lessons 8 and 10 (without ids of its own)
@@ -166,10 +166,10 @@ The session, the grants and the login by which `may` judges — [P/06.3](../../.
 The parts of Н1.4 and Н1.5 that the domain introduces are parts of P/07-01 and P/07-02 without ids of their own (the move plan of lesson 7, В5; as P/02.1
 Н1.2б). The text was moved by the move of lessons 8–10 (stage B, commit 10; the move plan of lesson 8, § 5, row P/07 Н1.6): the parts
 about the module from М11/8 Н1.8 `module`, М11/11 Н1.6 `declared` and the module description
-[`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`](../../../../КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md) § 7 (the sections `domain`, `access`, `GET /api/held`) and
+[`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`](../../../КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md) § 7 (the sections `domain`, `access`, `GET /api/held`) and
 § 10a (the holder page) (review analysis of stage A 6–7, № 27, № 30). The doors that the domain console gives to the page —
-[lesson P/10](../../../10-domain-console/spec/10-domain-console.norms.md) (the holder page — P/10-04); the forwarding to them, `/api/held`
-and `/domain/shared/<sub>` at the cluster console — [chapter P/06.7](../../../06-console/spec/06.7-console.norms.md).
+[lesson P/10](../../10-domain-console/spec/10-domain-console.norms.md) (the holder page — P/10-04); the forwarding to them, `/api/held`
+and `/domain/shared/<sub>` at the cluster console — [chapter P/06.7](../../06-console/spec/06.7-console.norms.md).
 
 ```yaml
 reads:     /domain/* (forwarding contract «Domain doors»; the cluster console forwards them to the domain console — P/06.7-02…05),
@@ -220,14 +220,14 @@ as they are; what the module calls in the mode `domain` is a property of the pub
 The module is a library of the platform in the browser, one code in all implementations (ADR-0005): the lesson has no process, door or
 HTTP contract of its own (ADR-0082 addendum 13). The library contract is two norms of Н1: what the module calls (Н1.4) and what it gives
 the shell (Н1.5); the late layer — Н1.6. The doors that the module calls, their codes and forms — the chapters of lesson 6 and the [contract of lesson
-6](../../../06-console/spec/06-console.api.openapi.yaml); the publication of the module byte for byte, the version `?v=` and the page are normed by
-[chapter 6.5](../../../06-console/spec/06.5-console.norms.md) Н1.1. The calls of Н1.5 are the shell addressing the library inside its own
-page, not the platform calling a subsystem: they are not hooks in the sense of the [boundary](../../../../ГРАНИЦА-ПЛАТФОРМЫ-И-ПОДСИСТЕМЫ.md)
-§1.1 ([ADR-0002](../../../../decisions/0002-без-хуков-спека-воркер-страница.md)); the bytes of the stream and of the archive the shell
-takes from the holder by `door` from `where()`, past the console ([ADR-0015](../../../../decisions/0015-байты-мимо-консоли-без-исключений.md)).
+6](../../06-console/spec/06-console.api.openapi.yaml); the publication of the module byte for byte, the version `?v=` and the page are normed by
+[chapter 6.5](../../06-console/spec/06.5-console.norms.md) Н1.1. The calls of Н1.5 are the shell addressing the library inside its own
+page, not the platform calling a subsystem: they are not hooks in the sense of the [boundary](../../../ГРАНИЦА-ПЛАТФОРМЫ-И-ПОДСИСТЕМЫ.md)
+§1.1 ([ADR-0002](../../../decisions/0002-без-хуков-спека-воркер-страница.md)); the bytes of the stream and of the archive the shell
+takes from the holder by `door` from `where()`, past the console ([ADR-0015](../../../decisions/0015-байты-мимо-консоли-без-исключений.md)).
 
 The description of the public surface of the module (the dictionary `W`, the card markup, the calls of the shell, the look) —
-[`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`](../../../../КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md) (not a norm; the move plan of lesson 7, В1). Where the description or
+[`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`](../../../КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md) (not a norm; the move plan of lesson 7, В1). Where the description or
 the published bytes differ from Н1.4, Н1.5, the lesson is right (review analysis of stage A 6–7, № 6); the discrepancies «Implementation decides»
 items 1 and 2 are removed by changes of behaviour (the Architect's decision of 2026-10-21).
 
@@ -243,7 +243,7 @@ the module calls — Н3 of the chapters of lesson 6.
 ## Н4 Refusals
 
 The lesson has no rows of Н4 of its own: the refusals of the doors that the module calls — Н4 of the chapters of lesson 6 (a wrong version of the module — 404 `no such
-version`, [P/06.5](../../../06-console/spec/06.5-console.norms.md) Н4); what the module does with a refusal — Н1.5 `api` (401 — the login
+version`, [P/06.5](../../06-console/spec/06.5-console.norms.md) Н4); what the module does with a refusal — Н1.5 `api` (401 — the login
 window; a replay — only by the rules of the owner of the repeat memory; an unknown outcome of `PUT` and of tables — a read first); a refusal with `field` —
 Н1.5 `forms`.
 
@@ -253,8 +253,8 @@ window; a replay — only by the rules of the owner of the repeat memory; an unk
 
 The lesson has no acceptance catalogue (the exception `P/07 no-acceptance`; the move plan of lesson 7, В2): the module is a library in the browser,
 the HTTP-TSV stand does not run it. The publication of the module byte for byte with the published files and the version `?v=1` (`?v=2` — 404) —
-sc. 01 of the [acceptance of chapter 6.5](../../../06-console/acceptance/5/README.md) (P/06.5 Н1.1). The subjects of Н1.4 and Н1.5 are checked
-by the jsdom tests of the owner of the specification [`Source/tests/console`](../../../../Source/tests/console) (review analysis of stage A 6–7,
+sc. 01 of the [acceptance of chapter 6.5](../../06-console/acceptance/5/README.md) (P/06.5 Н1.1). The subjects of Н1.4 and Н1.5 are checked
+by the jsdom tests of the owner of the specification [`Source/tests/console`](../../../Source/tests/console) (review analysis of stage A 6–7,
 № 31): a test mounts the published module on a page in jsdom and intercepts its requests; the module is one for all implementations
 (ADR-0005), the evidence is one for all (ADR-0080 addendum 16).
 
@@ -275,7 +275,7 @@ by the jsdom tests of the owner of the specification [`Source/tests/console`](..
 | Н1.5 `tree` — the tree by the folders of the cluster (ADR-0096) | TSV does not see the calls of the page | jsdom test `module-folders` (not written yet: the module does not do this, a debt of the product): the tree from `/folders`, an empty folder, a rename by one write |
 | Н1.4 `subsystems`, `unplaceable` (ADR-0112 addendum (23)) | TSV does not see the calls of the page; the witness `Source/w2cplatform/console.js` does not execute the rule — a limit of the witness, we do not edit it | the acceptance tests of the module of implementations, not jsdom on the witness: `module-unplaceable-all` — an unplaced unit of a subsystem outside `opts.subsystems` is visible as a row of the section (subsystem, id, reason) without a card and without actions, `/<sub>/unplaceable` is called for every subsystem of the catalogue; `module-subsystems-none` — `subsystems: []`: not a single `/<rows>`, `/<sub>/<rows>`, the tree is empty, the section of unplaced units reads all subsystems |
 | Н1.5 `writes_via` — forms without a write (ADR-0119 addendum (10)) | TSV does not see the calls of the page; the witness `Source/w2cplatform/console.js` does not know the word — a limit of the witness, we do not edit it | the acceptance test of the module of implementations, not jsdom on the witness: `module-writes-via` — a unit of a subsystem with `unit.writes_via` has no creation form, `unitForm` has no «сохранить» and «удалить», not a single `POST`, `PUT`, `DELETE` of the rows of this subsystem; a subsystem without the word has the forms as before |
-| Н1.6 the late layer (the mode `domain`, the sections `domain`, `access`, `login_url`, `refresh {access}`) | the stand of lesson 6 has no domain; TSV does not see the calls of the page | the jsdom test of the mode `domain` at the owner of the module (Н1.6 `holder`; `Source/tests/console`); the doors of the holder page — the acceptance of [lesson P/10](../../../10-domain-console/spec/10-domain-console.norms.md) (P/10-04), the doors of people — [the acceptance of chapter P/08.4](../../../08-domain/acceptance/4/README.md); the form by `schema` — jsdom test `module-shared-schema` (the Architect's decision of 2026-10-21) |
+| Н1.6 the late layer (the mode `domain`, the sections `domain`, `access`, `login_url`, `refresh {access}`) | the stand of lesson 6 has no domain; TSV does not see the calls of the page | the jsdom test of the mode `domain` at the owner of the module (Н1.6 `holder`; `Source/tests/console`); the doors of the holder page — the acceptance of [lesson P/10](../../10-domain-console/spec/10-domain-console.norms.md) (P/10-04), the doors of people — [the acceptance of chapter P/08.4](../../08-domain/acceptance/4/README.md); the form by `schema` — jsdom test `module-shared-schema` (the Architect's decision of 2026-10-21) |
 
 ---
 
@@ -290,7 +290,7 @@ The module is one code in all implementations: an implementation does not write 
    an automatic replay of `PUT` and of any `POST` («а», «е»), the body field `retry_after` instead of the header `Retry-After` («ж»), `may` without grants —
    `true` with any `open` and for an unknown session («б», «в»), no event `logout` («г»), the reference `worker:<w>` without a subsystem («д»),
    `poll_s` from the memory of the browser, `/<table>` at the root, an error without `status` and `body`, the read of `server_unsaid`, a shell without
-   comparing `version` («з»). The evidence — the jsdom tests [`Source/tests/console`](../../../../Source/tests/console) by the table of Н5. The debt
+   comparing `version` («з»). The evidence — the jsdom tests [`Source/tests/console`](../../../Source/tests/console) by the table of Н5. The debt
    of the product — to «Сборка» (ADR-0005): its copy of the module is brought to these bytes.
 2. **closed: the form of the shared document by `schema`** (Н1.6 `schema`) — by a change of behaviour of the owner of the specification (ADR-0080
    addendum 16; the Architect's decision of 2026-10-21): before — the document `{name, type: json}` as a JSON text without a form (the description § 10a). The evidence —
