@@ -1,15 +1,15 @@
 # P/10 — инструкция для реализации
 
-Текст производный от en, руками не правится: источник — английский [`en/10-domain-console.README.en.md`](en/10-domain-console.README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+Текст производный от `spec/10-domain-console.README.md`, руками не правится: источник — английский [`spec/10-domain-console.README.md`](../../spec/10-domain-console.README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
-Этот файл — для агента (или человека), который пишет код по уроку. Объяснение «зачем» — [`../10-domain-console.md`](../10-domain-console.md).
+Этот файл — для агента (или человека), который пишет код по уроку. Объяснение «зачем» — `ru/10-domain-console.md` (для человека, в выгрузку не входит).
 
 ## Задача
 
 Реализовать процесс `domainconsole` на коробке держателя на языке `<LANG>`; пройти приёмку Н5 и закрыть чеклист
-готовности. Всего 17 норм: P/10-01…17; соответствие прежним id — [`id-map.tsv`](../../common/id-map.tsv). Урок собран из
+готовности. Всего 17 норм: P/10-01…17; соответствие прежним id — [`id-map.tsv`](../../../common/id-map.tsv). Урок собран из
 уроков М11/1, 3, 4, 6, 8, 9, 11, 12 (сторона консоли домена) (стадия B, ADR-0083 доп. (1), (14)). Процесс `domain` —
-урок [P/08](../../08-domain/ru/spec/08-domain.README.md), агент — урок [P/09](../../09-agent/ru/spec/09-agent.README.md), пересылка
+урок [P/08](../../../08-domain/ru/spec/08-domain.README.md), агент — урок [P/09](../../../09-agent/ru/spec/09-agent.README.md), пересылка
 консоли кластера — глава P/06.7.
 
 - Двери чтения `GET /domain`, `/domain/<sub>/<rows>`, `/domain/<sub>/tables/<таблица>`, `/domain/shadow`, `/domain/members`, `/domain/topology`,
@@ -22,16 +22,16 @@
 
 - Канон — [нормы](10-domain-console.norms.md), включая Н0, абзац «Данные», порядок Н3 и отказы Н4. Вход и вывод команды
   приёмки — Н5.
-- [HTTP-контракт](10-domain-console.api.openapi.yaml) выражает формы своих дверей и коды перехода 2; ответы процесса
-  `domain` — [OpenAPI урока P/08](../../08-domain/spec/08-domain.api.openapi.yaml) (ссылкой).
-- Договоры: [пересылки](../../common/contracts/forwarding.md), [сторожевой и передачи](../../common/contracts/gate-and-pass.md),
-  [токена домена](../../common/contracts/domain-token.md), [права](../../common/contracts/may.md), [сертификата
-  роли](../../common/contracts/role-certificate.md), [`peer`](../../common/contracts/peer.md), [журнала
-  событий](../../common/contracts/event-journal.md).
+- [HTTP-контракт](../../spec/10-domain-console.api.openapi.yaml) выражает формы своих дверей и коды перехода 2; ответы процесса
+  `domain` — [OpenAPI урока P/08](../../../08-domain/spec/08-domain.api.openapi.yaml) (ссылкой).
+- Договоры: [пересылки](../../../common/contracts/forwarding.md), [сторожевой и передачи](../../../common/contracts/gate-and-pass.md),
+  [токена домена](../../../common/contracts/domain-token.md), [права](../../../common/contracts/may.md), [сертификата
+  роли](../../../common/contracts/role-certificate.md), [`peer`](../../../common/contracts/peer.md), [журнала
+  событий](../../../common/contracts/event-journal.md).
 - [Приёмка](../acceptance/README.md) — стенд нескольких кластеров ([общий README
-  приёмки](../../common/acceptance/README.md#стенд-домена), раздел «Стенд домена») и вектор
+  приёмки](../../../common/acceptance/README.md#стенд-домена), раздел «Стенд домена») и вектор
   [`alarms`](../vectors/alarms/README.md). Флаги, окружение, коды выхода — [`../lifecycle.md`](../lifecycle.md).
-- [Лекция](../10-domain-console.md) объясняет причины.
+- Лекция (`ru/10-domain-console.md`, для человека, в выгрузку не входит) объясняет причины.
 
 Внутренние интерфейсы, типы и устройство — выбор реализации. Имя и шаблон вызова команды `alarms` — пункт «Решает
 реализация» норм.

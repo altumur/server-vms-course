@@ -1,13 +1,13 @@
 # Vectors of the alarm list
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/alarms/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The vectors of the function `alarms(input)` of the domain console — the alarm list of the members at the holder: the state of each member (`ok`,
 `silent`, `not_reporting`, `never`, `unreadable`), the silence row, the witnesses, the domain clock at the lines of the page, the history without
-repeats, the window and the phrase `sentence`. The owner is lesson P/10 ([norms](../../../spec/10-domain-console.norms.md) Н1.8, Н3 `alarms`,
+repeats, the window and the phrase `sentence`. The owner is lesson P/10 ([norms](../../spec/10-domain-console.norms.md) Н1.8, Н3 `alarms`,
 Н5 `alarms`; the Architect's decision on the review analysis of stage A 8–10, № 8: the function `alarms` and its vector are at the domain console).
-The history that the function reads is written by the process `domain` ([P/08.9](../../../../08-domain/spec/08.9-domain.norms.md) Н1.9);
-the alarm page of a member — by the agent ([P/09.1](../../../../09-agent/spec/09.1-agent.norms.md) Н1.10). The bytes are written by «Спецификация»
+The history that the function reads is written by the process `domain` ([P/08.9](../../../08-domain/spec/08.9-domain.norms.md) Н1.9);
+the alarm page of a member — by the agent ([P/09.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.10). The bytes are written by «Спецификация»
 (ADR-0083); the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
 
 The rows 01–15 were transferred from the inputs of the command `alarms` of the acceptance of М11/11 (`inputs/alarms-*.json`, sc. 04) without a change of the bytes
@@ -41,7 +41,7 @@ of the acceptance of М11, at the rows 16–27 — the checked case and its norm
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](../cases.tsv), 27 rows: 19 computed, 8 `@exit 2` | `input` — the input of the command `alarms` as JSON text → `expect`: `{events, members, complete, sentence}` or a part of it |
+| [`cases.tsv`](cases.tsv), 27 rows: 19 computed, 8 `@exit 2` | `input` — the input of the command `alarms` as JSON text → `expect`: `{events, members, complete, sentence}` or a part of it |
 
 | Rows | What they check |
 |---|---|
@@ -59,7 +59,7 @@ the norm is right, «Спецификация» corrects the vector.
 ## Source log
 
 The rows of `corrections.tsv` of the acceptance of М11/11 about sc. 04 and its inputs (the paths and numbers are the former ones, they are resolved by
-[`id-map.tsv`](../../../../common/id-map.tsv)):
+[`id-map.tsv`](../../../common/id-map.tsv)):
 
 | date | sample | fix |
 |---|---|---|

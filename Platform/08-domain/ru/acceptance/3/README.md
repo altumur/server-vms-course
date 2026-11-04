@@ -19,7 +19,7 @@
 [`agent-sig`](../../../../common/vectors/agent-sig/README.md), [`domain-envelopes`](../../../../common/vectors/domain-envelopes/README.md)
 (`m1-open.tsv`, `m1-round.tsv`) и [`accept`](../../../../common/vectors/accept/README.md); их входы сняты вместе с шагами (строка
 `corrections.tsv`). Остальные сценарии М11/03 — приёмка [главы 8.1](../1/README.md) (04, 06–09); М11/04 сц. 02–04 —
-[глава 9.2](../../../../09-agent/ru/acceptance/2/README.md), М11/08 — [глава 6.7](../../../../06-console/ru/acceptance/7/README.md) (01–03), [урок P/10](../../../../10-domain-console/acceptance/README.md) (05), векторы `peer` (06), М11/12 — главы 8.10 и [9.1](../../../../09-agent/ru/acceptance/1/README.md).
+[глава 9.2](../../../../09-agent/ru/acceptance/2/README.md), М11/08 — [глава 6.7](../../../../06-console/ru/acceptance/7/README.md) (01–03), [урок P/10](../../../../10-domain-console/ru/acceptance/README.md) (05), векторы `peer` (06), М11/12 — главы 8.10 и [9.1](../../../../09-agent/ru/acceptance/1/README.md).
 
 ## Стенд
 
@@ -66,7 +66,7 @@ W2C_TLS_DIR=…`, `@env m1 W2C_TLS_DIR`; значение `inputs/…` — пу�
 (`@env`) — словарь «Стенда домена» [общего README приёмки](../../../../common/acceptance/README.md), `@env` и «Окружение
 пересылки» (разбор ревью стадии B 8–10, № 22: М-16).
 
-**Сценарий 19** — сосед на стенде: дверь `GET /domain/members` консоли домена ([урок P/10](../../../../10-domain-console/spec/10-domain-console.norms.md)
+**Сценарий 19** — сосед на стенде: дверь `GET /domain/members` консоли домена ([урок P/10](../../../../10-domain-console/ru/spec/10-domain-console.norms.md)
 Н1.2б, P/10-07; C10-MEMBERS-SOURCE-01, C10-MEMBERS-KNOCKING-ABSENT-01). Процесс `domain` остановлен (шаг 2), чтобы проход
 держателя не переписал вид; на его место кладётся вид `inputs/view-member-list-ghost.json`: только `hold`, поля `knocking` нет (шаг 3). Шаг 4 показывает, что консоль домена читает этот вид. Шаг 5: `members` —
 doc строк `domain/member-rows/<раздел>` (`hold`, `m1`, `m2`), а не вид; поля `knocking` в читаемом виде нет —

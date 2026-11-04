@@ -9,7 +9,7 @@
 ([P/03.2](../../03-worker/ru/spec/03.2-worker.norms.md) Н3 «проверка схемы воркером»), ресурс
 ([P/05](../../05-resource/ru/spec/05-resource.norms.md) Н3 «старт ресурса — проверка схемы»), процессы домена — `domain`,
 агент, консоль домена ([P/02.4 Н1.12](../../02-installer/ru/spec/02.4-installer.norms.md); консоль домена —
-[P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.1); шаг 0 старта процесса — [P/02.3](../../02-installer/ru/spec/02.3-installer.norms.md)
+[P/10](../../10-domain-console/ru/spec/10-domain-console.norms.md) Н1.1); шаг 0 старта процесса — [P/02.3](../../02-installer/ru/spec/02.3-installer.norms.md)
 Н3 «Старт процесса».
 
 Перенесено из P/06.6 Н1.1а (строки `platform/schema`, `SCHEMA`, `BUILD`, `heartbeat`, `check`) и общего блока «старт

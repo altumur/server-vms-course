@@ -20,7 +20,7 @@ cc36de538, черновики G03, G04; ниже); 21 — сц. 27 `roles-copy` 
 03, 05, 09 — [глава 8.6](../../../../08-domain/ru/acceptance/6/README.md), 06 — [глава 8.1](../../../../08-domain/ru/acceptance/1/README.md)
 (сц. 15); М11/10 сц. 01 — приёмка главы 6.7 (15), 02–04, 08–10, 12 — [глава 8.8](../../../../08-domain/ru/acceptance/8/README.md),
 06 — пакет векторов [`follow`](../../vectors/follow/README.md); М11/11 сц. 01 — [глава 8.9](../../../../08-domain/ru/acceptance/9/README.md),
-02 — [приёмка урока P/10](../../../../10-domain-console/acceptance/README.md), 04 — вектор [`alarms`](../../../../10-domain-console/vectors/alarms/README.md), 03 — векторы [`resolve`](../../../../06-console/ru/vectors/resolve/README.md); М11/12 сц. 02 — [глава 8.3](../../../../08-domain/ru/acceptance/3/README.md) (сц. 17), 04,
+02 — [приёмка урока P/10](../../../../10-domain-console/ru/acceptance/README.md), 04 — вектор [`alarms`](../../../../10-domain-console/ru/vectors/alarms/README.md), 03 — векторы [`resolve`](../../../../06-console/ru/vectors/resolve/README.md); М11/12 сц. 02 — [глава 8.3](../../../../08-domain/ru/acceptance/3/README.md) (сц. 17), 04,
 05 — [глава 8.10](../../../../08-domain/ru/acceptance/10/README.md). Сторону агента в сценариях других глав — список «Соседи на
 стенде» нормы главы, Н5.
 

@@ -6,8 +6,8 @@
 раздел [«Стенд домена»](../../../../common/acceptance/README.md#стенд-домена) (двери `holder`, `member`, директивы `@domain`, `@person`; план урока 8 В5). Норма главы —
 [`08.9-domain.norms.md`](../../spec/08.9-domain.norms.md) Н5. Сценарий 01 перенесён из приёмки М11/11 (стадия B, ADR-0083
 доп. (1): без изменения поведения); номер сценария и шагов — прежние; сценарий 07 — аудит покрытия P/08 (номера 02–06 — у сценариев М11/11 в соседних приёмках). Остальные сценарии М11/11 — урок P/10 (02 — список
-тревог; векторы `alarms` — 04), [приёмка главы 9.1](../../../../09-agent/ru/acceptance/1/README.md) (05; 06 → 14) и консоль кластера (векторы [`resolve`](../../../../06-console/ru/vectors/resolve/README.md) — 03, глава P/06.7); урок P/10 — [приёмка](../../../../10-domain-console/acceptance/README.md)
-и вектор [`alarms`](../../../../10-domain-console/vectors/alarms/README.md). Формы чужих дверей — их
+тревог; векторы `alarms` — 04), [приёмка главы 9.1](../../../../09-agent/ru/acceptance/1/README.md) (05; 06 → 14) и консоль кластера (векторы [`resolve`](../../../../06-console/ru/vectors/resolve/README.md) — 03, глава P/06.7); урок P/10 — [приёмка](../../../../10-domain-console/ru/acceptance/README.md)
+и вектор [`alarms`](../../../../10-domain-console/ru/vectors/alarms/README.md). Формы чужих дверей — их
 владельцы.
 
 ## Стенд

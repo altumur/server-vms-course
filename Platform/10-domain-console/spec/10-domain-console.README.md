@@ -1,15 +1,15 @@
 # P/10 — instructions for an implementation
 
-This English text is the source; the Russian [`10-domain-console.README.md`](../10-domain-console.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/10-domain-console.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-This file is for the agent (or the human) who writes code by the lesson. The explanation of «why» is [`../10-domain-console.md`](../../10-domain-console.md).
+This file is for the agent (or the human) who writes code by the lesson. The explanation of «why» is `ru/10-domain-console.md` (for people, not in the export).
 
 ## Task
 
 Implement the process `domainconsole` on the holder's box in the language `<LANG>`; pass the acceptance of Н5 and close the readiness
-checklist. There are 17 norms in all: P/10-01…17; the map to former ids is [`id-map.tsv`](../../../common/id-map.tsv). The lesson is assembled from
+checklist. There are 17 norms in all: P/10-01…17; the map to former ids is [`id-map.tsv`](../../common/id-map.tsv). The lesson is assembled from
 the lessons М11/1, 3, 4, 6, 8, 9, 11, 12 (the domain console side) (stage B, ADR-0083 addendum (1), (14)). The process `domain` is
-lesson [P/08](../../../08-domain/spec/08-domain.README.md), the agent is lesson [P/09](../../../09-agent/spec/09-agent.README.md), the forwarding
+lesson [P/08](../../08-domain/spec/08-domain.README.md), the agent is lesson [P/09](../../09-agent/spec/09-agent.README.md), the forwarding
 of the cluster console is chapter P/06.7.
 
 - The read doors `GET /domain`, `/domain/<sub>/<rows>`, `/domain/<sub>/tables/<таблица>`, `/domain/shadow`, `/domain/members`, `/domain/topology`,
@@ -20,18 +20,18 @@ of the cluster console is chapter P/06.7.
 
 ## Inputs and their priority
 
-- The canon is the [norms](../10-domain-console.norms.md), including Н0, the paragraph «Data», the order of Н3 and the refusals of Н4. The input and the output of the
+- The canon is the [norms](10-domain-console.norms.md), including Н0, the paragraph «Data», the order of Н3 and the refusals of Н4. The input and the output of the
   acceptance command are Н5.
-- The [HTTP contract](../10-domain-console.api.openapi.yaml) expresses the forms of its own doors and the codes of transition 2; the answers of the process
-  `domain` are the [OpenAPI of lesson P/08](../../../08-domain/spec/08-domain.api.openapi.yaml) (by reference).
-- Contracts: [forwarding](../../../common/contracts/forwarding.md), [gate and pass](../../../common/contracts/gate-and-pass.md),
-  [domain token](../../../common/contracts/domain-token.md), [right](../../../common/contracts/may.md), [role
-  certificate](../../../common/contracts/role-certificate.md), [`peer`](../../../common/contracts/peer.md), [event
-  journal](../../../common/contracts/event-journal.md).
-- [Acceptance](../../acceptance/README.md) — the stand of several clusters ([the common README of
-  acceptance](../../../common/acceptance/README.md#стенд-домена), the section «Domain stand») and the vector
-  [`alarms`](../../vectors/alarms/README.md). Flags, environment, exit codes — [`../lifecycle.md`](../../lifecycle.md).
-- The [lecture](../../10-domain-console.md) explains the reasons.
+- The [HTTP contract](10-domain-console.api.openapi.yaml) expresses the forms of its own doors and the codes of transition 2; the answers of the process
+  `domain` are the [OpenAPI of lesson P/08](../../08-domain/spec/08-domain.api.openapi.yaml) (by reference).
+- Contracts: [forwarding](../../common/contracts/forwarding.md), [gate and pass](../../common/contracts/gate-and-pass.md),
+  [domain token](../../common/contracts/domain-token.md), [right](../../common/contracts/may.md), [role
+  certificate](../../common/contracts/role-certificate.md), [`peer`](../../common/contracts/peer.md), [event
+  journal](../../common/contracts/event-journal.md).
+- [Acceptance](../acceptance/README.md) — the stand of several clusters ([the common README of
+  acceptance](../../common/acceptance/README.md#стенд-домена), the section «Domain stand») and the vector
+  [`alarms`](../vectors/alarms/README.md). Flags, environment, exit codes — [`../lifecycle.md`](../lifecycle.md).
+- The lecture (`ru/10-domain-console.md`, for people, not in the export) explains the reasons.
 
 Internal interfaces, types and structure are the implementation's choice. The name and the call template of the command `alarms` are the item of «Implementation
 decides» of the norms.
@@ -55,12 +55,12 @@ The instructions introduce no new refusal. Record a change of acceptance in `cor
 
 This is a suggested order, not a mandatory structure of the code.
 
-1. `alarms` by the vector [`alarms`](../../vectors/alarms/README.md).
+1. `alarms` by the vector [`alarms`](../vectors/alarms/README.md).
 2. The read doors of Н2 and their refusals of Н4.
 3. The gate of the domain console; `/session` with the grants.
 4. The passing to the process; «принять консолью»; the role door.
 5. The holder's page and `door.pass` on the domain.
-6. The stand: scenarios 02, 05–19 of the [acceptance of the lesson](../../acceptance/README.md) and the domain console side in the scenarios of the chapters of lesson P/08
+6. The stand: scenarios 02, 05–19 of the [acceptance of the lesson](../acceptance/README.md) and the domain console side in the scenarios of the chapters of lesson P/08
    (the table of neighbours on the stand of Н5).
 
 ## Pitfalls of the language and the library

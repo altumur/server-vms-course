@@ -11,7 +11,7 @@
 ([P/08.0 Н1.6](../../../08-domain/ru/spec/08.0-domain.norms.md), P/08.0-02), слушатель `SIGNER_URL` — строка `signer` того же договора и
 [P/02.4 Н1.6](../../../02-installer/ru/spec/02.4-installer.norms.md) `client_cert` (ADR-0083 доп. (20), доп. (21)); отпечатки центра члена, `on_accept`, `admin` —
 [P/08.3 Н1.6](../../../08-domain/ru/spec/08.3-domain.norms.md); `client`, `first` и функция `peer` — [договор `peer`](../../contracts/peer.md);
-пересылка — [договор пересылки](../../contracts/forwarding.md); класс `role` — [P/10 Н1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`
+пересылка — [договор пересылки](../../contracts/forwarding.md); класс `role` — [P/10 Н1.4](../../../10-domain-console/ru/spec/10-domain-console.norms.md) `server.role`
 (P/10-11); договор сертификата роли — [`role-certificate.md`](../../contracts/role-certificate.md); перенос —
 [P/08.8 Н1.8](../../../08-domain/ru/spec/08.8-domain.norms.md). Пункт 3 и «держатель прежней сборки» из п. 7 — проверка чтением
 ([P/08.4 Н5](../../../08-domain/ru/spec/08.4-domain.norms.md) и [P/08.3 Н5](../../../08-domain/ru/spec/08.3-domain.norms.md)).
@@ -88,7 +88,7 @@ TLS-этапом «cammeta-acceptance» 2026-10-21; ADR-0083 доп. (19) п. 2;
 `@tls-setup …/stand.json`, `@domain m1 m2` (или `m1 m2 m3`), затем `@until` записи члена: у `m2` — `Entry.ca` с
 отпечатком центра `m2` и строка `domain/members/m2/ca-certs` (`on_accept`, приём отчёта с `tls_ca`, `tls_ca_certs`).
 
-**П. 7 — рукопожатие по `ca-certs`** ([P/08.3 Н1.6](../../../08-domain/ru/spec/08.3-domain.norms.md) `on_accept`; [P/10 Н1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`): после строки `ca-certs` и `Entry.ca`
+**П. 7 — рукопожатие по `ca-certs`** ([P/08.3 Н1.6](../../../08-domain/ru/spec/08.3-domain.norms.md) `on_accept`; [P/10 Н1.4](../../../10-domain-console/ru/spec/10-domain-console.norms.md) `server.role`): после строки `ca-certs` и `Entry.ca`
 дверь `holder`, клиент `m2-console`, пересылаемый запрос с `X-Operator: console` → `{"handshake": "ok"}`, `http` — ответ
 двери по сторожевой (не 401/403 со словами `no_role`, `wrong_role`, `bad_chain`).
 
@@ -143,7 +143,7 @@ admin; агент остановлен — его отчёт с `tls_ca` вер�
 Данные «Спецификации»; шаги и сценарий пишет TLS-этап «cammeta-acceptance»; до того — долг стенда. Подготовка — как у п. 2.
 Нормы: [договор пересылки](../../contracts/forwarding.md) «Пересылка — одна функция» `answer`, `journal`, `tls`;
 [P/06.7 Н1.7](../../../06-console/ru/spec/06.7-console.norms.md) `server` (переход 1 — класс `signed`);
-[P/08.3 Н1.6](../../../08-domain/ru/spec/08.3-domain.norms.md) `admin`, Н4; [P/10 Н1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`.
+[P/08.3 Н1.6](../../../08-domain/ru/spec/08.3-domain.norms.md) `admin`, Н4; [P/10 Н1.4](../../../10-domain-console/ru/spec/10-domain-console.norms.md) `server.role`.
 
 | Шаг | Ожидание | Норма |
 |---|---|---|
