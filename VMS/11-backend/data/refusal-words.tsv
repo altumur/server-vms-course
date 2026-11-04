@@ -1,6 +1,6 @@
-# The closed list of values of code of the Problem answer of the backend doors: chapters 11.1–11.6, 11.8 (ADR-0094 B5; measurement С.5). Moved from Н4, it does not change the norms: on a mismatch the source is the norm in the column norm.
+# The closed list of values of code of the Problem answer of the backend doors: chapters 11.1–11.6, 11.8, 11.20 (ADR-0094 B5; measurement С.5). Moved from Н4, it does not change the norms: on a mismatch the source is the norm in the column norm.
 # The word error here is the code of the contract. Where it is translated from (a console or domain word) — in the column norm. The values — the list ProblemCode of the contract; there are no own codes (V/11.2 Н1.3).
-# door — the contract doors: devices, archives, volumes, objects; folders; operations; discovery; access; rules; schedules — and day-groups, modes, maintenance-windows; test — /test/*; * — every door. code — the status; 4xx — the door status; «-» — the code of a step result, a failed group record has no status: 200.
+# door — the contract doors: devices, archives, volumes, objects; folders; operations; discovery; access; rules; schedules — and day-groups, modes, maintenance-windows; exports — and /me/export (11.20); test — /test/*; * — every door. code — the status; 4xx — the door status; «-» — the code of a step result, a failed group record has no status: 200.
 # field — «-»: there is no field; <поле> — the contract field that the refusal names; otherwise — the exact value. 502–504 — UPSTREAM_UNAVAILABLE (V/11.2 Н1.3). The words of the assistant turn — V/11.7.
 door	code	error	field	norm
 *	401	UNAUTHORIZED	-	11.1, 11.2 Н4; 11.4 Н4: 401 of the gate, 401 of the callback; 11.5 Н4
@@ -27,7 +27,7 @@ devices	422	VALIDATION_FAILED	<поле>	11.4 Н4: 409 ref, must_match, fixed
 devices	422	VALIDATION_FAILED	copies	11.4 Н1.14: a repeat, no server, two servers of one cluster, a server of the primary's cluster
 devices	422	VALIDATION_FAILED	-	11.4 Н4: 413 batch too large
 devices	422	VALIDATION_FAILED	idempotencyKey	11.4 Н1.4: another body, another operation with the same key
-devices	422	NOT_SUPPORTED	type	11.3 Н4: the device kind; 11.4 Н1.2: DELETE, PATCH channel, storage, children
+devices	422	NOT_SUPPORTED	type	11.3 Н4: the device kind; 11.4 Н1.2: DELETE, PATCH channel, storage, children; 11.20 Н1.7: recording days not of a camera
 devices	422	NOT_SUPPORTED	stream	11.3 Н4: no other stream, another word
 devices	422	NOT_SUPPORTED	<поле>	11.3 Н4: address fields next to rtspUrl, an address not ipint://, a host change of ipsrv, configMode, children; 11.4 Н1.2: ipsrv without a row
 devices	409	IDENTIFIER_TAKEN	identifier	11.4 Н1.2, Н1.5: a taken number
@@ -148,7 +148,28 @@ devices	409	NO_PRIMARY	-	11.4 Н1.25: there is no primary recording of its own c
 devices	409	DEVICE_REFUSED	-	11.4 Н1.23: the door has no route keeps
 devices	422	VALIDATION_FAILED	state	11.4 Н1.17: no state
 devices	422	VALIDATION_FAILED	at	11.4 Н1.22: at not of the form
-devices	422	VALIDATION_FAILED	to	11.4 Н1.23, Н1.25: the end is not later than the start
+devices	422	VALIDATION_FAILED	to	11.4 Н1.23, Н1.25: the end is not later than the start; 11.4 Н1.24: a span without to, a moment with to; 11.20 Н1.7: recording days
 devices	422	VALIDATION_FAILED	note	11.4 Н1.24: an empty note
 devices	422	VALIDATION_FAILED	recordingIds	11.4 Н1.23: a recording not of this camera
 devices	503	UPSTREAM_UNAVAILABLE	-	11.4 Н1.15: there is no gateway yet
+exports	422	VALIDATION_FAILED	<поле>	11.20 Н1.2 item 1: not by the schema ExportCreate, a JSON Pointer into the body; item 3: the combinations of V/08.6 Н1.1 — /periods, /at, /cameras/i/archiveId, a repeat /cameras/i; /cameras/i/deviceId, /cameras/i/archiveId of item 5; /special/maxFileMb below 100
+exports	422	VALIDATION_FAILED	/periods/i/to	11.20 Н1.2 item 3: the end of a period is not later than its start
+exports	422	VALIDATION_FAILED	/cameras/i/area	11.20 Н1.2 item 3: the area box outside w > 0, h > 0, x + w ≤ 1, y + h ≤ 1 (ADR-0117 addendum (7) item 3)
+exports	422	VALIDATION_FAILED	idempotencyKey	11.20 Н1.2 «Repeat»: another body with the same key (11.4 Н1.4)
+exports	422	VALIDATION_FAILED	ids	11.20 Н1.1: ids over idsMax, an id not a UUID
+exports	422	VALIDATION_FAILED	state	11.20 Н1.3: a word outside Export.state
+exports	422	NOT_SUPPORTED	/cameras	11.20 Н1.2 item 2: a frame of several cameras (the Architect's decision of 2026-11-04)
+exports	422	NOT_SUPPORTED	<поле>	11.20 Н1.2 item 2: outside the declaration and Reference.export — /format, /singleFile, /source, /quality/…, /titles/…, /special/player, /privacy, /highlight, /destination; item 5: /cameras/i/deviceId not a camera; item 10: transcoding without a server gpu
+exports	422	LIMIT_EXCEEDED	<поле>	11.20 Н1.2 item 4: /cameras over EXPORT_CAMERAS_MAX, /periods over EXPORT_PERIODS_MAX or EXPORT_TOTAL_MAX; /special/maxFileMb over maxFileMbMax
+exports	422	NO_RECORDING	<поле>	11.20 Н1.2 item 5: /cameras/i without a primary recording; item 10: /periods, /at — no span in any period
+exports	403	PERMISSION_DENIED	/cameras/i	11.20 Н1.2 item 6: no edit on exp, edit without admin (params.reason: privacy), a live frame without live viewing; a refused batch row
+exports	403	PERMISSION_DENIED	-	11.20 Н1.4: a request to another's part without admin; Н1.6: a link not to the author, where 403
+exports	422	PASSWORD_REQUIRED	/password	11.20 Н1.2 item 7: a camera without admin and no password (ADR-0117 § 4 item 2)
+exports	403	SUPERVISOR_REJECTED	/supervisor	11.20 Н1.2 item 8, «Supervisor»: no supervisor when required (params.reason: required), the author, 401, deny, ok: false of /domain/verify
+exports	409	BUSY	-	11.20 Н1.2 item 9: unfinished orders of the person — EXPORT_ACTIVE_PER_USER or more
+exports	409	OTHER_CLUSTER	-	11.20 Н1.2 item 5: a camera of another cluster, params.url
+exports	409	DEVICE_OFFLINE	-	11.20 Н1.2 item 10: a live frame from a camera with online false
+exports	409	NOT_RUNNABLE	-	11.20 Н1.4: cancel of an ended order; Н1.5: retry-failed without failed parts
+exports	410	EXPORT_EXPIRED	-	11.20 Н1.6: the part is expired or its result.expires has passed
+exports	404	NOT_FOUND	-	11.20 Н1.2 «Repeat», Н1.3–Н1.6: no visible part of the order, no such file
+exports	503	UPSTREAM_UNAVAILABLE	-	11.20 Н1.1, Н1.2 item 8, «Supervisor»: no X-W2C-Supervision, /domain/verify unavailable, 503, 409 deposed, 429; Н1.4: 429 per_person; Н1.6: the holder is not known

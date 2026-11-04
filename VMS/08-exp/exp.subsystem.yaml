@@ -49,6 +49,7 @@ unit:
             maxItems: 4
           single_file: {type: boolean}
           file_mb:    {type: integer, minimum: 100, maximum: 4000}
+          tz:         {type: string, maxLength: 64}   # the IANA zone of the file names: backend writes the system time zone (the Architect's decision 2026-11-04; V/08.7 Н1.4)
           chapters:   {type: array, maxItems: 256, items: {type: object, required: [at, title], additionalProperties: false, properties: {at: {type: number}, title: {type: string, maxLength: 128}}}}
     password_secret: {type: string}                         # ZIP AES-256 or the PDF's; gone with the row (доп. (4) п. 3)
     by:       {type: string, required: true, fixed: true}   # the author: a copy in each part (доп. (6) п. 4)

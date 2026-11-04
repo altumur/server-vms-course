@@ -5,7 +5,7 @@ This English text is the source; the Russian translation `ru/README.md` (for peo
 The module of specification lessons of the video subsystem, sliced by subsystems: one lesson — one subsystem with its own
 manifest (ADR-0090 addendum (2)). The lesson directory is `NN-<имя>`, the lesson number is the owner address (`V/NN`), the map is
 [`common/lessons.tsv`](common/lessons.tsv). Common to all lessons — [`common/`](common/README.md). The lesson layout is
-as in `Platform/`: the lecture `NN-<имя>.md`, the norms `spec/`, the acceptance `acceptance/`, the data `data/`, the vectors `vectors/`. The VMS data
+as in `Platform/` (ADR-0124): the English source on the canonical path — `README.md`, the norms `spec/`, the forms `forms/`, the data `data/`, the vectors `vectors/`, the acceptance `acceptance/<K>/`; the log of corrections `journal/corrections-<K>.tsv` (history, not an input; not in the export); for people, not in the export — `ru/`: the lecture `ru/NN-<имя>.md` and translations of the English text by the same path. The VMS data
 families are JSON Schema 2020-12 with the layers of `Platform/common/LAYERS.md`, as on the platform (ADR-0092).
 
 The VMS lessons read the platform only from the export `cammeta-specs` at a pinned commit (ADR-0090 item 2); a change of the

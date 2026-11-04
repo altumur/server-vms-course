@@ -39,6 +39,10 @@
       "description": "Оборудование: домены, серверы, устройства, папки"
     },
     {
+      "name": "export",
+      "description": "Выгрузка видео и кадров: задание, ход, файлы со сроком (ADR-0117)"
+    },
+    {
       "name": "storage",
       "description": "Хранилища и тома"
     },
@@ -5277,7 +5281,7 @@
           "assist"
         ],
         "summary": "Ход разговора с ассистентом (SSE)",
-        "description": "Ответ — поток text/event-stream: на сообщение строка data: (AssistEvent), без event: и без id:. Ход длится от десятков секунд до нескольких минут. Закрыть поток — отменить ход. Оборванный поток не продолжается: клиент повторяет запрос. Поток без завершающего сообщения — обрыв, UPSTREAM_UNAVAILABLE. «Применить» — обычный POST /devices/update с items плана и новым idempotencyKey; устройство изменилось после плана — его строка в failed с VERSION_MISMATCH. Без него ничего не пишется. Что это за реплика — настройка устройств, правило автоматизации или вопрос о системе, — бэкенд решает сам по каждой реплике, поля типа в запросе и в событиях нет: в одном разговоре бывают и вопрос, и правка, и правило. Вопрос о системе — конечное событие answer, плана нет. Отбор («дай список», «покажи», «выведи») — конечное событие found: отбирает бэкенд по полям Device, форма показывает отобранное в дереве; ничего не пишет. План правил — поле rules, «Применить» — двери из описания AssistRuleEdit сессией человека.",
+        "description": "Ответ — поток text/event-stream: на сообщение строка data: (AssistEvent), без event: и без id:. Ход длится от десятков секунд до нескольких минут. Закрыть поток — отменить ход. Оборванный поток не продолжается: клиент повторяет запрос. Поток без завершающего сообщения — обрыв, UPSTREAM_UNAVAILABLE. «Применить» — POST /devices/update с items плана и новым idempotencyKey (устройство изменилось после плана — его строка в failed с VERSION_MISMATCH) или групповая операция POST /operations с version плана в expectedVersions (изменилось — 412 VERSION_MISMATCH, ничего не записано): так делает форма, план настройки идёт черновиком групповой карточки. Без него ничего не пишется. Что это за реплика — настройка устройств, правило автоматизации или вопрос о системе, — бэкенд решает сам по каждой реплике, поля типа в запросе и в событиях нет: в одном разговоре бывают и вопрос, и правка, и правило. Вопрос о системе — конечное событие answer, плана нет. Отбор («дай список», «покажи», «выведи») — конечное событие found: отбирает бэкенд по полям Device, форма показывает отобранное в дереве; ничего не пишет. План правил — поле rules, «Применить» — двери из описания AssistRuleEdit сессией человека.",
         "requestBody": {
           "required": true,
           "content": {
@@ -7982,6 +7986,530 @@
             "$ref": "#/components/responses/Problem"
           },
           "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/me/export": {
+      "get": {
+        "operationId": "getExportGrant",
+        "tags": [
+          "export"
+        ],
+        "summary": "Права на выгрузку",
+        "description": "Что можно этому человеку и по камерам из ids. Окно читает при открытии и при смене камер.",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Id камер через запятую, до idsMax"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportGrant"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/devices/{deviceId}/recording-days": {
+      "get": {
+        "operationId": "getRecordingDays",
+        "tags": [
+          "export"
+        ],
+        "summary": "Сутки с записью",
+        "description": "Для календаря окна: дешевле шкалы. from и to — даты; нет — последние 31 сутки. Не камера — 422 NOT_SUPPORTED.",
+        "parameters": [
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordingDays"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/exports/check": {
+      "post": {
+        "operationId": "checkExport",
+        "tags": [
+          "export"
+        ],
+        "summary": "Проверить заказ",
+        "description": "Без запуска: ошибки у полей, перекодирование, оценка, имена файлов, отрезки без записи. Ответ всегда 200, если тело по схеме.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportCheck"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/exports": {
+      "get": {
+        "operationId": "listExports",
+        "tags": [
+          "export"
+        ],
+        "summary": "Задания выгрузки",
+        "description": "Новые сверху, общее правило страницы. mine=true — только свои; чужие видны с правом на журнал камер, без ссылок на файлы.",
+        "parameters": [
+          {
+            "name": "mine",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Состояния через запятую: это ИЛИ"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "description": "Сколько строк на странице, по умолчанию 200"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "nextCursor прошлой страницы как есть. Просроченный или чужой — 422 INVALID_CURSOR, читать с начала"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createExport",
+        "tags": [
+          "export"
+        ],
+        "summary": "Выгрузить",
+        "description": "202 и задание: части по камерам и записям идут рядом со своими записями. Кадр — то же задание, обычно готово за секунды. Нет EXPORT или права на камеру — 403 PERMISSION_DENIED, field — /cameras/i. Без пароля при политике — 422 PASSWORD_REQUIRED. Записи нет ни в одном отрезке — 422 NO_RECORDING. Пределы — 422 LIMIT_EXCEEDED. Активных заданий больше limits.maxActivePerUser — 409 BUSY. Камера другого кластера — 409 OTHER_CLUSTER; живой кадр с камеры без связи — 409 DEVICE_OFFLINE.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Принято: задание идёт",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Export"
+                }
+              }
+            },
+            "headers": {
+              "Location": {
+                "description": "/exports/{exportId}",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/exports/{exportId}": {
+      "get": {
+        "operationId": "getExport",
+        "tags": [
+          "export"
+        ],
+        "summary": "Задание выгрузки",
+        "parameters": [
+          {
+            "name": "exportId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Export"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteExport",
+        "tags": [
+          "export"
+        ],
+        "summary": "Удалить задание и файлы",
+        "description": "Идущее — сначала отменяется. Своё; чужое — только с admin на exp по камере.",
+        "parameters": [
+          {
+            "name": "exportId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Готово"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/exports/{exportId}/cancel": {
+      "post": {
+        "operationId": "cancelExport",
+        "tags": [
+          "export"
+        ],
+        "summary": "Отменить",
+        "description": "Текущая часть может доиграть, следующие не начинаются, готовые файлы удаляются. Уже закончилось — 409 NOT_RUNNABLE.",
+        "parameters": [
+          {
+            "name": "exportId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Export"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/exports/{exportId}/retry-failed": {
+      "post": {
+        "operationId": "retryExport",
+        "tags": [
+          "export"
+        ],
+        "summary": "Повторить неудачные части",
+        "description": "Новое задание с retryOf и теми же настройками; пароль присылается заново. Неудачных частей нет — 409 NOT_RUNNABLE.",
+        "parameters": [
+          {
+            "name": "exportId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Принято",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Export"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "default": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/exports/{exportId}/files/{fileId}/link": {
+      "post": {
+        "operationId": "getExportFileLink",
+        "tags": [
+          "export"
+        ],
+        "summary": "Ссылка на файл",
+        "description": "Только автор. Срок — limits.linkTtlSec; брать перед самым скачиванием. Файл удалён по сроку — 410 EXPORT_EXPIRED. stub:// — подставной файл стенда.",
+        "parameters": [
+          {
+            "name": "exportId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Готово",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportFileLink"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "410": {
             "$ref": "#/components/responses/Problem"
           },
           "401": {
@@ -11553,6 +12081,10 @@
               "type": "string"
             },
             "description": "Виды событий камеры для сценариев между камерами. Отдельный список: ruleTriggers шире"
+          },
+          "export": {
+            "$ref": "#/components/schemas/ExportReference",
+            "description": "Выгрузка: есть, если система объявила createExport"
           }
         },
         "additionalProperties": false,
@@ -11620,7 +12152,23 @@
           "accessDepth",
           "accessRestrictions",
           "accessUserRights",
-          "streamGrants"
+          "streamGrants",
+          "exportVideo",
+          "exportFrame",
+          "exportLiveFrame",
+          "exportArea",
+          "exportMultiCamera",
+          "exportMultiPeriod",
+          "exportSingleFile",
+          "exportTranscode",
+          "exportTitles",
+          "exportEventTitles",
+          "exportTracks",
+          "exportPrivacy",
+          "exportAudio",
+          "exportPassword",
+          "exportPlayer",
+          "exportCloud"
         ],
         "description": "Необязательная возможность системы: без неё поле есть в записи, но менять его нельзя (422 NOT_SUPPORTED)",
         "x-enum-descriptions": {
@@ -11635,7 +12183,23 @@
           "accessDepth": "Глубина просмотра архива: RoleGlobal.depth. Без неё значение не 0 — 422 NOT_SUPPORTED",
           "accessRestrictions": "Запреты роли: RoleGlobal.restr. Без неё непустое значение — 422 NOT_SUPPORTED",
           "accessUserRights": "Права на права пользователей: выбор RoleGlobal.ur. Без неё ur следует за функцией: ALL при USERS_RIGHTS_SETUP, иначе NO; другое значение — 422 NOT_SUPPORTED",
-          "streamGrants": "Доступ учёток потоков к камерам: Access.streamGrants. Без неё непустой список — 422 NOT_SUPPORTED, field: streamGrants"
+          "streamGrants": "Доступ учёток потоков к камерам: Access.streamGrants. Без неё непустой список — 422 NOT_SUPPORTED, field: streamGrants",
+          "exportVideo": "Выгрузка видео: видеоформаты и отрезки",
+          "exportFrame": "Кадр архива и печать",
+          "exportLiveFrame": "Живой кадр",
+          "exportArea": "Область кадра (cameras[].area)",
+          "exportMultiCamera": "Несколько камер в задании",
+          "exportMultiPeriod": "Несколько отрезков в задании",
+          "exportSingleFile": "«В один файл»: дорожки камер в одном MKV",
+          "exportTranscode": "Качество, скорость, прореживание, вшитые титры",
+          "exportTitles": "Титры",
+          "exportEventTitles": "Титры источника событий",
+          "exportTracks": "Треки детекторов и маркеры",
+          "exportPrivacy": "Маскирование",
+          "exportAudio": "Звук",
+          "exportPassword": "Пароль на файл",
+          "exportPlayer": "Плеер в выдаче",
+          "exportCloud": "Выгрузка в облако"
         }
       },
       "Capabilities": {
@@ -11719,7 +12283,9 @@
               "prompt.closed",
               "stream.hello",
               "tree.changed",
-              "journal.event"
+              "journal.event",
+              "export.progress",
+              "export.finished"
             ],
             "x-enum-descriptions": {
               "stream.reset": "Пропущенное не дослать (Last-Event-ID слишком старый): клиент перечитывает то, что есть у него в кэше. Весь перечень не читается никогда",
@@ -11735,7 +12301,9 @@
               "prompt.closed": "Вопрос закрыт: kind=rulePrompt, entityId — вопрос, payload — ruleId, fireId, step, reason: answered, expired, reset, stopped; при answered ещё answer и by — кто ответил",
               "stream.hello": "Первое сообщение потока: clientId — для PUT /stream/{clientId}/watch",
               "tree.changed": "Ветка изменилась вне наблюдения: layout, parentIds. Частота постоянная и не зависит от размера домена. Клиент перечитывает эти ветки, если они у него загружены",
-              "journal.event": "Новая запись журнала об устройстве: entityId — устройство, payload — JournalEvent. Наблюдающим устройство, его родителя или камеру, к которой привязан источник событий: лента и титры закладки «Просмотр»"
+              "journal.event": "Новая запись журнала об устройстве: entityId — устройство, payload — JournalEvent. Наблюдающим устройство, его родителя или камеру, к которой привязан источник событий: лента и титры закладки «Просмотр»",
+              "export.progress": "Ход выгрузки: kind=export, entityId — задание, payload — progress и part. Только автору",
+              "export.finished": "Выгрузка закончилась: kind=export, payload — state и files. Только автору"
             }
           },
           "at": {
@@ -11770,7 +12338,8 @@
               "rulePrompt",
               "scenarios",
               "hold",
-              "bookmark"
+              "bookmark",
+              "export"
             ]
           },
           "entityId": {
@@ -12970,7 +13539,12 @@
           "OTHER_CLUSTER",
           "OTHER_NETWORK",
           "NO_PRIMARY",
-          "FINGERPRINT_MISMATCH"
+          "FINGERPRINT_MISMATCH",
+          "PASSWORD_REQUIRED",
+          "NO_RECORDING",
+          "LIMIT_EXCEEDED",
+          "EXPORT_EXPIRED",
+          "SUPERVISOR_REJECTED"
         ],
         "description": "Машинный код ошибки: интерфейс показывает свой текст по коду",
         "x-enum-descriptions": {
@@ -13012,7 +13586,12 @@
           "OTHER_CLUSTER": "Камера другого кластера: живое видео и PTZ идут через него. params.url — вход через её кластер (409)",
           "FINGERPRINT_MISMATCH": "Отпечаток приёма не совпал с Server.fingerprint",
           "OTHER_NETWORK": "Раздача камеры создана для другой сети. params.labels — метки раздачи (409). Кто вправе — PUT /devices/{id}/live, остальные ждут конца срока раздачи",
-          "NO_PRIMARY": "Основной записи своего кластера нет: закрепить некуда (409)"
+          "NO_PRIMARY": "Основной записи своего кластера нет: закрепить некуда (409)",
+          "PASSWORD_REQUIRED": "Политика требует пароль на выгрузку (422)",
+          "NO_RECORDING": "В отрезке нет записи (422), field — /periods/i",
+          "LIMIT_EXCEEDED": "Предел выгрузки: params.limit — какой, params.max — сколько можно (422)",
+          "EXPORT_EXPIRED": "Файл выгрузки удалён по сроку (410)",
+          "SUPERVISOR_REJECTED": "Супервизор не подтвердил (403), field: /supervisor"
         }
       },
       "ServerPatch": {
@@ -19652,7 +20231,8 @@
           "note",
           "occurred",
           "at",
-          "by"
+          "by",
+          "type"
         ],
         "properties": {
           "id": {
@@ -19676,6 +20256,22 @@
           },
           "by": {
             "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "moment",
+              "span"
+            ],
+            "x-enum-descriptions": {
+              "moment": "Момент occurred",
+              "span": "Отрезок от occurred до to"
+            }
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Конец отрезка: только у span"
           }
         }
       },
@@ -19692,6 +20288,23 @@
           "occurred": {
             "type": "string",
             "format": "date-time"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "moment",
+              "span"
+            ],
+            "x-enum-descriptions": {
+              "moment": "Момент occurred",
+              "span": "Отрезок от occurred до to"
+            },
+            "description": "Нет — moment"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time",
+            "description": "span: конец отрезка, позже occurred; нет или не позже — 422 VALIDATION_FAILED, field: to"
           }
         }
       },
@@ -19771,6 +20384,1069 @@
                 "reason": {
                   "type": "string"
                 }
+              }
+            }
+          }
+        }
+      },
+      "ExportArea": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "x",
+          "y",
+          "w",
+          "h"
+        ],
+        "description": "Область кадра в долях исходного кадра камеры: левый верхний угол x, y, ширина w и высота h. w > 0, h > 0, x + w ≤ 1, y + h ≤ 1, иначе 422 VALIDATION_FAILED, field: /cameras/i/area. Обрезает и видео (с перекодированием), и кадр",
+        "properties": {
+          "x": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "y": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "w": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "h": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      },
+      "ExportCamera": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "deviceId"
+        ],
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "archiveId": {
+            "type": "string",
+            "description": "Какой архив камеры, если их несколько. Нет — сервер выбирает, как playback"
+          },
+          "area": {
+            "$ref": "#/components/schemas/ExportArea"
+          }
+        }
+      },
+      "ExportPeriod": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "to"
+        ],
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Конец не позже начала — 422 VALIDATION_FAILED, field: /periods/i/to"
+          }
+        }
+      },
+      "ExportQuality": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Качество: всё, кроме codec: source, — перекодирование (exportTranscode)",
+        "properties": {
+          "codec": {
+            "type": "string",
+            "description": "Из reference.export.formats[].codecs; source — как в архиве, без перекодирования"
+          },
+          "compression": {
+            "type": "string",
+            "description": "Ступень из reference.export.compression"
+          },
+          "resolution": {
+            "type": "string",
+            "description": "Из reference.export.resolutions; source — как у камеры"
+          },
+          "fpsDivisor": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Прореживание: каждый n-й кадр"
+          },
+          "maxFps": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "speed": {
+            "type": "number",
+            "minimum": 1,
+            "description": "Ускорение: время в файле сжимается в speed раз"
+          }
+        }
+      },
+      "ExportTitles": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Титры (exportTitles)",
+        "properties": {
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Из reference.export.titleFields"
+          },
+          "font": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "family": {
+                "type": "string"
+              },
+              "size": {
+                "type": "integer",
+                "minimum": 6
+              }
+            }
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+          },
+          "background": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+          },
+          "backgroundAlpha": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Прозрачность фона, %"
+          },
+          "overlay": {
+            "type": "string",
+            "enum": [
+              "burned",
+              "soft"
+            ],
+            "x-enum-descriptions": {
+              "burned": "Вшитые в кадр: перекодирование",
+              "soft": "Дорожкой субтитров: только где formats[].softTitles"
+            }
+          },
+          "eventSource": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "on"
+            ],
+            "description": "Титры источника событий: строки журнала источника за отрезок (exportEventTitles)",
+            "properties": {
+              "on": {
+                "type": "boolean"
+              },
+              "overlay": {
+                "type": "string",
+                "enum": [
+                  "burned",
+                  "soft"
+                ],
+                "x-enum-descriptions": {
+                  "burned": "Вшитые в кадр",
+                  "soft": "Дорожкой субтитров"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ExportCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "cameras",
+          "format"
+        ],
+        "description": "Заказ выгрузки. Тело POST /exports и POST /exports/check одно и то же. Ошибки — с field, JSON Pointer по телу: /cameras/0/area, /periods/1/to",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string",
+            "description": "Повтор с тем же ключом — то же задание"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "video",
+              "frame"
+            ],
+            "x-enum-descriptions": {
+              "video": "Видео за отрезки periods",
+              "frame": "Один кадр: из архива в момент at или живой"
+            }
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "archive",
+              "live"
+            ],
+            "description": "Нет — archive",
+            "x-enum-descriptions": {
+              "archive": "Из записи",
+              "live": "Живой кадр: только mode: frame, момент — сейчас по часам сервера; камера без связи — 409 DEVICE_OFFLINE"
+            }
+          },
+          "cameras": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/ExportCamera"
+            },
+            "description": "Больше limits.maxCameras — 422 LIMIT_EXCEEDED"
+          },
+          "periods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExportPeriod"
+            },
+            "description": "mode: video. Больше limits.maxPeriods или суммарно дольше limits.maxTotalSec — 422 LIMIT_EXCEEDED"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "mode: frame, source: archive — момент кадра"
+          },
+          "bookmarkId": {
+            "type": "string",
+            "description": "Вход «закладка»: подпись и титр «закладка». Отрезки окно берёт из закладки само"
+          },
+          "format": {
+            "type": "string",
+            "description": "id из reference.export.formats; вид формата не совпал с mode — 422 NOT_SUPPORTED, field: /format"
+          },
+          "singleFile": {
+            "type": "boolean",
+            "description": "Все камеры дорожками в одном файле: только где formats[].singleFile = tracks"
+          },
+          "name": {
+            "type": "string",
+            "description": "Предложение имени; итог — Export.files[].name"
+          },
+          "password": {
+            "type": "string",
+            "writeOnly": true,
+            "description": "ZIP AES-256, у pdf — пароль PDF. В ответах и журнале нет. Нужен по политике и не прислан — 422 PASSWORD_REQUIRED, field: /password"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "supervisor": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "login",
+              "password"
+            ],
+            "description": "Подтверждение второго человека (accessSupervision). Отказ — 403 SUPERVISOR_REJECTED, field: /supervisor",
+            "properties": {
+              "login": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string",
+                "writeOnly": true
+              }
+            }
+          },
+          "destination": {
+            "type": "string",
+            "enum": [
+              "download",
+              "cloud"
+            ],
+            "x-enum-descriptions": {
+              "download": "Скачать по ссылке",
+              "cloud": "В облако (exportCloud)"
+            }
+          },
+          "quality": {
+            "$ref": "#/components/schemas/ExportQuality"
+          },
+          "special": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "player": {
+                "type": "boolean"
+              },
+              "audio": {
+                "type": "boolean",
+                "description": "Звук записи (exportAudio)"
+              },
+              "maxFileMb": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Части файла не больше, МБ; нет — limits.maxFileMbDefault"
+              }
+            }
+          },
+          "highlight": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Треки детекторов и маркеры закладок (exportTracks)",
+            "properties": {
+              "detectorIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "bookmarks": {
+                "type": "boolean"
+              }
+            }
+          },
+          "privacy": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Маскирование (exportPrivacy). Без права смотреть без маски сервер ставит её сам: Export.enforced.privacy",
+            "properties": {
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "hide",
+                  "invert"
+                ],
+                "x-enum-descriptions": {
+                  "none": "Не скрывать",
+                  "hide": "Скрыть объекты",
+                  "invert": "Скрыть всё, кроме объектов"
+                }
+              }
+            }
+          },
+          "titles": {
+            "$ref": "#/components/schemas/ExportTitles"
+          }
+        }
+      },
+      "ExportCheck": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ok",
+          "errors",
+          "transcode",
+          "files"
+        ],
+        "description": "Проверка без запуска: окно зовёт её при смене камер и отрезков, ошибки встают у своих полей до «Экспорт»",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "description": "Заказ пройдёт: ошибок нет"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "description": "Те же коды, что ответил бы POST /exports, у каждого field"
+          },
+          "transcode": {
+            "type": "boolean",
+            "description": "Будет перекодирование: дольше и с меткой gpu"
+          },
+          "estimate": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "bytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sec": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Сколько займёт, оценка"
+              }
+            }
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "deviceId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Итоговые имена файлов"
+          },
+          "noRecording": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "camera",
+                "period"
+              ],
+              "properties": {
+                "camera": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "period": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "description": "В каких отрезках у какой камеры записи нет совсем (номера в заказе)"
+          }
+        }
+      },
+      "ExportPart": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "deviceId",
+          "state",
+          "percent"
+        ],
+        "description": "Часть — одна камера и одна её запись (ADR-0117 доп. (4)); ход и итог у каждой свои, частичный успех — норма",
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "wait",
+              "run",
+              "ok",
+              "fail",
+              "cancel"
+            ],
+            "x-enum-descriptions": {
+              "wait": "Ждёт",
+              "run": "Идёт",
+              "ok": "Готова",
+              "fail": "Не вышла: code",
+              "cancel": "Отменена"
+            }
+          },
+          "percent": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "no_recording",
+              "unreachable",
+              "no_space",
+              "limit",
+              "offline",
+              "expired"
+            ],
+            "x-enum-descriptions": {
+              "no_recording": "Записи в отрезке нет",
+              "unreachable": "Сервер записи не отвечает",
+              "no_space": "Нет места под файлы",
+              "limit": "Предел",
+              "offline": "Камера без связи (живой кадр)",
+              "expired": "Файлы части потеряны: держатель сменился"
+            }
+          },
+          "partial": {
+            "type": "boolean",
+            "description": "В отрезке дыры: отдано то, что есть"
+          }
+        }
+      },
+      "ExportFile": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "sizeBytes",
+          "mediaType",
+          "expiresAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "deviceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "mediaType": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Файл удаляется по сроку, потом ссылка — 410 EXPORT_EXPIRED"
+          }
+        }
+      },
+      "Export": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "state",
+          "createdAt",
+          "by",
+          "progress",
+          "parts",
+          "files",
+          "request"
+        ],
+        "description": "Задание выгрузки. Видит и скачивает автор; ход приходит потоком export.progress, итог — export.finished. Истина — GET",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "done",
+              "failed",
+              "cancelled",
+              "expired"
+            ],
+            "x-enum-descriptions": {
+              "queued": "В очереди",
+              "running": "Идёт",
+              "done": "Готово: хотя бы одна часть дала файл",
+              "failed": "Ни одна часть не вышла",
+              "cancelled": "Отменено",
+              "expired": "Файлы удалены по сроку"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "by": {
+            "type": "string",
+            "description": "Логин автора"
+          },
+          "supervisedBy": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "percent",
+              "done",
+              "total"
+            ],
+            "properties": {
+              "percent": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "done": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "total": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExportPart"
+            }
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExportFile"
+            }
+          },
+          "request": {
+            "$ref": "#/components/schemas/ExportCreate",
+            "description": "Что заказали: без password и supervisor.password"
+          },
+          "enforced": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Что сервер навязал политикой",
+            "properties": {
+              "privacy": {
+                "type": "boolean"
+              },
+              "watermark": {
+                "type": "boolean"
+              },
+              "password": {
+                "type": "boolean"
+              }
+            }
+          },
+          "transcode": {
+            "type": "boolean"
+          },
+          "retryOf": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "ExportPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Export"
+            }
+          },
+          "nextCursor": {
+            "type": "string"
+          }
+        }
+      },
+      "ExportFileLink": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "url",
+          "expiresAt"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Адрес файла с токеном: дверь отдаёт его attachment и с Range; брать перед самым скачиванием"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ExportGrant": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "allowed",
+          "passwordRequired",
+          "privacyForced",
+          "supervisorRequired",
+          "watermark",
+          "devices"
+        ],
+        "description": "Что можно этому человеку: окно прячет то, чего нельзя, сервер всё равно судит сам",
+        "properties": {
+          "allowed": {
+            "type": "boolean",
+            "description": "Функция EXPORT есть"
+          },
+          "passwordRequired": {
+            "type": "boolean",
+            "description": "Нет ALLOW_UNPROTECTED_EXPORT: без пароля — 422 PASSWORD_REQUIRED"
+          },
+          "privacyForced": {
+            "type": "boolean",
+            "description": "Нет ALLOW_SHOW_PRIVACY_VIDEO_IN_ARCHIVE: маску ставит сервер"
+          },
+          "supervisorRequired": {
+            "type": "boolean"
+          },
+          "watermark": {
+            "type": "boolean"
+          },
+          "depthHours": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Глубина архива роли, 0 — без предела"
+          },
+          "refusal": {
+            "type": "string",
+            "description": "Почему нельзя совсем, словами: защита нужна по политике, а система её не умеет"
+          },
+          "devices": {
+            "type": "array",
+            "description": "Камеры из ids запроса",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "deviceId",
+                "archive",
+                "live"
+              ],
+              "properties": {
+                "deviceId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "archive": {
+                  "type": "boolean",
+                  "description": "Выгружать запись можно"
+                },
+                "live": {
+                  "type": "boolean",
+                  "description": "Живой кадр можно"
+                }
+              }
+            }
+          }
+        }
+      },
+      "RecordingDays": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "days",
+          "unavailable"
+        ],
+        "description": "Сутки с записью — дёшево, для календаря окна. Сутки — в поясе системы (Me.timezone); глубже depth роли не отдаются",
+        "properties": {
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "date",
+                "recorded"
+              ],
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                },
+                "recorded": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "unavailable": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TimelineUnavailable"
+            },
+            "description": "Что не ответило: дней может быть больше"
+          }
+        }
+      },
+      "ExportReference": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "formats",
+          "compression",
+          "resolutions",
+          "fpsDivisors",
+          "titleFields",
+          "fonts",
+          "privacyModes",
+          "destinations",
+          "limits"
+        ],
+        "description": "Справочник окна выгрузки: списки только отсюда, чего нет — того нет в окне",
+        "properties": {
+          "formats": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "kind",
+                "codecs",
+                "softTitles",
+                "chapters",
+                "player",
+                "password",
+                "singleFile",
+                "entries"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "mkv, mp4, avi, exe, jpg, pdf — открытая строка"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "video",
+                    "frame"
+                  ]
+                },
+                "codecs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "source — «По умолчанию», без перекодирования"
+                },
+                "softTitles": {
+                  "type": "boolean"
+                },
+                "chapters": {
+                  "type": "boolean",
+                  "description": "Маркеры закладок главами"
+                },
+                "player": {
+                  "type": "boolean"
+                },
+                "password": {
+                  "type": "string",
+                  "enum": [
+                    "zip",
+                    "native",
+                    "none"
+                  ]
+                },
+                "singleFile": {
+                  "type": "string",
+                  "enum": [
+                    "tracks",
+                    "mosaic",
+                    "none"
+                  ]
+                },
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "archive",
+                      "live"
+                    ]
+                  }
+                }
+              }
+            },
+            "description": "Порядок — порядок в списке окна"
+          },
+          "compression": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "resolutions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "fpsDivisors": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "titleFields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "dateTime, shortName, cameraName, coordinates, user, bookmark"
+          },
+          "fonts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "sizes"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "sizes": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          },
+          "privacyModes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "none",
+                "hide",
+                "invert"
+              ]
+            }
+          },
+          "destinations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "download",
+                "cloud"
+              ]
+            }
+          },
+          "limits": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "maxCameras",
+              "maxPeriods",
+              "maxTotalSec",
+              "maxFileMbDefault",
+              "maxFileMbMax",
+              "maxActivePerUser",
+              "keepSec",
+              "linkTtlSec",
+              "bookmarkPadSec"
+            ],
+            "properties": {
+              "maxCameras": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Камер в задании"
+              },
+              "maxPeriods": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Отрезков в задании"
+              },
+              "maxTotalSec": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Видео в задании суммарно, с"
+              },
+              "maxFileMbDefault": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Часть файла по умолчанию, МБ"
+              },
+              "maxFileMbMax": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Часть файла наибольшая, МБ"
+              },
+              "maxActivePerUser": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Активных заданий у человека: больше — 409 BUSY"
+              },
+              "keepSec": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Сколько живут файлы после готовности"
+              },
+              "linkTtlSec": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Срок ссылки на файл"
+              },
+              "bookmarkPadSec": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Отрезок вокруг закладки-момента: ± столько секунд"
               }
             }
           }
