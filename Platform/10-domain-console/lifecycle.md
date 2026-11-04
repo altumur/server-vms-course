@@ -3,6 +3,8 @@
 Контракт жизненного цикла процесса консоли домена `domainconsole` (ADR-0083 доп. (2) п. 1): запуск, настройка, диск, выход. Нормы —
 [P/10](spec/10-domain-console.norms.md) (стадия B).
 
+Текст производный от en, руками не правится: источник — английский [`en/lifecycle.en.md`](en/lifecycle.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 2).
+
 ## Запуск
 
 - Юнит `w2c-domainconsole.service`, роль `domainconsole`, раннер `w2c-run.sh domainconsole`, `W2C_ROLE=domainconsole`,

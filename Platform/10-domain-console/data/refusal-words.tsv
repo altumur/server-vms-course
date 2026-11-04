@@ -1,6 +1,6 @@
-# Закрытый перечень слов error своих дверей консоли домена (ADR-0094 B5): двери чтения, /domain/alarms. Правила — Н4; формат field — P/06.1 Н2. Переход 3 — слова процесса domain, P/08 data/refusal-words.tsv, как пришли.
+# The closed list of error words of the own doors of the domain console (ADR-0094 B5): the read doors, /domain/alarms. The rules — Н4; the format of field — P/06.1 Н2. Transition 3 — the words of the process domain, P/08 data/refusal-words.tsv, as they came.
 # door — view /domain, /domain/shadow, /domain/members, /domain/topology, /domain/<sub>/<rows>, /domain/shared; placement /domain/placement…;
-# alarms /domain/alarms; * — каждая своя дверь. Слова договоров peer и передачи — их разделы. field — как в таблице P/06; у своих дверей тел нет, поля нет.
+# alarms /domain/alarms; * — every own door. The words of the peer and pass contracts — their sections. field — as in the table of P/06; the own doors have no bodies, there is no field.
 door	code	error	field	norm
 view	400	refused	-	Н4
 view	404	no domain here	-	Н4

@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/08.10: стенд домена hold, m1, m2 — один процесс domain (очередь domain/signer-turn, standby, отдача по SIGTERM) и потолок MEMBERS_MAX. Перенесено из М11/12 (сц. 04, 05; стадия B), номера и шаги прежние. Формат — README.
+# Приёмка P/08.10: стенд домена hold, m1, m2 — один процесс domain (очередь domain/signer-turn, standby, отдача по SIGTERM) и потолок SERVERS_MAX. Перенесено из М11/12 (сц. 04, 05; стадия B), номера и шаги прежние. Формат — README.
 04-one-domain-process	1	@domain m1	ok
 04-one-domain-process	2	@start domain second	ok
 04-one-domain-process	3	@until 30 signer2 POST /api/login {"user": "root", "password": "w2c test root password"}	503 {"error": "standby"}
