@@ -1621,7 +1621,7 @@ class Check:
     def vms_forms(self):
         if self.vms_request_forms is not None:
             return self.vms_request_forms
-        readme = self.root / VMS_DIR / "common/acceptance/README.md"
+        readme = human_text(self.root / VMS_DIR / "common/acceptance/README.md", self.root)   # «Директивы и двери VMS» — русский заголовок (ADR-0124: ru/ у common)
         text = self.read(readme) if readme.exists() else None
         section = re.search(r"^## Директивы и двери VMS.*?(?=^## |\Z)", text or "", re.S | re.M)
         directives, doors = {}, []

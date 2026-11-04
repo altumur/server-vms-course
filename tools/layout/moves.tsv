@@ -848,3 +848,12 @@ Platform/common	-	-	linked
 VMS	VMS/README.md	VMS/ru/README.md	translation
 VMS	VMS/en/README.en.md	VMS/README.md	source
 VMS	-	-	linked
+VMS/common	VMS/common/README.md	VMS/common/ru/README.md	translation
+VMS/common	VMS/common/acceptance/README.md	VMS/common/ru/acceptance/README.md	translation
+VMS/common	VMS/common/inventory.md	VMS/common/ru/inventory.md	translation
+VMS/common	VMS/common/vectors/family-read/README.md	VMS/common/ru/vectors/family-read/README.md	translation
+VMS/common	VMS/common/en/README.en.md	VMS/common/README.md	source
+VMS/common	VMS/common/acceptance/en/README.en.md	VMS/common/acceptance/README.md	source
+VMS/common	VMS/common/en/inventory.en.md	VMS/common/inventory.md	source
+VMS/common	VMS/common/vectors/family-read/en/README.en.md	VMS/common/vectors/family-read/README.md	source
+VMS/common	-	-	linked
