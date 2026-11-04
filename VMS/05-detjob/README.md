@@ -1,12 +1,12 @@
 # V/05 A job over an archive interval
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 Status: **translated** — chapters V/05.1–V/05.4 (2026-10-23; review — 2026-10-29); the plan below is the history of the translation (approved by
 «Архитектор» 2026-10-23, decisions 1–9 accepted; what is in force is the norms of the chapters). Sources: the inventory
-[`../common/inventory.md`](../../common/inventory.md) § 1, § 2 (М10B/20 — the `detjob` half; М10B/21, except the platform
+[`../common/inventory.md`](../common/inventory.md) § 1, § 2 (М10B/20 — the `detjob` half; М10B/21, except the platform
 mechanism; М10B/22 — by reference; М10B/23 step 2). The platform: the export `cammeta-specs` `7a875c75` (the VMS pin). The manifest is
-[`detjob.subsystem.yaml`](../detjob.subsystem.yaml) (the canon; ADR-0090 addendum (6) item 8).
+[`detjob.subsystem.yaml`](detjob.subsystem.yaml) (the canon; ADR-0090 addendum (6) item 8).
 
 ## What lesson V/05 is
 
@@ -37,9 +37,9 @@ events (V/11).
 - **Doors:** `detjob` has no HTTP door of its own — rows through the console door (P/06.1), reading — the archive doors of the recorders (V/02.5)
   and the listing of the holder door (V/01.5) with the role certificate `detjobworker`; the lesson has no OpenAPI — the registry row
   `V/05 no-openapi` (an inquiry with chapter V/05.1).
-- **Data families:** the fields of the rows of the job's events — [`data/detjob-events`](../data/) (the teaching `tick` — `pass`, `scan.partial` —
+- **Data families:** the fields of the rows of the job's events — [`data/detjob-events`](data/) (the teaching `tick` — `pass`, `scan.partial` —
   `partial`, `waited`; the place is the root of a row of the platform events family, the trees `detjob` and `detjob.alarms`; read by the console and
-  the `auto` scenarios), the rows are in the VMS catalogue [`../common/data/catalog.tsv`](../../common/data/catalog.tsv). The rows, the state
+  the `auto` scenarios), the rows are in the VMS catalogue [`../common/data/catalog.tsv`](../common/data/catalog.tsv). The rows, the state
   and the heartbeat are expressed by the manifest: no other process reads the job heartbeat.
 
 ## Decisions for the plan (accepted by «Архитектор» 2026-10-23)
