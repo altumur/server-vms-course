@@ -69,6 +69,10 @@ class Forms(unittest.TestCase):
         self.edit("forms/stages.tsv", "\t-\tdoor,refusals\t", "\t-\tdoor,shell\t")
         self.assertTrue(check_forms.check_stage_parts(self.lesson / "forms/stages.tsv")[0])
 
+    def test_stage_depends(self):                       # depends — только прежние этапы; launch — часть пакета
+        self.edit("forms/stages.tsv", "\t-\tlaunch\t1\t", "\t-\tlaunch\t4\t")
+        self.assertTrue(any("depends" in e for e in check_forms.check_stage_parts(self.lesson / "forms/stages.tsv")[0]))
+
     def test_stage_gate(self):                          # gate списком, tests:<глава>:<сценарии>[:seams]
         self.edit("forms/stages.tsv", "s4-parallel-cas:seams", "s9-nothing:seams")
         self.assertTrue(any("s9-nothing" in e for e in check_forms.check_stage_parts(self.lesson / "forms/stages.tsv")[0]))
