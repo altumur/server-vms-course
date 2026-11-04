@@ -24,6 +24,7 @@
 Итог: `flags: P/N PASS|FAIL` (пропуски — отдельно); код 0 — все прошли, 1 — нет, 2 — ошибка запуска судьи.
 """
 import argparse
+import ipaddress
 import json
 import os
 import random
@@ -48,10 +49,10 @@ COLUMNS = ["flag", "type", "default", "default_text", "required", "commands", "b
 SHORT = {"id": "ID", "api": "API", "tls": "TLS"}
 ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", re.A)
 INT = re.compile(r"-?(0|[1-9][0-9]*)", re.A)
-DUR = re.compile(r"((?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(ns|us|µs|μs|ms|s|m|h))", re.A)
 NS = {"ns": 1, "us": 10 ** 3, "µs": 10 ** 3, "μs": 10 ** 3, "ms": 10 ** 6, "s": 10 ** 9, "m": 60 * 10 ** 9,
       "h": 3600 * 10 ** 9}
 I64 = 2 ** 63
+HOSTNAME = re.compile(r"[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)*", re.A)
 
 
 class Bad(Exception):
@@ -75,18 +76,34 @@ def read_table(path=TABLE):
 
 
 def v_addr(s):
+    """host:port по шапке формы (P/01.3-R031): хост — имя, IPv4 или [IPv6], непустой; порт 1–65535 без ведущих нулей."""
     if s.startswith("["):
         end = s.find("]")
         if end < 0 or s[end + 1:end + 2] != ":":
             raise Bad("not host:port")
         host, port = s[1:end], s[end + 2:]
-        if "[" in host or "[" in port or "]" in port:
+        if "[" in host or "[" in port or "]" in port or ":" in port:
             raise Bad("not host:port")
+        if ":" not in host or "%" in host:
+            raise Bad("not IPv6")
+        try:
+            ipaddress.IPv6Address(host)
+        except ValueError:
+            raise Bad("not IPv6") from None
     else:
         host, sep, port = s.rpartition(":")
         if not sep or ":" in host or "[" in s or "]" in s:
             raise Bad("not host:port")
-    if not re.fullmatch(r"[0-9]{1,5}", port, re.A) or int(port) > 65535:
+        if not host:
+            raise Bad("empty host")
+        if re.fullmatch(r"[0-9.]+", host):
+            try:
+                ipaddress.IPv4Address(host)
+            except ValueError:
+                raise Bad("not IPv4") from None
+        elif not HOSTNAME.fullmatch(host):
+            raise Bad("not a name")
+    if not re.fullmatch(r"[1-9][0-9]{0,4}", port, re.A) or int(port) > 65535:
         raise Bad("port")
     return s
 
@@ -101,28 +118,11 @@ def v_int(s, lo, hi):
 
 
 def v_duration(s):
-    rest = s
-    if rest[:1] in "+-":
-        if rest[0] == "-" and rest[1:] not in ("0", ""):
-            raise Bad("negative")
-        rest = rest[1:]
-    if rest == "0":
-        return 0
-    if not rest:
+    """[1-9][0-9]*(ms|s|m|h), > 0 (шапка формы)."""
+    m = re.fullmatch(r"([1-9][0-9]*)(ms|s|m|h)", s, re.A)
+    if not m or int(m[1]) * NS[m[2]] >= I64:
         raise Bad("duration")
-    total, pos = 0, 0
-    for m in DUR.finditer(rest):
-        if m.start() != pos:
-            raise Bad("duration")
-        num, unit = m.group(1)[:-len(m.group(2))], m.group(2)
-        whole, _, frac = num.partition(".")
-        total += int(whole or 0) * NS[unit] + (int(frac) * NS[unit] // 10 ** len(frac) if frac else 0)
-        pos = m.end()
-    if pos != len(rest):
-        raise Bad("duration")
-    if s.startswith("-") and total:
-        raise Bad("negative")
-    return total
+    return int(m[1]) * NS[m[2]]
 
 
 def parse_value(t, raw):
@@ -269,11 +269,12 @@ class Model:
                 later.append((fld, self.by[d[1:]]["field"]))
             elif d.startswith("$"):
                 val = env.get(d[1:], "")
-                if val:
-                    try:
-                        fields[fld] = parse_value(r["type"], val)[1]
-                    except Bad:
-                        return "refuse", r["flag"]
+                if not val:                       # нет ни флага, ни переменной — отказ (refuse_start, Н4 1.3 стр. 6)
+                    return "refuse", r["flag"]
+                try:
+                    fields[fld] = parse_value(r["type"], val)[1]
+                except Bad:
+                    return "refuse", r["flag"]
             elif r["type"] != "bool":
                 fields[fld] = parse_value(r["type"], d)[1]
         for fld, other in later:
@@ -329,7 +330,7 @@ class Probes:
         if t == "id":
             return ["s1", "Node_2.a-b"]
         if t == "duration":
-            return ["5s", "250ms", "1m30s"]
+            return ["5s", "250ms", "2m", "1h"]
         if t == "bytes:>0":
             return ["1", "4096"]
         if t.startswith("int:"):
@@ -344,7 +345,8 @@ class Probes:
         return []
 
     BAD = {"path": [""], "dir": [""], "file": [""], "addr": ["nohost", "127.0.0.1:65536", "127.0.0.1:99999", "127.0.0.1:x", "::1:80",
-           "127.0.0.1:"], "id": ["_x", "a b", "x" * 129, ""], "duration": ["5", "x", "-1s"],
+           "127.0.0.1:", ":8080", "127.0.0.1:0", "127.0.0.1:080", "[127.0.0.1]:80", "a..b:80", "999.1.1.1:80",
+           "127.000.0.1:80", "[::1%lo]:80", "-a:80"], "id": ["_x", "a b", "x" * 129, ""], "duration": ["5", "x", "-1s", "0s", "1h30m", "1.5s", "5us", "05s", "5S"],
            "bytes:>0": ["0", "512KiB", "-5", "1.5", "x", "007"], "list:id@addr": ["", "s1", "s1@nohost",
            "s1@127.0.0.1:1,", "_x@127.0.0.1:1"], "list:id@addr/addr": ["", "s1@127.0.0.1:1", "s1@127.0.0.1:1/x"]}
 

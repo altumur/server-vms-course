@@ -31,20 +31,41 @@ func valNonEmpty(raw string) (string, error) {
 	return raw, nil
 }
 
-// typeAddr — host:port: порт — десятичное 0…65535; хост может быть пуст (все адреса), IPv6 — в скобках.
+// valAddr — host:port по шапке формы (P/01.3-R031): хост непустой — имя, IPv4 или [IPv6]; порт — десятичное 1…65535
+// без ведущих нулей.
 func valAddr(raw string) (string, error) {
-	_, port, err := net.SplitHostPort(raw)
+	host, port, err := net.SplitHostPort(raw)
 	if err != nil {
 		return "", errors.New("not host:port")
 	}
-	if !digits(port) || len(port) > 5 {
-		return "", errors.New("the port is not a decimal number")
+	if !digits(port) || port[0] == '0' || len(port) > 5 {
+		return "", errors.New("the port is not a decimal number 1–65535")
 	}
 	if n, _ := strconv.Atoi(port); n > 65535 {
 		return "", errors.New("the port is above 65535")
 	}
+	switch {
+	case host == "":
+		return "", errors.New("an empty host")
+	case strings.HasPrefix(raw, "["):
+		if ip := net.ParseIP(host); ip == nil || !strings.Contains(host, ":") {
+			return "", errors.New("[…] is not an IPv6 address")
+		}
+	case ipv4ish.MatchString(host):
+		if ip := net.ParseIP(host); ip == nil || ip.To4() == nil {
+			return "", errors.New("not an IPv4 address")
+		}
+	case !hostName.MatchString(host):
+		return "", errors.New("the host is not a name, IPv4 or [IPv6]")
+	}
 	return raw, nil
 }
+
+var (
+	ipv4ish  = regexp.MustCompile(`^[0-9.]+$`)
+	hostName = regexp.MustCompile(`^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)*$`)
+	duration = regexp.MustCompile(`^([1-9][0-9]*)(ms|s|m|h)$`)
+)
 
 func valID(raw string) (string, error) {
 	if !memberID.MatchString(raw) {
@@ -78,16 +99,18 @@ func valBytes(raw string) (int64, error) {
 	return n, nil
 }
 
-// typeDuration — длительность Go (5s, 250ms, 1m30s), не отрицательная.
+// valDuration — длительность по шапке формы: [1-9][0-9]*(ms|s|m|h), больше 0 (5s, 250ms; не 1h30m, не 1.5s, не µs).
 func valDuration(raw string) (time.Duration, error) {
-	d, err := time.ParseDuration(raw)
-	if err != nil {
-		return 0, errors.New("not a duration (5s, 250ms)")
+	m := duration.FindStringSubmatch(raw)
+	if m == nil {
+		return 0, errors.New("not a duration <integer>(ms|s|m|h) > 0")
 	}
-	if d < 0 {
-		return 0, errors.New("a negative duration")
+	n, err := strconv.ParseInt(m[1], 10, 64)
+	unit := map[string]time.Duration{"ms": time.Millisecond, "s": time.Second, "m": time.Minute, "h": time.Hour}[m[2]]
+	if err != nil || n > int64((1<<63-1)/unit) {
+		return 0, errors.New("the duration is out of range")
 	}
-	return d, nil
+	return time.Duration(n) * unit, nil
 }
 
 // typeEnum — одно из значений; ints — все значения целые: значение CEL — int64.
