@@ -4,10 +4,10 @@ traces `<name>.traces.tsv`.
 The check:
 - form: states, events, timers, actions, functions are closed sets; a transition names an event of events, actions of
   actions with the right number of arguments, `to` — a state; every expression — `if`, the arguments of actions, `set:`,
-  `emit:`, `invariants:` — compiles in CEL when the machine loads, not when a trace reaches it;
+  `invariants:` — compiles in CEL when the machine loads, not when a trace reaches it;
 - traces: step 0 of a trace is `input {...}` (it may override const: `{"const": {...}}`), then external events at times
-  of virtual clocks; the executor raises the timer events itself (tick, the reply deadlines, the read deadlines,
-  wait_expired) in the order of env, runs the transitions, checks the invariants after every event and then the
+  of virtual clocks; the executor raises the timer events itself (tick, read_expired, wait_expired) in the order
+  of env, runs the transitions, checks the invariants after every event and then the
   assertions of the step.
 The executor is the reference for the traces, not an implementation; `check_machines.py` is a tool of check_spec, not a norm
 (ADR-0120 addendum (5) item 6). The timer semantics below are those of rollout-poll's timers: section.
@@ -62,7 +62,7 @@ class Machine:
 
     def form(self):
         d = self.doc
-        for key in ("machine", "norm", "states", "initial", "input", "const", "vars", "timers", "events", "env",
+        for key in ("machine", "norm", "states", "initial", "input", "types", "const", "vars", "timers", "events", "env",
                     "functions", "actions", "invariants", "transitions"):
             if key not in d:
                 self.error(f"no section {key}")
@@ -71,7 +71,7 @@ class Machine:
         if d["initial"] not in d["states"]:
             self.error(f"initial {d['initial']} is not a state")
         for name, action in d["actions"].items():
-            unknown = set(action) - {"args", "set", "emit", "io"}
+            unknown = set(action) - {"args", "set", "io"}
             if unknown:
                 self.error(f"action {name}: unknown keys {sorted(unknown)}")
             for var in action.get("set", {}):
@@ -115,8 +115,6 @@ class Machine:
         for name, action in d["actions"].items():
             for var, expr in action.get("set", {}).items():
                 out.append((f"action {name} set {var}", expr, action.get("args", [])))
-            if "emit" in action:
-                out.append((f"action {name} emit", action["emit"], action.get("args", [])))
         for name, expr in d["invariants"].items():
             out.append((f"invariant {name}", expr, []))
         return out
@@ -143,7 +141,7 @@ class Machine:
 
 
 class Run:
-    """The reference executor: transitions by the file, actions by set/emit/io, timers on virtual clocks."""
+    """The reference executor: transitions by the file, actions by set/io, timers on virtual clocks."""
 
     def __init__(self, machine, inp):
         self.m, self.d = machine, machine.doc
@@ -152,7 +150,6 @@ class Run:
         self.state = self.d["initial"]
         self.vars = {name: json.loads(json.dumps(spec["init"])) for name, spec in self.d["vars"].items()}
         self.now, self.next_tick, self.wait = 0.0, 0, self.const["ROLLOUT_WAIT"]
-        self.pending = {}            # (k, who) → deadline of a reply read of batch k
         self.reads = {}              # n → deadline of a target read
         self.did, self.violations = [], []
 
@@ -186,12 +183,8 @@ class Run:
         action = self.d["actions"][name]
         params = dict(zip(action.get("args", []), values))
         new = {var: self.ev(expr, params) for var, expr in action.get("set", {}).items()}
-        emitted = self.ev(action["emit"], params) if "emit" in action else []
-        if name == "send_status":                          # io: the reads of batch k and their reply deadlines
-            k = values[0]
-            for who in ["self"] + [v for v in self.input["voters"] if v != self.input["self"]]:
-                self.pending[(k, who)] = (k + 1) * self.const["BATCH"]
-            self.did.append(f"send_status {k}")
+        if name == "send_status":                          # io: the reads of batch k; no answer by tick(k + 1) — no event
+            self.did.append(f"send_status {values[0]}")
         if name == "read_commit":                          # io: the read next_read and its deadline
             self.reads[self.vars["next_read"]] = self.now + self.const["READ"]
             self.did.append(f"read_commit {self.vars['next_read']} {','.join(sorted(self.vars['need']))}")
@@ -200,9 +193,6 @@ class Run:
         if name == "refuse":
             self.did.append(f"refuse {values[0]} {values[1]}")
         self.vars.update(new)
-        for e in emitted:
-            kind = e.pop("event")
-            self.event(kind, e)
 
     def deliver(self, kind, params, label):
         if self.state != "polling":                        # passed and refused take no events
@@ -214,13 +204,10 @@ class Run:
                 if not self.ev(expr, {}):
                     self.violations.append(f"invariant {name} broken after {label}")
 
-    def voter_order(self, who):
-        return -1 if who == "self" else self.input["voters"].index(who)
-
     def due(self, until):
         """Raise the timer events up to `until`, one instant at a time, in the order of env."""
         while self.state == "polling":
-            times = list(self.reads.values()) + list(self.pending.values()) + [self.next_tick * self.const["BATCH"]]
+            times = list(self.reads.values()) + [self.next_tick * self.const["BATCH"]]
             if self.wait is not None:
                 times.append(self.wait)
             t = min(times)
@@ -229,14 +216,7 @@ class Run:
             self.now = t
             for n in sorted(n for n, at in self.reads.items() if at == t):
                 del self.reads[n]
-                self.deliver("commit", {"n": n, "c": None}, f"commit {n} null")
-            for k, who in sorted((key for key, at in self.pending.items() if at == t),
-                                 key=lambda x: (x[0], self.voter_order(x[1]))):
-                del self.pending[(k, who)]
-                if who == "self":
-                    self.deliver("self_status", {"k": k, "r": None}, f"self_status {k} null")
-                else:
-                    self.deliver("status", {"k": k, "v": who, "r": None}, f"status {k} {who} null")
+                self.deliver("read_expired", {"n": n}, f"read_expired {n}")
             if self.next_tick * self.const["BATCH"] == t:
                 k = self.next_tick
                 self.next_tick += 1
@@ -250,10 +230,6 @@ class Run:
         self.now = max(self.now, t)
         if kind == "advance":
             return
-        if kind == "self_status":
-            self.pending.pop((params["k"], "self"), None)
-        if kind == "status":
-            self.pending.pop((params["k"], params["v"]), None)
         if kind == "commit":
             self.reads.pop(params["n"], None)
         label = {"self_status": "self", "status": "status", "commit": "commit"}[kind]

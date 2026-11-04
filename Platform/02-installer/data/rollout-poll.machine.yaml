@@ -1,13 +1,14 @@
 # The voter poll of w2cctl rollout — the norm of P/02.4 Н1.9 poll (ADR-0115 addenda (28)–(37); form — ADR-0120 item 2 (b),
-# addendum (5) items 4, 5). The prose of Н1.9 keeps only bound, unproven, other_order and the rationale; where prose and
-# this machine differ, the machine holds. Traces — rollout-poll.traces.tsv; check_spec runs them (check_machines.py).
-# One poll is one instance: pre before the actions, pre before the member restart, or the -last check — each with its own targets.
+# addenda (5) items 4, 5 and (6)). The prose of Н1.9 keeps only why, other_order, bound and unproven; where prose and this
+# machine differ, the machine holds. Traces — rollout-poll.traces.tsv; check_spec runs them (check_machines.py).
+# One poll is one instance: pre before the actions, pre before the member restart — or, with -last, the -last check in place
+# of both — each with its own targets.
 #
 # Execution. Events come one at a time, in time order; timers are part of the machine (timers:), the executor raises their
 # events on virtual clocks. On an event, the transitions with that event name are taken in order: each whose if holds runs
 # its do in order; stop: true or to: <state> ends the event. passed and refused take no events.
-# An action evaluates its set: and emit: over the state before it, then assigns set: at once, then delivers the events of
-# emit: in order, each fully, before the next action. io: is input/output: it changes no variable.
+# An action evaluates its set: over the state before it (after the previous action), then assigns it at once; io: is
+# input/output and changes no variable. There are no nested events.
 # Expressions are CEL (extensions strings, two-var-comprehensions) over the event parameters, input, const and the
 # variables (by name, and as vars.<name>). Sets are lists without repeats. Everything compiles when the machine loads.
 machine: rollout-poll
@@ -16,10 +17,20 @@ states: [polling, passed, refused]
 initial: polling
 
 input:                                   # the status snapshot of the own member at mode (Н1.9 mode, poll)
-  mode: string                           # pre — pass: live ≥ quorum + 1; last — pass: every other voter is live
+  last: bool                             # -last: pass — every other voter is live; otherwise pass — live ≥ quorum + 1
   self: string                           # the id of the own member
-  voters: list<string>                   # voters of the snapshot; self among them; ≥ 2 voters (one with -allow-downtime — no poll, Н1.9 pre)
+  voters: list<string>                   # voters of the snapshot; self among them; ≥ 2 voters; -allow-downtime with ≤ 2 voters — no poll (Н1.9 pre)
   members: map<string,string>            # members of the snapshot: id → address
+
+types:                                   # the answer of GET /v1/status (P/01.3 Н2 /v1/status, schema Status of 01-store.api.openapi.yaml)
+  status:
+    state: "Leader | Follower | Candidate | Shutdown | Door"
+    leader: "string — the -api address of the leader; '' when the leader is unknown or runs without -api"
+    leader_id: "string — the id of the leader; '' when the leader is unknown"
+    applied: int
+    commit: int
+    voters: "list<string> — always present"
+    members: "map<string,string> — id → -api address; a member without -api is absent; may be {}"
 
 const:
   BATCH: 1                               # s; batch k starts at s0 + k·BATCH (s0 — the start of the poll)
@@ -30,8 +41,8 @@ vars:
   k: {type: int, init: -1}                             # the current batch
   leader: {type: "string|null", init: null}            # the address leader of the own member's answer in batch k — only for the target read
   leader_id: {type: "string|null", init: null}         # leader_id of the same answer — what live answers are compared with
-  self_replied: {type: bool, init: false}              # the own member's answer of batch k (or its absence) is processed
-  leaderless: {type: bool, init: false}                # in batch k every voter has a break (no answer of the own member, or no leader)
+  self_replied: {type: bool, init: false}              # the own member's answer of batch k (or its refusal) is processed
+  leaderless: {type: bool, init: false}                # in batch k every voter has a break (the own member refused, or no leader_id)
   replied: {type: "list<string>", init: []}            # voters whose answer of batch k is processed (self too)
   held: {type: "list<{v, r}>", init: []}               # answers of batch k that came before the own member's answer
   alive: {type: "list<string>", init: []}              # live in batch k
@@ -43,23 +54,24 @@ vars:
   result: {type: "{code, word}|null", init: null}      # the refusal of the poll
 
 timers:                                  # a closed set; the executor raises their events
-  batch: {every: BATCH, from: s0, event: tick}                                   # tick(k) at s0 + k·BATCH, k = 0, 1, …
-  reply: {after_io: send_status, until: next tick, event: "self_status(k, null), status(k, v, null)"}   # each read of batch k not answered by tick(k + 1)
-  read: {after_io: read_commit, after: READ, event: "commit(n, null)"}           # a target read not answered within READ
+  batch: {every: BATCH, from: s0, event: tick}                       # tick(k) at s0 + k·BATCH, k = 0, 1, …; it also closes batch k − 1
+  read: {after_io: read_commit, after: READ, event: read_expired}    # a target read not answered within READ
   wait: {after: ROLLOUT_WAIT, from: s0, event: wait_expired}
 
-events:                                  # a closed set; r — the answer of GET /v1/status, or null (no answer in time)
+events:                                  # a closed set
   tick: [k]
-  self_status: [k, r]                    # the own member over admin.sock
-  status: [k, v, r]                      # voter v ≠ self at the address members[v]
-  commit: [n, c]                         # target read n: c — the commit of the leader, or null (no answer in time)
+  self_status: [k, r]                    # the own member over admin.sock: r — the answer, null — the connection was refused before the deadline
+  status: [k, v, r]                      # voter v ≠ self at members[v]: r — the answer, null — the connection was refused before the deadline
+  commit: [n, c]                         # target read n: c — the commit of the leader's answer, null — the connection was refused
+  read_expired: [n]                      # target read n got no answer within READ
   wait_expired: []
 
 env:                                     # assumptions of the environment (P/02.4 Н1.9 bound)
-  - "Events of one instant, in this order: commit(n, null) of reads due; self_status(k − 1, null), then status(k − 1, v, null) in the order of input.voters, for the reads of batch k − 1 not answered; tick(k); wait_expired."
-  - "Each read is answered at most once. An answer later than its deadline may still arrive after the deadline gave null: it carries the old batch k or a finished read n, and the machine ignores it."
+  - "A read of batch k not answered by tick(k + 1) gives no event: tick(k + 1) closes batch k and its action close_batch puts the break."
+  - "Events of one instant, in this order: read_expired; tick; wait_expired; then external events. So an answer of batch k exactly at tick(k + 1) comes after it and is ignored (old k); a commit exactly at its read deadline comes after read_expired and is ignored (finished read); a target read started at tick(k) by the judgement of batch k − 1 belongs to that instant."
+  - "Each read is answered at most once; an answer after its deadline may still arrive and is ignored."
   - "An answer describes the member at some moment between the read and the answer. A voter cut off from the group after its last read, or less than an election timeout before it, still shows its former state and leader_id; a cut-off shorter than 2 s plus an election timeout may stay unseen; a crash and restart shorter than two observations (2 s) may stay unseen — the limits of Н1.9 bound."
-  - "The membership of the store does not change during rollout (Н1.9 limit); a change seen in an answer of the own member refuses the poll. voters and members of the own member may lag behind the leader until the own member applies a membership change (Н1.9 bound)."
+  - "The membership of the store does not change during rollout (Н1.9 limit); a change seen in the answer of the own member or of the leader of the batch refuses the poll; a change after those answers in the passing batch is not seen (Н1.9 bound)."
 
 functions:                               # a closed set
   same_set: "(list, list) -> bool — equal as sets (Н1.9 poll: the order does not count)"
@@ -67,41 +79,45 @@ functions:                               # a closed set
 actions:                                 # a closed set
   send_status:
     args: [k]
-    io: "GET /v1/status of the own member over admin.sock, once (its answer gives the leader of the batch and the answer of the voter self), and of each voter v ≠ self at members[v]; the deadline of each is tick(k + 1) (timer reply)"
+    io: "GET /v1/status of the own member over admin.sock, once (its answer gives the leader of the batch and the answer of the voter self), and of each voter v ≠ self at members[v]; the deadline of each is tick(k + 1)"
   new_batch:
     args: [k]
     set: {k: "k", leader: "null", leader_id: "null", self_replied: "false", leaderless: "false", read_done: "false", replied: "[]", held: "[]", alive: "[]", need: "[]"}
-  rupture:
-    args: [v]
-    set: {target: "target.filter(t, t.v != v)", need: "need.filter(u, u != v)", alive: "alive.filter(u, u != v)", reads: "reads.map(x, {'n': x.n, 'who': x.who.filter(u, u != v)})"}
-  rupture_all:
-    set: {leaderless: "true", target: "[]", need: "[]", alive: "[]", reads: "reads.map(x, {'n': x.n, 'who': []})"}
+  close_batch:                           # batch k − 1 is over: no answer of the own member — a break of all; no answer of a voter — its break
+    set:
+      leaderless: "leaderless || !self_replied"
+      target: "target.filter(t, self_replied && t.v in replied)"
+      need: "need.filter(u, self_replied && u in replied)"
+      alive: "alive.filter(u, self_replied && u in replied)"
+      reads: "reads.map(x, {'n': x.n, 'who': x.who.filter(u, self_replied && u in replied)})"
+      held: "[]"
+  break_all:                             # the own member refused the connection, or answered without leader_id — a break of all in this batch
+    set: {leaderless: "true", self_replied: "true", target: "[]", need: "[]", alive: "[]", reads: "reads.map(x, {'n': x.n, 'who': []})", replied: "replied + [input.self] + held.map(h, h.v)", held: "[]"}
   set_leader:
     args: [r]
-    set: {leader: "r.leader", leader_id: "r.leader_id"}
-  self_done:
-    set: {self_replied: "true"}
+    set: {leader: "r.leader", leader_id: "r.leader_id", self_replied: "true"}
   hold:
     args: [v, r]
     set: {held: "held + [{'v': v, 'r': r}]"}
-  release_held:
-    set: {held: "[]"}
-    emit: "held.map(h, {'event': 'status', 'k': vars.k, 'v': h.v, 'r': h.r})"
-  as_voter:
-    args: [r]
-    emit: "[{'event': 'status', 'k': vars.k, 'v': input.self, 'r': r}]"
-  mark_replied:
-    args: [v]
-    set: {replied: "v in replied ? replied : replied + [v]"}
-  mark_need:
-    args: [v]
-    set: {need: "v in need ? need : need + [v]"}
-  mark_alive:
-    args: [v]
-    set: {alive: "v in alive ? alive : alive + [v]"}
+  answer:                                # the answer of voter v in this batch: live — a target read or the count; otherwise — its break
+    args: [v, r]
+    set:
+      target: "(!leaderless && r != null && (r.state == 'Leader' || r.state == 'Follower') && r.leader_id == leader_id) ? target : target.filter(t, t.v != v)"
+      need: "(!leaderless && r != null && (r.state == 'Leader' || r.state == 'Follower') && r.leader_id == leader_id) ? (!target.exists(t, t.v == v) && !reads.exists(x, v in x.who) && !(v in need) ? need + [v] : need) : need.filter(u, u != v)"
+      alive: "(!leaderless && r != null && (r.state == 'Leader' || r.state == 'Follower') && r.leader_id == leader_id) ? (target.exists(t, t.v == v && r.applied >= t.c) && !(v in alive) ? alive + [v] : alive) : alive.filter(u, u != v)"
+      reads: "(!leaderless && r != null && (r.state == 'Leader' || r.state == 'Follower') && r.leader_id == leader_id) ? reads : reads.map(x, {'n': x.n, 'who': x.who.filter(u, u != v)})"
+      replied: "v in replied ? replied : replied + [v]"
+  answer_held:                           # the held answers of this batch, after the own member's answer gave leader_id (one answer per voter)
+    set:
+      target: "target.filter(t, !held.exists(h, h.v == t.v && !(h.r != null && (h.r.state == 'Leader' || h.r.state == 'Follower') && h.r.leader_id == leader_id)))"
+      need: "need + held.filter(h, h.r != null && (h.r.state == 'Leader' || h.r.state == 'Follower') && h.r.leader_id == leader_id && !target.exists(t, t.v == h.v) && !reads.exists(x, h.v in x.who) && !(h.v in need)).map(h, h.v)"
+      alive: "alive + held.filter(h, h.r != null && (h.r.state == 'Leader' || h.r.state == 'Follower') && h.r.leader_id == leader_id && target.exists(t, t.v == h.v && h.r.applied >= t.c) && !(h.v in alive)).map(h, h.v)"
+      reads: "reads.map(x, {'n': x.n, 'who': x.who.filter(u, !held.exists(h, h.v == u && !(h.r != null && (h.r.state == 'Leader' || h.r.state == 'Follower') && h.r.leader_id == leader_id)))})"
+      replied: "replied + held.filter(h, !(h.v in replied)).map(h, h.v)"
+      held: "[]"
   read_commit:
     set: {reads: "reads + [{'n': next_read, 'who': need}]", next_read: "next_read + 1", need: "[]", read_done: "true"}
-    io: "GET /v1/status of the leader of the batch (admin.sock when leader_id == input.self, otherwise the address leader); its commit is the target of read next_read; deadline READ (timer read)"
+    io: "GET /v1/status of the leader of the batch (admin.sock when leader_id == input.self, otherwise the address leader, or members[leader_id] when leader is ''); its commit is the target of read next_read; deadline READ (timer read)"
   set_targets:
     args: [n, c]
     set: {target: "target + reads.filter(x, x.n == n)[0].who.map(v, {'v': v, 'c': c})", reads: "reads.filter(x, x.n != n)"}
@@ -122,37 +138,43 @@ invariants:                              # CEL over vars and input; hold after e
   read_has_no_target: "reads.all(x, x.who.all(v, !target.exists(t, t.v == v)))"
   one_target: "target.all(t, target.filter(u, u.v == t.v).size() == 1)"
   voters_only: "replied.all(v, v in input.voters) && target.all(t, t.v in input.voters)"
+  held_only_before_self: "self_replied ? size(held) == 0 : size(alive) == 0 && size(replied) == 0"
 
 transitions:
-  # tick(k): first the judgement of batch k − 1 (its answers have all come or their deadline is this instant), then the new batch
-  - {event: tick, if: "k > 0 && (input.mode == 'pre' ? size(alive) >= size(input.voters) / 2 + 2 : input.voters.all(v, v == input.self || v in alive))", do: [pass], to: passed}
+  # tick(k): close batch k − 1 (answers that did not come are breaks), judge it, then the new batch
+  - {event: tick, if: "k > 0", do: [close_batch]}
+  - {event: tick, if: "k > 0 && (input.last ? input.voters.all(v, v == input.self || v in alive) : size(alive) >= size(input.voters) / 2 + 2)", do: [pass], to: passed}
   - {event: tick, if: "k > 0 && size(need) > 0 && !read_done", do: [read_commit]}
   - {event: tick, do: ["new_batch(k)", "send_status(k)"], stop: true}
 
-  # self_status(k, r): a received answer checks the membership always, then leadership; no leader — a break of all
+  # self_status(k, r): a received answer checks the membership always (its own and the held answer of the leader), then
+  # leadership; no leader_id — a break of all; otherwise the leader of the batch, the own answer, the held answers
   - {event: self_status, if: "k != vars.k", stop: true}
-  - {event: self_status, if: "r == null", do: [rupture_all, self_done, "mark_replied(input.self)", release_held], stop: true}
+  - {event: self_status, if: "r == null", do: [break_all], stop: true}
   - {event: self_status, if: "!same_set(r.voters, input.voters) || r.members != input.members", do: ["refuse(2, 'voters changed')"], to: refused}
-  - {event: self_status, if: "input.mode == 'last' && r.state != 'Leader'", do: ["refuse(2, '-last: not the leader')"], to: refused}
-  - {event: self_status, if: "input.mode == 'pre' && r.state == 'Leader' && size(input.voters) > 1", do: ["refuse(2, 'leader goes last')"], to: refused}
-  - {event: self_status, if: "!has(r.leader_id) || r.leader_id == '' || !has(r.leader) || r.leader == ''", do: [rupture_all, self_done, "mark_replied(input.self)", release_held], stop: true}
-  - {event: self_status, do: ["set_leader(r)", self_done, "as_voter(r)", release_held], stop: true}
+  - {event: self_status, if: "r.leader_id != '' && held.exists(h, h.v == r.leader_id && h.r != null && (!same_set(h.r.voters, input.voters) || h.r.members != input.members))", do: ["refuse(2, 'voters changed')"], to: refused}
+  - {event: self_status, if: "input.last && (r.state != 'Leader' || r.leader_id != input.self)", do: ["refuse(2, '-last: not the leader')"], to: refused}
+  - {event: self_status, if: "!input.last && r.state == 'Leader' && size(input.voters) > 1", do: ["refuse(2, 'leader goes last')"], to: refused}
+  - {event: self_status, if: "r.leader_id == ''", do: [break_all], stop: true}
+  - {event: self_status, do: ["set_leader(r)", "answer(input.self, r)", answer_held]}
+  - {event: self_status, if: "size(replied) == size(input.voters) && size(need) > 0 && !read_done", do: [read_commit], stop: true}
+  - {event: self_status, stop: true}
 
   # status(k, v, r): the answer of a voter in batch k
   - {event: status, if: "k != vars.k", stop: true}
   - {event: status, if: "!self_replied", do: ["hold(v, r)"], stop: true}
-  - {event: status, if: "leaderless || r == null || !(r.state == 'Leader' || r.state == 'Follower') || r.leader_id != leader_id", do: ["rupture(v)", "mark_replied(v)"]}
-  - {event: status, if: "!leaderless && r != null && (r.state == 'Leader' || r.state == 'Follower') && r.leader_id == leader_id && !target.exists(t, t.v == v) && !reads.exists(x, v in x.who)", do: ["mark_need(v)"]}
-  - {event: status, if: "!leaderless && r != null && (r.state == 'Leader' || r.state == 'Follower') && r.leader_id == leader_id && target.exists(t, t.v == v && r.applied >= t.c)", do: ["mark_alive(v)"]}
-  - {event: status, do: ["mark_replied(v)"]}
+  - {event: status, if: "!leaderless && v == leader_id && r != null && (!same_set(r.voters, input.voters) || r.members != input.members)", do: ["refuse(2, 'voters changed')"], to: refused}
+  - {event: status, do: ["answer(v, r)"]}
   - {event: status, if: "size(replied) == size(input.voters) && size(need) > 0 && !read_done", do: [read_commit], stop: true}
   - {event: status, stop: true}
 
-  # commit(n, c): a target read has come back, or its deadline passed
+  # commit(n, c) — a target read came back (c) or its connection was refused (null); read_expired(n) — its deadline passed
   - {event: commit, if: "!reads.exists(x, x.n == n)", stop: true}
   - {event: commit, if: "c == null", do: ["drop_read(n)"], stop: true}
   - {event: commit, do: ["set_targets(n, c)"], stop: true}
+  - {event: read_expired, if: "reads.exists(x, x.n == n)", do: ["drop_read(n)"], stop: true}
+  - {event: read_expired, stop: true}
 
   # the deadline of the poll: tick of the same instant has already judged the last batch
-  - {event: wait_expired, if: "input.mode == 'pre'", do: ["refuse(2, 'not enough live voters')"], to: refused}
+  - {event: wait_expired, if: "!input.last", do: ["refuse(2, 'not enough live voters')"], to: refused}
   - {event: wait_expired, do: ["refuse(2, '-last: voters not live')"], to: refused}

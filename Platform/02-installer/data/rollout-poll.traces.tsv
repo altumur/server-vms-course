@@ -1,168 +1,227 @@
 # Traces of rollout-poll.machine.yaml (ADR-0120 item 2 (b), addendum (5) item 4 (b)): step 0 — input (const may be overridden), then
 # external events at virtual time t; the executor raises tick, the reply and read deadlines and wait_expired itself. expect — assertions after the step,
 # separated by «;»: state, alive, need, replied (sets, comma separated), target.<v> (- — no target), reads (n:whom …), did (an event or io of the step, timers included),
-# not (no such event or io). Cases — ADR-0115 addenda (28)–(37), the Architect's remark 7, ADR-0120 addendum (5) item 4 (b), (c).
+# not (no such event or io). Cases — ADR-0115 addenda (28)–(37), the Architect's remark 7, ADR-0120 addenda (5) item 4 (b), (c) and (6).
 trace	step	t	event	expect
-healthy-under-write	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	state=polling
+healthy-under-write	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	state=polling
 healthy-under-write	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	did=tick 0; did=send_status 0; need=a; replied=a
-healthy-under-write	2	0.2	status 0 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	need=a,b
-healthy-under-write	3	0.3	status 0 c {"state": "Follower", "leader_id": "b", "applied": 9, "commit": 9}	did=read_commit 1 a,b,c; need=; reads=1:a,b,c
+healthy-under-write	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	need=a,b
+healthy-under-write	3	0.3	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 9, "commit": 9, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	did=read_commit 1 a,b,c; need=; reads=1:a,b,c
 healthy-under-write	4	0.5	commit 1 12	target.a=12; target.b=12; target.c=12; reads=
 healthy-under-write	5	1.1	self 1 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 12, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 12}	did=tick 1; alive=a
-healthy-under-write	6	1.2	status 1 b {"state": "Leader", "leader_id": "b", "applied": 14, "commit": 14}	alive=a,b
-healthy-under-write	7	1.3	status 1 c {"state": "Follower", "leader_id": "b", "applied": 13, "commit": 13}	alive=a,b,c; target.c=12
+healthy-under-write	6	1.2	status 1 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 14, "commit": 14, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	alive=a,b
+healthy-under-write	7	1.3	status 1 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 13, "commit": 13, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	alive=a,b,c; target.c=12
 healthy-under-write	8	2	advance	did=tick 2; did=pass; state=passed
-rupture-drops-target	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+rupture-drops-target	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 rupture-drops-target	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-rupture-drops-target	2	0.2	status 0 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
-rupture-drops-target	3	0.3	status 0 c {"state": "Follower", "leader_id": "b", "applied": 10, "commit": 10}	reads=1:a,b,c
+rupture-drops-target	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+rupture-drops-target	3	0.3	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	reads=1:a,b,c
 rupture-drops-target	4	0.5	commit 1 10	target.c=10
 rupture-drops-target	5	1.1	self 1 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	alive=a
-rupture-drops-target	6	1.2	status 1 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	alive=a,b
+rupture-drops-target	6	1.2	status 1 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	alive=a,b
 rupture-drops-target	7	1.3	status 1 c null	target.c=-; alive=a,b
 rupture-drops-target	8	2.1	self 2 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 20, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 20}	did=tick 2; state=polling
-rupture-drops-target	9	2.2	status 2 b {"state": "Leader", "leader_id": "b", "applied": 20, "commit": 20}	alive=a,b
-rupture-drops-target	10	2.3	status 2 c {"state": "Follower", "leader_id": "b", "applied": 11, "commit": 11}	need=; did=read_commit 2 c; reads=2:c
+rupture-drops-target	9	2.2	status 2 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 20, "commit": 20, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	alive=a,b
+rupture-drops-target	10	2.3	status 2 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 11, "commit": 11, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	need=; did=read_commit 2 c; reads=2:c
 rupture-drops-target	11	2.5	commit 2 20	target.c=20
 rupture-drops-target	12	3.1	self 3 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 20, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 20}	
-rupture-drops-target	13	3.2	status 3 b {"state": "Leader", "leader_id": "b", "applied": 20, "commit": 20}	
-rupture-drops-target	14	3.3	status 3 c {"state": "Follower", "leader_id": "b", "applied": 15, "commit": 15}	alive=a,b
+rupture-drops-target	13	3.2	status 3 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 20, "commit": 20, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+rupture-drops-target	14	3.3	status 3 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 15, "commit": 15, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	alive=a,b
 rupture-drops-target	15	4.1	self 4 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 20, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 20}	state=polling
-rupture-drops-target	16	4.2	status 4 b {"state": "Leader", "leader_id": "b", "applied": 20, "commit": 20}	
-rupture-drops-target	17	4.3	status 4 c {"state": "Follower", "leader_id": "b", "applied": 20, "commit": 20}	alive=a,b,c
+rupture-drops-target	16	4.2	status 4 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 20, "commit": 20, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+rupture-drops-target	17	4.3	status 4 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 20, "commit": 20, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	alive=a,b,c
 rupture-drops-target	18	5	advance	state=passed
-not-live-reply	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+not-live-reply	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 not-live-reply	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-not-live-reply	2	0.2	status 0 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
-not-live-reply	3	0.3	status 0 c {"state": "Candidate", "leader_id": "b", "applied": 10, "commit": 10}	need=; replied=a,b,c; did=read_commit 1 a,b; reads=1:a,b
+not-live-reply	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+not-live-reply	3	0.3	status 0 c {"state": "Candidate", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	need=; replied=a,b,c; did=read_commit 1 a,b; reads=1:a,b
 not-live-reply	4	0.5	commit 1 10	target.c=-
 not-live-reply	5	1.1	self 1 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-not-live-reply	6	1.2	status 1 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
-not-live-reply	7	1.3	status 1 c {"state": "Follower", "leader_id": "c", "applied": 10, "commit": 10}	alive=a,b; need=
+not-live-reply	6	1.2	status 1 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+not-live-reply	7	1.3	status 1 c {"state": "Follower", "leader": "h-c", "leader_id": "c", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	alive=a,b; need=
 not-live-reply	8	2	advance	state=polling
-leader-changed	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+leader-changed	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 leader-changed	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-leader-changed	2	0.2	status 0 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
-leader-changed	3	0.3	status 0 c {"state": "Follower", "leader_id": "b", "applied": 10, "commit": 10}	
+leader-changed	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+leader-changed	3	0.3	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 leader-changed	4	0.5	commit 1 10	target.b=10
 leader-changed	5	1.1	self 1 {"state": "Follower", "leader": "h-c", "leader_id": "c", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	alive=a
-leader-changed	6	1.2	status 1 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	alive=a; target.b=-
-leader-changed	7	1.3	status 1 c {"state": "Leader", "leader_id": "c", "applied": 10, "commit": 10}	alive=a,c; target.a=10
+leader-changed	6	1.2	status 1 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	alive=a; target.b=-
+leader-changed	7	1.3	status 1 c {"state": "Leader", "leader": "h-c", "leader_id": "c", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	alive=a,c; target.a=10
 leader-changed	8	2.1	self 2 {"state": "Follower", "leader": "h-c", "leader_id": "c", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	state=polling
-leader-changed	9	2.2	status 2 b {"state": "Follower", "leader_id": "c", "applied": 10, "commit": 10}	need=b
-leader-changed	10	2.3	status 2 c {"state": "Leader", "leader_id": "c", "applied": 10, "commit": 10}	alive=a,c; did=read_commit 2 b
-held-before-self	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
-held-before-self	1	0.1	status 0 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	replied=; need=
-held-before-self	2	0.2	status 0 c {"state": "Follower", "leader_id": "b", "applied": 10, "commit": 10}	replied=
+leader-changed	9	2.2	status 2 b {"state": "Follower", "leader": "h-c", "leader_id": "c", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	need=b
+leader-changed	10	2.3	status 2 c {"state": "Leader", "leader": "h-c", "leader_id": "c", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	alive=a,c; did=read_commit 2 b
+held-before-self	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+held-before-self	1	0.1	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	replied=; need=
+held-before-self	2	0.2	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	replied=
 held-before-self	3	0.3	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	replied=a,b,c; need=; did=read_commit 1 a,b,c
-self-no-answer	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+self-no-answer	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 self-no-answer	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-self-no-answer	2	0.2	status 0 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
-self-no-answer	3	0.3	status 0 c {"state": "Follower", "leader_id": "b", "applied": 10, "commit": 10}	
+self-no-answer	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+self-no-answer	3	0.3	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 self-no-answer	4	0.5	commit 1 10	target.a=10
-self-no-answer	5	1.2	status 1 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	did=tick 1; replied=
-self-no-answer	6	1.3	status 1 c {"state": "Follower", "leader_id": "b", "applied": 10, "commit": 10}	replied=
-self-no-answer	7	2	advance	did=self_status 1 null; not=pass; state=polling; target.a=-; target.b=-; target.c=-
-read-timeout	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+self-no-answer	5	1.2	status 1 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	did=tick 1; replied=
+self-no-answer	6	1.3	status 1 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	replied=
+self-no-answer	7	2	advance	did=tick 2; not=pass; state=polling; target.a=-; target.b=-; target.c=-
+read-timeout	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 read-timeout	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-read-timeout	2	0.2	status 0 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
-read-timeout	3	0.3	status 0 c {"state": "Follower", "leader_id": "b", "applied": 10, "commit": 10}	reads=1:a,b,c
+read-timeout	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+read-timeout	3	0.3	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	reads=1:a,b,c
 read-timeout	4	1.1	self 1 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	did=tick 1; need=; reads=1:a,b,c
-read-timeout	5	1.2	status 1 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
-read-timeout	6	1.3	status 1 c {"state": "Follower", "leader_id": "b", "applied": 10, "commit": 10}	did=commit 1 null; did=read_commit 2 c; reads=2:c
+read-timeout	5	1.2	status 1 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+read-timeout	6	1.3	status 1 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	did=read_expired 1; did=read_commit 2 c; reads=2:c
 read-timeout	7	2.1	self 2 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	need=a
-read-timeout	8	2.2	status 2 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
-read-timeout	9	2.3	status 2 c {"state": "Follower", "leader_id": "b", "applied": 10, "commit": 10}	did=commit 2 null; did=read_commit 3 a,b,c; reads=3:a,b,c
-read-after-rupture	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+read-timeout	8	2.2	status 2 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+read-timeout	9	2.3	status 2 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	did=read_expired 2; did=read_commit 3 a,b,c; reads=3:a,b,c
+read-after-rupture	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 read-after-rupture	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-read-after-rupture	2	0.2	status 0 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
-read-after-rupture	3	0.3	status 0 c {"state": "Follower", "leader_id": "b", "applied": 10, "commit": 10}	reads=1:a,b,c
+read-after-rupture	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+read-after-rupture	3	0.3	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	reads=1:a,b,c
 read-after-rupture	4	1.1	self 1 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-read-after-rupture	5	1.2	status 1 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
+read-after-rupture	5	1.2	status 1 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 read-after-rupture	6	1.25	status 1 c null	reads=1:a,b
 read-after-rupture	7	1.28	commit 1 10	target.a=10; target.b=10; target.c=-
-one-read-per-batch	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+one-read-per-batch	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 one-read-per-batch	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-one-read-per-batch	2	0.2	status 0 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	need=a,b; reads=
-one-read-per-batch	3	1.1	self 1 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	did=status 0 c null; did=read_commit 1 a,b; did=tick 1; need=; reads=1:a,b
-batch-not-delayed	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+one-read-per-batch	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	need=a,b; reads=
+one-read-per-batch	3	1.1	self 1 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	did=tick 1; did=read_commit 1 a,b; need=; reads=1:a,b
+batch-not-delayed	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 batch-not-delayed	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-batch-not-delayed	2	0.2	status 0 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
-batch-not-delayed	3	0.9	status 0 c {"state": "Follower", "leader_id": "b", "applied": 10, "commit": 10}	did=read_commit 1 a,b,c
+batch-not-delayed	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+batch-not-delayed	3	0.9	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	did=read_commit 1 a,b,c
 batch-not-delayed	4	1	advance	did=tick 1; did=send_status 1; reads=1:a,b,c
-batch-not-delayed	5	1.9	advance	did=commit 1 null; reads=
-late-status-ignored	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+batch-not-delayed	5	1.9	advance	did=read_expired 1; reads=
+late-status-ignored	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 late-status-ignored	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-late-status-ignored	2	0.2	status 0 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
-late-status-ignored	3	1.05	status 0 c {"state": "Follower", "leader_id": "b", "applied": 10, "commit": 10}	did=status 0 c null; did=tick 1; replied=; need=
-late-commit-ignored	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+late-status-ignored	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+late-status-ignored	3	1.05	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	did=tick 1; replied=; need=
+late-commit-ignored	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 late-commit-ignored	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-late-commit-ignored	2	0.2	status 0 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
-late-commit-ignored	3	0.3	status 0 c {"state": "Follower", "leader_id": "b", "applied": 10, "commit": 10}	reads=1:a,b,c
-late-commit-ignored	4	1.3	advance	did=commit 1 null; reads=
+late-commit-ignored	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+late-commit-ignored	3	0.3	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	reads=1:a,b,c
+late-commit-ignored	4	1.3	advance	did=read_expired 1; reads=
 late-commit-ignored	5	1.4	commit 1 10	target.a=-; target.b=-; target.c=-
-deadline-order	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "const": {"ROLLOUT_WAIT": 3}}	
+deadline-order	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "const": {"ROLLOUT_WAIT": 3}}	
 deadline-order	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-deadline-order	2	0.2	status 0 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
-deadline-order	3	0.3	status 0 c {"state": "Follower", "leader_id": "b", "applied": 10, "commit": 10}	
+deadline-order	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+deadline-order	3	0.3	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 deadline-order	4	0.5	commit 1 10	
 deadline-order	5	1.1	self 1 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-deadline-order	6	1.2	status 1 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
-deadline-order	7	1.3	status 1 c {"state": "Follower", "leader_id": "b", "applied": 9, "commit": 9}	
+deadline-order	6	1.2	status 1 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+deadline-order	7	1.3	status 1 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 9, "commit": 9, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 deadline-order	8	2	advance	did=tick 2; not=pass; state=polling
 deadline-order	9	2.1	self 2 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-deadline-order	10	2.2	status 2 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
-deadline-order	11	2.3	status 2 c {"state": "Follower", "leader_id": "b", "applied": 10, "commit": 10}	
+deadline-order	10	2.2	status 2 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+deadline-order	11	2.3	status 2 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 deadline-order	12	2.5	advance	alive=a,b,c
 deadline-order	13	3	advance	did=tick 3; did=pass; state=passed; not=wait_expired
-deadline-order-refuse	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "const": {"ROLLOUT_WAIT": 3}}	
+deadline-order-refuse	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "const": {"ROLLOUT_WAIT": 3}}	
 deadline-order-refuse	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
 deadline-order-refuse	2	3	advance	did=tick 3; did=wait_expired; did=refuse 2 not enough live voters; state=refused
-unanswered-before-tick	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+unanswered-before-tick	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 unanswered-before-tick	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-unanswered-before-tick	2	0.2	status 0 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
-unanswered-before-tick	3	0.3	status 0 c {"state": "Follower", "leader_id": "b", "applied": 10, "commit": 10}	
+unanswered-before-tick	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+unanswered-before-tick	3	0.3	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 unanswered-before-tick	4	0.5	commit 1 10	
 unanswered-before-tick	5	1.1	self 1 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-unanswered-before-tick	6	1.2	status 1 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	alive=a,b
-unanswered-before-tick	7	2	advance	did=status 1 c null; did=tick 2; not=pass; state=polling
-voters-changed	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+unanswered-before-tick	6	1.2	status 1 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	alive=a,b
+unanswered-before-tick	7	2	advance	did=tick 2; not=pass; state=polling; target.c=-
+voters-changed	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 voters-changed	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c", "d"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	state=refused; did=refuse 2 voters changed
-members-changed	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+members-changed	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 members-changed	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b2", "c": "h-c"}, "commit": 10}	state=refused; did=refuse 2 voters changed
-voters-changed-no-leader	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+voters-changed-no-leader	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 voters-changed-no-leader	1	0.1	self 0 {"state": "Follower", "leader": "", "leader_id": "", "applied": 10, "voters": ["a", "b"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	state=refused; did=refuse 2 voters changed
-voters-changed-candidate	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+voters-changed-candidate	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 voters-changed-candidate	1	0.1	self 0 {"state": "Candidate", "leader": "", "leader_id": "", "applied": 10, "voters": ["a", "b", "c", "d"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	state=refused; did=refuse 2 voters changed
-no-leader-break	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
-no-leader-break	1	0.1	status 0 b {"state": "Leader", "leader_id": "b", "applied": 10, "commit": 10}	
+no-leader-break	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+no-leader-break	1	0.1	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 no-leader-break	2	0.2	self 0 {"state": "Follower", "leader": "", "leader_id": "", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	state=polling; replied=a,b; alive=; need=
-candidate-break	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+candidate-break	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 candidate-break	1	0.1	self 0 {"state": "Candidate", "leader": "", "leader_id": "", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	state=polling; replied=a; need=
-voters-reordered	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+voters-reordered	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 voters-reordered	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["c", "a", "b"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	state=polling
-pre-at-leader	0	0	input {"mode": "pre", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+pre-at-leader	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 pre-at-leader	1	0.1	self 0 {"state": "Leader", "leader": "h-a", "leader_id": "a", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	state=refused; did=refuse 2 leader goes last
-last-at-follower	0	0	input {"mode": "last", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+last-at-follower	0	0	input {"last": true, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 last-at-follower	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	state=refused; did=refuse 2 -last: not the leader
-last-passes	0	0	input {"mode": "last", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+last-passes	0	0	input {"last": true, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 last-passes	1	0.1	self 0 {"state": "Leader", "leader": "h-a", "leader_id": "a", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-last-passes	2	0.2	status 0 b {"state": "Follower", "leader_id": "a", "applied": 10, "commit": 10}	
-last-passes	3	0.3	status 0 c {"state": "Follower", "leader_id": "a", "applied": 10, "commit": 10}	did=read_commit 1 a,b,c
+last-passes	2	0.2	status 0 b {"state": "Follower", "leader": "h-a", "leader_id": "a", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+last-passes	3	0.3	status 0 c {"state": "Follower", "leader": "h-a", "leader_id": "a", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	did=read_commit 1 a,b,c
 last-passes	4	0.5	commit 1 10	
 last-passes	5	1.1	self 1 {"state": "Leader", "leader": "h-a", "leader_id": "a", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-last-passes	6	1.2	status 1 b {"state": "Follower", "leader_id": "a", "applied": 10, "commit": 10}	alive=a,b
-last-passes	7	1.3	status 1 c {"state": "Follower", "leader_id": "a", "applied": 9, "commit": 9}	alive=a,b
+last-passes	6	1.2	status 1 b {"state": "Follower", "leader": "h-a", "leader_id": "a", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	alive=a,b
+last-passes	7	1.3	status 1 c {"state": "Follower", "leader": "h-a", "leader_id": "a", "applied": 9, "commit": 9, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	alive=a,b
 last-passes	8	2.1	self 2 {"state": "Leader", "leader": "h-a", "leader_id": "a", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	state=polling
-last-passes	9	2.2	status 2 b {"state": "Follower", "leader_id": "a", "applied": 10, "commit": 10}	
-last-passes	10	2.3	status 2 c {"state": "Follower", "leader_id": "a", "applied": 10, "commit": 10}	alive=a,b,c
+last-passes	9	2.2	status 2 b {"state": "Follower", "leader": "h-a", "leader_id": "a", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+last-passes	10	2.3	status 2 c {"state": "Follower", "leader": "h-a", "leader_id": "a", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	alive=a,b,c
 last-passes	11	3	advance	state=passed; did=pass
-last-two-of-three-not-enough	0	0	input {"mode": "last", "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "const": {"ROLLOUT_WAIT": 3}}	
+last-two-of-three-not-enough	0	0	input {"last": true, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "const": {"ROLLOUT_WAIT": 3}}	
 last-two-of-three-not-enough	1	0.1	self 0 {"state": "Leader", "leader": "h-a", "leader_id": "a", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-last-two-of-three-not-enough	2	0.2	status 0 b {"state": "Follower", "leader_id": "a", "applied": 10, "commit": 10}	
-last-two-of-three-not-enough	3	1.05	commit 1 10	did=status 0 c null; did=read_commit 1 a,b
+last-two-of-three-not-enough	2	0.2	status 0 b {"state": "Follower", "leader": "h-a", "leader_id": "a", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+last-two-of-three-not-enough	3	1.05	commit 1 10	did=commit 1
 last-two-of-three-not-enough	4	1.1	self 1 {"state": "Leader", "leader": "h-a", "leader_id": "a", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
-last-two-of-three-not-enough	5	1.2	status 1 b {"state": "Follower", "leader_id": "a", "applied": 10, "commit": 10}	alive=a,b
+last-two-of-three-not-enough	5	1.2	status 1 b {"state": "Follower", "leader": "h-a", "leader_id": "a", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	alive=a,b
 last-two-of-three-not-enough	6	2.1	self 2 {"state": "Leader", "leader": "h-a", "leader_id": "a", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	state=polling
-last-two-of-three-not-enough	7	2.2	status 2 b {"state": "Follower", "leader_id": "a", "applied": 10, "commit": 10}	
+last-two-of-three-not-enough	7	2.2	status 2 b {"state": "Follower", "leader": "h-a", "leader_id": "a", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
 last-two-of-three-not-enough	8	3	advance	state=refused; did=refuse 2 -last: voters not live
+leader-voters-changed	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+leader-voters-changed	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
+leader-voters-changed	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c", "d"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	state=refused; did=refuse 2 voters changed
+leader-voters-changed-held	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+leader-voters-changed-held	1	0.1	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c2"}}	state=polling
+leader-voters-changed-held	2	0.2	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	state=refused; did=refuse 2 voters changed
+follower-voters-not-checked	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+follower-voters-not-checked	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
+follower-voters-not-checked	2	0.2	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	state=polling
+voters-changed-later-batch	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+voters-changed-later-batch	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
+voters-changed-later-batch	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+voters-changed-later-batch	3	0.3	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+voters-changed-later-batch	4	0.5	commit 1 10	
+voters-changed-later-batch	5	1.1	self 1 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c", "d"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	did=tick 1; state=refused; did=refuse 2 voters changed
+became-leader-later-batch	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+became-leader-later-batch	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
+became-leader-later-batch	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+became-leader-later-batch	3	0.3	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+became-leader-later-batch	4	0.5	commit 1 10	
+became-leader-later-batch	5	1.1	self 1 {"state": "Leader", "leader": "h-a", "leader_id": "a", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	state=refused; did=refuse 2 leader goes last
+lost-leadership-later-batch	0	0	input {"last": true, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+lost-leadership-later-batch	1	0.1	self 0 {"state": "Leader", "leader": "h-a", "leader_id": "a", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	state=polling
+lost-leadership-later-batch	2	1.1	self 1 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	state=refused; did=refuse 2 -last: not the leader
+last-leader-id-not-self	0	0	input {"last": true, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+last-leader-id-not-self	1	0.1	self 0 {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	state=refused; did=refuse 2 -last: not the leader
+leader-address-empty	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+leader-address-empty	1	0.1	self 0 {"state": "Follower", "leader": "", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	need=a; replied=a
+target-voter-silent	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+target-voter-silent	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
+target-voter-silent	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+target-voter-silent	3	0.3	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+target-voter-silent	4	0.5	commit 1 10	target.c=10
+target-voter-silent	5	1.1	self 1 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
+target-voter-silent	6	1.2	status 1 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	alive=a,b; target.c=10
+target-voter-silent	7	2	advance	did=tick 2; target.c=-; target.a=10; not=pass; state=polling
+status-refused-connection	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+status-refused-connection	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
+status-refused-connection	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+status-refused-connection	3	0.3	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+status-refused-connection	4	0.5	commit 1 10	
+status-refused-connection	5	1.1	self 1 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
+status-refused-connection	6	1.15	status 1 c null	target.c=-; replied=a,c
+answer-at-tick-instant	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+answer-at-tick-instant	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
+answer-at-tick-instant	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+answer-at-tick-instant	3	1	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	did=tick 1; replied=; need=
+commit-at-deadline-instant	0	0	input {"last": false, "self": "a", "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+commit-at-deadline-instant	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}, "commit": 10}	
+commit-at-deadline-instant	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	
+commit-at-deadline-instant	3	0.3	status 0 c {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b", "c"], "members": {"a": "h-a", "b": "h-b", "c": "h-c"}}	reads=1:a,b,c
+commit-at-deadline-instant	4	1.3	commit 1 10	did=read_expired 1; reads=; target.a=-
+two-voters-refused	0	0	input {"last": false, "self": "a", "voters": ["a", "b"], "members": {"a": "h-a", "b": "h-b"}, "const": {"ROLLOUT_WAIT": 3}}	
+two-voters-refused	1	0.1	self 0 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b"], "members": {"a": "h-a", "b": "h-b"}, "commit": 10}	
+two-voters-refused	2	0.2	status 0 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b"], "members": {"a": "h-a", "b": "h-b"}}	did=read_commit 1 a,b
+two-voters-refused	3	0.5	commit 1 10	
+two-voters-refused	4	1.1	self 1 {"state": "Follower", "leader": "h-b", "leader_id": "b", "applied": 10, "voters": ["a", "b"], "members": {"a": "h-a", "b": "h-b"}, "commit": 10}	
+two-voters-refused	5	1.2	status 1 b {"state": "Leader", "leader": "h-b", "leader_id": "b", "applied": 10, "commit": 10, "voters": ["a", "b"], "members": {"a": "h-a", "b": "h-b"}}	alive=a,b
+two-voters-refused	6	3	advance	not=pass; state=refused; did=refuse 2 not enough live voters
