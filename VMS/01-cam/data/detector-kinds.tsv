@@ -1,6 +1,6 @@
-# Виды встроенных детекторов: детектор .rep ↔ код контракта Device.detectorKind (V/01.1 Н1.2б, V/11.3 Н1.3; ADR-0107 п. 8). По DriverPack 2026-10-02, сверяется по новой версии. Читает backend.
-# driver — каталог драйвера; template — id детектора в .rep, значение cam/device_units.template; name — его имя; kind — код контракта. Детектора нет в таблице — вне пяти кодов: other. detectorsGroup NoDetector не входит.
-# Сопоставлено по detectionType, id и имени выражением: грубый счёт, сверяется с новой версией вместе с числами.
+# Kinds of built-in detectors: the .rep detector ↔ the contract code Device.detectorKind (V/01.1 Н1.2б, V/11.3 Н1.3; ADR-0107 item 8). By DriverPack 2026-10-02, checked against a new version. Read by backend.
+# driver — the driver directory; template — the detector id in .rep, the value of cam/device_units.template; name — its name; kind — the contract code. A detector not in the table — outside the five codes: other. detectorsGroup NoDetector is not included.
+# Matched by detectionType, id and name with an expression: a rough count, checked against a new version together with the numbers.
 driver	template	name	kind
 3S	motion_detection	Motion Detection	motion
 AEVision	motion_detection	Motion Detection	motion

@@ -1,22 +1,22 @@
 openapi: 3.1.0
 info:
-  title: V/01 — дверь держателя камеры (архив устройства)
+  title: V/01 — the door of the camera holder (the device archive)
   version: 1.0.0
   description: |
-    HTTP-контракт двери держателя `camworker` — главы V/01.5 урока «Камера» модуля VMS. Канон —
-    [нормы главы 5](01.5-cam.norms.md); этот файл их выражает и не добавляет требований: порядок отказов,
-    пределы, куски и бюджет — Н1.5, Н3; личность клиента и разбор запроса — Н2 (сертификат роли, класс `mixed`
-    договора сертификата роли; без комплекта — только петля, маршруты — 401 `no_role`). Только `GET`, у `talk` — `POST`; иной метод на
-    маршруте — 405, иной путь — 404 `no such path`. Порядок: путь → метод → допуск → query (Н2). Цепочка, отвергнутая
-    TLS, — отказ рукопожатия без HTTP-ответа (в контракте не выражается).
+    The HTTP contract of the door of the holder `camworker` — chapter V/01.5 of the lesson «Камера» of the VMS module. The canon is
+    [the norms of chapter 5](01.5-cam.norms.md); this file expresses them and adds no requirements: the order of refusals,
+    the limits, the spans and the budget — Н1.5, Н3; the client identity and the request parsing — Н2 (the role certificate, the class `mixed`
+    of the role certificate contract; without a kit — loopback only, the routes answer 401 `no_role`). Only `GET`, for `talk` — `POST`; another method on
+    a route — 405, another path — 404 `no such path`. The order: path → method → admission → query (Н2). A chain rejected by
+    TLS is a handshake refusal without an HTTP answer (not expressed in the contract).
 servers:
   - url: https://{server}:{port}
-    description: с комплектом роли camworker — адрес SERVER_NAME (V/01.5 Н1.2; P/03.4 Н1.7 kit); сертификат клиента обязателен
+    description: with the kit of the role camworker — the address SERVER_NAME (V/01.5 Н1.2; P/03.4 Н1.7 kit); the client certificate is mandatory
     variables:
       server: {default: "srv-a"}
       port: {default: "0"}
   - url: http://127.0.0.1:{port}
-    description: без комплекта сертификатов — только петля; маршруты отвечают 401 no_role (V/01.5 Н1.2, Н2)
+    description: without a certificate kit — loopback only; the routes answer 401 no_role (V/01.5 Н1.2, Н2)
     variables:
       port: {default: "0"}
 security:
@@ -24,10 +24,10 @@ security:
 paths:
   /devices:
     get:
-      summary: Устройства группы держателя (V/01.5 Н1.4)
+      summary: The devices of the holder's group (V/01.5 Н1.4)
       responses:
         "200":
-          description: по элементу на устройство
+          description: one element per device
           content:
             application/json:
               schema:
@@ -39,14 +39,14 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /recordings/{id}:
     get:
-      summary: Перечень кусков архива устройства по камере (V/01.5 Н1.3, Н3)
+      summary: The list of spans of the device archive for a camera (V/01.5 Н1.3, Н3)
       parameters:
         - $ref: "#/components/parameters/Id"
         - $ref: "#/components/parameters/From"
         - $ref: "#/components/parameters/To"
       responses:
         "200":
-          description: куски, подрезанные к [from, to)
+          description: the spans, clipped to [from, to)
           content:
             application/json:
               schema:
@@ -66,7 +66,7 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /playback/{id}:
     get:
-      summary: Байты архива устройства за интервал (V/01.5 Н1.3, Н3)
+      summary: The bytes of the device archive for an interval (V/01.5 Н1.3, Н3)
       parameters:
         - $ref: "#/components/parameters/Id"
         - $ref: "#/components/parameters/From"
@@ -74,12 +74,12 @@ paths:
       responses:
         "200":
           description: |
-            байты устройства как есть; HTTP/1.1 — Transfer-Encoding chunked, без Content-Length; отказ после
-            первого байта — ответ без последнего куска; Range не поддерживается; дыра внутри краёв покрытия — не
-            отказ, ни байта за весь интервал — 200 без байтов, с последним куском
+            the bytes of the device as they are; HTTP/1.1 — Transfer-Encoding chunked, no Content-Length; a refusal after
+            the first byte — the answer without the last chunk; Range is not supported; a hole inside the coverage edges is not
+            a refusal, not a byte over the whole interval — 200 without bytes, with the last chunk
           headers:
             X-Coverage-From:
-              description: нижний край покрытия, по которому подрезано, секунды (V/01.5 Н1.3)
+              description: the lower edge of the coverage the answer is clipped by, seconds (V/01.5 Н1.3)
               schema: {type: number}
           content:
             video/mp4:
@@ -92,28 +92,28 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /talk/{id}/{number}:
     post:
-      summary: Звук разговора шлюз → держатель → динамик (V/01.5 Н1.3, Н3; V/01.4 Н1.4а); роль liveworker
+      summary: The talk audio gateway → holder → speaker (V/01.5 Н1.3, Н3; V/01.4 Н1.4а); the role liveworker
       parameters:
         - $ref: "#/components/parameters/Id"
         - name: number
           in: path
           required: true
-          description: номер `spk`; не целое ≥ 1 — 404 `no call`
+          description: the number of `spk`; not an integer ≥ 1 — 404 `no call`
           schema: {type: string}
         - name: user
           in: query
           required: true
-          description: кто говорит, `user` токена двери шлюза; сверяется с `by` просьбы `talk`
+          description: who speaks, `user` of the gateway's door token; checked against `by` of the request `talk`
           schema: {type: string, minLength: 1}
       requestBody:
         required: true
-        description: записи SMPL звука подряд, HTTP/1.1 chunked, пока идёт разговор; `BODY` и `PACE_FLOOR` не действуют, кадра нет `TALK_SILENT` — конец (V/01.5 Н1.5)
+        description: SMPL audio records in a row, HTTP/1.1 chunked, while the talk goes on; `BODY` and `PACE_FLOOR` do not apply, no frame for `TALK_SILENT` — the end (V/01.5 Н1.5)
         content:
           application/octet-stream:
             schema: {type: string, format: binary}
       responses:
         "200":
-          description: заголовки — сразу, как занятость сверена; ответ кончается с разговором, тела нет
+          description: the headers — as soon as the busy state is checked; the answer ends with the talk, there is no body
         "400": {$ref: "#/components/responses/Refusal"}
         "401": {$ref: "#/components/responses/NoRole"}
         "403": {$ref: "#/components/responses/RoleRefusal"}
@@ -126,35 +126,35 @@ components:
     roleCertificate:
       type: mutualTLS
       description: |
-        сертификат роли клиента (класс `mixed` договора сертификата роли): допущены recworker, detjobworker,
-        detedgeworker, у `talk` — liveworker; набор доверия — ca.pem, ca.next.pem своего кластера (V/01.5 Н2)
+        the role certificate of the client (the class `mixed` of the role certificate contract): admitted are recworker, detjobworker,
+        detedgeworker, for `talk` — liveworker; the trust set — ca.pem, ca.next.pem of its own cluster (V/01.5 Н2)
   parameters:
     Id:
       name: id
       in: path
       required: true
-      description: id камеры (V/01.1 Н1.1); сегмент как записан, не из назначения — 404 (V/01.5 Н2)
+      description: the camera id (V/01.1 Н1.1); the segment as written, not from the assignment — 404 (V/01.5 Н2)
       schema: {type: string}
     From:
       name: from
       in: query
       required: false
       description: |
-        секунды Unix, включительно, запись числа JSON, конечное; без параметра — от начала архива; повтор, пустое
-        значение, иная запись, from > to (заданы оба) — 400 bad range (V/01.5 Н2)
+        Unix seconds, inclusive, written as a JSON number, finite; without the parameter — from the start of the archive; a repeat, an empty
+        value, another notation, from > to (both given) — 400 bad range (V/01.5 Н2)
       schema: {type: number}
     To:
       name: to
       in: query
       required: false
       description: |
-        секунды Unix, не включительно, запись числа JSON, конечное; без параметра — до конца архива; повтор, пустое
-        значение, иная запись, from > to (заданы оба) — 400 bad range (V/01.5 Н2)
+        Unix seconds, exclusive, written as a JSON number, finite; without the parameter — to the end of the archive; a repeat, an empty
+        value, another notation, from > to (both given) — 400 bad range (V/01.5 Н2)
       schema: {type: number}
   responses:
     Refusal:
-      description: отказ (V/01.5 Н4); 503 предела соединений — с заголовком Retry-After 1; у /playback роли detedgeworker — и
-        запас сессий устройства PLAYBACK_SPARE (Н1.5, Н3)
+      description: a refusal (V/01.5 Н4); 503 of the connection limit — with the header Retry-After 1; for /playback of the role detedgeworker — also
+        the device session spare PLAYBACK_SPARE (Н1.5, Н3)
       headers:
         Retry-After:
           required: false
@@ -170,7 +170,7 @@ components:
               detail: {type: string}
     NoRole:
       description: |
-        сертификата клиента нет (с комплектом) или комплекта нет (петля) — 401 no_role (V/01.5 Н2)
+        no client certificate (with a kit) or no kit (loopback) — 401 no_role (V/01.5 Н2)
       content:
         application/json:
           schema:
@@ -182,8 +182,8 @@ components:
               detail: {type: string}
     RoleRefusal:
       description: |
-        после рукопожатия: роль не из допущенных — wrong_role; роли в SAN не ровно одна — no_role; подпись листа
-        или центра вне sig, серийник в revoked — bad_chain (слова класса `role` договора сертификата роли; V/01.5 Н2)
+        after the handshake: a role not among the admitted — wrong_role; not exactly one role in SAN — no_role; the signature of the leaf
+        or of the authority outside sig, the serial in revoked — bad_chain (the words of the class `role` of the role certificate contract; V/01.5 Н2)
       content:
         application/json:
           schema:
@@ -222,7 +222,7 @@ components:
           type: array
           items: {type: string}
         can:
-          description: описание устройства без identity, channels и resolutions; rays и relays — номера живых детей хоста (V/01.4 Н1.4)
+          description: the device description without identity, channels and resolutions; rays and relays — the numbers of the live children of the host (V/01.4 Н1.4)
           type: object
           additionalProperties: false
           properties:

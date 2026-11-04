@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/01.5: дверь держателя на петле без комплекта; камера-файл без архива устройства. Формат — README.
+# Acceptance of V/01.5: the holder's door on loopback without a kit; a file camera without a device archive. Format — README.
 01-door	1	@start worker cam w-srv-a-1 on srv-a	ok
 01-door	2	POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
 01-door	3	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "idle", "playback_url": "@absent", "coverage": "@absent", "index_url": "@absent"}]}

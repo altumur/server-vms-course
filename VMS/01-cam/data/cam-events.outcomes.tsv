@@ -1,16 +1,16 @@
-# Исходы нечитаемых слов cam в строке события (корень строки семьи events-unit; схема cam-events.schema.json, V/01.2 Н1.5); путь — от строки. Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of unreadable words of cam in an event row (the root of a row of the family events-unit; schema cam-events.schema.json, V/01.2 Н1.5); the path is from the row. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
-	console	строку не судит: выдаёт её дверью /events как прочитал, поля подсистемы — как есть (P/06.4 Н1.3; договор журнала событий line)	1	строка	P/06.4 Н1.3
-	autoworker	слова подсистемы не по форме писателя: не прочитаны, а не отсутствуют — строка не совпадает ни с одним триггером, чей match называет такое поле (сравнение строгое, без приведения); не отказ — строка идёт в окно и курсор как любая	1	строка	V/07.2 Н1.3, Н4
-/port	autoworker	port io.input не по форме писателя: триггер с match по «port» не совпадает ("1" ≠ 1), прочие поля строки сравниваются	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
-/value	autoworker	value io.input не по форме писателя: триггер с match по «value» не совпадает ("1" ≠ 1), прочие поля строки сравниваются	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
-/dropped	autoworker	dropped source-stats не по форме писателя: триггер с match по «dropped» не совпадает ("1" ≠ 1), прочие поля строки сравниваются	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
-/depth	autoworker	depth source-stats не по форме писателя: триггер с match по «depth» не совпадает ("1" ≠ 1), прочие поля строки сравниваются	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
-/lines	autoworker	lines text не по форме писателя: триггер с match по «lines» не совпадает ("1" ≠ 1), прочие поля строки сравниваются	1	поле	V/07.2 Н1.3; V/01.2 Н1.5; V/11.17 Н1.2
-/group	autoworker	group text не по форме писателя: триггер с match по «group» не совпадает ("1" ≠ 1), прочие поля строки сравниваются	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
-/camera	autoworker	camera text не по форме писателя: триггер с match по «camera» не совпадает ("1" ≠ 1), прочие поля строки сравниваются	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
-/word	autoworker	word text не по форме писателя: триггер с match по «word» не совпадает ("1" ≠ 1), прочие поля строки сравниваются	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
-/unit	autoworker	unit не по форме писателя: триггер с match по «unit» не совпадает ("1" ≠ 1), прочие поля строки сравниваются	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
-/event	autoworker	event unit не по форме писателя: триггер с match по «event» не совпадает ("1" ≠ 1), прочие поля строки сравниваются	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
-/phase	autoworker	phase unit не по форме писателя: триггер с match по «phase» не совпадает ("1" ≠ 1), прочие поля строки сравниваются	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
-/det_kind	autoworker	det_kind unit не по форме писателя: как det строка не судится, прочие поля строки сравниваются	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
+	console	does not judge the row: serves it by the door /events as read, the subsystem's fields as they are (P/06.4 Н1.3; the event log contract line)	1	строка	P/06.4 Н1.3
+	autoworker	the subsystem's words not in the writer's form: not read, rather than absent — the row matches no trigger whose match names such a field (the comparison is strict, without coercion); not a refusal — the row goes to the window and the cursor like any other	1	строка	V/07.2 Н1.3, Н4
+/port	autoworker	port of io.input not in the writer's form: a trigger with match on «port» does not match ("1" ≠ 1), the other fields of the row are compared	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
+/value	autoworker	value of io.input not in the writer's form: a trigger with match on «value» does not match ("1" ≠ 1), the other fields of the row are compared	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
+/dropped	autoworker	dropped of source-stats not in the writer's form: a trigger with match on «dropped» does not match ("1" ≠ 1), the other fields of the row are compared	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
+/depth	autoworker	depth of source-stats not in the writer's form: a trigger with match on «depth» does not match ("1" ≠ 1), the other fields of the row are compared	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
+/lines	autoworker	lines of text not in the writer's form: a trigger with match on «lines» does not match ("1" ≠ 1), the other fields of the row are compared	1	поле	V/07.2 Н1.3; V/01.2 Н1.5; V/11.17 Н1.2
+/group	autoworker	group of text not in the writer's form: a trigger with match on «group» does not match ("1" ≠ 1), the other fields of the row are compared	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
+/camera	autoworker	camera of text not in the writer's form: a trigger with match on «camera» does not match ("1" ≠ 1), the other fields of the row are compared	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
+/word	autoworker	word of text not in the writer's form: a trigger with match on «word» does not match ("1" ≠ 1), the other fields of the row are compared	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
+/unit	autoworker	unit not in the writer's form: a trigger with match on «unit» does not match ("1" ≠ 1), the other fields of the row are compared	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
+/event	autoworker	event of unit not in the writer's form: a trigger with match on «event» does not match ("1" ≠ 1), the other fields of the row are compared	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
+/phase	autoworker	phase of unit not in the writer's form: a trigger with match on «phase» does not match ("1" ≠ 1), the other fields of the row are compared	1	поле	V/07.2 Н1.3; V/01.2 Н1.5
+/det_kind	autoworker	det_kind of unit not in the writer's form: the row is not judged as det, the other fields of the row are compared	1	поле	V/07.2 Н1.3; V/01.2 Н1.5

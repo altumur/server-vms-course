@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/01.2: держатель камеры (хранилище, консоль cam, контроллер cam, ресурс и держатель на srv-a). Формат — README.
+# Acceptance of V/01.2: the camera holder (the store, the console cam, the controller cam, the resource and the holder on srv-a). Format — README.
 01-hold	1	@start worker cam w-srv-a-1 on srv-a	ok
 01-hold	2	POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
 01-hold	3	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "idle", "live_url": "@absent", "live_shm": "@absent"}]}
