@@ -1,11 +1,11 @@
 # Acceptance V/11.8 — translation of rights
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/8/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`11.8-backend.norms.md`](../../../spec/11.8-backend.norms.md) Н5, the boundary of the suite is [V/11.6](../../../spec/11.6-backend.norms.md) Н5. The stand and the vocabulary are the [common README
-of VMS acceptance](../../../../common/acceptance/README.md) on top of the common platform README (export `7a875c75`, the VMS pin).
+The norm of the chapter is [`11.8-backend.norms.md`](../../spec/11.8-backend.norms.md) Н5, the boundary of the suite is [V/11.6](../../spec/11.6-backend.norms.md) Н5. The stand and the vocabulary are the [common README
+of VMS acceptance](../../../common/acceptance/README.md) on top of the common platform README (export `7a875c75`, the VMS pin).
 
-The basis of the `backend` acceptance is the consolem API tests in the profile ([`data/profile-tests.tsv`](../../../data/profile-tests.tsv)). Here is only what they do not see (ADR-0094 addenda (17), (18)):
+The basis of the `backend` acceptance is the consolem API tests in the profile ([`data/profile-tests.tsv`](../../data/profile-tests.tsv)). Here is only what they do not see (ADR-0094 addenda (17), (18)):
 the column «What the test does not see» is mandatory, the analysis of the tests is the listing of gaps by «Консоль» at `ef7175b`. The first run is with the first generation of V/11; until then the scenarios are the text of the norm.
 
 ## Preparation

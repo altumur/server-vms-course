@@ -1,10 +1,10 @@
 # V/11 Configurator backend
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 Status: **translated** (2026-10-30, «Спецификация VMS»; the plan is accepted by «Архитектор»): chapters V/11.1–V/11.19 — norms (chapters 15–19 are the former lesson V/08, ADR-0118), chapters 9–13 moved from V/10 (ADR-0093 addendum (8) item 2; 2026-11-02); the stand —
 by a candidate with the platform norms B. The basis is ADR-0094 (A1–A7, addenda (1)–(16); B1–B7, B9 — platform norms), ADR-0095–ADR-0100.
-The platform is the export `cammeta-specs` `7a875c75` (the VMS pin; the increment of rights on top of the norms B, ADR-0090 addendum (17)). The manifest is [`backend.subsystem.yaml`](../backend.subsystem.yaml)
+The platform is the export `cammeta-specs` `7a875c75` (the VMS pin; the increment of rights on top of the norms B, ADR-0090 addendum (17)). The manifest is [`backend.subsystem.yaml`](backend.subsystem.yaml)
 (the canon; ADR-0090 addendum (6) item 8). The sources are the session «Консоль»
 (a comparison with consolem, a sketch of the adapter; reference, not canon).
 
@@ -20,9 +20,9 @@ console itself: the shell `backend.shell.html` and the files of the product set 
 
 | Chapter | What it norms | Status | Platform and lessons |
 |---|---|---|---|
-| V/11.1 | The unit `backend/instances/<name>` by labels next to `live`; the callback — TLS with the role `backend`, the ticket is bound to the server leaf of the instance (one per server), a socket — only without a kit (addendum (6)); the worker is without rights and without state; the WebUI — the shell [`backend.shell.html`](../backend.shell.html) with a CSP of exactly the minimum of P/06.5 (`index.html` of the consolem build `39ba6a3`) and the static files of the subsystem (B7: the list in the manifest, the commit and SHA-256, outside `api/`); the handover: the route `api`, the answer JSON/SSE, the second view and the callback listing with `<sub>/policy` (B1) | norms | P/02.1, P/03, P/04, P/06.5 Н1.1, Н1.8; ADR-0094 B1, B7, addenda (6), (8) |
+| V/11.1 | The unit `backend/instances/<name>` by labels next to `live`; the callback — TLS with the role `backend`, the ticket is bound to the server leaf of the instance (one per server), a socket — only without a kit (addendum (6)); the worker is without rights and without state; the WebUI — the shell [`backend.shell.html`](backend.shell.html) with a CSP of exactly the minimum of P/06.5 (`index.html` of the consolem build `39ba6a3`) and the static files of the subsystem (B7: the list in the manifest, the commit and SHA-256, outside `api/`); the handover: the route `api`, the answer JSON/SSE, the second view and the callback listing with `<sub>/policy` (B1) | norms | P/02.1, P/03, P/04, P/06.5 Н1.1, Н1.8; ADR-0094 B1, B7, addenda (6), (8) |
 | V/11.2 | The contract of the consolem fork at the commit `39ba6a3`, the copy and SHA-256; the fate of each of the 142 operations (124 are translated, 15 — `404 NO_ROUTE`; 3 — `POST /test/reset`, `/test/clock`, `/test/stream-elsewhere` only on the stand, otherwise `404 TEST_SUPPORT_OFF`); the refusal — the contract's `Problem`; the declaration of capabilities | norms | ADR-0050; ADR-0094 A1, A5, addendum (2) item 2 |
-| V/11.3 | The mapping «consolem kind ↔ VMS subsystem» by lesson data ([`data/mapping.tsv`](../data/mapping.tsv)): a domain — a cluster, a camera — `cam` + `rec` + `det`, the device tree — `cam/devices`, `cam/children`, `cam/device_units`, a storage — `rec/volumes`; a rule — an `auto/scenarios` row, the library — the `auto` tables; `recordMode`, the device fields from rules — `cam/rule_state`; the version — the store index | norms | V/01, V/02, V/04, V/07; ADR-0094 A6, addendum (2) items 3, 4 |
+| V/11.3 | The mapping «consolem kind ↔ VMS subsystem» by lesson data ([`data/mapping.tsv`](data/mapping.tsv)): a domain — a cluster, a camera — `cam` + `rec` + `det`, the device tree — `cam/devices`, `cam/children`, `cam/device_units`, a storage — `rec/volumes`; a rule — an `auto/scenarios` row, the library — the `auto` tables; `recordMode`, the device fields from rules — `cam/rule_state`; the version — the store index | norms | V/01, V/02, V/04, V/07; ADR-0094 A6, addendum (2) items 3, 4 |
 | V/11.4 | Translation of reads and writes: device search and the question about the model (V/01.8), the device assembly, a device write by one B9 package (`cas` of the written ones, the others by guards; 412 — nothing is written), the version — a concatenation of the store indexes of the parts and of the tombstones, the repeat memory of `idempotencyKey`, group writes per element, console refusals → contract codes, id — UUID v5; folders and hidden members, group operations, the limits of the parts and of the device folders; rules, `RULE_INVALID`, cascades, the library, undo and redo `backend/undo`, streams and live, pan-tilt and presets, the unit command, accounts, server labels | norms | B3, B4, B5, B9; ADR-0095, ADR-0096, ADR-0105, ADR-0106, ADR-0112 |
 | V/11.5 | The callback by ticket and the stream: `/stream` from the feed `/changes`, the table of messages, `Last-Event-ID`, `stream.reset`, `operation.*`, the descendants of a deleted folder | norms | B1, B2; ADR-0095, ADR-0096 |
 | V/11.6 | The stand and acceptance: the consolem API tests in the capabilities profile, `/test/reset`, `/test/clock`, `/test/stream-elsewhere` (the key `TEST_SUPPORT` and the console loopback mark), `/test/events` — `NO_ROUTE`, `?selftest` | norms | ADR-0050 |
@@ -42,11 +42,11 @@ console itself: the shell `backend.shell.html` and the files of the product set 
 
 ## Contract and WebUI
 
-- **The contract** — [`consolem.openapi.json`](../consolem.openapi.json): `api/openapi.json` of the fork repository
+- **The contract** — [`consolem.openapi.json`](consolem.openapi.json): `api/openapi.json` of the fork repository
   `github.com/altumur/consolem` at the commit `39ba6a3f0ac8d99add4b24c347dfa7f71bc659aa` (2026-11-02), the bytes as in the
-  repository; 142 operations; SHA-256 — [`consolem.openapi.json.sha256`](../consolem.openapi.json.sha256) (`a149b96c…70`).
+  repository; 142 operations; SHA-256 — [`consolem.openapi.json.sha256`](consolem.openapi.json.sha256) (`a149b96c…70`).
 - **The WebUI** — a build of the fork under the console CSP at the same commit (repeatable; V/11.1 Н1.4).
-  The entry page is the shell [`backend.shell.html`](../backend.shell.html): the `index.html` of the build byte for byte (SHA-256
+  The entry page is the shell [`backend.shell.html`](backend.shell.html): the `index.html` of the build byte for byte (SHA-256
   `39d14d7c551772b34abda0d47737731eeef07d415989ffea571eedacb0c6fcb4`; ADR-0094 addendum (8) item 3). The API is under
   `/backend/api/`, the static files are `/backend/<файл>` outside `api/` (addendum (8) item 2). The static files of the subsystem (B7) are
   the other files of the build's `MANIFEST.json`, seven of them (they are not part of the course, they are the fork's code):
@@ -71,7 +71,7 @@ console itself: the shell `backend.shell.html` and the files of the product set 
 
 ## Assistant: decisions
 
-The numbers are the items of addendum (1) of ADR-0093; items 1–3 — [V/10](../../10-assist/README.md). The page panel is removed (addendum (8) item 2): where an item speaks of
+The numbers are the items of addendum (1) of ADR-0093; items 1–3 — [V/10](../10-assist/README.md). The page panel is removed (addendum (8) item 2): where an item speaks of
 a `PUT` write, the write is now the client's `POST /devices/update` (chapter 7 Н1.3), items 6, 10 are history.
 
 4. **The executor** is `backend`: there is no panel; the plan check is a pure function of `backend` (addendum (8) item 2).
@@ -97,7 +97,7 @@ Accepted in the plan as is (the analysis, row 12): the targets of the plan are a
 3. The plan check: the minimum of ADR-0093 item 5 is a normative floor, the harness package only adds to it. The selection condition is not reconciled in meaning with
    the request: completeness — against the computed selection, a substitution of the condition — «Применить» ("Apply") of the shown version with the selection
    block (addendum (3) item 2). An empty edit (`from = to`) is a plan refusal (V/11.11).
-4. The model door — [V/10](../../10-assist/README.md).
+4. The model door — [V/10](../10-assist/README.md).
 5. The plan format promises neither idempotency nor a check without a write — only a partial application by rows (V/11.11, V/11.12).
 
 **ADR-0093 addendum (3)** (the harness handover package):
@@ -128,9 +128,9 @@ settings of the pilot's machine:
 
 | Lesson file | What | Norm |
 |---|---|---|
-| [`harness/system.md`](../harness/system.md) | the system text | V/11.9 Н1.2 |
-| [`harness/tools.json`](../harness/tools.json) | nine tools: names, descriptions, argument schemas | V/11.10 Н1.1 |
-| [`harness/words.json`](../harness/words.json) | locale data: the verbs of a list edit, the polarity of `bool` and of removal, the service words `stop`, the expressions «нет прав» ("no rights"), «не найдено» ("not found"), «все» ("all"); the captions and the operator words | V/11.10 Н1.4, V/11.11 Н1.2, Н1.4 |
+| [`harness/system.md`](harness/system.md) | the system text | V/11.9 Н1.2 |
+| [`harness/tools.json`](harness/tools.json) | nine tools: names, descriptions, argument schemas | V/11.10 Н1.1 |
+| [`harness/words.json`](harness/words.json) | locale data: the verbs of a list edit, the polarity of `bool` and of removal, the service words `stop`, the expressions «нет прав» ("no rights"), «не найдено» ("not found"), «все» ("all"); the captions and the operator words | V/11.10 Н1.4, V/11.11 Н1.2, Н1.4 |
 
 The check rules (the tables and the pseudocode of the package) — V/11.11 Н1.2–Н1.5; the loop policy — V/11.9 Н1.2–Н1.4; the overview — V/11.9
 Н1.2.
@@ -215,9 +215,9 @@ Not measured by the pilot; they do not change the norms (ADR-0093 addendum (3) i
 ## Acceptance
 
 Acceptance is the consolem API tests (`tests/api-*.js` at the pinned commit) against the stand in the capabilities profile and our own suite
-[`acceptance/`](../acceptance/) of what these tests do not see (ADR-0094 addendum (17); chapter 6 Н5); `?selftest` is a check of the build by the product under our CSP (ADR-0094
-Confirmation; chapter 6 Н1.4). The profile is the lesson table [`data/profile-tests.tsv`](../data/profile-tests.tsv) (V/11.6 Н1.2); it is reconciled at a new contract version.
-The assistant — the vectors [`plan-check`](../vectors/plan-check/README.md), [`turn`](../vectors/turn/README.md), [`rules-words`](../vectors/rules-words/README.md), [`zone-mask`](../vectors/zone-mask/README.md) (the zone raster, V/11.3 Н1.3), executed by the `backend` driver (V/11.7 Н5), the model stub — V/10.2 Н5.
+[`acceptance/`](acceptance/) of what these tests do not see (ADR-0094 addendum (17); chapter 6 Н5); `?selftest` is a check of the build by the product under our CSP (ADR-0094
+Confirmation; chapter 6 Н1.4). The profile is the lesson table [`data/profile-tests.tsv`](data/profile-tests.tsv) (V/11.6 Н1.2); it is reconciled at a new contract version.
+The assistant — the vectors [`plan-check`](vectors/plan-check/README.md), [`turn`](vectors/turn/README.md), [`rules-words`](vectors/rules-words/README.md), [`zone-mask`](vectors/zone-mask/README.md) (the zone raster, V/11.3 Н1.3), executed by the `backend` driver (V/11.7 Н5), the model stub — V/10.2 Н5.
 
 ## Open questions
 

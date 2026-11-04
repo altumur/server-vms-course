@@ -31,7 +31,7 @@ the subsystem is required for the assistant (ADR-0093 addendum (9) item 2, it li
 3. **The model on a server** is a child process of the holder (unix socket 0700, shuts down on `fenced` and on giving up the holding, a loading
    phase); one model per server — by the label and the capacity; the memory numbers — from the package measurements, in V/09 (V/10.1).
 
-The other items of addenda (1)–(5) are in [V/11](../11-backend/README.md#ассистент-решения): they are about the loop and the plan.
+The other items of addenda (1)–(5) are in [V/11](../11-backend/README.md#assistant-decisions): they are about the loop and the plan.
 
 **ADR-0093 addendum (2)** (Kimi's review): the model door — the door token by `view` on the model row; `rights.routes` is not needed (clarified
 by the norms review, Claude С-3); the door is open to any client with `view`, the step — to its owner (V/10.1 Н1.1, V/10.2 Н1.1).

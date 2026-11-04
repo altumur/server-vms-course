@@ -1,9 +1,9 @@
 # Turn scenarios — V/11.9
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/turn/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The turn loop without a model: `backend` runs the turn by recorded answers of the model door over the console
-[`../plan-check/stand3.console.json`](../../plan-check/README.md). The `backend` driver executes it (V/11.7 Н5).
+[`../plan-check/stand3.console.json`](../plan-check/README.md). The `backend` driver executes it (V/11.7 Н5).
 
 The vectors do not judge the utterance type (V/11.7 Н1.6): the driver sets the type `config` and skips the step `route`; the `model` answers are steps of the loop. There are no vectors for the steps `route`, `explain`, `found`: a limit, they are judged by reading.
 

@@ -1,9 +1,9 @@
 # Vectors of the tools and of the plan check — V/11.10, V/11.11
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/plan-check/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The vectors of chapter 10 (the read tools, the answer to the admin) and of chapter 11 (the plan, the words reconciliation, the question and the refusal) of lesson V/11. They
-are executed by the `backend` driver (V/11.7 Н5) with the harness data [`harness/`](../../../harness/) and a console stub built from the
+are executed by the `backend` driver (V/11.7 Н5) with the harness data [`harness/`](../../harness/) and a console stub built from the
 console file below. There is no model in the vectors: the tool calls are given ready-made.
 
 ## Files

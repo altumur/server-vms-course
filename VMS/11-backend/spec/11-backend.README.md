@@ -1,6 +1,6 @@
 # V/11 Configurator backend — instructions for an implementation
 
-This English text is the source; the Russian [`11-backend.README.md`](../11-backend.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/11-backend.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 What an implementation of the subsystem `backend` does and how to check the result. The canon is the norms of the chapters `11.K-backend.norms.md`; these
 instructions do not add to them. The platform is the export `cammeta-specs` `7a875c75` (the VMS pin; an increment of rights on top of the norms B, ADR-0090 addendum (17); the mark «норма платформы B» — where the chapter relies on them).
@@ -8,14 +8,14 @@ instructions do not add to them. The platform is the export `cammeta-specs` `7a8
 ## Inputs and their priority
 
 - The canon: the norms of the chapters `11.K-backend.norms.md` (Н1–Н5 of each chapter; the addresses `V/11.K Н…`).
-- The canon of the manifest: [`backend.subsystem.yaml`](../../backend.subsystem.yaml): the bytes as they are; the blocks of the second kind of pass
+- The canon of the manifest: [`backend.subsystem.yaml`](../backend.subsystem.yaml): the bytes as they are; the blocks of the second kind of pass
   (B1) and of static files (B7) are comments until the platform norms.
-- The canon of the shell: [`backend.shell.html`](../../backend.shell.html): the bytes as they are; the implementation does not generate it.
-- The door contract: [`consolem.openapi.json`](../../consolem.openapi.json) (the pinned commit, SHA-256 next to it); it is not edited.
-- The mapping of kinds: the data [`data/mapping.tsv`](../../data/mapping.tsv).
-- The assistant harness: the data [`harness/`](../../harness/), the catalogue [`data/rule-catalog.json`](../../data/rule-catalog.json): the bytes as they are.
-- Acceptance: the consolem API tests at the pinned commit in the capability profile (chapter 6) and the own suite [`acceptance/`](../../acceptance/).
-- [The lecture](../../11-backend.md) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…`.
+- The canon of the shell: [`backend.shell.html`](../backend.shell.html): the bytes as they are; the implementation does not generate it.
+- The door contract: [`consolem.openapi.json`](../consolem.openapi.json) (the pinned commit, SHA-256 next to it); it is not edited.
+- The mapping of kinds: the data [`data/mapping.tsv`](../data/mapping.tsv).
+- The assistant harness: the data [`harness/`](../harness/), the catalogue [`data/rule-catalog.json`](../data/rule-catalog.json): the bytes as they are.
+- Acceptance: the consolem API tests at the pinned commit in the capability profile (chapter 6) and the own suite [`acceptance/`](../acceptance/).
+- The lecture (`ru/11-backend.md`, for people, not in the export) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…`.
 
 Record a contradiction with its place and a counterexample (the section «On a divergence»); an arbitrary refusal does not replace an
 absent norm. The structure of the code is left to the implementation within the canon.
@@ -32,11 +32,11 @@ absent norm. The structure of the code is left to the implementation within the 
 | V/11.6 | the profile of the product tests, the key `TEST_SUPPORT` of the subsystem file and the console loopback mark for `/test/reset`, `/test/clock` | the stand after the platform increment |
 | V/11.7 | the assistant turn in `backend`: the loop V/11.9 with the model by the route `assist/chat` with the ticket, the tools and the plan check V/11.10, V/11.11 with the ticket, the plan only in the fields `DevicePatch`, stream events, the turn limit | the vectors `plan-check`, `turn` by the driver of `backend`; `tests/api-assist.js` in the profile — one row, acceptance 4/`29-assist` |
 | V/11.8 | the snapshot `Access` from the domain doors, the role rows by the level table and back, the domain snapshot by the viewer's grants, applying by a difference: the domain package, `lines` of the role, the cluster rows, the divergence, refusals of the untranslatable | the API tests `api-access.js` in the profile; by reading |
-| V/11.9 | the loop: the step messages from `harness/`, `tool_choice: required`, the window, the poll, parsing the answer, outcomes, the turn through requests | the vectors [`turn`](../../vectors/turn/README.md) |
+| V/11.9 | the loop: the step messages from `harness/`, `tool_choice: required`, the window, the poll, parsing the answer, outcomes, the turn through requests | the vectors [`turn`](../vectors/turn/README.md) |
 | V/11.10 | nine tools `harness/tools.json` with the ticket, selection over full lists, `can_edit` | the vectors `plan-check`, `turn` |
-| V/11.11 | the plan check — a pure function, the words `harness/words.json`, refusals by the chapter's words | the vectors [`plan-check`](../../vectors/plan-check/README.md) |
+| V/11.11 | the plan check — a pure function, the words `harness/words.json`, refusals by the chapter's words | the vectors [`plan-check`](../vectors/plan-check/README.md) |
 | V/11.12 | changes to apply, the secret mark, the substitution into `password` of the plan | the vectors `plan-check`; by reading |
-| V/11.13 | the rule harness `harness/rules/`, the neutral plan and one translator into the body, the catalogue `data/rule-catalog.json`, check layers by the row, `ask`, `escalate`, writing only by a human | the vectors [`rules-words`](../../vectors/rules-words/README.md), [`rules-neutral`](../../vectors/rules-neutral/README.md), no run yet |
+| V/11.13 | the rule harness `harness/rules/`, the neutral plan and one translator into the body, the catalogue `data/rule-catalog.json`, check layers by the row, `ask`, `escalate`, writing only by a human | the vectors [`rules-words`](../vectors/rules-words/README.md), [`rules-neutral`](../vectors/rules-neutral/README.md), no run yet |
 | V/11.14 | the transition to the core in stages 0–5: at each stage only the pinned contract of that stage is translated; a composite kind by the core path — the same B9 package as the legacy path; the legacy paths live until stage 5 | API tests in the profile of the stage contract and the stage condition (Н1.3) |
 | V/11.15 | the form is served under `/backend/`, the shell byte for byte; the tab «Просмотр» second in the camera card; the condition of removing the page and the remainder | by reading; the fork's tests |
 | V/11.16 | the timeline: the `backend` side — the doors of recordings and places, merging, yielding, the unavailable named; the form — windows, pages, «Закрепить», events by `occurred`, the mark with `late` | by reading; the fork's tests, V/11 |

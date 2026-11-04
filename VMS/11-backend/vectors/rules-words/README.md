@@ -1,6 +1,6 @@
 # Vectors of the rule words reconciliation — V/11.13
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/rules-words/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The reconciliation with the words of the request (chapter 13 Н1.6) and the prohibitions (Н1.5) on the measurement cases. There is no model: the plan row is given ready-made. The expectations are derived by a write-up of the chapter's rules over `harness/rules/words.json`, independent of the pilot's code; they are not checked by an implementation. Cases with `known_gap` fix a limit: the plan is wrong, and the reconciliation accepts it.
 
