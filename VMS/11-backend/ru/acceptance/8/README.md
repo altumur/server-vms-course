@@ -1,7 +1,7 @@
 # Приёмка V/11.8 — перевод прав
 
 Норма главы — [`11.8-backend.norms.md`](../../spec/11.8-backend.norms.md) Н5, граница набора — [V/11.6](../../spec/11.6-backend.norms.md) Н5. Стенд и словарь — [общий README
-приёмки VMS](../../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `7a875c75`, пин VMS).
+приёмки VMS](../../../../common/ru/acceptance/README.md) поверх общего README платформы (выгрузка `7a875c75`, пин VMS).
 
 Текст производный от `acceptance/8/README.md`, руками не правится: источник — английский [`acceptance/8/README.md`](../../../acceptance/8/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 

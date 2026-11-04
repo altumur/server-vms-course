@@ -1,14 +1,14 @@
-# Общее для всех уроков VMS
+# Common to all VMS lessons
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 ```text
-lessons.tsv        карта уроков: номер (адрес V/NN), каталог, заголовок, подсистема (имя манифеста или «-»), статус
-data/catalog.tsv   каталог данных VMS: ключи подсистем — владелец, участники, читатели (форма каталога платформы)
-id-map.tsv         id прежних норм М10B, М12A, М12B → V/NN[.K]-MM (форма id-map платформы)
-acceptance/        общий стенд и директивы приёмок VMS (поверх общего README приёмки платформы)
-inventory.md       опись: главы М10B, М12A, М12B → уроки VMS/ и платформа, имена с «vms», vmsjobs, domain:, пробелы платформы
+lessons.tsv        the lesson map: number (address V/NN), directory, title, subsystem (manifest name or «-»), status
+data/catalog.tsv   the VMS data catalog: the subsystem keys — owner, participants, readers (the form of the platform catalog)
+id-map.tsv         ids of the former norms М10B, М12A, М12B → V/NN[.K]-MM (the form of the platform id-map)
+acceptance/        the common stand and directives of the VMS acceptances (on top of the common platform acceptance README)
+inventory.md       the inventory: chapters М10B, М12A, М12B → the lessons VMS/ and the platform, names with «vms», vmsjobs, domain:, platform gaps
 ```
 
-Таблицы читает `check_spec` (ADR-0090 доп. (1), «Условия старта»). На старте каталог и id-map пусты: их наполняет опись
-и перевод уроков «Спецификацией VMS». Опись (`inventory.md`, ADR-0090 доп. (4)) таблицы не читает и проверяется «Архитектором».
+The tables are read by `check_spec` (ADR-0090 addendum (1), «Условия старта»). At the start the catalog and the id-map are empty: they are filled by the inventory
+and by the translation of the lessons by «Спецификация VMS». The inventory (`inventory.md`, ADR-0090 addendum (4)) does not read the tables and is checked by «Архитектор».

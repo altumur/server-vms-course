@@ -11,7 +11,7 @@
 - Канон — нормы глав `10.K-assist.norms.md` (Н1–Н5 каждой главы; адреса `V/10.K Н…`).
 - Канон манифеста — [`assist.subsystem.yaml`](../../assist.subsystem.yaml): байты как есть.
 - [Контракт](../../spec/10-assist.api.openapi.yaml) выражает формы HTTP-входов канона.
-- Приёмка — [глава 1](../acceptance/1/README.md), [глава 2](../acceptance/2/README.md); стенд и словарь — [общий README приёмки VMS](../../../common/acceptance/README.md); новых требований приёмка не вводит.
+- Приёмка — [глава 1](../acceptance/1/README.md), [глава 2](../acceptance/2/README.md); стенд и словарь — [общий README приёмки VMS](../../../common/ru/acceptance/README.md); новых требований приёмка не вводит.
 - Векторы — [`vectors/`](../../vectors/) (заглушка модели).
 - Лекция (`ru/10-assist.md`, для человека, в выгрузку не входит) объясняет причины; платформа — нормы выгрузки пина VMS по адресам `P/…` (их правит не VMS).
 
