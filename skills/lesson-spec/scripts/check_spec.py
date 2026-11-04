@@ -1421,7 +1421,7 @@ class Check:
         chapters = {}
         for norms in sorted(spec.glob("[0-9][0-9].*-*.norms.md")):
             key = re.match(r"[0-9]{2}\.([0-9]+)-", norms.name)
-            head = "\n".join(norms.read_text(encoding="utf-8").splitlines()[:12])
+            head = "\n".join(human_text(norms, self.root).read_text(encoding="utf-8").splitlines()[:12])   # ru/ (ADR-0124)
             late = re.search(r"Глава позднего слоя: ввод(?:ит|ят) урок(?:и)? ([0-9]+(?:(?:, | и )[0-9]+)*)", head)
             if key and late:
                 chapters[int(key[1])] = {int(n) for n in re.findall(r"[0-9]+", late[1])}

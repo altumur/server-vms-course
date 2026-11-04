@@ -23,8 +23,9 @@ The meaning step (ADR-0124 addendum (1) item 3), by the class of the linking fil
   layout) — into the source `Y` with the English anchor; a link into `ru/` without a source (the lecture) or into
   `journal/` becomes text: a code span of the path from the root of the lesson, «(for people, not in the export)»;
 - translation (Russian under `ru/` of a moved lesson, or a derived Russian text of a lesson in the former layout) — into
-  translations `ru/Y` (the Russian anchor), into the source for machine files and for its own source; within the moved
-  lesson a link to the lecture or the journal becomes text as in its source;
+  translations `ru/Y` (the Russian anchor), into the source for machine files and for its own source; a link to a
+  lecture or a journal becomes text wherever its source has text (the pair stays one to one);
+- lecture (`ru/NN-<имя>.md`: Russian, for people, without a pair) — into translations; links stay links;
 - history (`decisions/**`, root `РЕВЬЮ-*.md`, `ХОД-*.md`, `windows/**`) — only links to paths that are no more, by the
   table;
 - any other text (lectures and Russian sources of other lessons, notes, rules) — as a source, but links stay links.
@@ -152,6 +153,8 @@ def file_class(path, text, homes):
     home = home_of(path)
     if home in homes:
         rest = path[len(home) + 1:]
+        if rest == f"ru/{Path(home).name}.md":
+            return "lecture"                             # Russian for people, no pair: links into ru/ stay links
         if rest.startswith("ru/"):
             return "translation"
         return "other" if rest.startswith("journal/") else "source"
@@ -227,22 +230,20 @@ class Rewriter:
         if home not in self.homes:
             return target, anchor, "link"
         rest = target[len(home) + 1:]
-        own = home_of(path) == home
+        mirror = cls in ("source", "translation")       # a translation mirrors its source: text where the source has text
         if rest.startswith("ru/"):
             source = f"{home}/{rest[3:]}"
             if self.exists(source) and target.endswith(".md"):
-                if cls == "translation":
+                if cls in ("translation", "lecture"):
                     return target, self.anchor(source, target, anchor, where), "link"
                 return source, self.anchor(target, source, anchor, where), "link"
-            if cls == "source" or (cls == "translation" and own):
-                return target, anchor, "text"           # the lecture: for people only
-            return target, anchor, "link"
+            return target, anchor, ("text" if mirror else "link")    # the lecture: for people only
         if rest.startswith("journal/"):
-            return target, anchor, ("text" if cls == "source" or (cls == "translation" and own) else "link")
+            return target, anchor, ("text" if mirror else "link")
         translation = f"{home}/ru/{rest}"
         if target.endswith(".md") and self.exists(translation):
             mine = path == translation                    # a translation names its own source
-            if cls == "translation" and not mine:
+            if cls in ("translation", "lecture") and not mine:
                 return translation, self.anchor(target, translation, anchor, where), "link"
             return target, self.anchor(translation, target, anchor, where), "link"
         return target, anchor, "link"
@@ -256,7 +257,7 @@ class Rewriter:
         for href in L.missed(text):
             self.problems.append(f"{path}: a link the rewriter cannot read: {href}")
         old_path = self.old_of.get(path, path) if table else path
-        lang = "en" if cls == "source" else "ru"
+        lang = "en" if cls == "source" else "ru"         # (lecture: Russian, links stay)
         out, at, changed = [], 0, 0
         for t in L.targets(text):
             p, _, a = t.dest.partition("#")
