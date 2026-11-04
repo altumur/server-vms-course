@@ -1,12 +1,17 @@
 """Сборка пакета Б для P/01 (ADR-0083 доп. (86) п. 2): проверки Н2.1 и строгий разборщик JSON — в каталог попытки.
 
 Запуск: python tools/normgen/kit/build_kit.py <dst> --module <путь импорта каталога <dst>/01-store> [--part tests] [--part door]
+       [--part flags] [--part refusals]
 
 Кладёт в <dst>/01-store/internal/:
 - checks/ — пакет, сгенерированный tools/normgen/gen_checks.py из Platform/01-store/forms/write-checks.tsv (берётся
   из tools/normgen/out/p01-1/go/checks; sha256 таблицы в его шапке должен совпасть с таблицей сейчас);
 - jsonstrict/, writecheck/ — ручной пакет tools/normgen/kit/go (в writecheck путь "kitmodule/internal/" заменяется на
   "<module>/internal/").
+Часть `flags` (--part flags; генератор № 3 ADR-0125 tools/normgen/gen_flags.py, судья flag_judge.py): flags/
+(заменяется целиком), паспорт формы, генератора и судьи — в provenance манифеста.
+Часть `refusals` (--part refusals; генератор № 4 ADR-0125 tools/normgen/gen_refusals.py, судья refusal_judge.py):
+refusals/ (заменяется целиком), паспорт — в provenance.
 Часть `tests` (--part tests; ADR-0126 доп. (2) п. 1, генератор № 6 ADR-0125 tools/normgen/gen_tests.py): vectortests/,
 vectorcmd/ (заменяются целиком) и заглушка адаптера vectoradapter/ — её реализация правит, кладётся, только если её нет.
 Часть `door` (--part door; генератор № 2 ADR-0125 tools/normgen/gen_door.py): door/ (заменяется целиком) — дверь из
@@ -28,6 +33,8 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent.parent
 sys.path.insert(0, str(HERE.parent))
 import gen_tests  # noqa: E402 — часть tests
+import gen_flags  # noqa: E402 — часть flags
+import gen_refusals  # noqa: E402 — часть refusals
 TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"
 GENERATED = ROOT / "tools/normgen/out/p01-1/go/checks"
 HANDWRITTEN = HERE / "go"
@@ -76,7 +83,7 @@ def git_head():
         return None
 
 
-PARTS = ("tests", "door")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
+PARTS = ("tests", "door", "flags", "refusals")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
 
 
 def build(dst, module, parts=()):
@@ -93,7 +100,9 @@ def build(dst, module, parts=()):
     kit_parts = ["writecheck", *sorted(set(parts))]
     try:
         tests = gen_tests.kit_files(module) if "tests" in parts else []
-    except gen_tests.GenError as exc:
+        flag_files = gen_flags.kit_files() if "flags" in parts else []
+        refusal_files = gen_refusals.kit_files() if "refusals" in parts else []
+    except (gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError) as exc:
         raise KitError(str(exc)) from None
     openapi_sha = sha256(OPENAPI.read_bytes()) if "door" in parts else None
     if openapi_sha and openapi_sha not in "".join((DOOR / "door.go").read_text(encoding="utf-8").splitlines()[:3]):
@@ -110,7 +119,8 @@ def build(dst, module, parts=()):
                       "origin": origin, "component": component, "source": source})
 
     for sub in ("checks", "jsonstrict", "writecheck") + (gen_tests.KIT_DIRS if tests else ()) + \
-            (("door",) if openapi_sha else ()):
+            (("door",) if openapi_sha else ()) + (gen_flags.KIT_DIRS if flag_files else ()) + \
+            (gen_refusals.KIT_DIRS if refusal_files else ()):
         if (internal / sub).exists():
             shutil.rmtree(internal / sub)
     for name, origin, source in CHECKS_FILES:
@@ -132,8 +142,12 @@ def build(dst, module, parts=()):
     if openapi_sha:
         for name, origin, source in DOOR_FILES:
             put("door", name, (DOOR / name).read_bytes(), origin, "door", source)
-    doc = (KIT_MD + (gen_tests.KIT_MD if tests else "") + (KIT_DOOR_MD if openapi_sha else "")) \
-        .replace("{module}", module).encode("utf-8")
+    for sub, name, data, origin, source in flag_files:
+        put(sub, name, data, origin, "flags", source)
+    for sub, name, data, origin, source in refusal_files:
+        put(sub, name, data, origin, "refusals", source)
+    doc = (KIT_MD + (gen_tests.KIT_MD if tests else "") + (KIT_DOOR_MD if openapi_sha else "")
+           + (gen_flags.KIT_MD if flag_files else "") + (gen_refusals.KIT_MD if refusal_files else "")).replace("{module}", module).encode("utf-8")
     (dst / "KIT.md").write_bytes(doc)
     # Паспорт попытки (доп. (86) п. 3) считает порознь: по происхождению (generated | handwritten) и по части
     # (normgen — генератор с его ручной средой runtime.go, prims.go; kit — ручной пакет jsonstrict, writecheck).
@@ -148,6 +162,8 @@ def build(dst, module, parts=()):
         "commit": git_head(),
         "table": {"path": str(TABLE.relative_to(ROOT)), "sha256": table_sha},
         "files": files,
+        "provenance": {**({"flags": gen_flags.provenance()} if flag_files else {}),
+                       **({"refusals": gen_refusals.provenance()} if refusal_files else {})},
         "doc": {"path": "KIT.md", "sha256": sha256(doc), "lines": lines(doc)},
         "lines": totals,
         "lines_by_component": parts,

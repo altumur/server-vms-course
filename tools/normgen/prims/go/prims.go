@@ -7,6 +7,7 @@ package checks
 import (
 	"errors"
 	"math"
+	"net"
 	"strings"
 )
 
@@ -39,4 +40,24 @@ func primWeight(items map[string]any) (int64, error) {
 // primFinite — конечно в binary64 (1e400 — нет).
 func primFinite(x float64) (bool, error) {
 	return !math.IsInf(x, 0) && !math.IsNaN(x), nil
+}
+
+// primLoopback — хост адреса host:port на петле: 127.0.0.0/8, ::1 или localhost (ADR-0125 доп. (2) п. 4).
+// IPv4 в форме ::ffff:a.b.c.d — как IPv4; зона (%lo) и прочие имена — не петля. Не host:port — ошибка CEL.
+func primLoopback(addr string) (bool, error) {
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		return false, errors.New("loopback: not host:port")
+	}
+	if strings.EqualFold(host, "localhost") {
+		return true, nil
+	}
+	ip := net.ParseIP(host)
+	if ip == nil {
+		return false, nil
+	}
+	if v4 := ip.To4(); v4 != nil {
+		return v4[0] == 127, nil
+	}
+	return ip.Equal(net.IPv6loopback), nil
 }
