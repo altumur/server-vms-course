@@ -20,8 +20,8 @@ console itself: the shell `backend.shell.html` and the files of the product set 
 
 | Chapter | What it norms | Status | Platform and lessons |
 |---|---|---|---|
-| V/11.1 | The unit `backend/instances/<name>` by labels next to `live`; the callback — TLS with the role `backend`, the ticket is bound to the server leaf of the instance (one per server), a socket — only without a kit (addendum (6)); the worker is without rights and without state; the WebUI — the shell [`backend.shell.html`](backend.shell.html) with a CSP of exactly the minimum of P/06.5 (`index.html` of the consolem build `a9a96e2`) and the static files of the subsystem (B7: the list in the manifest, the commit and SHA-256, outside `api/`); the handover: the route `api`, the answer JSON/SSE, the second view and the callback listing with `<sub>/policy` (B1) | norms | P/02.1, P/03, P/04, P/06.5 Н1.1, Н1.8; ADR-0094 B1, B7, addenda (6), (8) |
-| V/11.2 | The contract of the consolem fork at the commit `a9a96e2`, the copy and SHA-256; the fate of each of the 152 operations (134 are translated, 15 — `404 NO_ROUTE`; 3 — `POST /test/reset`, `/test/clock`, `/test/stream-elsewhere` only on the stand, otherwise `404 TEST_SUPPORT_OFF`); the refusal — the contract's `Problem`; the declaration of capabilities | norms | ADR-0050; ADR-0094 A1, A5, addendum (2) item 2 |
+| V/11.1 | The unit `backend/instances/<name>` by labels next to `live`; the callback — TLS with the role `backend`, the ticket is bound to the server leaf of the instance (one per server), a socket — only without a kit (addendum (6)); the worker is without rights and without state; the WebUI — the shell [`backend.shell.html`](backend.shell.html) with a CSP of exactly the minimum of P/06.5 (`index.html` of the consolem build `754a52e`) and the static files of the subsystem (B7: the list in the manifest, the commit and SHA-256, outside `api/`); the handover: the route `api`, the answer JSON/SSE, the second view and the callback listing with `<sub>/policy` (B1) | norms | P/02.1, P/03, P/04, P/06.5 Н1.1, Н1.8; ADR-0094 B1, B7, addenda (6), (8) |
+| V/11.2 | The contract of the consolem fork at the commit `754a52e`, the copy and SHA-256; the fate of each of the 152 operations (134 are translated, 15 — `404 NO_ROUTE`; 3 — `POST /test/reset`, `/test/clock`, `/test/stream-elsewhere` only on the stand, otherwise `404 TEST_SUPPORT_OFF`); the refusal — the contract's `Problem`; the declaration of capabilities | norms | ADR-0050; ADR-0094 A1, A5, addendum (2) item 2 |
 | V/11.3 | The mapping «consolem kind ↔ VMS subsystem» by lesson data ([`data/mapping.tsv`](data/mapping.tsv)): a domain — a cluster, a camera — `cam` + `rec` + `det`, the device tree — `cam/devices`, `cam/children`, `cam/device_units`, a storage — `rec/volumes`; a rule — an `auto/scenarios` row, the library — the `auto` tables; `recordMode`, the device fields from rules — `cam/rule_state`; the version — the store index | norms | V/01, V/02, V/04, V/07; ADR-0094 A6, addendum (2) items 3, 4 |
 | V/11.4 | Translation of reads and writes: device search and the question about the model (V/01.8), the device assembly, a device write by one B9 package (`cas` of the written ones, the others by guards; 412 — nothing is written), the version — a concatenation of the store indexes of the parts and of the tombstones, the repeat memory of `idempotencyKey`, group writes per element, console refusals → contract codes, id — UUID v5; folders and hidden members, group operations, the limits of the parts and of the device folders; rules, `RULE_INVALID`, cascades, the library, undo and redo `backend/undo`, streams and live, pan-tilt and presets, the unit command, accounts, server labels | norms | B3, B4, B5, B9; ADR-0095, ADR-0096, ADR-0105, ADR-0106, ADR-0112 |
 | V/11.5 | The callback by ticket and the stream: `/stream` from the feed `/changes`, the table of messages, `Last-Event-ID`, `stream.reset`, `operation.*`, the descendants of a deleted folder | norms | B1, B2; ADR-0095, ADR-0096 |
@@ -44,28 +44,28 @@ console itself: the shell `backend.shell.html` and the files of the product set 
 ## Contract and WebUI
 
 - **The contract** — [`consolem.openapi.json`](consolem.openapi.json): `api/openapi.json` of the fork repository
-  `github.com/altumur/consolem` at the commit `a9a96e20cbb083b2300d91dfa7887d341dcb455c` (2026-11-04), the bytes as in the
-  repository; 152 operations; SHA-256 — [`consolem.openapi.json.sha256`](consolem.openapi.json.sha256) (`aad6727a…3e`).
+  `github.com/altumur/consolem` at the commit `754a52ebba66fcd8245b37bd3c3af355e8c38a32` (2026-11-04), the bytes as in the
+  repository; 152 operations; SHA-256 — [`consolem.openapi.json.sha256`](consolem.openapi.json.sha256) (`3a79a46c…ce`).
 - **The WebUI** — a build of the fork under the console CSP at the same commit (repeatable; V/11.1 Н1.4).
   The entry page is the shell [`backend.shell.html`](backend.shell.html): the `index.html` of the build byte for byte (SHA-256
-  `3ab3f7a548fbbf060c128c8e28618503430cf763da753a798fee5a0cbabe1935`; ADR-0094 addendum (8) item 3). The API is under
+  `7578a8bf9a5cd6462ff600d4a862c8bd0f4810bfbe4b4672e6209d290c73f073`; ADR-0094 addendum (8) item 3). The API is under
   `/backend/api/`, the static files are `/backend/<файл>` outside `api/` (addendum (8) item 2). The static files of the subsystem (B7) are
   the other files of the build's `MANIFEST.json`, seven of them (they are not part of the course, they are the fork's code):
 
   ```
   c7d903057bd0d9e4ec923afa2d7d940f4d8cb9b8ddb1d41c04014ff6b2c696cb  app.css
-  80cd759abf38ccd4a8a7a8c8db75183858b3172d355a4ef712a7ec9649a0c446  app.js
+  932147de7952fb24e48b48d398f6c621a37c2774b65af5acf906e8c051ca39e2  app.js
   b7eb438a1ee67293981a8748356bba839ce9101307ed8d87cf43b0dda557e6cf  client.js
   693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3  fonts/InterVariable.woff2
-  c10a84aa1f4e830c9aad88882c04e71975c561282559425ab5fcf3015e69df17  i18n-en.js
-  4d697cf7f9e4aec1f006658732c0366a741be5ac06a80b062e1a389aca2aba94  openapi.js
+  ecd4dc13c8fa333b3887b3e4ec7daa34f5213056354a39cb2ef39ec069e75db7  i18n-en.js
+  26f15a309ad76086bc70e7fd748f722400cc77282d1b6ad3f492217f5fc27185  openapi.js
   c1e5524fbef47072be82677f4a7ac0ebf9236fe7f12998901fd9d842c6ca27e3  whep-stub.js
   ```
 
   The eighth file of the build, `assets/stub-piece.mp4`, is not part of the set: `.mp4` is outside `console.files` (P/02.1), the stub piece is needed only by the address `stub://`, and `backend` does not give that out.
 
   The SHA-256 of the set (SHA-256 of these seven lines with `\n`, the order — by path bytes):
-  `1b10d05acac120952dc2d75523b9fcc6f77873aca9b958a016b9777b5bbe64f1`. The console serves them as static files of the subsystem
+  `29d840f9c50cd8c0aea4c4b98d346230238d3f1f9ce8d85d0159f38cf2ec9738`. The console serves them as static files of the subsystem
   `backend` (B7, ADR-0094 addendum (1)) by the manifest listing, by name without the query string `?v=`; the deployment package
   builds them from the pinned commit and puts them next to the manifest, the console checks the SHA-256 of each when serving (V/09.3).
 - **The UUID namespace** of the records (V/11.4 Н1.6): `BACKEND_NS` = `4ffc0b08-e8bd-4a4e-b7fb-d4ecc8a83ecb`.
