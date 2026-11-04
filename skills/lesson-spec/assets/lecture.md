@@ -1,7 +1,7 @@
 # Урок {{LESSON}} — {{TITLE}}
 
 *Модуль {{MODULE}}. Лекция объясняет механизм; точные правила — в
-[нормах](spec/{{STEM}}.norms.md), HTTP-контракт — в [OpenAPI](spec/{{STEM}}.api.openapi.yaml),
+[нормах](spec/{{STEM}}.norms.md), HTTP-контракт — в [OpenAPI](../spec/{{STEM}}.api.openapi.yaml),
 порядок реализации — в [инструкции](spec/{{STEM}}.README.md).*
 
 ## Зачем этот урок

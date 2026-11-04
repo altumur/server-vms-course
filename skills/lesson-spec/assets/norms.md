@@ -1,6 +1,6 @@
 # {{ID_PREFIX}} — {{TITLE}}: нормы
 
-Канон урока. [Лекция](../{{STEM}}.md), [HTTP-контракт]({{STEM}}.api.openapi.yaml),
+Канон урока. [Лекция](../{{STEM}}.md), [HTTP-контракт](../../spec/{{STEM}}.api.openapi.yaml),
 [инструкция]({{STEM}}.README.md), [приёмка]({{ACCEPTANCE_LINK}}).
 
 ## Н0 Словарь слов
