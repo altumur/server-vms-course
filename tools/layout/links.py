@@ -13,7 +13,7 @@ import unicodedata
 from pathlib import Path
 
 FENCE = re.compile(r"^(`{3,}|~{3,})[^\n]*\n.*?^\1[ \t]*$", re.M | re.S)
-LINK = re.compile(r"(!?)\[((?:[^\[\]\n]|\[[^\[\]\n]*\])*)\]\(([^()\s]+)\)")
+LINK = re.compile(r"(!?)\[((?:[^\[\]\n]|\n(?![ \t]*\n)|\[[^\[\]\n]*\])*)\]\(([^()\s]+)\)")   # text may wrap a line
 HEADING = re.compile(r"^(#{1,6})[ \t]+(.+?)[ \t#]*$", re.M)
 SCHEME = re.compile(r"[a-z][a-z0-9+.-]*:")
 
