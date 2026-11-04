@@ -845,3 +845,5 @@ Platform/common	-	-	linked
 .	en/КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.en.md	КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md	source
 .	en/НОРМАТИВНЫЕ-СЛОВА.en.md	НОРМАТИВНЫЕ-СЛОВА.md	source
 .	-	-	linked
+VMS	VMS/README.md	VMS/ru/README.md	translation
+VMS	VMS/en/README.en.md	VMS/README.md	source
