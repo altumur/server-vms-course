@@ -1,0 +1,57 @@
+// Package writecheck — проверки тела POST /v1/write до Н3 (ADR-0083 доп. (86) п. 2, пакет Б): строгий разбор JSON
+// (jsonstrict, P/01.1 Н2.1), затем таблица проверок write-checks.tsv (checks, сгенерирован tools/normgen).
+// Написан руками; путь импорта "kitmodule/internal/" заменяет tools/normgen/kit/build_kit.py.
+package writecheck
+
+import (
+	"fmt"
+
+	"kitmodule/internal/checks"
+	"kitmodule/internal/jsonstrict"
+)
+
+// JSONDepth — JSON_DEPTH P/01.1 Н2.1: одно число для всех реализаций, не параметр.
+const JSONDepth = jsonstrict.Depth
+
+// Limits — имена #lim таблицы write-checks.tsv; lim вызывающего обязан нести каждое (сверяет test_kit.py).
+var Limits = []string{"BATCH_WRITES", "BATCH_GUARDS", "ROW_CEILING"}
+
+// Refusal — отказ: Code и Kind — статус и kind ответа, Fault — прочие поля тела отказа (nil — их нет; значения int64
+// и string). N — строка таблицы (0 — отказ разбора JSON), Check — её имя ("json" — разбор), Reason — причина разбора
+// или ошибка вычисления fault; N, Check, Reason — для журнала, вызывающему их не отдают.
+type Refusal struct {
+	Code   int
+	Kind   string
+	Fault  map[string]any
+	N      int
+	Check  string
+	Reason string
+}
+
+// Check — тело целиком (рамка HTTP и предел тела уже пройдены), роль сокета, значения #lim урока и права роли
+// (P/01.2 Н3 «проверить»: сокет, операция read | write | delete, ключ). Ответ: первый отказ и разобранное тело;
+// отказ nil — команда идёт к Н3 с этим телом. При отказе разбора тело nil. Нет имени из Limits в lim или allowed
+// nil — паника: это ошибка кода, а не входа.
+func Check(body []byte, sock string, lim map[string]int64, allowed func(sock, op, key string) bool) (*Refusal, any) {
+	for _, name := range Limits {
+		if _, ok := lim[name]; !ok {
+			panic(fmt.Sprintf("writecheck: lim has no %s", name))
+		}
+	}
+	if allowed == nil {
+		panic("writecheck: allowed is nil")
+	}
+	value, lone, err := jsonstrict.Decode(body, JSONDepth)
+	if err != nil {
+		return &Refusal{Code: err.Code, Kind: err.Kind, Check: "json", Reason: err.Reason}, nil
+	}
+	r := checks.Check(checks.Input{Body: value, Sock: sock, Lone: lone, Lim: lim, Fns: checks.Fns{Allowed: allowed}})
+	if r == nil {
+		return nil, value
+	}
+	out := &Refusal{Code: r.Code, Kind: r.Kind, Fault: r.Fault, N: r.N, Check: r.Check}
+	if r.FaultErr != "" {
+		out.Reason = "fault: " + r.FaultErr
+	}
+	return out, value
+}
