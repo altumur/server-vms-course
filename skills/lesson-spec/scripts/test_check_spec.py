@@ -1915,6 +1915,17 @@ class LayoutTests(unittest.TestCase):
         self.assertTrue(any("ru/spec/stray.md" in e and "without its source" in e for e in result.errors), result.errors)
         self.assertFalse(any("ru/01-store.md" in e and "without its source" in e for e in result.errors), result.errors)
 
+    def test_anchor_is_judged(self):                    # файл есть, якорь есть (ревью пилота: русский якорь на английский X)
+        result = Check(self.root)
+        source = self.dir / "spec/01.1-store.norms.md"
+        source.write_text("# Source\n\n## Н0 Vocabulary\n\n### Time in a row\n")
+        result.markdown(self.dir / "spec/01.2-store.norms.md",
+                        "[a](01.1-store.norms.md#н0-vocabulary), [b](01.1-store.norms.md#time-in-a-row), "
+                        "[c](01.1-store.norms.md#н0-словарь-слов), [d](#н1-section), [e](#nope)\n")
+        missing = [e for e in result.errors if "missing anchor" in e]
+        self.assertEqual(len(missing), 2, result.errors)
+        self.assertTrue(any("#н0-словарь-слов" in e for e in missing) and any("#nope" in e for e in missing), missing)
+
     def test_form_not_in_data(self):
         (self.dir / "data").mkdir()
         (self.dir / "data/write-checks.tsv").write_text("n\top\n")

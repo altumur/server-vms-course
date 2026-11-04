@@ -1237,12 +1237,21 @@ class Check:
         try:
             for target in markdown_links(MarkdownIt("commonmark").parse(text)):
                 url = urlsplit(target)
-                if url.scheme or url.netloc or not url.path:
+                if url.scheme or url.netloc:
                     continue
+                if not url.path:                         # an anchor of the same file (as it lies on disk)
+                    if url.fragment and unquote(url.fragment) not in self.anchors(path):
+                        self.error(path, f"missing anchor: {unquote(target)} — no such heading in this file")
+                    continue
+                whole = path.parent / unquote(url.path)
                 if url.path.startswith("/"):
                     self.error(path, f"absolute local link is not portable: {target}")
-                elif not (path.parent / unquote(url.path)).exists():
+                elif not whole.exists():
                     self.error(path, f"missing link target: {target}")
+                elif url.fragment and whole.suffix == ".md" and whole.is_file() and \
+                        unquote(url.fragment) not in self.anchors(whole):
+                    self.error(path, f"missing anchor: {unquote(target)} — no such heading in {self.name(whole)} (anchors as "
+                                     "GitHub builds them; ADR-0124 доп. (1) п. 3: a source has English headings)")
                 elif source_file(Path(path).resolve(), self.root) and \
                         outside_export(Path(path).resolve().parent / unquote(url.path), self.root):
                     self.error(path, f"a source links into ru/ or journal/, which the export has not: {target} — "
@@ -1250,6 +1259,33 @@ class Check:
                 self.stats["local_links"] += 1
         except ValueError as exc:
             self.error(path, str(exc))
+
+    def anchors(self, path):
+        """Anchors of the headings of a Markdown file as GitHub builds them (github-slugger over the rendered text of
+        a heading; a repeated one gets -1, -2…). Read once per run."""
+        path = Path(os.path.normpath(Path(path).resolve()))
+        cache = self.__dict__.setdefault("_anchors", {})
+        if path not in cache:
+            import unicodedata
+            seen, out, level = {}, set(), None
+            try:
+                tokens = MarkdownIt("commonmark").parse(path.read_text(encoding="utf-8"))
+            except (OSError, UnicodeError):
+                tokens = []
+            for tok in tokens:
+                if tok.type == "heading_open":
+                    level = tok.tag
+                elif tok.type == "inline" and level is not None:
+                    words = "".join(c.content for c in (tok.children or []) if c.type in ("text", "code_inline"))
+                    base = "".join("-" if ch == " " else ch for ch in words.strip().lower()
+                                   if ch in "-_ " or unicodedata.category(ch)[0] in "LNM")
+                    n = seen.get(base, 0)
+                    seen[base] = n + 1
+                    out.add(base if n == 0 else f"{base}-{n}")
+                    level = None
+            cache[path] = out
+            self.stats["anchored_files"] += 1
+        return cache[path]
 
     def openapi(self, path):
         """A lesson's own contract: a checked OpenAPI document with HTTP paths."""
