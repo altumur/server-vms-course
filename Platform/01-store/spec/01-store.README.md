@@ -149,6 +149,6 @@ Chapter 1.3:
 | a scenario is red, the norms of the chapters are unambiguous | the code |
 | the norms of the chapters are incomplete or contradictory | do not work around it in the code; a question in `QUESTIONS.md`; the fix is made by the author of the norms, then the code |
 | a scenario contradicts the norms of the chapters | an acceptance defect; a question to the author; the code follows the norms of the chapters |
-| an AI made a mistake and was corrected by a person | a row in `corrections.tsv` next to the scenarios (ADR-0080 addendum 1) |
+| an AI made a mistake and was corrected by a person | a row in `journal/corrections-<K>.tsv` of the chapter (ADR-0080 addendum 1) |
 
 An additional check after run 33: service POSTs: unknown field/not an object/extra JSON/framing — 400; 1 MiB + 1 — 413; no path/method — 404/405. Check each reason against Н2, Н4 and the full Fault, not only the code number.

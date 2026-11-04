@@ -18,9 +18,9 @@ The format is the dictionary of directives and doors of the common acceptance RE
   `key` included, are not admitted (the common rule of `error` is kept). For the weight refusal in sc. 15 the fields `key` and `size`
   are mandatory and are compared as before.
 
-## `corrections.tsv`
+## `journal/corrections-1.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample` (a sample of a generation error), `fix` (which line of the lesson was clarified), `languages`. Empty: no error has repeated so far.
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample` (a sample of a generation error), `fix` (which line of the lesson was clarified), `languages`. Empty: no error has repeated so far.
 
 ## Additional check of the class of errors of run 36 (Kimi)
 
