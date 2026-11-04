@@ -4,7 +4,10 @@ tools/normgen/kit/stub (хранилище в памяти без смысла �
 Запуск: python tools/normgen/kit/build_stub.py <dst> [--spec-version <полный SHA выгрузки cammeta-specs>] [--go-build]
 
 Кладёт в <dst>: 01-store/ (пакет: build_kit.build, части writecheck и door, go.mod модуля stubstore, cmd/stubstore,
-acceptance.yaml формата 2) и assembly.yaml (format 1, один модуль 01-store). --go-build собирает 01-store/bin/stubstore
+acceptance.yaml формата 2), assembly.yaml (format 1, один модуль 01-store) и SPEC_VERSION. Раннер требует, чтобы <dst>
+был корнем репозитория Git (git init; git add -A; git commit — делает вызывающий). Ключи профиля: role_header —
+заголовок роли заглушки (X-Configstore-Role); request_line_limit 8192 — объявлен, но рамку заглушка не держит (net/http):
+пробы рамки P/01.1/extra — шаги, зависящие от ручной части, судьёй двери не засчитываются. --go-build собирает 01-store/bin/stubstore
 (иначе сборка — фаза build раннера: `go build -o bin/stubstore ./cmd/stubstore`). Прогон — только на сервере через
 очередь, не здесь.
 """
@@ -33,6 +36,8 @@ stand:
   store: './bin/stubstore -dir {{data}} -admin {{socket}} -rights {{rights}} -max-body {{body_limit}} -max-value {{row_ceiling}}'
 keys:
   role: acc
+  role_header: X-Configstore-Role
+  request_line_limit: 8192
 artifacts:
   stubstore: bin/stubstore
 """
@@ -66,6 +71,7 @@ def build(dst, spec=None, go_build=False):
         raise build_kit.KitError(f"spec_version {sha!r}: a full 40-hex commit of cammeta-specs")
     (store / "acceptance.yaml").write_text(PROFILE.format(spec=sha), encoding="utf-8")
     (dst / "assembly.yaml").write_text(ASSEMBLY, encoding="utf-8")
+    (dst / "SPEC_VERSION").write_text(sha + "\n", encoding="utf-8")   # раннер: корень Git реализации несёт SPEC_VERSION
     if go_build:
         import os
         env = dict(os.environ, **GOENV_FLAGS)
