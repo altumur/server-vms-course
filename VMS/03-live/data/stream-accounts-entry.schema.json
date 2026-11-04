@@ -1,23 +1,23 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "value элемента книги учёток RTSP domain/live/stream-accounts (копия у члена) и domain/live/stream-accounts/<член> (у держателя домена), V/03.6 Н1.3: учётка {name, to, disabled, password_secret}; пароль — только конверт кольца (enc:v2, договор запечатывания), открытого текста в книге нет",
+ "description": "value of an element of the RTSP account book domain/live/stream-accounts (the copy at a member) and domain/live/stream-accounts/<member> (at the domain holder), V/03.6 Н1.3: an account {name, to, disabled, password_secret}; the password is only a keyring envelope (enc:v2, the sealing contract), there is no plain text in the book",
  "type": "object",
  "properties": {
   "name": {
-   "description": "имя учётки — грамматика имени человека домена (P/08.4 Н1.1 name), ключ книги (key: name)",
+   "description": "the account name — the grammar of a domain person name (P/08.4 Н1.1 name), the key of the book (key: name)",
    "type": "string",
    "minLength": 1
   },
   "to": {
-   "description": "\"servers\": все члены class server прохода (V/03.6 Н1.3)",
+   "description": "\"servers\": all members of class server of the pass (V/03.6 Н1.3)",
    "const": "servers"
   },
   "disabled": {
-   "description": "отключённая не играет (V/03.6 Н1.1)",
+   "description": "a disabled one does not play (V/03.6 Н1.1)",
    "type": "boolean"
   },
   "password_secret": {
-   "description": "конверт enc:v2:<kid>:<nonce>:<ct> кольца держателя (строка члена) или члена (копия); открывает только читатель-секрет (V/03.6 Н1.1, договор запечатывания)",
+   "description": "the envelope enc:v2:<kid>:<nonce>:<ct> of the keyring of the holder (the member row) or of the member (the copy); only a secret reader opens it (V/03.6 Н1.1, the sealing contract)",
    "type": "string",
    "pattern": "^(?:enc:v2:[\\s\\S]+)$"
   }

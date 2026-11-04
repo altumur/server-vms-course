@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "слова подсистемы live в пульсе live/heartbeats/<имя>, которые читают другие процессы (открытое место семьи платформы heartbeats, P/03.4 Н1.1: элемент status[] и верх пульса сверх полей платформы); смысл — V/03.2 Н1.5; прочие слова пульса — диагностика",
+ "description": "the words of the subsystem live in the heartbeat live/heartbeats/<name> that other processes read (an open place of the Platform family heartbeats, P/03.4 Н1.1: an element of status[] and the top of the heartbeat beyond the Platform fields); the meaning — V/03.2 Н1.5; the other words of the heartbeat are diagnostics",
  "type": "object",
  "properties": {
   "status": {
@@ -9,7 +9,7 @@
     "type": "object",
     "properties": {
      "asked": {
-      "description": "id потоков раздачи со спросом или подпиской, основной — id камеры (V/03.2 Н1.5)",
+      "description": "the ids of the delivery streams with demand or a subscription, the main one is the camera id (V/03.2 Н1.5)",
       "type": "array",
       "items": {
        "type": "string",
@@ -23,7 +23,7 @@
    }
   },
   "asked_solo": {
-   "description": "id потоков со спросом или подпиской без раздачи: самостоятельные подписки точки RTSP (V/03.2 Н1.5, V/03.6 Н1.4)",
+   "description": "the ids of the streams with demand or a subscription without a delivery: standalone subscriptions of the RTSP endpoint (V/03.2 Н1.5, V/03.6 Н1.4)",
    "type": "array",
    "items": {
     "type": "string",

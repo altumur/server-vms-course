@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/03.1: раздача — единица по спросу (дверь единиц консоли live; манифесты cam и live). Формат — README.
+# Acceptance of V/03.1: the delivery is a unit on demand (the units door of the console live; the manifests cam and live). Format — README.
 01-create	1	console2 POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
 01-create	2	POST /streams {"cam": "$c1", "labels": ["public-address"]}	201 {"id": "$c1", "cam": "$c1", "grace": 60, "labels": ["public-address"]}
 01-create	3	POST /streams {"cam": "$c1"}	409 {"error": "exists"}
