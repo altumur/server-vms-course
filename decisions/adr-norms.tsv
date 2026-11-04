@@ -1286,10 +1286,13 @@ adr	add	point	status	file	norm	note
 0117	6	пп. 1–4	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md; VMS/08-exp/spec/08.8-exp.norms.md; VMS/08-exp/exp.subsystem.yaml	V/08.6 Н1.1, Н1.4; V/08.8 Н1.2–Н1.4	worker.deletes parts, отмена просьбой, общие поля в каждой части, per_person 64 (М ревью (6)); решила: ttl 600
 0117	7	п. 1	НОРМА	VMS/08-exp/spec/08.7-exp.norms.md	V/08.7 Н1.2, Н1.3	кадр архива и живой кадр обрезаются по area
 0117	7	п. 2	НОРМА	VMS/08-exp/spec/08.6-exp.norms.md	V/08.6 Н1.1	area у камеры заказа: settings.area части — рамка своей камеры; settings в частях не одинаковы (area, labels)
-0117	7	п. 3	НЕТ НОРМЫ	-	-	422 /cameras/i/area у backend — доля V/11 при контракте с /exports
+0117	7	п. 3	НОРМА	VMS/11-backend/spec/11.20-backend.norms.md; VMS/11-backend/ru/spec/11.20-backend.norms.md	V/11.20 Н1.2	422 VALIDATION_FAILED field /cameras/i/area у backend, area массивом (решение Архитектора 2026-11-04); ревью V/11.20 отложено — после пилота форм (ADR-0120 доп. (2), ADR-0121 доп. (2))
 0117	7	п. 4	НЕ НОРМА	-	-	контракт форка — «Консоль»
 0117	7	М ревью	НОРМА	VMS/08-exp/spec/08.7-exp.norms.md	V/08.7 Н1.4	пиксели: x, y, w, h вниз до чётного, сторона < 16 — отказ части (решила); обрезка → масштаб → титры
 0117	7	С2 Спецификации	НОРМА	VMS/08-exp/spec/08.7-exp.norms.md	V/08.7 Н1.4	доли → пиксели вниз, чётность только у видео, наименьшая сторона < 16 — отказ; маска → обрезка → масштаб → титры
+0117	1	п. 2 (V/11)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md; VMS/11-backend/ru/spec/11.4-backend.norms.md	V/11.4 Н1.24	закладка type moment | span, to у отрезка, 422 field to; выгрузка из отрезка — его границы, из момента ±bookmarkPadSec 30 (V/11.20); ревью V/11.20 отложено — после пилота форм (ADR-0120 доп. (2), ADR-0121 доп. (2))
+0117	1	пп. 1, 3 (V/11)	НОРМА	VMS/11-backend/spec/11.20-backend.norms.md; VMS/11-backend/ru/spec/11.20-backend.norms.md	V/11.20 Н1.1–Н1.9	перевод операций /exports форка a9a96e2 на строки частей exp; объявленные возможности первой генерации; пояс имени файла — settings.tz (решила; Архитектор принял 2026-11-04); ревью V/11.20 отложено — после пилота форм (ADR-0120 доп. (2), ADR-0121 доп. (2))
+0117	0	§ 8 (V/11)	НОРМА	VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/ru/spec/11.2-backend.norms.md	V/11.2 Н1.5	features выгрузки профиля one-domain (решение Архитектора 2026-11-04); пределы надзора и пароля — «Консоли» запросом команде consolem
 0119	0	п. 1	ОТВЕРГНУТО	-	-	доля платформы: дверь консоли /persons/verify заменена доп. (1) п. 1
 0119	0	п. 2	ОТВЕРГНУТО	-	-	доля платформы: общий счёт по логину заменён доп. (1) п. 2
 0119	0	п. 3	ОТВЕРГНУТО	-	-	доля платформы: person.verified заменён доп. (1) п. 3 — domain.verify
