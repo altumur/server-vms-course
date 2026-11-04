@@ -294,8 +294,8 @@ def build(dst, module, parts=(), judged=None):
     for sub, name, data, origin, source in refusal_files:
         put(sub, name, data, origin, "refusals", source)
     for sub, name, data, origin, source, own in launch_files:
-        if own and Path(os.path.normpath(internal / sub / name)).exists():
-            continue                    # main.go реализации не трогается
+        if own and own_taken(Path(os.path.normpath(internal / sub / name)), data):
+            continue                    # main.go и рамка реализации не трогаются
         put(sub, name, data, origin, "launch", source)
         if own:
             files[-1]["editable"] = True

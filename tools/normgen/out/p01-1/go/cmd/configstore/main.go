@@ -5,13 +5,15 @@
 // Command configstore — the store daemon: launch.Main parses the flags of forms/daemon-flags.tsv (a refusal — exit 2),
 // checks the FORMAT mark in -dir, opens your core (coreadapter.Open — the same Open as the stage tests; while it is
 // the kit's stub, the empty core of the frame answers: every key absent), listens on -sockets (admin.sock and a
-// <role>.sock per role of -rights) and serves HTTP through coreadapter.Handle until SIGTERM.
+// <role>.sock per role of -rights) and serves HTTP by your frame (internal/frame) through coreadapter.Handle until
+// SIGTERM.
 package main
 
 import (
 	"os"
 
 	"normgen/p01-1/coreadapter"
+	"normgen/p01-1/frame"
 	"normgen/p01-1/launch"
 )
 
@@ -22,6 +24,10 @@ func main() {
 	os.Exit(launch.Main(os.Args[1:], os.Getenv, launch.App{
 		Mark: mark,
 		Open: coreadapter.Open, // yours: internal/coreadapter/open.go (its stub — the empty core of the frame)
-		Raft: false,            // a box build: -group-size 3|5, -join, -door — exit 2 «this build has no raft»
+		// yours: internal/frame — the HTTP frame of Н2.1 (the kit's is a TEMPORARY one on net/http: replace it)
+		Frame: func(c coreadapter.Core, cfg coreadapter.Config, sock string) launch.Frame {
+			return frame.New(c, cfg, sock)
+		},
+		Raft: false, // a box build: -group-size 3|5, -join, -door — exit 2 «this build has no raft»
 	}))
 }
