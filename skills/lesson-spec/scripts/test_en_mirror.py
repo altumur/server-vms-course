@@ -1,0 +1,81 @@
+"""Сверка ru↔en (ADR-0120 п. 1 (б)): пара P/01.1 сходится, а каждое расхождение — номер, ссылка, код, слово отказа,
+`code`-вставка, таблица, чеклист, кириллица, пометка «производный» — даёт отказ."""
+import unittest
+from pathlib import Path
+
+import en_mirror
+
+ROOT = Path(__file__).resolve().parents[3]
+RU = ROOT / "Platform/01-store/spec/01.1-store.norms.md"
+EN = ROOT / "Platform/01-store/spec/en/01.1-store.norms.en.md"
+
+
+class Mirror(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.ru = RU.read_text(encoding="utf-8")
+        cls.en = EN.read_text(encoding="utf-8")
+
+    def compare(self, ru=None, en=None):
+        return en_mirror.compare(self.ru if ru is None else ru, self.en if en is None else en, RU, EN, ROOT)
+
+    def mutated(self, old, new, which="en"):
+        text = self.en if which == "en" else self.ru
+        self.assertEqual(text.count(old), 1, old)
+        errors = self.compare(**{which: text.replace(old, new)})
+        self.assertTrue(errors, f"no refusal for {old!r} → {new!r}")
+        return errors
+
+    def test_pair_agrees(self):
+        self.assertEqual(self.compare(), [])
+        self.assertIn((RU, EN), list(en_mirror.pairs(ROOT)))
+
+    def test_kinds_from_n4(self):
+        self.assertEqual(en_mirror.kinds_of(self.ru), {"badkey", "badrequest", "forbidden", "conflict", "expired",
+                                                      "early", "guard", "toolarge", "unavailable", "refused",
+                                                      "ambiguous"})
+
+    def test_code(self):
+        self.mutated("then the door MUST answer `404 {kind: badrequest}`", "then the door MUST answer `405 {kind: badrequest}`")
+
+    def test_refusal_word(self):
+        errors = self.mutated("8. If not_before is given and admitted ≤ not_before, return `early`.",
+                              "8. If not_before is given and admitted ≤ not_before, return `expired`.")
+        self.assertTrue(any("early" in e for e in errors), errors)
+
+    def test_reference(self):
+        self.mutated("(C01-ROW-INDEX-LOST-01, the Architect's decision of 2026-10-29).\n",
+                     "(the Architect's decision of 2026-10-29).\n")
+        self.mutated("it names names and versions, not content (ADR-0021).", "it names names and versions, not content.")
+        self.mutated("UTF-8 is not required (Н3 «list»).", "UTF-8 is not required (Н5 «list»).")
+
+    def test_link(self):
+        self.mutated("[P/08.4](../../../08-domain/spec/08.4-domain.norms.md)", "[P/08.4](../../../08-domain/spec/08.3-domain.norms.md)")
+
+    def test_code_span_dropped(self):
+        self.mutated("`JSON_DEPTH` = 128", "JSON_DEPTH = 128")
+
+    def test_table_row(self):
+        self.mutated("| 40 | batch rights:", "| 39b | x | y |\n| 40 | batch rights:")
+
+    def test_checklist(self):
+        self.mutated("- [ ] **P/01.1-31** batch", "- [ ] **P/01.1-32** batch")
+
+    def test_section(self):
+        self.mutated("## Correspondence to former lessons", "### Correspondence to former lessons")
+
+    def test_heading_number(self):
+        self.mutated("### Н2.1 Request parsing", "### Н2.2 Request parsing")
+
+    def test_cyrillic(self):
+        errors = self.mutated("The read MUST be linearizable", "The read ДОЛЖЕН be linearizable")
+        self.assertTrue(any("Cyrillic" in e for e in errors), errors)
+        self.mutated("# A store row. The store", "# Строка хранилища. The store")
+
+    def test_mark(self):
+        errors = self.mutated(en_mirror.MARK, "производный", which="ru")
+        self.assertTrue(any("mark" in e for e in errors), errors)
+
+
+if __name__ == "__main__":
+    unittest.main()
