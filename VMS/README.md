@@ -23,7 +23,7 @@
 | 03 | [`03-live/`](03-live/ru/README.md) | `live` | переведён |
 | 04 | [`04-det/`](04-det/ru/README.md) | `det` | переведён |
 | 05 | [`05-detjob/`](05-detjob/ru/README.md) | `detjob` | переведён |
-| 06 | [`06-detedge/`](06-detedge/README.md) | `detedge` | переведён |
+| 06 | [`06-detedge/`](06-detedge/ru/README.md) | `detedge` | переведён |
 | 07 | [`07-auto/`](07-auto/README.md) | `auto` | переведён |
 | 08 | [`08-exp/`](08-exp/README.md) | `exp` — выгрузка, главы V/08.6–V/08.9 | переведён |
 | 09 | [`09-deploy/`](09-deploy/README.md) | развёртывание VMS | переведён |

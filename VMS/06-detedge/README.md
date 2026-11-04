@@ -1,10 +1,10 @@
 # V/06 Detection over the device archive
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 Status: **translated** — chapters V/06.1–V/06.4 (2026-10-23; review — the analysis of 2026-10-29); the plan below is the history of the translation (decisions 1–10
-accepted by «Архитектор» 2026-10-23; the transition — ADR-0090 addendum (11)). Sources: the inventory [`../common/inventory.md`](../../common/inventory.md) § 1, § 2 (М10B/23).
-The platform: the export `cammeta-specs` `7a875c75` (the VMS pin). The manifest is [`detedge.subsystem.yaml`](../detedge.subsystem.yaml) (the canon; ADR-0090
+accepted by «Архитектор» 2026-10-23; the transition — ADR-0090 addendum (11)). Sources: the inventory [`../common/inventory.md`](../common/inventory.md) § 1, § 2 (М10B/23).
+The platform: the export `cammeta-specs` `7a875c75` (the VMS pin). The manifest is [`detedge.subsystem.yaml`](detedge.subsystem.yaml) (the canon; ADR-0090
 addendum (6) item 8).
 
 ## What lesson V/06 is
@@ -34,9 +34,9 @@ the model registry (V/04.2); the job — the same rules of the event and of the 
   `detedge/<watch>/e<эпоха>/`, alarms — `detedge.alarms/…`.
 - **Doors:** there is no HTTP door of its own — rows through the console door (P/06.1), reading — the holder doors `/recordings`, `/playback`
   (V/01.5, the role leaf `detedgeworker`); the lesson has no OpenAPI — the registry row `V/06 no-openapi` (an inquiry with chapter V/06.1).
-- **Data families:** the fields of the rows of the watch's events — [`data/detedge-events`](../data/) (`tick` — `pass`; `detedge.overrun`,
+- **Data families:** the fields of the rows of the watch's events — [`data/detedge-events`](data/) (`tick` — `pass`; `detedge.overrun`,
   `detedge.rewound` — `from`, `to`; the place is the root of a row of the platform events family, the trees `detedge` and `detedge.alarms`;
-  read by the console and the `auto` scenarios), the row is in the VMS catalogue [`../common/data/catalog.tsv`](../../common/data/catalog.tsv).
+  read by the console and the `auto` scenarios), the row is in the VMS catalogue [`../common/data/catalog.tsv`](../common/data/catalog.tsv).
 
 ## Decisions for the plan (accepted by «Архитектор» 2026-10-23)
 

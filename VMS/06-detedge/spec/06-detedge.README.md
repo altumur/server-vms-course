@@ -1,6 +1,6 @@
 # V/06 Detection over the device archive — instructions for an implementation
 
-This English text is the source; the Russian [`06-detedge.README.md`](../06-detedge.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/06-detedge.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 What an implementation of the subsystem `detedge` does and how to check the result. The canon is the norms of the chapters `06.K-detedge.norms.md`; these
 instructions do not add to them. The platform is the export `cammeta-specs` `7a875c75` (the VMS pin).
@@ -8,10 +8,10 @@ instructions do not add to them. The platform is the export `cammeta-specs` `7a8
 ## Inputs and their priority
 
 - The canon: the norms of the chapters `06.K-detedge.norms.md` (Н1–Н5 of each chapter; the addresses `V/06.K Н…`).
-- The canon of the manifest: [`detedge.subsystem.yaml`](../../detedge.subsystem.yaml): the bytes as they are.
-- Acceptance: [chapter 1](../../acceptance/1/README.md); the stand and the vocabulary — [the common VMS acceptance README](../../../common/acceptance/README.md); acceptance introduces no new requirements.
-- Vectors: [`mask`](../../../04-det/vectors/mask/README.md) (the package command).
-- [The lecture](../../06-detedge.md) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
+- The canon of the manifest: [`detedge.subsystem.yaml`](../detedge.subsystem.yaml): the bytes as they are.
+- Acceptance: [chapter 1](../acceptance/1/README.md); the stand and the vocabulary — [the common VMS acceptance README](../../common/acceptance/README.md); acceptance introduces no new requirements.
+- Vectors: [`mask`](../../04-det/vectors/mask/README.md) (the package command).
+- The lecture (`ru/06-detedge.md`, for people, not in the export) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
 
 Record a contradiction with its place and a counterexample (the section «On a divergence»); an arbitrary refusal does not replace an
 absent norm. The structure of the code is left to the implementation within the canon.
@@ -20,7 +20,7 @@ absent norm. The structure of the code is left to the implementation within the 
 
 | Chapter | What the implementation has | Check |
 |---|---|---|
-| V/06.1 | the manifest `VMS/06-detedge/detedge.subsystem.yaml` loads with the strict loader without edits; the unit door of the console executes the watch's declarations | [acceptance 1](../../acceptance/1/README.md) |
+| V/06.1 | the manifest `VMS/06-detedge/detedge.subsystem.yaml` loads with the strict loader without edits; the unit door of the console executes the watch's declarations | [acceptance 1](../acceptance/1/README.md) |
 | V/06.2 | the holder by the heartbeat, the window (`SETTLE` 30, 600 s per pass), the listing `/recordings` (`None` ≠ `[]`, normalisation of the spans), reading `/playback` by 60 s of media outside the runtime loop, one session per device, 4 reads per pass, 503 (including the door's reserve `PLAYBACK_SPARE`) — waiting | by reading |
 | V/06.3 | the frontier cursor (the first taking `now`/`earliest`, movement by the window, by the continuous beginning, by what was fully looked through; «события → подачи → курсор»), what the ring erased — a jump and `detedge.overrun`, a frontier ahead of the archive — `detedge.rewound`; a model of the `det` registry (`tick` on an absolute grid, the mask — the vectors `mask`), events by the rules of V/05.3 | by reading, the vectors `mask` |
 | V/06.4 | `keep: hits` — segments around the findings (joining, ∩ what was counted), a catch-up recording request by filing into the recording `rec` before the cursor (whole seconds, before «visible from», pieces ≤ a day); phases; the heartbeat (`events_written`, `through`, `lag`, `overrun`) | by reading |
