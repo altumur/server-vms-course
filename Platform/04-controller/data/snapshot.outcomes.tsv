@@ -1,5 +1,5 @@
-# Исходы нечитаемого объекта <sub>/snapshot/<воркер> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable object <sub>/snapshot/<воркер> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole object); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	console	шард целиком нечитаем (не JSON или не объект шарда): на /metrics — пропущен и посчитан в `<sub>_snapshot_garbled_shards`, /metrics — 200 с остальными, не 503; ошибка чтения не обновляет возраст (P/01.1 Н0 «Устойчивость выдачи»; ответ «Архитектора» 2026-10-25 на вопросы этапа 3, Г-05)	0	строка	P/06.5 Н1.3 age, metrics
-	domainagent	шард целиком нечитаем (не JSON или не объект шарда): в публикацию не входит и в deleted не попадает, прежняя копия у держателя остаётся, журнал (ответ «Архитектора» 2026-10-25 на вопросы этапа 3, Г-06)	0	строка	P/09.1 Н1.2
+	console	the whole shard is unreadable (not JSON or not a shard object): on /metrics — skipped and counted in `<sub>_snapshot_garbled_shards`, /metrics — 200 with the rest, not 503; a read error does not update the age (P/01.1 Н0 «Stability of output»; the Architect's answer of 2026-10-25 to the questions of stage 3, Г-05)	0	строка	P/06.5 Н1.3 age, metrics
+	domainagent	the whole shard is unreadable (not JSON or not a shard object): it does not enter the publication and does not get into deleted, the previous copy at the holder stays, the log (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-06)	0	строка	P/09.1 Н1.2

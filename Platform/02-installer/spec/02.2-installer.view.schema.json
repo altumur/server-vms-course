@@ -1980,7 +1980,7 @@
        ]
       },
       "wanted": {
-       "description": "table: a row with the name of the place — the place needs a holder (P/04 Н3 «нехватка()»)",
+       "description": "table: a row with the name of the place — the place needs a holder (P/04 Н3 «shortage()»)",
        "type": "string"
       }
      },

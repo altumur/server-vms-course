@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "want": {
-   "description": "абсолютная цель числа процессов роли на сервере, базовый `<prefix>-<сервер>-1` входит",
+   "description": "the absolute target of the number of processes of the role on the server, the base `<prefix>-<сервер>-1` is included",
    "type": "integer",
    "x-integer": true,
    "minimum": 1,
@@ -14,27 +14,27 @@
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "момент записи; диагностика — сроки по наблюдению версии строки (Н1.4 сроки)",
+   "description": "the moment of the write; diagnostics — the terms go by the observation of the row version (Н1.4 terms)",
    "x-codec": [
     "time"
    ]
   },
   "by": {
-   "description": "экземпляр контроллера; диагностика — полномочие даёт cas и страж placement_turn",
+   "description": "the controller instance; diagnostics — the authority is given by cas and the guard placement_turn",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "why": {
-   "description": "непустая причина; грамматика Н3 «нехватка(), заказать()…»",
+   "description": "a non-empty reason; the grammar of Н3 «нехватка(), заказать()…»",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "retiring": {
-   "description": "воркер, выбранный к сокращению (Н3 «сократить»); имя слота P/03.2 Н1.4",
+   "description": "the worker chosen for shrinking (Н3 «сократить»); a slot name, P/03.2 Н1.4",
    "type": "string",
    "pattern": "^(?:[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)$",
    "x-codec": [

@@ -3,16 +3,16 @@
  "type": "object",
  "properties": {
   "cluster": {
-   "description": "имя установки — CLUSTER окружения (P/02.4 Н1.2), не задано — local",
+   "description": "the installation name — CLUSTER of the environment (P/02.4 Н1.2), not set — local",
    "type": "string"
   },
   "worker": {
-   "description": "у шарда неразмещённых — null",
+   "description": "for the shard of the unplaced — null",
    "type": "null"
   },
   "ts": {
    "$ref": "#/$defs/common.time",
-   "description": "момент публикации"
+   "description": "the moment of publication"
   }
  },
  "propertyNames": {
@@ -25,7 +25,7 @@
     ]
    },
    {
-    "description": "unit.rows манифеста (P/06.1 Н1.1; не cluster/worker/ts — P/02.1)",
+    "description": "unit.rows of the manifest (P/06.1 Н1.1; not cluster/worker/ts — P/02.1)",
     "type": "string"
    }
   ]
@@ -848,10 +848,10 @@
    "properties": {
     "id": {
      "$ref": "#/$defs/common.named_id",
-     "description": "id единицы (P/06.1 Н1.3)"
+     "description": "the unit id (P/06.1 Н1.3)"
     },
     "revision": {
-     "description": "revision строки единицы",
+     "description": "revision of the unit row",
      "type": [
       "string",
       "integer"
@@ -859,14 +859,14 @@
      "x-integer": true
     },
     "worker": {
-     "description": "у неразмещённой — нет воркера",
+     "description": "an unplaced one has no worker",
      "type": [
       "string",
       "null"
      ]
     },
     "server": {
-     "description": "сервер воркера; у неразмещённой — нет",
+     "description": "the worker's server; an unplaced one has none",
      "type": [
       "string",
       "null"
@@ -889,7 +889,7 @@
     ]
    },
    "additionalProperties": {
-    "description": "поле из snapshot манифеста (P/02.1), адреса — с маской P/06.2 Н1.1а"
+    "description": "a field from snapshot of the manifest (P/02.1), addresses — with the mask of P/06.2 Н1.1а"
    },
    "required": [
     "id",

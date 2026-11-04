@@ -3,14 +3,14 @@
  "type": "object",
  "properties": {
   "holder": {
-   "description": "уникальная метка попытки захвата или \"\" — очередь свободна; новая попытка не повторяет метку прежней",
+   "description": "a unique mark of the capture attempt or \"\" — the turn is free; a new attempt does not repeat the mark of the previous one",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "manifest_rev": {
-   "description": "ревизия манифеста (P/02.3 Н1.5 rev); не убывает — старый контроллер не захватывает новую ревизию",
+   "description": "the manifest revision (P/02.3 Н1.5 rev); does not decrease — an old controller does not capture a new revision",
    "type": "string",
    "pattern": "^(?:[1-9][0-9]*)$",
    "x-codec": [
