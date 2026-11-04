@@ -176,6 +176,9 @@ follows from it for the stand. The scenarios and the expectations of acceptances
   (P/01.3 Н1.3 `durability`).
 - **Instance** — per scenario (P/01.1) or per full run, as the lesson README says; the runner waits for the socket or the port,
   then checks the parameters by behaviour per Н5 P/01.1. A ready door instead of a launch — the run is not isolated and not green.
+  A run of named scenarios only (the gate `accept:<chapter>:<scenarios>` of a stage, ADR-0126) keeps the isolation per scenario and
+  does not carry the chapter-wide probes of the parameters and of raw HTTP: its result names the subset, and a target is green
+  only by its full run.
 - **README checks beyond the TSV** in each lesson are a scenario or an item «checked by reading» with a subject: controlled
   clocks, two consoles on one store and drills on a real box with systemd (`@manual`, [system acceptance](system/README.md)) are not given by this interface;
   a store group of several daemons is given by «Store group stand» below (P/01.3 Н5), a server failure — by «Three-server cluster stand» below.
