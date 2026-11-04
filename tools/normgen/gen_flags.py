@@ -30,7 +30,7 @@ FLAG = re.compile(r"-[a-z][a-z-]*|--[a-z][a-z-]*")
 TYPE = re.compile(r"path|dir|file|addr|id|bool|duration|bytes:>0|list:id@addr(?:/addr)?"
                   r"|enum:[A-Za-z0-9_.-]+(?:\|[A-Za-z0-9_.-]+)*|int:(-?[0-9]+)\.\.(-?[0-9]*)")
 INITIALISMS = {"id": "ID", "api": "API", "tls": "TLS"}
-DURATION = re.compile(r"(?:[0-9]+(?:\.[0-9]+)?(?:ns|us|µs|ms|s|m|h))+")
+DURATION = re.compile(r"[1-9][0-9]*(?:ms|s|m|h)")          # шапка формы (P/01.3-R031)
 DURATION_NS = {"ns": 1, "us": 1000, "µs": 1000, "ms": 10 ** 6, "s": 10 ** 9, "m": 60 * 10 ** 9, "h": 3600 * 10 ** 9}
 MEMBER_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}")
 INT64 = (-2 ** 63, 2 ** 63 - 1)
@@ -293,7 +293,10 @@ def go_parse(table):
         elif row["default"].startswith("$"):
             var = row["default"][1:]
             fn = {"id": "valID", "addr": "valAddr"}.get(row["type"], "valNonEmpty")
-            out += [f"\tif ({admits(row)}) && !fl.Given[{flag}] && getenv({go_str(var)}) != \"\" {{",
+            out += [f"\tif ({admits(row)}) && !fl.Given[{flag}] && getenv({go_str(var)}) == \"\" {{",
+                    f"\t\treturn nil, refuse({flag}, {go_str('no ' + row['flag'] + ' and no $' + var)})",
+                    "\t}",
+                    f"\tif ({admits(row)}) && !fl.Given[{flag}] {{",
                     f"\t\tv, err := {fn}(getenv({go_str(var)}))",
                     "\t\tif err != nil {",
                     f"\t\t\treturn nil, refuse({flag}, \"the default ${var}: \"+err.Error())",
@@ -496,8 +499,10 @@ type Flags struct {
   `$SERVER_NAME` unless required). Fields of flags the command does not admit stay zero.
 - Syntax: `-flag value` or `-flag=value`; a flag without a value (bool) takes no `=`; a repeated flag is a refusal;
   `--` ends the flags (the rest are positional); the daemon takes no positional words (a refusal). `--from` is spelled with two hyphens, as in the norm.
-- Types: `bytes` — a plain integer of bytes > 0 (no `KiB`); `duration` — Go syntax (`5s`, `250ms`), not negative;
-  `addr` — `host:port` with a decimal port; `id` — the member id of P/01.3 Н2.
+- Types (the header of the form, P/01.3-R031): `bytes`, `int` — a decimal integer without a sign, a plus or leading
+  zeros, `bytes` without a suffix (no `KiB`); `duration` — `<integer>(ms|s|m|h)`, > 0 (`5s`, `250ms`; not `1h30m`);
+  `addr` — `host:port`, a non-empty host (a name, IPv4 or `[IPv6]`), a port 1–65535; `id` — the member id of P/01.3 Н2.
+- No `-id` and an empty or absent `SERVER_NAME` (outside a group) — a refusal, code 2.
 - Not done here (content, not the form of the table): the rights file and the TLS kit contents, `-id` against the door
   certificate, the FORMAT mark, the inherited sockets, the positional words of the subcommands. Your own subcommands
   (for example `vectors` of part `tests`) — dispatch them before `ParseArgs`.
