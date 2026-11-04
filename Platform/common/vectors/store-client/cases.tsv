@@ -1,24 +1,24 @@
-# Исход ответа хранилища для клиента (договор common/contracts/store-client.md «Исходы и что делает клиент» outcome, no_reply; SC-WIRE78-G01).
-# Строка: case<TAB>input<TAB>expect<TAB>note. Форма — README пакета.
+# The outcome of a store answer for the client (the store client contract common/contracts/store-client.md «Outcomes and what the client does» outcome, no_reply; SC-WIRE78-G01).
+# A row: case<TAB>input<TAB>expect<TAB>note. The form — the package README.
 case	input	expect	note
-get-row	{"op":"get","reply":{"status":200,"body":{"items":{"a":"1"},"index":"7"}}}	"row"	читаемая строка
-get-absent	{"op":"get","reply":{"status":200,"body":{"items":null,"index":""}}}	"absent"	отсутствующая строка: items null, index ""
-get-unreadable	{"op":"get","reply":{"status":200,"body":{"items":null,"index":"7","unreadable":true}}}	"unreadable"	повреждённая строка существует и имеет версию — не absent
-get-no-index	{"op":"get","reply":{"status":200,"body":{"items":{"a":"1"}}}}	"unavailable"	ответ чтения не по закрытой форме — нечитаемый ответ: unavailable
-get-none	{"op":"get","reply":"@none"}	"unavailable"	ответ не пришёл — для чтения unavailable, не «нет»
-list-truncated	{"op":"list","reply":"@truncated"}	"unavailable"	обрезанный ответ перечисления — unavailable
-list-ok	{"op":"list","reply":{"status":200,"body":{"keys":{"a/b":"3","a/c":"9"}}}}	"listing"	перечисление
-list-bad-version	{"op":"list","reply":{"status":200,"body":{"keys":{"a/b":"03"}}}}	"unavailable"	версия в перечислении не по форме провода (ведущий ноль) — нечитаемый ответ перечисления: unavailable
-write-ok	{"op":"write","reply":{"status":200,"body":{"index":"8"}}}	"written"	запись сделана
-write-again	{"op":"write","reply":{"status":200,"body":{"index":"8","again":true}}}	"written"	ответ сохранённого повтора того же id — тоже written
-write-bad-index	{"op":"write","reply":{"status":200,"body":{"index":"08"}}}	"ambiguous"	версия не по форме провода (ведущий ноль) — нечитаемый ответ записи: ambiguous
-write-none	{"op":"write","reply":"@none"}	"ambiguous"	ответ записи не пришёл — ambiguous: повтор только тем же id
-write-refused-connection	{"op":"write","reply":"@refused"}	"ambiguous"	отказ в соединении — тоже «ответ не пришёл»
-write-truncated	{"op":"write","reply":"@truncated"}	"ambiguous"	обрезанный ответ записи — ambiguous: повтор только тем же id
-write-conflict	{"op":"write","reply":{"status":409,"body":{"kind":"conflict","error":"x","index":"5"}}}	"conflict"	Fault — его kind: перечитать и повторить
-write-conflict-batch	{"op":"write","reply":{"status":409,"body":{"kind":"conflict","error":"x","key":"s/rows/a","index":"5"}}}	"conflict"	отказ cas пакета называет строку: ключ не меняет исход
-write-guard	{"op":"write","reply":{"status":412,"body":{"kind":"guard","error":"x","key":"s/slots/w-1","index":"4"}}}	"guard"	страж не на той версии: не повторять, перечитать условие
-write-ambiguous	{"op":"write","reply":{"status":503,"body":{"kind":"ambiguous","error":"x"}}}	"ambiguous"	исход записи неизвестен
-write-toolarge	{"op":"write","reply":{"status":413,"body":{"kind":"toolarge","error":"x","limit":1048576}}}	"toolarge"	тело больше предела — Fault, его kind: уменьшить тело, не повторять тем же
-get-forbidden	{"op":"get","reply":{"status":403,"body":{"kind":"forbidden","error":"x"}}}	"forbidden"	личность не допускается или прав нет — Fault, его kind
-get-unavailable	{"op":"get","reply":{"status":503,"body":{"kind":"unavailable","error":"x"}}}	"unavailable"	операция не сделана: повторить на следующем шаге
+get-row	{"op":"get","reply":{"status":200,"body":{"items":{"a":"1"},"index":"7"}}}	"row"	a readable row
+get-absent	{"op":"get","reply":{"status":200,"body":{"items":null,"index":""}}}	"absent"	an absent row: items null, index ""
+get-unreadable	{"op":"get","reply":{"status":200,"body":{"items":null,"index":"7","unreadable":true}}}	"unreadable"	a damaged row exists and has a version — not absent
+get-no-index	{"op":"get","reply":{"status":200,"body":{"items":{"a":"1"}}}}	"unavailable"	a read answer not by the closed form — an unreadable answer: unavailable
+get-none	{"op":"get","reply":"@none"}	"unavailable"	the answer did not come — for a read unavailable, not «no»
+list-truncated	{"op":"list","reply":"@truncated"}	"unavailable"	a truncated listing answer — unavailable
+list-ok	{"op":"list","reply":{"status":200,"body":{"keys":{"a/b":"3","a/c":"9"}}}}	"listing"	a listing
+list-bad-version	{"op":"list","reply":{"status":200,"body":{"keys":{"a/b":"03"}}}}	"unavailable"	a version in the listing not by the wire form (a leading zero) — an unreadable listing answer: unavailable
+write-ok	{"op":"write","reply":{"status":200,"body":{"index":"8"}}}	"written"	the write is done
+write-again	{"op":"write","reply":{"status":200,"body":{"index":"8","again":true}}}	"written"	the answer of a saved repeat of the same id — also written
+write-bad-index	{"op":"write","reply":{"status":200,"body":{"index":"08"}}}	"ambiguous"	a version not by the wire form (a leading zero) — an unreadable write answer: ambiguous
+write-none	{"op":"write","reply":"@none"}	"ambiguous"	the write answer did not come — ambiguous: repeat only with the same id
+write-refused-connection	{"op":"write","reply":"@refused"}	"ambiguous"	a connection refused — also «the answer did not come»
+write-truncated	{"op":"write","reply":"@truncated"}	"ambiguous"	a truncated write answer — ambiguous: repeat only with the same id
+write-conflict	{"op":"write","reply":{"status":409,"body":{"kind":"conflict","error":"x","index":"5"}}}	"conflict"	Fault — its kind: reread and repeat
+write-conflict-batch	{"op":"write","reply":{"status":409,"body":{"kind":"conflict","error":"x","key":"s/rows/a","index":"5"}}}	"conflict"	a cas refusal of a batch names the row: the key does not change the outcome
+write-guard	{"op":"write","reply":{"status":412,"body":{"kind":"guard","error":"x","key":"s/slots/w-1","index":"4"}}}	"guard"	the guard is not at that version: do not repeat, reread the condition
+write-ambiguous	{"op":"write","reply":{"status":503,"body":{"kind":"ambiguous","error":"x"}}}	"ambiguous"	the outcome of the write is unknown
+write-toolarge	{"op":"write","reply":{"status":413,"body":{"kind":"toolarge","error":"x","limit":1048576}}}	"toolarge"	the body is over the limit — Fault, its kind: reduce the body, do not repeat with the same one
+get-forbidden	{"op":"get","reply":{"status":403,"body":{"kind":"forbidden","error":"x"}}}	"forbidden"	the identity is not admitted or there are no rights — Fault, its kind
+get-unavailable	{"op":"get","reply":{"status":503,"body":{"kind":"unavailable","error":"x"}}}	"unavailable"	the operation is not done: repeat at the next step

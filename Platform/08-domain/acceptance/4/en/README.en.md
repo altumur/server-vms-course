@@ -19,7 +19,7 @@ The scenario М11/09 07 (`07-may`, 24 steps) is the same cases, it is not moved 
 The preparation is as the acceptance of [chapter 8.5](../../5/README.md) (formerly the acceptance README of
 М11/05): the catalogue `testsub` and `testsub2`, the counter
 `c1-<кластер>` and the shelf `sh1` on each cluster, the training writer of contributions. The doors `holder`, `member`, `signer` and the directives
-`@domain`, `@person`, `@stop agent` — the section «Стенд домена» of the common acceptance README.
+`@domain`, `@person`, `@stop agent` — the section «Domain stand» of the common acceptance README.
 
 - The person `root` with the password `w2c test root password` is created at `@install domain` (`domain first-admin`, the directive
   `@admin`): an assignment of the role `admin`, there is no direct row in `domain/grants/domain` (ADR-0100 §5). The runner goes as them by default:
@@ -52,8 +52,8 @@ The preparation is as the acceptance of [chapter 8.5](../../5/README.md) (former
   `domain/disabled` is still `["ann"]`, the grant of `ann` is not removed (the reconciliation of subjects without a name: the row exists, but is unreadable —
   the person exists, C08-GRANTS-ORPHAN-01). `DELETE` deletes the unreadable row too, removes the grant (`grants_changed: ["m1"]`);
   then `domain/disabled` is `[]` (the reconciliation by the flags of the rows of people), the login of `ann` — an ordinary 401. The norm does not name an edit `PUT` of an unreadable
-  row (Н3 «дверь людей» step 7: «нет — 404» against the rule «Нечитаемая строка») — there is no step.
-- Scenario 14 — the common ceiling (Н1.10 `ceiling`, the contract of the gate and the forwarding «Предел попыток»): the names `n1`–`n4` with
+  row (Н3 «дверь людей» step 7: «нет — 404» against the rule «Unreadable row») — there is no step.
+- Scenario 14 — the common ceiling (Н1.10 `ceiling`, the contract of the gate and the forwarding «Attempt limit»): the names `n1`–`n4` with
   five failures each (the key is the pair (address, name): the fifth failure of each key still passes, `per_address` does not fire) — 20
   refusals of all keys; a fresh name `n5` — the first attempt passes (401: «не чаще одной попытки в 60 с» does not yet act for a key without an attempt),
   the second right after it — 429 `too many attempts`. `Retry-After` is not compared in the TSV (the number of seconds is not
@@ -70,7 +70,7 @@ layer of lesson P/06) and lesson P/10; the outcome of the scenarios is the rows 
 
 ## scenarios.tsv
 
-The format is the dictionary of the «Стенд» and the section «Стенд домена» of the common acceptance README; the expectation is a subset of fields.
+The format is the dictionary of the «Stand» and the section «Domain stand» of the common acceptance README; the expectation is a subset of fields.
 
 | № | Scenario | Steps | What |
 |---|---|---|---|

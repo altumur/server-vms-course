@@ -1,23 +1,23 @@
-# Файл отзыва revoked (договор сертификата роли revoke file, bad_file). Форма — README.
+# The revocation file revoked (the role certificate contract revoke file, bad_file). The form — README.
 case	file	expect	note
-ok	"1a2b\n3c\n"	["3c", "1a2b"]	по строке на серийник; порядок — по значению
-no-final-lf	"ab"	["ab"]	последняя строка без LF
-empty	""	[]	пустой файл — отзывов нет
-leading-zeros	"00ff\n0ab\n"	["ab", "ff"]	ведущие нули не значимы
-upper	"ABCDEF\nff\n"	["ff", "abcdef"]	регистр не важен
-same-value	"ab\n00AB\n"	["ab"]	повтор по значению — один серийник, не ошибка
-zero	"0\n000\n"	["0"]	ноль — «0»
-decimal-looking	"123\n"	["123"]	десятичной записи нет: 123 — серийник 0x123
-skip	"# отозваны 2026-10-23\n\nab\n#cd\n"	["ab"]	пустая строка и строка с «#» — пропуск
-bad-0x	"0xab\n"	@bad	«0x» — неверная строка: файл неверен целиком
-bad-space	"ab \n"	@bad	пробел — неверная строка
-bad-leading-space-comment	" # x\nab\n"	@bad	«#» не в начале строки — неверная строка
-bad-colon	"ab:cd\n"	@bad	разделители — неверная строка
-bad-crlf	"ab\r\ncd\r\n"	@bad	CR — знак вне hex: неверная строка
-bad-nonhex	"ab\nzz\n"	@bad	знак вне hex; верные строки рядом не спасают — прежнее и частичное не используется
-bad-sign	"-1\n"	@bad	знак — неверная строка
-absent	@absent	@bad	нет ни revoked, ни crl.pem — как неверный файл: отказ закрыт (absent)
-both-union	{"revoked":"ab\n","crl":["cd","00AB"]}	["ab", "cd"]	оба файла — объединение (both)
-crl-only	{"revoked":"@absent","crl":["cd"]}	["cd"]	есть crl.pem, нет revoked — не ошибка (absent)
-both-revoked-bad	{"revoked":"zz\n","crl":["cd"]}	@bad	неверный revoked при верном crl.pem — отказ закрыт (both)
-both-crl-bad	{"revoked":"ab\n","crl":"@bad"}	@bad	неверный crl.pem при верном revoked — отказ закрыт (both)
+ok	"1a2b\n3c\n"	["3c", "1a2b"]	one line per serial; the order — by value
+no-final-lf	"ab"	["ab"]	the last line without LF
+empty	""	[]	an empty file — no revocations
+leading-zeros	"00ff\n0ab\n"	["ab", "ff"]	leading zeros are not significant
+upper	"ABCDEF\nff\n"	["ff", "abcdef"]	case does not matter
+same-value	"ab\n00AB\n"	["ab"]	a repeat by value — one serial, not an error
+zero	"0\n000\n"	["0"]	zero — «0»
+decimal-looking	"123\n"	["123"]	there is no decimal notation: 123 — the serial 0x123
+skip	"# отозваны 2026-10-23\n\nab\n#cd\n"	["ab"]	an empty line and a line with «#» — skipped
+bad-0x	"0xab\n"	@bad	«0x» — an invalid line: the file is invalid as a whole
+bad-space	"ab \n"	@bad	a space — an invalid line
+bad-leading-space-comment	" # x\nab\n"	@bad	«#» not at the start of a line — an invalid line
+bad-colon	"ab:cd\n"	@bad	separators — an invalid line
+bad-crlf	"ab\r\ncd\r\n"	@bad	CR — a character outside hex: an invalid line
+bad-nonhex	"ab\nzz\n"	@bad	a character outside hex; valid lines beside it do not save it — the former and the partial are not used
+bad-sign	"-1\n"	@bad	a character — an invalid line
+absent	@absent	@bad	neither revoked nor crl.pem — as an invalid file: fails closed (absent)
+both-union	{"revoked":"ab\n","crl":["cd","00AB"]}	["ab", "cd"]	both files — the union (both)
+crl-only	{"revoked":"@absent","crl":["cd"]}	["cd"]	crl.pem present, no revoked — not an error (absent)
+both-revoked-bad	{"revoked":"zz\n","crl":["cd"]}	@bad	an invalid revoked with a valid crl.pem — fails closed (both)
+both-crl-bad	{"revoked":"ab\n","crl":"@bad"}	@bad	an invalid crl.pem with a valid revoked — fails closed (both)

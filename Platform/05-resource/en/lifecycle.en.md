@@ -57,7 +57,7 @@ None: the setting channel is the environment only ([P/02.4] Н1.2 «The setting 
   `runs`, `gone`, `unknown`; a `gone` file it MAY remove under its own `flock` ([presence lock] `presence_lock`, [catalogue]).
 - **The objects root** — the objects door, the body copies `<sub>/blobs/sha256-<hex>` from the neighbours of the ring, the tombstones `.gone/<ключ>`, the directory locks `<каталог>/~lock`
   ([P/05] Н1.1, Н1.1 «Tombstones»; ADR-0083 addendum (16)). File names in both roots — one encoding `%XX` / `%h<sha256>` ([event journal]
-  «Имена файлов в общих деревьях»; the threshold of `%h` — by the full file name with the suffix of the norm and the margin of the temporary name, review of stage B 3–5, № 20).
+  «File names in shared trees»; the threshold of `%h` — by the full file name with the suffix of the norm and the margin of the temporary name, review of stage B 3–5, № 20).
 - **Store rows** — the heartbeat `platform/resources/<server>/heartbeat` (an object), the door row `platform/doors/<сервер>`,
   the release requests `<sub>/requests/free-<server>-<volume>`; it reads `platform/space`, `platform/mirror`,
   `<sub>/retention`, `<sub>/alarms_retention`, `platform/decommission/*`, `platform/schema`, `platform/manifest/<sub>` and the mark
@@ -92,7 +92,7 @@ start refusal, code 2 ([P/02.4] Н1.6 `process`; ADR-0075 addendum of 2026-10-26
 ## Stand
 
 The roots `{data}/config`, `objects`, `events` are created before the process start by the role start command of the profile — [the common
-acceptance README](../../common/acceptance/README.md) «Стенд без root»; the process does not create the roots ([P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
+acceptance README](../../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
 
 - The command of the «Стенд» with the substitutions `{rport}` — the door port, `{server}` — the server name (`srv-a`; at the stand of М11 —
   `srv-<кластер>`) ([Stand] «Ресурс»).

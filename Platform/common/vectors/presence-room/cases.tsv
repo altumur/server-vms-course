@@ -1,6 +1,6 @@
-# Счёт room и live (договор замка присутствия «Счёт room»; PL-EXT-01): имена слотов живых замков роли (prefix w, сервер srv-a) и бюджет памяти → room.<sub>, live.<sub>. Форма — README.
+# The count of room and live (the presence lock contract «Счёт room»; PL-EXT-01): the slot names of the live locks of a role (prefix w, server srv-a) and the memory budget → room.<sub>, live.<sub>. The form — README.
 case	input	expect	note
-n-99	{"prefix":"w","server":"srv-a","HOST_MEMORY_MB":4096,"WORKER_MEMORY_MB":256,"locks":["w-srv-a-1","w-srv-a-2","w-srv-a-99"]}	{"room":"13","live":"2,99"}	n = 99 — заказанный слот: в счёт номеров и в live
-n-100	{"prefix":"w","server":"srv-a","HOST_MEMORY_MB":4096,"WORKER_MEMORY_MB":256,"locks":["w-srv-a-1","w-srv-a-2","w-srv-a-100"]}	{"room":"13","live":"2"}	n = 100 — не слот этой установки: как замок без номера — в живые (память), не в счёт номеров и не в live; строка лога
-n-leading-zero	{"prefix":"w","server":"srv-a","HOST_MEMORY_MB":4096,"WORKER_MEMORY_MB":256,"locks":["w-srv-a-1","w-srv-a-02"]}	{"room":"14","live":""}	02 — не каноническая запись: замок без номера
-n-1-base	{"prefix":"w","server":"srv-a","HOST_MEMORY_MB":4096,"WORKER_MEMORY_MB":256,"locks":["w-srv-a-1"]}	{"room":"15","live":""}	1 — базовый: в живые, не в счёт номеров n ≥ 2
+n-99	{"prefix":"w","server":"srv-a","HOST_MEMORY_MB":4096,"WORKER_MEMORY_MB":256,"locks":["w-srv-a-1","w-srv-a-2","w-srv-a-99"]}	{"room":"13","live":"2,99"}	n = 99 — an ordered slot: in the count of numbers and in live
+n-100	{"prefix":"w","server":"srv-a","HOST_MEMORY_MB":4096,"WORKER_MEMORY_MB":256,"locks":["w-srv-a-1","w-srv-a-2","w-srv-a-100"]}	{"room":"13","live":"2"}	n = 100 — not a slot of this installation: as a lock without a number — among the live (memory), not in the count of numbers and not in live; a log line
+n-leading-zero	{"prefix":"w","server":"srv-a","HOST_MEMORY_MB":4096,"WORKER_MEMORY_MB":256,"locks":["w-srv-a-1","w-srv-a-02"]}	{"room":"14","live":""}	02 — not a canonical notation: a lock without a number
+n-1-base	{"prefix":"w","server":"srv-a","HOST_MEMORY_MB":4096,"WORKER_MEMORY_MB":256,"locks":["w-srv-a-1"]}	{"room":"15","live":""}	1 — the base one: among the live, not in the count of numbers n ≥ 2

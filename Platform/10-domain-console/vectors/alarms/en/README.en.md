@@ -18,7 +18,7 @@ the only source of these cases.
 
 ## Run
 
-Without a stand: the function of an implementation (the command `alarms`, the norms «Решает реализация» item 1) gets the input (the column `input`) and
+Without a stand: the function of an implementation (the command `alarms`, the norms «Implementation decides» item 1) gets the input (the column `input`) and
 gives the output; `expect` is a subset of the fields of the output (`@absent` — no such field) or `@exit 2` (the input is out of form: the norms Н5
 `exit`). The `@exit 2` rows are `alarms-15-lost-after-negative` (`lost_after` not > 0) and `alarms-17`…`alarms-23` (the other cases of
 code 2 of Н5 `exit`). A page out of the form of P/09.1 Н1.10 — the outcome 0 `unreadable`, not code 2 (rows 06, 12, 24–26).

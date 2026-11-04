@@ -26,7 +26,7 @@ the heartbeat (an object) is not read here. The resource P/05 is needed by all t
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Стенд» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей):
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей):
 the doors `store` (a role with read rights on `testsub/`), `console`, `console2`, `resource`, `admin` (sc. 23 — the row `platform/schema`);
 the directives `@start` (including `@start controller <sub> shrink_after=<с>`, `@start worker <sub> <имя> on <сервер>`,
 `@start worker <имя> on srv-b` sc. 33 and `@start worker <имя> labels=<метки>` sc. 24), `@sigterm`, `@sigkill`, `@sleep`, `@until`,
@@ -35,7 +35,7 @@ sc. 28–32, 41; `@as testsubworker store …` sc. 13, 21, 42), `@grow`, `@cut r
 `@thaw w-1` (sc. 26, 27); the expectation — a subset of fields, `@any`, `@absent` (sc. 21), `@time` (sc. 03, 21, 23, 25), `@exit 2` at
 `@start controller` (sc. 23).
 
-The processes are started per the section «Стенд» of the common acceptance README (the commands of roles, the environment of the worker); the read role of the store
+The processes are started per the section «Stand» of the common acceptance README (the commands of roles, the environment of the worker); the read role of the store
 without a rights file (P/01.2 Н1.2) — with full rights on `testsub/` and `testsub2/`.
 
 The stand begins with an empty store and without workers; the runner stops everything it started after the last step of
@@ -88,11 +88,11 @@ a scenario. One scenario takes no longer than 3 minutes.
   «нехватки нет»; a preparation where the hysteresis would allow shrinking with waiting ones the stand with one shelf and capacity 8 does not give —
   the branch is checked by the vector [`shrink-allowed`](../../vectors/shrink-allowed/README.md) — the rows `placeless-with-waiting`
   (the hysteresis would pass) and `placeless-no-waiting` (Н5; the Architect's decision of 2026-10-20, № 12 of the analysis of the review of stage B 3–5);
-- sc. 18, steps 15–19 — the protection of a replay on deletion (Н3 step 8; the row check contract «Строка заказчика: `made`» `delete`):
+- sc. 18, steps 15–19 — the protection of a replay on deletion (Н3 step 8; the row check contract «The customer's row: `made`» `delete`):
   the order row `testsub-c3` with `ends` in 2001 and `made.keep` 9999999999 (2286) — the clock of the controller is not later than `keep`, the row
   is not deleted, and its state (born matched) is not removed by the cleanup; within 12 s (two passes) the deletion would have been tried
   (the coverage audit of P/04, D06);
-- sc. 20 — a restart of the controller (Н3 «Гонки», ADR-0049): after `@sigterm controller` and a new `@start controller` the placement row
+- sc. 20 — a restart of the controller (Н3 «Races», ADR-0049): after `@sigterm controller` and a new `@start controller` the placement row
   of `c20` is the same (the version `index` and `rev` did not change: the decision is read, not revised), epoch 1; the new instance
   works — it places `c21` (within 90 s: the turn of the former holder may wait TURN_TERM 45 s) (the coverage audit of P/04, D01);
 - sc. 21 — the write `release` (Н3 «fate», «запись release»; the table R28 below, the last row): three workers without units
@@ -106,7 +106,7 @@ a scenario. One scenario takes no longer than 3 minutes.
   group of weight 9 with capacity 8 — none is placed (`unplaced` 9, `/where` 404), `g10` without `feed` is placed; after
   the deletion of `g9` and `g10` the group of eight with 8 free — wholly on `t-1`. The units and the shelf are set up before the worker: the first
   pass with the keeper of the shelf sees the group as a whole, not in parts (the coverage audit of P/04, D03);
-- sc. 23 — the schema check at the start of the controller ([the schema contract](../../../common/contracts/schema.md) «Проверка при старте»):
+- sc. 23 — the schema check at the start of the controller ([the schema contract](../../../common/contracts/schema.md) «Check at start»):
   `platform/schema` with `version` 2 (above SCHEMA 1) and `x` (not a number) — `@start controller` exits with code 2, there is no pass report;
   with `version` 1 — the controller starts and writes the report. The resource is raised before the write of the row: it checks the schema at its own
   start. The branch «ошибка чтения — ждать» — sc. 25, «до чтения манифеста» — by reading (the coverage audit of P/04, D07);
@@ -117,7 +117,7 @@ a scenario. One scenario takes no longer than 3 minutes.
   bypassing the writer with an unreadable label `qq!` — the last read labels and without a judgment of reachability: within 12 s neither `c1`
   (the labels of the node do not accept it) nor `c2` is removed (the outcomes of the family `server-labels`, the reader `<s>controller`) (the coverage audit of
   P/04, D10);
-- sc. 25 — a read error of the schema row at the start of the controller ([the schema contract](../../../common/contracts/schema.md) «Проверка при старте»:
+- sc. 25 — a read error of the schema row at the start of the controller ([the schema contract](../../../common/contracts/schema.md) «Check at start»:
   «ошибка чтения → ждать доступности, не начиная работы»): `@cut role testsubcontroller store` before the start —
   the store is silent to the role of the controller (P/02.5 Н1.4), the read of `platform/schema` hangs without an answer; within 10 s there is no pass report
   (the work is not begun); after `@mend` the controller without a new `@start` writes the report — it waited and did not exit (a refusal of the start is
@@ -167,7 +167,7 @@ The revision of the manifest of the stand is 1 (the first installation, P/02.3 �
   `safe: true` (there are no units on `srv-a` — the assignment and the `status` of the heartbeat, `@until` 60 s: the worker stops the unit and
   writes the heartbeat), `DELETE /drain` — `draining: ""`. The counts of the console without workers — sc. 04, 07 of the acceptance of P/06.6.
 - Sc. 34 — `retire_when` by the state (Н1.3 `retire_when`; [the row check contract](../../../common/contracts/row-check.md)
-  «Состояние единицы» `acts`): the holder of `t1` writes `result` `{state: open}` (P/03.6 sc. 09); its row is rewritten to
+  «Unit state» `acts`): the holder of `t1` writes `result` `{state: open}` (P/03.6 sc. 09); its row is rewritten to
   `done` by cas — the state is in effect (born and the revision of the row), `t1` is removed with the reason `done`, the assignment is empty, it does not enter
   `unplaced` (0); the row of the unit is not deleted (`delete_after` 600 s — by reading), the effective state is not removed by the cleanup.
 - Sc. 35 — the cleanup of a state with a foreign `born` (Н3 step 8а): the row of the unit `t2` is live, the state row has another `born`:
@@ -239,7 +239,7 @@ There are no foreign controllers, resources, spare processes or start timers. Th
 the read role of the store has access to testsub/ and testsub2/. The preparation uses separate administrative rights.
 
 All the workers of a scenario have the constant BOX_ID of the stand and server = srv-a, except `@start worker … on <сервер>` (the dictionary of the common acceptance README; analysis of the review of stage B 3–5, № 33);
-each copy gets a new instance. The name is passed by the substitution `{name}` of the directive (the common acceptance README, «Стенд»; analysis of the review of stage B 3–5, № 33).
+each copy gets a new instance. The name is passed by the substitution `{name}` of the directive (the common acceptance README, «Stand»; analysis of the review of stage B 3–5, № 33).
 A decreasing memory budget is not provoked: the chosen CAPACITY/WORKER_MEMORY_MB must satisfy P/03.4 (the budget).
 The ordinary configuration of testsub uses safe defaults; the parameters of the stand-in and of the deadlines are not accelerated for the sake of the test.
 

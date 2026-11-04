@@ -26,7 +26,7 @@ manifests — the union, the same answer with another order of the manifests, ke
 ## Run
 
 Without a stand: the side gives the input to its own computation of `families` of the door `GET /domain/keys` (the catalogue manifests and the read of the rows under
-`domain/` are replaced by the input). The native outcome is code 0 and the value `families` (one expectation column — the common rule «Векторы»
+`domain/` are replaced by the input). The native outcome is code 0 and the value `families` (one expectation column — the common rule «Vectors»
 of [the common acceptance README](../../../../common/acceptance/README.md)); the input is `cells` `decls`, `present`.
 Who executes it is the cluster console (`06-console`, P/06.7 Н1.11 `families`). The console module (`07-console-module`) takes
 `families` ready-made: the subsystem page selects its own keys by prefix (ACC-VECTORS-CONNECT-03: a row is executed by the role whose

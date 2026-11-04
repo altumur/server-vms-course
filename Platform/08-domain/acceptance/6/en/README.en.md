@@ -11,11 +11,11 @@ a change of behaviour); the numbers and the steps are the former ones, except sc
 
 The `If-Match` condition of the units door, by which the agent applies an edit, is sc. 14 of the acceptance of
 [P/06.1](../../../../06-console/acceptance/1/README.md). The doors `GET /domain/placement`, `/domain`, `/domain/<sub>/<rows>`,
-through which the stand reads placements, the view and the units, are doors of the domain console (lesson P/10, [the forwarding contract](../../../../common/contracts/forwarding.md) «Двери домена»; [Н1.2а, Н1.2г](../../../../10-domain-console/spec/10-domain-console.norms.md)); the chapter normates their content.
+through which the stand reads placements, the view and the units, are doors of the domain console (lesson P/10, [the forwarding contract](../../../../common/contracts/forwarding.md) «Domain doors»; [Н1.2а, Н1.2г](../../../../10-domain-console/spec/10-domain-console.norms.md)); the chapter normates their content.
 
 ## Preparation
 
-As the acceptance README of [chapter 8.3](../../3/README.md) («Стенд», «Подготовка каждого сценария»;
+As the acceptance README of [chapter 8.3](../../3/README.md) («Stand», «Подготовка каждого сценария»;
 formerly the acceptance README of М11/03): the runner brings up three clusters on one machine — `hold`, `m1`, `m2`; each has its own
 empty store, its own `{data}`, its own role sockets and console and resource ports, its own ring (P/06.2 Н1.2), a manifest catalog of
 only `testsub` (`domain.edit: [start, labels]`, `domain.ref: name`); the console, the controller and the worker `w-1` of `testsub`, the resource
@@ -29,7 +29,7 @@ scenario. The domain name is `acme`; the recovery file is `{recovery}` in the in
 
 ## scenarios.tsv
 
-The format is the dictionary of the «Стенд» and the dictionary of the domain; an expectation is a subset of fields. `$id` is the id of the kept edit from the 202 answer.
+The format is the dictionary of the «Stand» and the dictionary of the domain; an expectation is a subset of fields. `$id` is the id of the kept edit from the 202 answer.
 
 | № | Scenario | Steps | What |
 |---|---|---|---|

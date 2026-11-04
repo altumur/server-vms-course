@@ -17,14 +17,14 @@ a neighbour by contract (the data catalogue, the life cycle of P/04), not the no
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Стенд» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей):
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей):
 the doors `store` (a role with read rights on `testsub/`), `console`, `resource` and `admin` (preparation of rows bypassing their writers — sc. 14–34;
 the floor of epochs — `op: floor`, sc. 26, 27), the directives `@start` (with the expectation `@exit 2` and the environment `<ИМЯ>=<значение>` of the worker), `@sigkill`,
 `@sigterm` (sc. 29), the expectation `@oneof` (sc. 33), `@sleep`, `@until`, `ASSERT`, `@cut role testsubworker store` / `@mend role testsubworker store` (sc. 24),
 `@spoil row` (sc. 27), `@spoil object` (sc. 44);
 the expectation is a subset of fields.
 
-The processes are started per the section «Стенд» of the common acceptance README (the commands of roles, the environment of the worker); the read role of
+The processes are started per the section «Stand» of the common acceptance README (the commands of roles, the environment of the worker); the read role of
 the store without a rights file (P/01.2 Н1.2) — with full rights on `testsub/` and `testsub2/`.
 
 The stand begins with an empty store and without workers; the runner stops everything it started after the last step of
@@ -170,7 +170,7 @@ There are no foreign controllers, resources, spare processes or start timers. Th
 the read role of the store has access to testsub/ and testsub2/. The preparation uses separate administrative rights.
 
 All the workers of a scenario have the constant BOX_ID of the stand and server = srv-a, except `@start worker … on <сервер>` (the dictionary of the common acceptance README; analysis of the review of stage B 3–5, № 33) and the environment `<ИМЯ>=<значение>` of sc. 22; each copy gets a new
-instance. The name is passed by the substitution `{name}` of the directive (the common acceptance README, «Стенд»; analysis of the review of stage B 3–5, № 33). A decreasing memory budget is not provoked: the chosen
+instance. The name is passed by the substitution `{name}` of the directive (the common acceptance README, «Stand»; analysis of the review of stage B 3–5, № 33). A decreasing memory budget is not provoked: the chosen
 CAPACITY/WORKER_MEMORY_MB must satisfy Н1.2 of chapter 3.4. The ordinary configuration of testsub uses
 safe defaults; the parameters of the stand-in and of the deadlines are not accelerated for the sake of the test.
 

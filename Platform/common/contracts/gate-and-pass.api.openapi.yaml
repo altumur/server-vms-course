@@ -1,20 +1,20 @@
-# Договор сторожевой и передачи (gate-and-pass.md) — общие формы его тел. Только components: дверей у договора нет; на эти
-# схемы ссылаются контракты консоли кластера (P/06), процесса domain (P/08) и консоли домена (P/10) — одна форма на провод,
-# копий нет. Вынесено из OpenAPI урока 6 переносом урока 10 (стадия B): форма отказа сторожевой нужна и процессу domain
-# (P/08.4 Н1.5), а ссылка 08 → 06 вместе с дверями главы позднего слоя 6.7 (06 → 08) дала бы цикл между файлами.
+# The gate-and-pass contract (gate-and-pass.md) — the common forms of its bodies. Only components: the contract has no doors; these
+# schemas are referenced by the contracts of the cluster console (P/06), the process domain (P/08) and the domain console (P/10) — one form per wire,
+# no copies. Taken out of the OpenAPI of lesson 6 by the move of lesson 10 (stage B): the refusal form of the gate is needed by the process domain too
+# (P/08.4 Н1.5), and a reference 08 → 06 together with the doors of the late-layer chapter 6.7 (06 → 08) would give a cycle between the files.
 openapi: 3.1.0
 info:
-  title: Сторожевая и передача — общие формы
+  title: Gate and pass — common forms
   version: '1'
-  description: 'Формы тел договора Platform/common/contracts/gate-and-pass.md (владелец P/06, глава 6.3; участники P/08.4, P/10).'
+  description: 'The body forms of the contract Platform/common/contracts/gate-and-pass.md (owner P/06, chapter 6.3; participants P/08.4, P/10).'
 components:
   schemas:
     Denied:
       type: object
       required: [detail, error]
       additionalProperties: false
-      description: 'Отказ сторожевой `{detail, error: denied}` (договор «Сторожевая» refusal; P/06.3 Н4 denied): 401 — личности
-        нет, 403 — гранта нет; у двери процесса domain — P/08.4 Н1.5'
+      description: 'A refusal of the gate `{detail, error: denied}` (the contract «The gate» refusal; P/06.3 Н4 denied): 401 — there is no
+        identity, 403 — there is no grant; at a door of the process domain — P/08.4 Н1.5'
       properties:
         detail:
           type: string
@@ -23,15 +23,15 @@ components:
     RefusalField:
       type: string
       pattern: "^(?:(?:/(?:[^~/]|~[01])*)+)$"
-      description: 'Путь поля отказа — JSON Pointer RFC 6901 от корня JSON-тела запроса, только у 400, 409, 412 (P/06.1 Н2 «Отказ:
-        error и field», ADR-0094 B5). Отказ всего тела, заголовка, query и сегмента пути идёт без field.'
+      description: 'The path of the refusal field — a JSON Pointer RFC 6901 from the root of the JSON body of the request, only at 400, 409, 412 (P/06.1 Н2 «Refusal:
+        `error` and `field`», ADR-0094 B5). A refusal of the whole body, of a header, of the query or of a path segment goes without field.'
     Unavailable:
       type: object
       required: [error]
       additionalProperties: false
-      description: 'Правило «Нечитаемая строка» раздела «Отказы сторожевой»: строка домена, которую проверка доступа читает для
-        этой сессии, есть, но не читается — 503 `{error: unavailable, detail?}`; detail — по стороне (у консоли кластера
-        обязателен, P/06.5 Н4 ConsoleRefusal); у дверей процесса domain (P/08) и консоли домена (P/10) со сторожевой'
+      description: 'The rule «Unreadable row» of the section «Refusals of the gate»: a row of the domain that the access check reads for
+        this session exists but does not read — 503 `{error: unavailable, detail?}`; detail — by side (at the cluster console
+        it is mandatory, P/06.5 Н4 ConsoleRefusal); at the doors of the process domain (P/08) and of the domain console (P/10) with the gate'
       properties:
         error:
           const: unavailable

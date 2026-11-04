@@ -16,7 +16,7 @@ console (lesson P/10, [Н1.2а](../../../../10-domain-console/spec/10-domain-con
 
 ## Preparation
 
-As the acceptance README of [chapter 8.3](../../3/README.md) («Стенд», «Подготовка каждого сценария»;
+As the acceptance README of [chapter 8.3](../../3/README.md) («Stand», «Подготовка каждого сценария»;
 formerly — the acceptance README of М11/03): the runner brings up three clusters on one machine — `hold`, `m1`, `m2`; each has its own empty store,
 its own `{data}`, its own role sockets and ports of the console and the resource, its own ring (P/06.2 Н1.2), the manifest catalogue — only `testsub`
 (`domain.ref: name`); the console, the controller and the worker `w-1` of `testsub`, the resource of its own server (`srv-hold`, `srv-m1`, `srv-m2`).
@@ -28,7 +28,7 @@ a margin. At the door `holder` the runner sets `Idempotency-Key` on `PUT` too (s
 
 ## scenarios.tsv
 
-The format is the dictionary of the «Стенд» and the domain dictionary; the expectation is a subset of fields.
+The format is the dictionary of the «Stand» and the domain dictionary; the expectation is a subset of fields.
 
 | № | Scenario | Steps | What |
 |---|---|---|---|

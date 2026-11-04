@@ -150,7 +150,7 @@ bypassing the writer are put by the store door of the member through `admin.sock
   value bound before the spoiling (`$ml`, `$mt`, `$gd`). At `domain/placed` it is `rev` 2: 1 after `@domain`, 2 after the write of
   the placement, as in sc. 01 of [the acceptance of chapter 8.6](../../../../08-domain/acceptance/6/README.md). The holder sends `members`
   because the agent without a readable copy does not send `members_rev` ([the report acceptance
-  contract](../../../../common/contracts/accept.md) «Список членов отставшему»).
+  contract](../../../../common/contracts/accept.md) «The list of members to the one lagging behind»).
 - **24** (G04). An unreadable outcomes row `domain/outcomes` (Н1.5 `apply`; the outcome of the family, `Г-56` — an exception to the rule
   of the only writer): the element `e-000000000001` is not an outcome object. The edit of the holder is stored (202), but the agent does not
   perform it: it has nothing to check «an outcome with `kept_at = at` is already written» by. For three passes the unit is the former one, the holder has one
@@ -175,7 +175,7 @@ bypassing the writer are put by the store door of the member through `admin.sock
 
 ## scenarios.tsv
 
-The format is the dictionary of the «Стенда» of the common acceptance README and the section «Стенд домена»; the expectation is a subset of the fields, `~` — a substring,
+The format is the dictionary of the «Стенда» of the common acceptance README and the section «Domain stand»; the expectation is a subset of the fields, `~` — a substring,
 `@time` — a time in a string (P/01.1 Н0), `@not(…)` — not equal. In total 22 scenarios / 252 steps. Sc. 27 — ADR-0098 §4, there is no dry run by an implementation; steps 14–15 give the emergency row so that `sealed` opens without the grant fields too; step 19 `@sleep 7` is a check of absence: the agent pass 5 s and a margin, the copies are not erased, the indices are the same; a break between two writes of the agent, an old agent and a rollback — by reading: the stand does not interrupt a write and does not substitute the agent version.
 
 Sc. 15 `one-agent` (DOM-AGENT-TURN-01, -02, the owner's consent 2026-10-26; P/09.1 Н1.13, Н3 «the agent turn»): two agents of the cluster `m1` (`@start agent m1 second` —

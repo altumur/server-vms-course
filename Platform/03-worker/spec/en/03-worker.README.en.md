@@ -89,7 +89,7 @@ the family schemas `../data/*.schema.json` (the sections «Семьи данны
 9. Make the holding of the place: own/foreign, strict, confirmation by one's own clock, the closing of the writer.
    The right to the data of a unit and the right to the place are checked jointly; neither replaces the other.
 10. Implement SIGTERM in the order of [chapter 3.4](../03.4-worker.norms.md) Н3 and distinguish it from SIGKILL. Describe the choices of the implementation
-    («Решает реализация» of the chapters), including TimeoutStopSec and the presence of the process at the resource.
+    («Implementation decides» of the chapters), including TimeoutStopSec and the presence of the process at the resource.
 11. Opening: pass the vectors of the contract `open.tsv` and `ring.tsv` ([`../../common/vectors/sealing/`](../../../common/vectors/sealing/README.md))
     with one's own opening function; the opening by the worker and `why` on an error — by reading [chapter 3.5](../03.5-worker.norms.md) Н3 «open»
     (there is no worker with secrets on the stand).

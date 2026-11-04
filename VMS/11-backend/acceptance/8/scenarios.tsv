@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/11.8: свой набор (ADR-0094 доп. (17), (18)): только то, чего не видят тесты consolem. Формат — README.
+# Acceptance of V/11.8: own suite (ADR-0094 addendum (17), (18)): only what the consolem tests do not see. Format — README.
 01-read	1	@domain m1	ok
 01-read	2	@on m1 @start worker backend b-srv-a-1 on srv-a	ok
 01-read	3	member m1 console2 POST /instances {"name": "main", "labels": []}	201 {"id": "main"}

@@ -8,7 +8,7 @@
 # contract), /heartbeats, /domain/at/{cluster}/{sub}/where/…, /domain/keys, /domain/shared/{sub}, /api/held, /api/backup, forwarding
 # to the signer of /api/prepare, /api/take, /domain/move; 6.8 — /folders, /folders/{id}; 6.9 — /{sub}/operations and the operation doors. The paths of chapter 6.7 are merged from the contracts М11/5, М11/8, М11/9, М11/10, М11/11
 # (the cluster console side; move of lesson 10, stage B, without a change of behaviour): forwarding has only the codes of transitions 1–2
-# (the forwarding contract Platform/common/contracts/forwarding.md «Отказы по переходам»; analysis of review of stage A 8–10, decision 3),
+# (the forwarding contract Platform/common/contracts/forwarding.md «Refusals by transition»; analysis of review of stage A 8–10, decision 3),
 # the answer of the domain console as it came — ForwardAnswer (like PassAnswer at door.pass); for forwarding to the signer the process answer is
 # a $ref to the operations of the OpenAPI of lesson P/08 (decision of the Architect on plans 8–10, item 9); the schemas of the deadline record, of the pair, of the pointer and
 # of the member name — a $ref to the OpenAPI of lesson P/08, no copies. The common console codes (chapter 6.5 Н2, Н4) are listed at their doors
@@ -28,7 +28,7 @@ openapi: 3.1.0
 info:
   title: P/06 — doors of the cluster console
   version: '1'
-  description: 'Canon — the norms of chapters 06.1…06.9-console.norms.md; Н2 «Разбор запроса консоли» and the common codes (chapter 6.5 Н2, Н4)
+  description: 'Canon — the norms of chapters 06.1…06.9-console.norms.md; Н2 «Console request parsing» and the common codes (chapter 6.5 Н2, Н4)
     apply at every door, their answers are listed explicitly at every operation. The short paths of units, tables, blob fields, /policy,
     /unplaceable, /where/{id} select CONSOLE_ROOT; the servers pair {origin}/{sub} explicitly selects a loaded subsystem, including
     root. /manifest, /servers, /where/{table}/{place}, /metrics are declared also with the prefix /{sub}. The common /drain, /schema, /session,
@@ -561,7 +561,7 @@ paths:
       summary: 'HEAD: List of table rows without secrets'
       responses:
         '400':
-          description: 'A common refusal of the console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, JSON of the body, a read
+          description: 'A common refusal of the console request parsing (chapter 6.5 Н2 «Console request parsing»: query, JSON of the body, a read
             parameter repeated) or of transport — the body is chunked or shorter than declared (chapter 6.5 Н4). A refusal of the form of its own door
             is named by its operation; HEAD carries no body'
         '401':
@@ -716,7 +716,7 @@ paths:
       summary: 'HEAD: Read one table row'
       responses:
         '400':
-          description: 'A common refusal of the console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, JSON of the body, a read
+          description: 'A common refusal of the console request parsing (chapter 6.5 Н2 «Console request parsing»: query, JSON of the body, a read
             parameter repeated) or of transport — the body is chunked or shorter than declared (chapter 6.5 Н4). A refusal of the form of its own door
             is named by its operation; HEAD carries no body'
         '401':
@@ -1505,7 +1505,7 @@ paths:
       summary: 'HEAD: The login state, including an anonymous one'
       responses:
         '400':
-          description: 'A common refusal of the console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, JSON of the body, a read
+          description: 'A common refusal of the console request parsing (chapter 6.5 Н2 «Console request parsing»: query, JSON of the body, a read
             parameter repeated) or of transport — the body is chunked or shorter than declared (chapter 6.5 Н4). A refusal of the form of its own door
             is named by its operation; HEAD carries no body'
         '403':
@@ -1598,7 +1598,7 @@ paths:
                 $ref: '#/components/schemas/ConsoleEvents'
         '400':
           description: Wrong parameters/body read — ConsoleRefusal (Н2; from, to, limit — the gate-and-pass contract
-            «Числовые параметры query», other parameters — P/05 Н1.3)
+            «Numeric query parameters», other parameters — P/05 Н1.3)
           content:
             application/json:
               schema:
@@ -1661,7 +1661,7 @@ paths:
         in: query
         required: false
         description: 'Time by the grammar of the time reader of the row codec after URL decoding: ^(0|[1-9][0-9]*)(\.[0-9]+)?$,
-          finite; otherwise 400, detail — from (the gate-and-pass contract «Числовые параметры query»; C06-EVENTS-QUERY-LEXEME-162-01).'
+          finite; otherwise 400, detail — from (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01).'
         schema:
           type: number
           default: 0
@@ -1669,7 +1669,7 @@ paths:
         in: query
         required: false
         description: 'The bound is not included, the window from ≤ t < to. Time by the grammar of the time reader of the row codec after URL decoding: ^(0|[1-9][0-9]*)(\.[0-9]+)?$,
-          finite; otherwise 400, detail — to (the gate-and-pass contract «Числовые параметры query»; C06-EVENTS-QUERY-LEXEME-162-01).'
+          finite; otherwise 400, detail — to (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01).'
         schema:
           type: number
           default: 1000000000000.0
@@ -1692,7 +1692,7 @@ paths:
         in: query
         required: false
         description: 'An integer as an integer lexeme after URL decoding: ^-?(0|[1-9][0-9]*)$, then 1…10000; otherwise 400, detail
-          — limit (the gate-and-pass contract «Числовые параметры query»; C06-EVENTS-QUERY-LEXEME-162-01).'
+          — limit (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01).'
         schema:
           type: integer
           minimum: 1
@@ -1737,7 +1737,7 @@ paths:
         in: query
         required: false
         description: 'Time by the grammar of the time reader of the row codec after URL decoding: ^(0|[1-9][0-9]*)(\.[0-9]+)?$,
-          finite; otherwise 400, detail — from (the gate-and-pass contract «Числовые параметры query»; C06-EVENTS-QUERY-LEXEME-162-01).'
+          finite; otherwise 400, detail — from (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01).'
         schema:
           type: number
           default: 0
@@ -1745,7 +1745,7 @@ paths:
         in: query
         required: false
         description: 'The bound is not included, the window from ≤ t < to. Time by the grammar of the time reader of the row codec after URL decoding: ^(0|[1-9][0-9]*)(\.[0-9]+)?$,
-          finite; otherwise 400, detail — to (the gate-and-pass contract «Числовые параметры query»; C06-EVENTS-QUERY-LEXEME-162-01).'
+          finite; otherwise 400, detail — to (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01).'
         schema:
           type: number
           default: 1000000000000.0
@@ -1768,7 +1768,7 @@ paths:
         in: query
         required: false
         description: 'An integer as an integer lexeme after URL decoding: ^-?(0|[1-9][0-9]*)$, then 1…10000; otherwise 400, detail
-          — limit (the gate-and-pass contract «Числовые параметры query»; C06-EVENTS-QUERY-LEXEME-162-01).'
+          — limit (the gate-and-pass contract «Numeric query parameters»; C06-EVENTS-QUERY-LEXEME-162-01).'
         schema:
           type: integer
           minimum: 1
@@ -1921,7 +1921,7 @@ paths:
         in: query
         required: false
         description: 'How many seconds to hold the answer if there is nothing to say. Read only with after. An integer as an integer lexeme after URL decoding: ^-?(0|[1-9][0-9]*)$,
-          then 0…25 (CHANGES_WAIT); otherwise 400, detail — wait (the gate-and-pass contract «Числовые параметры query»).'
+          then 0…25 (CHANGES_WAIT); otherwise 400, detail — wait (the gate-and-pass contract «Numeric query parameters»).'
         schema:
           type: integer
           minimum: 0
@@ -2210,7 +2210,7 @@ paths:
       summary: 'HEAD: Root page'
       responses:
         '400':
-          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, body JSON, a read
+          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, body JSON, a read
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 Н4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '403':
@@ -2293,7 +2293,7 @@ paths:
       summary: 'HEAD: Root page'
       responses:
         '400':
-          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, body JSON, a read
+          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, body JSON, a read
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 Н4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '403':
@@ -2379,7 +2379,7 @@ paths:
       summary: 'HEAD: Platform module'
       responses:
         '400':
-          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, body JSON, a read
+          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, body JSON, a read
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 Н4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '403':
@@ -2465,7 +2465,7 @@ paths:
       summary: 'HEAD: Platform module'
       responses:
         '400':
-          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, body JSON, a read
+          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, body JSON, a read
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 Н4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '403':
@@ -2538,7 +2538,7 @@ paths:
       summary: 'HEAD: The console process is alive'
       responses:
         '400':
-          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, body JSON, a read
+          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, body JSON, a read
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 Н4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '403':
@@ -2610,7 +2610,7 @@ paths:
         '200':
           description: The subsystem form as the console loaded it; the answer has no revision; HEAD has no body
         '400':
-          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, body JSON, a read
+          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, body JSON, a read
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 Н4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '401':
@@ -2762,7 +2762,7 @@ paths:
       summary: 'HEAD: ManifestView of a mounted subsystem'
       responses:
         '400':
-          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, body JSON, a read
+          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, body JSON, a read
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 Н4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '401':
@@ -2835,7 +2835,7 @@ paths:
       summary: 'HEAD: Mounted subsystems'
       responses:
         '400':
-          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, body JSON, a read
+          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, body JSON, a read
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 Н4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '401':
@@ -2908,7 +2908,7 @@ paths:
       summary: 'HEAD: Server observations'
       responses:
         '400':
-          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, body JSON, a read
+          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, body JSON, a read
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 Н4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '401':
@@ -2982,7 +2982,7 @@ paths:
       summary: 'HEAD: Server observations'
       responses:
         '400':
-          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, body JSON, a read
+          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, body JSON, a read
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 Н4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '401':
@@ -3062,7 +3062,7 @@ paths:
       summary: 'HEAD: Resource heartbeats'
       responses:
         '400':
-          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, body JSON, a read
+          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, body JSON, a read
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 Н4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '401':
@@ -3152,7 +3152,7 @@ paths:
       summary: 'HEAD: Subsystem heartbeats'
       responses:
         '400':
-          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, body JSON, a read
+          description: 'General refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, body JSON, a read
             parameter repeated) or of transport — a chunked body or one shorter than declared (chapter 6.5 Н4). The form refusal of a door itself
             is named by that door''s operation; HEAD has no body'
         '401':
@@ -3261,7 +3261,7 @@ paths:
         '200':
           description: Placement and optional holder door; HEAD carries no body
         '400':
-          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, the JSON of the body, a read
+          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, the JSON of the body, a read
             parameter repeated) or of transport — a body chunked or shorter than declared (chapter 6.5 Н4). The form refusal of its own door
             is named by its operation; HEAD carries no body'
         '401':
@@ -3315,7 +3315,7 @@ paths:
     get:
       summary: Holder door of a place
       description: Hold not known — the hold row or the heartbeat of the holder cannot be read — 503 unavailable, not 404
-        (the observation contract «Удержание места» unknown; В7 item 3, the decision of the Architect of 2026-10-28, П1; line 27 of the list).
+        (the observation contract «Hold of a place» unknown; В7 item 3, the decision of the Architect of 2026-10-28, П1; line 27 of the list).
       responses:
         '400':
           $ref: '#/components/responses/BadBody'
@@ -3370,7 +3370,7 @@ paths:
       summary: 'HEAD: Holder door of a place'
       responses:
         '400':
-          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, the JSON of the body, a read
+          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, the JSON of the body, a read
             parameter repeated) or of transport — a body chunked or shorter than declared (chapter 6.5 Н4). The form refusal of its own door
             is named by its operation; HEAD carries no body'
         '401':
@@ -3443,7 +3443,7 @@ paths:
     get:
       summary: Holder door of a place
       description: Hold not known — the hold row or the heartbeat of the holder cannot be read — 503 unavailable, not 404
-        (the observation contract «Удержание места» unknown; В7 item 3, the decision of the Architect of 2026-10-28, П1; line 27 of the list).
+        (the observation contract «Hold of a place» unknown; В7 item 3, the decision of the Architect of 2026-10-28, П1; line 27 of the list).
       responses:
         '400':
           $ref: '#/components/responses/BadBody'
@@ -3498,7 +3498,7 @@ paths:
       summary: 'HEAD: Holder door of a place'
       responses:
         '400':
-          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, the JSON of the body, a read
+          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, the JSON of the body, a read
             parameter repeated) or of transport — a body chunked or shorter than declared (chapter 6.5 Н4). The form refusal of its own door
             is named by its operation; HEAD carries no body'
         '401':
@@ -3581,7 +3581,7 @@ paths:
       summary: 'HEAD: Console metric series'
       responses:
         '400':
-          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, the JSON of the body, a read
+          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, the JSON of the body, a read
             parameter repeated) or of transport — a body chunked or shorter than declared (chapter 6.5 Н4). The form refusal of its own door
             is named by its operation; HEAD carries no body'
         '403':
@@ -3652,7 +3652,7 @@ paths:
       summary: 'HEAD: Console metric series'
       responses:
         '400':
-          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, the JSON of the body, a read
+          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, the JSON of the body, a read
             parameter repeated) or of transport — a body chunked or shorter than declared (chapter 6.5 Н4). The form refusal of its own door
             is named by its operation; HEAD carries no body'
         '401':
@@ -3752,7 +3752,7 @@ paths:
       summary: 'HEAD: Shell of a mounted subsystem with console.shell; without it there is no page'
       responses:
         '400':
-          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, the JSON of the body, a read
+          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, the JSON of the body, a read
             parameter repeated) or of transport — a body chunked or shorter than declared (chapter 6.5 Н4). The form refusal of its own door
             is named by its operation; HEAD carries no body'
         '401':
@@ -3856,7 +3856,7 @@ paths:
       summary: 'HEAD: Shell of a mounted subsystem with console.shell; without it there is no page'
       responses:
         '400':
-          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, the JSON of the body, a read
+          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, the JSON of the body, a read
             parameter repeated) or of transport — a body chunked or shorter than declared (chapter 6.5 Н4). The form refusal of its own door
             is named by its operation; HEAD carries no body'
         '401':
@@ -3979,7 +3979,7 @@ paths:
       summary: 'HEAD: Static file of a subsystem'
       responses:
         '400':
-          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, the JSON of the body, a read
+          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, the JSON of the body, a read
             parameter repeated) or of transport — a body chunked or shorter than declared (chapter 6.5 Н4). The form refusal of its own door
             is named by its operation; HEAD carries no body'
         '401':
@@ -4197,7 +4197,7 @@ paths:
       summary: 'door.pass: HEAD to the worker door'
       responses:
         '400':
-          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, the JSON of the body, a read
+          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, the JSON of the body, a read
             parameter repeated) or of transport — a body chunked or shorter than declared (chapter 6.5 Н4). The form refusal of its own door
             is named by its operation; HEAD carries no body'
         '401':
@@ -4347,7 +4347,7 @@ paths:
               $ref: '#/components/headers/ETag'
           description: Effective policy; HEAD carries no body
         '400':
-          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, the JSON of the body, a read
+          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, the JSON of the body, a read
             parameter repeated) or of transport — a body chunked or shorter than declared (chapter 6.5 Н4). The form refusal of its own door
             is named by its operation; HEAD carries no body'
         '401':
@@ -4528,7 +4528,7 @@ paths:
               $ref: '#/components/headers/ETag'
           description: Drain snapshot; chapter 6.6; HEAD carries no body
         '400':
-          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, the JSON of the body, a read
+          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, the JSON of the body, a read
             parameter repeated) or of transport — a body chunked or shorter than declared (chapter 6.5 Н4). The form refusal of its own door
             is named by its operation; HEAD carries no body'
         '401':
@@ -4751,7 +4751,7 @@ paths:
               $ref: '#/components/headers/ETag'
           description: Probe effective or proposed labels, without writing; HEAD has no body
         '400':
-          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, body JSON, a read
+          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, body JSON, a read
             parameter repeated) or of transport — the body is chunked or shorter than declared (chapter 6.5 Н4). The form refusal of its own door
             is named by its operation; HEAD has no body'
         '401':
@@ -4952,7 +4952,7 @@ paths:
         '200':
           description: Units without an eligible worker; HEAD has no body
         '400':
-          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, body JSON, a read
+          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, body JSON, a read
             parameter repeated) or of transport — the body is chunked or shorter than declared (chapter 6.5 Н4). The form refusal of its own door
             is named by its operation; HEAD has no body'
         '401':
@@ -5082,7 +5082,7 @@ paths:
       summary: 'HEAD: Observed schema and capabilities of builds'
       responses:
         '400':
-          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Разбор запроса консоли»: query, body JSON, a read
+          description: 'The common refusal of console request parsing (chapter 6.5 Н2 «Console request parsing»: query, body JSON, a read
             parameter repeated) or of transport — the body is chunked or shorter than declared (chapter 6.5 Н4). The form refusal of its own door
             is named by its operation; HEAD has no body'
         '401':
@@ -5242,11 +5242,11 @@ paths:
         '503':
           description: as for GET, without a body
   /domain:
-    description: 'Chapter 6.7 Н1.2–Н1.5, Н3 «forward» — GET /domain: a row of the table «Двери домена» of the forwarding contract
+    description: 'Chapter 6.7 Н1.2–Н1.5, Н3 «forward» — GET /domain: a row of the table «Domain doors» of the forwarding contract
       (Platform/common/contracts/forwarding.md), hops 1–2: the cluster console forwards to the domain console of its own box
       (holds, view.url; hop 2) or to the cluster console of the holder (CLUSTERS; hop 1) and returns the answer as it came. Here — only the codes of hops 1–2;
       the answer of the domain console (view, hop 2) — the OpenAPI of lesson P/10, the codes of the domain process (hop 3) — the OpenAPI of lesson P/08; this
-      contract does not list them (forwarding contract «Отказы по переходам»; analysis of review of stage A 8–10, decision 3).'
+      contract does not list them (forwarding contract «Refusals by transition»; analysis of review of stage A 8–10, decision 3).'
     get:
       summary: 'Forwarding: domain view'
       responses:
@@ -5294,16 +5294,16 @@ paths:
         default:
           description: the answer of the domain console to HEAD as it came, without a body
   /domain/{route}:
-    description: 'Chapter 6.7 Н1.2–Н1.5, Н3 «forward» — the other rows of the table «Двери домена» of the forwarding contract, hops 1–2:
+    description: 'Chapter 6.7 Н1.2–Н1.5, Н3 «forward» — the other rows of the table «Domain doors» of the forwarding contract, hops 1–2:
       a (method, path) pair from the table is forwarded to the domain console, the answer — as it came; anything else under /domain/ (except own doors
       of the console: books, at, keys, shared/<sub>, /domain/move) — 404 not a domain route without a call; a segment «.» or «..», including
       in percent form, — also 404. Here — only the codes of hops 1–2; the answers of the domain console and of the domain process — the OpenAPI of lessons P/10
-      and P/08 by the table row, this contract does not list them (forwarding contract «Отказы по переходам»; decision 3).'
+      and P/08 by the table row, this contract does not list them (forwarding contract «Refusals by transition»; decision 3).'
     parameters:
     - name: route
       in: path
       required: true
-      description: The path tail after /domain/ — a row of the table «Двери домена» (one or more segments; a template of
+      description: The path tail after /domain/ — a row of the table «Domain doors» (one or more segments; a template of
         several segments OpenAPI does not define, a path longer than one segment is forwarded the same way); query — as it came.
       schema:
         type: string
@@ -5965,13 +5965,13 @@ paths:
         '503':
           description: as for GET, without a body
   /api/login:
-    description: 'Chapter 6.7 Н1.2 process — login of people POST /api/login: a row of the table «Двери домена» of the forwarding contract
+    description: 'Chapter 6.7 Н1.2 process — login of people POST /api/login: a row of the table «Domain doors» of the forwarding contract
       (Platform/common/contracts/forwarding.md; Identity «—» — an open row, the gate of the forwarding console does not
       ask for it; open_routes of the gate contract) — hops 1–2: the page goes to its own console, the cluster console forwards
       the login to the domain console of its own box (holds, view.url; hop 2) or to the cluster console of the holder (CLUSTERS; hop 1) and returns the answer as
       it came. Here — only the codes of hops 1–2; the answer of the domain console (operation passLogin of the OpenAPI of lesson P/10) and of the domain process
       (operation login of the OpenAPI of lesson P/08) — as it came, this contract does not list them (forwarding contract
-      «Отказы по переходам»; analysis of review of stage A 8–10, decision 3; analysis of review of stage B 8–10, № 11).'
+      «Refusals by transition»; analysis of review of stage A 8–10, decision 3; analysis of review of stage B 8–10, № 11).'
     post:
       summary: 'Forwarding: login of domain people'
       responses:
@@ -6258,7 +6258,7 @@ paths:
   /domain/verify:
     description: 'Chapter 6.7 Н1.15 (ADR-0119) — checking the credentials of a second person without login: only by a ticket with the entry
       domain/verify in calls; the console forwards to the domain process exactly {user, password} (POST /api/verify of lesson P/08), then judges need
-      of the checked one by its own copy of grants and roles, and supervision (the gate and handover contract «Надзор»).'
+      of the checked one by its own copy of grants and roles, and supervision (the gate and handover contract «Supervision»).'
     post:
       summary: 'Check without login: the password at the domain, the right and supervision at the cluster console'
       requestBody:
@@ -7383,7 +7383,7 @@ components:
     ClusterTimezone:
       type: string
       pattern: '^(?:[A-Za-z][A-Za-z0-9_+-]*(/[A-Za-z][A-Za-z0-9_+-]*)*)$'
-      description: the IANA time zone name, a cluster setting, not the OS of the server; the value of `TIMEZONE`, not set — `UTC` (the environment file contract «Переменные окружения»; the gate and pass contract `session` `timezone`, ADR-0094 B6)
+      description: the IANA time zone name, a cluster setting, not the OS of the server; the value of `TIMEZONE`, not set — `UTC` (the environment file contract «Environment variables»; the gate and pass contract `session` `timezone`, ADR-0094 B6)
     Session:
       oneOf:
       - $ref: '#/components/schemas/OpenSession'
@@ -7613,7 +7613,7 @@ components:
           - unknown
         resource_heard_at:
           description: 'Wall-clock seconds of the console (the time of P/01.1 Н0) when it first read the current version of the resource heartbeat
-            as readable (the observation contract «Наблюдение версии»); with the same version it does not move; an unreadable version, a non-answer and
+            as readable (the observation contract «Observation of a version»); with the same version it does not move; an unreadable version, a non-answer and
             absence do not change it; there was no readable heartbeat — null; at of the writer is not used (chapter 6.5 Н2; C06-SERVER-DIAGNOSTICS-163-01, decision of the Architect of 2026-10-27).'
           anyOf:
           - type: number
@@ -9407,7 +9407,7 @@ components:
         index:
           $ref: '#/components/schemas/StoreIndex'
         held_by:
-          description: by of the active place hold (the observation contract «Удержание места»), otherwise null;
+          description: by of the active place hold (the observation contract «Hold of a place»), otherwise null;
             an unconfirmed read of the hold or of the heartbeat — null, not 503 (Н1.6; C06-TABLE-HELD-BY-33-01).
           anyOf:
           - $ref: '#/components/schemas/WorkerName'
@@ -9638,7 +9638,7 @@ components:
             $ref: '#/components/schemas/Resolved'
   responses:
     BadBody:
-      description: 'The common refusal of parsing a console request (chapter 6.5 Н2 «Разбор запроса консоли»: query, the JSON of the body, a readable
+      description: 'The common refusal of parsing a console request (chapter 6.5 Н2 «Console request parsing»: query, the JSON of the body, a readable
         parameter repeated) — error refused — or of transport — the body is chunked or shorter than declared, error denied (chapter 6.5 Н4).
         A refusal of the form of its own door is named by its operation: the words of the list data/refusal-words.tsv.'
       content:
@@ -9921,10 +9921,10 @@ components:
             - $ref: '#/components/schemas/DomainRefusal'
             - $ref: '#/components/schemas/ConsoleRefusal'
     ForwardAnswer:
-      description: 'The answer of the domain console as it came (chapter 6.7 Н1.5; the forwarding contract «Пересылка — одна функция» answer):
+      description: 'The answer of the domain console as it came (chapter 6.7 Н1.5; the forwarding contract «Forwarding is one function» answer):
         status, Content-Type, X-Unreachable and the body without parsing and wrapping. The forms and codes — the operation of the OpenAPI of lesson P/10 by the row
-        of the table «Двери домена» (transition 2) and the OpenAPI of lesson P/08 (transition 3); this contract does not list them (the forwarding contract
-        «Отказы по переходам»; review of stage A 8–10, decision 3).'
+        of the table «Domain doors» (transition 2) and the OpenAPI of lesson P/08 (transition 3); this contract does not list them (the forwarding contract
+        «Refusals by transition»; review of stage A 8–10, decision 3).'
       content:
         '*/*':
           schema: {}

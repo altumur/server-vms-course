@@ -1,4 +1,4 @@
-# Файл кольца (договор запечатывания, «Файл кольца»): текст файла (JSON-строка) → current и порядок ключей или unreadable.
+# The ring file (the sealing contract, «Ring file»): the text of the file (a JSON string) → current and the order of the keys or unreadable.
 case	file	expect
 one	"k1 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea\n"	current k1; keys k1
 two_first_current	"k2 32ac1451572332b2684494f6276f6082c0ce7feb7e74a5efbfcdf6e14c43d2a7\nk1 29dd2b4a883861adf8ae1964e2fe81fef69656092aa8eec807a182c06fedc4ea\n"	current k2; keys k2, k1

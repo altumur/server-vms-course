@@ -1,7 +1,7 @@
 [
  {
   "id": "turn-plan",
-  "rule": "V/11.9 Н1.2 сообщения шага; исход «план»",
+  "rule": "V/11.9 Н1.2 the step messages; the outcome «план»",
   "console": "stand3",
   "text": "Switch tally Gate-1 to \"loud\" mode.",
   "model": [
@@ -114,7 +114,7 @@
  },
  {
   "id": "turn-text-call",
-  "rule": "V/11.9 Н1.4 пп. 1–2 вызов текстом не исполняется, подсказка в счёт",
+  "rule": "V/11.9 Н1.4 items 1–2 a call as text is not executed, the hint counts",
   "console": "stand3",
   "text": "Switch tally Gate-1 to \"loud\" mode.",
   "model": [
@@ -268,7 +268,7 @@
  },
  {
   "id": "turn-look-first",
-  "rule": "V/11.9 Н1.4 п. 4 сначала данные — раз за ход",
+  "rule": "V/11.9 Н1.4 item 4 data first — once per turn",
   "console": "stand3",
   "text": "Do something",
   "model": [
@@ -368,7 +368,7 @@
  },
  {
   "id": "turn-ask",
-  "rule": "V/11.9 Н1.4 п. 6 ответ админа — результат ask_admin; второй вызов ответа — not executed; счёт с нуля",
+  "rule": "V/11.9 Н1.4 item 6 the admin's answer is the result of ask_admin; a second answer call — not executed; the count from zero",
   "console": "stand3",
   "text": "Change Gate-1 mode",
   "answers": [
@@ -558,7 +558,7 @@
  },
  {
   "id": "turn-plan-then-call",
-  "rule": "V/11.9 Н1.4 п. 6 после принятого плана — not executed",
+  "rule": "V/11.9 Н1.4 item 6 after an accepted plan — not executed",
   "console": "stand3",
   "text": "Switch tally Gate-1 to \"loud\" mode.",
   "model": [
@@ -679,7 +679,7 @@
  },
  {
   "id": "turn-limit",
-  "rule": "V/11.9 Н1.4 п. 7 предел 25 — «ход не завершён» с последней причиной, не refuse",
+  "rule": "V/11.9 Н1.4 item 7 the limit 25 — «ход не завершён» with the last cause, not refuse",
   "console": "stand3",
   "text": "Switch tally Gate-1 to \"loud\" mode.",
   "model": [
@@ -5195,7 +5195,7 @@
  },
  {
   "id": "turn-ask-at-25",
-  "rule": "V/11.9 Н1.4 пп. 6–7 вопрос на вызове № 25 — после ответа новые 25",
+  "rule": "V/11.9 Н1.4 items 6–7 a question on call No. 25 — after the answer a new 25",
   "console": "stand3",
   "text": "Change Gate-1 mode",
   "answers": [
@@ -10387,7 +10387,7 @@
  },
  {
   "id": "turn-lost",
-  "rule": "V/11.9 Н1.3 410/404 — ход заново: тексты одним user, новый счёт",
+  "rule": "V/11.9 Н1.3 410/404 — the turn anew: the texts as one user, a new count",
   "console": "stand3",
   "text": "Switch tally Gate-1 to \"loud\" mode.",
   "model": [
@@ -10565,7 +10565,7 @@
  },
  {
   "id": "turn-lost-3",
-  "rule": "V/11.9 Н1.3 третий 410 — «ход не завершён»",
+  "rule": "V/11.9 Н1.3 the third 410 — «ход не завершён»",
   "console": "stand3",
   "text": "x",
   "model": [
@@ -10638,7 +10638,7 @@
  },
  {
   "id": "turn-door-cancelled",
-  "rule": "V/11.9 Н1.3, Н1.5 шаг cancelled у двери (не по отмене страницы) — «ход не завершён»",
+  "rule": "V/11.9 Н1.3, Н1.5 the step cancelled at the door (not by a page cancel) — «ход не завершён»",
   "console": "stand3",
   "text": "x",
   "model": [
@@ -10714,7 +10714,7 @@
  },
  {
   "id": "turn-bad-args",
-  "rule": "V/11.9 Н1.4 п. 3 аргументы не JSON; имя по аргументам; имя из прототипа — не инструмент (RVP-06)",
+  "rule": "V/11.9 Н1.4 item 3 arguments not JSON; the name by the arguments; a name from the prototype is not a tool (RVP-06)",
   "console": "stand3",
   "text": "Switch tally Gate-1 to \"loud\" mode.",
   "model": [
@@ -10883,7 +10883,7 @@
  },
  {
   "id": "turn-cancel-during-check",
-  "rule": "V/11.9 Н1.5, Н1.6 сброс, пока идёт проверка плана: план не публикуется (RVP-01)",
+  "rule": "V/11.9 Н1.5, Н1.6 a reset while the plan check runs: the plan is not published (RVP-01)",
   "console": "stand3",
   "text": "Switch tally Gate-1 to \"loud\" mode.",
   "cancel_on_tool": "propose_plan",
@@ -10983,7 +10983,7 @@
  },
  {
   "id": "turn-reverse-about",
-  "rule": "V/11.11 Н1.4 п. 8, Н1.7 обратный about: свидетели отбора у строк плана (RVP-05)",
+  "rule": "V/11.11 Н1.4 item 8, Н1.7 reverse about: the selection witnesses at the plan rows (RVP-05)",
   "console": "stand3",
   "text": "For tallies with loud mode set step 9",
   "model": [
@@ -11150,7 +11150,7 @@
  },
  {
   "id": "turn-window",
-  "rule": "V/11.9 Н1.2 окно: старейшие результаты — [result elided …], последние 4 и ask_admin целы",
+  "rule": "V/11.9 Н1.2 the window: the oldest results — [result elided …], the last 4 and ask_admin intact",
   "console": "stand3",
   "text": "Change Gate-1 mode",
   "answers": [
@@ -12232,7 +12232,7 @@
  },
  {
   "id": "turn-reasoning-dropped",
-  "rule": "V/11.9 Н1.2 сообщение модели — в историю без reasoning_content",
+  "rule": "V/11.9 Н1.2 the model message — into the history without reasoning_content",
   "console": "stand3",
   "text": "Switch tally Gate-1 to \"loud\" mode.",
   "model": [
@@ -12346,7 +12346,7 @@
  },
  {
   "id": "turn-secret-later",
-  "rule": "V/11.9 Н1.2 секрет, введённый с ответом, — сообщение в конце истории",
+  "rule": "V/11.9 Н1.2 a secret entered with an answer — a message at the end of the history",
   "console": "stand3",
   "text": "For tally Office-2 change the feed password.",
   "answers": [
@@ -12531,7 +12531,7 @@
  },
  {
   "id": "turn-secret-before-ask",
-  "rule": "V/11.12 Н1.3 секрет, введённый с просьбой, живёт через вопрос: план после вопроса ссылается на него",
+  "rule": "V/11.12 Н1.3 a secret entered with the request lives through a question: the plan after the question refers to it",
   "console": "stand3",
   "text": "For tally Office-2 change the feed password.",
   "answers": [
@@ -12632,7 +12632,7 @@
  },
  {
   "id": "turn-refine",
-  "rule": "V/11.9 Н1.5 уточнение: текст с context плана добавляется к текстам хода, прежние слова в «названо» остаются",
+  "rule": "V/11.9 Н1.5 refinement: a text with the plan context is added to the turn texts, the former words in «названо» stay",
   "console": "stand3",
   "text": "Switch tally Gate-1 to \"loud\" mode.",
   "model": [

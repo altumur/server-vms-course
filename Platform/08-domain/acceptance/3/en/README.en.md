@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md), the section [«Стенд домена»](../../../../common/acceptance/README.md#стенд-домена)
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md), the section [«Domain stand»](../../../../common/acceptance/README.md#стенд-домена)
 (the dictionary of directives and doors of the stand of several clusters; before its move — the «Словарь директив и дверей М11» of the README
 of the acceptance of М11/01). The norm of the chapter is
 [`08.3-domain.norms.md`](../../../spec/08.3-domain.norms.md) Н5. The scenarios were moved (stage B, ADR-0083 addendum (1): without
@@ -63,8 +63,8 @@ files: A — `d72f9e5e…68a6`, B — `6fefd57b…e217`. Step 4 — the row `dom
 3 already sees the fingerprint), step 18 — the removal by the administrator deleted it. Steps 10–11 check that an edit by the administrator without
 a change of the centres at the member is rewritten by its next report. Steps 14–16 — two agent passes (`REPORT_EVERY` 5 s) without
 `tls_ca`: the fingerprints are not removed. How the runner passes the environment and restarts the console and the agent of the cluster with the variable
-(`@env`) — the dictionary of the «Стенд домена» of [the common acceptance README](../../../../common/acceptance/README.md), `@env` and
-«Окружение пересылки» (the review analysis of stage B 8–10, № 22: `М-16`).
+(`@env`) — the dictionary of the «Domain stand» of [the common acceptance README](../../../../common/acceptance/README.md), `@env` and
+«Forwarding environment» (the review analysis of stage B 8–10, № 22: `М-16`).
 
 **Scenario 19** — a neighbour on the stand: the door `GET /domain/members` of the domain console ([lesson P/10](../../../../10-domain-console/spec/10-domain-console.norms.md)
 Н1.2б, P/10-07; C10-MEMBERS-SOURCE-01, C10-MEMBERS-KNOCKING-ABSENT-01). The process `domain` is stopped (step 2), so that the pass of
@@ -93,11 +93,11 @@ the description is up to the Architect, the skill `lesson-spec`).
 
 ## scenarios.tsv
 
-The format is the dictionary of the «Стенд» of the common acceptance README and the section «Стенд домена». `$fp1`, `$fp2` are fingerprints that the runner
+The format is the dictionary of the «Stand» of the common acceptance README and the section «Domain stand». `$fp1`, `$fp2` are fingerprints that the runner
 binds from `knocking` and substitutes into the admission: so the stand repeats what a person does, comparing the fingerprint with the log of
 the agent; `$kr` (sc. 20) is the `rev` of the set from `trust` of the view; `$k` (sc. 29) is the private key of the batch from the answer of `POST /domain/batches`, the runner gives it to the command `join` by the directive `@join m2 batch=b1 $k`. In total 21 scenarios / 218 steps.
 
-**Sc. 29 — the admission batch** (ADR-0113 addendum (2)–(4); P/08.3 Н1.1б; the contract of the admission of a report «Стук партии»; P/09.1 Н1.1 `join` `batch`). `@domain m1` admits `hold` and `m1`, the agent `m2` is not started. Step 3 — a live batch with the same name — 409. Step 4 — `join` on `m2` with the batch: the row `domain/join` `{class: camera, batch}`. Step 6 — the box is admitted without a person: `Entry` with `class: camera` and `batch`, there is no knock. Step 7 — the exclusion: the fingerprint goes into `refused` of the batch. Steps 8–10 — the same token does not bring the box back: the knock with `batch` lies and waits for a person for two agent passes. Steps 11–12 — the revocation of the batch, the row with `revoked: true` and `used: 1`. Step 13 — a person admits the knock by the fingerprint: the revocation and `refused` close only the admission by the batch. By reading: the exhaustion of `n` and the revocation against a new box (on the stand there is one free box `m2`, `join` is create-once), the term `until`, the overflow of `refused`, the relay `via`, the `state` of the copy.
+**Sc. 29 — the admission batch** (ADR-0113 addendum (2)–(4); P/08.3 Н1.1б; the contract of the admission of a report «The batch knock»; P/09.1 Н1.1 `join` `batch`). `@domain m1` admits `hold` and `m1`, the agent `m2` is not started. Step 3 — a live batch with the same name — 409. Step 4 — `join` on `m2` with the batch: the row `domain/join` `{class: camera, batch}`. Step 6 — the box is admitted without a person: `Entry` with `class: camera` and `batch`, there is no knock. Step 7 — the exclusion: the fingerprint goes into `refused` of the batch. Steps 8–10 — the same token does not bring the box back: the knock with `batch` lies and waits for a person for two agent passes. Steps 11–12 — the revocation of the batch, the row with `revoked: true` and `used: 1`. Step 13 — a person admits the knock by the fingerprint: the revocation and `refused` close only the admission by the batch. By reading: the exhaustion of `n` and the revocation against a new box (on the stand there is one free box `m2`, `join` is create-once), the term `until`, the overflow of `refused`, the relay `via`, the `state` of the copy.
 
 Sc. 18 (C08-G06): the door `signer` sends to the process `domain` the packet `POST /api/relay/m9` with `{"relayed": {}}` without a signature — `m9`
 is not a member: 404 before the check of the signature and without a knock (P/08.3 Н2, the order of the row `POST /api/relay`).

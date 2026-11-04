@@ -3,7 +3,7 @@
 This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The stand, the dictionary of directives and doors — [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей) and its
-section [«Стенд домена»](../../../common/acceptance/README.md#стенд-домена) (the door `holder` — the domain console on `hold`, the doors
+section [«Domain stand»](../../../common/acceptance/README.md#стенд-домена) (the door `holder` — the domain console on `hold`, the doors
 `member`, the directives `@domain`, `@person`, `@stop agent`, `@start agent`; the plan of lesson 10 В10). The norm of the lesson is
 [`10-domain-console.norms.md`](../../spec/10-domain-console.norms.md) Н5. The scenarios were moved from the acceptances of М11/08 (sc. 05) and
 М11/11 (sc. 02) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers of the scenarios and the steps are the former ones; sc. 06–09 —
@@ -40,7 +40,7 @@ The runner goes as the human `root` (the first administrator — chapter 8.4, th
   at `/domain/shadow`. The step does not ask for the topology: its door reads the row `domain/topology`, Н1.2в does not name an unreadable view.
 - **Scenario 08** — a break of the passing (Н1.3 `pass`, Н4 «слова договора пересылки `answer`»): the process `domain` is stopped,
   the domain console is alive; an edit (`PUT /domain/topology`) and the door of people (`GET /domain/users` — `GET` is passed too, Н1.3а) — 502
-  `did not answer` («сеть», [the forwarding contract](../../../common/contracts/forwarding.md) «Пересылка — одна функция» `answer`);
+  `did not answer` («сеть», [the forwarding contract](../../../common/contracts/forwarding.md) «Forwarding is one function» `answer`);
   its own read door (`GET /domain`) answers. After `@restart domain` and the readiness of the process (the login `signer`, as sc. 04 of the acceptance of
   [chapter 8.10](../../../08-domain/acceptance/10/README.md)) the same edit — 200 `rev: 1`: the broken one is not applied.
 - **Scenario 09** — silence (Н1.3 `pass`): the process `domain` is frozen (`@on hold @freeze domain`, the pause ≈ the term «Ожидание»
@@ -80,9 +80,9 @@ the spoiling it is stopped (`@on hold @sigterm domain`, as sc. 07), the domain c
   `domain/topology` — sc. 15 step 2 of the acceptance of [chapter 8.3](../../../08-domain/acceptance/3/README.md) (C10-TOPOLOGY-ABSENT-01);
   no counter (C10-PLACEMENT-ABSENT-01) — by reading: after `@domain` it exists, the stand cannot delete it.
 - **Scenario 12** — the shared document and the member list do not read (Н1.2б, Н1.2е, Н3 `alarms`, Н4 `unavailable`): the pointer
-  `domain/shared` out of form — 503, not `doc: null` (steps 3, 4); the row `domain/members` out of form with a readable view — 503 at
+  `domain/shared` out of form — 503, not `doc: null` (steps 3, 4); the row `domain/member-rows/3723` (the part of the member `hold`, Н1.2) out of form with a readable view — 503 at
   `GET /domain/members` and at the whole door `GET /domain/alarms`, not an empty list (steps 6–8; step 5 — the control before the spoiling).
-- **Scenario 13** — the grammar of the alarm window (Н1.8 `door`, the gate-and-pass contract «Числовые параметры query»,
+- **Scenario 13** — the grammar of the alarm window (Н1.8 `door`, the gate-and-pass contract «Numeric query parameters»,
   C06-EVENTS-QUERY-LEXEME-162-01, A12): `1e3`, `-1`, `%2B1` (= `+1`), `%201` (= « 1»), `1_000` at `since` and `1e10` at `until` — 400
   `refused` with its own `detail`; each value without the grammar check would give a window `since ≤ until` (200), the refusal is only
   the grammar; `since` twice — 400; `%31` and `%32` (= `1`, `2`) — accepted: the window `[1, 2]`, no rows (step 9).
@@ -94,7 +94,7 @@ the spoiling it is stopped (`@on hold @sigterm domain`, as sc. 07), the domain c
   `.` or `.%2E` — 404 `not a domain route`, not 401 (steps 3, 4); an incoming `X-User: root` is stripped — without a token 401, `/session`
   is anonymous, without `user` (steps 5, 6); with the token of `root` an incoming `X-User: forged` does not change the identity, `/session` carries the grants
   `domain/grants/domain` (`[{cap, scope}]`, the first administrator, step 8). `X-Operator: console` — by reading (until the TLS stand).
-- **Scenario 16** — the rule «Нечитаемая строка» of the gate (Н1.5, Н4 `unavailable`): `domain/disabled`, `domain/revoked`
+- **Scenario 16** — the rule «Unreadable row» of the gate (Н1.5, Н4 `unavailable`): `domain/disabled`, `domain/revoked`
   (`no_revocations`), `domain/grants/domain`, `domain/keys` out of form — 503 `unavailable`, not 401/403; after each (except
   the last) the former value by the form — `GET /domain` 200 again: each 503 is from its own row. The former values: `names` —
   `"[]"` (none is disabled), `jtis` — `""` (an empty string by the form of the contract `keys`; the row `domain/revoked` without revocations may also be absent), the grants of the domain door — the row of the first administrator. No row
@@ -120,8 +120,8 @@ Sc. 17 — ADR-0094 B4 (the version of the row at the read doors); sc. 18, 19 �
 
 ## scenarios.tsv
 
-The format — [the dictionary of directives and doors of the «Стенд» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей)
-and the section «Стенд домена»: a subset of the fields, `~` — a substring, `@file` — the bytes of a file. In total 16 scenarios / 163 steps.
+The format — [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей)
+and the section «Domain stand»: a subset of the fields, `~` — a substring, `@file` — the bytes of a file. In total 16 scenarios / 163 steps.
 
 The subset of expect does not replace the check of the full HTTP form of the OpenAPI of the lesson: check the required fields, the types, the Content-Type.
 

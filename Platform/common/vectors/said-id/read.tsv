@@ -1,13 +1,13 @@
-# Чтение fetched: rid сообщён, если среди имён через «,» есть rid или SaidID(rid) (P/03.4 Н1.1 `said_id` read). Форма — README рядом.
+# Reading fetched: rid is reported if among the names separated by «,» there is rid or SaidID(rid) (P/03.4 Н1.1 `said_id` read). The form — the README beside.
 case	fetched	rid	reported	note
-exact	"cmd-1"	"cmd-1"	true	имя равно rid
-second	"cmd-1,cmd-2"	"cmd-2"	true	rid — второе имя
-no-prefix	"cmd-12"	"cmd-1"	false	сравнение имени целиком, не префикс
-empty	""	"cmd-1"	false	пустой fetched — ничего не сообщено
-empty-element	"x,,cmd-1"	"cmd-1"	true	пустой элемент — не имя, остальные читаются
-no-trim	"cmd-1, cmd-2"	"cmd-2"	false	пробелы не снимаются: « cmd-2» — не cmd-2 (писатель пишет без пробелов)
-hashed	"x,#c0f8bd4dbc2b0c03107c"	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	true	длинный rid — по SaidID
-raw-long	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	true	читатель принимает и сам rid, не только SaidID
-comma-raw	"a,b"	"a,b"	false	rid с запятой сам по себе не читается: разбит на a и b
-comma-hashed	"#1eb7c54d52831bbfe894"	"a,b"	true	rid с запятой — по SaidID
-other-hash	"#7a538607fdaab9296995"	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	false	чужой хэш — не сообщён
+exact	"cmd-1"	"cmd-1"	true	the name equals rid
+second	"cmd-1,cmd-2"	"cmd-2"	true	rid — the second name
+no-prefix	"cmd-12"	"cmd-1"	false	the name is compared whole, not as a prefix
+empty	""	"cmd-1"	false	an empty fetched — nothing is reported
+empty-element	"x,,cmd-1"	"cmd-1"	true	an empty element — not a name, the rest are read
+no-trim	"cmd-1, cmd-2"	"cmd-2"	false	spaces are not removed: « cmd-2» — not cmd-2 (the writer writes without spaces)
+hashed	"x,#c0f8bd4dbc2b0c03107c"	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	true	a long rid — by SaidID
+raw-long	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	true	the reader accepts rid itself too, not only SaidID
+comma-raw	"a,b"	"a,b"	false	a rid with a comma is not read by itself: split into a and b
+comma-hashed	"#1eb7c54d52831bbfe894"	"a,b"	true	a rid with a comma — by SaidID
+other-hash	"#7a538607fdaab9296995"	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"	false	someone else's hash — not reported

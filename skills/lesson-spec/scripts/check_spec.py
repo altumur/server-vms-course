@@ -437,7 +437,7 @@ CATALOG_FIELDS = ["key", "kind", "owner", "ops", "readers", "when", "version", "
 # header: `# when — … закрытого перечня: <слово> — <пояснение>[; <слово> — <пояснение>]…` (решение «Архитектора»
 # 2026-10-20, коммит курса 9ca4837ad).
 MANIFEST_FORM = Path("Platform/02-installer/spec/02.1-installer.form.yaml")
-WHEN_WORDS = re.compile(r"(?:перечня:|;)\s*([a-z_]+(?:\.[a-z_]+)*) — ")
+WHEN_WORDS = re.compile(r"(?:перечня:|closed list:|;)\s*([a-z_]+(?:\.[a-z_]+)*) — ")   # en — шапка по-английски (ADR-0121)
 CATALOG_KINDS = {"row", "object", "file", "dir"}
 CATALOG_OPS = {"create", "put", "cas", "guard", "mark", "delete", "append"}
 ROLE = r"(?:console|resource|domainagent|domainconsole|domain|admin|configstore-door|<s>(?:controller|worker|domain)|proc:[0-9]{2}-[a-z][a-z-]*)"

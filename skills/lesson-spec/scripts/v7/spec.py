@@ -526,7 +526,7 @@ def family_read(root, catalog, judge=True):
     templates, why = key_templates(root, catalog)
     errors += [(KEYS_README, "family-read: %s" % w) for w in why]
     for p in sorted(d.iterdir()):
-        if p.name in ("README.md", ".DS_Store"):
+        if p.name in ("README.md", ".DS_Store", "en"):            # en — английский источник README (ADR-0121)
             continue
         m = re.fullmatch(r"([0-9]{2})\.tsv", p.name)
         if not m:

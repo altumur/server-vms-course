@@ -1,5 +1,7 @@
 # Векторы yaml-suite: слой 1 на yaml-test-suite (ADR-0092 п. 2; набор Б, раздел «слой 1 сужает YAML 1.2.2»)
 
+Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
+
 Источник — yaml-test-suite (github.com/yaml/yaml-test-suite), данные тега `data-2022-01-17`: архив
 `https://github.com/yaml/yaml-test-suite/archive/refs/tags/data-2022-01-17.tar.gz`, sha256
 `ccae49c1d010d27c20d315969a97752f95b14642fc1e73755db4eb2df4bb0256`. Лицензия — MIT, текст целиком — `LICENSE` (файл

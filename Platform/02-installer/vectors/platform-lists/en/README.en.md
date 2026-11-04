@@ -33,7 +33,7 @@ Who executes — by `list`, the installer (`02-installer`): `heartbeat_strings`,
 
 The expectation column is `word`, the set of words of one `list`: one call per list, the input — `cells` `{"list": <имя>}`; the outcome —
 code 0 and a JSON array of strings — all words of this closed list of the side; the comparison — equality of sets with the words of the rows
-of the table of this `list` (order and repeats do not matter) (the Architect's decision of 2026-10-27; the common rule «Векторы» of [the common acceptance
+of the table of this `list` (order and repeats do not matter) (the Architect's decision of 2026-10-27; the common rule «Vectors» of [the common acceptance
 README](../../../../common/acceptance/README.md)).
 
 ## What the vector does not cover

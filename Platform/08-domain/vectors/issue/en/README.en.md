@@ -20,7 +20,7 @@ source of these cases.
 ## Run
 
 Without a stand: the command `issue` of an implementation gets the input (the column `input`) and prints JSON; `expect` is a subset of the fields
-of the output by the dictionary of the «Стенд» ([the common acceptance README](../../../../common/acceptance/README.md), `<код> <JSON>`: the named fields
+of the output by the dictionary of the «Stand» ([the common acceptance README](../../../../common/acceptance/README.md), `<код> <JSON>`: the named fields
 exist and are equal, an array — by length, order and elements, a number — by value) or `@exit 2` (an input not of the form of Н5, including
 a `decl` not of the loading form of [P/02.1 Н1.2б](../../../../02-installer/spec/02.1-installer.norms.md)). There are three `@exit 2` rows
 (`issue-37`, `issue-38`, `issue-keep-too-long`); the other 37 inputs are of the form. `iat`, `exp` are from the `now` of the input, not from the process clock.

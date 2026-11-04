@@ -1,10 +1,10 @@
-# Маска на входе (договор маски журнала «Маска на входе» mask_in; пробельные — договор имени человека white_space): значение
-# секретного поля, присланное на запись, → маска (отказ записи, P/06.2 Н4) или значение. Форма — README.
+# The mask at the input (the log mask contract «Mask at the input» mask_in; the white-space ones — the human name contract white_space): the value
+# of a secret field sent for a write → a mask (a write refusal, P/06.2 Н4) or a value. The form — README.
 case	value	expect	note
-three-stars	"***"	{"mask": true}	маска журнала и показа секрета (`***`, векторы log-mask и secret-in) на входе — отказ
-four-stars	"****"	{"mask": true}	больше трёх знаков множества — маска
-two-stars	"**"	{"mask": false}	меньше трёх знаков — значение
-one-star	"*"	{"mask": false}	один знак — значение
+three-stars	"***"	{"mask": true}	the log mask and the secret display mask (`***`, the vectors log-mask and secret-in) at the input — a refusal
+four-stars	"****"	{"mask": true}	more than three characters of the set — a mask
+two-stars	"**"	{"mask": false}	fewer than three characters — a value
+one-star	"*"	{"mask": false}	one character — a value
 fullwidth	"＊＊＊"	{"mask": true}	U+FF0A
 asterisk-operator	"∗∗∗"	{"mask": true}	U+2217
 low-asterisk	"⁎⁎⁎"	{"mask": true}	U+204E
@@ -17,20 +17,20 @@ dot-operator	"⋅⋅⋅"	{"mask": true}	U+22C5
 white-bullet	"◦◦◦"	{"mask": true}	U+25E6
 white-circle	"○○○"	{"mask": true}	U+25CB
 medium-black-circle	"⚫⚫⚫"	{"mask": true}	U+26AB
-mixed-set	"*•●"	{"mask": true}	знаки множества вперемешку — маска
-tab-edge	"\t***"	{"mask": true}	пробельный по краю не в счёт (S12; приёмка P/06.2 сц. 02 шаг 5)
-nbsp-edge	"\u00a0***"	{"mask": true}	U+00A0 по краю (S12; приёмка P/06.2 сц. 02 шаг 6)
-spaces-both-edges	" *** "	{"mask": true}	пробелы с обеих сторон
-ideographic-and-ls	"\u3000***\u2028"	{"mask": true}	U+3000 и U+2028 — пробельные White_Space
-nel-edge	"\u0085***"	{"mask": true}	U+0085 — пробельный White_Space
-newline-edge	"***\n"	{"mask": true}	U+000A — пробельный
-zero-width-edge	"\u200b***"	{"mask": false}	U+200B не White_Space — не край: значение
-inner-spaces	"* * *"	{"mask": false}	пробелы внутри — не знаки множества: значение
-spaces-two-marks	" ** "	{"mask": false}	после края два знака — значение
-password-inside	"a***b"	{"mask": false}	пароль со звёздочками внутри — значение (S12)
-password-tail	"***a"	{"mask": false}	знак вне множества — значение
-star-like-not-in-set	"⋆⋆⋆"	{"mask": false}	U+22C6 не из множества — значение
-hyphenation-point	"‧‧‧"	{"mask": false}	U+2027 не из множества — значение
-empty	""	{"mask": false}	пустое — не маска (знаков меньше трёх)
-only-spaces	"   "	{"mask": false}	одни пробельные — знаков множества нет: не маска
-plain	"secret"	{"mask": false}	обычное значение
+mixed-set	"*•●"	{"mask": true}	characters of the set mixed — a mask
+tab-edge	"\t***"	{"mask": true}	a white-space one at the edge does not count (S12; acceptance P/06.2 sc. 02 step 5)
+nbsp-edge	"\u00a0***"	{"mask": true}	U+00A0 at the edge (S12; acceptance P/06.2 sc. 02 step 6)
+spaces-both-edges	" *** "	{"mask": true}	spaces on both sides
+ideographic-and-ls	"\u3000***\u2028"	{"mask": true}	U+3000 and U+2028 — White_Space white-space ones
+nel-edge	"\u0085***"	{"mask": true}	U+0085 — a White_Space white-space one
+newline-edge	"***\n"	{"mask": true}	U+000A — a white-space one
+zero-width-edge	"\u200b***"	{"mask": false}	U+200B is not White_Space — not an edge: a value
+inner-spaces	"* * *"	{"mask": false}	spaces inside — not characters of the set: a value
+spaces-two-marks	" ** "	{"mask": false}	after the edge two characters — a value
+password-inside	"a***b"	{"mask": false}	a password with asterisks inside — a value (S12)
+password-tail	"***a"	{"mask": false}	a character outside the set — a value
+star-like-not-in-set	"⋆⋆⋆"	{"mask": false}	U+22C6 not from the set — a value
+hyphenation-point	"‧‧‧"	{"mask": false}	U+2027 not from the set — a value
+empty	""	{"mask": false}	empty — not a mask (fewer than three characters)
+only-spaces	"   "	{"mask": false}	white-space ones only — no characters of the set: not a mask
+plain	"secret"	{"mask": false}	an ordinary value

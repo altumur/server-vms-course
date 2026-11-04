@@ -30,7 +30,7 @@ Before each automatic scenario stop the processes of the previous one, create se
 Without workers there is no placement; the counter c4 is created only in 04. The domain login, closed grants, CSP and a repeat of a logical action are checked by a separate stand/module test, not by this TSV.
 
 - **A pass of the second kind (sc. 32; ADR-0094 B1).** `probe-x` declares `door.pass` of the second kind, it has no worker. Steps 1–2 — a refusal of the console by the form of the manifest: `no worker…` becomes `{code, message}`; step 3 — the first segment of the route, while the path is outside `api/v1`; step 4 — `apix`: the comparison is by whole segments. Steps 5–8 — there is no ticket with such a value: the console is open, and still the identity is only the ticket, 401, no write. Step 9 — an open route does not read the ticket. A live ticket — [the stand of the pass of the second kind](../../../../common/acceptance/pass/README.md).
-- **Processes.** Sc. 08–10 bring up processes by the directives of the «Стенд» (`@start worker`, `@start resource`,
+- **Processes.** Sc. 08–10 bring up processes by the directives of the «Stand» (`@start worker`, `@start resource`,
   `@start controller testsub2`); before `@start` there are no background processes. The worker is `w-1` of the subsystem `testsub` on `srv-a`.
 - **The store door.** Sc. 07 writes an intent row bypassing the controller: `@as testsubcontroller store` — the role socket of the
   controller `testsub` by the installation rights file (P/02.5). There is no controller `testsub` in sc. 07, nobody will
@@ -127,7 +127,7 @@ Sc. 12 step 7: two unreadable heartbeats (`w-7`, `W-9`) — `testsub_heartbeats_
 
 The stand of sc. 13–16 with the controller `testsub` (`@start controller`) and the resource (`@start resource`); a catalogue of two manifests.
 The steps before `/metrics` of the console are preparation: the controller writes the snapshot shard `testsub/snapshot/unplaced`, the resource gives it out
-through the objects door (`@until 20`, `@time` — the dictionary of the «Стенд»); their subject is the acceptance of [P/04](../../../../04-controller/acceptance/README.md)
+through the objects door (`@until 20`, `@time` — the dictionary of the «Stand»); their subject is the acceptance of [P/04](../../../../04-controller/acceptance/README.md)
 (sc. 03, 08 with the same steps). The subject of the chapter: sc. 03 step 5 — the series `testsub_snapshot_age_seconds` (Н1.3 `age`); sc. 17 steps
 7–9 — the controller is stopped, the shard is spoiled (`@spoil object`), `/metrics` 200 with `testsub_snapshot_garbled_shards 1` (Н1.3
 `metrics`; Н0 P/01.1 «Stability of output»). The row `testsub/counters/s7` with `start: notint` sc. 17 writes bypassing the console by the role

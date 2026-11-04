@@ -56,7 +56,7 @@ console — [chapter 6.7](../../../06-console/spec/06.7-console.norms.md), the w
   [the agent signature](../../../common/contracts/agent-signature.md) (the holder is the verifier) — chapter 8.3;
   [the right](../../../common/contracts/may.md) — chapter 8.4; [the term record](../../../common/contracts/record.md) and
   [the ask signature](../../../common/contracts/ask-sig.md) — chapter 8.8; [the local token door](../../../common/contracts/local-token-door.md)
-  — chapter 8.7; [the forwarding](../../../common/contracts/forwarding.md) («Адрес клиента», «Двери домена») and
+  — chapter 8.7; [the forwarding](../../../common/contracts/forwarding.md) («Client address», «Domain doors») and
   [the role certificate](../../../common/contracts/role-certificate.md#серверная-сторона-класс-signed) — chapter 8.0; the holder
   ring and the envelope `enc:v2` — [the sealing contract](../../../common/contracts/sealing.md).
 - [OpenAPI](../08-domain.api.openapi.yaml) expresses the HTTP forms of the canon of all the chapters: one door of the process — one contract.
@@ -85,7 +85,7 @@ console — [chapter 6.7](../../../06-console/spec/06.7-console.norms.md), the w
 The internal interfaces, types, error classes, libraries and the division into components are chosen by the implementation. The acceptance commands
 (`view`, `keys`, `token`, `seal`, `seal-round`, `accept`, `agent-sig`, `seal-member`, `seal-member-round`, `may`,
 `assemble`, `issue`, `record`, `ask-sig`) call the functions of Н3 of the chapters and of the contracts without the store and the network; their names and call
-templates — the items «Решает реализация» of the chapters.
+templates — the items «Implementation decides» of the chapters.
 
 **On a discrepancy.** Name the norm id, the input, the initial state, the expected and the obtained outcome. First check which
 chapter or lesson the rule belongs to: the door of the process — chapter 8.0; the set, the token, the envelopes — chapter 8.2 and the contracts; the acceptance —
@@ -101,7 +101,7 @@ an unsupported case. Record a change of the acceptance in `corrections.tsv` of i
 
 - **8.0.** The door `SIGNER_URL`: accept the edits of the domain console as they came, check the identity and the grant itself (chapter 8.4);
   read `X-W2C-Client` only on a connection of the role `domainconsole` ([the forwarding contract](../../../common/contracts/forwarding.md)
-  «Адрес клиента»); its own refusals `deposed`, `frozen`, `standby` — by its own word in `error`. The server side of the class
+  «Client address»); its own refusals `deposed`, `frozen`, `standby` — by its own word in `error`. The server side of the class
   `signed` — [the role certificate contract](../../../common/contracts/role-certificate.md#серверная-сторона-класс-signed)
   (do not require a client certificate and do not give it rights; requesting it is optional, and a presented one is checked in the
   handshake — its own CA, the validity, EKU `clientAuth`, otherwise an alert; ADR-0083 addendum (20), addendum (21)).
@@ -141,7 +141,7 @@ an unsupported case. Record a change of the acceptance in `corrections.tsv` of i
 - **8.10.** The queue `domain/signer-turn`: the guard of every write into the holder rows, the objects — after the confirmation of the queue;
   the standby — 503 `standby` at all the doors; giving up the queue on `SIGTERM`. The ceilings: 413 `whole too large`; 409
   `too many members` and «the entry of <член> would exceed 1240 bytes» at any write of `domain/member-rows/<раздел>`.
-- The description of all the choices of the sections «Решает реализация» of the chapters — 20 items «Решает реализация» in all — and the means of
+- The description of all the choices of the sections «Implementation decides» of the chapters — 20 items «Implementation decides» in all — and the means of
   executing the acceptance: the vector commands and the stand directives.
 
 ## Order of work
@@ -351,7 +351,7 @@ an edit and an interruption in the middle they do not prove. The inputs of the v
 
 ## Done when
 
-All the choices of the implementation are described (the items «Решает реализация» of all chapters), all the norms of the checklists of the chapters are fulfilled and
+All the choices of the implementation are described (the items «Implementation decides» of all chapters), all the norms of the checklists of the chapters are fulfilled and
 the ways of checking are recorded: for each id — a specific piece of evidence or an unchecked dependency. State the slice, the commands and the stand,
 the observations and the limitations. The data of past runs do not replace the preparation of a new one.
 

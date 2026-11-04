@@ -159,7 +159,8 @@ def code_parts(body):
 
 def links(body, base, root):
     out = set()
-    for target in LINK.findall(FENCE.sub("", body)):
+    text = SPAN.sub(lambda m: m.group(0) if m.string.startswith("](", m.end()) else " ", FENCE.sub("", body))   # «](…)» внутри кода — не ссылка
+    for target in LINK.findall(text):
         path = target.split("#", 1)[0]
         if not path:                                   # a heading of the same file: its anchor follows the language
             out.add("#")
@@ -367,7 +368,8 @@ def pairs(root):
     """English sources → (ru, en), в Platform/ и VMS/:
     - урок с `ru/` (ADR-0124): каждый `*.md` урока вне `ru/` и `journal/` — источник `X`, перевод — `ru/X`;
     - урок без `ru/` (ADR-0121 п. 1): `<каталог>/en/<имя>.en.md` ↔ `<каталог>/<имя>.md` (нормы в `spec/en/`, у прочих
-      каталогов — `en/` рядом)."""
+      каталогов — `en/` рядом); корневые НОРМАТИВНЫЕ-СЛОВА и КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ — `en/` в корне (ADR-0124 доп. (1)
+      п. 4)."""
     root = Path(root)
     homes = sorted(h for h in [*root.glob("Platform/*"), *root.glob("VMS/*")] if (h / "ru").is_dir())
     out = []
@@ -376,7 +378,7 @@ def pairs(root):
             rel = x.relative_to(home)
             if rel.parts[0] not in ("ru", "journal"):
                 out.append((home / "ru" / rel, x))
-    for en in sorted([*root.glob("Platform/**/en/*.en.md"), *root.glob("VMS/**/en/*.en.md")]):
+    for en in sorted([*root.glob("Platform/**/en/*.en.md"), *root.glob("VMS/**/en/*.en.md"), *root.glob("en/*.en.md")]):
         if not any(en.is_relative_to(h) for h in homes):
             out.append((en.parent.parent / en.name.replace(".en.md", ".md"), en))
     yield from sorted(out, key=lambda p: p[1])

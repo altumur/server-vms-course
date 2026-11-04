@@ -14,7 +14,7 @@ is taken by `01-unplaced` from М10/04), `10-drain-strand` (in М10/10 — `02-d
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Стенд» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей):
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей):
 the doors `console`, `console2`, `resource`, `store`; the directives `@start controller`, `@start resource`, `@as`, `@put object`,
 `@spoil object`, `@until`, `@sleep` (sc. 13), `@big(N)`; the expectation is an exact code or `2xx`/`4xx` and a subset of fields. A request without a door
 prefix (sc. 01–07, the former acceptance of М10/04) goes to the console `testsub` — the door of the lesson P/06; `Idempotency-Key` — per the dictionary,
@@ -44,7 +44,7 @@ are installed by the preparation and are not removed by the word «пусто».
 its own state, without shared directories and ports.
 
 Between 01 and 02 the controller must complete at least one pass after the creation of u1.
-The confirmation is a change of the report controller/pass, observed by the report printing command from the section «Стенд»
+The confirmation is a change of the report controller/pass, observed by the report printing command from the section «Stand»
 of the common acceptance README; it does not require adding a new HTTP door. The waiting limit is 15 s. The expiry of the deadline is a refusal of the preparation,
 not a permission to continue. GET /counters without a placement does not prove the completion of a pass:
 with an empty pool the placement row may not appear at all.
@@ -68,7 +68,7 @@ The doors of the console `testsub` (root) and `testsub2` (mounted, `console2 …
 `srv-a` by directives (`@start controller`, `@start resource`), the store (`store …`); without workers and a domain. A build with
 schema 1 (sc. 08 waits for `understood: 1`, sc. 11 — `understood: 1`, `can_raise_to: 1`); the body limit of the console is 1 MiB.
 
-The start interface is the section «Стенд» of the common acceptance README, without commands of the chapter's own: `@start controller` and
+The start interface is the section «Stand» of the common acceptance README, without commands of the chapter's own: `@start controller` and
 `@start resource` are the role commands of the controller `testsub` and of the resource of the server `srv-a` (the substitutions `{data}`, `{socket}`,
 `{manifest}`, at the resource `{rport}`); the resource is ready when it listens on `{rport}` and there is the row `platform/doors/srv-a`.
 `console …` and `console2 …` are one console on `{port}`, the second is the prefix `/testsub2`. `store …` without `@as` is the store door
@@ -127,7 +127,7 @@ the rows of the console (`testsub/policy`, `platform/drain`, `platform/schema`, 
 
 ## Inputs `inputs/`
 
-The heartbeats of the worker `w-1` for `@put object` (the object write command of the «Стенд», bypassing the writer): `hb-w-1-no-status.json` (sc. 07,
+The heartbeats of the worker `w-1` for `@put object` (the object write command of the «Stand», bypassing the writer): `hb-w-1-no-status.json` (sc. 07,
 09; from the acceptances of М10/04 and М10/10 — the bytes coincide), `hb-w-1-pending-0.json`, `hb-w-1-pending-missing.json`,
 `hb-w-1-pending-fraction.json`, `hb-w-1-pending-minus-zero.json`, `hb-w-1-pending-2p63.json`, `hb-w-1-schema-fraction.json`,
 `hb-w-1-build-number.json` (sc. 12; from the acceptance of М10/10, the registry row e31e5c28).

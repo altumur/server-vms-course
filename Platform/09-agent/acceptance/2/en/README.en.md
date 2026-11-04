@@ -17,15 +17,15 @@ relay (chapter 9.1: P/09.1-05, P/09.1-21, P/09.1-24), the silence of a member in
 
 ## Stand
 
-The preparation is as the acceptance README of [chapter 8.3](../../../../08-domain/acceptance/3/README.md) («Стенд», «Подготовка каждого сценария»;
+The preparation is as the acceptance README of [chapter 8.3](../../../../08-domain/acceptance/3/README.md) («Stand», «Подготовка каждого сценария»;
 formerly — the acceptance README of М11/03), there are four clusters: `hold`, `m1`, `m2`, `relay`. The agent `relay` always opens
-the relay door (`RELAY=1`, `{relay_port}`); the doors and the directives — the section «Стенд домена» of the common acceptance README
+the relay door (`RELAY=1`, `{relay_port}`); the doors and the directives — the section «Domain stand» of the common acceptance README
 (`@domain <кластеры>`, `@start agent <кластер> via relay`, `@stop agent`, `@cut relay`, `@mend relay`, `@clock`).
 The topology is empty until the step that writes it.
 
 ## scenarios.tsv
 
-The format is the dictionary of the «Стенда» and the section «Стенд домена» of the common acceptance README; the expectation is a subset of the fields. `$fp2` is the fingerprint
+The format is the dictionary of the «Стенда» and the section «Domain stand» of the common acceptance README; the expectation is a subset of the fields. `$fp2` is the fingerprint
 of the stranger whom the holder learned of from a knock that came in a relay package.
 
 - Sc. 02 steps 11–14 (the mutation check 2026-10-18): the relay checks the member signature — with the agent clock 400 s

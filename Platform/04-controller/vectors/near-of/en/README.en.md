@@ -30,7 +30,7 @@ Who executes it is the controller (`04-controller`: the neighbour by `near`, P/0
 
 ## Stand command
 
-`near-of` is the key `stand` of the profile `04-controller` (the section «Раскладка по процессам» of [the common acceptance README](../../../../common/acceptance/README.md)):
+`near-of` is the key `stand` of the profile `04-controller` (the section «Layout by processes» of [the common acceptance README](../../../../common/acceptance/README.md)):
 a template with `{input}` — the path of the file into which the runner writes the cell `input` of the row byte for byte; stdout — the UTF-8 bytes of the id
 of the chosen neighbour exactly as `expect`, without a line feed and without a JSON wrapper; there is no neighbour (`expect` is empty) — an empty stdout;
 code 0. An input not by the form of this README — code 2 (`@exit 2`). Another code or extra bytes — FAIL of the row.

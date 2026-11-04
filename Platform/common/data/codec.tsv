@@ -1,15 +1,15 @@
-# Кодек строк хранилища — один на платформу (ADR-0088 п. 3, доп. (1) Р1, Р6; доп. (2) С1, С2, С4, С9). Байты — «Спецификация».
-# Строка хранилища — объект строк items (P/01.1 Н1): каждое значение — строка; логический тип узла схемы семьи → запись.
-# Два режима: писатель (строгая запись) и читатель (терпимый). Узел с пометкой whole: true — целый знак и у читателя.
-# Подписанное — до терпимости (доп. (1) Р6): кодек и схема читателя — на разобранной копии, подпись и sha256 — по исходным байтам.
-# Строка: type<TAB>row_writer<TAB>row_reader<TAB>json_writer<TAB>json_reader<TAB>norm.
+# The codec of store rows — one for the platform (ADR-0088 item 3, addendum (1) Р1, Р6; addendum (2) С1, С2, С4, С9). Bytes — «Спецификация».
+# A store row is an object of strings items (P/01.1 Н1): each value is a string; the logical type of a node of the family schema → a notation.
+# Two modes: the writer (strict notation) and the reader (tolerant). A node marked whole: true — integer notation for the reader too.
+# The signed comes before tolerance (addendum (1) Р6): the codec and the reader's schema — on the parsed copy, the signature and sha256 — by the original bytes.
+# Row: type<TAB>row_writer<TAB>row_reader<TAB>json_writer<TAB>json_reader<TAB>norm.
 type	row_writer	row_reader	json_writer	json_reader	norm
-string	как есть	как есть	строка JSON	строка JSON	P/06.1 Н1.2 values_by_type
-integer	десятичная запись целым знаком: ^-?(0|[1-9][0-9]*)$, по модулю не больше 2^53 − 1	по значению: десятичная запись конечного числа, равного целому по точному десятичному значению лексемы, не после binary64 (1.0 — 1; 100.00000000000000001 — не целое); с whole: true — только целый знак	число JSON целым знаком	по точному десятичному значению лексемы, не после binary64 (1.0 — 1; 100.00000000000000001 — не целое); с whole: true — только целый знак (1.0, 1e0, -0.0 — не целое)	P/06.1 Н1.2; ADR-0088 доп. (1) Р1, доп. (2) С9; OBS154-RAW-TIME-EXACT-01
-number	десятичная запись без экспоненты, кратчайшая, восстанавливающая число	десятичная запись конечного числа	число JSON (ES6, ADR-0072)	число JSON	P/06.1 Н1.2 values_by_type float
+string	as is	as is	JSON string	JSON string	P/06.1 Н1.2 values_by_type
+integer	decimal integer notation: ^-?(0|[1-9][0-9]*)$, absolute value not greater than 2^53 − 1	by value: the decimal notation of a finite number equal to an integer by the exact decimal value of the lexeme, not after binary64 (1.0 — 1; 100.00000000000000001 — not an integer); with whole: true — only integer notation	JSON number in integer notation	by the exact decimal value of the lexeme, not after binary64 (1.0 — 1; 100.00000000000000001 — not an integer); with whole: true — only integer notation (1.0, 1e0, -0.0 — not an integer)	P/06.1 Н1.2; ADR-0088 addendum (1) Р1, addendum (2) С9; OBS154-RAW-TIME-EXACT-01
+number	decimal notation without an exponent, the shortest one that restores the number	decimal notation of a finite number	JSON number (ES6, ADR-0072)	JSON number	P/06.1 Н1.2 values_by_type float
 boolean	"true" | "false"	"true" | "false"	true | false	true | false	P/06.1 Н1.2 values_by_type bool
-time	^(0|[1-9][0-9]*)(\.[0-9]{1,3})?$	^(0|[1-9][0-9]*)(\.[0-9]+)?$; значение конечно в binary64, переполнение — не по форме (MAY-UNTIL-D8-01)	число JSON записи писателя (строка — если форма поля называет строку)	число или строка записи читателя	P/01.1 Н0 «Время в строке»; ADR-0088 доп. (2) С1
-array	список P/06.1 Н1.2: элементы через запятую; пустой элемент, запятая в элементе или ведущий [ — массив JSON; [] — "", [""] — '[""]'	"" — []; ведущий [ — массив JSON; иначе разделить по запятым	массив JSON	массив JSON	P/06.1 Н1.2 values_by_type list
-encoding: json	текст JSON в items	текст JSON по грамматике Н1.1 значений json: без NaN и бесконечностей, без повтора ключей	—	—	ADR-0088 п. 5, доп. (2) С2
-encoding: jcs	текст JCS (ADR-0072)	как encoding: json; JCS у читателя не проверяется, если норма урока этого не требует	—	—	ADR-0088 доп. (2) С4
-null	элемента нет	отсутствие элемента	null	null	P/06.1 Н1.2 absent
+time	^(0|[1-9][0-9]*)(\.[0-9]{1,3})?$	^(0|[1-9][0-9]*)(\.[0-9]+)?$; the value is finite in binary64, an overflow — not by the form (MAY-UNTIL-D8-01)	JSON number in the writer's notation (a string — if the form of the field names a string)	a number or a string in the reader's notation	P/01.1 Н0 «Time in a row»; ADR-0088 addendum (2) С1
+array	list P/06.1 Н1.2: elements separated by commas; an empty element, a comma in an element or a leading [ — a JSON array; [] — "", [""] — '[""]'	"" — []; a leading [ — a JSON array; otherwise split by commas	JSON array	JSON array	P/06.1 Н1.2 values_by_type list
+encoding: json	JSON text in items	JSON text by the grammar Н1.1 of json values: without NaN and infinities, without repeated keys	—	—	ADR-0088 item 5, addendum (2) С2
+encoding: jcs	JCS text (ADR-0072)	as encoding: json; JCS is not checked by the reader unless the norm of the lesson requires it	—	—	ADR-0088 addendum (2) С4
+null	no element	absence of the element	null	null	P/06.1 Н1.2 absent
