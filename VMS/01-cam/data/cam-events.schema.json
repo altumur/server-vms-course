@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "слова подсистемы cam в строке события бакета камеры (открытое место семьи платформы events-unit — корень строки, поля сверх t, kind, id, of, class, occurred, v); тип поля задаёт пишущий урок — V/01.2 Н1.5; читают консоль (/events, P/06.4 — как есть) и сценарии auto (V/07.2 Н1.3 — строго)",
+ "description": "the words of the subsystem cam in an event row of a camera bucket (the open place of the Platform family events-unit — the root of the row, the fields beyond t, kind, id, of, class, occurred, v); the field type is set by the writing lesson — V/01.2 Н1.5; read by the console (/events, P/06.4 — as is) and the auto scenarios (V/07.2 Н1.3 — strictly)",
  "type": "object",
  "allOf": [
   {
@@ -20,7 +20,7 @@
       "type": "integer",
       "minimum": 1,
       "x-integer": true,
-      "description": "вход устройства в нумерации V/01.4 Н1.1, с 1"
+      "description": "the device input in the numbering of V/01.4 Н1.1, from 1"
      },
      "value": {
       "type": "string",
@@ -28,7 +28,7 @@
        "open",
        "closed"
       ],
-      "description": "closed — начало тревоги, open — конец: от norm входа (V/01.4 Н1.4а)"
+      "description": "closed — the start of the alarm, open — the end: relative to norm of the input (V/01.4 Н1.4а)"
      }
     },
     "required": [
@@ -54,13 +54,13 @@
       "type": "integer",
       "minimum": 0,
       "x-integer": true,
-      "description": "кадров отброшено за окно сводки"
+      "description": "frames dropped over the summary window"
      },
      "depth": {
       "type": "integer",
       "minimum": 0,
       "x-integer": true,
-      "description": "глубина очереди источника"
+      "description": "the queue depth of the source"
      }
     },
     "required": [
@@ -87,22 +87,22 @@
       "items": {
        "type": "string"
       },
-      "description": "rawData строки EventData источника текста"
+      "description": "rawData of the EventData row of the text source"
      },
      "group": {
       "type": "integer",
       "minimum": 1,
       "x-integer": true,
-      "description": "номер группы в пределах соединения; вне группы поля нет"
+      "description": "the group number within the connection; outside a group there is no field"
      },
      "camera": {
       "type": "string",
-      "description": "поле camera строки eventsrc (V/01.1 Н1.1г)"
+      "description": "the field camera of the eventsrc row (V/01.1 Н1.1г)"
      },
      "word": {
       "type": "string",
       "minLength": 1,
-      "description": "msg первого совпавшего элемента words (V/01.2 Н1.5)"
+      "description": "msg of the first matched element of words (V/01.2 Н1.5)"
      }
     },
     "required": [
@@ -125,12 +125,12 @@
     "properties": {
      "unit": {
       "type": "string",
-      "description": "id строки cam/device_units"
+      "description": "the id of the row cam/device_units"
      },
      "event": {
       "type": "string",
       "minLength": 1,
-      "description": "слово шаблона единицы как есть"
+      "description": "the word of the unit template as is"
      },
      "phase": {
       "type": "string",
@@ -139,12 +139,12 @@
        "end",
        "still"
       ],
-      "description": "у двухфазного события: still — фаза открыта, повтор держателя; у мгновенного поля нет"
+      "description": "for a two-phase event: still — the phase is open, a repeat by the holder; an instant event has no field"
      },
      "det_kind": {
       "type": "string",
       "minLength": 1,
-      "description": "у встроенного детектора: вид по detector-kinds.tsv, вне таблицы other"
+      "description": "for a built-in detector: the kind by detector-kinds.tsv, outside the table other"
      }
     },
     "required": [

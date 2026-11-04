@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/01.8: формы таблиц поиска; живой драйвер — шаги @manual. Формат — README.
+# Acceptance of V/01.8: the forms of the search tables; a live driver — steps @manual. Format — README.
 01-tables	1	POST /searches {"cluster": "local", "search": "0123456789abcdef0123456789abcdef", "started_at": 1760000000, "until": 1760000030}	201 {"row": {"name": "local", "search": "0123456789abcdef0123456789abcdef", "stopped_at": "@absent"}}
 01-tables	2	POST /searches {"cluster": "local", "search": "not-hex", "started_at": 1760000000, "until": 1760000030}	400 {"error": "@any"}
 01-tables	3	POST /searches {"cluster": "local", "search": "0123456789abcdef0123456789abcdef", "started_at": 1760000000}	400 {"error": "@any"}

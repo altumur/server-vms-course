@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/01.4: команда камере без устройства — refused (стенд главы 2). Формат — README.
+# Acceptance of V/01.4: a command to a camera without a device — refused (the stand of chapter 2). Format — README.
 01-no-device	1	POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}
 01-no-device	2	@start worker cam w-srv-a-1 on srv-a	ok
 01-no-device	3	@until 60 GET /cameras	200 {"rows": [{"id": "$c1", "phase": "idle"}]}
