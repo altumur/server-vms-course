@@ -1,27 +1,27 @@
 openapi: 3.1.0
 info:
-  title: V/10 — дверь держателя модели ассистента
+  title: V/10 — the door of the assistant model holder
   version: 1.0.0
   description: |
-    HTTP-контракт двери держателя модели `assistworker` — урок V/10 «Ассистент» модуля VMS. Канон — нормы глав
-    `10.K-assist.norms.md`; файл их выражает и не добавляет требований. Маршрут `chat` (глава V/10.2): поставить шаг
-    модели, спросить его состояние или ответ, отбить; допуск — токен двери консоли (`GET /assist/where/<name>`, право
-    `view` на строку модели, договор токена двери; `Authorization: Bearer`). Шаг принадлежит `user` токена: чужому —
-    404. Иной метод — 405, иной путь — 404.
+    The HTTP contract of the door of the model holder `assistworker` — lesson V/10 «Ассистент» of the VMS module. The canon is the norms
+    of the chapters `10.K-assist.norms.md`; the file expresses them and adds no requirements. The route `chat` (chapter V/10.2): queue a step
+    of the model, ask for its state or answer, cancel it; admittance — the console door token (`GET /assist/where/<name>`, the right
+    `view` on the model row, the door token contract; `Authorization: Bearer`). A step belongs to the `user` of the token: to anyone else —
+    404. Another method — 405, another path — 404.
 servers:
   - url: https://{server}:{port}
-    description: с комплектом роли assistworker — имя сервера SERVER_NAME (P/03.4 Н1.7 door_address kit)
+    description: with the kit of the role assistworker — the server name SERVER_NAME (P/03.4 Н1.7 door_address kit)
     variables:
       server: {default: srv-a}
       port: {default: "0"}
   - url: http://127.0.0.1:{port}
-    description: без комплекта сертификатов — только петля (P/03.4 Н1.7)
+    description: without a certificate kit — loopback only (P/03.4 Н1.7)
     variables:
       port: {default: "0"}
 paths:
   /chat/{name}/steps:
     post:
-      summary: Поставить шаг модели (Н1.2)
+      summary: Queue a step of the model (Н1.2)
       security: [{doorToken: []}]
       parameters:
         - $ref: "#/components/parameters/ModelName"
@@ -32,11 +32,11 @@ paths:
             schema: {$ref: "#/components/schemas/StepRequest"}
       responses:
         "202":
-          description: шаг в очереди
+          description: the step is in the queue
           headers:
             Location:
               required: true
-              description: "/chat/<name>/steps/<step>; сегмент step процент-кодирован"
+              description: "/chat/<name>/steps/<step>; the segment step is percent-encoded"
               schema: {type: string}
             Connection: {$ref: "#/components/headers/Close"}
           content:
@@ -56,7 +56,7 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /chat/{name}/steps/{step}:
     get:
-      summary: Состояние или ответ своего шага, долгий опрос до 20 с (Н1.3)
+      summary: The state or the answer of one's own step, long polling up to 20 s (Н1.3)
       security: [{doorToken: []}]
       parameters:
         - $ref: "#/components/parameters/ModelName"
@@ -64,11 +64,11 @@ paths:
         - name: wait
           in: query
           required: false
-          description: секунды ожидания завершения шага; умолчание 0
+          description: seconds of waiting for the step to finish; default 0
           schema: {type: integer, minimum: 0, maximum: 20}
       responses:
         "200":
-          description: состояние шага
+          description: the step state
           headers:
             Connection: {$ref: "#/components/headers/Close"}
           content:
@@ -81,14 +81,14 @@ paths:
         "410": {$ref: "#/components/responses/Refusal"}
         "503": {$ref: "#/components/responses/Refusal"}
     delete:
-      summary: Отбить свой шаг (Н1.5)
+      summary: Cancel one's own step (Н1.5)
       security: [{doorToken: []}]
       parameters:
         - $ref: "#/components/parameters/ModelName"
         - $ref: "#/components/parameters/Step"
       responses:
         "200":
-          description: шаг снят или запрос к модели оборван (или уже завершён); шаг забыт
+          description: the step is removed or the request to the model is cut off (or already finished); the step is forgotten
           headers:
             Connection: {$ref: "#/components/headers/Close"}
           content:
@@ -109,25 +109,25 @@ components:
   headers:
     Close:
       required: true
-      description: каждый ответ маршрута chat закрывает соединение (V/10.2 Н1.6)
+      description: every answer of the route chat closes the connection (V/10.2 Н1.6)
       schema: {const: close}
   parameters:
     ModelName:
       name: name
       in: path
       required: true
-      description: имя строки модели `assist/models/<name>` (V/10.1 Н1.1)
+      description: the name of the model row `assist/models/<name>` (V/10.1 Н1.1)
       schema: {type: string, minLength: 1}
     Step:
       name: step
       in: path
       required: true
-      description: id шага из ответа 202
+      description: the step id from the answer 202
       schema: {$ref: "#/components/schemas/StepId"}
   schemas:
     StepId:
       type: string
-      description: "<instance держателя>.<128 случайных бит, 32 строчных hex>; в экземпляре может быть точка — разбор по последней; в пути сегмент процент-кодирован (V/10.2 Н1.6)"
+      description: "<instance of the holder>.<128 random bits, 32 lowercase hex>; the instance may contain a dot — parsing is by the last one; in the path the segment is percent-encoded (V/10.2 Н1.6)"
       pattern: "^(?:[\\s\\S]+\\.[0-9a-f]{32})$"
       examples: ["srv.a:1:abcdef.00000000000000000000000000000000"]
     ToolCall:
@@ -145,7 +145,7 @@ components:
             name: {type: string}
             arguments: {type: string}
     RequestMessage:
-      description: сообщение истории шага (V/10.2 Н1.2); сообщение модели из ответа возвращается как есть
+      description: a message of the step history (V/10.2 Н1.2); a model message from an answer is returned as is
       type: object
       unevaluatedProperties: false
       oneOf:
@@ -168,7 +168,7 @@ components:
             reasoning_content: {type: string}
     ModelMessage:
       type: object
-      description: сообщение модели (V/10.2 Н1.3); иных полей держатель не отдаёт
+      description: a model message (V/10.2 Н1.3); the holder serves no other fields
       required: [role, content]
       additionalProperties: false
       properties:
@@ -210,10 +210,10 @@ components:
         max_tokens:
           type: integer
           minimum: 1
-          description: "верхняя граница — context строки модели (V/10.2 Н1.2): больше — 400 bad step"
-        turn: {type: string, pattern: "^(?:[0-9a-f]{32})$", description: "ход клиента (V/10.2 Н1.2, Н1.4)"}
+          description: "the upper bound is context of the model row (V/10.2 Н1.2): more — 400 bad step"
+        turn: {type: string, pattern: "^(?:[0-9a-f]{32})$", description: "the client's turn (V/10.2 Н1.2, Н1.4)"}
     StepState:
-      description: состояние шага по ветвям (V/10.2 Н1.3)
+      description: the step state by branches (V/10.2 Н1.3)
       type: object
       unevaluatedProperties: false
       oneOf:
@@ -265,14 +265,14 @@ components:
     doorToken:
       type: http
       scheme: bearer
-      description: токен двери консоли (договор токена двери)
+      description: the console door token (the door token contract)
   responses:
     Refusal:
-      description: отказ (V/10.2 Н4); срок повтора — в теле `retry_after` (Retry-After клиенту в браузере не виден через CORS), кроме busy двери процесса — там срока в теле нет
+      description: a refusal (V/10.2 Н4); the retry timeout is in the body `retry_after` (Retry-After is not visible to a client in a browser through CORS), except busy of the process door — there is no timeout in the body there
       headers:
         Connection:
           required: false
-          description: у отказов маршрута chat — всегда; 413 и busy двери процесса (door_limits) — по платформе (V/10.2 Н1.6)
+          description: for refusals of the route chat — always; 413 and busy of the process door (door_limits) — by the platform (V/10.2 Н1.6)
           schema: {const: close}
         Retry-After:
           required: false

@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/10.1: строка модели (дверь единиц консоли assist; манифест assist). Формат — README.
+# Acceptance of V/10.1: the model row (the units door of the console assist; the manifest assist). Format — README.
 01-create	1	POST /models {"name": "m1", "labels": ["assist-a"]}	201 {"id": "m1", "enabled": true, "model": "gpt-oss-20b", "quant": "q8_0", "context": 16384, "labels": ["assist-a"]}
 01-create	2	POST /models {"name": "m1", "labels": ["assist-a"]}	409 {"error": "exists"}
 01-create	3	POST /models {"name": "m2"}	400 {"error": "@any"}
