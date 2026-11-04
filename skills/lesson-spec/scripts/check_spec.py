@@ -219,6 +219,9 @@ PUTS_CHAPTERS = {("P/02", "2/"), ("P/02", "3/")}
 VARIANTS_CHAPTER = ("P/02", "5/")                     # variants/ — форма (аудит Gemini P/02, свойства 24, 25)
 
 
+REQ_ANCHOR = re.compile(r"<!-- (?:req: P/[0-9]{2}\.[0-9]+-R[0-9]{3}|removed: P/[0-9]{2}\.[0-9]+-R[0-9]{3} by ADR-[0-9]{4}) -->")
+
+
 def markdown_links(tokens):
     for token in tokens:
         if token.type == "link_open":
@@ -229,6 +232,8 @@ def markdown_links(tokens):
             continue
         elif token.type == "html_block" and token.content.strip() in FORM_MARKERS:
             continue                                  # a built section (ADR-0087, ADR-0088) between its markers
+        elif token.type == "html_block" and REQ_ANCHOR.fullmatch(token.content.strip()):
+            continue                                  # the anchor of a requirement or its tombstone (ADR-0122 доп. (1) п. 1)
         elif token.type in {"html_inline", "html_block"}:
             raise ValueError("unsupported raw HTML; local links/resources need a separate check")
         if token.children:
@@ -373,6 +378,8 @@ def family_place(row, v7=False):
 LESSONS = Path("Platform/lessons.tsv")
 LESSONS_BASE = ["lesson", "dir", "title"]
 LESSONS_NAMES = ["process", "unit"]
+LESSONS_DELTA = ["delta_base"]   # ADR-0122 доп. (1) п. 7: SHA курса, с которого урок правится дельтами; «-» — урок по ADR-0114
+DELTA_BASE = re.compile(r"-|[0-9a-f]{9,40}")
 UNITS_NORMS = Path("Platform/02-installer/spec/02.4-installer.norms.md")
 # Entries of the unit block that are not the unit of one process; exempt from «every `.service` entry with a role is
 # the process of a lesson».
@@ -766,11 +773,15 @@ class Check:
         text = self.read(path) or ""
         header = next((line[1:].strip().split("\t") for line in text.splitlines() if line.startswith("# lesson\t")),
                       LESSONS_BASE)
-        if header not in (LESSONS_BASE, LESSONS_BASE + LESSONS_NAMES):
-            self.error(path, f"header expected {' '.join(LESSONS_BASE)} [{' '.join(LESSONS_NAMES)}], "
+        if header not in (LESSONS_BASE, LESSONS_BASE + LESSONS_NAMES, LESSONS_BASE + LESSONS_NAMES + LESSONS_DELTA):
+            self.error(path, f"header expected {' '.join(LESSONS_BASE)} [{' '.join(LESSONS_NAMES)} [{' '.join(LESSONS_DELTA)}]], "
                              f"got {' '.join(header)}")
             header = LESSONS_BASE
         rows = [(n, dict(zip(header, cols))) for n, cols in self.tsv(path, len(header))]
+        for n, row in rows:
+            base = row.get("delta_base")
+            if base is not None and not DELTA_BASE.fullmatch(base):
+                self.error(path, f"line {n}: delta_base {base!r} is neither - nor a commit sha (ADR-0122 addendum (1) item 7)")
         self.lessons = (header != LESSONS_BASE, rows)
         return self.lessons
 
@@ -2134,6 +2145,11 @@ class Check:
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)
+        for lesson in check_forms.req_lessons(self.root):
+            errors, stats = check_forms.check_req_anchors(lesson)
+            for message in errors:
+                self.error(lesson, message)
+            self.stats["req_anchors"] = self.stats.get("req_anchors", 0) + stats["req_anchors"]
 
     def library_defects(self):
         if not self.v7:

@@ -1,6 +1,7 @@
 """Сборка пакета Б для P/01 (ADR-0083 доп. (86) п. 2): проверки Н2.1 и строгий разборщик JSON — в каталог попытки.
 
-Запуск: python tools/normgen/kit/build_kit.py <dst> --module <путь импорта каталога <dst>/01-store> [--part flags] [--part tests]
+Запуск: python tools/normgen/kit/build_kit.py <dst> --module <путь импорта каталога <dst>/01-store> [--part tests] [--part door]
+       [--part flags]
 
 Кладёт в <dst>/01-store/internal/:
 - checks/ — пакет, сгенерированный tools/normgen/gen_checks.py из Platform/01-store/forms/write-checks.tsv (берётся
@@ -11,6 +12,9 @@
 (заменяется целиком), паспорт формы, генератора и судьи — в provenance манифеста.
 Часть `tests` (--part tests; ADR-0126 доп. (2) п. 1, генератор № 6 ADR-0125 tools/normgen/gen_tests.py): vectortests/,
 vectorcmd/ (заменяются целиком) и заглушка адаптера vectoradapter/ — её реализация правит, кладётся, только если её нет.
+Часть `door` (--part door; генератор № 2 ADR-0125 tools/normgen/gen_door.py): door/ (заменяется целиком) — дверь из
+Platform/01-store/spec/01-store.api.openapi.yaml (tools/normgen/out/p01-1/go/door; sha256 OpenAPI в шапке door.go
+должен совпасть с OpenAPI сейчас).
 Пишет <dst>/KIT.md (API для модели, английский) и <dst>/kit.manifest.json (пути, sha256, строки, происхождение).
 Каталоги checks, jsonstrict, writecheck в <dst>/01-store/internal заменяются целиком; прочее в <dst> не трогается.
 """
@@ -45,6 +49,13 @@ KIT_FILES = [
     ("jsonstrict", "jsonstrict.go"),
     ("writecheck", "writecheck.go"),
 ]
+# Часть door: door.go строит gen_door.py по OpenAPI, runtime.go — копия его ручной среды.
+OPENAPI = ROOT / "Platform/01-store/spec/01-store.api.openapi.yaml"
+DOOR = ROOT / "tools/normgen/out/p01-1/go/door"
+DOOR_FILES = [
+    ("door.go", "generated", "tools/normgen/out/p01-1/go/door/door.go"),
+    ("runtime.go", "handwritten", "tools/normgen/doorrt/go/runtime.go"),
+]
 
 
 class KitError(Exception):
@@ -69,7 +80,7 @@ def git_head():
         return None
 
 
-PARTS = ("flags", "tests")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
+PARTS = ("tests", "door", "flags")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
 
 
 def build(dst, module, parts=()):
@@ -89,6 +100,10 @@ def build(dst, module, parts=()):
         flag_files = gen_flags.kit_files() if "flags" in parts else []
     except (gen_tests.GenError, gen_flags.GenError) as exc:
         raise KitError(str(exc)) from None
+    openapi_sha = sha256(OPENAPI.read_bytes()) if "door" in parts else None
+    if openapi_sha and openapi_sha not in "".join((DOOR / "door.go").read_text(encoding="utf-8").splitlines()[:3]):
+        raise KitError(f"{DOOR / 'door.go'} is stale against {OPENAPI.relative_to(ROOT)} (sha256 {openapi_sha}): "
+                       f"run tools/normgen/gen_door.py")
     internal = dst / "01-store/internal"
     files = []
 
@@ -100,7 +115,7 @@ def build(dst, module, parts=()):
                       "origin": origin, "component": component, "source": source})
 
     for sub in ("checks", "jsonstrict", "writecheck") + (gen_tests.KIT_DIRS if tests else ()) + \
-            (gen_flags.KIT_DIRS if flag_files else ()):
+            (("door",) if openapi_sha else ()) + (gen_flags.KIT_DIRS if flag_files else ()):
         if (internal / sub).exists():
             shutil.rmtree(internal / sub)
     for name, origin, source in CHECKS_FILES:
@@ -119,10 +134,13 @@ def build(dst, module, parts=()):
         put(sub, name, data, origin, "tests", source)
         if own:
             files[-1]["editable"] = True
+    if openapi_sha:
+        for name, origin, source in DOOR_FILES:
+            put("door", name, (DOOR / name).read_bytes(), origin, "door", source)
     for sub, name, data, origin, source in flag_files:
         put(sub, name, data, origin, "flags", source)
-    doc = (KIT_MD + (gen_flags.KIT_MD if flag_files else "") + (gen_tests.KIT_MD if tests else "")
-           ).replace("{module}", module).encode("utf-8")
+    doc = (KIT_MD + (gen_tests.KIT_MD if tests else "") + (KIT_DOOR_MD if openapi_sha else "")
+           + (gen_flags.KIT_MD if flag_files else "")).replace("{module}", module).encode("utf-8")
     (dst / "KIT.md").write_bytes(doc)
     # Паспорт попытки (доп. (86) п. 3) считает порознь: по происхождению (generated | handwritten) и по части
     # (normgen — генератор с его ручной средой runtime.go, prims.go; kit — ручной пакет jsonstrict, writecheck).
@@ -142,6 +160,8 @@ def build(dst, module, parts=()):
         "lines": totals,
         "lines_by_component": parts,
     }
+    if openapi_sha:
+        manifest["openapi"] = {"path": str(OPENAPI.relative_to(ROOT)), "sha256": openapi_sha}
     (dst / "kit.manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
                                            encoding="utf-8")
     return manifest
@@ -227,6 +247,70 @@ const jsonstrict.Depth = 128
 func checks.Check(in checks.Input) *checks.Refusal
 type checks.Input struct { Body any; Sock string; Lone []string; Lim map[string]int64; Fns checks.Fns }
 ```
+"""
+
+
+KIT_DOOR_MD = """
+## `door` — the doors of the store from the OpenAPI (generated)
+
+Import path `{module}/internal/door`, generated by `tools/normgen/gen_door.py` from
+`Platform/01-store/spec/01-store.api.openapi.yaml` (`door.go`; `runtime.go` is its handwritten environment). It is the
+mechanical part of the doors: what the OpenAPI says as a form. The frame of HTTP, the limits of Н2.1, the identity,
+the order «frame → route → identity → body» and the store (Н3) are yours. Standard library only, Go 1.22.
+
+```go
+// Route — the operation by the method and the raw request-target; the path is compared byte for byte.
+// An unknown path — 404; a method that is not of its path — 405 where the path declares 405, otherwise 404;
+// refusal is ready to send. Ops: OpGet, OpList, OpWrite, OpRights, OpStatus, OpJoin, OpLeave, OpMetrics.
+func Route(method, target string) (op Op, query string, refusal *Response)
+
+type Response struct { Code int; Header [][2]string; Body []byte } // send as is (no body for HEAD)
+
+// Handler — you implement it: one method per operation. C is your call context (the role socket, …).
+type Handler[C any] interface {
+    Get(c C, q GetQuery) Answer       // GetQuery{Key string}
+    List(c C, q ListQuery) Answer     // ListQuery{Prefix *string}: nil — absent
+    Write(c C, body []byte) Answer    // writecheck.Check the body (Cmd, BatchCmd); op floor — then DecodeFloorCmd
+    Rights(c C) Answer
+    Status(c C) Answer
+    Join(c C, body []byte) Answer     // jsonstrict.Decode, then DecodeJoin
+    Leave(c C, body []byte) Answer    // jsonstrict.Decode, then DecodeLeave
+    Metrics(c C) Answer               // Metrics200 — text/plain
+    QueryRefused(c C, op Op, e *QueryError) Answer
+}
+// Dispatch parses the query of op by the OpenAPI and calls the method; a query out of form calls QueryRefused.
+func Dispatch[C any](h Handler[C], c C, op Op, query string, body []byte) Answer
+
+type QueryError struct { Param string; Reason QueryReason; Schema string; Rule string }
+// Reason: QueryAbsent, QueryRepeated (the parameter is not an array), QueryValue (not by the schema of the
+// parameter; Schema — its components/schemas name, e.g. "Key"; Rule — "utf8", "minLength", "not", …).
+// Which refusal (kind) each gives, the OpenAPI does not say as a form: you decide by the norms.
+
+type Answer struct { Code int; Body Body; RetryAfter bool } // RetryAfter — the header Retry-After: 1 where declared
+// Encode — the answer on the wire; refuses a code, a schema or a header not declared for op, and a body out of its
+// schema (an error: nothing is sent — it is a bug of yours).
+func Encode(op Op, a Answer) (*Response, error)
+// Refuse — a refusal from kind, the error text and fields (writecheck.Refusal: Code, Kind, Fault) into the one
+// declared refusal schema of (op, code) that the object matches.
+func Refuse(op Op, code int, kind, msg string, fields map[string]any) (Answer, error)
+// AnswerOf — an answer from a JSON value (map[string]any, string, int64, json.Number, …): the one declared schema.
+func AnswerOf(op Op, code int, v any) (Answer, error)
+// Decode<Schema> — a request body that write-checks.tsv does not judge: FloorCmd, Join, Leave.
+func DecodeJoin(v any) (Join, *Violation)
+```
+
+Bodies are Go types of the schemas, fields in the order of `properties`; an optional field is a pointer (nil — absent),
+a `const` field is not a field (it is always sent), an optional `const` is a `bool`. `Row` is `Row1` (a readable row
+`{Items, Index}`), `Row2` (absent: `items: null, index: ""`) or `Row3` (`{Index}` and `unreadable: true`). Faults:
+`BadKeyFault{Error}`, `BadRequestFault{Error}`, `ForbiddenFault{Error}`, `ConflictFault{Error, Index}`,
+`BatchConflictFault{Error, Key, Index}`, `ExpiredFault`, `EarlyFault`, `GuardFault{Error, Key, Index}`,
+`RowTooLargeFault{Error, Key, Size, Limit}`, `BodyTooLargeFault{Error, Limit, Size *int64}`, `UnavailableFault`,
+`AmbiguousFault`, `Refused`. Others: `Listing{Keys}`, `Written{Index, Again}`, `Status`, `RightsFile`, `Empty`.
+The names of a map are written in the order of UTF-8 bytes. `type: integer` is a JSON number written without a
+fraction and an exponent (`1.0` is not an integer).
+
+What the door does NOT do: the byte limit of a key (1024, Н1), which `kind` a query refusal is, `HEAD` without a body,
+the body limit, the identity and the rights, the store.
 """
 
 

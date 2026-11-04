@@ -281,3 +281,41 @@ def check_stage_parts(path):
                 errors.append(f"{path.name}: {r['stage']}: {column} {r[column]!r} — not a list of {sorted(KIT_PARTS)}")
     return errors, {"stage_rows": len(lines) - 1}
 
+
+ANCHOR = re.compile(r"^<!-- req: (\S+) -->$", re.M)
+TOMBSTONE = re.compile(r"^<!-- removed: (\S+) by ADR-[0-9]{4} -->$", re.M)
+REQ = re.compile(r"P/([0-9]{2})\.([0-9]+)-R([0-9]{3})")
+
+
+def req_lessons(root):
+    """Lessons whose English norms carry requirement anchors (ADR-0122 доп. (1) п. 1)."""
+    return sorted({p.parent.parent for p in Path(root).glob("Platform/*/spec/*.norms.md")
+                   if ANCHOR.search(p.read_text(encoding="utf-8"))})
+
+
+def check_req_anchors(lesson):
+    """Якоря требований урока: номер `P/NN.K-RNNN` по грамматике и главе файла, уникален в уроке, не из надгробий
+    `<!-- removed: … by ADR-NNNN -->`; русский перевод `ru/` якорей не несёт (их несёт только источник)."""
+    lesson = Path(lesson)
+    errors, seen, removed, count = [], {}, set(), 0
+    for norms in sorted((lesson / "spec").glob("*.norms.md")):
+        text = norms.read_text(encoding="utf-8")
+        m = re.match(r"([0-9]{2})\.([0-9]+)-", norms.name)
+        removed |= set(TOMBSTONE.findall(text))
+        for number in ANCHOR.findall(text):
+            count += 1
+            g = REQ.fullmatch(number)
+            if not g:
+                errors.append(f"{norms.name}: anchor {number} is not P/NN.K-RNNN")
+            elif not m or (g[1], g[2]) != (m[1], m[2]):
+                errors.append(f"{norms.name}: anchor {number} is not of this chapter")
+            if number in seen:
+                errors.append(f"{norms.name}: anchor {number} repeats ({seen[number]})")
+            seen.setdefault(number, norms.name)
+    for number in sorted(removed & set(seen)):
+        errors.append(f"{lesson.name}: anchor {number} reuses a removed number")
+    for ru in sorted((lesson / "ru").rglob("*.md")) if (lesson / "ru").is_dir() else []:
+        if ANCHOR.search(ru.read_text(encoding="utf-8")):
+            errors.append(f"{ru.relative_to(lesson)}: a translation carries requirement anchors (only the source does)")
+    return errors, {"req_anchors": count}
+
