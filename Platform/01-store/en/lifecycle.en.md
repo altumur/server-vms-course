@@ -14,8 +14,8 @@ durability barriers), [P/01.2](../spec/01.2-store.norms.md) (rights file, role s
 | What | How | Norm |
 |---|---|---|
 | the group daemon | the unit `configstore.service`: `User=configstore`, `UMask=0077`, `-dir /data/platform/configstore`, `-sockets /run/configstore`, `-rights`, `-tls`, `-group-size`; the runner `w2c-run.sh configstore` | P/02.4 Н1.1 `units` |
-| sockets | the units `configstore-admin.socket` and `configstore-<роль>.socket`, `FileDescriptorName=admin \| <роль>`, `Service=configstore.service` | P/02.4 Н1.1, Н1.3 `sockets` |
-| first start and restart | `member.json` exists — a restart, otherwise `-bootstrap` (the first server) or `-join` (the others) | P/02.4 Н3 «server start» step 1, Н1.3 `group.join` |
+| sockets | the units `configstore-admin.socket` and `configstore-<роль>.socket`, `FileDescriptorName=admin \| <роль>`, `Service=configstore.service` | P/02.4 Н1.1, P/01.3 Н1.3 `sockets` |
+| first start and restart | `member.json` exists — a restart, otherwise `-bootstrap` (the first server) or `-join` (the others) | P/02.4 Н3 «server start» step 1, P/01.3 Н1.3 `group.join` |
 | the box store | a build without raft, one voter (`box`) | P/01.3 Н1.3 `box` |
 | the in-process store | the profile `file://` «the whole box is one implementation», without a door; the on-disk format is not a contract | P/02.4 Н1.2 `PLATFORM_STORE`, P/01.1 Н2 |
 
@@ -29,8 +29,8 @@ The order of the runner's environment files — the unit's values → `roles/<W2
 
 | Variable | Meaning | Default | Norm |
 |---|---|---|---|
-| `CONFIGSTORE_ID`, `_RAFT`, `_API`, `_GROUP_SIZE`, `_JOIN`, `_FLAGS`, `_TUNING` | daemon flags from `configstore.env`; read by the runner | `configstore.env` sets `tuning` `lan`; the default of the flag `-tuning` itself is `default` | P/02.4 Н1.2, Н1.3 «Daemon flags» |
-| `SERVER_NAME` | the default of `-id` outside a group | the short hostname | P/02.4 Н1.2, Н1.3 «Daemon flags» `-id` |
+| `CONFIGSTORE_ID`, `_RAFT`, `_API`, `_GROUP_SIZE`, `_JOIN`, `_FLAGS`, `_TUNING` | daemon flags from `configstore.env`; read by the runner | `configstore.env` sets `tuning` `lan`; the default of the flag `-tuning` itself is `default` | P/02.4 Н1.2, P/01.3 Н1.3 «Daemon flags» |
+| `SERVER_NAME` | the default of `-id` outside a group | the short hostname | P/02.4 Н1.2, P/01.3 Н1.3 «Daemon flags» `-id` |
 | `LISTEN_FDS`, `LISTEN_FDNAMES` | inherited sockets (`sd_listen_fds`); read by the daemon itself | — | P/01.3 Н1.3 `sockets` |
 | `NOTIFY_SOCKET` | the systemd watchdog | — | P/02.4 Н1.2 |
 
