@@ -215,3 +215,10 @@ Platform/06-console	Platform/06-console/vectors/requests-body/en/README.en.md	Pl
 Platform/06-console	Platform/06-console/vectors/resolve/en/README.en.md	Platform/06-console/vectors/resolve/README.md	source
 Platform/06-console	Platform/06-console/vectors/rid/en/README.en.md	Platform/06-console/vectors/rid/README.md	source
 Platform/06-console	-	-	linked
+Platform/07-console-module	Platform/07-console-module/07-console-module.md	Platform/07-console-module/ru/07-console-module.md	lecture
+Platform/07-console-module	Platform/07-console-module/README.md	Platform/07-console-module/ru/README.md	translation
+Platform/07-console-module	Platform/07-console-module/spec/07-console-module.README.md	Platform/07-console-module/ru/spec/07-console-module.README.md	translation
+Platform/07-console-module	Platform/07-console-module/spec/07-console-module.norms.md	Platform/07-console-module/ru/spec/07-console-module.norms.md	translation
+Platform/07-console-module	Platform/07-console-module/en/README.en.md	Platform/07-console-module/README.md	source
+Platform/07-console-module	Platform/07-console-module/spec/en/07-console-module.README.en.md	Platform/07-console-module/spec/07-console-module.README.md	source
+Platform/07-console-module	Platform/07-console-module/spec/en/07-console-module.norms.en.md	Platform/07-console-module/spec/07-console-module.norms.md	source
