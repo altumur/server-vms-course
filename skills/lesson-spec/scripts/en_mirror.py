@@ -1,0 +1,156 @@
+"""Сверка английского текста норм с русским (ADR-0120 п. 1 (б)): один набор номеров норм, ссылок, кодов и слов отказов.
+
+Русский текст `Platform/NN-<процесс>/spec/<stem>.norms.md` — норма; английский `spec/en/<stem>.norms.en.md` — производный.
+Сверяется по разделам второго уровня (`## …`), по порядку: разделов столько же, у каждого раздела равны
+- номера норм `Н…` в заголовках подразделов (по порядку);
+- множества ссылок: `P/NN[.K][-MM]`, `ADR-NNNN`, `Н…`, id находок (`C01-ROW-INDEX-LOST-01`), цели ссылок Markdown
+  (путём от корня, у английского файла на каталог глубже);
+- множество HTTP-кодов (100–599 целым словом) и множество слов отказов (виды `kind` таблицы Н4 русского текста) — в
+  `code`-вставках и блоках кода;
+- `code`-вставки русского раздела есть и в английском (английский МОЖЕТ добавить свои: алгоритм называет переменные);
+- таблицы: столько же, строк столько же.
+Чеклист: id `P/…-MM` — те же, в том же порядке. Кириллица в английском — только в `code`, «…», номерах `Н…`, целях
+ссылок, именах файлов и прежних уроков (`М10A_Platform/…`, `М10/11`): нормативные слова по-русски там — нарушение.
+"""
+import os
+import re
+from pathlib import Path
+
+MARK = "производный от en, руками не правится"
+H2 = re.compile(r"^###? ", re.M)                   # разделы и подразделы: сверка по каждому
+FENCE = re.compile(r"^```[^\n]*\n.*?^```[ \t]*$", re.M | re.S)
+SPAN = re.compile(r"(`+)(.+?)\1", re.S)
+NORM_NO = re.compile(r"(?<![\wА-Яа-яЁё])Н[0-9]+(?:\.[0-9]+)*[а-я]?(?!\w|\.[0-9])")
+LESSON = re.compile(r"(?<![\w/])P/[0-9]{2}(?:\.[0-9]+)?(?:-[0-9]{2})?(?![0-9])")
+ADR = re.compile(r"\bADR-[0-9]{4}\b")
+FINDING = re.compile(r"(?<![\w-])[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-[0-9]{2}(?![\w-])")
+CODE = re.compile(r"(?<![\w.])[1-5][0-9]{2}(?![\w.])")
+LINK = re.compile(r"\]\(([^()\s]+)\)")
+CHECK_ID = re.compile(r"^- \[[ xX]\] \*\*(P/[0-9.]+-[0-9]+)\*\*", re.M)
+TABLE_ROW = re.compile(r"^\|.*\|[ \t]*$", re.M)
+CYR = re.compile(r"[А-Яа-яЁё]")
+ALLOWED_CYR = [SPAN, re.compile(r"«[^»\n]*»"), NORM_NO, LINK,
+               re.compile(r"[\wА-Яа-яЁё.-]*[А-ЯЁ][\wА-Яа-яЁё-]*\.(?:md|tsv|yaml|json)\b"),
+               re.compile(r"(?<![\w])М[0-9]+[A-Z]?(?:_[A-Za-z]+)?(?:/[0-9]+)?"),
+               re.compile(r"(?<![\w])[А-ЯЁ][0-9]+(?![\w])")]   # id находок ревью по-русски: А1, А10
+
+
+def sections(text):
+    """Text → [(title, body)] by `## ` headings; the part before the first one is section 0 («»)."""
+    starts = [m.start() for m in H2.finditer(text)]
+    bounds = [0, *starts, len(text)]
+    out = []
+    for a, b in zip(bounds, bounds[1:]):
+        part = text[a:b]
+        title = part.split("\n", 1)[0].lstrip("#").strip() if part.startswith("#") else ""
+        out.append((title, part))
+    return out
+
+
+def kinds_of(ru_text):
+    """Refusal words: the first code span of the `kind` column (third) of the Н4 table of the Russian text."""
+    words = set()
+    for title, body in sections(ru_text):
+        if not re.match(r"Н4(?:\s|$)", title):
+            continue
+        for row in TABLE_ROW.findall(body):
+            cells = [c.strip() for c in row.strip().strip("|").split("|")]
+            if len(cells) >= 3 and re.fullmatch(r"[1-5][0-9]{2}", cells[1]):      # шапка таблицы — не строка
+                span = SPAN.search(cells[2])
+                if span and re.fullmatch(r"[a-z]+", span.group(2)):
+                    words.add(span.group(2))
+    return words
+
+
+def code_parts(body):
+    return [m.group(2) for m in SPAN.finditer(FENCE.sub("", body))] + FENCE.findall(body)
+
+
+def links(body, base, root):
+    out = set()
+    for target in LINK.findall(FENCE.sub("", body)):
+        path = target.split("#", 1)[0]
+        if not path or re.match(r"[a-z]+:", path):
+            out.add(target)
+            continue
+        whole = os.path.normpath(base / path)
+        try:
+            rel = Path(whole).relative_to(root)
+        except ValueError:
+            rel = Path(whole)
+        out.add(rel.as_posix() + ("#" + target.split("#", 1)[1] if "#" in target else ""))
+    return out
+
+
+def facts(body, base, root, kinds, pair=()):
+    prose = body
+    code = code_parts(body)
+    linktext = re.sub(r"\[`[^`\n]*`\]\(", "[](", FENCE.sub("", body))   # путь в тексте ссылки — у en на каталог глубже
+    spans = {m.group(2) for m in SPAN.finditer(linktext)}
+    words = {w for part in code for w in re.findall(r"[a-z]+", part) if w in kinds}
+    return {
+        "norm numbers in headings": [m.group(0) for line in body.splitlines() if line.startswith("#")
+                                     for m in NORM_NO.finditer(line)],
+        "references": (set(LESSON.findall(prose)) | set(ADR.findall(prose)) | set(NORM_NO.findall(prose))
+                       | set(FINDING.findall(prose))),
+        "link targets": links(body, base, root) - set(pair),
+        "HTTP codes": set(CODE.findall(prose)),
+        "refusal words": words,
+        "tables rows": [len(TABLE_ROW.findall(t)) for t in re.split(r"\n[ \t]*\n", FENCE.sub("", body))
+                        if TABLE_ROW.search(t)],
+        "spans": spans,
+    }
+
+
+def compare(ru_text, en_text, ru_path, en_path, root):
+    """→ list of messages (empty: the texts agree)."""
+    root, ru_path, en_path = Path(root).resolve(), Path(ru_path).resolve(), Path(en_path).resolve()
+    kinds = kinds_of(ru_text)
+    errors = []
+    ru_ids, en_ids = CHECK_ID.findall(ru_text), CHECK_ID.findall(en_text)
+    if ru_ids != en_ids:
+        errors.append(f"checklist ids differ: ru {ru_ids} / en {en_ids}")
+    ru_s, en_s = sections(ru_text), sections(en_text)
+    if len(ru_s) != len(en_s):
+        errors.append(f"{len(en_s)} sections «##»/«###», the Russian text has {len(ru_s)}")
+    for (rt, rb), (et, eb) in zip(ru_s, en_s):
+        where = f"section «{et or '(head)'}» (ru «{rt or '(head)'}»)"
+        rl, el = len(rb) - len(rb.lstrip("#")), len(eb) - len(eb.lstrip("#"))
+        if rl != el:
+            errors.append(f"{where}: heading level {el}, ru {rl}")
+        rn, en = NORM_NO.match(rt), NORM_NO.match(et)
+        if (rn and rn.group(0)) != (en and en.group(0)):
+            errors.append(f"{where}: heading norm number {en and en.group(0)}, ru {rn and rn.group(0)}")
+        pair = {Path(os.path.normpath(Path(p))).relative_to(root).as_posix() for p in (ru_path, en_path)}
+        rf = facts(rb, Path(ru_path).parent, root, kinds, pair)
+        ef = facts(eb, Path(en_path).parent, root, kinds, pair)
+        for key in rf:
+            if key == "spans":
+                missing = rf[key] - ef[key]
+                if missing:
+                    errors.append(f"{where}: code spans of the Russian text missing: {sorted(missing)}")
+            elif rf[key] != ef[key]:
+                if isinstance(rf[key], set):
+                    errors.append(f"{where}: {key} differ: only ru {sorted(rf[key] - ef[key])}, "
+                                  f"only en {sorted(ef[key] - rf[key])}")
+                else:
+                    errors.append(f"{where}: {key} differ: ru {rf[key]}, en {ef[key]}")
+    rest = FENCE.sub(" ", en_text)
+    for pattern in ALLOWED_CYR:
+        rest = pattern.sub(" ", rest)
+    for fence in FENCE.findall(en_text):                     # блоки кода — тоже по-английски, кроме «…» и Н…
+        rest += "\n" + re.sub(r"«[^»\n]*»|" + NORM_NO.pattern + "|" + ALLOWED_CYR[4].pattern, " ", fence)
+    if MARK not in ru_text:
+        errors.append(f"the Russian text has no mark «{MARK}» in its head")
+    for line in rest.splitlines():
+        if CYR.search(line):
+            errors.append(f"Cyrillic outside code, «…», Н-numbers and file names: "
+                          f"{line.strip()[:80]!r}")
+    return errors
+
+
+def pairs(root):
+    """English texts of Platform norms → (ru, en)."""
+    root = Path(root)
+    for en in sorted(root.glob("Platform/*/spec/en/*.norms.en.md")):
+        yield en.parent.parent / en.name.replace(".norms.en.md", ".norms.md"), en

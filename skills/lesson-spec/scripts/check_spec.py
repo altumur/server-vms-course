@@ -1963,6 +1963,26 @@ class Check:
     LIBRARY_DEFECTS = Path("Platform/common/versions/DEFECTS.md")
     VECTOR_REF = re.compile(r"(family-read|yaml-suite|corpus|canonical):(\S+)")
 
+    def english_mirrors(self):
+        """ADR-0120 п. 1 (б), доп. (1): английский текст норм `spec/en/<stem>.norms.en.md` — источник, русский — производный;
+        один набор номеров норм, ссылок, кодов и слов отказов (`en_mirror.compare`), иначе отказ."""
+        import en_mirror
+        for ru, en in en_mirror.pairs(self.root):
+            texts = self.read(en), ru.is_file() and self.read(ru)
+            if not ru.is_file():
+                self.error(en, f"no Russian text {self.name(ru)} for this English source")
+            if not all(texts):
+                continue
+            self.markdown(en, texts[0])
+            for message in en_mirror.compare(texts[1], texts[0], ru, en, self.root):
+                self.error(en, f"ru↔en: {message}")
+            self.stats["english_mirrors"] += 1
+        for ru in sorted(self.root.glob("Platform/*/spec/*.norms.md")):
+            text = ru.read_text(encoding="utf-8")
+            en = ru.parent / "en" / ru.name.replace(".norms.md", ".norms.en.md")
+            if en_mirror.MARK in "\n".join(text.splitlines()[:12]) and not en.is_file():
+                self.error(ru, f"marked «{en_mirror.MARK}», but {self.name(en)} is missing")
+
     def library_defects(self):
         if not self.v7:
             return
@@ -2773,6 +2793,7 @@ def main():
     check.stub_text()
     check.library_defects()
     check.layer_words()
+    check.english_mirrors()
     for error in check.errors:
         print("ERROR", error)
     for line in check.excepted:
