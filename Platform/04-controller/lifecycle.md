@@ -1,17 +1,17 @@
 # Controller — lifecycle (lesson P/04)
 
-This English text is the source; the Russian [`lifecycle.md`](../lifecycle.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 2).
+This English text is the source; the Russian translation `ru/lifecycle.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 2).
 
 The lifecycle contract of the process `<sub>controller` (ADR-0083 addendum (2) item 1). The rows refer to the norms of the
 lesson [P/04] (stage B) and of the neighbouring lessons and do not retell them.
 
-[P/02.3]: ../../02-installer/spec/02.3-installer.norms.md
-[P/02.4]: ../../02-installer/spec/02.4-installer.norms.md
-[P/02.5]: ../../02-installer/spec/02.5-installer.norms.md
-[P/04]: ../spec/04-controller.norms.md
-[P/06.6]: ../../06-console/spec/06.6-console.norms.md
-[Stand]: ../../common/acceptance/README.md
-[catalogue]: ../../common/data/catalog.tsv
+[P/02.3]: ../02-installer/spec/02.3-installer.norms.md
+[P/02.4]: ../02-installer/spec/02.4-installer.norms.md
+[P/02.5]: ../02-installer/spec/02.5-installer.norms.md
+[P/04]: spec/04-controller.norms.md
+[P/06.6]: ../06-console/spec/06.6-console.norms.md
+[Stand]: ../common/acceptance/README.md
+[catalogue]: ../common/data/catalog.tsv
 
 ## Launch
 
@@ -29,7 +29,7 @@ lesson [P/04] (stage B) and of the neighbouring lessons and do not retell them.
 | `PLATFORM_STORE` | the store door — the role socket `configstore:///run/configstore/<sub>controller.sock` | `file://<PLATFORM_DIR>/config` (the profile of a box of one implementation) | [P/02.4] Н1.2 |
 | `PLATFORM_DIR` | the state root | `/data/platform` | [P/02.4] Н1.2 |
 | `OBJECTS` / `PLATFORM_OBJECTS` | the objects root: the pass report, the snapshot shards | `<PLATFORM_DIR>/objects` | [P/02.4] Н1.2 «The setting channel» |
-| `RESOURCE_ROOT` / `EVENTS` | the events root: its own journal `audit/<sub>controller/e1/…` | `<PLATFORM_DIR>/events` | [P/02.4] Н1.2 «The setting channel», [the event journal contract](../../common/contracts/event-journal.md) `journal` |
+| `RESOURCE_ROOT` / `EVENTS` | the events root: its own journal `audit/<sub>controller/e1/…` | `<PLATFORM_DIR>/events` | [P/02.4] Н1.2 «The setting channel», [the event journal contract](../common/contracts/event-journal.md) `journal` |
 | `SERVER_NAME` | its own server; not by the grammar of the slot suffix — code 2 | the short hostname | [P/02.4] Н1.2 |
 | `BOX_ID` | the box | `/etc/machine-id`, otherwise the hostname | [P/02.4] Н1.2 |
 | `HUNG_MOVE_AFTER`, `REACH_BUDGET` | the terms of the fate of a hung slot and the reachability budget | 900, 10 | [P/02.4] Н1.2, [P/04] Н1.4, «Implementation decides» item 4 |
@@ -39,7 +39,7 @@ lesson [P/04] (stage B) and of the neighbouring lessons and do not retell them.
 | `W2C_ENV`, `W2C_SUB_ENV` | the environment files: the common one and the subsystem one | `/etc/w2c/w2c.env`; without a value — none | [P/02.4] Н1.2 |
 | `NOTIFY_SOCKET` | the systemd watchdog | — | [P/02.4] Н1.1 `notify` |
 
-The environment files are read by parsing, not by `source` ([the environment file contract](../../common/contracts/env-file.md)); the order — the unit values, the role file, `w2c.env`, the subsystem file
+The environment files are read by parsing, not by `source` ([the environment file contract](../common/contracts/env-file.md)); the order — the unit values, the role file, `w2c.env`, the subsystem file
 ([P/02.4] Н1.2).
 
 ## Flags
@@ -54,9 +54,9 @@ argument of the runner command is the subsystem name `<sub>`.
   `<sub>/controller/placement_intent`, `<sub>/decommissioned/<сервер>`; participation in `<sub>/slots/<имя>` (a proposal) and `<sub>/<manifest:unit.rows>/<id>`
   (`delete_after`).
 - **Objects** in the objects root: the pass report `<sub>/controller/pass` ([P/04] Н1.2), the snapshot shards
-  `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced` ([P/04] Н1.3а). File names — one encoding ([the event journal contract](../../common/contracts/event-journal.md) «File names in shared trees»).
+  `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced` ([P/04] Н1.3а). File names — one encoding ([the event journal contract](../common/contracts/event-journal.md) «File names in shared trees»).
 - **Cluster objects** (the heartbeats of workers and resources, the reports) the controller reads through the resource of its own server (the
-  objects door [P/05](../../05-resource/spec/05-resource.norms.md), `scope`); without a resource on its own server with `cluster://` — «unknown», not «no» ([the object store client contract](../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision 2026-10-27); a stand that needs the worker heartbeats
+  objects door [P/05](../05-resource/spec/05-resource.norms.md), `scope`); without a resource on its own server with `cluster://` — «unknown», not «no» ([the object store client contract](../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision 2026-10-27); a stand that needs the worker heartbeats
   puts a resource on the server of the controller ([P/04] Н3 «pass()» step 0; ADR-0084 addendum (2) Р17; review of stage A
   3–5, № 22).
 - **Reads**: the worker heartbeats `<sub>/heartbeats/<имя>`, the resource heartbeat `platform/resources/<server>/heartbeat`,
@@ -93,7 +93,7 @@ argument of the runner command is the subsystem name `<sub>`.
 ## Stand
 
 The roots `{data}/config`, `objects`, `events` are created before the process start by the role start command of the profile — [the common
-acceptance README](../../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
+acceptance README](../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
 
 - The command of the «Stand» with the substitution `{sub}` (`testsub` when there is no `<sub>`); `{data}` is `PLATFORM_DIR`, the stand turns
   the substitutions into the environment of [P/02.4] Н1.2 ([Stand] «Один каталог данных»).
@@ -102,5 +102,5 @@ acceptance README](../../common/acceptance/README.md) «Stand without root»; th
 
 ## Open
 
-- The pass outcome when the resource of the server is unreadable the controller derives from the resource heartbeat and the presence lock (P/05 Н1.4, [the presence lock contract](../../common/contracts/presence-lock.md));
+- The pass outcome when the resource of the server is unreadable the controller derives from the resource heartbeat and the presence lock (P/05 Н1.4, [the presence lock contract](../common/contracts/presence-lock.md));
   the second pilot confirmed the replaceability of the controller on the common state — it has no open lifecycle rows.

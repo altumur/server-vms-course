@@ -1,8 +1,8 @@
 # Vectors: the victim of shrinking
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/shrink-victim/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is lesson P/04 ([norms](../../../spec/04-controller.norms.md) Н3 «сократить()», `жертва`; ADR-0084 addendum (1) Р4, addendum (6); P/03.2 Н1.4 the grammar of the name). The participant is
+The owner is lesson P/04 ([norms](../../spec/04-controller.norms.md) Н3 «сократить()», `жертва`; ADR-0084 addendum (1) Р4, addendum (6); P/03.2 Н1.4 the grammar of the name). The participant is
 `<s>controller`. The bytes are written by the Specification (ADR-0083, stage A, A6).
 
 ## `cases.tsv`

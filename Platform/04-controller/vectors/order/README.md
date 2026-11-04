@@ -1,8 +1,8 @@
 # Vectors: the shortage of a label set and the order by servers
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/order/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is lesson P/04 ([norms](../../../spec/04-controller.norms.md) Н3 «нехватка(), заказать(), снять заказ, сократить()»: `в пути`, `per`, `нужно`, `кандидат`,
+The owner is lesson P/04 ([norms](../../spec/04-controller.norms.md) Н3 «нехватка(), заказать(), снять заказ, сократить()»: `в пути`, `per`, `нужно`, `кандидат`,
 `порядок`, `заказать`; ADR-0084 and addendum (1) Р2, Р6, Р9, addendum (2)–(3) Р13′–Р22; cammeta-go М10-04 № 5). The participant is `<s>controller`. The bytes are written by
 the Specification (ADR-0083, stage A, A6).
 
@@ -52,7 +52,7 @@ withheld}}, orders, withheld}`: the `in_flight` of a set — how much capacity i
 
 The executor of the vector answers with code 2 (the cell `expect` — `@exit 2`) exactly to an input from the list: not a JSON object; a field of the wrong
 type (numbers — integers ≥ 0, `capacity` — an integer ≥ 0 or `null`, `base`, `drained`, `quiet` — booleans, labels — strings by [the label
-alphabet](../../../../common/contracts/labels.md)); `want` outside 1…99; `live` outside 0…99; `door` — not a list or `null`, a number in it outside 2…99 or a repeat;
+alphabet](../../../common/contracts/labels.md)); `want` outside 1…99; `live` outside 0…99; `door` — not a list or `null`, a number in it outside 2…99 or a repeat;
 the name of a server not by the grammar of a server (P/02.4 Н1.2); two sets with one canonical writing; `placeless` at a server without `place_by` of the set;
 `numbers` — not a list of integers 1…99, with a repeat or not `live` of them. An input by form with an inadmissible metric is not a refusal: the capacity of a heartbeat not as a number (P/04 Н1.3) — the worker accepts
 no units and does not enter `workers`; an unreadable door row — `door: null`. An integer — by the exact decimal value of the notation, as `x-integer` (LAYERS §3): `1.0`, `1e0` — 1; `1.5`, a boolean, a string, a number outside binary64 — not an integer; the number `n` in the name of a worker is a lexeme of the string, without a leading zero (C04-VECTOR-INT-VALUE-01). The rest is outside the vector.
@@ -64,4 +64,4 @@ Who executes it is the controller (`04-controller`: the shortage, `в пути`,
 ## What the vector does not cover
 
 The withdrawal by the deadline (Р27),
-a number above want (Р28) and the shrinking — by time, the steps of [the acceptance of P/04](../../../acceptance/README.md) (sc. 14–17; analysis of the review of stage B 3–5, № 17).
+a number above want (Р28) and the shrinking — by time, the steps of [the acceptance of P/04](../../acceptance/README.md) (sc. 14–17; analysis of the review of stage B 3–5, № 17).

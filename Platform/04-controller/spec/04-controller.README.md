@@ -1,22 +1,22 @@
 # P/04 — instructions for an implementation
 
-This English text is the source; the Russian [`04-controller.README.md`](../04-controller.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/04-controller.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is [`../04-controller.md`](../../04-controller.md).
+This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/04-controller.md` (for people, not in the export).
 
 ## Task
 
 Implement the controller of the manifest. The controller makes its decisions as rows; the launch of processes is the units `w2c-controller@.service` and
-`<dep>-<sub>worker@.service` [P/02.4](../../../02-installer/spec/02.4-installer.norms.md) Н1.1. The operator doors of the policy,
-the drain, the labels and the decommission of a server are the doors of the console ([P/06.6](../../../06-console/spec/06.6-console.norms.md) Н2).
+`<dep>-<sub>worker@.service` [P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н1.1. The operator doors of the policy,
+the drain, the labels and the decommission of a server are the doors of the console ([P/06.6](../../06-console/spec/06.6-console.norms.md) Н2).
 
 ## Inputs and their priority
 
-The canon is the [norms](../04-controller.norms.md), including Н0. The [acceptance](../../acceptance/README.md) shows observable examples;
-the [lecture](../../04-controller.md) explains the mechanism and does not change the norm. The lesson has no HTTP contract of its own (`P/04 no-openapi`).
-The forms of a unit are set in [P/06.1](../../../06-console/spec/06.1-console.norms.md), of the slot — in
-[P/03.2](../../../03-worker/spec/03.2-worker.norms.md), the manifest keys — in [P/02.1](../../../02-installer/spec/02.1-installer.norms.md),
-the heartbeat — in [P/03.4](../../../03-worker/spec/03.4-worker.norms.md). The forms of the rows and objects of the lesson are the family schemas `data/*.schema.json`
+The canon is the [norms](04-controller.norms.md), including Н0. The [acceptance](../acceptance/README.md) shows observable examples;
+the lecture (`ru/04-controller.md`, for people, not in the export) explains the mechanism and does not change the norm. The lesson has no HTTP contract of its own (`P/04 no-openapi`).
+The forms of a unit are set in [P/06.1](../../06-console/spec/06.1-console.norms.md), of the slot — in
+[P/03.2](../../03-worker/spec/03.2-worker.norms.md), the manifest keys — in [P/02.1](../../02-installer/spec/02.1-installer.norms.md),
+the heartbeat — in [P/03.4](../../03-worker/spec/03.4-worker.norms.md). The forms of the rows and objects of the lesson are the family schemas `data/*.schema.json`
 (the data catalogue, ADR-0088). On a discrepancy, record the places and a counterexample, do not choose the behaviour by a guess; the order
 of escalation is in the section «On a discrepancy». Internal functions, types and libraries are chosen by the implementation.
 
@@ -42,8 +42,8 @@ of escalation is in the section «On a discrepancy». Internal functions, types 
    With equal free capacity a separate comparison by the full ASCII name is kept.
    The order of workers (ADR-0084): the row `<sub>/want/<сервер>` always, `want` is an absolute target, the capacity in flight is subtracted
    from the shortage; the withdrawal by the deadline, the number above want, the shrinking with `retiring` and a budget — Н3 «нехватка(), заказать()…»;
-   the vectors [`order`](../../vectors/order/README.md), [`shrink-victim`](../../vectors/shrink-victim/README.md) and
-   [`shrink-allowed`](../../vectors/shrink-allowed/README.md) (the condition of shrinking and the order of the reasons of refusal; the Architect's decision of 2026-10-20, № 12 of the analysis of the review of stage B 3–5).
+   the vectors [`order`](../vectors/order/README.md), [`shrink-victim`](../vectors/shrink-victim/README.md) and
+   [`shrink-allowed`](../vectors/shrink-allowed/README.md) (the condition of shrinking and the order of the reasons of refusal; the Architect's decision of 2026-10-20, № 12 of the analysis of the review of stage B 3–5).
    In flight — the numbers 2…want without a live process by the heartbeats; the candidate and the share — by the door row (`room.<sub>`, `live.<sub>`
    of one snapshot), free(s) is computed once per pass and decreases with each share; the withdrawal by the deadline — `want := 1 + |живые
    номера ∩ {2…want}|`; a number above want is outside the pool, the script stops it (want is not raised); with `distinct` and a place

@@ -3,15 +3,15 @@
 Контракт жизненного цикла процесса `<sub>controller` (ADR-0083 доп. (2) п. 1). Строки ссылаются на нормы урока [P/04]
 (стадия B) и соседних уроков и их не пересказывают.
 
-Текст производный от en, руками не правится: источник — английский [`en/lifecycle.en.md`](en/lifecycle.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 2).
+Текст производный от `lifecycle.md`, руками не правится: источник — английский [`lifecycle.md`](../lifecycle.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 2).
 
-[P/02.3]: ../02-installer/ru/spec/02.3-installer.norms.md
-[P/02.4]: ../02-installer/ru/spec/02.4-installer.norms.md
-[P/02.5]: ../02-installer/ru/spec/02.5-installer.norms.md
+[P/02.3]: ../../02-installer/ru/spec/02.3-installer.norms.md
+[P/02.4]: ../../02-installer/ru/spec/02.4-installer.norms.md
+[P/02.5]: ../../02-installer/ru/spec/02.5-installer.norms.md
 [P/04]: spec/04-controller.norms.md
-[P/06.6]: ../06-console/spec/06.6-console.norms.md
-[Стенд]: ../common/acceptance/README.md
-[каталог]: ../common/data/catalog.tsv
+[P/06.6]: ../../06-console/spec/06.6-console.norms.md
+[Стенд]: ../../common/acceptance/README.md
+[каталог]: ../../common/data/catalog.tsv
 
 ## Запуск
 
@@ -29,7 +29,7 @@
 | `PLATFORM_STORE` | дверь хранилища — сокет роли `configstore:///run/configstore/<sub>controller.sock` | `file://<PLATFORM_DIR>/config` (профиль коробки одной реализации) | [P/02.4] Н1.2 |
 | `PLATFORM_DIR` | корень состояния | `/data/platform` | [P/02.4] Н1.2 |
 | `OBJECTS` / `PLATFORM_OBJECTS` | корень объектов: отчёт прохода, шарды снимка | `<PLATFORM_DIR>/objects` | [P/02.4] Н1.2 «Канал настройки» |
-| `RESOURCE_ROOT` / `EVENTS` | корень событий: свой журнал `audit/<sub>controller/e1/…` | `<PLATFORM_DIR>/events` | [P/02.4] Н1.2 «Канал настройки», [договор журнала событий](../common/contracts/event-journal.md) `journal` |
+| `RESOURCE_ROOT` / `EVENTS` | корень событий: свой журнал `audit/<sub>controller/e1/…` | `<PLATFORM_DIR>/events` | [P/02.4] Н1.2 «Канал настройки», [договор журнала событий](../../common/contracts/event-journal.md) `journal` |
 | `SERVER_NAME` | свой сервер; не по грамматике суффикса слота — код 2 | короткий hostname | [P/02.4] Н1.2 |
 | `BOX_ID` | коробка | `/etc/machine-id`, иначе hostname | [P/02.4] Н1.2 |
 | `HUNG_MOVE_AFTER`, `REACH_BUDGET` | сроки судьбы зависшего слота и бюджет достижимости | 900, 10 | [P/02.4] Н1.2, [P/04] Н1.4, «Решает реализация» п. 4 |
@@ -39,7 +39,7 @@
 | `W2C_ENV`, `W2C_SUB_ENV` | файлы окружения: общий и подсистемы | `/etc/w2c/w2c.env`; без значения — нет | [P/02.4] Н1.2 |
 | `NOTIFY_SOCKET` | сторож systemd | — | [P/02.4] Н1.1 `notify` |
 
-Файлы окружения читаются разбором, не `source` ([договор файла окружения](../common/contracts/env-file.md)); порядок — значения юнита, файл роли, `w2c.env`, файл подсистемы
+Файлы окружения читаются разбором, не `source` ([договор файла окружения](../../common/contracts/env-file.md)); порядок — значения юнита, файл роли, `w2c.env`, файл подсистемы
 ([P/02.4] Н1.2).
 
 ## Флаги
@@ -54,9 +54,9 @@
   `<sub>/controller/placement_intent`, `<sub>/decommissioned/<сервер>`; участие в `<sub>/slots/<имя>` (предложение) и `<sub>/<manifest:unit.rows>/<id>`
   (`delete_after`).
 - **Объекты** в корне объектов: отчёт прохода `<sub>/controller/pass` ([P/04] Н1.2), шарды снимка
-  `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced` ([P/04] Н1.3а). Имена файлов — одно кодирование ([договор журнала событий](../common/contracts/event-journal.md) «Имена файлов в общих деревьях»).
+  `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced` ([P/04] Н1.3а). Имена файлов — одно кодирование ([договор журнала событий](../../common/contracts/event-journal.md) «Имена файлов в общих деревьях»).
 - **Объекты кластера** (пульсы воркеров и ресурсов, отчёты) контроллер читает через ресурс своего сервера (дверь
-  объектов [P/05](../05-resource/spec/05-resource.norms.md), `scope`); без ресурса на своём сервере при `cluster://` — «не известно», не «нет» ([договор клиента хранилища объектов](../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; решение «Архитектора» 2026-10-27); стенд, которому нужны пульсы воркеров,
+  объектов [P/05](../../05-resource/spec/05-resource.norms.md), `scope`); без ресурса на своём сервере при `cluster://` — «не известно», не «нет» ([договор клиента хранилища объектов](../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; решение «Архитектора» 2026-10-27); стенд, которому нужны пульсы воркеров,
   ставит ресурс на сервер контроллера ([P/04] Н3 «проход()» шаг 0; ADR-0084 доп. (2) Р17; разбор ревью стадии A
   3–5, № 22).
 - **Читает**: пульсы воркеров `<sub>/heartbeats/<имя>`, пульс ресурса `platform/resources/<server>/heartbeat`,
@@ -93,7 +93,7 @@
 ## Стенд
 
 Корни `{data}/config`, `objects`, `events` до старта процесса создаёт команда запуска роли профиля — [общий README
-приёмки](../common/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../02-installer/ru/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
+приёмки](../../common/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../../02-installer/ru/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
 
 - Команда «Стенда» с подстановкой `{sub}` (без `<sub>` — `testsub`); `{data}` — это `PLATFORM_DIR`, стенд переводит
   подстановки в окружение [P/02.4] Н1.2 ([Стенд] «Один каталог данных»).
@@ -102,5 +102,5 @@
 
 ## Открыто
 
-- Исход прохода, когда ресурс сервера нечитаем, контроллер выводит из пульса ресурса и замка присутствия (P/05 Н1.4, [договор замка присутствия](../common/contracts/presence-lock.md));
+- Исход прохода, когда ресурс сервера нечитаем, контроллер выводит из пульса ресурса и замка присутствия (P/05 Н1.4, [договор замка присутствия](../../common/contracts/presence-lock.md));
   второй пилот подтвердил заменяемость контроллера на общем состоянии — открытых строк жизненного цикла у него нет.

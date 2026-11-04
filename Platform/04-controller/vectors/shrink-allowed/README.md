@@ -1,12 +1,12 @@
 # Vectors: whether shrinking is allowed
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/shrink-allowed/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is lesson P/04 ([norms](../../../spec/04-controller.norms.md) Н3 «нехватка(), заказать(), снять заказ, сократить()»:
+The owner is lesson P/04 ([norms](../../spec/04-controller.norms.md) Н3 «нехватка(), заказать(), снять заказ, сократить()»:
 `сократить (шаг 9а)` — `условие`, `жертва`; `в пути(s)`, `номер выше want`; Н1.4 `SHRINK_AFTER`; ADR-0084 addendum (1) Р3,
 addendum (3) Р13′, Р16′, addendum (4) Р28, addendum (5) Р16‴). The participant is `<s>controller`. The bytes are written by the Specification (ADR-0083;
 the Architect's decision of 2026-10-20, № 12 of the analysis of the review of stage B 3–5). One case is one label set of the role in one pass
-(as [`order`](../../order/README.md)).
+(as [`order`](../order/README.md)).
 
 ## `cases.tsv`
 
@@ -48,7 +48,7 @@ The check goes in order, `why` is the first reason that fired (P/04 Н3 «сок
    enter `Σ free` — as «свободно у подходящих живых» of Н3 «по набору меток» (Р16′; the Architect's decision of 2026-10-20);
 6. `ok` — shrink, `victim` — the victim.
 
-**The victim** is the same as in [`shrink-victim`](../../shrink-victim/README.md): the largest number `n` (as an integer, not by the slot
+**The victim** is the same as in [`shrink-victim`](../shrink-victim/README.md): the largest number `n` (as an integer, not by the slot
 order), with equal numbers on different servers — the smaller name of the server in UTF-8 bytes. Here the pool is the numbers
 `2 ≤ n ≤ want(s)` from `live`: a number above want is not in the pool (Н3 «номер выше want», Р28) — it is never a victim, and its free does not
 enter the hysteresis; the same holds for `shrink-victim`, whose input carries the `want` of each server (analysis of the review of stage B 6–7, № 42;

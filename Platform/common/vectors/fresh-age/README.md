@@ -4,7 +4,7 @@
 
 Владелец — [договор наблюдения](../../contracts/observation.md) «Свежесть: `LOST_AFTER`» (общий договор модуля
 «Платформа»). Участники — все наблюдатели, которые судят «менялся в последние LOST_AFTER»: контроллер — живой воркер пула,
-судьба слота, `resource_state` ([P/04](../../../04-controller/spec/04-controller.norms.md) Н3); консоль — `worker_state`
+судьба слота, `resource_state` ([P/04](../../../04-controller/ru/spec/04-controller.norms.md) Н3); консоль — `worker_state`
 и `WorkerRow.state` ([глава 6.1](../../../06-console/spec/06.1-console.norms.md) Н2,
 [глава 6.5](../../../06-console/spec/06.5-console.norms.md)), `w2c_resources_live` (глава 6.5), живые ресурсы слияния
 `/events` ([глава 6.4](../../../06-console/spec/06.4-console.norms.md) Н3 «слияние»), `live` `/schema`, «живые» подъёма
@@ -15,7 +15,7 @@
 
 ## Правило (договор наблюдения «Свежесть»)
 
-- `LOST_AFTER` = 45 с (значение — договор наблюдения «Свежесть»; роль в сроках судьи — [P/04](../../../04-controller/spec/04-controller.norms.md) Н1.4);
+- `LOST_AFTER` = 45 с (значение — договор наблюдения «Свежесть»; роль в сроках судьи — [P/04](../../../04-controller/ru/spec/04-controller.norms.md) Н1.4);
 - **свеж** — возраст наблюдаемой версии ≤ `LOST_AFTER`; **не свеж** — возраст > `LOST_AFTER`. Отношение одно у всех
   наблюдателей и выдач.
 

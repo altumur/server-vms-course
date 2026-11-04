@@ -28,7 +28,7 @@
 - **[Урок 10](10-recworker.md)** — регистратор, `place_by: volume`, `home` как предпочтение.
 - **[Урок 26](26-a-backup-archive-of-our-own.md)** — резервная запись, `when: offline`, дверь архива.
 - **[P/03](../Platform/03-worker/ru/03-worker.md)**, глава 3.2 (прежде М10/3, шаг 11) — место и его захват (`claim_hold`, `renew_hold`, `release_hold`), строгая аренда и возврат за именем; решение о месте сквозь молчание — ADR 0029.
-- **[P/04](../Platform/04-controller/04-controller.md)** — фильтры размещения и декларации `affinity`, `near.prefer`.
+- **[P/04](../Platform/04-controller/ru/04-controller.md)** — фильтры размещения и декларации `affinity`, `near.prefer`.
 - **[P/06](../Platform/06-console/06-console.md)**, глава 6.2 (прежде М10/7) — секреты: поле-секрет, `bound_to` и запечатывание; правило адресов.
 
 ## Чему вы научитесь
@@ -680,4 +680,4 @@ def backups(vars_) -> set[str]:
 
 ## Что дальше
 
-Двери, через которые страница собирает шкалу из всех томов, — [урок 12](12-the-vms-console.md) и [урок 24](24-an-interval-in-the-browser.md). Как основная запись закрывает дыры из резервной — [урок 26](26-a-backup-archive-of-our-own.md). Как устроено само кольцо, блок и последовательность — [уроки 6–8](07-volume-block-sequence-stream.md). На кластере те же тома берут регистраторы разных серверов, и шкала собирается через двери мест — [урок 28](28-vms-on-the-cluster.md); платформа кластера — [P/02](../Platform/02-installer/ru/02-installer.md), глава 2.4, и [P/04](../Platform/04-controller/04-controller.md).
+Двери, через которые страница собирает шкалу из всех томов, — [урок 12](12-the-vms-console.md) и [урок 24](24-an-interval-in-the-browser.md). Как основная запись закрывает дыры из резервной — [урок 26](26-a-backup-archive-of-our-own.md). Как устроено само кольцо, блок и последовательность — [уроки 6–8](07-volume-block-sequence-stream.md). На кластере те же тома берут регистраторы разных серверов, и шкала собирается через двери мест — [урок 28](28-vms-on-the-cluster.md); платформа кластера — [P/02](../Platform/02-installer/ru/02-installer.md), глава 2.4, и [P/04](../Platform/04-controller/ru/04-controller.md).

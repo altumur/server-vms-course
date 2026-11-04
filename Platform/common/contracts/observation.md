@@ -4,8 +4,8 @@
 
 Общий договор модуля «Платформа» (ADR-0083 доп. (5): контракт, который читают несколько процессов, лежит в
 `Platform/common/`; решение «Архитектора» по разбору ревью стадии A 6–7, № 1, № 2). Владелец — урок
-[P/04](../../04-controller/spec/04-controller.norms.md) (Н1.4: константа `LOST_AFTER` и судья; блоки перенесены оттуда; разбор ревью стадии B 6–7, № 35). Читают: контроллер — пул, судья
-слота, вывод сервера ([P/04](../../04-controller/spec/04-controller.norms.md) Н1.4, Н3), консоль — выдачи наблюдений
+[P/04](../../04-controller/ru/spec/04-controller.norms.md) (Н1.4: константа `LOST_AFTER` и судья; блоки перенесены оттуда; разбор ревью стадии B 6–7, № 35). Читают: контроллер — пул, судья
+слота, вывод сервера ([P/04](../../04-controller/ru/spec/04-controller.norms.md) Н1.4, Н3), консоль — выдачи наблюдений
 (глава [P/06.5](../../06-console/spec/06.5-console.norms.md): `/servers`, `/resources`, `/where`, `/unplaceable`,
 `/metrics`), двери управления (глава [P/06.6](../../06-console/spec/06.6-console.norms.md): вывод сервера, `/schema`,
 подъём схемы, дренаж, прогнозы меток), живые ресурсы слияния `/events` (глава
@@ -132,7 +132,7 @@ ALIVE_EVERY:    15           # с; ресурс переписывает at св
 
 Нечитаемый пульс — по форме его писателя (раздел «Форма» выше; [P/05 Н1.4](../../05-resource/spec/05-resource.norms.md)); строку двери
 наблюдатель судит по смене её версии, не по полям (семья `doors` P/05). Что значит каждое состояние для судьбы слота и
-пула — [P/04 Н3](../../04-controller/spec/04-controller.norms.md) «судьба», «выбрать»; для выдачи `ServerRow.resource` —
+пула — [P/04 Н3](../../04-controller/ru/spec/04-controller.norms.md) «судьба», «выбрать»; для выдачи `ServerRow.resource` —
 глава 6.5; для отказа вывода сервера — глава 6.6. Состояние по истории наблюдения — векторы
 [`resource-state`](../vectors/resource-state/README.md).
 
@@ -177,7 +177,7 @@ member_state:                                    # по монотонным ч�
 
 Эффективное размещение единицы читается по строкам контроллера `<sub>/controller/placement_intent` и `<sub>/placement/<id>`
 (форма — семьи `placement-intent`, `placement`: `Platform/04-controller/data/placement-intent.schema.json`,
-`Platform/04-controller/data/placement.schema.json` и их `.outcomes.tsv`, раздел «Форма»; сторона писателя — [P/04](../../04-controller/spec/04-controller.norms.md) Н1.5).
+`Platform/04-controller/data/placement.schema.json` и их `.outcomes.tsv`, раздел «Форма»; сторона писателя — [P/04](../../04-controller/ru/spec/04-controller.norms.md) Н1.5).
 Правило одно для всех читателей: контроллера, `/where`, `/unplaceable`, прогнозов меток, дренажа.
 
 ```

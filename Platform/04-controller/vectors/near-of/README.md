@@ -1,8 +1,8 @@
 # Vectors: the neighbour of a unit by `near` (`by`, `of`, `prefer`)
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/near-of/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is lesson P/04 ([norms](../../../spec/04-controller.norms.md) Н1.3 `near`; ADR-0091 item 10). The participant is
+The owner is lesson P/04 ([norms](../../spec/04-controller.norms.md) Н1.3 `near`; ADR-0091 item 10). The participant is
 `<s>controller` (the preference when choosing a worker, Н3 «choose»). The bytes are written by the Specification. The vector checks only
 the choice of the neighbour; that the worker holding it is preferable, and that without a holder there is no preference, — Н3 «choose», by reading.
 
@@ -30,7 +30,7 @@ Who executes it is the controller (`04-controller`: the neighbour by `near`, P/0
 
 ## Stand command
 
-`near-of` is the key `stand` of the profile `04-controller` (the section «Layout by processes» of [the common acceptance README](../../../../common/acceptance/README.md)):
+`near-of` is the key `stand` of the profile `04-controller` (the section «Layout by processes» of [the common acceptance README](../../../common/acceptance/README.md)):
 a template with `{input}` — the path of the file into which the runner writes the cell `input` of the row byte for byte; stdout — the UTF-8 bytes of the id
 of the chosen neighbour exactly as `expect`, without a line feed and without a JSON wrapper; there is no neighbour (`expect` is empty) — an empty stdout;
 code 0. An input not by the form of this README — code 2 (`@exit 2`). Another code or extra bytes — FAIL of the row.

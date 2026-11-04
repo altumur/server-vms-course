@@ -1,17 +1,17 @@
 # Acceptance P/04 — the controller
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
-The norm of the lesson is [`04-controller.norms.md`](../../spec/04-controller.norms.md) Н5. The scenarios were moved from the acceptance of
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../common/acceptance/README.md#словарь-директив-и-дверей).
+The norm of the lesson is [`04-controller.norms.md`](../spec/04-controller.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/05, sc. 03 and 08 (the snapshot) — from the acceptance of М10/10
 (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers of scenarios and steps are the former ones, except the steps of sc. 11 (the former
 4–9 are 7–12, the preparation of the shelf, `corrections.tsv`), the first step `@start resource` of sc. 07, 11, 13 (P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27), the new sc. 17 (analysis of the review of stage B 3–5, № 17), steps 15–19 of sc. 18 and the new sc. 20–27 (the coverage audit of P/04,
 2026-10-30, the drafts D01, D03, D04, D06, D07, D08, D10) and sc. 28–42 (the second pass of the coverage audit of P/04, Gemini, the drafts
 G01–G07 — the section below). The steps `/metrics` of the console of
 sc. 03 (step 5) and 08 (steps 7–9) are the side of the reader of the snapshot, chapter 6.5: they are separated into [the acceptance of
-P/06.5](../../../06-console/acceptance/5/README.md) (analysis of the review of stage A 6–7, № 32). The doors of the console without workers (sc.
-01–07 of the acceptance of М10/04) — [the acceptance of P/06.6](../../../06-console/acceptance/6/README.md).
+P/06.5](../../06-console/acceptance/5/README.md) (analysis of the review of stage A 6–7, № 32). The doors of the console without workers (sc.
+01–07 of the acceptance of М10/04) — [the acceptance of P/06.6](../../06-console/acceptance/6/README.md).
 
 ## Stand
 
@@ -22,11 +22,11 @@ of one manifest does not touch the rows of the other on capture and cleanup. The
 `status` with `phase: running` (P/03.4 Н1.1 `phase`) and one word of the subsystem `n` — the value of the counter (P/03.4 Н1.1 `status`;
 the second pilot, Н-7). Observation — rows through the store door P/01.1, units and placement through the console door (`/where`,
 `/unplaceable`, `/servers`, `/metrics`), the pass report `<sub>/controller/pass` — through the objects door of the resource (sc. 12, 15);
-the heartbeat (an object) is not read here. The resource P/05 is needed by all the scenarios with workers and the controller — 03, 07, 08, 11–44 (the resource on the server of the controller; sc. 15, 33, 36–39, 44 — two resources; analysis of the review of stage B 3–5, № 17): the controller reads the heartbeats of the workers through the objects door of the resource of its server, without the resource — «не известно» ([the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27).
+the heartbeat (an object) is not read here. The resource P/05 is needed by all the scenarios with workers and the controller — 03, 07, 08, 11–44 (the resource on the server of the controller; sc. 15, 33, 36–39, 44 — two resources; analysis of the review of stage B 3–5, № 17): the controller reads the heartbeats of the workers through the objects door of the resource of its server, without the resource — «не известно» ([the object store client contract](../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27).
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей):
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../common/acceptance/README.md#словарь-директив-и-дверей):
 the doors `store` (a role with read rights on `testsub/`), `console`, `console2`, `resource`, `admin` (sc. 23 — the row `platform/schema`);
 the directives `@start` (including `@start controller <sub> shrink_after=<с>`, `@start worker <sub> <имя> on <сервер>`,
 `@start worker <имя> on srv-b` sc. 33 and `@start worker <имя> labels=<метки>` sc. 24), `@sigterm`, `@sigkill`, `@sleep`, `@until`,
@@ -57,7 +57,7 @@ a scenario. One scenario takes no longer than 3 minutes.
   therefore steps 4–5 put the shelf `s-1` on the server of `t-1` (`srv-a`) and wait for the hold row `testsub2/holds/s-1` (analysis
   of the review of stage A 3–5, № 7);
 - sc. 12 — `@sigkill` of a worker with a live resource P/05 and a second worker `w-2`: the resource sees the lock free, the fate of
-  `w-1` is `move` (`why` — a word about `gone`, as a substring), `c12` moves to `w-2` within 60 s, then the slot `w-1` is released (`released: true`; `move` is visible in the report of one pass, 5 s, — the step `fates` goes before the check of the move, C04-FATES-WINDOW-01) ([the presence lock contract](../../../common/contracts/presence-lock.md),
+  `w-1` is `move` (`why` — a word about `gone`, as a substring), `c12` moves to `w-2` within 60 s, then the slot `w-1` is released (`released: true`; `move` is visible in the report of one pass, 5 s, — the step `fates` goes before the check of the move, C04-FATES-WINDOW-01) ([the presence lock contract](../../common/contracts/presence-lock.md),
   the norms Н3 «fate»; the second pilot, Н-1; the log of cammeta-go, lesson 5 № 8 — the norms do not tell to remove the placement before a new
   target); as sc. 10 of the acceptance of P/03.2 — after P/05;
 - sc. 13 — an abandoned capture (the Quint pilot, F2): step 7 waits for epoch 1 — `w-1` has started `c13` (the placement row does not
@@ -86,7 +86,7 @@ a scenario. One scenario takes no longer than 3 minutes.
   (after P/05: the resource writes `room.testsub2`). The branch «живые без места при ждущих не сокращаются» (Р16′) the stand does not distinguish
   from the hysteresis: the remaining `t-srv-a-1` has free 8 − 8 = 0 < `per` 8, and the shrinking is forbidden with any definition of
   «нехватки нет»; a preparation where the hysteresis would allow shrinking with waiting ones the stand with one shelf and capacity 8 does not give —
-  the branch is checked by the vector [`shrink-allowed`](../../vectors/shrink-allowed/README.md) — the rows `placeless-with-waiting`
+  the branch is checked by the vector [`shrink-allowed`](../vectors/shrink-allowed/README.md) — the rows `placeless-with-waiting`
   (the hysteresis would pass) and `placeless-no-waiting` (Н5; the Architect's decision of 2026-10-20, № 12 of the analysis of the review of stage B 3–5);
 - sc. 18, steps 15–19 — the protection of a replay on deletion (Н3 step 8; the row check contract «The customer's row: `made`» `delete`):
   the order row `testsub-c3` with `ends` in 2001 and `made.keep` 9999999999 (2286) — the clock of the controller is not later than `keep`, the row
@@ -106,7 +106,7 @@ a scenario. One scenario takes no longer than 3 minutes.
   group of weight 9 with capacity 8 — none is placed (`unplaced` 9, `/where` 404), `g10` without `feed` is placed; after
   the deletion of `g9` and `g10` the group of eight with 8 free — wholly on `t-1`. The units and the shelf are set up before the worker: the first
   pass with the keeper of the shelf sees the group as a whole, not in parts (the coverage audit of P/04, D03);
-- sc. 23 — the schema check at the start of the controller ([the schema contract](../../../common/contracts/schema.md) «Check at start»):
+- sc. 23 — the schema check at the start of the controller ([the schema contract](../../common/contracts/schema.md) «Check at start»):
   `platform/schema` with `version` 2 (above SCHEMA 1) and `x` (not a number) — `@start controller` exits with code 2, there is no pass report;
   with `version` 1 — the controller starts and writes the report. The resource is raised before the write of the row: it checks the schema at its own
   start. The branch «ошибка чтения — ждать» — sc. 25, «до чтения манифеста» — by reading (the coverage audit of P/04, D07);
@@ -117,7 +117,7 @@ a scenario. One scenario takes no longer than 3 minutes.
   bypassing the writer with an unreadable label `qq!` — the last read labels and without a judgment of reachability: within 12 s neither `c1`
   (the labels of the node do not accept it) nor `c2` is removed (the outcomes of the family `server-labels`, the reader `<s>controller`) (the coverage audit of
   P/04, D10);
-- sc. 25 — a read error of the schema row at the start of the controller ([the schema contract](../../../common/contracts/schema.md) «Check at start»:
+- sc. 25 — a read error of the schema row at the start of the controller ([the schema contract](../../common/contracts/schema.md) «Check at start»:
   «ошибка чтения → ждать доступности, не начиная работы»): `@cut role testsubcontroller store` before the start —
   the store is silent to the role of the controller (P/02.5 Н1.4), the read of `platform/schema` hangs without an answer; within 10 s there is no pass report
   (the work is not begun); after `@mend` the controller without a new `@start` writes the report — it waited and did not exit (a refusal of the start is
@@ -125,12 +125,12 @@ a scenario. One scenario takes no longer than 3 minutes.
   (sc. 18 of the acceptance of P/05) (the coverage audit of P/04, D07 sc. 03);
 - sc. 26, 27 — a silent live worker (Н3 «fate»: the order of the rules and the margin; the coverage audit of P/04, D08): `@freeze w-1`
   stops the whole process with all the threads — the loop and the stand-in (the slot is not renewed, the heartbeat is not written), the process is alive and
-  holds the flock of the presence lock ([the presence lock contract](../../../common/contracts/presence-lock.md)): the resource says
+  holds the flock of the presence lock ([the presence lock contract](../../common/contracts/presence-lock.md)): the resource says
   `runs` (`running` of the heartbeat of the resource — both before and during the freeze). The last version of the slot was written no earlier than a lease
   step ≈ 8.3 s before the freeze (P/03.2 Н1.2), therefore the margin «та же версия наблюдается < SLOT_TERM + LOST_AFTER» (45 + 45 s)
   holds `alive` no less than ≈ 81.7 s from the freeze: sc. 26 step 11 after 75 s sees `alive`, then — `hung` (the rule
   «ресурс live ∧ процесс runs»), no later than ≈ 100 s (the first observation of the version — a pass of 5 s, one more pass for the report). With
-  `hung` the name is not released (`names_given` is empty; HUNG_MOVE_AFTER 900 s — [the environment file contract](../../../common/contracts/env-file.md)),
+  `hung` the name is not released (`names_given` is empty; HUNG_MOVE_AFTER 900 s — [the environment file contract](../../common/contracts/env-file.md)),
   the slot is not released, the unit `c26` stays on `w-1` (`hung` is not in MOVED_FATES, Н3 «leaving»). Sc. 27 — the same without units:
   `hung`, not `release` (the table «Переходы release»: the presence `runs` — write nothing). After `@thaw` the worker
   renews the slot — `alive` again. The freeze is no longer than the limit of the directive 120 s: sc. 26 — 75 + up to 35 s, sc. 27 — up to 110 s.
@@ -159,14 +159,14 @@ The revision of the manifest of the stand is 1 (the first installation, P/02.3 �
   of `c1` without `manifest_rev` is stamped with revision 1 (the write — `rev` 2); the row of `c2` is decided by revision 2, there is no unit
   `c2` — the removal of a deleted one is forbidden by the guard: the row is the same, `manifest_behind: 1` (the number of rows of the pass whose write is
   postponed, a row — once per pass: C04-MANIFEST-BEHIND-COUNT-01), the assignment of `w-1` (`c1,c2`) is not rewritten.
-- Sc. 32 — a turn with a newer revision ([the turn contract](../../../common/contracts/turn.md) step 1): the row
+- Sc. 32 — a turn with a newer revision ([the turn contract](../../common/contracts/turn.md) step 1): the row
   `placement_turn` with `manifest_rev` 10 — the controller does not take it and does not rewrite it (the version is the same), `c2` is not
   placed within two passes; `c1` is placed before the write (the controller worked).
 - Sc. 33 — a drain with live workers (Н3 «leaving»: the server is being drained; P/06.6 Н2 `/drain`): `c1` on `w-1` (`srv-a`),
   `w-2` on `srv-b`; `POST /drain?server=srv-a` — `c1` goes to `w-2` with the reason `server srv-a draining`, `GET /drain` —
   `safe: true` (there are no units on `srv-a` — the assignment and the `status` of the heartbeat, `@until` 60 s: the worker stops the unit and
   writes the heartbeat), `DELETE /drain` — `draining: ""`. The counts of the console without workers — sc. 04, 07 of the acceptance of P/06.6.
-- Sc. 34 — `retire_when` by the state (Н1.3 `retire_when`; [the row check contract](../../../common/contracts/row-check.md)
+- Sc. 34 — `retire_when` by the state (Н1.3 `retire_when`; [the row check contract](../../common/contracts/row-check.md)
   «Unit state» `acts`): the holder of `t1` writes `result` `{state: open}` (P/03.6 sc. 09); its row is rewritten to
   `done` by cas — the state is in effect (born and the revision of the row), `t1` is removed with the reason `done`, the assignment is empty, it does not enter
   `unplaced` (0); the row of the unit is not deleted (`delete_after` 600 s — by reading), the effective state is not removed by the cleanup.
@@ -261,7 +261,7 @@ This applies both to an ordinary HTTP step, and to each attempt of @until, and t
 @any requires the presence of a field; @absent — its absence; ~text — a string occurrence.
 JSON types are exact, true is not equal to 1; objects are compared by the given fields recursively,
 arrays — by the number, order and values of the elements, except arrays without a normed order (`configured`) — the dictionary of the common acceptance README. An expectation of a single code does not require an empty body.
-The full HTTP answer additionally matches the contract of the store (P/01.1) or of units ([P/06](../../../06-console/spec/06-console.api.openapi.yaml), chapter 6.1).
+The full HTTP answer additionally matches the contract of the store (P/01.1) or of units ([P/06](../../06-console/spec/06-console.api.openapi.yaml), chapter 6.1).
 
 The scenarios observe rows and HTTP answers, not the contents of the heartbeat objects and not the actual external writes
 of a unit. A change of the epoch/assignment by itself does not prove that the old process has stopped working.
@@ -306,7 +306,7 @@ time. The `@until` of the snapshot reads the local resource; an error of publica
 
 ## Checks by reading from the acceptance of М10/04
 
-The doors of the console of М10/04 were moved to [the acceptance of P/06.6](../../../06-console/acceptance/6/README.md); the checks of the controller from its
+The doors of the console of М10/04 were moved to [the acceptance of P/06.6](../../06-console/acceptance/6/README.md); the checks of the controller from its
 README are here. The TSV on an empty pool does not prove the properties below. For each one state the place of the implementation, an observation of
 a controlled stand or an abstract model on the operations of P/01.1 (run 25).
 
@@ -320,7 +320,7 @@ a controlled stand or an abstract model on the operations of P/01.1 (run 25).
 - A late old controller after a change of turn gets 412 on the addition and the removal. On an unknown
   outcome the barrier turn is confirmed first; an old command cannot apply after the re-read.
   On the loss of the barrier itself the changes do not continue.
-- The read intent → placement → intent is repeated on a change of version ([the observation contract](../../../common/contracts/observation.md)
+- The read intent → placement → intent is repeated on a change of version ([the observation contract](../../common/contracts/observation.md)
   «Чтение решения»). Idle is not deleted. A group over the ceiling of intent/assignment is refused wholly before the change of placements.
 - With the same history of the versions of the slot, shifts of the writer's clock -30/0/+300 do not change the fate.
   The first look begins 45 s, then the margin up to 90 s; the different histories of judges are not obliged to coincide.
