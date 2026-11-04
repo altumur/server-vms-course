@@ -42,6 +42,7 @@ import gen_refusals  # noqa: E402 — часть refusals
 import gen_checks  # noqa: E402 — свежесть writecheck
 import gen_door  # noqa: E402 — свежесть door
 import gen_launch  # noqa: E402 — часть launch
+import gen_core  # noqa: E402 — часть core
 TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"
 GENERATED = ROOT / "tools/normgen/out/p01-1/go/checks"
 HANDWRITTEN = HERE / "go"
@@ -116,7 +117,7 @@ def git_head():
         return None
 
 
-PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
+PARTS = ("vectors", "stagetests", "door", "flags", "refusals", "launch", "core")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
 
 
 EXAMPLES = HERE / "examples"                # пример подключения на часть: Go-файл, его собирает kit/test_kit.py
@@ -185,8 +186,8 @@ def provenance(parts, files, judged):
     }
     out = {}
     for part in parts:
-        if part in ("flags", "refusals", "launch"):
-            mod = {"flags": gen_flags, "refusals": gen_refusals, "launch": gen_launch}[part]
+        if part in ("flags", "refusals", "launch", "core"):
+            mod = {"flags": gen_flags, "refusals": gen_refusals, "launch": gen_launch, "core": gen_core}[part]
             out[part] = {**mod.provenance(), "output": output(part)}
         else:
             component, t = table[part]
@@ -213,6 +214,9 @@ def build(dst, module, parts=(), judged=None):
     if "launch" in parts and not {"door", "flags", "stagetests"} <= set(parts):
         raise KitError("--part launch needs --part door, --part flags and --part stagetests: the frame parses by flags "
                        "and serves coreadapter.Handle over apidoor (ADR-0083 addendum (95) item 3)")
+    if "core" in parts and not {"door", "stagetests"} <= set(parts):
+        raise KitError("--part core needs --part door and --part stagetests: the core is the coreadapter.Core of the "
+                       "stage tests over apidoor.Handler (ADR-0083 addendum (95) item 3)")
     kit_parts = ["writecheck", *sorted(set(parts))]
     parts_set = list(kit_parts)
     try:
@@ -221,7 +225,9 @@ def build(dst, module, parts=(), judged=None):
         flag_files = gen_flags.kit_files() if "flags" in parts else []
         refusal_files = gen_refusals.kit_files() if "refusals" in parts else []
         launch_files = gen_launch.kit_files(module) if "launch" in parts else []
-    except (gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError, gen_launch.GenError) as exc:
+        core_files = gen_core.kit_files(module) if "core" in parts else []
+    except (gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError, gen_launch.GenError,
+            gen_core.GenError) as exc:
         raise KitError(str(exc)) from None
     openapi_sha = sha256(OPENAPI.read_bytes()) if "door" in parts else None
     if openapi_sha:
@@ -252,6 +258,8 @@ def build(dst, module, parts=(), judged=None):
         put(sub, name, data, "handwritten", "kit", str((HANDWRITTEN / sub / name).relative_to(ROOT)))
 
     for (sub, name, data, origin, source, own), component in tests:
+        if core_files and (sub, name) == ("coreadapter", "open.go"):
+            continue                    # open.go — у части core: Open уже возвращает её ядро
         if own and (internal / sub / name).exists():
             continue                    # адаптер реализации не трогается
         put(sub, name, data, origin, component, source)
@@ -270,10 +278,15 @@ def build(dst, module, parts=(), judged=None):
         put(sub, name, data, origin, "launch", source)
         if own:
             files[-1]["editable"] = True
+    for sub, name, data, origin, source, own in core_files:
+        if (internal / sub / name).exists():
+            continue                    # ядро реализации не трогается
+        put(sub, name, data, origin, "core", source)
+        files[-1]["editable"] = True
     doc = (KIT_MD + (gen_tests.KIT_MD if "vectors" in parts else "")
            + (gen_tests.KIT_MD_STAGETESTS if "stagetests" in parts else "") + (KIT_DOOR_MD if openapi_sha else "")
            + (gen_flags.KIT_MD if flag_files else "") + (gen_refusals.KIT_MD if refusal_files else "")
-           + (gen_launch.KIT_MD if launch_files else "")).replace("{module}", module)
+           + (gen_launch.KIT_MD if launch_files else "") + (gen_core.KIT_MD if core_files else "")).replace("{module}", module)
     doc = (doc + connect_md(kit_parts, module) + exported_md(internal, dst, module)).encode("utf-8")
     (dst / "KIT.md").write_bytes(doc)
     # Паспорт попытки (доп. (86) п. 3) считает порознь: по происхождению (generated | handwritten) и по части

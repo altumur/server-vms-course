@@ -11,6 +11,7 @@
 | 4 | `gen_refusals.py` | `forms/refusals.tsv` | `refusals/` | `refusals` | `refusal_judge.py` — приёмка и `door.Refuse` |
 | 6 | `gen_tests.py` | `vectors/jcs`, `vectors/rights-evaluator`, `forms/stages.tsv` | `vectortests/`, `vectorcmd/`, `vectoradapter/` | `tests` | `vector_judge.py` |
 | 2 + 3 | `gen_launch.py` | `forms/daemon-flags.tsv`, OpenAPI (через части `flags`, `door`) | `launch/`, `cmd/configstore/` | `launch` (нужны `door`, `flags`, `stagetests`) | раннер P/01.1 на пакете как есть (пустое ядро `launch.Empty` на заглушке `coreadapter.Open`) → `launch_judge.py` (этап `launch`: `01-absent`) |
+| 2 + Н3 | `gen_core.py` | `apidoor.Handler` (выход `gen_door`), `spec/01.1-store.norms.md` (якоря req разделов Н3, Н2.1) | `out/p01-1/core/coreadapter/` (`core.go`, `open.go` — **реализации**, кладутся один раз) | `core` (нужны `door`, `stagetests`) | `test_gen_core.py` (сборка, заглушки, тесты этапов красные без паники) и раннер на пакете (этап `launch` остаётся закрытым: `Get` заглушки — пустое хранилище) |
 
 Ручное — один раз на словарь: среда CEL `runtime/`, примитивы `#fn` `prims/` (Go и Python), типы флагов
 `flags/go/flagtypes.go`, среда двери `doorrt/`, пакет `kit/go` (`jsonstrict`, `writecheck`).
@@ -35,7 +36,7 @@ KIT.md — справка подключения (ADR-0083 доп. (95) п. 2): 
 
 - Python с `cel_expr_python` (оракул CEL для `test_gen_checks.py` и `flag_judge.py`) — `/opt/check-env/lesson-spec/bin/python`.
 - Набор: `test_gen_checks.py`, `test_gen_tests.py`, `test_gen_door.py`, `test_gen_flags.py`, `test_gen_refusals.py`,
-  `test_gen_stagetests.py`, `test_gate.py`, `test_judges.py`, `test_gen_launch.py`, `kit/test_kit.py`; затем `skills/lesson-spec/scripts/check_spec.py`.
+  `test_gen_stagetests.py`, `test_gate.py`, `test_judges.py`, `test_gen_launch.py`, `test_gen_core.py`, `kit/test_kit.py`; затем `skills/lesson-spec/scripts/check_spec.py`.
 - `gate.py` — общий разбор списка `gate` формы stages.tsv для генераторов (грамматика шапки формы, как у `check_forms`).
 - Судьи: отсутствие исполнения — отрицательный исход. Ожидаемый набор шагов — из сценариев и проекции, не из отчёта;
   шаг без исхода, пустой или обрезанный отчёт, незавершённый `go test` — провал. Запуск демона у `flag_judge.py` —
