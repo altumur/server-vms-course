@@ -1,4 +1,4 @@
-# Исходы нечитаемого объекта domain/members/<член>/reports/<rev>.delta (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable object domain/members/<член>/reports/<rev>.delta (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole object); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domain	объект целиком нечитаем: читателя по норме нет — объект хранит байты, которые подписал агент, рядом с поколением; поколение и метка от него не зависят (sha256 — в метке delta_sha256); не переписывается, журнал (аудит раскладки, Г-28; правило DF-OUTCOMES-109, решение «Архитектора» 2026-10-25)	0	строка	P/08.3 Н1.3 delta
+	domain	the whole object is unreadable: there is no reader by the norm — the object stores the bytes that the agent signed, next to the generation; the generation and the mark do not depend on it (sha256 — in the mark delta_sha256); not rewritten, log (layout audit, Г-28; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)	0	строка	P/08.3 Н1.3 delta

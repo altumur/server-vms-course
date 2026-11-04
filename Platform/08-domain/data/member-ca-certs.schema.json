@@ -3,10 +3,10 @@
  "type": "object",
  "properties": {
   "certs": {
-   "description": "текст JCS `[<PEM>…]` — сертификаты центров члена в порядке его Entry.ca",
+   "description": "JCS text `[<PEM>…]` — the member's CA certificates in the order of its Entry.ca",
    "type": "array",
    "items": {
-    "description": "PEM — ровно один блок CERTIFICATE центра (CA:true); sha256(DER) — отпечаток Entry.ca на том же месте (проверка урока, не формы)",
+    "description": "PEM — exactly one CERTIFICATE block of a CA (CA:true); sha256(DER) — the fingerprint of Entry.ca at the same position (a check of the lesson, not of the form)",
     "type": "string",
     "not": {
      "enum": [

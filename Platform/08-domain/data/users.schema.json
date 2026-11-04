@@ -4,13 +4,13 @@
  "properties": {
   "name": {
    "$ref": "#/$defs/common.person_name",
-   "description": "имя человека — то же, что <имя> ключа; не субъект индекса имён (проверка двери, глава 8.5 Н1.7)",
+   "description": "name of the person — the same as <имя> of the key; not a subject of the names index (a check of the door, chapter 8.5 Н1.7)",
    "x-codec": [
     "string"
    ]
   },
   "how": {
-   "description": "\"password\" — иных способов входа урок не нормирует",
+   "description": "\"password\" — the lesson does not lay down norms for other ways of login",
    "type": "string",
    "enum": [
     "password"
@@ -20,21 +20,21 @@
    ]
   },
   "pwhash_secret": {
-   "description": "pbkdf2-sha256$600000$<соль: 32 hex>$<ключ: 64 hex> — PBKDF2-HMAC-SHA256 от UTF-8 пароля, соль — 16 случайных байт, ключ — 32 байта; секрет по суффиксу (P/02.1 Н1.3а) — в строке конверт кольца держателя, форма хеша — у открытого",
+   "description": "pbkdf2-sha256$600000$<соль: 32 hex>$<ключ: 64 hex> — PBKDF2-HMAC-SHA256 of the UTF-8 password, salt — 16 random bytes, key — 32 bytes; a secret by the suffix (P/02.1 Н1.3а) — in the row a ring envelope of the holder, the hash form — of the opened value",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "disabled": {
-   "description": "выключен ли человек; каждая правка — затем domain/disabled (Н3 «дверь людей» шаг 9)",
+   "description": "whether the person is disabled; every edit — then domain/disabled (Н3 «people door» step 9)",
    "type": "boolean",
    "x-codec": [
     "boolean"
    ]
   },
   "title": {
-   "description": "отображаемое имя, 0..200 знаков; поля нет — \"\" (P/08.4 Н1.1)",
+   "description": "display name, 0..200 characters; no field — \"\" (P/08.4 Н1.1)",
    "type": "string",
    "maxLength": 200,
    "x-codec": [
@@ -42,7 +42,7 @@
    ]
   },
   "email": {
-   "description": "строка 0..254 знаков; форму адреса платформа не проверяет; поля нет — \"\"",
+   "description": "a string of 0..254 characters; the platform does not check the form of the address; no field — \"\"",
    "type": "string",
    "maxLength": 254,
    "x-codec": [
@@ -51,13 +51,13 @@
   },
   "expires": {
    "$ref": "#/$defs/common.time",
-   "description": "0 — без срока; иначе стенные секунды; now ≥ expires — выключен по сроку; поля нет — 0",
+   "description": "0 — without a term; otherwise wall-clock seconds; now ≥ expires — disabled by term; no field — 0",
    "x-codec": [
     "time"
    ]
   },
   "pw_by": {
-   "description": "имя того, кто последним задал пароль (P/08.4 Н1.1, Н1.3в password); поля нет — «задал не администратор»",
+   "description": "name of the one who last set the password (P/08.4 Н1.1, Н1.3в password); no field — «set not by an administrator»",
    "type": "string",
    "x-codec": [
     "string"
@@ -65,13 +65,13 @@
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды последней правки",
+   "description": "wall-clock seconds of the last edit",
    "x-codec": [
     "time"
    ]
   },
   "by": {
-   "description": "имя человека последней правки (доказанное сторожевой); у first-admin — сам заводимый",
+   "description": "name of the person of the last edit (proven by the gate); for first-admin — the one being created",
    "type": "string",
    "x-codec": [
     "string"
@@ -79,7 +79,7 @@
   },
   "revision": {
    "$ref": "#/$defs/common.pos53",
-   "description": "счётчик записей строки: 1 при создании, +1 на каждую запись; читает только процесс domain и консоль домена, писатель пишет всегда (P/08.0 Н1.9 «Версии»; ADR-0094 B4)",
+   "description": "write counter of the row: 1 at creation, +1 per write; read only by the domain process and the domain console, the writer always writes it (P/08.0 Н1.9 «Versions»; ADR-0094 B4)",
    "x-whole": true,
    "x-codec": [
     "integer"

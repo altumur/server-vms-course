@@ -3,14 +3,14 @@
  "type": "object",
  "properties": {
   "events": {
-   "description": "строки страницы, как приняты; не больше HISTORY_LINES = 2000 строк, самые новые (договор истории тревог history)",
+   "description": "lines of the page, as accepted; not more than HISTORY_LINES = 2000 lines, the newest (the alarm history contract history)",
    "type": "array",
    "items": {
-    "description": "строка страницы тревог члена, как принята (договор истории тревог events); прочие поля строки индекса P/05 Н1.3 — имена автора",
+    "description": "a line of the member's alarm page, as accepted (the alarm history contract events); the other fields of the index row P/05 Н1.3 — the author's names",
     "type": "object",
     "properties": {
      "id": {
-      "description": "id строки индекса — непустая строка (P/09.1 Н1.10 event)",
+      "description": "id of the index row — a non-empty string (P/09.1 Н1.10 event)",
       "type": "string",
       "not": {
        "enum": [
@@ -19,14 +19,14 @@
       }
      },
      "class": {
-      "description": "класс строки индекса — alarm (P/09.1 Н1.10 event)",
+      "description": "class of the index row — alarm (P/09.1 Н1.10 event)",
       "type": "string",
       "enum": [
        "alarm"
       ]
      },
      "kind": {
-      "description": "непустая строка (P/09.1 Н1.10 event)",
+      "description": "a non-empty string (P/09.1 Н1.10 event)",
       "type": "string",
       "not": {
        "enum": [
@@ -35,15 +35,15 @@
       }
      },
      "unit": {
-      "description": "единица строки индекса (P/09.1 Н1.10 event)",
+      "description": "unit of the index row (P/09.1 Н1.10 event)",
       "type": "string"
      },
      "t": {
       "$ref": "#/$defs/common.time",
-      "description": "время строки на часах домена (договор истории тревог «Часы домена»: t + (received_at − sent_at) последнего принятого отчёта, который несёт эту страницу)"
+      "description": "time of the line on the domain clock (the alarm history contract «Часы домена»: t + (received_at − sent_at) of the last accepted report that carries this page)"
      },
      "t_src": {
-      "description": "t строки, как пришло — по часам члена; same_line сравнивает по нему (договор истории тревог same_line)",
+      "description": "t of the line, as it arrived — by the member's clock; same_line compares by it (the alarm history contract same_line)",
       "type": "number"
      }
     },
@@ -65,7 +65,7 @@
      ]
     },
     "additionalProperties": {
-     "description": "прочие поля строки индекса P/05 Н1.3 ({subsystem, of, …}) — как пришли"
+     "description": "other fields of the index row P/05 Н1.3 ({subsystem, of, …}) — as they arrived"
     },
     "required": [
      "id",
@@ -79,7 +79,7 @@
   },
   "cut_before": {
    "$ref": "#/$defs/common.time",
-   "description": "с какого момента член держится целиком: число (часы домена), при создании истории — 0, не null; не убывает (договор истории тревог history, cut; сверка М11, A13, A14)"
+   "description": "from which moment the member is held whole: a number (domain clock), at the creation of the history — 0, not null; does not decrease (the alarm history contract history, cut; reconciliation of М11, A13, A14)"
   }
  },
  "additionalProperties": false,

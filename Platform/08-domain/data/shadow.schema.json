@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "counts": {
-   "description": "по виду Н1.6 kinds и unknown",
+   "description": "by kind Н1.6 kinds and unknown",
    "type": "object",
    "properties": {
     "lagging": {
@@ -40,7 +40,7 @@
    ]
   },
   "findings": {
-   "description": "по порядку видов в counts, затем (sub, ref, cluster, worker) в байтах UTF-8 (Н1.6 findings_order)",
+   "description": "in the order of the kinds in counts, then (sub, ref, cluster, worker) in UTF-8 bytes (Н1.6 findings_order)",
    "type": "array",
    "items": {
     "type": "object",
@@ -61,20 +61,20 @@
       "$ref": "#/$defs/common.sub_name"
      },
      "ref": {
-      "description": "ref единицы (Н1.2)",
+      "description": "ref of the unit (Н1.2)",
       "type": "string"
      },
      "cluster": {
-      "description": "член по зерну вида (Н1.6 grain)",
+      "description": "member by the grain of the kind (Н1.6 grain)",
       "type": "string",
       "pattern": "^(?:[a-z0-9-]{1,64})$"
      },
      "worker": {
-      "description": "воркер заявки (Н1.6 grain)",
+      "description": "worker of the claim (Н1.6 grain)",
       "type": "string"
      },
      "detail": {
-      "description": "слова; у unknown — состояние члена или «not a member»",
+      "description": "words; for unknown — the state of the member or «not a member»",
       "type": "string",
       "not": {
        "enum": [
@@ -94,14 +94,14 @@
   },
   "clean_streak": {
    "$ref": "#/$defs/common.uint53",
-   "description": "проходов подряд без находок (Н1.6 SHADOW_CLEAN)"
+   "description": "passes in a row without findings (Н1.6 SHADOW_CLEAN)"
   },
   "may_write": {
    "description": "Н1.6 exit",
    "type": "boolean"
   },
   "why": {
-   "description": "почему may_write такое",
+   "description": "why may_write is such",
    "type": "string",
    "not": {
     "enum": [
@@ -922,7 +922,7 @@
   },
   "count": {
    "$ref": "#/$defs/common.uint53",
-   "description": "число находок вида"
+   "description": "number of findings of the kind"
   }
  }
 }

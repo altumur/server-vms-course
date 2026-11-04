@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "print": {
-   "description": "отпечаток запроса: кто, метод, путь, тело — HMAC print главы P/06.2 Н1 под кольцом держателя; форма и kid — выбор реализации (P/08.0 Н1.9 «Память повторов»)",
+   "description": "request fingerprint: who, method, path, body — the HMAC print of chapter P/06.2 Н1 under the holder's ring; form and kid — the implementation's choice (P/08.0 Н1.9 «Repeat memory»)",
    "type": "string",
    "minLength": 1,
    "x-codec": [
@@ -11,7 +11,7 @@
    ]
   },
   "code": {
-   "description": "код HTTP сохранённого ответа, ниже 500: 5xx память не держит",
+   "description": "HTTP code of the stored answer, below 500: the memory does not keep 5xx",
    "type": "integer",
    "x-integer": true,
    "minimum": 200,
@@ -22,14 +22,14 @@
    ]
   },
   "body": {
-   "description": "тело сохранённого ответа как текст; повтор отдаёт его байт в байт",
+   "description": "body of the stored answer as text; a repeat returns it byte for byte",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "index": {
-   "description": "индекс ETag ответа, если цель этим пакетом не писалась; поля нет — ETag несёт индекс самой строки заявки (P/01.1: одна версия на операцию)",
+   "description": "index ETag of the answer if the target was not written by this batch; no field — the ETag carries the index of the claim row itself (P/01.1: one version per operation)",
    "type": "string",
    "minLength": 1,
    "x-codec": [
@@ -38,7 +38,7 @@
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды записи заявки: для людей и журнала, срок считает монотонный возраст (P/08.0 Н1.9)",
+   "description": "wall-clock seconds of the write of the claim: for people and the log, the term is counted by the monotonic age (P/08.0 Н1.9)",
    "x-codec": [
     "time"
    ]

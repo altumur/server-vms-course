@@ -4,18 +4,18 @@
  "properties": {
   "as_of": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды держателя на конце прохода"
+   "description": "the holder's wall-clock seconds at the end of the pass"
   },
   "holder": {
    "$ref": "#/$defs/common.domain_member",
-   "description": "имя держателя"
+   "description": "holder name"
   },
   "complete": {
-   "description": "команда view: true ⟺ каждый член ok и contested пуст; у прохода — круг, Н1.4б complete",
+   "description": "command view: true ⟺ every member is ok and contested is empty; for the pass — the round, Н1.4б complete",
    "type": "boolean"
   },
   "members": {
-   "description": "по name",
+   "description": "by name",
    "type": "array",
    "items": {
     "type": "object",
@@ -34,7 +34,7 @@
       ]
      },
      "age": {
-      "description": "секунды с последней смены метки, которую видел этот процесс, без смены — с первого взгляда; у never — null",
+      "description": "seconds since the last change of the mark seen by this process, without a change — since the first sight; for never — null",
       "type": [
        "number",
        "null"
@@ -53,14 +53,14 @@
          "type": "null"
         },
         "then": {
-         "description": "у never",
+         "description": "for never",
          "type": "null"
         }
        }
       ]
      },
      "servers": {
-      "description": "серверы копии по name в байтах UTF-8; нет копии или ни одного имени — поля нет (Н1.4)",
+      "description": "servers of the copy by name in UTF-8 bytes; no copy or not a single name — no field (Н1.4)",
       "type": "array",
       "items": {
        "type": "object",
@@ -74,15 +74,15 @@
          }
         },
         "online": {
-         "description": "есть пульс сервера: член ok и пульс свеж; пульсов нет — поля нет",
+         "description": "there is a server heartbeat: the member is ok and the heartbeat is fresh; no heartbeats — no field",
          "type": "boolean"
         },
         "labels": {
-         "description": "метки через запятую из domain/servers",
+         "description": "labels separated by commas from domain/servers",
          "type": "string"
         },
         "pulse": {
-         "description": "поля domain.view_pulse из пульса воркера сервера, по подсистемам",
+         "description": "domain.view_pulse fields from the heartbeat of the server worker, per subsystem",
          "type": "object",
          "x-opaque": true
         }
@@ -94,11 +94,11 @@
       }
      },
      "url": {
-      "description": "адрес входа члена из domain/servers; нет — член за NAT (Н1.4)",
+      "description": "the member's entry address from domain/servers; absent — the member is behind NAT (Н1.4)",
       "type": "string"
      },
      "class": {
-      "description": "Entry.class, нет — server (P/08.1 Н1.7)",
+      "description": "Entry.class; absent — server (P/08.1 Н1.7)",
       "type": "string",
       "enum": [
        "server",
@@ -115,7 +115,7 @@
    }
   },
   "units": {
-   "description": "каждый манифест каталога с domain.ref (Н1.2), ключ есть и у пустого; порядок — по (cluster, id, worker)",
+   "description": "each manifest of the catalogue with domain.ref (Н1.2), the key is present for an empty one as well; order — by (cluster, id, worker)",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/common.sub_name"
@@ -128,7 +128,7 @@
    }
   },
   "contested": {
-   "description": "ref, который заявляют два члена и больше; ключ есть у каждого манифеста с domain.ref, без спорных — {}",
+   "description": "a ref claimed by two members or more; the key is present for every manifest with domain.ref, without contested ones — {}",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/common.sub_name"
@@ -154,20 +154,20 @@
    }
   },
   "trust": {
-   "description": "набор, которому верит держатель (Н1.2а; глава 8.2)",
+   "description": "the set the holder trusts (Н1.2а; chapter 8.2)",
    "type": "object",
    "properties": {
     "rev": {
      "$ref": "#/$defs/common.pos53",
-     "description": "rev набора domain/keys"
+     "description": "rev of the domain/keys set"
     },
     "root": {
      "$ref": "#/$defs/fingerprint",
-     "description": "отпечаток корня"
+     "description": "root fingerprint"
     },
     "book_seal": {
      "$ref": "#/$defs/fingerprint",
-     "description": "отпечаток ключа приёма книг"
+     "description": "fingerprint of the book intake key"
     }
    },
    "additionalProperties": false,
@@ -178,14 +178,14 @@
    ]
   },
   "knocking": {
-   "description": "по name (Н1.7)",
+   "description": "by name (Н1.7)",
    "type": "array",
    "items": {
     "$ref": "#/$defs/knock"
    }
   },
   "reports": {
-   "description": "поля метки reported каждого члена (Н1.7)",
+   "description": "fields of the reported mark of each member (Н1.7)",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/common.domain_member"
@@ -198,19 +198,19 @@
      },
      "base": {
       "$ref": "#/$defs/common.uint53",
-      "description": "0 — пришло целое"
+      "description": "0 — arrived whole"
      },
      "received_at": {
       "$ref": "#/$defs/common.time",
-      "description": "стенные секунды держателя приёма"
+      "description": "the holder's wall-clock seconds of the intake"
      },
      "sent_at": {
-      "description": "sent_at публикации, как пришёл",
+      "description": "sent_at of the publication, as it arrived",
       "type": "number"
      },
      "via": {
       "$ref": "#/$defs/common.domain_member",
-      "description": "ретранслятор — дорога метки (Н1.6а)"
+      "description": "relay — the route of the mark (Н1.6а)"
      },
      "keys_rev": {
       "$ref": "#/$defs/common.pos53"
@@ -224,7 +224,7 @@
       ]
      },
      "sign_failures": {
-      "description": "поле последнего принятого запроса (P/08.3-11; P/09.1 Н1.12)",
+      "description": "field of the last accepted request (P/08.3-11; P/09.1 Н1.12)",
       "type": "object",
       "properties": {
        "domain": {
@@ -248,7 +248,7 @@
    }
   },
   "topology": {
-   "description": "doc строки domain/topology, прочитанный проходом; нет строки — {rev 0, star []} (Н1.6а; форма — глава 8.3 Н1.2)",
+   "description": "doc of the domain/topology row read by the pass; no row — {rev 0, star []} (Н1.6а; form — chapter 8.3 Н1.2)",
    "type": "object",
    "properties": {
     "rev": {
@@ -286,7 +286,7 @@
       "$ref": "#/$defs/common.domain_member"
      },
      "uniqueItems": true,
-     "description": "кто ведёт хотя бы одного члена (P/08.3 Н1.2)"
+     "description": "who leads at least one member (P/08.3 Н1.2)"
     }
    },
    "additionalProperties": false,
@@ -296,29 +296,29 @@
    ]
   },
   "relay_refused": {
-   "description": "последние отказы пакетов этого процесса (Н1.6а)",
+   "description": "the last batch refusals of this process (Н1.6а)",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/common.domain_member",
-    "description": "ретранслятор"
+    "description": "relay"
    },
    "additionalProperties": {
     "type": "object",
     "propertyNames": {
      "$ref": "#/$defs/common.domain_member",
-     "description": "член"
+     "description": "member"
     },
     "additionalProperties": {
-     "description": "причина",
+     "description": "reason",
      "type": "string"
     }
    }
   },
   "books": {
-   "description": "`{\"<sub>/<книга>\": {conflicts, dropped, undelivered, person_names?, too_large?, too_large_count?, near_ceiling?, near_ceiling_count?}}` — диагностика сборки книг (P/08.5 Н1.5)",
+   "description": "`{\"<sub>/<книга>\": {conflicts, dropped, undelivered, person_names?, too_large?, too_large_count?, near_ceiling?, near_ceiling_count?}}` — diagnostics of the assembly of books (P/08.5 Н1.5)",
    "type": "object",
    "propertyNames": {
-    "description": "`<sub>/<книга>` — каждая собираемая книга каталога (P/02.1 Н1.2б domain.books с from)",
+    "description": "`<sub>/<книга>` — each assembled book of the catalogue (P/02.1 Н1.2б domain.books with from)",
     "type": "string",
     "pattern": "^(?:[a-z][a-z0-9_-]{0,31}/[a-z0-9][a-z0-9_-]*)$"
    },
@@ -326,7 +326,7 @@
     "type": "object",
     "properties": {
      "conflicts": {
-      "description": "ключи unique с двумя вкладами и больше, по возрастанию",
+      "description": "unique keys with two contributions or more, ascending",
       "type": "array",
       "items": {
        "type": "string"
@@ -334,11 +334,11 @@
       "uniqueItems": true
      },
      "dropped": {
-      "description": "снятые вклады (без значений и секретов)",
+      "description": "removed contributions (without values and secrets)",
       "type": "object",
       "propertyNames": {
        "$ref": "#/$defs/common.domain_member",
-       "description": "член-вкладчик"
+       "description": "contributor member"
       },
       "additionalProperties": {
        "type": "string",
@@ -352,10 +352,10 @@
       "type": "object",
       "propertyNames": {
        "$ref": "#/$defs/common.domain_member",
-       "description": "член-вкладчик"
+       "description": "contributor member"
       },
       "additionalProperties": {
-       "description": "получатели to вне списка членов, по возрастанию",
+       "description": "recipients to outside the member list, ascending",
        "type": "array",
        "items": {
         "type": "string"
@@ -364,7 +364,7 @@
       }
      },
      "person_names": {
-      "description": "у книги с domain.names — ключи, которые — имена людей, не доставлены (Н1.7 reverse), по возрастанию",
+      "description": "for a book with domain.names — the keys that are names of people, not delivered (Н1.7 reverse), in ascending order",
       "type": "array",
       "items": {
        "type": "string"
@@ -372,7 +372,7 @@
       "uniqueItems": true
      },
      "too_large": {
-      "description": "чья строка больше потолка и не записана (P/08.5 Н1.5), первые MISSING_SHOWN, class server первыми; у книги to: \"*\" — */<раздел>",
+      "description": "whose row is larger than the ceiling and is not written (P/08.5 Н1.5), the first MISSING_SHOWN, class server first; for a book to: \"*\" — */<раздел>",
       "type": "array",
       "uniqueItems": true,
       "maxItems": 500,
@@ -381,11 +381,11 @@
       }
      },
      "too_large_count": {
-      "description": "все такие строки (P/08.5 Н1.5)",
+      "description": "all such rows (P/08.5 Н1.5)",
       "$ref": "#/$defs/common.pos53"
      },
      "near_ceiling": {
-      "description": "разделы членов, чья строка book-keys этой книги больше NEAR_CEILING (P/08.5 Н1.5), первые MISSING_SHOWN по возрастанию",
+      "description": "sections of the members whose book-keys row of this book is larger than NEAR_CEILING (P/08.5 Н1.5), the first MISSING_SHOWN in ascending order",
       "type": "array",
       "uniqueItems": true,
       "maxItems": 500,
@@ -394,7 +394,7 @@
       }
      },
      "near_ceiling_count": {
-      "description": "все такие разделы (P/08.5 Н1.5)",
+      "description": "all such sections (P/08.5 Н1.5)",
       "$ref": "#/$defs/common.pos53"
      }
     },
@@ -407,31 +407,31 @@
    }
   },
   "pending": {
-   "description": "поле главы 8.6 (М11/6 Н1.6 view.pending)",
+   "description": "field of chapter 8.6 (М11/6 Н1.6 view.pending)",
    "type": "object",
    "x-opaque": true
   },
   "outcomes": {
-   "description": "поле главы 8.6 (М11/6 Н1.6 view.outcomes)",
+   "description": "field of chapter 8.6 (М11/6 Н1.6 view.outcomes)",
    "type": "object",
    "x-opaque": true
   },
   "url": {
-   "description": "DOMAIN_CONSOLE_URL процесса domain (адрес пересылки view.url — договор пересылки; разбор ревью стадии B 8–10, № 22: М-16)",
+   "description": "DOMAIN_CONSOLE_URL of the domain process (the forwarding address of view.url — the forwarding contract; review analysis of stage B 8–10, № 22: М-16)",
    "type": "string"
   },
   "term": {
-   "description": "поле главы 8.8 (М11/10 Н1.3 view.term)",
+   "description": "field of chapter 8.8 (М11/10 Н1.3 view.term)",
    "type": "object",
    "x-opaque": true
   },
   "shared": {
-   "description": "поле главы 8.9 (М11/11 Н1.6 view.shared)",
+   "description": "field of chapter 8.9 (М11/11 Н1.6 view.shared)",
    "type": "object",
    "x-opaque": true
   },
   "role_spread": {
-   "description": "расхождение роли по кластерам, только не ok (P/08.4 Н3)",
+   "description": "divergence of the role across clusters, only not ok (P/08.4 Н3)",
    "type": "object",
    "additionalProperties": {
     "type": "object",
@@ -446,7 +446,7 @@
    }
   },
   "parts": {
-   "description": "непустые разделы последнего круга: раздел → as_of (Н1.4б)",
+   "description": "non-empty sections of the last round: section → as_of (Н1.4б)",
    "type": "object",
    "additionalProperties": {
     "type": "number"
@@ -458,16 +458,16 @@
    "x-opaque": true
   },
   "knocking_count": {
-   "description": "сколько стуков лежит в domain/knocks/* (P/08.1 Н1.4б)",
+   "description": "how many knocks lie in domain/knocks/* (P/08.1 Н1.4б)",
    "type": "integer",
    "minimum": 0
   },
   "backup_short": {
-   "description": "есть камеры, а взявших копию меньше BACKUP_HOLDERS (P/08.8 Н1.5 new_camera)",
+   "description": "there are cameras, and those who took a copy are fewer than BACKUP_HOLDERS (P/08.8 Н1.5 new_camera)",
    "type": "object",
    "properties": {
     "have": {
-     "description": "взявших копию",
+     "description": "those who took a copy",
      "$ref": "#/$defs/common.uint53"
     },
     "need": {
@@ -490,7 +490,7 @@
  ],
  "$defs": {
   "age": {
-   "description": "секунды, один знак после точки (Н1.4 round)",
+   "description": "seconds, one digit after the point (Н1.4 round)",
    "type": "number",
    "minimum": 0
   },
@@ -1296,12 +1296,12 @@
    "maximum": 9007199254740991
   },
   "fingerprint": {
-   "description": "отпечаток ключа — hex(sha256(открытый ключ)[:8]), 16 знаков (глава 8.2, М11/2 Н1.1 fingerprint)",
+   "description": "key fingerprint — hex(sha256(public key)[:8]), 16 characters (chapter 8.2, М11/2 Н1.1 fingerprint)",
    "type": "string",
    "pattern": "^(?:[0-9a-f]{16})$"
   },
   "knock": {
-   "description": "стучащийся (глава 8.3, М11/3 Н1.1 knock)",
+   "description": "the knocker (chapter 8.3, М11/3 Н1.1 knock)",
    "type": "object",
    "properties": {
     "name": {
@@ -1309,11 +1309,11 @@
     },
     "last": {
      "$ref": "#/$defs/common.time",
-     "description": "стенные секунды держателя последнего стука"
+     "description": "the holder's wall-clock seconds of the last knock"
     },
     "times": {
      "$ref": "#/$defs/common.pos53",
-     "description": "число стуков этим ключом"
+     "description": "number of knocks with this key"
     },
     "key": {
      "$ref": "#/$defs/common.domain_member_key"
@@ -1330,7 +1330,7 @@
      ]
     },
     "keys_rev": {
-     "description": "rev набора, который член держит, или null",
+     "description": "rev of the set that the member holds, or null",
      "type": [
       "integer",
       "null"
@@ -1356,14 +1356,14 @@
    "properties": {
     "sub": {
      "$ref": "#/$defs/common.sub_name",
-     "description": "подсистема"
+     "description": "subsystem"
     },
     "id": {
      "$ref": "#/$defs/common.named_id",
-     "description": "id единицы в её кластере (строкой; Н1.4 Unit id)"
+     "description": "id of the unit in its cluster (as a string; Н1.4 Unit id)"
     },
     "ref": {
-     "description": "значение поля domain.ref строки единицы (Н1.2)",
+     "description": "value of the domain.ref field of the unit row (Н1.2)",
      "type": "string",
      "not": {
       "enum": [
@@ -1373,21 +1373,21 @@
     },
     "cluster": {
      "$ref": "#/$defs/common.domain_member",
-     "description": "член, в копии которого единица"
+     "description": "the member in whose copy the unit is"
     },
     "revision": {
      "$ref": "#/$defs/common.pos53",
-     "description": "версия строки единицы из строки шарда (Н1.4 Unit revision)"
+     "description": "version of the unit row from the shard row (Н1.4 Unit revision)"
     },
     "labels": {
-     "description": "поле labels строки шарда (Н1.4 Unit)",
+     "description": "the labels field of the shard row (Н1.4 Unit)",
      "type": "array",
      "items": {
       "type": "string"
      }
     },
     "about": {
-     "description": "id about-единицы из строки шарда (Н1.4 Unit)",
+     "description": "id of the about unit from the shard row (Н1.4 Unit)",
      "type": "string",
      "not": {
       "enum": [
@@ -1396,7 +1396,7 @@
      }
     },
     "worker": {
-     "description": "из пульса или из строки шарда; нет — поля нет; пульс без поля worker — имя из ключа пульса",
+     "description": "from the heartbeat or from the shard row; absent — no field; a heartbeat without the worker field — the name from the heartbeat key",
      "type": "string",
      "not": {
       "enum": [
@@ -1405,7 +1405,7 @@
      }
     },
     "server": {
-     "description": "поле server пульса или строки шарда; нет — поля нет",
+     "description": "the server field of the heartbeat or of the shard row; absent — no field",
      "type": "string",
      "not": {
       "enum": [
@@ -1414,7 +1414,7 @@
      }
     },
     "phase": {
-     "description": "status[].phase пульса (P/03.4 Н1.1); у configured — unobserved",
+     "description": "status[].phase of the heartbeat (P/03.4 Н1.1); for configured — unobserved",
      "type": "string",
      "not": {
       "enum": [
@@ -1424,7 +1424,7 @@
     },
     "age": {
      "$ref": "#/$defs/age",
-     "description": "у live/stale — с последней смены пульса, у configured — с последней смены метки"
+     "description": "for live/stale — since the last change of the heartbeat, for configured — since the last change of the mark"
     },
     "state": {
      "description": "Н1.3 unit_state",
@@ -1437,12 +1437,12 @@
      ]
     },
     "view": {
-     "description": "поля, названные domain.view манифеста (P/02.1 Н1.2а), из строки шарда; секретных полей нет (P/06.2 Н1.4)",
+     "description": "fields named by domain.view of the manifest (P/02.1 Н1.2а), from the shard row; there are no secret fields (P/06.2 Н1.4)",
      "type": "object",
      "x-opaque": true
     },
     "status": {
-     "description": "поля domain.view_status манифеста из элемента status[] пульса (Н1.4 Unit status)",
+     "description": "domain.view_status fields of the manifest from the status[] element of the heartbeat (Н1.4 Unit status)",
      "type": "object",
      "x-opaque": true
     }

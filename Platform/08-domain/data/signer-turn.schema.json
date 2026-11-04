@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "holder": {
-   "description": "экземпляр активного процесса domain `<коробка>:<pid>:<6 hex>` (форма экземпляра — договор экземпляра common/contracts/instance.md) или \"\" — очередь отдана по SIGTERM (Н1.7 release)",
+   "description": "instance of the active domain process `<коробка>:<pid>:<6 hex>` (the instance form — the instance contract common/contracts/instance.md) or \"\" — the turn was given up by SIGTERM (Н1.7 release)",
    "type": "string",
    "x-codec": [
     "string"

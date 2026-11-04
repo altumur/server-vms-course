@@ -4,7 +4,7 @@
  "properties": {
   "rev": {
    "$ref": "#/$defs/common.pos53",
-   "description": "счётчик domain/placement — rev последней записи или удаления назначения (Н1.1); ответ агенту несёт его в carry.placement.rev (Н1.2)",
+   "description": "the domain/placement counter — rev of the last write or deletion of an assignment (Н1.1); the answer to the agent carries it in carry.placement.rev (Н1.2)",
    "x-codec": [
     "integer"
    ]

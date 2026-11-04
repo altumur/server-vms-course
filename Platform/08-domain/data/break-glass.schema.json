@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "pwhash_secret": {
-   "description": "та же форма, что pwhash_secret строки человека (Н1.1): pbkdf2-sha256$600000$<соль: 32 hex>$<ключ: 64 hex> от аварийного пароля (≥ GLASS_MIN); в строке — конверт кольца, форма хеша — у открытого",
+   "description": "the same form as pwhash_secret of the person row (Н1.1): pbkdf2-sha256$600000$<соль: 32 hex>$<ключ: 64 hex> of the break-glass password (≥ GLASS_MIN); in the row — a ring envelope, the hash form — of the opened value",
    "type": "string",
    "x-codec": [
     "string"
@@ -11,14 +11,14 @@
   },
   "set_at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды установки пароля (GET /domain/break-glass — {clusters: {<кластер>: {set_at}}})",
+   "description": "wall-clock seconds of setting the password (GET /domain/break-glass — {clusters: {<кластер>: {set_at}}})",
    "x-codec": [
     "time"
    ]
   },
   "revision": {
    "$ref": "#/$defs/common.pos53",
-   "description": "счётчик записей строки: 1 при создании, +1 на каждую запись; читает только процесс domain и консоль домена, писатель пишет всегда (P/08.0 Н1.9 «Версии»; ADR-0094 B4)",
+   "description": "write counter of the row: 1 at creation, +1 per write; read only by the domain process and the domain console, the writer always writes it (P/08.0 Н1.9 «Versions»; ADR-0094 B4)",
    "x-whole": true,
    "x-codec": [
     "integer"

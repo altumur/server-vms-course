@@ -1400,3 +1400,4 @@ adr	add	point	status	file	norm	note
 0121	0	P/06.4 «Решает реализация»	НОРМА	Platform/06-console; Platform/07-console-module (en и ru)	P/06.4 «Решает реализация»	полосы и срок слияния — договор слияния журнала событий (решение «Архитектора» 2026-11-04)
 0121	0	P/06.4 Н1	НОРМА	Platform/06-console; Platform/07-console-module (en и ru)	P/06.4 Н1	ttl — договор просьбы (решение «Архитектора» 2026-11-04)
 0121	0	P/06.1 «Команда окна уборки»	НОРМА	Platform/06-console; Platform/07-console-module (en и ru)	P/06.1 «Команда окна уборки»	строка кода 3 возвращена в таблицу (решение «Архитектора» 2026-11-04)
+0121	0	P/08.4 «Гонки»	НОРМА	Platform/08-domain/spec/08.4-domain.norms.md; Platform/08-domain/spec/en/08.4-domain.norms.en.md	P/08.4 «Гонки»	лишняя обратная кавычка: `TOKEN_LIFETIME + TOKEN_SKEW` одним кодом, смысл тот же (решила «Спецификация» 2026-11-04, опечатка разметки)

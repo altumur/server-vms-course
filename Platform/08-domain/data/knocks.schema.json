@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {},
  "additionalProperties": {
-  "description": "стук, текст JSON {key, pinned, at, batch, class}",
+  "description": "knock, JSON text {key, pinned, at, batch, class}",
   "type": "string",
   "x-codec": [
    "string"

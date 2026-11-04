@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {},
  "additionalProperties": {
-  "description": "запись кольца, текст JSON",
+  "description": "ring record, JSON text",
   "type": "string",
   "x-codec": [
    "string"

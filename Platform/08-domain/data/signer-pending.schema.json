@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "seed_secret": {
-   "description": "hex 32 случайных байт — закрытый скаляр X25519; конверт кольца",
+   "description": "hex of 32 random bytes — the X25519 private scalar; a ring envelope",
    "type": "string",
    "x-codec": [
     "string"

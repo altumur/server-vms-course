@@ -1,5 +1,5 @@
-# Исходы нечитаемого объекта domain/backups/part-… (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable object domain/backups/part-… (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole object); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domain	объект целиком нечитаем: новая копия пишет часть заново; дверь — 404; журнал без значения	1	строка	P/08.8 Н1.5а
-	domainagent	часть не сошлась с sha256 головы: не хранить, taken не писать, повтор; journal domain/backup-refused	1	строка	P/08.8 Н1.5а
+	domain	the whole object is unreadable: a new copy writes the part anew; the door — 404; log without the value	1	строка	P/08.8 Н1.5а
+	domainagent	the part did not match the sha256 of the head: do not store, do not write taken, repeat; journal domain/backup-refused	1	строка	P/08.8 Н1.5а

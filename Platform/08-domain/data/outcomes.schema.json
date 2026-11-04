@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {},
  "propertyNames": {
-  "description": "id правки, чей это исход (Н1.4 id)",
+  "description": "id of the edit whose outcome this is (Н1.4 id)",
   "type": "string",
   "pattern": "^(?:e-[0-9a-f]{12})$"
  },

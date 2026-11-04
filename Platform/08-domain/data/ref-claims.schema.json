@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {},
  "additionalProperties": {
-  "description": "as_of заявки члена, текст JSON",
+  "description": "as_of of the member's claim, JSON text",
   "type": "string",
   "x-codec": [
    "string"

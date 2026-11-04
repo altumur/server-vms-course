@@ -1,5 +1,5 @@
-# Исходы нечитаемой строки domain/signer-pending (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable row domain/signer-pending (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	admin	строка целиком нечитаема: `w2cctl secrets seal`/`status` — строку не трогает (байт в байт), строка журнала «`<ключ>` unreadable» без значения, обход продолжается, итог — код 1 (В7 п. 3, П4)	0	строка	P/02.4 Н1.9 «Команды `w2cctl secrets`»
-	domain	строка целиком нечитаема: подготовленного ключа у цели нет — конверт keys_sealed передачи цель не откроет: шаг 5 плановой передачи (P/08.8 Н1.7) цель не выполняет, передачу не принимает, строку не переписывает, причина — в журнал раз в проход, без значения (аудит раскладки, Г-39; правило DF-OUTCOMES-109, решение «Архитектора» 2026-10-25)	0	строка	P/08.2 Н1.3; P/08.8 Н1.7
+	admin	the whole row is unreadable: `w2cctl secrets seal`/`status` — does not touch the row (byte for byte), a log line «`<ключ>` unreadable» without the value, the walk continues, the result — code 1 (В7 item 3, П4)	0	строка	P/02.4 Н1.9 «Команды `w2cctl secrets`»
+	domain	the whole row is unreadable: the target has no prepared key — the target will not open the keys_sealed envelope of the handover: the target does not perform step 5 of the planned handover (P/08.8 Н1.7), does not accept the handover, does not rewrite the row, the cause goes to the log once per pass, without the value (layout audit, Г-39; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)	0	строка	P/08.2 Н1.3; P/08.8 Н1.7

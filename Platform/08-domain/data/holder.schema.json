@@ -3,23 +3,23 @@
  "type": "object",
  "properties": {
   "doc": {
-   "description": "текст JCS документа записи срока; ровно один элемент строки; закрытый набор полей — лишнее поле: not_a_record (record шаг 1)",
+   "description": "JCS text of the term record document; exactly one element of the row; a closed set of fields — an extra field: not_a_record (record step 1)",
    "type": "object",
    "properties": {
     "domain": {
-     "description": "имя домена (P/08.2 Н1.1); ≠ домену набора — функция record шаг 2 (another_domain), не форма"
+     "description": "domain name (P/08.2 Н1.1); ≠ the domain of the set — function record step 2 (another_domain), not the form"
     },
     "term": {
      "$ref": "#/$defs/common.pos53",
-     "description": "срок — целое ≥ 1"
+     "description": "term — an integer ≥ 1"
     },
     "holder": {
-     "description": "имя члена-держателя (P/08.1 Н1.1 member)",
+     "description": "name of the holder member (P/08.1 Н1.1 member)",
      "type": "string",
      "pattern": "^(?:[a-z0-9-]{1,64})$"
     },
     "url": {
-     "description": "адрес двери процесса domain держателя — SIGNER_URL окружения этого процесса, без него http://localhost:8445; у держателя из нескольких узлов — адрес, который доходит до любого узла кластера (P/08.10 Н1.7); непустая строка",
+     "description": "the address of the door of the holder's domain process — SIGNER_URL of the environment of this process, without it http://localhost:8445; for a holder of several nodes — an address that reaches any node of the cluster (P/08.10 Н1.7); a non-empty string",
      "type": "string",
      "not": {
       "enum": [
@@ -28,22 +28,22 @@
      }
     },
     "ca": {
-     "description": "центр держателя, 1–2 отпечатка без повторов (ADR-0075 уточнение 2); нет — у держателя центра нет",
+     "description": "the holder's CA, 1–2 fingerprints without repetitions (ADR-0075 clarification 2); absent — the holder has no CA",
      "type": "array",
      "items": {
       "$ref": "#/$defs/common.sha256_hex",
-      "description": "отпечаток центра держателя — sha256 hex DER-сертификата центра (P/08.3 Н1.6 fingerprint)"
+      "description": "fingerprint of the holder's CA — sha256 hex of the DER certificate of the CA (P/08.3 Н1.6 fingerprint)"
      },
      "minItems": 1,
      "uniqueItems": true,
      "maxItems": 2
     },
     "at": {
-     "description": "стенные секунды подписи; число JSON (record шаг 1: at — число)",
+     "description": "wall-clock seconds of the signature; a JSON number (record step 1: at — a number)",
      "type": "number"
     },
     "restored_from": {
-     "description": "{term, rev} резервной копии, из которой восстановлен этот срок (P/08.8 Н1.5); срок 1 — без поля",
+     "description": "{term, rev} of the backup from which this term was restored (P/08.8 Н1.5); term 1 — without the field",
      "type": "object",
      "properties": {
       "term": {
@@ -60,20 +60,20 @@
      ]
     },
     "issuer": {
-     "description": "hex открытого ключа выпускающего, 32 байта (P/08.2 Н1.3 issuing_key_secret)",
+     "description": "hex of the issuer's public key, 32 bytes (P/08.2 Н1.3 issuing_key_secret)",
      "type": "string",
      "pattern": "^(?:[0-9a-f]{64})$"
     },
     "kid": {
-     "description": "serial выпускающего — первые 16 знаков hex issuer; иное — функция record шаги 3–5, не форма",
+     "description": "serial of the issuer — the first 16 characters of hex issuer; anything else — function record steps 3–5, not the form",
      "type": "string"
     },
     "sig": {
-     "description": "base64url без = подписи Ed25519 выпускающего над UTF-8(JCS(doc без kid и sig)), 64 байта; не base64url, не 64 байта или не сходится — функция record шаг 5 (bad_signature), не форма",
+     "description": "base64url without = of the issuer's Ed25519 signature over UTF-8(JCS(doc without kid and sig)), 64 bytes; not base64url, not 64 bytes or does not match — function record step 5 (bad_signature), not the form",
      "type": "string"
     },
     "key": {
-     "description": "hex ключа члена-держателя; у срока 1 до первого отчёта его агента поля нет (ADR-0113 доп. (3) п. 2)",
+     "description": "hex of the key of the holder member; in term 1, before the first report of its agent, there is no field (ADR-0113 addendum (3) item 2)",
      "type": "string",
      "pattern": "^(?:[0-9a-f]{64})$"
     }

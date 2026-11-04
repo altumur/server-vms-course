@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "pub": {
-   "description": "hex открытого корня (32 байта Ed25519); обязателен",
+   "description": "hex of the public root (32 bytes Ed25519); mandatory",
    "type": "string",
    "pattern": "^(?:[0-9a-f]{64})$",
    "x-codec": [
@@ -11,7 +11,7 @@
    ]
   },
   "domain": {
-   "description": "имя домена, 1–64 знака [a-z0-9-]; обязателен",
+   "description": "domain name, 1–64 characters [a-z0-9-]; mandatory",
    "type": "string",
    "pattern": "^(?:[a-z0-9-]{1,64})$",
    "x-codec": [

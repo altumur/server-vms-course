@@ -3,20 +3,20 @@
  "type": "object",
  "properties": {
   "sent_at": {
-   "description": "конечное число — стенные секунды агента в момент отправки",
+   "description": "a finite number — the agent's wall-clock seconds at the moment of sending",
    "type": "number"
   },
   "objects": {
-   "description": "что изменилось против base (целое при base 0)",
+   "description": "what changed against base (whole at base 0)",
    "type": "object",
    "x-opaque": true
   },
   "base": {
    "$ref": "#/$defs/common.uint53",
-   "description": "rev поколения у держателя, против которого изменения; нет или 0 — тело целое"
+   "description": "rev of the generation at the holder against which the changes are; absent or 0 — the body is whole"
   },
   "deleted": {
-   "description": "ключи, которых больше нет против base; только при base > 0",
+   "description": "keys that no longer exist against base; only at base > 0",
    "type": "array",
    "items": {
     "type": "string",
@@ -29,11 +29,11 @@
   },
   "key": {
    "$ref": "#/$defs/common.domain_member_key",
-   "description": "ключ члена — тот, что в domain/member-key"
+   "description": "member key — the one in domain/member-key"
   },
   "keys_rev": {
    "$ref": "#/$defs/common.pos53",
-   "description": "rev набора domain/keys, который член держит"
+   "description": "rev of the domain/keys set that the member holds"
   },
   "pinned": {
    "$ref": "#/$defs/root_fingerprint"
@@ -930,15 +930,15 @@
    "maximum": 9007199254740991
   },
   "out_of_delta": {
-   "description": "поле вне дельты — форма своей нормы; не по ней — поле не взято, журнал держателя, отчёт принят (P/09.1 Н1.2 out_of_delta)"
+   "description": "a field outside the delta — the form of its own norm; not by it — the field is not taken, the holder's log, the report is accepted (P/09.1 Н1.2 out_of_delta)"
   },
   "outcome": {
-   "description": "исход правки домена у члена — форма P/09.1 Н1.5",
+   "description": "outcome of a domain edit at the member — form P/09.1 Н1.5",
    "type": "object",
    "x-opaque": true
   },
   "root_fingerprint": {
-   "description": "отпечаток корня domain/root члена (P/08.2 Н1.1)",
+   "description": "root fingerprint of the member's domain/root (P/08.2 Н1.1)",
    "type": "string",
    "pattern": "^(?:[0-9a-f]{16})$"
   }

@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "parts": {
-   "description": "непустые разделы папки по возрастанию, текст JSON",
+   "description": "non-empty sections of the folder in ascending order, JSON text",
    "type": "array",
    "x-encoding": "json",
    "items": {

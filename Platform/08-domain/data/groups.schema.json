@@ -4,13 +4,13 @@
  "properties": {
   "name": {
    "$ref": "#/$defs/common.person_name",
-   "description": "имя группы — то же, что <имя> ключа",
+   "description": "group name — the same as <имя> of the key",
    "x-codec": [
     "string"
    ]
   },
   "title": {
-   "description": "отображаемое название",
+   "description": "display title",
    "type": "string",
    "x-codec": [
     "string"
@@ -18,7 +18,7 @@
    "maxLength": 200
   },
   "comment": {
-   "description": "комментарий",
+   "description": "comment",
    "type": "string",
    "x-codec": [
     "string"
@@ -26,7 +26,7 @@
    "maxLength": 2000
   },
   "members": {
-   "description": "имена людей по возрастанию в байтах UTF-8, без повторов — порядок правило писателя",
+   "description": "names of people in ascending order in UTF-8 bytes, without repetitions — the order is the writer's rule",
    "type": "array",
    "items": {
     "$ref": "#/$defs/common.person_name"
@@ -38,7 +38,7 @@
    ]
   },
   "joined": {
-   "description": "когда каждый член вошёл в группу (P/08.4 Н1.3а, Н1.3в tokens); ключи — ровно members",
+   "description": "when each member joined the group (P/08.4 Н1.3а, Н1.3в tokens); keys — exactly members",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/common.person_name"
@@ -52,7 +52,7 @@
    ]
   },
   "source": {
-   "description": "local — до ADR каталогов",
+   "description": "local — until the ADR of catalogues",
    "type": "string",
    "x-codec": [
     "string"
@@ -63,13 +63,13 @@
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды последней правки",
+   "description": "wall-clock seconds of the last edit",
    "x-codec": [
     "time"
    ]
   },
   "by": {
-   "description": "имя человека последней правки",
+   "description": "name of the person of the last edit",
    "type": "string",
    "x-codec": [
     "string"
@@ -77,7 +77,7 @@
   },
   "revision": {
    "$ref": "#/$defs/common.pos53",
-   "description": "счётчик записей строки: 1 при создании, +1 на каждую запись; читает только процесс domain и консоль домена, писатель пишет всегда (P/08.0 Н1.9 «Версии»; ADR-0094 B4)",
+   "description": "write counter of the row: 1 at creation, +1 per write; read only by the domain process and the domain console, the writer always writes it (P/08.0 Н1.9 «Versions»; ADR-0094 B4)",
    "x-whole": true,
    "x-codec": [
     "integer"

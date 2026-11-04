@@ -4,21 +4,21 @@
  "properties": {
   "doc": {
    "$ref": "#/$defs/common.grants_doc",
-   "description": "текст JCS {lines} — строки грантов кластера (или двери домена у domain/grants/domain)",
+   "description": "JCS text {lines} — grant lines of the cluster (or of the domain door for domain/grants/domain)",
    "x-codec": [
     "object"
    ]
   },
   "revision": {
    "$ref": "#/$defs/common.pos53",
-   "description": "счётчик записей строки: 1 при создании, +1 на каждую запись; читает только процесс domain и консоль домена, писатель пишет всегда (P/08.0 Н1.9 «Версии»; ADR-0094 B4)",
+   "description": "write counter of the row: 1 at creation, +1 per write; read only by the domain process and the domain console, the writer always writes it (P/08.0 Н1.9 «Versions»; ADR-0094 B4)",
    "x-whole": true,
    "x-codec": [
     "integer"
    ]
   },
   "role_at": {
-   "description": "когда строки роли на этом кластере записаны в последний раз: текст JSON, роль — секунды (Н1.3а role_at)",
+   "description": "when the rows of the role on this cluster were last written: JSON text, role — seconds (Н1.3а role_at)",
    "type": "object",
    "additionalProperties": {
     "type": "number",

@@ -1,4 +1,4 @@
-# Исходы нечитаемой строки domain/book-keys/<sub>/<книга>/<раздел> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable row domain/book-keys/<sub>/<книга>/<раздел> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domain	строка целиком нечитаема: строка выбрасывается, круг пишет её заново из копий членов раздела, журнал без значения; призрак снимет следующий перенос: предел	0	строка	P/08.5 Н1.3 to_all
+	domain	the whole row is unreadable: the row is thrown away, the round writes it anew from the copies of the members of the section, log without the value; a ghost is removed by the next move: a limit	0	строка	P/08.5 Н1.3 to_all

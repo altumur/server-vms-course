@@ -40,7 +40,7 @@
    ]
   },
   "refused": {
-   "description": "отпечаток — at, текст JSON",
+   "description": "fingerprint — at, JSON text",
    "type": "object",
    "x-encoding": "json",
    "additionalProperties": {
