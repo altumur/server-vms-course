@@ -129,3 +129,17 @@ Platform/04-controller	Platform/04-controller/vectors/order/en/README.en.md	Plat
 Platform/04-controller	Platform/04-controller/vectors/shrink-allowed/en/README.en.md	Platform/04-controller/vectors/shrink-allowed/README.md	source
 Platform/04-controller	Platform/04-controller/vectors/shrink-victim/en/README.en.md	Platform/04-controller/vectors/shrink-victim/README.md	source
 Platform/04-controller	-	-	linked
+Platform/05-resource	Platform/05-resource/05-resource.md	Platform/05-resource/ru/05-resource.md	lecture
+Platform/05-resource	Platform/05-resource/README.md	Platform/05-resource/ru/README.md	translation
+Platform/05-resource	Platform/05-resource/acceptance/README.md	Platform/05-resource/ru/acceptance/README.md	translation
+Platform/05-resource	Platform/05-resource/acceptance/corrections.tsv	Platform/05-resource/journal/corrections.tsv	journal
+Platform/05-resource	Platform/05-resource/lifecycle.md	Platform/05-resource/ru/lifecycle.md	translation
+Platform/05-resource	Platform/05-resource/spec/05-resource.README.md	Platform/05-resource/ru/spec/05-resource.README.md	translation
+Platform/05-resource	Platform/05-resource/spec/05-resource.norms.md	Platform/05-resource/ru/spec/05-resource.norms.md	translation
+Platform/05-resource	Platform/05-resource/vectors/relieve/README.md	Platform/05-resource/ru/vectors/relieve/README.md	translation
+Platform/05-resource	Platform/05-resource/en/README.en.md	Platform/05-resource/README.md	source
+Platform/05-resource	Platform/05-resource/acceptance/en/README.en.md	Platform/05-resource/acceptance/README.md	source
+Platform/05-resource	Platform/05-resource/en/lifecycle.en.md	Platform/05-resource/lifecycle.md	source
+Platform/05-resource	Platform/05-resource/spec/en/05-resource.README.en.md	Platform/05-resource/spec/05-resource.README.md	source
+Platform/05-resource	Platform/05-resource/spec/en/05-resource.norms.en.md	Platform/05-resource/spec/05-resource.norms.md	source
+Platform/05-resource	Platform/05-resource/vectors/relieve/en/README.en.md	Platform/05-resource/vectors/relieve/README.md	source
