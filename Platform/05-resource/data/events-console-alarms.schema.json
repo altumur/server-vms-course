@@ -4,22 +4,22 @@
  "properties": {
   "t": {
    "$ref": "#/$defs/common.time",
-   "description": "секунды стенных часов писателя, когда записали; выбирает бакет (годы до 9999 — EJ-G06)"
+   "description": "the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06)"
   },
   "kind": {
-   "description": "вид события",
+   "description": "the event kind",
    "type": "string"
   },
   "id": {
-   "description": "`e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; уникален, по нему убирают дубли копий",
+   "description": "`e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it",
    "type": "string"
   },
   "of": {
-   "description": "`<sub>/<id>` — единица, про которую; ставит платформа из about",
+   "description": "`<sub>/<id>` — the unit it is about; set by the platform from about",
    "type": "string"
   },
   "class": {
-   "description": "только у тревоги; observation не пишется",
+   "description": "only for an alarm; not written for observation",
    "type": "string",
    "enum": [
     "alarm"
@@ -27,10 +27,10 @@
   },
   "occurred": {
    "$ref": "#/$defs/common.time",
-   "description": "когда произошло; необязателен"
+   "description": "when it happened; optional"
   },
   "v": {
-   "description": "версия строки — дополнительное поле: читатель его терпит (LAYERS.md § 6), писатель не пишет — отсутствие = версия 1; положительное целое, v = 2 сохраняется, выбора поведения по v нет (договор журнала событий line; догадки стадии C EJ-G10, EJ-L04)",
+   "description": "the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04)",
    "type": "integer",
    "x-integer": true,
    "minimum": 1
@@ -55,7 +55,7 @@
   ]
  },
  "additionalProperties": {
-  "description": "слова подсистемы; поля сверх формы читатель сохраняет как есть, писатель пишет строку строго по форме (EJ-G10)"
+  "description": "the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10)"
  },
  "required": [
   "t",

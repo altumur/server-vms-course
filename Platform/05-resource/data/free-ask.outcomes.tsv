@@ -1,6 +1,6 @@
-# Исходы нечитаемой строки <sub>/requests/free-<server>-<volume> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable row <sub>/requests/free-<server>-<volume> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	<s>worker	строка не по форме ресурса — не просьба: пропуск, причина в журнал без значения (В7 п. 3, строка 10)	0	строка	P/03.6 Н3 «взгляд держателя»
-	console	строка ресурса без живого хозяина снимается по ttl	0	строка	P/06.4 Н3 «жнец»
-	resource	не своя форма (есть unit, чужие server/volume, испорченная форма): не трогать, журнал free_ask.key_taken, пропустить	0	строка	P/05 Н1.4 free_ask, Н3 «проход ресурса» relieve
+	<s>worker	a row not in the resource's form is not a request: skipped, the cause goes to the log without the value (В7 item 3, row 10)	0	строка	P/03.6 Н3 «взгляд держателя»
+	console	a resource row without a live owner is removed by ttl	0	строка	P/06.4 Н3 «жнец»
+	resource	not its own form (unit present, someone else's server/volume, a spoiled form): do not touch, log free_ask.key_taken, skip	0	строка	P/05 Н1.4 free_ask, Н3 «проход ресурса» relieve

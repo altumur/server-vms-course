@@ -1,5 +1,7 @@
 # P/05 — Ресурс: нормы
 
+Текст производный от en, руками не правится: источник — английский [`en/05-resource.norms.en.md`](en/05-resource.norms.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+
 Канон урока. [Лекция](../05-resource.md), [контракт](05-resource.api.openapi.yaml), [инструкция](05-resource.README.md),
 [жизненный цикл](../lifecycle.md), [приёмка](../acceptance/README.md). Урок перенесён из
 М10/8 (стадия B, ADR-0083 доп. (1): без изменения
@@ -378,10 +380,10 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `url` | строка | обязателен |  | адрес двери ресурса (RESOURCE_URL) |
-| `since` | время (P/01.1 Н0 «Время в строке») | обязателен |  | момент старта ресурса |
-| `at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | момент последней отметки, каждые 15 с; судят по смене версии строки, не по значению (resource_state договора наблюдения) |
-| `.<имя>` | строка | необязателен |  | имя: `room.<sub>` — элемент каждой подсистемы каталога, чей файл роли `roles/<sub>worker.env` есть на коробке; рядом `live.<sub>` (ADR-0084 доп. (3) Р14′); десятичное ≥ 0 — сколько ещё процессов роли `<sub>worker` сервер поднимет (договор замка присутствия «Счёт room»), или "unknown"; читатель элемент не по форме строкой не отказывает: элемента нет, не читается или unknown — сервер не кандидат в заказ этой роли (P/04 Н3 «заказать()»); у `live.<sub>` — номера n ≥ 2 живых замков роли через запятую по возрастанию без повторов из того же снимка, что `room.<sub>`, или пусто; нет или не читается — сервер не кандидат (договор замка присутствия, live) |
+| `url` | строка | обязателен |  | the address of the resource door (RESOURCE_URL) |
+| `since` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment of the resource start |
+| `at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment of the last mark, every 15 s; judged by a change of the row version, not by the value (resource_state of the observation contract) |
+| `.<имя>` | строка | необязателен |  | имя: `room.<sub>` — an element for each subsystem of the catalogue whose role file `roles/<sub>worker.env` is present on the box; next to it `live.<sub>` (ADR-0084 addendum (3) Р14′); a decimal ≥ 0 — how many more processes of the role `<sub>worker` the server will start (the presence lock contract «Счёт room»), or "unknown"; the reader does not refuse an element out of form at the row level: the element is absent, unreadable or unknown — the server is not a candidate for an order of this role (P/04 Н3 «order()»); for `live.<sub>` — the numbers n ≥ 2 of the live locks of the role, comma-separated, ascending, without repeats, from the same snapshot as `room.<sub>`, or empty; absent or unreadable — the server is not a candidate (the presence lock contract, live) |
 
 Только у писателя (`$defs.writer`):
 
@@ -394,10 +396,10 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| строка целиком | `<s>controller` | строка целиком нечитаема: сервер не кандидат в заказ; поля нечитаемой строки не подменяются отсутствием, причина — в журнал (аудит раскладки, Г-09; правило DF-OUTCOMES-109, решение «Архитектора» 2026-10-25) | 0 | строка | P/04 Н1, Н3 «заказать()» |
-| строка целиком | `console` | строка целиком нечитаема: жизнь ресурса — по смене версии строки (resource_state договора наблюдения), не по её полям; поля нечитаемой строки не подменяются отсутствием; строка двери выведенного сервера нечитаема — проход консоли удаляет её так же: delete с cas по прочитанной версии, содержимое для удаления не нужно (В7 п. 3, строка 12); причина — в журнал (аудит раскладки, Г-09; правило DF-OUTCOMES-109, решение «Архитектора» 2026-10-25) | 0 | строка | договор наблюдения resource_state; P/06.6 Н3 «вывести_сервер» |
-| строка целиком | `resource` | строка целиком нечитаема: restore — дверь нечитаема, восстановление неполное; mirror — адреса нет, сервер не сосед этого прохода; поля нечитаемой строки не подменяются отсутствием, причина — в журнал (аудит раскладки, Г-09; правило DF-OUTCOMES-109, решение «Архитектора» 2026-10-25) | 0 | строка | P/05 Н1.4 door_row, «Восстановление бакетов» |
-| строка целиком | `<s>worker` | строка двери своего сервера нечитаема: клиент объектов при голом cluster:// — чтение объектов кластера «не известно», не «нет», не отказ старта и не отказ записи в свой каталог; при следующем обращении строка читается заново (П3; В7 п. 3, строка 11) | 0 | строка | договор клиента хранилища объектов door (P03-OBJECTS-DEFAULT-1FD) |
+| строка целиком | `<s>controller` | the whole row is unreadable: the server is not a candidate for an order; the fields of the unreadable row are not replaced by absence, the cause goes to the log (layout audit, Г-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/04 Н1, Н3 «заказать()» |
+| строка целиком | `console` | the whole row is unreadable: the life of the resource is judged by a change of the row version (resource_state of the observation contract), not by its fields; the fields of the unreadable row are not replaced by absence; the door row of a decommissioned server is unreadable — the console pass deletes it all the same: delete with cas by the version read, the content is not needed for the deletion (В7 item 3, row 12); the cause goes to the log (layout audit, Г-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | договор наблюдения resource_state; P/06.6 Н3 «вывести_сервер» |
+| строка целиком | `resource` | the whole row is unreadable: restore — the door is unreadable, the restoration is incomplete; mirror — there is no address, the server is not a neighbour of this pass; the fields of the unreadable row are not replaced by absence, the cause goes to the log (layout audit, Г-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/05 Н1.4 door_row, «Восстановление бакетов» |
+| строка целиком | `<s>worker` | the door row of its own server is unreadable: the object client with a bare cluster:// — reading the cluster objects is «unknown», not «no», not a start refusal and not a refusal of writing to its own catalogue; on the next access the row is read anew (П3; В7 item 3, row 11) | 0 | строка | договор клиента хранилища объектов door (P03-OBJECTS-DEFAULT-1FD) |
 
 #### `platform/resources/<server>/heartbeat` — объект
 
@@ -405,63 +407,63 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `server` | строка; целиком `[a-z0-9]+(-[a-z0-9]+)*` | обязателен |  | свой сервер — SERVER_NAME по грамматике договора файла окружения «Переменные окружения», как у замка присутствия (догадка стадии C R05-G07, решение «Архитектора» 2026-10-23); не по ней или не равен серверу ключа — пульс нечитаем (P/06.5 Н2) |
-| `box` | строка | необязателен |  | коробка (BOX_ID, договор файла окружения «Переменные окружения») |
-| `ts` | время (P/01.1 Н0 «Время в строке») | обязателен |  | стенные секунды пульса; пишется каждые 10 с |
-| `url` | строка | обязателен |  | адрес двери ресурса |
-| `schema` | целое; ≥ 1; ≤ 9007199254740991; целый знак и у читателя (x-whole) | обязателен |  | SCHEMA сборки (P/06.6 Н1.1а heartbeat): целое JSON без дробной части и экспоненты, ≥ 1; `1.0`, `1e0`, `-1`, строка, null — схема процесса неизвестна |
-| `build` | строка | обязателен |  | слово сборки (BUILD); не строка — поле не известно: null в ответах консоли (В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 14 списка) |
-| `usage` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | байты файлов бакетов деревьев этого сервера и копий в .mirror/ |
-| `usage_at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | стенные секунды замера usage |
-| `space` | по определению `disk` | обязателен |  | том дерева событий |
-| `volumes` | отображение имена автора: имя — строка, значение — по определению `disk` | обязателен |  | то же по каждому тому (журнал cammeta-go, урок 9 № 1) |
+| `server` | строка; целиком `[a-z0-9]+(-[a-z0-9]+)*` | обязателен |  | its own server — SERVER_NAME by the grammar of the environment file contract «Переменные окружения», as for the presence lock (stage C guess R05-G07, the Architect's decision of 2026-10-23); not by it or not equal to the server of the key — the heartbeat is unreadable (P/06.5 Н2) |
+| `box` | строка | необязателен |  | the box (BOX_ID, the environment file contract «Переменные окружения») |
+| `ts` | время (P/01.1 Н0 «Время в строке») | обязателен |  | wall-clock seconds of the heartbeat; written every 10 s |
+| `url` | строка | обязателен |  | the address of the resource door |
+| `schema` | целое; ≥ 1; ≤ 9007199254740991; целый знак и у читателя (x-whole) | обязателен |  | SCHEMA of the build (P/06.6 Н1.1а heartbeat): a JSON integer without a fractional part and exponent, ≥ 1; `1.0`, `1e0`, `-1`, a string, null — the process schema is unknown |
+| `build` | строка | обязателен |  | the build word (BUILD); not a string — the field is unknown: null in the console's answers (В7 item 3, the Architect's decision of 2026-10-28, П1; row 14 of the list) |
+| `usage` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | bytes of the bucket files of the trees of this server and of the copies in .mirror/ |
+| `usage_at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | wall-clock seconds of the usage measurement |
+| `space` | по определению `disk` | обязателен |  | the volume of the event tree |
+| `volumes` | отображение имена автора: имя — строка, значение — по определению `disk` | обязателен |  | the same per volume (log of cammeta-go, lesson 9 № 1) |
 | `volumes.<имя>` | по определению `disk` | необязателен |  |  |
-| `units` | отображение имена автора: имя — строка; целиком `[a-z][a-z0-9_-]{0,31}`, значение — список, элемент — строка | обязателен |  | `{<sub>: [<id>…]}`; нет таких — {}; в каждом пульсе (E39) |
-| `units.<имя>` | список, элемент — строка | необязателен |  | id единиц, которые называют в status пульсы воркеров этой коробки из running, по возрастанию байтов |
+| `units` | отображение имена автора: имя — строка; целиком `[a-z][a-z0-9_-]{0,31}`, значение — список, элемент — строка | обязателен |  | `{<sub>: [<id>…]}`; none such — {}; in every heartbeat (E39) |
+| `units.<имя>` | список, элемент — строка | необязателен |  | ids of the units named in status by the heartbeats of the workers of this box from running, in ascending byte order |
 | `units.<имя>[]` | строка | необязателен |  |  |
-| `workers` | по определению `slot_list` | необязателен |  | все слоты, о которых ресурс знает на своей коробке (по замкам присутствия) |
-| `running` | по определению `slot_list` | необязателен |  | слоты с живым процессом (держит замок присутствия) |
-| `unknown` | по определению `slot_list` | необязателен |  | присутствие не прочлось |
+| `workers` | по определению `slot_list` | необязателен |  | all slots the resource knows about on its box (by the presence locks) |
+| `running` | по определению `slot_list` | необязателен |  | slots with a live process (it holds the presence lock) |
+| `unknown` | по определению `slot_list` | необязателен |  | presence could not be read |
 | `instances` | отображение имена автора: имя — строка; целиком `[^/]+/[^/]+`, значение — строка; целиком `[\s\S]+` | необязателен |  | `{<sub>/<имя слота>: <экземпляр>}` |
 | `instances.<имя>` | строка; целиком `[\s\S]+` | необязателен |  |  |
-| `short` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | сколько байтов отметка просила освободить и не смогла (P/06.5 Н3 /metrics w2c_resource_short_bytes): Σ по томам наибольшей need (> 0) среди действующих своих `free-<server>-<volume>` этого прохода relieve — подсистемы на одном томе не суммируются; need — по Н3 relieve, вверх до целого байта, насыщение 2^53−1; platform/space выключен, просьб нет, need ≤ 0 — 0; вход прохода не прочитан — прежнее значение (догадка стадии C R05-G03, решение «Архитектора» 2026-10-23) |
-| `waits` | отображение `{waiting, held, full, replaced, max}` | необязателен |  | счётчики ожиданий /events/wait (Н1.6); в каждом пульсе (E39) |
+| `short` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | how many bytes the mark asked to free and could not (P/06.5 Н3 /metrics w2c_resource_short_bytes): Σ over the volumes of the largest need (> 0) among the effective own `free-<server>-<volume>` of this relieve pass — subsystems on one volume are not summed; need — by Н3 relieve, rounded up to a whole byte, saturation 2^53−1; platform/space disabled, no requests, need ≤ 0 — 0; the pass input was not read — the previous value (stage C guess R05-G03, the Architect's decision of 2026-10-23) |
+| `waits` | отображение `{waiting, held, full, replaced, max}` | необязателен |  | counters of the /events/wait waits (Н1.6); in every heartbeat (E39) |
 | `waits.waiting` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
 | `waits.held` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
 | `waits.full` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
 | `waits.replaced` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
 | `waits.max` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
-| `mirrors` | отображение имена автора: имя — строка, значение — целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | `{<сервер>: n}` — копии соседей в .mirror/ |
+| `mirrors` | отображение имена автора: имя — строка, значение — целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | `{<сервер>: n}` — copies of neighbours in .mirror/ |
 | `mirrors.<имя>` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | целое от 0 до 2^53 − 1 |
-| `pass_started` | время (P/01.1 Н0 «Время в строке») | необязателен |  | начало текущего прохода (Н3 «проход ресурса») |
-| `pass_stalled` | число; ≥ 0 | необязателен |  | секунды, только пока проход завис (PULSE_LIMIT) |
-| `volumes_stuck` | отображение имена автора: имя — строка, значение — число | необязателен |  | тома, чей зонд не ответил (P/06.5 ResourceRow) |
+| `pass_started` | время (P/01.1 Н0 «Время в строке») | необязателен |  | the start of the current pass (Н3 «проход ресурса») |
+| `pass_stalled` | число; ≥ 0 | необязателен |  | seconds, only while the pass is hung (PULSE_LIMIT) |
+| `volumes_stuck` | отображение имена автора: имя — строка, значение — число | необязателен |  | volumes whose probe did not answer (P/06.5 ResourceRow) |
 | `volumes_stuck.<имя>` | число | необязателен |  |  |
-| `door` | отображение `{addr, mode, cert_until?}` | необязателен |  | состояние двери ресурса (P/06.5 ResourceRow DoorState); пишет ресурс в каждом пульсе (P/05 Н1.4; ADR-0075 доп. (3); разбор ревью стадии B 3–5, № 28) |
-| `door.addr` | строка | обязателен |  | адрес двери ресурса — RESOURCE_HOST:RESOURCE_PORT |
-| `door.mode` | строка; одно из: `loopback`, `mtls` | обязателен |  | loopback — без RESOURCE_TLS, только петля; mtls — RESOURCE_TLS=1, взаимный TLS (ADR-0075) |
-| `door.cert_until` | число | необязателен |  | стенные секунды конца срока сертификата сервера своего комплекта (W2C_TLS_DIR); при mtls |
-| `garbled_rows` | отображение имена автора: имя — строка, значение — целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | нечитаемых строк таблиц, прочитанных ресурсом (holds), по таблице |
+| `door` | отображение `{addr, mode, cert_until?}` | необязателен |  | the state of the resource door (P/06.5 ResourceRow DoorState); written by the resource in every heartbeat (P/05 Н1.4; ADR-0075 addendum (3); analysis of review of stage B 3–5, № 28) |
+| `door.addr` | строка | обязателен |  | the address of the resource door — RESOURCE_HOST:RESOURCE_PORT |
+| `door.mode` | строка; одно из: `loopback`, `mtls` | обязателен |  | loopback — without RESOURCE_TLS, loopback only; mtls — RESOURCE_TLS=1, mutual TLS (ADR-0075) |
+| `door.cert_until` | число | необязателен |  | wall-clock seconds of the expiry of the server certificate of its own set (W2C_TLS_DIR); with mtls |
+| `garbled_rows` | отображение имена автора: имя — строка, значение — целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | unreadable rows of the tables read by the resource (holds), per table |
 | `garbled_rows.<имя>` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | целое от 0 до 2^53 − 1 |
-| `retention_garbled` | список, не короче 1, без повторов, элемент — строка; целиком `[a-z][a-z0-9_-]{0,31}` | необязателен |  | подсистемы, у которых любой срок (`<sub>/retention` или `<sub>/alarms_retention`) с неверным days (P/05 Н1.3 retention rule), независимо от retention_withheld (R05-RETENTION-MIXED-51-01), по возрастанию байтов; нет таких — поля нет (P/05 Н3 retain, Н4; догадка стадии C C05-RETENTION-PULSE-33, решение «Архитектора» 2026-10-25) |
+| `retention_garbled` | список, не короче 1, без повторов, элемент — строка; целиком `[a-z][a-z0-9_-]{0,31}` | необязателен |  | subsystems where any term (`<sub>/retention` or `<sub>/alarms_retention`) has a wrong days (P/05 Н1.3 retention rule), regardless of retention_withheld (R05-RETENTION-MIXED-51-01), in ascending byte order; none such — the field is absent (P/05 Н3 retain, Н4; stage C guess C05-RETENTION-PULSE-33, the Architect's decision of 2026-10-25) |
 | `retention_garbled[]` | строка; целиком `[a-z][a-z0-9_-]{0,31}` | необязателен |  |  |
-| `retention_withheld` | отображение имена автора: имя — строка; целиком `[a-z][a-z0-9_-]{0,31}`, значение — строка; одно из: `days_garbled`, `unknown`, `holds_unread` | необязателен |  | почему зависимое дерево подсистемы в этом проходе срока не убиралось — закрытый перечень: days_garbled — неверный days, unknown — строка срока не прочитана (хранилище не ответило), holds_unread — удержания не прочитаны (договор удержаний); у подсистемы одна причина по порядку unknown → days_garbled → holds_unread; каждое дерево удерживается по своему сроку (R05-G08, R05-RETENTION-MIXED-51-01); нет причины — поля нет (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33) |
+| `retention_withheld` | отображение имена автора: имя — строка; целиком `[a-z][a-z0-9_-]{0,31}`, значение — строка; одно из: `days_garbled`, `unknown`, `holds_unread` | необязателен |  | why a dependent tree of the subsystem was not cleaned up by term in this pass — a closed list: days_garbled — a wrong days, unknown — the term row was not read (the store did not answer), holds_unread — the holds were not read (the holds contract); a subsystem has one cause, in the order unknown → days_garbled → holds_unread; each tree is held by its own term (R05-G08, R05-RETENTION-MIXED-51-01); no cause — the field is absent (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33) |
 | `retention_withheld.<имя>` | строка; одно из: `days_garbled`, `unknown`, `holds_unread` | необязателен |  |  |
-| `settings_unread` | список, не короче 1, без повторов, элемент — одно из: `mirror`, `space` | необязателен |  | строки настроек прохода ресурса, которые в этом проходе не прочитались: mirror — platform/mirror (шаг mirror и копии тел не исполняются), space — platform/space (шаг relieve не исполняется); по возрастанию байтов; нет таких — поля нет (P/05 Н1.4 mirror, space, Н3; В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 20, 21 списка) |
+| `settings_unread` | список, не короче 1, без повторов, элемент — одно из: `mirror`, `space` | необязателен |  | the settings rows of the resource pass that were not read in this pass: mirror — platform/mirror (the mirror step and the body copies are not executed), space — platform/space (the relieve step is not executed); in ascending byte order; none such — the field is absent (P/05 Н1.4 mirror, space, Н3; В7 item 3, the Architect's decision of 2026-10-28, П1; rows 20, 21 of the list) |
 | `settings_unread[]` | одно из: `mirror`, `space` | необязателен |  |  |
-| `restore` | отображение имена автора: имя — строка, значение — отображение `{done, silent?, last_ok?, last_error?, error_at?, restored, missing, failures, lines_garbled?, next?}` | необязателен |  | `{<сосед>: …}` — восстановление бакетов с копий соседей (Н1.4 «Восстановление бакетов»); в каждом пульсе (E39) |
+| `restore` | отображение имена автора: имя — строка, значение — отображение `{done, silent?, last_ok?, last_error?, error_at?, restored, missing, failures, lines_garbled?, next?}` | необязателен |  | `{<сосед>: …}` — restoring buckets from copies of neighbours (Н1.4 «Восстановление бакетов»); in every heartbeat (E39) |
 | `restore.<имя>` | отображение `{done, silent?, last_ok?, last_error?, error_at?, restored, missing, failures, lines_garbled?, next?}` | необязателен |  |  |
 | `restore.<имя>.done` | bool | обязателен |  |  |
 | `restore.<имя>.silent` | bool | необязателен |  |  |
 | `restore.<имя>.last_ok` | число | необязателен |  |  |
 | `restore.<имя>.last_error` | строка | необязателен |  |  |
 | `restore.<имя>.error_at` | число | необязателен |  |  |
-| `restore.<имя>.restored` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | только реально вытянутые у этого соседа бакеты; бакет, уже лежащий на томе, не считается (Н1.4 «Восстановление бакетов») |
+| `restore.<имя>.restored` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | only the buckets actually pulled from this neighbour; a bucket already lying on the volume is not counted (Н1.4 «Восстановление бакетов») |
 | `restore.<имя>.missing` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
 | `restore.<имя>.failures` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
 | `restore.<имя>.lines_garbled` | целое; ≥ 0; ≤ 9007199254740991 | необязателен |  | целое от 0 до 2^53 − 1 |
 | `restore.<имя>.next` | число | необязателен |  |  |
-| `mirror` | отображение `{skipped, failed, peer_errors, lines_garbled, sum_refused?, peer_sum_refused?, pull_sum_bad?, unsummed?}` | необязателен |  | счётчики зеркала (Н1.4 mirror; skipped — бакеты больше 64 MiB); в каждом пульсе (E39) |
+| `mirror` | отображение `{skipped, failed, peer_errors, lines_garbled, sum_refused?, peer_sum_refused?, pull_sum_bad?, unsummed?}` | необязателен |  | mirror counters (Н1.4 mirror; skipped — buckets larger than 64 MiB); in every heartbeat (E39) |
 | `mirror.skipped` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
 | `mirror.failed` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
 | `mirror.peer_errors` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | целое от 0 до 2^53 − 1 |
@@ -476,10 +478,10 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
 | `<disk>` | отображение `{total, free, used, full}` |  |  |  |
-| `<disk>.total` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | байты (statfs) |
-| `<disk>.free` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | байты |
-| `<disk>.used` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | байты |
-| `<disk>.full` | число; ≥ 0; ≤ 1 | обязателен |  | доля used/total от 0 до 1 (не признак) |
+| `<disk>.total` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | bytes (statfs) |
+| `<disk>.free` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | bytes |
+| `<disk>.used` | целое; ≥ 0; ≤ 9007199254740991 | обязателен |  | bytes |
+| `<disk>.full` | число; ≥ 0; ≤ 1 | обязателен |  | the fraction used/total from 0 to 1 (not a flag) |
 
 **`slot_list`**
 
@@ -492,13 +494,13 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| `/schema` | * | схема процесса неизвестна: в processes двери /schema — schema: null; в ResourceRow двери /resources — schema: null (разбор ревью стадии B 6–7, № 6); пульс остаётся читаемым | 0 | поле | P/06.6 Н1.1а heartbeat, Н2.3; P/06.5 Н2 «Выдачи» |
-| `/build` | * | build не строка — поле не известно: null в ResourceRow (/resources) и в processes двери /schema, не ""; пульс остаётся читаемым (П1; В7 п. 3, строка 14) | 0 | поле | P/06.5 Н2; P/06.6 Н2.3 |
-| `/retention_garbled` | * | поле не по форме — не известно: null в ResourceRow, не отсутствие (причины срока не подменяются «причин нет»); пульс остаётся читаемым (П1; В7 п. 3, строка 14) | 0 | поле | P/05 Н3 retain; P/06.5 Н2 |
-| `/retention_withheld` | * | поле не по форме — не известно: null в ResourceRow, не отсутствие (причины срока не подменяются «причин нет»); пульс остаётся читаемым (П1; В7 п. 3, строка 14) | 0 | поле | P/05 Н3 retain; P/06.5 Н2 |
-| объект целиком | `<s>controller` | пульс нечитаем: жизни ресурса не подтверждает, его смена — тоже (resource_state: unreachable при свежей строке двери, иначе по порядку правил); присутствия процессов не даёт | 1 | строка | договор наблюдения resource_state |
-| объект целиком | `console` | пульс нечитаем: жизни ресурса не подтверждает, его смена — тоже (resource_state: unreachable при свежей строке двери, иначе по порядку правил); в /resources не входит, считается в w2c_resource_heartbeats_garbled, ответ 200 | 1 | строка | договор наблюдения resource_state; P/06.5 Н2 «Выдачи» |
-| объект целиком | `resource` | пульс соседа нечитаем: restore соседа — пульс не читается, восстановление неполное (необходимы все известные двери) | 1 | строка | P/05 Н1.4 «Восстановление бакетов» |
+| `/schema` | * | the process schema is unknown: in processes of the door /schema — schema: null; in ResourceRow of the door /resources — schema: null (analysis of review of stage B 6–7, № 6); the heartbeat stays readable | 0 | поле | P/06.6 Н1.1а heartbeat, Н2.3; P/06.5 Н2 «Выдачи» |
+| `/build` | * | build is not a string — the field is unknown: null in ResourceRow (/resources) and in processes of the door /schema, not ""; the heartbeat stays readable (П1; В7 item 3, row 14) | 0 | поле | P/06.5 Н2; P/06.6 Н2.3 |
+| `/retention_garbled` | * | a field out of form is unknown: null in ResourceRow, not absence (the term causes are not replaced by «no causes»); the heartbeat stays readable (П1; В7 item 3, row 14) | 0 | поле | P/05 Н3 retain; P/06.5 Н2 |
+| `/retention_withheld` | * | a field out of form is unknown: null in ResourceRow, not absence (the term causes are not replaced by «no causes»); the heartbeat stays readable (П1; В7 item 3, row 14) | 0 | поле | P/05 Н3 retain; P/06.5 Н2 |
+| объект целиком | `<s>controller` | the heartbeat is unreadable: it does not confirm the life of the resource, nor does its change (resource_state: unreachable with a fresh door row, otherwise by the order of the rules); it gives no presence of processes | 1 | строка | договор наблюдения resource_state |
+| объект целиком | `console` | the heartbeat is unreadable: it does not confirm the life of the resource, nor does its change (resource_state: unreachable with a fresh door row, otherwise by the order of the rules); it does not enter /resources, it is counted in w2c_resource_heartbeats_garbled, the answer is 200 | 1 | строка | договор наблюдения resource_state; P/06.5 Н2 «Выдачи» |
+| объект целиком | `resource` | the neighbour's heartbeat is unreadable: restore of the neighbour — the heartbeat is not read, the restoration is incomplete (all known doors are required) | 1 | строка | P/05 Н1.4 «Восстановление бакетов» |
 
 #### `<sub>/requests/free-<server>-<volume>` — строка
 
@@ -506,18 +508,18 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `free` | число; > 0 | обязателен |  | need = used − total·low − Σ freeing из пульсов, байты; need ≤ 0 — строка снимается, не пишется |
-| `volume` | строка; целиком `[A-Za-z0-9_]{1,64}` | обязателен |  | имя тома из ASCII A-Z/a-z/0-9/_, 1–64 байта, без дефиса; на коробке один том — events |
-| `server` | строка; целиком `[\s\S]+` | обязателен |  | свой сервер — непустой сегмент ключа P/01.1, дефисы допустимы; совпадает с `<server>` ключа |
-| `at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | штамп записи |
+| `free` | число; > 0 | обязателен |  | need = used − total·low − Σ freeing from the heartbeats, bytes; need ≤ 0 — the row is removed, not written |
+| `volume` | строка; целиком `[A-Za-z0-9_]{1,64}` | обязателен |  | the volume name of ASCII A-Z/a-z/0-9/_, 1–64 bytes, without a hyphen; on the box there is one volume — events |
+| `server` | строка; целиком `[\s\S]+` | обязателен |  | its own server — a non-empty key segment of P/01.1, hyphens allowed; matches `<server>` of the key |
+| `at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the write stamp |
 
 Исходы нечитаемой строки (читатель — роль; `*` — все читатели семьи):
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| строка целиком | `<s>worker` | строка не по форме ресурса — не просьба: пропуск, причина в журнал без значения (В7 п. 3, строка 10) | 0 | строка | P/03.6 Н3 «взгляд держателя» |
-| строка целиком | `console` | строка ресурса без живого хозяина снимается по ttl | 0 | строка | P/06.4 Н3 «жнец» |
-| строка целиком | `resource` | не своя форма (есть unit, чужие server/volume, испорченная форма): не трогать, журнал free_ask.key_taken, пропустить | 0 | строка | P/05 Н1.4 free_ask, Н3 «проход ресурса» relieve |
+| строка целиком | `<s>worker` | a row not in the resource's form is not a request: skipped, the cause goes to the log without the value (В7 item 3, row 10) | 0 | строка | P/03.6 Н3 «взгляд держателя» |
+| строка целиком | `console` | a resource row without a live owner is removed by ttl | 0 | строка | P/06.4 Н3 «жнец» |
+| строка целиком | `resource` | not its own form (unit present, someone else's server/volume, a spoiled form): do not touch, log free_ask.key_taken, skip | 0 | строка | P/05 Н1.4 free_ask, Н3 «проход ресурса» relieve |
 
 #### `<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
 
@@ -525,20 +527,20 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | секунды стенных часов писателя, когда записали; выбирает бакет (годы до 9999 — EJ-G06) |
-| `kind` | строка | обязателен |  | вид события |
-| `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; уникален, по нему убирают дубли копий |
-| `of` | строка | необязателен |  | `<sub>/<id>` — единица, про которую; ставит платформа из about |
-| `class` | строка; одно из: `alarm` | необязателен |  | только у тревоги; observation не пишется |
-| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | когда произошло; необязателен |
-| `v` | целое; ≥ 1 | необязателен |  | версия строки — дополнительное поле: читатель его терпит (LAYERS.md § 6), писатель не пишет — отсутствие = версия 1; положительное целое, v = 2 сохраняется, выбора поведения по v нет (договор журнала событий line; догадки стадии C EJ-G10, EJ-L04) |
-| `.<имя>` | любое значение | необязателен |  | слова подсистемы; поля сверх формы читатель сохраняет как есть, писатель пишет строку строго по форме (EJ-G10) |
+| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `kind` | строка | обязателен |  | the event kind |
+| `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
+| `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
+| `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
+| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | when it happened; optional |
+| `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
+| `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
 Исходы нечитаемого файла (читатель — роль; `*` — все читатели семьи):
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| файл целиком | `resource` | полная строка (с LF) не по форме line — не JSON-объект, нет t, kind или id, время не по кодеку читателя, глубже JSON_DEPTH 128 (P/01.1 Н2.1; договор журнала событий line depth, EJ-DEPTH-BASELINE33): пропуск этой строки и счёт garbled, бакет читается дальше, не отказ бакета; последний фрагмент без LF — не строка, счёт torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
 
 #### `<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
 
@@ -546,20 +548,20 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | секунды стенных часов писателя, когда записали; выбирает бакет (годы до 9999 — EJ-G06) |
-| `kind` | строка | обязателен |  | вид события |
-| `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; уникален, по нему убирают дубли копий |
-| `of` | строка | необязателен |  | `<sub>/<id>` — единица, про которую; ставит платформа из about |
-| `class` | строка; одно из: `alarm` | необязателен |  | только у тревоги; observation не пишется |
-| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | когда произошло; необязателен |
-| `v` | целое; ≥ 1 | необязателен |  | версия строки — дополнительное поле: читатель его терпит (LAYERS.md § 6), писатель не пишет — отсутствие = версия 1; положительное целое, v = 2 сохраняется, выбора поведения по v нет (договор журнала событий line; догадки стадии C EJ-G10, EJ-L04) |
-| `.<имя>` | любое значение | необязателен |  | слова подсистемы; поля сверх формы читатель сохраняет как есть, писатель пишет строку строго по форме (EJ-G10) |
+| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `kind` | строка | обязателен |  | the event kind |
+| `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
+| `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
+| `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
+| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | when it happened; optional |
+| `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
+| `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
 Исходы нечитаемого файла (читатель — роль; `*` — все читатели семьи):
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| файл целиком | `resource` | полная строка (с LF) не по форме line — не JSON-объект, нет t, kind или id, время не по кодеку читателя, глубже JSON_DEPTH 128 (P/01.1 Н2.1; договор журнала событий line depth, EJ-DEPTH-BASELINE33): пропуск этой строки и счёт garbled, бакет читается дальше, не отказ бакета; последний фрагмент без LF — не строка, счёт torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
 
 #### `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
 
@@ -567,20 +569,20 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | секунды стенных часов писателя, когда записали; выбирает бакет (годы до 9999 — EJ-G06) |
-| `kind` | строка | обязателен |  | вид события |
-| `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; уникален, по нему убирают дубли копий |
-| `of` | строка | необязателен |  | `<sub>/<id>` — единица, про которую; ставит платформа из about |
-| `class` | строка; одно из: `alarm` | необязателен |  | только у тревоги; observation не пишется |
-| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | когда произошло; необязателен |
-| `v` | целое; ≥ 1 | необязателен |  | версия строки — дополнительное поле: читатель его терпит (LAYERS.md § 6), писатель не пишет — отсутствие = версия 1; положительное целое, v = 2 сохраняется, выбора поведения по v нет (договор журнала событий line; догадки стадии C EJ-G10, EJ-L04) |
-| `.<имя>` | любое значение | необязателен |  | слова подсистемы; поля сверх формы читатель сохраняет как есть, писатель пишет строку строго по форме (EJ-G10) |
+| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `kind` | строка | обязателен |  | the event kind |
+| `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
+| `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
+| `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
+| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | when it happened; optional |
+| `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
+| `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
 Исходы нечитаемого файла (читатель — роль; `*` — все читатели семьи):
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| файл целиком | `resource` | полная строка (с LF) не по форме line — не JSON-объект, нет t, kind или id, время не по кодеку читателя, глубже JSON_DEPTH 128 (P/01.1 Н2.1; договор журнала событий line depth, EJ-DEPTH-BASELINE33): пропуск этой строки и счёт garbled, бакет читается дальше, не отказ бакета; последний фрагмент без LF — не строка, счёт torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
 
 #### `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
 
@@ -588,20 +590,20 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | секунды стенных часов писателя, когда записали; выбирает бакет (годы до 9999 — EJ-G06) |
-| `kind` | строка | обязателен |  | вид события |
-| `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; уникален, по нему убирают дубли копий |
-| `of` | строка | необязателен |  | `<sub>/<id>` — единица, про которую; ставит платформа из about |
-| `class` | строка; одно из: `alarm` | необязателен |  | только у тревоги; observation не пишется |
-| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | когда произошло; необязателен |
-| `v` | целое; ≥ 1 | необязателен |  | версия строки — дополнительное поле: читатель его терпит (LAYERS.md § 6), писатель не пишет — отсутствие = версия 1; положительное целое, v = 2 сохраняется, выбора поведения по v нет (договор журнала событий line; догадки стадии C EJ-G10, EJ-L04) |
-| `.<имя>` | любое значение | необязателен |  | слова подсистемы; поля сверх формы читатель сохраняет как есть, писатель пишет строку строго по форме (EJ-G10) |
+| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `kind` | строка | обязателен |  | the event kind |
+| `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
+| `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
+| `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
+| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | when it happened; optional |
+| `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
+| `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
 Исходы нечитаемого файла (читатель — роль; `*` — все читатели семьи):
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| файл целиком | `resource` | полная строка (с LF) не по форме line — не JSON-объект, нет t, kind или id, время не по кодеку читателя, глубже JSON_DEPTH 128 (P/01.1 Н2.1; договор журнала событий line depth, EJ-DEPTH-BASELINE33): пропуск этой строки и счёт garbled, бакет читается дальше, не отказ бакета; последний фрагмент без LF — не строка, счёт torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
 
 #### `<корень событий>/console/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
 
@@ -609,20 +611,20 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | секунды стенных часов писателя, когда записали; выбирает бакет (годы до 9999 — EJ-G06) |
-| `kind` | строка | обязателен |  | вид события |
-| `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; уникален, по нему убирают дубли копий |
-| `of` | строка | необязателен |  | `<sub>/<id>` — единица, про которую; ставит платформа из about |
-| `class` | строка; одно из: `alarm` | необязателен |  | только у тревоги; observation не пишется |
-| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | когда произошло; необязателен |
-| `v` | целое; ≥ 1 | необязателен |  | версия строки — дополнительное поле: читатель его терпит (LAYERS.md § 6), писатель не пишет — отсутствие = версия 1; положительное целое, v = 2 сохраняется, выбора поведения по v нет (договор журнала событий line; догадки стадии C EJ-G10, EJ-L04) |
-| `.<имя>` | любое значение | необязателен |  | слова подсистемы; поля сверх формы читатель сохраняет как есть, писатель пишет строку строго по форме (EJ-G10) |
+| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `kind` | строка | обязателен |  | the event kind |
+| `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
+| `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
+| `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
+| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | when it happened; optional |
+| `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
+| `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
 Исходы нечитаемого файла (читатель — роль; `*` — все читатели семьи):
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| файл целиком | `resource` | полная строка (с LF) не по форме line — не JSON-объект, нет t, kind или id, время не по кодеку читателя, глубже JSON_DEPTH 128 (P/01.1 Н2.1; договор журнала событий line depth, EJ-DEPTH-BASELINE33): пропуск этой строки и счёт garbled, бакет читается дальше, не отказ бакета; последний фрагмент без LF — не строка, счёт torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
 
 #### `<корень событий>/console.alarms/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
 
@@ -630,20 +632,20 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | секунды стенных часов писателя, когда записали; выбирает бакет (годы до 9999 — EJ-G06) |
-| `kind` | строка | обязателен |  | вид события |
-| `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; уникален, по нему убирают дубли копий |
-| `of` | строка | необязателен |  | `<sub>/<id>` — единица, про которую; ставит платформа из about |
-| `class` | строка; одно из: `alarm` | необязателен |  | только у тревоги; observation не пишется |
-| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | когда произошло; необязателен |
-| `v` | целое; ≥ 1 | необязателен |  | версия строки — дополнительное поле: читатель его терпит (LAYERS.md § 6), писатель не пишет — отсутствие = версия 1; положительное целое, v = 2 сохраняется, выбора поведения по v нет (договор журнала событий line; догадки стадии C EJ-G10, EJ-L04) |
-| `.<имя>` | любое значение | необязателен |  | слова подсистемы; поля сверх формы читатель сохраняет как есть, писатель пишет строку строго по форме (EJ-G10) |
+| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `kind` | строка | обязателен |  | the event kind |
+| `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
+| `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
+| `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
+| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | when it happened; optional |
+| `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
+| `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
 Исходы нечитаемого файла (читатель — роль; `*` — все читатели семьи):
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| файл целиком | `resource` | полная строка (с LF) не по форме line — не JSON-объект, нет t, kind или id, время не по кодеку читателя, глубже JSON_DEPTH 128 (P/01.1 Н2.1; договор журнала событий line depth, EJ-DEPTH-BASELINE33): пропуск этой строки и счёт garbled, бакет читается дальше, не отказ бакета; последний фрагмент без LF — не строка, счёт torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
 
 #### `<корень событий>/.mirror/<server>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
 
@@ -651,20 +653,20 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | секунды стенных часов писателя, когда записали; выбирает бакет (годы до 9999 — EJ-G06) |
-| `kind` | строка | обязателен |  | вид события |
-| `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; уникален, по нему убирают дубли копий |
-| `of` | строка | необязателен |  | `<sub>/<id>` — единица, про которую; ставит платформа из about |
-| `class` | строка; одно из: `alarm` | необязателен |  | только у тревоги; observation не пишется |
-| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | когда произошло; необязателен |
-| `v` | целое; ≥ 1 | необязателен |  | версия строки — дополнительное поле: читатель его терпит (LAYERS.md § 6), писатель не пишет — отсутствие = версия 1; положительное целое, v = 2 сохраняется, выбора поведения по v нет (договор журнала событий line; догадки стадии C EJ-G10, EJ-L04) |
-| `.<имя>` | любое значение | необязателен |  | слова подсистемы; поля сверх формы читатель сохраняет как есть, писатель пишет строку строго по форме (EJ-G10) |
+| `t` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `kind` | строка | обязателен |  | the event kind |
+| `id` | строка | обязателен |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
+| `of` | строка | необязателен |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
+| `class` | строка; одно из: `alarm` | необязателен |  | only for an alarm; not written for observation |
+| `occurred` | время (P/01.1 Н0 «Время в строке») | необязателен |  | when it happened; optional |
+| `v` | целое; ≥ 1 | необязателен |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
+| `.<имя>` | любое значение | необязателен |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
 Исходы нечитаемого файла (читатель — роль; `*` — все читатели семьи):
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| файл целиком | `resource` | полная строка (с LF) не по форме line — не JSON-объект, нет t, kind или id, время не по кодеку читателя, глубже JSON_DEPTH 128 (P/01.1 Н2.1; договор журнала событий line depth, EJ-DEPTH-BASELINE33): пропуск этой строки и счёт garbled, бакет читается дальше, не отказ бакета; последний фрагмент без LF — не строка, счёт torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
+| файл целиком | `resource` | a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn | 0 | строка | договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07 |
 
 #### `<корень событий>/.workers/<sub>/<экземпляр>.lock` — файл
 
@@ -672,17 +674,17 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `instance` | строка; не из: `""` | обязателен |  | экземпляр воркера (договор экземпляра common/contracts/instance.md: INSTANCE_ID или `<коробка>:<pid>:<6 hex>`); имя файла замка — он же в кодировании имён договора журнала событий |
-| `sub` | строка; целиком `[a-z][a-z0-9_-]{0,31}` | обязателен |  | подсистема воркера — каталог `.workers/<sub>/` замка |
-| `worker` | строка; целиком `\|[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` | обязателен |  | имя слота (P/03.2 Н1.4) или "" — до захвата имени и пока воркер ищет без имени (никто); номер n имени `<prefix>-<сервер>-<n>` — для room и live (договор замка присутствия «Счёт room») |
-| `server` | строка; целиком `[a-z0-9]+(-[a-z0-9]+)*` | обязателен |  | сервер воркера — SERVER_NAME (P/02.4 Н1.2) |
-| `pid` | целое; ≥ 1; ≤ 9007199254740991; целый знак и у читателя (x-whole) | обязателен |  | pid процесса воркера — целое ≥ 1; для показа: присутствие — по flock, не по pid (kill(pid, 0) — не источник) |
+| `instance` | строка; не из: `""` | обязателен |  | the worker instance (the instance contract common/contracts/instance.md: INSTANCE_ID or `<коробка>:<pid>:<6 hex>`); the lock file name is the same instance in the name encoding of the event log contract |
+| `sub` | строка; целиком `[a-z][a-z0-9_-]{0,31}` | обязателен |  | the worker's subsystem — the directory `.workers/<sub>/` of the lock |
+| `worker` | строка; целиком `\|[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` | обязателен |  | the slot name (P/03.2 Н1.4) or "" — before the name is captured and while the worker searches without a name (nobody); the number n of the name `<prefix>-<сервер>-<n>` — for room and live (the presence lock contract «Счёт room») |
+| `server` | строка; целиком `[a-z0-9]+(-[a-z0-9]+)*` | обязателен |  | the worker's server — SERVER_NAME (P/02.4 Н1.2) |
+| `pid` | целое; ≥ 1; ≤ 9007199254740991; целый знак и у читателя (x-whole) | обязателен |  | pid of the worker process — an integer ≥ 1; for display: presence is by flock, not by pid (kill(pid, 0) is not a source) |
 
 Исходы нечитаемого файла (читатель — роль; `*` — все читатели семьи):
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| файл целиком | `resource` | содержимое пусто или не по форме (не JSON-объект, нет поля, поле не по форме, лишнее поле): замок занят — живой процесс без номера: входит в `room.<sub>`, не входит в workers, running, `live.<sub>`; замок взят ресурсом и сверка совпала — gone по файлу, ключа `<sub>/<worker>` нет, файл МОЖНО удалить; unknown — файл, который не читается (ошибка open или read), и ошибка flock или fstat/stat, кроме «занят» и ENOENT у stat (решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7), не его содержимое (разбор ревью стадии B 3–5, № 23) | 0 | строка | договор замка присутствия «Замок», «Счёт room»; P/05 Н1.4 workers, room |
+| файл целиком | `resource` | the content is empty or out of form (not a JSON object, a field missing, a field out of form, an extra field): the lock is busy — a live process without a number: it enters `room.<sub>`, does not enter workers, running, `live.<sub>`; the lock is taken by the resource and the check matched — gone by the file, there is no key `<sub>/<worker>`, the file MAY be deleted; unknown — a file that cannot be read (an open or read error), and an flock or fstat/stat error, except «busy» and ENOENT at stat (the Architect's decision of 2026-10-20, analysis of review of stage B 6–7), not its content (analysis of review of stage B 3–5, № 23) | 0 | строка | договор замка присутствия «Замок», «Счёт room»; P/05 Н1.4 workers, room |
 
 #### `.gone/<ключ>` — объект
 
@@ -690,17 +692,17 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `written` | время (P/01.1 Н0 «Время в строке») | обязателен |  | момент удаления тела у удалившего |
-| `peers` | список, элемент — строка; целиком `[\s\S]+` | обязателен |  | соседи кольца, у которых могла быть копия тела |
+| `written` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment the body was deleted at the deleter |
+| `peers` | список, элемент — строка; целиком `[\s\S]+` | обязателен |  | neighbours of the ring that could have had a copy of the body |
 | `peers[]` | строка; целиком `[\s\S]+` | необязателен |  |  |
-| `acked` | список, элемент — строка; целиком `[\s\S]+` | обязателен |  | соседи из `peers`, подтвердившие удаление (404 на GET копии) |
+| `acked` | список, элемент — строка; целиком `[\s\S]+` | обязателен |  | neighbours from `peers` that confirmed the deletion (404 on GET of the copy) |
 | `acked[]` | строка; целиком `[\s\S]+` | необязателен |  |  |
 
 Исходы нечитаемого объекта (читатель — роль; `*` — все читатели семьи):
 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
-| объект целиком | `resource` | объект целиком нечитаем: сосед копию не роняет, удаливший подтверждений не дописывает и надгробие не снимает — неизвестный исход не подтверждение (договор надгробий garbled); причина — в журнал прохода (аудит раскладки, Г-10; правило DF-OUTCOMES-109, решение «Архитектора» 2026-10-25) | 0 | строка | P/05 Н1.1 «Надгробия» |
+| объект целиком | `resource` | the whole object is unreadable: the neighbour does not drop the copy, the deleter does not append confirmations and does not remove the tombstone — an unknown outcome is not a confirmation (the tombstones contract garbled); the cause goes to the pass log (layout audit, Г-10; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/05 Н1.1 «Надгробия» |
 <!-- families:end -->
 
 ---

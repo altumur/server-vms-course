@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "url": {
-   "description": "адрес двери ресурса (RESOURCE_URL)",
+   "description": "the address of the resource door (RESOURCE_URL)",
    "type": "string",
    "x-codec": [
     "string"
@@ -11,14 +11,14 @@
   },
   "since": {
    "$ref": "#/$defs/common.time",
-   "description": "момент старта ресурса",
+   "description": "the moment of the resource start",
    "x-codec": [
     "time"
    ]
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "момент последней отметки, каждые 15 с; судят по смене версии строки, не по значению (resource_state договора наблюдения)",
+   "description": "the moment of the last mark, every 15 s; judged by a change of the row version, not by the value (resource_state of the observation contract)",
    "x-codec": [
     "time"
    ]
@@ -34,13 +34,13 @@
     ]
    },
    {
-    "description": "`room.<sub>` — элемент каждой подсистемы каталога, чей файл роли `roles/<sub>worker.env` есть на коробке; рядом `live.<sub>` (ADR-0084 доп. (3) Р14′)",
+    "description": "`room.<sub>` — an element for each subsystem of the catalogue whose role file `roles/<sub>worker.env` is present on the box; next to it `live.<sub>` (ADR-0084 addendum (3) Р14′)",
     "type": "string"
    }
   ]
  },
  "additionalProperties": {
-  "description": "десятичное ≥ 0 — сколько ещё процессов роли `<sub>worker` сервер поднимет (договор замка присутствия «Счёт room»), или \"unknown\"; читатель элемент не по форме строкой не отказывает: элемента нет, не читается или unknown — сервер не кандидат в заказ этой роли (P/04 Н3 «заказать()»); у `live.<sub>` — номера n ≥ 2 живых замков роли через запятую по возрастанию без повторов из того же снимка, что `room.<sub>`, или пусто; нет или не читается — сервер не кандидат (договор замка присутствия, live)",
+  "description": "a decimal ≥ 0 — how many more processes of the role `<sub>worker` the server will start (the presence lock contract «Счёт room»), or \"unknown\"; the reader does not refuse an element out of form at the row level: the element is absent, unreadable or unknown — the server is not a candidate for an order of this role (P/04 Н3 «order()»); for `live.<sub>` — the numbers n ≥ 2 of the live locks of the role, comma-separated, ascending, without repeats, from the same snapshot as `room.<sub>`, or empty; absent or unreadable — the server is not a candidate (the presence lock contract, live)",
   "type": "string",
   "x-codec": [
    "string"

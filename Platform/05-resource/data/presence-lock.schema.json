@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "instance": {
-   "description": "экземпляр воркера (договор экземпляра common/contracts/instance.md: INSTANCE_ID или `<коробка>:<pid>:<6 hex>`); имя файла замка — он же в кодировании имён договора журнала событий",
+   "description": "the worker instance (the instance contract common/contracts/instance.md: INSTANCE_ID or `<коробка>:<pid>:<6 hex>`); the lock file name is the same instance in the name encoding of the event log contract",
    "type": "string",
    "not": {
     "enum": [
@@ -13,21 +13,21 @@
   },
   "sub": {
    "$ref": "#/$defs/common.sub_name",
-   "description": "подсистема воркера — каталог `.workers/<sub>/` замка"
+   "description": "the worker's subsystem — the directory `.workers/<sub>/` of the lock"
   },
   "worker": {
-   "description": "имя слота (P/03.2 Н1.4) или \"\" — до захвата имени и пока воркер ищет без имени (никто); номер n имени `<prefix>-<сервер>-<n>` — для room и live (договор замка присутствия «Счёт room»)",
+   "description": "the slot name (P/03.2 Н1.4) or \"\" — before the name is captured and while the worker searches without a name (nobody); the number n of the name `<prefix>-<сервер>-<n>` — for room and live (the presence lock contract «Счёт room»)",
    "type": "string",
    "pattern": "^(?:|[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)$"
   },
   "server": {
-   "description": "сервер воркера — SERVER_NAME (P/02.4 Н1.2)",
+   "description": "the worker's server — SERVER_NAME (P/02.4 Н1.2)",
    "type": "string",
    "pattern": "^(?:[a-z0-9]+(-[a-z0-9]+)*)$"
   },
   "pid": {
    "$ref": "#/$defs/common.pos53",
-   "description": "pid процесса воркера — целое ≥ 1; для показа: присутствие — по flock, не по pid (kill(pid, 0) — не источник)",
+   "description": "pid of the worker process — an integer ≥ 1; for display: presence is by flock, not by pid (kill(pid, 0) is not a source)",
    "x-whole": true
   }
  },

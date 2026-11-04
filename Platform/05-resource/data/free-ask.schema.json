@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "free": {
-   "description": "need = used − total·low − Σ freeing из пульсов, байты; need ≤ 0 — строка снимается, не пишется",
+   "description": "need = used − total·low − Σ freeing from the heartbeats, bytes; need ≤ 0 — the row is removed, not written",
    "type": "number",
    "exclusiveMinimum": 0,
    "x-codec": [
@@ -11,7 +11,7 @@
    ]
   },
   "volume": {
-   "description": "имя тома из ASCII A-Z/a-z/0-9/_, 1–64 байта, без дефиса; на коробке один том — events",
+   "description": "the volume name of ASCII A-Z/a-z/0-9/_, 1–64 bytes, without a hyphen; on the box there is one volume — events",
    "type": "string",
    "pattern": "^(?:[A-Za-z0-9_]{1,64})$",
    "x-codec": [
@@ -19,7 +19,7 @@
    ]
   },
   "server": {
-   "description": "свой сервер — непустой сегмент ключа P/01.1, дефисы допустимы; совпадает с `<server>` ключа",
+   "description": "its own server — a non-empty key segment of P/01.1, hyphens allowed; matches `<server>` of the key",
    "type": "string",
    "pattern": "^(?:[\\s\\S]+)$",
    "x-codec": [
@@ -28,7 +28,7 @@
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "штамп записи",
+   "description": "the write stamp",
    "x-codec": [
     "time"
    ]

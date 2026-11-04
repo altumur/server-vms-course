@@ -3,45 +3,45 @@
  "type": "object",
  "properties": {
   "server": {
-   "description": "свой сервер — SERVER_NAME по грамматике договора файла окружения «Переменные окружения», как у замка присутствия (догадка стадии C R05-G07, решение «Архитектора» 2026-10-23); не по ней или не равен серверу ключа — пульс нечитаем (P/06.5 Н2)",
+   "description": "its own server — SERVER_NAME by the grammar of the environment file contract «Переменные окружения», as for the presence lock (stage C guess R05-G07, the Architect's decision of 2026-10-23); not by it or not equal to the server of the key — the heartbeat is unreadable (P/06.5 Н2)",
    "type": "string",
    "pattern": "^(?:[a-z0-9]+(-[a-z0-9]+)*)$"
   },
   "box": {
-   "description": "коробка (BOX_ID, договор файла окружения «Переменные окружения»)",
+   "description": "the box (BOX_ID, the environment file contract «Переменные окружения»)",
    "type": "string"
   },
   "ts": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды пульса; пишется каждые 10 с"
+   "description": "wall-clock seconds of the heartbeat; written every 10 s"
   },
   "url": {
-   "description": "адрес двери ресурса",
+   "description": "the address of the resource door",
    "type": "string"
   },
   "schema": {
    "$ref": "#/$defs/common.pos53",
-   "description": "SCHEMA сборки (P/06.6 Н1.1а heartbeat): целое JSON без дробной части и экспоненты, ≥ 1; `1.0`, `1e0`, `-1`, строка, null — схема процесса неизвестна",
+   "description": "SCHEMA of the build (P/06.6 Н1.1а heartbeat): a JSON integer without a fractional part and exponent, ≥ 1; `1.0`, `1e0`, `-1`, a string, null — the process schema is unknown",
    "x-whole": true
   },
   "build": {
-   "description": "слово сборки (BUILD); не строка — поле не известно: null в ответах консоли (В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 14 списка)",
+   "description": "the build word (BUILD); not a string — the field is unknown: null in the console's answers (В7 item 3, the Architect's decision of 2026-10-28, П1; row 14 of the list)",
    "type": "string"
   },
   "usage": {
    "$ref": "#/$defs/common.uint53",
-   "description": "байты файлов бакетов деревьев этого сервера и копий в .mirror/"
+   "description": "bytes of the bucket files of the trees of this server and of the copies in .mirror/"
   },
   "usage_at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды замера usage"
+   "description": "wall-clock seconds of the usage measurement"
   },
   "space": {
    "$ref": "#/$defs/disk",
-   "description": "том дерева событий"
+   "description": "the volume of the event tree"
   },
   "volumes": {
-   "description": "то же по каждому тому (журнал cammeta-go, урок 9 № 1)",
+   "description": "the same per volume (log of cammeta-go, lesson 9 № 1)",
    "type": "object",
    "propertyNames": {
     "type": "string"
@@ -51,13 +51,13 @@
    }
   },
   "units": {
-   "description": "`{<sub>: [<id>…]}`; нет таких — {}; в каждом пульсе (E39)",
+   "description": "`{<sub>: [<id>…]}`; none such — {}; in every heartbeat (E39)",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/common.sub_name"
    },
    "additionalProperties": {
-    "description": "id единиц, которые называют в status пульсы воркеров этой коробки из running, по возрастанию байтов",
+    "description": "ids of the units named in status by the heartbeats of the workers of this box from running, in ascending byte order",
     "type": "array",
     "items": {
      "type": "string"
@@ -66,15 +66,15 @@
   },
   "workers": {
    "$ref": "#/$defs/slot_list",
-   "description": "все слоты, о которых ресурс знает на своей коробке (по замкам присутствия)"
+   "description": "all slots the resource knows about on its box (by the presence locks)"
   },
   "running": {
    "$ref": "#/$defs/slot_list",
-   "description": "слоты с живым процессом (держит замок присутствия)"
+   "description": "slots with a live process (it holds the presence lock)"
   },
   "unknown": {
    "$ref": "#/$defs/slot_list",
-   "description": "присутствие не прочлось"
+   "description": "presence could not be read"
   },
   "instances": {
    "description": "`{<sub>/<имя слота>: <экземпляр>}`",
@@ -90,10 +90,10 @@
   },
   "short": {
    "$ref": "#/$defs/common.uint53",
-   "description": "сколько байтов отметка просила освободить и не смогла (P/06.5 Н3 /metrics w2c_resource_short_bytes): Σ по томам наибольшей need (> 0) среди действующих своих `free-<server>-<volume>` этого прохода relieve — подсистемы на одном томе не суммируются; need — по Н3 relieve, вверх до целого байта, насыщение 2^53−1; platform/space выключен, просьб нет, need ≤ 0 — 0; вход прохода не прочитан — прежнее значение (догадка стадии C R05-G03, решение «Архитектора» 2026-10-23)"
+   "description": "how many bytes the mark asked to free and could not (P/06.5 Н3 /metrics w2c_resource_short_bytes): Σ over the volumes of the largest need (> 0) among the effective own `free-<server>-<volume>` of this relieve pass — subsystems on one volume are not summed; need — by Н3 relieve, rounded up to a whole byte, saturation 2^53−1; platform/space disabled, no requests, need ≤ 0 — 0; the pass input was not read — the previous value (stage C guess R05-G03, the Architect's decision of 2026-10-23)"
   },
   "waits": {
-   "description": "счётчики ожиданий /events/wait (Н1.6); в каждом пульсе (E39)",
+   "description": "counters of the /events/wait waits (Н1.6); in every heartbeat (E39)",
    "type": "object",
    "properties": {
     "waiting": {
@@ -122,7 +122,7 @@
    ]
   },
   "mirrors": {
-   "description": "`{<сервер>: n}` — копии соседей в .mirror/",
+   "description": "`{<сервер>: n}` — copies of neighbours in .mirror/",
    "type": "object",
    "propertyNames": {
     "type": "string"
@@ -133,15 +133,15 @@
   },
   "pass_started": {
    "$ref": "#/$defs/common.time",
-   "description": "начало текущего прохода (Н3 «проход ресурса»)"
+   "description": "the start of the current pass (Н3 «проход ресурса»)"
   },
   "pass_stalled": {
-   "description": "секунды, только пока проход завис (PULSE_LIMIT)",
+   "description": "seconds, only while the pass is hung (PULSE_LIMIT)",
    "type": "number",
    "minimum": 0
   },
   "volumes_stuck": {
-   "description": "тома, чей зонд не ответил (P/06.5 ResourceRow)",
+   "description": "volumes whose probe did not answer (P/06.5 ResourceRow)",
    "type": "object",
    "propertyNames": {
     "type": "string"
@@ -151,15 +151,15 @@
    }
   },
   "door": {
-   "description": "состояние двери ресурса (P/06.5 ResourceRow DoorState); пишет ресурс в каждом пульсе (P/05 Н1.4; ADR-0075 доп. (3); разбор ревью стадии B 3–5, № 28)",
+   "description": "the state of the resource door (P/06.5 ResourceRow DoorState); written by the resource in every heartbeat (P/05 Н1.4; ADR-0075 addendum (3); analysis of review of stage B 3–5, № 28)",
    "type": "object",
    "properties": {
     "addr": {
-     "description": "адрес двери ресурса — RESOURCE_HOST:RESOURCE_PORT",
+     "description": "the address of the resource door — RESOURCE_HOST:RESOURCE_PORT",
      "type": "string"
     },
     "mode": {
-     "description": "loopback — без RESOURCE_TLS, только петля; mtls — RESOURCE_TLS=1, взаимный TLS (ADR-0075)",
+     "description": "loopback — without RESOURCE_TLS, loopback only; mtls — RESOURCE_TLS=1, mutual TLS (ADR-0075)",
      "type": "string",
      "enum": [
       "loopback",
@@ -167,7 +167,7 @@
      ]
     },
     "cert_until": {
-     "description": "стенные секунды конца срока сертификата сервера своего комплекта (W2C_TLS_DIR); при mtls",
+     "description": "wall-clock seconds of the expiry of the server certificate of its own set (W2C_TLS_DIR); with mtls",
      "type": "number"
     }
    },
@@ -178,7 +178,7 @@
    ]
   },
   "garbled_rows": {
-   "description": "нечитаемых строк таблиц, прочитанных ресурсом (holds), по таблице",
+   "description": "unreadable rows of the tables read by the resource (holds), per table",
    "type": "object",
    "propertyNames": {
     "type": "string"
@@ -188,7 +188,7 @@
    }
   },
   "retention_garbled": {
-   "description": "подсистемы, у которых любой срок (`<sub>/retention` или `<sub>/alarms_retention`) с неверным days (P/05 Н1.3 retention rule), независимо от retention_withheld (R05-RETENTION-MIXED-51-01), по возрастанию байтов; нет таких — поля нет (P/05 Н3 retain, Н4; догадка стадии C C05-RETENTION-PULSE-33, решение «Архитектора» 2026-10-25)",
+   "description": "subsystems where any term (`<sub>/retention` or `<sub>/alarms_retention`) has a wrong days (P/05 Н1.3 retention rule), regardless of retention_withheld (R05-RETENTION-MIXED-51-01), in ascending byte order; none such — the field is absent (P/05 Н3 retain, Н4; stage C guess C05-RETENTION-PULSE-33, the Architect's decision of 2026-10-25)",
    "type": "array",
    "items": {
     "type": "string",
@@ -198,7 +198,7 @@
    "uniqueItems": true
   },
   "retention_withheld": {
-   "description": "почему зависимое дерево подсистемы в этом проходе срока не убиралось — закрытый перечень: days_garbled — неверный days, unknown — строка срока не прочитана (хранилище не ответило), holds_unread — удержания не прочитаны (договор удержаний); у подсистемы одна причина по порядку unknown → days_garbled → holds_unread; каждое дерево удерживается по своему сроку (R05-G08, R05-RETENTION-MIXED-51-01); нет причины — поля нет (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33)",
+   "description": "why a dependent tree of the subsystem was not cleaned up by term in this pass — a closed list: days_garbled — a wrong days, unknown — the term row was not read (the store did not answer), holds_unread — the holds were not read (the holds contract); a subsystem has one cause, in the order unknown → days_garbled → holds_unread; each tree is held by its own term (R05-G08, R05-RETENTION-MIXED-51-01); no cause — the field is absent (P/05 Н3 retain, Н4; C05-RETENTION-PULSE-33)",
    "type": "object",
    "propertyNames": {
     "type": "string",
@@ -214,7 +214,7 @@
    }
   },
   "settings_unread": {
-   "description": "строки настроек прохода ресурса, которые в этом проходе не прочитались: mirror — platform/mirror (шаг mirror и копии тел не исполняются), space — platform/space (шаг relieve не исполняется); по возрастанию байтов; нет таких — поля нет (P/05 Н1.4 mirror, space, Н3; В7 п. 3, решение «Архитектора» 2026-10-28, П1; строка 20, 21 списка)",
+   "description": "the settings rows of the resource pass that were not read in this pass: mirror — platform/mirror (the mirror step and the body copies are not executed), space — platform/space (the relieve step is not executed); in ascending byte order; none such — the field is absent (P/05 Н1.4 mirror, space, Н3; В7 item 3, the Architect's decision of 2026-10-28, П1; rows 20, 21 of the list)",
    "type": "array",
    "items": {
     "enum": [
@@ -226,7 +226,7 @@
    "uniqueItems": true
   },
   "restore": {
-   "description": "`{<сосед>: …}` — восстановление бакетов с копий соседей (Н1.4 «Восстановление бакетов»); в каждом пульсе (E39)",
+   "description": "`{<сосед>: …}` — restoring buckets from copies of neighbours (Н1.4 «Восстановление бакетов»); in every heartbeat (E39)",
    "type": "object",
    "propertyNames": {
     "type": "string"
@@ -251,7 +251,7 @@
      },
      "restored": {
       "$ref": "#/$defs/common.uint53",
-      "description": "только реально вытянутые у этого соседа бакеты; бакет, уже лежащий на томе, не считается (Н1.4 «Восстановление бакетов»)"
+      "description": "only the buckets actually pulled from this neighbour; a bucket already lying on the volume is not counted (Н1.4 «Восстановление бакетов»)"
      },
      "missing": {
       "$ref": "#/$defs/common.uint53"
@@ -276,7 +276,7 @@
    }
   },
   "mirror": {
-   "description": "счётчики зеркала (Н1.4 mirror; skipped — бакеты больше 64 MiB); в каждом пульсе (E39)",
+   "description": "mirror counters (Н1.4 mirror; skipped — buckets larger than 64 MiB); in every heartbeat (E39)",
    "type": "object",
    "properties": {
     "skipped": {
@@ -1135,18 +1135,18 @@
    "properties": {
     "total": {
      "$ref": "#/$defs/common.uint53",
-     "description": "байты (statfs)"
+     "description": "bytes (statfs)"
     },
     "free": {
      "$ref": "#/$defs/common.uint53",
-     "description": "байты"
+     "description": "bytes"
     },
     "used": {
      "$ref": "#/$defs/common.uint53",
-     "description": "байты"
+     "description": "bytes"
     },
     "full": {
-     "description": "доля used/total от 0 до 1 (не признак)",
+     "description": "the fraction used/total from 0 to 1 (not a flag)",
      "type": "number",
      "minimum": 0,
      "maximum": 1

@@ -4,10 +4,10 @@
  "properties": {
   "written": {
    "$ref": "#/$defs/common.time",
-   "description": "момент удаления тела у удалившего"
+   "description": "the moment the body was deleted at the deleter"
   },
   "peers": {
-   "description": "соседи кольца, у которых могла быть копия тела",
+   "description": "neighbours of the ring that could have had a copy of the body",
    "type": "array",
    "items": {
     "type": "string",
@@ -15,7 +15,7 @@
    }
   },
   "acked": {
-   "description": "соседи из `peers`, подтвердившие удаление (404 на GET копии)",
+   "description": "neighbours from `peers` that confirmed the deletion (404 on GET of the copy)",
    "type": "array",
    "items": {
     "type": "string",
