@@ -840,3 +840,7 @@ Platform/common	Platform/common/vectors/yaml-suite/en/README.en.md	Platform/comm
 Platform/common	Platform/common/versions/en/DEFECTS.en.md	Platform/common/versions/DEFECTS.md	source
 Platform/common	Platform/common/versions/en/README.en.md	Platform/common/versions/README.md	source
 Platform/common	-	-	linked
+.	КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md	ru/КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md	translation
+.	НОРМАТИВНЫЕ-СЛОВА.md	ru/НОРМАТИВНЫЕ-СЛОВА.md	translation
+.	en/КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.en.md	КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md	source
+.	en/НОРМАТИВНЫЕ-СЛОВА.en.md	НОРМАТИВНЫЕ-СЛОВА.md	source
