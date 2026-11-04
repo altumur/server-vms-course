@@ -1,9 +1,9 @@
 # Acceptance V/01.3 — the source `driverpack://file`
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`01.3-cam.norms.md`](../../../spec/01.3-cam.norms.md) Н5. The stand and the directives are in [the common VMS acceptance
-README](../../../../common/acceptance/README.md) (export `7a875c75`). The run — after the first stage C generation that has passed the platform
+The norm of the chapter is [`01.3-cam.norms.md`](../../spec/01.3-cam.norms.md) Н5. The stand and the directives are in [the common VMS acceptance
+README](../../../common/acceptance/README.md) (export `7a875c75`). The run — after the first stage C generation that has passed the platform
 acceptance (ADR-0090 addenda (8), (9)).
 
 | Steps of `01-bad-name` | Norm | What it observes |

@@ -1,9 +1,9 @@
 # Acceptance V/01.2 — the camera holder
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/2/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`01.2-cam.norms.md`](../../../spec/01.2-cam.norms.md) Н5. The dictionary of directives, doors and expectations is in the common
-[platform acceptance README](../../../../../Platform/common/acceptance/README.md#словарь-директив-и-дверей) (export `7a875c75`);
+The norm of the chapter is [`01.2-cam.norms.md`](../../spec/01.2-cam.norms.md) Н5. The dictionary of directives, doors and expectations is in the common
+[platform acceptance README](../../../../Platform/common/acceptance/README.md#словарь-директив-и-дверей) (export `7a875c75`);
 the format of `scenarios.tsv` is the same. The run — after the first stage C generation that has passed the platform acceptance (ADR-0090 addenda (8),
 (9)); until then the scenarios are norm text.
 

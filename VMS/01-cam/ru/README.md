@@ -1,11 +1,11 @@
 # V/01 Камера
 
 Статус: **переведён** — главы V/01.1–V/01.8 (2026-10-23); план ниже — история перевода. Источники — опись
-[`../common/inventory.md`](../common/inventory.md) § 1, § 2. Платформа — выгрузка `cammeta-specs` `7a875c75`.
-Манифест — [`cam.subsystem.yaml`](cam.subsystem.yaml) (канон; ADR-0090 доп. (6) п. 8). Оболочка корня —
-[`cam.shell.html`](cam.shell.html): ссылка на форму `/backend/` и модуль платформы P/07 (урок V/11, глава 1 Н1.1); прежняя страница — свидетель `Source/vms/cam.shell.html`.
+[`../common/inventory.md`](../../common/inventory.md) § 1, § 2. Платформа — выгрузка `cammeta-specs` `7a875c75`.
+Манифест — [`cam.subsystem.yaml`](../cam.subsystem.yaml) (канон; ADR-0090 доп. (6) п. 8). Оболочка корня —
+[`cam.shell.html`](../cam.shell.html): ссылка на форму `/backend/` и модуль платформы P/07 (урок V/11, глава 1 Н1.1); прежняя страница — свидетель `Source/vms/cam.shell.html`.
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+Текст производный от `README.md`, руками не правится: источник — английский [`README.md`](../README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
 ## Что такое урок V/01
 
@@ -44,9 +44,9 @@
   событий `cam-events`, элемент книги `sources`, решение лицензии — по образцу `Platform/*/data/` (слои —
   `Platform/common/LAYERS.md`, ADR-0092).
   Строка камеры, строки `devices`, `children`, `child_settings`, `device_units`, `unit_next`, `rule_state`, `searches`, `found`, `probes`, `probe_replies` и тело просьбы выражает манифест (P/02.1) — своих семей у них нет. Своё содержимое в
-  открытых местах семей платформы — [`data/`](data/): слова пульса `cam-heartbeat-words` (место — корень пульса, пустой указатель),
+  открытых местах семей платформы — [`data/`](../data/): слова пульса `cam-heartbeat-words` (место — корень пульса, пустой указатель),
   `value` элемента книги `sources-entry` и решение `licence-decision` (место `/*/entries/*/value`) — форма, слои, исходы по
-  читателям; строки — в каталоге VMS [`../common/data/catalog.tsv`](../common/data/catalog.tsv) (колонка `place`; решение
+  читателям; строки — в каталоге VMS [`../common/data/catalog.tsv`](../../common/data/catalog.tsv) (колонка `place`; решение
   «Архитектора» А); поля строк событий `cam-events` (`io.input` — `port`, `value`; `source-stats` — `dropped`, `depth`; `text` — `lines`, `group`, `camera`, `word`; `unit` — `unit`, `event`, `phase`;
   место — корень строки семьи событий платформы, деревья `cam` и `cam.alarms`). Вклад `cam/sources/<слот>` — форма манифеста (P/03.7), семьёй VMS не судится. Векторы семей строит
   построитель `family-read` (`VMS/common/vectors/family-read/01.tsv`), вручную их нет.

@@ -1,9 +1,9 @@
 # Acceptance V/01.5 — the device archive and its door
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/5/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`01.5-cam.norms.md`](../../../spec/01.5-cam.norms.md) Н5. The stand, the directives and the door `holder` are in [the common VMS
-acceptance README](../../../../common/acceptance/README.md) over the common platform README (export `7a875c75`). There are no certificate
+The norm of the chapter is [`01.5-cam.norms.md`](../../spec/01.5-cam.norms.md) Н5. The stand, the directives and the door `holder` are in [the common VMS
+acceptance README](../../../common/acceptance/README.md) over the common platform README (export `7a875c75`). There are no certificate
 kits. The run — after the first stage C generation that has passed
 the platform acceptance (ADR-0090 addenda (8), (9)).
 

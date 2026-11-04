@@ -1,11 +1,11 @@
 # V/01 Camera
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 Status: **translated** — chapters V/01.1–V/01.8 (2026-10-23); the plan below is the history of the translation. Sources: the inventory
-[`../common/inventory.md`](../../common/inventory.md) § 1, § 2. The platform: the export `cammeta-specs` `7a875c75`.
-The manifest is [`cam.subsystem.yaml`](../cam.subsystem.yaml) (the canon; ADR-0090 addendum (6) item 8). The root shell is
-[`cam.shell.html`](../cam.shell.html): a link to the form `/backend/` and to the platform module P/07 (lesson V/11, chapter 1 Н1.1); the former page is the witness `Source/vms/cam.shell.html`.
+[`../common/inventory.md`](../common/inventory.md) § 1, § 2. The platform: the export `cammeta-specs` `7a875c75`.
+The manifest is [`cam.subsystem.yaml`](cam.subsystem.yaml) (the canon; ADR-0090 addendum (6) item 8). The root shell is
+[`cam.shell.html`](cam.shell.html): a link to the form `/backend/` and to the platform module P/07 (lesson V/11, chapter 1 Н1.1); the former page is the witness `Source/vms/cam.shell.html`.
 
 ## What lesson V/01 is
 
@@ -44,9 +44,9 @@ their behaviour (addendum (4) item 2).
   of the events `cam-events`, the element of the book `sources`, the licence decision — after the pattern of `Platform/*/data/` (the layers —
   `Platform/common/LAYERS.md`, ADR-0092).
   The camera row, the rows `devices`, `children`, `child_settings`, `device_units`, `unit_next`, `rule_state`, `searches`, `found`, `probes`, `probe_replies` and the body of a request are expressed by the manifest (P/02.1) — they have no families of their own. The lesson's own content in
-  the open places of the platform families is [`data/`](../data/): the heartbeat words `cam-heartbeat-words` (the place is the heartbeat root, an empty pointer),
+  the open places of the platform families is [`data/`](data/): the heartbeat words `cam-heartbeat-words` (the place is the heartbeat root, an empty pointer),
   `value` of the element of the book `sources-entry` and the decision `licence-decision` (the place `/*/entries/*/value`) — the form, the layers, the outcomes per
-  reader; the rows are in the VMS catalogue [`../common/data/catalog.tsv`](../../common/data/catalog.tsv) (the column `place`; decision
+  reader; the rows are in the VMS catalogue [`../common/data/catalog.tsv`](../common/data/catalog.tsv) (the column `place`; decision
   «А» of «Архитектор»); the fields of the rows of the events `cam-events` (`io.input` — `port`, `value`; `source-stats` — `dropped`, `depth`; `text` — `lines`, `group`, `camera`, `word`; `unit` — `unit`, `event`, `phase`;
   the place is the root of a row of the platform events family, the trees `cam` and `cam.alarms`). The contribution `cam/sources/<слот>` is a form of the manifest (P/03.7), it is not judged by a VMS family. The vectors of the families are built by
   the builder `family-read` (`VMS/common/vectors/family-read/01.tsv`); there are none by hand.

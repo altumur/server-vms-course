@@ -23,10 +23,10 @@
 
 ## Что нужно знать заранее
 
-Манифест подсистемы и его загрузчик ([P/02.1](../../Platform/02-installer/spec/02.1-installer.norms.md)); дверь
-единиц ([P/06.1](../../Platform/06-console/spec/06.1-console.norms.md)); секреты в строке и адрес с паролем
-([P/06.2](../../Platform/06-console/spec/06.2-console.norms.md)); размещение
-([P/04](../../Platform/04-controller/spec/04-controller.norms.md)); воркер (P/03).
+Манифест подсистемы и его загрузчик ([P/02.1](../../../Platform/02-installer/ru/spec/02.1-installer.norms.md)); дверь
+единиц ([P/06.1](../../../Platform/06-console/ru/spec/06.1-console.norms.md)); секреты в строке и адрес с паролем
+([P/06.2](../../../Platform/06-console/ru/spec/06.2-console.norms.md)); размещение
+([P/04](../../../Platform/04-controller/ru/spec/04-controller.norms.md)); воркер (P/03).
 
 ## Глава 1. Камера — единица
 
@@ -163,7 +163,7 @@ DriverPack. Как каждая схема пишет логин, манифес
 кусками (сессия на кусок, закрыта до отдачи клиенту), держит общий бюджет байтов в пути, отвечает «занято» со словами
 устройства и отрезает застрявший канал, не трогая соседние.
 
-Точные правила — [нормы главы 5](spec/01.5-cam.norms.md), контракт — [OpenAPI](spec/01-cam.api.openapi.yaml).
+Точные правила — [нормы главы 5](spec/01.5-cam.norms.md), контракт — [OpenAPI](../spec/01-cam.api.openapi.yaml).
 
 ## Глава 6. Камера на домене
 

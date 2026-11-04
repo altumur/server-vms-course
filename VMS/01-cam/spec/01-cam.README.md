@@ -1,6 +1,6 @@
 # V/01 Camera — instructions for an implementation
 
-This English text is the source; the Russian [`01-cam.README.md`](../01-cam.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/01-cam.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 What an implementation of the subsystem `cam` does and how to check the result. The canon is the norms of the chapters `01.K-cam.norms.md`; these
 instructions do not add to them. The platform is the export `cammeta-specs` `7a875c75`: an implementation of `cam` is a subsystem on the
@@ -9,10 +9,10 @@ platform; it neither edits nor repeats the platform's code.
 ## Inputs and their priority
 
 - The canon: the norms of the chapters `01.K-cam.norms.md` (Н1–Н5 of each chapter; the addresses `V/01.K Н…`).
-- The canon of the manifest: [`cam.subsystem.yaml`](../../cam.subsystem.yaml): the bytes as they are.
-- [The contract](../01-cam.api.openapi.yaml) expresses the forms of the HTTP inputs of the canon.
-- Acceptance: [chapter 1](../../acceptance/1/README.md), [chapter 2](../../acceptance/2/README.md), [chapter 3](../../acceptance/3/README.md), [chapter 4](../../acceptance/4/README.md), [chapter 5](../../acceptance/5/README.md), [chapter 8](../../acceptance/8/README.md); the stand and the vocabulary — [the common VMS acceptance README](../../../common/acceptance/README.md); acceptance introduces no new requirements.
-- [The lecture](../../01-cam.md) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
+- The canon of the manifest: [`cam.subsystem.yaml`](../cam.subsystem.yaml): the bytes as they are.
+- [The contract](01-cam.api.openapi.yaml) expresses the forms of the HTTP inputs of the canon.
+- Acceptance: [chapter 1](../acceptance/1/README.md), [chapter 2](../acceptance/2/README.md), [chapter 3](../acceptance/3/README.md), [chapter 4](../acceptance/4/README.md), [chapter 5](../acceptance/5/README.md), [chapter 8](../acceptance/8/README.md); the stand and the vocabulary — [the common VMS acceptance README](../../common/acceptance/README.md); acceptance introduces no new requirements.
+- The lecture (`ru/01-cam.md`, for people, not in the export) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
 
 Record a contradiction with its place and a counterexample (the section «On a divergence»); an arbitrary refusal does not replace an
 absent norm. The structure of the code is left to the implementation within the canon.
@@ -21,14 +21,14 @@ absent norm. The structure of the code is left to the implementation within the 
 
 | Chapter | What the implementation has | Check |
 |---|---|---|
-| V/01.1 | the manifest `VMS/01-cam/cam.subsystem.yaml` loads with the strict loader without edits; the unit door of the platform console executes the camera's declarations | [acceptance 1](../../acceptance/1/README.md) |
-| V/01.2 | the holder `camworker`: the desired state, one connection, RTSP delivery and the share `cam.shm`, the heartbeat words, events; the command that starts the holder for the acceptance «Стенд» is named in the implementation description | [acceptance 2](../../acceptance/2/README.md) |
-| V/01.3 | the source `driverpack://file/<имя>`: the refusals of Н1.1, a file as a camera Н1.2; an hour-long run for the monotonicity of the timestamps — in the implementation description | [acceptance 3](../../acceptance/3/README.md) |
-| V/01.4 | execution of the requests `output`, `preset` by the device driver, questions to the device outside the loop, the row `cam/devices/<хост>`, the device's children, `can`, arming and switching off for a time (`cam/rule_state/<id>`) | [acceptance 4](../../acceptance/4/README.md) |
-| V/01.5 | the holder door (`/devices`, `/recordings`, `/playback`) per [OpenAPI](../01-cam.api.openapi.yaml), the limits of Н1.5, the class `mixed`; the device archive driver | [acceptance 5](../../acceptance/5/README.md) |
+| V/01.1 | the manifest `VMS/01-cam/cam.subsystem.yaml` loads with the strict loader without edits; the unit door of the platform console executes the camera's declarations | [acceptance 1](../acceptance/1/README.md) |
+| V/01.2 | the holder `camworker`: the desired state, one connection, RTSP delivery and the share `cam.shm`, the heartbeat words, events; the command that starts the holder for the acceptance «Стенд» is named in the implementation description | [acceptance 2](../acceptance/2/README.md) |
+| V/01.3 | the source `driverpack://file/<имя>`: the refusals of Н1.1, a file as a camera Н1.2; an hour-long run for the monotonicity of the timestamps — in the implementation description | [acceptance 3](../acceptance/3/README.md) |
+| V/01.4 | execution of the requests `output`, `preset` by the device driver, questions to the device outside the loop, the row `cam/devices/<хост>`, the device's children, `can`, arming and switching off for a time (`cam/rule_state/<id>`) | [acceptance 4](../acceptance/4/README.md) |
+| V/01.5 | the holder door (`/devices`, `/recordings`, `/playback`) per [OpenAPI](01-cam.api.openapi.yaml), the limits of Н1.5, the class `mixed`; the device archive driver | [acceptance 5](../acceptance/5/README.md) |
 | V/01.6 | the contribution to the book `cam/sources/<слот>`, the camera stream pusher (polling the receiver, continuation, applications), `taken_by`, the order of recording onto the card; the stream transport — in the implementation description | by reading (VMS has no domain stand); the order — V/02.4 `06-edge` |
 | V/01.7 | the worker on the domain `camdomain`: checking the signature with the vendor key, the count by the domain view, the book `licence`; the holder does not hold a camera outside `licensed` | by reading (VMS has no domain stand) |
-| V/01.8 | the base worker: search by the row `cam/searches`, the findings `cam/found`, the answers to the question about the model; the search driver | [acceptance 8](../../acceptance/8/README.md); a live driver — `@manual` |
+| V/01.8 | the base worker: search by the row `cam/searches`, the findings `cam/found`, the answers to the question about the model; the search driver | [acceptance 8](../acceptance/8/README.md); a live driver — `@manual` |
 
 The manifest is specification data: the implementation reads its bytes as they are (ADR-0090 addendum (6) item 8), and neither copies nor
 supplements it.

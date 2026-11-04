@@ -41,7 +41,7 @@ $ENV python skills/lesson-spec/scripts/check_spec.py --root $S \
 в списке `tools/vms-boundary/source-vms.sha256` с тем же sha256, других файлов нет (счёт `vms_frozen`); без списка
 (выгрузка) — не проверяется.
 
-**Урок модуля VMS** — тот же вызов с путём лекции: `check_spec.py VMS/01-cam/01-cam.md`; разбор — как у урока
+**Урок модуля VMS** — тот же вызов с путём лекции: `check_spec.py VMS/01-cam/ru/01-cam.md`; разбор — как у урока
 «Платформы» (главы `spec/NN.K-<имя>.norms.md`, приёмка `acceptance/K/`, одна инструкция, OpenAPI или строка
 `no-openapi`), с отличиями: id `V/NN.K-MM`, ключ реестра `V/NN`; урок — строка `VMS/common/lessons.tsv`; id-map —
 `VMS/common/id-map.tsv`; «Данные» — по каталогу платформы (общие семьи `<sub>/…`); проверок процесса платформы
