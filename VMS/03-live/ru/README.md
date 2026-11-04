@@ -1,12 +1,12 @@
 # V/03 Живое видео
 
 Статус: **переведён** — главы V/03.1–V/03.6 (2026-10-23; ревью 2026-10-29); разделы ниже о решениях плана, запросах,
-правках и порядке — история перевода. Источники — опись [`../common/inventory.md`](../common/inventory.md) § 1, § 2
+правках и порядке — история перевода. Источники — опись [`../common/inventory.md`](../../common/inventory.md) § 1, § 2
 (М10B/13; М12A/03; М12B/01 шаг 6а; М12B/03 шаг 4). Платформа — выгрузка `cammeta-specs` `7a875c75` (пин VMS; главы писались
-на `f6f3895` … `180c6c5` — их шапки). Манифест — [`live.subsystem.yaml`](live.subsystem.yaml) (канон; ADR-0090
+на `f6f3895` … `180c6c5` — их шапки). Манифест — [`live.subsystem.yaml`](../live.subsystem.yaml) (канон; ADR-0090
 доп. (6) п. 8).
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+Текст производный от `README.md`, руками не правится: источник — английский [`README.md`](../README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
 ## Что такое урок V/03
 
@@ -39,11 +39,11 @@ trickle), без перекодирования; устройствам (вид�
   шлюза (`live.view*`, `live.rtsp.*`).
 - **Семьи данных** (класс семей VMS, решение «Архитектора» А): строка раздачи, таблица `accounts` и вклад
   `live/stream-accounts/<слот>` выражает манифест (P/02.1) — своих семей у них нет. Своё содержимое в открытых местах семей
-  платформы — [`data/`](data/): `value`
+  платформы — [`data/`](../data/): `value`
   элемента книги учёток `stream-accounts-entry` (место `/*/entries/*/value`; пароль — только конверт кольца) — форма, слои,
-  исходы по читателям; строки — в каталоге VMS [`../common/data/catalog.tsv`](../common/data/catalog.tsv) (колонка
+  исходы по читателям; строки — в каталоге VMS [`../common/data/catalog.tsv`](../../common/data/catalog.tsv) (колонка
   `place`); векторы строит построитель family-read, вручную не пишутся. Слова пульса шлюза — семья
-  `live/heartbeats/<имя>` ([`data/live-heartbeat-words.schema.json`](data/live-heartbeat-words.schema.json); читают `camworker`, `expworker`); `capacity` судит контроллер платформы (договор пула), `headroom` показывает консоль рядами `worker_headroom` и
+  `live/heartbeats/<имя>` ([`data/live-heartbeat-words.schema.json`](../data/live-heartbeat-words.schema.json); читают `camworker`, `expworker`); `capacity` судит контроллер платформы (договор пула), `headroom` показывает консоль рядами `worker_headroom` и
   `headroom` (P/06.5 Н3; контроллер его не читает, P/04 Н1.3).
 - **Двери:** дверь шлюза `whep` (страница, токен двери консоли) и `/live/accounts` через `door.pass` — OpenAPI урока
   `spec/03-live.api.openapi.yaml`; дверь RTSP шлюза — RTSP с Digest (не HTTP), глава 6.

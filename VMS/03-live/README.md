@@ -1,11 +1,11 @@
 # V/03 Live video
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 Status: **translated** — chapters V/03.1–V/03.6 (2026-10-23; review 2026-10-29); the sections below on the plan decisions, the inquiries,
-the edits and the order are the history of the translation. Sources: the inventory [`../common/inventory.md`](../../common/inventory.md) § 1, § 2
+the edits and the order are the history of the translation. Sources: the inventory [`../common/inventory.md`](../common/inventory.md) § 1, § 2
 (М10B/13; М12A/03; М12B/01 step 6a; М12B/03 step 4). The platform: the export `cammeta-specs` `7a875c75` (the VMS pin; the chapters were written
-on `f6f3895` … `180c6c5` — see their heads). The manifest is [`live.subsystem.yaml`](../live.subsystem.yaml) (the canon; ADR-0090
+on `f6f3895` … `180c6c5` — see their heads). The manifest is [`live.subsystem.yaml`](live.subsystem.yaml) (the canon; ADR-0090
 addendum (6) item 8).
 
 ## What lesson V/03 is
@@ -39,11 +39,11 @@ the GStreamer packages and `libnice` in the image — V/09.
   log (`live.view*`, `live.rtsp.*`).
 - **Data families** (the class of VMS families, decision «А» of «Архитектор»): the delivery row, the table `accounts` and the contribution
   `live/stream-accounts/<слот>` are expressed by the manifest (P/02.1) — they have no families of their own. The lesson's own content in the open places of the platform
-  families is [`data/`](../data/): `value`
+  families is [`data/`](data/): `value`
   of the element of the book of accounts `stream-accounts-entry` (the place `/*/entries/*/value`; the password is only a keyring envelope) — the form, the layers,
-  the outcomes per reader; the rows are in the VMS catalogue [`../common/data/catalog.tsv`](../../common/data/catalog.tsv) (the column
+  the outcomes per reader; the rows are in the VMS catalogue [`../common/data/catalog.tsv`](../common/data/catalog.tsv) (the column
   `place`); the vectors are built by the builder family-read, they are not written by hand. The gateway's heartbeat words are the family
-  `live/heartbeats/<имя>` ([`data/live-heartbeat-words.schema.json`](../data/live-heartbeat-words.schema.json); read by `camworker`, `expworker`); `capacity` is judged by the platform controller (the pool contract), `headroom` is shown by the console with the series `worker_headroom` and
+  `live/heartbeats/<имя>` ([`data/live-heartbeat-words.schema.json`](data/live-heartbeat-words.schema.json); read by `camworker`, `expworker`); `capacity` is judged by the platform controller (the pool contract), `headroom` is shown by the console with the series `worker_headroom` and
   `headroom` (P/06.5 Н3; the controller does not read it, P/04 Н1.3).
 - **Doors:** the gateway door `whep` (the page, the console door token) and `/live/accounts` through `door.pass` — the lesson's OpenAPI
   `spec/03-live.api.openapi.yaml`; the gateway's RTSP door is RTSP with Digest (not HTTP), chapter 6.

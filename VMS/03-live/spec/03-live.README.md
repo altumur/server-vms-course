@@ -1,6 +1,6 @@
 # V/03 Live video — instructions for an implementation
 
-This English text is the source; the Russian [`03-live.README.md`](../03-live.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/03-live.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 What an implementation of the subsystem `live` does and how to check the result. The canon is the norms of the chapters `03.K-live.norms.md`; these
 instructions do not add to them. The platform is the export `cammeta-specs` `7a875c75`.
@@ -8,10 +8,10 @@ instructions do not add to them. The platform is the export `cammeta-specs` `7a8
 ## Inputs and their priority
 
 - The canon: the norms of the chapters `03.K-live.norms.md` (Н1–Н5 of each chapter; the addresses `V/03.K Н…`).
-- The canon of the manifest: [`live.subsystem.yaml`](../../live.subsystem.yaml): the bytes as they are.
-- [The contract](../03-live.api.openapi.yaml) expresses the forms of the HTTP inputs of the canon.
-- Acceptance: [chapter 1](../../acceptance/1/README.md), [chapter 3](../../acceptance/3/README.md); the stand and the vocabulary — [the common VMS acceptance README](../../../common/acceptance/README.md); acceptance introduces no new requirements.
-- [The lecture](../../03-live.md) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
+- The canon of the manifest: [`live.subsystem.yaml`](../live.subsystem.yaml): the bytes as they are.
+- [The contract](03-live.api.openapi.yaml) expresses the forms of the HTTP inputs of the canon.
+- Acceptance: [chapter 1](../acceptance/1/README.md), [chapter 3](../acceptance/3/README.md); the stand and the vocabulary — [the common VMS acceptance README](../../common/acceptance/README.md); acceptance introduces no new requirements.
+- The lecture (`ru/03-live.md`, for people, not in the export) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
 
 Record a contradiction with its place and a counterexample (the section «On a divergence»); an arbitrary refusal does not replace an
 absent norm. The structure of the code is left to the implementation within the canon.
@@ -20,12 +20,12 @@ absent norm. The structure of the code is left to the implementation within the 
 
 | Chapter | What the implementation has | Check |
 |---|---|---|
-| V/03.1 | the manifest `VMS/03-live/live.subsystem.yaml` loads with the strict loader without edits; the unit door of the console executes the delivery's declarations; placement — the platform controller | [acceptance 1](../../acceptance/1/README.md) |
+| V/03.1 | the manifest `VMS/03-live/live.subsystem.yaml` loads with the strict loader without edits; the unit door of the console executes the delivery's declarations; placement — the platform controller | [acceptance 1](../acceptance/1/README.md) |
 | V/03.2 | the source by the heartbeats (loopback RTSP of its own server, otherwise the receiver of its own cluster with a leaf of the role `liveworker`), one subscription, the epoch, reconciliation (`resets`), `waiting` with reasons | by reading |
-| V/03.3 | the gateway door per [OpenAPI](../03-live.api.openapi.yaml): the route `whep`, the door token, the stream choice by size, an offer without trickle, a talk, hang-up, the limits, the log `live.view*`, the CORS of the route | by reading (the WHEP stand — later), [acceptance 3](../../acceptance/3/README.md) `@manual` |
+| V/03.3 | the gateway door per [OpenAPI](03-live.api.openapi.yaml): the route `whep`, the door token, the stream choice by size, an offer without trickle, a talk, hang-up, the limits, the log `live.view*`, the CORS of the route | by reading (the WHEP stand — later), [acceptance 3](../acceptance/3/README.md) `@manual` |
 | V/03.4 | branching (a queue ≤ 1 s, a tee without branches), the PT from the offer, H.264/H.265 without transcoding, the note `codec`, sound with the exception of Н1.5 | by reading; a test of the PT choice over offers |
 | V/03.5 | the grace and the deletion of the row by `cas` (`worker.deletes`), the sweeping of sessions (`CONNECT_SECONDS`), the heartbeat (the capacity, the counters, the delivery element), `streams_live`, stopping | by reading |
-| V/03.6 | the table `accounts` (the gateway only), the doors `/live/accounts` through `door.pass` per [OpenAPI](../03-live.api.openapi.yaml), the name check and the revocation of grants through its own console, the contribution to the book `stream-accounts` (one gateway of the cluster), the RTSP door with Digest and grants | by reading (the stand of the worker `live` — later) |
+| V/03.6 | the table `accounts` (the gateway only), the doors `/live/accounts` through `door.pass` per [OpenAPI](03-live.api.openapi.yaml), the name check and the revocation of grants through its own console, the contribution to the book `stream-accounts` (one gateway of the cluster), the RTSP door with Digest and grants | by reading (the stand of the worker `live` — later) |
 
 The manifest is specification data: the implementation reads its bytes as they are (ADR-0090 addendum (6) item 8).
 

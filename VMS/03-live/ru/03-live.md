@@ -20,7 +20,7 @@
 ## Что нужно знать заранее
 
 Урок V/01 (раздача держателя — RTSP петли), V/02 глава 9 (приёмник); размещение
-([P/04](../../Platform/04-controller/spec/04-controller.norms.md)); дверь единиц ([P/06.1](../../Platform/06-console/spec/06.1-console.norms.md)).
+([P/04](../../../Platform/04-controller/ru/spec/04-controller.norms.md)); дверь единиц ([P/06.1](../../../Platform/06-console/ru/spec/06.1-console.norms.md)).
 
 ## Глава 1. Раздача — единица по спросу
 
