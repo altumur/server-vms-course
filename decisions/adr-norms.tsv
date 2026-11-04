@@ -1336,3 +1336,18 @@ adr	add	point	status	file	norm	note
 0119	16	—	НЕ НОРМА	-	-	доля VMS: нет
 0119	17	—	НЕ НОРМА	-	-	доля VMS: нет; предел «другой супервизор» нормы не требует
 0119	18	—	НЕ НОРМА	-	-	доля VMS: нет — резерв идущих проверок у процесса domain («Спецификация», п. 4); 429 с Retry-After: 1 — тот же ответ двери verify, его перевод у backend — при контракте /exports вместе с (13) п. 2
+0115	28	п. 1	НОРМА	Platform/02-installer/spec/02.4-installer.norms.md	P/02.4 Н1.9 poll, target	commit опроса — на каждого голосующего, в каждом опросе заново; буквы (б), (в) заменены (29)–(31)
+0115	28	п. 2	НОРМА	Platform/02-installer/spec/02.4-installer.norms.md	P/02.4 Н1.7 add шаг 0	served новой подсистемы — обычно после обхода, по метке backend — и раньше
+0115	28	п. 3	НЕ НОРМА	-	-	доля VMS — @traverse (3), «Спецификация VMS»
+0115	28	п. 4	НОРМА	Platform/02-installer/spec/02.4-installer.norms.md	P/02.4 Н1.9 unproven; P/02.4-22	что модель не доказала — предел, названный; порядок обхода реализацией не судится
+0115	29	пп. 1, 2	НОРМА	Platform/02-installer/spec/02.4-installer.norms.md	P/02.4 Н1.9 target, other_order	цель — commit после первого ответа голосующего; иной порядок — с той же гарантией; уточнено (30)–(32)
+0115	30	пп. 1, 2	НОРМА	Platform/02-installer/spec/02.4-installer.norms.md	P/02.4 Н1.9 live_reply, bound	первый ответ — живой ответ; отрезанный после последнего чтения — предел
+0115	30	п. 3	НОРМА	Platform/02-installer/spec/02.4-installer.norms.md	P/02.4 Н1.9 unproven	барьер «всегда» и -last моделью не доказаны
+0115	31	пп. 1, 2	НОРМА	Platform/02-installer/spec/02.4-installer.norms.md	P/02.4 Н1.9 poll, live_reply, target, alive	разрыв снимает цель; опрос одним правилом
+0115	31	п. 3	НОРМА	Platform/02-installer/spec/02.4-installer.norms.md	P/02.4 Н1.9 unproven	падение голосующего посреди опроса — не проверено
+0115	32	пп. 1–5	НОРМА	Platform/02-installer/spec/02.4-installer.norms.md; Platform/common/acceptance/system/scenarios.tsv	P/02.4 Н1.9 round, round_leader, alive, leader -last, other_order, bound	круги по всем голосующим, -last — все прочие, лидер круга, обе половины гарантии иного порядка, предел «разрыв короче круга»
+0115	33	пп. 1–3	НОРМА	Platform/02-installer/spec/02.4-installer.norms.md	P/02.4 Н1.9 round, round_leader	срок чтения 1 с, чтения круга одновременно; лидер круга — из ответа своего члена; второй абзац п. 1 заменён (35)
+0115	33	п. 4	НОРМА	Platform/02-installer/spec/02.4-installer.norms.md	P/02.4 Н1.9 unproven	висящее чтение — то же падение посреди опроса
+0115	34	п. 1	НОРМА	Platform/02-installer/spec/02.4-installer.norms.md	P/02.4 Н1.9 target	срок 1 с у чтения commit; шаг круга заменён (35)
+0115	34	п. 2	НОРМА	Platform/02-installer/spec/02.4-installer.norms.md; Platform/common/acceptance/system/scenarios.tsv	P/02.4 Н1.9 leader; системная приёмка сц. 09 шаг 2	«-last: not the leader» и «leader goes last» сразу, не по сроку
+0115	35	пп. 1, 2	НОРМА	Platform/02-installer/spec/02.4-installer.norms.md	P/02.4 Н1.9 round, target, alive, bound	партии статусов по часам s₀ + k с, чтение цели отдельно, круг = партия, граница наблюдения 2 с
