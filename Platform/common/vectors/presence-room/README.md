@@ -1,8 +1,8 @@
 # Vectors: the count of `room` and `live`
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/presence-room/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the presence lock contract](../../../contracts/presence-lock.md) «Count `room`» (the guess of stage C PL-EXT-01, the decision of
+The owner is [the presence lock contract](../../contracts/presence-lock.md) «Count `room`» (the guess of stage C PL-EXT-01, the decision of
 the Architect of 2026-10-23). The participants are the resource (writes `room.<sub>`, `live.<sub>` by the door mark, P/05 Н1.4) and the controller
 (reads, P/04 Н3 «order()», «free(s)»). The bytes are written by «Спецификация».
 
@@ -17,5 +17,5 @@ of each live lock of the role (the flock is held); `expect` — `{room, live}` a
 
 A side computes `room` and `live` by its own resource code from the input, without files, and compares with `expect` (JSON by value).
 Who performs is the resource (`05-resource`); the controller does not perform the count: it reads `room`/`live` from the door row
-([P/04](../../../../04-controller/spec/04-controller.norms.md) Н3 «free(s)»; ACC-VECTORS-CONNECT-03; the Architect's decision of
+([P/04](../../../04-controller/spec/04-controller.norms.md) Н3 «free(s)»; ACC-VECTORS-CONNECT-03; the Architect's decision of
 2026-10-27).

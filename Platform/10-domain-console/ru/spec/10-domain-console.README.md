@@ -24,12 +24,12 @@
   приёмки — Н5.
 - [HTTP-контракт](../../spec/10-domain-console.api.openapi.yaml) выражает формы своих дверей и коды перехода 2; ответы процесса
   `domain` — [OpenAPI урока P/08](../../../08-domain/spec/08-domain.api.openapi.yaml) (ссылкой).
-- Договоры: [пересылки](../../../common/contracts/forwarding.md), [сторожевой и передачи](../../../common/contracts/gate-and-pass.md),
-  [токена домена](../../../common/contracts/domain-token.md), [права](../../../common/contracts/may.md), [сертификата
-  роли](../../../common/contracts/role-certificate.md), [`peer`](../../../common/contracts/peer.md), [журнала
-  событий](../../../common/contracts/event-journal.md).
+- Договоры: [пересылки](../../../common/ru/contracts/forwarding.md), [сторожевой и передачи](../../../common/ru/contracts/gate-and-pass.md),
+  [токена домена](../../../common/ru/contracts/domain-token.md), [права](../../../common/ru/contracts/may.md), [сертификата
+  роли](../../../common/ru/contracts/role-certificate.md), [`peer`](../../../common/ru/contracts/peer.md), [журнала
+  событий](../../../common/ru/contracts/event-journal.md).
 - [Приёмка](../acceptance/README.md) — стенд нескольких кластеров ([общий README
-  приёмки](../../../common/acceptance/README.md#стенд-домена), раздел «Стенд домена») и вектор
+  приёмки](../../../common/ru/acceptance/README.md#стенд-домена), раздел «Стенд домена») и вектор
   [`alarms`](../vectors/alarms/README.md). Флаги, окружение, коды выхода — [`../lifecycle.md`](../lifecycle.md).
 - Лекция (`ru/10-domain-console.md`, для человека, в выгрузку не входит) объясняет причины.
 

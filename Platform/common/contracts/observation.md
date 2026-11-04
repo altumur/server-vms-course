@@ -1,29 +1,29 @@
 # The observation contract: freshness, resource state, reading the decision
 
-This English text is the source; the Russian [`observation.md`](../observation.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/observation.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5): a contract that several processes read lies in
 `Platform/common/`; the Architect's decision on the review of stage A 6–7, № 1, № 2). The owner is lesson
-[P/04](../../../04-controller/spec/04-controller.norms.md) (Н1.4: the constant `LOST_AFTER` and the judge; the blocks are moved from there; review of stage B 6–7, № 35). Readers: the controller — the pool, the judge
-of a slot, the decommissioning of a server ([P/04](../../../04-controller/spec/04-controller.norms.md) Н1.4, Н3), the console — the outputs of observations
-(chapter [P/06.5](../../../06-console/spec/06.5-console.norms.md): `/servers`, `/resources`, `/where`, `/unplaceable`,
-`/metrics`), the control doors (chapter [P/06.6](../../../06-console/spec/06.6-console.norms.md): server decommissioning, `/schema`,
+[P/04](../../04-controller/spec/04-controller.norms.md) (Н1.4: the constant `LOST_AFTER` and the judge; the blocks are moved from there; review of stage B 6–7, № 35). Readers: the controller — the pool, the judge
+of a slot, the decommissioning of a server ([P/04](../../04-controller/spec/04-controller.norms.md) Н1.4, Н3), the console — the outputs of observations
+(chapter [P/06.5](../../06-console/spec/06.5-console.norms.md): `/servers`, `/resources`, `/where`, `/unplaceable`,
+`/metrics`), the control doors (chapter [P/06.6](../../06-console/spec/06.6-console.norms.md): server decommissioning, `/schema`,
 the schema raise, the drain, label forecasts), the live resources of the merge `/events` (chapter
-[P/06.4](../../../06-console/spec/06.4-console.norms.md)) and contender marks (`name_conflict` P/06.5; section «Freshness of a contender mark»). Moved from P/04 Н1.4 (`resource_state`) and Н1.5 (the reader
+[P/06.4](../../06-console/spec/06.4-console.norms.md)) and contender marks (`name_conflict` P/06.5; section «Freshness of a contender mark»). Moved from P/04 Н1.4 (`resource_state`) and Н1.5 (the reader
 side of the decision) without a change of behaviour, except one: the freshness bound is one relation `≤` for all observers
 («Freshness» below; review of stage A 6–7, № 1). What an observer does with the state (the fate of a slot, the pool, a refusal of decommissioning,
 `live` of a process in `/schema`, `state` of a worker in an output) is in the norms of the reading lessons; the form of the observed rows and objects is at
-their owners ([catalogue](../../data/catalog.tsv)).
+their owners ([catalogue](../data/catalog.tsv)).
 
-Normative keywords follow the [course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
 The observer reads the resource heartbeat `platform/resources/<s>/heartbeat` by the form and the outcomes of the family of its writer — the files
 `Platform/05-resource/data/resource-heartbeat.schema.json` and `Platform/05-resource/data/resource-heartbeat.outcomes.tsv`
-([form](../../../05-resource/data/resource-heartbeat.schema.json), [outcomes](../../../05-resource/data/resource-heartbeat.outcomes.tsv));
+([form](../../05-resource/data/resource-heartbeat.schema.json), [outcomes](../../05-resource/data/resource-heartbeat.outcomes.tsv));
 the door row `platform/doors/<s>` — by the change of its version, its form is `Platform/05-resource/data/doors.schema.json`, the outcomes are
-`Platform/05-resource/data/doors.outcomes.tsv` ([form](../../../05-resource/data/doors.schema.json)). The named data files are part of the reading of `common`
+`Platform/05-resource/data/doors.outcomes.tsv` ([form](../../05-resource/data/doors.schema.json)). The named data files are part of the reading of `common`
 (ADR-0083 addendum (32) item 1; C04-DEP-OBS-HEARTBEAT-01). The outcomes are by `outcomes.tsv`: for a field not of its form that has
 an outcome row of the field (`build`, `schema`, `retention_garbled`, `retention_withheld`) its outcome applies, the heartbeat stays
 readable; only the outcome «the whole object» makes the heartbeat unreadable (a field outside the closed form included).
@@ -36,7 +36,7 @@ The other forms by which observers read (layout audit, В-38–В-40, Б-16; the
 — `Platform/04-controller/data/placement-intent.schema.json`, `Platform/04-controller/data/placement-intent.outcomes.tsv`,
 `Platform/04-controller/data/placement.schema.json`, `Platform/04-controller/data/placement.outcomes.tsv`. The version of an object
 (section «Observation of a version» changed: the headers `X-Server`, `X-Written`, in the listing `server`, `written`) is the contract of the
-resource door `Platform/05-resource/spec/05-resource.api.openapi.yaml` ([OpenAPI of lesson P/05](../../../05-resource/spec/05-resource.api.openapi.yaml)).
+resource door `Platform/05-resource/spec/05-resource.api.openapi.yaml` ([OpenAPI of lesson P/05](../../05-resource/spec/05-resource.api.openapi.yaml)).
 
 ## Observation of a version
 
@@ -84,7 +84,7 @@ or a «stale» heartbeat: `resource_state` below; a live worker in an output of 
 `WorkerRow.state` `/servers`); the live processes of `/schema` and of the schema raise, «heard» of the server decommissioning, the freshness of the heartbeat
 of the drain (chapter 6.6); the series `w2c_resources_live` (chapter 6.5); the live resources of the merge `/events` (chapter 6.4); the neighbours of a mirror (P/05 Н1.4 mirror, the same door row). The former notations
 «`< 45 с`», «`< LOST_AFTER`» at the doors of the console are read by this contract; where an output gave `<`, this is a change of behaviour at
-one step — an age of exactly LOST_AFTER: fresh. The bound is checked by the vector [`fresh-age`](../../vectors/fresh-age/README.md):
+one step — an age of exactly LOST_AFTER: fresh. The bound is checked by the vector [`fresh-age`](../vectors/fresh-age/README.md):
 the pure function «age → fresh» with the rows `LOST_AFTER − 1`, `= LOST_AFTER`, `+ 1` and fractional ones near the bound (review
 of stage B 6–7, № 20: a vector instead of an acceptance step at the bound, which a stand without controlled clocks does not do).
 
@@ -130,16 +130,16 @@ ALIVE_EVERY:    15           # s; the resource rewrites at of its door row platf
                              # the door row changes even with a silent heartbeat (moved from P/04 Н1.4; layout audit, the Architect's decision of 2026-10-25, А-10)
 ```
 
-An unreadable heartbeat is judged by the form of its writer (section «Form» above; [P/05 Н1.4](../../../05-resource/spec/05-resource.norms.md)); the door row
+An unreadable heartbeat is judged by the form of its writer (section «Form» above; [P/05 Н1.4](../../05-resource/spec/05-resource.norms.md)); the door row
 the observer judges by the change of its version, not by its fields (the family `doors` P/05). What each state means for the fate of a slot and
-for the pool — [P/04 Н3](../../../04-controller/spec/04-controller.norms.md) «fate», «choose»; for the output `ServerRow.resource` —
+for the pool — [P/04 Н3](../../04-controller/spec/04-controller.norms.md) «fate», «choose»; for the output `ServerRow.resource` —
 chapter 6.5; for a refusal of server decommissioning — chapter 6.6. The state by the history of observation — the vectors
-[`resource-state`](../../vectors/resource-state/README.md).
+[`resource-state`](../vectors/resource-state/README.md).
 
 ## Server decommissioned
 
-Moved from [P/03.2](../../../03-worker/spec/03.2-worker.norms.md) Н3 «start()» step 3 and P/04 Н3 «decommission_server» «Races»
-(layout audit, the Architect's decision of 2026-10-25, А-18); the rows of the request and of the mark — [P/06.6](../../../06-console/spec/06.6-console.norms.md) Н1.1 and P/04 Н3 «decommission_server».
+Moved from [P/03.2](../../03-worker/spec/03.2-worker.norms.md) Н3 «start()» step 3 and P/04 Н3 «decommission_server» «Races»
+(layout audit, the Architect's decision of 2026-10-25, А-18); the rows of the request and of the mark — [P/06.6](../../06-console/spec/06.6-console.norms.md) Н1.1 and P/04 Н3 «decommission_server».
 
 ```yaml
 decommissioned: the server <s> is decommissioned — there is the request row platform/decommission/<s> (written by the console; the form —
@@ -154,7 +154,7 @@ narrower:      readers whose norm takes only the request row judge by it: the re
 
 ## Freshness of a domain member
 
-Moved from [P/08.1](../../../08-domain/spec/08.1-domain.norms.md) Н1.3 `member_state` without a change (layout audit, the Architect's decision of 2026-10-25, А-15); readers —
+Moved from [P/08.1](../../08-domain/spec/08.1-domain.norms.md) Н1.3 `member_state` without a change (layout audit, the Architect's decision of 2026-10-25, А-15); readers —
 the process `domain` (the view, P/08.1) and the domain console (P/10 Н3 `alarms`: `silent` by the last report and `silent_after`).
 
 ```yaml
@@ -177,7 +177,7 @@ member_state:                                    # by the monotonic clock of the
 
 The effective placement of a unit is read by the controller rows `<sub>/controller/placement_intent` and `<sub>/placement/<id>`
 (the form — the families `placement-intent`, `placement`: `Platform/04-controller/data/placement-intent.schema.json`,
-`Platform/04-controller/data/placement.schema.json` and their `.outcomes.tsv`, section «Form»; the writer side — [P/04](../../../04-controller/spec/04-controller.norms.md) Н1.5).
+`Platform/04-controller/data/placement.schema.json` and their `.outcomes.tsv`, section «Form»; the writer side — [P/04](../../04-controller/spec/04-controller.norms.md) Н1.5).
 The rule is one for all readers: the controller, `/where`, `/unplaceable`, label forecasts, the drain.
 
 ```
@@ -202,7 +202,7 @@ of absence between two reads (the writer side — P/04 Н1.5).
 
 Moved from P/03.2 Н1.2, Н1.4а (they have a reference here); `CONTEND_EVERY` — how often the writer rewrites its mark —
 stays at the writer (P/03.2 Н1.2). The reader is the console: `WorkerRow.name_conflict` `/servers`, the series `name_conflicts`
-([P/06.5](../../../06-console/spec/06.5-console.norms.md) Н2, Н3) (C06-CONTENDER-FRESH-33-01, the Architect's decision of 2026-10-25).
+([P/06.5](../../06-console/spec/06.5-console.norms.md) Н2, Н3) (C06-CONTENDER-FRESH-33-01, the Architect's decision of 2026-10-25).
 
 ```yaml
 CONTENDER_FRESH: 300   # s; the freshness bound of a contender mark
@@ -217,7 +217,7 @@ contender: a contender mark <sub>/contenders/<имя>/<коробка> (contende
 
 ## Vectors
 
-The packages [`fresh-age`](../../vectors/fresh-age/README.md) (the freshness bound: age → fresh), [`hold-state`](../../vectors/hold-state/README.md) (an effective hold of a place; C06-WHERE-PLACE-HOLD-33-01), [`resource-state`](../../vectors/resource-state/README.md) (the resource state by the history of observation) and [`heartbeat-read`](../../vectors/heartbeat-read/README.md) (reading a heartbeat by the form and the outcomes: for a resource — correct and incorrect `retention_*`, the outcome of a field and of the whole object, C04-DEP-OBS-HEARTBEAT-01; for a worker — `worker.tsv`: the whole object, an element of `status[]` by readers, `worker` ≠ the name of the key, the outcomes of fields, C08-HEARTBEAT-READER-99-VECTORS), [`contender-fresh`](../../vectors/contender-fresh/README.md) (the freshness bound of a contender mark: age → fresh; C06-CONTENDER-FRESH-33-01). (ADR-0083 addendum (32) item 2)
+The packages [`fresh-age`](../vectors/fresh-age/README.md) (the freshness bound: age → fresh), [`hold-state`](../vectors/hold-state/README.md) (an effective hold of a place; C06-WHERE-PLACE-HOLD-33-01), [`resource-state`](../vectors/resource-state/README.md) (the resource state by the history of observation) and [`heartbeat-read`](../vectors/heartbeat-read/README.md) (reading a heartbeat by the form and the outcomes: for a resource — correct and incorrect `retention_*`, the outcome of a field and of the whole object, C04-DEP-OBS-HEARTBEAT-01; for a worker — `worker.tsv`: the whole object, an element of `status[]` by readers, `worker` ≠ the name of the key, the outcomes of fields, C08-HEARTBEAT-READER-99-VECTORS), [`contender-fresh`](../vectors/contender-fresh/README.md) (the freshness bound of a contender mark: age → fresh; C06-CONTENDER-FRESH-33-01). (ADR-0083 addendum (32) item 2)
 
 ## Correspondence to former lessons
 
@@ -227,8 +227,8 @@ of the reader of the decision (the paragraphs «An active intent is an accepted 
 from М10/9 Н3 «`/where/<id>`» — the choice of target/reason at an active intent
 (chapter 6.5); from P/03.2 Н1.4 — the definition of the age of the observed version (by reference); from P/03.2 Н1.2, Н1.4а — `CONTENDER_FRESH` and the freshness
 of a contender mark (C06-CONTENDER-FRESH-33-01). Parts of norms by `note` of
-[id-map](../../id-map.tsv): P/04-04 (life by the change of the heartbeat, the first look), P/04-10 (`resource_state`), P/04-01 (the double
+[id-map](../id-map.tsv): P/04-04 (life by the change of the heartbeat, the first look), P/04-10 (`resource_state`), P/04-01 (the double
 read of intent), P/06.5-04 (`ServerRow.resource`, `WorkerRow.state`), P/06.5-05 (`/where`), P/06.6-02 (server decommissioning),
-P/06.6-04 (the live processes of `/schema`). The freshness bound — the vector [`fresh-age`](../../vectors/fresh-age/README.md) (review
+P/06.6-04 (the live processes of `/schema`). The freshness bound — the vector [`fresh-age`](../vectors/fresh-age/README.md) (review
 of stage B 6–7, № 20); the age and the resource state — by the history of observation on the clock of the observer: the acceptance steps of P/04,
 P/06.5, P/06.6 and reading.

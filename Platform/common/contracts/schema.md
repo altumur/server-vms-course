@@ -1,15 +1,15 @@
 # The store schema contract: `platform/schema`, `SCHEMA`, the check at start
 
-This English text is the source; the Russian [`schema.md`](../schema.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/schema.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): the schema check at start is executed by all processes
 of the platform — a contract, not copies in chapters; layout audit А-02, the Architect's decision of 2026-10-25). The owner is chapter
-[P/06.6](../../../06-console/spec/06.6-console.norms.md) (Н1.1а «Schema», Н3 «raise_schema»). Participants: the console (P/06.6),
-the controller ([P/04](../../../04-controller/spec/04-controller.norms.md) Н3 «controller start — schema check»), the worker
-([P/03.2](../../../03-worker/spec/03.2-worker.norms.md) Н3 «schema check by the worker»), the resource
-([P/05](../../../05-resource/spec/05-resource.norms.md) Н3 «resource start — schema check»), the domain processes — `domain`,
-the agent, the domain console ([P/02.4 Н1.12](../../../02-installer/spec/02.4-installer.norms.md); the domain console —
-[P/10](../../../10-domain-console/spec/10-domain-console.norms.md) Н1.1); step 0 of a process start is [P/02.3](../../../02-installer/spec/02.3-installer.norms.md)
+[P/06.6](../../06-console/spec/06.6-console.norms.md) (Н1.1а «Schema», Н3 «raise_schema»). Participants: the console (P/06.6),
+the controller ([P/04](../../04-controller/spec/04-controller.norms.md) Н3 «controller start — schema check»), the worker
+([P/03.2](../../03-worker/spec/03.2-worker.norms.md) Н3 «schema check by the worker»), the resource
+([P/05](../../05-resource/spec/05-resource.norms.md) Н3 «resource start — schema check»), the domain processes — `domain`,
+the agent, the domain console ([P/02.4 Н1.12](../../02-installer/spec/02.4-installer.norms.md); the domain console —
+[P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.1); step 0 of a process start is [P/02.3](../../02-installer/spec/02.3-installer.norms.md)
 Н3 «Process start».
 
 Moved from P/06.6 Н1.1а (the lines `platform/schema`, `SCHEMA`, `BUILD`, `heartbeat`, `check`) and the common block «start
@@ -17,13 +17,13 @@ of the controller, the worker, the resource or the console — schema check» (P
 a change of behaviour; they refer here. The raise of the schema by the operator (`raise`, `PUT /schema`, the maintenance window) is with the
 owner, P/06.6 Н1.1а, Н3 «raise_schema».
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
 The row `platform/schema` is the family `schema`: the form `Platform/06-console/data/schema.schema.json`, the outcomes
-`Platform/06-console/data/schema.outcomes.tsv` ([form](../../../06-console/data/schema.schema.json),
-[outcomes](../../../06-console/data/schema.outcomes.tsv)). The field `schema` of a heartbeat is the heartbeat forms
+`Platform/06-console/data/schema.outcomes.tsv` ([form](../../06-console/data/schema.schema.json),
+[outcomes](../../06-console/data/schema.outcomes.tsv)). The field `schema` of a heartbeat is the heartbeat forms
 `Platform/03-worker/data/heartbeats.schema.json` (outcomes — `Platform/03-worker/data/heartbeats.outcomes.tsv`) and `Platform/05-resource/data/resource-heartbeat.schema.json` (outcomes — `Platform/05-resource/data/resource-heartbeat.outcomes.tsv`) (and their
 `.outcomes.tsv`).
 
@@ -59,12 +59,12 @@ worker: after the renewal of the slot — P/03.2 Н3 «schema check by the worke
 
 ## Vectors
 
-The package [`schema`](../../vectors/schema/README.md): the function `check` — the row `platform/schema` and SCHEMA of the build → a start with the version,
+The package [`schema`](../vectors/schema/README.md): the function `check` — the row `platform/schema` and SCHEMA of the build → a start with the version,
 «schema is newer» with the exact N, or «out of form» (C06-SCHEMA-WIDE-32-01, the Architect's decision of 2026-10-25). A read error and the slot renewal by the worker — by acceptance scenarios
 of the participants (P/06.6; a read error at the resource — sc. 18 of the acceptance of P/05, a start refusal — sc. 17) and by reading.
 
 ## Correspondence to former lessons
 
-From P/06.6 Н1.1а (`platform/schema`, `SCHEMA`, `BUILD`, `heartbeat`, `check`; the norm P/06.6-04 by `note` of [id-map](../../id-map.tsv))
+From P/06.6 Н1.1а (`platform/schema`, `SCHEMA`, `BUILD`, `heartbeat`, `check`; the norm P/06.6-04 by `note` of [id-map](../id-map.tsv))
 and the common block Н3 «start … — schema check» (P/06.6, P/03.2, P/04, P/05; formerly М10/10 Н3, М10/10-01); they refer here
 (layout audit А-02).

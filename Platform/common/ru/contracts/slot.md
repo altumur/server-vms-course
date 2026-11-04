@@ -1,26 +1,26 @@
 # Договор слота: состояния строки слота и сроки
 
-Текст производный от en, руками не правится: источник — английский [`en/slot.en.md`](en/slot.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
+Текст производный от `contracts/slot.md`, руками не правится: источник — английский [`contracts/slot.md`](../../contracts/slot.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
 
 Общий договор модуля «Платформа» (ADR-0083 доп. (5), доп. (13): состояние строки слота судят воркер, контроллер, консоль и
 агент — договор, а не копии в главах; аудит раскладки А-04, решение «Архитектора» 2026-10-25). Владелец — глава
-[P/03.2](../../03-worker/ru/spec/03.2-worker.norms.md) Н1.4 (строка `<sub>/slots/<имя>`). Участники: воркер — захват и
-продление (P/03.2 Н3); контроллер — судья слота, уход единиц, заказ ([P/04](../../04-controller/ru/spec/04-controller.norms.md)
-Н1.4, Н3); консоль — `WorkerRow.released`, `slot_taking`, `slot_until`, `slot_garbled` ([P/06.5](../../06-console/ru/spec/06.5-console.norms.md)
-Н2, Н3 «/servers»), дренаж ([P/06.6](../../06-console/ru/spec/06.6-console.norms.md)); агент — живость воркера на домене
-([P/09.1](../../09-agent/ru/spec/09.1-agent.norms.md) Н1.4); пул — [договор пула](pool.md) «Живой воркер».
+[P/03.2](../../../03-worker/ru/spec/03.2-worker.norms.md) Н1.4 (строка `<sub>/slots/<имя>`). Участники: воркер — захват и
+продление (P/03.2 Н3); контроллер — судья слота, уход единиц, заказ ([P/04](../../../04-controller/ru/spec/04-controller.norms.md)
+Н1.4, Н3); консоль — `WorkerRow.released`, `slot_taking`, `slot_until`, `slot_garbled` ([P/06.5](../../../06-console/ru/spec/06.5-console.norms.md)
+Н2, Н3 «/servers»), дренаж ([P/06.6](../../../06-console/ru/spec/06.6-console.norms.md)); агент — живость воркера на домене
+([P/09.1](../../../09-agent/ru/spec/09.1-agent.norms.md) Н1.4); пул — [договор пула](pool.md) «Живой воркер».
 
 Перенесено из P/03.2 Н1.4 (`states`, `SLOT_TERM`, `TORN_STILL`) без изменения поведения; P/03.2 и читатели — ссылкой
 сюда. Форма строки, имя и порядок имён — у владельца и в [договоре имени слота](slot-name.md); возраст наблюдаемой версии —
 [договор наблюдения](observation.md) «Наблюдение версии».
 
-Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Нормативные слова — по [канону курса](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Форма
 
 Строка `<sub>/slots/<имя>` — семья `slots`: форма `Platform/03-worker/data/slots.schema.json`, исходы
-`Platform/03-worker/data/slots.outcomes.tsv` ([форма](../../03-worker/data/slots.schema.json),
-[исходы](../../03-worker/data/slots.outcomes.tsv)); поля `holder`, `until`, `released`, `gen`, `server` — там и в P/03.2
+`Platform/03-worker/data/slots.outcomes.tsv` ([форма](../../../03-worker/data/slots.schema.json),
+[исходы](../../../03-worker/data/slots.outcomes.tsv)); поля `holder`, `until`, `released`, `gen`, `server` — там и в P/03.2
 Н1.4.
 
 ## Состояния

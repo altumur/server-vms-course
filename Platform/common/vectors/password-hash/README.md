@@ -1,8 +1,8 @@
 # Vectors: the password hash
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/password-hash/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is chapter P/08.4 through [the password hash contract](../../../contracts/password-hash.md) (the guess of stage C GP-G06, the Architect's decision
+The owner is chapter P/08.4 through [the password hash contract](../../contracts/password-hash.md) (the guess of stage C GP-G06, the Architect's decision
 of 2026-10-23). The participants are the process `domain` (writes and checks) and the cluster console (the break-glass entry). The bytes are written by
 «Спецификация»; the expectations were computed by two independent implementations of PBKDF2-HMAC-SHA256.
 
@@ -17,7 +17,7 @@ value: the hash string or `true`/`false`; `note`.
 ## Stand command `password-hash`
 
 The key `stand` of the profiles `08-domain` and `06-console` (the section «Layout by processes» of [the common acceptance
-README](../../../acceptance/README.md)), by the general rule of the vector commands: a template with `{input}` — the path of a file into which the runner
+README](../../acceptance/README.md)), by the general rule of the vector commands: a template with `{input}` — the path of a file into which the runner
 writes the cell `input` byte for byte; stdout — a JSON value and LF (the hash string or `true`/`false`), compared with `expect` by
 value; code 0 — computed, 2 — an input not of the form (not one of the two objects, the salt not 32 lowercase hex; the input is strict JSON in UTF-8 without
 BOM: a repeated key, an extra field, a field not a string, a lone surrogate — also not of the form), stdout empty; a hash string not of the form

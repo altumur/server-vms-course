@@ -1,11 +1,11 @@
 # Векторы: свежесть метки соперника — возраст наблюдаемой версии → свежа
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
+Текст производный от `vectors/contender-fresh/README.md`, руками не правится: источник — английский [`vectors/contender-fresh/README.md`](../../../vectors/contender-fresh/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
 
 Владелец — [договор наблюдения](../../contracts/observation.md) «Свежесть метки соперника: `CONTENDER_FRESH`» (догадка
 стадии C C06-CONTENDER-FRESH-33-01, решение «Архитектора» 2026-10-25). Писатель метки — воркер
-([P/03.2](../../../03-worker/ru/spec/03.2-worker.norms.md) Н1.4а, `CONTEND_EVERY`); читатель — консоль (`WorkerRow.name_conflict`
-`/servers`, ряд `name_conflicts`, [глава 6.5](../../../06-console/ru/spec/06.5-console.norms.md)). Байты пишет «Спецификация»;
+([P/03.2](../../../../03-worker/ru/spec/03.2-worker.norms.md) Н1.4а, `CONTEND_EVERY`); читатель — консоль (`WorkerRow.name_conflict`
+`/servers`, ряд `name_conflicts`, [глава 6.5](../../../../06-console/ru/spec/06.5-console.norms.md)). Байты пишет «Спецификация»;
 строки — по тексту договора.
 
 ## Правило

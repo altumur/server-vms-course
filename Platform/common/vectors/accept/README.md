@@ -1,8 +1,8 @@
 # Vectors of accepting a report
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/accept/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The vectors of [the report acceptance contract](../../../contracts/accept.md): the function «accept» (`accept`) — the generation, the mark, `same`,
+The vectors of [the report acceptance contract](../../contracts/accept.md): the function «accept» (`accept`) — the generation, the mark, `same`,
 `heard`, `ignored`, the refusals, the roads. The owner is lesson P/08, chapter 8.3 (the holder); the participant is the relay (9.2), which
 accepts a member by the same function over its own memory (the review analysis of stage A 8–10, № 13 / decision 2; ADR-0083 addendum (13)). The bytes
 are written by «Спецификация» (ADR-0083); the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
@@ -17,9 +17,9 @@ the acceptance of chapter P/08.3 (`Platform/08-domain/journal/corrections-3.tsv`
 ## Run
 
 Without a stand: the function of an implementation gets the input (the column `input`) and gives the output; `expect` is a subset of the fields of the output by
-the dictionary of the «Stand» ([the common acceptance README](../../../acceptance/README.md)): `"@absent"` — there is no field, `"@any"` — the field exists with any
+the dictionary of the «Stand» ([the common acceptance README](../../acceptance/README.md)): `"@absent"` — there is no field, `"@any"` — the field exists with any
 value. The form of the input and the output, the meaning of the fields (`catalog`, `refreshed_ago`, `refresh`, `whole`, `status`) and the exit code 2 are
-[the contract](../../../contracts/accept.md) «The form of the function»; the mark `mark` is by the form of the contract «Generation, mark, limits», its
+[the contract](../../contracts/accept.md) «The form of the function»; the mark `mark` is by the form of the contract «Generation, mark, limits», its
 `sha256` is of the JCS of `stored`, except `accept-05-rebase-stored-not-mark` and `accept-20-whole-over-broken-stored` of lesson 3: there
 `stored` is deliberately not with `mark.sha256` (the review analysis of stage B 8–10, № 22, Claude `М-18`).
 
@@ -30,8 +30,8 @@ witnesses and contributions (`accept-36`…`accept-39`) — `["testsub", "testsu
 
 | Manifest | File | sha256 |
 |---|---|---|
-| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../../Source/tests/testdata/testsub.subsystem.yaml) | `7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a` |
-| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `813a807f3472bdc64e279c94c12bfe3b00ebaaa8ebda0c996d2a50161043e6eb` |
+| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a` |
+| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `813a807f3472bdc64e279c94c12bfe3b00ebaaa8ebda0c996d2a50161043e6eb` |
 
 The bytes of `testsub2` changed on 2026-11-04 (the roadmap 4.5): the token kind `vault` with `keep: true` was added to `domain.tokens`, then the comments of the header were rewritten without the names of test files; the fields on which the expectations of this table depend were not touched — a recheck by the oracle is not needed.
 
@@ -44,7 +44,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](../cases.tsv), 66 rows (3 ADR-0113 — `accept-camera-*`, `accept-heard-every-changed`; 26 of lesson 3, 9 of lesson 4, 2 of the relay door — `same_sent_at` after `heard`, the witnesses' note and the Architect's decision of 2026-10-23; 25 of stage C — below; 1 — the coverage audit of P/08, the second pass of Gemini) | `input` is the input of the command `accept` as JSON text (`catalog`, `mark`, `stored`, `body`, `refreshed_ago`; for lesson 4 — `via`, `heard_ago`) → `expect`: `generation` (`rev`, `base`, parts of `whole`), `heard` (`refresh`), `same`, `ignored` or `refused` (`status`, `reason`: `rebase`, `same_sent_at`, `not_ready`, `not_a_publication`, `rev_exhausted`; `whole_too_large` — there are no rows, «Candidates») |
+| [`cases.tsv`](cases.tsv), 66 rows (3 ADR-0113 — `accept-camera-*`, `accept-heard-every-changed`; 26 of lesson 3, 9 of lesson 4, 2 of the relay door — `same_sent_at` after `heard`, the witnesses' note and the Architect's decision of 2026-10-23; 25 of stage C — below; 1 — the coverage audit of P/08, the second pass of Gemini) | `input` is the input of the command `accept` as JSON text (`catalog`, `mark`, `stored`, `body`, `refreshed_ago`; for lesson 4 — `via`, `heard_ago`) → `expect`: `generation` (`rev`, `base`, parts of `whole`), `heard` (`refresh`), `same`, `ignored` or `refused` (`status`, `reason`: `rebase`, `same_sent_at`, `not_ready`, `not_a_publication`, `rev_exhausted`; `whole_too_large` — there are no rows, «Candidates») |
 
 ## Rows of stage C
 
@@ -86,4 +86,4 @@ The review analysis of stage B 8–10, № 6 (Claude `П-2`):
 The vectors of lessons 3 and 4 are inputs of an acceptance that passed at two witness implementations; the rows of stage C were composed by the contract;
 they were not checked by a reference rebuild (the generation and the mark
 rest on the sections of the contract «Generation, mark, limits» and «The member's publication»; the owners of the text are P/08.3 Н1.3,
-[P/09.1](../../../../09-agent/spec/09.1-agent.norms.md) Н1.2). On a divergence the contract is right, the vector is corrected by «Спецификация».
+[P/09.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.2). On a divergence the contract is right, the vector is corrected by «Спецификация».

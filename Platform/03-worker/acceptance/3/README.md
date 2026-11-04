@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`03.3-worker.norms.md`](../../spec/03.3-worker.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/05 (stage B, ADR-0083 addendum (1): without a change of
 behaviour); the numbers of scenarios and steps are the former ones, except sc. 02 and 06: the first step is `@start resource`, the former ones are shifted by one
@@ -14,7 +14,7 @@ The scenarios run on a stand of the `testsub` processes of the implementation: t
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей): the doors `store` (a role with read rights on `testsub/`), `console`, `resource` and `admin` (sc. 25, 35), the directives `@start`,
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors): the doors `store` (a role with read rights on `testsub/`), `console`, `resource` and `admin` (sc. 25, 35), the directives `@start`,
 `@sleep`, `@until`, `@as`, `ASSERT`; the expectation is a subset of fields.
 
 The processes are started per the section «Stand» of the common acceptance README (the commands of roles, the environment of the worker); the read role of

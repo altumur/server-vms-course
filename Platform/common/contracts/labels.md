@@ -1,16 +1,16 @@
 # The label alphabet contract
 
-This English text is the source; the Russian [`labels.md`](../labels.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/labels.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5); the Architect's decision on the analysis of the review of stage A 6–7, № 11: the label
-alphabet is in `common/`). The owner is lesson [P/06](../../../06-console/spec/06.6-console.norms.md) (chapter 6.6: the label doors of a
-server; moved from there; analysis of the review of stage B 6–7, № 35). Readers: the controller — the constraint `labels-subset` and the worker labels ([P/04](../../../04-controller/spec/04-controller.norms.md)
-Н1.3), the console — the label field of a unit ([P/06.1](../../../06-console/spec/06.1-console.norms.md) Н1.2 `list`), the label doors
-of a server and the forecasts ([P/06.6](../../../06-console/spec/06.6-console.norms.md) Н2.1), the grants by labels ([P/08.4](../../../08-domain/spec/08.4-domain.norms.md) Н1.3
+alphabet is in `common/`). The owner is lesson [P/06](../../06-console/spec/06.6-console.norms.md) (chapter 6.6: the label doors of a
+server; moved from there; analysis of the review of stage B 6–7, № 35). Readers: the controller — the constraint `labels-subset` and the worker labels ([P/04](../../04-controller/spec/04-controller.norms.md)
+Н1.3), the console — the label field of a unit ([P/06.1](../../06-console/spec/06.1-console.norms.md) Н1.2 `list`), the label doors
+of a server and the forecasts ([P/06.6](../../06-console/spec/06.6-console.norms.md) Н2.1), the grants by labels ([P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.3
 `scope`). Moved from chapter 6.6 Н2.1 (formerly М10/4 Н2) without a change of behaviour. The form of the server label row is the family
-`server-labels` ([P/06.6](../../../06-console/data/server-labels.schema.json)); what labels mean for placement is with the reading lessons.
+`server-labels` ([P/06.6](../../06-console/data/server-labels.schema.json)); what labels mean for placement is with the reading lessons.
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
@@ -53,4 +53,4 @@ refuse:  an element not by the alphabet — a refusal of the one who reads the i
 
 ## Vectors
 
-The package [`labels`](../../vectors/labels/README.md): a label, the write of a set, the reading of a list text, `LABELS` of the environment (`env_labels`). The label field of a unit as a list field — the packages [`values-by-type`](../../vectors/values-by-type/README.md) (`list:labels`) and [`row-check`](../../vectors/row-check/README.md) of the row check contract. (ADR-0083 addendum (32) item 2)
+The package [`labels`](../vectors/labels/README.md): a label, the write of a set, the reading of a list text, `LABELS` of the environment (`env_labels`). The label field of a unit as a list field — the packages [`values-by-type`](../vectors/values-by-type/README.md) (`list:labels`) and [`row-check`](../vectors/row-check/README.md) of the row check contract. (ADR-0083 addendum (32) item 2)

@@ -1,34 +1,34 @@
 # System acceptance of the module «Платформа» — the stand of all processes
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/acceptance/system/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 End-to-end scenarios that check the norms of several micromodules at once and require a stand of all processes of the platform
-([the module note](../../../../module-design.md): «сквозные сценарии … со стендом из всех микромодулей»). Moved from the acceptance of М10/11
+([the module note](../../../module-design.md): «сквозные сценарии … со стендом из всех микромодулей»). Moved from the acceptance of М10/11
 (sc. 05, 06; stage B, ADR-0083 addendum (1): without a change of behaviour) by the Architect's decision on В2 of the move plan of lesson 6:
 a scenario belongs to the lesson whose norm it checks (the presence lock, sc. 16 of М10/11, — the acceptance of
-[P/05](../../../../05-resource/acceptance/README.md)), the drills of many processes — here. The numbers and steps are the former ones.
-Four scenarios / 75 steps: sc. 05 — 61 automatic steps on the three-server cluster stand (the section «Sc. 05»; not executable yet — the section «Executability»), sc. 07 and 08 — 7 steps `@manual`, sc. 09 — 7 steps `@manual`; sc. 06 `recover` is moved by scenario 18 of the [acceptance of P/01.3](../../../../01-store/acceptance/3/README.md) to the store group stand (ПРАВИЛА-РАБОТЫ.md § 4, 2026-10-30); sc. 07 — a cold start of a part and a worker (ADR-0091 addendum (2), (3)), sc. 08 — the worker program from the manifest row (ADR-0091 addendum (4)–(6)).
+[P/05](../../../05-resource/acceptance/README.md)), the drills of many processes — here. The numbers and steps are the former ones.
+Four scenarios / 75 steps: sc. 05 — 61 automatic steps on the three-server cluster stand (the section «Sc. 05»; not executable yet — the section «Executability»), sc. 07 and 08 — 7 steps `@manual`, sc. 09 — 7 steps `@manual`; sc. 06 `recover` is moved by scenario 18 of the [acceptance of P/01.3](../../../01-store/acceptance/3/README.md) to the store group stand (ПРАВИЛА-РАБОТЫ.md § 4, 2026-10-30); sc. 07 — a cold start of a part and a worker (ADR-0091 addendum (2), (3)), sc. 08 — the worker program from the manifest row (ADR-0091 addendum (4)–(6)).
 
 ## Stand
 
-Sc. 05 runs on the stand of the runner: [«Three-server cluster stand»](../../README.md#стенд-кластера-из-трёх-серверов) of the common README,
+Sc. 05 runs on the stand of the runner: [«Three-server cluster stand»](../README.md#three-server-cluster-stand) of the common README,
 the manifests `testsub` and `testsub2`, the event mirror is switched on by step 6. Before, it was a drill `@manual` on a real cluster; the plan
 of stage 2 is `decisions/inbox/2026-10-30-план-сценарии-группы-автоматом.md` (ПРАВИЛА-РАБОТЫ.md § 4).
 
 Sc. 07 and 08 check a box with systemd, not a group: a real test server with the units of the platform
-([P/02.4](../../../../02-installer/spec/02.4-installer.norms.md) Н1.1). The operator runs the drills by the drill log, the runner only prints the steps
-`@manual` ([the dictionary of directives](../../README.md#словарь-директив-и-дверей)): they do not enter the result, they are neither green nor
+([P/02.4](../../../02-installer/spec/02.4-installer.norms.md) Н1.1). The operator runs the drills by the drill log, the runner only prints the steps
+`@manual` ([the dictionary of directives](../README.md#dictionary-of-directives-and-doors)): they do not enter the result, they are neither green nor
 red, they get no PASS from printing. The log of the operator is to name the preconditions of Н3 of the norms, the outcomes and the limitations.
 
 ## Scenarios
 
 | № | Drill | Norms |
 |---|---|---|
-| 05 | «pull the power»: the server failure table, the timing profile 45/90 with all tolerances, the return without moving back, except a declared `home` | [P/04](../../../../04-controller/spec/04-controller.norms.md) Н1.4а `power_pull` (`stays`, `lost`, `store`, `return`), Н3 «pull the power (do nothing) — a drill», «fate», «pass()» step 7 (P/04-22); [P/05](../../../../05-resource/spec/05-resource.norms.md) Н1.4 «Bucket restore» (P/05-12); [P/01.3](../../../../01-store/spec/01.3-store.norms.md) Н1.3 (a restart by `member.json` without `join`) |
-| 06 | moved: sc. 18 of the [acceptance of P/01.3](../../../../01-store/acceptance/3/README.md) (the store group stand, 2026-10-30) | [P/01.3](../../../../01-store/spec/01.3-store.norms.md) Н1.3 `floor`, Н3 «recover the store» |
-| 07 | a part of a subsystem: after a reboot the share directories exist before the units, the part starts earlier than the workers, both without the subsystem file; the units by the keys; the producer writes into the share under `ProtectSystem=strict`, the consumer connects without `ReadWritePaths`; a stop of the part does not stop the worker | [P/02.4](../../../../02-installer/spec/02.4-installer.norms.md) Н1.1 (`units`, `dirs`), Н1.2 `W2C_SUB_ENV`, Н1.7 `install`, Н3 «server start» (ADR-0091 addendum (2), (3)) |
-| 08 | the worker program: the unit is the command of the runner, the runner executes `worker.exec` of the row with `W2C_MANIFEST_REV`; a change v1 → v2 through `manifest put` — v2 after a restart; the keys of the units are the installation source, `manifest put` does not change them; for a worker on the domain — by reading | [P/02.3](../../../../02-installer/spec/02.3-installer.norms.md) Н3 «Process start», «The worker program from the row», «The installation source»; [P/02.4](../../../../02-installer/spec/02.4-installer.norms.md) Н1.1, Н1.9 (ADR-0091 addendum (4)–(6)) |
-| 09 | add a subsystem to a working cluster (ADR-0115 addendum (21)–(24)): a degraded group — a refusal before the first restart; the leader — last (`-last`); a failed return between steps — the round stands; a changed manifest of a working subsystem — `get` replaces the previous file, the round passes on all servers (ADR-0115 addendum (26)); a repeat — «already done» on a passed one; after all — the switch-on; a box — only with `-allow-downtime`; `manifest get` with another hash — a refusal; three voters and a server with a door; the switch without restarts (ADR-0115 addendum (25)) | [P/02.4](../../../../02-installer/spec/02.4-installer.norms.md) Н1.7 `add`, Н1.9 `rollout`, `manifest get`; [P/02.5](../../../../02-installer/spec/02.5-installer.norms.md) Н3 «install»; [P/06.5](../../../../06-console/spec/06.5-console.norms.md) Н2 `/manifest/<sub>/source` |
+| 05 | «pull the power»: the server failure table, the timing profile 45/90 with all tolerances, the return without moving back, except a declared `home` | [P/04](../../../04-controller/spec/04-controller.norms.md) Н1.4а `power_pull` (`stays`, `lost`, `store`, `return`), Н3 «pull the power (do nothing) — a drill», «fate», «pass()» step 7 (P/04-22); [P/05](../../../05-resource/spec/05-resource.norms.md) Н1.4 «Bucket restore» (P/05-12); [P/01.3](../../../01-store/spec/01.3-store.norms.md) Н1.3 (a restart by `member.json` without `join`) |
+| 06 | moved: sc. 18 of the [acceptance of P/01.3](../../../01-store/acceptance/3/README.md) (the store group stand, 2026-10-30) | [P/01.3](../../../01-store/spec/01.3-store.norms.md) Н1.3 `floor`, Н3 «recover the store» |
+| 07 | a part of a subsystem: after a reboot the share directories exist before the units, the part starts earlier than the workers, both without the subsystem file; the units by the keys; the producer writes into the share under `ProtectSystem=strict`, the consumer connects without `ReadWritePaths`; a stop of the part does not stop the worker | [P/02.4](../../../02-installer/spec/02.4-installer.norms.md) Н1.1 (`units`, `dirs`), Н1.2 `W2C_SUB_ENV`, Н1.7 `install`, Н3 «server start» (ADR-0091 addendum (2), (3)) |
+| 08 | the worker program: the unit is the command of the runner, the runner executes `worker.exec` of the row with `W2C_MANIFEST_REV`; a change v1 → v2 through `manifest put` — v2 after a restart; the keys of the units are the installation source, `manifest put` does not change them; for a worker on the domain — by reading | [P/02.3](../../../02-installer/spec/02.3-installer.norms.md) Н3 «Process start», «The worker program from the row», «The installation source»; [P/02.4](../../../02-installer/spec/02.4-installer.norms.md) Н1.1, Н1.9 (ADR-0091 addendum (4)–(6)) |
+| 09 | add a subsystem to a working cluster (ADR-0115 addendum (21)–(24)): a degraded group — a refusal before the first restart; the leader — last (`-last`); a failed return between steps — the round stands; a changed manifest of a working subsystem — `get` replaces the previous file, the round passes on all servers (ADR-0115 addendum (26)); a repeat — «already done» on a passed one; after all — the switch-on; a box — only with `-allow-downtime`; `manifest get` with another hash — a refusal; three voters and a server with a door; the switch without restarts (ADR-0115 addendum (25)) | [P/02.4](../../../02-installer/spec/02.4-installer.norms.md) Н1.7 `add`, Н1.9 `rollout`, `manifest get`; [P/02.5](../../../02-installer/spec/02.5-installer.norms.md) Н3 «install»; [P/06.5](../../../06-console/spec/06.5-console.norms.md) Н2 `/manifest/<sub>/source` |
 
 For `recover` (now sc. 18 of the acceptance of P/01.3) the isolation of the previous group, the saved sources and
 a reliable upper are mandatory; the absence of any condition means a refusal before changes, including with `force`. One available copy does not
@@ -104,7 +104,7 @@ does not execute the scenario (the common README).
 
 ## scenarios.tsv
 
-The format is the [dictionary of directives and doors of «Стенда» of the common acceptance README](../../README.md#словарь-директив-и-дверей). Sc. 05 — the directives
+The format is the [dictionary of directives and doors of «Стенда» of the common acceptance README](../README.md#dictionary-of-directives-and-doors). Sc. 05 — the directives
 and doors of the section «Three-server cluster stand» and of the dictionary; sc. 07, 08 — only `@manual`, the expectation — `manual`.
 
 ## Scenario boundaries

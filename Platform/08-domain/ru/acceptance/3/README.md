@@ -2,7 +2,7 @@
 
 Текст производный от `acceptance/3/README.md`, руками не правится: источник — английский [`acceptance/3/README.md`](../../../acceptance/3/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
-Стенд, словарь директив и дверей — [общий README приёмки](../../../../common/acceptance/README.md), раздел [«Стенд домена»](../../../../common/acceptance/README.md#стенд-домена)
+Стенд, словарь директив и дверей — [общий README приёмки](../../../../common/ru/acceptance/README.md), раздел [«Стенд домена»](../../../../common/ru/acceptance/README.md#стенд-домена)
 (словарь директив и дверей стенда нескольких кластеров; до его переезда — «Словарь директив и дверей М11» README
 приёмки М11/01). Норма главы —
 [`08.3-domain.norms.md`](../../spec/08.3-domain.norms.md) Н5. Сценарии перенесены (стадия B, ADR-0083 доп. (1): без
@@ -16,8 +16,8 @@
 
 Сценарии-команды М11/03 сц. 10–13 (`agent-sig`, `seal-member`, `seal-member-round`, `accept`) и М11/04 сц. 06 (`accept` с
 дорогой) не перенесены: те же случаи без изменения байтов — векторы общих договоров
-[`agent-sig`](../../../../common/vectors/agent-sig/README.md), [`domain-envelopes`](../../../../common/vectors/domain-envelopes/README.md)
-(`m1-open.tsv`, `m1-round.tsv`) и [`accept`](../../../../common/vectors/accept/README.md); их входы сняты вместе с шагами (строка
+[`agent-sig`](../../../../common/ru/vectors/agent-sig/README.md), [`domain-envelopes`](../../../../common/ru/vectors/domain-envelopes/README.md)
+(`m1-open.tsv`, `m1-round.tsv`) и [`accept`](../../../../common/ru/vectors/accept/README.md); их входы сняты вместе с шагами (строка
 `corrections.tsv`). Остальные сценарии М11/03 — приёмка [главы 8.1](../1/README.md) (04, 06–09); М11/04 сц. 02–04 —
 [глава 9.2](../../../../09-agent/ru/acceptance/2/README.md), М11/08 — [глава 6.7](../../../../06-console/ru/acceptance/7/README.md) (01–03), [урок P/10](../../../../10-domain-console/ru/acceptance/README.md) (05), векторы `peer` (06), М11/12 — главы 8.10 и [9.1](../../../../09-agent/ru/acceptance/1/README.md).
 
@@ -63,7 +63,7 @@ W2C_TLS_DIR=…`, `@env m1 W2C_TLS_DIR`; значение `inputs/…` — пу�
 3 уже видит отпечаток), шаг 18 — снятие администратором удалило её. Шаги 10–11 проверяют, что правка администратора без
 смены центров у члена переписывается его следующим отчётом. Шаги 14–16 — два прохода агента (`REPORT_EVERY` 5 с) без
 `tls_ca`: отпечатки не снимаются. Как раннер передаёт окружение и перезапускает консоль и агента кластера с переменной
-(`@env`) — словарь «Стенда домена» [общего README приёмки](../../../../common/acceptance/README.md), `@env` и «Окружение
+(`@env`) — словарь «Стенда домена» [общего README приёмки](../../../../common/ru/acceptance/README.md), `@env` и «Окружение
 пересылки» (разбор ревью стадии B 8–10, № 22: М-16).
 
 **Сценарий 19** — сосед на стенде: дверь `GET /domain/members` консоли домена ([урок P/10](../../../../10-domain-console/ru/spec/10-domain-console.norms.md)
@@ -80,7 +80,7 @@ doc строк `domain/member-rows/<раздел>` (`hold`, `m1`, `m2`), а не
 
 | Файл | Сценарий | Что в нём |
 |---|---|---|
-| `other-root.json` | 02 | файл восстановления чужого корня (`root 2` векторов [`keys`](../../../../common/vectors/keys/README.md); прежде — урок М11/2 Н5) для `@join m2 inputs/other-root.json` |
+| `other-root.json` | 02 | файл восстановления чужого корня (`root 2` векторов [`keys`](../../../../common/ru/vectors/keys/README.md); прежде — урок М11/2 Н5) для `@join m2 inputs/other-root.json` |
 | `kit-m1-one/ca.pem` | 04 | центр A (`w2c test ca north`), EC P-256 |
 | `kit-m1-two/ca.pem`, `kit-m1-two/ca.next.pem` | 04 | центры A и B (`w2c test ca south`) |
 | `view-member-list-ghost.json` | 19 | объект `domain/view` (форма [`view`](../../../data/view.schema.json)): `member_list` — `hold` и `ghost`, без `knocking` |

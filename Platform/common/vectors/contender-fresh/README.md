@@ -1,11 +1,11 @@
 # Vectors: the freshness of a contender mark — the age of the observed version → fresh
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/contender-fresh/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the observation contract](../../../contracts/observation.md) «Freshness of a contender mark: `CONTENDER_FRESH`» (stage C guess
+The owner is [the observation contract](../../contracts/observation.md) «Freshness of a contender mark: `CONTENDER_FRESH`» (stage C guess
 C06-CONTENDER-FRESH-33-01, the Architect's decision 2026-10-25). The writer of the mark is the worker
-([P/03.2](../../../../03-worker/spec/03.2-worker.norms.md) Н1.4а, `CONTEND_EVERY`); the reader is the console (`WorkerRow.name_conflict`
-`/servers`, the series `name_conflicts`, [chapter 6.5](../../../../06-console/spec/06.5-console.norms.md)). The bytes are written by «Спецификация»;
+([P/03.2](../../../03-worker/spec/03.2-worker.norms.md) Н1.4а, `CONTEND_EVERY`); the reader is the console (`WorkerRow.name_conflict`
+`/servers`, the series `name_conflicts`, [chapter 6.5](../../../06-console/spec/06.5-console.norms.md)). The bytes are written by «Спецификация»;
 the rows are by the text of the contract.
 
 ## Rule
@@ -20,7 +20,7 @@ mark — as older: this is a reading of the form, not an age, it is not in the t
 ## `fresh.tsv`
 
 UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, the first line not skipped is the header. The fields `case`, `age`,
-`fresh`, `note` are as in the package [`fresh-age`](../../fresh-age/README.md) (`age` — a JSON number, `fresh` — `true` | `false`).
+`fresh`, `note` are as in the package [`fresh-age`](../fresh-age/README.md) (`age` — a JSON number, `fresh` — `true` | `false`).
 
 6 rows: 0 (the first look), 299, 300, 300.0, 300.001, 301.
 
@@ -34,4 +34,4 @@ Who performs it — the console (`06-console`: the freshness of marks for `Worke
 ## Native outcome
 
 Code 0 and the value of the column `fresh` — `true` or `false` (one expectation column — the common rule «Vectors» of [the common acceptance
-README](../../../acceptance/README.md); as at [`fresh-age`](../../fresh-age/README.md)); the input is the cell `age`; the Architect's decision 2026-10-27.
+README](../../acceptance/README.md); as at [`fresh-age`](../fresh-age/README.md)); the input is the cell `age`; the Architect's decision 2026-10-27.

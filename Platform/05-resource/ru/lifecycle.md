@@ -9,9 +9,9 @@
 [P/02.4]: ../../02-installer/ru/spec/02.4-installer.norms.md
 [P/02.5]: ../../02-installer/ru/spec/02.5-installer.norms.md
 [P/05]: spec/05-resource.norms.md
-[журнал событий]: ../../common/contracts/event-journal.md
-[замок присутствия]: ../../common/contracts/presence-lock.md
-[Стенд]: ../../common/acceptance/README.md
+[журнал событий]: ../../common/ru/contracts/event-journal.md
+[замок присутствия]: ../../common/ru/contracts/presence-lock.md
+[Стенд]: ../../common/ru/acceptance/README.md
 [каталог]: ../../common/data/catalog.tsv
 
 ## Запуск
@@ -26,7 +26,7 @@
 ## Окружение
 
 Окружение собирает раннер `w2c-run.sh` в порядке P/02.4 Н1.2: значения юнита → `roles/<W2C_ROLE>.env` → `w2c.env` →
-файл подсистемы, раньше прочитанное побеждает; файлы — разбором, не `source` ([договор файла окружения](../../common/contracts/env-file.md); [02-installer/lifecycle.md](../../02-installer/ru/lifecycle.md)).
+файл подсистемы, раньше прочитанное побеждает; файлы — разбором, не `source` ([договор файла окружения](../../common/ru/contracts/env-file.md); [02-installer/lifecycle.md](../../02-installer/ru/lifecycle.md)).
 
 | Переменная | Смысл | Умолчание | Норма |
 |---|---|---|---|
@@ -35,8 +35,8 @@
 | `PLATFORM_DIR` | корень состояния | `/data/platform` | [P/02.4] Н1.2 |
 | `RESOURCE_ROOT` / `EVENTS` | корень деревьев событий; в нём же замки присутствия `.workers/` | `<PLATFORM_DIR>/events` | [P/02.4] Н1.2 «Канал настройки», [журнал событий], [замок присутствия] |
 | `OBJECTS` / `PLATFORM_OBJECTS` | корень объектов двери объектов и копий тел | `<PLATFORM_DIR>/objects` | [P/02.4] Н1.2, [P/05] Н1.1 |
-| `RESOURCE_HOST`, `RESOURCE_PORT` | адрес двери ресурса; юнит не пишет — умолчание процесса; задан в `w2c.env` — адрес привязки (вне петли — только с комплектом, ADR-0075 доп. 2026-10-26 (6) п. 2); при `mtls` цепочка — лист, затем его центр ([договор сертификата роли](../../common/contracts/role-certificate.md) `server`; ревью норм ADR-0075, Claude fd85ea8cc, С-2, С-3) | `127.0.0.1`, `8090` | [P/02.4] Н1.1, Н1.2, Н1.6 |
-| `RESOURCE_URL` | адрес двери, который ресурс пишет в строку двери; IP-литерал вне петли (порог петли [договора сертификата роли](../../common/contracts/role-certificate.md) `loopback`: `ip`) — ресурс при старте пишет строку журнала; у `https://` клиенты откажут `ip_address`, у `http://` — ошибка настройки, видимая отказом соединения (ADR-0075 доп. 2026-10-26 (4) п. 6) | — | [P/02.4] Н1.2, [P/05] Н1.4 `door_row` |
+| `RESOURCE_HOST`, `RESOURCE_PORT` | адрес двери ресурса; юнит не пишет — умолчание процесса; задан в `w2c.env` — адрес привязки (вне петли — только с комплектом, ADR-0075 доп. 2026-10-26 (6) п. 2); при `mtls` цепочка — лист, затем его центр ([договор сертификата роли](../../common/ru/contracts/role-certificate.md) `server`; ревью норм ADR-0075, Claude fd85ea8cc, С-2, С-3) | `127.0.0.1`, `8090` | [P/02.4] Н1.1, Н1.2, Н1.6 |
+| `RESOURCE_URL` | адрес двери, который ресурс пишет в строку двери; IP-литерал вне петли (порог петли [договора сертификата роли](../../common/ru/contracts/role-certificate.md) `loopback`: `ip`) — ресурс при старте пишет строку журнала; у `https://` клиенты откажут `ip_address`, у `http://` — ошибка настройки, видимая отказом соединения (ADR-0075 доп. 2026-10-26 (4) п. 6) | — | [P/02.4] Н1.2, [P/05] Н1.4 `door_row` |
 | `RESOURCE_TLS` | дверь по TLS | — | [P/02.4] Н1.2, Н1.6 |
 | `SERVER_NAME` | свой сервер: ключ пульса и строки двери; не по грамматике — код 2 | короткий hostname | [P/02.4] Н1.2 |
 | `BOX_ID` | коробка | `/etc/machine-id`, иначе hostname | [P/02.4] Н1.2 |
@@ -92,7 +92,7 @@
 ## Стенд
 
 Корни `{data}/config`, `objects`, `events` до старта процесса создаёт команда запуска роли профиля — [общий README
-приёмки](../../common/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../../02-installer/ru/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
+приёмки](../../common/ru/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../../02-installer/ru/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
 
 - Команда «Стенда» с подстановками `{rport}` — порт двери, `{server}` — имя сервера (`srv-a`; у стенда М11 —
   `srv-<кластер>`) ([Стенд] «Ресурс»).

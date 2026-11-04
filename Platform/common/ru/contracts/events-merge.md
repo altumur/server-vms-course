@@ -1,24 +1,24 @@
 # Договор слияния журнала событий: живые ресурсы, слияние, эпохи, полнота
 
-Текст производный от en, руками не правится: источник — английский [`en/events-merge.en.md`](en/events-merge.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
+Текст производный от `contracts/events-merge.md`, руками не правится: источник — английский [`contracts/events-merge.md`](../../contracts/events-merge.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
 
 Общий договор модуля «Платформа» (ADR-0083 доп. (5), доп. (13): общий алгоритм нескольких процессов — договор, а не копии в
-главах). Владелец — урок P/06, [глава 6.4](../../06-console/ru/spec/06.4-console.norms.md) Н1.3, Н3 «слияние» (перенесено сюда без
+главах). Владелец — урок P/06, [глава 6.4](../../../06-console/ru/spec/06.4-console.norms.md) Н1.3, Н3 «слияние» (перенесено сюда без
 изменения поведения консоли, ADR-0091 доп. (21) п. 1). Участники — консоль кластера (дверь `GET /events`, P/06.4 Н2) и воркер
-подсистемы, который сливает журнал сам: читает `GET /events` ресурсов ([P/05](../../05-resource/ru/spec/05-resource.norms.md) Н1.3,
+подсистемы, который сливает журнал сам: читает `GET /events` ресурсов ([P/05](../../../05-resource/ru/spec/05-resource.norms.md) Н1.3,
 допуск — раздел «Участник» `admission`) и строки эпох подсистем, объявленные в `worker.reads` (`<sub>/epoch/`;
-[P/02.5](../../02-installer/ru/spec/02.5-installer.norms.md) Н1.4); дверь консоли воркеру не открывается, её TLS, `open`/`shut` и
+[P/02.5](../../../02-installer/ru/spec/02.5-installer.norms.md) Н1.4); дверь консоли воркеру не открывается, её TLS, `open`/`shut` и
 пределы не меняются (ADR-0091 доп. (21) п. 1, доп. (23) пп. 3–5, доп. (24) п. 4, доп. (25) п. 4, доп. (27) п. 2). Индекс —
 P/05 Н1.3; форма строки и ответа — раздел «Форма», запрос и обрезка `cut` — «Запрос и ответ ресурса» ниже; подсказка `/events/wait` — у ресурсов (P/05 Н1.6), у консоли её нет.
 
-Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Нормативные слова — по [канону курса](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Форма
 
 Строка события и ответ ресурса на `GET /events` — схемы `EventRow`, `ResourceEventRow`, `ResourceEvents` контракта
-`Platform/05-resource/spec/05-resource.api.openapi.yaml` ([OpenAPI урока P/05](../../05-resource/spec/05-resource.api.openapi.yaml));
+`Platform/05-resource/spec/05-resource.api.openapi.yaml` ([OpenAPI урока P/05](../../../05-resource/spec/05-resource.api.openapi.yaml));
 ответ консоли — `ConsoleEvents` и `ConsoleEventRow` контракта `Platform/06-console/spec/06-console.api.openapi.yaml`
-([OpenAPI урока P/06](../../06-console/spec/06-console.api.openapi.yaml)). Оба файла входят в чтение `common` (ADR-0083
+([OpenAPI урока P/06](../../../06-console/spec/06-console.api.openapi.yaml)). Оба файла входят в чтение `common` (ADR-0083
 доп. (33) п. 1; EM-READ-33-01). Строки эпох `<sub>/epoch/<id>` — семья `epoch`: `Platform/03-worker/data/epoch.schema.json`,
 `Platform/03-worker/data/epoch.outcomes.tsv`; строки дверей `platform/doors/<s>` (раздел «Живые ресурсы») — семья `doors`:
 `Platform/05-resource/data/doors.schema.json`, `Platform/05-resource/data/doors.outcomes.tsv` (аудит раскладки, В-18, В-19, Б-18;
@@ -74,7 +74,7 @@ admission:    дверь ресурса /events* допускает роли con
 ([договор наблюдения](observation.md) `fresh`; первый взгляд — как свежий); пульс ресурса слияние не читает: живость ресурса
 здесь — только по строке двери (разбор ревью стадии B 6–7, № 35). Граница одна, `≤ LOST_AFTER` — вектор
 [`fresh-age`](../vectors/fresh-age/README.md). Ресурс с несвежей строкой двери (`silent`) не спрашивается. Той же строкой ресурс судит живость
-соседей зеркала ([P/05](../../05-resource/ru/spec/05-resource.norms.md) Н1.4 `mirror`).
+соседей зеркала ([P/05](../../../05-resource/ru/spec/05-resource.norms.md) Н1.4 `mirror`).
 
 ## Слияние
 

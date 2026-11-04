@@ -1,21 +1,21 @@
 # The holds contract: the manifest section `holds`, hold rows, what they hold
 
-This English text is the source; the Russian [`holds.md`](../holds.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/holds.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies in
-chapters; the stage C guess R05-G06, the Architect's decision of 2026-10-23). The owner is lesson P/06, [chapter 6.4](../../../06-console/spec/06.4-console.norms.md)
-Н1.5 `holds`. The rows of the hold table are written by the table door of the console ([P/06.1](../../../06-console/spec/06.1-console.norms.md) Н1.6); the holds
-are read by the resource in the term pass ([P/05](../../../05-resource/spec/05-resource.norms.md) Н3 «resource pass» `retain`; the rights —
-[P/02.5](../../../02-installer/spec/02.5-installer.norms.md) Н1.4, the row `resource`: «the table `holds`, the rows of manifests with
-`about`»). The form of the section in the manifest and the reference checks by the loader are [P/02.1](../../../02-installer/spec/02.1-installer.norms.md)
-Н1.2 `holds`, references 50–54. Decisions: [ADR-0057](../../../../decisions/0057-консоль-из-каталога-спек-хуки-консоли-уходят.md)
-(the addendum of 2026-10-10 — `released`), [ADR-0091](../../../../decisions/0091-механизмы-платформы-по-запросам-vms.md) item 8 (the hold «about»).
+chapters; the stage C guess R05-G06, the Architect's decision of 2026-10-23). The owner is lesson P/06, [chapter 6.4](../../06-console/spec/06.4-console.norms.md)
+Н1.5 `holds`. The rows of the hold table are written by the table door of the console ([P/06.1](../../06-console/spec/06.1-console.norms.md) Н1.6); the holds
+are read by the resource in the term pass ([P/05](../../05-resource/spec/05-resource.norms.md) Н3 «resource pass» `retain`; the rights —
+[P/02.5](../../02-installer/spec/02.5-installer.norms.md) Н1.4, the row `resource`: «the table `holds`, the rows of manifests with
+`about`»). The form of the section in the manifest and the reference checks by the loader are [P/02.1](../../02-installer/spec/02.1-installer.norms.md)
+Н1.2 `holds`, references 50–54. Decisions: [ADR-0057](../../../decisions/0057-консоль-из-каталога-спек-хуки-консоли-уходят.md)
+(the addendum of 2026-10-10 — `released`), [ADR-0091](../../../decisions/0091-механизмы-платформы-по-запросам-vms.md) item 8 (the hold «about»).
 
 Moved from P/06.4 Н1.5 `holds` and `about` without a change of behaviour; added are the rules of reading the window and the addressee with an incomplete
 declaration and unreadable rows — in them the rule «an unknown read is not equal to absence» applies (P/05 Н1.3 `retention`
 `rule`): what is not read reliably is held.
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
@@ -39,8 +39,8 @@ addressee:  A — the subsystem of the addressee: about.sub of the manifest <M> 
 
 ## Hold row
 
-The row is `<M>/<table>/<id>`; the elements are texts by `values_by_type` ([the row check contract](../row-check.md) «Unit row»;
-the vectors [`values-by-type`](../../vectors/values-by-type/README.md); Б-23).
+The row is `<M>/<table>/<id>`; the elements are texts by `values_by_type` ([the row check contract](row-check.md) «Unit row»;
+the vectors [`values-by-type`](../vectors/values-by-type/README.md); Б-23).
 
 ```yaml
 released:   released is declared and the element of this field in the row exists and is non-empty (a text longer than zero) — the row holds nothing,
@@ -82,13 +82,13 @@ heartbeat (P/05 Н4, the row «retention: … holds failed to read»). An empty 
 
 ## Vectors
 
-The package [`holds`](../../vectors/holds/README.md) — the function «does the row hold the bucket» (the input — the declaration, the row, the segment of the bucket;
+The package [`holds`](../vectors/holds/README.md) — the function «does the row hold the bucket» (the input — the declaration, the row, the segment of the bucket;
 the output — `held` | `not_held` | `unknown`): the sections «Declaration», «Hold row», «What a row holds» without the choice of the trees of the
 addressee (ADR-0083 addendum (37) item 5). Reading the elements of a row by their type is the package
-[`values-by-type`](../../vectors/values-by-type/README.md). The table listing, the trees of the addressee and the hold «about» are checked
+[`values-by-type`](../vectors/values-by-type/README.md). The table listing, the trees of the addressee and the hold «about» are checked
 by reading; the removal by term too: the stand does not wait out the term of buckets (P/06.4-08, P/05-06).
 
 ## Correspondence to former lessons
 
 From P/06.4 Н1.5 (`holds`, `about`): the declaration, `released`, the window, `longest`, the hold «about» (the norm P/06.4-08 — by `note` of
-[id-map](../../id-map.tsv)). P/06.4 Н1.5 and P/05 Н3 `retain` refer here.
+[id-map](../id-map.tsv)). P/06.4 Н1.5 and P/05 Н3 `retain` refer here.

@@ -1,18 +1,18 @@
 # The log mask contract: free log text with the mask
 
-This English text is the source; the Russian [`log-mask.md`](../log-mask.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/log-mask.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): all processes of the platform write the mask into the log — the console,
 the worker, the resource, the domain processes; a contract, not copies in chapters; the stage C guess C06-LOG-MASK-33-01, the
-Architect's decision of 2026-10-25). The owner is chapter [P/06.2](../../../06-console/spec/06.2-console.norms.md) of the console (Н1.4 `never`
+Architect's decision of 2026-10-25). The owner is chapter [P/06.2](../../06-console/spec/06.2-console.norms.md) of the console (Н1.4 `never`
 `log`). The participants are all processes of the platform that write a log (id-map: М10/7-08 → P/06.2-05, «все процессы»). The parsing
-of an address, of pairs and the field rule are [the address contract](../url-credentials.md) (А1–А15); here is the function masking free text
+of an address, of pairs and the field rule are [the address contract](url-credentials.md) (А1–А15); here is the function masking free text
 as a whole.
 
 Moved from P/06.2 Н1.4 `log` and the lines of the address contract about free text (А1, А2) without a change of behaviour; P/06.2 and
 the address contract refer here.
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Function
 
@@ -60,7 +60,7 @@ value, a Digest hash, pairs without a secret name, an address without a password
 ## Where it applies
 
 Every line of the journal (log) of a process of the platform. The places where there is no secret at all are the block `never` below, moved from
-[P/06.2](../../../06-console/spec/06.2-console.norms.md) Н1.4 without a change (layout audit, the Architect's decision of 2026-10-25, Б-30): the journal `audit`, the heartbeat, the snapshot,
+[P/06.2](../../06-console/spec/06.2-console.norms.md) Н1.4 without a change (layout audit, the Architect's decision of 2026-10-25, Б-30): the journal `audit`, the heartbeat, the snapshot,
 argv and the text of a refusal contain no values — this is a rule of the places of writing, not a mask.
 
 ```yaml
@@ -81,7 +81,7 @@ never:
 
 ## Mask at the input
 
-From P/06.2 Н1.1 `mask_in` without a change (layout audit, the Architect's decision of 2026-10-25, А-21); the white-space characters are [the person name contract](../person-name.md)
+From P/06.2 Н1.1 `mask_in` without a change (layout audit, the Architect's decision of 2026-10-25, А-21); the white-space characters are [the person name contract](person-name.md)
 «White space» (`white_space`). The refusal of a write with such a value is P/06.2 Н4.
 
 ```yaml
@@ -92,14 +92,14 @@ mask_in: a value of ≥ 3 characters of the set «* ＊ ∗ ⁎ ✱ • ● ∙ 
 
 ## Vectors
 
-The package [`log-mask`](../../vectors/log-mask/README.md) (`cases.tsv`, 39 rows, 8 of them — the Architect's answer of 2026-10-25; «Mask at the input» — `mask_in.tsv`, 33 rows, the
+The package [`log-mask`](../vectors/log-mask/README.md) (`cases.tsv`, 39 rows, 8 of them — the Architect's answer of 2026-10-25; «Mask at the input» — `mask_in.tsv`, 33 rows, the
 Architect's decision of 2026-10-27; the catalogue rule — the field declarations
-[`secret-in/fields.yaml`](../../vectors/secret-in/fields.yaml)). The value of a field `type: url` is the package
-[`secret-in`](../../vectors/secret-in/README.md) of the address contract. The journal, the heartbeat, the snapshot, argv without values — by reading
+[`secret-in/fields.yaml`](../vectors/secret-in/fields.yaml)). The value of a field `type: url` is the package
+[`secret-in`](../vectors/secret-in/README.md) of the address contract. The journal, the heartbeat, the snapshot, argv without values — by reading
 (P/06.2-05).
 
 ## Correspondence to former lessons
 
-From P/06.2 Н1.4 `log` (the norm P/06.2-05 — by `note` of [id-map](../../id-map.tsv); formerly М10/7 Н1.4 `log` and the common table
+From P/06.2 Н1.4 `log` (the norm P/06.2-05 — by `note` of [id-map](../id-map.tsv); formerly М10/7 Н1.4 `log` and the common table
 `Source/tests/testdata/log_mask.tsv`, the bytes of the package coincide with it) and the address contract А1, А2 (free text); they
 refer here. The package is moved from `Platform/06-console/vectors/log-mask/` (C06-LOG-MASK-33-01).

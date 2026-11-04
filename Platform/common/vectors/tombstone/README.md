@@ -1,8 +1,8 @@
 # Vectors: the tombstone — the peers, the acknowledgements, the removal
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/tombstone/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the tombstone contract](../../../contracts/tombstone.md) (lesson P/05; the guess of stage C C06-BLOB-GC-33-01 /
+The owner is [the tombstone contract](../../contracts/tombstone.md) (lesson P/05; the guess of stage C C06-BLOB-GC-33-01 /
 IF-OBJECT-TOMBSTONE63-PEERS-01, the Architect's decision of 2026-10-25). The participants are the console (writes the tombstone, P/06.1 Н3
 «body sweep») and the resource (the acknowledgements and the removal, P/05 Н1.1). The bytes are written by «Спецификация»; the rows are by the text of the contract.
 

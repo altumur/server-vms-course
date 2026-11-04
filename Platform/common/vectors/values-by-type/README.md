@@ -1,11 +1,11 @@
 # Vectors: text forms of values by type (`values_by_type`)
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/values-by-type/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is chapter P/06.1 ([norms](../../../../06-console/spec/06.1-console.norms.md) Н1.2 `values_by_type`, `absent`; Н2 — the values of the JSON answer;
+The owner is chapter P/06.1 ([norms](../../../06-console/spec/06.1-console.norms.md) Н1.2 `values_by_type`, `absent`; Н2 — the values of the JSON answer;
 Н4 — type refusals). The participants are all who read or write unit and table rows by the manifest: `<s>controller`, `<s>worker`,
-`<s>domain`, `domain`, `domainagent` (the readers of a unit row by [the catalog](../../../data/catalog.tsv)), the codec of the schemas
-of families [`codec.tsv`](../../../data/codec.tsv) (the types `string`, `integer`, `number`, `boolean`, `array`, `null` — the
+`<s>domain`, `domain`, `domainagent` (the readers of a unit row by [the catalog](../../data/catalog.tsv)), the codec of the schemas
+of families [`codec.tsv`](../../data/codec.tsv) (the types `string`, `integer`, `number`, `boolean`, `array`, `null` — the
 same rule), table rows (P/06.1 Н1.6: the values and stamps — by `values_by_type`), the row `sweep` (P/06.1 Н1.5: `at`).
 The bytes are written by «Спецификация» (ADR-0083, stage B; review analysis of stage A 6–7, № 33); the conformance of the product is by its acceptance
 against this table (ADR-0080 addendum 16).
@@ -17,11 +17,11 @@ UTF-8, LF, fields separated by TAB. Lines with `#` and empty lines are skipped, 
 | Field | Meaning |
 |---|---|
 | `case` | the name of the row |
-| `type` | the type of the manifest field: `string`, `url`, `int`, `float`, `bool`, `list`, `json`, `blob`; `secret` — a string field with the suffix `_secret`; `list:labels` — the field of the placement labels (`placement.constraint: labels-subset`, the label alphabet — [the contract](../../../contracts/labels.md)); `int:inherit` — an `int` field with `inherit` |
+| `type` | the type of the manifest field: `string`, `url`, `int`, `float`, `bool`, `list`, `json`, `blob`; `secret` — a string field with the suffix `_secret`; `list:labels` — the field of the placement labels (`placement.constraint: labels-subset`, the label alphabet — [the contract](../../contracts/labels.md)); `int:inherit` — an `int` field with `inherit` |
 | `dir` | `write` — a JSON value at the input of a door → an element of the row; `read` — an element of the row → a JSON value of the answer; `both` — both directions |
 | `json` | the JSON value (JSON text) — as in the request body (`write`) or the answer (`read`); `@unset` — the field is not passed (`write`) / the answer has no field (`read`); `@unreadable` — the element does not read as its type (`read`) |
-| `row` | the element of the store row — **a JSON string** with the text of the element (`"5"` — the text `5`, `""` — an empty text); `@absent` — there is no element; `@refuse` — the write is refused, 400 at the door (Н4), `@refuse <слово>` — with this `fault` ([the dictionary](../../fault/README.md)); `@json <текст JSON>` — the element is the text of a JSON array, equal by value; `@sealed` — an envelope `enc:v2:…` ([the sealing contract](../../../contracts/sealing.md)) |
-| `note` | where the row comes from: a rule of the norm or an acceptance step of P/06.1 (sc. — the scenario number of [the acceptance of the chapter](../../../../06-console/acceptance/1/README.md)) |
+| `row` | the element of the store row — **a JSON string** with the text of the element (`"5"` — the text `5`, `""` — an empty text); `@absent` — there is no element; `@refuse` — the write is refused, 400 at the door (Н4), `@refuse <слово>` — with this `fault` ([the dictionary](../fault/README.md)); `@json <текст JSON>` — the element is the text of a JSON array, equal by value; `@sealed` — an envelope `enc:v2:…` ([the sealing contract](../../contracts/sealing.md)) |
+| `note` | where the row comes from: a rule of the norm or an acceptance step of P/06.1 (sc. — the scenario number of [the acceptance of the chapter](../../../06-console/acceptance/1/README.md)) |
 
 ## Run
 
@@ -52,7 +52,7 @@ columns of this half as written: at `write` — `{type, json}`, at `read` — `{
 the expectation is not passed (`row` at `write`, `json` at `read`); the native object below is built by the command (C-VBT-FRAME-01, the decision
 of the Specification).
 
-The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../../acceptance/README.md));
+The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../acceptance/README.md));
 a template with `{input}` — the path of a file with one JSON object. The runner gives a `both` row by two independent calls `write` and
 `read`; `both` never occurs in the input; the command does not get the expected result.
 
@@ -83,6 +83,6 @@ code 0 with `refused`, not code 2. The conversion and the choice of the field by
 
 The preparation of the field set at creation (passed, `inherit`, `default`, the empty form — Н1.2, sc. 01, 02, 10), the order
 of refusals (Н3 step 4), the ceiling of a `json` field of 4000 bytes (Н1.4, sc. 16), address parsing and the password in it (chapter 6.2 Н1.1а, the vectors
-`secret-in`), the bytes of the envelope (the vectors [`common/vectors/sealing/`](../../sealing/README.md)), `fixed`,
-references and `unique` (Н1.3). The cross-language notation of `float` beyond the examples is by the rule `values_by_type` of [the row check contract](../../../contracts/row-check.md) «Unit row» («the shortest that restores
+`secret-in`), the bytes of the envelope (the vectors [`common/vectors/sealing/`](../sealing/README.md)), `fixed`,
+references and `unique` (Н1.3). The cross-language notation of `float` beyond the examples is by the rule `values_by_type` of [the row check contract](../../contracts/row-check.md) «Unit row» («the shortest that restores
 the number, without an exponent»), not by this table.

@@ -1,6 +1,6 @@
 # The layers of В7: the standard and our own remainder
 
-This English text is the source; the Russian [`LAYERS.md`](../LAYERS.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/LAYERS.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 The form of the manifest (P/02.1), the canonical view (P/02.2) and the forms of the data families (the catalogue `Platform/common/data/`) the course
 writes in standard files: JSON Schema 2020-12 — the form, CEL — the relations of the manifest. What the standard does not express is held by
@@ -18,7 +18,7 @@ and a new rule of a layer are decided by the Architect (ADR-0087 addendum (5), A
 | `02.1-installer.scalars.tsv` | the table of the plain scalars of the manifest (P/02.1 Н1.1) | next to the form of the manifest |
 | `common/data/codec.tsv` | the codec of the store rows: a logical type → the notation in `items` and in JSON (layer 3) | `Platform/common/data/` |
 | `<семья>.outcomes.tsv` | the outcomes of an unreadable row or object by readers (§ 7) | next to the schema of the family |
-| `common/versions/` | the pinned versions of the standard libraries and the YAML parsers: [README](../versions/README.md), `go.mod`, `go.sum`, `requirements.txt` (ADR-0092 item 9) | `Platform/common/versions/` |
+| `common/versions/` | the pinned versions of the standard libraries and the YAML parsers: [README](versions/README.md), `go.mod`, `go.sum`, `requirements.txt` (ADR-0092 item 9) | `Platform/common/versions/` |
 | `common/data/common.schema.json` | the common definitions of the family schemas — for reference, not a norm: each family schema is self-contained | `Platform/common/data/` |
 
 The files `*.tsv` are tables: UTF-8 without BOM, the line feed LF, TAB is the column separator, a line with `#` is a comment, the first
@@ -85,10 +85,10 @@ The workarounds of the defects of the pinned parsers are not rules (the outcome 
 - **D16** (both parsers): a last line of spaces without a line feed after a block scalar gives a value without
   the final `\n` — layer 1 appends LF to the end of a text without LF before parsing.
 
-The other known defects of the pinned versions and their workarounds — [the list of library defects](../versions/DEFECTS.md) (ADR-0092 item 9):
+The other known defects of the pinned versions and their workarounds — [the list of library defects](versions/DEFECTS.md) (ADR-0092 item 9):
 each has a vector row on which the answer is different without the workaround, or «страж».
 
-**The package `yaml-suite`** ([`vectors/yaml-suite/`](../vectors/yaml-suite/README.md)) — the outcome of layer 1 on each test of
+**The package `yaml-suite`** ([`vectors/yaml-suite/`](vectors/yaml-suite/README.md)) — the outcome of layer 1 on each test of
 yaml-test-suite `data-2022-01-17` (the inputs are in the package, acceptance without a network); `layer1` is checked strictly, the rule is a summary.
 
 ## 5. Relations (CEL)
@@ -116,7 +116,7 @@ of the reader work on a parsed copy, the signature, `sha256` and forwarding — 
 Pointer). The path of the families is normative: it chooses the outcome (§ 7); where the library gives no place — layer 4.
 
 **The key** of an instance is checked by the template of the column `key` of the catalogue: the literals of the template — exactly, a placeholder `<…>` — by
-the [table of placeholders](../data/README.md) (the grammar, the number of path components, an example). A key not by the template — the instance is not
+the [table of placeholders](data/README.md) (the grammar, the number of path components, an example). A key not by the template — the instance is not
 of this family: a refusal on the empty path `""` (the instance whole), the value is not judged — like a row that is not an object; the outcome is the rows
 of the empty path of `<семья>.outcomes.tsv` (V7-FAMILY-KEY-PLACEHOLDER-01). The path `/key` does not fit for this: it is the path of the field
 `key` of the value (P/08 `member-report`, `member-report-delta`, `member-reported`; for an open root — any name).
@@ -165,7 +165,7 @@ A schema with a word (`<схема>.schema.json#<слово>` in the column `sch
 with a word — `<схема>.<слово>.outcomes.tsv` next to the schema (V7-DOMAIN-SLOT-PULSE-SCHEMA-01).
 
 The unreadable is not replaced by absence (the rule DF-OUTCOMES-109); for the console gate — the rule «Unreadable row»
-of the [gate-and-pass contract](../contracts/gate-and-pass.md).
+of the [gate-and-pass contract](contracts/gate-and-pass.md).
 
 ## 8. The table of the manifest scalars (`scalars.tsv`)
 

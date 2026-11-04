@@ -1,22 +1,22 @@
 # The store client contract: address, request, answer, outcomes and what to do with each
 
-This English text is the source; the Russian [`store-client.md`](../store-client.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/store-client.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): the store client is at all processes of the platform; a contract,
 not copies in chapters; the stage C guess SC-WIRE78-G01 / C08-SDK-06, the Architect's decision of 2026-10-25). The owner is chapter
-[P/01.1](../../../01-store/spec/01.1-store.norms.md). The participants are all processes that talk to the store through the door of P/01.1:
+[P/01.1](../../01-store/spec/01.1-store.norms.md). The participants are all processes that talk to the store through the door of P/01.1:
 the console, the controller, the worker, the resource, the domain processes, the agent, the installer.
 
 Moved from P/01.1 (the caller's side: Н1, Н2, Н2.1, Н3, Н4 «What the caller does») without a change of behaviour; the server's
-side (parsing, the order of checks, operations, the repeat memory, codes) stays in P/01.1 and [P/01.3](../../../01-store/spec/01.3-store.norms.md);
+side (parsing, the order of checks, operations, the repeat memory, codes) stays in P/01.1 and [P/01.3](../../01-store/spec/01.3-store.norms.md);
 P/01.1 refers here.
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
 The wire is the contract of the store door `Platform/01-store/spec/01-store.api.openapi.yaml`
-([OpenAPI](../../../01-store/spec/01-store.api.openapi.yaml); it is part of the reading of `common` by ADR-0083 addendum (33) item 1): the routes
+([OpenAPI](../../01-store/spec/01-store.api.openapi.yaml); it is part of the reading of `common` by ADR-0083 addendum (33) item 1): the routes
 `GET /v1/get?key=`, `GET /v1/list?prefix=`, `POST /v1/write` (`Cmd`: `put` | `delete`; `BatchCmd`: `batch`), the schemas `Key`, `Row`, `Listing`,
 `Cmd`, `BatchCmd`, `Written`, `Fault`. The row, the condition `cas`, the guard `guard`, the time conditions `not_after`/`not_before` and the `id` of a write are
 the schemas `Row` and `Cmd` of the same OpenAPI (P/01.1 Н1; the client writes by them; layout audit, Б-05).
@@ -97,9 +97,9 @@ memory:    the store remembers an id for at least two minutes and at least 50 00
 
 ## Vectors
 
-The package [`store-client`](../../vectors/store-client/README.md): the outcome of an answer for the client — the operation and the answer (code and body, no
+The package [`store-client`](../vectors/store-client/README.md): the outcome of an answer for the client — the operation and the answer (code and body, no
 answer, a cut, a refused connection) → the outcome (the section «Outcomes and what the client does», `no_reply`). The wire (routes, parsing,
-codes at the inputs) is the acceptance of lesson 01 ([P/01.1 Н5](../../../01-store/spec/01.1-store.norms.md)).
+codes at the inputs) is the acceptance of lesson 01 ([P/01.1 Н5](../../01-store/spec/01.1-store.norms.md)).
 
 ## Correspondence to former lessons
 

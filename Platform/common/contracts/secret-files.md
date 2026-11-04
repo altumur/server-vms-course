@@ -1,16 +1,16 @@
 # The secret file placement contract
 
-This English text is the source; the Russian [`secret-files.md`](../secret-files.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/secret-files.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): one rule of several processes is a contract, not copies
 in chapters; the stage C guesses S-005, DF-G01, the Architect's decision of 2026-10-23). The owner is lesson
-[P/02](../../../02-installer/spec/02.4-installer.norms.md), chapter 2.4 (the layout Н1.1, the commands `w2cctl secrets` Н1.9 and «domain
+[P/02](../../02-installer/spec/02.4-installer.norms.md), chapter 2.4 (the layout Н1.1, the commands `w2cctl secrets` Н1.9 and «domain
 installation» Н3 — the installer puts both files; ADR-0083 addendum (29) item 9: the line names the owner lesson of the norm; the library by the contract is written by the session `common` of the generation). One placement rule for all secret
-files on a box: the ring file ([the sealing contract](../sealing.md) «Ring file» `mode`, `link`) and the domain recovery file
-([the domain founding contract](../domain-founding.md) «Root and recovery file» `place`, `mode`). Where each file is to
+files on a box: the ring file ([the sealing contract](sealing.md) «Ring file» `mode`, `link`) and the domain recovery file
+([the domain founding contract](domain-founding.md) «Root and recovery file» `place`, `mode`). Where each file is to
 be and what its mode is — in the contract of that file; here — how the reader and the writer check the placement.
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ```yaml
 file:      a secret file is a regular file; the file itself is a symbolic link or a special file (a directory, a socket, a device,

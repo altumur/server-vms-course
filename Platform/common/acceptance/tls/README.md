@@ -1,22 +1,22 @@
 # The TLS stand and the fourth cluster — acceptance data of lessons 8–10
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/acceptance/tls/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 The debts of the stand of lessons 8–10 per ADR-0083 addendum (9) (the owner's decision, 387a71377): TLS between clusters
 (the server side, session resumption, the handshake by `ca-certs`) and the fourth cluster. The form
 of the directives was agreed by the Architect with «cammeta-acceptance» (2026-10-20); here are the data of «Спецификация»: the kit description,
-the logical doors and clients, the closed outcome of a probe and the expectations. The directives are the section [«Стенд домена»](../../README.md#стенд-домена) of the common acceptance README (the forms were introduced by lesson М11/8 — the column
+the logical doors and clients, the closed outcome of a probe and the expectations. The directives are the section [«Стенд домена»](../README.md#domain-stand) of the common acceptance README (the forms were introduced by lesson М11/8 — the column
 «Урок» of the dictionary; review analysis of stage B 8–10, № 22: М-1). The implementation profile declares `keys.tls_stand: 1`; without it the checks of this stand are not executed
 (not GREEN). Norms: the server side of the class `signed` — the role certificate contract «The server side: the class `signed`»
-([P/08.0 Н1.6](../../../../08-domain/spec/08.0-domain.norms.md), P/08.0-02), the listener `SIGNER_URL` — the row `signer` of the same contract and
-[P/02.4 Н1.6](../../../../02-installer/spec/02.4-installer.norms.md) `client_cert` (ADR-0083 addendum (20), addendum (21)); the CA fingerprints of a member, `on_accept`, `admin` —
-[P/08.3 Н1.6](../../../../08-domain/spec/08.3-domain.norms.md); `client`, `first` and the function `peer` — [the contract `peer`](../../../contracts/peer.md);
-forwarding — [the forwarding contract](../../../contracts/forwarding.md); the class `role` — [P/10 Н1.4](../../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`
-(P/10-11); the role certificate contract — [`role-certificate.md`](../../../contracts/role-certificate.md); the move —
-[P/08.8 Н1.8](../../../../08-domain/spec/08.8-domain.norms.md). Item 3 and «the holder of a previous build» from item 7 are a check by reading
-([P/08.4 Н5](../../../../08-domain/spec/08.4-domain.norms.md) and [P/08.3 Н5](../../../../08-domain/spec/08.3-domain.norms.md)).
+([P/08.0 Н1.6](../../../08-domain/spec/08.0-domain.norms.md), P/08.0-02), the listener `SIGNER_URL` — the row `signer` of the same contract and
+[P/02.4 Н1.6](../../../02-installer/spec/02.4-installer.norms.md) `client_cert` (ADR-0083 addendum (20), addendum (21)); the CA fingerprints of a member, `on_accept`, `admin` —
+[P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md); `client`, `first` and the function `peer` — [the contract `peer`](../../contracts/peer.md);
+forwarding — [the forwarding contract](../../contracts/forwarding.md); the class `role` — [P/10 Н1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`
+(P/10-11); the role certificate contract — [`role-certificate.md`](../../contracts/role-certificate.md); the move —
+[P/08.8 Н1.8](../../../08-domain/spec/08.8-domain.norms.md). Item 3 and «the holder of a previous build» from item 7 are a check by reading
+([P/08.4 Н5](../../../08-domain/spec/08.4-domain.norms.md) and [P/08.3 Н5](../../../08-domain/spec/08.3-domain.norms.md)).
 
-## Kits: [`stand.json`](../stand.json)
+## Kits: [`stand.json`](stand.json)
 
 The runner materializes the kits per the description at the moment of `@tls-setup` (before the stand is created), by its own clock: there are no ready keys in
 the course, the validity periods always suit the real time. The keys are test ones only; they do not get into the run report.
@@ -32,8 +32,8 @@ the course, the validity periods always suit the real time. The keys are test on
 | `named` | the kit of one box with another server name (ADR-0075 addendum 2026-10-26 (4) item 7): its own CA, the role leaves `roles` with CN `<роль>.<server>` and SAN DNS `server` (`box-n`), not `localhost`; the layout — the contract `kit`; the other clusters do not trust its CA. Only `@kit-start` uses it |
 | `negative` | client leaves for probes: `issuer` — the cluster whose CA signs; `role` — the role of the leaf; the other fields replace the default of the leaf: `uri: null` — without SAN URI, `eku` — its own set, `sig` — the signature of the leaf (`sha512` — ECDSA with SHA-512, outside the closed list of the contract `sig`), `not_before`, `days` — its own validity |
 
-The CA fingerprint is the sha256 hex of DER ([P/08.3 Н1.6](../../../../08-domain/spec/08.3-domain.norms.md) `fingerprint`). The runner names to each cluster its kit directory
-(`W2C_TLS_DIR`) and the initial fingerprint of the holder (`DOMAIN_CA` next to `DOMAIN_URL`, [the contract `peer`](../../../contracts/peer.md) «Client and first contact» `first`). The publication of
+The CA fingerprint is the sha256 hex of DER ([P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `fingerprint`). The runner names to each cluster its kit directory
+(`W2C_TLS_DIR`) and the initial fingerprint of the holder (`DOMAIN_CA` next to `DOMAIN_URL`, [the contract `peer`](../../contracts/peer.md) «Client and first contact» `first`). The publication of
 `tls_ca`/`tls_ca_certs` is the business of the implementation per the norm: the stand does not substitute them.
 
 ## Doors and clients of the probe `@tls`
@@ -42,8 +42,8 @@ The CA fingerprint is the sha256 hex of DER ([P/08.3 Н1.6](../../../../08-domai
 |---|---|---|
 | `holder` | the domain console on `hold` — the reception of forwarding with `X-Operator: console`; by the route of P/06.7 Н1.4 its client is the console of the cluster `hold`, a direct connection of the console of a member is the probe `@tls` (ADR-0083 addendum (18)) | `role` |
 | `signer` | the process `domain` on `hold` — `POST /api/member/<член>`, `GET /api/carry/<член>` | `signed`, the listener `SIGNER_URL`: requests a client certificate optionally, checks a presented one in the handshake (the role certificate contract `signer`; ADR-0083 addendum (20), addendum (21)) |
-| `member <кластер> console` | the console of the cluster (`/domain/at/…`, forwarding) | `signed` for incoming from other clusters: does not request a client certificate, strips `X-Operator: console` ([P/06.7](../../../../06-console/spec/06.7-console.norms.md) Н1.7 `server`; ADR-0083 addendum (18)) |
-| `callback <кластер>` | the callback listener of the console of the cluster, the port `{cport}` | a mandatory role leaf of the subsystem, the role certificate contract «The callback leaf»; the main listener above does not change (ADR-0094 addendum (16)); the probes — by the directive `@pass-call` of the [stand of the pass of the second kind](../../pass/README.md), the kits — its `stand.json` |
+| `member <кластер> console` | the console of the cluster (`/domain/at/…`, forwarding) | `signed` for incoming from other clusters: does not request a client certificate, strips `X-Operator: console` ([P/06.7](../../../06-console/spec/06.7-console.norms.md) Н1.7 `server`; ADR-0083 addendum (18)) |
+| `callback <кластер>` | the callback listener of the console of the cluster, the port `{cport}` | a mandatory role leaf of the subsystem, the role certificate contract «The callback leaf»; the main listener above does not change (ADR-0094 addendum (16)); the probes — by the directive `@pass-call` of the [stand of the pass of the second kind](../pass/README.md), the kits — its `stand.json` |
 
 `@tls-kit <кластер> console <комплект>` — the replacement of the kit of one console of a cluster (the form was agreed by the Architect with
 the TLS stage of «cammeta-acceptance» 2026-10-21; ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 22). The runner stops only the console of the cluster
@@ -88,7 +88,7 @@ The preparation of all probes: `@clusters hold m1 m2 m3` (item 9 — the fourth 
 `@tls-setup …/stand.json`, `@domain m1 m2` (or `m1 m2 m3`), then `@until` of the member's record: for `m2` — `Entry.ca` with
 the fingerprint of the CA of `m2` and the row `domain/members/m2/ca-certs` (`on_accept`, the admission of a report with `tls_ca`, `tls_ca_certs`).
 
-**Item 7 — the handshake by `ca-certs`** ([P/08.3 Н1.6](../../../../08-domain/spec/08.3-domain.norms.md) `on_accept`; [P/10 Н1.4](../../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`): after the row `ca-certs` and `Entry.ca`
+**Item 7 — the handshake by `ca-certs`** ([P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `on_accept`; [P/10 Н1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`): after the row `ca-certs` and `Entry.ca`
 the door `holder`, the client `m2-console`, a forwarded request with `X-Operator: console` → `{"handshake": "ok"}`, `http` — the answer
 of the door per the gate (not 401/403 with the words `no_role`, `wrong_role`, `bad_chain`).
 
@@ -121,7 +121,7 @@ so the row «the leaf of the next CA of `hold`» is not executed and is not decl
 by a form of the description with the next CA of a cluster — the data of «Спецификация», the directive — the TLS stage of «cammeta-acceptance».
 
 A change of the union is seen by new connections: `@stop agent m2`, then `holder POST /domain/members/m2/ca {"ca": []}` (the grant
-admin; the agent is stopped — its report with `tls_ca` would return the CA, [P/08.3 Н1.6](../../../../08-domain/spec/08.3-domain.norms.md) `on_accept`; the Architect's decision of 2026-10-21, as № 14) → the next probe
+admin; the agent is stopped — its report with `tls_ca` would return the CA, [P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `on_accept`; the Architect's decision of 2026-10-21, as № 14) → the next probe
 `holder` / `m2-console` — `{"handshake": "alert", "http": null}`; the return `{"ca": [<отпечаток m2>], "ca_certs": [<PEM m2>]}` →
 again `{"handshake": "ok"}`.
 
@@ -134,16 +134,16 @@ outcomes pass):
    false` or (b) `session_available: true`.
 3. With (b): `holder` / `m2-console`, `resume_session: s1` → `{"handshake": "ok", "reused": false}` (a full handshake).
 4. Remove the CA: `@stop agent m2`, then `holder POST /domain/members/m2/ca {"ca": []}`, without restarting the server (the agent
-   is stopped — its report with `tls_ca` would return the CA, [P/08.3 Н1.6](../../../../08-domain/spec/08.3-domain.norms.md) `on_accept`; the Architect's decision of 2026-10-21, as № 14).
+   is stopped — its report with `tls_ca` would return the CA, [P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `on_accept`; the Architect's decision of 2026-10-21, as № 14).
 5. `holder` / `m2-console` with a new connection → `{"handshake": "alert", "http": null}`; with (b) — also with `resume_session: s1` →
    `{"handshake": "alert", "http": null}` (there is no resumption: the ticket of the past session does not bring the CA back). With (a) the presentation
    is not executed and is not declared executed.
 
 **Forwarding through the role door and the branches of `admin`** (review analysis of stage B 8–10, № 14; review analysis of stage A 8–10, № 36).
 The data of «Спецификация»; the steps and the scenario are written by the TLS stage of «cammeta-acceptance»; until then — a debt of the stand. The preparation — as for item 2.
-Norms: [the forwarding contract](../../../contracts/forwarding.md) «Forwarding is one function» `answer`, `journal`, `tls`;
-[P/06.7 Н1.7](../../../../06-console/spec/06.7-console.norms.md) `server` (transition 1 — the class `signed`);
-[P/08.3 Н1.6](../../../../08-domain/spec/08.3-domain.norms.md) `admin`, Н4; [P/10 Н1.4](../../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`.
+Norms: [the forwarding contract](../../contracts/forwarding.md) «Forwarding is one function» `answer`, `journal`, `tls`;
+[P/06.7 Н1.7](../../../06-console/spec/06.7-console.norms.md) `server` (transition 1 — the class `signed`);
+[P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `admin`, Н4; [P/10 Н1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`.
 
 | Step | Expectation | Norm |
 |---|---|---|
@@ -159,14 +159,14 @@ Rows 2–3 are steps (the Architect's decision of 2026-10-21 on № 14, the way 
 the edit «Т-правка» per ADR-0083 addendum (18): the former «502 at the forwarding console» and the journal with `status: 502` are removed — by the route of P/06.7 Н1.4
 to the role door of the holder goes the console of the cluster `hold`, whose CA is always in the union, not the console of `m2`). The positive
 control of row 1 — before the removal, and right after it its journal by the same read as below: `events[0]` ⊇ `{kind: domain.forwarded,
-cluster: hold, path: /domain, status: 200, id: $positive_forward_id}` — bind `id` ([P/05](../../../../05-resource/spec/05-resource.norms.md)
+cluster: hold, path: /domain, status: 200, id: $positive_forward_id}` — bind `id` ([P/05](../../../05-resource/spec/05-resource.norms.md)
 Н1.3 `row`; the dictionary of «Стенда домена» `$имя`); then stop the agent of `m2` (`@stop agent m2`: the report of the agent will not return the CA into
 the union) and `holder POST /domain/members/m2/ca {"ca": []}`; after this row 2 — the probe `@tls` of the door `holder`
 by the client `m2-console`, row 3 — `member m2 console GET /domain` → `200`. The journal of the forwarding console (row 3) is read
 by the regular door of the resource, without a new directive: `@until 30 member m2 resource GET
 /events?kind=domain.forwarded&unit=audit/console&keep=newest&limit=1` → `200`, `events[0]` ⊇ `{kind: domain.forwarded,
 cluster: hold, path: /domain, user: <имя токена стенда>, status: 200, id: @not($positive_forward_id)}`
-([P/05](../../../../05-resource/spec/05-resource.norms.md) Н1.3 `query`, `row`): both forwardings give `200`, and without `@not` on `id`
+([P/05](../../../05-resource/spec/05-resource.norms.md) Н1.3 `query`, `row`): both forwardings give `200`, and without `@not` on `id`
 the previous record of row 1 would give a false pass (the remark of «cammeta-acceptance» of 2026-10-21 on 967baf9ad).
 
 **№ 14, the handshake refusal of the role door on transition 2** (ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 22; the data — «Спецификация», the directive
@@ -187,7 +187,7 @@ of the stand.
 | `member hold console GET /domain` | `200` | the return |
 | the journal of hold | `200`, `events[0]` ⊇ `{kind: domain.forwarded, cluster: hold, path: /domain, user: <имя>, status: 200, id: @not($hold_forward_ok)}` — the record after the return (the record of the refusal — `status: 502`) | `journal` |
 
-**№ 14, the class `signed` of the console of a cluster** (ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 23). Norm: [P/06.7 Н1.7](../../../../06-console/spec/06.7-console.norms.md)
+**№ 14, the class `signed` of the console of a cluster** (ADR-0083 addendum (19) item 2; review analysis of ADR-0090, № 23). Norm: [P/06.7 Н1.7](../../../06-console/spec/06.7-console.norms.md)
 `server` — everything incoming from other clusters on the listener of the console of a cluster: it does not request a client certificate, does not refuse by the CA
 in the handshake, does not recognize `X-Operator: console`; it always strips it (the forwarding contract `x_operator`).
 
@@ -199,8 +199,8 @@ in the handshake, does not recognize `X-Operator: console`; it always strips it 
 
 ## The client of its own box and the address defaults (ADR-0075 addendum 2026-10-26 (4) item 7, (5) item 4)
 
-Norms: [the role certificate contract](../../../contracts/role-certificate.md) «The client of a door of its own cluster» (`own_client`,
-`loopback`); [P/02.4 Н1.6](../../../../02-installer/spec/02.4-installer.norms.md) `process`, `console`; Н1.12 and the lifecycle of
+Norms: [the role certificate contract](../../contracts/role-certificate.md) «The client of a door of its own cluster» (`own_client`,
+`loopback`); [P/02.4 Н1.6](../../../02-installer/spec/02.4-installer.norms.md) `process`, `console`; Н1.12 and the lifecycle of
 P/08, P/10 (the address defaults). The directive `@kit-start` — the dictionary of «Стенда домена» of the common README (the form was agreed with
 «cammeta-acceptance» 2026-10-26). The preparation — `@tls-setup …/stand.json` (the kit `named`); the steps do not require
 `@domain` and the clusters of the domain stand: the process starts alone, on the box of the stand with its store and manifests.
@@ -220,22 +220,22 @@ of the server at the door `kit` is an outcome of the probe, not the class «stan
 | `@kit-start domainconsole none` | `@exit 2` | `DOMAIN_CONSOLE_HOST` the default `0.0.0.0` without a kit — a start refusal (Н1.6 `console`, `process`) |
 | `@kit-start domain none` | `@exit 2` | there is no `SIGNER_HOST` — the process default `0.0.0.0` is not an explicit address: without a kit — a start refusal ((5) item 4) |
 | `@kit-start domain none SIGNER_HOST=0.0.0.0` | `ok ~domain listens on ~without a certificate kit` | an explicit address outside the loopback without a kit — a start with a loud line (Н1.6 `process`) |
-| `@kit-start console none TIMEZONE=` | `@exit 2` | [the environment file contract](../../../contracts/env-file.md) `TIMEZONE`: an empty value is not in form (ADR-0094 B6; P/06.3-06) |
+| `@kit-start console none TIMEZONE=` | `@exit 2` | [the environment file contract](../../contracts/env-file.md) `TIMEZONE`: an empty value is not in form (ADR-0094 B6; P/06.3-06) |
 | `@kit-start console none TIMEZONE=+03:00` | `@exit 2` | the same: the value is outside the grammar |
 | `@kit-start console none TIMEZONE=Etc/GMT+5` | `ok` | the value is in form; a console on the loopback does not need a kit, so the `@exit 2` of the rows above was caused by the variable itself |
 | `@kit-start console none TIMEZONE=No/Such_Zone` | `ok` | only the form is checked: the console does not read the zone database |
 
-## The fourth cluster — the ER branches (item 9; [P/08.8 Н1.8](../../../../08-domain/spec/08.8-domain.norms.md) step 6)
+## The fourth cluster — the ER branches (item 9; [P/08.8 Н1.8](../../../08-domain/spec/08.8-domain.norms.md) step 6)
 
 The preparation: `@clusters hold m1 m2 m3`, `@domain m1 m3`; the keepers with `BACKUP_HOLDERS` 2 — `m3`, `m1` (the order by descending
 sha256 «hold/<член>»: `m3`, `m1`, `m2`; confirm it on the live state — the rows `domain/keepers/<член>` of the holder,
-[P/08.8 Н1.5](../../../../08-domain/spec/08.8-domain.norms.md)); `@until` of the backup copy at both keepers; only then — the admission of the target `m2` by the same steps as
+[P/08.8 Н1.5](../../../08-domain/spec/08.8-domain.norms.md)); `@until` of the backup copy at both keepers; only then — the admission of the target `m2` by the same steps as
 `@domain`: `@start agent m2`, the admission by the fingerprint from `knocking` (`POST /domain/members`), `@join m2`, `@until` `m2` — `ok` and
 it holds the set of the holder. So `m2` is never a keeper for a single pass and has no backup copy of its own: with
 `@domain m1 m2 m3` the member admitted earlier than the others managed to become a temporary keeper, and no one throws away the copy at a member
 (P/08.8 Н1.5; without `copy` the move would restore it — Н1.8 step 6 — instead of a refusal; the finding ER of cammeta-go on 3e65002,
 the class «data», the Architect's assignment of 2026-10-22). Then `@until` at `m2` of a term record ≥ 1 (following,
-[P/09.1](../../../../09-agent/spec/09.1-agent.norms.md) Н3) and of the backup copy at both keepers; then `@stop domain`.
+[P/09.1](../../../09-agent/spec/09.1-agent.norms.md) Н3) and of the backup copy at both keepers; then `@stop domain`.
 
 - **«A neighbour did not answer»** (ER, added by the Quint model of М11): `@cut-route m2 hold console`, `@cut-route m2 m1 console`,
   `@cut-route m2 m3 console` — no neighbour answers (the holder holds its copy `domain/backups/rev-N` and would otherwise give
@@ -248,5 +248,5 @@ the class «data», the Architect's assignment of 2026-10-22). Then `@until` at 
   of the move). Removing the copies by the preparation of the stand is not possible either: the backup copies are objects (`domain/backup` at a keeper,
   `domain/backups/rev-*` at the holder; P/08.8 Н1.5), the admin operations of the store delete rows (only the pointer
   `domain/backup-taken` can be removed), there is no common contract for deleting objects; the stand does not touch the private files of the implementation (agreed with
-  «cammeta-acceptance», the Architect's decision of 2026-10-20). A check by reading — [P/08.8 Н5](../../../../08-domain/spec/08.8-domain.norms.md) («Checked by reading», step 6
-  of the move), like item 3; the acceptance README of [chapter 8.8](../../../../08-domain/acceptance/8/README.md), sc. 03.
+  «cammeta-acceptance», the Architect's decision of 2026-10-20). A check by reading — [P/08.8 Н5](../../../08-domain/spec/08.8-domain.norms.md) («Checked by reading», step 6
+  of the move), like item 3; the acceptance README of [chapter 8.8](../../../08-domain/acceptance/8/README.md), sc. 03.

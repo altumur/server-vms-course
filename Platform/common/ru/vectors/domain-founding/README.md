@@ -1,6 +1,6 @@
 # Векторы: основание домена
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
+Текст производный от `vectors/domain-founding/README.md`, руками не правится: источник — английский [`vectors/domain-founding/README.md`](../../../vectors/domain-founding/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
 
 Владелец — [договор основания домена](../../contracts/domain-founding.md) (находка «Спецификации» I02-FOUND, решение
 «Архитектора» 2026-10-23). Участники — установщик (P/02.4 Н3 «установка домена», команды смен) и процесс `domain`
@@ -10,9 +10,9 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`recovery.tsv`](recovery.tsv) | `input` — `{file, mode}`: содержимое файла восстановления JSON и его режим (восьмеричный, строкой) → `{domain, root_pub, fingerprint}` прочитанного файла или `@refuse` — файл не читается, ничего не меняется |
-| [`book-seal.tsv`](book-seal.tsv) | `seed_secret` hex 32 байт → `book_seal` = X25519(seed, 9) hex |
-| [`claim.tsv`](claim.tsv) | `input` — `{issuing_key_secret, domain, holder, url, at}` → строка `domain/holder` `{doc}`, где `doc` — текст JCS документа записи срока 1 с `issuer`, `kid`, `sig` (Ed25519 детерминирован, RFC 8032) |
+| [`recovery.tsv`](../../../vectors/domain-founding/recovery.tsv) | `input` — `{file, mode}`: содержимое файла восстановления JSON и его режим (восьмеричный, строкой) → `{domain, root_pub, fingerprint}` прочитанного файла или `@refuse` — файл не читается, ничего не меняется |
+| [`book-seal.tsv`](../../../vectors/domain-founding/book-seal.tsv) | `seed_secret` hex 32 байт → `book_seal` = X25519(seed, 9) hex |
+| [`claim.tsv`](../../../vectors/domain-founding/claim.tsv) | `input` — `{issuing_key_secret, domain, holder, url, at}` → строка `domain/holder` `{doc}`, где `doc` — текст JCS документа записи срока 1 с `issuer`, `kid`, `sig` (Ed25519 детерминирован, RFC 8032) |
 
 Кто исполняет: `recovery.tsv` и `book-seal.tsv` — установщик (`02-installer`, команды установки и смен); `claim.tsv` —
 процесс `domain` держателя (`08-domain`): запись срока 1 пишет только он (ACC-VECTORS-CONNECT-02, решение «Архитектора» 2026-10-26).

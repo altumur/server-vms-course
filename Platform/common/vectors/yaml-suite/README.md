@@ -1,6 +1,6 @@
 # yaml-suite vectors: layer 1 on yaml-test-suite (ADR-0092 item 2; set «Б», the section «слой 1 сужает YAML 1.2.2»)
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/yaml-suite/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 The source is yaml-test-suite (github.com/yaml/yaml-test-suite), the data of the tag `data-2022-01-17`: the archive
 `https://github.com/yaml/yaml-test-suite/archive/refs/tags/data-2022-01-17.tar.gz`, sha256

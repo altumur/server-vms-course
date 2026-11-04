@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`06.3-console.norms.md`](../../spec/06.3-console.norms.md) Н5. The scenario was moved from the acceptance of
 М10/09 (stage B, ADR-0083 addendum (1): without a change of
 behaviour); the numbers of the scenario and of the steps are the former ones. The other scenarios of М10/09 are the acceptance of [chapter 6.5](../5/README.md). The forms of foreign
@@ -18,7 +18,7 @@ run. The third manifest of the stand of chapter 6.5 (`probe-x`) is not needed by
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей):
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors):
 a door without a prefix is the console; a subset of fields, `@header` in the expectation. In all, 1 scenario / 5 steps.
 
 A subset expect does not replace the check of the full HTTP form of the OpenAPI of the lesson: check the mandatory fields, the types, Content-Type,

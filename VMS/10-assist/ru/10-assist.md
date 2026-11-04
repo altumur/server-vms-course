@@ -24,7 +24,7 @@
 ## Что нужно знать заранее
 
 Размещение по меткам ([P/04](../../../Platform/04-controller/ru/spec/04-controller.norms.md) Н1.3); дверь процесса и её токен
-([P/03.4](../../../Platform/03-worker/ru/spec/03.4-worker.norms.md) Н1.7, [договор токена двери](../../../Platform/common/contracts/door-token.md)); образец двери с токеном —
+([P/03.4](../../../Platform/03-worker/ru/spec/03.4-worker.norms.md) Н1.7, [договор токена двери](../../../Platform/common/ru/contracts/door-token.md)); образец двери с токеном —
 шлюз живого видео (урок V/03, глава 3).
 
 ## Глава 1. Модель — единица и воркер

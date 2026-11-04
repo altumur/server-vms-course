@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../common/acceptance/README.md#словарь-директив-и-дверей).
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the lesson is [`05-resource.norms.md`](../spec/05-resource.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/08 (01, 02, 08) and
 М10/11 (01 → 09, 16 — the Architect's decision on В2 of the plan of the move of lesson 6: a scenario belongs to the lesson whose norm it checks) and
@@ -51,7 +51,7 @@ these scenarios do not replace the check of the TLS refusals.
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../common/acceptance/README.md#словарь-директив-и-дверей).
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 In total 35 scenarios / 292 steps; sc. 29–45 (the second pass of the audit, below) — 128 steps; sc. 24–28 (the edges of `free_ask`, below) — 49 steps; the other 115: 86 HTTP (with @until; the Architect's decision of 2026-11-04 — by scenarios.tsv), four `@append event`, `@append event-raw`, 18 `@start`, `@sigkill`,
 `@cut`, `@mend`, `@sleep` and two ASSERT.
 

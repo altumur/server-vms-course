@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../common/acceptance/README.md#словарь-директив-и-дверей).
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the lesson is [`04-controller.norms.md`](../spec/04-controller.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/05, sc. 03 and 08 (the snapshot) — from the acceptance of М10/10
 (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers of scenarios and steps are the former ones, except the steps of sc. 11 (the former
@@ -26,7 +26,7 @@ the heartbeat (an object) is not read here. The resource P/05 is needed by all t
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../common/acceptance/README.md#словарь-директив-и-дверей):
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors):
 the doors `store` (a role with read rights on `testsub/`), `console`, `console2`, `resource`, `admin` (sc. 23 — the row `platform/schema`);
 the directives `@start` (including `@start controller <sub> shrink_after=<с>`, `@start worker <sub> <имя> on <сервер>`,
 `@start worker <имя> on srv-b` sc. 33 and `@start worker <имя> labels=<метки>` sc. 24), `@sigterm`, `@sigkill`, `@sleep`, `@until`,

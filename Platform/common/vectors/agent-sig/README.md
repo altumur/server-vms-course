@@ -1,10 +1,10 @@
 # Vectors of the agent signature
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/agent-sig/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The vectors of [the agent signature contract](../../../contracts/agent-signature.md): the check of the header `X-Agent-Signature` by the function
+The vectors of [the agent signature contract](../../contracts/agent-signature.md): the check of the header `X-Agent-Signature` by the function
 `agent-sig`. The member's agent signs (the owner is lesson P/09, chapter 9.1); the checkers are the holder (chapters 8.3, 8.7), the relay
-(9.2) and the cluster console ([P/06.3](../../../../06-console/spec/06.3-console.norms.md) Н1.3 `identity` step 2). The package is common:
+(9.2) and the cluster console ([P/06.3](../../../06-console/spec/06.3-console.norms.md) Н1.3 `identity` step 2). The package is common:
 one signature is checked by three processes (the review analysis of stage A 8–10, № 13 / decision 2; ADR-0083 addendum (13)). The bytes are written by
 «Спецификация» (ADR-0083); the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
 
@@ -36,7 +36,7 @@ of the acceptance.
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](../cases.tsv), 25 rows: 4 `ok`, 21 refusals (the last three rows — `X-Agent-For`, the input `for`, ADR-0111 item 16: `agent-sig-for-ok` — `ok`, two — refusals) (row 20 — the order of the checks: a foreign key outside the window → `out_of_window`, the review analysis of stage B 8–10, № 3; 21 — `sig` with non-zero trailing bits, 22 — GET with a body and a signature over it, AS-01/02) | `input` is the input of the command `agent-sig` as JSON text (`key`, `method`, `path`, `body`, `header`, `now`, `window`; the lexemes of numbers — as in the input file) → `expect` — `{"result":"ok"}` or `{"result":"refused","reason":<слово>}`: `out_of_window` (the boundary `now` = `мс`/1000 + the window — `ok`, 0.001 s further and in the other direction — a refusal; the window 60 at the units door), `bad_signature` (a foreign key, the body, the path, the method changed; GET with a body — with a signature over the empty one and over the one that came; a key of small order), `not_a_signature` (no «.», `мс` not digits, with a leading zero, 17 characters; `sig` with «=», 63 bytes, non-zero trailing bits), `no_signature` (an empty header) |
+| [`cases.tsv`](cases.tsv), 25 rows: 4 `ok`, 21 refusals (the last three rows — `X-Agent-For`, the input `for`, ADR-0111 item 16: `agent-sig-for-ok` — `ok`, two — refusals) (row 20 — the order of the checks: a foreign key outside the window → `out_of_window`, the review analysis of stage B 8–10, № 3; 21 — `sig` with non-zero trailing bits, 22 — GET with a body and a signature over it, AS-01/02) | `input` is the input of the command `agent-sig` as JSON text (`key`, `method`, `path`, `body`, `header`, `now`, `window`; the lexemes of numbers — as in the input file) → `expect` — `{"result":"ok"}` or `{"result":"refused","reason":<слово>}`: `out_of_window` (the boundary `now` = `мс`/1000 + the window — `ok`, 0.001 s further and in the other direction — a refusal; the window 60 at the units door), `bad_signature` (a foreign key, the body, the path, the method changed; GET with a body — with a signature over the empty one and over the one that came; a key of small order), `not_a_signature` (no «.», `мс` not digits, with a leading zero, 17 characters; `sig` with «=», 63 bytes, non-zero trailing bits), `no_signature` (an empty header) |
 
 The vectors were checked by reference Ed25519 (RFC 8032) and SHA-256 against the text of the contract, not against the code of implementations; on a divergence the
 contract is right, the vector is corrected by «Спецификация».

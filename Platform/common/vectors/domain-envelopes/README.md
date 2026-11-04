@@ -1,8 +1,8 @@
 # Domain envelope vectors
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/domain-envelopes/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The vectors of [the domain envelopes contract](../../../contracts/domain-envelopes.md): the opening and the round of the envelopes `x25519:v1` (the contribution
+The vectors of [the domain envelopes contract](../../contracts/domain-envelopes.md): the opening and the round of the envelopes `x25519:v1` (the contribution
 of a member to the book acceptance key) and `m1` (the holder's answer to a member). The package is common: one process seals, another opens
 (the agent and the holder are different lessons and, on the matrix stand, different implementations; review analysis of stage A 8–10, № 12; ADR-0083
 addendum (13)). The bytes are written by «Спецификация» (ADR-0083); the conformance of the product is by its acceptance against these tables (ADR-0080 addendum 16).
@@ -11,7 +11,7 @@ The rows were transferred from the inputs of the vector commands of the acceptan
 М11/2 (`inputs/seal-*.json`, sc. 08–11), `m1-*` — from
 М11/3 (`inputs/seal-member-*.json`, sc. 11–12); `case` is
 the name of the input file. The scenarios М11/02 sc. 08–11 and М11/03 sc. 11, 12 and their inputs were removed by the move of lesson 8 (ADR-0083 addendum (14)
-item 17; the logs — [the README of the package `domain-token`](../../domain-token/README.md#журнал-источника) (М11/02), the acceptance of chapter P/08.3 (`Platform/08-domain/journal/corrections-3.tsv`, a log, not in the export)): the tables are the only source of these cases.
+item 17; the logs — [the README of the package `domain-token`](../domain-token/README.md#source-log) (М11/02), the acceptance of chapter P/08.3 (`Platform/08-domain/journal/corrections-3.tsv`, a log, not in the export)): the tables are the only source of these cases.
 
 ## Run
 
@@ -23,7 +23,7 @@ the process `domain` (`08-domain`: the assembly of a book, the target of the tra
 the sealer: `x25519-round.tsv` — the agent of a member (`09-agent`) and the process `domain` (`08-domain`, `keys_sealed`),
 `m1-round.tsv` — the process `domain` (`08-domain`); the relay only carries envelopes — it performs no tables (ACC-VECTORS-CONNECT-02, the Architect's decision 2026-10-26).
 
-The commands and the output forms are the same as at the former acceptance of М11: `seal`, `seal-round` — [P/08.2](../../../../08-domain/spec/08.2-domain.norms.md)
+The commands and the output forms are the same as at the former acceptance of М11: `seal`, `seal-round` — [P/08.2](../../../08-domain/spec/08.2-domain.norms.md)
 Н5 (formerly М11/2 Н5); `seal-member`, `seal-member-round` — the table below (formerly М11/3 Н5, removed by the move of lesson 8; the input
 of `seal-member` — `{seed, sealed}`, of `seal-member-round` — `{key, seed, plain}`; review analysis of stage B 8–10, № 22, Claude
 М-1); the comparison — a subset of fields, the cell `expect` sets `result` (and the value or the refusal word) (the reading of the commits
@@ -41,8 +41,8 @@ At the rounds `ok` — both envelopes opened into `plain` and differ (`distinct:
 
 ## Keys
 
-The seeds are 32 bytes `sha256("w2c test <слово>")` (as the keys of [the sealing vectors](../../sealing/README.md) and
-of [the door token](../../door-token/README.md)); the table does not name the words of derivation — the bytes are fixed here, an implementation
+The seeds are 32 bytes `sha256("w2c test <слово>")` (as the keys of [the sealing vectors](../sealing/README.md) and
+of [the door token](../door-token/README.md)); the table does not name the words of derivation — the bytes are fixed here, an implementation
 takes them from here. The envelopes of the opening vectors are sealed with the one-time seeds `eph 1…3` and `nonce` — the bytes 0…11 only for
 reproducibility; in operation `eph` and `nonce` are random (the contract, `seal`).
 
@@ -62,14 +62,14 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 
 | File | Input → expectation |
 |---|---|
-| [`x25519-open.tsv`](../x25519-open.tsv), 16 rows | `seed_hex` (the seed of the book acceptance key), `envelope`, the AAD context `member`, `source_path`, `item`, `pointer` → a value or `not_v1`, `not_an_envelope`, `does_not_open`. Cases: it opens, an empty value, Cyrillic and `~`/`/` in the context; another intake key, another `member`, `source_path`, `item`, `pointer`, a tampered `ct`; another version, `=`, four parts, short `nonce` and `ct`, a zero `eph`, non-canonical base64url |
-| [`x25519-round.tsv`](../x25519-round.tsv), 2 rows | `book_seal_hex`, `seed_hex`, `plain`, the context → `ok` (both opened, the envelopes differ) or `not_an_envelope` (a `book_seal` of small order) |
-| [`m1-open.tsv`](../m1-open.tsv), 11 rows | `seed_hex` (the seed of the member key), `sealed` → a value or `not_m1`, `not_an_envelope`, `does_not_open`. Cases: it opens, empty; another member, the AAD of another key, a tampered `ct`; the tag `m2:`, the form with dots; three parts, `=`, a short `nonce`, a zero `eph` |
-| [`m1-round.tsv`](../m1-round.tsv), 1 row | `key_hex` (the public Ed25519 of the member), `seed_hex`, `plain` → `ok` |
+| [`x25519-open.tsv`](x25519-open.tsv), 16 rows | `seed_hex` (the seed of the book acceptance key), `envelope`, the AAD context `member`, `source_path`, `item`, `pointer` → a value or `not_v1`, `not_an_envelope`, `does_not_open`. Cases: it opens, an empty value, Cyrillic and `~`/`/` in the context; another intake key, another `member`, `source_path`, `item`, `pointer`, a tampered `ct`; another version, `=`, four parts, short `nonce` and `ct`, a zero `eph`, non-canonical base64url |
+| [`x25519-round.tsv`](x25519-round.tsv), 2 rows | `book_seal_hex`, `seed_hex`, `plain`, the context → `ok` (both opened, the envelopes differ) or `not_an_envelope` (a `book_seal` of small order) |
+| [`m1-open.tsv`](m1-open.tsv), 11 rows | `seed_hex` (the seed of the member key), `sealed` → a value or `not_m1`, `not_an_envelope`, `does_not_open`. Cases: it opens, empty; another member, the AAD of another key, a tampered `ct`; the tag `m2:`, the form with dots; three parts, `=`, a short `nonce`, a zero `eph` |
+| [`m1-round.tsv`](m1-round.tsv), 1 row | `key_hex` (the public Ed25519 of the member), `seed_hex`, `plain` → `ok` |
 
 ## Candidates
 
-- `keys_sealed` of the holder's transfer (`x25519:v1` to the `seal` of the target with AAD `take|<to>`, [P/08.8](../../../../08-domain/spec/08.8-domain.norms.md) Н1.7 step 5) —
+- `keys_sealed` of the holder's transfer (`x25519:v1` to the `seal` of the target with AAD `take|<to>`, [P/08.8](../../../08-domain/spec/08.8-domain.norms.md) Н1.7 step 5) —
   there are no vectors, it is checked by the stand of chapter 8.8; a package candidate.
 - The sealing of `m1` by the holder with the answer `carry` (the content of `sealed`) — there are no vectors: the round and the stand of chapter 8.3.
 

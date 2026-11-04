@@ -1,33 +1,33 @@
 # The domain key set contract: the row `domain/keys`, the function `keys`, the revocations `domain/revoked` and their removal
 
-This English text is the source; the Russian [`keys.md`](../keys.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/keys.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common algorithm of several processes is a contract, not
 copies in chapters; analysis of review of stage A 8–10, № 13 / decision 2, № 3). The owner is lesson P/08, chapter 8.2
-([norms](../../../08-domain/spec/08.2-domain.norms.md)): the process `domain`
+([norms](../../08-domain/spec/08.2-domain.norms.md)): the process `domain`
 of the holder signs the set with the root and keeps the revocations. Participants:
 
 | Who | What it does by the contract |
 |---|---|
-| the member's agent ([chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.4 `from_carry`) | accepts the set from the holder's answer with the function `keys` and writes `domain/keys`; merges `domain/revoked` of the answer with its own row and removes the `prune` entries |
-| the relay ([P/09.2](../../../09-agent/spec/09.2-agent.norms.md) Н1.4 `keys`) | reads the accepted set of its cluster (id-map М11/2-04) |
-| the cluster console ([P/06.3](../../../06-console/spec/06.3-console.norms.md) «Ключи есть») | accepts the set with the function `keys` with the pinned root |
-| the checkers of a domain token ([the domain token contract](../domain-token.md)) | read the accepted set and `domain/revoked` |
-| the process `domain` at a move and at following ([chapter 8.8](../../../08-domain/spec/08.8-domain.norms.md) Н1.8; «follow» — the section «The follow set» below) | accepts the sets of the answers of `/api/held` with the function `keys` |
+| the member's agent ([chapter 9.1](../../09-agent/spec/09.1-agent.norms.md) Н1.4 `from_carry`) | accepts the set from the holder's answer with the function `keys` and writes `domain/keys`; merges `domain/revoked` of the answer with its own row and removes the `prune` entries |
+| the relay ([P/09.2](../../09-agent/spec/09.2-agent.norms.md) Н1.4 `keys`) | reads the accepted set of its cluster (id-map М11/2-04) |
+| the cluster console ([P/06.3](../../06-console/spec/06.3-console.norms.md) «Ключи есть») | accepts the set with the function `keys` with the pinned root |
+| the checkers of a domain token ([the domain token contract](domain-token.md)) | read the accepted set and `domain/revoked` |
+| the process `domain` at a move and at following ([chapter 8.8](../../08-domain/spec/08.8-domain.norms.md) Н1.8; «follow» — the section «The follow set» below) | accepts the sets of the answers of `/api/held` with the function `keys` |
 
 Moved from М11/2 Н1.2 (the rows `row`, `doc`, `writer_forms`, `only_forward`), Н1.6 (the block `domain/revoked`: the form,
 `writer`, `order`, `prune`, `readers`), Н3 «`keys(pinned, held, offered)`» (steps 1–8 and the paragraph about the refusal) and the rows
 of `from_carry` of P/09.1 Н1.4 about `revoked` without a change of behaviour. The owner keeps: the root and its pinning (P/08.2 Н1.1),
 the `rev` of the writer, the emergency `rev` and the premise of clocks (P/08.2 Н1.2 `rev`, `emergency`, `clocks`), the holder keys and `OLD_KEYS`
-(P/08.2 Н1.3, Н1.6), the changes of the set (P/08.2 Н3; installation — [P/02.4](../../../02-installer/spec/02.4-installer.norms.md) Н3),
-the offline revocation window (P/08.2 Н1.7). What is common to the forms — the [domain founding contract](../domain-founding.md)
+(P/08.2 Н1.3, Н1.6), the changes of the set (P/08.2 Н3; installation — [P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н3),
+the offline revocation window (P/08.2 Н1.7). What is common to the forms — the [domain founding contract](domain-founding.md)
 «Common rules of forms» (layout audit, Б-03: hex, canonical base64url, JCS — RFC 8785, Ed25519 — RFC 8032, X25519 — RFC 7748, completeness
 of JSON forms, a repeated key, «integer»). References in the moved text: «Н1.x», «Н3» — the chapters of P/08.2 (formerly of lesson М11/2; the numbers of the
 subsections are the former ones); «lesson N» — lesson М11/N, their addresses now: «lesson 3» (the agent, the admission and the signature of a member) — P/09.1 and P/08.3,
 «lesson 3 Н1.6 from_carry» — P/09.1 Н1.4 `from_carry`, «lesson 7» (the kind token) — P/08.7, «lesson 9» (the revocation of a person) — P/08.4,
 «lesson 10» (the issuing holder) — P/08.8 (analysis of review of stage B 8–10, № 22; Kimi SB810-07).
 
-Normative keywords follow the [course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
@@ -69,7 +69,7 @@ writer_forms:      kid of a token key = the first 8 hex characters of its public
 only_forward:      a member holds one set; a set with a smaller rev — a refusal, with an equal one — «holding», it is not rewritten
 ```
 
-The `rev` of a new set at the writer (an ordinary, a planned and an emergency change) — [P/08.2](../../../08-domain/spec/08.2-domain.norms.md) Н1.2 `rev`, `emergency`, `clocks`.
+The `rev` of a new set at the writer (an ordinary, a planned and an emergency change) — [P/08.2](../../08-domain/spec/08.2-domain.norms.md) Н1.2 `rev`, `emergency`, `clocks`.
 
 ## The key fingerprint
 
@@ -107,10 +107,10 @@ order; the first rule that fires gives the result.
 
 A refusal does not change the row `domain/keys`; the member keeps trusting the former set and writes the reason into the journal (М13).
 
-`held = null` — at an agent without a trusted set in memory and with its own row unreadable (after start): step 7 does not judge, the set is accepted from the pinned root; the rollback limit — [P/09.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.4 `from_carry` (ADR-0110 addendum (28)).
+`held = null` — at an agent without a trusted set in memory and with its own row unreadable (after start): step 7 does not judge, the set is accepted from the pinned root; the rollback limit — [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н1.4 `from_carry` (ADR-0110 addendum (28)).
 
-«Н1.2» in steps 2 and 6 is the section «The set `domain/keys`» above; `pinned` is `{pub, domain}` of the row `domain/root` ([the domain founding contract](../domain-founding.md) «Root pinning»; the form — «Form» above).
-The form of the function is the input of the command `keys` ([P/08.2](../../../08-domain/spec/08.2-domain.norms.md) Н5).
+«Н1.2» in steps 2 and 6 is the section «The set `domain/keys`» above; `pinned` is `{pub, domain}` of the row `domain/root` ([the domain founding contract](domain-founding.md) «Root pinning»; the form — «Form» above).
+The form of the function is the input of the command `keys` ([P/08.2](../../08-domain/spec/08.2-domain.norms.md) Н5).
 
 A copy from P/08.2 Н5 (layout audit, the Architect's decision of 2026-10-25, Б-14):
 
@@ -168,13 +168,13 @@ merge:          revoked → a union with its own row domain/revoked: the entries
                 version with the entries of the answer, the reason into the journal without a value (В7 item 3, the Architect's decision of 2026-10-28, П2; row 44 of the list)
 ```
 
-`TOKEN_SKEW` and «Н3 token step 6» are the [domain token contract](../domain-token.md) «Токен», «Проверка»; «prune of lesson 2 Н1.6» is
+`TOKEN_SKEW` and «Н3 token step 6» are the [domain token contract](domain-token.md) «Токен», «Проверка»; «prune of lesson 2 Н1.6» is
 the row `prune` above. When the agent applies the field `revoked` (after the outcome `took` or `holding` of the function `keys` over the set of the same
 answer) — P/09.1 Н1.4 `from_carry`.
 
 ## The follow set
 
-Moved from [P/09.1](../../../09-agent/spec/09.1-agent.norms.md) Н3 «follow» step 1а without a change of behaviour (layout audit, the Architect's decision of 2026-10-25,
+Moved from [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н3 «follow» step 1а without a change of behaviour (layout audit, the Architect's decision of 2026-10-25,
 А-08). The follow set is the memory of the member's agent; it checks the term records of steps 2–4 of «follow» (P/09.1) and the records
 of a move (the move set — by the same rule, P/08.8 Н1.8 step 5, the start of the pass for it is the start of step 5; the difference of the move set: its own domain/keys which is not
 confirmed by its own domain/holder that passed record with this set (its own record is spoiled, unreadable or absent; a break of the move does not leave such a row, P/08.8 Н1.8 step 8): the move set starts not
@@ -195,13 +195,13 @@ point (the term record contract «Точка смены `switch`») is false by 
 
 ## Vectors
 
-The package [`keys`](../../vectors/keys/README.md) (analysis of review of stage A 8–10, № 13): 29 lines — 21 inputs of the command `keys` of the acceptance of
+The package [`keys`](../vectors/keys/README.md) (analysis of review of stage A 8–10, № 13): 29 lines — 21 inputs of the command `keys` of the acceptance of
 М11/2 (sc. 01–03) without a change of bytes, two lines of the field `thefts`, four lines of the field `keep_until` and two lines of the field `stolen_issuing`; the scenarios and the inputs were removed by the move of lesson 8 — the table is the only source of these
 cases. The merge and the removal of `domain/revoked` at a member (`merge`, `repeat`, `prune`) — `revoked.tsv` of the same package (7 lines;
-guess of stage C KEYS-G01, the Architect's decision of 2026-10-23); the bound of `prune` at the token checker — the vectors [`domain-token`](../../vectors/domain-token/README.md) (formerly sc. 07
+guess of stage C KEYS-G01, the Architect's decision of 2026-10-23); the bound of `prune` at the token checker — the vectors [`domain-token`](../vectors/domain-token/README.md) (formerly sc. 07
 of the acceptance of М11/2) through the function `token`.
 
-The canonical JSON (RFC 8785, ADR-0072) on which the contract relies is the package [`jcs`](../../../01-store/vectors/jcs/README.md)
+The canonical JSON (RFC 8785, ADR-0072) on which the contract relies is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the form RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
 
 ## Correspondence to former lessons
@@ -209,5 +209,5 @@ of lesson P/01 (`canonical_json.tsv`: input → the form RFC 8785 → sha256; AD
 From М11/2 (analysis of review of stage A 8–10, № 13 / decision 2): Н1.2 — the rows `row`, `doc`, `writer_forms`, `only_forward` (here
 «The set»; in Н1.2 — a pointer, `rev`, `emergency`, `clocks` stayed); Н1.6 — the block `domain/revoked` (here «Revocations»;
 `OLD_KEYS` stayed); Н3 «keys» — steps 1–8 and the paragraph about the refusal (here «The function `keys`»). From М11/3 Н1.6 — a part of the row
-`from_carry` about `revoked` (here `merge`). Parts of the norms М11/2-02, -04, -06 and М11/3-09 — by `note` of [id-map](../../id-map.tsv);
+`from_carry` about `revoked` (here `merge`). Parts of the norms М11/2-02, -04, -06 and М11/3-09 — by `note` of [id-map](../id-map.tsv);
 the catalogue row `domain/revoked` (participant `domainagent`) — a merge by jti (analysis of review of stage A 8–10, № 3).

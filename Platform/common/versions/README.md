@@ -1,11 +1,11 @@
 # Pinned versions
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/versions/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The standard libraries and the YAML parsers on which the implementations execute the layers of В7 ([the layers of В7](../../LAYERS.md)): the pinned
-version is the standard, the external test suite and the known defects of this version (ADR-0092 item 9). Python — [`requirements.txt`](../requirements.txt)
-(the hashes are of macOS arm64 wheels; on Linux — the same versions with the hashes of the wheels of its own platform), Go — [`go.mod`](../go.mod) and
-[`go.sum`](../go.sum) (only the requirements of the modules; the module name is neutral, the implementation sets its own).
+The standard libraries and the YAML parsers on which the implementations execute the layers of В7 ([the layers of В7](../LAYERS.md)): the pinned
+version is the standard, the external test suite and the known defects of this version (ADR-0092 item 9). Python — [`requirements.txt`](requirements.txt)
+(the hashes are of macOS arm64 wheels; on Linux — the same versions with the hashes of the wheels of its own platform), Go — [`go.mod`](go.mod) and
+[`go.sum`](go.sum) (only the requirements of the modules; the module name is neutral, the implementation sets its own).
 
 | What | Python | Go | External test suite |
 |---|---|---|---|
@@ -18,8 +18,8 @@ version is the standard, the external test suite and the known defects of this v
 **yaml-test-suite** — the data tag `data-2022-01-17`, the archive
 `https://github.com/yaml/yaml-test-suite/archive/refs/tags/data-2022-01-17.tar.gz`, sha256
 `ccae49c1d010d27c20d315969a97752f95b14642fc1e73755db4eb2df4bb0256`; the inputs and outcomes of layer 1 —
-[the package `yaml-suite`](../../vectors/yaml-suite/README.md).
+[the package `yaml-suite`](../vectors/yaml-suite/README.md).
 
-**Known defects** of the pinned versions, their workarounds and vectors — [DEFECTS.md](../DEFECTS.md); where a workaround stands in the layers — [the layers of В7](../../LAYERS.md): § 3 «Expression» (the full match
+**Known defects** of the pinned versions, their workarounds and vectors — [DEFECTS.md](DEFECTS.md); where a workaround stands in the layers — [the layers of В7](../LAYERS.md): § 3 «Expression» (the full match
 of `pattern`), § 4 (D13, D16), § 5 (a CEL execution error, the map iteration order D18), § 2 layer 4 (the place of refusal of
 `propertyNames`, `uniqueItems`).

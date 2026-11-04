@@ -1,10 +1,10 @@
 # Vectors: the common row check
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/row-check/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is chapter P/06.1 of the console through [the row check contract](../../../contracts/row-check.md) (the guess of stage C W03-E07,
-the Architect's decision of 2026-10-23). The participants are the units door of the console ([P/06.1](../../../../06-console/spec/06.1-console.norms.md)
-Н3 «create», «edit») and the customer's library of the worker ([P/03.6](../../../../03-worker/spec/03.6-worker.norms.md) Н1.6,
+The owner is chapter P/06.1 of the console through [the row check contract](../../contracts/row-check.md) (the guess of stage C W03-E07,
+the Architect's decision of 2026-10-23). The participants are the units door of the console ([P/06.1](../../../06-console/spec/06.1-console.norms.md)
+Н3 «create», «edit») and the customer's library of the worker ([P/03.6](../../../03-worker/spec/03.6-worker.norms.md) Н1.6,
 Н3 «order»): one table for both sides. The bytes are written by «Спецификация». The cases are taken from the norms of the contract and the steps
 of the acceptance of P/06.1 (sc. 15, 16, 18, 20 — in the column `note`).
 
@@ -27,10 +27,10 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; 
 | `stored` | for `edit` — the read row; for `create` — the tombstone over which one creates; empty — there is no row. A JSON object in the form of a unit row (the elements are strings) |
 | `rows` | the other rows of the store that the check reads: a JSON object `{ключ: строка}`; `"@garbled"` instead of a row — the row is not read by its form |
 | `expect` | `ok` or `refused` |
-| `word` | for `refused` — the `fault` from the dictionary [`../fault/`](../../fault/README.md), if the refusal carries it; otherwise the class of the row «Refusals» of the contract: `platform_field`, `unknown_field`, `blob`, `enum`, `type`, `labels`, `bad_id`, `fixed`, `required`; for `ok` empty |
+| `word` | for `refused` — the `fault` from the dictionary [`../fault/`](../fault/README.md), if the refusal carries it; otherwise the class of the row «Refusals» of the contract: `platform_field`, `unknown_field`, `blob`, `enum`, `type`, `labels`, `bad_id`, `fixed`, `required`; for `ok` empty |
 | `field` | the field that the refusal names (the first in the order of the contract); for `unknown_field` — all unknown names in ascending byte order separated by commas (RC-10) |
 | `step` | the step of the contract at which the refusal occurs |
-| `row` | for `ok` — the part of the prepared row that is compared: a JSON object `{элемент: текст}`, `"@absent"` — there is no element; empty — not compared. The text of a list in the form of a JSON array is compared by JSON value (as `@json` of the vectors [`values-by-type`](../../values-by-type/README.md)) |
+| `row` | for `ok` — the part of the prepared row that is compared: a JSON object `{элемент: текст}`, `"@absent"` — there is no element; empty — not compared. The text of a list in the form of a JSON array is compared by JSON value (as `@json` of the vectors [`values-by-type`](../values-by-type/README.md)) |
 | `note` | a rule of the contract or a step of the acceptance of P/06.1 |
 
 81 cases: 30 `ok`, 51 `refused` (`labels_repeat` — a repeat of a label in the labels field of a unit, the value as it is, C51-LABEL-LIST-01; `unique_required_*` — required + unique with an empty value, the refusal `П4` before unique; a non-required unique with empty ones — `unique_*_not_counted`, RC-17; C51-UNIQUE-EMPTY-01).
@@ -55,7 +55,7 @@ of the contract (C06-VECTOR-ROWCHECK-WIRE-168-11, the Architect's decision of 20
 
 ## `state.tsv`
 
-The state of a unit is the row check contract «Unit state» (`acts`, `unreadable`); the form of the row is [`state.schema.json`](../../../../03-worker/data/state.schema.json), the outcomes are [`state.outcomes.tsv`](../../../../03-worker/data/state.outcomes.tsv)
+The state of a unit is the row check contract «Unit state» (`acts`, `unreadable`); the form of the row is [`state.schema.json`](../../../03-worker/data/state.schema.json), the outcomes are [`state.outcomes.tsv`](../../../03-worker/data/state.outcomes.tsv)
 (STATE169-VECTORS-01, the Architect's decision of 2026-10-27). UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped;
 the first line without `#` is the header `case<TAB>name<TAB>unit<TAB>state<TAB>expect<TAB>note`.
 

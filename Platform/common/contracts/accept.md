@@ -1,32 +1,32 @@
 # The report reception contract: the function «accept» (`accept`) — generation, mark, roads
 
-This English text is the source; the Russian [`accept.md`](../accept.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/accept.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common algorithm of several processes is a contract, not
-copies in the chapters; analysis of review of stage A 8–10, № 13 / decision 2). The owner is lesson P/08, [chapter 8.3](../../../08-domain/spec/08.3-domain.norms.md): the process `domain` of the holder accepts
+copies in the chapters; analysis of review of stage A 8–10, № 13 / decision 2). The owner is lesson P/08, [chapter 8.3](../../08-domain/spec/08.3-domain.norms.md): the process `domain` of the holder accepts
 the publication of a member on `POST /api/member/<член>` after the signature. A participant is the relay
-([P/09.2](../../../09-agent/spec/09.2-agent.norms.md) Н2): its door accepts a member with this function over its own
-memory; the holder accepts a relay batch with it too, with `via` = the relay ([P/08.3](../../../08-domain/spec/08.3-domain.norms.md)
+([P/09.2](../../09-agent/spec/09.2-agent.norms.md) Н2): its door accepts a member with this function over its own
+memory; the holder accepts a relay batch with it too, with `via` = the relay ([P/08.3](../../08-domain/spec/08.3-domain.norms.md)
 Н3 «the holder on `POST /api/relay/<ретранслятор>`»).
 
 Moved from М11/3 Н3 «`принять(mark, stored, body, via, heard_ago)`» (the paragraph on `via` and `heard_ago`, steps 0–7, the paragraph on
 `sent_at`, the answer and a failure) without a change of behaviour. The forms that the function relies on are repeated here so that the holder,
 the relay and the agent execute the contract without the norms 8.x (analysis of review of stage B 8–10, № 4, № 6; ADR-0083 addendum (15); Claude
 `С-3`, `С-4`, `С-6`, `П-2`; Kimi SB810-01): the generation, the mark, `MARK_REFRESH`, `BODY_LIMIT` — the section «Generation, mark, limits»
-(from [P/08.3](../../../08-domain/spec/08.3-domain.norms.md) Н1.3, Н1.3а); the publication, `member_objects`, the fields outside the delta,
-`ready` — the section «The member's publication» (from [P/09.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.2 and P/08.3 Н1.6 `form`);
+(from [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.3, Н1.3а); the publication, `member_objects`, the fields outside the delta,
+`ready` — the section «The member's publication» (from [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н1.2 and P/08.3 Н1.6 `form`);
 the field `every` of the answer — the section «The answer `carry`: `every`» (from P/08.3 Н1.5); the form of the function, the output and the exit code 2 — the section
 «The form of the function» (from М11/3 Н5, М11/4 Н5). The owners of the text stay the same (P/08.3, P/09.1) and refer here; the values
-do not change. The other fields of the answer `carry` — the section «The answer `carry`»; the ceiling of the integer `whole` — [P/08.10](../../../08-domain/spec/08.10-domain.norms.md)
+do not change. The other fields of the answer `carry` — the section «The answer `carry`»; the ceiling of the integer `whole` — [P/08.10](../../08-domain/spec/08.10-domain.norms.md)
 Н1.5. References in the moved text: «Н1.2» — the section «The member's publication» (P/09.1 Н1.2); «Н1.3» — the section «Generation, mark,
 limits» (P/08.3 Н1.3); «Н1.5» — the section «The answer `carry`»; «Н2» — P/08.3 Н2; «lesson 4 Н1.3» — the section «Generation, mark, limits»
 `ROAD_QUIET` (P/08.3 Н1.3а).
 
-Normative keywords follow the [course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
-The rows and objects that the function writes and reads are families by the [catalogue](../../data/catalog.tsv): the report, the delta and the mark of a member — `Platform/08-domain/data/member-report.schema.json`, `Platform/08-domain/data/member-report.outcomes.tsv`; `Platform/08-domain/data/member-report-delta.schema.json`, `Platform/08-domain/data/member-report-delta.outcomes.tsv`; `Platform/08-domain/data/member-reported.schema.json`, `Platform/08-domain/data/member-reported.outcomes.tsv`; the member key `domain/member-key` — `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; the families of `member_objects` — `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; `Platform/04-controller/data/snapshot.schema.json`, `Platform/04-controller/data/snapshot.outcomes.tsv`; `Platform/09-agent/data/reaches.schema.json`, `Platform/09-agent/data/reaches.outcomes.tsv`; `Platform/09-agent/data/shared-refused.schema.json`, `Platform/09-agent/data/shared-refused.outcomes.tsv`; `Platform/09-agent/data/backup-taken.schema.json`, `Platform/09-agent/data/backup-taken.outcomes.tsv`; `Platform/09-agent/data/alarms.schema.json`, `Platform/09-agent/data/alarms.outcomes.tsv`; `Platform/09-agent/data/outcomes.schema.json`, `Platform/09-agent/data/outcomes.outcomes.tsv`; `Platform/08-domain/data/shared.schema.json`, `Platform/08-domain/data/shared.outcomes.tsv`. The doors — OpenAPI `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`POST /api/member/<член>`, `POST /api/relay/<ретранслятор>`, the answer `carry`) and `Platform/09-agent/spec/09-agent.api.openapi.yaml` (the relay door); the manifest keys `domain.*` — `Platform/02-installer/spec/02.1-installer.schema.json` (layout audit, `В-01`…`В-04`, `Б-13`; the Architect's decision of 2026-10-25).
+The rows and objects that the function writes and reads are families by the [catalogue](../data/catalog.tsv): the report, the delta and the mark of a member — `Platform/08-domain/data/member-report.schema.json`, `Platform/08-domain/data/member-report.outcomes.tsv`; `Platform/08-domain/data/member-report-delta.schema.json`, `Platform/08-domain/data/member-report-delta.outcomes.tsv`; `Platform/08-domain/data/member-reported.schema.json`, `Platform/08-domain/data/member-reported.outcomes.tsv`; the member key `domain/member-key` — `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; the families of `member_objects` — `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; `Platform/04-controller/data/snapshot.schema.json`, `Platform/04-controller/data/snapshot.outcomes.tsv`; `Platform/09-agent/data/reaches.schema.json`, `Platform/09-agent/data/reaches.outcomes.tsv`; `Platform/09-agent/data/shared-refused.schema.json`, `Platform/09-agent/data/shared-refused.outcomes.tsv`; `Platform/09-agent/data/backup-taken.schema.json`, `Platform/09-agent/data/backup-taken.outcomes.tsv`; `Platform/09-agent/data/alarms.schema.json`, `Platform/09-agent/data/alarms.outcomes.tsv`; `Platform/09-agent/data/outcomes.schema.json`, `Platform/09-agent/data/outcomes.outcomes.tsv`; `Platform/08-domain/data/shared.schema.json`, `Platform/08-domain/data/shared.outcomes.tsv`. The doors — OpenAPI `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`POST /api/member/<член>`, `POST /api/relay/<ретранслятор>`, the answer `carry`) and `Platform/09-agent/spec/09-agent.api.openapi.yaml` (the relay door); the manifest keys `domain.*` — `Platform/02-installer/spec/02.1-installer.schema.json` (layout audit, `В-01`…`В-04`, `Б-13`; the Architect's decision of 2026-10-25).
 
 ## Generation, mark, limits
 
@@ -77,7 +77,7 @@ P/08.8).
 From P/09.1 Н1.2 (`publication`, `out_of_delta`, `member_objects`, `ready`) and P/08.3 Н1.6 `form` without a change of behaviour
 (analysis of review of stage B 8–10, № 4; Claude `С-6`): the body of `POST /api/member/<член>` that the agent sends (P/09.1), and the holder and
 the relay accept with the function «accept». How the agent assembles the objects (`change`, `fresh`, contributions to books, the body limit of the
-agent) — P/09.1 Н1.2; the forms `tls_ca`, `tls_ca_certs` at the member — [the role certificate contract](../role-certificate.md); their
+agent) — P/09.1 Н1.2; the forms `tls_ca`, `tls_ca_certs` at the member — [the role certificate contract](role-certificate.md); their
 acceptance by the holder (`on_accept`) — P/08.3 Н1.6; `members_rev` — the section «The list of members to the one lagging behind»; `sign_failures` — P/09.1 Н1.12.
 
 ```yaml
@@ -150,8 +150,8 @@ name (step 4).
 
 ## The check of the member and the key
 
-Moved from [P/08.3](../../../08-domain/spec/08.3-domain.norms.md) Н2, the row `POST /api/member/<член>`, without a change of behaviour
-(layout audit, the Architect's decision of 2026-10-25, `Б-12`); the signature — [the agent signature contract](../agent-signature.md). The relay door accepts a member in the same
+Moved from [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н2, the row `POST /api/member/<член>`, without a change of behaviour
+(layout audit, the Architect's decision of 2026-10-25, `Б-12`); the signature — [the agent signature contract](agent-signature.md). The relay door accepts a member in the same
 order over its own memory (P/09.2 Н2); the relay batch at the holder — P/08.3 Н2 `POST /api/relay` (C08-G06).
 
 ```yaml
@@ -168,7 +168,7 @@ order:          in order: 503 `standby` before reading the body (P/08.10 Н1.7);
 
 ## The answer `carry`
 
-Moved from [P/08.3](../../../08-domain/spec/08.3-domain.norms.md) Н1.5 without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, `Б-12`); the bound of `every` is
+Moved from [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.5 without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, `Б-12`); the bound of `every` is
 the section below.
 
 ```yaml
@@ -196,7 +196,7 @@ carry:          the answer 200 to POST /api/member/<член> and GET /api/carry
 
 ## The list of members to the one lagging behind
 
-Moved from [P/08.3](../../../08-domain/spec/08.3-domain.norms.md) Н1.4а without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, `Б-12`).
+Moved from [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.4а without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, `Б-12`).
 
 ```yaml
 publication.members_rev?:  {term, rev} of the copy of its own section domain/member-list/<раздел> that the member holds (P/09.1 Н1.1); no row — no
@@ -224,7 +224,7 @@ packet:      in the answer to a relay batch refused[<член>] = {reason: "busy
 
 ## The knock
 
-Moved from [P/08.3](../../../08-domain/spec/08.3-domain.norms.md) Н1.1 `knock` without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, `Б-12`): the memory
+Moved from [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.1 `knock` without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, `Б-12`): the memory
 of the process `domain` about the knocking ones; the knocks from a relay batch — the section «The relay batch: limits».
 
 ```yaml
@@ -242,7 +242,7 @@ knock:          {name, last, times, key, fingerprint, pinned, keys_rev, class, b
 
 ## The batch knock
 
-The admission batch — [P/08.3](../../../08-domain/spec/08.3-domain.norms.md) Н1.1б. The step comes after the check of the body signature by the key `key`: at the holder's door and for a knock from a relay batch (P/08.3 Н3 step 3) alike; the relay door does not judge the batch, the body goes as a knock as it is.
+The admission batch — [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.1б. The step comes after the check of the body signature by the key `key`: at the holder's door and for a knock from a relay batch (P/08.3 Н3 step 3) alike; the relay door does not judge the batch, the body goes as a knock as it is.
 
 ```yaml
 publication.batch: {name, sig}    # out of form — the field is not taken, an ordinary knock
@@ -273,7 +273,7 @@ every:          a field of the answer carry (P/08.3 Н1.5): s — the agent pass
                 a reason for the agent to reject the answer (the behaviour of М11/3 Н1.6)
 ```
 
-The batch signature — the package [`agent-sig`](../../vectors/agent-sig/README.md), the file `batch-knock.tsv`.
+The batch signature — the package [`agent-sig`](../vectors/agent-sig/README.md), the file `batch-knock.tsv`.
 
 ## The function «accept»
 
@@ -315,7 +315,7 @@ the `rev` of the mark if `mark.via` = the road of the answer, otherwise 0 (the o
 ## The form of the function
 
 From М11/3 Н5 `accept`, `exit` and М11/4 Н5 (the fields `via`, `heard_ago`) without a change of behaviour: the input and the output of the rows of the package
-[`accept`](../../vectors/accept/README.md) (the scenarios were removed by the move of lesson 8; analysis of review of stage B 8–10, № 6, Claude `П-2`;
+[`accept`](../vectors/accept/README.md) (the scenarios were removed by the move of lesson 8; analysis of review of stage B 8–10, № 6, Claude `П-2`;
 № 4, Claude `С-4`):
 
 ```yaml
@@ -348,8 +348,8 @@ exit:           0 — computed (a refusal by a word included); 2 — the input i
 
 ## The relay batch: limits
 
-Moved from [P/09.2](../../../09-agent/spec/09.2-agent.norms.md) Н1.4 (`BATCH_LIMIT`, `KNOCKS`) without a change; the limits
-are read by the relay (it writes the batch, P/09.2 Н3) and by the holder (it accepts it, [P/08.3](../../../08-domain/spec/08.3-domain.norms.md)
+Moved from [P/09.2](../../09-agent/spec/09.2-agent.norms.md) Н1.4 (`BATCH_LIMIT`, `KNOCKS`) without a change; the limits
+are read by the relay (it writes the batch, P/09.2 Н3) and by the holder (it accepts it, [P/08.3](../../08-domain/spec/08.3-domain.norms.md)
 Н3 «the holder on `POST /api/relay/<ретранслятор>`», Н4) — they have references here (C08-G05, the Architect's decision of 2026-10-25).
 
 ```yaml
@@ -369,7 +369,7 @@ answer:        the holder's answer to the client of the agent and of the relay (
 
 ## Vectors
 
-The package [`accept`](../../vectors/accept/README.md) (analysis of review of stage A 8–10, № 13): 66 rows — the inputs of the command `accept`
+The package [`accept`](../vectors/accept/README.md) (analysis of review of stage A 8–10, № 13): 66 rows — the inputs of the command `accept`
 of the acceptance of М11/3 (sc. 13, 26 rows) and М11/4 (sc. 06, 9 rows — roads) without a change of bytes, 3 rows of ADR-0113 (`road_quiet`, a change of `every`) (the scenarios and inputs were removed by the move
 of lesson 8 — the table is the only source of these cases), 2 rows of the relay door and 25 rows of stage C: the other families
 of `member_objects`, extra fields and `@exit 2`, the form of `sign_failures`, the form of the mark — `sign_failures` {} and the time `received_at` (ACC-FORM172, ACC-TIME172; the README of the package), 1 row — a mark without `stale` (coverage audit of P/08, the second pass of Gemini). The implementation of the holder and
@@ -377,13 +377,13 @@ the relay passes them with its function, without a stand. There is no row for st
 (the README of the package, «Candidates»; analysis of review of stage B 8–10, № 6). The limits of the relay batch (the bound 64 MiB, knock 33,
 a knock larger than 256 KiB) are not expressed by the function «accept» — by reading (C08-G05).
 
-The canonical JSON (RFC 8785, ADR-0072) that the contract relies on is the package [`jcs`](../../../01-store/vectors/jcs/README.md)
+The canonical JSON (RFC 8785, ADR-0072) that the contract relies on is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the form of RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
 
 ## Correspondence to former lessons
 
 From М11/3 (analysis of review of stage A 8–10, № 13 / decision 2): Н3 «принять» in full (here «The function «accept»»; in М11/3 —
-a pointer). The norm М11/3-06 (acceptance: `same`, `same_sent_at`, `rebase`, `heard`) — by `note` of [id-map](../../id-map.tsv);
+a pointer). The norm М11/3-06 (acceptance: `same`, `same_sent_at`, `rebase`, `heard`) — by `note` of [id-map](../id-map.tsv);
 executed by 8.3 and 9.2. From М11/3 Н5 and М11/4 Н5 — the forms of the command `accept` and `exit` (here «The form of the function»; analysis of review
 of stage B 8–10, № 6). The sections «Generation, mark, limits», «The member's publication», «The answer `carry`: `every`» are copies of the rows of
 P/08.3 Н1.3, Н1.3а, Н1.5, Н1.6 `form` and P/09.1 Н1.2 for the self-sufficiency of lesson P/09 (analysis of review of stage B 8–10, № 4).

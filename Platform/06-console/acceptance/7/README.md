@@ -2,8 +2,8 @@
 
 This English text is the source; the Russian translation `ru/acceptance/7/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей),
-the section [«Domain stand»](../../../common/acceptance/README.md#стенд-домена) (a stand of several clusters). The norm of the chapter is
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
+the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters). The norm of the chapter is
 [`06.7-console.norms.md`](../../spec/06.7-console.norms.md) Н5. The scenarios were moved from the acceptances of М11/08 (01, 02, 03),
 М11/09 (06; 03 → 14), М11/05 (02 → 13) and М11/10 (01 → 15) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers,
 the names and the steps are the former ones, except `13-notes-unique` (in М11/05 — `02-notes-unique`), `14-break-glass` (in М11/09 —

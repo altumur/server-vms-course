@@ -1,10 +1,10 @@
 # Vectors of the right by grants
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/may/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The vectors of [the right contract](../../../contracts/may.md): the function `may` — the right of a person by the grant lines (rank, scope,
+The vectors of [the right contract](../../contracts/may.md): the function `may` — the right of a person by the grant lines (rank, scope,
 the term of the line, the age of the copy, a disabled person, a break-glass session). The owner is lesson P/08, chapter 8.4; it is performed by the gate consoles
-of a cluster ([P/06.3](../../../../06-console/spec/06.3-console.norms.md) Н1.3, chapter 6.7), by the consoles of the domain (lesson 10) and by the process
+of a cluster ([P/06.3](../../../06-console/spec/06.3-console.norms.md) Н1.3, chapter 6.7), by the consoles of the domain (lesson 10) and by the process
 `domain` (8.4) (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 1; the review analysis of stage A 8–10). The bytes are written by
 «Спецификация» (ADR-0083); the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
 
@@ -17,8 +17,8 @@ decision of 2026-10-20, ADR-0083 addendum (14) item 17): the table is the only s
 
 ## Form of the input of the command `may`
 
-The input is one JSON object (the column `input`); the function and its steps are [the right contract](../../../contracts/may.md) «The function `may`».
-The form was moved here from [P/08.4](../../../../08-domain/spec/08.4-domain.norms.md) Н5 `exit` together with the choices of the log
+The input is one JSON object (the column `input`); the function and its steps are [the right contract](../../contracts/may.md) «The function `may`».
+The form was moved here from [P/08.4](../../../08-domain/spec/08.4-domain.norms.md) Н5 `exit` together with the choices of the log
 (the guesses of stage C MAY-G01/G02, the Architect's decision of 2026-10-23): a common algorithm is a common form.
 
 ```yaml
@@ -64,8 +64,8 @@ of a line of `lines`, of `unit` or of `about`; `sub` not by the grammar; `chains
 
 ## `covers`
 
-Whether one grant scope covers the door unit ([the gate contract](../../../contracts/gate-and-pass.md) `scope`; step 7 of the function
-`may` — by the scope; C06-EVENTS-QUERY-UNKNOWN-138-10, the Architect's decision of 2026-10-26). The file [`covers.tsv`](../covers.tsv), the same
+Whether one grant scope covers the door unit ([the gate contract](../../contracts/gate-and-pass.md) `scope`; step 7 of the function
+`may` — by the scope; C06-EVENTS-QUERY-UNKNOWN-138-10, the Architect's decision of 2026-10-26). The file [`covers.tsv`](covers.tsv), the same
 file rules as `cases.tsv`.
 
 ```yaml
@@ -82,14 +82,14 @@ rule:    "*" — true; unit:<s>/<i> = ref — true by the name, not reading the 
          ref.sub = platform — unit: and labels: do not cover
 ```
 
-19 rows. Tiers 1–4 and the choice of the first non-empty one are judged by the role group, not by one scope, so they are in [`cases.tsv`](../cases.tsv) (may-62…may-92), not here. The first 9: `unit:` by the name at an unreadable row — `true`; `labels:` and a grant on an about-unit at an unreadable one — `false`; `*` at
+19 rows. Tiers 1–4 and the choice of the first non-empty one are judged by the role group, not by one scope, so they are in [`cases.tsv`](cases.tsv) (may-62…may-92), not here. The first 9: `unit:` by the name at an unreadable row — `true`; `labels:` and a grant on an about-unit at an unreadable one — `false`; `*` at
 an unreadable one — `true`; at a readable one — the labels at the row itself, the labels at about, a grant on an about-unit — `true`, `unit:` of a foreign
 unit without about — `false`; a scope not by the grammar — `@exit 2`. Another 10 — `folder:`: at a unit, at about, at a subfolder, at a folder as an object, over a dead chain, at an unknown membership.
 
 ## Run
 
 Without a stand: the function of an implementation gets the input (the column `input`) and gives the output; `expect` is a subset of the fields of the output (`{"result":"unavailable"}` — the third outcome, the door answers 503) or
-`@exit 2` (an input not of the form of [P/08.4](../../../../08-domain/spec/08.4-domain.norms.md) Н5 `exit`: the lines of `grants` are a trusted input, a line not of the form — 2, not a skip). The time is
+`@exit 2` (an input not of the form of [P/08.4](../../../08-domain/spec/08.4-domain.norms.md) Н5 `exit`: the lines of `grants` are a trusted input, a line not of the form — 2, not a skip). The time is
 by the input `now`, not by the process clock. Who performs: `cases.tsv` — the gate consoles of a cluster (`06-console`) and of the domain
 (`10-domain-console`) and the process `domain` (`08-domain`); `covers.tsv` — only `06-console` and `10-domain-console` (the record `vectors` `common/may` or the former command
 `covers` of the common acceptance README; one is enough — ACC-VECTORS-COVERS-STAND-01) (ACC-VECTORS-CONNECT-02, the Architect's decision of 2026-10-26).
@@ -97,7 +97,7 @@ by the input `now`, not by the process clock. Who performs: `cases.tsv` — the 
 ## Units
 
 `c1` `testsub` with the labels `east`, `ground`; `c2` without labels; `t1` `testsub2` with the label `west` and `about` — `c1`. Folders — ids of 32 hex digits: `0f…`, `0b…` are root ones, `0a…` is a root one with the subfolder `0c…`. `now` is
-1760000000; the age of the copy is `GRANT_LIFETIME` ([P/08.4](../../../../08-domain/spec/08.4-domain.norms.md) Н1.3).
+1760000000; the age of the copy is `GRANT_LIFETIME` ([P/08.4](../../../08-domain/spec/08.4-domain.norms.md) Н1.3).
 
 ## Files
 
@@ -106,7 +106,7 @@ of the acceptance.
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](../cases.tsv), 120 rows: 51 `allow`, 44 `deny`, 7 `unavailable`, 18 `@exit 2` (may-26 — `until` does not fit in binary64, MAY-UNTIL-D8-01; may-27…may-106 — ADR-0097–ADR-0100, there is no dry run by an implementation) | `input` is the input of the command `may` as JSON text → `expect`: `{"result":"allow"}` (a break-glass session without grants, a copy of exactly one day of age, a holder line without `as_of`, `view` without a unit — any line, `*`, `unit:` its own and through `about`, `labels:` all labels, the labels of `about`, a higher rank, the term of the line ahead) or `{"result":"deny","reason":<слово>}`: `disabled` (disabled at a grant), `stale` (a copy older than one day), `no_grant` (no line, `edit` without a unit not by `*`, a foreign unit, one label missing, the labels of the unit itself at `about`, a lower rank, an expired line, `"*"` not by `*`, a line of another subject, a unit without labels); `@exit 2` — a scope `unit:` with an id not by the grammar of [P/06.1](../../../../06-console/spec/06.1-console.norms.md) Н1.3; `subject` "" of a grant line (`may-25`, MAY-G03) |
+| [`cases.tsv`](cases.tsv), 120 rows: 51 `allow`, 44 `deny`, 7 `unavailable`, 18 `@exit 2` (may-26 — `until` does not fit in binary64, MAY-UNTIL-D8-01; may-27…may-106 — ADR-0097–ADR-0100, there is no dry run by an implementation) | `input` is the input of the command `may` as JSON text → `expect`: `{"result":"allow"}` (a break-glass session without grants, a copy of exactly one day of age, a holder line without `as_of`, `view` without a unit — any line, `*`, `unit:` its own and through `about`, `labels:` all labels, the labels of `about`, a higher rank, the term of the line ahead) or `{"result":"deny","reason":<слово>}`: `disabled` (disabled at a grant), `stale` (a copy older than one day), `no_grant` (no line, `edit` without a unit not by `*`, a foreign unit, one label missing, the labels of the unit itself at `about`, a lower rank, an expired line, `"*"` not by `*`, a line of another subject, a unit without labels); `@exit 2` — a scope `unit:` with an id not by the grammar of [P/06.1](../../../06-console/spec/06.1-console.norms.md) Н1.3; `subject` "" of a grant line (`may-25`, MAY-G03) |
 
-The vectors were checked by an oracle against the text of the contract (steps 1–8) and the form of the input of [P/08.4](../../../../08-domain/spec/08.4-domain.norms.md) Н1.3, Н5 `exit`, not against the code of implementations; on a
+The vectors were checked by an oracle against the text of the contract (steps 1–8) and the form of the input of [P/08.4](../../../08-domain/spec/08.4-domain.norms.md) Н1.3, Н5 `exit`, not against the code of implementations; on a
 divergence the contract is right, the vector is corrected by «Спецификация».

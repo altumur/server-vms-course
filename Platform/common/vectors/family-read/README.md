@@ -1,6 +1,6 @@
 # family-read vectors (ADR-0087 addendum (9) item 2; ADR-0092 Confirmation, sets «А» and «Б»)
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/family-read/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 Reading a data family of the catalog (`Platform/common/data/catalog.tsv`) by the common library of an implementation: the input is the family (`key`,
 `kind`), the mode `writer` or `reader`, the text of the instance; the outcome is the verdict, the refusal paths (JSON Pointer), the outcome of

@@ -1,8 +1,8 @@
 # Vectors: a line of the environment file
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/env-file/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is chapter P/02.4 through [the environment file contract](../../../contracts/env-file.md) (the grammar `KEY=VALUE`, the edges B19;
+The owner is chapter P/02.4 through [the environment file contract](../../contracts/env-file.md) (the grammar `KEY=VALUE`, the edges B19;
 stage C guess C04-ENV-01, the Architect's decision 2026-10-23). The participants are those whose norm itself parses environment files:
 the runner `w2c-run.sh` and the workers script (the profile `02-installer`); the role processes get the environment from the runner (below,
 «Who performs it»; ACC-VECTORS-CONNECT-04). The bytes are written by
@@ -40,7 +40,7 @@ P/02.4 Н1.5 step 4) — the profile `02-installer`; the role processes get the 
 
 ## Stand command `env-line`
 
-The key `stand` of the profile `02-installer` (the section «Layout by processes» of [the common acceptance README](../../../acceptance/README.md)),
+The key `stand` of the profile `02-installer` (the section «Layout by processes» of [the common acceptance README](../../acceptance/README.md)),
 by the common rule of the vector commands: a template with `{input}` — the path of a file into which the runner writes the cell `line` byte for byte (a JSON
 string); stdout — a JSON value and LF, compared with `expect` by value; code 0 — computed, 2 — an input not of the form (not a JSON
 string). The table has no other profiles: the role processes do not parse environment files (ACC-VECTORS-CONNECT-04).

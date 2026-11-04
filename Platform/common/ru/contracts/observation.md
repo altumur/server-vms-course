@@ -1,29 +1,29 @@
 # Договор наблюдения: свежесть, состояние ресурса, чтение решения
 
-Текст производный от en, руками не правится: источник — английский [`en/observation.en.md`](en/observation.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
+Текст производный от `contracts/observation.md`, руками не правится: источник — английский [`contracts/observation.md`](../../contracts/observation.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
 
 Общий договор модуля «Платформа» (ADR-0083 доп. (5): контракт, который читают несколько процессов, лежит в
 `Platform/common/`; решение «Архитектора» по разбору ревью стадии A 6–7, № 1, № 2). Владелец — урок
-[P/04](../../04-controller/ru/spec/04-controller.norms.md) (Н1.4: константа `LOST_AFTER` и судья; блоки перенесены оттуда; разбор ревью стадии B 6–7, № 35). Читают: контроллер — пул, судья
-слота, вывод сервера ([P/04](../../04-controller/ru/spec/04-controller.norms.md) Н1.4, Н3), консоль — выдачи наблюдений
-(глава [P/06.5](../../06-console/ru/spec/06.5-console.norms.md): `/servers`, `/resources`, `/where`, `/unplaceable`,
-`/metrics`), двери управления (глава [P/06.6](../../06-console/ru/spec/06.6-console.norms.md): вывод сервера, `/schema`,
+[P/04](../../../04-controller/ru/spec/04-controller.norms.md) (Н1.4: константа `LOST_AFTER` и судья; блоки перенесены оттуда; разбор ревью стадии B 6–7, № 35). Читают: контроллер — пул, судья
+слота, вывод сервера ([P/04](../../../04-controller/ru/spec/04-controller.norms.md) Н1.4, Н3), консоль — выдачи наблюдений
+(глава [P/06.5](../../../06-console/ru/spec/06.5-console.norms.md): `/servers`, `/resources`, `/where`, `/unplaceable`,
+`/metrics`), двери управления (глава [P/06.6](../../../06-console/ru/spec/06.6-console.norms.md): вывод сервера, `/schema`,
 подъём схемы, дренаж, прогнозы меток), живые ресурсы слияния `/events` (глава
-[P/06.4](../../06-console/ru/spec/06.4-console.norms.md)) и метки соперников (`name_conflict` P/06.5; раздел «Свежесть метки соперника»). Перенесено из P/04 Н1.4 (`resource_state`) и Н1.5 (сторона
+[P/06.4](../../../06-console/ru/spec/06.4-console.norms.md)) и метки соперников (`name_conflict` P/06.5; раздел «Свежесть метки соперника»). Перенесено из P/04 Н1.4 (`resource_state`) и Н1.5 (сторона
 читателя решения) без изменения поведения, кроме одного: граница свежести — одно отношение `≤` у всех наблюдателей
 («Свежесть» ниже; разбор ревью стадии A 6–7, № 1). Что наблюдатель делает с состоянием (судьба слота, пул, отказ вывода,
 `live` процесса в `/schema`, `state` воркера в выдаче) — в нормах читающих уроков; форма наблюдаемых строк и объектов — у
-их владельцев ([каталог](../data/catalog.tsv)).
+их владельцев ([каталог](../../data/catalog.tsv)).
 
-Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Нормативные слова — по [канону курса](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Форма
 
 Пульс ресурса `platform/resources/<s>/heartbeat` наблюдатель читает по форме и исходам семьи его писателя — файлам
 `Platform/05-resource/data/resource-heartbeat.schema.json` и `Platform/05-resource/data/resource-heartbeat.outcomes.tsv`
-([форма](../../05-resource/data/resource-heartbeat.schema.json), [исходы](../../05-resource/data/resource-heartbeat.outcomes.tsv));
+([форма](../../../05-resource/data/resource-heartbeat.schema.json), [исходы](../../../05-resource/data/resource-heartbeat.outcomes.tsv));
 строку двери `platform/doors/<s>` — по смене версии, её форма — `Platform/05-resource/data/doors.schema.json`, исходы —
-`Platform/05-resource/data/doors.outcomes.tsv` ([форма](../../05-resource/data/doors.schema.json)). Названные файлы данных входят в чтение `common`
+`Platform/05-resource/data/doors.outcomes.tsv` ([форма](../../../05-resource/data/doors.schema.json)). Названные файлы данных входят в чтение `common`
 (ADR-0083 доп. (32) п. 1; C04-DEP-OBS-HEARTBEAT-01). Исходы — по `outcomes.tsv`: поле не по своей форме, у которого есть
 строка исхода поля (`build`, `schema`, `retention_garbled`, `retention_withheld`), действует его исход, пульс остаётся
 читаемым; нечитаемым пульс делает только исход «объект целиком» (в том числе поле вне закрытой формы).
@@ -36,7 +36,7 @@
 — `Platform/04-controller/data/placement-intent.schema.json`, `Platform/04-controller/data/placement-intent.outcomes.tsv`,
 `Platform/04-controller/data/placement.schema.json`, `Platform/04-controller/data/placement.outcomes.tsv`. Версия объекта
 (раздел «Наблюдение версии» changed: заголовки `X-Server`, `X-Written`, в листинге `server`, `written`) — контракт двери
-ресурса `Platform/05-resource/spec/05-resource.api.openapi.yaml` ([OpenAPI урока P/05](../../05-resource/spec/05-resource.api.openapi.yaml)).
+ресурса `Platform/05-resource/spec/05-resource.api.openapi.yaml` ([OpenAPI урока P/05](../../../05-resource/spec/05-resource.api.openapi.yaml)).
 
 ## Наблюдение версии
 
@@ -130,16 +130,16 @@ ALIVE_EVERY:    15           # с; ресурс переписывает at св
                              # строка двери меняется и при молчащем пульсе (перенесено из P/04 Н1.4; аудит раскладки, решение «Архитектора» 2026-10-25, А-10)
 ```
 
-Нечитаемый пульс — по форме его писателя (раздел «Форма» выше; [P/05 Н1.4](../../05-resource/ru/spec/05-resource.norms.md)); строку двери
+Нечитаемый пульс — по форме его писателя (раздел «Форма» выше; [P/05 Н1.4](../../../05-resource/ru/spec/05-resource.norms.md)); строку двери
 наблюдатель судит по смене её версии, не по полям (семья `doors` P/05). Что значит каждое состояние для судьбы слота и
-пула — [P/04 Н3](../../04-controller/ru/spec/04-controller.norms.md) «судьба», «выбрать»; для выдачи `ServerRow.resource` —
+пула — [P/04 Н3](../../../04-controller/ru/spec/04-controller.norms.md) «судьба», «выбрать»; для выдачи `ServerRow.resource` —
 глава 6.5; для отказа вывода сервера — глава 6.6. Состояние по истории наблюдения — векторы
 [`resource-state`](../vectors/resource-state/README.md).
 
 ## Сервер выведен
 
-Перенесено из [P/03.2](../../03-worker/ru/spec/03.2-worker.norms.md) Н3 «старт()» шаг 3 и P/04 Н3 «вывести_сервер» «Гонки»
-(аудит раскладки, решение «Архитектора» 2026-10-25, А-18); строки запроса и отметки — [P/06.6](../../06-console/ru/spec/06.6-console.norms.md) Н1.1 и P/04 Н3 «вывести_сервер».
+Перенесено из [P/03.2](../../../03-worker/ru/spec/03.2-worker.norms.md) Н3 «старт()» шаг 3 и P/04 Н3 «вывести_сервер» «Гонки»
+(аудит раскладки, решение «Архитектора» 2026-10-25, А-18); строки запроса и отметки — [P/06.6](../../../06-console/ru/spec/06.6-console.norms.md) Н1.1 и P/04 Н3 «вывести_сервер».
 
 ```yaml
 decommissioned: сервер <s> выведен — есть строка запроса platform/decommission/<s> (пишет консоль; форма —
@@ -154,7 +154,7 @@ narrower:      читатели, чья норма берёт только ст�
 
 ## Свежесть члена домена
 
-Перенесено из [P/08.1](../../08-domain/ru/spec/08.1-domain.norms.md) Н1.3 `member_state` без изменения (аудит раскладки, решение «Архитектора» 2026-10-25, А-15); читатели —
+Перенесено из [P/08.1](../../../08-domain/ru/spec/08.1-domain.norms.md) Н1.3 `member_state` без изменения (аудит раскладки, решение «Архитектора» 2026-10-25, А-15); читатели —
 процесс `domain` (вид, P/08.1) и консоль домена (P/10 Н3 `alarms`: `silent` по последнему отчёту и `silent_after`).
 
 ```yaml
@@ -177,7 +177,7 @@ member_state:                                    # по монотонным ч�
 
 Эффективное размещение единицы читается по строкам контроллера `<sub>/controller/placement_intent` и `<sub>/placement/<id>`
 (форма — семьи `placement-intent`, `placement`: `Platform/04-controller/data/placement-intent.schema.json`,
-`Platform/04-controller/data/placement.schema.json` и их `.outcomes.tsv`, раздел «Форма»; сторона писателя — [P/04](../../04-controller/ru/spec/04-controller.norms.md) Н1.5).
+`Platform/04-controller/data/placement.schema.json` и их `.outcomes.tsv`, раздел «Форма»; сторона писателя — [P/04](../../../04-controller/ru/spec/04-controller.norms.md) Н1.5).
 Правило одно для всех читателей: контроллера, `/where`, `/unplaceable`, прогнозов меток, дренажа.
 
 ```
@@ -202,7 +202,7 @@ active intent и id в members → решают target/reason/at/manifest_rev in
 
 Перенесено из P/03.2 Н1.2, Н1.4а (у них ссылка сюда); `CONTEND_EVERY` — как часто писатель переписывает свою метку —
 остаётся у писателя (P/03.2 Н1.2). Читатель — консоль: `WorkerRow.name_conflict` `/servers`, ряд `name_conflicts`
-([P/06.5](../../06-console/ru/spec/06.5-console.norms.md) Н2, Н3) (C06-CONTENDER-FRESH-33-01, решение «Архитектора» 2026-10-25).
+([P/06.5](../../../06-console/ru/spec/06.5-console.norms.md) Н2, Н3) (C06-CONTENDER-FRESH-33-01, решение «Архитектора» 2026-10-25).
 
 ```yaml
 CONTENDER_FRESH: 300   # с; граница свежести метки соперника
@@ -227,7 +227,7 @@ contender: метка соперника <sub>/contenders/<имя>/<коробк
 из М10/9 Н3 «`/where/<id>`» — выбор target/reason при активном intent
 (глава 6.5); из P/03.2 Н1.4 — определение возраста наблюдаемой версии (ссылкой); из P/03.2 Н1.2, Н1.4а — `CONTENDER_FRESH` и свежесть
 метки соперника (C06-CONTENDER-FRESH-33-01). Части норм по `note`
-[id-map](../id-map.tsv): P/04-04 (жизнь по изменению пульса, первый взгляд), P/04-10 (`resource_state`), P/04-01 (двойное
+[id-map](../../id-map.tsv): P/04-04 (жизнь по изменению пульса, первый взгляд), P/04-10 (`resource_state`), P/04-01 (двойное
 чтение intent), P/06.5-04 (`ServerRow.resource`, `WorkerRow.state`), P/06.5-05 (`/where`), P/06.6-02 (вывод сервера),
 P/06.6-04 (живые процессы `/schema`). Граница свежести — вектор [`fresh-age`](../vectors/fresh-age/README.md) (разбор
 ревью стадии B 6–7, № 20); возраст и состояние ресурса — по истории наблюдения на часах наблюдателя: шаги приёмки P/04,

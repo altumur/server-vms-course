@@ -1,8 +1,8 @@
 # Vectors: the process instance — a given `INSTANCE_ID`
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/instance/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the process instance contract](../../../contracts/instance.md) (chapter P/03.2; INSTANCE54-02, the Architect's decision
+The owner is [the process instance contract](../../contracts/instance.md) (chapter P/03.2; INSTANCE54-02, the Architect's decision
 2026-10-25). The participants are the processes that write an instance (the worker, the resource, the process `domain`, the writers of the event journal).
 The bytes are written by «Спецификация»; the rows are by the text of the contract.
 
@@ -31,6 +31,6 @@ Who performs it — every process whose norm writes its own instance — both ta
 
 ## Native outcome
 
-The package has no separate command contract — the common rule «Vectors» of [the common acceptance README](../../../acceptance/README.md)
+The package has no separate command contract — the common rule «Vectors» of [the common acceptance README](../../acceptance/README.md)
 (ACC-VECTORS-CONNECT-04, the Architect's decision 2026-10-26): the function answers with code 0 and one JSON value. The output object of the table or the JSON string `"@refuse"`; «отказ старта, код 2» is an outcome of the process, at the function of the package — `"@refuse"`
 with code 0.

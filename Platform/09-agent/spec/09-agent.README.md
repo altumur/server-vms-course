@@ -34,7 +34,7 @@ the late layer of the cluster console — [chapter 6.7](../../06-console/spec/06
   `x25519:v1` and opens `m1`; the relay carries `m1` without opening it), [the report acceptance](../../common/contracts/accept.md)
   (the function «принять» over the relay memory — chapter 9.2), [the term record](../../common/contracts/record.md) (following,
   the keeper, the shared document — chapter 9.1), [the sealing](../../common/contracts/sealing.md) (the home secrets — envelopes
-  of the ring), [the role certificate](../../common/contracts/role-certificate.md#серверная-сторона-класс-signed) (the relay
+  of the ring), [the role certificate](../../common/contracts/role-certificate.md#the-server-side-the-class-signed) (the relay
   door — chapter 9.2), [the forwarding](../../common/contracts/forwarding.md) (502 `did not answer` of the token door of the
   relay), [the event journal](../../common/contracts/event-journal.md).
 - [The OpenAPI of the lesson](09-agent.api.openapi.yaml) expresses the HTTP forms of the agent doors: the tag `local-door` — the local door
@@ -46,7 +46,7 @@ the late layer of the cluster console — [chapter 6.7](../../06-console/spec/06
   a holder row and its copy at the agent — the common definitions (`common/data/common.schema.json` for reference; each
   family schema is self-contained, ADR-0092).
 - The acceptance of the chapters checks the norms: [9.1](../acceptance/1/README.md), [9.2](../acceptance/2/README.md). The stand of several
-  clusters, the directives and the doors — [the common acceptance README](../../common/acceptance/README.md#стенд-домена), the section «Domain stand».
+  clusters, the directives and the doors — [the common acceptance README](../../common/acceptance/README.md#domain-stand), the section «Domain stand».
   The vectors of the lesson — [`follow`](../vectors/follow/README.md) (9.1); the common ones — [`agent-sig`](../../common/vectors/agent-sig/README.md),
   [`peer`](../../common/vectors/peer/README.md) (9.1), [`accept`](../../common/vectors/accept/README.md) (9.2). Flags,
   environment, exit codes — [`../lifecycle.md`](../lifecycle.md).
@@ -74,7 +74,7 @@ Record a change of the acceptance in `corrections.tsv` of its catalogue.
   value; the row `domain/<sub>/<книга>` at a member.
 - **9.1.** The copies `domain/placed*`, the application of edits with `If-Match`, `domain/outcomes`; the holder — its own edits at itself.
 - **9.1.** The local door `/tokens/<sub>/<вид>` with the identity of the role ([the local token door
-  contract](../../common/contracts/local-token-door.md#сокет-роли): the role socket); the request to the holder; opening `m1`, the check of
+  contract](../../common/contracts/local-token-door.md#the-role-socket): the role socket); the request to the holder; opening `m1`, the check of
   `request_id`, `exp`.
 - **9.1.** `RELAY_URL` for a member behind a relay; `domain/reached`, `domain/reaches`; the HTTPS client by the contract `peer`.
 - **9.1.** Following by `/api/held` and 409 `deposed`, the check `record`; keeping the backup copy (`domain/backup`,
@@ -123,7 +123,7 @@ relies on the agent pass.
 2. The check of the member signature at the door — [the agent signature contract](../../common/contracts/agent-signature.md), the key — from `keys`
    of the package answer; the vectors [`agent-sig`](../../common/vectors/agent-sig/README.md).
 3. `domain_age` in the answer to the member (Н1.4).
-4. The server side of the door — [the role certificate contract](../../common/contracts/role-certificate.md#серверная-сторона-класс-signed).
+4. The server side of the door — [the role certificate contract](../../common/contracts/role-certificate.md#the-server-side-the-class-signed).
 5. The stand: the scenarios of [the acceptance of the chapter](../acceptance/2/README.md).
 
 ### The whole lesson

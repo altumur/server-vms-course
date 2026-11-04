@@ -1,8 +1,8 @@
 # Vectors: reading the heartbeat of a resource and a worker by the form of the family
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/heartbeat-read/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the observation contract](../../../contracts/observation.md) «Form», «Resource state» (stage C guess
+The owner is [the observation contract](../../contracts/observation.md) «Form», «Resource state» (stage C guess
 C04-DEP-OBS-HEARTBEAT-01, the Architect's decision 2026-10-25). The form is `Platform/05-resource/data/resource-heartbeat.schema.json`,
 the outcomes are `Platform/05-resource/data/resource-heartbeat.outcomes.tsv` (the family `platform/resources/<server>/heartbeat` of lesson
 P/05). The participants are the observers of `resource_state`: the controller and the console. The bytes are written by «Спецификация»; the expectations are obtained by the judge
@@ -46,7 +46,7 @@ readable, `100.00000000000000001` — unreadable to all (`freeing` has no field 
 ## Run
 
 Without a stand: a side reads the object by its heartbeat reader (for a resource — the one that gives `resource_state`; for a worker — each
-reader from `expect` by its own part) and compares: whether the heartbeat is readable, which elements are skipped and to which fields a field outcome is applied. The state by the observation history is the package [`resource-state`](../../resource-state/README.md).
+reader from `expect` by its own part) and compares: whether the heartbeat is readable, which elements are skipped and to which fields a field outcome is applied. The state by the observation history is the package [`resource-state`](../resource-state/README.md).
 Who performs it: `cases.tsv` — the observers of `resource_state`: the controller (`04-controller`) and the console (`06-console`);
 `worker.tsv` — the console (`06-console`) the whole `expect`; the controller (`04-controller`) and the shadow report of the domain (`08-domain`) —
 the parts `others` and `fields` (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-26).

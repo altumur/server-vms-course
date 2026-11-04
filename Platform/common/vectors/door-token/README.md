@@ -1,11 +1,11 @@
 # Vectors of the door token
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/door-token/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The vectors of [the door token contract](../../../contracts/door-token.md): the issuing of `door1.<kid>.<claims>.<sig>` (claims in JCS, the signature
+The vectors of [the door token contract](../../contracts/door-token.md): the issuing of `door1.<kid>.<claims>.<sig>` (claims in JCS, the signature
 Ed25519) and the check at the holder by the row `door/keys`. The owner of the contract is lesson P/06, chapter
-[6.5](../../../../06-console/spec/06.5-console.norms.md) (Н3 «`/where/<id>`»: the console issues the token); the checker is the holder
-of the door, chapter [3.4](../../../../03-worker/spec/03.4-worker.norms.md) Н3 «the door token at the holder» (P/03.4-08). The package is common:
+[6.5](../../../06-console/spec/06.5-console.norms.md) (Н3 «`/where/<id>`»: the console issues the token); the checker is the holder
+of the door, chapter [3.4](../../../03-worker/spec/03.4-worker.norms.md) Н3 «the door token at the holder» (P/03.4-08). The package is common:
 one process writes the algorithm, others read (the Architect's decision of 2026-10-20, the review analysis of stage B 3–5: an Ed25519 signature
 without vectors is a silent divergence of implementations). The bytes are written by «Спецификация» (ADR-0083); the conformance of the product is by its
 acceptance against these tables (ADR-0080 addendum 16).
@@ -23,7 +23,7 @@ Who performs is by the table: `issue.tsv` — the console (`06-console`, issues 
 
 ## Stand command `door-token-issue`
 
-The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../../acceptance/README.md);
+The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../acceptance/README.md);
 chapter 6.5 Н3): a template with `{input}` — the path of a file with an object of exactly `{seed_hex, kid, now, claims}` of a row of `issue.tsv`:
 `seed_hex`, `kid` — the strings of the cells, `now` — the number of the cell, `claims` — the lexeme of the cell as it is (the order of fields, `routes` and
 the numeric lexemes are not re-derived; the row `number_form` with an exponent at `expires` is a valid input of issuing, the form of the checking
@@ -34,7 +34,7 @@ of issuing with code 0 — the published rows are computable. stdout is exactly 
 
 ## Stand command `door-token-verify`
 
-The key `stand` of the profile `03-worker` (the section «Layout by processes» of [the common acceptance README](../../../acceptance/README.md);
+The key `stand` of the profile `03-worker` (the section «Layout by processes» of [the common acceptance README](../../acceptance/README.md);
 P/03.4 Н5): a template with `{input}` — the path of a file into which the runner writes one JSON object of the input of a row: for `verify.tsv` —
 `{keys, authorization, now, unit, holder, path}` (`keys` — the value of the column as JSON, `authorization` and `path` — strings
 byte for byte, an empty string `authorization` — there is no header, `now` — a number), for `place.tsv` — the cell `input` as it is
@@ -45,7 +45,7 @@ the Architect of 2026-10-23).
 
 ## Keys
 
-The Ed25519 seed is 32 bytes `sha256("w2c test <слово>")` (as the keys of [the sealing vectors](../../sealing/README.md)); the tables do not name the words
+The Ed25519 seed is 32 bytes `sha256("w2c test <слово>")` (as the keys of [the sealing vectors](../sealing/README.md)); the tables do not name the words
 of derivation — the seed and the public key are fixed as bytes, an implementation takes them from here and does not derive them
 anew (`SA67-Б3`). The seed is what the row `door/signer` holds in `seed_secret` (64 lowercase hex); the public key is the value
 of the row `door/keys` under the same `kid`.
@@ -65,21 +65,21 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 
 | File | Input → expectation |
 |---|---|
-| [`issue.tsv`](../issue.tsv), 7 rows | `seed_hex`, `kid`, `now`, `claims` — an object `{user, unit, holder, routes, expires}` as JSON text, as passed to the issuer (`expires` = `now` + 120) → `claims_jcs` — its RFC 8785 form (UTF-8), `token` — `door1.<kid>.<base64url без «=» claims_jcs>.<base64url без «=» подписи над ASCII «door1.<kid>.<claims>»>`. Cases: an ordinary one, the order of fields (the same token), the order of `routes` (an array is not sorted), Cyrillic and a character outside the BMP, escaping, a number with an exponent, a `kid` of 32 characters |
-| [`verify.tsv`](../verify.tsv), 89 rows: 17 `ok`, 72 `forbidden` (5 — DT-G01, 6 — DT-G02; a separator HTAB and several headers `Authorization` cannot be expressed by a TSV row — by reading) | `keys` — the value of the row `door/keys` as JSON text; `authorization` — the header `Authorization` whole, empty — there is no header (formerly the column `token`; at most rows — `Bearer <token>`; (the Architect's decision of 2026-10-20, the review analysis of stage B 6–7)); `now`; `unit`, `holder` — the holder's own (`unit` — `<sub>/<id>`, `holder` — the `instance` of its heartbeat); `path` — the target of the request to the holder's door: the URL path, at some rows with a query (`?t=<token>`); the first segment of the URL path without the query is compared with the elements of `routes` (the review analysis of stage B 6–7, № 9) → `ok` and `claims` (the text of the claims part) or `forbidden` (the column `claims` is empty) |
-| [`place.tsv`](../place.tsv), 4 rows: 2 `ok`, 2 `forbidden` | `input` — `{keys, authorization, now, holder, path, place_units}`: `place_units` — the units whose data lie in the holder's place, the list is built by the subsystem (the data have not landed yet — there is no unit, unless the door norm named it, DT-PLACE-NOT-YET-01); the place token is the contract «The place token» (ADR-0091 addendum (7), (8)) → `expect` and `claims` — the read claims at `ok` as JSON text, compared by value; at `forbidden` empty (the reading of «cammeta-acceptance» 2026-10-23) |
+| [`issue.tsv`](issue.tsv), 7 rows | `seed_hex`, `kid`, `now`, `claims` — an object `{user, unit, holder, routes, expires}` as JSON text, as passed to the issuer (`expires` = `now` + 120) → `claims_jcs` — its RFC 8785 form (UTF-8), `token` — `door1.<kid>.<base64url без «=» claims_jcs>.<base64url без «=» подписи над ASCII «door1.<kid>.<claims>»>`. Cases: an ordinary one, the order of fields (the same token), the order of `routes` (an array is not sorted), Cyrillic and a character outside the BMP, escaping, a number with an exponent, a `kid` of 32 characters |
+| [`verify.tsv`](verify.tsv), 89 rows: 17 `ok`, 72 `forbidden` (5 — DT-G01, 6 — DT-G02; a separator HTAB and several headers `Authorization` cannot be expressed by a TSV row — by reading) | `keys` — the value of the row `door/keys` as JSON text; `authorization` — the header `Authorization` whole, empty — there is no header (formerly the column `token`; at most rows — `Bearer <token>`; (the Architect's decision of 2026-10-20, the review analysis of stage B 6–7)); `now`; `unit`, `holder` — the holder's own (`unit` — `<sub>/<id>`, `holder` — the `instance` of its heartbeat); `path` — the target of the request to the holder's door: the URL path, at some rows with a query (`?t=<token>`); the first segment of the URL path without the query is compared with the elements of `routes` (the review analysis of stage B 6–7, № 9) → `ok` and `claims` (the text of the claims part) or `forbidden` (the column `claims` is empty) |
+| [`place.tsv`](place.tsv), 4 rows: 2 `ok`, 2 `forbidden` | `input` — `{keys, authorization, now, holder, path, place_units}`: `place_units` — the units whose data lie in the holder's place, the list is built by the subsystem (the data have not landed yet — there is no unit, unless the door norm named it, DT-PLACE-NOT-YET-01); the place token is the contract «The place token» (ADR-0091 addendum (7), (8)) → `expect` and `claims` — the read claims at `ok` as JSON text, compared by value; at `forbidden` empty (the reading of «cammeta-acceptance» 2026-10-23) |
 
 ## Refusals
 
-A refusal of the check is one word `forbidden`, the answer of the holder's door 403 with the body `{"error": "forbidden"}` without a reason ([P/03.4](../../../../03-worker/spec/03.4-worker.norms.md)
-Н4, [the contract](../../../contracts/door-token.md) «Keys `door/keys`») (the Architect's decision of 2026-10-20, the vectors door-token). The order of the checks
+A refusal of the check is one word `forbidden`, the answer of the holder's door 403 with the body `{"error": "forbidden"}` without a reason ([P/03.4](../../../03-worker/spec/03.4-worker.norms.md)
+Н4, [the contract](../../contracts/door-token.md) «Keys `door/keys`») (the Architect's decision of 2026-10-20, the vectors door-token). The order of the checks
 the vector does not fix: the reason is not visible in the answer. The refusal rows are by the check list of the contract:
 
 | Check of the contract | Rows |
 |---|---|
 | four parts | `three_parts`, `five_parts`, `token_empty` |
 | `door1` | `prefix_door2`, `prefix_upper` |
-| `kid` in `door/keys` (an unreadable row — `kid` is not found, [the outcome of the family](../../../../06-console/data/door-keys.outcomes.tsv)) | `unknown_kid`, `empty_keys`, `keys_upper_hex`, `keys_short_hex`, `keys_not_object`, `keys_bad_other_entry` (a foreign entry not of the form — the whole row is unreadable; the review analysis of stage B 6–7, № 8) |
+| `kid` in `door/keys` (an unreadable row — `kid` is not found, [the outcome of the family](../../../06-console/data/door-keys.outcomes.tsv)) | `unknown_kid`, `empty_keys`, `keys_upper_hex`, `keys_short_hex`, `keys_not_object`, `keys_bad_other_entry` (a foreign entry not of the form — the whole row is unreadable; the review analysis of stage B 6–7, № 8) |
 | the signature — strictly by RFC 8032 §5.1.7, including `0 ≤ S < L` (the review analysis of stage B 6–7, № 12) | `foreign_key`, `forged_signer`, `sig_bit`, `sig_last_bit`, `sig_short`, `sig_s_not_reduced`, `claims_swapped`; without the cofactor, A or R of small order — a refusal (the Architect's decision of 2026-10-20, the review analysis of stage B 6–7): `key_small_order`, `sig_r_small_order` |
 | the parts — strict base64url without «=», the trailing bits of the last character are zeros | `sig_padded`, `claims_padded`, `claims_std_base64`, `sig_trailing_bits`, `claims_trailing_bits` |
 | claims exactly `{user, unit, holder, routes, expires}` | `extra_field`, `missing_user`, `missing_expires`, `missing_unit`, `missing_holder`, `missing_routes`, `claims_not_json` |
@@ -98,5 +98,5 @@ the signature covers the bytes of the claims part (the Architect's decision of 2
 The rows `key_small_order` and `sig_r_small_order` satisfy the equation [S]B = R + [k]A; the OpenSSL check (pyca cryptography) accepts them,
 the refusal is given only by the condition of the contract «A или R малого порядка — отказ» (the Architect's decision of 2026-10-20, the review analysis of stage B 6–7).
 
-The vectors were obtained by reference Ed25519 (RFC 8032) and JCS (RFC 8785, checked on [`jcs`](../../../../01-store/vectors/jcs/README.md))
+The vectors were obtained by reference Ed25519 (RFC 8032) and JCS (RFC 8785, checked on [`jcs`](../../../01-store/vectors/jcs/README.md))
 by the contract, not by the code of implementations; on a divergence the contract is right, the vector is corrected by «Спецификация».

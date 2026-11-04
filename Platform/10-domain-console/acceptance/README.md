@@ -2,8 +2,8 @@
 
 This English text is the source; the Russian translation `ru/acceptance/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand, the dictionary of directives and doors — [the common acceptance README](../../common/acceptance/README.md#словарь-директив-и-дверей) and its
-section [«Domain stand»](../../common/acceptance/README.md#стенд-домена) (the door `holder` — the domain console on `hold`, the doors
+The stand, the dictionary of directives and doors — [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors) and its
+section [«Domain stand»](../../common/acceptance/README.md#domain-stand) (the door `holder` — the domain console on `hold`, the doors
 `member`, the directives `@domain`, `@person`, `@stop agent`, `@start agent`; the plan of lesson 10 В10). The norm of the lesson is
 [`10-domain-console.norms.md`](../spec/10-domain-console.norms.md) Н5. The scenarios were moved from the acceptances of М11/08 (sc. 05) and
 М11/11 (sc. 02) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers of the scenarios and the steps are the former ones; sc. 06–09 —
@@ -120,7 +120,7 @@ Sc. 17 — ADR-0094 B4 (the version of the row at the read doors); sc. 18, 19 �
 
 ## scenarios.tsv
 
-The format — [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../common/acceptance/README.md#словарь-директив-и-дверей)
+The format — [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors)
 and the section «Domain stand»: a subset of the fields, `~` — a substring, `@file` — the bytes of a file. In total 16 scenarios / 163 steps.
 
 The subset of expect does not replace the check of the full HTTP form of the OpenAPI of the lesson: check the required fields, the types, the Content-Type.

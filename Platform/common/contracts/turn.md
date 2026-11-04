@@ -1,22 +1,22 @@
 # The writer turn contract: the turn row, terms, guard, barrier
 
-This English text is the source; the Russian [`turn.md`](../turn.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/turn.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): one changing writer at each moment — at the
 subsystem controller and at the `domain` process of the holder; one algorithm is a contract, not copies in chapters; layout audit А-03,
-the Architect's decision of 2026-10-25). The owner is lesson [P/04](../../../04-controller/spec/04-controller.norms.md) (Н1.5 «Placement admission
+the Architect's decision of 2026-10-25). The owner is lesson [P/04](../../04-controller/spec/04-controller.norms.md) (Н1.5 «Placement admission
 between controllers», Н3 «get and hold the placement turn»). Participants: the controller — the row
 `<sub>/controller/placement_turn` (P/04); the `domain` process at the holder — the row `domain/signer-turn`
-([P/08.10](../../../08-domain/spec/08.10-domain.norms.md) Н1.7, Н3); the member agent — the row `domain/agent-turn`
-([P/09.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.13, Н3 «the agent turn»; DOM-AGENT-TURN-01, the owner's consent of 2026-10-26): by the same rule as the turn
+([P/08.10](../../08-domain/spec/08.10-domain.norms.md) Н1.7, Н3); the member agent — the row `domain/agent-turn`
+([P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н1.13, Н3 «the agent turn»; DOM-AGENT-TURN-01, the owner's consent of 2026-10-26): by the same rule as the turn
 of the `domain` process (the column «Turn of the `domain` process» below, the form `{holder}`). The cluster console — the row `<sub>/operations-turn`
-([P/06.9](../../../06-console/spec/06.9-console.norms.md) Н3 «leader»; ADR-0095): the leader of the group operations of a subsystem (the column «Operations turn» below).
+([P/06.9](../../06-console/spec/06.9-console.norms.md) Н3 «leader»; ADR-0095): the leader of the group operations of a subsystem (the column «Operations turn» below).
 
 Moved from P/04 Н1.5 (`TURN_TERM`, `TURN_RENEW`) and Н3 «get and hold the placement turn» (the steps, the barrier,
 «Races») without a change of behaviour; P/04 and P/08.10 refer here. What is each participant's own — the row key, the mark
 `holder`, which writes go under the guard, when the turn is given up — is the participant's (P/04 Н1.5, Н3; P/08.10 Н1.7).
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
@@ -24,7 +24,7 @@ The turn row of the controller is the family `placement-turn`: the form `Platfor
 `Platform/04-controller/data/placement-turn.outcomes.tsv`; the turn row of the `domain` process is the family `signer-turn`:
 `Platform/08-domain/data/signer-turn.schema.json`, `Platform/08-domain/data/signer-turn.outcomes.tsv`; the operations turn row is the family `operations-turn`:
 `Platform/06-console/data/operations-turn.schema.json`, `Platform/06-console/data/operations-turn.outcomes.tsv`. The operations `cas` and
-`guard` are [the store client contract](../store-client.md).
+`guard` are [the store client contract](store-client.md).
 
 ## Terms
 
@@ -67,9 +67,9 @@ The terms (`TURN_TERM`, `TURN_RENEW`), `cas`, the guard, the giving up and the b
 
 | | Subsystem turn | Turn of the `domain` process | Operations turn |
 |---|---|---|---|
-| row | `<sub>/controller/placement_turn` (P/04 Н1.5) | `domain/signer-turn` (P/08.10 Н1.7); at the member agent — `domain/agent-turn` (P/09.1 Н1.13) | `<sub>/operations-turn` ([P/06.9](../../../06-console/spec/06.9-console.norms.md) Н3 «leader») |
+| row | `<sub>/controller/placement_turn` (P/04 Н1.5) | `domain/signer-turn` (P/08.10 Н1.7); at the member agent — `domain/agent-turn` (P/09.1 Н1.13) | `<sub>/operations-turn` ([P/06.9](../../06-console/spec/06.9-console.norms.md) Н3 «leader») |
 | form | `{holder, manifest_rev}` | `{holder}` — there is no revision and it is not checked | `{holder}` — there is no revision and it is not checked |
-| `holder` | a new unique mark of each attempt | the process instance ([the instance contract](../instance.md)); it rewrites its own row by CAS of the read version (P/08.10 Н3 step 2) | a new unique mark of each attempt |
+| `holder` | a new unique mark of each attempt | the process instance ([the instance contract](instance.md)); it rewrites its own row by CAS of the read version (P/08.10 Н3 step 2) | a new unique mark of each attempt |
 | step 1 `manifest_rev > моя` | do not change, `manifest_behind` | does not apply | does not apply |
 | under the guard | write and delete of `placement/*`, `workers/*`, `placement_intent`, delete of a unit row by `delete_after` (P/04 Н3) | every write of the process to a row of the holder's store (P/08.10 Н1.7 `guard`); at the agent — every write to a row `domain/*` of the member (P/09.1 Н1.13 `guard`) | the writes of the leader: the row `<sub>/operations-epoch`, the write flags of an operation, the results of a failure and of `cancel`, the removal of a secret, the finish batch; a step batch goes by the ticket and guards the generation, not the turn (P/06.9 Н2) |
 | giving up | at the end of the pass (step 6) | on SIGTERM by the active process (P/08.10 Н1.7 `release`) | when there are no unfinished operations (step 6) and on SIGTERM |
@@ -95,7 +95,7 @@ bounded by this.
 
 ## Vectors
 
-The package [`turn`](../../vectors/turn/README.md) (C08-TURN-SELF-99, the Architect's decision of 2026-10-26): sequences of events
+The package [`turn`](../vectors/turn/README.md) (C08-TURN-SELF-99, the Architect's decision of 2026-10-26): sequences of events
 of one side over a turn row and its actions — take an empty or a given-up one, one's own row of the `domain` process (`held`, not
 `busy`), a foreign live one — busy, a foreign one older than `TURN_TERM` — take, `manifest_rev` (step 1), renewal, the guard, 412, the barrier on
 an unknown outcome of a write — of the target row and of one's own turn row, the giving up `holder ""`; both kinds of turn. Races of two claimants and late writes of the old holder are

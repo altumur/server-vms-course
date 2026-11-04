@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/9/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`06.9-console.norms.md`](../../spec/06.9-console.norms.md) Н5. The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The norm of the chapter is [`06.9-console.norms.md`](../../spec/06.9-console.norms.md) Н5. The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 In total 2 scenarios / 8 steps.
 
 **There is no dry run by an implementation.** The chapter is part of the rights increment and waits for the credit of increment B.
@@ -13,7 +13,7 @@ A console with the manifest `testsub`, it declares no operations. A door without
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors](../../../common/acceptance/README.md#словарь-директив-и-дверей). The scenarios check only what is executable without a declaration: the subsystem has no operation doors, rows do not appear, there is no rollback as a path.
+The format is [the dictionary of directives and doors](../../../common/acceptance/README.md#dictionary-of-directives-and-doors). The scenarios check only what is executable without a declaration: the subsystem has no operation doors, rows do not appear, there is no rollback as a path.
 
 ## Plan of scenarios after ADR-0094 B1
 

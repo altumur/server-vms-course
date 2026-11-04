@@ -1,9 +1,9 @@
 # Vectors: the record of the sent deadline `valid_until`
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/deadline/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the contract of the request and its mark](../../../contracts/request-mark.md) «Request» `valid_until` (the owner of the contract is chapter P/06.4;
-[norms](../../../../06-console/spec/06.4-console.norms.md) Н3 «file a request» step 1; stage C guesses C06-DEADLINE-PRECISION-33-01,
+The owner is [the contract of the request and its mark](../../contracts/request-mark.md) «Request» `valid_until` (the owner of the contract is chapter P/06.4;
+[norms](../../../06-console/spec/06.4-console.norms.md) Н3 «file a request» step 1; stage C guesses C06-DEADLINE-PRECISION-33-01,
 C47-DEADLINE-VECTORS-01, the Architect's decisions 2026-10-25). The participant is the request door of the console. The bytes are written by «Спецификация»;
 the rows are by the text of the norm.
 

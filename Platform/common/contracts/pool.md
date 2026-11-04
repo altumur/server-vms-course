@@ -1,11 +1,11 @@
 # The pool contract: a live worker, the pool, the keeper of a place, server eligibility
 
-This English text is the source; the Russian [`pool.md`](../pool.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/pool.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13), addendum (30): a common algorithm of several processes is a contract, not
 copies in chapters; guess of stage C C06-SERVER-POLICY-33-01, the Architect's decision of 2026-10-25). The owner is lesson
-[P/04](../../../04-controller/spec/04-controller.norms.md) (Н3 «choose»: the controller places units only on the workers of the pool).
-The participant is the cluster console ([P/06.5](../../../06-console/spec/06.5-console.norms.md) Н2: `WorkerRow.idle_by_policy`,
+[P/04](../../04-controller/spec/04-controller.norms.md) (Н3 «choose»: the controller places units only on the workers of the pool).
+The participant is the cluster console ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н2: `WorkerRow.idle_by_policy`,
 `ServerRow.placeable`, `why`): the same computation by its own reads and its own clock.
 
 Moved from P/04 Н3 «choose» (the lines «live worker», «pool», «keeper») without a change of the controller's behaviour; for the view
@@ -13,7 +13,7 @@ of the console, about which P/04 was silent, — four answers of the Architect o
 beyond the pool (`constraint`, `spread_by`, `affinity`, the group, the home, capacity and order) — still P/04 Н3 «choose», the line
 «eligible» and below.
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
@@ -97,10 +97,10 @@ why:       with placeable: false — «no eligible live worker»; with true — 
 
 ## Vectors
 
-The package [`pool`](../../vectors/pool/README.md): the input — heartbeats (who is live), slots, assignments, unit rows, servers (drain,
+The package [`pool`](../vectors/pool/README.md): the input — heartbeats (who is live), slots, assignments, unit rows, servers (drain,
 decommission, order), resources, the manifest; the output — the pool, the keepers, `idle_by_policy`, `placeable`/`why`, the load and the count. The liveness of a heartbeat by history is the package
-[`fresh-age`](../../vectors/fresh-age/README.md) and [`resource-state`](../../vectors/resource-state/README.md); `constraint`,
-`spread_by`, `affinity`, the order of choice — P/04, the scenarios and reading. A participant: the package [`slot-name`](../../vectors/slot-name/README.md)
+[`fresh-age`](../vectors/fresh-age/README.md) and [`resource-state`](../vectors/resource-state/README.md); `constraint`,
+`spread_by`, `affinity`, the order of choice — P/04, the scenarios and reading. A participant: the package [`slot-name`](../vectors/slot-name/README.md)
 — the package of the common contract slot-name, executed by common; this contract is a participant there (slot order —
 the keeper on equal load; В-44; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25).
 

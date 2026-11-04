@@ -1,14 +1,14 @@
 # The local token door contract of the agent: the role socket, the identity of the connection, the body, the answer, refusals
 
-This English text is the source; the Russian [`local-token-door.md`](../local-token-door.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/local-token-door.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common contract can appear before the move
-of the owner lesson; analysis of review of stage A 8–10, № 1 / decision 1). The owner is [chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) of lesson P/09 (Н1.6,
+of the owner lesson; analysis of review of stage A 8–10, № 1 / decision 1). The owner is [chapter 9.1](../../09-agent/spec/09.1-agent.norms.md) of lesson P/09 (Н1.6,
 P/09.1-10; the source is М11/7 Н1.2): the member's agent listens on the local door and passes the request on to the
-holder. The participant is the worker, chapter [P/03.7](../../../03-worker/spec/03.7-worker.norms.md) Н1.5: it asks for a token through this door.
-The socket units — [P/02.4 Н1.1](../../../02-installer/spec/02.4-installer.norms.md); the variable `AGENT_TOKEN_DIR` — in the life
-cycles of the [agent](../../../09-agent/lifecycle.md) and of the [worker](../../../03-worker/lifecycle.md). The holder's door, the issue and the
-claims of a token — chapter [P/08.7](../../../08-domain/spec/08.7-domain.norms.md) (Н1.3, Н1.4, Н3); the form of a token — the [domain token contract](../domain-token.md).
+holder. The participant is the worker, chapter [P/03.7](../../03-worker/spec/03.7-worker.norms.md) Н1.5: it asks for a token through this door.
+The socket units — [P/02.4 Н1.1](../../02-installer/spec/02.4-installer.norms.md); the variable `AGENT_TOKEN_DIR` — in the life
+cycles of the [agent](../../09-agent/lifecycle.md) and of the [worker](../../03-worker/lifecycle.md). The holder's door, the issue and the
+claims of a token — chapter [P/08.7](../../08-domain/spec/08.7-domain.norms.md) (Н1.3, Н1.4, Н3); the form of a token — the [domain token contract](domain-token.md).
 
 Moved from М11/7 Н1.2 (the block `door`, `body`, `request`, `TOKEN_BODY`, `answer`, `no_queue`, `TOKEN_WAIT`) and the rows of Н4
 «у агента» without a change of behaviour. The section «The role socket» is a change of behaviour (the Architect's decision of 2026-10-20, ADR-0083 addendum
@@ -16,7 +16,7 @@ Moved from М11/7 Н1.2 (the block `door`, `body`, `request`, `TOKEN_BODY`, `ans
 «Implementation decides» item 1). ADR-0080 item 2 («the mechanics of a side» is decided by the implementation) does not apply to this door: the door
 connects processes of different implementations on one box, and the witnesses already differ in the socket name.
 
-Normative keywords follow the [course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
@@ -57,8 +57,8 @@ in_process:  the agent in the platform process of a cluster of one — a call, n
 ```
 
 **An open question — a worker on another server of the cluster.** The local door over TCP with a role certificate (ADR-0075) for a worker
-whose cluster's agent is on another server is not normed until the stand; the place is [P/09.1 Н5](../../../09-agent/spec/09.1-agent.norms.md#open)
-«Open» (the move plan of lesson 9, В1). While the question is open, such a door does not take the domain ports 8444–8447 ([P/02.4 Н1.12](../../../02-installer/spec/02.4-installer.norms.md)).
+whose cluster's agent is on another server is not normed until the stand; the place is [P/09.1 Н5](../../09-agent/spec/09.1-agent.norms.md#open)
+«Open» (the move plan of lesson 9, В1). While the question is open, such a door does not take the domain ports 8444–8447 ([P/02.4 Н1.12](../../02-installer/spec/02.4-installer.norms.md)).
 
 ## The door
 
@@ -91,7 +91,7 @@ TOKEN_WAIT: 10          # s
 ```
 
 «The role certificate in a cluster» of the row `door` is the open question of the section «The role socket»; «Н2» of the row `no_queue` is P/09.1 Н2.
-The HTTP form of the door — [OpenAPI of lesson 9](../../../09-agent/spec/09-agent.api.openapi.yaml), the tag `local-door`, `/tokens/{sub}/{kind}`.
+The HTTP form of the door — [OpenAPI of lesson 9](../../09-agent/spec/09-agent.api.openapi.yaml), the tag `local-door`, `/tokens/{sub}/{kind}`.
 
 ## Refusals
 
@@ -108,11 +108,11 @@ The code and `error` are normative; `detail` is the words of the implementation,
 | `invalid token reply` | 502 | at the agent: `m1` did not open, a wrong `request_id`, `exp ≤ now` |
 | `unavailable` | 503 | at the agent: upstream did not answer within TOKEN_WAIT — the holder or the relay; 502 `did not answer` of the relay — also 503 (`no_queue`; the Architect's decision of 2026-10-20 on the question of commit 9); 503 `frozen` of the holder (P/08.7 Н3 «issue» step 6а) — also 503 `unavailable`: the worker has no word for freezing, the request is repeated, the former token is kept (ADR-0110 addendum (12) item 3) |
 
-413 of the local door and of the holder's door — `refusal_413` above (Б-31); the code and the body of the holder passed on «as received» — [P/08.7](../../../08-domain/spec/08.7-domain.norms.md) Н4. The holder's answer is opened by the agent ([P/09.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.6 `agent`; `m1` — [P/08.3](../../../08-domain/spec/08.3-domain.norms.md) Н1.5 and the [domain envelopes contract](../domain-envelopes.md)).
+413 of the local door and of the holder's door — `refusal_413` above (Б-31); the code and the body of the holder passed on «as received» — [P/08.7](../../08-domain/spec/08.7-domain.norms.md) Н4. The holder's answer is opened by the agent ([P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н1.6 `agent`; `m1` — [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.5 and the [domain envelopes contract](domain-envelopes.md)).
 
 ## The call in the process
 
-From М11/12 Н1.3 `tokens` (the norm is [P/09.1 Н1.11](../../../09-agent/spec/09.1-agent.norms.md), P/09.1-14; the Architect's decision
+From М11/12 Н1.3 `tokens` (the norm is [P/09.1 Н1.11](../../09-agent/spec/09.1-agent.norms.md), P/09.1-14; the Architect's decision
 on the move plans of 8–10, item 4: the agent has no library contract). The rows `call`, `differs` are a reading of М11/12 Н1.3
 «в процессе — вызов, а не дверь»: the former tail «без очереди, TOKEN_WAIT и 503 …» was also read as a removal of the door's refusals
 (analysis of review of stage B 8–10, № 2):
@@ -146,6 +146,6 @@ these are system calls over the file system of the box, not a function of data, 
 From М11/7 (analysis of review of stage A 8–10, № 1 / decision 1): Н1.2 whole (here «The door»; in М11/7 — a pointer) and the rows of Н4
 «у агента» — 401/404/400, 502 `invalid token reply`, 503 `unavailable` (here «Refusals»). From М11/12 Н1.8 — the row
 `local_door` (do not take the ports 8444–8447; here «An open question»); the former «choice of the implementation» and the TCP default `8448`
-are removed by decision 1. The norm is P/09.1-10 (М11/7-02; `note` of [id-map](../../id-map.tsv)); the participant is P/03.7-04. From М11/12
+are removed by decision 1. The norm is P/09.1-10 (М11/7-02; `note` of [id-map](../id-map.tsv)); the participant is P/03.7-04. From М11/12
 Н1.3 `tokens` — the section «The call in the process» (the Architect's decision on the move plans of 8–10, item 4).
-The contract has no vectors: the door is checked by sc. 01, 02 of the [acceptance of chapter 8.7](../../../08-domain/acceptance/7/README.md) (М11/7-02 → P/09.1-10).
+The contract has no vectors: the door is checked by sc. 01, 02 of the [acceptance of chapter 8.7](../../08-domain/acceptance/7/README.md) (М11/7-02 → P/09.1-10).

@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md), the section [«Domain stand»](../../../common/acceptance/README.md#стенд-домена)
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md), the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand)
 (the dictionary of directives and doors of the stand of several clusters; before its move — the «Словарь директив и дверей М11» of the README
 of the acceptance of М11/01). The norm of the chapter is
 [`08.3-domain.norms.md`](../../spec/08.3-domain.norms.md) Н5. The scenarios were moved (stage B, ADR-0083 addendum (1): without

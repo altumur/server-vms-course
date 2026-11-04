@@ -1,19 +1,19 @@
 # The tombstone contract: the tombstone of a deleted body, neighbours, acknowledgements, removal
 
-This English text is the source; the Russian [`tombstone.md`](../tombstone.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/tombstone.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): several processes write and read a tombstone — a contract,
 not copies in chapters; the stage C guess C06-BLOB-GC-33-01 / IF-OBJECT-TOMBSTONE63-PEERS-01, the Architect's decision of 2026-10-25).
-The owner is lesson [P/05](../../../05-resource/spec/05-resource.norms.md) (Н1.1 «Tombstones»; the family `.gone/<ключ>` —
-[the catalogue](../../data/catalog.tsv), the form — [`gone.schema.json`](../../../05-resource/data/gone.schema.json), the outcomes —
-[`gone.outcomes.tsv`](../../../05-resource/data/gone.outcomes.tsv)). The participants are the console: it writes a tombstone at the completion of the body sweep
-window ([P/06.1](../../../06-console/spec/06.1-console.norms.md) Н3 «body sweep»); the resource: it drops copies by the tombstones
+The owner is lesson [P/05](../../05-resource/spec/05-resource.norms.md) (Н1.1 «Tombstones»; the family `.gone/<ключ>` —
+[the catalogue](../data/catalog.tsv), the form — [`gone.schema.json`](../../05-resource/data/gone.schema.json), the outcomes —
+[`gone.outcomes.tsv`](../../05-resource/data/gone.outcomes.tsv)). The participants are the console: it writes a tombstone at the completion of the body sweep
+window ([P/06.1](../../06-console/spec/06.1-console.norms.md) Н3 «body sweep»); the resource: it drops copies by the tombstones
 of a neighbour, appends acknowledgements and removes the tombstone (P/05 Н1.1 «Bodies at the resource», «Tombstones»).
 
 Moved from P/05 Н1.1 «Tombstones» (formerly М10/10 Н1.5 `delete`) without a change of behaviour; new is the rule `peers`
 (the section «Neighbours»): formerly the source and the completeness of the list were not named.
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
@@ -86,7 +86,7 @@ remove:    otherwise the tombstone is kept for at least 7 days and is removed on
 
 ## Vectors
 
-The package [`tombstone`](../../vectors/tombstone/README.md): `peers` — the door listing, the decommission listing, its own server → peers or
+The package [`tombstone`](../vectors/tombstone/README.md): `peers` — the door listing, the decommission listing, its own server → peers or
 «no deletion»; `ack` — peers, acked, the answers of GET of the copy and the decommission listing → acked; `remove` — peers, acked, written, now, a write again →
 remove or keep. The tombstone at the deleter — the listing `prefix=.gone/`, the body, 409 «deleted later», the removal on a newer write —
 sc. 45 of the acceptance of P/05 (the tombstone is put by `@put object`); the dropping of a copy by a neighbour — reading; a stand with two resources — system
@@ -94,5 +94,5 @@ acceptance (P/05-11 — sc. 45 and by reading).
 
 ## Correspondence to former lessons
 
-From P/05 Н1.1 «Tombstones» (the block `delete`; the norm P/05-11 — by `note` of [id-map](../../id-map.tsv)) and the line of P/06.1 Н1.5
+From P/05 Н1.1 «Tombstones» (the block `delete`; the norm P/05-11 — by `note` of [id-map](../id-map.tsv)) and the line of P/06.1 Н1.5
 `delete`; they refer here. The section «Neighbours» is a new rule (C06-BLOB-GC-33-01 / IF-OBJECT-TOMBSTONE63-PEERS-01).

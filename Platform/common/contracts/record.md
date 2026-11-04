@@ -1,29 +1,29 @@
 # The term record and issuer signature contract: `domain/holder`, the function `record`, refusal words
 
-This English text is the source; the Russian [`record.md`](../record.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/record.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (11) and addendum (13): a common algorithm of several processes is a contract, not
-copies in chapters; analysis of review of stage A 8–10, № 13 / decision 2). The owner is lesson P/08, chapter [8.8](../../../08-domain/spec/08.8-domain.norms.md) (moved from
+copies in chapters; analysis of review of stage A 8–10, № 13 / decision 2). The owner is lesson P/08, chapter [8.8](../../08-domain/spec/08.8-domain.norms.md) (moved from
 М11/10 Н1.1, Н3 «record»): the process `domain` of the holder
 signs with the issuing key the record of its term, the backup document and the handover grant. They are checked by the function `record`:
 
 | Who | Where | Kinds |
 |---|---|---|
-| the member's agent ([chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md)) | following the holder (P/09.1 Н3 «follow»), the check of the backup copy by the keeper (Н3 «check the backup copy»), the condition of the holder's cluster (P/09.1 Н1.4 `holder_cluster`) | the term record, the backup document |
+| the member's agent ([chapter 9.1](../../09-agent/spec/09.1-agent.norms.md)) | following the holder (P/09.1 Н3 «follow»), the check of the backup copy by the keeper (Н3 «check the backup copy»), the condition of the holder's cluster (P/09.1 Н1.4 `holder_cluster`) | the term record, the backup document |
 | the process `domain` (8.8) | the displacement (P/08.8 Н1.6), the handover (P/08.8 Н1.7: the record of the target, the grant), the move (P/08.8 Н1.8) | three kinds, the members row is the fourth |
-| the cluster console ([P/06.7](../../../06-console/spec/06.7-console.norms.md) Н1.14; the vectors `resolve`) and the agent (9.1) | the shared document ([P/08.9](../../../08-domain/spec/08.9-domain.norms.md) Н1.2 `document`; Н3 «take the document» step 4 — [P/09.1](../../../09-agent/spec/09.1-agent.norms.md)) | the shared document |
-| the token issue (8.7) | the shared document of the scenario ([P/08.7](../../../08-domain/spec/08.7-domain.norms.md) Н3 step 5) | the shared document checked by the agent |
+| the cluster console ([P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.14; the vectors `resolve`) and the agent (9.1) | the shared document ([P/08.9](../../08-domain/spec/08.9-domain.norms.md) Н1.2 `document`; Н3 «take the document» step 4 — [P/09.1](../../09-agent/spec/09.1-agent.norms.md)) | the shared document |
+| the token issue (8.7) | the shared document of the scenario ([P/08.7](../../08-domain/spec/08.7-domain.norms.md) Н3 step 5) | the shared document checked by the agent |
 
 Moved from М11/10 Н1.1 (the row `domain/holder` and the block `doc`), Н3 «`record(keys, row, виды)`» (the paragraph about the kinds and steps
 1–6) and Н4 (the words of `record`) without a change of behaviour. The owner keeps: `claim` and `check` of the term record (Н1.1), the forms
-of the backup document (Н1.5) and of the grant (Н1.7), the issuing key (`issuing_key_secret`, [P/08.2](../../../08-domain/spec/08.2-domain.norms.md) Н1.3), the kind «shared
-document» ([P/08.9](../../../08-domain/spec/08.9-domain.norms.md) Н1.2 `document`, `signature`). References in the moved text: «Н1.x», «Н3» — of lesson М11/10 (Н1.1, Н1.5, Н1.7 — the same numbers of chapter P/08.8; Н3 «следовать» —
+of the backup document (Н1.5) and of the grant (Н1.7), the issuing key (`issuing_key_secret`, [P/08.2](../../08-domain/spec/08.2-domain.norms.md) Н1.3), the kind «shared
+document» ([P/08.9](../../08-domain/spec/08.9-domain.norms.md) Н1.2 `document`, `signature`). References in the moved text: «Н1.x», «Н3» — of lesson М11/10 (Н1.1, Н1.5, Н1.7 — the same numbers of chapter P/08.8; Н3 «следовать» —
 P/09.1 Н3 «follow», «check the backup copy»); «lesson N» — lesson М11/N, their addresses now: «lesson 3» (the agent carries
 reports) — P/09.1 Н3 and P/08.3 Н2, «lesson 11» (the shared document) — P/08.9 Н1.2 (analysis of review of stage B 8–10, № 22; Kimi
-SB810-07); `keys` — the accepted set ([the domain key set contract](../keys.md)). What is common to the forms — the [domain founding contract](../domain-founding.md)
+SB810-07); `keys` — the accepted set ([the domain key set contract](keys.md)). What is common to the forms — the [domain founding contract](domain-founding.md)
 «Common rules of forms» (layout audit, Б-03).
 
-Normative keywords follow the [course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
@@ -56,7 +56,7 @@ The backup document (Н1.5), the grant (Н1.7) and the members row `domain/membe
 
 ## The switch point `switch`
 
-Moved from [P/08.8](../../../08-domain/spec/08.8-domain.norms.md) Н1.6 `switch` without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, Б-04):
+Moved from [P/08.8](../../08-domain/spec/08.8-domain.norms.md) Н1.6 `switch` without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, Б-04):
 the condition is read by the process `domain` of the holder and by the agent of its cluster (the key set contract: the rows `domain/keys` and
 `domain/revoked` the agent of the holder's cluster does not write while the cluster holds the term).
 
@@ -102,7 +102,7 @@ chapter 8.9 — with the one kind «shared document» (P/08.9 Н1.2 document; Н
 
 The JSON nesting limit is 64, one number for the platform (the JSON depth of the body of a console door, P/06.1 Н1.4): the string `row` and
 the text `doc` are parsed each with its own limit; a level is an object or an array (a scalar — 0, an empty object or array — 1,
-as `depth` of links, [the В7 layers](../../LAYERS.md) § 5); deeper than 64 — `not_a_record` (step 1), at the trusted `keys` — the input is out of form, exit 2 (guess of stage C REC-G02, the Architect's decision of 2026-10-23).
+as `depth` of links, [the В7 layers](../LAYERS.md) § 5); deeper than 64 — `not_a_record` (step 1), at the trusted `keys` — the input is out of form, exit 2 (guess of stage C REC-G02, the Architect's decision of 2026-10-23).
 
 ```
 1. row is not {doc: <text>}, doc is not a JSON object of the closed set of one of the kinds of the third argument; the kinds of this lesson are the term record
@@ -144,7 +144,7 @@ take(keys, row, part, have):
 6.                                                                          → older: the former copy stays
 ```
 
-`have` is the copy of this part, or there is none; in steps 3, 4 — its `(term, rev)`. The input of the command `take` is `{keys, row, part, have}`, `have` — a row `{doc}` or `null`; the output is `{result: take | same | older}` or `{result: refused, reason}`; the package is [`record/take.tsv`](../../vectors/record/take.tsv), the freshness bound.
+`have` is the copy of this part, or there is none; in steps 3, 4 — its `(term, rev)`. The input of the command `take` is `{keys, row, part, have}`, `have` — a row `{doc}` or `null`; the output is `{result: take | same | older}` or `{result: refused, reason}`; the package is [`record/take.tsv`](../vectors/record/take.tsv), the freshness bound.
 
 ## Refusal words
 
@@ -154,12 +154,12 @@ of the caller (P/08.8 Н1.6; P/09.1 Н3 «follow», «take the document»).
 
 ## Vectors
 
-The package [`record`](../../vectors/record/README.md) (analysis of review of stage A 8–10, № 13): `shared.tsv` — 8 lines of the kind «shared
+The package [`record`](../vectors/record/README.md) (analysis of review of stage A 8–10, № 13): `shared.tsv` — 8 lines of the kind «shared
 document» (REC-G01); `cases.tsv` — 46 lines: 10 of the kind «members row» (`record-member-row-*`), 1 of a term record with `key`, 7 by C08-BACKUP-JSON-99 (`raw` of the backup document: the bytes `ff7b` — `/3s=`, 0 bytes — `""`, a JSON out of form « [ 1.00 ] » — its bytes; an object in form — into `objects`; without padding, base64url and a key both in `objects` and in `raw` — `not_a_record`), 1 by C137-SCHEMA-TIME-01 (`until` beyond binary64 — code 2), 3 by REC-TRUSTED-TIME73 (the time `until` of the trusted set by the canon of P/01.1 Н0: a string of the record is accepted, −1 and «1e9» — code 2), 4 by REC-G02 (nesting 64/65 of the text `doc`, of the row and of `keys`), 3 by REC-G01 (term 1 with `restored_from`, `domain` as a number, `kid` not hex) and 17 — the inputs of the command `record`
 of the acceptance of М11/10 (sc. 05) without a change of bytes: three kinds of document, a foreign domain, a revoked and an unknown issuer,
 `kid` ≠ `issuer`, a substitution, forms and types; one line is an input out of form (`@exit 2`; analysis of review of stage B 8–10, № 22); the scenario and the inputs were removed by the move
 of lesson 8 — the table is the only source of these cases. The form of the function and the exit codes of the command are a copy of
-[P/08.8](../../../08-domain/spec/08.8-domain.norms.md) Н5 `record`, `exit` (layout audit, the Architect's decision of 2026-10-25, Б-14):
+[P/08.8](../../08-domain/spec/08.8-domain.norms.md) Н5 `record`, `exit` (layout audit, the Architect's decision of 2026-10-25, Б-14):
 
 ```yaml
 record:    input {keys: <the set document>, row: {doc}}; output {result: ok, term, holder} | {result: refused, reason}
@@ -171,11 +171,11 @@ exit:      0 — computed; 2 — the input is out of form; exit codes follow the
            {}, doc not JSON or a number, an extra field of row) — 0 not_a_record
 ```
  Participant: the package
-[`follow`](../../../09-agent/vectors/follow/README.md) — a package of the owner lesson P/09 (chapter 9.1), it executes it; the term record contract
+[`follow`](../../09-agent/vectors/follow/README.md) — a package of the owner lesson P/09 (chapter 9.1), it executes it; the term record contract
 there is a consumer: following calls `record` (layout audit, В-49; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25). The package `resolve` of lesson P/06 does not call `record`
 (the input is a domain value `{term, rev, value}`) — it is not counted in «Vectors».
 
-The canonical JSON (RFC 8785, ADR-0072) on which the contract relies is the package [`jcs`](../../../01-store/vectors/jcs/README.md)
+The canonical JSON (RFC 8785, ADR-0072) on which the contract relies is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the form RFC 8785 → sha256; ADR-0083 addendum (33) item 2).
 
 ## Correspondence to former lessons
@@ -183,4 +183,4 @@ of lesson P/01 (`canonical_json.tsv`: input → the form RFC 8785 → sha256; AD
 From М11/10 (analysis of review of stage A 8–10, № 13 / decision 2): Н1.1 — the row `domain/holder` with the block `doc` (here «The term
 record»; `claim` and `check` stayed); Н3 «record» — the paragraph about the kinds and steps 1–6 (here «The function `record`»); Н4 — the phrase about the words of
 `record` (here «Refusal words»). Parts of the norms М11/10-01 (the term record and `record`) and М11/11-04 (the check of the shared document) —
-by `note` of [id-map](../../id-map.tsv).
+by `note` of [id-map](../id-map.tsv).

@@ -2,7 +2,7 @@
 
 Текст производный от `acceptance/1/README.md`, руками не правится: источник — английский [`acceptance/1/README.md`](../../../acceptance/1/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
-Стенд, словарь директив и дверей — [общий README приёмки](../../../../common/acceptance/README.md). Норма главы —
+Стенд, словарь директив и дверей — [общий README приёмки](../../../../common/ru/acceptance/README.md). Норма главы —
 [`01.1-store.norms.md`](../../spec/01.1-store.norms.md) Н5.
 
 ## `scenarios.tsv`

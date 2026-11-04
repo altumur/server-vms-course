@@ -16,7 +16,7 @@ unix-сокете): словарь операций (глава 1.1), файл �
 |---|---|---|
 | [`01.1-store.norms.md`](01.1-store.norms.md), [`01.2-store.norms.md`](01.2-store.norms.md), [`01.3-store.norms.md`](01.3-store.norms.md) | нормы глав: что ДОЛЖНО быть | 1 — канон |
 | [`01-store.api.openapi.yaml`](../../spec/01-store.api.openapi.yaml) | форма HTTP-запросов и ответов всех дверей, полные тела `/v1/rights` и `/v1/list` | 2 — при расхождении с нормами правы нормы |
-| [`../acceptance/1/`](../acceptance/1/README.md), [`../acceptance/2/`](../acceptance/2/README.md), [`../acceptance/3/`](../acceptance/3/README.md) (`scenarios.tsv`, `README.md`); стенд — [общий README](../../../common/acceptance/README.md) | приёмка | 3 — проверяет нормы, не дополняет их |
+| [`../acceptance/1/`](../acceptance/1/README.md), [`../acceptance/2/`](../acceptance/2/README.md), [`../acceptance/3/`](../acceptance/3/README.md) (`scenarios.tsv`, `README.md`); стенд — [общий README](../../../common/ru/acceptance/README.md) | приёмка | 3 — проверяет нормы, не дополняет их |
 | `ru/01-store.md` (для человека, в выгрузку не входит) | контекст, мотивация | не норма; требований из неё не выводить |
 | [`../lifecycle.md`](../lifecycle.md) | флаги, окружение, коды выхода, юниты | указатель на нормы главы 1.3 |
 

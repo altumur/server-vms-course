@@ -1,13 +1,13 @@
 # The domain founding contract: the root, the recovery file, pinning, installation, term record 1
 
-This English text is the source; the Russian [`domain-founding.md`](../domain-founding.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/domain-founding.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies
-in chapters; the Architect's decision of 2026-10-23 on the finding of the Specification I02-FOUND). The owner is lesson P/08: chapter [8.2](../../../08-domain/spec/08.2-domain.norms.md) (the root, the forms, the keys of the holder
-and of book acceptance) and chapter [8.8](../../../08-domain/spec/08.8-domain.norms.md) (the term record). Participants: the installer — the command
-«domain installation» ([P/02.4](../../../02-installer/spec/02.4-installer.norms.md) Н3) and the change commands that read the recovery
+in chapters; the Architect's decision of 2026-10-23 on the finding of the Specification I02-FOUND). The owner is lesson P/08: chapter [8.2](../../08-domain/spec/08.2-domain.norms.md) (the root, the forms, the keys of the holder
+and of book acceptance) and chapter [8.8](../../08-domain/spec/08.8-domain.norms.md) (the term record). Participants: the installer — the command
+«domain installation» ([P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н3) and the change commands that read the recovery
 file; the holder's process `domain` — term record 1; the member's agent — pinning at `join`
-([P/09.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.1). Moved from P/08.2 Н1 («Common to all forms of the chapter», «Completeness
+([P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н1.1). Moved from P/08.2 Н1 («Common to all forms of the chapter», «Completeness
 of forms»), P/08.2 Н1.1 (`recovery_file`, `pin`) and P/02.4 Н3 «domain installation» without a change of behaviour; one thing is clarified —
 where the installation puts the backup key (step 4, the row `domain/signer`: only the installation creates it).
 
@@ -16,11 +16,11 @@ The forms of the rows that this contract names are in the families of lesson P/0
 `domain/signer` — `signer` (`Platform/08-domain/data/signer.schema.json`, `Platform/08-domain/data/signer.outcomes.tsv`);
 `domain/book-seal` — `book-seal` (`Platform/08-domain/data/book-seal.schema.json`,
 `Platform/08-domain/data/book-seal.outcomes.tsv`); `domain/keys` — the family `keys` (`Platform/08-domain/data/keys.schema.json`,
-`Platform/08-domain/data/keys.outcomes.tsv`) and [the domain key set contract](../keys.md); `domain/holder` — the family `holder`
+`Platform/08-domain/data/keys.outcomes.tsv`) and [the domain key set contract](keys.md); `domain/holder` — the family `holder`
 (`Platform/08-domain/data/holder.schema.json`, `Platform/08-domain/data/holder.outcomes.tsv`) and [the term
-record contract](../record.md).
+record contract](record.md).
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Common rules of forms
 
@@ -92,8 +92,8 @@ decides» item 8).
 ```
 
 The interface of step 8 before chapter 8.8: an installation without chapter 8.8 executes steps 1–7 and ends there successfully; the term record
-(`domain/holder`) is read by no one without chapter 8.8: the holder in the list of members — [P/08.3](../../../08-domain/spec/08.3-domain.norms.md)
-Н3 «the holder in the list», the holder's answer without `holder` — P/08.3 Н1.5. Chapter [8.8](../../../08-domain/spec/08.8-domain.norms.md)
+(`domain/holder`) is read by no one without chapter 8.8: the holder in the list of members — [P/08.3](../../08-domain/spec/08.3-domain.norms.md)
+Н3 «the holder in the list», the holder's answer without `holder` — P/08.3 Н1.5. Chapter [8.8](../../08-domain/spec/08.8-domain.norms.md)
 adds step 8: term record 1 is written by the holder's process `domain` after the installation («Term record 1»).
 
 **The operator window.** A premise: there is one operator window per domain — the domain installation and the change commands that read the recovery
@@ -102,7 +102,7 @@ installation — code 2 with the word `busy` before any changes (the way of loca
 implementation); the platform does not claim a distributed lock between servers and installations (guess of stage C I02-DOMAIN-WINDOW, the Architect's decision of 2026-10-23).
 
 An installation interrupted before step 6 is repeated after the operator removes the recovery file: the members do not trust anything
-yet, the rows of steps 4–5 are overwritten. The process `domain` does not found the domain — [P/08.2](../../../08-domain/spec/08.2-domain.norms.md)
+yet, the rows of steps 4–5 are overwritten. The process `domain` does not found the domain — [P/08.2](../../08-domain/spec/08.2-domain.norms.md)
 Н3 «the process `domain` does not found the domain»; the cold start — P/08.2 Н3 «cold start».
 
 ## Term record 1
@@ -120,7 +120,7 @@ claim_1:     the holder's process domain at the first start after the installati
 
 ## Vectors
 
-The package [`domain-founding`](../../vectors/domain-founding/README.md): founding the domain — the root, the recovery file, pinning. (ADR-0083 addendum (32) item 2)
+The package [`domain-founding`](../vectors/domain-founding/README.md): founding the domain — the root, the recovery file, pinning. (ADR-0083 addendum (32) item 2)
 
-The canonical JSON (RFC 8785, ADR-0072) on which the contract rests is the package [`jcs`](../../../01-store/vectors/jcs/README.md)
+The canonical JSON (RFC 8785, ADR-0072) on which the contract rests is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).

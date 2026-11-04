@@ -1,6 +1,6 @@
 # Common to all micromodules
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 ```text
 data/catalog.tsv           the data catalogue: rows, objects, files — the owner, the participants, the readers (ADR-0083)

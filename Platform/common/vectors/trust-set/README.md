@@ -1,8 +1,8 @@
 # Vectors: the trust set of a role door and the leaf check
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/trust-set/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the role certificate contract](../../../contracts/role-certificate.md) «The server side: the class `role`» (`trust_set`,
+The owner is [the role certificate contract](../../contracts/role-certificate.md) «The server side: the class `role`» (`trust_set`,
 `unreadable`; stage C guess C10-SDK-ROLE83, the Architect's decision 2026-10-25). The participant is the domain console (the role door,
 lesson P/10). The bytes are written by «Спецификация»; the rows are by the text of the contract.
 

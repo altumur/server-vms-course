@@ -1,26 +1,26 @@
 # The slot contract: states of the slot row and terms
 
-This English text is the source; the Russian [`slot.md`](../slot.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/slot.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): the state of a slot row is judged by the worker, the controller, the console and
 the agent — a contract, not copies in chapters; layout audit А-04, the Architect's decision of 2026-10-25). The owner is chapter
-[P/03.2](../../../03-worker/spec/03.2-worker.norms.md) Н1.4 (the row `<sub>/slots/<имя>`). Participants: the worker — capture and
-renewal (P/03.2 Н3); the controller — the slot judge, the leaving of units, the order ([P/04](../../../04-controller/spec/04-controller.norms.md)
-Н1.4, Н3); the console — `WorkerRow.released`, `slot_taking`, `slot_until`, `slot_garbled` ([P/06.5](../../../06-console/spec/06.5-console.norms.md)
-Н2, Н3 «/servers»), the drain ([P/06.6](../../../06-console/spec/06.6-console.norms.md)); the agent — the liveness of a worker in the domain
-([P/09.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.4); the pool — [the pool contract](../pool.md) «Live worker».
+[P/03.2](../../03-worker/spec/03.2-worker.norms.md) Н1.4 (the row `<sub>/slots/<имя>`). Participants: the worker — capture and
+renewal (P/03.2 Н3); the controller — the slot judge, the leaving of units, the order ([P/04](../../04-controller/spec/04-controller.norms.md)
+Н1.4, Н3); the console — `WorkerRow.released`, `slot_taking`, `slot_until`, `slot_garbled` ([P/06.5](../../06-console/spec/06.5-console.norms.md)
+Н2, Н3 «/servers»), the drain ([P/06.6](../../06-console/spec/06.6-console.norms.md)); the agent — the liveness of a worker in the domain
+([P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н1.4); the pool — [the pool contract](pool.md) «Live worker».
 
 Moved from P/03.2 Н1.4 (`states`, `SLOT_TERM`, `TORN_STILL`) without a change of behaviour; P/03.2 and the readers refer
-here. The form of the row, the name and the order of names are with the owner and in [the slot name contract](../slot-name.md); the age of the observed version is
-[the observation contract](../observation.md) «Observation of a version».
+here. The form of the row, the name and the order of names are with the owner and in [the slot name contract](slot-name.md); the age of the observed version is
+[the observation contract](observation.md) «Observation of a version».
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
 The row `<sub>/slots/<имя>` is the family `slots`: the form `Platform/03-worker/data/slots.schema.json`, the outcomes
-`Platform/03-worker/data/slots.outcomes.tsv` ([form](../../../03-worker/data/slots.schema.json),
-[outcomes](../../../03-worker/data/slots.outcomes.tsv)); the fields `holder`, `until`, `released`, `gen`, `server` are there and in P/03.2
+`Platform/03-worker/data/slots.outcomes.tsv` ([form](../../03-worker/data/slots.schema.json),
+[outcomes](../../03-worker/data/slots.outcomes.tsv)); the fields `holder`, `until`, `released`, `gen`, `server` are there and in P/03.2
 Н1.4.
 
 ## States
@@ -48,9 +48,9 @@ TORN_STILL: 45 + 5     # how long a torn row with a readable gen stands unchange
 
 ## Vectors
 
-The package [`slot`](../../vectors/slot/README.md): the judgement judge(row, age) → `held`, `lapsed`, `released`, `taking`, `torn` (with
+The package [`slot`](../vectors/slot/README.md): the judgement judge(row, age) → `held`, `lapsed`, `released`, `taking`, `torn` (with
 `takeable`) — a row per state, the boundaries `SLOT_TERM` and `TORN_STILL`, `until` beyond binary64 (C140-SLOT-TIME-01). The boundary
-of heartbeat freshness is the package [`fresh-age`](../../vectors/fresh-age/README.md) of the observation contract; the transitions are acceptance scenarios of P/03.2,
+of heartbeat freshness is the package [`fresh-age`](../vectors/fresh-age/README.md) of the observation contract; the transitions are acceptance scenarios of P/03.2,
 P/04 and reading.
 
 ## Correspondence to former lessons

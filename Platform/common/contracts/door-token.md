@@ -1,24 +1,24 @@
 # The door token contract: the bytes `door1`, claims in JCS, an Ed25519 signature, the keys `door/keys`, the check at the holder
 
-This English text is the source; the Russian [`door-token.md`](../door-token.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/door-token.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5) and addendum (11): a contract that one process writes and others read
-lies in `Platform/common/`; analysis of the review of stage B 3–5, В1). The owner is lesson [P/06](../../../06-console/spec/06.5-console.norms.md)
+lies in `Platform/common/`; analysis of the review of stage B 3–5, В1). The owner is lesson [P/06](../../06-console/spec/06.5-console.norms.md)
 (chapter 6.5): the console issues the token in the answer of `/where/<id>` and `/where/<table>/<place>` (P/06.5 Н3), holds the signer
 `door/signer` and writes the public keys `door/keys`. Readers: the door holder — the worker that checks the token at its door
-(chapter [P/03.4](../../../03-worker/spec/03.4-worker.norms.md) Н3 «the door token at the holder», P/03.4-08); the domain agent reads
-`door/keys` ([the catalogue](../../data/catalog.tsv)). Moved from P/06.5 Н3 «`/where/<id>`» (the block «Door token — bytes»: `token`
+(chapter [P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н3 «the door token at the holder», P/03.4-08); the domain agent reads
+`door/keys` ([the catalogue](../data/catalog.tsv)). Moved from P/06.5 Н3 «`/where/<id>`» (the block «Door token — bytes»: `token`
 and the row `door/keys`) and P/03.4 Н3 «the door token at the holder» (the row `door/keys` about the checker and the phrase of «Races») without
 a change of behaviour; after the move the check was changed — the changes of behaviour: the Architect's decisions of 2026-10-20 (ADR-0083
 addendum (12): strict base64url, a closed composition and types of the claims, the segment `routes` by `name`, the whole sign of `expires`, a single
 refusal `forbidden`) and the analysis of the review of stage B 6–7 (№ 10 — a whole `expires`, № 12 — a strict Ed25519 check); the implementations
 are reconciled by the vectors `door-token` (analysis of the review of stage B 6–7, № 11). When and to whom the console issues a token (by `view` on a unit, TTL 120 s, the journal `door.issued`, the field `door`
 of the answer), the signer `door/signer` and its envelope are in the owner's norms (P/06.5 Н3, the family
-[`door-signer`](../../../06-console/data/door-signer.schema.json)); the form of the keys row is the owner's family
-[`door-keys`](../../../06-console/data/door-keys.schema.json) with the outcome table next to it. JCS is RFC 8785 (ADR-0072; the vectors
-[`jcs`](../../../01-store/vectors/jcs/README.md) of lesson P/01).
+[`door-signer`](../../06-console/data/door-signer.schema.json)); the form of the keys row is the owner's family
+[`door-keys`](../../06-console/data/door-keys.schema.json) with the outcome table next to it. JCS is RFC 8785 (ADR-0072; the vectors
+[`jcs`](../../01-store/vectors/jcs/README.md) of lesson P/01).
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
@@ -75,9 +75,9 @@ The composition of the claims is closed: an extra field or the absence of any of
 The types of the claims are closed: `user`, `unit`, `holder` are JSON strings; `routes` is an array of JSON strings, the elements are segments by
 the grammar of `door.routes` (P/02.1, `strList`), without repetitions; `expires` is a JSON integer, seconds, not greater than 2^53−1. Another type,
 a fractional or greater `expires`, a repetition in `routes` — a refusal 403 `{"error": "forbidden"}`, even with a correct signature (the Architect's decision of 2026-10-20, Kimi SB67-01).
-An element of `routes` is a segment by the grammar of `name` `[a-z][a-z0-9_-]{0,31}`, without «/» ([P/02.1](../../../02-installer/spec/02.1-installer.norms.md)
+An element of `routes` is a segment by the grammar of `name` `[a-z][a-z0-9_-]{0,31}`, without «/» ([P/02.1](../../02-installer/spec/02.1-installer.norms.md)
 Н1 «Form», `door.routes`); `read/x` or `Read` is a refusal (the Architect's decision of 2026-10-20). A JSON integer is only a notation without a dot
-and an exponent, like the whole sign of the family writer ([layers В7](../../LAYERS.md) § 3, `x-whole`): `1792454520.0` and `1.79245452E9` in the bytes of the
+and an exponent, like the whole sign of the family writer ([layers В7](../LAYERS.md) § 3, `x-whole`): `1792454520.0` and `1.79245452E9` in the bytes of the
 claims are a refusal, although the value is whole (the Architect's decision of 2026-10-20).
 The checker reads the text of the claims by I-JSON (RFC 7493): the bytes are strict UTF-8 (an invalid sequence is a refusal, not
 a replacement with U+FFFD); a field name twice is a refusal, not «the last value»; names are compared byte for byte (`User` is not `user`:
@@ -101,10 +101,10 @@ The list of units of a place is built by the subsystem; the check compares `unit
 The request path is compared by its first segment: for `/read/x` the segment is `read`; `/reader`, `/x/read` and `/` are not equal to the element `read`
 (the Architect's decision of 2026-10-20, the vectors door-token). The segment is compared raw, without decoding `%XX`:
 `/re%61d/x` is not equal to the element `read`; any divergence is a refusal, not a bypass (the Architect's decision of 2026-10-20, the vectors door-token). The refusal is one outcome for all causes: the holder's door answers 403 with the body
-`{"error": "forbidden"}` without a reason (the Architect's decision of 2026-10-20, the vectors door-token) ([P/03.4](../../../03-worker/spec/03.4-worker.norms.md) Н4), the order of checks is not normed. So
+`{"error": "forbidden"}` without a reason (the Architect's decision of 2026-10-20, the vectors door-token) ([P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н4), the order of checks is not normed. So
 the client does not learn which check failed, and the implementations do not diverge in the order of checks (the Architect's decision of 2026-10-20, the vectors door-token).
 
-An unreadable row `door/keys` is an outcome of the owner's family ([`door-keys.outcomes.tsv`](../../../06-console/data/door-keys.outcomes.tsv)):
+An unreadable row `door/keys` is an outcome of the owner's family ([`door-keys.outcomes.tsv`](../../06-console/data/door-keys.outcomes.tsv)):
 at the holder — the `kid` of the token is not found, a refusal of the door (403 `forbidden`). The unit of unreadability is the whole row: an entry of another
 `kid` out of form (the key is not 64 lowercase hex) makes the whole row unreadable, and a token with its own, correct `kid` also gets
 a refusal — the checker does not read the row by entries (analysis of the review of stage B 6–7, № 8).
@@ -116,13 +116,13 @@ layout audit Б-21, the Architect's decision of 2026-10-25).
 
 ## Vectors
 
-The package [`door-token`](../../vectors/door-token/README.md) (the Architect's decision of 2026-10-20, analysis of the review of stage B 3–5):
+The package [`door-token`](../vectors/door-token/README.md) (the Architect's decision of 2026-10-20, analysis of the review of stage B 3–5):
 the issue (`issue.tsv`: the seed of `door/signer`, `kid`, claims → JCS bytes and `token`) and the check at the holder (`verify.tsv`: the row
 `door/keys`, `token`, `now`, its own `unit` and `holder`, the request path → `ok` or `forbidden` by the check list above). An implementation
 passes them with its own function, without a stand; at the stand the check by the holder remains a reading (P/06.5-05, P/03.4-08: the stand has no
 holder door that checks the token).
 
-The canonical JSON (RFC 8785, ADR-0072) on which the contract rests is the package [`jcs`](../../../01-store/vectors/jcs/README.md)
+The canonical JSON (RFC 8785, ADR-0072) on which the contract rests is the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
 
 ## Correspondence to former lessons
@@ -130,5 +130,5 @@ of lesson P/01 (`canonical_json.tsv`: input → RFC 8785 form → sha256; ADR-00
 From P/06.5 (analysis of the review of stage B 3–5, В1; formerly М10/9 Н3 «`/where/<id>`»): the block «Door token — bytes» — the row `token`
 (here «Token») and the row `door/keys` about the writer; the row `door/signer` stays in P/06.5 Н3. From P/03.4 Н3 «the door token at the
 holder» (formerly a part of М10/9-09): the row `door/keys` about the checker and the phrase of «Races» (here «Keys `door/keys`»; both
-halves of the row `door/keys` are merged into one, as in the source М10/9). Parts of the norms by `note` of [id-map](../../id-map.tsv): P/06.5-05
+halves of the row `door/keys` are merged into one, as in the source М10/9). Parts of the norms by `note` of [id-map](../id-map.tsv): P/06.5-05
 (the bytes of the token, `door/keys`), P/03.4-08 (the check at the holder).

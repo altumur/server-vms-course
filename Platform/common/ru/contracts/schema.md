@@ -1,15 +1,15 @@
 # Договор схемы хранилища: `platform/schema`, `SCHEMA`, проверка при старте
 
-Текст производный от en, руками не правится: источник — английский [`en/schema.en.md`](en/schema.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
+Текст производный от `contracts/schema.md`, руками не правится: источник — английский [`contracts/schema.md`](../../contracts/schema.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
 
 Общий договор модуля «Платформа» (ADR-0083 доп. (5), доп. (13): проверку схемы при старте исполняют все процессы
 платформы — договор, а не копии в главах; аудит раскладки А-02, решение «Архитектора» 2026-10-25). Владелец — глава
-[P/06.6](../../06-console/ru/spec/06.6-console.norms.md) (Н1.1а «Схема», Н3 «поднять_схему»). Участники: консоль (P/06.6),
-контроллер ([P/04](../../04-controller/ru/spec/04-controller.norms.md) Н3 «старт контроллера — проверка схемы»), воркер
-([P/03.2](../../03-worker/ru/spec/03.2-worker.norms.md) Н3 «проверка схемы воркером»), ресурс
-([P/05](../../05-resource/ru/spec/05-resource.norms.md) Н3 «старт ресурса — проверка схемы»), процессы домена — `domain`,
-агент, консоль домена ([P/02.4 Н1.12](../../02-installer/ru/spec/02.4-installer.norms.md); консоль домена —
-[P/10](../../10-domain-console/ru/spec/10-domain-console.norms.md) Н1.1); шаг 0 старта процесса — [P/02.3](../../02-installer/ru/spec/02.3-installer.norms.md)
+[P/06.6](../../../06-console/ru/spec/06.6-console.norms.md) (Н1.1а «Схема», Н3 «поднять_схему»). Участники: консоль (P/06.6),
+контроллер ([P/04](../../../04-controller/ru/spec/04-controller.norms.md) Н3 «старт контроллера — проверка схемы»), воркер
+([P/03.2](../../../03-worker/ru/spec/03.2-worker.norms.md) Н3 «проверка схемы воркером»), ресурс
+([P/05](../../../05-resource/ru/spec/05-resource.norms.md) Н3 «старт ресурса — проверка схемы»), процессы домена — `domain`,
+агент, консоль домена ([P/02.4 Н1.12](../../../02-installer/ru/spec/02.4-installer.norms.md); консоль домена —
+[P/10](../../../10-domain-console/ru/spec/10-domain-console.norms.md) Н1.1); шаг 0 старта процесса — [P/02.3](../../../02-installer/ru/spec/02.3-installer.norms.md)
 Н3 «Старт процесса».
 
 Перенесено из P/06.6 Н1.1а (строки `platform/schema`, `SCHEMA`, `BUILD`, `heartbeat`, `check`) и общего блока «старт
@@ -17,13 +17,13 @@
 изменения поведения; у них — ссылки сюда. Подъём схемы оператором (`raise`, `PUT /schema`, окно обслуживания) — у
 владельца, P/06.6 Н1.1а, Н3 «поднять_схему».
 
-Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Нормативные слова — по [канону курса](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Форма
 
 Строка `platform/schema` — семья `schema`: форма `Platform/06-console/data/schema.schema.json`, исходы
-`Platform/06-console/data/schema.outcomes.tsv` ([форма](../../06-console/data/schema.schema.json),
-[исходы](../../06-console/data/schema.outcomes.tsv)). Поле `schema` пульса — формы пульсов
+`Platform/06-console/data/schema.outcomes.tsv` ([форма](../../../06-console/data/schema.schema.json),
+[исходы](../../../06-console/data/schema.outcomes.tsv)). Поле `schema` пульса — формы пульсов
 `Platform/03-worker/data/heartbeats.schema.json` (исходы — `Platform/03-worker/data/heartbeats.outcomes.tsv`) и `Platform/05-resource/data/resource-heartbeat.schema.json` (исходы — `Platform/05-resource/data/resource-heartbeat.outcomes.tsv`) (и их
 `.outcomes.tsv`).
 
@@ -65,6 +65,6 @@ check:    при старте контроллера, воркера, ресур
 
 ## Соответствие прежним урокам
 
-Из P/06.6 Н1.1а (`platform/schema`, `SCHEMA`, `BUILD`, `heartbeat`, `check`; норма P/06.6-04 по `note` [id-map](../id-map.tsv))
+Из P/06.6 Н1.1а (`platform/schema`, `SCHEMA`, `BUILD`, `heartbeat`, `check`; норма P/06.6-04 по `note` [id-map](../../id-map.tsv))
 и общего блока Н3 «старт … — проверка схемы» (P/06.6, P/03.2, P/04, P/05; прежде М10/10 Н3, М10/10-01); у них — ссылки сюда
 (аудит раскладки А-02).

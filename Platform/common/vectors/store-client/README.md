@@ -1,8 +1,8 @@
 # Vectors: the outcome of a store answer for the client
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/store-client/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the store client contract](../../../contracts/store-client.md) (chapter P/01.1; the guess of stage C SC-WIRE78-G01 /
+The owner is [the store client contract](../../contracts/store-client.md) (chapter P/01.1; the guess of stage C SC-WIRE78-G01 /
 C08-SDK-06, the Architect's decision of 2026-10-25). The participants are all processes that talk with the store through the door of P/01.1. The bytes
 are written by «Спецификация»; the rows are by the text of the contract and P/01.1 Н2, Н4.
 

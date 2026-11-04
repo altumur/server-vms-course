@@ -50,15 +50,15 @@ ADR-0083 доп. (1), (14)). Агент члена и ретранслятор �
   [8.3](08.3-domain.norms.md), [8.4](08.4-domain.norms.md), [8.5](08.5-domain.norms.md), [8.6](08.6-domain.norms.md),
   [8.7](08.7-domain.norms.md), [8.8](08.8-domain.norms.md), [8.9](08.9-domain.norms.md), [8.10](08.10-domain.norms.md),
   включая Н0, абзацы «Данные», порядок Н3 и отказы Н4. Вход и вывод команд приёмки — Н5 глав.
-- Общие алгоритмы — договоры, главы ссылаются на них, а не повторяют: [набор ключей](../../../common/contracts/keys.md),
-  [токен домена](../../../common/contracts/domain-token.md) и [конверты домена](../../../common/contracts/domain-envelopes.md)
-  (`x25519:v1`, `m1`, содержимое `sealed`) — главы 8.2, 8.3; [приём отчёта](../../../common/contracts/accept.md) и
-  [подпись агента](../../../common/contracts/agent-signature.md) (держатель — проверяющий) — глава 8.3;
-  [право](../../../common/contracts/may.md) — глава 8.4; [запись срока](../../../common/contracts/record.md) и
-  [подпись просьбы](../../../common/contracts/ask-sig.md) — глава 8.8; [местная дверь токенов](../../../common/contracts/local-token-door.md)
-  — глава 8.7; [пересылка](../../../common/contracts/forwarding.md) («Адрес клиента», «Двери домена») и
-  [сертификат роли](../../../common/contracts/role-certificate.md#серверная-сторона-класс-signed) — глава 8.0; кольцо
-  держателя и конверт `enc:v2` — [договор запечатывания](../../../common/contracts/sealing.md).
+- Общие алгоритмы — договоры, главы ссылаются на них, а не повторяют: [набор ключей](../../../common/ru/contracts/keys.md),
+  [токен домена](../../../common/ru/contracts/domain-token.md) и [конверты домена](../../../common/ru/contracts/domain-envelopes.md)
+  (`x25519:v1`, `m1`, содержимое `sealed`) — главы 8.2, 8.3; [приём отчёта](../../../common/ru/contracts/accept.md) и
+  [подпись агента](../../../common/ru/contracts/agent-signature.md) (держатель — проверяющий) — глава 8.3;
+  [право](../../../common/ru/contracts/may.md) — глава 8.4; [запись срока](../../../common/ru/contracts/record.md) и
+  [подпись просьбы](../../../common/ru/contracts/ask-sig.md) — глава 8.8; [местная дверь токенов](../../../common/ru/contracts/local-token-door.md)
+  — глава 8.7; [пересылка](../../../common/ru/contracts/forwarding.md) («Адрес клиента», «Двери домена») и
+  [сертификат роли](../../../common/ru/contracts/role-certificate.md#серверная-сторона-класс-signed) — глава 8.0; кольцо
+  держателя и конверт `enc:v2` — [договор запечатывания](../../../common/ru/contracts/sealing.md).
 - [OpenAPI](../../spec/08-domain.api.openapi.yaml) выражает HTTP-формы канона всех глав: одна дверь процесса — один контракт.
   Свои двери процесса и двери, которые ему передают консоль домена и консоль кластера, стоят в нём с кодами процесса:
   Н3 дверей, 401/403 своей проверки личности и гранта, 409 `deposed`, 503 `frozen` и `standby`. Коды перехода
@@ -72,14 +72,14 @@ ADR-0083 доп. (1), (14)). Агент члена и ретранслятор �
   [8.3](../acceptance/3/README.md), [8.4](../acceptance/4/README.md), [8.5](../acceptance/5/README.md),
   [8.6](../acceptance/6/README.md), [8.7](../acceptance/7/README.md), [8.8](../acceptance/8/README.md),
   [8.9](../acceptance/9/README.md), [8.10](../acceptance/10/README.md); у главы 8.0 каталога нет (Н5). Стенд нескольких
-  кластеров, директивы и двери — [общий README приёмки](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+  кластеров, директивы и двери — [общий README приёмки](../../../common/ru/acceptance/README.md#словарь-директив-и-дверей).
   Векторы урока — [`view`](../vectors/view/README.md) (8.1), [`assemble`](../vectors/assemble/README.md) (8.5),
-  [`issue`](../vectors/issue/README.md) (8.7); общие — [`keys`](../../../common/vectors/keys/README.md),
-  [`domain-token`](../../../common/vectors/domain-token/README.md),
-  [`domain-envelopes`](../../../common/vectors/domain-envelopes/README.md) (8.2, 8.3),
-  [`accept`](../../../common/vectors/accept/README.md), [`agent-sig`](../../../common/vectors/agent-sig/README.md) (8.3),
-  [`may`](../../../common/vectors/may/README.md) (8.4), [`record`](../../../common/vectors/record/README.md),
-  [`ask-sig`](../../../common/vectors/ask-sig/README.md) (8.8). Флаги, окружение, коды выхода — [`../lifecycle.md`](../lifecycle.md).
+  [`issue`](../vectors/issue/README.md) (8.7); общие — [`keys`](../../../common/ru/vectors/keys/README.md),
+  [`domain-token`](../../../common/ru/vectors/domain-token/README.md),
+  [`domain-envelopes`](../../../common/ru/vectors/domain-envelopes/README.md) (8.2, 8.3),
+  [`accept`](../../../common/ru/vectors/accept/README.md), [`agent-sig`](../../../common/ru/vectors/agent-sig/README.md) (8.3),
+  [`may`](../../../common/ru/vectors/may/README.md) (8.4), [`record`](../../../common/ru/vectors/record/README.md),
+  [`ask-sig`](../../../common/ru/vectors/ask-sig/README.md) (8.8). Флаги, окружение, коды выхода — [`../lifecycle.md`](../lifecycle.md).
 - Лекция (`ru/08-domain.md`, для человека, в выгрузку не входит) объясняет механизм и примеры.
 
 Внутренние интерфейсы, типы, классы ошибок, библиотеки и разбиение на компоненты выбирает реализация. Команды приёмки
@@ -100,9 +100,9 @@ P/10; пересылка к подписанту, сессия с грантам
 ## Что создать
 
 - **8.0.** Дверь `SIGNER_URL`: правки консоли домена принимать как пришли, проверять личность и грант самому (глава 8.4);
-  `X-W2C-Client` читать только на соединении роли `domainconsole` ([договор пересылки](../../../common/contracts/forwarding.md)
+  `X-W2C-Client` читать только на соединении роли `domainconsole` ([договор пересылки](../../../common/ru/contracts/forwarding.md)
   «Адрес клиента»); свои отказы `deposed`, `frozen`, `standby` — своим словом в `error`. Серверная сторона класса
-  `signed` — [договор сертификата роли](../../../common/contracts/role-certificate.md#серверная-сторона-класс-signed)
+  `signed` — [договор сертификата роли](../../../common/ru/contracts/role-certificate.md#серверная-сторона-класс-signed)
   (сертификат клиента не требовать и прав ему не давать; запрашивать необязательно и предъявленный проверять в
   рукопожатии — свой центр, срок, EKU `clientAuth`, иначе alert; ADR-0083 доп. (20), доп. (21)).
 - **8.1.** Проход держателя Н3: вид домена (голова раз в 3 с, разделы кругом) и теневой отчёт, объекты `domain/view` и `domain/shadow`; поля вида
@@ -113,7 +113,7 @@ P/10; пересылка к подписанту, сессия с грантам
   `domain/book-seal`, `domain/revoked` по Н1.1–Н1.6 и семьям; писатель — процесс `domain`, у члена — агент
   (`domain/root` — только `admin`). Вызовы смен Н3. Команды приёмки `keys`, `token`, `seal`, `seal-round`.
 - **8.3.** Двери `POST /api/member/<член>`, `GET /api/carry/<член>`, `POST /api/relay/<ретранслятор>`; функция «принять»
-  ([договор приёма отчёта](../../../common/contracts/accept.md)) с мьютексом на члена, с `via` и `heard_ago`; стук `knock` и
+  ([договор приёма отчёта](../../../common/ru/contracts/accept.md)) с мьютексом на члена, с `via` и `heard_ago`; стук `knock` и
   стуки из пакета; держатель в списке; поля вида `knocking`, `reports`. Приём `tls_ca` в `Entry.ca` и
   `tls_ca_certs` в строку `domain/members/<член>/ca-certs` до неё. `members` в ответе только отставшему; 409
   `too many members` при приёме члена. Правки списка (`POST`/`DELETE /domain/members`, `POST /domain/members/<член>/ca`)
@@ -170,11 +170,11 @@ P/10; пересылка к подписанту, сессия с грантам
 
 ### Глава 8.3 — приём отчётов
 
-1. Проверка подписи агента ([договор подписи агента](../../../common/contracts/agent-signature.md), `agent-sig`): окно в
+1. Проверка подписи агента ([договор подписи агента](../../../common/ru/contracts/agent-signature.md), `agent-sig`): окно в
    обе стороны, путь без query.
-2. Конверт `m1` ([договор конвертов домена](../../../common/contracts/domain-envelopes.md), `seal-member`): бирациональное
+2. Конверт `m1` ([договор конвертов домена](../../../common/ru/contracts/domain-envelopes.md), `seal-member`): бирациональное
    отображение ключа, SHA-512 зерна, HKDF, AAD.
-3. «Принять» ([договор приёма отчёта](../../../common/contracts/accept.md), `accept`): порядок шагов, 409 трёх видов,
+3. «Принять» ([договор приёма отчёта](../../../common/ru/contracts/accept.md), `accept`): порядок шагов, 409 трёх видов,
    `heard` и `MARK_REFRESH`, порядок записей объекта, `.delta` и метки.
 4. «Принять» с дорогой (`accept` с `via`, `heard_ago`): шаги 2, 2а, 3 договора приёма отчёта.
 5. Приём члена Н3 и держатель в списке; топология Н1.2: форма, отказы, CAS по `base_rev` и `If-Match`, JCS текста `doc`.
@@ -199,7 +199,7 @@ P/10; пересылка к подписанту, сессия с грантам
 
 ### Глава 8.4 — люди и гранты
 
-1. `may` — чистая функция [договора права](../../../common/contracts/may.md) — по векторам.
+1. `may` — чистая функция [договора права](../../../common/ru/contracts/may.md) — по векторам.
 2. Строка человека, хеш PBKDF2, вход и предел; неразличимость ответа.
 3. Строки грантов, последний администратор, метка удаления и сверка.
 4. Проверка у дверей процесса по `domain/grants/domain`; аварийная учётка у держателя.
@@ -227,10 +227,10 @@ P/10; пересылка к подписанту, сессия с грантам
 
 1. `issue` (чистая функция Н3): формы, роль, `by`, области placement → unit, scenario; аудитория; слова отказов;
    векторы [`issue`](../vectors/issue/README.md).
-2. Утверждения и подпись ([договор токена домена](../../../common/contracts/domain-token.md) «Токен»).
-3. Дверь держателя `/api/tokens/…` и ответ в конверте `m1` ([договор конвертов домена](../../../common/contracts/domain-envelopes.md)).
+2. Утверждения и подпись ([договор токена домена](../../../common/ru/contracts/domain-token.md) «Токен»).
+3. Дверь держателя `/api/tokens/…` и ответ в конверте `m1` ([договор конвертов домена](../../../common/ru/contracts/domain-envelopes.md)).
 4. Стенд [приёмки главы](../acceptance/7/README.md): раннер входит в местную дверь агента с личностью роли
-   ([договор местной двери токенов](../../../common/contracts/local-token-door.md#сокет-роли)).
+   ([договор местной двери токенов](../../../common/ru/contracts/local-token-door.md#сокет-роли)).
 
 ### Глава 8.8 — срок, копия, перенос
 
@@ -347,7 +347,7 @@ P/10; пересылка к подписанту, сессия с грантам
 правки и обрыв посередине они не доказывают. Входы векторов `view`, `assemble` и `accept` зависят от байтов манифестов
 `testsub` и `testsub2`; README пакетов называют их sha256 — другой манифест даёт другой вывод. На стенде без TLS
 `X-W2C-Client` не доверяется никогда; класс `signed` и строки двери `signer` проверяет TLS-стенд
-([`common/acceptance/tls/`](../../../common/acceptance/tls/README.md)), когда он готов.
+([`common/acceptance/tls/`](../../../common/ru/acceptance/tls/README.md)), когда он готов.
 
 ## Готово, когда
 

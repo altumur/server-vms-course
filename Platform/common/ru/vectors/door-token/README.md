@@ -1,11 +1,11 @@
 # Векторы токена двери
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
+Текст производный от `vectors/door-token/README.md`, руками не правится: источник — английский [`vectors/door-token/README.md`](../../../vectors/door-token/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
 
 Векторы [договора токена двери](../../contracts/door-token.md): выпуск `door1.<kid>.<claims>.<sig>` (claims в JCS, подпись
 Ed25519) и проверка у держателя по строке `door/keys`. Владелец договора — урок P/06, глава
-[6.5](../../../06-console/ru/spec/06.5-console.norms.md) (Н3 «`/where/<id>`»: консоль выдаёт токен); проверяющий — держатель
-двери, глава [3.4](../../../03-worker/ru/spec/03.4-worker.norms.md) Н3 «токен двери у держателя» (P/03.4-08). Пакет — общий:
+[6.5](../../../../06-console/ru/spec/06.5-console.norms.md) (Н3 «`/where/<id>`»: консоль выдаёт токен); проверяющий — держатель
+двери, глава [3.4](../../../../03-worker/ru/spec/03.4-worker.norms.md) Н3 «токен двери у держателя» (P/03.4-08). Пакет — общий:
 алгоритм пишет один процесс, читают другие (решение «Архитектора» 2026-10-20, разбор ревью стадии B 3–5: подпись Ed25519
 без векторов — молчаливое расхождение реализаций). Байты пишет «Спецификация» (ADR-0083); соответствие продукта — его
 приёмкой по этим таблицам (ADR-0080 доп. 16).
@@ -65,13 +65,13 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`issue.tsv`](issue.tsv), 7 строк | `seed_hex`, `kid`, `now`, `claims` — объект `{user, unit, holder, routes, expires}` текстом JSON, как передан выпускающему (`expires` = `now` + 120) → `claims_jcs` — его форма RFC 8785 (UTF-8), `token` — `door1.<kid>.<base64url без «=» claims_jcs>.<base64url без «=» подписи над ASCII «door1.<kid>.<claims>»>`. Случаи: обычный, порядок полей (тот же токен), порядок `routes` (массив не сортируется), кириллица и символ вне BMP, экранирование, число с порядком, `kid` в 32 знака |
-| [`verify.tsv`](verify.tsv), 89 строк: 17 `ok`, 72 `forbidden` (5 — DT-G01, 6 — DT-G02; разделитель HTAB и несколько заголовков `Authorization` строкой TSV не выразить — чтением) | `keys` — значение строки `door/keys` текстом JSON; `authorization` — заголовок `Authorization` целиком, пусто — заголовка нет (прежде колонка `token`; у большинства строк — `Bearer <token>`; (решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7)); `now`; `unit`, `holder` — свои у держателя (`unit` — `<sub>/<id>`, `holder` — `instance` его пульса); `path` — цель запроса к двери держателя: путь URL, у части строк с query (`?t=<token>`); первый сегмент пути URL без query сравнивается с элементами `routes` (разбор ревью стадии B 6–7, № 9) → `ok` и `claims` (текст части claims) или `forbidden` (колонка `claims` пуста) |
-| [`place.tsv`](place.tsv), 4 строки: 2 `ok`, 2 `forbidden` | `input` — `{keys, authorization, now, holder, path, place_units}`: `place_units` — единицы, чьи данные лежат в месте держателя, перечень строит подсистема (данные ещё не легли — единицы нет, если норма двери не назвала её, DT-PLACE-NOT-YET-01); токен места — договор «Токен места» (ADR-0091 доп. (7), (8)) → `expect` и `claims` — прочитанные claims у `ok` текстом JSON, сравниваются по значению; у `forbidden` пусто (чтение «cammeta-acceptance» 2026-10-23) |
+| [`issue.tsv`](../../../vectors/door-token/issue.tsv), 7 строк | `seed_hex`, `kid`, `now`, `claims` — объект `{user, unit, holder, routes, expires}` текстом JSON, как передан выпускающему (`expires` = `now` + 120) → `claims_jcs` — его форма RFC 8785 (UTF-8), `token` — `door1.<kid>.<base64url без «=» claims_jcs>.<base64url без «=» подписи над ASCII «door1.<kid>.<claims>»>`. Случаи: обычный, порядок полей (тот же токен), порядок `routes` (массив не сортируется), кириллица и символ вне BMP, экранирование, число с порядком, `kid` в 32 знака |
+| [`verify.tsv`](../../../vectors/door-token/verify.tsv), 89 строк: 17 `ok`, 72 `forbidden` (5 — DT-G01, 6 — DT-G02; разделитель HTAB и несколько заголовков `Authorization` строкой TSV не выразить — чтением) | `keys` — значение строки `door/keys` текстом JSON; `authorization` — заголовок `Authorization` целиком, пусто — заголовка нет (прежде колонка `token`; у большинства строк — `Bearer <token>`; (решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7)); `now`; `unit`, `holder` — свои у держателя (`unit` — `<sub>/<id>`, `holder` — `instance` его пульса); `path` — цель запроса к двери держателя: путь URL, у части строк с query (`?t=<token>`); первый сегмент пути URL без query сравнивается с элементами `routes` (разбор ревью стадии B 6–7, № 9) → `ok` и `claims` (текст части claims) или `forbidden` (колонка `claims` пуста) |
+| [`place.tsv`](../../../vectors/door-token/place.tsv), 4 строки: 2 `ok`, 2 `forbidden` | `input` — `{keys, authorization, now, holder, path, place_units}`: `place_units` — единицы, чьи данные лежат в месте держателя, перечень строит подсистема (данные ещё не легли — единицы нет, если норма двери не назвала её, DT-PLACE-NOT-YET-01); токен места — договор «Токен места» (ADR-0091 доп. (7), (8)) → `expect` и `claims` — прочитанные claims у `ok` текстом JSON, сравниваются по значению; у `forbidden` пусто (чтение «cammeta-acceptance» 2026-10-23) |
 
 ## Отказы
 
-Отказ проверки — одно слово `forbidden`, ответ двери держателя 403 с телом `{"error": "forbidden"}` без причины ([P/03.4](../../../03-worker/ru/spec/03.4-worker.norms.md)
+Отказ проверки — одно слово `forbidden`, ответ двери держателя 403 с телом `{"error": "forbidden"}` без причины ([P/03.4](../../../../03-worker/ru/spec/03.4-worker.norms.md)
 Н4, [договор](../../contracts/door-token.md) «Ключи `door/keys`») (решение «Архитектора» 2026-10-20, векторы door-token). Порядок проверок
 вектор не фиксирует: причина в ответе не видна. Строки отказа — по списку проверки договора:
 
@@ -79,7 +79,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 |---|---|
 | четыре части | `three_parts`, `five_parts`, `token_empty` |
 | `door1` | `prefix_door2`, `prefix_upper` |
-| `kid` в `door/keys` (нечитаемая строка — `kid` не найден, [исход семьи](../../../06-console/data/door-keys.outcomes.tsv)) | `unknown_kid`, `empty_keys`, `keys_upper_hex`, `keys_short_hex`, `keys_not_object`, `keys_bad_other_entry` (чужая запись не по форме — нечитаема вся строка; разбор ревью стадии B 6–7, № 8) |
+| `kid` в `door/keys` (нечитаемая строка — `kid` не найден, [исход семьи](../../../../06-console/data/door-keys.outcomes.tsv)) | `unknown_kid`, `empty_keys`, `keys_upper_hex`, `keys_short_hex`, `keys_not_object`, `keys_bad_other_entry` (чужая запись не по форме — нечитаема вся строка; разбор ревью стадии B 6–7, № 8) |
 | подпись — строго по RFC 8032 §5.1.7, в том числе `0 ≤ S < L` (разбор ревью стадии B 6–7, № 12) | `foreign_key`, `forged_signer`, `sig_bit`, `sig_last_bit`, `sig_short`, `sig_s_not_reduced`, `claims_swapped`; без кофактора, A или R малого порядка — отказ (решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7): `key_small_order`, `sig_r_small_order` |
 | части — строгий base64url без «=», хвостовые биты последнего знака — нули | `sig_padded`, `claims_padded`, `claims_std_base64`, `sig_trailing_bits`, `claims_trailing_bits` |
 | claims ровно `{user, unit, holder, routes, expires}` | `extra_field`, `missing_user`, `missing_expires`, `missing_unit`, `missing_holder`, `missing_routes`, `claims_not_json` |
@@ -98,5 +98,5 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 Строки `key_small_order` и `sig_r_small_order` удовлетворяют уравнению [S]B = R + [k]A; проверка OpenSSL (pyca cryptography) их принимает,
 отказ даёт только условие договора «A или R малого порядка — отказ» (решение «Архитектора» 2026-10-20, разбор ревью стадии B 6–7).
 
-Векторы получены эталонными Ed25519 (RFC 8032) и JCS (RFC 8785, проверен на [`jcs`](../../../01-store/ru/vectors/jcs/README.md))
+Векторы получены эталонными Ed25519 (RFC 8032) и JCS (RFC 8785, проверен на [`jcs`](../../../../01-store/ru/vectors/jcs/README.md))
 по договору, не по коду реализаций; при расхождении прав договор, вектор правит «Спецификация».

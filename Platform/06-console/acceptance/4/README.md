@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/4/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`06.4-console.norms.md`](../../spec/06.4-console.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/08 (stage B, ADR-0083 addendum (1): without a change of
 behaviour); the numbers of scenarios and steps are the former ones. Scenarios 05 (a request with a holder) and 07 (the append) of М10/08 are in
@@ -37,7 +37,7 @@ ticks of the holder and the reaper are expected, settle=60 by default.
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей): the doors `console`, `console2` (sc. 07, 08, 11, 12), `resource`, `store` (with `@as` — sc. 08, 09), `admin` (sc. 11, 12), the directives `@until`, `@sleep`, the request form `@header`. In total 9 scenarios / 120 steps (sc. 03 steps 16–20 — the segment note `to`, ADR-0117 addendum (3) item 2; sc. 04 steps 16–21 — a submitted deadline -1, 1e-12, 1000.1234: 202 and a write truncated downwards to ms, a negative one — 0, C06-DEADLINE-PRECISION-33-01; sc. 07 `07-request-gone` — 11 steps, ADR-0091 addendum (11) item 4: requests of `testsub2` with `per_person` 3, the deletion of the addressee unit — the outcome `gone` of the reaper, the row is removed, the reserve is released: the fourth request is 429 before and 202 after; sc. 11 `11-request-expired` — 15 steps, below); all HTTP (with @until and @key).
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors): the doors `console`, `console2` (sc. 07, 08, 11, 12), `resource`, `store` (with `@as` — sc. 08, 09), `admin` (sc. 11, 12), the directives `@until`, `@sleep`, the request form `@header`. In total 9 scenarios / 120 steps (sc. 03 steps 16–20 — the segment note `to`, ADR-0117 addendum (3) item 2; sc. 04 steps 16–21 — a submitted deadline -1, 1e-12, 1000.1234: 202 and a write truncated downwards to ms, a negative one — 0, C06-DEADLINE-PRECISION-33-01; sc. 07 `07-request-gone` — 11 steps, ADR-0091 addendum (11) item 4: requests of `testsub2` with `per_person` 3, the deletion of the addressee unit — the outcome `gone` of the reaper, the row is removed, the reserve is released: the fourth request is 429 before and 202 after; sc. 11 `11-request-expired` — 15 steps, below); all HTTP (with @until and @key).
 
 Steps of the reconciliation of python and go М10/6–11 (2026-10-18):
 - **03/9** — `user: operator` of the note (E60).

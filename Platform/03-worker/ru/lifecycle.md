@@ -12,8 +12,8 @@
 [P/02.4](../../02-installer/ru/spec/02.4-installer.norms.md) (Н1.1 юниты, Н1.2 окружение, Н1.5
 воркеры по заказу), [P/02.3](../../02-installer/ru/spec/02.3-installer.norms.md) (Н3 «Старт процесса», «Смена
 манифеста»), [P/06.6](../../06-console/ru/spec/06.6-console.norms.md) (Н1.1а строка схемы),
-[договор замка присутствия](../../common/contracts/presence-lock.md), [договор журнала событий](../../common/contracts/event-journal.md) (бакеты),
-[договор местной двери токенов](../../common/contracts/local-token-door.md) (просьба токена, глава 3.7).
+[договор замка присутствия](../../common/ru/contracts/presence-lock.md), [договор журнала событий](../../common/ru/contracts/event-journal.md) (бакеты),
+[договор местной двери токенов](../../common/ru/contracts/local-token-door.md) (просьба токена, глава 3.7).
 
 ## Запуск
 
@@ -44,7 +44,7 @@
 | `RESOURCE_ROOT` / `EVENTS` | корень событий: бакеты и замок присутствия | `<PLATFORM_DIR>/events` | P/02.4 Н1.2, P/05 Н1.4, договор замка присутствия |
 | `SECRETS_KEY` | кольцо — у держателей секретов | — | P/03.5 Н1.2 |
 | `W2C_ROLE`, `W2C_TLS_DIR` | роль и комплект; `W2C_ROLE` ≠ роли команды раннера (`worker <sub>` — `<sub>worker`, `domainworker <sub>` — `<sub>domain`) — отказ запуска, код 2 (ADR-0091 доп. (5) п. 1) | `<sub>worker`; `/etc/w2c/tls` | P/02.4 Н1.1, Н1.2, Н1.6 |
-| `AGENT_TOKEN_DIR` | каталог сокетов местной двери токенов агента: воркер просит токен в `<AGENT_TOKEN_DIR>/<W2C_ROLE>.sock` (глава 3.7 Н1.5) | `/run/w2c/domainagent` | [договор местной двери токенов](../../common/contracts/local-token-door.md) «Сокет роли» (разбор ревью стадии A 8–10, № 1 / решение 1) |
+| `AGENT_TOKEN_DIR` | каталог сокетов местной двери токенов агента: воркер просит токен в `<AGENT_TOKEN_DIR>/<W2C_ROLE>.sock` (глава 3.7 Н1.5) | `/run/w2c/domainagent` | [договор местной двери токенов](../../common/ru/contracts/local-token-door.md) «Сокет роли» (разбор ревью стадии A 8–10, № 1 / решение 1) |
 | `CAPACITY`, `WORKER_MEMORY_MB` | ёмкость и бюджет памяти | — | P/02.4 Н1.2, Н1.5 `memory` |
 | `BUILD` | слово сборки в пульсе (глава 6.6) | `dev` | P/02.4 Н1.2, P/06.6 Н1.1а |
 | `W2C_ENV`, `W2C_SUB_ENV` | файлы окружения | `/etc/w2c/w2c.env`; путь юнита | P/02.4 Н1.2 |
@@ -64,7 +64,7 @@
 | `<корень событий>/.workers/<sub>/<экземпляр>.lock` | замок присутствия: содержимое заново при старте, исключающий `flock` всё время жизни | [каталог](../../common/data/catalog.tsv), договор замка присутствия, P/03.2 Н3 «старт()» шаг 2б |
 | `<корень событий>/<sub>/<unit>/e<эпоха>/…`, `<sub>.alarms/…`, `audit/<sub>worker/e1/…` | бакеты событий, участник `append` | [каталог](../../common/data/catalog.tsv), договор журнала событий, P/03.6 Н1.2 |
 | объекты `<sub>/heartbeats/<имя>`, `<sub>/contenders/<имя>/<коробка>` | пульс и метка соперника | [каталог](../../common/data/catalog.tsv), P/03.4 Н1.1, P/03.2 Н1.4а |
-| `/etc/w2c/secrets/platform.key` (`SECRETS_KEY`) | кольцо — только чтение | [каталог](../../common/data/catalog.tsv), [договор запечатывания](../../common/contracts/sealing.md) |
+| `/etc/w2c/secrets/platform.key` (`SECRETS_KEY`) | кольцо — только чтение | [каталог](../../common/data/catalog.tsv), [договор запечатывания](../../common/ru/contracts/sealing.md) |
 | имена компонентов в деревьях | одно кодирование `%XX`, `%h<sha256>`; порог `%h` — по полному имени файла (компонент, суффикс нормы, запас временного имени; разбор ревью стадии B 3–5, № 20) | договор журнала событий «Имена файлов в общих деревьях» |
 
 ## Коды выхода
@@ -90,9 +90,9 @@
 ## Стенд
 
 Корни `{data}/config`, `objects`, `events` до старта процесса создаёт команда запуска роли профиля — [общий README
-приёмки](../../common/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../../02-installer/ru/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
+приёмки](../../common/ru/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../../02-installer/ru/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
 
-«Стенд» — [общий README приёмки](../../common/acceptance/README.md): `@start worker [<sub>]
+«Стенд» — [общий README приёмки](../../common/ru/acceptance/README.md): `@start worker [<sub>]
 <имя>` — имя подстановкой `{name}` (аргумент), `{sub}`; окружение от `{data}` (`PLATFORM_DIR`), `BOX_ID` стенда,
 `SERVER_NAME`, `PLATFORM_STORE` сокета роли, переменная `slot.name_env`, если манифест её объявил; `@sigterm`, `@sigkill`;
 воркеры по заказу — директива `@grow` (исполняет ряд `workers_wanted` вместо скрипта).

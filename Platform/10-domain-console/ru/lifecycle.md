@@ -26,11 +26,11 @@
 |---|---|---|---|
 | `W2C_ROLE` | роль `domainconsole` | юнит | P/02.4 Н1.2 |
 | `PLATFORM_DIR`, `PLATFORM_STORE`, `OBJECTS`, `RESOURCE_ROOT` / `EVENTS` | состояние, дверь хранилища, корни объектов и событий (журнал роли пишется) | P/02.4 Н1.2 | P/02.4 Н1.2 «Канал настройки и раскладка» |
-| `DOMAIN_CONSOLE_HOST`, `DOMAIN_CONSOLE_PORT` | дверь оператора домена; консоли членов пересылают сюда; TLS — по комплекту роли (P/02.4 Н1.6, [договор сертификата роли](../../common/contracts/role-certificate.md) `kit`; ADR-0075 доп. 2026-10-26 (2) п. 4) | `0.0.0.0:8444` — умолчание процесса (юнит не пишет), не явный адрес: только с комплектом, без комплекта — отказ старта, код 2 (P/02.4 Н1.6 `process`; ADR-0075 доп. 2026-10-26 (3) п. 5, (4) п. 4; ревью норм ADR-0075, Claude fd85ea8cc, С-3) | [P/02.4 Н1.12](../../02-installer/ru/spec/02.4-installer.norms.md) |
-| `SIGNER_URL` | дверь процесса `domain` своей коробки — передача правок; проверка сервера — [договор сертификата роли](../../common/contracts/role-certificate.md) «Клиент двери своего кластера» (хост — литерал петли — имя `SERVER_NAME`; `localhost` — имя) | `http://localhost:8445` (стенд одной машины, как [жизненный цикл P/08](../../08-domain/ru/lifecycle.md); разбор ревью стадии A 8–10, № 33) | [P/10 Н1.3](spec/10-domain-console.norms.md) (передача; приём — P/08.0 Н1.8); [P/08.2 Н1.3](../../08-domain/ru/spec/08.2-domain.norms.md) |
-| `LOGIN_URL` | вход людей, значение `login_url` в `/session` | `/api/login` | [договор сторожевой и передачи](../../common/contracts/gate-and-pass.md) `session` `login_url`; [P/08.4 Н1.2](../../08-domain/ru/spec/08.4-domain.norms.md); P/02.4 Н1.2 |
-| `TIMEZONE` | часовой пояс: значение `timezone` в `/session`; из `w2c.env` своей коробки; пустое или не по форме — код 2 | `UTC` | [договор файла окружения](../../common/contracts/env-file.md); [P/10 Н1.7](spec/10-domain-console.norms.md) `session` |
-| `W2C_TLS_DIR` | комплект роли `domainconsole` и свои `ca.pem`, `ca.next.pem` — объединение центров двери роли | P/02.4 Н1.6 | [P/10 Н1.4](spec/10-domain-console.norms.md) `roles`, `server.role`; [договор сертификата роли](../../common/contracts/role-certificate.md) `kit` |
+| `DOMAIN_CONSOLE_HOST`, `DOMAIN_CONSOLE_PORT` | дверь оператора домена; консоли членов пересылают сюда; TLS — по комплекту роли (P/02.4 Н1.6, [договор сертификата роли](../../common/ru/contracts/role-certificate.md) `kit`; ADR-0075 доп. 2026-10-26 (2) п. 4) | `0.0.0.0:8444` — умолчание процесса (юнит не пишет), не явный адрес: только с комплектом, без комплекта — отказ старта, код 2 (P/02.4 Н1.6 `process`; ADR-0075 доп. 2026-10-26 (3) п. 5, (4) п. 4; ревью норм ADR-0075, Claude fd85ea8cc, С-3) | [P/02.4 Н1.12](../../02-installer/ru/spec/02.4-installer.norms.md) |
+| `SIGNER_URL` | дверь процесса `domain` своей коробки — передача правок; проверка сервера — [договор сертификата роли](../../common/ru/contracts/role-certificate.md) «Клиент двери своего кластера» (хост — литерал петли — имя `SERVER_NAME`; `localhost` — имя) | `http://localhost:8445` (стенд одной машины, как [жизненный цикл P/08](../../08-domain/ru/lifecycle.md); разбор ревью стадии A 8–10, № 33) | [P/10 Н1.3](spec/10-domain-console.norms.md) (передача; приём — P/08.0 Н1.8); [P/08.2 Н1.3](../../08-domain/ru/spec/08.2-domain.norms.md) |
+| `LOGIN_URL` | вход людей, значение `login_url` в `/session` | `/api/login` | [договор сторожевой и передачи](../../common/ru/contracts/gate-and-pass.md) `session` `login_url`; [P/08.4 Н1.2](../../08-domain/ru/spec/08.4-domain.norms.md); P/02.4 Н1.2 |
+| `TIMEZONE` | часовой пояс: значение `timezone` в `/session`; из `w2c.env` своей коробки; пустое или не по форме — код 2 | `UTC` | [договор файла окружения](../../common/ru/contracts/env-file.md); [P/10 Н1.7](spec/10-domain-console.norms.md) `session` |
+| `W2C_TLS_DIR` | комплект роли `domainconsole` и свои `ca.pem`, `ca.next.pem` — объединение центров двери роли | P/02.4 Н1.6 | [P/10 Н1.4](spec/10-domain-console.norms.md) `roles`, `server.role`; [договор сертификата роли](../../common/ru/contracts/role-certificate.md) `kit` |
 | `CLUSTER`, `BOX_ID`, `SERVER_NAME` | кластер, коробка, сервер | P/02.4 Н1.2 | P/02.4 Н1.2 |
 
 ## Флаги
@@ -46,14 +46,14 @@
 - Страница держателя — та же страница модуля консоли, `sections: [domain]` ([P/10 Н1.7](spec/10-domain-console.norms.md));
   поставка модуля — с бинарником консоли, не из `$CAMMETA_SPECS` ([P/06.5](../../06-console/ru/spec/06.5-console.norms.md) Н1.1 `module`).
 - Журнал роли — `<корень событий>/audit/domainconsole/e1/…`, тревога `session.debug_open` — `audit.alarms/domainconsole`
-  ([договор журнала событий](../../common/contracts/event-journal.md) `journal`).
+  ([договор журнала событий](../../common/ru/contracts/event-journal.md) `journal`).
 
 ## Коды выхода
 
 | Код | Когда | Норма |
 |---|---|---|
 | 2 | отказ старта по манифесту, правам, схеме — без перезапуска | P/02.4 Н1.1 `common`; P/10 Н1.1 |
-| 2 | `TIMEZONE` пустое или не по форме | [договор файла окружения](../../common/contracts/env-file.md); [P/10 Н1.7](spec/10-domain-console.norms.md) `session` |
+| 2 | `TIMEZONE` пустое или не по форме | [договор файла окружения](../../common/ru/contracts/env-file.md); [P/10 Н1.7](spec/10-domain-console.norms.md) `session` |
 | ≠ 0 | иной сбой; юнит перезапускает | P/02.4 Н1.1 |
 
 ## Сигналы и готовность
@@ -66,9 +66,9 @@
 ## Стенд
 
 Корни `{data}/config`, `objects`, `events` до старта процесса создаёт команда запуска роли профиля — [общий README
-приёмки](../../common/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../../02-installer/ru/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
+приёмки](../../common/ru/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../../02-installer/ru/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
 
-Стенд нескольких кластеров ([общий README приёмки](../../common/acceptance/README.md#стенд-домена), раздел «Стенд домена»): `@start domain` поднимает процессы `domain` и консоли домена на
+Стенд нескольких кластеров ([общий README приёмки](../../common/ru/acceptance/README.md#стенд-домена), раздел «Стенд домена»): `@start domain` поднимает процессы `domain` и консоли домена на
 `hold`; дверь `holder <запрос>` — консоль домена на `hold`, `holder@<кластер>` — на другом кластере после переноса;
 `Idempotency-Key` у `POST`, `PUT`, `DELETE` — по правилу `@key`. `{data}` — `PLATFORM_DIR` кластера ([общий README
-приёмки](../../common/acceptance/README.md) «Стенд»; разбор ревью стадии B 3–5, № 33).
+приёмки](../../common/ru/acceptance/README.md) «Стенд»; разбор ревью стадии B 3–5, № 33).

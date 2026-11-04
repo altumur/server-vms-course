@@ -13,7 +13,7 @@ The scenarios and the manifest variants were moved from the acceptance of М10/6
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей): a door without a prefix is the store, `@as <роль>`, `@header` before the method, `$имя`, `ASSERT`;
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors): a door without a prefix is the store, `@as <роль>`, `@header` before the method, `$имя`, `ASSERT`;
 the expectation is a subset of fields, `index` may be omitted. Own additions:
 
 - `expect` without a body at the code `403` — the full form `{kind: forbidden, error: …}`. For a refusal of an operation on a row, error names the role, the action and the key.

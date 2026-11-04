@@ -1,8 +1,8 @@
 # Vectors: the judgement of a slot row
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/slot/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the slot contract](../../../contracts/slot.md) (chapter P/03.2 Н1.4; C140-SLOT-TIME-01, the Architect's decision 2026-10-26).
+The owner is [the slot contract](../../contracts/slot.md) (chapter P/03.2 Н1.4; C140-SLOT-TIME-01, the Architect's decision 2026-10-26).
 The participants are the worker (capture, renewal), the controller (the slot judge), the console, the agent, the pool contract. The bytes are written by «Спецификация»;
 the rows are by the text of the contract, the norms do not change.
 

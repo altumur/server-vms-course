@@ -1,16 +1,16 @@
 # The sealing contract: the ring, the envelope `enc:v2`, AAD
 
-This English text is the source; the Russian [`sealing.md`](../sealing.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/sealing.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5): a contract that several processes read lies in
-`Platform/common/`; the Architect's decision on the review of stage B 1–2, item 4). The owner is lesson [P/06](../../../06-console/spec/06.2-console.norms.md),
+`Platform/common/`; the Architect's decision on the review of stage B 1–2, item 4). The owner is lesson [P/06](../../06-console/spec/06.2-console.norms.md),
 chapter 6.2 Н1.2 «The envelope and the key ring» (moved from М10/7 Н1.2; ADR-0083 addendum (29) item 9: the line names the owner lesson of the norm; the library by the contract is written by the session `common` of the generation). Readers: the installer — the commands `w2cctl secrets`
-([P/02.4 Н1.9](../../../02-installer/spec/02.4-installer.norms.md)), the worker — opening (chapter P/03.5), the console —
-sealing and resealing ([chapter P/06.2](../../../06-console/spec/06.2-console.norms.md)),
+([P/02.4 Н1.9](../../02-installer/spec/02.4-installer.norms.md)), the worker — opening (chapter P/03.5), the console —
+sealing and resealing ([chapter P/06.2](../../06-console/spec/06.2-console.norms.md)),
 the domain processes (М11). Moved from М10/7 Н1.2 without a change of behaviour: what to seal, who holds the key, rotation, the mode
 without a key and the idempotency fingerprint stay in the norms of the reading lessons.
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Envelope
 
@@ -59,7 +59,7 @@ ring_file:                                   # SECRETS_KEY=<path>; the default i
 ```
 
 Three states of the ring at a holder (from P/06.2 Н1.2 `no_key` without change; layout audit, the Architect's decision of 2026-10-25, Б-22); what the door
-of the holder does with each is the norm of its lesson (the console — P/06.2 Н1.2, Н4; the common row check — [the row check contract](../row-check.md) «Ring boundary»;
+of the holder does with each is the norm of its lesson (the console — P/06.2 Н1.2, Н4; the common row check — [the row check contract](row-check.md) «Ring boundary»;
 the worker — P/03.5 Н1.2 `open_without`):
 
 ```yaml
@@ -89,10 +89,10 @@ the implementation cannot represent the result, the command refuses before chang
 
 ## Reseal a value
 
-Moved from [P/06.2](../../../06-console/spec/06.2-console.norms.md) Н3 «reseal at start» (what is done with one value)
+Moved from [P/06.2](../../06-console/spec/06.2-console.norms.md) Н3 «reseal at start» (what is done with one value)
 without new behaviour; which rows are walked, `cas` by the read version, races and the order of the ring holders — there and in
-[P/02.5](../../../02-installer/spec/02.5-installer.norms.md) Н1.3, by reference (guess of stage C C06-RESEAL-33-01, the Architect's decision of 2026-10-25). The walk at
-the console (its own rows at start, P/06.2 Н3) and at the installer (`w2cctl secrets seal` by prefixes, [P/02.4](../../../02-installer/spec/02.4-installer.norms.md) Н1.9) differs —
+[P/02.5](../../02-installer/spec/02.5-installer.norms.md) Н1.3, by reference (guess of stage C C06-RESEAL-33-01, the Architect's decision of 2026-10-25). The walk at
+the console (its own rows at start, P/06.2 Н3) and at the installer (`w2cctl secrets seal` by prefixes, [P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н1.9) differs —
 there is no common rule of the walk, it stays with each; what is common is what is done with one value, below (layout audit Б-22).
 
 ```yaml
@@ -112,11 +112,11 @@ unreadable: the value of a json field is not JSON or the row is out of form — 
 
 ## Vectors
 
-The package [`sealing`](../../vectors/sealing/README.md): the envelope `enc:v2`, AAD, the ring file, resealing a value (`reseal.tsv`,
+The package [`sealing`](../vectors/sealing/README.md): the envelope `enc:v2`, AAD, the ring file, resealing a value (`reseal.tsv`,
 C06-RESEAL-33-01). (ADR-0083 addendum (32) item 2)
 
 ## Correspondence to former lessons
 
 From М10/7 Н1.2 (stage B, review of stage B 1–2 item 4): the blocks `envelope` and `ring_file` (`line`, `mode`), the paragraphs about the AAD path
 and about the grammar of the ring file. Parts of the norms М10/7-03 (the envelope and AAD; chapter P/03.5) and М10/7-04 (the form of the ring file — here; the ring, `rotate` and
-resealing — chapter P/06.2) — by `note` of [id-map](../../id-map.tsv) (analysis of the review of stage B 6–7, № 23).
+resealing — chapter P/06.2) — by `note` of [id-map](../id-map.tsv) (analysis of the review of stage B 6–7, № 23).

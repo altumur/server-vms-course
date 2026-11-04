@@ -1,16 +1,16 @@
 # Data catalogue
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/data/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-[`catalog.tsv`](../catalog.tsv) is the catalogue of the rows, objects and files of the module: the key, the kind, the owner, the operations, the readers, the condition,
-the version, the family schema, the norm (ADR-0083). [`codec.tsv`](../codec.tsv) is the codec of the store rows; [`common.schema.json`](../common.schema.json)
-is the common definitions of the family schemas, for reference. The reading layers of the families — [LAYERS.md](../../LAYERS.md) § 6, § 7.
+[`catalog.tsv`](catalog.tsv) is the catalogue of the rows, objects and files of the module: the key, the kind, the owner, the operations, the readers, the condition,
+the version, the family schema, the norm (ADR-0083). [`codec.tsv`](codec.tsv) is the codec of the store rows; [`common.schema.json`](common.schema.json)
+is the common definitions of the family schemas, for reference. The reading layers of the families — [LAYERS.md](../LAYERS.md) § 6, § 7.
 
 ## Key by the template (V7-FAMILY-KEY-PLACEHOLDER-01)
 
 The column `key` of the catalogue is the key template: literals and placeholders `<…>` (and `*` — any key under the prefix). The key
 of an instance belongs to a family if it matches the template whole: the literals — exactly, a placeholder — by a full match of
-the grammar of the first table below on the substring of the key that it occupies (the portable expression `^(?:…)$`, [LAYERS.md](../../LAYERS.md)
+the grammar of the first table below on the substring of the key that it occupies (the portable expression `^(?:…)$`, [LAYERS.md](../LAYERS.md)
 § 3 «Expression»; `/` — only if the grammar takes it). For a placeholder whose norm does not give its own grammar —
 a non-empty component `[^/]+`, for a root — an absolute path, for a path and an object key — non-empty components (the choice of the generator,
 accepted by the Architect). Where a placeholder means different things in different families (`<имя>`, `<id>`), the key is judged by the union, while
@@ -18,8 +18,8 @@ the writer writes by the norm of its own family (the second table). The constrai
 (reserved words, `free-…`, the length in bytes) are not judged by the key — they are held by the norm of the writer.
 
 `<manifest:X>` is the value of the key `X` of the manifest of the subsystem `<sub>`; the key is judged by the grammar of the value, the manifest is not
-read. A key not by the template — a refusal on the empty path `""`, the value is not judged ([LAYERS.md](../../LAYERS.md) § 6). The example is
-the substitution by which the vectors [`family-read`](../../vectors/family-read/README.md) build the column `key` of the rows with a key by
+read. A key not by the template — a refusal on the empty path `""`, the value is not judged ([LAYERS.md](../LAYERS.md) § 6). The example is
+the substitution by which the vectors [`family-read`](../vectors/family-read/README.md) build the column `key` of the rows with a key by
 the template.
 
 | Placeholder | Grammar | Example | Norm |

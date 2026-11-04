@@ -1,11 +1,11 @@
 # Vectors: the loopback threshold of a client of its own cluster
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/loopback/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the role certificate contract](../../../contracts/role-certificate.md) «The client of a door of its own cluster» `loopback`
+The owner is [the role certificate contract](../../contracts/role-certificate.md) «The client of a door of its own cluster» `loopback`
 (ADR-0075 addendum 2026-10-26 (3) item 1, (4) item 1, (5) item 1). The participants are the clients of the door of their own cluster (`own_client` of the contract):
 the agent to its console, the workers script, the cluster console at transition 2 and in the forwarding to the signer, the client of the resource door.
-The threshold decides whether to substitute `SERVER_NAME` into the `host` of the function [`peer`](../../peer/README.md) before step 1; the function `peer` itself and
+The threshold decides whether to substitute `SERVER_NAME` into the `host` of the function [`peer`](../peer/README.md) before step 1; the function `peer` itself and
 its package do not change from this. The bytes are written by «Спецификация»; the rows are by the text of the contract.
 
 ## `cases.tsv`

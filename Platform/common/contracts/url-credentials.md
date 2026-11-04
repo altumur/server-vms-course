@@ -1,18 +1,18 @@
 # The address contract: the login and the password in a url value
 
-This English text is the source; the Russian [`url-credentials.md`](../url-credentials.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/url-credentials.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies
 in the chapters; guess of stage C W03-E07, the Architect's decision of 2026-10-23). The owner is chapter
-[P/06.2](../../../06-console/spec/06.2-console.norms.md) of the console (Н1.1 `url_field`, Н1.1а, Н3 «read_address»). Participants:
-[the common row check](../row-check.md) — the door of units and tables of the console ([P/06.1](../../../06-console/spec/06.1-console.norms.md))
-and the customer library ([P/03.6](../../../03-worker/spec/03.6-worker.norms.md) Н1.6); the display of an address in answers (P/06.2 Н1.4) and
-[the log mask](../log-mask.md) of all processes (free text as a whole is that contract; C06-LOG-MASK-33-01); the declarations `credentials` and `secret_in` of a field `type: url` — the loader
-[P/02.1](../../../02-installer/spec/02.1-installer.norms.md) Н1.2а; the refusal `bad_url` of a group source — P/04 Н1.3 `group_by`.
+[P/06.2](../../06-console/spec/06.2-console.norms.md) of the console (Н1.1 `url_field`, Н1.1а, Н3 «read_address»). Participants:
+[the common row check](row-check.md) — the door of units and tables of the console ([P/06.1](../../06-console/spec/06.1-console.norms.md))
+and the customer library ([P/03.6](../../03-worker/spec/03.6-worker.norms.md) Н1.6); the display of an address in answers (P/06.2 Н1.4) and
+[the log mask](log-mask.md) of all processes (free text as a whole is that contract; C06-LOG-MASK-33-01); the declarations `credentials` and `secret_in` of a field `type: url` — the loader
+[P/02.1](../../02-installer/spec/02.1-installer.norms.md) Н1.2а; the refusal `bad_url` of a group source — P/04 Н1.3 `group_by`.
 Moved from P/06.2 Н1.1 (`url_field` without `bound_to`, `common_words`, `normalisation`), Н1.1а and Н3 «read_address» without
 a change of behaviour; the address rules А1–А15 are kept.
 
-Normative keywords follow the [course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## The field rule and the common vocabulary
 
@@ -37,7 +37,7 @@ The display mask is `***` (P/06.2 Н1.1 `mask`).
 ## Schemes (`schemes`)
 
 The rule of a field `type: url` names the admissible schemes: `schemes` — a scheme name `[a-z][a-z0-9+.-]*` → `{host?, fragment?,
-none?}` (the declaration in the manifest — [P/02.1](../../../02-installer/spec/02.1-installer.norms.md) Н1.3 `<schemes>`; the meaning — here;
+none?}` (the declaration in the manifest — [P/02.1](../../02-installer/spec/02.1-installer.norms.md) Н1.3 `<schemes>`; the meaning — here;
 guess of stage C URLC-HOST-01, the Architect's decision of 2026-10-23). A scheme of the value not from `schemes` — the refusal `bad_url`.
 
 ```yaml
@@ -98,7 +98,7 @@ The reason: by RFC 3986 such a value is not an address, but whoever opens it wil
 | query | `?` | `#` |
 | fragment | `#` | the end of the address |
 
-In free text (a value without `://` by А1, a log line — [the log mask contract](../log-mask.md)) an address ends at a space, a quote, `\`, `<` or `>`.
+In free text (a value without `://` by А1, a log line — [the log mask contract](log-mask.md)) an address ends at a space, a quote, `\`, `<` or `>`.
 A value of a field `type: url` with `://` is one address as a whole: these characters do not cut it. A character that the grammar of RFC 3986
 admits nowhere — a space and control characters, `"`, `<`, `>`, `\`, `^`, `` ` ``, `{`, `|`, `}` — makes the url
 unparsable: the refusal `bad_url` before storing (А15). Non-ASCII characters are admissible: А4 reads them. `'` is a character of the grammar
@@ -179,8 +179,8 @@ The name is masked together with the value. The reason: the recipient will decod
   `regex` and `nested` of all url fields of the loaded manifests — together with the field rule. The own pairs of the outer
   address are read only by the field rule. Therefore at a field whose rule does not name `session`, the pair `?session=abc`
   is accepted, while `session` inside a nested address is a secret if the rule of another url field of the catalogue names it
-  (in the vectors [`secret-in`](../../vectors/secret-in/README.md) — the fields `rec.volumes.url` and `cam.source` from the file
-  [`fields.yaml`](../../vectors/secret-in/fields.yaml) of the vectors).
+  (in the vectors [`secret-in`](../vectors/secret-in/README.md) — the fields `rec.volumes.url` and `cam.source` from the file
+  [`fields.yaml`](../vectors/secret-in/fields.yaml) of the vectors).
 - **Depth.** The outer address is level 0, levels 1–3 are read. An address of level 4 is not read and is counted as
   a password: `?src=http://a/x?src=http://b/y?src=http://c/z?src=http://d/w` → `?src=***`. The reason: about what is not
   read it is unknown that it is clean.
@@ -246,7 +246,7 @@ would stretch the userinfo of the outer address over the nested one.
 
 «Does not parse» — by RFC 3986 (a character outside the grammar of А2, a non-numeric port of А12). A refusal of a parsed address by the section
 «Schemes» (a scheme not from `schemes`, no host, no path at `host: path`) is not А15: the credentials do not give it, `bad_url` is
-the step url of [the row check](../row-check.md) (guess of stage C URLC-VECTORS-02, clarification, the Architect's decision of 2026-10-23).
+the step url of [the row check](row-check.md) (guess of stage C URLC-VECTORS-02, clarification, the Architect's decision of 2026-10-23).
 
 The order of the checks affects only the text of the reason and is left to the implementation. The value and its parts are not repeated
 in the reason (P/06.2 Н4). The reason: a login found first does not make the password next to it safe —
@@ -285,8 +285,8 @@ refusal(value):
 later changes only the reading of nested addresses in the following writes.
 
 The refusal is the word `bad_url` and the names of the `credentials` fields (А15): at a door — 400 `fault: bad_url` (P/06.2 Н4, P/06.1 Н4), at
-the customer library — the outcome `refused` ([the row check contract](../row-check.md) «Refusals»).
+the customer library — the outcome `refused` ([the row check contract](row-check.md) «Refusals»).
 
 ## Vectors
 
-The package [`secret-in`](../../vectors/secret-in/README.md) (`cases.tsv`, the field declarations `fields.yaml`); free log text — the package [`log-mask`](../../vectors/log-mask/README.md) of [the log mask contract](../log-mask.md); the rules of «Schemes» — partly the packages [`group-of`](../../vectors/group-of/README.md) and [`row-check`](../../vectors/row-check/README.md). (ADR-0083 addendum (32) item 2)
+The package [`secret-in`](../vectors/secret-in/README.md) (`cases.tsv`, the field declarations `fields.yaml`); free log text — the package [`log-mask`](../vectors/log-mask/README.md) of [the log mask contract](log-mask.md); the rules of «Schemes» — partly the packages [`group-of`](../vectors/group-of/README.md) and [`row-check`](../vectors/row-check/README.md). (ADR-0083 addendum (32) item 2)

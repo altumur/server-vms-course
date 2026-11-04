@@ -91,7 +91,7 @@ families, including the directory `testsub/heartbeats` of two parts, — 403; a 
 a family, `testsub/heartbeats/sub`), — 404; a key that differs from the written one only by case or normalization (`W-1` with
 `w-1`), is its own key: 404, not another's object (reconciliation of python and go М10/6–11, E1, E2, E4, E7, E8).
 
-**File names in shared trees** — one encoding for all implementations: [the event log contract](../../common/contracts/event-journal.md#имена-файлов-в-общих-деревьях)
+**File names in shared trees** — one encoding for all implementations: [the event log contract](../../common/contracts/event-journal.md#file-names-in-shared-trees)
 (moved there from this subsection; review of stage A 3–5, № 9).
 
 A file system error after admission is a refusal of the write, not a success and not «there is no file».

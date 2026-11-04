@@ -1,31 +1,31 @@
 # The gate-and-pass contract: who calls the console, `/session`, the pass of `door.pass` to a worker
 
-This English text is the source; the Russian [`gate-and-pass.md`](../gate-and-pass.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/gate-and-pass.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (11) and addendum (13): a contract that several
 processes execute lies in `Platform/common/`; analysis of review of stage A 8–10, № 14 / decision 3). The owner is lesson
-[P/06](../../../06-console/spec/06.3-console.norms.md) (chapters 6.3 — the gate and the session, 6.5 — `door.pass`): the cluster console
+[P/06](../../06-console/spec/06.3-console.norms.md) (chapters 6.3 — the gate and the session, 6.5 — `door.pass`): the cluster console
 asks every door for the identity and the grant and passes the routes `door.pass` to a worker. The participant is lesson P/10, the domain console
-([norms of lesson P/10](../../../10-domain-console/spec/10-domain-console.norms.md) Н1.5, Н1.6, Н1.7): the same gate before the doors `/domain/*` and the same pass of the routes `door.pass` to the worker on the domain.
+([norms of lesson P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.5, Н1.6, Н1.7): the same gate before the doors `/domain/*` and the same pass of the routes `door.pass` to the worker on the domain.
 
 | What | Cluster console (P/06) | Domain console (P/10) |
 |---|---|---|
-| the gate (section «The gate») | in full; the grants are the copy of `domain/grants` of this cluster (section «The gate with grants» `cluster`) | `gate`, `identity`, `x_user`, `caps`, `scope`, `csrf`, `body`, `refusal`; the grants are `domain/grants/domain`, `need` is [P/08.4](../../../08-domain/spec/08.4-domain.norms.md) Н1.5 `domain`, `body_unit` |
+| the gate (section «The gate») | in full; the grants are the copy of `domain/grants` of this cluster (section «The gate with grants» `cluster`) | `gate`, `identity`, `x_user`, `caps`, `scope`, `csrf`, `body`, `refusal`; the grants are `domain/grants/domain`, `need` is [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.5 `domain`, `body_unit` |
 | `/session`, `/healthz` (section «The gate» `session`) | yes | yes (P/10 Н1.7 `session`; `grants` — P/10 Н1.5 `session`) |
 | the traces of the domain, «loopback — operator» (section «Traces of the domain») | yes (the late layer) | yes (P/10 Н1.5) |
 | the rights by the body (section «Rights by the body») | `rights:`, `body_unit`, `session` | `body_unit`, `session`, the line `domain` |
 | the break-glass entry and the attempt limit (section «Break-glass entry») | yes | the limit is at `POST /api/login`, passed to the process `domain` |
-| the pass of `door.pass` (section «Pass of `door.pass`») | to a live worker of the subsystem with a door ([P/06.5](../../../06-console/spec/06.5-console.norms.md) Н1.8 «Live worker with a door») | to the worker on the domain of this subsystem by its heartbeat (P/10 Н1.6 `route`, `address`, `absent`) |
+| the pass of `door.pass` (section «Pass of `door.pass`») | to a live worker of the subsystem with a door ([P/06.5](../../06-console/spec/06.5-console.norms.md) Н1.8 «Live worker with a door») | to the worker on the domain of this subsystem by its heartbeat (P/10 Н1.6 `route`, `address`, `absent`) |
 | the pass of the second kind and the callback by ticket (section «Pass of the second kind») | yes | the pass — yes; there is no callback on the domain yet (P/10 Н1.6) |
-| forwarding of `/domain/*` to another process | [forwarding contract](../forwarding.md) | [forwarding contract](../forwarding.md) |
+| forwarding of `/domain/*` to another process | [forwarding contract](forwarding.md) | [forwarding contract](forwarding.md) |
 
 Moved from P/06.3 Н1.3 (the block `gate`, `open_routes`, `session` in full) and P/06.5 Н1.8 (the block `manifest`, `rule`, `codes`) without
 a change of behaviour; the source chapters hold pointers. What the grants and the entry of the people of the domain mean is lesson P/08
-([chapter 8.4](../../../08-domain/spec/08.4-domain.norms.md)); the parsing of a console request and the order of checks are the section «Request parsing and the order of checks» below; the keys `rights:` of the manifest are
+([chapter 8.4](../../08-domain/spec/08.4-domain.norms.md)); the parsing of a console request and the order of checks are the section «Request parsing and the order of checks» below; the keys `rights:` of the manifest are
 P/06.3 Н1.5; the refusals of the gate are the section «Refusals of the gate»; the refusals of the pass are P/06.5 Н4.
 References «Н1.x» in the moved text are to the source chapter (Н1.5, Н1.8 — P/06.3; Н4 — P/06.5); «chapter 6.K» is a chapter of lesson P/06.
 
-Normative keywords follow the [course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
@@ -261,11 +261,11 @@ the JSON of the body by RFC 8259 (a repeated field name, `NaN`/`Infinity`, BOM, 
 without normalization, HTTP by RFC 9112, the early refusal. The deviations of the console, the same for all its doors (chapters 6.1–6.6):
 a parse refusal is 400 ConsoleRefusal `{detail, error: refused}`, not `Fault {kind}` of P/01.1; no route — 404 NoRoute, the method — 405
 (P/01.1 gives 404 to both); a parameter that the door reads is repeated — 400, except `v` of the module — 404 (Н1.1); the body `chunked` — 400
-([chapter 6.3](../../../06-console/spec/06.3-console.norms.md) Н1.3 `body`); the depth of the JSON of the body is 64 ([chapter 6.1](../../../06-console/spec/06.1-console.norms.md) Н1.4). The doors of other chapters refer here and name only their own deviations.
+([chapter 6.3](../../06-console/spec/06.3-console.norms.md) Н1.3 `body`); the depth of the JSON of the body is 64 ([chapter 6.1](../../06-console/spec/06.1-console.norms.md) Н1.4). The doors of other chapters refer here and name only their own deviations.
 
 **Numeric query parameters** (C06-EVENTS-QUERY-LEXEME-162-01, the Architect's decision of 2026-10-27). A query parameter that a door reads as a number is first
 URL-decoded (P/01.1 Н2.1: `+` is a space, `%XX` is a byte), then its whole value goes by the reader grammar of its
-type of the [row codec](../../data/codec.tsv): time (`from`, `to` at `GET /events`; `since`, `until` at `GET /domain/alarms`
+type of the [row codec](../data/codec.tsv): time (`from`, `to` at `GET /events`; `since`, `until` at `GET /domain/alarms`
 of the domain console) — `time`: `^(0|[1-9][0-9]*)(\.[0-9]+)?$`, finite in binary64; an integer (`limit`, `late`) — `integer` as an integer lexeme
 `^-?(0|[1-9][0-9]*)$`, then the bounds of the door; a number — `number`, the decimal notation of the reader. Out of the grammar — 400
 ConsoleRefusal, `detail` is the name of the parameter (a door with its own `detail` names it in its deviation). Consequences: `+1`
@@ -276,7 +276,7 @@ door is its own (P/05 Н1.3).
   refusal before the body) sends the full answer with `Connection: close`, then reads and discards what is sent, without parsing, up to
   the declared length, but no more than the volume and no longer than the drain term, and only after that closes the connection: a client
   that still sends the body gets the answer, not a connection reset. The rule is one for all HTTP doors of the module (the console —
-  [P/06.5](../../../06-console/spec/06.5-console.norms.md) Н2 «Console request parsing», the bytes door — P/06.1 Н2, the resource door — P/05 Н2 «Query parsing»); the volume and the drain term are item 9 of «Implementation decides».
+  [P/06.5](../../06-console/spec/06.5-console.norms.md) Н2 «Console request parsing», the bytes door — P/06.1 Н2, the resource door — P/05 Н2 «Query parsing»); the volume and the drain term are item 9 of «Implementation decides».
 
 A body refusal at the doors of the console: chunked — 400, larger than the limit — 413, slow — 408, short — 400; the body ConsoleRefusal
 `{detail, error: denied}` (P/06.5 Н4 the row «body»; GP-L03, the Architect's decision of 2026-10-28).
@@ -306,7 +306,7 @@ A body refusal at the doors of the console: chunked — 400, larger than the lim
 ## The gate with grants
 
 From P/06.7 Н1.9 `cluster` (the side of the cluster console; moved without a change; layout audit `Б-09`, `Б-11`, the Architect's decision of 2026-10-25): in the state `on` a person is admitted
-only by the entry and the grants. The side of the process `domain` is [P/08.4](../../../08-domain/spec/08.4-domain.norms.md) Н1.5; the domain
+only by the entry and the grants. The side of the process `domain` is [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.5; the domain
 console is P/10 Н1.5 (the grants `domain/grants/domain`).
 
 ```yaml
@@ -334,7 +334,7 @@ From P/06.3 Н4 (moved without a change; layout audit `Б-09`, `Б-11`, the Arch
 
 **Unreadable row** (the owner's decision of 2026-10-28). A row of the domain that the access check reads for this session
 (the identity, the signature, the grant, the input of `may`) exists but does not read (an outcome of its family) — 503 `{error: "unavailable", detail?}` (the form
-`Unavailable` of the [common forms of the contract](../gate-and-pass.api.openapi.yaml); `detail` at the cluster console is mandatory — P/06.5 Н4); not 401, not 403, not «no row»; it does not count
+`Unavailable` of the [common forms of the contract](gate-and-pass.api.openapi.yaml); `detail` at the cluster console is mandatory — P/06.5 Н4); not 401, not 403, not «no row»; it does not count
 toward the limits; there is no journal. The exceptions are only those named here:
 - the debug entry of the console (section «The gate» `identity` item 4): an unreadable `domain/disabled` — «as without the entry»;
 - an unreadable element `lines` of the grants (the path `/doc/lines/*` of the families `grants`; P/08.4 Н1.3 `unreadable`): in a direct group a skip with
@@ -360,9 +360,9 @@ applications of the rule.
 | no grant | 403 | `{detail: "<кто> may not <cap> <единица \| here>", error: denied}`; journal | — |
 | no domain, not loopback | 403 | `{detail: "this cluster is in no domain … loopback", error: denied}` | connect a domain |
 | there were keys, nothing to check with | 503 | `{detail: "…admits nobody", error: denied}` | restore the trust |
-| the row `domain/keys` exists but does not read — nothing to check a token with ([family `keys`](../../../08-domain/data/keys.outcomes.tsv)) | 503 | `{error: "unavailable"}` — the rule «Unreadable row»; not «the token is valid» | wait for a readable row (DF-OUTCOMES-109, the Architect's decision of 2026-10-25) |
-| the row `domain/member` exists but does not read — nothing to check the signature of its own agent (`X-Agent-Signature`) and the trace of the domain with ([family `member`](../../../09-agent/data/member.outcomes.tsv)) | 503 | `{error: "unavailable"}` — the rule «Unreadable row»; not «the signature is valid», not «no domain» | wait for a readable row (C06-GATE-UNREADABLE-ROW-503-01, the Architect's decision of 2026-10-28) |
-| the row `domain/disabled` exists but does not read — nothing to check the input `disabled` of the function `may` with ([family `disabled`](../../../08-domain/data/disabled.outcomes.tsv)) | 503 | `{error: "unavailable"}` — the rule «Unreadable row» (C06-GATE-DISABLED-UNREADABLE-JOURNAL-01, the Architect's decision of 2026-10-28); `may` does not decide; the debug entry of the console — «as without the entry» (section «The gate») | wait for a readable row (C06-GATE-UNREADABLE-ROW-503-01, the Architect's decision of 2026-10-28) |
+| the row `domain/keys` exists but does not read — nothing to check a token with ([family `keys`](../../08-domain/data/keys.outcomes.tsv)) | 503 | `{error: "unavailable"}` — the rule «Unreadable row»; not «the token is valid» | wait for a readable row (DF-OUTCOMES-109, the Architect's decision of 2026-10-25) |
+| the row `domain/member` exists but does not read — nothing to check the signature of its own agent (`X-Agent-Signature`) and the trace of the domain with ([family `member`](../../09-agent/data/member.outcomes.tsv)) | 503 | `{error: "unavailable"}` — the rule «Unreadable row»; not «the signature is valid», not «no domain» | wait for a readable row (C06-GATE-UNREADABLE-ROW-503-01, the Architect's decision of 2026-10-28) |
+| the row `domain/disabled` exists but does not read — nothing to check the input `disabled` of the function `may` with ([family `disabled`](../../08-domain/data/disabled.outcomes.tsv)) | 503 | `{error: "unavailable"}` — the rule «Unreadable row» (C06-GATE-DISABLED-UNREADABLE-JOURNAL-01, the Architect's decision of 2026-10-28); `may` does not decide; the debug entry of the console — «as without the entry» (section «The gate») | wait for a readable row (C06-GATE-UNREADABLE-ROW-503-01, the Architect's decision of 2026-10-28) |
 | callback by ticket: the header out of form, no record, the wrong transport or leaf, the session kind is not `person`, the door outside the list, the ticket token is revoked, expired or its key is withdrawn, the person is disabled (section «Pass of the second kind» `ticket`) | 401 | `{detail: "ticket refused", error: denied}`; the cause is only in the line of the console log, the worker has no need to know it | finish the translation of the request: the ticket is dead, there is no retry (ADR-0094 B1) |
 | a foreign Origin on an acting request by cookie | 403 | `{detail, error: denied}` | — |
 | `/session POST` at an open console (section «The gate» `session` `by_state`) | 400 | `{detail, error: "this console is open"}` | — |
@@ -370,7 +370,7 @@ applications of the rule.
 | break-glass entry: the limit | 429 | `Retry-After` | wait |
 
 A refusal of the gate has no side writes of the door. The lane, the frame, no path, the method, the body, the common entry limit of the console (429) —
-[chapter 6.5](../../../06-console/spec/06.5-console.norms.md) Н4.
+[chapter 6.5](../../06-console/spec/06.5-console.norms.md) Н4.
 
 ## Traces of the domain
 
@@ -378,13 +378,13 @@ From P/06.3 Н1.8 (the late layer, introduced by lesson P/08; guess of stage C G
 is the section «The gate with grants» above.
 
 The states `on`, `open`, `shut` of the console gate are Н1.3. «Keys exist» means the row `domain/keys` reads and is accepted
-by the function `keys` ([domain key set contract](../keys.md); analysis of review of stage A 8–10, № 13) with the pinned root. «A trace of the domain» is any of the rows `domain/root`, `domain/member`, `domain/revoked`,
+by the function `keys` ([domain key set contract](keys.md); analysis of review of stage A 8–10, № 13) with the pinned root. «A trace of the domain» is any of the rows `domain/root`, `domain/member`, `domain/revoked`,
 `domain/grants/*`, `domain/break-glass/*`, or this console process has already seen keys: then without keys — `shut` (503), not `open`.
 
-In the state `on` the identity goes by the order of Н1.3 `identity`: the agent signature — [agent signature contract](../agent-signature.md); the token — the function `token` of the
-[domain token contract](../domain-token.md) «Проверка» (owner P/08.2; analysis of review of stage B 3–5, В1) by the set of this cluster with `expect {kind: person, cluster: null}` (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10); the grants of a person and the entry — P/08.4. Without an identity — 401, not 503: 503 is only `shut`. In `on`
+In the state `on` the identity goes by the order of Н1.3 `identity`: the agent signature — [agent signature contract](agent-signature.md); the token — the function `token` of the
+[domain token contract](domain-token.md) «Проверка» (owner P/08.2; analysis of review of stage B 3–5, В1) by the set of this cluster with `expect {kind: person, cluster: null}` (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10); the grants of a person and the entry — P/08.4. Without an identity — 401, not 503: 503 is only `shut`. In `on`
 a person is admitted only by the entry and the grants (section «The gate with grants»); «loopback — operator» is only `open`; the agent of its own cluster passes by
-the signature ([agent signature contract](../agent-signature.md); analysis of review of stage A 8–10, № 13).
+the signature ([agent signature contract](agent-signature.md); analysis of review of stage A 8–10, № 13).
 
 ```yaml
 loopback:  «loopback — operator» — only the state open (no domain, Н1.3); in the state on — only «The gate with grants» above
@@ -393,14 +393,14 @@ loopback:  «loopback — operator» — only the state open (no domain, Н1.3);
 ## Rights by the body
 
 From P/06.3 Н1.5 (the keys `rights:` of the manifest — the boundary of the rights of people), P/06.7 Н1.9 and P/10 Н1.5 (`body_unit`, `session`), P/08.4 Н1.5
-(the line `domain`) without a change of behaviour (guess of stage C GP-G05, the Architect's decision of 2026-10-23). The form of the keys is `Platform/02-installer/spec/02.1-installer.schema.json` (`rights`; [form](../../../02-installer/spec/02.1-installer.schema.json), P/02.1).
+(the line `domain`) without a change of behaviour (guess of stage C GP-G05, the Architect's decision of 2026-10-23). The form of the keys is `Platform/02-installer/spec/02.1-installer.schema.json` (`rights`; [form](../../02-installer/spec/02.1-installer.schema.json), P/02.1).
 
 | Key | Meaning |
 |---|---|
 | `routes: {view: [семьи], edit: [семьи]}` | the writes of the family require less than `admin`: `view` or `edit`; for unit rows only creation is lowered |
 | `cluster_rows: true` | any write of a unit row requires a grant on the cluster |
 | `unit_of: {таблица: поле}` | a row of the table belongs to the unit from the field; a write requires the right on the unit of the old and of the new row |
-| `reach: {group: [поля], cluster: [поля], requests: [действия]}` | what an edit changes beyond the unit: a group field — all units of the old and of the new group; a cluster field — a grant on the cluster; a request with an action — `edit` on the whole group (the action is the field `action` of the request body, [chapter 6.4](../../../06-console/spec/06.4-console.norms.md) Н1.5 `action`; analysis of review of stage A 6–7, № 14); `reach.group` requires `placement.group_by` |
+| `reach: {group: [поля], cluster: [поля], requests: [действия]}` | what an edit changes beyond the unit: a group field — all units of the old and of the new group; a cluster field — a grant on the cluster; a request with an action — `edit` on the whole group (the action is the field `action` of the request body, [chapter 6.4](../../06-console/spec/06.4-console.norms.md) Н1.5 `action`; analysis of review of stage A 6–7, № 14); `reach.group` requires `placement.group_by` |
 | `names: [{field, unit, sub \| of, action?}]` | the units that a row names inside a `json` field; their targets are added to the reach of the edit |
 
 ```yaml
@@ -446,7 +446,7 @@ domain:    the domain console and the process domain: may with grants = domain/g
 From P/06.7 Н1.10 (the cluster console; the domain console has no emergency session — it has no steps 1 and 2 of `identity`, P/10 Н1.5) and
 P/08.4 Н1.10 (the attempt limit is common to `POST /session/break-glass` of the cluster console and `POST /api/login` of the process `domain`,
 to which the domain console passes it) without a change of behaviour (guess of stage C GP-G05, the Architect's decision of 2026-10-23). The holder's side (the row
-`domain/break-glass/<кластер>`, `GLASS_MIN`, `carry`) — [P/08.4](../../../08-domain/spec/08.4-domain.norms.md) Н1.6.
+`domain/break-glass/<кластер>`, `GLASS_MIN`, `carry`) — [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.6.
 
 ```yaml
 door:          POST /session/break-glass {who, why, password} at the cluster console (section «The gate» open_routes) — in order:
@@ -471,11 +471,11 @@ journal:       access.break_glass.opened {who, why} | .refused {who, why, reason
                stronger than view — access.break_glass {who, method, path}
 ```
 
-The check of the password hash — the [password hash contract](../password-hash.md) (`verify`; GP-G06).
+The check of the password hash — the [password hash contract](password-hash.md) (`verify`; GP-G06).
 
 ### Attempt limit
 
-«Н1.2» is [P/08.4](../../../08-domain/spec/08.4-domain.norms.md); «chapter 8.0 Н1.8» is P/08.0 (layout audit, `Б-08`: the circle through P/08.4 Н1.10 is removed — the rule is here).
+«Н1.2» is [P/08.4](../../08-domain/spec/08.4-domain.norms.md); «chapter 8.0 Н1.8» is P/08.0 (layout audit, `Б-08`: the circle through P/08.4 Н1.10 is removed — the rule is here).
 
 ```yaml
 scope:     at the process domain — POST /api/login and POST /api/verify (P/08.4 Н1.2а); at the cluster console — POST /session/break-glass; each door has its own count
@@ -531,7 +531,7 @@ There are no vectors for these rules — they are checked by the scenarios of th
 
 ## Pass of `door.pass`
 
-From P/06.5 Н1.8; the grammar of `door.pass` in the manifest — [P/02.1](../../../02-installer/spec/02.1-installer.norms.md):
+From P/06.5 Н1.8; the grammar of `door.pass` in the manifest — [P/02.1](../../02-installer/spec/02.1-installer.norms.md):
 
 ```yaml
 manifest: door: {routes: […], pass: [<сегмент>…]}   # the segments do not repeat routes, rows and where (P/02.1)
@@ -559,7 +559,7 @@ Which worker gets the route depends on the side (the table above). The domain co
 the role `domainconsole`; no worker on the domain is heard — 503 `{detail: <текст строки codes>, error: "unavailable"}` (P/10 Н1.6 `absent`;
 C06-GP-L03-DOMAIN-WORKER-503-01, the Architect's decision of 2026-10-28). The worker on the domain accepts
 `door.pass` only from a client with the role certificate `domainconsole` (otherwise 403 `forbidden`) and does not check the credentials of people
-again: the token of the person was checked by the gate of the domain console ([P/03.7](../../../03-worker/spec/03.7-worker.norms.md) Н1.6
+again: the token of the person was checked by the gate of the domain console ([P/03.7](../../03-worker/spec/03.7-worker.norms.md) Н1.6
 `door_client`; edit `d92df6554`; analysis of review of stage B 8–10, № 9).
 
 ### Supervision
@@ -589,7 +589,7 @@ one:       the header and the answer of the check door (P/06.7 Н1.15) — one f
 
 The first kind above passes the credential of the person to the worker, so a captured worker could act on their behalf after the request too. The second kind passes
 the request without the credential, with a ticket for this request: the worker calls the console doors back only by the ticket, only while the request is open, only from the transport of its own
-role and only to the doors of the list (ADR-0094 B1, addendum (3), (6), (12); ADR-0091 addendum (30)). The grammar of `door.pass` is [P/02.1](../../../02-installer/spec/02.1-installer.norms.md) Н1.4; the closed list of doors is [P/06.3](../../../06-console/spec/06.3-console.norms.md) Н1.9.
+role and only to the doors of the list (ADR-0094 B1, addendum (3), (6), (12); ADR-0091 addendum (30)). The grammar of `door.pass` is [P/02.1](../../02-installer/spec/02.1-installer.norms.md) Н1.4; the closed list of doors is [P/06.3](../../06-console/spec/06.3-console.norms.md) Н1.9.
 The accounts of the subsystems that need the first kind stay on it until their transition; `door.pass` of one manifest is of one kind.
 
 ```yaml
@@ -651,18 +651,18 @@ PASS_STREAMS_MAX: 256         # passes as a stream of one instance at once: each
 PASS_TICKET_CHECK: 5          # s; the term within which an open stream notices a revocation, a disabling and exp
 ```
 
-**One worker per server.** A ticket is bound to the leaf of the server, and the leaf is one per role and server: a second worker with a callback on the same server would share it. Therefore the controller's order for such a subsystem does not raise `want` of the server above 1 ([P/04](../../../04-controller/spec/04-controller.norms.md) Н3 «shortage(), order()…»).
+**One worker per server.** A ticket is bound to the leaf of the server, and the leaf is one per role and server: a second worker with a callback on the same server would share it. Therefore the controller's order for such a subsystem does not raise `want` of the server above 1 ([P/04](../../04-controller/spec/04-controller.norms.md) Н3 «shortage(), order()…»).
 
 **Races.** Two callbacks of one ticket at once are independent, the edits are judged by `cas` and `If-Match`. The request closes in the middle of a callback — a call that has passed `ticket` runs to its end: one write is atomic, and the next call gets 401, so the worker stops the translation and writes nothing more. A disabling and a revocation are seen by the next call or by the stream check: the window is `PASS_TICKET_CHECK` and the delay of the copy at the cluster: at a member a revocation goes by the copy of `domain/revoked`, a disabling — by the copy of grants, so the ticket of a disabled person is not removed there until the end of the request, but `may` refuses it.
 
 ## Vectors
 
-There are no vectors: the gate, `/session`, the rights by the body, the break-glass entry and the pass are checked by the scenarios of the acceptances of chapters 6.3, 6.5, 6.7, of lesson P/10 and of chapter 8.4, the pass of the second kind — by the stand [`acceptance/pass/`](../../acceptance/pass/README.md); the check of the break-glass password — by the package [`password-hash`](../../vectors/password-hash/README.md) of the password hash contract. (ADR-0083 addendum (32) item 2) The coverage of a grant `scope` against a unit row is the function `covers` of the package [`may`](../../vectors/may/README.md) (`covers.tsv`; C06-EVENTS-QUERY-UNKNOWN-138-10).
+There are no vectors: the gate, `/session`, the rights by the body, the break-glass entry and the pass are checked by the scenarios of the acceptances of chapters 6.3, 6.5, 6.7, of lesson P/10 and of chapter 8.4, the pass of the second kind — by the stand [`acceptance/pass/`](../acceptance/pass/README.md); the check of the break-glass password — by the package [`password-hash`](../vectors/password-hash/README.md) of the password hash contract. (ADR-0083 addendum (32) item 2) The coverage of a grant `scope` against a unit row is the function `covers` of the package [`may`](../vectors/may/README.md) (`covers.tsv`; C06-EVENTS-QUERY-UNKNOWN-138-10).
 
 ## Correspondence to former lessons
 
 From P/06.3 (analysis of review of stage A 8–10, № 14 / decision 3; formerly М10/9 Н1.3): Н1.3 — the block `gate`, `open_routes`, `session`
 in full (here «The gate»; in P/06.3 Н1.3 — a pointer and a paragraph about request parsing). From P/06.5 Н1.8 (formerly М10/11 Н1.8):
 the block `manifest`, `rule`, `codes` (here «Pass of `door.pass`»; the definition of «a live worker with a door» stayed in P/06.5 Н1.8). Parts of the norms
-P/06.3-02, P/06.3-03 and P/06.5-12 — by `note` of the [id-map](../../id-map.tsv); the domain console — М11/8-10 (`door.pass` on the domain,
+P/06.3-02, P/06.3-03 and P/06.5-12 — by `note` of the [id-map](../id-map.tsv); the domain console — М11/8-10 (`door.pass` on the domain,
 P/10-03), М11/8-11 (the holder's page, P/10-04) and М11/9-06 (the gate with grants; the part of the domain console — P/10-13, of the cluster console — P/06.7-11).

@@ -1,12 +1,12 @@
 # Векторы: бакет журнала событий и имена `%h<sha256>`
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
+Текст производный от `vectors/journal/README.md`, руками не правится: источник — английский [`vectors/journal/README.md`](../../../vectors/journal/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
 
 Владелец — [договор журнала событий](../../contracts/event-journal.md): `bucket` `torn`, форма `line` и «Имена файлов в
 общих деревьях» (догадки стадии C EJ-G03, EJ-G04, EJ-G06, EJ-G07, EJ-L03, EJ-L06, решение «Архитектора» 2026-10-23); форма строки — семья events
 P/05 (`05-resource/data/events-*.schema.json`: `events-unit`, `events-unit-alarms`, `events-audit`,
 `events-audit-alarms`, `events-console`, `events-console-alarms`, `events-mirror`). Участники — писатели и читатели
-деревьев событий и объектов: воркер, консоль, контроллер, ресурс ([P/05](../../../05-resource/ru/spec/05-resource.norms.md)
+деревьев событий и объектов: воркер, консоль, контроллер, ресурс ([P/05](../../../../05-resource/ru/spec/05-resource.norms.md)
 Н1.1, Н1.2, Н1.4). Байты пишет «Спецификация».
 
 ## `bucket.tsv`

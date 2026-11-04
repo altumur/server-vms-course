@@ -1,8 +1,8 @@
 # Vectors: the log mask
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/log-mask/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the log mask contract](../../../contracts/log-mask.md) (chapter [P/06.2](../../../../06-console/spec/06.2-console.norms.md) Н1.4 `never.log`; the pairs and the addresses — [the address contract](../../../contracts/url-credentials.md)). The package was moved from `Platform/06-console/vectors/log-mask/` byte for byte (C06-LOG-MASK-33-01); eight rows at the end (the end of the Basic/Bearer credentials, the White_Space whitespace — the answer of «Архитектора» 2026-10-25) are only here: the common table `Source/tests/testdata/log_mask.tsv` is the former one.
+The owner is [the log mask contract](../../contracts/log-mask.md) (chapter [P/06.2](../../../06-console/spec/06.2-console.norms.md) Н1.4 `never.log`; the pairs and the addresses — [the address contract](../../contracts/url-credentials.md)). The package was moved from `Platform/06-console/vectors/log-mask/` byte for byte (C06-LOG-MASK-33-01); eight rows at the end (the end of the Basic/Bearer credentials, the White_Space whitespace — the answer of «Архитектора» 2026-10-25) are only here: the common table `Source/tests/testdata/log_mask.tsv` is the former one.
 The participants are all processes of the platform that write a log (id-map: М10/7-08 → P/06.2-05, «все процессы»). The bytes are written by
 «Спецификация»; the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16, ADR-0083). Moved from
 `Source/tests/testdata/log_mask.tsv` byte for byte (stage B, the move of lesson 6, the Architect's decision on В8 of the plan of lesson 6);
@@ -22,7 +22,7 @@ between TABs, nothing is unescaped: `\t`, `\n` in a cell are two characters. Thr
 ## Run
 
 A side masks `raw` by the log mask of a process that knows the manifests of the stand, and compares with `masked` byte for byte. The rule
-of the catalog is the union of the rules of the fields `cam.source` and `rec.volumes.url` from [`fields.yaml`](../../secret-in/fields.yaml) of the vectors `secret-in`
+of the catalog is the union of the rules of the fields `cam.source` and `rec.volumes.url` from [`fields.yaml`](../secret-in/fields.yaml) of the vectors `secret-in`
 (in the input of the single command `vectors` — `files` with the key `fields.yaml`; `cells: {raw}`; the inventory C04/C06-NEXT-167, the Architect's decision 2026-10-27)
 with the common dictionary Н1.1 `common_words` (the names that the manifest adds — `sig`, `psd` — are included).
 Who performs it — every process of the platform that writes a log (ACC-VECTORS-CONNECT-04, the Architect's decision 2026-10-26; the principle ACC-VECTORS-CONNECT-03): the store daemon and its CLI (`01-store`),
@@ -33,7 +33,7 @@ log lines past the mask: their diagnostics go through `w2cctl` — the same mask
 write to the log file. The store daemon and the CLI (`01-store`) do not load manifests — their catalog is empty (the contract `log-mask`
 `rule`) (C01-C02-LOG-MASK-ROLES-01, the Architect's decision 2026-10-27).
 
-The value of a field `type: url` — the vectors [`../secret-in/`](../../secret-in/README.md): in a free text an address ends at a space,
+The value of a field `type: url` — the vectors [`../secret-in/`](../secret-in/README.md): in a free text an address ends at a space,
 a quote, `\`, `<` or `>` (the address contract А2), in the value of a field — it does not.
 
 ## `mask_in.tsv`

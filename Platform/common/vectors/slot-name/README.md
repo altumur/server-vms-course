@@ -1,8 +1,8 @@
 # Vectors: the slot name
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/slot-name/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the slot name contract](../../../contracts/slot-name.md) (chapter P/03.2 Н1.4; the guess of stage C POOL-ORDER-51-01, the Architect's decision
+The owner is [the slot name contract](../../contracts/slot-name.md) (chapter P/03.2 Н1.4; the guess of stage C POOL-ORDER-51-01, the Architect's decision
 of 2026-10-25). The participants are the slot capture, the controller, the pool contract, the workers script, the console. The bytes are written by
 «Спецификация»; the rows are by the text of the contract.
 

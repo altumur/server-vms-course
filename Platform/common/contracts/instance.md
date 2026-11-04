@@ -1,21 +1,21 @@
 # The process instance contract: grammar and computation
 
-This English text is the source; the Russian [`instance.md`](../instance.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/instance.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): several processes write the process instance into the rows of the slot, the turn, the presence
 lock and into event ids — a contract, not copies in chapters; layout audit А-06, the Architect's decision of
-2026-10-25). The owner is chapter [P/03.2](../../../03-worker/spec/03.2-worker.norms.md) (Н1.4 `holder`, Н3 «start()» step 2).
+2026-10-25). The owner is chapter [P/03.2](../../03-worker/spec/03.2-worker.norms.md) (Н1.4 `holder`, Н3 «start()» step 2).
 Participants: the worker (the slot, the contender mark, the heartbeat — P/03.2, P/03.4), the resource — the field `instance` of the presence lock
-([P/05](../../../05-resource/spec/05-resource.norms.md) Н1.4; [the presence lock contract](../presence-lock.md)), the process `domain` —
-`holder` of the row `domain/signer-turn` ([P/08.10](../../../08-domain/spec/08.10-domain.norms.md) Н1.7), the writers of the event journal
-(the instance in an event id — [the event journal contract](../event-journal.md) «The event id and the writer instance»), the installer —
-the variable `INSTANCE_ID` ([the environment file contract](../env-file.md) «Environment variables»).
+([P/05](../../05-resource/spec/05-resource.norms.md) Н1.4; [the presence lock contract](presence-lock.md)), the process `domain` —
+`holder` of the row `domain/signer-turn` ([P/08.10](../../08-domain/spec/08.10-domain.norms.md) Н1.7), the writers of the event journal
+(the instance in an event id — [the event journal contract](event-journal.md) «The event id and the writer instance»), the installer —
+the variable `INSTANCE_ID` ([the environment file contract](env-file.md) «Environment variables»).
 
 Moved from P/03.2 Н1.4 (`holder`: the grammar of the instance) and Н3 «start()» step 2 (the computation) without a change of behaviour;
 P/03.2 and the readers refer here. The profile of the instance as a path component (forbidden characters, representability in file names)
 stays in the event journal contract; what a process does on a refusal is with its lesson (the worker — P/03.2 Н3 «start()», Н4).
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
@@ -47,7 +47,7 @@ box:       the box grammar — non-empty, without «:» and without what the ins
 
 ## Vectors
 
-The package [`instance`](../../vectors/instance/README.md): a given INSTANCE_ID — accepted as given or a start refusal (INSTANCE54-02, the Architect's decision of 2026-10-25);
+The package [`instance`](../vectors/instance/README.md): a given INSTANCE_ID — accepted as given or a start refusal (INSTANCE54-02, the Architect's decision of 2026-10-25);
 `box.tsv` — the box resolver: INSTANCE_ID, BOX_ID, the content or an error of machine-id, hostname → the box and the source, or code 2
 (INSTANCE130-SOURCES-01, the Architect's decision of 2026-10-25).
 The computed form depends on the environment and the machine of the box — by reading and by acceptance scenarios of P/03.2 (two boxes — system

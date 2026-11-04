@@ -11,7 +11,7 @@
 ## Входы и их приоритет
 
 - Канон — [нормы](05-resource.norms.md), определения Н0 — по P/01.1; файловые договоры —
-  [журнал событий](../../../common/contracts/event-journal.md) и [замок присутствия](../../../common/contracts/presence-lock.md).
+  [журнал событий](../../../common/ru/contracts/event-journal.md) и [замок присутствия](../../../common/ru/contracts/presence-lock.md).
 - [HTTP-контракт](../../spec/05-resource.api.openapi.yaml) выражает Н2.
 - [Приёмка](../acceptance/README.md) задаёт подготовку и наблюдения.
 - Лекция (`ru/05-resource.md`, для человека, в выгрузку не входит) объясняет причины и границы; [жизненный цикл](../lifecycle.md) — окружение, коды выхода.

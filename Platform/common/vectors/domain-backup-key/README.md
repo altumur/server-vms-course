@@ -1,8 +1,8 @@
 # Vectors: the domain backup copy key
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/domain-backup-key/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the domain backup copy key contract](../../../contracts/domain-backup-key.md) (stage C guesses I02-BACKUP-HMAC,
+The owner is [the domain backup copy key contract](../../contracts/domain-backup-key.md) (stage C guesses I02-BACKUP-HMAC,
 DBK-G01/G02, the Architect's decision 2026-10-23). The participants are the installer (P/02.4 Н3 «domain installation» step 8) and the process `domain`
 of the holder (P/08.8 Н1.5). The bytes are written by «Спецификация».
 
@@ -26,5 +26,5 @@ Who performs it — the installer (`02-installer`, the command «domain installa
 
 ## Native outcome
 
-The package has no separate command contract — the common rule «Vectors» of [the common acceptance README](../../../acceptance/README.md)
+The package has no separate command contract — the common rule «Vectors» of [the common acceptance README](../../acceptance/README.md)
 (ACC-VECTORS-CONNECT-04, the Architect's decision 2026-10-26): the function answers with code 0 and one JSON value. The key — a JSON string with hex (`"<64 hex>"`), a refusal of the derivation — the JSON string `"@refuse"`.

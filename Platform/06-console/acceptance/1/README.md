@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`06.1-console.norms.md`](../../spec/06.1-console.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/03 (01–14, all) and
 М10/10 (04, 05, 06, 07, 11 → 15–19) (stage B,
@@ -179,7 +179,7 @@ the common body limit. The deletion of a blob, maintenance windows and fsync are
 
 Tab-separated: `scenario`, `step`, `request`, `expect`. Rows with `#` are notes.
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей): a door without a prefix is the console; `@key`/`@nokey`, a subset of fields, `$имя` (here they bind `revision` and the digest `$d`).
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors): a door without a prefix is the console; `@key`/`@nokey`, a subset of fields, `$имя` (here they bind `revision` and the digest `$d`).
 Its own: the field `bytes` of the answer of the bytes door — Н2 «Doors of bodies and tables» of the chapter; the code is always compared.
 
 Partial expectations of the TSV do not cancel the forms of the full answer: the mandatory fields, the JSON types and the restrictions

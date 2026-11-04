@@ -50,7 +50,7 @@ TLS: the kit of the role `domainagent` by `W2C_ROLE`; the client of the doors of
 (the expected role of the server: the holder — `domain`, the relay — `domainagent` — [the role certificate
 contract](../common/contracts/role-certificate.md) `peer_role`; review analysis of stage B 8–10, № 4); the relay door — the same kit `domainagent`, the server side of the class
 `signed` ([P/09.2 Н1.6](spec/09.2-agent.norms.md); [the role certificate
-contract](../common/contracts/role-certificate.md#серверная-сторона-класс-signed); the kit — [P/02.4 Н1.6](../02-installer/spec/02.4-installer.norms.md)).
+contract](../common/contracts/role-certificate.md#the-server-side-the-class-signed); the kit — [P/02.4 Н1.6](../02-installer/spec/02.4-installer.norms.md)).
 The agent in the process — without a kit, the client only `https://` with the check `peer` ([P/09.1 Н1.11](spec/09.1-agent.norms.md) `client`).
 
 ## Flags
@@ -102,7 +102,7 @@ None: the setting channel is the environment only (P/02.4 Н1.2).
 The roots `{data}/config`, `objects`, `events` are created before the process start by the role start command of the profile — [the common
 acceptance README](../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
 
-The stand of several clusters ([the common acceptance README](../common/acceptance/README.md#стенд-домена), the section «Domain stand»): `@start agent <кластер>` — `CLUSTER`, `DOMAIN_URL` —
+The stand of several clusters ([the common acceptance README](../common/acceptance/README.md#domain-stand), the section «Domain stand»): `@start agent <кластер>` — `CLUSTER`, `DOMAIN_URL` —
 the runner's proxy; `@start agent <кластер> via <ретранслятор>` — `RELAY_URL` instead of `DOMAIN_URL`; `@join <кластер>
 [<файл>]` — the command `join` with the recovery file; `@clock` — `W2C_WALL_OFFSET`. `{data}` — `PLATFORM_DIR` of the cluster
 ([the common acceptance README](../common/acceptance/README.md) «Stand»; review analysis of stage B 3–5, № 33). The fourth cluster

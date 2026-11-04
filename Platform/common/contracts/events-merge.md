@@ -1,24 +1,24 @@
 # The event journal merge contract: live resources, the merge, epochs, completeness
 
-This English text is the source; the Russian [`events-merge.md`](../events-merge.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/events-merge.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies in
-chapters). The owner is lesson P/06, [chapter 6.4](../../../06-console/spec/06.4-console.norms.md) Н1.3, Н3 «merge» (moved here without
+chapters). The owner is lesson P/06, [chapter 6.4](../../06-console/spec/06.4-console.norms.md) Н1.3, Н3 «merge» (moved here without
 a change of the console's behaviour, ADR-0091 addendum (21) item 1). The participants are the cluster console (the door `GET /events`, P/06.4 Н2) and a subsystem
-worker that merges the journal itself: it reads `GET /events` of the resources ([P/05](../../../05-resource/spec/05-resource.norms.md) Н1.3,
+worker that merges the journal itself: it reads `GET /events` of the resources ([P/05](../../05-resource/spec/05-resource.norms.md) Н1.3,
 admission — the section «The participant» `admission`) and the epoch rows of the subsystems declared in `worker.reads` (`<sub>/epoch/`;
-[P/02.5](../../../02-installer/spec/02.5-installer.norms.md) Н1.4); the console door is not opened to the worker, its TLS, `open`/`shut` and
+[P/02.5](../../02-installer/spec/02.5-installer.norms.md) Н1.4); the console door is not opened to the worker, its TLS, `open`/`shut` and
 limits do not change (ADR-0091 addendum (21) item 1, addendum (23) items 3–5, addendum (24) item 4, addendum (25) item 4, addendum (27) item 2). The index is
 P/05 Н1.3; the form of the row and of the answer — the section «Form», the query and the cut `cut` — «The resource query and answer» below; the hint `/events/wait` is at the resources (P/05 Н1.6), the console has none.
 
-Normative keywords follow the [course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
 The event row and the answer of a resource to `GET /events` — the schemas `EventRow`, `ResourceEventRow`, `ResourceEvents` of the contract
-`Platform/05-resource/spec/05-resource.api.openapi.yaml` ([OpenAPI of lesson P/05](../../../05-resource/spec/05-resource.api.openapi.yaml));
+`Platform/05-resource/spec/05-resource.api.openapi.yaml` ([OpenAPI of lesson P/05](../../05-resource/spec/05-resource.api.openapi.yaml));
 the console's answer — `ConsoleEvents` and `ConsoleEventRow` of the contract `Platform/06-console/spec/06-console.api.openapi.yaml`
-([OpenAPI of lesson P/06](../../../06-console/spec/06-console.api.openapi.yaml)). Both files are in the reading of `common` (ADR-0083
+([OpenAPI of lesson P/06](../../06-console/spec/06-console.api.openapi.yaml)). Both files are in the reading of `common` (ADR-0083
 addendum (33) item 1; EM-READ-33-01). The epoch rows `<sub>/epoch/<id>` — the family `epoch`: `Platform/03-worker/data/epoch.schema.json`,
 `Platform/03-worker/data/epoch.outcomes.tsv`; the door rows `platform/doors/<s>` (the section «Live resources») — the family `doors`:
 `Platform/05-resource/data/doors.schema.json`, `Platform/05-resource/data/doors.outcomes.tsv` (layout audit, В-18, В-19, Б-18;
@@ -29,7 +29,7 @@ the Architect's decision of 2026-10-25).
 Moved from P/05 Н1.3 (`query`, `cut`, `answer` and the paragraphs about `by`, copies, `truncated`, `partial`) without a change of behaviour: the resource
 executes them at itself, the merger — over the answers (EM-READ-33-01). The grammar of the query parameters and their refusals — the resource door,
 P/05 Н1.3 (below this block) and Н2; at the console door `from`, `to`, `limit` — the reader grammar of
-[the gate-and-pass contract](../gate-and-pass.md) «Numeric query parameters» (C06-EVENTS-QUERY-LEXEME-162-01, the Architect's decision of 2026-10-27).
+[the gate-and-pass contract](gate-and-pass.md) «Numeric query parameters» (C06-EVENTS-QUERY-LEXEME-162-01, the Architect's decision of 2026-10-27).
 
 ```yaml
 query:       from, to (seconds; default 0..1e12; the window from ≤ t < to, C05-QUERY-TO-OPEN-01), kind, subsystem, unit (<sub>/<id>; a bare id — a refusal), limit (1000; ceiling
@@ -71,10 +71,10 @@ admission:    the resource door /events* admits the roles console, resource and 
 ## Live resources
 
 Live resources are the door rows `platform/doors/<s>` whose version changed within the last `LOST_AFTER` by the participant's clock
-([the observation contract](../observation.md) `fresh`; the first look — as fresh); the merge does not read the resource heartbeat: the liveness of a resource
+([the observation contract](observation.md) `fresh`; the first look — as fresh); the merge does not read the resource heartbeat: the liveness of a resource
 here is only by the door row (analysis of review of stage B 6–7, № 35). The boundary is one, `≤ LOST_AFTER` — the vector
-[`fresh-age`](../../vectors/fresh-age/README.md). A resource with a stale door row (`silent`) is not asked. By the same row a resource judges the liveness
-of its mirror neighbours ([P/05](../../../05-resource/spec/05-resource.norms.md) Н1.4 `mirror`).
+[`fresh-age`](../vectors/fresh-age/README.md). A resource with a stale door row (`silent`) is not asked. By the same row a resource judges the liveness
+of its mirror neighbours ([P/05](../../05-resource/spec/05-resource.norms.md) Н1.4 `mirror`).
 
 ## The merge
 
@@ -136,10 +136,10 @@ own result of the same form, the worker's `complete` coincides with the console'
 
 ## Vectors
 
-The package [`events-merge`](../../vectors/events-merge/README.md): the merge function without a stand — duplicates, the order `cut`, `truncated`,
+The package [`events-merge`](../vectors/events-merge/README.md): the merge function without a stand — duplicates, the order `cut`, `truncated`,
 `fenced`/`earlier-run`/`current`, no answer, `silent`, `said`, an epoch not read, a worker with a declared, an undeclared and an unread
 epoch, `partial`, `lines_garbled` (ADR-0091 addendum (21) item 3); the visibility filter of the console — a grant by labels and
-an unreadable unit (`withheld`), a grant on the unit and on `*`, labels by `of`, labels `[]` (C06-EVENTS-LABEL-SOURCE-138-07). The liveness of a door row — the package [`fresh-age`](../../vectors/fresh-age/README.md) (the boundary `LOST_AFTER`, the section «Live resources»);
+an unreadable unit (`withheld`), a grant on the unit and on `*`, labels by `of`, labels `[]` (C06-EVENTS-LABEL-SOURCE-138-07). The liveness of a door row — the package [`fresh-age`](../vectors/fresh-age/README.md) (the boundary `LOST_AFTER`, the section «Live resources»);
 `from mirror`, races and late answers — by reading.
 
 ## Correspondence to former lessons

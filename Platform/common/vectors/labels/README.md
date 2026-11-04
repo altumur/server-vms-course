@@ -1,12 +1,12 @@
 # Vectors: the label alphabet
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/labels/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is lesson P/06 through [the label alphabet contract](../../../contracts/labels.md) (`label`, `set` `output`, `text`, `read`;
+The owner is lesson P/06 through [the label alphabet contract](../../contracts/labels.md) (`label`, `set` `output`, `text`, `read`;
 stage C guesses L01–L03, the Architect's decision 2026-10-23). The participants are those who read labels by the contract: the console (the labels field
 of a unit, the label doors of a server), the controller (`labels-subset`), grants by labels. The bytes are written by «Спецификация». The labels field
-of a unit as a list field — the vectors [`values-by-type`](../../values-by-type/README.md) (`list:labels`) and
-[`row-check`](../../row-check/README.md).
+of a unit as a list field — the vectors [`values-by-type`](../values-by-type/README.md) (`list:labels`) and
+[`row-check`](../row-check/README.md).
 
 ## `cases.tsv`
 
@@ -36,5 +36,5 @@ the worker writes as a comma-separated string — P/03.4 Н1.1, the family `hear
 
 ## Native outcome
 
-The package has no separate command contract — the common rule «Vectors» of [the common acceptance README](../../../acceptance/README.md)
+The package has no separate command contract — the common rule «Vectors» of [the common acceptance README](../../acceptance/README.md)
 (ACC-VECTORS-CONNECT-04, the Architect's decision 2026-10-26): the function answers with code 0 and one JSON value. `ok` — the JSON string `"ok"`, a refusal — the JSON string `"@refuse"`, otherwise a JSON value, as in `expect`.

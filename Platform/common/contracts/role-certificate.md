@@ -1,21 +1,21 @@
 # The role certificate contract: form, signatures, kit, revocation
 
-This English text is the source; the Russian [`role-certificate.md`](../role-certificate.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/role-certificate.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5); the Architect's decision on the review of stage B 1–2, item 4). The owner is lesson
-[P/02](../../../02-installer/spec/02.4-installer.norms.md), chapter 2.4 Н1.6 (the center, the role kits, the address rule; ADR-0083 addendum (29) item 9: the line names the lesson that owns the norm; the library by the contract is written by the session `common` of the generation). The
-certificates are issued by the installer ([P/02.4 Н1.6](../../../02-installer/spec/02.4-installer.norms.md): the center, `w2c-ca.sh`, the role kits,
+[P/02](../../02-installer/spec/02.4-installer.norms.md), chapter 2.4 Н1.6 (the center, the role kits, the address rule; ADR-0083 addendum (29) item 9: the line names the lesson that owns the norm; the library by the contract is written by the session `common` of the generation). The
+certificates are issued by the installer ([P/02.4 Н1.6](../../02-installer/spec/02.4-installer.norms.md): the center, `w2c-ca.sh`, the role kits,
 the address rule); the peer is verified by every door between processes — the store daemon
-([P/01.3 Н1.6](../../../01-store/spec/01.3-store.norms.md)), the role doors ([P/02.4 Н1.6](../../../02-installer/spec/02.4-installer.norms.md)
+([P/01.3 Н1.6](../../01-store/spec/01.3-store.norms.md)), the role doors ([P/02.4 Н1.6](../../02-installer/spec/02.4-installer.norms.md)
 `doors`) and the domain doors (lessons P/08–P/10; analysis of review of stage B 8–10, № 22); the server side of the doors
 between clusters of the class `signed` is the section «The server side: the class `signed`» (the participants are the process `domain`, chapter P/08.0,
-the relay, [P/09.2](../../../09-agent/spec/09.2-agent.norms.md) Н1.6, P/09.2-07, and the cluster console — everything incoming from other
-clusters on its listener, [P/06.7](../../../06-console/spec/06.7-console.norms.md) Н1.7 `server`; ADR-0083 addendum (18), addendum (19) item 2; the class is divided by
+the relay, [P/09.2](../../09-agent/spec/09.2-agent.norms.md) Н1.6, P/09.2-07, and the cluster console — everything incoming from other
+clusters on its listener, [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.7 `server`; ADR-0083 addendum (18), addendum (19) item 2; the class is divided by
 listener: the listener `SIGNER_URL` of the process `domain` requests the client certificate optionally and verifies a presented
 one, the other participants do not request it — ADR-0083 addendum (20), addendum (21)). Moved from P/01.3 Н1.6
 (formerly М10/11 Н1.6) without a change of behaviour: which roles each door admits stays in the norm of that door.
 
-Normative keywords follow the [course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ```yaml
 cert:         CN <роль>.<server>; SAN DNS <server>; SAN URI urn:w2c:role:<роль> — exactly one role; serverAuth + clientAuth;
@@ -68,7 +68,7 @@ From P/02.4 Н1.2 (`W2C_TLS_DIR`), P/02.4 Н1.6 `roles`, P/10 Н1.4 `roles` and 
 `tls_ca_certs` — the member's side, `Entry.ca` — the form) without a change of behaviour: analysis of review of stage A 8–10, № 15; analysis
 of review of stage B 8–10, № 4 (ADR-0083 addendum (15)) — lesson P/09 takes them from the contract, not from the norms 8.x and lesson P/10 (step 13
 of the reading order). The owners of the text stay the same and refer here; the holder's side (`form`, `on_accept`, the row
-`ca-certs`, the door `admin`) — [P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md).
+`ca-certs`, the door `admin`) — [P/08.3 Н1.6](../../08-domain/spec/08.3-domain.norms.md).
 
 ```yaml
 W2C_TLS_DIR:  the root of the kits kit (above): Linux /etc/w2c/tls, macOS <W2C_BOX>/tls (ADR-0075; the environment file contract «Environment variables»); the paths of kit are
@@ -147,9 +147,9 @@ own_url:      the URL of a client of its own console (the agent, the workers scr
 ## The server side: the class `signed`
 
 From М11/8 Н1.6 `server` (the introduction) and `signed` without a change of behaviour (the Architect's decision of 2026-10-20, ADR-0083 addendum (14)
-item 6; analysis of review of stage A 8–10, № 21). The participants are the process `domain` ([P/08.0](../../../08-domain/spec/08.0-domain.norms.md)
-Н1.6, P/08.0-02), the relay ([P/09.2](../../../09-agent/spec/09.2-agent.norms.md) Н1.6, P/09.2-07) and the cluster console — everything incoming from
-other clusters on its listener ([P/06.7](../../../06-console/spec/06.7-console.norms.md) Н1.7 `server`; ADR-0083 addendum (18), addendum (19) item 2). The class `role` is the door of the domain console,
+item 6; analysis of review of stage A 8–10, № 21). The participants are the process `domain` ([P/08.0](../../08-domain/spec/08.0-domain.norms.md)
+Н1.6, P/08.0-02), the relay ([P/09.2](../../09-agent/spec/09.2-agent.norms.md) Н1.6, P/09.2-07) and the cluster console — everything incoming from
+other clusters on its listener ([P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.7 `server`; ADR-0083 addendum (18), addendum (19) item 2). The class `role` is the door of the domain console,
 the section «The server side: the class `role`» below (C10-SDK-ROLE83, the Architect's decision of 2026-10-25).
 
 ```yaml
@@ -194,10 +194,10 @@ server:       the server side of the doors between clusters — two classes (log
 
 ## The server side: the class `role`
 
-From [P/10 Н1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role` (formerly М11/8 Н1.6) without a change of
-behaviour; P/10 and [the `peer` contract](../peer.md) refer here (C10-SDK-ROLE83, the Architect's decision of 2026-10-25). The participant is the domain console (the door accepting
+From [P/10 Н1.4](../../10-domain-console/spec/10-domain-console.norms.md) `server.role` (formerly М11/8 Н1.6) without a change of
+behaviour; P/10 and [the `peer` contract](peer.md) refer here (C10-SDK-ROLE83, the Architect's decision of 2026-10-25). The participant is the domain console (the door accepting
 the forwarding at transition 2, the lesson that owns the door — P/10); the normative client is the cluster console of the holder
-([P/06.7](../../../06-console/spec/06.7-console.norms.md) Н1.4 `holds`). Where P/10 was silent (the trust set at unreadable
+([P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.4 `holds`). Where P/10 was silent (the trust set at unreadable
 rows) — the Architect's decision of 2026-10-25 (the row `unreadable`).
 
 ```yaml
@@ -249,7 +249,7 @@ stand:        checked by reading: the stand does not raise TLS between clusters 
 
 ## The callback leaf
 
-The main listener of the cluster console is of the class `signed`: it does not request a client certificate and does not refuse by center. A request for a leaf on it would break this class: a stack with an optional certificate breaks the handshake at a foreign center, and shows a browser a choice of leaf. Therefore the callback by ticket goes to a separate listener of the same console, where the role leaf is mandatory ([the gate-and-pass contract](../gate-and-pass.md) «Pass of the second kind»; ADR-0094 addendum (6), addendum (12) item 6, addendum (16)). The main listener and the door classes are not changed by this.
+The main listener of the cluster console is of the class `signed`: it does not request a client certificate and does not refuse by center. A request for a leaf on it would break this class: a stack with an optional certificate breaks the handshake at a foreign center, and shows a browser a choice of leaf. Therefore the callback by ticket goes to a separate listener of the same console, where the role leaf is mandatory ([the gate-and-pass contract](gate-and-pass.md) «Pass of the second kind»; ADR-0094 addendum (6), addendum (12) item 6, addendum (16)). The main listener and the door classes are not changed by this.
 
 ```yaml
 callback:     the callback listener — at a cluster console with a kit, if the catalogue has a manifest with a non-empty door.pass.calls; otherwise it is not opened; the port — CONSOLE_CALL_PORT
@@ -268,8 +268,8 @@ callback:     the callback listener — at a cluster console with a kit, if the 
 
 ## The server side: the class `mixed`
 
-The door of a subsystem process ([P/03.4](../../../03-worker/spec/03.4-worker.norms.md) Н1.7) serves the processes of other subsystems and
-a page in a browser, which has no leaf: one listener, admission by the route `door.routes` of the manifest ([P/02.1](../../../02-installer/spec/02.1-installer.norms.md)
+The door of a subsystem process ([P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.7) serves the processes of other subsystems and
+a page in a browser, which has no leaf: one listener, admission by the route `door.routes` of the manifest ([P/02.1](../../02-installer/spec/02.1-installer.norms.md)
 Н1.3) (ADR-0091 addendum (7), (8); the Architect's decisions on the repeated review of 2026-10-23).
 
 ```yaml
@@ -322,10 +322,10 @@ mixed:        as signed in full: TLS of the server of the process role (cert, se
 
 ## Vectors
 
-The packages [`crl`](../../vectors/crl/README.md) (CRL: the signature, the terms, revocation) and [`revoked`](../../vectors/revoked/README.md) (the file `revoked`). (ADR-0083 addendum (32) item 2)
-A participant: the package [`peer`](../../vectors/peer/README.md) — the package of the common contract peer, executed by common; this contract is a participant there: the closed list `sig` is checked by its step 4 (layout audit, `В-57`; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25).
-The package [`trust-set`](../../vectors/trust-set/README.md) — the trust set of the role door and the check of the leaf (the class `role` `trust_set`, `unreadable`; C10-SDK-ROLE83).
-The package [`loopback`](../../vectors/loopback/README.md) — the loopback threshold of the client of its own cluster (`loopback`, 31 rows; ADR-0075 addendum of 2026-10-26 (4) item 1). The substitution
+The packages [`crl`](../vectors/crl/README.md) (CRL: the signature, the terms, revocation) and [`revoked`](../vectors/revoked/README.md) (the file `revoked`). (ADR-0083 addendum (32) item 2)
+A participant: the package [`peer`](../vectors/peer/README.md) — the package of the common contract peer, executed by common; this contract is a participant there: the closed list `sig` is checked by its step 4 (layout audit, `В-57`; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25).
+The package [`trust-set`](../vectors/trust-set/README.md) — the trust set of the role door and the check of the leaf (the class `role` `trust_set`, `unreadable`; C10-SDK-ROLE83).
+The package [`loopback`](../vectors/loopback/README.md) — the loopback threshold of the client of its own cluster (`loopback`, 31 rows; ADR-0075 addendum of 2026-10-26 (4) item 1). The substitution
 `host = SERVER_NAME` before step 1 of `peer` is not expressed by the package `peer` (the function does not change) — the acceptance of the client lessons checks it.
 
 ## Correspondence to former lessons

@@ -1,15 +1,15 @@
 # The slot name contract: grammar, «by name», slot order, next number, role process
 
-This English text is the source; the Russian [`slot-name.md`](../slot-name.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/slot-name.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13), addendum (30); the stage C guess POOL-ORDER-51-01, the
-Architect's decision of 2026-10-25). The owner is chapter [P/03.2](../../../03-worker/spec/03.2-worker.norms.md) Н1.4 (the slot and its name). The participants are
-the slot capture (P/03.2 Н3), the controller ([P/04](../../../04-controller/spec/04-controller.norms.md): the keeper of a place, «number above
-want», the victim of shrinking), [the pool contract](../pool.md), the worker script ([P/02.4](../../../02-installer/spec/02.4-installer.norms.md) Н1.5),
+Architect's decision of 2026-10-25). The owner is chapter [P/03.2](../../03-worker/spec/03.2-worker.norms.md) Н1.4 (the slot and its name). The participants are
+the slot capture (P/03.2 Н3), the controller ([P/04](../../04-controller/spec/04-controller.norms.md): the keeper of a place, «number above
+want», the victim of shrinking), [the pool contract](pool.md), the worker script ([P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н1.5),
 the console. Moved from P/03.2 Н1.4 («The order of names and the next number») without a change of behaviour; the name of a role process and the number
 N are the Architect's answers of 2026-10-25 (P/04 was silent about the form).
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
@@ -60,9 +60,9 @@ use:       the number above want (P/04 Н3) and the victim of shrinking compare 
 
 ## Vectors
 
-The package [`slot-name`](../../vectors/slot-name/README.md): the slot order (the example of P/03.2, a suffix longer than 64 bits, «by name»),
+The package [`slot-name`](../vectors/slot-name/README.md): the slot order (the example of P/03.2, a suffix longer than 64 bits, «by name»),
 the next number, the number of a role process and «not a role process» (a server with «-», s ≠ server, no heartbeat, out of form). A participant:
-the package [`pool`](../../vectors/pool/README.md) is the package of the common contract pool, executed by common; this contract is a participant there
+the package [`pool`](../vectors/pool/README.md) is the package of the common contract pool, executed by common; this contract is a participant there
 (the pool order, the keeper, «number above want»; В-59; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25).
 
 ## Correspondence to former lessons

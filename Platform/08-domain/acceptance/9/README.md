@@ -2,8 +2,8 @@
 
 This English text is the source; the Russian translation `ru/acceptance/9/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей) and its
-section [«Domain stand»](../../../common/acceptance/README.md#стенд-домена) (the doors `holder`, `member`, the directives `@domain`, `@person`; the plan of lesson 8 В5). The norm of the chapter is
+The stand and the dictionary of directives and doors are [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) and its
+section [«Domain stand»](../../../common/acceptance/README.md#domain-stand) (the doors `holder`, `member`, the directives `@domain`, `@person`; the plan of lesson 8 В5). The norm of the chapter is
 [`08.9-domain.norms.md`](../../spec/08.9-domain.norms.md) Н5. Scenario 01 was moved from the acceptance of М11/11 (stage B, ADR-0083
 addendum (1): without a change of behaviour); the numbers of the scenario and of the steps are the former ones; scenario 07 is the coverage audit of P/08 (the numbers 02–06 belong to the scenarios of М11/11 in neighbouring acceptances). The other scenarios of М11/11 are lesson P/10 (02 — the list of
 alarms; the vectors `alarms` — 04), [the acceptance of chapter 9.1](../../../09-agent/acceptance/1/README.md) (05; 06 → 14) and the cluster console (the vectors [`resolve`](../../../06-console/vectors/resolve/README.md) — 03, chapter P/06.7); lesson P/10 is [the acceptance](../../../10-domain-console/acceptance/README.md)
@@ -44,7 +44,7 @@ is taken by the member's agent ([chapter 9.1](../../../09-agent/spec/09.1-agent.
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей)
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors)
 and the section «Domain stand»: a subset of fields, `~` is a substring. In total 4 scenarios / 46 steps.
 
 Sc. 08 (the coverage audit of P/08, the second pass of Gemini, the draft G10 `e32df6f8b`, rewritten): the removal of the last field of a subsystem (`null`) removes the

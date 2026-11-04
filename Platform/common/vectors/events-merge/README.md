@@ -1,9 +1,9 @@
 # Vectors: the merge of the event journal
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/events-merge/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the event journal merge contract](../../../contracts/events-merge.md) (lesson P/06, chapter 6.4; ADR-0091 addendum (21) item 3).
-The participants are the cluster console (`GET /events`, [P/06.4](../../../../06-console/spec/06.4-console.norms.md)) and a subsystem worker
+The owner is [the event journal merge contract](../../contracts/events-merge.md) (lesson P/06, chapter 6.4; ADR-0091 addendum (21) item 3).
+The participants are the cluster console (`GET /events`, [P/06.4](../../../06-console/spec/06.4-console.norms.md)) and a subsystem worker
 that merges the journal itself. The bytes are written by «Спецификация»; the rows were composed by the text of the contract and checked by its oracle, not by the code of
 implementations.
 
@@ -43,5 +43,5 @@ Who performs a row is by the field `participant` of the input: `"console"` — t
 ## What the vector does not cover
 
 The visibility filter of the console (the contract, step 5а) — the rows with `grant` above; without `grant` the caller is with `view` on `*`. The cut by `limit`
-after the filter with the limit 10000 to the resources and the reading of the unit rows themselves — the acceptance and reading (C06-EVENTS-VIEW-33-01). The freshness of the door row (the package [`fresh-age`](../../fresh-age/README.md)), `from mirror`, the lanes and the timeout, a late answer, the reconciliation
+after the filter with the limit 10000 to the resources and the reading of the unit rows themselves — the acceptance and reading (C06-EVENTS-VIEW-33-01). The freshness of the door row (the package [`fresh-age`](../fresh-age/README.md)), `from mirror`, the lanes and the timeout, a late answer, the reconciliation
 of the evidence row with a fresh read of the epoch — by reading the contract; the rights of the worker to `<sub>/epoch/` — P/02.5 and the scenarios.

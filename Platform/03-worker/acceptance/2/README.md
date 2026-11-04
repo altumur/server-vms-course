@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/2/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`03.2-worker.norms.md`](../../spec/03.2-worker.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/05 (stage B, ADR-0083 addendum (1): without a change of
 behaviour); the numbers of scenarios and steps are the former ones, except sc. 04 and 08: the first step is `@start resource`, the former ones are shifted by one (P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). Sc. 02, 06 are the acceptance of chapter 3.3, sc. 03 — of chapter 3.4, the rest — [P/04](../../../04-controller/acceptance/README.md).
@@ -17,7 +17,7 @@ a neighbour by contract (the data catalogue, the life cycle of P/04), not the no
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей):
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors):
 the doors `store` (a role with read rights on `testsub/`), `console`, `resource` and `admin` (preparation of rows bypassing their writers — sc. 14–34;
 the floor of epochs — `op: floor`, sc. 26, 27), the directives `@start` (with the expectation `@exit 2` and the environment `<ИМЯ>=<значение>` of the worker), `@sigkill`,
 `@sigterm` (sc. 29), the expectation `@oneof` (sc. 33), `@sleep`, `@until`, `ASSERT`, `@cut role testsubworker store` / `@mend role testsubworker store` (sc. 24),

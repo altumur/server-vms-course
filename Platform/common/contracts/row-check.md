@@ -1,28 +1,28 @@
 # The row check contract: the form of a unit row and the common check
 
-This English text is the source; the Russian [`row-check.md`](../row-check.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/row-check.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes
 is a contract, not copies in chapters; the stage C guess W03-E07, the Architect's decision of 2026-10-23). The owner is
-chapter [P/06.1](../../../06-console/spec/06.1-console.norms.md) of the console (Н1.2 «Unit row», Н1.3 «Identifier», Н3
+chapter [P/06.1](../../06-console/spec/06.1-console.norms.md) of the console (Н1.2 «Unit row», Н1.3 «Identifier», Н3
 «Common row check»). Participants: the units and tables door of the console (P/06.1 Н3 «create», «edit», «table — write a
-row») and the customer's library of the worker ([P/03.6](../../../03-worker/spec/03.6-worker.norms.md) Н1.6, Н3 «order»;
+row») and the customer's library of the worker ([P/03.6](../../03-worker/spec/03.6-worker.norms.md) Н1.6, Н3 «order»;
 ADR-0091 item 1) — one check over one form of the row. Moved from P/06.1 Н1.2, Н1.3 (named, tombstone, unique,
 canonical_url, ref_and_must_match), Н3 «Common row check» and steps 4–7 of «create», 2, 4–5 of «edit» without a change of
 behaviour; what the door does around the check (the claim, the number, the write, HTTP codes, `made_prefix`, `made_key`,
-secrets) — P/06.1 and [P/06.2](../../../06-console/spec/06.2-console.norms.md), what the library does — P/03.6.
+secrets) — P/06.1 and [P/06.2](../../06-console/spec/06.2-console.norms.md), what the library does — P/03.6.
 
-Normative keywords follow the [course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md). «Н1.2», «Н1.3», «Н3», «Н4» in the moved text
+Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md). «Н1.2», «Н1.3», «Н3», «Н4» in the moved text
 are addresses of chapters of P/06.1 unless said otherwise; «step N» of «create»/«edit» is a step of the door procedure of
 P/06.1 Н3, their checks are the section «Order of checks» below.
 
 ## Form
 
 The unit row follows the catalogue manifest (`unit.fields`; the form of the manifest is `Platform/02-installer/spec/02.1-installer.schema.json`,
-[form](../../../02-installer/spec/02.1-installer.schema.json)) and the section «Unit row» below. The unit state row
+[form](../../02-installer/spec/02.1-installer.schema.json)) and the section «Unit row» below. The unit state row
 `<sub>/state/<имя>/<id>` (section «Unit state») — the form `Platform/03-worker/data/state.schema.json`, the outcomes
-`Platform/03-worker/data/state.outcomes.tsv` ([form](../../../03-worker/data/state.schema.json),
-[outcomes](../../../03-worker/data/state.outcomes.tsv); C149-STATE-SUPPORT-01, the Architect's decision of 2026-10-26).
+`Platform/03-worker/data/state.outcomes.tsv` ([form](../../03-worker/data/state.schema.json),
+[outcomes](../../03-worker/data/state.outcomes.tsv); C149-STATE-SUPPORT-01, the Architect's decision of 2026-10-26).
 
 ## Unit row
 
@@ -75,12 +75,12 @@ table_platform_fields: [by, at, made_at, held_by, garbled, revision, index]   # 
   # of the object <sub>/heartbeats/<имя> (P/03.4 Н1.1, added by М10/5)
 ```
 
-The text forms of values by type are the vectors [`values-by-type`](../../vectors/values-by-type/README.md) (review of stage A
+The text forms of values by type are the vectors [`values-by-type`](../vectors/values-by-type/README.md) (review of stage A
 6–7, № 33).
 
 ## The customer's row: `made`
 
-Moved from [P/03.6](../../../03-worker/spec/03.6-worker.norms.md) Н1.6 (`made`, `ORDER_HORIZON`, `not_after`, `tombstone`,
+Moved from [P/03.6](../../03-worker/spec/03.6-worker.norms.md) Н1.6 (`made`, `ORDER_HORIZON`, `not_after`, `tombstone`,
 `deletes`) without a change of behaviour: the rule is read by the customer's library (P/03.6), the controller (P/04 Н3 step 8)
 and the units door of the console (P/06.1 Н3 «delete») (layout audit А-11, the Architect's decision of 2026-10-25).
 
@@ -104,7 +104,7 @@ delete:      a row with made is deleted (by the worker of the addressee by worke
 
 ## Unit state
 
-Moved from [P/03.6](../../../03-worker/spec/03.6-worker.norms.md) Н1.7 (`acts`, `unreadable`) without a change of behaviour:
+Moved from [P/03.6](../../03-worker/spec/03.6-worker.norms.md) Н1.7 (`acts`, `unreadable`) without a change of behaviour:
 the rule «the state is in effect» is read by the holder of the unit (P/03.6), the controller (P/04 Н1.3 `retire_when`, Н1.3а `state`) and the console
 (P/06.1 Н2 «State in the answer») (layout audit А-05, the Architect's decision of 2026-10-25). The form of the state row is `Platform/03-worker/data/state.schema.json`, the outcomes are `Platform/03-worker/data/state.outcomes.tsv`
 (P/03.6 Н1.7; C149-STATE-SUPPORT-01, the Architect's decision of 2026-10-26).
@@ -164,7 +164,7 @@ the console, `made_at` of a row with the same name — the former one (P/06.1 Н
 | Ring | Secret in the prepared row |
 |---|---|
 | `SECRETS_KEY` not set (development mode, P/06.2 `no_key.unset`) | an edit (`PUT`) with a non-empty `*_secret` — the value is written in the clear, as is; a creation (`POST`) of a unit with a non-empty `*_secret` at any depth — 400 before the claim (ibid.). A table row — the same rule (one for the units and tables doors, P/06.2 Н3 «create/edit» step 3): there is no row with this name — `POST` of the table is a creation, a non-empty `*_secret` at any depth — 400 before the write; the row exists — `POST` over it is an edit, a non-empty secret is written in the clear; an empty, `null` or not given top-level secret — the former value (the stage C guess C06-ROWCHECK-TABLE-RING-33-01, the Architect's decision of 2026-10-23) |
-| set and opens | the envelope `enc:v2` by the [sealing contract](../sealing.md) |
+| set and opens | the envelope `enc:v2` by the [sealing contract](sealing.md) |
 | set, but does not read or does not open (including `SECRETS_KEY=""`, P/06.2 `no_key.unreadable`) | 503 `unavailable` before the row check (before П1), nothing is written |
 
 A list has only string elements; another JSON element is a refusal of the field type (section «Refusals»).
@@ -172,9 +172,9 @@ An `int` value at the input of the door is a JSON number without a fraction part
 `9007199254740992` for `int` are `not_number` (such a number is read by a JSON client of any language). The number `-0` is stored as `0`
 (JCS, ADR-0072).
 The value of a json field is any JSON value; its `schema` is JSON Schema 2020-12 by the definition `jsonSchemaLite` of
-`Platform/02-installer/spec/02.1-installer.schema.json` ([manifest form](../../../02-installer/spec/02.1-installer.schema.json); the list of keywords and the depth are there; layout audit, Б-06; review of stage A 6–7,
+`Platform/02-installer/spec/02.1-installer.schema.json` ([manifest form](../../02-installer/spec/02.1-installer.schema.json); the list of keywords and the depth are there; layout audit, Б-06; review of stage A 6–7,
 № 11); a schema with another keyword is a load refusal `refused:value` (P/02.1), so all implementations check the same thing.
-An empty element is admissible in an ordinary list, but not in placement labels by the [label alphabet](../labels.md).
+An empty element is admissible in an ordinary list, but not in placement labels by the [label alphabet](labels.md).
 
 ## Identifier and field constraints
 
@@ -217,8 +217,8 @@ ref_and_must_match:                      # a field of a unit or a table (P/02.1 
 ## The url value
 
 A field `type: url` is read thus: not by RFC 3986 (`%zz`, control characters, `\`), no scheme or host (the place of the host and the values of
-«no host» — `schemes.<s>.host`/`none` of the [address contract](../url-credentials.md) «Schemes»; with `host: path` there is no path — there is no place of the host: `mirror://local`),
-with credentials (`@` in the authority; a password or a login in the address by the rule of the field — [address contract](../url-credentials.md)),
+«no host» — `schemes.<s>.host`/`none` of the [address contract](url-credentials.md) «Schemes»; with `host: path` there is no path — there is no place of the host: `mirror://local`),
+with credentials (`@` in the authority; a password or a login in the address by the rule of the field — [address contract](url-credentials.md)),
 with `#` (except a scheme with `fragment: none`), a scheme not from `schemes`, a non-numeric port — refusal `bad_url` (the address contract «Schemes»).
 
 ## Order of checks
@@ -258,7 +258,7 @@ edit (only the given fields, without filling defaults):
 
 The order of refusals of П1, П2 «group», П5 and Р3 — the stage C guesses RC-10–RC-12, RC-15, RC-16, the Architect's decision of 2026-10-23.
 
-**Batch** ([P/06.1](../../../06-console/spec/06.1-console.norms.md) Н3 «batch»; ADR-0094 B9, refinement (b)). The row check of the batch door reads references by the state after
+**Batch** ([P/06.1](../../06-console/spec/06.1-console.norms.md) Н3 «batch»; ADR-0094 B9, refinement (b)). The row check of the batch door reads references by the state after
 the batch: a target and a referring row written by the same batch are in the new prepared state; a row removed by it is as absent, a tombstone is as a tombstone; a row outside
 the batch is as usual. `unique` of П5 is counted the same way: two rows of the batch with one value — a refusal. The order and the words of refusals are the same; the first refused row is by the order of `writes`. The library has no batch.
 
@@ -280,8 +280,8 @@ the requirement that the target exists (ADR-0057): the refusal conditions remain
 
 ## Refusals
 
-The words of a refusal are `error` (a word of the closed list of the door, [P/06.1](../../../06-console/spec/06.1-console.norms.md) Н2 «Refusal: `error` and `field`»; the test does not compare the text of `detail`) and `fault` from the closed vocabulary
-[`../../vectors/fault/`](../../vectors/fault/README.md). At the door — the code and the body by P/06.1 Н4 «Units door» (the column «Door»); at the
+The words of a refusal are `error` (a word of the closed list of the door, [P/06.1](../../06-console/spec/06.1-console.norms.md) Н2 «Refusal: `error` and `field`»; the test does not compare the text of `detail`) and `fault` from the closed vocabulary
+[`../../vectors/fault/`](../vectors/fault/README.md). At the door — the code and the body by P/06.1 Н4 «Units door» (the column «Door»); at the
 library — the outcome of the order `refused` and the count `creates.refused` of the heartbeat (P/03.6 Н1.6, P/03.4 Н1.1).
 
 | Reason | Step | Word | Door |
@@ -294,7 +294,7 @@ library — the outcome of the order `refused` and the count `creates.refused` o
 | the value of a field that is not `json` is not by the `schema` of the field | П2 | `error: type`, `detail` with the name of the field | 400 |
 | the value is not by the type of the field: not a number for `int`/`float`, not a boolean, not a list of strings, not a string | П2 | for numbers `error: not_number`, `fault: not_number`; otherwise `error: type`; `detail` with the name of the field | 400 |
 | an integer value of the field placement.weight.field < 1 | П2 | `{detail, error: type}`, without fault; `detail` «<поле> must be at least 1» | 400 |
-| `url` does not read, with credentials, with `#`, a scheme not from `schemes` | П2 | `error: bad_url`, `fault: bad_url`; `detail` without the value, with the names of the fields `credentials` ([address contract](../url-credentials.md) А15) | 400 |
+| `url` does not read, with credentials, with `#`, a scheme not from `schemes` | П2 | `error: bad_url`, `fault: bad_url`; `detail` without the value, with the names of the fields `credentials` ([address contract](url-credentials.md) А15) | 400 |
 | the labels are not by the label alphabet | П2 | `error: labels` | 400 |
 | the id is not by the section «Identifier and field constraints» | П3 | `error: bad_id`, `detail` with the name and the reason | 400 |
 | a `fixed` field changes (an edit or a return over a tombstone); the source field of the id changes | П3, Р2 | `error: fixed`, `detail` «<поле> is fixed …» | 400 |
@@ -303,8 +303,8 @@ library — the outcome of the order `refused` and the count `creates.refused` o
 
 ## Vectors
 
-The packages [`row-check`](../../vectors/row-check/README.md) (the common row check), [`values-by-type`](../../vectors/values-by-type/README.md) (the forms of values), [`fault`](../../vectors/fault/README.md) (the words of refusals); the address — the package [`secret-in`](../../vectors/secret-in/README.md) of the address contract. (ADR-0083 addendum (32) item 2) The unit state — the table
+The packages [`row-check`](../vectors/row-check/README.md) (the common row check), [`values-by-type`](../vectors/values-by-type/README.md) (the forms of values), [`fault`](../vectors/fault/README.md) (the words of refusals); the address — the package [`secret-in`](../vectors/secret-in/README.md) of the address contract. (ADR-0083 addendum (32) item 2) The unit state — the table
 `state.tsv` of the package `row-check` (`acts`, `unreadable`; STATE169-VECTORS-01, the Architect's decision of 2026-10-27).
 
-The canonical JSON (RFC 8785, ADR-0072) that the contract relies on — the package [`jcs`](../../../01-store/vectors/jcs/README.md)
+The canonical JSON (RFC 8785, ADR-0072) that the contract relies on — the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).

@@ -1,10 +1,10 @@
 # Vectors: the writer turn — sequences over the turn row
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/turn/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the writer turn contract](../../../contracts/turn.md) (lesson P/04 Н1.5, Н3; C08-TURN-SELF-99, the Architect's decision
+The owner is [the writer turn contract](../../contracts/turn.md) (lesson P/04 Н1.5, Н3; C08-TURN-SELF-99, the Architect's decision
 2026-10-26). The participants are the controller (`<sub>/controller/placement_turn`, P/04) and the process `domain` of the holder
-(`domain/signer-turn`, [P/08.10](../../../../08-domain/spec/08.10-domain.norms.md) Н1.7, Н3). The bytes are written by «Спецификация»; the rows are
+(`domain/signer-turn`, [P/08.10](../../../08-domain/spec/08.10-domain.norms.md) Н1.7, Н3). The bytes are written by «Спецификация»; the rows are
 by the text of the contract and P/08.10 Н3 «the turn of the domain process», the norms do not change.
 
 ## `cases.tsv`
@@ -15,7 +15,7 @@ A row is one sequence of events of one side; `expect` is the array of its action
 **Input** — `{kind, turn, me, steps}`: `kind` — `placement` (the turn of a subsystem) or `signer` (the turn of the process `domain`; the turn of the agent of a member `domain/agent-turn` —
 by the same rule, its cases are the `signer` rows, P/09.1 Н1.13);
 `turn` — the key of the turn row (the guard key); `me` — its own: the `manifest_rev` of the controller or `holder` — the instance of the process
-`domain` ([the instance contract](../../../contracts/instance.md)); `steps` — the events:
+`domain` ([the instance contract](../../contracts/instance.md)); `steps` — the events:
 
 | Event | Meaning |
 |---|---|

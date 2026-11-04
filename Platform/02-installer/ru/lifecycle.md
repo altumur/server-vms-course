@@ -25,7 +25,7 @@
 | `w2c-run.sh <роль>` | раннер процессов: `configstore`, `controller <sub>`, `console`, `resource`, `domain`, `domainconsole`, `domainagent`, `worker <sub> <слот>`, `domainworker <sub>` (исполняют `worker.exec` строки манифеста, `W2C_MANIFEST_REV`), `workers`, `rights`, `part <sub> <часть>` (часть подсистемы: значения юнита и файл подсистемы, без `W2C_ROLE`); окружение — значения юнита → `roles/<W2C_ROLE>.env` → `w2c.env` → файл подсистемы (раньше прочитанное побеждает), файлы — разбором, не `source`; `W2C_ROLE` не той роли — код 2 | P/02.4 Н1.2, Н1.9 |
 | `w2cctl rights -deployment <имя> [--check <файл>]` | вывод прав из `MANIFEST_DIR`; `--check` — по смыслу | P/02.5 Н2, Н3 |
 | `w2c-ca.sh init \| issue \| revoke \| crl \| own` | центр и комплекты ролей | P/02.4 Н1.6 |
-| `w2cctl secrets new \| seal \| rotate \| status` | кольцо ключей | [договор запечатывания](../../common/contracts/sealing.md), P/02.4 Н1.9 |
+| `w2cctl secrets new \| seal \| rotate \| status` | кольцо ключей | [договор запечатывания](../../common/ru/contracts/sealing.md), P/02.4 Н1.9 |
 | `w2cctl mirror \| space \| retention \| tls status \| domain move` | строки оператора и проверки | P/02.4 Н1.9 |
 | `w2c-workers.sh` | скрипт воркеров по заказу: `w2c-workers.service` (`Type=oneshot`, `Restart=no`, `User=w2c-workers` без групп, один на сервер) и `.timer` (`OnBootSec` 1–2 мин, `OnUnitActiveSec` 1 мин); ряды `<sub>_workers_wanted{server}` → `start`/`stop` экземпляров `<prefix>-<SERVER_NAME>-<n>`, n 2…99 (ADR-0084) | P/02.4 Н1.1, Н1.5 |
 | кластер из одного со встроенным манифестом | процесс коробки сам пишет строку манифеста и метку — правом `admin`, как установщик | P/02.3 Н1.5, P/02.4 Н1.10 |
@@ -52,11 +52,11 @@
 | Путь | Что | Норма |
 |---|---|---|
 | `/etc/w2c` → `/data/platform/etc`, `/etc/<sub>` | ссылки; настоящий каталог на их месте — отказ установки | P/02.4 Н1.1 `dirs`, Н1.7 `install.refuse` |
-| `/etc/w2c/w2c.env`, `/etc/w2c/roles/<роль>.env`, `<W2C_SUB_ENV>`, `/etc/w2c/configstore.env` | файлы окружения: создаются, никогда не переписываются; грамматика — [договор файла окружения](../../common/contracts/env-file.md), разбор, не `source` | P/02.4 Н1.2, Н1.7 |
+| `/etc/w2c/w2c.env`, `/etc/w2c/roles/<роль>.env`, `<W2C_SUB_ENV>`, `/etc/w2c/configstore.env` | файлы окружения: создаются, никогда не переписываются; грамматика — [договор файла окружения](../../common/ru/contracts/env-file.md), разбор, не `source` | P/02.4 Н1.2, Н1.7 |
 | `/etc/w2c/configstore-rights.json` | файл прав, по смыслу равный выводу; иначе установка отказана | P/02.5 Н3 «установить» |
 | строки `platform/manifest/<sub>`, `platform/manifest/<sub>/rev` | строка манифеста и метка | [каталог](../../common/data/catalog.tsv), P/02.3 Н1.5 |
 | `/etc/w2c/tls/ca.pem`, `ca.next.pem`, `revoked`, `crl.pem`, `<роль>/server.pem`, `<роль>/server.key` | центр и комплекты ролей | [каталог](../../common/data/catalog.tsv), P/02.4 Н1.6 |
-| `/etc/w2c/secrets/platform.key` | кольцо: `secrets new` создаёт, `rotate` дописывает сверху | [каталог](../../common/data/catalog.tsv), [договор запечатывания](../../common/contracts/sealing.md) «Файл кольца» |
+| `/etc/w2c/secrets/platform.key` | кольцо: `secrets new` создаёт, `rotate` дописывает сверху | [каталог](../../common/data/catalog.tsv), [договор запечатывания](../../common/ru/contracts/sealing.md) «Файл кольца» |
 | юниты Н1.1 и юниты сокетов `configstore-*.socket` | пишет `install.sh` | P/02.4 Н1.1 |
 
 ## Коды выхода
@@ -79,7 +79,7 @@
 
 ## Стенд
 
-«Стенд» — [общий README приёмки](../../common/acceptance/README.md) (разбор ревью стадии B 3–5, № 33):
+«Стенд» — [общий README приёмки](../../common/ru/acceptance/README.md) (разбор ревью стадии B 3–5, № 33):
 - команда загрузки одного файла манифеста — `{file}` (P/02.1, корпус `verdicts.tsv`);
 - `manifest-put {socket} {file}` — через `admin.sock`, манифесты стенда по одному до первого `@start`;
 - команда вывода прав — `{manifests}`, `{deployment}` (`dep`), `{file}`: `{rights}` приёмок, перенесённых из М10/4–11 (разбор ревью стадии B 3–5, № 34), и варианты главы 2.5.
@@ -88,7 +88,7 @@
 
 | Что | Как | Норма |
 |---|---|---|
-| юниты домена | `w2c-domain.service` (`SIGNER_HOST/PORT` 0.0.0.0:8445), `w2c-domainconsole.service` (8444), `w2c-domainagent.service` (своего порта нет; дверь ретранслятора — `RELAY_PORT` 8446); `w2c-domainagent-token-<роль>.socket` — местная дверь токенов, `<AGENT_TOKEN_DIR>/<роль>.sock` | P/02.4 Н1.12, Н1.1, [договор местной двери токенов](../../common/contracts/local-token-door.md) (разбор ревью стадии A 8–10, решение 1) |
+| юниты домена | `w2c-domain.service` (`SIGNER_HOST/PORT` 0.0.0.0:8445), `w2c-domainconsole.service` (8444), `w2c-domainagent.service` (своего порта нет; дверь ретранслятора — `RELAY_PORT` 8446); `w2c-domainagent-token-<роль>.socket` — местная дверь токенов, `<AGENT_TOKEN_DIR>/<роль>.sock` | P/02.4 Н1.12, Н1.1, [договор местной двери токенов](../../common/ru/contracts/local-token-door.md) (разбор ревью стадии A 8–10, решение 1) |
 | установка домена | команда оператора, один раз на домен | P/02.4 Н3 «установка домена» (P/02.4-10) |
 
 ## Открыто

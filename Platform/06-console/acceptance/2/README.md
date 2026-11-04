@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/2/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`06.2-console.norms.md`](../../spec/06.2-console.norms.md) Н5. The scenarios, the fields file and the text below were moved from
 the acceptance of М10/07 whole (stage B, ADR-0083 addendum (1):
 without a change of behaviour); the numbers of the scenarios and the steps are the former ones; the common tables `secret_in.tsv` and `log_mask.tsv` are the vectors
@@ -31,7 +31,7 @@ of `secret-in`, the value is the declaration of the field in the form of P/02.1.
 
 ## scenarios.tsv
 
-The units door of `testsub2` (the rows `tallies`; the tables door `shelves` — sc. 10; the console root `CONSOLE_ROOT=testsub2`, the common acceptance README «Stand») and the store door; the format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей) (`console`, `store`, `@key`, `@as`, a subset of fields). The implementation is started with a key ring (`SECRETS_KEY`), the manifests `testsub` and `testsub2`, an empty store; the resource `srv-a` is the first step of sc. 01, 05, 09 (the processes are restarted between scenarios; `@start resource`: `GET /tallies` reads the heartbeats through the objects door of the resource of its server; C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29); the store rows are read by a role with the right to read `testsub2/` (for example, `testsub2worker`), sc. 06 — by a role without the right (`testsubworker`). The field `of` of `tallies` is the name of a counter of `testsub`; before the scenarios the runner creates the counter `c1` in `testsub`.
+The units door of `testsub2` (the rows `tallies`; the tables door `shelves` — sc. 10; the console root `CONSOLE_ROOT=testsub2`, the common acceptance README «Stand») and the store door; the format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors) (`console`, `store`, `@key`, `@as`, a subset of fields). The implementation is started with a key ring (`SECRETS_KEY`), the manifests `testsub` and `testsub2`, an empty store; the resource `srv-a` is the first step of sc. 01, 05, 09 (the processes are restarted between scenarios; `@start resource`: `GET /tallies` reads the heartbeats through the objects door of the resource of its server; C06-PULSE-LAPSE-503-03, the Architect's decision of 2026-10-29); the store rows are read by a role with the right to read `testsub2/` (for example, `testsub2worker`), sc. 06 — by a role without the right (`testsubworker`). The field `of` of `tallies` is the name of a counter of `testsub`; before the scenarios the runner creates the counter `c1` in `testsub`.
 
 ## corrections.tsv
 

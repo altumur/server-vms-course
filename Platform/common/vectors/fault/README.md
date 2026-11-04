@@ -1,13 +1,13 @@
 # Vectors: the dictionary `fault` of door refusals
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/fault/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is chapter P/06.1 ([the norms](../../../../06-console/spec/06.1-console.norms.md) Н2: the refusal answer `{detail, error, fault?}`; Н4: the reasons
+The owner is chapter P/06.1 ([the norms](../../../06-console/spec/06.1-console.norms.md) Н2: the refusal answer `{detail, error, fault?}`; Н4: the reasons
 with `fault` — `not_json`, `not_number`, `too_long`, `bad_url`, `unique`, `must_match`, `garbled`). The participants are the doors that
-speak these words: the tables door (P/06.1 Н4 «Bodies, tables…»), the requests door ([chapter 6.4](../../../../06-console/spec/06.4-console.norms.md);
-the vector [`requests-body`](../../../../06-console/vectors/requests-body/README.md)), sealing by the console ([chapter 6.2](../../../../06-console/spec/06.2-console.norms.md): `bad_url` at an address with
+speak these words: the tables door (P/06.1 Н4 «Bodies, tables…»), the requests door ([chapter 6.4](../../../06-console/spec/06.4-console.norms.md);
+the vector [`requests-body`](../../../06-console/vectors/requests-body/README.md)), sealing by the console ([chapter 6.2](../../../06-console/spec/06.2-console.norms.md): `bad_url` at an address with
 a password), the units door of the console and the customer's library (`06-console`, `03-worker`: the word `bad_url` of the vector
-[`group-of`](../../group-of/) is from here; the controller, [P/04](../../../../04-controller/spec/04-controller.norms.md) `group_by`, only computes
+[`group-of`](../group-of/) is from here; the controller, [P/04](../../../04-controller/spec/04-controller.norms.md) `group_by`, only computes
 the group and does not speak refusal words — C04-VECTOR-FAULT-167, the Architect's decision of 2026-10-27), the doors of the domain (lessons 8–10). The bytes are written by
 «Спецификация» (ADR-0083, stage B; the Architect's decision of 2026-10-06 on the closed dictionary); the conformance of the product is by its
 acceptance against this table (ADR-0080 addendum 16).
@@ -45,7 +45,7 @@ their doors and functions speak: the doors of the domain
 
 ## Stand command `fault`
 
-The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../../acceptance/README.md));
+The key `stand` of the profile `06-console` (the section «Layout by processes» of [the common acceptance README](../../acceptance/README.md));
 a template with `{input}` — the path of a file with an object of exactly `{}`. One call per table: the answer is the full map of its own dictionary
 of refusals `{<слово>: <код HTTP>}`, the code is a JSON integer (not a string, not a bool); the set of words and every code equal `fault.tsv`,
 the order of fields does not matter; a word beyond the table or a missing one — FAIL. An input not of the form: not an object or a non-empty object.

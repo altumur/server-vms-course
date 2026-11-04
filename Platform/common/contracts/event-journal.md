@@ -1,20 +1,20 @@
 # The event journal contract: the line, the id, the bucket, file names, writers, writing a line
 
-This English text is the source; the Russian [`event-journal.md`](../event-journal.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/event-journal.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5): a contract that several processes read and write lies in
-`Platform/common/`; review of stage A 3–5, № 9). The owner is the resource [P/05](../../../05-resource/spec/05-resource.norms.md):
+`Platform/common/`; review of stage A 3–5, № 9). The owner is the resource [P/05](../../05-resource/spec/05-resource.norms.md):
 it reads the buckets (the index P/05 Н1.3), copies the closed ones (P/05 Н1.4 `mirror`), removes them by term and pulls them back
 (P/05 Н3 «resource pass», Н1.4 «Bucket restore»); the order of writing a line is the section «Writing a line» below (moved
 from P/05 Н3 «write an event»; review of stage B 3–5, В1). Lines are appended
-(`append`) by: the worker — the events of the subsystem by `observe` (chapter [P/03.6](../../../03-worker/spec/03.6-worker.norms.md)),
-the console — the journal and the marks of the operator (chapter [P/06.4](../../../06-console/spec/06.4-console.norms.md)),
+(`append`) by: the worker — the events of the subsystem by `observe` (chapter [P/03.6](../../03-worker/spec/03.6-worker.norms.md)),
+the console — the journal and the marks of the operator (chapter [P/06.4](../../06-console/spec/06.4-console.norms.md)),
 each process of the platform — the journal `audit` of its role; the encoding of file names is performed by each process that puts a file into
 the root of events or of objects. Moved from М10/8 Н1.1 (the paragraph «File names in shared trees») and Н1.2 (the blocks `line`,
 `bucket`, `class`, `journal`, `writer`, the paragraph on the id) without a change of behaviour: the suppression of repeats (`suppress`) — chapter
 P/03.6 Н1.2; `older_epochs` and the marks of the operator (`marks`) — chapter P/06.4 Н1.2. The vectors — the section «Vectors» below.
 
-Normative keywords follow the [course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## The line and the bucket
 
@@ -104,7 +104,7 @@ the outcome of a suppression included; it is not reused at a change of the unit,
 The outcome of a suppression gets a new id, not the id of the first line of the window. A mirror/a repeated output
 keeps the id of the source line. When the counter is exhausted, new lines are not published until a new
 unique instance; wrapping the counter is forbidden.
-The writer instance is a non-empty string unique with regard to boxes and restarts (`INSTANCE_ID`, `BOX_ID` — [the environment file contract «Environment variables»](../env-file.md); the grammar and the computation — [the instance contract](../instance.md)); a local PID
+The writer instance is a non-empty string unique with regard to boxes and restarts (`INSTANCE_ID`, `BOX_ID` — [the environment file contract «Environment variables»](env-file.md); the grammar and the computation — [the instance contract](instance.md)); a local PID
 is not enough, a repeat of a former INSTANCE_ID by a new process is outside the profile. The instance is one
 path component: not `.`/`..`, without `/`, `\`, `|`, `"`, a comma, Cc/Zl/Zp. This condition
 of the profile applies both to INSTANCE_ID from the environment and to the computed value; it is checked
@@ -120,7 +120,7 @@ the addressee is determined by the manifest.
 
 **File names in shared trees** — one encoding for all implementations: objects and event trees (P/05 Н1.1, Н1.2,
 Н1.4) are written by processes of different implementations on one box (the Architect's decision, the second pilot, Н-3; it carries out the reconciliation of python and go
-М10/3–5 item 14 and U20). Any logical key that the grammar of [P/01.1](../../../01-store/spec/01.1-store.norms.md), the grammars of the id ([P/06.1](../../../06-console/spec/06.1-console.norms.md) Н1.3) and of the slot ([P/03.2](../../../03-worker/spec/03.2-worker.norms.md) Н1.4) and the limit
+М10/3–5 item 14 and U20). Any logical key that the grammar of [P/01.1](../../01-store/spec/01.1-store.norms.md), the grammars of the id ([P/06.1](../../06-console/spec/06.1-console.norms.md) Н1.3) and of the slot ([P/03.2](../../03-worker/spec/03.2-worker.norms.md) Н1.4) and the limit
 of the full key permit is representable on disk. The layout of directories is by the logical key, component by component (between `/`):
 
 - a byte of a component from `[a-z0-9._-]` is written as is, any other UTF-8 byte — as `%` and two lowercase hex digits (`A` —
@@ -146,7 +146,7 @@ of the full key permit is representable on disk. The layout of directories is by
   of an object; the components whose form the norm itself sets are written as is — the bucket name `<YYYYMMDDTHHMMSSZ>.events.jsonl`,
   `e<эпоха>`, the suffix `.alarms`, the directories `.workers`, `.mirror`, `.gone`, the endings `.lock`, `.name`, the service `~lock` and the tail of the temporary name with `~` (`T` and `Z` of the
   bucket name — not `%54`, `%5a`); a composite component is the encoded name plus the norm suffix: `testsub.alarms`,
-  `<экземпляр>.lock` (journal of cammeta-go, lesson 8 № 10; the Architect's decision). The step — sc. 08 steps 12–16 of the [acceptance of P/05](../../../05-resource/acceptance/README.md): a bucket that
+  `<экземпляр>.lock` (journal of cammeta-go, lesson 8 № 10; the Architect's decision). The step — sc. 08 steps 12–16 of the [acceptance of P/05](../../05-resource/acceptance/README.md): a bucket that
   the runner writes past the writer under the name of the norm is read by the resource.
 
 ## Retention of a tree
@@ -166,7 +166,7 @@ retention:   the term of a tree in days when there is no retention row: <sub> �
 
 From P/05 Н3 «write an event (the platform, by observe of the subsystem)» (review of stage B 3–5, В1): the side of the owner of the
 file contract — the steps that each writer of a line executes (the worker by `observe` — chapter
-[P/03.6](../../../03-worker/spec/03.6-worker.norms.md) Н1.2, the console — chapter [P/06.4](../../../06-console/spec/06.4-console.norms.md)
+[P/03.6](../../03-worker/spec/03.6-worker.norms.md) Н1.2, the console — chapter [P/06.4](../../06-console/spec/06.4-console.norms.md)
 Н1.2, the journal `audit` — the process of the role); the refusals of the writer — «Refusals of the writer» below (moved from P/05 Н4; layout audit Б-29, the Architect's decision of 2026-10-25).
 
 ```
@@ -207,14 +207,14 @@ file contract — the steps that each writer of a line executes (the worker by `
 
 ## Vectors
 
-The package [`journal`](../../vectors/journal/README.md): `bucket.tsv` (reading a bucket, a torn tail, unreadable lines), `names.tsv` (file names), `years.tsv` (the choice of a bucket), `append.tsv` (appending a line, the section «Writing a line» step 5; EJ-L03), `modes.tsv` (the modes of the events root, of the trees and of the buckets). (ADR-0083 addendum (32) item 2)
+The package [`journal`](../vectors/journal/README.md): `bucket.tsv` (reading a bucket, a torn tail, unreadable lines), `names.tsv` (file names), `years.tsv` (the choice of a bucket), `append.tsv` (appending a line, the section «Writing a line» step 5; EJ-L03), `modes.tsv` (the modes of the events root, of the trees and of the buckets). (ADR-0083 addendum (32) item 2)
 
 ## Correspondence to former lessons
 
 From М10/8 (stage B, review of stage A 3–5, № 9): Н1.2 — the blocks `line`, `bucket`, `class`, `journal`, `writer`, the paragraph
 on the event id and the writer instance (except the sentences on the index line — P/05 Н1.2); Н1.1 — the paragraph «File names in shared
 trees». The parts of norms М10/8-01 (the encoding of names; P/05-01), М10/8-03 (the fields of the line; P/05-03) and М10/8-04 (the bucket, `fsync`,
-a torn line; P/05-04) — by `note` of [id-map](../../id-map.tsv). Suppression (`suppress` and its paragraph) — chapter P/03.6 Н1.2;
+a torn line; P/05-04) — by `note` of [id-map](../id-map.tsv). Suppression (`suppress` and its paragraph) — chapter P/03.6 Н1.2;
 `older_epochs`, `marks` — P/06.4 Н1.2 (review of stage B 6–7, № 24). From P/05 Н3 (review of stage B 3–5, В1): «write an event» — steps 1–5 and «Races»
 (here «Writing a line»; the references «Н1.1», «the event journal contract `writer`» are written as «P/05 Н1.1», «`writer` above»); the parts
-P/05-03, P/05-04 and P/03.6-01 (the worker — a writer of a line) by `note` of [id-map](../../id-map.tsv).
+P/05-03, P/05-04 and P/03.6-01 (the worker — a writer of a line) by `note` of [id-map](../id-map.tsv).

@@ -1,17 +1,17 @@
 # The presence lock contract: the file, who holds it, who reads it, the count `room`
 
-This English text is the source; the Russian [`presence-lock.md`](../presence-lock.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/presence-lock.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5); analysis of the review of stage A 3–5, № 9). The owner is the resource
-[P/05](../../../05-resource/spec/05-resource.norms.md): it reads the locks of its box, derives from them the presence of the worker
+[P/05](../../05-resource/spec/05-resource.norms.md): it reads the locks of its box, derives from them the presence of the worker
 processes (P/05 Н1.4 `workers`, `running`, `unknown`, `presence`) and the count `room.<sub>` of the door row (P/05 Н1.4
-`door_row`). The lock is held by the worker — the worker's side: chapter [P/03.2](../../../03-worker/spec/03.2-worker.norms.md) Н3
-«start()», step 2б; the number `room.<sub>` is read by the controller ([P/04](../../../04-controller/spec/04-controller.norms.md) Н3
-«shortage(), order(), withdraw the order, shrink() — with grows: true»); the layout of the events root — [P/02.4 Н1.2](../../../02-installer/spec/02.4-installer.norms.md) «The setting channel
+`door_row`). The lock is held by the worker — the worker's side: chapter [P/03.2](../../03-worker/spec/03.2-worker.norms.md) Н3
+«start()», step 2б; the number `room.<sub>` is read by the controller ([P/04](../../04-controller/spec/04-controller.norms.md) Н3
+«shortage(), order(), withdraw the order, shrink() — with grows: true»); the layout of the events root — [P/02.4 Н1.2](../../02-installer/spec/02.4-installer.norms.md) «The setting channel
 and the layout of `PLATFORM_DIR`». Moved from М10/8 Н1.4 (`presence_lock`, `room`) and М10/11 Н1.4 (`presence`) without a change of
 behaviour; the derivation of the presence words from the fields of the resource heartbeat — P/05 Н1.4 `presence`.
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
@@ -67,9 +67,9 @@ presence:   the resource tells about the processes of its box by the heartbeat f
             of the closed list of P/04: the controller waits for it), never «left»
 ```
 
-The form of the content is the family `presence-lock` of P/05: [the schema](../../../05-resource/data/presence-lock.schema.json),
-[the outcomes](../../../05-resource/data/presence-lock.outcomes.tsv); the instance is `{key, file}`, the text of the file with `x-encoding: json` at the root
-([layers В7](../../LAYERS.md) § 6); the column `schema` of the catalogue row names the family, the section of families is in the norms of P/05 (analysis of the review of stage B 6–7, № 44).
+The form of the content is the family `presence-lock` of P/05: [the schema](../../05-resource/data/presence-lock.schema.json),
+[the outcomes](../../05-resource/data/presence-lock.outcomes.tsv); the instance is `{key, file}`, the text of the file with `x-encoding: json` at the root
+([layers В7](../LAYERS.md) § 6); the column `schema` of the catalogue row names the family, the section of families is in the norms of P/05 (analysis of the review of stage B 6–7, № 44).
 
 The race «the worker between open and flock, the resource deletes the file»: the worker opened the file, the resource takes flock without waiting, the comparison
 matched — gone, the resource deletes the file and releases the lock; the blocking flock of the worker gets the lock on the deleted file,
@@ -102,10 +102,10 @@ live:      next to every room.<sub> — the element live.<sub>: the numbers n �
 
 ## Vectors
 
-The package [`presence-room`](../../vectors/presence-room/README.md) (the count `room`); the modes of the directories and files of the locks are the rows of `modes.tsv` of the package [`journal`](../../vectors/journal/README.md) (together with the event journal). (ADR-0083 addendum (32) item 2)
+The package [`presence-room`](../vectors/presence-room/README.md) (the count `room`); the modes of the directories and files of the locks are the rows of `modes.tsv` of the package [`journal`](../vectors/journal/README.md) (together with the event journal). (ADR-0083 addendum (32) item 2)
 
 ## Correspondence to former lessons
 
 From М10/8 Н1.4 (stage B, analysis of the review of stage A 3–5, № 9): `presence_lock` whole and `room` (at P/05 Н1.4 `room` is
 a reference here); from М10/11 Н1.4 — `presence`. Part of the norm М10/8-10 (the lock and the count `room`; P/05-07) — by `note` of
-[id-map](../../id-map.tsv); the worker's side (step 2б «старт()» of М10/5) — chapter P/03.2, a part of М10/5 by the id-map of lesson 3.
+[id-map](../id-map.tsv); the worker's side (step 2б «старт()» of М10/5) — chapter P/03.2, a part of М10/5 by the id-map of lesson 3.

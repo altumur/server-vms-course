@@ -1,12 +1,12 @@
 # The stand of group operations
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/acceptance/ops/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The scenarios of `door.pass.operations`: the acceptance with the memory of the caller, the leader, the generation, the step batch (ADR-0095; the norms — [P/06.9](../../../../06-console/spec/06.9-console.norms.md) Н1.1–Н1.6, Н2, Н3, [the writer turn contract](../../../contracts/turn.md), the batch door and the replay memory — [P/06.1](../../../../06-console/spec/06.1-console.norms.md) Н2, Н3, the ticket — [the gate-and-pass contract](../../../contracts/gate-and-pass.md) «Pass of the second kind»). What is checked without an operation step goes in the [acceptance 6.9](../../../../06-console/acceptance/9/README.md), sc. 01, 02.
+The scenarios of `door.pass.operations`: the acceptance with the memory of the caller, the leader, the generation, the step batch (ADR-0095; the norms — [P/06.9](../../../06-console/spec/06.9-console.norms.md) Н1.1–Н1.6, Н2, Н3, [the writer turn contract](../../contracts/turn.md), the batch door and the replay memory — [P/06.1](../../../06-console/spec/06.1-console.norms.md) Н2, Н3, the ticket — [the gate-and-pass contract](../../contracts/gate-and-pass.md) «Pass of the second kind»). What is checked without an operation step goes in the [acceptance 6.9](../../../06-console/acceptance/9/README.md), sc. 01, 02.
 
-**There is no dry run by an implementation.** Not a single step is executed: the values are computed from the text of the norm. New scenarios enter the pin of the lines only by a runner release, after a run against an implementation; each red step is analysed by the question «norm or data», as on the [stand of the pass of the second kind](../../pass/README.md#исполнимость).
+**There is no dry run by an implementation.** Not a single step is executed: the values are computed from the text of the norm. New scenarios enter the pin of the lines only by a runner release, after a run against an implementation; each red step is analysed by the question «norm or data», as on the [stand of the pass of the second kind](../pass/README.md#executability).
 
-5 scenarios / 112 steps. The runner plays the worker: a scenario needs to keep a step call open and to write the step batch itself. The manifest is [`probe-op`](../probe-op.subsystem.yaml): the table `repeats` — the memory of the caller, like `backend/repeats` (`service: true`), the unit row `things` — the target of a step. The kits [`stand.json`](../stand.json) — for sc. 12 of the plan: the scenarios of this release go without `@tls-setup`, because the second console stands only on the stand without a kit.
+5 scenarios / 112 steps. The runner plays the worker: a scenario needs to keep a step call open and to write the step batch itself. The manifest is [`probe-op`](probe-op.subsystem.yaml): the table `repeats` — the memory of the caller, like `backend/repeats` (`service: true`), the unit row `things` — the target of a step. The kits [`stand.json`](stand.json) — for sc. 12 of the plan: the scenarios of this release go without `@tls-setup`, because the second console stands only on the stand without a kit.
 
 | № | Scenario | Norms |
 |---|---|---|
@@ -16,17 +16,17 @@ The scenarios of `door.pass.operations`: the acceptance with the memory of the c
 | 07 | `07-lost-batch-answer`: a lost answer of the batch, a repeat with the same key: the saved answer, not 412 | Н2 «Step batch»; P/06.1 Н3 «batch» |
 | 07 | `07-late-batch`: the leader on a process pause, another took the turn, a cancel, a late batch — `412 leader moved`, the outcome stays `cancel` | Н2 «Step batch», Н3 «finish», «Races» |
 
-`step_key` in `Idempotency-Key` is computed by the definition of Н2 and checked against [`op-step/key.tsv`](../../../../06-console/vectors/op-step/key.tsv). The `id` of the operations are random, written as they are.
+`step_key` in `Idempotency-Key` is computed by the definition of Н2 and checked against [`op-step/key.tsv`](../../../06-console/vectors/op-step/key.tsv). The `id` of the operations are random, written as they are.
 
 ## Preparation
 
-The stand is [«Domain stand»](../../README.md#стенд-домена), `@domain m1`; the runner sets up `probe-op` on `m1` together with the manifests of the stand. The door `socket m1 probe-opworker` — [the dictionary](../../README.md#подставной-воркер-передачи-второго-вида). The person of the scenarios is `root`: the steps go by their right, the token validity `TOKEN_LIFETIME` is longer than any scenario. The target of a step is the row `things`. `expected` and `versions` carry its `revision`: for the console these are opaque values, and the index in the `cas` of the batch is taken from the answer of `POST`.
+The stand is [«Domain stand»](../README.md#domain-stand), `@domain m1`; the runner sets up `probe-op` on `m1` together with the manifests of the stand. The door `socket m1 probe-opworker` — [the dictionary](../README.md#stand-in-worker-of-the-pass-of-the-second-kind). The person of the scenarios is `root`: the steps go by their right, the token validity `TOKEN_LIFETIME` is longer than any scenario. The target of a step is the row `things`. `expected` and `versions` carry its `revision`: for the console these are opaque values, and the index in the `cas` of the batch is taken from the answer of `POST`.
 
 In sc. 03 the instance `backend` is a repeated submission of `@pass-worker` of the same name: the previous worker is closed, the client gets 502, the 202 is lost. A second console of sc. 03 is not needed: ADR-0095, Confirmation, speaks of another instance of `backend`.
 
 ## Two consoles
 
-`console#2` is the console of another server: there is one console per server ([P/02.5](../../../../02-installer/spec/02.5-installer.norms.md) Н1.5), so the copy has its own `PLATFORM_DIR`, port and role socket, while the store and the ring are common. The ticket lives at the instance that issued it (`ticket` step 1), so the door `socket m1#2` leads to copy 2, a foreign ticket there is 401.
+`console#2` is the console of another server: there is one console per server ([P/02.5](../../../02-installer/spec/02.5-installer.norms.md) Н1.5), so the copy has its own `PLATFORM_DIR`, port and role socket, while the store and the ring are common. The ticket lives at the instance that issued it (`ticket` step 1), so the door `socket m1#2` leads to copy 2, a foreign ticket there is 401.
 
 - `07-restart-with-outcome`, `07-restart-no-outcome`: the leader is copy 1, copy 2 starts in the middle of a call and after the first is stopped becomes the leader; the new ticket goes to it.
 - `07-late-batch`: the late batch goes by the ticket of the previous leader, so the previous leader is copy 2. Copy 1 is frozen until the acceptance and does not contend for the turn. Step 9 puts the operation on pause: the call of copy 2 plays to the end, and the new leader does not call the step, so the cancel does not wait for its call `OPS_STEP_WAIT`; step 24 holds this. `OPS_STEP_WAIT` is shorter than `TURN_TERM`, so the turn gives up the write through `admin.sock`: otherwise the ticket would die earlier than the new holder.
@@ -50,7 +50,7 @@ Sc. 03: `pause` right after the acceptance holds the steps while the stand-in wo
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
-There is no `@sleep`. `@pass-step-none` counts as a sleep ([the dictionary](../../README.md#подставной-воркер-передачи-второго-вида)):
+There is no `@sleep`. `@pass-step-none` counts as a sleep ([the dictionary](../README.md#stand-in-worker-of-the-pass-of-the-second-kind)):
 
 | Step | Timing, s | Reason |
 |---|---|---|
@@ -65,7 +65,7 @@ There is no `@sleep`. `@pass-step-none` counts as a sleep ([the dictionary](../.
 
 ## The other scenarios of the plan
 
-Sc. 04–06, 08–13 of the [plan](../../../../06-console/acceptance/9/README.md#plan-of-scenarios-after-adr-0094-b1) — by reading for now, the meaning is the former one:
+Sc. 04–06, 08–13 of the [plan](../../../06-console/acceptance/9/README.md#plan-of-scenarios-after-adr-0094-b1) — by reading for now, the meaning is the former one:
 
 | № | Scenario | Norms |
 |---|---|---|
@@ -83,7 +83,7 @@ The change of the ring of sc. 11 stays by reading forever: there is no directive
 
 ## scenarios.tsv
 
-The format is the [dictionary of directives and doors](../../README.md#словарь-директив-и-дверей).
+The format is the [dictionary of directives and doors](../README.md#dictionary-of-directives-and-doors).
 
 ## corrections.tsv
 

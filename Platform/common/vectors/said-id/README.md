@@ -1,11 +1,11 @@
 # Vectors: SaidID — the name of a request in `fetched`
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/said-id/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the request mark contract](../../../contracts/request-mark.md) «fetched» `said_id` (moved from chapter
-[P/03.4](../../../../03-worker/spec/03.4-worker.norms.md) Н1.1; the layout audit `А-24`, `Б-02`); the field `fetched` of the heartbeat is P/03.4 Н1.1: the worker
-writes into the heartbeat the SaidIDs of the requests whose outcome it reported ([chapter 3.6](../../../../03-worker/spec/03.6-worker.norms.md) Н3
-«holder's look»). The participant is [chapter 6.4](../../../../06-console/spec/06.4-console.norms.md): the reaper of the console reads
+The owner is [the request mark contract](../../contracts/request-mark.md) «fetched» `said_id` (moved from chapter
+[P/03.4](../../../03-worker/spec/03.4-worker.norms.md) Н1.1; the layout audit `А-24`, `Б-02`); the field `fetched` of the heartbeat is P/03.4 Н1.1: the worker
+writes into the heartbeat the SaidIDs of the requests whose outcome it reported ([chapter 3.6](../../../03-worker/spec/03.6-worker.norms.md) Н3
+«holder's look»). The participant is [chapter 6.4](../../../06-console/spec/06.4-console.norms.md): the reaper of the console reads
 `fetched` and removes the append row when its rid is reported (Н3 «reaper» `clear`;
 before the move — М10/8). The package is common: the algorithm is read by two processes (the Architect's decision on the review analysis of stage A 6–7, № 2).
 The bytes are written by «Спецификация» (ADR-0083); the conformance of the product is by its acceptance against these tables (ADR-0080 addendum 16).
@@ -18,7 +18,7 @@ The bytes are written by «Спецификация» (ADR-0083); the conformanc
 - **hashed** — otherwise «#» and the first 20 hex characters of sha256(UTF-8 rid), in lowercase;
 - **read** — split `fetched` by «,»; the rid is reported if among the names there is the rid or SaidID(rid).
 
-The input of the vectors is a rid by its grammar ([P/06.4](../../../../06-console/spec/06.4-console.norms.md) Н1.5 `rid`, the vector [`rid`](../../../../06-console/vectors/rid/README.md): ≤ 200 bytes of UTF-8, not empty, not `.`/`..`, without
+The input of the vectors is a rid by its grammar ([P/06.4](../../../06-console/spec/06.4-console.norms.md) Н1.5 `rid`, the vector [`rid`](../../../06-console/vectors/rid/README.md): ≤ 200 bytes of UTF-8, not empty, not `.`/`..`, without
 `/ \ " '` and Cc, Zl, Zp, does not start with `free-`). The categories are by Unicode 15.0.0 (as `common.schema.json`); the characters of the vectors
 are chosen so that their category did not change in the versions 15.x.
 
@@ -45,7 +45,7 @@ Five fields: `case`; `fetched` — the value of the heartbeat field, a JSON stri
 ## Stand commands
 
 The key `stand` of the profiles `03-worker` and `06-console` (the section «Layout by processes» of [the common acceptance
-README](../../../acceptance/README.md)); a template with `{input}` — the path of the input file of the row;
+README](../../acceptance/README.md)); a template with `{input}` — the path of the input file of the row;
 code 0 — computed, 2 — an input not of the form; stdout is compared with the expectation as JSON by value; there is no envelope `result`
 (the guess of stage C W03-G03, the Architect's decision of 2026-10-23):
 

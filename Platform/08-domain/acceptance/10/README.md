@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/10/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are [the common acceptance README](../../../common/acceptance/README.md), the section [«Domain stand»](../../../common/acceptance/README.md#стенд-домена)
+The stand and the dictionary of directives and doors are [the common acceptance README](../../../common/acceptance/README.md), the section [«Domain stand»](../../../common/acceptance/README.md#domain-stand)
 (a stand of several clusters; formerly the dictionary of the М11 README of the acceptance М11/01). The norm of the chapter is
 [`08.10-domain.norms.md`](../../spec/08.10-domain.norms.md) Н5. The scenarios were moved from the acceptance of М11/12 (04, 05) (stage B,
 ADR-0083 addendum (1): without a change of behaviour); the numbers, the names of the scenarios and the steps are the former ones. The other scenarios of М11/12: 01, 03,

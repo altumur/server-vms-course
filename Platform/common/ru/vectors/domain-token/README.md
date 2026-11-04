@@ -1,13 +1,13 @@
 # Векторы токена домена
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
+Текст производный от `vectors/domain-token/README.md`, руками не правится: источник — английский [`vectors/domain-token/README.md`](../../../vectors/domain-token/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
 
 Векторы [договора токена домена](../../contracts/domain-token.md): функция `token(keys, revoked, now, token)` — проверка
 токена домена по принятому набору `domain/keys` и строке `domain/revoked` по стенным часам проверяющего, с `expect`
 получателя (вид и свой кластер). Владелец — урок P/08, глава 8.2; функцию исполняют сторожевая консоли кластера
-([P/06.3](../../../06-console/ru/spec/06.3-console.norms.md) Н1.3, Н1.8), получатель токена вида — воркер и дверь члена
-([P/03.7](../../../03-worker/ru/spec/03.7-worker.norms.md) Н3 «проверить у получателя»), процесс `domain` у дверей людей
-([глава 8.4](../../../08-domain/ru/spec/08.4-domain.norms.md)) и консоль домена (урок P/10). Байты пишет «Спецификация»
+([P/06.3](../../../../06-console/ru/spec/06.3-console.norms.md) Н1.3, Н1.8), получатель токена вида — воркер и дверь члена
+([P/03.7](../../../../03-worker/ru/spec/03.7-worker.norms.md) Н3 «проверить у получателя»), процесс `domain` у дверей людей
+([глава 8.4](../../../../08-domain/ru/spec/08.4-domain.norms.md)) и консоль домена (урок P/10). Байты пишет «Спецификация»
 (ADR-0083); соответствие продукта — его приёмкой по этой таблице (ADR-0080 доп. 16).
 
 Строки переложены из входов команды `token` приёмки М11/2
@@ -25,13 +25,13 @@
 
 ## Ключи
 
-Ключи входов главы [P/08.2](../../../08-domain/ru/spec/08.2-domain.norms.md) (пакеты `keys`, `domain-token`,
+Ключи входов главы [P/08.2](../../../../08-domain/ru/spec/08.2-domain.norms.md) (пакеты `keys`, `domain-token`,
 `domain-envelopes`; ключ приёма книг — и пакет `assemble`) тестовые и открыты: зерно каждого — `sha256("w2c test
 <слово>")`, слова — `root 1` (корень домена `acme`),
 `root 2` (чужой корень), `token key 1…3` (ключи токенов `t1…t3`), `book seal 1`, `book seal 2` (ключи приёма книг),
 `member m1` (ключ члена в `revoked_members`), `eph 1…3` (одноразовые пары конвертов векторов; `nonce` — байты 0…11).
 Векторы конвертов запечатаны с этими `eph` и `nonce` только ради воспроизводимости; реализация при запечатывании берёт
-случайные ([P/08.2](../../../08-domain/ru/spec/08.2-domain.norms.md) Н1.5, [договор конвертов домена](../../contracts/domain-envelopes.md)). Открытые ключи:
+случайные ([P/08.2](../../../../08-domain/ru/spec/08.2-domain.norms.md) Н1.5, [договор конвертов домена](../../contracts/domain-envelopes.md)). Открытые ключи:
 
 ```text
 root 1      34dc3424ca1fc497170b49eef38222db60fbcaa887852645d7c73bedcc9f7684
@@ -42,7 +42,7 @@ book seal 2 57bf48000f17919375a83a26f7b2064ade5a0b8ee1c29f9a3bbdd87c28434603
 `token-*`: момент `now` = 1760000000 (кроме случаев границ), токен — `iat = now − 10`, `exp = now + 890`,
 `jti = 0123456789abcdef`, `sub = alice`; набор rev 3: `current = t2`, `t1` с `until = now + 100`. `keys-15` и `token-15` —
 набор после кражи (rev 1760000000, ключ `t3`, `revoked_issuing = [i1]`, новый `book_seal`). У токенов входов есть `kind`
-(`person`; вид у каждого токена домена); сц. 12 — проверка получателем (у входов, кроме `token-21`, — вид `tally` с полем аудитории; `expect`: вид и свой кластер, [P/08.7](../../../08-domain/ru/spec/08.7-domain.norms.md), [P/03.7](../../../03-worker/ru/spec/03.7-worker.norms.md)).
+(`person`; вид у каждого токена домена); сц. 12 — проверка получателем (у входов, кроме `token-21`, — вид `tally` с полем аудитории; `expect`: вид и свой кластер, [P/08.7](../../../../08-domain/ru/spec/08.7-domain.norms.md), [P/03.7](../../../../03-worker/ru/spec/03.7-worker.norms.md)).
 `seal-round` сверяется по `opened` и `distinct`; форма двух `envelopes` — по договору конвертов домена.
 
 ## Файлы
@@ -52,7 +52,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 53 строки: 12 `ok`, 31 отказ, 10 `@exit 2` | `input` — вход команды `token` текстом JSON (`keys` — документ набора, `revoked` — `{jtis}` как прочитана или `null`, `now`, `token`, `expect?` — `{kind, cluster, audience_claim?}`, `kind` — строка или список видов) → `expect` — `{"result":"ok","payload":{…}}` (подмножество полей `payload`) или `{"result":"refused","reason":<слово>}`: `unknown_key` (прежний ключ после `until`, ключа нет в наборе, украденный ключ после нового набора), `bad_signature` (подмена `payload`), `not_a_token` (две части, `alg` не `EdDSA`, повтор ключа в `header`), `bad_claims` (нет `jti`, `jti` не по грамматике, нет `kind`, `exp` строкой), `expired`, `future`, `revoked`, `no_revocations` (`jtis` не строка, `exp` записи — слово, ведущий ноль, не конечное), `wrong_kind`, `wrong_audience` (чужой кластер, поле аудитории `audience_claim`) |
+| [`cases.tsv`](../../../vectors/domain-token/cases.tsv), 53 строки: 12 `ok`, 31 отказ, 10 `@exit 2` | `input` — вход команды `token` текстом JSON (`keys` — документ набора, `revoked` — `{jtis}` как прочитана или `null`, `now`, `token`, `expect?` — `{kind, cluster, audience_claim?}`, `kind` — строка или список видов) → `expect` — `{"result":"ok","payload":{…}}` (подмножество полей `payload`) или `{"result":"refused","reason":<слово>}`: `unknown_key` (прежний ключ после `until`, ключа нет в наборе, украденный ключ после нового набора), `bad_signature` (подмена `payload`), `not_a_token` (две части, `alg` не `EdDSA`, повтор ключа в `header`), `bad_claims` (нет `jti`, `jti` не по грамматике, нет `kind`, `exp` строкой), `expired`, `future`, `revoked`, `no_revocations` (`jtis` не строка, `exp` записи — слово, ведущий ноль, не конечное), `wrong_kind`, `wrong_audience` (чужой кластер, поле аудитории `audience_claim`) |
 
 Границы: `now = exp + 60` — `ok`, `exp + 61` — `expired`; `now = iat − 60` — `ok`, `iat − 61` — `future`; `expect` с
 `cluster: null` (`person`) — аудитория не проверяется.
@@ -89,7 +89,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 Строки `corrections.tsv` приёмки М11/02 до переноса и строки переноса — для пакетов `keys`, `domain-token`,
 `domain-envelopes` (каталог приёмки М11/02 снят переносом урока 8; пути и номера — прежние, их разрешает
-[`id-map.tsv`](../../id-map.tsv)):
+[`id-map.tsv`](../../../id-map.tsv)):
 
 | date | sample | fix |
 |---|---|---|

@@ -1,29 +1,29 @@
 # The alarm history contract: the history of a member at the holder, equality of lines, `cut_before`
 
-This English text is the source; the Russian [`alarm-history.md`](../alarm-history.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/alarm-history.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): the holder writes the history, the domain console reads it — a contract,
 not copies in chapters; the stage C guess C10-ALARM-SAME-LINE83, the Architect's decision of 2026-10-25). The owner is chapter
-[P/08.9](../../../08-domain/spec/08.9-domain.norms.md) Н1.9. Participants: the writer — the holder pass, the process `domain`
-(ADR-0032); the reader — the alarm list of the domain console ([P/10](../../../10-domain-console/spec/10-domain-console.norms.md) Н1.8, Н3
+[P/08.9](../../08-domain/spec/08.9-domain.norms.md) Н1.9. Participants: the writer — the holder pass, the process `domain`
+(ADR-0032); the reader — the alarm list of the domain console ([P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.8, Н3
 `alarms`: the merge of the page and the history); the backup copy of the holder (P/08.8 Н1.5 `objects`).
 
 Moved from P/08.9 Н1.9 without a change of behaviour, together with the rule of a repeated line within one page (P/10 Н3 `alarms`
 step 2; reconciliation of М11, A16); P/08.9 and P/10 refer here.
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
 The object `domain/alarm-history/<член>` is the family `alarm-history`: the form `Platform/08-domain/data/alarm-history.schema.json`,
-the outcomes `Platform/08-domain/data/alarm-history.outcomes.tsv` ([form](../../../08-domain/data/alarm-history.schema.json),
-[outcomes](../../../08-domain/data/alarm-history.outcomes.tsv)). A history line is a line of the alarm page of the member, as accepted:
+the outcomes `Platform/08-domain/data/alarm-history.outcomes.tsv` ([form](../../08-domain/data/alarm-history.schema.json),
+[outcomes](../../08-domain/data/alarm-history.outcomes.tsv)). A history line is a line of the alarm page of the member, as accepted:
 `t` — by the domain clock (the section «Domain clock»), `t_src` — the `t` of the line as it came, by the member's clock. Times follow the canon of P/01.1 Н0
 «Time in a row» (`Platform/common/data/codec.tsv`, the row `time`): the writer — at most three fraction digits.
 
 ## Domain clock
 
-Moved from [P/10](../../../10-domain-console/spec/10-domain-console.norms.md) Н1.8 `clock` without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, А-13):
+Moved from [P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.8 `clock` without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, А-13):
 the clock of a line is read by the holder pass (it writes the history, `events[].t`) and by the alarm list of the domain console.
 
 ```yaml
@@ -71,12 +71,12 @@ line) is P/10 Н3 `alarms`, by `same_line` from here.
 
 ## Vectors
 
-The package [`alarm-history`](../../vectors/alarm-history/README.md): the equality of lines (`same`), a repeat in a page (`page`), the write
+The package [`alarm-history`](../vectors/alarm-history/README.md): the equality of lines (`same`), a repeat in a page (`page`), the write
 of the holder (`write`: creation with `cut_before` 0, no repeats by `same_line`, removal by the week and movement of `cut_before`,
 nothing removed, equal `t` at the boundary `HISTORY_LINES`); `same` — also `t_src` 990/990.0, absent/`null` (AH-SAME52-01, AH-CUT52-01).
 The merge of the page and the history is the package `alarms` of lesson P/10.
 
 ## Correspondence to former lessons
 
-From P/08.9 Н1.9 (the block whole; the norm P/08.9 — by `note` of [id-map](../../id-map.tsv)) and P/10 Н3 `alarms` step 2 (a repeat in
+From P/08.9 Н1.9 (the block whole; the norm P/08.9 — by `note` of [id-map](../id-map.tsv)) and P/10 Н3 `alarms` step 2 (a repeat in
 a page); they refer here (C10-ALARM-SAME-LINE83).

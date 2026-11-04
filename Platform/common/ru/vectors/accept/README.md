@@ -1,6 +1,6 @@
 # Векторы приёма отчёта
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
+Текст производный от `vectors/accept/README.md`, руками не правится: источник — английский [`vectors/accept/README.md`](../../../vectors/accept/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
 
 Векторы [договора приёма отчёта](../../contracts/accept.md): функция «принять» (`accept`) — поколение, метка, `same`,
 `heard`, `ignored`, отказы, дороги. Владелец — урок P/08, глава 8.3 (держатель); участник — ретранслятор (9.2), который
@@ -30,8 +30,8 @@ Kimi SB810-06): у строк уроков 3 и 4 `catalog` — `["testsub"]`, �
 
 | Манифест | Файл | sha256 |
 |---|---|---|
-| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a` |
-| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `813a807f3472bdc64e279c94c12bfe3b00ebaaa8ebda0c996d2a50161043e6eb` |
+| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../../Source/tests/testdata/testsub.subsystem.yaml) | `7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a` |
+| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `813a807f3472bdc64e279c94c12bfe3b00ebaaa8ebda0c996d2a50161043e6eb` |
 
 Байты `testsub2` сменились 2026-11-04 (дорожная карта 4.5): добавлен вид токена `vault` с `keep: true` в `domain.tokens`, затем переписаны комментарии шапки без имён файлов тестов; поля, от которых зависят ожидания этой таблицы, не тронуты — перепроверка оракулом не нужна.
 
@@ -44,7 +44,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 66 строк (3 ADR-0113 — `accept-camera-*`, `accept-heard-every-changed`; 26 урока 3, 9 урока 4, 2 двери ретранслятора — `same_sent_at` после `heard`, справка свидетелей и решение «Архитектора» 2026-10-23; 25 стадии C — ниже; 1 — аудит покрытия P/08, второй проход Gemini) | `input` — вход команды `accept` текстом JSON (`catalog`, `mark`, `stored`, `body`, `refreshed_ago`; у урока 4 — `via`, `heard_ago`) → `expect`: `generation` (`rev`, `base`, части `whole`), `heard` (`refresh`), `same`, `ignored` или `refused` (`status`, `reason`: `rebase`, `same_sent_at`, `not_ready`, `not_a_publication`, `rev_exhausted`; `whole_too_large` — строк нет, «Кандидаты») |
+| [`cases.tsv`](../../../vectors/accept/cases.tsv), 66 строк (3 ADR-0113 — `accept-camera-*`, `accept-heard-every-changed`; 26 урока 3, 9 урока 4, 2 двери ретранслятора — `same_sent_at` после `heard`, справка свидетелей и решение «Архитектора» 2026-10-23; 25 стадии C — ниже; 1 — аудит покрытия P/08, второй проход Gemini) | `input` — вход команды `accept` текстом JSON (`catalog`, `mark`, `stored`, `body`, `refreshed_ago`; у урока 4 — `via`, `heard_ago`) → `expect`: `generation` (`rev`, `base`, части `whole`), `heard` (`refresh`), `same`, `ignored` или `refused` (`status`, `reason`: `rebase`, `same_sent_at`, `not_ready`, `not_a_publication`, `rev_exhausted`; `whole_too_large` — строк нет, «Кандидаты») |
 
 ## Строки стадии C
 
@@ -86,4 +86,4 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 Векторы уроков 3 и 4 — входы приёмки, прошедшей у двух реализаций-свидетелей; строки стадии C составлены по договору;
 эталонной пересборкой не проверялись (поколение и метка
 опираются на разделы договора «Поколение, метка, пределы» и «Публикация члена»; владельцы текста — P/08.3 Н1.3,
-[P/09.1](../../../09-agent/ru/spec/09.1-agent.norms.md) Н1.2). При расхождении прав договор, вектор правит «Спецификация».
+[P/09.1](../../../../09-agent/ru/spec/09.1-agent.norms.md) Н1.2). При расхождении прав договор, вектор правит «Спецификация».

@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/4/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`03.4-worker.norms.md`](../../spec/03.4-worker.norms.md) Н5. The scenario was moved from the acceptance of
 М10/05 (stage B, ADR-0083 addendum (1): without a change of
 behaviour); the number of the scenario and of the steps are the former ones, except the first step `@start resource` of sc. 03: the controller reads the heartbeat of the worker through the objects door of the resource of its server, without the resource «not known» ([the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). Four scenarios / 36 steps: 03-sigterm (9), 13-pulse-counters (9; the VMS request «пульс и битая строка»: the counts of the heartbeat and the rows of `/metrics`, with the resource `srv-a` — the heartbeat is read through its door), 36-previous-heartbeat (12), 37-place-released-on-sigterm (6) (coverage audit of P/03, the second pass of Gemini).
@@ -11,7 +11,7 @@ The scenario runs on a stand of the `testsub` processes of the implementation: t
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей): the doors `store` (a role with read rights on `testsub/`), `console`, `resource` and `admin` (sc. 37 — the shelf), the directives `@start`, `@sigterm`,
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors): the doors `store` (a role with read rights on `testsub/`), `console`, `resource` and `admin` (sc. 37 — the shelf), the directives `@start`, `@sigterm`,
 `@sigkill`, `@spoil object` (sc. 36), `@until`; the expectation is a subset of fields.
 
 The processes are started per the section «Stand» of the common acceptance README (the commands of roles, the environment of the worker); the read role of

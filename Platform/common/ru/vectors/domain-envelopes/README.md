@@ -1,6 +1,6 @@
 # Векторы конвертов домена
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
+Текст производный от `vectors/domain-envelopes/README.md`, руками не правится: источник — английский [`vectors/domain-envelopes/README.md`](../../../vectors/domain-envelopes/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
 
 Векторы [договора конвертов домена](../../contracts/domain-envelopes.md): открытие и круг конвертов `x25519:v1` (вклад
 члена к ключу приёма книг) и `m1` (ответ держателя члену). Пакет — общий: запечатывает один процесс, открывает другой
@@ -23,7 +23,7 @@
 запечатывающий: `x25519-round.tsv` — агент члена (`09-agent`) и процесс `domain` (`08-domain`, `keys_sealed`),
 `m1-round.tsv` — процесс `domain` (`08-domain`); ретранслятор конверты только несёт — таблиц не исполняет (ACC-VECTORS-CONNECT-02, решение «Архитектора» 2026-10-26).
 
-Команды и формы вывода — те же, что у прежней приёмки М11: `seal`, `seal-round` — [P/08.2](../../../08-domain/ru/spec/08.2-domain.norms.md)
+Команды и формы вывода — те же, что у прежней приёмки М11: `seal`, `seal-round` — [P/08.2](../../../../08-domain/ru/spec/08.2-domain.norms.md)
 Н5 (прежде М11/2 Н5); `seal-member`, `seal-member-round` — таблица ниже (прежде М11/3 Н5, снят переносом урока 8; вход
 `seal-member` — `{seed, sealed}`, `seal-member-round` — `{key, seed, plain}`; разбор ревью стадии B 8–10, № 22, Claude
 М-1); сравнение — подмножество полей, ячейка `expect` задаёт `result` (и значение или слово отказа) (чтение коммитов
@@ -62,14 +62,14 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`x25519-open.tsv`](x25519-open.tsv), 16 строк | `seed_hex` (зерно ключа приёма книг), `envelope`, контекст AAD `member`, `source_path`, `item`, `pointer` → значение или `not_v1`, `not_an_envelope`, `does_not_open`. Случаи: открывается, пустое значение, кириллица и `~`/`/` в контексте; другой ключ приёма, иной `member`, `source_path`, `item`, `pointer`, испорченный `ct`; другая версия, `=`, четыре части, короткие `nonce` и `ct`, нулевой `eph`, неканонический base64url |
-| [`x25519-round.tsv`](x25519-round.tsv), 2 строки | `book_seal_hex`, `seed_hex`, `plain`, контекст → `ok` (оба открылись, конверты различны) или `not_an_envelope` (`book_seal` малого порядка) |
-| [`m1-open.tsv`](m1-open.tsv), 11 строк | `seed_hex` (зерно ключа члена), `sealed` → значение или `not_m1`, `not_an_envelope`, `does_not_open`. Случаи: открывается, пустое; другой член, AAD другого ключа, испорченный `ct`; тег `m2:`, форма с точками; три части, `=`, короткий `nonce`, нулевой `eph` |
-| [`m1-round.tsv`](m1-round.tsv), 1 строка | `key_hex` (открытый Ed25519 члена), `seed_hex`, `plain` → `ok` |
+| [`x25519-open.tsv`](../../../vectors/domain-envelopes/x25519-open.tsv), 16 строк | `seed_hex` (зерно ключа приёма книг), `envelope`, контекст AAD `member`, `source_path`, `item`, `pointer` → значение или `not_v1`, `not_an_envelope`, `does_not_open`. Случаи: открывается, пустое значение, кириллица и `~`/`/` в контексте; другой ключ приёма, иной `member`, `source_path`, `item`, `pointer`, испорченный `ct`; другая версия, `=`, четыре части, короткие `nonce` и `ct`, нулевой `eph`, неканонический base64url |
+| [`x25519-round.tsv`](../../../vectors/domain-envelopes/x25519-round.tsv), 2 строки | `book_seal_hex`, `seed_hex`, `plain`, контекст → `ok` (оба открылись, конверты различны) или `not_an_envelope` (`book_seal` малого порядка) |
+| [`m1-open.tsv`](../../../vectors/domain-envelopes/m1-open.tsv), 11 строк | `seed_hex` (зерно ключа члена), `sealed` → значение или `not_m1`, `not_an_envelope`, `does_not_open`. Случаи: открывается, пустое; другой член, AAD другого ключа, испорченный `ct`; тег `m2:`, форма с точками; три части, `=`, короткий `nonce`, нулевой `eph` |
+| [`m1-round.tsv`](../../../vectors/domain-envelopes/m1-round.tsv), 1 строка | `key_hex` (открытый Ed25519 члена), `seed_hex`, `plain` → `ok` |
 
 ## Кандидаты
 
-- `keys_sealed` передачи держателя (`x25519:v1` к `seal` цели с AAD `take|<to>`, [P/08.8](../../../08-domain/ru/spec/08.8-domain.norms.md) Н1.7 шаг 5) —
+- `keys_sealed` передачи держателя (`x25519:v1` к `seal` цели с AAD `take|<to>`, [P/08.8](../../../../08-domain/ru/spec/08.8-domain.norms.md) Н1.7 шаг 5) —
   векторов нет, проверяется стендом главы 8.8; кандидат пакета.
 - Запечатывание `m1` держателем с ответом `carry` (содержимое `sealed`) — векторов нет: круг и стенд главы 8.3.
 

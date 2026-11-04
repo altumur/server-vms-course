@@ -1,25 +1,25 @@
 # The request and its mark contract: the request row, the keys `requests`, the mark, the states, `kept`
 
-This English text is the source; the Russian [`request-mark.md`](../request-mark.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/request-mark.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5) and addendum (11): a contract that several processes read
-and write lies in `Platform/common/`; review of stage B 3–5, В1). The owner is chapter [P/06.4](../../../06-console/spec/06.4-console.norms.md)
+and write lies in `Platform/common/`; review of stage B 3–5, В1). The owner is chapter [P/06.4](../../06-console/spec/06.4-console.norms.md)
 (the console): it creates the request row by the door and removes it by the reaper, keeps the accounting `asked` itself, and in
 the mark it is a participant (the reaper writes `no_begun` `expired` and `unknown` by the index; P/06.4 Н3 «file a request»,
 «reaper»). Read and written by: the holder worker — the mark `begun` and the outcome, the cleanup of the mark after `kept`, the
-filing of a row by `worker.requests` (chapter [P/03.6](../../../03-worker/spec/03.6-worker.norms.md) Н1.5, Н3 «holder's look»,
-«Execution and cleanup of the mark»); the heartbeat of the holder with `fetched` — chapter [P/03.4](../../../03-worker/spec/03.4-worker.norms.md)
+filing of a row by `worker.requests` (chapter [P/03.6](../../03-worker/spec/03.6-worker.norms.md) Н1.5, Н3 «holder's look»,
+«Execution and cleanup of the mark»); the heartbeat of the holder with `fetched` — chapter [P/03.4](../../03-worker/spec/03.4-worker.norms.md)
 Н1.1. Moved from P/06.4 (formerly М10/8) Н1.5 (the blocks `<sub>/requests/<rid>`, `action`, `rid`, `manifest`, `mark` and the
 paragraph on the vectors), Н1.6 (the paragraph on the forms of the mark), Н3 «States of an executed request and its mark»
 (whole) and «Races» of the procedure «reaper» without a change of behaviour. The accounting of a person (`ledger`), `holds`,
 the constants of the reaper, the doors of the console, the filing `POST /<sub>/requests` and the procedure of the reaper are in
 the norms of the owner (P/06.4 Н1.5, Н2, Н3); the constants of the holder — P/03.6 Н1.5; the form of the keys `requests` in the
-manifest and the refusals of their loading — [P/02.1](../../../02-installer/spec/02.1-installer.norms.md) Н1.4, Н4. The form
-of the rows — the families of the owner [`requests`](../../../06-console/data/requests.schema.json) (`<sub>/requests/<rid>`) and
-[`commands`](../../../06-console/data/commands.schema.json) (`objects/<sub>/commands/<rid>`) with the tables of outcomes next to
-them ([catalogue](../../data/catalog.tsv)). A reference «P/0N[.K] НM» is a norm of a lesson or of a chapter of the module.
+manifest and the refusals of their loading — [P/02.1](../../02-installer/spec/02.1-installer.norms.md) Н1.4, Н4. The form
+of the rows — the families of the owner [`requests`](../../06-console/data/requests.schema.json) (`<sub>/requests/<rid>`) and
+[`commands`](../../06-console/data/commands.schema.json) (`objects/<sub>/commands/<rid>`) with the tables of outcomes next to
+them ([catalogue](../data/catalog.tsv)). A reference «P/0N[.K] НM» is a norm of a lesson or of a chapter of the module.
 
-Normative keywords follow the [course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
@@ -101,8 +101,8 @@ manifest:                                    # requests: (the form — `Platform
 ```
 
 The accounting of a person `ledger` (`<sub>/asked/<sha16(имя)>`), the manifest section `holds` and the constants of the reaper (`CLEAR_EVERY`, `SWEEP_EVERY`,
-`REAP_AFTER`) — [P/06.4 Н1.5](../../../06-console/spec/06.4-console.norms.md); the constants of the holder (`PERFORM_TIMEOUT`,
-`PERFORM_GRACE`, `REQUESTS_HOLD`, `COMMANDS_PER_LOOK`) — [P/03.6 Н1.5](../../../03-worker/spec/03.6-worker.norms.md).
+`REAP_AFTER`) — [P/06.4 Н1.5](../../06-console/spec/06.4-console.norms.md); the constants of the holder (`PERFORM_TIMEOUT`,
+`PERFORM_GRACE`, `REQUESTS_HOLD`, `COMMANDS_PER_LOOK`) — [P/03.6 Н1.5](../../03-worker/spec/03.6-worker.norms.md).
 
 ## Mark
 
@@ -159,10 +159,10 @@ of the family `requests/<rid>` without `unit` is unreadable by the family `reque
 the declared form/action of the manifest (`outcome`, `free`, `elsewhere`; the action — section «Request» `action`), not by the text of
 rid alone (review of stage B 6–7, № 37).
 A resource row without a live owner: the owner is the resource `<server>` from the key `requests/free-<server>-<volume>`; «without a live owner» is
-only `resource_state` of this server = `silent` ([observation contract](../observation.md) «Resource state»); `live`,
+only `resource_state` of this server = `silent` ([observation contract](observation.md) «Resource state»); `live`,
 `unreachable`, `unknown` — do not remove; no answer of the store — leave it; at `silent` and an age of the row ≥ `ttl` (by the rule of
 `ttl` of an ordinary row without a term, the manifest section above) — `delete` by `cas` of the version read, there is no mark (P/05 Н1.4 `free_ask`;
-the stage C guess C06-FREE-OWNER-33-01, the Architect's decision of 2026-10-25; vectors [`reap`](../../../06-console/vectors/reap/README.md)
+the stage C guess C06-FREE-OWNER-33-01, the Architect's decision of 2026-10-25; vectors [`reap`](../../06-console/vectors/reap/README.md)
 profile `resource`).
 Append: the console removes the row by CAS after fetched and settle and frees its rid in asked
 by CAS. The addressee unit of the append is confirmed absent (there is no row `<sub>/<rows>/<unit>` or it is a tombstone) —
@@ -176,9 +176,9 @@ CAS and the rid from `asked` by CAS; an unknown read — leave it. A late `fetch
 change, the start of `settle` does not move — the request has one outcome, the first confirmed one; `fetched` confirmed earlier
 excludes the mark `expired`. Nobody cleans up the mark `expired` (marks accumulate, one per rid), and the rid of an append is derived from data and the door does not read the mark: a new request with the same rid is accepted (202), and the former mark with the same `unit`/`digest` closes it through `settle`, not through `ttl` — the repeat window after `expired` is shortened, the consumer knows this; the platform does not introduce a cleanup of append marks (the Architect's decision of 2026-10-31). Without a mark of the reaper an append has no marks, and it is not removed by `ttl` alone (P/06.4 Н3 reaper `gone`,
 `expired`; ADR-0091 addendum (11) item 4; the stage C guess C06-GONE-FETCHED-33-01, the Architect's decision of 2026-10-25; the VMS request
-«срок просьбы», the Architect's decision of 2026-10-29; vectors [`reap`](../../../06-console/vectors/reap/README.md)). The holder's side of the append is [chapter P/03.6](../../../03-worker/spec/03.6-worker.norms.md) Н3 «The ADR-0054 append».
+«срок просьбы», the Architect's decision of 2026-10-29; vectors [`reap`](../../06-console/vectors/reap/README.md)). The holder's side of the append is [chapter P/03.6](../../03-worker/spec/03.6-worker.norms.md) Н3 «The ADR-0054 append».
 The sign of an append is `requests.outcome: fetched` (ADR-0054 addendum 2026-10-17); the training consumer is the requests of `testsub2`
-(the form — the README of the [acceptance of chapter 3.6](../../../03-worker/acceptance/6/README.md), the handler — P/03.6 Н5). Except for these two marks the reaper neither marks such a row nor removes it by `ttl` alone; scenario 07 of the acceptance of chapter 3.6.
+(the form — the README of the [acceptance of chapter 3.6](../../03-worker/acceptance/6/README.md), the handler — P/03.6 Н5). Except for these two marks the reaper neither marks such a row nor removes it by `ttl` alone; scenario 07 of the acceptance of chapter 3.6.
 Resource rows and elsewhere stay with their owners; the reaper neither marks them nor
 moves them into the protocol of an ordinary request. Elsewhere is closed/removed by its owner — in the ordinary profile; in the append profile a body with
 `action` from `elsewhere` is an append: the holder reports fetched, the console removes the row after settle (P/03.6 Н3; (the Architect's decision of 2026-10-20, review of stage B 6–7)).
@@ -221,13 +221,13 @@ Each read gives a state only at the moment of the read: a conflict returns to th
 | reaper, append, the mark gone or expired | a mark of the same unit/digest; the age of its confirmation ≥settle | remove the row by CAS, the rid from asked by CAS | conflict → do not delete a new version; < settle — do not remove |
 | holder, cleanup of the mark | the request row no longer exists and kept has elapsed | delete by the index of the checked mark | conflict/unknown read → leave it |
 
-The rows «holder …», «another holder …», «the holder that began …» and «holder, cleanup of the mark» are the side of [chapter P/03.6](../../../03-worker/spec/03.6-worker.norms.md)
+The rows «holder …», «another holder …», «the holder that began …» and «holder, cleanup of the mark» are the side of [chapter P/03.6](../../03-worker/spec/03.6-worker.norms.md)
 (Н3 «holder's look», «Execution and cleanup of the mark»); they stand here because the table is one per request. The rows
 «filing …» are the console door (P/06.4 Н3 «file a request», the steps are there), «reaper …» and «clear …» are the procedure of the reaper (P/06.4 Н3 «reaper»).
 
 ## fetched
 
-Moved from [P/03.4](../../../03-worker/spec/03.4-worker.norms.md) Н1.1 `said_id` and P/03.6 «Implementation decides» item 1 (the limits)
+Moved from [P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.1 `said_id` and P/03.6 «Implementation decides» item 1 (the limits)
 without a change of behaviour: the name of a request in `fetched` of the heartbeat is written by the holder worker (P/03.6 Н3 «holder's look»), read by the reaper
 of the console (P/06.4 Н3 «reaper» `clear`) (layout audit А-24, Б-02, the Architect's decision of 2026-10-25). The field `fetched` of the heartbeat has the form of P/03.4 Н1.1
 (`Platform/03-worker/data/heartbeats.schema.json`, the outcomes `Platform/03-worker/data/heartbeats.outcomes.tsv`).
@@ -250,15 +250,15 @@ From the «Races» of the procedure «reaper» of P/06.4 Н3: two holders of one
 
 ## Vectors
 
-The grammar of `rid` — the vectors [`rid`](../../../06-console/vectors/rid/README.md); the write of a body field into the row (`<body fields>`; `<поля тела>` in the Russian text) — the vectors
-[`requests-body`](../../../06-console/vectors/requests-body/README.md); `digest` — the vectors [`request-digest`](../../../06-console/vectors/request-digest/README.md);
+The grammar of `rid` — the vectors [`rid`](../../06-console/vectors/rid/README.md); the write of a body field into the row (`<body fields>`; `<поля тела>` in the Russian text) — the vectors
+[`requests-body`](../../06-console/vectors/requests-body/README.md); `digest` — the vectors [`request-digest`](../../06-console/vectors/request-digest/README.md);
 the name `SaidID(rid)` in `fetched` of the heartbeat — section «fetched» `said_id` (the vectors
-[`said-id`](../../vectors/said-id/README.md), the owner is this contract); the reaper over an append request — the marks `gone` and `expired`, `settle`, without removal by `ttl` alone (the rows
-«reaper, append, …» of the section «States…») and a resource row without a live owner (C06-FREE-OWNER-33-01) — the vectors [`reap`](../../../06-console/vectors/reap/README.md) (C06-GONE-FETCHED-33-01);
-the write of a sent term `valid_until` — the vectors [`deadline`](../../vectors/deadline/README.md) (C47-DEADLINE-VECTORS-01).
+[`said-id`](../vectors/said-id/README.md), the owner is this contract); the reaper over an append request — the marks `gone` and `expired`, `settle`, without removal by `ttl` alone (the rows
+«reaper, append, …» of the section «States…») and a resource row without a live owner (C06-FREE-OWNER-33-01) — the vectors [`reap`](../../06-console/vectors/reap/README.md) (C06-GONE-FETCHED-33-01);
+the write of a sent term `valid_until` — the vectors [`deadline`](../vectors/deadline/README.md) (C47-DEADLINE-VECTORS-01).
 The packages are at the owner (P/06.4); the other states and `kept` have no vectors — the acceptance steps of chapters 6.4 and 3.6 and reading.
 
-The canonical JSON (RFC 8785, ADR-0072) that the contract relies on — the package [`jcs`](../../../01-store/vectors/jcs/README.md)
+The canonical JSON (RFC 8785, ADR-0072) that the contract relies on — the package [`jcs`](../../01-store/vectors/jcs/README.md)
 of lesson P/01 (`canonical_json.tsv`: input → the RFC 8785 form → sha256; ADR-0083 addendum (33) item 2).
 
 ## Correspondence to former lessons
@@ -267,6 +267,6 @@ From P/06.4 (review of stage B 3–5, В1; formerly М10/8): Н1.5 — the block
 `mark` (with `kept`) and the paragraph on the vectors; Н1.6 — the paragraph on the forms of the mark (here «Three forms of the mark»; the door `answered` stays in
 P/06.4 Н1.6 with a reference here); Н3 «States of an executed request and its mark» whole; «Races» of the procedure «reaper». The references inside
 the moved text («Н1.5», «chapter 3.6», «chapter 6.3», «Н2», «by Н3») are written with the full address (P/06.4 …, P/03.6 …,
-P/06.3 …). Parts of norms by `note` of [id-map](../../id-map.tsv): P/06.4-03 (removal by settle, cleanup of the mark after `kept`),
+P/06.3 …). Parts of norms by `note` of [id-map](../id-map.tsv): P/06.4-03 (removal by settle, cleanup of the mark after `kept`),
 P/06.4-06 (the request Н1.5, `filed`, `action`), P/06.4-07 (append, the console side), P/03.6-03 (the holder), P/03.6-04
 (append, the holder side). The vectors — the packages of P/06.4 (section «Vectors»).

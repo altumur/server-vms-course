@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/6/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the chapter is [`06.6-console.norms.md`](../../spec/06.6-console.norms.md) Н5. The scenarios were moved from the acceptances of
 М10/04 (01–07),
 М10/10 (01 → 08, 02 → 10, 09, 12) and
@@ -14,7 +14,7 @@ is taken by `01-unplaced` from М10/04), `10-drain-strand` (in М10/10 — `02-d
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей):
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors):
 the doors `console`, `console2`, `resource`, `store`; the directives `@start controller`, `@start resource`, `@as`, `@put object`,
 `@spoil object`, `@until`, `@sleep` (sc. 13), `@big(N)`; the expectation is an exact code or `2xx`/`4xx` and a subset of fields. A request without a door
 prefix (sc. 01–07, the former acceptance of М10/04) goes to the console `testsub` — the door of the lesson P/06; `Idempotency-Key` — per the dictionary,

@@ -57,7 +57,7 @@ console — [chapter 6.7](../../06-console/spec/06.7-console.norms.md), the work
   [the right](../../common/contracts/may.md) — chapter 8.4; [the term record](../../common/contracts/record.md) and
   [the ask signature](../../common/contracts/ask-sig.md) — chapter 8.8; [the local token door](../../common/contracts/local-token-door.md)
   — chapter 8.7; [the forwarding](../../common/contracts/forwarding.md) («Client address», «Domain doors») and
-  [the role certificate](../../common/contracts/role-certificate.md#серверная-сторона-класс-signed) — chapter 8.0; the holder
+  [the role certificate](../../common/contracts/role-certificate.md#the-server-side-the-class-signed) — chapter 8.0; the holder
   ring and the envelope `enc:v2` — [the sealing contract](../../common/contracts/sealing.md).
 - [OpenAPI](08-domain.api.openapi.yaml) expresses the HTTP forms of the canon of all the chapters: one door of the process — one contract.
   The own doors of the process and the doors that the domain console and the cluster console pass to it stand in it with the codes of the process:
@@ -72,7 +72,7 @@ console — [chapter 6.7](../../06-console/spec/06.7-console.norms.md), the work
   [8.3](../acceptance/3/README.md), [8.4](../acceptance/4/README.md), [8.5](../acceptance/5/README.md),
   [8.6](../acceptance/6/README.md), [8.7](../acceptance/7/README.md), [8.8](../acceptance/8/README.md),
   [8.9](../acceptance/9/README.md), [8.10](../acceptance/10/README.md); chapter 8.0 has no catalogue (Н5). The stand of several
-  clusters, the directives and the doors — [the common acceptance README](../../common/acceptance/README.md#словарь-директив-и-дверей).
+  clusters, the directives and the doors — [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors).
   The vectors of the lesson — [`view`](../vectors/view/README.md) (8.1), [`assemble`](../vectors/assemble/README.md) (8.5),
   [`issue`](../vectors/issue/README.md) (8.7); the common ones — [`keys`](../../common/vectors/keys/README.md),
   [`domain-token`](../../common/vectors/domain-token/README.md),
@@ -102,7 +102,7 @@ an unsupported case. Record a change of the acceptance in `corrections.tsv` of i
 - **8.0.** The door `SIGNER_URL`: accept the edits of the domain console as they came, check the identity and the grant itself (chapter 8.4);
   read `X-W2C-Client` only on a connection of the role `domainconsole` ([the forwarding contract](../../common/contracts/forwarding.md)
   «Client address»); its own refusals `deposed`, `frozen`, `standby` — by its own word in `error`. The server side of the class
-  `signed` — [the role certificate contract](../../common/contracts/role-certificate.md#серверная-сторона-класс-signed)
+  `signed` — [the role certificate contract](../../common/contracts/role-certificate.md#the-server-side-the-class-signed)
   (do not require a client certificate and do not give it rights; requesting it is optional, and a presented one is checked in the
   handshake — its own CA, the validity, EKU `clientAuth`, otherwise an alert; ADR-0083 addendum (20), addendum (21)).
 - **8.1.** The holder's pass of Н3: the domain view (the head once every 3 s, the sections in a round) and the shadow report, the objects `domain/view` and `domain/shadow`; the view fields
@@ -230,7 +230,7 @@ This is a proposed order, not an obligatory structure of the code. The chapters 
 2. The claims and the signature ([the domain token contract](../../common/contracts/domain-token.md) «Токен»).
 3. The holder door `/api/tokens/…` and the answer in the envelope `m1` ([the domain envelopes contract](../../common/contracts/domain-envelopes.md)).
 4. The stand of [the acceptance of the chapter](../acceptance/7/README.md): the runner logs into the local door of the agent with the identity of a role
-   ([the local token door contract](../../common/contracts/local-token-door.md#сокет-роли)).
+   ([the local token door contract](../../common/contracts/local-token-door.md#the-role-socket)).
 
 ### Chapter 8.8 — the term, the copy, the move
 

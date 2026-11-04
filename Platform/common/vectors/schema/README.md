@@ -1,8 +1,8 @@
 # Vectors: the schema check at start
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/schema/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the schema contract](../../../contracts/schema.md) (chapter P/06.6; C06-SCHEMA-WIDE-32-01, the Architect's decision
+The owner is [the schema contract](../../contracts/schema.md) (chapter P/06.6; C06-SCHEMA-WIDE-32-01, the Architect's decision
 2026-10-25). The participants are the processes that check the schema at start: the controller, the worker, the resource, the console, the domain processes.
 The bytes are written by «Спецификация»; the rows are by the text of the contract.
 

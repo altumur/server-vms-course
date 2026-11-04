@@ -32,7 +32,7 @@ ADR-0083 доп. (1): без изменения поведения): Н1.4 и Н
 двери урока 6, в позднем слое (Н1.6) ещё двери домена: `/domain/*` и вход `login_url` (`POST /api/login`) — двери
 консоли домена ([урок P/10](../../../10-domain-console/ru/spec/10-domain-console.norms.md); процесс `domain` — [урок
 P/08](../../../08-domain/spec/08-domain.api.openapi.yaml)), которые консоль кластера пересылает
-([глава P/06.7](../../../06-console/ru/spec/06.7-console.norms.md); [договор пересылки](../../../common/contracts/forwarding.md) «Двери
+([глава P/06.7](../../../06-console/ru/spec/06.7-console.norms.md); [договор пересылки](../../../common/ru/contracts/forwarding.md) «Двери
 домена»), и свои двери консоли кластера `/api/held`, `/domain/shared/<sub>` (глава P/06.7) (разбор ревью стадии B 6–7,
 № 30; Claude M-5); формы — [контракт урока 6](../../../06-console/spec/06-console.api.openapi.yaml), в позднем слое — контракты
 уроков 8 и 10; владельцы строк — главы уроков 6, 8 и их каталог.

@@ -1,12 +1,12 @@
 # Vectors: the event journal bucket and the names `%h<sha256>`
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/journal/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the event journal contract](../../../contracts/event-journal.md): `bucket` `torn`, the form `line` and «File names in shared trees»
+The owner is [the event journal contract](../../contracts/event-journal.md): `bucket` `torn`, the form `line` and «File names in shared trees»
 (the guesses of stage C EJ-G03, EJ-G04, EJ-G06, EJ-G07, EJ-L03, EJ-L06, the Architect's decision of 2026-10-23); the form of the row is the family events
 of P/05 (`05-resource/data/events-*.schema.json`: `events-unit`, `events-unit-alarms`, `events-audit`,
 `events-audit-alarms`, `events-console`, `events-console-alarms`, `events-mirror`). The participants are the writers and the readers
-of the trees of events and objects: the worker, the console, the controller, the resource ([P/05](../../../../05-resource/spec/05-resource.norms.md)
+of the trees of events and objects: the worker, the console, the controller, the resource ([P/05](../../../05-resource/spec/05-resource.norms.md)
 Н1.1, Н1.2, Н1.4). The bytes are written by «Спецификация».
 
 ## `bucket.tsv`
@@ -65,7 +65,7 @@ the objects client contract: `03-worker`, `04-controller`, `06-console`, `08-dom
 
 ## Native outcome
 
-The package has no separate command contract — the general rule «Vectors» of [the common acceptance README](../../../acceptance/README.md)
+The package has no separate command contract — the general rule «Vectors» of [the common acceptance README](../../acceptance/README.md)
 (ACC-VECTORS-CONNECT-04, the Architect's decision of 2026-10-26): the function answers with code 0 and one JSON value. `bucket.tsv` — an object `{ids, torn, garbled, …}`; `names.tsv` — for `read-*` the component as a JSON string or the JSON string
 `"@skip"`, for `write-*` — the JSON string `"write"`, `"keep"` or `"refuse"`; `years.tsv` — the name of the bucket as a JSON string or the
 JSON string `"@refuse"`; `append.tsv` — the content after the write as a JSON string or `"@refuse"`. `modes.tsv` is a layout test, not

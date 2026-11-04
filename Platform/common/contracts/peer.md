@@ -1,37 +1,37 @@
 # The `peer` contract: the client about a server of another cluster, the first contact of a CA, refusal words
 
-This English text is the source; the Russian [`peer.md`](../peer.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/peer.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (13) and addendum (14): a common algorithm of several processes is a contract, not
 copies in chapters; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 2; analysis of the review of stage A 8–10, № 7; analysis of the review
-of stage A 6–7, № 28; analysis of the review of stage B 6–7, № 25). The owner is lesson P/09, [chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.7 (P/09.1-27; the first contract — the agent to `https://`;
+of stage A 6–7, № 28; analysis of the review of stage B 6–7, № 25). The owner is lesson P/09, [chapter 9.1](../../09-agent/spec/09.1-agent.norms.md) Н1.7 (P/09.1-27; the first contract — the agent to `https://`;
 the source — М11/8 Н1.6 `client`, `first`, Н3 «peer»).
 By the function `peer` a client of a door of another cluster over `https://` accepts a server:
 
 | Who | Whom it calls | Where |
 |---|---|---|
-| the member agent ([chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.7), the relay ([9.2](../../../09-agent/spec/09.2-agent.norms.md); lesson 4: it is an agent) | the holder, the relay | «Client and first contact»; the agent in a process — P/09.1 Н1.11 `client` |
-| the cluster console ([chapter 6.7](../../../06-console/spec/06.7-console.norms.md) Н1.7) | the console of a member or of the holder | [the forwarding contract](../forwarding.md) `tls` |
-| the process `domain` (8.8) | the consoles of the neighbours on a move and a handover | [P/08.8](../../../08-domain/spec/08.8-domain.norms.md) Н1.7, Н1.8 |
-| the domain console ([lesson P/10](../../../10-domain-console/spec/10-domain-console.norms.md) Н1.4) | — (the server of a role door: steps 6–7 over the client leaf with `role: console`) | [the role certificate contract](../role-certificate.md) «The server side: the class `role`» (C10-SDK-ROLE83) |
-| the clients of its own cluster ([the role certificate contract](../role-certificate.md) `own_client`) | the doors of its own cluster | its own CAs (`ca.pem`, `ca.next.pem` `W2C_TLS_DIR`), `host` by the loop threshold `loopback`, then revocation (review of the norms of ADR-0075, Claude fd85ea8cc, М-5) |
-| a client of another cluster to the door of a process `mixed` (a subsystem process, [P/03.4](../../../03-worker/spec/03.4-worker.norms.md) Н1.7 `cross_cluster`) | the door of the process of the member named by the destination or the book of the subsystem | it presents no leaf, the admission is the route `domain` by the domain token; the server is the peer of the destination member: the role is the role of the door, the fingerprints are `Entry.ca` of this member from the copy `domain/member-list/<раздел>` (read by `worker.reads`), the name is from the address; the role certificate contract does not change (ADR-0091 addendum (18) item 2, addendum (19) item 2) |
+| the member agent ([chapter 9.1](../../09-agent/spec/09.1-agent.norms.md) Н1.7), the relay ([9.2](../../09-agent/spec/09.2-agent.norms.md); lesson 4: it is an agent) | the holder, the relay | «Client and first contact»; the agent in a process — P/09.1 Н1.11 `client` |
+| the cluster console ([chapter 6.7](../../06-console/spec/06.7-console.norms.md) Н1.7) | the console of a member or of the holder | [the forwarding contract](forwarding.md) `tls` |
+| the process `domain` (8.8) | the consoles of the neighbours on a move and a handover | [P/08.8](../../08-domain/spec/08.8-domain.norms.md) Н1.7, Н1.8 |
+| the domain console ([lesson P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.4) | — (the server of a role door: steps 6–7 over the client leaf with `role: console`) | [the role certificate contract](role-certificate.md) «The server side: the class `role`» (C10-SDK-ROLE83) |
+| the clients of its own cluster ([the role certificate contract](role-certificate.md) `own_client`) | the doors of its own cluster | its own CAs (`ca.pem`, `ca.next.pem` `W2C_TLS_DIR`), `host` by the loop threshold `loopback`, then revocation (review of the norms of ADR-0075, Claude fd85ea8cc, М-5) |
+| a client of another cluster to the door of a process `mixed` (a subsystem process, [P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.7 `cross_cluster`) | the door of the process of the member named by the destination or the book of the subsystem | it presents no leaf, the admission is the route `domain` by the domain token; the server is the peer of the destination member: the role is the role of the door, the fingerprints are `Entry.ca` of this member from the copy `domain/member-list/<раздел>` (read by `worker.reads`), the name is from the address; the role certificate contract does not change (ADR-0091 addendum (18) item 2, addendum (19) item 2) |
 
 Moved from М11/8 Н1.6 (the lines `client`, `first`; the line `revoke` is the client's side, the decision of «Спецификация» on
 the move of lesson 10), Н3 «peer(chain, fingerprints, role, host, now)» (steps 1–9 and the paragraph
 after them) and Н4 (the words of `peer`) without a change of behaviour; the step numbers are the former ones. The fingerprint
 of a CA, the publication fields `tls_ca`, `tls_ca_certs`, the form of `Entry.ca`, `W2C_TLS_DIR`, the roles of the domain processes and the expected
 role of the server `role` at the agent and the relay (the holder — `domain`, the relay — `domainagent`) are [the role certificate
-contract](../role-certificate.md) «The cluster kit, the domain roles, the center between clusters» (`fingerprint`, `tls_ca`,
+contract](role-certificate.md) «The cluster kit, the domain roles, the center between clusters» (`fingerprint`, `tls_ca`,
 `tls_ca_certs`, `Entry.ca`, `domain_roles`, `peer_role`; analysis of the review of stage B 8–10, № 4); the server side of the class
 `signed` is there too; the write of `Entry.ca` at the holder (`on_accept`, the row `ca-certs`, `admin`) is the holder's side, P/08.3
-Н1.6. The class `role` (`server.role`) is a participant, [the role certificate contract](../role-certificate.md) «The server side: the class `role`» (the table above); the answer of forwarding to a refusal is P/06.7 Н4
+Н1.6. The class `role` (`server.role`) is a participant, [the role certificate contract](role-certificate.md) «The server side: the class `role`» (the table above); the answer of forwarding to a refusal is P/06.7 Н4
 `did not answer`. References in the moved text: «Н1.x», «Н3» are
 of lesson М11/8 (Н1.6 — P/06.7 Н1.7 and the lines of this contract, Н3 — P/06.7 Н3); «lesson N» is lesson М11/N; signatures are
-[the role certificate contract](../role-certificate.md) `sig`. The form of the function is the input of a row of the package [`peer`](../../vectors/peer/README.md) (formerly the command `peer` of the acceptance of М11/8 Н5):
+[the role certificate contract](role-certificate.md) `sig`. The form of the function is the input of a row of the package [`peer`](../vectors/peer/README.md) (formerly the command `peer` of the acceptance of М11/8 Н5):
 `{chain: [<PEM>…], fingerprints: [<hex>…], role, host, now}` → `{result: ok}` | `{result: refused, reason}`.
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Client and first contact
 
@@ -79,7 +79,7 @@ From М11/8 Н3 «peer(chain, fingerprints, role, host, now) — клиент о
 ```
 
 A client of a door of its own cluster calls the same function with its own CAs and `host` by the loop threshold, then checks revocation —
-[the role certificate contract](../role-certificate.md) «The client of a door of its own cluster» (`own_client`; ADR-0075 addendum 2026-10-26 (5) item 1); the function
+[the role certificate contract](role-certificate.md) «The client of a door of its own cluster» (`own_client`; ADR-0075 addendum 2026-10-26 (5) item 1); the function
 and its vectors do not change because of this.
 
 Above the anchor the chain is not checked: the anchor is assigned by the fingerprint of the record (whether it stands as a root or an intermediate — it does not matter);
@@ -92,10 +92,10 @@ From М11/8 Н4: the words of `peer`: `ip_address`, `bad_chain`, `foreign_ca`, `
 
 ## Vectors
 
-The package [`peer`](../../vectors/peer/README.md): 31 rows — 25 inputs of the command `peer` of the acceptance of М11/8 (sc. 06) without a change of values, row 27 — a rearranged chain → `bad_chain` (step 4; analysis of the review of stage B 8–10, № 10) and rows 28–32 of the coverage audit of P/09 (second pass): `127.1` — a name, `::1` — `ip_address`, an empty chain before empty fingerprints — `bad_chain`, a trailing dot of host — `wrong_name`, an input without fields — `@exit 2`.
+The package [`peer`](../vectors/peer/README.md): 31 rows — 25 inputs of the command `peer` of the acceptance of М11/8 (sc. 06) without a change of values, row 27 — a rearranged chain → `bad_chain` (step 4; analysis of the review of stage B 8–10, № 10) and rows 28–32 of the coverage audit of P/09 (second pass): `127.1` — a name, `::1` — `ip_address`, an empty chain before empty fingerprints — `bad_chain`, a trailing dot of host — `wrong_name`, an input without fields — `@exit 2`.
 
 ## Correspondence to former lessons
 
 From М11/8 (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 2; analysis of the review of stage A 8–10, № 7): the lines `client` and
 `first` of Н1.6 (here «Client and first contact»; in М11/8 — a pointer), Н3 «peer» whole (here «The function `peer`») and the phrase of Н4
-on the words of `peer` (here «Refusal words»). The norm М11/8-09 (`peer` and the first contact of a CA) — by `note` of [id-map](../../id-map.tsv).
+on the words of `peer` (here «Refusal words»). The norm М11/8-09 (`peer` and the first contact of a CA) — by `note` of [id-map](../id-map.tsv).

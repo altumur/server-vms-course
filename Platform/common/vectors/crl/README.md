@@ -1,10 +1,10 @@
 # Vectors: the file `crl.pem`
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/crl/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is the common [role certificate contract](../../../contracts/role-certificate.md) `revoke` (`crl`, `both`, `absent`;
+The owner is the common [role certificate contract](../../contracts/role-certificate.md) `revoke` (`crl`, `both`, `absent`;
 stage C guesses RC-02, S03, RC-05 and RC-06, the Architect's decision 2026-10-23). The participants are the same doors as at the package
-[`revoked`](../../revoked/README.md). The bytes are written by «Спецификация»; the centres and the CRLs were issued once with keys from constant
+[`revoked`](../revoked/README.md). The bytes are written by «Спецификация»; the centres and the CRLs were issued once with keys from constant
 bytes (Ed25519 and ECDSA P-256), the validity — 2026-01-01…2036-01-01, unless the row says otherwise.
 
 ## `cases.tsv`
@@ -28,5 +28,5 @@ Who performs it — every role whose door or client checks revocation (`revoke` 
 
 ## Native outcome
 
-The package has no separate command contract — the common rule «Vectors» of [the common acceptance README](../../../acceptance/README.md)
+The package has no separate command contract — the common rule «Vectors» of [the common acceptance README](../../acceptance/README.md)
 (ACC-VECTORS-CONNECT-04, the Architect's decision 2026-10-26): the function answers with code 0 and one JSON value. The object `{ca, ca_next, …}` by the form of `expect` or the JSON string `"@bad"` — the file is wrong.

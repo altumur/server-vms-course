@@ -1,13 +1,13 @@
 # Domain token vectors
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/domain-token/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The vectors of [the domain token contract](../../../contracts/domain-token.md): the function `token(keys, revoked, now, token)` — the check of
+The vectors of [the domain token contract](../../contracts/domain-token.md): the function `token(keys, revoked, now, token)` — the check of
 a domain token by the accepted set `domain/keys` and the row `domain/revoked` by the wall clock of the checker, with the `expect`
 of the recipient (the kind and its own cluster). The owner is lesson P/08, chapter 8.2; the function is performed by the gate of the cluster console
-([P/06.3](../../../../06-console/spec/06.3-console.norms.md) Н1.3, Н1.8), the recipient of a kind token — the worker and the door of a member
-([P/03.7](../../../../03-worker/spec/03.7-worker.norms.md) Н3 «check at the recipient»), the process `domain` at the doors of people
-([chapter 8.4](../../../../08-domain/spec/08.4-domain.norms.md)) and the domain console (lesson P/10). The bytes are written by «Спецификация»
+([P/06.3](../../../06-console/spec/06.3-console.norms.md) Н1.3, Н1.8), the recipient of a kind token — the worker and the door of a member
+([P/03.7](../../../03-worker/spec/03.7-worker.norms.md) Н3 «check at the recipient»), the process `domain` at the doors of people
+([chapter 8.4](../../../08-domain/spec/08.4-domain.norms.md)) and the domain console (lesson P/10). The bytes are written by «Спецификация»
 (ADR-0083); the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
 
 The rows were transferred from the inputs of the command `token` of the acceptance of М11/2
@@ -20,18 +20,18 @@ the only source of these cases.
 
 Without a stand: the function of an implementation gets the input (the column `input`) and gives the output; `expect` is a subset of the fields of the output. Exit
 code 0 — computed (a refusal by a word included); `@exit 2` — an input not of the form: exit code 2, the output is not compared
-(the dictionary of the «Стенда» of [the common acceptance README](../../../acceptance/README.md)); there are ten such rows — `token-30`, `token-31`, `token-32`, `token-39`…`token-42`, `token-44`, `token-45`, `token-keep-no-until`.
+(the dictionary of the «Стенда» of [the common acceptance README](../../acceptance/README.md)); there are ten such rows — `token-30`, `token-31`, `token-32`, `token-39`…`token-42`, `token-44`, `token-45`, `token-keep-no-until`.
 Who performs it — every checker of a token, all rows by one function (`expect` is an input): the gate of the cluster console (`06-console`, P/06.3 Н1.3 `identity` step 3), the recipient of a kind token and the process door (`03-worker`, P/03.7 Н1.5; P/03.4 Н1.7 `door_admission`), the process `domain` at the doors of people (`08-domain`, P/08.4) and the gate of the domain console (`10-domain-console`, P/10 Н1.5). The agent of a member (`09-agent`) does not call the function: it checks the answer of the local token door by `request_id` and `exp` (P/08.7 Н3) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
 
 ## Keys
 
-The keys of the inputs of chapter [P/08.2](../../../../08-domain/spec/08.2-domain.norms.md) (the packages `keys`, `domain-token`,
+The keys of the inputs of chapter [P/08.2](../../../08-domain/spec/08.2-domain.norms.md) (the packages `keys`, `domain-token`,
 `domain-envelopes`; the book acceptance key — and the package `assemble`) are test keys and open: the seed of each is `sha256("w2c test
 <слово>")`, the words are `root 1` (the root of the domain `acme`),
 `root 2` (a foreign root), `token key 1…3` (the token keys `t1…t3`), `book seal 1`, `book seal 2` (the book acceptance keys),
 `member m1` (the member key in `revoked_members`), `eph 1…3` (one-time pairs of the vector envelopes; `nonce` — the bytes 0…11).
 The envelope vectors are sealed with these `eph` and `nonce` only for reproducibility; an implementation takes
-random ones when sealing ([P/08.2](../../../../08-domain/spec/08.2-domain.norms.md) Н1.5, [the domain envelopes contract](../../../contracts/domain-envelopes.md)). The public keys:
+random ones when sealing ([P/08.2](../../../08-domain/spec/08.2-domain.norms.md) Н1.5, [the domain envelopes contract](../../contracts/domain-envelopes.md)). The public keys:
 
 ```text
 root 1      34dc3424ca1fc497170b49eef38222db60fbcaa887852645d7c73bedcc9f7684
@@ -42,7 +42,7 @@ book seal 2 57bf48000f17919375a83a26f7b2064ade5a0b8ee1c29f9a3bbdd87c28434603
 `token-*`: the moment `now` = 1760000000 (except the boundary cases), the token — `iat = now − 10`, `exp = now + 890`,
 `jti = 0123456789abcdef`, `sub = alice`; the set rev 3: `current = t2`, `t1` with `until = now + 100`. `keys-15` and `token-15` are
 the set after a theft (rev 1760000000, the key `t3`, `revoked_issuing = [i1]`, a new `book_seal`). The tokens of the inputs have `kind`
-(`person`; every domain token has a kind); sc. 12 is the check by the recipient (the inputs, except `token-21`, have the kind `tally` with an audience field; `expect`: the kind and its own cluster, [P/08.7](../../../../08-domain/spec/08.7-domain.norms.md), [P/03.7](../../../../03-worker/spec/03.7-worker.norms.md)).
+(`person`; every domain token has a kind); sc. 12 is the check by the recipient (the inputs, except `token-21`, have the kind `tally` with an audience field; `expect`: the kind and its own cluster, [P/08.7](../../../08-domain/spec/08.7-domain.norms.md), [P/03.7](../../../03-worker/spec/03.7-worker.norms.md)).
 `seal-round` is reconciled by `opened` and `distinct`; the form of the two `envelopes` — by the domain envelopes contract.
 
 ## Files
@@ -52,12 +52,12 @@ of the acceptance.
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](../cases.tsv), 53 rows: 12 `ok`, 31 refusals, 10 `@exit 2` | `input` — the input of the command `token` as JSON text (`keys` — the set document, `revoked` — `{jtis}` as read or `null`, `now`, `token`, `expect?` — `{kind, cluster, audience_claim?}`, `kind` — a string or a list of kinds) → `expect` — `{"result":"ok","payload":{…}}` (a subset of the fields of `payload`) or `{"result":"refused","reason":<слово>}`: `unknown_key` (a former key after `until`, the key is not in the set, a stolen key after a new set), `bad_signature` (a substituted `payload`), `not_a_token` (two parts, `alg` not `EdDSA`, a repeated key in `header`), `bad_claims` (no `jti`, `jti` not by the grammar, no `kind`, `exp` as a string), `expired`, `future`, `revoked`, `no_revocations` (`jtis` not a string, the `exp` of an entry — a word, a leading zero, not finite), `wrong_kind`, `wrong_audience` (a foreign cluster, the audience field `audience_claim`) |
+| [`cases.tsv`](cases.tsv), 53 rows: 12 `ok`, 31 refusals, 10 `@exit 2` | `input` — the input of the command `token` as JSON text (`keys` — the set document, `revoked` — `{jtis}` as read or `null`, `now`, `token`, `expect?` — `{kind, cluster, audience_claim?}`, `kind` — a string or a list of kinds) → `expect` — `{"result":"ok","payload":{…}}` (a subset of the fields of `payload`) or `{"result":"refused","reason":<слово>}`: `unknown_key` (a former key after `until`, the key is not in the set, a stolen key after a new set), `bad_signature` (a substituted `payload`), `not_a_token` (two parts, `alg` not `EdDSA`, a repeated key in `header`), `bad_claims` (no `jti`, `jti` not by the grammar, no `kind`, `exp` as a string), `expired`, `future`, `revoked`, `no_revocations` (`jtis` not a string, the `exp` of an entry — a word, a leading zero, not finite), `wrong_kind`, `wrong_audience` (a foreign cluster, the audience field `audience_claim`) |
 
 Boundaries: `now = exp + 60` — `ok`, `exp + 61` — `expired`; `now = iat − 60` — `ok`, `iat − 61` — `future`; `expect` with
 `cluster: null` (`person`) — the audience is not checked.
 
-The form of `expect` ([the contract](../../../contracts/domain-token.md) «Проверка», `expect`; item 7 of the note on the plans 8–10, the edit
+The form of `expect` ([the contract](../../contracts/domain-token.md) «Проверка», `expect`; item 7 of the note on the plans 8–10, the edit
 `0c9521c66`): the key `cluster` is mandatory, `null` — only at `kind: person`. The rows `token-30-expect-no-cluster` (the input
 `token-18` without the key `cluster`) and `token-31-null-cluster-not-person` (the input `token-18` with `cluster: null` at `kind: tally`) are
 `@exit 2`; the token and the other fields of the input are the bytes of `token-18` (review analysis of stage B 8–10, № 13). `expect` is a closed form:
@@ -89,7 +89,7 @@ the vector.
 
 The rows of `corrections.tsv` of the acceptance of М11/02 before the move and the rows of the move — for the packages `keys`, `domain-token`,
 `domain-envelopes` (the acceptance directory of М11/02 is removed by the move of lesson 8; the paths and numbers are the former ones, they are resolved by
-[`id-map.tsv`](../../../id-map.tsv)):
+[`id-map.tsv`](../../id-map.tsv)):
 
 | date | sample | fix |
 |---|---|---|

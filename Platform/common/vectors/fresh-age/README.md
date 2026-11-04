@@ -1,21 +1,21 @@
 # Vectors: freshness — the age of the observed version → fresh
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/fresh-age/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the observation contract](../../../contracts/observation.md) «Freshness: `LOST_AFTER`» (a common contract of the module
+The owner is [the observation contract](../../contracts/observation.md) «Freshness: `LOST_AFTER`» (a common contract of the module
 «Платформа»). The participants are all observers that judge «changed within the last LOST_AFTER»: the controller — a live worker of the pool,
-the fate of a slot, `resource_state` ([P/04](../../../../04-controller/spec/04-controller.norms.md) Н3); the console — `worker_state`
-and `WorkerRow.state` ([chapter 6.1](../../../../06-console/spec/06.1-console.norms.md) Н2,
-[chapter 6.5](../../../../06-console/spec/06.5-console.norms.md)), `w2c_resources_live` (chapter 6.5), the live resources of the merge of
-`/events` ([chapter 6.4](../../../../06-console/spec/06.4-console.norms.md) Н3 «merge»), `live` of `/schema`, «live» of the schema
-raise and «heard» of the server output ([chapter 6.6](../../../../06-console/spec/06.6-console.norms.md)); the resource — the neighbours of the mirror ([P/05](../../../../05-resource/spec/05-resource.norms.md) Н1.4 `mirror`). The package replaces «a step
+the fate of a slot, `resource_state` ([P/04](../../../04-controller/spec/04-controller.norms.md) Н3); the console — `worker_state`
+and `WorkerRow.state` ([chapter 6.1](../../../06-console/spec/06.1-console.norms.md) Н2,
+[chapter 6.5](../../../06-console/spec/06.5-console.norms.md)), `w2c_resources_live` (chapter 6.5), the live resources of the merge of
+`/events` ([chapter 6.4](../../../06-console/spec/06.4-console.norms.md) Н3 «merge»), `live` of `/schema`, «live» of the schema
+raise and «heard» of the server output ([chapter 6.6](../../../06-console/spec/06.6-console.norms.md)); the resource — the neighbours of the mirror ([P/05](../../../05-resource/spec/05-resource.norms.md) Н1.4 `mirror`). The package replaces «a step
 of the acceptance at the boundary», which a stand without a controlled clock does not do (the Architect's decision on the review analysis of stage B 6–7,
 № 20; the boundary `≤` — the review analysis of stage A 6–7, № 1). The bytes are written by «Спецификация» (ADR-0083); the conformance of the product is by its
 acceptance against this table (ADR-0080 addendum 16).
 
 ## Rule (the observation contract «Свежесть»)
 
-- `LOST_AFTER` = 45 s (the value is the observation contract «Свежесть»; the role in the terms of the judge is [P/04](../../../../04-controller/spec/04-controller.norms.md) Н1.4);
+- `LOST_AFTER` = 45 s (the value is the observation contract «Свежесть»; the role in the terms of the judge is [P/04](../../../04-controller/spec/04-controller.norms.md) Н1.4);
 - **fresh** — the age of the observed version ≤ `LOST_AFTER`; **not fresh** — the age > `LOST_AFTER`. The relation is one for all
   observers and outputs.
 
@@ -42,7 +42,7 @@ an excess of a microsecond (45.000001): the precision of the observer's clock is
 ## Stand command `fresh-age`
 
 The key `stand` of the profiles `04-controller` and `06-console` (the section «Layout by processes» of [the common acceptance
-README](../../../acceptance/README.md)), by the general rule of the vector commands: a template with `{input}` — the path of a file into which the runner
+README](../../acceptance/README.md)), by the general rule of the vector commands: a template with `{input}` — the path of a file into which the runner
 writes the cell `age` byte for byte (a JSON number); stdout — `true` or `false` and LF; the comparison is JSON by value with the column
 `fresh`; code 0 — computed, 2 — an input not of the form (not a JSON number), stdout empty (the guess of stage C C04-VECTOR-01, the Architect's decision of 2026-10-23).
 

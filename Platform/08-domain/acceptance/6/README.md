@@ -2,8 +2,8 @@
 
 This English text is the source; the Russian translation `ru/acceptance/6/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей),
-the section [«Стенд домена»](../../../common/acceptance/README.md#стенд-домена) (a stand of several clusters; formerly the dictionary of the М11 README of the acceptance
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
+the section [«Стенд домена»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly the dictionary of the М11 README of the acceptance
 М11/01; the plan of the move of lesson 8, В5). The norm of the chapter is
 [`08.6-domain.norms.md`](../../spec/08.6-domain.norms.md) Н5; [the contract](../../spec/08-domain.api.openapi.yaml),
 the lecture (`ru/08-domain.md`, for people, not in the export). Scenarios 01, 02, 03, 05, 09 were moved from the acceptance of М11/06 (stage B, ADR-0083 addendum (1): without

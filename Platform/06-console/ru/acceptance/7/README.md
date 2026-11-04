@@ -2,8 +2,8 @@
 
 Текст производный от `acceptance/7/README.md`, руками не правится: источник — английский [`acceptance/7/README.md`](../../../acceptance/7/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
-Стенд, словарь директив и дверей — [общий README приёмки](../../../../common/acceptance/README.md#словарь-директив-и-дверей),
-раздел [«Стенд домена»](../../../../common/acceptance/README.md#стенд-домена) (стенд нескольких кластеров). Норма главы —
+Стенд, словарь директив и дверей — [общий README приёмки](../../../../common/ru/acceptance/README.md#словарь-директив-и-дверей),
+раздел [«Стенд домена»](../../../../common/ru/acceptance/README.md#стенд-домена) (стенд нескольких кластеров). Норма главы —
 [`06.7-console.norms.md`](../../spec/06.7-console.norms.md) Н5. Сценарии перенесены из приёмок М11/08 (01, 02, 03),
 М11/09 (06; 03 → 14), М11/05 (02 → 13) и М11/10 (01 → 15) (стадия B, ADR-0083 доп. (1): без изменения поведения); номера,
 имена и шаги — прежние, кроме `13-notes-unique` (в М11/05 — `02-notes-unique`), `14-break-glass` (в М11/09 —
@@ -15,12 +15,12 @@
 Функцию `resolve` без стенда проверяет вектор [`resolve`](../../vectors/resolve/README.md) (12 строк: 11 — бывший сц. 03 приёмки
 М11/11); `families` двери `/domain/keys` (Н1.11) — вектор [`key-families`](../../vectors/key-families/README.md) (12 строк:
 один `id` в нескольких манифестах, порядок; на стенде один манифест с `domain.keys`). Остальные сценарии источников — у соседей: М11/08 сц. 04 — [глава 8.3](../../../../08-domain/ru/acceptance/3/README.md),
-05 (страница держателя) — урок P/10, 06 — векторы [`peer`](../../../../common/vectors/peer/README.md); М11/09 — [глава
+05 (страница держателя) — урок P/10, 06 — векторы [`peer`](../../../../common/ru/vectors/peer/README.md); М11/09 — [глава
 8.4](../../../../08-domain/ru/acceptance/4/README.md), [8.5](../../../../08-domain/ru/acceptance/5/README.md) (11) и векторы
-[`may`](../../../../common/vectors/may/README.md); М11/05 — [глава 8.5](../../../../08-domain/ru/acceptance/5/README.md), [9.1](../../../../09-agent/ru/acceptance/1/README.md)
+[`may`](../../../../common/ru/vectors/may/README.md); М11/05 — [глава 8.5](../../../../08-domain/ru/acceptance/5/README.md), [9.1](../../../../09-agent/ru/acceptance/1/README.md)
 (13) и вектор [`assemble`](../../../../08-domain/ru/vectors/assemble/README.md); М11/10 — [глава 8.8](../../../../08-domain/ru/acceptance/8/README.md),
-[9.1](../../../../09-agent/ru/acceptance/1/README.md) (11), векторы [`record`](../../../../common/vectors/record/README.md),
-[`ask-sig`](../../../../common/vectors/ask-sig/README.md), [`follow`](../../../../09-agent/ru/vectors/follow/README.md).
+[9.1](../../../../09-agent/ru/acceptance/1/README.md) (11), векторы [`record`](../../../../common/ru/vectors/record/README.md),
+[`ask-sig`](../../../../common/ru/vectors/ask-sig/README.md), [`follow`](../../../../09-agent/ru/vectors/follow/README.md).
 
 ## Стенд
 

@@ -1,8 +1,8 @@
 # Vectors: the object store client — the address and the outcome of a read
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/vectors/object-client/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the object store client contract](../../../contracts/object-client.md) (lesson P/05; C10-OBJECT-ADDRESS-32, the Architect's decision
+The owner is [the object store client contract](../../contracts/object-client.md) (lesson P/05; C10-OBJECT-ADDRESS-32, the Architect's decision
 of 2026-10-25). The participants are the platform processes that write and read objects. The bytes are written by «Спецификация».
 
 ## `address.tsv`

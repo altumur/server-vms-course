@@ -1,33 +1,33 @@
 # The right contract: the function `may`, refusal words
 
-This English text is the source; the Russian [`may.md`](../may.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/may.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (13) and addendum (14): a common algorithm of several processes is a contract, not
 copies in chapters; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 1; analysis of review of stage A 8–10). The owner is lesson
-P/08, [chapter 8.4](../../../08-domain/spec/08.4-domain.norms.md) (Н1.4 is a pointer here): people, grants and
+P/08, [chapter 8.4](../../08-domain/spec/08.4-domain.norms.md) (Н1.4 is a pointer here): people, grants and
 the right by grants. The function `may` is performed by:
 
 | Who | Where | `grants`, `as_of`, `disabled` |
 |---|---|---|
-| the cluster console ([P/06.3](../../../06-console/spec/06.3-console.norms.md) Н1.3 `identity` step 3, `need`; chapter 6.7 — a session with grants) | [P/06.7](../../../06-console/spec/06.7-console.norms.md) Н1.9 `cluster`, `session` (effective lines — step 5) | the copy of `domain/grants` of this cluster and its `as_of`; `domain/disabled` of this store |
-| the domain console ([lesson P/10](../../../10-domain-console/spec/10-domain-console.norms.md) Н1.5) and the process `domain` (8.4) | [P/08.4](../../../08-domain/spec/08.4-domain.norms.md) Н1.5 `domain`; Н3 «people door» step 2, «grants» step 1 | `domain/grants/domain`, `as_of` — `null`; `roles` — from the role and group rows of the holder (P/08.4 Н1.3 `roles_at_holder`) |
+| the cluster console ([P/06.3](../../06-console/spec/06.3-console.norms.md) Н1.3 `identity` step 3, `need`; chapter 6.7 — a session with grants) | [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.9 `cluster`, `session` (effective lines — step 5) | the copy of `domain/grants` of this cluster and its `as_of`; `domain/disabled` of this store |
+| the domain console ([lesson P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.5) and the process `domain` (8.4) | [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.5 `domain`; Н3 «people door» step 2, «grants» step 1 | `domain/grants/domain`, `as_of` — `null`; `roles` — from the role and group rows of the holder (P/08.4 Н1.3 `roles_at_holder`) |
 
-Where the cluster console gets the input `roles` — the copy of the role table `domain/roles` and its tie with the copy of the grants: [P/06.7](../../../06-console/spec/06.7-console.norms.md) Н1.9 `cluster`, [the gate-and-pass contract](../gate-and-pass.md) «Сторожевая с грантами» (ADR-0098 §4).
+Where the cluster console gets the input `roles` — the copy of the role table `domain/roles` and its tie with the copy of the grants: [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.9 `cluster`, [the gate-and-pass contract](gate-and-pass.md) «Сторожевая с грантами» (ADR-0098 §4).
 
-Step 5 (effective lines) is also read by the delivery of a book by grant ([P/08.5](../../../08-domain/spec/08.5-domain.norms.md)
+Step 5 (effective lines) is also read by the delivery of a book by grant ([P/08.5](../../08-domain/spec/08.5-domain.norms.md)
 Н1.3 `grant`) and by the name index (P/08.5 Н1.7 `delivery`): `sub` is the subsystem of the book, only the direct group; the `role:` lines and
 the role table do not take part (ADR-0097 §4, ADR-0098 §4); the console module computes a hint by the same groups and tiers
-([P/07](../../../07-console-module/spec/07-console-module.norms.md) Н1.5 `may`), the server always checks.
+([P/07](../../07-console-module/spec/07-console-module.norms.md) Н1.5 `may`), the server always checks.
 
 Steps 1–8 are moved from М11/9 Н1.4 (input, output) and Н4 (the words of `may`); the step numbers are the former ones, steps 4а, 7а–7в were added by ADR-0098–ADR-0100. The
-owner keeps: the grant line ([P/08.4](../../../08-domain/spec/08.4-domain.norms.md) Н1.3: `lines`, `line`, the ranks of `cap` — `none < view < edit < admin`, `sub`, `scope`,
-`until`, `GRANT_LIFETIME`, `unreadable` — the value and the input rule are repeated below, «The function `may`»; the member's copy — [P/09.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.4), the check at the process
+owner keeps: the grant line ([P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.3: `lines`, `line`, the ranks of `cap` — `none < view < edit < admin`, `sub`, `scope`,
+`until`, `GRANT_LIFETIME`, `unreadable` — the value and the input rule are repeated below, «The function `may`»; the member's copy — [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н1.4), the check at the process
 `domain` and what the door answers on `deny` (P/08.4 Н1.5: 403 `denied`, `detail` at `stale`), the break-glass account at the holder
 (P/08.4 Н1.6); the gate with grants and the break-glass entry at the cluster console — P/06.7 Н1.9, Н1.10, at the domain console — P/10 Н1.5. The reference
 «Н1.6» in the moved text is М11/9 Н1.6, now P/06.7 Н1.10 (the break-glass session of the console); `rank` is the order of `cap` of
-P/08.4 Н1.3; labels — the [labels alphabet contract](../labels.md).
+P/08.4 Н1.3; labels — the [labels alphabet contract](labels.md).
 
-Normative keywords follow the [course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
@@ -146,7 +146,7 @@ lines_in:       the function gets only lines of lines in the form of P/08.4 Н1.
                 is at the caller, code 2 is at the function
 ```
 
-Which input is out of form (the `grants` lines are a trusted input) — the README of the vectors [`may`](../../vectors/may/README.md) «Form of the input of the command `may`» (MAY-G01/G02); the exit codes of the command `may` are a copy of [P/08.4](../../../08-domain/spec/08.4-domain.norms.md) Н5 `exit` (layout audit, the Architect's decision of 2026-10-25, Б-14):
+Which input is out of form (the `grants` lines are a trusted input) — the README of the vectors [`may`](../vectors/may/README.md) «Form of the input of the command `may`» (MAY-G01/G02); the exit codes of the command `may` are a copy of [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н5 `exit` (layout audit, the Architect's decision of 2026-10-25, Б-14):
 
 ```yaml
 exit:      0 — computed; 2 — the input is out of form; exit codes follow the principle of the vocabulary of «Domain stand» («Коды выхода команд-векторов»: 2 — the form
@@ -200,14 +200,14 @@ From М11/9 Н4: the words of `may`: `disabled`, `stale`, `no_grant`. The outcom
 
 ## Vectors
 
-The package [`may`](../../vectors/may/README.md): 120 lines (`may-role-*` — the input `as_role`, ADR-0105 item 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, roles, tiers, step 4а); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); of the first 26: 24 are inputs of the command `may` of the acceptance of М11/9 (sc. 07) without a change of values, except `labels: []` at the unit of
+The package [`may`](../vectors/may/README.md): 120 lines (`may-role-*` — the input `as_role`, ADR-0105 item 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, roles, tiers, step 4а); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); of the first 26: 24 are inputs of the command `may` of the acceptance of М11/9 (sc. 07) without a change of values, except `labels: []` at the unit of
 `may-24` (the Architect's decision of 2026-10-20; the README of the package);
 one of them, `may-24`, is an input out of form (`@exit 2`; analysis of review of stage B 8–10, № 22); `may-25` — `subject` "" (`@exit 2`, MAY-G03); `may-26` — `until` does not fit in binary64 (`@exit 2`, MAY-UNTIL-D8-01). The scenario and the inputs were removed by the move of lesson 8 — the table is the only
 source of these cases. There is also `covers.tsv` — 19 lines of the function `covers(scope, ref, row)` of the gate ([the gate
-contract](../gate-and-pass.md) `scope`; C06-EVENTS-QUERY-UNKNOWN-138-10).
+contract](gate-and-pass.md) `scope`; C06-EVENTS-QUERY-UNKNOWN-138-10).
 
 ## Correspondence to former lessons
 
 From М11/9 (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 1; analysis of review of stage A 8–10): Н1.4 whole (here
 «The function `may`»; in М11/9 — a pointer) and the phrase of Н4 about the words of `may` (here «Refusal words»). The norm М11/9-05 (`may` in order)
-— by `note` of [id-map](../../id-map.tsv).
+— by `note` of [id-map](../id-map.tsv).

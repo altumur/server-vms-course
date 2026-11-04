@@ -4,7 +4,7 @@
 
 Владелец — глава P/03.6 ([нормы](../../spec/03.6-worker.norms.md) Н1.6 `id`, `key`; ADR-0091 п. 1). Участник —
 `<s>worker` заказчика (библиотека воркера). Запись значений по типам — [P/06.1](../../../../06-console/ru/spec/06.1-console.norms.md)
-Н1.2 `values_by_type` (векторы [`values-by-type`](../../../../common/vectors/values-by-type/README.md)). Байты пишет «Спецификация».
+Н1.2 `values_by_type` (векторы [`values-by-type`](../../../../common/ru/vectors/values-by-type/README.md)). Байты пишет «Спецификация».
 
 ## `cases.tsv`
 
@@ -27,7 +27,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 ## Команда стенда
 
-`creates-key` — ключ `stand` профиля `03-worker` (раздел «Раскладка по процессам» [общего README приёмки](../../../../common/acceptance/README.md)):
+`creates-key` — ключ `stand` профиля `03-worker` (раздел «Раскладка по процессам» [общего README приёмки](../../../../common/ru/acceptance/README.md)):
 шаблон с `{input}` — путь файла, в который раннер пишет ячейку `input` строки байт в байт; stdout — UTF-8 байты id ровно
 как `expect`, без перевода строки в конце и без JSON-обёртки; код 0. Вход не по форме этого README — код 2 (`@exit 2`).
 Иной код или лишние байты — FAIL строки.

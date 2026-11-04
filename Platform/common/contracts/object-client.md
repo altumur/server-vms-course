@@ -1,29 +1,29 @@
 # The object store client contract: the address, the operations, the answer of the resource door, the outcomes
 
-This English text is the source; the Russian [`object-client.md`](../object-client.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/contracts/object-client.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): objects are written and read by all platform processes — a contract,
 not copies in chapters; guess of stage C C10-OBJECT-ADDRESS-32, the Architect's decision of 2026-10-25). The owner is lesson
-[P/05](../../../05-resource/spec/05-resource.norms.md) (Н1.1 «Object», Н2). Participants: the worker (heartbeats, rival marks — P/03.2,
+[P/05](../../05-resource/spec/05-resource.norms.md) (Н1.1 «Object», Н2). Participants: the worker (heartbeats, rival marks — P/03.2,
 P/03.4), the controller (the snapshot, the pass report — P/04), the console (bodies — P/06.1), the resource (its own objects and the object door),
-the domain processes (`domain/*`), the installer — the value of the address (P/02.4 Н1.2; [the environment file contract](../env-file.md)
-«Environment variables»). The model is [the store client contract](../store-client.md).
+the domain processes (`domain/*`), the installer — the value of the address (P/02.4 Н1.2; [the environment file contract](env-file.md)
+«Environment variables»). The model is [the store client contract](store-client.md).
 
 Moved from P/05 Н1.1 (`api`, `ops`, `cluster`, `written`, the key and the prefix, the listing and the tombstones) and Н2 (the answers of the object
 door, `scope`, refusals) without a change of behaviour; the door side (request parsing, admission, the layout on disk, limits) is in
 P/05, P/05 refers here.
 
-Normative keywords follow [the course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
 The wire of the resource's object door is `Platform/05-resource/spec/05-resource.api.openapi.yaml`
-([OpenAPI](../../../05-resource/spec/05-resource.api.openapi.yaml); it enters the reading of `common` by ADR-0083 addendum (33) item 1):
+([OpenAPI](../../05-resource/spec/05-resource.api.openapi.yaml); it enters the reading of `common` by ADR-0083 addendum (33) item 1):
 `GET /v1/objects` (`ObjectListing`), `GET /v1/objects/{key}` (bytes, the headers `X-Written`, `X-Server`, `X-Missing`),
-the refusals `ResourceError`, `ResourceDenied`. Tombstones `.gone/<ключ>` — [the tombstone contract](../tombstone.md). The door row
+the refusals `ResourceError`, `ResourceDenied`. Tombstones `.gone/<ключ>` — [the tombstone contract](tombstone.md). The door row
 `platform/doors/<сервер>` (the address of the read door with a bare `cluster://`, the section «Address» `door`) — the form
 `Platform/05-resource/data/doors.schema.json`, the outcomes `Platform/05-resource/data/doors.outcomes.tsv`
-([form](../../../05-resource/data/doors.schema.json), [outcomes](../../../05-resource/data/doors.outcomes.tsv); P/05 Н1.4 `door_row`).
+([form](../../05-resource/data/doors.schema.json), [outcomes](../../05-resource/data/doors.outcomes.tsv); P/05 Н1.4 `door_row`).
 
 ## Address
 
@@ -99,7 +99,7 @@ listing:   the closed form ObjectListing; only the keys of the door families und
 
 ## Vectors
 
-The package [`object-client`](../../vectors/object-client/README.md): `address.tsv` — parsing of the address (a bare file://, an absolute and
+The package [`object-client`](../vectors/object-client/README.md): `address.tsv` — parsing of the address (a bare file://, an absolute and
 a non-absolute path, cluster:// with resource and without, resource empty, repeated, percent-encoded, another scheme; a bare
 cluster:// — the door by the door row of its own server, no row, does not read, the store did not answer — «unknown»; an explicit
 resource overrides the row, P03-OBJECTS-DEFAULT-1FD); `read.tsv` — the class of the read outcome: the code, `X-Missing`, no

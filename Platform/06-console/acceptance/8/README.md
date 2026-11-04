@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/acceptance/8/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`06.8-console.norms.md`](../../spec/06.8-console.norms.md) Н5. The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The norm of the chapter is [`06.8-console.norms.md`](../../spec/06.8-console.norms.md) Н5. The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 In total 12 scenarios / 189 steps.
 
 **There is no dry run by an implementation.** The scenarios are composed by reading the norms and the contract; `index` and other values of the store the scenario binds from the answer and does not compute in advance. The chapter is part of the rights increment and waits for the credit of increment B.
@@ -16,7 +16,7 @@ The folder reaper on the stand works with the period of the norm `FOLDERS_REAP_E
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors](../../../common/acceptance/README.md#словарь-директив-и-дверей). A subset of fields, `$имя`, `@any`, `@big(N)`, `@header`, `@key`, `@as`, `@until`, `ASSERT` — as there. The record `{"items": null}` means: there is no row.
+The format is [the dictionary of directives and doors](../../../common/acceptance/README.md#dictionary-of-directives-and-doors). A subset of fields, `$имя`, `@any`, `@big(N)`, `@header`, `@key`, `@as`, `@until`, `ASSERT` — as there. The record `{"items": null}` means: there is no row.
 
 - `$f`, `$g` and the like bind the folder id from the answer `201`. The scenario does not set the value of the id: the console chooses 128 random bits.
 - `$i`, `$j` bind `index`: they are compared only for equality. The `index` of the answer of `PUT` equals the index of the row in the store — sc. 02 steps 4–5.

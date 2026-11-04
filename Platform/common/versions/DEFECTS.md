@@ -1,13 +1,13 @@
 # Defects of the pinned library versions (ADR-0092 item 9)
 
-This English text is the source; the Russian [`DEFECTS.md`](../DEFECTS.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
+This English text is the source; the Russian translation `ru/versions/DEFECTS.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-A list for the implementations: the defects of the libraries of the pinned versions ([requirements.txt](../requirements.txt), [go.mod](../go.mod))
+A list for the implementations: the defects of the libraries of the pinned versions ([requirements.txt](requirements.txt), [go.mod](go.mod))
 that change the outcome against the norm, and their workarounds. A workaround is not a rule: the outcome is the same as by the norm. The defects of the former reference
 of the dialect (a norm edit after the tag) do not go here.
 
 The column «Vector» is the vector rows on which the answer is different without the workaround: `family-read:<case>` (the package
-[`family-read`](../../vectors/family-read/README.md)), `yaml-suite:<id>` ([`yaml-suite`](../../vectors/yaml-suite/README.md)),
+[`family-read`](../vectors/family-read/README.md)), `yaml-suite:<id>` ([`yaml-suite`](../vectors/yaml-suite/README.md)),
 `corpus:<случай>` (the corpus of P/02.1, `02-installer/acceptance/1/verdicts.tsv`), `canonical:<case>` (the vectors of P/02.2). `страж`
 — the defect is seen only with a translation error: correct vectors do not catch it, the workaround is a check that there is no error. The check
 of the specification reconciles: each vector row exists, each entry has a row or `страж`.

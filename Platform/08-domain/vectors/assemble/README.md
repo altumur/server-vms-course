@@ -26,7 +26,7 @@ not of the form of Н5: the keys of `copies` are not exactly `members`; `grants`
 
 The input is Н5 of the chapter: `book` is `testsub2/notes` (`pick: unique`, the names index `notes/` with `grant: view`) or `testsub2/rolls`
 (`pick: all`), `members` is the list of members, `book_seal_seed` is the `seed_secret` of the book acceptance key (`book seal 1`,
-[the README of the package `domain-token`](../../../common/vectors/domain-token/README.md#ключи) «Keys»), `copies` is the state and the objects of the copy
+[the README of the package `domain-token`](../../../common/vectors/domain-token/README.md#keys) «Keys»), `copies` is the state and the objects of the copy
 of each member (`null` — there is no copy), `grants` and `now` are the grant rows of the receivers for the rule Н1.3 `grant`. The secrets of the
 inputs are envelopes `x25519:v1` to `book seal 1` (in case 07 — to `book seal 2`: it does not open), `eph 1`, `nonce` 0…11
 ([the domain envelopes contract](../../../common/contracts/domain-envelopes.md) «Конверт `x25519:v1`», the AAD is `[член, ключ строки,

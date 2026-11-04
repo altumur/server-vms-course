@@ -1,32 +1,32 @@
 # Договор приёма отчёта: функция «принять» (`accept`) — поколение, метка, дороги
 
-Текст производный от en, руками не правится: источник — английский [`en/accept.en.md`](en/accept.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
+Текст производный от `contracts/accept.md`, руками не правится: источник — английский [`contracts/accept.md`](../../contracts/accept.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
 
 Общий договор модуля «Платформа» (ADR-0083 доп. (5), доп. (11) и доп. (13): общий алгоритм нескольких процессов — договор, а
-не копии в главах; разбор ревью стадии A 8–10, № 13 / решение 2). Владелец — урок P/08, [глава 8.3](../../08-domain/ru/spec/08.3-domain.norms.md): процесс `domain` держателя принимает
+не копии в главах; разбор ревью стадии A 8–10, № 13 / решение 2). Владелец — урок P/08, [глава 8.3](../../../08-domain/ru/spec/08.3-domain.norms.md): процесс `domain` держателя принимает
 публикацию члена на `POST /api/member/<член>` после подписи. Участник — ретранслятор
-([P/09.2](../../09-agent/ru/spec/09.2-agent.norms.md) Н2): его дверь принимает члена этой функцией над своей
-памятью; пакет ретранслятора держатель принимает ею же с `via` = ретранслятор ([P/08.3](../../08-domain/ru/spec/08.3-domain.norms.md)
+([P/09.2](../../../09-agent/ru/spec/09.2-agent.norms.md) Н2): его дверь принимает члена этой функцией над своей
+памятью; пакет ретранслятора держатель принимает ею же с `via` = ретранслятор ([P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md)
 Н3 «держатель на POST /api/relay»).
 
 Перенесено из М11/3 Н3 «`принять(mark, stored, body, via, heard_ago)`» (абзац о `via` и `heard_ago`, шаги 0–7, абзац о
 `sent_at`, ответе и сбое) без изменения поведения. Формы, на которые функция опирается, повторены здесь, чтобы держатель,
 ретранслятор и агент исполняли договор без норм 8.x (разбор ревью стадии B 8–10, № 4, № 6; ADR-0083 доп. (15); Claude
 С-3, С-4, С-6, П-2; Kimi SB810-01): поколение, метка, `MARK_REFRESH`, `BODY_LIMIT` — раздел «Поколение, метка, пределы»
-(из [P/08.3](../../08-domain/ru/spec/08.3-domain.norms.md) Н1.3, Н1.3а); публикация, `member_objects`, поля вне дельты,
-`ready` — раздел «Публикация члена» (из [P/09.1](../../09-agent/ru/spec/09.1-agent.norms.md) Н1.2 и P/08.3 Н1.6 `form`);
+(из [P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md) Н1.3, Н1.3а); публикация, `member_objects`, поля вне дельты,
+`ready` — раздел «Публикация члена» (из [P/09.1](../../../09-agent/ru/spec/09.1-agent.norms.md) Н1.2 и P/08.3 Н1.6 `form`);
 поле `every` ответа — раздел «Ответ `carry`: `every`» (из P/08.3 Н1.5); форма функции, вывод и код выхода 2 — раздел
 «Форма функции» (из М11/3 Н5, М11/4 Н5). Владельцы текста остаются прежними (P/08.3, P/09.1) и ссылаются сюда; значения
-не меняются. Прочие поля ответа `carry` — раздел «Ответ `carry`»; потолок целого `whole` — [P/08.10](../../08-domain/ru/spec/08.10-domain.norms.md)
+не меняются. Прочие поля ответа `carry` — раздел «Ответ `carry`»; потолок целого `whole` — [P/08.10](../../../08-domain/ru/spec/08.10-domain.norms.md)
 Н1.5. Ссылки в перенесённом тексте: «Н1.2» — раздел «Публикация члена» (P/09.1 Н1.2); «Н1.3» — раздел «Поколение, метка,
 пределы» (P/08.3 Н1.3); «Н1.5» — раздел «Ответ `carry`»; «Н2» — P/08.3 Н2; «урок 4 Н1.3» — раздел «Поколение, метка, пределы»
 `ROAD_QUIET` (P/08.3 Н1.3а).
 
-Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md).
+Нормативные слова — по [канону курса](../../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Форма
 
-Строки и объекты, которые функция пишет и читает, — семьи по [каталогу](../data/catalog.tsv): отчёт, дельта и метка члена — `Platform/08-domain/data/member-report.schema.json`, `Platform/08-domain/data/member-report.outcomes.tsv`; `Platform/08-domain/data/member-report-delta.schema.json`, `Platform/08-domain/data/member-report-delta.outcomes.tsv`; `Platform/08-domain/data/member-reported.schema.json`, `Platform/08-domain/data/member-reported.outcomes.tsv`; ключ члена `domain/member-key` — `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; семьи `member_objects` — `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; `Platform/04-controller/data/snapshot.schema.json`, `Platform/04-controller/data/snapshot.outcomes.tsv`; `Platform/09-agent/data/reaches.schema.json`, `Platform/09-agent/data/reaches.outcomes.tsv`; `Platform/09-agent/data/shared-refused.schema.json`, `Platform/09-agent/data/shared-refused.outcomes.tsv`; `Platform/09-agent/data/backup-taken.schema.json`, `Platform/09-agent/data/backup-taken.outcomes.tsv`; `Platform/09-agent/data/alarms.schema.json`, `Platform/09-agent/data/alarms.outcomes.tsv`; `Platform/09-agent/data/outcomes.schema.json`, `Platform/09-agent/data/outcomes.outcomes.tsv`; `Platform/08-domain/data/shared.schema.json`, `Platform/08-domain/data/shared.outcomes.tsv`. Двери — OpenAPI `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`POST /api/member/<член>`, `POST /api/relay/<ретранслятор>`, ответ `carry`) и `Platform/09-agent/spec/09-agent.api.openapi.yaml` (дверь ретранслятора); ключи манифеста `domain.*` — `Platform/02-installer/spec/02.1-installer.schema.json` (аудит раскладки, В-01…В-04, Б-13; решение «Архитектора» 2026-10-25).
+Строки и объекты, которые функция пишет и читает, — семьи по [каталогу](../../data/catalog.tsv): отчёт, дельта и метка члена — `Platform/08-domain/data/member-report.schema.json`, `Platform/08-domain/data/member-report.outcomes.tsv`; `Platform/08-domain/data/member-report-delta.schema.json`, `Platform/08-domain/data/member-report-delta.outcomes.tsv`; `Platform/08-domain/data/member-reported.schema.json`, `Platform/08-domain/data/member-reported.outcomes.tsv`; ключ члена `domain/member-key` — `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; семьи `member_objects` — `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; `Platform/04-controller/data/snapshot.schema.json`, `Platform/04-controller/data/snapshot.outcomes.tsv`; `Platform/09-agent/data/reaches.schema.json`, `Platform/09-agent/data/reaches.outcomes.tsv`; `Platform/09-agent/data/shared-refused.schema.json`, `Platform/09-agent/data/shared-refused.outcomes.tsv`; `Platform/09-agent/data/backup-taken.schema.json`, `Platform/09-agent/data/backup-taken.outcomes.tsv`; `Platform/09-agent/data/alarms.schema.json`, `Platform/09-agent/data/alarms.outcomes.tsv`; `Platform/09-agent/data/outcomes.schema.json`, `Platform/09-agent/data/outcomes.outcomes.tsv`; `Platform/08-domain/data/shared.schema.json`, `Platform/08-domain/data/shared.outcomes.tsv`. Двери — OpenAPI `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`POST /api/member/<член>`, `POST /api/relay/<ретранслятор>`, ответ `carry`) и `Platform/09-agent/spec/09-agent.api.openapi.yaml` (дверь ретранслятора); ключи манифеста `domain.*` — `Platform/02-installer/spec/02.1-installer.schema.json` (аудит раскладки, В-01…В-04, Б-13; решение «Архитектора» 2026-10-25).
 
 ## Поколение, метка, пределы
 
@@ -150,7 +150,7 @@ ready:          агент не шлёт публикацию, пока у не�
 
 ## Проверка члена и ключа
 
-Перенесено из [P/08.3](../../08-domain/ru/spec/08.3-domain.norms.md) Н2, строка `POST /api/member/<член>`, без изменения поведения
+Перенесено из [P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md) Н2, строка `POST /api/member/<член>`, без изменения поведения
 (аудит раскладки, решение «Архитектора» 2026-10-25, Б-12); подпись — [договор подписи агента](agent-signature.md). Дверь ретранслятора принимает члена тем же
 порядком над своей памятью (P/09.2 Н2); пакет ретранслятора у держателя — P/08.3 Н2 `POST /api/relay` (C08-G06).
 
@@ -168,7 +168,7 @@ order:          по порядку: 503 `standby` до чтения тела (P
 
 ## Ответ `carry`
 
-Перенесено из [P/08.3](../../08-domain/ru/spec/08.3-domain.norms.md) Н1.5 без изменения поведения (аудит раскладки, решение «Архитектора» 2026-10-25, Б-12); граница `every` —
+Перенесено из [P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md) Н1.5 без изменения поведения (аудит раскладки, решение «Архитектора» 2026-10-25, Б-12); граница `every` —
 раздел ниже.
 
 ```yaml
@@ -196,7 +196,7 @@ carry:          ответ 200 на POST /api/member/<член> и GET /api/carr
 
 ## Список членов отставшему
 
-Перенесено из [P/08.3](../../08-domain/ru/spec/08.3-domain.norms.md) Н1.4а без изменения поведения (аудит раскладки, решение «Архитектора» 2026-10-25, Б-12).
+Перенесено из [P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md) Н1.4а без изменения поведения (аудит раскладки, решение «Архитектора» 2026-10-25, Б-12).
 
 ```yaml
 publication.members_rev?:  {term, rev} копии своего раздела domain/member-list/<раздел>, которую член держит (P/09.1 Н1.1); нет строки — поля
@@ -224,7 +224,7 @@ packet:      в ответе пакета ретранслятора refused[<ч
 
 ## Стук
 
-Перенесено из [P/08.3](../../08-domain/ru/spec/08.3-domain.norms.md) Н1.1 `knock` без изменения поведения (аудит раскладки, решение «Архитектора» 2026-10-25, Б-12): память
+Перенесено из [P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md) Н1.1 `knock` без изменения поведения (аудит раскладки, решение «Архитектора» 2026-10-25, Б-12): память
 процесса `domain` о стучащихся; стуки из пакета ретранслятора — раздел «Пакет ретранслятора: пределы».
 
 ```yaml
@@ -242,7 +242,7 @@ knock:          {name, last, times, key, fingerprint, pinned, keys_rev, class, b
 
 ## Стук партии
 
-Партия приёма — [P/08.3](../../08-domain/ru/spec/08.3-domain.norms.md) Н1.1б. Шаг идёт после проверки подписи тела ключом `key`: у двери держателя и для стука из пакета ретранслятора (P/08.3 Н3 шаг 3) одинаково; дверь ретранслятора партию не судит, тело идёт стуком как есть.
+Партия приёма — [P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md) Н1.1б. Шаг идёт после проверки подписи тела ключом `key`: у двери держателя и для стука из пакета ретранслятора (P/08.3 Н3 шаг 3) одинаково; дверь ретранслятора партию не судит, тело идёт стуком как есть.
 
 ```yaml
 publication.batch: {name, sig}    # не по форме — поле не взято, стук обычный
@@ -348,8 +348,8 @@ exit:           0 — вычислено (в том числе отказ сло
 
 ## Пакет ретранслятора: пределы
 
-Перенесено из [P/09.2](../../09-agent/ru/spec/09.2-agent.norms.md) Н1.4 (`BATCH_LIMIT`, `KNOCKS`) без изменения; пределы
-читают ретранслятор (пишет пакет, P/09.2 Н3) и держатель (принимает, [P/08.3](../../08-domain/ru/spec/08.3-domain.norms.md)
+Перенесено из [P/09.2](../../../09-agent/ru/spec/09.2-agent.norms.md) Н1.4 (`BATCH_LIMIT`, `KNOCKS`) без изменения; пределы
+читают ретранслятор (пишет пакет, P/09.2 Н3) и держатель (принимает, [P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md)
 Н3 «держатель на POST /api/relay/<ретранслятор>», Н4) — у них ссылки сюда (C08-G05, решение «Архитектора» 2026-10-25).
 
 ```yaml
@@ -377,13 +377,13 @@ answer:        ответ держателя клиенту агента и ре
 (README пакета, «Кандидаты»; разбор ревью стадии B 8–10, № 6). Пределы пакета ретранслятора (граница 64 MiB, 33-й стук,
 стук больше 256 KiB) функция «принять» не выражает — чтением (C08-G05).
 
-Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../../01-store/ru/vectors/jcs/README.md)
+Канонический JSON (RFC 8785, ADR-0072), на который опирается договор, — пакет [`jcs`](../../../01-store/ru/vectors/jcs/README.md)
 урока P/01 (`canonical_json.tsv`: вход → форма RFC 8785 → sha256; ADR-0083 доп. (33) п. 2).
 
 ## Соответствие прежним урокам
 
 Из М11/3 (разбор ревью стадии A 8–10, № 13 / решение 2): Н3 «принять» целиком (здесь «Функция «принять»»; в М11/3 —
-указатель). Норма М11/3-06 (приём: `same`, `same_sent_at`, `rebase`, `heard`) — по `note` [id-map](../id-map.tsv);
+указатель). Норма М11/3-06 (приём: `same`, `same_sent_at`, `rebase`, `heard`) — по `note` [id-map](../../id-map.tsv);
 исполняют 8.3 и 9.2. Из М11/3 Н5 и М11/4 Н5 — формы команды `accept` и `exit` (здесь «Форма функции»; разбор ревью
 стадии B 8–10, № 6). Разделы «Поколение, метка, пределы», «Публикация члена», «Ответ `carry`: `every`» — копии строк
 P/08.3 Н1.3, Н1.3а, Н1.5, Н1.6 `form` и P/09.1 Н1.2 для самодостаточности урока P/09 (разбор ревью стадии B 8–10, № 4).
