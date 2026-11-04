@@ -72,7 +72,7 @@ class Core(unittest.TestCase):
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory(prefix="ncore-")
         cls.store = build(cls.tmp.name)
-        cls.core = (cls.store / "internal/coreadapter/core.go").read_text(encoding="utf-8")
+        cls.core = "".join(p.read_text(encoding="utf-8") for p in sorted((cls.store / "internal/coreadapter").glob("*.go")))
 
     @classmethod
     def tearDownClass(cls):
@@ -128,6 +128,8 @@ class Core(unittest.TestCase):
         self.assertIn("01-store/internal/coreadapter/core.go", own)
         self.assertIn("01-store/internal/coreadapter/open.go", own)
         self.assertIn("core", m["provenance"])
+        for name in ("core", "open", *(n.lower() for n in gen_core.OPS)):
+            self.assertIn(f"01-store/internal/coreadapter/{name}.go", own)
         open_go = (self.store / "internal/coreadapter/open.go").read_text(encoding="utf-8")
         self.assertIn("newStore(cfg)", open_go)
         self.assertNotIn("ErrNotImplemented", open_go)
@@ -143,6 +145,43 @@ class Kit(unittest.TestCase):
             core.write_text(core.read_text(encoding="utf-8") + "\n// mine\n", encoding="utf-8")
             build_kit.build(t, MOD, PARTS)
             self.assertTrue(core.read_text(encoding="utf-8").endswith("// mine\n"))
+
+    def test_one_operation_per_file(self):
+        """Правка одной операции файлом целиком не задевает другие; файлы — по методу, без DO NOT EDIT."""
+        with tempfile.TemporaryDirectory() as t:
+            store = build(t)
+            pkg = store / "internal/coreadapter"
+            for name in gen_core.OPS:
+                text = (pkg / f"{name.lower()}.go").read_text(encoding="utf-8")
+                self.assertEqual(re.findall(r"^func \(s \*Store\) (\w+)\(", text, re.M), [name])
+                self.assertNotIn("DO NOT EDIT", text)
+            before = {p.name: p.read_bytes() for p in pkg.glob("*.go") if p.name != "write.go"}
+            (pkg / "write.go").write_text(
+                f'package coreadapter\n\nimport "{MOD}/internal/apidoor"\n\n'
+                "func (s *Store) Write(c Ctx, body []byte) apidoor.Answer { return notImplemented(apidoor.OpWrite) }\n"
+                "\n// mine\n", encoding="utf-8")
+            build_kit.build(t, MOD, PARTS)
+            self.assertTrue((pkg / "write.go").read_text(encoding="utf-8").endswith("// mine\n"))
+            self.assertEqual({p.name: p.read_bytes() for p in pkg.glob("*.go") if p.name != "write.go"}, before)
+            done = subprocess.run(["go", "vet", "./internal/coreadapter/"], cwd=store, capture_output=True, text=True)
+            self.assertEqual(done.returncode, 0, done.stderr)
+
+    def test_legacy_core_file(self):
+        """Пакет до разнесения: все методы в core.go — заглушки по файлам не кладутся (двойного объявления нет)."""
+        with tempfile.TemporaryDirectory() as t:
+            store = build(t)
+            pkg = store / "internal/coreadapter"
+            methods = [pkg / f"{n.lower()}.go" for n in gen_core.OPS]
+            merged = (pkg / "core.go").read_text(encoding="utf-8") + "".join(
+                p.read_text(encoding="utf-8").split('import "example.com/w2c/store/internal/apidoor"\n', 1)[1]
+                for p in methods)
+            (pkg / "core.go").write_text(merged, encoding="utf-8")
+            for p in methods:
+                p.unlink()
+            build_kit.build(t, MOD, PARTS)
+            self.assertFalse(any(p.exists() for p in methods))
+            done = subprocess.run(["go", "vet", "./internal/coreadapter/"], cwd=store, capture_output=True, text=True)
+            self.assertEqual(done.returncode, 0, done.stderr)
 
     def test_needs_parts(self):
         with tempfile.TemporaryDirectory() as t:

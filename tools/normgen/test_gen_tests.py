@@ -146,6 +146,8 @@ class GenTests(unittest.TestCase):
         (cls.mod / "cmd/vec").mkdir(parents=True)
         (cls.mod / "go.mod").write_text("module normgen/p01-1\n\ngo 1.22\n", encoding="utf-8")
         cls.write_parts(cls.mod, cls.files)
+        for stub in ("canonical.go", "rights.go"):                 # заглушки по файлу на функцию — вместо них подставной
+            (cls.mod / "vectoradapter" / stub).unlink()
         (cls.mod / "vectoradapter/vectoradapter.go").write_text(fake_adapter(), encoding="utf-8")
         (cls.mod / "cmd/vec/main.go").write_text(VEC_MAIN, encoding="utf-8")
         cls.vec = Path(cls.tmp.name) / "vec.bin"
@@ -431,10 +433,30 @@ class GenTests(unittest.TestCase):
             self.assertEqual(f.get("editable", False), "/vectoradapter/" in f["path"] or f["path"].endswith("/coreadapter/open.go"))
             self.assertNotIn(b"normgen/p01-1", (dst / f["path"]).read_bytes())
         self.assertIn("TestRightsEval_Line", (dst / "KIT.md").read_text(encoding="utf-8"))
-        own = store / "internal/vectoradapter/vectoradapter.go"
-        own.write_text(own.read_text(encoding="utf-8") + "\n// mine\n", encoding="utf-8")
+        adapter = store / "internal/vectoradapter"
+        self.assertEqual(sorted(p.name for p in adapter.glob("*.go")), ["canonical.go", "rights.go"])
+        for name, fn in (("canonical.go", "Canonical"), ("rights.go", "LoadRights")):
+            text = (adapter / name).read_text(encoding="utf-8")
+            self.assertIn(f"func {fn}(", text)
+            self.assertNotIn("DO NOT EDIT", text)
+        rights = (adapter / "rights.go").read_bytes()
+        own = adapter / "canonical.go"           # правка Canonical целиком файлом — LoadRights не задет
+        own.write_text('package vectoradapter\n\nfunc Canonical(raw []byte) ([]byte, error) { return raw, nil }\n'
+                       '\n// mine\n', encoding="utf-8")
         m = build_kit.build(dst, module, ["door", "vectors", "stagetests"])
         self.assertTrue(own.read_text(encoding="utf-8").endswith("// mine\n"))
+        self.assertEqual((adapter / "rights.go").read_bytes(), rights)
+        done = go(["vet", "./internal/vectoradapter/", "./internal/vectortests/"], store)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        # пакет до разнесения: обе функции в vectoradapter.go — заглушки по файлам не кладутся (двойного объявления нет)
+        (adapter / "vectoradapter.go").write_text(
+            "package vectoradapter\n\nfunc Canonical(raw []byte) ([]byte, error) { return raw, nil }\n\n"
+            "func LoadRights(file []byte) (func(role, action, key string) bool, error) { return nil, nil }\n",
+            encoding="utf-8")
+        own.unlink()
+        (adapter / "rights.go").unlink()
+        m = build_kit.build(dst, module, ["door", "vectors", "stagetests"])
+        self.assertEqual(sorted(p.name for p in adapter.glob("*.go")), ["vectoradapter.go"])
         self.assertNotIn("internal/vectoradapter", [f["path"].rsplit("/", 1)[0][len("01-store/"):] for f in m["files"]])
         other = Path(self.tmp.name) / "kit-plain"
         m = build_kit.build(other, module)
