@@ -15,38 +15,39 @@
 #fn weight(map) -> int — the weight of items of Н1: the sum of UTF-8 byte lengths of all names and values
 #fn finite(double) -> bool — finite in binary64 (1e400 is not)
 #fn allowed(string, string, string) -> bool — the rights of the role (socket, operation read | write | delete, key): P/01.2 Н3 «check»
-n	op	group	each	check	when	code	kind	fault	norm
-1	*			body_object	type(body) != map	400	badrequest		P/01.1 Н2.1
-2	*			op	!has(body.op) || type(body.op) != string || !(body.op in ["put", "delete", "batch", "floor"])	400	badrequest		P/01.1 Н4
-3	floor			floor_socket	sock != "admin"	403	forbidden		P/01.3 Н4
-4	put,delete			key_form	!has(body.key) || type(body.key) != string	400	badrequest		P/01.1 Н2
-5	put,delete			key_rules	"/key" in lone || !key_ok(body.key)	400	badkey		P/01.1 Н1 row.key
-6	put			items	!has(body.items) || type(body.items) != map || body.items.exists(f, type(body.items[f]) != string) || lone.exists(p, p == "/items" || p.startsWith("/items/"))	400	badrequest		P/01.1 Н1 row.items
-7	put,delete			cas	has(body.cas) && body.cas != null && !(type(body.cas) == string && body.cas.matches("^(|0|[1-9][0-9]{0,19})$"))	400	badrequest		P/01.1 Н1 cas
-8	put,delete			guard_form	has(body.guard) && (type(body.guard) != map || size(body.guard) != 2 || !has(body.guard.key) || !has(body.guard.index) || type(body.guard.key) != string || body.guard.key == "" || type(body.guard.index) != string || !body.guard.index.matches("^(|0|[1-9][0-9]{0,19})$"))	400	badrequest		P/01.1 Н1 guard
-9	put,delete			guard_key	has(body.guard) && ("/guard/key" in lone || !key_ok(body.guard.key))	400	badkey		P/01.1 Н1 guard
-10	put,delete			id	has(body.id) && !(type(body.id) == string && body.id.matches("^[0-9a-f]{1,64}$"))	400	badrequest		P/01.1 Н1 id
-11	put,delete			not_after	has(body.not_after) && !((type(body.not_after) == int && body.not_after >= 0) || (type(body.not_after) == double && finite(body.not_after) && body.not_after >= 0.0))	400	badrequest		P/01.1 Н1 not_after
-12	put,delete			not_before	has(body.not_before) && !((type(body.not_before) == int && body.not_before >= 0) || (type(body.not_before) == double && finite(body.not_before) && body.not_before >= 0.0))	400	badrequest		P/01.1 Н1 not_before
-13	put			weight	weight(body.items) > lim.ROW_CEILING	413	toolarge	{"limit": lim.ROW_CEILING, "key": body.key, "size": weight(body.items)}	P/01.1 Н4
-14	put,delete			rights	!allowed(sock, body.op == "put" ? "write" : "delete", body.key)	403	forbidden		P/01.1 Н3 «write», «delete»
-15	put,delete			guard_rights	has(body.guard) && !allowed(sock, "read", body.guard.key)	403	forbidden		P/01.1 Н3 «write», «delete»
-16	batch			writes_form	!has(body.writes) || type(body.writes) != list || size(body.writes) == 0 || (sock != "console" && size(body.writes) > lim.BATCH_WRITES)	400	badrequest		P/01.1 Н1 batch
-17	batch	writes	i, w in body.writes	write_object	type(w) != map || w.exists(f, !(f in ["op", "key", "items", "cas"]))	400	badrequest		P/01.1 Н1 batch
-18	batch	writes	i, w in body.writes	write_op	!has(w.op) || type(w.op) != string || !(w.op in ["put", "delete"])	400	badrequest		P/01.1 Н1 batch
-19	batch	writes	i, w in body.writes	write_key_form	!has(w.key) || type(w.key) != string	400	badrequest		P/01.1 Н2
-20	batch	writes	i, w in body.writes	write_key_rules	("/writes/" + string(i) + "/key") in lone || !key_ok(w.key)	400	badkey		P/01.1 Н1 row.key
-21	batch	writes	i, w in body.writes	write_items	w.op == "put" && (!has(w.items) || type(w.items) != map || w.items.exists(f, type(w.items[f]) != string) || lone.exists(p, p == "/writes/" + string(i) + "/items" || p.startsWith("/writes/" + string(i) + "/items/")))	400	badrequest		P/01.1 Н1 batch
-22	batch	writes	i, w in body.writes	write_cas	has(w.cas) && w.cas != null && !(type(w.cas) == string && w.cas.matches("^(|0|[1-9][0-9]{0,19})$"))	400	badrequest		P/01.1 Н1 batch
-23	batch			guards_form	has(body.guards) && (type(body.guards) != list || (!(sock in ["console", "domain"]) && size(body.guards) > lim.BATCH_GUARDS))	400	badrequest		P/01.1 Н1 batch
-24	batch	guards	i, g in body.guards	guard_elem_form	type(g) != map || size(g) != 2 || !has(g.key) || !has(g.index) || type(g.key) != string || g.key == "" || type(g.index) != string || !g.index.matches("^(|0|[1-9][0-9]{0,19})$")	400	badrequest		P/01.1 Н1 batch
-25	batch	guards	i, g in body.guards	guard_elem_key	("/guards/" + string(i) + "/key") in lone || !key_ok(g.key)	400	badkey		P/01.1 Н1 batch
-26	batch			writes_twice	body.writes.exists(i, a, body.writes.exists(j, b, i < j && a.key == b.key))	400	badrequest		P/01.1 Н1 batch
-27	batch			guards_twice	has(body.guards) && body.guards.exists(i, a, body.guards.exists(j, b, i < j && a.key == b.key))	400	badrequest		P/01.1 Н1 batch
-28	batch			guard_on_write	has(body.guards) && body.guards.exists(g, body.writes.exists(w, w.key == g.key))	400	badrequest		P/01.1 Н1 batch
-29	batch			id	has(body.id) && !(type(body.id) == string && body.id.matches("^[0-9a-f]{1,64}$"))	400	badrequest		P/01.1 Н1 id
-30	batch			not_after	has(body.not_after) && !((type(body.not_after) == int && body.not_after >= 0) || (type(body.not_after) == double && finite(body.not_after) && body.not_after >= 0.0))	400	badrequest		P/01.1 Н1 not_after
-31	batch			not_before	has(body.not_before) && !((type(body.not_before) == int && body.not_before >= 0) || (type(body.not_before) == double && finite(body.not_before) && body.not_before >= 0.0))	400	badrequest		P/01.1 Н1 not_before
-32	batch	weights	i, w in body.writes	write_weight	w.op == "put" && weight(w.items) > lim.ROW_CEILING	413	toolarge	{"limit": lim.ROW_CEILING, "key": w.key, "size": weight(w.items)}	P/01.1 Н3 «write batch»
-33	batch	write_rights	i, w in body.writes	write_rights	!allowed(sock, w.op == "put" ? "write" : "delete", w.key)	403	forbidden		P/01.1 Н3 «write batch»
-34	batch	guard_rights	i, g in body.guards	guard_elem_rights	!allowed(sock, "read", g.key)	403	forbidden		P/01.1 Н3 «write batch»
+# id — the stable address of the row (ADR-0122 addendum (1) item 4): wc-<check> (a check name repeated at op batch — wc-batch_<check>), apart from the order n; not renumbered
+n	id	op	group	each	check	when	code	kind	fault	norm
+1	wc-body_object	*			body_object	type(body) != map	400	badrequest		P/01.1 Н2.1
+2	wc-op	*			op	!has(body.op) || type(body.op) != string || !(body.op in ["put", "delete", "batch", "floor"])	400	badrequest		P/01.1 Н4
+3	wc-floor_socket	floor			floor_socket	sock != "admin"	403	forbidden		P/01.3 Н4
+4	wc-key_form	put,delete			key_form	!has(body.key) || type(body.key) != string	400	badrequest		P/01.1 Н2
+5	wc-key_rules	put,delete			key_rules	"/key" in lone || !key_ok(body.key)	400	badkey		P/01.1 Н1 row.key
+6	wc-items	put			items	!has(body.items) || type(body.items) != map || body.items.exists(f, type(body.items[f]) != string) || lone.exists(p, p == "/items" || p.startsWith("/items/"))	400	badrequest		P/01.1 Н1 row.items
+7	wc-cas	put,delete			cas	has(body.cas) && body.cas != null && !(type(body.cas) == string && body.cas.matches("^(|0|[1-9][0-9]{0,19})$"))	400	badrequest		P/01.1 Н1 cas
+8	wc-guard_form	put,delete			guard_form	has(body.guard) && (type(body.guard) != map || size(body.guard) != 2 || !has(body.guard.key) || !has(body.guard.index) || type(body.guard.key) != string || body.guard.key == "" || type(body.guard.index) != string || !body.guard.index.matches("^(|0|[1-9][0-9]{0,19})$"))	400	badrequest		P/01.1 Н1 guard
+9	wc-guard_key	put,delete			guard_key	has(body.guard) && ("/guard/key" in lone || !key_ok(body.guard.key))	400	badkey		P/01.1 Н1 guard
+10	wc-id	put,delete			id	has(body.id) && !(type(body.id) == string && body.id.matches("^[0-9a-f]{1,64}$"))	400	badrequest		P/01.1 Н1 id
+11	wc-not_after	put,delete			not_after	has(body.not_after) && !((type(body.not_after) == int && body.not_after >= 0) || (type(body.not_after) == double && finite(body.not_after) && body.not_after >= 0.0))	400	badrequest		P/01.1 Н1 not_after
+12	wc-not_before	put,delete			not_before	has(body.not_before) && !((type(body.not_before) == int && body.not_before >= 0) || (type(body.not_before) == double && finite(body.not_before) && body.not_before >= 0.0))	400	badrequest		P/01.1 Н1 not_before
+13	wc-weight	put			weight	weight(body.items) > lim.ROW_CEILING	413	toolarge	{"limit": lim.ROW_CEILING, "key": body.key, "size": weight(body.items)}	P/01.1 Н4
+14	wc-rights	put,delete			rights	!allowed(sock, body.op == "put" ? "write" : "delete", body.key)	403	forbidden		P/01.1 Н3 «write», «delete»
+15	wc-guard_rights	put,delete			guard_rights	has(body.guard) && !allowed(sock, "read", body.guard.key)	403	forbidden		P/01.1 Н3 «write», «delete»
+16	wc-writes_form	batch			writes_form	!has(body.writes) || type(body.writes) != list || size(body.writes) == 0 || (sock != "console" && size(body.writes) > lim.BATCH_WRITES)	400	badrequest		P/01.1 Н1 batch
+17	wc-write_object	batch	writes	i, w in body.writes	write_object	type(w) != map || w.exists(f, !(f in ["op", "key", "items", "cas"]))	400	badrequest		P/01.1 Н1 batch
+18	wc-write_op	batch	writes	i, w in body.writes	write_op	!has(w.op) || type(w.op) != string || !(w.op in ["put", "delete"])	400	badrequest		P/01.1 Н1 batch
+19	wc-write_key_form	batch	writes	i, w in body.writes	write_key_form	!has(w.key) || type(w.key) != string	400	badrequest		P/01.1 Н2
+20	wc-write_key_rules	batch	writes	i, w in body.writes	write_key_rules	("/writes/" + string(i) + "/key") in lone || !key_ok(w.key)	400	badkey		P/01.1 Н1 row.key
+21	wc-write_items	batch	writes	i, w in body.writes	write_items	w.op == "put" && (!has(w.items) || type(w.items) != map || w.items.exists(f, type(w.items[f]) != string) || lone.exists(p, p == "/writes/" + string(i) + "/items" || p.startsWith("/writes/" + string(i) + "/items/")))	400	badrequest		P/01.1 Н1 batch
+22	wc-write_cas	batch	writes	i, w in body.writes	write_cas	has(w.cas) && w.cas != null && !(type(w.cas) == string && w.cas.matches("^(|0|[1-9][0-9]{0,19})$"))	400	badrequest		P/01.1 Н1 batch
+23	wc-guards_form	batch			guards_form	has(body.guards) && (type(body.guards) != list || (!(sock in ["console", "domain"]) && size(body.guards) > lim.BATCH_GUARDS))	400	badrequest		P/01.1 Н1 batch
+24	wc-guard_elem_form	batch	guards	i, g in body.guards	guard_elem_form	type(g) != map || size(g) != 2 || !has(g.key) || !has(g.index) || type(g.key) != string || g.key == "" || type(g.index) != string || !g.index.matches("^(|0|[1-9][0-9]{0,19})$")	400	badrequest		P/01.1 Н1 batch
+25	wc-guard_elem_key	batch	guards	i, g in body.guards	guard_elem_key	("/guards/" + string(i) + "/key") in lone || !key_ok(g.key)	400	badkey		P/01.1 Н1 batch
+26	wc-writes_twice	batch			writes_twice	body.writes.exists(i, a, body.writes.exists(j, b, i < j && a.key == b.key))	400	badrequest		P/01.1 Н1 batch
+27	wc-guards_twice	batch			guards_twice	has(body.guards) && body.guards.exists(i, a, body.guards.exists(j, b, i < j && a.key == b.key))	400	badrequest		P/01.1 Н1 batch
+28	wc-guard_on_write	batch			guard_on_write	has(body.guards) && body.guards.exists(g, body.writes.exists(w, w.key == g.key))	400	badrequest		P/01.1 Н1 batch
+29	wc-batch_id	batch			id	has(body.id) && !(type(body.id) == string && body.id.matches("^[0-9a-f]{1,64}$"))	400	badrequest		P/01.1 Н1 id
+30	wc-batch_not_after	batch			not_after	has(body.not_after) && !((type(body.not_after) == int && body.not_after >= 0) || (type(body.not_after) == double && finite(body.not_after) && body.not_after >= 0.0))	400	badrequest		P/01.1 Н1 not_after
+31	wc-batch_not_before	batch			not_before	has(body.not_before) && !((type(body.not_before) == int && body.not_before >= 0) || (type(body.not_before) == double && finite(body.not_before) && body.not_before >= 0.0))	400	badrequest		P/01.1 Н1 not_before
+32	wc-write_weight	batch	weights	i, w in body.writes	write_weight	w.op == "put" && weight(w.items) > lim.ROW_CEILING	413	toolarge	{"limit": lim.ROW_CEILING, "key": w.key, "size": weight(w.items)}	P/01.1 Н3 «write batch»
+33	wc-write_rights	batch	write_rights	i, w in body.writes	write_rights	!allowed(sock, w.op == "put" ? "write" : "delete", w.key)	403	forbidden		P/01.1 Н3 «write batch»
+34	wc-guard_elem_rights	batch	guard_rights	i, g in body.guards	guard_elem_rights	!allowed(sock, "read", g.key)	403	forbidden		P/01.1 Н3 «write batch»

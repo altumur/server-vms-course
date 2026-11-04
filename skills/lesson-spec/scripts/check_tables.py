@@ -15,7 +15,7 @@ import math
 import re
 from pathlib import Path
 
-COLUMNS = ["n", "op", "group", "each", "check", "when", "code", "kind", "fault", "norm"]
+COLUMNS = ["n", "id", "op", "group", "each", "check", "when", "code", "kind", "fault", "norm"]   # id — ADR-0122 доп. (1) п. 4
 PROBE_COLUMNS = ["n", "case", "sock", "body"]
 EACH = re.compile(r"([a-z]\w*), ([a-z]\w*) in (body(?:\.[a-z_]+)+)")
 CEL_BUILTINS = {"type", "has", "size", "string", "bytes", "int", "double", "matches", "startsWith", "endsWith",
@@ -54,8 +54,13 @@ class Table:
 
     def form(self):
         seen_groups, last_group = set(), None
+        ids = [row["id"] for row in self.rows]
+        for dup in sorted({i for i in ids if ids.count(i) > 1}):
+            self.error(f"id {dup} repeats (a stable address of a row, ADR-0122 доп. (1) п. 4)")
         for k, row in enumerate(self.rows, 1):
             where = f"n {row['n']}"
+            if not re.fullmatch(r"[a-z][a-z0-9_-]*", row["id"]):
+                self.error(f"{where}: id {row['id']!r} is not [a-z][a-z0-9_-]*")
             if row["n"] != str(k):
                 self.error(f"{where}: n must be {k} (rows in order, without gaps)")
             if row["op"] != "*" and not re.fullmatch(r"[a-z]+(,[a-z]+)*", row["op"]):

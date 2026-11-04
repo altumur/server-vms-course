@@ -47,6 +47,10 @@ class Checks(unittest.TestCase):
         self.table.write_text("\n".join(text) + "\n", encoding="utf-8")
         self.refused("the first violated row is")
 
+    def test_row_id(self):                              # ADR-0122 доп. (1) п. 4: адрес строки — постоянный, свой
+        self.edit(self.table, "\twc-op\t", "\twc-body_object\t")
+        self.refused("id wc-body_object repeats")
+
     def test_condition_weakened(self):
         self.edit(self.table, "sock != \"admin\"", "sock == \"nobody\"")
         self.refused("n 3, only")

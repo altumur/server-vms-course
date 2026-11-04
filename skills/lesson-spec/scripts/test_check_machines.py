@@ -42,8 +42,12 @@ class Machines(unittest.TestCase):
                     "(!reads.exists(x, v in x.who) && !(v in need)", "need_has_no_target")
 
     def test_no_hold(self):                              # answers before the own member's answer
-        self.mutate('{event: status, if: "!self_replied", do: ["hold(v, r)"], stop: true}',
-                    '{event: status, if: "false", do: ["hold(v, r)"], stop: true}', "held-before-self")
+        self.mutate('event: status, if: "!self_replied", do: ["hold(v, r)"], stop: true}',
+                    'event: status, if: "false", do: ["hold(v, r)"], stop: true}', "held-before-self")
+
+    def test_transition_id(self):                        # ADR-0122 доп. (1) п. 4: адрес перехода
+        self.mutate("{id: tick-2, event: tick,", "{id: tick-1, event: tick,", "id tick-1 repeats")
+
 
     def test_last_counts_quorum(self):                   # (32) item 2
         self.mutate("input.voters.all(v, v == input.self || v in alive)", "size(alive) >= 2", "last-two-of-three")
