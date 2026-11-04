@@ -141,40 +141,41 @@ invariants:                              # CEL over vars and input; hold after e
   held_only_before_self: "self_replied ? size(held) == 0 : size(alive) == 0 && size(replied) == 0"
 
 transitions:
+  # id — the stable address of the transition (ADR-0122 addendum (1) item 4): <event>-<k>, k by the first introduction; not renumbered
   # tick(k): close batch k − 1 (answers that did not come are breaks), judge it, then the new batch
-  - {event: tick, if: "k > 0", do: [close_batch]}
-  - {event: tick, if: "k > 0 && (input.last ? input.voters.all(v, v == input.self || v in alive) : size(alive) >= size(input.voters) / 2 + 2)", do: [pass], to: passed}
-  - {event: tick, if: "k > 0 && size(need) > 0 && !read_done", do: [read_commit]}
-  - {event: tick, do: ["new_batch(k)", "send_status(k)"], stop: true}
+  - {id: tick-1, event: tick, if: "k > 0", do: [close_batch]}
+  - {id: tick-2, event: tick, if: "k > 0 && (input.last ? input.voters.all(v, v == input.self || v in alive) : size(alive) >= size(input.voters) / 2 + 2)", do: [pass], to: passed}
+  - {id: tick-3, event: tick, if: "k > 0 && size(need) > 0 && !read_done", do: [read_commit]}
+  - {id: tick-4, event: tick, do: ["new_batch(k)", "send_status(k)"], stop: true}
 
   # self_status(k, r): a received answer checks the membership always (its own and the held answer of the leader), then
   # leadership; no leader_id — a break of all; otherwise the leader of the batch, the own answer, the held answers
-  - {event: self_status, if: "k != vars.k", stop: true}
-  - {event: self_status, if: "r == null", do: [break_all], stop: true}
-  - {event: self_status, if: "!same_set(r.voters, input.voters) || r.members != input.members", do: ["refuse(2, 'voters changed')"], to: refused}
-  - {event: self_status, if: "r.leader_id != '' && held.exists(h, h.v == r.leader_id && h.r != null && (!same_set(h.r.voters, input.voters) || h.r.members != input.members))", do: ["refuse(2, 'voters changed')"], to: refused}
-  - {event: self_status, if: "input.last && (r.state != 'Leader' || r.leader_id != input.self)", do: ["refuse(2, '-last: not the leader')"], to: refused}
-  - {event: self_status, if: "!input.last && r.state == 'Leader' && size(input.voters) > 1", do: ["refuse(2, 'leader goes last')"], to: refused}
-  - {event: self_status, if: "r.leader_id == ''", do: [break_all], stop: true}
-  - {event: self_status, do: ["set_leader(r)", "answer(input.self, r)", answer_held]}
-  - {event: self_status, if: "size(replied) == size(input.voters) && size(need) > 0 && !read_done", do: [read_commit], stop: true}
-  - {event: self_status, stop: true}
+  - {id: self_status-1, event: self_status, if: "k != vars.k", stop: true}
+  - {id: self_status-2, event: self_status, if: "r == null", do: [break_all], stop: true}
+  - {id: self_status-3, event: self_status, if: "!same_set(r.voters, input.voters) || r.members != input.members", do: ["refuse(2, 'voters changed')"], to: refused}
+  - {id: self_status-4, event: self_status, if: "r.leader_id != '' && held.exists(h, h.v == r.leader_id && h.r != null && (!same_set(h.r.voters, input.voters) || h.r.members != input.members))", do: ["refuse(2, 'voters changed')"], to: refused}
+  - {id: self_status-5, event: self_status, if: "input.last && (r.state != 'Leader' || r.leader_id != input.self)", do: ["refuse(2, '-last: not the leader')"], to: refused}
+  - {id: self_status-6, event: self_status, if: "!input.last && r.state == 'Leader' && size(input.voters) > 1", do: ["refuse(2, 'leader goes last')"], to: refused}
+  - {id: self_status-7, event: self_status, if: "r.leader_id == ''", do: [break_all], stop: true}
+  - {id: self_status-8, event: self_status, do: ["set_leader(r)", "answer(input.self, r)", answer_held]}
+  - {id: self_status-9, event: self_status, if: "size(replied) == size(input.voters) && size(need) > 0 && !read_done", do: [read_commit], stop: true}
+  - {id: self_status-10, event: self_status, stop: true}
 
   # status(k, v, r): the answer of a voter in batch k
-  - {event: status, if: "k != vars.k", stop: true}
-  - {event: status, if: "!self_replied", do: ["hold(v, r)"], stop: true}
-  - {event: status, if: "!leaderless && v == leader_id && r != null && (!same_set(r.voters, input.voters) || r.members != input.members)", do: ["refuse(2, 'voters changed')"], to: refused}
-  - {event: status, do: ["answer(v, r)"]}
-  - {event: status, if: "size(replied) == size(input.voters) && size(need) > 0 && !read_done", do: [read_commit], stop: true}
-  - {event: status, stop: true}
+  - {id: status-1, event: status, if: "k != vars.k", stop: true}
+  - {id: status-2, event: status, if: "!self_replied", do: ["hold(v, r)"], stop: true}
+  - {id: status-3, event: status, if: "!leaderless && v == leader_id && r != null && (!same_set(r.voters, input.voters) || r.members != input.members)", do: ["refuse(2, 'voters changed')"], to: refused}
+  - {id: status-4, event: status, do: ["answer(v, r)"]}
+  - {id: status-5, event: status, if: "size(replied) == size(input.voters) && size(need) > 0 && !read_done", do: [read_commit], stop: true}
+  - {id: status-6, event: status, stop: true}
 
   # commit(n, c) — a target read came back (c) or its connection was refused (null); read_expired(n) — its deadline passed
-  - {event: commit, if: "!reads.exists(x, x.n == n)", stop: true}
-  - {event: commit, if: "c == null", do: ["drop_read(n)"], stop: true}
-  - {event: commit, do: ["set_targets(n, c)"], stop: true}
-  - {event: read_expired, if: "reads.exists(x, x.n == n)", do: ["drop_read(n)"], stop: true}
-  - {event: read_expired, stop: true}
+  - {id: commit-1, event: commit, if: "!reads.exists(x, x.n == n)", stop: true}
+  - {id: commit-2, event: commit, if: "c == null", do: ["drop_read(n)"], stop: true}
+  - {id: commit-3, event: commit, do: ["set_targets(n, c)"], stop: true}
+  - {id: read_expired-1, event: read_expired, if: "reads.exists(x, x.n == n)", do: ["drop_read(n)"], stop: true}
+  - {id: read_expired-2, event: read_expired, stop: true}
 
   # the deadline of the poll: tick of the same instant has already judged the last batch
-  - {event: wait_expired, if: "!input.last", do: ["refuse(2, 'not enough live voters')"], to: refused}
-  - {event: wait_expired, do: ["refuse(2, '-last: voters not live')"], to: refused}
+  - {id: wait_expired-1, event: wait_expired, if: "!input.last", do: ["refuse(2, 'not enough live voters')"], to: refused}
+  - {id: wait_expired-2, event: wait_expired, do: ["refuse(2, '-last: voters not live')"], to: refused}

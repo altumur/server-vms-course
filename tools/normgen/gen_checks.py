@@ -1,6 +1,6 @@
 """Генератор кода проверок по таблице формы ADR-0120 п. 2 (а) — пилот на P/01.1 Н2.1 (`write-checks.tsv`).
 
-Читает таблицу (шапка `#var`, `#lim`, `#fn`; колонки n op group each check when code kind fault norm) и строит:
+Читает таблицу (шапка `#var`, `#lim`, `#fn`; колонки n id op group each check when code kind fault norm) и строит:
 - модуль Go 1.22 только на стандартной библиотеке: `<out>/go/checks/checks.go` (package checks) и рядом
   `runtime.go` (среда CEL, tools/normgen/runtime/go) и `prims.go` (примитивы #fn, tools/normgen/prims/go);
 - модуль Python 3.12 только на стандартной библиотеке: `<out>/python/checks.py` (среда и примитивы вставлены в файл).
@@ -28,7 +28,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 DEFAULT_TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"          # ADR-0124: формы — в forms/
 DEFAULT_OUT = HERE / "out/p01-1"
-COLUMNS = ["n", "op", "group", "each", "check", "when", "code", "kind", "fault", "norm"]
+COLUMNS = ["n", "id", "op", "group", "each", "check", "when", "code", "kind", "fault", "norm"]   # id — ADR-0122 доп. (1) п. 4
 EACH = re.compile(r"([a-z]\w*), ([a-z]\w*) in (body(?:\.[a-z_]+)+)")
 FN_TYPES = {"string", "map", "double", "int", "bool", "list", "dyn"}
 TYPE_NAMES = ("bool", "int", "double", "string", "list", "map", "null_type", "type")
@@ -65,7 +65,7 @@ class Table:
         body = [line for line in lines if not line.startswith("#")]
         if not body or body[0].split("\t") != COLUMNS:
             raise GenError(f"{name}: columns must be {COLUMNS}")
-        last_group, seen = None, set()
+        last_group, seen, ids = None, set(), set()
         for k, line in enumerate(body[1:], 1):
             cells = line.split("\t")
             if len(cells) != len(COLUMNS):
@@ -76,6 +76,9 @@ class Table:
                 raise GenError(f"{where}: n must be {k}")
             if row["op"] != "*" and not re.fullmatch(r"[a-z]+(,[a-z]+)*", row["op"]):
                 raise GenError(f"{where}: op {row['op']!r} — * or a list of values")
+            if not re.fullmatch(r"[a-z][a-z0-9_-]*", row["id"]) or row["id"] in ids:
+                raise GenError(f"{where}: id {row['id']!r} — [a-z][a-z0-9_-]*, unique (ADR-0122 доп. (1) п. 4)")
+            ids.add(row["id"])
             if not re.fullmatch(r"[a-z][a-z_]*", row["check"]):
                 raise GenError(f"{where}: check {row['check']!r} — a Latin name")
             if not re.fullmatch(r"[1-5][0-9]{2}", row["code"]) or not re.fullmatch(r"[a-z]+", row["kind"]):
@@ -980,8 +983,8 @@ def go_row_step(row, args, ind):
             "\tif !full {", "\t\treturn steps, hit", "\t}", "}"]
     cond = go_filter(row)
     if cond:
-        return [f"{pad}// n {n} {row['check']}", f"{pad}if {cond} {{"] + [f"{pad}\t{b}" for b in body] + [f"{pad}}}"]
-    return [f"{pad}// n {n} {row['check']}"] + [f"{pad}{b}" for b in body]
+        return [f"{pad}// n {n} {row['id']} {row['check']}", f"{pad}if {cond} {{"] + [f"{pad}\t{b}" for b in body] + [f"{pad}}}"]
+    return [f"{pad}// n {n} {row['id']} {row['check']}"] + [f"{pad}{b}" for b in body]
 
 
 def go_driver(table):

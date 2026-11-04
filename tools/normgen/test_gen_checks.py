@@ -468,7 +468,7 @@ class SubsetSemantics(Trio):
     def table_path(cls):
         head = [line for line in TABLE.read_text(encoding="utf-8").splitlines() if line.startswith("#")]
         rows = ["\t".join(gen_checks.COLUMNS)]
-        rows += [f"{k}\t*\t\t\tsem_{chr(97 + k // 26)}{chr(97 + k % 26)}\t{expr}\t400\tbadrequest\t\tsemantics"
+        rows += [f"{k}\twc-sem{k}\t*\t\t\tsem_{chr(97 + k // 26)}{chr(97 + k % 26)}\t{expr}\t400\tbadrequest\t\tsemantics"
                  for k, expr in enumerate(SEMANTICS, 1)]
         path = Path(cls.tmp.name) / "semantics-checks.tsv"
         path.write_text("\n".join(head + rows) + "\n", encoding="utf-8")

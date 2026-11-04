@@ -78,13 +78,18 @@ class Machine:
                 if var not in d["vars"]:
                     self.error(f"action {name}: set {var} is not a variable")
         self.calls = []
+        tids = [t.get("id") for t in d["transitions"]]
+        for dup in sorted({i for i in tids if i and tids.count(i) > 1}):
+            self.error(f"transition id {dup} repeats")
         for k, t in enumerate(d["transitions"], 1):
             where = f"transition {k}"
             if t.get("event") not in d["events"]:
                 self.error(f"{where}: event {t.get('event')} is not in events")
             if "to" in t and t["to"] not in d["states"]:
                 self.error(f"{where}: to {t['to']} is not a state")
-            unknown = set(t) - {"event", "if", "do", "to", "stop"}
+            if not re.fullmatch(r"[a-z][a-z0-9_-]*", str(t.get("id", ""))):
+                self.error(f"{where}: id {t.get('id')!r} is not [a-z][a-z0-9_-]* (ADR-0122 доп. (1) п. 4)")
+            unknown = set(t) - {"id", "event", "if", "do", "to", "stop"}
             if unknown:
                 self.error(f"{where}: unknown keys {sorted(unknown)}")
             for action in t.get("do", []):
