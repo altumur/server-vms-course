@@ -1,0 +1,380 @@
+// stubstore — заглушка демона хранилища P/01 для внешнего судьи двери (ADR-0125 доп. (1) п. 1): пакет Б (door из
+// OpenAPI, writecheck из write-checks.tsv) за простой рамкой net/http и хранилище в памяти без смысла Н3. Это не
+// реализация урока: нет cas, guard, памяти id, времени допуска, долговечности, группы. Мера судьи — шаги приёмки P/01.1,
+// которые от ядра не зависят: формы ответов, коды отказов разбора, маршруты и методы. Написана руками; путь импорта
+// "kitmodule/" заменяет tools/normgen/kit/build_stub.py.
+//
+// Запуск: stubstore -dir <каталог> -admin <путь admin.sock> -rights <файл прав> -max-body <байты> -max-value <байты>
+// Сокеты ролей (<роль>.sock по ролям файла прав) — рядом с admin.sock.
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"io"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+	"syscall"
+
+	"kitmodule/internal/door"
+	"kitmodule/internal/jsonstrict"
+	"kitmodule/internal/writecheck"
+)
+
+// Пределы урока (P/01.1 Н1): BATCH_WRITES и BATCH_GUARDS — 64; ROW_CEILING — флаг -max-value.
+const batchLimit = 64
+
+type rights struct {
+	Roles map[string]struct {
+		Read   []string `json:"read"`
+		Write  []string `json:"write"`
+		Delete []string `json:"delete"`
+	} `json:"roles"`
+}
+
+type row struct {
+	items map[string]string
+	index string
+}
+
+type store struct {
+	mu       sync.Mutex
+	rows     map[string]row
+	next     uint64
+	maxBody  int64
+	maxValue int64
+	rights   rights
+	raw      any // файл прав как значение JSON (для /v1/rights)
+}
+
+// call — контекст вызова ручной части: роль сокета.
+type call struct {
+	sock string
+}
+
+// match — образец прав заглушки: «префикс*» или точный ключ (полная семантика P/01.2 Н1.3 — не дело заглушки).
+func match(patterns []string, key string) bool {
+	for _, p := range patterns {
+		if strings.HasSuffix(p, "*") && strings.HasPrefix(key, strings.TrimSuffix(p, "*")) || p == key {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *store) allowed(sock, op, key string) bool {
+	if sock == "admin" {
+		return true
+	}
+	r, ok := s.rights.Roles[sock]
+	if !ok {
+		return false
+	}
+	switch op {
+	case "read":
+		return match(r.Read, key)
+	case "write":
+		return match(r.Write, key)
+	case "delete":
+		return match(r.Delete, key)
+	}
+	return false
+}
+
+func (s *store) version() string {
+	s.next++
+	return strconv.FormatUint(s.next, 10)
+}
+
+func refuse(op door.Op, code int, kind, msg string, fields map[string]any) door.Answer {
+	a, err := door.Refuse(op, code, kind, msg, fields)
+	if err != nil {
+		log.Printf("stubstore: refuse %v %d %s: %v", op, code, kind, err)
+		a, _ = door.Refuse(op, 503, "unavailable", "stub: "+kind, nil)
+	}
+	return a
+}
+
+// Методы door.Handler — ручная часть заглушки.
+
+func (s *store) Get(c *call, q door.GetQuery) door.Answer {
+	if len(q.Key) > 1024 { // Н1: предел ключа в байтах UTF-8 — не форма OpenAPI
+		return refuse(door.OpGet, 400, "badkey", "key too long", nil)
+	}
+	if !s.allowed(c.sock, "read", q.Key) {
+		return refuse(door.OpGet, 403, "forbidden", "no read right", nil)
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	r, ok := s.rows[q.Key]
+	if !ok {
+		return door.Answer{Code: 200, Body: door.Row2{}}
+	}
+	items := make(map[string]string, len(r.items))
+	for k, v := range r.items {
+		items[k] = v
+	}
+	return door.Answer{Code: 200, Body: door.Row1{Items: items, Index: r.index}}
+}
+
+func (s *store) List(c *call, q door.ListQuery) door.Answer {
+	prefix := ""
+	if q.Prefix != nil {
+		prefix = *q.Prefix
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	keys := map[string]string{}
+	for k, r := range s.rows {
+		if strings.HasPrefix(k, prefix) {
+			keys[k] = r.index
+		}
+	}
+	return door.Answer{Code: 200, Body: door.Listing{Keys: keys}}
+}
+
+func strItems(v any) map[string]string {
+	m, _ := v.(map[string]any)
+	out := make(map[string]string, len(m))
+	for k, x := range m {
+		out[k], _ = x.(string)
+	}
+	return out
+}
+
+func (s *store) apply(op, key string, items any) {
+	if op == "put" {
+		s.rows[key] = row{items: strItems(items)}
+	} else {
+		delete(s.rows, key)
+	}
+}
+
+func (s *store) Write(c *call, body []byte) door.Answer {
+	lim := map[string]int64{"BATCH_WRITES": batchLimit, "BATCH_GUARDS": batchLimit, "ROW_CEILING": s.maxValue}
+	r, v := writecheck.Check(body, c.sock, lim, s.allowed)
+	if r != nil {
+		return refuse(door.OpWrite, r.Code, r.Kind, "refused", r.Fault)
+	}
+	cmd := v.(map[string]any)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	switch cmd["op"] {
+	case "floor":
+		if _, e := door.DecodeFloorCmd(cmd); e != nil {
+			return refuse(door.OpWrite, 400, "badrequest", "floor out of form", nil)
+		}
+		return door.Answer{Code: 200, Body: door.Written{Index: s.version()}}
+	case "batch":
+		index := s.version()
+		for _, w := range cmd["writes"].([]any) {
+			m := w.(map[string]any)
+			key := m["key"].(string)
+			s.apply(m["op"].(string), key, m["items"])
+			if x, ok := s.rows[key]; ok {
+				x.index = index
+				s.rows[key] = x
+			}
+		}
+		return door.Answer{Code: 200, Body: door.Written{Index: index}}
+	}
+	key := cmd["key"].(string)
+	index := s.version()
+	s.apply(cmd["op"].(string), key, cmd["items"])
+	if x, ok := s.rows[key]; ok {
+		x.index = index
+		s.rows[key] = x
+	}
+	return door.Answer{Code: 200, Body: door.Written{Index: index}}
+}
+
+func (s *store) Rights(c *call) door.Answer {
+	if c.sock != "admin" {
+		return refuse(door.OpRights, 403, "forbidden", "admin only", nil)
+	}
+	if s.raw == nil {
+		return refuse(door.OpRights, 404, "badrequest", "no rights file", nil)
+	}
+	a, err := door.AnswerOf(door.OpRights, 200, s.raw)
+	if err != nil {
+		return refuse(door.OpRights, 503, "unavailable", "rights file out of form", nil)
+	}
+	return a
+}
+
+func (s *store) Status(c *call) door.Answer {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return door.Answer{Code: 200, Body: door.Status{Id: "stub", State: "Leader", LeaderId: "stub", Commit: s.next,
+		Applied: s.next, Voters: []string{"stub"}, Members: map[string]string{}, MaxValue: s.maxValue}}
+}
+
+func (s *store) member(op door.Op, c *call, body []byte, decode func(any) *door.Violation) door.Answer {
+	if c.sock != "admin" {
+		return refuse(op, 403, "forbidden", "admin.sock only", nil)
+	}
+	v, _, err := jsonstrict.Decode(body, jsonstrict.Depth)
+	if err != nil {
+		return refuse(op, 400, "badrequest", "not JSON", nil)
+	}
+	if e := decode(v); e != nil {
+		return refuse(op, 400, "badrequest", "out of form", nil)
+	}
+	return refuse(op, 409, "refused", "stub has no group", nil)
+}
+
+func (s *store) Join(c *call, body []byte) door.Answer {
+	return s.member(door.OpJoin, c, body, func(v any) *door.Violation { _, e := door.DecodeJoin(v); return e })
+}
+
+func (s *store) Leave(c *call, body []byte) door.Answer {
+	return s.member(door.OpLeave, c, body, func(v any) *door.Violation { _, e := door.DecodeLeave(v); return e })
+}
+
+func (s *store) Metrics(c *call) door.Answer {
+	return door.Answer{Code: 200, Body: door.Metrics200("configstore_doors 1\n")}
+}
+
+// QueryRefused — какой отказ даёт query вне формы, OpenAPI говорит только словами (P/01.1 Н2.1): повтор и отсутствие —
+// badrequest, значение не по схеме Key (в том числе не UTF-8) — badkey.
+func (s *store) QueryRefused(c *call, op door.Op, e *door.QueryError) door.Answer {
+	if e.Reason == door.QueryValue && e.Schema == "Key" {
+		return refuse(op, 400, "badkey", "bad key", nil)
+	}
+	return refuse(op, 400, "badrequest", "query out of form", nil)
+}
+
+// Рамка: net/http (не рамка Н2.1 — заглушка). Порядок: маршрут → личность → предел тела → операция.
+
+type handler struct {
+	s    *store
+	sock string
+}
+
+func write(w http.ResponseWriter, r *door.Response) {
+	for _, h := range r.Header {
+		w.Header().Add(h[0], h[1])
+	}
+	w.Header().Set("Content-Length", strconv.Itoa(len(r.Body)))
+	w.WriteHeader(r.Code)
+	_, _ = w.Write(r.Body)
+}
+
+func (h handler) answer(w http.ResponseWriter, op door.Op, a door.Answer) {
+	resp, err := door.Encode(op, a)
+	if err != nil {
+		log.Printf("stubstore: %v", err)
+		resp, _ = door.Encode(op, refuse(op, 503, "unavailable", "stub: undeclared answer", nil))
+	}
+	write(w, resp)
+}
+
+func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	op, query, refusal := door.Route(r.Method, r.RequestURI)
+	if refusal != nil {
+		write(w, refusal)
+		return
+	}
+	c := &call{sock: h.sock}
+	if h.sock != "admin" && r.Header.Get("X-Configstore-Role") != "" {
+		h.answer(w, op, refuse(op, 403, "forbidden", "role header on a role socket", nil))
+		return
+	}
+	var body []byte
+	if r.Body != nil {
+		limit := h.s.maxBody
+		if r.ContentLength > limit {
+			w.Header().Set("Connection", "close")
+			h.answer(w, op, refuse(op, 413, "toolarge", "body too large",
+				map[string]any{"limit": limit, "size": r.ContentLength}))
+			return
+		}
+		b, err := io.ReadAll(io.LimitReader(r.Body, limit+1))
+		if err != nil {
+			h.answer(w, op, refuse(op, 400, "badrequest", "body", nil))
+			return
+		}
+		if int64(len(b)) > limit {
+			w.Header().Set("Connection", "close")
+			h.answer(w, op, refuse(op, 413, "toolarge", "body too large", map[string]any{"limit": limit}))
+			return
+		}
+		body = b
+	}
+	h.answer(w, op, door.Dispatch[*call](h.s, c, op, query, body))
+}
+
+func listen(path string, s *store, sock string, servers *[]*http.Server) {
+	_ = os.Remove(path)
+	l, err := net.Listen("unix", path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "stubstore: socket %s: %v\n", path, err)
+		os.Exit(2)
+	}
+	srv := &http.Server{Handler: handler{s: s, sock: sock}}
+	*servers = append(*servers, srv)
+	go func() { _ = srv.Serve(l) }()
+}
+
+func main() {
+	dir := flag.String("dir", "", "data directory")
+	admin := flag.String("admin", "", "path of admin.sock (role sockets next to it)")
+	rightsPath := flag.String("rights", "", "rights file")
+	maxBody := flag.Int64("max-body", 1048576, "body read limit, bytes")
+	maxValue := flag.Int64("max-value", 524288, "row ceiling, bytes")
+	flag.Parse()
+	if *dir == "" || *admin == "" || *maxBody <= 0 || *maxValue <= 0 || flag.NArg() != 0 {
+		fmt.Fprintln(os.Stderr, "stubstore: -dir, -admin required; -max-body, -max-value > 0")
+		os.Exit(2)
+	}
+	if err := os.MkdirAll(*dir, 0o755); err != nil {
+		fmt.Fprintln(os.Stderr, "stubstore:", err)
+		os.Exit(2)
+	}
+	s := &store{rows: map[string]row{}, maxBody: *maxBody, maxValue: *maxValue}
+	if *rightsPath != "" {
+		data, err := os.ReadFile(*rightsPath)
+		if err == nil {
+			err = json.Unmarshal(data, &s.rights)
+		}
+		if err == nil {
+			d := json.NewDecoder(bytes.NewReader(data))
+			d.UseNumber()
+			err = d.Decode(&s.raw)
+		}
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "stubstore: rights file:", err)
+			os.Exit(2)
+		}
+	}
+	var servers []*http.Server
+	listen(*admin, s, "admin", &servers)
+	roles := make([]string, 0, len(s.rights.Roles))
+	for role := range s.rights.Roles {
+		roles = append(roles, role)
+	}
+	sort.Strings(roles)
+	for _, role := range roles {
+		listen(filepath.Join(filepath.Dir(*admin), role+".sock"), s, role, &servers)
+	}
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+	<-stop
+	for _, srv := range servers {
+		_ = srv.Close()
+	}
+	_ = os.Remove(*admin)
+	for _, role := range roles {
+		_ = os.Remove(filepath.Join(filepath.Dir(*admin), role+".sock"))
+	}
+}
