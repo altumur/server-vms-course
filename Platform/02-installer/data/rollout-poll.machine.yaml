@@ -1,6 +1,6 @@
 # The voter poll of w2cctl rollout — the norm of P/02.4 Н1.9 poll (ADR-0115 addenda (28)–(37); form — ADR-0120 item 2 (b),
 # addenda (5) items 4, 5 and (6)). The prose of Н1.9 keeps only why, other_order, bound and unproven; where prose and this
-# machine differ, the machine holds. Traces — rollout-poll.traces.tsv; check_spec runs them (check_machines.py).
+# machine differ, the machine holds. Traces — rollout-poll.traces.tsv; the course checks run them.
 # One poll is one instance: pre before the actions, pre before the member restart — or, with -last, the -last check in place
 # of both — each with its own targets.
 #
