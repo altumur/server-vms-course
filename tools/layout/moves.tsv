@@ -1,0 +1,31 @@
+# Таблица переноса уроков в раскладку ADR-0124 (доп. (1) п. 5): старый путь → новый. Постоянная: читатель старого ADR находит по ней новое место.
+# kind: translation — русский производный X → ru/X; source — английский en/<имя>.en.md → X; lecture — лекция → ru/; form — формы ADR-0120 → forms/; journal — corrections.tsv → journal/.
+# lesson	old	new	kind
+Platform/01-store	Platform/01-store/01-store.md	Platform/01-store/ru/01-store.md	lecture
+Platform/01-store	Platform/01-store/README.md	Platform/01-store/ru/README.md	translation
+Platform/01-store	Platform/01-store/acceptance/1/README.md	Platform/01-store/ru/acceptance/1/README.md	translation
+Platform/01-store	Platform/01-store/acceptance/1/corrections.tsv	Platform/01-store/journal/corrections-1.tsv	journal
+Platform/01-store	Platform/01-store/acceptance/2/README.md	Platform/01-store/ru/acceptance/2/README.md	translation
+Platform/01-store	Platform/01-store/acceptance/2/corrections.tsv	Platform/01-store/journal/corrections-2.tsv	journal
+Platform/01-store	Platform/01-store/acceptance/3/README.md	Platform/01-store/ru/acceptance/3/README.md	translation
+Platform/01-store	Platform/01-store/acceptance/3/corrections.tsv	Platform/01-store/journal/corrections-3.tsv	journal
+Platform/01-store	Platform/01-store/data/write-checks.probes.tsv	Platform/01-store/forms/write-checks.probes.tsv	form
+Platform/01-store	Platform/01-store/data/write-checks.tsv	Platform/01-store/forms/write-checks.tsv	form
+Platform/01-store	Platform/01-store/lifecycle.md	Platform/01-store/ru/lifecycle.md	translation
+Platform/01-store	Platform/01-store/spec/01-store.README.md	Platform/01-store/ru/spec/01-store.README.md	translation
+Platform/01-store	Platform/01-store/spec/01.1-store.norms.md	Platform/01-store/ru/spec/01.1-store.norms.md	translation
+Platform/01-store	Platform/01-store/spec/01.2-store.norms.md	Platform/01-store/ru/spec/01.2-store.norms.md	translation
+Platform/01-store	Platform/01-store/spec/01.3-store.norms.md	Platform/01-store/ru/spec/01.3-store.norms.md	translation
+Platform/01-store	Platform/01-store/vectors/jcs/README.md	Platform/01-store/ru/vectors/jcs/README.md	translation
+Platform/01-store	Platform/01-store/vectors/rights-evaluator/README.md	Platform/01-store/ru/vectors/rights-evaluator/README.md	translation
+Platform/01-store	Platform/01-store/en/README.en.md	Platform/01-store/README.md	source
+Platform/01-store	Platform/01-store/acceptance/1/en/README.en.md	Platform/01-store/acceptance/1/README.md	source
+Platform/01-store	Platform/01-store/acceptance/2/en/README.en.md	Platform/01-store/acceptance/2/README.md	source
+Platform/01-store	Platform/01-store/acceptance/3/en/README.en.md	Platform/01-store/acceptance/3/README.md	source
+Platform/01-store	Platform/01-store/en/lifecycle.en.md	Platform/01-store/lifecycle.md	source
+Platform/01-store	Platform/01-store/spec/en/01-store.README.en.md	Platform/01-store/spec/01-store.README.md	source
+Platform/01-store	Platform/01-store/spec/en/01.1-store.norms.en.md	Platform/01-store/spec/01.1-store.norms.md	source
+Platform/01-store	Platform/01-store/spec/en/01.2-store.norms.en.md	Platform/01-store/spec/01.2-store.norms.md	source
+Platform/01-store	Platform/01-store/spec/en/01.3-store.norms.en.md	Platform/01-store/spec/01.3-store.norms.md	source
+Platform/01-store	Platform/01-store/vectors/jcs/en/README.en.md	Platform/01-store/vectors/jcs/README.md	source
+Platform/01-store	Platform/01-store/vectors/rights-evaluator/en/README.en.md	Platform/01-store/vectors/rights-evaluator/README.md	source
