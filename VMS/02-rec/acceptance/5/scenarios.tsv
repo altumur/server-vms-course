@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/02.5: дверь архива регистратора на петле (процессные маршруты), стенд главы 4. Формат — README.
+# Acceptance of V/02.5: the archive door of the recorder on loopback (the process routes), the stand of chapter 4. Format — README.
 01-door	1	@start worker cam w-srv-a-1 on srv-a	ok
 01-door	2	@start worker rec r-srv-a-1 on srv-a	ok
 01-door	3	console2 POST /cameras {"name": "door", "source": "driverpack://file/door.mp4"}	201 {"id": "$c1"}

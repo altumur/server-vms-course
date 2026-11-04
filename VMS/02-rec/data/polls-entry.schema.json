@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "value элемента книги domain/rec/polls (копия у члена, #copy) и domain/rec/polls/<член> (у держателя домена, #member), V/02.9 Н1.7",
+ "description": "value of an element of the book domain/rec/polls (the copy at a member, #copy) and domain/rec/polls/<member> (at the domain holder, #member), V/02.9 Н1.7",
  "type": "object",
  "properties": {
   "ref": {

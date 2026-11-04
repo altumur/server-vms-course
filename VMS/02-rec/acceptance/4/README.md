@@ -3,6 +3,8 @@
 Норма главы — [`02.4-rec.norms.md`](../../spec/02.4-rec.norms.md) Н5. Стенд и директивы — [общий README приёмки
 VMS](../../../common/acceptance/README.md) (выгрузка `7a875c75`).
 
+Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+
 ## Подготовка
 
 Стенд VMS с манифестами `cam` и `rec`: консоль — `CONSOLE_ROOT=rec` (дверь `console` — `/recordings`, `/volumes`),

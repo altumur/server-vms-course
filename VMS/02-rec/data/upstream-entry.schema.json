@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "value элемента книги domain/rec/upstream (копия у члена, #copy) и domain/rec/upstream/<член> (у держателя домена, #member), V/02.9 Н1.8",
+ "description": "value of an element of the book domain/rec/upstream (the copy at a member, #copy) and domain/rec/upstream/<member> (at the domain holder, #member), V/02.9 Н1.8",
  "type": "object",
  "properties": {
   "relay": {

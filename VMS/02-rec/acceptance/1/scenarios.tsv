@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/02.1: запись — единица (дверь единиц и таблиц консоли rec; манифесты cam, rec и auto). Формат — README.
+# Acceptance of V/02.1: a recording is a unit (the units and tables door of the console rec; the manifests cam, rec and auto). Format — README.
 01-create	1	POST /volumes {"name": "disk-a", "kind": "local", "url": "file://{data}/subsystems/rec/obsd/volumes/1", "server": "srv-a", "quota_bytes": 1000000000}	201 {"name": "disk-a"}
 01-create	2	POST /recordings {"name": "7", "cam": "7", "home": "disk-a"}	201 {"id": "7", "cam": "7", "retention_days": 30, "enabled": true, "until": 0, "when": "always"}
 01-create	3	POST /recordings {"name": "8"}	400 {"error": "required", "field": "/cam", "detail": "~needs a cam"}
