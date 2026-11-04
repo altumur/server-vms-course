@@ -2,11 +2,11 @@
 
 Модуль уроков-спецификаций видеоподсистемы, нарезанный по подсистемам: один урок — одна подсистема со своим
 манифестом (ADR-0090 доп. (2)). Каталог урока — `NN-<имя>`, номер урока — адрес владельца (`V/NN`), карта —
-[`common/lessons.tsv`](common/lessons.tsv). Общее для всех уроков — [`common/`](common/README.md). Раскладка урока —
+[`common/lessons.tsv`](../common/lessons.tsv). Общее для всех уроков — [`common/`](../common/README.md). Раскладка урока —
 как у `Platform/`: лекция `NN-<имя>.md`, нормы `spec/`, приёмка `acceptance/`, данные `data/`, векторы `vectors/`. Семьи
 данных VMS — JSON Schema 2020-12 со слоями `Platform/common/LAYERS.md`, как у платформы (ADR-0092).
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+Текст производный от `README.md`, руками не правится: источник — английский [`README.md`](../README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
 Платформу уроки VMS читают только из выгрузки `cammeta-specs` на закреплённом коммите (ADR-0090 п. 2); правку
 платформы просят файлом во входящих (п. 4). Пишет модуль «Спецификация VMS» по белому списку ADR-0090 доп. (1).
@@ -18,18 +18,18 @@
 
 | V | Каталог | Подсистема | Статус |
 |---|---|---|---|
-| 01 | [`01-cam/`](01-cam/ru/README.md) | `cam` | переведён |
-| 02 | [`02-rec/`](02-rec/ru/README.md) | `rec` | переведён |
-| 03 | [`03-live/`](03-live/ru/README.md) | `live` | переведён |
-| 04 | [`04-det/`](04-det/ru/README.md) | `det` | переведён |
-| 05 | [`05-detjob/`](05-detjob/ru/README.md) | `detjob` | переведён |
-| 06 | [`06-detedge/`](06-detedge/ru/README.md) | `detedge` | переведён |
-| 07 | [`07-auto/`](07-auto/ru/README.md) | `auto` | переведён |
-| 08 | [`08-exp/`](08-exp/ru/README.md) | `exp` — выгрузка, главы V/08.6–V/08.9 | переведён |
-| 09 | [`09-deploy/`](09-deploy/ru/README.md) | развёртывание VMS | переведён |
-| 10 | [`10-assist/`](10-assist/ru/README.md) | `assist` | переведён |
-| 11 | [`11-backend/`](11-backend/ru/README.md) | `backend` | переведён |
-| 12 | [`12-psim/`](12-psim/ru/README.md) | плагины psim, `psim-<id>` | переведён |
+| 01 | [`01-cam/`](../01-cam/ru/README.md) | `cam` | переведён |
+| 02 | [`02-rec/`](../02-rec/ru/README.md) | `rec` | переведён |
+| 03 | [`03-live/`](../03-live/ru/README.md) | `live` | переведён |
+| 04 | [`04-det/`](../04-det/ru/README.md) | `det` | переведён |
+| 05 | [`05-detjob/`](../05-detjob/ru/README.md) | `detjob` | переведён |
+| 06 | [`06-detedge/`](../06-detedge/ru/README.md) | `detedge` | переведён |
+| 07 | [`07-auto/`](../07-auto/ru/README.md) | `auto` | переведён |
+| 08 | [`08-exp/`](../08-exp/ru/README.md) | `exp` — выгрузка, главы V/08.6–V/08.9 | переведён |
+| 09 | [`09-deploy/`](../09-deploy/ru/README.md) | развёртывание VMS | переведён |
+| 10 | [`10-assist/`](../10-assist/ru/README.md) | `assist` | переведён |
+| 11 | [`11-backend/`](../11-backend/ru/README.md) | `backend` | переведён |
+| 12 | [`12-psim/`](../12-psim/ru/README.md) | плагины psim, `psim-<id>` | переведён |
 
 Состав уроков предварительный: точное разнесение глав М10B, М12A, М12B по урокам — опись «Спецификации VMS»
 (доп. (4)), проверяет «Архитектор».
