@@ -2,7 +2,7 @@
 
 Модуль уроков-спецификаций видеоподсистемы, нарезанный по подсистемам: один урок — одна подсистема со своим
 манифестом (ADR-0090 доп. (2)). Каталог урока — `NN-<имя>`, номер урока — адрес владельца (`V/NN`), карта —
-[`common/lessons.tsv`](../common/lessons.tsv). Общее для всех уроков — [`common/`](../common/README.md). Раскладка урока —
+[`common/lessons.tsv`](../common/lessons.tsv). Общее для всех уроков — [`common/`](../common/ru/README.md). Раскладка урока —
 как у `Platform/`: лекция `NN-<имя>.md`, нормы `spec/`, приёмка `acceptance/`, данные `data/`, векторы `vectors/`. Семьи
 данных VMS — JSON Schema 2020-12 со слоями `Platform/common/LAYERS.md`, как у платформы (ADR-0092).
 
