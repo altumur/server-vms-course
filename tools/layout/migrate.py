@@ -7,14 +7,20 @@ text as a mirror in `ru/`, forms in `forms/`, logs in `journal/`.
     python tools/layout/migrate.py <урок> --phase links    # 3rd commit: links over the course, heads of pairs (once)
     python tools/layout/migrate.py --phase relink          # any time: links into moved lessons by meaning (idempotent)
 
-`<урок>` — `Platform/NN-<имя>`, `VMS/NN-<имя>`, `Platform/common` or `VMS/common`. Run from the root of the course. Each
+`<урок>` — `Platform/NN-<имя>`, `VMS/NN-<имя>`, `Platform/common` or `VMS/common`; or a shallow home: `.` — the root of
+the course (`НОРМАТИВНЫЕ-СЛОВА.md`, `КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`; ADR-0124 доп. (1) п. 4), `Platform` or `VMS` — the
+README of a module. A shallow home holds its own files only (not its subdirectories but `en/` and `ru/`); only its pairs
+`en/X.en.md` ↔ `X` move, its other Russian files (notes of the course) stay and are not sources. Run from the root of
+the course. Each
 phase stages its own paths only (`git mv`, `git add <путь>`), the commit is the operator's. The table of moves is kept for
 good in `tools/layout/moves.tsv`: a reader of an old ADR finds the new place by it. Machine Markdown (`harness/**` — the
 bytes of a product prompt, ADR-0124 доп. (1) п. 4) is not moved, not translated and not rewritten.
 
 `links` = the table step and the meaning step; it runs once per lesson right after `en` (moves.tsv keeps the mark
 `linked`): the table step resolves the links of a moved file from its former place. `relink` is the meaning step alone,
-over every moved lesson; run it after merging texts written by the former habit. Every problem — a syntax the rewriter
+over every moved lesson; run it after merging texts written by the former habit. `--keep <префикс>` (repeated) leaves
+the files under the prefix as they are — a parallel branch moves them (`VMS/common`); what the phase would change there
+is printed «KEPT», and `relink` after the merge does it. Every problem — a syntax the rewriter
 cannot read (`links.missed`), a Russian anchor without its English pair, a link that must become text but is a
 definition — is found before anything is written, and the phase exits 1.
 
@@ -66,11 +72,11 @@ def tracked(prefix=None):
 
 def plan(home):
     """The moves of a lesson in the former layout → [(old, new, kind)], paths from the root of the course."""
-    files = tracked(home)
-    rel = [f[len(home) + 1:] for f in files]
+    rel = [inside(home, f) for f in own(home)]
     if any(r.startswith("ru/") for r in rel):
         raise SystemExit(f"{home}: already has ru/ — moved")
     name = Path(home).name
+    shallow = home in SHALLOW
     sources = {}
     for r in rel:
         m = re.fullmatch(r"(?:(.*)/)?en/([^/]+)\.en\.md", r)
@@ -80,7 +86,10 @@ def plan(home):
     for r in sorted(rel):
         if re.search(r"(?:^|/)en/[^/]+\.en\.md$", r) or MACHINE_MD.search(r):
             continue
-        if r.endswith(".md"):
+        if shallow:                                    # only the pairs move; the notes of the course stay
+            if r in sources:
+                rows.append((r, f"ru/{r}", "translation"))
+        elif r.endswith(".md"):
             if r == f"{name}.md":
                 rows.append((r, f"ru/{r}", "lecture"))
             elif r in sources:
@@ -97,7 +106,7 @@ def plan(home):
         rows.append((en, x, "source"))
     if missing:
         raise SystemExit(f"{home}: not translated whole — no English source for: " + ", ".join(missing))
-    return [(f"{home}/{o}", f"{home}/{n}", k) for o, n, k in rows]
+    return [(under(home, o), under(home, n), k) for o, n, k in rows]
 
 
 def read_moves():
@@ -135,24 +144,59 @@ def prune_empty(home):
 
 # ---- classes of files ---------------------------------------------------------------------------------------------
 
+MODULES = ("Platform", "VMS")
+SHALLOW = (".", *MODULES)                               # homes of their own files only: the root, a module directory
+
+
 def home_of(path):
-    parts = Path(path).parts
-    return "/".join(parts[:2]) if len(parts) >= 2 and parts[0] in ("Platform", "VMS") else None
+    """The home of a file: a lesson (or `common`) `Platform/<x>`, `VMS/<x>`; a module `Platform`, `VMS` for the files of
+    the module directory itself and of its `en/`, `ru/`; the root `.` for the files of the root and of its `en/`, `ru/`;
+    otherwise None."""
+    parts = Path(os.path.normpath(path)).parts
+    if not parts or parts == (".",):
+        return None
+    if parts[0] in MODULES:
+        if len(parts) >= 3 and parts[1] not in ("en", "ru"):
+            return "/".join(parts[:2])
+        return parts[0] if len(parts) >= 2 else None
+    return "." if len(parts) == 1 or parts[0] in ("en", "ru") else None
+
+
+def under(home, rest):
+    """A path of a home → from the root of the course."""
+    return rest if home == "." else f"{home}/{rest}"
+
+
+def inside(home, path):
+    """A path from the root of the course → from its home."""
+    return path if home == "." else path[len(home) + 1:]
+
+
+def own(home):
+    """The tracked files of a home (a shallow home: its own files, `en/` and `ru/`)."""
+    if home in SHALLOW:
+        return [p for p in tracked(None if home == "." else home) if home_of(p) == home]
+    return tracked(home)
 
 
 def moved_homes():
     return {lesson for lesson, *_ in read_moves()}
 
 
-def file_class(path, text, homes):
-    """source, translation, history, machine or other — of the linking file by its path now."""
+def file_class(path, text, homes, sources=frozenset()):
+    """source, translation, history, machine or other — of the linking file by its path now. `sources` — the sources of
+    the moved shallow homes (the root, a module): there only they are sources, the notes beside them are «other»."""
     if HISTORY.search(path):
         return "history"
     if MACHINE_MD.search(path):
         return "machine"
     home = home_of(path)
+    if home in homes and home in SHALLOW:
+        if inside(home, path).startswith("ru/"):
+            return "translation"
+        return "source" if path in sources else "other"
     if home in homes:
-        rest = path[len(home) + 1:]
+        rest = inside(home, path)
         if rest == f"ru/{Path(home).name}.md":
             return "lecture"                             # Russian for people, no pair: links into ru/ stay links
         if rest.startswith("ru/"):
@@ -179,9 +223,11 @@ def heading_map(a, b):
 class Rewriter:
     """`moves` — of the lesson being moved (the table step); `homes` — every moved lesson (the meaning step)."""
 
-    def __init__(self, root, homes, moves=()):
+    def __init__(self, root, homes, moves=(), keep=()):
         self.root = Path(root)
         self.homes = homes
+        self.keep = tuple(keep)
+        self.sources = {n for lesson, o, n, k in read_moves() if k == "source" and lesson in SHALLOW}
         self.new_of = {o: n for o, n, _ in moves}
         self.old_of = {n: o for o, n, _ in moves}
         self.kind = {o: k for o, n, k in moves}
@@ -229,10 +275,10 @@ class Rewriter:
         home = home_of(target)
         if home not in self.homes:
             return target, anchor, "link"
-        rest = target[len(home) + 1:]
+        rest = inside(home, target)
         mirror = cls in ("source", "translation")       # a translation mirrors its source: text where the source has text
         if rest.startswith("ru/"):
-            source = f"{home}/{rest[3:]}"
+            source = under(home, rest[3:])
             if self.exists(source) and target.endswith(".md"):
                 if cls in ("translation", "lecture"):
                     return target, self.anchor(source, target, anchor, where), "link"
@@ -240,7 +286,7 @@ class Rewriter:
             return target, anchor, ("text" if mirror else "link")    # the lecture: for people only
         if rest.startswith("journal/"):
             return target, anchor, ("text" if mirror else "link")
-        translation = f"{home}/ru/{rest}"
+        translation = under(home, f"ru/{rest}")
         if target.endswith(".md") and self.exists(translation):
             mine = path == translation                    # a translation names its own source
             if cls in ("translation", "lecture") and not mine:
@@ -251,7 +297,7 @@ class Rewriter:
     def rewrite(self, path, table=True):
         """→ the new text of a file or None (unchanged); problems are collected, nothing is written."""
         text = (self.root / path).read_text(encoding="utf-8")
-        cls = file_class(path, text, self.homes)
+        cls = file_class(path, text, self.homes, self.sources)
         if cls == "machine":
             return None
         for href in L.missed(text):
@@ -276,7 +322,7 @@ class Rewriter:
                     self.problems.append(f"{where}: a link definition must become text — edit by hand")
                     continue
                 home = home_of(target)
-                name = target[len(home) + 1:] if home_of(path) == home else target
+                name = inside(home, target) if home_of(path) == home else target
                 note = (JOURNAL_NOTE if "/journal/" in target else NOTE)[lang]
                 inner = t.text
                 rep = f"`{name}` ({note})" if re.fullmatch(r"`[^`]+`", inner) else f"{inner} (`{name}`, {note})"
@@ -306,6 +352,10 @@ class Rewriter:
         return "".join(out)
 
 
+def kept(path, keep):
+    return any(path == k or path.startswith(k.rstrip("/") + "/") for k in keep)
+
+
 def rewrite_course(rw, table):
     """Plan every rewrite, stop before writing if anything is wrong; → the changed paths."""
     plans = {}
@@ -314,6 +364,9 @@ def rewrite_course(rw, table):
             new = rw.rewrite(path, table=table)
             if new is not None:
                 plans[path] = new
+    for path in [p for p in plans if kept(p, rw.keep)]:
+        print("KEPT", path, "(a parallel branch moves it: relink after the merge)")
+        del plans[path]
     for w in sorted(set(rw.warnings)):
         print("WARNING", w)
     if rw.problems:
@@ -335,7 +388,7 @@ def heads(home, moves):
     done = []
     for old, new, kind in moves:
         if kind == "source":                           # old en/…en.md → X: its translation is ru/X
-            rel = new[len(home) + 1:]
+            rel = inside(home, new)
             src = Path(new)
             text = src.read_text(encoding="utf-8")
             fixed = EN_HEAD.sub(lambda m: f"the Russian translation `ru/{rel}` ({NOTE['en']}){m.group(1)}", text, count=1)
@@ -353,7 +406,7 @@ def heads(home, moves):
     return done
 
 
-def mentions(moves):
+def mentions(moves, keep=()):
     """Full paths of files that are no more, in text of live files (not history), by the table → [(file, count)]."""
     gone = {o: n for o, n, k in moves if k in ("source", "lecture", "form", "journal")}
     if not gone:
@@ -364,6 +417,10 @@ def mentions(moves):
         if (HISTORY.search(path) and path not in LIVE_TABLES) or Path(path).resolve() == MOVES or MACHINE_MD.search(path):
             continue
         if not path.endswith((".md", ".tsv", ".yaml", ".json", ".txt")):
+            continue
+        if kept(path, keep):
+            if pattern.search(Path(path).read_text(encoding="utf-8", errors="replace")):
+                print("KEPT", path, "(text mentions of gone paths: relink after the merge does not fix them — by hand)")
             continue
         try:
             text = Path(path).read_text(encoding="utf-8")
@@ -385,17 +442,19 @@ def main(argv):
     ap = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     ap.add_argument("lesson", nargs="?")
     ap.add_argument("--phase", required=True, choices=["plan", "ru", "en", "links", "relink"])
+    ap.add_argument("--keep", action="append", default=[], help="leave files under this prefix as they are")
     args = ap.parse_args(argv)
     if args.phase == "relink":
-        rw = Rewriter(Path.cwd(), moved_homes())
+        rw = Rewriter(Path.cwd(), moved_homes(), keep=args.keep)
         touched = rewrite_course(rw, table=False)
         for p in touched:
             git("add", p)
         report(rw)
         return 0
-    home = (args.lesson or "").rstrip("/")
-    if not Path(home).is_dir() or home_of(home) != home:
-        raise SystemExit(f"{home}: not a lesson directory (Platform/NN-<имя>, VMS/NN-<имя>, */common)")
+    home = (args.lesson or "").rstrip("/") or "."
+    if not Path(home).is_dir() or home_of(f"{home}/x") != home:
+        raise SystemExit(f"{home}: not a lesson directory (Platform/NN-<имя>, VMS/NN-<имя>, */common) nor a shallow home "
+                         "(., Platform, VMS)")
     if args.phase == "plan":
         for row in (lesson_moves(home) or plan(home)):
             print("\t".join(row))
@@ -418,16 +477,23 @@ def main(argv):
             if kind in ("source", "form", "journal"):
                 git_mv(old, new)
                 n += 1
-        prune_empty(home)
+        if home in SHALLOW:                            # its en/ only: the rest of a shallow home is not moved
+            en = Path(under(home, "en"))
+            if en.is_dir():
+                prune_empty(en)
+                if not any(en.iterdir()):
+                    en.rmdir()
+        else:
+            prune_empty(home)
         print(f"{home}: {n} files → canonical paths, forms/, journal/")
         return 0
     if any(r[0] == home and r[3] == "linked" for r in read_moves()):
         raise SystemExit(f"{home}: links already done — use --phase relink")
-    rw = Rewriter(Path.cwd(), moved_homes(), rows)
+    rw = Rewriter(Path.cwd(), moved_homes(), rows, keep=args.keep)
     touched = rewrite_course(rw, table=True)
     head = heads(home, rows)
-    ment = mentions(rows)
-    rw2 = Rewriter(Path.cwd(), moved_homes())         # the meaning step once more: idempotent, after heads
+    ment = mentions(rows, keep=args.keep)
+    rw2 = Rewriter(Path.cwd(), moved_homes(), keep=args.keep)         # the meaning step once more: idempotent, after heads
     touched2 = rewrite_course(rw2, table=False)
     write_moves(read_moves() + [(home, "-", "-", "linked")])
     for p in sorted(set(touched) | set(touched2) | set(head) | {p for p, _ in ment}) + ["tools/layout/moves.tsv"]:

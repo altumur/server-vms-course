@@ -3,17 +3,23 @@
 Шаблоны заполняются после выбора норм. Они помогают разместить готовое содержание и не принимают
 архитектурных решений. При переносе источник разделов — существующий урок, а не образец другого урока.
 
-| Исходник | Назначение в модуле | Подстановки |
+Раскладка — ADR-0124 ([SKILL.md](../SKILL.md), «Где что лежит»): источник — английский на каноническом пути урока,
+перевод — тем же путём в `ru/`, лекция — только в `ru/`.
+
+| Исходник | Назначение в уроке | Подстановки |
 |---|---|---|
-| `assets/lecture.md` | `NN-slug.md` | `STEM`, `TITLE`, `MODULE`, `LESSON`, ссылки и объяснение |
-| `assets/norms.md` | `spec/NN-slug.norms.md` | те же; `ID_PREFIX`, `N0_LINK`, `ACCEPTANCE_LINK`, формы и проходы |
-| `assets/instructions.md` | `spec/NN-slug.README.md` | те же; подготовка и проверка реализации |
-| `assets/api.openapi.yaml` | `spec/NN-slug.api.openapi.yaml` | `TITLE`; реальные маршруты, схемы и ответы |
+| `assets/lecture.md` | `ru/NN-slug.md` (для человека, без пары, не в выгрузке) | `STEM`, `TITLE`, `MODULE`, `LESSON`, ссылки и объяснение |
+| `assets/norms.md` | `spec/NN.K-slug.norms.md` (en) и перевод `ru/spec/NN.K-slug.norms.md` | те же; `ID_PREFIX`, `N0_LINK`, `ACCEPTANCE_LINK`, формы и проходы |
+| `assets/instructions.md` | `spec/NN-slug.README.md` (en) и перевод `ru/spec/NN-slug.README.md` | те же; подготовка и проверка реализации |
+| `assets/api.openapi.yaml` | `spec/NN-slug.api.openapi.yaml` (без перевода: машинный файл) | `TITLE`; реальные маршруты, схемы и ответы |
 
 - `STEM` — полное имя без расширения, например `03-units-slots-epochs-lease`.
 - `ID_PREFIX` — адрес норм, например `P/03.2` (глава урока «Платформы») или `М11/3`; буква модуля допустима (`М12A/1`).
-- `ACCEPTANCE_LINK` из `spec/` модуля — например `../acceptance/2/README.md` из `Platform/03-worker/spec/` (приёмка главы 3.2).
-- `N0_LINK` — относительный путь к словарю нормативных слов курса `НОРМАТИВНЫЕ-СЛОВА.md` в корне курса: из `<модуль>/spec/` это `../../НОРМАТИВНЫЕ-СЛОВА.md`, из `Platform/NN-<процесс>/spec/` — `../../../НОРМАТИВНЫЕ-СЛОВА.md`.
+- `ACCEPTANCE_LINK` из `spec/` урока — например `../acceptance/2/README.md` из `Platform/03-worker/spec/` (приёмка главы 3.2);
+  из перевода `ru/spec/` — `../acceptance/2/README.md` тоже (перевод README приёмки — `ru/acceptance/2/README.md`).
+- `N0_LINK` — относительный путь к словарю нормативных слов курса в корне: у источника — английский
+  `НОРМАТИВНЫЕ-СЛОВА.md` (из `Platform/NN-<процесс>/spec/` — `../../../НОРМАТИВНЫЕ-СЛОВА.md`), у перевода — русский
+  `ru/НОРМАТИВНЫЕ-СЛОВА.md` (из `Platform/NN-<процесс>/ru/spec/` — `../../../../ru/НОРМАТИВНЫЕ-СЛОВА.md`).
   Н0 не копируется.
 
 ## Разделы

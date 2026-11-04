@@ -300,30 +300,30 @@ def human_text(path, root):
     """The Russian text of a lesson file: in the layout of ADR-0124 the translation `ru/X` of the source `X`, otherwise the
     file itself. The checks of norms, «Данные», counts and families read the Russian text (their words are Russian);
     `en_mirror` holds the source and the translation to one content."""
+    import en_mirror                                # the homes of the layout: lessons, the root, a module directory
     path = Path(path)
-    try:
-        parts = path.relative_to(root).parts
-    except ValueError:
-        return path
-    if len(parts) >= 3 and parts[0] in ("Platform", "VMS") and parts[2] not in ("ru", "journal") \
-            and (Path(root) / parts[0] / parts[1] / "ru").is_dir():
-        return Path(root) / parts[0] / parts[1] / "ru" / Path(*parts[2:])
+    moved = en_mirror.home_of(path, root)
+    if moved and moved[1].parts[0] not in ("ru", "journal"):
+        return moved[0] / "ru" / moved[1]
     return path
 
 
 def outside_export(path, root):
-    """`ru/` or `journal/` of a lesson in the layout of ADR-0124 — not in the export (ADR-0124 item 4)."""
-    try:
-        parts = Path(os.path.normpath(path)).relative_to(root).parts
-    except ValueError:
-        return False
-    return len(parts) >= 3 and parts[0] in ("Platform", "VMS") and parts[2] in ("ru", "journal") \
-        and (Path(root) / parts[0] / parts[1] / "ru").is_dir()
+    """`ru/` or `journal/` of a lesson in the layout of ADR-0124, `ru/` of the root or of a module directory — not in the
+    export (ADR-0124 item 4, addendum (1) item 4)."""
+    import en_mirror
+    moved = en_mirror.home_of(os.path.normpath(path), root)
+    return bool(moved) and moved[1].parts[0] in ("ru", "journal")
 
 
 def source_file(path, root):
     """A Markdown file the generator reads and the export carries: outside `ru/` and `journal/` of a lesson in the layout
-    of ADR-0124, or an English `en/<имя>.en.md` of the former layout."""
+    of ADR-0124, a source `X` of the root or of a module directory with `ru/X`, or an English `en/<имя>.en.md` of the
+    former layout."""
+    import en_mirror
+    moved = en_mirror.home_of(path, root)
+    if moved:
+        return moved[1].parts[0] not in ("ru", "journal")
     try:
         parts = Path(path).relative_to(root).parts
     except ValueError:
@@ -331,7 +331,7 @@ def source_file(path, root):
     if len(parts) < 3 or parts[0] not in ("Platform", "VMS"):
         return False
     if (Path(root) / parts[0] / parts[1] / "ru").is_dir():
-        return parts[2] not in ("ru", "journal")
+        return False
     return len(parts) >= 2 and parts[-2] == "en" and parts[-1].endswith(".en.md")
 EXCEPTION_KINDS = {"no-openapi", "scenarios-format", "acceptance-entry", "no-acceptance", "no-schema",
                    "data-paragraph", "family-read", "implied"}
@@ -2075,7 +2075,7 @@ class Check:
             for message in en_mirror.compare(texts[1], texts[0], ru, en, self.root):
                 self.error(en, f"ru↔en: {message}")
             self.stats["english_mirrors"] += 1
-        for ru in sorted([*self.root.glob("Platform/**/*.md"), *self.root.glob("VMS/**/*.md")]):
+        for ru in sorted([*self.root.glob("Platform/**/*.md"), *self.root.glob("VMS/**/*.md"), *self.root.glob("ru/*.md")]):
             if ru.parent.name == "en":
                 continue
             moved = en_mirror.home_of(ru, self.root)

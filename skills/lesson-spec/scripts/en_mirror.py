@@ -5,7 +5,9 @@
   урока) с пометкой «производный от `X`, руками не правится». Ссылки перевода ведут в переводы (`ru/Y`, русский якорь),
   ссылки источника — в источник (`Y`, английский якорь): при сверке цель перевода `<урок>/ru/Y#якорь` читается как
   `<урок>/Y#английский-якорь` по парам заголовков `Y` и `ru/Y` (один к одному). Построенные блоки сверяются по
-  разрешённым целям ссылок: у источника и перевода глубина путей разная.
+  разрешённым целям ссылок: у источника и перевода глубина путей разная. Мелкие дома — корень курса
+  (`НОРМАТИВНЫЕ-СЛОВА.md`, `КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`; доп. (1) п. 4) и каталог модуля (`VMS/README.md`) с `ru/`:
+  пара — свой файл `X` ↔ `ru/X`; прочие файлы рядом (записки курса, `Platform/lessons.tsv`) — не источники.
 - Прежняя (ADR-0121): английский `<каталог>/en/<имя>.en.md` — источник (нормы — в `spec/en/`); русский
   `<каталог>/<имя>.md` — производный, с пометкой «производный от en, руками не правится».
 Сверяется по разделам `##` и `###`, по порядку: разделов столько же,
@@ -41,17 +43,35 @@ def mark(rel):
     return f"производный от `{rel}`, руками не правится"
 
 
+MODULES = ("Platform", "VMS")
+
+
 def home_of(path, root):
-    """The lesson (or `common`) of a path in the layout of ADR-0124 → (home, path from the home) or None: a directory
-    `Platform/<x>` or `VMS/<x>` that holds `ru/`."""
+    """The home of a path in the layout of ADR-0124 → (home, path from the home) or None:
+    - a lesson (or `common`): a directory `Platform/<x>` or `VMS/<x>` that holds `ru/` — any path in it;
+    - a shallow home (ADR-0124 доп. (1) п. 4): the root of the course or a module directory `Platform`, `VMS` that holds
+      `ru/` — its `ru/…` and its own file `X` that has the translation `ru/X` (the notes beside it are not sources)."""
+    root = Path(root)
     try:
-        parts = Path(os.path.normpath(Path(path))).relative_to(Path(root)).parts
+        parts = Path(os.path.normpath(Path(path))).relative_to(root).parts
     except ValueError:
         return None
-    if len(parts) < 3 or parts[0] not in ("Platform", "VMS"):
+    if not parts:
         return None
-    home = Path(root) / parts[0] / parts[1]
-    return (home, Path(*parts[2:])) if (home / "ru").is_dir() else None
+    if parts[0] in MODULES and len(parts) >= 3 and parts[1] not in ("en", "ru"):
+        home = root / parts[0] / parts[1]
+        return (home, Path(*parts[2:])) if (home / "ru").is_dir() else None
+    if parts[0] in MODULES:
+        home, rest = root / parts[0], parts[1:]
+    elif len(parts) == 1 or parts[0] in ("en", "ru"):
+        home, rest = root, parts
+    else:
+        return None
+    if not rest or not (home / "ru").is_dir():
+        return None
+    if rest[0] == "ru" or (len(rest) == 1 and (home / "ru" / rest[0]).is_file()):
+        return home, Path(*rest)
+    return None
 
 
 def slug(text):
@@ -102,9 +122,9 @@ def as_source(rel, root):
     """A target `<урок>/ru/Y[#a]` (path from the root) → `<урок>/Y[#английский a]` when `Y` is a source of a lesson in
     the layout of ADR-0124; any other target as is."""
     path, _, anchor = rel.partition("#")
-    parts = Path(path).parts
-    if len(parts) >= 4 and parts[0] in ("Platform", "VMS") and parts[2] == "ru" and (Path(root) / parts[0] / parts[1] / "ru").is_dir():
-        source = Path(parts[0], parts[1], *parts[3:])
+    moved = home_of(Path(root) / path, root)
+    if moved and len(moved[1].parts) >= 2 and moved[1].parts[0] == "ru":
+        source = (moved[0] / Path(*moved[1].parts[1:])).relative_to(Path(root))
         if (Path(root) / source).exists():
             if "#" in rel:
                 anchor = source_anchor(Path(root) / source, Path(root) / path, anchor)
@@ -368,8 +388,9 @@ def compare(ru_text, en_text, ru_path, en_path, root):
 
 
 def pairs(root):
-    """English sources → (ru, en), в Platform/ и VMS/:
+    """English sources → (ru, en), в Platform/, VMS/ и в корне курса:
     - урок с `ru/` (ADR-0124): каждый `*.md` урока вне `ru/` и `journal/` — источник `X`, перевод — `ru/X`;
+    - мелкий дом с `ru/` (корень курса, каталог модуля; ADR-0124 доп. (1) п. 4): каждый `ru/X.md` — перевод своего `X`;
     - урок без `ru/` (ADR-0121 п. 1): `<каталог>/en/<имя>.en.md` ↔ `<каталог>/<имя>.md` (нормы в `spec/en/`, у прочих
       каталогов — `en/` рядом); корневые НОРМАТИВНЫЕ-СЛОВА и КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ — `en/` в корне (ADR-0124 доп. (1)
       п. 4)."""
@@ -381,6 +402,9 @@ def pairs(root):
             rel = x.relative_to(home)
             if rel.parts[0] not in ("ru", "journal") and not MACHINE_MD.search(rel.as_posix()):
                 out.append((home / "ru" / rel, x))
+    for home in [root, *(root / m for m in MODULES)]:
+        if (home / "ru").is_dir():
+            out.extend((ru, home / ru.name) for ru in sorted((home / "ru").glob("*.md")))
     for en in sorted([*root.glob("Platform/**/en/*.en.md"), *root.glob("VMS/**/en/*.en.md"), *root.glob("en/*.en.md")]):
         if not any(en.is_relative_to(h) for h in homes):
             out.append((en.parent.parent / en.name.replace(".en.md", ".md"), en))
