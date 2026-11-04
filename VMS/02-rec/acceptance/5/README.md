@@ -1,9 +1,9 @@
 # Acceptance V/02.5 — the archive door
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/5/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`02.5-rec.norms.md`](../../../spec/02.5-rec.norms.md) Н5. The stand is as in [acceptance 4](../../4/README.md); the recorder's archive
-door is on loopback without a kit (`archive <воркер>` of [the common VMS acceptance README](../../../../common/acceptance/README.md)).
+The norm of the chapter is [`02.5-rec.norms.md`](../../spec/02.5-rec.norms.md) Н5. The stand is as in [acceptance 4](../4/README.md); the recorder's archive
+door is on loopback without a kit (`archive <воркер>` of [the common VMS acceptance README](../../../common/acceptance/README.md)).
 
 | Steps of `01-door` | Norm | What it observes |
 |---|---|---|

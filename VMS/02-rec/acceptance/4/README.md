@@ -1,9 +1,9 @@
 # Acceptance V/02.4 — the recorder
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/4/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`02.4-rec.norms.md`](../../../spec/02.4-rec.norms.md) Н5. The stand and the directives are in [the common VMS acceptance
-README](../../../../common/acceptance/README.md) (export `7a875c75`).
+The norm of the chapter is [`02.4-rec.norms.md`](../../spec/02.4-rec.norms.md) Н5. The stand and the directives are in [the common VMS acceptance
+README](../../../common/acceptance/README.md) (export `7a875c75`).
 
 ## Preparation
 

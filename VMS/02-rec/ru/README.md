@@ -2,11 +2,11 @@
 
 Статус: **переведён** — главы V/02.1–V/02.9; разделы «Решения, принятые для плана», «Запросы урока», «Отличия от
 свидетеля», «Правки манифеста», «Порядок работы» — история перевода. Источники — опись
-[`../common/inventory.md`](../common/inventory.md) § 1, § 2. Платформа — выгрузка `cammeta-specs` `7a875c75` (заголовки глав —
+[`../common/inventory.md`](../../common/inventory.md) § 1, § 2. Платформа — выгрузка `cammeta-specs` `7a875c75` (заголовки глав —
 на своих выгрузках). Манифест —
-[`rec.subsystem.yaml`](rec.subsystem.yaml) (канон; ADR-0090 доп. (6) п. 8).
+[`rec.subsystem.yaml`](../rec.subsystem.yaml) (канон; ADR-0090 доп. (6) п. 8).
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+Текст производный от `README.md`, руками не правится: источник — английский [`README.md`](../README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
 ## Что такое урок V/02
 
@@ -40,10 +40,10 @@
   `rec/ingest/clock/*`, `rec/ingest/up/*` (`objects`), долг заказа `rec/state/scan/*`, просьбы `rec/requests/*`, вклады в книги `rec/primaries/*`,
   `rec/upstream/*`, `rec/polls/*`, отчёт `rec/polled/<приёмник>`.
 - **Семьи данных** — своё содержимое в открытых местах семей платформы, которое читают другие процессы и манифест не
-  выражает, — [`data/`](data/): слова пульса `rec-heartbeat-words` (`ingest`, `url`, `volume`, `stream.lagging`, `written_through`
+  выражает, — [`data/`](../data/): слова пульса `rec-heartbeat-words` (`ingest`, `url`, `volume`, `stream.lagging`, `written_through`
   элемента записи; место — корень пульса, пустой указатель), `value` элементов книг `primaries-entry`, `ingest-entry`, `polls-entry`,
   `upstream-entry` (место `/*/entries/*/value`; `#copy` — копия у члена, `#member` — строка члена у держателя домена; у `primaries`, `ingest` только `#member`: книги всем, ключи одни) —
-  форма, слои, исходы по читателям; строки — в каталоге VMS [`../common/data/catalog.tsv`](../common/data/catalog.tsv)
+  форма, слои, исходы по читателям; строки — в каталоге VMS [`../common/data/catalog.tsv`](../../common/data/catalog.tsv)
   (колонка `place`). Объекты `rec/ingest/*`, `rec/sealed/*`, `rec/used/*`, `rec/taken/*` (`objects` манифеста) и вклады
   `rec/<книга>/<слот>` — форма манифеста, семьёй VMS не судятся; свидетель `rec/polled/<слот>` читает консоль домена по
   объявлению `witness` (P/10 Н1.8). Векторы — построитель `family-read` (`VMS/common/vectors/family-read/02.tsv`).
@@ -98,6 +98,6 @@ obsd}`, `worker.uses: [cam.shm, rec.obsd]`, `worker.stop_timeout: 47`, `unit.sta
 
 Глава за главой, коммит на главу: V/02.1 → V/02.2 → V/02.3 → V/02.4 → V/02.5 → V/02.6 → V/02.7 → V/02.8 → V/02.9. Лекция
 `02-rec.md` и инструкция `spec/02-rec.README.md` — с первой главой, дополняются по главам. Приёмка — сценариями вместе с
-главой (общий стенд — [`../common/acceptance/README.md`](../common/acceptance/README.md); движку нужен живой `obsd` с
+главой (общий стенд — [`../common/acceptance/README.md`](../../common/acceptance/README.md); движку нужен живой `obsd` с
 патчами — стенд называет его подстановкой `{obsd}`); прогон — после первой генерации стадии C, прошедшей приёмку платформы. `lessons.tsv` —
 `переведён` после последней главы.

@@ -1,9 +1,9 @@
 # The contract of the archive engine `obsd` (lesson V/02)
 
-This English text is the source; the Russian [`02-rec.obsd.contract.md`](../02-rec.obsd.contract.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/02-rec.obsd.contract.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The contract of the part `obsd` of the subsystem `rec` — the socket protocol and the properties of the engine that the recorder (chapters
-V/02.3, V/02.4) and the archive door (V/02.5) rely on. This file is the canon; the norms of chapter [V/02.2](../02.2-rec.norms.md) are what `rec` requires of the
+V/02.3, V/02.4) and the archive door (V/02.5) rely on. This file is the canon; the norms of chapter [V/02.2](02.2-rec.norms.md) are what `rec` requires of the
 part (the service, the share, the environment, the timeouts, the engine version). The engine is ObjectStorage (tree `2bbee4a`, 2026-10-02) with the patches
 01–07 (V/02.2 Н1.4); the contract describes what is observable on the socket and in the volume, not the structure of the client.
 

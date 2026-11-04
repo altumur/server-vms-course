@@ -1,12 +1,12 @@
 # V/02 Recording
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 Status: **translated** — chapters V/02.1–V/02.9; the sections «Decisions taken for the plan», «Inquiries of the lesson», «Differences from
 the witness», «Manifest edits», «Order of work» are the history of the translation. Sources: the inventory
-[`../common/inventory.md`](../../common/inventory.md) § 1, § 2. The platform: the export `cammeta-specs` `7a875c75` (the chapter headers —
+[`../common/inventory.md`](../common/inventory.md) § 1, § 2. The platform: the export `cammeta-specs` `7a875c75` (the chapter headers —
 on their own exports). The manifest is
-[`rec.subsystem.yaml`](../rec.subsystem.yaml) (the canon; ADR-0090 addendum (6) item 8).
+[`rec.subsystem.yaml`](rec.subsystem.yaml) (the canon; ADR-0090 addendum (6) item 8).
 
 ## What lesson V/02 is
 
@@ -40,10 +40,10 @@ The subsystems that consume the archive door are the page (V/11, the shell) and 
   `rec/ingest/clock/*`, `rec/ingest/up/*` (`objects`), the order debt `rec/state/scan/*`, the requests `rec/requests/*`, the contributions to the books `rec/primaries/*`,
   `rec/upstream/*`, `rec/polls/*`, the report `rec/polled/<приёмник>`.
 - **Data families** — the lesson's own content in the open places of the platform families, which other processes read and the manifest does not
-  express — [`data/`](../data/): the heartbeat words `rec-heartbeat-words` (`ingest`, `url`, `volume`, `stream.lagging`, `written_through`
+  express — [`data/`](data/): the heartbeat words `rec-heartbeat-words` (`ingest`, `url`, `volume`, `stream.lagging`, `written_through`
   of a recording element; the place is the heartbeat root, an empty pointer), `value` of the elements of the books `primaries-entry`, `ingest-entry`, `polls-entry`,
   `upstream-entry` (the place `/*/entries/*/value`; `#copy` — the copy at the member, `#member` — the member row at the domain holder; `primaries`, `ingest` have only `#member`: the books go to all, the keys are one) —
-  the form, the layers, the outcomes per reader; the rows are in the VMS catalogue [`../common/data/catalog.tsv`](../../common/data/catalog.tsv)
+  the form, the layers, the outcomes per reader; the rows are in the VMS catalogue [`../common/data/catalog.tsv`](../common/data/catalog.tsv)
   (the column `place`). The objects `rec/ingest/*`, `rec/sealed/*`, `rec/used/*`, `rec/taken/*` (`objects` of the manifest) and the contributions
   `rec/<книга>/<слот>` are a form of the manifest, they are not judged by a VMS family; the witness `rec/polled/<слот>` is read by the domain console per the
   declaration `witness` (P/10 Н1.8). The vectors — the builder `family-read` (`VMS/common/vectors/family-read/02.tsv`).
@@ -98,6 +98,6 @@ norms. The product — by a debt row to «Сборка» per chapter.
 
 Chapter by chapter, a commit per chapter: V/02.1 → V/02.2 → V/02.3 → V/02.4 → V/02.5 → V/02.6 → V/02.7 → V/02.8 → V/02.9. The lecture
 `02-rec.md` and the instructions `spec/02-rec.README.md` — with the first chapter, supplemented chapter by chapter. Acceptance — as scenarios together with the
-chapter (the common stand — [`../common/acceptance/README.md`](../../common/acceptance/README.md); the engine needs a live `obsd` with
+chapter (the common stand — [`../common/acceptance/README.md`](../common/acceptance/README.md); the engine needs a live `obsd` with
 patches — the stand names it by the substitution `{obsd}`); the run — after the first stage C generation that has passed the platform acceptance. `lessons.tsv` —
 `переведён` after the last chapter.
