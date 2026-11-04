@@ -159,14 +159,14 @@ admin; агент остановлен — его отчёт с `tls_ca` вер�
 Т-правка по ADR-0083 доп. (18): прежние «502 у пересылающей» и журнал со `status: 502` сняты — по маршруту P/06.7 Н1.4
 к двери роли держателя идёт консоль кластера `hold`, чей центр в объединении всегда, а не консоль `m2`). Положительный
 контроль строки 1 — до снятия, и сразу её журнал тем же чтением, что ниже: `events[0]` ⊇ `{kind: domain.forwarded,
-cluster: hold, path: /domain, status: 200, id: $positive_forward_id}` — связать `id` ([P/05](../../../05-resource/spec/05-resource.norms.md)
+cluster: hold, path: /domain, status: 200, id: $positive_forward_id}` — связать `id` ([P/05](../../../05-resource/ru/spec/05-resource.norms.md)
 Н1.3 `row`; словарь «Стенда домена» `$имя`); затем остановить агент `m2` (`@stop agent m2`: отчёт агента не вернёт центр в
 объединение) и `holder POST /domain/members/m2/ca {"ca": []}`; после этого строка 2 — проба `@tls` двери `holder`
 клиентом `m2-console`, строка 3 — `member m2 console GET /domain` → `200`. Журнал пересылающей (строка 3) читается
 штатной дверью ресурса, без новой директивы: `@until 30 member m2 resource GET
 /events?kind=domain.forwarded&unit=audit/console&keep=newest&limit=1` → `200`, `events[0]` ⊇ `{kind: domain.forwarded,
 cluster: hold, path: /domain, user: <имя токена стенда>, status: 200, id: @not($positive_forward_id)}`
-([P/05](../../../05-resource/spec/05-resource.norms.md) Н1.3 `query`, `row`): обе пересылки дают `200`, и без `@not` по `id`
+([P/05](../../../05-resource/ru/spec/05-resource.norms.md) Н1.3 `query`, `row`): обе пересылки дают `200`, и без `@not` по `id`
 прежняя запись строки 1 дала бы ложный проход (замечание «cammeta-acceptance» 2026-10-21 к 967baf9ad).
 
 **№ 14, отказ рукопожатия двери роли на переходе 2** (ADR-0083 доп. (19) п. 2; разбор ревью ADR-0090, № 22; данные — «Спецификация», директива

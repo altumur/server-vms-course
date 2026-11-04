@@ -1,18 +1,18 @@
 # Resource — lifecycle (lesson P/05)
 
-This English text is the source; the Russian [`lifecycle.md`](../lifecycle.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 2).
+This English text is the source; the Russian translation `ru/lifecycle.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 2).
 
 The lifecycle contract of the process `resource` (ADR-0083 addendum (2) item 1). The rows refer to the norms of the lesson and do not
 retell them (stage B: the references to М10/8, М10/10, М10/11 are retargeted to P/05 and the common contracts).
 
-[P/02.3]: ../../02-installer/spec/02.3-installer.norms.md
-[P/02.4]: ../../02-installer/spec/02.4-installer.norms.md
-[P/02.5]: ../../02-installer/spec/02.5-installer.norms.md
-[P/05]: ../spec/05-resource.norms.md
-[event journal]: ../../common/contracts/event-journal.md
-[presence lock]: ../../common/contracts/presence-lock.md
-[Stand]: ../../common/acceptance/README.md
-[catalogue]: ../../common/data/catalog.tsv
+[P/02.3]: ../02-installer/spec/02.3-installer.norms.md
+[P/02.4]: ../02-installer/spec/02.4-installer.norms.md
+[P/02.5]: ../02-installer/spec/02.5-installer.norms.md
+[P/05]: spec/05-resource.norms.md
+[event journal]: ../common/contracts/event-journal.md
+[presence lock]: ../common/contracts/presence-lock.md
+[Stand]: ../common/acceptance/README.md
+[catalogue]: ../common/data/catalog.tsv
 
 ## Launch
 
@@ -26,7 +26,7 @@ retell them (stage B: the references to М10/8, М10/10, М10/11 are retargeted 
 ## Environment
 
 The environment is assembled by the runner `w2c-run.sh` in the order of P/02.4 Н1.2: the unit values → `roles/<W2C_ROLE>.env` → `w2c.env` →
-the subsystem file, what is read earlier wins; the files — by parsing, not by `source` ([the environment file contract](../../common/contracts/env-file.md); [02-installer/lifecycle.md](../../02-installer/lifecycle.md)).
+the subsystem file, what is read earlier wins; the files — by parsing, not by `source` ([the environment file contract](../common/contracts/env-file.md); [02-installer/lifecycle.md](../02-installer/lifecycle.md)).
 
 | Variable | Meaning | Default | Norm |
 |---|---|---|---|
@@ -35,8 +35,8 @@ the subsystem file, what is read earlier wins; the files — by parsing, not by 
 | `PLATFORM_DIR` | the state root | `/data/platform` | [P/02.4] Н1.2 |
 | `RESOURCE_ROOT` / `EVENTS` | the root of the event trees; the presence locks `.workers/` are in it too | `<PLATFORM_DIR>/events` | [P/02.4] Н1.2 «The setting channel», [event journal], [presence lock] |
 | `OBJECTS` / `PLATFORM_OBJECTS` | the root of the objects of the objects door and of the body copies | `<PLATFORM_DIR>/objects` | [P/02.4] Н1.2, [P/05] Н1.1 |
-| `RESOURCE_HOST`, `RESOURCE_PORT` | the address of the resource door; the unit does not write it — the process default; set in `w2c.env` — the bind address (off the loopback — only with a kit, ADR-0075 addendum of 2026-10-26 (6) item 2); with `mtls` the chain — the leaf, then its center ([the role certificate contract](../../common/contracts/role-certificate.md) `server`; review of the norms of ADR-0075, Claude fd85ea8cc, С-2, С-3) | `127.0.0.1`, `8090` | [P/02.4] Н1.1, Н1.2, Н1.6 |
-| `RESOURCE_URL` | the door address that the resource writes into the door row; an IP literal off the loopback (the loopback threshold of [the role certificate contract](../../common/contracts/role-certificate.md) `loopback`: `ip`) — the resource writes a journal line at start; with `https://` the clients refuse `ip_address`, with `http://` — a configuration error visible as a connection refusal (ADR-0075 addendum of 2026-10-26 (4) item 6) | — | [P/02.4] Н1.2, [P/05] Н1.4 `door_row` |
+| `RESOURCE_HOST`, `RESOURCE_PORT` | the address of the resource door; the unit does not write it — the process default; set in `w2c.env` — the bind address (off the loopback — only with a kit, ADR-0075 addendum of 2026-10-26 (6) item 2); with `mtls` the chain — the leaf, then its center ([the role certificate contract](../common/contracts/role-certificate.md) `server`; review of the norms of ADR-0075, Claude fd85ea8cc, С-2, С-3) | `127.0.0.1`, `8090` | [P/02.4] Н1.1, Н1.2, Н1.6 |
+| `RESOURCE_URL` | the door address that the resource writes into the door row; an IP literal off the loopback (the loopback threshold of [the role certificate contract](../common/contracts/role-certificate.md) `loopback`: `ip`) — the resource writes a journal line at start; with `https://` the clients refuse `ip_address`, with `http://` — a configuration error visible as a connection refusal (ADR-0075 addendum of 2026-10-26 (4) item 6) | — | [P/02.4] Н1.2, [P/05] Н1.4 `door_row` |
 | `RESOURCE_TLS` | the door over TLS | — | [P/02.4] Н1.2, Н1.6 |
 | `SERVER_NAME` | its own server: the key of the heartbeat and of the door row; not by the grammar — code 2 | the short hostname | [P/02.4] Н1.2 |
 | `BOX_ID` | the box | `/etc/machine-id`, otherwise the hostname | [P/02.4] Н1.2 |
@@ -92,7 +92,7 @@ start refusal, code 2 ([P/02.4] Н1.6 `process`; ADR-0075 addendum of 2026-10-26
 ## Stand
 
 The roots `{data}/config`, `objects`, `events` are created before the process start by the role start command of the profile — [the common
-acceptance README](../../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
+acceptance README](../common/acceptance/README.md) «Stand without root»; the process does not create the roots ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, the Architect's decision 2026-10-27).
 
 - The command of the «Стенд» with the substitutions `{rport}` — the door port, `{server}` — the server name (`srv-a`; at the stand of М11 —
   `srv-<кластер>`) ([Stand] «Ресурс»).

@@ -1,10 +1,10 @@
 # Vectors: the request to free space (`relieve`)
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/relieve/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is lesson [P/05](../../../spec/05-resource.norms.md) (Н1.4 `free_ask`, Н3 «проход ресурса» `relieve`; the VMS freeing request,
+The owner is lesson [P/05](../../spec/05-resource.norms.md) (Н1.4 `free_ask`, Н3 «проход ресурса» `relieve`; the VMS freeing request,
 the Architect's decision of 2026-10-23). The participants are the resource (writes and removes `<sub>/requests/free-<server>-<volume>`) and the workers
-of a subsystem with `requests.free` (answer with the heartbeat field `freeing`, [P/03.4](../../../../03-worker/spec/03.4-worker.norms.md) Н1.1).
+of a subsystem with `requests.free` (answer with the heartbeat field `freeing`, [P/03.4](../../../03-worker/spec/03.4-worker.norms.md) Н1.1).
 The bytes are written by the Specification.
 
 ## `cases.tsv`

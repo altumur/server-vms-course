@@ -28,7 +28,7 @@ The canon is the norms of the chapters, including Н0, the deadlines of Н1.2 of
 [3.4](03.4-worker.norms.md) and the order of Н3. The lesson has no HTTP door and no OpenAPI of its own ([chapter 3.1](03.1-worker.norms.md)
 Н2; ADR-0082 addendum 13): the forms of the requests and answers of the store are set by [P/01.1](../../01-store/spec/01-store.api.openapi.yaml),
 the doors of units — by [lesson P/06](../../06-console/spec/06-console.api.openapi.yaml) (chapter 6.1), the publication of objects — by
-[lesson P/05](../../05-resource/spec/05-resource.norms.md#н2-двери). The forms of the rows and objects of the lesson are
+[lesson P/05](../../05-resource/spec/05-resource.norms.md#н2-doors). The forms of the rows and objects of the lesson are
 the family schemas `../data/*.schema.json` (the sections «Семьи данных» of chapters 3.2 and 3.4; ADR-0088).
 
 ## What to create

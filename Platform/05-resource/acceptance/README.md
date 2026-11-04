@@ -1,9 +1,9 @@
 # Acceptance P/05 — the resource
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
-The norm of the lesson is [`05-resource.norms.md`](../../spec/05-resource.norms.md) Н5. The scenarios were moved from the acceptance of
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../common/acceptance/README.md#словарь-директив-и-дверей).
+The norm of the lesson is [`05-resource.norms.md`](../spec/05-resource.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/08 (01, 02, 08) and
 М10/11 (01 → 09, 16 — the Architect's decision on В2 of the plan of the move of lesson 6: a scenario belongs to the lesson whose norm it checks) and
 М10/10 (10; the Specification's decision on В2 of the move)
@@ -43,7 +43,7 @@ Sc. `10-body-copy` (the body copy at the resource, from М10/10; T10, T11) insta
 an admissible identity of a neighbour; the digest `sha256-190267417aed…` — of the bytes `peer-copy`. It needs neither the console nor the controller.
 
 console — the console door testsub from the loopback, access to the operations and the units is permitted (the console is needed by the steps 02/6, 8, 12–16, 08/14 —
-the same door at the merge, and 09-resource-door/6–7 — `/servers`, `/metrics`; the console — [P/06](../../../06-console/06-console.md));
+the same door at the merge, and 09-resource-door/6–7 — `/servers`, `/metrics`; the console — [P/06](../../06-console/06-console.md));
 resource — the resource door srv-a with an admissible identity; store — the store door with reading of
 testsub/ and `platform/doors/`; admin — the door `admin.sock` (the row `platform/schema` of sc. 17, the console writes it by the role admin, P/06.6 Н1.1а). If the deployment uses TLS, issue the corresponding
 certificates and roles per P/02.4 Н1.6 (`w2c-ca.sh issue <server> <роль>`, the kit `kit`) and the address rule of P/02.4 Н1.6;
@@ -51,7 +51,7 @@ these scenarios do not replace the check of the TLS refusals.
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../common/acceptance/README.md#словарь-директив-и-дверей).
 In total 35 scenarios / 292 steps; sc. 29–45 (the second pass of the audit, below) — 128 steps; sc. 24–28 (the edges of `free_ask`, below) — 49 steps; the other 115: 86 HTTP (with @until; the Architect's decision of 2026-11-04 — by scenarios.tsv), four `@append event`, `@append event-raw`, 18 `@start`, `@sigkill`,
 `@cut`, `@mend`, `@sleep` and two ASSERT.
 
@@ -61,7 +61,7 @@ Steps of the reconciliation of python and go М10/6–11 (2026-10-18):
   405 (E1, E4–E10).
 - **02/7–12, 17–23** — the grammar of `unit`, `from`, `limit`, an empty and a repeated parameter, an unknown parameter and a non-ASCII
   `since` of the hint — 400; `from=1_0` — a number; `POST /events` at the resource — 405 without a body (E12–E17).
-- **02/13–16** — the console: `from` by the grammar of the time reader ([the gate and pass contract](../../../common/contracts/gate-and-pass.md)
+- **02/13–16** — the console: `from` by the grammar of the time reader ([the gate and pass contract](../../common/contracts/gate-and-pass.md)
   «Numeric query parameters»): `%2B1`, `%201`, `1e3` — 400, `%31` (= `1`) — 200 (C06-EVENTS-QUERY-LEXEME-162-01, the Architect's decision of 2026-10-27).
 - **08** — the resource paths: `..`, `%2F` and a foreign tree in `/mirrored`, `/mirror`, `/events/{path}` — 404/400 (the write does not
   happen), `GET` on `/mirror/…` — 405, `/buckets` not of two segments — 404 (E26, E27, E29–E31, E36). The body of `PUT` is
@@ -69,7 +69,7 @@ Steps of the reconciliation of python and go М10/6–11 (2026-10-18):
 
 E19 — sc. 08 steps 12–14: `@append event` writes `{bad` into a bucket bypassing the writer, the resource and the console answer 200 with
 `lines_garbled: 1`. Steps 15–16 — the bucket name and `e<эпоха>` are the form of the norm, they are not encoded; an alarm in the tree `audit/console`
-(not `.alarms`) is `class: alarm` by the field ([the event journal contract](../../../common/contracts/event-journal.md); the second pilot,
+(not `.alarms`) is `class: alarm` by the field ([the event journal contract](../../common/contracts/event-journal.md); the second pilot,
 Н-2, Н-3). Without a step, by reading: E3, E11, E18, E22–E24, E34, E35, E37, E38, E42, E43, E46 — a stand with one resource does not write
 temporary files and does not fill the disk; the dictionary does not express `X-Sum` with a trailing space. The second pass of the audit (Gemini) took as steps
 E32 (an alarm of a subsystem — sc. 34), E44 and E45 (the band between the marks and the disabled marks — sc. 41, 40), an open bucket at
@@ -79,7 +79,7 @@ E32 (an alarm of a subsystem — sc. 34), E44 and E45 (the band between the mark
 
 From the acceptance of М10/11 (the second pilot, Н-1; catches Б1): the resource and the worker `w-1` — in the heartbeat of the resource `running: [testsub/w-1]`;
 `@sigkill w-1` — the lock is free, `running: []`; a new start of the same name — `running` again. The norm is
-[the presence lock contract](../../../common/contracts/presence-lock.md) (the owner is lesson P/05) and Н1.4 `presence`; the heartbeat
+[the presence lock contract](../../common/contracts/presence-lock.md) (the owner is lesson P/05) and Н1.4 `presence`; the heartbeat
 of the resource is read through the objects door (`resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local`). Step 1
 starts the resource, step 2 — the worker `w-1` per the section «Stand» of the common acceptance README (`BOX_ID` of the stand, `SERVER_NAME=srv-a`);
 `@sigkill` waits for the confirmed termination of the process.
@@ -93,7 +93,7 @@ reads the time field written by the resource — the door row `platform/doors/sr
 
 The scenarios of the coverage audit of P/05 (2026-10-30); each expectation is from the norm:
 
-- sc. 17-schema-refusal — the check of the schema at start (Н3 «resource start — schema check»; [the schema contract](../../../common/contracts/schema.md)
+- sc. 17-schema-refusal — the check of the schema at start (Н3 «resource start — schema check»; [the schema contract](../../common/contracts/schema.md)
   «Check at start», «Boundary»): `platform/schema` with `version` 2 (above SCHEMA 1) and `x` (not an integer) — `@start resource`
   exits with code 2; there is no door row `platform/doors/srv-a` — the check of the schema goes before the first write (lifecycle
   «Порядок старта»); with `version` 1 — the resource starts and writes the door row. The row is written by the door `admin` (the writer is the console by the role admin,
@@ -103,17 +103,17 @@ The scenarios of the coverage audit of P/05 (2026-10-30); each expectation is fr
   an answer); `@mend` closes the hanging connections — the resource gets a read error and, without exiting, reads again: the door row
   appears without a new `@start` (the deadline 90 s — the norm does not limit the repeat of the reading by a step). A resource that exited on a read
   error will not write the door row;
-- sc. 19-service-names — the service names (Н1.1 `disk`; [the event journal contract](../../../common/contracts/event-journal.md)
+- sc. 19-service-names — the service names (Н1.1 `disk`; [the event journal contract](../../common/contracts/event-journal.md)
   «File names in shared trees»): the write of the heartbeat of the worker `w-1` goes by temp + rename under the lock of the directory
   `objects/testsub/heartbeats/~lock`, the lock file is not removed; the traversal of the tree skips the names with `~` — there is no
   `testsub/heartbeats/~lock` in the listing of the key; the key `~lock` is encoded into `%7elock` — the reading of the key is 404, not the lock file (a service name does not
   coincide with a key). The heartbeat of `w-1` in the listing is the control that the directory is the right one;
 - sc. 20-door-room — the heartbeat of the resource (Н1.4 `heartbeat`): the field `door` with `addr` and `mode` (`loopback` without `RESOURCE_TLS`, `mtls`
   with it — «Stand» does not set `RESOURCE_TLS`, the branch `mtls` is for a deployment with TLS); the door row (Н1.4 `door_row`,
-  [the presence lock contract](../../../common/contracts/presence-lock.md) «Count `room`»): for `testsub2` (`grows: true`, the role file
+  [the presence lock contract](../../common/contracts/presence-lock.md) «Count `room`»): for `testsub2` (`grows: true`, the role file
   `testsub2worker.env` with `HOST_MEMORY_MB=4096`, `WORKER_MEMORY_MB=256` is put by the runner — «Stand») `room` =
   min(16 − the live ones, 98 − the live ones with a number n ≥ 2): without workers — 16 and `live` ""; `t-srv-a-2` (n = 2) — 15 and "2"; `t-1`
-  (a name without a server — without a number, [the slot name contract](../../../common/contracts/slot-name.md) «Role process name and its number»)
+  (a name without a server — without a number, [the slot name contract](../../common/contracts/slot-name.md) «Role process name and its number»)
   — 14, does not enter `live`; `t-srv-a-1` (n = 1, the base one) — 13, does not enter `live`. `testsub` has no role file — there are no elements
   `room.testsub`, `live.testsub`, they are not expected;
 - sc. 21-events-wait — the hint (Н1.6): there are no rows under `want` — the wait answers by the deadline `{changed: false, seq}`; the row
@@ -186,7 +186,7 @@ against the report of the first pass, not against the acceptance); large bundles
 - sc. 44-objects-door-family (G01 item 1) — `objects.door` of the manifest (Н1.1 `door`): `testsub2` declares `door: [tickets/*]` —
   the door gives out the object `testsub2/tickets/t1` (`@put object` from `inputs/ticket-t1.json`, 28 bytes): `GET` 200 with the body, in the listing
   `prefix=testsub2/tickets/` with `size` 28; `testsub` has no section `objects` — `testsub/tickets/t1` 403 (a key outside the families of the door, Н4);
-- sc. 45-gone-door (G02) — the tombstone at the remover (Н1.1 `written`, `door`; [the tombstone contract](../../../common/contracts/tombstone.md)
+- sc. 45-gone-door (G02) — the tombstone at the remover (Н1.1 `written`, `door`; [the tombstone contract](../../common/contracts/tombstone.md)
   `listing`, `rewrite`; Н4 «удалено позже»; C05-GONE-BODY-READ-01, C05-GONE-REWRITE-AT-WRITE-01): the tombstone
   `.gone/testsub2/blobs/sha256-2c26b46b…e7ae` (SHA-256 of the bytes `foo`) with `written` 1700000100 is put by `@put object` from
   `inputs/gone-foo.json`; the ordinary listing `testsub2/blobs/` does not show it — `{}`; `prefix=.gone/` — the listing of the tombstones, `GET` —
@@ -211,14 +211,14 @@ G01, G02), without changes.
 | File | Scenario | What is in it |
 |---|---|---|
 | `ticket-t1.json` | 44 | the object `testsub2/tickets/t1` of the family `objects.door` of the manifest `testsub2`: `{"id":"t1","title":"check"}` with LF, 28 bytes |
-| `gone-foo.json` | 45 | the tombstone `.gone/testsub2/blobs/sha256-2c26b46b…e7ae` by the form [`gone`](../../data/gone.schema.json): `written` 1700000100, `peers` `["srv-b"]`, `acked` `[]`, with LF |
+| `gone-foo.json` | 45 | the tombstone `.gone/testsub2/blobs/sha256-2c26b46b…e7ae` by the form [`gone`](../data/gone.schema.json): `written` 1700000100, `peers` `["srv-b"]`, `acked` `[]`, with LF |
 
 ## Comparison
 
 The forms of an expectation are per the dictionary. The expectation of one code does not require an empty body.
 A repeat of a variable inside expect compares its temporary value. The directives are not sent
 to the server as HTTP. A full answer is additionally checked by the contract of its owner:
-the store — P/01.1, the resource doors — Н2 of the lesson, the console — [P/06](../../../06-console/spec/06-console.api.openapi.yaml) (chapters 6.4, 6.5).
+the store — P/01.1, the resource doors — Н2 of the lesson, the console — [P/06](../../06-console/spec/06-console.api.openapi.yaml) (chapters 6.4, 6.5).
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
@@ -248,7 +248,7 @@ These are tasks of the implementation/stand, not checks already performed:
 | Index | A torn tail — sc. 22. An empty/evicted cache keeps the answer with unchanged files; the boundaries from/to/limit and the priority of alarms |
 | Wait | The outcomes `full` and `replaced` (`changed` and the deadline — sc. 21), wrong/repeated parameters and boundaries. Two CN with one client do not evict each other; after a restart/full the ordinary pass remains |
 | Streams | JSONL without an array; a break of a file (200 with `X-Sum`, 206 and 416 with `Content-Range` — sc. 36). PUT of the mirror: 64 MiB and +1 byte, the deadline, a publication error: no partial copy, the former one is intact (no `X-Sum`, not by the form, a bad sum — sc. 32) |
-| Retention/holds | Absence and an unknown reading are distinguished; a wrong days/unreadable holds do not permit removing a tree (the reasons in the heartbeat — sc. 37, 38). The hold window (the hold function — the vectors [`holds`](../../../common/vectors/holds/README.md)), the floor of the deadline of the marks and the hour of the mirror |
+| Retention/holds | Absence and an unknown reading are distinguished; a wrong days/unreadable holds do not permit removing a tree (the reasons in the heartbeat — sc. 37, 38). The hold window (the hold function — the vectors [`holds`](../../common/vectors/holds/README.md)), the floor of the deadline of the marks and the hour of the mirror |
 | Free space | After the change of free_ask to an ordinary request with the same rid, the removal conflicts by CAS, the request is intact. freeing does not include a freeing already reflected by the measurement |
 
 A reading of the branches and the schema confirms only the corresponding order/form. Timers,
@@ -279,7 +279,7 @@ the last step, wait for the stop of all the created processes, then remove the s
 
 The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
 of the acceptances of М10/10 and М10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
-resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (analysis of the review of stage B 6–7, № 18). The log of М10/08 is moved as a whole into [the acceptance of chapter 6.4](../../../06-console/acceptance/4/corrections.tsv).
+resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (analysis of the review of stage B 6–7, № 18). The log of М10/08 is moved as a whole into [the acceptance of chapter 6.4](../../06-console/acceptance/4/corrections.tsv).
 
 ## Edges of `free_ask` on the first pass (sc. 24–28)
 

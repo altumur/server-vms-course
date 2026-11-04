@@ -1,8 +1,8 @@
 # P/05 — instructions for an implementation
 
-This English text is the source; the Russian [`05-resource.README.md`](../05-resource.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/05-resource.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is [`../05-resource.md`](../../05-resource.md).
+This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/05-resource.md` (for people, not in the export).
 
 ## Task
 
@@ -10,13 +10,13 @@ Give the platform objects, events and their reading; give the resource the clean
 
 ## Inputs and their priority
 
-- The canon is the [norms](../05-resource.norms.md), the definitions of Н0 — per P/01.1; the file contracts are
-  [the event journal](../../../common/contracts/event-journal.md) and [the presence lock](../../../common/contracts/presence-lock.md).
-- The [HTTP contract](../05-resource.api.openapi.yaml) expresses Н2.
-- The [acceptance](../../acceptance/README.md) sets the preparation and the observations.
-- The [lecture](../../05-resource.md) explains the reasons and the boundaries; the [lifecycle](../../lifecycle.md) — the environment, the exit codes.
+- The canon is the [norms](05-resource.norms.md), the definitions of Н0 — per P/01.1; the file contracts are
+  [the event journal](../../common/contracts/event-journal.md) and [the presence lock](../../common/contracts/presence-lock.md).
+- The [HTTP contract](05-resource.api.openapi.yaml) expresses Н2.
+- The [acceptance](../acceptance/README.md) sets the preparation and the observations.
+- The lecture (`ru/05-resource.md`, for people, not in the export) explains the reasons and the boundaries; the [lifecycle](../lifecycle.md) — the environment, the exit codes.
 
-The objects use the store vocabulary of P/01.1, the roles — [P/02.4 Н1.6](../../../02-installer/spec/02.4-installer.norms.md) and
+The objects use the store vocabulary of P/01.1, the roles — [P/02.4 Н1.6](../../02-installer/spec/02.4-installer.norms.md) and
 the role certificate contract. `PUT /v1/objects/<sub>/blobs/<digest>` — Н1.1 «Тела у ресурса», Н2; `restore` (`GET /mirrored/<server>`) — Н1.4 «Восстановление бакетов».
 Internal functions,
 libraries and the way the handlers are placed are not prescribed.
