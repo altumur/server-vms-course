@@ -26,7 +26,7 @@ import (
 	"sync"
 	"syscall"
 
-	"kitmodule/internal/door"
+	"kitmodule/internal/apidoor"
 	"kitmodule/internal/jsonstrict"
 	"kitmodule/internal/writecheck"
 )
@@ -96,38 +96,38 @@ func (s *store) version() string {
 	return strconv.FormatUint(s.next, 10)
 }
 
-func refuse(op door.Op, code int, kind, msg string, fields map[string]any) door.Answer {
-	a, err := door.Refuse(op, code, kind, msg, fields)
+func refuse(op apidoor.Op, code int, kind, msg string, fields map[string]any) apidoor.Answer {
+	a, err := apidoor.Refuse(op, code, kind, msg, fields)
 	if err != nil {
 		log.Printf("stubstore: refuse %v %d %s: %v", op, code, kind, err)
-		a, _ = door.Refuse(op, 503, "unavailable", "stub: "+kind, nil)
+		a, _ = apidoor.Refuse(op, 503, "unavailable", "stub: "+kind, nil)
 	}
 	return a
 }
 
-// Методы door.Handler — ручная часть заглушки.
+// Методы apidoor.Handler — ручная часть заглушки.
 
-func (s *store) Get(c *call, q door.GetQuery) door.Answer {
+func (s *store) Get(c *call, q apidoor.GetQuery) apidoor.Answer {
 	if len(q.Key) > 1024 { // Н1: предел ключа в байтах UTF-8 — не форма OpenAPI
-		return refuse(door.OpGet, 400, "badkey", "key too long", nil)
+		return refuse(apidoor.OpGet, 400, "badkey", "key too long", nil)
 	}
 	if !s.allowed(c.sock, "read", q.Key) {
-		return refuse(door.OpGet, 403, "forbidden", "no read right", nil)
+		return refuse(apidoor.OpGet, 403, "forbidden", "no read right", nil)
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	r, ok := s.rows[q.Key]
 	if !ok {
-		return door.Answer{Code: 200, Body: door.Row2{}}
+		return apidoor.Answer{Code: 200, Body: apidoor.Row2{}}
 	}
 	items := make(map[string]string, len(r.items))
 	for k, v := range r.items {
 		items[k] = v
 	}
-	return door.Answer{Code: 200, Body: door.Row1{Items: items, Index: r.index}}
+	return apidoor.Answer{Code: 200, Body: apidoor.Row1{Items: items, Index: r.index}}
 }
 
-func (s *store) List(c *call, q door.ListQuery) door.Answer {
+func (s *store) List(c *call, q apidoor.ListQuery) apidoor.Answer {
 	prefix := ""
 	if q.Prefix != nil {
 		prefix = *q.Prefix
@@ -140,7 +140,7 @@ func (s *store) List(c *call, q door.ListQuery) door.Answer {
 			keys[k] = r.index
 		}
 	}
-	return door.Answer{Code: 200, Body: door.Listing{Keys: keys}}
+	return apidoor.Answer{Code: 200, Body: apidoor.Listing{Keys: keys}}
 }
 
 func strItems(v any) map[string]string {
@@ -160,21 +160,21 @@ func (s *store) apply(op, key string, items any) {
 	}
 }
 
-func (s *store) Write(c *call, body []byte) door.Answer {
+func (s *store) Write(c *call, body []byte) apidoor.Answer {
 	lim := map[string]int64{"BATCH_WRITES": batchLimit, "BATCH_GUARDS": batchLimit, "ROW_CEILING": s.maxValue}
 	r, v := writecheck.Check(body, c.sock, lim, s.allowed)
 	if r != nil {
-		return refuse(door.OpWrite, r.Code, r.Kind, "refused", r.Fault)
+		return refuse(apidoor.OpWrite, r.Code, r.Kind, "refused", r.Fault)
 	}
 	cmd := v.(map[string]any)
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	switch cmd["op"] {
 	case "floor":
-		if _, e := door.DecodeFloorCmd(cmd); e != nil {
-			return refuse(door.OpWrite, 400, "badrequest", "floor out of form", nil)
+		if _, e := apidoor.DecodeFloorCmd(cmd); e != nil {
+			return refuse(apidoor.OpWrite, 400, "badrequest", "floor out of form", nil)
 		}
-		return door.Answer{Code: 200, Body: door.Written{Index: s.version()}}
+		return apidoor.Answer{Code: 200, Body: apidoor.Written{Index: s.version()}}
 	case "batch":
 		index := s.version()
 		for _, w := range cmd["writes"].([]any) {
@@ -186,7 +186,7 @@ func (s *store) Write(c *call, body []byte) door.Answer {
 				s.rows[key] = x
 			}
 		}
-		return door.Answer{Code: 200, Body: door.Written{Index: index}}
+		return apidoor.Answer{Code: 200, Body: apidoor.Written{Index: index}}
 	}
 	key := cmd["key"].(string)
 	index := s.version()
@@ -195,31 +195,31 @@ func (s *store) Write(c *call, body []byte) door.Answer {
 		x.index = index
 		s.rows[key] = x
 	}
-	return door.Answer{Code: 200, Body: door.Written{Index: index}}
+	return apidoor.Answer{Code: 200, Body: apidoor.Written{Index: index}}
 }
 
-func (s *store) Rights(c *call) door.Answer {
+func (s *store) Rights(c *call) apidoor.Answer {
 	if c.sock != "admin" {
-		return refuse(door.OpRights, 403, "forbidden", "admin only", nil)
+		return refuse(apidoor.OpRights, 403, "forbidden", "admin only", nil)
 	}
 	if s.raw == nil {
-		return refuse(door.OpRights, 404, "badrequest", "no rights file", nil)
+		return refuse(apidoor.OpRights, 404, "badrequest", "no rights file", nil)
 	}
-	a, err := door.AnswerOf(door.OpRights, 200, s.raw)
+	a, err := apidoor.AnswerOf(apidoor.OpRights, 200, s.raw)
 	if err != nil {
-		return refuse(door.OpRights, 503, "unavailable", "rights file out of form", nil)
+		return refuse(apidoor.OpRights, 503, "unavailable", "rights file out of form", nil)
 	}
 	return a
 }
 
-func (s *store) Status(c *call) door.Answer {
+func (s *store) Status(c *call) apidoor.Answer {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return door.Answer{Code: 200, Body: door.Status{Id: "stub", State: "Leader", LeaderId: "stub", Commit: s.next,
+	return apidoor.Answer{Code: 200, Body: apidoor.Status{Id: "stub", State: "Leader", LeaderId: "stub", Commit: s.next,
 		Applied: s.next, Voters: []string{"stub"}, Members: map[string]string{}, MaxValue: s.maxValue}}
 }
 
-func (s *store) member(op door.Op, c *call, body []byte, decode func(any) *door.Violation) door.Answer {
+func (s *store) member(op apidoor.Op, c *call, body []byte, decode func(any) *apidoor.Violation) apidoor.Answer {
 	if c.sock != "admin" {
 		return refuse(op, 403, "forbidden", "admin.sock only", nil)
 	}
@@ -233,22 +233,22 @@ func (s *store) member(op door.Op, c *call, body []byte, decode func(any) *door.
 	return refuse(op, 409, "refused", "stub has no group", nil)
 }
 
-func (s *store) Join(c *call, body []byte) door.Answer {
-	return s.member(door.OpJoin, c, body, func(v any) *door.Violation { _, e := door.DecodeJoin(v); return e })
+func (s *store) Join(c *call, body []byte) apidoor.Answer {
+	return s.member(apidoor.OpJoin, c, body, func(v any) *apidoor.Violation { _, e := apidoor.DecodeJoin(v); return e })
 }
 
-func (s *store) Leave(c *call, body []byte) door.Answer {
-	return s.member(door.OpLeave, c, body, func(v any) *door.Violation { _, e := door.DecodeLeave(v); return e })
+func (s *store) Leave(c *call, body []byte) apidoor.Answer {
+	return s.member(apidoor.OpLeave, c, body, func(v any) *apidoor.Violation { _, e := apidoor.DecodeLeave(v); return e })
 }
 
-func (s *store) Metrics(c *call) door.Answer {
-	return door.Answer{Code: 200, Body: door.Metrics200("configstore_doors 1\n")}
+func (s *store) Metrics(c *call) apidoor.Answer {
+	return apidoor.Answer{Code: 200, Body: apidoor.Metrics200("configstore_doors 1\n")}
 }
 
 // QueryRefused — какой отказ даёт query вне формы, OpenAPI говорит только словами (P/01.1 Н2.1): повтор и отсутствие —
 // badrequest, значение не по схеме Key (в том числе не UTF-8) — badkey.
-func (s *store) QueryRefused(c *call, op door.Op, e *door.QueryError) door.Answer {
-	if e.Reason == door.QueryValue && e.Schema == "Key" {
+func (s *store) QueryRefused(c *call, op apidoor.Op, e *apidoor.QueryError) apidoor.Answer {
+	if e.Reason == apidoor.QueryValue && e.Schema == "Key" {
 		return refuse(op, 400, "badkey", "bad key", nil)
 	}
 	return refuse(op, 400, "badrequest", "query out of form", nil)
@@ -261,7 +261,7 @@ type handler struct {
 	sock string
 }
 
-func write(w http.ResponseWriter, r *door.Response) {
+func write(w http.ResponseWriter, r *apidoor.Response) {
 	for _, h := range r.Header {
 		w.Header().Add(h[0], h[1])
 	}
@@ -270,17 +270,17 @@ func write(w http.ResponseWriter, r *door.Response) {
 	_, _ = w.Write(r.Body)
 }
 
-func (h handler) answer(w http.ResponseWriter, op door.Op, a door.Answer) {
-	resp, err := door.Encode(op, a)
+func (h handler) answer(w http.ResponseWriter, op apidoor.Op, a apidoor.Answer) {
+	resp, err := apidoor.Encode(op, a)
 	if err != nil {
 		log.Printf("stubstore: %v", err)
-		resp, _ = door.Encode(op, refuse(op, 503, "unavailable", "stub: undeclared answer", nil))
+		resp, _ = apidoor.Encode(op, refuse(op, 503, "unavailable", "stub: undeclared answer", nil))
 	}
 	write(w, resp)
 }
 
 func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	op, query, refusal := door.Route(r.Method, r.RequestURI)
+	op, query, refusal := apidoor.Route(r.Method, r.RequestURI)
 	if refusal != nil {
 		write(w, refusal)
 		return
@@ -311,7 +311,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		body = b
 	}
-	h.answer(w, op, door.Dispatch[*call](h.s, c, op, query, body))
+	h.answer(w, op, apidoor.Dispatch[*call](h.s, c, op, query, body))
 }
 
 func listen(path string, s *store, sock string, servers *[]*http.Server) {

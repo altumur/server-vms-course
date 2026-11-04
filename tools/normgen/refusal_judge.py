@@ -8,7 +8,7 @@
 - приёмка (независимый вход): каждое ожидание отказа `<4xx|5xx> {json}` сценариев `acceptance/1..3` находит строку
   каталога с тем же кодом и kind; поля ожидания — по правилу главы: 1.1 сравнивает тело целиком (поля = обязательные
   строки плюс часть необязательных), 1.2 и 1.3 — подмножеством (поля ⊆ поля строки);
-- дверь: тело каждой строки http (обязательные поля; все поля) кодирует door.Refuse + door.Encode хотя бы у одной
+- дверь: тело каждой строки http (обязательные поля; все поля) кодирует apidoor.Refuse + apidoor.Encode хотя бы у одной
   операции OpenAPI, строка с Retry-After — с заголовком (две генерации — № 2 и № 4 — согласны).
 Отказы по шагам приёмки на заглушке двери — прогон раннера P/01.1 (судья части door), не здесь.
 Итог: `refusals: P/N PASS|FAIL`; код 0 — все прошли, 1 — нет, 2 — ошибка запуска судьи.
@@ -111,7 +111,7 @@ def main(argv=None):
             for p in g["probes"]:
                 why = None
                 if not p["ops"]:
-                    why = f"door.Refuse/Encode take the fields {p['fields'] or []} at no operation"
+                    why = f"apidoor.Refuse/Encode take the fields {p['fields'] or []} at no operation"
                 elif g["RetryAfter"] and not p["retry"]:
                     why = "no operation declares Retry-After for it"
                 check(f"door {r['name']} {sorted(p['fields'] or [])}", why)

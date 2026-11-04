@@ -4,9 +4,9 @@
 Go 1.22 только на стандартной библиотеке `<out>/go/refusals/refusals.go`: по переменной *Spec на строку (имя — name в
 CamelCase), All, ByName, проверку полей тела (Check), строку лога и код выхода отказов запуска и CLI (LogLine, Exit).
 
-Роли трёх (ADR-0125 доп. (1) п. 5): форма тела — OpenAPI *Fault, её кодирует часть door (door.Refuse); каталог — эта
+Роли трёх (ADR-0125 доп. (1) п. 5): форма тела — OpenAPI *Fault, её кодирует часть door (apidoor.Refuse); каталог — эта
 таблица; порядок и условия команды записи — write-checks.tsv (часть writecheck). Пакет тела не кодирует: он даёт
-код, вид, поля и заголовок для door.Refuse и проверяет набор полей. Причина словами и «что делает вызывающий» — проза
+код, вид, поля и заголовок для apidoor.Refuse и проверяет набор полей. Причина словами и «что делает вызывающий» — проза
 Н4, генератор её не читает (доп. (1) п. 4).
 
 Запуск: python tools/normgen/gen_refusals.py [таблица.tsv [каталог_выхода]].
@@ -128,7 +128,7 @@ type Spec struct {
 	Kind       string      // http — слово kind на проводе; иначе ""
 	Fields     []Field     // http — поля тела помимо kind и error
 	Headers    [][2]string // http — заголовки ответа
-	RetryAfter bool        // среди Headers есть Retry-After (для door.Answer.RetryAfter)
+	RetryAfter bool        // среди Headers есть Retry-After (для apidoor.Answer.RetryAfter)
 	Log        []string    // start, cli — значения, которые называет лог
 	Words      []string    // start, cli — слова, которые лог несёт дословно
 	Norm       string
@@ -138,7 +138,7 @@ type Spec struct {
 func ByName(name string) *Spec { return byName[name] }
 
 // Check — набор полей тела отказа http: все обязательные есть, лишних нет, значения — целое (int, int64) или строка.
-// Тело кодирует door.Refuse(op, s.Code, s.Kind, msg, values) по схеме *Fault OpenAPI.
+// Тело кодирует apidoor.Refuse(op, s.Code, s.Kind, msg, values) по схеме *Fault OpenAPI.
 func (s *Spec) Check(values map[string]any) error {
 	if s.Surface != "http" {
 		return fmt.Errorf("refusal %s: surface %s has no body", s.Name, s.Surface)
@@ -294,7 +294,7 @@ func (s *Spec) Exit(logf func(string), values map[string]string) int // logs Log
 
 - An http refusal: pick the row by its condition (the names are the conditions of Н4; the rows of the write command
   carry the names of `write-checks.tsv` checks), then with part `door`:
-  `a, err := door.Refuse(op, s.Code, s.Kind, msg, values)`; `a.RetryAfter = s.RetryAfter`. `Check(values)` first if
+  `a, err := apidoor.Refuse(op, s.Code, s.Kind, msg, values)`; `a.RetryAfter = s.RetryAfter`. `Check(values)` first if
   you want the catalogue to judge the fields; the door judges the body against the OpenAPI `*Fault`.
 - A start refusal: `os.Exit(refusals.StartFlags.Exit(log.Print, map[string]string{"flag": r.Flag}))` (with part
   `flags`: `r` is the `*flags.Refusal`).

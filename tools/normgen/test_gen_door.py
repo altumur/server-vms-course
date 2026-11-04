@@ -4,7 +4,7 @@
 (нужны PyYAML и jsonschema — независимые загрузчик и валидатор, — и go 1.22 в PATH; сети не нужно).
 
 - загрузчик yamlsub = PyYAML на OpenAPI курса; конструкции вне подмножества — отказ;
-- out/p01-1/go/door — ровно свежая генерация; go build, go vet, gofmt чисты;
+- out/p01-1/go/apidoor — ровно свежая генерация; go build, go vet, gofmt чисты;
 - покрытие: пути, методы, параметры query, тела запросов, коды и схемы ответов, заголовки — как в OpenAPI (читает PyYAML);
 - маршруты: каждый метод на каждом пути и чужие пути (декодирование, нормализация, абсолютная форма) — код и схема
   отказа по OpenAPI;
@@ -352,18 +352,18 @@ class Loader(unittest.TestCase):
 
 class Generated(DoorBase):
     def test_out_up_to_date(self):
-        """tools/normgen/out/p01-1/go/door — ровно свежая генерация; шапка несёт sha256 OpenAPI."""
+        """tools/normgen/out/p01-1/go/apidoor — ровно свежая генерация; шапка несёт sha256 OpenAPI."""
         for name in ("door.go", "runtime.go"):
-            self.assertEqual((self.out / "go/door" / name).read_bytes(), (OUT / "go/door" / name).read_bytes(),
+            self.assertEqual((self.out / "go/apidoor" / name).read_bytes(), (OUT / "go/apidoor" / name).read_bytes(),
                              f"{name} is stale: run tools/normgen/gen_door.py")
         self.assertEqual((self.out / "go/go.mod").read_bytes(), (OUT / "go/go.mod").read_bytes())
         import hashlib
-        self.assertIn(hashlib.sha256(self.text.encode()).hexdigest(), (OUT / "go/door/door.go").read_text()[:400])
+        self.assertIn(hashlib.sha256(self.text.encode()).hexdigest(), (OUT / "go/apidoor/door.go").read_text()[:400])
 
     def test_build_vet_fmt(self):
         go(["build", "./..."], OUT / "go")
         go(["vet", "./..."], OUT / "go")
-        fmt = subprocess.run(["gofmt", "-l", "door"], cwd=OUT / "go", capture_output=True, text=True).stdout
+        fmt = subprocess.run(["gofmt", "-l", "apidoor"], cwd=OUT / "go", capture_output=True, text=True).stdout
         self.assertEqual(fmt, "")
 
     def test_coverage(self):
@@ -693,10 +693,10 @@ class Kit(unittest.TestCase):
             self.assertEqual(m["parts"], ["writecheck", *sorted(parts)])
             door = [f for f in m["files"] if f["component"] == "door"]
             self.assertEqual(sorted((f["path"], f["origin"]) for f in door),
-                             [("01-store/internal/door/door.go", "generated"),
-                              ("01-store/internal/door/runtime.go", "handwritten")])
+                             [("01-store/internal/apidoor/door.go", "generated"),
+                              ("01-store/internal/apidoor/runtime.go", "handwritten")])
             self.assertEqual(m["openapi"]["sha256"], bk.sha256(SPEC.read_bytes()))
-            self.assertIn("kittest/internal/door", (dst / "KIT.md").read_text(encoding="utf-8"))
+            self.assertIn("kittest/internal/apidoor", (dst / "KIT.md").read_text(encoding="utf-8"))
             self.assertEqual(sorted(m["lines_by_component"]), sorted({"kit", "normgen", *parts}))
         with self.assertRaises(bk.KitError):
             bk.build(Path(self.tmp.name) / "bad", "kittest", ("doors",))
@@ -776,7 +776,7 @@ class Mutations(unittest.TestCase):
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory(prefix="normgen-door-mut-")
         _, cls.doc = gen_door.load(SPEC)
-        cls.base = (OUT / "go/door/door.go").read_text(encoding="utf-8")
+        cls.base = (OUT / "go/apidoor/door.go").read_text(encoding="utf-8")
 
     @classmethod
     def tearDownClass(cls):
@@ -787,7 +787,7 @@ class Mutations(unittest.TestCase):
         change(doc)
         out = Path(self.tmp.name) / f"m{k}" / "p01-1"
         gen_door.emit(doc, "mutant", "0" * 64, out)
-        text = (out / "go/door/door.go").read_text(encoding="utf-8")
+        text = (out / "go/apidoor/door.go").read_text(encoding="utf-8")
         self.assertNotEqual(text.split("\n", 3)[3], self.base.split("\n", 3)[3], f"mutant {k}: the output did not change")
         if not probe:
             return None
