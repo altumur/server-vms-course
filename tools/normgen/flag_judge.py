@@ -294,6 +294,8 @@ class Probes:
     def __init__(self, model, tmp, stub, rights, tls):
         self.m, self.tmp, self.stub, self.rights, self.tls = model, Path(tmp), stub, rights, tls
         self.out, self.k = [], 0
+        self.junk = str(self.tmp / "junk")   # значение-заглушка: только абсолютный путь во временном каталоге — демон,
+        # принявший чужой флаг (--dir как -dir), пишет туда, а не в каталог запуска
 
     def fresh(self):
         self.k += 1
@@ -388,13 +390,13 @@ class Probes:
                 self.add(f"bad {flag} {v!r}", self.without(self.fresh(), flag) + [flag, v])
             if r["type"] != "bool":
                 self.add(f"no value {flag}", self.without(self.fresh(), flag) + [flag])
-            once = [flag] + ([] if r["type"] == "bool" else (self.good(r)[:1] or ["x"]))
+            once = [flag] + ([] if r["type"] == "bool" else (self.good(r)[:1] or [self.junk]))
             self.add(f"repeat {flag}", self.complete(self.without(self.fresh(), flag) + once + once), normative=False)
         for word in ("-no-such-flag", "-socket", "--dir", "-Dir", "-"):
-            self.add(f"foreign {word}", self.fresh() + [word, "x"])
+            self.add(f"foreign {word}", self.fresh() + [word, self.junk])
         for r in self.m.rows:
             if "daemon" not in r["commands"]:
-                v = [] if r["type"] == "bool" else (self.good(r)[:1] or ["x"])
+                v = [] if r["type"] == "bool" else (self.good(r)[:1] or [self.junk])
                 self.add(f"other command {r['flag']} at daemon", self.fresh() + [r["flag"]] + v)
         for r in daemon:
             if r["required"] not in ("true", "false"):
@@ -465,14 +467,14 @@ class Probes:
                 self.add(f"{cmd}: {r['flag']}", argv + [r["flag"]] + v + ["pos1"], normative=False)
             for r in self.m.rows:
                 if cmd not in r["commands"]:
-                    v = [] if r["type"] == "bool" else (self.good(r)[:1] or ["x"])
+                    v = [] if r["type"] == "bool" else (self.good(r)[:1] or [self.junk])
                     self.add(f"{cmd}: foreign {r['flag']}", argv + [r["flag"]] + v, normative=False)
                     break
             req = [r for r in own if r["required"] == "true"]
             if req:
                 self.add(f"{cmd}: no {req[0]['flag']}", [cmd], normative=False)
-        self.add("unknown subcommand", ["frobnicate", "-dir", "x"], normative=False)
-        self.add("explicit daemon word", ["daemon", "-dir", "x"], normative=False)
+        self.add("unknown subcommand", ["frobnicate", "-dir", self.junk], normative=False)
+        self.add("explicit daemon word", ["daemon", "-dir", self.junk], normative=False)
 
     def conventions(self):
         d = self.fresh()
@@ -492,7 +494,7 @@ class Probes:
                 w = rnd.choice(words)
                 r = self.m.by.get(w)
                 if r and r["type"] != "bool":
-                    pool = (self.good(r) or ["x"]) + self.bad(r)
+                    pool = (self.good(r) or [self.junk]) + self.bad(r)
                     v = rnd.choice(pool)
                     argv += [f"{w}={v}"] if rnd.random() < 0.15 else [w, v]
                 else:
