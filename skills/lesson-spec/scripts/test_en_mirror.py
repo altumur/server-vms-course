@@ -97,6 +97,9 @@ class Mirror(unittest.TestCase):
         self.assertEqual(en_mirror.numbers("0.25 s", "en"), ["0.25"])
         self.assertNotEqual(en_mirror.numbers("0,6", "ru"), en_mirror.numbers("0.5", "en"))
 
+    def test_escaped_pipe(self):                        # «\\|» inside a code span of a cell does not split it
+        self.assertEqual(en_mirror.cells("| a | `x \\| y` | b |"), ["a", "`x \\| y`", "b"])
+
     def test_mark(self):
         errors = self.mutated(en_mirror.MARK, "производный", which="ru")
         self.assertTrue(any("mark" in e for e in errors), errors)

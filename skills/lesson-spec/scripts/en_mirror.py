@@ -60,7 +60,7 @@ def kinds_of(ru_text):
         if not re.match(r"Н4(?:\s|$)", title):
             continue
         for row in TABLE_ROW.findall(body):
-            cells = [c.strip() for c in row.strip().strip("|").split("|")]
+            cells = [c.strip() for c in re.split(r"(?<!\\)\|", row.strip().strip("|"))]
             if len(cells) >= 3 and re.fullmatch(r"[1-5][0-9]{2}", cells[1]):      # шапка таблицы — не строка
                 span = SPAN.search(cells[2])
                 if span and re.fullmatch(r"[a-z]+", span.group(2)):
@@ -139,7 +139,8 @@ def code_part(line):
 
 
 def cells(row):
-    return [c.strip() for c in row.strip().strip("|").split("|")]
+    """A table row → cells; an escaped «\\|» (inside a code span of a cell) does not split it."""
+    return [c.strip() for c in re.split(r"(?<!\\)\|", row.strip().strip("|"))]
 
 
 def strict(rb, eb):
