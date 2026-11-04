@@ -1,13 +1,13 @@
 # Acceptance P/03.6 — requests and events of the worker
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/6/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей).
-The norm of the chapter is [`03.6-worker.norms.md`](../../../spec/03.6-worker.norms.md) Н5. The scenarios were moved from the acceptance of
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The norm of the chapter is [`03.6-worker.norms.md`](../../spec/03.6-worker.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/08 (stage B, ADR-0083 addendum (1): without a change of
 behaviour); the numbers of scenarios and steps are the former ones. The preparation, the comparison and the evidence below are the parts of the former README needed by
-these scenarios; the forms of foreign doors belong to their owners ([P/05](../../../../05-resource/spec/05-resource.norms.md) — the doors of the resource,
-[chapter P/06.4](../../../../06-console/spec/06.4-console.norms.md) — the doors of the console).
+these scenarios; the forms of foreign doors belong to their owners ([P/05](../../../05-resource/spec/05-resource.norms.md) — the doors of the resource,
+[chapter P/06.4](../../../06-console/spec/06.4-console.norms.md) — the doors of the console).
 
 ## Preparation of each scenario
 
@@ -79,7 +79,7 @@ Step 05/5 accepts only 200 Answered or 202 Queued by the full contract: with 202
 queued equals the precomputed $rid; with 200 answered relates to c5 and the digest of the submitted
 body. Another 2xx is not permitted by the contract. So a fast answer does not change the variables of the following steps. The directives are not sent
 to the server as HTTP. The full answer is additionally checked by the contract of its owner:
-the store — P/01.1, the units — P/06.1, the doors of the resource — P/05 Н2, the other doors — [chapter P/06.4](../../../../06-console/spec/06.4-console.norms.md) Н2. In particular, answered
+the store — P/01.1, the units — P/06.1, the doors of the resource — P/05 Н2, the other doors — [chapter P/06.4](../../../06-console/spec/06.4-console.norms.md) Н2. In particular, answered
 with @any in the TSV is still bound to be a full mark of one of the three forms of AnsweredMark.
 
 ## Evidence outside TSV
@@ -94,7 +94,7 @@ These are tasks for the implementation/stand, not checks already performed:
 
 Additional probes of Kimi 33: The outcome refused after a call always has error, never performed; check both the pass and the form of the mark. These are tasks of a check of the norms/stand, not a statement about the execution of an implementation.
 
-Additional check of the class of errors of run 36 (Kimi), by reading: suppress is always divided by tree/unit/epoch/kind/class; by is a non-empty list of strings, t/id/repeats/since/until are forbidden. unit is taken from the path, an absent selected field differs from null; without by only the five service fields are excluded. Reconcile structured JSON values, two different units and epochs. The deadline of kept is max(60, ttl) from the moment when the holder saw that the request row is no longer there, and not earlier than valid_until ([the request and its mark contract](../../../../common/contracts/request-mark.md) `kept`; C03-KEPT-FROM-ABSENT-01).
+Additional check of the class of errors of run 36 (Kimi), by reading: suppress is always divided by tree/unit/epoch/kind/class; by is a non-empty list of strings, t/id/repeats/since/until are forbidden. unit is taken from the path, an absent selected field differs from null; without by only the five service fields are excluded. Reconcile structured JSON values, two different units and epochs. The deadline of kept is max(60, ttl) from the moment when the holder saw that the request row is no longer there, and not earlier than valid_until ([the request and its mark contract](../../../common/contracts/request-mark.md) `kept`; C03-KEPT-FROM-ABSENT-01).
 
 Additional case R38-03/04/05:
 

@@ -58,7 +58,7 @@
 | исход ответа хранилища для клиента | [`store-client/`](store-client/README.md) | P/01.1 | [договор клиента хранилища](../contracts/store-client.md) (SC-WIRE78-G01) |
 | надгробие: соседи, подтверждения, снятие | [`tombstone/`](tombstone/README.md) | P/05 (участник — консоль P/06.1) | [договор надгробий](../contracts/tombstone.md) (C06-BLOB-GC-33-01) |
 | свежесть метки соперника: возраст → свежа (`≤ CONTENDER_FRESH`) | [`contender-fresh/`](contender-fresh/README.md) | common (договор наблюдения) | [договор наблюдения](../contracts/observation.md) «Свежесть метки соперника» (C06-CONTENDER-FRESH-33-01) |
-| SaidID: имя просьбы в `fetched` и его чтение | [`said-id/`](said-id/README.md) | P/03.4 (участник 6.4) | [P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.1 `said_id` |
+| SaidID: имя просьбы в `fetched` и его чтение | [`said-id/`](said-id/README.md) | P/03.4 (участник 6.4) | [P/03.4](../../03-worker/ru/spec/03.4-worker.norms.md) Н1.1 `said_id` |
 | токен двери `door1`: выпуск (JCS, Ed25519) и проверка у держателя по `door/keys` | [`door-token/`](door-token/README.md) | P/06.5 (участник 3.4) | [договор токена двери](../contracts/door-token.md); P/06.5-05, P/03.4-08 |
 | «принять консолью» | векторов нет — шаги приёмки [главы 6.7](../../06-console/acceptance/7/README.md) (сц. 01, 02) | P/06 | [договор пересылки](../contracts/forwarding.md) «Принять консолью» |
 | конверты домена `x25519:v1` и `m1`: открытие и круг (`seal`, `seal-round`, `seal-member`, `seal-member-round` приёмки М11) | [`domain-envelopes/`](domain-envelopes/README.md) | common (владелец P/08, главы 8.2, 8.3) | [договор конвертов домена](../contracts/domain-envelopes.md); разбор ревью стадии A 8–10, № 12 |

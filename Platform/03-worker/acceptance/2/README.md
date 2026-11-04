@@ -1,11 +1,11 @@
 # Acceptance P/03.2 — the slot, the epoch, the lease, nobody, the place (stand)
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/2/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей).
-The norm of the chapter is [`03.2-worker.norms.md`](../../../spec/03.2-worker.norms.md) Н5. The scenarios were moved from the acceptance of
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The norm of the chapter is [`03.2-worker.norms.md`](../../spec/03.2-worker.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/05 (stage B, ADR-0083 addendum (1): without a change of
-behaviour); the numbers of scenarios and steps are the former ones, except sc. 04 and 08: the first step is `@start resource`, the former ones are shifted by one (P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). Sc. 02, 06 are the acceptance of chapter 3.3, sc. 03 — of chapter 3.4, the rest — [P/04](../../../../04-controller/acceptance/README.md).
+behaviour); the numbers of scenarios and steps are the former ones, except sc. 04 and 08: the first step is `@start resource`, the former ones are shifted by one (P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). Sc. 02, 06 are the acceptance of chapter 3.3, sc. 03 — of chapter 3.4, the rest — [P/04](../../../04-controller/acceptance/README.md).
 
 The scenarios run on a stand of the `testsub` processes of the implementation: the store, the console `testsub`, the controller `testsub` and the workers
 `testsub` (the training worker of counters), which the runner controls. The catalogue of the stand is two manifests, `testsub` and `testsub2`, in the order of
@@ -17,7 +17,7 @@ a neighbour by contract (the data catalogue, the life cycle of P/04), not the no
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей):
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей):
 the doors `store` (a role with read rights on `testsub/`), `console`, `resource` and `admin` (preparation of rows bypassing their writers — sc. 14–34;
 the floor of epochs — `op: floor`, sc. 26, 27), the directives `@start` (with the expectation `@exit 2` and the environment `<ИМЯ>=<значение>` of the worker), `@sigkill`,
 `@sigterm` (sc. 29), the expectation `@oneof` (sc. 33), `@sleep`, `@until`, `ASSERT`, `@cut role testsubworker store` / `@mend role testsubworker store` (sc. 24),
@@ -49,14 +49,14 @@ In total 28 scenarios / 263 steps: 01-start (8), 04-two-copies (12), 05-sigkill 
   contract `journal`) is read by the events door of the console; exactly one row `worker.name_taken` — at the displaced copy; the second
   `GET` after 12 s — the same one. The resource of the stand is on the server of the controller (`srv-a`; ADR-0084 addendum (2) Р17).
 - sc. 04, 08, 10 — with the resource P/05 (`@start resource` as the first step): the controller and the console read the heartbeats of the workers through the objects door
-  of the resource of their server; without the resource the reading is «not known» ([the object store client contract](../../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). Sc. 01, 05, 09, 11 do not wait for placement.
+  of the resource of their server; without the resource the reading is «not known» ([the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). Sc. 01, 05, 09, 11 do not wait for placement.
 
 **Scenarios of 2026-10-30** (coverage audit of P/03, audit-kimi `ba6666f13`, `fe341f708`). The rows that are not written by the console,
 the runner puts and spoils through the door `admin` (full rights, the dictionary of the common acceptance README) — a write bypassing the writer, as the unit row
 of sc. 12 of the acceptance of chapter 3.3; `cas` is not set where the writer itself rewrites the row (a write on top, P/01.1 Н1
 `cas`), — there is no race with the renewal. Sc. 09, 11 wait for the start refusal by the expectation `@exit 2` (the dictionary, `@start worker`).
 - sc. 14 — an existing row `w-1` with an unreadable `gen` (released, `holder` empty): the worker with a given name does not
-  rewrite it either at once or after `TORN_STILL` 50 s ([the slot contract](../../../../common/contracts/slot.md) «Сроки»), no name —
+  rewrite it either at once or after `TORN_STILL` 50 s ([the slot contract](../../../common/contracts/slot.md) «Сроки»), no name —
   no heartbeat (Н1.4 the paragraph «У отсутствующей строки…», Н3 «capture», the table of transitions);
 - sc. 15 — readable free rows: without `released` and with an empty `holder` (`gen` 7 → 8), a released one with a foreign `holder`
   (`gen` 3 → 4); the capture writes its own `server` (Н3 «capture», the table of transitions; analysis of the review of stage B 3–5, № 6);
@@ -66,14 +66,14 @@ of sc. 12 of the acceptance of chapter 3.3; `cas` is not set where the writer it
   `gen` 8 (Н3 «capture», the table of transitions);
 - sc. 18 — epoch rows before the issue: `2^53 − 1` and not a number; after the assignment of units both rows are of the same version — the issue
   is refused before the write, 0 is not substituted (Н1.5, Н3 «take_epoch(id)», Н4);
-- sc. 19, 20 — the row `platform/schema` with `version` 2 (SCHEMA of the build 1, [the schema contract](../../../../common/contracts/schema.md)):
+- sc. 19, 20 — the row `platform/schema` with `version` 2 (SCHEMA of the build 1, [the schema contract](../../../common/contracts/schema.md)):
   before the start — a start refusal with code 2, no slot; on the go — after a renewal the worker exits, the slot is not released (`released`
   as before, the version of the row does not change), there is no heartbeat any more (Н3 «schema check by the worker»);
 - sc. 21 — the row `platform/decommission/srv-a` before the start: no name, no heartbeat, no contender marks (the listing of the objects
   door is empty); the row is removed — a new worker takes the name (Н3 «start()» step 3, Н1.4а);
 - sc. 22 — start refusals with code 2: the name from the unit names a foreign server (`w-srv-b-1`, Н3 «start()» step `2c`), `INSTANCE_ID` and
-  `BOX_ID` not by the grammar ([the instance contract](../../../../common/contracts/instance.md) `forms`, `sources`), `SERVER_NAME`
-  not by the grammar ([the environment file contract](../../../../common/contracts/env-file.md)); no slots; `w-srv-a-1` — the name of its own
+  `BOX_ID` not by the grammar ([the instance contract](../../../common/contracts/instance.md) `forms`, `sources`), `SERVER_NAME`
+  not by the grammar ([the environment file contract](../../../common/contracts/env-file.md)); no slots; `w-srv-a-1` — the name of its own
   server — is taken;
 - sc. 23 — the own place `sh1` (the shelf names `srv-a`; `testsub2`: `places.lease: strict`, `lease.unconfirmed_max: 600`):
   the hold row is torn (`gen` not a number) — the worker does not rewrite it and holds the place longer than the strict window `CLOSE_BY`
@@ -90,7 +90,7 @@ acceptance README):
   (`until` changed, `gen` as before — not a new capture), the lease is confirmed (the heartbeat element has no `lease`, chapter 3.4
   Н1.1), the epoch of the unit has the same version and number (not released and not issued anew, Н3 «lease_step()» step 4, «take_epoch»),
   the placement is as before. Not checked in the TSV (depends on a choice of the implementation): the count `store_errors` — the deadline of waiting for an answer
-  of the client and the repeats inside a logical call are decided by the implementation ([the store client contract](../../../../common/contracts/store-client.md)
+  of the client and the repeats inside a logical call are decided by the implementation ([the store client contract](../../../common/contracts/store-client.md)
   `wait`; Н1.6 «Сетевые повторы внутри него»); the stand-in heartbeat `stood_in` — whether a step gets stuck longer than STALL 12.5 s also
   depends on this deadline (chapter 3.4 Н3 «stand_in()»); silence longer than the window and `unconfirmed_max` — by reading (Н5 of the norms).
 
@@ -131,7 +131,7 @@ write `op: floor` of the door `admin` (the dictionary of the common acceptance R
   the contributions of the predecessor by each `from` of the books of the manifest (`testsub2/notes/t-1`, `testsub2/rolls/t-1`: there is no row or there is
   no element of the predecessor in it — `@oneof`: the training writer of contributions `testsub2` may already have written its own row under the slot,
   the norms of chapter 3.6 Н5); the contribution of a foreign slot
-  `testsub2/notes/t-2` is of the same version (Н3 «capture» step 4; [chapter 3.7](../../../spec/03.7-worker.norms.md) Н1.2 `claim`);
+  `testsub2/notes/t-2` is of the same version (Н3 «capture» step 4; [chapter 3.7](../../spec/03.7-worker.norms.md) Н1.2 `claim`);
 - sc. 34 — a foreign place `sh1` with a torn hold row (`gen` not a number, `by: t-9`): the worker does not take it either at once or
   after `45 + HOLD_SKEW` (the row is of the same version after 62 s); a free shelf `sh2` appeared — it takes it (Н3 «место»
   `взять_место`: the torn ones — skip; `holds.outcomes.tsv` `<s>worker`).
@@ -250,7 +250,7 @@ This is a subject of a manual check of the specification and of a future check o
 ## Cases of the acceptance of М10/03 on the slot, the epoch and the lease (the move of lesson 6)
 
 Moved from the acceptance README of М10/03 with the move of lesson 6 (stage B): the main acceptance of the units door went to
-[the acceptance of P/06.1](../../../../06-console/acceptance/1/README.md), the cases below check chapter 3.2.
+[the acceptance of P/06.1](../../../06-console/acceptance/1/README.md), the cases below check chapter 3.2.
 
 ### Additional checks R29 — slot, epoch, guard, holds
 
@@ -261,7 +261,7 @@ a full key limit of 1024 UTF-8 bytes; there is no narrower file limit (P/06.1 Н
 |---|---|
 | The name w- + 1007/1008 letters (the full testsub/slots/… — 1023/1024), then w- + 1009 letters (1025) | The first two pass the limit of the string key and are captured; the last one — a refusal of the candidate without the first write. A given name stays nobody, the automatic search checks the next candidate; an error of a newly computed name ends the search |
 | Badkey after the first write of the capture; separately on renewal; separately at the target key of a write under the slot | The capture does not give out a live slot and does not roll back what was confirmed; the renewal loses the name; the target write is refused, the key error by itself does not prove the loss of the slot |
-| Badkey at the guard key; separately at the issue/confirmation of the epoch; separately at holds | The guard does not admit the write; the issue of the epoch does not start the unit, the confirmation — fenced; the taking of holds is refused, the renewal loses the place per [P/03.2 Н3 «place: take, hold, let go»](../../../spec/03.2-worker.norms.md); the refusal does not turn into silent |
+| Badkey at the guard key; separately at the issue/confirmation of the epoch; separately at holds | The guard does not admit the write; the issue of the epoch does not start the unit, the confirmation — fenced; the taking of holds is refused, the renewal loses the place per [P/03.2 Н3 «place: take, hold, let go»](../../spec/03.2-worker.norms.md); the refusal does not turn into silent |
 
 ### Counterexamples of run 23 — slot and lease
 
@@ -269,7 +269,7 @@ For slots and the lease — a worker and controlled clocks/delays.
 
 | Norm | Initial state and intervention | Expected observation |
 |---|---|---|
-| P/03.2-02 | The preferred name is held by a live instance of another box | NameOnAnotherBox: the process is nobody, the mark refused (without `worker.name_taken` — it is only on the loss of the name, [P/03.2 Н3 «nobody and getting the name back»](../../../spec/03.2-worker.norms.md)), another name is not taken |
+| P/03.2-02 | The preferred name is held by a live instance of another box | NameOnAnotherBox: the process is nobody, the mark refused (without `worker.name_taken` — it is only on the loss of the name, [P/03.2 Н3 «nobody and getting the name back»](../../spec/03.2-worker.norms.md)), another name is not taken |
 | P/03.2-02 | B on its first start takes the given name from A of the same box; A after the loss searches for its name again | A stays nobody: the right of the first start is not restored; the live slot of B is not rewritten |
 | P/03.2-01, -02 | gen = bad, the row is still for 50 s; separately — gen = 7 and a torn until, also 50 s; separately — an absent row | unreadable gen: the candidate is refused, the row does not change (also on a release by the controller); readable gen: a new 8; absence: the first 1 |
 | P/03.2-05 | the write is prepared with the guard v1; one's own renewal gives v2 with the same holder/gen; separately — v2 was written by another holder | in both cases the late write gets 412 and changes nothing; the re-read keeps the name in the first case and fences off in the second; the repeat uses a fresh check, not the old guard |
@@ -307,7 +307,7 @@ These are the checks P/03.2-01, -02, -03; the 53 HTTP steps of the units door do
 | Preparation and action | Expected outcome |
 |---|---|
 | A free row w-1 with gen=bad; separately gen=7, until torn and age 49/50 s; separately a readable released | gen=bad is not rewritten; a torn until admits the transition only from 50 s, a new gen=8; a readable released admits the transition at once |
-| The first CAS succeeds, then a refusal of the guard of a deletion or of the CAS of the final write; separately the success of the final write is not confirmed | The slot is not returned as live, there are no writes under it; foreign contributions are not deleted. On an unknown outcome the current operation is repeated with the same id per [P/03.4-07](../../../spec/03.4-worker.norms.md); after a definite refusal a new capture gets fresh versions |
+| The first CAS succeeds, then a refusal of the guard of a deletion or of the CAS of the final write; separately the success of the final write is not confirmed | The slot is not returned as live, there are no writes under it; foreign contributions are not deleted. On an unknown outcome the current operation is repeated with the same id per [P/03.4-07](../../spec/03.4-worker.norms.md); after a definite refusal a new capture gets fresh versions |
 | A non-answer of the read of slots; separately an empty list read successfully | A non-answer leaves the process nobody. An empty list allows a process without a name to create w-1 |
 | Free are w-b, w-10, w-1, w-01, w-2, w-a, w-0, w-srv-a-1; go through the candidates with a CAS refusal to the previous one | The slot order: w-0, w-01, w-1, w-2, w-10, w-a, w-b, w-srv-a-1; the order of the source list has no effect |
 | Both names w-2/w-10 are released through names_given, then separately both are simply free | For names_given the order by name: w-10 first; for free ones — the slot order: w-2 first |

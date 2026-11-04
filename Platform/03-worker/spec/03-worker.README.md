@@ -1,34 +1,34 @@
 # P/03 — instructions for an implementation
 
-This English text is the source; the Russian [`03-worker.README.md`](../03-worker.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/03-worker.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is [`../03-worker.md`](../../03-worker.md).
+This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/03-worker.md` (for people, not in the export).
 
 ## Task
 
 Implement the basic loop of the worker in the language `<LANG>`: ownership of a name, leases of units, the heartbeat, the stand-in for a stuck step,
 the holding of a place and the stop — by the seven chapters of the lesson; pass the Н5 acceptance of the chapters and close their readiness checklists.
 
-- **3.1.** The subsystem supplies its work through the six calls of [chapter 3.1](../03.1-worker.norms.md) Н2: four working ones and
+- **3.1.** The subsystem supplies its work through the six calls of [chapter 3.1](03.1-worker.norms.md) Н2: four working ones and
   two of the ordered stop. The signatures in a specific language and the internal division are not normed.
-- **3.2.** The slot, the epoch, the lease, «nobody», the place and the schema check by the worker — [chapter 3.2](../03.2-worker.norms.md).
-- **3.3.** The reconciliation loop in the order of Н3 of [chapter 3.3](../03.3-worker.norms.md) (read after P/04).
+- **3.2.** The slot, the epoch, the lease, «nobody», the place and the schema check by the worker — [chapter 3.2](03.2-worker.norms.md).
+- **3.3.** The reconciliation loop in the order of Н3 of [chapter 3.3](03.3-worker.norms.md) (read after P/04).
 - **3.4.** The heartbeat, the stand-in, writes under the slot, the stop by SIGTERM, the memory budget, `id` on every write —
-  [chapter 3.4](../03.4-worker.norms.md).
-- **3.5.** Opening a secret by the recipient per the [sealing contract](../../../common/contracts/sealing.md) —
-  [chapter 3.5](../03.5-worker.norms.md) Н3.
+  [chapter 3.4](03.4-worker.norms.md).
+- **3.5.** Opening a secret by the recipient per the [sealing contract](../../common/contracts/sealing.md) —
+  [chapter 3.5](03.5-worker.norms.md) Н3.
 - **3.6.** For the holder — the execution of a request with a mark before the call and an explicit unknown outcome; the writing of events and suppression —
-  [chapter 3.6](../03.6-worker.norms.md) (read after lesson P/05).
+  [chapter 3.6](03.6-worker.norms.md) (read after lesson P/05).
 - **3.7.** The late layer: the write of a contribution under the slot and the cleanup on capturing a foreign slot; the check of a token at the recipient —
-  [chapter 3.7](../03.7-worker.norms.md) (introduced by lesson 8).
+  [chapter 3.7](03.7-worker.norms.md) (introduced by lesson 8).
 
 ## Inputs and their priority
 
-The canon is the norms of the chapters, including Н0, the deadlines of Н1.2 of chapters [3.2](../03.2-worker.norms.md), [3.3](../03.3-worker.norms.md),
-[3.4](../03.4-worker.norms.md) and the order of Н3. The lesson has no HTTP door and no OpenAPI of its own ([chapter 3.1](../03.1-worker.norms.md)
-Н2; ADR-0082 addendum 13): the forms of the requests and answers of the store are set by [P/01.1](../../../01-store/spec/01-store.api.openapi.yaml),
-the doors of units — by [lesson P/06](../../../06-console/spec/06-console.api.openapi.yaml) (chapter 6.1), the publication of objects — by
-[lesson P/05](../../../05-resource/spec/05-resource.norms.md#н2-двери). The forms of the rows and objects of the lesson are
+The canon is the norms of the chapters, including Н0, the deadlines of Н1.2 of chapters [3.2](03.2-worker.norms.md), [3.3](03.3-worker.norms.md),
+[3.4](03.4-worker.norms.md) and the order of Н3. The lesson has no HTTP door and no OpenAPI of its own ([chapter 3.1](03.1-worker.norms.md)
+Н2; ADR-0082 addendum 13): the forms of the requests and answers of the store are set by [P/01.1](../../01-store/spec/01-store.api.openapi.yaml),
+the doors of units — by [lesson P/06](../../06-console/spec/06-console.api.openapi.yaml) (chapter 6.1), the publication of objects — by
+[lesson P/05](../../05-resource/spec/05-resource.norms.md#н2-двери). The forms of the rows and objects of the lesson are
 the family schemas `../data/*.schema.json` (the sections «Семьи данных» of chapters 3.2 and 3.4; ADR-0088).
 
 ## What to create
@@ -44,10 +44,10 @@ the family schemas `../data/*.schema.json` (the sections «Семьи данны
 
 ## Order of work
 
-1. Implement the start and the state «nobody». The manifest and the memory budget are checked before the name is obtained ([chapter 3.4](../03.4-worker.norms.md)
+1. Implement the start and the state «nobody». The manifest and the memory budget are checked before the name is obtained ([chapter 3.4](03.4-worker.norms.md)
    Н3 «start() — the budget step»). The first capture on one's own box and a repeated search are different modes; a repeated search does not
    take away a live slot. A refusal at the start does not permit writing the heartbeat under a foreign name.
-2. Assemble the loop in the order of [chapter 3.3](../03.3-worker.norms.md) Н3. First the ownership gates, then the reconciliation of the assignment and
+2. Assemble the loop in the order of [chapter 3.3](03.3-worker.norms.md) Н3. First the ownership gates, then the reconciliation of the assignment and
    of the unit, the pump, the lease step, the heartbeat, the watchdog and the wait. Every unit checks the gates before its start.
 3. The lease step checks the slot first. The loss of the slot stops all units; the loss of one epoch — only its unit.
    Do not count the absence of an answer as an empty row or list. The saved last list on a non-answer does not permit
@@ -88,12 +88,12 @@ the family schemas `../data/*.schema.json` (the sections «Семьи данны
    `platform/epoch_floor` once per step; an epoch below the floor is a loss of the lease.
 9. Make the holding of the place: own/foreign, strict, confirmation by one's own clock, the closing of the writer.
    The right to the data of a unit and the right to the place are checked jointly; neither replaces the other.
-10. Implement SIGTERM in the order of [chapter 3.4](../03.4-worker.norms.md) Н3 and distinguish it from SIGKILL. Describe the choices of the implementation
+10. Implement SIGTERM in the order of [chapter 3.4](03.4-worker.norms.md) Н3 and distinguish it from SIGKILL. Describe the choices of the implementation
     («Implementation decides» of the chapters), including TimeoutStopSec and the presence of the process at the resource.
-11. Opening: pass the vectors of the contract `open.tsv` and `ring.tsv` ([`../../common/vectors/sealing/`](../../../common/vectors/sealing/README.md))
-    with one's own opening function; the opening by the worker and `why` on an error — by reading [chapter 3.5](../03.5-worker.norms.md) Н3 «open»
+11. Opening: pass the vectors of the contract `open.tsv` and `ring.tsv` ([`../../common/vectors/sealing/`](../../common/vectors/sealing/README.md))
+    with one's own opening function; the opening by the worker and `why` on an error — by reading [chapter 3.5](03.5-worker.norms.md) Н3 «open»
     (there is no worker with secrets on the stand).
-12. Write an event under the epoch per the [event journal contract](../../../common/contracts/event-journal.md) (lesson P/05); suppression — [chapter 3.6](../03.6-worker.norms.md) Н1.2. Separate
+12. Write an event under the epoch per the [event journal contract](../../common/contracts/event-journal.md) (lesson P/05); suppression — [chapter 3.6](03.6-worker.norms.md) Н1.2. Separate
     ordinary requests, the append of ADR-0054, elsewhere and free_ask per Н3 of chapter 3.6. The append does not create a mark: fetched, the removal
     of the row and the release of asked; a repeat decides by the data. For the ordinary profile carry out the table: admission and deadline,
     a confirmed begun, a single call. Check a conflict and an unknown outcome of each read/change. The presence of

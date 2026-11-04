@@ -27,7 +27,7 @@
 - **Уроки [6](06-objectstorage-the-engine.md)–[8](08-visibility-retention-timeline.md)** — движок: том, блок, последовательность, поток; читатель видит только закрытые блоки; кольцо.
 - **[Урок 10](10-recworker.md)** — регистратор, `place_by: volume`, `home` как предпочтение.
 - **[Урок 26](26-a-backup-archive-of-our-own.md)** — резервная запись, `when: offline`, дверь архива.
-- **[P/03](../Platform/03-worker/03-worker.md)**, глава 3.2 (прежде М10/3, шаг 11) — место и его захват (`claim_hold`, `renew_hold`, `release_hold`), строгая аренда и возврат за именем; решение о месте сквозь молчание — ADR 0029.
+- **[P/03](../Platform/03-worker/ru/03-worker.md)**, глава 3.2 (прежде М10/3, шаг 11) — место и его захват (`claim_hold`, `renew_hold`, `release_hold`), строгая аренда и возврат за именем; решение о месте сквозь молчание — ADR 0029.
 - **[P/04](../Platform/04-controller/04-controller.md)** — фильтры размещения и декларации `affinity`, `near.prefer`.
 - **[P/06](../Platform/06-console/06-console.md)**, глава 6.2 (прежде М10/7) — секреты: поле-секрет, `bound_to` и запечатывание; правило адресов.
 

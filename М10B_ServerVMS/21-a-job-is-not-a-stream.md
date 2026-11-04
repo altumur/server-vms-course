@@ -22,7 +22,7 @@
 - **[М10/2](../Platform/02-installer/ru/02-installer.md)** — что пишет какой токен. Этот урок целиком стоит на той таблице.
 - **[P/04](../Platform/04-controller/04-controller.md)** — размещение, `unplace_deleted` и `retire_when` (шаг 9), heartbeat как канал воркер → контроллер.
 - **[P/05](../Platform/05-resource/05-resource.md)** — индекс событий, `current_epochs` и `epoch_is`.
-- **[P/06](../Platform/06-console/06-console.md)**, глава 6.4, и **[P/03](../Platform/03-worker/03-worker.md)**, глава 3.6 (прежде М10/8, шаг 14) — семейство запросов: строка `<sub>/requests/<id>`, кто исполняет, кто убирает.
+- **[P/06](../Platform/06-console/06-console.md)**, глава 6.4, и **[P/03](../Platform/03-worker/ru/03-worker.md)**, глава 3.6 (прежде М10/8, шаг 14) — семейство запросов: строка `<sub>/requests/<id>`, кто исполняет, кто убирает.
 
 ## Чему вы научитесь
 

@@ -1,20 +1,20 @@
 # Acceptance P/03.3 — the reconciliation loop of the worker (stand)
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей).
-The norm of the chapter is [`03.3-worker.norms.md`](../../../spec/03.3-worker.norms.md) Н5. The scenarios were moved from the acceptance of
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The norm of the chapter is [`03.3-worker.norms.md`](../../spec/03.3-worker.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/05 (stage B, ADR-0083 addendum (1): without a change of
 behaviour); the numbers of scenarios and steps are the former ones, except sc. 02 and 06: the first step is `@start resource`, the former ones are shifted by one
-— the controller and the console read the heartbeats of the workers through the objects door of the resource of their server, without the resource «not known» ([the object store client contract](../../../../common/contracts/object-client.md) `door`;
+— the controller and the console read the heartbeats of the workers through the objects door of the resource of their server, without the resource «not known» ([the object store client contract](../../../common/contracts/object-client.md) `door`;
 P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). The chapter is read after lesson P/04: the scenarios wait for an assignment from the controller.
 Five scenarios / 49 steps; sc. 12 `12-row-unreadable` (the VMS request «пульс и битая строка») — also the resource `srv-a` (`@start resource`): the heartbeat is read through the door of the resource, the unit row is put bypassing the console by `@as console store`. Sc. 25 `25-unit-never-read` (coverage audit of P/03, 2026-10-30) — the unit row is broken (`start: "x"`) already before the first read: there is no controller, the assignment `testsub/workers/w-1` (the form of P/04 Н1.1) and the unit row are put by the runner through the door `admin`; the unit does not start, there is no epoch, the heartbeat element is `phase: unreadable` without `epoch` and `observed_revision`, `garbled_rows` ≥ 1 (`ASSERT`), `pass_failures` 0 (Н3 the loop, step 2; chapter 3.4 Н1.1). Sc. 35 `35-unit-born-changed` (coverage audit of P/03, the second pass of Gemini, 2026-10-30, the draft G06) — the unit row and the assignment, as in sc. 25, through the door `admin`, there is no controller; the unit runs under epoch 1, then the runner rewrites its row with a new `born` (a new life, the row check contract `born`) and `revision` 2, while the unit stays in the assignment `testsub/workers/w-1`: the worker stops it, releases the epoch and takes a new one — epoch 2, the heartbeat element `running` under epoch 2 and `observed_revision` 2 (Н3 the loop, step 2 «born сменился»; in sc. 02 an edit without a change of `born` does not change the epoch).
 
-The scenarios run on a stand of the `testsub` processes of the implementation: the store, the console `testsub`, the controller `testsub` and the workers `testsub` (the training worker of counters), which the runner controls. The catalogue of the stand is two manifests, `testsub` and `testsub2`, in the order of the section «Стенд» of the common acceptance README (reconciliation of python and go М10/3–5, item 24): the worker of one manifest does not touch the rows of the other on capture and cleanup. The training worker `testsub` reports the started counter by the element `status` with `phase: running` ([chapter 3.4](../../../spec/03.4-worker.norms.md) Н1.1 `phase`) and one word of the subsystem `n` — the value of the counter (chapter 3.4 Н1.1 `status`; the second pilot, `Н-7`). Observation — rows through the store door P/01.1 and units through the console door P/06.1; the heartbeat (an object) is not read here. The controller is a neighbour by contract (the data catalogue, `lifecycle.md` of P/04), not the norms of P/04 (the plan of the move of lesson 3, В2).
+The scenarios run on a stand of the `testsub` processes of the implementation: the store, the console `testsub`, the controller `testsub` and the workers `testsub` (the training worker of counters), which the runner controls. The catalogue of the stand is two manifests, `testsub` and `testsub2`, in the order of the section «Стенд» of the common acceptance README (reconciliation of python and go М10/3–5, item 24): the worker of one manifest does not touch the rows of the other on capture and cleanup. The training worker `testsub` reports the started counter by the element `status` with `phase: running` ([chapter 3.4](../../spec/03.4-worker.norms.md) Н1.1 `phase`) and one word of the subsystem `n` — the value of the counter (chapter 3.4 Н1.1 `status`; the second pilot, `Н-7`). Observation — rows through the store door P/01.1 and units through the console door P/06.1; the heartbeat (an object) is not read here. The controller is a neighbour by contract (the data catalogue, `lifecycle.md` of P/04), not the norms of P/04 (the plan of the move of lesson 3, В2).
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей): the doors `store` (a role with read rights on `testsub/`), `console`, `resource` and `admin` (sc. 25, 35), the directives `@start`,
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей): the doors `store` (a role with read rights on `testsub/`), `console`, `resource` and `admin` (sc. 25, 35), the directives `@start`,
 `@sleep`, `@until`, `@as`, `ASSERT`; the expectation is a subset of fields.
 
 The processes are started per the section «Stand» of the common acceptance README (the commands of roles, the environment of the worker); the read role of
@@ -75,7 +75,7 @@ separately. The other evidence is Н5 of the norms of the chapter, «Evidence ou
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
-Waiting for an event is `@until`. The remaining sleeps are a check of absence or the time before an action; the length is the smallest by the deadlines of Н1.2 of [chapter 3.2](../../../spec/03.2-worker.norms.md) and Н1.2 of chapter 3.3:
+Waiting for an event is `@until`. The remaining sleeps are a check of absence or the time before an action; the length is the smallest by the deadlines of Н1.2 of [chapter 3.2](../../spec/03.2-worker.norms.md) and Н1.2 of chapter 3.3:
 
 | Sc./step | Sleep | Reason |
 |---|---|---|

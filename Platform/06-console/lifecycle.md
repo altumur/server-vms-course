@@ -7,7 +7,7 @@
 
 [P/02.3]: ../02-installer/ru/spec/02.3-installer.norms.md
 [P/02.4]: ../02-installer/ru/spec/02.4-installer.norms.md
-[P/03.2]: ../03-worker/spec/03.2-worker.norms.md
+[P/03.2]: ../03-worker/ru/spec/03.2-worker.norms.md
 [P/06.1]: spec/06.1-console.norms.md
 [P/06.2]: spec/06.2-console.norms.md
 [P/06.3]: spec/06.3-console.norms.md

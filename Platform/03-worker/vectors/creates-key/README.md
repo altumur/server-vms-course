@@ -1,10 +1,10 @@
 # Vectors: the id of an order row (`worker.creates[].key`)
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/creates-key/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter P/03.6 ([norms](../../../spec/03.6-worker.norms.md) Н1.6 `id`, `key`; ADR-0091 item 1). The participant is
-`<s>worker` of the orderer (the worker library). The writing of values by types is [P/06.1](../../../../06-console/spec/06.1-console.norms.md)
-Н1.2 `values_by_type` (the vectors [`values-by-type`](../../../../common/vectors/values-by-type/README.md)). The bytes are written by the Specification.
+The owner is chapter P/03.6 ([norms](../../spec/03.6-worker.norms.md) Н1.6 `id`, `key`; ADR-0091 item 1). The participant is
+`<s>worker` of the orderer (the worker library). The writing of values by types is [P/06.1](../../../06-console/spec/06.1-console.norms.md)
+Н1.2 `values_by_type` (the vectors [`values-by-type`](../../../common/vectors/values-by-type/README.md)). The bytes are written by the Specification.
 
 ## `cases.tsv`
 
@@ -27,7 +27,7 @@ Who executes it is the orderer worker (`03-worker`: the library builds the id, P
 
 ## Stand command
 
-`creates-key` is the key `stand` of the profile `03-worker` (the section «Layout by processes» of [the common acceptance README](../../../../common/acceptance/README.md)):
+`creates-key` is the key `stand` of the profile `03-worker` (the section «Layout by processes» of [the common acceptance README](../../../common/acceptance/README.md)):
 a template with `{input}` — the path of the file into which the runner writes the cell `input` of the row byte for byte; stdout — the UTF-8 bytes of the id exactly
 as `expect`, without a line feed at the end and without a JSON wrapper; code 0. An input not by the form of this README — code 2 (`@exit 2`).
 Another code or extra bytes — FAIL of the row.

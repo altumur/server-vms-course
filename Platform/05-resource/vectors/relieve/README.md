@@ -4,7 +4,7 @@
 
 Владелец — урок [P/05](../../spec/05-resource.norms.md) (Н1.4 `free_ask`, Н3 «проход ресурса» `relieve`; запрос VMS freeing,
 решение «Архитектора» 2026-10-23). Участники — ресурс (пишет и снимает `<sub>/requests/free-<server>-<volume>`) и воркеры
-подсистемы с `requests.free` (отвечают полем пульса `freeing`, [P/03.4](../../../03-worker/spec/03.4-worker.norms.md) Н1.1).
+подсистемы с `requests.free` (отвечают полем пульса `freeing`, [P/03.4](../../../03-worker/ru/spec/03.4-worker.norms.md) Н1.1).
 Байты пишет «Спецификация».
 
 ## `cases.tsv`
