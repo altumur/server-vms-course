@@ -1,16 +1,22 @@
-"""Сверка английского текста норм с русским (ADR-0120 п. 1 (б)): один набор номеров норм, ссылок, кодов и слов отказов.
+"""Сверка английского источника спецификации с производным русским текстом (ADR-0121 п. 3; ADR-0120 доп. (5) п. 7).
 
-Русский текст `Platform/NN-<процесс>/spec/<stem>.norms.md` — норма; английский `spec/en/<stem>.norms.en.md` — производный.
-Сверяется по разделам второго уровня (`## …`), по порядку: разделов столько же, у каждого раздела равны
-- номера норм `Н…` в заголовках подразделов (по порядку);
+Английский `<каталог>/en/<имя>.en.md` — источник (нормы — в `spec/en/`); русский `<каталог>/<имя>.md` — производный,
+с пометкой «производный от en, руками не правится». Сверяется по разделам `##` и `###`, по порядку: разделов столько же,
+уровни те же, у каждого раздела равны
+- номера норм `Н…` в заголовках;
 - множества ссылок: `P/NN[.K][-MM]`, `ADR-NNNN`, `Н…`, id находок (`C01-ROW-INDEX-LOST-01`), цели ссылок Markdown
   (путём от корня, у английского файла на каталог глубже);
-- множество HTTP-кодов (100–599 целым словом) и множество слов отказов (виды `kind` таблицы Н4 русского текста) — в
-  `code`-вставках и блоках кода;
+- множество HTTP-кодов (100–599 целым словом) и множество слов отказов (виды `kind` таблиц Н4 урока) — в `code`-вставках
+  и блоках кода;
 - `code`-вставки русского раздела есть и в английском (английский МОЖЕТ добавить свои: алгоритм называет переменные);
-- таблицы: столько же, строк столько же.
+- числа русской прозы раздела есть в английской;
+- таблицы: столько же, строк столько же; в каждой ячейке — те же числа и `code`-вставки, ячейка без кириллицы — та же;
+- блоки кода с пометкой языка (```yaml …) — по строкам: строк столько же, у каждой тот же отступ, тот же ключ, те же
+  числа; строка без кириллицы (вне комментария `#`) — та же; переводятся только комментарии и русская проза значений.
+  Блок без пометки — процедура: английский пишет её нумерованным алгоритмом (ADR-0120 п. 1 (а)), построчно не сверяется.
 Чеклист: id `P/…-MM` — те же, в том же порядке. Кириллица в английском — только в `code`, «…», номерах `Н…`, целях
-ссылок, именах файлов и прежних уроков (`М10A_Platform/…`, `М10/11`): нормативные слова по-русски там — нарушение.
+ссылок, именах файлов, прежних уроков (`М10A_Platform/…`, `М10/11`) и id ревью (`А1`): русские слова там — нарушение.
+Блоки `families`, `form`, `canonical` (sections.py) английский несёт байт в байт (ADR-0121 доп. (1) п. 2).
 """
 import os
 import re
@@ -102,6 +108,76 @@ def facts(body, base, root, kinds, pair=()):
     }
 
 
+NUMBER = re.compile(r"(?<![\w.])[0-9]+(?:[.,][0-9]+)*(?![\w])")
+TAGGED = re.compile(r"^```([A-Za-z]+)[^\n]*\n(.*?)^```[ \t]*$", re.M | re.S)
+KEY = re.compile(r"^(\s*(?:- )?)([^\s:#][^:#]*?):(?=\s|$)")
+
+
+def code_part(line):
+    """A line of a code block without its comment (` #…` outside quotes)."""
+    quote = None
+    for k, ch in enumerate(line):
+        if quote:
+            quote = None if ch == quote else quote
+        elif ch in "\"'":
+            quote = ch
+        elif ch == "#" and (k == 0 or line[k - 1] in " \t"):
+            return line[:k].rstrip()
+    return line.rstrip()
+
+
+def cells(row):
+    return [c.strip() for c in row.strip().strip("|").split("|")]
+
+
+def strict(rb, eb):
+    """ADR-0120 доп. (5) п. 7: values, orders and identifiers of code blocks, tables and prose agree."""
+    out = []
+    rt, et = TAGGED.findall(rb), TAGGED.findall(eb)
+    if [t for t, _ in rt] != [t for t, _ in et]:
+        out.append(f"tagged code blocks differ: ru {[t for t, _ in rt]}, en {[t for t, _ in et]}")
+    for k, ((tag, rcode), (_, ecode)) in enumerate(zip(rt, et), 1):
+        rl, el = rcode.splitlines(), ecode.splitlines()
+        if len(rl) != len(el):
+            out.append(f"code block {k} ({tag}): {len(el)} lines, ru {len(rl)} — translate comments and prose values only")
+            continue
+        for no, (r, e) in enumerate(zip(rl, el), 1):
+            rc, ec = code_part(r), code_part(e)
+            where = f"code block {k} ({tag}) line {no}"
+            if len(r) - len(r.lstrip()) != len(e) - len(e.lstrip()):
+                out.append(f"{where}: indentation differs")
+            rk, ek = KEY.match(rc), KEY.match(ec)
+            if rk and not CYR.search(rk.group(2)) and (not ek or rk.group(0) != ek.group(0)):
+                out.append(f"{where}: key {rk.group(2)!r}, en {ek and ek.group(2)!r}")
+            if not CYR.search(rc) and rc != ec:
+                out.append(f"{where}: {ec!r}, ru {rc!r} — only comments are translated here")
+            elif sorted(NUMBER.findall(rc)) != sorted(NUMBER.findall(ec)):
+                out.append(f"{where}: numbers {sorted(NUMBER.findall(ec))}, ru {sorted(NUMBER.findall(rc))}")
+    rtab = [t for t in re.split(r"\n[ \t]*\n", FENCE.sub("", rb)) if TABLE_ROW.search(t)]
+    etab = [t for t in re.split(r"\n[ \t]*\n", FENCE.sub("", eb)) if TABLE_ROW.search(t)]
+    for k, (r, e) in enumerate(zip(rtab, etab), 1):
+        for no, (rr, er) in enumerate(zip(TABLE_ROW.findall(r), TABLE_ROW.findall(e)), 1):
+            rc, ec = cells(rr), cells(er)
+            if len(rc) != len(ec):
+                out.append(f"table {k} row {no}: {len(ec)} cells, ru {len(rc)}")
+                continue
+            for c, (x, y) in enumerate(zip(rc, ec), 1):
+                where = f"table {k} row {no} cell {c}"
+                xs, ys = LINK.sub("]()", x), LINK.sub("]()", y)
+                if not CYR.search(xs) and not re.search(r"\[[^\]]*[A-Za-z]{3}", xs) and xs != ys:
+                    out.append(f"{where}: {y!r}, ru {x!r}")
+                elif sorted(NUMBER.findall(SPAN.sub("", xs))) != sorted(NUMBER.findall(SPAN.sub("", ys))):
+                    out.append(f"{where}: numbers {sorted(NUMBER.findall(SPAN.sub('', ys)))}, ru {sorted(NUMBER.findall(SPAN.sub('', xs)))}")
+                elif {m.group(2) for m in SPAN.finditer(xs)} - {m.group(2) for m in SPAN.finditer(ys)}:
+                    out.append(f"{where}: code spans {sorted({m.group(2) for m in SPAN.finditer(xs)} - {m.group(2) for m in SPAN.finditer(ys)})} missing")
+    rp = TABLE_ROW.sub("", LINK.sub("]()", FENCE.sub("", rb)))
+    ep = TABLE_ROW.sub("", LINK.sub("]()", FENCE.sub("", eb)))
+    missing = set(NUMBER.findall(rp)) - set(NUMBER.findall(ep))
+    if missing:
+        out.append(f"numbers of the Russian prose missing: {sorted(missing)}")
+    return out
+
+
 BUILT = re.compile(r"<!-- (families|form|canonical):begin -->.*?<!-- \1:end -->", re.S)
 
 
@@ -135,6 +211,7 @@ def compare(ru_text, en_text, ru_path, en_path, root):
         pair = {Path(os.path.normpath(Path(p))).relative_to(root).as_posix() for p in (ru_path, en_path)}
         rf = facts(rb, Path(ru_path).parent, root, kinds, pair)
         ef = facts(eb, Path(en_path).parent, root, kinds, pair)
+        errors.extend(f"{where}: {m}" for m in strict(rb, eb))
         for key in rf:
             if key == "spans":
                 missing = rf[key] - ef[key]

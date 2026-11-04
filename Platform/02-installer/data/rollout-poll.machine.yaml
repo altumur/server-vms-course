@@ -1,106 +1,158 @@
-# Автомат опроса голосующих w2cctl rollout — P/02.4 Н1.9 poll (ADR-0115 доп. (28)–(37)); форма — ADR-0120 п. 2 (б),
-# ответ «Архитектора» 2026-11-04 к форме (4), замечания 1–6. Норма ссылается на автомат; трассы — rollout-poll.traces.tsv.
-# Один опрос: pre перед действиями, pre перед перезапуском члена или проверка -last — каждый раз новый экземпляр, свои цели.
+# The voter poll of w2cctl rollout — the norm of P/02.4 Н1.9 poll (ADR-0115 addenda (28)–(37); form — ADR-0120 item 2 (b),
+# addendum (5) items 4, 5). The prose of Н1.9 keeps only bound, unproven, other_order and the rationale; where prose and
+# this machine differ, the machine holds. Traces — rollout-poll.traces.tsv; check_spec runs them (check_machines.py).
+# One poll is one instance: pre before the actions, pre before the member restart, or the -last check — each with its own targets.
 #
-# Исполнение. События приходят по одному. На событие переходы с его именем в event просматриваются по порядку: каждый, чьё if истинно,
-# исполняет do по порядку; stop: true или to: <состояние> кончает обработку события. В passed и refused событий нет.
-# if и аргументы действий — CEL (расширения strings, two-var-comprehensions) над параметрами события, input, vars и const;
-# множества — списки без повторов. Действия — только из actions, таймеры — только из timers, функции — только из functions.
+# Execution. Events come one at a time, in time order; timers are part of the machine (timers:), the executor raises their
+# events on virtual clocks. On an event, the transitions with that event name are taken in order: each whose if holds runs
+# its do in order; stop: true or to: <state> ends the event. passed and refused take no events.
+# An action evaluates its set: and emit: over the state before it, then assigns set: at once, then delivers the events of
+# emit: in order, each fully, before the next action. io: is input/output: it changes no variable.
+# Expressions are CEL (extensions strings, two-var-comprehensions) over the event parameters, input, const and the
+# variables (by name, and as vars.<name>). Sets are lists without repeats. Everything compiles when the machine loads.
 machine: rollout-poll
 norm: P/02.4 Н1.9 poll
 states: [polling, passed, refused]
 initial: polling
 
-input:                                   # снимок статуса своего члена при mode (Н1.9 mode, poll)
-  mode: string                           # pre — проход: живых ≥ кворум + 1; last — проход: жив каждый прочий голосующий
-  self: string                           # id своего члена
-  voters: list<string>                   # voters снимка; self среди них; голосующих ≥ 2 (один с -allow-downtime — опроса нет, Н1.9 pre)
-  members: map<string,string>            # members снимка: id → адрес
+input:                                   # the status snapshot of the own member at mode (Н1.9 mode, poll)
+  mode: string                           # pre — pass: live ≥ quorum + 1; last — pass: every other voter is live
+  self: string                           # the id of the own member
+  voters: list<string>                   # voters of the snapshot; self among them; ≥ 2 voters (one with -allow-downtime — no poll, Н1.9 pre)
+  members: map<string,string>            # members of the snapshot: id → address
 
 const:
-  BATCH: 1                               # с; партия k начинается в s0 + k·BATCH (s0 — начало опроса)
-  READ: 1                                # с; срок чтения цели
-  ROLLOUT_WAIT: 300                      # с; срок опроса
+  BATCH: 1                               # s; batch k starts at s0 + k·BATCH (s0 — the start of the poll)
+  READ: 1                                # s; the deadline of a target read
+  ROLLOUT_WAIT: 300                      # s; the deadline of the poll
 
 vars:
-  k: {type: int, init: -1}                           # текущая партия
-  leader: {type: "string|null", init: null}          # адрес лидера партии k — leader ответа своего члена
-  leader_id: {type: "string|null", init: null}       # leader_id того же ответа
-  self_replied: {type: bool, init: false}            # ответ своего члена в партии k обработан
-  leaderless: {type: bool, init: false}              # в партии k у всех разрыв (Н1.9 round_leader)
-  replied: {type: "list<string>", init: []}          # голосующие, чей ответ партии k обработан (self тоже)
-  held: {type: "list<{v, r}>", init: []}             # ответы партии k, пришедшие раньше ответа своего члена
-  alive: {type: "list<string>", init: []}            # живые в партии k (Н1.9 alive)
-  need: {type: "list<string>", init: []}             # живой ответ в партии k, цели нет и чтение не идёт
-  target: {type: "map<string,int>", init: {}}        # цель голосующего в этом опросе (Н1.9 target)
-  reads: {type: "map<int,list<string>>", init: {}}   # идущие чтения цели: номер → кому цель
+  k: {type: int, init: -1}                             # the current batch
+  leader: {type: "string|null", init: null}            # the address leader of the own member's answer in batch k — only for the target read
+  leader_id: {type: "string|null", init: null}         # leader_id of the same answer — what live answers are compared with
+  self_replied: {type: bool, init: false}              # the own member's answer of batch k (or its absence) is processed
+  leaderless: {type: bool, init: false}                # in batch k every voter has a break (no answer of the own member, or no leader)
+  replied: {type: "list<string>", init: []}            # voters whose answer of batch k is processed (self too)
+  held: {type: "list<{v, r}>", init: []}               # answers of batch k that came before the own member's answer
+  alive: {type: "list<string>", init: []}              # live in batch k
+  need: {type: "list<string>", init: []}               # a live answer in batch k, no target and no read under way
+  target: {type: "list<{v, c}>", init: []}             # the target of a voter in this poll
+  reads: {type: "list<{n, who}>", init: []}            # target reads under way: number → whom it gives a target
   next_read: {type: int, init: 1}
-  read_done: {type: bool, init: false}               # чтение цели партии k уже начато
+  read_done: {type: bool, init: false}                 # the target read of batch k has started
+  result: {type: "{code, word}|null", init: null}      # the refusal of the poll
 
-timers:                                  # закрытый набор
-  batch: {every: BATCH, from: s0, event: tick}                 # tick(k) в s0 + k·BATCH, k = 0, 1, …
-  wait: {after: ROLLOUT_WAIT, from: s0, event: wait_expired}   # в один миг с tick — после него
-  read: {after: READ, from: read_commit, event: commit}        # не успело — commit(n, null)
+timers:                                  # a closed set; the executor raises their events
+  batch: {every: BATCH, from: s0, event: tick}                                   # tick(k) at s0 + k·BATCH, k = 0, 1, …
+  reply: {after_io: send_status, until: next tick, event: "self_status(k, null), status(k, v, null)"}   # each read of batch k not answered by tick(k + 1)
+  read: {after_io: read_commit, after: READ, event: "commit(n, null)"}           # a target read not answered within READ
+  wait: {after: ROLLOUT_WAIT, from: s0, event: wait_expired}
 
-events:                                  # закрытый набор; r — ответ GET /v1/status или null (нет ответа в срок)
+events:                                  # a closed set; r — the answer of GET /v1/status, or null (no answer in time)
   tick: [k]
-  self_status: [k, r]                    # свой член по admin.sock; срок — до tick(k + 1)
-  status: [k, v, r]                      # голосующий v ≠ self по адресу members; срок — до tick(k + 1)
-  commit: [n, c]                         # чтение цели n: c — commit лидера или null (нет ответа в срок)
+  self_status: [k, r]                    # the own member over admin.sock
+  status: [k, v, r]                      # voter v ≠ self at the address members[v]
+  commit: [n, c]                         # target read n: c — the commit of the leader, or null (no answer in time)
   wait_expired: []
 
-functions:                               # закрытый набор
-  same_set: "(list, list) -> bool — равны как множества (Н1.9 poll: порядок не в счёт)"
+env:                                     # assumptions of the environment (P/02.4 Н1.9 bound)
+  - "Events of one instant, in this order: commit(n, null) of reads due; self_status(k − 1, null), then status(k − 1, v, null) in the order of input.voters, for the reads of batch k − 1 not answered; tick(k); wait_expired."
+  - "Each read is answered at most once. An answer later than its deadline may still arrive after the deadline gave null: it carries the old batch k or a finished read n, and the machine ignores it."
+  - "An answer describes the member at some moment between the read and the answer; a voter cut off after its last read, and a break shorter than two observations (2 s), are not seen — the limits of Н1.9 bound."
+  - "The membership of the store does not change during rollout (Н1.9 limit); a change seen in an answer of the own member refuses the poll."
 
-actions:                                 # закрытый набор; что меняет каждое
-  send_status: "(k) — GET /v1/status своего члена по admin.sock (один раз: ответ даёт лидера партии и ответ голосующего self) и каждого v ≠ self по members[v]; срок каждого — tick(k + 1)"
-  new_partition: "(k) — k := k; leader, leader_id := null; self_replied, leaderless, read_done := false; replied, held, alive, need := []"
-  rupture_unanswered: "() — партия k кончилась: self не ответил — rupture_all; иначе rupture каждого v из voters, кого нет в replied"
-  rupture: "(v) — разрыв v: target[v] снят, v убран из need, из alive и из каждого reads[n] (чтение, начатое до разрыва, цели не даёт)"
-  rupture_all: "() — leaderless := true; rupture каждого v из voters"
-  set_leader: "(r) — leader := r.leader, leader_id := r.leader_id; self_replied := true"
-  hold: "(v, r) — held += {v, r}"
-  release_held: "() — self_replied := true; каждый {v, r} из held по порядку — событием status(k, v, r); held := []"
-  as_voter: "(r) — ответ своего члена — событием status(k, self, r)"
-  mark_replied: "(v) — replied += v"
-  mark_need: "(v) — need += v"
-  mark_alive: "(v) — alive += v"
-  read_commit: "() — need пусто или read_done — ничего; иначе reads[next_read] := need, need := [], next_read += 1, read_done := true; GET /v1/status лидера партии (leader_id = self — admin.sock, иначе адрес leader), срок READ"
-  set_targets: "(n, c) — target[v] := c каждому v из reads[n]; reads[n] снят"
-  drop_read: "(n) — reads[n] снят: цели нет, следующий живой ответ — снова need"
-  refuse: "(code, word) — отказ опроса"
-  pass: "() — опрос пройден"
+functions:                               # a closed set
+  same_set: "(list, list) -> bool — equal as sets (Н1.9 poll: the order does not count)"
+
+actions:                                 # a closed set
+  send_status:
+    args: [k]
+    io: "GET /v1/status of the own member over admin.sock, once (its answer gives the leader of the batch and the answer of the voter self), and of each voter v ≠ self at members[v]; the deadline of each is tick(k + 1) (timer reply)"
+  new_batch:
+    args: [k]
+    set: {k: "k", leader: "null", leader_id: "null", self_replied: "false", leaderless: "false", read_done: "false", replied: "[]", held: "[]", alive: "[]", need: "[]"}
+  rupture:
+    args: [v]
+    set: {target: "target.filter(t, t.v != v)", need: "need.filter(u, u != v)", alive: "alive.filter(u, u != v)", reads: "reads.map(x, {'n': x.n, 'who': x.who.filter(u, u != v)})"}
+  rupture_all:
+    set: {leaderless: "true", target: "[]", need: "[]", alive: "[]", reads: "reads.map(x, {'n': x.n, 'who': []})"}
+  set_leader:
+    args: [r]
+    set: {leader: "r.leader", leader_id: "r.leader_id"}
+  self_done:
+    set: {self_replied: "true"}
+  hold:
+    args: [v, r]
+    set: {held: "held + [{'v': v, 'r': r}]"}
+  release_held:
+    set: {held: "[]"}
+    emit: "held.map(h, {'event': 'status', 'k': vars.k, 'v': h.v, 'r': h.r})"
+  as_voter:
+    args: [r]
+    emit: "[{'event': 'status', 'k': vars.k, 'v': input.self, 'r': r}]"
+  mark_replied:
+    args: [v]
+    set: {replied: "v in replied ? replied : replied + [v]"}
+  mark_need:
+    args: [v]
+    set: {need: "v in need ? need : need + [v]"}
+  mark_alive:
+    args: [v]
+    set: {alive: "v in alive ? alive : alive + [v]"}
+  read_commit:
+    set: {reads: "reads + [{'n': next_read, 'who': need}]", next_read: "next_read + 1", need: "[]", read_done: "true"}
+    io: "GET /v1/status of the leader of the batch (admin.sock when leader_id == input.self, otherwise the address leader); its commit is the target of read next_read; deadline READ (timer read)"
+  set_targets:
+    args: [n, c]
+    set: {target: "target + reads.filter(x, x.n == n)[0].who.map(v, {'v': v, 'c': c})", reads: "reads.filter(x, x.n != n)"}
+  drop_read:
+    args: [n]
+    set: {reads: "reads.filter(x, x.n != n)"}
+  refuse:
+    args: [code, word]
+    set: {result: "{'code': code, 'word': word}"}
+  pass:
+    io: "the poll has passed"
+
+invariants:                              # CEL over vars and input; hold after every event (the judges of the model and the tests)
+  live_has_target: "alive.all(v, target.exists(t, t.v == v))"
+  live_replied: "alive.all(v, v in replied)"
+  leaderless_none_live: "!leaderless || size(alive) == 0"
+  need_has_no_target: "need.all(v, !target.exists(t, t.v == v))"
+  read_has_no_target: "reads.all(x, x.who.all(v, !target.exists(t, t.v == v)))"
+  one_target: "target.all(t, target.filter(u, u.v == t.v).size() == 1)"
+  voters_only: "replied.all(v, v in input.voters) && target.all(t, t.v in input.voters)"
 
 transitions:
-  # tick(k): сначала суд партии k − 1 (ответы её все пришли или их срок — этот миг), затем новая партия
+  # tick(k): first the judgement of batch k − 1 (its answers have all come or their deadline is this instant), then the new batch
   - {event: tick, if: "k > 0 && (input.mode == 'pre' ? size(alive) >= size(input.voters) / 2 + 2 : input.voters.all(v, v == input.self || v in alive))", do: [pass], to: passed}
-  - {event: tick, if: "k > 0", do: [rupture_unanswered, read_commit]}
-  - {event: tick, do: ["new_partition(k)", "send_status(k)"], stop: true}
+  - {event: tick, if: "k > 0 && size(need) > 0 && !read_done", do: [read_commit]}
+  - {event: tick, do: ["new_batch(k)", "send_status(k)"], stop: true}
 
-  # self_status(k, r): лидер партии, состав, лидерство; затем свой член как голосующий и задержанные ответы
+  # self_status(k, r): a received answer checks the membership always, then leadership; no leader — a break of all
   - {event: self_status, if: "k != vars.k", stop: true}
-  - {event: self_status, if: "r == null || !has(r.leader) || r.leader == ''", do: [rupture_all, "mark_replied(input.self)", release_held], stop: true}
-  - {event: self_status, do: ["set_leader(r)"]}
+  - {event: self_status, if: "r == null", do: [rupture_all, self_done, "mark_replied(input.self)", release_held], stop: true}
   - {event: self_status, if: "!same_set(r.voters, input.voters) || r.members != input.members", do: ["refuse(2, 'voters changed')"], to: refused}
   - {event: self_status, if: "input.mode == 'last' && r.state != 'Leader'", do: ["refuse(2, '-last: not the leader')"], to: refused}
   - {event: self_status, if: "input.mode == 'pre' && r.state == 'Leader' && size(input.voters) > 1", do: ["refuse(2, 'leader goes last')"], to: refused}
-  - {event: self_status, do: ["as_voter(r)", release_held], stop: true}
+  - {event: self_status, if: "!has(r.leader_id) || r.leader_id == '' || !has(r.leader) || r.leader == ''", do: [rupture_all, self_done, "mark_replied(input.self)", release_held], stop: true}
+  - {event: self_status, do: ["set_leader(r)", self_done, "as_voter(r)", release_held], stop: true}
 
-  # status(k, v, r): ответ голосующего партии k
+  # status(k, v, r): the answer of a voter in batch k
   - {event: status, if: "k != vars.k", stop: true}
   - {event: status, if: "!self_replied", do: ["hold(v, r)"], stop: true}
   - {event: status, if: "leaderless || r == null || !(r.state == 'Leader' || r.state == 'Follower') || r.leader_id != leader_id", do: ["rupture(v)", "mark_replied(v)"]}
-  - {event: status, if: "!leaderless && r != null && (r.state == 'Leader' || r.state == 'Follower') && r.leader_id == leader_id && !(v in target) && !reads.exists(n, v in reads[n])", do: ["mark_need(v)"]}
-  - {event: status, if: "!leaderless && r != null && (r.state == 'Leader' || r.state == 'Follower') && r.leader_id == leader_id && v in target && r.applied >= target[v]", do: ["mark_alive(v)"]}
-  - {event: status, if: "!(v in replied)", do: ["mark_replied(v)"]}
-  - {event: status, if: "size(replied) == size(input.voters)", do: [read_commit], stop: true}
+  - {event: status, if: "!leaderless && r != null && (r.state == 'Leader' || r.state == 'Follower') && r.leader_id == leader_id && !target.exists(t, t.v == v) && !reads.exists(x, v in x.who)", do: ["mark_need(v)"]}
+  - {event: status, if: "!leaderless && r != null && (r.state == 'Leader' || r.state == 'Follower') && r.leader_id == leader_id && target.exists(t, t.v == v && r.applied >= t.c)", do: ["mark_alive(v)"]}
+  - {event: status, do: ["mark_replied(v)"]}
+  - {event: status, if: "size(replied) == size(input.voters) && size(need) > 0 && !read_done", do: [read_commit], stop: true}
   - {event: status, stop: true}
 
-  # commit(n, c): чтение цели вернулось или не успело
-  - {event: commit, if: "!(n in reads)", stop: true}
+  # commit(n, c): a target read has come back, or its deadline passed
+  - {event: commit, if: "!reads.exists(x, x.n == n)", stop: true}
   - {event: commit, if: "c == null", do: ["drop_read(n)"], stop: true}
   - {event: commit, do: ["set_targets(n, c)"], stop: true}
 
-  # срок опроса: tick того же мига уже рассудил последнюю партию
+  # the deadline of the poll: tick of the same instant has already judged the last batch
   - {event: wait_expired, if: "input.mode == 'pre'", do: ["refuse(2, 'not enough live voters')"], to: refused}
   - {event: wait_expired, do: ["refuse(2, '-last: voters not live')"], to: refused}

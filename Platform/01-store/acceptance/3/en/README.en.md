@@ -149,7 +149,7 @@ the marker they are not executed (common README, «Стенд группы хр�
   nothing is transferred, with `-force` — transferred, the floor is raised (Н1.3 `floor` `when`, «Daemon flags» `-force`).
 - **Remaining by reading**: a full cut of a member in both directions (the outgoing connections of a member on one machine are not cut);
   the branch `ambiguous` (the write went to the leader without an answer); writers during `import` (the window between the floor and «Done»); the door leaf
-  on `-raft` is now not by reading: sc. 07, the last step (below); an unreadable door row outside `configstore_doors` (Н1.3
+  on `-raft` is now not by reading: sc. 07, the last step (above, `П-3`); an unreadable door row outside `configstore_doors` (Н1.3
   `door`) — a TSV request does not carry the current time for a fresh `seen_at`, and a row with an old `seen_at` the implementation is entitled
   not to count as a visible door by the deadline (the door writes it every 30 s): the step would not tell an unreadable row from a stale one; `recover` with the clock earlier than
   the `generation_at` of the floor — the stand does not put a floor with a future `generation_at` into the group (`op: floor` writes the clock of the leader).
@@ -186,7 +186,7 @@ Before each automatic scenario stop the processes of the previous one, create se
 
 A subset of expect does not replace the check of the full HTTP form of the OpenAPI of the lesson: check the mandatory fields, types, Content-Type, special headers and the absence of a body for HEAD/204. In expectation lines `$имя` is first bound only after a successful match of the whole answer; the following uses compare, and requests use only values already bound. A failed attempt of @until does not change the variables. @until repeats a read until the given local deadline, not a mutation; after it expires — FAIL with the last answer. @any admits any value of a present field, @absent requires absence; they do not replace the types of the full schema. A JSON object is compared by subset (`{}` at any level is exactly an empty object: the dictionary of the common README, ACC-EMPTY-OBJECT-01), an array by length and order. Raw HTML/text is compared as UTF-8 bytes with the given substring, it is not parsed as JSON.
 
-In total 24 scenarios / 292 steps, all automatic (sc. 07 — 18 steps, sc. 17 — 53, sc. 18 — 28; formerly sc. 07 was one step `@manual`; sc. 12 steps 23–26, 19, 20, 21 — the coverage audit of P/01; sc. 12 steps 27–32, 22–29 — its second pass, of them 25–29 on the group stand); sc. 15 — steps 1–8; sc. 16 — 1 step (step 9 is in the acceptance of chapter 6.5, there it is step 1 of sc. 15). 08/6–9 — the floor only upwards, only admin (mutation check 7cecaf2 № 46, 47). Sc. 08: the replay memory of `op: floor` is in the store
+In total 24 scenarios / 292 steps, all automatic (sc. 07 — 18 steps, sc. 17 — 53, sc. 18 — 28; formerly sc. 07 was one step `@manual`; sc. 12 steps 23–26, 19, 20, 21 — the coverage audit of P/01; sc. 12 steps 27–32, 22–29 — its second pass, of them 25–29 on the group stand); sc. 15 — steps 1–8 (step 9 is in the acceptance of chapter 6.5, there it is step 1 of sc. 15); sc. 16 — 1 step. 08/6–9 — the floor only upwards, only admin (mutation check 7cecaf2 № 46, 47). Sc. 08: the replay memory of `op: floor` is in the store
 (chapter 1.3 Н2): a replay with the same `id` after a restart — the same `index` and `again`, a different `floor` with this `id` — 400; an implementation
 that keeps it in process memory answers 409 «only upwards» after a restart, and the scenario does not pass.
 

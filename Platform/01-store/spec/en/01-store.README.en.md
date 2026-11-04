@@ -78,7 +78,7 @@ Below is one possible order. The split into functions, the internal interfaces a
 
 References «Н…» are norms of chapter 1.3; rights are chapter 1.2.
 
-1. Describe the stable/transitional membership of the group, sequential join/leave and the door without a vote. For status keep the exact uint64; `leader` is the `-api` address, `leader_id` is the id. Do not forward admin.sock; take the rights from chapter 1.2. The daemon flags are only the table «Daemon flags» of Н1.3; sockets are flat, inherited ones by `FileDescriptorName` (Н1.3 `sockets`).
+1. Describe the stable/transitional membership of the group, sequential join/leave and the door without a vote. For status keep the exact uint64; `leader` is the `-api` address, `leader_id` is the id. Do not forward admin.sock; take the rights from chapter 1.2. The daemon flags are only the table «Daemon flags» of Н1.3; the sockets are in one directory, without subdirectories (admin.sock and the role sockets side by side), inherited ones by `FileDescriptorName` (Н1.3 `sockets`).
 
    Write the mark `FORMAT` first into an empty directory and check it before any write: a foreign or unmarked non-empty directory is exit code 2 without changes. Write the copy `backup`, and read `import`/`restore`, only in the form of Н1.3 `copy`; do not carry your own on-disk format into the copy.
 
@@ -101,7 +101,7 @@ Places where idiomatic code in many languages breaks a norm:
 | the whole batch (Н3 «write batch») | writing the rows one at a time under a lock: power is lost between files, and half of the batch remains | the way of item 3 of «Implementation decides»: an intent log with a barrier before the rows are published; one raft log record |
 | one version per batch (Н1 `index`) | the version counter grows on every row | a version is handed out per operation, all rows of the batch get it |
 | a refusal does not quote what was sent (Н4) | messages like `invalid value "<тело>"` from JSON libraries | an own message, without the sent data, except the key |
-| the key spelling is `Key`, the length is in bytes (Н1, Н2) | a common validator refusal turns any wrong key into `badrequest` | an absent or non-string key (of a command, a guard, a read) and an empty guard key — `badrequest`; a key string not by the rules of Н1 — `badkey`, including a non-empty guard key |
+| the key spelling is the OpenAPI schema `Key`, the length is in bytes (Н1, Н2) | a common validator refusal turns any wrong key into `badrequest` | an absent or non-string key (of a command, a guard, a read) and an empty guard key — `badrequest`; a key string not by the rules of Н1 — `badkey`, including a non-empty guard key |
 | a body over the limit → 413 (Н2, Н4) | the framework answers with its own 413/400 or puts the row ceiling into `limit` | limit the read before JSON parsing, return a `Fault` with the body limit in `limit`; the optional `size` is the full size of the body |
 | an unknown route → 404 badrequest (Н2) | the standard 404 page of the framework | an own handler with `Fault` |
 | query parsing (Н2.1) | `+` read literally; on a repeated parameter the first or the last is taken silently | `application/x-www-form-urlencoded`: `+` is a space, `%2B` is a plus; a repeat of `key`/`prefix` — `badrequest`; `key` not UTF-8 — `badkey` |
