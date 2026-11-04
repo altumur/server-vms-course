@@ -236,10 +236,16 @@ def go_parse(table):
            "\tfor k := 0; k < len(args); k++ {",
            "\t\ttok := args[k]",
            "\t\tif tok == \"--\" {",
+           "\t\t\tif cmd == \"daemon\" && k+1 < len(args) {",
+           "\t\t\t\treturn nil, refuse(args[k+1], \"the daemon takes no positional words\")",
+           "\t\t\t}",
            "\t\t\tfl.Args = append(fl.Args, args[k+1:]...)",
            "\t\t\tbreak",
            "\t\t}",
            "\t\tif len(tok) < 2 || tok[0] != '-' {",
+           "\t\t\tif cmd == \"daemon\" {",
+           "\t\t\t\treturn nil, refuse(tok, \"the daemon takes no positional words\")",
+           "\t\t\t}",
            "\t\t\tfl.Args = append(fl.Args, tok)",
            "\t\t\tcontinue",
            "\t\t}",
@@ -489,7 +495,7 @@ type Flags struct {
 - Every field of a flag the command admits holds its value or the table default (`-raft-bind` = `-raft`; `-id` =
   `$SERVER_NAME` unless required). Fields of flags the command does not admit stay zero.
 - Syntax: `-flag value` or `-flag=value`; a flag without a value (bool) takes no `=`; a repeated flag is a refusal;
-  `--` ends the flags (the rest are positional). `--from` is spelled with two hyphens, as in the norm.
+  `--` ends the flags (the rest are positional); the daemon takes no positional words (a refusal). `--from` is spelled with two hyphens, as in the norm.
 - Types: `bytes` — a plain integer of bytes > 0 (no `KiB`); `duration` — Go syntax (`5s`, `250ms`), not negative;
   `addr` — `host:port` with a decimal port; `id` — the member id of P/01.3 Н2.
 - Not done here (content, not the form of the table): the rights file and the TLS kit contents, `-id` against the door
