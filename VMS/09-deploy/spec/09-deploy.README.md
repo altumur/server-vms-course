@@ -1,6 +1,6 @@
 # V/09 Deploying VMS — instructions for an implementation
 
-This English text is the source; the Russian [`09-deploy.README.md`](../09-deploy.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/09-deploy.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 What an implementation of the VMS installation does and how to check the result. The canon is the norms of the chapters `09.K-deploy.norms.md`; these
 instructions do not add to them. The platform is the export `cammeta-specs` `7a875c75`.
@@ -8,7 +8,7 @@ instructions do not add to them. The platform is the export `cammeta-specs` `7a8
 ## Inputs and their priority
 
 - The canon: the norms of the chapters `09.K-deploy.norms.md` (Н1–Н5 of each chapter; the addresses `V/09.K Н…`).
-- [The lecture](../../09-deploy.md) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
+- The lecture (`ru/09-deploy.md`, for people, not in the export) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
 
 Record a contradiction with its place and a counterexample (the section «On a divergence»); an arbitrary refusal does not replace an
 absent norm. The structure of the code is left to the implementation within the canon.

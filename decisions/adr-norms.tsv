@@ -1423,7 +1423,7 @@ adr	add	point	status	file	norm	note
 0121	0	P/09.2 Н2	НОРМА	Platform/09-agent (en и ru)	P/09.2 Н2	строка POST /api/tokens/<член>/… — в таблице дверей (решение Спецификации по ADR-0121 п. 6, факт: строка таблицы стояла после абзаца)
 0121	0	P/09.1 Н5	НОРМА	Platform/09-agent (en и ru)	P/09.1 Н5	источник сц. 15 — DOM-AGENT-TURN-01, сц. 27 — ADR-0098 §4; строка 27 после 25 (решение Спецификации по ADR-0121 п. 6, факт: README приёмки 1)
 0121	0	пп. 1, 3 (V/12, common)	НОРМА	VMS/12-psim/**/en/*.en.md; VMS/common/**/en/*.en.md; VMS/en/README.en.md	V/12, VMS/common	английский источник V/12 и VMS/common; шапки таблиц common, explanations не переводится
-0121	0	п. 6	НОРМА	VMS/09-deploy/spec/en/09.2-deploy.norms.en.md; VMS/09-deploy/spec/09.2-deploy.norms.md	V/09.2 Н1.3	решение Спецификации VMS по ADR-0121 п. 6, факт: пример по таблице recworker unit_mb 42 — 2151 МБ, ⌊(460 − 51) / 42⌋ = 9
+0121	0	п. 6	НОРМА	VMS/09-deploy/spec/09.2-deploy.norms.md; VMS/09-deploy/spec/09.2-deploy.norms.md	V/09.2 Н1.3	решение Спецификации VMS по ADR-0121 п. 6, факт: пример по таблице recworker unit_mb 42 — 2151 МБ, ⌊(460 − 51) / 42⌋ = 9
 0121	0	п. 6	НОРМА	VMS/08-exp/spec/08-exp.api.openapi.yaml	OpenAPI V/08	решение Спецификации VMS по ADR-0121 п. 6, факт: 08.9-exp.norms.md — глава 9
 0121	0	п. 6	НОРМА	VMS/07-auto/spec/07.2-auto.norms.md; VMS/07-auto/spec/07.2-auto.norms.md	V/07.2 Н1, LONG_POLL	решение Спецификации VMS по ADR-0121 п. 6, факт: долгий опрос — Н1.5
 0121	0	п. 6	НОРМА	VMS/03-live/README.md; VMS/03-live/README.md	V/03 README «Семьи данных»	решение Спецификации VMS по ADR-0121 п. 6, факт: у слов пульса шлюза семья live/heartbeats/<имя> (каталог VMS, читают camworker, expworker)

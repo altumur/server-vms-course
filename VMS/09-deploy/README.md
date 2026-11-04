@@ -1,9 +1,9 @@
 # V/09 Deploying VMS
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 Status: **translated** — chapters V/09.1–V/09.4 (2026-10-23; review 2026-10-29); the plan below is the history of the translation. Sources:
-the inventory [`../common/inventory.md`](../../common/inventory.md) § 1, § 2 (М10B/17 steps 5–8, 10 — what did not go into P/02.4; М10B/28
+the inventory [`../common/inventory.md`](../common/inventory.md) § 1, § 2 (М10B/17 steps 5–8, 10 — what did not go into P/02.4; М10B/28
 step 1 — the values of `CAPACITY`; М12A/05 steps 1, 2, 5). The platform: the export `cammeta-specs` `7a875c75`. The lesson has no subsystem
 and no manifest of its own.
 

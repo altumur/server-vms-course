@@ -20,8 +20,8 @@
 
 ## Что нужно знать заранее
 
-Установщик платформы ([P/02.3](../../Platform/02-installer/spec/02.3-installer.norms.md),
-[P/02.4](../../Platform/02-installer/spec/02.4-installer.norms.md)), манифесты уроков V/01–V/07, V/10, V/11.
+Установщик платформы ([P/02.3](../../../Platform/02-installer/ru/spec/02.3-installer.norms.md),
+[P/02.4](../../../Platform/02-installer/ru/spec/02.4-installer.norms.md)), манифесты уроков V/01–V/07, V/10, V/11.
 
 ## Глава 1. Что ставится и в каком порядке
 
