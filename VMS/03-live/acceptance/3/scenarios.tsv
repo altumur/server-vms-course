@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/03.3: выбор потока по размеру при двух потоках. Формат — README.
+# Acceptance of V/03.3: the stream choice by size with two streams. Format — README.
 01-size	1	@manual стенд WHEP с воркером live и клиентом WebRTC: ?width=320&height=180 и ?width=640&height=360 — 201, в журнале live.view поток 640x360; ?width=641&height=360 — поток 1920x1080	manual
 01-size	2	@manual ?width=3840&height=2160 больше всех — самый крупный, 1920x1080	manual
 01-size	3	@manual ни resolution, ни size ни у одного потока (первый проход, источник не поднят) — основной	manual

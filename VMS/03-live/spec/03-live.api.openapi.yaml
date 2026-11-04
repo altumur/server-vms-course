@@ -1,68 +1,68 @@
 openapi: 3.1.0
 info:
-  title: V/03 — дверь шлюза живого видео
+  title: V/03 — the door of the live video gateway
   version: 1.0.0
   description: |
-    HTTP-контракт двери шлюза `liveworker` — урок V/03 «Живое видео» модуля VMS. Канон — нормы глав `03.K-live.norms.md`;
-    файл их выражает и не добавляет требований. Маршрут `whep` (глава V/03.3): оффер и отбой; допуск — токен двери консоли
-    (`GET /live/where/<cam>`, договор токена двери; `Authorization: Bearer` или `?t=`). Разбор запроса — P/01.1 Н2.1 с
-    отступлениями глав V/03.3 и V/03.6: путь байт в байт (`/whep/7/`, пустые сегменты — 404), иной метод — 405, повтор
-    `stream`, `width`, `height` — 400, пустой `stream` — как без него; тело SDP — не больше 256 КиБ **байтов** по `Content-Length` (V/03.3 Н1.2;
-    `maxLength` меряет знаки и предела не выражает). CORS — `cors` договора сертификата роли (V/03.3 Н1.4), в контракте не
-    выражается.
-    Учётки потоков (глава V/03.6) — маршруты консоли кластера `/live/accounts…` (смонтированная `live`) и `/accounts…`
-    (`CONSOLE_ROOT=live`), которые консоль передаёт шлюзу (`door.pass`): право человека проверяет консоль (view на что-либо — чтение,
-    admin на `*` — запись); шлюз — лист роли `console` (класс `role`) и удостоверение человека снова (V/03.6 Н1.2). Путь, который
-    получает шлюз, — `/accounts…` при любом корне (договор передачи, C06-DOOR-PASS-PATH-01).
+    The HTTP contract of the door of the gateway `liveworker` — lesson V/03 «Живое видео» of the VMS module. The canon is the norms of the chapters `03.K-live.norms.md`;
+    this file expresses them and adds no requirements. The route `whep` (chapter V/03.3): the offer and the hang-up; admittance — the door token of the console
+    (`GET /live/where/<cam>`, the door token contract; `Authorization: Bearer` or `?t=`). The request parsing — P/01.1 Н2.1 with
+    the deviations of chapters V/03.3 and V/03.6: the path byte for byte (`/whep/7/`, empty segments — 404), another method — 405, a repeat of
+    `stream`, `width`, `height` — 400, an empty `stream` — as without it; the SDP body — at most 256 KiB of **bytes** by `Content-Length` (V/03.3 Н1.2;
+    `maxLength` measures characters and does not express the limit). CORS — `cors` of the role certificate contract (V/03.3 Н1.4), not expressed in
+    the contract.
+    Stream accounts (chapter V/03.6) — the routes of the cluster console `/live/accounts…` (the mounted `live`) and `/accounts…`
+    (`CONSOLE_ROOT=live`), which the console passes to the gateway (`door.pass`): the console checks the person's right (view on anything — reading,
+    admin on `*` — writing); the gateway checks the leaf of the role `console` (class `role`) and the person's credential again (V/03.6 Н1.2). The path the
+    gateway receives is `/accounts…` under any root (the pass contract, C06-DOOR-PASS-PATH-01).
 servers:
   - url: https://{server}:{port}
-    description: шлюз с комплектом роли liveworker — адрес SERVER_NAME (P/03.4 Н1.7 kit)
+    description: the gateway with the kit of the role liveworker — the address SERVER_NAME (P/03.4 Н1.7 kit)
     variables:
       server: {default: "srv-a"}
       port: {default: "0"}
   - url: http://127.0.0.1:{port}
-    description: шлюз без комплекта сертификатов — только петля (P/03.4 Н1.7); двери учёток закрыты (no_kit, 401 no_role)
+    description: the gateway without a certificate kit — loopback only (P/03.4 Н1.7); the account doors are closed (no_kit, 401 no_role)
     variables:
       port: {default: "0"}
 paths:
   /whep/{cam}:
     post:
-      summary: Оффер WebRTC — ответ без trickle (Н1.2)
+      summary: The WebRTC offer — an answer without trickle (Н1.2)
       security: [{doorToken: []}]
       parameters:
         - name: cam
           in: path
           required: true
-          description: id камеры — имя раздачи (V/03.1 Н1.1)
+          description: the camera id — the name of the delivery (V/03.1 Н1.1)
           schema: {type: string, minLength: 1}
         - name: stream
           in: query
           required: false
-          description: поток камеры — id её прочего потока (раскодированный); не пуст — размер не судит; повтор параметра — 400; поток не этой камеры — 404 `stream refused` (V/03.3 Н1.2)
+          description: a stream of the camera — the id of its other stream (decoded); not empty — the size is not judged; a repeat of the parameter — 400; a stream not of this camera — 404 `stream refused` (V/03.3 Н1.2)
           schema: {type: string}
         - name: width
           in: query
           required: false
-          description: ширина окна зрителя в пикселях, вместе с `height`; поток выбирает шлюз; `stream` не пуст — выбора нет; нет обоих — основной; один без другого, не по форме, повтор — 400 `bad query` (V/03.3 Н1.2)
+          description: the width of the viewer's window in pixels, together with `height`; the gateway chooses the stream; `stream` not empty — there is no choice; neither of the two — the main one; one without the other, not in form, a repeat — 400 `bad query` (V/03.3 Н1.2)
           schema: {type: string, pattern: "^(?:[1-9][0-9]*)$"}
         - name: height
           in: query
           required: false
-          description: высота окна зрителя в пикселях, вместе с `width` (V/03.3 Н1.2)
+          description: the height of the viewer's window in pixels, together with `width` (V/03.3 Н1.2)
           schema: {type: string, pattern: "^(?:[1-9][0-9]*)$"}
       requestBody:
         required: true
-        description: оффер SDP; не больше 256 КиБ байтов по Content-Length (V/03.3 Н1.2), иначе 413 до чтения тела
+        description: the SDP offer; at most 256 KiB of bytes by Content-Length (V/03.3 Н1.2), otherwise 413 before the body is read
         content:
           application/sdp:
             schema: {type: string}
       responses:
         "201":
-          description: ответ SDP со всеми кандидатами ICE
+          description: the SDP answer with all ICE candidates
           headers:
             Location:
               required: true
-              description: "/whep/session/<sid>?gateway=<имя шлюза>"
+              description: "/whep/session/<sid>?gateway=<gateway name>"
               schema: {type: string}
           content:
             application/sdp:
@@ -77,22 +77,22 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /whep/session/{session}:
     delete:
-      summary: Отбой своей сессии (Н1.3)
+      summary: The hang-up of one's own session (Н1.3)
       security: [{doorToken: []}]
       parameters:
         - name: session
           in: path
           required: true
-          description: sid из Location ответа на оффер
+          description: the sid from Location of the answer to the offer
           schema: {type: string}
         - name: gateway
           in: query
           required: false
-          description: имя шлюза из Location; своё — как без параметра, чужое — 404 `no session` (после проверки токена, V/03.3 Н1.3)
+          description: the gateway name from Location; its own — as without the parameter, another's — 404 `no session` (after the token check, V/03.3 Н1.3)
           schema: {type: string}
       responses:
         "204":
-          description: сессия закрыта
+          description: the session is closed
         "400": {$ref: "#/components/responses/Refusal"}
         "403": {$ref: "#/components/responses/Refusal"}
         "404": {$ref: "#/components/responses/Refusal"}
@@ -100,22 +100,22 @@ paths:
         "503": {$ref: "#/components/responses/Refusal"}
   /frame/{cam}:
     get:
-      summary: Кадр JPEG раздачи для выгрузки — только воркеру exp по сертификату роли (V/03.3 Н1.5)
+      summary: A JPEG frame of the delivery for the export — only to the worker exp by the role certificate (V/03.3 Н1.5)
       security: [{roleCertificate: []}]
       parameters:
         - name: cam
           in: path
           required: true
-          description: id камеры — имя раздачи (V/03.1 Н1.1)
+          description: the camera id — the name of the delivery (V/03.1 Н1.1)
           schema: {type: string, minLength: 1}
         - name: stream
           in: query
           required: false
-          description: поток камеры; без него — основной
+          description: the camera stream; without it — the main one
           schema: {type: string}
       responses:
         "200":
-          description: следующий ключевой кадр потока, полный размер, JPEG
+          description: the next key frame of the stream, full size, JPEG
           content:
             image/jpeg:
               schema: {type: string, contentEncoding: binary}
@@ -125,32 +125,32 @@ paths:
         "504": {$ref: "#/components/responses/Refusal"}
   /talk/{cam}/{number}:
     post:
-      summary: Оффер разговора — звук браузера к `spk` хозяина (V/03.3 Н1.2а)
+      summary: The talk offer — the browser's audio to `spk` of the host (V/03.3 Н1.2а)
       security: [{doorToken: []}]
       parameters:
         - name: cam
           in: path
           required: true
-          description: id строки-хозяина `spk` — имя раздачи
+          description: the id of the host row of `spk` — the name of the delivery
           schema: {type: string, minLength: 1}
         - name: number
           in: path
           required: true
-          description: номер `spk`; не целое ≥ 1 — 404 `no such path`
+          description: the number of `spk`; not an integer ≥ 1 — 404 `no such path`
           schema: {type: string}
       requestBody:
         required: true
-        description: оффер SDP с `m=audio` на отправку; не больше 256 КиБ байтов по Content-Length
+        description: the SDP offer with `m=audio` for sending; at most 256 KiB of bytes by Content-Length
         content:
           application/sdp:
             schema: {type: string}
       responses:
         "201":
-          description: ответ SDP со всеми кандидатами ICE; отбой — `DELETE /whep/session/{session}`
+          description: the SDP answer with all ICE candidates; the hang-up — `DELETE /whep/session/{session}`
           headers:
             Location:
               required: true
-              description: "/whep/session/<sid>?gateway=<имя шлюза>"
+              description: "/whep/session/<sid>?gateway=<gateway name>"
               schema: {type: string}
           content:
             application/sdp:
@@ -181,17 +181,17 @@ components:
     Accounts:
       servers:
         - url: https://{console}
-          description: консоль кластера (корень или монтирование `live`); шлюзу маршрут передаётся door.pass
+          description: the cluster console (the root or the mount `live`); the route is passed to the gateway by door.pass
           variables:
             console: {default: "console.example"}
       get:
-        summary: Учётки потоков кластера, без паролей (V/03.6 Н1.2; через door.pass консоли, право view)
+        summary: The stream accounts of the cluster, without passwords (V/03.6 Н1.2; through door.pass of the console, the right view)
         security: [{personToken: []}]
         responses:
           "401": {$ref: "#/components/responses/Refusal"}
           "403": {$ref: "#/components/responses/Refusal"}
           "200":
-            description: список
+            description: the list
             content:
               application/json:
                 schema:
@@ -205,7 +205,7 @@ components:
           "502": {$ref: "#/components/responses/Refusal"}
           "503": {$ref: "#/components/responses/Refusal"}
       post:
-        summary: Новая учётка — пароль один раз (право admin)
+        summary: A new account — the password once (the right admin)
         security: [{personToken: []}]
         requestBody:
           required: true
@@ -228,13 +228,13 @@ components:
     Account:
       servers:
         - url: https://{console}
-          description: консоль кластера (корень или монтирование `live`); шлюзу маршрут передаётся door.pass
+          description: the cluster console (the root or the mount `live`); the route is passed to the gateway by door.pass
           variables:
             console: {default: "console.example"}
       parameters:
         - $ref: "#/components/parameters/AccountName"
       put:
-        summary: Включить или отключить учётку (право admin)
+        summary: Enable or disable an account (the right admin)
         security: [{personToken: []}]
         requestBody:
           required: true
@@ -250,7 +250,7 @@ components:
           "401": {$ref: "#/components/responses/Refusal"}
           "403": {$ref: "#/components/responses/Refusal"}
           "200":
-            description: учётка после правки
+            description: the account after the edit
             content:
               application/json:
                 schema:
@@ -264,13 +264,13 @@ components:
           "502": {$ref: "#/components/responses/Refusal"}
           "503": {$ref: "#/components/responses/Refusal"}
       delete:
-        summary: Удалить строку учётки; гранты снимает сверка домена (право admin; повтор — 404)
+        summary: Delete the account row; the grants are removed by the domain reconciliation (the right admin; a repeat — 404)
         security: [{personToken: []}]
         responses:
           "401": {$ref: "#/components/responses/Refusal"}
           "403": {$ref: "#/components/responses/Refusal"}
           "200":
-            description: удалена
+            description: deleted
             content:
               application/json:
                 schema:
@@ -286,13 +286,13 @@ components:
     AccountPassword:
       servers:
         - url: https://{console}
-          description: консоль кластера (корень или монтирование `live`); шлюзу маршрут передаётся door.pass
+          description: the cluster console (the root or the mount `live`); the route is passed to the gateway by door.pass
           variables:
             console: {default: "console.example"}
       parameters:
         - $ref: "#/components/parameters/AccountName"
       post:
-        summary: Новый пароль — один раз (право admin)
+        summary: A new password — once (the right admin)
         security: [{personToken: []}]
         responses:
           "401": {$ref: "#/components/responses/Refusal"}
@@ -307,7 +307,7 @@ components:
       name: name
       in: path
       required: true
-      description: имя учётки (грамматика имени человека домена)
+      description: the account name (the grammar of a domain person name)
       schema: {type: string, minLength: 1, maxLength: 64}
   schemas:
     Account:
@@ -323,17 +323,17 @@ components:
     personToken:
       type: http
       scheme: bearer
-      description: удостоверение человека у консоли кластера (P/06.3); шлюз проверяет его снова после листа роли console (V/03.6 Н1.2)
+      description: the person's credential at the cluster console (P/06.3); the gateway checks it again after the leaf of the role console (V/03.6 Н1.2)
     doorToken:
       type: http
       scheme: bearer
-      description: токен двери консоли (договор токена двери); также ?t=
+      description: the door token of the console (the door token contract); also ?t=
     roleCertificate:
       type: mutualTLS
-      description: лист роли expworker (договор сертификата роли, класс role)
+      description: the leaf of the role expworker (the role certificate contract, class role)
   responses:
     WithPassword:
-      description: учётка и её пароль — пароль только в этом ответе
+      description: the account and its password — the password only in this answer
       content:
         application/json:
           schema:
@@ -344,7 +344,7 @@ components:
               account: {$ref: "#/components/schemas/Account"}
               password: {type: string, minLength: 32, maxLength: 32}
     Refusal:
-      description: отказ (V/03.3 Н4, V/03.6 Н4; 401/403 сторожевой и допуска, 502/503 передачи); 503 пределов — с Retry-After
+      description: a refusal (V/03.3 Н4, V/03.6 Н4; 401/403 of the gate and of the admittance, 502/503 of the pass); 503 of the limits — with Retry-After
       headers:
         Retry-After:
           required: false

@@ -1,8 +1,8 @@
-# Исходы нечитаемых слов live в пульсе live/heartbeats/<имя> (V/03.2 Н1.5) у читателей-подсистем; пульс целиком нечитаемый — семья heartbeats платформы. Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of unreadable words of live in the heartbeat live/heartbeats/<name> (V/03.2 Н1.5) for the subsystem readers; a wholly unreadable heartbeat is the Platform family heartbeats. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
-/status	camworker	asked элемента раздачи не по форме: не прочитан, а не отсутствует — считается, что потребитель есть: идущий поток идёт, неоткрытый открывается; следующий пульс — снова	1	элемент	V/01.2 Н1.2в
-/asked_solo	camworker	asked_solo не по форме: так же	1	строка	V/01.2 Н1.2в
-	camworker	пульс шлюза не читается: какие потоки просят, не прочитано: считается, что потребитель есть — идущий поток идёт, неоткрытый открывается; прочие шлюзы идут	1	строка	V/01.2 Н1.2в
-/status	expworker	элемент раздачи не по форме: этот шлюз раздачу камеры не держит — на этом проходе его не зовут; другой шлюз с элементом по форме — зовут	1	элемент	V/08.7 Н1.2
-	expworker	пульс шлюза не читается: его не зовут на этом проходе; нет иного шлюза — часть ждёт до FRAME_WAIT, затем offline	1	строка	V/08.7 Н1.2
-/asked_solo	expworker	asked_solo не по форме: exp его не читает — пульс годен, шлюз зовут по status	1	строка	V/08.7 Н1.2
+/status	camworker	asked of a delivery element not in form: not read, rather than absent — a consumer is taken to exist: a running stream goes on, one not open is opened; the next heartbeat — again	1	элемент	V/01.2 Н1.2в
+/asked_solo	camworker	asked_solo not in form: the same	1	строка	V/01.2 Н1.2в
+	camworker	the gateway's heartbeat is unreadable: which streams are asked for is not read: a consumer is taken to exist — a running stream goes on, one not open is opened; the other gateways go on	1	строка	V/01.2 Н1.2в
+/status	expworker	a delivery element not in form: this gateway does not hold the camera's delivery — it is not called on this pass; another gateway with an element in form is called	1	элемент	V/08.7 Н1.2
+	expworker	the gateway's heartbeat is unreadable: it is not called on this pass; no other gateway — the part waits up to FRAME_WAIT, then offline	1	строка	V/08.7 Н1.2
+/asked_solo	expworker	asked_solo not in form: exp does not read it — the heartbeat is fit, the gateway is called by status	1	строка	V/08.7 Н1.2
