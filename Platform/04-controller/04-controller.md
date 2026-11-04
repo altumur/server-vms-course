@@ -24,7 +24,7 @@
 
 ## Что нужно знать заранее
 
-[P/01](../01-store/01-store.md): запись с `cas`, конфликт. [P/02](../02-installer/02-installer.md): ключи `placement.*`, `slot`, `lease`. [P/06.1](../06-console/spec/06.1-console.norms.md): строка единицы. [P/03](../03-worker/03-worker.md), глава 3.2: строка слота и её состояния, эпоха, аренда, сроки 45/45/25 с, `names_given` как вход захвата.
+[P/01](../01-store/ru/01-store.md): запись с `cas`, конфликт. [P/02](../02-installer/02-installer.md): ключи `placement.*`, `slot`, `lease`. [P/06.1](../06-console/spec/06.1-console.norms.md): строка единицы. [P/03](../03-worker/03-worker.md), глава 3.2: строка слота и её состояния, эпоха, аренда, сроки 45/45/25 с, `names_given` как вход захвата.
 
 ## Строка — решение, назначения его исполняют
 

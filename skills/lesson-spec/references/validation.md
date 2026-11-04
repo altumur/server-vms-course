@@ -25,7 +25,7 @@ $ENV python skills/lesson-spec/scripts/check_spec.py --root $S \
 пары ADR-0085 нет ни у одной главы курса, но её проверку держат тесты скрипта.
 
 **Урок модуля «Платформа»** (`Platform/`, ADR-0083) — тот же вызов с путём лекции:
-`check_spec.py Platform/01-store/01-store.md` (все — без аргументов). Нормы — по главам `spec/NN.K-<процесс>.norms.md` (id `P/NN.K-MM`;
+`check_spec.py Platform/01-store/ru/01-store.md` (все — без аргументов). Нормы — по главам `spec/NN.K-<процесс>.norms.md` (id `P/NN.K-MM`;
 у урока без глав — `spec/NN-<процесс>.norms.md`, id `P/NN-MM`); каждая глава проверяется как урок: Н0–Н5, чеклист,
 «Данные», своя приёмка `acceptance/K/` (набор таблиц — ниже). Одна инструкция `spec/NN-<процесс>.README.md`
 и один OpenAPI на урок. Счёты лекции и инструкции — суммы по главам. Ключ реестра — `P/NN`, значение

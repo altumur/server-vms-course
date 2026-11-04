@@ -1,9 +1,9 @@
 # Acceptance P/01.3 — the store daemon
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей).
-The norm of the chapter is [`01.3-store.norms.md`](../../../spec/01.3-store.norms.md) Н5. The scenarios were moved from the acceptance of
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
+The norm of the chapter is [`01.3-store.norms.md`](../../spec/01.3-store.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/11 (stage B, ADR-0083 addendum (1): without a change of
 behaviour); the numbers of scenarios and steps are the former ones.
 
@@ -16,7 +16,7 @@ a non-durable training store (the norms of chapter 1.3, «Implementation decides
 ## Stand
 
 The stand store is as in the acceptance of М10/11: schema 1, the manifests `testsub` and `testsub2` are put by `manifest-put` through `admin.sock`
-(common README), the rights file `{rights}` is the ready input of chapter 1.2 [`../2/inputs/rights.json`](../../2/inputs/rights.json); the runner puts it before the store starts. Of it, the steps of the chapter need only the role socket
+(common README), the rights file `{rights}` is the ready input of chapter 1.2 [`../2/inputs/rights.json`](../2/inputs/rights.json); the runner puts it before the store starts. Of it, the steps of the chapter need only the role socket
 `console` without the rights of `admin` (`@as console`: sc. 08 step 8, sc. 15 steps 1–2) and the manifest rows `testsub`, `testsub2` (sc. 11
 steps 9–10: the copy `backup` carries the manifest rows). The resource, the controller, the console and the workers are not needed by the chapter. The stand store of the chapter is
 a single member of a box without `-api` (Н1.3 `-api`: the flag is not mandatory; the box has no partners): sc. 16 relies on this.
@@ -83,7 +83,7 @@ the upper of the input before the first row (Н1.3 `floor`); the number depends 
 - Sc. 15: service doors (Н2). Steps 1–2 — `@as console`: `join` and `leave` from a role socket — 403 before the membership (B1); steps
   3–4 — the body `@big(1048577)` is larger than the 1 MiB limit — 413, for `PUT /v1/status` before 405 (framing → route, B2, B3); step 6 —
   empty `raft`/`api` — 400 (B4); steps 7–8 — `HEAD`. Step 9 of sc. 15 (`door.pass` `testsub2` without a worker with a door — 503,
-  B26) was moved to step 1 of sc. 15 of [the acceptance of chapter 6.5](../../../../06-console/acceptance/5/README.md): it needs the console.
+  B26) was moved to step 1 of sc. 15 of [the acceptance of chapter 6.5](../../../06-console/acceptance/5/README.md): it needs the console.
 
 ## A member without `-api` (sc. 16)
 
@@ -95,7 +95,7 @@ the map of a single member of a box is `{}` (Н1.3 `-api`, `box`; Н2 `GET /v1/s
 ## The store group (sc. 07, 17, 18, 25–29, 31)
 
 The group stand is the section «Стенд группы хранилища» of the common README: the members `s1`…`s5`, `d1`, `d2` on the loopback, the kits are
-[`inputs/group.json`](../inputs/group.json) (one centre, the server name of a leaf is the `<id>` of the member), the scenario role at the doors `store@<id>` is `console`
+[`inputs/group.json`](inputs/group.json) (one centre, the server name of a leaf is the `<id>` of the member), the scenario role at the doors `store@<id>` is `console`
 (the stand rights file). These scenarios do not need the stand store of the chapter. Formerly sc. 07 was a `@manual` drill on a real
 cluster; by ПРАВИЛА-РАБОТЫ.md § 4 it and the drills of the checklist items of the chapter (the door, size and membership, the floor of epochs, the metrics row of doors) became scenarios (the plan
 `decisions/inbox/2026-10-30-план-сценарии-группы-автоматом.md`, accepted by the Architect on 2026-10-30; steps for the defect classes
@@ -192,6 +192,6 @@ that keeps it in process memory answers 409 «only upwards» after a restart, an
 
 ## Additional check of the class of errors of run 36 (Kimi)
 
-By reading: 503 unavailable after 5 s without a leader, ambiguous after an unknown outcome and unavailable with Retry-After at the connection limit are different branches. Sc. 05 of [the system acceptance](../../../../common/acceptance/system/README.md) with one dropped server keeps the quorum and does not check all the 503 branches. A replay of id with another floor — 400 badrequest. For /v1/write and /v1/rights an unknown method gives the 404 of the owners; 405 only for status/join/leave/metrics. The metric of sc.04 is configstore_raft_voters_expected. The environment values and 64/32/8 are normative defaults; an override of the profile is declared before acceptance.
+By reading: 503 unavailable after 5 s without a leader, ambiguous after an unknown outcome and unavailable with Retry-After at the connection limit are different branches. Sc. 05 of [the system acceptance](../../../common/acceptance/system/README.md) with one dropped server keeps the quorum and does not check all the 503 branches. A replay of id with another floor — 400 badrequest. For /v1/write and /v1/rights an unknown method gives the 404 of the owners; 405 only for status/join/leave/metrics. The metric of sc.04 is configstore_raft_voters_expected. The environment values and 64/32/8 are normative defaults; an override of the profile is declared before acceptance.
 
 This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models of the author are not a performed stand test.

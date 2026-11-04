@@ -1,8 +1,8 @@
 # Store — lesson P/01
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-A micromodule: a process; roles are sockets. What it norms and from where — the [module design note](../../module-design.md), the table «Уроки».
+A micromodule: a process; roles are sockets. What it norms and from where — the [module design note](../module-design.md), the table «Уроки».
 
 The layout of the catalogue (filled by the move, stage B):
 

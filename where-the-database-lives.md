@@ -334,6 +334,6 @@ So the verdict *one database, and it belongs to a Node* became **no database at 
 - `worker-and-process-model.md` (retired, not in the repository) — camera lifecycle must survive a control-plane outage, which is the rule this record generalises
 - [P/05](./Platform/05-resource/05-resource.md) — events in buckets on the resource, copied to a peer; footage stays on the disks that recorded it
 - [P/03.2](./Platform/03-worker/03-worker.md) — the epoch row per unit and the fencing it gives
-- [P/01.1](./Platform/01-store/01-store.md) — the cluster's store on raft, check-and-set against the key's index, which is what makes the epoch monotonic without a second database
+- [P/01.1](./Platform/01-store/ru/01-store.md) — the cluster's store on raft, check-and-set against the key's index, which is what makes the epoch monotonic without a second database
 
 *Written 5 September 2026. Seventh revision added 12 September 2026.*

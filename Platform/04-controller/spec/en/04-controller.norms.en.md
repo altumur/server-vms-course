@@ -20,11 +20,11 @@ an address is a former lesson (the history of the move). Norm ids are
 
 ## Н0 Vocabulary
 
-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md). The rules of the module are [P/01.1 Н0](../../../01-store/spec/01.1-store.norms.md#н0-словарь-слов).
+Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../../НОРМАТИВНЫЕ-СЛОВА.md). The rules of the module are [P/01.1 Н0](../../../01-store/spec/01.1-store.norms.md#н0-vocabulary).
 
 ## Н1 Form
 
-**Time.** The time fields of the rows and objects of the lesson are time by [the canon of Н0 of P/01.1](../../../01-store/spec/01.1-store.norms.md#время-в-строке): `<sub>/placement/<id>` — `at`; `platform/doors/<сервер>` — `since`, `at`; `platform/drain` — `at`; `platform/decommission/<сервер>` — `at`; `<sub>/decommissioned/<сервер>` — `asked_at`, `at`; `<sub>/controller/placement_intent` — `at`; `<sub>/want/<сервер>` — `at`; the object `<sub>/controller/pass` — `at`, `last_success`; the object `<sub>/snapshot/<воркер>` — `ts`.
+**Time.** The time fields of the rows and objects of the lesson are time by [the canon of Н0 of P/01.1](../../../01-store/spec/01.1-store.norms.md#time-in-a-row): `<sub>/placement/<id>` — `at`; `platform/doors/<сервер>` — `since`, `at`; `platform/drain` — `at`; `platform/decommission/<сервер>` — `at`; `<sub>/decommissioned/<сервер>` — `asked_at`, `at`; `<sub>/controller/placement_intent` — `at`; `<sub>/want/<сервер>` — `at`; the object `<sub>/controller/pass` — `at`, `last_success`; the object `<sub>/snapshot/<воркер>` — `ts`.
 
 **Data** ([catalogue](../../../common/data/catalog.tsv)):
 - owns: `<sub>/placement/<id>`, `<sub>/workers/<имя>`, `<sub>/want/<сервер>`, `<sub>/decommissioned/<сервер>`, `<sub>/controller/placement_turn`, `<sub>/controller/placement_intent`, `<sub>/controller/pass`, `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced`, `<sub>/snapshot-tables/<таблица>`;

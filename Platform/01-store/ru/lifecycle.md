@@ -3,10 +3,10 @@
 Контракт жизненного цикла процесса хранилища `configstore` (ADR-0083 доп. (2) п. 1): запуск, настройка, файлы на диске, коды выхода,
 сигналы. Стадия A — поверх нынешних норм М10. Нормы здесь не пересказываются: каждая строка ведёт к своей норме.
 
-Текст производный от en, руками не правится: источник — английский [`en/lifecycle.en.md`](en/lifecycle.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 2).
+Текст производный от `lifecycle.md`, руками не правится: источник — английский [`lifecycle.md`](../lifecycle.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 2).
 
-Нормы: [P/02.4](../02-installer/spec/02.4-installer.norms.md) (Н1.1 юниты, Н1.2 окружение,
-Н3 «старт сервера»), [P/01.3](spec/01.3-store.norms.md) (Н1.3 демон, Н4), [P/04](../04-controller/spec/04-controller.norms.md) (Н1.4а отказ сервера), [P/01.1](spec/01.1-store.norms.md) (дверь,
+Нормы: [P/02.4](../../02-installer/spec/02.4-installer.norms.md) (Н1.1 юниты, Н1.2 окружение,
+Н3 «старт сервера»), [P/01.3](spec/01.3-store.norms.md) (Н1.3 демон, Н4), [P/04](../../04-controller/spec/04-controller.norms.md) (Н1.4а отказ сервера), [P/01.1](spec/01.1-store.norms.md) (дверь,
 барьеры долговечности), [P/01.2](spec/01.2-store.norms.md) (файл прав, сокеты ролей).
 
 ## Запуск
@@ -25,7 +25,7 @@
 только окружение systemd — переданные сокеты (`LISTEN_FDS`, `LISTEN_FDNAMES`) и сторожа (`NOTIFY_SOCKET`): переданный
 сокет флагом не заменить (P/01.3 Н1.3 `sockets`).
 Порядок файлов окружения раннера — значения юнита → `roles/<W2C_ROLE>.env` → `w2c.env` → `configstore.env`
-(P/02.4 Н1.2; [02-installer/lifecycle.md](../02-installer/lifecycle.md)).
+(P/02.4 Н1.2; [02-installer/lifecycle.md](../../02-installer/lifecycle.md)).
 
 | Переменная | Смысл | Умолчание | Норма |
 |---|---|---|---|
@@ -54,8 +54,8 @@
 | `/etc/w2c/configstore-rights.json` (`-rights`) | файл прав; без файла — только `admin.sock`; живой перезагрузки нет | P/01.2 Н1.2 |
 | `/etc/w2c/tls` (`-tls`) | корень комплектов: внутри — комплект роли `configstore` или `configstore-door` | P/01.3 Н1.3 «Флаги демона» `-tls`, Н1.6 |
 | файл копии (`backup <файл>`) | JSON Lines `copy`, 0600, tmp + rename, вне `-dir` | P/01.3 Н1.3 `copy`, `admin_ops`; вектор — `Platform/common/vectors/README.md` |
-| строка `platform/configstore-doors/<id>` | пишет дверь без голоса раз в 30 с | [каталог](../common/data/catalog.tsv) |
-| строка `platform/epoch_floor` | поднимается только `op: floor` на `admin.sock` лидера (`restore`, `import`, `recover`) | P/01.3 Н1.3 `floor`, [каталог](../common/data/catalog.tsv) |
+| строка `platform/configstore-doors/<id>` | пишет дверь без голоса раз в 30 с | [каталог](../../common/data/catalog.tsv) |
+| строка `platform/epoch_floor` | поднимается только `op: floor` на `admin.sock` лидера (`restore`, `import`, `recover`) | P/01.3 Н1.3 `floor`, [каталог](../../common/data/catalog.tsv) |
 
 ## Коды выхода
 
@@ -77,7 +77,7 @@
 
 ## Стенд
 
-«Стенд» — [общий README приёмки](../common/acceptance/README.md) (разбор ревью стадии B 3–5, № 33):
+«Стенд» — [общий README приёмки](../../common/acceptance/README.md) (разбор ревью стадии B 3–5, № 33):
 - команда хранилища получает `{data}` (`PLATFORM_DIR`, хранилище — `{data}/configstore`), `{socket}` (`admin.sock`,
   сокеты ролей рядом), `{rights}`, `{body_limit}` → `-max-body`, `{row_ceiling}` → `-max-value`; манифестов не кладёт;
 - `{rights}`: в P/01.1 — файл роли `acc`, в приёмках, перенесённых из М10/4–11, — вывод прав из манифестов стенда командой вывода прав;
@@ -88,4 +88,4 @@
 
 - Путь `member.json` внутри `-dir` и формат каталога данных — решает реализация (P/01.1 «Решает реализация» п. 3); между
   реализациями переносит только копия `copy`.
-- Готовность демона — сокет: `sd_notify` он не шлёт, `Type=notify` — только у контроллера и воркера ([P/02.4 Н1.1](../02-installer/spec/02.4-installer.norms.md) `notify`; Решено «Архитектором» 2026-10-18 (второй пилот)).
+- Готовность демона — сокет: `sd_notify` он не шлёт, `Type=notify` — только у контроллера и воркера ([P/02.4 Н1.1](../../02-installer/spec/02.4-installer.norms.md) `notify`; Решено «Архитектором» 2026-10-18 (второй пилот)).

@@ -1,13 +1,13 @@
 # Store — lifecycle (lesson P/01)
 
-This English text is the source; the Russian [`lifecycle.md`](../lifecycle.md) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 2).
+This English text is the source; the Russian translation `ru/lifecycle.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 2).
 
 The lifecycle contract of the store process `configstore` (ADR-0083 addendum (2) item 1): start, configuration, files on disk, exit codes,
 signals. Stage A — on top of the current norms of М10. The norms are not retold here: each line leads to its norm.
 
-Norms: [P/02.4](../../02-installer/spec/02.4-installer.norms.md) (Н1.1 units, Н1.2 environment,
-Н3 «server start»), [P/01.3](../spec/01.3-store.norms.md) (Н1.3 daemon, Н4), [P/04](../../04-controller/spec/04-controller.norms.md) (Н1.4а server refusal), [P/01.1](../spec/01.1-store.norms.md) (door,
-durability barriers), [P/01.2](../spec/01.2-store.norms.md) (rights file, role sockets).
+Norms: [P/02.4](../02-installer/spec/02.4-installer.norms.md) (Н1.1 units, Н1.2 environment,
+Н3 «server start»), [P/01.3](spec/01.3-store.norms.md) (Н1.3 daemon, Н4), [P/04](../04-controller/spec/04-controller.norms.md) (Н1.4а server refusal), [P/01.1](spec/01.1-store.norms.md) (door,
+durability barriers), [P/01.2](spec/01.2-store.norms.md) (rights file, role sockets).
 
 ## Start
 
@@ -25,7 +25,7 @@ The daemon's configuration is set by flags (below): the file `configstore.env` i
 only the systemd environment — the passed sockets (`LISTEN_FDS`, `LISTEN_FDNAMES`) and the watchdog (`NOTIFY_SOCKET`): a passed
 socket cannot be replaced by a flag (P/01.3 Н1.3 `sockets`).
 The order of the runner's environment files — the unit's values → `roles/<W2C_ROLE>.env` → `w2c.env` → `configstore.env`
-(P/02.4 Н1.2; [02-installer/lifecycle.md](../../02-installer/lifecycle.md)).
+(P/02.4 Н1.2; [02-installer/lifecycle.md](../02-installer/lifecycle.md)).
 
 | Variable | Meaning | Default | Norm |
 |---|---|---|---|
@@ -36,7 +36,7 @@ The order of the runner's environment files — the unit's values → `roles/<W2
 
 ## Flags
 
-The closed table «Daemon flags» — [P/01.3 Н1.3](../spec/01.3-store.norms.md):
+The closed table «Daemon flags» — [P/01.3 Н1.3](spec/01.3-store.norms.md):
 `-dir` (required), `-id`, `-sockets`, `-rights`, `-tls`, `-raft`, `-raft-bind`, `-api`, `-bootstrap`, `-join`,
 `-group-size`, `-force`, `-door`, `-voters`, `-tuning`, `-leader-wait`, `-max-value`, `-max-body`, `-max-conns`,
 `-api-conns`, `-api-per-address`, `-index-base`. A flag outside the table is a start refusal, code 2. The administrative commands —
@@ -54,8 +54,8 @@ The closed table «Daemon flags» — [P/01.3 Н1.3](../spec/01.3-store.norms.md
 | `/etc/w2c/configstore-rights.json` (`-rights`) | the rights file; without the file — only `admin.sock`; there is no live reload | P/01.2 Н1.2 |
 | `/etc/w2c/tls` (`-tls`) | the root of the kits: inside — the kit of the role `configstore` or `configstore-door` | P/01.3 Н1.3 «Daemon flags» `-tls`, Н1.6 |
 | the copy file (`backup <файл>`) | JSON Lines `copy`, 0600, tmp + rename, outside `-dir` | P/01.3 Н1.3 `copy`, `admin_ops`; the vector — `Platform/common/vectors/README.md` |
-| the row `platform/configstore-doors/<id>` | written by a door without a vote every 30 s | [catalogue](../../common/data/catalog.tsv) |
-| the row `platform/epoch_floor` | raised only by `op: floor` on the leader's `admin.sock` (`restore`, `import`, `recover`) | P/01.3 Н1.3 `floor`, [catalogue](../../common/data/catalog.tsv) |
+| the row `platform/configstore-doors/<id>` | written by a door without a vote every 30 s | [catalogue](../common/data/catalog.tsv) |
+| the row `platform/epoch_floor` | raised only by `op: floor` on the leader's `admin.sock` (`restore`, `import`, `recover`) | P/01.3 Н1.3 `floor`, [catalogue](../common/data/catalog.tsv) |
 
 ## Exit codes
 
@@ -77,7 +77,7 @@ The closed table «Daemon flags» — [P/01.3 Н1.3](../spec/01.3-store.norms.md
 
 ## Stand
 
-«Стенд» — the [common acceptance README](../../common/acceptance/README.md) (analysis of the review of stage B 3–5, № 33):
+«Стенд» — the [common acceptance README](../common/acceptance/README.md) (analysis of the review of stage B 3–5, № 33):
 - the store command gets `{data}` (`PLATFORM_DIR`, the store — `{data}/configstore`), `{socket}` (`admin.sock`,
   the role sockets next to it), `{rights}`, `{body_limit}` → `-max-body`, `{row_ceiling}` → `-max-value`; it puts no manifests;
 - `{rights}`: in P/01.1 — the file of the role `acc`, in the acceptances moved from М10/4–11 — the rights derived from the stand's manifests by the rights derivation command;
@@ -88,4 +88,4 @@ The closed table «Daemon flags» — [P/01.3 Н1.3](../spec/01.3-store.norms.md
 
 - The path of `member.json` inside `-dir` and the format of the data directory — the implementation decides (P/01.1 «Implementation decides» item 3); between
   implementations only the copy `copy` transfers.
-- The daemon's readiness is the socket: it does not send `sd_notify`, `Type=notify` — only at the controller and the worker ([P/02.4 Н1.1](../../02-installer/spec/02.4-installer.norms.md) `notify`; Decided by the Architect 2026-10-18 (the second pilot)).
+- The daemon's readiness is the socket: it does not send `sd_notify`, `Type=notify` — only at the controller and the worker ([P/02.4 Н1.1](../02-installer/spec/02.4-installer.norms.md) `notify`; Decided by the Architect 2026-10-18 (the second pilot)).

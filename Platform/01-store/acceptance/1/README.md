@@ -1,9 +1,9 @@
 # Acceptance P/01.1 — the store operations vocabulary
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md). The norm of the chapter is
-[`01.1-store.norms.md`](../../../spec/01.1-store.norms.md) Н5.
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md). The norm of the chapter is
+[`01.1-store.norms.md`](../../spec/01.1-store.norms.md) Н5.
 
 ## `scenarios.tsv`
 

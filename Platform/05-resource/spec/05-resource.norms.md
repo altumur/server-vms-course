@@ -21,11 +21,11 @@
 
 ## Н0 Словарь слов
 
-Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md). Правила модуля — [P/01.1 Н0](../../01-store/spec/01.1-store.norms.md#н0-словарь-слов).
+Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md). Правила модуля — [P/01.1 Н0](../../01-store/ru/spec/01.1-store.norms.md#н0-словарь-слов).
 
 ## Н1 Форма
 
-**Время.** Поля времени строк и объектов урока — время по [канону Н0 P/01.1](../../01-store/spec/01.1-store.norms.md#время-в-строке): строка события — `t` ([договор журнала событий](../../common/contracts/event-journal.md)); объект пульса ресурса `platform/resources/<server>/heartbeat` — `ts`, `usage_at`, `pass_started`; строка двери `platform/doors/<сервер>` — `since`, `at`; `<sub>/requests/free-<server>-<volume>` — `at`; надгробие `.gone/<ключ>` — `written` (пишет консоль, [P/06.1](../../06-console/spec/06.1-console.norms.md) Н1.5).
+**Время.** Поля времени строк и объектов урока — время по [канону Н0 P/01.1](../../01-store/ru/spec/01.1-store.norms.md#время-в-строке): строка события — `t` ([договор журнала событий](../../common/contracts/event-journal.md)); объект пульса ресурса `platform/resources/<server>/heartbeat` — `ts`, `usage_at`, `pass_started`; строка двери `platform/doors/<сервер>` — `since`, `at`; `<sub>/requests/free-<server>-<volume>` — `at`; надгробие `.gone/<ключ>` — `written` (пишет консоль, [P/06.1](../../06-console/spec/06.1-console.norms.md) Н1.5).
 
 **Данные** ([каталог](../../common/data/catalog.tsv)):
 - владеет: `platform/resources/<server>/heartbeat`, `platform/doors/<сервер>`, `<sub>/requests/free-<server>-<volume>`, `<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/<sub>.alarms/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/audit.alarms/<роль>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/console.alarms/<экземпляр>/e1/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.mirror/<server>/<дерево>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl`, `<корень событий>/.workers/<sub>/<экземпляр>.lock`, `<корень событий или объектов>/<путь>/%h<sha256>.name`, `<корень объектов>/<каталог>/~lock` (ADR-0083 доп. (16)), `.gone/<ключ>`, `objects/<sub>/<manifest:objects.rows>`, `objects/<sub>/<manifest:objects.rows>/*`;

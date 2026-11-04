@@ -39,7 +39,7 @@
    - `Platform/common/data/common.form.yaml` — общие определения типов и грамматик (`unit_id`, `slot_name`, `sub_name`, `server_name`, `box_id`, `instance_id`, `rid`, `sha256_hex`, `envelope_v2`, `x25519_v1` по `ADR-0088` п. 4 и доп. (2) С3, С7).
    - Вынос общего раздела «Стенд» и «Словарь директив и дверей» из `Source/tests/testdata/acceptance/М10_Platform/01/README.md:3-148` в `Platform/common/acceptance/README.md` (чтобы сценарии уроков 2–10 не ссылались внутрь удаляемого `М10_Platform/01/`).
 2. **Нормы, OpenAPI, лекция, инструкция и жизненный цикл `Platform/01-store/`:**
-   - `Platform/01-store/01-store.md` (лекция) и `Platform/01-store/spec/01-store.README.md`.
+   - `Platform/01-store/ru/01-store.md` (лекция) и `Platform/01-store/spec/01-store.README.md`.
    - `Platform/01-store/spec/01-store.norms.md` (главы `1.1`, `1.2`, `1.3` + `Н0` с правилами модуля, абзацем `**Данные**` и встроенными байт-в-байт разделами форм семей `configstore-doors` и `epoch_floor`).
    - Единый `Platform/01-store/spec/01-store.api.openapi.yaml` — слияние `01-storage.api.openapi.yaml`, `06-rights.api.openapi.yaml` (`/v1/rights`) и `11-the-platform-on-a-box-and-a-cluster.api.openapi.yaml` (`/v1/status`, `/v1/join`, `/v1/leave`, `/metrics`) с сохранением различия `HEAD`: `404` на `/v1/get`, `/v1/list`, `/v1/write`, `/v1/rights` vs `405` на `/v1/status`, `/v1/join`, `/v1/leave`, `/metrics`.
    - Обновлённый `Platform/01-store/lifecycle.md` (перевод ссылок с `М10/*` на `P/01.1`–`P/01.3`, исправление умолчания `SERVER_NAME` и ссылки на вектор копии).

@@ -20,11 +20,11 @@
 
 ## Н0 Словарь слов
 
-Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md). Правила модуля — [P/01.1 Н0](../../01-store/spec/01.1-store.norms.md#н0-словарь-слов).
+Нормативные слова — по [канону курса](../../../НОРМАТИВНЫЕ-СЛОВА.md). Правила модуля — [P/01.1 Н0](../../01-store/ru/spec/01.1-store.norms.md#н0-словарь-слов).
 
 ## Н1 Форма
 
-**Время.** Поля времени строк и объектов урока — время по [канону Н0 P/01.1](../../01-store/spec/01.1-store.norms.md#время-в-строке): `<sub>/placement/<id>` — `at`; `platform/doors/<сервер>` — `since`, `at`; `platform/drain` — `at`; `platform/decommission/<сервер>` — `at`; `<sub>/decommissioned/<сервер>` — `asked_at`, `at`; `<sub>/controller/placement_intent` — `at`; `<sub>/want/<сервер>` — `at`; объект `<sub>/controller/pass` — `at`, `last_success`; объект `<sub>/snapshot/<воркер>` — `ts`.
+**Время.** Поля времени строк и объектов урока — время по [канону Н0 P/01.1](../../01-store/ru/spec/01.1-store.norms.md#время-в-строке): `<sub>/placement/<id>` — `at`; `platform/doors/<сервер>` — `since`, `at`; `platform/drain` — `at`; `platform/decommission/<сервер>` — `at`; `<sub>/decommissioned/<сервер>` — `asked_at`, `at`; `<sub>/controller/placement_intent` — `at`; `<sub>/want/<сервер>` — `at`; объект `<sub>/controller/pass` — `at`, `last_success`; объект `<sub>/snapshot/<воркер>` — `ts`.
 
 **Данные** ([каталог](../../common/data/catalog.tsv)):
 - владеет: `<sub>/placement/<id>`, `<sub>/workers/<имя>`, `<sub>/want/<сервер>`, `<sub>/decommissioned/<сервер>`, `<sub>/controller/placement_turn`, `<sub>/controller/placement_intent`, `<sub>/controller/pass`, `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced`, `<sub>/snapshot-tables/<таблица>`;

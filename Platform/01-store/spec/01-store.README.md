@@ -1,8 +1,8 @@
 # P/01 — instructions for an implementation
 
-This English text is the source; the Russian [`01-store.README.md`](../01-store.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/01-store.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is [`../01-store.md`](../../01-store.md).
+This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/01-store.md` (for people, not in the export).
 
 ## Task
 
@@ -15,15 +15,15 @@ the cluster; show the loaded rights file only to admin.
 
 | File | Role | Priority |
 |---|---|---|
-| [`01.1-store.norms.md`](../01.1-store.norms.md), [`01.2-store.norms.md`](../01.2-store.norms.md), [`01.3-store.norms.md`](../01.3-store.norms.md) | the norms of the chapters: what MUST be | 1 — the canon |
-| [`01-store.api.openapi.yaml`](../01-store.api.openapi.yaml) | the form of the HTTP requests and answers of all doors, the full bodies of `/v1/rights` and `/v1/list` | 2 — on a divergence from the norms, the norms are right |
-| [`../acceptance/1/`](../../acceptance/1/README.md), [`../acceptance/2/`](../../acceptance/2/README.md), [`../acceptance/3/`](../../acceptance/3/README.md) (`scenarios.tsv`, `README.md`); the stand — [the common README](../../../common/acceptance/README.md) | acceptance | 3 — checks the norms, does not add to them |
-| [`../01-store.md`](../../01-store.md) | context, motivation | not a norm; do not derive requirements from it |
-| [`../lifecycle.md`](../../lifecycle.md) | flags, environment, exit codes, units | a pointer to the norms of chapter 1.3 |
+| [`01.1-store.norms.md`](01.1-store.norms.md), [`01.2-store.norms.md`](01.2-store.norms.md), [`01.3-store.norms.md`](01.3-store.norms.md) | the norms of the chapters: what MUST be | 1 — the canon |
+| [`01-store.api.openapi.yaml`](01-store.api.openapi.yaml) | the form of the HTTP requests and answers of all doors, the full bodies of `/v1/rights` and `/v1/list` | 2 — on a divergence from the norms, the norms are right |
+| [`../acceptance/1/`](../acceptance/1/README.md), [`../acceptance/2/`](../acceptance/2/README.md), [`../acceptance/3/`](../acceptance/3/README.md) (`scenarios.tsv`, `README.md`); the stand — [the common README](../../common/acceptance/README.md) | acceptance | 3 — checks the norms, does not add to them |
+| `ru/01-store.md` (for people, not in the export) | context, motivation | not a norm; do not derive requirements from it |
+| [`../lifecycle.md`](../lifecycle.md) | flags, environment, exit codes, units | a pointer to the norms of chapter 1.3 |
 
 Rules:
 
-- Do not add behaviour that is not in the norms of the chapters. Do not «improve» the semantics: normalization of keys, comparison of versions by greater/less, a blind repeat of an earlier command with an old guard (`guard`), new codes and kinds of refusals are forbidden. A new attempt after re-reading the condition and checking the right to it is allowed (Н3 «write»: «The caller re-reads the condition and decides anew whether it has the right to repeat»; [P/03.2-05](../../../03-worker/spec/03.2-worker.norms.md)).
+- Do not add behaviour that is not in the norms of the chapters. Do not «improve» the semantics: normalization of keys, comparison of versions by greater/less, a blind repeat of an earlier command with an old guard (`guard`), new codes and kinds of refusals are forbidden. A new attempt after re-reading the condition and checking the right to it is allowed (Н3 «write»: «The caller re-reads the condition and decides anew whether it has the right to repeat»; [P/03.2-05](../../03-worker/spec/03.2-worker.norms.md)).
 - If the norms of the chapters are silent or contradict themselves, do not guess. Write a question into the implementation's `QUESTIONS.md` with a reference to the section and choose the most conservative behaviour (a refusal, not an assumption). The lesson has no open questions as of 2026-10-15: all known ones are closed in the norms.
 - For ease of checking, comments may refer to the norms: `// P/01.1 Н3 записать, шаг 7` or `// P/01.1-10` at the place that carries out the norm.
 
@@ -38,7 +38,7 @@ The mandatory behaviour is set by the norms of the chapters. The internal interf
    Do not serialize all the fields of the internal type with zero values. Check the full body against the schema
    of the answer of the specific operation and code; one common `Fault` does not confirm the right kind of refusal.
 2. **A data store of the chosen kind**: in memory, on files or with a replicated log (the group and the daemon `configstore` — chapter 1.3 Н1.3). The implementation describes its choice and guarantees under the section «Implementation decides»; having several kinds at once is not required.
-3. **An HTTP server on a unix socket** per [`01-store.api.openapi.yaml`](../01-store.api.openapi.yaml), which translates the refusals of the core into the codes of Н4. The read limit of the body is set separately from the row ceiling; exceeding it is refused per Н2 before JSON parsing and the call of the operation.
+3. **An HTTP server on a unix socket** per [`01-store.api.openapi.yaml`](01-store.api.openapi.yaml), which translates the refusals of the core into the codes of Н4. The read limit of the body is set separately from the row ceiling; exceeding it is refused per Н2 before JSON parsing and the call of the operation.
 4. **The rights check per Н3 and Н4**. The permissions to read, write and delete are given by `allowed(роль, действие, ключ)` of chapter 1.2 Н1.3; the internal API of the check is chosen by the implementation. The identity of the caller is determined by the role socket (chapter 1.2 Н1.1 `identity`). The rights file is chapter 1.2 Н1.2: loading the whole file, a single evaluator, binding the identity to the socket or the writer, and checking trusted forwarding; the two HTTP forms of Н2 of chapter 1.2. The internal classes, functions, the structure of the pattern index and the way the evaluator is integrated remain with the implementation; the acceptance role has full rights to the prefix `acc/` and to nothing else; listing names does not require the read right, but it is done after the identity check of chapter 1.2 (Н3).
 5. **The implementation description** (ARCHITECTURE) — an answer to every item of the section «Implementation decides». An item without an answer means the implementation is not ready.
 6. **The store daemon** (chapter 1.3): flags, `FORMAT`, the group and the door without a vote, sockets, durability, service doors, the floor, the copy and `import`/`restore`/`recover`.
