@@ -378,6 +378,8 @@ def family_place(row, v7=False):
 LESSONS = Path("Platform/lessons.tsv")
 LESSONS_BASE = ["lesson", "dir", "title"]
 LESSONS_NAMES = ["process", "unit"]
+LESSONS_DELTA = ["delta_base"]   # ADR-0122 доп. (1) п. 7: SHA курса, с которого урок правится дельтами; «-» — урок по ADR-0114
+DELTA_BASE = re.compile(r"-|[0-9a-f]{9,40}")
 UNITS_NORMS = Path("Platform/02-installer/spec/02.4-installer.norms.md")
 # Entries of the unit block that are not the unit of one process; exempt from «every `.service` entry with a role is
 # the process of a lesson».
@@ -771,11 +773,15 @@ class Check:
         text = self.read(path) or ""
         header = next((line[1:].strip().split("\t") for line in text.splitlines() if line.startswith("# lesson\t")),
                       LESSONS_BASE)
-        if header not in (LESSONS_BASE, LESSONS_BASE + LESSONS_NAMES):
-            self.error(path, f"header expected {' '.join(LESSONS_BASE)} [{' '.join(LESSONS_NAMES)}], "
+        if header not in (LESSONS_BASE, LESSONS_BASE + LESSONS_NAMES, LESSONS_BASE + LESSONS_NAMES + LESSONS_DELTA):
+            self.error(path, f"header expected {' '.join(LESSONS_BASE)} [{' '.join(LESSONS_NAMES)} [{' '.join(LESSONS_DELTA)}]], "
                              f"got {' '.join(header)}")
             header = LESSONS_BASE
         rows = [(n, dict(zip(header, cols))) for n, cols in self.tsv(path, len(header))]
+        for n, row in rows:
+            base = row.get("delta_base")
+            if base is not None and not DELTA_BASE.fullmatch(base):
+                self.error(path, f"line {n}: delta_base {base!r} is neither - nor a commit sha (ADR-0122 addendum (1) item 7)")
         self.lessons = (header != LESSONS_BASE, rows)
         return self.lessons
 
