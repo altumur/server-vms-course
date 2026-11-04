@@ -1201,6 +1201,7 @@ adr	add	point	status	file	norm	note
 0115	27	п. 1	НОРМА	VMS/common/acceptance/README.md	словарь @traverse (2)	доля VMS: барьер хранилища стенда — всегда, и без перезапуска
 0115	27	пп. 2, 3, 4 (а)–(в)	НЕ НОРМА	-	-	доля VMS: нет — платформа (P/02.4 Н1.7, Н1.9), «Спецификация»; у стенда один член — живых и W2C_HOLD нет
 0115	27	пп. 1–3, 4 (а), (б)	НОРМА	Platform/02-installer/spec/02.4-installer.norms.md; Platform/common/acceptance/system/scenarios.tsv	P/02.4 Н1.7 w2c_env W2C_HOLD; Н1.9 rollout done, pre, steps, barrier, limit; системная сц. 09 шаг 4	доля платформы: барьер всегда, и при already done; живой голосующий — applied ≥ commit лидера; W2C_HOLD — юниты выключены и при повторе, включает только install без него; два rollout — предел; served новой по метке backend до обхода — допустимо; п. 4 (в) снят М2 ревью (27): served против rev строки хранилища; живой — опросом до ROLLOUT_WAIT, отказ только по сроку (М1), и у -last; п. 4 (г) — доля VMS
+0115	28	п. 3	НОРМА	VMS/common/acceptance/README.md	@traverse (3)	served консоли сверяется с rev строки platform/manifest/<sub> хранилища, не с rev ответа /source
 0116	0	Drivers	НЕ НОРМА	-	-	—
 0116	0	Options 2–4	ОТВЕРГНУТО	-	-	выбран вариант 1, гибрид этапами
 0116	0	§1 п. 1	НОРМА	VMS/11-backend/spec/11.14-backend.norms.md	V/11.14 Н1.1	таблица видов — данные `data/kinds.tsv` (решила: имя файла и колонки `kind`, `from`, `write`, `implements`, `actions`, `events`); файл и строки — с контрактом этапа 1; закрытая таблица V/11.3 Н1.2 и `mapping.tsv` судят старые пути до этапа 5
