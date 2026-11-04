@@ -92,6 +92,12 @@ class Mirror(unittest.TestCase):
         en = self.en + "\nThe template `[a-z](?:[a-z0-9]{0,61})` is a name.\n"
         self.assertEqual(self.compare(ru=ru, en=en), [])
 
+    def test_indented_code_block(self):                 # блок кода внутри пункта списка — тоже блок, комментарий переводится
+        ru = self.ru + "\n1. Пункт:\n\n   ```yaml\n   limit: 8   # предел пакета\n   ```\n"
+        en = self.en + "\n1. Item:\n\n   ```yaml\n   limit: 8   # the batch limit\n   ```\n"
+        self.assertEqual(self.compare(ru=ru, en=en), [])
+        self.assertTrue(self.compare(ru=ru, en=en.replace("limit: 8 ", "limit: 9 ")))
+
     def test_table_cell_value(self):
         self.mutated("| 22 | a body over 1048576 bytes", "| 22 | a body over 1048577 bytes")
         self.mutated("| 02 | a creation with", "| 03 | a creation with")

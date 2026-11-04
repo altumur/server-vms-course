@@ -132,7 +132,7 @@ def as_source(rel, root):
             return source.as_posix() + ("#" + anchor if "#" in rel else "")
     return rel
 H2 = re.compile(r"^###? ", re.M)                   # разделы и подразделы: сверка по каждому
-FENCE = re.compile(r"^```[^\n]*\n.*?^```[ \t]*$", re.M | re.S)
+FENCE = re.compile(r"^[ \t]*```[^\n]*\n.*?^[ \t]*```[ \t]*$", re.M | re.S)   # и с отступом — блок внутри пункта списка
 SPAN = re.compile(r"(`+)(.+?)\1", re.S)
 NORM_NO = re.compile(r"(?<![\wА-Яа-яЁё])Н[0-9]+(?:\.[0-9]+)*[а-я]?(?!\w|\.[0-9])")
 LESSON = re.compile(r"(?<![\w/])P/[0-9]{2}(?:\.[0-9]+)?(?:-[0-9]{2})?(?![0-9])")
@@ -234,7 +234,7 @@ def numbers(text, lang):
             token = re.sub(r",(?=[0-9]{3}(?![0-9]))", "", token)
         out.append(token.replace(",", "."))
     return out
-TAGGED = re.compile(r"^```([A-Za-z]+)[^\n]*\n(.*?)^```[ \t]*$", re.M | re.S)
+TAGGED = re.compile(r"^[ \t]*```([A-Za-z]+)[^\n]*\n(.*?)^[ \t]*```[ \t]*$", re.M | re.S)
 KEY = re.compile(r"^(\s*(?:- )?)([^\s:#][^:#]*?):(?=\s|$)")
 
 
