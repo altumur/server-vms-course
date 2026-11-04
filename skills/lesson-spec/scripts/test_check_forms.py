@@ -14,7 +14,7 @@ class Forms(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
         self.lesson = self.tmp / "Platform/01-store"
-        for part in ("forms", "spec"):
+        for part in ("forms", "spec", "acceptance", "vectors"):
             shutil.copytree(LESSON / part, self.lesson / part)
 
     def tearDown(self):
@@ -69,6 +69,12 @@ class Forms(unittest.TestCase):
         self.edit("forms/stages.tsv", "\t-\tdoor,refusals\t", "\t-\tdoor,shell\t")
         self.assertTrue(check_forms.check_stage_parts(self.lesson / "forms/stages.tsv")[0])
 
+    def test_stage_gate(self):                          # gate списком, tests:<глава>:<сценарии>[:seams]
+        self.edit("forms/stages.tsv", "s4-parallel-cas:seams", "s9-nothing:seams")
+        self.assertTrue(any("s9-nothing" in e for e in check_forms.check_stage_parts(self.lesson / "forms/stages.tsv")[0]))
+        self.edit("forms/stages.tsv", "s9-nothing:seams", "s4-parallel-cas:seam")
+        self.assertTrue(check_forms.check_stage_parts(self.lesson / "forms/stages.tsv")[0])
+
     def test_req_anchors(self):                         # ADR-0122 доп. (1) п. 1: номера требований
         self.assertEqual(check_forms.check_req_anchors(self.lesson)[0], [])
         self.edit("spec/01.1-store.norms.md", "<!-- req: P/01.1-R002 -->", "<!-- req: P/01.1-R001 -->")
@@ -79,6 +85,15 @@ class Forms(unittest.TestCase):
     def test_req_tombstone(self):
         self.edit("spec/01.1-store.norms.md", "<!-- req: P/01.1-R003 -->", "<!-- removed: P/01.1-R002 by ADR-0122 -->\n<!-- req: P/01.1-R003 -->")
         self.assertTrue(any("reuses a removed" in e for e in check_forms.check_req_anchors(self.lesson)[0]))
+
+    def test_seams(self):                               # ADR-0126 доп. (7) п. 1: закрытая грамматика швов
+        path = self.lesson / "acceptance/1/seams.tsv"
+        self.assertEqual(check_forms.check_seams(path)[0], [])
+        self.edit("acceptance/1/seams.tsv", "@clock +600", "@clock 600s")
+        self.assertTrue(check_forms.check_seams(path)[0])
+        self.edit("acceptance/1/seams.tsv", "@clock 600s", "@clock +600")
+        self.edit("acceptance/1/seams.tsv", "one 200 {", "200 {")
+        self.assertTrue(any("after @parallel" in e for e in check_forms.check_seams(path)[0]))
 
     def test_refusal_code_kind(self):
         self.edit("forms/refusals.tsv", "1.1\t9\tguard_mismatch\thttp\t412\t", "1.1\t9\tguard_mismatch\thttp\t409\t")

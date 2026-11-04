@@ -2140,6 +2140,11 @@ class Check:
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)
+        for path in check_forms.seam_files(self.root):
+            errors, stats = check_forms.check_seams(path)
+            for message in errors:
+                self.error(path, message)
+            self.stats["seam_steps"] = self.stats.get("seam_steps", 0) + stats["seam_steps"]
         for path in check_forms.stage_forms(self.root):
             errors, stats = check_forms.check_stage_parts(path)
             for message in errors:
@@ -2383,7 +2388,8 @@ class Check:
             self.error(acceptance / "corrections.tsv", f"the log lives in {self.name(log)} (ADR-0124 доп. (1) п. 8 (2))")
         self.tsv(log, 4, ["date", "sample", "fix", "languages"])
         supported = {"README.md", "corrections.tsv", "scenarios.tsv", "verdicts.tsv", "diagnostics.tsv", "classes.tsv", "cases",
-                     "en"}                     # en/README.en.md — английский источник README (ADR-0121), сверка english_mirrors
+                     "en",                     # en/README.en.md — английский источник README (ADR-0121), сверка english_mirrors
+                     "seams.tsv"}              # швы процесса (ADR-0126 доп. (7) п. 1) — check_forms.check_seams
         puts = (key, entry) in PUTS_CHAPTERS
         if puts:
             supported |= {"puts.tsv", "puts"}

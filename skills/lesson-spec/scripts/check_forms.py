@@ -254,7 +254,8 @@ def check_refusals(path):
     return errors, stats
 
 
-KIT_PARTS = {"writecheck", "door", "flags", "refusals", "tests"}     # генераторы ADR-0125 (ADR-0126 доп. (2) п. 1)
+KIT_PARTS = {"writecheck", "door", "flags", "refusals", "vectors", "stagetests"}   # ADR-0126 доп. (2) п. 1, доп. (7) п. 4
+GATE = re.compile(r"tests:([0-9]+\.[0-9]+):([^:;\s]+)(:seams)?|accept:([0-9]+\.[0-9]+):([^:;\s]+)|vectors:([a-z0-9-]+)|build")
 
 
 def stage_forms(root):
@@ -271,8 +272,11 @@ def check_stage_parts(path):
     errors = [f"{path.name}: no column {c}" for c in ("stage", "kit", "parts") if c not in head]
     if errors:
         return errors, {}
+    lesson = path.parent.parent
     for line in lines[1:]:
         r = dict(zip(head, line.split("\t")))
+        for check in r.get("gate", "").split(";"):
+            errors += gate_errors(lesson, r["stage"], check)
         for column in ("kit", "parts"):
             if r[column] == "-":
                 continue
@@ -318,4 +322,79 @@ def check_req_anchors(lesson):
         if ANCHOR.search(ru.read_text(encoding="utf-8")):
             errors.append(f"{ru.relative_to(lesson)}: a translation carries requirement anchors (only the source does)")
     return errors, {"req_anchors": count}
+
+
+def gate_errors(lesson, stage, check):
+    """ADR-0126 доп. (1) п. 8, доп. (7) пп. 2, 3: одна проверка списка `gate` — закрытый вид без пробелов; глава —
+    каталог приёмки урока; сценарии — имена `scenarios.tsv` главы (`seams.tsv` — с `:seams`) или `*`; пакет векторов —
+    `vectors/<пакет>` урока или проба формы `forms/<пакет>.probes.tsv`."""
+    m = GATE.fullmatch(check)
+    if not m:
+        return [f"stages.tsv: {stage}: gate {check!r} is not tests:<chapter>:<scenarios|*>[:seams], accept:…, vectors:… or build"]
+    if m[6]:
+        if not ((lesson / "vectors" / m[6]).is_dir() or (lesson / "forms" / f"{m[6]}.probes.tsv").is_file()):
+            return [f"stages.tsv: {stage}: no vector package {m[6]}"]
+        return []
+    if check == "build":
+        return []
+    chapter, names, seams = (m[1], m[2], m[3]) if m[1] else (m[4], m[5], None)
+    file = lesson / "acceptance" / chapter.split(".")[1] / ("seams.tsv" if seams else "scenarios.tsv")
+    if not file.is_file():
+        return [f"stages.tsv: {stage}: no {file.relative_to(lesson)} for {check.split(':')[0]}:{chapter}"]
+    if names == "*":
+        return []
+    known = {ln.split("\t")[0] for ln in file.read_text(encoding="utf-8").splitlines() if ln and not ln.startswith("#")}
+    missing = [n for n in names.split(",") if n not in known]
+    return [f"stages.tsv: {stage}: scenarios {missing} are not in {file.relative_to(lesson)}"] if missing else []
+
+
+DIRECTIVE = re.compile(r"@clock [+-][0-9]+|@reopen|@parallel [2-9]|@parallel [1-9][0-9]+")
+OUTCOMES = re.compile(r"each \S.*|one \S.*; rest \S.*")
+
+
+def seam_files(root):
+    return sorted(Path(root).glob("Platform/*/acceptance/*/seams.tsv"))
+
+
+def check_seams(path):
+    """ADR-0126 доп. (7) п. 1: сценарии над швами процесса — колонки `scenarios.tsv`, шаги подряд с 1, директивы закрыты
+    (`@clock ±N`, `@reopen`, `@parallel K`, ожидание директивы — `ok`), шаг после `@parallel` ждёт `each …` или
+    `one …; rest …`, прочие шаги — нет; имена сценариев не повторяют `scenarios.tsv` главы."""
+    path = Path(path)
+    lines = path.read_text(encoding="utf-8").splitlines()
+    head = [ln for ln in lines if ln.startswith("#")]
+    errors, steps, last, parallel = [], 0, {}, False
+    if not head or head[-1] != "# scenario\tstep\trequest\texpect":
+        errors.append(f"{path.name}: the last header line must be the columns of scenarios.tsv")
+    other = path.parent / "scenarios.tsv"
+    known = {ln.split("\t")[0] for ln in other.read_text(encoding="utf-8").splitlines() if ln and not ln.startswith("#")} \
+        if other.is_file() else set()
+    for no, ln in enumerate(lines, 1):
+        if not ln or ln.startswith("#"):
+            continue
+        cells = ln.split("\t")
+        if len(cells) != 4:
+            errors.append(f"{path.name}: line {no}: {len(cells)} cells, expected 4")
+            continue
+        name, step, request, expect = cells
+        steps += 1
+        if name in known:
+            errors.append(f"{path.name}: line {no}: scenario {name} is also in scenarios.tsv")
+        if step != str(last.get(name, 0) + 1):
+            errors.append(f"{path.name}: line {no}: step {step} of {name}, expected {last.get(name, 0) + 1}")
+        last[name] = int(step) if step.isdigit() else last.get(name, 0) + 1
+        if request.startswith("@"):
+            if not DIRECTIVE.fullmatch(request):
+                errors.append(f"{path.name}: line {no}: directive {request!r} is not @clock ±N, @reopen or @parallel K")
+            if expect != "ok":
+                errors.append(f"{path.name}: line {no}: a directive expects ok")
+            if parallel:
+                errors.append(f"{path.name}: line {no}: @parallel is followed by a directive")
+            parallel = request.startswith("@parallel")
+            continue
+        if parallel != bool(OUTCOMES.fullmatch(expect)):
+            errors.append(f"{path.name}: line {no}: " + ("the step after @parallel expects each … or one …; rest …" if parallel
+                                                         else "each/one…rest only after @parallel"))
+        parallel = False
+    return errors, {"seam_steps": steps}
 

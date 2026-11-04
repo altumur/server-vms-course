@@ -18,6 +18,14 @@ The format is the dictionary of directives and doors of the common acceptance RE
   `key` included, are not admitted (the common rule of `error` is kept). For the weight refusal in sc. 15 the fields `key` and `size`
   are mandatory and are compared as before.
 
+## `seams.tsv` — scenarios over the seams of the process (ADR-0125 addendum (4) item 7)
+
+[`seams.tsv`](seams.tsv) — six scenarios of the properties of the core that the checklist checks «by reading»: the `id`
+memory does not forget by time alone (P/01.1-11), the equality boundary of the admission time (P/01.1-25), the admission
+time does not decrease and survives a restart (P/01.1-26), concurrent CAS of one row (P/01.1-15), a batch whole after a
+restart (P/01.1-31). They run only through the adapter of kit B (the directives `@clock`, `@reopen`, `@parallel` — the
+header of the file); the runner does not read the file. The stages — `store_core` (`@clock`, `@parallel`) and `durable` (`@reopen`) of `forms/stages.tsv`, by `tests:1.1:<scenarios>:seams` in their `gate`.
+
 ## `journal/corrections-1.tsv`
 
 The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample` (a sample of a generation error), `fix` (which line of the lesson was clarified), `languages`. Empty: no error has repeated so far.
