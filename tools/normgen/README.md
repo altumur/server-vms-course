@@ -18,8 +18,10 @@
 
 `python3 kit/build_kit.py <dst> --module <путь импорта <dst>/01-store> [--part door] [--part flags] [--part refusals]
 [--part tests]` — части в `<dst>/01-store/internal/`, `KIT.md` и `kit.manifest.json` (`parts`, строки по
-происхождению и части, `provenance` — sha256 формы, генератора и судьи). Выход генератора, отставший от формы, —
-отказ сборки: сначала перегенерировать.
+происхождению и части, `provenance` — по каждой части sha256 форм, генератора, ручной среды и судьи, `output` —
+sha256 набора её файлов, `judged` — ссылка на суд этого выхода, `--judged часть=ссылка`). Каждый копируемый выход
+сверяется со свежим прогоном своего генератора (№ 1, № 2 — тоже, не по шапке): отставший от формы, генератора или
+ручной среды — отказ сборки, сначала перегенерировать.
 
 ## Тесты и судьи — на Linux (CT 103)
 
@@ -28,7 +30,11 @@
 
 - Python с `cel_expr_python` (оракул CEL для `test_gen_checks.py` и `flag_judge.py`) — `/opt/check-env/lesson-spec/bin/python`.
 - Набор: `test_gen_checks.py`, `test_gen_tests.py`, `test_gen_door.py`, `test_gen_flags.py`, `test_gen_refusals.py`,
-  `kit/test_kit.py`; затем `skills/lesson-spec/scripts/check_spec.py`.
+  `test_gen_stagetests.py`, `test_gate.py`, `test_judges.py`, `kit/test_kit.py`; затем `skills/lesson-spec/scripts/check_spec.py`.
+- `gate.py` — общий разбор списка `gate` формы stages.tsv для генераторов (грамматика шапки формы, как у `check_forms`).
+- Судьи: отсутствие исполнения — отрицательный исход. Ожидаемый набор шагов — из сценариев и проекции, не из отчёта;
+  шаг без исхода, пустой или обрезанный отчёт, незавершённый `go test` — провал. Запуск демона у `flag_judge.py` —
+  готовность (`admin.sock` в `-sockets`); группа без соседей без готовности — «не проверено» с причиной.
 - `flag_judge.py --cmd <демон> [--stub] [--box]` — `--stub` для заглушки `flags/stub` (сверка значений), `--box` для
   сборки без raft. Пробы пишут только во временный каталог.
 - Судья двери — раннер через очередь CT 103 (`/srv/cammeta-checks`, `check.py submit --env go --with-git`): во входе

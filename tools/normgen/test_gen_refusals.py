@@ -135,7 +135,7 @@ class GenRefusals(unittest.TestCase):
         dst = Path(self.tmp.name) / "kit"
         manifest = build_kit.build(dst, "example.com/attempt/01-store", ["door", "refusals"])
         self.assertEqual(manifest["parts"], ["writecheck", "door", "refusals"])
-        self.assertEqual(set(manifest["provenance"]["refusals"]), {"form", "generator", "judge"})
+        self.assertEqual(set(manifest["provenance"]["refusals"]), {"form", "generator", "judge", "output", "judged"})
         mod = dst / "01-store"
         (mod / "go.mod").write_text("module example.com/attempt/01-store\n\ngo 1.22\n", encoding="utf-8")
         (mod / "internal/refusals/behaviour_test.go").write_text(BEHAVIOUR, encoding="utf-8")

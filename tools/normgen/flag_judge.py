@@ -2,7 +2,7 @@
 
 Запуск (на CT 103, python с cel_expr_python — /opt/check-env/lesson-spec/bin/python):
   python tools/normgen/flag_judge.py --cmd './bin/configstore' [--stub] [--cwd <каталог>] [--rights-file <файл>]
-      [--tls-dir <каталог>] [--ok-wait 2] [--json <итог.json>] [--fuzz N --seed S]
+      [--tls-dir <каталог>] [--ok-wait 5] [--json <итог.json>] [--fuzz N --seed S]
 
 Модель — своя, не из генератора: таблица `Platform/01-store/forms/daemon-flags.tsv` читается заново, типы словаря
 шапки разбираются здесь же, `required` и `bad` вычисляет оракул CEL (cel_expr_python, как check_forms), `loopback` —
@@ -16,12 +16,17 @@
 - `--fuzz N` — ещё N случайных строк (только с `--stub`: сверка значений).
 Нормативные пробы гоняются всегда; пробы соглашений пакета (повтор флага, `-x=v`, `--`, подкоманды) — только с `--stub`.
 
-Исход пробы на демоне: отказ — код 2 не позже 10 с; запуск — через `--ok-wait` с процесс жив или вышел с кодом ≠ 2
-(его снимает SIGTERM, затем SIGKILL). С `--stub` (заглушка tools/normgen/flags/stub) — ещё флаг отказа и все поля Flags.
+Исход пробы на демоне: отказ — код 2 не позже 10 с; запуск — готовность: за `--ok-wait` с процесс жив и в каталоге
+`-sockets` пробы слушает `admin.sock` (его создаёт сам демон без юнитов, lifecycle.md; ревью Codex С1); затем SIGTERM,
+SIGKILL. Выход до готовности (код 0, 1, иной, сигнал) — провал. Проба, которая заведомо не даёт полного демона (группа
+без соседей: -join, -door/-voters, -group-size 3|5), без готовности — «не проверено» с причиной, не успех; код 2 на ней —
+провал. С `--stub` (заглушка tools/normgen/flags/stub) — ещё флаг отказа и все поля Flags; готовности у заглушки нет.
 `--box` — сборка без raft (ключ профиля store_build: box): проба запуска с флагами группы (-join, -door, -voters,
--bootstrap, -raft, -raft-bind, -group-size 3|5) может кончиться кодом 2 (Н4 1.3 box_no_raft).
+-bootstrap, -raft, -raft-bind, -group-size 3|5) может кончиться кодом 2 (Н4 1.3 box_no_raft) — исход «box_no_raft»,
+отдельно от успеха.
 Пробы с `-rights` / `-tls` на демоне требуют `--rights-file` / `--tls-dir` (содержимое — не форма), иначе пропущены.
-Итог: `flags: P/N PASS|FAIL` (пропуски — отдельно); код 0 — все прошли, 1 — нет, 2 — ошибка запуска судьи.
+Итог: `flags: P/N PASS|FAIL` (не проверено, box_no_raft, пропуски — отдельно); код 0 — провалов нет и прошла
+хоть одна проба, 1 — иначе, 2 — ошибка запуска судьи.
 """
 import argparse
 import ipaddress
@@ -516,53 +521,123 @@ def raft_flags(argv):
     return any(a.split("=")[0] in RAFT for a in argv) or any(v in ("3", "5") for v in gs)
 
 
+PEERS = ("-join", "-door", "-voters")
+
+
+def needs_peers(argv):
+    """Группа без соседей: полный демон заведомо не встаёт (ждёт лидера) — готовность не обязательна."""
+    gs = [argv[k + 1] for k, a in enumerate(argv[:-1]) if a == "-group-size"]
+    return any(a.split("=")[0] in PEERS for a in argv) or any(v in ("3", "5") for v in gs)
+
+
+def sockets_dir(argv):
+    for k, a in enumerate(argv):
+        if a == "-sockets" and k + 1 < len(argv):
+            return argv[k + 1]
+        if a.startswith("-sockets="):
+            return a.split("=", 1)[1]
+    return None
+
+
+def listening(path):
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.settimeout(0.5)
+    try:
+        s.connect(path)
+        return True
+    except OSError:
+        return False
+    finally:
+        s.close()
+
+
+def stop(proc):
+    out = err = b""
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        try:
+            os.killpg(proc.pid, sig)
+        except ProcessLookupError:
+            break
+        try:
+            out, err = proc.communicate(timeout=3)
+            break
+        except subprocess.TimeoutExpired:
+            continue
+    return out, err
+
+
 def run(cmd, cwd, probe, stub, ok_wait, box=False):
+    """→ (исход, почему): pass | fail | unverified | box_no_raft."""
     argv = shlex.split(cmd) + probe["argv"]
     env = {k: v for k, v in os.environ.items() if k != "SERVER_NAME"}
     env.update(probe["env"])
     proc = subprocess.Popen(argv, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             start_new_session=True)
-    limit = 10 if probe["expect"] == "refuse" else ok_wait
-    try:
-        out, err = proc.communicate(timeout=limit)
-        code = proc.returncode
-    except subprocess.TimeoutExpired:
-        code = None
-        for sig in (signal.SIGTERM, signal.SIGKILL):
-            try:
-                os.killpg(proc.pid, sig)
-            except ProcessLookupError:
-                break
-            try:
-                out, err = proc.communicate(timeout=3)
-                break
-            except subprocess.TimeoutExpired:
-                continue
-    alive = code is None
-    if probe["expect"] == "refuse":
-        if code != 2:
-            return f"want a start refusal (code 2 within 10 s), got {'alive' if alive else f'code {code}'}"
-    elif code == 2 and not (box and raft_flags(probe["argv"])):
-        return f"want a start, got code 2: {err.decode(errors='replace').strip()[:300]}"
-    if not stub:
-        return None
+    if stub or probe["expect"] == "refuse":
+        try:
+            out, err = proc.communicate(timeout=10)
+            code = proc.returncode
+        except subprocess.TimeoutExpired:
+            code = None
+            out, err = stop(proc)
+        if probe["expect"] == "refuse":
+            if code != 2:
+                return "fail", f"want a start refusal (code 2 within 10 s), got {'alive' if code is None else f'code {code}'}"
+            if not stub:
+                return "pass", None
+        return stub_fields(probe, out, code)
+    # запуск настоящего демона: готовность — живой процесс и слушающий admin.sock в -sockets пробы
+    sock = sockets_dir(probe["argv"])
+    deadline, ready = time.monotonic() + ok_wait, False
+    while time.monotonic() < deadline:
+        if proc.poll() is not None:
+            break
+        if sock and listening(os.path.join(sock, "admin.sock")):
+            ready = True
+            break
+        time.sleep(0.05)
+    code = proc.poll()
+    if code is None:
+        _, err = stop(proc)
+    else:
+        _, err = proc.communicate()
+    tail = err.decode(errors="replace").strip()[-300:]
+    peers = needs_peers(probe["argv"])
+    if code == 2:
+        if box and raft_flags(probe["argv"]):
+            return "box_no_raft", "code 2 of a build without raft (P/01.3 box_no_raft)"
+        return "fail", f"want a start, got code 2: {tail}"
+    if ready and code is None:
+        return "pass", None
+    if code is not None:
+        if peers:
+            return "unverified", f"exit {code} before readiness; a group without peers cannot start a full daemon: {tail}"
+        return "fail", f"want a start, the daemon exited {code} before readiness (admin.sock): {tail}"
+    if sock is None:
+        return "unverified", "alive, but the probe has no -sockets: readiness cannot be seen (default /run/configstore)"
+    if peers:
+        return "unverified", f"alive, no admin.sock within {ok_wait} s; a group without peers waits for a leader"
+    return "fail", f"alive, but not ready: no listening {sock}/admin.sock within {ok_wait} s"
+
+
+def stub_fields(probe, out, code):
     try:
         got = json.loads(out.decode())
     except ValueError:
-        return f"the stub did not print JSON: {out[:200]!r}"
+        return "fail", f"the stub did not print JSON: {out[:200]!r}"
     if probe["expect"] == "refuse":
         if got != {"refusal": probe["want"]}:
-            return f"want the refusal of {probe['want']}, got {got}"
-        return None
+            return "fail", f"want the refusal of {probe['want']}, got {got}"
+        return "pass", None
     if code != 0:
-        return f"the stub exited {code}"
+        return "fail", f"the stub exited {code}"
     fields = got.get("fields", {})
     fields["Given"] = sorted(fields.get("Given", []))
     if fields != probe["want"]:
         diff = {k: (probe["want"].get(k), fields.get(k)) for k in set(fields) | set(probe["want"])
                 if probe["want"].get(k) != fields.get(k)}
-        return f"fields differ (want, got): {diff}"
-    return None
+        return "fail", f"fields differ (want, got): {diff}"
+    return "pass", None
 
 
 def main(argv=None):
@@ -572,7 +647,7 @@ def main(argv=None):
     ap.add_argument("--stub", action="store_true", help="the stub of tools/normgen/flags/stub: compare the values too")
     ap.add_argument("--rights-file")
     ap.add_argument("--tls-dir")
-    ap.add_argument("--ok-wait", type=float, default=2.0)
+    ap.add_argument("--ok-wait", type=float, default=5.0, help="seconds to readiness (admin.sock)")
     ap.add_argument("--box", action="store_true", help="a build without raft (profile store_build: box): a start "
                     "probe with group flags may end with code 2 (P/01.3 box_no_raft)")
     ap.add_argument("--fuzz", type=int, default=0)
@@ -594,16 +669,20 @@ def main(argv=None):
                     a.rights_file if "-rights" in p["argv"] else a.tls_dir)):
                 skipped += 1
                 continue
-            why = run(a.cmd, a.cwd, p, a.stub, a.ok_wait if not a.stub else 10, a.box)
-            results.append({"name": p["name"], "argv": p["argv"], "expect": p["expect"], "ok": why is None,
-                            "why": why})
-            if why:
-                print(f"FAIL {p['name']}: {shlex.join(p['argv'])}: {why}", flush=True)
-    passed = sum(r["ok"] for r in results)
-    verdict = "PASS" if passed == len(results) and results else "FAIL"
-    print(f"flags: {passed}/{len(results)} {verdict}" + (f" (skipped {skipped})" if skipped else ""))
+            status, why = run(a.cmd, a.cwd, p, a.stub, a.ok_wait, a.box)
+            results.append({"name": p["name"], "argv": p["argv"], "expect": p["expect"], "status": status,
+                            "ok": status == "pass", "why": why})
+            if status != "pass":
+                print(f"{status.upper()} {p['name']}: {shlex.join(p['argv'])}: {why}", flush=True)
+    count = {k: sum(r["status"] == k for r in results) for k in ("pass", "fail", "unverified", "box_no_raft")}
+    judged = count["pass"] + count["fail"]
+    verdict = "PASS" if count["fail"] == 0 and count["pass"] else "FAIL"
+    extra = [f"{k} {count[k]}" for k in ("unverified", "box_no_raft") if count[k]] + (
+        [f"skipped {skipped}"] if skipped else [])
+    print(f"flags: {count['pass']}/{judged} {verdict}" + (f" ({', '.join(extra)})" if extra else ""))
     if a.json:
-        Path(a.json).write_text(json.dumps({"passed": passed, "total": len(results), "skipped": skipped,
+        Path(a.json).write_text(json.dumps({"passed": count["pass"], "total": judged, "skipped": skipped,
+                                            "unverified": count["unverified"], "box_no_raft": count["box_no_raft"],
                                             "verdict": verdict, "results": results}, ensure_ascii=False, indent=1))
     return 0 if verdict == "PASS" else 1
 

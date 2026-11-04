@@ -30,6 +30,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -38,6 +39,8 @@ sys.path.insert(0, str(HERE.parent))
 import gen_tests  # noqa: E402 — часть tests
 import gen_flags  # noqa: E402 — часть flags
 import gen_refusals  # noqa: E402 — часть refusals
+import gen_checks  # noqa: E402 — свежесть writecheck
+import gen_door  # noqa: E402 — свежесть door
 TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"
 GENERATED = ROOT / "tools/normgen/out/p01-1/go/checks"
 HANDWRITTEN = HERE / "go"
@@ -68,6 +71,32 @@ class KitError(Exception):
     pass
 
 
+NORMGEN = ROOT / "tools/normgen"
+
+
+def entry(path):
+    path = Path(path)
+    return {"path": str(path.relative_to(ROOT)), "sha256": sha256(path.read_bytes())}
+
+
+def fresh_check(gen, src, sub, names):
+    """Весь копируемый выход части равен свежему прогону генератора (ревью Codex С2): шапка формы не доказывает,
+    что генератор, его ручная среда (runtime, prims, doorrt) и сам out не менялись. GenError, расхождение — KitError."""
+    with tempfile.TemporaryDirectory(prefix="kit-fresh-") as tmp:
+        out = Path(tmp) / "p01-1"
+        try:
+            gen.generate(src, out)
+        except gen.GenError as exc:
+            raise KitError(f"tools/normgen/{Path(gen.__file__).name}: {exc}") from None
+        for name in names:
+            kept = NORMGEN / "out/p01-1" / sub / name
+            new = (out / sub / name).read_bytes()
+            if not kept.is_file() or kept.read_bytes() != new:
+                raise KitError(f"{kept} differs from a fresh run of tools/normgen/"
+                               f"{Path(gen.__file__).name} (the form, the generator or its handwritten environment "
+                               f"changed, or out was edited): run the generator")
+
+
 def sha256(data):
     return hashlib.sha256(data).hexdigest()
 
@@ -89,21 +118,57 @@ def git_head():
 PARTS = ("vectors", "stagetests", "door", "flags", "refusals")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
 
 
-def build(dst, module, parts=()):
+def provenance(parts, files, judged):
+    """Паспорт частей (ADR-0125 доп. (1) п. 6 (а); ревью Codex С2): формы, генератор, ручная среда, судья — пути и
+    sha256; output — sha256 набора скопированных файлов части (путь и sha256 каждого, по порядку), judged — ссылка на
+    результат суда этого выхода (--judged часть=ссылка; без неё — null: суд не назван)."""
+    def output(*components):
+        own = sorted((f["path"], f["sha256"]) for f in files if f["component"] in components and not f.get("editable"))
+        return sha256("".join(f"{p}\t{h}\n" for p, h in own).encode())
+    table = {
+        "writecheck": (("normgen", "kit"), {"form": [TABLE], "generator": NORMGEN / "gen_checks.py",
+                                   "handwritten": [NORMGEN / "runtime/go/runtime.go", NORMGEN / "prims/go/prims.go"]
+                                   + [HANDWRITTEN / sub / name for sub, name in KIT_FILES],
+                                   "judge": NORMGEN / "test_gen_checks.py"}),
+        "door": (("door",), {"form": [OPENAPI], "generator": NORMGEN / "gen_door.py",
+                          "handwritten": [NORMGEN / "doorrt/go/runtime.go"], "judge": NORMGEN / "door_judge.py"}),
+        "vectors": (("vectors",), {"form": [ROOT / "Platform/01-store/forms/stages.tsv"],
+                                "generator": NORMGEN / "gen_tests.py", "judge": NORMGEN / "vector_judge.py"}),
+        "stagetests": (("stagetests",), {"form": [ROOT / "Platform/01-store/forms/stages.tsv",
+                                               ROOT / "Platform/01-store/acceptance/1/scenarios.tsv",
+                                               ROOT / "Platform/01-store/acceptance/1/seams.tsv"],
+                                      "generator": NORMGEN / "gen_stagetests.py",
+                                      "judge": NORMGEN / "scenario_judge.py"}),
+    }
+    out = {}
+    for part in parts:
+        if part in ("flags", "refusals"):
+            mod = gen_flags if part == "flags" else gen_refusals
+            out[part] = {**mod.provenance(), "output": output(part)}
+        else:
+            component, t = table[part]
+            out[part] = {"form": [entry(f) for f in t["form"] if f.is_file()], "generator": entry(t["generator"]),
+                         "handwritten": [entry(f) for f in t.get("handwritten", [])], "judge": entry(t["judge"]),
+                         "output": output(*component)}
+        out[part]["judged"] = judged.get(part)
+    return out
+
+
+def build(dst, module, parts=(), judged=None):
     dst = Path(dst)
+    if set(judged or {}) - set(("writecheck",) + PARTS):
+        raise KitError(f"--judged: unknown parts {sorted(set(judged) - set(('writecheck',) + PARTS))}")
     if not MODULE.fullmatch(module) or "//" in module or module.endswith("/"):
         raise KitError(f"--module {module!r} is not a Go import path")
     table_sha = sha256(TABLE.read_bytes())
-    head = (GENERATED / "checks.go").read_text(encoding="utf-8").splitlines()[:3]
-    if not any(table_sha in line for line in head):
-        raise KitError(f"{GENERATED / 'checks.go'} is stale against {TABLE.relative_to(ROOT)} (sha256 {table_sha}): "
-                       f"run tools/normgen/gen_checks.py")
+    fresh_check(gen_checks, TABLE, "go/checks", [n for n, _, _ in CHECKS_FILES])
     if set(parts) - set(PARTS):
         raise KitError(f"--part {sorted(set(parts) - set(PARTS))}: one of {list(PARTS)}")
     if "stagetests" in parts and "door" not in parts:
         raise KitError("--part stagetests needs --part door: the stage tests go through coreadapter over apidoor "
                        "(ADR-0126 addendum (7) item 5)")
     kit_parts = ["writecheck", *sorted(set(parts))]
+    parts_set = list(kit_parts)
     try:
         tests = [(f, "vectors") for f in gen_tests.kit_files(module, "vectors")] if "vectors" in parts else []
         tests += [(f, "stagetests") for f in gen_tests.kit_files(module, "stagetests")] if "stagetests" in parts else []
@@ -112,9 +177,8 @@ def build(dst, module, parts=()):
     except (gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError) as exc:
         raise KitError(str(exc)) from None
     openapi_sha = sha256(OPENAPI.read_bytes()) if "door" in parts else None
-    if openapi_sha and openapi_sha not in "".join((DOOR / "door.go").read_text(encoding="utf-8").splitlines()[:3]):
-        raise KitError(f"{DOOR / 'door.go'} is stale against {OPENAPI.relative_to(ROOT)} (sha256 {openapi_sha}): "
-                       f"run tools/normgen/gen_door.py")
+    if openapi_sha:
+        fresh_check(gen_door, OPENAPI, "go/apidoor", [n for n, _, _ in DOOR_FILES])
     internal = dst / "01-store/internal"
     files = []
 
@@ -170,8 +234,7 @@ def build(dst, module, parts=()):
         "commit": git_head(),
         "table": {"path": str(TABLE.relative_to(ROOT)), "sha256": table_sha},
         "files": files,
-        "provenance": {**({"flags": gen_flags.provenance()} if flag_files else {}),
-                       **({"refusals": gen_refusals.provenance()} if refusal_files else {})},
+        "provenance": provenance(parts_set, files, judged or {}),
         "doc": {"path": "KIT.md", "sha256": sha256(doc), "lines": lines(doc)},
         "lines": totals,
         "lines_by_component": parts,
@@ -335,9 +398,18 @@ def main(argv=None):
     ap.add_argument("dst", help="the attempt directory (the kit goes to <dst>/01-store/internal)")
     ap.add_argument("--module", required=True, help="Go import path of <dst>/01-store")
     ap.add_argument("--part", action="append", default=[], choices=PARTS, help="an extra part of the kit")
+    ap.add_argument("--judged", action="append", default=[], metavar="PART=REF",
+                    help="the judge result of this output of a part (a queue id, a report path) — into provenance")
     args = ap.parse_args(argv)
+    judged = {}
+    for j in args.judged:
+        part, sep, ref = j.partition("=")
+        if not sep or not ref:
+            print(f"build_kit: --judged {j!r}: want PART=REF", file=sys.stderr)
+            return 1
+        judged[part] = ref
     try:
-        manifest = build(args.dst, args.module, args.part)
+        manifest = build(args.dst, args.module, args.part, judged)
     except KitError as exc:
         print(f"build_kit: {exc}", file=sys.stderr)
         return 1

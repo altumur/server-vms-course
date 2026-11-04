@@ -717,7 +717,13 @@ def build_go(spec, rel, sha):
     types, bodies = [], {}
     # проверки всех схем (кроме write-checks)
     for n in g.names:
-        g.chk(g.schemas[n], "chk" + n, f"#/components/schemas/{n}" if n in spec.schemas else f"response {n}")
+        where = f"#/components/schemas/{n}" if n in spec.schemas else f"response {n}"
+        got = g.chk(g.schemas[n], "chk" + n, where)
+        if got != "chk" + n:                 # алиас $ref, схема без ограничений, общий узел: своя функция по имени схемы
+            # (таблица checks, союзы и Decode зовут chk<имя>; ревью Codex С3)
+            g.checks.append(f"// chk{n} — {where}: " + (f"the alias of {got[3:]}" if got else "no constraint") + ".\n"
+                            f"func chk{n}(v any, at string) *Violation {{\n"
+                            + (f"return {got}(v, at)" if got else "_, _ = v, at\nreturn nil") + "\n}\n")
     # типы
     for n in g.names:
         kind, s = g.kinds[n], g.schemas[n]

@@ -849,6 +849,26 @@ class Mutations(unittest.TestCase):
         self.mutant(11, lambda d: d["paths"]["/v1/list"]["get"]["parameters"][0]["schema"].update(minLength=1),
                     probe=False)
 
+    def test_ref_alias(self):
+        """Алиас $ref (с пометкой и без) — своя функция chk<имя>: выход собирается, проверка — как у цели (ревью Codex С3)."""
+        def change(d):
+            sch = d["components"]["schemas"]
+            sch["AliasKey"] = {"$ref": "#/components/schemas/Key"}
+            sch["AliasKey2"] = {"description": "an alias", "$ref": "#/components/schemas/AliasKey"}
+        p = self.mutant(12, change)
+        for name in ("AliasKey", "AliasKey2", "Key"):
+            self.assertIsNone(p(cmd="check", schema=name, json='"acc/x"')["violation"], name)
+            self.assertIsNotNone(p(cmd="check", schema=name, json='""')["violation"], name)
+            self.assertIsNotNone(p(cmd="check", schema=name, json="7")["violation"], name)
+
+    def test_ref_alias_of_object_refused(self):
+        """Алиас объекта или союза — вне подмножества: отказ генератора, не некорректный Go."""
+        for k, target in enumerate(("Written", "Row")):
+            doc = copy.deepcopy(self.doc)
+            doc["components"]["schemas"]["Alias"] = {"$ref": f"#/components/schemas/{target}"}
+            with self.assertRaises(gen_door.GenError, msg=target):
+                gen_door.emit(doc, "mutant", "0" * 64, Path(self.tmp.name) / f"ra{k}" / "p01-1")
+
     def test_subset_refusals(self):
         """Вне подмножества — отказ генератора, а не молчаливая потеря ограничения."""
         cases = [
