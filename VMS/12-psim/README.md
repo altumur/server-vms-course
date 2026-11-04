@@ -1,9 +1,9 @@
 # V/12 psim plugins
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 Status: **norms of chapters V/12.1–V/12.4** (2026-11-03, «Спецификация VMS»; the plan accepted by «Архитектор»); the generator vectors — after
-the loader key `display.tables` (ADR-0115 addendum (11)), the stand acceptance — [`acceptance/4`](../acceptance/4/README.md). The basis is ADR-0071 (psim plugins
+the loader key `display.tables` (ADR-0115 addendum (11)), the stand acceptance — [`acceptance/4`](acceptance/4/README.md). The basis is ADR-0071 (psim plugins
 through an adapter), ADR-0115 with addenda (1)–(15). The platform is the export `cammeta-specs` `7a875c75`; the loader keys of ADR-0115 are P/02.1
 of the course. psim-sdk `c3d9ebb` is read-only. The lesson has no canonical manifest: the subsystem's manifest is built by the generator
 from the plugin's manifest.
@@ -32,6 +32,6 @@ the packages of the adapter and of the plugin (V/09).
 
 - **Rows:** `psim-<id>/units/plugin`, the kind tables `psim-<id>/<т>`, `psim-<id>/<т>_seen`, the event rings `psim-<id>/<т>_events` (ADR-0115 addendum (13)), the state
   `psim-<id>/state/<имя>/plugin`, the requests `psim-<id>/requests/<rid>`, the event log of the unit `plugin`.
-- **Doors:** the door of the adapter process — [`spec/12-psim.api.openapi.yaml`](../spec/12-psim.api.openapi.yaml); the server `Platform` — gRPC
+- **Doors:** the door of the adapter process — [`spec/12-psim.api.openapi.yaml`](spec/12-psim.api.openapi.yaml); the server `Platform` — gRPC
   on loopback, it does not go outside.
 - **Data families:** the lesson has no rows of its own in the VMS catalogue — the tables are set by the plugin's manifest.

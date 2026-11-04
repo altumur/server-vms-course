@@ -1,6 +1,6 @@
 # Generator vectors V/12.2
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/generate/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The input is the plugin directory (`plugin.json`, `langs/*.json`) and the list of installed ones; the output is the subsystem manifest and the `calls` fragment
 (V/12.2 Н1.2) or a refusal line (Н1.3). The manifest is compared after loading by the strict loader P/02.1, not as text.

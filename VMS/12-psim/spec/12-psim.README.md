@@ -1,6 +1,6 @@
 # V/12 psim plugins — instructions for an implementation
 
-This English text is the source; the Russian [`12-psim.README.md`](../12-psim.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/12-psim.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 What an implementation of the lesson builds and how to check the result. The canon is the norms of the chapters `12.K-psim.norms.md`; these
 instructions do not add to them. The platform is the export `cammeta-specs` `7a875c75`; the loader keys of ADR-0115 are P/02.1 of the course.
@@ -12,9 +12,9 @@ instructions do not add to them. The platform is the export `cammeta-specs` `7a8
   (the adapter's protocol), `psim_platform_emulator/` (the host's behaviour where the proto is silent), `psim_plugins/cmd/security_controller`,
   `camera` (acceptance). The bytes of `psim_platform_emulator/webui/i18n.js` — SHA-256
   `7ef4d865fbb3265c18af5ba6b0e8bb2c6c17b1838e20794592a9f4d9c5675584`.
-- The adapter door — [`12-psim.api.openapi.yaml`](../12-psim.api.openapi.yaml).
-- The generator vectors — [`vectors/generate`](../../vectors/generate/README.md).
-- [The lecture](../../12-psim.md) explains the reasons.
+- The adapter door — [`12-psim.api.openapi.yaml`](12-psim.api.openapi.yaml).
+- The generator vectors — [`vectors/generate`](../vectors/generate/README.md).
+- The lecture (`ru/12-psim.md`, for people, not in the export) explains the reasons.
 
 ## What to create — the result by chapter
 

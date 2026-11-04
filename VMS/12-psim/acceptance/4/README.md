@@ -1,9 +1,9 @@
 # Acceptance V/12.4 — installation and the `backend` manifest assembler
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/4/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`12.4-psim.norms.md`](../../../spec/12.4-psim.norms.md) Н5; the adapter and the door — chapter 3 Н5. The stand and the vocabulary are
-[the common VMS acceptance README](../../../../common/acceptance/README.md) («Плагины psim на стенде», the directives `@psim`) over the common
+The norm of the chapter is [`12.4-psim.norms.md`](../../spec/12.4-psim.norms.md) Н5; the adapter and the door — chapter 3 Н5. The stand and the vocabulary are
+[the common VMS acceptance README](../../../common/acceptance/README.md) («Плагины psim на стенде», the directives `@psim`) over the common
 platform README (export `7a875c75`).
 
 ## Preparation
@@ -21,6 +21,6 @@ from loopback without a domain (one identity with full rights). A scenario — o
 | `04-page` | V/12.3-06, V/12.4-02 | the controller `psim-<id>` is brought up by the installation (on the stand — the role `enable`), the worker-adapter — `@start worker`; the page token, entry by `?t=`, the cookie, the removed headers, `static` |
 
 What the stand does not see: the plugin process, the gRPC calls and the psim pages — `@manual` with the reason in the step (they are judged by the
-implementation run on the acceptance machine with the plugins built). The generator is judged by the vectors [`../../vectors/generate`](../../../vectors/generate/README.md).
+implementation run on the acceptance machine with the plugins built). The generator is judged by the vectors [`../../vectors/generate`](../../vectors/generate/README.md).
 
 In all, 4 independent scenarios, 40 steps.
