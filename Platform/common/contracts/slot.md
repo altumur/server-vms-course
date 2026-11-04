@@ -8,7 +8,7 @@
 продление (P/03.2 Н3); контроллер — судья слота, уход единиц, заказ ([P/04](../../04-controller/ru/spec/04-controller.norms.md)
 Н1.4, Н3); консоль — `WorkerRow.released`, `slot_taking`, `slot_until`, `slot_garbled` ([P/06.5](../../06-console/ru/spec/06.5-console.norms.md)
 Н2, Н3 «/servers»), дренаж ([P/06.6](../../06-console/ru/spec/06.6-console.norms.md)); агент — живость воркера на домене
-([P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н1.4); пул — [договор пула](pool.md) «Живой воркер».
+([P/09.1](../../09-agent/ru/spec/09.1-agent.norms.md) Н1.4); пул — [договор пула](pool.md) «Живой воркер».
 
 Перенесено из P/03.2 Н1.4 (`states`, `SLOT_TERM`, `TORN_STILL`) без изменения поведения; P/03.2 и читатели — ссылкой
 сюда. Форма строки, имя и порядок имён — у владельца и в [договоре имени слота](slot-name.md); возраст наблюдаемой версии —

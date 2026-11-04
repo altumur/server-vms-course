@@ -17,10 +17,10 @@
 один `id` в нескольких манифестах, порядок; на стенде один манифест с `domain.keys`). Остальные сценарии источников — у соседей: М11/08 сц. 04 — [глава 8.3](../../../../08-domain/ru/acceptance/3/README.md),
 05 (страница держателя) — урок P/10, 06 — векторы [`peer`](../../../../common/vectors/peer/README.md); М11/09 — [глава
 8.4](../../../../08-domain/ru/acceptance/4/README.md), [8.5](../../../../08-domain/ru/acceptance/5/README.md) (11) и векторы
-[`may`](../../../../common/vectors/may/README.md); М11/05 — [глава 8.5](../../../../08-domain/ru/acceptance/5/README.md), [9.1](../../../../09-agent/acceptance/1/README.md)
+[`may`](../../../../common/vectors/may/README.md); М11/05 — [глава 8.5](../../../../08-domain/ru/acceptance/5/README.md), [9.1](../../../../09-agent/ru/acceptance/1/README.md)
 (13) и вектор [`assemble`](../../../../08-domain/ru/vectors/assemble/README.md); М11/10 — [глава 8.8](../../../../08-domain/ru/acceptance/8/README.md),
-[9.1](../../../../09-agent/acceptance/1/README.md) (11), векторы [`record`](../../../../common/vectors/record/README.md),
-[`ask-sig`](../../../../common/vectors/ask-sig/README.md), [`follow`](../../../../09-agent/vectors/follow/README.md).
+[9.1](../../../../09-agent/ru/acceptance/1/README.md) (11), векторы [`record`](../../../../common/vectors/record/README.md),
+[`ask-sig`](../../../../common/vectors/ask-sig/README.md), [`follow`](../../../../09-agent/ru/vectors/follow/README.md).
 
 ## Стенд
 

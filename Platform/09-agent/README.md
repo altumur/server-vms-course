@@ -1,8 +1,8 @@
 # The agent (9.1) and the relay mode (9.2) — lesson P/09
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-A micromodule: the process domainagent or a mode in a process. What it norms and from where — the [module design note](../../module-design.md), the table «Уроки».
+A micromodule: the process domainagent or a mode in a process. What it norms and from where — the [module design note](../module-design.md), the table «Уроки».
 
 The layout of the catalogue (the move of stage B is done; review analysis of stage B 8–10, № 22, Claude М-15):
 

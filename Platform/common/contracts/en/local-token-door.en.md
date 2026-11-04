@@ -57,7 +57,7 @@ in_process:  the agent in the platform process of a cluster of one — a call, n
 ```
 
 **An open question — a worker on another server of the cluster.** The local door over TCP with a role certificate (ADR-0075) for a worker
-whose cluster's agent is on another server is not normed until the stand; the place is [P/09.1 Н5](../../../09-agent/spec/09.1-agent.norms.md#открыто)
+whose cluster's agent is on another server is not normed until the stand; the place is [P/09.1 Н5](../../../09-agent/spec/09.1-agent.norms.md#open)
 «Open» (the move plan of lesson 9, В1). While the question is open, such a door does not take the domain ports 8444–8447 ([P/02.4 Н1.12](../../../02-installer/spec/02.4-installer.norms.md)).
 
 ## The door

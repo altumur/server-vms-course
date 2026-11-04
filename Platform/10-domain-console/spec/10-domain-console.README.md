@@ -9,7 +9,7 @@
 Реализовать процесс `domainconsole` на коробке держателя на языке `<LANG>`; пройти приёмку Н5 и закрыть чеклист
 готовности. Всего 17 норм: P/10-01…17; соответствие прежним id — [`id-map.tsv`](../../common/id-map.tsv). Урок собран из
 уроков М11/1, 3, 4, 6, 8, 9, 11, 12 (сторона консоли домена) (стадия B, ADR-0083 доп. (1), (14)). Процесс `domain` —
-урок [P/08](../../08-domain/ru/spec/08-domain.README.md), агент — урок [P/09](../../09-agent/spec/09-agent.README.md), пересылка
+урок [P/08](../../08-domain/ru/spec/08-domain.README.md), агент — урок [P/09](../../09-agent/ru/spec/09-agent.README.md), пересылка
 консоли кластера — глава P/06.7.
 
 - Двери чтения `GET /domain`, `/domain/<sub>/<rows>`, `/domain/<sub>/tables/<таблица>`, `/domain/shadow`, `/domain/members`, `/domain/topology`,

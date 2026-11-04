@@ -1,11 +1,11 @@
 # Acceptance P/09.1 — the agent of a member (stand)
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand, the dictionary of directives and doors — [the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей),
-the section [«Стенд домена»](../../../../common/acceptance/README.md#стенд-домена) (the stand of several clusters; formerly — the М11 dictionary of the acceptance README
-of М11/01; the plan of the move of lesson 8, В5). The norm of the chapter is [`09.1-agent.norms.md`](../../../spec/09.1-agent.norms.md) Н5;
-[the contract](../../../spec/09-agent.api.openapi.yaml), [the lecture](../../../09-agent.md). The scenarios were moved (stage B, ADR-0083
+The stand, the dictionary of directives and doors — [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей),
+the section [«Стенд домена»](../../../common/acceptance/README.md#стенд-домена) (the stand of several clusters; formerly — the М11 dictionary of the acceptance README
+of М11/01; the plan of the move of lesson 8, В5). The norm of the chapter is [`09.1-agent.norms.md`](../../spec/09.1-agent.norms.md) Н5;
+[the contract](../../spec/09-agent.api.openapi.yaml), the lecture (`ru/09-agent.md`, for people, not in the export). The scenarios were moved (stage B, ADR-0083
 addendum (1): without a change of behaviour) from the acceptances of М11/05 (04 → 13), М11/06 (04, 07, 08), М11/10 (11), М11/11 (05, 06 → 14) and
 М11/12 (01, 03, 06); the numbers, names and steps are the former ones, except `13-slot-liveness` (in М11/05 — `04-slot-liveness`) and
 `14-pointer-checksum` (in М11/11 — `06-pointer-checksum`): the number 04 is taken by the scenario of М11/06, the number 06 — by the scenario of М11/12;
@@ -16,17 +16,17 @@ the next numbers after the largest number of the sources of the chapter (М11/10
 cc36de538, drafts G03, G04; below); 21 — sc. 27 `roles-copy` (ADR-0098 §4).
 
 The other scenarios of the sources are at the chapters of their outcome (ADR-0083 addendum (13); the appendix of the plan of the move of lesson 8): М11/05
-sc. 01, 03, 05 — [chapter 8.5](../../../../08-domain/acceptance/5/README.md), 02 — [the acceptance of chapter 6.7](../../../../06-console/acceptance/7/README.md) (13); М11/06 sc. 01, 02,
-03, 05, 09 — [chapter 8.6](../../../../08-domain/acceptance/6/README.md), 06 — [chapter 8.1](../../../../08-domain/acceptance/1/README.md)
-(sc. 15); М11/10 sc. 01 — the acceptance of chapter 6.7 (15), 02–04, 08–10, 12 — [chapter 8.8](../../../../08-domain/acceptance/8/README.md),
-06 — the vector package [`follow`](../../../vectors/follow/README.md); М11/11 sc. 01 — [chapter 8.9](../../../../08-domain/acceptance/9/README.md),
-02 — [the acceptance of lesson P/10](../../../../10-domain-console/acceptance/README.md), 04 — the vector [`alarms`](../../../../10-domain-console/vectors/alarms/README.md), 03 — the vectors [`resolve`](../../../../06-console/vectors/resolve/README.md); М11/12 sc. 02 — [chapter 8.3](../../../../08-domain/acceptance/3/README.md) (sc. 17), 04,
-05 — [chapter 8.10](../../../../08-domain/acceptance/10/README.md). The agent side in the scenarios of other chapters — the list
+sc. 01, 03, 05 — [chapter 8.5](../../../08-domain/acceptance/5/README.md), 02 — [the acceptance of chapter 6.7](../../../06-console/acceptance/7/README.md) (13); М11/06 sc. 01, 02,
+03, 05, 09 — [chapter 8.6](../../../08-domain/acceptance/6/README.md), 06 — [chapter 8.1](../../../08-domain/acceptance/1/README.md)
+(sc. 15); М11/10 sc. 01 — the acceptance of chapter 6.7 (15), 02–04, 08–10, 12 — [chapter 8.8](../../../08-domain/acceptance/8/README.md),
+06 — the vector package [`follow`](../../vectors/follow/README.md); М11/11 sc. 01 — [chapter 8.9](../../../08-domain/acceptance/9/README.md),
+02 — [the acceptance of lesson P/10](../../../10-domain-console/acceptance/README.md), 04 — the vector [`alarms`](../../../10-domain-console/vectors/alarms/README.md), 03 — the vectors [`resolve`](../../../06-console/vectors/resolve/README.md); М11/12 sc. 02 — [chapter 8.3](../../../08-domain/acceptance/3/README.md) (sc. 17), 04,
+05 — [chapter 8.10](../../../08-domain/acceptance/10/README.md). The agent side in the scenarios of other chapters — the list
 «Соседи на стенде» of the norm of the chapter, Н5.
 
 ## Stand
 
-**Preparation of each scenario** — as the acceptance README of [chapter 8.3](../../../../08-domain/acceptance/3/README.md)
+**Preparation of each scenario** — as the acceptance README of [chapter 8.3](../../../08-domain/acceptance/3/README.md)
 («Подготовка каждого сценария»; from the acceptance README of М11/03): the runner brings up on one machine three clusters — `hold`, `m1`, `m2`; each has
 its own empty store, its own `{data}`, its own role sockets and ports of the console and the resource, its own ring (P/06.2 Н1.2), the manifest catalogue
 — only `testsub`; the console, the controller and the worker `w-1` of `testsub`, the resource of its own server (`srv-hold`, `srv-m1`, `srv-m2`).
@@ -62,8 +62,8 @@ The differences by scenario (from the READMEs of the source acceptances):
   name`. The doors `holder`, `member` and the directives `@domain`, `@cut`, `@mend`, `@clock` — the dictionary of the «Стенда домена»; at the door
   `holder` the runner sets `Idempotency-Key` also for `PUT`/`DELETE`. `$id` is the id of the stored edit from the answer 202. The holder stores
   the edit (chapter 8.6), the agent of `m1` applies it (Н1.5) after `@mend`; the condition `If-Match` of the units door — sc. 14 of the acceptance of
-  [P/06.1](../../../../06-console/acceptance/1/README.md). Sc. 08: `@clock m1 +90` — the agent clock outside the window of the units door
-  `UNIT_WINDOW` 60 s ([the agent signature contract](../../../../common/contracts/agent-signature.md)); step 10 returns the clock.
+  [P/06.1](../../../06-console/acceptance/1/README.md). Sc. 08: `@clock m1 +90` — the agent clock outside the window of the units door
+  `UNIT_WINDOW` 60 s ([the agent signature contract](../../../common/contracts/agent-signature.md)); step 10 returns the clock.
 - **Scenario 11** (from the acceptance README of М11/10; the Quint model of М11, scenario Q3). The stand with a signer also on `m1`: the doors
   `holder`, `member`, `signer` and the directives `@domain`, `@start domain on`, `@stop domain`, `@move` — the dictionary of the
   «Стенда домена». A revocation after the last backup copy does not revive after a move: the agent of a member merges `domain/revoked` of the answer
@@ -74,19 +74,19 @@ The differences by scenario (from the READMEs of the source acceptances):
   - `marks` — `list` with `inherit: []`, `merge: union`.
 
   The doors `holder`, `member` and the directives `@domain`, `@on`, `@put object` — the dictionary of the «Стенда домена». A document of the form of
-  [P/08.9 Н1.2](../../../../08-domain/spec/08.9-domain.norms.md) `document`, but signed by an unknown issuer
+  [P/08.9 Н1.2](../../../08-domain/spec/08.9-domain.norms.md) `document`, but signed by an unknown issuer
   (`inputs/shared-doc-unknown-issuer.json`: `kid` `0000000000000000` is not in `issuing` of the set, `sig` — 64 bytes), the runner
   puts as an object and a pointer bypassing the edit (C09-SHARED-ACCEPT-01; the Architect's decision 2026-10-29: the outcomes of the family `shared-docs` —
   the holder does not send out what is unreadable): sc. 05 — with its sum: the holder sends the document, the member does not take it — `record`
   refuses `unknown_issuer` (Н3 «take the document» step 4), there is no row `domain/shared` at the member; the holder console — `record`
-  did not pass, the values without the domain (`from: manifest`, [P/06.7](../../../../06-console/spec/06.7-console.norms.md) Н1.14; a neighbour
+  did not pass, the values without the domain (`from: manifest`, [P/06.7](../../../06-console/spec/06.7-console.norms.md) Н1.14; a neighbour
   on the stand). Sc. 14 — with a foreign sum: an object not with the `sha256` of the pointer — unreadable for the holder (the outcomes of `shared-docs`):
   the holder console — 503 `unavailable`, the document is not sent to the member, there is no row `domain/shared` at the member. The refusal of the agent
   «does not match the pointer» (Н3 «take the document» step 3) the stand does not reach — the holder does not send such a document, and
   the step has no separate function (a vector would require a new agent command): the sum check by the agent — by reading.
 - **Scenario 13** (from the acceptance README of М11/05). The catalogue of each cluster is `testsub` and `testsub2` (the order — the «Стенд» of the common
   acceptance README); on each cluster run the controllers of both, the worker `w-1` of the manifest `testsub`, the worker `t-1` of the manifest
-  `testsub2` (with the training writer of contributions — [P/08.5](../../../../08-domain/spec/08.5-domain.norms.md) Н5) and the resource of its own
+  `testsub2` (with the training writer of contributions — [P/08.5](../../../08-domain/spec/08.5-domain.norms.md) Н5) and the resource of its own
   server `srv-<кластер>`; before the steps the store of each cluster has the counter `testsub` `c1-<кластер>` (its own ref at
   each: a common `c1` would be disputed, and `@domain` would not wait for `complete: true`) and the shelf `testsub2` `sh1` `{zone: z1,
   server: srv-<кластер>}`. `console2` at `member` — the prefix `/testsub2`. The directive `@on m1 @sigkill t-1` kills
@@ -101,7 +101,7 @@ The differences by scenario (from the READMEs of the source acceptances):
     in the holder view the pending 0 and the outcome `performed` 200. `base` is the revision of the unit in the copy of `hold` at the holder (P/08.6 Н1.4),
     `If-Match` matches.
   - **17** (J02). The local token door with a silent holder ([the local token
-    door contract](../../../../common/contracts/local-token-door.md) `no_queue`, `TOKEN_WAIT` 10 s): the process `domain` on `hold`
+    door contract](../../../common/contracts/local-token-door.md) `no_queue`, `TOKEN_WAIT` 10 s): the process `domain` on `hold`
     is frozen (`@on hold @freeze domain`; there is one copy, the signer queue has nobody to pass to) — the connection is accepted, there is no
     answer; the request of `m2` — 503 `unavailable` in one request (the door answers no later than `TOKEN_WAIT`, the runner waits for the answer longer).
     After `@thaw` — again 200. The freeze is about `TOKEN_WAIT`, less than `LOST_AFTER` and `TURN_TERM` (45 s).
@@ -127,7 +127,7 @@ bypassing the writer are put by the store door of the member through `admin.sock
 - **20** (G03). `join` at a member (Н1.1 `same`, `another`): a repeated `@join m1` with the same `{pub, domain}` — `ok`, the row
   `domain/root` and its index are the former ones. At `m2` (`@domain m1` does not accept and does not pin it) the runner puts `domain/root`
   of the same root with the domain `other` — `@join m2` `refused`, the row and the index are the former ones. The refusal after a foreign root — sc. 02 step 10
-  of [the acceptance of chapter 8.3](../../../../08-domain/acceptance/3/README.md); here it is checked that the row does not change in either case.
+  of [the acceptance of chapter 8.3](../../../08-domain/acceptance/3/README.md); here it is checked that the row does not change in either case.
 - **21** (G03). The pair of the member key (Н1.1 `pub`, C09-MEMBER-KEY-PAIR-01): while the agent is stopped `pub` of the row
   `domain/member-key` at `m1` is replaced by the public key of the member `hold`. It is a point of the curve, the form of the row is right, `seed_secret`
   is the former one and opens, but `pub` is not from the seed: the row is unreadable by the outcome of the family. The agent runs and does not sign: the row
@@ -138,7 +138,7 @@ bypassing the writer are put by the store door of the member through `admin.sock
   by reading («Evidence outside the TSV»).
 - **22** (G04). The removal of the refusal of the shared document (Н1.10 `member`, C09-SHARED-REFUSED-CLEANUP-01, -02). The document
   of an unknown issuer, as in sc. 05, gets the refusal `unknown_issuer`. An edit of the holder with `base_rev` 1 passes:
-  the former document is readable for the holder, the form and the sum are right ([P/08.9](../../../../08-domain/spec/08.9-domain.norms.md)
+  the former document is readable for the holder, the form and the sum are right ([P/08.9](../../../08-domain/spec/08.9-domain.norms.md)
   Н1.3 step 5). The holder signs the document rev 2, the member takes it, and the taken document removes the refusal with the pair (1, 1),
   which is not newer than its own. Then the runner puts a refusal with the pair (1, 2), not newer than its own `domain/shared`: it is removed by the next
   pass without a new document (the follow-through; step 1 of «take the document» — «nothing»). An unreadable refusal (`doc` not JSON) is removed
@@ -148,9 +148,9 @@ bypassing the writer are put by the store door of the member through `admin.sock
   the only writer: an answer against an unreadable row is «differs» for it, and it rewrites the row by CAS with the value of the
   answer. The runner spoils four rows of `m1` (`doc` not JSON, `as_of` not a time, `rev` not an integer), and each returns to the
   value bound before the spoiling (`$ml`, `$mt`, `$gd`). At `domain/placed` it is `rev` 2: 1 after `@domain`, 2 after the write of
-  the placement, as in sc. 01 of [the acceptance of chapter 8.6](../../../../08-domain/acceptance/6/README.md). The holder sends `members`
+  the placement, as in sc. 01 of [the acceptance of chapter 8.6](../../../08-domain/acceptance/6/README.md). The holder sends `members`
   because the agent without a readable copy does not send `members_rev` ([the report acceptance
-  contract](../../../../common/contracts/accept.md) «The list of members to the one lagging behind»).
+  contract](../../../common/contracts/accept.md) «The list of members to the one lagging behind»).
 - **24** (G04). An unreadable outcomes row `domain/outcomes` (Н1.5 `apply`; the outcome of the family, `Г-56` — an exception to the rule
   of the only writer): the element `e-000000000001` is not an outcome object. The edit of the holder is stored (202), but the agent does not
   perform it: it has nothing to check «an outcome with `kept_at = at` is already written» by. For three passes the unit is the former one, the holder has one
@@ -167,7 +167,7 @@ bypassing the writer are put by the store door of the member through `admin.sock
 
 | File | Scenario | What is in it |
 |---|---|---|
-| `shared-doc-unknown-issuer.json` | 05, 14, 22 | a shared document of the form ([P/08.9 Н1.2](../../../../08-domain/spec/08.9-domain.norms.md) `document`) with an unknown issuer: `kid` `0000000000000000`, `issuer` — 32 bytes `0x11`, `sig` — 64 zero bytes base64url |
+| `shared-doc-unknown-issuer.json` | 05, 14, 22 | a shared document of the form ([P/08.9 Н1.2](../../../08-domain/spec/08.9-domain.norms.md) `document`) with an unknown issuer: `kid` `0000000000000000`, `issuer` — 32 bytes `0x11`, `sig` — 64 zero bytes base64url |
 | `backup-foreign-term.json` | 19 | a backup copy document of the form `backup.schema.json` (`common.domain_backup_doc`) of term and revision 99, `holder` `hold`, `members` `[hold, m1]`, empty `state` and `objects`, `issuer` — 32 bytes `0x33`, `kid` — the first 16 characters, `sig` — the bytes 0…63 base64url (does not verify: the agent reads its own copy by form); JCS without a line break, sha256 `eec6d36c2e9636846f2d335daf072c791c8022e1e714091f05fe56e4b2380434` — in the row `domain/backup-taken` of step 5 |
 
 `shared-doc-unknown-issuer.json` is copied byte for byte from `inputs/` of the acceptance of М11/11 (the plan of the move of lesson 9, § 3
@@ -240,13 +240,13 @@ for the holder's answer, and an edit received before the key was spoiled is a ra
 a member, the refusals of the keeper's agent by the sum and by `record` (the holder does not send such a document), a break of the road of the local token door,
 an answer from the relay memory and `as_of` of the grants copy (on the stand `as_of` is visible only as a store row, and its freshening is
 no more often than `AS_OF_STORE_EVERY`), the agent body limit; the HTTPS client and the first contact (the stand without TLS). The bytes of the agent signature
-— the package [`agent-sig`](../../../../common/vectors/agent-sig/README.md), the function `peer` — the package
-[`peer`](../../../../common/vectors/peer/README.md), the function `follow` — the package [`follow`](../../../vectors/follow/README.md).
+— the package [`agent-sig`](../../../common/vectors/agent-sig/README.md), the function `peer` — the package
+[`peer`](../../../common/vectors/peer/README.md), the function `follow` — the package [`follow`](../../vectors/follow/README.md).
 
 ## corrections.tsv
 
 The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows of the logs of the acceptances of М11/05, М11/06,
 М11/10, М11/11 and М11/12 from before the move — at the beginning of the log, with the former paths and numbers (they are resolved by
-[`id-map.tsv`](../../../../common/id-map.tsv)): by `sample` — the rows about the scenarios of this chapter; the rows without a scenario (the whole
+[`id-map.tsv`](../../../common/id-map.tsv)): by `sample` — the rows about the scenarios of this chapter; the rows without a scenario (the whole
 `scenarios.tsv`, `inputs`, `@sleep`, the preparation, the move) — into all the successor chapters (review analysis of stage B 6–7, № 18).
 Then — the rows of the move of this chapter and of the history of the sources.

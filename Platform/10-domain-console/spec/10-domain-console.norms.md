@@ -51,7 +51,7 @@
 **Время.** Строк и объектов со временем урок не пишет; строка журнала роли — `t` по [договору журнала
 событий](../../common/contracts/event-journal.md). `age` ответа `GET /domain` — секунды по стенным часам консоли, не время в
 строке (Н1.2а); время строк списка тревог — часы домена (Н1.8 `clock`); объект истории — [глава 8.9](../../08-domain/ru/spec/08.9-domain.norms.md)
-Н1 «Время», страница тревог члена — [глава 9.1](../../09-agent/spec/09.1-agent.norms.md) Н1 «Время».
+Н1 «Время», страница тревог члена — [глава 9.1](../../09-agent/ru/spec/09.1-agent.norms.md) Н1 «Время».
 
 **Данные** ([каталог](../../common/data/catalog.tsv)):
 - владеет: `<sub>/<manifest:domain.witness.report>/<имя>`;
@@ -350,7 +350,7 @@ clock:         часы домена строки тревог — [догово
 events_order:  по t убывая, затем member, id; строки истории — from_history: true
 ```
 
-Страница тревог члена и её фронт — [глава 9.1](../../09-agent/spec/09.1-agent.norms.md) Н1.10; метка `reported` —
+Страница тревог члена и её фронт — [глава 9.1](../../09-agent/ru/spec/09.1-agent.norms.md) Н1.10; метка `reported` —
 [глава 8.3](../../08-domain/ru/spec/08.3-domain.norms.md) Н1.3; история — глава 8.9 Н1.9 (`same_line`, `cut_before`).
 
 ---
@@ -430,7 +430,7 @@ HTTP-контракт: [10-domain-console.api.openapi.yaml](10-domain-console.ap
 
 `same_line`, повтор в странице и `cut_before` — [договор истории тревог](../../common/contracts/alarm-history.md) (C10-ALARM-SAME-LINE83).
 
-**Гонки.** Член без связи и шторм тревог — [глава 9.1](../../09-agent/spec/09.1-agent.norms.md) Н3 «Гонки».
+**Гонки.** Член без связи и шторм тревог — [глава 9.1](../../09-agent/ru/spec/09.1-agent.norms.md) Н3 «Гонки».
 
 ---
 
