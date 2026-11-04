@@ -1,12 +1,14 @@
 """Сборка пакета Б для P/01 (ADR-0083 доп. (86) п. 2): проверки Н2.1 и строгий разборщик JSON — в каталог попытки.
 
-Запуск: python tools/normgen/kit/build_kit.py <dst> --module <путь импорта каталога <dst>/01-store>
+Запуск: python tools/normgen/kit/build_kit.py <dst> --module <путь импорта каталога <dst>/01-store> [--part tests]
 
 Кладёт в <dst>/01-store/internal/:
 - checks/ — пакет, сгенерированный tools/normgen/gen_checks.py из Platform/01-store/forms/write-checks.tsv (берётся
   из tools/normgen/out/p01-1/go/checks; sha256 таблицы в его шапке должен совпасть с таблицей сейчас);
 - jsonstrict/, writecheck/ — ручной пакет tools/normgen/kit/go (в writecheck путь "kitmodule/internal/" заменяется на
   "<module>/internal/").
+Часть `tests` (--part tests; ADR-0126 доп. (2) п. 1, генератор № 6 ADR-0125 tools/normgen/gen_tests.py): vectortests/,
+vectorcmd/ (заменяются целиком) и заглушка адаптера vectoradapter/ — её реализация правит, кладётся, только если её нет.
 Пишет <dst>/KIT.md (API для модели, английский) и <dst>/kit.manifest.json (пути, sha256, строки, происхождение).
 Каталоги checks, jsonstrict, writecheck в <dst>/01-store/internal заменяются целиком; прочее в <dst> не трогается.
 """
@@ -21,6 +23,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent.parent
+sys.path.insert(0, str(HERE.parent))
+import gen_tests  # noqa: E402 — часть tests
 TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"
 GENERATED = ROOT / "tools/normgen/out/p01-1/go/checks"
 HANDWRITTEN = HERE / "go"
@@ -62,7 +66,10 @@ def git_head():
         return None
 
 
-def build(dst, module):
+PARTS = ("tests",)       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
+
+
+def build(dst, module, parts=()):
     dst = Path(dst)
     if not MODULE.fullmatch(module) or "//" in module or module.endswith("/"):
         raise KitError(f"--module {module!r} is not a Go import path")
@@ -71,6 +78,13 @@ def build(dst, module):
     if not any(table_sha in line for line in head):
         raise KitError(f"{GENERATED / 'checks.go'} is stale against {TABLE.relative_to(ROOT)} (sha256 {table_sha}): "
                        f"run tools/normgen/gen_checks.py")
+    if set(parts) - set(PARTS):
+        raise KitError(f"--part {sorted(set(parts) - set(PARTS))}: one of {list(PARTS)}")
+    kit_parts = ["writecheck", *sorted(set(parts))]
+    try:
+        tests = gen_tests.kit_files(module) if "tests" in parts else []
+    except gen_tests.GenError as exc:
+        raise KitError(str(exc)) from None
     internal = dst / "01-store/internal"
     files = []
 
@@ -81,7 +95,7 @@ def build(dst, module):
         files.append({"path": str(target.relative_to(dst)), "sha256": sha256(data), "lines": lines(data),
                       "origin": origin, "component": component, "source": source})
 
-    for sub in ("checks", "jsonstrict", "writecheck"):
+    for sub in ("checks", "jsonstrict", "writecheck") + (gen_tests.KIT_DIRS if tests else ()):
         if (internal / sub).exists():
             shutil.rmtree(internal / sub)
     for name, origin, source in CHECKS_FILES:
@@ -94,7 +108,13 @@ def build(dst, module):
             raise KitError(f"{sub}/{name}: no import {PLACEHOLDER}… to rewrite")
         put(sub, name, data, "handwritten", "kit", str((HANDWRITTEN / sub / name).relative_to(ROOT)))
 
-    doc = KIT_MD.replace("{module}", module).encode("utf-8")
+    for sub, name, data, origin, source, own in tests:
+        if own and (internal / sub).exists():
+            continue                    # адаптер реализации не трогается
+        put(sub, name, data, origin, "tests", source)
+        if own:
+            files[-1]["editable"] = True
+    doc = (KIT_MD + (gen_tests.KIT_MD if tests else "")).replace("{module}", module).encode("utf-8")
     (dst / "KIT.md").write_bytes(doc)
     # Паспорт попытки (доп. (86) п. 3) считает порознь: по происхождению (generated | handwritten) и по части
     # (normgen — генератор с его ручной средой runtime.go, prims.go; kit — ручной пакет jsonstrict, writecheck).
@@ -105,6 +125,7 @@ def build(dst, module):
     manifest = {
         "kit": "P/01 pack B (ADR-0083 amendment 86): Н2.1 write checks and strict JSON body parser, Go",
         "module": module,
+        "parts": kit_parts,
         "commit": git_head(),
         "table": {"path": str(TABLE.relative_to(ROOT)), "sha256": table_sha},
         "files": files,
@@ -204,9 +225,10 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("dst", help="the attempt directory (the kit goes to <dst>/01-store/internal)")
     ap.add_argument("--module", required=True, help="Go import path of <dst>/01-store")
+    ap.add_argument("--part", action="append", default=[], choices=PARTS, help="an extra part of the kit")
     args = ap.parse_args(argv)
     try:
-        manifest = build(args.dst, args.module)
+        manifest = build(args.dst, args.module, args.part)
     except KitError as exc:
         print(f"build_kit: {exc}", file=sys.stderr)
         return 1

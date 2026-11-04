@@ -392,7 +392,10 @@ class GenChecks(Trio):
     def test_out_up_to_date(self):
         """tools/normgen/out/p01-1 — ровно то, что строит генератор сейчас."""
         def files(root):
-            return sorted(p.relative_to(root) for p in root.rglob("*") if p.is_file() and "__pycache__" not in p.parts)
+            # только части gen_checks: рядом в out/p01-1 лежат выходы других генераторов (gen_tests — ADR-0125 № 6)
+            mine = lambda rel: rel == Path("go/go.mod") or rel.parts[:2] == ("go", "checks") or rel.parts[0] == "python"
+            return sorted(rel for p in root.rglob("*") if p.is_file() and "__pycache__" not in p.parts
+                          and mine(rel := p.relative_to(root)))
 
         fresh, kept = files(self.out), files(OUT)
         self.assertEqual(fresh, kept)
