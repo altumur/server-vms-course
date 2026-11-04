@@ -278,6 +278,61 @@ def pointer(document, ref):
 
 # Files a desktop leaves in any directory; never part of a lesson (not tracked by git).
 IGNORED = {".DS_Store"}
+
+
+# The layout of a lesson (ADR-0124; addendum (1) item 6: both layouts for the time of the move). A lesson (or `common`)
+# with `ru/` is in the new one: the English source on the canonical path, the Russian text for people in `ru/` (the
+# lecture `ru/NN-<имя>.md`, the translation of every source `X` — `ru/X`), logs in `journal/`. Without `ru/` — the former
+# one (ADR-0121: `en/<имя>.en.md` next to the Russian text, the lecture and `corrections.tsv` in place).
+def lesson_home(path):
+    """The directory of a lesson for its lecture or any file of it in `ru/`: `Platform/NN-x/ru/NN-x.md` → `Platform/NN-x`."""
+    path = Path(path)
+    return path.parent.parent if path.parent.name == "ru" else path.parent
+
+
+def lecture_of(home):
+    """The lecture of a lesson by its layout: `ru/NN-<имя>.md` (ADR-0124) or `NN-<имя>.md`."""
+    home = Path(home)
+    return home / "ru" / f"{home.name}.md" if (home / "ru").is_dir() else home / f"{home.name}.md"
+
+
+def human_text(path, root):
+    """The Russian text of a lesson file: in the layout of ADR-0124 the translation `ru/X` of the source `X`, otherwise the
+    file itself. The checks of norms, «Данные», counts and families read the Russian text (their words are Russian);
+    `en_mirror` holds the source and the translation to one content."""
+    path = Path(path)
+    try:
+        parts = path.relative_to(root).parts
+    except ValueError:
+        return path
+    if len(parts) >= 3 and parts[0] in ("Platform", "VMS") and parts[2] not in ("ru", "journal") \
+            and (Path(root) / parts[0] / parts[1] / "ru").is_dir():
+        return Path(root) / parts[0] / parts[1] / "ru" / Path(*parts[2:])
+    return path
+
+
+def outside_export(path, root):
+    """`ru/` or `journal/` of a lesson in the layout of ADR-0124 — not in the export (ADR-0124 item 4)."""
+    try:
+        parts = Path(os.path.normpath(path)).relative_to(root).parts
+    except ValueError:
+        return False
+    return len(parts) >= 3 and parts[0] in ("Platform", "VMS") and parts[2] in ("ru", "journal") \
+        and (Path(root) / parts[0] / parts[1] / "ru").is_dir()
+
+
+def source_file(path, root):
+    """A Markdown file the generator reads and the export carries: outside `ru/` and `journal/` of a lesson in the layout
+    of ADR-0124, or an English `en/<имя>.en.md` of the former layout."""
+    try:
+        parts = Path(path).relative_to(root).parts
+    except ValueError:
+        return False
+    if len(parts) < 3 or parts[0] not in ("Platform", "VMS"):
+        return False
+    if (Path(root) / parts[0] / parts[1] / "ru").is_dir():
+        return parts[2] not in ("ru", "journal")
+    return len(parts) >= 2 and parts[-2] == "en" and parts[-1].endswith(".en.md")
 EXCEPTION_KINDS = {"no-openapi", "scenarios-format", "acceptance-entry", "no-acceptance", "no-schema",
                    "data-paragraph", "family-read", "implied"}
 # Виды, которые читает только режим В7 (стандартные файлы): их устаревание он и называет, не уборка урока.
@@ -756,7 +811,7 @@ class Check:
                 if not lifecycle.exists():
                     self.error(lifecycle, f"lesson {row['lesson']} has process {process} but no lifecycle.md")
                 else:
-                    text = self.read(lifecycle)
+                    text = self.read(human_text(lifecycle, self.root))
                     if text is not None and f"`{process}`" not in lifecycle_head(text):
                         self.error(lifecycle, f"the head (title and first paragraph) does not name the process "
                                               f"`{process}` (lessons.tsv line {line})")
@@ -1104,7 +1159,7 @@ class Check:
         moved = {}
         for _, row in self.lessons_table()[1]:
             directory = row.get("dir")
-            if directory and (self.root / "Platform" / directory / f"{directory}.md").exists():
+            if directory and lecture_of(self.root / "Platform" / directory).exists():
                 moved[row["lesson"]] = self.lesson_roles(row["lesson"])
         ids = self.platform_ids()
         old = {}
@@ -1188,6 +1243,10 @@ class Check:
                     self.error(path, f"absolute local link is not portable: {target}")
                 elif not (path.parent / unquote(url.path)).exists():
                     self.error(path, f"missing link target: {target}")
+                elif source_file(Path(path).resolve(), self.root) and \
+                        outside_export(Path(path).resolve().parent / unquote(url.path), self.root):
+                    self.error(path, f"a source links into ru/ or journal/, which the export has not: {target} — "
+                                     "name it by text (ADR-0124 addendum (1) item 3)")
                 self.stats["local_links"] += 1
         except ValueError as exc:
             self.error(path, str(exc))
@@ -1860,7 +1919,7 @@ class Check:
             aux = Check(self.root, None, False)
             with contextlib.redirect_stdout(io.StringIO()):
                 for row in rows:
-                    lesson = self.root / "Platform" / row["dir"] / (row["dir"] + ".md")
+                    lesson = lecture_of(self.root / "Platform" / row["dir"])
                     if lesson.is_file():
                         aux.lesson(lesson)
             for k, v in aux.star_readers.items():
@@ -1897,7 +1956,8 @@ class Check:
 
     def stub_text(self):
         platform = Path(os.path.normpath(self.root / "Platform"))
-        files = sorted(platform.glob("*/data/*.outcomes.tsv")) + sorted(platform.glob("*/spec/*.norms.md"))
+        files = sorted(platform.glob("*/data/*.outcomes.tsv")) + sorted(platform.glob("*/spec/*.norms.md")) + \
+            sorted(platform.glob("*/ru/spec/*.norms.md"))       # ADR-0124: the Russian text of a moved lesson
         for path in files:
             for no, line in enumerate(path.read_text(encoding="utf-8").split("\n"), 1):
                 m = self.STUB_TEXT.search(line)
@@ -1964,8 +2024,9 @@ class Check:
     VECTOR_REF = re.compile(r"(family-read|yaml-suite|corpus|canonical):(\S+)")
 
     def english_mirrors(self):
-        """ADR-0120 п. 1 (б), доп. (1): английский текст норм `spec/en/<stem>.norms.en.md` — источник, русский — производный;
-        один набор номеров норм, ссылок, кодов и слов отказов (`en_mirror.compare`), иначе отказ."""
+        """ADR-0120 п. 1 (б), доп. (1): английский текст — источник, русский — производный; один набор номеров норм,
+        ссылок, кодов и слов отказов (`en_mirror.compare`), иначе отказ. Пары — по раскладке урока: `X` ↔ `ru/X` (ADR-0124)
+        или `en/<имя>.en.md` ↔ `<имя>.md` (ADR-0121); в `ru/` без источника — только лекция."""
         import en_mirror
         for ru, en in en_mirror.pairs(self.root):
             texts = self.read(en), ru.is_file() and self.read(ru)
@@ -1980,15 +2041,27 @@ class Check:
         for ru in sorted([*self.root.glob("Platform/**/*.md"), *self.root.glob("VMS/**/*.md")]):
             if ru.parent.name == "en":
                 continue
+            moved = en_mirror.home_of(ru, self.root)
+            if moved and moved[1].parts[0] == "ru":
+                home, rel = moved[0], moved[1].relative_to("ru")
+                if not (home / rel).is_file() and ru != lecture_of(home):
+                    self.error(ru, f"a Russian text in ru/ without its source {self.name(home / rel)}: in ru/ only the "
+                                   "lecture lives without a pair (ADR-0124 п. 1)")
+                continue
             text = ru.read_text(encoding="utf-8")
             en = ru.parent / "en" / ru.name.replace(".md", ".en.md")
             if en_mirror.MARK in "\n".join(text.splitlines()[:12]) and not en.is_file():
                 self.error(ru, f"marked «{en_mirror.MARK}», but {self.name(en)} is missing")
 
     def check_tables(self):
-        """ADR-0120 п. 2 (а): таблицы проверок команды `Platform/*/data/*-checks.tsv` — форма, CEL, функции #fn,
+        """ADR-0120 п. 2 (а): таблицы проверок команды `Platform/*/forms/*-checks.tsv` (в прежней раскладке — `data/`) — форма, CEL, функции #fn,
         параметры #lim и пробы `*-checks.probes.tsv`, сверенные прогоном (`check_tables.check`)."""
         import check_tables
+        import check_machines
+        for path in [*check_tables.tables(self.root), *check_machines.machines(self.root)]:
+            if path.parent.name == "data" and (path.parent.parent / "ru").is_dir():
+                self.error(path, "a form of a lesson in the layout of ADR-0124 lives in forms/; data/ holds the data "
+                                 "families only (ADR-0124 п. 1)")
         for path in check_tables.tables(self.root):
             errors, stats = check_tables.check(path)
             for message in errors:
@@ -1996,7 +2069,7 @@ class Check:
             self.stats.update(stats)
 
     def check_machines(self):
-        """ADR-0120 п. 2 (б): автоматы норм `Platform/*/data/*.machine.yaml` — закрытые наборы, CEL, трассы
+        """ADR-0120 п. 2 (б): автоматы норм `Platform/*/forms/*.machine.yaml` (в прежней раскладке — `data/`) — закрытые наборы, CEL, трассы
         `*.traces.tsv` прогоном эталонного исполнителя (`check_machines.check`)."""
         import check_machines
         for path in check_machines.machines(self.root):
@@ -2223,12 +2296,19 @@ class Check:
     # acceptance-entry exception (a chapter directory of a Platform lesson: `K/name`).
     def acceptance(self, acceptance, key, entry=""):
         texts = {}
-        readme = acceptance / "README.md"
+        readme = human_text(acceptance / "README.md", self.root)
         text = self.read(readme)
         if text is not None:
             texts[readme] = text
             self.markdown(readme, text)
-        self.tsv(acceptance / "corrections.tsv", 4, ["date", "sample", "fix", "languages"])
+        home = acceptance.parent.parent if entry else acceptance.parent
+        moved = (home / "ru").is_dir() and home.parent in (self.root / "Platform", self.root / VMS_DIR)
+        # ADR-0124 доп. (1) п. 8 (2): the log of a lesson in the new layout is journal/corrections-<глава>.tsv, not an input
+        log = home / "journal" / (f"corrections-{entry.rstrip('/')}.tsv" if entry else "corrections.tsv") if moved \
+            else acceptance / "corrections.tsv"
+        if moved and (acceptance / "corrections.tsv").exists():
+            self.error(acceptance / "corrections.tsv", f"the log lives in {self.name(log)} (ADR-0124 доп. (1) п. 8 (2))")
+        self.tsv(log, 4, ["date", "sample", "fix", "languages"])
         supported = {"README.md", "corrections.tsv", "scenarios.tsv", "verdicts.tsv", "diagnostics.tsv", "classes.tsv", "cases",
                      "en"}                     # en/README.en.md — английский источник README (ADR-0121), сверка english_mirrors
         puts = (key, entry) in PUTS_CHAPTERS
@@ -2371,9 +2451,9 @@ class Check:
                         self.error(readme, f"line {line}: sha256 is not of {match.group(1)}")
 
     def lesson(self, lesson):
-        if lesson.parent.parent == self.root / "Platform":
+        if lesson_home(lesson).parent == self.root / "Platform":
             return self.platform_lesson(lesson)
-        if lesson.parent.parent == self.root / VMS_DIR:
+        if lesson_home(lesson).parent == self.root / VMS_DIR:
             return self.platform_lesson(lesson, vms=True)
         if lesson.parent.parent != self.root or not re.fullmatch(r"[0-9]{2}-.+\.md", lesson.name):
             self.error(lesson, "expected module/NN-slug.md under repository root")
@@ -2458,22 +2538,24 @@ class Check:
         if not vms and not self.catalog_checked:
             self.catalog_lessons()
         stem = lesson.stem
+        home = lesson_home(lesson)
+        human = lambda path: human_text(path, self.root)   # noqa: E731 — the Russian text of a source (ADR-0124)
         if not re.fullmatch(r"[0-9]{2}-[a-z][a-z0-9-]*" if vms else r"[0-9]{2}-[a-z][a-z-]*", stem) or \
-                lesson.parent.name != stem:
+                home.name != stem or lesson != lecture_of(home):
             self.error(lesson, "expected VMS/NN-<имя>/NN-<имя>.md" if vms else "expected Platform/NN-<процесс>/NN-<процесс>.md")
             return
         number, process = stem[:2], stem[3:]
         key = f"V/{number}" if vms else f"P/{number}"
         if vms and not self.vms_lesson_listed(lesson, number, stem):
             return
-        spec, acceptance = lesson.parent / "spec", lesson.parent / "acceptance"
+        spec, acceptance = home / "spec", home / "acceptance"
         whole = spec / f"{stem}.norms.md"
         chapters = sorted((p for p in spec.glob(f"{number}.*-{process}.norms.md")
                            if re.fullmatch(rf"{number}\." + CHAPTER + rf"-{re.escape(process)}\.norms\.md", p.name)), key=chapter_key)
         if whole.exists() and chapters:
             self.error(whole, "a lesson has either one norms file or chapter norms, not both")
-        parts = [(p.name.split("-", 1)[0].split(".")[1], p) for p in chapters] or [(None, whole)]
-        instructions = spec / f"{stem}.README.md"
+        parts = [(p.name.split("-", 1)[0].split(".")[1], human(p)) for p in chapters] or [(None, human(whole))]
+        instructions = human(spec / f"{stem}.README.md")
         texts, all_ids, owned, total_choices, saids = {}, [], set(), 0, []
         totals = {"scenarios": None, "verdicts": None}
         for path in [lesson, instructions]:
@@ -2655,7 +2737,7 @@ class Check:
             if path.is_file() else []
         for d in dirs:
             found = sorted((self.root / VMS_DIR / d / "spec").glob(f"{number}.{chapter}-*.norms.md")) if chapter \
-                else [p for p in [self.root / VMS_DIR / d / f"{d}.md"] if p.is_file()]
+                else [p for p in [lecture_of(self.root / VMS_DIR / d)] if p.is_file()]
             if found:
                 return found[0]
         return None
@@ -2788,19 +2870,20 @@ def main():
     check = Check(args.root, args.exceptions, args.strict_coverage)
     for name, got, want in environment():
         check.error(REQUIREMENTS, f"environment: {name} {got or 'is missing'}, pinned {want}; run: {SCHEMA_INSTALL}")
-    names = args.lessons or [f"Platform/{row['dir']}/{row['dir']}.md" for _, row in check.lessons_table()[1]
-                             if row.get("dir") and (check.root / "Platform" / row["dir"] / f"{row['dir']}.md").is_file()]
+    names = args.lessons or [lecture_of(check.root / "Platform" / row["dir"]).relative_to(check.root).as_posix()
+                             for _, row in check.lessons_table()[1]
+                             if row.get("dir") and lecture_of(check.root / "Platform" / row["dir"]).is_file()]
     for line, row in check.lessons_table()[1]:            # строка без файла урока — красное, не тихий пропуск (Kimi М-1)
-        if not row.get("dir") or not (check.root / "Platform" / row["dir"] / f"{row['dir']}.md").is_file():
+        if not row.get("dir") or not lecture_of(check.root / "Platform" / row["dir"]).is_file():
             check.error(check.root / LESSONS, f"line {line}: lesson {row.get('lesson')} has no file "
-                                              f"Platform/{row.get('dir')}/{row.get('dir')}.md")
+                                              f"Platform/{row.get('dir')}/{row.get('dir')}.md (or ru/ by ADR-0124)")
     if not names:
         check.error(check.root / LESSONS, "no lessons: name them or keep Platform/lessons.tsv")
     for name in names:
         check.lesson((check.root / name).resolve())
     if not args.lessons:                                   # уроки VMS — тем же проходом, строго (2026-11-03: без них ошибки формы копились)
         vms = Check(args.root, args.exceptions, True)
-        lessons = [d / f"{d.name}.md" for d in sorted((check.root / "VMS").glob("[0-9][0-9]-*")) if (d / f"{d.name}.md").is_file()]
+        lessons = [lecture_of(d) for d in sorted((check.root / "VMS").glob("[0-9][0-9]-*")) if lecture_of(d).is_file()]
         for path in lessons:
             vms.lesson(path.resolve())
         check.errors.extend(e for e in vms.errors if e not in check.errors)

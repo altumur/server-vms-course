@@ -1,13 +1,16 @@
 """Сверка ru↔en (ADR-0120 п. 1 (б)): пара P/01.1 сходится, а каждое расхождение — номер, ссылка, код, слово отказа,
-`code`-вставка, таблица, чеклист, кириллица, пометка «производный» — даёт отказ."""
+`code`-вставка, таблица, чеклист, кириллица, пометка «производный» — даёт отказ. P/01 — в раскладке ADR-0124 (источник `X`,
+перевод `ru/X`), прочие уроки — в прежней (ADR-0121): пары обеих раскладок."""
 import unittest
 from pathlib import Path
 
 import en_mirror
 
 ROOT = Path(__file__).resolve().parents[3]
-RU = ROOT / "Platform/01-store/spec/01.1-store.norms.md"
-EN = ROOT / "Platform/01-store/spec/en/01.1-store.norms.en.md"
+RU = ROOT / "Platform/01-store/ru/spec/01.1-store.norms.md"
+EN = ROOT / "Platform/01-store/spec/01.1-store.norms.md"
+RU3 = ROOT / "Platform/01-store/ru/spec/01.3-store.norms.md"
+EN3 = ROOT / "Platform/01-store/spec/01.3-store.norms.md"
 
 
 class Mirror(unittest.TestCase):
@@ -50,7 +53,7 @@ class Mirror(unittest.TestCase):
         self.mutated("UTF-8 is not required (Н3 «list»).", "UTF-8 is not required (Н5 «list»).")
 
     def test_link(self):
-        self.mutated("[P/08.4](../../../08-domain/spec/08.4-domain.norms.md)", "[P/08.4](../../../08-domain/spec/08.3-domain.norms.md)")
+        self.mutated("[P/08.4](../../08-domain/spec/08.4-domain.norms.md)", "[P/08.4](../../08-domain/spec/08.3-domain.norms.md)")
 
     def test_code_span_dropped(self):
         self.mutated("`JSON_DEPTH` = 128", "JSON_DEPTH = 128")
@@ -100,9 +103,50 @@ class Mirror(unittest.TestCase):
     def test_escaped_pipe(self):                        # «\\|» inside a code span of a cell does not split it
         self.assertEqual(en_mirror.cells("| a | `x \\| y` | b |"), ["a", "`x \\| y`", "b"])
 
-    def test_mark(self):
-        errors = self.mutated(en_mirror.MARK, "производный", which="ru")
+    def test_mark(self):                                # ADR-0124 доп. (1) п. 8 (1): источник — путём от корня урока
+        errors = self.mutated(en_mirror.mark("spec/01.1-store.norms.md"), "производный", which="ru")
         self.assertTrue(any("mark" in e for e in errors), errors)
+        self.mutated("производный от `spec/01.1-store.norms.md`", "производный от `spec/01.2-store.norms.md`", which="ru")
+
+
+class Layouts(unittest.TestCase):
+    """ADR-0124 доп. (1) п. 3, 6: пары обеих раскладок; ссылки перевода — в переводы, сверяются как ссылки в источник."""
+
+    def compare3(self, ru=None, en=None):
+        r, e = RU3.read_text(encoding="utf-8"), EN3.read_text(encoding="utf-8")
+        return en_mirror.compare(r if ru is None else ru, e if en is None else en, RU3, EN3, ROOT)
+
+    def test_pairs_of_both_layouts(self):
+        pairs = list(en_mirror.pairs(ROOT))
+        self.assertIn((RU3, EN3), pairs)
+        self.assertIn((ROOT / "Platform/01-store/ru/lifecycle.md", ROOT / "Platform/01-store/lifecycle.md"), pairs)
+        self.assertIn((ROOT / "Platform/02-installer/spec/02.1-installer.norms.md",
+                       ROOT / "Platform/02-installer/spec/en/02.1-installer.norms.en.md"), pairs)
+        self.assertFalse([p for p in pairs if "/01-store/" in str(p[1]) and "/en/" in str(p[1])])
+        self.assertFalse([p for p in pairs if p[1].name == "01-store.md"])     # лекция — без пары, только для человека
+
+    def test_translation_links_translation(self):       # ru/…#русский якорь ≡ …#английский якорь по парам заголовков
+        self.assertEqual(self.compare3(), [])
+        ru = RU3.read_text(encoding="utf-8")
+        self.assertIn("(01.1-store.norms.md#н0-словарь-слов)", ru)
+        errors = self.compare3(ru=ru.replace("(01.1-store.norms.md#н0-словарь-слов)", "(01.1-store.norms.md#н1-форма)"))
+        self.assertTrue(any("link targets differ" in e for e in errors), errors)
+        errors = self.compare3(ru=ru.replace("(01.1-store.norms.md#н0-словарь-слов)",
+                                             "(../../spec/01.1-store.norms.md#н0-vocabulary)"))
+        self.assertEqual(errors, [])                       # перевод МОЖЕТ сослаться и на источник — цель та же
+
+    def test_source_anchor(self):
+        self.assertEqual(en_mirror.as_source("Platform/01-store/ru/spec/01.1-store.norms.md#время-в-строке", ROOT),
+                         "Platform/01-store/spec/01.1-store.norms.md#time-in-a-row")
+        self.assertEqual(en_mirror.as_source("Platform/02-installer/spec/02.1-installer.norms.md#x", ROOT),
+                         "Platform/02-installer/spec/02.1-installer.norms.md#x")
+
+    def test_built_block_by_targets(self):              # блок источника и перевода — тот же, глубина путей разная
+        ru = RU3.read_text(encoding="utf-8")
+        self.assertIn("](../../data/epoch_floor.schema.json)", ru)
+        self.assertIn("](../data/epoch_floor.schema.json)", EN3.read_text(encoding="utf-8"))
+        errors = self.compare3(ru=ru.replace("](../../data/epoch_floor.schema.json)", "](../../data/epoch_floor.outcomes.tsv)"))
+        self.assertTrue(any("built blocks differ" in e for e in errors), errors)
 
 
 if __name__ == "__main__":

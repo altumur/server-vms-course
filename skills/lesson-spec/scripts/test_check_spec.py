@@ -1851,5 +1851,77 @@ class VmsLessonTests(unittest.TestCase):
         self.assertFalse(any("VMS" in e for e in check.errors), check.errors)
 
 
+class LayoutTests(unittest.TestCase):
+    """ADR-0124 (доп. (1) п. 6): урок с `ru/` — новая раскладка. Лекция и переводы — в `ru/`, источник — на каноническом
+    пути, журнал — `journal/corrections-<глава>.tsv`; проверки урока читают русский перевод, источник не ссылается в
+    `ru/` и `journal/`."""
+
+    API = PlatformLessonTests.API
+
+    def setUp(self):
+        PlatformLessonTests.setUp(self)
+        ru = self.dir / "ru"
+        for path in sorted(p for p in self.dir.rglob("*.md")):
+            rel = path.relative_to(self.dir)
+            (ru / rel).parent.mkdir(parents=True, exist_ok=True)
+            if rel.as_posix() == "01-store.md":
+                path.rename(ru / rel)                    # лекция — только для человека
+            else:
+                (ru / rel).write_text(path.read_text())   # русский перевод тем же путём
+        for chapter in ("1", "2"):
+            (self.dir / "journal").mkdir(exist_ok=True)
+            (self.dir / "acceptance" / chapter / "corrections.tsv").rename(self.dir / f"journal/corrections-{chapter}.tsv")
+        self.lesson = ru / "01-store.md"
+
+    def check(self):
+        result = Check(self.root)
+        result.lesson(self.lesson)
+        return result
+
+    def test_new_layout_passes(self):
+        result = self.check()
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.stats["norm_ids"], 2)
+        self.assertEqual(result.stats["lessons"], 1)
+
+    def test_lesson_checks_read_the_translation(self):  # слова проверок русские: судится ru/X, не источник X
+        (self.dir / "spec/01.1-store.norms.md").write_text("# English source\n")
+        self.assertEqual(self.check().errors, [])
+        (self.dir / "ru/spec/01.1-store.norms.md").write_text("# x\n")
+        errors = self.check().errors
+        self.assertTrue(errors and all("ru/spec/01.1-store.norms.md" in e or "P/01.1" in e for e in errors), errors)
+
+    def test_log_lives_in_journal(self):
+        (self.dir / "journal/corrections-2.tsv").unlink()
+        self.assertTrue(any("journal/corrections-2.tsv" in e for e in self.check().errors))
+        (self.dir / "journal/corrections-2.tsv").write_text("date\tsample\tfix\tlanguages\n")
+        (self.dir / "acceptance/1/corrections.tsv").write_text("date\tsample\tfix\tlanguages\n")
+        errors = self.check().errors
+        self.assertTrue(any("the log lives in Platform/01-store/journal/corrections-1.tsv" in e for e in errors), errors)
+
+    def test_source_does_not_link_ru_or_journal(self):
+        result = Check(self.root)
+        source = self.dir / "spec/01.1-store.norms.md"
+        result.markdown(source, "[lecture](../ru/01-store.md), [log](../journal/corrections-1.tsv)\n")
+        self.assertEqual(sum("links into ru/ or journal/" in e for e in result.errors), 2, result.errors)
+        result = Check(self.root)                          # перевод — может: он сам в ru/
+        result.markdown(self.dir / "ru/spec/01.1-store.norms.md", "[lecture](../01-store.md)\n")
+        self.assertEqual(result.errors, [])
+
+    def test_translation_without_source(self):
+        (self.dir / "ru/spec/stray.md").write_text("# Stray\n")
+        result = Check(self.root)
+        result.english_mirrors()
+        self.assertTrue(any("ru/spec/stray.md" in e and "without its source" in e for e in result.errors), result.errors)
+        self.assertFalse(any("ru/01-store.md" in e and "without its source" in e for e in result.errors), result.errors)
+
+    def test_form_not_in_data(self):
+        (self.dir / "data").mkdir()
+        (self.dir / "data/write-checks.tsv").write_text("n\top\n")
+        result = Check(self.root)
+        result.check_tables()
+        self.assertTrue(any("lives in forms/" in e for e in result.errors), result.errors)
+
+
 if __name__ == "__main__":
     unittest.main()

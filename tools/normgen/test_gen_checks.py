@@ -36,8 +36,8 @@ sys.path.insert(0, str(ROOT / "skills/lesson-spec/scripts"))
 import check_tables  # noqa: E402 — оракул
 import gen_checks  # noqa: E402
 
-TABLE = ROOT / "Platform/01-store/data/write-checks.tsv"
-PROBES = ROOT / "Platform/01-store/data/write-checks.probes.tsv"
+TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"                  # ADR-0124: формы — в forms/
+PROBES = ROOT / "Platform/01-store/forms/write-checks.probes.tsv"
 OUT = HERE / "out/p01-1"
 MUTANTS = int(os.environ.get("NORMGEN_MUTANTS", "12000"))
 SEED = int(os.environ.get("NORMGEN_SEED", "20261104"))

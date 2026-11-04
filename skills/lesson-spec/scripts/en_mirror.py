@@ -1,7 +1,14 @@
 """Сверка английского источника спецификации с производным русским текстом (ADR-0121 п. 3; ADR-0120 доп. (5) п. 7).
 
-Английский `<каталог>/en/<имя>.en.md` — источник (нормы — в `spec/en/`); русский `<каталог>/<имя>.md` — производный,
-с пометкой «производный от en, руками не правится». Сверяется по разделам `##` и `###`, по порядку: разделов столько же,
+Две раскладки на время перехода (ADR-0124 доп. (1) п. 6): урок с каталогом `ru/` — новая, без — прежняя.
+- Новая (ADR-0124): английский `X` на каноническом пути — источник, перевод — `ru/X` того же урока (тот же путь от корня
+  урока) с пометкой «производный от `X`, руками не правится». Ссылки перевода ведут в переводы (`ru/Y`, русский якорь),
+  ссылки источника — в источник (`Y`, английский якорь): при сверке цель перевода `<урок>/ru/Y#якорь` читается как
+  `<урок>/Y#английский-якорь` по парам заголовков `Y` и `ru/Y` (один к одному). Построенные блоки сверяются по
+  разрешённым целям ссылок: у источника и перевода глубина путей разная.
+- Прежняя (ADR-0121): английский `<каталог>/en/<имя>.en.md` — источник (нормы — в `spec/en/`); русский
+  `<каталог>/<имя>.md` — производный, с пометкой «производный от en, руками не правится».
+Сверяется по разделам `##` и `###`, по порядку: разделов столько же,
 уровни те же, у каждого раздела равны
 - номера норм `Н…` в заголовках;
 - множества ссылок: `P/NN[.K][-MM]`, `ADR-NNNN`, `Н…`, id находок (`C01-ROW-INDEX-LOST-01`), цели ссылок Markdown
@@ -22,7 +29,84 @@ import os
 import re
 from pathlib import Path
 
-MARK = "производный от en, руками не правится"
+MARK = "производный от en, руками не правится"      # прежняя раскладка (ADR-0121)
+
+
+def mark(rel):
+    """The mark of a translation in the layout of ADR-0124 (addendum (1) item 8 (1)): the source by its path from the
+    root of the lesson."""
+    return f"производный от `{rel}`, руками не правится"
+
+
+def home_of(path, root):
+    """The lesson (or `common`) of a path in the layout of ADR-0124 → (home, path from the home) or None: a directory
+    `Platform/<x>` or `VMS/<x>` that holds `ru/`."""
+    try:
+        parts = Path(os.path.normpath(Path(path))).relative_to(Path(root)).parts
+    except ValueError:
+        return None
+    if len(parts) < 3 or parts[0] not in ("Platform", "VMS"):
+        return None
+    home = Path(root) / parts[0] / parts[1]
+    return (home, Path(*parts[2:])) if (home / "ru").is_dir() else None
+
+
+def slug(text):
+    """GitHub's anchor of a heading text: lower case; letters, digits, marks, `-`, `_` kept; spaces → `-`."""
+    import unicodedata
+    return "".join("-" if ch == " " else ch for ch in text.lower()
+                   if ch in "-_ " or unicodedata.category(ch)[0] in "LNM")
+
+
+def heading_text(raw):
+    raw = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", raw)
+    raw = re.sub(r"<[^>]+>", "", raw)
+    raw = re.sub(r"(`+)(.+?)\1", r"\2", raw)
+    raw = re.sub(r"(\*\*|__|\*)(.+?)\1", r"\2", raw)
+    return raw.strip()
+
+
+def anchors_in_order(text):
+    """[(level, anchor)] of the ATX headings outside code blocks, in order; a repeated anchor gets -1, -2…"""
+    seen, out = {}, []
+    for line in re.sub(r"^(`{3,}|~{3,})[^\n]*\n.*?^\1[ \t]*$", "", text, flags=re.M | re.S).splitlines():
+        m = re.match(r"^(#{1,6})[ \t]+(.+?)[ \t#]*$", line)
+        if m:
+            base = slug(heading_text(m.group(2)))
+            n = seen.get(base, 0)
+            seen[base] = n + 1
+            out.append((len(m.group(1)), base if n == 0 else f"{base}-{n}"))
+    return out
+
+
+_ANCHORS = {}
+
+
+def source_anchor(source, translation, anchor):
+    """A Russian anchor of the translation → the English anchor of its source (headings one to one), else as is."""
+    key = (source, translation)
+    if key not in _ANCHORS:
+        try:
+            en = anchors_in_order(Path(source).read_text(encoding="utf-8"))
+            ru = anchors_in_order(Path(translation).read_text(encoding="utf-8"))
+            _ANCHORS[key] = {r: e for (_, r), (_, e) in zip(ru, en)} if [a for a, _ in en] == [a for a, _ in ru] else {}
+        except OSError:
+            _ANCHORS[key] = {}
+    return _ANCHORS[key].get(anchor, anchor)
+
+
+def as_source(rel, root):
+    """A target `<урок>/ru/Y[#a]` (path from the root) → `<урок>/Y[#английский a]` when `Y` is a source of a lesson in
+    the layout of ADR-0124; any other target as is."""
+    path, _, anchor = rel.partition("#")
+    parts = Path(path).parts
+    if len(parts) >= 4 and parts[0] in ("Platform", "VMS") and parts[2] == "ru" and (Path(root) / parts[0] / parts[1] / "ru").is_dir():
+        source = Path(parts[0], parts[1], *parts[3:])
+        if (Path(root) / source).exists():
+            if "#" in rel:
+                anchor = source_anchor(Path(root) / source, Path(root) / path, anchor)
+            return source.as_posix() + ("#" + anchor if "#" in rel else "")
+    return rel
 H2 = re.compile(r"^###? ", re.M)                   # разделы и подразделы: сверка по каждому
 FENCE = re.compile(r"^```[^\n]*\n.*?^```[ \t]*$", re.M | re.S)
 SPAN = re.compile(r"(`+)(.+?)\1", re.S)
@@ -88,7 +172,7 @@ def links(body, base, root):
             rel = Path(whole).relative_to(root)
         except ValueError:
             rel = Path(whole)
-        out.add(rel.as_posix() + ("#" + target.split("#", 1)[1] if "#" in target else ""))
+        out.add(as_source(rel.as_posix() + ("#" + target.split("#", 1)[1] if "#" in target else ""), root))
     return out
 
 
@@ -198,16 +282,41 @@ def strict(rb, eb):
 BUILT = re.compile(r"<!-- (families|form|canonical):begin -->.*?<!-- \1:end -->", re.S)
 
 
+def resolved(block, path, root):
+    """A built block with the targets of its links resolved from its file to paths from the root (ADR-0124: the source
+    and its translation lie at different depths, the block is the same)."""
+    def one(m):
+        target = m.group(1)
+        if re.match(r"[a-z]+:", target) or target.startswith("#"):
+            return m.group(0)
+        whole = os.path.normpath(Path(path).parent / target.split("#", 1)[0])
+        try:
+            rel = Path(whole).relative_to(root).as_posix()
+        except ValueError:
+            rel = whole
+        return "](/" + as_source(rel + ("#" + target.split("#", 1)[1] if "#" in target else ""), root) + ")"
+    return LINK.sub(one, block)
+
+
 def compare(ru_text, en_text, ru_path, en_path, root):
     """→ list of messages (empty: the texts agree). Built blocks between `<!-- …:begin/end -->` (sections.py) are
-    compared as they are: the English source carries the block byte for byte until sections.py has an English mode."""
+    compared as they are: the English source carries the block byte for byte until sections.py has an English mode
+    (in the layout of ADR-0124 — byte for byte but the targets of links, resolved from each file)."""
     ru_blocks, en_blocks = BUILT.findall(ru_text), BUILT.findall(en_text)
     built_ru, built_en = [m.group(0) for m in BUILT.finditer(ru_text)], [m.group(0) for m in BUILT.finditer(en_text)]
+    new = home_of(Path(ru_path).resolve(), Path(root).resolve()) is not None
+    if new:
+        r = Path(root).resolve()
+        built_ru = [resolved(b, Path(ru_path).resolve(), r) for b in built_ru]
+        built_en = [resolved(b, Path(en_path).resolve(), r) for b in built_en]
     pre = []
     if built_ru != built_en:
         pre.append(f"built blocks differ: ru {ru_blocks}, en {en_blocks} (the English source carries them as built)")
     ru_text, en_text = BUILT.sub("<!-- built -->", ru_text), BUILT.sub("<!-- built -->", en_text)
     root, ru_path, en_path = Path(root).resolve(), Path(ru_path).resolve(), Path(en_path).resolve()
+    want = mark(home_of(ru_path, root)[1].relative_to("ru").as_posix()) if new else MARK
+    marked = want in ("\n".join(ru_text.splitlines()[:12]) if new else ru_text)
+    ru_text = ru_text.replace(want, "производный", 1)   # пометка — не текст: её путь в `code` у источника не повторяется
     errors_pre = pre
     kinds = kinds_of(ru_text) or lesson_kinds(ru_path)
     errors = list(errors_pre)
@@ -245,8 +354,8 @@ def compare(ru_text, en_text, ru_path, en_path, root):
         rest = pattern.sub(" ", rest)
     for fence in FENCE.findall(en_text):                     # блоки кода — тоже по-английски, кроме «…» и Н…
         rest += "\n" + re.sub("|".join([r"«[^»\n]*»", NORM_NO.pattern] + [x.pattern for x in ALLOWED_CYR[4:]]), " ", fence)
-    if MARK not in ru_text:
-        errors.append(f"the Russian text has no mark «{MARK}» in its head")
+    if not marked:
+        errors.append(f"the Russian text has no mark «{want}» in its head")
     for line in rest.splitlines():
         if CYR.search(line):
             errors.append(f"Cyrillic outside code, «…», Н-numbers and file names: "
@@ -255,11 +364,22 @@ def compare(ru_text, en_text, ru_path, en_path, root):
 
 
 def pairs(root):
-    """English sources → (ru, en): `<каталог>/en/<имя>.en.md` ↔ `<каталог>/<имя>.md` (ADR-0121 п. 1: нормы в `spec/en/`,
-    у прочих каталогов — `en/` рядом), в Platform/ и VMS/."""
+    """English sources → (ru, en), в Platform/ и VMS/:
+    - урок с `ru/` (ADR-0124): каждый `*.md` урока вне `ru/` и `journal/` — источник `X`, перевод — `ru/X`;
+    - урок без `ru/` (ADR-0121 п. 1): `<каталог>/en/<имя>.en.md` ↔ `<каталог>/<имя>.md` (нормы в `spec/en/`, у прочих
+      каталогов — `en/` рядом)."""
     root = Path(root)
+    homes = sorted(h for h in [*root.glob("Platform/*"), *root.glob("VMS/*")] if (h / "ru").is_dir())
+    out = []
+    for home in homes:
+        for x in sorted(home.rglob("*.md")):
+            rel = x.relative_to(home)
+            if rel.parts[0] not in ("ru", "journal"):
+                out.append((home / "ru" / rel, x))
     for en in sorted([*root.glob("Platform/**/en/*.en.md"), *root.glob("VMS/**/en/*.en.md")]):
-        yield en.parent.parent / en.name.replace(".en.md", ".md"), en
+        if not any(en.is_relative_to(h) for h in homes):
+            out.append((en.parent.parent / en.name.replace(".en.md", ".md"), en))
+    yield from sorted(out, key=lambda p: p[1])
 
 
 def lesson_kinds(ru_path):

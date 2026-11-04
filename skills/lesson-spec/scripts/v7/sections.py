@@ -6,6 +6,10 @@
 По маркерам норм: `<!-- form:begin -->` — «Форма» P/02.1 (`<база>.schema.json`, `.relations.json`, `.scalars.tsv`
 рядом); `<!-- families:begin -->` — «Семьи данных» главы по каталогу; `<!-- canonical:begin -->` — «Форма
 канонического вида» P/02.2 (`02.2-installer.view.schema.json` рядом). Текст между маркерами заменяется построенным.
+
+Урок в раскладке ADR-0124 (с `ru/`): нормы `spec/X` — английский источник, `ru/spec/X` — перевод. Блок один и тот же, его
+получают оба файла (ADR-0121 доп. (1) п. 2: источник несёт блок как построен), ссылки — от каждого файла своей глубины;
+файлы формы берутся рядом с источником. Можно назвать любой из двух.
 """
 import json
 import re
@@ -34,7 +38,26 @@ def chapter_families(root, prefix, catalog=None):
     return [spec.load_family(root, r) for r in rows]
 
 
-def built(kind, norms, root):
+def pair_of(norms, root):
+    """→ (source, [files to write]): a norms file of a lesson in the layout of ADR-0124 — its source `spec/X` and both
+    `spec/X`, `ru/spec/X`; of the former layout — the file itself."""
+    norms = Path(norms).resolve()
+    root = Path(root).resolve()
+    try:
+        parts = norms.relative_to(root).parts
+    except ValueError:
+        return norms, [norms]
+    if len(parts) >= 4 and parts[0] in ("Platform", "VMS") and (root / parts[0] / parts[1] / "ru").is_dir():
+        home = root / parts[0] / parts[1]
+        rest = Path(*parts[3:]) if parts[2] == "ru" else Path(*parts[2:])
+        source, translation = home / rest, home / "ru" / rest
+        return source, [source] + ([translation] if translation.is_file() else [])
+    return norms, [norms]
+
+
+def built(kind, norms, root, at=None):
+    """The block of a kind for the norms `norms` (files of the form next to it); links of the families — from `at`."""
+    at = norms if at is None else at
     base = Path(norms).parent / Path(norms).name[:-len(".norms.md")]
     if kind == "form":
         sch = json.loads(Path(str(base) + ".schema.json").read_text(encoding="utf-8"))
@@ -44,23 +67,26 @@ def built(kind, norms, root):
         fams = chapter_families(root, chapter_prefix(norms))
         if not fams:
             raise spec.SpecError("%s: the chapter owns no family with a schema in the catalog" % Path(norms).name)
-        return section.build_families_section(Path(norms).resolve(), Path(root).resolve(), fams)
+        return section.build_families_section(Path(at).resolve(), Path(root).resolve(), fams)
     doc = json.loads((Path(norms).parent / "02.2-installer.view.schema.json").read_text(encoding="utf-8"))
     return view.build_view_section(doc)
 
 
 def rewrite(norms, root):
-    """Переписать в нормах каждый раздел с маркерами; → [вид раздела]."""
-    lines = Path(norms).read_text(encoding="utf-8").split("\n")
+    """Переписать в нормах каждый раздел с маркерами (в раскладке ADR-0124 — в источнике и переводе); → [вид раздела]."""
+    source, files = pair_of(norms, root)
     done = []
-    for kind, (begin, end) in MARKERS.items():
-        if lines.count(begin) != 1 or lines.count(end) != 1:
-            continue
-        text = built(kind, norms, root)
-        a, b = lines.index(begin), lines.index(end)
-        lines = lines[:a + 1] + text.rstrip("\n").split("\n") + lines[b:]
-        done.append(kind)
-    Path(norms).write_text("\n".join(lines), encoding="utf-8")
+    for path in files:
+        lines = Path(path).read_text(encoding="utf-8").split("\n")
+        for kind, (begin, end) in MARKERS.items():
+            if lines.count(begin) != 1 or lines.count(end) != 1:
+                continue
+            text = built(kind, source, root, at=path)
+            a, b = lines.index(begin), lines.index(end)
+            lines = lines[:a + 1] + text.rstrip("\n").split("\n") + lines[b:]
+            if kind not in done:
+                done.append(kind)
+        Path(path).write_text("\n".join(lines), encoding="utf-8")
     return done
 
 

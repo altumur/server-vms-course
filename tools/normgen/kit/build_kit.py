@@ -3,7 +3,7 @@
 Запуск: python tools/normgen/kit/build_kit.py <dst> --module <путь импорта каталога <dst>/01-store>
 
 Кладёт в <dst>/01-store/internal/:
-- checks/ — пакет, сгенерированный tools/normgen/gen_checks.py из Platform/01-store/data/write-checks.tsv (берётся
+- checks/ — пакет, сгенерированный tools/normgen/gen_checks.py из Platform/01-store/forms/write-checks.tsv (берётся
   из tools/normgen/out/p01-1/go/checks; sha256 таблицы в его шапке должен совпасть с таблицей сейчас);
 - jsonstrict/, writecheck/ — ручной пакет tools/normgen/kit/go (в writecheck путь "kitmodule/internal/" заменяется на
   "<module>/internal/").
@@ -21,7 +21,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent.parent
-TABLE = ROOT / "Platform/01-store/data/write-checks.tsv"
+TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"
 GENERATED = ROOT / "tools/normgen/out/p01-1/go/checks"
 HANDWRITTEN = HERE / "go"
 PLACEHOLDER = '"kitmodule/internal/'
@@ -126,7 +126,7 @@ closed): import and call them. `kit.manifest.json` lists every file with its sha
 |---|---|---|
 | `writecheck` | `{module}/internal/writecheck` | handwritten: parser + checks in one call — **use this** |
 | `jsonstrict` | `{module}/internal/jsonstrict` | handwritten: the strict JSON parser of Н2.1 |
-| `checks` | `{module}/internal/checks` | generated from `Platform/01-store/data/write-checks.tsv` |
+| `checks` | `{module}/internal/checks` | generated from `Platform/01-store/forms/write-checks.tsv` |
 
 Standard library only, Go 1.22. All functions are pure and safe for concurrent use.
 

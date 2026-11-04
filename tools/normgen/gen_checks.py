@@ -26,7 +26,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-DEFAULT_TABLE = ROOT / "Platform/01-store/data/write-checks.tsv"
+DEFAULT_TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"          # ADR-0124: формы — в forms/
 DEFAULT_OUT = HERE / "out/p01-1"
 COLUMNS = ["n", "op", "group", "each", "check", "when", "code", "kind", "fault", "norm"]
 EACH = re.compile(r"([a-z]\w*), ([a-z]\w*) in (body(?:\.[a-z_]+)+)")

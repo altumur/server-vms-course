@@ -7,7 +7,7 @@ from pathlib import Path
 import check_tables
 
 ROOT = Path(__file__).resolve().parents[3]
-TABLE = ROOT / "Platform/01-store/data/write-checks.tsv"
+TABLE = ROOT / "Platform/01-store/forms/write-checks.tsv"          # раскладка ADR-0124: формы — в forms/
 PROBES = TABLE.with_name("write-checks.probes.tsv")
 
 

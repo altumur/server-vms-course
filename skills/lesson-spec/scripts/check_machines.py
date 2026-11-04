@@ -1,5 +1,5 @@
-"""Machines of the norms (ADR-0120 item 2 (b), addendum (5) items 4, 6): `Platform/NN-*/data/<name>.machine.yaml` with
-traces `<name>.traces.tsv`.
+"""Machines of the norms (ADR-0120 item 2 (b), addendum (5) items 4, 6): `Platform/NN-*/forms/<name>.machine.yaml` (the
+layout of ADR-0124; `data/` in the former one) with traces `<name>.traces.tsv` next to it.
 
 The check:
 - form: states, events, timers, actions, functions are closed sets; a transition names an event of events, actions of
@@ -332,4 +332,5 @@ def check(path):
 
 
 def machines(root):
-    return sorted(Path(root).glob("Platform/*/data/*.machine.yaml"))
+    """Machines: `forms/` of a lesson in the layout of ADR-0124, `data/` in the former one (addendum (1) item 6)."""
+    return sorted([*Path(root).glob("Platform/*/forms/*.machine.yaml"), *Path(root).glob("Platform/*/data/*.machine.yaml")])

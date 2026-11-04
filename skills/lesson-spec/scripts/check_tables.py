@@ -1,4 +1,5 @@
-"""Таблица проверок команды (ADR-0120 п. 2 (а)): `Platform/NN-*/data/<имя>-checks.tsv` и входы `<имя>-checks.probes.tsv`.
+"""Таблица проверок команды (ADR-0120 п. 2 (а)): `Platform/NN-*/forms/<имя>-checks.tsv` (раскладка ADR-0124; в прежней —
+`data/`) и входы `<имя>-checks.probes.tsv` рядом.
 
 Форма таблицы — в её шапке (`#var`, `#lim`, `#fn`, колонки n, op, group, each, check, when, code, kind, fault, norm). Эта
 проверка:
@@ -294,4 +295,5 @@ def check(table_path):
 
 
 def tables(root):
-    return sorted(Path(root).glob("Platform/*/data/*-checks.tsv"))
+    """Таблицы проверок: `forms/` урока в раскладке ADR-0124, `data/` — в прежней (на время перехода, доп. (1) п. 6)."""
+    return sorted([*Path(root).glob("Platform/*/forms/*-checks.tsv"), *Path(root).glob("Platform/*/data/*-checks.tsv")])
