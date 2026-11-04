@@ -17,6 +17,7 @@ judge — мера этапа launch: gate accept:1.1:01-absent — сценар
 """
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -34,7 +35,7 @@ format: 2
 implementation: normgen-launch-frame
 module: 01-store
 spec_version: '{spec}'
-build: 'go build -o bin/configstore ./cmd/configstore'
+build: '{build}'
 stand:
   store1: './bin/configstore -id store1 -dir {{data}} -sockets {{rundir}} -rights {{rights}} -max-body {{body_limit}} -max-value {{row_ceiling}}'
   store: './bin/configstore -id store1 -dir {{data}} -sockets {{rundir}} -rights {{rights}} -max-body {{body_limit}} -max-value {{row_ceiling}}'
@@ -44,7 +45,7 @@ keys:
   request_line_limit: 8192
 artifacts:
   configstore: bin/configstore
-"""
+{vectors}"""
 ASSEMBLY = "format: 1\nmodules:\n  01-store: 01-store/acceptance.yaml\n"
 
 RUN = """# Судья части launch (ADR-0083 доп. (95) п. 3): раннер P/01.1 --build на каркасе пакета с пустым ядром.
@@ -55,7 +56,7 @@ env = dict(os.environ, CAMMETA_SPECS=os.path.join(here, 'specs'), GOCACHE=os.pat
            GOFLAGS='-mod=mod', GOPROXY='off', GOWORK='off', GOTOOLCHAIN='local')
 out = os.path.join(os.environ.get('CHECK_OUT', here), 'report')
 code = subprocess.call([sys.executable, '-I', '-B', os.path.join(here, 'acceptance/runner/all.py'),
-                        '--assembly', os.path.join(here, 'impl/assembly.yaml'), '--only', 'P/01.1',
+                        '--assembly', os.path.join(here, 'impl/assembly.yaml'), '--only', 'P/01.1'{only},
                         '--build', '--out', out], env=env, cwd=here)
 for name in sorted(os.listdir(out)) if os.path.isdir(out) else []:
     if name.endswith(('.json', '.txt')) and name not in ('inventory.json', 'commands.json'):
@@ -68,14 +69,27 @@ def git(args, cwd):
     subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True)
 
 
-def stand(dst, spec):
+def stand(dst, spec, kit=None, vectors=False):
+    """kit — готовый каталог пакета (копируется как есть), иначе build_kit.build; vectors — ещё bin/vectors и
+    vectors/write-checks профиля (gate vectors:write-checks этапа model)."""
     if len(spec) != 40:
         raise build_kit.KitError(f"--spec-version {spec!r}: a full 40-hex commit of cammeta-specs")
     dst = Path(dst)
-    manifest = build_kit.build(dst, MODULE, PARTS)
+    if kit:
+        shutil.copytree(kit, dst, ignore=shutil.ignore_patterns("SOURCE.txt"))
+        manifest = json.loads((dst / "kit.manifest.json").read_text(encoding="utf-8"))
+        if manifest.get("module") != MODULE:
+            raise build_kit.KitError(f"{kit}: module {manifest.get('module')!r}, the stand wants {MODULE}")
+    else:
+        manifest = build_kit.build(dst, MODULE, PARTS + (("vectors",) if vectors else ()))
     store = dst / "01-store"
     (store / "go.mod").write_text(f"module {MODULE}\n\ngo 1.22\n", encoding="utf-8")
-    (store / "acceptance.yaml").write_text(PROFILE.format(spec=spec), encoding="utf-8")
+    build = "go build -o bin/configstore ./cmd/configstore" + (" && go build -o bin/vectors ./cmd/vectors" if vectors else "")
+    vec = "vectors:\n  01-store/write-checks: 'bin/vectors {input}'\n" if vectors else ""
+    text = PROFILE.format(spec=spec, build=build, vectors="{vectors}")
+    (store / "acceptance.yaml").write_text(text.replace("{vectors}", vec).replace("artifacts:\n  configstore: bin/configstore\n",
+                                           "artifacts:\n  configstore: bin/configstore\n" + ("  vectors: bin/vectors\n" if vectors else "")),
+                                           encoding="utf-8")
     (dst / "assembly.yaml").write_text(ASSEMBLY, encoding="utf-8")
     (dst / "SPEC_VERSION").write_text(spec + "\n", encoding="utf-8")
     (dst / ".gitignore").write_text("01-store/bin/\n", encoding="utf-8")
@@ -85,18 +99,19 @@ def stand(dst, spec):
     return manifest
 
 
-def job(dst, spec, acceptance, specs):
+def job(dst, spec, acceptance, specs, kit=None, vectors=False):
     dst = Path(dst)
     dst.mkdir(parents=True)
-    (dst / "RUN.py").write_text(RUN, encoding="utf-8")
+    (dst / "RUN.py").write_text(RUN.replace("{only}", ", '--only', 'P/01/vectors-write-checks'" if vectors else ""),
+                                encoding="utf-8")
     git(["clone", "-q", str(acceptance), str(dst / "acceptance")], dst)
     git(["clone", "-q", str(specs), str(dst / "specs")], dst)
     git(["checkout", "-q", spec], dst / "specs")
-    stand(dst / "impl", spec)                 # specs — с .git: предпроверка раннера читает его метаданные
+    stand(dst / "impl", spec, kit, vectors)        # specs — с .git: предпроверка раннера читает его метаданные
     return dst
 
 
-def judge(report, json_out=None):
+def judge(report, json_out=None, vectors=False):
     path = Path(report) / "P-01.1-door.json"
     errors, steps, summary = [], {}, {}
     try:
@@ -133,6 +148,16 @@ def judge(report, json_out=None):
             errors.append(f"{name}: {sc['error'][:300]}")
     if not want:
         errors.append(f"no steps of {GATE} in {table}")
+    if vectors:
+        vpath = Path(report) / "P-01-vectors-write-checks.json"
+        try:
+            v = json.loads(vpath.read_text(encoding="utf-8"))
+            n, ok = len(v.get("vectors") or []), v.get("green") is True
+            print(f"model: vectors:write-checks {'PASS' if ok and n else 'FAIL'} ({n} vectors)")
+            if not (ok and n):
+                errors.append(f"vectors:write-checks not green ({n} vectors)")
+        except (OSError, ValueError) as e:
+            errors.append(f"no vector report {vpath}: {e!r}")
     verdict = "PASS" if not errors and steps and all(steps.values()) else "FAIL"
     for e in errors:
         print("FAIL", e)
@@ -156,17 +181,21 @@ def main(argv=None):
     j.add_argument("--spec-version", required=True)
     j.add_argument("--acceptance", default="/home/pilot/cammeta-acceptance")
     j.add_argument("--specs", default="/home/pilot/cammeta-specs")
+    for x in (s, j):
+        x.add_argument("--kit", help="a built kit directory, copied as is (default: build_kit.build)")
+        x.add_argument("--vectors", action="store_true", help="also bin/vectors and gate vectors:write-checks (model)")
     d = sub.add_parser("judge")
     d.add_argument("report")
     d.add_argument("--json")
+    d.add_argument("--vectors", action="store_true")
     a = ap.parse_args(argv)
     try:
         if a.cmd == "stand":
-            stand(a.dst, a.spec_version)
+            stand(a.dst, a.spec_version, a.kit, a.vectors)
         elif a.cmd == "job":
-            print(job(a.dst, a.spec_version, a.acceptance, a.specs))
+            print(job(a.dst, a.spec_version, a.acceptance, a.specs, a.kit, a.vectors))
         else:
-            return judge(a.report, a.json)
+            return judge(a.report, a.json, a.vectors)
     except (build_kit.KitError, subprocess.CalledProcessError) as exc:
         print(f"launch_judge: {exc}", file=sys.stderr)
         return 1
