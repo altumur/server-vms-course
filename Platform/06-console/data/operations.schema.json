@@ -3,21 +3,21 @@
  "type": "object",
  "properties": {
   "by": {
-   "description": "автор операции: тот, чьим правом идут шаги (P/06.9 Н1.2)",
+   "description": "the author of the operation: the one by whose right the steps go (P/06.9 Н1.2)",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "jti": {
-   "description": "jti токена, к которому операция привязана сейчас (Н3 «перепривязать»)",
+   "description": "jti of the token the operation is bound to now (Н3 «rebind»)",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "kid": {
-   "description": "ключ подписи того же токена",
+   "description": "the signing key of the same token",
    "type": "string",
    "x-codec": [
     "string"
@@ -25,34 +25,34 @@
   },
   "iat": {
    "$ref": "#/$defs/common.time",
-   "description": "iat того же токена: вход шага 4а договора права (P/06.9 Н1.2; ADR-0100 §3)",
+   "description": "iat of the same token: an input of step 4а of the right contract (P/06.9 Н1.2; ADR-0100 §3)",
    "x-codec": [
     "time"
    ]
   },
   "exp": {
    "$ref": "#/$defs/common.time",
-   "description": "срок того же токена",
+   "description": "the term of the same token",
    "x-codec": [
     "time"
    ]
   },
   "created_at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды приёма",
+   "description": "the wall-clock seconds of intake",
    "x-codec": [
     "time"
    ]
   },
   "finished_at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды завершения; у незавершённой нет; от него считается OPS_KEEP",
+   "description": "the wall-clock seconds of finishing; an unfinished one has none; OPS_KEEP is counted from it",
    "x-codec": [
     "time"
    ]
   },
   "state": {
-   "description": "`running` — не завершена, `done` — завершена; `paused` выдаётся только дверью (Н2)",
+   "description": "`running` — not finished, `done` — finished; `paused` is given out only by the door (Н2)",
    "type": "string",
    "x-codec": [
     "string"
@@ -63,21 +63,21 @@
    ]
   },
   "paused": {
-   "description": "человеческая пауза: перепривязка её не снимает",
+   "description": "a human pause: rebinding does not lift it",
    "type": "boolean",
    "x-codec": [
     "boolean"
    ]
   },
   "expired": {
-   "description": "срок привязанного токена вышел, операция ждёт автора (Н3 «шаг»)",
+   "description": "the term of the bound token has run out, the operation waits for the author (Н3 «step»)",
    "type": "boolean",
    "x-codec": [
     "boolean"
    ]
   },
   "cancel": {
-   "description": "отмена записана; исполняет ведущий (Н3 «завершить»)",
+   "description": "the cancellation is recorded; the leader executes it (Н3 «finish»)",
    "type": "boolean",
    "x-codec": [
     "boolean"
@@ -85,14 +85,14 @@
   },
   "total": {
    "$ref": "#/$defs/common.pos53",
-   "description": "число шагов, задано при приёме",
+   "description": "the number of steps, set at intake",
    "x-whole": true,
    "x-codec": [
     "integer"
    ]
   },
   "retry_of": {
-   "description": "id операции, чьи неудачные шаги повторяет эта; нет — обычная операция",
+   "description": "the id of the operation whose failed steps this one repeats; absent — an ordinary operation",
    "type": "string",
    "x-codec": [
     "string"

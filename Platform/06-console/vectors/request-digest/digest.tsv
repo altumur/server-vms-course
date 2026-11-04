@@ -1,6 +1,6 @@
-# Digest of a request (М10/8 Н1.5 `digest`, Н3 «подать просьбу» шаг 1): the vectors of their own (ADR-0083, stage A).
+# Digest of a request (М10/8 Н1.5 `digest`, Н3 «подать просьбу» step 1): the vectors of their own (ADR-0083, stage A).
 # Owner: «Спецификация»; lesson-owner М10/8; participants console (a request filed at the door) and <s>worker (filed by a
-# worker, worker.requests). The product's conformance — its own acceptance against this table (ADR-0080 доп. 16).
+# worker, worker.requests). The product's conformance — its own acceptance against this table (ADR-0080 addendum 16).
 #
 # A client's digest: sha256 of JCS (RFC 8785, ADR-0072) of the client's body after the schema, without valid_until — the
 # one server field a client may send; unit is in it. A worker's digest: sha256 of JCS of the object made of the row's

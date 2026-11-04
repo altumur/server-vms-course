@@ -274,7 +274,7 @@ paths:
   /events:
     get:
       summary: 'Resource: the local index (Н1.3, Н3 «запрос (ресурс)»); the console merge — the contract P/06 (chapter 6.4)'
-      description: 'The order and the cut (cut, Н1.3) — the same for the resource and for the console merge (chapter 6.4 Н3 «слияние»): before the cut
+      description: 'The order and the cut (cut, Н1.3) — the same for the resource and for the console merge (chapter 6.4 Н3 «merge»): before the cut
         remove duplicates by id; first class alarm, then observation; within a class by by (keep newest — descending, oldest —
         ascending), with equal time — id lexicographically by UTF-8 bytes; the first limit rows. truncated — the number
         of matching rows unique by id that remain after this cut (analysis of review of stage B 6–7, № 32).'

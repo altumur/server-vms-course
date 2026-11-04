@@ -1,5 +1,7 @@
 # Векторы: грамматика `rid` просьбы
 
+Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+
 Владелец — глава P/06.4 ([нормы](../../spec/06.4-console.norms.md) Н1.5 `rid`: имя строки `<sub>/requests/<rid>` и метки
 `objects/<sub>/commands/<rid>`; Н4 «просьба: неверный … rid»; ADR-0060). Участники — дверь просьб консоли
 (`POST /<sub>/requests`: rid по шаблону `requests.key` или `r-<sha16(Idempotency-Key)>`; отказ — 400 RequestError, Н4) и

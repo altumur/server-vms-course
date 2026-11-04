@@ -59,7 +59,7 @@ no units and does not enter `workers`; an unreadable door row — `door: null`. 
 
 ## Who executes
 
-Who executes it is the controller (`04-controller`: the shortage, `в пути`, `свободно(s)`, the candidates and the shares, P/04 Н3 «нехватка(), заказать()») — all the rows. Only read the ready result: the resource (`05-resource`, writes `room`/`live` of the door row, P/05 Н1.4 `door_row`), the server script (`02-installer`, P/02.4 Н1.5) and the console (`06-console`, the series `workers_wanted`/`workers_withheld`, P/06.5 Н3 «/metrics — текст») (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who executes it is the controller (`04-controller`: the shortage, `в пути`, `свободно(s)`, the candidates and the shares, P/04 Н3 «нехватка(), заказать()») — all the rows. Only read the ready result: the resource (`05-resource`, writes `room`/`live` of the door row, P/05 Н1.4 `door_row`), the server script (`02-installer`, P/02.4 Н1.5) and the console (`06-console`, the series `workers_wanted`/`workers_withheld`, P/06.5 Н3 «/metrics — text») (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## What the vector does not cover
 

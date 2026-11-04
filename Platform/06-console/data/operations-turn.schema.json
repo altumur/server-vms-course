@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "holder": {
-   "description": "новая уникальная метка попытки ведущего; пустая строка — очередь отдана (договор очереди писателя)",
+   "description": "a new unique mark of the leader's attempt; an empty string — the turn is given up (the writer turn contract)",
    "type": "string",
    "x-codec": [
     "string"

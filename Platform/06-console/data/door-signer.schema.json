@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "kid": {
-   "description": "имя ключа подписи токена двери, 1–32 знака [a-z0-9-]; тот же kid — в door/keys и в токене `door1.<kid>…`",
+   "description": "the name of the signing key of the door token, 1–32 characters [a-z0-9-]; the same kid — in door/keys and in the token `door1.<kid>…`",
    "type": "string",
    "pattern": "^(?:[a-z0-9-]{1,32})$",
    "x-codec": [
@@ -11,7 +11,7 @@
    ]
   },
   "seed_secret": {
-   "description": "32 байта зерна Ed25519 в 64 строчных hex; секрет по суффиксу `_secret` — конверт кольца `enc:v2` (договор запечатывания, глава 6.2)",
+   "description": "32 bytes of the Ed25519 seed in 64 lowercase hex; a secret by the suffix `_secret` — a ring envelope `enc:v2` (the sealing contract, chapter 6.2)",
    "type": "string",
    "x-codec": [
     "string"

@@ -232,7 +232,7 @@
     },
     "writes": {
      "$ref": "#/$defs/strList",
-     "description": "own tables, not `unit.rows`; a table with a declared `*_secret` field — refusal: its rows are written only by the worker, the console has no write to them, and the console ring does not see them: a change of the ring would leave them under the old key (P/06.2 Н3 «перезапечатать при старте»); the list form declares no fields, its secrets are resealed by the worker itself (P/03.4 Н1.6 `list_secret`)",
+     "description": "own tables, not `unit.rows`; a table with a declared `*_secret` field — refusal: its rows are written only by the worker, the console has no write to them, and the console ring does not see them: a change of the ring would leave them under the old key (P/06.2 Н3 «reseal at start»); the list form declares no fields, its secrets are resealed by the worker itself (P/03.4 Н1.6 `list_secret`)",
      "default": [],
      "x-owner": "P/02.5 Н1.4",
      "x-default-text": "no worker tables"
@@ -2024,7 +2024,7 @@
    "pattern": "^(?:[a-z][a-z0-9_-]{0,31}(?:/[a-z][a-z0-9_-]{0,31})*)$"
   },
   "passTicket": {
-   "description": "the second kind: a ticket per request instead of a person's credential (P/06.5 Н1.8, the guard and pass contract)",
+   "description": "the second kind: a ticket per request instead of a person's credential (P/06.5 Н1.8, the gate-and-pass contract)",
    "type": "object",
    "properties": {
     "routes": {
@@ -2728,11 +2728,11 @@
         "type": "string"
        },
        "action": {
-        "description": "object key: the action of a request to a unit (the guard and pass contract, names)",
+        "description": "object key: the action of a request to a unit (the gate-and-pass contract, names)",
         "type": "string"
        },
        "at": {
-        "description": "a path inside the field value: keys separated by dots, [] — each element (the guard and pass contract, names)",
+        "description": "a path inside the field value: keys separated by dots, [] — each element (the gate-and-pass contract, names)",
         "type": "string",
         "pattern": "^(?:[a-z_][a-z0-9_]*(\\[\\])?(\\.[a-z_][a-z0-9_]*(\\[\\])?)*)$"
        },
@@ -2789,7 +2789,7 @@
         }
        },
        "quiet": {
-        "description": "keys of an object without a target (the guard and pass contract, names)",
+        "description": "keys of an object without a target (the gate-and-pass contract, names)",
         "type": "array",
         "items": {
          "type": "string"

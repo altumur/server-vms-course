@@ -1,7 +1,7 @@
-# Исходы нечитаемой строки platform/decommission/<сервер> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable row platform/decommission/<сервер> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	<s>controller	строка целиком нечитаема: контроллер вывод в этом проходе не исполняет; строка не переписывается, причина — в журнал (аудит раскладки, Г-12; правило DF-OUTCOMES-109, решение «Архитектора» 2026-10-25)	0	строка	P/04 Н3 «вывести_сервер» шаг 2
-	<s>worker	строка целиком нечитаема: воркер при старте имени не берёт и остаётся никем до читаемой строки, журнал (ответ «Архитектора» 2026-10-25 на вопросы этапа 3, Г-12)	0	строка	P/03.2 Н3 «старт()» шаг 3
-	console	строка целиком нечитаема: консоль строку двери не удаляет; строка не переписывается, причина — в журнал (аудит раскладки, Г-12; правило DF-OUTCOMES-109, решение «Архитектора» 2026-10-25)	0	строка	P/06.6 Н3 «вывести_сервер»
-	resource	строка целиком нечитаема: ресурс свою строку двери не пишет, журнал (ответ «Архитектора» 2026-10-25 на вопросы этапа 3, Г-12)	0	строка	P/05 Н1.4 door_row
+	<s>controller	the whole row is unreadable: the controller does not execute the decommission in this pass; the row is not rewritten, the cause goes to the log (layout audit, Г-12; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)	0	строка	P/04 Н3 «decommission_server» шаг 2
+	<s>worker	the whole row is unreadable: the worker takes no name at start and stays nobody until a readable row, log (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-12)	0	строка	P/03.2 Н3 «старт()» шаг 3
+	console	the whole row is unreadable: the console does not delete the door row; the row is not rewritten, the cause goes to the log (layout audit, Г-12; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25)	0	строка	P/06.6 Н3 «decommission_server»
+	resource	the whole row is unreadable: the resource does not write its own door row, log (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-12)	0	строка	P/05 Н1.4 door_row

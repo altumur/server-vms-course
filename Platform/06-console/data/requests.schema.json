@@ -4,27 +4,27 @@
  "properties": {
   "unit": {
    "$ref": "#/$defs/common.named_id",
-   "description": "id единицы-адресата (P/06.1 Н1.3); ДОЛЖЕН — у просьбы ресурса его нет, по этому их и различают",
+   "description": "the id of the addressee unit (P/06.1 Н1.3); MUST — a request of the resource has none, and that is how they are told apart",
    "x-codec": [
     "string"
    ]
   },
   "valid_until": {
    "$ref": "#/$defs/common.time",
-   "description": "срок; когда у манифеста valid_for или клиент прислал свой срок; 0 и прошедшее — срок, уже вышедший (expired), а не «без срока»; присланное число дверь записывает усечением вниз до миллисекунд, отрицательное — 0 (P/06.4 Н3 «подать просьбу» шаг 1; C06-DEADLINE-PRECISION-33-01)",
+   "description": "the term; when the manifest has valid_for or the client sent its own term; 0 and a past moment — a term already run out (expired), not «without a term»; the door writes a sent number truncated down to milliseconds, a negative one — 0 (P/06.4 Н3 «file a request» step 1; C06-DEADLINE-PRECISION-33-01)",
    "x-codec": [
     "time"
    ]
   },
   "digest": {
    "$ref": "#/$defs/common.sha256_hex",
-   "description": "ДОЛЖЕН у всякой исполняемой просьбы — у поданной дверью JCS тела клиента без valid_until (вид client), у поданной воркером JCS полей тела строки без unit, valid_until и штампов (вид worker); у цели с requests.key — вид worker у обоих писателей (векторы vectors/request-digest/, третье правило; ADR-0091 доп. (24) п. 3)",
+   "description": "MUST for every executable request — for one filed by the door, JCS of the client's body without valid_until (kind client), for one filed by a worker, JCS of the row's body fields without unit, valid_until and the stamps (kind worker); for a target with requests.key — kind worker for both writers (vectors vectors/request-digest/, the third rule; ADR-0091 addendum (24) item 3)",
    "x-codec": [
     "string"
    ]
   },
   "by": {
-   "description": "штамп requests.stamp — кто подал (человек, доказанный сторожевой; без домена — operator)",
+   "description": "the stamp requests.stamp — who filed (the person proven by the guard; without a domain — operator)",
    "type": "string",
    "x-codec": [
     "string"
@@ -32,20 +32,20 @@
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "штамп requests.stamp — когда подано",
+   "description": "the stamp requests.stamp — when filed",
    "x-codec": [
     "time"
    ]
   },
   "group": {
-   "description": "штамп requests.stamp — группа единицы",
+   "description": "the stamp requests.stamp — the unit's group",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "filed": {
-   "description": "экземпляр воркера, подавшего строку (worker.requests); ДОЛЖЕН у поданной воркером, у поданной дверью отсутствует",
+   "description": "the instance of the worker that filed the row (worker.requests); MUST for one filed by a worker, absent for one filed by the door",
    "type": "string",
    "x-codec": [
     "string"
@@ -71,7 +71,7 @@
   ]
  },
  "additionalProperties": {
-  "description": "поля тела по requests.schema манифеста и поле about штампа: строка — как есть, иное значение — канонический JSON (JCS, ADR-0072; векторы vectors/requests-body/); имя и значение проверяет схема манифеста у писателя",
+  "description": "the body fields by the manifest's requests.schema and the field about of the stamp: a string — as is, any other value — canonical JSON (JCS, ADR-0072; vectors vectors/requests-body/); the name and the value are checked by the manifest's schema at the writer",
   "type": "string",
   "x-codec": [
    "string"

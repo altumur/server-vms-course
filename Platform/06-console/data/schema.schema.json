@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "version": {
-   "description": "версия раскладки ≥ 1; подъём только вверх (Н3 «поднять_схему»); `GET /schema` отдаёт её точным числом JSON",
+   "description": "the layout version ≥ 1; raising only upwards (Н3 «raise_schema»); `GET /schema` gives it out as an exact JSON number",
    "type": "integer",
    "x-integer": true,
    "minimum": 1,
@@ -13,14 +13,14 @@
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "момент подъёма; при той же версии строка переписывается с новым at (Н2.3 PUT)",
+   "description": "the moment of raising; at the same version the row is rewritten with a new at (Н2.3 PUT)",
    "x-codec": [
     "time"
    ]
   },
   "revision": {
    "$ref": "#/$defs/common.pos53",
-   "description": "счётчик записей строки: 1 при создании, +1 на каждую запись; читает только консоль, писатель пишет всегда (P/06.6 Н2.1 «Версия строки»; ADR-0094 B4)",
+   "description": "the row's write counter: 1 at creation, +1 on every write; only the console reads it, the writer always writes it (P/06.6 Н2.1 «Версия строки»; ADR-0094 B4)",
    "x-whole": true,
    "x-codec": [
     "integer"

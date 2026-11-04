@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "servers": {
-   "description": "политика мест подсистемы; строка побеждает `placement.servers` манифеста (P/04 Н1.3 `servers`)",
+   "description": "the subsystem's placement policy; the row wins over the manifest's `placement.servers` (P/04 Н1.3 `servers`)",
    "type": "string",
    "enum": [
     "shared",
@@ -15,7 +15,7 @@
   },
   "revision": {
    "$ref": "#/$defs/common.pos53",
-   "description": "счётчик записей строки: 1 при создании, +1 на каждую запись; читает только консоль, писатель пишет всегда (P/06.6 Н2.1 «Версия строки»; ADR-0094 B4)",
+   "description": "the row's write counter: 1 at creation, +1 on every write; only the console reads it, the writer always writes it (P/06.6 Н2.1 «Версия строки»; ADR-0094 B4)",
    "x-whole": true,
    "x-codec": [
     "integer"

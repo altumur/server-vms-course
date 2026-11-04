@@ -3,10 +3,10 @@
  "type": "object",
  "properties": {
   "labels": {
-   "description": "метки сервера по правилу списка (через запятую, иначе массив JSON; кодек array); \"\" — ни одной: сервер не достаёт ни до одной метки; строка побеждает метки узла; без повторов (азбука меток `set`; разбор ревью стадии B 6–7, № 40)",
+   "description": "the server's labels by the list rule (comma-separated, otherwise a JSON array; codec array); \"\" — none: the server reaches no label; the row wins over the node labels; without repeats (the label alphabet `set`; analysis of review of stage B 6–7, № 40)",
    "type": "array",
    "items": {
-    "description": "метка — 1–64 ASCII-знака, первая буква/цифра, далее буква/цифра, `_`, `.`, `:`, `-`; перевод строки недопустим (азбука меток, common/contracts/labels.md)",
+    "description": "a label — 1–64 ASCII characters, the first a letter/digit, then a letter/digit, `_`, `.`, `:`, `-`; a line break is not allowed (the label alphabet, common/contracts/labels.md)",
     "type": "string",
     "pattern": "^(?:[A-Za-z0-9][A-Za-z0-9_.:-]{0,63})$"
    },
@@ -17,7 +17,7 @@
   },
   "revision": {
    "$ref": "#/$defs/common.pos53",
-   "description": "счётчик записей строки: 1 при создании, +1 на каждую запись; читает только консоль, писатель пишет всегда (P/06.6 Н2.1 «Версия строки»; ADR-0094 B4)",
+   "description": "the row's write counter: 1 at creation, +1 on every write; only the console reads it, the writer always writes it (P/06.6 Н2.1 «Версия строки»; ADR-0094 B4)",
    "x-whole": true,
    "x-codec": [
     "integer"

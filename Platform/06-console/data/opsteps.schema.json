@@ -3,14 +3,14 @@
  "type": "object",
  "properties": {
   "body": {
-   "description": "тело шага без секретов: JSON, консоль его не разбирает (Н1.2)",
+   "description": "the step's body without secrets: JSON, the console does not parse it (Н1.2)",
    "x-encoding": "json",
    "x-codec": [
     "any"
    ]
   },
   "root": {
-   "description": "корень цели: одна компонента ключа, не больше 200 байт UTF-8, консоль его не разбирает (Н1.3)",
+   "description": "the root of the target: one key component, at most 200 bytes of UTF-8, the console does not parse it (Н1.3)",
    "type": "string",
    "x-codec": [
     "string"
@@ -19,14 +19,14 @@
    "x-max-bytes": 200
   },
   "expected": {
-   "description": "ожидаемые версии объектов корня из expectedVersions приёма или прежней операции: JSON, консоль его не разбирает (Н1.4)",
+   "description": "the expected versions of the root's objects from expectedVersions of the intake or of the previous operation: JSON, the console does not parse it (Н1.4)",
    "x-encoding": "json",
    "x-codec": [
     "any"
    ]
   },
   "password_secret": {
-   "description": "значение секрета шага: запечатано договором запечатывания, путь AAD `/password_secret`; у шага `ok` и `cancel` снято, у `fail` лежит до OPS_KEEP ради повтора (Н3)",
+   "description": "the value of the step's secret: sealed by the sealing contract, AAD path `/password_secret`; for a step `ok` and `cancel` it is removed, for `fail` it stays until OPS_KEEP for the sake of a repeat (Н3)",
    "type": "string",
    "x-codec": [
     "string"

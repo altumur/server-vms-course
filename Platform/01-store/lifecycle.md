@@ -14,8 +14,8 @@
 | Что | Как | Норма |
 |---|---|---|
 | демон группы | юнит `configstore.service`: `User=configstore`, `UMask=0077`, `-dir /data/platform/configstore`, `-sockets /run/configstore`, `-rights`, `-tls`, `-group-size`; раннер `w2c-run.sh configstore` | P/02.4 Н1.1 `units` |
-| сокеты | юниты `configstore-admin.socket` и `configstore-<роль>.socket`, `FileDescriptorName=admin \| <роль>`, `Service=configstore.service` | P/02.4 Н1.1, Н1.3 `sockets` |
-| первый старт и рестарт | есть `member.json` — рестарт, иначе `-bootstrap` (первый сервер) или `-join` (остальные) | P/02.4 Н3 «старт сервера» шаг 1, Н1.3 `group.join` |
+| сокеты | юниты `configstore-admin.socket` и `configstore-<роль>.socket`, `FileDescriptorName=admin \| <роль>`, `Service=configstore.service` | P/02.4 Н1.1, P/01.3 Н1.3 `sockets` |
+| первый старт и рестарт | есть `member.json` — рестарт, иначе `-bootstrap` (первый сервер) или `-join` (остальные) | P/02.4 Н3 «старт сервера» шаг 1, P/01.3 Н1.3 `group.join` |
 | хранилище коробки | сборка без raft, один голосующий (`box`) | P/01.3 Н1.3 `box` |
 | хранилище в процессе | профиль `file://` «вся коробка — одна реализация», без двери; формат на диске не контракт | P/02.4 Н1.2 `PLATFORM_STORE`, P/01.1 Н2 |
 
@@ -29,8 +29,8 @@
 
 | Переменная | Смысл | Умолчание | Норма |
 |---|---|---|---|
-| `CONFIGSTORE_ID`, `_RAFT`, `_API`, `_GROUP_SIZE`, `_JOIN`, `_FLAGS`, `_TUNING` | флаги демона из `configstore.env`; читает раннер | `configstore.env` ставит `tuning` `lan`; умолчание самого флага `-tuning` — `default` | P/02.4 Н1.2, Н1.3 «Флаги демона» |
-| `SERVER_NAME` | умолчание `-id` вне группы | короткий hostname | P/02.4 Н1.2, Н1.3 «Флаги демона» `-id` |
+| `CONFIGSTORE_ID`, `_RAFT`, `_API`, `_GROUP_SIZE`, `_JOIN`, `_FLAGS`, `_TUNING` | флаги демона из `configstore.env`; читает раннер | `configstore.env` ставит `tuning` `lan`; умолчание самого флага `-tuning` — `default` | P/02.4 Н1.2, P/01.3 Н1.3 «Флаги демона» |
+| `SERVER_NAME` | умолчание `-id` вне группы | короткий hostname | P/02.4 Н1.2, P/01.3 Н1.3 «Флаги демона» `-id` |
 | `LISTEN_FDS`, `LISTEN_FDNAMES` | унаследованные сокеты (`sd_listen_fds`); читает сам демон | — | P/01.3 Н1.3 `sockets` |
 | `NOTIFY_SOCKET` | сторож systemd | — | P/02.4 Н1.2 |
 

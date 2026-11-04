@@ -1,5 +1,5 @@
-# Исходы нечитаемой строки platform/memberof/<sub>/<manifest:unit.rows>/<id> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable row platform/memberof/<sub>/<manifest:unit.rows>/<id> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	console	строка целиком нечитаема: запись состава с этой единицей — 503 `unavailable`, ничего не записано; удаление единицы идёт: строка снимается `cas` прочитанной версии, строки папок в пакет не входят, член висит до прохода жнеца, как при удалении мимо двери; жнец переписывает строку по составу папок, причина — в журнал	0	строка	P/06.8 Н3 «удаление единицы», «жнец»
-	domainagent	строка целиком нечитаема: копию общих папок агент перезаписывает по прочитанной версии из следующего carry.folders; журнал без значения	1	строка	P/09.1 Н1.5
+	console	the whole row is unreadable: a write of membership with this unit — 503 `unavailable`, nothing is written; the deletion of the unit goes on: the row is removed with `cas` of the version read, the folder rows do not enter the batch, the member hangs until the reaper's pass, as at a deletion past the door; the reaper rewrites the row by the membership of the folders, the cause goes to the log	0	строка	P/06.8 Н3 «удаление единицы», «reaper»
+	domainagent	the whole row is unreadable: the agent rewrites the copy of the shared folders by the version read from the next carry.folders; log without the value	1	строка	P/09.1 Н1.5

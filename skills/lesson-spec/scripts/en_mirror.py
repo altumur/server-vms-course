@@ -230,10 +230,10 @@ def compare(ru_text, en_text, ru_path, en_path, root):
         ef = facts(eb, Path(en_path).parent, root, kinds, pair)
         errors.extend(f"{where}: {m}" for m in strict(rb, eb))
         for key in rf:
-            if key == "spans":
+            if key in ("spans", "refusal words"):          # английский МОЖЕТ добавить: алгоритм называет, «unit» — и слово
                 missing = rf[key] - ef[key]
                 if missing:
-                    errors.append(f"{where}: code spans of the Russian text missing: {sorted(missing)}")
+                    errors.append(f"{where}: {'code spans' if key == 'spans' else key} of the Russian text missing: {sorted(missing)}")
             elif rf[key] != ef[key]:
                 if isinstance(rf[key], set):
                     errors.append(f"{where}: {key} differ: only ru {sorted(rf[key] - ef[key])}, "

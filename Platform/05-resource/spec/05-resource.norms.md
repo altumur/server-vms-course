@@ -397,7 +397,7 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
 | строка целиком | `<s>controller` | the whole row is unreadable: the server is not a candidate for an order; the fields of the unreadable row are not replaced by absence, the cause goes to the log (layout audit, Г-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/04 Н1, Н3 «заказать()» |
-| строка целиком | `console` | the whole row is unreadable: the life of the resource is judged by a change of the row version (resource_state of the observation contract), not by its fields; the fields of the unreadable row are not replaced by absence; the door row of a decommissioned server is unreadable — the console pass deletes it all the same: delete with cas by the version read, the content is not needed for the deletion (В7 item 3, row 12); the cause goes to the log (layout audit, Г-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | договор наблюдения resource_state; P/06.6 Н3 «вывести_сервер» |
+| строка целиком | `console` | the whole row is unreadable: the life of the resource is judged by a change of the row version (resource_state of the observation contract), not by its fields; the fields of the unreadable row are not replaced by absence; the door row of a decommissioned server is unreadable — the console pass deletes it all the same: delete with cas by the version read, the content is not needed for the deletion (В7 item 3, row 12); the cause goes to the log (layout audit, Г-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | договор наблюдения resource_state; P/06.6 Н3 «decommission_server» |
 | строка целиком | `resource` | the whole row is unreadable: restore — the door is unreadable, the restoration is incomplete; mirror — there is no address, the server is not a neighbour of this pass; the fields of the unreadable row are not replaced by absence, the cause goes to the log (layout audit, Г-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/05 Н1.4 door_row, «Восстановление бакетов» |
 | строка целиком | `<s>worker` | the door row of its own server is unreadable: the object client with a bare cluster:// — reading the cluster objects is «unknown», not «no», not a start refusal and not a refusal of writing to its own catalogue; on the next access the row is read anew (П3; В7 item 3, row 11) | 0 | строка | договор клиента хранилища объектов door (P03-OBJECTS-DEFAULT-1FD) |
 
@@ -518,7 +518,7 @@ GET. Поле `sum` и заголовок X-Sum — 64 строчные hex-ци
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
 | строка целиком | `<s>worker` | a row not in the resource's form is not a request: skipped, the cause goes to the log without the value (В7 item 3, row 10) | 0 | строка | P/03.6 Н3 «взгляд держателя» |
-| строка целиком | `console` | a resource row without a live owner is removed by ttl | 0 | строка | P/06.4 Н3 «жнец» |
+| строка целиком | `console` | a resource row without a live owner is removed by ttl | 0 | строка | P/06.4 Н3 «reaper» |
 | строка целиком | `resource` | not its own form (unit present, someone else's server/volume, a spoiled form): do not touch, log free_ask.key_taken, skip | 0 | строка | P/05 Н1.4 free_ask, Н3 «проход ресурса» relieve |
 
 #### `<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл

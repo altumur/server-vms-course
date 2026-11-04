@@ -1,4 +1,4 @@
-# Исходы нечитаемой строки <sub>/opcount/<id> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable row <sub>/opcount/<id> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	console	строка целиком нечитаема: дверь чтения считает счётчики по строкам итогов; ведущий и пакет шага переписывают строку `cas` прочитанной версии значениями, посчитанными по итогам, причина — в журнал	0	строка	P/06.9 Н2, Н3 «шаг»
+	console	the whole row is unreadable: the read door counts the counters by the result rows; the leader and the step's batch rewrite the row with `cas` of the version read with the values counted by the results, the cause goes to the log	0	строка	P/06.9 Н2, Н3 «step»
