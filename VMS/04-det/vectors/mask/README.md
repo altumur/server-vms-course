@@ -1,8 +1,8 @@
 # Vectors: the detector mask — the PGM grammar and the scale to the frame
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/mask/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is lesson V/04 ([the norms of chapter 1](../../../spec/04.1-det.norms.md) Н1.1 «Маска и размер кадра»). The participants are `detworker`
+The owner is lesson V/04 ([the norms of chapter 1](../../spec/04.1-det.norms.md) Н1.1 «Маска и размер кадра»). The participants are `detworker`
 (the detector mask, V/04.2 Н1.2), `detjobworker` (the mask of a scan job, V/05.3 Н1.3) and `detedgeworker` (the mask of a traversal of the device
 archive, V/06.3 Н1.4): the rule is one. The bytes are written by «Спецификация VMS»
 (a decision of «Архитектор» on the second round of the review «потоки камеры», item 13). The run — after the first stage C generation

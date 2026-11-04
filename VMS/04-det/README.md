@@ -1,11 +1,11 @@
 # V/04 Live detection
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 Status: **translated** — chapters V/04.1–V/04.4 (2026-10-23; review — 2026-10-29); the plan below is the history of the translation (approved — «Архитектор»
 2026-10-23, decisions 1–7 accepted, 5 — with an amendment: if the epoch is not taken, there is no element). Sources: the
-inventory [`../common/inventory.md`](../../common/inventory.md) § 1, § 2 (М10B/14). The platform: the export `cammeta-specs` `7a875c75` (the VMS pin).
-The manifest is [`det.subsystem.yaml`](../det.subsystem.yaml) (the canon; ADR-0090 addendum (6) item 8).
+inventory [`../common/inventory.md`](../common/inventory.md) § 1, § 2 (М10B/14). The platform: the export `cammeta-specs` `7a875c75` (the VMS pin).
+The manifest is [`det.subsystem.yaml`](det.subsystem.yaml) (the canon; ADR-0090 addendum (6) item 8).
 
 ## What lesson V/04 is
 
@@ -33,9 +33,9 @@ Neighbours: the camera holder (V/01, delivery); the receiver (V/02.9); the order
   events — the resource log of its own server `det/<unit>/e<эпоха>/`, alarms — `det.alarms/<unit>/e<эпоха>/` (P/05 Н1.2).
 - **Doors:** `det` has no HTTP door of its own — rows through the console door (P/06.1), events — the console's `/events` (P/06.4); the lesson has
   no OpenAPI — the registry row `V/04 no-openapi` (by an inquiry with chapter V/04.1).
-- **Data families:** the fields of the detector's event rows — [`data/det-events`](../data/) (the teaching `tick` — `pass`; the place — the root of the row
+- **Data families:** the fields of the detector's event rows — [`data/det-events`](data/) (the teaching `tick` — `pass`; the place — the root of the row
   of the platform's event family, the trees `det` and `det.alarms`; read by the console and the `auto` scenarios), the row — in the VMS catalogue
-  [`../common/data/catalog.tsv`](../../common/data/catalog.tsv); the fields of other models — the worker registry, not judged by a family.
+  [`../common/data/catalog.tsv`](../common/data/catalog.tsv); the fields of other models — the worker registry, not judged by a family.
 
 ## Decisions for the plan (accepted by «Архитектор» 2026-10-23)
 

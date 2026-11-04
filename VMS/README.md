@@ -21,7 +21,7 @@
 | 01 | [`01-cam/`](01-cam/ru/README.md) | `cam` | переведён |
 | 02 | [`02-rec/`](02-rec/ru/README.md) | `rec` | переведён |
 | 03 | [`03-live/`](03-live/ru/README.md) | `live` | переведён |
-| 04 | [`04-det/`](04-det/README.md) | `det` | переведён |
+| 04 | [`04-det/`](04-det/ru/README.md) | `det` | переведён |
 | 05 | [`05-detjob/`](05-detjob/README.md) | `detjob` | переведён |
 | 06 | [`06-detedge/`](06-detedge/README.md) | `detedge` | переведён |
 | 07 | [`07-auto/`](07-auto/README.md) | `auto` | переведён |

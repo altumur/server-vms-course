@@ -1,6 +1,6 @@
 # V/04 Live detection — instructions for an implementation
 
-This English text is the source; the Russian [`04-det.README.md`](../04-det.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/04-det.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 What an implementation of the subsystem `det` does and how to check the result. The canon is the norms of the chapters `04.K-det.norms.md`; these
 instructions do not add to them. The platform is the export `cammeta-specs` `7a875c75` (the VMS pin).
@@ -8,10 +8,10 @@ instructions do not add to them. The platform is the export `cammeta-specs` `7a8
 ## Inputs and their priority
 
 - The canon: the norms of the chapters `04.K-det.norms.md` (Н1–Н5 of each chapter; the addresses `V/04.K Н…`).
-- The canon of the manifest: [`det.subsystem.yaml`](../../det.subsystem.yaml): the bytes as they are.
-- Acceptance: [chapter 1](../../acceptance/1/README.md), [chapter 4](../../acceptance/4/README.md); the stand and the vocabulary — [the common VMS acceptance README](../../../common/acceptance/README.md); acceptance introduces no new requirements.
-- Vectors: [`mask`](../../vectors/mask/README.md) (the package command).
-- [The lecture](../../04-det.md) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
+- The canon of the manifest: [`det.subsystem.yaml`](../det.subsystem.yaml): the bytes as they are.
+- Acceptance: [chapter 1](../acceptance/1/README.md), [chapter 4](../acceptance/4/README.md); the stand and the vocabulary — [the common VMS acceptance README](../../common/acceptance/README.md); acceptance introduces no new requirements.
+- Vectors: [`mask`](../vectors/mask/README.md) (the package command).
+- The lecture (`ru/04-det.md`, for people, not in the export) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
 
 Record a contradiction with its place and a counterexample (the section «On a divergence»); an arbitrary refusal does not replace an
 absent norm. The structure of the code is left to the implementation within the canon.
@@ -20,10 +20,10 @@ absent norm. The structure of the code is left to the implementation within the 
 
 | Chapter | What the implementation has | Check |
 |---|---|---|
-| V/04.1 | the manifest `VMS/04-det/det.subsystem.yaml` loads with the strict loader without edits (together with `auto` — the orderer of `det` rows); the console's units door executes the detector's declarations | [acceptance 1](../../acceptance/1/README.md) |
+| V/04.1 | the manifest `VMS/04-det/det.subsystem.yaml` loads with the strict loader without edits (together with `auto` — the orderer of `det` rows); the console's units door executes the detector's declarations | [acceptance 1](../acceptance/1/README.md) |
 | V/04.2 | the source by heartbeats (the share `cam.shm`, the loopback RTSP, the receiver of its own cluster by the leaf `detworker`), reconciliation; the model registry and the teaching `tick`; phases with `reason`; a restart by revision | by reading; acceptance 4 (chapter 4) |
 | V/04.3 | the model's events are log rows written by the platform's writer (`of` of the camera, `may_write` before each one), the class by `alarms`, suppression of `motion` | by reading; acceptance 4 (chapter 4) |
-| V/04.4 | the heartbeat (`events_written`, `events_refused`, the element `phase`/`reason`/`events`/`via`), the series `units_running`, the stop; the command that starts the worker for «Стенд» — in the implementation description | [acceptance 4](../../acceptance/4/README.md) |
+| V/04.4 | the heartbeat (`events_written`, `events_refused`, the element `phase`/`reason`/`events`/`via`), the series `units_running`, the stop; the command that starts the worker for «Стенд» — in the implementation description | [acceptance 4](../acceptance/4/README.md) |
 
 The manifest is specification data: the implementation reads its bytes as they are (ADR-0090 addendum (6) item 8).
 

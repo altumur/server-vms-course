@@ -20,7 +20,7 @@ V/06), сценарии (V/07), страница (V/11).
 ## Что нужно знать заранее
 
 Урок V/01 (раздача держателя: доля `cam.shm`, RTSP петли), V/02 глава 9 (приёмник); журнал событий
-([P/05](../../Platform/05-resource/spec/05-resource.norms.md)); размещение ([P/04](../../Platform/04-controller/spec/04-controller.norms.md)).
+([P/05](../../../Platform/05-resource/ru/spec/05-resource.norms.md)); размещение ([P/04](../../../Platform/04-controller/ru/spec/04-controller.norms.md)).
 
 ## Глава 1. Детектор — единица
 

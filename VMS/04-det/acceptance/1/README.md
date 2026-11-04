@@ -1,9 +1,9 @@
 # Acceptance V/04.1 — the detector as a unit
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norm of the chapter is [`04.1-det.norms.md`](../../../spec/04.1-det.norms.md) Н5. The stand and the vocabulary are in [the common VMS acceptance
-README](../../../../common/acceptance/README.md) on top of the common platform README (export `7a875c75`, the VMS pin; the form `@raw` of a body is from its
+The norm of the chapter is [`04.1-det.norms.md`](../../spec/04.1-det.norms.md) Н5. The stand and the vocabulary are in [the common VMS acceptance
+README](../../../common/acceptance/README.md) on top of the common platform README (export `7a875c75`, the VMS pin; the form `@raw` of a body is from its
 vocabulary).
 
 ## Preparation
