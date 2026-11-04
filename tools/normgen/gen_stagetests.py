@@ -31,15 +31,8 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 
 ENGINES = {"1.1": "runner/run.py"}          # главы с перенесённым движком
-# Переходное объявление (до дельты формы ADR-0126 доп. (7) п. 3): этап → [(глава, [сценарии], seams)].
-# store_core — 20 сценариев Н3 из комплекта «Спецификации» 0125-p01-stages-store-core (dbbae3ffe).
-TRANSITIONAL = {
-    "store_core": [("1.1", ["01-absent", "02-create-once", "03-read-back", "04-stale-cas", "05-unconditional",
-                            "06-delete", "07-no-reuse", "08-list", "09-guard", "10-guard-absent",
-                            "11-guard-before-cas", "12-id", "28-admission", "30-id-fingerprint",
-                            "31-delete-cas-id-order", "33-batch-all-or-nothing", "34-batch-create-edit-delete",
-                            "35-batch-guards", "36-batch-repeat", "37-batch-times"], False)],
-}
+# Переходное объявление: этап → [(глава, [сценарии], seams)] — только для этапа без элементов tests: в форме.
+TRANSITIONAL = {}       # форма P/01 несёт tests:<глава>:… (дельта 0125-p01-stages-seams, main 322d2cfb8)
 METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD")
 VAR = re.compile(r"\$[A-Za-z0-9_]+")
 BIG = re.compile(r"@big\((\d+)\)")

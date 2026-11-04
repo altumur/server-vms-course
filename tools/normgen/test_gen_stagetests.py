@@ -175,6 +175,8 @@ def with_gate(gate):
         cells = line.split("\t")
         if len(cells) > 4 and cells[1] == "store_core":
             cells[4] = gate
+        elif len(cells) > 4 and cells[0] != "n":       # прочие этапы — без tests: (их сценариев нет в синтетике)
+            cells[4] = ";".join(p for p in cells[4].split(";") if not p.strip().startswith("tests:")) or "build"
         lines.append("\t".join(cells))
     return "\n".join(lines)
 
@@ -201,6 +203,17 @@ class StageTests(unittest.TestCase):
         if "tests:1.1:" not in STAGES:                     # переходное объявление, пока форма без tests:<глава>
             self.assertEqual(len(inventory), want)
         self.assertTrue(all(len(r) == 6 for r in inventory))
+        seams, _, _ = gen_stagetests.read_table(ROOT, "1.1", "seams.tsv")
+        listed = {r[0].split("/")[2] for r in inventory if r[0].split("/")[1] == "seams.tsv"}
+        if seams:                                        # каждый сценарий швов формы — в описи, шаг в шаг
+            self.assertEqual(listed, {n for n in seams if any(n in r[0] for r in inventory)})
+            self.assertEqual(sum(1 for r in inventory if r[0].split("/")[1] == "seams.tsv"),
+                             sum(len(seams[n]) for n in listed))
+        stages = {r[1] for r in inventory}
+        for line in STAGES.split("\n"):
+            cells = line.split("\t")
+            if len(cells) > 4 and "tests:" in cells[4]:
+                self.assertIn(cells[1], stages, "a stage with tests: has its projection")
 
     def test_selection_prefix_and_refusals(self):
         root = synthetic_root(self.sub("p"), [c[:4] for c in SCEN], [c[:4] for c in SEAMS])

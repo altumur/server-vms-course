@@ -103,3 +103,23 @@ func TestStoreCore_36BatchRepeat(t *testing.T) {
 func TestStoreCore_37BatchTimes(t *testing.T) {
 	runScenario(t, "1.1", "37-batch-times", false, scenarios1_1["37-batch-times"][:13])
 }
+
+// TestStoreCore_S1IdMemoryTimeAlone — chapter 1.1, seams.tsv, scenario s1-id-memory-time-alone: steps 1…3 of the projection.
+func TestStoreCore_S1IdMemoryTimeAlone(t *testing.T) {
+	runScenario(t, "1.1", "s1-id-memory-time-alone", true, seams1_1["s1-id-memory-time-alone"][:3])
+}
+
+// TestStoreCore_S2AdmissionEqual — chapter 1.1, seams.tsv, scenario s2-admission-equal: steps 1…5 of the projection.
+func TestStoreCore_S2AdmissionEqual(t *testing.T) {
+	runScenario(t, "1.1", "s2-admission-equal", true, seams1_1["s2-admission-equal"][:5])
+}
+
+// TestStoreCore_S3AdmissionMonotone — chapter 1.1, seams.tsv, scenario s3-admission-monotone: steps 1…4 of the projection.
+func TestStoreCore_S3AdmissionMonotone(t *testing.T) {
+	runScenario(t, "1.1", "s3-admission-monotone", true, seams1_1["s3-admission-monotone"][:4])
+}
+
+// TestStoreCore_S4ParallelCas — chapter 1.1, seams.tsv, scenario s4-parallel-cas: steps 1…4 of the projection.
+func TestStoreCore_S4ParallelCas(t *testing.T) {
+	runScenario(t, "1.1", "s4-parallel-cas", true, seams1_1["s4-parallel-cas"][:4])
+}
