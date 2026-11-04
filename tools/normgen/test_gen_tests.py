@@ -35,7 +35,8 @@ import vector_judge  # noqa: E402
 from gen_checks import go_str  # noqa: E402
 
 OUT = HERE / "out/p01-1"
-PARTS = ("go/vectoradapter", "go/vectortests", "go/vectorcmd", "go/cmd/vectors", "go/jsonstrict", "go/writecheck", "vectors")
+PARTS = ("go/vectoradapter", "go/vectortests", "go/vectorcmd", "go/cmd/vectors", "go/jsonstrict", "go/writecheck",
+         "go/stagetests", "go/coreadapter", "vectors")
 GOENV = dict(os.environ, GOPROXY="off", GOFLAGS="-mod=mod", GOWORK="off", GOTOOLCHAIN="local")
 MAX_RSS = 1 << 30
 JCS = "Platform/01-store/vectors/jcs/canonical_json.tsv"
@@ -48,7 +49,7 @@ def go(args, cwd, env=None):
 
 def copy_root(dst):
     """Минимальный корень курса для генератора: векторы P/01 и форма этапов."""
-    for rel in ("Platform/01-store/vectors", "Platform/01-store/forms"):
+    for rel in ("Platform/01-store/vectors", "Platform/01-store/forms", "Platform/01-store/acceptance/1"):
         shutil.copytree(ROOT / rel, Path(dst) / rel)
     return Path(dst)
 
@@ -159,7 +160,8 @@ class GenTests(unittest.TestCase):
     @staticmethod
     def write_parts(mod, files, only_tests=False):
         for rel, data in files.items():
-            if not rel.startswith("go/") or (only_tests and not rel.startswith("go/vectortests/")):
+            if not rel.startswith("go/") or (only_tests and not rel.startswith("go/vectortests/")) or \
+                    rel.startswith(("go/stagetests/", "go/coreadapter/")):     # тесты этапов — test_gen_stagetests.py
                 continue
             target = Path(mod) / rel[3:]
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -390,7 +392,7 @@ class GenTests(unittest.TestCase):
         import build_kit
         module = "example.com/w2c/store"
         dst = Path(self.tmp.name) / "kit"
-        m = build_kit.build(dst, module, ["tests"])
+        m = build_kit.build(dst, module, ["door", "tests"])
         store = dst / "01-store"
         (store / "go.mod").write_text(f"module {module}\n\ngo 1.22\n", encoding="utf-8")
         (store / "cmd/store").mkdir(parents=True)
@@ -398,21 +400,21 @@ class GenTests(unittest.TestCase):
                                                  encoding="utf-8")
         done = go(["vet", "./..."], store)
         self.assertEqual(done.returncode, 0, done.stderr)
-        self.assertEqual(m["parts"], ["writecheck", "tests"])
+        self.assertEqual(m["parts"], ["writecheck", "door", "tests"])
         tests = [f for f in m["files"] if f["component"] == "tests"]
-        self.assertEqual(sorted(f["path"].split("/")[2] for f in tests),
-                         ["vectoradapter", "vectorcmd", "vectors", "vectortests", "vectortests", "vectortests"])
+        self.assertEqual(sorted({f["path"].split("/")[2] for f in tests}),
+                         ["coreadapter", "stagetests", "vectoradapter", "vectorcmd", "vectors", "vectortests"])
         self.assertIn("01-store/cmd/vectors/main.go", [f["path"] for f in tests])   # бинарь векторов (ADR-0126 доп. (5))
         done = go(["build", "-o", str(Path(self.tmp.name) / "kit-vectors"), "./cmd/vectors"], store)
         self.assertEqual(done.returncode, 0, done.stderr)
         for f in tests:
             self.assertEqual(f["origin"], "generated")
-            self.assertEqual(f.get("editable", False), "/vectoradapter/" in f["path"])
+            self.assertEqual(f.get("editable", False), "/vectoradapter/" in f["path"] or f["path"].endswith("/coreadapter/open.go"))
             self.assertNotIn(b"normgen/p01-1", (dst / f["path"]).read_bytes())
         self.assertIn("TestRightsEval_Line", (dst / "KIT.md").read_text(encoding="utf-8"))
         own = store / "internal/vectoradapter/vectoradapter.go"
         own.write_text(own.read_text(encoding="utf-8") + "\n// mine\n", encoding="utf-8")
-        m = build_kit.build(dst, module, ["tests"])
+        m = build_kit.build(dst, module, ["door", "tests"])
         self.assertTrue(own.read_text(encoding="utf-8").endswith("// mine\n"))
         self.assertNotIn("internal/vectoradapter", [f["path"].rsplit("/", 1)[0][len("01-store/"):] for f in m["files"]])
         other = Path(self.tmp.name) / "kit-plain"

@@ -98,6 +98,9 @@ def build(dst, module, parts=()):
                        f"run tools/normgen/gen_checks.py")
     if set(parts) - set(PARTS):
         raise KitError(f"--part {sorted(set(parts) - set(PARTS))}: one of {list(PARTS)}")
+    if "tests" in parts and "door" not in parts:
+        raise KitError("--part tests needs --part door: the stage tests go through coreadapter over apidoor "
+                       "(ADR-0125 addendum (4) item 4)")
     kit_parts = ["writecheck", *sorted(set(parts))]
     try:
         tests = gen_tests.kit_files(module) if "tests" in parts else []
@@ -135,7 +138,7 @@ def build(dst, module, parts=()):
         put(sub, name, data, "handwritten", "kit", str((HANDWRITTEN / sub / name).relative_to(ROOT)))
 
     for sub, name, data, origin, source, own in tests:
-        if own and (internal / sub).exists():
+        if own and (internal / sub / name).exists():
             continue                    # адаптер реализации не трогается
         put(sub, name, data, origin, "tests", source)
         if own:
