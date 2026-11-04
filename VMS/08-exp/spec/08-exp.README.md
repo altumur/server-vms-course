@@ -1,6 +1,6 @@
 # V/08 Export — instructions for an implementation
 
-This English text is the source; the Russian [`08-exp.README.md`](../08-exp.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/08-exp.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 What an implementation of the subsystem `exp` builds and how to check the result. The canon is the norms of the chapters `08.K-exp.norms.md`; these instructions
 do not add to them. The platform is the export `cammeta-specs` `7a875c75`.
@@ -8,10 +8,10 @@ do not add to them. The platform is the export `cammeta-specs` `7a875c75`.
 ## Inputs and their priority
 
 - The canon: the norms of the chapters `08.K-exp.norms.md` (Н1–Н5 of each chapter; the addresses `V/08.K Н…`).
-- The canon of the manifest: [`exp.subsystem.yaml`](../../exp.subsystem.yaml): the bytes as they are.
-- The door: [`08-exp.api.openapi.yaml`](../08-exp.api.openapi.yaml).
+- The canon of the manifest: [`exp.subsystem.yaml`](../exp.subsystem.yaml): the bytes as they are.
+- The door: [`08-exp.api.openapi.yaml`](08-exp.api.openapi.yaml).
 - Neighbours: the archive doors V/02.5, the frame route V/03.3 Н1.5, reading an interval V/05.2, `backend` V/11.
-- [The lecture](../../08-exp.md) explains the reasons.
+- The lecture (`ru/08-exp.md`, for people, not in the export) explains the reasons.
 
 ## What to create — the result by chapter
 

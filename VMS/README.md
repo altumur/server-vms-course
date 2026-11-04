@@ -25,7 +25,7 @@
 | 05 | [`05-detjob/`](05-detjob/ru/README.md) | `detjob` | переведён |
 | 06 | [`06-detedge/`](06-detedge/ru/README.md) | `detedge` | переведён |
 | 07 | [`07-auto/`](07-auto/ru/README.md) | `auto` | переведён |
-| 08 | [`08-exp/`](08-exp/README.md) | `exp` — выгрузка, главы V/08.6–V/08.9 | переведён |
+| 08 | [`08-exp/`](08-exp/ru/README.md) | `exp` — выгрузка, главы V/08.6–V/08.9 | переведён |
 | 09 | [`09-deploy/`](09-deploy/README.md) | развёртывание VMS | переведён |
 | 10 | [`10-assist/`](10-assist/README.md) | `assist` | переведён |
 | 11 | [`11-backend/`](11-backend/README.md) | `backend` | переведён |

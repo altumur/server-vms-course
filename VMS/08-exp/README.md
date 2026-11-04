@@ -1,10 +1,10 @@
 # V/08 Export
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-Status: **norms of chapters V/08.6–V/08.9** (2026-11-03, «Спецификация VMS»; the plan is accepted by «Архитектор»; until the merge of ADR-0118 — lesson V/13, chapters V/13.1–V/13.4); acceptance — [`acceptance/6`](../acceptance/6/README.md); the share of V/11 (`/exports`, `reference.export`, the stream, the functions of V/11.8, the fates of V/11.2) — when the contract of the fork with
+Status: **norms of chapters V/08.6–V/08.9** (2026-11-03, «Спецификация VMS»; the plan is accepted by «Архитектор»; until the merge of ADR-0118 — lesson V/13, chapters V/13.1–V/13.4); acceptance — [`acceptance/6`](acceptance/6/README.md); the share of V/11 (`/exports`, `reference.export`, the stream, the functions of V/11.8, the fates of V/11.2) — when the contract of the fork with
 `/exports` is fixed (V/11.14 Н1.3). The basis is ADR-0117 with addenda (1)–(6). The platform is the export `cammeta-specs` `7a875c75`. The manifest is
-[`exp.subsystem.yaml`](../exp.subsystem.yaml) (the canon; ADR-0090 addendum (6) item 8).
+[`exp.subsystem.yaml`](exp.subsystem.yaml) (the canon; ADR-0090 addendum (6) item 8).
 
 ## What lesson V/08 is
 
@@ -29,7 +29,7 @@ the order as one batch of parts, progress and result by reading the parts, the l
 
 - **Rows:** `exp/parts/<name>`, the state `exp/state/cursor/<name>`, `exp/state/result/<name>`, the requests `exp/requests/<rid>`,
   the part's event log with `of: cam/<cam>`; it sets up `live/streams/<cam>`.
-- **Doors:** the worker's process door — [`spec/08-exp.api.openapi.yaml`](../spec/08-exp.api.openapi.yaml): `files` by token, `parts`
+- **Doors:** the worker's process door — [`spec/08-exp.api.openapi.yaml`](spec/08-exp.api.openapi.yaml): `files` by token, `parts`
   by the role `expworker`.
 - **Data families:** the lesson has no rows of its own in the VMS catalogue; the reader of the heartbeats of `rec` and `live` is `expworker` (the outcomes are in the data
   of lessons 02, 03).

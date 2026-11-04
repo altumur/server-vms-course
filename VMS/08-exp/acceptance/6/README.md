@@ -1,9 +1,9 @@
 # Acceptance V/08.6–V/08.9 — export
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/6/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The norms are [`08.6-exp.norms.md`](../../../spec/08.6-exp.norms.md) … [`08.9-exp.norms.md`](../../../spec/08.9-exp.norms.md), sections Н5. The stand and
-the vocabulary are [the common VMS acceptance README](../../../../common/acceptance/README.md) over the common platform README (export `7a875c75`).
+The norms are [`08.6-exp.norms.md`](../../spec/08.6-exp.norms.md) … [`08.9-exp.norms.md`](../../spec/08.9-exp.norms.md), sections Н5. The stand and
+the vocabulary are [the common VMS acceptance README](../../../common/acceptance/README.md) over the common platform README (export `7a875c75`).
 
 ## Preparation
 
