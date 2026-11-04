@@ -4,13 +4,13 @@
  "properties": {
   "rev": {
    "$ref": "#/$defs/common.uint53",
-   "description": "rev индекса domain/relay-members/<ретранслятор> (P/08.3 Н1.2)",
+   "description": "rev of the index domain/relay-members/<ретранслятор> (P/08.3 Н1.2)",
    "x-codec": [
     "integer"
    ]
   },
   "members": {
-   "description": "имена членов за этим ретранслятором, текст JSON, по возрастанию",
+   "description": "the names of the members behind this relay, JSON text, ascending",
    "type": "array",
    "x-encoding": "json",
    "items": {

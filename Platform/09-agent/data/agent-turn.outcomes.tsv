@@ -1,4 +1,4 @@
-# Исходы нечитаемой строки domain/agent-turn (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable row domain/agent-turn (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domainagent	строка целиком нечитаема: агент — ждущий (отчётов не шлёт, domain/* не пишет, дверь ретранслятора не открывает; местная дверь токенов работает), журнал; очередь не берётся и не продлевается, CAS поверх нечитаемой строки нет (Н3 «очередь агента» шаг 1)	0	строка	P/09.1 Н1.13 standby, Н3 «очередь агента» шаг 1
+	domainagent	the whole row is unreadable: the agent is waiting (sends no reports, does not write domain/*, does not open the relay door; the local token door works), the log; the turn is not taken and not renewed, there is no CAS over the unreadable row (Н3 «the agent turn» step 1)	0	строка	P/09.1 Н1.13 standby, Н3 «the agent turn» шаг 1

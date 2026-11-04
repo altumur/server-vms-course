@@ -1,5 +1,5 @@
-# Исходы нечитаемой строки domain/relay-for (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable row domain/relay-for (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domainagent	строка целиком нечитаема: агент перезаписывает её по прочитанной версии следующим relay_for	0	строка	P/09.2 Н3
-	<s>worker	строка целиком нечитаема: воркер — действие, которому строка нужна, в этом проходе не выполняется, причина в журнал	0	строка	P/09.2 Н3
+	domainagent	the whole row is unreadable: the agent rewrites it on the version read with the next relay_for	0	строка	P/09.2 Н3
+	<s>worker	the whole row is unreadable: the worker — the action that needs the row is not performed in this pass, the cause goes to the log	0	строка	P/09.2 Н3

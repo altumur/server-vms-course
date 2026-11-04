@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "why": {
-   "description": "причина: «not the copy the pointer names» (шаг 1), слово record (шаг 2), «older than the copy kept here» (шаг 3)",
+   "description": "the cause: «not the copy the pointer names» (step 1), a word of record (step 2), «older than the copy kept here» (step 3)",
    "type": "string",
    "not": {
     "enum": [
@@ -16,14 +16,14 @@
   },
   "term": {
    "$ref": "#/$defs/common.pos53",
-   "description": "срок отказанной резервной копии (pointer ответа)",
+   "description": "the term of the refused backup copy (pointer of the answer)",
    "x-codec": [
     "integer"
    ]
   },
   "rev": {
    "$ref": "#/$defs/common.pos53",
-   "description": "ревизия отказанной резервной копии (pointer ответа)",
+   "description": "the revision of the refused backup copy (pointer of the answer)",
    "x-codec": [
     "integer"
    ]

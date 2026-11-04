@@ -49,7 +49,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](../cases.tsv), 22 rows: 21 computed, 1 `@exit 2` | `input` is the input of `assemble` as JSON text → `expect`: the rows `rows` (delivery only to the members from `to`, the order of `entries` by (member, item), `missing` with closed words, the key of a `unique` conflict and one not delivered by the grant — `"@absent"`, an opened secret in `value`) and `report` (`conflicts`, `dropped` — `bad_contribution`, `secret_unopened`, `undelivered`); `@exit 2` — `grants` without `now` |
+| [`cases.tsv`](../cases.tsv), 23 rows: 22 computed, 1 `@exit 2` | `input` is the input of `assemble` as JSON text → `expect`: the rows `rows` (delivery only to the members from `to`, the order of `entries` by (member, item), `missing` with closed words, the key of a `unique` conflict and one not delivered by the grant — `"@absent"`, an opened secret in `value`) and `report` (`conflicts`, `dropped` — `bad_contribution`, `secret_unopened`, `undelivered`); `@exit 2` — `grants` without `now` |
 
 | Cases | What it checks |
 |---|---|
@@ -62,6 +62,8 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 | 10 | objects outside the `from` of the book are not read |
 | 14–16 | the names index `notes/` with `grant: view`: a grant row of the receiver — the key is delivered; no rows — only `""`; `grants: null` — the rule is not applied |
 | 17 | `grants` without `now` — `@exit 2` |
+| `to-all`, `star-in-plain-book`, `to-servers` (ADR-0113 addendum (8) item 4, (11) item 1) | a book with `to: "*"` — the head and the row of the key's section, the field `to` of the input is not read; `"*"` in the input of an ordinary book — the cost of a row per member is not returned; `to` `servers` — a camera receives nothing |
+| `13-missing-shown` (the analysis of stage 8) | `missing_count` — all, `missing` — the first 500, the class `server` first |
 
 The vectors are checked by an oracle against the text of the norms (Н1.3, Н3 «сборка книги», Н5; the opening of a secret — by reference X25519, HKDF-SHA256
 and AES-256-GCM by the domain envelopes contract; the acting grant row — [the right contract](../../../../common/contracts/may.md)

@@ -4,21 +4,21 @@
  "properties": {
   "from": {
    "$ref": "#/$defs/common.time",
-   "description": "начало окна страницы по стенным часам члена — to − ALARM_WINDOW"
+   "description": "the start of the page window by the member's wall clock — to − ALARM_WINDOW"
   },
   "to": {
    "$ref": "#/$defs/common.time",
-   "description": "момент сборки страницы"
+   "description": "the moment the page was assembled"
   },
   "events": {
-   "description": "строки индекса класса alarm всех манифестов каталога, не больше ALARM_PAGE = 100, самые новые (Н1.10 events)",
+   "description": "the index rows of class alarm of all manifests of the catalogue, no more than ALARM_PAGE = 100, the newest (Н1.10 events)",
    "type": "array",
    "items": {
-    "description": "строка страницы — форма строки индекса P/05 Н1.3 (Н1.10 event); прочие поля — имена автора",
+    "description": "a page row — the form of the index row P/05 Н1.3 (Н1.10 event); other fields — the author's names",
     "type": "object",
     "properties": {
      "id": {
-      "description": "id строки индекса — непустая строка, обязателен",
+      "description": "id of the index row — a non-empty string, required",
       "type": "string",
       "not": {
        "enum": [
@@ -27,14 +27,14 @@
       }
      },
      "class": {
-      "description": "класс строки индекса — alarm",
+      "description": "the class of the index row — alarm",
       "type": "string",
       "enum": [
        "alarm"
       ]
      },
      "kind": {
-      "description": "непустая строка",
+      "description": "a non-empty string",
       "type": "string",
       "not": {
        "enum": [
@@ -43,11 +43,11 @@
       }
      },
      "unit": {
-      "description": "единица строки индекса",
+      "description": "the unit of the index row",
       "type": "string"
      },
      "t": {
-      "description": "время строки по часам члена",
+      "description": "the time of the row by the member's clock",
       "type": "number"
      }
     },
@@ -68,7 +68,7 @@
      ]
     },
     "additionalProperties": {
-     "description": "прочие поля строки индекса P/05 Н1.3 ({subsystem, of, …}) — как в индексе"
+     "description": "the other fields of the index row P/05 Н1.3 ({subsystem, of, …}) — as in the index"
     },
     "required": [
      "id",
@@ -80,7 +80,7 @@
    }
   },
   "truncated": {
-   "description": "truncated ответа индекса > 0",
+   "description": "truncated of the index answer > 0",
    "type": "boolean"
   }
  },

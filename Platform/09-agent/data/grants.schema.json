@@ -4,14 +4,14 @@
  "properties": {
   "doc": {
    "$ref": "#/$defs/common.grants_doc",
-   "description": "текст JCS {lines} — поле grants ответа держателя как есть",
+   "description": "JCS text {lines} — the field grants of the holder's answer as it is",
    "x-codec": [
     "object"
    ]
   },
   "as_of": {
    "$ref": "#/$defs/common.time",
-   "description": "момент, когда держатель собрал ответ: стенные секунды приёма минус domain_age (прямой ответ — 0); назад не уходит; копия старше as_of + GRANT_LIFETIME прав не даёт (P/08.4 Н1.3)",
+   "description": "the moment when the holder assembled the answer: the wall-clock seconds of receipt minus domain_age (a direct answer — 0); does not go back; a copy older than as_of + GRANT_LIFETIME gives no rights (P/08.4 Н1.3)",
    "x-codec": [
     "time"
    ]

@@ -3,13 +3,13 @@
  "type": "object",
  "properties": {
   "servers": {
-   "description": "серверы кластера из строк platform/servers",
+   "description": "the servers of the cluster from the rows platform/servers",
    "type": "object",
    "additionalProperties": {
     "type": "object",
     "properties": {
      "labels": {
-      "description": "метки через запятую, как в строке (P/06.6)",
+      "description": "labels separated by commas, as in the row (P/06.6)",
       "type": "string"
      }
     },
@@ -20,7 +20,7 @@
    }
   },
   "url": {
-   "description": "PUBLIC_URL окружения агента; не задан — поля нет",
+   "description": "PUBLIC_URL of the agent's environment; not set — no field",
    "type": "string"
   }
  },

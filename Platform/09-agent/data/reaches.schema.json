@@ -3,10 +3,10 @@
  "type": "object",
  "properties": {
   "networks": {
-   "description": "сети члена, по возрастанию, без повторов",
+   "description": "the networks of the member, ascending, without repeats",
    "type": "array",
    "items": {
-    "description": "слово REACHES окружения агента (например vlan:site-a) или `net:<cidr>` сети интерфейса",
+    "description": "a word of REACHES of the agent's environment (for example vlan:site-a) or `net:<cidr>` of an interface network",
     "type": "string"
    },
    "uniqueItems": true

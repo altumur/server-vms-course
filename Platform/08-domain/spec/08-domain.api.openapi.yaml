@@ -2307,7 +2307,7 @@ components:
       type: object
       required: [error, detail]
       additionalProperties: false
-      description: 'A planned handover is under way; edits of people and of the signer (P/08.8 Н1.7 order step 1)'
+      description: 'A planned handover is under way; edits of people and of the signer are refused (P/08.8 Н1.7 order step 1)'
       properties:
         error: {const: frozen}
         detail: {type: string, minLength: 1, description: '<h> is handing the domain over to <to>; edits are refused until it has — seconds, not minutes — and then go there'}

@@ -4,28 +4,28 @@
  "properties": {
   "sign_failures_domain": {
    "$ref": "#/$defs/common.pos53",
-   "description": "запросы держателю или ретранслятору, которые агент с запуска не отправил, потому что не смог подписать (Н1.12 count: один на проход)",
+   "description": "requests to the holder or the relay that the agent has not sent since start because it could not sign them (Н1.12 count: one per pass)",
    "x-codec": [
     "integer"
    ]
   },
   "sign_failures_console": {
    "$ref": "#/$defs/common.pos53",
-   "description": "правки Н1.5 своей консоли, которые агент с запуска не отправил, потому что не смог подписать (одна на правку)",
+   "description": "the edits Н1.5 of its own console that the agent has not sent since start because it could not sign them (one per edit)",
    "x-codec": [
     "integer"
    ]
   },
   "too_large": {
    "$ref": "#/$defs/common.pos53",
-   "description": "байты целого, которое агент не отправил (Н1.2 body); снимается следующим отправленным целым",
+   "description": "the bytes of the whole that the agent did not send (Н1.2 body); removed by the next whole sent",
    "x-codec": [
     "integer"
    ]
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды агента записи",
+   "description": "the agent's wall-clock seconds of the write",
    "x-codec": [
     "time"
    ]

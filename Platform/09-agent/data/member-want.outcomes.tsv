@@ -1,4 +1,4 @@
-# Исходы нечитаемой строки domain/member-want/<раздел> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable row domain/member-want/<раздел> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domainagent	строка целиком нечитаема: агент — считает просьбой: читает раздел дверью, снимает строку (Н1.4 member_want)	0	строка	P/09.1 Н1.4 member_want
+	domainagent	the whole row is unreadable: the agent — counts it as a request: reads the section by the door, removes the row (Н1.4 member_want)	0	строка	P/09.1 Н1.4 member_want

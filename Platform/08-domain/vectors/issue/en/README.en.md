@@ -22,8 +22,8 @@ source of these cases.
 Without a stand: the command `issue` of an implementation gets the input (the column `input`) and prints JSON; `expect` is a subset of the fields
 of the output by the dictionary of the «Стенд» ([the common acceptance README](../../../../common/acceptance/README.md), `<код> <JSON>`: the named fields
 exist and are equal, an array — by length, order and elements, a number — by value) or `@exit 2` (an input not of the form of Н5, including
-a `decl` not of the loading form of [P/02.1 Н1.2б](../../../../02-installer/spec/02.1-installer.norms.md)). There are two `@exit 2` rows
-(`issue-37`, `issue-38`); the other 36 inputs are of the form. `iat`, `exp` are from the `now` of the input, not from the process clock.
+a `decl` not of the loading form of [P/02.1 Н1.2б](../../../../02-installer/spec/02.1-installer.norms.md)). There are three `@exit 2` rows
+(`issue-37`, `issue-38`, `issue-keep-too-long`); the other 37 inputs are of the form. `iat`, `exp` are from the `now` of the input, not from the process clock.
 
 ## Inputs
 
@@ -55,11 +55,12 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 | 16–21, 23, 25, 26, 28, 29 | `scenario`: directly, behind a relay (`up`), the lift of the relay, the home by placement; no element, a foreign `by`, no document, a name twice — `no_item`; `acts` by JCS; the home is unreadable — `no_home`; the home is not a member — `no_audience` |
 | 31–36 (the coverage audit of P/08, the second pass) | `star_centre` (Н1.1 `computed`): the `cluster` of the record in `star` — `centre` in the audience, without `centre` — `no_centre`, outside `star` — nothing; `origin` `""` with `caller: origin` — `outside_scope`, in `target_fields` — not in the audience; `scenario` behind a relay ≠ the home without `centre` — `no_centre` |
 | 37, 38 (the coverage audit of P/08, the second pass) | an input not of the form — `@exit 2`: `decl` not of the loading form (`lifetime` 0, the М11 check, T4), `now` as a string |
+| `keep-too-long`, `keep-ok` (ADR-0110 addendum (10) item 2) | `decl` with `keep` and `lifetime` greater than `KEEP_OLD` — `@exit 2`; `keep` — the assertions are the same, `jti` is not judged |
 
 The vectors are checked by an oracle against the text of the norms (Н1.1 `computed`, Н1.3 `body`, Н1.4, Н3 «выдать»), not against the code of implementations: the output
 of the oracle contains the expectation of each row. The rows `issue-31`…`issue-38` (the coverage audit of P/08, the second pass of Gemini, the draft
 G07 `e32df6f8b`, rewritten into the input of `issue` of this table; the inputs are `issue-01` and `issue-17` with the named change) — the expectation
 of each row is a subset of the output of the command `issue` of both witness implementations `cammeta-python` and `cammeta-go` (the export
-`d27f95d`); all 38 rows agree at both. Not taken from the draft: the skipping of a `scenario` element without the field at the path `act`: at
+`d27f95d`); all 38 rows `issue-01`…`issue-38` agree at both. Not taken from the draft: the skipping of a `scenario` element without the field at the path `act`: at
 the declarations of the manifests (`tally2`: `act` `then`, `target` `then.item`) an element without `act` has no `target` either — it is filtered out
 earlier, so the skipping rule cannot be distinguished (by reading). On a divergence the text of the norm is right, the vector is corrected by «Спецификация».

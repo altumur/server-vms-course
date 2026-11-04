@@ -90,6 +90,9 @@ The format is the dictionary of the «Стенд» and the section «Стенд 
 | 18 | `garbled-grants-row` | 6 | an unreadable row `domain/grants/m1`: `POST /domain/users` — 503, an edit `PUT` over it — 503; the row is fixed past the door (`delete` under `domain/` is forbidden to `admin` too) — 201 |
 | 19 | `garbled-break-glass` | 7 | an unreadable `domain/break-glass/m1`: `GET /domain/break-glass` — the key `m1` is there, `{}`; `PUT` writes the row anew — `set_at` again |
 | 20 | `batch-rights` | 18 | ann with `admin unit:testsub/c1-m1` at the console of `m1`; steps 16–17 — tombstones by `about`: one's own unit — 200, a foreign one — 403; step 18 — `GET /testsub/next_id` as a creation of rows — 403 (ADR-0094 B4); the batch door (ADR-0094 B9): the second row without a right — 403 of the whole batch, the indexes of both are the former ones; the guard `c2-m1` without `view` — 412 `row moved` with `index: ""`, as for an absent row; one's own row — 200 `{written: 1}` |
+| 21 | `changes-rights` | 23 | the feed `GET /changes` of the member console under a narrow grant (ADR-0094 B2): a change of the set of the grant lines — a reset; the number of another person; there is no grant — 403 |
+| 22 | `changes-labels` | 21 | the feed under a narrow grant by marks (ADR-0094 B2): a new row with a mark is visible without a reset, a row without a mark is not visible, a change of the mark of the unit — a reset |
+| 23 | `versions-and-repeats` | 30 | the versions and the replay memory of the doors of people (chapter 8.0 Н1.9, ADR-0094 B3, B4) |
 | 24 | `grant-line-forms` | 10 | the forms of a line: `sub`, `folder:`, `none`, a repeat, the order (ADR-0097); there is no dry run |
 | 25 | `sub-of-each-check` | 15 | `sub` of each check: `/drain`, a batch, `/marks`; there is no dry run |
 | 26 | `events-by-sub` | 12 | `/events` by the `sub` of an event; there is no dry run |

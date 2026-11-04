@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "holder": {
-   "description": "экземпляр активного агента `<коробка>:<pid>:<6 hex>` (форма экземпляра — договор экземпляра common/contracts/instance.md) или \"\" — очередь отдана по SIGTERM (Н1.13 release)",
+   "description": "the instance of the active agent `<коробка>:<pid>:<6 hex>` (the form of the instance — the instance contract common/contracts/instance.md) or \"\" — the turn is given up on SIGTERM (Н1.13 release)",
    "type": "string",
    "x-codec": [
     "string"

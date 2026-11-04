@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "seed_secret": {
-   "description": "hex 32 случайных байт — зерно Ed25519 ключа члена (RFC 8032); в строке — конверт кольца члена (договор запечатывания), форма hex — у открытого",
+   "description": "hex of 32 random bytes — the Ed25519 seed of the member key (RFC 8032); in the row — an envelope of the member's ring (the sealing contract), the hex form — of the opened one",
    "type": "string",
    "x-codec": [
     "string"
@@ -11,7 +11,7 @@
   },
   "pub": {
    "$ref": "#/$defs/common.domain_member_key",
-   "description": "hex открытого ключа члена: им агент подписывает (Н1.3), к нему держатель запечатывает (P/08.3 Н1.5)",
+   "description": "hex of the member's public key: the agent signs with it (Н1.3), the holder seals to it (P/08.3 Н1.5)",
    "x-codec": [
     "string"
    ]
