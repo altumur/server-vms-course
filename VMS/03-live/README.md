@@ -42,9 +42,9 @@ trickle), без перекодирования; устройствам (вид�
   платформы — [`data/`](data/): `value`
   элемента книги учёток `stream-accounts-entry` (место `/*/entries/*/value`; пароль — только конверт кольца) — форма, слои,
   исходы по читателям; строки — в каталоге VMS [`../common/data/catalog.tsv`](../common/data/catalog.tsv) (колонка
-  `place`); векторы строит построитель family-read, вручную не пишутся. Слова пульса шлюза своей семьи нет:
-  `capacity` судит контроллер платформы (договор пула), `headroom` показывает консоль рядами `worker_headroom` и
-  `headroom` (P/06.5 Н3; контроллер его не читает, P/04 Н1.3), прочие слова другие процессы не читают.
+  `place`); векторы строит построитель family-read, вручную не пишутся. Слова пульса шлюза — семья
+  `live/heartbeats/<имя>` ([`data/live-heartbeat-words.schema.json`](data/live-heartbeat-words.schema.json); читают `camworker`, `expworker`); `capacity` судит контроллер платформы (договор пула), `headroom` показывает консоль рядами `worker_headroom` и
+  `headroom` (P/06.5 Н3; контроллер его не читает, P/04 Н1.3).
 - **Двери:** дверь шлюза `whep` (страница, токен двери консоли) и `/live/accounts` через `door.pass` — OpenAPI урока
   `spec/03-live.api.openapi.yaml`; дверь RTSP шлюза — RTSP с Digest (не HTTP), глава 6.
 

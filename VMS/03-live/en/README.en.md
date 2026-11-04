@@ -42,9 +42,9 @@ the GStreamer packages and `libnice` in the image — V/09.
   families is [`data/`](../data/): `value`
   of the element of the book of accounts `stream-accounts-entry` (the place `/*/entries/*/value`; the password is only a keyring envelope) — the form, the layers,
   the outcomes per reader; the rows are in the VMS catalogue [`../common/data/catalog.tsv`](../../common/data/catalog.tsv) (the column
-  `place`); the vectors are built by the builder family-read, they are not written by hand. The gateway's heartbeat words have no family of their own:
-  `capacity` is judged by the platform controller (the pool contract), `headroom` is shown by the console with the series `worker_headroom` and
-  `headroom` (P/06.5 Н3; the controller does not read it, P/04 Н1.3), the other words are read by no other process.
+  `place`); the vectors are built by the builder family-read, they are not written by hand. The gateway's heartbeat words are the family
+  `live/heartbeats/<имя>` ([`data/live-heartbeat-words.schema.json`](../data/live-heartbeat-words.schema.json); read by `camworker`, `expworker`); `capacity` is judged by the platform controller (the pool contract), `headroom` is shown by the console with the series `worker_headroom` and
+  `headroom` (P/06.5 Н3; the controller does not read it, P/04 Н1.3).
 - **Doors:** the gateway door `whep` (the page, the console door token) and `/live/accounts` through `door.pass` — the lesson's OpenAPI
   `spec/03-live.api.openapi.yaml`; the gateway's RTSP door is RTSP with Digest (not HTTP), chapter 6.
 

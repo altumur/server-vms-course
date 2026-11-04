@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: |
     The HTTP contract of the process door of the worker `exp` — chapter V/08.9 of the lesson «Выгрузка» of the VMS module. The canon is
-    [the norms of chapter 4](08.9-exp.norms.md); this file expresses them and adds no requirements. The route `files` is for a person by
+    [the norms of chapter 9](08.9-exp.norms.md); this file expresses them and adds no requirements. The route `files` is for a person by
     the console door token (`GET /exp/where/<part>`, the door token contract; `?t=` or `Authorization: Bearer`), only for the author
     of the part. The route `parts` is for the leading part of the same order by the role certificate `expworker`. Request parsing and the
     connection limits — the process door of P/03.4 Н1.7.

@@ -1,28 +1,28 @@
 openapi: 3.1.0
 info:
-  title: V/12 — дверь адаптера плагина psim
+  title: V/12 — the door of the psim plugin adapter
   version: 1.0.0
   description: |
-    HTTP-контракт двери процесса воркера-адаптера подсистемы `psim-<id>` — глава V/12.3 Н1.6 урока «Плагины psim» модуля VMS.
-    Канон — [нормы главы 3](12.3-psim.norms.md); этот файл их выражает и не добавляет требований. Маршруты ресурсов — имена
-    `path_prefix` ресурсов `PROXY` плагина (V/12.1 Н1.5), здесь — параметр `route`; их содержание — дело плагина, дверь его
-    проксирует на `location` из `RegisterResource` (V/12.3 Н1.2). Вход — токен двери консоли (`GET /psim-<id>/where/plugin`,
-    договор токена двери) в `?t=` или `Authorization: Bearer`; после входа — кука сеанса страницы `psim`. `static` — без
-    допуска. Разбор запроса и пределы соединений — дверь процесса P/03.4 Н1.7.
+    The HTTP contract of the process door of the adapter worker of the subsystem `psim-<id>` — chapter V/12.3 Н1.6 of the lesson «Плагины psim» of the VMS module.
+    The canon is [the norms of chapter 3](12.3-psim.norms.md); this file expresses them and adds no requirements. The resource routes are the names
+    `path_prefix` of the plugin's `PROXY` resources (V/12.1 Н1.5), here the parameter `route`; their content is the plugin's business, the door
+    proxies it to `location` from `RegisterResource` (V/12.3 Н1.2). Sign-in — the console door token (`GET /psim-<id>/where/plugin`,
+    the door token contract) in `?t=` or `Authorization: Bearer`; after sign-in — the session cookie of the `psim` page. `static` — without
+    admittance. Request parsing and connection limits — the process door of P/03.4 Н1.7.
 servers:
   - url: https://{server}:{port}
-    description: дверь процесса адаптера с комплектом роли воркера — адрес SERVER_NAME (P/03.4 Н1.7 kit)
+    description: the process door of the adapter with the kit of the worker role — the address SERVER_NAME (P/03.4 Н1.7 kit)
     variables:
       server: {default: "srv-a"}
       port: {default: "0"}
 paths:
   /static/i18n.js:
     get:
-      summary: Словарь страниц psim — байты psim-sdk c3d9ebb по SHA-256 (V/12.3 Н1.6)
+      summary: The dictionary of the psim pages — the bytes of psim-sdk c3d9ebb by SHA-256 (V/12.3 Н1.6)
       security: []
       responses:
         "200":
-          description: байты `psim_platform_emulator/webui/i18n.js`
+          description: the bytes of `psim_platform_emulator/webui/i18n.js`
           content:
             application/javascript:
               schema: {type: string}
@@ -32,39 +32,39 @@ paths:
       - name: route
         in: path
         required: true
-        description: маршрут ресурса `PROXY` плагина (V/12.1 Н1.5), не `static`
+        description: a route of a plugin `PROXY` resource (V/12.1 Н1.5), not `static`
         schema: {type: string, pattern: "^(?:[a-z][a-z0-9_-]{0,31})$"}
       - name: rest
         in: path
         required: true
-        description: хвост пути — уходит на `location` ресурса как есть
+        description: the tail of the path — goes to the resource's `location` as is
         schema: {type: string}
     get:
-      summary: Вход по токену или запрос страницы плагина (V/12.3 Н1.6)
+      summary: Sign-in by token or a request of a plugin page (V/12.3 Н1.6)
       security: [{doorToken: []}, {pageCookie: []}]
       parameters:
         - name: t
           in: query
           required: false
-          description: токен двери консоли; с ним — вход, ответ 303 и кука сеанса
+          description: the console door token; with it — sign-in, the answer 303 and the session cookie
           schema: {type: string}
       responses:
-        "200": {description: ответ плагина как есть}
+        "200": {description: the plugin's answer as is}
         "303":
-          description: вход принят — тот же адрес без `t`, кука сеанса страницы; `Cookie` и `Authorization` запроса плагину не уходят, все `Set-Cookie` плагина сняты
+          description: sign-in accepted — the same address without `t`, the page session cookie; `Cookie` and `Authorization` of the request do not go to the plugin, every `Set-Cookie` of the plugin is removed
           headers:
             Location: {schema: {type: string}}
             Set-Cookie:
-              description: "`psim_<plugin_id>=<сеанс>; HttpOnly; Secure; SameSite=Strict; Path=/<route>/`, без Domain, срок 3600 с"
+              description: "`psim_<plugin_id>=<session>; HttpOnly; Secure; SameSite=Strict; Path=/<route>/`, without Domain, lifetime 3600 s"
               schema: {type: string}
         "401": {$ref: "#/components/responses/Refusal"}
         "403": {$ref: "#/components/responses/Refusal"}
         "502": {$ref: "#/components/responses/Refusal"}
     post:
-      summary: Запрос страницы плагина к своему серверу (V/12.3 Н1.6)
+      summary: A request of a plugin page to its own server (V/12.3 Н1.6)
       security: [{doorToken: []}, {pageCookie: []}]
       responses:
-        "200": {description: ответ плагина как есть}
+        "200": {description: the plugin's answer as is}
         "401": {$ref: "#/components/responses/Refusal"}
         "502": {$ref: "#/components/responses/Refusal"}
 components:
@@ -72,15 +72,15 @@ components:
     doorToken:
       type: http
       scheme: bearer
-      description: токен двери консоли (договор токена двери); иначе `?t=`
+      description: the console door token (the door token contract); otherwise `?t=`
     pageCookie:
       type: apiKey
       in: cookie
       name: psim_<plugin_id>
-      description: сеанс страницы адаптера (V/12.3 Н1.6), 128 случайных бит, 3600 с; имя — с id плагина
+      description: the session of the adapter page (V/12.3 Н1.6), 128 random bits, 3600 s; the name carries the plugin id
   responses:
     Refusal:
-      description: "отказ двери: объект с полем error — слово отказа"
+      description: "a refusal of the door: an object with the field error — the refusal word"
       content:
         application/json:
           schema:

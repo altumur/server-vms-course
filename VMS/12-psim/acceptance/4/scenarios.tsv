@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/12.4: установка до обхода, обход стенда, установка после обхода, включение и сборка; плагины psim-sdk c3d9ebb без правок. Формат — README.
+# Acceptance of V/12.4: installation before the traversal, the traversal of the stand, installation after the traversal, enabling and assembly; the psim-sdk c3d9ebb plugins without edits. Format — README.
 01-install	1	@psim install {psim}/camera	ok
 01-install	2	@traverse	ok
 01-install	3	@psim finish {psim}/camera	ok
