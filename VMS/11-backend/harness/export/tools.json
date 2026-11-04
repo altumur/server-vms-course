@@ -1,0 +1,160 @@
+[
+ {
+  "name": "find_cameras",
+  "description": "Cameras whose name or folder has these words (any case, any word ending). Empty text — all cameras.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "text": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "text"
+   ]
+  }
+ },
+ {
+  "name": "export",
+  "description": "The export order; ends the turn. The admin checks and sends it in the export window.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "text": {
+     "type": "string"
+    },
+    "mode": {
+     "type": "string",
+     "enum": [
+      "video",
+      "frame"
+     ]
+    },
+    "source": {
+     "type": "string",
+     "enum": [
+      "archive",
+      "live"
+     ]
+    },
+    "cameras": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "camera": {
+        "type": "string"
+       },
+       "area": {
+        "type": "object",
+        "properties": {
+         "x": {
+          "type": "number"
+         },
+         "y": {
+          "type": "number"
+         },
+         "w": {
+          "type": "number"
+         },
+         "h": {
+          "type": "number"
+         }
+        }
+       }
+      },
+      "required": [
+       "camera"
+      ]
+     }
+    },
+    "periods": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "from": {
+        "type": "string"
+       },
+       "to": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "from",
+       "to"
+      ]
+     }
+    },
+    "at": {
+     "type": "string"
+    },
+    "format": {
+     "type": "string"
+    },
+    "compression": {
+     "type": "string"
+    },
+    "resolution": {
+     "type": "string"
+    },
+    "fpsDivisor": {
+     "type": "integer"
+    },
+    "titles": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "audio": {
+     "type": "boolean"
+    },
+    "maxFileMb": {
+     "type": "integer"
+    },
+    "singleFile": {
+     "type": "boolean"
+    },
+    "comment": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "text",
+    "mode",
+    "cameras"
+   ]
+  }
+ },
+ {
+  "name": "ask_admin",
+  "description": "One short question; ends the turn.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "question": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "question"
+   ]
+  }
+ },
+ {
+  "name": "refuse",
+  "description": "Cannot be done; ends the turn.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {
+    "reason": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "reason"
+   ]
+  }
+ }
+]

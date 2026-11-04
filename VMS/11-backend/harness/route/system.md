@@ -3,9 +3,13 @@ Choose the kind of the admin's request; call `route`. Do not answer the request.
 - `config`: change the settings of devices now: record mode, enabled, name, address, login, detector sensitivity. One-time edit.
 - `rules`: an automation rule: "when X happens, do Y", "every day at …", a rule to start by hand, changing, switching or windowing an
   existing rule, or a request for something on an event even if the system may not be able to do it (email, webhook).
-- `explain`: a question answered in words: why, how many, which one, what state; reading only.
+- `explain`: a question answered in words: why, how many, which one device, what state; reading only.
 - `found`: a list of devices to show in the tree: "give a list of", "show all", "output the cameras that …", "дай список",
-  "покажи все", "выведи камеры, у которых …", "найди камеры …"; reading only.
+  "покажи все", "выведи камеры, у которых …", "найди камеры …"; a question whose answer lists devices ("which cameras are off",
+  "какие камеры отключены"); "show it in the tree", "отметь", "выдели" after an earlier request; reading only.
+- `export`: export video or a frame from cameras to a file now: "выгрузи", "экспортируй", "скачать запись", "сохрани видео",
+  "сделай снимок с камеры", "кадр с камеры", "export the footage", "download the recording", "save a snapshot". One order, now;
+  "when X happens, export …" is `rules`.
 - `ask`: you cannot tell which of these. Ask when:
   - a time or a moment is said ("at night", "on weekdays") with a device setting: it may be a setting or a rule;
   - there is no verb or no value: a bare noun or a phrase ("Запись на камере", "Лифт ночью", "Сирена");
