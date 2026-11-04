@@ -11,7 +11,10 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 	"unicode/utf8"
 
 	"normgen/p01-1/coreadapter"
@@ -33,17 +36,59 @@ var (
 	assertRx = regexp.MustCompile(`^ASSERT\s+` + termRx + `\s*(==|!=|<=|>=|<|>)\s*` + termRx + `\s*$`)
 )
 
+// openCore, handleCall — the kit's adapter (a test of the generator substitutes them to judge the engine alone).
+var (
+	openCore   = coreadapter.Open
+	handleCall = coreadapter.Handle
+)
+
+// t0 — the clock of a seam scenario at the first Open: 2000000000 wall seconds («Спецификация», seams of P/01).
+var t0 = time.Unix(2000000000, 0)
+
+// clock — the test clock: for seams.tsv t0 plus the accumulated @clock shifts; for scenarios.tsv the wall clock, as
+// the runner's stand has; safe for concurrent use.
+type clock struct {
+	shift atomic.Int64
+	wall  bool
+}
+
+func (c *clock) now() time.Time {
+	base := t0
+	if c.wall {
+		base = time.Now()
+	}
+	return base.Add(time.Duration(c.shift.Load()) * time.Second)
+}
+
+// scenario — the state of one scenario: the core (reopened by @reopen), its config, the bound $names, the next step's
+// parallelism.
+type scenario struct {
+	core     coreadapter.Core
+	cfg      coreadapter.Config
+	clk      *clock
+	env      map[string]any
+	parallel int
+	name     string
+}
+
 // runScenario — one scenario on a fresh core: the steps in order as subtests; a failed step does not bind and the
 // next steps go on (as the runner does).
-func runScenario(t *testing.T, chapter, name string, steps []step) {
-	core, err := coreadapter.Open(coreadapter.Config{BodyLimit: 1048576, RowCeiling: 524288, Rights: []byte(standRights)})
+func runScenario(t *testing.T, chapter, name string, seams bool, steps []step) {
+	clk := &clock{wall: !seams}
+	cfg := coreadapter.Config{BodyLimit: 1048576, RowCeiling: 524288, Rights: []byte(standRights), Now: clk.now,
+		DataDir: t.TempDir()}
+	core, err := openCore(cfg)
 	if err != nil || core == nil {
 		t.Fatalf("coreadapter.Open: %v", err)
 	}
-	defer core.Close()
-	env := map[string]any{}
+	sc := &scenario{core: core, cfg: cfg, clk: clk, env: map[string]any{}, name: name}
+	defer func() {
+		if sc.core != nil {
+			sc.core.Close()
+		}
+	}()
 	if strings.HasPrefix(name, "21-") { // runner/run.py: the preparation of sc. 21 through admin.sock
-		code, _, body := core.Handle(coreadapter.Call{Sock: "admin"}, "POST", "/v1/write", map[string]string{"Content-Type": "application/json"},
+		code, _, body := sc.handle(coreadapter.Call{Sock: "admin"}, "POST", "/v1/write", map[string]string{"Content-Type": "application/json"},
 			[]byte(`{"op":"put","key":"other/21-rights/c9","items":{"n":"1"}}`))
 		if code != 200 {
 			t.Errorf("preparation via admin.sock: %d %q", code, clip(body))
@@ -52,17 +97,50 @@ func runScenario(t *testing.T, chapter, name string, steps []step) {
 	for _, st := range steps {
 		st := st
 		t.Run(st.step, func(t *testing.T) {
-			for _, why := range runStep(core, name, st, env) {
-				t.Errorf("%s step %s (scenarios.tsv:%d): %s", name, st.step, st.line, why)
+			for _, why := range sc.runStep(st) {
+				t.Errorf("%s step %s (line %d): %s", name, st.step, st.line, why)
 			}
 		})
 	}
 }
 
-func runStep(core coreadapter.Core, name string, st step, env map[string]any) []string {
-	if strings.HasPrefix(st.request, "ASSERT ") {
-		return checkAssert(st.request, env)
+func (sc *scenario) handle(call coreadapter.Call, method, target string, header map[string]string, body []byte) (int, map[string]string, []byte) {
+	if sc.core == nil {
+		return 599, nil, []byte(`{"error":"the core is closed (a failed @reopen)"}`)
 	}
+	return handleCall(sc.core, sc.cfg, call, method, target, header, body)
+}
+
+func (sc *scenario) runStep(st step) []string {
+	env := sc.env
+	switch {
+	case strings.HasPrefix(st.request, "ASSERT "):
+		return checkAssert(st.request, env)
+	case strings.HasPrefix(st.request, "@clock "): // seams: the clock shift in seconds, accumulated
+		n, _ := strconv.ParseInt(st.request[len("@clock "):], 10, 64)
+		sc.clk.shift.Add(n)
+		return nil
+	case st.request == "@reopen": // seams: Close and Open on the same DataDir with the same clock
+		if sc.core != nil {
+			sc.core.Close()
+		}
+		core, err := openCore(sc.cfg)
+		if err != nil || core == nil {
+			sc.core = nil
+			return []string{fmt.Sprintf("@reopen: coreadapter.Open: %v", err)}
+		}
+		sc.core = core
+		return nil
+	case strings.HasPrefix(st.request, "@parallel "): // seams: the next step K times at once
+		sc.parallel, _ = strconv.Atoi(st.request[len("@parallel "):])
+		return nil
+	}
+	if sc.parallel > 0 {
+		k := sc.parallel
+		sc.parallel = 0
+		return sc.runParallel(st, k)
+	}
+	name := sc.name
 	req, err := substitute(st.request, env)
 	if err != "" {
 		return []string{err}
@@ -79,7 +157,7 @@ func runStep(core coreadapter.Core, name string, st step, env map[string]any) []
 	if body != nil {
 		header["Content-Type"] = "application/json"
 	}
-	code, _, raw := core.Handle(coreadapter.Call{Sock: "acc"}, method, target, header, body)
+	code, _, raw := sc.handle(coreadapter.Call{Sock: "acc"}, method, target, header, body)
 	act, perr := decode(raw)
 	if perr != nil {
 		return []string{fmt.Sprintf("body is not JSON (%v): %q", perr, clip(raw))}
@@ -104,6 +182,104 @@ func runStep(core coreadapter.Core, name string, st step, env map[string]any) []
 	if len(out) == 0 {
 		for k, v := range trial {
 			env[k] = v
+		}
+	}
+	return out
+}
+
+type reply struct {
+	code int
+	act  any
+	errs []string
+}
+
+// runParallel — seams @parallel K: the request K times at once; expect «each <e>» — every answer matches e;
+// «one <e1>; rest <e2>» — exactly one answer matches e1 (it may bind), all the others match e2 (no new names).
+func (sc *scenario) runParallel(st step, k int) []string {
+	req, err := substitute(st.request, sc.env)
+	if err != "" {
+		return []string{err}
+	}
+	method, rest, _ := strings.Cut(req, " ")
+	target, text, hasBody := strings.Cut(rest, " ")
+	var body []byte
+	if hasBody {
+		body = []byte(text)
+	} else if method != "GET" {
+		body = []byte{}
+	}
+	header := map[string]string{}
+	if body != nil {
+		header["Content-Type"] = "application/json"
+	}
+	replies := make([]reply, k)
+	var wg sync.WaitGroup
+	for i := 0; i < k; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			code, _, raw := sc.handle(coreadapter.Call{Sock: "acc"}, method, target, header, append([]byte(nil), body...))
+			act, perr := decode(raw)
+			if perr != nil {
+				replies[i] = reply{code, nil, []string{fmt.Sprintf("body is not JSON (%v): %q", perr, clip(raw))}}
+				return
+			}
+			replies[i] = reply{code: code, act: act}
+		}(i)
+	}
+	wg.Wait()
+	for i, r := range replies {
+		if len(r.errs) > 0 {
+			return append([]string{fmt.Sprintf("answer %d of %d:", i+1, k)}, r.errs...)
+		}
+	}
+	judge := func(expect string, r reply, env map[string]any) []string {
+		var out []string
+		if r.code != 200 {
+			if o, ok := r.act.(*object); !ok || !isStr(o.get("error")) {
+				out = append(out, "body.error: a fault must carry an error string (Н2)")
+			}
+		}
+		return append(out, checkResponse(r.code, r.act, expect, env, method, target)...)
+	}
+	if strings.HasPrefix(st.expect, "each ") {
+		var out []string
+		for i, r := range replies {
+			for _, e := range judge(st.expect[len("each "):], r, copyEnv(sc.env)) {
+				out = append(out, fmt.Sprintf("answer %d of %d: %s", i+1, k, e))
+			}
+		}
+		return out
+	}
+	one, restExp, _ := strings.Cut(strings.TrimPrefix(st.expect, "one "), "; rest ")
+	var hits []int
+	var bound map[string]any
+	for i, r := range replies {
+		trial := copyEnv(sc.env)
+		if len(judge(one, r, trial)) == 0 {
+			hits = append(hits, i)
+			bound = trial
+		}
+	}
+	if len(hits) != 1 {
+		codes := make([]int, k)
+		for i, r := range replies {
+			codes[i] = r.code
+		}
+		return []string{fmt.Sprintf("want exactly one answer of %d to match %q, got %d (codes %v)", k, one, len(hits), codes)}
+	}
+	var out []string
+	for i, r := range replies {
+		if i == hits[0] {
+			continue
+		}
+		for _, e := range judge(restExp, r, copyEnv(bound)) {
+			out = append(out, fmt.Sprintf("answer %d of %d (rest): %s", i+1, k, e))
+		}
+	}
+	if len(out) == 0 {
+		for kk, v := range bound {
+			sc.env[kk] = v
 		}
 	}
 	return out

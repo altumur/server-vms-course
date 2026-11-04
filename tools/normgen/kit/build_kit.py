@@ -1,6 +1,6 @@
 """Сборка пакета Б для P/01 (ADR-0083 доп. (86) п. 2): проверки Н2.1 и строгий разборщик JSON — в каталог попытки.
 
-Запуск: python tools/normgen/kit/build_kit.py <dst> --module <путь импорта каталога <dst>/01-store> [--part tests] [--part door]
+Запуск: python tools/normgen/kit/build_kit.py <dst> --module <путь импорта каталога <dst>/01-store> [--part vectors] [--part stagetests] [--part door]
        [--part flags] [--part refusals]
 
 Кладёт в <dst>/01-store/internal/:
@@ -12,8 +12,10 @@
 (заменяется целиком), паспорт формы, генератора и судьи — в provenance манифеста.
 Часть `refusals` (--part refusals; генератор № 4 ADR-0125 tools/normgen/gen_refusals.py, судья refusal_judge.py):
 refusals/ (заменяется целиком), паспорт — в provenance.
-Часть `tests` (--part tests; ADR-0126 доп. (2) п. 1, генератор № 6 ADR-0125 tools/normgen/gen_tests.py): vectortests/,
-vectorcmd/ (заменяются целиком) и заглушка адаптера vectoradapter/ — её реализация правит, кладётся, только если её нет.
+Часть `vectors` (--part vectors; ADR-0126 доп. (7) п. 4, генератор № 6 ADR-0125 tools/normgen/gen_tests.py): vectortests/,
+vectorcmd/, cmd/vectors (заменяются целиком) и заглушка адаптера vectoradapter/ — её реализация правит, кладётся, только если её нет.
+Часть `stagetests` (--part stagetests, нужна часть door; ADR-0125 доп. (3), (4), ADR-0126 доп. (7), gen_stagetests.py, судья
+scenario_judge.py): stagetests/ (заменяется целиком) и coreadapter/ — coreadapter.go пакета, open.go реализации (кладётся один раз).
 Часть `door` (--part door; генератор № 2 ADR-0125 tools/normgen/gen_door.py): door/ (заменяется целиком) — дверь из
 Platform/01-store/spec/01-store.api.openapi.yaml (tools/normgen/out/p01-1/go/apidoor → internal/apidoor, пакет apidoor — не затирает internal/door реализации; sha256 OpenAPI в шапке door.go
 должен совпасть с OpenAPI сейчас).
@@ -84,7 +86,7 @@ def git_head():
         return None
 
 
-PARTS = ("tests", "door", "flags", "refusals")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
+PARTS = ("vectors", "stagetests", "door", "flags", "refusals")       # части сверх writecheck (имена ADR-0126 доп. (2) п. 1)
 
 
 def build(dst, module, parts=()):
@@ -98,12 +100,13 @@ def build(dst, module, parts=()):
                        f"run tools/normgen/gen_checks.py")
     if set(parts) - set(PARTS):
         raise KitError(f"--part {sorted(set(parts) - set(PARTS))}: one of {list(PARTS)}")
-    if "tests" in parts and "door" not in parts:
-        raise KitError("--part tests needs --part door: the stage tests go through coreadapter over apidoor "
-                       "(ADR-0125 addendum (4) item 4)")
+    if "stagetests" in parts and "door" not in parts:
+        raise KitError("--part stagetests needs --part door: the stage tests go through coreadapter over apidoor "
+                       "(ADR-0126 addendum (7) item 5)")
     kit_parts = ["writecheck", *sorted(set(parts))]
     try:
-        tests = gen_tests.kit_files(module) if "tests" in parts else []
+        tests = [(f, "vectors") for f in gen_tests.kit_files(module, "vectors")] if "vectors" in parts else []
+        tests += [(f, "stagetests") for f in gen_tests.kit_files(module, "stagetests")] if "stagetests" in parts else []
         flag_files = gen_flags.kit_files() if "flags" in parts else []
         refusal_files = gen_refusals.kit_files() if "refusals" in parts else []
     except (gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError) as exc:
@@ -122,7 +125,7 @@ def build(dst, module, parts=()):
         files.append({"path": str(target.relative_to(dst)), "sha256": sha256(data), "lines": lines(data),
                       "origin": origin, "component": component, "source": source})
 
-    for sub in ("checks", "jsonstrict", "writecheck") + (gen_tests.KIT_DIRS if tests else ()) + \
+    for sub in ("checks", "jsonstrict", "writecheck") + sum((gen_tests.PART_DIRS[p] for p in ("vectors", "stagetests") if p in parts), ()) + \
             (("apidoor",) if openapi_sha else ()) + (gen_flags.KIT_DIRS if flag_files else ()) + \
             (gen_refusals.KIT_DIRS if refusal_files else ()):
         if Path(os.path.normpath(internal / sub)).exists():
@@ -137,10 +140,10 @@ def build(dst, module, parts=()):
             raise KitError(f"{sub}/{name}: no import {PLACEHOLDER}… to rewrite")
         put(sub, name, data, "handwritten", "kit", str((HANDWRITTEN / sub / name).relative_to(ROOT)))
 
-    for sub, name, data, origin, source, own in tests:
+    for (sub, name, data, origin, source, own), component in tests:
         if own and (internal / sub / name).exists():
             continue                    # адаптер реализации не трогается
-        put(sub, name, data, origin, "tests", source)
+        put(sub, name, data, origin, component, source)
         if own:
             files[-1]["editable"] = True
     if openapi_sha:
@@ -150,7 +153,8 @@ def build(dst, module, parts=()):
         put(sub, name, data, origin, "flags", source)
     for sub, name, data, origin, source in refusal_files:
         put(sub, name, data, origin, "refusals", source)
-    doc = (KIT_MD + (gen_tests.KIT_MD if tests else "") + (KIT_DOOR_MD if openapi_sha else "")
+    doc = (KIT_MD + (gen_tests.KIT_MD if "vectors" in parts else "")
+           + (gen_tests.KIT_MD_STAGETESTS if "stagetests" in parts else "") + (KIT_DOOR_MD if openapi_sha else "")
            + (gen_flags.KIT_MD if flag_files else "") + (gen_refusals.KIT_MD if refusal_files else "")).replace("{module}", module).encode("utf-8")
     (dst / "KIT.md").write_bytes(doc)
     # Паспорт попытки (доп. (86) п. 3) считает порознь: по происхождению (generated | handwritten) и по части
