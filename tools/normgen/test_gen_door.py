@@ -683,27 +683,27 @@ class Kit(unittest.TestCase):
 
     def test_parts(self):
         bk = self.build_kit
-        for parts in (("door",), ("writecheck", "door")):
+        for parts in (("door",), ("tests", "door")):
             dst = Path(self.tmp.name) / "-".join(parts)
             m = bk.build(dst, "kittest", parts)
             store = dst / "01-store"
             (store / "go.mod").write_text("module kittest\n\ngo 1.22\n", encoding="utf-8")
             go(["build", "./..."], store)
             go(["vet", "./..."], store)
-            self.assertEqual(m["parts"], list(parts))
+            self.assertEqual(m["parts"], ["writecheck", *sorted(parts)])
             door = [f for f in m["files"] if f["component"] == "door"]
             self.assertEqual(sorted((f["path"], f["origin"]) for f in door),
                              [("01-store/internal/door/door.go", "generated"),
                               ("01-store/internal/door/runtime.go", "handwritten")])
             self.assertEqual(m["openapi"]["sha256"], bk.sha256(SPEC.read_bytes()))
             self.assertIn("kittest/internal/door", (dst / "KIT.md").read_text(encoding="utf-8"))
-            self.assertEqual(sorted(m["lines_by_component"]),
-                             sorted({"door"} | ({"kit", "normgen"} if "writecheck" in parts else set())))
+            self.assertEqual(sorted(m["lines_by_component"]), sorted({"kit", "normgen", *parts}))
         with self.assertRaises(bk.KitError):
             bk.build(Path(self.tmp.name) / "bad", "kittest", ("doors",))
         m = bk.build(Path(self.tmp.name) / "default", "kittest")
         self.assertEqual(m["parts"], ["writecheck"])
         self.assertNotIn("door", m["lines_by_component"])
+        self.assertNotIn("openapi", m)
 
     def test_stub_daemon(self):
         import socket

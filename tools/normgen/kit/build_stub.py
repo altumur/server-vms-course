@@ -3,7 +3,7 @@ tools/normgen/kit/stub (хранилище в памяти без смысла �
 
 Запуск: python tools/normgen/kit/build_stub.py <dst> [--spec-version <полный SHA выгрузки cammeta-specs>] [--go-build]
 
-Кладёт в <dst>: 01-store/ (пакет: build_kit.build(parts writecheck, door), go.mod модуля stubstore, cmd/stubstore,
+Кладёт в <dst>: 01-store/ (пакет: build_kit.build, части writecheck и door, go.mod модуля stubstore, cmd/stubstore,
 acceptance.yaml формата 2) и assembly.yaml (format 1, один модуль 01-store). --go-build собирает 01-store/bin/stubstore
 (иначе сборка — фаза build раннера: `go build -o bin/stubstore ./cmd/stubstore`). Прогон — только на сервере через
 очередь, не здесь.
@@ -52,7 +52,7 @@ def spec_version(given):
 
 def build(dst, spec=None, go_build=False):
     dst = Path(dst)
-    manifest = build_kit.build(dst, MODULE, ("writecheck", "door"))
+    manifest = build_kit.build(dst, MODULE, ("door",))
     store = dst / "01-store"
     (store / "go.mod").write_text(f"module {MODULE}\n\ngo 1.22\n", encoding="utf-8")
     cmd = store / "cmd/stubstore"
