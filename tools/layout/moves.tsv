@@ -521,3 +521,16 @@ VMS/08-exp	VMS/08-exp/spec/en/08.7-exp.norms.en.md	VMS/08-exp/spec/08.7-exp.norm
 VMS/08-exp	VMS/08-exp/spec/en/08.8-exp.norms.en.md	VMS/08-exp/spec/08.8-exp.norms.md	source
 VMS/08-exp	VMS/08-exp/spec/en/08.9-exp.norms.en.md	VMS/08-exp/spec/08.9-exp.norms.md	source
 VMS/08-exp	-	-	linked
+VMS/09-deploy	VMS/09-deploy/09-deploy.md	VMS/09-deploy/ru/09-deploy.md	lecture
+VMS/09-deploy	VMS/09-deploy/README.md	VMS/09-deploy/ru/README.md	translation
+VMS/09-deploy	VMS/09-deploy/spec/09-deploy.README.md	VMS/09-deploy/ru/spec/09-deploy.README.md	translation
+VMS/09-deploy	VMS/09-deploy/spec/09.1-deploy.norms.md	VMS/09-deploy/ru/spec/09.1-deploy.norms.md	translation
+VMS/09-deploy	VMS/09-deploy/spec/09.2-deploy.norms.md	VMS/09-deploy/ru/spec/09.2-deploy.norms.md	translation
+VMS/09-deploy	VMS/09-deploy/spec/09.3-deploy.norms.md	VMS/09-deploy/ru/spec/09.3-deploy.norms.md	translation
+VMS/09-deploy	VMS/09-deploy/spec/09.4-deploy.norms.md	VMS/09-deploy/ru/spec/09.4-deploy.norms.md	translation
+VMS/09-deploy	VMS/09-deploy/en/README.en.md	VMS/09-deploy/README.md	source
+VMS/09-deploy	VMS/09-deploy/spec/en/09-deploy.README.en.md	VMS/09-deploy/spec/09-deploy.README.md	source
+VMS/09-deploy	VMS/09-deploy/spec/en/09.1-deploy.norms.en.md	VMS/09-deploy/spec/09.1-deploy.norms.md	source
+VMS/09-deploy	VMS/09-deploy/spec/en/09.2-deploy.norms.en.md	VMS/09-deploy/spec/09.2-deploy.norms.md	source
+VMS/09-deploy	VMS/09-deploy/spec/en/09.3-deploy.norms.en.md	VMS/09-deploy/spec/09.3-deploy.norms.md	source
+VMS/09-deploy	VMS/09-deploy/spec/en/09.4-deploy.norms.en.md	VMS/09-deploy/spec/09.4-deploy.norms.md	source
