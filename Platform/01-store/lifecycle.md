@@ -39,7 +39,7 @@ The order of the runner's environment files — the unit's values → `roles/<W2
 The closed table «Daemon flags» — [P/01.3 Н1.3](spec/01.3-store.norms.md), machine form [`forms/daemon-flags.tsv`](forms/daemon-flags.tsv):
 `-dir` (required), `-id`, `-sockets`, `-rights`, `-tls`, `-raft`, `-raft-bind`, `-api`, `-bootstrap`, `-join`,
 `-group-size`, `-force`, `-isolated`, `-upper`, `-peers` (the last three — only for `recover`), `-door`, `-voters`, `-tuning`, `-leader-wait`, `-max-value`, `-max-body`, `-max-conns`,
-`-api-conns`, `-api-per-address`, `-index-base`. A flag outside the table is a start refusal, code 2. The administrative commands —
+`-api-conns`, `-api-per-address`, `-index-base`, `-groups` (only for `rights`). A flag outside the table is a start refusal, code 2. The administrative commands —
 `configstore status | join | leave | admit | backup | restore | import | recover | rights` (P/01.3 Н1.3 `admin_ops`,
 Н1.9).
 

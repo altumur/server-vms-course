@@ -4,7 +4,7 @@
 # name — the condition, snake_case, unique in the file; where a row is a check of write-checks.tsv, the same name as its check.
 # surface — http (a door), start (the daemon start), cli (an administrative command). code — an HTTP code; exit 2; exit !0 (non-zero); - (no answer).
 # kind — the wire word kind (OpenAPI *Fault); - at start and cli. fields — the fields of the body besides kind and error, comma-separated, ? — optional.
-# headers — the headers of the answer; log — what the log names (start, cli); - — none. The cause in words and «what the caller does» are prose (Н4).
+# headers — the headers of the answer (no conditional header: a prose row with several causes is several rows here); log — what the log names (start, cli); - — none. The cause in words and «what the caller does» are prose (Н4).
 chapter	row	name	surface	code	kind	fields	headers	log	norm
 1.1	1	key_rules	http	400	badkey	-	-	-	P/01.1 Н1 row.key; P/01.1 Н4
 1.1	2	body_form	http	400	badrequest	-	-	-	P/01.1 Н2.1; P/01.1 Н4
@@ -17,7 +17,9 @@ chapter	row	name	surface	code	kind	fields	headers	log	norm
 1.1	9	guard_mismatch	http	412	guard	key,index	-	-	P/01.1 Н3
 1.1	10	weight	http	413	toolarge	limit,key,size	-	-	P/01.1 Н1 row.items.ceiling
 1.1	11	body_limit	http	413	toolarge	limit,size?	-	-	P/01.1 Н2
-1.1	12	unavailable	http	503	unavailable	-	Retry-After: 1?	-	P/01.1 Н4; P/01.3 Н1.3 leader_wait
+1.1	12	no_leader_wait	http	503	unavailable	-	-	-	P/01.1 Н4; P/01.3 Н1.3 leader_wait
+1.1	12	lock_wait	http	503	unavailable	-	-	-	P/01.1 «Implementation decides» item 1
+1.1	12	connection_limit_doors	http	503	unavailable	-	Retry-After: 1	-	P/01.1 Н4; P/01.3 Н1.3 -max-conns
 1.1	13	floor_not_higher	http	409	refused	-	-	-	P/01.3 Н1.3; P/01.3 Н2
 1.1	14	ambiguous_leader	http	503	ambiguous	-	-	-	P/01.1 Н3
 1.1	15	ambiguous_medium	http	503	ambiguous	-	-	-	P/01.1 «Implementation decides» item 7
@@ -34,7 +36,6 @@ chapter	row	name	surface	code	kind	fields	headers	log	norm
 1.2	9	rights_not_admin	http	403	forbidden	-	-	-	P/01.2 Н2
 1.2	10	rights_not_loaded	http	404	badrequest	-	-	-	P/01.2 Н2
 1.2	11	rights_file_form	start	exit 2	-	-	-	rights file	P/01.2 Н1.2
-1.2	12	no_rights_flag	start	-	-	-	-	-	P/01.2 Н1.2
 1.3	1	service_body_form	http	400	badrequest	-	-	-	P/01.3 Н2; P/01.1 Н2
 1.3	2	service_body_limit	http	413	toolarge	limit,size?	-	-	P/01.3 Н2
 1.3	3	service_no_route	http	404	badrequest	-	-	-	P/01.3 Н2

@@ -71,10 +71,13 @@ def english_norms(lesson):
 
 
 def cel_env():
+    """CEL of the flag form: `f`, `cmd`; `loopback(string) -> bool` — only declared here (the host of the address is
+    127.0.0.0/8, ::1 or localhost; the implementation is in normgen runtime/prims; ADR-0125 доп. (2) п. 4)."""
     from cel_expr_python import cel
     T = cel.Type
     cfg = cel.NewEnvConfigFromYaml("name: forms\nextensions:\n  - name: strings\n")
-    return cel.NewEnv(config=cfg, variables={"f": T.Map(T.STRING, T.DYN), "cmd": T.STRING}, functions=[])
+    loopback = cel.FunctionDecl("loopback", [cel.Overload("loopback_string", T.BOOL, [T.STRING])])   # declaration only
+    return cel.NewEnv(config=cfg, variables={"f": T.Map(T.STRING, T.DYN), "cmd": T.STRING}, functions=[loopback])
 
 
 def size(text):

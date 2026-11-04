@@ -3,14 +3,14 @@
 # gate — <kind>:<argument>[:<argument>] without spaces: tests:<stage> — own tests of the implementation named after the stage; vectors:<package>
 # — the vectors of the lesson through the vector command of the implementation; build — the build of the profile; accept:<chapter>:<scenarios|*>
 # — the named scenarios of acceptance/<chapter>/scenarios.tsv (comma-separated) or * (all applicable) pass whole. A stage is closed when its
-# gate and the gates of all former stages hold. weight — the relative weight 1–5; kit — the part of kit B that closes the stage (- — none);
+# gate and the gates of all former stages hold. weight — the relative weight 1–5; kit — the parts of kit B that close the stage, comma-separated: writecheck, door, flags, refusals, tests (the generators of ADR-0125; - — none; ADR-0126 addendum (2));
 # depends — the n of former stages, comma-separated, - — none; when — CEL over the keys of the profile, empty — always applicable.
 n	stage	goal	norms	gate	weight	kit	depends	when
 1	model	The pure checks of the data model and the write command: key, items, cas, guard, id, the order of the checks	P/01.1 Н1; P/01.1 Н2.1; forms/write-checks.tsv	vectors:write-checks	2	writecheck	-	
 2	jcs	The canonical JSON text (RFC 8785) of the documents the store compares and signs by bytes	P/01.1 Н1 id; vectors/jcs	vectors:jcs	1	-	-	
 3	store_core	The chosen store in memory: the procedures of Н3 step by step — the guard before cas, the id memory, the admission time, the batch	P/01.1 Н3	tests:store_core	3	-	1,2	
-4	launch	The daemon starts by the profile — the flag table, the flat sockets, the FORMAT mark — and answers one route	P/01.3 Н1.3; forms/daemon-flags.tsv; P/01.1 Н2	accept:1.1:01-absent	2	-	3	
-5	http	The doors of chapter 1.1: routes, the parsing of Н2.1, the limits, the refusals of Н4	P/01.1 Н2; P/01.1 Н4; forms/refusals.tsv	accept:1.1:*	4	-	4	
+4	launch	The daemon starts by the profile — the flag table, the flat sockets, the FORMAT mark — and answers one route	P/01.3 Н1.3; forms/daemon-flags.tsv; P/01.1 Н2	accept:1.1:01-absent	2	flags	3	
+5	http	The doors of chapter 1.1: routes, the parsing of Н2.1, the limits, the refusals of Н4	P/01.1 Н2; P/01.1 Н4; forms/refusals.tsv	accept:1.1:*	4	door,refusals	4	
 6	rights_eval	The evaluator of the rights file on the vectors: the form of Н1.2, the patterns, never	P/01.2 Н1.2; P/01.2 Н1.3	vectors:rights-evaluator	2	-	4	
 7	rights	The rights at the doors: the check order of Н3, /v1/list, /v1/rights, the refusals of Н4	P/01.2 Н2; P/01.2 Н3; P/01.2 Н4	accept:1.2:*	3	-	5,6	
 8	durable	A file-based store: indivisibility, versions, the durability barriers, an unreadable row, a restart	P/01.1 Н1; P/01.1 «Implementation decides»; P/01.3 Н1.3	accept:1.3:08-floor-replay,19-version-restart,20-spoil-row,22-spoil-row-guard,30-batch-restart	3	-	5	

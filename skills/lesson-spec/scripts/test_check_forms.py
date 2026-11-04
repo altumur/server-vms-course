@@ -66,7 +66,7 @@ class Forms(unittest.TestCase):
 
     def test_refusal_rows_cover_prose(self):
         text = (self.lesson / "forms/refusals.tsv").read_text(encoding="utf-8")
-        line = next(x for x in text.split("\n") if x.startswith("1.2\t12\t"))
+        line = next(x for x in text.split("\n") if x.startswith("1.2\t11\t"))
         self.edit("forms/refusals.tsv", line + "\n", "")
         self.assertTrue(self.refusals())
 
