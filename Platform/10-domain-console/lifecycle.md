@@ -9,8 +9,8 @@
 
 - Юнит `w2c-domainconsole.service`, роль `domainconsole`, раннер `w2c-run.sh domainconsole`, `W2C_ROLE=domainconsole`,
   `User=w2c`, группы `w2c-store w2c-events` (разбор ревью стадии A 8–10, № 33); кольца и группы `w2c-secrets` нет —
-  [P/02.4 Н1.12](../02-installer/spec/02.4-installer.norms.md); общее юнитов — P/02.4 Н1.1 `common`
-  ([P/02.4](../02-installer/spec/02.4-installer.norms.md)).
+  [P/02.4 Н1.12](../02-installer/ru/spec/02.4-installer.norms.md); общее юнитов — P/02.4 Н1.1 `common`
+  ([P/02.4](../02-installer/ru/spec/02.4-installer.norms.md)).
 - У кластера-держателя, рядом с процессом `domain`. Строк держателя консоль не пишет: правки передаёт процессу
   `domain` ([P/10 Н1.3](spec/10-domain-console.norms.md) — передача; приём —
   [P/08.0 Н1.8](../08-domain/spec/08.0-domain.norms.md)); очередь `domain/signer-turn` ей не нужна
@@ -26,7 +26,7 @@
 |---|---|---|---|
 | `W2C_ROLE` | роль `domainconsole` | юнит | P/02.4 Н1.2 |
 | `PLATFORM_DIR`, `PLATFORM_STORE`, `OBJECTS`, `RESOURCE_ROOT` / `EVENTS` | состояние, дверь хранилища, корни объектов и событий (журнал роли пишется) | P/02.4 Н1.2 | P/02.4 Н1.2 «Канал настройки и раскладка» |
-| `DOMAIN_CONSOLE_HOST`, `DOMAIN_CONSOLE_PORT` | дверь оператора домена; консоли членов пересылают сюда; TLS — по комплекту роли (P/02.4 Н1.6, [договор сертификата роли](../common/contracts/role-certificate.md) `kit`; ADR-0075 доп. 2026-10-26 (2) п. 4) | `0.0.0.0:8444` — умолчание процесса (юнит не пишет), не явный адрес: только с комплектом, без комплекта — отказ старта, код 2 (P/02.4 Н1.6 `process`; ADR-0075 доп. 2026-10-26 (3) п. 5, (4) п. 4; ревью норм ADR-0075, Claude fd85ea8cc, С-3) | [P/02.4 Н1.12](../02-installer/spec/02.4-installer.norms.md) |
+| `DOMAIN_CONSOLE_HOST`, `DOMAIN_CONSOLE_PORT` | дверь оператора домена; консоли членов пересылают сюда; TLS — по комплекту роли (P/02.4 Н1.6, [договор сертификата роли](../common/contracts/role-certificate.md) `kit`; ADR-0075 доп. 2026-10-26 (2) п. 4) | `0.0.0.0:8444` — умолчание процесса (юнит не пишет), не явный адрес: только с комплектом, без комплекта — отказ старта, код 2 (P/02.4 Н1.6 `process`; ADR-0075 доп. 2026-10-26 (3) п. 5, (4) п. 4; ревью норм ADR-0075, Claude fd85ea8cc, С-3) | [P/02.4 Н1.12](../02-installer/ru/spec/02.4-installer.norms.md) |
 | `SIGNER_URL` | дверь процесса `domain` своей коробки — передача правок; проверка сервера — [договор сертификата роли](../common/contracts/role-certificate.md) «Клиент двери своего кластера» (хост — литерал петли — имя `SERVER_NAME`; `localhost` — имя) | `http://localhost:8445` (стенд одной машины, как [жизненный цикл P/08](../08-domain/lifecycle.md); разбор ревью стадии A 8–10, № 33) | [P/10 Н1.3](spec/10-domain-console.norms.md) (передача; приём — P/08.0 Н1.8); [P/08.2 Н1.3](../08-domain/spec/08.2-domain.norms.md) |
 | `LOGIN_URL` | вход людей, значение `login_url` в `/session` | `/api/login` | [договор сторожевой и передачи](../common/contracts/gate-and-pass.md) `session` `login_url`; [P/08.4 Н1.2](../08-domain/spec/08.4-domain.norms.md); P/02.4 Н1.2 |
 | `TIMEZONE` | часовой пояс: значение `timezone` в `/session`; из `w2c.env` своей коробки; пустое или не по форме — код 2 | `UTC` | [договор файла окружения](../common/contracts/env-file.md); [P/10 Н1.7](spec/10-domain-console.norms.md) `session` |
@@ -42,7 +42,7 @@
 - Читает строки держателя (`domain/*` кроме `!domain/signer*` и `!domain/idem/*`, P/02.5 Н1.4); своих строк не пишет; чтения — абзац
   «Данные» [P/10 Н1](spec/10-domain-console.norms.md) и каталог данных [`common/data/catalog.tsv`](../common/data/catalog.tsv),
   читатель `domainconsole`.
-- Кольца нет ([P/02.4 Н1.12](../02-installer/spec/02.4-installer.norms.md)).
+- Кольца нет ([P/02.4 Н1.12](../02-installer/ru/spec/02.4-installer.norms.md)).
 - Страница держателя — та же страница модуля консоли, `sections: [domain]` ([P/10 Н1.7](spec/10-domain-console.norms.md));
   поставка модуля — с бинарником консоли, не из `$CAMMETA_SPECS` ([P/06.5](../06-console/spec/06.5-console.norms.md) Н1.1 `module`).
 - Журнал роли — `<корень событий>/audit/domainconsole/e1/…`, тревога `session.debug_open` — `audit.alarms/domainconsole`
@@ -66,7 +66,7 @@
 ## Стенд
 
 Корни `{data}/config`, `objects`, `events` до старта процесса создаёт команда запуска роли профиля — [общий README
-приёмки](../common/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
+приёмки](../common/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../02-installer/ru/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
 
 Стенд нескольких кластеров ([общий README приёмки](../common/acceptance/README.md#стенд-домена), раздел «Стенд домена»): `@start domain` поднимает процессы `domain` и консоли домена на
 `hold`; дверь `holder <запрос>` — консоль домена на `hold`, `holder@<кластер>` — на другом кластере после переноса;

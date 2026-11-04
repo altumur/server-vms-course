@@ -9,8 +9,8 @@
 [3.3](spec/03.3-worker.norms.md) (Н3 «цикл()»), [3.4](spec/03.4-worker.norms.md) (Н1.1 пульс, Н3 «старт() — шаг бюджета»,
 «остановка по SIGTERM», Н4), [3.5](spec/03.5-worker.norms.md) (Н1.2 кольцо, Н3 «открыть»), [3.6](spec/03.6-worker.norms.md)
 (Н1.2 события);
-[P/02.4](../02-installer/spec/02.4-installer.norms.md) (Н1.1 юниты, Н1.2 окружение, Н1.5
-воркеры по заказу), [P/02.3](../02-installer/spec/02.3-installer.norms.md) (Н3 «Старт процесса», «Смена
+[P/02.4](../02-installer/ru/spec/02.4-installer.norms.md) (Н1.1 юниты, Н1.2 окружение, Н1.5
+воркеры по заказу), [P/02.3](../02-installer/ru/spec/02.3-installer.norms.md) (Н3 «Старт процесса», «Смена
 манифеста»), [P/06.6](../06-console/spec/06.6-console.norms.md) (Н1.1а строка схемы),
 [договор замка присутствия](../common/contracts/presence-lock.md), [договор журнала событий](../common/contracts/event-journal.md) (бакеты),
 [договор местной двери токенов](../common/contracts/local-token-door.md) (просьба токена, глава 3.7).
@@ -29,7 +29,7 @@
 Окружение собирает раннер `w2c-run.sh worker <sub> <слот>` (воркер на домене — `domainworker <sub>`) в порядке P/02.4 Н1.2,
 том же, что у процессов платформы; раннер исполняет `worker.exec` строки манифеста и передаёт `W2C_MANIFEST_REV`
 (ADR-0091 доп. (4)–(6)): значения юнита → `roles/<W2C_ROLE>.env` → `w2c.env` →
-файл подсистемы, раньше прочитанное побеждает ([02-installer/lifecycle.md](../02-installer/lifecycle.md)).
+файл подсистемы, раньше прочитанное побеждает ([02-installer/lifecycle.md](../02-installer/ru/lifecycle.md)).
 
 | Переменная | Смысл | Умолчание | Норма |
 |---|---|---|---|
@@ -90,7 +90,7 @@
 ## Стенд
 
 Корни `{data}/config`, `objects`, `events` до старта процесса создаёт команда запуска роли профиля — [общий README
-приёмки](../common/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
+приёмки](../common/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../02-installer/ru/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
 
 «Стенд» — [общий README приёмки](../common/acceptance/README.md): `@start worker [<sub>]
 <имя>` — имя подстановкой `{name}` (аргумент), `{sub}`; окружение от `{data}` (`PLATFORM_DIR`), `BOX_ID` стенда,

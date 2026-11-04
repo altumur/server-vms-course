@@ -270,7 +270,7 @@ This is a suggested order, not a mandatory structure of the code.
 2. Take the full forms of drain (Н2.2). Distinguish safe by observations from a confirmed rest before the shutdown;
    missing/stale pending — unknown, not zero (Н1.2).
 3. Make the doors per Н2. The policy and where belong to the subsystem; drain and servers — to the console root.
-   In UnitRef and both maps of drain the subsystem name follows [Н1.2 P/02.1](../../../02-installer/spec/02.1-installer.norms.md#н12-документ):
+   In UnitRef and both maps of drain the subsystem name follows [Н1.2 P/02.1](../../../02-installer/spec/02.1-installer.norms.md#н12-document):
    the whole closed list of reserved names applies both to the reference prefix and to the map keys.
    The field subsystem has the same grammar; the agreement of the map keys,
    the values of subsystem and the visibility are checked separately from the schema.

@@ -1,8 +1,8 @@
 # Acceptance P/02.1 — the verdicts of the manifest loader
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/1/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The scenarios of [the norms of chapter 2.1](../../../spec/02.1-installer.norms.md) Н5 (ADR-0080); the stand — [the common acceptance README](../../../../common/acceptance/README.md). The door of the chapter is the loader itself: a file is given alone, as the manifest of a subsystem, and the answer is one of two.
+The scenarios of [the norms of chapter 2.1](../../spec/02.1-installer.norms.md) Н5 (ADR-0080); the stand — [the common acceptance README](../../../common/acceptance/README.md). The door of the chapter is the loader itself: a file is given alone, as the manifest of a subsystem, and the answer is one of two.
 
 ## verdicts.tsv
 
@@ -24,7 +24,7 @@ The rules by which the verdicts are set are the norms of the chapter Н1 (text, 
 
 ## puts.tsv
 
-The manifest installation `manifest put` (`puts.tsv`, `puts/`) — [the acceptance of chapter 2.3](../../3/README.md).
+The manifest installation `manifest put` (`puts.tsv`, `puts/`) — [the acceptance of chapter 2.3](../3/README.md).
 
 ## classes.tsv
 

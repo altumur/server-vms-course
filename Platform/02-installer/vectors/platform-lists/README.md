@@ -1,9 +1,9 @@
 # Vectors: the closed lists of the platform
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/platform-lists/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter [P/02.5](../../../spec/02.5-installer.norms.md) of the installer (Н1.3 `roles`, `platform_readers`; Н1.4 —
-the negations of the secret readers; review analysis of stage A 6–7, № 5). The participants are the loader [P/02.1](../../../spec/02.1-installer.norms.md)
+The owner is chapter [P/02.5](../../spec/02.5-installer.norms.md) of the installer (Н1.3 `roles`, `platform_readers`; Н1.4 —
+the negations of the secret readers; review analysis of stage A 6–7, № 5). The participants are the loader [P/02.1](../../spec/02.1-installer.norms.md)
 (Н1.2а: `heartbeat.strings` names no string fields of the platform heartbeat; `display.tree.columns[].field` and
 `display.form[].fields[]` — a field of the unit or a name from `platform_shown`; `objects.rows[]` names no families of the platform) and
 the rights generator P/02.5 Н2. The bytes are written by the Specification; the conformance of the product — by its acceptance against this table (ADR-0080
@@ -34,9 +34,9 @@ Who executes — by `list`, the installer (`02-installer`): `heartbeat_strings`,
 The expectation column is `word`, the set of words of one `list`: one call per list, the input — `cells` `{"list": <имя>}`; the outcome —
 code 0 and a JSON array of strings — all words of this closed list of the side; the comparison — equality of sets with the words of the rows
 of the table of this `list` (order and repeats do not matter) (the Architect's decision of 2026-10-27; the common rule «Vectors» of [the common acceptance
-README](../../../../common/acceptance/README.md)).
+README](../../../common/acceptance/README.md)).
 
 ## What the vector does not cover
 
-The loader refusal on a manifest that names a word from the list — the cases of the corpus of [the acceptance of P/02.1](../../../acceptance/1/);
-the derivation of the rights for the secret rows — the variants of [the acceptance of P/02.5](../../../acceptance/5/) and sc. 06 of [the acceptance of chapter 6.2](../../../../06-console/acceptance/2/README.md).
+The loader refusal on a manifest that names a word from the list — the cases of the corpus of [the acceptance of P/02.1](../../acceptance/1/);
+the derivation of the rights for the secret rows — the variants of [the acceptance of P/02.5](../../acceptance/5/) and sc. 06 of [the acceptance of chapter 6.2](../../../06-console/acceptance/2/README.md).

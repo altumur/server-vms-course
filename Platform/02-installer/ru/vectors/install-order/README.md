@@ -1,6 +1,6 @@
 # Векторы: порядок первичной установки манифестов
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+Текст производный от `vectors/install-order/README.md`, руками не правится: источник — английский [`vectors/install-order/README.md`](../../../vectors/install-order/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
 Владелец — глава [P/02.4](../../spec/02.4-installer.norms.md) установщика (Н1.7 `install` `steps`, `order`; догадка стадии C
 I02-INSTALL-ORDER, решение «Архитектора» 2026-10-23). Участник — установщик (`install.sh`, шаг `manifest put`). Байты пишет
@@ -21,8 +21,8 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 ## Команда стенда `install-order`
 
-Ключ `stand` профиля `02-installer` (раздел «Раскладка по процессам» [общего README приёмки](../../../common/acceptance/README.md)),
-по образцу `door-token-verify` ([векторы door-token](../../../common/vectors/door-token/README.md)): шаблон с `{input}` —
+Ключ `stand` профиля `02-installer` (раздел «Раскладка по процессам» [общего README приёмки](../../../../common/acceptance/README.md)),
+по образцу `door-token-verify` ([векторы door-token](../../../../common/vectors/door-token/README.md)): шаблон с `{input}` —
 путь файла, в который раннер пишет байты ячейки `input` строки как есть. stdout — ровно один JSON-объект в UTF-8 и LF,
 код 0: `{"result":"ok","order":[…]}` — сравнивается с `expect` по значению JSON, — или `{"result":"refused"}` (`expect` — `@exit 2`). Вход не по
 форме (неверный тип, незнакомое или повторное поле, повторное имя в `manifests`) — код 2, stdout пуст; отказ правила на входе по форме — код 0, `{"result":"refused"}` (догадка стадии C I02-STAND-FORM, решение «Архитектора» 2026-10-23). Иной код, иной `result`, лишние поля или байты — FAIL строки (догадка стадии C I02-STAND, решение «Архитектора» 2026-10-23).

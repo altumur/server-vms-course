@@ -9,7 +9,7 @@
 «Урок» словаря; разбор ревью стадии B 8–10, № 22: М-1). Профиль реализации объявляет `keys.tls_stand: 1`; без него проверки этого стенда не исполнены
 (не GREEN). Нормы: серверная сторона класса `signed` — договор сертификата роли «Серверная сторона: класс `signed`»
 ([P/08.0 Н1.6](../../../08-domain/spec/08.0-domain.norms.md), P/08.0-02), слушатель `SIGNER_URL` — строка `signer` того же договора и
-[P/02.4 Н1.6](../../../02-installer/spec/02.4-installer.norms.md) `client_cert` (ADR-0083 доп. (20), доп. (21)); отпечатки центра члена, `on_accept`, `admin` —
+[P/02.4 Н1.6](../../../02-installer/ru/spec/02.4-installer.norms.md) `client_cert` (ADR-0083 доп. (20), доп. (21)); отпечатки центра члена, `on_accept`, `admin` —
 [P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md); `client`, `first` и функция `peer` — [договор `peer`](../../contracts/peer.md);
 пересылка — [договор пересылки](../../contracts/forwarding.md); класс `role` — [P/10 Н1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`
 (P/10-11); договор сертификата роли — [`role-certificate.md`](../../contracts/role-certificate.md); перенос —
@@ -200,7 +200,7 @@ cluster: hold, path: /domain, user: <имя токена стенда>, status: 
 ## Клиент своей коробки и умолчания адресов (ADR-0075 доп. 2026-10-26 (4) п. 7, (5) п. 4)
 
 Нормы: [договор сертификата роли](../../contracts/role-certificate.md) «Клиент двери своего кластера» (`own_client`,
-`loopback`); [P/02.4 Н1.6](../../../02-installer/spec/02.4-installer.norms.md) `process`, `console`; Н1.12 и lifecycle
+`loopback`); [P/02.4 Н1.6](../../../02-installer/ru/spec/02.4-installer.norms.md) `process`, `console`; Н1.12 и lifecycle
 P/08, P/10 (умолчания адресов). Директива `@kit-start` — словарь «Стенда домена» общего README (форма согласована
 «cammeta-acceptance» 2026-10-26). Подготовка — `@tls-setup …/stand.json` (комплект `named`); шаги не требуют
 `@domain` и кластеров стенда домена: процесс стартует один, на коробке стенда с его хранилищем и манифестами.

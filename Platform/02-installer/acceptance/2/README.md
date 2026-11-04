@@ -1,17 +1,17 @@
 # Acceptance P/02.2 — the canonical view on the installation `manifest put`
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/2/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md). The norm of the chapter is
-[`02.2-installer.norms.md`](../../../spec/02.2-installer.norms.md) Н5; the write of the view is [chapter 2.3](../../../spec/02.3-installer.norms.md)
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md). The norm of the chapter is
+[`02.2-installer.norms.md`](../../spec/02.2-installer.norms.md) Н5; the write of the view is [chapter 2.3](../../spec/02.3-installer.norms.md)
 Н3 «Manifest change» (the installer). `puts.tsv` has 9 installations; the installation files are in `puts/`. The window of chapter 2.2 is
 `decisions/inbox/2026-10-20-окно-главы-2.2-канонический-вид.md`, section 4 and the Architect's decision (item 8): the view is built before
 any write, a view above the ceiling is a refusal of the installation as a whole, the write order is row, view, mark last. The bytes of the view are
-the vectors [`canonical`](../../../vectors/canonical/README.md); here — the wrapper, `rev`, «unchanged» and the boundary of the view ceiling.
+the vectors [`canonical`](../../vectors/canonical/README.md); here — the wrapper, `rev`, «unchanged» and the boundary of the view ceiling.
 
 ## puts.tsv
 
-The format of `puts.tsv` of [chapter 2.3](../../3/README.md) with a fourth column `canonical` and with directives between files. The installation is
+The format of `puts.tsv` of [chapter 2.3](../3/README.md) with a fourth column `canonical` and with directives between files. The installation is
 the command `manifest-put {socket} {file}` of the section «Stand» of the common acceptance README; the store is an instance of the «Stand» with a row ceiling of
 524288 bytes (common README, «Параметры каждого экземпляра»).
 
@@ -23,7 +23,7 @@ line not skipped is the header `case<TAB>puts<TAB>expect<TAB>canonical`, then on
   `@view-spoil`, `@rev-delete`, `@rev-spoil`; a file comes first and last;
 - `expect` — `<код> <rev>`: `<код>` is the return code of the **last** installation (`0` or `2`), `<rev>` is the decimal `rev` of the row
   `platform/manifest/<name>` after it, where `<name>` is the `name` of the last file; `-` — there is no row;
-- `canonical` — the case name of [`vectors/canonical/cases.tsv`](../../../vectors/canonical/cases.tsv), whose bytes `expect/<case>.json`
+- `canonical` — the case name of [`vectors/canonical/cases.tsv`](../../vectors/canonical/cases.tsv), whose bytes `expect/<case>.json`
   are the expected field `manifest` of the view row; `-` — there is no view row.
 
 **Directives** (between installations, through `admin.sock` of the instance — `{socket}` of the «Stand», the operations of P/01.1; `<name>` is the `name`
@@ -47,7 +47,7 @@ failed). After the last installation the runner compares:
    `items`; `-` — `items: null`);
 4. the mark `platform/manifest/<name>/rev`: its `rev` is the same `<rev>`, `sha256` is the `sha256` of the row; `-` — there is no mark; with code `2`
    after `@rev-spoil` — the mark is the one the directive wrote (`rev` — `"x"`): the refused installation does not touch it;
-5. the view row `platform/manifest/<name>/canonical/1` (`items` by the codec of [the family `canonical-row`](../../../data/canonical-row.schema.json)):
+5. the view row `platform/manifest/<name>/canonical/1` (`items` by the codec of [the family `canonical-row`](../../data/canonical-row.schema.json)):
    `form` — `"1"`, `rev` — `<rev>`, `sha256` — the `sha256` of the row, `manifest` — the bytes `expect/<canonical>.json` of the vector byte for
    byte; extra fields are not compared; `canonical` = `-` — there is no view row.
 
@@ -66,7 +66,7 @@ of the view after a `cas` conflict — by reading per Н5 of the chapter.
 | 06 | `view_at_ceiling` | the weight of the view row is exactly 524288 — the view is written, the row and the mark rev 2; the boundary of the domain of accepted manifests | P/02.2 Н1.2 `ceiling` (ADR-0089 addendum (1) Р11) |
 | 07 | `sugared` | the sugar `tables`, `bound_to`, without `snapshot` and `display` — the installer's view equals the vector | P/02.2-02, P/02.2-03 |
 | 08 | `rev_deleted` | there is no mark, the file is the same — «unchanged»: the row and the view are the former rev 1, the mark is brought up to date — rev 1, the `sha256` of the row (the Gemini audit P/02, property 13) | P/02.3 Н3 «Manifest change» («метки нет … → довести»), P/02.3-03 |
-| 09 | `rev_spoiled` | the mark is not by the form (`rev` — `"x"`), the file is the same — a refusal, code 2, nothing is written: the row and the view are the former rev 1, the mark is the spoiled one (property 14) | P/02.3 Н1.5 `rules`, [`manifest-rev.outcomes.tsv`](../../../data/manifest-rev.outcomes.tsv) (the reader `admin`), P/02.3-01 |
+| 09 | `rev_spoiled` | the mark is not by the form (`rev` — `"x"`), the file is the same — a refusal, code 2, nothing is written: the row and the view are the former rev 1, the mark is the spoiled one (property 14) | P/02.3 Н1.5 `rules`, [`manifest-rev.outcomes.tsv`](../../data/manifest-rev.outcomes.tsv) (the reader `admin`), P/02.3-01 |
 
 The weight of the view row is the sum of the bytes of the names and values of `items` (P/01.1 Н1): `form` `"1"`, `rev` of one digit, `sha256` 64 characters,
 `manifest` — `87 +` the length of the view. The files 05 and 06 differ by one byte of the field `display.unit` (after `worker.exec` the field is shortened by 49 bytes: the view of 06 is again 524201); their manifest rows are under the ceiling.

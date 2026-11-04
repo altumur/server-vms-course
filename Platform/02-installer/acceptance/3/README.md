@@ -1,10 +1,10 @@
 # Acceptance P/02.3 — the manifest installation `manifest put`
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md). The norm of the chapter is
-[`02.3-installer.norms.md`](../../../spec/02.3-installer.norms.md) Н5. `puts.tsv` has 82 installations (9 after `near_*` — the coverage audit P/02 of 2026-10-30, the next 16 — its second pass, below; the 11 next ones — ADR-0094 B7; 3 `calls_*` — the callback list at a subsystem of the catalogue, ADR-0094 B1; the 3 last `calls_first_*`, `calls_second_kind` — ADR-0112 addendum (3) item 2); the installation files are in `puts/`.
-The table and the files were moved from the acceptance of М10/2 (stage B) without changes; the loader corpus is [the acceptance of chapter 2.1](../../1/README.md).
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md). The norm of the chapter is
+[`02.3-installer.norms.md`](../../spec/02.3-installer.norms.md) Н5. `puts.tsv` has 82 installations (9 after `near_*` — the coverage audit P/02 of 2026-10-30, the next 16 — its second pass, below; the 11 next ones — ADR-0094 B7; 3 `calls_*` — the callback list at a subsystem of the catalogue, ADR-0094 B1; the 3 last `calls_first_*`, `calls_second_kind` — ADR-0112 addendum (3) item 2); the installation files are in `puts/`.
+The table and the files were moved from the acceptance of М10/2 (stage B) without changes; the loader corpus is [the acceptance of chapter 2.1](../1/README.md).
 
 ## puts.tsv
 
@@ -29,7 +29,7 @@ line not skipped is the header `case<TAB>puts<TAB>expect`, then one line per cas
   (replace the former one); it applies to the following installations of the line; the working copy is its own for each line.
 
 **The files of the list.** Next to the working copy of the manifest of each installation the runner puts the whole content of
-[`06-console/acceptance/5/inputs/testsub2/`](../../../../06-console/acceptance/5/inputs/testsub2) under the same paths — the same files as
+[`06-console/acceptance/5/inputs/testsub2/`](../../../06-console/acceptance/5/inputs/testsub2) under the same paths — the same files as
 `testsub2` has on the stand (common README, «Манифесты»); P/02.3 Н3 reads them next to the manifest file. There is no directive for them: the files do not change between
 installations. The shell next to the manifest appears only by `@shell-put`.
 
@@ -69,7 +69,7 @@ waits; the target after an incompatible client — a refusal at the installation
 ## corrections.tsv
 
 The log of AI corrections (ADR-0080 addendum 1): `date`, `sample` (a sample of a generation error), `fix` (which line of the chapter was clarified),
-`languages`. The former corrections of `puts.tsv` are in the log of [chapter 2.1](../../1/corrections.tsv) (the line 2026-10-17 `02/m49_*, puts.tsv`).
+`languages`. The former corrections of `puts.tsv` are in the log of chapter 2.1 (`journal/corrections-1.tsv`, a log, not in the export) (the line 2026-10-17 `02/m49_*, puts.tsv`).
 
 ## Checks by reading
 

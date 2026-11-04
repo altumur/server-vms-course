@@ -13,7 +13,7 @@
 Сборку на всех краях без стенда проверяет вектор [`assemble`](../../vectors/assemble/README.md) (17 строк, бывший сц. 06
 приёмки М11/05). Сц. 02 `notes-unique` приёмки М11/05 — [приёмка главы 6.7](../../../06-console/acceptance/7/README.md) сц. 13, сц. 04 `slot-liveness` — [приёмка главы 9.1](../../../09-agent/acceptance/1/README.md) сц. 13.
 Отказы объявления книги и индекса имён — случаи `m51_books_*`, `m59_names_*` корпуса
-[P/02.1](../../../02-installer/acceptance/1/README.md).
+[P/02.1](../../../02-installer/ru/acceptance/1/README.md).
 
 ## Подготовка
 

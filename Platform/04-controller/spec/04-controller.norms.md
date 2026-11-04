@@ -35,7 +35,7 @@
 журнал `unit.unplaced_deleted` (Н3 «проход()», шаг 8) и тревоги (`workers.raise_failed` — Н1.4, hung/unsure — шаг 3) пишет в
 `audit/<роль>` и `audit.alarms/<роль>`, файл `%h<sha256>.name` — по [договору журнала
 событий](../../common/contracts/event-journal.md) (`journal`, `writer`, «Имена файлов»); ключ своего комплекта — для
-дверей ресурса по HTTPS ([P/02.4 Н1.6](../../02-installer/spec/02.4-installer.norms.md) `roles`) (разбор ревью стадии B 3–5, № 10).
+дверей ресурса по HTTPS ([P/02.4 Н1.6](../../02-installer/ru/spec/02.4-installer.norms.md) `roles`) (разбор ревью стадии B 3–5, № 10).
 
 Строки `<sub>/policy`, `platform/servers/<сервер>`, `platform/drain`, `platform/decommission/<сервер>` (пишет консоль, P/06.6) и
 `platform/doors/<сервер>` (пишет ресурс, P/05) в Н1.1 — форма, которую читает контроллер; владелец строки —

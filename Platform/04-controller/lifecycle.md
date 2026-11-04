@@ -5,9 +5,9 @@
 
 Текст производный от en, руками не правится: источник — английский [`en/lifecycle.en.md`](en/lifecycle.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 2).
 
-[P/02.3]: ../02-installer/spec/02.3-installer.norms.md
-[P/02.4]: ../02-installer/spec/02.4-installer.norms.md
-[P/02.5]: ../02-installer/spec/02.5-installer.norms.md
+[P/02.3]: ../02-installer/ru/spec/02.3-installer.norms.md
+[P/02.4]: ../02-installer/ru/spec/02.4-installer.norms.md
+[P/02.5]: ../02-installer/ru/spec/02.5-installer.norms.md
 [P/04]: spec/04-controller.norms.md
 [P/06.6]: ../06-console/spec/06.6-console.norms.md
 [Стенд]: ../common/acceptance/README.md
@@ -93,7 +93,7 @@
 ## Стенд
 
 Корни `{data}/config`, `objects`, `events` до старта процесса создаёт команда запуска роли профиля — [общий README
-приёмки](../common/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
+приёмки](../common/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../02-installer/ru/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
 
 - Команда «Стенда» с подстановкой `{sub}` (без `<sub>` — `testsub`); `{data}` — это `PLATFORM_DIR`, стенд переводит
   подстановки в окружение [P/02.4] Н1.2 ([Стенд] «Один каталог данных»).

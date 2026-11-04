@@ -1,8 +1,8 @@
 # Vectors: the on-demand workers script
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/workers-script/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter [P/02.4](../../../spec/02.4-installer.norms.md) of the installer (Н1.5 «Workers on demand», `rules` 2–4;
+The owner is chapter [P/02.4](../../spec/02.4-installer.norms.md) of the installer (Н1.5 «Workers on demand», `rules` 2–4;
 ADR-0084 addendum (1) Р1, Р4; moved from М10/11, stage B). The participant is `w2c-workers.sh` of the server. The bytes are written by the Specification (ADR-0083, stage A, A6; review of stage A 2).
 
 ## `cases.tsv`
@@ -30,7 +30,7 @@ the value is not by the metric form of P/06.5 Н3 «/metrics — текст» (i
 (rules 2); the console is silent or `reconcile_age` is greater than 60 or `-1` (rules 2); there is no role file, the budget is not a positive
 integer, `CAPACITY` is not an integer > 0 or the divisor is zero (rules 4). Comparison — JSON by value.
 
-Not covered by the vectors: the serialization of passes and the reservation of numbers (rules 5) — by the stand acceptance (`@grow`, [the common acceptance README](../../../../common/acceptance/README.md); review analysis of stage B 3–5, № 33)
+Not covered by the vectors: the serialization of passes and the reservation of numbers (rules 5) — by the stand acceptance (`@grow`, [the common acceptance README](../../../common/acceptance/README.md); review analysis of stage B 3–5, № 33)
 and by reading; a single execution mechanism (rules 6) — by reading.
 
 ## Who executes

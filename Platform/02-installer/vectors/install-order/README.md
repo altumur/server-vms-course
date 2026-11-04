@@ -1,8 +1,8 @@
 # Vectors: the order of the initial installation of manifests
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/install-order/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter [P/02.4](../../../spec/02.4-installer.norms.md) of the installer (Н1.7 `install` `steps`, `order`; guess of stage C
+The owner is chapter [P/02.4](../../spec/02.4-installer.norms.md) of the installer (Н1.7 `install` `steps`, `order`; guess of stage C
 I02-INSTALL-ORDER, the Architect's decision of 2026-10-23). The participant is the installer (`install.sh`, the step `manifest put`). The bytes are written by
 the Specification.
 
@@ -21,8 +21,8 @@ before changes. Comparison — JSON by value.
 
 ## Stand command `install-order`
 
-The key `stand` of the profile `02-installer` (the section «Layout by processes» of [the common acceptance README](../../../../common/acceptance/README.md)),
-following the pattern of `door-token-verify` ([the door-token vectors](../../../../common/vectors/door-token/README.md)): a template with `{input}` —
+The key `stand` of the profile `02-installer` (the section «Layout by processes» of [the common acceptance README](../../../common/acceptance/README.md)),
+following the pattern of `door-token-verify` ([the door-token vectors](../../../common/vectors/door-token/README.md)): a template with `{input}` —
 the path of the file into which the runner writes the bytes of the cell `input` of the row as they are. stdout — exactly one JSON object in UTF-8 and LF,
 code 0: `{"result":"ok","order":[…]}` — compared with `expect` by JSON value, — or `{"result":"refused"}` (`expect` — `@exit 2`). An input not by
 form (a wrong type, an unknown or repeated field, a repeated name in `manifests`) — code 2, stdout empty; a refusal by a rule on an input that is by form — code 0, `{"result":"refused"}` (guess of stage C I02-STAND-FORM, the Architect's decision of 2026-10-23). A different code, a different `result`, extra fields or bytes — FAIL of the row (guess of stage C I02-STAND, the Architect's decision of 2026-10-23).

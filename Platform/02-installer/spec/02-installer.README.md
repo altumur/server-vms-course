@@ -1,8 +1,8 @@
 # P/02 — instructions for an implementation
 
-This English text is the source; the Russian [`02-installer.README.md`](../02-installer.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/02-installer.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is [`../02-installer.md`](../../02-installer.md).
+This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/02-installer.md` (for people, not in the export).
 
 ## Task
 
@@ -10,43 +10,43 @@ Implement the installer of lesson P/02 in the language `<LANG>` by four chapters
 reading and changing a manifest in the store (chapter 2.3), the units, the runner, the installer and the operator procedures (chapter 2.4), generation of
 rights from the manifest catalogue (chapter 2.5). Pass the Н5 acceptance of the chapters and close their readiness checklists.
 
-- **2.1.** Implement strict loading of a manifest and of a manifest catalogue per Н1–Н4 of [chapter 2.1](../02.1-installer.norms.md). Pass
-  the Н5 acceptance by the regular loading path and close the whole [readiness checklist](../02.1-installer.norms.md#чеклист-готовности).
+- **2.1.** Implement strict loading of a manifest and of a manifest catalogue per Н1–Н4 of [chapter 2.1](02.1-installer.norms.md). Pass
+  the Н5 acceptance by the regular loading path and close the whole [readiness checklist](02.1-installer.norms.md#readiness-checklist).
   The main input of the chapter is the procedure `загрузить(байты, источник)`, not an HTTP door.
-- **2.2.** The canonical view of a manifest per [chapter 2.2](../02.2-installer.norms.md): the projection of Н1.1 (sugar, defaults, the steps П1–П5,
+- **2.2.** The canonical view of a manifest per [chapter 2.2](02.2-installer.norms.md): the projection of Н1.1 (sugar, defaults, the steps П1–П5,
   `ordered`, JCS), the view row of Н1.2 and the write of `manifest put` per Н3 — the view before the write, above the ceiling — a refusal as a whole, the order
-  row — view — mark. Pass the vectors [`canonical`](../../vectors/canonical/README.md) byte for byte and the acceptance of the chapter
-  [`acceptance/2/`](../../acceptance/2/README.md) (window 2.2, item 8: vectors and acceptance).
-- **2.3.** Reading and changing a manifest in the store per Н1.5 and Н3 of [chapter 2.3](../02.3-installer.norms.md); close its
-  [readiness checklist](../02.3-installer.norms.md#чеклист-готовности).
-- **2.4.** Prepare the processes/units, the runner, the installer and the operator procedures of Н1 of [chapter 2.4](../02.4-installer.norms.md).
-- **2.5.** Generate rights from the manifest catalogue per [chapter 2.5](../02.5-installer.norms.md). The rights evaluator, the form of the file and the door
-  `/v1/rights` are chapter [P/01.2](../../../01-store/spec/01.2-store.norms.md) and its steps of the instructions
-  [01-store.README.md](../../../01-store/spec/01-store.README.md). The setup of the user, groups, sockets and certificates
+  row — view — mark. Pass the vectors [`canonical`](../vectors/canonical/README.md) byte for byte and the acceptance of the chapter
+  [`acceptance/2/`](../acceptance/2/README.md) (window 2.2, item 8: vectors and acceptance).
+- **2.3.** Reading and changing a manifest in the store per Н1.5 and Н3 of [chapter 2.3](02.3-installer.norms.md); close its
+  [readiness checklist](02.3-installer.norms.md#readiness-checklist).
+- **2.4.** Prepare the processes/units, the runner, the installer and the operator procedures of Н1 of [chapter 2.4](02.4-installer.norms.md).
+- **2.5.** Generate rights from the manifest catalogue per [chapter 2.5](02.5-installer.norms.md). The rights evaluator, the form of the file and the door
+  `/v1/rights` are chapter [P/01.2](../../01-store/spec/01.2-store.norms.md) and its steps of the instructions
+  [01-store.README.md](../../01-store/spec/01-store.README.md). The setup of the user, groups, sockets and certificates
   is tied to chapter 2.4: the units of Н1.1 (`User=`, `SupplementaryGroups=`), the sockets — P/01.3 Н1.3 `sockets`, the kit of Н1.6 `kit` and
   the issue by `w2c-ca.sh`.
 
 The lesson has no HTTP contract of its own: the door `GET /manifest` and the form `ManifestView` belong to chapter P/06.5
-([norms](../../../06-console/spec/06.5-console.norms.md), [instructions](../../../06-console/spec/06-console.README.md), [contract](../../../06-console/spec/06-console.api.openapi.yaml)).
+([norms](../../06-console/spec/06.5-console.norms.md), [instructions](../../06-console/spec/06-console.README.md), [contract](../../06-console/spec/06-console.api.openapi.yaml)).
 
 ## Inputs and their priority
 
 | File | Role | Priority |
 |---|---|---|
-| [02.1-installer.norms.md](../02.1-installer.norms.md) | the canon of chapter 2.1: text, document, fields, references, loading passes, refusals and the corpus | 1 |
-| [02.1-installer.schema.json](../02.1-installer.schema.json), [`.relations.json`](../02.1-installer.relations.json), [`.layers.tsv`](../02.1-installer.layers.tsv), [`.scalars.tsv`](../02.1-installer.scalars.tsv); [the В7 layers](../../../common/LAYERS.md) | the form source of chapter 2.1 (ADR-0092): standard files — JSON Schema 2020-12 and CEL, executed by libraries of pinned versions and by own layers; the section «Form» of the chapter norms is built from them | 1 |
-| [02.3-installer.norms.md](../02.3-installer.norms.md) | the canon of chapter 2.3: the manifest row and the mark, the start and the change, `manifest put` | 1 |
-| [02.4-installer.norms.md](../02.4-installer.norms.md) | the canon of chapter 2.4: units, environment, workers on order, certificates, installation, operator commands; the late layer — the ports and units of the domain, the installation of the domain (lesson 8) | 1 |
-| [02.5-installer.norms.md](../02.5-installer.norms.md) | the canon of chapter 2.5: roles and the derivation of rights, the readers of secret rows, generation and `--check` | 1 |
-| [The acceptance README of chapter 2.1](../../acceptance/1/README.md), `verdicts.tsv`, `diagnostics.tsv`, `classes.tsv`, `cases/`, `corrections.tsv` next to it | common inputs, expected verdicts, classes and diagnostic hints | 3 — check the canon, do not add to it |
-| [The acceptance README of chapter 2.3](../../acceptance/3/README.md), `puts.tsv`, `puts/` | the installations of `manifest put` | 3 — check the canon, do not add to it |
-| [The acceptance README of chapter 2.5](../../acceptance/5/README.md), `scenarios.tsv`, `variants/`; the stand — [the common README](../../../common/acceptance/README.md) | preparing and comparing rights | 3 — check the canon, do not add to it |
-| [The vectors of the workers script](../../vectors/workers-script/README.md) | rules 2–4 of the workers script (chapter 2.4 Н1.5) | 3 |
-| [The vectors of the exec command line](../../vectors/exec/README.md) | argv of `worker.exec`, `parts.<часть>.exec` (chapter 2.1 `execLine`) | 3 |
-| [The vectors of the installation order](../../vectors/install-order/README.md) | the order of `manifest put` of the primary installation (chapter 2.4 Н1.7 `order`) | 3 |
-| [The norms of P/01](../../../01-store/spec/01.1-store.norms.md) | the normative words and the store operations for Н3 of chapter 2.3; the rights file and the evaluator (P/01.2) for chapter 2.5 | by the references of the canon |
+| [02.1-installer.norms.md](02.1-installer.norms.md) | the canon of chapter 2.1: text, document, fields, references, loading passes, refusals and the corpus | 1 |
+| [02.1-installer.schema.json](02.1-installer.schema.json), [`.relations.json`](02.1-installer.relations.json), [`.layers.tsv`](02.1-installer.layers.tsv), [`.scalars.tsv`](02.1-installer.scalars.tsv); [the В7 layers](../../common/LAYERS.md) | the form source of chapter 2.1 (ADR-0092): standard files — JSON Schema 2020-12 and CEL, executed by libraries of pinned versions and by own layers; the section «Form» of the chapter norms is built from them | 1 |
+| [02.3-installer.norms.md](02.3-installer.norms.md) | the canon of chapter 2.3: the manifest row and the mark, the start and the change, `manifest put` | 1 |
+| [02.4-installer.norms.md](02.4-installer.norms.md) | the canon of chapter 2.4: units, environment, workers on order, certificates, installation, operator commands; the late layer — the ports and units of the domain, the installation of the domain (lesson 8) | 1 |
+| [02.5-installer.norms.md](02.5-installer.norms.md) | the canon of chapter 2.5: roles and the derivation of rights, the readers of secret rows, generation and `--check` | 1 |
+| [The acceptance README of chapter 2.1](../acceptance/1/README.md), `verdicts.tsv`, `diagnostics.tsv`, `classes.tsv`, `cases/`, `corrections.tsv` next to it | common inputs, expected verdicts, classes and diagnostic hints | 3 — check the canon, do not add to it |
+| [The acceptance README of chapter 2.3](../acceptance/3/README.md), `puts.tsv`, `puts/` | the installations of `manifest put` | 3 — check the canon, do not add to it |
+| [The acceptance README of chapter 2.5](../acceptance/5/README.md), `scenarios.tsv`, `variants/`; the stand — [the common README](../../common/acceptance/README.md) | preparing and comparing rights | 3 — check the canon, do not add to it |
+| [The vectors of the workers script](../vectors/workers-script/README.md) | rules 2–4 of the workers script (chapter 2.4 Н1.5) | 3 |
+| [The vectors of the exec command line](../vectors/exec/README.md) | argv of `worker.exec`, `parts.<часть>.exec` (chapter 2.1 `execLine`) | 3 |
+| [The vectors of the installation order](../vectors/install-order/README.md) | the order of `manifest put` of the primary installation (chapter 2.4 Н1.7 `order`) | 3 |
+| [The norms of P/01](../../01-store/spec/01.1-store.norms.md) | the normative words and the store operations for Н3 of chapter 2.3; the rights file and the evaluator (P/01.2) for chapter 2.5 | by the references of the canon |
 | The grammars of the owner lessons listed in Н1.2 of chapter 2.1 | the admissible keys inside the sections of a manifest | by the references of the canon; a consolidated list is not derived from the code of an implementation |
-| [The lecture](../../02-installer.md), [the life cycle](../../lifecycle.md) | motivation and examples for a person; a pointer to the flags and units | not a norm |
+| The lecture (`ru/02-installer.md`, for people, not in the export), [the life cycle](../lifecycle.md) | motivation and examples for a person; a pointer to the flags and units | not a norm |
 
 The full closed set of keys needs the section grammars named in Н1.2 of chapter 2.1. The opaque places
 and the levels with author names are set there too; they do not turn the whole document into an arbitrary mapping.
@@ -101,7 +101,7 @@ This is a possible order, not an additional norm about the structure of the code
 1. *(2.1)* Read the norms in full. Write out the boundaries of the closed, named and opaque levels from Н1.2,
    their owner lessons and the choices of the implementation. Check the mandatory unit/rows/id: the loader does not invent a family or a kind of id; the absence of unit.fields means an empty mapping.
 2. *(2.1)* Set up the reading of bytes and the parsing of the text per Н1.1: a YAML 1.2 parser of a pinned version and the fine check of layer 1
-   ([the В7 layers](../../../common/LAYERS.md) § 4, workarounds D13, D16). Run the checks that need the original text or the list of keys before
+   ([the В7 layers](../../common/LAYERS.md) § 4, workarounds D13, D16). Run the checks that need the original text or the list of keys before
    the conversion into a mapping before the library loses this information; one document — by bytes.
 3. *(2.1)* Carry out the loading pass of Н3 by layers: text → form (the JSON Schema 2020-12 schema and the words `x-*`, the integer place —
    layer 2) → relations (CEL, only with a clean form). Filling the defaults does not hide an erroneous input.
@@ -121,7 +121,7 @@ This is a possible order, not an additional norm about the structure of the code
 4. The role certificate (SAN URI `urn:w2c:role:<роль>`, CN `<роль>.<сервер>`, the key 0640 root:<the group of the unit's user>) and
    the address rule (a daemon off the loopback — only with TLS; a process door without a kit — the loopback; signer and relay — by an explicit
    address with a loud log line, on the process default `0.0.0.0` — a start refusal, code 2; resource without a kit — only the loopback, ADR-0075 addendum 2026-10-26 (6) item 2; ADR-0075 addendum 2026-10-26 (5) item 4): confirm it by a structural test of the units and by the tests of the centre (Н5) or
-   explicitly leave it without evidence of execution: the acceptance has no stand with TLS, it is checked by reading ([the system stand](../../../common/acceptance/system/README.md)).
+   explicitly leave it without evidence of execution: the acceptance has no stand with TLS, it is checked by reading ([the system stand](../../common/acceptance/system/README.md)).
 
 ### Chapter 2.5 — the derivation of rights
 
@@ -132,13 +132,13 @@ This is a possible order, not an additional norm about the structure of the code
    only the presence of a line in the list. Before the conversion, reject a literal * and a leading !/delete: in the declarations; do not change the key. Check the neighbouring vault, vault2, vault/nested: an exact declaration of vault does not change their ordinary rights. The generator outputs the delete field explicitly.
 3. Check the two admission rows of the controller per Н5: read/write are allowed, delete
    is forbidden; the other allowed deletions have not disappeared. Compare both sides of the
-   boundary console/controller/worker without changing the placement protocol of [P/04](../../../04-controller/spec/04-controller.norms.md).
+   boundary console/controller/worker without changing the placement protocol of [P/04](../../04-controller/spec/04-controller.norms.md).
 4. Prepare the stand per the acceptance README: a separate instance for each scenario,
    empty data and replay memory, the same rights file, the background writers stopped.
    Carry out all steps.
 5. Check all items of the canonical checklist. Confirm the sockets, file permissions, TLS and certificates
    by a structural test of the units and by the tests of the centre (chapter 2.4 Н5) or explicitly leave them without evidence
-   of execution: the acceptance has no stand with TLS, it is checked by reading ([the system stand](../../../common/acceptance/system/README.md)).
+   of execution: the acceptance has no stand with TLS, it is checked by reading ([the system stand](../../common/acceptance/system/README.md)).
 
 For all chapters: complete the implementation description and the checklists; do not declare the check of the table a check of the whole life cycle of a manifest.
 

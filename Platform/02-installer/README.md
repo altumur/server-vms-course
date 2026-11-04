@@ -1,11 +1,11 @@
 # Manifest and installer — lesson P/02
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-A micromodule: a command process, a centre, units. What it norms and from where — the [module design note](../../module-design.md), the table «Уроки».
+A micromodule: a command process, a centre, units. What it norms and from where — the [module design note](../module-design.md), the table «Уроки».
 
 The layout of the catalogue (filled by the move, stage B). The installer has no OpenAPI of its own — it has no HTTP doors;
-`GET /manifest`, `ManifestView` and `ConsoleRefusal` moved with the move of lesson 2 temporarily to М10/9, and with the move of lesson 6 to [chapter 6.5](../../06-console/spec/06.5-console.norms.md) of the console
+`GET /manifest`, `ManifestView` and `ConsoleRefusal` moved with the move of lesson 2 temporarily to М10/9, and with the move of lesson 6 to [chapter 6.5](../06-console/spec/06.5-console.norms.md) of the console
 (review of stage A 2, П10):
 
 ```text

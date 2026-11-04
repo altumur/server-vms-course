@@ -1,19 +1,19 @@
 # Acceptance P/02.5 — the derivation of rights through the store door
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/5/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md). The norm of the chapter is
-[`02.5-installer.norms.md`](../../../spec/02.5-installer.norms.md) Н5, the full bodies of the two routes are
-[the OpenAPI](../../../../01-store/spec/01-store.api.openapi.yaml) of lesson P/01.
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md). The norm of the chapter is
+[`02.5-installer.norms.md`](../../spec/02.5-installer.norms.md) Н5, the full bodies of the two routes are
+[the OpenAPI](../../../01-store/spec/01-store.api.openapi.yaml) of lesson P/01.
 The file has 8 scenarios / 70 steps (sc. 12 steps 12–18 — `domainagent` does not write `domain/root`, `view`, `shadow`, `backups/rev-1`, `shared-docs/rev-1`, `alarm-history/m1`, `idem/k1`, 403, C02-LOCAL-BINDING240-ROOT; the mutation check 7cecaf2 № 29, 49: the admission rows of the controller without delete, the negation of `idem` at the worker; sc. 13 — the order and the state, ADR-0091, sc. 02 step 8 — the deletion of a row of `testsub2` by the controller is now 200: it has `retire_when.delete_after` and `ends`); the roles and the rights file are generated from `testsub` and `testsub2`
 (`Source/tests/testdata/testsub*.subsystem.yaml`) with the deployment name `testsub`.
 The scenarios and the manifest variants were moved from the acceptance of М10/6
 (stage B) with the former numbers, steps and texts. Scenarios 05–08 and 10 (the evaluator, `never`, listing, the guard, identity,
-`/v1/rights`) are in the acceptance of [P/01.2](../../../../01-store/acceptance/2/README.md) (stage B); the numbers of the remaining ones did not change.
+`/v1/rights`) are in the acceptance of [P/01.2](../../../01-store/acceptance/2/README.md) (stage B); the numbers of the remaining ones did not change.
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей): a door without a prefix is the store, `@as <роль>`, `@header` before the method, `$имя`, `ASSERT`;
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей): a door without a prefix is the store, `@as <роль>`, `@header` before the method, `$имя`, `ASSERT`;
 the expectation is a subset of fields, `index` may be omitted. Own additions:
 
 - `expect` without a body at the code `403` — the full form `{kind: forbidden, error: …}`. For a refusal of an operation on a row, error names the role, the action and the key.
@@ -80,7 +80,7 @@ the text beyond this is not compared. The store is not started, there are no pro
 **`check.tsv`:** UTF-8, LF, fields separated by TAB; lines with `#` are skipped; the header `case	file	code`; then one line per
 case: `case` — `[a-z0-9_]+`, unique; `file` — `check/<case>.rights`, a rights file; `code` — `0` (the file by meaning
 equals the generated one) or `!0` (any code except 0). For each line the runner calls the rights comparison of the implementation (`rights --check
-<file>`, Н2, Н3 «install») — by the command `stand.rights-check` of the profile `02-installer` ([the common acceptance README](../../../../common/acceptance/README.md),
+<file>`, Н2, Н3 «install») — by the command `stand.rights-check` of the profile `02-installer` ([the common acceptance README](../../../common/acceptance/README.md),
 «Команда сверки прав»): `{manifests}` — the manifest catalogue of the variant, `{deployment}` = `dep`, `{file}` — `check/<case>.rights`;
 the outcome is the code, compared with the column `code`. No key in the profile — the cases of `check.tsv` are not executed (neither GREEN nor an outcome of the
 implementation) (the Architect's decision of 2026-10-30, the norm questions of the Gemini audit, P/02 item 3; C02-RIGHTS-CHECK-STAND-01). The comparison by meaning

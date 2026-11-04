@@ -137,7 +137,7 @@ platform/schema нет, раннер её не пишет (чтение комм
 - `POST /drain` с server=srv-a: полный ответ `{draining: "srv-a"}`; `DELETE`: `{draining: ""}`.
   Противоположные тела не проходят схему даже при правильном последующем GET.
 - Полные ответы меток и drain проверяются по всей грамматике имени подсистемы
-  [P/02.1 Н1.2](../../../02-installer/spec/02.1-installer.norms.md#н12-документ),
+  [P/02.1 Н1.2](../../../02-installer/ru/spec/02.1-installer.norms.md#н12-документ),
   включая весь закрытый список зарезервированных имён. Для каждого слова проверить отказ
   в префиксе UnitRef (would_move и will_move), в ключе каждой из карт would_strand/subsystems
   и в поле subsystem; например, platform/u1, domain/u1, events/u1 и ключ events недопустимы.

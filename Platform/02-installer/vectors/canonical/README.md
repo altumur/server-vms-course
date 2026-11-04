@@ -1,12 +1,12 @@
 # Vectors: the canonical view of a manifest
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/canonical/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter [P/02.2](../../../spec/02.2-installer.norms.md) of the installer (Н1.1 projection, P/02.2-07). The participants are
-the loader [P/02.1](../../../spec/02.1-installer.norms.md) (the view is built only from an accepted manifest, verdict `ok`) and the installer
-`manifest put` [P/02.3](../../../spec/02.3-installer.norms.md) Н3 (writes the view next to the row). A vector is the bytes of a manifest → the bytes of the field
+The owner is chapter [P/02.2](../../spec/02.2-installer.norms.md) of the installer (Н1.1 projection, P/02.2-07). The participants are
+the loader [P/02.1](../../spec/02.1-installer.norms.md) (the view is built only from an accepted manifest, verdict `ok`) and the installer
+`manifest put` [P/02.3](../../spec/02.3-installer.norms.md) Н3 (writes the view next to the row). A vector is the bytes of a manifest → the bytes of the field
 `manifest` of the view row `platform/manifest/<sub>/canonical/1`; the wrapper `{form, rev, sha256, manifest}` and `rev` are not vectors but
-[the acceptance of chapter 2.2](../../../acceptance/2/README.md) (ADR-0089 addendum (1) Р13). Both implementations — byte for byte. The window of chapter 2.2 is
+[the acceptance of chapter 2.2](../../acceptance/2/README.md) (ADR-0089 addendum (1) Р13). Both implementations — byte for byte. The window of chapter 2.2 is
 `decisions/inbox/2026-10-20-окно-главы-2.2-канонический-вид.md` (section 5, the Architect's decision — item 8).
 
 ## Composition
@@ -36,7 +36,7 @@ UTF-8, LF, fields separated by TAB; rows with `#` are explanations, empty ones a
 - `case` — the name of the case: `[A-Za-z0-9][A-Za-z0-9_.-]*`, unique in the file;
 - `input` — the path of the manifest file from the root of the layout (the course or the export `cammeta-specs`): with `/`, without `..`, ending in
   `.subsystem.yaml`; the loader of chapter 2.1 accepts it;
-- `expect` — exactly `expect/<case>.json`: the bytes of the view — JCS ([ADR-0072](../../../../../decisions/0072-канонический-json-подписанных-документов-rfc-8785.md)),
+- `expect` — exactly `expect/<case>.json`: the bytes of the view — JCS ([ADR-0072](../../../../decisions/0072-канонический-json-подписанных-документов-rfc-8785.md)),
   UTF-8, without a line feed at the end;
 - `note` — what the row shows (not compared).
 
@@ -50,5 +50,5 @@ Who executes — the installer (`02-installer`: «build view» P/02.2 Н3 — fo
 ## What the vector does not cover
 
 The wrapper of the view row, the write order row — view — mark, «без изменений» with the view, the refusal `toolarge` of the view — the acceptance of chapter
-[`acceptance/2/`](../../../acceptance/2/README.md). The schema of the view — the section «Форма канонического вида» of the norms of chapter 2.2 (P/02.2-05;
+[`acceptance/2/`](../../acceptance/2/README.md). The schema of the view — the section «Форма канонического вида» of the norms of chapter 2.2 (P/02.2-05;
 `check_spec` checks that the view of each input passes it). The reader of the view — by the edits of the readers (P/02.2-06).

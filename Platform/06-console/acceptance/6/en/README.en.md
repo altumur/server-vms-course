@@ -137,7 +137,7 @@ The heartbeats of the worker `w-1` for `@put object` (the object write command o
 - `POST /drain` with server=srv-a: the full answer `{draining: "srv-a"}`; `DELETE`: `{draining: ""}`.
   The opposite bodies do not pass the schema even with a correct following GET.
 - The full answers of labels and drain are checked by the whole grammar of a subsystem name
-  [P/02.1 Н1.2](../../../../02-installer/spec/02.1-installer.norms.md#н12-документ),
+  [P/02.1 Н1.2](../../../../02-installer/spec/02.1-installer.norms.md#н12-document),
   including the whole closed list of reserved names. For each word check the refusal
   in the prefix of UnitRef (would_move and will_move), in the key of each of the maps would_strand/subsystems
   and in the field subsystem; for example, platform/u1, domain/u1, events/u1 and the key events are inadmissible.

@@ -26,7 +26,7 @@
 - М11/11 — Н1.6 `door` (Н1.2е), Н1.8 целиком (Н1.8),
   Н3 `alarms`, строки Н2 и Н4 консоли домена, Н5 `alarms` и `exit` в части `alarms`, сц. 02 и 04 (вектор `alarms`),
   «Решает реализация» п. 1 в части `alarms`;
-- М11/12 Н1.8 — сторона консоли домена при старте (текст — [P/02.4 Н1.12](../../02-installer/spec/02.4-installer.norms.md);
+- М11/12 Н1.8 — сторона консоли домена при старте (текст — [P/02.4 Н1.12](../../02-installer/ru/spec/02.4-installer.norms.md);
   здесь Н1.1).
 
 Чего здесь нет и где оно: содержимое вида и теневого отчёта — [глава 8.1](../../08-domain/spec/08.1-domain.norms.md); исполнение
@@ -59,11 +59,11 @@
 - читает: `domain/relay-members/<ретранслятор>`, `domain/<sub>/<manifest:domain.kept>`, `domain/folder-units/<id>`, `domain/folder-units/<id>/<раздел>`, `domain/folder-counts/<id>`, `domain/view-rows/<раздел>`, `domain/anywhere`, `domain/folders/<id>`, `domain/memberof/<член>/<sub>/<manifest:unit.rows>/<id>`, `domain/members/<член>/tables/<sub>/<таблица>`, `domain/roles/<имя>`, `domain/groups/<имя>`, `platform/manifest/<sub>`, `platform/manifest/<sub>/rev` (метка: смена манифеста — P/02.3 Н3; В7 п. 3, решение «Архитектора» 2026-10-28, П3; строка 19 списка), `platform/schema`, `/etc/w2c/tls/<роль>/server.key`, `domain/view`, `domain/shadow`, `domain/holder`, `domain/keys`, `domain/root`, `domain/revoked`, `domain/member-rows/<раздел>`, `domain/members/<член>/ca-certs`, `domain/members/<член>/reports/<rev>`, `domain/members/<член>/reported`, `domain/topology`, `domain/<sub>/worker`, `domain/<sub>/heartbeat`, `domain/placement`, `domain/placement/<sub>/<ref>`, `domain/disabled`, `domain/grants/<кластер>`, `domain/shared`, `domain/shared-docs/rev-<rev>`, `domain/alarm-history/<член>`.
 
 Строк держателя консоль домена не пишет: правки передаёт процессу `domain` (Н1.3; приём — [P/08.0](../../08-domain/spec/08.0-domain.norms.md)
-Н1.8), права `domainconsole` — чтение `domain/*` ([P/02.5](../../02-installer/spec/02.5-installer.norms.md) Н1.4). Семья
+Н1.8), права `domainconsole` — чтение `domain/*` ([P/02.5](../../02-installer/ru/spec/02.5-installer.norms.md) Н1.4). Семья
 объектов свидетеля `<sub>/<manifest:domain.witness.report>/<имя>` — у этого урока по протоколу (Н1.8 `witness`; решение
 «Архитектора» по планам переноса 8–10, п. 8): пишет воркер подсистемы (участник), несёт агент в отчёте; консоль домена
 читает свидетелей только из отчётов членов (`domain/members/<член>/reports/<rev>`; держатель — тоже член со своим агентом),
-схемы в `data/` у семьи нет (форма — объявление `domain.witness` манифеста, [P/02.1 Н1.2б](../../02-installer/spec/02.1-installer.norms.md)).
+схемы в `data/` у семьи нет (форма — объявление `domain.witness` манифеста, [P/02.1 Н1.2б](../../02-installer/ru/spec/02.1-installer.norms.md)).
 
 Что читает каждая дверь: вид, теневой отчёт, список членов, топологию, назначения, гранты, общий документ — двери чтения
 Н1.2 (формы строк — их главы урока P/08); `domain/keys`, `domain/root`, `domain/revoked`, `domain/disabled`,
@@ -81,8 +81,8 @@ C10-ROLE-LOG-C47) и служба без комплекта (`no_kit`) — ди�
 ### Н1.1 Процесс и старт (М11/12 Н1.8; P/02.4 Н1.12)
 
 Консоль домена — процесс `domainconsole` у кластера-держателя, рядом с процессом `domain`: юнит
-`w2c-domainconsole.service`, роль `domainconsole`, порт `DOMAIN_CONSOLE_HOST/PORT` 0.0.0.0:8444 — только с комплектом роли, TLS — по комплекту (ADR-0075 доп. 2026-10-26 (2) п. 4; [P/02.4 Н1.12](../../02-installer/spec/02.4-installer.norms.md)).
-Как процессы платформы, она исполняет сторону читателя строки манифеста ([P/02.3](../../02-installer/spec/02.3-installer.norms.md)
+`w2c-domainconsole.service`, роль `domainconsole`, порт `DOMAIN_CONSOLE_HOST/PORT` 0.0.0.0:8444 — только с комплектом роли, TLS — по комплекту (ADR-0075 доп. 2026-10-26 (2) п. 4; [P/02.4 Н1.12](../../02-installer/ru/spec/02.4-installer.norms.md)).
+Как процессы платформы, она исполняет сторону читателя строки манифеста ([P/02.3](../../02-installer/ru/spec/02.3-installer.norms.md)
 Н3 «Старт процесса», «Смена манифеста»): встроенного манифеста у неё нет, шаги 0–4 «Старт процесса» — как там: шаг 0 —
 проверка схемы с `SCHEMA` сборки платформы ([договор схемы](../../common/contracts/schema.md) «Проверка при старте»);
 шаг 1 — весь каталог; шаг 2 — только `sha256` строки (сравнивать встроенные байты не с чем); затем окружение, комплект
@@ -165,7 +165,7 @@ door:          GET /domain/shared у консоли домена (view) → 200 
 ```
 
 Документ и указатель — [глава 8.9](../../08-domain/spec/08.9-domain.norms.md) Н1.2; `view.shared` — глава 8.9 Н1.6; объявление
-`domain.shared` — [P/02.1 Н1.2б](../../02-installer/spec/02.1-installer.norms.md). Правку `PUT /domain/shared` консоль передаёт
+`domain.shared` — [P/02.1 Н1.2б](../../02-installer/ru/spec/02.1-installer.norms.md). Правку `PUT /domain/shared` консоль передаёт
 процессу (Н1.3; исполнение — глава 8.9 Н1.3).
 
 ### Н1.3 Передача процессу `domain` (М11/3 Н1.8 `console`, `pass`; М11/9 Н1.9 `pass`)

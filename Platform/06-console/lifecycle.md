@@ -5,8 +5,8 @@
 
 Текст производный от en, руками не правится: источник — английский [`en/lifecycle.en.md`](en/lifecycle.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 2).
 
-[P/02.3]: ../02-installer/spec/02.3-installer.norms.md
-[P/02.4]: ../02-installer/spec/02.4-installer.norms.md
+[P/02.3]: ../02-installer/ru/spec/02.3-installer.norms.md
+[P/02.4]: ../02-installer/ru/spec/02.4-installer.norms.md
 [P/03.2]: ../03-worker/spec/03.2-worker.norms.md
 [P/06.1]: spec/06.1-console.norms.md
 [P/06.2]: spec/06.2-console.norms.md
@@ -34,7 +34,7 @@
 ## Окружение
 
 Окружение собирает раннер `w2c-run.sh` в порядке P/02.4 Н1.2: значения юнита → `roles/<W2C_ROLE>.env` → `w2c.env` →
-файл подсистемы, раньше прочитанное побеждает; файлы — разбором, не `source` ([договор файла окружения](../common/contracts/env-file.md); [02-installer/lifecycle.md](../02-installer/lifecycle.md)).
+файл подсистемы, раньше прочитанное побеждает; файлы — разбором, не `source` ([договор файла окружения](../common/contracts/env-file.md); [02-installer/lifecycle.md](../02-installer/ru/lifecycle.md)).
 
 | Переменная | Смысл | Умолчание | Норма |
 |---|---|---|---|
@@ -117,7 +117,7 @@
 ## Стенд
 
 Корни `{data}/config`, `objects`, `events` до старта процесса создаёт команда запуска роли профиля — [общий README
-приёмки](../common/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
+приёмки](../common/acceptance/README.md) «Стенд без root»; процесс корней не создаёт ([P/02.4](../02-installer/ru/spec/02.4-installer.norms.md) Н1.1 `dirs`; STAND-ROOTS-CLEAR-01, решение «Архитектора» 2026-10-27).
 
 - Команда «Стенда» с подстановкой `{port}`; `{data}` — это `PLATFORM_DIR`: стенд ставит `PLATFORM_DIR={data}`,
   `CONSOLE_PORT={port}`, `PLATFORM_STORE` — сокет роли, `SECRETS_KEY={data}/etc/secrets/platform.key` — кольцо, которое раннер создаёт
