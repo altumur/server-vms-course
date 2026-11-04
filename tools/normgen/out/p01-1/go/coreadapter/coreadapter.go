@@ -7,10 +7,15 @@ package coreadapter
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	"normgen/p01-1/apidoor"
 )
+
+// ErrNotImplemented — what the kit's open.go stub returns until your Open exists; the daemon frame (part launch)
+// answers with its empty core then (every key absent), the stage tests fail.
+var ErrNotImplemented = errors.New("coreadapter: not implemented")
 
 // Config — the stand of one scenario.
 type Config struct {
