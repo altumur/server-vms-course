@@ -1983,6 +1983,16 @@ class Check:
             if en_mirror.MARK in "\n".join(text.splitlines()[:12]) and not en.is_file():
                 self.error(ru, f"marked «{en_mirror.MARK}», but {self.name(en)} is missing")
 
+    def check_tables(self):
+        """ADR-0120 п. 2 (а): таблицы проверок команды `Platform/*/data/*-checks.tsv` — форма, CEL, функции #fn,
+        параметры #lim и пробы `*-checks.probes.tsv`, сверенные прогоном (`check_tables.check`)."""
+        import check_tables
+        for path in check_tables.tables(self.root):
+            errors, stats = check_tables.check(path)
+            for message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
+
     def library_defects(self):
         if not self.v7:
             return
@@ -2794,6 +2804,7 @@ def main():
     check.library_defects()
     check.layer_words()
     check.english_mirrors()
+    check.check_tables()
     for error in check.errors:
         print("ERROR", error)
     for line in check.excepted:
