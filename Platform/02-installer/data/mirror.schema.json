@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "enabled": {
-   "description": "копировать закрытые бакеты событий соседям; строки нет, поля нет или строка не читается — false (P/05 Н1.4 mirror); тела зеркалируются всегда, независимо от enabled (P/05 Н1.1 «Тела у ресурса»)",
+   "description": "copy closed event buckets to neighbours; no row, no field, or the row is unreadable — false (P/05 Н1.4 mirror); bodies are always mirrored, regardless of enabled (P/05 Н1.1 «Тела у ресурса»)",
    "type": "boolean",
    "x-codec": [
     "boolean"
@@ -11,7 +11,7 @@
   },
   "copies": {
    "$ref": "#/$defs/common.uint53",
-   "description": "соседей — следующие copies живых серверов по имени; строки нет или не читается — 1 (P/05 Н1.1 «Тела у ресурса» mirror)",
+   "description": "the neighbours are the next copies live servers by name; no row or it is unreadable — 1 (P/05 Н1.1 «Тела у ресурса» mirror)",
    "x-codec": [
     "integer"
    ]

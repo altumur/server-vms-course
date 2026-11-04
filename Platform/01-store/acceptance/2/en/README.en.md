@@ -56,7 +56,7 @@ the named role.
   the mandatory arrays, unknown fields, delete absent / [] / a separate list.
   comment is absent or is a string and is returned as loaded; a number/null/object
   instead of comment is a refusal. A change of only comment does not change the effective rights; --check
-  compares by meaning (P/02.5 Н3 «установить»): comment and the order of patterns are not compared. Also check the installed rights file of the implementation.
+  compares by meaning (P/02.5 Н3 «install»): comment and the order of patterns are not compared. Also check the installed rights file of the implementation.
 - Check a denial before and after a permission, an exact key and a prefix, an asterisk in
   the middle, an unknown role, never for admin and for an ordinary role, the separate read right of the guard.
   list has no read check; trust in the identity stays mandatory.

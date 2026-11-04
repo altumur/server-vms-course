@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "days": {
-   "description": "дни; конечное число > 0; строки нет — умолчание — договор журнала событий «Срок дерева»; иное — «не известно», ничего не убирать (ADR-0076)",
+   "description": "days; a finite number > 0; no row — the default is the event log contract «Срок дерева»; anything else — «unknown», remove nothing (ADR-0076)",
    "type": "number",
    "exclusiveMinimum": 0,
    "x-codec": [

@@ -28,7 +28,7 @@ COURSE_MANIFESTS = (Path("Source/tests/testdata"),)
 HEADER = ["case", "input", "expect", "note"]
 CASE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*")
 GENERATED = ("corpus-", "course-")
-VECTOR_ENTRIES = {"README.md", "cases.tsv", "expect", "inputs"}
+VECTOR_ENTRIES = {"README.md", "cases.tsv", "expect", "inputs", "en"}   # en/README.en.md — английский источник README (ADR-0121)
 COMMENT = ("# Векторы canonical главы P/02.2 (P/02.2-07): байты манифеста → байты `manifest` канонического вида (без обёртки, Р13).\n"
            "# Строка: case<TAB>input<TAB>expect<TAB>note; input — путь манифеста от корня раскладки, expect — expect/<case>.json.\n"
            "# Строки corpus-*, course-* и все ожидания строит построитель (form_source/build_canonical.py vectors); правила — README.\n")

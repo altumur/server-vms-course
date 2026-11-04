@@ -1,13 +1,13 @@
-# Таблица скаляров P/02.1 Н1.1 (scalars): простой скаляр → вид; первая совпавшая строка сверху.
-# В кавычках и блочный скаляр — всегда строка (Н1.1 string). Слои — Platform/common/LAYERS.md § 8.
+# The table of scalars of P/02.1 Н1.1 (scalars): a plain scalar → kind; the first matching row from the top.
+# A quoted scalar and a block scalar are always a string (Н1.1 string). Layers — Platform/common/LAYERS.md § 8.
 kind	pattern	norm
-null	null|Null|NULL|~|	Н1.1 scalars null; пустое значение — отдельно (сказанный ключ без значения, Н1.2а)
-true	[tT][rR][uU][eE]	Н1.1 scalars bool: в любом регистре
-false	[fF][aA][lL][sS][eE]	Н1.1 scalars bool: в любом регистре
-int	[-+]?[0-9]+	Н1.1 scalars int: десятичные цифры со знаком; 0x10, 0o7, 1_000 — слова
-float	[-+]?(\.[0-9]+|[0-9]+(\.[0-9]*)?)([eE][-+]?[0-9]+)?	Н1.1 scalars float: с точкой или показателем; в целом месте — value
-nonfinite	[-+]?\.(inf|Inf|INF)	Н1.1 scalars float: .inf распознаётся, отказ value
-nonfinite	\.(nan|NaN|NAN)	Н1.1 scalars float: .nan распознаётся, отказ value
-string	.*	Н1.1 scalars string: всё остальное
-limit	int_max=9007199254740991	Н1.1 scalars int: по модулю не больше 2^53 − 1
-limit	float_max=1.7976931348623157e308	Н1.1: float конечны и по модулю не больше
+null	null|Null|NULL|~|	Н1.1 scalars null; an empty value is separate (a stated key without a value, Н1.2а)
+true	[tT][rR][uU][eE]	Н1.1 scalars bool: in any case
+false	[fF][aA][lL][sS][eE]	Н1.1 scalars bool: in any case
+int	[-+]?[0-9]+	Н1.1 scalars int: decimal digits with a sign; 0x10, 0o7, 1_000 are words
+float	[-+]?(\.[0-9]+|[0-9]+(\.[0-9]*)?)([eE][-+]?[0-9]+)?	Н1.1 scalars float: with a dot or an exponent; in an integer place — value
+nonfinite	[-+]?\.(inf|Inf|INF)	Н1.1 scalars float: .inf is recognized, refusal value
+nonfinite	\.(nan|NaN|NAN)	Н1.1 scalars float: .nan is recognized, refusal value
+string	.*	Н1.1 scalars string: everything else
+limit	int_max=9007199254740991	Н1.1 scalars int: in absolute value at most 2^53 − 1
+limit	float_max=1.7976931348623157e308	Н1.1: float values are finite and in absolute value not greater

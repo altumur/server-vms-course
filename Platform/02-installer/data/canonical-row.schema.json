@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "form": {
-   "description": "номер формы вида; сейчас 1",
+   "description": "number of the view form; currently 1",
    "type": "string",
    "pattern": "^(?:[1-9][0-9]*)$",
    "x-codec": [
@@ -12,7 +12,7 @@
   },
   "rev": {
    "$ref": "#/$defs/common.pos53",
-   "description": "rev строки манифеста, из которой вид построен (P/02.3 Н1.5)",
+   "description": "rev of the manifest row from which the view was built (P/02.3 Н1.5)",
    "x-whole": true,
    "x-codec": [
     "integer"
@@ -20,13 +20,13 @@
   },
   "sha256": {
    "$ref": "#/$defs/common.sha256_hex",
-   "description": "sha256 строки манифеста",
+   "description": "sha256 of the manifest row",
    "x-codec": [
     "string"
    ]
   },
   "manifest": {
-   "description": "байты вида текстом — JCS, UTF-8 (P/02.2 Н1.1); проверяется построенной схемой вида",
+   "description": "the bytes of the view as text — JCS, UTF-8 (P/02.2 Н1.1); checked by the built schema of the view",
    "type": "string",
    "x-codec": [
     "string"
@@ -49,7 +49,7 @@
   ]
  },
  "additionalProperties": {
-  "description": "лишние поля: читатель их не читает и ими не отказывает, писатель их не пишет (терпимый читатель, как строка манифеста P/02.3 Н1.5)",
+  "description": "extra fields: the reader does not read them and does not refuse because of them, the writer does not write them (a tolerant reader, like the manifest row P/02.3 Н1.5)",
   "x-codec": [
    "any"
   ]

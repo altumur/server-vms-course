@@ -58,8 +58,8 @@ events:                                  # a closed set; r — the answer of GET
 env:                                     # assumptions of the environment (P/02.4 Н1.9 bound)
   - "Events of one instant, in this order: commit(n, null) of reads due; self_status(k − 1, null), then status(k − 1, v, null) in the order of input.voters, for the reads of batch k − 1 not answered; tick(k); wait_expired."
   - "Each read is answered at most once. An answer later than its deadline may still arrive after the deadline gave null: it carries the old batch k or a finished read n, and the machine ignores it."
-  - "An answer describes the member at some moment between the read and the answer; a voter cut off after its last read, and a break shorter than two observations (2 s), are not seen — the limits of Н1.9 bound."
-  - "The membership of the store does not change during rollout (Н1.9 limit); a change seen in an answer of the own member refuses the poll."
+  - "An answer describes the member at some moment between the read and the answer. A voter cut off from the group after its last read, or less than an election timeout before it, still shows its former state and leader_id; a cut-off shorter than 2 s plus an election timeout may stay unseen; a crash and restart shorter than two observations (2 s) may stay unseen — the limits of Н1.9 bound."
+  - "The membership of the store does not change during rollout (Н1.9 limit); a change seen in an answer of the own member refuses the poll. voters and members of the own member may lag behind the leader until the own member applies a membership change (Н1.9 bound)."
 
 functions:                               # a closed set
   same_set: "(list, list) -> bool — equal as sets (Н1.9 poll: the order does not count)"
