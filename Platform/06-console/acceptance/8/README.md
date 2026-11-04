@@ -46,6 +46,6 @@ The plan of the rights scenarios, when the norm `may` is entered (a domain stand
 4. adding and removing a unit with `admin` over the folder, without `admin` on the unit — 403;
 5. deleting a folder with a role row `folder:` on a descendant without `admin` on `*` in `sub` of this row — 403.
 
-## corrections.tsv
+## `journal/corrections-8.tsv`
 
-The log of corrections of the scenarios of the chapter, the format is as in the neighbouring chapters.
+The log of corrections of the scenarios of the chapter (ADR-0124: a log, not an input, not in the export), the format is as in the neighbouring chapters.

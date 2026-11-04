@@ -60,9 +60,9 @@ lines are not cases. Each `case` occurs once and has `refused` in `verdicts.tsv`
 For the other cases the verdict table checks acceptance/refusal and the source name; the implementation SHOULD give the path and the line
 per Н4 of the norms — as a hint.
 
-## corrections.tsv
+## `journal/corrections-1.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample` (a sample of a generation error), `fix` (which line of the lesson was clarified), `languages`. Empty — no error has repeated so far.
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample` (a sample of a generation error), `fix` (which line of the lesson was clarified), `languages`. Empty — no error has repeated so far.
 
 ## Additional check of string field names (R36-01)
 

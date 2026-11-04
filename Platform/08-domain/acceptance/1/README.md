@@ -8,7 +8,7 @@ the section [«Стенд домена»](../../../common/acceptance/README.md#d
 [`08.1-domain.norms.md`](../../spec/08.1-domain.norms.md) Н5. The scenarios were moved from the acceptance of М11/03 (04, 06–09) and
 М11/06 (06 → 15) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones, except the scenario of М11/06:
 the number 06 is taken by a scenario of М11/03, it got the number 15 — the next one after the largest number of the sources of the chapter (М11/03 sc. 14;
-the Architect's decision 2026-10-20, ADR-0083 addendum (14) item 14; the row of `corrections.tsv`). In total 6 scenarios / 39 steps.
+the Architect's decision 2026-10-20, ADR-0083 addendum (14) item 14; the row of `journal/corrections-1.tsv`). In total 6 scenarios / 39 steps.
 
 The same views without a stand are the vectors [`view`](../../vectors/view/README.md) (28 rows, the former sc. 01–16 of the acceptance of М11/01).
 The doors `GET /domain`, `/domain/<sub>/<rows>`, `/domain/shadow`, through which the stand reads the view and the report, are doors of the domain
@@ -42,9 +42,9 @@ The format is the dictionary of the «Stand» and the domain dictionary; the exp
 Scenarios 06–09 repeat on the stand scenarios 01–05 of the acceptance of М11/01 (the vectors `view`): real reports of agents in
 `domain/members/<член>/reports/<rev>` and the holder's view.
 
-## corrections.tsv
+## `journal/corrections-1.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows from before the move are `corrections.tsv`
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are `corrections.tsv`
 of the acceptances of М11/03 and М11/06 as a whole, at the beginning of the log, with the former paths and numbers (they are resolved by
 [`id-map.tsv`](../../../common/id-map.tsv)); the rows about scenarios of other chapters are the history of the source (the plan of the move of lesson 8,
 § 3 «Журналы»).

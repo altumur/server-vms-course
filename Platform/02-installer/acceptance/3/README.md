@@ -66,9 +66,9 @@ exactly `FILE_MAX` — accepted, rev 2.
 The cases `near_*` (ADR-0091 addendum (26) item 2) — the deferral of `near`: there is no subsystem `near.sub` — the client is accepted, the field check
 waits; the target after an incompatible client — a refusal at the installation of the target.
 
-## corrections.tsv
+## `journal/corrections-3.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample` (a sample of a generation error), `fix` (which line of the chapter was clarified),
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample` (a sample of a generation error), `fix` (which line of the chapter was clarified),
 `languages`. The former corrections of `puts.tsv` are in the log of chapter 2.1 (`journal/corrections-1.tsv`, a log, not in the export) (the line 2026-10-17 `02/m49_*, puts.tsv`).
 
 ## Checks by reading

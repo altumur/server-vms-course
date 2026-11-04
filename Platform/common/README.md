@@ -2,9 +2,14 @@
 
 This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
+The layout of the catalogue (ADR-0124: the English source on the canonical path, the Russian text for people in `ru/`; common has no lecture):
+
 ```text
+README.md                  this file
 data/catalog.tsv           the data catalogue: rows, objects, files — the owner, the participants, the readers (ADR-0083)
 data/README.md             the key by the template of the catalogue: the table of placeholders — grammar, number of components, example
+data/codec.tsv             the codec of the store rows (ADR-0088)
+data/common.schema.json    the common definitions of the family schemas, for reference, not a norm; its layers — data/common.layers.tsv
 contracts/                 common contracts of several processes: sealing (the ring, enc:v2, AAD), the role certificate,
                            the event journal, the presence lock, observation (resource_state, LOST_AFTER), the label alphabet;
                            a request and its mark, the door token, the domain token (review analysis of stage B 3–5, В1);
@@ -24,11 +29,15 @@ vectors/{keys,agent-sig,accept,record,ask-sig,may,peer}/  the vectors of the com
                            the report admission, the term record, the request signature, the right may, the client peer (former inputs of the acceptance of М11;
                            review analysis of stage B 8–10, № 22)
 contracts/gate-and-pass.api.openapi.yaml  the common body forms of the gate-and-pass contract (Denied; referenced by P/06, P/08, P/10)
-testdata/                  testsub*.yaml — the end-to-end example (moves from Source/tests/testdata at stage B)
+acceptance/README.md       the common acceptance stand: the dictionary of directives and doors, the domain stand
 acceptance/system/         end-to-end scenarios of several micromodules
 acceptance/pass/           the pass of the second kind with the stand-in worker of the runner
-acceptance/matrix/         mixed builds
+acceptance/ops/            the stand of group operations door.pass.operations (ADR-0095)
+acceptance/tls/            the TLS stand and the fourth cluster — acceptance data of lessons 8–10
+journal/corrections-<K>.tsv  the correction log of the acceptance K (system, pass, ops) — history, not an input; not in the export
 id-map.tsv                 the old id of a norm, scenario, step, vector → the new one
+manifest-rename.tsv        the transition table of ADR-0086: names with the word spec → manifest
+ru/                        for people, not in the export — translations of the English text by the same path
 ```
 
 The dictionary of normative words is the canon of the whole course; it lies outside the module (a course file).

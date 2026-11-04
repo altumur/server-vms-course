@@ -17,9 +17,9 @@
 `store` с `@as`; директивы `@start`, `@sigkill`, `@sigterm`, `@spoil object`, `@put object`, `@sleep`, `@until`; ожидания
 `~текст`, `!contains`, `@header`, `@file`, `@any`, `@absent`, `@not`.
 
-## corrections.tsv
+## `journal/corrections-5.tsv`
 
-Журнал исправлений ИИ (ADR-0080 доп. 1): `date`, `sample`, `fix`, `languages`. Строки до переноса — из `corrections.tsv`
+Журнал исправлений ИИ (ADR-0080 доп. 1; ADR-0124: журнал, не вход, в выгрузку не входит): `date`, `sample`, `fix`, `languages`. Строки до переноса — из `corrections.tsv`
 приёмок М10/09, М10/10 и М10/11 (сняты переносом урока 6, `e11928b21`), в начале этого журнала по сценариям главы, с прежними путями и номерами (их
 разрешает `Platform/common/id-map.tsv`); строки без сценария — во всех главах-наследниках (разбор ревью стадии B 6–7, № 18).
 

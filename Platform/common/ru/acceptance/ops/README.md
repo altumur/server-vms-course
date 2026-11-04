@@ -85,6 +85,6 @@
 
 Формат — [словарь директив и дверей](../README.md#словарь-директив-и-дверей).
 
-## corrections.tsv
+## `journal/corrections-ops.tsv`
 
-Журнал правок приёмки: `date`, `sample`, `fix`, `languages`.
+Журнал правок приёмки (ADR-0124: журнал, не вход, в выгрузку не входит): `date`, `sample`, `fix`, `languages`.

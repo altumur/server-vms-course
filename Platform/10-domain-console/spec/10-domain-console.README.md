@@ -39,7 +39,7 @@ decides» of the norms.
 **On a divergence.** Name the norm id, the input, the initial state, the expected and the obtained outcome. An implementation defect is
 an output that does not match the expectation on an acceptance input. An acceptance defect is an expectation that diverges from the norm. A norm gap is an input
 for which the norm gives no unambiguous outcome: record the place and a counterexample and hand it to «Спецификации» with a proposal.
-The instructions introduce no new refusal. Record a change of acceptance in `corrections.tsv` of its catalogue.
+The instructions introduce no new refusal. Record a change of acceptance in `journal/corrections.tsv` of the lesson.
 
 ## What to create
 

@@ -172,9 +172,9 @@ Sc. 01–07 — one instance, the state is not reset between them. Before sc. 08
 resets the store (rows and objects) and the variables. After the last step wait for the stop of all the created processes,
 then delete the state.
 
-## corrections.tsv
+## `journal/corrections-6.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
 of the acceptances of М10/04, М10/10 and М10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
 resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (analysis of the review of stage B 6–7, № 18). The implementations and their runners check their own
 result; this directory does not run them itself.

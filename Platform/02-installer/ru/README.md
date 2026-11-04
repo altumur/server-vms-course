@@ -2,19 +2,25 @@
 
 Текст производный от `README.md`, руками не правится: источник — английский [`README.md`](../README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
-Микромодуль: процесс-команда, центр, юниты. Что нормирует и откуда — [записка модуля](../../module-design.md), таблица «Уроки».
+Микромодуль: процесс-команда, центр, юниты. Что нормирует и откуда — записка модуля `Platform/module-design.md` (для человека, в выгрузку не входит), таблица «Уроки».
 
-Раскладка каталога (заполняется переносом, стадия B). Своего OpenAPI у установщика нет — HTTP-дверей у него нет;
+Раскладка каталога (ADR-0124: английский источник — на каноническом пути, русский текст для человека — в `ru/`). Своего OpenAPI у установщика нет — HTTP-дверей у него нет;
 `GET /manifest`, `ManifestView` и `ConsoleRefusal` при переносе урока 2 переехали временно в М10/9, переносом урока 6 — в [главу 6.5](../../06-console/ru/spec/06.5-console.norms.md) консоли
 (ревью стадии A 2, П10):
 
 ```text
-02-installer.md                     лекция
-spec/02[.K]-installer.norms.md       нормы (главы — .K)
-spec/02-installer.library.md         договор библиотеки (если есть)
+README.md                            этот файл
+spec/02.K-installer.norms.md         нормы (главы 2.1–2.5 — .K)
+spec/02.1-installer.schema.json      источник формы главы 2.1 (с .relations.json, .layers.tsv, .scalars.tsv; ADR-0092)
+spec/02.2-installer.view.schema.json схема канонического вида главы 2.2
 spec/02-installer.README.md          инструкция реализации
-lifecycle.md                    флаги, окружение, коды выхода, юниты
-data/<семья>.schema.json        схемы семей, которыми урок владеет (JSON Schema 2020-12, ADR-0092; ADR-0088)
-vectors/<алгоритм>/             векторы алгоритмов, которые урок вводит
-acceptance/[K/]                 приёмка
+lifecycle.md                         флаги, окружение, коды выхода, юниты
+forms/rollout-poll.machine.yaml      формы ADR-0120 (автомат опроса обхода с трассами rollout-poll.traces.tsv)
+data/<семья>.schema.json             семьи данных, которыми урок владеет (JSON Schema 2020-12, ADR-0092; ADR-0088)
+vectors/<алгоритм>/                  векторы алгоритмов, которые урок вводит
+acceptance/1/                        приёмка главы 2.1 (README.md, verdicts.tsv, classes.tsv, diagnostics.tsv, cases/)
+acceptance/2/, acceptance/3/         приёмка глав 2.2, 2.3 (README.md, puts.tsv, puts/)
+acceptance/5/                        приёмка главы 2.5 (README.md, scenarios.tsv, variants/)
+journal/corrections-<K>.tsv          журнал исправлений ИИ главы K — история, не вход; в выгрузку не входит
+ru/                                  для человека, в выгрузку не входит — лекция ru/02-installer.md, переводы английского текста тем же путём
 ```

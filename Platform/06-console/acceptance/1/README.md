@@ -8,7 +8,7 @@ The norm of the chapter is [`06.1-console.norms.md`](../../spec/06.1-console.nor
 М10/10 (04, 05, 06, 07, 11 → 15–19) (stage B,
 ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones, except the scenarios of М10/10: their numbers 04–07 and 11 are taken
 by scenarios of М10/03, they got the next free ones (`15-blob`, `16-ceilings`, `17-tables`, `18-table-ref`,
-`19-table-feed`; the rows of `corrections.tsv`). In all 46 scenarios / 514 steps: 11 — the service table (46, ADR-0094 B1, below), 79 — the feed (41–45, ADR-0094 B2, below), 65 — versions (38–40, ADR-0094 B4, below), 95 — the batch door (33–37, ADR-0094 B9, below), 100 — the units door (01–14), 56 — bodies and
+`19-table-feed`; the rows of `journal/corrections-1.tsv`). In all 46 scenarios / 514 steps: 11 — the service table (46, ADR-0094 B1, below), 79 — the feed (41–45, ADR-0094 B2, below), 65 — versions (38–40, ADR-0094 B4, below), 95 — the batch door (33–37, ADR-0094 B9, below), 100 — the units door (01–14), 56 — bodies and
 tables (15–19), 16 — the order row and the unit state (20, ADR-0091), 6 — the deletion of a row of a worker table (21, the VMS request «команды и строка устройства»),
 48 — the coverage audit of P/06 (22–27, below), 38 — its second pass (Gemini; 28–32, below).
 
@@ -198,9 +198,9 @@ In scenario 01 the runner additionally saves the **full** answer of step 1. At s
 match it whole (the order of the fields of an object does not matter, the order of arrays matters). This checks the promised
 repeat, including the fields not named in the expectation of step 2. Step 3 with a different body under the former key checks 422.
 
-## corrections.tsv
+## `journal/corrections-1.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
 of the acceptances of М10/03 and М10/10 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
 resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (review analysis of stage B 6–7, № 18).
 

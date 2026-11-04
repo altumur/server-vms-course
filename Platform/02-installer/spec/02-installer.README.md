@@ -38,7 +38,7 @@ The lesson has no HTTP contract of its own: the door `GET /manifest` and the for
 | [02.3-installer.norms.md](02.3-installer.norms.md) | the canon of chapter 2.3: the manifest row and the mark, the start and the change, `manifest put` | 1 |
 | [02.4-installer.norms.md](02.4-installer.norms.md) | the canon of chapter 2.4: units, environment, workers on order, certificates, installation, operator commands; the late layer — the ports and units of the domain, the installation of the domain (lesson 8) | 1 |
 | [02.5-installer.norms.md](02.5-installer.norms.md) | the canon of chapter 2.5: roles and the derivation of rights, the readers of secret rows, generation and `--check` | 1 |
-| [The acceptance README of chapter 2.1](../acceptance/1/README.md), `verdicts.tsv`, `diagnostics.tsv`, `classes.tsv`, `cases/`, `corrections.tsv` next to it | common inputs, expected verdicts, classes and diagnostic hints | 3 — check the canon, do not add to it |
+| [The acceptance README of chapter 2.1](../acceptance/1/README.md), `verdicts.tsv`, `diagnostics.tsv`, `classes.tsv`, `cases/` | common inputs, expected verdicts, classes and diagnostic hints | 3 — check the canon, do not add to it |
 | [The acceptance README of chapter 2.3](../acceptance/3/README.md), `puts.tsv`, `puts/` | the installations of `manifest put` | 3 — check the canon, do not add to it |
 | [The acceptance README of chapter 2.5](../acceptance/5/README.md), `scenarios.tsv`, `variants/`; the stand — [the common README](../../common/acceptance/README.md) | preparing and comparing rights | 3 — check the canon, do not add to it |
 | [The vectors of the workers script](../vectors/workers-script/README.md) | rules 2–4 of the workers script (chapter 2.4 Н1.5) | 3 |
@@ -184,4 +184,4 @@ For all chapters: complete the implementation description and the checklists; do
 | The table contradicts the norm | pass an acceptance defect to the author of the norms; do not change the verdict for the sake of a green run |
 | The norm is incomplete or contradictory | describe the question with the input file and a reference to the section; agree on a change of the canon |
 | The rights outcome diverges from the norm | match the input and the outcome with Н1–Н4 of chapter 2.5, then with the acceptance file; report to «Спецификация» the place, a counterexample and the proposed solution |
-| After an AI correction a repeated wrong interpretation is found | write the sample and the clarification into `corrections.tsv` of its chapter per ADR-0080 |
+| After an AI correction a repeated wrong interpretation is found | write the sample and the clarification into `journal/corrections-<K>.tsv` of its chapter per ADR-0080 |

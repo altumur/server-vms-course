@@ -34,6 +34,6 @@ The runner executes sc. 01–09: the directives of the dictionary, the door `soc
 
 The format is the [dictionary of directives and doors of «Стенда» of the common acceptance README](../README.md#dictionary-of-directives-and-doors). The stand is [«Domain stand»](../README.md#domain-stand), `@domain m1`; the runner sets up `probe-p` on `m1` and `hold` together with the manifests of the stand; on `hold` the worker is brought up only by sc. 09. `probe-f` — together with `probe-p` only on the cluster of the scenario (`m1`; for sc. 04 the stand without a domain — `hold`); on `hold` next to `m1` it is absent: the entry `probe-f/accounts` in `door.pass.calls` of `probe-p` there is a deferral of the catalogue; while there is no `probe-f`, there is simply no door, the installer and the console accept `probe-p` ([P/02.1](../../../02-installer/spec/02.1-installer.norms.md) Н1.4, `door.pass.calls[]`). Sc. 04 — the console stand without a domain, the directives without `<кластер>`.
 
-## corrections.tsv
+## `journal/corrections-pass.tsv`
 
-The correction log of the acceptance: `date`, `sample`, `fix`, `languages`.
+The correction log of the acceptance (ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`.

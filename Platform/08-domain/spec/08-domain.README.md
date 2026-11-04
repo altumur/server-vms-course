@@ -95,7 +95,7 @@ by the recipient — P/03.7; the declarations `domain.*` — P/02.1; the domain 
 If the implementation is wrong — fix it and repeat the related checks. If the norm, the contract or the expectation diverge —
 report to the Specification the place, the counterexample and the proposed decision; the decision is reflected in the norm, the contract, the instructions and
 the affected acceptance. Do not carry a difference of the implementation into the canon silently; do not add a new mechanism only for the sake of
-an unsupported case. Record a change of the acceptance in `corrections.tsv` of its catalogue.
+an unsupported case. Record a change of the acceptance in `journal/corrections-<K>.tsv` of its chapter.
 
 ## What to create
 

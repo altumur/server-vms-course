@@ -61,9 +61,9 @@ The format is the dictionary of the «Stand» of the common acceptance README an
 
 In total 6 scenarios / 56 steps.
 
-## corrections.tsv
+## `journal/corrections-10.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
 of the acceptance of М11/12: about the scenarios of the chapter (04, 05) and without a scenario — at the beginning of the log, as a whole, with the former paths and numbers (they
 are resolved by `Platform/common/id-map.tsv`). Implementations and their runners check their own result; this directory does not
 run them itself.

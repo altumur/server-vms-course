@@ -8,7 +8,7 @@ the section [«Стенд домена»](../../../common/acceptance/README.md#d
 [`08.5-domain.norms.md`](../../spec/08.5-domain.norms.md) Н5. The scenarios were moved from the acceptances of М11/05 (01, 03, 05) and
 М11/09 (05 → 11) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones, except the scenario of М11/09:
 the number 05 is taken by a scenario of М11/05, it got the number 11 — the next one after the largest number of the sources of the chapter (М11/09
-sc. 10; the Architect's decision 2026-10-20, ADR-0083 addendum (14) item 14; the row of `corrections.tsv`). In total 7 scenarios / 72 steps (sc. 14 — ADR-0097 §4, there is no dry run by an implementation; the delivery of a key with the `sub` of a book and the key `role:` — by reading: the stand does not give a row with `sub` when the book is already assembled) (sc. 13 — the coverage audit of P/08, the second pass of Gemini).
+sc. 10; the Architect's decision 2026-10-20, ADR-0083 addendum (14) item 14; the row of `journal/corrections-5.tsv`). In total 7 scenarios / 72 steps (sc. 14 — ADR-0097 §4, there is no dry run by an implementation; the delivery of a key with the `sub` of a book and the key `role:` — by reading: the stand does not give a row with `sub` when the book is already assembled) (sc. 13 — the coverage audit of P/08, the second pass of Gemini).
 
 The assembly on all edges without a stand is checked by the vector [`assemble`](../../vectors/assemble/README.md) (17 rows, the former sc. 06
 of the acceptance of М11/05). Sc. 02 `notes-unique` of the acceptance of М11/05 is [the acceptance of chapter 6.7](../../../06-console/acceptance/7/README.md) sc. 13, sc. 04 `slot-liveness` — [the acceptance of chapter 9.1](../../../09-agent/acceptance/1/README.md) sc. 13.
@@ -55,9 +55,9 @@ are checked for the ring envelope (`~enc:v2:`) and for the absence of the value 
   agent passes after it `alice` is absent. The silence of `m1` (steps 12–13) makes the index unknown, but a new row of a person
   (`alice` `edit`) does not wait for the index, and the former row `t7` is not checked — 200 (Н1.7 `checks`; the М11 reconciliation, P5, P6).
 
-## corrections.tsv
+## `journal/corrections-5.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
 of the acceptances of М11/05 and М11/09 as a whole, at the beginning of the log, with the former paths and numbers (they are resolved by
 [`id-map.tsv`](../../../common/id-map.tsv)); the rows about scenarios of other chapters are the history of the source (the plan of the move of lesson 8,
 § 3 «Журналы»). The implementations and their runners check their own result; this directory does not run them itself.

@@ -17,9 +17,9 @@ Doors: without a prefix — the console (scenarios 01–12, as in М10/09), `con
 `store` with `@as`; the directives `@start`, `@sigkill`, `@sigterm`, `@spoil object`, `@put object`, `@sleep`, `@until`; the expectations
 `~текст`, `!contains`, `@header`, `@file`, `@any`, `@absent`, `@not`.
 
-## corrections.tsv
+## `journal/corrections-5.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
 of the acceptances of М10/09, М10/10 and М10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
 resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (analysis of the review of stage B 6–7, № 18).
 

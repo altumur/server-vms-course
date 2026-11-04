@@ -43,8 +43,8 @@ is closed outside the loopback; after an identity the cookie checks Origin befor
 This is a subject of a manual check of the specification and of a future check of an implementation. The prepared requests, the reading and the finite models
 of the author are not a performed stand test.
 
-## corrections.tsv
+## `journal/corrections-3.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows of the log of the acceptance of М10/09 about scenario 03
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows of the log of the acceptance of М10/09 about scenario 03
 were moved here as they are; the whole log of М10/09 is at the beginning of the log of the acceptance of chapter 6.5 (`journal/corrections-5.tsv`, a log, not in the export) (review analysis
 of stage B 6–7, № 18).

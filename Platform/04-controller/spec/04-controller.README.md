@@ -97,11 +97,11 @@ P/04-01…28 are fulfilled, the choices of the implementation are described, the
 and the remaining guarantees have evidence per Н5.
 State the slice, the commands/stand, the observations and the limitations. A check of the documents does not mean
 the passing of an implementation. A discrepancy of a norm and a form is to be drawn up with a counterexample by the rules of the project;
-a repeatable error of the acceptance is to be written into corrections.tsv.
+a repeatable error of the acceptance is to be written into `journal/corrections.tsv`.
 
 ## On a discrepancy
 
 Reconcile the norm and the scenario on one exact input. Record the places, the initial state,
 the intervention and the expected/actual result; if the sources diverge, pass the question to the Specification
 with a recommendation and do not carry the behaviour of the implementation into the canon silently. A correction of a norm affects
-the acceptance; a repeatable error of the acceptance is to be written into corrections.tsv.
+the acceptance; a repeatable error of the acceptance is to be written into `journal/corrections.tsv`.

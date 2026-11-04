@@ -37,6 +37,6 @@ A step of an operation requires a manifest with `door.pass.operations` and a wor
 
 Sc. 04–06, 08–13 of the plan table — by reading, the change of the ring of sc. 11 — for good: there is no directive; the form of the key — the cases `a95_*` of the corpus of P/02.1. The algorithms without a stand are checked by the vectors [`op-step`](../../vectors/op-step/README.md): `step_key` and the expected version along the chain of the root.
 
-## corrections.tsv
+## `journal/corrections-9.tsv`
 
-The log of corrections of the scenarios of the chapter, the format is as in the neighbouring chapters.
+The log of corrections of the scenarios of the chapter (ADR-0124: a log, not an input, not in the export), the format is as in the neighbouring chapters.

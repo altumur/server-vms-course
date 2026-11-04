@@ -470,7 +470,7 @@ HTTP-контракт: [10-domain-console.api.openapi.yaml](../../spec/10-domain
 
 Каталог [`acceptance/`](../acceptance/README.md): стенд нескольких кластеров главы 8.3 (`hold`, `m1`, `m2`, каталог
 `testsub`), сценарии 02 (из М11/11) и 05 (из М11/08) — номера и шаги прежние; 06–09 — аудит покрытия P/10 (audit-kimi
-290ae7697); 10–16 — его второй проход (audit-coverage-gemini 798e11a44); 17 — ADR-0094 B4; 18, 19 — двери `kept` и ретранслятора (новые сценарии 2026-11-02, `corrections.tsv`). Список тревог — вектор
+290ae7697); 10–16 — его второй проход (audit-coverage-gemini 798e11a44); 17 — ADR-0094 B4; 18, 19 — двери `kept` и ретранслятора (новые сценарии 2026-11-02, `journal/corrections.tsv`). Список тревог — вектор
 [`vectors/alarms`](../vectors/alarms/README.md) (27 строк: 15 — бывший сц. 04 приёмки М11/11; 16 — C10-REPORTED-OUTCOME-1D6; 17–27 — второй проход аудита покрытия).
 
 ```yaml

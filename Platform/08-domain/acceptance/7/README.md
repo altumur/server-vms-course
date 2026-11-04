@@ -54,9 +54,9 @@ The format is the dictionary of the «Stand» and the dictionary of the domain; 
   (the scope `unit`, `poll_home`) — 503 `unavailable` before the scope; the local door passes the code and the body of the holder as they came
   (the local token door contract `answer`).
 
-## corrections.tsv
+## `journal/corrections-7.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
 of the acceptance of М11/07 as a whole, at the beginning of the log, with the former paths and numbers (they are resolved by
 [`id-map.tsv`](../../../common/id-map.tsv)); the rows about sc. 03 are the history of the source (the plan of the move of lesson 8, § 3 «Журналы»).
 Implementations and their runners check their own result; this directory does not run them itself.

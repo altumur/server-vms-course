@@ -218,9 +218,9 @@ by the controller the norm binds to a request that the console writes only for a
 a request «standing»; the answer of `DELETE /servers/{server}/decommission` is `{}`); G06 sc. 02 (`@put object` of a heartbeat —
 the stand of this acceptance has no such directive); G04 steps 16–17 (the reason `deleted` — sc. 06 of the acceptance of P/03.3).
 
-## corrections.tsv
+## `journal/corrections.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
 of the acceptance of М10/05 (removed by the move), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are resolved by
 `Platform/common/id-map.tsv`; analysis of the review of stage B 3–5, № 30); likewise — the rows of the acceptances of М10/10 and М10/11 about scenarios 03, 08
 and the deadlines of the home (removed by the move of lesson 6, `e11928b21`; analysis of the review of stage B 6–7, № 18).

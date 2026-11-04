@@ -151,9 +151,9 @@ P/02.3 Н3 step 4 — the system acceptance, sc. 08 `@manual`).
   the heartbeat is not read — `t-1` takes `sh1` (`gen` 2, `by: t-1`, a new `holder`) and names the shelf in the heartbeat. The draft expected
   the opposite (the place is not taken even after 60 s) — by the decision this is wrong.
 
-## corrections.tsv
+## `journal/corrections-2.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
 of the acceptance of М10/05 (removed by the move), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are resolved by
 `Platform/common/id-map.tsv`; analysis of the review of stage B 3–5, № 30).
 

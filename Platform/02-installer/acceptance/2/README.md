@@ -89,9 +89,9 @@ ceiling of the new instance of this line (`{row_ceiling}` of the start command o
 
 Both lines are in `puts-ceiling.tsv`.
 
-## corrections.tsv
+## `journal/corrections-2.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample` (a sample of a generation error), `fix` (which line of the chapter was clarified),
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample` (a sample of a generation error), `fix` (which line of the chapter was clarified),
 `languages`. The line 2026-10-23 is the shift of the weight boundaries after `worker.exec` (finding of cammeta-c-go I02-G01).
 
 ## Checks by reading

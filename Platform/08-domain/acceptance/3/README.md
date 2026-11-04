@@ -18,7 +18,7 @@ The command scenarios of М11/03 sc. 10–13 (`agent-sig`, `seal-member`, `seal-
 a road) are not moved: the same cases without a change of bytes are the vectors of the common contracts
 [`agent-sig`](../../../common/vectors/agent-sig/README.md), [`domain-envelopes`](../../../common/vectors/domain-envelopes/README.md)
 (`m1-open.tsv`, `m1-round.tsv`) and [`accept`](../../../common/vectors/accept/README.md); their inputs are removed together with the steps (the row of
-`corrections.tsv`). The other scenarios of М11/03 are the acceptance of [chapter 8.1](../1/README.md) (04, 06–09); М11/04 sc. 02–04 —
+`journal/corrections-3.tsv`). The other scenarios of М11/03 are the acceptance of [chapter 8.1](../1/README.md) (04, 06–09); М11/04 sc. 02–04 —
 [chapter 9.2](../../../09-agent/acceptance/2/README.md), М11/08 — [chapter 6.7](../../../06-console/acceptance/7/README.md) (01–03), [lesson P/10](../../../10-domain-console/acceptance/README.md) (05), the vectors `peer` (06), М11/12 — chapters 8.10 and [9.1](../../../09-agent/acceptance/1/README.md).
 
 ## Stand
@@ -161,8 +161,8 @@ Checked by reading (the norm of the chapter, Н5): the CAS of the admission of a
 in the mark and the view, non-matching certificates `tls_ca_certs`, the union of the handshake at the role door (lesson P/10 Н1.4). The knock and the checks
 of the holder on a relay packet — sc. 02, 03 of [the acceptance of chapter 9.2](../../../09-agent/acceptance/2/README.md).
 
-## corrections.tsv
+## `journal/corrections-3.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The logs of the acceptances of М11/03, М11/04, М11/08 and
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The logs of the acceptances of М11/03, М11/04, М11/08 and
 М11/12 as a whole, at the beginning of this log, with the former paths and numbers (they are resolved by `Platform/common/id-map.tsv`); then
 the rows of the move, the renaming and the removed command scenarios.

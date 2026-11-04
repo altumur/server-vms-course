@@ -26,9 +26,9 @@ P03-OBJECTS-DEFAULT-1FD; решение «Архитектора» 2026-10-27). 
 - сц. 02 шаг 8 — `rows` двери единиц (P/06.1 Н2): элемент живого пульса с `phase: running`, `worker`,
   `worker_state: live`; пустой `rows` при живом воркере — FAIL.
 
-## corrections.tsv
+## `journal/corrections-3.tsv`
 
-Журнал исправлений ИИ (ADR-0080 доп. 1): `date`, `sample`, `fix`, `languages`. Строки до переноса — из `corrections.tsv`
+Журнал исправлений ИИ (ADR-0080 доп. 1; ADR-0124: журнал, не вход, в выгрузку не входит): `date`, `sample`, `fix`, `languages`. Строки до переноса — из `corrections.tsv`
 приёмки М10/05 (снята переносом), в начале этого журнала по сценариям главы, с прежними путями и номерами (их разрешает
 `Platform/common/id-map.tsv`; разбор ревью стадии B 3–5, № 30).
 

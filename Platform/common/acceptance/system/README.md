@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/acceptance/system/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 End-to-end scenarios that check the norms of several micromodules at once and require a stand of all processes of the platform
-([the module note](../../../module-design.md): «сквозные сценарии … со стендом из всех микромодулей»). Moved from the acceptance of М10/11
+(the module note `Platform/module-design.md`, for people, not in the export: «сквозные сценарии … со стендом из всех микромодулей»). Moved from the acceptance of М10/11
 (sc. 05, 06; stage B, ADR-0083 addendum (1): without a change of behaviour) by the Architect's decision on В2 of the move plan of lesson 6:
 a scenario belongs to the lesson whose norm it checks (the presence lock, sc. 16 of М10/11, — the acceptance of
 [P/05](../../../05-resource/acceptance/README.md)), the drills of many processes — here. The numbers and steps are the former ones.
@@ -111,8 +111,8 @@ and doors of the section «Three-server cluster stand» and of the dictionary; s
 
 Sc. 05 — the boundary of the common README: each run gets new directories and ports of all three servers. The drills 07, 08 are executed on a real box and have no runner boundaries: each one — on its own test box, the original directories are saved before the start.
 
-## corrections.tsv
+## `journal/corrections-system.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
 of the acceptance of М10/11 (removed by the move of lesson 6, `e11928b21`), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are
 resolved by `Platform/common/id-map.tsv`); the rows without a scenario are in all successor chapters (review analysis of stage B 6–7, № 18).

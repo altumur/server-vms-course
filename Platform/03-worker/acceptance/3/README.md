@@ -26,9 +26,9 @@ The stand begins with an empty store and without workers; the runner stops every
 - sc. 02 step 8 — `rows` of the units door (P/06.1 Н2): an element of a live heartbeat with `phase: running`, `worker`,
   `worker_state: live`; an empty `rows` with a live worker — FAIL.
 
-## corrections.tsv
+## `journal/corrections-3.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The rows from before the move are from `corrections.tsv`
 of the acceptance of М10/05 (removed by the move), at the beginning of this log by the scenarios of the chapter, with the former paths and numbers (they are resolved by
 `Platform/common/id-map.tsv`; analysis of the review of stage B 3–5, № 30).
 

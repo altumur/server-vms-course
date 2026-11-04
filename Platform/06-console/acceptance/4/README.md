@@ -161,9 +161,9 @@ The bounds of :int per P/02.1: binary64, the modulus is not more than 2^53−1; 
 - Settle: with the first confirmed outcome at the local moment 0 the row stands at 0/2/59.999, CAS is admitted at 60; this is not a guarantee that the tick runs exactly at 60. A repeated observation and unknown→performed do not extend the count, after a restart it starts anew. Check clear and sweep, including expired without fetched and an answer found by a late filing: it returns answered and leaves the row to the reaper. An unreadable mark or another unit/digest give no ground to remove the row. A shift of ended_at of the writer does not change the age. The TSV checks only the eventual removal within 90 s, not the lower bound 60; the bound requires a controlled clock/reading of the implementation.
 - The append (P/03.6-04, P/06.4-07; formerly М10/8-19) and the form of the consumer of the append in `testsub2` — with scenario 07 in [the acceptance of chapter 3.6](../../../03-worker/acceptance/6/README.md).
 
-## corrections.tsv
+## `journal/corrections-4.tsv`
 
-Four columns: date, sample, fix, languages. The reason for changes and for errors
+The log of AI corrections (ADR-0124: a log, not an input, not in the export). Four columns: date, sample, fix, languages. The reason for changes and for errors
 of interpretation is kept, including the preparation and the filter of notes. The log does not replace a run. The rows from before the move are the log of the acceptance of М10/08
 in full (the directory М10/08 is removed by the move of lesson 6; the rows about scenarios 01, 02, 05, 07, 08 are history, their scenarios are now
 in the acceptances of P/05 and of chapter 3.6).

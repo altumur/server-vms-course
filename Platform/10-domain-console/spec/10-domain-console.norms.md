@@ -470,7 +470,7 @@ The words of `peer` are [the `peer` contract](../../common/contracts/peer.md) «
 
 The catalogue [`acceptance/`](../acceptance/README.md): the stand of several clusters of chapter 8.3 (`hold`, `m1`, `m2`, the catalogue
 `testsub`), scenarios 02 (from М11/11) and 05 (from М11/08) — the numbers and steps are the former ones; 06–09 — the coverage audit of P/10 (audit-kimi
-290ae7697); 10–16 — its second pass (audit-coverage-gemini 798e11a44); 17 — ADR-0094 B4; 18, 19 — the `kept` and relay doors (new scenarios of 2026-11-02, `corrections.tsv`). The alarm list is the vector
+290ae7697); 10–16 — its second pass (audit-coverage-gemini 798e11a44); 17 — ADR-0094 B4; 18, 19 — the `kept` and relay doors (new scenarios of 2026-11-02, `journal/corrections.tsv`). The alarm list is the vector
 [`vectors/alarms`](../vectors/alarms/README.md) (27 rows: 15 — the former sc. 04 of the acceptance of М11/11; 16 — C10-REPORTED-OUTCOME-1D6; 17–27 — the second pass of the coverage audit).
 
 ```yaml

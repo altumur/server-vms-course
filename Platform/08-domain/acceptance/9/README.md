@@ -55,8 +55,8 @@ a replay of `null` of an absent field «без новой `rev`»: step 5 gives 
 
 A subset of expect does not replace the check of the full HTTP form of the OpenAPI of the lesson: check the mandatory fields, types, Content-Type.
 
-## corrections.tsv
+## `journal/corrections-9.tsv`
 
-The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The log of the acceptance of М11/11 is moved here
+The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The log of the acceptance of М11/11 is moved here
 as a whole, the rows as they are (the plan of lesson 8 § 3 «Журналы»: the log of the source goes into each directory that takes its scenarios;
 the paths of the old rows — `11/…`, `NN-<имя> <шаг>` — are resolved by [id-map](../../../common/id-map.tsv)); the last row is the move.

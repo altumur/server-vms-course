@@ -64,7 +64,7 @@ by the recipient — P/03.7; the ports, the units and the box — P/02.4; the ri
 fix it and repeat the relevant checks. If the norm, the contract or the expectation disagree — report to «Спецификация»
 the place, a counterexample and the proposed solution; the solution is reflected in the norm, the contract, the instructions and the affected acceptance.
 Do not carry a difference of the implementation silently into the canon; do not add a new mechanism only for the sake of an unsupported case.
-Record a change of the acceptance in `corrections.tsv` of its catalogue.
+Record a change of the acceptance in `journal/corrections-<K>.tsv` of the chapter.
 
 ## What to create
 

@@ -85,6 +85,6 @@ The change of the ring of sc. 11 stays by reading forever: there is no directive
 
 The format is the [dictionary of directives and doors](../README.md#dictionary-of-directives-and-doors).
 
-## corrections.tsv
+## `journal/corrections-ops.tsv`
 
-The correction log of the acceptance: `date`, `sample`, `fix`, `languages`.
+The correction log of the acceptance (ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`.
