@@ -3,14 +3,14 @@
  "type": "object",
  "properties": {
   "ref": {
-   "description": "значение цели токена",
+   "description": "value of the token's target",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "jti": {
-   "description": "jti действующего токена",
+   "description": "jti of the valid token",
    "type": "string",
    "x-codec": [
     "string"
@@ -18,21 +18,21 @@
   },
   "exp": {
    "$ref": "#/$defs/common.time",
-   "description": "exp токена",
+   "description": "exp of the token",
    "x-codec": [
     "time"
    ]
   },
   "member": {
    "$ref": "#/$defs/common.domain_member",
-   "description": "член-заявитель",
+   "description": "claimant member",
    "x-codec": [
     "string"
    ]
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "момент выдачи",
+   "description": "moment of issue",
    "x-codec": [
     "time"
    ]

@@ -4,7 +4,7 @@
  "properties": {
   "seq": {
    "$ref": "#/$defs/common.pos53",
-   "description": "номер последнего приёма; +1 при каждом приёме под тем же CAS, что правка (Н1.4 seq); не правка",
+   "description": "number of the last intake; +1 at every intake under the same CAS as the edit (Н1.4 seq); not an edit",
    "x-codec": [
     "integer"
    ]
@@ -18,7 +18,7 @@
     ]
    },
    {
-    "description": "id правки — \"e-\" + первые 12 знаков hex sha256(UTF-8(член) ‖ 0x00 ‖ UTF-8(Idempotency-Key)) (Н1.4 id)",
+    "description": "edit id — \"e-\" + the first 12 characters of hex sha256(UTF-8(member) ‖ 0x00 ‖ UTF-8(Idempotency-Key)) (Н1.4 id)",
     "type": "string",
     "pattern": "^(?:e-[0-9a-f]{12})$"
    }
@@ -836,24 +836,24 @@
    "maximum": 9007199254740991
   },
   "edit": {
-   "description": "хранимая правка {id, seq, what, method, path, body, key, at, base?, by?, iat?, asked} — текст JSON (Н1.4 edit)",
+   "description": "stored edit {id, seq, what, method, path, body, key, at, base?, by?, iat?, asked} — JSON text (Н1.4 edit)",
    "type": "object",
    "properties": {
     "id": {
-     "description": "id правки; равен имени элемента (Н1.4 id)",
+     "description": "edit id; equal to the element name (Н1.4 id)",
      "type": "string",
      "pattern": "^(?:e-[0-9a-f]{12})$"
     },
     "seq": {
      "$ref": "#/$defs/common.pos53",
-     "description": "номер приёма — значение элемента seq строки после +1 при приёме; порядок ждущих правок члена (Н1.4 seq)"
+     "description": "intake number — the value of the seq element of the row after +1 at intake; the order of the member's pending edits (Н1.4 seq)"
     },
     "what": {
-     "description": "имена полей тела по возрастанию через «,», у POST — с полем domain.ref, без cluster; DELETE — \"\"",
+     "description": "names of the body fields in ascending order separated by «,», for POST — with the domain.ref field, without cluster; DELETE — \"\"",
      "type": "string"
     },
     "method": {
-     "description": "метод двери консоли члена",
+     "description": "method of the member console door",
      "type": "string",
      "enum": [
       "POST",
@@ -862,42 +862,42 @@
      ]
     },
     "path": {
-     "description": "путь двери консоли члена: строки единиц, таблицы или `/console/batch` (Н1.4 path, Н1.3б)",
+     "description": "path of the member console door: unit rows, tables or `/console/batch` (Н1.4 path, Н1.3б)",
      "type": "string"
     },
     "body": {
-     "description": "объект полей; DELETE — {}",
+     "description": "object of fields; DELETE — {}",
      "type": "object",
      "x-opaque": true
     },
     "key": {
-     "description": "Idempotency-Key запроса",
+     "description": "Idempotency-Key of the request",
      "type": "string"
     },
     "at": {
      "$ref": "#/$defs/common.time",
-     "description": "стенные секунды процесса domain; после исхода того же id — не меньше nextafter его kept_at (Н1.4 at)"
+     "description": "wall-clock seconds of the domain process; after an outcome of the same id — not less than nextafter of its kept_at (Н1.4 at)"
     },
     "base": {
-     "description": "revision единицы в копии члена при приёме (PUT, DELETE) или base ждущей PUT того же path + 1; у POST нет; нет — правка идёт без If-Match (Н1.4 base)",
+     "description": "revision of the unit in the member's copy at intake (PUT, DELETE) or base of the pending PUT of the same path + 1; POST has none; absent — the edit goes without If-Match (Н1.4 base)",
      "type": "integer",
      "x-integer": true,
      "minimum": 1
     },
     "by": {
-     "description": "человек, которого судит консоль члена (Н1.4 by)",
+     "description": "the person judged by the member console (Н1.4 by)",
      "type": "string"
     },
     "iat": {
-     "description": "iat токена этого человека (Н1.4 by)",
+     "description": "iat of this person's token (Н1.4 by)",
      "type": "number"
     },
     "asked": {
-     "description": "запрос двери домена, как его принял процесс; по нему правку повторяют у нового держателя (глава 8.8 Н1.6 apply)",
+     "description": "the domain door request as the process accepted it; by it the edit is repeated at the new holder (chapter 8.8 Н1.6 apply)",
      "type": "object",
      "properties": {
       "method": {
-       "description": "метод двери домена",
+       "description": "method of the domain door",
        "type": "string",
        "enum": [
         "POST",
@@ -906,11 +906,11 @@
        ]
       },
       "path": {
-       "description": "путь двери домена, нормализован — PUT, DELETE `/domain/<sub>/<rows>/<ref>?cluster=<член найденный>[&id=<id>]`; POST `/domain/<sub>/<rows>` без query (Н1.4 asked)",
+       "description": "path of the domain door, normalized — PUT, DELETE `/domain/<sub>/<rows>/<ref>?cluster=<член найденный>[&id=<id>]`; POST `/domain/<sub>/<rows>` without query (Н1.4 asked)",
        "type": "string"
       },
       "body": {
-       "description": "тело запроса двери домена, у POST — с cluster",
+       "description": "body of the domain door request, for POST — with cluster",
        "type": "object",
        "x-opaque": true
       }

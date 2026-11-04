@@ -4,14 +4,14 @@
  "properties": {
   "term": {
    "$ref": "#/$defs/common.uint53",
-   "description": "срок держателя",
+   "description": "holder term",
    "x-codec": [
     "integer"
    ]
   },
   "rev": {
    "$ref": "#/$defs/common.uint53",
-   "description": "счётчик записей папок и членства",
+   "description": "counter of writes of folders and membership",
    "x-codec": [
     "integer"
    ]

@@ -1,7 +1,7 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$ref": "#/$defs/common.domain_backup_pointer",
- "description": "указатель выбранного хранителя {term, rev, sha256} у держателя (Н1.5 keepers); его несёт ответ агенту — carry (P/08.3 Н1.5)",
+ "description": "pointer of the chosen keeper {term, rev, sha256} at the holder (Н1.5 keepers); the answer to the agent carries it — carry (P/08.3 Н1.5)",
  "$defs": {
   "common.book_missing": {
    "description": "кого не хватает в книге — [{member, why}] class server первыми, внутри по member в байтах UTF-8, один на книгу (P/08.5 Н1.3 missing); порядок и «один на член» — правило урока, не форма",

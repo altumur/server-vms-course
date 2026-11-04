@@ -1,5 +1,5 @@
-# Исходы нечитаемой строки domain/relay-members/… (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable row domain/relay-members/… (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole object); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domain	строка целиком нечитаема: ответ пакета без relay_for и keys, ретранслятор держит прежние; журнал без значения	1	строка	P/08.3 Н1.2
-	domainconsole	строка целиком нечитаема: дверь — 503 {error: "unavailable"}	1	строка	P/10 Н1.2а
+	domain	the whole row is unreadable: the answer of the batch without relay_for and keys, the relay keeps the former ones; log without the value	1	строка	P/08.3 Н1.2
+	domainconsole	the whole row is unreadable: the door — 503 {error: "unavailable"}	1	строка	P/10 Н1.2а

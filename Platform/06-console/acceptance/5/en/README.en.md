@@ -120,7 +120,7 @@ Heartbeats of a given form are put by `@put object <ключ> inputs/<файл>`
 | `ct-dash-b2.json` | `testsub/contenders/-/b2` | a search mark without a given name, `name: "-"`, `state: waiting` — not a contender for the name (sc. 25) |
 | `hb-t-1-belt-slow.json` | `testsub2/heartbeats/t-1` | `jam: "stuck"` (a word from `heartbeat.strings`), `belt.state: "slow"` — a word not from `heartbeat.strings` (C20) |
 
-Sc. 12 step 7: two unreadable heartbeats (`w-7`, `W-9`) — `testsub_heartbeats_garbled 2`. Step 7 writes the row
+Sc. 12 step 7: two unreadable heartbeats (`w-7`, `W-9`) — `testsub_heartbeats_garbled 2`. Step 8 writes the row
 `platform/servers/srv-a` by the role `console` (P/02.5 Н1.4).
 
 ## Stand of sc. 03 and 17 (from М10/10)

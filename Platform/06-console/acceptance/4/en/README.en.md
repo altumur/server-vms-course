@@ -5,8 +5,8 @@ This English text is the source; the Russian [`README.md`](../README.md) is deri
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей).
 The norm of the chapter is [`06.4-console.norms.md`](../../../spec/06.4-console.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/08 (stage B, ADR-0083 addendum (1): without a change of
-behaviour); the numbers of scenarios and steps are the former ones. Scenarios 05 (a request with a holder) and 07 (the append) are in
-[the acceptance of chapter 3.6](../../../../03-worker/acceptance/6/README.md), scenarios 01, 02, 08 (the objects door, the events query, the paths
+behaviour); the numbers of scenarios and steps are the former ones. Scenarios 05 (a request with a holder) and 07 (the append) of М10/08 are in
+[the acceptance of chapter 3.6](../../../../03-worker/acceptance/6/README.md); 01, 02, 08 of М10/08 (the objects door, the events query, the paths
 of the resource) are in [the acceptance of P/05](../../../../05-resource/acceptance/README.md). The preparation, the comparison and the evidence below are the parts
 of the former README needed by these scenarios; the forms of foreign doors belong to their owners ([P/05](../../../../05-resource/spec/05-resource.norms.md) —
 the doors of the resource, [P/01.1](../../../../01-store/spec/01.1-store.norms.md) — the store).
@@ -78,7 +78,7 @@ Sc. 08–10 (`audit-coverage-gemini` 0a5ae79f9) — likewise, each on its own em
 
 ## Append without a holder (sc. 11)
 
-The VMS request «срок просьбы», the Architect's decision of 2026-10-29; after the pattern of sc. 04 and sc. 07. There are no workers on the stand, the unit `t1`
+The VMS request «срок просьбы», the Architect's decision of 2026-10-29; after the pattern of sc. 04 and sc. 07 `07-request-gone`. There are no workers on the stand, the unit `t1`
 exists — nobody serves the request, `gone` does not come. `testsub2`: `per_person` 3, `settle` 30, `ttl` 3600, so
 the boundary is the age of 3660 s. The deadline is not waited for: the age of a row is counted from its `at` (the request contract, the key `ttl`), and step 9 through the door
 `admin` replaces by `cas` the row `$r1` with the same row with the old `at` `1700000000` (the same technique as in sc. 38 of [the acceptance of chapter

@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "units": {
-   "description": "ссылки `<член>/<sub>/<rows>/<uid>` по возрастанию, текст JSON",
+   "description": "references `<член>/<sub>/<rows>/<uid>` in ascending order, JSON text",
    "type": "array",
    "x-encoding": "json",
    "items": {

@@ -4,7 +4,7 @@
  "properties": {
   "doc": {
    "$ref": "#/$defs/common.domain_topology_doc",
-   "description": "текст JCS {rev, centre?, star, relays?, via?, by?, at?}",
+   "description": "JCS text {rev, centre?, star, relays?, via?, by?, at?}",
    "x-codec": [
     "object"
    ]

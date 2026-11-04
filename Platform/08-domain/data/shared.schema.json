@@ -3,23 +3,23 @@
  "type": "object",
  "properties": {
   "doc": {
-   "description": "текст JCS указателя (у держателя) или строки копии (у члена)",
+   "description": "JCS text of the pointer (at the holder) or of the copy row (at the member)",
    "type": "object",
    "properties": {
     "term": {
      "$ref": "#/$defs/common.pos53",
-     "description": "срок держателя документа (глава 8.8, из М11/10 Н1.1); порядок — (term, rev), term старше"
+     "description": "term of the holder of the document (chapter 8.8, from М11/10 Н1.1); order — (term, rev), term is senior"
     },
     "rev": {
      "$ref": "#/$defs/common.pos53",
-     "description": "номер правки документа"
+     "description": "edit number of the document"
     },
     "sha256": {
      "$ref": "#/$defs/common.sha256_hex",
-     "description": "hex sha256 текста объекта документа"
+     "description": "hex sha256 of the text of the document object"
     },
     "object": {
-     "description": "ключ объекта документа — строка `domain/shared-docs/rev-<rev>` с rev указателя; только у указателя держателя, у строки копии члена поля нет (Н1.2 pointer; разбор ревью стадии A 8–10, № 26)",
+     "description": "key of the document object — the string `domain/shared-docs/rev-<rev>` with the rev of the pointer; only at the holder's pointer, the member's copy row has no field (Н1.2 pointer; review analysis of stage A 8–10, № 26)",
      "type": "string",
      "pattern": "^(?:domain/shared-docs/rev-[1-9][0-9]*)$"
     }

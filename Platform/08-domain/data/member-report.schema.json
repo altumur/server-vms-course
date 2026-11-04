@@ -3,28 +3,28 @@
  "type": "object",
  "properties": {
   "sent_at": {
-   "description": "sent_at публикации, создавшей поколение (стенные секунды агента, как пришло)",
+   "description": "sent_at of the publication that created the generation (the agent's wall-clock seconds, as it arrived)",
    "type": "number"
   },
   "objects": {
-   "description": "все объекты члена после применения изменения — только member_objects (P/09.1 Н1.2); ключ — ключ объекта, значение — JSON объекта",
+   "description": "all objects of the member after applying the change — only member_objects (P/09.1 Н1.2); key — the object key, value — the object JSON",
    "type": "object",
    "x-opaque": true
   },
   "key": {
    "$ref": "#/$defs/common.domain_member_key",
-   "description": "ключ члена из публикации"
+   "description": "member key from the publication"
   },
   "keys_rev": {
    "$ref": "#/$defs/common.pos53",
-   "description": "rev набора domain/keys, который член держит; нет — набора нет"
+   "description": "rev of the domain/keys set that the member holds; absent — there is no set"
   },
   "pinned": {
    "$ref": "#/$defs/root_fingerprint",
-   "description": "отпечаток domain/root члена; нет — не закреплён"
+   "description": "fingerprint of the member's domain/root; absent — not pinned"
   },
   "outcomes": {
-   "description": "исходы правок домена (P/09.1 Н1.5); нет поля — исходов нет",
+   "description": "outcomes of domain edits (P/09.1 Н1.5); no field — no outcomes",
    "type": "object",
    "propertyNames": {
     "type": "string",
@@ -848,12 +848,12 @@
    "maximum": 9007199254740991
   },
   "outcome": {
-   "description": "исход правки домена у члена — форма P/09.1 Н1.5",
+   "description": "outcome of a domain edit at the member — form P/09.1 Н1.5",
    "type": "object",
    "x-opaque": true
   },
   "root_fingerprint": {
-   "description": "отпечаток корня domain/root члена (P/08.2 Н1.1)",
+   "description": "root fingerprint of the member's domain/root (P/08.2 Н1.1)",
    "type": "string",
    "pattern": "^(?:[0-9a-f]{16})$"
   }

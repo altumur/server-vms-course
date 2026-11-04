@@ -1,0 +1,50 @@
+# Acceptance P/08.1 — the domain view and the shadow report (stand)
+
+This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей),
+the section [«Стенд домена»](../../../../common/acceptance/README.md#стенд-домена) (a stand of several clusters; formerly — the М11 dictionary of the acceptance README of
+М11/01; the plan of the move of lesson 8, В5). The norm of the chapter is
+[`08.1-domain.norms.md`](../../../spec/08.1-domain.norms.md) Н5. The scenarios were moved from the acceptance of М11/03 (04, 06–09) and
+М11/06 (06 → 15) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones, except the scenario of М11/06:
+the number 06 is taken by a scenario of М11/03, it got the number 15 — the next one after the largest number of the sources of the chapter (М11/03 sc. 14;
+the Architect's decision 2026-10-20, ADR-0083 addendum (14) item 14; the row of `corrections.tsv`). In total 6 scenarios / 39 steps.
+
+The same views without a stand are the vectors [`view`](../../../vectors/view/README.md) (28 rows, the former sc. 01–16 of the acceptance of М11/01).
+The doors `GET /domain`, `/domain/<sub>/<rows>`, `/domain/shadow`, through which the stand reads the view and the report, are doors of the domain
+console (lesson P/10, [Н1.2а](../../../../10-domain-console/spec/10-domain-console.norms.md)); the chapter sets the norm for their content.
+
+## Preparation
+
+As the acceptance README of [chapter 8.3](../../3/README.md) («Стенд», «Подготовка каждого сценария»;
+formerly — the acceptance README of М11/03): the runner brings up three clusters on one machine — `hold`, `m1`, `m2`; each has its own empty store,
+its own `{data}`, its own role sockets and ports of the console and the resource, its own ring (P/06.2 Н1.2), the manifest catalogue — only `testsub`
+(`domain.ref: name`); the console, the controller and the worker `w-1` of `testsub`, the resource of its own server (`srv-hold`, `srv-m1`, `srv-m2`).
+There are no units. There is no domain: the directive `@domain` of the first step of each scenario sets it up. The domain name is `acme`; the recovery
+file is `{recovery}` in the instance directory.
+
+Do not speed up the clocks: LOST_AFTER 45 s, REPORT_EVERY 5 s, MARK_REFRESH 22.5 s, SHADOW_STALL 60 s; the `@until` terms are taken with
+a margin. At the door `holder` the runner sets `Idempotency-Key` on `PUT` too (sc. 15, assignments — chapter 8.6).
+
+## scenarios.tsv
+
+The format is the dictionary of the «Стенд» and the domain dictionary; the expectation is a subset of fields.
+
+| № | Scenario | Steps | What |
+|---|---|---|---|
+| 04 | `cut-and-mend` | 5 | `@cut m1` — after LOST_AFTER `silent`, `complete: false`; `@mend` — `ok` again |
+| 06 | `view-on-the-stand` | 8 | two units in two members, a search by ref, `?cluster=`, `no such member`; `contested` is empty; the shadow report — `unmanaged` 2, `may_write: false` |
+| 07 | `view-unseen-and-silent` | 7 | after a restart of `domain` the members are `unseen`, then `ok`; a silent one is `silent` |
+| 08 | `view-configured-and-stale` | 8 | a unit without a worker — `configured`, `unobserved`; the worker is killed — `stale` |
+| 09 | `view-contested` | 5 | one ref in two members — `contested`, the unit is not in `units` |
+| 15 | `shadow-and-executors` | 6 | an assignment with `copies`: the claims of the executors from `cluster` and `copies` are not a `conflict`; an assignment without a unit — `orphaned` after SHADOW_STALL |
+
+Scenarios 06–09 repeat on the stand scenarios 01–05 of the acceptance of М11/01 (the vectors `view`): real reports of agents in
+`domain/members/<член>/reports/<rev>` and the holder's view.
+
+## corrections.tsv
+
+The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows from before the move are `corrections.tsv`
+of the acceptances of М11/03 and М11/06 as a whole, at the beginning of the log, with the former paths and numbers (they are resolved by
+[`id-map.tsv`](../../../../common/id-map.tsv)); the rows about scenarios of other chapters are the history of the source (the plan of the move of lesson 8,
+§ 3 «Журналы»).

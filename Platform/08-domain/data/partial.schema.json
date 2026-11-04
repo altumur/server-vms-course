@@ -4,20 +4,20 @@
  "properties": {
   "term": {
    "$ref": "#/$defs/common.pos53",
-   "description": "источник раздела: срок наибольшей слитой строки",
+   "description": "source of the section: the term of the largest merged row",
    "x-codec": [
     "integer"
    ]
   },
   "rev": {
    "$ref": "#/$defs/common.pos53",
-   "description": "источник раздела: её rev",
+   "description": "source of the section: its rev",
    "x-codec": [
     "integer"
    ]
   },
   "new": {
-   "description": "имена с Entry нового срока, текст JSON",
+   "description": "names with Entry of the new term, JSON text",
    "type": "array",
    "x-encoding": "json",
    "items": {
@@ -25,7 +25,7 @@
    }
   },
   "removed": {
-   "description": "имена, снятые новым сроком, текст JSON",
+   "description": "names removed by the new term, JSON text",
    "type": "array",
    "x-encoding": "json",
    "items": {
@@ -34,14 +34,14 @@
   },
   "servers": {
    "$ref": "#/$defs/common.uint53",
-   "description": "счёт раздела: серверов",
+   "description": "count of the section: servers",
    "x-codec": [
     "integer"
    ]
   },
   "cameras": {
    "$ref": "#/$defs/common.uint53",
-   "description": "счёт раздела: камер",
+   "description": "count of the section: cameras",
    "x-codec": [
     "integer"
    ]

@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "kid": {
-   "description": "kid ключа токенов — current набора (договор набора ключей домена writer_forms)",
+   "description": "kid of the token key — current of the set (the domain key set contract writer_forms)",
    "type": "string",
    "not": {
     "enum": [
@@ -15,14 +15,14 @@
    ]
   },
   "token_key_secret": {
-   "description": "hex 32 байт — зерно Ed25519 ключа токенов (current набора); конверт кольца",
+   "description": "hex of 32 bytes — the Ed25519 seed of the token key (current of the set); a ring envelope",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "serial": {
-   "description": "serial выпускающего — тот, что в issuing набора (writer_forms)",
+   "description": "serial of the issuer — the one in issuing of the set (writer_forms)",
    "type": "string",
    "not": {
     "enum": [
@@ -34,14 +34,14 @@
    ]
   },
   "issuing_key_secret": {
-   "description": "hex 32 байт — зерно Ed25519 выпускающего (применение — P/08.8); конверт кольца",
+   "description": "hex of 32 bytes — the issuer's Ed25519 seed (use — P/08.8); a ring envelope",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "backup_key_secret": {
-   "description": "hex 32 байт — ключ резервной копии (P/08.8 Н1.5, HMAC-SHA256 от зерна корня); пишет установка и перенос; конверт кольца",
+   "description": "hex of 32 bytes — the backup key (P/08.8 Н1.5, HMAC-SHA256 of the root seed); written by the installation and the move; a ring envelope",
    "type": "string",
    "x-codec": [
     "string"
@@ -49,13 +49,13 @@
   },
   "backup_key_rev": {
    "$ref": "#/$defs/common.pos53",
-   "description": "целое ≥ 1, при установке 1",
+   "description": "an integer ≥ 1, at installation 1",
    "x-codec": [
     "integer"
    ]
   },
   "forgotten": {
-   "description": "смещённый держатель заменяет строку на {forgotten: \"deposed by term N\"} (P/08.8 Н1.6)",
+   "description": "the deposed holder replaces the row with {forgotten: \"deposed by term N\"} (P/08.8 Н1.6)",
    "type": "string",
    "x-codec": [
     "string"

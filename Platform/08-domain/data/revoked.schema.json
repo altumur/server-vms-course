@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "jtis": {
-   "description": "`\"<jti>:<exp>,…\"` — jti по грамматике токена (1–64 [A-Za-z0-9_-]), exp — число JSON без пробелов, конечное, exp отозванного токена; пусто — \"\"; повтор jti и порядок читатель не проверяет; писатель — по возрастанию jti в байтах",
+   "description": "`\"<jti>:<exp>,…\"` — jti by the token grammar (1–64 [A-Za-z0-9_-]), exp — a JSON number without spaces, finite, the exp of the revoked token; empty — \"\"; the reader does not check repetition of jti or the order; the writer — by ascending jti in bytes",
    "type": "string",
    "pattern": "^(?:([A-Za-z0-9_-]{1,64}:-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?(,[A-Za-z0-9_-]{1,64}:-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?)*)?)$",
    "x-codec": [

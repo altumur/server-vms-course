@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "at": {
-   "description": "время подписи: значение X-W2C-Time как пришло — десятичная запись стенных секунд с тремя знаками после точки (договор подписи просьбы, common/contracts/ask-sig.md, time; P/08.8 Н1.8 шаг 4а)",
+   "description": "signing time: the value of X-W2C-Time as it arrived — the decimal notation of wall-clock seconds with three digits after the point (the ask signature contract, common/contracts/ask-sig.md, time; P/08.8 Н1.8 step 4а)",
    "type": "string",
    "pattern": "^(?:(0|[1-9][0-9]*)\\.[0-9]{3})$",
    "x-codec": [
@@ -12,7 +12,7 @@
   },
   "sha256": {
    "$ref": "#/$defs/common.sha256_hex",
-   "description": "sha256 тела подписанного запроса, 64 строчные hex-цифры (P/08.8 Н1.8 by_file, шаг 4а)",
+   "description": "sha256 of the body of the signed request, 64 lowercase hex digits (P/08.8 Н1.8 by_file, step 4а)",
    "x-codec": [
     "string"
    ]

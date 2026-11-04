@@ -1,4 +1,4 @@
-# Исходы нечитаемой строки domain/idem/<key> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable row domain/idem/<key> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domain	строка целиком нечитаема: дверь с этим ключом — 503 unavailable, строка не трогается, нового прохода нет: ответ мог быть выдан, нечитаемая строка отсутствия не подтверждает; снимает её срок, как прочие (P/08.0 Н1.9 «Память повторов»; образец — P/06.1 Н3 «создать» шаг 2)	0	строка	P/08.0 Н1.9 «Память повторов»
+	domain	the whole row is unreadable: the door with this key — 503 unavailable, the row is not touched, there is no new pass: the answer might have been given, an unreadable row does not confirm absence; it is removed by its term, like the others (P/08.0 Н1.9 «Repeat memory»; the pattern — P/06.1 Н3 «create» step 2)	0	строка	P/08.0 Н1.9 «Память повторов»

@@ -4,22 +4,22 @@
  "properties": {
   "rev": {
    "$ref": "#/$defs/common.pos53",
-   "description": "номер поколения; выдаёт держатель, +1 на принятое изменение"
+   "description": "generation number; issued by the holder, +1 per accepted change"
   },
   "sha256": {
    "$ref": "#/$defs/common.sha256_hex",
-   "description": "sha256 байтов generation"
+   "description": "sha256 of the bytes of generation"
   },
   "base": {
    "$ref": "#/$defs/common.uint53",
-   "description": "rev, против которого пришло изменение; 0 — пришло целое"
+   "description": "rev against which the change arrived; 0 — arrived whole"
   },
   "delta_sha256": {
    "$ref": "#/$defs/common.sha256_hex",
-   "description": "sha256 байтов delta (при base 0 — тела целого, как пришло)"
+   "description": "sha256 of the bytes of delta (at base 0 — of the whole body, as it arrived)"
   },
   "signature": {
-   "description": "заголовок X-Agent-Signature прямого отчёта, создавшего поколение, как пришёл; через ретранслятор поля нет",
+   "description": "the X-Agent-Signature header of the direct report that created the generation, as it arrived; through a relay — no field",
    "type": "string"
   },
   "key": {
@@ -32,30 +32,30 @@
    "$ref": "#/$defs/root_fingerprint"
   },
   "sent_at": {
-   "description": "sent_at публикации последнего принятого запроса, как пришёл (P/01.1 Н0 «Время в строке» — по своей норме)",
+   "description": "sent_at of the publication of the last accepted request, as it arrived (P/01.1 Н0 «Time in a row» — by its own norm)",
    "type": "number"
   },
   "received_at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды держателя приёма"
+   "description": "the holder's wall-clock seconds of the intake"
   },
   "request_sha256": {
    "$ref": "#/$defs/common.sha256_hex",
-   "description": "sha256 байтов тела этого запроса, как пришло; повтор узнаётся по (sent_at, request_sha256)"
+   "description": "sha256 of the bytes of the body of this request, as it arrived; a repeat is recognized by (sent_at, request_sha256)"
   },
   "via": {
    "$ref": "#/$defs/common.domain_member",
-   "description": "ретранслятор дороги последнего запроса (Н1.3а); нет — прямо"
+   "description": "relay of the route of the last request (Н1.3а); absent — direct"
   },
   "stale": {
-   "description": "из публикации при каждом приёме; нет в публикации — []",
+   "description": "from the publication at every intake; not in the publication — []",
    "type": "array",
    "items": {
     "type": "string"
    }
   },
   "sign_failures": {
-   "description": "из публикации при каждом приёме с записью метки; нет в публикации — поля нет (Н1.6а)",
+   "description": "from the publication at every intake with a write of the mark; not in the publication — no field (Н1.6а)",
    "type": "object",
    "properties": {
     "domain": {
@@ -904,14 +904,14 @@
    "maximum": 9007199254740991
   },
   "failures": {
-   "description": "n ≥ 1 — запросы, которые агент с запуска не отправил, потому что не смог подписать",
+   "description": "n ≥ 1 — requests that the agent has not sent since start because it could not sign them",
    "type": "integer",
    "x-integer": true,
    "minimum": 1,
    "maximum": 9007199254740991
   },
   "root_fingerprint": {
-   "description": "отпечаток корня domain/root члена (P/08.2 Н1.1)",
+   "description": "root fingerprint of the member's domain/root (P/08.2 Н1.1)",
    "type": "string",
    "pattern": "^(?:[0-9a-f]{16})$"
   },

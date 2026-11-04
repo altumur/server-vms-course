@@ -3,13 +3,13 @@
  "type": "object",
  "properties": {
   "": {
-   "description": "срок записи строки: своя читается и в первом круге (P/08.5 Н1.3 first_pass; ADR-0113 доп. (23) п. 1), текст JSON",
+   "description": "write term of the row: one's own is read in the first round as well (P/08.5 Н1.3 first_pass; ADR-0113 addendum (23) item 1), JSON text",
    "type": "object",
    "x-encoding": "json",
    "properties": {
     "term": {
      "$ref": "#/$defs/common.pos53",
-     "description": "срок записи строки"
+     "description": "write term of the row"
     }
    },
    "additionalProperties": false,
@@ -19,7 +19,7 @@
   }
  },
  "additionalProperties": {
-  "description": "имя — член; ключи книги, которые он дал, текст JSON",
+  "description": "name — member; the book keys it gave, JSON text",
   "type": "array",
   "x-encoding": "json",
   "items": {

@@ -9,7 +9,7 @@
    ]
   },
   "members": {
-   "description": "член — ключ, текст JSON",
+   "description": "member — key, JSON text",
    "type": "object",
    "additionalProperties": {
     "type": "string"

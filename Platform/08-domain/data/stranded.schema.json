@@ -3,20 +3,20 @@
  "type": "object",
  "properties": {
   "doc": {
-   "description": "текст JCS брошенного; ровно один элемент строки",
+   "description": "JCS text of the stranded one; exactly one element of the row",
    "type": "object",
    "properties": {
     "term": {
      "$ref": "#/$defs/common.pos53",
-     "description": "срок (Н1.6 stranded)"
+     "description": "term (Н1.6 stranded)"
     },
     "holder": {
-     "description": "имя члена-держателя (Н1.6 stranded; P/08.1 Н1.1 member)",
+     "description": "name of the holder member (Н1.6 stranded; P/08.1 Н1.1 member)",
      "type": "string",
      "pattern": "^(?:[a-z0-9-]{1,64})$"
     },
     "base": {
-     "description": "резервная копия, от которой считается отличие: из которой восстановлен новый срок, если это резервная копия этого держателя (restored_from записи), иначе его последняя",
+     "description": "the backup from which the difference is counted: the one from which the new term was restored, if it is a backup of this holder (restored_from of the record), otherwise its last one",
      "type": "object",
      "properties": {
       "term": {
@@ -33,21 +33,21 @@
      ]
     },
     "items": {
-     "description": "элементы state, которые отличаются от base, по (path, key)",
+     "description": "elements of state that differ from base, by (path, key)",
      "type": "array",
      "items": {
       "type": "object",
       "properties": {
        "path": {
-        "description": "ключ строки state (Н1.5 state)",
+        "description": "key of the state row (Н1.5 state)",
         "type": "string"
        },
        "key": {
-        "description": "элемент строки; имя элемента — Idempotency-Key повтора правки (Н1.6 apply)",
+        "description": "element of the row; the element name — Idempotency-Key of the repeat of the edit (Н1.6 apply)",
         "type": "string"
        },
        "value": {
-        "description": "значение элемента как хранится (текст); секрет изменён — \"<secret: differs>\"; null — элемента нет в state смещённого (удаление, и у секрета); \"\" — запись пустого значения",
+        "description": "value of the element as stored (text); a secret changed — \"<secret: differs>\"; null — the element is absent in the state of the deposed one (a deletion, and for a secret); \"\" — a write of an empty value",
         "type": [
          "string",
          "null"

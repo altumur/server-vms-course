@@ -3,15 +3,15 @@
  "type": "object",
  "properties": {
   "cluster": {
-   "description": "член, чей снимок таблицы; равен имени члена в ключе",
+   "description": "the member whose table snapshot this is; equal to the member name in the key",
    "type": "string"
   },
   "ts": {
    "$ref": "#/$defs/common.time",
-   "description": "момент записи объекта у члена (P/04 Н1.3б); часы члена"
+   "description": "moment the object was written at the member (P/04 Н1.3б); the member's clock"
   },
   "refused": {
-   "description": "вместо строк заглушка: таблица не вошла (P/04 Н1.3б ceiling, P/09.1 Н1.2 tables_budget)",
+   "description": "a stub instead of the rows: the table did not fit (P/04 Н1.3б ceiling, P/09.1 Н1.2 tables_budget)",
    "type": "string",
    "enum": [
     "too_large",
@@ -19,7 +19,7 @@
    ]
   },
   "rows": {
-   "description": "строки таблицы по key в байтах UTF-8 (порядок — правило урока, не форма)",
+   "description": "table rows by key in UTF-8 bytes (the order is the lesson's rule, not the form)",
    "type": "array",
    "items": {
     "$ref": "#/$defs/row"
@@ -838,7 +838,7 @@
    "type": "object",
    "properties": {
     "key": {
-     "description": "имя строки (P/06.1 Н1.6)",
+     "description": "row name (P/06.1 Н1.6)",
      "type": "string",
      "not": {
       "enum": [
@@ -848,46 +848,46 @@
     },
     "revision": {
      "$ref": "#/$defs/common.pos53",
-     "description": "версия строки"
+     "description": "row version"
     },
     "fields": {
-     "description": "поля списка domain.view_tables манифеста; значения своим типом; секретов нет",
+     "description": "fields of the domain.view_tables list of the manifest; values with their own type; no secrets",
      "type": "object",
      "x-opaque": true
     },
     "secrets": {
-     "description": "имена заданных полей *_secret; значений нет",
+     "description": "names of the set *_secret fields; no values",
      "type": "array",
      "items": {
       "type": "string"
      }
     },
     "worker": {
-     "description": "у строк единиц — из назначения",
+     "description": "for unit rows — from the assignment",
      "type": "string"
     },
     "server": {
-     "description": "у строк единиц — из назначения",
+     "description": "for unit rows — from the assignment",
      "type": "string"
     },
     "phase": {
-     "description": "у строк единиц — из пульса",
+     "description": "for unit rows — from the heartbeat",
      "type": "string"
     },
     "status": {
-     "description": "поля domain.view_status из элемента status[] пульса",
+     "description": "domain.view_status fields from the status[] element of the heartbeat",
      "type": "object",
      "x-opaque": true
     },
     "labels": {
-     "description": "у строк единиц — поле labels",
+     "description": "for unit rows — the labels field",
      "type": "array",
      "items": {
       "type": "string"
      }
     },
     "about": {
-     "description": "у строк единиц — id about-единицы",
+     "description": "for unit rows — id of the about unit",
      "type": "string"
     }
    },

@@ -3,11 +3,11 @@
  "type": "object",
  "properties": {
   "": {
-   "description": "текст JCS {missing, missing_count} — полнота индекса",
+   "description": "JCS text {missing, missing_count} — completeness of the index",
    "type": "object",
    "properties": {
     "missing": {
-     "description": "члены, чьих вкладов нет из-за них (silent, never, no_copy, bad_contribution, secret_unopened), первые MISSING_SHOWN 500: class server первыми, внутри по возрастанию (Н1.7 missing)",
+     "description": "members whose contributions are absent because of these (silent, never, no_copy, bad_contribution, secret_unopened), the first MISSING_SHOWN 500: class server first, inside in ascending order (Н1.7 missing)",
      "type": "array",
      "items": {
       "$ref": "#/$defs/common.domain_member"
@@ -16,7 +16,7 @@
      "maxItems": 500
     },
     "missing_count": {
-     "description": "все такие члены; 0 — индекс known (Н1.7 known)",
+     "description": "all such members; 0 — the index is known (Н1.7 known)",
      "$ref": "#/$defs/common.uint53"
     }
    },
@@ -39,18 +39,18 @@
     ]
    },
    {
-    "description": "subject — значение key вклада книги (Н1.7 subject), непустая строка",
+    "description": "subject — the value of key of the book contribution (Н1.7 subject), a non-empty string",
     "type": "string",
     "pattern": "^(?:[\\s\\S]+)$"
    }
   ]
  },
  "additionalProperties": {
-  "description": "текст JCS {members}",
+  "description": "JCS text {members}",
   "type": "object",
   "properties": {
    "members": {
-    "description": "члены, заявившие этот key, по возрастанию — из всех читаемых вкладов, включая спорные unique и недоставленные; значений и секретов нет",
+    "description": "members that claimed this key, in ascending order — from all readable contributions, including contested unique and undelivered ones; no values and secrets",
     "type": "array",
     "items": {
      "$ref": "#/$defs/common.domain_member"

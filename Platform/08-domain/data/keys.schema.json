@@ -3,25 +3,25 @@
  "type": "object",
  "properties": {
   "doc": {
-   "description": "текст JSON документа набора; ровно один элемент строки; закрытый набор полей — лишнее поле: not_a_set; массивы — без значения порядка, повтор элемента допустим; писатель кладёт массивы по возрастанию",
+   "description": "JSON text of the set document; exactly one element of the row; a closed set of fields — an extra field: not_a_set; arrays — without a meaning of order, a repetition of an element is allowed; the writer puts arrays in ascending order",
    "type": "object",
    "properties": {
     "domain": {
-     "description": "имя домена, 1–64 знака [a-z0-9-] (P/08.2 Н1.1)",
+     "description": "domain name, 1–64 characters [a-z0-9-] (P/08.2 Н1.1)",
      "type": "string",
      "pattern": "^(?:[a-z0-9-]{1,64})$"
     },
     "rev": {
      "$ref": "#/$defs/common.pos53",
-     "description": "ревизия набора, целое 1 … 2^53 − 1; только вперёд (договор only_forward; rev писателя — P/08.2 Н1.2)"
+     "description": "revision of the set, an integer 1 … 2^53 − 1; only forward (the only_forward contract; the writer's rev — P/08.2 Н1.2)"
     },
     "root": {
-     "description": "hex открытого корня (32 байта Ed25519)",
+     "description": "hex of the public root (32 bytes Ed25519)",
      "type": "string",
      "pattern": "^(?:[0-9a-f]{64})$"
     },
     "current": {
-     "description": "kid ключа токенов, которым держатель подписывает сейчас; ∈ keys; ∉ until (писатель: первые 8 знаков hex открытого ключа)",
+     "description": "kid of the token key with which the holder signs now; ∈ keys; ∉ until (writer: the first 8 characters of the hex of the public key)",
      "type": "string",
      "not": {
       "enum": [
@@ -30,11 +30,11 @@
      }
     },
     "keys": {
-     "description": "`{<kid>: <hex открытого ключа токенов>}`, не пусто",
+     "description": "`{<kid>: <hex открытого ключа токенов>}`, not empty",
      "type": "object",
      "properties": {},
      "propertyNames": {
-      "description": "kid — непустая строка (писатель: первые 8 знаков hex открытого ключа токенов, writer_forms)",
+      "description": "kid — a non-empty string (writer: the first 8 characters of the hex of the public token key, writer_forms)",
       "type": "string",
       "not": {
        "enum": [
@@ -43,13 +43,13 @@
       }
      },
      "additionalProperties": {
-      "description": "hex открытого ключа токенов Ed25519 (32 байта)",
+      "description": "hex of the Ed25519 public token key (32 bytes)",
       "type": "string",
       "pattern": "^(?:[0-9a-f]{64})$"
      }
     },
     "until": {
-     "description": "`{<kid>: <стенные секунды>}` — срок прежних ключей токенов только для видов keep; kid есть и в until; нет — такого срока нет",
+     "description": "`{<kid>: <стенные секунды>}` — the term of former token keys only for keep kinds; the kid is in until as well; absent — there is no such term",
      "type": "object",
      "properties": {},
      "propertyNames": {
@@ -63,11 +63,11 @@
      },
      "additionalProperties": {
       "$ref": "#/$defs/common.time",
-      "description": "стенные секунды — ключ ещё принимается для видов keep до этого момента включительно"
+      "description": "wall-clock seconds — the key is still accepted for keep kinds until this moment inclusive"
      }
     },
     "keep_until": {
-     "description": "`{<kid>: <стенные секунды>}` — срок прежних ключей токенов только для видов keep; kid есть и в until; нет — такого срока нет",
+     "description": "`{<kid>: <стенные секунды>}` — the term of former token keys only for keep kinds; the kid is in until as well; absent — there is no such term",
      "type": "object",
      "properties": {},
      "propertyNames": {
@@ -81,14 +81,14 @@
      },
      "additionalProperties": {
       "$ref": "#/$defs/common.time",
-      "description": "стенные секунды — ключ ещё принимается для видов keep до этого момента включительно"
+      "description": "wall-clock seconds — the key is still accepted for keep kinds until this moment inclusive"
      }
     },
     "issuing": {
-     "description": "ключи выпускающего держателя (P/08.8); пустой массив допустим (непустота названа только у keys)",
+     "description": "the holder's issuer keys (P/08.8); an empty array is allowed (non-emptiness is named only for keys)",
      "type": "array",
      "items": {
-      "description": "serial — непустая строка (писатель: первые 16 знаков hex открытого ключа выпускающего)",
+      "description": "serial — a non-empty string (writer: the first 16 characters of the hex of the issuer's public key)",
       "type": "string",
       "not": {
        "enum": [
@@ -98,10 +98,10 @@
      }
     },
     "revoked_issuing": {
-     "description": "отозванные ключи выпускающего; всегда массив, может быть пустым",
+     "description": "revoked issuer keys; always an array, may be empty",
      "type": "array",
      "items": {
-      "description": "serial отозванного выпускающего",
+      "description": "serial of the revoked issuer",
       "type": "string",
       "not": {
        "enum": [
@@ -111,16 +111,16 @@
      }
     },
     "revoked_members": {
-     "description": "отозванные ключи членов (приём и подпись члена сверяются с ним — P/08.3); нет — пусто",
+     "description": "revoked member keys (the intake and the member's signature are checked against it — P/08.3); absent — empty",
      "type": "array",
      "items": {
-      "description": "hex открытого ключа члена",
+      "description": "hex of the member's public key",
       "type": "string",
       "pattern": "^(?:[0-9a-f]{64})$"
      }
     },
     "stolen_issuing": {
-     "description": "выпускающие, отозванные кражей, подмножество revoked_issuing; нет — пусто (договор набора ключей)",
+     "description": "issuers revoked by theft, a subset of revoked_issuing; absent — empty (the key set contract)",
      "type": "array",
      "items": {
       "type": "string",
@@ -129,19 +129,19 @@
     },
     "thefts": {
      "$ref": "#/$defs/common.pos53",
-     "description": "счёт смен после кражи (P/08.2 Н3 шаг 3); нет — 0; метка кражи для SET_GUARD (договор набора ключей «Набор следования»)"
+     "description": "count of changes after theft (P/08.2 Н3 step 3); absent — 0; the theft mark for SET_GUARD (the key set contract «Набор следования»)"
     },
     "book_seal": {
-     "description": "hex открытого ключа приёма книг X25519 (P/08.2 Н1.4); обязателен; точка малого порядка — набор не читается (функция keys шаг 6 — no_book_seal, не not_a_set; добавлено сверкой М11, S1)",
+     "description": "hex of the X25519 public book intake key (P/08.2 Н1.4); mandatory; a small-order point — the set is not read (function keys step 6 — no_book_seal, not not_a_set; added by the reconciliation of М11, S1)",
      "type": "string",
      "pattern": "^(?:[0-9a-f]{64})$"
     },
     "kid": {
-     "description": "\"root\"; иное — функция keys шаг 3 (bad_signature), не форма",
+     "description": "\"root\"; anything else — function keys step 3 (bad_signature), not the form",
      "type": "string"
     },
     "sig": {
-     "description": "base64url без = подписи Ed25519 корня над UTF-8(JCS(doc без kid и sig)), 64 байта; не base64url или не 64 байта — функция keys шаг 5 (bad_signature), не форма",
+     "description": "base64url without = of the root's Ed25519 signature over UTF-8(JCS(doc without kid and sig)), 64 bytes; not base64url or not 64 bytes — function keys step 5 (bad_signature), not the form",
      "type": "string"
     }
    },

@@ -4,13 +4,13 @@
  "properties": {
   "name": {
    "$ref": "#/$defs/common.person_name",
-   "description": "имя роли — то же, что <имя> ключа",
+   "description": "role name — the same as <имя> of the key",
    "x-codec": [
     "string"
    ]
   },
   "title": {
-   "description": "отображаемое название",
+   "description": "display title",
    "type": "string",
    "x-codec": [
     "string"
@@ -18,7 +18,7 @@
    "maxLength": 200
   },
   "comment": {
-   "description": "комментарий",
+   "description": "comment",
    "type": "string",
    "x-codec": [
     "string"
@@ -26,26 +26,26 @@
    "maxLength": 2000
   },
   "assigned": {
-   "description": "назначения людям и группам; порядок — (вид, имя) в байтах UTF-8, без повторов — правило строки (P/08.4 Н1.3а)",
+   "description": "assignments to people and groups; order — (kind, name) in UTF-8 bytes, without repetitions — the rule of the row (P/08.4 Н1.3а)",
    "type": "array",
    "items": {
     "type": "object",
     "properties": {
      "person": {
       "$ref": "#/$defs/common.person_name",
-      "description": "человек домена"
+      "description": "domain person"
      },
      "group": {
       "$ref": "#/$defs/common.person_name",
-      "description": "группа домена"
+      "description": "domain group"
      },
      "until": {
       "$ref": "#/$defs/common.time",
-      "description": "как until строки гранта (P/08.4 Н1.3)"
+      "description": "like until of the grant row (P/08.4 Н1.3)"
      },
      "at": {
       "$ref": "#/$defs/common.time",
-      "description": "когда элемент начал действовать (P/08.4 Н1.3а)"
+      "description": "when the element took effect (P/08.4 Н1.3а)"
      }
     },
     "additionalProperties": false,
@@ -72,7 +72,7 @@
    ]
   },
   "lines": {
-   "description": "права роли на весь домен: JSON-текст списка {cap, sub?, scope, until} (Н1.3а lines)",
+   "description": "rights of the role on the whole domain: JSON text of a list {cap, sub?, scope, until} (Н1.3а lines)",
    "type": "array",
    "items": {
     "type": "object",
@@ -108,27 +108,27 @@
   },
   "lines_at": {
    "$ref": "#/$defs/common.time",
-   "description": "когда записаны lines",
+   "description": "when lines were written",
    "x-codec": [
     "time"
    ]
   },
   "lines_by": {
-   "description": "кто записал lines",
+   "description": "who wrote lines",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "supervision": {
-   "description": "надзор: подсистема → роль супервизоров; действие автора с этой ролью над подсистемой требует подтверждения человеком роли супервизоров (P/08.4 Н1.3а supervision; ADR-0119 доп. (5) п. 1); нет поля — надзора нет",
+   "description": "supervision: subsystem → role of supervisors; an action of an author with this role over the subsystem requires confirmation by a person of the supervisors' role (P/08.4 Н1.3а supervision; ADR-0119 addendum (5) item 1); no field — no supervision",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/common.sub_name"
    },
    "additionalProperties": {
     "$ref": "#/$defs/common.person_name",
-    "description": "имя роли домена"
+    "description": "domain role name"
    },
    "x-encoding": "jcs",
    "x-codec": [
@@ -137,13 +137,13 @@
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды последней правки",
+   "description": "wall-clock seconds of the last edit",
    "x-codec": [
     "time"
    ]
   },
   "by": {
-   "description": "имя человека последней правки",
+   "description": "name of the person of the last edit",
    "type": "string",
    "x-codec": [
     "string"
@@ -151,7 +151,7 @@
   },
   "revision": {
    "$ref": "#/$defs/common.pos53",
-   "description": "счётчик записей строки: 1 при создании, +1 на каждую запись; читает только процесс domain и консоль домена, писатель пишет всегда (P/08.0 Н1.9 «Версии»; ADR-0094 B4)",
+   "description": "write counter of the row: 1 at creation, +1 per write; read only by the domain process and the domain console, the writer always writes it (P/08.0 Н1.9 «Versions»; ADR-0094 B4)",
    "x-whole": true,
    "x-codec": [
     "integer"

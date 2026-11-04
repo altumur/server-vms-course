@@ -10,7 +10,7 @@ the names and the steps are the former ones, except `13-notes-unique` (in М11/0
 `03-break-glass`) and `15-held-and-copies` (in М11/10 — `01-held-and-copies`): their numbers are taken by the scenarios of М11/08 (it has more scenarios in
 the chapter); the new numbers are the next ones after the largest number of the sources of the chapter (М11/10 sc. 12), in the order of
 the lesson М11, then of the scenario (the Architect's decision on the plans of the move 8–10, ADR-0083 addendum (14) item 14; the row of
-`corrections.tsv`). In total 10 scenarios / 106 steps: 41 from М11/08, 18 from М11/09, 5 from М11/05, 9 from М11/10, 11 — sc. 16 (the second pass of the coverage audit of P/06, Gemini), 7 — sc. 17 (ADR-0094 B6), 9 — sc. 18 (ADR-0094 B7), 4 — sc. 03 (ADR-0112 addendum (12) item 3), 1 — sc. 03 (ADR-0112 addendum (13) item 10), 1 — sc. 03 (the ADR reconciliation С23).
+`corrections.tsv`). In total 10 scenarios / 106 steps: 41 from М11/08, 18 from М11/09, 5 from М11/05, 9 from М11/10, 11 — sc. 16 (the second pass of the coverage audit of P/06, Gemini), 7 — sc. 17 (ADR-0094 B6), 9 — sc. 18 (ADR-0094 B7), 4 steps of sc. 03 (ADR-0112 addendum (12) item 3), 1 step of sc. 03 (ADR-0112 addendum (13) item 10), 1 step of sc. 03 (the ADR reconciliation С23).
 
 The function `resolve` without a stand is checked by the vector [`resolve`](../../../vectors/resolve/README.md) (12 rows: 11 — the former sc. 03 of the acceptance of
 М11/11); `families` of the door `/domain/keys` (Н1.11) — by the vector [`key-families`](../../../vectors/key-families/README.md) (12 rows:

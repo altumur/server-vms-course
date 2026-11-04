@@ -6,7 +6,7 @@
   "type": "string"
  },
  "additionalProperties": {
-  "description": "поля метки: `at`, `done` (Н1.1 domain/deleting); читатель ими не отказывает: at нет или не читается — срока нет",
+  "description": "fields of the mark: `at`, `done` (Н1.1 domain/deleting); the reader does not refuse by them: at absent or unreadable — there is no term",
   "x-codec": [
    "any"
   ]

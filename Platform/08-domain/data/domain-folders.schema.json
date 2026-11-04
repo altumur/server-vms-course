@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "name": {
-   "description": "имя папки: не пусто, не длиннее FOLDER_NAME_MAX байт UTF-8; уникальности среди соседей нет (Н1.1)",
+   "description": "folder name: not empty, not longer than FOLDER_NAME_MAX bytes of UTF-8; there is no uniqueness among siblings (Н1.1)",
    "type": "string",
    "x-codec": [
     "string"
@@ -12,7 +12,7 @@
    "x-max-bytes": 255
   },
   "parent": {
-   "description": "id родителя; пустая строка — корень домена; задаётся при создании и не меняется (Н1.8)",
+   "description": "parent id; an empty string — the domain root; set at creation and does not change (Н1.8)",
    "type": "string",
    "x-codec": [
     "string"
@@ -20,7 +20,7 @@
    "pattern": "^(?:([0-9a-f]{32})?)$"
   },
   "deleted": {
-   "description": "надгробие: папка удалена; поверх него запись отказана, строка не убирается (Н1.2)",
+   "description": "tombstone: the folder is deleted; a write over it is refused, the row is not removed (Н1.2)",
    "type": "boolean",
    "x-codec": [
     "boolean"
@@ -28,13 +28,13 @@
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды записи",
+   "description": "wall-clock seconds of the write",
    "x-codec": [
     "time"
    ]
   },
   "by": {
-   "description": "имя человека записи",
+   "description": "name of the person of the record",
    "type": "string",
    "x-codec": [
     "string"
@@ -42,7 +42,7 @@
   },
   "revision": {
    "$ref": "#/$defs/common.pos53",
-   "description": "счётчик записей строки: 1 при создании, +1 на каждую запись; читает только процесс domain и консоль домена, писатель пишет всегда (P/08.0 Н1.9 «Версии»; ADR-0094 B4)",
+   "description": "write counter of the row: 1 at creation, +1 per write; read only by the domain process and the domain console, the writer always writes it (P/08.0 Н1.9 «Versions»; ADR-0094 B4)",
    "x-whole": true,
    "x-codec": [
     "integer"
