@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/01.3: демон хранилища, служебные двери, копия; группа хранилища — сц. 07, 17, 18 (стенд группы). Перенесено из М10/11 (стадия B). Формат — README.
+# Acceptance of P/01.3: the store daemon, the service doors, the copy; the store group — sc. 07, 17, 18 (the group stand). Moved from М10/11 (stage B). Format — README.
 04-store-metrics	1	store GET /metrics	200 ~configstore_raft_term
 04-store-metrics	2	store GET /metrics	200 ~configstore_raft_voters_expected
 07-group-size	1	@group-setup inputs/group.json	ok

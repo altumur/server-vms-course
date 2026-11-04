@@ -1,6 +1,6 @@
-# Вектор оценщика прав: роль, действие, ключ → allow | deny по файлу прав rights.json рядом (М10/6 Н1.2 pattern, Н1.3).
-# allow — только подтверждённый успех (чтение — 200 Row, запись и удаление — 200 Written); deny — 403 forbidden на сокете
-# роли; иное (5xx, обрыв, другой ответ) — неопределённый исход (README). Строки с # и пустые пропускаются; первая — заголовок.
+# The rights evaluator vector: role, action, key → allow | deny by the rights file rights.json next to it (М10/6 Н1.2 pattern, Н1.3).
+# allow — only a confirmed success (read — 200 Row, write and delete — 200 Written); deny — 403 forbidden on the socket
+# of the role; anything else (5xx, a drop, another answer) is an undetermined outcome (README). Lines with # and empty lines are skipped; the first is the header.
 role	action	key	expect
 acc	read	acc/exact	allow
 acc	read	acc/exactly	deny

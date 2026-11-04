@@ -1,20 +1,20 @@
-# Порядок проверок команды и пакета POST /v1/write (P/01.1 Н2.1; ADR-0120 п. 2 (а)). Норма ссылается на эту таблицу, прозой её не повторяет.
-# Вход таблицы — тело, уже разобранное как JSON по Н2.1 (рамка HTTP, предел тела, RFC 8259, JSON_DEPTH — до таблицы). Строки — по порядку n:
-# первая строка, чьё when истинно, даёт отказ code, kind и поля fault; ни одна — команда идёт к Н3. Состояние хранилища (cas и guard по значению, память id) таблица не читает — это Н3.
-# op — к каким командам строка: * — ко всем, иначе перечень значений body.op через запятую. group — подряд идущие строки с одним group — группа:
-# each связывает индекс и элемент списка (i, w in body.writes), группа применяется к элементам по порядку, элемент i целиком раньше элемента i + 1; списка нет — элементов нет.
-# when и fault — CEL (расширения strings, two-var-comprehensions; type(), has(), matches() — стандарт CEL). Переменные:
-#var body dyn — JSON тела; строки — с U+FFFD вместо одиночного суррогата
-#var sock string — роль сокета вызывающего (P/01.2 Н1.1 identity): admin, console, domain или имя роли
-#var lone list<string> — JSON Pointer каждой строки тела с одиночным суррогатом; у имени поля — указатель объекта, где оно стоит (Н2.1)
-#var lim map<string,int> — параметры урока, только имена #lim
+# The order of checks of a command and a batch POST /v1/write (P/01.1 Н2.1; ADR-0120 item 2 (a)). The norm refers to this table and does not repeat it in prose.
+# The input of the table is the body already parsed as JSON by Н2.1 (HTTP framing, the body limit, RFC 8259, JSON_DEPTH — before the table). Rows in the order of n:
+# the first row whose when is true gives the refusal code, kind and the fields fault; none — the command goes on to Н3. The table does not read the store state (cas and guard by value, the id memory) — that is Н3.
+# op — which commands the row applies to: * — all, otherwise a comma list of values of body.op. group — consecutive rows with one group form a group:
+# each binds the index and the element of a list (i, w in body.writes), the group applies to the elements in order, element i as a whole before element i + 1; no list — no elements.
+# when and fault are CEL (extensions strings, two-var-comprehensions; type(), has(), matches() — standard CEL). Variables:
+#var body dyn — the JSON of the body; strings carry U+FFFD instead of a lone surrogate
+#var sock string — the socket role of the caller (P/01.2 Н1.1 identity): admin, console, domain or a role name
+#var lone list<string> — the JSON Pointer of every string of the body with a lone surrogate; for a field name — the pointer of the object where it stands (Н2.1)
+#var lim map<string,int> — the parameters of the lesson, only the names of #lim
 #lim BATCH_WRITES — P/01.1 Н1 batch
 #lim BATCH_GUARDS — P/01.1 Н1 batch
-#lim ROW_CEILING — P/01.1 Н1 row.items.ceiling: потолок строки хранилища
-#fn key_ok(string) -> bool — правила ключа Н1 row.key: не пуст, не начинается с /, нет сегмента .., не длиннее 1024 байт UTF-8
-#fn weight(map) -> int — вес items Н1: сумма длин в байтах UTF-8 всех имён и значений
-#fn finite(double) -> bool — конечно в binary64 (1e400 — нет)
-#fn allowed(string, string, string) -> bool — права роли (сокет, операция read | write | delete, ключ): P/01.2 Н3 «проверить»
+#lim ROW_CEILING — P/01.1 Н1 row.items.ceiling: the row ceiling of the store
+#fn key_ok(string) -> bool — the key rules of Н1 row.key: not empty, does not start with /, no segment .., at most 1024 UTF-8 bytes
+#fn weight(map) -> int — the weight of items of Н1: the sum of UTF-8 byte lengths of all names and values
+#fn finite(double) -> bool — finite in binary64 (1e400 is not)
+#fn allowed(string, string, string) -> bool — the rights of the role (socket, operation read | write | delete, key): P/01.2 Н3 «check»
 n	op	group	each	check	when	code	kind	fault	norm
 1	*			body_object	type(body) != map	400	badrequest		P/01.1 Н2.1
 2	*			op	!has(body.op) || type(body.op) != string || !(body.op in ["put", "delete", "batch", "floor"])	400	badrequest		P/01.1 Н4
@@ -29,8 +29,8 @@ n	op	group	each	check	when	code	kind	fault	norm
 11	put,delete			not_after	has(body.not_after) && !((type(body.not_after) == int && body.not_after >= 0) || (type(body.not_after) == double && finite(body.not_after) && body.not_after >= 0.0))	400	badrequest		P/01.1 Н1 not_after
 12	put,delete			not_before	has(body.not_before) && !((type(body.not_before) == int && body.not_before >= 0) || (type(body.not_before) == double && finite(body.not_before) && body.not_before >= 0.0))	400	badrequest		P/01.1 Н1 not_before
 13	put			weight	weight(body.items) > lim.ROW_CEILING	413	toolarge	{"limit": lim.ROW_CEILING, "key": body.key, "size": weight(body.items)}	P/01.1 Н4
-14	put,delete			rights	!allowed(sock, body.op == "put" ? "write" : "delete", body.key)	403	forbidden		P/01.1 Н3 «записать», «удалить»
-15	put,delete			guard_rights	has(body.guard) && !allowed(sock, "read", body.guard.key)	403	forbidden		P/01.1 Н3 «записать», «удалить»
+14	put,delete			rights	!allowed(sock, body.op == "put" ? "write" : "delete", body.key)	403	forbidden		P/01.1 Н3 «write», «delete»
+15	put,delete			guard_rights	has(body.guard) && !allowed(sock, "read", body.guard.key)	403	forbidden		P/01.1 Н3 «write», «delete»
 16	batch			writes_form	!has(body.writes) || type(body.writes) != list || size(body.writes) == 0 || (sock != "console" && size(body.writes) > lim.BATCH_WRITES)	400	badrequest		P/01.1 Н1 batch
 17	batch	writes	i, w in body.writes	write_object	type(w) != map || w.exists(f, !(f in ["op", "key", "items", "cas"]))	400	badrequest		P/01.1 Н1 batch
 18	batch	writes	i, w in body.writes	write_op	!has(w.op) || type(w.op) != string || !(w.op in ["put", "delete"])	400	badrequest		P/01.1 Н1 batch
@@ -47,6 +47,6 @@ n	op	group	each	check	when	code	kind	fault	norm
 29	batch			id	has(body.id) && !(type(body.id) == string && body.id.matches("^[0-9a-f]{1,64}$"))	400	badrequest		P/01.1 Н1 id
 30	batch			not_after	has(body.not_after) && !((type(body.not_after) == int && body.not_after >= 0) || (type(body.not_after) == double && finite(body.not_after) && body.not_after >= 0.0))	400	badrequest		P/01.1 Н1 not_after
 31	batch			not_before	has(body.not_before) && !((type(body.not_before) == int && body.not_before >= 0) || (type(body.not_before) == double && finite(body.not_before) && body.not_before >= 0.0))	400	badrequest		P/01.1 Н1 not_before
-32	batch	weights	i, w in body.writes	write_weight	w.op == "put" && weight(w.items) > lim.ROW_CEILING	413	toolarge	{"limit": lim.ROW_CEILING, "key": w.key, "size": weight(w.items)}	P/01.1 Н3 «записать пакет»
-33	batch	write_rights	i, w in body.writes	write_rights	!allowed(sock, w.op == "put" ? "write" : "delete", w.key)	403	forbidden		P/01.1 Н3 «записать пакет»
-34	batch	guard_rights	i, g in body.guards	guard_elem_rights	!allowed(sock, "read", g.key)	403	forbidden		P/01.1 Н3 «записать пакет»
+32	batch	weights	i, w in body.writes	write_weight	w.op == "put" && weight(w.items) > lim.ROW_CEILING	413	toolarge	{"limit": lim.ROW_CEILING, "key": w.key, "size": weight(w.items)}	P/01.1 Н3 «write batch»
+33	batch	write_rights	i, w in body.writes	write_rights	!allowed(sock, w.op == "put" ? "write" : "delete", w.key)	403	forbidden		P/01.1 Н3 «write batch»
+34	batch	guard_rights	i, g in body.guards	guard_elem_rights	!allowed(sock, "read", g.key)	403	forbidden		P/01.1 Н3 «write batch»

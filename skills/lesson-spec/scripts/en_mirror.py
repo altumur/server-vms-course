@@ -30,7 +30,7 @@ CHECK_ID = re.compile(r"^- \[[ xX]\] \*\*(P/[0-9.]+-[0-9]+)\*\*", re.M)
 TABLE_ROW = re.compile(r"^\|.*\|[ \t]*$", re.M)
 CYR = re.compile(r"[А-Яа-яЁё]")
 ALLOWED_CYR = [SPAN, re.compile(r"«[^»\n]*»"), NORM_NO, LINK,
-               re.compile(r"[\wА-Яа-яЁё.-]*[А-ЯЁ][\wА-Яа-яЁё-]*\.(?:md|tsv|yaml|json)\b"),
+               re.compile(r"[\wА-Яа-яЁё.-]*[А-Яа-яЁё][\wА-Яа-яЁё.-]*\.(?:md|tsv|yaml|json)\b"),   # имена файлов
                re.compile(r"(?<![\w])М[0-9]+[A-Z]?(?:_[A-Za-z]+)?(?:/[0-9]+)?"),
                re.compile(r"(?<![\w])[А-ЯЁ][0-9]+(?![\w])")]   # id находок ревью по-русски: А1, А10
 
@@ -102,11 +102,22 @@ def facts(body, base, root, kinds, pair=()):
     }
 
 
+BUILT = re.compile(r"<!-- (families|form|canonical):begin -->.*?<!-- \1:end -->", re.S)
+
+
 def compare(ru_text, en_text, ru_path, en_path, root):
-    """→ list of messages (empty: the texts agree)."""
+    """→ list of messages (empty: the texts agree). Built blocks between `<!-- …:begin/end -->` (sections.py) are
+    compared as they are: the English source carries the block byte for byte until sections.py has an English mode."""
+    ru_blocks, en_blocks = BUILT.findall(ru_text), BUILT.findall(en_text)
+    built_ru, built_en = [m.group(0) for m in BUILT.finditer(ru_text)], [m.group(0) for m in BUILT.finditer(en_text)]
+    pre = []
+    if built_ru != built_en:
+        pre.append(f"built blocks differ: ru {ru_blocks}, en {en_blocks} (the English source carries them as built)")
+    ru_text, en_text = BUILT.sub("<!-- built -->", ru_text), BUILT.sub("<!-- built -->", en_text)
     root, ru_path, en_path = Path(root).resolve(), Path(ru_path).resolve(), Path(en_path).resolve()
-    kinds = kinds_of(ru_text)
-    errors = []
+    errors_pre = pre
+    kinds = kinds_of(ru_text) or lesson_kinds(ru_path)
+    errors = list(errors_pre)
     ru_ids, en_ids = CHECK_ID.findall(ru_text), CHECK_ID.findall(en_text)
     if ru_ids != en_ids:
         errors.append(f"checklist ids differ: ru {ru_ids} / en {en_ids}")
@@ -139,7 +150,7 @@ def compare(ru_text, en_text, ru_path, en_path, root):
     for pattern in ALLOWED_CYR:
         rest = pattern.sub(" ", rest)
     for fence in FENCE.findall(en_text):                     # блоки кода — тоже по-английски, кроме «…» и Н…
-        rest += "\n" + re.sub(r"«[^»\n]*»|" + NORM_NO.pattern + "|" + ALLOWED_CYR[4].pattern, " ", fence)
+        rest += "\n" + re.sub("|".join([r"«[^»\n]*»", NORM_NO.pattern] + [x.pattern for x in ALLOWED_CYR[4:]]), " ", fence)
     if MARK not in ru_text:
         errors.append(f"the Russian text has no mark «{MARK}» in its head")
     for line in rest.splitlines():
@@ -150,7 +161,21 @@ def compare(ru_text, en_text, ru_path, en_path, root):
 
 
 def pairs(root):
-    """English texts of Platform norms → (ru, en)."""
+    """English sources → (ru, en): `<каталог>/en/<имя>.en.md` ↔ `<каталог>/<имя>.md` (ADR-0121 п. 1: нормы в `spec/en/`,
+    у прочих каталогов — `en/` рядом), в Platform/ и VMS/."""
     root = Path(root)
-    for en in sorted(root.glob("Platform/*/spec/en/*.norms.en.md")):
-        yield en.parent.parent / en.name.replace(".norms.en.md", ".norms.md"), en
+    for en in sorted([*root.glob("Platform/**/en/*.en.md"), *root.glob("VMS/**/en/*.en.md")]):
+        yield en.parent.parent / en.name.replace(".en.md", ".md"), en
+
+
+def lesson_kinds(ru_path):
+    """Refusal words of the lesson: the Н4 tables of its spec/*.norms.md (README приёмки и векторов своей Н4 не имеют)."""
+    path = Path(ru_path).resolve()
+    for parent in path.parents:
+        spec = parent / "spec"
+        if spec.is_dir() and any(spec.glob("*.norms.md")):
+            words = set()
+            for norms in spec.glob("*.norms.md"):
+                words |= kinds_of(norms.read_text(encoding="utf-8"))
+            return words
+    return set()
