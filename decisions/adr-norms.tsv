@@ -1458,3 +1458,4 @@ adr	add	point	status	file	norm	note
 0121	0	common acceptance README	НОРМА	Platform/common (en и ru)	common acceptance README	директивы pass раннер исполняет (решение Спецификации по ADR-0121 п. 6, факт: pass/README «Исполнимость»)
 0121	0	en термины	НОРМА	Platform/common (en и ru)	en термины	«The gate with grants» (P/06.7); «book acceptance key»; «the whole object» (решение Спецификации по ADR-0121 п. 6, факт: заголовок P/08.2 Н1.4; «сторожевая» = gate)
 0121	0	P/10 и common: строки common.* схем	НОРМА	Platform/common/data/common.schema.json; $defs/common.* схем уроков (кроме P/01 — после перераскладки)	common.*	описания по-английски одной картой во всех копиях (ADR-0121 п. 3)
+0121	0	КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ §5	НОРМА	КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md; en/КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.en.md	КОНСОЛЬ-МОДУЛЬ §5	отказ у поля по field: модуль это делает, P/07 «Решает реализация» п. 4 закрыт (решение Спецификации по ADR-0121 п. 6, факт: P/07, тест module-refusal-field)
