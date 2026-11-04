@@ -80,7 +80,7 @@ the spoiling it is stopped (`@on hold @sigterm domain`, as sc. 07), the domain c
   `domain/topology` — sc. 15 step 2 of the acceptance of [chapter 8.3](../../../08-domain/acceptance/3/README.md) (C10-TOPOLOGY-ABSENT-01);
   no counter (C10-PLACEMENT-ABSENT-01) — by reading: after `@domain` it exists, the stand cannot delete it.
 - **Scenario 12** — the shared document and the member list do not read (Н1.2б, Н1.2е, Н3 `alarms`, Н4 `unavailable`): the pointer
-  `domain/shared` out of form — 503, not `doc: null` (steps 3, 4); the row `domain/members` out of form with a readable view — 503 at
+  `domain/shared` out of form — 503, not `doc: null` (steps 3, 4); the row `domain/member-rows/3723` (the part of the member `hold`, Н1.2) out of form with a readable view — 503 at
   `GET /domain/members` and at the whole door `GET /domain/alarms`, not an empty list (steps 6–8; step 5 — the control before the spoiling).
 - **Scenario 13** — the grammar of the alarm window (Н1.8 `door`, the gate-and-pass contract «Числовые параметры query»,
   C06-EVENTS-QUERY-LEXEME-162-01, A12): `1e3`, `-1`, `%2B1` (= `+1`), `%201` (= « 1»), `1_000` at `since` and `1e10` at `until` — 400
