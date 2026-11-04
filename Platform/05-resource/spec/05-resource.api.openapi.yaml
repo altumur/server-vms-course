@@ -1,43 +1,43 @@
-# P/05 — двери ресурса сервера: HTTP-контракт. Канон — 05-resource.norms.md (Н1.1, Н1.3, Н1.6, Н2–Н4). Пути и схемы
-# перенесены из контракта М10/8 (08-events-resource-requests.api.openapi.yaml; стадия B, без изменения поведения):
-# /v1/objects, /v1/objects/{key}, GET /events ресурса, /events/wait, /buckets/{sub}/{unit}, /events/{path}, /mirror/…,
-# /mirrored/…. Двери консоли (/marks, /{sub}/requests, /{sub}/asked/{sha16}, слияние GET и HEAD /events) — в
-# контракте P/06 (06-console.api.openapi.yaml, глава 6.4); схемы ответа /events, общие обеим дверям (EventRow, UnitRef,
-# SafeSegment, ObjectKey, Sha256, Subsystem), — здесь, P/06 ссылается на них ($ref). PUT /v1/objects/{sub}/blobs/{digest}
-# (копия тела у ресурса) — перенесён из контракта М10/10 (решение «Спецификации» по В2 переноса); дверь байтов консоли
-# PUT /{rows}/{id}/{blob_field} — P/06 (глава 6.1).
+# P/05 — the doors of the server resource: the HTTP contract. Canon — 05-resource.norms.md (Н1.1, Н1.3, Н1.6, Н2–Н4). Paths and schemas
+# are carried over from the contract М10/8 (08-events-resource-requests.api.openapi.yaml; stage B, without a change of behaviour):
+# /v1/objects, /v1/objects/{key}, GET /events of the resource, /events/wait, /buckets/{sub}/{unit}, /events/{path}, /mirror/…,
+# /mirrored/…. The console doors (/marks, /{sub}/requests, /{sub}/asked/{sha16}, the merge GET and HEAD /events) — in
+# the contract P/06 (06-console.api.openapi.yaml, chapter 6.4); the response schemas of /events common to both doors (EventRow, UnitRef,
+# SafeSegment, ObjectKey, Sha256, Subsystem) — here, P/06 refers to them ($ref). PUT /v1/objects/{sub}/blobs/{digest}
+# (a body copy at the resource) — carried over from the contract М10/10 (the Specification's decision on В2 of the transfer); the console bytes door
+# PUT /{rows}/{id}/{blob_field} — P/06 (chapter 6.1).
 openapi: 3.1.0
 info:
-  title: P/05 — двери ресурса сервера
+  title: P/05 — the doors of the server resource
   version: '1'
-  description: 'Канон — 05-resource.norms.md. Н2 разделяет JSON, байты и отсутствие тела; допуск ролей и TLS — Н2
-    «Допуск к дверям ресурса», P/02.4 Н1.6 и договор сертификата роли (ADR-0075); внутренний API не нормируется. Формы
-    реализации могут расходиться: контракт не утверждает, что какая-либо реализация ему проверена.'
+  description: 'Canon — 05-resource.norms.md. Н2 separates JSON, bytes and the absence of a body; the admission of roles and TLS — Н2
+    «Допуск к дверям ресурса», P/02.4 Н1.6 and the role certificate contract (ADR-0075); the internal API is not normed. The forms
+    of an implementation may diverge: the contract does not claim that any implementation has been checked against it.'
 paths:
   /v1/objects:
     get:
-      summary: 'Ресурс: список доступных объектов'
+      summary: 'Resource: the list of available objects'
       responses:
         '200':
-          description: Полный список доступной семьи
+          description: The full list of the available family
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ObjectListing'
         '400':
-          description: Неверный scope/prefix
+          description: Wrong scope/prefix
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '503':
-          description: Листинг не удался
+          description: The listing failed
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '403':
-          description: Семья не выдаётся, строка-объект или отказ личности
+          description: The family is not given out, a row object or a refusal of the identity
           content:
             application/json:
               schema:
@@ -50,9 +50,9 @@ paths:
         required: false
         schema:
           type: string
-        description: Начало относительного ключа; пустота разрешена. Проверка по Н1.1, отдельная от полного
-          ключа. Обычный список не показывает надгробий .gone/; prefix=.gone/ — только чтение надгробий
-          {written, peers, acked} (Н1.1 «Надгробия»; журнал cammeta-go, урок 10 № 2).
+        description: The beginning of a relative key; emptiness is allowed. The check by Н1.1, separate from the full
+          key. The ordinary list does not show the tombstones .gone/; prefix=.gone/ — read only of the tombstones
+          {written, peers, acked} (Н1.1 «Надгробия»; log of cammeta-go, lesson 10 № 2).
       - name: scope
         in: query
         required: false
@@ -70,10 +70,10 @@ paths:
       schema:
         $ref: '#/components/schemas/ObjectKey'
     get:
-      summary: 'Ресурс: прочитать объект'
+      summary: 'Resource: read an object'
       responses:
         '200':
-          description: Байты выбранной копии
+          description: The bytes of the selected copy
           content:
             application/octet-stream:
               schema:
@@ -83,23 +83,23 @@ paths:
             X-Written:
               schema:
                 type: string
-              description: 'Обязателен: время записи выбранной копии в секундах, десятичный текст.'
+              description: 'Required: the write time of the selected copy in seconds, decimal text.'
             X-Server:
               schema:
                 $ref: '#/components/schemas/SafeSegment'
-              description: 'Обязателен: сервер выбранной копии.'
+              description: 'Required: the server of the selected copy.'
             X-Missing:
               schema:
                 type: string
-              description: 'Если есть неответившие: имена через запятую.'
+              description: 'If there are servers that did not answer: the names, comma-separated.'
         '400':
-          description: Неверный key/scope
+          description: Wrong key/scope
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '403':
-          description: Семья не выдаётся, строка-объект или отказ личности
+          description: The family is not given out, a row object or a refusal of the identity
           content:
             application/json:
               schema:
@@ -107,7 +107,7 @@ paths:
                 - $ref: '#/components/schemas/ResourceError'
                 - $ref: '#/components/schemas/ResourceDenied'
         '404':
-          description: Объект не найден среди ответивших
+          description: The object is not found among those that answered
           content:
             application/json:
               schema:
@@ -116,15 +116,15 @@ paths:
             X-Missing:
               schema:
                 type: string
-              description: Неответившие серверы через запятую, если есть.
+              description: The servers that did not answer, comma-separated, if any.
         '503':
-          description: Не удалось прочитать копию
+          description: Failed to read the copy
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '413':
-          description: Выбранное тело больше 64 МиБ; до успешных заголовков, без усечения
+          description: The selected body is larger than 64 MiB; before successful headers, without truncation
           content:
             application/json:
               schema:
@@ -140,22 +140,22 @@ paths:
           - cluster
           default: local
     put:
-      summary: Только отказ PUT не-блоба; полная дверь PUT /v1/objects/{sub}/blobs/{digest} — Н2
+      summary: Only the refusal of PUT of a non-blob; the full door PUT /v1/objects/{sub}/blobs/{digest} — Н2
       responses:
         '400':
-          description: Неверный ключ/scope
+          description: Wrong key/scope
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '405':
-          description: Этот ключ не blob; другой объект пишет его писатель
+          description: This key is not a blob; another object is written by its writer
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '403':
-          description: Отказ личности/роли до операции по таблице Н2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table Н2 «Допуск к дверям ресурса» (ADR-0075)
           content:
             application/json:
               schema:
@@ -184,7 +184,7 @@ paths:
         type: string
         pattern: "^(?:sha256-[0-9a-f]{64})$"
     put:
-      summary: 'Дверь ресурса: принять полную копию blob (Н1.1 «Тела у ресурса», Н2; перенесено из контракта М10/10)'
+      summary: 'Resource door: accept a full copy of a blob (Н1.1 «Тела у ресурса», Н2; carried over from the contract М10/10)'
       parameters:
       - name: Content-Length
         in: header
@@ -208,61 +208,61 @@ paths:
               format: binary
       responses:
         '400':
-          description: Неверный путь, framing или чтение
+          description: Wrong path, framing or read
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '404':
-          description: Нет пути
+          description: No path
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '405':
-          description: Метод/семья не допускает PUT; ключ не blob-формы (заглавные hex, без sha256-) или подсистема без blob-поля — обычный объект, его пишет владелец (Н1.1 «Тела у ресурса» mirror)
+          description: The method/family does not admit PUT; a key not of the blob form (uppercase hex, without sha256-) or a subsystem without a blob field — an ordinary object, it is written by the owner (Н1.1 «Тела у ресурса» mirror)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '408':
-          description: Медленное тело
+          description: Slow body
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '409':
-          description: Надгробие новее копии
+          description: The tombstone is newer than the copy
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '411':
-          description: Нет длины
+          description: No length
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '413':
-          description: Больше предела
+          description: Larger than the limit
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '422':
-          description: Байты не соответствуют digest
+          description: The bytes do not match digest
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '503':
-          description: Хранилище недоступно
+          description: The store is unavailable
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '403':
-          description: Недопустимая роль/семья
+          description: Inadmissible role/family
           content:
             application/json:
               schema:
@@ -270,14 +270,14 @@ paths:
                 - $ref: '#/components/schemas/ResourceError'
                 - $ref: '#/components/schemas/ResourceDenied'
         '204':
-          description: Целая копия принята; тела ответа нет
+          description: The whole copy is accepted; there is no response body
   /events:
     get:
-      summary: 'Ресурс: локальный индекс (Н1.3, Н3 «запрос (ресурс)»); слияние консоли — контракт P/06 (глава 6.4)'
-      description: 'Порядок и обрезка (cut, Н1.3) — один для ресурса и для слияния консоли (глава 6.4 Н3 «слияние»): до обрезки
-        дубли по id убрать; сначала class alarm, затем observation; внутри класса по by (keep newest — убывание, oldest —
-        возрастание), при равном времени — id лексикографически по байтам UTF-8; первые limit строк. truncated — число
-        подходящих уникальных по id строк, оставшихся после этой обрезки (разбор ревью стадии B 6–7, № 32).'
+      summary: 'Resource: the local index (Н1.3, Н3 «запрос (ресурс)»); the console merge — the contract P/06 (chapter 6.4)'
+      description: 'The order and the cut (cut, Н1.3) — the same for the resource and for the console merge (chapter 6.4 Н3 «слияние»): before the cut
+        remove duplicates by id; first class alarm, then observation; within a class by by (keep newest — descending, oldest —
+        ascending), with equal time — id lexicographically by UTF-8 bytes; the first limit rows. truncated — the number
+        of matching rows unique by id that remain after this cut (analysis of review of stage B 6–7, № 32).'
       responses:
         '200':
           description: ResourceEvents
@@ -286,28 +286,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/ResourceEvents'
         '400':
-          description: Неверные параметры (Н1.3, Н2, Н3 «запрос»)
+          description: Wrong parameters (Н1.3, Н2, Н3 «query»)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '403':
-          description: Отказ личности/роли до операции по таблице Н2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table Н2 «Допуск к дверям ресурса» (ADR-0075)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceDenied'
         '405':
-          description: Метод не поддержан (в том числе HEAD и POST, Н2) — без тела (сверка python и go М10/6–11, E17)
+          description: The method is not supported (including HEAD and POST, Н2) — without a body (the comparison of python and go М10/6–11, E17)
         '503':
-          description: Busy либо индекса нет
+          description: Busy or there is no index
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
           headers:
             Retry-After:
-              description: При busy обязателен со значением 1.
+              description: With busy it is required with the value 1.
               schema:
                 const: '1'
       parameters:
@@ -320,7 +320,7 @@ paths:
       - name: to
         in: query
         required: false
-        description: Граница не включена, окно from ≤ t < to (договор слияния журнала событий query).
+        description: The bound is not included, the window from ≤ t < to (the event log merge contract query).
         schema:
           type: number
           default: 1000000000000.0
@@ -373,7 +373,7 @@ paths:
       - name: late
         in: query
         required: false
-        description: Только с by=occurred; на сколько секунд запись могла отстать от occurred (договор слияния журнала событий by).
+        description: Only with by=occurred; by how many seconds the write could lag behind occurred (the event log merge contract by).
         schema:
           type: integer
           minimum: 0
@@ -381,33 +381,33 @@ paths:
           default: 3600
   /events/wait:
     get:
-      summary: 'Ресурс: подсказка перечитать, без строк событий (ADR-0038)'
+      summary: 'Resource: a hint to re-read, without event rows (ADR-0038)'
       responses:
         '200':
-          description: Изменение, тишина, очередь полна либо прежний запрос вытеснен
+          description: A change, silence, the queue is full or the previous request is displaced
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/WaitAnswer'
         '400':
-          description: Неверный want/client/since/timeout
+          description: Wrong want/client/since/timeout
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
         '503':
-          description: Общая полоса ресурса занята
+          description: The common lane of the resource is busy
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResourceError'
           headers:
             Retry-After:
-              description: При busy обязателен со значением 1.
+              description: With busy it is required with the value 1.
               schema:
                 const: '1'
         '403':
-          description: Отказ личности/роли до операции по таблице Н2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table Н2 «Допуск к дверям ресурса» (ADR-0075)
           content:
             application/json:
               schema:
@@ -432,7 +432,7 @@ paths:
         schema:
           type: string
           pattern: "^(?:(?:0|[1-9][0-9]*))$"
-          description: Десятичный uint64, по умолчанию 0. Проверка диапазона обязательна.
+          description: A decimal uint64, 0 by default. The range check is mandatory.
       - name: client
         in: query
         required: false
@@ -454,11 +454,11 @@ paths:
       schema:
         $ref: '#/components/schemas/SafeSegment'
     get:
-      summary: 'Ресурс: перечень бакетов единицы'
+      summary: 'Resource: the list of buckets of a unit'
       responses:
         '200':
-          description: 'UTF-8 JSON Lines: по одному BucketInfo на LF, без внешнего массива; пустой перечень — пустое
-            тело'
+          description: 'UTF-8 JSON Lines: one BucketInfo per LF, without an outer array; an empty list — an empty
+            body'
           content:
             application/x-ndjson:
               schema:
@@ -466,11 +466,11 @@ paths:
                 x-line-schema:
                   $ref: '#/components/schemas/BucketInfo'
         '500':
-          description: Чтение каталога или метаданных не удалось; до успешных заголовков, тело отсутствует. Перечень неизвестен, не пуст.
+          description: Reading the directory or the metadata failed; before successful headers, the body is absent. The list is unknown, not empty.
         '404':
-          description: Неверный путь/неизвестная единица; тело отсутствует
+          description: Wrong path/unknown unit; the body is absent
         '403':
-          description: Отказ личности/роли до операции по таблице Н2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table Н2 «Допуск к дверям ресурса» (ADR-0075)
           content:
             application/json:
               schema:
@@ -482,13 +482,13 @@ paths:
       required: true
       schema:
         $ref: '#/components/schemas/ObjectKey'
-      description: Относительный путь с суффиксом .events.jsonl, также .mirror/<server>/... для восстановления;
-        сегменты . и .. запрещены.
+      description: A relative path with the suffix .events.jsonl, also .mirror/<server>/... for restoration;
+        the segments . and .. are forbidden.
     get:
-      summary: 'Ресурс: поток файла бакета'
+      summary: 'Resource: the stream of a bucket file'
       responses:
         '200':
-          description: Полный файл до зафиксированного размера
+          description: The full file up to the fixed size
           content:
             application/octet-stream:
               schema:
@@ -498,9 +498,9 @@ paths:
             X-Sum:
               schema:
                 $ref: '#/components/schemas/Sha256'
-              description: SHA-256 полного возвращаемого тела, обязателен.
+              description: SHA-256 of the full returned body, required.
         '206':
-          description: Один диапазон файла
+          description: One range of the file
           content:
             application/octet-stream:
               schema:
@@ -510,11 +510,11 @@ paths:
             Content-Range:
               schema:
                 type: string
-              description: 'Обязателен: bytes start-end/size.'
+              description: 'Required: bytes start-end/size.'
         '404':
-          description: Нет доступного обычного файла бакета; тело отсутствует
+          description: There is no available regular bucket file; the body is absent
         '416':
-          description: Диапазон не удовлетворяется
+          description: The range is not satisfiable
           content:
             text/plain:
               schema:
@@ -523,11 +523,11 @@ paths:
             Content-Range:
               schema:
                 type: string
-              description: 'Обязателен: bytes */size.'
+              description: 'Required: bytes */size.'
         '500':
-          description: Не удалось подготовить полное тело/его сумму; тело отсутствует
+          description: Failed to prepare the full body/its sum; the body is absent
         '403':
-          description: Отказ личности/роли до операции по таблице Н2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table Н2 «Допуск к дверям ресурса» (ADR-0075)
           content:
             application/json:
               schema:
@@ -539,7 +539,7 @@ paths:
         schema:
           type: string
           pattern: "^(?:bytes=(?:[0-9]+-[0-9]*|-[1-9][0-9]*))$"
-        description: В профиле урока один диапазон; множественные/условные запросы вне профиля.
+        description: In the lesson profile there is one range; multiple/conditional requests are outside the profile.
   /mirror/{server}/{path}:
     parameters:
     - name: server
@@ -553,22 +553,22 @@ paths:
       schema:
         $ref: '#/components/schemas/ObjectKey'
     put:
-      summary: 'Ресурс: принять целую копию закрытого бакета'
+      summary: 'Resource: accept a whole copy of a closed bucket'
       responses:
         '204':
-          description: Копия проверена и опубликована; тело отсутствует
+          description: The copy is checked and published; the body is absent
         '400':
-          description: Неверные путь/сумма, нет X-Sum или оборванное тело; тело отсутствует
+          description: Wrong path/sum, no X-Sum or a cut-off body; the body is absent
         '408':
-          description: Тело пришло слишком медленно; тело отсутствует
+          description: The body came too slowly; the body is absent
         '413':
-          description: Больше 67108864 байт; тело отсутствует
+          description: Larger than 67108864 bytes; the body is absent
         '422':
-          description: SHA-256 тела не совпала; тело отсутствует
+          description: The SHA-256 of the body did not match; the body is absent
         '500':
-          description: Ошибка файла/публикации; тело отсутствует
+          description: A file/publication error; the body is absent
         '403':
-          description: Отказ личности/роли до операции по таблице Н2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table Н2 «Допуск к дверям ресурса» (ADR-0075)
           content:
             application/json:
               schema:
@@ -594,20 +594,20 @@ paths:
       schema:
         $ref: '#/components/schemas/SafeSegment'
     get:
-      summary: 'Ресурс: перечень копий сервера'
+      summary: 'Resource: the list of copies of a server'
       responses:
         '200':
-          description: Полный перечень копий
+          description: The full list of copies
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MirroredListing'
         '500':
-          description: Чтение каталога или метаданных не удалось; до успешных заголовков, тело отсутствует. Перечень неизвестен, не пуст.
+          description: Reading the directory or the metadata failed; before successful headers, the body is absent. The list is unknown, not empty.
         '404':
-          description: Копий этого сервера нет; тело отсутствует
+          description: There are no copies of this server; the body is absent
         '403':
-          description: Отказ личности/роли до операции по таблице Н2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table Н2 «Допуск к дверям ресурса» (ADR-0075)
           content:
             application/json:
               schema:
@@ -625,10 +625,10 @@ paths:
       schema:
         $ref: '#/components/schemas/ObjectKey'
     get:
-      summary: 'Ресурс: целая копия бакета'
+      summary: 'Resource: a whole copy of a bucket'
       responses:
         '200':
-          description: Байты копии
+          description: The bytes of the copy
           content:
             application/octet-stream:
               schema:
@@ -638,13 +638,13 @@ paths:
             X-Sum:
               schema:
                 $ref: '#/components/schemas/Sha256'
-              description: Обязателен, сумма возвращаемой копии.
+              description: Required, the sum of the returned copy.
         '404':
-          description: Нет такой копии; тело отсутствует
+          description: There is no such copy; the body is absent
         '500':
-          description: Не удалось прочитать/проверить копию; тело отсутствует
+          description: Failed to read/check the copy; the body is absent
         '403':
-          description: Отказ личности/роли до операции по таблице Н2 «Допуск к дверям ресурса» (ADR-0075)
+          description: Refusal of the identity/role before the operation by the table Н2 «Допуск к дверям ресурса» (ADR-0075)
           content:
             application/json:
               schema:
@@ -652,7 +652,7 @@ paths:
 components:
   schemas:
     SubsystemName:
-      description: Имя загружаемой подсистемы по P/02.1 Н1.2 (подлинник; контракт P/06 ссылается на него, $ref).
+      description: The name of a loaded subsystem by P/02.1 Н1.2 (the original; the contract P/06 refers to it, $ref).
       type: string
       minLength: 1
       maxLength: 32
@@ -699,16 +699,16 @@ components:
       type: string
       minLength: 1
       pattern: "^(?:(?:[^/.\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]*|\\.[^/.\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]*|\\.\\.[^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+)(?:/(?:[^/.\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]*|\\.[^/.\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029][^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]*|\\.\\.[^/\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+))*)$"
-      description: Непустой относительный ключ; каждый сегмент непуст и не точка или две точки. Проверка смысла ключа
-        — Н1.1; схема не проверяет символические ссылки диска. Все компоненты и полный путь с корнем должны помещаться
-        в объявленный файловый профиль (договор журнала событий «Имена файлов в общих деревьях»); иначе 400 до файловой операции.
+      description: A non-empty relative key; each segment is non-empty and not a dot or two dots. The check of the meaning of the key
+        — Н1.1; the schema does not check the symbolic links of the disk. All components and the full path with the root must fit
+        into the declared file profile (the event log contract «Имена файлов в общих деревьях»); otherwise 400 before the file operation.
     UnitRef:
       type: string
       minLength: 3
       pattern: "^(?:[a-z][a-z0-9_-]{0,31}(?:\\.alarms)?/[^/|\",\\\\\u0000-\u001F\u007F-\u009F\u2028\u2029]+)$"
-      description: Полная ссылка <дерево>/<единица>, также console/<экземпляр> и audit/<роль>; экземпляр заранее ограничен профилем договора журнала событий. Без точных . и ..
-        во второй части; для адресата единицы дополнительно действует UnitId (контракт P/06, глава 6.1 Н1.3); существование проверяется там, где
-        этого требует маршрут.
+      description: A full reference <tree>/<unit>, also console/<instance> and audit/<role>; the instance is limited in advance by the profile of the event log contract. Without exact . and ..
+        in the second part; for the addressee of a unit UnitId applies additionally (the contract P/06, chapter 6.1 Н1.3); existence is checked where
+        the route requires it.
       not:
         pattern: "^(?:[\\s\\S]*/\\.{1,2})$"
     Sha256:
@@ -790,10 +790,10 @@ components:
       properties:
         id:
           type: string
-          description: 'Как прочитан: строка, разобранная формой line договора журнала событий, выдаётся как есть (форма читателя;
-            догадка стадии C R05-G02, решение «Архитектора» 2026-10-23). Обязанность писателя — канон
-            e1-<hex дерева>-<hex единицы>-<эпоха>-<hex экземпляра>-<номер> (hex UTF-8, эпоха и номер десятичные), генерация и
-            отсутствие повторного номера — договор журнала событий (Н1.2).'
+          description: 'As read: a string parsed by the form line of the event log contract is given out as is (the reader''s form;
+            stage C guess R05-G02, the Architect''s decision of 2026-10-23). The writer''s duty is the canon
+            e1-<hex of the tree>-<hex of the unit>-<epoch>-<hex of the instance>-<number> (hex UTF-8, epoch and number decimal), the generation and
+            the absence of a repeated number — the event log contract (Н1.2).'
         subsystem:
           type: string
           minLength: 1
@@ -808,7 +808,7 @@ components:
           type: number
         kind:
           type: string
-          description: Как прочитан (форма читателя, R05-G02); непустое слово — обязанность писателя.
+          description: As read (the form of the reader, R05-G02); a non-empty word is the duty of the writer.
         server:
           $ref: '#/components/schemas/SafeSegment'
         bucket:
@@ -834,12 +834,12 @@ components:
           type: number
         until:
           type: number
-      description: Поля подсистемы открыты; перечисленные поля платформы имеют эти типы и не переопределяются. of
-        пуст только у платформенной строки без адресата. Все JSON-числа конечны. epoch_is и fenced ставит сливающий —
-        консоль или воркер по договору слияния журнала событий (у ресурса их нет); unknown — только у воркера;
-        согласованность epoch_is/fenced — Н1.3.
+      description: The subsystem fields are open; the listed platform fields have these types and are not overridden. of
+        is empty only for a platform row without an addressee. All JSON numbers are finite. epoch_is and fenced are set by the merger —
+        the console or the worker by the event log merge contract (the resource has none of them); unknown — only for the worker;
+        consistency of epoch_is/fenced — Н1.3.
     ResourceEventRow:
-      description: Строка ответа ресурса — без epoch_is и fenced (их ставит сливающий, договор слияния журнала событий).
+      description: A row of the resource response — without epoch_is and fenced (they are set by the merger, the event log merge contract).
       type: object
       additionalProperties: true
       allOf:
@@ -862,13 +862,13 @@ components:
         state:
           const: live
         truncated:
-          description: Число подходящих уникальных по id строк, не вошедших в локальный limit после дедупликации.
+          description: The number of matching rows unique by id that did not fit into the local limit after deduplication.
           type: integer
           minimum: 0
         partial:
           const: true
         lines_garbled:
-          description: Число пропущенных нечитаемых строк бакетов и файлов не на месте (Н1.3; P/01.1 Н0 «Устойчивость выдачи»); поля нет, когда пропусков нет.
+          description: The number of skipped unreadable bucket lines and misplaced files (Н1.3; P/01.1 Н0 «Stability of output»); the field is absent when nothing is skipped.
           type: integer
           minimum: 1
     WaitPart:
@@ -879,8 +879,8 @@ components:
     Want:
       type: string
       minLength: 3
-      description: 'Список через запятую: <sub>/<kind>[/<unit>]. Каждая часть — WaitPart; пустые элементы и пробелы
-        не допускаются.'
+      description: 'A comma-separated list: <sub>/<kind>[/<unit>]. Each part is WaitPart; empty elements and spaces
+        are not allowed.'
       pattern: "^(?:[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}(?:/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63})?(?:,[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63}(?:/[A-Za-z0-9_-][A-Za-z0-9_.-]{0,63})?)*)$"
     Touched:
       type: string

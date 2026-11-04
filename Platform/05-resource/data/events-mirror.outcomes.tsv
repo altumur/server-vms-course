@@ -1,4 +1,4 @@
-# Исходы нечитаемой строки бакета журнала событий (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable line of an event log bucket (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole line); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	resource	полная строка (с LF) не по форме line — не JSON-объект, нет t, kind или id, время не по кодеку читателя, глубже JSON_DEPTH 128 (P/01.1 Н2.1; договор журнала событий line depth, EJ-DEPTH-BASELINE33): пропуск этой строки и счёт garbled, бакет читается дальше, не отказ бакета; последний фрагмент без LF — не строка, счёт torn	0	строка	договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07
+	resource	a full line (with LF) out of the form line — not a JSON object, no t, kind or id, the time not by the reader's codec, deeper than JSON_DEPTH 128 (P/01.1 Н2.1; the event log contract line depth, EJ-DEPTH-BASELINE33): this line is skipped and counted in garbled, the bucket is read further, not a refusal of the bucket; the last fragment without LF is not a line, counted in torn	0	строка	договор журнала событий `bucket` `torn`; догадки стадии C EJ-G03, EJ-G07

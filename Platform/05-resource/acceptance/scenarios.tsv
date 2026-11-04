@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/05: стенд testsub с ресурсом srv-a и консолью. Перенесено из М10/08 (сц. 01, 02, 08), М10/11 (сц. 01 → 09, 16) и М10/10 (сц. 10) (стадия B). Формат и директивы — README.
+# Acceptance of P/05: the stand testsub with the resource srv-a and the console. Carried over from М10/08 (sc. 01, 02, 08), М10/11 (sc. 01 → 09, 16) and М10/10 (sc. 10) (stage B). Format and directives — README.
 01-objects-door	1	resource GET /v1/objects?prefix=testsub/heartbeats/&scope=local	200 {"server": "srv-a", "objects": {}}
 01-objects-door	2	resource GET /v1/objects?prefix=testsub/heartbeats/&scope=nowhere	400
 01-objects-door	3	resource GET /v1/objects/testsub/counters/c1?scope=local	403
@@ -75,7 +75,7 @@ scenario	step	request	expect
 16-presence-lock	5	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": []}
 16-presence-lock	6	@start worker w-1	ok
 16-presence-lock	7	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": ["testsub/w-1"]}
-# 17-schema-refusal (аудит покрытия P/05, F01): platform/schema с version выше SCHEMA (2) и не числом — ресурс не стартует, код 2, строки двери нет; с version 1 — стартует
+# 17-schema-refusal (coverage audit of P/05, F01): platform/schema with version above SCHEMA (2) and not a number — the resource does not start, code 2, no door row; with version 1 — starts
 17-schema-refusal	1	admin POST /v1/write {"id":"f17a","op":"put","key":"platform/schema","items":{"version":"2","at":"1700000000"},"cas":""}	200
 17-schema-refusal	2	@start resource	@exit 2
 17-schema-refusal	3	admin POST /v1/write {"id":"f17b","op":"put","key":"platform/schema","items":{"version":"x","at":"1700000000"}}	200
@@ -84,18 +84,18 @@ scenario	step	request	expect
 17-schema-refusal	6	admin POST /v1/write {"id":"f17c","op":"put","key":"platform/schema","items":{"version":"1","at":"1700000000"}}	200
 17-schema-refusal	7	@start resource	ok
 17-schema-refusal	8	@until 30 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"url": "@any", "since": "@time"}}
-# 18-schema-read-wait (аудит покрытия P/05, F01): хранилище молчит ресурсу на чтении platform/schema — ресурс ждёт, не выходит; хранилище снова отвечает — ресурс стартует сам, без перезапуска
+# 18-schema-read-wait (coverage audit of P/05, F01): the store is silent to the resource on reading platform/schema — the resource waits, does not exit; the store answers again — the resource starts by itself, without a restart
 18-schema-read-wait	1	@cut role resource store	ok
 18-schema-read-wait	2	@start resource	ok
 18-schema-read-wait	3	@sleep 10	ok
 18-schema-read-wait	4	@mend role resource store	ok
 18-schema-read-wait	5	@until 90 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"url": "@any", "since": "@time"}}
-# 19-service-names (аудит покрытия P/05, F02): замок каталога ~lock, который оставляет запись пульса воркера, — не ключ: вне листинга, чтение ключа ~lock — 404
+# 19-service-names (coverage audit of P/05, F02): the directory lock ~lock, which the write of the worker heartbeat leaves behind, is not a key: outside the listing, reading the key ~lock — 404
 19-service-names	1	@start resource	ok
 19-service-names	2	@start worker w-1	ok
 19-service-names	3	@until 30 resource GET /v1/objects?prefix=testsub/heartbeats/&scope=local	200 {"server": "srv-a", "objects": {"testsub/heartbeats/w-1": {"server": "srv-a"}, "testsub/heartbeats/~lock": "@absent"}}
 19-service-names	4	resource GET /v1/objects/testsub/heartbeats/~lock?scope=local	404
-# 20-door-room (аудит покрытия P/05, F03; каталог testsub и testsub2): поле door в пульсе; room.testsub2 и live.testsub2 строки двери по живым замкам — номер n ≥ 2 в live, n = 1 и имя без номера — только в room
+# 20-door-room (coverage audit of P/05, F03; catalogue testsub and testsub2): the field door in the heartbeat; room.testsub2 and live.testsub2 of the door row by live locks — the number n ≥ 2 in live, n = 1 and a name without a number — only in room
 20-door-room	1	@start resource	ok
 20-door-room	2	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	@oneof 200 {"server": "srv-a", "door": {"addr": "@any", "mode": "loopback"}} | 200 {"server": "srv-a", "door": {"addr": "@any", "mode": "mtls"}}
 20-door-room	3	@until 40 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"room.testsub2": "16", "live.testsub2": ""}}
@@ -105,20 +105,20 @@ scenario	step	request	expect
 20-door-room	7	@until 40 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"room.testsub2": "14", "live.testsub2": "2"}}
 20-door-room	8	@start worker testsub2 t-srv-a-1	ok
 20-door-room	9	@until 40 store GET /v1/get?key=platform/doors/srv-a	200 {"items": {"room.testsub2": "13", "live.testsub2": "2"}}
-# 21-events-wait (аудит покрытия P/05, F05): подсказка /events/wait — под want строк нет: {changed: false, seq} по сроку; строка есть: since=0 — сразу changed с touched; курсор since=seq — снова без изменений
+# 21-events-wait (coverage audit of P/05, F05): the hint /events/wait — no rows under want: {changed: false, seq} by the deadline; a row exists: since=0 — changed with touched at once; the cursor since=seq — again without changes
 21-events-wait	1	@start resource	ok
 21-events-wait	2	resource GET /events/wait?want=testsub/probe.tick/c1&since=0&timeout=1	200 {"changed": false, "seq": "$s1"}
 21-events-wait	3	@append event testsub/c1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-1"}	ok
 21-events-wait	4	resource GET /events/wait?want=testsub/probe.tick/c1&since=0&timeout=5	200 {"changed": true, "seq": "$s2", "touched": ["testsub/probe.tick/c1"]}
 21-events-wait	5	ASSERT $s1 <= $s2	
 21-events-wait	6	resource GET /events/wait?want=testsub/probe.tick/c1&since=$s2&timeout=1	200 {"changed": false}
-# 22-torn-tail (аудит покрытия P/05, F06): хвост бакета без LF (разбираемый JSON) — не строка: не в events и truncated, partial: true, не lines_garbled; целая строка отдаётся
+# 22-torn-tail (coverage audit of P/05, F06): the bucket tail without LF (parseable JSON) is not a line: not in events and truncated, partial: true, not lines_garbled; a whole line is returned
 22-torn-tail	1	@start resource	ok
 22-torn-tail	2	@append event testsub/c1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-1"}	ok
 22-torn-tail	3	@until 30 resource GET /events?unit=testsub/c1	200 {"events": [{"kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-1"}], "state": "live", "truncated": 0}
 22-torn-tail	4	@append event-raw testsub/c1/e1 {"t": {now}, "kind": "probe.torn", "id": "e1-74657374737562-6331-1-70726f6265-2"}	ok
 22-torn-tail	5	@until 30 resource GET /events?unit=testsub/c1	200 {"events": [{"kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-1"}], "state": "live", "truncated": 0, "partial": true, "lines_garbled": "@absent"}
-# 23-object-ceiling (аудит покрытия P/05, F07; каталог testsub и testsub2): потолок двери ресурса 64 МиБ — копия тела ровно 67108864 байт принята и читается, 67108865 байт — 413, ключа нет
+# 23-object-ceiling (coverage audit of P/05, F07; catalogue testsub and testsub2): the ceiling of the resource door is 64 MiB — a body copy of exactly 67108864 bytes is accepted and read, 67108865 bytes — 413, no key
 23-object-ceiling	1	@start resource	ok
 23-object-ceiling	2	resource @header X-Written: 1700000000 PUT /v1/objects/testsub2/blobs/sha256-e20a69eca39368572e90b9135738a613838f954987a0b44b6220889c171cbb76 @big(67108864)	204
 23-object-ceiling	3	resource GET /v1/objects/testsub2/blobs/sha256-e20a69eca39368572e90b9135738a613838f954987a0b44b6220889c171cbb76?scope=local	200 ~xxxx
@@ -171,7 +171,7 @@ scenario	step	request	expect
 28-free-ask-volume-profile	8	@until 60 resource GET /events?kind=free_ask.key_taken	200 {"events": [{"kind": "free_ask.key_taken"}]}
 28-free-ask-volume-profile	9	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i2", "items": {"free": "1", "volume": "b-c", "server": "srv-a", "at": "1700000000"}}
 28-free-ask-volume-profile	10	ASSERT $i1 == $i2	
-# 29-row-objects (аудит покрытия P/05, второй проход Gemini, G01 п. 1): строки-объекты objects.rows (testsub2/marks/*) и commands/* обеих подсистем дверь объектов не выдаёт — 403 и при записанной строке objects/<ключ>, на любом scope; prefix строк-объектов — 403; prefix=testsub2/ — фильтр, 200 без них
+# 29-row-objects (coverage audit of P/05, second pass of Gemini, G01 item 1): the object door does not give out the row objects objects.rows (testsub2/marks/*) and commands/* of both subsystems — 403 even with a written row objects/<ключ>, on any scope; a prefix of row objects — 403; prefix=testsub2/ — a filter, 200 without them
 29-row-objects	1	admin POST /v1/write {"id":"72901","op":"put","key":"objects/testsub2/marks/m1","items":{"count":"1"},"cas":""}	200
 29-row-objects	2	admin POST /v1/write {"id":"72902","op":"put","key":"objects/testsub2/commands/r1","items":{"outcome":"expired"},"cas":""}	200
 29-row-objects	3	resource GET /v1/objects/testsub2/marks/m1?scope=local	403
@@ -181,14 +181,14 @@ scenario	step	request	expect
 29-row-objects	7	resource GET /v1/objects?prefix=testsub2/marks/&scope=local	403
 29-row-objects	8	resource GET /v1/objects?prefix=testsub2/commands/&scope=local	403
 29-row-objects	9	resource GET /v1/objects?prefix=testsub2/&scope=local	200 {"server": "srv-a", "objects": {"testsub2/marks/m1": "@absent", "testsub2/commands/r1": "@absent"}}
-# 30-copy-written-max (G01 п. 2; C05-COPY-WRITTEN-SOURCE-01): копия тела хранит written исходной; уже лежащая копия того же ключа — written не уменьшается (большее из двух)
+# 30-copy-written-max (G01 item 2; C05-COPY-WRITTEN-SOURCE-01): a body copy keeps the written of the original; a copy of the same key already lying there — written does not decrease (the larger of the two)
 30-copy-written-max	1	resource @header X-Written: 1700000010 PUT /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw foo	204
 30-copy-written-max	2	resource GET /v1/objects?prefix=testsub2/blobs/&scope=local	200 {"server": "srv-a", "objects": {"testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"written": 1700000010, "server": "srv-a", "size": 3}}}
 30-copy-written-max	3	resource @header X-Written: 1700000005 PUT /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw foo	204
 30-copy-written-max	4	resource GET /v1/objects?prefix=testsub2/blobs/&scope=local	200 {"server": "srv-a", "objects": {"testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"written": 1700000010, "server": "srv-a", "size": 3}}}
 30-copy-written-max	5	resource @header X-Written: 1700000020 PUT /v1/objects/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae @raw foo	204
 30-copy-written-max	6	resource GET /v1/objects?prefix=testsub2/blobs/&scope=local	200 {"server": "srv-a", "objects": {"testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"written": 1700000020, "server": "srv-a", "size": 3}}}
-# 31-objects-cluster (G03; два ресурса, srv-b — @start resource on srv-b): тело srv-a копируется соседу первым проходом после перезапуска (C05-PASS-FIRST-AT-START-01) с исходным written; scope=cluster: равный written — больший сервер (srv-b), свежая копия побеждает, молчащий srv-b — missing и X-Missing у 404
+# 31-objects-cluster (G03; two resources, srv-b — @start resource on srv-b): the body of srv-a is copied to the neighbour by the first pass after the restart (C05-PASS-FIRST-AT-START-01) with the original written; scope=cluster: equal written — the larger server (srv-b), the fresh copy wins, a silent srv-b — missing and X-Missing at 404
 31-objects-cluster	1	@start resource on srv-b	ok
 31-objects-cluster	2	@until 30 store GET /v1/get?key=platform/doors/srv-b	200 {"items": {"url": "@any"}}
 31-objects-cluster	3	@start resource	ok
@@ -205,7 +205,7 @@ scenario	step	request	expect
 31-objects-cluster	14	@sigkill resource#1	ok
 31-objects-cluster	15	resource GET /v1/objects?prefix=testsub2/blobs/&scope=cluster	200 {"server": "srv-a", "missing": ["srv-b"], "objects": {"testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"server": "srv-a", "written": 1700000005}}}
 31-objects-cluster	16	resource GET /v1/objects/testsub/heartbeats/w-9?scope=cluster	404 @header X-Missing: ~srv-b
-# 32-mirror-put-refusals (G04 ч. 1): копий srv-b нет — /mirrored/srv-b 404; PUT /mirror открытого бакета (конец окна позже часов приёмника), без X-Sum, X-Sum не по форме — 400; сумма не та — 422; копия не опубликована
+# 32-mirror-put-refusals (G04 part 1): no copies of srv-b — /mirrored/srv-b 404; PUT /mirror of an open bucket (the window end later than the receiver's clock), without X-Sum, X-Sum out of form — 400; a wrong sum — 422; the copy is not published
 32-mirror-put-refusals	1	resource GET /mirrored/srv-b	404
 32-mirror-put-refusals	2	resource @header X-Sum: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae PUT /mirror/srv-b/testsub/c1/e1/20990101T000000Z.events.jsonl @raw foo	400
 32-mirror-put-refusals	3	resource PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	400
@@ -213,7 +213,7 @@ scenario	step	request	expect
 32-mirror-put-refusals	5	resource @header X-Sum: 2C26B46B68FFC68FF99B453C1D30413413422D706483BFA0F98A5E886266E7AE PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	400
 32-mirror-put-refusals	6	resource @header X-Sum: 0000000000000000000000000000000000000000000000000000000000000000 PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	422
 32-mirror-put-refusals	7	resource GET /mirrored/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl	404
-# 33-mirror-put-read (G04 ч. 2; R05-G04): закрытый бакет с верной X-Sum — 204; /mirrored/srv-b — {copies: [{path, written, size, sum}]}; повтор того же бакета с той же суммой written не сдвигает; байты копии с X-Sum; нет такой копии — 404; пульс mirrors {srv-b: 1}
+# 33-mirror-put-read (G04 part 2; R05-G04): a closed bucket with a correct X-Sum — 204; /mirrored/srv-b — {copies: [{path, written, size, sum}]}; a repeat of the same bucket with the same sum does not shift written; the copy bytes with X-Sum; no such copy — 404; the heartbeat mirrors {srv-b: 1}
 33-mirror-put-read	1	resource @header X-Sum: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl @raw foo	204
 33-mirror-put-read	2	resource GET /mirrored/srv-b	200 {"copies": [{"path": "testsub/c1/e1/20260101T000000Z.events.jsonl", "written": "$w1", "size": 3, "sum": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae"}]}
 33-mirror-put-read	3	@sleep 2	ok
@@ -223,11 +223,11 @@ scenario	step	request	expect
 33-mirror-put-read	7	resource GET /mirrored/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl	200 ~foo
 33-mirror-put-read	8	resource GET /mirrored/srv-b/testsub/c1/e1/20260101T001000Z.events.jsonl	404
 33-mirror-put-read	9	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"mirrors": {"srv-b": 1}}
-# 34-events-alarms-unit (G05 ч. 1; E32, C05-QUERY-UNIT-ALARMS-01): строка дерева testsub.alarms/c1 — subsystem testsub, unit testsub/c1, class alarm; unit=testsub.alarms/c1 — форма UnitRef, не нормализуется: 200 без совпадений
+# 34-events-alarms-unit (G05 part 1; E32, C05-QUERY-UNIT-ALARMS-01): a line of the tree testsub.alarms/c1 — subsystem testsub, unit testsub/c1, class alarm; unit=testsub.alarms/c1 — the UnitRef form, not normalized: 200 without matches
 34-events-alarms-unit	1	@append event testsub.alarms/c1/e1 {"t": {now}, "kind": "probe.alarm", "id": "e1-746573747375622e616c61726d73-6331-1-70726f6265-1", "of": "testsub/c1", "class": "alarm"}	ok
 34-events-alarms-unit	2	@until 30 resource GET /events?unit=testsub/c1	200 {"events": [{"kind": "probe.alarm", "id": "e1-746573747375622e616c61726d73-6331-1-70726f6265-1", "class": "alarm", "subsystem": "testsub", "unit": "testsub/c1"}], "state": "live", "truncated": 0}
 34-events-alarms-unit	3	resource GET /events?unit=testsub.alarms/c1	200 {"events": [], "state": "live", "truncated": 0}
-# 35-events-cut-order (G05 ч. 2; договор слияния журнала событий cut, by, truncated; EJ-L06): HEAD /events — 405; дубль id — первая строка; сначала alarm, затем observation по keep, равное время — id по байтам; by=occurred (без occurred — t); truncated — после дедупликации
+# 35-events-cut-order (G05 part 2; the event log merge contract cut, by, truncated; EJ-L06): HEAD /events — 405; a duplicate id — the first line; first alarm, then observation by keep, equal time — id by bytes; by=occurred (without occurred — t); truncated — after deduplication
 35-events-cut-order	1	resource HEAD /events	405
 35-events-cut-order	2	@append event testsub.alarms/c1/e1 {"t": 1700000010, "kind": "probe.alarm", "id": "e1-746573747375622e616c61726d73-6331-1-70726f6265-10", "of": "testsub/c1", "class": "alarm"}	ok
 35-events-cut-order	3	@append event testsub/c1/e1 {"t": 1700000020, "occurred": 1700000005, "kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-12", "of": "testsub/c1", "val": 1}	ok
@@ -243,7 +243,7 @@ scenario	step	request	expect
 35-events-cut-order	13	resource GET /events?unit=testsub/c1&class=observation&from=1700000000&to=1700000002&by=occurred	200 {"events": [], "state": "live"}
 35-events-cut-order	14	resource GET /events?unit=testsub/c1&late=1	400
 35-events-cut-order	15	resource GET /events?unit=testsub/c1&class=observation&from=1700000020&to=1700000025	200 {"events": [{"id": "e1-74657374737562-6331-1-70726f6265-11"}, {"id": "e1-74657374737562-6331-1-70726f6265-12"}], "state": "live"}
-# 36-events-bucket-stream (G05 ч. 3): бакет из одной строки (87 байт с LF) — GET /events/{path} 200 с X-Sum целого тела, один Range — 206 с Content-Range, вне файла — 416 с Content-Range; /buckets неизвестной единицы — 404
+# 36-events-bucket-stream (G05 part 3): a bucket of one line (87 bytes with LF) — GET /events/{path} 200 with X-Sum of the whole body, one Range — 206 with Content-Range, outside the file — 416 with Content-Range; /buckets of an unknown unit — 404
 36-events-bucket-stream	1	@append event testsub/c2/e1 {"t": 1700000000, "kind": "probe.tick", "id": "e1-74657374737562-6332-1-70726f6265-1"}	ok
 36-events-bucket-stream	2	@until 30 resource GET /events?unit=testsub/c2	200 {"events": [{"id": "e1-74657374737562-6332-1-70726f6265-1", "bucket": "$b"}], "state": "live", "truncated": 0}
 36-events-bucket-stream	3	resource GET /events/$b	200 @header X-Sum: ~395b0387a7b9605cbdada2e513815aede6bb83fa2f60d1a324287e1708e58fc3
@@ -251,7 +251,7 @@ scenario	step	request	expect
 36-events-bucket-stream	5	resource @header Range: bytes=0-9 GET /events/$b	206 @header Content-Range: ~bytes 0-9/87
 36-events-bucket-stream	6	resource @header Range: bytes=999999-1000000 GET /events/$b	416 @header Content-Range: ~bytes */87
 36-events-bucket-stream	7	resource GET /buckets/testsub/nosuch	404
-# 37-retention-garbled (G06 ч. 1; C05-RETENTION-PULSE-33, R05-RETENTION-MIXED-51-01): days 0 у testsub/retention и не число у testsub2/alarms_retention (testsub2/retention верен) — первый проход: retention_garbled [testsub, testsub2], retention_withheld days_garbled у обеих; деревья есть до старта
+# 37-retention-garbled (G06 part 1; C05-RETENTION-PULSE-33, R05-RETENTION-MIXED-51-01): days 0 in testsub/retention and not a number in testsub2/alarms_retention (testsub2/retention is correct) — the first pass: retention_garbled [testsub, testsub2], retention_withheld days_garbled for both; the trees exist before the start
 37-retention-garbled	1	admin POST /v1/write {"id":"73701","op":"put","key":"testsub/retention","items":{"days":"0"},"cas":""}	200
 37-retention-garbled	2	admin POST /v1/write {"id":"73702","op":"put","key":"testsub2/retention","items":{"days":"30"},"cas":""}	200
 37-retention-garbled	3	admin POST /v1/write {"id":"73703","op":"put","key":"testsub2/alarms_retention","items":{"days":"bad"},"cas":""}	200
@@ -260,24 +260,24 @@ scenario	step	request	expect
 37-retention-garbled	6	@append event testsub2.alarms/t1/e1 {"t": {now}, "kind": "probe.alarm", "id": "e1-74657374737562322e616c61726d73-7431-1-70726f6265-1", "class": "alarm"}	ok
 37-retention-garbled	7	@start resource	ok
 37-retention-garbled	8	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"retention_garbled": ["testsub", "testsub2"], "retention_withheld": {"testsub": "days_garbled", "testsub2": "days_garbled"}}
-# 38-holds-garbled-row (G06 ч. 2; договор удержаний «Что держит строка»): строка удержания testsub2/notches без читаемого окна (to не число), не отпущена — garbled_rows.notches 1 в пульсе после первого прохода
+# 38-holds-garbled-row (G06 part 2; the holds contract «Что держит строка»): the hold row testsub2/notches without a readable window (to not a number), not released — garbled_rows.notches 1 in the heartbeat after the first pass
 38-holds-garbled-row	1	admin POST /v1/write {"id":"73801","op":"put","key":"testsub2/notches/c1-1760700000-1760703600","items":{"of":"c1","from":"1760700000","to":"bad"},"cas":""}	200
 38-holds-garbled-row	2	@append event testsub2/t1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-7465737473756232-7431-1-70726f6265-1"}	ok
 38-holds-garbled-row	3	@start resource	ok
 38-holds-garbled-row	4	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"garbled_rows": {"notches": 1}}
-# 39-settings-unread (G06 ч. 3; Н1.4 space, mirror, В7 п. 3 П1): platform/space и platform/mirror с enabled не по форме — строки нечитаемы: settings_unread [mirror, space], шаг relieve не исполняется — своя строка free-* не пишется
+# 39-settings-unread (G06 part 3; Н1.4 space, mirror, В7 item 3 П1): platform/space and platform/mirror with enabled out of form — the rows are unreadable: settings_unread [mirror, space], the relieve step is not executed — its own row free-* is not written
 39-settings-unread	1	admin POST /v1/write {"id":"73901","op":"put","key":"platform/space","items":{"enabled":"maybe","high":"0.0000001","low":"0.00000001"},"cas":""}	200
 39-settings-unread	2	admin POST /v1/write {"id":"73902","op":"put","key":"platform/mirror","items":{"enabled":"maybe"},"cas":""}	200
 39-settings-unread	3	@start resource	ok
 39-settings-unread	4	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"settings_unread": ["mirror", "space"]}
 39-settings-unread	5	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"items": null}
-# 40-space-disabled (G07 ч. 1; E45, R05-G03): platform/space enabled false — первый проход снимает свою строку free-srv-a-events, short 0
+# 40-space-disabled (G07 part 1; E45, R05-G03): platform/space enabled false — the first pass removes its own row free-srv-a-events, short 0
 40-space-disabled	1	admin POST /v1/write {"id":"74001","op":"put","key":"platform/space","items":{"enabled":"false","high":"0.0000001","low":"0.00000001"},"cas":""}	200
 40-space-disabled	2	admin POST /v1/write {"id":"74002","op":"put","key":"testsub2/requests/free-srv-a-events","items":{"free":"100","volume":"events","server":"srv-a","at":"1700000000"},"cas":""}	200
 40-space-disabled	3	@start resource	ok
 40-space-disabled	4	@until 60 admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"items": null}
 40-space-disabled	5	@until 30 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"short": 0}
-# 41-space-band (G07 ч. 2; E44): доля занятого между low и high, need > 0 — своя строка free-srv-a-events стоит как есть: та же версия и то же free
+# 41-space-band (G07 part 2; E44): the used fraction between low and high, need > 0 — its own row free-srv-a-events stays as is: the same version and the same free
 41-space-band	1	admin POST /v1/write {"id":"74101","op":"put","key":"platform/space","items":{"enabled":"true","high":"0.99999999","low":"0.00000001"},"cas":""}	200
 41-space-band	2	admin POST /v1/write {"id":"74102","op":"put","key":"testsub2/requests/free-srv-a-events","items":{"free":"100","volume":"events","server":"srv-a","at":"1700000000"},"cas":""}	200
 41-space-band	3	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i1", "items": {"free": "100", "volume": "events", "server": "srv-a", "at": "1700000000"}}
@@ -286,25 +286,25 @@ scenario	step	request	expect
 41-space-band	6	@sleep 12	ok
 41-space-band	7	admin GET /v1/get?key=testsub2/requests/free-srv-a-events	200 {"index": "$i2", "items": {"free": "100", "volume": "events", "server": "srv-a", "at": "1700000000"}}
 41-space-band	8	ASSERT $i1 == $i2	
-# 42-heartbeat-units (G08 ч. 1; E39): units пульса ресурса — id единиц из status пульса живого воркера w-1, по возрастанию байтов (c2 создана раньше c1)
+# 42-heartbeat-units (G08 part 1; E39): units of the resource heartbeat — ids of the units from status of the heartbeat of the live worker w-1, in ascending byte order (c2 created earlier than c1)
 42-heartbeat-units	1	@start controller	ok
 42-heartbeat-units	2	@start worker w-1	ok
 42-heartbeat-units	3	console POST /counters {"name": "c2", "start": 1}	201
 42-heartbeat-units	4	console POST /counters {"name": "c1", "start": 1}	201
 42-heartbeat-units	5	@until 60 resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local	200 {"running": ["testsub/w-1"], "units": {"testsub": ["c1", "c2"]}}
-# 43-spoiled-object-door (G08 ч. 2; C05-SPOIL-OBJECT-BYTES-01): испорченный пульс воркера дверь объектов не разбирает — в листинге с written, server, size и GET 200, не 503
+# 43-spoiled-object-door (G08 part 2; C05-SPOIL-OBJECT-BYTES-01): the object door does not parse a spoiled worker heartbeat — in the listing with written, server, size and GET 200, not 503
 43-spoiled-object-door	1	@start worker w-1	ok
 43-spoiled-object-door	2	@until 30 resource GET /v1/objects?prefix=testsub/heartbeats/&scope=local	200 {"server": "srv-a", "objects": {"testsub/heartbeats/w-1": {"server": "srv-a"}}}
 43-spoiled-object-door	3	@sigkill w-1	ok
 43-spoiled-object-door	4	@spoil object testsub/heartbeats/w-1	ok
 43-spoiled-object-door	5	resource GET /v1/objects?prefix=testsub/heartbeats/&scope=local	200 {"server": "srv-a", "objects": {"testsub/heartbeats/w-1": {"written": "@any", "server": "srv-a", "size": "@any"}}}
 43-spoiled-object-door	6	resource GET /v1/objects/testsub/heartbeats/w-1?scope=local	200
-# 44-objects-door-family (G01 п. 1; каталог testsub и testsub2): objects.door манифеста — testsub2 объявляет door: [tickets/*], объект testsub2/tickets/t1 (кладёт @put object из inputs/) дверь объектов выдаёт: GET 200 и в листинге; testsub того не объявляет — testsub/tickets/t1 403
+# 44-objects-door-family (G01 item 1; catalogue testsub and testsub2): objects.door of the manifest — testsub2 declares door: [tickets/*], the object door gives out the object testsub2/tickets/t1 (put by @put object from inputs/): GET 200 and in the listing; testsub does not declare that — testsub/tickets/t1 403
 44-objects-door-family	1	@put object testsub2/tickets/t1 inputs/ticket-t1.json	ok
 44-objects-door-family	2	resource GET /v1/objects/testsub2/tickets/t1?scope=local	200 {"id": "t1", "title": "check"}
 44-objects-door-family	3	resource GET /v1/objects?prefix=testsub2/tickets/&scope=local	200 {"server": "srv-a", "objects": {"testsub2/tickets/t1": {"server": "srv-a", "written": "@any", "size": 28}}}
 44-objects-door-family	4	resource GET /v1/objects/testsub/tickets/t1?scope=local	403
-# 45-gone-door (G02; C05-GONE-BODY-READ-01, C05-GONE-REWRITE-AT-WRITE-01; каталог testsub и testsub2): надгробие .gone/<ключ> у удалившего (кладёт @put object из inputs/, written 1700000100) — обычный листинг его не показывает, prefix=.gone/ и GET тела — только чтение, PUT — 405; копия старше надгробия — 409, ключа нет; новее — 204, ключ с исходным written, надгробие снято тем же действием
+# 45-gone-door (G02; C05-GONE-BODY-READ-01, C05-GONE-REWRITE-AT-WRITE-01; catalogue testsub and testsub2): the tombstone .gone/<ключ> at the deleter (put by @put object from inputs/, written 1700000100) — the ordinary listing does not show it, prefix=.gone/ and GET of the body — read only, PUT — 405; a copy older than the tombstone — 409, no key; newer — 204, the key with the original written, the tombstone removed by the same action
 45-gone-door	1	@put object .gone/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae inputs/gone-foo.json	ok
 45-gone-door	2	resource GET /v1/objects?prefix=testsub2/blobs/&scope=local	200 {"server": "srv-a", "objects": {}}
 45-gone-door	3	resource GET /v1/objects?prefix=.gone/&scope=local	200 {"server": "srv-a", "objects": {".gone/testsub2/blobs/sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae": {"server": "srv-a"}}}
