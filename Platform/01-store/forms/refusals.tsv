@@ -2,9 +2,9 @@
 # The roles of the three: the OpenAPI *Fault — the form of the body; this table — the catalogue; write-checks.tsv — the order and the conditions of the write command.
 # chapter — 1.1, 1.2, 1.3; row — the number of the row of the Н4 table of the chapter (from 1); a prose row with two outcomes is two rows with one row.
 # name — the condition, snake_case, unique in the file; where a row is a check of write-checks.tsv, the same name as its check.
-# surface — http (a door), start (the daemon start), cli (an administrative command). code — an HTTP code; exit 2; exit !0 (non-zero); - (no answer).
+# surface — http (a door), start (the daemon start), cli (an administrative command). code — an HTTP code; exit 2 (the configuration refusal of the start); exit !0 — a non-zero code other than 2; - (no answer).
 # kind — the wire word kind (OpenAPI *Fault); - at start and cli. fields — the fields of the body besides kind and error, comma-separated, ? — optional.
-# headers — the headers of the answer (no conditional header: a prose row with several causes is several rows here); log — what the log names (start, cli); - — none. The cause in words and «what the caller does» are prose (Н4).
+# headers — the headers of the answer (no conditional header: a prose row with several causes is several rows here; Retry-After only where named); log — what the log line names (start, cli): a name — the value of the cause (of the names, those the cause has, at least one); «…» — the words verbatim; - — none. The cause in words and «what the caller does» are prose (Н4).
 chapter	row	name	surface	code	kind	fields	headers	log	norm
 1.1	1	key_rules	http	400	badkey	-	-	-	P/01.1 Н1 row.key; P/01.1 Н4
 1.1	2	body_form	http	400	badrequest	-	-	-	P/01.1 Н2.1; P/01.1 Н4

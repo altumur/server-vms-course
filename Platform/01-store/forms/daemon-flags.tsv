@@ -7,6 +7,11 @@
 # required and bad are CEL (as write-checks.tsv): required — the flag must be given; bad — a start refusal beyond type and required;
 # empty bad — none. commands — the commands at which the flag is admitted: daemon (the start without a subcommand) or a subcommand
 # of admin_ops (status, join, leave, admit, backup, restore, import, recover, rights), comma-separated.
+# Writing (P/01.3 Н1.3, P/01.3-R031): -name value | -name=value; bool — without a value; -- ends the flags; a repeated flag, a bool with a value,
+# a positional word of the daemon — a start refusal, code 2; positional words — only of admin_ops by its grammar (admit <id>, backup <file>, leave [id]).
+# Values: bytes, int — a decimal integer without a sign, a plus or leading zeros, bytes without a suffix (default_text is the writing of the prose);
+# duration — [1-9][0-9]*(ms|s|m|h); addr — a non-empty host (a name, IPv4 or [IPv6]) and a port 1–65535. $SERVER_NAME empty or absent — no default.
+# The CEL values of f: int — for int, bytes and an enum of integers; true — for bool; a string as given — for the rest.
 #var f map<string,dyn> — the flags parsed from the command line (a flag without a value — true)
 #var cmd string — the command: daemon or a subcommand of admin_ops
 #fn loopback(string) -> bool — the host of the address is on the loopback: 127.0.0.0/8, ::1 or localhost (normgen prims)
