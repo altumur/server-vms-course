@@ -1,0 +1,101 @@
+# Входы таблицы write-checks.tsv (ADR-0120 п. 2 (а); ответ «Архитектора» 2026-11-04, вопрос 2): по ним генератор строит тесты, check_spec сверяет каждый вход с таблицей.
+# case: only — первой нарушена строка n, ни одна следующая вычислимая строка не нарушена; pair — первой нарушена строка n и ближайшая следующая вычислимая строка тоже;
+# nopair — у строки n пары нет, в body — почему; pass — ни одна строка не нарушена (n — 0). Вычислимая — чьё when на этом входе вычисляется без ошибки CEL.
+# Пары нет только у строки, после которой ни одна строка этого входа не вычислима, или у последней строки своей команды.
+# Значения параметров и права — у проб свои, малые (норма — только имена #lim таблицы):
+#lim BATCH_WRITES 2
+#lim BATCH_GUARDS 2
+#lim ROW_CEILING 8
+#allow writer read acc/
+#allow writer write acc/
+#allow writer delete acc/
+#allow admin *
+#allow console *
+#allow domain *
+n	case	sock	body
+0	pass	writer	{"op": "put", "key": "acc/a", "items": {"f": "v"}, "cas": "", "guard": {"key": "acc/g", "index": "7"}, "id": "ab", "not_after": 1.5, "not_before": 0, "extra": [1]}
+0	pass	writer	{"op": "delete", "key": "acc/a", "items": 5, "cas": null}
+0	pass	admin	{"op": "floor", "value": 3}
+0	pass	console	{"op": "batch", "writes": [{"op": "put", "key": "acc/a", "items": {}}, {"op": "delete", "key": "acc/b"}, {"op": "delete", "key": "acc/c"}], "guards": [{"key": "acc/g", "index": ""}, {"key": "acc/h", "index": "1"}, {"key": "acc/i", "index": ""}]}
+0	pass	domain	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a", "cas": "3"}], "guards": [{"key": "acc/g", "index": ""}, {"key": "acc/h", "index": ""}, {"key": "acc/i", "index": ""}]}
+1	only	writer	[]
+1	nopair	writer	тело не объект: ни одна следующая строка не вычислима
+2	only	writer	{"op": "get", "key": "acc/a"}
+2	only	writer	{"key": "acc/a"}
+2	nopair	writer	op вне перечня: ни одна следующая строка не относится к этой команде
+3	only	writer	{"op": "floor", "value": 3}
+3	nopair	writer	у floor после сокета — P/01.3 Н2, строк таблицы нет
+4	only	writer	{"op": "put", "items": {"f": "v"}}
+4	only	writer	{"op": "delete", "key": 7}
+4	pair	writer	{"op": "put", "items": "x"}
+5	only	admin	{"op": "put", "key": "/a", "items": {"f": "v"}}
+5	only	admin	{"op": "delete", "key": "a/../b"}
+5	only	admin	{"op": "put", "key": "a\ud800", "items": {"f": "v"}}
+5	pair	admin	{"op": "put", "key": "/a", "items": "x"}
+6	only	writer	{"op": "put", "key": "acc/a", "items": {"f": 1}}
+6	only	writer	{"op": "put", "key": "acc/a"}
+6	only	writer	{"op": "put", "key": "acc/a", "items": {"f": "v\ud800"}}
+6	pair	writer	{"op": "put", "key": "acc/a", "items": {"f": 1}, "cas": 5}
+7	only	writer	{"op": "put", "key": "acc/a", "items": {"f": "v"}, "cas": "01"}
+7	pair	writer	{"op": "put", "key": "acc/a", "items": {"f": "v"}, "cas": "01", "guard": null}
+8	only	writer	{"op": "put", "key": "acc/a", "items": {"f": "v"}, "guard": {"key": "acc/g"}}
+8	only	writer	{"op": "delete", "key": "acc/a", "guard": {"key": "acc/g", "index": 5}}
+8	pair	admin	{"op": "put", "key": "acc/a", "items": {"f": "v"}, "guard": {"key": "/x", "index": "x"}}
+9	only	admin	{"op": "put", "key": "acc/a", "items": {"f": "v"}, "guard": {"key": "/g", "index": ""}}
+9	pair	admin	{"op": "put", "key": "acc/a", "items": {"f": "v"}, "guard": {"key": "/g", "index": ""}, "id": "X"}
+10	only	writer	{"op": "put", "key": "acc/a", "items": {"f": "v"}, "id": null}
+10	pair	writer	{"op": "put", "key": "acc/a", "items": {"f": "v"}, "id": "X", "not_after": -1}
+11	only	writer	{"op": "put", "key": "acc/a", "items": {"f": "v"}, "not_after": 1e400}
+11	pair	writer	{"op": "delete", "key": "acc/a", "not_after": "1", "not_before": true}
+12	only	writer	{"op": "put", "key": "acc/a", "items": {"f": "v"}, "not_before": null}
+12	pair	writer	{"op": "put", "key": "acc/a", "items": {"f": "vvvvvvvvv"}, "not_before": -0.5}
+13	only	writer	{"op": "put", "key": "acc/a", "items": {"f": "vvvvvvvvv"}}
+13	pair	writer	{"op": "put", "key": "zzz/a", "items": {"f": "vvvvvvvvv"}}
+14	only	writer	{"op": "delete", "key": "zzz/a"}
+14	pair	writer	{"op": "put", "key": "zzz/a", "items": {"f": "v"}, "guard": {"key": "zzz/g", "index": ""}}
+15	only	writer	{"op": "delete", "key": "acc/a", "guard": {"key": "zzz/g", "index": ""}}
+15	nopair	writer	последняя строка команды put и delete
+16	only	writer	{"op": "batch", "writes": []}
+16	only	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}, {"op": "delete", "key": "acc/b"}, {"op": "delete", "key": "acc/c"}]}
+16	only	writer	{"op": "batch"}
+16	pair	writer	{"op": "batch", "writes": {}, "guards": "x"}
+17	only	writer	{"op": "batch", "writes": [5]}
+17	only	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a", "guard": {"key": "acc/g", "index": ""}}]}
+17	pair	writer	{"op": "batch", "writes": [5], "guards": "x"}
+18	only	writer	{"op": "batch", "writes": [{"op": "batch", "key": "acc/a"}]}
+18	pair	writer	{"op": "batch", "writes": [{"op": "get"}]}
+19	only	writer	{"op": "batch", "writes": [{"op": "put", "items": {"f": "v"}}]}
+19	pair	writer	{"op": "batch", "writes": [{"op": "put", "items": "x"}]}
+20	only	admin	{"op": "batch", "writes": [{"op": "put", "key": "/a", "items": {"f": "v"}}]}
+20	only	admin	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}, {"op": "delete", "key": "\ud800"}]}
+20	pair	admin	{"op": "batch", "writes": [{"op": "put", "key": "/a", "items": "x"}]}
+21	only	writer	{"op": "batch", "writes": [{"op": "put", "key": "acc/a"}]}
+21	only	writer	{"op": "batch", "writes": [{"op": "put", "key": "acc/a", "items": {"\ud800": "v"}}]}
+21	pair	writer	{"op": "batch", "writes": [{"op": "put", "key": "acc/a", "cas": 5}]}
+22	only	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a", "cas": "x"}]}
+22	pair	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a", "cas": "x"}, 5]}
+23	only	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}], "guards": null}
+23	only	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}], "guards": [{"key": "acc/g", "index": ""}, {"key": "acc/h", "index": ""}, {"key": "acc/i", "index": ""}]}
+23	pair	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}, {"op": "delete", "key": "acc/a"}], "guards": "x"}
+24	only	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}], "guards": [{"key": "acc/g"}]}
+24	pair	admin	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}], "guards": [{"key": "/g", "index": "x"}]}
+25	only	admin	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}], "guards": [{"key": "/g", "index": ""}]}
+25	pair	admin	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}, {"op": "delete", "key": "acc/a"}], "guards": [{"key": "/g", "index": ""}]}
+26	only	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}, {"op": "put", "key": "acc/a", "items": {}}]}
+26	pair	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}, {"op": "delete", "key": "acc/a"}], "guards": [{"key": "acc/g", "index": ""}, {"key": "acc/g", "index": "1"}]}
+27	only	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}], "guards": [{"key": "acc/g", "index": ""}, {"key": "acc/g", "index": ""}]}
+27	pair	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}], "guards": [{"key": "acc/a", "index": ""}, {"key": "acc/a", "index": ""}]}
+28	only	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}], "guards": [{"key": "acc/a", "index": ""}]}
+28	pair	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}], "guards": [{"key": "acc/a", "index": ""}], "id": "X"}
+29	only	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}], "id": ""}
+29	pair	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}], "id": "", "not_after": -1}
+30	only	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}], "not_after": null}
+30	pair	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}], "not_after": null, "not_before": "0"}
+31	only	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}], "not_before": 1e400}
+31	pair	writer	{"op": "batch", "writes": [{"op": "put", "key": "acc/a", "items": {"f": "vvvvvvvvv"}}], "not_before": -1}
+32	only	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/b"}, {"op": "put", "key": "acc/a", "items": {"f": "vvvvvvvvv"}}]}
+32	pair	writer	{"op": "batch", "writes": [{"op": "put", "key": "acc/a", "items": {"f": "vvvvvvvvv"}}, {"op": "put", "key": "acc/b", "items": {"g": "wwwwwwwww"}}]}
+33	only	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}, {"op": "delete", "key": "zzz/a"}]}
+33	pair	writer	{"op": "batch", "writes": [{"op": "delete", "key": "zzz/a"}], "guards": [{"key": "zzz/g", "index": ""}]}
+34	only	writer	{"op": "batch", "writes": [{"op": "delete", "key": "acc/a"}], "guards": [{"key": "acc/g", "index": ""}, {"key": "zzz/g", "index": ""}]}
+34	nopair	writer	последняя строка пакета
