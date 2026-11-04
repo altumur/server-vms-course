@@ -267,7 +267,6 @@ power_pull:
   moves:    units — by two silences (the heartbeat of the worker and the word of the resource), by the tolerances of Н3; 90 s + a pass —
             a guide for a sound stand with heartbeats known in advance, an available store and capacity, not a general deadline; the new holder takes
             the next epoch; the same with shared and distinct; it does not move back by itself, except a declared `home` (Н3 «pass()», step 7, HOME_BUDGET)
-fresh_controller: what is seen for the first time has just changed; it moves nothing for the first 45 s (Н3 «pass()», step 0)
   stays:    the archive on the volume of the server — under the old epoch, unavailable until the return, not rebuilt, not lost;
             the units of a hung live worker — stay with it (one writer)
   lost:     the open bucket and the closed buckets without a confirmed mirror copy; one vote of the group.
@@ -277,6 +276,7 @@ fresh_controller: what is seen for the first time has just changed; it moves not
   restore:  P/05 Н1.4 «Восстановление бакетов»
   return:   the resource pulls the buckets; the workers take free names; a name with an expired slot — only by the word of the controller (P/03.2)
   presence: the presence lock contract (common/contracts/presence-lock.md)
+fresh_controller: what is seen for the first time has just changed; it moves nothing for the first 45 s (Н3 «pass()», step 0)
 ```
 
 `stays`, `lost`, `store`, `return` and the procedure «pull the power» (Н3) are the remainder of М10/11 Н1.4, Н3, moved here with lesson 6

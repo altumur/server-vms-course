@@ -52,7 +52,7 @@ these scenarios do not replace the check of the TLS refusals.
 ## scenarios.tsv
 
 The format is [the dictionary of directives and doors of the «Стенд» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
-In total 35 scenarios / 292 steps; sc. 29–45 (the second pass of the audit, below) — 128 steps; sc. 24–28 (the edges of `free_ask`, below) — 49 steps; the other 115: 88 HTTP (with @until), four `@append event`, `@append event-raw`, 18 `@start`, `@sigkill`,
+In total 35 scenarios / 292 steps; sc. 29–45 (the second pass of the audit, below) — 128 steps; sc. 24–28 (the edges of `free_ask`, below) — 49 steps; the other 115: 86 HTTP (with @until; the Architect's decision of 2026-11-04 — by scenarios.tsv), four `@append event`, `@append event-raw`, 18 `@start`, `@sigkill`,
 `@cut`, `@mend`, `@sleep` and two ASSERT.
 
 Steps of the reconciliation of python and go М10/6–11 (2026-10-18):
@@ -132,9 +132,7 @@ The scenarios of the coverage audit of P/05 (2026-10-30); each expectation is fr
 
 Not accepted from the drafts of the audit: F02 sc. 01 (`.tmp` is not a service name of the current norm: the component `w-9.tmp` is encoded as
 it is, it is a key; the service names are with `~`, ADR-0083 addendum (16)) and the directive `@plant object` (a service name is given by the lock `~lock`
-of a real write, sc. 19; the bytes of the file of an ordinary object are the implementation's own, «Решает реализация» item 9); F04 (the edges of `free_ask`:
-the norm does not bind the first pass of the resource to the start — «каждые 600 с», the schedule of the first pass is not set; the volume of the box by
-the norm is `events`) — by reading; `@freeze store` (the store is not a name for `@sigkill`/`@freeze`; a read error — `@cut role` of sc. 18).
+of a real write, sc. 19; the bytes of the file of an ordinary object are the implementation's own, «Решает реализация» item 9); `@freeze store` (the store is not a name for `@sigkill`/`@freeze`; a read error — `@cut role` of sc. 18). F04 (the edges of `free_ask`) was accepted later — sc. 24–28 after C05-PASS-FIRST-AT-START-01, the section [«Edges of `free_ask` on the first pass»](#edges-of-free_ask-on-the-first-pass-sc-2428) (the Architect's decision of 2026-11-04).
 
 ## Coverage audit of P/05, second pass (Gemini) (sc. 29–45)
 

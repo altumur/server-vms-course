@@ -193,6 +193,11 @@ The revision of the manifest of the stand is 1 (the first installation, P/02.3 �
 - Sc. 42 — the fate `wait` (Н3 «fate»; the table «Переходы release»): an occupied slot `w-9` without a process, the resource is alive — the resource knows nothing about
   the worker (`unlisted`); before the margin SLOT_TERM + LOST_AFTER — `alive`, then `wait`: `names_given` is empty
   (HUNG_MOVE_AFTER 900 s), the slot row is the same. `wait` beyond HUNG_MOVE_AFTER — by reading (beyond the ceiling of the scenario).
+
+### Home at the place holder (sc. 43, 44; C04-HOME-PLACE-HOLDER-01)
+
+Sc. 43, 44 are not the second pass of the audit but cases of the clarification C04-HOME-PLACE-HOLDER-01 (the Architect's decision of 2026-11-04).
+
 - Sc. 43 — the home at the holder of a place (Н1.3 `home`; Н3 «choose», step 7; C04-HOME-PLACE-HOLDER-01): two shelves on `srv-a`. Which
   shelf is at which worker is set by the order of the steps: `s-a2` is set up after `t-1` has taken `s-a1`, and `t-2` is left with one
   free shelf (P/03.2 Н3 «place: take»: the order of the subsystem has nothing to choose from). The names `t-1`, `t-2` are not processes of the role
