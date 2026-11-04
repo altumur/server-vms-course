@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/01.2: дверь хранилища под ролями развёртывания testsub (сценарии 05–08, 10 из М10/06, стадия B). Формат — README.
+# Acceptance of P/01.2: the store door under the deployment roles of testsub (scenarios 05–08, 10 from М10/06, stage B). Format — README.
 05-epoch-never-deleted	1	@as testsubworker POST /v1/write {"id":"e1","op":"put","key":"testsub/epoch/c5","items":{"epoch":"3"},"cas":""}	200
 05-epoch-never-deleted	2	POST /v1/write {"id":"e2","op":"delete","key":"testsub/epoch/c5"}	403
 05-epoch-never-deleted	3	@as testsubcontroller POST /v1/write {"id":"e3","op":"delete","key":"testsub/epoch/c5"}	403

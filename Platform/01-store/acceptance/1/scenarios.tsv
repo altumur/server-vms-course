@@ -26,7 +26,7 @@
 07-no-reuse	3	POST /v1/write {"op":"put","key":"acc/07-no-reuse/c1","items":{"n":"1"},"cas":""}	200 {"index":"$c"}
 07-no-reuse	4	POST /v1/write {"op":"put","key":"acc/07-no-reuse/c1","items":{"n":"2"},"cas":"$a"}	409 {"kind":"conflict","index":"$c"}
 07-no-reuse	5	ASSERT $a != $b $c	
-# 08-list: в шагах 4–6 сравниваются значения и порядок имён в keys по README; b намеренно записан раньше a.
+# 08-list: steps 4–6 compare the values and the order of names in keys by the README; b is written before a on purpose.
 08-list	1	POST /v1/write {"op":"put","key":"acc/08-list/k/b","items":{"n":"b"}}	200 {"index":"$b"}
 08-list	2	POST /v1/write {"op":"put","key":"acc/08-list/k/a","items":{"n":"a"}}	200 {"index":"$a"}
 08-list	3	POST /v1/write {"op":"put","key":"acc/08-list/kk","items":{"n":"x"}}	200 {"index":"$x"}
@@ -154,7 +154,7 @@
 27-method-route	6	GET /v1/get/?key=acc/27-method-route/a	404 {"kind":"badrequest"}
 27-method-route	7	GET //v1/get?key=acc/27-method-route/a	404 {"kind":"badrequest"}
 27-method-route	8	GET /v1/list?prefix=acc/27-method-route/	200 {"keys":{}}
-# 28-admission: 1 (1970) уже прошло, 4102444800 (2100) ещё не настало при любых часах стенда; шаг 9 — 4102444800.0 равно 4102444800 по значению; шаг 10 — not_after в отпечатке; шаг 13 — отказ expired id не занимает
+# 28-admission: 1 (1970) has already passed, 4102444800 (2100) has not yet come at any clock of the stand; step 9 — 4102444800.0 equals 4102444800 by value; step 10 — not_after in the fingerprint; step 13 — the refusal expired does not take the id
 28-admission	1	POST /v1/write {"op":"put","key":"acc/28-admission/c1","items":{"n":"1"},"cas":"","not_after":4102444800}	200 {"index":"$a"}
 28-admission	2	POST /v1/write {"op":"put","key":"acc/28-admission/c1","items":{"n":"2"},"cas":"$a","not_after":1}	409 {"kind":"expired"}
 28-admission	3	POST /v1/write {"op":"delete","key":"acc/28-admission/c1","cas":"$a","not_before":4102444800}	409 {"kind":"early"}

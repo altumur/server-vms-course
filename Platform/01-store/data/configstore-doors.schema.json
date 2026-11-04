@@ -4,7 +4,7 @@
  "properties": {
   "seen_at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенное время последнего подтверждения двери (раз в 30 с)",
+   "description": "the wall time of the last confirmation of the door (every 30 s)",
    "x-codec": [
     "time"
    ]

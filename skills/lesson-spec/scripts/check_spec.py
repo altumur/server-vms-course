@@ -1318,7 +1318,7 @@ class Check:
         if len(tokens) < 3 or tokens[0] or tokens[1] != "paths":
             return None
         door = (self.contracts[source][0] or {}).get("paths", {}).get(tokens[2].replace("~1", "/").replace("~0", "~"))
-        found = re.match(r"Глава ([0-9]+)\.([0-9]+)(?![0-9.])", str((door or {}).get("description", "")))
+        found = re.match(r"(?:Глава|Chapter) ([0-9]+)\.([0-9]+)(?![0-9.])", str((door or {}).get("description", "")))  # ADR-0121: описания дверей — по-английски
         return int(found[2]) if found and int(found[1]) == lesson else None
 
     # Late-layer chapters of a lesson: K → the lessons that introduce it, from the header of NN.K-<процесс>.norms.md.
@@ -1973,13 +1973,15 @@ class Check:
                 self.error(en, f"no Russian text {self.name(ru)} for this English source")
             if not all(texts):
                 continue
-            self.markdown(en, texts[0])
+            self.markdown(en, en_mirror.BUILT.sub("", texts[0]))   # построенный блок — русская копия, ссылки от ru
             for message in en_mirror.compare(texts[1], texts[0], ru, en, self.root):
                 self.error(en, f"ru↔en: {message}")
             self.stats["english_mirrors"] += 1
-        for ru in sorted(self.root.glob("Platform/*/spec/*.norms.md")):
+        for ru in sorted([*self.root.glob("Platform/**/*.md"), *self.root.glob("VMS/**/*.md")]):
+            if ru.parent.name == "en":
+                continue
             text = ru.read_text(encoding="utf-8")
-            en = ru.parent / "en" / ru.name.replace(".norms.md", ".norms.en.md")
+            en = ru.parent / "en" / ru.name.replace(".md", ".en.md")
             if en_mirror.MARK in "\n".join(text.splitlines()[:12]) and not en.is_file():
                 self.error(ru, f"marked «{en_mirror.MARK}», but {self.name(en)} is missing")
 
@@ -2227,7 +2229,8 @@ class Check:
             texts[readme] = text
             self.markdown(readme, text)
         self.tsv(acceptance / "corrections.tsv", 4, ["date", "sample", "fix", "languages"])
-        supported = {"README.md", "corrections.tsv", "scenarios.tsv", "verdicts.tsv", "diagnostics.tsv", "classes.tsv", "cases"}
+        supported = {"README.md", "corrections.tsv", "scenarios.tsv", "verdicts.tsv", "diagnostics.tsv", "classes.tsv", "cases",
+                     "en"}                     # en/README.en.md — английский источник README (ADR-0121), сверка english_mirrors
         puts = (key, entry) in PUTS_CHAPTERS
         if puts:
             supported |= {"puts.tsv", "puts"}
@@ -2249,7 +2252,7 @@ class Check:
                     own_format = True
                 elif item.name not in supported:
                     self.error(item, "unsupported acceptance entry; add a format-specific check")
-                elif item.name not in ("cases", "puts") and not item.is_file():
+                elif item.name not in ("cases", "puts", "en") and not item.is_file():
                     self.error(item, "acceptance table/document must be a file")
         except OSError as exc:
             self.error(acceptance, str(exc))

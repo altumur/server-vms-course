@@ -68,7 +68,7 @@ class Checks(unittest.TestCase):
         self.refused("n 13: no probe «only»")
 
     def test_pair_missing(self):
-        self.edit(self.probes, '15\tnopair\twriter\tпоследняя строка команды put и delete\n', "")
+        self.edit(self.probes, '15\tnopair\twriter\tthe last row of the commands put and delete\n', "")
         self.refused("n 15: no probe «pair»")
 
     def test_probe_wrong(self):
