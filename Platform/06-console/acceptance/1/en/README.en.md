@@ -33,7 +33,7 @@ identity with the right to create, read, edit and delete units; in the variant w
 by [chapter 6.3](../../../spec/06.3-console.norms.md) Н1.3 `open` (only from the loopback, otherwise 403). The runner records the address of the door, the way of preparation and the declared body limit;
 the table requests are to fit in it. The limit itself stays a choice of the implementation by the norms of the chapter Н4 and of chapter 6.3 Н1.3 `body` (≥ 1 MiB).
 
-Scenarios 01–14 are 87 steps. Scenarios 03 and 14 run **each on its own clean instance** (the preparation above): their steps 03/8 and
+Scenarios 01–14 are 100 steps. Scenarios 03 and 14 run **each on its own clean instance** (the preparation above): their steps 03/8 and
 14/8 read the whole list `GET /counters`, and the door does not narrow the read to one unit (Н2), so the expectation does not depend on the order of
 the scenarios. The other 12 run sequentially **on one instance**, without cleanup between them. Scenario 14 is
 the condition `If-Match` of PUT and DELETE (P/08.6: the domain agent applies an edit from the revision that the domain saw), steps 11–23 — the replay memory of these doors before the condition (Н3 «память повторов»). Scenario 13 is
@@ -101,7 +101,7 @@ scenarios 15, 16 and 18 the runner creates the counter `c1` in `testsub` (for `o
 its own `Idempotency-Key`, before the first step; in the other scenarios there is no `c1`. The resource is started by the command of the resource role
 of the server `srv-a` (the substitutions `{data}`, `{socket}`, `{manifest}`, `{rport}`); it is ready when it listens on `{rport}` and there is the row
 `platform/doors/srv-a`. `console …` and `console2 …` are one console on `{port}`, the second is the prefix `/testsub2`. `store …` is
-the store door by a role with full rights on the prefix of the subsystem (P/01.1 «Стенд»).
+the store door by a role with full rights on the prefix of the subsystem (the common acceptance README «Стенд»).
 
 Before each scenario stop the processes of the previous one, create separate empty row/object stores and clear
 the variables/the replay memory. Load the unchanged testsub and testsub2; root is testsub, the second is available under /testsub2;
@@ -377,7 +377,7 @@ The bounds of :int by P/02.1: binary64, the absolute value not greater than 2^53
 a language coercion. Check ±0.5, ±7.9, ±(2^53−1), 1e16, 1e21 and the canonical decimal result without an exponent.
 
 The cleanup with grace — the phases of Н3 and the codes of the window command of Н2: without `--writers-stopped` nothing is deleted, the grace of 300 s of an unchanged
-version, an object newer than the mark is not touched (controlled clocks are needed, «Стенд» P/01.1). They are checked by reading (reconciliation of python and go
+version, an object newer than the mark is not touched (controlled clocks are needed, the common acceptance README «Стенд»). They are checked by reading (reconciliation of python and go
 М10/6–11): T16 — `null` at a json field of a table and T23 — `made_at` (the tables of `testsub2` have no json field and no `made_at`).
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
