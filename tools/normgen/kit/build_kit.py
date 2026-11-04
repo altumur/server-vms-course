@@ -21,6 +21,7 @@ Platform/01-store/spec/01-store.api.openapi.yaml (tools/normgen/out/p01-1/go/doo
 Каталоги checks, jsonstrict, writecheck в <dst>/01-store/internal заменяются целиком; прочее в <dst> не трогается.
 """
 import argparse
+import os
 import hashlib
 import json
 import re
@@ -112,7 +113,7 @@ def build(dst, module, parts=()):
     files = []
 
     def put(rel_dir, name, data, origin, component, source):
-        target = internal / rel_dir / name
+        target = Path(os.path.normpath(internal / rel_dir / name))      # ../cmd/vectors — рядом с internal
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
         files.append({"path": str(target.relative_to(dst)), "sha256": sha256(data), "lines": lines(data),
@@ -121,8 +122,8 @@ def build(dst, module, parts=()):
     for sub in ("checks", "jsonstrict", "writecheck") + (gen_tests.KIT_DIRS if tests else ()) + \
             (("door",) if openapi_sha else ()) + (gen_flags.KIT_DIRS if flag_files else ()) + \
             (gen_refusals.KIT_DIRS if refusal_files else ()):
-        if (internal / sub).exists():
-            shutil.rmtree(internal / sub)
+        if Path(os.path.normpath(internal / sub)).exists():
+            shutil.rmtree(os.path.normpath(internal / sub))
     for name, origin, source in CHECKS_FILES:
         put("checks", name, (GENERATED / name).read_bytes(), origin, "normgen", source)
     for sub, name in KIT_FILES:

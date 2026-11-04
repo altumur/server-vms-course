@@ -1,0 +1,14 @@
+{
+ "format": 1,
+ "package": "01-store/write-checks",
+ "table": "write-checks.probes.tsv",
+ "case": "line-53",
+ "variant": "",
+ "cells": {
+  "sock": "writer",
+  "body": "{\"op\": \"put\", \"key\": \"zzz/a\", \"items\": {\"f\": \"vvvvvvvvv\"}}",
+  "lim": "{\"BATCH_WRITES\":2,\"BATCH_GUARDS\":2,\"ROW_CEILING\":8}",
+  "allow": "[\"writer read acc/\",\"writer write acc/\",\"writer delete acc/\",\"admin *\",\"console *\",\"domain *\"]"
+ },
+ "files": {}
+}
