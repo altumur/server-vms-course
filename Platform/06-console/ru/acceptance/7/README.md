@@ -14,17 +14,17 @@
 
 Функцию `resolve` без стенда проверяет вектор [`resolve`](../../vectors/resolve/README.md) (12 строк: 11 — бывший сц. 03 приёмки
 М11/11); `families` двери `/domain/keys` (Н1.11) — вектор [`key-families`](../../vectors/key-families/README.md) (12 строк:
-один `id` в нескольких манифестах, порядок; на стенде один манифест с `domain.keys`). Остальные сценарии источников — у соседей: М11/08 сц. 04 — [глава 8.3](../../../../08-domain/acceptance/3/README.md),
+один `id` в нескольких манифестах, порядок; на стенде один манифест с `domain.keys`). Остальные сценарии источников — у соседей: М11/08 сц. 04 — [глава 8.3](../../../../08-domain/ru/acceptance/3/README.md),
 05 (страница держателя) — урок P/10, 06 — векторы [`peer`](../../../../common/vectors/peer/README.md); М11/09 — [глава
-8.4](../../../../08-domain/acceptance/4/README.md), [8.5](../../../../08-domain/acceptance/5/README.md) (11) и векторы
-[`may`](../../../../common/vectors/may/README.md); М11/05 — [глава 8.5](../../../../08-domain/acceptance/5/README.md), [9.1](../../../../09-agent/acceptance/1/README.md)
-(13) и вектор [`assemble`](../../../../08-domain/vectors/assemble/README.md); М11/10 — [глава 8.8](../../../../08-domain/acceptance/8/README.md),
+8.4](../../../../08-domain/ru/acceptance/4/README.md), [8.5](../../../../08-domain/ru/acceptance/5/README.md) (11) и векторы
+[`may`](../../../../common/vectors/may/README.md); М11/05 — [глава 8.5](../../../../08-domain/ru/acceptance/5/README.md), [9.1](../../../../09-agent/acceptance/1/README.md)
+(13) и вектор [`assemble`](../../../../08-domain/ru/vectors/assemble/README.md); М11/10 — [глава 8.8](../../../../08-domain/ru/acceptance/8/README.md),
 [9.1](../../../../09-agent/acceptance/1/README.md) (11), векторы [`record`](../../../../common/vectors/record/README.md),
 [`ask-sig`](../../../../common/vectors/ask-sig/README.md), [`follow`](../../../../09-agent/vectors/follow/README.md).
 
 ## Стенд
 
-**Сценарии 01–03, 15** (из README приёмок М11/08 и М11/10). Подготовка — как приёмка [главы 8.3](../../../../08-domain/acceptance/3/README.md)
+**Сценарии 01–03, 15** (из README приёмок М11/08 и М11/10). Подготовка — как приёмка [главы 8.3](../../../../08-domain/ru/acceptance/3/README.md)
 («Стенд», «Подготовка каждого сценария»): кластеры `hold`, `m1`, `m2`, каталог `testsub`. Двери `holder`,
 `holder@<кластер>`, `member <кластер> console`, `signer` и директивы `@domain`, `@person`, `@env`, `@start domain on`,
 `@stop domain`, `@move` — раздел «Стенд домена» общего README приёмки; там же окружение пересылки (`CLUSTERS` консолей,
@@ -39,12 +39,12 @@
   нет). `m9` — имя не члена.
 - Сценарий 15. Хранители: при двух членах `ok` (`m1`, `m2`) оба. `@sleep 35` — `BACKUP_EVERY` и проход агента после
   `@domain`: приём членов меняет состояние, и первая резервная копия не последняя. `$r` — её ревизия из первого ответа
-  после тишины; тихий домен новых ревизий не делает ([глава 8.8](../../../../08-domain/spec/08.8-domain.norms.md) Н1.5 `rev`). У
+  после тишины; тихий домен новых ревизий не делает ([глава 8.8](../../../../08-domain/ru/spec/08.8-domain.norms.md) Н1.5 `rev`). У
   держателя резервной копии нет: `backup` его `/api/held` — `null`. Шаг 7 — вид держателя (глава 8.8 Н1.3 `term`, дверь
   консоли домена — урок P/10) — сосед на стенде.
 
 **Сценарий 16** (второй проход аудита покрытия P/06, Gemini, `audit-coverage-gemini` 0a5ae79f9) — стенд сц. 01–03, 15
-(`testsub` объявляет `domain.shared`, как в приёмке [главы 8.9](../../../../08-domain/acceptance/9/README.md)).
+(`testsub` объявляет `domain.shared`, как в приёмке [главы 8.9](../../../../08-domain/ru/acceptance/9/README.md)).
 - Шаги 2–6 — `GET /domain/shared/testsub` у консоли кластера держателя (`member hold console`): документ, который называет
   указатель (`domain/shared-docs/rev-<rev>`, Н1.14 `term, rev`), — `term` 1, `rev` 1 после правки держателем (шаг 2; у члена
   это — сц. 01 приёмки главы 8.9); `?unit=` пустой и повторённый — 400 `refused` «a unit id is required», `..` — 404 `no such
@@ -63,9 +63,9 @@
 негодном токене: личность не доказана (шаг 5); `HEAD` и файл — `401`; с человеком — оболочка байт в байт (P/06.5 Н2 «Вход на оболочке»).
 Вошедший без гранта (`403`) — чтением.
 
-**Сценарии 06, 13, 14** (из README приёмок М11/05 и М11/09). Подготовка — как приёмка [главы 8.5](../../../../08-domain/acceptance/5/README.md)
+**Сценарии 06, 13, 14** (из README приёмок М11/05 и М11/09). Подготовка — как приёмка [главы 8.5](../../../../08-domain/ru/acceptance/5/README.md)
 («Подготовка»): каталог каждого кластера — `testsub` и `testsub2`; на каждом кластере работают контроллеры обеих, воркер
-`w-1` манифеста `testsub`, воркер `t-1` манифеста `testsub2` (с учебным писателем вкладов — [глава 8.5](../../../../08-domain/spec/08.5-domain.norms.md) Н5) и
+`w-1` манифеста `testsub`, воркер `t-1` манифеста `testsub2` (с учебным писателем вкладов — [глава 8.5](../../../../08-domain/ru/spec/08.5-domain.norms.md) Н5) и
 ресурс своего сервера `srv-<кластер>`; до шагов в хранилище каждого кластера есть счётчик `testsub` `c1-<кластер>` и полка
 `testsub2` `sh1` `{zone: z1, server: srv-<кластер>}`. `console2` у `member` — префикс `/testsub2`.
 

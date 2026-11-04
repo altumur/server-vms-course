@@ -26,7 +26,7 @@
 
 Как в README приёмки М11/8 «Входы»: центры A (`w2c test ca north`), его промежуточный AI и B (`w2c test ca south`), EC
 P-256; листы роли `console` с SAN DNS `m2.w2c.test`; якоря RSA-2048, Ed25519 и P-384 с SHA-384 (сверка М11, D14). Отпечаток
-— sha256 hex DER центра ([P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `fingerprint`). `now` — 1760000000.
+— sha256 hex DER центра ([P/08.3 Н1.6](../../../08-domain/ru/spec/08.3-domain.norms.md) `fingerprint`). `now` — 1760000000.
 
 ## Файлы
 

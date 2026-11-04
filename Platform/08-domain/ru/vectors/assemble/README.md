@@ -1,6 +1,6 @@
 # Векторы сборки книги
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+Текст производный от `vectors/assemble/README.md`, руками не правится: источник — английский [`vectors/assemble/README.md`](../../../vectors/assemble/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
 Векторы функции `assemble` [главы P/08.5](../../spec/08.5-domain.norms.md): сборка одной книги у держателя без
 хранилища, сети и стенда — вход — копии членов списка и их состояние вида, вывод — строки книги каждого члена до кольца
@@ -18,7 +18,7 @@
 ## Прогон
 
 Без стенда: команда `assemble` реализации получает вход (колонка `input`) и печатает JSON `{rows, report}`; `expect` —
-подмножество полей вывода по словарю «Стенда» ([общий README приёмки](../../../common/acceptance/README.md), `<код>
+подмножество полей вывода по словарю «Стенда» ([общий README приёмки](../../../../common/acceptance/README.md), `<код>
 <JSON>`: названные поля есть и равны, `"@absent"` — поля нет, массив — по длине, порядку и элементам) или `@exit 2` (вход
 не по форме Н5: ключи `copies` — не в точности `members`; `grants` без `now`). Каждая строка — отдельный запуск.
 
@@ -26,20 +26,20 @@
 
 Вход — Н5 главы: `book` — `testsub2/notes` (`pick: unique`, индекс имён `notes/` с `grant: view`) или `testsub2/rolls`
 (`pick: all`), `members` — список членов, `book_seal_seed` — `seed_secret` ключа приёма книг (`book seal 1`,
-[README пакета `domain-token`](../../../common/vectors/domain-token/README.md#ключи) «Ключи»), `copies` — состояние и объекты копии
+[README пакета `domain-token`](../../../../common/vectors/domain-token/README.md#ключи) «Ключи»), `copies` — состояние и объекты копии
 каждого члена (`null` — копии нет), `grants` и `now` — строки грантов получателей для правила Н1.3 `grant`. Секреты
 входов — конверты `x25519:v1` к `book seal 1` (в случае 07 — к `book seal 2`: не открывается), `eph 1`, `nonce` 0…11
-([договор конвертов домена](../../../common/contracts/domain-envelopes.md) «Конверт `x25519:v1`», AAD — `[член, ключ строки,
+([договор конвертов домена](../../../../common/contracts/domain-envelopes.md) «Конверт `x25519:v1`», AAD — `[член, ключ строки,
 item]` и JSON Pointer секрета). Случай 12 — секрет конвертом кольца члена `enc:v2:`: член его не открыл, и агент нёс как
-есть ([глава 9.1](../../../09-agent/spec/09.1-agent.norms.md) Н1.2) — сборка даёт `secret_unopened`.
+есть ([глава 9.1](../../../../09-agent/spec/09.1-agent.norms.md) Н1.2) — сборка даёт `secret_unopened`.
 
 Ожидания зависят от байтов манифестов каталога (разбор ревью стадии A 8–10, № 37): `domain.books` (`from`, `key`, `pick`, `to`) и
 `domain.names` манифеста `testsub2` из данных спецификации:
 
 | Манифест | Файл | sha256 |
 |---|---|---|
-| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a` |
-| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `813a807f3472bdc64e279c94c12bfe3b00ebaaa8ebda0c996d2a50161043e6eb` |
+| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../../Source/tests/testdata/testsub.subsystem.yaml) | `7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a` |
+| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `813a807f3472bdc64e279c94c12bfe3b00ebaaa8ebda0c996d2a50161043e6eb` |
 
 Байты `testsub2` сменились 2026-11-04 (дорожная карта 4.5): добавлен вид токена `vault` с `keep: true` в `domain.tokens`, затем переписаны комментарии шапки без имён файлов тестов; поля, от которых зависят ожидания этой таблицы, не тронуты — перепроверка оракулом не нужна.
 
@@ -49,7 +49,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 23 строки: 22 вычислено, 1 `@exit 2` | `input` — вход `assemble` текстом JSON → `expect`: строки `rows` (доставка только членам из `to`, порядок `entries` по (member, item), `missing` с закрытыми словами, ключ конфликта `unique` и недоставленный по гранту — `"@absent"`, открытый секрет в `value`) и `report` (`conflicts`, `dropped` — `bad_contribution`, `secret_unopened`, `undelivered`); `@exit 2` — `grants` без `now` |
+| [`cases.tsv`](../../../vectors/assemble/cases.tsv), 23 строки: 22 вычислено, 1 `@exit 2` | `input` — вход `assemble` текстом JSON → `expect`: строки `rows` (доставка только членам из `to`, порядок `entries` по (member, item), `missing` с закрытыми словами, ключ конфликта `unique` и недоставленный по гранту — `"@absent"`, открытый секрет в `value`) и `report` (`conflicts`, `dropped` — `bad_contribution`, `secret_unopened`, `undelivered`); `@exit 2` — `grants` без `now` |
 
 | Случаи | Что проверяет |
 |---|---|
@@ -66,6 +66,6 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 | `13-missing-shown` (разбор этапа 8) | `missing_count` — все, `missing` — первые 500, сначала класс `server` |
 
 Векторы проверены оракулом по тексту норм (Н1.3, Н3 «сборка книги», Н5; открытие секрета — эталонными X25519, HKDF-SHA256
-и AES-256-GCM по договору конвертов домена; действующая строка гранта — [договор права](../../../common/contracts/may.md)
+и AES-256-GCM по договору конвертов домена; действующая строка гранта — [договор права](../../../../common/contracts/may.md)
 шаг 5), не по коду реализаций: вывод оракула содержит ожидание каждой строки. При расхождении прав текст нормы, вектор
 правит «Спецификация».

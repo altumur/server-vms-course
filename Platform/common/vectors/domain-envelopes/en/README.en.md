@@ -11,7 +11,7 @@ The rows were transferred from the inputs of the vector commands of the acceptan
 М11/2 (`inputs/seal-*.json`, sc. 08–11), `m1-*` — from
 М11/3 (`inputs/seal-member-*.json`, sc. 11–12); `case` is
 the name of the input file. The scenarios М11/02 sc. 08–11 and М11/03 sc. 11, 12 and their inputs were removed by the move of lesson 8 (ADR-0083 addendum (14)
-item 17; the logs — [the README of the package `domain-token`](../../domain-token/README.md#журнал-источника) (М11/02), [the acceptance of chapter P/08.3](../../../../08-domain/acceptance/3/corrections.tsv)): the tables are the only source of these cases.
+item 17; the logs — [the README of the package `domain-token`](../../domain-token/README.md#журнал-источника) (М11/02), the acceptance of chapter P/08.3 (`Platform/08-domain/journal/corrections-3.tsv`, a log, not in the export)): the tables are the only source of these cases.
 
 ## Run
 

@@ -1,18 +1,18 @@
 # Acceptance P/08.9 — the shared document of the domain
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/9/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are [the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей) and its
-section [«Domain stand»](../../../../common/acceptance/README.md#стенд-домена) (the doors `holder`, `member`, the directives `@domain`, `@person`; the plan of lesson 8 В5). The norm of the chapter is
-[`08.9-domain.norms.md`](../../../spec/08.9-domain.norms.md) Н5. Scenario 01 was moved from the acceptance of М11/11 (stage B, ADR-0083
+The stand and the dictionary of directives and doors are [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей) and its
+section [«Domain stand»](../../../common/acceptance/README.md#стенд-домена) (the doors `holder`, `member`, the directives `@domain`, `@person`; the plan of lesson 8 В5). The norm of the chapter is
+[`08.9-domain.norms.md`](../../spec/08.9-domain.norms.md) Н5. Scenario 01 was moved from the acceptance of М11/11 (stage B, ADR-0083
 addendum (1): without a change of behaviour); the numbers of the scenario and of the steps are the former ones; scenario 07 is the coverage audit of P/08 (the numbers 02–06 belong to the scenarios of М11/11 in neighbouring acceptances). The other scenarios of М11/11 are lesson P/10 (02 — the list of
-alarms; the vectors `alarms` — 04), [the acceptance of chapter 9.1](../../../../09-agent/acceptance/1/README.md) (05; 06 → 14) and the cluster console (the vectors [`resolve`](../../../../06-console/vectors/resolve/README.md) — 03, chapter P/06.7); lesson P/10 is [the acceptance](../../../../10-domain-console/acceptance/README.md)
-and the vector [`alarms`](../../../../10-domain-console/vectors/alarms/README.md). The forms of foreign doors are for their
+alarms; the vectors `alarms` — 04), [the acceptance of chapter 9.1](../../../09-agent/acceptance/1/README.md) (05; 06 → 14) and the cluster console (the vectors [`resolve`](../../../06-console/vectors/resolve/README.md) — 03, chapter P/06.7); lesson P/10 is [the acceptance](../../../10-domain-console/acceptance/README.md)
+and the vector [`alarms`](../../../10-domain-console/vectors/alarms/README.md). The forms of foreign doors are for their
 owners.
 
 ## Stand
 
-The preparation is as the acceptance README of [chapter 8.3](../../3/README.md) («Подготовка каждого сценария», from М11/03: the clusters `hold`, `m1`,
+The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («Подготовка каждого сценария», from М11/03: the clusters `hold`, `m1`,
 `m2`, the catalog `testsub`), with a declaration of the shared in `testsub`:
 - `domain.shared: [step, marks, {rounds}]`;
 - `step` is an `int` with `inherit: 1`;
@@ -20,7 +20,7 @@ The preparation is as the acceptance README of [chapter 8.3](../../3/README.md) 
 
 The runner goes as the human `root` (the first administrator — chapter 8.4, the directive `@person`).
 
-- **Scenario 09** — versions and the replay memory ([chapter 8.0](../../../spec/08.0-domain.norms.md) Н1.9; Н1.3 steps 1а–3). The first write carries `base_rev: 0` (step 2). `If-Match` with `base_rev`: different, an index next to it, neither one nor the other — 400 `field: /base_rev` (steps 6–8), equal — a write (step 9). Step 5: `row` is a pointer. Step 14: the condition before the content.
+- **Scenario 09** — versions and the replay memory ([chapter 8.0](../../spec/08.0-domain.norms.md) Н1.9; Н1.3 steps 1а–3). The first write carries `base_rev: 0` (step 2). `If-Match` with `base_rev`: different, an index next to it, neither one nor the other — 400 `field: /base_rev` (steps 6–8), equal — a write (step 9). Step 5: `row` is a pointer. Step 14: the condition before the content.
 - **Scenario 01.**
   - Step 05 — an edit with an outdated `base_rev` and an unknown subsystem: the revision 409 before the content 400 (Н1.3 steps 3, 4).
   - Steps 06–08 — content refusals: there is no subsystem and the name is not shared, the type of a field, the schema of the document `rounds` (`every` ≥ 1). Step 06
@@ -39,12 +39,12 @@ The runner goes as the human `root` (the first administrator — chapter 8.4, th
 
 Neighbours on the stand: the edit is passed to the process by the domain console (`holder PUT`, lesson P/10, chapter 8.0); `GET /domain/shared`
 (steps 02, 14) is a door of the domain console (lesson P/10, P/10-14), the content of `delivery` is `view.shared` of this chapter (Н1.6); the document
-is taken by the member's agent ([chapter 9.1](../../../../09-agent/spec/09.1-agent.norms.md), P/09.1-12); the value at the read `GET /domain/shared/testsub` (steps 11–13, 16) is the cluster console
+is taken by the member's agent ([chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md), P/09.1-12); the value at the read `GET /domain/shared/testsub` (steps 11–13, 16) is the cluster console
 (the OpenAPI of lesson 6 `GET /domain/shared/{sub}`); the units `c5`, `c6` (steps 09, 10) are the units door P/06.1.
 
 ## scenarios.tsv
 
-The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей)
+The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей)
 and the section «Domain stand»: a subset of fields, `~` is a substring. In total 4 scenarios / 46 steps.
 
 Sc. 08 (the coverage audit of P/08, the second pass of Gemini, the draft G10 `e32df6f8b`, rewritten): the removal of the last field of a subsystem (`null`) removes the
@@ -59,4 +59,4 @@ A subset of expect does not replace the check of the full HTTP form of the OpenA
 
 The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The log of the acceptance of М11/11 is moved here
 as a whole, the rows as they are (the plan of lesson 8 § 3 «Журналы»: the log of the source goes into each directory that takes its scenarios;
-the paths of the old rows — `11/…`, `NN-<имя> <шаг>` — are resolved by [id-map](../../../../common/id-map.tsv)); the last row is the move.
+the paths of the old rows — `11/…`, `NN-<имя> <шаг>` — are resolved by [id-map](../../../common/id-map.tsv)); the last row is the move.

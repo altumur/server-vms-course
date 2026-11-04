@@ -1,21 +1,21 @@
 # Acceptance P/08.6 — placement and kept edits (stand)
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/6/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md#словарь-директив-и-дверей),
-the section [«Стенд домена»](../../../../common/acceptance/README.md#стенд-домена) (a stand of several clusters; formerly the dictionary of the М11 README of the acceptance
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей),
+the section [«Стенд домена»](../../../common/acceptance/README.md#стенд-домена) (a stand of several clusters; formerly the dictionary of the М11 README of the acceptance
 М11/01; the plan of the move of lesson 8, В5). The norm of the chapter is
-[`08.6-domain.norms.md`](../../../spec/08.6-domain.norms.md) Н5; [the contract](../../../spec/08-domain.api.openapi.yaml),
-[the lecture](../../../08-domain.md). Scenarios 01, 02, 03, 05, 09 were moved from the acceptance of М11/06 (stage B, ADR-0083 addendum (1): without
-a change of behaviour); the numbers and the steps are the former ones, except sc. 03: step 14 (the holder's copy with `start` 7 before `DELETE`) is inserted, the former 14–16 are now 15–17 (the decision of «Архитектор» 2026-10-21 on a data finding of cammeta-python ac3509b). The other scenarios of М11/06: 04, 07, 08 — [the acceptance of chapter 9.1](../../../../09-agent/acceptance/1/README.md), 06 — [the acceptance of chapter 8.1](../../1/README.md) (sc. 15). Sc. 10 is added by ADR-0091 addenda (12)–(19) (the executors of placement). Sc. 11 — the coverage audit of P/08 (audit-kimi 1e9929d51), sc. 12–15 — its second pass (Gemini). In total 12 scenarios / 261 steps.
+[`08.6-domain.norms.md`](../../spec/08.6-domain.norms.md) Н5; [the contract](../../spec/08-domain.api.openapi.yaml),
+the lecture (`ru/08-domain.md`, for people, not in the export). Scenarios 01, 02, 03, 05, 09 were moved from the acceptance of М11/06 (stage B, ADR-0083 addendum (1): without
+a change of behaviour); the numbers and the steps are the former ones, except sc. 03: step 14 (the holder's copy with `start` 7 before `DELETE`) is inserted, the former 14–16 are now 15–17 (the decision of «Архитектор» 2026-10-21 on a data finding of cammeta-python ac3509b). The other scenarios of М11/06: 04, 07, 08 — [the acceptance of chapter 9.1](../../../09-agent/acceptance/1/README.md), 06 — [the acceptance of chapter 8.1](../1/README.md) (sc. 15). Sc. 10 is added by ADR-0091 addenda (12)–(19) (the executors of placement). Sc. 11 — the coverage audit of P/08 (audit-kimi 1e9929d51), sc. 12–15 — its second pass (Gemini). In total 12 scenarios / 261 steps.
 
 The `If-Match` condition of the units door, by which the agent applies an edit, is sc. 14 of the acceptance of
-[P/06.1](../../../../06-console/acceptance/1/README.md). The doors `GET /domain/placement`, `/domain`, `/domain/<sub>/<rows>`,
-through which the stand reads placements, the view and the units, are doors of the domain console (lesson P/10, [the forwarding contract](../../../../common/contracts/forwarding.md) «Domain doors»; [Н1.2а, Н1.2г](../../../../10-domain-console/spec/10-domain-console.norms.md)); the chapter normates their content.
+[P/06.1](../../../06-console/acceptance/1/README.md). The doors `GET /domain/placement`, `/domain`, `/domain/<sub>/<rows>`,
+through which the stand reads placements, the view and the units, are doors of the domain console (lesson P/10, [the forwarding contract](../../../common/contracts/forwarding.md) «Domain doors»; [Н1.2а, Н1.2г](../../../10-domain-console/spec/10-domain-console.norms.md)); the chapter normates their content.
 
 ## Preparation
 
-As the acceptance README of [chapter 8.3](../../3/README.md) («Stand», «Подготовка каждого сценария»;
+As the acceptance README of [chapter 8.3](../3/README.md) («Stand», «Подготовка каждого сценария»;
 formerly the acceptance README of М11/03): the runner brings up three clusters on one machine — `hold`, `m1`, `m2`; each has its own
 empty store, its own `{data}`, its own role sockets and console and resource ports, its own ring (P/06.2 Н1.2), a manifest catalog of
 only `testsub` (`domain.edit: [start, labels]`, `domain.ref: name`); the console, the controller and the worker `w-1` of `testsub`, the resource
@@ -72,14 +72,14 @@ an unreadable `seq` — the norm gives `null` to a row unreadable as a whole, an
 (by reading).
 
 Sc. 01 steps 10–16, 19 and sc. 03 steps 11–17 also observe the side of the member's agent (the copies `domain/placed*`, the application of an edit
-through the units door) — items of [chapter 9.1](../../../../09-agent/spec/09.1-agent.norms.md) (P/09.1-07, -08) refer to them; the outcome of the scenario is the placement and the holder's edit
+through the units door) — items of [chapter 9.1](../../../09-agent/spec/09.1-agent.norms.md) (P/09.1-07, -08) refer to them; the outcome of the scenario is the placement and the holder's edit
 (ADR-0083 addendum (13)).
 
 ## corrections.tsv
 
 The log of AI corrections (ADR-0080 addendum 1): `date`, `sample`, `fix`, `languages`. The rows from before the move are `corrections.tsv`
 of the acceptance of М11/06 as a whole, at the beginning of the log, with the former paths and numbers (they are resolved by
-[`id-map.tsv`](../../../../common/id-map.tsv)); the rows about scenarios of other chapters are the history of the source (the plan of the move of lesson 8,
+[`id-map.tsv`](../../../common/id-map.tsv)); the rows about scenarios of other chapters are the history of the source (the plan of the move of lesson 8,
 § 3 «Журналы»).
 
 ## Placement counter after the start (sc. 01, 10)

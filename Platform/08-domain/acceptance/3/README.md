@@ -1,11 +1,11 @@
 # Acceptance P/08.3 — admission of reports
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/3/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are in [the common acceptance README](../../../../common/acceptance/README.md), the section [«Domain stand»](../../../../common/acceptance/README.md#стенд-домена)
+The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md), the section [«Domain stand»](../../../common/acceptance/README.md#стенд-домена)
 (the dictionary of directives and doors of the stand of several clusters; before its move — the «Словарь директив и дверей М11» of the README
 of the acceptance of М11/01). The norm of the chapter is
-[`08.3-domain.norms.md`](../../../spec/08.3-domain.norms.md) Н5. The scenarios were moved (stage B, ADR-0083 addendum (1): without
+[`08.3-domain.norms.md`](../../spec/08.3-domain.norms.md) Н5. The scenarios were moved (stage B, ADR-0083 addendum (1): without
 a change of behaviour) from the acceptances of М11/03 (01, 02, 03, 05, 14), М11/04 (01 → 15, 05 → 16), М11/08 (04) and М11/12 (02 → 17);
 the numbers, the names and the steps are the former ones, except `15-topology` (in М11/04 — `01-topology`), `16-second-road` (in М11/04 —
 `05-second-road`) and `17-members-only-to-the-lagging` (in М11/12 — `02-members-only-to-the-lagging`): their numbers are taken by
@@ -16,10 +16,10 @@ the view fields of chapter 8.1 and a mark beyond the limit of `rev`), 25 — sc.
 
 The command scenarios of М11/03 sc. 10–13 (`agent-sig`, `seal-member`, `seal-member-round`, `accept`) and М11/04 sc. 06 (`accept` with
 a road) are not moved: the same cases without a change of bytes are the vectors of the common contracts
-[`agent-sig`](../../../../common/vectors/agent-sig/README.md), [`domain-envelopes`](../../../../common/vectors/domain-envelopes/README.md)
-(`m1-open.tsv`, `m1-round.tsv`) and [`accept`](../../../../common/vectors/accept/README.md); their inputs are removed together with the steps (the row of
-`corrections.tsv`). The other scenarios of М11/03 are the acceptance of [chapter 8.1](../../1/README.md) (04, 06–09); М11/04 sc. 02–04 —
-[chapter 9.2](../../../../09-agent/acceptance/2/README.md), М11/08 — [chapter 6.7](../../../../06-console/acceptance/7/README.md) (01–03), [lesson P/10](../../../../10-domain-console/acceptance/README.md) (05), the vectors `peer` (06), М11/12 — chapters 8.10 and [9.1](../../../../09-agent/acceptance/1/README.md).
+[`agent-sig`](../../../common/vectors/agent-sig/README.md), [`domain-envelopes`](../../../common/vectors/domain-envelopes/README.md)
+(`m1-open.tsv`, `m1-round.tsv`) and [`accept`](../../../common/vectors/accept/README.md); their inputs are removed together with the steps (the row of
+`corrections.tsv`). The other scenarios of М11/03 are the acceptance of [chapter 8.1](../1/README.md) (04, 06–09); М11/04 sc. 02–04 —
+[chapter 9.2](../../../09-agent/acceptance/2/README.md), М11/08 — [chapter 6.7](../../../06-console/acceptance/7/README.md) (01–03), [lesson P/10](../../../10-domain-console/acceptance/README.md) (05), the vectors `peer` (06), М11/12 — chapters 8.10 and [9.1](../../../09-agent/acceptance/1/README.md).
 
 ## Stand
 
@@ -39,7 +39,7 @@ opens the relay door (`RELAY=1`, `{relay_port}`); the directives `@domain <кл�
 relay`, `@stop agent`. The topology is empty until the step that writes it.
 
 **Scenarios 20–22** (the coverage audit of P/08, audit-kimi 1e9929d51) — the view fields of chapter 8.1 on the stand:
-- sc. 20 — `trust` and `topology` of the view ([chapter 8.1](../../../spec/08.1-domain.norms.md) Н1.2а, Н1.6а): before the topology is written —
+- sc. 20 — `trust` and `topology` of the view ([chapter 8.1](../../spec/08.1-domain.norms.md) Н1.2а, Н1.6а): before the topology is written —
   exactly `{rev: 0, star: [], via: {}}`; `trust.rev` is the same `rev` of the set as `reports.<член>.keys_rev` after `@domain`
   (the readiness of `@domain` — each member holds the holder's set); the written topology is seen in the view by the next pass
   (`@until`). `m2` in `via` is not a relay — there are no refusals of Н1.2; the direct report of `m1` is the second road (Н1.3а).
@@ -50,7 +50,7 @@ relay`, `@stop agent`. The topology is empty until the step that writes it.
   11 accepts `{}` or the absence of the field (`@oneof`); there is no key `relay` in any branch.
 - sc. 22 — the mark `domain/members/m1/reported` with `rev` 2^53 (9007199254740992, one above `pos53`), put past the
   writer while the agent `m1` is stopped: the member is `silent`, the view is incomplete by the field (`complete: false`). The strict reading — the mark is not by the
-  form ([the outcomes of the family](../../../data/member-reported.outcomes.tsv): there is no copy, the member is `silent`); the non-strict one — there is no generation
+  form ([the outcomes of the family](../../data/member-reported.outcomes.tsv): there is no copy, the member is `silent`); the non-strict one — there is no generation
   `reports/9007199254740992` and the `sha256` is foreign (chapter 8.1 Н3 step 2) — the same `silent`. `@until 10`: the mark of `m1` is
   younger than `MARK_REFRESH` + `REPORT_EVERY` at the moment of the stop, and before LOST_AFTER (45 s) the silence by the term does not come —
   `silent` is given only by the substitution.
@@ -63,10 +63,10 @@ files: A — `d72f9e5e…68a6`, B — `6fefd57b…e217`. Step 4 — the row `dom
 3 already sees the fingerprint), step 18 — the removal by the administrator deleted it. Steps 10–11 check that an edit by the administrator without
 a change of the centres at the member is rewritten by its next report. Steps 14–16 — two agent passes (`REPORT_EVERY` 5 s) without
 `tls_ca`: the fingerprints are not removed. How the runner passes the environment and restarts the console and the agent of the cluster with the variable
-(`@env`) — the dictionary of the «Domain stand» of [the common acceptance README](../../../../common/acceptance/README.md), `@env` and
+(`@env`) — the dictionary of the «Domain stand» of [the common acceptance README](../../../common/acceptance/README.md), `@env` and
 «Forwarding environment» (the review analysis of stage B 8–10, № 22: `М-16`).
 
-**Scenario 19** — a neighbour on the stand: the door `GET /domain/members` of the domain console ([lesson P/10](../../../../10-domain-console/spec/10-domain-console.norms.md)
+**Scenario 19** — a neighbour on the stand: the door `GET /domain/members` of the domain console ([lesson P/10](../../../10-domain-console/spec/10-domain-console.norms.md)
 Н1.2б, P/10-07; C10-MEMBERS-SOURCE-01, C10-MEMBERS-KNOCKING-ABSENT-01). The process `domain` is stopped (step 2), so that the pass of
 the holder does not rewrite the view; in its place the view `inputs/view-member-list-ghost.json` is put: only `hold`, there is no field `knocking` (step 3). Step 4 shows that the domain console reads this view. Step 5: `members` is the
 doc of the rows `domain/member-rows/<раздел>` (`hold`, `m1`, `m2`), not the view; there is no field `knocking` in the read view —
@@ -80,11 +80,11 @@ at `m1` is with it (the row came once), then the answer is again without `member
 
 | File | Scenario | What is in it |
 |---|---|---|
-| `other-root.json` | 02 | the recovery file of a foreign root (`root 2` of the vectors [`keys`](../../../../common/vectors/keys/README.md); formerly — lesson М11/2 Н5) for `@join m2 inputs/other-root.json` |
+| `other-root.json` | 02 | the recovery file of a foreign root (`root 2` of the vectors [`keys`](../../../common/vectors/keys/README.md); formerly — lesson М11/2 Н5) for `@join m2 inputs/other-root.json` |
 | `kit-m1-one/ca.pem` | 04 | the centre A (`w2c test ca north`), EC P-256 |
 | `kit-m1-two/ca.pem`, `kit-m1-two/ca.next.pem` | 04 | the centres A and B (`w2c test ca south`) |
-| `view-member-list-ghost.json` | 19 | the object `domain/view` (the form [`view`](../../../data/view.schema.json)): `member_list` — `hold` and `ghost`, without `knocking` |
-| `member-reported-rev-2pow53.json` | 22 | the mark object `domain/members/m1/reported` (the form [`member-reported`](../../../data/member-reported.schema.json)), JCS; all fields by the form, except `rev` = 9007199254740992 (2^53, the limit of `pos53` — 2^53 − 1) |
+| `view-member-list-ghost.json` | 19 | the object `domain/view` (the form [`view`](../../data/view.schema.json)): `member_list` — `hold` and `ghost`, without `knocking` |
+| `member-reported-rev-2pow53.json` | 22 | the mark object `domain/members/m1/reported` (the form [`member-reported`](../../data/member-reported.schema.json)), JCS; all fields by the form, except `rev` = 9007199254740992 (2^53, the limit of `pos53` — 2^53 − 1) |
 
 The inputs were moved byte for byte from `inputs/` of the acceptances of М11/03 and М11/08, `view-member-list-ghost.json` is added for sc. 19
 (the exception `acceptance-entry inputs`; the description of the exception — the Architect's decision 2026-10-29; the analysis of the plan of the move of lesson 8, § 3 «Исключения»),
@@ -125,7 +125,7 @@ it the snapshot is there for any number of generations between them (a generatio
   remove the centre and the route; `centre: null` — too.
 - sc. 26 — the row `domain/topology` is spoiled past the door (`doc` is not JSON): `PUT` — 503 `unavailable`, the row is the former one (the edit is
   partial and against `base_rev`, it cannot be executed without reading; C08-TOPOLOGY-PUT-UNREADABLE-01), `GET` — 503 too (P/10 Н1.2в).
-- sc. 27 — the versions and the replay memory of the edit doors ([chapter 8.0](../../../spec/08.0-domain.norms.md) Н1.9). The clusters `hold`, `m1`, `m2`.
+- sc. 27 — the versions and the replay memory of the edit doors ([chapter 8.0](../../spec/08.0-domain.norms.md) Н1.9). The clusters `hold`, `m1`, `m2`.
   There is no row `domain/topology` yet: the condition — 412 with `revision: 0`, and the first write carries `base_rev: 0` (steps 3–5). The condition is judged before the content (step 7), the form — before reading (step 9),
   `If-Match` with `base_rev`: different ones and the index next to it — 400, equal ones — a write (steps 10–12). The index of the former version no longer fits (step 13), the current one fits (steps 14, 15).
   Step 17 repeats step 16 with the former `If-Match`: without the memory this would be a 412 of one's own write; step 22 gives the saved 412 with `revision: 4`, although the row is already at 5.
@@ -159,7 +159,7 @@ steps 5, 9, 11, sc. 22 step 4 — for the next pass of the view (`VIEW_EVERY` 3 
 
 Checked by reading (the norm of the chapter, Н5): the CAS of the admission of a member, a failure between the writes of a generation, of `delta` and of the mark, `sign_failures`
 in the mark and the view, non-matching certificates `tls_ca_certs`, the union of the handshake at the role door (lesson P/10 Н1.4). The knock and the checks
-of the holder on a relay packet — sc. 02, 03 of [the acceptance of chapter 9.2](../../../../09-agent/acceptance/2/README.md).
+of the holder on a relay packet — sc. 02, 03 of [the acceptance of chapter 9.2](../../../09-agent/acceptance/2/README.md).
 
 ## corrections.tsv
 

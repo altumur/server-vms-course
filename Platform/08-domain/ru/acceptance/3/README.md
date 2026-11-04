@@ -1,8 +1,8 @@
 # Приёмка P/08.3 — приём отчётов
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+Текст производный от `acceptance/3/README.md`, руками не правится: источник — английский [`acceptance/3/README.md`](../../../acceptance/3/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
-Стенд, словарь директив и дверей — [общий README приёмки](../../../common/acceptance/README.md), раздел [«Стенд домена»](../../../common/acceptance/README.md#стенд-домена)
+Стенд, словарь директив и дверей — [общий README приёмки](../../../../common/acceptance/README.md), раздел [«Стенд домена»](../../../../common/acceptance/README.md#стенд-домена)
 (словарь директив и дверей стенда нескольких кластеров; до его переезда — «Словарь директив и дверей М11» README
 приёмки М11/01). Норма главы —
 [`08.3-domain.norms.md`](../../spec/08.3-domain.norms.md) Н5. Сценарии перенесены (стадия B, ADR-0083 доп. (1): без
@@ -16,10 +16,10 @@
 
 Сценарии-команды М11/03 сц. 10–13 (`agent-sig`, `seal-member`, `seal-member-round`, `accept`) и М11/04 сц. 06 (`accept` с
 дорогой) не перенесены: те же случаи без изменения байтов — векторы общих договоров
-[`agent-sig`](../../../common/vectors/agent-sig/README.md), [`domain-envelopes`](../../../common/vectors/domain-envelopes/README.md)
-(`m1-open.tsv`, `m1-round.tsv`) и [`accept`](../../../common/vectors/accept/README.md); их входы сняты вместе с шагами (строка
+[`agent-sig`](../../../../common/vectors/agent-sig/README.md), [`domain-envelopes`](../../../../common/vectors/domain-envelopes/README.md)
+(`m1-open.tsv`, `m1-round.tsv`) и [`accept`](../../../../common/vectors/accept/README.md); их входы сняты вместе с шагами (строка
 `corrections.tsv`). Остальные сценарии М11/03 — приёмка [главы 8.1](../1/README.md) (04, 06–09); М11/04 сц. 02–04 —
-[глава 9.2](../../../09-agent/acceptance/2/README.md), М11/08 — [глава 6.7](../../../06-console/ru/acceptance/7/README.md) (01–03), [урок P/10](../../../10-domain-console/acceptance/README.md) (05), векторы `peer` (06), М11/12 — главы 8.10 и [9.1](../../../09-agent/acceptance/1/README.md).
+[глава 9.2](../../../../09-agent/acceptance/2/README.md), М11/08 — [глава 6.7](../../../../06-console/ru/acceptance/7/README.md) (01–03), [урок P/10](../../../../10-domain-console/acceptance/README.md) (05), векторы `peer` (06), М11/12 — главы 8.10 и [9.1](../../../../09-agent/acceptance/1/README.md).
 
 ## Стенд
 
@@ -50,7 +50,7 @@ relay`, `@stop agent`. Топология пуста до шага, которы
   11 принимает `{}` или отсутствие поля (`@oneof`); ключа `relay` нет ни в одной ветви.
 - сц. 22 — метка `domain/members/m1/reported` с `rev` 2^53 (9007199254740992, на единицу выше `pos53`), положенная мимо
   писателя при остановленном агенте `m1`: член `silent`, вид неполон полем (`complete: false`). Строгое чтение — метка не по
-  форме ([исходы семьи](../../data/member-reported.outcomes.tsv): копии нет, член `silent`); нестрогое — поколения
+  форме ([исходы семьи](../../../data/member-reported.outcomes.tsv): копии нет, член `silent`); нестрогое — поколения
   `reports/9007199254740992` нет и `sha256` чужой (глава 8.1 Н3 шаг 2) — тот же `silent`. `@until 10`: метка `m1`
   моложе `MARK_REFRESH` + `REPORT_EVERY` на момент остановки, и до LOST_AFTER (45 с) молчание по сроку не наступает —
   `silent` даёт только подмена.
@@ -63,10 +63,10 @@ W2C_TLS_DIR=…`, `@env m1 W2C_TLS_DIR`; значение `inputs/…` — пу�
 3 уже видит отпечаток), шаг 18 — снятие администратором удалило её. Шаги 10–11 проверяют, что правка администратора без
 смены центров у члена переписывается его следующим отчётом. Шаги 14–16 — два прохода агента (`REPORT_EVERY` 5 с) без
 `tls_ca`: отпечатки не снимаются. Как раннер передаёт окружение и перезапускает консоль и агента кластера с переменной
-(`@env`) — словарь «Стенда домена» [общего README приёмки](../../../common/acceptance/README.md), `@env` и «Окружение
+(`@env`) — словарь «Стенда домена» [общего README приёмки](../../../../common/acceptance/README.md), `@env` и «Окружение
 пересылки» (разбор ревью стадии B 8–10, № 22: М-16).
 
-**Сценарий 19** — сосед на стенде: дверь `GET /domain/members` консоли домена ([урок P/10](../../../10-domain-console/spec/10-domain-console.norms.md)
+**Сценарий 19** — сосед на стенде: дверь `GET /domain/members` консоли домена ([урок P/10](../../../../10-domain-console/spec/10-domain-console.norms.md)
 Н1.2б, P/10-07; C10-MEMBERS-SOURCE-01, C10-MEMBERS-KNOCKING-ABSENT-01). Процесс `domain` остановлен (шаг 2), чтобы проход
 держателя не переписал вид; на его место кладётся вид `inputs/view-member-list-ghost.json`: только `hold`, поля `knocking` нет (шаг 3). Шаг 4 показывает, что консоль домена читает этот вид. Шаг 5: `members` —
 doc строк `domain/member-rows/<раздел>` (`hold`, `m1`, `m2`), а не вид; поля `knocking` в читаемом виде нет —
@@ -80,11 +80,11 @@ doc строк `domain/member-rows/<раздел>` (`hold`, `m1`, `m2`), а не
 
 | Файл | Сценарий | Что в нём |
 |---|---|---|
-| `other-root.json` | 02 | файл восстановления чужого корня (`root 2` векторов [`keys`](../../../common/vectors/keys/README.md); прежде — урок М11/2 Н5) для `@join m2 inputs/other-root.json` |
+| `other-root.json` | 02 | файл восстановления чужого корня (`root 2` векторов [`keys`](../../../../common/vectors/keys/README.md); прежде — урок М11/2 Н5) для `@join m2 inputs/other-root.json` |
 | `kit-m1-one/ca.pem` | 04 | центр A (`w2c test ca north`), EC P-256 |
 | `kit-m1-two/ca.pem`, `kit-m1-two/ca.next.pem` | 04 | центры A и B (`w2c test ca south`) |
-| `view-member-list-ghost.json` | 19 | объект `domain/view` (форма [`view`](../../data/view.schema.json)): `member_list` — `hold` и `ghost`, без `knocking` |
-| `member-reported-rev-2pow53.json` | 22 | объект-метка `domain/members/m1/reported` (форма [`member-reported`](../../data/member-reported.schema.json)), JCS; все поля по форме, кроме `rev` = 9007199254740992 (2^53, предел `pos53` — 2^53 − 1) |
+| `view-member-list-ghost.json` | 19 | объект `domain/view` (форма [`view`](../../../data/view.schema.json)): `member_list` — `hold` и `ghost`, без `knocking` |
+| `member-reported-rev-2pow53.json` | 22 | объект-метка `domain/members/m1/reported` (форма [`member-reported`](../../../data/member-reported.schema.json)), JCS; все поля по форме, кроме `rev` = 9007199254740992 (2^53, предел `pos53` — 2^53 − 1) |
 
 Входы перенесены байт в байт из `inputs/` приёмок М11/03 и М11/08, `view-member-list-ghost.json` добавлен для сц. 19
 (исключение `acceptance-entry inputs`; описание исключения — решение «Архитектора» 2026-10-29; разбор плана переноса урока 8, § 3 «Исключения»),
@@ -159,7 +159,7 @@ doc строк `domain/member-rows/<раздел>` (`hold`, `m1`, `m2`), а не
 
 Проверяются чтением (норма главы, Н5): CAS приёма члена, сбой между записями поколения, `delta` и метки, `sign_failures`
 в метке и виде, несходящиеся сертификаты `tls_ca_certs`, объединение рукопожатия у двери роли (урок P/10 Н1.4). Стук и проверки
-держателя на пакете ретранслятора — сц. 02, 03 [приёмки главы 9.2](../../../09-agent/acceptance/2/README.md).
+держателя на пакете ретранслятора — сц. 02, 03 [приёмки главы 9.2](../../../../09-agent/acceptance/2/README.md).
 
 ## corrections.tsv
 

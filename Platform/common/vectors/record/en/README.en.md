@@ -10,7 +10,7 @@ by its acceptance against this table (ADR-0080 addendum 16).
 
 The rows were transferred from the inputs of the command `record` of the acceptance of М11/10
 (`inputs/record-*.json`, sc. 05) without a change of bytes; `case` is the name of the input file. Scenario 05 of the acceptance of М11/10 and its inputs
-were removed by the move of lesson 8 (ADR-0083 addendum (14) item 17; the log is [the acceptance of chapter P/08.8](../../../../08-domain/acceptance/8/corrections.tsv)):
+were removed by the move of lesson 8 (ADR-0083 addendum (14) item 17; the log is the acceptance of chapter P/08.8 (`Platform/08-domain/journal/corrections-8.tsv`, a log, not in the export)):
 the table is the only source of these cases.
 
 ## Run

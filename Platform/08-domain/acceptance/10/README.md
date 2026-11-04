@@ -1,17 +1,17 @@
 # Acceptance P/08.10 — the queue and the price
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/10/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are [the common acceptance README](../../../../common/acceptance/README.md), the section [«Domain stand»](../../../../common/acceptance/README.md#стенд-домена)
+The stand and the dictionary of directives and doors are [the common acceptance README](../../../common/acceptance/README.md), the section [«Domain stand»](../../../common/acceptance/README.md#стенд-домена)
 (a stand of several clusters; formerly the dictionary of the М11 README of the acceptance М11/01). The norm of the chapter is
-[`08.10-domain.norms.md`](../../../spec/08.10-domain.norms.md) Н5. The scenarios were moved from the acceptance of М11/12 (04, 05) (stage B,
+[`08.10-domain.norms.md`](../../spec/08.10-domain.norms.md) Н5. The scenarios were moved from the acceptance of М11/12 (04, 05) (stage B,
 ADR-0083 addendum (1): without a change of behaviour); the numbers, the names of the scenarios and the steps are the former ones. The other scenarios of М11/12: 01, 03,
-06 — [the acceptance of chapter 9.1](../../../../09-agent/acceptance/1/README.md), 02 — [chapter 8.3](../../3/README.md) (17) (the plan of the move of lesson 8, the appendix). Scenarios 07, 08 are
+06 — [the acceptance of chapter 9.1](../../../09-agent/acceptance/1/README.md), 02 — [chapter 8.3](../3/README.md) (17) (the plan of the move of lesson 8, the appendix). Scenarios 07, 08 are
 the coverage audit of P/08; 09, 10 — the coverage audit of P/08, the second pass of Gemini. There are no vectors: the chapter introduces no new functions.
 
 ## Stand
 
-The preparation is as the «Подготовка каждого сценария» of the acceptance of [chapter 8.3](../../3/README.md) (formerly the acceptance README of М11/03,
+The preparation is as the «Подготовка каждого сценария» of the acceptance of [chapter 8.3](../3/README.md) (formerly the acceptance README of М11/03,
 «Подготовка каждого сценария 01–09»), the catalog `testsub`. The doors `holder`, `member`, `resource`, `signer`, `signer2` and
 the directives `@domain`, `@start domain`, `@start agent`, `@install domain`, `@start domain second`, `@on`, `@freeze`, `@thaw` are the dictionary of the
 «Domain stand» and the common dictionary of directives of the common acceptance README. The runner goes as the human `root` (chapter 8.4). The clock is not accelerated: `LOST_AFTER` 45 s,
@@ -50,7 +50,7 @@ the directives `@domain`, `@start domain`, `@start agent`, `@install domain`, `@
 Not taken from the draft G11: `on_accept` with a large foreign Entry — not 409 (C08-CA-ENTRY-MAX-01) — the agent needs a TLS kit
 (`W2C_TLS_DIR`, the inputs of the acceptance of chapter 8.3), and the stand does not read the log `domain.member.ca.refused` (by reading); 503 `standby`
 at the other doors of the process without `domain/signer` (C08-TURN-WITHOUT-SIGNER-01) — the dictionary has no door of the process `domain` not on
-`hold` (`signer` is only `hold`); its answer on the merits is `POST /api/take`, sc. 16 of [the acceptance of chapter 8.8](../../8/README.md).
+`hold` (`signer` is only `hold`); its answer on the merits is `POST /api/take`, sc. 16 of [the acceptance of chapter 8.8](../8/README.md).
 
 By reading: `whole too large` (Н1.5), a holder `url` of several nodes and an unknown outcome of a write with the guard (Н1.7),
 the price (Н1.9).

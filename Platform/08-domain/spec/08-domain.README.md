@@ -1,8 +1,8 @@
 # P/08 — instructions for an implementation
 
-This English text is the source; the Russian [`08-domain.README.md`](../08-domain.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/08-domain.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is [`../08-domain.md`](../../08-domain.md).
+This file is for the agent (or person) who writes code from the lesson. The explanation of «why» is `ru/08-domain.md` (for people, not in the export).
 
 ## Task
 
@@ -11,55 +11,55 @@ the shadow report, people and grants, books, placement and edits, the issue of t
 history, the queue — by the eleven chapters of the lesson; pass the Н5 acceptance of the chapters and close their readiness checklists. 89 norms in all:
 P/08.0-01…04, P/08.1-01…11, P/08.2-01…11, P/08.3-01…13, P/08.4-01…09 and P/08.4-17 (ADR-0119), P/08.5-01…05, P/08.6-01…05, P/08.7-01…03,
 P/08.8-01…09, P/08.9-01…03 and P/08.9-05, -06 (the number 04 is empty: the alarm list at the holder went to lesson P/10 —
-[`id-map.tsv`](../../../common/id-map.tsv)), P/08.10-01…03. The lesson is assembled from lessons М11/1–12 (the holder side) (stage B,
+[`id-map.tsv`](../../common/id-map.tsv)), P/08.10-01…03. The lesson is assembled from lessons М11/1–12 (the holder side) (stage B,
 ADR-0083 addendum (1), (14)). The member agent and the relay — lesson P/09, the domain console — lesson P/10, the late layer of the cluster
-console — [chapter 6.7](../../../06-console/spec/06.7-console.norms.md), the worker on the domain — [chapter P/03.7](../../../03-worker/spec/03.7-worker.norms.md).
+console — [chapter 6.7](../../06-console/spec/06.7-console.norms.md), the worker on the domain — [chapter P/03.7](../../03-worker/spec/03.7-worker.norms.md).
 
 - **8.0.** The door `SIGNER_URL`: one writer of the holder rows, the acceptance of the edits that the domain console passes
   (`X-W2C-Client` — only from a connection of the role `domainconsole`), the answers `deposed`, `frozen`, `standby` by its own word,
-  the server side of the class `signed` — [chapter 8.0](../08.0-domain.norms.md).
+  the server side of the class `signed` — [chapter 8.0](08.0-domain.norms.md).
 - **8.1.** The holder's pass, which brings the copies of the members together into the domain view and the shadow report, and the command `view` for the acceptance —
-  [chapter 8.1](../08.1-domain.norms.md). The domain writes nothing into the members; the doors of the view are answered by the domain console (lesson P/10).
+  [chapter 8.1](08.1-domain.norms.md). The domain writes nothing into the members; the doors of the view are answered by the domain console (lesson P/10).
 - **8.2.** The domain trust: the acceptance function of the set `domain/keys` (`keys`), the token check (`token`), sealing and
-  opening the envelope `x25519:v1`, the holder key rows, three key changes — [chapter 8.2](../08.2-domain.norms.md). The chapter has no
-  HTTP doors of its own; the domain installation is built by [P/02.4](../../../02-installer/spec/02.4-installer.norms.md) (P/02.4-10).
+  opening the envelope `x25519:v1`, the holder key rows, three key changes — [chapter 8.2](08.2-domain.norms.md). The chapter has no
+  HTTP doors of its own; the domain installation is built by [P/02.4](../../02-installer/spec/02.4-installer.norms.md) (P/02.4-10).
 - **8.3.** The acceptance of the member reports by generations, the holder's answer and the envelope `m1`, the holder side of the two-sided acceptance of a member
   (`POST /domain/members` through the domain console); the topology with an edit door, the relay package and the rule of two roads;
-  the CA prints in the member entry — [chapter 8.3](../08.3-domain.norms.md).
+  the CA prints in the member entry — [chapter 8.3](08.3-domain.norms.md).
 - **8.4.** People at the holder and the login that issues a person token; the attempts limit; the grant rows of each cluster and of the
   domain doors; the right — by the function `may` at the doors of the process; the emergency row of the cluster in the answer to the agent —
-  [chapter 8.4](../08.4-domain.norms.md).
+  [chapter 8.4](08.4-domain.norms.md).
 - **8.5.** The assembly of books in the view pass, the delivery of the entry to the member, the mask; the names index and its checks at the doors of people and grants —
-  [chapter 8.5](../08.5-domain.norms.md).
+  [chapter 8.5](08.5-domain.norms.md).
 - **8.6.** Placement by the operator (the holder record, the counter, the answer to the agent only with the records that name the member),
   the acceptance of an edit of a member unit with the refusals of chapter 8.1, stored edits for a switched-off member, outcomes and `settle` —
-  [chapter 8.6](../08.6-domain.norms.md).
+  [chapter 8.6](08.6-domain.norms.md).
 - **8.7.** The holder door for token requests, the issue by scopes in order, the claims and the signature, the answer in the envelope
-  `m1` — [chapter 8.7](../08.7-domain.norms.md).
+  `m1` — [chapter 8.7](08.7-domain.norms.md).
 - **8.8.** The term and the term record; the backup copy at the keepers; the deposed holder and the stranded; the planned handover;
-  the emergency move by the recovery file — [chapter 8.8](../08.8-domain.norms.md). The members follow the larger term by themselves
+  the emergency move by the recovery file — [chapter 8.8](08.8-domain.norms.md). The members follow the larger term by themselves
   (lesson P/09).
 - **8.9.** The shared document: the edit, the object and the pointer, the re-signing after a move, `shared` in the answer to the agent,
-  «доставлено скольким»; the alarm history in the pass — [chapter 8.9](../08.9-domain.norms.md).
+  «доставлено скольким»; the alarm history in the pass — [chapter 8.9](08.9-domain.norms.md).
 - **8.10.** The queue `domain/signer-turn` and the guard of every write, the standby process, giving up the queue on `SIGTERM`; the ceilings:
-  the ceiling of the section row, `SERVERS_MAX`, `ENTRY_MAX`, `whole` — [chapter 8.10](../08.10-domain.norms.md).
+  the ceiling of the section row, `SERVERS_MAX`, `ENTRY_MAX`, `whole` — [chapter 8.10](08.10-domain.norms.md).
 
 ## Inputs and their priority
 
-- The canon is the norms of chapters [8.0](../08.0-domain.norms.md), [8.1](../08.1-domain.norms.md), [8.2](../08.2-domain.norms.md),
-  [8.3](../08.3-domain.norms.md), [8.4](../08.4-domain.norms.md), [8.5](../08.5-domain.norms.md), [8.6](../08.6-domain.norms.md),
-  [8.7](../08.7-domain.norms.md), [8.8](../08.8-domain.norms.md), [8.9](../08.9-domain.norms.md), [8.10](../08.10-domain.norms.md),
+- The canon is the norms of chapters [8.0](08.0-domain.norms.md), [8.1](08.1-domain.norms.md), [8.2](08.2-domain.norms.md),
+  [8.3](08.3-domain.norms.md), [8.4](08.4-domain.norms.md), [8.5](08.5-domain.norms.md), [8.6](08.6-domain.norms.md),
+  [8.7](08.7-domain.norms.md), [8.8](08.8-domain.norms.md), [8.9](08.9-domain.norms.md), [8.10](08.10-domain.norms.md),
   including Н0, the paragraphs «Данные», the order of Н3 and the refusals of Н4. The input and the output of the acceptance commands — Н5 of the chapters.
-- The common algorithms are contracts; the chapters refer to them and do not repeat them: [the key set](../../../common/contracts/keys.md),
-  [the domain token](../../../common/contracts/domain-token.md) and [the domain envelopes](../../../common/contracts/domain-envelopes.md)
-  (`x25519:v1`, `m1`, the content of `sealed`) — chapters 8.2, 8.3; [the report acceptance](../../../common/contracts/accept.md) and
-  [the agent signature](../../../common/contracts/agent-signature.md) (the holder is the verifier) — chapter 8.3;
-  [the right](../../../common/contracts/may.md) — chapter 8.4; [the term record](../../../common/contracts/record.md) and
-  [the ask signature](../../../common/contracts/ask-sig.md) — chapter 8.8; [the local token door](../../../common/contracts/local-token-door.md)
-  — chapter 8.7; [the forwarding](../../../common/contracts/forwarding.md) («Client address», «Domain doors») and
-  [the role certificate](../../../common/contracts/role-certificate.md#серверная-сторона-класс-signed) — chapter 8.0; the holder
-  ring and the envelope `enc:v2` — [the sealing contract](../../../common/contracts/sealing.md).
-- [OpenAPI](../08-domain.api.openapi.yaml) expresses the HTTP forms of the canon of all the chapters: one door of the process — one contract.
+- The common algorithms are contracts; the chapters refer to them and do not repeat them: [the key set](../../common/contracts/keys.md),
+  [the domain token](../../common/contracts/domain-token.md) and [the domain envelopes](../../common/contracts/domain-envelopes.md)
+  (`x25519:v1`, `m1`, the content of `sealed`) — chapters 8.2, 8.3; [the report acceptance](../../common/contracts/accept.md) and
+  [the agent signature](../../common/contracts/agent-signature.md) (the holder is the verifier) — chapter 8.3;
+  [the right](../../common/contracts/may.md) — chapter 8.4; [the term record](../../common/contracts/record.md) and
+  [the ask signature](../../common/contracts/ask-sig.md) — chapter 8.8; [the local token door](../../common/contracts/local-token-door.md)
+  — chapter 8.7; [the forwarding](../../common/contracts/forwarding.md) («Client address», «Domain doors») and
+  [the role certificate](../../common/contracts/role-certificate.md#серверная-сторона-класс-signed) — chapter 8.0; the holder
+  ring and the envelope `enc:v2` — [the sealing contract](../../common/contracts/sealing.md).
+- [OpenAPI](08-domain.api.openapi.yaml) expresses the HTTP forms of the canon of all the chapters: one door of the process — one contract.
   The own doors of the process and the doors that the domain console and the cluster console pass to it stand in it with the codes of the process:
   Н3 of the doors, 401/403 of its own check of identity and grant, 409 `deposed`, 503 `frozen` and `standby`. The codes of the hop
   (the gate of the console, 502) are carried by the contracts of the consoles (lesson P/10, chapter 6.7). `X-W2C-Client` at the doors that
@@ -68,19 +68,19 @@ console — [chapter 6.7](../../../06-console/spec/06.7-console.norms.md), the w
 - The forms of the rows and objects of the lesson are the family schemas `../data/*.schema.json` (the sections «Семьи данных» of the chapters; ADR-0088); the forms
   shared by a holder row and its copy at the agent — the common definitions (`common/data/common.schema.json` for reference; each
   family schema is self-contained, ADR-0092).
-- The acceptance of the chapters checks the norms: [8.1](../../acceptance/1/README.md), 8.2 (the vectors of the common packages — [Н5 of the chapter](../08.2-domain.norms.md)),
-  [8.3](../../acceptance/3/README.md), [8.4](../../acceptance/4/README.md), [8.5](../../acceptance/5/README.md),
-  [8.6](../../acceptance/6/README.md), [8.7](../../acceptance/7/README.md), [8.8](../../acceptance/8/README.md),
-  [8.9](../../acceptance/9/README.md), [8.10](../../acceptance/10/README.md); chapter 8.0 has no catalogue (Н5). The stand of several
-  clusters, the directives and the doors — [the common acceptance README](../../../common/acceptance/README.md#словарь-директив-и-дверей).
-  The vectors of the lesson — [`view`](../../vectors/view/README.md) (8.1), [`assemble`](../../vectors/assemble/README.md) (8.5),
-  [`issue`](../../vectors/issue/README.md) (8.7); the common ones — [`keys`](../../../common/vectors/keys/README.md),
-  [`domain-token`](../../../common/vectors/domain-token/README.md),
-  [`domain-envelopes`](../../../common/vectors/domain-envelopes/README.md) (8.2, 8.3),
-  [`accept`](../../../common/vectors/accept/README.md), [`agent-sig`](../../../common/vectors/agent-sig/README.md) (8.3),
-  [`may`](../../../common/vectors/may/README.md) (8.4), [`record`](../../../common/vectors/record/README.md),
-  [`ask-sig`](../../../common/vectors/ask-sig/README.md) (8.8). Flags, environment, exit codes — [`../lifecycle.md`](../../lifecycle.md).
-- The [lecture](../../08-domain.md) explains the mechanism and examples.
+- The acceptance of the chapters checks the norms: [8.1](../acceptance/1/README.md), 8.2 (the vectors of the common packages — [Н5 of the chapter](08.2-domain.norms.md)),
+  [8.3](../acceptance/3/README.md), [8.4](../acceptance/4/README.md), [8.5](../acceptance/5/README.md),
+  [8.6](../acceptance/6/README.md), [8.7](../acceptance/7/README.md), [8.8](../acceptance/8/README.md),
+  [8.9](../acceptance/9/README.md), [8.10](../acceptance/10/README.md); chapter 8.0 has no catalogue (Н5). The stand of several
+  clusters, the directives and the doors — [the common acceptance README](../../common/acceptance/README.md#словарь-директив-и-дверей).
+  The vectors of the lesson — [`view`](../vectors/view/README.md) (8.1), [`assemble`](../vectors/assemble/README.md) (8.5),
+  [`issue`](../vectors/issue/README.md) (8.7); the common ones — [`keys`](../../common/vectors/keys/README.md),
+  [`domain-token`](../../common/vectors/domain-token/README.md),
+  [`domain-envelopes`](../../common/vectors/domain-envelopes/README.md) (8.2, 8.3),
+  [`accept`](../../common/vectors/accept/README.md), [`agent-sig`](../../common/vectors/agent-sig/README.md) (8.3),
+  [`may`](../../common/vectors/may/README.md) (8.4), [`record`](../../common/vectors/record/README.md),
+  [`ask-sig`](../../common/vectors/ask-sig/README.md) (8.8). Flags, environment, exit codes — [`../lifecycle.md`](../lifecycle.md).
+- The lecture (`ru/08-domain.md`, for people, not in the export) explains the mechanism and examples.
 
 The internal interfaces, types, error classes, libraries and the division into components are chosen by the implementation. The acceptance commands
 (`view`, `keys`, `token`, `seal`, `seal-round`, `accept`, `agent-sig`, `seal-member`, `seal-member-round`, `may`,
@@ -100,9 +100,9 @@ an unsupported case. Record a change of the acceptance in `corrections.tsv` of i
 ## What to create
 
 - **8.0.** The door `SIGNER_URL`: accept the edits of the domain console as they came, check the identity and the grant itself (chapter 8.4);
-  read `X-W2C-Client` only on a connection of the role `domainconsole` ([the forwarding contract](../../../common/contracts/forwarding.md)
+  read `X-W2C-Client` only on a connection of the role `domainconsole` ([the forwarding contract](../../common/contracts/forwarding.md)
   «Client address»); its own refusals `deposed`, `frozen`, `standby` — by its own word in `error`. The server side of the class
-  `signed` — [the role certificate contract](../../../common/contracts/role-certificate.md#серверная-сторона-класс-signed)
+  `signed` — [the role certificate contract](../../common/contracts/role-certificate.md#серверная-сторона-класс-signed)
   (do not require a client certificate and do not give it rights; requesting it is optional, and a presented one is checked in the
   handshake — its own CA, the validity, EKU `clientAuth`, otherwise an alert; ADR-0083 addendum (20), addendum (21)).
 - **8.1.** The holder's pass of Н3: the domain view (the head once every 3 s, the sections in a round) and the shadow report, the objects `domain/view` and `domain/shadow`; the view fields
@@ -113,7 +113,7 @@ an unsupported case. Record a change of the acceptance in `corrections.tsv` of i
   `domain/book-seal`, `domain/revoked` by Н1.1–Н1.6 and the families; the writer is the process `domain`, at a member — the agent
   (`domain/root` — only `admin`). The calls of the changes of Н3. The acceptance commands `keys`, `token`, `seal`, `seal-round`.
 - **8.3.** The doors `POST /api/member/<член>`, `GET /api/carry/<член>`, `POST /api/relay/<ретранслятор>`; the function «принять»
-  ([the report acceptance contract](../../../common/contracts/accept.md)) with a mutex per member, with `via` and `heard_ago`; the knock `knock` and
+  ([the report acceptance contract](../../common/contracts/accept.md)) with a mutex per member, with `via` and `heard_ago`; the knock `knock` and
   the knocks from a package; the holder in the list; the view fields `knocking`, `reports`. The acceptance of `tls_ca` into `Entry.ca` and of
   `tls_ca_certs` into the row `domain/members/<член>/ca-certs` before it. `members` in the answer only to the one lagging behind; 409
   `too many members` at the acceptance of a member. The edits of the list (`POST`/`DELETE /domain/members`, `POST /domain/members/<член>/ca`)
@@ -152,7 +152,7 @@ This is a proposed order, not an obligatory structure of the code. The chapters 
 ### Chapter 8.0 — the doors of the process
 
 1. The door of the process and the acceptance of the domain console edits (Н1.8) — before the chapters whose doors it carries.
-2. The queue of the process `domain` and the guard of the writes ([chapter 8.10](../08.10-domain.norms.md) Н1.7) — before the first holder pass:
+2. The queue of the process `domain` and the guard of the writes ([chapter 8.10](08.10-domain.norms.md) Н1.7) — before the first holder pass:
    every write needs the guard.
 3. The server side of the class `signed` by the role certificate contract.
 4. The evidence of Н5 of the chapter: the acceptance of edits — scenarios 01, 02 of chapter 8.3; the answers `deposed`, `frozen`, `standby` — the stands
@@ -170,18 +170,18 @@ This is a proposed order, not an obligatory structure of the code. The chapters 
 
 ### Chapter 8.3 — acceptance of reports
 
-1. The check of the agent signature ([the agent signature contract](../../../common/contracts/agent-signature.md), `agent-sig`): the window in
+1. The check of the agent signature ([the agent signature contract](../../common/contracts/agent-signature.md), `agent-sig`): the window in
    both directions, the path without a query.
-2. The envelope `m1` ([the domain envelopes contract](../../../common/contracts/domain-envelopes.md), `seal-member`): the birational
+2. The envelope `m1` ([the domain envelopes contract](../../common/contracts/domain-envelopes.md), `seal-member`): the birational
    map of the key, SHA-512 of the seed, HKDF, AAD.
-3. «Принять» ([the report acceptance contract](../../../common/contracts/accept.md), `accept`): the order of the steps, 409 of three kinds,
+3. «Принять» ([the report acceptance contract](../../common/contracts/accept.md), `accept`): the order of the steps, 409 of three kinds,
    `heard` and `MARK_REFRESH`, the order of the writes of the object, `.delta` and the marks.
 4. «Принять» with a road (`accept` with `via`, `heard_ago`): steps 2, 2а, 3 of the report acceptance contract.
 5. The acceptance of a member of Н3 and the holder in the list; the topology of Н1.2: the form, the refusals, CAS by `base_rev` and `If-Match`, the JCS of the text `doc`.
 6. The holder on a package of Н3: the topology, `refused`, the answer with `rev` for this road.
 7. `tls_ca` → `Entry.ca`, `tls_ca_certs` → `ca-certs` and the administrator door.
 8. `members_rev`: `members` in the answer only to the one lagging behind; the ceilings of chapter 8.10 — together with the acceptance of members.
-9. The stand: the scenarios of [the acceptance of the chapter](../../acceptance/3/README.md).
+9. The stand: the scenarios of [the acceptance of the chapter](../acceptance/3/README.md).
 
 ### Chapter 8.1 — the view and the shadow mode
 
@@ -195,24 +195,24 @@ This is a proposed order, not an obligatory structure of the code. The chapters 
 4. The command `view`: the input and the output — Н5 of the chapter and the OpenAPI; each pass of the input is one holder pass.
 5. The view fields of the other chapters (Н1.2а, Н1.6а, Н1.7) — by the same pass; the fields `books`, `pending`, `outcomes`, `term`, `shared` —
    by chapters 8.5, 8.6, 8.8, 8.9.
-6. The vectors [`view`](../../vectors/view/README.md), then the stand of [the acceptance of the chapter](../../acceptance/1/README.md).
+6. The vectors [`view`](../vectors/view/README.md), then the stand of [the acceptance of the chapter](../acceptance/1/README.md).
 
 ### Chapter 8.4 — people and grants
 
-1. `may` — the pure function of [the right contract](../../../common/contracts/may.md) — by the vectors.
+1. `may` — the pure function of [the right contract](../../common/contracts/may.md) — by the vectors.
 2. The row of a person, the PBKDF2 hash, the login and the limit; the indistinguishability of the answer.
 3. The grant rows, the last administrator, the deletion mark and the reconciliation.
 4. The check at the doors of the process by `domain/grants/domain`; the emergency account at the holder.
-5. The stand of [the acceptance of the chapter](../../acceptance/4/README.md) with the identity `root`, which the runner sets by the vocabulary of the «Стенда домена».
+5. The stand of [the acceptance of the chapter](../acceptance/4/README.md) with the identity `root`, which the runner sets by the vocabulary of the «Стенда домена».
 
 ### Chapter 8.5 — books and the names index
 
 1. `assemble` (the pure function of Н3): who contributes, `missing` with closed words, the removal of a contribution as a whole, `unique`/`all`,
-   the order; the vectors [`assemble`](../../vectors/assemble/README.md).
-2. The book rows at the holder, the secrets — by the ring ([P/06.2](../../../06-console/spec/06.2-console.norms.md) Н1.2), a write
+   the order; the vectors [`assemble`](../vectors/assemble/README.md).
+2. The book rows at the holder, the secrets — by the ring ([P/06.2](../../06-console/spec/06.2-console.norms.md) Н1.2), a write
    only on a change; the names index after the assembly of the books of the pass; the delivery `sealed.books`; the mask.
 3. The checks of the names index at the doors of people and grants (chapter 8.4 Н3, the steps of the name check).
-4. The stand of [the acceptance of the chapter](../../acceptance/5/README.md); the training writer of the contributions `testsub2` — Н5 of the chapter.
+4. The stand of [the acceptance of the chapter](../acceptance/5/README.md); the training writer of the contributions `testsub2` — Н5 of the chapter.
 
 ### Chapter 8.6 — placement and edits
 
@@ -220,17 +220,17 @@ This is a proposed order, not an obligatory structure of the code. The chapters 
 2. The refusals of an edit by chapters 8.1 and 8.6; the forms of the edit and of the placement.
 3. The stored edit, `base` with the waiting ones taken into account, the outcomes and `settle` — after the agent side (lesson P/09, the application with
    `If-Match`) or together with it: the stand observes the application.
-4. The stand of [the acceptance of the chapter](../../acceptance/6/README.md); `If-Match` of the units door — [chapter P/06.1](../../../06-console/spec/06.1-console.norms.md),
+4. The stand of [the acceptance of the chapter](../acceptance/6/README.md); `If-Match` of the units door — [chapter P/06.1](../../06-console/spec/06.1-console.norms.md),
    the executors in the shadow report — the stand of chapter 8.1.
 
 ### Chapter 8.7 — the issue of tokens
 
 1. `issue` (the pure function of Н3): the forms, the role, `by`, the scopes placement → unit, scenario; the audience; the refusal words;
-   the vectors [`issue`](../../vectors/issue/README.md).
-2. The claims and the signature ([the domain token contract](../../../common/contracts/domain-token.md) «Токен»).
-3. The holder door `/api/tokens/…` and the answer in the envelope `m1` ([the domain envelopes contract](../../../common/contracts/domain-envelopes.md)).
-4. The stand of [the acceptance of the chapter](../../acceptance/7/README.md): the runner logs into the local door of the agent with the identity of a role
-   ([the local token door contract](../../../common/contracts/local-token-door.md#сокет-роли)).
+   the vectors [`issue`](../vectors/issue/README.md).
+2. The claims and the signature ([the domain token contract](../../common/contracts/domain-token.md) «Токен»).
+3. The holder door `/api/tokens/…` and the answer in the envelope `m1` ([the domain envelopes contract](../../common/contracts/domain-envelopes.md)).
+4. The stand of [the acceptance of the chapter](../acceptance/7/README.md): the runner logs into the local door of the agent with the identity of a role
+   ([the local token door contract](../../common/contracts/local-token-door.md#сокет-роли)).
 
 ### Chapter 8.8 — the term, the copy, the move
 
@@ -239,21 +239,21 @@ This is a proposed order, not an obligatory structure of the code. The chapters 
 3. The backup copy: the composition, its key, the revision by the content, the keepers.
 4. The emergency move: the neighbours, the choice of the backup copy, the new term, the keys.
 5. The displacement; the planned handover; the stranded.
-6. The stand of [the acceptance of the chapter](../../acceptance/8/README.md): the signer on `m1` too, the move by the directives of the vocabulary of the «Стенда домена».
+6. The stand of [the acceptance of the chapter](../acceptance/8/README.md): the signer on `m1` too, the move by the directives of the vocabulary of the «Стенда домена».
 
 ### Chapter 8.9 — the shared document and the alarm history
 
 1. The document, the pointer, the edit (Н1.2, Н1.3).
 2. `shared` in the answer to the agent; «доставлено скольким» (Н1.4, Н1.6).
 3. The alarm history (Н1.9).
-4. The stand of [the acceptance of the chapter](../../acceptance/9/README.md).
+4. The stand of [the acceptance of the chapter](../acceptance/9/README.md).
 
 ### Chapter 8.10 — the queue and the cost
 
 1. The queue `domain/signer-turn` and the guard — already from step 2 of chapter 8.0; here — the standby at all the doors and giving up the queue on
    `SIGTERM`.
 2. The ceilings of the section row, `SERVERS_MAX`, `ENTRY_MAX`, `whole` — together with the acceptance of members of chapter 8.3.
-3. The stand of [the acceptance of the chapter](../../acceptance/10/README.md): `SERVERS_MAX`, `ENTRY_MAX`, the freshness of the queue; `whole` and the cost — by reading.
+3. The stand of [the acceptance of the chapter](../acceptance/10/README.md): `SERVERS_MAX`, `ENTRY_MAX`, the freshness of the queue; `whole` and the cost — by reading.
 
 ### The whole lesson
 
@@ -329,8 +329,8 @@ chapters 8.0 and 8.2 have no catalogue. Fill the checklists of the chapters with
 
 ### One writer of the holder rows
 
-The holder rows are written only by the process `domain` ([chapter 8.0](../08.0-domain.norms.md) Н1.8 `writer`), each — with the guard
-of the queue ([chapter 8.10](../08.10-domain.norms.md) Н1.7); the exception — the rows of the worker on the domain (P/03.7). The domain console
+The holder rows are written only by the process `domain` ([chapter 8.0](08.0-domain.norms.md) Н1.8 `writer`), each — with the guard
+of the queue ([chapter 8.10](08.10-domain.norms.md) Н1.7); the exception — the rows of the worker on the domain (P/03.7). The domain console
 does not write the holder rows — it passes an edit to the process; the agent writes the copies at its member (lesson P/09). Check by reading
 that every write of the rows of the families of the lesson goes from the process and with the guard, and the objects — after the confirmation of the queue.
 
@@ -347,7 +347,7 @@ The vectors check the pure functions and nothing more: the order of the writes o
 an edit and an interruption in the middle they do not prove. The inputs of the vectors `view`, `assemble` and `accept` depend on the bytes of the manifests
 `testsub` and `testsub2`; the READMEs of the packages name their sha256 — another manifest gives another output. On a stand without TLS
 `X-W2C-Client` is never trusted; the class `signed` and the rows of the door `signer` are checked by the TLS stand
-([`common/acceptance/tls/`](../../../common/acceptance/tls/README.md)), when it is ready.
+([`common/acceptance/tls/`](../../common/acceptance/tls/README.md)), when it is ready.
 
 ## Done when
 
@@ -357,7 +357,7 @@ the observations and the limitations. The data of past runs do not replace the p
 
 - **8.0.** The evidence by reading for `X-W2C-Client` and the server side of the class `signed` is named; the answers `deposed`,
   `frozen`, `standby` are observed on the stands of chapters 8.8 and 8.10.
-- **8.1.** The vectors [`view`](../../vectors/view/README.md) pass by the command `view`; the stand of the chapter passes with real
+- **8.1.** The vectors [`view`](../vectors/view/README.md) pass by the command `view`; the stand of the chapter passes with real
   reports of the members; the description of the implementation names the command `view` and where the memory of the shadow report is kept.
 - **8.2.** The vectors `keys`, `domain-token`, `domain-envelopes` (`x25519-open`, `x25519-round`) pass by the commands `keys`,
   `token`, `seal`, `seal-round`; the description of the implementation names the acceptance commands and the calls of the changes (the installation command — by

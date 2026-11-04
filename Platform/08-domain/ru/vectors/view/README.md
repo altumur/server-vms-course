@@ -1,6 +1,6 @@
 # Векторы вида домена и теневого отчёта
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+Текст производный от `vectors/view/README.md`, руками не правится: источник — английский [`vectors/view/README.md`](../../../vectors/view/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
 Векторы функции `view` [главы P/08.1](../../spec/08.1-domain.norms.md): проход держателя без хранилища, сети и стенда —
 вход — проходы держателя по порядку, вывод — вид домена и теневой отчёт последнего прохода (Н1.3–Н1.6, Н3 «проход
@@ -18,14 +18,14 @@ JSON файла одной строкой: сняты только незнач�
 ## Прогон
 
 Без стенда: команда `view` реализации получает вход (колонка `input`) и печатает JSON `{view, shadow}`; `expect` —
-подмножество полей вывода по словарю «Стенда» ([общий README приёмки](../../../common/acceptance/README.md), `<код>
+подмножество полей вывода по словарю «Стенда» ([общий README приёмки](../../../../common/acceptance/README.md), `<код>
 <JSON>`: названные поля есть и равны, массив — по длине, порядку и элементам, число — по значению) или `@exit 2` (вход не
 по форме `ViewInput`). Каждая строка — отдельный запуск на свежем состоянии: память теневого отчёта между строками не
 переходит. `as_of` вывода — стенные секунды процесса команды, не сравнивается.
 
 ## Входы и манифесты
 
-Форма входа — `ViewInput`, вывода — `ViewOutput` ([контракт урока](../../spec/08-domain.api.openapi.yaml)): `manifests` — манифесты каталога,
+Форма входа — `ViewInput`, вывода — `ViewOutput` ([контракт урока](../../../spec/08-domain.api.openapi.yaml)): `manifests` — манифесты каталога,
 `holder` — имя держателя, `passes` — проходы; в проходе `at` — монотонные секунды держателя, `members.<член>` —
 `{mark, stale?, objects}` (`mark` — `rev` метки `reported` или `null`, `stale` — поле `stale` метки, `objects` — пульсы
 `<sub>/heartbeats/<воркер>` и шарды `<sub>/snapshot/<шард>` копии), `placements` — назначения
@@ -41,8 +41,8 @@ JSON файла одной строкой: сняты только незнач�
 
 | Манифест | Файл | sha256 |
 |---|---|---|
-| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a` |
-| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `813a807f3472bdc64e279c94c12bfe3b00ebaaa8ebda0c996d2a50161043e6eb` |
+| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../../Source/tests/testdata/testsub.subsystem.yaml) | `7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a` |
+| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `813a807f3472bdc64e279c94c12bfe3b00ebaaa8ebda0c996d2a50161043e6eb` |
 
 Байты `testsub2` сменились 2026-11-04 (дорожная карта 4.5): добавлен вид токена `vault` с `keep: true` в `domain.tokens`, затем переписаны комментарии шапки без имён файлов тестов; поля, от которых зависят ожидания этой таблицы, не тронуты — перепроверка оракулом не нужна.
 
@@ -54,7 +54,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 51 строка: 20 только `view`, 19 только `shadow`, 8 оба, 4 `@exit 2` (28 — из М11/01, 5 — ADR-0091 доп. (12)–(19), 10 — аудит покрытия P/08, второй проход, 4 — проба чтения 08, 2 — ADR-0110, ADR-0111, 2 — ADR-0113 доп. (1)) | `input` — вход команды `view` текстом JSON → `expect` — подмножество `{view, shadow}`: члены `ok`/`unseen`/`silent`/`never` и `age` (LOST_AFTER 45/46, пропажа и возврат метки, уход и возврат члена, округление 0.25 → 0.3), единицы `live`/`stale`/`configured`/`silent`, `contested`, `complete`, дубль id, смена пульса по JCS, элемент пульса без строки шарда; находки `lagging`, `stalled` (SHADOW_STALL 60/61), `orphaned`, `unmanaged`, `conflict` (исполнители `cluster` и `copies`, два воркера одного члена), `stale_epoch`, `unknown`, `clean_streak` и `may_write`; исполнители назначения `{cluster} ∪ copies` — не `contested` (`10-copies`, `10-origin-is-cluster`), член вне множества и `origin` вне `copies` — `contested` и `conflict` (`10-not-executor`, `10-origin-outside-copies`), третий член `silent` — `complete: false` без спора (`10-third-silent`), строка без значения `domain.ref` — вне `units`, без заявки (`10-no-ref-row`), назначения не прочитаны — `contested`, отчёт прежний (`10-placements-unread`) |
+| [`cases.tsv`](../../../vectors/view/cases.tsv), 51 строка: 20 только `view`, 19 только `shadow`, 8 оба, 4 `@exit 2` (28 — из М11/01, 5 — ADR-0091 доп. (12)–(19), 10 — аудит покрытия P/08, второй проход, 4 — проба чтения 08, 2 — ADR-0110, ADR-0111, 2 — ADR-0113 доп. (1)) | `input` — вход команды `view` текстом JSON → `expect` — подмножество `{view, shadow}`: члены `ok`/`unseen`/`silent`/`never` и `age` (LOST_AFTER 45/46, пропажа и возврат метки, уход и возврат члена, округление 0.25 → 0.3), единицы `live`/`stale`/`configured`/`silent`, `contested`, `complete`, дубль id, смена пульса по JCS, элемент пульса без строки шарда; находки `lagging`, `stalled` (SHADOW_STALL 60/61), `orphaned`, `unmanaged`, `conflict` (исполнители `cluster` и `copies`, два воркера одного члена), `stale_epoch`, `unknown`, `clean_streak` и `may_write`; исполнители назначения `{cluster} ∪ copies` — не `contested` (`10-copies`, `10-origin-is-cluster`), член вне множества и `origin` вне `copies` — `contested` и `conflict` (`10-not-executor`, `10-origin-outside-copies`), третий член `silent` — `complete: false` без спора (`10-third-silent`), строка без значения `domain.ref` — вне `units`, без заявки (`10-no-ref-row`), назначения не прочитаны — `contested`, отчёт прежний (`10-placements-unread`) |
 
 Вход не по форме (Н4, Н5 главы; форма `ViewInput`) — строки `17-exit-*`: `holder` `""`, `passes` `[]`, `mark` 2^53, назначение
 `{cluster: ""}` — `@exit 2` (аудит покрытия P/08, второй проход Gemini; в приёмке М11/01 их не было).
@@ -90,7 +90,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 ## Журнал источника
 
 Строки `corrections.tsv` приёмки М11/01 до переноса (каталог снят переносом урока 8; пути и номера — прежние, их разрешает
-[`id-map.tsv`](../../../common/id-map.tsv)):
+[`id-map.tsv`](../../../../common/id-map.tsv)):
 
 | date | sample | fix |
 |---|---|---|

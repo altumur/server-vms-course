@@ -1,20 +1,20 @@
 # Acceptance P/08.8 — term, backup, move and handover
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/acceptance/8/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The stand and the dictionary of directives and doors are the section «Domain stand» of [the common acceptance README](../../../../common/acceptance/README.md#стенд-домена)
+The stand and the dictionary of directives and doors are the section «Domain stand» of [the common acceptance README](../../../common/acceptance/README.md#стенд-домена)
 (before the merge, the dictionary of the М11 README of the acceptance М11/01).
-The norm of the chapter is [`08.8-domain.norms.md`](../../../spec/08.8-domain.norms.md) Н5. The scenarios and the text below were moved from the acceptance of
+The norm of the chapter is [`08.8-domain.norms.md`](../../spec/08.8-domain.norms.md) Н5. The scenarios and the text below were moved from the acceptance of
 М11/10 (stage B, ADR-0083 addendum (1): without
 a change of behaviour); the numbers of the scenarios and the steps are the former ones. Scenarios 05 (`record`) and 07 (`ask-sig`) are removed — the same cases are in
-the packages [`common/vectors/record`](../../../../common/vectors/record/README.md) and
-[`common/vectors/ask-sig`](../../../../common/vectors/ask-sig/README.md) (the plan of the move of lesson 8, В1); scenario 06 (`follow`) is removed — the package
-[`follow`](../../../../09-agent/vectors/follow/README.md), 11 — [the acceptance of chapter 9.1](../../../../09-agent/acceptance/1/README.md); 01 —
-[the acceptance of chapter 6.7](../../../../06-console/acceptance/7/README.md) sc. 15.
+the packages [`common/vectors/record`](../../../common/vectors/record/README.md) and
+[`common/vectors/ask-sig`](../../../common/vectors/ask-sig/README.md) (the plan of the move of lesson 8, В1); scenario 06 (`follow`) is removed — the package
+[`follow`](../../../09-agent/vectors/follow/README.md), 11 — [the acceptance of chapter 9.1](../../../09-agent/acceptance/1/README.md); 01 —
+[the acceptance of chapter 6.7](../../../06-console/acceptance/7/README.md) sc. 15.
 
 ## Stand
 
-The preparation is as the acceptance README of [chapter 8.3](../../3/README.md) («Подготовка каждого сценария»; from the acceptance README of М11/03).
+The preparation is as the acceptance README of [chapter 8.3](../3/README.md) («Подготовка каждого сценария»; from the acceptance README of М11/03).
 The doors `holder`, `holder@<кластер>`, `member`, `signer` and the directives `@domain`, `@start domain on`, `@stop domain`, `@move` are
 the dictionary of the «Domain stand». The runner goes as the human `root` (chapter 8.4).
 
@@ -31,7 +31,7 @@ the dictionary of the «Domain stand». The runner goes as the human `root` (cha
   «копии нет нигде» deterministically — the first copy is made in the first pass of the holder (Н1.5 first), and `m1` is a keeper
   (BACKUP_HOLDERS 2 of two members) and holds it in its store, so even with silent neighbours the move restores
   from its own. Sc. 12 step 6 — with `why`: a backup of term 2 may not exist yet. The branch «сосед не ответил» is the stand
-  of the fourth cluster ([the TLS stand](../../../../common/acceptance/tls/README.md) «Четвёртый кластер», item 9).
+  of the fourth cluster ([the TLS stand](../../../common/acceptance/tls/README.md) «Четвёртый кластер», item 9).
 - **Scenario 04.** The handover target is `m1`. `m9` is not a member.
 
 The freeze for the time of a handover, «новее не прочитана», an abandoned one and its replay, `stolen` the stand does not cause — by reading (Н5
@@ -52,13 +52,13 @@ of the chapter). `stolen` is the steps of chapter 8.2 «change after theft». Th
   takes the move set into the follow set, `hold` yields, forgets the keys, `domain/keys` at `hold` is the new set (G1);
   10 — a move to a member with the old set: the copy (2, r2) of a neighbour is checked by the move set, term 3, without a rollback (RB);
   12 — a handover, then a move (term 3), both former ones are displaced and forgot the keys. Scenario 11 (Q3, a revocation does not revive after
-  a move — RV) — [the acceptance of chapter 9.1](../../../../09-agent/acceptance/1/README.md).
+  a move — RV) — [the acceptance of chapter 9.1](../../../09-agent/acceptance/1/README.md).
 
 ## Inputs
 
 The scenarios of the chapter have no inputs. The inputs `record-*` and `ask-sig-*` of the acceptance of М11/10 are removed together with scenarios 05 and 07: the same
 cases are the tables of the packages `record` and `ask-sig` (the input is JSON text in a row). The inputs `follow-*` are removed — the same cases are in
-the package [`follow`](../../../../09-agent/vectors/follow/README.md).
+the package [`follow`](../../../09-agent/vectors/follow/README.md).
 
 ## scenarios.tsv
 

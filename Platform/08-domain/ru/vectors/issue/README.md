@@ -1,6 +1,6 @@
 # Векторы выдачи токена воркера
 
-Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+Текст производный от `vectors/issue/README.md`, руками не правится: источник — английский [`vectors/issue/README.md`](../../../vectors/issue/README.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
 
 Векторы функции `issue` [главы P/08.7](../../spec/08.7-domain.norms.md): выдача токена держателем без хранилища, сети и
 стенда — вход — объявление вида, роль и член-заявитель, тело просьбы, назначения, топология, единицы членов, общий
@@ -14,15 +14,15 @@
 решение «Архитектора» 2026-10-20, ADR-0083 доп. (14)). `case` — имя файла входа, `note` — сценарий и шаг приёмки М11/07.
 Вход — JSON файла одной строкой: сняты только незначащие пробелы вне строк; порядок ключей, лексемы чисел и значения — как
 в файле. Ожидание — подмножество шага приёмки как есть (после `ok `). Сценарий М11/07 сц. 03 и его входы сняты переносом
-урока 8 (каталог М11/07 снят; журнал — [приёмка главы P/08.7](../../acceptance/7/corrections.tsv)): таблица — единственный
+урока 8 (каталог М11/07 снят; журнал — приёмка главы P/08.7 (`journal/corrections-7.tsv`, журнал, в выгрузку не входит)): таблица — единственный
 источник этих случаев.
 
 ## Прогон
 
 Без стенда: команда `issue` реализации получает вход (колонка `input`) и печатает JSON; `expect` — подмножество полей
-вывода по словарю «Стенда» ([общий README приёмки](../../../common/acceptance/README.md), `<код> <JSON>`: названные поля
+вывода по словарю «Стенда» ([общий README приёмки](../../../../common/acceptance/README.md), `<код> <JSON>`: названные поля
 есть и равны, массив — по длине, порядку и элементам, число — по значению) или `@exit 2` (вход не по форме Н5, в том числе
-`decl` не по форме загрузки [P/02.1 Н1.2б](../../../02-installer/ru/spec/02.1-installer.norms.md)). Строки `@exit 2` — три
+`decl` не по форме загрузки [P/02.1 Н1.2б](../../../../02-installer/ru/spec/02.1-installer.norms.md)). Строки `@exit 2` — три
 (`issue-37`, `issue-38`, `issue-keep-too-long`); прочие 37 входов — по форме. `iat`, `exp` — от `now` входа, не от часов процесса.
 
 ## Входы
@@ -32,8 +32,8 @@
 запись без `copies` — тоже нечитаема), `topology` (`centre?`, `star`, `via`), `units` — владельцы единиц по ref, `shared` —
 общий документ, `now` — 1760000000. Домен — `acme`; члены — `hold`, `m1`, `m2`, `relay`. Объявления видов во входах — виды
 `tally`, `probe` манифеста `testsub` и `feed`, `tally2` манифеста `testsub2` из данных спецификации
-([`testsub`](../../../../Source/tests/testdata/testsub.subsystem.yaml),
-[`testsub2`](../../../../Source/tests/testdata/testsub2.subsystem.yaml)) — входы несут их целиком и от байтов манифестов не
+([`testsub`](../../../../../Source/tests/testdata/testsub.subsystem.yaml),
+[`testsub2`](../../../../../Source/tests/testdata/testsub2.subsystem.yaml)) — входы несут их целиком и от байтов манифестов не
 зависят. Строки `issue-31`…`issue-35` несут объявление `tally` с изменённой областью `placement` (`target_fields`
 `[cluster, star_centre]` или `[cluster, origin]`, `caller: copies`) — по форме загрузки P/02.1 Н1.2б (оба свидетеля его
 принимают), не байты манифеста.
@@ -44,7 +44,7 @@ UTF-8, LF, поля через TAB; строки с `#` и пустые проп
 
 | Файл | Вход → ожидание |
 |---|---|
-| [`cases.tsv`](cases.tsv), 40 строк: 13 `ok`, 24 `refused`, 3 `@exit 2` | `input` — вход `issue` текстом JSON → `expect`: `{"result":"ok","claims":…}` (утверждения Н1.4: `iss`, `sub`, `kind`, `iat`, `exp`, утверждение ref и аудитории из области, давшей аудиторию, у `scenario` — `by`, `acts` по JCS, `up`) или `{"result":"refused","status":…,"reason":<слово>}`: `bad_request`, `by_misplaced` (400); `not_granted`, `outside_scope`, `no_assignment`, `assignment_unreadable`, `unit_not_unique`, `not_poll_home`, `trigger_not_reported`, `no_shared_doc`, `no_item`, `no_home`, `no_audience` (403); `no_centre` (409) |
+| [`cases.tsv`](../../../vectors/issue/cases.tsv), 40 строк: 13 `ok`, 24 `refused`, 3 `@exit 2` | `input` — вход `issue` текстом JSON → `expect`: `{"result":"ok","claims":…}` (утверждения Н1.4: `iss`, `sub`, `kind`, `iat`, `exp`, утверждение ref и аудитории из области, давшей аудиторию, у `scenario` — `by`, `acts` по JCS, `up`) или `{"result":"refused","status":…,"reason":<слово>}`: `bad_request`, `by_misplaced` (400); `not_granted`, `outside_scope`, `no_assignment`, `assignment_unreadable`, `unit_not_unique`, `not_poll_home`, `trigger_not_reported`, `no_shared_doc`, `no_item`, `no_home`, `no_audience` (403); `no_centre` (409) |
 
 | Случаи | Что проверяет |
 |---|---|

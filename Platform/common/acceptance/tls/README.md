@@ -8,13 +8,13 @@
 логические двери и клиенты, закрытый исход пробы и ожидания. Директивы — раздел [«Стенд домена»](../README.md#стенд-домена) общего README приёмки (формы ввёл урок М11/8 — колонка
 «Урок» словаря; разбор ревью стадии B 8–10, № 22: М-1). Профиль реализации объявляет `keys.tls_stand: 1`; без него проверки этого стенда не исполнены
 (не GREEN). Нормы: серверная сторона класса `signed` — договор сертификата роли «Серверная сторона: класс `signed`»
-([P/08.0 Н1.6](../../../08-domain/spec/08.0-domain.norms.md), P/08.0-02), слушатель `SIGNER_URL` — строка `signer` того же договора и
+([P/08.0 Н1.6](../../../08-domain/ru/spec/08.0-domain.norms.md), P/08.0-02), слушатель `SIGNER_URL` — строка `signer` того же договора и
 [P/02.4 Н1.6](../../../02-installer/ru/spec/02.4-installer.norms.md) `client_cert` (ADR-0083 доп. (20), доп. (21)); отпечатки центра члена, `on_accept`, `admin` —
-[P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md); `client`, `first` и функция `peer` — [договор `peer`](../../contracts/peer.md);
+[P/08.3 Н1.6](../../../08-domain/ru/spec/08.3-domain.norms.md); `client`, `first` и функция `peer` — [договор `peer`](../../contracts/peer.md);
 пересылка — [договор пересылки](../../contracts/forwarding.md); класс `role` — [P/10 Н1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`
 (P/10-11); договор сертификата роли — [`role-certificate.md`](../../contracts/role-certificate.md); перенос —
-[P/08.8 Н1.8](../../../08-domain/spec/08.8-domain.norms.md). Пункт 3 и «держатель прежней сборки» из п. 7 — проверка чтением
-([P/08.4 Н5](../../../08-domain/spec/08.4-domain.norms.md) и [P/08.3 Н5](../../../08-domain/spec/08.3-domain.norms.md)).
+[P/08.8 Н1.8](../../../08-domain/ru/spec/08.8-domain.norms.md). Пункт 3 и «держатель прежней сборки» из п. 7 — проверка чтением
+([P/08.4 Н5](../../../08-domain/ru/spec/08.4-domain.norms.md) и [P/08.3 Н5](../../../08-domain/ru/spec/08.3-domain.norms.md)).
 
 ## Комплекты: [`stand.json`](stand.json)
 
@@ -32,7 +32,7 @@
 | `named` | комплект одной коробки с иным именем сервера (ADR-0075 доп. 2026-10-26 (4) п. 7): свой центр, листы ролей `roles` с CN `<роль>.<server>` и SAN DNS `server` (`box-n`), не `localhost`; раскладка — договор `kit`; другие кластеры его центру не верят. Им пользуется только `@kit-start` |
 | `negative` | клиентские листы для проб: `issuer` — кластер, чей центр подписывает; `role` — роль листа; прочие поля заменяют умолчание листа: `uri: null` — без SAN URI, `eku` — свой набор, `sig` — подпись листа (`sha512` — ECDSA с SHA-512, вне закрытого списка договора `sig`), `not_before`, `days` — свой срок |
 
-Отпечаток центра — sha256 hex DER ([P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `fingerprint`). Раннер называет каждому кластеру его каталог комплекта
+Отпечаток центра — sha256 hex DER ([P/08.3 Н1.6](../../../08-domain/ru/spec/08.3-domain.norms.md) `fingerprint`). Раннер называет каждому кластеру его каталог комплекта
 (`W2C_TLS_DIR`) и начальный отпечаток держателя (`DOMAIN_CA` рядом с `DOMAIN_URL`, [договор `peer`](../../contracts/peer.md) «Клиент и первый контакт» `first`). Публикация
 `tls_ca`/`tls_ca_certs` — дело реализации по норме: стенд их не подставляет.
 
@@ -88,7 +88,7 @@ TLS-этапом «cammeta-acceptance» 2026-10-21; ADR-0083 доп. (19) п. 2;
 `@tls-setup …/stand.json`, `@domain m1 m2` (или `m1 m2 m3`), затем `@until` записи члена: у `m2` — `Entry.ca` с
 отпечатком центра `m2` и строка `domain/members/m2/ca-certs` (`on_accept`, приём отчёта с `tls_ca`, `tls_ca_certs`).
 
-**П. 7 — рукопожатие по `ca-certs`** ([P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `on_accept`; [P/10 Н1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`): после строки `ca-certs` и `Entry.ca`
+**П. 7 — рукопожатие по `ca-certs`** ([P/08.3 Н1.6](../../../08-domain/ru/spec/08.3-domain.norms.md) `on_accept`; [P/10 Н1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`): после строки `ca-certs` и `Entry.ca`
 дверь `holder`, клиент `m2-console`, пересылаемый запрос с `X-Operator: console` → `{"handshake": "ok"}`, `http` — ответ
 двери по сторожевой (не 401/403 со словами `no_role`, `wrong_role`, `bad_chain`).
 
@@ -121,7 +121,7 @@ TLS-этапом «cammeta-acceptance» 2026-10-21; ADR-0083 доп. (19) п. 2;
 формой описания со следующим центром кластера — данные «Спецификации», директива — TLS-этап «cammeta-acceptance».
 
 Смена объединения видна новым соединениям: `@stop agent m2`, затем `holder POST /domain/members/m2/ca {"ca": []}` (грант
-admin; агент остановлен — его отчёт с `tls_ca` вернул бы центр, [P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `on_accept`; решение «Архитектора» 2026-10-21, как № 14) → следующая проба
+admin; агент остановлен — его отчёт с `tls_ca` вернул бы центр, [P/08.3 Н1.6](../../../08-domain/ru/spec/08.3-domain.norms.md) `on_accept`; решение «Архитектора» 2026-10-21, как № 14) → следующая проба
 `holder` / `m2-console` — `{"handshake": "alert", "http": null}`; возврат `{"ca": [<отпечаток m2>], "ca_certs": [<PEM m2>]}` →
 снова `{"handshake": "ok"}`.
 
@@ -134,7 +134,7 @@ admin; агент остановлен — его отчёт с `tls_ca` вер�
    false` или (б) `session_available: true`.
 3. При (б): `holder` / `m2-console`, `resume_session: s1` → `{"handshake": "ok", "reused": false}` (полное рукопожатие).
 4. Снять центр: `@stop agent m2`, затем `holder POST /domain/members/m2/ca {"ca": []}`, без перезапуска сервера (агент
-   остановлен — его отчёт с `tls_ca` вернул бы центр, [P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `on_accept`; решение «Архитектора» 2026-10-21, как № 14).
+   остановлен — его отчёт с `tls_ca` вернул бы центр, [P/08.3 Н1.6](../../../08-domain/ru/spec/08.3-domain.norms.md) `on_accept`; решение «Архитектора» 2026-10-21, как № 14).
 5. `holder` / `m2-console` новым соединением → `{"handshake": "alert", "http": null}`; при (б) — и с `resume_session: s1` →
    `{"handshake": "alert", "http": null}` (возобновления нет: билет прошлой сессии центр не возвращает). При (а) предъявление
    не исполняется и исполненным не объявляется.
@@ -143,7 +143,7 @@ admin; агент остановлен — его отчёт с `tls_ca` вер�
 Данные «Спецификации»; шаги и сценарий пишет TLS-этап «cammeta-acceptance»; до того — долг стенда. Подготовка — как у п. 2.
 Нормы: [договор пересылки](../../contracts/forwarding.md) «Пересылка — одна функция» `answer`, `journal`, `tls`;
 [P/06.7 Н1.7](../../../06-console/ru/spec/06.7-console.norms.md) `server` (переход 1 — класс `signed`);
-[P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `admin`, Н4; [P/10 Н1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`.
+[P/08.3 Н1.6](../../../08-domain/ru/spec/08.3-domain.norms.md) `admin`, Н4; [P/10 Н1.4](../../../10-domain-console/spec/10-domain-console.norms.md) `server.role`.
 
 | Шаг | Ожидание | Норма |
 |---|---|---|
@@ -225,11 +225,11 @@ P/08, P/10 (умолчания адресов). Директива `@kit-start` 
 | `@kit-start console none TIMEZONE=Etc/GMT+5` | `ok` | значение по форме; у консоли на петле комплект не нужен, поэтому `@exit 2` строк выше дала сама переменная |
 | `@kit-start console none TIMEZONE=No/Such_Zone` | `ok` | сверяется только форма: консоль базы поясов не читает |
 
-## Четвёртый кластер — ветви ER (п. 9; [P/08.8 Н1.8](../../../08-domain/spec/08.8-domain.norms.md) шаг 6)
+## Четвёртый кластер — ветви ER (п. 9; [P/08.8 Н1.8](../../../08-domain/ru/spec/08.8-domain.norms.md) шаг 6)
 
 Подготовка: `@clusters hold m1 m2 m3`, `@domain m1 m3`; хранители при `BACKUP_HOLDERS` 2 — `m3`, `m1` (порядок по убыванию
 sha256 «hold/<член>»: `m3`, `m1`, `m2`; подтвердить на живом состоянии — строки `domain/keepers/<член>` держателя,
-[P/08.8 Н1.5](../../../08-domain/spec/08.8-domain.norms.md)); `@until` резервной копии у обоих хранителей; только затем — приём цели `m2` теми же шагами, что
+[P/08.8 Н1.5](../../../08-domain/ru/spec/08.8-domain.norms.md)); `@until` резервной копии у обоих хранителей; только затем — приём цели `m2` теми же шагами, что
 `@domain`: `@start agent m2`, приём по отпечатку из `knocking` (`POST /domain/members`), `@join m2`, `@until` `m2` — `ok` и
 держит набор держателя. Так `m2` не бывает хранителем ни на один проход и своей резервной копии не имеет: при
 `@domain m1 m2 m3` член, принятый раньше прочих, успевал стать временным хранителем, а копию у члена не выбрасывает никто
@@ -248,5 +248,5 @@ sha256 «hold/<член>»: `m3`, `m1`, `m2`; подтвердить на жив
   переноса). Снять копии подготовкой стенда тоже нельзя: резервные копии — объекты (`domain/backup` у хранителя,
   `domain/backups/rev-*` у держателя; P/08.8 Н1.5), admin-операции хранилища удаляют строки (снять можно лишь указатель
   `domain/backup-taken`), общего договора удаления объектов нет; частные файлы реализации стенд не трогает (согласовано с
-  «cammeta-acceptance», решение «Архитектора» 2026-10-20). Проверка чтением — [P/08.8 Н5](../../../08-domain/spec/08.8-domain.norms.md) («Проверяются чтением», шаг 6
-  переноса), как п. 3; README приёмки [главы 8.8](../../../08-domain/acceptance/8/README.md), сц. 03.
+  «cammeta-acceptance», решение «Архитектора» 2026-10-20). Проверка чтением — [P/08.8 Н5](../../../08-domain/ru/spec/08.8-domain.norms.md) («Проверяются чтением», шаг 6
+  переноса), как п. 3; README приёмки [главы 8.8](../../../08-domain/ru/acceptance/8/README.md), сц. 03.

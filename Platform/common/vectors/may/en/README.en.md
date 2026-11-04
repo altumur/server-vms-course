@@ -13,7 +13,7 @@ of the input is in one line, the order of keys and the lexemes of numbers are as
 `may-24-unit-id-not-grammar`: `"labels": []` was added to the unit of the input (the Architect's decision of 2026-10-20): a unit
 `{sub, id}` without `labels` is itself an input not of the form (`unit` is `{sub, id, labels, about?}`), and `@exit 2` would not distinguish an id
 of a scope `unit:` not by the grammar from a unit without labels. Sc. 07 of the acceptance of М11/9 and its inputs were removed by the move of lesson 8 (the Architect's
-decision of 2026-10-20, ADR-0083 addendum (14) item 17): the table is the only source of these cases; the log is [the acceptance of chapter 8.4](../../../../08-domain/acceptance/4/corrections.tsv).
+decision of 2026-10-20, ADR-0083 addendum (14) item 17): the table is the only source of these cases; the log is the acceptance of chapter 8.4 (`Platform/08-domain/journal/corrections-4.tsv`, a log, not in the export).
 
 ## Form of the input of the command `may`
 

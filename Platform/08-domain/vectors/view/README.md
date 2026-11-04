@@ -1,8 +1,8 @@
 # Vectors of the domain view and the shadow report
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/view/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The vectors of the function `view` of [chapter P/08.1](../../../spec/08.1-domain.norms.md): the holder's pass without a store, a network and a stand —
+The vectors of the function `view` of [chapter P/08.1](../../spec/08.1-domain.norms.md): the holder's pass without a store, a network and a stand —
 the input is the holder's passes in order, the output is the domain view and the shadow report of the last pass (Н1.3–Н1.6,
 Н3 «проход держателя»; Н2 «Команда `view`»). The owner is lesson P/08, chapter 8.1; the function is performed by the process `domain` (a pass once per
 `VIEW_EVERY`). The bytes are written by «Спецификация» (ADR-0083); the conformance of the product is by its acceptance against this table (ADR-0080
@@ -18,14 +18,14 @@ by the move of lesson 8 (the directory М11/01 is removed): the table is the onl
 ## Run
 
 Without a stand: the command `view` of an implementation gets the input (the column `input`) and prints the JSON `{view, shadow}`; `expect` is
-a subset of the fields of the output by the dictionary of the «Stand» ([the common acceptance README](../../../../common/acceptance/README.md), `<код>
+a subset of the fields of the output by the dictionary of the «Stand» ([the common acceptance README](../../../common/acceptance/README.md), `<код>
 <JSON>`: the named fields exist and are equal, an array — by length, order and elements, a number — by value) or `@exit 2` (an input not
 of the form `ViewInput`). Each row is a separate run on a fresh state: the memory of the shadow report does not pass between rows.
 The `as_of` of the output is the wall seconds of the command process, it is not compared.
 
 ## Inputs and manifests
 
-The form of the input is `ViewInput`, of the output `ViewOutput` ([the contract of the lesson](../../../spec/08-domain.api.openapi.yaml)): `manifests` are the manifests of the catalog,
+The form of the input is `ViewInput`, of the output `ViewOutput` ([the contract of the lesson](../../spec/08-domain.api.openapi.yaml)): `manifests` are the manifests of the catalog,
 `holder` is the name of the holder, `passes` are the passes; in a pass `at` is the monotonic seconds of the holder, `members.<член>` is
 `{mark, stale?, objects}` (`mark` is the `rev` of the mark `reported` or `null`, `stale` is the field `stale` of the mark, `objects` are the pulses
 `<sub>/heartbeats/<воркер>` and the shards `<sub>/snapshot/<шард>` of the copy), `placements` are the placements
@@ -41,8 +41,8 @@ The expectations depend on the bytes of the catalog manifests (the review analys
 
 | Manifest | File | sha256 |
 |---|---|---|
-| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../../Source/tests/testdata/testsub.subsystem.yaml) | `7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a` |
-| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `813a807f3472bdc64e279c94c12bfe3b00ebaaa8ebda0c996d2a50161043e6eb` |
+| `testsub` | [`Source/tests/testdata/testsub.subsystem.yaml`](../../../../Source/tests/testdata/testsub.subsystem.yaml) | `7e6118cea2d639e11e894208d5f5be1d82cd1ec385cac0231fe7449305e5430a` |
+| `testsub2` | [`Source/tests/testdata/testsub2.subsystem.yaml`](../../../../Source/tests/testdata/testsub2.subsystem.yaml) | `813a807f3472bdc64e279c94c12bfe3b00ebaaa8ebda0c996d2a50161043e6eb` |
 
 The bytes of `testsub2` changed on 2026-11-04 (roadmap 4.5): the token kind `vault` with `keep: true` was added to `domain.tokens`, then the comments of the header were rewritten without the names of test files; the fields on which the expectations of this table depend are not touched — a recheck by the oracle is not needed.
 
@@ -54,7 +54,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 
 | File | Input → expectation |
 |---|---|
-| [`cases.tsv`](../cases.tsv), 51 rows: 20 only `view`, 19 only `shadow`, 8 both, 4 `@exit 2` (28 — from М11/01, 5 — ADR-0091 addenda (12)–(19), 10 — the coverage audit of P/08, the second pass, 4 — the reading probe of 08, 2 — ADR-0110, ADR-0111, 2 — ADR-0113 addendum (1)) | `input` is the input of the command `view` as JSON text → `expect` is a subset of `{view, shadow}`: the members `ok`/`unseen`/`silent`/`never` and `age` (LOST_AFTER 45/46, the loss and the return of a mark, the leaving and the return of a member, rounding 0.25 → 0.3), the units `live`/`stale`/`configured`/`silent`, `contested`, `complete`, a duplicate id, a change of the pulse by JCS, a pulse element without a shard row; the findings `lagging`, `stalled` (SHADOW_STALL 60/61), `orphaned`, `unmanaged`, `conflict` (the executors `cluster` and `copies`, two workers of one member), `stale_epoch`, `unknown`, `clean_streak` and `may_write`; the executors of placement `{cluster} ∪ copies` — not `contested` (`10-copies`, `10-origin-is-cluster`), a member outside the set and `origin` outside `copies` — `contested` and `conflict` (`10-not-executor`, `10-origin-outside-copies`), a third member `silent` — `complete: false` without a dispute (`10-third-silent`), a row without a `domain.ref` value — outside `units`, without a claim (`10-no-ref-row`), the placements were not read — `contested`, the report as before (`10-placements-unread`) |
+| [`cases.tsv`](cases.tsv), 51 rows: 20 only `view`, 19 only `shadow`, 8 both, 4 `@exit 2` (28 — from М11/01, 5 — ADR-0091 addenda (12)–(19), 10 — the coverage audit of P/08, the second pass, 4 — the reading probe of 08, 2 — ADR-0110, ADR-0111, 2 — ADR-0113 addendum (1)) | `input` is the input of the command `view` as JSON text → `expect` is a subset of `{view, shadow}`: the members `ok`/`unseen`/`silent`/`never` and `age` (LOST_AFTER 45/46, the loss and the return of a mark, the leaving and the return of a member, rounding 0.25 → 0.3), the units `live`/`stale`/`configured`/`silent`, `contested`, `complete`, a duplicate id, a change of the pulse by JCS, a pulse element without a shard row; the findings `lagging`, `stalled` (SHADOW_STALL 60/61), `orphaned`, `unmanaged`, `conflict` (the executors `cluster` and `copies`, two workers of one member), `stale_epoch`, `unknown`, `clean_streak` and `may_write`; the executors of placement `{cluster} ∪ copies` — not `contested` (`10-copies`, `10-origin-is-cluster`), a member outside the set and `origin` outside `copies` — `contested` and `conflict` (`10-not-executor`, `10-origin-outside-copies`), a third member `silent` — `complete: false` without a dispute (`10-third-silent`), a row without a `domain.ref` value — outside `units`, without a claim (`10-no-ref-row`), the placements were not read — `contested`, the report as before (`10-placements-unread`) |
 
 An input not of the form (Н4, Н5 of the chapter; the form `ViewInput`) — the rows `17-exit-*`: `holder` `""`, `passes` `[]`, `mark` 2^53, the placement
 `{cluster: ""}` — `@exit 2` (the coverage audit of P/08, the second pass of Gemini; they were not in the acceptance of М11/01).
@@ -90,7 +90,7 @@ the rule). On a divergence the norm is right, the vector is corrected by «Сп�
 ## Log of the source
 
 The rows of `corrections.tsv` of the acceptance of М11/01 before the move (the directory is removed by the move of lesson 8; the paths and numbers are the former ones, they are resolved by
-[`id-map.tsv`](../../../../common/id-map.tsv)):
+[`id-map.tsv`](../../../common/id-map.tsv)):
 
 | date | sample | fix |
 |---|---|---|

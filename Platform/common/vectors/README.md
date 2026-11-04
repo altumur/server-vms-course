@@ -73,9 +73,9 @@
 | клиент о сервере другого кластера: функция `peer` | [`peer/`](peer/README.md) | common (владелец P/09) | [договор `peer`](../contracts/peer.md); решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 2 |
 | порог петли клиента своего кластера: `{url}` → `loopback` \| `name` \| `ip` | [`loopback/`](loopback/README.md) | common (договор сертификата роли) | [договор сертификата роли](../contracts/role-certificate.md) «Клиент двери своего кластера» `loopback`; ADR-0075 доп. 2026-10-26 (4) п. 1, (5) п. 1 |
 | токен домена: функция `token` | [`domain-token/`](domain-token/README.md) | common (владелец P/08, глава 8.2) | [договор токена домена](../contracts/domain-token.md); P/08.2-05, -06, -07 |
-| вид домена и теневой отчёт: функция `view` | [`08-domain/vectors/view/`](../../08-domain/vectors/view/README.md) | P/08.1 | [P/08.1](../../08-domain/spec/08.1-domain.norms.md) Н1.3–Н1.6, Н3 |
-| сборка книги: функция `assemble` | [`08-domain/vectors/assemble/`](../../08-domain/vectors/assemble/README.md) | P/08.5 | [P/08.5](../../08-domain/spec/08.5-domain.norms.md) Н1.3, Н3 |
-| выдача токена воркера: функция `issue` | [`08-domain/vectors/issue/`](../../08-domain/vectors/issue/README.md) | P/08.7 | [P/08.7](../../08-domain/spec/08.7-domain.norms.md) Н3 |
+| вид домена и теневой отчёт: функция `view` | [`08-domain/vectors/view/`](../../08-domain/ru/vectors/view/README.md) | P/08.1 | [P/08.1](../../08-domain/ru/spec/08.1-domain.norms.md) Н1.3–Н1.6, Н3 |
+| сборка книги: функция `assemble` | [`08-domain/vectors/assemble/`](../../08-domain/ru/vectors/assemble/README.md) | P/08.5 | [P/08.5](../../08-domain/ru/spec/08.5-domain.norms.md) Н1.3, Н3 |
+| выдача токена воркера: функция `issue` | [`08-domain/vectors/issue/`](../../08-domain/ru/vectors/issue/README.md) | P/08.7 | [P/08.7](../../08-domain/ru/spec/08.7-domain.norms.md) Н3 |
 | следование: функция `follow` | [`09-agent/vectors/follow/`](../../09-agent/vectors/follow/README.md) | P/09.1 | [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н3 «следовать» |
 | значение при чтении: функция `resolve` | [`06-console/vectors/resolve/`](../../06-console/ru/vectors/resolve/README.md) (14 строк; 11 из М11/11 сц. 03) | P/06.7 | [P/06.7](../../06-console/ru/spec/06.7-console.norms.md) Н1.14, Н3 `resolve` |
 | список тревог: функция `alarms` | [`10-domain-console/vectors/alarms/`](../../10-domain-console/vectors/alarms/README.md) (27 строк; 15 из М11/11 сц. 04; 17–27 — аудит покрытия Gemini P/10) | P/10 | [P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.8, Н3 `alarms` |
@@ -89,8 +89,8 @@
 | скрипт воркеров по заказу (что запустить, что остановить) | [`02-installer/vectors/workers-script/`](../../02-installer/vectors/workers-script/) | P/02.4 | P/02.4 Н1.5 rules 2–4 |
 | порядок наборов меток над общей ёмкостью | [`04-controller/vectors/order/`](../../04-controller/vectors/order/) — случаи `two-sets-*` (набор берёт до своей потребности, остаток следующему) | P/04 | P/04 Н3 «порядок наборов» |
 | снятие заказа по сроку, номер выше want, сокращение по выдержке, пробный процесс при `distinct` | шагом приёмки — [P/04](../../04-controller/ru/acceptance/README.md) сц. 14–17 | P/04 | P/04 Н3; ADR-0084 |
-| `YIELD_SAME_TERM`, `SET_GUARD` (набор следования) | шагом приёмки — [P/08.8](../../08-domain/acceptance/8/README.md) сц. 09; вход `follow` наборов ответов не несёт | P/08.8 | [P/08.8](../../08-domain/spec/08.8-domain.norms.md) Н1.6 `yields`; [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н3 «следовать» 1а |
-| `put_at` по индексу до подтверждения очереди, CAS своей строки очереди (G6, T6) | чтением — стенд не останавливает процесс между шагами | P/08.10 | [P/08.10](../../08-domain/spec/08.10-domain.norms.md) Н1.7, Н3 «очередь процесса domain» |
+| `YIELD_SAME_TERM`, `SET_GUARD` (набор следования) | шагом приёмки — [P/08.8](../../08-domain/ru/acceptance/8/README.md) сц. 09; вход `follow` наборов ответов не несёт | P/08.8 | [P/08.8](../../08-domain/ru/spec/08.8-domain.norms.md) Н1.6 `yields`; [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н3 «следовать» 1а |
+| `put_at` по индексу до подтверждения очереди, CAS своей строки очереди (G6, T6) | чтением — стенд не останавливает процесс между шагами | P/08.10 | [P/08.10](../../08-domain/ru/spec/08.10-domain.norms.md) Н1.7, Н3 «очередь процесса domain» |
 
 Векторы М11 — бывшие входы команд стенда своих уроков; все они теперь пакеты (урок 8 — пакеты `view`, `assemble`, `issue`
 урока и общие пакеты выше, урок 9 — пакет `follow`, урок 10 — `resolve` главы 6.7 и `alarms` урока P/10; их сценарии и
