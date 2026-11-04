@@ -1,4 +1,4 @@
-# Исходы нечитаемого value элемента книги дорог asks: строка `domain/auto/asks/*/<раздел>` у держателя домена и копия у члена, схема `asks-entry.schema.json#member` (V/07.5 Н1.3); путь — от value. Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable value of an element of the book of roads asks: the row `domain/auto/asks/*/<section>` at the domain holder and the copy at a member, schema `asks-entry.schema.json#member` (V/07.5 Н1.3); the path is from value. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
-	autoworker	value элемента цели не по форме: дорога не прочитана, а не отсутствует — просьба к этой цели не подаётся (сработка без действия, reason в пульсе), прочие цели книги идут; следующее чтение — снова	1	элемент	V/07.5 Н1.4
-	domainagent	копию раздела кладёт как пришла, значение элемента не судит: нечитаемое судит читатель; следующий ответ двери перезаписывает строку	1	строка	P/09.1 Н1.4 book_want
+	autoworker	value of a target element not in form: the road is not read, rather than absent — the request to this target is not filed (a firing without an action, reason in the heartbeat), the other targets of the book go on; the next read — again	1	элемент	V/07.5 Н1.4
+	domainagent	puts the copy of the section as it came, does not judge the value of an element: the unreadable is judged by the reader; the next answer of the door overwrites the row	1	строка	P/09.1 Н1.4 book_want

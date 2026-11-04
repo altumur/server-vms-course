@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/07.6: таблицы auto (дверь таблиц консоли). Формат — README.
+# Acceptance of V/07.6: the tables of auto (the tables door of the console). Format — README.
 01-tables	1	POST /schedules {"id": "00000000-0000-4000-8000-000000000001", "title": "Рабочие часы", "kind": "week", "week": [[["09:00", "18:00"]], [["09:00", "18:00"]], [["09:00", "18:00"]], [["09:00", "18:00"]], [["09:00", "18:00"]], [], []], "overrides": [], "valid": {"from": "", "to": ""}}	201 {"row": {"title": "Рабочие часы", "kind": "week", "builtin": false}}
 01-tables	2	POST /schedules {"id": "00000000-0000-4000-8000-000000000002", "title": "Закат", "kind": "astro", "astro": {"window": "night", "offset_start_min": 0, "offset_end_min": 0, "lat": 55.75, "lon": 37.62, "utc_offset_hours": 3}}	201 {"row": {"kind": "astro"}}
 01-tables	3	POST /schedules {"id": "00000000-0000-4000-8000-000000000003", "title": "x", "kind": "monthly"}	400 {"error": "@any"}

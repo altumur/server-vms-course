@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка V/07.1: сценарий — единица и язык (дверь единиц консоли auto). Формат — README.
+# Acceptance of V/07.1: the scenario is a unit and a language (the units door of the console auto). Format — README.
 01-create	1	POST /scenarios {"name": "door-on-badge", "when": [{"sub": "cam", "kind": "io.input", "unit": "12", "match": {"port": 1, "value": "closed"}}], "then": [{"sub": "cam", "action": "output", "unit": "12", "port": 2, "pulse_ms": 500}]}	201 {"id": "1", "name": "door-on-badge", "start": "event", "when": "@any", "within": 0, "rate_per_minute": 6, "valid_for": 30, "enabled": true, "repeat": "skip", "log_only": false, "allow_chain": true, "hidden": ""}
 01-create	2	POST /scenarios {"name": "s2", "when": [], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	201 {"name": "s2", "when": []}
 01-create	3	POST /scenarios {"name": "s3", "when": [{"sub": "det", "kind": "motion", "extra": 1}], "then": [{"sub": "cam", "action": "preset", "unit": "7", "n": 3}]}	400 {"error": "@any"}
