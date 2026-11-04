@@ -229,7 +229,7 @@ adr	add	point	status	file	norm	note
 0105	0	п. 8 segment	НОРМА	VMS/02-rec/spec/02.3-rec.norms.md	V/02.3 Н1.6	VMS/02-rec/spec/02.3-rec.norms.md:124
 0105	0	п. 9	ПРЕДЕЛ	VMS/07-auto/spec/07.2-auto.norms.md	V/07.2 Н1.3	VMS/07-auto/spec/07.2-auto.norms.md:97
 0105	0	п. 10	НОРМА	VMS/07-auto/spec/07.1-auto.norms.md; VMS/11-backend/spec/11.2-backend.norms.md; VMS/11-backend/spec/11.4-backend.norms.md	V/07.1 Н1.1; V/11.2 Н1.2; V/11.4 Н1.10	VMS/07-auto/spec/07.1-auto.norms.md:36; VMS/11-backend/spec/11.2-backend.norms.md:43; VMS/11-backend/spec/11.4-backend.norms.md:407
-0105	0	п. 11	НЕ НОРМА	VMS/07-auto/acceptance/1/corrections.tsv; VMS/07-auto/acceptance/6/scenarios.tsv	corrections.tsv; scenarios.tsv	процесс; приёмка есть (VMS/07-auto/acceptance/1/corrections.tsv:4-5, VMS/07-auto/acceptance/6/scenarios.tsv); `.qnt` в снимке нет: не проверено
+0105	0	п. 11	НЕ НОРМА	VMS/07-auto/journal/corrections-1.tsv; VMS/07-auto/acceptance/6/scenarios.tsv	corrections.tsv; scenarios.tsv	процесс; приёмка есть (VMS/07-auto/journal/corrections-1.tsv:4-5, VMS/07-auto/acceptance/6/scenarios.tsv); `.qnt` в снимке нет: не проверено
 0105	1	п. 1	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.11	`GET /modes/current`: `manual` решает backend, иначе слово вычислителя, нет его — `otherwise`; момент считает вычислитель
 0106	0	п. 1 (а)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:434
 0106	0	п. 1 (б)	НОРМА	VMS/11-backend/spec/11.4-backend.norms.md	V/11.4 Н1.12	VMS/11-backend/spec/11.4-backend.norms.md:434, VMS/11-backend/spec/11.4-backend.norms.md:443
@@ -1425,7 +1425,7 @@ adr	add	point	status	file	norm	note
 0121	0	пп. 1, 3 (V/12, common)	НОРМА	VMS/12-psim/**/en/*.en.md; VMS/common/**/en/*.en.md; VMS/en/README.en.md	V/12, VMS/common	английский источник V/12 и VMS/common; шапки таблиц common, explanations не переводится
 0121	0	п. 6	НОРМА	VMS/09-deploy/spec/en/09.2-deploy.norms.en.md; VMS/09-deploy/spec/09.2-deploy.norms.md	V/09.2 Н1.3	решение Спецификации VMS по ADR-0121 п. 6, факт: пример по таблице recworker unit_mb 42 — 2151 МБ, ⌊(460 − 51) / 42⌋ = 9
 0121	0	п. 6	НОРМА	VMS/08-exp/spec/08-exp.api.openapi.yaml	OpenAPI V/08	решение Спецификации VMS по ADR-0121 п. 6, факт: 08.9-exp.norms.md — глава 9
-0121	0	п. 6	НОРМА	VMS/07-auto/spec/en/07.2-auto.norms.en.md; VMS/07-auto/spec/07.2-auto.norms.md	V/07.2 Н1, LONG_POLL	решение Спецификации VMS по ADR-0121 п. 6, факт: долгий опрос — Н1.5
+0121	0	п. 6	НОРМА	VMS/07-auto/spec/07.2-auto.norms.md; VMS/07-auto/spec/07.2-auto.norms.md	V/07.2 Н1, LONG_POLL	решение Спецификации VMS по ADR-0121 п. 6, факт: долгий опрос — Н1.5
 0121	0	п. 6	НОРМА	VMS/03-live/README.md; VMS/03-live/README.md	V/03 README «Семьи данных»	решение Спецификации VMS по ADR-0121 п. 6, факт: у слов пульса шлюза семья live/heartbeats/<имя> (каталог VMS, читают camworker, expworker)
 0121	0	п. 6	НОРМА	VMS/common/acceptance/en/README.en.md; VMS/common/acceptance/README.md	@traverse (1)	решение Спецификации VMS по ADR-0121 п. 6, факт: «которые называет строка» (было «названа»)
 0121	0	п. 6	НОРМА	VMS/12-psim/spec/en/12.3-psim.norms.en.md; VMS/12-psim/spec/12.3-psim.norms.md	V/12.3-04	решение Спецификации VMS по ADR-0121 п. 6, факт: <т>_seen перезаписывается пустой, не удаляется (Н1.4)

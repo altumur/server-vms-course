@@ -19,7 +19,7 @@
 ## Что нужно знать заранее
 
 Уроки V/01 (просьбы камере), V/02, V/04, V/05 (строки, которые сценарий заказывает); журнал событий
-([P/05](../../Platform/05-resource/spec/05-resource.norms.md)); заказ строк и подача просьб ([P/03.6](../../Platform/03-worker/spec/03.6-worker.norms.md)).
+([P/05](../../../Platform/05-resource/ru/spec/05-resource.norms.md)); заказ строк и подача просьб ([P/03.6](../../../Platform/03-worker/ru/spec/03.6-worker.norms.md)).
 
 ## Глава 1. Сценарий — единица и язык
 

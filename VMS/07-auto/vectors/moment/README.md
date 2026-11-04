@@ -1,8 +1,8 @@
 # Vectors: the moment function — schedule, sun, object mode
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/vectors/moment/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is lesson V/07 ([the norms of chapter 6](../../../spec/07.6-auto.norms.md) Н1.2–Н1.5, Н1.7). The numbers were computed by the reference
+The owner is lesson V/07 ([the norms of chapter 6](../../spec/07.6-auto.norms.md) Н1.2–Н1.5, Н1.7). The numbers were computed by the reference
 automation engine from the consolem set `785824c` (`api/rule-engine.js`) and rechecked by an independent recomputation from the text of the norm;
 the line `at` of the manual mode is a rule of the norm (Н1.5), the engine does not have it. The run — after the first stage C generation that has passed the platform
 acceptance (ADR-0090 addenda (8), (9)).

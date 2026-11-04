@@ -1,12 +1,12 @@
 # V/07 Scenarios
 
-This English text is the source; the Russian [`README.md`](../README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 Status: **translated** — chapters V/07.1–V/07.6 (the plan of 2026-10-23 is the history of the translation below; inquiries 5, 6 are resolved by ADR-0091 addendum (21);
 the review of V/07 — 2026-10-29); the norms are by chapter below. Sources:
-the inventory [`../common/inventory.md`](../../common/inventory.md) § 1, § 2 (М10B/25, except the mechanism; М10B/11 step 6; М10B/12 step 12 —
+the inventory [`../common/inventory.md`](../common/inventory.md) § 1, § 2 (М10B/25, except the mechanism; М10B/11 step 6; М10B/12 step 12 —
 the meaning of the form; М12A/12; М12B/03 step 8; М12B/04 step 7). The platform: the export `cammeta-specs` `7a875c75`. The manifest is
-[`auto.subsystem.yaml`](../auto.subsystem.yaml) (the canon; ADR-0090 addendum (6) item 8).
+[`auto.subsystem.yaml`](auto.subsystem.yaml) (the canon; ADR-0090 addendum (6) item 8).
 
 ## What lesson V/07 is
 
@@ -41,9 +41,9 @@ Neighbours: the camera holder — execution of the request and of the scenario r
   door (P/08.9), the scenario request — the recorder's receiver (V/02.9); the holder's own door — the route `test` (V/07.4 Н2); the lesson has no OpenAPI.
 - **Data families** (the class of VMS families, the analysis of the review of V/01 question 5, decision «А» of «Архитектор»): the scenario rows, the cursor
   and the run row (`unit.state`), the tables, the document `domain/shared` (`domain.shared.scenarios` with a schema) and the contribution `auto/asks/<слот>` are expressed by the manifest
-  (P/02.1, P/03.7) — they have no families of their own. The lesson's own content in the open place of a platform family is [`data/`](../data/):
+  (P/02.1, P/03.7) — they have no families of their own. The lesson's own content in the open place of a platform family is [`data/`](data/):
   `value` of the element of the book of roads `asks-entry` (the place `/*/entries/*/value` of the book `domain/auto/asks` and `domain/auto/asks/<член>`)
-  — the form, the layers, the outcomes per reader; the rows are in the VMS catalogue [`../common/data/catalog.tsv`](../../common/data/catalog.tsv).
+  — the form, the layers, the outcomes per reader; the rows are in the VMS catalogue [`../common/data/catalog.tsv`](../common/data/catalog.tsv).
   The vectors are built by the builder `family-read` (`../common/vectors/family-read/07.tsv`). The heartbeat of `auto` is judged by no foreign process —
   it is read by the console and the page, there is no family.
 

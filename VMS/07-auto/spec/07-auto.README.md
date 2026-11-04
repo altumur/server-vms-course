@@ -1,6 +1,6 @@
 # V/07 Scenarios — instructions for an implementation
 
-This English text is the source; the Russian [`07-auto.README.md`](../07-auto.README.md) is derived from it by translation and is not edited by hand (ADR-0121).
+This English text is the source; the Russian translation `ru/spec/07-auto.README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 What an implementation of the subsystem `auto` does and how to check the result. The canon is the norms of the chapters `07.K-auto.norms.md`; these
 instructions do not add to them. The platform is the export `cammeta-specs` `7a875c75`.
@@ -8,9 +8,9 @@ instructions do not add to them. The platform is the export `cammeta-specs` `7a8
 ## Inputs and their priority
 
 - The canon: the norms of the chapters `07.K-auto.norms.md` (Н1–Н5 of each chapter; the addresses `V/07.K Н…`).
-- The canon of the manifest: [`auto.subsystem.yaml`](../../auto.subsystem.yaml): the bytes as they are.
-- Acceptance: [chapter 1](../../acceptance/1/README.md), [chapter 6](../../acceptance/6/README.md); the vectors of the moment function — [`moment`](../../vectors/moment/README.md); the stand and the vocabulary — [the common VMS acceptance README](../../../common/acceptance/README.md); acceptance introduces no new requirements.
-- [The lecture](../../07-auto.md) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
+- The canon of the manifest: [`auto.subsystem.yaml`](../auto.subsystem.yaml): the bytes as they are.
+- Acceptance: [chapter 1](../acceptance/1/README.md), [chapter 6](../acceptance/6/README.md); the vectors of the moment function — [`moment`](../vectors/moment/README.md); the stand and the vocabulary — [the common VMS acceptance README](../../common/acceptance/README.md); acceptance introduces no new requirements.
+- The lecture (`ru/07-auto.md`, for people, not in the export) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…` (they are edited not by VMS).
 
 Record a contradiction with its place and a counterexample (the section «On a divergence»); an arbitrary refusal does not replace an
 absent norm. The structure of the code is left to the implementation within the canon.
@@ -19,12 +19,12 @@ absent norm. The structure of the code is left to the implementation within the 
 
 | Chapter | What the implementation has | Check |
 |---|---|---|
-| V/07.1 | the manifest `VMS/07-auto/auto.subsystem.yaml` loads with the strict loader without edits (the VMS catalogue as a whole); the console unit door executes the number key, the schemas `when`, `conditions`, `then` and the bounds of the fields; the form of a step inside a branch is judged by the evaluator | [acceptance 1](../../acceptance/1/README.md) |
+| V/07.1 | the manifest `VMS/07-auto/auto.subsystem.yaml` loads with the strict loader without edits (the VMS catalogue as a whole); the console unit door executes the number key, the schemas `when`, `conditions`, `then` and the bounds of the fields; the form of a step inside a branch is judged by the evaluator | [acceptance 1](../acceptance/1/README.md) |
 | V/07.2 | the wants, reading the merged log (a participant of the contract `events-merge`, the epochs by `worker.reads`), the firing by the closing event, the cursor `unit.state.cursor` (the full window, `COLD_START`, a new `revision` by the cursor row), the long poll; a run by schedule and by hand; `LONG_POLL` in `/etc/auto/auto.env` | by reading |
 | V/07.3 | the refusal of two fields, the reconciliation of the scenario with `can`, with the rows of devices, detectors and recordings (`unfit`, `unchecked`), the refusal texts | by reading |
 | V/07.4 | the requests to `cam` (the deadline from the event, `late`), the orders to `rec`, `det` (the base, `mask_of`, a second one is not set up), `detjob` (the window, the detector's fields); the actions `arm`, `disarm`, `disable`, `alarm`; the checks before the actions, the expansion of the targets, the run row `unit.state.runs` and the waiting steps, `repeat`; the ceilings; the events `fired`, `step`, `suppressed`; the requests `run`, `retry`, the door `test`; the heartbeat and the series | by reading, `@manual` of acceptance 1 |
 | V/07.5 | the document `auto.scenarios` (the form), the executor of the trigger's cluster, the contribution to the book `asks`, the request to the receiver with the token `ask` and the outcomes, carrying through the relay | by reading |
-| V/07.6 | the tables of `auto`, the moment function `in_effect`, `sun`, the mode `object_mode` and the heartbeat field, the windows, `TIMEZONE` of the environment, the wall minutes at clock changes | [acceptance 6](../../acceptance/6/README.md), the vectors [`moment`](../../vectors/moment/README.md) |
+| V/07.6 | the tables of `auto`, the moment function `in_effect`, `sun`, the mode `object_mode` and the heartbeat field, the windows, `TIMEZONE` of the environment, the wall minutes at clock changes | [acceptance 6](../acceptance/6/README.md), the vectors [`moment`](../vectors/moment/README.md) |
 
 The manifest is specification data: the implementation reads its bytes as they are (ADR-0090 addendum (6) item 8).
 
