@@ -3,7 +3,7 @@
 Запуск: python3 tools/normgen/scenario_judge.py --inventory <internal/stagetests/inventory.tsv>
             --go-test <вывод go test -json ./internal/stagetests> --runner <out/report раннера> [--stage http] [--json итог]
 
-- опись — по id шага `<глава>/<сценарий>/<шаг>`: переведённые шаги — подтесты `Test<Этап>_<Сценарий>/<шаг>`;
+- опись — по id шага `<глава>/<файл>/<сценарий>/<шаг>` (шаги seams.tsv раннер не исполняет — не судятся): переведённые шаги — подтесты `Test<Этап>_<Сценарий>/<шаг>`;
 - раннер — отчёт цели P/01.1/door (`P-01.1-door.json`: сценарий → шаги ok);
 - шаг совпал, когда исход подтеста (pass | fail) равен исходу шага у раннера; расхождение — дефект генератора (или
   адаптера, если он обходит рамку: такие шаги сверяются отдельно, доп. (4) п. 6); подтест, которого нет в выводе,
@@ -46,11 +46,16 @@ def main(argv=None):
                 for st in body.get("steps", []):
                     runner[f"{chapter}/{sc}/{st['step']}"] = "pass" if st["ok"] else "fail"
     out, by_stage = [], {}
-    for step_id, stage, test, status, _ in rows:
+    seams = 0
+    for step_id, stage, test, status, *_ in rows:
         if status != "translated" or (a.stage and stage not in a.stage):
             continue
-        sub = f"{test}/{step_id.rsplit('/', 1)[1]}"
-        got, want = tests.get(sub, "missing"), runner.get(step_id, "missing")
+        chapter, fname, sc, step = step_id.split("/")
+        if fname != "scenarios.tsv":                 # швы раннер не исполняет: их судят только тесты пакета
+            seams += 1
+            continue
+        sub = f"{test}/{step}"
+        got, want = tests.get(sub, "missing"), runner.get(f"{chapter}/{sc}/{step}", "missing")
         ok = got == want
         s = by_stage.setdefault(stage, {"match": 0, "total": 0, "runner_green": 0, "tests_green": 0})
         s["total"] += 1
@@ -60,6 +65,8 @@ def main(argv=None):
         out.append({"step": step_id, "stage": stage, "test": sub, "tests": got, "runner": want, "ok": ok})
         if not ok:
             print(f"DIFF {stage} {step_id}: tests {got}, runner {want}")
+    if seams:
+        print(f"seams.tsv steps not judged by the runner: {seams}")
     for stage, s in by_stage.items():
         print(f"stagetests {stage}: matched {s['match']}/{s['total']} (green: runner {s['runner_green']}, "
               f"tests {s['tests_green']})")
