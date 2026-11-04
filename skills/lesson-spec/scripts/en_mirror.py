@@ -108,7 +108,19 @@ def facts(body, base, root, kinds, pair=()):
     }
 
 
-NUMBER = re.compile(r"(?<![\w.])[0-9]+(?:[.,][0-9]+)*(?![\w])")
+NUMBER = re.compile(r"(?<![\w.,])[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{3})+(?![\w])|(?<![\w.])[0-9]+(?:[.,][0-9]+)*(?![\w])")
+
+
+def numbers(text, lang):
+    """Numbers of a text by value of notation: groups of thousands by a space, «250 000» — one number; Russian «0,5» —
+    decimal comma, English «250,000» — a comma before exactly three digits separates thousands («0.5» ≡ «0,5»)."""
+    out = []
+    for token in NUMBER.findall(text):
+        token = re.sub(r"[ \u00a0\u202f]", "", token)
+        if lang == "en":
+            token = re.sub(r",(?=[0-9]{3}(?![0-9]))", "", token)
+        out.append(token.replace(",", "."))
+    return out
 TAGGED = re.compile(r"^```([A-Za-z]+)[^\n]*\n(.*?)^```[ \t]*$", re.M | re.S)
 KEY = re.compile(r"^(\s*(?:- )?)([^\s:#][^:#]*?):(?=\s|$)")
 
@@ -151,8 +163,8 @@ def strict(rb, eb):
                 out.append(f"{where}: key {rk.group(2)!r}, en {ek and ek.group(2)!r}")
             if not CYR.search(rc) and rc != ec:
                 out.append(f"{where}: {ec!r}, ru {rc!r} — only comments are translated here")
-            elif sorted(NUMBER.findall(rc)) != sorted(NUMBER.findall(ec)):
-                out.append(f"{where}: numbers {sorted(NUMBER.findall(ec))}, ru {sorted(NUMBER.findall(rc))}")
+            elif sorted(numbers(rc, "ru")) != sorted(numbers(ec, "en")):
+                out.append(f"{where}: numbers {sorted(numbers(ec, 'en'))}, ru {sorted(numbers(rc, 'ru'))}")
     rtab = [t for t in re.split(r"\n[ \t]*\n", FENCE.sub("", rb)) if TABLE_ROW.search(t)]
     etab = [t for t in re.split(r"\n[ \t]*\n", FENCE.sub("", eb)) if TABLE_ROW.search(t)]
     for k, (r, e) in enumerate(zip(rtab, etab), 1):
@@ -166,13 +178,13 @@ def strict(rb, eb):
                 xs, ys = LINK.sub("]()", x), LINK.sub("]()", y)
                 if not CYR.search(xs) and not re.search(r"\[[^\]]*[A-Za-z]{3}", xs) and xs != ys:
                     out.append(f"{where}: {y!r}, ru {x!r}")
-                elif sorted(NUMBER.findall(SPAN.sub("", xs))) != sorted(NUMBER.findall(SPAN.sub("", ys))):
-                    out.append(f"{where}: numbers {sorted(NUMBER.findall(SPAN.sub('', ys)))}, ru {sorted(NUMBER.findall(SPAN.sub('', xs)))}")
+                elif sorted(numbers(SPAN.sub("", xs), "ru")) != sorted(numbers(SPAN.sub("", ys), "en")):
+                    out.append(f"{where}: numbers {sorted(numbers(SPAN.sub('', ys), 'en'))}, ru {sorted(numbers(SPAN.sub('', xs), 'ru'))}")
                 elif {m.group(2) for m in SPAN.finditer(xs)} - {m.group(2) for m in SPAN.finditer(ys)}:
                     out.append(f"{where}: code spans {sorted({m.group(2) for m in SPAN.finditer(xs)} - {m.group(2) for m in SPAN.finditer(ys)})} missing")
     rp = TABLE_ROW.sub("", LINK.sub("]()", FENCE.sub("", rb)))
     ep = TABLE_ROW.sub("", LINK.sub("]()", FENCE.sub("", eb)))
-    missing = set(NUMBER.findall(rp)) - set(NUMBER.findall(ep))
+    missing = set(numbers(rp, "ru")) - set(numbers(ep, "en"))
     if missing:
         out.append(f"numbers of the Russian prose missing: {sorted(missing)}")
     return out
