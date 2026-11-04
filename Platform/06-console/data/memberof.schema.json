@@ -3,10 +3,10 @@
  "type": "object",
  "properties": {
   "folders": {
-   "description": "id папок, в составе которых стоит единица ключа, без повторов; писатель пишет от одной до FOLDERS_PER_UNIT_MAX; пустого списка нет: строку снимают (Н1.1)",
+   "description": "the ids of the folders whose membership includes the unit of the key, without repeats; the writer writes from one to FOLDERS_PER_UNIT_MAX; there is no empty list: the row is removed (Н1.1)",
    "type": "array",
    "items": {
-    "description": "id папки (Н1.1)",
+    "description": "the folder id (Н1.1)",
     "type": "string",
     "pattern": "^(?:[0-9a-f]{32})$"
    },

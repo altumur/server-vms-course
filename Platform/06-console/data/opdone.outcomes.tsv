@@ -1,4 +1,4 @@
-# Исходы нечитаемой строки <sub>/opdone/<id>/<i> (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — строка целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable row <sub>/opdone/<id>/<i> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	console	строка целиком нечитаема: исход шага неизвестен, шаг не зовут снова; дверь чтения отдаёт шаг состоянием `fail` с кодом `not_run`; ведущий пишет в запись `cancel: true`: следующие шаги над корнем нельзя вести по неизвестной версии, причина — в журнал	0	строка	P/06.9 Н3 «шаг»
+	console	the whole row is unreadable: the outcome of the step is unknown, the step is not called again; the read door gives out the step with the state `fail` with the code `not_run`; the leader writes `cancel: true` into the record: the next steps over the root cannot be led by an unknown version, the cause goes to the log	0	строка	P/06.9 Н3 «step»

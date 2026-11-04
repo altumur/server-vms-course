@@ -4,16 +4,16 @@
  "properties": {
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды первой отметки партии — диагностическое время, не скользящий срок (Н3 «уборка тел»); при пустой партии не читается",
+   "description": "the wall-clock seconds of the batch's first mark — a diagnostic time, not a sliding term (Н3 «уборка тел»); not read for an empty batch",
    "x-codec": [
     "time"
    ]
   },
   "digests": {
-   "description": "отмеченные дайджесты по правилу списка Н1.2 (через запятую); пустая партия — \"\" (или строки нет); писатель отмечает не больше SWEEP_LIMIT 64 за проход",
+   "description": "the marked digests by the list rule of Н1.2 (comma-separated); an empty batch — \"\" (or no row); the writer marks at most SWEEP_LIMIT 64 per pass",
    "type": "array",
    "items": {
-    "description": "дайджест тела без ссылок из строк (Н1.5 object)",
+    "description": "the digest of a body without references from rows (Н1.5 object)",
     "type": "string",
     "pattern": "^(?:sha256-[0-9a-f]{64})$"
    },

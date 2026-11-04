@@ -1,11 +1,11 @@
 case	input	expect	note
-first	{"steps":[{"root":"a","expected":{"a":"1"}}],"done":{},"i":0}	{"a":"1"}	шаг без прежних: expected строки
-after-ok	{"steps":[{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}}],"done":{"0":{"state":"ok","versions":{"a":"2"}}},"i":1}	{"a":"2"}	ok над корнем: версии итога
-fail-then-set	{"steps":[{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}}],"done":{"0":{"state":"fail"}},"i":1}	{"a":"1"}	fail в цепочку не входит
-ok-fail-set	{"steps":[{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}}],"done":{"0":{"state":"ok","versions":{"a":"2"}},"1":{"state":"fail"}},"i":2}	{"a":"2"}	после ok и fail — версия последнего ok
-ok-ok	{"steps":[{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}}],"done":{"0":{"state":"ok","versions":{"a":"2"}},"1":{"state":"ok","versions":{"a":"3"}}},"i":2}	{"a":"3"}	последний ok, а не первый
-other-root	{"steps":[{"root":"a","expected":{"a":"1"}},{"root":"b","expected":{"b":"5"}}],"done":{"0":{"state":"ok","versions":{"a":"2"}}},"i":1}	{"b":"5"}	чужой корень цепочки не даёт
-two-objects-one-root	{"steps":[{"root":"a","expected":{"cam":"1"}},{"root":"a","expected":{"det":"4"}}],"done":{"0":{"state":"ok","versions":{"cam":"2","det":"4"}}},"i":1}	{"cam":"2","det":"4"}	два объекта одного корня: версии итога целиком
-cancel-not-counted	{"steps":[{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}}],"done":{"0":{"state":"cancel"}},"i":1}	{"a":"1"}	cancel в цепочку не входит
-later-ignored	{"steps":[{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}}],"done":{"2":{"state":"ok","versions":{"a":"9"}}},"i":1}	{"a":"1"}	итог после i не считается
-retry-copy	{"steps":[{"root":"a","expected":{"a":"2"}},{"root":"a","expected":{"a":"2"}}],"done":{"0":{"state":"ok","versions":{"a":"3"}}},"i":1}	{"a":"3"}	новая операция retry-failed: expected копии — версия прежней; внутри новой цепочка та же
+first	{"steps":[{"root":"a","expected":{"a":"1"}}],"done":{},"i":0}	{"a":"1"}	a step without previous ones: the row's expected
+after-ok	{"steps":[{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}}],"done":{"0":{"state":"ok","versions":{"a":"2"}}},"i":1}	{"a":"2"}	ok over the root: the versions of the result
+fail-then-set	{"steps":[{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}}],"done":{"0":{"state":"fail"}},"i":1}	{"a":"1"}	fail does not enter the chain
+ok-fail-set	{"steps":[{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}}],"done":{"0":{"state":"ok","versions":{"a":"2"}},"1":{"state":"fail"}},"i":2}	{"a":"2"}	after ok and fail — the version of the last ok
+ok-ok	{"steps":[{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}}],"done":{"0":{"state":"ok","versions":{"a":"2"}},"1":{"state":"ok","versions":{"a":"3"}}},"i":2}	{"a":"3"}	the last ok, not the first
+other-root	{"steps":[{"root":"a","expected":{"a":"1"}},{"root":"b","expected":{"b":"5"}}],"done":{"0":{"state":"ok","versions":{"a":"2"}}},"i":1}	{"b":"5"}	another root gives no chain
+two-objects-one-root	{"steps":[{"root":"a","expected":{"cam":"1"}},{"root":"a","expected":{"det":"4"}}],"done":{"0":{"state":"ok","versions":{"cam":"2","det":"4"}}},"i":1}	{"cam":"2","det":"4"}	two objects of one root: the versions of the result as a whole
+cancel-not-counted	{"steps":[{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}}],"done":{"0":{"state":"cancel"}},"i":1}	{"a":"1"}	cancel does not enter the chain
+later-ignored	{"steps":[{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}},{"root":"a","expected":{"a":"1"}}],"done":{"2":{"state":"ok","versions":{"a":"9"}}},"i":1}	{"a":"1"}	a result after i is not counted
+retry-copy	{"steps":[{"root":"a","expected":{"a":"2"}},{"root":"a","expected":{"a":"2"}}],"done":{"0":{"state":"ok","versions":{"a":"3"}}},"i":1}	{"a":"3"}	a new operation retry-failed: expected of the copy — the version of the previous one; inside the new one the chain is the same

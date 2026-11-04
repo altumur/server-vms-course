@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "state": {
-   "description": "итог шага",
+   "description": "the result of the step",
    "type": "string",
    "x-codec": [
     "string"
@@ -15,35 +15,35 @@
    ]
   },
   "code": {
-   "description": "слово отказа: у `fail` от подсистемы — её код, у сбоя вызова — `not_run` (Н1.5)",
+   "description": "the refusal word: for a `fail` from the subsystem — its code, for a call failure — `not_run` (Н1.5)",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "field": {
-   "description": "поле отказа, как его назвала подсистема",
+   "description": "the refusal field as the subsystem named it",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "version": {
-   "description": "версия цели после шага: непрозрачная строка подсистемы",
+   "description": "the version of the target after the step: an opaque string of the subsystem",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "created_id": {
-   "description": "id созданного шагом объекта",
+   "description": "the id of the object created by the step",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "versions": {
-   "description": "версии объектов корня после шага: JSON, консоль передаёт его в вызов следующего шага над корнем (Н1.4)",
+   "description": "the versions of the root's objects after the step: JSON, the console passes it into the call of the next step over the root (Н1.4)",
    "x-encoding": "json",
    "x-codec": [
     "any"

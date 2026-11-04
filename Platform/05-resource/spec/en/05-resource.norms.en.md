@@ -174,7 +174,7 @@ retention:
 ```
 
 The merge of the resource answers by the console (`merge`) — [chapter 6.4](../../../06-console/spec/06.4-console.norms.md) Н1.3
-and Н3 «слияние» (the console); the form of the console answer (`answer` above, `ConsoleEvents` of the contract) is common with the resource.
+and Н3 «merge» (the console); the form of the console answer (`answer` above, `ConsoleEvents` of the contract) is common with the resource.
 
 A query uses finite `from`/`to`, `from ≤ to`; `limit` is an integer 1…10000 (reconciliation of python and go М10/6–11, E12–E15):
 - `from`, `to` — an ASCII decimal number: an optional `-`, digits (`_` is allowed between digits), an optional dot with
@@ -397,7 +397,7 @@ The form `answered` (the mark row of a request, AnsweredMark) — [chapter 6.4](
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
 | строка целиком | `<s>controller` | the whole row is unreadable: the server is not a candidate for an order; the fields of the unreadable row are not replaced by absence, the cause goes to the log (layout audit, Г-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/04 Н1, Н3 «заказать()» |
-| строка целиком | `console` | the whole row is unreadable: the life of the resource is judged by a change of the row version (resource_state of the observation contract), not by its fields; the fields of the unreadable row are not replaced by absence; the door row of a decommissioned server is unreadable — the console pass deletes it all the same: delete with cas by the version read, the content is not needed for the deletion (В7 item 3, row 12); the cause goes to the log (layout audit, Г-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | договор наблюдения resource_state; P/06.6 Н3 «вывести_сервер» |
+| строка целиком | `console` | the whole row is unreadable: the life of the resource is judged by a change of the row version (resource_state of the observation contract), not by its fields; the fields of the unreadable row are not replaced by absence; the door row of a decommissioned server is unreadable — the console pass deletes it all the same: delete with cas by the version read, the content is not needed for the deletion (В7 item 3, row 12); the cause goes to the log (layout audit, Г-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | договор наблюдения resource_state; P/06.6 Н3 «decommission_server» |
 | строка целиком | `resource` | the whole row is unreadable: restore — the door is unreadable, the restoration is incomplete; mirror — there is no address, the server is not a neighbour of this pass; the fields of the unreadable row are not replaced by absence, the cause goes to the log (layout audit, Г-09; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/05 Н1.4 door_row, «Восстановление бакетов» |
 | строка целиком | `<s>worker` | the door row of its own server is unreadable: the object client with a bare cluster:// — reading the cluster objects is «unknown», not «no», not a start refusal and not a refusal of writing to its own catalogue; on the next access the row is read anew (П3; В7 item 3, row 11) | 0 | строка | договор клиента хранилища объектов door (P03-OBJECTS-DEFAULT-1FD) |
 
@@ -518,7 +518,7 @@ The form `answered` (the mark row of a request, AnsweredMark) — [chapter 6.4](
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
 | строка целиком | `<s>worker` | a row not in the resource's form is not a request: skipped, the cause goes to the log without the value (В7 item 3, row 10) | 0 | строка | P/03.6 Н3 «взгляд держателя» |
-| строка целиком | `console` | a resource row without a live owner is removed by ttl | 0 | строка | P/06.4 Н3 «жнец» |
+| строка целиком | `console` | a resource row without a live owner is removed by ttl | 0 | строка | P/06.4 Н3 «reaper» |
 | строка целиком | `resource` | not its own form (unit present, someone else's server/volume, a spoiled form): do not touch, log free_ask.key_taken, skip | 0 | строка | P/05 Н1.4 free_ask, Н3 «проход ресурса» relieve |
 
 #### `<корень событий>/<sub>/<unit>/e<эпоха>/<YYYYMMDDTHHMMSSZ>.events.jsonl` — файл
@@ -965,7 +965,7 @@ An implementation is to name in its description:
 
 1. **the object store on the box and in the cluster** — the layout on disk (directories, the delete tombstones `.gone/<ключ>` — the tombstone contract) and the size limits; the address `OBJECTS` and the access of the client — [the object store client contract](../../../common/contracts/object-client.md) (C10-OBJECT-ADDRESS-32);
 2. ~~**how the resource learns the presence of processes**~~ — normed: [the presence lock contract](../../../common/contracts/presence-lock.md) `presence_lock` (the second pilot, Н-1);
-3. **the eviction policy of the index cache** within 64 MiB (Н1.3); the number of merge lanes (8) and the term (3 s) are a norm of [P/06.4](../../../06-console/spec/06.4-console.norms.md) Н3 «слияние», not a choice;
+3. **the eviction policy of the index cache** within 64 MiB (Н1.3); the number of merge lanes (8) and the term (3 s) are a norm of [P/06.4](../../../06-console/spec/06.4-console.norms.md) Н3 «merge», not a choice;
 4. **the long poll `/events/wait`**: the structure of the memory of observations and the deployable limit of waits; the forms of want/the answer and the profile of the timeout are Н1.6, not a choice;
 5. **the journal line**: the fields beyond `sub`/`target`/`addr` of the event log contract `journal`, the writer role, the epoch of the tree (`e1`);
 6. **streams and the reading of a body**: the term of the mirror reception, the way to check the whole body before publication, the distinction of a refusal before the headers and a break after them (the limits and terms of the POST of the console — [chapter 6.4](../../../06-console/spec/06.4-console.norms.md) «Решает реализация» item 3);

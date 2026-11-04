@@ -409,7 +409,7 @@ Active intent — принятое общее решение для members, п�
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
 | строка целиком | `<s>controller` | the whole row is unreadable: the unreadable is not replaced by absence and is not rewritten: an error of step 9 (failures + 1), the order rules (retiring, «number above want») are not applied to the processes of the server (the pool contract want_rule), the cause goes to the pass log (layout audit, Г-07; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/04 Н3 «pass()»; договор пула want_rule |
-| строка целиком | `console` | the whole row is unreadable: there is no series workers_wanted{server} of this server, the server's script starts and stops nothing by it (P/02.4 Н1.5; layout audit, Г-07) | 0 | строка | P/06.5 Н3 «/metrics — текст» |
+| строка целиком | `console` | the whole row is unreadable: there is no series workers_wanted{server} of this server, the server's script starts and stops nothing by it (P/02.4 Н1.5; layout audit, Г-07) | 0 | строка | P/06.5 Н3 «/metrics — text» |
 
 #### `<sub>/decommissioned/<сервер>` — строка
 
@@ -568,10 +568,10 @@ Active intent — принятое общее решение для members, п�
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
 | `/names_given` | * | the worker at capture (P/03.2 Н3 «capture» step 1): without a readable names_given there is no permission by it — the name is taken only when released or free, the cause goes to the log (layout audit, Г-01; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | поле | P/04 Н1.2; P/03.2 Н3 «захватить» |
-| `/short` | * | short out of form (an element without a required field of Н1.2, including groups): the console does not give the series units_short, workers_withheld and groups_waiting of this pass (C06-GROUPS-WAITING-33-01), /metrics — 200 (P/01.1 Н0 «Stability of output»); the rest of the report is read (analysis of review of stage B 3–5, № 13) | 1 | поле | P/04 Н1.2; P/06.5 Н3 «/metrics — текст» (разбор ревью стадии B 6–7, № 24) |
+| `/short` | * | short out of form (an element without a required field of Н1.2, including groups): the console does not give the series units_short, workers_withheld and groups_waiting of this pass (C06-GROUPS-WAITING-33-01), /metrics — 200 (P/01.1 Н0 «Stability of output»); the rest of the report is read (analysis of review of stage B 3–5, № 13) | 1 | поле | P/04 Н1.2; P/06.5 Н3 «/metrics — text» (разбор ревью стадии B 6–7, № 24) |
 | `/hung_move_after` | * | the worker (P/03.2): keeps the previous hang limit (the last one read); if none was read — does not judge itself hung by the limit of the report; the cause goes to the log once per pass (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-02) | 1 | поле | P/04 Н1.2 |
 | объект целиком | `<s>worker` | the whole object is unreadable: the worker at capture — as /names_given: there is no permission by it, the name is taken only when released or free, the cause goes to the log; the hang limit — as /hung_move_after: the previous one read, without one read it does not judge itself hung by the limit of the report | 2 | строка | P/04 Н1.2; P/03.2 Н3 «захватить» |
-| объект целиком | `console` | the whole object is unreadable: the console removes the series from the pass report rather than dropping the /metrics answer (P/01.1 Н0 «Stability of output»); /where of an unplaced one — reason without why: «not placed: no worker holds it» | 2 | строка | P/06.5 Н3 «/metrics — текст»; P/06.6 Н2.2 |
+| объект целиком | `console` | the whole object is unreadable: the console removes the series from the pass report rather than dropping the /metrics answer (P/01.1 Н0 «Stability of output»); /where of an unplaced one — reason without why: «not placed: no worker holds it» | 2 | строка | P/06.5 Н3 «/metrics — text»; P/06.6 Н2.2 |
 
 #### `<sub>/snapshot/<воркер>` — объект
 

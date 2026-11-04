@@ -4,7 +4,7 @@
  "properties": {
   "done": {
    "$ref": "#/$defs/common.uint53",
-   "description": "сколько шагов окончено: `ok`, `failed` и `cancelled` вместе",
+   "description": "how many steps are finished: `ok`, `failed` and `cancelled` together",
    "x-whole": true,
    "x-codec": [
     "integer"
@@ -12,7 +12,7 @@
   },
   "ok": {
    "$ref": "#/$defs/common.uint53",
-   "description": "сколько шагов с итогом `ok`",
+   "description": "how many steps with the result `ok`",
    "x-whole": true,
    "x-codec": [
     "integer"
@@ -20,7 +20,7 @@
   },
   "failed": {
    "$ref": "#/$defs/common.uint53",
-   "description": "сколько шагов с итогом `fail`",
+   "description": "how many steps with the result `fail`",
    "x-whole": true,
    "x-codec": [
     "integer"
@@ -28,7 +28,7 @@
   },
   "cancelled": {
    "$ref": "#/$defs/common.uint53",
-   "description": "сколько шагов с итогом `cancel`",
+   "description": "how many steps with the result `cancel`",
    "x-whole": true,
    "x-codec": [
     "integer"

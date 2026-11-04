@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "operation": {
-   "description": "id операции, которая держит корень (Н1.3)",
+   "description": "the id of the operation that holds the root (Н1.3)",
    "type": "string",
    "x-codec": [
     "string"

@@ -3,14 +3,14 @@
  "type": "object",
  "properties": {
   "instance": {
-   "description": "begun — экземпляр держателя, начавшего вызов",
+   "description": "begun — the instance of the holder that began the call",
    "type": "string",
    "x-codec": [
     "string"
    ]
   },
   "slot": {
-   "description": "begun — слот держателя",
+   "description": "begun — the holder's slot",
    "type": "string",
    "x-codec": [
     "string"
@@ -18,13 +18,13 @@
   },
   "unit": {
    "$ref": "#/$defs/common.named_id",
-   "description": "id единицы — тот же, что у строки просьбы; повтор сравнивает unit и digest",
+   "description": "the unit id — the same as that of the request row; a repeat compares unit and digest",
    "x-codec": [
     "string"
    ]
   },
   "of": {
-   "description": "begun — единица-адресат `<sub>/<id>` (необязателен)",
+   "description": "begun — the addressee unit `<sub>/<id>` (optional)",
    "type": "string",
    "x-codec": [
     "string"
@@ -32,27 +32,27 @@
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "begun.at — когда держатель начал",
+   "description": "begun.at — when the holder began",
    "x-codec": [
     "time"
    ]
   },
   "digest": {
    "$ref": "#/$defs/common.sha256_hex",
-   "description": "тот же digest, что у строки просьбы (Н1.5 `digest`); переносится и в no_begun",
+   "description": "the same digest as that of the request row (Н1.5 `digest`); carried into no_begun as well",
    "x-codec": [
     "string"
    ]
   },
   "valid_until": {
    "$ref": "#/$defs/common.time",
-   "description": "begun.valid_until — срок строки просьбы, если он был (необязателен)",
+   "description": "begun.valid_until — the term of the request row, if it had one (optional)",
    "x-codec": [
     "time"
    ]
   },
   "outcome": {
-   "description": "исход — закрытый перечень (ADR-0054); gone — единица-адресат отсутствует, закрыл жнец (ADR-0091 доп. (11) п. 4); нет поля — begun без исхода (исполняется)",
+   "description": "the outcome — a closed list (ADR-0054); gone — the addressee unit is absent, closed by the reaper (ADR-0091 addendum (11) item 4); no field — begun without an outcome (being executed)",
    "type": "string",
    "enum": [
     "performed",
@@ -66,7 +66,7 @@
    ]
   },
   "action": {
-   "description": "значение поля action тела просьбы (договор просьбы «Просьба» action), не имя обработчика; у тела с action обязателен при performed/refused после вызова, при unknown необязателен; у тела без action поля нет (разбор ревью стадии B 6–7, № 16)",
+   "description": "the value of the field action of the request body (the request contract «Просьба» action), not the handler name; for a body with action, mandatory at performed/refused after the call, optional at unknown; for a body without action, there is no field (analysis of review of stage B 6–7, № 16)",
    "type": "string",
    "x-codec": [
     "string"
@@ -74,13 +74,13 @@
   },
   "ended_at": {
    "$ref": "#/$defs/common.time",
-   "description": "когда закрыт исход",
+   "description": "when the outcome was closed",
    "x-codec": [
     "time"
    ]
   },
   "error": {
-   "description": "причина, ≤ 200 кодовых точек Unicode (договор просьбы «Метка», предел error) — ДОЛЖЕН у refused и unknown, нет у performed и expired",
+   "description": "the reason, ≤ 200 Unicode code points (the request contract «Метка», the error limit) — MUST at refused and unknown, absent at performed and expired",
    "type": "string",
    "pattern": "^(?:[\\s\\S]{0,200})$",
    "x-codec": [
@@ -88,7 +88,7 @@
    ]
   },
   "late": {
-   "description": "исход начавшего, пришедший после unknown (жнеца или другого держателя)",
+   "description": "the outcome of the one who began, arriving after unknown (from the reaper or another holder)",
    "type": "string",
    "enum": [
     "true"
@@ -98,7 +98,7 @@
    ]
   },
   "ended_by": {
-   "description": "кто закрыл чужую или безначальную просьбу; у ответа начавшего поля нет",
+   "description": "who closed another's or a beginless request; the answer of the one who began has no field",
    "type": "string",
    "enum": [
     "reaper",
@@ -109,7 +109,7 @@
    ]
   },
   "reply": {
-   "description": "ответ perform начавшего держателя: текст JSON объекта, значения — строки до 200 кодовых точек; у no_begun, expired, gone нет",
+   "description": "the perform answer of the holder that began: the JSON text of an object, the values — strings of up to 200 code points; absent for no_begun, expired, gone",
    "type": "object",
    "additionalProperties": {
     "type": "string",

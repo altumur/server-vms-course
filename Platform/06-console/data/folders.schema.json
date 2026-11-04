@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "name": {
-   "description": "имя папки: не пусто, не длиннее FOLDER_NAME_MAX байт UTF-8; уникальности среди соседей нет (Н1.1)",
+   "description": "the folder name: not empty, not longer than FOLDER_NAME_MAX bytes of UTF-8; no uniqueness among siblings (Н1.1)",
    "type": "string",
    "x-codec": [
     "string"
@@ -12,7 +12,7 @@
    "x-max-bytes": 255
   },
   "parent": {
-   "description": "id родителя; пустая строка — корень кластера; задаётся при создании и не меняется (Н1.2)",
+   "description": "the parent id; an empty string — the cluster root; set at creation and does not change (Н1.2)",
    "type": "string",
    "x-codec": [
     "string"
@@ -20,10 +20,10 @@
    "pattern": "^(?:([0-9a-f]{32})?)$"
   },
   "members": {
-   "description": "ссылки на единицы `<sub>/<rows>/<id>` по порядку, без повторов; писатель пишет не больше FOLDERS_MEMBERS_MAX (Н1.1); у надгробия — пусто",
+   "description": "references to units `<sub>/<rows>/<id>` in order, without repeats; the writer writes at most FOLDERS_MEMBERS_MAX (Н1.1); for a tombstone — empty",
    "type": "array",
    "items": {
-    "description": "ссылка на единицу объявленной подсистемы: полный ключ её строки (Н1.1)",
+    "description": "a reference to a unit of a declared subsystem: the full key of its row (Н1.1)",
     "type": "string",
     "pattern": "^(?:[a-z][a-z0-9_-]{0,31}/[a-z][a-z0-9_-]{0,31}/[^/]+)$",
     "x-max-bytes": 1006
@@ -34,7 +34,7 @@
    ]
   },
   "deleted": {
-   "description": "надгробие: папка удалена; поверх него запись отказана, строка не убирается (Н1.2)",
+   "description": "a tombstone: the folder is deleted; a write over it is refused, the row is not removed (Н1.2)",
    "type": "boolean",
    "x-codec": [
     "boolean"

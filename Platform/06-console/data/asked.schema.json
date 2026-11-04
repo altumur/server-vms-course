@@ -3,10 +3,10 @@
  "type": "object",
  "properties": {
   "rids": {
-   "description": "зарезервированные/неотвеченные rid человека — список (P/06.1 Н1.2 `list`; кодек array; rid с запятой — массив JSON); \"\" — ни одного",
+   "description": "the person's reserved/unanswered rids — a list (P/06.1 Н1.2 `list`; codec array; a rid with a comma — a JSON array); \"\" — none",
    "type": "array",
    "items": {
-    "description": "rid по грамматике договора просьбы и её метки `rid` (векторы vectors/rid/; разбор ревью стадии B 6–7, № 24)",
+    "description": "rid by the grammar of the contract of the request and its mark `rid` (vectors vectors/rid/; analysis of review of stage B 6–7, № 24)",
     "type": "string",
     "not": {
      "anyOf": [
@@ -30,7 +30,7 @@
    ]
   },
   "by": {
-   "description": "человек, чей это учёт (без домена — operator)",
+   "description": "the person whose accounting this is (without a domain — operator)",
    "type": "string",
    "x-codec": [
     "string"
@@ -38,7 +38,7 @@
   },
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "штамп записи учёта",
+   "description": "the stamp of the accounting write",
    "x-codec": [
     "time"
    ]

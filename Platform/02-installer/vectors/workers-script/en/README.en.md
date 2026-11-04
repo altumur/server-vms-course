@@ -15,7 +15,7 @@ byte. Fields: `case`, `input` and `expect` — JSON text, `note`.
 - `running` — the numbers of the running instances `n ≥ 2` (the base `-1` is not included);
 - `console` — `"ok"` (the last successful scrape of `/metrics` is no older than a minute) or `"silent"` (the scrape failed or is older than
   a minute by the monotonic clock of the script); no field — `"ok"`;
-- `reconcile_age` — the text of the value of the series `<sub>_reconcile_last_success_age_seconds` by the value form of P/06.5 Н3 «/metrics — текст»
+- `reconcile_age` — the text of the value of the series `<sub>_reconcile_last_success_age_seconds` by the value form of P/06.5 Н3 «/metrics — text»
   (the canonical JCS notation: a fraction is allowed — `60.5`, `0.5`; `-1`; another notation — `1e1`, `60.50`, `+5` — not by form, do nothing);
   the comparison with 60 — by value (C02-RECONCILE-AGE-FORM-01); no field — the series is in order;
 - `memory` — the values of `roles/<роль>.env` as strings as written: `{HOST_MEMORY_MB, WORKER_MEMORY_MB, CAPACITY}`; `null` —
@@ -35,4 +35,4 @@ and by reading; a single execution mechanism (rules 6) — by reading.
 
 ## Who executes
 
-Who executes — the installer (`02-installer`: the server script `w2c-workers.sh`, P/02.4 Н1.5 `rules` 2–4). Only read the ready result: the controller (`04-controller`, writes `want` of the order row, P/04 Н1.1) and the console (`06-console`, the series `workers_wanted{server}`, P/06.5 Н3 «/metrics — текст»); the worker (`03-worker`) only accepts the stop (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who executes — the installer (`02-installer`: the server script `w2c-workers.sh`, P/02.4 Н1.5 `rules` 2–4). Only read the ready result: the controller (`04-controller`, writes `want` of the order row, P/04 Н1.1) and the console (`06-console`, the series `workers_wanted{server}`, P/06.5 Н3 «/metrics — text»); the worker (`03-worker`) only accepts the stop (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).

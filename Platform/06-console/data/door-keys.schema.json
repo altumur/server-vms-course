@@ -3,12 +3,12 @@
  "type": "object",
  "properties": {},
  "propertyNames": {
-  "description": "kid — имя ключа подписи, 1–32 знака [a-z0-9-] (как kid строки door/signer)",
+  "description": "kid — the name of the signing key, 1–32 characters [a-z0-9-] (as the kid of the row door/signer)",
   "type": "string",
   "pattern": "^(?:[a-z0-9-]{1,32})$"
  },
  "additionalProperties": {
-  "description": "64 строчных hex открытого ключа Ed25519 (RFC 8032)",
+  "description": "64 lowercase hex of the Ed25519 public key (RFC 8032)",
   "type": "string",
   "pattern": "^(?:[0-9a-f]{64})$",
   "x-codec": [

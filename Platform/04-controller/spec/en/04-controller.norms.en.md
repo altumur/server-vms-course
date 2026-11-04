@@ -77,12 +77,12 @@ platform/decommission/<сервер>:           # the writer is the console
   why:       <non-empty reason>           # grammar Н3 «shortage(), order()…»
   retiring?: <worker name>                # chosen for shrinking (Н3 «shrink»)
   # the row always exists for an installed role on a server of a manifest with grows: true (Н3 «order row»); only the decommission
-  # of the server and the removal of the role delete it; shrinking writes want 1, does not delete; the controller and the console read it (series workers_wanted P/06.5 Н3 «/metrics — текст»)
+  # of the server and the removal of the role delete it; shrinking writes want 1, does not delete; the controller and the console read it (series workers_wanted P/06.5 Н3 «/metrics — text»)
 ```
 
 ### Н1.2 Pass report
 
-The object `<sub>/controller/pass` is written at the end of every pass; it is read by the console (the series `<sub>_reconcile_last_pass_age_seconds`, `<sub>_reconcile_pass_seconds`, `<sub>_reconcile_failures`, `<sub>_units_unplaced`, `<sub>_units_diverged` — P/06.5 Н3 «/metrics — текст») and by the workers (`names_given`, `hung_move_after` — P/03.2). The pass report MUST contain the fields below; an implementation MAY add its own counters.
+The object `<sub>/controller/pass` is written at the end of every pass; it is read by the console (the series `<sub>_reconcile_last_pass_age_seconds`, `<sub>_reconcile_pass_seconds`, `<sub>_reconcile_failures`, `<sub>_units_unplaced`, `<sub>_units_diverged` — P/06.5 Н3 «/metrics — text») and by the workers (`names_given`, `hung_move_after` — P/03.2). The pass report MUST contain the fields below; an implementation MAY add its own counters.
 
 ```yaml
 pass:
@@ -137,7 +137,7 @@ The form of the keys is P/02.1 (Н1.2). Here — what each of them means for the
 | Key | Meaning | Default |
 |---|---|---|
 | `capacity: {from, default, unit_mb, base_mb}` | capacity — [the pool contract](../../../common/contracts/pool.md) `capacity` (moved there without a change; layout audit, the Architect's decision of 2026-10-25, А-12); the reason — the field `fates.<воркер>.why` of the pass report (Н1.2) | `from: capacity`; `default` is required |
-| `headroom: {from}` | headroom — a heartbeat field that the subsystem names; the controller does not read it (neither the choice, nor the slot fate, nor the pass report); the console shows it — the series `worker_headroom{worker,server}` and `headroom` ([P/06.5](../../../06-console/spec/06.5-console.norms.md) Н3 «/metrics — текст») (C04-HEADROOM-UNREADABLE-01) | `from: headroom` |
+| `headroom: {from}` | headroom — a heartbeat field that the subsystem names; the controller does not read it (neither the choice, nor the slot fate, nor the pass report); the console shows it — the series `worker_headroom{worker,server}` and `headroom` ([P/06.5](../../../06-console/spec/06.5-console.norms.md) Н3 «/metrics — text») (C04-HEADROOM-UNREADABLE-01) | `from: headroom` |
 | `weight: {field, default}` | the weight of a unit — an `int` field of the row ≥ 1, when the field is absent — weight.default ≥ 1; a wrong present value is not replaced with default: the unit row is unreadable (`garbled` of the pass report), the unit is neither placed nor removed, the reason is in `unplaceable`; the load = Σ of the weights (ADR-0078) | without the key — weight 1 for all |
 | `constraint` | `none` \| `labels-subset`: the labels of the unit ⊆ the labels of the worker. The labels of the unit — its field `labels` of type `list` (no field — an empty set, the constraint holds); a label — by [the label alphabet](../../../common/contracts/labels.md); the labels of the worker — the row `platform/servers/<сервер>` or the node labels | `none` |
 | `tie_break` | `most-free-capacity` — the only word | the same |
@@ -409,7 +409,7 @@ target by the next decision. A fully placed group is not reconsidered without a 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
 | строка целиком | `<s>controller` | the whole row is unreadable: the unreadable is not replaced by absence and is not rewritten: an error of step 9 (failures + 1), the order rules (retiring, «number above want») are not applied to the processes of the server (the pool contract want_rule), the cause goes to the pass log (layout audit, Г-07; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | строка | P/04 Н3 «pass()»; договор пула want_rule |
-| строка целиком | `console` | the whole row is unreadable: there is no series workers_wanted{server} of this server, the server's script starts and stops nothing by it (P/02.4 Н1.5; layout audit, Г-07) | 0 | строка | P/06.5 Н3 «/metrics — текст» |
+| строка целиком | `console` | the whole row is unreadable: there is no series workers_wanted{server} of this server, the server's script starts and stops nothing by it (P/02.4 Н1.5; layout audit, Г-07) | 0 | строка | P/06.5 Н3 «/metrics — text» |
 
 #### `<sub>/decommissioned/<сервер>` — строка
 
@@ -568,10 +568,10 @@ target by the next decision. A fully placed group is not reconsidered without a 
 | Путь отказа | Читатель | Исход | Приоритет | Единица | Норма |
 |---|---|---|---|---|---|
 | `/names_given` | * | the worker at capture (P/03.2 Н3 «capture» step 1): without a readable names_given there is no permission by it — the name is taken only when released or free, the cause goes to the log (layout audit, Г-01; rule DF-OUTCOMES-109, the Architect's decision of 2026-10-25) | 0 | поле | P/04 Н1.2; P/03.2 Н3 «захватить» |
-| `/short` | * | short out of form (an element without a required field of Н1.2, including groups): the console does not give the series units_short, workers_withheld and groups_waiting of this pass (C06-GROUPS-WAITING-33-01), /metrics — 200 (P/01.1 Н0 «Stability of output»); the rest of the report is read (analysis of review of stage B 3–5, № 13) | 1 | поле | P/04 Н1.2; P/06.5 Н3 «/metrics — текст» (разбор ревью стадии B 6–7, № 24) |
+| `/short` | * | short out of form (an element without a required field of Н1.2, including groups): the console does not give the series units_short, workers_withheld and groups_waiting of this pass (C06-GROUPS-WAITING-33-01), /metrics — 200 (P/01.1 Н0 «Stability of output»); the rest of the report is read (analysis of review of stage B 3–5, № 13) | 1 | поле | P/04 Н1.2; P/06.5 Н3 «/metrics — text» (разбор ревью стадии B 6–7, № 24) |
 | `/hung_move_after` | * | the worker (P/03.2): keeps the previous hang limit (the last one read); if none was read — does not judge itself hung by the limit of the report; the cause goes to the log once per pass (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-02) | 1 | поле | P/04 Н1.2 |
 | объект целиком | `<s>worker` | the whole object is unreadable: the worker at capture — as /names_given: there is no permission by it, the name is taken only when released or free, the cause goes to the log; the hang limit — as /hung_move_after: the previous one read, without one read it does not judge itself hung by the limit of the report | 2 | строка | P/04 Н1.2; P/03.2 Н3 «захватить» |
-| объект целиком | `console` | the whole object is unreadable: the console removes the series from the pass report rather than dropping the /metrics answer (P/01.1 Н0 «Stability of output»); /where of an unplaced one — reason without why: «not placed: no worker holds it» | 2 | строка | P/06.5 Н3 «/metrics — текст»; P/06.6 Н2.2 |
+| объект целиком | `console` | the whole object is unreadable: the console removes the series from the pass report rather than dropping the /metrics answer (P/01.1 Н0 «Stability of output»); /where of an unplaced one — reason without why: «not placed: no worker holds it» | 2 | строка | P/06.5 Н3 «/metrics — text»; P/06.6 Н2.2 |
 
 #### `<sub>/snapshot/<воркер>` — объект
 
@@ -1071,7 +1071,7 @@ one probe process per pass (ADR-0084 addendum (3) Р16′, addendum (5) Р16‴;
 
 ```
 console: the decommission request and its refusals, the row platform/decommission/<s>, the delete of platform/doors/<s> on its pass
-         and the withdrawal — chapter P/06.6 Н3 «вывести_сервер(s) — сторона консоли»
+         and the withdrawal — chapter P/06.6 Н3 «decommission_server(s) — the console side»
 controller (step 2): the server answers — the same rule as the console refusal 409 server answers (the resource, a worker or a slot of the server
          are heard within the last LOST_AFTER by the observation contract; P/06.6 Н3) → the request stands (standing): execute nothing,
          check again on the next pass; a live server is not decommissioned (C04-DECOMMISSION-STANDING-01); except the remainder of contributions
@@ -1104,7 +1104,7 @@ withdrawal: the request row removed by the console → the controller removes th
 
 The console side (the refusal 409 `server answers` by [the observation contract](../../../common/contracts/observation.md), the write of
 the request, the delete of the door row, the withdrawal) is [chapter P/06.6](../../../06-console/spec/06.6-console.norms.md) Н3
-«вывести_сервер(s) — сторона консоли» (review of stage A 6–7, № 2); here — the execution by the controller.
+«decommission_server(s) — the console side» (review of stage A 6–7, № 2); here — the execution by the controller.
 
 **Races.** The decommission of a server and the return of its workers: `decommissioned/*` is written with `cas`; a worker of this server checks the decommission at the capture (P/03.2 Н3 «start()», step 3: `platform/decommission/<s>` or `<sub>/decommissioned/<s>`) and does not take the name; the console request and the pass of the controller are separated by a row — a repeat of the request is idempotent.
 
@@ -1124,7 +1124,7 @@ manifest_behind (Н1.2): the number of rows of this pass whose write is postpone
 ### controller start — schema check
 
 The controller side of the common block of [P/06.6](../../../06-console/spec/06.6-console.norms.md) Н3 «старт консоли — проверка схемы» (part of М10/10-01
-by `note` of id-map; the row `platform/schema`, `SCHEMA` and the raise are P/06.6 Н1.1а, Н3 «поднять_схему»).
+by `note` of id-map; the row `platform/schema`, `SCHEMA` and the raise are P/06.6 Н1.1а, Н3 «raise_schema»).
 
 ```
 start: the schema contract «Проверка при старте» ([the schema contract](../../../common/contracts/schema.md); moved there without a change; layout audit А-02, the Architect's decision of 2026-10-25)
@@ -1295,7 +1295,7 @@ The implementation is to name in its description:
 3. **how the resource of a server reports the presence of a process** (the form of the field `workers` of the resource heartbeat — P/05 Н1.4) and the presence lock ([the presence lock contract](../../../common/contracts/presence-lock.md));
 4. **where `HUNG_MOVE_AFTER`, `REACH_BUDGET` come from** (the environment) and their defaults;
 5. **how rebalancing is requested** and who calls it; the budget;
-6. **additional fields of the report** beyond Н1.2 and how the metrics are made from it (the series `<sub>_reconcile_*`, `<sub>_units_unplaced`, `<sub>_units_diverged` — P/06.5 Н3 «/metrics — текст»);
+6. **additional fields of the report** beyond Н1.2 and how the metrics are made from it (the series `<sub>_reconcile_*`, `<sub>_units_unplaced`, `<sub>_units_diverged` — P/06.5 Н3 «/metrics — text»);
 7. **the exact texts** of reasons and refusals beyond the grammar of Н3/Н4;
 8. **what a manifest without `grows` does** with a shortage (it counts nothing) and where the server script lives (`w2c-workers.sh`, P/02.4 Н1.5 `script`);
 9. **the command printing the pass report** `<sub>/controller/pass` for the acceptance — by the section «Стенд» of the common README of the acceptance.
