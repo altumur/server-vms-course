@@ -3,19 +3,19 @@
  "type": "object",
  "properties": {
   "doc": {
-   "description": "текст JCS отказа {term, rev, reason, at}; в отчёте — разобранный объект, term и rev целые (Н1.10 in_report)",
+   "description": "JCS text of the refusal {term, rev, reason, at}; in the report — the parsed object, term and rev integers (Н1.10 in_report)",
    "type": "object",
    "properties": {
     "term": {
      "$ref": "#/$defs/common.pos53",
-     "description": "срок отказанного документа (указателя)"
+     "description": "the term of the refused document (of the pointer)"
     },
     "rev": {
      "$ref": "#/$defs/common.pos53",
-     "description": "номер правки отказанного документа (указателя)"
+     "description": "the revision number of the refused document (of the pointer)"
     },
     "reason": {
-     "description": "причина отказа — слова Н3 «взять документ» шаги 3–5",
+     "description": "the cause of the refusal — the words of Н3 «take the document» steps 3–5",
      "type": "string",
      "not": {
       "enum": [
@@ -25,7 +25,7 @@
     },
     "at": {
      "$ref": "#/$defs/common.time",
-     "description": "стенные секунды агента отказа"
+     "description": "the agent's wall-clock seconds of the refusal"
     }
    },
    "additionalProperties": false,

@@ -4,7 +4,7 @@
  "properties": {
   "at": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды просьбы читателя (Н1.4 book_want)",
+   "description": "the wall-clock seconds of the reader's request (Н1.4 book_want)",
    "x-codec": [
     "time"
    ]

@@ -1,7 +1,7 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$ref": "#/$defs/common.book_row",
- "description": "копия книги у члена; секреты value — конверты кольца члена (Н1.4 member_row)",
+ "description": "the copy of the book at the member; the secrets value — envelopes of the member's ring (Н1.4 member_row)",
  "$defs": {
   "common.book_missing": {
    "description": "кого не хватает в книге — [{member, why}] class server первыми, внутри по member в байтах UTF-8, один на книгу (P/08.5 Н1.3 missing); порядок и «один на член» — правило урока, не форма",

@@ -1,7 +1,7 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
  "$ref": "#/$defs/common.shared_doc",
- "description": "подписанный общий документ у члена — копия, взятая агентом (Н1.10 member)",
+ "description": "the signed shared document at the member — the copy taken by the agent (Н1.10 member)",
  "$defs": {
   "common.book_missing": {
    "description": "кого не хватает в книге — [{member, why}] class server первыми, внутри по member в байтах UTF-8, один на книгу (P/08.5 Н1.3 missing); порядок и «один на член» — правило урока, не форма",

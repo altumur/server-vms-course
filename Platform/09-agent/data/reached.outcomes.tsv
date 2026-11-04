@@ -1,4 +1,4 @@
-# Исходы нечитаемого объекта domain/reached (ADR-0088 доп. (1) Р7, доп. (2) С11). Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
-# path — путь отказа (JSON Pointer; "" — объект целиком); priority — меньше раньше; unit — единица нечитаемости.
+# Outcomes of an unreadable object domain/reached (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# path — the refusal path (JSON Pointer; "" — the whole object); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
-	domainagent	объект целиком нечитаем: агент («назад не уходит», «тот же ts не переписывается» — сравнение с прочитанным, Н1.7, Н1.4 fresh) с нечитаемым — «отличается»: агент — единственный писатель — перезаписывает объект CAS по прочитанной версии новым значением, причина в журнал; сравнение с нечитаемым прочитанным — «отличается» → запись (ответ «Архитектора» 2026-10-25 на вопросы этапа 3, Г-59)	0	строка	P/09.1 Н1.7 domain/reached; Н1.4 fresh
+	domainagent	the whole object is unreadable: the agent («does not go back», «the same ts is not rewritten» — a comparison with what was read, Н1.7, Н1.4 fresh) with the unreadable — «differs»: the agent — the only writer — rewrites the object by CAS on the version read with the new value, the cause goes to the log; a comparison with the unreadable read value — «differs» → a write (the Architect's answer of 2026-10-25 to the questions of stage 3, Г-59)	0	строка	P/09.1 Н1.7 domain/reached; Н1.4 fresh

@@ -4,7 +4,7 @@
  "properties": {
   "ts": {
    "$ref": "#/$defs/common.time",
-   "description": "стенные секунды, когда агент последний раз дотянулся до домена"
+   "description": "the wall-clock seconds when the agent last reached the domain"
   }
  },
  "additionalProperties": false,

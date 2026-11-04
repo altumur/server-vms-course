@@ -4,14 +4,14 @@
  "properties": {
   "cluster": {
    "$ref": "#/$defs/common.domain_member",
-   "description": "имя своего члена — CLUSTER установки (P/08.1 Н1.1 member)",
+   "description": "the name of its own member — CLUSTER of the installation (P/08.1 Н1.1 member)",
    "x-codec": [
     "string"
    ]
   },
   "pub": {
    "$ref": "#/$defs/common.domain_member_key",
-   "description": "hex открытого ключа члена — pub строки domain/member-key",
+   "description": "hex of the member's public key — pub of the row domain/member-key",
    "x-codec": [
     "string"
    ]

@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "class": {
-   "description": "класс члена: server | camera (P/08.3 Н1.1а); партия — всегда camera",
+   "description": "the class of the member: server | camera (P/08.3 Н1.1а); a batch — always camera",
    "type": "string",
    "enum": [
     "server",
@@ -14,15 +14,15 @@
    ]
   },
   "batch": {
-   "description": "партия приёма (P/08.3 Н1.1б): текст JSON; зерно — конверт кольца члена (договор запечатывания)",
+   "description": "the intake batch (P/08.3 Н1.1б): JSON text; the seed — an envelope of the member's ring (the sealing contract)",
    "type": "object",
    "properties": {
     "name": {
-     "description": "имя партии, строка domain/batches/<имя>",
+     "description": "the name of the batch, the row domain/batches/<имя>",
      "type": "string"
     },
     "seed_secret": {
-     "description": "закрытый ключ партии: зерно Ed25519, конверт кольца члена",
+     "description": "the private key of the batch: an Ed25519 seed, an envelope of the member's ring",
      "type": "string"
     }
    },

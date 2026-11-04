@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "doc_sha256": {
-   "description": "hex SHA-256 текста doc грантов этого члена, из которого держатель собрал таблицу (P/08.4 Н1.3б)",
+   "description": "hex SHA-256 of the text doc of the grants of this member from which the holder assembled the table (P/08.4 Н1.3б)",
    "type": "string",
    "x-codec": [
     "string"
@@ -11,7 +11,7 @@
    "pattern": "^(?:[0-9a-f]{64})$"
   },
   "groups": {
-   "description": "группы из assigned: группа → люди",
+   "description": "groups from assigned: group → people",
    "type": "object",
    "additionalProperties": {
     "type": "array",
@@ -25,7 +25,7 @@
    ]
   },
   "assigned": {
-   "description": "роль → назначения без at; только роли со строками у этого члена и всегда admin",
+   "description": "role → assignments without at; only the roles with rows at this member and always admin",
    "type": "object",
    "additionalProperties": {
     "type": "array",
@@ -34,15 +34,15 @@
      "properties": {
       "person": {
        "$ref": "#/$defs/common.person_name",
-       "description": "человек домена"
+       "description": "a person of the domain"
       },
       "group": {
        "$ref": "#/$defs/common.person_name",
-       "description": "группа домена"
+       "description": "a group of the domain"
       },
       "until": {
        "$ref": "#/$defs/common.time",
-       "description": "как until строки гранта (P/08.4 Н1.3)"
+       "description": "as until of the grant row (P/08.4 Н1.3)"
       }
      },
      "additionalProperties": false,
@@ -69,7 +69,7 @@
    ]
   },
   "admin_at": {
-   "description": "человек → момент назначения admin (P/08.4 Н1.3б)",
+   "description": "person → the moment of the assignment of admin (P/08.4 Н1.3б)",
    "type": "object",
    "additionalProperties": {
     "$ref": "#/$defs/common.time"
@@ -80,7 +80,7 @@
    ]
   },
   "supervision": {
-   "description": "роль с надзором → {подсистема: роль супервизоров}; всегда все такие роли домена (P/08.4 Н1.3б; ADR-0119 доп. (4) п. 1, доп. (6) п. 2); нет поля — надзора нет",
+   "description": "a role with supervision → {subsystem: the role of the supervisors}; always all such roles of the domain (P/08.4 Н1.3б; ADR-0119 addendum (4) item 1, addendum (6) item 2); no field — no supervision",
    "type": "object",
    "propertyNames": {
     "$ref": "#/$defs/common.person_name"
@@ -100,7 +100,7 @@
    ]
   },
   "unreadable": {
-   "description": "нечитаемые у держателя строки ролей и групп, которые таблица несла бы: отметка вместо пропуска — надзор судится в пользу надзора (P/08.4 Н1.3б; ADR-0119 доп. (6) п. 2); нет поля — таких нет",
+   "description": "the rows of roles and groups unreadable at the holder that the table would carry: a mark instead of a skip — supervision is judged in favour of supervision (P/08.4 Н1.3б; ADR-0119 addendum (6) item 2); no field — there are none",
    "type": "object",
    "properties": {
     "roles": {
@@ -126,7 +126,7 @@
   },
   "as_of": {
    "$ref": "#/$defs/common.time",
-   "description": "как as_of копии грантов (P/09.1 Н1.4 fresh); таблица старше as_of + GRANT_LIFETIME не используется",
+   "description": "as as_of of the grants copy (P/09.1 Н1.4 fresh); a table older than as_of + GRANT_LIFETIME is not used",
    "x-codec": [
     "time"
    ]
