@@ -1,7 +1,7 @@
-# Исходы нечитаемых слов detjob в строке события (корень строки семьи events-unit; схема detjob-events.schema.json, V/05.3 Н1.3, V/05.4 Н1.2); путь — от строки. Строка: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of unreadable words of detjob in an event row (the root of a row of the family events-unit; schema detjob-events.schema.json, V/05.3 Н1.3, V/05.4 Н1.2); the path is from the row. A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 path	reader	outcome	priority	unit	norm
-	console	строку не судит: выдаёт её дверью /events как прочитал, поля подсистемы — как есть (P/06.4 Н1.3; договор журнала событий line)	1	строка	P/06.4 Н1.3
-	autoworker	слова подсистемы не по форме писателя: не прочитаны, а не отсутствуют — строка не совпадает ни с одним триггером, чей match называет такое поле (сравнение строгое, без приведения); не отказ — строка идёт в окно и курсор как любая	1	строка	V/07.2 Н1.3, Н4
-/pass	autoworker	pass tick не по форме писателя: триггер с match по «pass» не совпадает ("3" ≠ 3), прочие поля строки сравниваются	1	поле	V/07.2 Н1.3; V/05.3 Н1.3
-/partial	autoworker	partial scan.partial не по форме писателя: триггер с match по «partial» не совпадает, прочие поля сравниваются	1	поле	V/07.2 Н1.3; V/05.4 Н1.2, Н1.4
-/waited	autoworker	waited scan.partial не по форме писателя: триггер с match по «waited» не совпадает, прочие поля сравниваются	1	поле	V/07.2 Н1.3; V/05.4 Н1.2, Н1.4
+	console	does not judge the row: serves it by the door /events as read, the subsystem's fields as they are (P/06.4 Н1.3; the event log contract line)	1	строка	P/06.4 Н1.3
+	autoworker	the subsystem's words not in the writer's form: not read, rather than absent — the row matches no trigger whose match names such a field (the comparison is strict, without coercion); not a refusal — the row goes to the window and the cursor like any other	1	строка	V/07.2 Н1.3, Н4
+/pass	autoworker	pass of tick not in the writer's form: a trigger with match on «pass» does not match ("3" ≠ 3), the other fields of the row are compared	1	поле	V/07.2 Н1.3; V/05.3 Н1.3
+/partial	autoworker	partial of scan.partial not in the writer's form: a trigger with match on «partial» does not match, the other fields are compared	1	поле	V/07.2 Н1.3; V/05.4 Н1.2, Н1.4
+/waited	autoworker	waited of scan.partial not in the writer's form: a trigger with match on «waited» does not match, the other fields are compared	1	поле	V/07.2 Н1.3; V/05.4 Н1.2, Н1.4

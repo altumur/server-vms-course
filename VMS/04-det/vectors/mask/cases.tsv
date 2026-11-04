@@ -1,30 +1,30 @@
-# Векторы маски детектора: грамматика PGM и масштаб к кадру (V/04.1 Н1.1 «Маска и размер кадра»). Формат — README.
+# Vectors of the detector mask: the PGM grammar and scaling to the frame (V/04.1 Н1.1 «Маска и размер кадра»). Format — README.
 # case	body	frame	expect	why
-g-ok	503520322032203235350a00ffff00		ok 2x2	пробел и LF — по одному пробельному знаку
-g-ok-lf	50350a320a320a3235350a00ffff00		ok 2x2	любой один пробельный знак: LF
-g-first-sample-ws	503520312031203235350a0a		ok 1x1	первый отсчёт — байт LF: после 255 ровно один пробельный знак, дальше растр
-g-comment	50350a2320630a3220320a3235350a00000000		refused	комментарий # — нет
-g-two-ws	50352020312031203235350a00		refused	два пробельных знака подряд
-g-maxval-1	50352031203120310a01		refused	maxval — только 255
-g-leading-zero	50352030322031203235350a0000		refused	число с ведущим нулём
-g-short	503520322032203235350a000000		refused	растра меньше w·h
-g-tail	503520312031203235350a00503520312031203235350aff		refused	хвост после w·h байт (второе изображение)
-g-p2	503220312031203235350a300a		refused	не P5
-g-zero-width	503520302031203235350a		refused	ширина 0
-g-wide	503520313032352031203235350a+00*1025		refused	ширина больше 1024
-g-max	503520313032342031303233203235350a+00*1047552		ok 1024x1023	тело 1 047 569 байт — в пределе 1 МиБ
-g-over-mib	503520313032342031303234203235350a+00*1048576		refused	ширина и высота в пределе, тело 1 048 593 байта — больше 1 МиБ
-g-tab	503509310931093235350900		ok 1x1	TAB — один пробельный знак
-g-cr	50350d310d310d3235350d00		ok 1x1	CR — один пробельный знак
-g-crlf	503520312031203235350d0a00		refused	CRLF после 255 — два пробельных знака
-g-zero-height	503520312030203235350a		refused	высота 0
-g-tall	503520312031303235203235350a+00*1025		refused	высота больше 1024
-g-huge	50352039393939393939393939393939393939393939392031203235350a00		refused	число шире 64 бит — отказ, а не сбой разбора
-g-sign	5035202b322031203235350a0000		refused	знак у числа
-g-no-ws-after-p5	5035322032203235350a00000000		refused	нет пробельного знака после P5 (P52 2 255)
-g-ws-before-p5	20503520322032203235350a00000000		refused	пробел перед P5
-g-maxval-0255	50352031203120303235350a00		refused	maxval 0255 — ведущий ноль
-s-same	503520322031203235350a0a0b	2x1	ok 2x1 0a0b	кадр того же размера — как есть
+g-ok	503520322032203235350a00ffff00		ok 2x2	a space and an LF — one whitespace character each
+g-ok-lf	50350a320a320a3235350a00ffff00		ok 2x2	any one whitespace character: LF
+g-first-sample-ws	503520312031203235350a0a		ok 1x1	the first sample is the byte LF: after 255 exactly one whitespace character, then the raster
+g-comment	50350a2320630a3220320a3235350a00000000		refused	a comment # — no
+g-two-ws	50352020312031203235350a00		refused	two whitespace characters in a row
+g-maxval-1	50352031203120310a01		refused	maxval — only 255
+g-leading-zero	50352030322031203235350a0000		refused	a number with a leading zero
+g-short	503520322032203235350a000000		refused	the raster is shorter than w·h
+g-tail	503520312031203235350a00503520312031203235350aff		refused	a tail after w·h bytes (a second image)
+g-p2	503220312031203235350a300a		refused	not P5
+g-zero-width	503520302031203235350a		refused	width 0
+g-wide	503520313032352031203235350a+00*1025		refused	width greater than 1024
+g-max	503520313032342031303233203235350a+00*1047552		ok 1024x1023	a body of 1,047,569 bytes — within the limit of 1 MiB
+g-over-mib	503520313032342031303234203235350a+00*1048576		refused	width and height within the limit, a body of 1,048,593 bytes — more than 1 MiB
+g-tab	503509310931093235350900		ok 1x1	TAB — one whitespace character
+g-cr	50350d310d310d3235350d00		ok 1x1	CR — one whitespace character
+g-crlf	503520312031203235350d0a00		refused	CRLF after 255 — two whitespace characters
+g-zero-height	503520312030203235350a		refused	height 0
+g-tall	503520312031303235203235350a+00*1025		refused	height greater than 1024
+g-huge	50352039393939393939393939393939393939393939392031203235350a00		refused	a number wider than 64 bits — a refusal, not a parse failure
+g-sign	5035202b322031203235350a0000		refused	a sign on a number
+g-no-ws-after-p5	5035322032203235350a00000000		refused	no whitespace character after P5 (P52 2 255)
+g-ws-before-p5	20503520322032203235350a00000000		refused	a space before P5
+g-maxval-0255	50352031203120303235350a00		refused	maxval 0255 — a leading zero
+s-same	503520322031203235350a0a0b	2x1	ok 2x1 0a0b	a frame of the same size — as is
 s-up	503520322032203235350a00ffff00	3x3	ok 2x2 0000ff/0000ff/ffff00	2×2 → 3×3
 s-down	503520342032203235350a0102030405060708	2x1	ok 4x2 0103	4×2 → 2×1
 s-one	503520312031203235350a7f	2x2	ok 1x1 7f7f/7f7f	1×1 → 2×2

@@ -1,6 +1,6 @@
 {
  "$schema": "https://json-schema.org/draft/2020-12/schema",
- "description": "слова подсистемы det в строке события бакета детектора (открытое место семьи платформы events-unit — корень строки); тип поля задаёт пишущий урок — V/04.2 Н1.2 (учебная модель tick), V/04.3 Н1.1; поля прочих моделей — реестр воркера («Решает реализация» V/04.2), семьёй не судятся; читают консоль (как есть) и сценарии auto (V/07.2 Н1.3 — строго)",
+ "description": "the words of the subsystem det in an event row of a detector bucket (the open place of the Platform family events-unit — the root of the row); the field type is set by the writing lesson — V/04.2 Н1.2 (the teaching model tick), V/04.3 Н1.1; the fields of other models — the worker's registry («Решает реализация» of V/04.2), not judged by the family; read by the console (as is) and the auto scenarios (V/07.2 Н1.3 — strictly)",
  "type": "object",
  "allOf": [
   {
@@ -20,7 +20,7 @@
       "type": "integer",
       "minimum": 3,
       "x-integer": true,
-      "description": "число проходов цикла воркера после запуска модели, кратное 3"
+      "description": "the number of passes of the worker loop since the model started, a multiple of 3"
      }
     },
     "required": [

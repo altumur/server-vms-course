@@ -3,6 +3,8 @@
 Норма главы — [`06.1-detedge.norms.md`](../../spec/06.1-detedge.norms.md) Н5. Стенд и словарь — [общий README приёмки
 VMS](../../../common/acceptance/README.md) поверх общего README платформы (выгрузка `7a875c75`, пин VMS).
 
+Текст производный от en, руками не правится: источник — английский [`en/README.en.md`](en/README.en.md), правка идёт в него, русский пересобирается переводом (ADR-0121).
+
 ## Подготовка
 
 Хранилище и консоль кластера; установлены манифесты `VMS/01-cam/cam.subsystem.yaml`, `VMS/02-rec/rec.subsystem.yaml`,
