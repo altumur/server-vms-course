@@ -1,4 +1,4 @@
-# The consolem API tests @39ba6a3 in the profile of the VMS stand (V/11.6 Н1.2; ADR-0094 addendum (18)): one row per check of the page tests/api.html.
+# The consolem API tests @a9a96e2 (reconciled with @39ba6a3: the same 255 checks, the export has no API tests of the fork — the own suite, V/11.20 Н5) in the profile of the VMS stand (V/11.6 Н1.2; ADR-0094 addendum (18)): one row per check of the page tests/api.html.
 # profile: in — MUST pass; skip — the page skips it itself by the test's needs; out — outside the profile, the page row is not judged.
 # The stand driver judges by this table, data-apitest of the page is not read. file — the test file, harness — an end-to-end check.
 # Operations of the profile that only an out test calls are checked by the own suite acceptance/ (ADR-0094 addendum (18) item 3). Reconciled on a new commit of the contract.
