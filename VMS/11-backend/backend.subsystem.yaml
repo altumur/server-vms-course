@@ -125,6 +125,11 @@ door:
       - GET rec/heartbeats           # the words of a hold in the pulse
       - rec/requests                 # filing a fetch (V/11.4 Н1.25)
       - marks                        # a bookmark: POST only, `edit` on the unit of the body, the ticket's person (V/11.4 Н1.24)
+      - exp/parts                    # an export order: the part rows in one batch, reads, a part without a holder by CAS (V/11.20; V/08.6, V/08.8 Н1.4)
+      - exp/requests                 # cancel, delete of a part (V/11.20 Н1.4; V/08.8)
+      - GET exp/where                # the file door and the person's token: the link to a file (V/11.20 Н1.6; V/08.9 Н1.1)
+      - GET exp/heartbeats           # a part's holder alive: the heartbeat against LOST_AFTER (V/11.20 Н1.4; V/08.8 Н1.4)
+      - domain/verify                # the supervision of an order (V/11.20 Н1.2; ADR-0119 п. 5)
       - GET domain/rec/books/primaries/* # recordings of other clusters: the section of the camera's ref at the holder (V/11.4 Н1.22)
       - GET domain/at/rec/where      # the door of a recording of another cluster
       - GET domain/at/rec/timeline   # the timeline of another cluster, its console passes it (ADR-0112 доп. (13) п. 10; P/06.7 Н1.6)
@@ -204,7 +209,7 @@ tables:
       h:        {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of user, 0, key
       user:     {type: string, required: true, schema: {minLength: 1}}   # the person of the ticket; compared on lookup
       idem_key: {type: string, required: true, schema: {minLength: 1}}   # the external idempotencyKey as given
-      op:       {type: string, required: true, enum: [createDevices, updateDevices, deleteObjects, createOperation, updateRules, assignServers]}
+      op:       {type: string, required: true, enum: [createDevices, updateDevices, deleteObjects, createOperation, updateRules, assignServers, createExport]}
       body:     {type: string, required: true, schema: {pattern: "^[0-9a-f]{64}$"}}   # SHA-256 hex of the body's bytes
       state:    {type: string, required: true, enum: [started, done]}
       operation: {type: string, schema: {pattern: "^[0-9a-f]{32}$"}}   # op createOperation: the id of the accepted operation
