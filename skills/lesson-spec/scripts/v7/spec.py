@@ -399,6 +399,8 @@ def placeholder_table(root):
     с заголовком KEYS_HEADER; грамматика — переносимое выражение `^(?:…)$` (слой 5) на подстроку ключа, которую занимает
     плейсхолдер (`/` — только если грамматика его берёт); пример — по грамматике."""
     path = Path(root) / KEYS_README
+    if (Path(root) / "Platform/common/ru").is_dir():     # ADR-0124: шапка KEYS_HEADER — у русского перевода ru/
+        path = Path(root) / "Platform/common/ru" / KEYS_README.relative_to("Platform/common")
     if not path.is_file():
         return None, ["%s: no file — the placeholder table of the catalog keys (%s)" % (KEYS_README,
                                                                                      " | ".join(KEYS_HEADER))]

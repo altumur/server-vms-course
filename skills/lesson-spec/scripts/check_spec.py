@@ -1534,6 +1534,7 @@ class Check:
     def directives(self, table, stands):
         known, found = set(), False
         for stand in dict.fromkeys(stands):
+            stand = human_text(stand, self.root)       # «Словарь директив» — русский заголовок (ADR-0124: ru/ у common)
             text = self.read(stand) if stand.exists() else None
             section = re.search(r"Словарь директив.*?(?=^## |\Z)", text or "", re.S | re.M)
             if section is not None:
@@ -2009,7 +2010,7 @@ class Check:
             return
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         from v7 import schema as v7schema
-        layers = self.root / "Platform/common/LAYERS.md"
+        layers = human_text(self.root / "Platform/common/LAYERS.md", self.root)
         words, inside = {}, False
         for line in layers.read_text(encoding="utf-8").split("\n"):
             if line.startswith("## "):
@@ -2117,8 +2118,8 @@ class Check:
     def library_defects(self):
         if not self.v7:
             return
-        path = Path(os.path.normpath(self.root / self.LIBRARY_DEFECTS))
-        layers = self.root / "Platform/common/LAYERS.md"
+        path = human_text(Path(os.path.normpath(self.root / self.LIBRARY_DEFECTS)), self.root)   # столбец «Вектор»
+        layers = human_text(self.root / "Platform/common/LAYERS.md", self.root)
         if not path.is_file():
             if layers.is_file() and "versions/DEFECTS.md" in layers.read_text(encoding="utf-8"):
                 self.error(path, "no file: LAYERS.md names the list of library defects")
