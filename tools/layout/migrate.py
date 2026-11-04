@@ -353,9 +353,9 @@ def main(argv):
         prune_empty(home)
         print(f"{home}: {n} files → canonical paths, forms/, journal/")
         return 0
-    homes = moved_homes()
-    moves = [(o, n, k) for lesson, o, n, k in read_moves()]
-    rw = Rewriter(Path.cwd(), homes, moves)
+    homes = moved_homes()                               # classes of files: every lesson moved so far
+    rw = Rewriter(Path.cwd(), homes, rows)              # places and targets: this lesson only — the links of lessons moved
+    #                                                     before are already by the new layout (run once per lesson)
     touched = []
     for path in tracked():
         if path.endswith(".md") and rw.rewrite(path):
