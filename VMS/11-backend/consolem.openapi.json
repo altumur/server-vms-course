@@ -5281,7 +5281,7 @@
           "assist"
         ],
         "summary": "Ход разговора с ассистентом (SSE)",
-        "description": "Ответ — поток text/event-stream: на сообщение строка data: (AssistEvent), без event: и без id:. Ход длится от десятков секунд до нескольких минут. Закрыть поток — отменить ход. Оборванный поток не продолжается: клиент повторяет запрос. Поток без завершающего сообщения — обрыв, UPSTREAM_UNAVAILABLE. «Применить» — POST /devices/update с items плана и новым idempotencyKey (устройство изменилось после плана — его строка в failed с VERSION_MISMATCH) или групповая операция POST /operations с version плана в expectedVersions (изменилось — 412 VERSION_MISMATCH, ничего не записано): так делает форма, план настройки идёт черновиком групповой карточки. Без него ничего не пишется. Что это за реплика — настройка устройств, правило автоматизации или вопрос о системе, — бэкенд решает сам по каждой реплике, поля типа в запросе и в событиях нет: в одном разговоре бывают и вопрос, и правка, и правило. Вопрос о системе — конечное событие answer, плана нет. Отбор («дай список», «покажи», «выведи») — конечное событие found: отбирает бэкенд по полям Device, форма показывает отобранное в дереве; ничего не пишет. План правил — поле rules, «Применить» — двери из описания AssistRuleEdit сессией человека.",
+        "description": "Ответ — поток text/event-stream: на сообщение строка data: (AssistEvent), без event: и без id:. Ход длится от десятков секунд до нескольких минут. Закрыть поток — отменить ход. Оборванный поток не продолжается: клиент повторяет запрос. Поток без завершающего сообщения — обрыв, UPSTREAM_UNAVAILABLE. «Применить» — POST /devices/update с items плана и новым idempotencyKey (устройство изменилось после плана — его строка в failed с VERSION_MISMATCH) или групповая операция POST /operations с version плана в expectedVersions (изменилось — 412 VERSION_MISMATCH, ничего не записано): так делает форма, план настройки идёт черновиком групповой карточки. Без него ничего не пишется. Что это за реплика — настройка устройств, правило автоматизации или вопрос о системе, — бэкенд решает сам по каждой реплике, поля типа в запросе и в событиях нет: в одном разговоре бывают и вопрос, и правка, и правило. Вопрос о системе — конечное событие answer, плана нет. Отбор («дай список», «покажи», «выведи») — конечное событие found: отбирает бэкенд по полям Device, форма показывает отобранное в дереве; ничего не пишет. План правил — поле rules, «Применить» — двери из описания AssistRuleEdit сессией человека. План выгрузки («выгрузи», «экспорт», «кадр с камеры») — поле export: форма открывает окно выгрузки с этим заказом и зовёт POST /exports/check, пароль и супервизора вводит человек, создаёт заказ POST /exports по кнопке; без createExport такого плана нет.",
         "requestBody": {
           "required": true,
           "content": {
@@ -17575,7 +17575,7 @@
             "x-enum-descriptions": {
               "progress": "Что ассистент делает сейчас: text. Может приходить много раз",
               "question": "Нужно уточнение: text, context. Ответ человека — новый запрос с этим context",
-              "plan": "План: summary, context, items или rules. Частичных планов нет: не может всё — refused",
+              "plan": "План: summary, context и items, rules или export. Частичных планов нет: не может всё — refused",
               "refused": "Не может: text, context, field",
               "error": "Ошибка: code, message",
               "answer": "Ответ на вопрос о системе: text, context. Плана нет, ничего не меняется. Разговор продолжается новым запросом с этим context",
@@ -17618,6 +17618,10 @@
               "$ref": "#/components/schemas/AssistRuleEdit"
             },
             "description": "План правил: записи по порядку. Предложение, а не запись: ход ничего не пишет"
+          },
+          "export": {
+            "$ref": "#/components/schemas/AssistExport",
+            "description": "План выгрузки: тело POST /exports/check и POST /exports. Ход ничего не пишет: форма открывает окно выгрузки, проверяет заказ, пароль и супервизора вводит человек. Бывает, только если объявлен createExport"
           },
           "ids": {
             "type": "array",
@@ -20668,6 +20672,152 @@
                 "writeOnly": true
               }
             }
+          },
+          "destination": {
+            "type": "string",
+            "enum": [
+              "download",
+              "cloud"
+            ],
+            "x-enum-descriptions": {
+              "download": "Скачать по ссылке",
+              "cloud": "В облако (exportCloud)"
+            }
+          },
+          "quality": {
+            "$ref": "#/components/schemas/ExportQuality"
+          },
+          "special": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "player": {
+                "type": "boolean"
+              },
+              "audio": {
+                "type": "boolean",
+                "description": "Звук записи (exportAudio)"
+              },
+              "maxFileMb": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Части файла не больше, МБ; нет — limits.maxFileMbDefault"
+              }
+            }
+          },
+          "highlight": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Треки детекторов и маркеры закладок (exportTracks)",
+            "properties": {
+              "detectorIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "bookmarks": {
+                "type": "boolean"
+              }
+            }
+          },
+          "privacy": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Маскирование (exportPrivacy). Без права смотреть без маски сервер ставит её сам: Export.enforced.privacy",
+            "properties": {
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "hide",
+                  "invert"
+                ],
+                "x-enum-descriptions": {
+                  "none": "Не скрывать",
+                  "hide": "Скрыть объекты",
+                  "invert": "Скрыть всё, кроме объектов"
+                }
+              }
+            }
+          },
+          "titles": {
+            "$ref": "#/components/schemas/ExportTitles"
+          }
+        }
+      },
+      "AssistExport": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "cameras",
+          "format"
+        ],
+        "description": "План выгрузки от ассистента: ExportCreate без password, supervisor и idempotencyKey — их вводит человек в окне выгрузки. Тело для POST /exports/check и POST /exports",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "video",
+              "frame"
+            ],
+            "x-enum-descriptions": {
+              "video": "Видео за отрезки periods",
+              "frame": "Один кадр: из архива в момент at или живой"
+            }
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "archive",
+              "live"
+            ],
+            "description": "Нет — archive",
+            "x-enum-descriptions": {
+              "archive": "Из записи",
+              "live": "Живой кадр: только mode: frame, момент — сейчас по часам сервера; камера без связи — 409 DEVICE_OFFLINE"
+            }
+          },
+          "cameras": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/ExportCamera"
+            },
+            "description": "Больше limits.maxCameras — 422 LIMIT_EXCEEDED"
+          },
+          "periods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExportPeriod"
+            },
+            "description": "mode: video. Больше limits.maxPeriods или суммарно дольше limits.maxTotalSec — 422 LIMIT_EXCEEDED"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "mode: frame, source: archive — момент кадра"
+          },
+          "bookmarkId": {
+            "type": "string",
+            "description": "Вход «закладка»: подпись и титр «закладка». Отрезки окно берёт из закладки само"
+          },
+          "format": {
+            "type": "string",
+            "description": "id из reference.export.formats; вид формата не совпал с mode — 422 NOT_SUPPORTED, field: /format"
+          },
+          "singleFile": {
+            "type": "boolean",
+            "description": "Все камеры дорожками в одном файле: только где formats[].singleFile = tracks"
+          },
+          "name": {
+            "type": "string",
+            "description": "Предложение имени; итог — Export.files[].name"
+          },
+          "comment": {
+            "type": "string"
           },
           "destination": {
             "type": "string",
