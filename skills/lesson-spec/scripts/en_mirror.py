@@ -32,6 +32,7 @@ import re
 from pathlib import Path
 
 MARK = "производный от en, руками не правится"      # прежняя раскладка (ADR-0121)
+REQ_ANCHOR = re.compile(r"^<!-- (?:req|removed): [^\n]*-->\n", re.M)   # якоря требований (ADR-0122 доп. (1) п. 1)
 # Машинный Markdown: байты продукта (промпты ассистента V/11 `harness/**`), уже английские, без перевода и вне пар
 # (ADR-0124 доп. (1) п. 4; tools/layout/migrate.py — то же правило).
 MACHINE_MD = re.compile(r"(?:^|/)harness/")
@@ -326,6 +327,7 @@ def compare(ru_text, en_text, ru_path, en_path, root):
     """→ list of messages (empty: the texts agree). Built blocks between `<!-- …:begin/end -->` (sections.py) are
     compared as they are: the English source carries the block byte for byte until sections.py has an English mode
     (in the layout of ADR-0124 — byte for byte but the targets of links, resolved from each file)."""
+    en_text = REQ_ANCHOR.sub("", en_text)           # якоря требований и надгробия — только у источника (ADR-0122 доп. (1) п. 1)
     ru_blocks, en_blocks = BUILT.findall(ru_text), BUILT.findall(en_text)
     built_ru, built_en = [m.group(0) for m in BUILT.finditer(ru_text)], [m.group(0) for m in BUILT.finditer(en_text)]
     new = home_of(Path(ru_path).resolve(), Path(root).resolve()) is not None

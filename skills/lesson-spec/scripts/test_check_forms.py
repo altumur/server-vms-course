@@ -69,6 +69,17 @@ class Forms(unittest.TestCase):
         self.edit("forms/stages.tsv", "\t-\tdoor,refusals\t", "\t-\tdoor,shell\t")
         self.assertTrue(check_forms.check_stage_parts(self.lesson / "forms/stages.tsv")[0])
 
+    def test_req_anchors(self):                         # ADR-0122 доп. (1) п. 1: номера требований
+        self.assertEqual(check_forms.check_req_anchors(self.lesson)[0], [])
+        self.edit("spec/01.1-store.norms.md", "<!-- req: P/01.1-R002 -->", "<!-- req: P/01.1-R001 -->")
+        self.assertTrue(any("repeats" in e for e in check_forms.check_req_anchors(self.lesson)[0]))
+        self.edit("spec/01.1-store.norms.md", "<!-- req: P/01.1-R001 -->\nA common rule", "<!-- req: P/01.2-R002 -->\nA common rule")
+        self.assertTrue(any("not of this chapter" in e for e in check_forms.check_req_anchors(self.lesson)[0]))
+
+    def test_req_tombstone(self):
+        self.edit("spec/01.1-store.norms.md", "<!-- req: P/01.1-R003 -->", "<!-- removed: P/01.1-R002 by ADR-0122 -->\n<!-- req: P/01.1-R003 -->")
+        self.assertTrue(any("reuses a removed" in e for e in check_forms.check_req_anchors(self.lesson)[0]))
+
     def test_refusal_code_kind(self):
         self.edit("forms/refusals.tsv", "1.1\t9\tguard_mismatch\thttp\t412\t", "1.1\t9\tguard_mismatch\thttp\t409\t")
         self.assertTrue(self.refusals())
