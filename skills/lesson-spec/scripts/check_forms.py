@@ -254,7 +254,7 @@ def check_refusals(path):
     return errors, stats
 
 
-KIT_PARTS = {"writecheck", "door", "flags", "refusals", "vectors", "stagetests"}   # ADR-0126 доп. (2) п. 1, доп. (7) п. 4
+KIT_PARTS = {"writecheck", "door", "flags", "refusals", "vectors", "stagetests", "launch"}   # ADR-0126 доп. (2) п. 1, доп. (7) п. 4; ADR-0083 доп. (95) п. 3
 GATE = re.compile(r"tests:([0-9]+\.[0-9]+):([^:;\s]+)(:seams)?|accept:([0-9]+\.[0-9]+):([^:;\s]+)|vectors:([a-z0-9-]+)|build")
 
 
@@ -264,8 +264,8 @@ def stage_forms(root):
 
 def check_stage_parts(path):
     """ADR-0126 доп. (4) п. 13: колонки `kit` (этап закрыт пакетом целиком) и `parts` (части, которыми этап пользуется) —
-    `-` или перечень через запятую из KIT_PARTS; часть не названа дважды в одной строке. Прочую сверку формы этапов
-    ведёт `check_spec` («Архитектор»)."""
+    `-` или перечень через запятую из KIT_PARTS; часть не названа дважды в одной строке; `n` идут по порядку с 1, `depends` —
+    `-` или номера прежних этапов (ADR-0126 доп. (1)). Прочую сверку формы этапов ведёт `check_spec` («Архитектор»)."""
     path = Path(path)
     lines = [line for line in path.read_text(encoding="utf-8").splitlines() if not line.startswith("#")]
     head = lines[0].split("\t") if lines else []
@@ -273,8 +273,12 @@ def check_stage_parts(path):
     if errors:
         return errors, {}
     lesson = path.parent.parent
-    for line in lines[1:]:
+    for i, line in enumerate(lines[1:], 1):
         r = dict(zip(head, line.split("\t")))
+        if "n" in r and r["n"] != str(i):
+            errors.append(f"{path.name}: {r['stage']}: n {r['n']!r} — expected {i}")
+        if r.get("depends", "-") != "-" and not all(d.isdigit() and 0 < int(d) < i for d in r["depends"].split(",")):
+            errors.append(f"{path.name}: {r['stage']}: depends {r['depends']!r} — not the n of former stages")
         for check in r.get("gate", "").split(";"):
             errors += gate_errors(lesson, r["stage"], check)
         for column in ("kit", "parts"):
