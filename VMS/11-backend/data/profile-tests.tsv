@@ -1,270 +1,270 @@
-# Тесты API consolem @39ba6a3 в профиле стенда VMS (V/11.6 Н1.2; ADR-0094 доп. (18)): одна строка на проверку страницы tests/api.html.
-# profile: in — обязана пройти; skip — страница сама пропускает по needs теста; out — вне профиля, строка страницы не судится.
-# Судит драйвер стенда по этой таблице, data-apitest страницы не читается. file — файл теста, harness — сквозная проверка.
-# Операции профиля, которые вызывает только тест out, проверяет свой набор acceptance/ (ADR-0094 доп. (18) п. 3). Сверяется при новом коммите контракта.
+# The consolem API tests @39ba6a3 in the profile of the VMS stand (V/11.6 Н1.2; ADR-0094 addendum (18)): one row per check of the page tests/api.html.
+# profile: in — MUST pass; skip — the page skips it itself by the test's needs; out — outside the profile, the page row is not judged.
+# The stand driver judges by this table, data-apitest of the page is not read. file — the test file, harness — an end-to-end check.
+# Operations of the profile that only an out test calls are checked by the own suite acceptance/ (ADR-0094 addendum (18) item 3). Reconciled on a new commit of the contract.
 file	test	profile	reason
 harness	Файлы тестов загрузились	in	-
 harness	Ответы соответствуют openapi.json	in	-
 harness	Неподдержанные операции отвечают 404 NO_ROUTE	in	-
-harness	Каждая объявленная операция покрыта тестами	out	DELETE /devices зовёт только тест, который падает раньше на поле none (V/11.3 Н4); покрытие держит перечень V/11.6 Н1.2
+harness	Каждая объявленная операция покрыта тестами	out	DELETE /devices is called only by a test that fails earlier on a none field (V/11.3 Н4); coverage is held by the listing of V/11.6 Н1.2
 api-read.js	Чтение: каждая коллекция отдаёт столько записей, сколько в эталонном наборе	in	-
 api-read.js	Чтение одной записи: тело как в списке, версия в ETag	in	-
 api-read.js	Нет записи — 404 NOT_FOUND; нет операции — 404 NO_ROUTE	in	-
 api-read.js	Текущий администратор и часы сервера: me набора, время — сейчас по стенду	in	-
-api-read.js	Времена набора сдвинуты на «сейчас − capturedAt»: моменты — точно, даты — на целые сутки	out	ждёт journal[0].at набора: журнал растёт, сброс его не откатывает (V/11.6 Н1.3)
-api-read.js	Справочники: коды, без подписей	out	ждёт вендора набора: deviceModels — файл пакета, данных нет (V/11.3 Н1.3); справочник — acceptance/4
+api-read.js	Времена набора сдвинуты на «сейчас − capturedAt»: моменты — точно, даты — на целые сутки	out	expects journal[0].at of the set: the log grows, a reset does not roll it back (V/11.6 Н1.3)
+api-read.js	Справочники: коды, без подписей	out	expects the vendor of the set: deviceModels is a package file, there is no data (V/11.3 Н1.3); the reference — acceptance/4
 api-read.js	Возможности системы: объявлены в справочниках, как в наборе; обязательный минимум есть	in	-
 api-read.js	Неподдержанные вид устройства и настройки — 422 NOT_SUPPORTED, ничего не меняется	in	-
-api-read.js	Права, опции, лицензии: снимок с версией в ETag	out	зовёт getSettings: опции вне профиля (ETag опций)
-api-read.js	Журнал: новые первыми, фильтр по категории	out	ждёт длину журнала набора: журнал растёт, сброс его не откатывает (V/11.6 Н1.3); GET /journal — acceptance/4
-api-read.js	Срабатывания правила: только этого правила, новые первыми	out	ждёт ruleFires набора: журнал растёт, сброс его не откатывает (V/11.6 Н1.3); GET /rules/{id}/fires — acceptance/4 17-rules
-api-read.js	Поиск в сети: последний итог домена — найденные устройства; домен без поиска — idle	out	нужен второй домен без поиска, набор one-domain: второго домена нет; idle и последний итог — acceptance/4 14-discovery
-api-read.js	Стенд: fixturePatch меняет набор только на этот прогон	out	fixturePatch стенд не исполняет (V/11.6 Н1.3)
-api-read.js	Стенд: actAs — прогон от имени другого администратора	out	actAs стенд не исполняет (V/11.6 Н1.3)
-api-read.js	Стенд: часы стоят и идут только по /test/clock; назад — нельзя	skip	система не умеет: остановленные часы
-api-read.js	Стенд: устройство потеряло и вернуло связь — запись и поток, версия не растёт	out	зовёт /test/events: 404 NO_ROUTE (V/11.6 Н1.3)
+api-read.js	Права, опции, лицензии: снимок с версией в ETag	out	calls getSettings: options are outside the profile (the options ETag)
+api-read.js	Журнал: новые первыми, фильтр по категории	out	expects the log length of the set: the log grows, a reset does not roll it back (V/11.6 Н1.3); GET /journal — acceptance/4
+api-read.js	Срабатывания правила: только этого правила, новые первыми	out	expects ruleFires of the set: the log grows, a reset does not roll it back (V/11.6 Н1.3); GET /rules/{id}/fires — acceptance/4 17-rules
+api-read.js	Поиск в сети: последний итог домена — найденные устройства; домен без поиска — idle	out	needs a second domain without discovery, the set one-domain: there is no second domain; idle and the last result — acceptance/4 14-discovery
+api-read.js	Стенд: fixturePatch меняет набор только на этот прогон	out	the stand does not execute fixturePatch (V/11.6 Н1.3)
+api-read.js	Стенд: actAs — прогон от имени другого администратора	out	the stand does not execute actAs (V/11.6 Н1.3)
+api-read.js	Стенд: часы стоят и идут только по /test/clock; назад — нельзя	skip	the system cannot: a stopped clock
+api-read.js	Стенд: устройство потеряло и вернуло связь — запись и поток, версия не растёт	out	calls /test/events: 404 NO_ROUTE (V/11.6 Н1.3)
 api-hardware.js	Устройство: переименовать — 200, версия +1, ETag, изменение в потоке	in	-
 api-hardware.js	Устройство: без If-Match — 428, старая версия — 412 с актуальной записью	in	-
 api-hardware.js	Устройство: пустое имя — 422 NAME_REQUIRED; чужое поле или тип — 422 VALIDATION_FAILED; нет устройства — 404	in	-
-api-hardware.js	Устройство: null убирает поле; пароль не возвращается, только hasPassword	out	identifier: null — поле read: 422 NOT_SUPPORTED (V/11.3 Н4); пароль — acceptance/4
-api-hardware.js	Операция: план карточки — шаги по одному, итог ok, объект и папки изменены, ход в потоке	out	preRecordSec — поле none, шаг fail (V/11.3 Н4); операция — acceptance/4
+api-hardware.js	Устройство: null убирает поле; пароль не возвращается, только hasPassword	out	identifier: null — a read field: 422 NOT_SUPPORTED (V/11.3 Н4); the password — acceptance/4
+api-hardware.js	Операция: план карточки — шаги по одному, итог ok, объект и папки изменены, ход в потоке	out	preRecordSec — a none field, the step fails (V/11.3 Н4); the operation — acceptance/4
 api-hardware.js	Операция: версия объекта не та, что в плане — 412, ничего не выполняется; версии нет — 428	in	-
 api-hardware.js	Операция: шаг с set и folderIds сразу, папка чужого домена, нет устройства — отказ до выполнения	in	-
 api-hardware.js	Операция: повтор с тем же idempotencyKey — та же операция, второй раз не выполняется	in	-
 api-hardware.js	Операция: над объектом уже идёт другая — 409 BUSY	in	-
-api-hardware.js	Операция: частичный успех — сервер без связи и превышенная лицензия дают fail с кодом, остальное выполняется	out	SERVER_OFFLINE и лицензии в нормах V/11 нет (V/11.4 Н1.8)
-api-hardware.js	Операция: пауза — шаги стоят; продолжить — идут; отменить оставшееся — cancel	out	пауза устарела, 404 NO_ROUTE (V/11.2 № 40)
+api-hardware.js	Операция: частичный успех — сервер без связи и превышенная лицензия дают fail с кодом, остальное выполняется	out	SERVER_OFFLINE and licences are not in the norms of V/11 (V/11.4 Н1.8)
+api-hardware.js	Операция: пауза — шаги стоят; продолжить — идут; отменить оставшееся — cancel	out	the pause is obsolete, 404 NO_ROUTE (V/11.2 No. 40)
 api-hardware.js	Операция: пока идёт, её объекты не меняются и другими запросами — 409 BUSY, в пакетной правке — failed BUSY; после отмены — можно	in	-
-api-hardware.js	Операция: папку, в которую ещё не выполненный шаг кладёт объект, удалить нельзя — 409 BUSY; переименовать можно	out	двери папок занятость не судят, предел V/11.4 Н1.8
-api-hardware.js	Операция: «Повторить неудачные» — новая операция только с неудачными шагами	out	SERVER_OFFLINE нет: шаг fail не держится (V/11.4 Н1.8); retry-failed — acceptance/4
+api-hardware.js	Операция: папку, в которую ещё не выполненный шаг кладёт объект, удалить нельзя — 409 BUSY; переименовать можно	out	the folder doors do not judge occupancy, a limit of V/11.4 Н1.8
+api-hardware.js	Операция: «Повторить неудачные» — новая операция только с неудачными шагами	out	there is no SERVER_OFFLINE: a fail step is not held (V/11.4 Н1.8); retry-failed — acceptance/4
 api-hardware.js	Операция: «Отменить» — объекты возвращаются к «до» обратной операцией, второй раз нельзя	in	-
-api-hardware.js	Операция: «Отменить» после чужой правки того же поля — шаг отката fail VERSION_MISMATCH, чужое не затирается	out	правит name сервера: 422 NOT_SUPPORTED (V/11.4 Н1.19); чужая правка поля — acceptance/4 19-revert
-api-domains.js	Домен: создать — 201, имя занято (без учёта регистра) — 409, пустое — 422	skip	система не умеет: createDomain
-api-domains.js	Домен: переименовать и задать лицензию — PATCH с версией; чужое имя — 409	out	зовёт patchDomain: вне профиля
-api-domains.js	Домен: удалить с переносом — серверы нераспределённые в целевом, папки, устройства, хранилища и найденное — там же	skip	система не умеет: deleteDomain
-api-domains.js	Домен: пустой удаляется без moveTo; последний — 409 LAST_DOMAIN	skip	система не умеет: createDomain, deleteDomain
-api-domains.js	Серверы: добавить в домен и исключить одним запросом — версия +1, добавленный в конце списка	out	нужна стучащаяся коробка: POST /servers/assign — acceptance/4 38-assign
-api-domains.js	Серверы: частичный успех — устаревшая версия и неизвестный сервер в failed, остальное выполнено	out	нужна стучащаяся коробка: POST /servers/assign — acceptance/4 38-assign
-api-domains.js	Серверы: повтор с тем же idempotencyKey — тот же ответ, второй раз не выполняется	out	нужна стучащаяся коробка: POST /servers/assign — acceptance/4 38-assign
-api-domains.js	Серверы: опрос адресов — в домене, найден, не отвечает; лишние адреса — 422	out	зовёт probeServers: вне профиля
-api-domains.js	Серверы: завести по адресу — нераспределённый в домене; тот же адрес — 409; неверный — 422	out	зовёт createServer: вне профиля
-api-domains.js	Сервер: PATCH — имя, роль и сеть (если система их умеет); неизвестная роль — 422	out	правит name, роль сервера: 422 NOT_SUPPORTED (V/11.4 Н1.19)
-api-domains.js	Операция: план карточки сервера и домена; сервер без связи — fail SERVER_OFFLINE	out	ServerPatch, DomainPatch — fail NOT_SUPPORTED (V/11.4 Н1.8 п. 6)
+api-hardware.js	Операция: «Отменить» после чужой правки того же поля — шаг отката fail VERSION_MISMATCH, чужое не затирается	out	edits the server name: 422 NOT_SUPPORTED (V/11.4 Н1.19); someone else's edit of a field — acceptance/4 19-revert
+api-domains.js	Домен: создать — 201, имя занято (без учёта регистра) — 409, пустое — 422	skip	the system cannot: createDomain
+api-domains.js	Домен: переименовать и задать лицензию — PATCH с версией; чужое имя — 409	out	calls patchDomain: outside the profile
+api-domains.js	Домен: удалить с переносом — серверы нераспределённые в целевом, папки, устройства, хранилища и найденное — там же	skip	the system cannot: deleteDomain
+api-domains.js	Домен: пустой удаляется без moveTo; последний — 409 LAST_DOMAIN	skip	the system cannot: createDomain, deleteDomain
+api-domains.js	Серверы: добавить в домен и исключить одним запросом — версия +1, добавленный в конце списка	out	needs a knocking box: POST /servers/assign — acceptance/4 38-assign
+api-domains.js	Серверы: частичный успех — устаревшая версия и неизвестный сервер в failed, остальное выполнено	out	needs a knocking box: POST /servers/assign — acceptance/4 38-assign
+api-domains.js	Серверы: повтор с тем же idempotencyKey — тот же ответ, второй раз не выполняется	out	needs a knocking box: POST /servers/assign — acceptance/4 38-assign
+api-domains.js	Серверы: опрос адресов — в домене, найден, не отвечает; лишние адреса — 422	out	calls probeServers: outside the profile
+api-domains.js	Серверы: завести по адресу — нераспределённый в домене; тот же адрес — 409; неверный — 422	out	calls createServer: outside the profile
+api-domains.js	Сервер: PATCH — имя, роль и сеть (если система их умеет); неизвестная роль — 422	out	edits the name, the role of a server: 422 NOT_SUPPORTED (V/11.4 Н1.19)
+api-domains.js	Операция: план карточки сервера и домена; сервер без связи — fail SERVER_OFFLINE	out	ServerPatch, DomainPatch — fail NOT_SUPPORTED (V/11.4 Н1.8 item 6)
 api-domains.js	Папка: создать корневую и вложенную; родитель в другом домене — 422	in	-
 api-domains.js	Папка: переименовать, очистить, задать состав; устройство чужого домена — 422	in	-
-api-domains.js	Папка: удалить вместе с подпапками, устройства остаются; без версии — 428	out	id папки сброс не вернёт (V/11.6 Н1.3); DELETE /folders — acceptance/4
-api-storage.js	Хранилище: создать локальное с первым томом — 201, оба в списках	out	storage: object у локального, иное имя тома, mode: dir — 422 NOT_SUPPORTED (V/11.3 Н1.1, Н1.3); POST /archives — acceptance/4
-api-storage.js	Хранилище: блочное не шифруется; бакет — всегда объектное; раздел целиком — неотформатирован	out	mode — поле none, состояния unfmt нет (V/11.3 Н1.3); POST /archives, облачное — acceptance/4
-api-storage.js	Хранилище: отказы — нет имени, двух владельцев, локальное без сервера, облако без бакета, чужой диск	out	двух владельцев и диска норма не судит (V/11.3 Н1.3); нет имени, локальное без сервера, нет сервера — acceptance/4
-api-storage.js	Том: добавить на свободный диск; тот же диск в этом хранилище и раздел на занятом диске — 409 DISK_TAKEN	skip	система не умеет: createVolume
-api-storage.js	Хранилище и том: PATCH с версией; пароль NAS — только запись	out	name хранилища — ключ строки: 422 NOT_SUPPORTED; remote у нас — бакет, login, password тома — поля none (V/11.3 Н1.3); PATCH /archives, /volumes — acceptance/4
-api-storage.js	Том: форматировать — сразу format, через 1,5 с ready и 0%; повторно во время — 409	out	зовёт formatVolume: вне профиля
-api-storage.js	Том: удалить — 204, его нет; хранилище остаётся	skip	система не умеет: deleteVolume
-api-storage.js	Хранилище: удалить — тома удалены, камеры остаются: основным — следующее, без него запись выключена	out	recordMode: motion у элемента extraArchives — 422 NOT_SUPPORTED: строка записи на камеру, не на архив (V/11.4 Н1.2); DELETE /archives — acceptance/4
-api-storage.js	Проверка подключения: NAS без пользователя и облако без бакета — не подключились	out	зовёт checkArchive: вне профиля; папки NAS у remote нет (V/11.3 Н1.3)
-api-storage.js	Операция: план карточек хранилища и тома; хранилище сервера без связи — fail SERVER_OFFLINE	out	SERVER_OFFLINE в нормах V/11 нет (V/11.4 Н1.8)
-api-devices.js	Добавить: камера с папкой — номер выдал сервер, пароль скрыт, в папке, дочерний детектор создан	out	online — пульс, новая камера не на связи (V/11.3 Н1.2); max + 1 не выходит: счётчик назад не идёт (P/06.1)
+api-domains.js	Папка: удалить вместе с подпапками, устройства остаются; без версии — 428	out	a reset does not bring back the folder id (V/11.6 Н1.3); DELETE /folders — acceptance/4
+api-storage.js	Хранилище: создать локальное с первым томом — 201, оба в списках	out	storage: object on a local one, another volume name, mode: dir — 422 NOT_SUPPORTED (V/11.3 Н1.1, Н1.3); POST /archives — acceptance/4
+api-storage.js	Хранилище: блочное не шифруется; бакет — всегда объектное; раздел целиком — неотформатирован	out	mode — a none field, there is no state unfmt (V/11.3 Н1.3); POST /archives, the cloud one — acceptance/4
+api-storage.js	Хранилище: отказы — нет имени, двух владельцев, локальное без сервера, облако без бакета, чужой диск	out	the norm does not judge two owners and a disk (V/11.3 Н1.3); no name, a local one without a server, no server — acceptance/4
+api-storage.js	Том: добавить на свободный диск; тот же диск в этом хранилище и раздел на занятом диске — 409 DISK_TAKEN	skip	the system cannot: createVolume
+api-storage.js	Хранилище и том: PATCH с версией; пароль NAS — только запись	out	the storage name is the row key: 422 NOT_SUPPORTED; remote is a bucket with us, login, password of a volume are none fields (V/11.3 Н1.3); PATCH /archives, /volumes — acceptance/4
+api-storage.js	Том: форматировать — сразу format, через 1,5 с ready и 0%; повторно во время — 409	out	calls formatVolume: outside the profile
+api-storage.js	Том: удалить — 204, его нет; хранилище остаётся	skip	the system cannot: deleteVolume
+api-storage.js	Хранилище: удалить — тома удалены, камеры остаются: основным — следующее, без него запись выключена	out	recordMode: motion on an extraArchives element — 422 NOT_SUPPORTED: the recording row is per camera, not per archive (V/11.4 Н1.2); DELETE /archives — acceptance/4
+api-storage.js	Проверка подключения: NAS без пользователя и облако без бакета — не подключились	out	calls checkArchive: outside the profile; remote has no NAS folder (V/11.3 Н1.3)
+api-storage.js	Операция: план карточек хранилища и тома; хранилище сервера без связи — fail SERVER_OFFLINE	out	SERVER_OFFLINE is not in the norms of V/11 (V/11.4 Н1.8)
+api-devices.js	Добавить: камера с папкой — номер выдал сервер, пароль скрыт, в папке, дочерний детектор создан	out	online — a heartbeat, a new camera is not connected (V/11.3 Н1.2); max + 1 does not come out: the counter does not go back (P/06.1)
 api-devices.js	Добавить: частичный успех — занятый номер, чужой родитель, папка другого домена	in	-
 api-devices.js	Добавить: дочерний объект под камерой и служба сервера; повтор с тем же ключом — второй раз не создаёт	in	-
 api-devices.js	Добавить из найденного: строка уходит из итога поиска	in	-
 api-devices.js	Изменить сразу: несколько устройств одним запросом, устаревшая версия — в failed	in	-
 api-devices.js	Определить модель: по адресу; неизвестный производитель — null	in	-
-api-devices.js	Удалить устройство: вместе с дочерними, из папок и из записи по детекторам	out	номер камеры сброс не вернёт (V/11.6 Н1.3); DELETE /devices — acceptance/4
+api-devices.js	Удалить устройство: вместе с дочерними, из папок и из записи по детекторам	out	a reset does not bring back the camera number (V/11.6 Н1.3); DELETE /devices — acceptance/4
 api-devices.js	Детектор из карточки камеры: шаг create, «Отменить» удаляет созданное	in	-
-api-devices.js	Поиск в сети: найденное по одному в своём порядке, итог заменяет прежний; во время — 409; остановка	out	ждёт первую находку в ответе 202: находку пишет воркер после ответа (V/11.4 Н1.9); ход, 409, замена итога, остановка — acceptance/4 14-discovery
-api-bulk.js	Групповое удаление: устройства, папка, том одним запросом; дочернее удалённого родителя — тоже удалено	out	удаляет камеру и папку: их id сброс не вернёт (V/11.6 Н1.3); POST /objects/delete — acceptance/4
+api-devices.js	Поиск в сети: найденное по одному в своём порядке, итог заменяет прежний; во время — 409; остановка	out	expects the first finding in the 202 answer: the worker writes the finding after the answer (V/11.4 Н1.9); the run, 409, replacing the result, stopping — acceptance/4 14-discovery
+api-bulk.js	Групповое удаление: устройства, папка, том одним запросом; дочернее удалённого родителя — тоже удалено	out	deletes a camera and a folder: a reset does not bring back their ids (V/11.6 Н1.3); POST /objects/delete — acceptance/4
 api-bulk.js	Групповое удаление: хранилище — камеры переходят на следующее или перестают писать, как у одиночного	in	-
 api-bulk.js	Правка выборки: включить, учётные данные, папка, детектор — одной операцией, «Отменить» возвращает всё	in	-
 api-rules.js	Правило: сохранить целиком — версия новая, автор и время с сервера, в истории — новая версия	in	-
 api-rules.js	Правило: выключенное сохраняется незаконченным; включённое с ошибкой — 422 RULE_INVALID; 428, 412, 404, 422	in	-
-api-rules.js	Правило: создать — id, порядок и первая версия истории от сервера; удалить — с историей, журнал запусков остаётся	out	ждёт id с 7: id у нас UUID v5 (V/11.4 Н1.6); создание, удаление с историей — acceptance/4 17-rules
+api-rules.js	Правило: создать — id, порядок и первая версия истории от сервера; удалить — с историей, журнал запусков остаётся	out	expects an id starting with 7: our id is a UUID v5 (V/11.4 Н1.6); creation, deletion with history — acceptance/4 17-rules
 api-rules.js	Правила группой: состояние и приглушение — частичный успех, «Только журнал» с даты, версия истории за смену состояния	in	-
 api-rules.js	Версия правила не возвращается: «Отменить» и «Вернуть версию» — новая метка; истечение приглушения версию не меняет	in	-
 api-rules.js	«Отменить» — как не было: «Изменено» и «в наблюдении с» прежние, версия записи — новая	in	-
 api-rules.js	Расписание «только здесь» у правила: владелец — правило, удаляется вместе с ним; владельца нет — 422	in	-
 api-rules.js	Порядок правил: всё или ничего — 412, если хоть одна версия не та	in	-
 api-rules.js	Запустить сейчас: трасса кодами — события, проверки, шаги по устройствам; запуск — в журнале; выключенное — 409	in	-
-api-rules.js	Пробный запуск: черновик на выбранных событиях — проверки событий и условий, ничего не выполняет; log — в журнал	out	log: true ждёт запись в журнале сразу: журнал читается с задержкой (V/07.2); проба и log — acceptance/4, @manual
+api-rules.js	Пробный запуск: черновик на выбранных событиях — проверки событий и условий, ничего не выполняет; log — в журнал	out	log: true expects a record in the log at once: the log is read with a delay (V/07.2); the probe and log — acceptance/4, @manual
 api-rules.js	Повторить невыполненное: только отказавшие шаги, на нынешних устройствах; нечего повторять — 409	in	-
-api-rules.js	Удалили устройство — в правилах оно остаётся удалённым по имени: новая версия правила, история поправлена	out	удаляет камеру набора: сброс её не вернёт (V/11.6 Н1.3); каскад gone — acceptance/4 17-rules
-api-rules.js	Расписания: создать, сохранить, удалить — где использовалось, переходит на «Никогда»; встроенные — 409 BUILTIN	out	ждёт id с f: id у нас случайный UUID (глава 3 Н1.2); расписания, BUILTIN, каскад — acceptance/4 18-schedules
+api-rules.js	Удалили устройство — в правилах оно остаётся удалённым по имени: новая версия правила, история поправлена	out	deletes a camera of the set: a reset does not bring it back (V/11.6 Н1.3); the gone cascade — acceptance/4 17-rules
+api-rules.js	Расписания: создать, сохранить, удалить — где использовалось, переходит на «Никогда»; встроенные — 409 BUILTIN	out	expects an id starting with f: our id is a random UUID (chapter 3 Н1.2); schedules, BUILTIN, the cascade — acceptance/4 18-schedules
 api-rules.js	Особые дни: создать, сохранить, удалить — из расписаний пропадают исключения этой группы	in	-
 api-rules.js	Режимы объекта: список целиком с версией; системный не удалить; удалённый уходит из условий; текущий — без версии	in	-
 api-rules.js	Окна обслуживания: создать вместе со своим расписанием, сохранить, удалить — своё расписание уходит с окном	in	-
-api-rules.js	Опции: изменить часть — остальное на месте, версия +1; чужой ключ и значение не из списка — 422	out	зовёт patchSettings: вне профиля
+api-rules.js	Опции: изменить часть — остальное на месте, версия +1; чужой ключ и значение не из списка — 422	out	calls patchSettings: outside the profile
 api-access.js	Права: применить черновик — роль переименована, новый пользователь с ролью, история с автором, версия +1	in	-
 api-access.js	Права: dryRun — проверка без записи	in	-
 api-access.js	Права: повторы имён и логинов (без учёта регистра) — 409; ссылка в никуда — 422	in	-
-api-access.js	Права: защита от самоблокировки — без администраторов и без себя нельзя	out	unr: false у admin — 422 NOT_SUPPORTED раньше SELF_LOCKOUT (V/11.8 Н1.5, ADR-0094 доп. (18) п. 4); SELF_LOCKOUT — acceptance/8
-api-access.js	Синхронизация каталога: сразу run, через 1,5 с ok и время; во время — 409; группа отдельно	out	зовёт syncCatalog: вне профиля
-api-read.js	Журнал: отбор по устройству, подсистеме, времени, limit; truncated и withheldCount	out	ждёт длину журнала набора: журнал растёт, сброс его не откатывает (V/11.6 Н1.3); отбор — acceptance/4 27-journal
-api-hardware.js	Операция: правка другого поля откату не мешает	out	правит ip сервера: 422 NOT_SUPPORTED (V/11.4 Н1.19); другое поле — acceptance/4 19-revert
+api-access.js	Права: защита от самоблокировки — без администраторов и без себя нельзя	out	unr: false for admin — 422 NOT_SUPPORTED before SELF_LOCKOUT (V/11.8 Н1.5, ADR-0094 addendum (18) item 4); SELF_LOCKOUT — acceptance/8
+api-access.js	Синхронизация каталога: сразу run, через 1,5 с ok и время; во время — 409; группа отдельно	out	calls syncCatalog: outside the profile
+api-read.js	Журнал: отбор по устройству, подсистеме, времени, limit; truncated и withheldCount	out	expects the log length of the set: the log grows, a reset does not roll it back (V/11.6 Н1.3); the filter — acceptance/4 27-journal
+api-hardware.js	Операция: правка другого поля откату не мешает	out	edits the server ip: 422 NOT_SUPPORTED (V/11.4 Н1.19); another field — acceptance/4 19-revert
 api-hardware.js	Одиночная правка — операция из одного шага: откат строго по стопке, с верхней	in	-
 api-hardware.js	Откат по стопке: новая правка после отмены становится верхней	in	-
-api-hardware.js	Откат одиночных правок: создание снимается, удаление и пароль — NOT_SUPPORTED, операции без шагов нет	out	удаляет камеру набора: сброс её не вернёт (V/11.6 Н1.3); пароль, удаление — acceptance/4 19-revert
+api-hardware.js	Откат одиночных правок: создание снимается, удаление и пароль — NOT_SUPPORTED, операции без шагов нет	out	deletes a camera of the set: a reset does not bring it back (V/11.6 Н1.3); the password, deletion — acceptance/4 19-revert
 api-hardware.js	Повтор: после отмены значения возвращаются новой операцией, она снова верхняя и отменяется	in	-
 api-hardware.js	Повтор: цепочка — отменили B, затем A, повторяется сначала A, потом B	in	-
 api-hardware.js	Повтор: новая правка очищает его целиком, откат отменённого не очищает	in	-
-api-hardware.js	Повтор: чужая правка поля — шаг fail VERSION_MISMATCH, чужое цело; созданное не создаётся заново; не откатившееся не повторяется	out	правит name сервера: 422 NOT_SUPPORTED (V/11.4 Н1.19); шаги — acceptance/4 28-redo
-api-domains.js	Метки сервера: PATCH, попадают в reference.serverLabels; детектор просит метку, сервера нет — faultText	out	faultText — слово держателя; метки — acceptance/4 31-server-labels
-api-devices.js	Находки сервера: не создаются и не удаляются, 422 NOT_SUPPORTED, field: type	out	строки cam/children пишет держатель: на стенде его нет; acceptance/4 11-devices
-api-devices.js	Находки сервера: правятся только поля из writableFields, у вида без полей — field: type	out	как выше; acceptance/4 11-devices
+api-hardware.js	Повтор: чужая правка поля — шаг fail VERSION_MISMATCH, чужое цело; созданное не создаётся заново; не откатившееся не повторяется	out	edits the server name: 422 NOT_SUPPORTED (V/11.4 Н1.19); the steps — acceptance/4 28-redo
+api-domains.js	Метки сервера: PATCH, попадают в reference.serverLabels; детектор просит метку, сервера нет — faultText	out	faultText is a word of the holder; labels — acceptance/4 31-server-labels
+api-devices.js	Находки сервера: не создаются и не удаляются, 422 NOT_SUPPORTED, field: type	out	the rows cam/children are written by the holder: the stand has none; acceptance/4 11-devices
+api-devices.js	Находки сервера: правятся только поля из writableFields, у вида без полей — field: type	out	as above; acceptance/4 11-devices
 api-devices.js	Справочник: deviceParams не предлагает pulse, debounce, gain, vol, acodec	in	-
-api-devices.js	ipsrv: с записью устройства создаётся, правится своими полями, DELETE оставляет камеры без родителя	out	ждёт отказ на смену адреса: у нас правится в пределах хоста (V/11.4 Н1.2); набор без ipsrv; acceptance/4 11-devices
-api-devices.js	ipsrv без записи: PATCH, DELETE, folderIds — 422 NOT_SUPPORTED	out	набор без ipsrv: acceptance/4 11-devices
-api-devices.js	Записи появляются и пропадают сами, у камеры меняется родитель	out	зовёт /test/events: 404 NO_ROUTE (V/11.6 Н1.3)
+api-devices.js	ipsrv: с записью устройства создаётся, правится своими полями, DELETE оставляет камеры без родителя	out	expects a refusal to change the address: with us it is edited within the host (V/11.4 Н1.2); the set has no ipsrv; acceptance/4 11-devices
+api-devices.js	ipsrv без записи: PATCH, DELETE, folderIds — 422 NOT_SUPPORTED	out	the set has no ipsrv: acceptance/4 11-devices
+api-devices.js	Записи появляются и пропадают сами, у камеры меняется родитель	out	calls /test/events: 404 NO_ROUTE (V/11.6 Н1.3)
 api-devices.js	Адрес камеры: без rtspUrl и без vendor, model — 422, rtspUrl читается и пишется, снять последний адрес нельзя	in	-
 api-devices.js	MAC камеры — только из поиска: без candidateId не хранится, PATCH — 422 NOT_SUPPORTED	in	-
-api-devices.js	Потоки: добавить, изменить, удалить; основной — это Device.res и fps; запись ссылается на id потока	out	online — пульс, держателя на стенде нет (V/11.3 Н1.2); acceptance/4 24-streams
-api-devices.js	Разрешение: латинская x, из resOptions; нет списка — ввод руками; codec только чтение, у потока откат	out	resOptions — строка cam/devices держателя; acceptance/4 24-streams
-api-devices.js	Живое видео: адрес, токен, срок; без связи — 409 DEVICE_OFFLINE; не камера — 422	out	online — пульс, шлюза на стенде нет; acceptance/4 30-live-accounts
-api-devices.js	Встроенный детектор: шаблон из detectorOptions, без них — 422; чувствительность по диапазону, нет настройки — 422	out	файла device-catalog.json у стенда нет; acceptance/4 16-record
-api-devices.js	Несовместимые детекторы: включение — 409 BUSY с params.reason, шаг операции — fail BUSY	out	файла device-catalog.json у стенда нет; чтением
-api-devices.js	Зона: rect, polygon, line в долях кадра, неверная — 422 field: zone; два детектора одного вида; stream и params серверного	out	камера из detectorOptions: файла device-catalog.json у стенда нет; acceptance/4 24-streams
-api-devices.js	Пресеты: задать, переименовать, удалить, откат; камера без PTZ — 422	out	имя пресета только из драйвера, пресет вне стопки (V/11.4 Н1.16); ptz — пульс; acceptance/4 25-ptz
-api-devices.js	Аренда PTZ: срок от ttlSec, продление, стоп, скорости от -1 до 1	out	ptz, online — пульс; зовёт /test/events; acceptance/4 25-ptz
-api-devices.js	Источник: 0.0.0.0 и :: — 422 field: ip; без сервера выбирает система и предупреждает; второй на порт не запустится	out	faultText — слово держателя, на стенде его нет; acceptance/4 13-units
+api-devices.js	Потоки: добавить, изменить, удалить; основной — это Device.res и fps; запись ссылается на id потока	out	online — a heartbeat, the stand has no holder (V/11.3 Н1.2); acceptance/4 24-streams
+api-devices.js	Разрешение: латинская x, из resOptions; нет списка — ввод руками; codec только чтение, у потока откат	out	resOptions is the holder's row cam/devices; acceptance/4 24-streams
+api-devices.js	Живое видео: адрес, токен, срок; без связи — 409 DEVICE_OFFLINE; не камера — 422	out	online — a heartbeat, the stand has no gateway; acceptance/4 30-live-accounts
+api-devices.js	Встроенный детектор: шаблон из detectorOptions, без них — 422; чувствительность по диапазону, нет настройки — 422	out	the stand has no file device-catalog.json; acceptance/4 16-record
+api-devices.js	Несовместимые детекторы: включение — 409 BUSY с params.reason, шаг операции — fail BUSY	out	the stand has no file device-catalog.json; by reading
+api-devices.js	Зона: rect, polygon, line в долях кадра, неверная — 422 field: zone; два детектора одного вида; stream и params серверного	out	a camera from detectorOptions: the stand has no file device-catalog.json; acceptance/4 24-streams
+api-devices.js	Пресеты: задать, переименовать, удалить, откат; камера без PTZ — 422	out	the preset name comes only from the driver, a preset is outside the stack (V/11.4 Н1.16); ptz — a heartbeat; acceptance/4 25-ptz
+api-devices.js	Аренда PTZ: срок от ttlSec, продление, стоп, скорости от -1 до 1	out	ptz, online — a heartbeat; calls /test/events; acceptance/4 25-ptz
+api-devices.js	Источник: 0.0.0.0 и :: — 422 field: ip; без сервера выбирает система и предупреждает; второй на порт не запустится	out	faultText is a word of the holder, the stand has none; acceptance/4 13-units
 api-devices.js	Правило: вид text у источника, match по слову; номера нет	in	-
-api-devices.js	Единица СКУД: шаблон из unitOptions, адрес path, правка model — 422; в папку нельзя; родитель — acfa, камера, ipsrv	out	шаблоны tmpl.* набора продукта: у нас unit-templates.tsv; acceptance/4 13-units
-api-devices.js	Реле: в СКУД заводит оператор, вне СКУД — 422; контроллер: acfa с родителем, без своего подключения, снимается с вложенным	out	как выше; acceptance/4 13-units
-api-devices.js	Команда единицы: выполняется, нет команды — 409 DEVICE_REFUSED, без связи — 409 DEVICE_OFFLINE	out	держателя на стенде нет; зовёт /test/events; acceptance/4 26-unit-op
-api-devices.js	Правило: действие unit с operation, вид unit с word; output на реле двери — 422 NOT_SUPPORTED	out	действие unit вне каталога шагов V/07.1: 422 NOT_SUPPORTED (V/11.3 Н1.3)
-api-devices.js	Профиль при добавлении: разовый выбор, в записи его нет; default — умолчания; template — копия с камеры той же модели	out	файла device-catalog.json у стенда нет; acceptance/4 16-record
-api-devices.js	Метки, тревожные виды, строка записи: хранятся; состояние только чтение	out	ждёт serverLabels непустым: у сервера стенда меток нет; acceptance/4 24-streams
-api-rules.js	Правило: номер входа и выхода — из записи, расхождение с полем правила — 422 RULE_INVALID	out	строк cam/children на стенде нет: acceptance/4 17-rules
+api-devices.js	Единица СКУД: шаблон из unitOptions, адрес path, правка model — 422; в папку нельзя; родитель — acfa, камера, ipsrv	out	the templates tmpl.* of the product set: we have unit-templates.tsv; acceptance/4 13-units
+api-devices.js	Реле: в СКУД заводит оператор, вне СКУД — 422; контроллер: acfa с родителем, без своего подключения, снимается с вложенным	out	as above; acceptance/4 13-units
+api-devices.js	Команда единицы: выполняется, нет команды — 409 DEVICE_REFUSED, без связи — 409 DEVICE_OFFLINE	out	the stand has no holder; calls /test/events; acceptance/4 26-unit-op
+api-devices.js	Правило: действие unit с operation, вид unit с word; output на реле двери — 422 NOT_SUPPORTED	out	the action unit is outside the step catalog of V/07.1: 422 NOT_SUPPORTED (V/11.3 Н1.3)
+api-devices.js	Профиль при добавлении: разовый выбор, в записи его нет; default — умолчания; template — копия с камеры той же модели	out	the stand has no file device-catalog.json; acceptance/4 16-record
+api-devices.js	Метки, тревожные виды, строка записи: хранятся; состояние только чтение	out	expects serverLabels nonempty: the stand server has no labels; acceptance/4 24-streams
+api-rules.js	Правило: номер входа и выхода — из записи, расхождение с полем правила — 422 RULE_INVALID	out	the stand has no rows cam/children: acceptance/4 17-rules
 api-rules.js	Правило: варианты уточнения входа — начало и конец тревоги, номера нет	in	-
-api-access.js	Учётки потоков: создать, пароль один раз, отключить, новый пароль, удалить	out	шлюза live на стенде нет (V/11.6 Н1.1); acceptance/4 30-live-accounts
-api-assist.js	Ассистент: план на камеры, «Применить» — POST /devices/update, старый план — VERSION_MISMATCH	out	заглушка разбирает слова, у нас ход ведёт модель (V/11.7 Н5)
-api-assist.js	Ассистент: вопрос, ответ с context — план; разговор держит клиент	out	как выше
-api-assist.js	Ассистент: отказ по полю и ошибка завершают поток	out	как выше
-api-assist.js	Ассистент: секрет идёт в set и не показывается в пояснении и в context	out	как выше
+api-access.js	Учётки потоков: создать, пароль один раз, отключить, новый пароль, удалить	out	the stand has no live gateway (V/11.6 Н1.1); acceptance/4 30-live-accounts
+api-assist.js	Ассистент: план на камеры, «Применить» — POST /devices/update, старый план — VERSION_MISMATCH	out	the stub parses words, with us the model leads the turn (V/11.7 Н5)
+api-assist.js	Ассистент: вопрос, ответ с context — план; разговор держит клиент	out	as above
+api-assist.js	Ассистент: отказ по полю и ошибка завершают поток	out	as above
+api-assist.js	Ассистент: секрет идёт в set и не показывается в пояснении и в context	out	as above
 api-assist.js	Ассистент: пустая просьба — 422	in	-
-api-storage.js	Откат: правка хранилища и имени тома — одиночные операции, значения возвращаются	out	name тома — ключ строки: 422 NOT_SUPPORTED (V/11.3 Н1.3)
-api-storage.js	Откат: адрес и размер тома — шаг fail NOT_SUPPORTED; прочие шаги той же операции идут	out	login тома — поле none, адрес NAS у network нет (V/11.3 Н1.3)
-api-storage.js	Откат: созданное хранилище и том снимаются; с записью камеры или изменённое — NOT_SUPPORTED	skip	needs createVolume: второго тома нет (V/11.2 № 32)
+api-storage.js	Откат: правка хранилища и имени тома — одиночные операции, значения возвращаются	out	the volume name is the row key: 422 NOT_SUPPORTED (V/11.3 Н1.3)
+api-storage.js	Откат: адрес и размер тома — шаг fail NOT_SUPPORTED; прочие шаги той же операции идут	out	the volume login is a none field, network has no NAS address (V/11.3 Н1.3)
+api-storage.js	Откат: созданное хранилище и том снимаются; с записью камеры или изменённое — NOT_SUPPORTED	skip	needs createVolume: there is no second volume (V/11.2 No. 32)
 api-storage.js	Откат: удаление хранилища и тома, форматирование — в стопке, шаг fail NOT_SUPPORTED	out	POST /volumes/{id}/format — NO_ROUTE (V/11.2 № 37)
-api-archive.js	Виды: справочник — объекты; вид вне списка — 422 NOT_SUPPORTED, field: kind	out	зовёт checkArchive: вне профиля
-api-archive.js	Карта сервера: сервер обязателен, одна на сервер, режим из archiveModes, шифрования нет	out	ждёт умолчание backup: when без слова читается полем нет (V/11.3 Н1.3)
-api-archive.js	Карта сервера: строка у всех камер сервера только для чтения, запись — отказ, правка и удаление меняют камеры	out	строка cam-<cam>-<том> — заказ держателя, стенд без воркеров; свой набор 4/10-archives
+api-archive.js	Виды: справочник — объекты; вид вне списка — 422 NOT_SUPPORTED, field: kind	out	calls checkArchive: outside the profile
+api-archive.js	Карта сервера: сервер обязателен, одна на сервер, режим из archiveModes, шифрования нет	out	expects the default backup: when without a word reads as no field (V/11.3 Н1.3)
+api-archive.js	Карта сервера: строка у всех камер сервера только для чтения, запись — отказ, правка и удаление меняют камеры	out	the row cam-<cam>-<том> is an order of the holder, the stand has no workers; own suite 4/10-archives
 api-archive.js	Запись камеры по виду: backup — только дополнительный на виде backup, инциденты не привязываются	in	-
 api-archive.js	Создание камеры: те же правила записи	in	-
 api-archive.js	Хранилище снято: резерв на сбой основным не становится	in	-
 api-archive.js	Архив не принимает записи: новая привязка — отказ, инциденты всегда false	in	-
 api-archive.js	Том: меньший объём — второе подтверждение, то же число; не хранится	in	-
-api-archive.js	Том: объявленное уменьшение ждёт подтверждения; выключение — состояние off	out	shrink_pending — слово пульса регистратора, стенд без воркеров
-api-archive.js	replica: со встроенного — основной поток, поток sub — 422 NOT_SUPPORTED, field: stream	out	камера с архивом устройства и двумя потоками: storage только при строке cam/devices, стенд без держателя
-api-archive.js	replica: другой архив камеры, тот же поток; чужой архив, сам у себя, цикл, резерв — 422 VALIDATION_FAILED	out	как строка выше
-api-archive.js	replica: без встроенного хранилища — только из другого архива; источник сняли — запись ждёт и говорит причину	out	причина — reason пульса регистратора, стенд без воркеров
-api-archive.js	replica в наборе: источник из архива, отставание, слово о потере и журнал; план по шагам проверяется целиком	out	отставание — пульс; replica.lost у rec нет (V/11.3 Н1.3)
-api-archive.js	Режим не replica: источника и отставания в записи нет; поля сервера правка строки не стирает	out	отставание — пульс регистратора
-api-archive.js	Карта камеры w2c: запись storage, recordMode и sizeBytes правятся, остальное — нет; обычная только чтение	out	камеры w2c в наборе нет; свой набор 4/10-archives
-api-archive.js	По расписанию: recordScheduleId обязателен, неизвестный — отказ; расписание сняли — запись ждёт	out	стенду нужен живой auto (V/11.3 Н1.3)
-api-archive.js	Срок и глубина: у записи свои, глубина больше срока — отказ; срок архива их не трогает	out	нужен второй том network набора, stream main; поведение — acceptance/4 33-archive-retention (V/11.3 Н1.3)
-api-archive.js	Микрофон записи: запись mic этой камеры, null — первый	out	mic — строка cam/children держателя, стенд без воркеров
-api-archive.js	Настройки: сроки событий и тревог	out	зовёт PATCH /settings: NO_ROUTE (V/11.2 № 80)
-api-archive.js	Обход архива: завести, умолчания, правка, снять; отказы	out	ждёт обход набора и архив устройства; свой набор 4/32-archive-tasks
-api-archive.js	Обход архива: снята камера — снят и он; снят архив — только ищет	out	то же
-api-archive.js	Скан архива: итог приходит по часам, поля задачи, отказы, отмена	out	итог считает воркер detjob, стенд без воркеров; свой набор 4/32-archive-tasks
-api-access.js	Встроенная роль: меняются только назначения; имя, описание, права, удаление — 409 BUILTIN; unr у другой и снятие — 422	out	опирается на людей и роли набора one-domain (V/11.8 Н5); acceptance/8 02-not-supported
-api-access.js	Последний администратор: срок учётной записи, назначения, ролей группы не считается — 409 SELF_LOCKOUT	out	опирается на людей и роли набора one-domain (V/11.8 Н5); acceptance/8 06-lockout
-api-access.js	Самоблокировка: снять с себя «Администратора» нельзя и при втором администраторе	out	опирается на людей и роли набора one-domain (V/11.8 Н5); acceptance/8 06-lockout
+api-archive.js	Том: объявленное уменьшение ждёт подтверждения; выключение — состояние off	out	shrink_pending is a word of the recorder heartbeat, the stand has no workers
+api-archive.js	replica: со встроенного — основной поток, поток sub — 422 NOT_SUPPORTED, field: stream	out	a camera with a device archive and two streams: storage only with a row cam/devices, the stand has no holder
+api-archive.js	replica: другой архив камеры, тот же поток; чужой архив, сам у себя, цикл, резерв — 422 VALIDATION_FAILED	out	as the row above
+api-archive.js	replica: без встроенного хранилища — только из другого архива; источник сняли — запись ждёт и говорит причину	out	the cause is reason of the recorder heartbeat, the stand has no workers
+api-archive.js	replica в наборе: источник из архива, отставание, слово о потере и журнал; план по шагам проверяется целиком	out	the lag is a heartbeat; rec has no replica.lost (V/11.3 Н1.3)
+api-archive.js	Режим не replica: источника и отставания в записи нет; поля сервера правка строки не стирает	out	the lag is the recorder heartbeat
+api-archive.js	Карта камеры w2c: запись storage, recordMode и sizeBytes правятся, остальное — нет; обычная только чтение	out	the set has no w2c camera; own suite 4/10-archives
+api-archive.js	По расписанию: recordScheduleId обязателен, неизвестный — отказ; расписание сняли — запись ждёт	out	the stand needs a live auto (V/11.3 Н1.3)
+api-archive.js	Срок и глубина: у записи свои, глубина больше срока — отказ; срок архива их не трогает	out	needs a second network volume of the set, stream main; the behaviour — acceptance/4 33-archive-retention (V/11.3 Н1.3)
+api-archive.js	Микрофон записи: запись mic этой камеры, null — первый	out	mic is the holder's row cam/children, the stand has no workers
+api-archive.js	Настройки: сроки событий и тревог	out	calls PATCH /settings: NO_ROUTE (V/11.2 No. 80)
+api-archive.js	Обход архива: завести, умолчания, правка, снять; отказы	out	expects a traversal of the set and a device archive; own suite 4/32-archive-tasks
+api-archive.js	Обход архива: снята камера — снят и он; снят архив — только ищет	out	the same
+api-archive.js	Скан архива: итог приходит по часам, поля задачи, отказы, отмена	out	the result is counted by the worker detjob, the stand has no workers; own suite 4/32-archive-tasks
+api-access.js	Встроенная роль: меняются только назначения; имя, описание, права, удаление — 409 BUILTIN; unr у другой и снятие — 422	out	relies on the people and roles of the set one-domain (V/11.8 Н5); acceptance/8 02-not-supported
+api-access.js	Последний администратор: срок учётной записи, назначения, ролей группы не считается — 409 SELF_LOCKOUT	out	relies on the people and roles of the set one-domain (V/11.8 Н5); acceptance/8 06-lockout
+api-access.js	Самоблокировка: снять с себя «Администратора» нельзя и при втором администраторе	out	relies on the people and roles of the set one-domain (V/11.8 Н5); acceptance/8 06-lockout
 api-access.js	Справочник: joins — «Просмотр» и «Просмотр архива» вместе дают «Просмотр и архив»	in	-
-api-access.js	Пароль: новый пользователь и смена, в ответах нет; политика — 422 PASSWORD_POLICY	out	политика набора иная: у нас только длина PASSWORD_MIN; acceptance/8 10-password
-api-access.js	Управляющий: ведёт пользователей, но «Администратора» не трогает — 403 на весь пакет, ничего не записано	out	actAs и fixturePatch: стенд входит своими людьми; acceptance/8 05-manager
-api-access.js	Управляющий: снимок целиком без изменений у администратора проходит; пароль, заданный им, не даёт назначить «Администратора»	out	actAs и fixturePatch: стенд входит своими людьми (V/11.8 Н1.1)
-api-access.js	Повышение: «Администратор» пользователю с чужим паролем — 409 PASSWORD_NOT_ADMIN, после смены пароля можно	out	ищет в наборе passwordByAdmin false: набор другой (V/11.8 Н1.1); чтением
-api-access.js	Почта: администратор и управляющий видят всех, остальные — только свою	out	actAs: стенд входит своими людьми; чтением (acceptance/8 README)
-api-access.js	Без функции «Настройка прав пользователей» применить нельзя — 403	out	actAs: стенд входит своими людьми; acceptance/8 01-read
-api-access.js	Папки ведёт только «Администратор»: функция роли и права на папку этого не дают — 403	out	actAs: стенд входит своими людьми; acceptance/8 09-cluster-admin
-api-access.js	Учётки потоков: доступ к камерам через Access; ссылки проверяются; удаление учётки, камеры и папки убирает доступ	out	шлюза live на стенде нет (V/11.6 Н1.1; V/11.8 Н1.11)
-api-access.js	Учётки потоков: без возможности непустой список — 422 NOT_SUPPORTED	out	fixturePatch возможностей: у нас объявлена
-api-access.js	Каталог: состояние синхронизации от клиента не берётся	skip	система не умеет: feature accessCatalogs
-api-access.js	Части прав: возможности нет — 422 NOT_SUPPORTED с полем; значение по умолчанию проходит	out	fixturePatch возможностей; acceptance/8 02-not-supported
-api-access.js	Справочник: уровень, функция, запрет, плагин вне reference.access — 422 NOT_SUPPORTED	out	fixturePatch справочника; acceptance/8 02-not-supported
-api-archive.js	Скан и обход: archiveJobs false — 422 deviceId; правка и снятие без права на камеру — 403	out	FX.devices с archiveJobs false: камеры-кластера на стенде нет; acceptance/4 32-archive-tasks
-api-archive.js	Карта камеры w2c: уменьшение только с подтверждением; поле не хранится; откат объёма не возвращает, как у тома	out	карты w2c на стенде нет: у кластера нет cfw://local; чтением
+api-access.js	Пароль: новый пользователь и смена, в ответах нет; политика — 422 PASSWORD_POLICY	out	the policy of the set differs: we have only the length PASSWORD_MIN; acceptance/8 10-password
+api-access.js	Управляющий: ведёт пользователей, но «Администратора» не трогает — 403 на весь пакет, ничего не записано	out	actAs and fixturePatch: the stand logs in with its own people; acceptance/8 05-manager
+api-access.js	Управляющий: снимок целиком без изменений у администратора проходит; пароль, заданный им, не даёт назначить «Администратора»	out	actAs and fixturePatch: the stand logs in with its own people (V/11.8 Н1.1)
+api-access.js	Повышение: «Администратор» пользователю с чужим паролем — 409 PASSWORD_NOT_ADMIN, после смены пароля можно	out	looks in the set for passwordByAdmin false: the set is different (V/11.8 Н1.1); by reading
+api-access.js	Почта: администратор и управляющий видят всех, остальные — только свою	out	actAs: the stand logs in with its own people; by reading (acceptance/8 README)
+api-access.js	Без функции «Настройка прав пользователей» применить нельзя — 403	out	actAs: the stand logs in with its own people; acceptance/8 01-read
+api-access.js	Папки ведёт только «Администратор»: функция роли и права на папку этого не дают — 403	out	actAs: the stand logs in with its own people; acceptance/8 09-cluster-admin
+api-access.js	Учётки потоков: доступ к камерам через Access; ссылки проверяются; удаление учётки, камеры и папки убирает доступ	out	the stand has no live gateway (V/11.6 Н1.1; V/11.8 Н1.11)
+api-access.js	Учётки потоков: без возможности непустой список — 422 NOT_SUPPORTED	out	fixturePatch of capabilities: ours is declared
+api-access.js	Каталог: состояние синхронизации от клиента не берётся	skip	the system cannot: feature accessCatalogs
+api-access.js	Части прав: возможности нет — 422 NOT_SUPPORTED с полем; значение по умолчанию проходит	out	fixturePatch of capabilities; acceptance/8 02-not-supported
+api-access.js	Справочник: уровень, функция, запрет, плагин вне reference.access — 422 NOT_SUPPORTED	out	fixturePatch of the reference; acceptance/8 02-not-supported
+api-archive.js	Скан и обход: archiveJobs false — 422 deviceId; правка и снятие без права на камеру — 403	out	FX.devices with archiveJobs false: the stand has no camera-cluster; acceptance/4 32-archive-tasks
+api-archive.js	Карта камеры w2c: уменьшение только с подтверждением; поле не хранится; откат объёма не возвращает, как у тома	out	the stand has no w2c card: the cluster has no cfw://local; by reading
 api-automation.js	Каталог: справочник говорит, что исполняет система; способы запуска и виды целей объявлены	in	-
 api-automation.js	Правило: годность действия — 30 по умолчанию, 10–600, вне границ — 422	in	-
-api-assist.js	Что за реплика, решает сервер: поля kind в запросе нет, слова правил — план правил, иначе настройка	out	заглушка разбирает слова, у нас ход ведёт модель (V/11.13)
-api-assist.js	План правил: новое правило — запись плана словами контракта, ход ничего не пишет, заведено logOnly	out	как выше
-api-assist.js	План правил: просили выключенным — выключенным	out	как выше
-api-assist.js	План правил: правка — только изменённые поля, PUT целиком с версией, чужая версия — 412 VERSION_MISMATCH	out	как выше
-api-assist.js	План правил: новое расписание — запись с ref, правило ссылается на него «@ref»	out	как выше
-api-assist.js	План правил: окно со ссылкой на новое расписание — строка объектом в теле окна, POST /schedules нет; новое окно выключено	out	как выше
-api-assist.js	План правил: расписание со ссылкой от правила и окна — своя запись; окно с готовым расписанием — копия строки	out	как выше
-api-assist.js	План правил: вопрос, ответ с context; чего форма не выражает — отказ словом о странице консоли	out	как выше
-api-assist.js	Вопрос о системе: «сколько», «какие» — answer без плана; в одном разговоре и вопрос, и правка; типа в событиях нет	out	как выше
-api-assist.js	Отбор: «дай список», «покажи», «выведи» — found, отбирает код по полям, ids по имени без повторов, условия словами	out	заглушка разбирает слова, у нас ход ведёт модель (V/11.7)
+api-assist.js	Что за реплика, решает сервер: поля kind в запросе нет, слова правил — план правил, иначе настройка	out	the stub parses words, with us the model leads the turn (V/11.13)
+api-assist.js	План правил: новое правило — запись плана словами контракта, ход ничего не пишет, заведено logOnly	out	as above
+api-assist.js	План правил: просили выключенным — выключенным	out	as above
+api-assist.js	План правил: правка — только изменённые поля, PUT целиком с версией, чужая версия — 412 VERSION_MISMATCH	out	as above
+api-assist.js	План правил: новое расписание — запись с ref, правило ссылается на него «@ref»	out	as above
+api-assist.js	План правил: окно со ссылкой на новое расписание — строка объектом в теле окна, POST /schedules нет; новое окно выключено	out	as above
+api-assist.js	План правил: расписание со ссылкой от правила и окна — своя запись; окно с готовым расписанием — копия строки	out	as above
+api-assist.js	План правил: вопрос, ответ с context; чего форма не выражает — отказ словом о странице консоли	out	as above
+api-assist.js	Вопрос о системе: «сколько», «какие» — answer без плана; в одном разговоре и вопрос, и правка; типа в событиях нет	out	as above
+api-assist.js	Отбор: «дай список», «покажи», «выведи» — found, отбирает код по полям, ids по имени без повторов, условия словами	out	the stub parses words, with us the model leads the turn (V/11.7)
 api-assist.js	Камера: выводное поле detectorKinds; GET /devices?noDetector — камеры без детектора вида, ограниченным проходом	in	-
-api-assist.js	План правил: вопрос оператору и эскалация — план с шагами ask, escalate, заведённый наблюдающим	out	как выше
-api-automation.js	Каталог: включённое вне каталога — 422 NOT_SUPPORTED с полем и причиной, выключенное хранится и читается	out	fixturePatch справочника: acceptance/4 17-rules
-api-automation.js	Каталог: уже включённое вне каталога не запускается — 409 NOT_RUNNABLE, причина кодом	out	fixturePatch справочника
-api-automation.js	Каталог: способ запуска, вид цели, «устройство из события», значение и поле действия	out	fixturePatch справочника
-api-automation.js	Каталог: событие и условие вне справочника — поле раздела	out	fixturePatch справочника
-api-automation.js	Правило: состояние от сервера — следит, отказано, не годится, не проверено; у выключенного нет; в версию не входит	out	пульс вычислителя: стенду нужен живой auto (V/11.3 Н1.3)
-api-automation.js	Правило: не годится — пресета нет на камере	out	пульс вычислителя и держателя: живой auto
-api-automation.js	Правило: уточнение события открыто — любой ключ, тип значения сохраняется, сравнение строгое	out	событие ставит /test/events: NO_ROUTE
-api-automation.js	Детектор на время и проверка архива: в каталоге, сохраняются, выполняются в запуске	out	FX.devices и запуск: живой auto
-api-automation.js	Детектор на время и проверка архива: границы и пустое окно — 422 RULE_INVALID, выключенное хранится	out	FX.devices: набора у нас нет
-api-automation.js	Проверка архива: камере без записи нечего проверять — шаг не выполнен, правило не годится	out	пульс вычислителя: живой auto
-api-automation.js	Цели: новое устройство в области входит в правило само, новой версии нет	out	FX и живой auto
-api-automation.js	Права: автор отвечает за всё, что называет правило; нет права — 403, ничего не записано	out	actAs и fixturePatch: стенд входит своими людьми
-api-automation.js	Права: своё право годится, умолчание роли и точечное исключение	out	actAs и fixturePatch
-api-automation.js	Права: роль запуска ограничивает выполнение; автор выбирает любую роль; нет роли — 422	out	actAs и живой auto
-api-automation.js	Вопрос: запуск встаёт на шаге, вопрос виден со всеми полями, в потоке — prompt.opened	out	очередь /test/events нет, запуск правила и вопрос стенду нечем поднять: приёмка 4/34-rule-prompts
-api-automation.js	Вопрос: первый ответ считается — ветка идёт, запись запуска та же, вопрос закрыт, повтор — 409	out	как выше
-api-automation.js	Вопрос: ответ «нет» — ветка «нет», «да» пропущена	out	как выше
-api-automation.js	Вопрос: чужая роль — 403, canAnswer false; не тот вид ответа — 422, вопрос открыт; нет вопроса — 404	out	как выше
-api-automation.js	Вопрос: срок вышел — ветка default, вопрос закрыт, ответ после срока не действует	out	как выше
-api-automation.js	Вопрос: шаг за шагом — второй вопрос после первого, вложенный в ветку	out	как выше
-api-automation.js	Эскалация: уровни по сроку, прежний остаётся открыт, ack на любом останавливает, уровень в трассе	out	как выше
-api-automation.js	Эскалация: никто не квитировал — конец последнего уровня, запуск идёт дальше	out	как выше
-api-automation.js	Эскалация: stop: reset — конец события останавливает, вопросы закрываются с reason: reset	out	как выше
-api-automation.js	Ход: правку, выключение, удаление правила запуск не переживает — вопросы закрыты, ответ не действует	out	как выше
-api-automation.js	Ход: repeat — skip пропускает, restart снимает прежний, queue идёт следом, сверх 16 — как skip	out	как выше
+api-assist.js	План правил: вопрос оператору и эскалация — план с шагами ask, escalate, заведённый наблюдающим	out	as above
+api-automation.js	Каталог: включённое вне каталога — 422 NOT_SUPPORTED с полем и причиной, выключенное хранится и читается	out	fixturePatch of the reference: acceptance/4 17-rules
+api-automation.js	Каталог: уже включённое вне каталога не запускается — 409 NOT_RUNNABLE, причина кодом	out	fixturePatch of the reference
+api-automation.js	Каталог: способ запуска, вид цели, «устройство из события», значение и поле действия	out	fixturePatch of the reference
+api-automation.js	Каталог: событие и условие вне справочника — поле раздела	out	fixturePatch of the reference
+api-automation.js	Правило: состояние от сервера — следит, отказано, не годится, не проверено; у выключенного нет; в версию не входит	out	the evaluator heartbeat: the stand needs a live auto (V/11.3 Н1.3)
+api-automation.js	Правило: не годится — пресета нет на камере	out	the evaluator and holder heartbeat: a live auto
+api-automation.js	Правило: уточнение события открыто — любой ключ, тип значения сохраняется, сравнение строгое	out	the event is placed by /test/events: NO_ROUTE
+api-automation.js	Детектор на время и проверка архива: в каталоге, сохраняются, выполняются в запуске	out	FX.devices and a run: a live auto
+api-automation.js	Детектор на время и проверка архива: границы и пустое окно — 422 RULE_INVALID, выключенное хранится	out	FX.devices: we do not have the set
+api-automation.js	Проверка архива: камере без записи нечего проверять — шаг не выполнен, правило не годится	out	the evaluator heartbeat: a live auto
+api-automation.js	Цели: новое устройство в области входит в правило само, новой версии нет	out	FX and a live auto
+api-automation.js	Права: автор отвечает за всё, что называет правило; нет права — 403, ничего не записано	out	actAs and fixturePatch: the stand logs in with its own people
+api-automation.js	Права: своё право годится, умолчание роли и точечное исключение	out	actAs and fixturePatch
+api-automation.js	Права: роль запуска ограничивает выполнение; автор выбирает любую роль; нет роли — 422	out	actAs and a live auto
+api-automation.js	Вопрос: запуск встаёт на шаге, вопрос виден со всеми полями, в потоке — prompt.opened	out	there is no /test/events queue, the stand has nothing to raise a rule run and a question with: acceptance 4/34-rule-prompts
+api-automation.js	Вопрос: первый ответ считается — ветка идёт, запись запуска та же, вопрос закрыт, повтор — 409	out	as above
+api-automation.js	Вопрос: ответ «нет» — ветка «нет», «да» пропущена	out	as above
+api-automation.js	Вопрос: чужая роль — 403, canAnswer false; не тот вид ответа — 422, вопрос открыт; нет вопроса — 404	out	as above
+api-automation.js	Вопрос: срок вышел — ветка default, вопрос закрыт, ответ после срока не действует	out	as above
+api-automation.js	Вопрос: шаг за шагом — второй вопрос после первого, вложенный в ветку	out	as above
+api-automation.js	Эскалация: уровни по сроку, прежний остаётся открыт, ack на любом останавливает, уровень в трассе	out	as above
+api-automation.js	Эскалация: никто не квитировал — конец последнего уровня, запуск идёт дальше	out	as above
+api-automation.js	Эскалация: stop: reset — конец события останавливает, вопросы закрываются с reason: reset	out	as above
+api-automation.js	Ход: правку, выключение, удаление правила запуск не переживает — вопросы закрыты, ответ не действует	out	as above
+api-automation.js	Ход: repeat — skip пропускает, restart снимает прежний, queue идёт следом, сверх 16 — как skip	out	as above
 api-automation.js	Тревожные виды на весь домен: Settings.values, только из reference.eventKinds	out	Settings — NO_ROUTE (V/11.2)
-api-automation.js	Правило на несколько доменов: только объявленные шаги, прочее — 422 NOT_SUPPORTED, field: steps; сервер выбирает домен	out	набор one-domain: второго домена нет; поведение — V/11.4 Н1.10
-api-access.js	Права: без версии — 422, старая — 412; состояние синхронизации от клиента не берётся	out	читает catalogs[0], каталогов нет (ADR-0094 доп. (18) п. 4); acceptance/8 11-changes, 08-clusters
-api-access.js	Роль на весь домен: запись одна, отказ одного кластера не откатывает прочие, расхождение видно, повтор	out	читает catalogs[0], каталогов нет (ADR-0094 доп. (18) п. 4); acceptance/8 11-changes, 08-clusters
-api-automation.js	Вопрос: «Только журнал» никого не спрашивает: срок, ветка default, действий нет; пробный запуск вопросов не открывает	out	нужен вычислитель стенда: V/11.4 Н1.10, acceptance/4 34-rule-prompts
-api-automation.js	Эскалация: «Только журнал» никого не спрашивает и кончается сроком последнего уровня	out	нужен вычислитель стенда: V/11.4 Н1.10, acceptance/4 34-rule-prompts
-api-automation.js	Вопрос: роль без строк грантов не видна — canAnswer ложь, 403; закрытый вопрос после ухода из памяти — 404	out	нужен вычислитель стенда: V/11.4 Н1.10, acceptance/4 34-rule-prompts
-api-cluster.js	Запись камеры w2c: приёмник — настройка, serverId наблюдение, снять, сервера нет — 422	out	нужен набор с членами /test/*: acceptance/4 38-assign, 39-recording-target; второй член — @manual
-api-cluster.js	Камера-кластер: правка принята — 409 SERVER_OFFLINE с kept, применится с периодом; повтор тот же, другая — 412; групповые и шаг	out	нужен набор с членами /test/*: acceptance/4 38-assign, 39-recording-target; второй член — @manual
-api-cluster.js	Копии записи: список серверов, порядок значим; копия — кластер: повтор, чужой, кластер основного и два сервера кластера — 422	out	нужен набор с членами /test/*: acceptance/4 38-assign, 39-recording-target; второй член — @manual
-api-cluster.js	Камера w2c: адресные поля не пишутся, молчание — DEVICE_OFFLINE, движение арендой недоступно, пресет можно	out	нужен набор с членами /test/*: acceptance/4 38-assign, 39-recording-target; второй член — @manual
-api-cluster.js	Правка при молчащем сервере — 409 SERVER_OFFLINE; другой кластер — OTHER_CLUSTER со ссылкой	out	нужен набор с членами /test/*: acceptance/4 38-assign, 39-recording-target; второй член — @manual
-api-cluster.js	Определение модели: логин и пароль необязательны, без них система вправе не назвать	out	нужен набор с членами /test/*: acceptance/4 38-assign, 39-recording-target; второй член — @manual
-api-cluster.js	Приём в домен: отпечаток сверяется, только администратор домена, камера становится записью camera	out	нужен набор с членами /test/*: acceptance/4 38-assign, 39-recording-target; второй член — @manual
-api-cluster.js	Папки без связи с доменом: 409 SERVER_OFFLINE, шаг fail, создание с папкой — 422	out	нужен набор с членами /test/*: acceptance/4 38-assign, 39-recording-target; второй член — @manual
-api-domains.js	Домен: потеря связи — только свой кластер, чужое не удалено, stream.reset; ретрансляторы	out	потеря связи и ретрансляторы на наборе: acceptance/4 40-domain-parts
-api-pages.js	Страницы: каждый перечень из таблицы — limit, cursor, обход целиком, чужой и просроченный курсор	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-pages.js	Страницы: курсор живёт круг вида, просроченный — 422 INVALID_CURSOR	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-pages.js	Страницы: вставка не сдвигает, строки не теряются и не повторяются	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-pages.js	Устройства: только строка, полная запись — по id с folderIds; total только без фильтра	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-pages.js	Устройства: фильтр идёт ограниченным проходом, пустая страница с nextCursor законна, обход находит всё	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-pages.js	Устройства: один член — порядок по имени; ids — до idsMax; папка — постоянная цена, скрытое не показывается	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-pages.js	Строка камеры-кластера: без сервера и родителя, r<revision>, hasChildren — «может быть»	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-pages.js	/objects/delete: обе формы version, r<revision> не видит правку записи, предел selectMax	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-pages.js	Дерево: верхний уровень, дети, порядок, parentCount, узла нет — 404	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-pages.js	Дерево: цепочки от корня; камера в нескольких папках — несколько; до idsMax	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-pages.js	Папка: состав через POST /folders/{id}/devices, одна операция, откат папок — fail NOT_SUPPORTED, предел selectMax	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-pages.js	Домен: stateSummary — числа не пересекаются, выключенные вне total, отставание на круг, unread, нет круга — нет поля	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-pages.js	Поток: stream.hello первым, события устройств — только по наблюдению и детям, tree.changed, предел watchMax	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-automation.js	Правило на несколько доменов: только объявленные шаги, прочее — 422 NOT_SUPPORTED, field: steps; сервер выбирает домен	out	the set one-domain: there is no second domain; the behaviour — V/11.4 Н1.10
+api-access.js	Права: без версии — 422, старая — 412; состояние синхронизации от клиента не берётся	out	reads catalogs[0], there are no catalogs (ADR-0094 addendum (18) item 4); acceptance/8 11-changes, 08-clusters
+api-access.js	Роль на весь домен: запись одна, отказ одного кластера не откатывает прочие, расхождение видно, повтор	out	reads catalogs[0], there are no catalogs (ADR-0094 addendum (18) item 4); acceptance/8 11-changes, 08-clusters
+api-automation.js	Вопрос: «Только журнал» никого не спрашивает: срок, ветка default, действий нет; пробный запуск вопросов не открывает	out	needs the stand evaluator: V/11.4 Н1.10, acceptance/4 34-rule-prompts
+api-automation.js	Эскалация: «Только журнал» никого не спрашивает и кончается сроком последнего уровня	out	needs the stand evaluator: V/11.4 Н1.10, acceptance/4 34-rule-prompts
+api-automation.js	Вопрос: роль без строк грантов не видна — canAnswer ложь, 403; закрытый вопрос после ухода из памяти — 404	out	needs the stand evaluator: V/11.4 Н1.10, acceptance/4 34-rule-prompts
+api-cluster.js	Запись камеры w2c: приёмник — настройка, serverId наблюдение, снять, сервера нет — 422	out	needs a set with members /test/*: acceptance/4 38-assign, 39-recording-target; the second member — @manual
+api-cluster.js	Камера-кластер: правка принята — 409 SERVER_OFFLINE с kept, применится с периодом; повтор тот же, другая — 412; групповые и шаг	out	needs a set with members /test/*: acceptance/4 38-assign, 39-recording-target; the second member — @manual
+api-cluster.js	Копии записи: список серверов, порядок значим; копия — кластер: повтор, чужой, кластер основного и два сервера кластера — 422	out	needs a set with members /test/*: acceptance/4 38-assign, 39-recording-target; the second member — @manual
+api-cluster.js	Камера w2c: адресные поля не пишутся, молчание — DEVICE_OFFLINE, движение арендой недоступно, пресет можно	out	needs a set with members /test/*: acceptance/4 38-assign, 39-recording-target; the second member — @manual
+api-cluster.js	Правка при молчащем сервере — 409 SERVER_OFFLINE; другой кластер — OTHER_CLUSTER со ссылкой	out	needs a set with members /test/*: acceptance/4 38-assign, 39-recording-target; the second member — @manual
+api-cluster.js	Определение модели: логин и пароль необязательны, без них система вправе не назвать	out	needs a set with members /test/*: acceptance/4 38-assign, 39-recording-target; the second member — @manual
+api-cluster.js	Приём в домен: отпечаток сверяется, только администратор домена, камера становится записью camera	out	needs a set with members /test/*: acceptance/4 38-assign, 39-recording-target; the second member — @manual
+api-cluster.js	Папки без связи с доменом: 409 SERVER_OFFLINE, шаг fail, создание с папкой — 422	out	needs a set with members /test/*: acceptance/4 38-assign, 39-recording-target; the second member — @manual
+api-domains.js	Домен: потеря связи — только свой кластер, чужое не удалено, stream.reset; ретрансляторы	out	loss of connectivity and relays on the set: acceptance/4 40-domain-parts
+api-pages.js	Страницы: каждый перечень из таблицы — limit, cursor, обход целиком, чужой и просроченный курсор	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Страницы: курсор живёт круг вида, просроченный — 422 INVALID_CURSOR	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Страницы: вставка не сдвигает, строки не теряются и не повторяются	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Устройства: только строка, полная запись — по id с folderIds; total только без фильтра	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Устройства: фильтр идёт ограниченным проходом, пустая страница с nextCursor законна, обход находит всё	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Устройства: один член — порядок по имени; ids — до idsMax; папка — постоянная цена, скрытое не показывается	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Строка камеры-кластера: без сервера и родителя, r<revision>, hasChildren — «может быть»	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	/objects/delete: обе формы version, r<revision> не видит правку записи, предел selectMax	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Дерево: верхний уровень, дети, порядок, parentCount, узла нет — 404	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Дерево: цепочки от корня; камера в нескольких папках — несколько; до idsMax	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Папка: состав через POST /folders/{id}/devices, одна операция, откат папок — fail NOT_SUPPORTED, предел selectMax	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Домен: stateSummary — числа не пересекаются, выключенные вне total, отставание на круг, unread, нет круга — нет поля	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Поток: stream.hello первым, события устройств — только по наблюдению и детям, tree.changed, предел watchMax	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
 api-pages.js	Поток: PUT не тому экземпляру — 404, новый поток держит список из запроса открытия, предел watch	in	-
-api-pages.js	Права: снимок без людей, перечни страницами, объекты роли, apply изменениями, чужая правка — 412	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-pages.js	Поиск в сети: страницы у candidates	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-pages.js	Запуски правила: страницы	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-pages.js	Документ V/07.5: чтение, запись целиком, версия, 412 на чужую правку, отказы формы, состояние из пульса	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-pages.js	Документ V/07.5: без admin домена — 403, без связи с доменом — 409	out	тест на большом наборе и /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
-api-devices.js	Живое видео: сеть, поток, шлюз; раздача для другой сети — 409 с params.labels, переразмещение, срок раздачи	out	шлюза на стенде нет: acceptance/4 41-live
-api-devices.js	Переразместить: право, без связи, не камера, другой кластер	out	шлюза на стенде нет: acceptance/4 41-live
-api-view.js	Журнал камеры: и единицы про неё; новая запись — journal.event наблюдающим	out	зовёт /test/events: 404 NO_ROUTE (V/11.6 Н1.3); acceptance/4 44-marks
-api-view.js	Отметка: создать и смотреть, occurred на прошлом моменте, пустая — 422, окно	out	журнал на наборе не воспроизводится: acceptance/4 44-marks
-api-view.js	Закрепить: сутки на просьбу, per_person 7, refused только о подаче; нет основной — 409	out	нужна основная запись на наборе: acceptance/4 44-marks
-api-view.js	Удержание: ключ — id, то же окно объединяет записи, заметка цела, снять, проверить	out	verify: держателя incidents на стенде нет; acceptance/4 43-holds
-api-view.js	Шкала: спаны с spanId и записью, окно, пустое окно, не камера, недоступное названо	out	регистратора на стенде нет (V/11.6 Н1.1); acceptance/4 42-timeline
-api-view.js	Кусок: по spanId и по моменту; 60 с; неотсечённый над моментом; нет записи — 404	out	регистратора на стенде нет (V/11.6 Н1.1); acceptance/4 42-timeline
-api-view.js	Разговор: адрес url, токен, срок; не spk — 422; отказ устройства, право, другой кластер	out	шлюза на стенде нет: acceptance/4 41-live
-api-view.js	Том: heldBy; события hold и bookmark идут в поток	out	регистратора на стенде нет: held_by пуст; acceptance/4 43-holds
-api-view.js	Реле: output с state и pulseMs; без state — 422; другая команда — 409	out	держателя на стенде нет (V/11.6 Н1.1); acceptance/4 41-live
+api-pages.js	Права: снимок без людей, перечни страницами, объекты роли, apply изменениями, чужая правка — 412	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Поиск в сети: страницы у candidates	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Запуски правила: страницы	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Документ V/07.5: чтение, запись целиком, версия, 412 на чужую правку, отказы формы, состояние из пульса	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-pages.js	Документ V/07.5: без admin домена — 403, без связи с доменом — 409	out	a test on a large set and /test/*: acceptance/4 35-pages, 36-tree, 37-folder-devices, 40-domain-parts; acceptance/8 11-changes
+api-devices.js	Живое видео: сеть, поток, шлюз; раздача для другой сети — 409 с params.labels, переразмещение, срок раздачи	out	the stand has no gateway: acceptance/4 41-live
+api-devices.js	Переразместить: право, без связи, не камера, другой кластер	out	the stand has no gateway: acceptance/4 41-live
+api-view.js	Журнал камеры: и единицы про неё; новая запись — journal.event наблюдающим	out	calls /test/events: 404 NO_ROUTE (V/11.6 Н1.3); acceptance/4 44-marks
+api-view.js	Отметка: создать и смотреть, occurred на прошлом моменте, пустая — 422, окно	out	the log is not reproduced on the set: acceptance/4 44-marks
+api-view.js	Закрепить: сутки на просьбу, per_person 7, refused только о подаче; нет основной — 409	out	needs a primary recording on the set: acceptance/4 44-marks
+api-view.js	Удержание: ключ — id, то же окно объединяет записи, заметка цела, снять, проверить	out	verify: the stand has no incidents holder; acceptance/4 43-holds
+api-view.js	Шкала: спаны с spanId и записью, окно, пустое окно, не камера, недоступное названо	out	the stand has no recorder (V/11.6 Н1.1); acceptance/4 42-timeline
+api-view.js	Кусок: по spanId и по моменту; 60 с; неотсечённый над моментом; нет записи — 404	out	the stand has no recorder (V/11.6 Н1.1); acceptance/4 42-timeline
+api-view.js	Разговор: адрес url, токен, срок; не spk — 422; отказ устройства, право, другой кластер	out	the stand has no gateway: acceptance/4 41-live
+api-view.js	Том: heldBy; события hold и bookmark идут в поток	out	the stand has no recorder: held_by is empty; acceptance/4 43-holds
+api-view.js	Реле: output с state и pulseMs; без state — 422; другая команда — 409	out	the stand has no holder (V/11.6 Н1.1); acceptance/4 41-live
