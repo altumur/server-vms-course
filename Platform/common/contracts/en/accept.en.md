@@ -30,41 +30,42 @@ The rows and objects that the function writes and reads are families by the [cat
 
 ## Generation, mark, limits
 
-From P/08.3 Н1.3 (`generation`, `whole`, `delta`, `reported`, `MARK_REFRESH`, `BODY_LIMIT`) and Н1.3а (`ROAD_QUIET`) without
-a change of behaviour; `REPORT_EVERY` — the section «The answer `carry`: `every`»:
+A copy of P/08.3 Н1.3 (`generation` … `BODY_LIMIT`) and Н1.3а (`ROAD_QUIET`) byte for byte: the lesson is the source of the copy (the
+Architect's decision of 2026-11-04); `every` and `REPORT_EVERY` in detail — the section «The answer `carry`: `every`»:
 
 ```yaml
 generation:     domain/members/<член>/reports/<rev>   # an object of the holder (P/05 Н1.1): the whole generation, JCS
   whole:        {sent_at, objects, key, keys_rev?, pinned?, outcomes?}   # objects — all objects of the member after applying the
-                change; outcomes — P/09.1 Н1.5: a change of outcomes is a new generation, the agent sends the field in every
+                change; outcomes — P/09.1 Н1.5: a change of outcomes is a new generation, the agent sends the field of outcomes of the edits still named by the holder (OUTCOME_HOLD) in every
                 publication while the row domain/outcomes is not empty; no field — no outcomes
 delta:          domain/members/<член>/reports/<rev>.delta     # the bytes of the publication body as received — what the agent signed
 reported:       domain/members/<член>/reported               # the mark object; the only boundary of what is accepted
-                # two parts: the generation fields are written only by generation (step 7); the fields of the last accepted request — by every
-                # acceptance with a write of the mark (steps 6, 7)
+                # two parts (the Architect's decision on R41-05 of run 41): the generation fields are written only by generation (report
+                # reception contract, step 7); the fields of the last accepted request — by every acceptance with a write of the mark (steps 6, 7)
   # generation fields
   rev:          an integer ≥ 1 — the generation number; handed out by the holder: +1 per accepted change
   sha256:       hex sha256 of the bytes of generation — sha256 of the JCS of the whole whole
   base:         the rev against which the change came; 0 — a whole came
   delta_sha256: hex sha256 of the bytes of delta (at base 0 — of the body of the whole, as it came)
-  signature?:   the header X-Agent-Signature of the direct report that created the generation, as it came; through a relay there is no field;
-                via is a field of the last request, so a mark without signature and without via is lawful: the generation came through
-                a relay, then a direct heard
-  key, keys_rev?, pinned?: from the publication
+  signature?:   the header X-Agent-Signature of the direct report that created the generation, as it came (Н1.4); through a relay
+                there is no field (Н1.3а); via is a field of the last request, so a mark without signature and without via is lawful:
+                the generation came through a relay, then a direct heard (the Architect's decision on the reconciliation of М11, A14)
+  key, keys_rev?, pinned?: from the publication — by them the domain console admits the member and shows the pinning
   # fields of the last accepted request
   sent_at:      sent_at of the publication; received_at — wall-clock seconds of the accepting holder
   request_sha256: hex sha256 of the bytes of the body of this request, as it came; a repeat is recognized by (sent_at, request_sha256)
-  via?:         the relay — the road of the request
-  stale:        from the publication at every acceptance, «heard» included (step 6); not in the publication — []
+  via?:         the relay — Н1.3а
+  stale:        from the publication at every acceptance, «heard» included (report reception contract, step 6); not in the publication — []
   sign_failures?: from the publication at every acceptance with a write of the mark, as stale; it creates no generation and does not
-                refresh the mark by itself; not in the publication — no field
-  every?:       s — the period told to the member by the last answer with a write of the mark (the section «The answer `carry`: `every`»); none — REPORT_EVERY
+                refresh the mark by itself; not in the publication — no field (Н1.6а; P/09.1 Н1.12; the Architect's decision on the reconciliation of М11, A7, W1)
+  every?:       s — the period told to the member by the last answer with a write of the mark (Н1.5; the report reception contract «The answer `carry`: `every`»); none — REPORT_EVERY
 keep:           the two last generations and their delta; older ones and those above the mark are removed by the next acceptance
-MARK_REFRESH:   22.5        # s = LOST_AFTER/2 by the holder's monotonic clock
+REPORT_EVERY:   5           # s — the agent pass; the holder's answer can assign every (Н1.5), 1 … 3600
+MARK_REFRESH:   22.5        # s = LOST_AFTER/2 (chapter 8.1 Н1.3) by the holder's monotonic clock
 BODY_LIMIT:     16 MiB      # the body limit of the door of the holder and of the relay: larger — 413, the body is not read further; it is also
-                            # the limit of the JCS of the whole of step 4а and of the whole that the agent does not send (P/09.1 Н1.2 body)
-ROAD_QUIET:     15          # s, the holder's monotonic clock: three passes of the agent (REPORT_EVERY 5); longer — the former road is silent;
-                            # for class camera — road_quiet = max(15, 3 × mark.every) (P/08.3 Н1.1а)
+                            # the limit of the JCS of the whole of step 4а of the report reception contract and of the whole that the agent does not send (P/09.1 Н1.2 body)
+ROAD_QUIET:    15         # s, the holder's monotonic clock: three passes of the agent (REPORT_EVERY 5); longer — the former road is silent;
+                           # for class camera — road_quiet = max(15, 3 × mark.every) (P/08.3 Н1.1а)
 ```
 
 The mark is the boundary of what is accepted: an object with a number not above `reported.rev` is immutable; an object above it belongs to nobody: it is not read, not
@@ -142,7 +143,8 @@ member_objects:                               # what the agent carries and what 
     domain/alarms:            the alarm page (P/09.1 Н1.10, P/10 Н1.8)
     domain/backup-taken:      {term, rev, sha256}, term and rev are JSON integers (P/09.1 Н1.9, P/08.8 Н1.5 in_report)
 ready:          the agent does not send a publication while it has not a single snapshot shard of every manifest of the catalogue with domain.ref:
-                such a publication would say «no units» — a full answer that the domain would believe
+                such a publication would say «no units» — a full answer that the domain would believe;
+                this does not concern table snapshots: they can be absent (the ceiling P/04 Н1.3б), the report is no worse for it
 ```
 
 The «other families» of `member_objects` are the list above; the holder keeps them as they are and drops only what the list does not
