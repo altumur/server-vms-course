@@ -1993,6 +1993,16 @@ class Check:
                 self.error(path, message)
             self.stats.update(stats)
 
+    def check_machines(self):
+        """ADR-0120 п. 2 (б): автоматы норм `Platform/*/data/*.machine.yaml` — закрытые наборы, CEL, трассы
+        `*.traces.tsv` прогоном эталонного исполнителя (`check_machines.check`)."""
+        import check_machines
+        for path in check_machines.machines(self.root):
+            errors, stats = check_machines.check(path)
+            for message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
+
     def library_defects(self):
         if not self.v7:
             return
@@ -2805,6 +2815,7 @@ def main():
     check.layer_words()
     check.english_mirrors()
     check.check_tables()
+    check.check_machines()
     for error in check.errors:
         print("ERROR", error)
     for line in check.excepted:

@@ -1,0 +1,106 @@
+# Автомат опроса голосующих w2cctl rollout — P/02.4 Н1.9 poll (ADR-0115 доп. (28)–(37)); форма — ADR-0120 п. 2 (б),
+# ответ «Архитектора» 2026-11-04 к форме (4), замечания 1–6. Норма ссылается на автомат; трассы — rollout-poll.traces.tsv.
+# Один опрос: pre перед действиями, pre перед перезапуском члена или проверка -last — каждый раз новый экземпляр, свои цели.
+#
+# Исполнение. События приходят по одному. На событие переходы с его именем в event просматриваются по порядку: каждый, чьё if истинно,
+# исполняет do по порядку; stop: true или to: <состояние> кончает обработку события. В passed и refused событий нет.
+# if и аргументы действий — CEL (расширения strings, two-var-comprehensions) над параметрами события, input, vars и const;
+# множества — списки без повторов. Действия — только из actions, таймеры — только из timers, функции — только из functions.
+machine: rollout-poll
+norm: P/02.4 Н1.9 poll
+states: [polling, passed, refused]
+initial: polling
+
+input:                                   # снимок статуса своего члена при mode (Н1.9 mode, poll)
+  mode: string                           # pre — проход: живых ≥ кворум + 1; last — проход: жив каждый прочий голосующий
+  self: string                           # id своего члена
+  voters: list<string>                   # voters снимка; self среди них; голосующих ≥ 2 (один с -allow-downtime — опроса нет, Н1.9 pre)
+  members: map<string,string>            # members снимка: id → адрес
+
+const:
+  BATCH: 1                               # с; партия k начинается в s0 + k·BATCH (s0 — начало опроса)
+  READ: 1                                # с; срок чтения цели
+  ROLLOUT_WAIT: 300                      # с; срок опроса
+
+vars:
+  k: {type: int, init: -1}                           # текущая партия
+  leader: {type: "string|null", init: null}          # адрес лидера партии k — leader ответа своего члена
+  leader_id: {type: "string|null", init: null}       # leader_id того же ответа
+  self_replied: {type: bool, init: false}            # ответ своего члена в партии k обработан
+  leaderless: {type: bool, init: false}              # в партии k у всех разрыв (Н1.9 round_leader)
+  replied: {type: "list<string>", init: []}          # голосующие, чей ответ партии k обработан (self тоже)
+  held: {type: "list<{v, r}>", init: []}             # ответы партии k, пришедшие раньше ответа своего члена
+  alive: {type: "list<string>", init: []}            # живые в партии k (Н1.9 alive)
+  need: {type: "list<string>", init: []}             # живой ответ в партии k, цели нет и чтение не идёт
+  target: {type: "map<string,int>", init: {}}        # цель голосующего в этом опросе (Н1.9 target)
+  reads: {type: "map<int,list<string>>", init: {}}   # идущие чтения цели: номер → кому цель
+  next_read: {type: int, init: 1}
+  read_done: {type: bool, init: false}               # чтение цели партии k уже начато
+
+timers:                                  # закрытый набор
+  batch: {every: BATCH, from: s0, event: tick}                 # tick(k) в s0 + k·BATCH, k = 0, 1, …
+  wait: {after: ROLLOUT_WAIT, from: s0, event: wait_expired}   # в один миг с tick — после него
+  read: {after: READ, from: read_commit, event: commit}        # не успело — commit(n, null)
+
+events:                                  # закрытый набор; r — ответ GET /v1/status или null (нет ответа в срок)
+  tick: [k]
+  self_status: [k, r]                    # свой член по admin.sock; срок — до tick(k + 1)
+  status: [k, v, r]                      # голосующий v ≠ self по адресу members; срок — до tick(k + 1)
+  commit: [n, c]                         # чтение цели n: c — commit лидера или null (нет ответа в срок)
+  wait_expired: []
+
+functions:                               # закрытый набор
+  same_set: "(list, list) -> bool — равны как множества (Н1.9 poll: порядок не в счёт)"
+
+actions:                                 # закрытый набор; что меняет каждое
+  send_status: "(k) — GET /v1/status своего члена по admin.sock (один раз: ответ даёт лидера партии и ответ голосующего self) и каждого v ≠ self по members[v]; срок каждого — tick(k + 1)"
+  new_partition: "(k) — k := k; leader, leader_id := null; self_replied, leaderless, read_done := false; replied, held, alive, need := []"
+  rupture_unanswered: "() — партия k кончилась: self не ответил — rupture_all; иначе rupture каждого v из voters, кого нет в replied"
+  rupture: "(v) — разрыв v: target[v] снят, v убран из need, из alive и из каждого reads[n] (чтение, начатое до разрыва, цели не даёт)"
+  rupture_all: "() — leaderless := true; rupture каждого v из voters"
+  set_leader: "(r) — leader := r.leader, leader_id := r.leader_id; self_replied := true"
+  hold: "(v, r) — held += {v, r}"
+  release_held: "() — self_replied := true; каждый {v, r} из held по порядку — событием status(k, v, r); held := []"
+  as_voter: "(r) — ответ своего члена — событием status(k, self, r)"
+  mark_replied: "(v) — replied += v"
+  mark_need: "(v) — need += v"
+  mark_alive: "(v) — alive += v"
+  read_commit: "() — need пусто или read_done — ничего; иначе reads[next_read] := need, need := [], next_read += 1, read_done := true; GET /v1/status лидера партии (leader_id = self — admin.sock, иначе адрес leader), срок READ"
+  set_targets: "(n, c) — target[v] := c каждому v из reads[n]; reads[n] снят"
+  drop_read: "(n) — reads[n] снят: цели нет, следующий живой ответ — снова need"
+  refuse: "(code, word) — отказ опроса"
+  pass: "() — опрос пройден"
+
+transitions:
+  # tick(k): сначала суд партии k − 1 (ответы её все пришли или их срок — этот миг), затем новая партия
+  - {event: tick, if: "k > 0 && (input.mode == 'pre' ? size(alive) >= size(input.voters) / 2 + 2 : input.voters.all(v, v == input.self || v in alive))", do: [pass], to: passed}
+  - {event: tick, if: "k > 0", do: [rupture_unanswered, read_commit]}
+  - {event: tick, do: ["new_partition(k)", "send_status(k)"], stop: true}
+
+  # self_status(k, r): лидер партии, состав, лидерство; затем свой член как голосующий и задержанные ответы
+  - {event: self_status, if: "k != vars.k", stop: true}
+  - {event: self_status, if: "r == null || !has(r.leader) || r.leader == ''", do: [rupture_all, "mark_replied(input.self)", release_held], stop: true}
+  - {event: self_status, do: ["set_leader(r)"]}
+  - {event: self_status, if: "!same_set(r.voters, input.voters) || r.members != input.members", do: ["refuse(2, 'voters changed')"], to: refused}
+  - {event: self_status, if: "input.mode == 'last' && r.state != 'Leader'", do: ["refuse(2, '-last: not the leader')"], to: refused}
+  - {event: self_status, if: "input.mode == 'pre' && r.state == 'Leader' && size(input.voters) > 1", do: ["refuse(2, 'leader goes last')"], to: refused}
+  - {event: self_status, do: ["as_voter(r)", release_held], stop: true}
+
+  # status(k, v, r): ответ голосующего партии k
+  - {event: status, if: "k != vars.k", stop: true}
+  - {event: status, if: "!self_replied", do: ["hold(v, r)"], stop: true}
+  - {event: status, if: "leaderless || r == null || !(r.state == 'Leader' || r.state == 'Follower') || r.leader_id != leader_id", do: ["rupture(v)", "mark_replied(v)"]}
+  - {event: status, if: "!leaderless && r != null && (r.state == 'Leader' || r.state == 'Follower') && r.leader_id == leader_id && !(v in target) && !reads.exists(n, v in reads[n])", do: ["mark_need(v)"]}
+  - {event: status, if: "!leaderless && r != null && (r.state == 'Leader' || r.state == 'Follower') && r.leader_id == leader_id && v in target && r.applied >= target[v]", do: ["mark_alive(v)"]}
+  - {event: status, if: "!(v in replied)", do: ["mark_replied(v)"]}
+  - {event: status, if: "size(replied) == size(input.voters)", do: [read_commit], stop: true}
+  - {event: status, stop: true}
+
+  # commit(n, c): чтение цели вернулось или не успело
+  - {event: commit, if: "!(n in reads)", stop: true}
+  - {event: commit, if: "c == null", do: ["drop_read(n)"], stop: true}
+  - {event: commit, do: ["set_targets(n, c)"], stop: true}
+
+  # срок опроса: tick того же мига уже рассудил последнюю партию
+  - {event: wait_expired, if: "input.mode == 'pre'", do: ["refuse(2, 'not enough live voters')"], to: refused}
+  - {event: wait_expired, do: ["refuse(2, '-last: voters not live')"], to: refused}
