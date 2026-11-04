@@ -114,8 +114,7 @@ Sc. 03 does not depend on the moment of the backup copy (chapter 8.8: `first`, `
 (two agent passes: one change may belong to a round that was in flight), and only step 10 takes the last generation: in
 it the snapshot is there for any number of generations between them (a generation carries all objects of the member, Н1.3).
 
-**Scenarios 23–26** (the coverage audit of P/08, the second pass of Gemini, the draft G03 `e32df6f8b`, rewritten):
-- sc. 28 — a machine came back after a theft (Н3 «принять члена» steps 1, 4, 6; the contract of the admission of a report `forget`; C08-STOLEN-KEY-ENTRY-01): `stolen` is not caused on the stand, the record of `m1` without `key` is seeded by `admin.sock`. Step 3: the key of the agent is in `revoked_keys` — the knock is kept, the admission 409. Step 6: `revoked_keys` holds a foreign key, therefore the key of the agent plays the new key of the machine — the admission 200, `revoked_keys` remained, the knock is removed. Not run by an implementation.
+**Scenarios 23–28** (23–26 — the coverage audit of P/08, the second pass of Gemini, the draft G03 `e32df6f8b`, rewritten; 27 — ADR-0094 B3, B4; 28 — C08-STOLEN-KEY-ENTRY-01):
 - sc. 23 — a repeat of the admission (Н3 «принять члена» step 1, D20): the stand is brought up by hand, as sc. 01; step 5 also waits for the `key`
   of the holder in the list — further the list does not rewrite itself, and the `rev` after the admission (`$r1`) does not change. The same fingerprint —
   200 without a write (the same `rev`, step 9 reads it again); another one — 409 «… was admitted with another key: have it leave first»;
@@ -133,6 +132,7 @@ it the snapshot is there for any number of generations between them (a generatio
   Step 24: `<key>` — `sha256("root" ‖ 0x00 ‖ "PUT" ‖ 0x00 ‖ "/domain/topology" ‖ 0x00 ‖ "t-r1")`; `body` is judged by a substring: the order of the fields of the body is the implementation's.
   Steps 27–31 — `If-Match` by the row `domain/member-rows/<раздел>`: `$m` is the `rev` of the list, the number depends on the course of `@domain`. Step 30: a non-member — 404 before the condition; step 31: the admission judges the condition first.
   The stand does not bind the value of `ETag`: it judges the quotes of the header, and the index — through `If-Match` from the store row.
+- sc. 28 — a machine came back after a theft (Н3 «принять члена» steps 1, 4, 6; the contract of the admission of a report `forget`; C08-STOLEN-KEY-ENTRY-01): `stolen` is not caused on the stand, the record of `m1` without `key` is seeded by `admin.sock`. Step 3: the key of the agent is in `revoked_keys` — the knock is kept, the admission 409. Step 6: `revoked_keys` holds a foreign key, therefore the key of the agent plays the new key of the machine — the admission 200, `revoked_keys` remained, the knock is removed. Not run by an implementation.
 
 Not taken from the draft G03: 503 of step 0 of «принять члена» with an unreadable `domain/view` — the view object is rewritten by the pass of
 the holder once in `VIEW_EVERY` (3 s), the stand will not hold the spoiling window (a race, by reading; with `domain` stopped there is no door);
