@@ -1,0 +1,4 @@
+# P/08 kit seams; ordinary code and controlled I/O, protocol in forms/README.md.
+# scenario	step	request	expect
+s01-sealed-contribution-dropped	1	CALL domain-book-assemble {"contribution":"secret_envelope_unopenable"}	{"bad_contribution":true,"member_items_in_result":0}
+s02-unique-key-conflict	1	CALL domain-book-assemble {"pick":"unique","same_ref":"different_values"}	{"conflict":true,"conflicting_key_in_result":false}

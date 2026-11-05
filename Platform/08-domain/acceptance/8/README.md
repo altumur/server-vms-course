@@ -102,3 +102,7 @@ The remaining sleeps:
 | 02/4 | 45 s | time before an action: a copy with the grants edit — not earlier than `BACKUP_EVERY` 30 s from the previous one, the holder's pass 3 s and the keeper agent's 5 s, a margin |
 | 08/3, 14/3 | 6 s | absence: a forged record does not displace the holder — the check of the record at each pass of the holder (`VIEW_EVERY` 3 s), two passes |
 | 10/10 | 40 s | time before an action: a copy of term 2 with the user `bob` — not earlier than `BACKUP_EVERY` 30 s from the first copy of the term, the passes of the holder and the agent |
+
+## Kit seams
+
+[3 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

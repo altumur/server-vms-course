@@ -1,0 +1,5 @@
+# P/08 kit seams; ordinary code and controlled I/O, protocol in forms/README.md.
+# scenario	step	request	expect
+s01-signature-before-mark	1	CALL domain-report-admit {"signature":"bad"}	{"status":401,"mark_writes":0}
+s02-old-copy-unconfirmed	1	CALL domain-report-admit {"old_generation":"read_unconfirmed"}	{"status":503,"mark_writes":0}
+s03-generation-before-mark	1	CALL domain-report-admit {"generation_put":"outcome_unconfirmed"}	{"status":503,"mark_writes":0,"generation_accepted":false}

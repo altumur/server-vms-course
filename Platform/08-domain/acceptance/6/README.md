@@ -89,3 +89,7 @@ the counter `domain/placement` by 1 (P/08.6 Н3, C08-PLACEMENT-BUMP-TURN-01). Af
 waits for `{"rev": 1, "records": {}}` (`@until`: the raise could come at the first answer to an agent), the first placement write is `rev` 2,
 then one by one. The former expectations `rev 0` / the first write `rev 1` (the move of М11/06) are from before this decision
 (C08-PLACEMENT-BUMP-ACCEPT-01, a question of c-go 2026-10-30).
+
+## Kit seams
+
+[3 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

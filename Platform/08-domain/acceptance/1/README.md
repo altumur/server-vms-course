@@ -48,3 +48,7 @@ The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, n
 of the acceptances of М11/03 and М11/06 as a whole, at the beginning of the log, with the former paths and numbers (they are resolved by
 [`id-map.tsv`](../../../common/id-map.tsv)); the rows about scenarios of other chapters are the history of the source (the plan of the move of lesson 8,
 § 3 «Журналы»).
+
+## Kit seams
+
+[3 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
