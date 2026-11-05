@@ -57,6 +57,7 @@ import gen_checks  # noqa: E402 — свежесть writecheck
 import gen_door  # noqa: E402 — свежесть door
 import gen_launch  # noqa: E402 — часть launch
 import gen_core  # noqa: E402 — часть core
+import gen_versioned_doors  # noqa: E402 — метаданные существующей части core у P/08
 import gen_families  # noqa: E402 — часть families
 sys.path.insert(0, str(HERE.parent / "contracts"))
 import kitside  # noqa: E402 — стороны урока у адаптеров части contracts
@@ -234,7 +235,8 @@ def provenance(parts, files, judged):
         elif part in MACHINES:
             out[part] = {**gen_machine.provenance(part), "output": output(part)}
         elif part in ("flags", "refusals", "launch", "core", "families", "admin", "box", "loader", "rollout-poll"):
-            mod = {"flags": gen_flags, "refusals": gen_refusals, "launch": gen_launch, "core": gen_core,
+            mod = {"flags": gen_flags, "refusals": gen_refusals, "launch": gen_launch,
+                   "core": gen_versioned_doors if L.key == "08-domain" else gen_core,
                    "families": gen_families, "admin": gen_admin, "box": gen_box, "loader": gen_manifest,
                    "rollout-poll": gen_rollout}[part]
             out[part] = {**mod.provenance(), "output": output(part)}
@@ -331,7 +333,9 @@ def build(dst, module, parts=(), judged=None, seed=None):
     if "launch" in parts and not {"door", "flags", "stagetests"} <= set(parts):
         raise KitError("--part launch needs --part door, --part flags and --part stagetests: the frame parses by flags "
                        "and serves coreadapter.Handle over apidoor (ADR-0083 addendum (95) item 3)")
-    if "core" in parts and not {"door", "stagetests"} <= set(parts):
+    if "core" in parts and L.key == "08-domain" and "door" not in parts:
+        raise KitError("--part core metadata of P/08 needs --part door")
+    if "core" in parts and L.key != "08-domain" and not {"door", "stagetests"} <= set(parts):
         raise KitError("--part core needs --part door and --part stagetests: the core is the coreadapter.Core of the "
                        "stage tests over apidoor.Handler (ADR-0083 addendum (95) item 3)")
     kit_parts = (["writecheck"] if has_wc else []) + sorted(set(parts))
@@ -346,7 +350,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
         flag_files = gen_flags.kit_files() if "flags" in parts else []
         refusal_files = gen_refusals.kit_files() if "refusals" in parts else []
         launch_files = gen_launch.kit_files(module) if "launch" in parts else []
-        core_files = gen_core.kit_files(module) if "core" in parts else []
+        core_files = ((gen_versioned_doors if L.key == "08-domain" else gen_core).kit_files(module)
+                      if "core" in parts else [])
         family_files = gen_families.kit_files() if "families" in parts else []
         admin_files = gen_admin.kit_files(module) if "admin" in parts else []
         box_files = gen_box.kit_files(module) if "box" in parts else []
@@ -356,7 +361,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
         machine_files = [(p, f) for p in sorted(set(parts) & set(MACHINES)) for f in gen_machine.kit_files(p, module)]
     except (gen_machine.GenError, gen_tests.GenError, gen_flags.GenError, gen_refusals.GenError, gen_launch.GenError,
             gen_core.GenError, gen_families.GenError, gen_admin.GenError, gen_box.GenError, gen_manifest.GenError, gen_cmdtests.GenError,
-            gen_rollout.GenError, gen_vectors.GenError) as exc:
+            gen_rollout.GenError, gen_vectors.GenError, gen_versioned_doors.GenError) as exc:
         raise KitError(str(exc)) from None
     door_lesson = "door" in parts and L.key != lesson.DEFAULT
     try:
@@ -469,10 +474,11 @@ def build(dst, module, parts=(), judged=None, seed=None):
         if own:
             files[-1]["editable"] = True
     for sub, name, data, origin, source, own in core_files:
-        if taken(internal / sub / name, data):
+        if own and taken(internal / sub / name, data):
             continue                    # ядро реализации не трогается
         put(sub, name, data, origin, "core", source)
-        files[-1]["editable"] = True
+        if own:
+            files[-1]["editable"] = True
     stagetests_md = (gen_tests.KIT_MD_STAGETESTS if http else gen_cmdtests.KIT_MD) if "stagetests" in parts else ""
     doc = ((KIT_MD if has_wc else KIT_MD_LESSON.replace("{lesson}", L.code).replace("{dir}", L.kit_dir))
            + ((gen_tests.kit_md() if L.key == lesson.DEFAULT else gen_vectors.KIT_MD) if "vectors" in parts else "")
@@ -482,7 +488,8 @@ def build(dst, module, parts=(), judged=None, seed=None):
            + (gen_families.kit_md() if family_files else "") + (gen_admin.kit_md() if admin_files else "")
            + (gen_box.kit_md() if box_files else "")
            + (gen_manifest.kit_md() if loader_files else "")
-           + (gen_launch.KIT_MD if launch_files else "") + (gen_core.KIT_MD if core_files else "")
+           + (gen_launch.KIT_MD if launch_files else "")
+           + ((gen_versioned_doors if L.key == "08-domain" else gen_core).KIT_MD if core_files else "")
            + "".join(gen_machine.kit_md(p) for p in sorted(set(parts) & set(MACHINES)))
            + (KIT_CONTRACTS_MD if "contracts" in parts else "")).replace("{module}", module)
     connect = connect_md(kit_parts, module) if L.key == lesson.DEFAULT else ""   # примеры частей — кодом P/01
@@ -702,6 +709,7 @@ PART_GENS = {"flags": ("gen_flags.py",), "refusals": ("gen_refusals.py",), "stag
              "rollout-poll": ("gen_rollout.py",), "families": ("gen_families.py",),
              "vectors": ("gen_families.py", "gen_vectors.py"), "loader": ("gen_manifest.py",),
              "contracts": ("contracts/gen/gen_heartbeat.py",),
+             "core": ("gen_versioned_doors.py",),
              **{m: ("gen_machine.py",) for m in MACHINES}, "door": ("gen_door_lesson.py",)}
 
 
