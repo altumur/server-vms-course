@@ -103,7 +103,7 @@ journal:      domain.forwarded {cluster, path, user, status} at the forwarding c
 
 ### First cookie transition to the domain
 
-G10-FORWARD-CREDENTIALS-01, the Architect's decision under ADR-0083. At the **first console transition toward the domain**, transition 1, 2 or 3 according to where the external request entered, the console sets `Authorization: Bearer <токен>` only when all of these hold:
+G10-FORWARD-CREDENTIALS-01, the Architect's decision under ADR-0083. At the **first console transition toward the domain**, transition 1, 2 or 3 according to where the external request entered, the console sets `Authorization: Bearer <token>` only when all of these hold:
 
 1. The ordinary `identity`, `need` and `may` checks of this request have succeeded.
 2. The original request has passed its cookie-CSRF check under the gate-and-pass contract. Converting the credential does not turn an unchecked cookie request into a non-cookie request.
