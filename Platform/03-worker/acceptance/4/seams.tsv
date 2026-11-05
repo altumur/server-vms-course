@@ -6,3 +6,6 @@ s1-stand-in-no-watchdog	1	CALL worker-stand-in {"step_age":13,"slot_owned":true,
 s2-stand-in-no-revival	1	CALL worker-stand-in {"step_age":13,"slot_owned":true,"writing_allowed":false,"fenced":true}	{"slot_writes":0,"epoch_reads":0,"heartbeat_writes":0,"watchdog_calls":0}
 s3-budget-domain-no-role	1	CALL worker-memory {"command":"domainworker","manifest":{"placement":{"capacity":{"default":3,"unit_mb":100,"base_mb":10}}},"environment":{}}	{"checked":false,"refused":false}
 s4-budget-over	1	CALL worker-memory {"command":"worker","manifest":{"placement":{"capacity":{"default":3,"unit_mb":100,"base_mb":10}}},"environment":{"CAPACITY":"3","WORKER_MEMORY_MB":"309"}}	{"checked":true,"refused":true,"reason":"MemoryBudgetRefused"}
+s5-heartbeat-base-default	1	CALL worker-base-heartbeat {"subsystem_overrides":{},"environment":{}}	{"schema":1,"build":"dev","pending_writes":0}
+s6-heartbeat-base-build	1	CALL worker-base-heartbeat {"subsystem_overrides":{},"environment":{"BUILD":"review"}}	{"schema":1,"build":"review","pending_writes":0}
+s7-stand-in-strict-place	1	CALL worker-stand-in {"step_age":13,"slot_owned":true,"writing_allowed":true,"strict_place":true,"loop_heartbeat":{"ts":100,"status":[]},"wall":113}	{"strict_place_writes":1,"strict_place_guarded_by_slot":true,"contribution_writes":0,"state_writes":0,"watchdog_calls":0}
