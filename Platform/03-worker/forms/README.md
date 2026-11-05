@@ -75,3 +75,7 @@ name adds a new process operation. All counters are observations since the fresh
 
 These seams supplement reading witnesses. They do not remove the checklist or close a process scenario, domain stand, keyless opening case,
 place writer, or OS presence-lock race that they do not execute. The stage plan lists them as kit tests; the full lesson remains the runner's work.
+
+## Row-write bindings
+
+[row-write-bindings.tsv](row-write-bindings.tsv) and its [grammar](row-write-bindings.md) define the state constructor from the start snapshot at P/03.6-R018/R029 under ADR-0127; IO/CAS/retry remain with the procedure.
