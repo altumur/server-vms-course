@@ -49,7 +49,9 @@ P/06.4-01…11, P/06.5-01…19, P/06.6-01…08, P/06.7-01…19, P/06.8-01…18, 
   of a resource and the reading of the decision intent → placement → intent — [the observation contract](../../common/contracts/observation.md).
 - [OpenAPI](06-console.api.openapi.yaml) expresses the HTTP forms of the canon of all chapters of the lesson: one door of a process — one
   contract; the description of each path names the chapter. The common answers (`BadBody`, `Unauthenticated`, `Denied`, `NoRoute`,
-  `Method`, `SlowBody`, `LargeBody`, `RateLimited`) — the same for all doors; 503 — by door: `Unavailable` (`busy`,
+  `Method`, `SlowBody`, `LargeBody`, `RateLimited`) — the same for all doors. The seven writing operations covered by `writes_via`
+  (chapter 6.1 Н1.1а) use `WriteDenied` at 403: `Denied` or `WritesVia` (`error: writes via`, without `field`); the gate's `Denied` remains `error: denied`.
+  503 — by door: `Unavailable` (`busy`,
   `denied`, `unavailable` — the doors of 6.6 and the observations of 6.5), `GuardUnavailable` (`GET /manifest`), `UnitUnavailable` and
   `WriteUnavailable` (the units door of 6.1), `ConsoleUnavailable` (the others). The schemas of the event rows and `SubsystemName` —
   `$ref` to [the contract of P/05](../../05-resource/spec/05-resource.api.openapi.yaml); the implementation reads them there.
@@ -324,10 +326,18 @@ The chapter is done after the ticket and the second kind of pass of ADR-0094 B1.
 ### The whole lesson
 
 Run the acceptance scenarios separately, with the preparation named by the acceptance README of the chapter: in all the lesson has
-141 scenarios / 1526 steps — chapter 6.1 (`acceptance/1/`: 01–46), chapter 6.2 (`acceptance/2/`: 01–11), chapter 6.3
+141 scenarios / 1528 steps — chapter 6.1 (`acceptance/1/`: 01–46), chapter 6.2 (`acceptance/2/`: 01–11), chapter 6.3
 (`acceptance/3/`: 03), chapter 6.4 (`acceptance/4/`: 03, 04, 06–12), chapter 6.5 (`acceptance/5/`: 01–33), chapter 6.6
 (`acceptance/6/`: 01–17), chapter 6.7 (`acceptance/7/`: 01–03, 06, 13–18; the domain stand), chapter 6.8 (`acceptance/8/`: 01–12), chapter 6.9 (`acceptance/9/`: 01–02). Fill the checklists of the chapters
 with the evidence from Н5 of the chapters.
+
+The ordinary P/06 stage can finish before progression to P/07 and P/08 when its non-domain responsibilities are implemented and all published
+executable targets of the ordinary stand and their vectors pass. Available non-domain pass checks belong to this stage too, including scenario 04 of
+[the pass stand](../../common/acceptance/pass/README.md). Chapter 6.7 and the positive group-operation and pass checks that require the domain stand
+(including its person and ticket setup) are recorded separately as unchecked dependencies;
+return to them after P/08–P/10 (ADR-0083 addendum (54) item 1). Continue the independent process work, including the reapers, resealing and the feed.
+Scenarios 01–02 of acceptance 6.9 confirm only the absence of operation doors without a declaration. They do not close the positive OPS checks
+or the chapter's readiness checklist. A `not_executed` check remains unchecked and does not count as PASS.
 
 ## Pitfalls of the language and the library
 
