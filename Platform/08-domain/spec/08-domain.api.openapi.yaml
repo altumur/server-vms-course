@@ -2607,7 +2607,7 @@ components:
                     silent_after:
                       type: number
                       minimum: 0
-                      description: 'Silence period of the member (observation contract «Freshness of a domain member»); absent — LOST_AFTER.'
+                      description: 'Native view camera selector and silence period (P/08.1 Н2, G08-VIEW-CAMERA-INPUT-01): an explicit field models a camera, with receipt time seeded by at of its first existing-mark look; age up to this threshold is ok, above it silent. Absent — a server, LOST_AFTER and unseen until an observed mark change. This native abstraction does not replace runtime Entry.class and reported.received_at; heartbeat timestamps are not receipt times.'
                     stale:
                       type: array
                       items: {type: string}
