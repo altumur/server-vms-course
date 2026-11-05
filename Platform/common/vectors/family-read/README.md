@@ -31,3 +31,7 @@ binary64: a refusal of the place, the writer does not crash). The runner compare
 
 The iteration order of mappings (D18): in Go the iteration of a `map` is random — the expression and the check must not depend on the order
 of keys (uniqueness and `prefix_free` — without element numbers); the set is run on Go more than once.
+
+## Vector wire
+
+The wire of `01.tsv`, `02.tsv` is set by the `common/family-read` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

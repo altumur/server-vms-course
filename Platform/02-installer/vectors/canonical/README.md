@@ -52,3 +52,7 @@ Who executes — the installer (`02-installer`: «build view» P/02.2 Н3 — fo
 The wrapper of the view row, the write order row — view — mark, «без изменений» with the view, the refusal `toolarge` of the view — the acceptance of chapter
 [`acceptance/2/`](../../acceptance/2/README.md). The schema of the view — the section «Форма канонического вида» of the norms of chapter 2.2 (P/02.2-05;
 `check_spec` checks that the view of each input passes it). The reader of the view — by the edits of the readers (P/02.2-06).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `02-installer/canonical` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

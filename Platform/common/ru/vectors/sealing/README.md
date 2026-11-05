@@ -28,13 +28,6 @@ nonce — первые 12 байт `sha256("w2c test <слово>")`; в раб�
 `reseal.tsv` — консоль (перезапечатывание при старте) и установщик (`w2cctl secrets seal`); строки `rotate*` —
 установщик (`w2cctl secrets rotate`) (ACC-VECTORS-CONNECT-03: строку исполняет роль, чья норма вызывает её функцию; решение «Архитектора» 2026-10-26).
 
-## Нативный исход
+## Провод векторов
 
-По общему правилу «Векторы» [общего README приёмки](../../acceptance/README.md) (решение «Архитектора» 2026-10-27); колонки ожидания:
-`aad.tsv` — `pointer`, `aad_hex`: объект `{"pointer": …, "aad_hex": …}` (вход — `row_key`, `path`); `envelope.tsv` —
-`envelope`: строка JSON конверта (вход — `key_hex`, `kid`, `nonce_b64url`, `row_key`, `pointer`, `plaintext`; открытие того же
-конверта — `open.tsv` своей функцией); `open.tsv`, `reseal.tsv`, `ring.tsv` — `expect`: значение JSON, слово (`sealed`,
-`unreadable`, строка `current …`) — строкой JSON. `ring.tsv`: вход единой команды `vectors` — `cells` «имя → строка»: у строк
-`rotate*` (по имени строки) `{"file": <ячейка>, "rotate": "true"}` (`"true"` — строка, не булево JSON), у прочих
-ровно `{"file": <ячейка>}`; исход — код 0 и строка JSON как `expect`; строки `rotate*` исполняет
-только установщик (`02-installer`) (ACC-SEALING-RING-ROTATE-01, решение «Архитектора» 2026-10-27).
+Провод таблиц `aad.tsv`, `envelope.tsv`, `open.tsv`, `reseal.tsv`, `ring.tsv` задают строки `common/sealing` в [единой форме](../../../vectors/wire.tsv); [грамматика](../wire.md). Форма — источник шапки, выбранных входов, фикстур, нативного исхода и сравнения. Смысл алгоритма и обязанность потребителя остаются здесь.

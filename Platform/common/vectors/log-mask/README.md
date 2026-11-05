@@ -53,3 +53,7 @@ of the log do not call `mask_in` — for them `cases.tsv` (ACC-VECTORS-CONNECT-0
 
 The journal, the heartbeat, the snapshot, argv and the text of a refusal without values (Н1.4 `never`) — by reading against the write places of the implementation: these
 outputs the table does not read (P/06.2-05).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/log-mask` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

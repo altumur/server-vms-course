@@ -31,3 +31,7 @@ Who performs is every process whose norm calls the door of P/01.1 as a client (A
 `w2cctl manifest put`, `rights`, `secrets`, the installation), the worker and the worker at the domain (`03-worker`), the controller (`04-controller`),
 the resource (`05-resource`), the cluster console (`06-console`), the process `domain` (`08-domain`), the agent (`09-agent`), the domain console
 (`10-domain-console`) — the writers and the readers of rows by the catalogue (`Platform/common/data/catalog.tsv`).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/store-client` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

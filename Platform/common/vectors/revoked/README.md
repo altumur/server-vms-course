@@ -26,7 +26,6 @@ value) equals `expect`, or the file is rejected as wrong at `@bad`. Bytes that a
 case of `bad_file` is checked by reading.
 Who performs are the same roles as at the package [`crl`](../crl/README.md) (the function `revoke` of the role certificate contract): the doors — the store (`01-store`), the worker (`03-worker`), the resource (`05-resource`), the process `domain` (`08-domain`, `SIGNER_URL`), the domain console (`10-domain-console`); the clients of their own cluster (`own_client`: peer, then the revocation) — the installer (`02-installer`), the controller (`04-controller`), the resource (`05-resource`), the console (`06-console`), the agent (`09-agent`), the domain console (`10-domain-console`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
-## Native outcome
+## Vector wire
 
-The package has no separate command contract — the general rule «Vectors» of [the common acceptance README](../../acceptance/README.md)
-(ACC-VECTORS-CONNECT-04, the Architect's decision of 2026-10-26): the function answers with code 0 and one JSON value. An array of serials or the JSON string `"@bad"` — the file is wrong.
+The wire of `cases.tsv` is set by the `common/revoked` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

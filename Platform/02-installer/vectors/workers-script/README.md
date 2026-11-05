@@ -36,3 +36,7 @@ and by reading; a single execution mechanism (rules 6) — by reading.
 ## Who executes
 
 Who executes — the installer (`02-installer`: the server script `w2c-workers.sh`, P/02.4 Н1.5 `rules` 2–4). Only read the ready result: the controller (`04-controller`, writes `want` of the order row, P/04 Н1.1) and the console (`06-console`, the series `workers_wanted{server}`, P/06.5 Н3 «/metrics — text»); the worker (`03-worker`) only accepts the stop (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `02-installer/workers-script` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

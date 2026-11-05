@@ -24,7 +24,6 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; 
 A side derives the key by its own code from `root_key` and `backup_key_rev` and compares with `expect`, or a refusal at `@refuse`.
 Who performs it — the installer (`02-installer`, the command «domain installation» of P/02.4 Н3: the key at `backup_key_rev` 1, step 4 of the domain founding contract) and the process `domain` of the holder (`08-domain`, P/08.8 Н1.5 `backup_key`: the sealing and the reading of a copy by its `backup_key_rev`) — all rows. They only read the ready one and do not derive the key: the keeper's agent (`09-agent`, P/09.1 Н3 «check the backup copy») and the cluster console (`06-console`, `GET /api/backup` as read, P/06.7) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
 
-## Native outcome
+## Vector wire
 
-The package has no separate command contract — the common rule «Vectors» of [the common acceptance README](../../acceptance/README.md)
-(ACC-VECTORS-CONNECT-04, the Architect's decision 2026-10-26): the function answers with code 0 and one JSON value. The key — a JSON string with hex (`"<64 hex>"`), a refusal of the derivation — the JSON string `"@refuse"`.
+The wire of `cases.tsv` is set by the `common/domain-backup-key` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.

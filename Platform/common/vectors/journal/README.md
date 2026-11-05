@@ -70,3 +70,7 @@ The package has no separate command contract — the general rule «Vectors» of
 `"@skip"`, for `write-*` — the JSON string `"write"`, `"keep"` or `"refuse"`; `years.tsv` — the name of the bucket as a JSON string or the
 JSON string `"@refuse"`; `append.tsv` — the content after the write as a JSON string or `"@refuse"`. `modes.tsv` is a layout test, not
 a function: the rule does not apply to it.
+
+## Vector wire
+
+The wire of `modes.tsv` is set by the `common/journal` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
