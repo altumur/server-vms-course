@@ -17,6 +17,44 @@ type Env struct {
 	Stdout io.Writer
 	Stderr io.Writer
 	Getenv func(string) string
+	Copy   CopyOps // optional: box.CopyControl over the actual host store/transport
+}
+
+// CopyOps is implemented by box.CopyControl. Connect it in launch.App.Admin's
+// ordinary admin.Run environment. No storage format or socket protocol is assumed.
+type CopyOps interface {
+	Backup(file string) error
+	Import(file string, indexBase uint64, force bool) error
+	Restore(file string, force bool) error
+}
+
+func runCopy(cmd string, f *flags.Flags, env Env) int {
+	log := env.Stderr
+	if log == nil {
+		log = io.Discard
+	}
+	want := 0
+	if cmd == "backup" {
+		want = 1
+	}
+	if len(f.Args) != want {
+		fmt.Fprintf(log, "configstore %s: want %d positional arguments\n", cmd, want)
+		return 2
+	}
+	var err error
+	switch cmd {
+	case "backup":
+		err = env.Copy.Backup(f.Args[0])
+	case "import":
+		err = env.Copy.Import(f.From, uint64(f.IndexBase), f.Force)
+	case "restore":
+		err = env.Copy.Restore(f.From, f.Force)
+	}
+	if err != nil {
+		fmt.Fprintf(log, "configstore %s: %v\n", cmd, err)
+		return 1
+	}
+	return 0
 }
 
 // NotInStageCode — the exit code of a subcommand without an implementation. Not 2: 2 is the start refusal of the flag

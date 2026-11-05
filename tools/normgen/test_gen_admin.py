@@ -58,7 +58,11 @@ class Admin(unittest.TestCase):
             text = (self.pkg / f"{cmd}.go").read_text(encoding="utf-8")
             name = gen_admin.go_name(cmd)
             self.assertEqual(re.findall(r"^func (\w+)\(", text, re.M), [name])
-            self.assertIn(f"func {name}(f *flags.Flags, env Env) int {{\n\treturn NotInStage(\"{cmd}\", env)\n}}", text)
+            self.assertIn(f"func {name}(f *flags.Flags, env Env) int {{", text)
+            self.assertIn(f'return NotInStage("{cmd}", env)', text)
+            if cmd in ("backup", "import", "restore"):
+                self.assertIn("if env.Copy != nil", text)
+                self.assertIn(f'return runCopy("{cmd}", f, env)', text)
             self.assertIn(f'case "{cmd}":\n\t\treturn {name}(f, env)', admin)
             self.assertNotIn("DO NOT EDIT", text)
             self.assertIn("(req: P/01.3-R006)", text)
