@@ -48,7 +48,7 @@ var t0 = time.Unix(2000000000, 0)
 // clock — the test clock: for seams.tsv t0 plus the accumulated @clock shifts; for scenarios.tsv the wall clock, as
 // the runner's stand has; safe for concurrent use.
 type clock struct {
-	shift atomic.Int64
+	shift atomic.Int64 // nanoseconds: a decimal @clock keeps its fraction exactly (no float)
 	wall  bool
 }
 
@@ -57,7 +57,35 @@ func (c *clock) now() time.Time {
 	if c.wall {
 		base = time.Now()
 	}
-	return base.Add(time.Duration(c.shift.Load()) * time.Second)
+	return base.Add(time.Duration(c.shift.Load()))
+}
+
+// clockShift — «@clock ±N» in nanoseconds: N is decimal seconds with at most 9 fraction digits, parsed exactly.
+func clockShift(arg string) (int64, error) {
+	sign, rest := int64(1), arg
+	switch {
+	case strings.HasPrefix(rest, "+"):
+		rest = rest[1:]
+	case strings.HasPrefix(rest, "-"):
+		sign, rest = -1, rest[1:]
+	default:
+		return 0, fmt.Errorf("@clock %q: want +N or -N", arg)
+	}
+	whole, frac, _ := strings.Cut(rest, ".")
+	if len(frac) > 9 {
+		return 0, fmt.Errorf("@clock %q: more than 9 fraction digits", arg)
+	}
+	sec, err := strconv.ParseInt(whole, 10, 64)
+	if err != nil || sec > 9e9 {
+		return 0, fmt.Errorf("@clock %q: seconds out of form", arg)
+	}
+	ns := int64(0)
+	if frac != "" {
+		if ns, err = strconv.ParseInt(frac+strings.Repeat("0", 9-len(frac)), 10, 64); err != nil {
+			return 0, fmt.Errorf("@clock %q: fraction out of form", arg)
+		}
+	}
+	return sign * (sec*1e9 + ns), nil
 }
 
 // scenario — the state of one scenario: the core (reopened by @reopen), its config, the bound $names, the next step's
@@ -116,8 +144,11 @@ func (sc *scenario) runStep(st step) []string {
 	switch {
 	case strings.HasPrefix(st.request, "ASSERT "):
 		return checkAssert(st.request, env)
-	case strings.HasPrefix(st.request, "@clock "): // seams: the clock shift in seconds, accumulated
-		n, _ := strconv.ParseInt(st.request[len("@clock "):], 10, 64)
+	case strings.HasPrefix(st.request, "@clock "): // seams: the clock shift in decimal seconds, accumulated
+		n, err := clockShift(st.request[len("@clock "):])
+		if err != nil {
+			return []string{err.Error()}
+		}
 		sc.clk.shift.Add(n)
 		return nil
 	case st.request == "@reopen": // seams: Close and Open on the same DataDir with the same clock

@@ -70,6 +70,15 @@ SEAMS = [
     ("m2-reopen", "3", "@reopen", "ok", None, "pass"),
     ("m2-reopen", "4", "GET /opens", '200 {"n":"2"}', None, "pass"),
     ("m2-reopen", "5", "GET /now", '200 {"now":"2000000005"}', None, "pass"),
+    ("m4-frac", "1", "@clock +0.25", "ok", None, "pass"),
+    ("m4-frac", "2", "GET /nowns", '200 {"now":"2000000000250000000"}', None, "pass"),
+    ("m4-frac", "3", "@clock +100.25", "ok", None, "pass"),
+    ("m4-frac", "4", "GET /nowns", '200 {"now":"2000000100500000000"}', None, "pass"),
+    ("m4-frac", "5", "@reopen", "ok", None, "pass"),
+    ("m4-frac", "6", "@clock -100.125", "ok", None, "pass"),
+    ("m4-frac", "7", "GET /nowns", '200 {"now":"2000000000375000000"}', None, "pass"),
+    ("m4-frac", "8", "@clock +0.000000001", "ok", None, "pass"),
+    ("m4-frac", "9", "GET /nowns", '200 {"now":"2000000000375000000"}', None, "fail"),
     ("m3-par", "1", "@parallel 4", "ok", None, "pass"),
     ("m3-par", "2", "POST /race1 {}", 'one 200 {"index":"$b"}; rest 409 {"kind":"conflict","index":"$b"}', None, "pass"),
     ("m3-par", "3", "GET /five", '200 {"index":"$b"}', None, "pass"),
@@ -127,6 +136,8 @@ func init() {
 		switch {
 		case target == "/now":
 			return 200, nil, []byte(fmt.Sprintf(`{"now":"%%d"}`, cfg.Now().Unix()))
+		case target == "/nowns":
+			return 200, nil, []byte(fmt.Sprintf(`{"now":"%%d"}`, cfg.Now().UnixNano()))
 		case target == "/opens":
 			mu.Lock()
 			defer mu.Unlock()

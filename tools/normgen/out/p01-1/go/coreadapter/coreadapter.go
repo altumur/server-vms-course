@@ -22,7 +22,7 @@ type Config struct {
 	BodyLimit  int64            // the read limit of the HTTP body (1048576 on the stand)
 	RowCeiling int64            // the row ceiling (524288 on the stand)
 	Rights     []byte           // the rights file (P/01.2 Н1.2): the role acc with read, write, delete on acc/*
-	Now        func() time.Time // the clock of the test: take every time of the core from it (seams @clock)
+	Now        func() time.Time // the clock of the test: take every time of the core from it (seams @clock, its fraction too)
 	DataDir    string           // the data directory of the scenario: fresh per scenario; @reopen opens it again
 }
 
