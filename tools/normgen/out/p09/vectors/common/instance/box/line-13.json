@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/instance",
+ "table": "box.tsv",
+ "case": "hostname-bad",
+ "variant": "",
+ "cells": {
+  "input": "{\"machine_id\":\"@missing\",\"hostname\":\"h:1\"}"
+ },
+ "files": {}
+}

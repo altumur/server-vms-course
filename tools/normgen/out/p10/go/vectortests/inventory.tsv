@@ -1,0 +1,392 @@
+# The vector tables of the lesson (gen_vectors.py).
+table	status
+common/alarm-history cases.tsv 10	excluded: op 'write': not this consumer (README «Who performs it»)
+common/alarm-history cases.tsv 11	excluded: op 'write': not this consumer (README «Who performs it»)
+common/alarm-history cases.tsv 12	excluded: op 'write': not this consumer (README «Who performs it»)
+common/alarm-history cases.tsv 16	excluded: op 'write': not this consumer (README «Who performs it»)
+common/alarm-history cases.tsv 17	excluded: op 'write': not this consumer (README «Who performs it»)
+common/alarm-history cases.tsv 18	excluded: op 'write': not this consumer (README «Who performs it»)
+common/alarm-history cases.tsv 19	excluded: op 'write': not this consumer (README «Who performs it»)
+common/alarm-history cases.tsv 4	translated
+common/alarm-history cases.tsv 5	translated
+common/alarm-history cases.tsv 6	translated
+common/alarm-history cases.tsv 7	translated
+common/alarm-history cases.tsv 8	translated
+common/alarm-history cases.tsv 9	translated
+common/alarm-history cases.tsv 13	translated
+common/alarm-history cases.tsv 14	translated
+common/alarm-history cases.tsv 15	translated
+common/domain-token cases.tsv 10	translated
+common/domain-token cases.tsv 11	translated
+common/domain-token cases.tsv 12	translated
+common/domain-token cases.tsv 13	translated
+common/domain-token cases.tsv 14	translated
+common/domain-token cases.tsv 15	translated
+common/domain-token cases.tsv 16	translated
+common/domain-token cases.tsv 17	translated
+common/domain-token cases.tsv 18	translated
+common/domain-token cases.tsv 19	translated
+common/domain-token cases.tsv 20	translated
+common/domain-token cases.tsv 21	translated
+common/domain-token cases.tsv 22	translated
+common/domain-token cases.tsv 23	translated
+common/domain-token cases.tsv 24	translated
+common/domain-token cases.tsv 25	translated
+common/domain-token cases.tsv 26	translated
+common/domain-token cases.tsv 27	translated
+common/domain-token cases.tsv 28	translated
+common/domain-token cases.tsv 29	translated
+common/domain-token cases.tsv 30	translated
+common/domain-token cases.tsv 31	translated
+common/domain-token cases.tsv 32	translated
+common/domain-token cases.tsv 33	translated
+common/domain-token cases.tsv 34	translated
+common/domain-token cases.tsv 35	translated
+common/domain-token cases.tsv 36	translated
+common/domain-token cases.tsv 37	translated
+common/domain-token cases.tsv 38	translated
+common/domain-token cases.tsv 39	translated
+common/domain-token cases.tsv 40	translated
+common/domain-token cases.tsv 41	translated
+common/domain-token cases.tsv 42	translated
+common/domain-token cases.tsv 43	translated
+common/domain-token cases.tsv 44	translated
+common/domain-token cases.tsv 45	translated
+common/domain-token cases.tsv 46	translated
+common/domain-token cases.tsv 47	translated
+common/domain-token cases.tsv 48	translated
+common/domain-token cases.tsv 49	translated
+common/domain-token cases.tsv 50	translated
+common/domain-token cases.tsv 51	translated
+common/domain-token cases.tsv 52	translated
+common/domain-token cases.tsv 53	translated
+common/domain-token cases.tsv 54	translated
+common/domain-token cases.tsv 55	translated
+common/domain-token cases.tsv 56	translated
+common/domain-token cases.tsv 57	translated
+common/domain-token cases.tsv 58	translated
+common/domain-token cases.tsv 59	translated
+common/domain-token cases.tsv 60	translated
+common/domain-token cases.tsv 61	translated
+common/domain-token cases.tsv 62	translated
+common/fresh-age fresh.tsv 3	translated
+common/fresh-age fresh.tsv 4	translated
+common/fresh-age fresh.tsv 5	translated
+common/fresh-age fresh.tsv 6	translated
+common/fresh-age fresh.tsv 7	translated
+common/fresh-age fresh.tsv 8	translated
+common/fresh-age fresh.tsv 9	translated
+common/fresh-age fresh.tsv 10	translated
+common/instance box.tsv 3	translated
+common/instance box.tsv 4	translated
+common/instance box.tsv 5	translated
+common/instance box.tsv 6	translated
+common/instance box.tsv 7	translated
+common/instance box.tsv 8	translated
+common/instance box.tsv 9	translated
+common/instance box.tsv 10	translated
+common/instance box.tsv 11	translated
+common/instance box.tsv 12	translated
+common/instance box.tsv 13	translated
+common/instance box.tsv 14	translated
+common/instance cases.tsv 4	translated
+common/instance cases.tsv 5	translated
+common/instance cases.tsv 6	translated
+common/instance cases.tsv 7	translated
+common/instance cases.tsv 8	translated
+common/journal append.tsv 3	translated
+common/journal append.tsv 4	translated
+common/journal append.tsv 5	translated
+common/journal append.tsv 6	translated
+common/journal append.tsv 7	translated
+common/journal append.tsv 8	translated
+common/journal names.tsv 3	translated
+common/journal names.tsv 4	translated
+common/journal names.tsv 5	translated
+common/journal names.tsv 6	translated
+common/journal names.tsv 7	translated
+common/journal names.tsv 8	translated
+common/journal names.tsv 9	translated
+common/journal names.tsv 10	translated
+common/journal names.tsv 11	translated
+common/journal years.tsv 3	translated
+common/journal years.tsv 4	translated
+common/journal years.tsv 5	translated
+common/journal years.tsv 6	translated
+common/loopback cases.tsv 3	translated
+common/loopback cases.tsv 4	translated
+common/loopback cases.tsv 5	translated
+common/loopback cases.tsv 6	translated
+common/loopback cases.tsv 7	translated
+common/loopback cases.tsv 8	translated
+common/loopback cases.tsv 9	translated
+common/loopback cases.tsv 10	translated
+common/loopback cases.tsv 11	translated
+common/loopback cases.tsv 12	translated
+common/loopback cases.tsv 13	translated
+common/loopback cases.tsv 14	translated
+common/loopback cases.tsv 15	translated
+common/loopback cases.tsv 16	translated
+common/loopback cases.tsv 17	translated
+common/loopback cases.tsv 18	translated
+common/loopback cases.tsv 19	translated
+common/loopback cases.tsv 20	translated
+common/loopback cases.tsv 21	translated
+common/loopback cases.tsv 22	translated
+common/loopback cases.tsv 23	translated
+common/loopback cases.tsv 24	translated
+common/loopback cases.tsv 25	translated
+common/loopback cases.tsv 26	translated
+common/loopback cases.tsv 27	translated
+common/loopback cases.tsv 28	translated
+common/loopback cases.tsv 29	translated
+common/loopback cases.tsv 30	translated
+common/loopback cases.tsv 31	translated
+common/loopback cases.tsv 32	translated
+common/loopback cases.tsv 33	translated
+common/may cases.tsv 7	translated
+common/may cases.tsv 8	translated
+common/may cases.tsv 9	translated
+common/may cases.tsv 10	translated
+common/may cases.tsv 11	translated
+common/may cases.tsv 12	translated
+common/may cases.tsv 13	translated
+common/may cases.tsv 14	translated
+common/may cases.tsv 15	translated
+common/may cases.tsv 16	translated
+common/may cases.tsv 17	translated
+common/may cases.tsv 18	translated
+common/may cases.tsv 19	translated
+common/may cases.tsv 20	translated
+common/may cases.tsv 21	translated
+common/may cases.tsv 22	translated
+common/may cases.tsv 23	translated
+common/may cases.tsv 24	translated
+common/may cases.tsv 25	translated
+common/may cases.tsv 26	translated
+common/may cases.tsv 27	translated
+common/may cases.tsv 28	translated
+common/may cases.tsv 29	translated
+common/may cases.tsv 30	translated
+common/may cases.tsv 31	translated
+common/may cases.tsv 32	translated
+common/may cases.tsv 33	translated
+common/may cases.tsv 34	translated
+common/may cases.tsv 35	translated
+common/may cases.tsv 36	translated
+common/may cases.tsv 37	translated
+common/may cases.tsv 38	translated
+common/may cases.tsv 39	translated
+common/may cases.tsv 40	translated
+common/may cases.tsv 41	translated
+common/may cases.tsv 42	translated
+common/may cases.tsv 43	translated
+common/may cases.tsv 44	translated
+common/may cases.tsv 45	translated
+common/may cases.tsv 46	translated
+common/may cases.tsv 47	translated
+common/may cases.tsv 48	translated
+common/may cases.tsv 49	translated
+common/may cases.tsv 50	translated
+common/may cases.tsv 51	translated
+common/may cases.tsv 52	translated
+common/may cases.tsv 53	translated
+common/may cases.tsv 54	translated
+common/may cases.tsv 55	translated
+common/may cases.tsv 56	translated
+common/may cases.tsv 57	translated
+common/may cases.tsv 58	translated
+common/may cases.tsv 59	translated
+common/may cases.tsv 60	translated
+common/may cases.tsv 61	translated
+common/may cases.tsv 62	translated
+common/may cases.tsv 63	translated
+common/may cases.tsv 64	translated
+common/may cases.tsv 65	translated
+common/may cases.tsv 66	translated
+common/may cases.tsv 67	translated
+common/may cases.tsv 68	translated
+common/may cases.tsv 69	translated
+common/may cases.tsv 70	translated
+common/may cases.tsv 71	translated
+common/may cases.tsv 72	translated
+common/may cases.tsv 73	translated
+common/may cases.tsv 74	translated
+common/may cases.tsv 75	translated
+common/may cases.tsv 76	translated
+common/may cases.tsv 77	translated
+common/may cases.tsv 78	translated
+common/may cases.tsv 79	translated
+common/may cases.tsv 80	translated
+common/may cases.tsv 81	translated
+common/may cases.tsv 82	translated
+common/may cases.tsv 83	translated
+common/may cases.tsv 84	translated
+common/may cases.tsv 85	translated
+common/may cases.tsv 86	translated
+common/may cases.tsv 87	translated
+common/may cases.tsv 88	translated
+common/may cases.tsv 89	translated
+common/may cases.tsv 90	translated
+common/may cases.tsv 91	translated
+common/may cases.tsv 92	translated
+common/may cases.tsv 93	translated
+common/may cases.tsv 94	translated
+common/may cases.tsv 95	translated
+common/may cases.tsv 96	translated
+common/may cases.tsv 97	translated
+common/may cases.tsv 98	translated
+common/may cases.tsv 99	translated
+common/may cases.tsv 100	translated
+common/may cases.tsv 101	translated
+common/may cases.tsv 102	translated
+common/may cases.tsv 103	translated
+common/may cases.tsv 104	translated
+common/may cases.tsv 105	translated
+common/may cases.tsv 106	translated
+common/may cases.tsv 107	translated
+common/may cases.tsv 108	translated
+common/may cases.tsv 109	translated
+common/may cases.tsv 110	translated
+common/may cases.tsv 111	translated
+common/may cases.tsv 112	translated
+common/may cases.tsv 113	translated
+common/may cases.tsv 114	translated
+common/may cases.tsv 115	translated
+common/may cases.tsv 116	translated
+common/may cases.tsv 117	translated
+common/may cases.tsv 118	translated
+common/may cases.tsv 119	translated
+common/may cases.tsv 120	translated
+common/may cases.tsv 121	translated
+common/may cases.tsv 122	translated
+common/may cases.tsv 123	translated
+common/may cases.tsv 124	translated
+common/may cases.tsv 125	translated
+common/may cases.tsv 126	translated
+common/may covers.tsv 3	translated
+common/may covers.tsv 4	translated
+common/may covers.tsv 5	translated
+common/may covers.tsv 6	translated
+common/may covers.tsv 7	translated
+common/may covers.tsv 8	translated
+common/may covers.tsv 9	translated
+common/may covers.tsv 10	translated
+common/may covers.tsv 11	translated
+common/may covers.tsv 12	translated
+common/may covers.tsv 13	translated
+common/may covers.tsv 14	translated
+common/may covers.tsv 15	translated
+common/may covers.tsv 16	translated
+common/may covers.tsv 17	translated
+common/may covers.tsv 18	translated
+common/may covers.tsv 19	translated
+common/may covers.tsv 20	translated
+common/may covers.tsv 21	translated
+common/object-client address.tsv 3	translated
+common/object-client address.tsv 4	translated
+common/object-client address.tsv 5	translated
+common/object-client address.tsv 6	translated
+common/object-client address.tsv 7	translated
+common/object-client address.tsv 8	translated
+common/object-client address.tsv 9	translated
+common/object-client address.tsv 10	translated
+common/object-client address.tsv 11	translated
+common/object-client address.tsv 12	translated
+common/object-client address.tsv 13	translated
+common/object-client address.tsv 14	translated
+common/object-client address.tsv 15	translated
+common/object-client address.tsv 16	translated
+common/object-client address.tsv 17	translated
+common/object-client read.tsv 3	translated
+common/object-client read.tsv 4	translated
+common/object-client read.tsv 5	translated
+common/object-client read.tsv 6	translated
+common/object-client read.tsv 7	translated
+common/object-client read.tsv 8	translated
+common/object-client read.tsv 9	translated
+common/object-client read.tsv 10	translated
+common/peer cases.tsv 7	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 8	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 9	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 10	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 11	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 12	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 13	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 14	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 18	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 19	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 20	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 21	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 22	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 23	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 24	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 25	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 26	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 27	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 28	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 29	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 31	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 32	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 34	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 35	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 36	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 37	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 38	excluded: not a role row: 06, 08, 09
+common/peer cases.tsv 15	translated
+common/peer cases.tsv 16	translated
+common/peer cases.tsv 17	translated
+common/peer cases.tsv 30	translated
+common/schema cases.tsv 3	translated
+common/schema cases.tsv 4	translated
+common/schema cases.tsv 5	translated
+common/schema cases.tsv 6	translated
+common/schema cases.tsv 7	translated
+common/schema cases.tsv 8	translated
+common/schema cases.tsv 9	translated
+common/schema cases.tsv 10	translated
+common/schema cases.tsv 11	translated
+common/trust-set cases.tsv 4	translated
+common/trust-set cases.tsv 5	translated
+common/trust-set cases.tsv 6	translated
+common/trust-set cases.tsv 7	translated
+common/trust-set cases.tsv 8	translated
+common/trust-set cases.tsv 9	translated
+common/trust-set cases.tsv 10	translated
+common/trust-set cases.tsv 11	translated
+common/trust-set cases.tsv 12	translated
+common/trust-set cases.tsv 13	translated
+common/trust-set cases.tsv 14	translated
+common/trust-set cases.tsv 15	translated
+10-domain-console/alarms cases.tsv 8	translated
+10-domain-console/alarms cases.tsv 9	translated
+10-domain-console/alarms cases.tsv 10	translated
+10-domain-console/alarms cases.tsv 11	translated
+10-domain-console/alarms cases.tsv 12	translated
+10-domain-console/alarms cases.tsv 13	translated
+10-domain-console/alarms cases.tsv 14	translated
+10-domain-console/alarms cases.tsv 15	translated
+10-domain-console/alarms cases.tsv 16	translated
+10-domain-console/alarms cases.tsv 17	translated
+10-domain-console/alarms cases.tsv 18	translated
+10-domain-console/alarms cases.tsv 19	translated
+10-domain-console/alarms cases.tsv 20	translated
+10-domain-console/alarms cases.tsv 21	translated
+10-domain-console/alarms cases.tsv 22	translated
+10-domain-console/alarms cases.tsv 23	translated
+10-domain-console/alarms cases.tsv 24	translated
+10-domain-console/alarms cases.tsv 25	translated
+10-domain-console/alarms cases.tsv 26	translated
+10-domain-console/alarms cases.tsv 27	translated
+10-domain-console/alarms cases.tsv 28	translated
+10-domain-console/alarms cases.tsv 29	translated
+10-domain-console/alarms cases.tsv 30	translated
+10-domain-console/alarms cases.tsv 31	translated
+10-domain-console/alarms cases.tsv 32	translated
+10-domain-console/alarms cases.tsv 33	translated
+10-domain-console/alarms cases.tsv 34	translated
+common_crl_test.go	translated
+common_log_mask_test.go	translated
+common_revoked_test.go	translated
+common_store_client_test.go	translated
+common/fault fault.tsv	excluded: layout (as 03): the process speaks no fault.tsv word of its own refusals (fault README «Who performs it»; no word in the lesson's norms); no native fault command

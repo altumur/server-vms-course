@@ -80,6 +80,10 @@ func checkBy(t *testing.T, where string, f func() vectoradapter.Answer, code int
 		secret(w, got, &errs)
 	case compare == "turn":
 		turn(w, got, &errs)
+	case compare == "secret-domain":
+		secretDomain(w, got, &errs)
+	case strings.HasPrefix(compare, "round:"):
+		round(w, got, compare[len("round:"):], &errs)
 	case compare == "vbt-write":
 		vbtWrite(w, got, &errs)
 	default:
@@ -116,6 +120,9 @@ func subset(exp, act any, path string, errs *[]string) {
 			}
 			if !has {
 				*errs = append(*errs, path+"."+k+": missing")
+				continue
+			}
+			if v == "@any" { // ключ есть, значение любое (общий словарь приёмки)
 				continue
 			}
 			subset(v, av, path+"."+k, errs)
@@ -325,6 +332,66 @@ func secret(exp, act any, errs *[]string) {
 		if hs, _ := h.(string); len(hs) >= 4 && strings.Contains(text, hs) {
 			*errs = append(*errs, "$.text repeats a hidden value of the row (no-leak whole)")
 		}
+	}
+}
+
+// secretDomain — secret-in у процесса домена (README «Native outcome»): ключи только fault и text; fault судится
+// только пустотой (слово — своё); при непустом fault text есть и не повторяет целый скрытый фрагмент (no-leak whole).
+func secretDomain(exp, act any, errs *[]string) {
+	e, _ := exp.(map[string]any)
+	a, ok := act.(map[string]any)
+	if !ok {
+		*errs = append(*errs, "$: want an object")
+		return
+	}
+	for k := range a {
+		if k != "fault" && k != "text" {
+			*errs = append(*errs, "$."+k+": an extra key")
+		}
+	}
+	gf, _ := a["fault"].(string)
+	wf, _ := e["fault"].(string)
+	if _, has := a["fault"]; !has || (gf == "") != (wf == "") {
+		*errs = append(*errs, "$.fault: "+show(a["fault"])+", want "+map[bool]string{true: "empty", false: "non-empty"}[wf == ""])
+	}
+	text, has := a["text"].(string)
+	if wf == "" {
+		if _, present := a["text"]; present {
+			*errs = append(*errs, "$.text: want absent at an empty fault")
+		}
+		return
+	}
+	if !has {
+		*errs = append(*errs, "$.text: missing at a refusal")
+		return
+	}
+	hidden, _ := e["hidden"].([]any)
+	for _, h := range hidden {
+		if hs, _ := h.(string); len(hs) >= 4 && strings.Contains(text, hs) {
+			*errs = append(*errs, "$.text repeats a hidden value of the row (no-leak whole)")
+		}
+	}
+}
+
+// round — круг конвертов domain-envelopes (spec "<поле>:<префикс>"): ожидание — подмножество, а поле — два разных
+// конверта с префиксом; не ok — подмножество.
+func round(exp, act any, spec string, errs *[]string) {
+	subset(exp, act, "$", errs)
+	e, _ := exp.(map[string]any)
+	if e["result"] != "ok" {
+		return
+	}
+	field, prefix, _ := strings.Cut(spec, ":")
+	a, _ := act.(map[string]any)
+	env, _ := a[field].([]any)
+	if len(env) != 2 {
+		*errs = append(*errs, "$."+field+": want two envelopes, got "+show(a[field]))
+		return
+	}
+	x, _ := env[0].(string)
+	y, _ := env[1].(string)
+	if !strings.HasPrefix(x, prefix) || !strings.HasPrefix(y, prefix) || x == y {
+		*errs = append(*errs, "$."+field+": two distinct envelopes with the prefix "+prefix)
 	}
 }
 

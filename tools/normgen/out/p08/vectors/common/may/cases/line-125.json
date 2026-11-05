@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/may",
+ "table": "cases.tsv",
+ "case": "may-role-admin",
+ "variant": "",
+ "cells": {
+  "input": "{\"grants\":{\"lines\":[]},\"cap\":\"view\",\"unit\":{\"sub\":\"testsub\",\"id\":\"c1\",\"labels\":[]},\"as_of\":1759999990,\"disabled\":[],\"user\":\"\",\"glass\":false,\"now\":1760000000,\"sub\":\"testsub\",\"as_role\":\"admin\"}"
+ },
+ "files": {}
+}

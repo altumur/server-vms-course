@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/instance",
+ "table": "cases.tsv",
+ "case": "given-leading-zeros-upper",
+ "variant": "",
+ "cells": {
+  "input": "{\"INSTANCE_ID\":\"w:007:ABCDEF\"}"
+ },
+ "files": {}
+}

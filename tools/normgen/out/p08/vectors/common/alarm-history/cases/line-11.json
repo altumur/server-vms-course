@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/alarm-history",
+ "table": "cases.tsv",
+ "case": "write-no-repeat",
+ "variant": "",
+ "cells": {
+  "op": "write",
+  "input": "{\"now\":1000000.0,\"history\":{\"events\":[{\"id\":\"e1-1\",\"class\":\"alarm\",\"kind\":\"door.forced\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"t\":999000.0,\"t_src\":998990.0}],\"cut_before\":0},\"lines\":[{\"id\":\"e1-5\",\"class\":\"alarm\",\"kind\":\"door.forced\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"t\":999002.0,\"t_src\":998990.0},{\"id\":\"e1-6\",\"class\":\"alarm\",\"kind\":\"door.held\",\"subsystem\":\"testsub\",\"unit\":\"testsub/c1\",\"t\":999003.0,\"t_src\":998993.0}]}"
+ },
+ "files": {}
+}

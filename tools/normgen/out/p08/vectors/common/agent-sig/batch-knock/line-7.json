@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/agent-sig",
+ "table": "batch-knock.tsv",
+ "case": "batch-knock-other-key",
+ "variant": "",
+ "cells": {
+  "input": "{\"domain\":\"acme\",\"key\":\"88cae557b9e5d4285769289b5af9d27cfdee0092823f38993912feae4b0c92c7\",\"name\":\"box-1\",\"pub\":\"00d9ac6e0650a370648236f77d3e639aedd197d75de2c2d1539c4490bc137ced\",\"sig\":\"252f21b01a2957169c8a495040116838b5ba4c8101aae2eb95628e200ce2249dd9453fcc450d82a81970391e2a16285af5f8239bea669923dce7a8b132811e04\"}"
+ },
+ "files": {}
+}

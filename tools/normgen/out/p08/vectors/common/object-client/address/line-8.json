@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/object-client",
+ "table": "address.tsv",
+ "case": "other-scheme",
+ "variant": "",
+ "cells": {
+  "input": "{\"OBJECTS\":\"s3://bucket\",\"PLATFORM_DIR\":\"/data/platform\"}"
+ },
+ "files": {}
+}

@@ -1,0 +1,4 @@
+# Inputs of the vector command for common/domain-envelopes m1-round.tsv (gen_vectors.py); compare round:sealed:m1:.
+# source Platform/common/vectors/domain-envelopes/m1-round.tsv sha256 f87c37d4b27eba09c08ee842177bdb8b1568cf6357080ad44c55d976c4d83529
+case	input	exit	stdout
+line-6	line-6.json	0	{"result":"ok","opened":["{\"grants\":{}}","{\"grants\":{}}"],"distinct":true}

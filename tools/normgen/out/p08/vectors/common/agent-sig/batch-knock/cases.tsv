@@ -1,0 +1,9 @@
+# Inputs of the vector command for common/agent-sig batch-knock.tsv (gen_vectors.py); compare subset.
+# source Platform/common/vectors/agent-sig/batch-knock.tsv sha256 4aaf2e17584476a4c86fec2518a3297343f649bfebb3bb280d236d7c5613dc87
+case	input	exit	stdout
+line-5	line-5.json	0	{"result":"ok"}
+line-6	line-6.json	0	{"result":"refused"}
+line-7	line-7.json	0	{"result":"refused"}
+line-8	line-8.json	0	{"result":"refused"}
+line-9	line-9.json	0	{"result":"refused"}
+line-10	line-10.json	0	{"result":"refused"}

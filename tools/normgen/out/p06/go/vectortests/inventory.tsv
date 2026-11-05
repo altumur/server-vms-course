@@ -1786,4 +1786,4 @@ common_log_mask_test.go	translated
 common_revoked_test.go	translated
 common_store_client_test.go	translated
 common/journal modes.tsv	excluded: a layout test, not a function (journal README; runner EXCLUDED_EXECUTION_TABLES)
-06-console/requests-body requests_body.tsv	excluded: an HTTP stand of the README «Stand» (POST of a fresh stand), not a vector function — open question of the draft (the runner has no c_* target)
+06-console/requests-body requests_body.tsv	excluded: layout (Architect, wire P/06 item 5): an unperformed duty of the real HTTP stand of the README «Stand» (POST and round trip on a fresh stand) — the runner checks the publication; no vector function, not a PASS

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/turn",
+ "table": "cases.tsv",
+ "case": "signer-take-stale",
+ "variant": "",
+ "cells": {
+  "input": "{\"kind\":\"signer\",\"turn\":\"domain/signer-turn\",\"me\":{\"holder\":\"box-a:4242:a1b2c3\"},\"steps\":[{\"read\":{\"holder\":\"box-b:77:ffffff\"},\"seen\":45,\"version\":5},{\"reply\":\"ok\",\"version\":6}]}"
+ },
+ "files": {}
+}
