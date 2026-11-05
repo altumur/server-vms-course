@@ -70,3 +70,7 @@ of the acceptances of М11/05 and М11/09 as a whole, at the beginning of the lo
 | 13/10 | 12 s | absence: the key `alice` (the name of a person) is not delivered to `m2` — two agent passes (`REPORT_EVERY` 5 s) after the delivery of the book with `t7` (step 9) |
 
 The other waits for an event are `@until` by a sign.
+
+## Kit seams
+
+[2 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

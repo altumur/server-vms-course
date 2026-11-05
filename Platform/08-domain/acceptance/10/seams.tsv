@@ -1,0 +1,7 @@
+# P/08 kit seams; ordinary code and controlled I/O, protocol in forms/README.md.
+# scenario	step	request	expect
+s01-standby-before-body	1	CALL domain-turn-door {"turn":"foreign","body":"unreadable_stream"}	{"status":503,"error":"standby","body_reads":0}
+s02-object-order	1	CALL domain-turn-object {"object":"view","race":"none"}	{"events":["get_at","turn.cas","put_at"],"own_turn_confirmed_for_write":true}
+s03-new-owner-object-preserved	1	CALL domain-turn-object {"object":"view","race":"new_owner_writes_after_our_confirmation"}	{"put_conflict":true,"new_object_preserved":true,"active":false}
+s04-unknown-row-write-barrier	1	CALL domain-turn-write {"write":"outcome_unconfirmed"}	{"write_repeated_before_read":false,"barrier_entered":true}
+s05-sigterm-cannot-clear-new-owner	1	CALL domain-turn-release {"race":"new_owner_before_release"}	{"new_owner_preserved":true,"foreign_turn_cleared":false}

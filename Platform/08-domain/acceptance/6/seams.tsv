@@ -1,0 +1,5 @@
+# P/08 kit seams; ordinary code and controlled I/O, protocol in forms/README.md.
+# scenario	step	request	expect
+s01-secret-is-really-sealed	1	CALL domain-edit-accept {"secret":"declared_top_level","operation":"new_edit"}	{"status":202,"member_open_equal":true,"plaintext_in_pending":false,"plaintext_in_asked":false,"plaintext_in_log":false}
+s02-changed-secret-same-key	1	CALL domain-edit-accept {"secret":"declared_top_level","operation":"repeat_changed_secret_same_key"}	{"status":202,"same_edit":true,"pending_appends":1,"new_secret_applied":false}
+s03-ambiguous-executor	1	CALL domain-edit-accept {"executors":"ambiguous"}	{"status":409,"pending_appends":0}

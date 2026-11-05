@@ -166,3 +166,7 @@ of the holder on a relay packet — sc. 02, 03 of [the acceptance of chapter 9.2
 The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The logs of the acceptances of М11/03, М11/04, М11/08 and
 М11/12 as a whole, at the beginning of this log, with the former paths and numbers (they are resolved by `Platform/common/id-map.tsv`); then
 the rows of the move, the renaming and the removed command scenarios.
+
+## Kit seams
+
+[3 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

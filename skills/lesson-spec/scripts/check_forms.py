@@ -1691,3 +1691,107 @@ def check_runtime_constants(path):
         if not r["meaning"].strip():
             errors.append(f"{where}: no meaning")
     return errors, {"runtime_constants": len(rows)}
+
+
+VDOOR_COLUMNS = ["method", "path", "row", "revision", "etag", "if_match", "absent_revision", "norm"]
+VDOOR_REVISIONS = ("doc.rev", "revision", "rev")
+VDOOR_IF_MATCH = ("optional", "ignored", "base-rev")
+VDOOR_ROW = re.compile(r"[a-z][a-z0-9-]*(?:/(?:[a-z][a-z0-9-]*|<[a-z][a-z0-9-]*>))*")
+VDOOR_BASE_REV_NORM = "P/08.0-R006"          # base-rev без P/08.0-R006 в norm — отказ (forms/README «Versioned doors»)
+
+
+def versioned_door_forms(root):
+    return sorted(Path(root).glob("Platform/*/forms/versioned-doors.tsv"))
+
+
+def versioned_operations(lesson):
+    """Операции OpenAPI урока → {(METHOD, path): (etag, if_match)}: заголовок ETag в каком-либо ответе (с `$ref` на
+    components/responses) и параметр-заголовок If-Match у операции или её path item (с `$ref` на components/parameters)."""
+    ops = {}
+    for api in sorted((lesson / "spec").glob("*.api.openapi.yaml")):
+        doc = yaml.safe_load(api.read_text(encoding="utf-8")) or {}
+        comp = doc.get("components") or {}
+
+        def ref(x, kind):
+            if isinstance(x, dict) and str(x.get("$ref", "")).startswith(f"#/components/{kind}/"):
+                return (comp.get(kind) or {}).get(x["$ref"].rsplit("/", 1)[1]) or {}
+            return x if isinstance(x, dict) else {}
+        for p, item in (doc.get("paths") or {}).items():
+            if not isinstance(item, dict):
+                continue
+            for m, op in item.items():
+                if m not in ROUTE_METHODS or not isinstance(op, dict):
+                    continue
+                etag = any("etag" in {str(h).lower() for h in (ref(r, "responses").get("headers") or {})}
+                           for r in (op.get("responses") or {}).values())
+                params = [ref(x, "parameters") for x in [*(item.get("parameters") or []), *(op.get("parameters") or [])]]
+                if_match = any(x.get("in") == "header" and str(x.get("name", "")).lower() == "if-match" for x in params)
+                ops[(m.upper(), p)] = (etag, if_match)
+    return ops
+
+
+def check_versioned_doors(path):
+    """ADR-0125 доп. (5), P/08.0 Н1.9 (решение «Архитектора» 2026-11-05): версии дверей — форма-норма, грамматика закрытая.
+    Колонки ровно VDOOR_COLUMNS (source нет); (method, path) — операция OpenAPI урока, не повторяется; каждая операция
+    OpenAPI с ETag в ответе или If-Match в параметрах — строка формы; etag=true ⇔ ETag в ответе, if_match=ignored ⇔ нет
+    If-Match. row — `-`, `writes[]` или шаблон семьи, где `<имя>` — захват пути операции или `<part>`; revision
+    doc.rev|revision|rev; etag true|false; if_match optional|ignored|base-rev; absent_revision 0|-; norm — непустой список
+    без повторов якорей требований урока, существующих в его нормах; base-rev — с P/08.0-R006."""
+    path = Path(path)
+    lesson = path.parent.parent
+    head = next((ln for ln in path.read_text(encoding="utf-8").splitlines() if not ln.startswith("#")), "").split("\t")
+    if "source" in head:
+        return [f"{path.name}: no source column: the form is the norm (P/08.0 Н1.9 moved here)"], {"versioned_doors": 0}
+    errors, rows = read(path, VDOOR_COLUMNS)
+    ops = versioned_operations(lesson)
+    anchors = set()
+    for norms in (lesson / "spec").glob("*.norms.md"):
+        anchors |= set(ANCHOR.findall(norms.read_text(encoding="utf-8")))
+    number = lesson.name[:2]
+    seen = set()
+    for r in rows:
+        where = f"{path.name}: {r['method']} {r['path']}"
+        key = (r["method"], r["path"])
+        if key in seen:
+            errors.append(f"{where}: repeats")
+        seen.add(key)
+        if key not in ops:
+            errors.append(f"{where}: not an operation of the lesson OpenAPI")
+        row = r["row"]
+        if row not in ("-", "writes[]"):
+            captures = set(re.findall(r"\{([^{}]+)\}", r["path"])) | {"part"}
+            if not VDOOR_ROW.fullmatch(row):
+                errors.append(f"{where}: row {row!r} is not -, writes[] or a family row template")
+            else:
+                stray = sorted(set(re.findall(r"<([^<>]+)>", row)) - captures)
+                if stray:
+                    errors.append(f"{where}: row placeholders {stray} are not captures of the path nor <part>")
+        if r["revision"] not in VDOOR_REVISIONS:
+            errors.append(f"{where}: revision {r['revision']!r} not in {list(VDOOR_REVISIONS)}")
+        if r["etag"] not in ("true", "false"):
+            errors.append(f"{where}: etag {r['etag']!r} is not true or false")
+        if r["if_match"] not in VDOOR_IF_MATCH:
+            errors.append(f"{where}: if_match {r['if_match']!r} not in {list(VDOOR_IF_MATCH)}")
+        if r["absent_revision"] not in ("0", "-"):
+            errors.append(f"{where}: absent_revision {r['absent_revision']!r} is not 0 or -")
+        if key in ops:
+            etag, if_match = ops[key]
+            if r["etag"] in ("true", "false") and (r["etag"] == "true") != etag:
+                errors.append(f"{where}: etag {r['etag']}, but the OpenAPI response {'has' if etag else 'has no'} ETag")
+            if r["if_match"] in VDOOR_IF_MATCH and (r["if_match"] != "ignored") != if_match:
+                errors.append(f"{where}: if_match {r['if_match']}, but the OpenAPI operation "
+                              f"{'reads' if if_match else 'does not declare'} If-Match")
+        norm = r["norm"].split(",")
+        if not r["norm"] or len(norm) != len(set(norm)):
+            errors.append(f"{where}: norm {r['norm']!r} is not a non-empty list without repeats")
+        for n in norm if r["norm"] else []:
+            g = REQ.fullmatch(n)
+            if not g or g[1] != number:
+                errors.append(f"{where}: norm {n!r} is not a requirement anchor of this lesson")
+            elif n not in anchors:
+                errors.append(f"{where}: norm {n} has no anchor in the norms of the lesson")
+        if r["if_match"] == "base-rev" and VDOOR_BASE_REV_NORM not in norm:
+            errors.append(f"{where}: if_match base-rev needs {VDOOR_BASE_REV_NORM} in norm")
+    for key in sorted(k for k, (etag, if_match) in ops.items() if (etag or if_match) and k not in seen):
+        errors.append(f"{path.name}: {key[0]} {key[1]}: the OpenAPI operation declares ETag or If-Match, but has no row")
+    return errors, {"versioned_doors": len(rows)}

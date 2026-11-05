@@ -144,3 +144,7 @@ Step 25: there is no row `c9`, the condition — 412 with `revision: 0`. The bre
 The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The log of the acceptance of М11/09 is moved here
 as a whole, as it is (the paths of the old rows — `09/…` and the names of the scenarios of М11/09 — are resolved by [id-map](../../../common/id-map.tsv));
 the rows of 2026-10-20 are the move, the removed scenario 07 and the edit of the input `may-24` of the package `common/vectors/may`.
+
+## Kit seams
+
+[4 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

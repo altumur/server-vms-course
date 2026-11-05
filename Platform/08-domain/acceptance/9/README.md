@@ -60,3 +60,7 @@ A subset of expect does not replace the check of the full HTTP form of the OpenA
 The log of AI corrections (ADR-0080 addendum 1; ADR-0124: a log, not an input, not in the export): `date`, `sample`, `fix`, `languages`. The log of the acceptance of М11/11 is moved here
 as a whole, the rows as they are (the plan of lesson 8 § 3 «Журналы»: the log of the source goes into each directory that takes its scenarios;
 the paths of the old rows — `11/…`, `NN-<имя> <шаг>` — are resolved by [id-map](../../../common/id-map.tsv)); the last row is the move.
+
+## Kit seams
+
+[3 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.

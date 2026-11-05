@@ -64,3 +64,7 @@ Implementations and their runners check their own result; this directory does no
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)
 
 There are no sleeps. The member's clock is moved by `@clock` (sc. 02 steps 9, 11).
+
+## Kit seams
+
+[3 CALL seams](seams.tsv) execute ordinary code with controlled inputs and I/O under [the forms protocol](../../forms/README.md#seams-and-stages). They do not replace ordinary scenarios, assigned vectors, the process stand or reading of the chapter.
