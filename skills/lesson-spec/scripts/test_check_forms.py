@@ -254,3 +254,120 @@ class FormsAllLessons(unittest.TestCase):         # ADR-0125 доп. (5): гра
                          ("GET\t/v1/units\tConsole\tx", False), ("GET\t/v1/units\tconsole\t ", False)):
             dr.write_text("method\tpath\troles\tnorm\n" + body + "\n", encoding="utf-8")
             self.assertEqual(not check_forms.check_door_roles(dr)[0], ok, body)
+
+
+class Wire(unittest.TestCase):                     # провод векторов wire.tsv (wire.md): настоящая форма и мутации
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())          # Platform ссылками, копия — только wire.tsv
+        vectors = self.tmp / "Platform/common/vectors"
+        vectors.mkdir(parents=True)
+        for real, place in ((ROOT / "Platform", self.tmp / "Platform"), (ROOT / "Platform/common", self.tmp / "Platform/common"),
+                            (ROOT / "Platform/common/vectors", vectors)):
+            for entry in real.iterdir():
+                if not (place / entry.name).exists() and entry.name != "wire.tsv":
+                    (place / entry.name).symlink_to(entry)
+        shutil.copyfile(ROOT / "Platform/common/vectors/wire.tsv", vectors / "wire.tsv")
+        (self.tmp / "Source").symlink_to(ROOT / "Source")   # фикстуры canonical от корня выгрузки
+        self.path = vectors / "wire.tsv"
+        self.good = self.path.read_text(encoding="utf-8")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def errors(self):
+        return check_forms.check_wire(self.path)[0]
+
+    def row(self, package, table, surface):
+        return next(x for x in self.good.split("\n") if x.startswith(f"{package}\t{table}\t{surface}\t"))
+
+    def mutate(self, old, new, row=None):
+        base = row or self.good
+        self.assertEqual(base.count(old), 1, old)
+        text = self.good.replace(row, row.replace(old, new)) if row else self.good.replace(old, new)
+        self.path.write_text(text, encoding="utf-8")
+        return self.errors()
+
+    def test_real_form_clean(self):
+        errors, stats = check_forms.check_wire(ROOT / "Platform/common/vectors/wire.tsv")
+        self.assertEqual(errors, [])
+        self.assertEqual(stats["wire_bindings"], 27)
+        self.assertEqual(self.errors(), [])
+
+    def test_lf_only_lines(self):                   # U+2028 в ячейке — байт ячейки, не конец строки (JCS P/01)
+        jcs = self.tmp / "Platform/01-store/vectors/jcs/canonical_json.tsv"
+        self.assertIn(" ", jcs.read_text(encoding="utf-8"))
+        table = self.tmp / "t.tsv"
+        table.write_text("a\tb\nx y\tz w\x85\n", encoding="utf-8")
+        self.assertEqual(check_forms.lf_lines(table), ["a\tb", "x y\tz w\x85"])
+        errors, rows = check_forms.vector_rows(table, ["a", "b"], False)
+        self.assertEqual((errors, len(rows)), ([], 1))
+
+    def test_columns(self):
+        row = self.row("common/crl", "cases.tsv", "vectors")
+        self.assertTrue(self.mutate(row, row + "\textra"))                       # лишняя колонка
+        self.assertTrue(self.mutate(row, row.rsplit("\t", 1)[0]))                # пропущенная колонка
+        self.assertTrue(self.mutate("package\ttable\tsurface\theader", "package\tsurface\ttable\theader"))
+
+    def test_triple_repeats(self):
+        row = self.row("common/crl", "cases.tsv", "vectors")
+        self.assertTrue(any("repeats" in e for e in self.mutate(row, row + "\n" + row)))
+
+    def test_surface(self):
+        row = self.row("common/crl", "cases.tsv", "vectors")
+        self.assertTrue(self.mutate("\tvectors\t", "\tfunction\t", row))
+
+    def test_compare(self):
+        row = self.row("common/crl", "cases.tsv", "vectors")
+        self.assertTrue(self.mutate("\tvalue\t", "\tequal\t", row))
+        self.assertTrue(self.mutate("\tvalue\t", "\t-\t", row))                  # «-» — только layout
+        self.assertTrue(self.mutate("\tvalue\t", '\t"value"\t', row))            # кавычки — не CSV
+
+    def test_column_not_in_header(self):
+        row = self.row("common/crl", "cases.tsv", "vectors")
+        self.assertTrue(self.mutate('{"column":"expect","decode":"cell"}', '{"column":"wanted","decode":"cell"}', row))
+        self.assertTrue(self.mutate('"cells":{"input":{"column":"input"}}', '"cells":{"input":{"column":"inp"}}', row))
+
+    def test_value_constructor(self):
+        row = self.row("common/crl", "cases.tsv", "vectors")
+        self.assertTrue(self.mutate('{"column":"expect","decode":"cell"}', '{"cell":"expect","decode":"cell"}', row))
+        self.assertTrue(self.mutate('{"column":"expect","decode":"cell"}', '{"column":"expect","decode":"yaml"}', row))
+        self.assertTrue(self.mutate('{"column":"expect","decode":"cell"}', '{"omit":true}', row))
+
+    def test_when_compiles(self):
+        row = self.row("common/crl", "cases.tsv", "vectors")
+        self.assertTrue(self.mutate('"variant":"","when":"true","cells"', '"variant":"","when":"row[","cells"', row))
+        self.assertTrue(self.mutate('"variant":"","when":"true","cells"', '"variant":"","when":"row","cells"', row))
+        self.assertTrue(self.mutate('"variant":"","when":"true","cells"', '"variant":"","when":"x == 1","cells"', row))
+
+    def test_two_expectations(self):
+        row = self.row("common/crl", "cases.tsv", "vectors")
+        exp = '{"variant":"","when":"true","code":0,"value":{"column":"expect","decode":"cell"}}'
+        self.assertTrue(any("2 expectations" in e for e in self.mutate(exp, exp + "," + exp, row)))
+        ring = self.row("common/sealing", "ring.tsv", "vectors")             # пересекающиеся when одного variant
+        self.assertTrue(any("select one row" in e for e in self.mutate(
+            '"when":"row[\\"case\\"].startsWith(\\"rotate\\") && owner', '"when":"owner', ring)))
+
+    def test_fixture_missing(self):
+        row = self.row("common/log-mask", "cases.tsv", "vectors")
+        self.assertTrue(self.mutate("../secret-in/fields.yaml", "../secret-in/nope.yaml", row))
+        self.assertTrue(self.mutate("../secret-in/fields.yaml", "../../../../../etc/hosts", row))
+        yaml_row = self.row("common/yaml-suite", "expect.tsv", "vectors")
+        self.assertTrue(self.mutate("inputs/{id}.yaml", "inputs/{id}.yml", yaml_row))
+
+    def test_layout_inputs(self):
+        row = self.row("common/journal", "modes.tsv", "layout")
+        self.assertTrue(self.mutate("\t[]\t{}\t", '\t[{"variant":"","cells":{"path":{"column":"path"}}}]\t{}\t', row))
+
+    def test_header_against_table(self):
+        row = self.row("common/crl", "cases.tsv", "vectors")
+        self.assertTrue(self.mutate("\tcase,input,expect,note\t", "\tcase,input,note,expect\t", row))
+        lm = self.row("common/log-mask", "cases.tsv", "vectors")
+        self.assertTrue(self.mutate("\t-,raw,masked,note\t", "\t-,raw,masked\t", lm))
+
+    def test_group_constant(self):               # группа без своего столбца в case — case не постоянен
+        row = self.row("02-installer/platform-lists", "cases.tsv", "vectors")
+        self.assertTrue(self.mutate('"case":"list"', '"case":"word"', row))
+
+    def test_foreign_owner(self):
+        row = self.row("01-store/rights-evaluator", "expect.tsv", "vectors")
+        self.assertTrue(self.mutate('owner == \\"01-store\\"', 'owner == \\"03-worker\\"', row))

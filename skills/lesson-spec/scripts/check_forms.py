@@ -10,6 +10,7 @@
 есть в каталоге, а строка с именем проверки — с тем же кодом и видом.
 """
 import json
+import os
 import re
 from pathlib import Path
 
@@ -678,3 +679,673 @@ def check_door_roles(path):
         if not r["norm"].strip():
             errors.append(f"{where}: no norm")
     return errors, {"door_roles": len(rows)}
+
+
+WIRE_COLUMNS = ["package", "table", "surface", "header", "inputs", "files", "expect", "compare", "markers", "native", "norm"]
+WIRE_COMPARES = ("value", "subset", "raw", "set", "object-sets", "lines-value", "lines-subset")
+ASSERT_COMPARES = ("value", "subset", "raw", "set", "object-sets")          # без test — без lines (wire.md «assert»)
+NATIVE_WORDS = ("object", "array", "string", "number", "boolean", "null", "value", "bytes")
+JSON_TYPES = ("object", "array", "string", "number", "boolean", "null")
+FRAMES = ("json", "json-lf", "raw")
+WIRE_VARIANT = re.compile(r"(?:[a-z][a-z0-9-]*)?")                          # пустой, read, write или иное имя
+STAND_KEY = re.compile(r"stand:[a-z0-9][a-z0-9-]*")
+WIRE_PACKAGE = re.compile(r"(common|[0-9]{2}-[a-z0-9-]+)/([a-z0-9][a-z0-9_.-]*)")
+PLACE = re.compile(r"\{([^{}]*)\}")
+OWNER_WORD = re.compile(r'owner\s*[!=]=\s*"([^"\\]*)"|"([^"\\]*)"\s*[!=]=\s*owner')
+DECODES = {"column": ("cell", "json", "text"), "group": ("text", "json", "cell"), "groups": ("text", "json", "cell"),
+           "suffix": ("text", "json", "cell"), "file": ("bytes", "text", "json")}
+VALUE_KEYS = {"column": {"column", "decode"}, "literal": {"literal"}, "object": {"object"}, "array": {"array"},
+              "file": {"file", "decode"}, "group": {"group"}, "groups": {"groups"}, "suffix": {"suffix", "decode"},
+              "omit": {"omit"}}
+
+
+def wire_forms(root):
+    return sorted(Path(root).glob("Platform/common/vectors/wire.tsv"))
+
+
+def lf_lines(path):
+    """Строки таблицы векторов строго по LF (`split("\\n")`, без одной завершающей пустой): U+2028, U+0085 и прочие
+    разделители `str.splitlines()` — байты ячейки (опубликованный вектор JCS P/01)."""
+    lines = Path(path).read_bytes().decode("utf-8").split("\n")
+    if lines and lines[-1] == "":
+        lines.pop()
+    return lines
+
+
+def wire_json(text):
+    """Строгий JSON ячейки провода: без BOM, повторов ключей, NaN и Infinity."""
+    if text.startswith("\ufeff"):
+        raise ValueError("BOM")
+
+    def pairs(items):
+        out = {}
+        for key, value in items:
+            if key in out:
+                raise ValueError(f"duplicate JSON key {key!r}")
+            out[key] = value
+        return out
+
+    def constant(word):
+        raise ValueError(f"not JSON: {word}")
+    return json.loads(text, object_pairs_hook=pairs, parse_constant=constant)
+
+
+def heading_anchors(path):
+    """Якоря заголовков Markdown, как их строит GitHub (как `check_spec.anchors`)."""
+    import unicodedata
+    from markdown_it import MarkdownIt
+    seen, out, level = {}, set(), None
+    for tok in MarkdownIt("commonmark").parse(Path(path).read_text(encoding="utf-8")):
+        if tok.type == "heading_open":
+            level = tok.tag
+        elif tok.type == "inline" and level is not None:
+            words = "".join(c.content for c in (tok.children or []) if c.type in ("text", "code_inline"))
+            base = "".join("-" if ch == " " else ch for ch in words.strip().lower()
+                           if ch in "-_ " or unicodedata.category(ch)[0] in "LNM")
+            n = seen.get(base, 0)
+            seen[base] = n + 1
+            out.add(base if n == 0 else f"{base}-{n}")
+            level = None
+    return out
+
+
+def wire_cel_env():
+    """CEL выбора строк провода: `row: map<string,string>`, `owner: string`, расширение strings (wire.md)."""
+    from cel_expr_python import cel
+    T = cel.Type
+    cfg = cel.NewEnvConfigFromYaml("name: wire\nextensions:\n  - name: strings\n")
+    return cel, cel.NewEnv(config=cfg, variables={"row": T.Map(T.STRING, T.STRING), "owner": T.STRING})
+
+
+def vector_rows(path, names, positional):
+    """Строки таблицы векторов по LF: пустые и `#` пропущены; с шапкой — первая прочая строка равна `names`. →
+    (ошибки, [(номер физической строки, {имя: ячейка})])."""
+    errors, rows, head = [], [], positional
+    for no, line in enumerate(lf_lines(path), 1):
+        if not line or line.startswith("#"):
+            continue
+        cells = line.split("\t")
+        if not head:
+            head = True
+            if cells != names:
+                errors.append(f"header {','.join(names)} differs from the table header {','.join(cells)}")
+            continue
+        if len(cells) != len(names):
+            errors.append(f"{path.name} line {no}: {len(cells)} fields, the header has {len(names)}")
+            continue
+        rows.append((no, dict(zip(names, cells))))
+    if not head:
+        errors.append(f"{path.name} has no header line")
+    return errors, rows
+
+
+class _Errors:
+    """Ошибки одной привязки: одно сообщение — один раз, со списком физических строк таблицы."""
+
+    def __init__(self, where):
+        self.where, self.lines = where, {}
+
+    def add(self, message, line=None):
+        lines = self.lines.setdefault(message, [])
+        if line is not None and line not in lines:
+            lines.append(line)
+
+    def out(self):
+        res = []
+        for message, lines in self.lines.items():
+            tail = ""
+            if lines:
+                tail = f" (line {', '.join(map(str, lines[:5]))}" + (f" and {len(lines) - 5} more" if len(lines) > 5 else "") + ")"
+            res.append(f"{self.where}: {message}{tail}")
+        return res
+
+
+def _keys(obj, allowed, required, what, err):
+    if not isinstance(obj, dict):
+        err.add(f"{what} is not an object")
+        return False
+    extra, missing = sorted(set(obj) - set(allowed)), sorted(set(required) - set(obj))
+    if extra or missing:
+        err.add(f"{what}: keys {sorted(obj)} — unknown {extra}, missing {missing}")
+        return False
+    return True
+
+
+def _value_shape(expr, cols, err, what, field=False, suffix=False):
+    """ValueExpr: ровно один конструктор закрытого списка, ключи и decode; column — из header. → использует group?"""
+    if not isinstance(expr, dict):
+        err.add(f"{what}: a ValueExpr is not an object")
+        return False
+    kinds = [k for k in expr if k in VALUE_KEYS]
+    if len(kinds) != 1 or set(expr) != VALUE_KEYS[kinds[0]]:
+        err.add(f"{what}: not exactly one ValueExpr constructor of the closed list with its keys: {sorted(expr)}")
+        return False
+    kind, grouped = kinds[0], False
+    if kind in DECODES and kind not in ("group", "groups") and expr["decode"] not in DECODES[kind]:
+        err.add(f"{what}: decode {expr['decode']!r} of {kind} is not one of {list(DECODES[kind])}")
+    if kind == "column" and expr["column"] not in cols:
+        err.add(f"{what}: column {expr['column']!r} is not in header")
+    elif kind == "object":
+        if not isinstance(expr["object"], dict):
+            err.add(f"{what}: object is not a map of fields")
+        else:
+            for name, sub in expr["object"].items():
+                grouped |= _value_shape(sub, cols, err, f"{what}.{name}", field=True, suffix=suffix)
+    elif kind == "array":
+        if not isinstance(expr["array"], list):
+            err.add(f"{what}: array is not a list")
+        else:
+            for i, sub in enumerate(expr["array"]):
+                grouped |= _value_shape(sub, cols, err, f"{what}[{i}]", suffix=suffix)
+    elif kind == "file":
+        _file_shape(expr["file"], cols, err, f"{what}.file", path_column=True)
+    elif kind in ("group", "groups"):
+        grouped = True
+        need = {"column", "decode"} | ({"by"} if kind == "groups" else set())
+        if _keys(expr[kind], need, need, f"{what}.{kind}", err):
+            for key in need - {"decode"}:
+                if expr[kind][key] not in cols:
+                    err.add(f"{what}.{kind}: {key} {expr[kind][key]!r} is not in header")
+            if expr[kind]["decode"] not in DECODES[kind]:
+                err.add(f"{what}: decode {expr[kind]['decode']!r} of {kind} is not one of {list(DECODES[kind])}")
+    elif kind == "suffix" and (expr["suffix"] is not True or not suffix):
+        err.add(f"{what}: suffix is true only in a value of a prefix marker")
+    elif kind == "omit" and (expr["omit"] is not True or not field):
+        err.add(f"{what}: omit is true only as an object field")
+    return grouped
+
+
+def _file_shape(spec, cols, err, what, path_column=False):
+    keys = {"base", "path", "path_column"} if path_column else {"base", "path", "when"}
+    if not isinstance(spec, dict) or not set(spec) <= keys or "base" not in spec or \
+            (path_column and len({"path", "path_column"} & set(spec)) != 1) or (not path_column and "path" not in spec):
+        err.add(f"{what}: not {{base, path{'|path_column' if path_column else ', when?'}}}")
+        return
+    if spec["base"] not in ("package", "root"):
+        err.add(f"{what}: base {spec['base']!r} is not package|root")
+    if "path_column" in spec and spec["path_column"] not in cols:
+        err.add(f"{what}: path_column {spec['path_column']!r} is not in header")
+    if "path" in spec:
+        p = spec["path"]
+        if not isinstance(p, str) or not p or p.startswith("/") or PLACE.sub("", p).count("{") or PLACE.sub("", p).count("}"):
+            err.add(f"{what}: path {p!r} is not a relative path with {{column}} substitutions")
+        else:
+            for name in PLACE.findall(p):
+                if name not in cols:
+                    err.add(f"{what}: substitution {{{name}}} is not a column of header")
+
+
+def _assert_shape(items, cols, err, what, suffix=False):
+    grouped = False
+    if not isinstance(items, list):
+        err.add(f"{what}: assert is not an array")
+        return False
+    for i, a in enumerate(items):
+        w = f"{what}.assert[{i}]"
+        if not _keys(a, {"pointer", "test", "value", "decode", "compare"}, {"pointer"}, w, err):
+            continue
+        if not isinstance(a["pointer"], str) or not re.fullmatch(r"(/([^~/]|~[01])*)*", a["pointer"]):
+            err.add(f"{w}: pointer {a['pointer']!r} is not a JSON Pointer")
+        test = a.get("test")
+        if test is not None and test not in ("prefix", "absent"):
+            err.add(f"{w}: test {test!r} is not prefix|absent")
+        if test == "absent" and set(a) != {"pointer", "test"}:
+            err.add(f"{w}: absent takes only pointer")
+        if test == "prefix" and ("value" not in a or "compare" in a):
+            err.add(f"{w}: prefix requires value and no compare")
+        if test is None and "value" not in a:
+            err.add(f"{w}: a comparison without test requires value")
+        if "compare" in a and a["compare"] not in ASSERT_COMPARES:
+            err.add(f"{w}: compare {a['compare']!r} is not one of {list(ASSERT_COMPARES)}")
+        if "decode" in a and a["decode"] != "json":
+            err.add(f"{w}: decode {a['decode']!r} is not json")
+        if "value" in a:
+            grouped |= _value_shape(a["value"], cols, err, f"{w}.value", suffix=suffix)
+    return grouped
+
+
+def _native_shape(d, err, what, in_array):
+    if not _keys(d, {"type", "frame", "schema", "variant", "when"}, {"type", "frame"} | ({"variant"} if in_array else set()),
+                 what, err):
+        return
+    t = d["type"]
+    if not (t in NATIVE_WORDS or (isinstance(t, list) and t and all(x in JSON_TYPES for x in t) and len(set(t)) == len(t))):
+        err.add(f"{what}: type {t!r} is not a listed word or an array of JSON type words")
+    if d["frame"] not in FRAMES:
+        err.add(f"{what}: frame {d['frame']!r} is not json|json-lf|raw")
+    if (t == "bytes") != (d["frame"] == "raw") or (t == "bytes" and "schema" in d):
+        err.add(f"{what}: bytes requires frame raw without schema, raw is only for bytes")
+    if "schema" in d:
+        import jsonschema
+        try:
+            jsonschema.Draft202012Validator.check_schema(d["schema"])
+        except jsonschema.SchemaError as exc:
+            err.add(f"{what}: schema is not Draft 2020-12: {str(exc)[:100]}")
+
+
+def consumers(root):
+    """`consumers.tsv` → {(package, table): [lesson, …]}."""
+    out = {}
+    path = Path(root) / "Platform/common/vectors/consumers.tsv"
+    lines = [ln for ln in lf_lines(path) if ln and not ln.startswith("#")]
+    for line in lines[1:]:
+        c = line.split("\t")
+        out.setdefault((c[0], c[1]), []).append(c[2])
+    return out
+
+
+def _decoded(text, decode, err, what, line):
+    if decode == "json":
+        try:
+            wire_json(text)
+        except ValueError as exc:
+            err.add(f"{what}: the cell is not strict JSON ({str(exc)[:60]})", line)
+
+
+def check_wire(path):
+    """Форма провода векторов `Platform/common/vectors/wire.tsv` (wire.md; ADR-0125 доп. (1) п. 5, доп. (5)): 11 колонок
+    литеральным TAB, тройка (package, table, surface) единственна, пакет и таблица существуют, header — шапка таблицы
+    (или число позиционных полей), JSON-ячейки строгие по закрытым конструкторам, column — из header, when — CEL;
+    затем по каждой строке таблицы и каждому потребителю: не больше одного входа варианта, у выбранного варианта ровно
+    одно ожидание и один native (группы — после фильтра when, when согласны по группе), файлы есть, run identity
+    единственна."""
+    path = Path(path)
+    root = path.parents[3]
+    platform = root / "Platform"
+    errors, stats = [], {"wire_bindings": 0, "wire_calls": 0, "wire_excluded": 0}
+    try:
+        lines = lf_lines(path)
+    except (OSError, UnicodeError) as exc:
+        return [f"{path.name}: unreadable: {exc}"], stats
+    text = path.read_bytes()
+    if text.startswith(b"\xef\xbb\xbf") or b"\r" in text:
+        errors.append(f"{path.name}: BOM or CR — the form is UTF-8 with LF")
+    body = [(no, ln) for no, ln in enumerate(lines, 1) if ln and not ln.startswith("#")]
+    if not body or body[0][1].split("\t") != WIRE_COLUMNS:
+        return errors + [f"{path.name}: columns must be {WIRE_COLUMNS}"], stats
+    cel, env = wire_cel_env()
+    owners_of = consumers(root)
+    seen = set()
+    for no, line in body[1:]:
+        cells = line.split("\t")
+        if len(cells) != len(WIRE_COLUMNS):
+            errors.append(f"{path.name}: row {no}: {len(cells)} cells, expected {len(WIRE_COLUMNS)}")
+            continue
+        stats["wire_bindings"] += 1
+        r = dict(zip(WIRE_COLUMNS, cells))
+        err = _Errors(f"{path.name}: row {no} {r['package']} {r['table']} {r['surface']}")
+        _check_binding(r, root, platform, env, cel, owners_of, seen, err, stats)
+        errors += err.out()
+    return errors, stats
+
+
+def _check_binding(r, root, platform, env, cel, owners_of, seen, err, stats):
+    triple = (r["package"], r["table"], r["surface"])
+    if triple in seen:
+        err.add("the triple (package, table, surface) repeats")
+    seen.add(triple)
+    surface = r["surface"]
+    layout, stand = surface == "layout", surface.startswith("stand:")
+    if not (surface in ("vectors", "layout") or STAND_KEY.fullmatch(surface)):
+        err.add(f"surface {surface!r} is not vectors, stand:<key> or layout")
+        return
+    m = WIRE_PACKAGE.fullmatch(r["package"])
+    pkg = platform / m[1] / "vectors" / m[2] if m else None
+    if not m or not pkg.is_dir():
+        err.add(f"package {r['package']!r} is not <lesson>/<name> of an existing Platform/<lesson>/vectors/<name>")
+        return
+    table = pkg / r["table"]
+    if "/" in r["table"] or not r["table"].endswith(".tsv") or not table.is_file():
+        err.add(f"table {r['table']!r} is not an existing TSV file of the package")
+        return
+    norm, _, anchor = r["norm"].partition("#")
+    npath = platform / norm
+    if not norm.endswith(".md") or not npath.is_file() or Path(norm).parts[0] == "ru" or \
+            Path(norm).parts[1:2] in (("ru",), ("journal",)):          # ru/ и journal/ урока — не в выгрузке (ADR-0124)
+        err.add(f"norm {r['norm']!r} is not an existing source .md path from Platform")
+    elif "#" in r["norm"] and anchor not in heading_anchors(npath):
+        err.add(f"norm anchor #{anchor} is not a heading of {norm}")
+    names = r["header"].split(",")
+    positional = names[0] == "-"
+    cols = names[1:] if positional else names
+    if not cols or not all(cols) or len(set(cols)) != len(cols) or "-" in cols:
+        err.add(f"header {r['header']!r} is not a list of unique column names")
+        return
+    terr, rows = vector_rows(table, cols, positional)
+    for e in terr:
+        err.add(e)
+    if terr:
+        return
+    parsed = {}
+    for column in ("inputs", "files", "expect", "markers") + (() if layout else ("native",)):
+        try:
+            parsed[column] = wire_json(r[column])
+        except ValueError as exc:
+            err.add(f"{column} is not strict JSON: {str(exc)[:80]}")
+    if layout:
+        if parsed.get("inputs") != [] or parsed.get("expect") != [] or parsed.get("markers") != [] or \
+                parsed.get("files") != {} or r["compare"] != "-" or r["native"] != "-":
+            err.add("layout requires inputs, expect, markers [], files {}, compare and native -")
+        return
+    if len(parsed) != 5:
+        return
+    inputs, files, expect, markers, native = (parsed[c] for c in ("inputs", "files", "expect", "markers", "native"))
+    whens = {}
+
+    def when_of(obj, what):
+        w = obj.get("when", "true")
+        if not isinstance(w, str):
+            err.add(f"{what}: when is not a CEL string")
+            return None
+        if w not in whens:
+            try:
+                prog = env.compile(w)
+                if prog.return_type() != cel.Type.BOOL:
+                    raise ValueError(f"type {prog.return_type()}, not bool")
+                whens[w] = prog
+            except Exception as exc:                       # noqa: BLE001 — the message names the cell
+                err.add(f"{what}: when {w!r} does not compile to a bool CEL: {str(exc)[:120]}")
+                whens[w] = None
+        return w if whens[w] else None
+
+    # inputs
+    if not isinstance(inputs, list) or not inputs:
+        err.add("inputs is not a nonempty array")
+        return
+    decls, variants = [], []
+    for i, d in enumerate(inputs):
+        what = f"inputs[{i}]"
+        if not _keys(d, {"variant", "when", "case", "cells", "arg_file", "group_by"}, {"variant"}, what, err):
+            continue
+        ok = True
+        if not isinstance(d["variant"], str) or not WIRE_VARIANT.fullmatch(d["variant"]):
+            err.add(f"{what}: variant {d['variant']!r} is not a variant name")
+            ok = False
+        if ("cells" in d) == ("arg_file" in d) or ("cells" in d) == stand:
+            err.add(f"{what}: exactly one of cells (vectors) or arg_file (stand:<key>)")
+            ok = False
+        if "cells" in d:
+            if not isinstance(d["cells"], dict) or not d["cells"]:
+                err.add(f"{what}: cells is not a nonempty map")
+                ok = False
+            else:
+                for name, src in d["cells"].items():
+                    if not (isinstance(src, dict) and len(src) == 1 and (
+                            (isinstance(src.get("column"), str) and src["column"] in cols)
+                            or isinstance(src.get("literal"), str))):
+                        err.add(f"{what}: cell {name!r} is not {{column: <header>}} or {{literal: <string>}}")
+                        ok = False
+        if "arg_file" in d:
+            a = d["arg_file"]
+            if not (isinstance(a, dict) and (
+                    (set(a) == {"column"} and a["column"] in cols) or (set(a) == {"literal"} and isinstance(a["literal"], str))
+                    or (set(a) == {"path_column", "base"} and a["path_column"] in cols and a["base"] in ("package", "root")))):
+                err.add(f"{what}: arg_file is not {{column}}, {{literal}} or {{path_column, base}} over header")
+                ok = False
+        if "case" in d:
+            c = d["case"]
+            if not (c in cols or c == {"line": True} or (isinstance(c, dict) and set(c) == {"literal"} and isinstance(c["literal"], str)
+                                                          and c["literal"])):
+                err.add(f"{what}: case {c!r} is not a header column, {{line: true}} or {{literal}}")
+                ok = False
+        if "group_by" in d and not (isinstance(d["group_by"], list) and all(g in cols for g in d["group_by"])
+                                     and len(set(d["group_by"])) == len(d["group_by"])):
+            err.add(f"{what}: group_by is not an array of header columns")
+            ok = False
+        w = when_of(d, what)
+        if ok and w:
+            decls.append((i, d, w))
+        if isinstance(d.get("variant"), str) and d["variant"] not in variants:
+            variants.append(d["variant"])
+    # files
+    if not isinstance(files, dict) or (stand and files):
+        err.add("files is not a map" + (" ({} on a stand surface)" if stand else ""))
+        files = {}
+    filedecl = []
+    for name, spec in files.items():
+        what = f"files.{name}"
+        if not name or "/" in name or name in (".", ".."):
+            err.add(f"{what}: not a basename")
+        _file_shape(spec, cols, err, what)
+        if isinstance(spec, dict):
+            filedecl.append((name, spec, when_of(spec, what)))
+    # expect, markers, compare, native
+    grouped_variants = set()
+    if not isinstance(expect, list):
+        err.add("expect is not an array")
+        expect = []
+    exps = []
+    for i, e in enumerate(expect):
+        what = f"expect[{i}]"
+        if not _keys(e, {"variant", "when", "code", "value", "assert"}, {"variant", "code", "value"}, what, err):
+            continue
+        if e["variant"] not in variants:
+            err.add(f"{what}: variant {e['variant']!r} has no input declaration")
+        if type(e["code"]) is not int or not 0 <= e["code"] <= 255:
+            err.add(f"{what}: code is not an integer 0..255")
+        g = _value_shape(e["value"], cols, err, f"{what}.value")
+        if e["value"] == {"omit": True}:
+            err.add(f"{what}: omit is never a root value")
+        g |= _assert_shape(e.get("assert", []), cols, err, what)
+        if g:
+            grouped_variants.add(e["variant"])
+        exps.append((e, when_of(e, what)))
+    if not isinstance(markers, list):
+        err.add("markers is not an array")
+        markers = []
+    marks = []
+    for i, mk in enumerate(markers):
+        what = f"markers[{i}]"
+        if not _keys(mk, {"variant", "column", "match", "prefix", "code", "ignore_stdout", "value", "compare", "assert"},
+                     {"variant", "column", "match"}, what, err):
+            continue
+        if mk["variant"] not in variants:
+            err.add(f"{what}: variant {mk['variant']!r} has no input declaration")
+        if mk["column"] not in cols:
+            err.add(f"{what}: column {mk['column']!r} is not in header")
+        if not isinstance(mk["match"], str) or not mk["match"]:
+            err.add(f"{what}: match is not a nonempty string")
+        for key in ("prefix", "ignore_stdout"):
+            if key in mk and not isinstance(mk[key], bool):
+                err.add(f"{what}: {key} is not boolean")
+        if "code" in mk and (type(mk["code"]) is not int or not 0 <= mk["code"] <= 255):
+            err.add(f"{what}: code is not an integer 0..255")
+        if "compare" in mk and mk["compare"] not in WIRE_COMPARES:
+            err.add(f"{what}: compare {mk['compare']!r} is not of the closed list")
+        g = False
+        if "value" in mk:
+            g = _value_shape(mk["value"], cols, err, f"{what}.value", suffix=mk.get("prefix") is True)
+            if mk["value"] == {"omit": True}:
+                err.add(f"{what}: omit is never a root value")
+        g |= _assert_shape(mk.get("assert", []), cols, err, what, suffix=mk.get("prefix") is True)
+        if g:
+            grouped_variants.add(mk["variant"])
+        marks.append(mk)
+    compare = r["compare"]
+    if compare in WIRE_COMPARES:
+        compares = {v: compare for v in variants}
+    else:
+        try:
+            compares = wire_json(compare)
+        except ValueError:
+            compares = None
+        if not (isinstance(compares, dict) and all(c in WIRE_COMPARES for c in compares.values())
+                and set(compares) == set(variants)):
+            err.add(f"compare {compare!r} is not one of {list(WIRE_COMPARES)} or a map of every variant to one")
+            compares = {}
+    natives = native if isinstance(native, list) else [native]
+    nats = []
+    for i, d in enumerate(natives):
+        what = f"native[{i}]" if isinstance(native, list) else "native"
+        _native_shape(d, err, what, isinstance(native, list))
+        if isinstance(d, dict):
+            if "variant" in d and d["variant"] not in variants:
+                err.add(f"{what}: variant {d['variant']!r} has no input declaration")
+            nats.append((d, when_of(d, what)))
+    for v in grouped_variants:
+        if any("group_by" not in d for _, d, _ in decls if d["variant"] == v):
+            err.add(f"variant {v!r}: group or groups requires group_by on its input declarations")
+    owner_set = owners_of.get((r["package"], r["table"]), []) if r["package"].startswith("common/") \
+        else [r["package"].split("/")[0]]
+    if not owner_set:
+        err.add("no consumer of the table in consumers.tsv")
+        return
+    for w in whens:
+        for a, b in OWNER_WORD.findall(w):
+            if (a or b) not in owner_set:
+                err.add(f"when {w!r} names {a or b!r}, not a consumer of the table")
+    if err.lines:                                          # строки судятся только по годной форме привязки
+        return
+    _check_rows(r, rows, cols, decls, filedecl, exps, marks, nats, compares, whens, owner_set, pkg, root, err, stats)
+
+
+def _check_rows(r, rows, cols, decls, filedecl, exps, marks, nats, compares, whens, owner_set, pkg, root, err, stats):
+    """По каждой строке и потребителю: выбор, группы, ровно одно ожидание и native, файлы, run identity."""
+    def ev(w, row, owner, line):
+        if w is None:
+            return None
+        val = whens[w].eval(data={"row": row, "owner": owner}).value()
+        if not isinstance(val, bool):
+            err.add(f"when {w!r} does not evaluate to a bool: {str(val)[:80]}", line)
+            return None
+        return val
+
+    def agree(values, what, line):
+        vals = set(values)
+        if len(vals) > 1:
+            err.add(f"{what}: when differs across the rows of a group", line)
+            return None
+        return vals.pop() if vals else None
+
+    def resolve(base, rel, what, line, decode=None):
+        start = pkg if base == "package" else root
+        full = Path(os.path.normpath(start / rel))
+        if Path(rel).is_absolute() or not (full == root or root in full.parents):
+            err.add(f"{what}: {rel!r} escapes the export", line)
+            return
+        if not full.is_file():
+            err.add(f"{what}: {rel!r} is not an existing file", line)
+            return
+        try:
+            data = full.read_bytes()
+            if decode in ("text", "json"):
+                data.decode("utf-8")
+            if decode == "json":
+                wire_json(data.decode("utf-8"))
+        except (OSError, UnicodeError, ValueError) as exc:
+            err.add(f"{what}: {rel!r} is unreadable as {decode}: {str(exc)[:60]}", line)
+
+    def constant(values, what, line):
+        if len(set(values)) > 1:
+            err.add(f"{what} is not constant across the group", line)
+        return values[0]
+
+    def subst(p, group):
+        return [PLACE.sub(lambda m: row[m[1]], p) for _, row in group]
+
+    def values(expr, group, what, line, suffix=None):
+        """Чтение ValueExpr по строкам группы: decode json — строгий JSON, column — постоянна, file — есть."""
+        if not isinstance(expr, dict):
+            return
+        if "column" in expr:
+            cell = constant([row[expr["column"]] for _, row in group], f"{what} column {expr['column']}", line)
+            _decoded(cell, expr["decode"], err, what, line)
+        elif "object" in expr:
+            for name, sub in expr["object"].items():
+                values(sub, group, f"{what}.{name}", line, suffix)
+        elif "array" in expr:
+            for i, sub in enumerate(expr["array"]):
+                values(sub, group, f"{what}[{i}]", line, suffix)
+        elif "file" in expr:
+            f = expr["file"]
+            rel = constant(subst(f["path"], group) if "path" in f else [row[f["path_column"]] for _, row in group],
+                           f"{what} file path", line)
+            resolve(f["base"], rel, what, line, expr["decode"])
+        elif "group" in expr or "groups" in expr:
+            g = expr.get("group") or expr["groups"]
+            for no, row in group:
+                _decoded(row[g["column"]], g["decode"], err, what, no)
+        elif "suffix" in expr and suffix is not None:
+            _decoded(suffix, expr["decode"], err, what, line)
+
+    identities = set()
+    for owner in owner_set:
+        calls = []                                         # (decl, [(no,row)…])
+        chosen = {i: [] for i, _, _ in decls}
+        for no, row in rows:
+            taken = {}
+            for i, d, w in decls:
+                if ev(w, row, owner, no):
+                    taken.setdefault(d["variant"], []).append(i)
+                    chosen[i].append((no, row))
+            for v, idx in taken.items():
+                if len(idx) > 1:
+                    err.add(f"owner {owner}: inputs {idx} of variant {v!r} select one row", no)
+            if not taken:
+                stats["wire_excluded"] += 1
+        for i, d, w in decls:
+            if "group_by" not in d:
+                calls += [(d, [x]) for x in chosen[i]]
+                continue
+            groups = {}
+            for no, row in chosen[i]:
+                groups.setdefault(tuple(row[c] for c in d["group_by"]), []).append((no, row))
+            for key in sorted(groups, key=lambda k: [x.encode("utf-8") for x in k]):
+                calls.append((d, groups[key]))
+        for d, group in calls:
+            v, line = d["variant"], group[0][0]
+            stats["wire_calls"] += 1
+            c = d.get("case")
+            if c is None:
+                c = "case" if "case" in cols else "id" if "id" in cols else {"line": True}
+            if c == {"line": True}:
+                case = constant([f"line-{no}" for no, _ in group], "case line", line)
+            elif isinstance(c, dict):
+                case = c["literal"]
+            else:
+                case = constant([row[c] for _, row in group], f"case column {c}", line)
+            ident = (owner, r["package"], r["table"], r["surface"], v, case)
+            if ident in identities:
+                err.add(f"owner {owner}: run identity variant {v!r} case {case!r} repeats", line)
+            identities.add(ident)
+            for name, src in (d.get("cells") or {}).items():
+                if "column" in src:
+                    constant([row[src["column"]] for _, row in group], f"cell {name}", line)
+            a = d.get("arg_file") or {}
+            if "column" in a:
+                constant([row[a["column"]] for _, row in group], "arg_file column", line)
+            if "path_column" in a:
+                resolve(a["base"], constant([row[a["path_column"]] for _, row in group], "arg_file path", line),
+                        "arg_file", line)
+            for name, spec, w in filedecl:
+                if w is not None and agree([ev(w, row, owner, no) for no, row in group], f"files.{name}", line):
+                    resolve(spec["base"], constant(subst(spec["path"], group), f"files.{name} path", line),
+                            f"files.{name}", line)
+            hit = [e for e, w in exps if e["variant"] == v and agree([ev(w, row, owner, no) for no, row in group],
+                                                                      "expect", line)]
+            if len(hit) != 1:
+                err.add(f"owner {owner}: variant {v!r} has {len(hit)} expectations, not exactly one", line)
+            nat = [nd for nd, w in nats if nd.get("variant", v) == v and agree(
+                [ev(w, row, owner, no) for no, row in group], "native", line)]
+            if len(nat) != 1:
+                err.add(f"owner {owner}: variant {v!r} has {len(nat)} native descriptors, not exactly one", line)
+            if v not in compares:
+                continue
+            found = []
+            for no, row in group:
+                first = next((k for k, mk in enumerate(marks) if mk["variant"] == v and (
+                    row[mk["column"]].startswith(mk["match"]) if mk.get("prefix") else row[mk["column"]] == mk["match"])), None)
+                found.append(first)
+            first = found[0] if len(set(found)) == 1 else None
+            if len(set(found)) > 1:
+                err.add(f"owner {owner}: markers match differently across the rows of a group", line)
+            if len(hit) != 1:
+                continue
+            mk = marks[first] if first is not None else {}
+            suffix = group[0][1][mk["column"]][len(mk["match"]):] if mk.get("prefix") else None
+            if mk.get("ignore_stdout"):
+                continue
+            values(mk.get("value", hit[0]["value"]), group, f"expect of variant {v!r}", line, suffix)
+            for k, item in enumerate(mk.get("assert", hit[0].get("assert", []))):
+                if isinstance(item, dict) and "value" in item:
+                    values(item["value"], group, f"assert[{k}]", line, suffix)
