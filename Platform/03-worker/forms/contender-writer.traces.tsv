@@ -1,0 +1,40 @@
+trace	step	t	event	expect
+first-waiting-no-name-taken	0	0	input {}	state=seeking; io=[]
+first-waiting-no-name-taken	1	1	observe {"withdrawn":false,"foreign":false,"due":true,"wall":100}	io=[["publish",["waiting",100,100]]]; var.since=100
+first-waiting-no-name-taken	2	2	observe {"withdrawn":false,"foreign":false,"due":true,"wall":110}	io=[["publish",["waiting",100,110]]]; var.since=100
+first-waiting-no-name-taken	3	3	acquired {}	state=holding; io=[]
+refused-before-first-capture	0	0	input {}	state=seeking; io=[]
+refused-before-first-capture	1	1	observe {"withdrawn":false,"foreign":true,"due":true,"wall":100}	io=[["publish",["refused",100,100]]]
+refused-before-first-capture	2	2	lost {}	io=[]; var.episode_lost=false
+refused-before-first-capture	3	3	acquired {}	state=holding; io=[]
+refused-priority-after-loss	0	0	input {}	state=seeking; io=[]
+refused-priority-after-loss	1	1	acquired {}	state=holding; io=[]
+refused-priority-after-loss	2	2	lost {}	io=[["name_taken",[]]]; state=seeking
+refused-priority-after-loss	3	3	observe {"withdrawn":false,"foreign":true,"due":true,"wall":120}	io=[["publish",["refused",120,120]]]
+refused-priority-after-loss	4	4	observe {"withdrawn":false,"foreign":false,"due":true,"wall":130}	io=[["publish",["nameless",130,130]]]
+same-state-since-survives-clock-backward	0	0	input {}	state=seeking; io=[]
+same-state-since-survives-clock-backward	1	1	observe {"withdrawn":false,"foreign":false,"due":true,"wall":100}	io=[["publish",["waiting",100,100]]]
+same-state-since-survives-clock-backward	2	2	observe {"withdrawn":false,"foreign":false,"due":true,"wall":90}	io=[["publish",["waiting",100,90]]]; var.since=100
+state-change-resets-since	0	0	input {}	state=seeking; io=[]
+state-change-resets-since	1	1	observe {"withdrawn":false,"foreign":false,"due":true,"wall":100}	io=[["publish",["waiting",100,100]]]
+state-change-resets-since	2	2	observe {"withdrawn":false,"foreign":true,"due":true,"wall":110}	io=[["publish",["refused",110,110]]]
+state-change-resets-since	3	3	observe {"withdrawn":false,"foreign":true,"due":true,"wall":120}	io=[["publish",["refused",110,120]]]
+state-change-resets-since	4	4	observe {"withdrawn":false,"foreign":false,"due":true,"wall":130}	io=[["publish",["waiting",130,130]]]
+withdrawn-never-contends	0	0	input {}	state=seeking; io=[]
+withdrawn-never-contends	1	1	observe {"withdrawn":true,"foreign":true,"due":true,"wall":100}	state=quiet; io=[]
+withdrawn-never-contends	2	2	observe {"withdrawn":true,"foreign":false,"due":true,"wall":110}	state=quiet; io=[]
+withdrawn-never-contends	3	3	acquired {}	state=quiet; io=[]
+withdrawn-never-contends	4	4	observe {"withdrawn":false,"foreign":false,"due":true,"wall":120}	state=seeking; io=[["publish",["waiting",120,120]]]
+not-due-does-not-publish	0	0	input {}	state=seeking; io=[]
+not-due-does-not-publish	1	1	observe {"withdrawn":false,"foreign":false,"due":false,"wall":100}	io=[]; var.phase="waiting"; var.since=100
+not-due-does-not-publish	2	2	observe {"withdrawn":false,"foreign":false,"due":false,"wall":105}	io=[]; var.since=100
+not-due-does-not-publish	3	3	observe {"withdrawn":false,"foreign":false,"due":true,"wall":110}	io=[["publish",["waiting",100,110]]]
+one-event-pair-per-loss-episode	0	0	input {}	state=seeking; io=[]
+one-event-pair-per-loss-episode	1	1	acquired {}	state=holding; io=[]
+one-event-pair-per-loss-episode	2	2	lost {}	io=[["name_taken",[]]]; var.episode_lost=true
+one-event-pair-per-loss-episode	3	3	lost {}	io=[]
+one-event-pair-per-loss-episode	4	4	observe {"withdrawn":false,"foreign":false,"due":true,"wall":110}	io=[["publish",["nameless",110,110]]]
+one-event-pair-per-loss-episode	5	5	acquired {}	io=[["name_back",[]]]; state=holding; var.episode_lost=false
+one-event-pair-per-loss-episode	6	6	acquired {}	io=[]
+one-event-pair-per-loss-episode	7	7	lost {}	io=[["name_taken",[]]]
+one-event-pair-per-loss-episode	8	8	acquired {}	io=[["name_back",[]]]; state=holding
