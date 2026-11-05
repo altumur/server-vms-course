@@ -97,7 +97,7 @@ class Forms(unittest.TestCase):
         self.assertTrue(check_forms.check_seams(path)[0])
         self.edit("acceptance/1/seams.tsv", "@clock 600s", "@clock +0.25")       # доли секунды (P/01.1 Н3, spec103)
         self.assertEqual(check_forms.check_seams(path)[0], [])
-        for bad in ("@clock +.25", "@clock +0.", "@clock +1e3"):
+        for bad in ("@clock +.25", "@clock +0.", "@clock +1e3", "@clock +01", "@clock +0.1234567891"):
             self.edit("acceptance/1/seams.tsv", "@clock +0.25", bad)
             self.assertTrue(check_forms.check_seams(path)[0], bad)
             self.edit("acceptance/1/seams.tsv", bad, "@clock +0.25")
