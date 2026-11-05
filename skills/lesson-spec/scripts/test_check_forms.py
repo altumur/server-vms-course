@@ -95,13 +95,14 @@ class Forms(unittest.TestCase):
         self.assertEqual(check_forms.check_seams(path)[0], [])
         self.edit("acceptance/1/seams.tsv", "@clock +600", "@clock 600s")
         self.assertTrue(check_forms.check_seams(path)[0])
-        self.edit("acceptance/1/seams.tsv", "@clock 600s", "@clock +0.25")       # доли секунды (P/01.1 Н3, spec103)
+        self.edit("acceptance/1/seams.tsv", "@clock 600s", "@clock +0.987654321")       # доли секунды (P/01.1 Н3, spec103)
         self.assertEqual(check_forms.check_seams(path)[0], [])
+        good = path.read_text(encoding="utf-8")
         for bad in ("@clock +.25", "@clock +0.", "@clock +1e3", "@clock +01", "@clock +0.1234567891"):
-            self.edit("acceptance/1/seams.tsv", "@clock +0.25", bad)
+            path.write_text(good.replace("@clock +0.987654321\t", bad + "\t"), encoding="utf-8")
             self.assertTrue(check_forms.check_seams(path)[0], bad)
-            self.edit("acceptance/1/seams.tsv", bad, "@clock +0.25")
-        self.edit("acceptance/1/seams.tsv", "@clock +0.25", "@clock +600")
+        path.write_text(good, encoding="utf-8")
+        self.edit("acceptance/1/seams.tsv", "@clock +0.987654321", "@clock +600")
         self.edit("acceptance/1/seams.tsv", "one 200 {", "200 {")
         self.assertTrue(any("after @parallel" in e for e in check_forms.check_seams(path)[0]))
 
@@ -130,3 +131,33 @@ class Forms(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FormsAllLessons(unittest.TestCase):         # ADR-0125 доп. (5): грамматика форм для уроков кроме P/01
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.lesson = self.tmp / "Platform/02-installer"
+        shutil.copytree(ROOT / "Platform/02-installer/acceptance", self.lesson / "acceptance")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def gate(self, check):
+        return check_forms.gate_errors(self.lesson, "s", check)
+
+    def test_case_gates(self):
+        first = next(ln.split("\t")[0] for ln in (self.lesson / "acceptance/1/verdicts.tsv").read_text(encoding="utf-8").splitlines()
+                     if ln and not ln.startswith("#"))
+        self.assertEqual(self.gate("verdicts:2.1:*"), [])
+        self.assertEqual(self.gate(f"verdicts:2.1:{first}"), [])
+        self.assertTrue(self.gate("verdicts:2.1:no-such-case"))
+        self.assertEqual(self.gate("puts:2.2:first,same_twice"), [])
+        self.assertTrue(self.gate("puts:2.2:case"))                # строка заголовка — не случай
+        self.assertTrue(self.gate("puts:2.4:*"))                   # нет таблицы главы
+        self.assertTrue(self.gate("verdict:2.1:*"))                # вид вне грамматики
+        self.assertTrue(self.gate("accept:2.1:*"))                 # accept — только scenarios.tsv
+
+    def test_parts_and_commands(self):
+        self.assertTrue({"families", "admin", "core", "rollout-poll"} <= check_forms.KIT_PARTS)
+        self.assertTrue(check_forms.COMMAND.fullmatch("manifest-put"))
+        self.assertFalse(check_forms.COMMAND.fullmatch("Put"))

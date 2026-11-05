@@ -20,7 +20,7 @@ TYPE = re.compile(r"(path|dir|file|addr|id|bool|duration|bytes:>0|int:[0-9]+\.\.
                   r"|list:id@addr(?:/addr)?)")
 PROSE_TYPE = {"path": "path", "dir": "directory path", "file": "file path", "addr": "host:port", "id": "member id",
               "bool": "no value", "duration": "duration", "bytes": "bytes", "int": "integer", "list": "comma-separated list"}
-COMMANDS = {"daemon", "status", "join", "leave", "admit", "backup", "restore", "import", "recover", "rights"}
+COMMAND = re.compile(r"[a-z][a-z-]*")   # подкоманда урока; сверка — с прозой (ячейка смысла), ADR-0125 доп. (5)
 UNITS = {"KiB": 1024, "MiB": 1024 ** 2, "GiB": 1024 ** 3}
 FAULT_KIND = {"BadRequestFault": "badrequest", "BodyTooLargeFault": "toolarge", "ForbiddenFault": "forbidden"}
 CELL = re.compile(r"(?<!\\)\|")
@@ -99,8 +99,8 @@ def check_flags(path):
         seen.add(r["flag"])
         if not TYPE.fullmatch(r["type"]):
             errors.append(f"{where}: type {r['type']!r} is not of the closed vocabulary")
-        if not set(r["commands"].split(",")) <= COMMANDS:
-            errors.append(f"{where}: commands {r['commands']!r} outside {sorted(COMMANDS)}")
+        if not all(COMMAND.fullmatch(c) for c in r["commands"].split(",")):
+            errors.append(f"{where}: commands {r['commands']!r} — not a list of lowercase command names")
         for column in ("required", "bad"):
             if r[column]:
                 try:
@@ -254,8 +254,11 @@ def check_refusals(path):
     return errors, stats
 
 
-KIT_PARTS = {"writecheck", "door", "flags", "refusals", "vectors", "stagetests", "launch"}   # ADR-0126 доп. (2) п. 1, доп. (7) п. 4; ADR-0083 доп. (95) п. 3
-GATE = re.compile(r"tests:([0-9]+\.[0-9]+):([^:;\s]+)(:seams)?|accept:([0-9]+\.[0-9]+):([^:;\s]+)|vectors:([a-z0-9-]+)|build")
+KIT_PARTS = {"writecheck", "door", "flags", "refusals", "vectors", "stagetests", "launch",   # ADR-0126 доп. (2) п. 1, доп. (7) п. 4; ADR-0083 доп. (95) п. 3
+             "families", "admin", "core", "rollout-poll"}                                   # ADR-0125 доп. (5)
+GATE = re.compile(r"tests:([0-9]+\.[0-9]+):([^:;\s]+)(:seams)?|accept:([0-9]+\.[0-9]+):([^:;\s]+)|vectors:([a-z0-9-]+)|build"
+                  r"|(verdicts|puts):([0-9]+\.[0-9]+):([^:;\s]+)")
+CASE_TABLE = {"verdicts": "verdicts.tsv", "puts": "puts.tsv"}   # таблицы случаев приёмки (P/02), ADR-0125 доп. (5)
 
 
 def stage_forms(root):
@@ -331,16 +334,28 @@ def check_req_anchors(lesson):
 def gate_errors(lesson, stage, check):
     """ADR-0126 доп. (1) п. 8, доп. (7) пп. 2, 3: одна проверка списка `gate` — закрытый вид без пробелов; глава —
     каталог приёмки урока; сценарии — имена `scenarios.tsv` главы (`seams.tsv` — с `:seams`) или `*`; пакет векторов —
-    `vectors/<пакет>` урока или проба формы `forms/<пакет>.probes.tsv`."""
+    `vectors/<пакет>` урока или проба формы `forms/<пакет>.probes.tsv`; `verdicts:`/`puts:` — случаи `verdicts.tsv`/`puts.tsv`
+    главы (ADR-0125 доп. (5))."""
     m = GATE.fullmatch(check)
     if not m:
-        return [f"stages.tsv: {stage}: gate {check!r} is not tests:<chapter>:<scenarios|*>[:seams], accept:…, vectors:… or build"]
+        return [f"stages.tsv: {stage}: gate {check!r} is not tests:<chapter>:<scenarios|*>[:seams], accept:…, "
+                f"verdicts:<chapter>:<cases|*>, puts:<chapter>:<cases|*>, vectors:… or build"]
     if m[6]:
         if not ((lesson / "vectors" / m[6]).is_dir() or (lesson / "forms" / f"{m[6]}.probes.tsv").is_file()):
             return [f"stages.tsv: {stage}: no vector package {m[6]}"]
         return []
     if check == "build":
         return []
+    if m[7]:                                             # verdicts:/puts: — случаи таблицы главы, первая колонка
+        chapter, names = m[8], m[9]
+        file = lesson / "acceptance" / chapter.split(".")[1] / CASE_TABLE[m[7]]
+        if not file.is_file():
+            return [f"stages.tsv: {stage}: no {file.relative_to(lesson)} for {m[7]}:{chapter}"]
+        if names == "*":
+            return []
+        known = {ln.split("\t")[0] for ln in file.read_text(encoding="utf-8").splitlines() if ln and not ln.startswith("#")} - {"case"}
+        missing = [n for n in names.split(",") if n not in known]
+        return [f"stages.tsv: {stage}: cases {missing} are not in {file.relative_to(lesson)}"] if missing else []
     chapter, names, seams = (m[1], m[2], m[3]) if m[1] else (m[4], m[5], None)
     file = lesson / "acceptance" / chapter.split(".")[1] / ("seams.tsv" if seams else "scenarios.tsv")
     if not file.is_file():
