@@ -1,0 +1,6 @@
+case	input	exit	stdout
+line-14	line-14.json	0	["worker", "server", "url", "instance", "labels", "fetched", "events"]
+line-45	line-45.json	0	["heartbeats", "contenders", "snapshot", "controller", "blobs", "commands", "*"]
+line-39	line-39.json	0	["worker", "server", "revision", "observed_revision", "phase", "id"]
+line-29	line-29.json	0	["domain/break-glass/=console", "domain/break-glass/=domain", "domain/break-glass/=domainagent", "domain/signer=domain", "domain/signer-pending=domain", "domain/book-seal=domain", "domain/users/=domain", "domain/member-key=domainagent", "domain/member-key=domain", "door/signer=console"]
+line-21	line-21.json	0	["console", "controller", "worker", "domain", "domainagent", "domainworker", "resource", "domainconsole"]

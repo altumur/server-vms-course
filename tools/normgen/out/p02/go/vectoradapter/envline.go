@@ -5,7 +5,8 @@ package vectoradapter
 
 // EnvLine — common/env-file cases.tsv (stand:env-line):
 //
-//	a line of an environment file (the bytes of a JSON string): ["K","V"], "skip" or "bad"
+//	Native input and output: Platform/common/vectors/env-file/README.md#vector-wire; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // input — the bytes of the {input} file of the stand command (the cell as written).
 func EnvLine(input []byte) Answer {

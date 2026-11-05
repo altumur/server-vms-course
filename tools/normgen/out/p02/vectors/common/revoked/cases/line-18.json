@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/revoked",
+ "table": "cases.tsv",
+ "case": "bad-sign",
+ "variant": "",
+ "cells": {
+  "file": "\"-1\\n\""
+ },
+ "files": {}
+}

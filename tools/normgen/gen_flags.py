@@ -31,6 +31,7 @@ DEFAULT_OUT = L.out
 COLUMNS = ["flag", "type", "default", "default_text", "required", "commands", "bad", "norm"]
 FLAG = re.compile(r"-[a-z][a-z0-9-]*|--[a-z][a-z0-9-]*")
 INPUT = re.compile(r"\$[A-Z][A-Z0-9_]*|<[a-z][a-z0-9_-]*>")    # входы процесса (P/03, P/04): $ОКРУЖЕНИЕ, <позиционный>
+INPUT_FLAG_TYPES = ("bool", "string", "number", "dir", "file")   # флаг команды рядом со входами процесса (P/06)
 TYPE = re.compile(r"path|dir|file|addr|id|bool|duration|bytes:>0|list:id@addr(?:/addr)?|string|number"
                   r"|enum:[A-Za-z0-9_.-]+(?:\|[A-Za-z0-9_.-]+)*|int:(-?[0-9]+)\.\.(-?[0-9]*)")
 INITIALISMS = {"id": "ID", "api": "API", "tls": "TLS"}
@@ -128,7 +129,7 @@ class Table:
             if not TYPE.fullmatch(row["type"]):
                 raise GenError(f"{where}: type {row['type']!r} is not of the closed vocabulary")
             row["commands"] = row["commands"].split(",")
-            known = (lambda c: re.fullmatch(r"[a-z]+", c)) if commands is None else (lambda c: c in commands.ids)
+            known = (lambda c: re.fullmatch(r"[a-z][a-z-]*", c)) if commands is None else (lambda c: c in commands.ids)
             if not all(known(c) for c in row["commands"]) or \
                     len(set(row["commands"])) != len(row["commands"]):
                 raise GenError(f"{where}: commands {row['commands']} — a comma list of names without repeats")
@@ -149,16 +150,18 @@ class Table:
                                    f"admitted at every command of this one")
         self.command_table = commands
         kinds = {bool(INPUT.fullmatch(r["flag"])) for r in self.rows}
-        if kinds == {True, False}:
-            raise GenError(f"{self.name}: flags and process inputs ($NAME, <arg>) in one form")
-        self.inputs = kinds == {True}
+        self.inputs = True in kinds          # входы процесса; P/06 — с флагами команды в той же форме (--writers-stopped)
         if self.inputs:
+            for row in self.rows:
+                if not INPUT.fullmatch(row["flag"]) and row["type"] not in INPUT_FLAG_TYPES:
+                    raise GenError(f"{self.name}: {row['flag']}: type {row['type']} — a flag beside process inputs "
+                                   f"is one of {', '.join(INPUT_FLAG_TYPES)}")
             if commands is not None:
                 raise GenError(f"{self.name}: process inputs with {COMMANDS_FORM}")
             for row in self.rows:
                 if row["default"].startswith(("=", "$")):
                     raise GenError(f"{self.name}: {row['flag']}: default {row['default']} — a literal or - for a process input")
-                if row["type"] == "bool" or row["type"].startswith("list:"):
+                if INPUT.fullmatch(row["flag"]) and row["type"] == "bool" or row["type"].startswith("list:"):
                     raise GenError(f"{self.name}: {row['flag']}: type {row['type']} for a process input")
             self.commands = []
             for row in self.rows:
@@ -765,12 +768,38 @@ def go_parse_inputs(table):
            "\tvar positional []string"]
     for row in pos:
         out += [f"\tif {admits(row)} {{", f"\t\tpositional = append(positional, {go_str(row['flag'])})", "\t}"]
+    flag_rows = [r for r in table.rows if r["flag"].startswith("--")]
+    if flag_rows:
+        out += ["\tgiven := map[string]string{}",
+                "\tvar words []string",
+                "\tfor k := 0; k < len(args); k++ {",
+                "\t\tw := args[k]",
+                "\t\tif !strings.HasPrefix(w, \"--\") {",
+                "\t\t\twords = append(words, w)",
+                "\t\t\tcontinue",
+                "\t\t}",
+                "\t\tname, value, hasValue := strings.Cut(w, \"=\")",
+                "\t\tswitch {"]
+        for row in flag_rows:
+            out += [f"\t\tcase name == {go_str(row['flag'])} && ({admits(row)}):"]
+            if row["type"] == "bool":
+                out += ["\t\t\tif !hasValue {", "\t\t\t\tvalue = \"true\"", "\t\t\t}"]
+            else:
+                out += ["\t\t\tif !hasValue {", "\t\t\t\tif k+1 == len(args) {",
+                        "\t\t\t\t\treturn nil, refuse(name, \"the flag needs a value\")", "\t\t\t\t}",
+                        "\t\t\t\tk++", "\t\t\t\tvalue = args[k]", "\t\t\t}"]
+            out += ["\t\t\tif _, twice := given[name]; twice {",
+                    "\t\t\t\treturn nil, refuse(name, \"the flag is given twice\")", "\t\t\t}",
+                    "\t\t\tgiven[name] = value"]
+        out += ["\t\tdefault:", "\t\t\treturn nil, refuse(name, \"not a flag of the process\")", "\t\t}", "\t}",
+                "\targs = words"]
     out += ["\tif len(args) > len(positional) {",
             "\t\treturn nil, refuse(args[len(positional)], fmt.Sprintf(\"%d positional words, the process takes %d\", "
             "len(args), len(positional)))",
-            "\t}",
-            "\tgiven := map[string]string{}",
-            "\tfor k, w := range args {",
+            "\t}"]
+    if not flag_rows:
+        out += ["\tgiven := map[string]string{}"]
+    out += ["\tfor k, w := range args {",
             "\t\tgiven[positional[k]] = w",
             "\t}"]
     for row in table.rows:
@@ -786,6 +815,12 @@ def go_parse_inputs(table):
             "\t\tswitch name {"]
     for row in table.rows:
         out += [f"\t\tcase {go_str(row['flag'])}: // {row['type']}"]
+        if row["type"] == "bool":
+            out += ["\t\t\tv, err := strconv.ParseBool(raw)",
+                    "\t\t\tif err != nil || (raw != \"true\" && raw != \"false\") {",
+                    "\t\t\t\treturn nil, refuse(name, \"not true or false\")", "\t\t\t}",
+                    f"\t\t\tin.{row['field']} = v", "\t\t\tf[name] = v"]
+            continue
         out += [f"\t\t\t{x}" for x in go_assign(row).copy()]
     out += ["\t\t}", "\t\tin.Given[name] = true", "\t}",
             "\te := &env{f: f, cmd: cmd}",
@@ -819,10 +854,14 @@ def go_module_inputs(table, rel, module, compiled):
                    f"\t{row['field']} {go_field_type(row['type'])}\n")
     order = "var inputOrder = []string{" + ", ".join(go_str(r["flag"]) for r in table.rows) + "}"
     imports = ['"errors"', '"fmt"', '"math"', '"regexp"', '"strconv"']
+    if any(r["flag"].startswith("--") for r in table.rows):
+        imports.append('"strings"')
     parts = [f"// Code generated by tools/normgen/gen_flags.py from {rel}; DO NOT EDIT.\n"
              f"// Таблица sha256 {table.sha256}.\n\n"
              "// Package flags — the process inputs of the lesson (ADR-0125 № 3, addendum (5)): environment values $NAME\n"
-             "// and positional <arg> of forms/daemon-flags.tsv; no CLI options.\n"
+             + ("// and positional <arg> of forms/daemon-flags.tsv, and the flags --name of its commands.\n"
+                if any(r["flag"].startswith("--") for r in table.rows) else
+                "// and positional <arg> of forms/daemon-flags.tsv; no CLI options.\n") +
              "package flags\n\n"
              f"import ({chr(10).join(imports)})",
              GO_API_INPUTS.strip("\n") % (", ".join(go_str(c) for c in table.commands), fields), order]
@@ -864,6 +903,53 @@ COPIES = (("flagtypes.go", HERE / "flags/go/flagtypes.go"), ("runtime.go", HERE 
           ("prims.go", HERE / "prims/go/prims.go"))
 
 
+CONSTANTS_FORM = "runtime-constants.tsv"           # числовой источник констант урока (P/06): часть flags, не новая
+CONSTANT_NAME = re.compile(r"[A-Z][A-Z0-9_]*")
+CONSTANT_UNITS = ("count", "s", "bytes")
+
+
+def constants_go(path, rel):
+    """runtime-constants.tsv (name value unit norm meaning) → constants.go пакета flags: const на строку и Constants."""
+    lines = [ln for ln in path.read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("#")]
+    head = ["name", "value", "unit", "norm", "meaning"]
+    if not lines or lines[0].split("\t") != head:
+        raise GenError(f"{path.name}: the header is not {' '.join(head)}")
+    norms = "".join(p.read_text(encoding="utf-8") for p in sorted((path.parent.parent / "spec").glob("*.norms.md")))
+    rows, seen = [], set()
+    for n, ln in enumerate(lines[1:], 2):
+        cells = ln.split("\t")
+        where = f"{path.name}:{n}"
+        if len(cells) != len(head):
+            raise GenError(f"{where}: {len(cells)} cells, the form has {len(head)}")
+        r = dict(zip(head, cells))
+        if not CONSTANT_NAME.fullmatch(r["name"]) or r["name"] in seen:
+            raise GenError(f"{where}: name {r['name']!r} — unique [A-Z][A-Z0-9_]*")
+        if not re.fullmatch(r"[1-9][0-9]*", r["value"]) or int(r["value"]) > INT64[1]:
+            raise GenError(f"{where}: value {r['value']!r} — a positive JSON integer")
+        if r["unit"] not in CONSTANT_UNITS:
+            raise GenError(f"{where}: unit {r['unit']!r} — one of {', '.join(CONSTANT_UNITS)}")
+        if f"<!-- req: {r['norm']} -->" not in norms:
+            raise GenError(f"{where}: norm {r['norm']} — no such req anchor in the lesson's spec")
+        if not r["meaning"].strip():
+            raise GenError(f"{where}: an empty meaning")
+        seen.add(r["name"])
+        rows.append(r)
+    out = [f"// Code generated by tools/normgen/gen_flags.py from {rel}; DO NOT EDIT.", "",
+           "package flags", "",
+           "// The runtime constants of the lesson (forms/runtime-constants.tsv): the defaults and limits of its norms —",
+           "// not inputs of the process, never environment knobs. The meaning and the dependent formulas stay in the norm.",
+           "const ("]
+    for r in rows:
+        out += [f"\t// {input_field('$' + r['name'])} — {r['meaning']} (unit {r['unit']}; {r['norm']})",
+                f"\t{input_field('$' + r['name'])} = {r['value']}"]
+    out += [")", "", "// Constant — a row of the form: the value, its unit (count, s, bytes) and the anchor of its norm.",
+            "type Constant struct {", "\tValue int64", "\tUnit  string", "\tNorm  string", "}", "",
+            "// Constants — the constants by their name in the form.", "var Constants = map[string]Constant{"]
+    out += [f"\t{go_str(r['name'])}: {{{r['value']}, {go_str(r['unit'])}, {go_str(r['norm'])}}}," for r in rows]
+    out += ["}", ""]
+    return "\n".join(out)
+
+
 def render(table_path=DEFAULT_TABLE):
     """→ {имя файла в go/flags: текст}."""
     table_path = Path(table_path).resolve()
@@ -881,6 +967,9 @@ def render(table_path=DEFAULT_TABLE):
         head = (f"// Code generated by tools/normgen/gen_flags.py: copy of tools/normgen/{src.relative_to(HERE)}; "
                 "DO NOT EDIT.\n\n")
         files[name] = gofmt(head + text)
+    consts = table_path.parent / CONSTANTS_FORM
+    if consts.is_file():
+        files["constants.go"] = gofmt(constants_go(consts, consts.relative_to(ROOT).as_posix()))
     return files
 
 
@@ -906,8 +995,8 @@ def kit_files(out=DEFAULT_OUT):
         kept = Path(out) / "go/flags" / name
         if not kept.is_file() or kept.read_text(encoding="utf-8") != fresh[name]:
             raise GenError(f"{kept} is stale: run tools/normgen/gen_flags.py")
-        origin = "generated" if name == "flags.go" else "handwritten"
-        source = kept if name == "flags.go" else dict(COPIES)[name]
+        origin = "generated" if name in ("flags.go", "constants.go") else "handwritten"
+        source = kept if name in ("flags.go", "constants.go") else dict(COPIES)[name]
         files.append(("flags", name, kept.read_bytes(), origin, str(Path(source).relative_to(ROOT))))
     return files
 
@@ -921,7 +1010,9 @@ def provenance():
         return {"form": [entry(DEFAULT_TABLE), entry(cmds)], "generator": entry(Path(__file__).resolve()),
                 "judge": entry(HERE / "cmdflag_judge.py")}
     if inputs_form():                                  # входы процесса (P/03, P/04): судья test_gen_flags_inputs
-        return {"form": [entry(DEFAULT_TABLE)], "generator": entry(Path(__file__).resolve()),
+        consts = DEFAULT_TABLE.parent / CONSTANTS_FORM
+        return {"form": [entry(DEFAULT_TABLE)] + ([entry(consts)] if consts.is_file() else []),
+                "generator": entry(Path(__file__).resolve()),
                 "judge": entry(HERE / "test_gen_flags_inputs.py")}
     return {"form": entry(DEFAULT_TABLE), "generator": entry(Path(__file__).resolve()), "judge": entry(JUDGE)}
 
@@ -950,6 +1041,18 @@ type Refusal struct { Flag, Reason string }   // no exit code: the process choos
 file non-empty, number a finite decimal), `required`, `bad` (CEL over the given values), then literal defaults. A
 default rule (`default_text`, in the field comment) and the contract checks of the norms (instance, labels, addresses,
 role, capacity) are yours — `Given` tells what was supplied.
+"""
+
+KIT_MD_COMMAND_FLAGS = """
+Beside the inputs the form names the flags of its commands (`--name`, P/06): in `args` a word `--name` or `--name=value`
+(a bool alone is `true`; its value is `true` or `false`; another type takes the next word without `=`); a flag of
+another command, a repeat or an unknown `--…` is a `Refusal` with that name; the other words are the positional ones.
+"""
+
+KIT_MD_CONSTANTS = """
+`forms/runtime-constants.tsv` — `flags/constants.go`: a `const` per row (`CHANGES_TICK` → `flags.ChangesTick`) and
+`flags.Constants` by the name of the form (value, unit `count` | `s` | `bytes`, the anchor of its norm). They are the
+defaults and limits of the norms — not inputs and not environment knobs; read them in your code instead of literals.
 """
 
 
@@ -1030,7 +1133,11 @@ def kit_md():
     """Справка части: команды урока (operator-commands.tsv) — KIT_MD_CMD; иначе флаги демона P/01."""
     if (DEFAULT_TABLE.parent / COMMANDS_FORM).is_file():
         return KIT_MD_CMD
-    return KIT_MD_INPUTS if inputs_form() else KIT_MD
+    if not inputs_form():
+        return KIT_MD
+    rows = Table(DEFAULT_TABLE.read_text(encoding="utf-8"), DEFAULT_TABLE.name).rows
+    return (KIT_MD_INPUTS + (KIT_MD_COMMAND_FLAGS if any(r["flag"].startswith("--") for r in rows) else "")
+            + (KIT_MD_CONSTANTS if (DEFAULT_TABLE.parent / CONSTANTS_FORM).is_file() else ""))
 
 
 def main(argv):

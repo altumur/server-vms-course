@@ -326,6 +326,7 @@ class Assert(NamedTuple):
     value: object
     min_bytes: Optional[int]        # только no-leak
     whole: Optional[bool]           # только no-leak (по умолчанию false)
+    decode: Optional[str] = None    # json внутри строкового поля ответа
 
 
 def leaks(text, secrets, min_bytes, whole=False):
@@ -525,7 +526,7 @@ class Expander:
                 if not isinstance(v, list) or not all(isinstance(s, str) for s in v):
                     raise WireError(f"{where}: no-leak value is a string or an array of strings, got {v!r:.80}")
             out.append(Assert(x["pointer"], x.get("test"), x.get("compare"), v, x.get("min_bytes"),
-                              bool(x.get("whole", False)) if x.get("test") == "no-leak" else None))
+                              bool(x.get("whole", False)) if x.get("test") == "no-leak" else None, x.get("decode")))
         return out
 
     def run(self, b, owner):

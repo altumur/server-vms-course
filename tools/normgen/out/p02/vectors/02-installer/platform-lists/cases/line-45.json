@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "02-installer/platform-lists",
+ "table": "cases.tsv",
+ "case": "object_families",
+ "variant": "",
+ "cells": {
+  "list": "object_families"
+ },
+ "files": {}
+}

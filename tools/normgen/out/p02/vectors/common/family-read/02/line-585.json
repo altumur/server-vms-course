@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "02.tsv",
+ "case": "02-k0020",
+ "variant": "",
+ "cells": {
+  "family": "platform/manifest/<sub>/files/<sha256>/<n>",
+  "key": "platform/manifest//files/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855/0",
+  "kind": "row",
+  "mode": "reader",
+  "who": "[\"admin\", \"console\"]",
+  "text": "{\"data\":\"eA==\"}"
+ },
+ "files": {}
+}

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/store-client",
+ "table": "cases.tsv",
+ "case": "get-row",
+ "variant": "",
+ "cells": {
+  "input": "{\"op\":\"get\",\"reply\":{\"status\":200,\"body\":{\"items\":{\"a\":\"1\"},\"index\":\"7\"}}}"
+ },
+ "files": {}
+}

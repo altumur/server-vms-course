@@ -5,8 +5,8 @@ package vectoradapter
 
 // EnvFile — common/env-file files.tsv (vectors):
 //
-//	the environment after the reading pass of the files (files.tsv input {route?, command_role?, unit, files}):
-//	an object of strings, or code 2 — a refusal to start
+//	Native input and output: Platform/common/vectors/env-file/README.md#vector-wire; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func EnvFile(table string, cells map[string]string, files map[string][]byte) Answer {

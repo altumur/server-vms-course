@@ -3,11 +3,11 @@
 
 package vectoradapter
 
-// FreshAge — common/fresh-age fresh.tsv (stand:fresh-age):
+// FreshAge — common/fresh-age fresh.tsv (vectors):
 //
-//	the freshness of an age (stand fresh-age): true | false
+//	the freshness of an age: true | false
 //
-// input — the bytes of the {input} file of the stand command (the cell as written).
-func FreshAge(input []byte) Answer {
+// cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
+func FreshAge(table string, cells map[string]string, files map[string][]byte) Answer {
 	return NotImplemented("FreshAge")
 }

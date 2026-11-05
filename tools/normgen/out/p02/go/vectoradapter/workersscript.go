@@ -5,7 +5,8 @@ package vectoradapter
 
 // WorkersScript — 02-installer/workers-script cases.tsv (stand:workers-script):
 //
-//	the decisions of the workers script (P/02.4 Н1.5) for the input: {start:[…], stop:[…]}
+//	Native input and output: Platform/02-installer/vectors/workers-script/README.md#vector-wire; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // input — the bytes of the {input} file of the stand command (the cell as written).
 func WorkersScript(input []byte) Answer {

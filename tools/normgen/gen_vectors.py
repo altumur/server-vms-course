@@ -3,10 +3,9 @@
 Запуск: python3 tools/normgen/gen_vectors.py --lesson 02-installer [<out>]
 
 Состав — свои пакеты урока (stages.tsv: gate vectors:<пакет>) и общие по Platform/common/vectors/consumers.tsv.
-Провод таблицы — объявление WIRE ниже: черновик формы Platform/common/vectors/wire.tsv («да» «Архитектора»; пишет
-«Спецификация»), выписанный из README пакетов, общего правила «Vectors» и раннера-судьи (/home/pilot/wire-p02-draft.md);
-форма его заменит. Пакеты, уже объявленные для P/01 (crl, revoked, log-mask, store-client, family-read), идут через
-common_vectors.py теми же функциями адаптера. journal/modes.tsv — не исполняется (тест раскладки; README пакета).
+P/02: входы, фикстуры, ожидания и сравнения — Platform/common/vectors/wire.tsv через wire.py; wire_vectors.py
+задаёт только сигнатуры Go адаптеров. Тесты проверяют полный native ответ по форме, затем сравнения и assert.
+Прочие уроки ждут полной формы и используют wire_draft.py. journal/modes.tsv — layout, не исполняется.
 
 Провод двух видов: единая команда `bin/vectors {input}` (кадр {format, package, table, case, variant, cells, files} →
 {exit_code, stdout_b64, stderr_b64}) и команда стенда `bin/vectors stand <ключ> {input}` (свой код выхода, stdout —
@@ -70,88 +69,8 @@ def cell_value(c):
         return c
 
 
-# Объявление провода (черновик wire.tsv). surface: vectors | stand:<ключ>; inputs — колонки cells (vectors) или
-# колонка/правило входа стенда; expect(row) → (код, значение | None, сырые байты | None); compare: value | raw |
-# layer1 | sets; fn — функция адаптера пакета; args — вид её аргументов.
-WIRE = {
-    "02-installer": [
-        {"package": "02-installer/canonical", "table": "cases.tsv", "surface": "stand:canonical", "fn": "Canonical",
-         "args": "source", "input": "input", "compare": "raw",
-         "expect": lambda r, d: (0, None, (d / r["expect"]).read_bytes()),
-         "doc": "the canonical projection (P/02.2 Н1.1) of the manifest file: the JCS bytes of the projection — stdout is "
-                "compared with expect/<case>.json byte for byte (no LF)"},
-        {"package": "02-installer/exec", "table": "cases.tsv", "surface": "stand:exec", "fn": "Exec", "args": "input",
-         "input": "exec", "compare": "value",
-         "expect": lambda r, d: (0, {"result": "refused"} if r["expect"] == "@refuse"
-                                 else {"result": "ok", "argv": json.loads(r["expect"])}, None),
-         "doc": "the parsing of worker.exec (the bytes of a JSON string): {\"result\":\"ok\",\"argv\":[…]} or "
-                "{\"result\":\"refused\"}; stdout — one object and one LF"},
-        {"package": "02-installer/install-order", "table": "cases.tsv", "surface": "stand:install-order",
-         "fn": "InstallOrder", "args": "input", "input": "input", "compare": "value",
-         "expect": lambda r, d: (0, {"result": "refused"} if r["expect"] == "@exit 2"
-                                 else {"result": "ok", "order": json.loads(r["expect"])}, None),
-         "doc": "the initial installation order (P/02.4 Н1.7 order) of {manifests, installed}: {\"result\":\"ok\","
-                "\"order\":[…]} or {\"result\":\"refused\"} (code 0)"},
-        {"package": "02-installer/workers-script", "table": "cases.tsv", "surface": "stand:workers-script",
-         "fn": "WorkersScript", "args": "input", "input": "input", "compare": "value",
-         "expect": lambda r, d: (0, json.loads(r["expect"]), None),
-         "doc": "the decisions of the workers script (P/02.4 Н1.5) for the input: {start:[…], stop:[…]}"},
-        {"package": "02-installer/platform-lists", "table": "cases.tsv", "surface": "stand:platform-lists",
-         "fn": "PlatformLists", "args": "none", "header": None, "fields": ["list", "word"], "compare": "sets",
-         "doc": "the closed lists of the platform (P/02.5 Н1.3, Н1.4): Value — map[string][]string, list → its words "
-                "(compared as sets); the unified command answers one list per call (cells {list}), the stand — all five"},
-        {"package": "02-installer/platform-lists", "table": "cases.tsv", "surface": "vectors", "fn": "PlatformLists",
-         "args": "none", "header": None, "fields": ["list", "word"], "inputs": ["list"], "per_list": True,
-         "compare": "sets"},                  # канон (решение «Архитектора»): вызов на список, cells {list} → массив
-        {"package": "common/env-file", "table": "cases.tsv", "surface": "stand:env-line", "fn": "EnvLine",
-         "args": "input", "input": "line", "compare": "value",
-         "expect": lambda r, d: (0, cell_value(r["expect"]), None),
-         "doc": "a line of an environment file (the bytes of a JSON string): [\"K\",\"V\"], \"skip\" or \"bad\""},
-        {"package": "common/env-file", "table": "files.tsv", "surface": "vectors", "fn": "EnvFile", "args": "cells",
-         "inputs": ["input"], "compare": "value",
-         "expect": lambda r, d: (2, None, None) if r["expect"] == "@exit 2" else (0, json.loads(r["expect"]), None),
-         "doc": "the environment after the reading pass of the files (files.tsv input {route?, command_role?, unit, "
-                "files}): an object of strings, or code 2 — a refusal to start"},
-        {"package": "common/domain-backup-key", "table": "cases.tsv", "surface": "vectors", "fn": "DomainBackupKey",
-         "args": "cells", "inputs": ["root_key", "backup_key_rev"], "compare": "value",
-         "expect": lambda r, d: (0, r["expect"], None),
-         "doc": "the domain backup copy key (HMAC-SHA256 of root_key and backup_key_rev): \"<64 hex>\" or \"@refuse\""},
-        {"package": "common/domain-founding", "table": "book-seal.tsv", "surface": "vectors", "fn": "DomainFounding",
-         "args": "cells", "inputs": ["seed_secret"], "compare": "value",
-         "expect": lambda r, d: (0, r["expect"], None),
-         "doc": "book-seal.tsv: the hex of book_seal of seed_secret; recovery.tsv: {domain, root_pub, fingerprint} or "
-                "\"@refuse\" (the table name tells which)"},
-        {"package": "common/domain-founding", "table": "recovery.tsv", "surface": "vectors", "fn": "DomainFounding",
-         "args": "cells", "inputs": ["input"], "compare": "value",
-         "expect": lambda r, d: (0, cell_value(r["expect"]), None)},
-        {"package": "common/loopback", "table": "cases.tsv", "surface": "vectors", "fn": "Loopback", "args": "cells",
-         "inputs": ["input"], "compare": "value",
-         "expect": lambda r, d: (2, None, None) if r["expect"] == "@exit 2" else (0, json.loads(r["expect"]), None),
-         "doc": "the kind of an address of the own cluster: \"loopback\", \"ip\" or \"name\"; code 2 — not an address"},
-        {"package": "common/sealing", "table": "aad.tsv", "surface": "vectors", "fn": "Sealing", "args": "cells",
-         "inputs": ["row_key", "path"], "compare": "value",
-         "expect": lambda r, d: (0, {"pointer": r["pointer"], "aad_hex": r["aad_hex"]}, None),
-         "doc": "the sealing contract by table: aad.tsv → {pointer, aad_hex}; envelope.tsv → the envelope string; open.tsv, "
-                "reseal.tsv, ring.tsv → the word or value of expect"},
-        {"package": "common/sealing", "table": "envelope.tsv", "surface": "vectors", "fn": "Sealing", "args": "cells",
-         "inputs": ["key_hex", "kid", "nonce_b64url", "row_key", "pointer", "plaintext"], "compare": "value",
-         "expect": lambda r, d: (0, r["envelope"], None)},
-        {"package": "common/sealing", "table": "open.tsv", "surface": "vectors", "fn": "Sealing", "args": "cells",
-         "inputs": ["key_hex", "envelope", "row_key", "pointer"], "compare": "value",
-         "expect": lambda r, d: (0, "sealed" if r["expect"] == "sealed" else cell_value(r["expect"]), None)},
-        {"package": "common/sealing", "table": "reseal.tsv", "surface": "vectors", "fn": "Sealing", "args": "cells",
-         "inputs": ["input"], "compare": "value",
-         "expect": lambda r, d: (0, cell_value(r["expect"]), None)},
-        {"package": "common/sealing", "table": "ring.tsv", "surface": "vectors", "fn": "Sealing", "args": "cells",
-         "inputs": ["file"], "extra_cells": lambda r: {"rotate": "true"} if r["case"].startswith("rotate") else {},
-         "compare": "value", "expect": lambda r, d: (0, r["expect"], None)},
-        {"package": "common/yaml-suite", "table": "expect.tsv", "surface": "vectors", "fn": "YamlSuite", "args": "cells",
-         "case": "id", "inputs": ["id"], "files": {"in.yaml": "inputs/{id}.yaml"}, "compare": "layer1",
-         "expect": lambda r, d: (0, {"layer1": r["layer1"]}, None),
-         "doc": "layer 1 of the manifest text on a yaml-test-suite input (files in.yaml): {layer1: \"ok\"|\"refused\"[, "
-                "rule]} — only layer1 is compared, rule is a hint"},
-    ],
-}
+# До полной формы прочие уроки используют согласованную временную проекцию wire_draft.py.
+WIRE = {}
 
 
 # Черновик провода P/03, P/04 — временная проекция до формы wire.tsv (wire_draft.py, источники — там).
@@ -194,6 +113,12 @@ def read_table(root, decl):
 
 def plan(root=ROOT):
     """→ ([объявление], [(пакет, таблица) общих из common_vectors]) урока; пакет состава без объявления — GenError."""
+    if L.key == "02-installer":
+        import wire_vectors
+        try:
+            return wire_vectors.declarations(root), common_vectors.composition(L.key, root, known_only=True)
+        except wire_vectors.wire.WireError as exc:
+            raise GenError(str(exc)) from None
     decls = WIRE.get(L.key)
     if decls is None:
         raise GenError(f"gen_vectors: no declaration for lesson {L.key}")
@@ -510,7 +435,7 @@ UNIFIED_CASE = '''	case %(key)s:
 '''
 
 
-def go_vectorcmd(decls, known):
+def go_vectorcmd(decls, known, bindings=None):
     imports = [f'\t"{GO_MODULE}/vectoradapter"']
     fam = any(n == "family-read" for n, _ in known)
     if fam:
@@ -546,7 +471,12 @@ def go_vectorcmd(decls, known):
     for name, table in known:
         cd = common_vectors.DECLS[name]
         key = go_str(f"common/{name} {table}")
-        want.append(f"\t\t{key}: {{{go_str(','.join(sorted(cd['inputs'])))}, {go_str(','.join(sorted(cd['files'])))}}},\n")
+        inputs, fixtures = cd["inputs"], cd["files"]
+        if bindings is not None:
+            binding = bindings[f"common/{name}", table, "vectors"]
+            inputs = {k for d in binding.inputs for k in d["cells"]}
+            fixtures = binding.files
+        want.append(f"\t\t{key}: {{{go_str(','.join(sorted(inputs)))}, {go_str(','.join(sorted(fixtures)))}}},\n")
         branch = common_vectors.VECTORCMD[name] % {"key": key}
         cases.append(branch)
     body = VECTORCMD % {"imports": "\n".join(imports) + "\n", "want": "".join(want), "cases": "".join(cases),
@@ -1306,6 +1236,12 @@ def lesson_consumers(root):
 
 def build(root=ROOT):
     """→ ({путь от out: байты}, опись [(пакет таблица строка, статус)])."""
+    if L.key == "02-installer":
+        import wire_vectors
+        try:
+            return wire_vectors.build(root, sys.modules[__name__])
+        except wire_vectors.wire.WireError as exc:
+            raise GenError(str(exc)) from None
     import hashlib
     decls, known = plan(root)
     files, inv = {}, []
@@ -1424,7 +1360,7 @@ def build(root=ROOT):
 def generate(root=ROOT, out=DEFAULT_OUT):
     files, inv = build(root)
     out = Path(out)
-    for sub in ("go/vectortests", "go/vectorcmd", "go/cmd/vectors", "vectors"):
+    for sub in ("go/vectortests", "go/vectorcmd", "go/cmd/vectors", "go/wirecheck", "vectors"):
         t = out / sub
         if t.exists():
             for p in sorted(t.rglob("*"), reverse=True):
@@ -1465,6 +1401,15 @@ def provenance():
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest()}
     decls, known = plan(ROOT)
+    if L.key == "02-installer":
+        import wire_vectors
+        runs, _ = wire_vectors.wire.expand(ROOT, L.key)
+        paths = {package_dir(ROOT, r.binding.package) / r.binding.table for r in runs}
+        forms = sorted(paths | {ROOT / wire_vectors.wire.FORM, ROOT / common_vectors.CONSUMERS})
+        return {"form": [entry(f) for f in forms], "generator": entry(Path(__file__).resolve()),
+                "handwritten": [entry(HERE / p) for p in ("wire.py", "wire_vectors.py", "wirert/go/check.go",
+                                                          "doorrt2/go/schema.go")], "judge": entry(JUDGE),
+                "judges": [entry(HERE / p) for p in ("test_wire_vectors.py", "test_wire.py")]}
     forms = sorted({read_table(ROOT, d)[1] for d in decls}) + [ROOT / common_vectors.CONSUMERS]
     return {"form": [entry(f) for f in forms], "generator": entry(Path(__file__).resolve()), "handwritten": [],
             "judge": entry(JUDGE)}

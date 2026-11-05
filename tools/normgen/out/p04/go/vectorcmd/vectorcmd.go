@@ -82,8 +82,6 @@ func Stand(key, path string, stdout, stderr io.Writer) int {
 			}
 		}()
 		switch key {
-		case "fresh-age":
-			a = vectoradapter.FreshAge(data)
 		case "group-of":
 			a = vectoradapter.GroupOf(data)
 		case "near-of":
@@ -161,6 +159,7 @@ func Run(data []byte) (code int, stdout, stderr []byte, err error) {
 	}
 	pkg := *in.Package + " " + *in.Table
 	want := map[string][2]string{
+		"common/fresh-age fresh.tsv":       {"age", ""},
 		"common/heartbeat-read cases.tsv":  {"object", ""},
 		"common/heartbeat-read worker.tsv": {"key,object", ""},
 		"common/instance box.tsv":          {"input", ""},
@@ -224,6 +223,12 @@ func Run(data []byte) (code int, stdout, stderr []byte, err error) {
 	}()
 	var value any
 	switch pkg {
+	case "common/fresh-age fresh.tsv":
+		a := vectoradapter.FreshAge(*in.Table, cellmap, files)
+		if c, o, e, done := answerOf(a); done {
+			return c, o, e, nil
+		}
+		value = a.Value
 	case "common/heartbeat-read cases.tsv":
 		a := vectoradapter.HeartbeatRead(*in.Table, cellmap, files)
 		if c, o, e, done := answerOf(a); done {

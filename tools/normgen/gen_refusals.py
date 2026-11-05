@@ -313,13 +313,13 @@ class PlainTable:
                 raise GenError(f"{where}: a peer row has no exit code")
             r["word_any"], r["word_cell"] = [], r["word"]
             if L.key != "02-installer" and r["word"] != "-":    # P/03+: word — сохранённая нормативная ячейка (spec103)
-                ticks = re.fullmatch(r"`([^`\s]+)`(?:, `[^`\s]+`)*", r["word"])
-                if ticks:                     # токены `…` — производный индекс: один символ | названные исходы
-                    toks = re.findall(r"`([^`\s]+)`", r["word"])
+                toks = re.findall(r"`([^`]+)`", r["word"])   # токен — и фраза: точный текст отказа (P/06.7)
+                if toks and re.sub(r"`[^`]+`|,|\s", "", r["word"]) == "":
+                    # токены `…` — производный индекс: один токен | названные исходы
                     r["word"], r["word_any"] = (toks[0], []) if len(toks) == 1 else ("-", toks)
                 else:
                     r["word"] = "-"                                # проза ячейки — без проекции
-            if r["word"] != "-" and not re.fullmatch(r"\S+", r["word"]):
+            if r["word"] != "-" and not r["word"].strip():
                 raise GenError(f"{where}: word {r['word']!r} — one token or -")
             r["log_names"], r["log_words"] = [], []
             if r["log"] != "-":

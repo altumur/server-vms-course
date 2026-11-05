@@ -1,6 +1,5 @@
 """Тесты части vectors урока без двери (gen_vectors.py; P/02, ADR-0125 доп. (5) п. 5): out свежий; на заглушках всё
-красное без паники (кроме family-read — его читает часть families); на подставном адаптере (ответы, выписанные из самих
-таблиц по объявлению провода) всё зелёное; мутанты подставного адаптера (код, значение, сырые байты, слово кольца,
+красное без паники (кроме family-read — его читает часть families); на подставном адаптере (ответы раскрытого wire) всё зелёное; мутанты подставного адаптера (код, значение, сырые байты, слово кольца,
 layer1) — красные ровно в своей таблице; journal/modes.tsv — в описи excluded."""
 import json
 import os
@@ -44,25 +43,23 @@ def fake_go(mut=None):
         ds = [x for x in ds if not x.get("per_list")]
         d = ds[0]
         entries = []
+        import wire
+        runs, _ = wire.expand(ROOT, "02-installer")
         for dd in ds:
-            pdir, path, rows = g.read_table(ROOT, dd)
-            if dd["compare"] == "sets":
-                lists = {}
-                for _, r in rows:
-                    lists.setdefault(r["list"], []).append(r["word"])
-                entries.append(("", 0, json.dumps(lists, ensure_ascii=False), None))
-                continue
-            for no, r in rows:
-                code, value, raw = dd["expect"](r, pdir)
+            selected = [r for r in runs if r.binding.key == tuple(dd[k] for k in ("package", "table", "surface"))]
+            for r in selected:
+                code, value, raw = r.code, r.value, None
+                if isinstance(value, bytes):
+                    value, raw = None, value
                 if dd["surface"] == "vectors":
-                    cells = {c: r[c] for c in dd["inputs"]}
-                    cells.update(dd.get("extra_cells", lambda _: {})(r))
-                    k = dd["table"] + "|" + "\x00".join(sorted(f"{a}={b}" for a, b in cells.items()))
+                    k = dd["table"] + "|" + "\x00".join(sorted(f"{a}={b}" for a, b in r.cells.items()))
                 elif dd["args"] == "source":
-                    k = (ROOT / r[dd["input"]]).name
+                    k = Path(r.arg_path).name
+                elif dd["args"] == "none":
+                    k = ""
                 else:
-                    k = r[dd["input"]]
-                if mut and mut[0] == dd["table"] and mut[1] == dd["package"] and no == min(n for n, _ in rows):
+                    k = r.arg.decode("utf-8")
+                if mut and mut[0] == dd["table"] and mut[1] == dd["package"] and r is selected[0]:
                     code, value, raw = mut[2](code, value, raw)
                 entries.append((k, code, json.dumps(value, ensure_ascii=False), raw))
         table = ",\n".join(f"\t{g.gstr(k)}: {{Code: {c}, Value: val({g.gstr(v)})"
@@ -108,6 +105,8 @@ class Vectors(unittest.TestCase):
                                   [str(cls.out)], capture_output=True, text=True, env=ENV)
             assert done.returncode == 0, done.stderr
         cls.mod = cls.out / "go"
+        import wire
+        cls.expected_count = len(wire.expand(ROOT, "02-installer")[0])
 
     @classmethod
     def tearDownClass(cls):
@@ -132,7 +131,8 @@ class Vectors(unittest.TestCase):
         self.assertIn("common/journal modes.tsv\texcluded: a layout test", inv)
 
     def test_stub_red(self):
-        res, panics, _ = results(self.mod)
+        res, panics, done = results(self.mod)
+        self.assertEqual(len(res), self.expected_count, done.stdout[-2000:] + done.stderr)
         self.assertEqual(panics, 0)
         red = {n.rsplit("_", 1)[0] for n, a in res.items() if a == "fail"}
         green = {n.rsplit("_", 1)[0] for n, a in res.items() if a == "pass"}
@@ -142,6 +142,7 @@ class Vectors(unittest.TestCase):
     def test_fake_green(self):
         mod = self.fake()
         res, _, done = results(mod)
+        self.assertEqual(len(res), self.expected_count, done.stdout[-2000:] + done.stderr)
         bad = {n for n, a in res.items() if a != "pass" and not n.startswith("TestCommon")}
         self.assertEqual(bad, set(), done.stdout[-2000:])
 
@@ -154,7 +155,8 @@ class Vectors(unittest.TestCase):
                  "TestLoopback_Cases"),
                 ("ring.tsv", "common/sealing", lambda c, v, r: (c, "unreadable!", r), "TestSealing_Ring"),
                 ("expect.tsv", "common/yaml-suite", lambda c, v, r: (c, {"layer1": "x"}, r), "TestYamlSuite_Expect")):
-            res, _, _ = results(self.fake((table, pkg, f)))
+            res, _, done = results(self.fake((table, pkg, f)))
+            self.assertEqual(len(res), self.expected_count, done.stdout[-2000:] + done.stderr)
             red = {n for n, a in res.items() if a == "fail" and not n.startswith("TestCommon")}
             self.assertTrue(red and all(n.startswith(test) for n in red), f"mutant {pkg} {table}: red {sorted(red)[:5]}")
 

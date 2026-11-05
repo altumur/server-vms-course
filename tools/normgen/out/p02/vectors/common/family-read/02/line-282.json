@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "02.tsv",
+ "case": "02-0281",
+ "variant": "",
+ "cells": {
+  "family": "platform/manifest/<sub>/canonical/<форма>",
+  "key": "platform/manifest/testsub/canonical/1",
+  "kind": "row",
+  "mode": "writer",
+  "who": "[\"admin\"]",
+  "text": "{\"form\":\"[1\",\"rev\":\"1\",\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"manifest\":\"a\"}"
+ },
+ "files": {}
+}

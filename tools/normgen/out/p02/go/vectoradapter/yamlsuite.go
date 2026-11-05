@@ -5,8 +5,8 @@ package vectoradapter
 
 // YamlSuite — common/yaml-suite expect.tsv (vectors):
 //
-//	layer 1 of the manifest text on a yaml-test-suite input (files in.yaml): {layer1: "ok"|"refused"[, rule]} —
-//	only layer1 is compared, rule is a hint
+//	Native input and output: Platform/common/vectors/yaml-suite/README.md#vector-wire; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func YamlSuite(table string, cells map[string]string, files map[string][]byte) Answer {

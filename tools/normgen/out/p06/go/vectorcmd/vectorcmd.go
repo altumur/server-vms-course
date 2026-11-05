@@ -82,8 +82,6 @@ func Stand(key, path string, stdout, stderr io.Writer) int {
 			}
 		}()
 		switch key {
-		case "fresh-age":
-			a = vectoradapter.FreshAge(data)
 		case "password-hash":
 			a = vectoradapter.PasswordHash(data)
 		case "said-id":
@@ -169,6 +167,7 @@ func Run(data []byte) (code int, stdout, stderr []byte, err error) {
 		"common/door-token issue.tsv":               {"claims,kid,now,seed_hex", ""},
 		"common/events-merge cases.tsv":             {"input", ""},
 		"common/fault fault.tsv":                    {"", ""},
+		"common/fresh-age fresh.tsv":                {"age", ""},
 		"common/group-of cases.tsv":                 {"raw", ""},
 		"common/heartbeat-read cases.tsv":           {"object", ""},
 		"common/heartbeat-read worker.tsv":          {"key,object", ""},
@@ -299,6 +298,12 @@ func Run(data []byte) (code int, stdout, stderr []byte, err error) {
 		value = a.Value
 	case "common/fault fault.tsv":
 		a := vectoradapter.Fault(*in.Table, cellmap, files)
+		if c, o, e, done := answerOf(a); done {
+			return c, o, e, nil
+		}
+		value = a.Value
+	case "common/fresh-age fresh.tsv":
+		a := vectoradapter.FreshAge(*in.Table, cellmap, files)
 		if c, o, e, done := answerOf(a); done {
 			return c, o, e, nil
 		}

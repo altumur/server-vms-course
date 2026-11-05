@@ -46,6 +46,11 @@ row. A repeated filing of a `json` row (below) is `PUT /counters/<name> {"doc": 
 then the field `doc` is compared again. The stand is one fresh stand for the whole table (analysis of the reading of the «cammeta-acceptance» commits
 2026-10-20: preparation is the data of the package, not a choice of the runner).
 
+
+For this store+console HTTP fixture, set both `OBJECTS=file://` and `PLATFORM_OBJECTS=file://` explicitly before the console starts. By [the object client contract](../../../common/contracts/object-client.md) Address, bare `file://` resolves to `<PLATFORM_DIR>/objects`. The role launch command creates this real local root with the stand permissions before startup, as in [the common stand](../../../common/acceptance/README.md); the console reads the actual directory, not a canned empty answer. This makes the configured local object source available to GET /counters while keeping the fixture to store+console.
+
+This is the fixture's selected configuration, not a fallback of a running process: with configstore and no OBJECTS setting the normal source remains cluster://; an unconfirmed first object read still gives 503. No resource process or pure native console command is added. The native worker rows do not use this HTTP fixture. The 77 table rows, refusal checks and all 21 accepted-json round trips are unchanged.
+
 ## Rules
 
 The writing rules are the header comment of the table (a string, `true`/`false`, a top-level `null`, a number by JCS, the length by the

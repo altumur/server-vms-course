@@ -4,7 +4,8 @@
 
 Своя модель формы судьи: процесс из колонки commands; позиционные <arg> по порядку формы (лишнее слово — отказ этим
 словом); $NAME — присутствие в окружении (пустое значение — тоже дано); тип string — любое значение, dir/file — непустое,
-number — конечная десятичная запись; required (true | CEL), затем bad (CEL над f — данные значения — и cmd, оракул
+number — конечная десятичная запись; флаг команды рядом со входами (P/06: --x, --x=v; bool — true | false; чужой и
+повтор — отказ именем флага); required (true | CEL), затем bad (CEL над f — данные значения — и cmd, оракул
 cel_expr_python), затем литеральные умолчания. Пробы — случайные окружения со значениями из словаря судьи (пары
 псевдонимов — то равные, то разные); исход Go Parse (отказ — имя входа; иначе Given и значения полей) — равен модели.
 Мутанты выхода (обрезанная проверка bad, потерянное умолчание, позиционный не той командой) — красные. out свежий.
@@ -22,7 +23,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-LESSONS = {"03-worker": "p03", "04-controller": "p04", "05-resource": "p05"}
+LESSONS = {"03-worker": "p03", "04-controller": "p04", "05-resource": "p05", "06-console": "p06"}
 GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
 NUMBER = re.compile(r"-?(0|[1-9][0-9]*)(\.[0-9]+)?")
 VALUES = ["", "a", "srv-a", "Bad_Name", "srv--a", "900", "1.5", "-3", "1e3", "0x10", "/data/x", "file:///x",
@@ -66,9 +67,31 @@ class Model:
         if cmd not in self.form.procs:
             return {"refused": cmd}
         pos = [r["flag"] for r in rows if r["flag"].startswith("<") and cmd in r["commands"]]
+        flags = {r["flag"]: r for r in rows if r["flag"].startswith("--") and cmd in r["commands"]}
+        given, words, k = {}, [], 0
+        while k < len(args):                  # флаги команды (P/06): --x, --x=v; не bool без «=» — следующее слово
+            w = args[k]
+            k += 1
+            if not w.startswith("--"):
+                words.append(w)
+                continue
+            name, eq, value = w.partition("=")
+            if name not in flags:
+                return {"refused": name}
+            if not eq:
+                if flags[name]["type"] == "bool":
+                    value = "true"
+                elif k == len(args):
+                    return {"refused": name}
+                else:
+                    value, k = args[k], k + 1
+            if name in given:
+                return {"refused": name}
+            given[name] = value
+        args = words
         if len(args) > len(pos):
             return {"refused": args[len(pos)]}
-        given = dict(zip(pos, args))
+        given.update(zip(pos, args))
         for r in rows:
             if r["flag"].startswith("$") and cmd in r["commands"] and r["flag"][1:] in environ:
                 given[r["flag"]] = environ[r["flag"][1:]]
@@ -79,7 +102,11 @@ class Model:
             raw = given[r["flag"]]
             if r["type"] in ("dir", "file", "path") and raw == "":
                 return {"refused": r["flag"]}
-            if r["type"] == "number":
+            if r["type"] == "bool":
+                if raw not in ("true", "false"):
+                    return {"refused": r["flag"]}
+                f[r["flag"]] = raw == "true"
+            elif r["type"] == "number":
                 if not NUMBER.fullmatch(raw):
                     return {"refused": r["flag"]}
                 f[r["flag"]] = float(raw)
@@ -94,7 +121,7 @@ class Model:
             if r["bad"] and r["flag"] in f and self.cel_true(k, "bad", f, cmd):
                 return {"refused": r["flag"]}
         for r in rows:
-            if cmd in r["commands"] and r["flag"] not in f and r["default"] != "-":
+            if cmd in r["commands"] and r["flag"] not in f and r["default"] != "-" and r["type"] != "bool":
                 values[field(r["flag"])] = float(r["default"]) if r["type"] == "number" else r["default"]
         return {"refused": None, "given": sorted(f), "values": values}
 
@@ -151,10 +178,16 @@ func main() {
 
 def probes(form, rnd, n):
     names = [r["flag"][1:] for r in form.rows if r["flag"].startswith("$")]
+    flags = [r["flag"] for r in form.rows if r["flag"].startswith("--")]
     out = []
     for _ in range(n):
         cmd = rnd.choice(form.procs + (["nosuch"] if rnd.random() < 0.03 else []))
         args = [rnd.choice(VALUES) for _ in range(rnd.choice([0, 0, 1, 1, 2]))]
+        for fl in flags:                               # флаги команды: с «=», без, повтор, чужой
+            if rnd.random() < 0.6:
+                args.insert(rnd.randint(0, len(args)), rnd.choice([fl, fl, fl + "=true", fl + "=false", fl + "=yes", fl + "=1", fl + "=TRUE"]))
+        if flags and rnd.random() < 0.05:
+            args.append(rnd.choice(["--nosuch", flags[0]]))
         env = {}
         for name in names:
             if rnd.random() < 0.35:
@@ -237,7 +270,9 @@ class InputFlags(unittest.TestCase):
                 self.assertEqual(bad[:2], [], f"{lesson}: {len(bad)} of {len(cases)} disagree")
                 outcomes = {model.run(*c)["refused"] for c in cases}
                 for k, r in enumerate(form.rows):      # каждая проверка формы сработала хоть раз
-                    if r["bad"]:                        # симметричные псевдонимы: отказ берёт первый, условие — оба
+                    if r["bad"] and r["flag"].startswith("--"):
+                        self.assertIn(r["flag"], outcomes, f"{lesson}: probes never refuse {r['flag']}")
+                    elif r["bad"]:                      # симметричные псевдонимы: отказ берёт первый, условие — оба
                         hit = any(model.cel_true(k, "bad", {"$" + n: v for n, v in e.items()}, c)
                                   for c, _, e in cases if r["flag"][1:] in e)
                         self.assertTrue(hit, f"{lesson}: bad of {r['flag']} is never true on the probes")
@@ -268,6 +303,78 @@ class InputFlags(unittest.TestCase):
                 except AssertionError:
                     continue                                # не собрался — убит
                 self.assertTrue(disagree(model, cases, got), f"{name} survives")
+
+    def test_mutants_command_flags(self):
+        """P/06: флаг команды рядом со входами — чужой флаг, слово не true/false, повтор, отказ bad — красные."""
+        rnd = random.Random(6)
+        lesson = "06-console"
+        form = Form(ROOT / "Platform" / lesson / "forms/daemon-flags.tsv")
+        model = Model(form)
+        cases = probes(form, rnd, 3000)
+        src = (self.mods[lesson] / "flags/flags.go").read_text()
+        muts = {
+            "unknown-accepted": src.replace('return nil, refuse(name, "not a flag of the process")', 'continue', 1),
+            "bool-word": src.replace('(raw != "true" && raw != "false")', 'false', 1),
+            "twice": src.replace('if _, twice := given[name]; twice {', 'if false {', 1),
+            "bad-dropped": src.replace('if in.Given["--writers-stopped"] && isTrue(bad', 'if false && isTrue(bad', 1),
+        }
+        for name, text in muts.items():
+            with self.subTest(mutant=name):
+                self.assertNotEqual(text, src, f"{name}: the mutant does not apply")
+                mod = self.tmp / f"mut06-{name}"
+                shutil.copytree(self.mods[lesson], mod)
+                (mod / "flags/flags.go").write_text(text)
+                try:
+                    got = run_driver(mod, cases)
+                except AssertionError:
+                    continue
+                self.assertTrue(disagree(model, cases, got), f"{name} survives")
+
+    def test_constants(self):
+        """runtime-constants.tsv (P/06) — constants.go части flags: своё чтение формы судьёй; const и Constants пакета
+        равны строкам (имя, значение, единица, якорь); якорь — есть в нормах урока; порченая форма — отказ генератора."""
+        for lesson, slug in LESSONS.items():
+            form = ROOT / "Platform" / lesson / "forms/runtime-constants.tsv"
+            got = self.mods[lesson] / "flags/constants.go"
+            self.assertEqual(form.is_file(), got.is_file(), lesson)
+            if not form.is_file():
+                continue
+            lines = [ln for ln in form.read_text(encoding="utf-8").split("\n") if ln and not ln.startswith("#")]
+            rows = [dict(zip(lines[0].split("\t"), ln.split("\t"))) for ln in lines[1:]]
+            norms = "".join(p.read_text(encoding="utf-8")
+                            for p in (ROOT / "Platform" / lesson / "spec").glob("*.norms.md"))
+            text = got.read_text(encoding="utf-8")
+            consts = dict(re.findall(r"^\t(\w+) = ([0-9]+)$", text, re.M))
+            table = {m[0]: (int(m[1]), m[2], m[3])
+                     for m in re.findall(r'^\t"(\w+)":\s+\{([0-9]+), "(\w+)", "([^"]+)"\},$', text, re.M)}
+            self.assertEqual(len(consts), len(rows), lesson)
+            self.assertEqual(len(table), len(rows), lesson)
+            for r in rows:
+                self.assertEqual(consts.get(field("$" + r["name"])), r["value"], r["name"])
+                self.assertEqual(table.get(r["name"]), (int(r["value"]), r["unit"], r["norm"]), r["name"])
+                self.assertIn(f"<!-- req: {r['norm']} -->", norms, r["name"])
+            src = form.read_text(encoding="utf-8")
+            first = rows[0]
+            row = "\t".join(first[k] for k in ("name", "value", "unit", "norm", "meaning"))
+            bad = {"value-zero": row.replace(f"\t{first['value']}\t", "\t0\t", 1),
+                   "value-quoted": row.replace(f"\t{first['value']}\t", f'\t"{first["value"]}"\t', 1),
+                   "unit": row.replace(f"\t{first['unit']}\t", "\tms\t", 1),
+                   "norm": row.replace(f"\t{first['norm']}\t", "\tP/06.1-R999\t", 1),
+                   "name": row.replace(first["name"], first["name"].lower(), 1),
+                   "repeat": row + "\n" + row}
+            for name, new in bad.items():
+                with self.subTest(lesson=lesson, form=name):
+                    d = self.tmp / f"bad-{name}" / "forms"
+                    shutil.copytree(form.parent, d, dirs_exist_ok=True)
+                    spec = d.parent / "spec"
+                    if not spec.exists():
+                        shutil.copytree(form.parent.parent / "spec", spec)
+                    (d / "runtime-constants.tsv").write_text(src.replace(row, new, 1), encoding="utf-8")
+                    done = subprocess.run([sys.executable, str(HERE / "gen_flags.py"), "--lesson", lesson,
+                                           str(d / "daemon-flags.tsv"), str(self.tmp / f"out-{name}")],
+                                          capture_output=True, text=True)
+                    self.assertNotEqual(done.returncode, 0, f"{name}: accepted")
+                    self.assertIn("runtime-constants.tsv", done.stderr, name)
 
 
 if __name__ == "__main__":

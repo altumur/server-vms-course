@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/fresh-age",
+ "table": "fresh.tsv",
+ "case": "equal-int",
+ "variant": "",
+ "cells": {
+  "age": "45"
+ },
+ "files": {}
+}
