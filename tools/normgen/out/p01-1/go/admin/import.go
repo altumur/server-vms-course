@@ -23,11 +23,12 @@ import "normgen/p01-1/flags"
 //	    taken, not smaller than the index of any row of the copy; then — a line per key: {key, items, index} (items and
 //	    index — as Row of chapter 1.1) or {key, items: null, index, unreadable: true} — a damaged row as read (Row of
 //	    chapter 1.1); the writer puts the keys in ascending order of UTF-8 bytes, the reader does not require an order;
-//	    platform/epoch_floor is an ordinary row; the id replay memory (chapter 1.1 Н3) is not part of the copy; the copy
-//	    knows no manifests — rows of any families, a family check at import is not needed (import below); another format
-//	    or version, an extra or a missing field, a line not JSON or not by Row, a repeated key, an index of a row higher
-//	    than the index of the header — a refusal of the whole input before the first write (Н4); an unreadable row in the
-//	    input — also a refusal (Н4). A copy of one implementation is restored by another (the store pilot, А2)
+//	    platform/epoch_floor is included as an ordinary input row for upper and the generation_at clock check, but is not
+//	    transferred; the id replay memory (chapter 1.1 Н3) is not part of the copy; the copy knows no manifests — rows of
+//	    any families, a family check at import is not needed (import below); another format or version, an extra or a
+//	    missing field, a line not JSON or not by Row, a repeated key, an index of a row higher than the index of the
+//	    header — a refusal of the whole input before the first write (Н4); an unreadable row in the input — also a
+//	    refusal (Н4). A copy of one implementation is restored by another (the store pilot, А2)
 //	  import: from an immutable copy (copy above) into a fresh group — not a single row, except the rows of doors without
 //	    a vote platform/configstore-doors/<id> (service rows of the group itself, `door` above: a live door writes its
 //	    own every 30 s — it does not cancel the freshness; during the transfer its write, like those of ordinary writers,
@@ -45,11 +46,14 @@ import "normgen/p01-1/flags"
 //	    of the families epoch, epoch_floor) — upper is not reliable, a refusal of the whole input (В7 item 3, the
 //	    Architect's decision of 2026-10-28, row 13 of the list); the copy knows no manifests: import does not check the
 //	    families of rows, a row of any family is transferred (log of cammeta-go, lesson 11 № 10). A bad row, size, base,
-//	    epoch — without changes. After the floor is published a refusal can leave part of the rows; a replay continues
-//	    the same attempt with the same floor, a new attempt — a new generation. Ordinary writers are not admitted until
-//	    completion: the daemon does not start on such a directory (code 2, the log — repeat import with the same input),
-//	    the store file:// in the process answers writes and reads with 503 unavailable, the directory does not change
-//	    (C01-UNFINISHED-IMPORT-WRITERS-01)
+//	    epoch — without changes. Transfer excludes the input platform/epoch_floor: the first write is the new floor F1,
+//	    with its new index and generation_at at that raise; then all other input rows keep their copy versions.
+//	    Completeness is every input row except that old floor, plus the new floor row; a partial replay preserves the
+//	    exact saved F1 row (items and index), never copies back the old floor or raises F1 again. After the floor is
+//	    published a refusal can leave part of the rows; a replay continues the same attempt with the same floor, a new
+//	    attempt — a new generation. Ordinary writers are not admitted until completion: the daemon does not start on such
+//	    a directory (code 2, the log — repeat import with the same input), the store file:// in the process answers
+//	    writes and reads with 503 unavailable, the directory does not change (C01-UNFINISHED-IMPORT-WRITERS-01)
 //	  floor: (platform/epoch_floor {floor, generation_at}); generation: max((upper >> 32) + 1, whole hours of UTC since
 //	    2026-01-01); floor = generation << 32; upper — the maximum of floor of the row platform/epoch_floor and epoch of
 //	    every row <sub>/epoch/<id> (P/03.2 Н1.5) in the whole verified input and in the saved state of the daemon (a
@@ -90,5 +94,8 @@ import "normgen/p01-1/flags"
 //	  1.3 row 14 import_repeated — exit !0 - (P/01.3 Н3; B12); with part refusals: refusals.ImportRepeated
 //	  1.3 row 24 clock_early — exit !0 - (P/01.3 Н3); with part refusals: refusals.ClockEarly
 func Import(f *flags.Flags, env Env) int {
+	if env.Copy != nil {
+		return runCopy("import", f, env)
+	}
 	return NotInStage("import", env)
 }

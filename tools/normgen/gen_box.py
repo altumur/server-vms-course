@@ -37,6 +37,9 @@ REFUSALS = L.form("refusals.tsv")
 OPENAPI = L.openapi
 KEYS_README = ROOT / "Platform/common/data/README.md"
 JUDGE = HERE / "test_gen_box.py"
+COPY_JUDGE = HERE / "test_copy_storage.py"
+COPY_RUNTIME = {f"box/copy_{name}.go": HERE / f"copyrt/go/{name}.go"
+                for name in ("storage", "validation", "import", "control")}
 STATES = ("Leader", "Follower", "Candidate", "Shutdown", "Door")
 REFUSAL_NAMES = ("box_no_raft", "box_last_voter", "box_admit", "join_parity", "recover_box", "service_body_form",
                  "backup_inside_dir", "import_repeated", "copy_input")
@@ -105,6 +108,14 @@ def facts():
                 r"an unreadable row in the input — also a refusal"):
         if not re.search(pat, copy_):
             raise GenError(f"Н1.3 copy: {pat!r} is not found")
+    import_ = block_line(t13, "import")
+    for phrase in ("Transfer excludes the input platform/epoch_floor: the first write is the new floor F1",
+                   "a partial replay preserves the exact saved F1 row (items and index)"):
+        if phrase not in import_:
+            raise GenError(f"Н1.3 import: the published F1/continuation rule is absent: {phrase}")
+    for pattern in (r"^(0|[1-9][0-9]*)(\.[0-9]+)?$", r"^(0|[1-9][0-9]*)(\.[0-9]{1,3})?$"):
+        if pattern not in t11:
+            raise GenError("Н0 time: the reader/writer notation used by the copy environment is absent")
     gm = re.search(r"generation: max\(\(upper >> (\d+)\) \+ 1, whole hours of UTC since (\d{4})-(\d\d)-(\d\d)\); "
                    r"floor = generation << (\d+);", floor)
     bm = re.search(r"1 … 2\^53 − 2\^32", floor)
@@ -651,7 +662,9 @@ def render():
     cp = COPY_GO % dict(common, format_go=go_str(f["copy_format"]), version=f["copy_version"], ceiling=f["ceiling"],
                         sub=f["<sub>"][4:-2], id=f["<id>"][4:-2], since_y=f["since"][0], since_m=f["since"][1],
                         since_d=f["since"][2], shift=f["shift"], max_generation=f["max_generation"])
-    return {"box/box.go": gofmt(box), "box/copy.go": gofmt(cp)}, f
+    files = {"box/box.go": gofmt(box), "box/copy.go": gofmt(cp)}
+    files.update({rel: gofmt(source.read_text(encoding="utf-8")) for rel, source in COPY_RUNTIME.items()})
+    return files, f
 
 
 def generate(out=DEFAULT_OUT):
@@ -672,7 +685,9 @@ def kit_files(module, out=DEFAULT_OUT):
             raise GenError(f"{kept} is stale: run tools/normgen/gen_box.py")
         data = kept.read_bytes().replace(f'"{GO_MODULE}/'.encode(), f'"{module}/internal/'.encode())
         sub, name = rel.rsplit("/", 1)
-        files.append((sub, name, data, "generated", str(kept.relative_to(ROOT)), False))
+        origin = "handwritten" if rel in COPY_RUNTIME else "generated"
+        source = COPY_RUNTIME.get(rel, kept)
+        files.append((sub, name, data, origin, str(source.relative_to(ROOT)), False))
     return files
 
 
@@ -680,16 +695,18 @@ def provenance():
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": sha(path)}
     return {"form": [entry(p) for p in (NORMS_13, NORMS_11, REFUSALS, OPENAPI, KEYS_README)],
-            "generator": entry(Path(__file__).resolve()), "handwritten": [], "judge": entry(JUDGE)}
+            "generator": entry(Path(__file__).resolve()), "handwritten": [entry(p) for p in COPY_RUNTIME.values()],
+            "judge": entry(JUDGE), "judges": [entry(JUDGE), entry(COPY_JUDGE)]}
 
 
 KIT_MD = """
-## Part `box`: what the norm fixes on one box (generated, closed)
+## Part `box`: what the norm fixes on one box (generated code with a handwritten store environment, closed)
 
 | File | Origin |
 |---|---|
 | `{module}/internal/box/box.go` | kit (closed): `Status`, `Metrics`, `Join`, `Leave`, `Admit`, `Recover`, `StartRefusal` |
 | `{module}/internal/box/copy.go` | kit (closed): the copy format — `EncodeCopy`, `DecodeCopy`, `Upper`, `Floor`, `BackupTarget`, `ImportRepeated` |
+| `{module}/internal/box/copy_storage.go`, `copy_validation.go`, `copy_import.go`, `copy_control.go` | handwritten kit environment (closed): `CopyStorage`, `ImportCopy`, `BackupCopy`, `CopyControl`, `CopyStartAllowed` |
 
 The store of a box (P/01.3 Н1.3 `box`) answers its service doors by the norm alone; you give it only the indices of
 your store. Wire it from your files (one line each), after your identity check (a role socket — 403 before the body):
@@ -706,12 +723,29 @@ return box.Recover(logf)        // code 2 «this build has no raft»
 if code, refused := box.StartRefusal(f, logf); refused { return code }   // -group-size 3|5, -join, -door
 ```
 
-**The copy** (Н1.3 `copy`, `import`, `floor`; `admin_ops` backup): `backup` — `box.BackupTarget(file, dir)` first
-(inside `-dir` — refused before writing), then `box.EncodeCopy(index, rows)` of one consistent state, written 0600 to a
-temporary file and renamed. `import`/`restore` — `box.DecodeCopy(data, f.MaxValue)` checks the whole input before the first write
-(a refusal — `err.Exit(logf)`, code ≠ 0), `box.Upper(rows, saved)` and `box.Floor(upper, now)` give the new floor
-(ok=false — an overflow, a refusal of recovery), then you write the floor first and the rows with their versions; a repeat
-after your phase «Done» mark — `box.ImportRepeated(logf)`. You only read and write the rows of your store.
+**The copy** (Н1.3 `copy`, `import`, `floor`; Н3 phases; `admin_ops` backup): implement `box.CopyStorage` over your actual
+store. `WithCopyLock` excludes ordinary writers/batches for the whole callback. Inside it, `CopyTxn.Snapshot` reads actual
+rows and the index; `BeginImport` atomically makes the new F1 and progress durable and advances the index;
+`WriteImport` durably writes one supplied row with its exact version; `FinishImport` persists Done. Source replay/admission
+memory is not an input: retain the normal metadata of YOUR new floor operation, not that of the source store.
+Use your ordinary durability barriers. Save the complete progress and F1 in your on-disk metadata. After reopening,
+read the same metadata; do not reconstruct a new F1. `box.CopyStartAllowed(progress)` gates ordinary startup (exit 2)
+and in-process reads/writes (503) while Transfer is pending. Only continuation bypasses that gate.
+
+The kit owns `box.ImportCopy`/`BackupCopy`/`CopyControl`: complete preflight, upper/clock/overflow, first F1, immutable-input
+identity, continuation and actual completeness; the input floor participates in upper/clock checks and is NEVER
+transferred. Other rows keep their versions. Backup takes one snapshot between batches, has no replay/admission memory,
+and writes an external 0600 file with sync/temp/rename/directory-sync. A repeated completed import refuses.
+
+Connect `admin.Env.Copy` to a `box.CopyControl` with the ACTUAL store Dir/Ceiling, your wall clock and `Open(command)`.
+For import/restore the target directory is `f.Dir`. Backup has no -dir flag: its Dir must be the LIVE daemon's actual
+data directory, not the empty CLI field; missing Dir refuses. Ceiling is the operative row ceiling (zero uses the
+normative default), not a guessed limit from an unrelated process.
+The opener gives the actual live store for backup (through YOUR admin transport), or an exclusive stopped target for
+box import/restore; it also supplies close. No private socket protocol or storage format is chosen by the kit.
+Use the existing `launch.App.Admin` hook to call `admin.Run` with that environment. Fresh Backup/Import/Restore wrappers
+delegate when Copy is connected; existing YOURS wrappers remain yours and can call the same port. Without a connection
+they fail explicitly. You still implement the storage/CLI transport connection; this kit is not a complete store core.
 """
 
 
