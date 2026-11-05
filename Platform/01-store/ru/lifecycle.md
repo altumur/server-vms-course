@@ -5,75 +5,75 @@
 
 Текст производный от `lifecycle.md`, руками не правится: источник — английский [`lifecycle.md`](../lifecycle.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 2).
 
-Нормы: [P/02.4](../../02-installer/ru/spec/02.4-installer.norms.md) (Н1.1 юниты, Н1.2 окружение,
-Н3 «старт сервера»), [P/01.3](spec/01.3-store.norms.md) (Н1.3 демон, Н4), [P/04](../../04-controller/ru/spec/04-controller.norms.md) (Н1.4а отказ сервера), [P/01.1](spec/01.1-store.norms.md) (дверь,
+Нормы: [P/02.4](../../02-installer/ru/spec/02.4-installer.norms.md) (N1.1 юниты, N1.2 окружение,
+N3 «старт сервера»), [P/01.3](spec/01.3-store.norms.md) (N1.3 демон, N4), [P/04](../../04-controller/ru/spec/04-controller.norms.md) (N1.4a отказ сервера), [P/01.1](spec/01.1-store.norms.md) (дверь,
 барьеры долговечности), [P/01.2](spec/01.2-store.norms.md) (файл прав, сокеты ролей).
 
 ## Запуск
 
 | Что | Как | Норма |
 |---|---|---|
-| демон группы | юнит `configstore.service`: `User=configstore`, `UMask=0077`, `-dir /data/platform/configstore`, `-sockets /run/configstore`, `-rights`, `-tls`, `-group-size`; раннер `w2c-run.sh configstore` | P/02.4 Н1.1 `units` |
-| сокеты | юниты `configstore-admin.socket` и `configstore-<роль>.socket`, `FileDescriptorName=admin \| <роль>`, `Service=configstore.service` | P/02.4 Н1.1, P/01.3 Н1.3 `sockets` |
-| первый старт и рестарт | есть `member.json` — рестарт, иначе `-bootstrap` (первый сервер) или `-join` (остальные) | P/02.4 Н3 «старт сервера» шаг 1, P/01.3 Н1.3 `group.join` |
-| хранилище коробки | сборка без raft, один голосующий (`box`) | P/01.3 Н1.3 `box` |
-| хранилище в процессе | профиль `file://` «вся коробка — одна реализация», без двери; формат на диске не контракт | P/02.4 Н1.2 `PLATFORM_STORE`, P/01.1 Н2 |
+| демон группы | юнит `configstore.service`: `User=configstore`, `UMask=0077`, `-dir /data/platform/configstore`, `-sockets /run/configstore`, `-rights`, `-tls`, `-group-size`; раннер `w2c-run.sh configstore` | P/02.4 N1.1 `units` |
+| сокеты | юниты `configstore-admin.socket` и `configstore-<роль>.socket`, `FileDescriptorName=admin \| <роль>`, `Service=configstore.service` | P/02.4 N1.1, P/01.3 N1.3 `sockets` |
+| первый старт и рестарт | есть `member.json` — рестарт, иначе `-bootstrap` (первый сервер) или `-join` (остальные) | P/02.4 N3 «старт сервера» шаг 1, P/01.3 N1.3 `group.join` |
+| хранилище коробки | сборка без raft, один голосующий (`box`) | P/01.3 N1.3 `box` |
+| хранилище в процессе | профиль `file://` «вся коробка — одна реализация», без двери; формат на диске не контракт | P/02.4 N1.2 `PLATFORM_STORE`, P/01.1 N2 |
 
 ## Окружение
 
 Настройку демона задают флаги (ниже): файл `configstore.env` читает раннер и собирает из него флаги. Сам демон читает
 только окружение systemd — переданные сокеты (`LISTEN_FDS`, `LISTEN_FDNAMES`) и сторожа (`NOTIFY_SOCKET`): переданный
-сокет флагом не заменить (P/01.3 Н1.3 `sockets`).
+сокет флагом не заменить (P/01.3 N1.3 `sockets`).
 Порядок файлов окружения раннера — значения юнита → `roles/<W2C_ROLE>.env` → `w2c.env` → `configstore.env`
-(P/02.4 Н1.2; [02-installer/lifecycle.md](../../02-installer/ru/lifecycle.md)).
+(P/02.4 N1.2; [02-installer/lifecycle.md](../../02-installer/ru/lifecycle.md)).
 
 | Переменная | Смысл | Умолчание | Норма |
 |---|---|---|---|
-| `CONFIGSTORE_ID`, `_RAFT`, `_API`, `_GROUP_SIZE`, `_JOIN`, `_FLAGS`, `_TUNING` | флаги демона из `configstore.env`; читает раннер | `configstore.env` ставит `tuning` `lan`; умолчание самого флага `-tuning` — `default` | P/02.4 Н1.2, P/01.3 Н1.3 «Флаги демона» |
-| `SERVER_NAME` | умолчание `-id` вне группы | короткий hostname | P/02.4 Н1.2, P/01.3 Н1.3 «Флаги демона» `-id` |
-| `LISTEN_FDS`, `LISTEN_FDNAMES` | унаследованные сокеты (`sd_listen_fds`); читает сам демон | — | P/01.3 Н1.3 `sockets` |
-| `NOTIFY_SOCKET` | сторож systemd | — | P/02.4 Н1.2 |
+| `CONFIGSTORE_ID`, `_RAFT`, `_API`, `_GROUP_SIZE`, `_JOIN`, `_FLAGS`, `_TUNING` | флаги демона из `configstore.env`; читает раннер | `configstore.env` ставит `tuning` `lan`; умолчание самого флага `-tuning` — `default` | P/02.4 N1.2, P/01.3 N1.3 «Флаги демона» |
+| `SERVER_NAME` | умолчание `-id` вне группы | короткий hostname | P/02.4 N1.2, P/01.3 N1.3 «Флаги демона» `-id` |
+| `LISTEN_FDS`, `LISTEN_FDNAMES` | унаследованные сокеты (`sd_listen_fds`); читает сам демон | — | P/01.3 N1.3 `sockets` |
+| `NOTIFY_SOCKET` | сторож systemd | — | P/02.4 N1.2 |
 
 ## Флаги
 
-Закрытая таблица «Флаги демона» — [P/01.3 Н1.3](spec/01.3-store.norms.md), машинная форма [`forms/daemon-flags.tsv`](../forms/daemon-flags.tsv):
+Закрытая таблица «Флаги демона» — [P/01.3 N1.3](spec/01.3-store.norms.md), машинная форма [`forms/daemon-flags.tsv`](../forms/daemon-flags.tsv):
 `-dir` (обязателен), `-id`, `-sockets`, `-rights`, `-tls`, `-raft`, `-raft-bind`, `-api`, `-bootstrap`, `-join`,
 `-group-size`, `-force`, `-isolated`, `-upper`, `-peers` (три последних — только у `recover`), `-door`, `-voters`, `-tuning`, `-leader-wait`, `-max-value`, `-max-body`, `-max-conns`,
 `-api-conns`, `-api-per-address`, `-index-base`, `-groups` (только у `rights`), `--from` (только у `restore`, `import`). Флаг вне таблицы — отказ старта, код 2. Административные команды —
-`configstore status | join | leave | admit | backup | restore | import | recover | rights` (P/01.3 Н1.3 `admin_ops`,
-Н1.9).
+`configstore status | join | leave | admit | backup | restore | import | recover | rights` (P/01.3 N1.3 `admin_ops`,
+N1.9).
 
 ## Каталоги и файлы
 
 | Путь | Что | Норма |
 |---|---|---|
-| `<PLATFORM_DIR>/configstore` (`-dir`) | каталог данных демона; формат на диске — решает реализация (P/01.1 «Решает реализация» п. 3) | P/02.4 Н1.2 «Канал настройки и раскладка» |
-| `<-dir>/FORMAT` | метка формата `{format, version, impl}`: пишется первой в пустой каталог; чужая или нет при непустом каталоге — отказ, код 2 | P/01.3 Н1.3 `format` |
-| `<-dir>/member.json` | партнёры и `how` после вступления; рестарт — не вступление | P/01.3 Н1.3 `group.join` (путь внутри `-dir` — решает реализация) |
-| `/run/configstore/admin.sock`, `/run/configstore/<роль>.sock` | плоско; унаследованные от юнитов `.socket`: `admin.sock` 0600, сокет роли 0660 с группой роли (`SocketGroup=`); сокет, которого не передали, демон создаёт сам в `-sockets`: `admin.sock` 0600, сокет роли 0660 с группой процесса | P/01.3 Н1.3 `sockets`, Н1.1 `dirs` |
-| `/etc/w2c/configstore-rights.json` (`-rights`) | файл прав; без файла — только `admin.sock`; живой перезагрузки нет | P/01.2 Н1.2 |
-| `/etc/w2c/tls` (`-tls`) | корень комплектов: внутри — комплект роли `configstore` или `configstore-door` | P/01.3 Н1.3 «Флаги демона» `-tls`, Н1.6 |
-| файл копии (`backup <файл>`) | JSON Lines `copy`, 0600, tmp + rename, вне `-dir` | P/01.3 Н1.3 `copy`, `admin_ops`; вектор — `Platform/common/vectors/README.md` |
+| `<PLATFORM_DIR>/configstore` (`-dir`) | каталог данных демона; формат на диске — решает реализация (P/01.1 «Решает реализация» п. 3) | P/02.4 N1.2 «Канал настройки и раскладка» |
+| `<-dir>/FORMAT` | метка формата `{format, version, impl}`: пишется первой в пустой каталог; чужая или нет при непустом каталоге — отказ, код 2 | P/01.3 N1.3 `format` |
+| `<-dir>/member.json` | партнёры и `how` после вступления; рестарт — не вступление | P/01.3 N1.3 `group.join` (путь внутри `-dir` — решает реализация) |
+| `/run/configstore/admin.sock`, `/run/configstore/<роль>.sock` | плоско; унаследованные от юнитов `.socket`: `admin.sock` 0600, сокет роли 0660 с группой роли (`SocketGroup=`); сокет, которого не передали, демон создаёт сам в `-sockets`: `admin.sock` 0600, сокет роли 0660 с группой процесса | P/01.3 N1.3 `sockets`, N1.1 `dirs` |
+| `/etc/w2c/configstore-rights.json` (`-rights`) | файл прав; без файла — только `admin.sock`; живой перезагрузки нет | P/01.2 N1.2 |
+| `/etc/w2c/tls` (`-tls`) | корень комплектов: внутри — комплект роли `configstore` или `configstore-door` | P/01.3 N1.3 «Флаги демона» `-tls`, N1.6 |
+| файл копии (`backup <файл>`) | JSON Lines `copy`, 0600, tmp + rename, вне `-dir` | P/01.3 N1.3 `copy`, `admin_ops`; вектор — `Platform/common/vectors/README.md` |
 | строка `platform/configstore-doors/<id>` | пишет дверь без голоса раз в 30 с | [каталог](../../common/data/catalog.tsv) |
-| строка `platform/epoch_floor` | поднимается только `op: floor` на `admin.sock` лидера (`restore`, `import`, `recover`) | P/01.3 Н1.3 `floor`, [каталог](../../common/data/catalog.tsv) |
+| строка `platform/epoch_floor` | поднимается только `op: floor` на `admin.sock` лидера (`restore`, `import`, `recover`) | P/01.3 N1.3 `floor`, [каталог](../../common/data/catalog.tsv) |
 
 ## Коды выхода
 
 | Код | Когда | Норма |
 |---|---|---|
 | 0 | упорядоченная остановка | — |
-| 2 | отказ старта: `-bootstrap` с `-join`, размер не 1/3/5, адрес вне петли без `-tls`, сертификат двери у голосующего; нет `-dir`; нет `-id` в группе; флаг вне таблицы; `-max-value` или `-max-body` не > 0; чужая или пропавшая метка `FORMAT`; унаследованный сокет чужого имени; хранилище коробки с `-group-size 3`/`5` или `-join`; `recover` на коробке | P/01.3 Н1.3 `refuse_start`, Н4 |
-| ≠ 0 | административная команда отказана: `backup` внутрь `-dir`, повтор `import`, вход не по `copy`, часы раньше `generation_at` | P/01.3 Н4 |
+| 2 | отказ старта: `-bootstrap` с `-join`, размер не 1/3/5, адрес вне петли без `-tls`, сертификат двери у голосующего; нет `-dir`; нет `-id` в группе; флаг вне таблицы; `-max-value` или `-max-body` не > 0; чужая или пропавшая метка `FORMAT`; унаследованный сокет чужого имени; хранилище коробки с `-group-size 3`/`5` или `-join`; `recover` на коробке | P/01.3 N1.3 `refuse_start`, N4 |
+| ≠ 0 | административная команда отказана: `backup` внутрь `-dir`, повтор `import`, вход не по `copy`, часы раньше `generation_at` | P/01.3 N4 |
 
 ## Сигналы и готовность
 
 | Что | Как | Норма |
 |---|---|---|
-| SIGTERM | остановка; `TimeoutStopSec` 20–30 | P/02.4 Н1.1 |
-| перезапуск | `Restart=always`, `RestartSec=2`, `RestartPreventExitStatus=2` | P/02.4 Н1.1 `common` |
-| готовность | сокет открыт; `After=configstore.service` у остальных — порядок, не готовность: каждый процесс сам ждёт достоверного чтения | P/02.4 Н3 «старт сервера», «Гонки» |
-| долговечность | барьеры не выключаются ни окружением, ни флагом эксплуатации | P/01.3 Н1.3 `durability`, P/01.1 «Решает реализация» п. 3 |
-| отказ большинства | 503 `unavailable` через 5 с; восстановление — `recover` рукой | P/04 Н1.4а `power_pull` `store`; P/01.3 Н3 «восстановить хранилище» |
+| SIGTERM | остановка; `TimeoutStopSec` 20–30 | P/02.4 N1.1 |
+| перезапуск | `Restart=always`, `RestartSec=2`, `RestartPreventExitStatus=2` | P/02.4 N1.1 `common` |
+| готовность | сокет открыт; `After=configstore.service` у остальных — порядок, не готовность: каждый процесс сам ждёт достоверного чтения | P/02.4 N3 «старт сервера», «Гонки» |
+| долговечность | барьеры не выключаются ни окружением, ни флагом эксплуатации | P/01.3 N1.3 `durability`, P/01.1 «Решает реализация» п. 3 |
+| отказ большинства | 503 `unavailable` через 5 с; восстановление — `recover` рукой | P/04 N1.4a `power_pull` `store`; P/01.3 N3 «восстановить хранилище» |
 
 ## Стенд
 
@@ -88,4 +88,4 @@
 
 - Путь `member.json` внутри `-dir` и формат каталога данных — решает реализация (P/01.1 «Решает реализация» п. 3); между
   реализациями переносит только копия `copy`.
-- Готовность демона — сокет: `sd_notify` он не шлёт, `Type=notify` — только у контроллера и воркера ([P/02.4 Н1.1](../../02-installer/ru/spec/02.4-installer.norms.md) `notify`; Решено «Архитектором» 2026-10-18 (второй пилот)).
+- Готовность демона — сокет: `sd_notify` он не шлёт, `Type=notify` — только у контроллера и воркера ([P/02.4 N1.1](../../02-installer/ru/spec/02.4-installer.norms.md) `notify`; Решено «Архитектором» 2026-10-18 (второй пилот)).

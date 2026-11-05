@@ -20,7 +20,7 @@
 
 ## Н0 Словарь слов
 
-Нормативные слова — по [канону курса](../../../../ru/НОРМАТИВНЫЕ-СЛОВА.md). Правила модуля — [P/01.1 Н0](../../../01-store/ru/spec/01.1-store.norms.md#н0-словарь-слов).
+Нормативные слова — по [канону курса](../../../../ru/НОРМАТИВНЫЕ-СЛОВА.md). Правила модуля — [P/01.1 Н0](../../../01-store/ru/spec/01.1-store.norms.md#n0-словарь-слов).
 
 ## Н1 Форма
 
@@ -351,7 +351,7 @@ Active intent — принятое общее решение для members, п�
 |---|---|---|---|---|
 | `worker` | строка; целиком `([a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)?` | обязателен |  | the worker name — a slot name, P/03.2 Н1.4 (`<prefix>-<суффикс>`; prefix of its own manifest — a check of the lesson, not of the form); "" — not placed |
 | `reason` | строка | обязателен |  | a reason for a human; non-empty (Н3 «Причина», P/04-18) |
-| `at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the controller's wall-clock seconds at the moment of the decision |
+| `at` | время (P/01.1 N0 «Время в строке») | обязателен |  | the controller's wall-clock seconds at the moment of the decision |
 | `rev` | строка; целиком `[1-9][0-9]*` | обязателен |  | a decimal integer ≥ 1; +1 for each write of the row |
 | `manifest_rev` | строка; целиком `[1-9][0-9]*` | необязателен |  | the manifest revision (P/02.3 Н1.5 rev) under which the decision was made; MUST for an implementation that keeps the manifest in the row; rows without it are stamped by the pass (Н3 «pass()» step 1) |
 
@@ -393,7 +393,7 @@ Active intent — принятое общее решение для members, п�
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
 | `want` | целое; ≥ 1; ≤ 99 | обязателен |  | the absolute target of the number of processes of the role on the server, the base `<prefix>-<сервер>-1` is included |
-| `at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment of the write; diagnostics — the terms go by the observation of the row version (Н1.4 terms) |
+| `at` | время (P/01.1 N0 «Время в строке») | обязателен |  | the moment of the write; diagnostics — the terms go by the observation of the row version (Н1.4 terms) |
 | `by` | строка | обязателен |  | the controller instance; diagnostics — the authority is given by cas and the guard placement_turn |
 | `why` | строка | обязателен |  | a non-empty reason; the grammar of Н3 «нехватка(), заказать()…» |
 | `retiring` | строка; целиком `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` | необязателен |  | the worker chosen for shrinking (Н3 «сократить»); a slot name, P/03.2 Н1.4 |
@@ -417,8 +417,8 @@ Active intent — принятое общее решение для members, п�
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `asked_at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | wall-clock seconds of the console request (`platform/decommission/<сервер>` at) |
-| `at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | wall-clock seconds of the controller's mark |
+| `asked_at` | время (P/01.1 N0 «Время в строке») | обязателен |  | wall-clock seconds of the console request (`platform/decommission/<сервер>` at) |
+| `at` | время (P/01.1 N0 «Время в строке») | обязателен |  | wall-clock seconds of the controller's mark |
 | `slots` | список, элемент — строка; целиком `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` | обязателен |  | names of the given-away slots by the list rule of P/06.1 Н1.2; "" — none; names, not a number (D7) |
 | `slots[]` | строка; целиком `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` | необязателен |  | the name of the given-away slot, P/03.2 Н1.4 |
 | `units` | список, элемент — строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` | обязателен |  | ids of the removed units by the list rule of P/06.1 Н1.2; "" — none |
@@ -462,7 +462,7 @@ Active intent — принятое общее решение для members, п�
 | `members[]` | строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` | необязателен |  | the id of a unit of the decision (P/06.1 Н1.3) |
 | `target` | строка; целиком `([a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)?` | необязателен |  | one target of the whole group — a worker name (slot, P/03.2 Н1.4); "" — remove the placement; only when active |
 | `reason` | строка | необязателен |  | a non-empty reason — the duty of the writer (the controller); the reader accepts "" (C06-WHERE-EMPTY-168-04, as C06-WHERE-EMPTY-33-01); only when active |
-| `at` | время (P/01.1 Н0 «Время в строке») | необязателен |  | wall-clock seconds of making the decision; only when active |
+| `at` | время (P/01.1 N0 «Время в строке») | необязателен |  | wall-clock seconds of making the decision; only when active |
 
 Правила:
 
@@ -487,11 +487,11 @@ Active intent — принятое общее решение для members, п�
 
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
-| `at` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment of the end of the pass |
+| `at` | время (P/01.1 N0 «Время в строке») | обязателен |  | the moment of the end of the pass |
 | `ok` | bool | обязателен |  | true — the pass reached the end, all inputs were read and no write was refused; otherwise false |
 | `error` | строка | обязателен |  | the text of the last error or an empty string |
 | `failures` | по определению `count` | обязателен |  | a counter ≥ 0 |
-| `last_success` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment of the end of the last successful pass |
+| `last_success` | время (P/01.1 N0 «Время в строке») | обязателен |  | the moment of the end of the last successful pass |
 | `seconds` | число; ≥ 0 | обязателен |  | the duration of the pass |
 | `manifest_rev` | строка или целое | обязателен |  | the manifest revision of the controller |
 | `manifest_behind` | по определению `count` | обязателен |  | rows of this pass whose write was postponed because of a lagging manifest; a row — once per pass |
@@ -504,7 +504,7 @@ Active intent — принятое общее решение для members, п�
 | `fates.<имя>.server` | строка | обязателен |  |  |
 | `fates.<имя>.why` | строка | обязателен |  |  |
 | `fates.<имя>.rev` | строка или целое | обязателен |  | the version of the judgment about the slot |
-| `fates.<имя>.since` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment the slot entered this fate by the controller's clock |
+| `fates.<имя>.since` | время (P/01.1 N0 «Время в строке») | обязателен |  | the moment the slot entered this fate by the controller's clock |
 | `diverged` | по определению `count` | обязателен |  | a counter ≥ 0 |
 | `unplaced` | по определению `count` | обязателен |  | a counter ≥ 0 |
 | `garbled` | по определению `count` | обязателен |  | a counter ≥ 0 |
@@ -539,7 +539,7 @@ Active intent — принятое общее решение для members, п�
 | `wants.<имя>.state` | строка; одно из: `ok`, `raising`, `raise_failed`, `no_base` | обязателен |  |  |
 | `raise_failed` | отображение имена автора: имя — по определению `server_name`, значение — отображение `{since, times}` | обязателен |  |  |
 | `raise_failed.<имя>` | отображение `{since, times}` | необязателен |  |  |
-| `raise_failed.<имя>.since` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment the order was removed |
+| `raise_failed.<имя>.since` | время (P/01.1 N0 «Время в строке») | обязателен |  | the moment the order was removed |
 | `raise_failed.<имя>.times` | по определению `count` | обязателен |  | refusals in a row |
 | `near_waiting` | список, не короче 1, без повторов, элемент — строка; целиком `[a-z][a-z0-9_-]{0,31}` | необязателен |  | the subsystems of placement.near.sub that are not in the manifest catalog of this pass: the affinity waits for their installation (Н1.3 near; ADR-0091 addendum (27) item 6); otherwise there is no field |
 | `near_waiting[]` | строка; целиком `[a-z][a-z0-9_-]{0,31}` | необязателен |  |  |
@@ -581,7 +581,7 @@ Active intent — принятое общее решение для members, п�
 |---|---|---|---|---|
 | `cluster` | строка | обязателен |  | the installation name — CLUSTER of the environment (P/02.4 Н1.2), not set — local |
 | `worker` | строка или null; целиком `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` | обязателен |  | the worker name of the shard (slot, P/03.2 Н1.4); for the shard of a gone worker — null |
-| `ts` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment of publication |
+| `ts` | время (P/01.1 N0 «Время в строке») | обязателен |  | the moment of publication |
 | `.<имя>` | список, элемент — отображение `{id, revision, worker, server}` и прочие имена автора: имя — строка, значение — любое значение | необязателен |  | имя: unit.rows of the manifest (P/06.1 Н1.1; not cluster/worker/ts — P/02.1) |
 | `.<имя>[]` | отображение `{id, revision, worker, server}` и прочие имена автора: имя — строка, значение — любое значение | необязателен |  |  |
 | `.<имя>[].id` | строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` | обязателен |  | the unit id (P/06.1 Н1.3) |
@@ -611,7 +611,7 @@ Active intent — принятое общее решение для members, п�
 |---|---|---|---|---|
 | `cluster` | строка | обязателен |  | the installation name — CLUSTER of the environment (P/02.4 Н1.2), not set — local |
 | `worker` | null | обязателен |  | for the shard of the unplaced — null |
-| `ts` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment of publication |
+| `ts` | время (P/01.1 N0 «Время в строке») | обязателен |  | the moment of publication |
 | `.<имя>` | список, элемент — отображение `{id, revision, worker, server}` и прочие имена автора: имя — строка, значение — любое значение | необязателен |  | имя: unit.rows of the manifest (P/06.1 Н1.1; not cluster/worker/ts — P/02.1) |
 | `.<имя>[]` | отображение `{id, revision, worker, server}` и прочие имена автора: имя — строка, значение — любое значение | необязателен |  |  |
 | `.<имя>[].id` | строка; не из: `.`, `..`; целиком `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` | обязателен |  | the unit id (P/06.1 Н1.3) |
@@ -640,7 +640,7 @@ Active intent — принятое общее решение для members, п�
 | Ключ | Тип и границы | Обязательность | Урок | Смысл |
 |---|---|---|---|---|
 | `cluster` | строка | обязателен |  | the installation name — CLUSTER of the environment (P/02.4 Н1.2), not set — local |
-| `ts` | время (P/01.1 Н0 «Время в строке») | обязателен |  | the moment of the write of the object; rows did not change — the previous one |
+| `ts` | время (P/01.1 N0 «Время в строке») | обязателен |  | the moment of the write of the object; rows did not change — the previous one |
 | `refused` | строка; одно из: `too_large`, `whole_too_large` | необязателен |  | a stub instead of rows: the table did not fit (P/04 Н1.3б ceiling, P/09.1 Н1.2 tables_budget) |
 | `rows` | список, элемент — отображение `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?}` | обязателен |  | the rows of the table by key in UTF-8 bytes (the order is a rule of the lesson, not the form) |
 | `rows[]` | отображение `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?}` | необязателен |  |  |

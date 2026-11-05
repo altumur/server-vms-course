@@ -413,7 +413,7 @@ def lifecycle_head(text):
 def unit_entries(text):
     """The unit block of P/02.4 Н1.1: `units:` of the first yaml block after the heading «Н1.1»; each entry
     `  <имя>[, <имя>]: …` (indent two) with its continuation lines (deeper indent) → (line, names, text)."""
-    heading = re.search(r"^#{2,6} Н1\.1\b.*$", text, re.M)
+    heading = re.search(r"^#{2,6} [НN]1\.1\b.*$", text, re.M)
     if not heading:
         return None
     rest = text[heading.end():]
@@ -1447,8 +1447,8 @@ class Check:
     def norms(self, path, text, prefix, allow_empty=False):
         headings, ids = outline(text)
         headers = [match.group(1) for heading in headings
-                   if (match := re.match(r"(Н[0-5])(?:\s|$)", heading))]
-        if headers != [f"Н{i}" for i in range(6)]:
+                   if (match := re.match(r"[НN]([0-5])(?:\s|$)", heading))]   # N0–N5 латиницей (ADR-0121 доп. (5) п. 1)
+        if headers != [str(i) for i in range(6)]:
             self.error(path, "expected Н0–Н5 once, in order")
         if not ids and not allow_empty:
             self.error(path, "no normative checklist ids")
@@ -1491,7 +1491,7 @@ class Check:
                     mismatch("%d (%d ok, %d refused)" % said, "%d (%d ok, %d refused)" % verdicts, "verdicts")
         if scenarios is not None and path.name.endswith(".norms.md"):
             # Every scenario row of the Н5 table names a scenario of scenarios.tsv by its number.
-            n5 = re.search(r"^## Н5\b.*?(?=^## |\Z)", text, re.S | re.M)
+            n5 = re.search(r"^## [НN]5\b.*?(?=^## |\Z)", text, re.S | re.M)
             numbers = {name.split("-", 1)[0] for name in scenarios[2]}
             rows = set()
             for match in re.finditer(r"^\|\s*(\d{2})\s*\|", n5.group(0) if n5 else "", re.M):

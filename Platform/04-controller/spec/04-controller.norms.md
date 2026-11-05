@@ -22,7 +22,7 @@ an address is a former lesson (the history of the move). Norm ids are
 
 <!-- req: P/04-R001 -->
 
-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md). The rules of the module are [P/01.1 Н0](../../01-store/spec/01.1-store.norms.md#н0-vocabulary).
+Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md). The rules of the module are [P/01.1 Н0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary).
 
 ## Н1 Form
 
@@ -397,7 +397,7 @@ Schema — [`placement.schema.json`](../data/placement.schema.json), outcomes �
 |---|---|---|---|---|
 | `worker` | string; matching `([a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)?` in full | required |  | the worker name — a slot name, P/03.2 Н1.4 (`<prefix>-<суффикс>`; prefix of its own manifest — a check of the lesson, not of the form); "" — not placed |
 | `reason` | string | required |  | a reason for a human; non-empty (Н3 «Причина», P/04-18) |
-| `at` | time (P/01.1 Н0 «Time in a row») | required |  | the controller's wall-clock seconds at the moment of the decision |
+| `at` | time (P/01.1 N0 «Time in a row») | required |  | the controller's wall-clock seconds at the moment of the decision |
 | `rev` | string; matching `[1-9][0-9]*` in full | required |  | a decimal integer ≥ 1; +1 for each write of the row |
 | `manifest_rev` | string; matching `[1-9][0-9]*` in full | optional |  | the manifest revision (P/02.3 Н1.5 rev) under which the decision was made; MUST for an implementation that keeps the manifest in the row; rows without it are stamped by the pass (Н3 «pass()» step 1) |
 
@@ -439,7 +439,7 @@ Schema — [`want.schema.json`](../data/want.schema.json), outcomes — [`want.o
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
 | `want` | integer; ≥ 1; ≤ 99 | required |  | the absolute target of the number of processes of the role on the server, the base `<prefix>-<сервер>-1` is included |
-| `at` | time (P/01.1 Н0 «Time in a row») | required |  | the moment of the write; diagnostics — the terms go by the observation of the row version (Н1.4 terms) |
+| `at` | time (P/01.1 N0 «Time in a row») | required |  | the moment of the write; diagnostics — the terms go by the observation of the row version (Н1.4 terms) |
 | `by` | string | required |  | the controller instance; diagnostics — the authority is given by cas and the guard placement_turn |
 | `why` | string | required |  | a non-empty reason; the grammar of Н3 «нехватка(), заказать()…» |
 | `retiring` | string; matching `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` in full | optional |  | the worker chosen for shrinking (Н3 «сократить»); a slot name, P/03.2 Н1.4 |
@@ -463,8 +463,8 @@ Schema — [`decommissioned.schema.json`](../data/decommissioned.schema.json), o
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `asked_at` | time (P/01.1 Н0 «Time in a row») | required |  | wall-clock seconds of the console request (`platform/decommission/<сервер>` at) |
-| `at` | time (P/01.1 Н0 «Time in a row») | required |  | wall-clock seconds of the controller's mark |
+| `asked_at` | time (P/01.1 N0 «Time in a row») | required |  | wall-clock seconds of the console request (`platform/decommission/<сервер>` at) |
+| `at` | time (P/01.1 N0 «Time in a row») | required |  | wall-clock seconds of the controller's mark |
 | `slots` | list, element — string; matching `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` in full | required |  | names of the given-away slots by the list rule of P/06.1 Н1.2; "" — none; names, not a number (D7) |
 | `slots[]` | string; matching `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` in full | optional |  | the name of the given-away slot, P/03.2 Н1.4 |
 | `units` | list, element — string; not one of: `.`, `..`; matching `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` in full | required |  | ids of the removed units by the list rule of P/06.1 Н1.2; "" — none |
@@ -508,7 +508,7 @@ Schema — [`placement-intent.schema.json`](../data/placement-intent.schema.json
 | `members[]` | string; not one of: `.`, `..`; matching `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` in full | optional |  | the id of a unit of the decision (P/06.1 Н1.3) |
 | `target` | string; matching `([a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*)?` in full | optional |  | one target of the whole group — a worker name (slot, P/03.2 Н1.4); "" — remove the placement; only when active |
 | `reason` | string | optional |  | a non-empty reason — the duty of the writer (the controller); the reader accepts "" (C06-WHERE-EMPTY-168-04, as C06-WHERE-EMPTY-33-01); only when active |
-| `at` | time (P/01.1 Н0 «Time in a row») | optional |  | wall-clock seconds of making the decision; only when active |
+| `at` | time (P/01.1 N0 «Time in a row») | optional |  | wall-clock seconds of making the decision; only when active |
 
 Rules:
 
@@ -533,11 +533,11 @@ Schema — [`controller-pass.schema.json`](../data/controller-pass.schema.json),
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `at` | time (P/01.1 Н0 «Time in a row») | required |  | the moment of the end of the pass |
+| `at` | time (P/01.1 N0 «Time in a row») | required |  | the moment of the end of the pass |
 | `ok` | bool | required |  | true — the pass reached the end, all inputs were read and no write was refused; otherwise false |
 | `error` | string | required |  | the text of the last error or an empty string |
 | `failures` | by the definition `count` | required |  | a counter ≥ 0 |
-| `last_success` | time (P/01.1 Н0 «Time in a row») | required |  | the moment of the end of the last successful pass |
+| `last_success` | time (P/01.1 N0 «Time in a row») | required |  | the moment of the end of the last successful pass |
 | `seconds` | number; ≥ 0 | required |  | the duration of the pass |
 | `manifest_rev` | string or integer | required |  | the manifest revision of the controller |
 | `manifest_behind` | by the definition `count` | required |  | rows of this pass whose write was postponed because of a lagging manifest; a row — once per pass |
@@ -550,7 +550,7 @@ Schema — [`controller-pass.schema.json`](../data/controller-pass.schema.json),
 | `fates.<name>.server` | string | required |  |  |
 | `fates.<name>.why` | string | required |  |  |
 | `fates.<name>.rev` | string or integer | required |  | the version of the judgment about the slot |
-| `fates.<name>.since` | time (P/01.1 Н0 «Time in a row») | required |  | the moment the slot entered this fate by the controller's clock |
+| `fates.<name>.since` | time (P/01.1 N0 «Time in a row») | required |  | the moment the slot entered this fate by the controller's clock |
 | `diverged` | by the definition `count` | required |  | a counter ≥ 0 |
 | `unplaced` | by the definition `count` | required |  | a counter ≥ 0 |
 | `garbled` | by the definition `count` | required |  | a counter ≥ 0 |
@@ -585,7 +585,7 @@ Schema — [`controller-pass.schema.json`](../data/controller-pass.schema.json),
 | `wants.<name>.state` | string; one of: `ok`, `raising`, `raise_failed`, `no_base` | required |  |  |
 | `raise_failed` | map author names: name — by the definition `server_name`, value — map `{since, times}` | required |  |  |
 | `raise_failed.<name>` | map `{since, times}` | optional |  |  |
-| `raise_failed.<name>.since` | time (P/01.1 Н0 «Time in a row») | required |  | the moment the order was removed |
+| `raise_failed.<name>.since` | time (P/01.1 N0 «Time in a row») | required |  | the moment the order was removed |
 | `raise_failed.<name>.times` | by the definition `count` | required |  | refusals in a row |
 | `near_waiting` | list, at least 1 items, without repeats, element — string; matching `[a-z][a-z0-9_-]{0,31}` in full | optional |  | the subsystems of placement.near.sub that are not in the manifest catalog of this pass: the affinity waits for their installation (Н1.3 near; ADR-0091 addendum (27) item 6); otherwise there is no field |
 | `near_waiting[]` | string; matching `[a-z][a-z0-9_-]{0,31}` in full | optional |  |  |
@@ -627,7 +627,7 @@ Schema — [`snapshot.schema.json`](../data/snapshot.schema.json), outcomes — 
 |---|---|---|---|---|
 | `cluster` | string | required |  | the installation name — CLUSTER of the environment (P/02.4 Н1.2), not set — local |
 | `worker` | string or null; matching `[a-z]{1,8}-[a-z0-9]+(-[a-z0-9]+)*` in full | required |  | the worker name of the shard (slot, P/03.2 Н1.4); for the shard of a gone worker — null |
-| `ts` | time (P/01.1 Н0 «Time in a row») | required |  | the moment of publication |
+| `ts` | time (P/01.1 N0 «Time in a row») | required |  | the moment of publication |
 | `.<name>` | list, element — map `{id, revision, worker, server}` and other author names: name — string, value — any value | optional |  | name: unit.rows of the manifest (P/06.1 Н1.1; not cluster/worker/ts — P/02.1) |
 | `.<name>[]` | map `{id, revision, worker, server}` and other author names: name — string, value — any value | optional |  |  |
 | `.<name>[].id` | string; not one of: `.`, `..`; matching `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` in full | required |  | the unit id (P/06.1 Н1.3) |
@@ -657,7 +657,7 @@ Schema — [`snapshot-unplaced.schema.json`](../data/snapshot-unplaced.schema.js
 |---|---|---|---|---|
 | `cluster` | string | required |  | the installation name — CLUSTER of the environment (P/02.4 Н1.2), not set — local |
 | `worker` | null | required |  | for the shard of the unplaced — null |
-| `ts` | time (P/01.1 Н0 «Time in a row») | required |  | the moment of publication |
+| `ts` | time (P/01.1 N0 «Time in a row») | required |  | the moment of publication |
 | `.<name>` | list, element — map `{id, revision, worker, server}` and other author names: name — string, value — any value | optional |  | name: unit.rows of the manifest (P/06.1 Н1.1; not cluster/worker/ts — P/02.1) |
 | `.<name>[]` | map `{id, revision, worker, server}` and other author names: name — string, value — any value | optional |  |  |
 | `.<name>[].id` | string; not one of: `.`, `..`; matching `[^/\\\|",\u{0000}-\u{001F}\u{007F}-\u{009F}\u{2028}\u{2029}٠-٩۰-۹߀-߉०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-൯෦-෯๐-๙໐-໙༠-༩၀-၉႐-႙០-៩᠐-᠙᥆-᥏᧐-᧙᪀-᪉᪐-᪙᭐-᭙᮰-᮹᱀-᱉᱐-᱙꘠-꘩꣐-꣙꤀-꤉꧐-꧙꧰-꧹꩐-꩙꯰-꯹０-９𐒠-𐒩𐴰-𐴹𑁦-𑁯𑃰-𑃹𑄶-𑄿𑇐-𑇙𑋰-𑋹𑑐-𑑙𑓐-𑓙𑙐-𑙙𑛀-𑛉𑜰-𑜹𑣠-𑣩𑥐-𑥙𑱐-𑱙𑵐-𑵙𑶠-𑶩𑽐-𑽙𖩠-𖩩𖫀-𖫉𖭐-𖭙𝟎-𝟿𞅀-𞅉𞋰-𞋹𞓰-𞓹𞥐-𞥙🯰-🯹]+` in full | required |  | the unit id (P/06.1 Н1.3) |
@@ -686,7 +686,7 @@ Schema — [`snapshot-tables.schema.json`](../data/snapshot-tables.schema.json),
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
 | `cluster` | string | required |  | the installation name — CLUSTER of the environment (P/02.4 Н1.2), not set — local |
-| `ts` | time (P/01.1 Н0 «Time in a row») | required |  | the moment of the write of the object; rows did not change — the previous one |
+| `ts` | time (P/01.1 N0 «Time in a row») | required |  | the moment of the write of the object; rows did not change — the previous one |
 | `refused` | string; one of: `too_large`, `whole_too_large` | optional |  | a stub instead of rows: the table did not fit (P/04 Н1.3б ceiling, P/09.1 Н1.2 tables_budget) |
 | `rows` | list, element — map `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?}` | required |  | the rows of the table by key in UTF-8 bytes (the order is a rule of the lesson, not the form) |
 | `rows[]` | map `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?}` | optional |  |  |

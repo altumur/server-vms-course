@@ -140,7 +140,9 @@ def sections(text):
 
 
 def find(secs, name):
-    hits = [s for s in secs if s[0] == name or s[0].startswith(name + "(")]
+    # номер раздела — Н… или N… (ADR-0121 доп. (5) п. 1: N0–N5 латиницей): имя в коде сверяется с обоими
+    lat = lambda x: re.sub(r"^Н(?=[0-9])", "N", x)    # noqa: E731
+    hits = [s for s in secs if lat(s[0]) == lat(name) or lat(s[0]).startswith(lat(name) + "(")]
     if len(hits) != 1:
         raise GenError(f"{NORMS.name}: section {name!r} — {len(hits)} found, want 1")
     return hits[0]

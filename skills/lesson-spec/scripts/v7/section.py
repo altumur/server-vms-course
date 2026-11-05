@@ -204,7 +204,7 @@ class SchemaSection:
         ts = [ts] if isinstance(ts, str) else list(ts or [])
         parts = []
         if s.get("x-time"):
-            parts.append(self.t("время (P/01.1 Н0 «Время в строке»)", "time (P/01.1 Н0 «Time in a row»)"))
+            parts.append(self.t("время (P/01.1 N0 «Время в строке»)", "time (P/01.1 N0 «Time in a row»)"))
             ts = [t for t in ts if t not in ("number", "string")]
         parts += [self.type_word(s, t) for t in ts]
         if not parts and "enum" not in s and "anyOf" not in s and "type" not in s:

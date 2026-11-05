@@ -20,7 +20,7 @@ to it by a change of behaviour after the commit of the lesson («Implementation 
 
 ## Н0 Vocabulary
 
-Normative words follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md). The rules of the module are [P/01.1 Н0](../../01-store/spec/01.1-store.norms.md#н0-vocabulary).
+Normative words follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md). The rules of the module are [P/01.1 Н0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary).
 
 ## Н1 Form
 

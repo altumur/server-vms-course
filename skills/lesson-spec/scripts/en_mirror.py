@@ -136,7 +136,7 @@ def as_source(rel, root):
 H2 = re.compile(r"^###? ", re.M)                   # разделы и подразделы: сверка по каждому
 FENCE = re.compile(r"^[ \t]*```[^\n]*\n.*?^[ \t]*```[ \t]*$", re.M | re.S)   # и с отступом — блок внутри пункта списка
 SPAN = re.compile(r"(`+)(.+?)\1", re.S)
-NORM_NO = re.compile(r"(?<![\wА-Яа-яЁё])Н[0-9]+(?:\.[0-9]+)*[а-я]?(?!\w|\.[0-9])")
+NORM_NO = re.compile(r"(?<![\wА-Яа-яЁё])[НN][0-9]+(?:\.[0-9]+)*[а-яa-e]?(?!\w|\.[0-9])")   # N… латиницей — доп. (5) п. 1
 LESSON = re.compile(r"(?<![\w/])P/[0-9]{2}(?:\.[0-9]+)?(?:-[0-9]{2})?(?![0-9])")
 ADR = re.compile(r"\bADR-[0-9]{4}\b")
 FINDING = re.compile(r"(?<![\w-])[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-[0-9]{2}(?![\w-])")
@@ -149,6 +149,9 @@ CYR = re.compile(r"[А-Яа-яЁё]")
 # кириллица там — нарушение правила «Кириллица в английском» ниже (разрешены только номера норм Н… и прежние уроки М10–М12).
 # Модуль, ещё не переведённый на латиницу меток, — прежнее разрешение (VMS — «Спецификация VMS»); список только сокращается.
 LABELS_PENDING = {"VMS"}
+# Уроки, где номера разделов уже латиницей N… (ADR-0121 доп. (5) п. 1): Н<цифра> в источнике — отказ; список растёт до всех.
+NUMBERS_DONE = ("Platform/01-store/",)
+CYR_NUMBER = re.compile(r"(?<![\wА-Яа-яЁё])Н[0-9]")
 RU_LABEL = re.compile(r"<([^<>`\n|=]*[А-Яа-яЁё][^<>`\n|=]*)>")
 LEGACY_LABELS = [re.compile(r"(?<![\w])М[0-9]+[A-Z]?(?:_[A-Za-z]+)?(?:/[0-9]+)?"),
                  re.compile(r"(?<![\w-])[А-ЯЁ]-?[0-9]+[а-я]?(?![\w])|(?<![\w])[0-9]+[а-я](?![\w])"),
@@ -175,7 +178,7 @@ def kinds_of(ru_text):
     """Refusal words: the first code span of the `kind` column (third) of the Н4 table of the Russian text."""
     words = set()
     for title, body in sections(ru_text):
-        if not re.match(r"Н4(?:\s|$)", title):
+        if not re.match(r"[НN]4(?:\s|$)", title):
             continue
         for row in TABLE_ROW.findall(body):
             cells = [c.strip() for c in re.split(r"(?<!\\)\|", row.strip().strip("|"))]
@@ -502,6 +505,14 @@ def compare(ru_text, en_text, ru_path, en_path, root):
         rest = pattern.sub(" ", rest)
     for fence in FENCE.findall(en_text):                     # блоки кода — тоже по-английски, кроме «…» и Н…
         rest += "\n" + re.sub("|".join([r"«[^»\n]*»", NORM_NO.pattern] + [x.pattern for x in allowed[4:]]), " ", fence)
+    try:
+        numbers_done = Path(en_path).resolve().relative_to(root).as_posix().startswith(NUMBERS_DONE)
+    except ValueError:
+        numbers_done = False
+    if numbers_done:                                 # номер раздела источника — латиницей (ADR-0121 доп. (5) п. 1)
+        for line in LINK.sub("]()", BUILT.sub(" ", en_text)).splitlines():
+            if CYR_NUMBER.search(line):
+                errors.append(f"a Cyrillic section number Н… in the source (N… since ADR-0121 addendum (5)): {line.strip()[:80]!r}")
     if not legacy:                                  # метка подстановки источника — английская, по словарю (ADR-0121 доп. (3) п. 4)
         for m in RU_LABEL.finditer(LINK.sub("]()", BUILT.sub(" ", en_text))):
             if CYR.search(re.sub(r"Н[0-9][0-9.]*[а-я]?|«[^»]*»|М1[0-2][A-Z]?(?:/[0-9]+)?", "", m.group(1))):

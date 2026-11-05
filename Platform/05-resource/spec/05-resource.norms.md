@@ -23,7 +23,7 @@ the map to former ids is [`id-map.tsv`](../../common/id-map.tsv).
 
 <!-- req: P/05-R001 -->
 
-Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md). The rules of the module are [P/01.1 Н0](../../01-store/spec/01.1-store.norms.md#н0-vocabulary).
+Normative keywords (MUST, MUST NOT, SHOULD, MAY by RFC 2119 and RFC 8174) follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md). The rules of the module are [P/01.1 Н0](../../01-store/spec/01.1-store.norms.md#n0-vocabulary).
 
 ## Н1 Form
 
@@ -452,8 +452,8 @@ Schema — [`doors.schema.json`](../data/doors.schema.json), outcomes — [`door
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
 | `url` | string | required |  | the address of the resource door (RESOURCE_URL) |
-| `since` | time (P/01.1 Н0 «Time in a row») | required |  | the moment of the resource start |
-| `at` | time (P/01.1 Н0 «Time in a row») | required |  | the moment of the last mark, every 15 s; judged by a change of the row version, not by the value (resource_state of the observation contract) |
+| `since` | time (P/01.1 N0 «Time in a row») | required |  | the moment of the resource start |
+| `at` | time (P/01.1 N0 «Time in a row») | required |  | the moment of the last mark, every 15 s; judged by a change of the row version, not by the value (resource_state of the observation contract) |
 | `.<name>` | string | optional |  | name: `room.<sub>` — an element for each subsystem of the catalogue whose role file `roles/<sub>worker.env` is present on the box; next to it `live.<sub>` (ADR-0084 addendum (3) R14′); a decimal ≥ 0 — how many more processes of the role `<sub>worker` the server will start (the presence lock contract «Счёт room»), or "unknown"; the reader does not refuse an element out of form at the row level: the element is absent, unreadable or unknown — the server is not a candidate for an order of this role (P/04 Н3 «order()»); for `live.<sub>` — the numbers n ≥ 2 of the live locks of the role, comma-separated, ascending, without repeats, from the same snapshot as `room.<sub>`, or empty; absent or unreadable — the server is not a candidate (the presence lock contract, live) |
 
 Only at the writer (`$defs.writer`):
@@ -480,12 +480,12 @@ Schema — [`resource-heartbeat.schema.json`](../data/resource-heartbeat.schema.
 |---|---|---|---|---|
 | `server` | string; matching `[a-z0-9]+(-[a-z0-9]+)*` in full | required |  | its own server — SERVER_NAME by the grammar of the environment file contract «Environment variables», as for the presence lock (stage C guess R05-G07, the Architect's decision of 2026-10-23); not by it or not equal to the server of the key — the heartbeat is unreadable (P/06.5 Н2) |
 | `box` | string | optional |  | the box (BOX_ID, the environment file contract «Environment variables») |
-| `ts` | time (P/01.1 Н0 «Time in a row») | required |  | wall-clock seconds of the heartbeat; written every 10 s |
+| `ts` | time (P/01.1 N0 «Time in a row») | required |  | wall-clock seconds of the heartbeat; written every 10 s |
 | `url` | string | required |  | the address of the resource door |
 | `schema` | integer; ≥ 1; ≤ 9007199254740991; the whole sign for the reader too (x-whole) | required |  | SCHEMA of the build (P/06.6 Н1.1а heartbeat): a JSON integer without a fractional part and exponent, ≥ 1; `1.0`, `1e0`, `-1`, a string, null — the process schema is unknown |
 | `build` | string | required |  | the build word (BUILD); not a string — the field is unknown: null in the console's answers (V7 item 3, the Architect's decision of 2026-10-28, P1; row 14 of the list) |
 | `usage` | integer; ≥ 0; ≤ 9007199254740991 | required |  | bytes of the bucket files of the trees of this server and of the copies in .mirror/ |
-| `usage_at` | time (P/01.1 Н0 «Time in a row») | required |  | wall-clock seconds of the usage measurement |
+| `usage_at` | time (P/01.1 N0 «Time in a row») | required |  | wall-clock seconds of the usage measurement |
 | `space` | by the definition `disk` | required |  | the volume of the event tree |
 | `volumes` | map author names: name — string, value — by the definition `disk` | required |  | the same per volume (log of cammeta-go, lesson 9 № 1) |
 | `volumes.<name>` | by the definition `disk` | optional |  |  |
@@ -506,7 +506,7 @@ Schema — [`resource-heartbeat.schema.json`](../data/resource-heartbeat.schema.
 | `waits.max` | integer; ≥ 0; ≤ 9007199254740991 | required |  | an integer from 0 to 2^53 − 1 |
 | `mirrors` | map author names: name — string, value — integer; ≥ 0; ≤ 9007199254740991 | required |  | `{<сервер>: n}` — copies of neighbours in .mirror/ |
 | `mirrors.<name>` | integer; ≥ 0; ≤ 9007199254740991 | optional |  | an integer from 0 to 2^53 − 1 |
-| `pass_started` | time (P/01.1 Н0 «Time in a row») | optional |  | the start of the current pass (Н3 «проход ресурса») |
+| `pass_started` | time (P/01.1 N0 «Time in a row») | optional |  | the start of the current pass (Н3 «проход ресурса») |
 | `pass_stalled` | number; ≥ 0 | optional |  | seconds, only while the pass is hung (PULSE_LIMIT) |
 | `volumes_stuck` | map author names: name — string, value — number | optional |  | volumes whose probe did not answer (P/06.5 ResourceRow) |
 | `volumes_stuck.<name>` | number | optional |  |  |
@@ -582,7 +582,7 @@ Schema — [`free-ask.schema.json`](../data/free-ask.schema.json), outcomes — 
 | `free` | number; > 0 | required |  | need = used − total·low − Σ freeing from the heartbeats, bytes; need ≤ 0 — the row is removed, not written |
 | `volume` | string; matching `[A-Za-z0-9_]{1,64}` in full | required |  | the volume name of ASCII A-Z/a-z/0-9/_, 1–64 bytes, without a hyphen; on the box there is one volume — events |
 | `server` | string; matching `[\s\S]+` in full | required |  | its own server — a non-empty key segment of P/01.1, hyphens allowed; matches `<server>` of the key |
-| `at` | time (P/01.1 Н0 «Time in a row») | required |  | the write stamp |
+| `at` | time (P/01.1 N0 «Time in a row») | required |  | the write stamp |
 
 Outcomes of an unreadable row (the reader is a role; `*` — all readers of the family):
 
@@ -598,12 +598,12 @@ Schema — [`events-unit.schema.json`](../data/events-unit.schema.json), outcome
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `t` | time (P/01.1 Н0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `t` | time (P/01.1 N0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
 | `kind` | string | required |  | the event kind |
 | `id` | string | required |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
 | `of` | string | optional |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
 | `class` | string; one of: `alarm` | optional |  | only for an alarm; not written for observation |
-| `occurred` | time (P/01.1 Н0 «Time in a row») | optional |  | when it happened; optional |
+| `occurred` | time (P/01.1 N0 «Time in a row») | optional |  | when it happened; optional |
 | `v` | integer; ≥ 1 | optional |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
 | `.<name>` | any value | optional |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
@@ -619,12 +619,12 @@ Schema — [`events-unit-alarms.schema.json`](../data/events-unit-alarms.schema.
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `t` | time (P/01.1 Н0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `t` | time (P/01.1 N0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
 | `kind` | string | required |  | the event kind |
 | `id` | string | required |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
 | `of` | string | optional |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
 | `class` | string; one of: `alarm` | optional |  | only for an alarm; not written for observation |
-| `occurred` | time (P/01.1 Н0 «Time in a row») | optional |  | when it happened; optional |
+| `occurred` | time (P/01.1 N0 «Time in a row») | optional |  | when it happened; optional |
 | `v` | integer; ≥ 1 | optional |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
 | `.<name>` | any value | optional |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
@@ -640,12 +640,12 @@ Schema — [`events-audit.schema.json`](../data/events-audit.schema.json), outco
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `t` | time (P/01.1 Н0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `t` | time (P/01.1 N0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
 | `kind` | string | required |  | the event kind |
 | `id` | string | required |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
 | `of` | string | optional |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
 | `class` | string; one of: `alarm` | optional |  | only for an alarm; not written for observation |
-| `occurred` | time (P/01.1 Н0 «Time in a row») | optional |  | when it happened; optional |
+| `occurred` | time (P/01.1 N0 «Time in a row») | optional |  | when it happened; optional |
 | `v` | integer; ≥ 1 | optional |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
 | `.<name>` | any value | optional |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
@@ -661,12 +661,12 @@ Schema — [`events-audit-alarms.schema.json`](../data/events-audit-alarms.schem
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `t` | time (P/01.1 Н0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `t` | time (P/01.1 N0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
 | `kind` | string | required |  | the event kind |
 | `id` | string | required |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
 | `of` | string | optional |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
 | `class` | string; one of: `alarm` | optional |  | only for an alarm; not written for observation |
-| `occurred` | time (P/01.1 Н0 «Time in a row») | optional |  | when it happened; optional |
+| `occurred` | time (P/01.1 N0 «Time in a row») | optional |  | when it happened; optional |
 | `v` | integer; ≥ 1 | optional |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
 | `.<name>` | any value | optional |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
@@ -682,12 +682,12 @@ Schema — [`events-console.schema.json`](../data/events-console.schema.json), o
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `t` | time (P/01.1 Н0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `t` | time (P/01.1 N0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
 | `kind` | string | required |  | the event kind |
 | `id` | string | required |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
 | `of` | string | optional |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
 | `class` | string; one of: `alarm` | optional |  | only for an alarm; not written for observation |
-| `occurred` | time (P/01.1 Н0 «Time in a row») | optional |  | when it happened; optional |
+| `occurred` | time (P/01.1 N0 «Time in a row») | optional |  | when it happened; optional |
 | `v` | integer; ≥ 1 | optional |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
 | `.<name>` | any value | optional |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
@@ -703,12 +703,12 @@ Schema — [`events-console-alarms.schema.json`](../data/events-console-alarms.s
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `t` | time (P/01.1 Н0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `t` | time (P/01.1 N0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
 | `kind` | string | required |  | the event kind |
 | `id` | string | required |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
 | `of` | string | optional |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
 | `class` | string; one of: `alarm` | optional |  | only for an alarm; not written for observation |
-| `occurred` | time (P/01.1 Н0 «Time in a row») | optional |  | when it happened; optional |
+| `occurred` | time (P/01.1 N0 «Time in a row») | optional |  | when it happened; optional |
 | `v` | integer; ≥ 1 | optional |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
 | `.<name>` | any value | optional |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
@@ -724,12 +724,12 @@ Schema — [`events-mirror.schema.json`](../data/events-mirror.schema.json), out
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `t` | time (P/01.1 Н0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
+| `t` | time (P/01.1 N0 «Time in a row») | required |  | the writer's wall-clock seconds when it was written; selects the bucket (years up to 9999 — EJ-G06) |
 | `kind` | string | required |  | the event kind |
 | `id` | string | required |  | `e1-<hexUTF8(дерево)>-<hexUTF8(единица)>-<эпоха>-<hexUTF8(экземпляр)>-<номер>`; unique, duplicate copies are removed by it |
 | `of` | string | optional |  | `<sub>/<id>` — the unit it is about; set by the platform from about |
 | `class` | string; one of: `alarm` | optional |  | only for an alarm; not written for observation |
-| `occurred` | time (P/01.1 Н0 «Time in a row») | optional |  | when it happened; optional |
+| `occurred` | time (P/01.1 N0 «Time in a row») | optional |  | when it happened; optional |
 | `v` | integer; ≥ 1 | optional |  | the line version — an additional field: the reader tolerates it (LAYERS.md § 6), the writer does not write it — absence = version 1; a positive integer, v = 2 is preserved, there is no choice of behaviour by v (the event log contract line; stage C guesses EJ-G10, EJ-L04) |
 | `.<name>` | any value | optional |  | the subsystem's words; fields beyond the form are kept by the reader as is, the writer writes the line strictly by the form (EJ-G10) |
 
@@ -763,7 +763,7 @@ Schema — [`gone.schema.json`](../data/gone.schema.json), outcomes — [`gone.o
 
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
-| `written` | time (P/01.1 Н0 «Time in a row») | required |  | the moment the body was deleted at the deleter |
+| `written` | time (P/01.1 N0 «Time in a row») | required |  | the moment the body was deleted at the deleter |
 | `peers` | list, element — string; matching `[\s\S]+` in full | required |  | neighbours of the ring that could have had a copy of the body |
 | `peers[]` | string; matching `[\s\S]+` in full | optional |  |  |
 | `acked` | list, element — string; matching `[\s\S]+` in full | required |  | neighbours from `peers` that confirmed the deletion (404 on GET of the copy) |

@@ -1,4 +1,4 @@
-# P/01 — doors of the store process: the HTTP contract. Operations — chapter 1.1 (01.1-store.norms.md Н2–Н4), rights and /v1/rights —
+# P/01 — doors of the store process: the HTTP contract. Operations — chapter 1.1 (01.1-store.norms.md N2–N4), rights and /v1/rights —
 # chapter 1.2 (01.2-store.norms.md), service doors of the daemon /v1/status, /v1/join, /v1/leave, /metrics and op floor — chapter 1.3 (01.3-store.norms.md).
 openapi: 3.1.0
 info: {title: Doors of the store process, version: "1"}
@@ -11,7 +11,7 @@ paths:
         in: query
         required: true
         schema: {$ref: "#/components/schemas/Key"}
-        description: Query parsing — Н2.1 (application/x-www-form-urlencoded; + is a space, %2B is a plus); repeated or absent — 400 badrequest, bytes not UTF-8 — 400 badkey.
+        description: Query parsing — N2.1 (application/x-www-form-urlencoded; + is a space, %2B is a plus); repeated or absent — 400 badrequest, bytes not UTF-8 — 400 badkey.
       responses:
         "200":
           description: a row; an absent one — items null, index ""
@@ -23,13 +23,13 @@ paths:
   /v1/list:
     get:
       summary: list
-      description: After the identity check of P/01.2 Н3 «check»; the read right to values is not required.
+      description: After the identity check of P/01.2 N3 «check»; the read right to values is not required.
       parameters:
       - name: prefix
         in: query
         required: false
         schema: {type: string}
-        description: Bytes after query parsing by Н2.1, UTF-8 is not required; absent — an empty prefix; repeated — 400 badrequest.
+        description: Bytes after query parsing by N2.1, UTF-8 is not required; absent — an empty prefix; repeated — 400 badrequest.
       responses:
         "200":
           description: every key with the given prefix and its version; keys in byte order
@@ -42,7 +42,7 @@ paths:
     post:
       summary: A plain write of P/01.1, a batch or a privileged raise of the floor
       description: >-
-        Н2 of the norms: the body read limit is set separately from the row ceiling; when
+        N2 of the norms: the body read limit is set separately from the row ceiling; when
         it is exceeded before JSON parsing — 413 toolarge, limit equals the body limit in bytes.
         In acceptance the body limit is 1048576, the row ceiling 524288 bytes.
       requestBody:
@@ -56,7 +56,7 @@ paths:
         "404": {$ref: "#/components/responses/NoRoute"}
         "403": {$ref: "#/components/responses/Forbidden"}
         "409":
-          description: CAS of P/01.1 (for a batch — with key of the row), admission-time conditions (expired, early — ADR-0091 item 1) or floor does not increase (refused — a row of P/01.1 Н4); another payload with the same id — 400 badrequest, not 409
+          description: CAS of P/01.1 (for a batch — with key of the row), admission-time conditions (expired, early — ADR-0091 item 1) or floor does not increase (refused — a row of P/01.1 N4); another payload with the same id — 400 badrequest, not 409
           content:
             application/json:
               schema:
@@ -142,7 +142,7 @@ paths:
               schema:
                 type: integer
                 const: 1
-              description: Only for unavailable at the connection limit (Н4); other 503 promise no deadline.
+              description: Only for unavailable at the connection limit (N4); other 503 promise no deadline.
   /v1/join:
     post:
       summary: Joining by the certified role of the daemon
@@ -190,7 +190,7 @@ paths:
               schema:
                 type: integer
                 const: 1
-              description: Only for unavailable at the connection limit (Н4); other 503 promise no deadline.
+              description: Only for unavailable at the connection limit (N4); other 503 promise no deadline.
         '409':
           description: The whole JSON body
           content:
@@ -256,9 +256,9 @@ paths:
               schema:
                 type: integer
                 const: 1
-              description: Only for unavailable at the connection limit (Н4); other 503 promise no deadline.
+              description: Only for unavailable at the connection limit (N4); other 503 promise no deadline.
         '409':
-          description: 'The store of a box without raft: leave of the last vote (Н1.3 box)'
+          description: 'The store of a box without raft: leave of the last vote (N1.3 box)'
           content:
             application/json:
               schema:
@@ -280,7 +280,7 @@ paths:
       summary: Daemon metrics
       responses:
         '200':
-          description: Prometheus text exposition UTF-8; series — Н1.3 metrics; a voter has configstore_raft_* and configstore_doors, a door without a vote — only configstore_door_forwards_total{outcome} and configstore_door_voters_reachable (C01-DOOR-METRICS-01)
+          description: Prometheus text exposition UTF-8; series — N1.3 metrics; a voter has configstore_raft_* and configstore_doors, a door without a vote — only configstore_door_forwards_total{outcome} and configstore_door_voters_reachable (C01-DOOR-METRICS-01)
           content:
             text/plain:
               schema:
@@ -320,7 +320,7 @@ paths:
               schema:
                 type: integer
                 const: 1
-              description: Only for unavailable at the connection limit (Н4); other 503 promise no deadline.
+              description: Only for unavailable at the connection limit (N4); other 503 promise no deadline.
 components:
   schemas:
     Key:
@@ -331,13 +331,13 @@ components:
         - pattern: "^(?:/[\\s\\S]*)$"
         - pattern: "^(?:(?:[\\s\\S]*/)?\\.\\.(?:/[\\s\\S]*)?)$"
       description: >-
-        Н1: a key is not empty, does not start with /, no segment between / equals ..;
+        N1: a key is not empty, does not start with /, no segment between / equals ..;
         ..foo is admissible. The limit of 1024 UTF-8 bytes and a smaller file limit
         are checked separately; maxLength does not express a number of bytes.
     Version:
       type: string
       pattern: "^(?:(?:0|[1-9][0-9]{0,19}))$"
-      description: A non-empty version by Н1; the caller compares it only for equality.
+      description: A non-empty version by N1; the caller compares it only for equality.
     VersionOrAbsent:
       type: string
       pattern: "^(?:(?:0|[1-9][0-9]{0,19})?)$"
@@ -377,23 +377,23 @@ components:
       description: The order of the names in keys is by UTF-8 bytes; JSON Schema does not check the order of an object.
     Cmd:
       type: object
-      description: "Extra top-level fields of a command are accepted and not read regardless of their JSON type (Н2, P/01.1-12, sc. 23); only guard is closed (added by the review of stage A 2)"
+      description: "Extra top-level fields of a command are accepted and not read regardless of their JSON type (N2, P/01.1-12, sc. 23); only guard is closed (added by the review of stage A 2)"
       unevaluatedProperties: true
       required: [op, key]
       properties:
-        op: {type: string, enum: [put, delete], description: "op floor is a separate schema FloorCmd of chapter 1.3 on the admin socket of the leader (added by P/01.3 Н2)"}
+        op: {type: string, enum: [put, delete], description: "op floor is a separate schema FloorCmd of chapter 1.3 on the admin socket of the leader (added by P/01.3 N2)"}
         key: {$ref: "#/components/schemas/Key"}
-        cas: {type: [string, "null"], pattern: "^(?:(?:0|[1-9][0-9]{0,19})?)$"}  # Н1: null, empty or a version; strictly to the end of the string
+        cas: {type: [string, "null"], pattern: "^(?:(?:0|[1-9][0-9]{0,19})?)$"}  # N1: null, empty or a version; strictly to the end of the string
         guard:
           type: object
           required: [key, index]
           additionalProperties: false
           properties:
             key: {$ref: "#/components/schemas/Key"}
-            index: {type: string, pattern: "^(?:(?:0|[1-9][0-9]{0,19})?)$"}  # Н1: empty or a version
+            index: {type: string, pattern: "^(?:(?:0|[1-9][0-9]{0,19})?)$"}  # N1: empty or a version
         id: {type: string, pattern: "^(?:[0-9a-f]{1,64})$"}
-        not_after: {type: number, minimum: 0, description: "Н1, Н3 «Admission time»: admitted only while the admission time ≤ not_after, otherwise 409 expired (ADR-0091 item 1)"}
-        not_before: {type: number, minimum: 0, description: "Н1, Н3 «Admission time»: admitted only if the admission time > not_before, otherwise 409 early (ADR-0091 item 1)"}
+        not_after: {type: number, minimum: 0, description: "N1, N3 «Admission time»: admitted only while the admission time ≤ not_after, otherwise 409 expired (ADR-0091 item 1)"}
+        not_before: {type: number, minimum: 0, description: "N1, N3 «Admission time»: admitted only if the admission time > not_before, otherwise 409 early (ADR-0091 item 1)"}
       oneOf:
       - properties:
           op: {const: put}
@@ -404,7 +404,7 @@ components:
           items: {}    # not read for delete: any JSON value or absence is no refusal
     BatchCmd:
       type: object
-      description: "A batch: Н1 batch, Н3 «write batch» (ADR-0094 B9). Extra top-level fields are not read, including key, items, cas, guard of a single write (Н2); the elements of writes and guards are closed. The limits BATCH_WRITES and BATCH_GUARDS, a repeated key and a guard on a written key are checks of the door, 400 badrequest; the role console has no count limits, the role domain has no limit on the number of guards (Н1), so the schema sets no maxItems."
+      description: "A batch: N1 batch, N3 «write batch» (ADR-0094 B9). Extra top-level fields are not read, including key, items, cas, guard of a single write (N2); the elements of writes and guards are closed. The limits BATCH_WRITES and BATCH_GUARDS, a repeated key and a guard on a written key are checks of the door, 400 badrequest; the role console has no count limits, the role domain has no limit on the number of guards (N1), so the schema sets no maxItems."
       unevaluatedProperties: true
       required: [op, writes]
       properties:
@@ -452,7 +452,7 @@ components:
         again: {const: true}
       description: The first application — index, for a batch one version for all rows; a stored replay adds again true.
     Fault:
-      description: The closed refusal forms of Н4; the specific code of the operation limits the admissible branches.
+      description: The closed refusal forms of N4; the specific code of the operation limits the admissible branches.
       oneOf:
       - $ref: "#/components/schemas/BadKeyFault"
       - $ref: "#/components/schemas/BadRequestFault"
@@ -505,7 +505,7 @@ components:
         error: {type: string}
         key: {$ref: "#/components/schemas/Key"}
         index: {$ref: "#/components/schemas/VersionOrAbsent"}
-      description: Н4, for a batch — the first row in the order of writes whose cas differed; nothing written.
+      description: N4, for a batch — the first row in the order of writes whose cas differed; nothing written.
     ExpiredFault:
       type: object
       required: [kind, error]
@@ -513,7 +513,7 @@ components:
       properties:
         kind: {const: expired}
         error: {type: string}
-      description: The admission time is later than not_after (Н4; ADR-0091 item 1); nothing written.
+      description: The admission time is later than not_after (N4; ADR-0091 item 1); nothing written.
     EarlyFault:
       type: object
       required: [kind, error]
@@ -521,7 +521,7 @@ components:
       properties:
         kind: {const: early}
         error: {type: string}
-      description: The admission time is not later than not_before (Н4; ADR-0091 item 1); nothing written.
+      description: The admission time is not later than not_before (N4; ADR-0091 item 1); nothing written.
     GuardFault:
       type: object
       required: [kind, error, key, index]
@@ -581,7 +581,7 @@ components:
             $ref: '#/components/schemas/RoleName'
           additionalProperties:
             $ref: '#/components/schemas/RoleRights'
-      description: The loaded configstore-rights.json. Agreement with the generator, groups and readers is a semantic check of Н1/Н3, not JSON Schema.
+      description: The loaded configstore-rights.json. Agreement with the generator, groups and readers is a semantic check of N1/N3, not JSON Schema.
     RoleName:
       type: string
       pattern: "^(?:[a-z][a-z0-9_-]{0,63})$"
@@ -613,7 +613,7 @@ components:
           type: array
           items:
             type: string
-      description: 'delete absent — an empty list, deleting is not allowed (P/01.2 Н1.2, decision b60d983e); the generator writes delete explicitly for every role. Patterns and negations — Н1.2/Н1.3.'
+      description: 'delete absent — an empty list, deleting is not allowed (P/01.2 N1.2, decision b60d983e); the generator writes delete explicitly for every role. Patterns and negations — N1.2/N1.3.'
     Empty:
       type: object
       required: []
@@ -746,7 +746,7 @@ components:
         max_value:
           type: integer
           minimum: 1
-          description: 'This instance’s effective row-weight ceiling in bytes: -max-value (P/01.3 Н1.3; row weight P/01.1); distinct from the HTTP body limit -max-body. Acceptance stand: 524288 bytes.'
+          description: 'This instance’s effective row-weight ceiling in bytes: -max-value (P/01.3 N1.3; row weight P/01.1); distinct from the HTTP body limit -max-body. Acceptance stand: 524288 bytes.'
         role:
           type: string
         last_snapshot:
@@ -756,7 +756,7 @@ components:
         admission_ahead:
           type: number
           exclusiveMinimum: 60
-          description: P/01.3 Н1.3 admission — by how many seconds the admission time of the last record is ahead of the leader's clock, only beyond 60 s (ADR-0091 item 1); a follower and a door have none.
+          description: P/01.3 N1.3 admission — by how many seconds the admission time of the last record is ahead of the leader's clock, only beyond 60 s (ADR-0091 item 1); a follower and a door have none.
         out:
           type: array
           items:
@@ -786,13 +786,13 @@ components:
           schema:
             $ref: "#/components/schemas/BadKeyFault"
     BadRequest:
-      description: The request is out of form (Н2.1); kind badrequest.
+      description: The request is out of form (N2.1); kind badrequest.
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/BadRequestFault"
     BadRequestOrKey:
-      description: A bad form of the request or command, or a key; classification — Н2.1 and Н4.
+      description: A bad form of the request or command, or a key; classification — N2.1 and N4.
       content:
         application/json:
           schema:
@@ -800,7 +800,7 @@ components:
             - $ref: "#/components/schemas/BadRequestFault"
             - $ref: "#/components/schemas/BadKeyFault"
     Forbidden:
-      description: The identity is not admitted by P/01.2 Н3 «check», or allowed of P/01.2 Н1.3 refused the read, write, delete or guard read; list does not require the read right.
+      description: The identity is not admitted by P/01.2 N3 «check», or allowed of P/01.2 N1.3 refused the read, write, delete or guard read; list does not require the read right.
       content:
         application/json:
           schema:
@@ -830,13 +830,13 @@ components:
       headers:
         Retry-After:
           schema: {type: integer, const: 1}
-          description: Only at the connection limit of the door (P/01.3 Н4); otherwise absent.
+          description: Only at the connection limit of the door (P/01.3 N4); otherwise absent.
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/UnavailableFault"
     NoRoute:
-      description: No route or no such method on it (Н2.1); kind badrequest. Unparseable HTTP is 400 badrequest, not 414, 431, 501 or 505.
+      description: No route or no such method on it (N2.1); kind badrequest. Unparseable HTTP is 400 badrequest, not 414, 431, 501 or 505.
       content:
         application/json:
           schema:
@@ -846,7 +846,7 @@ components:
       headers:
         Retry-After:
           schema: {type: integer, const: 1}
-          description: Only for unavailable at the connection limit of the door (P/01.3 Н4); otherwise absent.
+          description: Only for unavailable at the connection limit of the door (P/01.3 N4); otherwise absent.
       content:
         application/json:
           schema:

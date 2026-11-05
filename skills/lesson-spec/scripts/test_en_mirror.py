@@ -202,6 +202,12 @@ class Layouts(unittest.TestCase):
         self.assertTrue(any("a Russian placeholder label in the source: <имя>" in e for e in errors), errors)
         self.assertEqual(self.compare3(en=en + "\nThe key `domain/users/<name>`.\n", ru=ru + "\nКлюч `domain/users/<имя>`.\n"), [])
 
+    def test_latin_section_numbers(self):              # ADR-0121 доп. (5) п. 1: в P/01 номера разделов — N…, Н… — отказ
+        en, ru = EN3.read_text(encoding="utf-8"), RU3.read_text(encoding="utf-8")
+        self.assertIn("## N0", en)
+        errors = self.compare3(en=en + "\nSee Н1.3.\n", ru=ru + "\nСм. N1.3.\n")
+        self.assertTrue(any("a Cyrillic section number" in e for e in errors), errors)
+
     def test_labels_by_dictionary(self):                # метка пары — по словарю Platform/common/placeholders.tsv
         self.assertEqual(en_mirror.as_english_labels("domain/users/<имя> ⟨вариант 2⟩", ROOT), "domain/users/<name> ⟨variant 2⟩")
         self.assertEqual(en_mirror.as_english_labels(".<имя> (имя)", ROOT), ".<name> (name)")
