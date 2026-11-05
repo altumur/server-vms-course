@@ -1,0 +1,240 @@
+"""Полные package, union владельца, отказы формы; вся цепочка генерации на пине spec103 7b96ff9f."""
+import copy
+import importlib
+import io
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tarfile
+import tempfile
+import unittest
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent.parent
+sys.path.insert(0, str(HERE))
+import vector_consumers as C
+import wire
+
+PIN = '7b96ff9f84e8090e11922131bc77799f0a0b54e1'
+GOENV = dict(os.environ, GOFLAGS='-mod=mod', GOPROXY='off', GOWORK='off', GOTOOLCHAIN='local')
+
+
+def generator(key):
+    import lesson
+    lesson.CURRENT = lesson.get(key)
+    os.environ['NORMGEN_LESSON'] = key
+    import gen_vectors
+    return importlib.reload(gen_vectors)
+
+
+class Registry(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix='consumer-registry-')
+        self.root = Path(self.tmp.name)
+        (self.root/'Platform').mkdir()
+        shutil.copy2(ROOT/'Platform/lessons.tsv', self.root/'Platform/lessons.tsv')
+        for package, table in [('common/demo', 'cases.tsv'), ('01-store/jcs', 'canonical_json.tsv'),
+                               ('06-console/rid', 'rid.tsv'), ('03-worker/unassigned', 'cases.tsv')]:
+            owner, name = package.split('/')
+            p = self.root/'Platform'/owner/'vectors'/name/table
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text('case\nonly\n')
+        self.rows = [('01-store/jcs', 'canonical_json.tsv', '02-installer', 'norm'),
+                     ('common/demo', 'cases.tsv', '03-worker', 'norm')]
+        self.write()
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def write(self):
+        p = self.root/C.FORM
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text('\t'.join(C.COLUMNS)+'\n'+'\n'.join('\t'.join(r) for r in self.rows)+'\n')
+
+    def test_union_and_no_common_implicit_owner(self):
+        rows = C.read(self.root)
+        self.assertEqual(rows['01-store/jcs', 'canonical_json.tsv'], {'01-store','02-installer'})
+        self.assertEqual(rows['common/demo', 'cases.tsv'], {'03-worker'})
+        self.assertEqual(rows['06-console/rid', 'rid.tsv'], {'06-console'})
+        self.assertIn(('03-worker/unassigned', 'cases.tsv'), C.for_lesson(self.root, '03-worker'))
+        self.rows = []
+        self.write()
+        self.assertNotIn(('common/demo', 'cases.tsv'), C.read(self.root))
+        self.assertIn(('01-store/jcs', 'canonical_json.tsv'), C.read(self.root))
+
+    def test_form_errors_even_on_another_consumer(self):
+        original = list(self.rows)
+        bad = [(*original[0][:3], 'different norm'), ('jcs','canonical_json.tsv','02-installer','norm'),
+               ('11-foreign/jcs','canonical_json.tsv','02-installer','norm'),
+               ('01-store/missing','canonical_json.tsv','02-installer','norm'),
+               ('01-store/jcs','missing.tsv','02-installer','norm'),
+               ('01-store/jcs','../canonical_json.tsv','02-installer','norm'),
+               ('01-store/jcs','canonical_json.tsv','99-unknown','norm')]
+        for row in bad:
+            with self.subTest(row=row):
+                self.rows = original + [row]
+                self.write()
+                with self.assertRaises(C.ConsumerError): C.for_lesson(self.root, '03-worker')
+                with self.assertRaises(wire.WireError): wire.consumers(self.root)
+
+    def test_header_and_cell_count(self):
+        p = self.root/C.FORM
+        for text in ('package\ttable\tlesson\n', '\t'.join(C.COLUMNS)+'\nonly\ttwo\n'):
+            p.write_text(text)
+            with self.assertRaises(C.ConsumerError): C.read(self.root)
+
+    def test_json_selector_is_strict(self):
+        cel = wire.Cel()
+        self.assertTrue(cel('"rid" in json(row["expect"])', {'expect':'{"rid":"a"}'}, '03-worker', 'fixture'))
+        for text in ('{"rid":1,"rid":2}', 'NaN', '{} garbage', '\ufeff{}'):
+            with self.subTest(text=text), self.assertRaises(wire.WireError):
+                cel('"rid" in json(row["expect"])', {'expect':text}, '03-worker', 'fixture')
+
+    def test_ignore_pointer_grammar(self):
+        wire.check_ignore(['/a~1b', '/list/0'], 'fixture')
+        for paths in ([], [''], ['relative'], ['/bad~2'], ['/a','/a'], ['/a','/a/b']):
+            with self.subTest(paths=paths), self.assertRaises(wire.WireError): wire.check_ignore(paths, 'fixture')
+
+
+class NewPin(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        found = subprocess.run(['git','cat-file','-e',PIN+':Platform/common/vectors/consumers.tsv'], cwd=ROOT,
+                               capture_output=True)
+        if found.returncode:
+            raise unittest.SkipTest('spec103 consumer pin '+PIN+' is not available')
+        cls.tmp = tempfile.TemporaryDirectory(prefix='consumer-pin-')
+        cls.root = Path(cls.tmp.name)/'specs'
+        cls.root.mkdir()
+        data = subprocess.check_output(['git','archive',PIN,'Platform','Source/tests/testdata'], cwd=ROOT)
+        with tarfile.open(fileobj=io.BytesIO(data)) as t: t.extractall(cls.root, filter='data')
+        cls.base = C.read(ROOT)
+        cls.new = C.read(cls.root)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def setUp(self):
+        import lesson
+        self.previous_lesson = lesson.CURRENT
+        self.previous_env = os.environ.get("NORMGEN_LESSON")
+
+    def tearDown(self):
+        import lesson
+        lesson.CURRENT = self.previous_lesson
+        if self.previous_env is None:
+            os.environ.pop("NORMGEN_LESSON", None)
+        else:
+            os.environ["NORMGEN_LESSON"] = self.previous_env
+        import gen_vectors
+        importlib.reload(gen_vectors)
+
+    def test_exact_assignments_owner_and_legacy_common_projection(self):
+        delta = {(p,t,o) for (p,t),owners in self.new.items() for o in owners}
+        delta -= {(p,t,o) for (p,t),owners in self.base.items() for o in owners}
+        expected = {('01-store/jcs','canonical_json.tsv',o) for o in
+                    ('02-installer','03-worker','06-console','08-domain','09-agent')}
+        expected |= {('06-console/'+p,t,'03-worker') for p,t in
+                     [('rid','rid.tsv'),('rid','template.tsv'),('request-digest','digest.tsv'),
+                      ('requests-body','requests_body.tsv')]}
+        self.assertEqual(delta, expected)
+        import common_vectors
+        for owner in ('01-store','02-installer','03-worker','06-console','08-domain','09-agent'):
+            self.assertEqual(common_vectors.composition(owner, self.root, known_only=True),
+                             common_vectors.composition(owner, ROOT, known_only=True))
+
+    def test_p01_refuses_an_unimplemented_foreign_assignment(self):
+        from unittest.mock import patch
+        import gen_tests
+        with patch.object(C, "for_lesson", return_value={("06-console/request-digest", "digest.tsv")}):
+            with self.assertRaisesRegex(gen_tests.GenError, "no gen_tests adapter"):
+                gen_tests.render(ROOT)
+
+    def test_p02_jcs_reaches_command_and_tests(self):
+        g = generator('02-installer')
+        files, inv = g.build(self.root)
+        self.assertIn('go/vectoradapter/jcs.go', files)
+        self.assertIn(b'case "01-store/jcs canonical_json.tsv"', files['go/vectorcmd/vectorcmd.go'])
+        frames = [json.loads(data) for path,data in files.items()
+                  if path.startswith('vectors/01-store/jcs/') and path.endswith('.json')]
+        self.assertEqual(len(frames), 17)
+        self.assertTrue(all(set(f['cells']) == {'raw'} and f['files'] == {} for f in frames))
+        self.assertTrue(any(p.startswith('01-store/jcs ') and status=='translated' for p,status in inv))
+
+    def fake_foreign(self, g, files, mutated=None):
+        mod = Path(self.tmp.name)/('mod-'+g.L.key+('-'+mutated if mutated else ''))
+        mod.mkdir(exist_ok=True)
+        for rel,data in files.items():
+            if rel.startswith('go/'):
+                p=mod/rel[3:];p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
+        shutil.copytree(HERE/'out'/g.L.slug/'go/families', mod/'families', dirs_exist_ok=True)
+        (mod/'go.mod').write_text(f'module {g.GO_MODULE}\n\ngo 1.22\n')
+        import consumer_vectors
+        ds = consumer_vectors.declarations(self.root, g) if g.L.key!='02-installer' else []
+        if g.L.key=='02-installer':
+            bs=wire.lesson_bindings(self.root,g.L.key)
+            b=next(b for b in bs if b.package=='01-store/jcs')
+            runs,_=wire.Expander(self.root).run(b,g.L.key)
+            ds=[dict(fn='JCS',package=b.package,_runs=runs)]
+        rows={}
+        for d in ds:
+            for r in d['_runs']:
+                value=copy.deepcopy(r.value)
+                if r.ignore==['/detail']:
+                    value={'detail':'an actual native reason'}
+                if mutated==d['package'].split('/')[1]:
+                    value={}   # missing required native fields or the value being compared
+                key=r.binding.table+'|'+'\x00'.join(sorted(k+'='+v for k,v in r.cells.items()))
+                rows.setdefault(d['fn'],{})[key]=value
+        head='''package vectoradapter
+import("encoding/json";"sort";"strings")
+func consumerKey(table string, cells map[string]string) string {
+    parts:=[]string{};for k,v:=range cells {parts=append(parts,k+"="+v)};sort.Strings(parts)
+    return table+"|"+strings.Join(parts,"\\x00")
+}
+'''
+        source=[head]
+        for fn, values in rows.items():
+            source.append(f'var consumer{fn} = map[string]string{{'+','.join(g.gstr(k)+':'+g.gstr(json.dumps(v,ensure_ascii=False)) for k,v in values.items())+'}\n')
+            source.append(f'func {fn}(table string,cells map[string]string,files map[string][]byte) Answer {{ s,ok:=consumer{fn}[consumerKey(table,cells)];if !ok {{return NotImplemented("missing fake input")}};var v any;_ = json.Unmarshal([]byte(s),&v);return Answer{{Value:v}} }}\n')
+            (mod/'vectoradapter'/(fn.lower()+'.go')).unlink()
+        (mod/'vectoradapter/consumer_fake.go').write_text('\n'.join(source))
+        return mod, sum(len(d['_runs']) for d in ds)
+
+    def test_new_consumers_execute_and_mutants_fail(self):
+        for owner in ('02-installer','03-worker','06-console','08-domain','09-agent'):
+            with self.subTest(owner=owner):
+                g=generator(owner)
+                files,_=g.build(self.root)
+                for mutant in ((None,'jcs','rid','request-digest','requests-body') if owner=='03-worker' else (None,'jcs')):
+                    mod,count=self.fake_foreign(g,files,mutant)
+                    pattern='^(TestJcs_|TestRid_|TestRequestDigest_|TestRequestsBody_)' if owner=='03-worker' else '^TestJcs_'
+                    done=subprocess.run(['go','test','-count=1','-json','./vectortests','-run',pattern], cwd=mod,
+                                        capture_output=True,text=True,env=GOENV)
+                    events=[json.loads(s) for s in done.stdout.splitlines() if s.startswith('{')]
+                    results={e['Test']:e['Action'] for e in events if e.get('Test') and e['Action'] in ('pass','fail')}
+                    self.assertEqual(len(results),count,done.stderr+done.stdout[-1800:])
+                    self.assertEqual(done.returncode==0,mutant is None,done.stderr+done.stdout[-1800:])
+                    if mutant:
+                        self.assertTrue(any(a=='fail' for a in results.values()))
+
+    def test_native_schema_runs_before_ignored_detail(self):
+        g=generator('03-worker');files,_=g.build(self.root)
+        mod,count=self.fake_foreign(g,files,'rid')
+        import consumer_vectors
+        d=next(d for d in consumer_vectors.declarations(self.root,g) if d['table']=='template.tsv')
+        row=next(r for r in d['_runs'] if r.ignore==['/detail'])
+        name=f"TestRid_Template_Line{row.lines[0]}"
+        done=subprocess.run(['go','test','-count=1','./vectortests','-run','^'+name+'$'],cwd=mod,
+                            capture_output=True,text=True,env=GOENV)
+        self.assertNotEqual(done.returncode,0)
+        self.assertIn('--- FAIL: '+name,done.stdout)
+        self.assertIn('native schema:',done.stdout)
+        self.assertIn('detail',done.stdout)
+
+
+if __name__=='__main__': unittest.main()

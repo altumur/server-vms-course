@@ -27,6 +27,7 @@ type native struct {
 type expected struct {
 	Code    int         `json:"code"`
 	Ignore  bool        `json:"ignore"`
+	Ignored []string    `json:"ignored"`
 	Value   any         `json:"value"`
 	Raw     *string     `json:"raw"`
 	Compare string      `json:"compare"`
@@ -98,7 +99,7 @@ func Check(code int, output []byte, spec string) error {
 		}
 		want = raw
 	}
-	if !compare(want, got, e.Compare) {
+	if !compare(without(want, e.Ignored), without(got, e.Ignored), e.Compare) {
 		return fmt.Errorf("compare %s: got %s, want %s", e.Compare, show(got), show(want))
 	}
 	for _, a := range e.Asserts {
@@ -288,4 +289,42 @@ func parseJSON(data []byte) (any, error) {
 		return nil, fmt.Errorf("not one strict UTF-8 JSON value")
 	}
 	return StrictJSON(data)
+}
+
+// without resolves all paths in the original value; array indices do not shift between removals.
+func without(v any, paths []string) any {
+	if len(paths) == 0 {
+		return v
+	}
+	by := map[string][]string{}
+	drop := map[string]bool{}
+	for _, path := range paths {
+		first, rest, nested := strings.Cut(path[1:], "/")
+		key := strings.ReplaceAll(strings.ReplaceAll(first, "~1", "/"), "~0", "~")
+		if nested {
+			by[key] = append(by[key], "/"+rest)
+		} else {
+			drop[key] = true
+		}
+	}
+	switch x := v.(type) {
+	case map[string]any:
+		out := map[string]any{}
+		for k, value := range x {
+			if !drop[k] {
+				out[k] = without(value, by[k])
+			}
+		}
+		return out
+	case []any:
+		out := []any{}
+		for i, value := range x {
+			key := fmt.Sprint(i)
+			if !drop[key] {
+				out = append(out, without(value, by[key]))
+			}
+		}
+		return out
+	}
+	return v
 }

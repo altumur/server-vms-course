@@ -25,6 +25,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 sys.path.insert(0, str(HERE))
 import common_vectors  # noqa: E402
+import vector_consumers  # noqa: E402
 import lesson  # noqa: E402
 from gen_checks import go_str, gofmt  # noqa: E402
 
@@ -85,6 +86,10 @@ def package_dir(root, pkg):
 
 
 def read_table(root, decl):
+    if decl.get("_form"):
+        b = decl["_runs"][0].binding if decl["_runs"] else decl["_excluded"][0].binding
+        import wire
+        return wire.package_dir(root, b.package), wire.package_dir(root, b.package) / b.table, wire.read_rows(root, b)
     d = package_dir(root, decl["package"])
     path = d / decl["table"]
     if not path.is_file():
@@ -122,6 +127,11 @@ def plan(root=ROOT):
     decls = WIRE.get(L.key)
     if decls is None:
         raise GenError(f"gen_vectors: no declaration for lesson {L.key}")
+    import consumer_vectors
+    try:
+        decls = list(decls) + consumer_vectors.declarations(root, sys.modules[__name__])
+    except consumer_vectors.wire.WireError as exc:
+        raise GenError(str(exc)) from None
     declared = {(d["package"], d["table"]) for d in decls}
     stages_path = Path(root) / L.rel / "forms/stages.tsv"
     stages = [ln.split("\t") for ln in stages_path.read_text(encoding="utf-8").split("\n")
@@ -131,13 +141,9 @@ def plan(root=ROOT):
         if not any(p == f"{L.key}/{pkg}" for p, _ in declared):
             raise GenError(f"stages.tsv gate vectors:{pkg}: no declaration of its wire")
     known = common_vectors.composition(L.key, root, known_only=True)
-    for line in (Path(root) / common_vectors.CONSUMERS).read_text(encoding="utf-8").split("\n")[1:]:
-        cells = line.split("\t")
-        if line.startswith("#") or len(cells) != 4 or cells[2] != L.key:
-            continue
-        pkg, table = cells[0], cells[1]
+    for pkg, table in lesson_consumers(root):
         if (pkg, table) in SKIP or (pkg, table) in SKIP_LESSON.get(L.key, {}) or (pkg, table) in declared \
-                or (pkg[7:], table) in known:
+                or (pkg.startswith("common/") and (pkg[len("common/"):], table) in known):
             continue
         raise GenError(f"consumers.tsv: {pkg} {table} → {L.key}: no declaration of its wire")
     return decls, known
@@ -1226,12 +1232,10 @@ def fixture(root, pdir, spec, r):
 
 
 def lesson_consumers(root):
-    out = set()
-    for line in (Path(root) / common_vectors.CONSUMERS).read_text(encoding="utf-8").split("\n")[1:]:
-        cells = line.split("\t")
-        if not line.startswith("#") and len(cells) == 4 and cells[2] == L.key:
-            out.add((cells[0], cells[1]))
-    return out
+    try:
+        return vector_consumers.for_lesson(root, L.key)
+    except vector_consumers.ConsumerError as exc:
+        raise GenError(str(exc)) from None
 
 
 def build(root=ROOT):
@@ -1252,12 +1256,14 @@ def build(root=ROOT):
     files["go/vectoradapter/vectoradapter.go"] = gofmt(TYPES_GO).encode("utf-8")
     for fn, ds in by_fn.items():
         files[f"go/vectoradapter/{fn.lower()}.go"] = gofmt(stub(ds)).encode("utf-8")
-    for fname, text in common_vectors.adapters(L.key, known_only=True).items():
+    for fname, text in common_vectors.adapters(L.key, known_only=True, root=root).items():
         files[f"go/vectoradapter/{fname}"] = gofmt(text).encode("utf-8")
     files["go/vectorcmd/vectorcmd.go"] = go_vectorcmd(decls, known).encode("utf-8")
     files["go/cmd/vectors/main.go"] = gofmt(MAIN_GO % GO_MODULE).encode("utf-8")
     files["go/vectortests/helpers_test.go"] = gofmt(HELPERS % {"module": GO_MODULE}).encode("utf-8")
     for d in decls:
+        if d.get("_form"):
+            continue
         if d.get("per_list"):
             inv.append((f"{d['package']} {d['table']} (vectors, per list)", "translated"))
             continue                                  # функция та же — её судит тест множеств stand-объявления
@@ -1352,6 +1358,13 @@ def build(root=ROOT):
             inv.append((f"{pkg} {table}", "excluded: " + SKIP[pkg, table]))
     for (pkg, table), why in SKIP_LESSON.get(L.key, {}).items():
         inv.append((f"{pkg} {table}", "excluded: " + why))
+    import consumer_vectors
+    try:
+        extra, extra_inv = consumer_vectors.render(root, sys.modules[__name__], decls)
+    except consumer_vectors.wire.WireError as exc:
+        raise GenError(str(exc)) from None
+    files.update(extra)
+    inv.extend(extra_inv)
     files["go/vectortests/inventory.tsv"] = ("\n".join(["# The vector tables of the lesson (gen_vectors.py).",
                                                         "table\tstatus"] + ["\t".join(x) for x in inv]) + "\n").encode()
     return files, inv
@@ -1405,14 +1418,20 @@ def provenance():
         import wire_vectors
         runs, _ = wire_vectors.wire.expand(ROOT, L.key)
         paths = {package_dir(ROOT, r.binding.package) / r.binding.table for r in runs}
-        forms = sorted(paths | {ROOT / wire_vectors.wire.FORM, ROOT / common_vectors.CONSUMERS})
+        forms = sorted(paths | {ROOT / wire_vectors.wire.FORM, ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS})
         return {"form": [entry(f) for f in forms], "generator": entry(Path(__file__).resolve()),
-                "handwritten": [entry(HERE / p) for p in ("wire.py", "wire_vectors.py", "wirert/go/check.go",
+                "handwritten": [entry(HERE / p) for p in ("wire.py", "wire_vectors.py", "vector_consumers.py", "wirert/go/check.go",
                                                           "doorrt2/go/schema.go")], "judge": entry(JUDGE),
-                "judges": [entry(HERE / p) for p in ("test_wire_vectors.py", "test_wire.py")]}
-    forms = sorted({read_table(ROOT, d)[1] for d in decls}) + [ROOT / common_vectors.CONSUMERS]
-    return {"form": [entry(f) for f in forms], "generator": entry(Path(__file__).resolve()), "handwritten": [],
-            "judge": entry(JUDGE)}
+                "judges": [entry(HERE / p) for p in ("test_wire_vectors.py", "test_wire.py", "test_consumer_packages.py")]}
+    forms = sorted({read_table(ROOT, d)[1] for d in decls}) + [ROOT / common_vectors.CONSUMERS, ROOT / vector_consumers.LESSONS]
+    if any(d.get("_form") for d in decls):
+        forms.append(ROOT / "Platform/common/vectors/wire.tsv")
+    hand = ["vector_consumers.py", "consumer_vectors.py"]
+    if any(d.get("_form") for d in decls):
+        hand += ["wire.py", "wire_vectors.py", "wirert/go/check.go", "doorrt2/go/schema.go"]
+    return {"form": [entry(f) for f in forms], "generator": entry(Path(__file__).resolve()),
+            "handwritten": [entry(HERE / p) for p in hand], "judge": entry(JUDGE),
+            "judges": [entry(HERE / "test_consumer_packages.py")]}
 
 
 KIT_MD = """
