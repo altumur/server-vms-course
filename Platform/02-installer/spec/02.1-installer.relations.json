@@ -1463,7 +1463,7 @@
    "relation": "when @domain.tokens.$k.keep = true : . <= 315360000",
    "class": "value",
    "norm": "P/08.2 Н1.6а",
-   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"tokens\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"tokens\"]) == map ? dyn(doc[\"domain\"][\"tokens\"]).map(k1, ((type(doc[\"domain\"][\"tokens\"][k1]) == map && \"keep\" in doc[\"domain\"][\"tokens\"][k1] && doc[\"domain\"][\"tokens\"][k1][\"keep\"] == true && \"lifetime\" in doc[\"domain\"][\"tokens\"][k1] && type(doc[\"domain\"][\"tokens\"][k1][\"lifetime\"]) != string && double(doc[\"domain\"][\"tokens\"][k1][\"lifetime\"]) > 315360000.0) ? [{\"p\": [\"domain\", \"tokens\", k1, \"lifetime\"]}] : [])) : []) : []) : [])",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"tokens\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"tokens\"]) == map ? dyn(doc[\"domain\"][\"tokens\"]).map(k1, ((type(doc[\"domain\"][\"tokens\"][k1]) == map && \"keep\" in doc[\"domain\"][\"tokens\"][k1] && doc[\"domain\"][\"tokens\"][k1][\"keep\"] == true && \"lifetime\" in doc[\"domain\"][\"tokens\"][k1] && type(doc[\"domain\"][\"tokens\"][k1][\"lifetime\"]) != string && double(dyn(doc[\"domain\"][\"tokens\"][k1][\"lifetime\"])) > 315360000.0) ? [{\"p\": [\"domain\", \"tokens\", k1, \"lifetime\"]}] : [])) : []) : []) : [])",
    "own": []
   },
   {
@@ -1472,7 +1472,7 @@
    "relation": "when @domain.tokens.$k.keep != true : . <= 86400",
    "class": "value",
    "norm": "ADR-0110 доп. (16) п. 3",
-   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"tokens\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"tokens\"]) == map ? dyn(doc[\"domain\"][\"tokens\"]).map(k1, ((type(doc[\"domain\"][\"tokens\"][k1]) == map && !(\"keep\" in doc[\"domain\"][\"tokens\"][k1] && doc[\"domain\"][\"tokens\"][k1][\"keep\"] == true) && \"lifetime\" in doc[\"domain\"][\"tokens\"][k1] && type(doc[\"domain\"][\"tokens\"][k1][\"lifetime\"]) != string && double(doc[\"domain\"][\"tokens\"][k1][\"lifetime\"]) > 86400.0) ? [{\"p\": [\"domain\", \"tokens\", k1, \"lifetime\"]}] : [])) : []) : []) : [])",
+   "cel": "((type(doc) == map && \"domain\" in doc) ? ((type(doc[\"domain\"]) == map && \"tokens\" in doc[\"domain\"]) ? (type(doc[\"domain\"][\"tokens\"]) == map ? dyn(doc[\"domain\"][\"tokens\"]).map(k1, ((type(doc[\"domain\"][\"tokens\"][k1]) == map && !(\"keep\" in doc[\"domain\"][\"tokens\"][k1] && doc[\"domain\"][\"tokens\"][k1][\"keep\"] == true) && \"lifetime\" in doc[\"domain\"][\"tokens\"][k1] && type(doc[\"domain\"][\"tokens\"][k1][\"lifetime\"]) != string && double(dyn(doc[\"domain\"][\"tokens\"][k1][\"lifetime\"])) > 86400.0) ? [{\"p\": [\"domain\", \"tokens\", k1, \"lifetime\"]}] : [])) : []) : []) : [])",
    "own": []
   },
   {
