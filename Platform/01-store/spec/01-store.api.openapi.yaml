@@ -746,6 +746,7 @@ components:
         max_value:
           type: integer
           minimum: 1
+          description: 'This instance’s effective row-weight ceiling in bytes: -max-value (P/01.3 Н1.3; row weight P/01.1); distinct from the HTTP body limit -max-body. Acceptance stand: 524288 bytes.'
         role:
           type: string
         last_snapshot:
