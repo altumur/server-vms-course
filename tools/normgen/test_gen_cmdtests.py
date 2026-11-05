@@ -233,7 +233,7 @@ class CmdTests(unittest.TestCase):
         return t / "go"
 
     def test_out_fresh(self):
-        for rel in ("stagetests/engine_test.go", "stagetests/manifest_load_test.go", "stagetests/inventory.tsv",
+        for rel in ("stagetests/engine_test.go", "stagetests/manifest_load_test.go", "stagetests/operator_files_test.go", "stagetests/inventory.tsv",
                     "lessonadapter/lessonadapter.go", "lessonadapter/command.go"):
             self.assertEqual((self.mod / rel).read_bytes(), (HERE / "out/p02/go" / rel).read_bytes(),
                              f"{rel}: run gen_cmdtests.py --lesson 02-installer")
@@ -242,7 +242,19 @@ class CmdTests(unittest.TestCase):
         inv = (self.mod / "stagetests/inventory.tsv").read_text(encoding="utf-8")
         self.assertIn("2.3/puts.tsv/*\tmanifest-put\t-\texcluded\tneeds the store of P/01 (runner corpus puts)", inv)
         self.assertIn("2.2/puts.tsv/*\tcanonical-put\t-\texcluded", inv)
-        self.assertEqual(inv.count("\ttranslated\t"), 946 + 33)
+        self.assertEqual(inv.count("\ttranslated\t"), 947 + 33)
+
+    def test_review_operator_file_and_ordinary_seams(self):
+        operator = (self.mod / "stagetests/operator_files_test.go").read_text(encoding="utf-8")
+        self.assertIn("$data/new.key", operator)
+        self.assertNotIn("$data/keys/new.key", operator)
+        seams = ROOT / "Platform/02-installer/acceptance/4/seams.tsv"
+        ordinary = {line.split("\t", 1)[0] for line in seams.read_text(encoding="utf-8").splitlines()
+                    if line.startswith(("s12-", "s13-"))}
+        self.assertEqual(ordinary, {"s12-secrets-walk-unknown", "s13-secrets-walk-kept"})
+        inventory = (self.mod / "stagetests/inventory.tsv").read_text(encoding="utf-8")
+        for scenario in ordinary:
+            self.assertNotIn(f"/seams.tsv/{scenario}/", inventory)
 
     def test_stub_red_without_panic(self):
         res, panics, _ = results(self.mod)

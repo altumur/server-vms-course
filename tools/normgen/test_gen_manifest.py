@@ -191,8 +191,8 @@ class Loader(unittest.TestCase):
         self.assertEqual(bad, [])
         for k, (got, total) in ((k, v[:2]) for k, v in sums.items()):
             self.assertEqual(got, total, k)
-        self.assertEqual(int(sums["verdicts"][1]), 946)
-        self.assertEqual(int(sums["canonical"][1]), 219)
+        self.assertEqual(int(sums["verdicts"][1]), 947)
+        self.assertEqual(int(sums["canonical"][1]), 220)
         self.assertEqual(int(sums["yaml-suite"][1]), 402)
 
     def test_mutants(self):
