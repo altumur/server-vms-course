@@ -2150,6 +2150,11 @@ class Check:
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)
+        for path in check_forms.versioned_door_forms(self.root):     # версии дверей P/08.0 Н1.9 (forms/README)
+            errors, stats = check_forms.check_versioned_doors(path)
+            for message in errors:
+                self.error(path, message)
+            self.stats.update(stats)
         for path in check_forms.route_lessons(self.root):
             errors, stats = check_forms.check_openapi_routing(path)
             for message in errors:

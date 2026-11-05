@@ -129,10 +129,6 @@ class Forms(unittest.TestCase):
         self.assertTrue(self.refusals())
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class FormsAllLessons(unittest.TestCase):         # ADR-0125 доп. (5): грамматика форм для уроков кроме P/01
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
@@ -495,3 +491,76 @@ class RuntimeConstants(unittest.TestCase):              # P/06 runtime-constants
                 self.assertTrue(check_forms.check_runtime_constants(f)[0], bad)
         finally:
             shutil.rmtree(tmp)
+
+
+class VersionedDoors(unittest.TestCase):                # P/08 versioned-doors.tsv: настоящая форма и мутации
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.lesson = self.tmp / "Platform/08-domain"
+        shutil.copytree(ROOT / "Platform/08-domain/spec", self.lesson / "spec")
+        (self.lesson / "forms").mkdir()
+        self.path = self.lesson / "forms/versioned-doors.tsv"
+        self.good = (ROOT / "Platform/08-domain/forms/versioned-doors.tsv").read_text(encoding="utf-8")
+        self.api = next((self.lesson / "spec").glob("*.api.openapi.yaml"))
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def errors(self, text):
+        self.path.write_text(text, encoding="utf-8")
+        return check_forms.check_versioned_doors(self.path)[0]
+
+    def line(self, method, path):
+        return next(x for x in self.good.split("\n") if x.startswith(f"{method}\t{path}\t"))
+
+    def cell(self, method, path, column, value):
+        line = self.line(method, path)
+        cells = line.split("\t")
+        cells[check_forms.VDOOR_COLUMNS.index(column)] = value
+        return self.good.replace(line + "\n", "\t".join(cells) + "\n")
+
+    def test_real_form_clean(self):
+        errors, stats = check_forms.check_versioned_doors(ROOT / "Platform/08-domain/forms/versioned-doors.tsv")
+        self.assertEqual(errors, [])
+        self.assertEqual(stats["versioned_doors"], 19)
+        self.assertEqual(self.errors(self.good), [])
+
+    def test_mutations(self):
+        head = "\t".join(check_forms.VDOOR_COLUMNS)
+        users = self.line("PUT", "/domain/users/{name}")
+        bad = {
+            "extra column": self.good.replace(head, head + "\tnote").replace(users, users + "\tx"),
+            "missing column": self.good.replace("\tabsent_revision\t", "\t"),
+            "source column": self.good.replace(head, head + "\tsource").replace(users, users + "\tx"),
+            "unknown operation": self.good.replace(users, users.replace("PUT\t/domain/users/{name}", "PUT\t/domain/nope/{name}")),
+            "uncovered operation": self.good.replace(users + "\n", ""),
+            "repeat": self.good.replace(users + "\n", users + "\n" + users + "\n"),
+            "revision": self.cell("PUT", "/domain/users/{name}", "revision", "version"),
+            "etag": self.cell("PUT", "/domain/users/{name}", "etag", "yes"),
+            "etag against OpenAPI": self.cell("PUT", "/domain/users/{name}", "etag", "false"),
+            "if_match": self.cell("PUT", "/domain/users/{name}", "if_match", "required"),
+            "if_match against OpenAPI": self.cell("PUT", "/domain/users/{name}", "if_match", "ignored"),
+            "absent_revision": self.cell("PUT", "/domain/users/{name}", "absent_revision", "1"),
+            "row kind": self.cell("PUT", "/domain/users/{name}", "row", "domain/users/{name}"),
+            "row placeholder": self.cell("PUT", "/domain/users/{name}", "row", "domain/users/<user>"),
+            "norm anchor": self.cell("PUT", "/domain/users/{name}", "norm", "P/08.0-R005,P/08.0-R999"),
+            "norm foreign lesson": self.cell("PUT", "/domain/users/{name}", "norm", "P/06.1-R030"),
+            "norm form": self.cell("PUT", "/domain/users/{name}", "norm", "P/08.0 Н1.9"),
+            "norm empty": self.cell("PUT", "/domain/users/{name}", "norm", ""),
+            "base-rev without R006": self.cell("PUT", "/domain/topology", "norm", "P/08.0-R005"),
+        }
+        for what, text in bad.items():
+            self.assertNotEqual(text, self.good, what)
+            self.assertTrue(self.errors(text), what)
+
+    def test_openapi_side(self):                        # новая операция с If-Match без строки формы — отказ
+        text = self.api.read_text(encoding="utf-8")
+        self.assertEqual(self.errors(self.good), [])
+        self.api.write_text(text.replace("\npaths:\n", "\npaths:\n  /domain/extra:\n    put:\n      parameters:\n"
+                                         "        - $ref: '#/components/parameters/IfMatch'\n"
+                                         "      responses: {'200': {description: ok}}\n", 1), encoding="utf-8")
+        self.assertTrue(self.errors(self.good))
+
+
+if __name__ == "__main__":
+    unittest.main()
