@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/wire.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124).
 
-The norm is [`wire.tsv`](wire.tsv), by the Architect’s decision under ADR-0125 addendum (1) item 5 and addendum (5). The first slice covers the vector tables of P/01 and P/02. A missing binding is an undeclared adapter, never a performed test. The write-checks probes in P/01 forms are judged by their own check table and probes grammar; this slice does not change that transport. The package README retains the algorithm, consumer obligation, meaning of the inputs and native fields, and reading or stand checks outside the function. It refers to this form for the wire, without a second wire declaration.
+The norm is [`wire.tsv`](wire.tsv), by the Architect’s decision under ADR-0125 addendum (1) item 5 and addendum (5). The initial slice covers the vector tables of P/01 and P/02; subsequent declared rows extend the registry. A missing binding is an undeclared adapter, never a performed test. The write-checks probes in P/01 forms are judged by their own check table and probes grammar; this slice does not change that transport. The package README retains the algorithm, consumer obligation, meaning of the inputs and native fields, and reading or stand checks outside the function. It refers to this form for the wire, without a second wire declaration.
 
 ## Rows and sources
 
@@ -94,3 +94,23 @@ The closed `compare` list is `value|subset|raw|set|object-sets|lines-value|lines
 ## Examples in the first slice
 
 The actual rows are executable declarations: log-mask preserves masked text as a decoded JSON string and compares raw bytes; family-read compares paths as a set and reader outcome arrays as sets; sealing ring adds rotate only to installer rotate cases; yaml-suite supplies in.yaml and judges only layer1; canonical resolves an existing manifest and compares expected file bytes. The exec and install-order stand bindings use json-lf and distinguish a native form refusal from their successful rule-refusal object. Platform-lists has two independent bindings: vectors groups by list and returns an array per group; stand:platform-lists groups the whole table and returns an object of sets. Journal modes is layout.
+
+## P/06 transport constructors
+
+These extensions are the Architect's decision under ADR-0125 addendum (5). The argument/file and ValueExpr lists above are extended only as declared here; all other keys and constructors remain closed.
+
+For stand, `arg_file` also permits exactly `{"json": <ValueExpr>}`. Evaluate the expression as a JSON value and write one JSON document to the argument file. Existing object/array/literal/text constructors apply. Inside this constructor alone, a source-input column may use `decode: "raw-json"`: validate one strict JSON document and insert its original JSON lexeme as a fragment, without normalization or decode/re-encode. This checks JSON syntax, not the native function's accepted form: a non-string rid still reaches that function. No expectation column may enter an argument file. The ordinary decode json remains a decoded value; raw-json is not allowed elsewhere, including expectations and fixtures.
+
+```text
+{"json":{"object":{"rid":{"column":"rid","decode":"raw-json"}}}}
+{"json":{"object":{"sender":{"column":"sender","decode":"text"},"input":{"column":"input","decode":"text"}}}}
+{"map":{"key":"word","value":{"column":"status","decode":"json"}}}
+```
+
+ValueExpr `map` has exactly key (a source column) and value (a ValueExpr), and requires group_by. On each row of the current group, use the raw key cell as the object key and evaluate value on that row. A repeated key is a data error even for equal values. Object order is not significant; the constructor does not run an implementation algorithm.
+
+An expectation and an assertion without test may declare `ignore: [<JSON Pointer>…]`. Ignore applies to both expected and actual values before their chosen comparison; native schema checks the complete actual value first. An absent ignored path is allowed. Empty/root, repeated or overlapping pointers are form errors; no assertion with test accepts ignore. Paths are resolved against each original value, so removing an array element does not shift the interpretation of another pointer. For console pool, ignore is exactly ["/fates"], compare value; all other keys remain strict.
+
+CEL when alone also provides `json(string) -> dyn`, one strict JSON document: no BOM, duplicates, NaN or Infinity. Parse failure is a form-data error, never false or a silently omitted test. This selector chooses the consumer operation by input fields, not by an implementation result, and cells still contain the exact source strings. Group when must still agree on every row. Example: `owner == "06-console" && !("salt" in json(row["input"]))`.
+
+The console requests-body binding remains surface layout: it is excluded from native/function generation, not discharged. The separately published and installed C target `P/06/vectors-requests-body` must run the actual store+console HTTP stand over all 77 rows and all 21 accepted-json round trips, by the package README. A worker's 52 native rows do not cover it; no pure native console command or fictional HTTP surface is introduced.
