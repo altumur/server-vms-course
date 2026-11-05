@@ -8,7 +8,8 @@
 # events on virtual clocks. On an event, the transitions with that event name are taken in order: each whose if holds runs
 # its do in order; stop: true or to: <state> ends the event. passed and refused take no events.
 # An action evaluates its set: over the state before it (after the previous action), then assigns it at once; io: is
-# input/output and changes no variable. There are no nested events.
+# input/output and changes no variable; its values (numbers, recipients) are those of the state before the action, as for set:.
+# There are no nested events.
 # Expressions are CEL (extensions strings, two-var-comprehensions) over the event parameters, input, const and the
 # variables (by name, and as vars.<name>). Sets are lists without repeats. Everything compiles when the machine loads.
 machine: rollout-poll
@@ -17,9 +18,10 @@ states: [polling, passed, refused]
 initial: polling
 
 input:                                   # the status snapshot of the own member at mode (Н1.9 mode, poll)
-  last: bool                             # -last: pass — every other voter is live; otherwise pass — live ≥ quorum + 1
+  last: bool                             # -last: with ≥ 3 voters pass — every other voter is live; otherwise pass — live ≥ quorum + 1
+  allow_downtime: bool                   # -allow-downtime; absent — false. With ≤ 2 voters: true — no poll, the first tick passes; false — the pre count, also with -last (Н1.9 pre)
   self: string                           # the id of the own member
-  voters: list<string>                   # voters of the snapshot; self among them; ≥ 2 voters; -allow-downtime with ≤ 2 voters — no poll (Н1.9 pre)
+  voters: list<string>                   # voters of the snapshot; self among them; ≥ 2 voters (one voter is judged before the machine, Н1.9 pre)
   members: map<string,string>            # members of the snapshot: id → address
 
 types:                                   # the answer of GET /v1/status (P/01.3 Н2 /v1/status, schema Status of 01-store.api.openapi.yaml)
@@ -79,7 +81,7 @@ functions:                               # a closed set
 actions:                                 # a closed set
   send_status:
     args: [k]
-    io: "GET /v1/status of the own member over admin.sock, once (its answer gives the leader of the batch and the answer of the voter self), and of each voter v ≠ self at members[v]; the deadline of each is tick(k + 1)"
+    io: "GET /v1/status of the own member over admin.sock, once (its answer gives the leader of the batch and the answer of the voter self), and of each voter v ≠ self at members[v]; the deadline of each is tick(k + 1). A voter v absent from members (no -api) is not asked: no event of it in batch k, tick(k + 1) closes the batch with its break (close_batch), as for any read without an answer; the same in each batch"
   new_batch:
     args: [k]
     set: {k: "k", leader: "null", leader_id: "null", self_replied: "false", leaderless: "false", read_done: "false", replied: "[]", held: "[]", alive: "[]", need: "[]"}
@@ -117,7 +119,7 @@ actions:                                 # a closed set
       held: "[]"
   read_commit:
     set: {reads: "reads + [{'n': next_read, 'who': need}]", next_read: "next_read + 1", need: "[]", read_done: "true"}
-    io: "GET /v1/status of the leader of the batch (admin.sock when leader_id == input.self, otherwise the address leader, or members[leader_id] when leader is ''); its commit is the target of read next_read; deadline READ (timer read)"
+    io: "GET /v1/status of the leader of the batch (admin.sock when leader_id == input.self, otherwise the address leader, or members[leader_id] when leader is ''); the read is numbered n = next_read and gives targets to who = need, both taken before set (set adds {n, who} to reads, then next_read becomes n + 1): its answer is commit(n, c), its deadline read_expired(n) after READ (timer read). No address (leader '' and leader_id absent from members) — the read is not sent: no commit(n), read_expired(n) after READ"
   set_targets:
     args: [n, c]
     set: {target: "target + reads.filter(x, x.n == n)[0].who.map(v, {'v': v, 'c': c})", reads: "reads.filter(x, x.n != n)"}
@@ -142,9 +144,12 @@ invariants:                              # CEL over vars and input; hold after e
 
 transitions:
   # id — the stable address of the transition (ADR-0122 addendum (1) item 4): <event>-<k>, k by the first introduction; not renumbered
-  # tick(k): close batch k − 1 (answers that did not come are breaks), judge it, then the new batch
+  # tick(k): -allow-downtime with ≤ 2 voters — no poll, the first tick passes (Н1.9 pre; ADR-0120 addendum (6) item 3);
+  # otherwise close batch k − 1 (answers that did not come are breaks), judge it, then the new batch; with ≤ 2 voters
+  # the judgement is the pre count also with -last, so two voters without -allow-downtime never pass (review of P/02, С1)
+  - {id: tick-5, event: tick, if: "has(input.allow_downtime) && input.allow_downtime && size(input.voters) <= 2", do: [pass], to: passed}
   - {id: tick-1, event: tick, if: "k > 0", do: [close_batch]}
-  - {id: tick-2, event: tick, if: "k > 0 && (input.last ? input.voters.all(v, v == input.self || v in alive) : size(alive) >= size(input.voters) / 2 + 2)", do: [pass], to: passed}
+  - {id: tick-2, event: tick, if: "k > 0 && (input.last && size(input.voters) > 2 ? input.voters.all(v, v == input.self || v in alive) : size(alive) >= size(input.voters) / 2 + 2)", do: [pass], to: passed}
   - {id: tick-3, event: tick, if: "k > 0 && size(need) > 0 && !read_done", do: [read_commit]}
   - {id: tick-4, event: tick, do: ["new_batch(k)", "send_status(k)"], stop: true}
 
@@ -176,6 +181,6 @@ transitions:
   - {id: read_expired-1, event: read_expired, if: "reads.exists(x, x.n == n)", do: ["drop_read(n)"], stop: true}
   - {id: read_expired-2, event: read_expired, stop: true}
 
-  # the deadline of the poll: tick of the same instant has already judged the last batch
-  - {id: wait_expired-1, event: wait_expired, if: "!input.last", do: ["refuse(2, 'not enough live voters')"], to: refused}
+  # the deadline of the poll: tick of the same instant has already judged the last batch; ≤ 2 voters — the word of pre
+  - {id: wait_expired-1, event: wait_expired, if: "!input.last || size(input.voters) <= 2", do: ["refuse(2, 'not enough live voters')"], to: refused}
   - {id: wait_expired-2, event: wait_expired, do: ["refuse(2, '-last: voters not live')"], to: refused}
