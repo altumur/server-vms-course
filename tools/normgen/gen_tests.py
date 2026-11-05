@@ -848,7 +848,8 @@ type Core interface {                    // your value
 ```
 
 `Handle` may be called concurrently (`@parallel`): the core must hold that. The seams of `seams.tsv`: `@clock ±N` —
-the test clock moves N seconds (from 2000000000 at the first Open), `@reopen` — Close and Open on the same DataDir and
+the test clock moves N seconds, N decimal (`+0.25`, `-100.125`; from 2000000000 at the first Open): `cfg.Now()` carries
+the fraction — never truncate it to whole seconds, keep it in what you store and compare, `@reopen` — Close and Open on the same DataDir and
 clock (what was written must read back), `@parallel K` — the next request K times at once.
 """
 

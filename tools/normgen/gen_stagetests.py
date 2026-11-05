@@ -12,7 +12,8 @@ TRANSITIONAL (параметр генератора), только для эта
   стенда, форма ожидания вне движка, отказ позднего этапа — ADR-0126 доп. (7) п. 6); остаток исключён с причиной;
 - отказ позднего этапа: ожидание `<код> {"kind": …}`, у которого все строки `refusals.tsv` главы сценария с этим кодом и
   kind нормированы главой урока, впервые названной в `norms` этапа с большим n (403 по файлу прав — P/01.2);
-- швы (`seams.tsv`, ADR-0126 доп. (7) п. 1, грамматика «Спецификации»): `@clock +N | -N` (секунды, накопительно; часы
+- швы (`seams.tsv`, ADR-0126 доп. (7) п. 1, грамматика «Спецификации»): `@clock +N | -N` (секунды, накопительно; N — десятичное, доля до 9 знаков точно в наносекундах,
+  не отбрасывается ни в Config.Now, ни при @reopen — spec103 2026-11-05; часы
   теста от T0 = 2000000000 с), `@reopen` (Close + Open с тем же DataDir и часами), `@parallel K` (K ≥ 2; следующий
   шаг K раз одновременно; его ожидание `each <ож>` | `one <ож>; rest <ож>`, новые $имена — только в `one`);
 - опись `stagetests/inventory.tsv` — по id шага `<глава>/<файл>/<сценарий>/<шаг>`: переведён | исключён (причина),
@@ -40,7 +41,7 @@ ENGINES = {"1.1": "runner/run.py"}          # главы с перенесённ
 TRANSITIONAL = {}       # форма P/01 несёт tests:<глава>:… (дельта 0125-p01-stages-seams, main 322d2cfb8)
 METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD")
 VAR = re.compile(r"\$[A-Za-z0-9_]+")
-CLOCK = re.compile(r"@clock [+-](0|[1-9][0-9]*)")
+CLOCK = re.compile(r"@clock [+-](0|[1-9][0-9]*)(\.[0-9]{1,9})?")     # секунды, десятичная доля до 1 нс (spec103)
 PARALLEL = re.compile(r"@parallel ([2-9]|[1-9][0-9]+)")
 ONE_REST = re.compile(r"one (.+?); rest (.+)")
 
@@ -336,7 +337,7 @@ type Config struct {
 	BodyLimit  int64            // the read limit of the HTTP body (1048576 on the stand)
 	RowCeiling int64            // the row ceiling (524288 on the stand)
 	Rights     []byte           // the rights file (P/01.2 Н1.2): the role acc with read, write, delete on acc/*
-	Now        func() time.Time // the clock of the test: take every time of the core from it (seams @clock)
+	Now        func() time.Time // the clock of the test: take every time of the core from it (seams @clock, its fraction too)
 	DataDir    string           // the data directory of the scenario: fresh per scenario; @reopen opens it again
 }
 
@@ -481,7 +482,7 @@ var t0 = time.Unix(2000000000, 0)
 // clock — the test clock: for seams.tsv t0 plus the accumulated @clock shifts; for scenarios.tsv the wall clock, as
 // the runner's stand has; safe for concurrent use.
 type clock struct {
-	shift atomic.Int64
+	shift atomic.Int64 // nanoseconds: a decimal @clock keeps its fraction exactly (no float)
 	wall  bool
 }
 
@@ -490,7 +491,35 @@ func (c *clock) now() time.Time {
 	if c.wall {
 		base = time.Now()
 	}
-	return base.Add(time.Duration(c.shift.Load()) * time.Second)
+	return base.Add(time.Duration(c.shift.Load()))
+}
+
+// clockShift — «@clock ±N» in nanoseconds: N is decimal seconds with at most 9 fraction digits, parsed exactly.
+func clockShift(arg string) (int64, error) {
+	sign, rest := int64(1), arg
+	switch {
+	case strings.HasPrefix(rest, "+"):
+		rest = rest[1:]
+	case strings.HasPrefix(rest, "-"):
+		sign, rest = -1, rest[1:]
+	default:
+		return 0, fmt.Errorf("@clock %q: want +N or -N", arg)
+	}
+	whole, frac, _ := strings.Cut(rest, ".")
+	if len(frac) > 9 {
+		return 0, fmt.Errorf("@clock %q: more than 9 fraction digits", arg)
+	}
+	sec, err := strconv.ParseInt(whole, 10, 64)
+	if err != nil || sec > 9e9 {
+		return 0, fmt.Errorf("@clock %q: seconds out of form", arg)
+	}
+	ns := int64(0)
+	if frac != "" {
+		if ns, err = strconv.ParseInt(frac+strings.Repeat("0", 9-len(frac)), 10, 64); err != nil {
+			return 0, fmt.Errorf("@clock %q: fraction out of form", arg)
+		}
+	}
+	return sign * (sec*1e9 + ns), nil
 }
 
 // scenario — the state of one scenario: the core (reopened by @reopen), its config, the bound $names, the next step's
@@ -549,8 +578,11 @@ func (sc *scenario) runStep(st step) []string {
 	switch {
 	case strings.HasPrefix(st.request, "ASSERT "):
 		return checkAssert(st.request, env)
-	case strings.HasPrefix(st.request, "@clock "): // seams: the clock shift in seconds, accumulated
-		n, _ := strconv.ParseInt(st.request[len("@clock "):], 10, 64)
+	case strings.HasPrefix(st.request, "@clock "): // seams: the clock shift in decimal seconds, accumulated
+		n, err := clockShift(st.request[len("@clock "):])
+		if err != nil {
+			return []string{err.Error()}
+		}
 		sc.clk.shift.Add(n)
 		return nil
 	case st.request == "@reopen": // seams: Close and Open on the same DataDir with the same clock
