@@ -25,7 +25,7 @@ at a check — `false`, code 0 (the guess of stage C PH-G02, ADR-0087 addendum (
 
 ## Who performs
 
-Who performs is by the form of `input`: `{password, salt}` (the rows `hash-*`) — the process `domain` (`08-domain`, writes the hash of people and of the break-glass account, P/08.4 Н1.1, Н1.6); `{hash, password}` (the rows `verify-*`) — the process `domain` (the login of people, P/08.4 Н1.2) and the console (`06-console`, the break-glass entry, P/06.7 Н1.10, the gate-and-pass contract «Аварийный вход»). The console does not write the hash; the agent (`09-agent`, `carry`) and the installer (`02-installer`, `secrets seal`) carry the string and seal it ready-made (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who performs is by the form of `input`: `{password, salt}` (the rows `hash-*`) — the process `domain` (`08-domain`, writes the hash of people and of the break-glass account, P/08.4 N1.1, N1.6); `{hash, password}` (the rows `verify-*`) — the process `domain` (the login of people, P/08.4 N1.2) and the console (`06-console`, the break-glass entry, P/06.7 N1.10, the gate-and-pass contract «Аварийный вход»). The console does not write the hash; the agent (`09-agent`, `carry`) and the installer (`02-installer`, `secrets seal`) carry the string and seal it ready-made (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## Vector wire
 

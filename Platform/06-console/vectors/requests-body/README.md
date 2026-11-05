@@ -2,10 +2,10 @@
 
 This English text is the source; the Russian translation `ru/vectors/requests-body/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter P/06.4 ([norms](../../spec/06.4-console.norms.md) Н1.5 `<body fields>`: «строка — как есть, иное значение — канонический JSON (JCS, ADR-0072)»;
-Н2: the `fault` of the requests door is only `too_long`). The participants are the units and tables door of
+The owner is chapter P/06.4 ([norms](../../spec/06.4-console.norms.md) N1.5 `<body fields>`: «строка — как есть, иное значение — канонический JSON (JCS, ADR-0072)»;
+N2: the `fault` of the requests door is only `too_long`). The participants are the units and tables door of
 [chapter 6.1](../../spec/06.1-console.norms.md) (a field of type `json`: the value as is, the ceiling `JSON_CEILING`, `not_json`) and
-the worker that writes a request itself ([chapter 3.6](../../../03-worker/spec/03.6-worker.norms.md) Н1.5: the fields of the row body
+the worker that writes a request itself ([chapter 3.6](../../../03-worker/spec/03.6-worker.norms.md) N1.5: the fields of the row body
 as text). The bytes are written by the Specification (ADR-0083, stage B; the rules — the Architect, 2026-10-05/06, the numbers by JCS — stage A
 ADR-0083, 2026-10-18); the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
 
@@ -63,12 +63,12 @@ byte — both sides file each accepted `json` row a second time with the read va
 The side files `body` by the kind `field` through the stand and compares `stored` (or the refusal and `fault`) byte for byte. One
 canonical function per side — at the requests door, at the units door and at the worker. Who executes it is by `field`: `json` — the units
 door of the console (`06-console`, chapter 6.1); `request` — the requests door of the console (`06-console`) and the worker that writes a request
-itself (`03-worker`, chapter 3.6 Н1.5; with its own body-writing function, without the console stand) (ACC-VECTORS-CONNECT-02, the Architect's decision of 2026-10-26).
+itself (`03-worker`, chapter 3.6 N1.5; with its own body-writing function, without the console stand) (ACC-VECTORS-CONNECT-02, the Architect's decision of 2026-10-26).
 
 For the worker (`03-worker`, the rows `request`, 52: 46 accepted, 1 `too_long`, 5 `<refused>`) the input of the single command `vectors` is
 `cells: {body}`, the cell as is; the native outcome is code 0 and `{"stored": <row>}` for an accepted row (`<empty>` — `""`)
 or `{"fault": "too_long"}` or `{"fault": "<refused>"}` — by the column `fault`; the comparison is by value. `too_long` for the worker
-is judged not by the writing function but by the check of the body against `requests.schema` before filing (P/03.6 Н1.5) — by the schema of the package stand
+is judged not by the writing function but by the check of the body against `requests.schema` before filing (P/03.6 N1.5) — by the schema of the package stand
 (`v: {maxLength: 32}`, the length by the written text); a refusal by the schema is the outcome `refused` of the norm, in the vector it is distinguished
 by the word of the column `fault` (ACC-REQUESTS-BODY-WORKER-01, the Architect's decision of 2026-10-27).
 

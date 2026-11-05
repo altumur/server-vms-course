@@ -477,8 +477,13 @@ class TestTree(unittest.TestCase):
         cells = {"need": 0, "owner": 1, "desc": 2}
         diff, used, n, translated = [], {}, 0, 0
 
-        def neutral(text):                      # что перевод не меняет: код, числа, ссылки на нормы
-            return sorted(re.findall(r"`[^`]*`|Н[0-9.]+[а-я]?|P/[0-9.]+|ADR-[0-9]+|[0-9]+", text))
+        def neutral(text):                      # что перевод не меняет: форма кода, числа, ссылки на нормы
+            # ADR-0121 доп. (5): номера Н… → N… (суффикс по порядку буквы), слова в коде переведены — у `…` сверяется
+            # форма (знаки и числа), а не слова
+            text = re.sub(r"Н([0-9.]+)([а-з]?)", lambda m: "N" + m.group(1) + ("abcdefgh"["абвгдежз".index(m.group(2))]
+                                                                              if m.group(2) else ""), text)
+            out = re.findall(r"`[^`]*`|N[0-9.]+[a-h]?|P/[0-9.]+|ADR-[0-9]+|[0-9]+", text)
+            return sorted(re.sub(r"[A-Za-zА-Яа-яЁё_]+(?:[ -]+[A-Za-zА-Яа-яЁё_]+)*", "w", x) if x.startswith("`") else x for x in out)
         for f in files:
             a = rows(git("show", "%s:%s" % (tag, f)))
             if not a:
@@ -504,6 +509,7 @@ class TestTree(unittest.TestCase):
                             continue
                         diff.append((f, section_, k[2], col, old[i][:80], w[2 + i][:80]))
         self.assertGreater(n, 1500)
+        self.maxDiff = None
         self.assertEqual(diff, [], "расхождение смысла без строки v7/sections-meaning-deltas.tsv")
         stale = [place for place in reg if not used.get(place)]
         self.assertEqual(stale, [], "строка реестра: места нет, «было» не то или ячейка ни «было», ни «стало»")

@@ -7,7 +7,7 @@ of every process that seals or opens (the installer — `w2cctl secrets`, the wo
 passes them by its own function, without a stand. The keys and the nonce are deterministic: a key is 32 bytes `sha256("w2c test <word>")`,
 a nonce is the first 12 bytes of `sha256("w2c test <word>")`; in operation a nonce is 12 random bytes, the vectors fix it. The table does not name
 the words of derivation: the keys and the nonce are fixed in the tables as bytes (`key_hex`, `nonce_b64url`), an implementation
-takes them from there and does not derive them anew (Kimi's addition to the review analysis of stage A 6–7, `SA67-Б3`).
+takes them from there and does not derive them anew (Kimi's addition to the review analysis of stage A 6–7, `SA67-B3`).
 
 | File | Input → expectation |
 |---|---|
@@ -21,7 +21,7 @@ Invalid UTF-8 of the ring file (the contract: the ring is unreadable) and symbol
 are checked by reading the file. The values in `plaintext`, `expect` (except `sealed`) and `file` are JSON strings (`\n`, `\t`, `﻿` — by JSON escaping).
 The vectors are obtained by reference AES-256-GCM by the contract; on a discrepancy the contract is right, «Спецификация» corrects the vector.
 
-Who performs it (the ring holders — P/06.2 Н1.2 `holders`, the installer — P/02.4 Н1.9): `aad.tsv`, `open.tsv` and the rows
+Who performs it (the ring holders — P/06.2 N1.2 `holders`, the installer — P/02.4 N1.9): `aad.tsv`, `open.tsv` and the rows
 of `ring.tsv` except `rotate*` — all who open: the installer (`02-installer`), the worker (`03-worker`), the console
 (`06-console`), the process `domain` (`08-domain`), the agent (`09-agent`); `envelope.tsv` — the sealers: the installer,
 the console, the process `domain` (the book at the holder), the agent (the member key, the book rows); the worker only opens (P/03.5);

@@ -24,7 +24,7 @@ the sealer: `x25519-round.tsv` — the agent of a member (`09-agent`) and the pr
 `m1-round.tsv` — the process `domain` (`08-domain`); the relay only carries envelopes — it performs no tables (ACC-VECTORS-CONNECT-02, the Architect's decision 2026-10-26).
 
 The commands and the output forms are the same as at the former acceptance of М11: `seal`, `seal-round` — [P/08.2](../../../08-domain/spec/08.2-domain.norms.md)
-Н5 (formerly М11/2 Н5); `seal-member`, `seal-member-round` — the table below (formerly М11/3 Н5, removed by the move of lesson 8; the input
+N5 (formerly М11/2 N5); `seal-member`, `seal-member-round` — the table below (formerly М11/3 N5, removed by the move of lesson 8; the input
 of `seal-member` — `{seed, sealed}`, of `seal-member-round` — `{key, seed, plain}`; review analysis of stage B 8–10, № 22, Claude
 M-1); the comparison — a subset of fields, the cell `expect` sets `result` (and the value or the refusal word) (the reading of the commits
 of «cammeta-acceptance» 2026-10-20):
@@ -69,7 +69,7 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped, 
 
 ## Candidates
 
-- `keys_sealed` of the holder's transfer (`x25519:v1` to the `seal` of the target with AAD `take|<to>`, [P/08.8](../../../08-domain/spec/08.8-domain.norms.md) Н1.7 step 5) —
+- `keys_sealed` of the holder's transfer (`x25519:v1` to the `seal` of the target with AAD `take|<to>`, [P/08.8](../../../08-domain/spec/08.8-domain.norms.md) N1.7 step 5) —
   there are no vectors, it is checked by the stand of chapter 8.8; a package candidate.
 - The sealing of `m1` by the holder with the answer `carry` (the content of `sealed`) — there are no vectors: the round and the stand of chapter 8.3.
 

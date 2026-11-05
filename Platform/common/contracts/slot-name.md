@@ -3,10 +3,10 @@
 This English text is the source; the Russian translation `ru/contracts/slot-name.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13), addendum (30); the stage C guess POOL-ORDER-51-01, the
-Architect's decision of 2026-10-25). The owner is chapter [P/03.2](../../03-worker/spec/03.2-worker.norms.md) Н1.4 (the slot and its name). The participants are
-the slot capture (P/03.2 Н3), the controller ([P/04](../../04-controller/spec/04-controller.norms.md): the keeper of a place, «number above
-want», the victim of shrinking), [the pool contract](pool.md), the worker script ([P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н1.5),
-the console. Moved from P/03.2 Н1.4 («The order of names and the next number») without a change of behaviour; the name of a role process and the number
+Architect's decision of 2026-10-25). The owner is chapter [P/03.2](../../03-worker/spec/03.2-worker.norms.md) N1.4 (the slot and its name). The participants are
+the slot capture (P/03.2 N3), the controller ([P/04](../../04-controller/spec/04-controller.norms.md): the keeper of a place, «number above
+want», the victim of shrinking), [the pool contract](pool.md), the worker script ([P/02.4](../../02-installer/spec/02.4-installer.norms.md) N1.5),
+the console. Moved from P/03.2 N1.4 («The order of names and the next number») without a change of behaviour; the name of a role process and the number
 N are the Architect's answers of 2026-10-25 (P/04 was silent about the form).
 
 Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
@@ -46,7 +46,7 @@ and given-up names; if there are none, max = 0; the new suffix has no leading ze
 ## Role process name and its number
 
 ```yaml
-role_name: <prefix>-<s>-<N> — the instance name from the unit (P/02.4 Н1.1, %i), s — SERVER_NAME (the environment file contract «Environment variables»; it may contain «-»)
+role_name: <prefix>-<s>-<N> — the instance name from the unit (P/02.4 N1.1, %i), s — SERVER_NAME (the environment file contract «Environment variables»; it may contain «-»)
 parse:     prefix — that of its own manifest; N — the last segment after «-»: a decimal integer without leading zeros, ≥ 1, without
            overflow; s — everything between «<prefix>-» and «-N», by the grammar of SERVER_NAME ^[a-z0-9]+(-[a-z0-9]+)*$ (the environment file contract «Environment variables»; layout audit B-24)
 server:    s equals the field server of the worker heartbeat — a role process of the server s with the number N; s ≠ server, there is no heartbeat or server in it does not
@@ -54,8 +54,8 @@ server:    s equals the field server of the worker heartbeat — a role process 
            enter live(s)
 not_role:  out of form — not a role process: w-5 (no server in the name), w-srv-a-02 (a leading zero), w-srv-a-0 (N < 1), a foreign
            prefix, the last segment is not a number
-use:       the number above want (P/04 Н3) and the victim of shrinking compare N as an integer, not by the slot order; 1 — the base role process,
-           2…99 — ordered by the controller (P/04 Н3 «order()», ADR-0084)
+use:       the number above want (P/04 N3) and the victim of shrinking compare N as an integer, not by the slot order; 1 — the base role process,
+           2…99 — ordered by the controller (P/04 N3 «order()», ADR-0084)
 ```
 
 ## Vectors
@@ -67,5 +67,5 @@ the package [`pool`](../vectors/pool/README.md) is the package of the common con
 
 ## Correspondence to former lessons
 
-From P/03.2 Н1.4 «The order of names and the next number» — whole; P/03.2, P/04 and the pool contract refer here. The Architect's answers
+From P/03.2 N1.4 «The order of names and the next number» — whole; P/03.2, P/04 and the pool contract refer here. The Architect's answers
 of 2026-10-25 (POOL-ORDER-51-01) on the form of the name of a role process are the section «Role process name and its number».

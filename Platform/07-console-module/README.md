@@ -10,7 +10,7 @@ vectors or acceptance catalogue of its own: the doors the module calls are the c
 
 ```text
 README.md                                this file
-spec/07-console-module.norms.md          norms (one chapter; Н2 — the library contract)
+spec/07-console-module.norms.md          norms (one chapter; N2 — the library contract)
 spec/07-console-module.README.md         implementation instructions
 ru/                                      for people, not in the export — the lecture ru/07-console-module.md, translations of the English text by the same path
 ```

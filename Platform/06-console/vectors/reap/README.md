@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/reap/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
-The owner is chapter P/06.4 ([norms](../../spec/06.4-console.norms.md) Н3 «reaper», `gone`, `expired`) through [the contract of the request and its
+The owner is chapter P/06.4 ([norms](../../spec/06.4-console.norms.md) N3 «reaper», `gone`, `expired`) through [the contract of the request and its
 mark](../../../common/contracts/request-mark.md) «States of an executed request and its mark» (the rows «жнец, дозапись, …»;
 stage C guess C06-GONE-FETCHED-33-01, the Architect's decision of 2026-10-25; the VMS request «срок просьбы», the Architect's decision of
 2026-10-29). The participant is the console reaper. The bytes are written by
@@ -18,7 +18,7 @@ UTF-8, LF, fields separated by TAB; rows with `#` and empty ones are skipped, th
 |---|---|
 | `profile` | `fetched` — the ADR-0054 append (`requests.outcome: fetched`); `resource` — the resource row `requests/free-<server>-<volume>` |
 | `resource_state` | for `resource`: `resource_state` of the owner server from the key (`live`, `unreachable`, `unknown`, `silent`) or `noanswer` — the store did not answer |
-| `settle`, `ttl` | the keys `requests` of the manifest, seconds; the key `ttl` may be absent. `REAP_AFTER` is the constant 60 (P/06.4 Н1.5) |
+| `settle`, `ttl` | the keys `requests` of the manifest, seconds; the key `ttl` may be absent. `REAP_AFTER` is the constant 60 (P/06.4 N1.5) |
 | `row` | `{unit, digest}` of the request row read with confirmation |
 | `row_age` | the age of the row (by the `ttl` rule of the contract), seconds |
 | `unit` | the read of the row of the addressee unit: `present`, `absent` (no row or a tombstone, confirmed), `unknown` (not confirmed) |
@@ -40,7 +40,7 @@ the boundary 3660 (`ttl` 3600 + `REAP_AFTER` 60) — 19 rows `expired-*` and `go
 
 Without a stand: the side gives the input to its own reaper decision and compares the output. The CAS races, the repeated write of the mark on `conflict` and
 the release of the record are by reading the contract; scenario 07 of the acceptance of chapter 6.4 is `gone` on the stand, scenario 11 is `expired` on the stand.
-Who executes it is the console reaper (`06-console`, both profiles: P/06.4 Н3 «reaper» and the removal of a resource row without a live owner by `ttl`; the contract of the request and its mark, the rows «жнец …»). The input is written by other roles, and they do not execute the reaper decisions: `fetched` of the heartbeat — the holder worker (`03-worker`, P/03.6 Н3 «The append»), the row `free-*` — the resource (`05-resource`, P/05 Н1.4 `free_ask`; its removal under the flag is `relieve`, not the reaper) (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who executes it is the console reaper (`06-console`, both profiles: P/06.4 N3 «reaper» and the removal of a resource row without a live owner by `ttl`; the contract of the request and its mark, the rows «жнец …»). The input is written by other roles, and they do not execute the reaper decisions: `fetched` of the heartbeat — the holder worker (`03-worker`, P/03.6 N3 «The append»), the row `free-*` — the resource (`05-resource`, P/05 N1.4 `free_ask`; its removal under the flag is `relieve`, not the reaper) (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## Vector wire
 

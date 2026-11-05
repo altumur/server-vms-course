@@ -32,7 +32,7 @@ as the set `{a}` (the constraint `labels-subset`) the package does not express �
 Who performs it — by `op`: `env_labels` — the worker (`03-worker`, the contract `env`); `label` — those who read labels by the contract:
 the controller (`04-controller`), the console (`06-console`), grants by labels (`08-domain`) and the worker (`03-worker`: each label
 of `LABELS` — by the alphabet); `set_write` — the console (`06-console`: the label row of a server, the labels field of a unit; the heartbeat labels
-the worker writes as a comma-separated string — P/03.4 Н1.1, the family `heartbeats`; C03-PULSE-LABELS-STRING-01); `text_read` — the controller (`04-controller`) and the console (`06-console`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-26).
+the worker writes as a comma-separated string — P/03.4 N1.1, the family `heartbeats`; C03-PULSE-LABELS-STRING-01); `text_read` — the controller (`04-controller`) and the console (`06-console`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-26).
 
 ## Native outcome
 

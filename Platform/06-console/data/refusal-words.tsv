@@ -1,221 +1,221 @@
-# The closed list of the error words of the cluster console doors: chapters 6.1, 6.2, 6.4, 6.5, 6.6, 6.8, 6.9 (ADR-0094 B5, addendum (13)). The rules — chapter 6.1 Н2 «Отказ: error и field».
+# The closed list of the error words of the cluster console doors: chapters 6.1, 6.2, 6.4, 6.5, 6.6, 6.8, 6.9 (ADR-0094 B5, addendum (13)). The rules — chapter 6.1 N2 «Отказ: error и field».
 # door — the doors: units /{rows}, /{rows}/{id}; blobs /{rows}/{id}/{blob_field}; tables /{table}, /{table}/{name}; batch /console/batch; policy /policy;
-# next_id /{sub}/next_id; changes /changes — no rows of its own, the words of 6.1 Н4 «Change feed» — the rows *; drain /drain; labels /servers/{server}/labels; decommission /servers/{server}/decommission; schema /schema; where /where/…;
+# next_id /{sub}/next_id; changes /changes — no rows of its own, the words of 6.1 N4 «Change feed» — the rows *; drain /drain; labels /servers/{server}/labels; decommission /servers/{server}/decommission; schema /schema; where /where/…;
 # folders /folders, /folders/{id}; operations /{sub}/operations…; pass the routes door.pass, a refusal of the console: the worker's answer goes as received, the form ProblemRefusal carries no words of its own (code and message are named by the manifest); pages the pages and /platform/*; events GET /events; marks POST /marks; requests POST /{sub}/requests; asked DELETE /{sub}/asked/{sha16};
-# * — every door of these chapters; session — POST /session; domain-forward — the doors of chapter 6.7 at the cluster console. The other words of chapters 6.3, 6.7 — their Н4.
+# * — every door of these chapters; session — POST /session; domain-forward — the doors of chapter 6.7 at the cluster console. The other words of chapters 6.3, 6.7 — their N4.
 # field — what the field field carries: «-» — no field; /<поле> — the body field that the refusal names; anything else — the exact value.
 door	code	error	field	norm
-units	400	Idempotency-Key required	-	6.1 Н4
-units	400	badkey	-	6.1 Н3, Н4
-units	400	not_json	-	6.1 Н4
+units	400	Idempotency-Key required	-	6.1 N4
+units	400	badkey	-	6.1 N3, N4
+units	400	not_json	-	6.1 N4
 units	400	platform_field	/<поле>	договор проверки строки P1, R1
 units	400	unknown field	/<поле>	договор проверки строки P1, R1
 units	400	not_number	/<поле>	договор проверки строки P2
-units	400	type	/<поле>	договор проверки строки P2; 6.2 Н4
+units	400	type	/<поле>	договор проверки строки P2; 6.2 N4
 units	400	too_long	/<поле>	договор проверки строки P2
 units	400	enum	/<поле>	договор проверки строки P2
-units	400	bad_url	/<поле>	договор проверки строки P2; 6.2 Н4
+units	400	bad_url	/<поле>	договор проверки строки P2; 6.2 N4
 units	400	blob	/<поле>	договор проверки строки P2, R2
 units	400	labels	/<поле>	договор проверки строки P2
 units	400	required	/<поле>	договор проверки строки P4
-units	400	bad_id	/<поле>	договор проверки строки P3; 6.1 Н3 «create» шаг 5
+units	400	bad_id	/<поле>	договор проверки строки P3; 6.1 N3 «create» шаг 5
 units	400	fixed	/<поле>	договор проверки строки P3, R2
-units	400	If-Match is a unit revision	-	6.1 Н2 «Версии»
-units	400	a sealed value is not taken from outside — give the password itself	/<поле>	6.2 Н4
-units	400	sealing key required	-	6.2 Н4
-units	400	refused	/<поле>	6.2 Н4
-units	403	writes via	-	6.1 Н1.1а
-units	404	no such unit	-	6.1 Н4
-units	404	no such path	-	6.5 Н2
-units	409	exists	/<поле>	6.1 Н4
+units	400	If-Match is a unit revision	-	6.1 N2 «Версии»
+units	400	a sealed value is not taken from outside — give the password itself	/<поле>	6.2 N4
+units	400	sealing key required	-	6.2 N4
+units	400	refused	/<поле>	6.2 N4
+units	403	writes via	-	6.1 N1.1a
+units	404	no such unit	-	6.1 N4
+units	404	no such path	-	6.5 N2
+units	409	exists	/<поле>	6.1 N4
 units	409	conflict	/<поле>	договор проверки строки P5, R3
-units	409	in flight	-	6.1 Н4
-units	412	revision moved	/revision	6.1 Н2 «Версии»
-units	413	row too large	-	6.1 Н4
-units	422	key reused	-	6.1 Н4
-units	503	store unavailable	-	6.1 Н4
-blobs	400	denied	-	6.1 Н4; 6.5 Н4
-blobs	403	writes via	-	6.1 Н1.1а
-blobs	404	no such unit	-	6.1 Н2
-blobs	404	no such blob field	-	6.1 Н2
-blobs	409	refused	-	6.1 Н4
-tables	400	the body does not fill it in	/<поле>	6.1 Н3 «table — write a row» шаг 1
-tables	400	Idempotency-Key required	-	6.1 Н3 «память повторов»
-tables	400	If-Match is a unit revision	-	6.1 Н2 «Версии»
-tables	400	sealing key required	-	6.2 Н4
-tables	400	not_json	-	6.1 Н4
-tables	400	unknown field	/<поле>	договор проверки строки P1; 6.1 Н4
+units	409	in flight	-	6.1 N4
+units	412	revision moved	/revision	6.1 N2 «Версии»
+units	413	row too large	-	6.1 N4
+units	422	key reused	-	6.1 N4
+units	503	store unavailable	-	6.1 N4
+blobs	400	denied	-	6.1 N4; 6.5 N4
+blobs	403	writes via	-	6.1 N1.1a
+blobs	404	no such unit	-	6.1 N2
+blobs	404	no such blob field	-	6.1 N2
+blobs	409	refused	-	6.1 N4
+tables	400	the body does not fill it in	/<поле>	6.1 N3 «table — write a row» шаг 1
+tables	400	Idempotency-Key required	-	6.1 N3 «память повторов»
+tables	400	If-Match is a unit revision	-	6.1 N2 «Версии»
+tables	400	sealing key required	-	6.2 N4
+tables	400	not_json	-	6.1 N4
+tables	400	unknown field	/<поле>	договор проверки строки P1; 6.1 N4
 tables	400	not_number	/<поле>	договор проверки строки P2
-tables	400	type	/<поле>	договор проверки строки P2; 6.2 Н4
+tables	400	type	/<поле>	договор проверки строки P2; 6.2 N4
 tables	400	too_long	/<поле>	договор проверки строки P2
 tables	400	enum	/<поле>	договор проверки строки P2
-tables	400	bad_url	/<поле>	договор проверки строки P2; 6.2 Н4
+tables	400	bad_url	/<поле>	договор проверки строки P2; 6.2 N4
 tables	400	blob	/<поле>	договор проверки строки P2
 tables	400	labels	/<поле>	договор проверки строки P2
 tables	400	required	/<поле>	договор проверки строки P4
-tables	400	bad_id	/<поле>	6.1 Н4
-tables	400	a sealed value is not taken from outside — give the password itself	/<поле>	6.2 Н4
-tables	400	refused	/<поле>	6.2 Н4
-tables	403	denied	-	6.1 Н1.6
-tables	403	writes via	-	6.1 Н1.1а
-tables	404	no such row	-	6.1 Н4
-tables	404	no such path	-	6.5 Н2
-tables	405	method	-	6.1 Н2
-tables	409	conflict	/<поле>	договор проверки строки P5; 6.1 Н4
-tables	409	refused	-	6.1 Н4
-tables	409	in flight	-	6.1 Н3 «память повторов»
-tables	412	revision moved	/revision	6.1 Н2 «Версии»
-tables	422	key reused	-	6.1 Н3 «память повторов»; ADR-0094 доп. (14)
-tables	413	row too large	-	6.1 Н3 «память повторов»
-next_id	404	no such path	-	6.1 Н2 «Counter door»
-batch	400	not_json	-	6.1 Н4 «Batch door»
-batch	400	bad batch	/<поле>	6.1 Н4 «Batch door»
-batch	400	badkey	/<поле>	6.1 Н4 «Batch door»
-batch	400	no anchor	/writes/<номер>/fields/<поле>	6.1 Н2 «Batch door»; ADR-0094 доп. (12) п. 3
-batch	400	Idempotency-Key required	-	6.1 Н3 «batch»
-batch	400	sealing key required	-	6.2 Н4
-batch	400	a sealed value is not taken from outside — give the password itself	/writes/<номер>/fields/<поле>	6.2 Н4
-batch	400	platform_field	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Batch door»
-batch	400	unknown field	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Batch door»
-batch	400	not_number	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Batch door»
-batch	400	type	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Batch door»
-batch	400	too_long	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Batch door»
-batch	400	enum	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Batch door»
-batch	400	bad_url	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Batch door»
-batch	400	blob	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Batch door»
-batch	400	labels	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Batch door»
-batch	400	required	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Batch door»
-batch	400	bad_id	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Batch door»
-batch	400	fixed	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Batch door»
-batch	400	refused	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Batch door»
-batch	400	the body does not fill it in	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 Н4 «Batch door»
-batch	403	denied	-	6.1 Н4 «Batch door»
-batch	403	writes via	-	6.1 Н1.1а
-batch	404	no such unit	-	6.1 Н4 «Batch door»
-batch	404	no such row	-	6.1 Н4 «Batch door»
-batch	409	conflict	/writes/<номер>/fields/<поле>	договор проверки строки P5, R3; 6.1 Н4 «Batch door»
-batch	409	in flight	-	6.1 Н3 «batch»
-batch	412	row moved	/writes/<номер>/cas	6.1 Н2 «Batch door»; у стража — /guards/<номер>/index
-batch	413	batch too large	-	6.1 Н1.4, Н4 «Batch door»
-batch	413	row too large	-	6.1 Н4 «Batch door»
-batch	422	key reused	-	6.1 Н3 «batch»; ADR-0094 доп. (14)
-batch	503	store unavailable	-	6.1 Н4 «Batch door»
-policy	400	refused	/servers	6.6 Н4
-policy	400	Idempotency-Key required	-	6.6 Н2.1 «Память повторов»
-policy	400	If-Match is a unit revision	-	6.1 Н2 «Версии»; 6.6 Н2.1 «Версия строки»
-policy	412	revision moved	/revision	6.1 Н2 «Версии»; 6.6 Н2.1 «Версия строки»
-policy	409	in flight	-	6.6 Н2.1 «Память повторов»
-policy	422	key reused	-	6.6 Н2.1 «Память повторов»; ADR-0094 доп. (14)
-drain	400	refused	-	6.6 Н4
-drain	409	refused	-	6.6 Н4
-drain	400	Idempotency-Key required	-	6.6 Н2.1 «Память повторов»
-drain	400	If-Match is a unit revision	-	6.1 Н2 «Версии»; 6.6 Н2.1 «Версия строки»
-drain	412	revision moved	/revision	6.1 Н2 «Версии»; 6.6 Н2.1 «Версия строки»
-drain	409	in flight	-	6.6 Н2.1 «Память повторов»
-drain	422	key reused	-	6.6 Н2.1 «Память повторов»; ADR-0094 доп. (14)
-labels	400	labels	/labels	6.6 Н4
-labels	400	refused	-	6.6 Н4
-labels	404	refused	-	6.6 Н4
-labels	400	Idempotency-Key required	-	6.6 Н2.1 «Память повторов»
-labels	400	If-Match is a unit revision	-	6.1 Н2 «Версии»; 6.6 Н2.1 «Версия строки»
-labels	412	revision moved	/revision	6.1 Н2 «Версии»; 6.6 Н2.1 «Версия строки»
-labels	409	in flight	-	6.6 Н2.1 «Память повторов»
-labels	422	key reused	-	6.6 Н2.1 «Память повторов»; ADR-0094 доп. (14)
-decommission	400	refused	-	6.6 Н4
-decommission	404	refused	-	6.6 Н4
-decommission	409	server answers	-	6.6 Н3
-decommission	400	Idempotency-Key required	-	6.6 Н2.1 «Память повторов»
-decommission	409	in flight	-	6.6 Н2.1 «Память повторов»
-decommission	422	key reused	-	6.6 Н2.1 «Память повторов»; ADR-0094 доп. (14)
-schema	400	a version is a whole number from 1	-	6.6 Н3 «raise_schema» шаг 1
-schema	409	refused	-	6.6 Н4
-schema	400	Idempotency-Key required	-	6.6 Н2.1 «Память повторов»
-schema	400	If-Match is a unit revision	-	6.1 Н2 «Версии»; 6.6 Н2.1 «Версия строки»
-schema	412	revision moved	/revision	6.1 Н2 «Версии»; 6.6 Н2.1 «Версия строки»
-schema	409	in flight	-	6.6 Н2.1 «Память повторов»
-schema	422	key reused	-	6.6 Н2.1 «Память повторов»; ADR-0094 доп. (14)
-where	400	badkey	-	6.5 Н4
-pages	404	no such version	-	6.5 Н4
-pages	404	is mounted	-	6.5 Н2
-marks	400	a mark names a unit	/unit	6.4 Н4
-requests	400	Idempotency-Key required	-	6.4 Н3 шаг 1; 6.1 Н4
-requests	400	bad body	-	6.4 Н4
-requests	400	bad unit	/unit	6.4 Н4
-requests	400	bad id	/<поле>	6.4 Н4
-requests	400	bad deadline	/valid_until	6.4 Н4; векторы deadline
-requests	400	too far	/valid_until	6.4 Н3 шаг 1
-requests	400	this subsystem takes no deadline	/valid_until	6.4 Н3 шаг 1
-requests	400	too_long	/<поле>	6.4 Н2
-requests	404	no requests	-	6.4 Н3 шаг 0
-requests	404	no such unit	-	6.4 Н3 шаг 0
-requests	409	exists	-	6.4 Н4
-requests	409	spent	-	6.4 Н4
-requests	429	too many	-	6.4 Н4
-requests	429	refused	-	6.4 Н4: учёт прочитан, но повреждён
-requests	503	store unavailable	-	6.4 Н4
-folders	400	not_json	-	6.8 Н4
-folders	400	Idempotency-Key required	-	6.8 Н3
-folders	400	bad folder	/<поле>	6.8 Н4
-folders	400	bad member	/members/<i>	6.8 Н4; без поля у query member
-folders	400	too many members	/members	6.8 Н4
-folders	400	too many folders	/members/<i>	6.8 Н4
-folders	400	too deep	/parent	6.8 Н4
-folders	404	no such folder	-	6.8 Н4
-folders	404	no such parent	-	6.8 Н4
-folders	409	parent gone	/parent	6.8 Н4
-folders	409	in flight	-	6.8 Н4
-folders	400	If-Match is a unit revision	-	6.1 Н2 «Версии»
-folders	412	folder moved	/index	6.8 Н4
-folders	412	parent moved	-	6.8 Н4
-folders	413	row too large	-	6.8 Н4
-folders	413	batch too large	-	6.8 Н4
-folders	422	key reused	-	6.8 Н4
-folders	503	store unavailable	-	6.8 Н4
-batch	400	bad member	/writes/<номер>/fields/members/<i>	6.8 Н3 «folder rows in a batch»
-batch	400	too many members	/writes/<номер>/fields/members	6.8 Н3 «folder rows in a batch»
-batch	400	too many folders	/writes/<номер>/key	6.8 Н3 «folder rows in a batch»
-batch	400	no chain	/writes/<номер>/key	6.8 Н3 «folder rows in a batch»
-batch	400	no membership	/writes/<номер>/key	6.8 Н3 «folder rows in a batch»
-batch	404	no such folder	-	6.8 Н3 «folder rows in a batch»
-batch	404	no such parent	-	6.8 Н3 «folder rows in a batch»
-batch	409	folder gone	/writes/<номер>/key	6.8 Н3 «folder rows in a batch»
-batch	409	parent gone	/writes/<номер>/key	6.8 Н3 «folder rows in a batch»
-batch	412	leader moved	-	6.9 Н2 «Пакет шага»
-operations	400	not_json	-	6.9 Н4
-operations	400	bad operation	/<поле>	6.9 Н4
-operations	400	too many steps	/items	6.9 Н4
-operations	400	too many operations	/items	6.9 Н4
-operations	404	no operations	-	6.9 Н4
-operations	404	no such operation	-	6.9 Н4
-operations	409	root busy	/items/<i>/root	6.9 Н4
-operations	409	exists	/id	6.9 Н4
-operations	409	operation done	-	6.9 Н4
-operations	409	operation running	-	6.9 Н4
-operations	409	nothing to retry	-	6.9 Н4
-operations	412	row moved	/memory/cas	6.9 Н4
-operations	413	batch too large	-	6.9 Н4
-operations	503	store unavailable	-	6.9 Н4
-pass	502	denied	-	6.5 Н4; договор сторожевой и передачи «Pass of `door.pass`»
-pass	504	denied	-	6.5 Н4; договор сторожевой и передачи «Pass of the second kind»
+tables	400	bad_id	/<поле>	6.1 N4
+tables	400	a sealed value is not taken from outside — give the password itself	/<поле>	6.2 N4
+tables	400	refused	/<поле>	6.2 N4
+tables	403	denied	-	6.1 N1.6
+tables	403	writes via	-	6.1 N1.1a
+tables	404	no such row	-	6.1 N4
+tables	404	no such path	-	6.5 N2
+tables	405	method	-	6.1 N2
+tables	409	conflict	/<поле>	договор проверки строки P5; 6.1 N4
+tables	409	refused	-	6.1 N4
+tables	409	in flight	-	6.1 N3 «память повторов»
+tables	412	revision moved	/revision	6.1 N2 «Версии»
+tables	422	key reused	-	6.1 N3 «память повторов»; ADR-0094 доп. (14)
+tables	413	row too large	-	6.1 N3 «память повторов»
+next_id	404	no such path	-	6.1 N2 «Counter door»
+batch	400	not_json	-	6.1 N4 «Batch door»
+batch	400	bad batch	/<поле>	6.1 N4 «Batch door»
+batch	400	badkey	/<поле>	6.1 N4 «Batch door»
+batch	400	no anchor	/writes/<номер>/fields/<поле>	6.1 N2 «Batch door»; ADR-0094 доп. (12) п. 3
+batch	400	Idempotency-Key required	-	6.1 N3 «batch»
+batch	400	sealing key required	-	6.2 N4
+batch	400	a sealed value is not taken from outside — give the password itself	/writes/<номер>/fields/<поле>	6.2 N4
+batch	400	platform_field	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 N4 «Batch door»
+batch	400	unknown field	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 N4 «Batch door»
+batch	400	not_number	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 N4 «Batch door»
+batch	400	type	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 N4 «Batch door»
+batch	400	too_long	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 N4 «Batch door»
+batch	400	enum	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 N4 «Batch door»
+batch	400	bad_url	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 N4 «Batch door»
+batch	400	blob	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 N4 «Batch door»
+batch	400	labels	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 N4 «Batch door»
+batch	400	required	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 N4 «Batch door»
+batch	400	bad_id	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 N4 «Batch door»
+batch	400	fixed	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 N4 «Batch door»
+batch	400	refused	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 N4 «Batch door»
+batch	400	the body does not fill it in	/writes/<номер>/fields/<поле>	договор проверки строки; 6.1 N4 «Batch door»
+batch	403	denied	-	6.1 N4 «Batch door»
+batch	403	writes via	-	6.1 N1.1a
+batch	404	no such unit	-	6.1 N4 «Batch door»
+batch	404	no such row	-	6.1 N4 «Batch door»
+batch	409	conflict	/writes/<номер>/fields/<поле>	договор проверки строки P5, R3; 6.1 N4 «Batch door»
+batch	409	in flight	-	6.1 N3 «batch»
+batch	412	row moved	/writes/<номер>/cas	6.1 N2 «Batch door»; у стража — /guards/<номер>/index
+batch	413	batch too large	-	6.1 N1.4, N4 «Batch door»
+batch	413	row too large	-	6.1 N4 «Batch door»
+batch	422	key reused	-	6.1 N3 «batch»; ADR-0094 доп. (14)
+batch	503	store unavailable	-	6.1 N4 «Batch door»
+policy	400	refused	/servers	6.6 N4
+policy	400	Idempotency-Key required	-	6.6 N2.1 «Память повторов»
+policy	400	If-Match is a unit revision	-	6.1 N2 «Версии»; 6.6 N2.1 «Версия строки»
+policy	412	revision moved	/revision	6.1 N2 «Версии»; 6.6 N2.1 «Версия строки»
+policy	409	in flight	-	6.6 N2.1 «Память повторов»
+policy	422	key reused	-	6.6 N2.1 «Память повторов»; ADR-0094 доп. (14)
+drain	400	refused	-	6.6 N4
+drain	409	refused	-	6.6 N4
+drain	400	Idempotency-Key required	-	6.6 N2.1 «Память повторов»
+drain	400	If-Match is a unit revision	-	6.1 N2 «Версии»; 6.6 N2.1 «Версия строки»
+drain	412	revision moved	/revision	6.1 N2 «Версии»; 6.6 N2.1 «Версия строки»
+drain	409	in flight	-	6.6 N2.1 «Память повторов»
+drain	422	key reused	-	6.6 N2.1 «Память повторов»; ADR-0094 доп. (14)
+labels	400	labels	/labels	6.6 N4
+labels	400	refused	-	6.6 N4
+labels	404	refused	-	6.6 N4
+labels	400	Idempotency-Key required	-	6.6 N2.1 «Память повторов»
+labels	400	If-Match is a unit revision	-	6.1 N2 «Версии»; 6.6 N2.1 «Версия строки»
+labels	412	revision moved	/revision	6.1 N2 «Версии»; 6.6 N2.1 «Версия строки»
+labels	409	in flight	-	6.6 N2.1 «Память повторов»
+labels	422	key reused	-	6.6 N2.1 «Память повторов»; ADR-0094 доп. (14)
+decommission	400	refused	-	6.6 N4
+decommission	404	refused	-	6.6 N4
+decommission	409	server answers	-	6.6 N3
+decommission	400	Idempotency-Key required	-	6.6 N2.1 «Память повторов»
+decommission	409	in flight	-	6.6 N2.1 «Память повторов»
+decommission	422	key reused	-	6.6 N2.1 «Память повторов»; ADR-0094 доп. (14)
+schema	400	a version is a whole number from 1	-	6.6 N3 «raise_schema» шаг 1
+schema	409	refused	-	6.6 N4
+schema	400	Idempotency-Key required	-	6.6 N2.1 «Память повторов»
+schema	400	If-Match is a unit revision	-	6.1 N2 «Версии»; 6.6 N2.1 «Версия строки»
+schema	412	revision moved	/revision	6.1 N2 «Версии»; 6.6 N2.1 «Версия строки»
+schema	409	in flight	-	6.6 N2.1 «Память повторов»
+schema	422	key reused	-	6.6 N2.1 «Память повторов»; ADR-0094 доп. (14)
+where	400	badkey	-	6.5 N4
+pages	404	no such version	-	6.5 N4
+pages	404	is mounted	-	6.5 N2
+marks	400	a mark names a unit	/unit	6.4 N4
+requests	400	Idempotency-Key required	-	6.4 N3 шаг 1; 6.1 N4
+requests	400	bad body	-	6.4 N4
+requests	400	bad unit	/unit	6.4 N4
+requests	400	bad id	/<поле>	6.4 N4
+requests	400	bad deadline	/valid_until	6.4 N4; векторы deadline
+requests	400	too far	/valid_until	6.4 N3 шаг 1
+requests	400	this subsystem takes no deadline	/valid_until	6.4 N3 шаг 1
+requests	400	too_long	/<поле>	6.4 N2
+requests	404	no requests	-	6.4 N3 шаг 0
+requests	404	no such unit	-	6.4 N3 шаг 0
+requests	409	exists	-	6.4 N4
+requests	409	spent	-	6.4 N4
+requests	429	too many	-	6.4 N4
+requests	429	refused	-	6.4 N4: учёт прочитан, но повреждён
+requests	503	store unavailable	-	6.4 N4
+folders	400	not_json	-	6.8 N4
+folders	400	Idempotency-Key required	-	6.8 N3
+folders	400	bad folder	/<поле>	6.8 N4
+folders	400	bad member	/members/<i>	6.8 N4; без поля у query member
+folders	400	too many members	/members	6.8 N4
+folders	400	too many folders	/members/<i>	6.8 N4
+folders	400	too deep	/parent	6.8 N4
+folders	404	no such folder	-	6.8 N4
+folders	404	no such parent	-	6.8 N4
+folders	409	parent gone	/parent	6.8 N4
+folders	409	in flight	-	6.8 N4
+folders	400	If-Match is a unit revision	-	6.1 N2 «Версии»
+folders	412	folder moved	/index	6.8 N4
+folders	412	parent moved	-	6.8 N4
+folders	413	row too large	-	6.8 N4
+folders	413	batch too large	-	6.8 N4
+folders	422	key reused	-	6.8 N4
+folders	503	store unavailable	-	6.8 N4
+batch	400	bad member	/writes/<номер>/fields/members/<i>	6.8 N3 «folder rows in a batch»
+batch	400	too many members	/writes/<номер>/fields/members	6.8 N3 «folder rows in a batch»
+batch	400	too many folders	/writes/<номер>/key	6.8 N3 «folder rows in a batch»
+batch	400	no chain	/writes/<номер>/key	6.8 N3 «folder rows in a batch»
+batch	400	no membership	/writes/<номер>/key	6.8 N3 «folder rows in a batch»
+batch	404	no such folder	-	6.8 N3 «folder rows in a batch»
+batch	404	no such parent	-	6.8 N3 «folder rows in a batch»
+batch	409	folder gone	/writes/<номер>/key	6.8 N3 «folder rows in a batch»
+batch	409	parent gone	/writes/<номер>/key	6.8 N3 «folder rows in a batch»
+batch	412	leader moved	-	6.9 N2 «Пакет шага»
+operations	400	not_json	-	6.9 N4
+operations	400	bad operation	/<поле>	6.9 N4
+operations	400	too many steps	/items	6.9 N4
+operations	400	too many operations	/items	6.9 N4
+operations	404	no operations	-	6.9 N4
+operations	404	no such operation	-	6.9 N4
+operations	409	root busy	/items/<i>/root	6.9 N4
+operations	409	exists	/id	6.9 N4
+operations	409	operation done	-	6.9 N4
+operations	409	operation running	-	6.9 N4
+operations	409	nothing to retry	-	6.9 N4
+operations	412	row moved	/memory/cas	6.9 N4
+operations	413	batch too large	-	6.9 N4
+operations	503	store unavailable	-	6.9 N4
+pass	502	denied	-	6.5 N4; договор сторожевой и передачи «Pass of `door.pass`»
+pass	504	denied	-	6.5 N4; договор сторожевой и передачи «Pass of the second kind»
 *	400	refused	-	договор сторожевой и передачи «Request parsing and the order of checks»
-*	400	denied	-	6.5 Н4
+*	400	denied	-	6.5 N4
 *	401	denied	-	договор сторожевой и передачи
 *	403	denied	-	договор сторожевой и передачи
-*	404	no such path	-	6.5 Н4
-*	405	method	-	6.5 Н4
-*	408	denied	-	6.5 Н4
-*	413	denied	-	6.5 Н4
-*	429	too many attempts	-	6.5 Н4
-*	503	busy	-	6.5 Н4
-*	503	denied	-	6.5 Н4
-*	503	unavailable	-	6.5 Н4
+*	404	no such path	-	6.5 N4
+*	405	method	-	6.5 N4
+*	408	denied	-	6.5 N4
+*	413	denied	-	6.5 N4
+*	429	too many attempts	-	6.5 N4
+*	503	busy	-	6.5 N4
+*	503	denied	-	6.5 N4
+*	503	unavailable	-	6.5 N4
 session	400	this console is open	-	договор сторожевой и передачи «Refusals of the gate»
-domain-forward	400	one hop	-	6.7 Н1.8
-domain-forward	404	no console known	-	6.7 Н4
-domain-forward	404	no signer here	-	6.7 Н1.8
-domain-forward	404	not a route handed to a member	-	6.7 Н4
-domain-forward	404	not another member	-	6.7 Н4
+domain-forward	400	one hop	-	6.7 N1.8
+domain-forward	404	no console known	-	6.7 N4
+domain-forward	404	no signer here	-	6.7 N1.8
+domain-forward	404	not a route handed to a member	-	6.7 N4
+domain-forward	404	not another member	-	6.7 N4
 domain-forward	502	did not answer	-	договор пересылки
-domain-forward	503	CLUSTERS does not read	-	6.7 Н4
-domain-forward	404	no such book shown	-	6.7 Н4
-folders	409	folders are the domain's	-	6.8 Н1.2а
+domain-forward	503	CLUSTERS does not read	-	6.7 N4
+domain-forward	404	no such book shown	-	6.7 N4
+folders	409	folders are the domain's	-	6.8 N1.2a

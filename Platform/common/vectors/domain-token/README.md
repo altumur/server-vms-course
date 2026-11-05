@@ -5,8 +5,8 @@ This English text is the source; the Russian translation `ru/vectors/domain-toke
 The vectors of [the domain token contract](../../contracts/domain-token.md): the function `token(keys, revoked, now, token)` — the check of
 a domain token by the accepted set `domain/keys` and the row `domain/revoked` by the wall clock of the checker, with the `expect`
 of the recipient (the kind and its own cluster). The owner is lesson P/08, chapter 8.2; the function is performed by the gate of the cluster console
-([P/06.3](../../../06-console/spec/06.3-console.norms.md) Н1.3, Н1.8), the recipient of a kind token — the worker and the door of a member
-([P/03.7](../../../03-worker/spec/03.7-worker.norms.md) Н3 «check at the recipient»), the process `domain` at the doors of people
+([P/06.3](../../../06-console/spec/06.3-console.norms.md) N1.3, N1.8), the recipient of a kind token — the worker and the door of a member
+([P/03.7](../../../03-worker/spec/03.7-worker.norms.md) N3 «check at the recipient»), the process `domain` at the doors of people
 ([chapter 8.4](../../../08-domain/spec/08.4-domain.norms.md)) and the domain console (lesson P/10). The bytes are written by «Спецификация»
 (ADR-0083); the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
 
@@ -21,7 +21,7 @@ the only source of these cases.
 Without a stand: the function of an implementation gets the input (the column `input`) and gives the output; `expect` is a subset of the fields of the output. Exit
 code 0 — computed (a refusal by a word included); `@exit 2` — an input not of the form: exit code 2, the output is not compared
 (the dictionary of the «Стенда» of [the common acceptance README](../../acceptance/README.md)); there are ten such rows — `token-30`, `token-31`, `token-32`, `token-39`…`token-42`, `token-44`, `token-45`, `token-keep-no-until`.
-Who performs it — every checker of a token, all rows by one function (`expect` is an input): the gate of the cluster console (`06-console`, P/06.3 Н1.3 `identity` step 3), the recipient of a kind token and the process door (`03-worker`, P/03.7 Н1.5; P/03.4 Н1.7 `door_admission`), the process `domain` at the doors of people (`08-domain`, P/08.4) and the gate of the domain console (`10-domain-console`, P/10 Н1.5). The agent of a member (`09-agent`) does not call the function: it checks the answer of the local token door by `request_id` and `exp` (P/08.7 Н3) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
+Who performs it — every checker of a token, all rows by one function (`expect` is an input): the gate of the cluster console (`06-console`, P/06.3 N1.3 `identity` step 3), the recipient of a kind token and the process door (`03-worker`, P/03.7 N1.5; P/03.4 N1.7 `door_admission`), the process `domain` at the doors of people (`08-domain`, P/08.4) and the gate of the domain console (`10-domain-console`, P/10 N1.5). The agent of a member (`09-agent`) does not call the function: it checks the answer of the local token door by `request_id` and `exp` (P/08.7 N3) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
 
 ## Keys
 
@@ -31,7 +31,7 @@ The keys of the inputs of chapter [P/08.2](../../../08-domain/spec/08.2-domain.n
 `root 2` (a foreign root), `token key 1…3` (the token keys `t1…t3`), `book seal 1`, `book seal 2` (the book acceptance keys),
 `member m1` (the member key in `revoked_members`), `eph 1…3` (one-time pairs of the vector envelopes; `nonce` — the bytes 0…11).
 The envelope vectors are sealed with these `eph` and `nonce` only for reproducibility; an implementation takes
-random ones when sealing ([P/08.2](../../../08-domain/spec/08.2-domain.norms.md) Н1.5, [the domain envelopes contract](../../contracts/domain-envelopes.md)). The public keys:
+random ones when sealing ([P/08.2](../../../08-domain/spec/08.2-domain.norms.md) N1.5, [the domain envelopes contract](../../contracts/domain-envelopes.md)). The public keys:
 
 ```text
 root 1      34dc3424ca1fc497170b49eef38222db60fbcaa887852645d7c73bedcc9f7684
@@ -63,13 +63,13 @@ The form of `expect` ([the contract](../../contracts/domain-token.md) «Пров
 `@exit 2`; the token and the other fields of the input are the bytes of `token-18` (review analysis of stage B 8–10, № 13). `expect` is a closed form:
 `token-32-expect-unknown-key` (the input `token-18` with an extra key `audience_clam`) — `@exit 2` (DT-G03).
 
-The list of kinds (ADR-0091 addendum (18) item 1, addendum (19) item 1; the route `domain` of the process door, P/03.4 Н1.7): `token-33`…`token-38` —
+The list of kinds (ADR-0091 addendum (18) item 1, addendum (19) item 1; the route `domain` of the process door, P/03.4 N1.7): `token-33`…`token-38` —
 a kind from the list — `ok`, not from the list — `wrong_kind`, an expired token of a foreign kind — `expired` before the kind, the audience field is that of
 the kind that matched at step 9 (the mapping `audience_claim`; a kind without an entry — `aud`); the token of the kind `probe` of rows 36–38 is signed
 with the key `t2` (`token key 2`), `aud` — `[m9]`, `for` — `[m1]`. `token-43` is a token of the kind `tally` with the same mapping as at `token-36` (the audience field is by the kind of the token, W03-G10). `token-39`…`token-42` are `@exit 2`: `person` in the list, a list with
 `audience_claim` as a string, a mapping key not from the list, an empty list.
 
-An input not of the form (the coverage audit of P/08, the second pass of Gemini): `token-44-expect-empty-audience-claim` (the input `token-18` with `audience_claim: ""`, P/08.2 Н5, T4) and
+An input not of the form (the coverage audit of P/08, the second pass of Gemini): `token-44-expect-empty-audience-claim` (the input `token-18` with `audience_claim: ""`, P/08.2 N5, T4) and
 `token-45-keys-no-current` (the input `token-18`, the set `keys` without `current`) — `@exit 2`. The expectations are the output of both witnesses
 `cammeta-python` and `cammeta-go`: at them `token-18` is `ok`, with this edit — code 2 with the named reason.
 

@@ -3,13 +3,13 @@
 This English text is the source; the Russian translation `ru/contracts/events-merge.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Platform» (ADR-0083 addendum (5), addendum (13): a common algorithm of several processes is a contract, not copies in
-chapters). The owner is lesson P/06, [chapter 6.4](../../06-console/spec/06.4-console.norms.md) Н1.3, Н3 «merge» (moved here without
-a change of the console's behaviour, ADR-0091 addendum (21) item 1). The participants are the cluster console (the door `GET /events`, P/06.4 Н2) and a subsystem
-worker that merges the journal itself: it reads `GET /events` of the resources ([P/05](../../05-resource/spec/05-resource.norms.md) Н1.3,
+chapters). The owner is lesson P/06, [chapter 6.4](../../06-console/spec/06.4-console.norms.md) N1.3, N3 «merge» (moved here without
+a change of the console's behaviour, ADR-0091 addendum (21) item 1). The participants are the cluster console (the door `GET /events`, P/06.4 N2) and a subsystem
+worker that merges the journal itself: it reads `GET /events` of the resources ([P/05](../../05-resource/spec/05-resource.norms.md) N1.3,
 admission — the section «The participant» `admission`) and the epoch rows of the subsystems declared in `worker.reads` (`<sub>/epoch/`;
-[P/02.5](../../02-installer/spec/02.5-installer.norms.md) Н1.4); the console door is not opened to the worker, its TLS, `open`/`shut` and
+[P/02.5](../../02-installer/spec/02.5-installer.norms.md) N1.4); the console door is not opened to the worker, its TLS, `open`/`shut` and
 limits do not change (ADR-0091 addendum (21) item 1, addendum (23) items 3–5, addendum (24) item 4, addendum (25) item 4, addendum (27) item 2). The index is
-P/05 Н1.3; the form of the row and of the answer — the section «Form», the query and the cut `cut` — «The resource query and answer» below; the hint `/events/wait` is at the resources (P/05 Н1.6), the console has none.
+P/05 N1.3; the form of the row and of the answer — the section «Form», the query and the cut `cut` — «The resource query and answer» below; the hint `/events/wait` is at the resources (P/05 N1.6), the console has none.
 
 Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
@@ -26,9 +26,9 @@ the Architect's decision of 2026-10-25).
 
 ## The resource query and answer
 
-Moved from P/05 Н1.3 (`query`, `cut`, `answer` and the paragraphs about `by`, copies, `truncated`, `partial`) without a change of behaviour: the resource
+Moved from P/05 N1.3 (`query`, `cut`, `answer` and the paragraphs about `by`, copies, `truncated`, `partial`) without a change of behaviour: the resource
 executes them at itself, the merger — over the answers (EM-READ-33-01). The grammar of the query parameters and their refusals — the resource door,
-P/05 Н1.3 (below this block) and Н2; at the console door `from`, `to`, `limit` — the reader grammar of
+P/05 N1.3 (below this block) and N2; at the console door `from`, `to`, `limit` — the reader grammar of
 [the gate-and-pass contract](gate-and-pass.md) «Numeric query parameters» (C06-EVENTS-QUERY-LEXEME-162-01, the Architect's decision of 2026-10-27).
 
 ```yaml
@@ -40,7 +40,7 @@ by:          by=occurred — a row without occurred uses t both in the filter an
 cut:         before the cut remove duplicates by id; first alarm, then observation; within a class by by (newest — descending, oldest —
              ascending), at an equal time id lexicographically by UTF-8 bytes; the first limit rows
 from_mirror: the resource reads the copies .mirror/<server>/ together with its own tree: the same bucket — a duplicate, it answers under the owner's name
-             (the field server of the row is the owner, except a line with its own field server — P/05 Н1.3 `row`); at the merger the bucket copies of a silent resource in the answers of others give state «; <s> from
+             (the field server of the row is the owner, except a line with its own field server — P/05 N1.3 `row`); at the merger the bucket copies of a silent resource in the answers of others give state «; <s> from
              mirror» (the section «The merge» step 2)
 truncated:   at a resource — matching whole rows unique by id that did not fit into its local limit (the number of candidates after
              deduplication minus the number given out); at the merger — the sum of truncated of those who answered plus the candidates that did not fit into the common
@@ -55,16 +55,16 @@ answer:      the resource — {events, state, truncated, partial?, lines_garbled
 ## The participant
 
 ```yaml
-participant:  the console — reads the epoch rows <sub>/epoch/* of all subsystems of the catalogue (the rights of the console, P/02.5 Н1.4);
+participant:  the console — reads the epoch rows <sub>/epoch/* of all subsystems of the catalogue (the rights of the console, P/02.5 N1.4);
               the worker <s>worker — the epoch rows of the subsystems declared in its worker.reads (<sub>/epoch/), and only them
 epochs_age:   the participant MAY keep the epoch rows read with an age by the observation contract and not reread them on every
               poll — for selection; a row that it gives out as a proof of fencing (epoch_is: fenced) it checks against a
               fresh read of the epoch (ADR-0091 addendum (23) item 4, addendum (24) item 4)
-policy:       older_epochs of the subsystem manifest (P/06.4 Н1.2): fenced | earlier-run, default fenced
+policy:       older_epochs of the subsystem manifest (P/06.4 N1.2): fenced | earlier-run, default fenced
 admission:    the resource door /events* admits the roles console, resource and <sub>worker of the manifests of the catalogue; a resource with TLS checks
               the client: the chain up to the authority, the serial is not in revoked (the role certificate contract revoke), exactly one role from the row
               of the route, CN = <role>.<SAN DNS>; otherwise a handshake refusal or 403 ResourceDenied with the role and the route; the client
-              checks the role resource and the SAN DNS of the server against the host of the address; an IP with TLS — a refusal by the client (moved from P/05 Н2
+              checks the role resource and the SAN DNS of the server against the host of the address; an IP with TLS — a refusal by the client (moved from P/05 N2
               «Admission to the resource doors» for the participant; layout audit, the Architect's decision of 2026-10-25, B-18)
 ```
 
@@ -74,7 +74,7 @@ Live resources are the door rows `platform/doors/<s>` whose version changed with
 ([the observation contract](observation.md) `fresh`; the first look — as fresh); the merge does not read the resource heartbeat: the liveness of a resource
 here is only by the door row (analysis of review of stage B 6–7, № 35). The boundary is one, `≤ LOST_AFTER` — the vector
 [`fresh-age`](../vectors/fresh-age/README.md). A resource with a stale door row (`silent`) is not asked. By the same row a resource judges the liveness
-of its mirror neighbours ([P/05](../../05-resource/spec/05-resource.norms.md) Н1.4 `mirror`).
+of its mirror neighbours ([P/05](../../05-resource/spec/05-resource.norms.md) N1.4 `mirror`).
 
 ## The merge
 
@@ -84,7 +84,7 @@ of its mirror neighbours ([P/05](../../05-resource/spec/05-resource.norms.md) Н
 2. did not answer → incomplete[<server>] = did not answer; said not live → said <state>; a stale door row → silent;
    for each of them state gets «; <s> unreachable»; bucket copies of a silent resource in the answers of other resources
    are given out, and then state also gets «; <s> from mirror» (reconciliation of python and go М10/6–11, E23)
-3. a row of a resource answer not in the form EventRow → skip it, count it in lines_garbled of the merger (P/05 Н1.3; E24);
+3. a row of a resource answer not in the form EventRow → skip it, count it in lines_garbled of the merger (P/05 N1.3; E24);
    lines_garbled of the answer — the sum of lines_garbled of those who answered plus the skips of step 3; partial: true if true at one who answered
 4. duplicates by id → one
 5. epochs (the section «Epochs» below): epoch_is and fenced at each row
@@ -128,7 +128,7 @@ failed:       a needed epoch (of a subsystem whose rows came in the answers) is 
 
 ## The answer
 
-`{events, state, truncated, partial?, lines_garbled?, complete, incomplete, withheld?}`: `withheld` — only at the console (step 5a); `events` — the rows of P/05 Н1.3 with `epoch_is` (except
+`{events, state, truncated, partial?, lines_garbled?, complete, incomplete, withheld?}`: `withheld` — only at the console (step 5a); `events` — the rows of P/05 N1.3 with `epoch_is` (except
 `failed`) and `fenced`; `state` — `live[; <s> unreachable][; <s> from mirror]`; `incomplete` — `{<server> | <sub>/epoch: did not
 answer | silent | said <state>}`; `complete` — `incomplete` is empty: this is the completeness of the sources that answered and of the epochs read, not
 the absence of a cut by `limit`. At the console this is the body of `GET /events` (the schema `ConsoleEvents` of the OpenAPI of lesson 6); at the worker — its
@@ -144,5 +144,5 @@ an unreadable unit (`withheld`), a grant on the unit and on `*`, labels by `of`,
 
 ## Correspondence to former lessons
 
-From P/06.4 Н1.3 `merge` and Н3 «merge (the console)» (formerly М10/8): the algorithm and the paragraph about the freshness of the door row — whole; P/06.4 has
+From P/06.4 N1.3 `merge` and N3 «merge (the console)» (formerly М10/8): the algorithm and the paragraph about the freshness of the door row — whole; P/06.4 has
 a reference here. New: the worker participant, `unknown`, a failure of reading an epoch (ADR-0091 addendum (20)–(27)).

@@ -2,7 +2,7 @@
 
 This English text is the source; the Russian translation `ru/vectors/alarm-history/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
-The owner is [the alarm history contract](../../contracts/alarm-history.md) (chapter P/08.9 Н1.9; the guess of stage C
+The owner is [the alarm history contract](../../contracts/alarm-history.md) (chapter P/08.9 N1.9; the guess of stage C
 C10-ALARM-SAME-LINE83, the Architect's decision of 2026-10-25). The participants are the holder's pass (the process `domain`) and the alarm list
 of the domain console (P/10). The bytes are written by «Спецификация»; the rows are by the text of the contract.
 
@@ -26,5 +26,5 @@ the boundary `HISTORY_LINES` 2000; AH-SAME52-01, AH-CUT52-01).
 Without a stand: a side gives the input to its functions of equality, of the parsing of a page and of the write of the history (the store and the clock are replaced by
 the input). The merge of a page and the history in the output of the domain console is the package `alarms` of lesson P/10.
 Who performs is by `op`: `same` — the holder's pass (`08-domain`, a write without repeats) and the alarm list of the domain console
-(`10-domain-console`); `page` — the domain console (P/10 Н3 `alarms` step 2); `write` — only the holder's pass (the contract,
+(`10-domain-console`); `page` — the domain console (P/10 N3 `alarms` step 2); `write` — only the holder's pass (the contract,
 `writer`) (ACC-VECTORS-CONNECT-02, the Architect's decision of 2026-10-26).

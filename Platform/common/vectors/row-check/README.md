@@ -4,8 +4,8 @@ This English text is the source; the Russian translation `ru/vectors/row-check/R
 
 The owner is chapter P/06.1 of the console through [the row check contract](../../contracts/row-check.md) (the guess of stage C W03-E07,
 the Architect's decision of 2026-10-23). The participants are the units door of the console ([P/06.1](../../../06-console/spec/06.1-console.norms.md)
-Н3 «create», «edit») and the customer's library of the worker ([P/03.6](../../../03-worker/spec/03.6-worker.norms.md) Н1.6,
-Н3 «order»): one table for both sides. The bytes are written by «Спецификация». The cases are taken from the norms of the contract and the steps
+N3 «create», «edit») and the customer's library of the worker ([P/03.6](../../../03-worker/spec/03.6-worker.norms.md) N1.6,
+N3 «order»): one table for both sides. The bytes are written by «Спецификация». The cases are taken from the norms of the contract and the steps
 of the acceptance of P/06.1 (sc. 15, 16, 18, 20 — in the column `note`).
 
 The manifests are `testsub` and `testsub2` (`Source/tests/testdata/*.subsystem.yaml`), loaded together: the catalogue of manifests
@@ -25,12 +25,12 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; 
 | `op` | `create` — creation (`P1`–`P5` of the contract), `edit` — an edit (`R1`–`R3`) |
 | `body` | the passed fields — a JSON object; numbers are lexemes as written (`1e2`, `-0`) |
 | `stored` | for `edit` — the read row; for `create` — the tombstone over which one creates; empty — there is no row. A JSON object in the form of a unit row (the elements are strings) |
-| `rows` | the other rows of the store that the check reads: a JSON object `{ключ: строка}`; `"@garbled"` instead of a row — the row is not read by its form |
+| `rows` | the other rows of the store that the check reads: a JSON object `{key: row}`; `"@garbled"` instead of a row — the row is not read by its form |
 | `expect` | `ok` or `refused` |
 | `word` | for `refused` — the `fault` from the dictionary [`../fault/`](../fault/README.md), if the refusal carries it; otherwise the class of the row «Refusals» of the contract: `platform_field`, `unknown_field`, `blob`, `enum`, `type`, `labels`, `bad_id`, `fixed`, `required`; for `ok` empty |
 | `field` | the field that the refusal names (the first in the order of the contract); for `unknown_field` — all unknown names in ascending byte order separated by commas (RC-10) |
 | `step` | the step of the contract at which the refusal occurs |
-| `row` | for `ok` — the part of the prepared row that is compared: a JSON object `{элемент: текст}`, `"@absent"` — there is no element; empty — not compared. The text of a list in the form of a JSON array is compared by JSON value (as `@json` of the vectors [`values-by-type`](../values-by-type/README.md)) |
+| `row` | for `ok` — the part of the prepared row that is compared: a JSON object `{element: text}`, `"@absent"` — there is no element; empty — not compared. The text of a list in the form of a JSON array is compared by JSON value (as `@json` of the vectors [`values-by-type`](../values-by-type/README.md)) |
 | `note` | a rule of the contract or a step of the acceptance of P/06.1 |
 
 81 cases: 30 `ok`, 51 `refused` (`labels_repeat` — a repeat of a label in the labels field of a unit, the value as it is, C51-LABEL-LIST-01; `unique_required_*` — required + unique with an empty value, the refusal `P4` before unique; a non-required unique with empty ones — `unique_*_not_counted`, RC-17; C51-UNIQUE-EMPTY-01).
@@ -39,16 +39,16 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; 
 
 A side performs its common row check: the preparation of the fields and the checks `P1`–`P5` (`create`) or `R1`–`R3` (`edit`) over
 `body`, `stored` and `rows`. Compared are the outcome, the class or `fault`, the field and, for `ok`, the elements of `row`. At the door the class is read
-from the refusal: the word `error` by P/06.1 Н2 «Refusal: `error` and `field`» (the class `unknown_field` — the word `unknown field`; at a table row
+from the refusal: the word `error` by P/06.1 N2 «Refusal: `error` and `field`» (the class `unknown_field` — the word `unknown field`; at a table row
 `platform_field` — also `unknown field`), the field — `field` without the leading `/` (for `unknown_field` — the first name); the text of `detail` is not compared; at the library — the outcome `refused`
 together with the reason that the library writes to the log. The library gives the fields of its order: the id source field — as a ready id
-(P/03.6 Н1.6), `born` and `made` it sets itself and does not pass them to the check.
+(P/03.6 N1.6), `born` and `made` it sets itself and does not pass them to the check.
 Who performs: the units door of the console (`06-console`) — all rows; the customer's library (`03-worker`) — the rows with `unit`
 `testsub2/tallies` (`create` and `edit`): this is the table that `testsub` orders (`worker.creates`), the library writes no other
 tables (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-26).
 
 The native outcome of `cases.tsv` is code 0 and one JSON object: `ok` — `{"result": "ok", "row": {…}}`, `row` — the prepared row
-`{элемент: текст}` (no element — no key); `refused` — `{"result": "refused", "word": "<fault or class>", "field": "<field>"}`
+`{element: text}` (no element — no key); `refused` — `{"result": "refused", "word": "<fault or class>", "field": "<field>"}`
 (no field — no key `field`). Compared are `result`, `word`, `field` and for `ok` — the elements named in the column `row`
 (`@absent` — no key; a list in the form of a JSON array — by value); the column `step` is not compared — it is for a human: the step
 of the contract (C06-VECTOR-ROWCHECK-WIRE-168-11, the Architect's decision of 2026-10-27; the input and the algorithm do not change).
@@ -69,13 +69,13 @@ the first line without `#` is the header `case<TAB>name<TAB>unit<TAB>state<TAB>e
 
 The expectations are the judge of the family `state` in the reader mode by the text of the row (`x-encoding: jcs` — JCS is checked only by the writer),
 then `value` by the schema `unit.state.<name>` of the manifest; `acts` — the unit row is live, the `born` are equal, the `revision` are equal (for `cursor`
-not reconciled: the contract `acts`, P/03.6 Н1.7 `cursor`; C170-STATE-CURSOR-01), the epoch is not reconciled. 24 rows: 7 act, 10 are unreadable, 7 are readable and do not act.
+not reconciled: the contract `acts`, P/03.6 N1.7 `cursor`; C170-STATE-CURSOR-01), the epoch is not reconciled. 24 rows: 7 act, 10 are unreadable, 7 are readable and do not act.
 The input of the single command `vectors` is `cells` `name`, `unit`, `state`; `files` — `testsub2.subsystem.yaml` (the schemas of `unit.state`).
 The native outcome is code 0 and the object `expect` (the general rule «Vectors» of the common acceptance README).
 
-Who performs is everyone whose norm judges «состояние действует»: the holder of the unit (`03-worker`, P/03.6 Н1.7 — writes anew
-a non-acting one), the controller (`04-controller`, P/04 Н1.3 `retire_when`, Н1.3а `state` and the count `snapshot_state_garbled`) and
-the console (`06-console`, P/06.1 Н2 «State in the answer») — all rows (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+Who performs is everyone whose norm judges «состояние действует»: the holder of the unit (`03-worker`, P/03.6 N1.7 — writes anew
+a non-acting one), the controller (`04-controller`, P/04 N1.3 `retire_when`, N1.3a `state` and the count `snapshot_state_garbled`) and
+the console (`06-console`, P/06.1 N2 «State in the answer») — all rows (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
 
 ## What the vector does not cover
 

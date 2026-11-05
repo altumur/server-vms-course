@@ -17,7 +17,7 @@ source of these cases.
 ## Run
 
 Without a stand: the function of an implementation gets the input (the column `input`) and gives the output; `expect` is a subset of the fields of the output or
-`@exit 2` (an input not of the form of М11/8 Н5 `exit`: there are no fields of the trusted input — the row `peer-32-exit2-fields-missing`; the acceptance README «Коды выхода команд-векторов»; a chain not of the form is not 2 but `bad_chain`, step 2). The time is by the input `now`, not by the process clock.
+`@exit 2` (an input not of the form of М11/8 N5 `exit`: there are no fields of the trusted input — the row `peer-32-exit2-fields-missing`; the acceptance README «Коды выхода команд-векторов»; a chain not of the form is not 2 but `bad_chain`, step 2). The time is by the input `now`, not by the process clock.
 Who performs it: the clients of another cluster — the agent and the relay (`09-agent`), the cluster console (`06-console`) and
 the process `domain` (`08-domain`) — all rows; the domain console (`10-domain-console`, a server of the class `role`: steps 6–7 over
 the client's leaf) — the rows with `reason` `no_role` and `wrong_role` (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-26).
@@ -26,7 +26,7 @@ the client's leaf) — the rows with `reason` `no_role` and `wrong_role` (ACC-VE
 
 As in the README of the acceptance of М11/8 «Inputs»: the centres A (`w2c test ca north`), its intermediate AI and B (`w2c test ca south`), EC
 P-256; the leaves of the role `console` with SAN DNS `m2.w2c.test`; the anchors RSA-2048, Ed25519 and P-384 with SHA-384 (the reconciliation of М11, D14). The fingerprint
-is the sha256 hex of the DER of the centre ([P/08.3 Н1.6](../../../08-domain/spec/08.3-domain.norms.md) `fingerprint`). `now` is 1760000000.
+is the sha256 hex of the DER of the centre ([P/08.3 N1.6](../../../08-domain/spec/08.3-domain.norms.md) `fingerprint`). `now` is 1760000000.
 
 ## Files
 

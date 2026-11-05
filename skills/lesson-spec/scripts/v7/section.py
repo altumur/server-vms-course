@@ -10,6 +10,7 @@
 """
 import json
 import os
+import re
 from pathlib import Path
 
 INT53 = 2 ** 53 - 1
@@ -59,8 +60,16 @@ def key_code(k):
     return "`%s`" % key(k)
 
 
-def cell(s):
+def code_cell(s):
+    """A cell that the table wraps in a code span: only `|` escaped, one line."""
     return str(s).replace("|", "\\|").replace("\n", " ")
+
+
+def cell(s):
+    """A table cell: `|` escaped, one line; a `<` before a Latin letter outside code spans is escaped (`\\<member>`): an
+    English placeholder in plain text is not raw HTML (ADR-0121 addendum (5) item 3)."""
+    parts = re.split(r"(`[^`]*`)", str(s).replace("|", "\\|").replace("\n", " "))
+    return "".join(p if p.startswith("`") else re.sub(r"(?<!\\)<(?=[A-Za-z/!?])", r"\\<", p) for p in parts)
 
 
 def ref_name(s):
@@ -443,7 +452,7 @@ class SchemaSection:
         out = [self.t("| Ключ | Тип и границы | Обязательность | Урок | Смысл |",
                       "| Key | Type and bounds | Requirement | Lesson | Meaning |"), "|---|---|---|---|---|"]
         for p, k, need, owner, desc in rows:
-            out.append("| `%s` | %s | %s | %s | %s |" % (cell(p), cell(k), cell(need), cell(owner), cell(desc)))
+            out.append("| `%s` | %s | %s | %s | %s |" % (code_cell(p), cell(k), cell(need), cell(owner), cell(desc)))
         return out
 
     def rules_text(self, holders):
@@ -529,7 +538,7 @@ class SchemaSection:
             return []
         out = [self.t("Только у писателя (`$defs.writer`):", "Only at the writer (`$defs.writer`):"), "",
                self.t("| Ключ | Ещё и |", "| Key | Also |"), "|---|---|"]
-        out += ["| `%s` | %s |" % (cell(p), cell(x)) for p, x in rows]
+        out += ["| `%s` | %s |" % (code_cell(p), cell(x)) for p, x in rows]
         return out + [""]
 
 
@@ -547,40 +556,40 @@ def build_form_section(schema_doc, relations_doc, scalars, lang="ru"):
     out = [t("### Форма (построена из стандартных файлов)", "### Form (built from the standard files)"), "",
            t("Форма — JSON Schema 2020-12 `02.1-installer.schema.json`, связи — CEL `02.1-installer.relations.json`, "
              "слова слоёв — `02.1-installer.layers.tsv` (ADR-0092). Класс отказа — слой, где отказ: `text` (текст, "
-             "Н1.1), `form` (форма), `relations` (связи — только при чистой форме). Выражение — целиком, как в схеме "
+             "N1.1), `form` (форма), `relations` (связи — только при чистой форме). Выражение — целиком, как в схеме "
              "(ECMA-262 `u` ∩ RE2, `.` — любой знак). Целое место: границы ±(2^53 − 1), значение с целым значением — "
              "целое.",
              "The form is the JSON Schema 2020-12 `02.1-installer.schema.json`, the relations are the CEL "
              "`02.1-installer.relations.json`, the words of the layers are `02.1-installer.layers.tsv` (ADR-0092). The "
-             "class of a refusal is the layer where it is refused: `text` (the text, Н1.1), `form` (the form), "
+             "class of a refusal is the layer where it is refused: `text` (the text, N1.1), `form` (the form), "
              "`relations` (the relations — only on a clean form). An expression matches in full, as in the schema "
              "(ECMA-262 `u` ∩ RE2, `.` is any character). An integer place: bounds ±(2^53 − 1), a value with an "
              "integral value is an integer."), ""]
     out += sec.root_body()
     out += sec.defs_body()
     rows_sc, limits = scalars
-    out += [t("#### Таблица скаляров (Н1.1)", "#### Table of scalars (Н1.1)"), "",
+    out += [t("#### Таблица скаляров (N1.1)", "#### Table of scalars (N1.1)"), "",
             t("Простой скаляр — по первой совпавшей строке сверху; в кавычках и блочный — строка.",
               "A plain scalar — by the first matching row from the top; a quoted or block scalar is a string."), "",
             t("| Вид | Образец (целиком) |", "| Kind | Pattern (in full) |"), "|---|---|"]
     for k, p in rows_sc:                         # textv7.load_scalars даёт скомпилированные выражения: в норме — шаблон
         pat = p.pattern if hasattr(p, "pattern") else p
-        out.append("| %s | `%s` |" % (k, cell(pat) if pat else ""))
+        out.append("| %s | `%s` |" % (k, code_cell(pat) if pat else ""))
     out += ["", t("Пределы: целое по модулю не больше %d; дробное по модулю не больше %r; вне пределов и nonfinite — "
                   "отказ формы на пути значения.",
                   "Limits: an integer of absolute value at most %d; a fraction of absolute value at most %r; out of "
                   "the limits and nonfinite — a form refusal at the path of the value.")
             % (limits["int_max"], limits["float_max"]), ""]
-    out += [t("#### Связи (Н1.4)", "#### Relations (Н1.4)"), "",
-            t("Только при чистой форме (Н3). Строка — выражение CEL файла связей; отказ — `refused:relations`, путь — "
+    out += [t("#### Связи (N1.4)", "#### Relations (N1.4)"), "",
+            t("Только при чистой форме (N3). Строка — выражение CEL файла связей; отказ — `refused:relations`, путь — "
               "место, которое выражение называет.",
-              "Only on a clean form (Н3). A row is a CEL expression of the relations file; the refusal is "
+              "Only on a clean form (N3). A row is a CEL expression of the relations file; the refusal is "
               "`refused:relations`, the path is the place that the expression names."), "",
             t("| № | Путь | Отношение | Норма |", "| No. | Path | Relation | Norm |"), "|---|---|---|---|"]
     for r in relations_doc["rows"]:
         implied = r.get("x-implied-by")
         more = t(" (следует из %s)", " (follows from %s)") % ", ".join(map(str, implied)) if implied else ""
-        out.append("| %d | `%s` | `%s`%s | %s |" % (r["no"], cell(r["path"]), cell(r["relation"]), more, cell(r["norm"])))
+        out.append("| %d | `%s` | `%s`%s | %s |" % (r["no"], code_cell(r["path"]), code_cell(r["relation"]), more, cell(r["norm"])))
     return "\n".join(out) + "\n"
 
 
@@ -640,7 +649,7 @@ def build_families_section(norms, root, families, lang="ru"):
                   "| Path of refusal | Reader | Outcome | Priority | Unit | Norm |"), "|---|---|---|---|---|---|"]
         for o in outcomes:
             out.append("| %s | %s | %s | %d | %s | %s |" % (
-                "`%s`" % cell(o.path) if o.path else t("%s целиком", "the whole %s") % kind_word[row["kind"]],
+                "`%s`" % code_cell(o.path) if o.path else t("%s целиком", "the whole %s") % kind_word[row["kind"]],
                 "`%s`" % o.reader if o.reader != "*" else "*", cell(o.outcome), o.priority,
                 UNIT_EN.get(o.unit, o.unit) if lang == "en" else o.unit, cell(o.norm)))
         out.append("")

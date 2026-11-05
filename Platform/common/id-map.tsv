@@ -16,7 +16,7 @@ old	new	chapter	subject	note
 М10/1-09	P/01.1-09	1.1	a guard: 412 guard with key and index now,	-
 М10/1-10	P/01.1-10	1.1	the guard before CAS — sc. 11	-
 М10/1-11	P/01.1-11	1.1	a replay by id: the first answer, again: true; other	-
-М10/1-12	P/01.1-12	1.1	keys, forms, the ceiling, routes — 400/404/413 by Н4	-
+М10/1-12	P/01.1-12	1.1	keys, forms, the ceiling, routes — 400/404/413 by N4	-
 М10/1-13	P/01.1-13	1.1	a refusal does not quote what was sent — sc. 18 (409	-
 М10/1-14	P/01.1-14	1.1	unavailable ≠ ambiguous ≠ conflict; a dropped answer reads	-
 М10/1-15	P/01.1-15	1.1	a read is linearizable — checked by reading: the mechanism is named in	-
@@ -28,20 +28,20 @@ old	new	chapter	subject	note
 М10/1-21	P/01.1-20	1.1	an implementation without a door SHOULD run the scenarios also through	-
 М10/1-22	P/01.1-21	1.1	a file-based implementation MAY refuse a key shorter than 1024	-
 М10/1-23	P/01.1-22	1.1	a store in the process without a door on a box	-
-М10/1-24	P/01.1-23	1.1	request parsing of Н2.1: query, the JSON of the body, the method and	-
-М11/1 Н0 «Порядок массивов вывода» (новый, разбор ревью стадии A 8–10, № 19 / решение 4)	P/01.1-24	1.1	the order of output arrays — scope lessons 8–10	rule Н0 P/01.1; read by the chapters of lessons 8–10 (before the move — М11/1–12 Н0 «урок 1 Н0»)
+М10/1-24	P/01.1-23	1.1	request parsing of N2.1: query, the JSON of the body, the method and	-
+М11/1 N0 «Порядок массивов вывода» (новый, разбор ревью стадии A 8–10, № 19 / решение 4)	P/01.1-24	1.1	the order of output arrays — scope lessons 8–10	rule N0 P/01.1; read by the chapters of lessons 8–10 (before the move — М11/1–12 N0 «урок 1 N0»)
 - (новая)	P/01.1-25	1.1	the write conditions not_after, not_before: 409 expired, early; the order of checks; the fingerprint	ADR-0091 item 1
 - (новая)	P/01.1-26	1.1	admission time: does not decrease along the log, stored in the log record, the conditions on application	ADR-0091 item 1
 - (новая)	P/01.1-27	1.1	the premise of the cluster clocks CLOCK_SKEW 60 s	ADR-0091 item 1
-М10/2-01	P/02.1-01	2.1	the manifest text is a subset of YAML 1.2 by Н1.1;	-
-М10/2-02	P/02.1-02	2.1	scalars are read by Н1.1: On/Off are words, "90"	-
+М10/2-01	P/02.1-01	2.1	the manifest text is a subset of YAML 1.2 by N1.1;	-
+М10/2-02	P/02.1-02	2.1	scalars are read by N1.1: On/Off are words, "90"	-
 М10/2-03	P/02.1-03	2.1	a closed set of keys at every level; unknown ones —	-
 М10/2-04	P/02.1-04	2.1	name is required, by the grammar; platform/domain/console/audit are forbidden — sc.	-
 М10/2-05	P/02.1-05	2.1	placement.capacity.default is required and an integer ≥ 0; the words of closed	-
-М10/2-06	P/02.1-06	2.1	the field grammar of Н1.3: types, the booleans required/fixed, one of	-
-М10/2-07	P/02.1-07	2.1	the references of Н1.4 resolve at loading: a field, a table, a metric,	-
+М10/2-06	P/02.1-06	2.1	the field grammar of N1.3: types, the booleans required/fixed, one of	-
+М10/2-07	P/02.1-07	2.1	the references of N1.4 resolve at loading: a field, a table, a metric,	-
 М10/2-08	P/02.1-08	2.1	weakening keys have no weakening defaults and are written	-
-М10/2-09	P/02.1-09	2.1	the opaque levels of Н1.2 are not checked by the set of keys,	-
+М10/2-09	P/02.1-09	2.1	the opaque levels of N1.2 are not checked by the set of keys,	-
 М10/2-10	P/02.1-10	2.1	one refusal per file, in words, with the source;	-
 М10/2-11	P/02.1-11	2.1	the catalogue checks (worker.requests, near) — a catalogue refusal; checked	-
 М10/2-12	P/02.3-01	2.3	the manifest row and the mark rev	+ part of М10/2-16 about manifest put (move of lesson 2)
@@ -51,10 +51,10 @@ old	new	chapter	subject	note
 М10/2-15	P/06.5-01	6.5	GET /manifest — the form ManifestView	2.1 — field grammar; before 6.5 it was temporarily М10/9-15 (move of lesson 2)
 М10/9-15	P/06.5-01	6.5	GET /manifest — the form ManifestView (a temporary id of the transfer of lesson 2; the original — М10/2-15)	2.1 — field grammar (review analysis of stage A 6–7, № 12)
 М10/2-16	P/02.1-12	2.1	one procedure load, the refusal of manifest put	2.3 — manifest put
-М10/2-17	P/02.1-13	2.1	the names of rows/tables by Н1.2: the positive ASCII grammar, the length and	-
+М10/2-17	P/02.1-13	2.1	the names of rows/tables by N1.2: the positive ASCII grammar, the length and	-
 М10/2-18	P/02.1-14	2.1	all eight platform_fields are forbidden in unit.fields before default/inherit	-
 М10/2-19	P/02.1-15	2.1	blob only for the unit, the name 1–64 ASCII by	-
-М10/2-20	P/02.1-16	2.1	snapshot excludes server/secret/blob by default; an explicit list with	4 — the exception is executed by the snapshot (shards, М10/10 Н1.3); 2.2 — the snapshot default in the projection of the canonical view
+М10/2-20	P/02.1-16	2.1	snapshot excludes server/secret/blob by default; an explicit list with	4 — the exception is executed by the snapshot (shards, М10/10 N1.3); 2.2 — the snapshot default in the projection of the canonical view
 М10/2-21	P/02.1-17	2.1	a table does not declare held_by/garbled/by/at/made_at, name only string with	-
 М10/2-22	P/02.1-18	2.1	delete_after only with a named id and the conditions of ADR-0067;	-
 М10/2-23	P/02.1-19	2.1	the public unit.id, table.key and requests.key do not take _secret;	-
@@ -67,42 +67,42 @@ old	new	chapter	subject	note
 М10/3-03	P/06.1-03	6.1	revision: 1 at creation, +1 on each edit,	-
 М10/3-04	P/06.1-04	6.1	platform fields are not accepted and live separately —	-
 М10/3-05	P/06.1-05	6.1	numeric id: the counter with cas, the first 1, not	-
-М10/3-06	P/06.1-06	6.1	a named id: the grammar of Н1.3, the source field is immutable, 409 exists	-
+М10/3-06	P/06.1-06	6.1	a named id: the grammar of N1.3, the source field is immutable, 409 exists	-
 М10/3-07	P/06.1-07	6.1	idempotent creation: the key is mandatory and not equal to '..',	-
-М10/3-08	P/06.1-08	6.1	the order of refusals of Н3 step 4 and strict types;	-
+М10/3-08	P/06.1-08	6.1	the order of refusals of N3 step 4 and strict types;	-
 М10/3-09	P/06.1-09	6.1	unique/ref/must_match — a preliminary check, 409 conflict with fault;	-
 М10/3-10	P/06.1-10	6.1	the deletion of a unit in two steps	4 — the second step of the controller
 М10/3-11	P/03.2-01	3.2	the slot row, the two orders of names and the next number	-
-М10/3-12	P/03.2-02	3.2	the capture by the table of Н3	-
+М10/3-12	P/03.2-02	3.2	the capture by the table of N3	-
 М10/3-13	P/03.2-03	3.2	the cleanup of the predecessor's entries under the slot guard: released →	-
 М10/3-14	P/03.2-04	3.2	renewal every ~8 s with cas; conflict requires	-
 М10/3-15	P/03.2-05	3.2	a write under the slot guard only with its own readable	-
 М10/3-16	P/03.2-06	3.2	the epoch: max(current, floor) + 1 with cas, once	-
 М10/3-17	P/03.2-07	3.2	the lease: a window of 25 s from the moment of the request, a confirmation	-
 М10/3-18	P/03.2-08	3.2	terms: actions stop by 25 s from the send	-
-М10/3-19	P/06.1-11	6.1	the full key rules and badkey	3.2 — worker branches Н3 «Full keys and store refusal»: slot choice (candidate refusal), capture after the start, renewal, write under the slot guard, issue and confirmation of the epoch; holding a place (take, renew, let go) — P/03.2 Н3 «place» (review analysis of stage A 3–5, № 11)
+М10/3-19	P/06.1-11	6.1	the full key rules and badkey	3.2 — worker branches N3 «Full keys and store refusal»: slot choice (candidate refusal), capture after the start, renewal, write under the slot guard, issue and confirmation of the epoch; holding a place (take, renew, let go) — P/03.2 N3 «place» (review analysis of stage A 3–5, № 11)
 М10/4-01	P/04-01	4	the effective decision is the active intent for members, otherwise	-
 М10/4-02	P/04-02	4	decisions and an unfinished intent are kept in the store; every	-
-М10/4-03	P/04-03	4	the order of the pass of Н3 and an attempt per step —	-
+М10/4-03	P/04-03	4	the order of the pass of N3 and an attempt per step —	-
 М10/4-04	P/04-04	4	the picture of the world: capacity, server, node labels — without	-
 М10/4-05	P/04-05	4	server labels: the row, the node, an unreadable one	6.6 — the labels door
-М10/4-06	P/04-06	4	the pool, the constraints, the preferences in the order of Н3; the placed is not	-
+М10/4-06	P/04-06	4	the pool, the constraints, the preferences in the order of N3; the placed is not	-
 М10/4-07	P/04-07	4	weight and free capacity: Σ of the weights, strictly more,	-
 М10/4-08	P/04-08	4	the group whole: room for all or all wait	-
 М10/4-09	P/04-09	4	distinct: the keeper of a place, the policy	6.6 — the /policy door
-М10/4-10	P/04-10	4	the slot fate of Н3: the outcomes, the order of the rules, presence only	-
+М10/4-10	P/04-10	4	the slot fate of N3: the outcomes, the order of the rules, presence only	-
 М10/4-11	P/04-11	4	names_given is bound to the version of the slot row; only NAME_FATES	-
 М10/4-12	P/04-12	4	move/first addition/sync — one intent: remove all members	-
 М10/4-13	P/04-13	4	leaving: the reasons in order, without a budget, a group whole	-
 М10/4-14	P/06.6-01	6.6	drain: one row, one server	4 — execution
-М10/4-15	P/06.6-02	6.6	decommission of a server: 404, gone, the withdrawal	4 — execution; the console side of P/04 Н3 «decommission_server» — here (review analysis of stage A 6–7, № 2); freshness — the observation contract common/contracts/observation.md
+М10/4-15	P/06.6-02	6.6	decommission of a server: 404, gone, the withdrawal	4 — execution; the console side of P/04 N3 «decommission_server» — here (review analysis of stage A 6–7, № 2); freshness — the observation contract common/contracts/observation.md
 М10/4-16	P/04-14	4	the order of workers by servers: a shortage, capacity on the way, a reduction	-
 М10/4-17	P/04-15	4	delete_after by the clock of the controller from the first look, a fresh	-
 М10/4-18	P/04-16	4	manifest_rev on the row, the rule guard, manifest_behind, stamping of old	-
-М10/4-19	P/04-17	4	the pass report of Н1.2 with the required fields; fates —	-
-М10/4-20	P/06.6-03	6.6	the controller doors of Н2 and the codes	4 — the reason why; 6.5 — /where
+М10/4-19	P/04-17	4	the pass report of N1.2 with the required fields; fates —	-
+М10/4-20	P/06.6-03	6.6	the controller doors of N2 and the codes	4 — the reason why; 6.5 — /where
 М10/4-21	P/04-18	4	the reason of a decision MUST be non-empty and SHOULD follow the grammar	-
-М10/4-22	P/04-19	4	the common admission of Н1.5/Н3: turn with cas/guard, a new look	-
+М10/4-22	P/04-19	4	the common admission of N1.5/Н3: turn with cas/guard, a new look	-
 М10/4-23	P/04-20	4	before the write of intent the full key <sub>/placement/<id> of each of	-
 М10/5-01	P/03.4-01	3.4	the worker heartbeat: the fields	-
 М10/5-02	P/03.4-02	3.4	the heartbeat rhythm and the last heartbeat	-
@@ -156,8 +156,8 @@ old	new	chapter	subject	note
 М10/7-11	P/06.2-06	6.2	the request fingerprint HMAC	6.1 — the claim
 М10/7-12	P/02.4-14	2.4	the commands w2cctl secrets	6.2 — the same envelope and traversal when the console writes secrets
 М10/7-13	P/06.2-08	6.2	json with nested secrets whole	-
-М10/8-01	P/05-01	5	the object of Н1.1: whole or nothing, a writer per directory,	part — the event journal contract common/contracts/event-journal.md (file names in shared trees); presence lock — common/contracts/presence-lock.md (review analysis of stage A 3–5, № 9)
-М10/8-02	P/05-02	5	the objects door of Н2: the families PLATFORM_DOOR + objects.door, the fresh	-
+М10/8-01	P/05-01	5	the object of N1.1: whole or nothing, a writer per directory,	part — the event journal contract common/contracts/event-journal.md (file names in shared trees); presence lock — common/contracts/presence-lock.md (review analysis of stage A 3–5, № 9)
+М10/8-02	P/05-02	5	the objects door of N2: the families PLATFORM_DOOR + objects.door, the fresh	-
 М10/8-03	P/05-03	5	the event line: the fields	3.6, 6.4 — writers; the row form — common/contracts/event-journal.md
 М10/8-04	P/05-04	5	the bucket by t, 600 s, the epoch in the path,	part — the event journal contract common/contracts/event-journal.md (bucket, fsync, torn line; № 9)
 М10/8-05	P/03.6-01	3.6	suppression of events	2.1 — load refusals
@@ -165,7 +165,7 @@ old	new	chapter	subject	note
 М10/8-07	P/05-05	5	the index: one per resource, without rebuild, the cache does not	-
 М10/8-08	P/06.4-02	6.4	the merge of events by the console	-
 М10/8-09	P/05-06	5	the term per subsystem: 365/1095, «not known» — do not	-
-М10/8-10	P/05-07	5	the resource of Н1.4: the heartbeat 10 s, the door row, the pass	part — the presence lock contract common/contracts/presence-lock.md (presence_lock, room, live; № 9)
+М10/8-10	P/05-07	5	the resource of N1.4: the heartbeat 10 s, the door row, the pass	part — the presence lock contract common/contracts/presence-lock.md (presence_lock, room, live; № 9)
 М10/8-11	P/05-08	5	the disk marks by shares (no row platform/space — enabled	-
 М10/8-12	P/05-09	5	the mirror: the neighbours by name, closed buckets, the copy does not	-
 М10/8-13	P/06.4-06	6.4	requests: the door POST /<sub>/requests, the codes, filed	3.6 — filing by the worker, filed; 2.1 — keys requests.* in the loader
@@ -173,7 +173,7 @@ old	new	chapter	subject	note
 М10/8-15	P/06.4-03	6.4	the reaper: clear and sweep	3.6 — marks
 М10/8-16	P/06.4-04	6.4	the accounting asked of people	-
 М10/8-17	P/06.4-05	6.4	the marks /marks	-
-М10/8-18	P/05-10	5	/events/wait — the hint of Н1.6: four forms, the parameter profile,	-
+М10/8-18	P/05-10	5	/events/wait — the hint of N1.6: four forms, the parameter profile,	-
 М10/8-19	P/03.6-04	3.6	the ADR-0054 append	6.4 — removing the row and freeing asked: P/06.4-07
 - (новая)	P/03.6-05	3.6	an order of a row of another subsystem: worker.creates, key, made, the outcomes	ADR-0091 item 1
 - (новая)	P/03.6-06	3.6	the unit state under the epoch guard, action by born and revision	ADR-0091 item 3
@@ -187,10 +187,10 @@ old	new	chapter	subject	note
 М10/9-02	P/06.5-03	6.5	the shell only at root; the mounted ones without a page; /mounts	-
 М10/9-03	P/02.1-26	2.1	the words display, servers, console	6.5 — /manifest (before 6.5 — in М10/9-15)
 М10/9-04	P/06.3-02	6.3	the gate	6.3 — domain traces at the gate (late layer); block gate — the gate-and-pass contract common/contracts/gate-and-pass.md, participant P/10 (P/10-13) (review analysis of stage A 8–10, № 14 / decision 3)
-М10/9-05	P/06.3-03	6.3	/session and the grants	8.4, 7 — may; session — the gate-and-pass contract common/contracts/gate-and-pass.md, participant P/10 (P/10-13, Н1.5 session) (review analysis of stage A 8–10, № 14)
+М10/9-05	P/06.3-03	6.3	/session and the grants	8.4, 7 — may; session — the gate-and-pass contract common/contracts/gate-and-pass.md, participant P/10 (P/10-13, N1.5 session) (review analysis of stage A 8–10, № 14)
 М10/9-06	P/07-01	7	the closed list of the module calls	-
 М10/9-07	P/07-02	7	the shell contract	-
-М10/9-08	P/06.5-04	6.5	/servers, /resources and WorkerRow by Н2/Н3 — sc.	-
+М10/9-08	P/06.5-04	6.5	/servers, /resources and WorkerRow by N2/Н3 — sc.	-
 М10/9-09	P/06.5-05	6.5	/where: the effective placement through intent/placement/intent by P/04 (by reading; review of stage B 3–5, № 38)	3.4 — the door token at the worker; 4 — double read of intent
 М10/9-09 (часть)	P/03.4-08	3.4	the door token at the holder: the check by door/keys	part 3.4 of the row М10/9-09 (move of lesson 3)
 - (новая)	P/03.4-09	3.4	the tallies of the holder and of the orderer in the heartbeat: command_*, filings, creates, made_rows, stalled	ADR-0091 items 1, 6, 7
@@ -199,10 +199,10 @@ old	new	chapter	subject	note
 - (новая)	P/03.4-12	3.4	the process door: the address, the admission, CORS, the log	ADR-0091 addendum (7)–(9); class mixed — the role certificate contract
 - (новая)	P/03.4-13	3.4	the heartbeat field freeing	VMS request freeing; calculation — 5
 - (новая)	P/03.4-14	3.4	place_error, the door addresses, a partial kit	ADR-0091 addendum (9)–(10); RC-NOKIT
-М10/9-10	P/06.5-06	6.5	/metrics by Н3: the subsystem series, the platform w2c_ once	-
+М10/9-10	P/06.5-06	6.5	/metrics by N3: the subsystem series, the platform w2c_ once	-
 М10/9-11	P/06.5-07	6.5	the common codes and the lanes of the console	all doors
 М10/9-12	P/06.5-08	6.5	the bytes go past the console: not a single route of the stream/archive in	-
-М10/9-13	P/06.5-09	6.5	stability of output (P/01.1 Н0; review of stage B 3–5, № 34): an unreadable worker heartbeat	-
+М10/9-13	P/06.5-09	6.5	stability of output (P/01.1 N0; review of stage B 3–5, № 34): an unreadable worker heartbeat	-
 М10/9-14	P/06.5-10	6.5	the series w2c_resource_ from the fields of ResourceRow and the «always» series	-
 М10/10-01	P/06.6-04	6.6	the schema row and the raise	3.2 — check by the worker at start and after renewal (P/03.2-15); 4 — check at start (P/04-23); 5 — check at start (P/05-13); the check at console start — here (plan of lesson 6, В5)
 М10/10-01 (часть)	P/03.2-15	3.2	the schema check by the worker at start and after the slot renewal	part 3.2 of the row М10/10-01 (move of lesson 3)
@@ -299,70 +299,70 @@ old	new	chapter	subject	note
 М11/2-02	P/08.2-02	8.2	the key set: the form, the signature of the root, book_seal	-
 М11/2-03	P/08.2-03	8.2	the pinning of the root at installation and admission	join at the member — P/09.1-21
 М11/2-04	P/08.2-04	8.2	keys: only forward, holding, took	the domain key set contract common/contracts/keys.md «Функция keys»; executed by 9.1, P/06.3, 8.8; read by 9.2; vectors — common/vectors/keys (review analysis of stage A 8–10, № 13 / decision 2)
-М11/2-05	P/08.2-05	8.2	the token check in the order of Н3	vector domain-token (common/vectors/domain-token); at the recipient — 3.7, session — 6.3, 6.7 (review analysis of stage A 8–10, № 25)
+М11/2-05	P/08.2-05	8.2	the token check in the order of N3	vector domain-token (common/vectors/domain-token); at the recipient — 3.7, session — 6.3, 6.7 (review analysis of stage A 8–10, № 25)
 М11/2-06	P/08.2-06	8.2	domain/revoked: the form, the removal, an unreadable row	the domain key set contract common/contracts/keys.md «Отзывы»: at the member merge and prune are executed by 9.1 (review analysis of stage A 8–10, № 3, № 13)
 М11/2-07	P/08.2-07	8.2	the offline revocation window	-
 М11/2-08	P/08.2-08	8.2	the envelope x25519:v1: bytes, AAD, refusal words	the domain envelopes contract common/contracts/domain-envelopes.md «Конверт x25519:v1»; sealed by 9.1, carried by 9.2, opened by 8.5; vectors — common/vectors/domain-envelopes x25519-open (review analysis of stage A 8–10, № 12)
 М11/2-09	P/08.2-09	8.2	sealing is non-deterministic	the domain envelopes contract common/contracts/domain-envelopes.md «Конверт x25519:v1» seal; the agent seals — 9.1 (contribution in the report), the holder 8.8 — keys_sealed; round — common/vectors/domain-envelopes x25519-round (review analysis of stage A 8–10, № 12)
-М11/2-10	P/02.4-10	2.4	the domain installation in the order of Н3	chapter of the late layer 2.4, introduced by 8.2; I3 and «процесс domain домена не основывает» — P/08.2-01, I4 — P/08.2-10 (review analysis of stage A 8–10, № 17)
+М11/2-10	P/02.4-10	2.4	the domain installation in the order of N3	chapter of the late layer 2.4, introduced by 8.2; I3 and «процесс domain домена не основывает» — P/08.2-01, I4 — P/08.2-10 (review analysis of stage A 8–10, № 17)
 М11/2-11	P/08.2-10	8.2	key changes: planned, of the book acceptance key, after a theft	the member side — P/09.1-20
 - (новая)	P/08.2-11	8.2	tokens keep: jti of the target, the word revoked, DELETE /domain/issued	ADR-0110 addendum (10)–(16)
-М11/2-11 (часть)	P/09.1-20	9.1	key changes at the member: a member without a connection holds the former set, the contributions are resealed to the new book_seal by the next report	part 9.1 of the row М11/2-11 — М11/2 Н3 «Член, который был без связи», Н4 (text — P/08.2 Н3; here P/09.1 Н1.4 «Key changes at the member»); changes at the holder — P/08.2-10 (plan of the move of lesson 9, § 2.2)
-М11/2-12	P/06.3-04	6.3	the traces of the domain at the gate	late layer 6.3 (subsection Н1.8), introduced by P/08.2
+М11/2-11 (часть)	P/09.1-20	9.1	key changes at the member: a member without a connection holds the former set, the contributions are resealed to the new book_seal by the next report	part 9.1 of the row М11/2-11 — М11/2 N3 «Член, который был без связи», N4 (text — P/08.2 N3; here P/09.1 N1.4 «Key changes at the member»); changes at the holder — P/08.2-10 (plan of the move of lesson 9, § 2.2)
+М11/2-12	P/06.3-04	6.3	the traces of the domain at the gate	late layer 6.3 (subsection N1.8), introduced by P/08.2
 М11/3-01	P/09.1-01	9.1	the member key Ed25519 create-once	-
 М11/3-02	P/08.3-01	8.3	two-sided member admission, the key by the fingerprint	agent join — P/09.1-21; POST /domain/members — pass P/10-02; GET /domain/members — P/10-07
-М11/3-02 (часть)	P/09.1-21	9.1	join at the member: domain/root create-once, same/another	part 9.1 of the row М11/3-02 — М11/3 Н1.1 join (P/09.1 Н1.1); acceptance at the holder — P/08.3-01; pinning at installation — P/08.2-03 (note М11/2-03 → here; plan of the move of lesson 9, § 2.2)
-М11/3-02 (часть)	P/10-07	10	GET /domain/members → {rev, members, knocking}	part 10 of the row М11/3-02 — М11/3 Н2 (the domain console door); member acceptance — P/08.3-01 (plan of the move of lesson 10, § 2)
+М11/3-02 (часть)	P/09.1-21	9.1	join at the member: domain/root create-once, same/another	part 9.1 of the row М11/3-02 — М11/3 N1.1 join (P/09.1 N1.1); acceptance at the holder — P/08.3-01; pinning at installation — P/08.2-03 (note М11/2-03 → here; plan of the move of lesson 9, § 2.2)
+М11/3-02 (часть)	P/10-07	10	GET /domain/members → {rev, members, knocking}	part 10 of the row М11/3-02 — М11/3 N2 (the domain console door); member acceptance — P/08.3-01 (plan of the move of lesson 10, § 2)
 М11/3-03	P/08.3-02	8.3	the refusals of member admission	pass — P/10-02
 М11/3-04	P/09.1-02	9.1	publication: the form, the whole and the delta, ready	2.1 late layer — the manifest key domain.reports
 М11/3-05	P/08.3-03	8.3	generation and the holder's mark	-
 М11/3-06	P/08.3-04	8.3	acceptance: same, same_sent_at, rebase, heard	the report acceptance contract common/contracts/accept.md; executed by 8.3 and 9.2 (over their own memory); vectors — common/vectors/accept (review analysis of stage A 8–10, № 13 / decision 2)
 М11/3-07	P/09.1-03	9.1	the agent at 409 rebase sends the whole	-
-М11/3-08	P/08.3-05	8.3	the agent signature: bytes, windows	the agent signature contract common/contracts/agent-signature.md (owner P/09.1 — signs, P/09.1-22; checked by 8.3, 8.7, 9.2, P/06.3 Н1.3); vectors — common/vectors/agent-sig (review analysis of stage A 8–10, № 13 / decision 2)
-М11/3-08 (часть)	P/09.1-22	9.1	the agent signs its requests — the agent signature contract (the owner P/09.1)	part 9.1 of the row М11/3-08 — the contract common/contracts/agent-signature.md, М11/3 Н3 step 4 (P/09.1 Н1.3); the check at the holder — P/08.3-05; vectors common/vectors/agent-sig (plan of the move of lesson 9, § 2.2)
+М11/3-08	P/08.3-05	8.3	the agent signature: bytes, windows	the agent signature contract common/contracts/agent-signature.md (owner P/09.1 — signs, P/09.1-22; checked by 8.3, 8.7, 9.2, P/06.3 N1.3); vectors — common/vectors/agent-sig (review analysis of stage A 8–10, № 13 / decision 2)
+М11/3-08 (часть)	P/09.1-22	9.1	the agent signs its requests — the agent signature contract (the owner P/09.1)	part 9.1 of the row М11/3-08 — the contract common/contracts/agent-signature.md, М11/3 N3 step 4 (P/09.1 N1.3); the check at the holder — P/08.3-05; vectors common/vectors/agent-sig (plan of the move of lesson 9, § 2.2)
 М11/3-09	P/09.1-04	9.1	the holder's answer and what the agent writes at home, m1	the holder's answer and sealing m1 — P/08.3-12; envelope m1 and the content sealed — the domain envelopes contract common/contracts/domain-envelopes.md (sealed by 8.3, 8.7; opened by 9.1); vectors — common/vectors/domain-envelopes m1-open, m1-round (review analysis of stage A 8–10, № 12)
-М11/3-09 (часть)	P/08.3-12	8.3	the holder's answer carry and sealing m1	part 8.3 of the row М11/3-09: М11/3 Н1.5 (the holder side); opening m1 and the home write — P/09.1-04; the domain envelopes contract common/contracts/domain-envelopes.md (review analysis of stage A 8–10, № 12; the Architect's decision of 2026-10-20)
+М11/3-09 (часть)	P/08.3-12	8.3	the holder's answer carry and sealing m1	part 8.3 of the row М11/3-09: М11/3 N1.5 (the holder side); opening m1 and the home write — P/09.1-04; the domain envelopes contract common/contracts/domain-envelopes.md (review analysis of stage A 8–10, № 12; the Architect's decision of 2026-10-20)
 М11/3-10	P/08.1-08	8.1	the view on the stand with real reports	-
 М11/3-11	P/08.1-09	8.1	the view fields member_list, knocking, reports	-
 М11/3-12	P/10-02	10	the edits of the domain console through the process domain	acceptance of edits — 8.0 (P/08.0-01); holder_cluster — P/09.1-04 (review analysis of stage A 8–10, № 18)
-М11/3-12 (часть)	P/08.0-01	8.0	acceptance of the edits of the domain console over SIGNER_URL: X-W2C-Client only on a connection of the role domainconsole, the answers deposed, frozen, standby	part 8.0 of the row М11/3-12, М11/3 Н1.8 pass, answers (review analysis of stage A 8–10, № 18)
+М11/3-12 (часть)	P/08.0-01	8.0	acceptance of the edits of the domain console over SIGNER_URL: X-W2C-Client only on a connection of the role domainconsole, the answers deposed, frozen, standby	part 8.0 of the row М11/3-12, М11/3 N1.8 pass, answers (review analysis of stage A 8–10, № 18)
 М11/4-01	P/09.2-01	9.2	the relay is a member, carries bytes	-
 М11/4-02	P/08.3-06	8.3	topology: the form, refusals, CAS, the copy at the member	GET /domain/topology — P/10-08; PUT — pass P/10-02; copy — P/09.1-23
-М11/4-02 (часть)	P/09.1-23	9.1	the copy of the topology domain/member-topology as it is, when it differs	part 9.1 of the row М11/4-02 — М11/4 Н1.2 domain/member-topology (P/09.1 Н1.4); topology — P/08.3-06 (plan of the move of lesson 9, § 2.2)
-М11/4-02 (часть)	P/10-08	10	GET /domain/topology — from the row, not from the view (T1)	part 10 of the row М11/4-02 — М11/4 Н2; topology — P/08.3-06 (plan of the move of lesson 10, § 2)
+М11/4-02 (часть)	P/09.1-23	9.1	the copy of the topology domain/member-topology as it is, when it differs	part 9.1 of the row М11/4-02 — М11/4 N1.2 domain/member-topology (P/09.1 N1.4); topology — P/08.3-06 (plan of the move of lesson 9, § 2.2)
+М11/4-02 (часть)	P/10-08	10	GET /domain/topology — from the row, not from the view (T1)	part 10 of the row М11/4-02 — М11/4 N2; topology — P/08.3-06 (plan of the move of lesson 10, § 2)
 М11/4-03	P/09.2-02	9.2	the relay batch and the door checks	holder checks — P/08.3-13
-М11/4-03 (часть)	P/08.3-13	8.3	the holder on the relay batch: the signature, the topology, the key, refused, the answer	part 8.3 of the row М11/4-03: М11/4 Н3 «держатель на POST /api/relay» steps 1, 2, 4; the package and the door of the relay — P/09.2-02 (the Architect's decision of 2026-10-20)
+М11/4-03 (часть)	P/08.3-13	8.3	the holder on the relay batch: the signature, the topology, the key, refused, the answer	part 8.3 of the row М11/4-03: М11/4 N3 «держатель на POST /api/relay» steps 1, 2, 4; the package and the door of the relay — P/09.2-02 (the Architect's decision of 2026-10-20)
 М11/4-04	P/08.3-07	8.3	the knock through a relay, the check by the holder	the relay door — 9.2
 М11/4-05	P/08.3-08	8.3	two roads: ignored, ROAD_QUIET, the base of the road	road choice — 9.1
 М11/4-06	P/09.2-03	9.2	a break of the relay, publications are not lost	the member side — P/09.1-24
-М11/4-06 (часть)	P/09.1-24	9.1	the member's agent behind a relay: RELAY_URL, rev of the relay's copy, 403 and 503 of the relay door	part 9.1 of the row М11/4-06 — М11/4 Н3 «агент члена за ретранслятором» (P/09.1 Н3); relay break — P/09.2-03 (plan of the move of lesson 9, § 2.2)
+М11/4-06 (часть)	P/09.1-24	9.1	the member's agent behind a relay: RELAY_URL, rev of the relay's copy, 403 and 503 of the relay door	part 9.1 of the row М11/4-06 — М11/4 N3 «агент члена за ретранслятором» (P/09.1 N3); relay break — P/09.2-03 (plan of the move of lesson 9, § 2.2)
 М11/4-07	P/09.1-05	9.1	domain/reached and domain_age	domain_age of the relay — P/09.2-06
-М11/4-07 (часть)	P/09.2-06	9.2	domain_age in the relay's answer to a member	part 9.2 of the row М11/4-07: М11/4 Н1.4 domain_age; domain/reached and domain_age at the member — P/09.1-05 (plan of the move of lesson 9, § 2.2)
+М11/4-07 (часть)	P/09.2-06	9.2	domain_age in the relay's answer to a member	part 9.2 of the row М11/4-07: М11/4 N1.4 domain_age; domain/reached and domain_age at the member — P/09.1-05 (plan of the move of lesson 9, § 2.2)
 М11/4-08	P/09.2-04	9.2	the member's signature is not carried through a relay	-
 М11/5-01	P/02.1-27	2.1	the declaration of a book and the load refusals m51	chapter of the late layer 2.1, introduced by 8.5
 М11/5-02	P/03.7-01	3.7	a contribution to a book under a slot, liveness, cleanup	chapter of the late layer 3, introduced by 8.5; the agent reads — 9.1
 М11/5-03	P/09.1-06	9.1	a contribution in the report, the envelope x25519, the same envelope	-
 М11/5-04	P/08.5-01	8.5	book assembly: missing, a spoiled contribution, the order	-
 М11/5-05	P/08.5-02	8.5	book delivery only to the members from to	write at the member — P/09.1-25
-М11/5-05 (часть)	P/09.1-25	9.1	the write of a book at the member domain/<sub>/<книга> by CAS; the holder's cluster has no copy	part 9.1 of the row М11/5-05 — М11/5 Н1.4 member_row, Н3 «запись у члена» (P/09.1 Н1.4, Н3); delivery — P/08.5-02 (plan of the move of lesson 9, § 2.2)
+М11/5-05 (часть)	P/09.1-25	9.1	the write of a book at the member domain/<sub>/<книга> by CAS; the holder's cluster has no copy	part 9.1 of the row М11/5-05 — М11/5 N1.4 member_row, N3 «запись у члена» (P/09.1 N1.4, N3); delivery — P/08.5-02 (plan of the move of lesson 9, § 2.2)
 М11/5-06	P/08.5-03	8.5	the mask of a book secret at the holder and the member	at the member — P/09.1-26
-М11/5-06 (часть)	P/09.1-26	9.1	the secrets of a book at the member — envelopes of the member's ring	part 9.1 of the row М11/5-06 — М11/5 Н1.4 member_row (P/09.1 Н1.4); the mask at the holder — P/08.5-03 (plan of the move of lesson 9, § 2.2)
+М11/5-06 (часть)	P/09.1-26	9.1	the secrets of a book at the member — envelopes of the member's ring	part 9.1 of the row М11/5-06 — М11/5 N1.4 member_row (P/09.1 N1.4); the mask at the holder — P/08.5-03 (plan of the move of lesson 9, § 2.2)
 М11/5-07	P/06.7-01	6.7	the book door of this member, the fields show	chapter of the late layer 6, introduced by 8.5; sc. 13 (М11/05 sc. 02)
 М11/5-08	P/08.5-04	8.5	without a grant of the name the recipient sees the empty value	grants — 8.4
 М11/5-09	P/03.7-02	3.7	carried books, kept, the worker on the domain	chapter of the late layer 3 (the subsystem worker on the domain); 2.1 late layer — domain.kept, domain.tables; 2.5 late layer — kept rights
 М11/6-01	P/08.6-01	8.6	assignment: the write, the counter, refusals	GET doors — P/10-09; pass — P/10-02; acceptance of the pass — 8.0
-М11/6-01 (часть)	P/10-09	10	GET /domain/placement, /domain/placement/<sub>/<ref> — the console answers itself	part 10 of the row М11/6-01 — М11/6 Н2; purpose — P/08.6-01; Go debt: the console passes GET to the process (plan of the move of lesson 10, § 8)
+М11/6-01 (часть)	P/10-09	10	GET /domain/placement, /domain/placement/<sub>/<ref> — the console answers itself	part 10 of the row М11/6-01 — М11/6 N2; purpose — P/08.6-01; Go debt: the console passes GET to the process (plan of the move of lesson 10, § 8)
 М11/6-02	P/09.1-07	9.1	the copy of assignments at the member	filter records of the holder's answer, write mutex, counter raise at start — 8.6 (P/08.6-01; review analysis of stage A 8–10, № 20)
 М11/6-02 (часть)	P/08.6-01	8.6	the answer to the agent: records only naming the member, under the write mutex; the raise of the counter at start	part 8.6 of the row М11/6-02 (review analysis of stage A 8–10, № 20)
 М11/6-03	P/08.6-02	8.6	the refusals of a domain edit	pass — P/10-02
 М11/6-04	P/08.6-03	8.6	the kept edit: id, the repeat, 422, the limit	-
 М11/6-05	P/09.1-08	9.1	application of an edit by the agent, the outcomes	-
-М11/6-06	P/08.6-04	8.6	outcomes at the holder, settle, the view	view fields pending, outcomes — 8.6 Н1.6; the view object — 8.1
+М11/6-06	P/08.6-04	8.6	outcomes at the holder, settle, the view	view fields pending, outcomes — 8.6 N1.6; the view object — 8.1
 М11/6-07	P/08.6-05	8.6	a secret in an edit — 400	loading domain.edit — 2.1 late layer
 М11/6-08	P/08.1-10	8.1	the shadow report reads the executors of an assignment	-
-М11/6-09	P/09.1-09	9.1	the holder applies its own edits as a member	storing holder edits in domain/pending/<держатель> — 8.6 (Н1.4)
+М11/6-09	P/09.1-09	9.1	the holder applies its own edits as a member	storing holder edits in domain/pending/<держатель> — 8.6 (N1.4)
 М11/7-01	P/02.1-28	2.1	the declaration of a token kind and the load refusals m57	chapter of the late layer 2.1, introduced by 8.7
-М11/7-02	P/09.1-10	9.1	the agent's local token door	the local token door contract common/contracts/local-token-door.md (role socket, door, refusals at the agent); participant P/03.7-04 (review analysis of stage A 8–10, № 1 / decision 1); TOKEN_HOLDER_BODY at the holder — P/08.7-01 (review analysis of stage A 8–10, № 20); the agent in a process — section «Вызов в процессе» of the contract (the Architect's decision on the move plans 8–10, item 4); TCP with a role certificate — P/09.1 Н5 «Open» (plan of the move of lesson 9, В1)
+М11/7-02	P/09.1-10	9.1	the agent's local token door	the local token door contract common/contracts/local-token-door.md (role socket, door, refusals at the agent); participant P/03.7-04 (review analysis of stage A 8–10, № 1 / decision 1); TOKEN_HOLDER_BODY at the holder — P/08.7-01 (review analysis of stage A 8–10, № 20); the agent in a process — section «Вызов в процессе» of the contract (the Architect's decision on the move plans 8–10, item 4); TCP with a role certificate — P/09.1 N5 «Open» (plan of the move of lesson 9, В1)
 М11/7-02 (часть)	P/08.7-01	8.7	TOKEN_HOLDER_BODY 413 at the holder's door	part 8.7 of the row М11/7-02 (review analysis of stage A 8–10, № 20)
 М11/7-03	P/08.7-01	8.7	the holder's door and the answer m1	answer check by the agent — 9.1; TOKEN_HOLDER_BODY — from М11/7-02
 М11/7-04	P/08.7-02	8.7	the token issue in order, the refusal words	-
@@ -375,55 +375,55 @@ old	new	chapter	subject	note
 М11/8-03	P/06.7-04	6.7	the forwarding address and one hop	chapter of the late layer 6; X-W2C-Via — the forwarding contract common/contracts/forwarding.md (review analysis of stage A 8–10, № 23)
 М11/8-04	P/06.7-05	6.7	forwarding: the headers, the answer as it came	chapter of the late layer 6; the forwarding contract common/contracts/forwarding.md «Пересылка», «Отказы по переходам» — participants P/10 (P/10-02), 8.0 (review analysis of stage A 8–10, № 23 / decision 3)
 М11/8-05	P/06.7-06	6.7	X-Operator only at a proved role	chapter of the late layer 6; acceptance at the domain console — P/10-10; the forwarding contract common/contracts/forwarding.md «Принять консолью» (review analysis of stage A 8–10, № 23)
-М11/8-05 (часть)	P/10-10	10	«принять консолью» at the domain console: X-Operator: console only at a proved role, X-User and the arrived X-W2C-Client are stripped	part 10 of the row М11/8-05 — М11/8 Н1.4 x_operator, Н3 «принять консолью» (the forwarding contract common/contracts/forwarding.md); cluster console — P/06.7-06
+М11/8-05 (часть)	P/10-10	10	«принять консолью» at the domain console: X-Operator: console only at a proved role, X-User and the arrived X-W2C-Client are stripped	part 10 of the row М11/8-05 — М11/8 N1.4 x_operator, N3 «принять консолью» (the forwarding contract common/contracts/forwarding.md); cluster console — P/06.7-06
 М11/8-06	P/06.7-07	6.7	the journal domain.forwarded	chapter of the late layer 6
 М11/8-07	P/06.7-08	6.7	/domain/at/… at the member	chapter of the late layer 6
 М11/8-08	P/08.3-09	8.3	tls_ca in Entry.ca, the edit by the administrator	POST /domain/members/<член>/ca — pass P/10-02; role door server.role — P/10-11; the server side of class signed — P/08.0-02, P/09.2-07
-М11/8-08 (часть)	P/09.2-07	9.2	the relay door — the class signed of the TLS server side: the leaf domainagent with EKU serverAuth, a client certificate is not required and gives no rights	part 9.2 of the row М11/8-08: М11/8 Н1.6 server.signed — the role certificate contract common/contracts/role-certificate.md «Серверная сторона: класс signed» (one place; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 6); process domain — P/08.0-02 (review analysis of stage A 8–10, № 21)
+М11/8-08 (часть)	P/09.2-07	9.2	the relay door — the class signed of the TLS server side: the leaf domainagent with EKU serverAuth, a client certificate is not required and gives no rights	part 9.2 of the row М11/8-08: М11/8 N1.6 server.signed — the role certificate contract common/contracts/role-certificate.md «Серверная сторона: класс signed» (one place; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 6); process domain — P/08.0-02 (review analysis of stage A 8–10, № 21)
 - (новая)	P/09.2-08	9.2	the outcomes of the relay door over its own memory: the status and reason, same_sent_at by the last write of the mark, 413, 503, 405	the witnesses' reference and the Architect's decision of 2026-10-23
-М11/8-08 (часть)	P/10-11	10	the role door of TLS server.role: the union of CAs, a refusal by the handshake, no_role/wrong_role/bad_chain, without resumption, EKU clientAuth	part 10 of the row М11/8-08 — М11/8 Н1.6 roles, server.role (decision 7 of the review analysis of stage A 8–10); Entry.ca — P/08.3-09; class signed — P/08.0-02, P/09.2-07; probes tls/ item 2 (holder), 7, 8
+М11/8-08 (часть)	P/10-11	10	the role door of TLS server.role: the union of CAs, a refusal by the handshake, no_role/wrong_role/bad_chain, without resumption, EKU clientAuth	part 10 of the row М11/8-08 — М11/8 N1.6 roles, server.role (decision 7 of the review analysis of stage A 8–10); Entry.ca — P/08.3-09; class signed — P/08.0-02, P/09.2-07; probes tls/ item 2 (holder), 7, 8
 М11/8-09	P/06.7-09	6.7	peer and the first contact of a CA	the peer contract common/contracts/peer.md (client, first, function peer, words) — owner 9 (P/09.1-27); participants 6.7, 8.8, P/10 (P/10-11, steps 6–7); vectors — common/vectors/peer (review analysis of stage A 6–7, № 28; review analysis of stage B 6–7, № 25; review analysis of stage A 8–10, № 7; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 2)
-М11/8-09 (часть)	P/09.1-27	9.1	the agent is an HTTPS client: peer, the first contact DOMAIN_CA/RELAY_CA, RELAY_MEMBER, the start refusal	part 9.1 of the row М11/8-09 — М11/8 Н1.6 client, first, roles (the contract common/contracts/peer.md; P/09.1 Н1.7); vectors common/vectors/peer; cluster console — P/06.7-09 (plan of the move of lesson 9, § 2.2)
+М11/8-09 (часть)	P/09.1-27	9.1	the agent is an HTTPS client: peer, the first contact DOMAIN_CA/RELAY_CA, RELAY_MEMBER, the start refusal	part 9.1 of the row М11/8-09 — М11/8 N1.6 client, first, roles (the contract common/contracts/peer.md; P/09.1 N1.7); vectors common/vectors/peer; cluster console — P/06.7-09 (plan of the move of lesson 9, § 2.2)
 М11/8-10	P/10-03	10	door.pass on the domain	the rule and codes of the pass — the gate-and-pass contract common/contracts/gate-and-pass.md (owner P/06; review analysis of stage A 8–10, № 14)
-М11/8-11	P/10-04	10	the holder's page	argument sections — P/07 Н1.6
-М11/8-12	P/06.7-10	6.7	forwarding to the signer without SIGNER_URL — 404	chapter of the late layer 6, introduced by 8.8; the rest of М11/8 Н1.9 — P/06.7-18
-М11/8-12 (часть)	P/06.7-18	6.7	forwarding to the signer in full: routes, order (steps 1–5), codes, the deadlines 10/90 s	part 6.7 of the row М11/8-12 — М11/8 Н1.9 whole; without SIGNER_URL — P/06.7-10; accepted by lesson P/10 (pass P/10-02; /api/prepare, /api/take — 8.8; /domain/move — P/06.7-17); introduced by 8.8 (review analysis of stage A 8–10, № 40 / decision 8; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 16)
+М11/8-11	P/10-04	10	the holder's page	argument sections — P/07 N1.6
+М11/8-12	P/06.7-10	6.7	forwarding to the signer without SIGNER_URL — 404	chapter of the late layer 6, introduced by 8.8; the rest of М11/8 N1.9 — P/06.7-18
+М11/8-12 (часть)	P/06.7-18	6.7	forwarding to the signer in full: routes, order (steps 1–5), codes, the deadlines 10/90 s	part 6.7 of the row М11/8-12 — М11/8 N1.9 whole; without SIGNER_URL — P/06.7-10; accepted by lesson P/10 (pass P/10-02; /api/prepare, /api/take — 8.8; /domain/move — P/06.7-17); introduced by 8.8 (review analysis of stage A 8–10, № 40 / decision 8; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 16)
 - (новая)	P/06.7-19	6.7	POST /domain/verify, supervision	ADR-0119
 М11/9-01	P/08.4-01	8.4	the person row: the name, the hash, disabled	-
 М11/9-02	P/08.4-02	8.4	the person login: one answer to a failure	-
 М11/9-03	P/08.4-03	8.4	the person token 900 s, revocation	-
 М11/9-04	P/08.4-04	8.4	grants: the form, until, the member's copy	copy at the member — P/09.1-28
-М11/9-04 (часть)	P/09.1-28	9.1	the copy of grants {doc, as_of}; an answer from the relay's memory does not move as_of	part 9.1 of the row М11/9-04 — М11/9 Н1.3 member_copy, holder_copy (P/09.1 Н1.4); grants at the holder — P/08.4-04 (plan of the move of lesson 9, § 2.2)
-М11/9-04 (часть)	P/10-12	10	GET /domain/grants → {grants: {<кластер>: [line…]}}	part 10 of the row М11/9-04 — М11/9 Н2; grants — P/08.4-04, the member copy — P/09.1-28
+М11/9-04 (часть)	P/09.1-28	9.1	the copy of grants {doc, as_of}; an answer from the relay's memory does not move as_of	part 9.1 of the row М11/9-04 — М11/9 N1.3 member_copy, holder_copy (P/09.1 N1.4); grants at the holder — P/08.4-04 (plan of the move of lesson 9, § 2.2)
+М11/9-04 (часть)	P/10-12	10	GET /domain/grants → {grants: {<кластер>: [line…]}}	part 10 of the row М11/9-04 — М11/9 N2; grants — P/08.4-04, the member copy — P/09.1-28
 М11/9-05	P/08.4-05	8.4	the function may in order	the right contract common/contracts/may.md; executed by the gates 6.3, 6.7, P/10 (P/10-13) and the process domain (8.4); vectors — common/vectors/may (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 1; review analysis of stage A 8–10)
 М11/9-06	P/06.7-11	6.7	the gate with grants, /session	chapter of the late layer 6 (session with grants: may by grants at the cluster gate), introduced by 8.4; form /session and identity — P/06.3-03; domain console — P/10-13 (review analysis of stage A 8–10, № 40 / decision 8)
-М11/9-06 (часть)	P/10-13	10	the gate of the domain console: may by domain/grants/domain, need by door, body_unit, grants in /session	part 10 of the row М11/9-06 — М11/9 Н1.5 body_unit, session; row domain — P/08.4 Н1.5; identity steps 3, 4 (plan 10 В12); participant of the contract gate-and-pass; cluster console — P/06.7-11
-М11/9-07	P/06.3-05	6.3	loopback — operator only in open	late layer 6.3 (Н1.8 `loopback`), introduced by P/08.4
+М11/9-06 (часть)	P/10-13	10	the gate of the domain console: may by domain/grants/domain, need by door, body_unit, grants in /session	part 10 of the row М11/9-06 — М11/9 N1.5 body_unit, session; row domain — P/08.4 N1.5; identity steps 3, 4 (plan 10 В12); participant of the contract gate-and-pass; cluster console — P/06.7-11
+М11/9-07	P/06.3-05	6.3	loopback — operator only in open	late layer 6.3 (N1.8 `loopback`), introduced by P/08.4
 М11/9-08	P/06.7-12	6.7	the break-glass entry in order, a session of 900 s	chapter of the late layer 6, introduced by 8.4; door POST /session/break-glass in order, hash check, session and GLASS_SESSIONS_MAX — 6.7; row domain/break-glass/<кластер>, door PUT, GLASS_MIN, form pwhash_secret — P/08.4-08; field carry and the copy at the member — P/09.1-29 (review analysis of stage A 8–10, № 22)
-М11/9-08 (часть)	P/08.4-08	8.4	the break-glass account at the holder: the row domain/break-glass/<кластер>, the door PUT, GLASS_MIN, the form pwhash_secret	part 8.4 of the row М11/9-08 — М11/9 Н1.6 (the holder side); entry in order and session — P/06.7-12; field carry and the copy at the member — P/09.1-29 (review analysis of stage A 8–10, № 22; the Architect's decision of 2026-10-20)
-М11/9-08 (часть)	P/09.1-29	9.1	the field carry — the copy of its own domain/break-glass/<член> at the member	part 9.1 of the row М11/9-08 — М11/9 Н1.6 carry, the agent side (text — P/08.4 Н1.6 carry; P/09.1 Н1.4 break_glass); the row at the holder — P/08.4-08, entry — P/06.7-12 (plan of the move of lesson 9, § 2.2)
-М11/9-09	P/08.4-06	8.4	the limit of login attempts	own count at each door: POST /api/login of the process domain — 8.4; POST /session/break-glass of the cluster console — 6.7; X-W2C-Client is set by the domain console — P/10-02 (Н1.3 pass) (review analysis of stage A 8–10, № 22)
+М11/9-08 (часть)	P/08.4-08	8.4	the break-glass account at the holder: the row domain/break-glass/<кластер>, the door PUT, GLASS_MIN, the form pwhash_secret	part 8.4 of the row М11/9-08 — М11/9 N1.6 (the holder side); entry in order and session — P/06.7-12; field carry and the copy at the member — P/09.1-29 (review analysis of stage A 8–10, № 22; the Architect's decision of 2026-10-20)
+М11/9-08 (часть)	P/09.1-29	9.1	the field carry — the copy of its own domain/break-glass/<член> at the member	part 9.1 of the row М11/9-08 — М11/9 N1.6 carry, the agent side (text — P/08.4 N1.6 carry; P/09.1 N1.4 break_glass); the row at the holder — P/08.4-08, entry — P/06.7-12 (plan of the move of lesson 9, § 2.2)
+М11/9-09	P/08.4-06	8.4	the limit of login attempts	own count at each door: POST /api/login of the process domain — 8.4; POST /session/break-glass of the cluster console — 6.7; X-W2C-Client is set by the domain console — P/10-02 (N1.3 pass) (review analysis of stage A 8–10, № 22)
 М11/9-10	P/08.5-05	8.5	the name index: the form, the checks, delivery	loading m59_names — 2.1 late layer
 М11/9-11	P/06.7-13	6.7	the key families, the door /domain/keys	chapter of the late layer 6; loading m59_keys — 2.1
 М11/9-12	P/08.4-07	8.4	the first administrator and the name domain	-
 М11/9-13	P/10-05	10	the people doors through the domain console	check — P/08.4-09
-М11/9-13 (часть)	P/08.4-09	8.4	the check at the doors of the process: the token person and may by domain/grants/domain	part 8.4 of the row М11/9-13 — М11/9 Н1.5 (check — 8.4); doors through the domain console — P/10-05 (the Architect's decision of 2026-10-20)
+М11/9-13 (часть)	P/08.4-09	8.4	the check at the doors of the process: the token person and may by domain/grants/domain	part 8.4 of the row М11/9-13 — М11/9 N1.5 (check — 8.4); doors through the domain console — P/10-05 (the Architect's decision of 2026-10-20)
 - (новая)	P/08.4-17	8.4	the check without login, supervision of roles	ADR-0119
 М11/10-01	P/08.8-01	8.8	the term record, record, claim	the term record contract common/contracts/record.md (form domain/holder, function record, words); executed by 9.1, 8.8, 6.7 (shared document); vectors — common/vectors/record (review analysis of stage A 8–10, № 13 / decision 2)
 М11/10-02	P/08.8-02	8.8	the former holder in the list, stolen	-
 М11/10-03	P/08.8-03	8.8	the view field term	view — 8.1
 М11/10-04	P/06.7-14	6.7	GET /api/held at the cluster console	chapter of the late layer 6, introduced by 8.8
 М11/10-05	P/08.8-04	8.8	the backup copy, the keepers, the pointers	the keeper's agent — P/09.1-30
-М11/10-05 (часть)	P/09.1-30	9.1	the keeper's agent: check the backup copy, domain/backup, -taken, -refused	part 9.1 of the row М11/10-05 — М11/10 Н1.5 member, Н3 «проверить резервную копию» (P/09.1 Н1.9, Н3); the backup at the holder — P/08.8-04 (plan of the move of lesson 9, § 2.2)
+М11/10-05 (часть)	P/09.1-30	9.1	the keeper's agent: check the backup copy, domain/backup, -taken, -refused	part 9.1 of the row М11/10-05 — М11/10 N1.5 member, N3 «проверить резервную копию» (P/09.1 N1.9, N3); the backup at the holder — P/08.8-04 (plan of the move of lesson 9, § 2.2)
 М11/10-06	P/08.8-05	8.8	the deposed holder, deposed	-
 М11/10-07	P/08.8-06	8.8	the planned handover, the freeze, the cancel	POST /domain/handover — pass P/10-02
 М11/10-08	P/08.8-07	8.8	the emergency move, the choice of a copy	POST /domain/stranded/apply — pass P/10-02, /domain/move — P/06.7-17
-М11/10-08 (часть)	P/06.7-17	6.7	POST /domain/move at the cluster console of the target: the identity and the grant admin of this cluster, forwarding to the signer	part 6.7 of the row М11/10-08 — М11/10 Н1.8 door; forwarding order — P/06.7-18; move steps — 8.8 (P/08.8-07); introduced by 8.8 (review analysis of stage A 8–10, № 40 / decision 8; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 16)
+М11/10-08 (часть)	P/06.7-17	6.7	POST /domain/move at the cluster console of the target: the identity and the grant admin of this cluster, forwarding to the signer	part 6.7 of the row М11/10-08 — М11/10 N1.8 door; forwarding order — P/06.7-18; move steps — 8.8 (P/08.8-07); introduced by 8.8 (review analysis of stage A 8–10, № 40 / decision 8; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 16)
 М11/10-09	P/09.1-11	9.1	following of the agent after the holder	vector follow
 М11/10-10	P/08.8-08	8.8	ask-sig and GET /api/backup	the request signature contract common/contracts/ask-sig.md; checked by 6.7 (/api/backup) and 8.8 (/api/prepare); vectors — common/vectors/ask-sig (review analysis of stage A 8–10, № 13 / decision 2); /api/backup — P/06.7-16
-М11/10-10 (часть)	P/06.7-16	6.7	GET /api/backup at the cluster console: the member's signature ask-sig, the member and the key by the list of members, the answer with a backup copy	part 6.7 of the row М11/10-10 — М11/10 Н1.9; signature check — the contract common/contracts/ask-sig.md; the backup document — 8.8; introduced by 8.8 (review analysis of stage A 8–10, № 40 / decision 8; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 16)
+М11/10-10 (часть)	P/06.7-16	6.7	GET /api/backup at the cluster console: the member's signature ask-sig, the member and the key by the list of members, the answer with a backup copy	part 6.7 of the row М11/10-10 — М11/10 N1.9; signature check — the contract common/contracts/ask-sig.md; the backup document — 8.8; introduced by 8.8 (review analysis of stage A 8–10, № 40 / decision 8; the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 16)
 М11/10-11	P/08.8-09	8.8	the writer switch point switch	the agent side — P/09.1-31
-М11/10-11 (часть)	P/09.1-31	9.1	the switch point switch — the agent's side	part 9.1 of the row М11/10-11 — М11/10 Н1.6 switch, Н3 «следовать» 1а (P/09.1 Н1.8); the point at the holder — P/08.8-09 (plan of the move of lesson 9, § 2.2)
+М11/10-11 (часть)	P/09.1-31	9.1	the switch point switch — the agent's side	part 9.1 of the row М11/10-11 — М11/10 N1.6 switch, N3 «следовать» 1а (P/09.1 N1.8); the point at the holder — P/08.8-09 (plan of the move of lesson 9, § 2.2)
 М11/11-01	P/02.1-29	2.1	the declaration of domain.shared, merge, witness, m61	chapter of the late layer 2.1, introduced by 8.9
 - (новая)	P/02.1-30	2.1	worker.creates: the form and the catalogue checks	ADR-0091 item 1; meaning — 3.6
 - (новая)	P/02.1-31	2.1	unit.state, retire_when.state, retire_when.delete_after, placement.ends, snapshot state, the name state	ADR-0091 items 2, 3; meaning — 3.6, 4
@@ -439,10 +439,10 @@ old	new	chapter	subject	note
 М11/11-02	P/08.9-01	8.9	the shared document: the form, the signature, the pointer	-
 М11/11-03	P/08.9-02	8.9	the edit of the shared document in order	PUT /domain/shared — pass P/10-02
 М11/11-04	P/09.1-12	9.1	delivery of the document to a member, the agent's check	the holder side — P/08.9-06
-М11/11-04 (часть)	P/08.9-06	8.9	the holder's side of the delivery: shared in the answer to the agent, doc only at a divergence; the pointer at the holder's cluster	part 8.9 of the row М11/11-04 — М11/11 Н1.4 carry, holder_self; acceptance by the agent — P/09.1-12 (the Architect's decision of 2026-10-20)
+М11/11-04 (часть)	P/08.9-06	8.9	the holder's side of the delivery: shared in the answer to the agent, doc only at a divergence; the pointer at the holder's cluster	part 8.9 of the row М11/11-04 — М11/11 N1.4 carry, holder_self; acceptance by the agent — P/09.1-12 (the Architect's decision of 2026-10-20)
 М11/11-05	P/06.7-15	6.7	the value at read time, resolve	chapter of the late layer 6, introduced by 8.9; vector 06-console/vectors/resolve; at the holder — the object the pointer names (Kimi SB67-02)
 М11/11-06	P/08.9-03	8.9	delivered to how many, declared	GET /domain/shared — P/10-14; PUT — pass P/10-02
-М11/11-06 (часть)	P/10-14	10	GET /domain/shared → {doc, delivery, declared}	part 10 of the row М11/11-06 — М11/11 Н1.6 door; view.shared — P/08.9-03
+М11/11-06 (часть)	P/10-14	10	GET /domain/shared → {doc, delivery, declared}	part 10 of the row М11/11-06 — М11/11 N1.6 door; view.shared — P/08.9-03
 М11/11-07	P/09.1-13	9.1	the member's alarm page	-
 М11/11-08	P/10-06	10	the alarm list at the holder, the witness	P/08.9-04 empty (plan of the move of lesson 8 В2; the Architect's decision on the review analysis of stage A 8–10, № 8)
 М11/11-09	P/08.9-05	8.9	the alarm history: the writer, the limit	vector alarms
@@ -450,23 +450,23 @@ old	new	chapter	subject	note
 М11/12-02	P/02.4-12	2.4	the hot and the durable on a box	home write on a difference — 9.1
 М11/12-03	P/09.1-14	9.1	the agent in the process without mTLS	-
 М11/12-04	P/08.3-10	8.3	members_rev, the list only to the one lagging behind	the agent side — P/09.1-32
-М11/12-04 (часть)	P/09.1-32	9.1	members_rev in the publication, the copy of the list	part 9.1 of the row М11/12-04 — М11/12 Н1.4, the agent side (P/09.1 Н1.2); the list only to the lagging one — P/08.3-10 (plan of the move of lesson 9, § 2.2)
+М11/12-04 (часть)	P/09.1-32	9.1	members_rev in the publication, the copy of the list	part 9.1 of the row М11/12-04 — М11/12 N1.4, the agent side (P/09.1 N1.2); the list only to the lagging one — P/08.3-10 (plan of the move of lesson 9, § 2.2)
 М11/12-05	P/08.10-01	8.10	the ceilings MEMBERS_MAX, ENTRY_MAX, whole	agent body limit — P/09.1-33
-М11/12-05 (часть)	P/09.1-33	9.1	the limit of the agent's body: a whole larger than BODY_LIMIT is not sent, too_large, without a repeat	part 9.1 of the row М11/12-05 — М11/12 Н1.5 body, Н3 steps 3, 5 (P/09.1 Н1.2, Н3); ceilings at the holder — P/08.10-01 (plan of the move of lesson 9, § 2.2)
+М11/12-05 (часть)	P/09.1-33	9.1	the limit of the agent's body: a whole larger than BODY_LIMIT is not sent, too_large, without a repeat	part 9.1 of the row М11/12-05 — М11/12 N1.5 body, N3 steps 3, 5 (P/09.1 N1.2, N3); ceilings at the holder — P/08.10-01 (plan of the move of lesson 9, § 2.2)
 - (новая)	P/09.1-34	9.1	one active agent at the member: the turn domain/agent-turn, the guard, the waiting one, the relay door only at the active one	DOM-AGENT-TURN-01, the owner's consent of 2026-10-26
 М11/12-06	P/09.1-15	9.1	domain/agent and sign_failures	-
-М11/12-07	P/08.10-02	8.10	the turn signer-turn, standby, SIGTERM	503 by doors — the summary table P/08.0 Н2; agent — P/09.1-19
+М11/12-07	P/08.10-02	8.10	the turn signer-turn, standby, SIGTERM	503 by doors — the summary table P/08.0 N2; agent — P/09.1-19
 М11/12-08	P/02.4-13	2.4	the domain ports and units	chapter of the late layer 2.4, introduced by 8.10
-М11/12-08 (часть)	P/10-15	10	the start of the domain console: the reader's side of the manifest row, the schema check, readiness — the port	part 10 of the row М11/12-08 — М11/12 Н1.8 (text — P/02.4 Н1.12, P/02.4-13); the step of the reader side — by reading (plan 10 В9)
+М11/12-08 (часть)	P/10-15	10	the start of the domain console: the reader's side of the manifest row, the schema check, readiness — the port	part 10 of the row М11/12-08 — М11/12 N1.8 (text — P/02.4 N1.12, P/02.4-13); the step of the reader side — by reading (plan 10 В9)
 М11/12-09	P/08.10-03	8.10	the cost	-
 # New ids of parts of the М11 norms without their own item (review analysis of stage A 8–10, № 21; Д-7): there are no former ids; the source and the М11 item where the part is accepted — in note.
-- (новая)	P/08.0-02	8.0	the server side of the doors of class signed: TLS with the server certificate of the role, a client certificate is not required and gives no rights, a presented one is checked in the handshake	М11/8 Н1.6 server.signed, item М11/8-08; the door and the package of the relay — P/09.2-07 (review analysis of stage A 8–10, № 21); check of the presented — ADR-0083 addendum (20), addendum (21)
-- (новая)	P/08.1-11	8.1	the view fields trust, topology, reports.<член>.via, relay_refused	М11/2 Н1.2 view.trust, М11/4 Н1.6; items М11/2-02, М11/4-02 (review analysis of stage A 8–10, № 21)
-- (новая)	P/08.3-11	8.3	sign_failures in the mark reported and in the view	М11/12 Н1.6 view, item М11/12-06; the agent side — P/09.1-15 (review analysis of stage A 8–10, № 21)
-- (новая)	P/09.1-16	9.1	the liveness of a contribution at the agent: the slot, the row, the slot again	М11/5 Н1.2 liveness, item М11/5-02; the row under the slot — P/03.7-01 (review analysis of stage A 8–10, № 21)
-- (новая)	P/09.1-17	9.1	a contribution with a secret without book_seal does not go into the report (no_seal); the objects domain.reports in the report	М11/5 Н1.2 no_seal, reports, item М11/5-03 (review analysis of stage A 8–10, № 21)
-- (новая)	P/09.1-18	9.1	the freshness marks: fresh, FRESH_EVERY	М11/12 Н1.2 fresh, item М11/12-02 (review analysis of stage A 8–10, № 21)
-- (новая)	P/09.1-19	9.1	the agent at 503 standby — by the next pass, not a reason to look for another term	М11/12 Н1.7 agent, Н3 agent step 5, item М11/12-07 (review analysis of stage A 8–10, № 21)
+- (новая)	P/08.0-02	8.0	the server side of the doors of class signed: TLS with the server certificate of the role, a client certificate is not required and gives no rights, a presented one is checked in the handshake	М11/8 N1.6 server.signed, item М11/8-08; the door and the package of the relay — P/09.2-07 (review analysis of stage A 8–10, № 21); check of the presented — ADR-0083 addendum (20), addendum (21)
+- (новая)	P/08.1-11	8.1	the view fields trust, topology, reports.<член>.via, relay_refused	М11/2 N1.2 view.trust, М11/4 N1.6; items М11/2-02, М11/4-02 (review analysis of stage A 8–10, № 21)
+- (новая)	P/08.3-11	8.3	sign_failures in the mark reported and in the view	М11/12 N1.6 view, item М11/12-06; the agent side — P/09.1-15 (review analysis of stage A 8–10, № 21)
+- (новая)	P/09.1-16	9.1	the liveness of a contribution at the agent: the slot, the row, the slot again	М11/5 N1.2 liveness, item М11/5-02; the row under the slot — P/03.7-01 (review analysis of stage A 8–10, № 21)
+- (новая)	P/09.1-17	9.1	a contribution with a secret without book_seal does not go into the report (no_seal); the objects domain.reports in the report	М11/5 N1.2 no_seal, reports, item М11/5-03 (review analysis of stage A 8–10, № 21)
+- (новая)	P/09.1-18	9.1	the freshness marks: fresh, FRESH_EVERY	М11/12 N1.2 fresh, item М11/12-02 (review analysis of stage A 8–10, № 21)
+- (новая)	P/09.1-19	9.1	the agent at 503 standby — by the next pass, not a reason to look for another term	М11/12 N1.7 agent, N3 agent step 5, item М11/12-07 (review analysis of stage A 8–10, № 21)
 # New norms of the window of chapter 2.2 «Канонический вид» (ADR-0089, behaviour edit after the move of lesson 2; window — `decisions/inbox/2026-10-20-окно-главы-2.2-канонический-вид.md`): there are no former ids.
 - (новая)	P/02.2-01	2.2	the projection: defaults, ordered, scalars, JCS	vectors 02-installer/vectors/canonical: corpus-*, course-*, example-sections, example-nested-key, example-ordered (window 2.2, item 8: vectors and acceptance)
 - (новая)	P/02.2-02	2.2	the sugar: tables, bound_to, in	vectors 02-installer/vectors/canonical: example-sugar-tables, example-sugar-bound_to, example-sugar-in; acceptance 02-installer/acceptance/2 puts.tsv sugared (window 2.2, item 8: vectors and acceptance)
@@ -474,7 +474,7 @@ old	new	chapter	subject	note
 - (новая)	P/02.2-04	2.2	the view row {form, rev, sha256, manifest}, its own ceiling, the form window	acceptance 02-installer/acceptance/2 puts.tsv: first, view_over_ceiling, view_at_ceiling; the form change window — by reading (window 2.2, item 8: vectors and acceptance)
 - (новая)	P/02.2-05	2.2	the view schema from the form source	check_spec: the view of each vector input passes the built schema; the section «Форма канонического вида» of the norms — the builder (window 2.2, item 8: vectors and acceptance)
 - (новая)	P/02.2-06	2.2	the view reader: the check against the mark, the schema, the refusal	-
-- (новая)	P/02.2-07	2.2	manifest put: the view before the write, toolarge as a whole, the order row — view — mark	acceptance 02-installer/acceptance/2 puts.tsv: first, same_twice, view_deleted, view_spoiled, view_over_ceiling, view_at_ceiling, sugared; P/02.3 Н3 «Manifest change»; the order of writes in time — by reading (window 2.2, item 8: vectors and acceptance)
+- (новая)	P/02.2-07	2.2	manifest put: the view before the write, toolarge as a whole, the order row — view — mark	acceptance 02-installer/acceptance/2 puts.tsv: first, same_twice, view_deleted, view_spoiled, view_over_ceiling, view_at_ceiling, sugared; P/02.3 N3 «Manifest change»; the order of writes in time — by reading (window 2.2, item 8: vectors and acceptance)
 # Acceptance scenarios of lesson P/01 (stage B move): old — the acceptance directory of the former lesson and the scenario number, new — the chapter and the number;
 # the steps of a scenario move one to one, unless note says otherwise.
 М10/01 сц. 01	P/01.1 сц. 01	1.1	01-absent	-
@@ -554,11 +554,11 @@ old	new	chapter	subject	note
 М10/10 сц. 10	P/05 сц. 10	5	10-body-copy	-
 # Vectors of lessons P/01, P/02 and of the common contracts (stage B move; review of stage B 1–2, item 11): old — the norm of the former lesson the vector was created by
 # (the vectors were created in stage A directly in Platform/), new — the lesson or the common contract and the vector directory.
-М10/6 Н1.3 (вектор стадии A)	P/01.2 vectors/rights-evaluator	1.2	the rights evaluator: an exact pattern, a prefix, literal * and !, negation	-
-М10/11 Н1.5 (вектор стадии A)	P/02.4 vectors/workers-script	2.4	the on-demand workers script: what to start, what to stop	-
-М10/7 Н1.2 (вектор ревью стадии B 1–2)	common vectors/sealing	common	the envelope enc:v2, the AAD path, opening, the ring file	the sealing contract common/contracts/sealing.md
-М10/4 Н3 «нехватка(), заказать()» (вектор стадии A)	P/04 vectors/order	4	a shortage of the label set and the order by servers: on the way, per, the candidate, the distribution	review analysis of stage A 3–5, № 20
-М10/4 Н3 «сократить()» (вектор стадии A)	P/04 vectors/shrink-victim	4	the victim of a reduction	review analysis of stage A 3–5, № 20
+М10/6 N1.3 (вектор стадии A)	P/01.2 vectors/rights-evaluator	1.2	the rights evaluator: an exact pattern, a prefix, literal * and !, negation	-
+М10/11 N1.5 (вектор стадии A)	P/02.4 vectors/workers-script	2.4	the on-demand workers script: what to start, what to stop	-
+М10/7 N1.2 (вектор ревью стадии B 1–2)	common vectors/sealing	common	the envelope enc:v2, the AAD path, opening, the ring file	the sealing contract common/contracts/sealing.md
+М10/4 N3 «нехватка(), заказать()» (вектор стадии A)	P/04 vectors/order	4	a shortage of the label set and the order by servers: on the way, per, the candidate, the distribution	review analysis of stage A 3–5, № 20
+М10/4 N3 «сократить()» (вектор стадии A)	P/04 vectors/shrink-victim	4	the victim of a reduction	review analysis of stage A 3–5, № 20
 # Acceptance scenarios of lesson P/06 (stage B move, lesson 6): numbers and steps as before; coinciding numbers — the next free one with a row of corrections.tsv.
 М10/03 сц. 01	P/06.1 сц. 01	6.1	01-create	-
 М10/03 сц. 02	P/06.1 сц. 02	6.1	02-exists	-
@@ -628,44 +628,44 @@ old	new	chapter	subject	note
 М10/11 сц. 05	common acceptance/system сц. 05	common	05-power-pull	system acceptance: was a drill @manual; since 2026-10-31 — the stand of a cluster of three servers (not executable yet, README of the acceptance)
 М10/11 сц. 06	P/01.3 сц. 18	1.3	18-group-recover	the store group stand (formerly common acceptance/system sc. 06, drill @manual; 2026-10-30)
 # Vectors of lesson P/06 and common ones (stage B move, lesson 6; the former tables Source/tests/testdata/*.tsv removed): old — the norm or the table of the former lesson.
-М10/3 Н4 fault (Source/tests/testdata/fault.tsv)	P/06.1 vectors/fault	6.1	the closed vocabulary of the word fault at door refusals	-
-М10/3 Н1.2 (новый, разбор ревью стадии A 6–7, № 33)	P/06.1 vectors/values-by-type	6.1	the text forms of the values of a unit row by types	-
-М10/7 Н1.1а (Source/tests/testdata/secret_in.tsv)	P/06.2 vectors/secret-in	6.2	where the login and password are in an address: the mask by the field rules	-
-М10/7 Н1.4 (Source/tests/testdata/log_mask.tsv)	P/06.2 vectors/log-mask	6.2	the mask of free log text	-
-М10/7 Н1.3 (Source/tests/testdata/platform_lists.tsv)	P/02.5 vectors/platform-lists	2.5	the closed lists of the platform: the readers of secrets, the heartbeat rows	owner 2.5 (review analysis of stage A 6–7, № 5)
-М10/8 Н1.5 rid (Source/tests/testdata/rid.tsv)	P/06.4 vectors/rid	6.4	the grammar and the limit of rid	-
-М10/8 Н1.5 тело (Source/tests/testdata/requests_body.tsv)	P/06.4 vectors/requests-body	6.4	the text of a request body: the values by types	-
-М10/4 Н1.3 group_by (Source/tests/testdata/group_of.tsv)	P/04 vectors/group-of	4	the group of a unit by the field group_by, cut_at: host	-
-P/04 Н1.4 resource_state, Н1.5 читатель (разбор ревью стадии A 6–7, № 2)	common contracts/observation	common	the observation of a version, freshness LOST_AFTER (one relation ≤), resource_state, the read intent → placement → intent	parts P/04-01, -04, -10; P/06.5-04, -05; P/06.6-02, -04
-P/03.4 Н1.1 said_id (новый, разбор ревью стадии A 6–7, № 2)	common vectors/said-id	common	SaidID: the name of a request in fetched and the read of fetched	owner 3.4, participant 6.4
+М10/3 N4 fault (Source/tests/testdata/fault.tsv)	P/06.1 vectors/fault	6.1	the closed vocabulary of the word fault at door refusals	-
+М10/3 N1.2 (новый, разбор ревью стадии A 6–7, № 33)	P/06.1 vectors/values-by-type	6.1	the text forms of the values of a unit row by types	-
+М10/7 N1.1a (Source/tests/testdata/secret_in.tsv)	P/06.2 vectors/secret-in	6.2	where the login and password are in an address: the mask by the field rules	-
+М10/7 N1.4 (Source/tests/testdata/log_mask.tsv)	P/06.2 vectors/log-mask	6.2	the mask of free log text	-
+М10/7 N1.3 (Source/tests/testdata/platform_lists.tsv)	P/02.5 vectors/platform-lists	2.5	the closed lists of the platform: the readers of secrets, the heartbeat rows	owner 2.5 (review analysis of stage A 6–7, № 5)
+М10/8 N1.5 rid (Source/tests/testdata/rid.tsv)	P/06.4 vectors/rid	6.4	the grammar and the limit of rid	-
+М10/8 N1.5 тело (Source/tests/testdata/requests_body.tsv)	P/06.4 vectors/requests-body	6.4	the text of a request body: the values by types	-
+М10/4 N1.3 group_by (Source/tests/testdata/group_of.tsv)	P/04 vectors/group-of	4	the group of a unit by the field group_by, cut_at: host	-
+P/04 N1.4 resource_state, N1.5 читатель (разбор ревью стадии A 6–7, № 2)	common contracts/observation	common	the observation of a version, freshness LOST_AFTER (one relation ≤), resource_state, the read intent → placement → intent	parts P/04-01, -04, -10; P/06.5-04, -05; P/06.6-02, -04
+P/03.4 N1.1 said_id (новый, разбор ревью стадии A 6–7, № 2)	common vectors/said-id	common	SaidID: the name of a request in fetched and the read of fetched	owner 3.4, participant 6.4
 М10/1 ADR-0072 (Source/tests/testdata/canonical_json.tsv)	P/01 vectors/jcs	1	JCS (RFC 8785): the canon of JSON text and sha256	review analysis of stage B 3–5, В5
-P/06.6 Н2.1 азбука меток (разбор ревью стадии A 6–7, № 11)	common contracts/labels	common	the alphabet of labels and the list of labels	read by P/04 Н1.3, P/06.1, P/06.6, lesson 8
-P/06.4 Н1.5 просьба, action, rid, manifest, mark и kept, Н1.6 формы метки, Н3 «States of an executed request and its mark», «Races» жнеца (разбор ревью стадии B 3–5, В1)	common contracts/request-mark	common	the request row, the keys requests, the mark (begun, answer, no_begun, kept), the state table, the races of marks	owner P/06.4; parts P/06.4-03, -06, -07; P/03.6-03, -04
-P/06.5 Н3 «Токен двери — байты» token, door/keys; P/03.4 Н3 «токен двери у держателя» (разбор ревью стадии B 3–5, В1)	common contracts/door-token	common	the door token door1: claims in JCS, the signature Ed25519, the keys door/keys, the check at the holder	owner P/06 (chapter 6.5); parts P/06.5-05, P/03.4-08; vectors — common/vectors/door-token
-М11/2 Н1.6 token, TOKEN_SKEW, Н3 token, Н4 токен (разбор ревью стадии B 3–5, В1)	common contracts/domain-token	common	the domain token: the form, TOKEN_SKEW, the check token with expect, the refusal words	owner P/08 (chapter 8.2); parts М11/2-05, -06; read by P/03.7-03, P/06.3 Н1.3
-P/05 Н3 «записать событие» (разбор ревью стадии B 3–5, В1)	common contracts/event-journal	common	the write of an event line: steps 1–5 and the races (section «Writing a line»)	owner P/05; parts P/05-03, -04; P/03.6-01
-P/06.5 Н3 «Токен двери — байты» token, door/keys; P/03.4 Н3 «токен двери у держателя» (вектор; решение «Архитектора» 2026-10-20, разбор ревью стадии B 3–5)	common vectors/door-token	common	the door token door1: the issue (claims in JCS, the signature Ed25519) and the check at the holder by door/keys	the contract common/contracts/door-token.md; owner P/06 (chapter 6.5), participant 3.4; parts P/06.5-05, P/03.4-08
-P/04 Н3 «сократить (шаг 9а)» условие (вектор; решение «Архитектора» 2026-10-20, № 12 разбора ревью стадии B 3–5)	P/04 vectors/shrink-allowed	4	whether a reduction is allowed: the condition and the order of the refusal reasons (no_victim, placeless_with_waiting, no_shortage_long_enough, in_flight, hysteresis)	part P/04-14; the branch of sc. 17 «живые без места при ждущих не сокращаются» (Р16′, Р16‴); the victim — as vectors/shrink-victim
-P/04 Н1.4 LOST_AFTER, договор наблюдения «Свежесть» (вектор; разбор ревью стадии B 6–7, № 20)	common vectors/fresh-age	common	freshness: the age of the observed version → fresh (≤ LOST_AFTER), the bound and fractional values around it	owner — the contract common/contracts/observation.md; read by P/04, P/06.1, P/06.4, P/06.5, P/06.6; parts P/04-04, P/06.5-04, P/06.6-05
-М11/7 Н1.2, Н4 «у агента»; М11/12 Н1.8 local_door (разбор ревью стадии A 8–10, № 1 / решение 1)	common contracts/local-token-door	common	the agent's local token door: the Unix socket <AGENT_TOKEN_DIR>/<роль>.sock, the group SocketGroup= of the unit, the role identity, the body, the answer, the refusals at the agent	owner P/09 (chapter 9.1), participant P/03.7; part М11/7-02; units — P/02.4 Н1.1; the agent in a process — section «Вызов в процессе» (the Architect's decision on the move plans 8–10, item 4); TCP with a role certificate — the open question P/09.1 Н5 «Open»
-М11/2 Н1.5, Н3 seal/open; М11/3 Н1.5 envelope_m1, sealed; формы полей sealed М11/5 Н1.4, М11/9 Н1.3, Н1.6 (разбор ревью стадии A 8–10, № 12)	common contracts/domain-envelopes	common	the domain envelopes x25519:v1 (a contribution to book_seal) and m1 (the holder's answer to a member), the content of sealed	owner P/08 (chapters 8.2, 8.3); participants 9.1, 9.2, 8.5, 8.7, 8.8; parts М11/2-08, -09, М11/3-09
-М11/2 Н1.5, М11/3 Н1.5 (входы приёмки М11/02 seal-*, М11/03 seal-member-*; разбор ревью стадии A 8–10, № 12)	common vectors/domain-envelopes	common	opening and the round of x25519:v1 and m1: x25519-open, x25519-round, m1-open, m1-round	the contract common/contracts/domain-envelopes.md; rows — acceptance inputs М11/2 sc. 08–11, М11/3 sc. 11–12 without a change of bytes
-М11/3 Н1.4 (разбор ревью стадии A 8–10, № 13 / решение 2)	common contracts/agent-signature	common	the agent signature X-Agent-Signature: bytes, the windows MEMBER_WINDOW and UNIT_WINDOW, the repeat limit, the check agent-sig and the refusal words	owner P/09 (chapter 9.1); checked by 8.3, 8.7, 9.2, P/06.3 Н1.3; part М11/3-08
-М11/3 Н1.4 (входы приёмки М11/03 agent-sig-*; разбор ревью стадии A 8–10, № 12, № 13)	common vectors/agent-sig	common	the agent signature check agent-sig: the window, bytes, forms, a key of small order	the contract common/contracts/agent-signature.md; rows — acceptance inputs М11/3 sc. 10 without a change of bytes
-М11/2 Н1.2 row, doc, writer_forms, only_forward; Н1.6 domain/revoked; Н3 keys; М11/3 Н1.6 from_carry revoked (разбор ревью стадии A 8–10, № 13 / решение 2, № 3)	common contracts/keys	common	the domain key set: the row domain/keys, the function keys, the revocations domain/revoked, merge at the member and prune	owner P/08 (chapter 8.2); participants 9.1, 9.2, P/06.3, 8.8; parts М11/2-02, -04, -06, М11/3-09
-М11/2 Н3 keys (входы приёмки М11/02 keys-*; разбор ревью стадии A 8–10, № 13)	common vectors/keys	common	the function keys: took, holding, older, no_pin, another_root, bad_signature, not_a_set, no_book_seal	the contract common/contracts/keys.md; rows — acceptance inputs М11/2 sc. 01–03 without a change of bytes
-М11/10 Н1.1 domain/holder doc; Н3 record; Н4 слова record (разбор ревью стадии A 8–10, № 13 / решение 2)	common contracts/record	common	the term record domain/holder and the signature of the issuer: the function record, the kinds, the refusal words	owner P/08 (chapter 8.8); participants 9.1, 6.7, 8.7, 8.9; parts М11/10-01, М11/11-04
-М11/10 Н3 record (входы приёмки М11/10 record-*; разбор ревью стадии A 8–10, № 13)	common vectors/record	common	the function record: three kinds, the domain, the issuer, the signature, forms	the contract common/contracts/record.md; rows — acceptance inputs М11/10 sc. 05 without a change of bytes
-М11/10 Н3 ask-sig; Н4 слова ask-sig (разбор ревью стадии A 8–10, № 13 / решение 2)	common contracts/ask-sig	common	the request signature X-W2C-Member, X-W2C-Time, X-W2C-Signature: the messages backup and prepare, the check ask-sig, the refusal words	owner P/08 (chapter 8.8); participant 6.7; part М11/10-10
-М11/10 Н3 ask-sig (входы приёмки М11/10 ask-sig-*; разбор ревью стадии A 8–10, № 13)	common vectors/ask-sig	common	the function ask-sig: missing, bad_time, skew, bad_signature, the window bound	the contract common/contracts/ask-sig.md; rows — acceptance inputs М11/10 sc. 07 without a change of bytes
-М11/3 Н3 «принять» (разбор ревью стадии A 8–10, № 13 / решение 2)	common contracts/accept	common	the function «принять»: the generation, the mark, same, heard, ignored, rebase, roads	owner P/08 (chapter 8.3); participant 9.2; part М11/3-06, М11/4-05
-М11/3 Н3 «принять», М11/4 Н1.3 (входы приёмки М11/03, М11/04 accept-*; разбор ревью стадии A 8–10, № 13)	common vectors/accept	common	the function accept: the generation, the delta, rebase, same, heard, not_ready, forms, roads	the contract common/contracts/accept.md; rows — acceptance inputs М11/3 sc. 13 and М11/4 sc. 06 without a change of bytes
-P/06.3 Н1.3 gate, open_routes, session; P/06.5 Н1.8 manifest, rule, codes (разбор ревью стадии A 8–10, № 14 / решение 3)	common contracts/gate-and-pass	common	the console gate (gate, identity, need, body, session) and the pass of door.pass to the worker	owner P/06 (chapters 6.3, 6.5); participant P/10 (domain console; P/10-03, P/10-13); parts P/06.3-02, -03, P/06.5-12, М11/8-10, М11/9-06
-М11/8 Н1.3 via, Н1.4, Н3 «принять консолью»; М11/9 Н1.10 header (разбор ревью стадии A 8–10, № 23, № 14 / решение 3)	common contracts/forwarding	common	forwarding: X-W2C-Via, X-Operator, X-W2C-Client, the forwarding function, the refusals by hops and whose OpenAPI carries them	owner P/06 (chapter 6.7); participants P/10 (P/10-02, P/10-10), 8.0; parts М11/8-03, -04, -05, -06, М11/9-09
-М11/9 Н1.4; Н4 слова may (решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 1; разбор ревью стадии A 8–10)	common contracts/may	common	the right by grants: the function may (input, output, steps 1–8), the refusal words	owner P/08 (chapter 8.4); participants 6.3, 6.7, P/10; part М11/9-05
-М11/9 Н1.4 (входы приёмки М11/09 may-*; решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 1; разбор ревью стадии A 8–10)	common vectors/may	common	the function may: the break-glass session, a disabled one, the age of the copy, view without a unit, the scopes *, unit:, labels:, ranks, the row term	the contract common/contracts/may.md; rows — acceptance inputs М11/9 sc. 07 without a change of values, except may-24 (the unit got "labels": [], README of the package) (review analysis of stage B 8–10, № 22)
-М11/8 Н1.6 client, first; Н3 peer; Н4 слова peer (решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 2; разбор ревью стадии A 8–10, № 7)	common contracts/peer	common	a client about a server of another cluster: client, the first contact DOMAIN_CA/RELAY_CA, the function peer (steps 1–9), the refusal words	owner P/09; participants 6.7, 8.8, P/10; part М11/8-09
-М11/8 Н3 peer (входы приёмки М11/08 peer-*; решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 2; разбор ревью стадии A 8–10, № 7)	common vectors/peer	common	the function peer: the anchor by the fingerprint, the path of signatures sig, the terms, the role and the name of the leaf, an IP address	the contract common/contracts/peer.md; rows — acceptance inputs М11/8 sc. 06 without a change of values
+P/06.6 N2.1 азбука меток (разбор ревью стадии A 6–7, № 11)	common contracts/labels	common	the alphabet of labels and the list of labels	read by P/04 N1.3, P/06.1, P/06.6, lesson 8
+P/06.4 N1.5 просьба, action, rid, manifest, mark и kept, N1.6 формы метки, N3 «States of an executed request and its mark», «Races» жнеца (разбор ревью стадии B 3–5, В1)	common contracts/request-mark	common	the request row, the keys requests, the mark (begun, answer, no_begun, kept), the state table, the races of marks	owner P/06.4; parts P/06.4-03, -06, -07; P/03.6-03, -04
+P/06.5 N3 «Токен двери — байты» token, door/keys; P/03.4 N3 «токен двери у держателя» (разбор ревью стадии B 3–5, В1)	common contracts/door-token	common	the door token door1: claims in JCS, the signature Ed25519, the keys door/keys, the check at the holder	owner P/06 (chapter 6.5); parts P/06.5-05, P/03.4-08; vectors — common/vectors/door-token
+М11/2 N1.6 token, TOKEN_SKEW, N3 token, N4 токен (разбор ревью стадии B 3–5, В1)	common contracts/domain-token	common	the domain token: the form, TOKEN_SKEW, the check token with expect, the refusal words	owner P/08 (chapter 8.2); parts М11/2-05, -06; read by P/03.7-03, P/06.3 N1.3
+P/05 N3 «записать событие» (разбор ревью стадии B 3–5, В1)	common contracts/event-journal	common	the write of an event line: steps 1–5 and the races (section «Writing a line»)	owner P/05; parts P/05-03, -04; P/03.6-01
+P/06.5 N3 «Токен двери — байты» token, door/keys; P/03.4 N3 «токен двери у держателя» (вектор; решение «Архитектора» 2026-10-20, разбор ревью стадии B 3–5)	common vectors/door-token	common	the door token door1: the issue (claims in JCS, the signature Ed25519) and the check at the holder by door/keys	the contract common/contracts/door-token.md; owner P/06 (chapter 6.5), participant 3.4; parts P/06.5-05, P/03.4-08
+P/04 N3 «сократить (шаг 9а)» условие (вектор; решение «Архитектора» 2026-10-20, № 12 разбора ревью стадии B 3–5)	P/04 vectors/shrink-allowed	4	whether a reduction is allowed: the condition and the order of the refusal reasons (no_victim, placeless_with_waiting, no_shortage_long_enough, in_flight, hysteresis)	part P/04-14; the branch of sc. 17 «живые без места при ждущих не сокращаются» (Р16′, Р16‴); the victim — as vectors/shrink-victim
+P/04 N1.4 LOST_AFTER, договор наблюдения «Свежесть» (вектор; разбор ревью стадии B 6–7, № 20)	common vectors/fresh-age	common	freshness: the age of the observed version → fresh (≤ LOST_AFTER), the bound and fractional values around it	owner — the contract common/contracts/observation.md; read by P/04, P/06.1, P/06.4, P/06.5, P/06.6; parts P/04-04, P/06.5-04, P/06.6-05
+М11/7 N1.2, N4 «у агента»; М11/12 N1.8 local_door (разбор ревью стадии A 8–10, № 1 / решение 1)	common contracts/local-token-door	common	the agent's local token door: the Unix socket <AGENT_TOKEN_DIR>/<роль>.sock, the group SocketGroup= of the unit, the role identity, the body, the answer, the refusals at the agent	owner P/09 (chapter 9.1), participant P/03.7; part М11/7-02; units — P/02.4 N1.1; the agent in a process — section «Вызов в процессе» (the Architect's decision on the move plans 8–10, item 4); TCP with a role certificate — the open question P/09.1 N5 «Open»
+М11/2 N1.5, N3 seal/open; М11/3 N1.5 envelope_m1, sealed; формы полей sealed М11/5 N1.4, М11/9 N1.3, N1.6 (разбор ревью стадии A 8–10, № 12)	common contracts/domain-envelopes	common	the domain envelopes x25519:v1 (a contribution to book_seal) and m1 (the holder's answer to a member), the content of sealed	owner P/08 (chapters 8.2, 8.3); participants 9.1, 9.2, 8.5, 8.7, 8.8; parts М11/2-08, -09, М11/3-09
+М11/2 N1.5, М11/3 N1.5 (входы приёмки М11/02 seal-*, М11/03 seal-member-*; разбор ревью стадии A 8–10, № 12)	common vectors/domain-envelopes	common	opening and the round of x25519:v1 and m1: x25519-open, x25519-round, m1-open, m1-round	the contract common/contracts/domain-envelopes.md; rows — acceptance inputs М11/2 sc. 08–11, М11/3 sc. 11–12 without a change of bytes
+М11/3 N1.4 (разбор ревью стадии A 8–10, № 13 / решение 2)	common contracts/agent-signature	common	the agent signature X-Agent-Signature: bytes, the windows MEMBER_WINDOW and UNIT_WINDOW, the repeat limit, the check agent-sig and the refusal words	owner P/09 (chapter 9.1); checked by 8.3, 8.7, 9.2, P/06.3 N1.3; part М11/3-08
+М11/3 N1.4 (входы приёмки М11/03 agent-sig-*; разбор ревью стадии A 8–10, № 12, № 13)	common vectors/agent-sig	common	the agent signature check agent-sig: the window, bytes, forms, a key of small order	the contract common/contracts/agent-signature.md; rows — acceptance inputs М11/3 sc. 10 without a change of bytes
+М11/2 N1.2 row, doc, writer_forms, only_forward; N1.6 domain/revoked; N3 keys; М11/3 N1.6 from_carry revoked (разбор ревью стадии A 8–10, № 13 / решение 2, № 3)	common contracts/keys	common	the domain key set: the row domain/keys, the function keys, the revocations domain/revoked, merge at the member and prune	owner P/08 (chapter 8.2); participants 9.1, 9.2, P/06.3, 8.8; parts М11/2-02, -04, -06, М11/3-09
+М11/2 N3 keys (входы приёмки М11/02 keys-*; разбор ревью стадии A 8–10, № 13)	common vectors/keys	common	the function keys: took, holding, older, no_pin, another_root, bad_signature, not_a_set, no_book_seal	the contract common/contracts/keys.md; rows — acceptance inputs М11/2 sc. 01–03 without a change of bytes
+М11/10 N1.1 domain/holder doc; N3 record; N4 слова record (разбор ревью стадии A 8–10, № 13 / решение 2)	common contracts/record	common	the term record domain/holder and the signature of the issuer: the function record, the kinds, the refusal words	owner P/08 (chapter 8.8); participants 9.1, 6.7, 8.7, 8.9; parts М11/10-01, М11/11-04
+М11/10 N3 record (входы приёмки М11/10 record-*; разбор ревью стадии A 8–10, № 13)	common vectors/record	common	the function record: three kinds, the domain, the issuer, the signature, forms	the contract common/contracts/record.md; rows — acceptance inputs М11/10 sc. 05 without a change of bytes
+М11/10 N3 ask-sig; N4 слова ask-sig (разбор ревью стадии A 8–10, № 13 / решение 2)	common contracts/ask-sig	common	the request signature X-W2C-Member, X-W2C-Time, X-W2C-Signature: the messages backup and prepare, the check ask-sig, the refusal words	owner P/08 (chapter 8.8); participant 6.7; part М11/10-10
+М11/10 N3 ask-sig (входы приёмки М11/10 ask-sig-*; разбор ревью стадии A 8–10, № 13)	common vectors/ask-sig	common	the function ask-sig: missing, bad_time, skew, bad_signature, the window bound	the contract common/contracts/ask-sig.md; rows — acceptance inputs М11/10 sc. 07 without a change of bytes
+М11/3 N3 «принять» (разбор ревью стадии A 8–10, № 13 / решение 2)	common contracts/accept	common	the function «принять»: the generation, the mark, same, heard, ignored, rebase, roads	owner P/08 (chapter 8.3); participant 9.2; part М11/3-06, М11/4-05
+М11/3 N3 «принять», М11/4 N1.3 (входы приёмки М11/03, М11/04 accept-*; разбор ревью стадии A 8–10, № 13)	common vectors/accept	common	the function accept: the generation, the delta, rebase, same, heard, not_ready, forms, roads	the contract common/contracts/accept.md; rows — acceptance inputs М11/3 sc. 13 and М11/4 sc. 06 without a change of bytes
+P/06.3 N1.3 gate, open_routes, session; P/06.5 N1.8 manifest, rule, codes (разбор ревью стадии A 8–10, № 14 / решение 3)	common contracts/gate-and-pass	common	the console gate (gate, identity, need, body, session) and the pass of door.pass to the worker	owner P/06 (chapters 6.3, 6.5); participant P/10 (domain console; P/10-03, P/10-13); parts P/06.3-02, -03, P/06.5-12, М11/8-10, М11/9-06
+М11/8 N1.3 via, N1.4, N3 «принять консолью»; М11/9 N1.10 header (разбор ревью стадии A 8–10, № 23, № 14 / решение 3)	common contracts/forwarding	common	forwarding: X-W2C-Via, X-Operator, X-W2C-Client, the forwarding function, the refusals by hops and whose OpenAPI carries them	owner P/06 (chapter 6.7); participants P/10 (P/10-02, P/10-10), 8.0; parts М11/8-03, -04, -05, -06, М11/9-09
+М11/9 N1.4; N4 слова may (решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 1; разбор ревью стадии A 8–10)	common contracts/may	common	the right by grants: the function may (input, output, steps 1–8), the refusal words	owner P/08 (chapter 8.4); participants 6.3, 6.7, P/10; part М11/9-05
+М11/9 N1.4 (входы приёмки М11/09 may-*; решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 1; разбор ревью стадии A 8–10)	common vectors/may	common	the function may: the break-glass session, a disabled one, the age of the copy, view without a unit, the scopes *, unit:, labels:, ranks, the row term	the contract common/contracts/may.md; rows — acceptance inputs М11/9 sc. 07 without a change of values, except may-24 (the unit got "labels": [], README of the package) (review analysis of stage B 8–10, № 22)
+М11/8 N1.6 client, first; N3 peer; N4 слова peer (решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 2; разбор ревью стадии A 8–10, № 7)	common contracts/peer	common	a client about a server of another cluster: client, the first contact DOMAIN_CA/RELAY_CA, the function peer (steps 1–9), the refusal words	owner P/09; participants 6.7, 8.8, P/10; part М11/8-09
+М11/8 N3 peer (входы приёмки М11/08 peer-*; решение «Архитектора» 2026-10-20, ADR-0083 доп. (14) п. 2; разбор ревью стадии A 8–10, № 7)	common vectors/peer	common	the function peer: the anchor by the fingerprint, the path of signatures sig, the terms, the role and the name of the leaf, an IP address	the contract common/contracts/peer.md; rows — acceptance inputs М11/8 sc. 06 without a change of values
 # Acceptance scenarios and vectors of lesson P/08 (stage B move, lesson 8): numbers and steps as before; a coinciding number — the next after the largest number of the chapter's sources (the Architect's decision of 2026-10-20 on plans 8–10, item 14); command scenarios — vector rows (case — the name of the input file), duplicates of common vectors removed (item 17).
 # Acceptance scenarios of chapter P/08.1 (stage B move, lesson 8): numbers and steps as before; a coinciding number — by the number of the М11 lesson, then of the scenario (ADR-0083 addendum (14) item 14).
 М11/03 сц. 04	P/08.1 сц. 04	8.1	04-cut-and-mend	-
@@ -675,7 +675,7 @@ P/06.3 Н1.3 gate, open_routes, session; P/06.5 Н1.8 manifest, rule, codes (р�
 М11/03 сц. 09	P/08.1 сц. 09	8.1	09-view-contested	-
 М11/06 сц. 06	P/08.1 сц. 15	8.1	15-shadow-and-executors	former name 06-shadow-and-executors (number 06 taken)
 # Acceptance steps М11/01 → vectors view of chapter P/08.1 (plan of the move of lesson 8, В1): a step — a row of cases.tsv with case = the name of the input file.
-М11/1 Н5 команда view (входы М11/01 inputs/*.json)	P/08.1 vectors/view	8.1	the domain view and the shadow report: the function view	28 rows from sc. 01–16; expectations checked by an oracle against the text of the norms; manifests testsub, testsub2 — sha256 in the README of the package
+М11/1 N5 команда view (входы М11/01 inputs/*.json)	P/08.1 vectors/view	8.1	the domain view and the shadow report: the function view	28 rows from sc. 01–16; expectations checked by an oracle against the text of the norms; manifests testsub, testsub2 — sha256 in the README of the package
 М11/01 сц. 01	P/08.1 vectors/view	8.1	01-two-members	step 1 — 01-two-members
 М11/01 сц. 02	P/08.1 vectors/view	8.1	02-member-unseen-and-silent	step 1 — 02-unseen, step 2 — 02-member-silent, step 3 — 02-member-at-45, step 4 — 02-member-at-46
 М11/01 сц. 03	P/08.1 vectors/view	8.1	03-configured-and-stale	step 1 — 03-configured-and-stale
@@ -705,7 +705,7 @@ P/06.3 Н1.3 gate, open_routes, session; P/06.5 Н1.8 manifest, rule, codes (р�
 М11/02 сц. 09	common vectors/domain-envelopes	common	09-envelope-does-not-open	removed: the same cases — domain-envelopes/x25519-open.tsv, 6 rows: step 1 → seal-03-another-book-seal, step 2 → seal-04-another-member, step 3 → seal-05-another-source, step 4 → seal-06-another-item, step 5 → seal-07-another-pointer, step 6 → seal-13-ct-flipped
 М11/02 сц. 10	common vectors/domain-envelopes	common	10-envelope-form	removed: the same cases — domain-envelopes/x25519-open.tsv, 7 rows: step 1 → seal-08-version-v2, step 2 → seal-09-padding, step 3 → seal-10-four-parts, step 4 → seal-11-short-nonce, step 5 → seal-14-short-ct, step 6 → seal-12-zero-eph, step 7 → seal-16-noncanonical-ct
 М11/02 сц. 11	common vectors/domain-envelopes	common	11-seal-round	removed: the same cases — domain-envelopes/x25519-round.tsv, 2 rows: step 1 → seal-round-01, step 2 → seal-round-02-small-order
-М11/2 Н3 token (входы приёмки М11/02 token-*; перенос урока 8)	common vectors/domain-token	common	the function token: the key and until, the form, the bound exp + 60 and iat − 60, revocation, expect of the recipient	the contract common/contracts/domain-token.md; owner P/08 (chapter 8.2); rows — acceptance inputs М11/2 sc. 04–07, 12 without a change of bytes
+М11/2 N3 token (входы приёмки М11/02 token-*; перенос урока 8)	common vectors/domain-token	common	the function token: the key and until, the form, the bound exp + 60 and iat − 60, revocation, expect of the recipient	the contract common/contracts/domain-token.md; owner P/08 (chapter 8.2); rows — acceptance inputs М11/2 sc. 04–07, 12 without a change of bytes
 # Acceptance scenarios of chapter 8.3 (stage B move, lesson 8): numbers and steps as before; coinciding numbers — the next after the largest number of the chapter's sources (plan § 3; the Architect's decision of 2026-10-20 item 14).
 М11/03 сц. 01	P/08.3 сц. 01	8.3	01-cold-start-and-acceptance	-
 М11/03 сц. 02	P/08.3 сц. 02	8.3	02-another-root-and-leave	input inputs/other-root.json — in acceptance/3/inputs/
@@ -735,11 +735,11 @@ P/06.3 Н1.3 gate, open_routes, session; P/06.5 Н1.8 manifest, rule, codes (р�
 М11/05 сц. 03	P/08.5 сц. 03	8.5	03-silent-contributor	-
 М11/05 сц. 05	P/08.5 сц. 05	8.5	05-recipient-not-member	-
 М11/09 сц. 05	P/08.5 сц. 11	8.5	11-names-index	former name 05-names-index (number 05 taken)
-М11/5 Н5 команда assemble (входы М11/05 inputs/assemble-*.json)	P/08.5 vectors/assemble	8.5	book assembly at the holder: the function assemble	17 rows from sc. 06; expectations checked by an oracle against the text of the norms; manifests testsub, testsub2 — sha256 in the README of the package
+М11/5 N5 команда assemble (входы М11/05 inputs/assemble-*.json)	P/08.5 vectors/assemble	8.5	book assembly at the holder: the function assemble	17 rows from sc. 06; expectations checked by an oracle against the text of the norms; manifests testsub, testsub2 — sha256 in the README of the package
 М11/05 сц. 06	P/08.5 vectors/assemble	8.5	06-assemble	transferred: 17 steps = 17 rows of cases.tsv (step N — assemble-NN; step 17 @exit 2 — expect «exit 2»)
 М11/07 сц. 01	P/08.7 сц. 01	8.7	01-token-and-audience	-
 М11/07 сц. 02	P/08.7 сц. 02	8.7	02-refusals	-
-М11/7 Н5 команда issue (входы М11/07 inputs/issue-*.json)	P/08.7 vectors/issue	8.7	the issue of a worker token by the holder: the function issue	30 rows from sc. 03; expectations checked by an oracle against the text of the norms
+М11/7 N5 команда issue (входы М11/07 inputs/issue-*.json)	P/08.7 vectors/issue	8.7	the issue of a worker token by the holder: the function issue	30 rows from sc. 03; expectations checked by an oracle against the text of the norms
 М11/07 сц. 03	P/08.7 vectors/issue	8.7	03-issue	transferred: 30 steps = 30 rows of cases.tsv (step N — issue-NN)
 # Acceptance scenarios of chapter 8.6: numbers and steps as before.
 М11/06 сц. 01	P/08.6 сц. 01	8.6	01-placement	-
@@ -774,7 +774,7 @@ P/06.3 Н1.3 gate, open_routes, session; P/06.5 Н1.8 manifest, rule, codes (р�
 М11/12 сц. 03	P/09.1 сц. 03	9.1	03-unreadable-member-key	-
 М11/12 сц. 06	P/09.1 сц. 06	9.1	06-fresh-and-unchanged	-
 # Vectors of chapter P/09.1 (move of lesson 9; plan of the move of lesson 9, § 3; the Architect's decision on plans 8–10, item 17): the command scenario М11/10 sc. 06 transferred to the package follow, a step — a row of cases.tsv with case = the name of the input file.
-М11/10 Н3 «следовать» (входы приёмки М11/10 follow-*; разбор ревью стадии A 8–10, № 8)	P/09.1 vectors/follow	9.1	following the holder: the function follow	12 rows from sc. 06 without a change of bytes; owner P/09.1, executed only by the agent; keys — the README of the package
+М11/10 N3 «следовать» (входы приёмки М11/10 follow-*; разбор ревью стадии A 8–10, № 8)	P/09.1 vectors/follow	9.1	following the holder: the function follow	12 rows from sc. 06 without a change of bytes; owner P/09.1, executed only by the agent; keys — the README of the package
 М11/10 сц. 06	P/09.1 vectors/follow	9.1	06-follow	transferred: 12 steps = 12 rows of cases.tsv: step 1 → follow-01-larger-term, step 2 → follow-02-held-larger, step 3 → follow-03-holding, step 4 → follow-04-two-holders, step 5 → follow-05-moved-its-door, step 6 → follow-06-forged-larger, step 7 → follow-07-nobody-answers, step 8 → follow-08-forged-only, step 9 → follow-09-same-term-other-holder, step 10 → follow-10-tampered-answer, step 11 → follow-11-held-is-a-backup, step 12 → follow-12-held-is-a-grant
 # Acceptance scenarios of chapter P/09.2 (stage B move, lesson 9): numbers and steps as before; number 01 is empty.
 М11/04 сц. 02	P/09.2 сц. 02	9.2	02-road-through-the-relay	-
@@ -791,13 +791,13 @@ P/06.3 Н1.3 gate, open_routes, session; P/06.5 Н1.8 manifest, rule, codes (р�
 М11/09 сц. 03	P/06.7 сц. 14	6.7	14-break-glass	former name 03-break-glass (number 03 taken by the scenario М11/08; the Architect's decision on the move plans 8–10, item 14; plan 8 gave 13)
 М11/10 сц. 01	P/06.7 сц. 15	6.7	15-held-and-copies	former name 01-held-and-copies (number 01 taken by the scenario М11/08; the Architect's decision on the move plans 8–10, item 14)
 # Vectors of chapter P/06.7 (move of lesson 10; plan of the move of lesson 8, § 3, В1; the Architect's decision on plans 8–10, item 17): the command scenario М11/11 sc. 03 transferred to the package resolve, a step — a row of cases.tsv with case = the name of the input file.
-М11/11 Н3 resolve (входы приёмки М11/11 resolve-*)	P/06.7 vectors/resolve	6.7	the value at read time: the function resolve	11 rows from sc. 03 without a change of values (expectations — JSON without the prefix ok and spaces outside strings; (review analysis of stage B 8–10, № 22)); owner P/06.7, executed by the cluster console (GET /domain/shared/<sub>)
+М11/11 N3 resolve (входы приёмки М11/11 resolve-*)	P/06.7 vectors/resolve	6.7	the value at read time: the function resolve	11 rows from sc. 03 without a change of values (expectations — JSON without the prefix ok and spaces outside strings; (review analysis of stage B 8–10, № 22)); owner P/06.7, executed by the cluster console (GET /domain/shared/<sub>)
 М11/11 сц. 03	P/06.7 vectors/resolve	6.7	03-resolve	transferred: 11 steps = 11 rows of cases.tsv: step 1 → resolve-01-unit-own, step 2 → resolve-02-domain, step 3 → resolve-03-manifest, step 4 → resolve-04-union, step 5 → resolve-05-union-no-unit, step 6 → resolve-06-union-no-domain, step 7 → resolve-07-document, step 8 → resolve-08-document-none, step 9 → resolve-09-groups, step 10 → resolve-10-override-list, step 11 → resolve-11-term-zero
 # Acceptance scenarios of lesson P/10 (stage B move, lesson 10): numbers and steps as before; one chapter — the directory acceptance/ without a subdirectory.
 М11/08 сц. 05	P/10 сц. 05	10	05-the-holders-page	-
 М11/11 сц. 02	P/10 сц. 02	10	02-silent-member	steps 4, 9 (delivery) — P/10-14; step 11 (the agent signature at /events of the member console) — a neighbour on the stand (plan 10 В6)
 # Vector of lesson P/10 (plan of the move of lesson 10, § 3, В7; the Architect's decision on plans 8–10, item 17): the command scenario М11/11 sc. 04 transferred to the package alarms, a step — a row of cases.tsv with case = the name of the input file.
-М11/11 Н3 alarms (входы приёмки М11/11 alarms-*; разбор ревью стадии A 8–10, № 8)	P/10 vectors/alarms	10	the alarm list: the function alarms	15 rows from sc. 04 without a change of values (expectations — JSON without the prefix ok and spaces outside strings; (review analysis of stage B 8–10, № 22)) (14 computed, 1 @exit 2); owner P/10 (decision 8)
+М11/11 N3 alarms (входы приёмки М11/11 alarms-*; разбор ревью стадии A 8–10, № 8)	P/10 vectors/alarms	10	the alarm list: the function alarms	15 rows from sc. 04 without a change of values (expectations — JSON without the prefix ok and spaces outside strings; (review analysis of stage B 8–10, № 22)) (14 computed, 1 @exit 2); owner P/10 (decision 8)
 М11/11 сц. 04	P/10 vectors/alarms	10	04-alarms	transferred: 15 steps = 15 rows of cases.tsv: step 1 → alarms-01-all-answered, step 2 → alarms-02-storm-truncated, step 3 → alarms-03-silent-last-report, step 4 → alarms-04-not-reporting-witness, step 5 → alarms-05-witness-older-than-report, step 6 → alarms-06-never-and-unreadable, step 7 → alarms-07-history-dedup-and-cut, step 8 → alarms-08-window, step 9 → alarms-09-clock-offset, step 10 → alarms-10-two-witnesses, step 11 → alarms-11-cut-before-zero, step 12 → alarms-12-page-line-not-alarm, step 13 → alarms-13-same-line-in-page, step 14 → alarms-14-witness-tie, step 15 → alarms-15-lost-after-negative
 - (новая)	P/02.1-38	2.1	door.pass of the second kind: the form and the relations	ADR-0094 B1
 - (новая)	P/02.5-06	2.5	the worker role socket to the console	ADR-0094 B1

@@ -1,169 +1,169 @@
-# The closed list of error words of the doors of the domain process: chapters 8.3, 8.4, 8.6–8.10 (ADR-0094 B5). The rules — chapter 8.0 Н4; the format of field — P/06.1 Н2.
+# The closed list of error words of the doors of the domain process: chapters 8.3, 8.4, 8.6–8.10 (ADR-0094 B5). The rules — chapter 8.0 N4; the format of field — P/06.1 N2.
 # door — the doors: agents /api/member, /api/carry, /api/relay; tokens /api/tokens; login /api/login; verify /api/verify; people /domain/users…; groups /domain/groups…; roles /domain/roles…; batch /domain/batch; batches /domain/batches…;
 # grants /domain/grants/…; break-glass /domain/break-glass/…; revoke /domain/revoke; members /domain/members…; topology /domain/topology;
 # placement /domain/placement/…; edits /domain/<sub>/<rows>…; shared /domain/shared; move /api/prepare, /api/take, /domain/move;
-# handover /domain/handover; stranded /domain/stranded/apply; agent-tokens — the agent's local tokens door (acceptance 8.7); * — every door of the process. For the agents the word is refined by reason (8.3 Н4, 8.7 Н4).
-# versions — the doors of the table 8.0 Н1.9: these words go with the words of their own door (members, topology, people, grants, break-glass, groups, roles, batch, placement, shared); If-Match is not read at POST /domain/users, /domain/groups, /domain/roles and at /domain/batch.
+# handover /domain/handover; stranded /domain/stranded/apply; agent-tokens — the agent's local tokens door (acceptance 8.7); * — every door of the process. For the agents the word is refined by reason (8.3 N4, 8.7 N4).
+# versions — the doors of the table 8.0 N1.9: these words go with the words of their own door (members, topology, people, grants, break-glass, groups, roles, batch, placement, shared); If-Match is not read at POST /domain/users, /domain/groups, /domain/roles and at /domain/batch.
 # field — what the field field carries: «-» — no field; otherwise the possible values separated by a space, <…> — a substitution: <поле> — a body field, <i> — the row number from zero.
 door	code	error	field	norm
-agents	400	refused	-	8.3 Н4
-agents	401	refused	-	8.3 Н4
-agents	403	refused	-	8.3 Н4
-agents	404	refused	-	8.3 Н4
-agents	409	refused	-	8.3 Н4
-agents	503	refused	-	8.3 Н4
-agents	413	whole too large	-	8.10 Н4
-tokens	400	refused	-	8.7 Н4
-tokens	403	refused	-	8.7 Н4
-tokens	404	refused	-	8.7 Н4
-tokens	409	refused	-	8.7 Н4
-tokens	413	refused	-	8.7 Н4
-login	400	bad body	/user /password	8.4 Н2
-login	401	refused	-	8.4 Н4
-login	413	too large	-	8.4 Н4
-login	429	too many attempts	-	8.4 Н4
-verify	400	bad body	-	8.4 Н4
-verify	401	refused	-	8.4 Н4
-verify	403	denied	-	8.4 Н4
-verify	413	too large	-	8.4 Н4
-verify	429	too many attempts	-	8.4 Н4
-people	400	bad body	-	8.4 Н4
-people	400	bad name	/name	8.4 Н4
-people	400	bad password	/password	8.4 Н4
-people	404	no such person	-	8.4 Н4
-people	409	exists	/name	8.4 Н4
-people	409	name taken	/name	8.4 Н4
-people	409	last admin	-	8.4 Н4
-people	413	too large	-	8.4 Н4
-people	503	names unknown	-	8.4 Н4
-grants	400	bad name	-	8.4 Н4
-grants	400	bad line	/lines /lines/<i>	8.4 Н4
-grants	400	grant too wide	/lines/<i>	8.4 Н4
-grants	400	unknown subject	/lines/<i>/subject	8.4 Н4
-grants	409	being deleted	/lines/<i>/subject	8.4 Н4
-grants	409	last admin	-	8.4 Н4
-grants	409	refused	-	8.4 Н4
-grants	413	too large	-	8.4 Н4
-grants	503	names unknown	-	8.4 Н4
-break-glass	400	bad body	-	8.4 Н4
-break-glass	400	bad name	-	8.4 Н4
-break-glass	400	bad password	/password	8.4 Н4
-break-glass	413	too large	-	8.4 Н4
-revoke	400	bad body	/token	8.4 Н4
-revoke	401	refused	-	8.4 Н4
-revoke	413	too large	-	8.4 Н4
-revoke	409	too many revocations	-	8.4 Н4
-members	400	refused	/name /fingerprint /ca /ca_certs	8.3 Н2, Н4
-members	404	refused	-	8.3 Н4
-members	409	refused	-	8.3 Н4, 8.10 Н4
-batches	400	refused	/name /via /n	8.3 Н1.1б
-batches	404	refused	-	8.3 Н1.1б
-batches	409	refused	-	8.3 Н1.1б
-batches	503	unavailable	-	8.3 Н1.1б
-topology	400	refused	/base_rev	8.3 Н4
-topology	409	refused	/base_rev /centre /star /via	8.3 Н4
-placement	400	refused	/<поле>	8.6 Н4
-placement	404	refused	-	8.6 Н4
-placement	409	refused	/cluster /origin /copies	8.6 Н4
-placement	503	refused	-	8.6 Н4
-edits	400	refused	/<поле>	8.6 Н4
-edits	400	a secret is set in the member's own cluster, never through a kept edit	/<поле>	8.6 Н1.3
-edits	404	refused	-	8.6 Н4, 8.1 Н4
-edits	404	no such member	-	8.6 Н4
-edits	409	executors	-	8.6 Н4
-edits	409	siblings	-	8.6 Н4
-edits	409	kept_full	-	8.6 Н4
-edits	409	unit is being deleted	-	8.6 Н4
-edits	409	the pending edits kept changing; ask again	-	8.6 Н4
-edits	413	too large	-	8.6 Н1.4
-edits	422	this Idempotency-Key was used for another edit	-	8.6 Н1.4
-edits	503	refused	-	8.6 Н4, 8.1 Н4
-versions	400	If-Match is a unit revision	-	8.0 Н1.9 «Версии»
-versions	400	Idempotency-Key required	-	8.0 Н1.9 «Память повторов»
-versions	409	in flight	-	8.0 Н1.9 «Память повторов»
-versions	412	revision moved	/revision	8.0 Н1.9 «Версии»
-versions	413	row too large	-	8.0 Н1.9 «Память повторов»
-versions	422	key reused	-	8.0 Н1.9 «Память повторов»; ADR-0094 доп. (14)
-shared	400	refused	/base_rev /shared /shared/<sub> /shared/<sub>/<имя>	8.9 Н1.3
-shared	409	refused	/base_rev	8.9 Н1.3
-shared	413	refused	-	8.9 Н1.3
-shared	503	refused	-	8.9 Н1.3
-move	400	refused	-	8.8 Н4
-move	403	refused	-	8.8 Н4
-move	404	refused	-	8.8 Н4
-move	409	refused	-	8.8 Н4
-move	503	refused	-	8.8 Н4
-handover	400	refused	/to	8.8 Н4
-handover	409	called off	-	8.8 Н4
-handover	409	refused	-	8.8 Н4
-stranded	400	redo it on the new holder	-	8.8 Н1.6
-stranded	404	refused	-	8.8 Н1.6
-stranded	409	refused	-	8.8 Н1.6
-*	400	denied	-	6.5 Н4
-*	401	denied	-	8.4 Н4
-*	403	denied	-	8.4 Н4
-*	405	method	-	8.0 Н4
-*	408	denied	-	6.5 Н4
-*	409	deposed	-	8.8 Н1.6
-*	413	denied	-	6.5 Н4
-*	503	frozen	-	8.8 Н1.7
-*	503	standby	-	8.10 Н1.7
-*	503	unavailable	-	8.4 Н1.5; 8.10 Н4
-groups	400	bad body	-	8.4 Н4
-groups	400	bad name	-	8.4 Н4
-groups	400	unknown member	/members/<i>	8.4 Н4
-groups	403	admin only	-	8.4 Н4
-groups	404	no such group	-	8.4 Н4
-groups	409	exists	/name	8.4 Н4
-groups	409	admin table too large	-	8.4 Н4
-groups	409	last admin	-	8.4 Н4
-groups	409	password set by a non-admin	/members/<i>	8.4 Н4
-groups	409	roles table too large	-	8.4 Н4
-groups	413	too large	-	8.4 Н4
-groups	503	unavailable	-	8.4 Н4
-roles	400	bad body	-	8.4 Н4
-roles	400	bad name	-	8.4 Н4
-roles	400	unknown member	/assigned/<i>	8.4 Н4
-roles	403	admin only	-	8.4 Н4
-roles	404	no such role	-	8.4 Н4
-roles	409	builtin	-	8.4 Н4
-roles	409	exists	/name	8.4 Н4
-roles	409	admin table too large	-	8.4 Н4
-roles	409	last admin	-	8.4 Н4
-roles	409	password set by a non-admin	/assigned/<i>	8.4 Н4
-roles	409	roles table too large	-	8.4 Н4
-roles	409	too many admins	/assigned	8.4 Н4
-roles	413	too large	-	8.4 Н4
-roles	503	unavailable	-	8.4 Н4
-batch	400	bad batch	-	8.4 Н4
-batch	400	bad name	/writes/<i>	8.4 Н4
-batch	400	bad line	/writes/<i>	8.4 Н4
-batch	400	unknown member	/writes/<i>	8.4 Н4
-batch	400	grant too wide	/writes/<i>	8.4 Н4
-batch	400	unknown subject	/writes/<i>	8.4 Н4
-batch	409	exists	/writes/<i>	8.4 Н4
-batch	409	being deleted	/writes/<i>	8.4 Н4
-batch	409	builtin	/writes/<i>	8.4 Н4
-batch	409	name taken	/writes/<i>	8.4 Н4
-batch	503	names unknown	-	8.4 Н4
-groups	409	being deleted	/members/<i>	8.4 Н4
-roles	409	being deleted	/assigned/<i>	8.4 Н4
-roles	400	unknown role	/supervision	8.4 Н4
-roles	409	role referenced	-	8.4 Н4
-batch	403	admin only	/writes/<i>	8.4 Н4
-batch	409	admin table too large	-	8.4 Н4
-batch	409	last admin	-	8.4 Н4
-batch	409	password set by a non-admin	/writes/<i>	8.4 Н4
-batch	409	roles table too large	-	8.4 Н4
-batch	409	too many admins	/writes/<i>	8.4 Н4
-batch	412	conflict	/writes/<i>	8.4 Н4
-batch	413	batch too large	-	8.4 Н4
-batch	413	too large	-	8.4 Н4
-batch	503	unavailable	-	8.4 Н4
-people	403	admin only	-	8.4 Н4
-people	409	roles table too large	-	8.4 Н4
-grants	403	admin only	-	8.4 Н4
-grants	409	roles table too large	-	8.4 Н4
-break-glass	403	admin only	-	8.4 Н4
-agent-tokens	400	bad request	-	P/09.1 Н1.6 местная дверь агента
-agent-tokens	404	not found	-	P/09.1 Н1.6 местная дверь агента
+agents	400	refused	-	8.3 N4
+agents	401	refused	-	8.3 N4
+agents	403	refused	-	8.3 N4
+agents	404	refused	-	8.3 N4
+agents	409	refused	-	8.3 N4
+agents	503	refused	-	8.3 N4
+agents	413	whole too large	-	8.10 N4
+tokens	400	refused	-	8.7 N4
+tokens	403	refused	-	8.7 N4
+tokens	404	refused	-	8.7 N4
+tokens	409	refused	-	8.7 N4
+tokens	413	refused	-	8.7 N4
+login	400	bad body	/user /password	8.4 N2
+login	401	refused	-	8.4 N4
+login	413	too large	-	8.4 N4
+login	429	too many attempts	-	8.4 N4
+verify	400	bad body	-	8.4 N4
+verify	401	refused	-	8.4 N4
+verify	403	denied	-	8.4 N4
+verify	413	too large	-	8.4 N4
+verify	429	too many attempts	-	8.4 N4
+people	400	bad body	-	8.4 N4
+people	400	bad name	/name	8.4 N4
+people	400	bad password	/password	8.4 N4
+people	404	no such person	-	8.4 N4
+people	409	exists	/name	8.4 N4
+people	409	name taken	/name	8.4 N4
+people	409	last admin	-	8.4 N4
+people	413	too large	-	8.4 N4
+people	503	names unknown	-	8.4 N4
+grants	400	bad name	-	8.4 N4
+grants	400	bad line	/lines /lines/<i>	8.4 N4
+grants	400	grant too wide	/lines/<i>	8.4 N4
+grants	400	unknown subject	/lines/<i>/subject	8.4 N4
+grants	409	being deleted	/lines/<i>/subject	8.4 N4
+grants	409	last admin	-	8.4 N4
+grants	409	refused	-	8.4 N4
+grants	413	too large	-	8.4 N4
+grants	503	names unknown	-	8.4 N4
+break-glass	400	bad body	-	8.4 N4
+break-glass	400	bad name	-	8.4 N4
+break-glass	400	bad password	/password	8.4 N4
+break-glass	413	too large	-	8.4 N4
+revoke	400	bad body	/token	8.4 N4
+revoke	401	refused	-	8.4 N4
+revoke	413	too large	-	8.4 N4
+revoke	409	too many revocations	-	8.4 N4
+members	400	refused	/name /fingerprint /ca /ca_certs	8.3 N2, N4
+members	404	refused	-	8.3 N4
+members	409	refused	-	8.3 N4, 8.10 N4
+batches	400	refused	/name /via /n	8.3 N1.1b
+batches	404	refused	-	8.3 N1.1b
+batches	409	refused	-	8.3 N1.1b
+batches	503	unavailable	-	8.3 N1.1b
+topology	400	refused	/base_rev	8.3 N4
+topology	409	refused	/base_rev /centre /star /via	8.3 N4
+placement	400	refused	/<поле>	8.6 N4
+placement	404	refused	-	8.6 N4
+placement	409	refused	/cluster /origin /copies	8.6 N4
+placement	503	refused	-	8.6 N4
+edits	400	refused	/<поле>	8.6 N4
+edits	400	a secret is set in the member's own cluster, never through a kept edit	/<поле>	8.6 N1.3
+edits	404	refused	-	8.6 N4, 8.1 N4
+edits	404	no such member	-	8.6 N4
+edits	409	executors	-	8.6 N4
+edits	409	siblings	-	8.6 N4
+edits	409	kept_full	-	8.6 N4
+edits	409	unit is being deleted	-	8.6 N4
+edits	409	the pending edits kept changing; ask again	-	8.6 N4
+edits	413	too large	-	8.6 N1.4
+edits	422	this Idempotency-Key was used for another edit	-	8.6 N1.4
+edits	503	refused	-	8.6 N4, 8.1 N4
+versions	400	If-Match is a unit revision	-	8.0 N1.9 «Версии»
+versions	400	Idempotency-Key required	-	8.0 N1.9 «Память повторов»
+versions	409	in flight	-	8.0 N1.9 «Память повторов»
+versions	412	revision moved	/revision	8.0 N1.9 «Версии»
+versions	413	row too large	-	8.0 N1.9 «Память повторов»
+versions	422	key reused	-	8.0 N1.9 «Память повторов»; ADR-0094 доп. (14)
+shared	400	refused	/base_rev /shared /shared/<sub> /shared/<sub>/<имя>	8.9 N1.3
+shared	409	refused	/base_rev	8.9 N1.3
+shared	413	refused	-	8.9 N1.3
+shared	503	refused	-	8.9 N1.3
+move	400	refused	-	8.8 N4
+move	403	refused	-	8.8 N4
+move	404	refused	-	8.8 N4
+move	409	refused	-	8.8 N4
+move	503	refused	-	8.8 N4
+handover	400	refused	/to	8.8 N4
+handover	409	called off	-	8.8 N4
+handover	409	refused	-	8.8 N4
+stranded	400	redo it on the new holder	-	8.8 N1.6
+stranded	404	refused	-	8.8 N1.6
+stranded	409	refused	-	8.8 N1.6
+*	400	denied	-	6.5 N4
+*	401	denied	-	8.4 N4
+*	403	denied	-	8.4 N4
+*	405	method	-	8.0 N4
+*	408	denied	-	6.5 N4
+*	409	deposed	-	8.8 N1.6
+*	413	denied	-	6.5 N4
+*	503	frozen	-	8.8 N1.7
+*	503	standby	-	8.10 N1.7
+*	503	unavailable	-	8.4 N1.5; 8.10 N4
+groups	400	bad body	-	8.4 N4
+groups	400	bad name	-	8.4 N4
+groups	400	unknown member	/members/<i>	8.4 N4
+groups	403	admin only	-	8.4 N4
+groups	404	no such group	-	8.4 N4
+groups	409	exists	/name	8.4 N4
+groups	409	admin table too large	-	8.4 N4
+groups	409	last admin	-	8.4 N4
+groups	409	password set by a non-admin	/members/<i>	8.4 N4
+groups	409	roles table too large	-	8.4 N4
+groups	413	too large	-	8.4 N4
+groups	503	unavailable	-	8.4 N4
+roles	400	bad body	-	8.4 N4
+roles	400	bad name	-	8.4 N4
+roles	400	unknown member	/assigned/<i>	8.4 N4
+roles	403	admin only	-	8.4 N4
+roles	404	no such role	-	8.4 N4
+roles	409	builtin	-	8.4 N4
+roles	409	exists	/name	8.4 N4
+roles	409	admin table too large	-	8.4 N4
+roles	409	last admin	-	8.4 N4
+roles	409	password set by a non-admin	/assigned/<i>	8.4 N4
+roles	409	roles table too large	-	8.4 N4
+roles	409	too many admins	/assigned	8.4 N4
+roles	413	too large	-	8.4 N4
+roles	503	unavailable	-	8.4 N4
+batch	400	bad batch	-	8.4 N4
+batch	400	bad name	/writes/<i>	8.4 N4
+batch	400	bad line	/writes/<i>	8.4 N4
+batch	400	unknown member	/writes/<i>	8.4 N4
+batch	400	grant too wide	/writes/<i>	8.4 N4
+batch	400	unknown subject	/writes/<i>	8.4 N4
+batch	409	exists	/writes/<i>	8.4 N4
+batch	409	being deleted	/writes/<i>	8.4 N4
+batch	409	builtin	/writes/<i>	8.4 N4
+batch	409	name taken	/writes/<i>	8.4 N4
+batch	503	names unknown	-	8.4 N4
+groups	409	being deleted	/members/<i>	8.4 N4
+roles	409	being deleted	/assigned/<i>	8.4 N4
+roles	400	unknown role	/supervision	8.4 N4
+roles	409	role referenced	-	8.4 N4
+batch	403	admin only	/writes/<i>	8.4 N4
+batch	409	admin table too large	-	8.4 N4
+batch	409	last admin	-	8.4 N4
+batch	409	password set by a non-admin	/writes/<i>	8.4 N4
+batch	409	roles table too large	-	8.4 N4
+batch	409	too many admins	/writes/<i>	8.4 N4
+batch	412	conflict	/writes/<i>	8.4 N4
+batch	413	batch too large	-	8.4 N4
+batch	413	too large	-	8.4 N4
+batch	503	unavailable	-	8.4 N4
+people	403	admin only	-	8.4 N4
+people	409	roles table too large	-	8.4 N4
+grants	403	admin only	-	8.4 N4
+grants	409	roles table too large	-	8.4 N4
+break-glass	403	admin only	-	8.4 N4
+agent-tokens	400	bad request	-	P/09.1 N1.6 местная дверь агента
+agent-tokens	404	not found	-	P/09.1 N1.6 местная дверь агента

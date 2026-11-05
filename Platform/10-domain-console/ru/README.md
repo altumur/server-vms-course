@@ -12,8 +12,8 @@ spec/10-domain-console.norms.md           нормы
 spec/10-domain-console.api.openapi.yaml   двери
 spec/10-domain-console.README.md          инструкция реализации
 lifecycle.md                              флаги, окружение, коды выхода, юниты
-data/refusal-words.tsv                    закрытый перечень слов error своих дверей (Н4; ADR-0094 B5)
-vectors/alarms/                           векторы списка тревог, функция alarms (Н1.8, Н3)
+data/refusal-words.tsv                    закрытый перечень слов error своих дверей (N4; ADR-0094 B5)
+vectors/alarms/                           векторы списка тревог, функция alarms (N1.8, N3)
 acceptance/                               приёмка урока, сц. 02, 05–19 (README.md, scenarios.tsv)
 journal/corrections.tsv                   журнал исправлений ИИ урока — история, не вход; в выгрузку не входит
 ru/                                       для человека, в выгрузку не входит — лекция ru/10-domain-console.md, переводы английского текста тем же путём

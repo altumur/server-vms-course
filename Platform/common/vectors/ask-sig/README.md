@@ -16,7 +16,7 @@ the table is the only source of these cases.
 ## Run
 
 Without a stand: the function of an implementation gets the input (the column `input`) and gives the outcome (the column `expect`) or `@exit 2` (an input not of
-the form of [P/08.8](../../../08-domain/spec/08.8-domain.norms.md) Н5 `exit`); the comparison is a subset of the fields of the output, as at the other domain packages (the reading of the commits of «cammeta-acceptance» 2026-10-20). The time is by the input `now`, not by the process clock.
+the form of [P/08.8](../../../08-domain/spec/08.8-domain.norms.md) N5 `exit`); the comparison is a subset of the fields of the output, as at the other domain packages (the reading of the commits of «cammeta-acceptance» 2026-10-20). The time is by the input `now`, not by the process clock.
 Who performs it — by the `ask` of the input: `backup` — the cluster console (`06-console`, `GET /api/backup`); `prepare` — the process
 `domain` of the target (`08-domain`, `POST /api/prepare`); `move` — the cluster console of the target and the process `domain` (ACC-VECTORS-CONNECT-02, the Architect's decision 2026-10-26).
 

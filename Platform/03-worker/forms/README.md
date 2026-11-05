@@ -6,7 +6,7 @@ These forms express the existing worker norms (ADR-0125 addendum (5)). The SDK h
 ## Process inputs
 
 [`daemon-flags.tsv`](daemon-flags.tsv) keeps the eight P/01 columns. `$NAME` denotes an environment value and `<name>` the optional
-ordinary worker slot-name argument; `commands` names `worker` and/or `domainworker`. The domain worker has its fixed slot of 3.7 Н1.6, not this name argument. The dynamic variable named by manifest `slot.name_env` is resolved by the adapter
+ordinary worker slot-name argument; `commands` names `worker` and/or `domainworker`. The domain worker has its fixed slot of 3.7 N1.6, not this name argument. The dynamic variable named by manifest `slot.name_env` is resolved by the adapter
 only when the argument is absent; the form does not turn it into a fixed environment name or a command option.
 
 Types are the P/01 vocabulary plus `string`. `default` is a literal, or `-` when there is no literal default; `default_text` preserves a
@@ -26,11 +26,11 @@ removed because its Code cell has no numeric code. `-` means no cell or no extra
 
 `start` is a start refusal, `process` a running process, `call` a library result, `peer` an imported door contract. `code` is a fixed HTTP
 code, `exit N`, `exit !0` or `-`; a conditional code stays in its normative outcome cell. `kind` is `-`: the imported peer's `error` is not a
-worker HTTP Fault schema. No unspecified stdout/stderr format is imposed by a diagnostic token. Н4 links to the form and has no second table.
+worker HTTP Fault schema. No unspecified stdout/stderr format is imposed by a diagnostic token. N4 links to the form and has no second table.
 
 ## Capture machine
 
-[`slot-capture.tsv`](slot-capture.tsv) is the machine of 3.2 Н3 capture. Its header declares closed states and actions, typed CEL inputs and
+[`slot-capture.tsv`](slot-capture.tsv) is the machine of 3.2 N3 capture. Its header declares closed states and actions, typed CEL inputs and
 TORN_STILL. Only the first matching row for the current state is taken. An action `-` means YOURS at `norm`, and must run before the next event
 is accepted; it never means no effect. The kit part `slot-capture` generates admission and transition choice and is called by `core`; candidate enumeration, deriving reader outcomes,
 full-key validation, store-item encoding, logical write ids, and guarded cleanup are the procedures at their anchors. A store non-answer is not
