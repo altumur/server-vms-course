@@ -122,6 +122,26 @@ class Core(unittest.TestCase):
         for name in ("Rights", "Status", "Join", "Leave", "Metrics"):
             self.assertRegex(self.core, rf"func \(s \*Store\) {name}\([^)]*\) apidoor.Answer {{\n\treturn notInStage\(")
 
+    def test_identity_over_context(self):
+        """Над Context — места личности (якоря P/01.2 Н1.1, Н3 «check», P/01.1 Н2.1, «list»), порядок, заголовок, строки
+        refusals.tsv; тело Context — прежнее (не код решения)."""
+        m = re.search(r"((?://.*\n)+)func \(s \*Store\) Context\(call Call, header map\[string\]string\) Ctx \{\n"
+                      r"\treturn &Request\{Call: call, Header: header\}\n\}", self.core)
+        self.assertTrue(m)
+        doc = m[1]
+        texts = {}
+        for path, _, anchor, _ in gen_core.IDENTITY:
+            self.assertIn(f"req: {anchor} — ", doc)
+            texts.setdefault(path, path.read_text(encoding="utf-8"))
+            self.assertIn(f"<!-- req: {anchor} -->", texts[path])
+        for want in ("403 with the role of the socket", "return `403` before the body is parsed",
+                     "«frame → route → identity → body»", "P/01.3-07", "X-Configstore-Role",
+                     "1.2 row 7 role_header — 403 forbidden", "refusals.RoleHeader", "1.1 row 4 identity",
+                     "QueryRefused too"):
+            self.assertIn(want, doc)
+        kit = (Path(self.tmp.name) / "KIT.md").read_text(encoding="utf-8")
+        self.assertIn("**Context — the identity of the call: what to check.**", kit)
+
     def test_manifest_and_doc(self):
         m = __import__("json").loads((Path(self.tmp.name) / "kit.manifest.json").read_text(encoding="utf-8"))
         own = {f["path"] for f in m["files"] if f.get("editable")}
