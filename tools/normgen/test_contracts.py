@@ -27,7 +27,7 @@ GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOL
 
 
 def adapter_fns():
-    return {re.search(r"^func ([A-Z]\w*)\((?:table string|input \[\]byte|file \[\]byte|raw string)", p.read_text(), re.M)[1]: p
+    return {re.search(r"^func ([A-Z]\w*)\((?:table|input|file|raw)\b", p.read_text(), re.M)[1]: p
             for p in sorted(ADAPTERS.glob("*.go"))}
 
 

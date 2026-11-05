@@ -398,7 +398,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
             origin = "generated" if data.startswith(b"// Code generated") else "handwritten"
             put("contracts", f.name, data, origin, "contracts", str(f.relative_to(ROOT)))
         for f in sorted((CONTRACTS / "adapters").glob("*.go")):
-            fn = re.search(r"^func ([A-Z]\w*)\((?:table string|input \[\]byte|file \[\]byte|raw string)", f.read_text(), re.M)[1]
+            fn = re.search(r"^func ([A-Z]\w*)\((?:table|input|file|raw)\b", f.read_text(), re.M)[1]
             contract_adapters[f"{fn.lower()}.go"] = f
     for (sub, name, data, origin, source, own), component in tests:
         if sub == "vectoradapter" and name in contract_adapters:   # заглушка → адаптер над contracts (свой у реализации)
@@ -604,7 +604,8 @@ event journal: names, buckets, lines…; the outcome of a store answer for its c
 crl.pem by the centers; the login and the password in a url value — the display and the refusal, the log mask of
 free text, the mask at the input; the url field rules from their declarations; NFKC of Unicode 15.0.0; the loopback
 threshold and the IP literal of peer; the schema check at start; the object address and the read outcome; freshness by LOST_AFTER; the fault words of
-the doors); reading files, the environment and the clock is yours. With the part
+the doors; the envelope enc:v2, the AAD path, the ring file and resealing a value; the values by type of a row);
+reading files, the environment and the clock is yours. With the part
 `vectors`, the adapters of the tables they cover (`vectoradapter/<package>.go`) call this package — yours to change
 like any adapter. `tools/normgen/test_contracts.py` runs the common vectors of every lesson against them.
 """
