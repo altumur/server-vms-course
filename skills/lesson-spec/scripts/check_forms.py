@@ -198,9 +198,13 @@ def check_refusals(path):
             errors.append(f"{where}: kind of a {r['surface']} refusal is -")
     number = re.match(r"([0-9]{2})-", lesson.name)[1].lstrip("0") if re.match(r"[0-9]{2}-", lesson.name) else ""
     for chapter in sorted({r["chapter"] for r in rows}):
-        k = chapter.split(".")[1]
-        norms = sorted((lesson / "spec").glob(f"{lesson.name[:2]}.{k}-*.norms.md"))
-        if not chapter.startswith(number + ".") or not norms:
+        if "." in chapter:
+            norms = sorted((lesson / "spec").glob(f"{lesson.name[:2]}.{chapter.split('.')[1]}-*.norms.md"))
+            mine_ok = chapter.startswith(number + ".")
+        else:                                            # урок одной главой: нормы одним файлом NN-<имя>.norms.md
+            norms = sorted((lesson / "spec").glob(f"{lesson.name[:2]}-*.norms.md"))
+            mine_ok = chapter == number
+        if not mine_ok or not norms:
             errors.append(f"{path.name}: chapter {chapter}: no norms file of the lesson")
             continue
         text = norms[0].read_text(encoding="utf-8")
@@ -286,10 +290,16 @@ def check_refusals(path):
 
 
 KIT_PARTS = {"writecheck", "door", "flags", "refusals", "vectors", "stagetests", "launch",   # ADR-0126 доп. (2) п. 1, доп. (7) п. 4; ADR-0083 доп. (95) п. 3
-             "families", "admin", "core", "rollout-poll"}                                   # ADR-0125 доп. (5)
-GATE = re.compile(r"tests:([0-9]+\.[0-9]+):([^:;\s]+)(:seams)?|accept:([0-9]+\.[0-9]+):([^:;\s]+)|vectors:([a-z0-9-]+)|build"
-                  r"|(verdicts|puts):([0-9]+\.[0-9]+):([^:;\s]+)")
+             "families", "admin", "core", "rollout-poll", "slot-capture"}                                   # ADR-0125 доп. (5)
+CH = r"[0-9]+(?:\.[0-9]+)?"          # глава NN.K или урок одной главой NN (P/04, ADR-0125 доп. (5))
+GATE = re.compile(rf"tests:({CH}):([^:;\s]+)(:seams)?|accept:({CH}):([^:;\s]+)|vectors:([a-z0-9-]+)|build"
+                  rf"|(verdicts|puts):({CH}):([^:;\s]+)")
 CASE_TABLE = {"verdicts": "verdicts.tsv", "puts": "puts.tsv"}   # таблицы случаев приёмки (P/02), ADR-0125 доп. (5)
+
+
+def acceptance_dir(lesson, chapter):
+    """Каталог приёмки главы: `acceptance/K` для NN.K, `acceptance` для урока одной главой NN."""
+    return lesson / "acceptance" / chapter.split(".")[1] if "." in chapter else lesson / "acceptance"
 
 
 def stage_forms(root):
@@ -326,7 +336,7 @@ def check_stage_parts(path):
 
 ANCHOR = re.compile(r"^<!-- req: (\S+) -->$", re.M)
 TOMBSTONE = re.compile(r"^<!-- removed: (\S+) by ADR-[0-9]{4} -->$", re.M)
-REQ = re.compile(r"P/([0-9]{2})\.([0-9]+)-R([0-9]{3})")
+REQ = re.compile(r"P/([0-9]{2})(?:\.([0-9]+))?-R([0-9]{3})")   # P/NN.K-RNNN или P/NN-RNNN урока одной главой
 
 
 def req_lessons(root):
@@ -342,14 +352,14 @@ def check_req_anchors(lesson):
     errors, seen, removed, count = [], {}, set(), 0
     for norms in sorted((lesson / "spec").glob("*.norms.md")):
         text = norms.read_text(encoding="utf-8")
-        m = re.match(r"([0-9]{2})\.([0-9]+)-", norms.name)
+        m = re.match(r"([0-9]{2})(?:\.([0-9]+))?-", norms.name)       # NN.K-<имя> — глава, NN-<имя> — урок одной главой
         removed |= set(TOMBSTONE.findall(text))
         for number in ANCHOR.findall(text):
             count += 1
             g = REQ.fullmatch(number)
             if not g:
                 errors.append(f"{norms.name}: anchor {number} is not P/NN.K-RNNN")
-            elif not m or (g[1], g[2]) != (m[1], m[2]):
+            elif not m or (g[1], g[2]) != (m[1], m[2]):          # P/04-RNNN — только в 04-<имя>.norms.md
                 errors.append(f"{norms.name}: anchor {number} is not of this chapter")
             if number in seen:
                 errors.append(f"{norms.name}: anchor {number} repeats ({seen[number]})")
@@ -379,7 +389,7 @@ def gate_errors(lesson, stage, check):
         return []
     if m[7]:                                             # verdicts:/puts: — случаи таблицы главы, первая колонка
         chapter, names = m[8], m[9]
-        file = lesson / "acceptance" / chapter.split(".")[1] / CASE_TABLE[m[7]]
+        file = acceptance_dir(lesson, chapter) / CASE_TABLE[m[7]]
         if not file.is_file():
             return [f"stages.tsv: {stage}: no {file.relative_to(lesson)} for {m[7]}:{chapter}"]
         if names == "*":
@@ -388,7 +398,7 @@ def gate_errors(lesson, stage, check):
         missing = [n for n in names.split(",") if n not in known]
         return [f"stages.tsv: {stage}: cases {missing} are not in {file.relative_to(lesson)}"] if missing else []
     chapter, names, seams = (m[1], m[2], m[3]) if m[1] else (m[4], m[5], None)
-    file = lesson / "acceptance" / chapter.split(".")[1] / ("seams.tsv" if seams else "scenarios.tsv")
+    file = acceptance_dir(lesson, chapter) / ("seams.tsv" if seams else "scenarios.tsv")
     if not file.is_file():
         return [f"stages.tsv: {stage}: no {file.relative_to(lesson)} for {check.split(':')[0]}:{chapter}"]
     if names == "*":

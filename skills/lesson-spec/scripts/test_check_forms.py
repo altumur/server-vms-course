@@ -211,3 +211,17 @@ class FormsAllLessons(unittest.TestCase):         # ADR-0125 доп. (5): гра
                     good.replace("P/02.3 Н3", " ")):
             (forms / "operator-commands.tsv").write_text(head + bad, encoding="utf-8")
             self.assertTrue(check_forms.check_operator_commands(forms / "operator-commands.tsv")[0], bad)
+
+    def test_single_chapter_lesson(self):              # урок одной главой (P/04): глава 4, acceptance/ без K, P/04-RNNN
+        one = self.tmp / "Platform/04-controller"
+        (one / "acceptance").mkdir(parents=True)
+        (one / "spec").mkdir()
+        (one / "acceptance/scenarios.tsv").write_text("# s\n# scenario\tstep\trequest\texpect\n01-a\t1\tGET /x\t200 {}\n", encoding="utf-8")
+        (one / "acceptance/seams.tsv").write_text("# s\n# scenario\tstep\trequest\texpect\ns1\t1\t@reopen\tok\n", encoding="utf-8")
+        self.assertEqual(check_forms.gate_errors(one, "s", "accept:4:01-a"), [])
+        self.assertEqual(check_forms.gate_errors(one, "s", "tests:4:*:seams"), [])
+        self.assertTrue(check_forms.gate_errors(one, "s", "accept:4:02-b"))
+        (one / "spec/04-controller.norms.md").write_text("<!-- req: P/04-R001 -->\nx\n<!-- req: P/04.1-R002 -->\n", encoding="utf-8")
+        errs = check_forms.check_req_anchors(one)[0]
+        self.assertEqual(len(errs), 1, errs)                   # P/04.1-R002 не этого файла; P/04-R001 — годен
+        self.assertIn("slot-capture", check_forms.KIT_PARTS)
