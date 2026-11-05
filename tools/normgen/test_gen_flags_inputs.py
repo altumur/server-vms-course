@@ -257,6 +257,28 @@ class InputFlags(unittest.TestCase):
                 self.assertTrue(kept.is_file(), f"{kept} missing")
                 self.assertEqual(kept.read_bytes(), p.read_bytes(), f"{kept} is stale: run gen_flags.py --lesson {lesson}")
 
+    def test_p06_instance_input(self):
+        """Absent/empty lets the caller compute the instance; supplied accepted spelling is preserved; no new CLI."""
+        given = "box-a:00042:AbCdEf"
+        cases = [("console", [], {}), ("console", [], {"INSTANCE_ID": ""}),
+                 ("console", [], {"INSTANCE_ID": given}),
+                 ("console", [], {"INSTANCE_ID": "узел:00042:AbCdEf"}),
+                 ("cleanup-window", ["--writers-stopped"], {"INSTANCE_ID": given}),
+                 ("console", ["--instance-id=" + given], {})]
+        got = run_driver(self.mods["06-console"], cases)
+        self.assertEqual(len(got), len(cases))
+        for i in range(5):
+            self.assertIsNone(got[i]["refused"], got[i])
+        self.assertNotIn("$INSTANCE_ID", got[0]["given"])
+        self.assertIn("$INSTANCE_ID", got[1]["given"])
+        self.assertNotIn("InstanceID", got[0]["values"])
+        self.assertNotIn("InstanceID", got[1]["values"])
+        self.assertEqual(got[2]["values"]["InstanceID"], given)
+        self.assertEqual(got[3]["values"]["InstanceID"], "узел:00042:AbCdEf")
+        self.assertNotIn("$INSTANCE_ID", got[4]["given"])
+        self.assertNotIn("InstanceID", got[4]["values"])
+        self.assertEqual(got[5]["refused"], "--instance-id")
+
     def test_oracle(self):
         rnd = random.Random(20261105)
         for lesson in LESSONS:
