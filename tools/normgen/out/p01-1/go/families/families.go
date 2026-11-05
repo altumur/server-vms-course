@@ -5,7 +5,7 @@
 // Platform/01-store/data/configstore-doors.schema.json sha256 9e1f0314b436bf31ea9c4ab987685dca993537872f35db13246959ba90f314dd
 // Platform/01-store/data/configstore-doors.layers.tsv sha256 f9fc249e4ff9938120810c2109cc3c6225bb4281538641e895779be236fbc88c
 // Platform/01-store/data/configstore-doors.outcomes.tsv sha256 d4ea2f76077fef05ea0118bb065005d87935bf9a7c76271e194cd6e3cbd3de99
-// Platform/common/data/README.md sha256 649728648d75b6686baf6550640190895eeb1829654bc763ccd6b7f85bd98bdb
+// Platform/common/data/README.md sha256 163df9f2f212a53e182144db14200c5ba0ee2cafeb6ce1650ec5f2a225062287
 // Platform/common/placeholders.tsv sha256 3178e8397f6baae5ba0ca7c676e091798ff2648be38cf871b744680128de90b7
 
 // Package families — the reading of the data families of P/01 (ADR-0125 № 5): by family a *Family

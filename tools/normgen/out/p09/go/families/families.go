@@ -80,7 +80,7 @@
 // Platform/09-agent/data/edit-ids.schema.json sha256 926e2110054a424629a72402e6c35b1724d1f0bd4777f239252147cf487f0cd0
 // Platform/09-agent/data/edit-ids.layers.tsv sha256 d6e164acf1937a75710da51a3875d61001c31d1e4c2b8fd296c68e621715364c
 // Platform/09-agent/data/edit-ids.outcomes.tsv sha256 fba5066872c3bc8629dcdc4e2d1e0e5c3284021f5be413425c123734bdcc7131
-// Platform/common/data/README.md sha256 649728648d75b6686baf6550640190895eeb1829654bc763ccd6b7f85bd98bdb
+// Platform/common/data/README.md sha256 163df9f2f212a53e182144db14200c5ba0ee2cafeb6ce1650ec5f2a225062287
 // Platform/common/placeholders.tsv sha256 3178e8397f6baae5ba0ca7c676e091798ff2648be38cf871b744680128de90b7
 
 // Package families — the reading of the data families of P/09 (ADR-0125 № 5): by family a *Family

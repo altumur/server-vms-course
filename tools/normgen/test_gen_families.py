@@ -60,10 +60,15 @@ class PlaceholderLabels(unittest.TestCase):
                 with self.assertRaises(GenError):
                     gen_families.placeholders()
 
-    def test_conflicting_explicit_grammars_are_refused(self):
+    def test_explicit_typed_grammars_take_priority_over_prose_labels(self):
         self.grammar([("<форма>", "^(?:old)$"), ("<form>", "^(?:new)$")])
         self.labels.write_text("ru\ten\nформа\tform\n")
-        with self.assertRaisesRegex(GenError, "conflicting grammars"):
+        self.assertEqual(gen_families.placeholders(), {"<форма>": "^(?:old)$", "<form>": "^(?:new)$"})
+
+    def test_ambiguous_missing_label_is_refused(self):
+        self.grammar([("<один>", "^(?:old)$"), ("<два>", "^(?:new)$")])
+        self.labels.write_text("ru\ten\nодин\tmissing\nдва\tmissing\n")
+        with self.assertRaisesRegex(GenError, "conflicting grammars for alias <missing>"):
             gen_families.placeholders()
 
     def test_conflicting_readme_duplicates_are_refused_before_mapping(self):

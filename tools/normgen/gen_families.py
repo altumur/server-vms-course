@@ -101,18 +101,22 @@ def placeholders():
     # The catalogue keeps its typed key templates. Only the spelling used to look
     # up their grammar changes between the ru/en labels of ADR-0121 (3).
     if PLACEHOLDER_LABELS.is_file():
+        explicit = dict(out)
         seen = set()
         for row in tsv(PLACEHOLDER_LABELS, ["ru", "en"]):
             if not row["ru"] or not row["en"] or row["ru"] in seen:
                 raise GenError(f"{rel(PLACEHOLDER_LABELS)}: empty or duplicate ru label {row['ru']!r}")
             seen.add(row["ru"])
             ru, en = f"<{row['ru']}>", f"<{row['en']}>"
-            if ru in out and en in out and out[ru] != out[en]:
-                raise GenError(f"{rel(PLACEHOLDER_LABELS)}: conflicting grammars for {ru} and {en}")
-            if en in out:
-                out[ru] = out[en]
-            elif ru in out:
-                out[en] = out[ru]
+            # README is typed data: explicit <сервер>/<server> and <ключ>/<key>
+            # can denote different types. Prose labels never override those.
+            if ru in explicit and en in explicit:
+                continue
+            source, alias = (en, ru) if en in explicit else (ru, en)
+            if source in explicit:
+                if alias in out and out[alias] != explicit[source]:
+                    raise GenError(f"{rel(PLACEHOLDER_LABELS)}: conflicting grammars for alias {alias}")
+                out[alias] = explicit[source]
     return out
 
 

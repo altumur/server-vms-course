@@ -23,7 +23,7 @@
 // Platform/03-worker/data/heartbeats.schema.json sha256 34968989c0d86a0e7c5f5b617c8ae43fd1f026c600fe6d5044f31df831eddb8d
 // Platform/03-worker/data/heartbeats.layers.tsv sha256 0912cbdf0d7e15c86d9ce2584734ab0e08cd1058e29af664870a3dd1ab002b10
 // Platform/03-worker/data/heartbeats.domain.outcomes.tsv sha256 3dfada530ce27a016cbcb59a8649364d269f01f79bbda6dbfead2a8a5a986a00
-// Platform/common/data/README.md sha256 649728648d75b6686baf6550640190895eeb1829654bc763ccd6b7f85bd98bdb
+// Platform/common/data/README.md sha256 163df9f2f212a53e182144db14200c5ba0ee2cafeb6ce1650ec5f2a225062287
 // Platform/common/placeholders.tsv sha256 3178e8397f6baae5ba0ca7c676e091798ff2648be38cf871b744680128de90b7
 
 // Package families — the reading of the data families of P/03 (ADR-0125 № 5): by family a *Family
