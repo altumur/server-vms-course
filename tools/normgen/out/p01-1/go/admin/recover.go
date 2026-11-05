@@ -47,10 +47,11 @@ import "normgen/p01-1/flags"
 //	    interpreted and is kept as is — schemas are the business of their owners (guess of stage C S04, the Architect's
 //	    decision of 2026-10-23); the copy `copy` knows no manifests (Н1.3 `import`) | Neither the floor nor the rows are
 //	    changed | | New floor | Raise floor above upper durably, once; op: floor has its own replay id | On an unknown
-//	    answer repeat with the same id, do not compute a new generation | | Transfer | Write the rows of the same
-//	    attempt; durable progress for continuation | A partial transfer is possible; ordinary writers are forbidden | |
-//	    Done | Check completeness, allow the updated membership/writers | The former group stays cut off; only epochs not
-//	    below floor are started — one issued with the old floor is lost (P/03.2 Н3 «take_epoch(id)») |
+//	    answer repeat with the same id, do not compute a new generation | | Transfer | Keep the first new floor F1; write
+//	    all other copy rows with their copy versions, excluding the old platform/epoch_floor; durable progress for
+//	    continuation | A partial transfer is possible; ordinary writers are forbidden | | Done | Check every non-floor
+//	    input row and the saved new F1 row; allow the updated membership/writers | The former group stays cut off; only
+//	    epochs not below floor are started — one issued with the old floor is lost (P/03.2 Н3 «take_epoch(id)») |
 //	  req: P/01.3-R027 — An overflow of the generation/uint64 is a refusal before changes. `-force` cancels none of these
 //	    checks. If a reliable upper of the lost tail cannot be obtained, the guarantee of non-repetition of epochs is
 //	    unprovable and recovery by this profile is not performed.

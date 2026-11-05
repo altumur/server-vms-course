@@ -235,6 +235,10 @@ step	stage	test	status	race	reason
 1.1/seams.tsv/s4-parallel-cas/2	store_core	TestStoreCore_S4ParallelCas	translated	yes	-
 1.1/seams.tsv/s4-parallel-cas/3	store_core	TestStoreCore_S4ParallelCas	translated	yes	-
 1.1/seams.tsv/s4-parallel-cas/4	store_core	TestStoreCore_S4ParallelCas	translated	yes	-
+1.3/seams.tsv/s7-loopback-api-no-tls/1	daemon_doors	TestDaemonDoors_S7LoopbackApiNoTls	translated	no	-
+1.3/seams.tsv/s8-loopback-join-needs-tls/1	daemon_doors	TestDaemonDoors_S8LoopbackJoinNeedsTls	translated	no	-
+1.3/seams.tsv/s9-public-api-needs-tls/1	daemon_doors	TestDaemonDoors_S9PublicApiNeedsTls	translated	no	-
+1.3/seams.tsv/s10-import-floor-resume/1	daemon_copy	TestDaemonCopy_S10ImportFloorResume	translated	no	-
 1.1/seams.tsv/s5-reopen-id-admission/1	durable	TestDurable_S5ReopenIdAdmission	translated	no	-
 1.1/seams.tsv/s5-reopen-id-admission/2	durable	TestDurable_S5ReopenIdAdmission	translated	no	-
 1.1/seams.tsv/s5-reopen-id-admission/3	durable	TestDurable_S5ReopenIdAdmission	translated	no	-
