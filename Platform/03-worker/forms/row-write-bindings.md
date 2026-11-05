@@ -16,7 +16,7 @@ guard_version is start:/pointer or input:/pointer to a declared exact P/01 strin
 
 ## The state constructor
 
-[The four rows](row-write-bindings.tsv) choose family <sub>/state/<name>/<unit>. start carries the accepted unit start: sub/unit, its born (empty if absent), revision, holder epoch and the exact index of the epoch row confirmed when taking it. input carries one declared state name and its value. born/revision/epoch and both guard references must come from start. value alone comes from input and is encoded as JCS by the state-family codec, after validation against unit.state.<name>. The name and unit also retain their manifest/key grammar.
+[The four rows](row-write-bindings.tsv) choose family `<sub>/state/<name>/<unit>`. start carries the accepted unit start: sub/unit, its born (empty if absent), revision, holder epoch and the exact index of the epoch row confirmed when taking it. input carries one declared state name and its value. born/revision/epoch and both guard references must come from start. value alone comes from input and is encoded as JCS by the state-family codec, after validation against `unit.state.<name>`. The name and unit also retain their manifest/key grammar.
 
 The result is key/items/guard. Reading the former state row, its CAS version, may_write, CAS/retry, guard refusal, synchronization and confirmation remain the ordinary IO procedure P/03.6-R029. The constructor performs none of them and reads no store. Capturing epoch_index from a newer read would break the binding even if its string is valid.
 
