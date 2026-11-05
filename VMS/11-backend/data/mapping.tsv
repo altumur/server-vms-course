@@ -322,28 +322,32 @@ Rule	mute	auto/rule_marks	mute	read	written by /rules/update; numbers ↔ date-t
 Rule	order	auto/rule_marks	order	read	written by POST /rules, /rules/reorder; only among the rules of one evaluator
 Rule	version	auto/scenarios + auto/rule_marks	s<индекс строки>.m<индекс отметки>	read	V/11.4 Н1.10
 Rule	historyNote	auto/versions	note строки версии	write	RuleWrite: restore, undo; no field in the answer
-RuleTrigger	source	auto/scenarios	when[].sub: vms ↔ cam, det, rec; det покрывает и встроенный, V/07.2 Н1.3	both
-RuleTrigger	kind	auto/scenarios	when[].kind как есть	both
+RuleTrigger	source	—	"unit"	const	the subsystem of the row — by the row event (V/11.13 Н1.4)
+RuleTrigger	event	auto/scenarios	when[].kind как есть; when[].sub: motion, linecross, lpr, disappeared, abandoned, crowd — det (покрывает и встроенный, V/07.2 Н1.3), segment.lost — rec, прочие — cam	both
+RuleTrigger	kinds	data:VMS/11-backend/data/rule-catalog.json#triggers	kinds строки с этим event; не хранится	both
+RuleTrigger	implements	—	—	none
 RuleTrigger	target	auto/scenarios	when[].target; unit — цель из одного устройства	both	see RuleTarget
-RuleTrigger	match	auto/scenarios	when[].match: value active ↔ closed, normal ↔ open; port строка цифр ↔ целое, из записи цели; word как есть; у вида unit word ↔ event, unit — ключ cam/device_units; прочие ключи и типы как есть	both	template — 422 NOT_SUPPORTED; a number mismatch — RULE_INVALID (V/11.3 Н1.3)
-RuleTarget	include	auto/scenarios	target.include: device — 7, child — <cam>-<type>-<number>, folder — id папки, server — имя, domain — CLUSTER	both	back — by the listings of the kind
-RuleTarget	exclude	auto/scenarios	target.exclude	both
+RuleTrigger	match	auto/scenarios	when[].match: value active ↔ closed, normal ↔ open; port строка цифр ↔ целое, из записи цели; word как есть; у события unit word ↔ event, unit — ключ cam/device_units; прочие ключи и типы как есть	both	template — 422 NOT_SUPPORTED; a number mismatch — RULE_INVALID (V/11.3 Н1.3)
+RuleTarget	include	auto/scenarios	target.include: {uid} объекта — device 7, child <cam>-<type>-<number>; {area: folder, uid} — id папки; {area: server, uid} — имя; {area: domain, uid} — CLUSTER	both	back — by the listings of the kind
+RuleTarget	exclude	auto/scenarios	target.exclude: uid ↔ строка цели	both
 RuleTarget	gone	auto/scenarios	target.gone	both	set by the cascade (V/11.4 Н1.10)
 RuleTarget	fromEvent	auto/scenarios	target.from_event	both
 RuleCondition	kind, value	auto/scenarios	conditions[] как есть	both
 RuleCondition	target	auto/scenarios	conditions[].target	both	see RuleTarget
 RuleCondition	scheduleId	auto/scenarios	conditions[].schedule	both
 RuleCondition	modeIds	auto/scenarios	conditions[].modes	both
-RuleAction	source, action	auto/scenarios	then[]: vms preset, output, unit, arm, disarm, disable ↔ cam; rec record; det detect, scan как есть; alarm alarm ↔ auto alarm; rule runrule ↔ auto runrule; прочие — данными	both	an undeclared one on an enabled rule — 422 NOT_SUPPORTED, field steps
+RuleAction	type, action	auto/scenarios	then[]: unitAction arm, disarm, preset, disable, output, unit ↔ cam; record ↔ rec record; detect, scan ↔ det; alarm ↔ auto alarm	both	an action outside unitActions of rule-catalog.json on an enabled rule — 422 NOT_SUPPORTED, field steps
+RuleAction	source, action	auto/scenarios	then[]: rule runrule ↔ auto runrule; прочие — данными	both
 RuleAction	target	auto/scenarios	then[].target; unit, cam — цель из одного устройства	both
-RuleAction	preset	auto/scenarios	n	both	0 — 422 VALIDATION_FAILED
-RuleAction	port, state, minutes, priority, text, duration	auto/scenarios	те же поля	both	port 0 — 422 VALIDATION_FAILED; duration event — data, an enabled one — RULE_INVALID
-RuleAction	pulseMs, afterSec	auto/scenarios	pulse_ms; after_sec, у scan after	both
-RuleAction	archive	auto/scenarios	archive: id хранилища ↔ имя тома; у scan rec: запись камеры на этом томе ↔ её home	both
-RuleAction	detectorKind	auto/scenarios	kind	both	detect, scan
-RuleAction	beforeSec	auto/scenarios	before	both	scan
-RuleAction	params	auto/scenarios	params	both	detect, scan
-RuleAction	operation	auto/scenarios	operation	both	the target is a device unit: unit, n of its row (V/07.1)
+RuleAction	params.preset	auto/scenarios	n	both	0 — 422 VALIDATION_FAILED
+RuleAction	params.port, params.minutes, params.priority, params.text, params.duration	auto/scenarios	те же поля	both	port 0 — 422 VALIDATION_FAILED; duration event — data, an enabled one — RULE_INVALID
+RuleAction	params.state	auto/scenarios	state: true ↔ closed, false ↔ open; true с params.pulseMs ↔ pulse с pulse_ms	both
+RuleAction	params.pulseMs, params.afterSec	auto/scenarios	pulse_ms; after_sec, у scan after	both
+RuleAction	params.archive	auto/scenarios	archive: id хранилища ↔ имя тома; у scan rec: запись камеры на этом томе ↔ её home	both
+RuleAction	params.detectorKind	auto/scenarios	kind	both	detect, scan
+RuleAction	params.beforeSec	auto/scenarios	before	both	scan
+RuleAction	params.params	auto/scenarios	params	both	detect, scan
+RuleAction	params.operation	auto/scenarios	operation	both	the target is a device unit: unit, n of its row (V/07.1)
 RuleAction	ruleId	auto/scenarios	rule: UUID ↔ номер	both
 RuleAction	layoutId, roleId, monitorId, to, subject, body, chat, method, url	auto/scenarios	те же поля в snake_case	both	data: the action is not declared
 RuleWait	control, sec	auto/scenarios	then[]: wait	both
@@ -357,7 +361,7 @@ RuleFire	at	GET /events	occurred	read
 RuleFire	by, result, checks	GET /events	те же поля fired; waiting, а запуска нет — итог по шагам	read	V/11.3 Н1.3
 RuleFire	logOnly	GET /events	log_only	read	none — false
 RuleFire	sourceDeviceIds	GET /events	source	read
-RuleFire	events	GET /events	events: sub ↔ source, cam ↔ deviceId, occurred ↔ at	read
+RuleFire	events	GET /events	events: source — unit, sub по event; kind ↔ event, cam ↔ deviceId, occurred ↔ at	read
 RuleFire	steps	GET /events	строки step: step ↔ path, target ↔ deviceId, action, label, result ↔ state, reason, note	read	control — the field is not null; skip — result: skip; depth — the number of branches in step; label, note — {code, params}: role ↔ roleId, user ↔ login (V/11.3 Н1.3)
 RulePrompt	—	auto/scenarios	state.runs строки: шаг ask, уровень escalate; кроме log_only и until 0	read	own cluster (V/11.3 Н1.3)
 RulePrompt	id	auto/scenarios	UUID rulePrompt:<кластер>/<scenario>/<fire>/<step>[/<n>]	read
@@ -419,7 +423,7 @@ Reference	recordModes	—	["none", "always", "motion", "sched", "replica", "back
 Reference	serviceTypes, supportLevels, cloudProviders	—	[]	const	the product has no services, support levels or cloud providers; a bucket is a volume address
 Reference	limits	—	{"ipScanMax": 0, "defaultServerPort": 0, "pageMax": 1000, "idsMax": 200, "selectMax": 500, "watchMax": 200, "scanPartsMax": 8, "scenariosMax": 1000}	const	there is no polling of server addresses (V/11.2 No. 10); pages — V/11.3 Н1.2б; scanPartsMax — a value per measurement; scenariosMax — maxItems V/07.5 Н1.1
 Reference	scenarioKinds	—	["io.input", "silent", "text", "unit"]	const	the event kinds of cam (kinds of the manifest): the trigger of a document scenario is cam only (V/07.5 Н1.2)
-Reference	access	—	{"features":["DEVICES_SETUP","ARCHIVES_SETUP","DETECTORS_SETUP","EDIT_PTZ_PRESETS","EXPORT","ALLOW_UNPROTECTED_EXPORT","ALLOW_SHOW_PRIVACY_VIDEO_IN_ARCHIVE","USERS_RIGHTS_SETUP"],"levels":{"cam":["FORBID","ONLY_ARCHIVE","MON","ARCHIVE","ARCH_MANAGE","FULL"],"arch":["FORBID","FULL"],"ur":["NO","ALL"]},"defaults":[{"key":"dCam","levels":"cam"},{"key":"dArch","levels":"arch"}],"globals":[],"folderFields":["cam"],"fieldDefaults":{"cam":"dCam","arch":"dArch"},"visibleFrom":{"cam":"ONLY_ARCHIVE","arch":"FULL"},"restrictions":[],"plugins":[],"roleTemplates":[{"id":"commissioner","rights":{"feat":["DEVICES_SETUP","ARCHIVES_SETUP","DETECTORS_SETUP","EDIT_PTZ_PRESETS"],"dCam":"FULL","dArch":"FULL"}},{"id":"operator","rights":{"feat":[],"dCam":"MON","dArch":"FULL"}},{"id":"viewer","rights":{"feat":[],"dCam":"MON"}}],"loginSchedules":[0],"syncTimezones":[],"staleDays":90,"expiringSoonDays":7,"joins":[{"kind":"cam","levels":["MON","ONLY_ARCHIVE"],"level":"ARCHIVE"}],"passwordPolicy":{"minLength":10,"letter":false,"digit":false,"notLogin":false}}	const	only what is translated (V/11.8; V/11.2 Н1.5)
+Reference	access	—	{"features":["DEVICES_SETUP","ARCHIVES_SETUP","DETECTORS_SETUP","EDIT_PTZ_PRESETS","EXPORT","ALLOW_UNPROTECTED_EXPORT","ALLOW_SHOW_PRIVACY_VIDEO_IN_ARCHIVE","USERS_RIGHTS_SETUP"],"levels":{"cam":["FORBID","ONLY_ARCHIVE","MON","ARCHIVE","ARCH_MANAGE","FULL"],"arch":["FORBID","FULL"],"ur":["NO","ALL"]},"defaults":[{"key":"cam","levels":"cam"},{"key":"arch","levels":"arch"}],"globals":[],"folderFields":["cam"],"visibleFrom":{"cam":"ONLY_ARCHIVE","arch":"FULL"},"restrictions":[],"plugins":[],"roleTemplates":[{"id":"commissioner","rights":{"feat":["DEVICES_SETUP","ARCHIVES_SETUP","DETECTORS_SETUP","EDIT_PTZ_PRESETS"],"kindAccess":{"cam":"FULL","arch":"FULL"}}},{"id":"operator","rights":{"feat":[],"kindAccess":{"cam":"MON","arch":"FULL"}}},{"id":"viewer","rights":{"feat":[],"kindAccess":{"cam":"MON"}}}],"loginSchedules":[0],"syncTimezones":[],"staleDays":90,"expiringSoonDays":7,"joins":[{"kind":"cam","levels":["MON","ONLY_ARCHIVE"],"level":"ARCHIVE"}],"passwordPolicy":{"minLength":10,"letter":false,"digit":false,"notLogin":false}}	const	only what is translated: the classes cam, arch (V/11.8 Н1 «Classes»; V/11.2 Н1.5)
 Reference	export	GET /manifest	exp: the enumerations of settings, the limits of V/08.6 Н1.4	read	the export window reference ExportReference, limits.bookmarkPadSec 30 (V/11.20 Н1.8)
 Reference	capabilities	backend	объявление возможностей	read	operations — «translated» of V/11.2; features — V/11.2 Н1.5; the kinds and what is editable — GET /kinds and Unit.writable (V/11.14 Н1.1)
 Reference	serverLabels	GET /servers	метки серверов по порядку байтов без server:*	read	a read refusal — [], a log line
@@ -461,7 +465,7 @@ OperationItem	version	GET /backend/operations/<id> + части цели	нын�
 OperationItem	createdId	GET /backend/operations/<id>	created_id	read
 OperationItem	params	GET /backend/operations/<id>	field итога incompatible:<id> → {reason: incompatible, with}; folders → {reason: folders}	read	the result does not carry the detail fields (V/11.4 Н1.8, Н1.12)
 stream	—	cam/cameras	строка с main = id камеры	both	a stream of the camera: a part of its assembly, written with it (V/11.4 Н1.15; V/11.3 Н1.3 «Потоки»)
-stream	uid	cam/cameras	UUID device:<кластер>/cam/cameras/<id>	read	the stream is a row of cam/cameras: the id rule of a camera row (V/11.4 Н1.6)
+stream	uid	cam/cameras	UUID device:<кластер>/cam/cameras/<id>; основной поток — device:<кластер>/cam/cameras/<id>#main	read	the main stream is the camera row; its own name keeps one uid per record (V/11.4 Н1.6)
 stream	kind	—	"stream"	const
 stream	parentId	cam/cameras	main — UUID камеры	read	set at creation (UnitCreate.parentId)
 stream	version	cam/cameras	индекс хранилища строки	read	in the list element by B4

@@ -226,7 +226,7 @@ The assistant — the vectors [`plan-check`](vectors/plan-check/README.md), [`tu
 2. **What is not declared for rules**: `recordMode: sched` — the field `recordScheduleId` is in the contract, there is no recording schedule row in the norms of V/02, V/07 (V/11.3 Н1.3). A `Rule` of several clusters: `ruleCrossDomainActions` is empty, `Rule` does not express this (V/11.4 Н1.10).
 4. **Questions to the product with the increment of rights**: the password of a new
    person (`AccessUser` has no field, V/11.8 Н1.5); which levels show detectors; folder management; `MON_PROT`; the pair `MON` and `ONLY_ARCHIVE`
-   (ADR-0097, ADR-0099, ADR-0100, «Запрос продукту»). `dArch: FULL` with `dCam: MON` does not become a line and is read as `FORBID` (V/11.8 Н1.4).
+   (ADR-0097, ADR-0099, ADR-0100, «Запрос продукту»). `kindAccess.arch: FULL` with `kindAccess.cam: MON` does not become a line and is read as `FORBID` (V/11.8 Н1.4).
 5. **A version that can come back** (V/11.4 Н1.1: the parts `h`, `i` do not go by guards and can also return the concatenation; the rights snapshot of V/11.8 Н1.1 is the same if a row was created and removed): the streams of a camera and the recordings of a volume enter the version as live rows —
    their tombstones cannot be found by the camera or the volume; creating and removing such a row bypassing `backend` returns the former concatenation
    with the same visible record. The product's strict «does not come back» does not hold here.

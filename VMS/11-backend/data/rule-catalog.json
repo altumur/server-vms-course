@@ -1,9 +1,12 @@
 {
- "_note": "The catalog of events, steps, conditions, controls, starts and targets of rules: data of lesson V/10 (chapter 7 Н1.3). Words of the contract; the canon of the V/07 row at the input — closed, open, translation V/11.3 Н1.3. assist_omit — what the rules harness does not offer: refusal Н1.5; empty since ADR-0093 addendum (9).",
+ "_note": "The catalogue of rules: data of lesson V/10 (V/11.13 Н1.3) in the words of the contract 0.2.0. actions, conditions, controls, starts, targets, crossDomain — the values of Reference.ruleActions, ruleConditions, ruleControls, ruleStarts, ruleTargets, ruleCrossDomainActions: mapping.tsv refers to them. triggers — the events of the kind descriptions (UnitKind.events of kinds.json), unitActions — the actions of objects (UnitKind.actions with ruleAction): not a reference, what the evaluator executes, they agree with kinds.json; kinds — the kinds that have the event or the action. The input io.input — active, normal; the canon of the V/07 row — closed, open, translation V/11.3 Н1.3. assist_omit — what the rules harness does not offer: refusal Н1.5; empty since ADR-0093 addendum (9).",
  "triggers": [
   {
-   "source": "vms",
-   "kind": "io.input",
+   "event": "io.input",
+   "kinds": [
+    "sensor",
+    "acfa_sensor"
+   ],
    "match": [
     {
      "id": "value",
@@ -15,9 +18,8 @@
    ]
   },
   {
-   "source": "vms",
-   "kind": "text",
-   "deviceTypes": [
+   "event": "text",
+   "kinds": [
     "eventsrc"
    ],
    "match": [
@@ -28,9 +30,8 @@
    ]
   },
   {
-   "source": "vms",
-   "kind": "unit",
-   "deviceTypes": [
+   "event": "unit",
+   "kinds": [
     "acfa_sensor",
     "acfa_lock",
     "acfa_fence",
@@ -45,96 +46,105 @@
    ]
   },
   {
-   "source": "det",
-   "kind": "motion",
+   "event": "motion",
+   "kinds": [
+    "camera"
+   ],
    "match": []
   },
   {
-   "source": "det",
-   "kind": "linecross",
+   "event": "linecross",
+   "kinds": [
+    "camera"
+   ],
    "match": []
   },
   {
-   "source": "det",
-   "kind": "lpr",
+   "event": "lpr",
+   "kinds": [
+    "camera"
+   ],
    "match": []
   },
   {
-   "source": "det",
-   "kind": "disappeared",
+   "event": "disappeared",
+   "kinds": [
+    "camera"
+   ],
    "match": []
   },
   {
-   "source": "det",
-   "kind": "abandoned",
+   "event": "abandoned",
+   "kinds": [
+    "camera"
+   ],
    "match": []
   },
   {
-   "source": "det",
-   "kind": "crowd",
+   "event": "crowd",
+   "kinds": [
+    "camera"
+   ],
    "match": []
   },
   {
-   "source": "vms",
-   "kind": "silent",
+   "event": "silent",
+   "kinds": [
+    "camera"
+   ],
    "match": []
   },
   {
-   "source": "rec",
-   "kind": "segment.lost",
+   "event": "segment.lost",
+   "kinds": [
+    "camera"
+   ],
    "match": []
   }
  ],
  "actions": [
   {
-   "source": "vms",
+   "source": "rule",
+   "action": "runrule",
+   "fields": [
+    {
+     "id": "ruleId"
+    }
+   ]
+  }
+ ],
+ "unitActions": [
+  {
    "action": "arm",
-   "deviceTypes": [
+   "kinds": [
     "camera"
    ],
-   "fields": [
-    {
-     "id": "target"
-    }
-   ]
+   "params": []
   },
   {
-   "source": "vms",
    "action": "disarm",
-   "deviceTypes": [
+   "kinds": [
     "camera"
    ],
-   "fields": [
-    {
-     "id": "target"
-    }
-   ]
+   "params": []
   },
   {
-   "source": "vms",
    "action": "preset",
-   "deviceTypes": [
+   "kinds": [
     "camera"
    ],
-   "fields": [
-    {
-     "id": "target"
-    },
+   "params": [
     {
      "id": "preset"
     }
    ]
   },
   {
-   "source": "rec",
    "action": "record",
-   "deviceTypes": [
+   "kinds": [
     "camera"
    ],
-   "fields": [
-    {
-     "id": "target"
-    },
+   "params": [
     {
      "id": "duration",
      "options": [
@@ -152,30 +162,22 @@
    ]
   },
   {
-   "source": "vms",
    "action": "disable",
-   "deviceTypes": [
+   "kinds": [
     "camera"
    ],
-   "fields": [
-    {
-     "id": "target"
-    },
+   "params": [
     {
      "id": "minutes"
     }
    ]
   },
   {
-   "source": "alarm",
    "action": "alarm",
-   "deviceTypes": [
+   "kinds": [
     "camera"
    ],
-   "fields": [
-    {
-     "id": "target"
-    },
+   "params": [
     {
      "id": "priority",
      "options": [
@@ -191,59 +193,45 @@
    ]
   },
   {
-   "source": "vms",
    "action": "output",
-   "deviceTypes": [
+   "kinds": [
     "relay"
    ],
-   "fields": [
+   "params": [
     {
-     "id": "target"
+     "id": "state"
     },
     {
-     "id": "pulseMs"
-    }
-   ]
-  },
-  {
-   "source": "rule",
-   "action": "runrule",
-   "deviceTypes": [],
-   "fields": [
+     "id": "pulseMs",
+     "optional": true
+    },
     {
-     "id": "ruleId"
+     "id": "port",
+     "optional": true
     }
    ]
   },
   {
-   "source": "vms",
    "action": "unit",
-   "deviceTypes": [
+   "kinds": [
     "acfa_sensor",
     "acfa_lock",
     "acfa_fence",
     "relay",
     "acfa"
    ],
-   "fields": [
-    {
-     "id": "target"
-    },
+   "params": [
     {
      "id": "operation"
     }
    ]
   },
   {
-   "source": "det",
    "action": "detect",
-   "deviceTypes": [
+   "kinds": [
     "camera"
    ],
-   "fields": [
-    {
-     "id": "target"
-    },
+   "params": [
     {
      "id": "detectorKind",
      "options": [
@@ -262,15 +250,11 @@
    ]
   },
   {
-   "source": "det",
    "action": "scan",
-   "deviceTypes": [
+   "kinds": [
     "camera"
    ],
-   "fields": [
-    {
-     "id": "target"
-    },
+   "params": [
     {
      "id": "detectorKind",
      "options": [
@@ -300,32 +284,28 @@
  ],
  "conditions": [
   {
-   "kind": "time",
-   "deviceTypes": []
+   "kind": "time"
   },
   {
-   "kind": "mode",
-   "deviceTypes": []
+   "kind": "mode"
   },
   {
    "kind": "armed",
-   "deviceTypes": [
-    "camera"
-   ]
+   "implements": [
+    "vms.camera/1"
+   ],
+   "target": true
   },
   {
    "kind": "recording",
-   "deviceTypes": [
-    "camera"
-   ]
+   "implements": [
+    "vms.camera/1"
+   ],
+   "target": true
   },
   {
    "kind": "online",
-   "deviceTypes": [
-    "camera",
-    "sensor",
-    "relay"
-   ]
+   "target": true
   }
  ],
  "controls": [
@@ -358,8 +338,7 @@
   "manual"
  ],
  "targets": {
-  "kinds": [
-   "device",
+  "areas": [
    "folder",
    "server",
    "domain"

@@ -1141,22 +1141,20 @@
         "duration": {
          "type": "string",
          "enum": [
-          "min",
-          "event"
+          "min"
          ]
         },
         "minutes": {
          "type": "integer",
          "minimum": 0
         },
-        "afterSec": {
-         "type": "integer",
-         "minimum": 0
-        },
         "archive": {
          "type": "string"
         }
-       }
+       },
+       "required": [
+        "minutes"
+       ]
       },
       "right": {
        "level": "FULL"
@@ -1208,11 +1206,7 @@
          "enum": [
           "motion",
           "linecross",
-          "abandoned",
-          "disappeared",
-          "crowd",
-          "lpr",
-          "other"
+          "lpr"
          ]
         },
         "minutes": {
@@ -1252,11 +1246,7 @@
          "enum": [
           "motion",
           "linecross",
-          "abandoned",
-          "disappeared",
-          "crowd",
-          "lpr",
-          "other"
+          "lpr"
          ]
         },
         "beforeSec": {
@@ -1347,7 +1337,6 @@
        "text": "Оставленный предмет",
        "lang": "ru"
       },
-      "rule": false,
       "right": {
        "level": "FULL"
       }
@@ -1359,7 +1348,6 @@
        "text": "Исчезновение предмета",
        "lang": "ru"
       },
-      "rule": false,
       "right": {
        "level": "FULL"
       }
@@ -1371,7 +1359,6 @@
        "text": "Скопление людей",
        "lang": "ru"
       },
-      "rule": false,
       "right": {
        "level": "FULL"
       }
@@ -2232,6 +2219,7 @@
     ],
     "implements": [],
     "capabilities": [
+     "create",
      "rename",
      "enable",
      "delete",
@@ -2393,7 +2381,8 @@
       "ruleAction": true,
       "ruleRight": {
        "level": "MANAGE"
-      }
+      },
+      "group": true
      },
      {
       "id": "unit",
@@ -2416,6 +2405,27 @@
        "required": [
         "operation"
        ]
+      },
+      "right": {
+       "level": "MANAGE"
+      }
+     }
+    ],
+    "events": [
+     {
+      "id": "unit",
+      "label": {
+       "key": "event.unit",
+       "text": "Единица СКУД",
+       "lang": "ru"
+      },
+      "params": {
+       "type": "object",
+       "properties": {
+        "word": {
+         "type": "string"
+        }
+       }
       },
       "right": {
        "level": "MANAGE"
@@ -3238,6 +3248,55 @@
       "group": "acfa",
       "view": "acfa"
      }
+    ],
+    "events": [
+     {
+      "id": "unit",
+      "label": {
+       "key": "event.unit",
+       "text": "Единица СКУД",
+       "lang": "ru"
+      },
+      "params": {
+       "type": "object",
+       "properties": {
+        "word": {
+         "type": "string"
+        }
+       }
+      },
+      "right": {
+       "level": "MANAGE"
+      }
+     }
+    ],
+    "actions": [
+     {
+      "id": "unit",
+      "label": {
+       "key": "action.acfa.unit",
+       "text": "Команда единицы",
+       "lang": "ru"
+      },
+      "execution": "instant",
+      "ruleAction": true,
+      "ruleOnly": true,
+      "params": {
+       "type": "object",
+       "additionalProperties": false,
+       "properties": {
+        "operation": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "operation"
+       ]
+      },
+      "right": {
+       "level": "MANAGE"
+      }
+     }
     ]
    }
   },
@@ -3570,7 +3629,8 @@
          "type": "boolean"
         }
        }
-      }
+      },
+      "group": true
      },
      {
       "id": "close",
@@ -3591,7 +3651,8 @@
          "type": "boolean"
         }
        }
-      }
+      },
+      "group": true
      },
      {
       "id": "block",
@@ -3612,7 +3673,8 @@
          "type": "boolean"
         }
        }
-      }
+      },
+      "group": true
      },
      {
       "id": "unit",
@@ -3804,7 +3866,8 @@
          "type": "boolean"
         }
        }
-      }
+      },
+      "group": true
      },
      {
       "id": "disarm",
@@ -3825,7 +3888,8 @@
          "type": "boolean"
         }
        }
-      }
+      },
+      "group": true
      },
      {
       "id": "unit",
