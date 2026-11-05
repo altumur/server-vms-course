@@ -3,3 +3,5 @@
 case	puts	expect	canonical	ceiling
 ceiling_976	probe	2 -	-	976
 ceiling_977	probe	0 1	example-sections	977
+# P/02 review (C4): the view weight with the final new rev — eight repeats bring rev 9 at the ceiling 977, the ninth needs rev 10 (978): a refusal, nothing written.
+ceiling_rev_10	probe @view-delete probe @view-delete probe @view-delete probe @view-delete probe @view-delete probe @view-delete probe @view-delete probe @view-delete probe @view-delete probe	2 9	-	977

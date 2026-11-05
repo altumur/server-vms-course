@@ -74,7 +74,7 @@ The weight of the view row is the sum of the bytes of the names and values of `i
 ## puts-ceiling.tsv: a non-default store ceiling
 
 The view ceiling is `max_value` of the answer of `GET /v1/status` of the store, not the number 524288 (the Architect's decision on the Go question P/02 № 4).
-A pair of cases is a separate file `puts-ceiling.tsv` (the coverage audit P/02, B00; `puts.tsv` does not change its form; the form
+The cases are a separate file `puts-ceiling.tsv` (the coverage audit P/02, B00; `puts.tsv` does not change its form; the form
 of the check — check_spec 0021baa83): the form is
 `case<TAB>puts<TAB>expect<TAB>canonical<TAB>ceiling`, the first four fields and the comparison are as in `puts.tsv`; `ceiling` is the row
 ceiling of the new instance of this line (`{row_ceiling}` of the start command of the «Stand»). Before the case the runner verifies the parameter:
@@ -86,8 +86,13 @@ ceiling of the new instance of this line (`{row_ceiling}` of the start command o
 |---|---|---|
 | 976 | `probe` | code 2, nothing is written: there is no row, no view and no mark; stderr names the file and the key of the view |
 | 977 | `probe` | code 0, rev 1, the view is the vector `example-sections` |
+| 977 | `probe`, then 9 times `@view-delete` and `probe` | code 2 at the last installation, nothing is written: the row and the mark are rev 9, there is no view (the directive removed it); stderr names the file and the key of the view |
 
-Both lines are in `puts-ceiling.tsv`.
+All three lines are in `puts-ceiling.tsv`. The third one, `ceiling_rev_10`, is the boundary rev 9 → 10 of the view weight (the P/02 lesson review, С4):
+each `@view-delete` and `probe` is a new revision (case 03 `view_deleted`), so the view of rev 9 weighs exactly 977 and is written, and the
+view of rev 10 weighs 978 (one more digit of `rev`). The installer checks the weight with the final new rev before any write (chapter 2.3 Н3
+step 14a), so the last installation refuses before the parts, the row and the mark. The same boundary reached through a `cas` conflict of two
+installers (the full catalogue read with rev 8, another installer writes rev 9 first) is checked by reading: the table installs sequentially.
 
 ## `journal/corrections-2.tsv`
 

@@ -255,7 +255,7 @@ class TestTree(unittest.TestCase):
     def test_manifest_clean(self):
         errors, stats = self.manifest(TREE)
         self.assertEqual(errors, [])
-        self.assertEqual(stats["form_cases"], 946)                 # случаи P/02 на 2026-11-04
+        self.assertEqual(stats["form_cases"], 947)                 # случаи P/02 на 2026-11-06 (+ свой calls requests, ревью P/02 С5)
         self.assertGreaterEqual(stats["form_rows_held"], 120)
 
     def test_strict_coverage_implied(self):  # noqa: C901

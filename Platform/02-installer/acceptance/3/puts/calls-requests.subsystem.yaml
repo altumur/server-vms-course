@@ -1,0 +1,10 @@
+# a submission to another subsystem by ticket (P/06.3 Н1.9; P/02.1 Н3 «load_catalogue»)
+name: callq
+unit:
+  rows: callers
+  id: name
+  fields:
+    name:  {type: string, required: true}
+placement: {capacity: {default: 1}}
+door: {pass: {routes: [api], calls: [neartd/requests]}}
+worker: {exec: /usr/lib/callq/worker}
