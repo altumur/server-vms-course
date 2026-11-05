@@ -161,3 +161,27 @@ class FormsAllLessons(unittest.TestCase):         # ADR-0125 доп. (5): гра
         self.assertTrue({"families", "admin", "core", "rollout-poll"} <= check_forms.KIT_PARTS)
         self.assertTrue(check_forms.COMMAND.fullmatch("manifest-put"))
         self.assertFalse(check_forms.COMMAND.fullmatch("Put"))
+
+    def test_process_seams(self):                     # швы не по HTTP: RUN, CALL, @file, @read (грамматика stagetests)
+        path = self.lesson / "acceptance/1/seams.tsv"
+        good = ["# P/02 seams (test)", "# scenario\tstep\trequest\texpect",
+                's1-put\t1\t@file $data/in.yaml inputs/cam.yaml\tok',
+                's1-put\t2\t@file $run/note "a b"\tok',
+                's1-put\t3\tRUN w2cctl manifest put inputs/cam.yaml\texit 0',
+                's1-put\t4\tRUN w2cctl manifest put "x y" $id\texit 2; stderr ~"unit.fields"',
+                's1-put\t5\tRUN w2cctl show\texit 0; stdout {"n": 1}; stdout-text "ok\\n"; stderr ~"w"',
+                's1-put\t6\tCALL parse-manifest {"text":"a: 1"}\t{"verdict":"refused"}',
+                's1-put\t7\tCALL parse-manifest {}\t@exit 2',
+                's1-put\t8\t@read $data/FORMAT\t{"format":"configstore"}',
+                's1-put\t9\t@read $manifest/testsub\t@absent',
+                's1-put\t10\t@read $run/log\ttext "done"']
+        path.write_text("\n".join(good) + "\n", encoding="utf-8")
+        self.assertEqual(check_forms.check_seams(path)[0], [])
+        bad = [('RUN w2cctl  put', 'exit 0'), ('RUN w2cctl "unterminated', 'exit 0'), ('RUN w2cctl put', 'exit x'),
+               ('RUN w2cctl put', 'exit 0; stderr ~"a"; stdout {}'), ('RUN w2cctl put', 'exit 0; stdout-text plain'),
+               ('CALL Parse {}', '{}'), ('CALL parse {not json}', '{}'), ('CALL parse {}', 'refused'),
+               ('@file /etc/x inputs/a', 'ok'), ('@file $data/x a.yaml', 'ok'), ('@file $data/x inputs/a', '200'),
+               ('@read data/FORMAT', '{}'), ('@read $data/FORMAT', 'text plain')]
+        for request, expect in bad:
+            path.write_text("\n".join(good[:2] + [f"s1-put\t1\t{request}\t{expect}"]) + "\n", encoding="utf-8")
+            self.assertTrue(check_forms.check_seams(path)[0], (request, expect))

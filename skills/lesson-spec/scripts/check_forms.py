@@ -9,6 +9,7 @@
 глав (число строк, код, вид, поля), `kind` и поля — в `*Fault` OpenAPI урока, код и вид каждой проверки `write-checks.tsv`
 есть в каталоге, а строка с именем проверки — с тем же кодом и видом.
 """
+import json
 import re
 from pathlib import Path
 
@@ -371,6 +372,90 @@ DIRECTIVE = re.compile(r"@clock [+-](?:0|[1-9][0-9]*)(?:\.[0-9]{1,9})?|@reopen|@
 OUTCOMES = re.compile(r"each \S.*|one \S.*; rest \S.*")
 
 
+STAND_PATH = re.compile(r"\$(data|run|manifest)/[^\s\"]+")       # путь стенда: от {data}/{rundir}/{manifest}
+FUNCTION = re.compile(r"[a-z][a-z0-9-]*")
+RUN_PARTS = ("stdout ", "stdout-text ", "stderr ~")              # части ожидания RUN после exit, в этом порядке
+
+
+def json_string(text):
+    """Строка — ровно одна JSON-строка?"""
+    try:
+        return isinstance(json.loads(text), str)
+    except ValueError:
+        return False
+
+
+def json_text(text):
+    try:
+        json.loads(text)
+        return True
+    except ValueError:
+        return False
+
+
+def run_words(text):
+    """Слова RUN: через один пробел; слово — без пробела и кавычки, либо JSON-строка → список слов или None."""
+    words, i, dec = [], 0, json.JSONDecoder()
+    while i < len(text):
+        if text[i] == '"':
+            try:
+                w, j = dec.raw_decode(text, i)
+            except ValueError:
+                return None
+            if not isinstance(w, str):
+                return None
+        else:
+            j = text.find(" ", i)
+            j = len(text) if j < 0 else j
+            w = text[i:j]
+            if not w or '"' in w or "\t" in w:
+                return None
+        words.append(w)
+        if j < len(text):
+            if text[j] != " " or j + 1 == len(text):
+                return None
+            j += 1
+        i = j
+    return words
+
+
+def process_step_errors(request, expect):
+    """ADR-0125 доп. (5): шаг шва не по HTTP (грамматика генератора stagetests) → ошибки; None — шаг не этого вида."""
+    if request.startswith("RUN "):
+        words = run_words(request[4:])
+        errs = [] if words and len(words) >= 1 else [f"RUN {request[4:]!r}: words are not plain or JSON strings with one space"]
+        parts = expect.split("; ")
+        if not re.fullmatch(r"exit [0-9]+", parts[0]):
+            errs.append(f"RUN expects «exit N» first, got {expect!r}")
+        last = -1
+        for part in parts[1:]:
+            k = next((n for n, pre in enumerate(RUN_PARTS) if part.startswith(pre)), None)
+            if k is None or k <= last:
+                errs.append(f"RUN expect part {part!r} is not stdout/stdout-text/stderr ~ in this order")
+                continue
+            last, body = k, part[len(RUN_PARTS[k]):]
+            if not (json_text(body) if k == 0 else json_string(body)):
+                errs.append(f"RUN expect part {part!r}: {'JSON' if k == 0 else 'a JSON string'} expected")
+        return errs
+    if request.startswith("CALL "):
+        name, _, body = request[5:].partition(" ")
+        errs = [] if FUNCTION.fullmatch(name) and json_text(body) else [f"CALL {request[5:]!r}: not <function> <JSON>"]
+        if expect not in ("@absent", "@exit 2") and not json_text(expect):
+            errs.append(f"CALL expects JSON, @absent or @exit 2, got {expect!r}")
+        return errs
+    if request.startswith("@file "):
+        path, _, src = request[6:].partition(" ")
+        errs = [] if STAND_PATH.fullmatch(path) and (re.fullmatch(r"inputs/[^\s\"]+", src) or json_string(src)) else \
+            [f"@file {request[6:]!r}: not <$data|$run|$manifest/path> inputs/<file>|<JSON string>"]
+        return errs + ([] if expect == "ok" else ["@file expects ok"])
+    if request.startswith("@read "):
+        errs = [] if STAND_PATH.fullmatch(request[6:]) else [f"@read {request[6:]!r}: not a stand path $data/, $run/, $manifest/"]
+        if not (expect == "@absent" or json_text(expect) or (expect.startswith("text ") and json_string(expect[5:]))):
+            errs.append(f"@read expects JSON, text <JSON string> or @absent, got {expect!r}")
+        return errs
+    return None
+
+
 def seam_files(root):
     return sorted(Path(root).glob("Platform/*/acceptance/*/seams.tsv"))
 
@@ -402,7 +487,13 @@ def check_seams(path):
         if step != str(last.get(name, 0) + 1):
             errors.append(f"{path.name}: line {no}: step {step} of {name}, expected {last.get(name, 0) + 1}")
         last[name] = int(step) if step.isdigit() else last.get(name, 0) + 1
-        if request.startswith("@"):
+        process = process_step_errors(request, expect)
+        if process is not None:
+            errors += [f"{path.name}: line {no}: {e}" for e in process]
+            if request.startswith("@file "):
+                parallel = False
+                continue
+        if request.startswith("@") and not request.startswith(("@file ", "@read ")):
             if not DIRECTIVE.fullmatch(request):
                 errors.append(f"{path.name}: line {no}: directive {request!r} is not @clock ±N (N — seconds, decimal fraction allowed), @reopen or @parallel K")
             if expect != "ok":
