@@ -13,7 +13,7 @@ import "normgen/p01-1/flags"
 //	spec/01.3-store.norms.md «Н1.3 Store» (req: P/01.3-R006):
 //	  admin_ops: import --from <copy> [-index-base N] [-force]
 //	  admin_ops: import/restore/floor in a group (raft) — only on admin.sock of the leader, before the first row
-//	  admin_ops: import into a directory where a former import has already finished (Н3 phase «Done») — a refusal, code ≠
+//	  admin_ops: import into a directory where a former import has already finished (N3 phase «Done») — a refusal, code ≠
 //	    0, nothing changes
 //	  admin_ops: an unfinished attempt is continued by a replay (import below) (reconciliation of python and go М10/6–11,
 //	    B12)
@@ -24,11 +24,11 @@ import "normgen/p01-1/flags"
 //	    index — as Row of chapter 1.1) or {key, items: null, index, unreadable: true} — a damaged row as read (Row of
 //	    chapter 1.1); the writer puts the keys in ascending order of UTF-8 bytes, the reader does not require an order;
 //	    platform/epoch_floor is included as an ordinary input row for upper and the generation_at clock check, but is not
-//	    transferred; the id replay memory (chapter 1.1 Н3) is not part of the copy; the copy knows no manifests — rows of
+//	    transferred; the id replay memory (chapter 1.1 N3) is not part of the copy; the copy knows no manifests — rows of
 //	    any families, a family check at import is not needed (import below); another format or version, an extra or a
 //	    missing field, a line not JSON or not by Row, a repeated key, an index of a row higher than the index of the
-//	    header — a refusal of the whole input before the first write (Н4); an unreadable row in the input — also a
-//	    refusal (Н4). A copy of one implementation is restored by another (the store pilot, А2)
+//	    header — a refusal of the whole input before the first write (N4); an unreadable row in the input — also a
+//	    refusal (N4). A copy of one implementation is restored by another (the store pilot, A2)
 //	  import: from an immutable copy (copy above) into a fresh group — not a single row, except the rows of doors without
 //	    a vote platform/configstore-doors/<id> (service rows of the group itself, `door` above: a live door writes its
 //	    own every 30 s — it does not cancel the freshness; during the transfer its write, like those of ordinary writers,
@@ -40,10 +40,10 @@ import "normgen/p01-1/flags"
 //	    group and can coincide with a version handed out in the fresh group before the transfer (there are only door rows
 //	    there): for a door row the version can return lower — no harm, the door writes its row without cas and within 30
 //	    s rewrites it above the base (C01-VERSION-ISSUED-01); -index-base ≥ the greatest version; a full preliminary
-//	    check before changing the floor/any row: the copy form (a Row line, the key by chapter 1.1 Н1, the size not above
+//	    check before changing the floor/any row: the copy form (a Row line, the key by chapter 1.1 N1, the size not above
 //	    the row ceiling), the versions (the base, index of the header) and the epochs — a row <s>/epoch/<id> with epoch
 //	    not a decimal integer or platform/epoch_floor with floor not decimal, an epoch or floor row unreadable (outcomes
-//	    of the families epoch, epoch_floor) — upper is not reliable, a refusal of the whole input (В7 item 3, the
+//	    of the families epoch, epoch_floor) — upper is not reliable, a refusal of the whole input (V7 item 3, the
 //	    Architect's decision of 2026-10-28, row 13 of the list); the copy knows no manifests: import does not check the
 //	    families of rows, a row of any family is transferred (log of cammeta-go, lesson 11 № 10). A bad row, size, base,
 //	    epoch — without changes. Transfer excludes the input platform/epoch_floor: the first write is the new floor F1,
@@ -56,23 +56,23 @@ import "normgen/p01-1/flags"
 //	    writes and reads with 503 unavailable, the directory does not change (C01-UNFINISHED-IMPORT-WRITERS-01)
 //	  floor: (platform/epoch_floor {floor, generation_at}); generation: max((upper >> 32) + 1, whole hours of UTC since
 //	    2026-01-01); floor = generation << 32; upper — the maximum of floor of the row platform/epoch_floor and epoch of
-//	    every row <sub>/epoch/<id> (P/03.2 Н1.5) in the whole verified input and in the saved state of the daemon (a
+//	    every row <sub>/epoch/<id> (P/03.2 N1.5) in the whole verified input and in the saved state of the daemon (a
 //	    fresh group has none); not a single row — 0; example at 2026-10-17T12:30Z (6948 whole hours): upper 5 →
 //	    generation max(1, 6948) = 6948, floor 29841432772608; upper 30064771072005 (7000 << 32 | 5) → generation
 //	    max(7001, 6948) = 7001, floor 30069066039296; the operator must confirm that the former installation handed out
 //	    nothing above upper (for example, a copy after the writers were stopped); upper ≥ the current floor and all saved
 //	    epochs. No reliable bound of the lost tail — a refusal of recovery; when: restore, import — before the first row:
 //	    in a group only op: floor on admin.sock of the leader, on a box — as the first write into the directory of a
-//	    stopped daemon (`box`); recover — locally in the dump of a stopped daemon (no socket, Н3 «recover» step 1); the
+//	    stopped daemon (`box`); recover — locally in the dump of a stopped daemon (no socket, N3 «recover» step 1); the
 //	    row is not written by put/delete; it only grows; a clock earlier than generation_at → a refusal without -force;
 //	    force allows only the clock going back, but not a repeat/lowering of the generation, a uint64 overflow or a
 //	    parallel recovery; form: floor in op: floor — a JSON integer without a fraction or an exponent (`20`, not `2.0e1`
 //	    and not `20.0`), 1 … 2^53 − 2^32; otherwise — 400 badrequest before writing (reconciliation of python and go
 //	    М10/6–11, B5); epochs are JSON integers < 2^53 (ADR-0070), so the floor leaves 2^32 numbers above itself:
 //	    generation ≤ 2^21 − 1 (hours since 2026-01-01 suffice for ~239 years); a generation that would give more — a
-//	    refusal of recovery, as an overflow (added by the pilot of data family schemas, Д6); issue: next_epoch =
+//	    refusal of recovery, as an overflow (added by the pilot of data family schemas, D6); issue: next_epoch =
 //	    max(current, floor) + 1 (P/03.2); an issue that read the floor before the raise can write a number below floor —
-//	    the worker does not start such an epoch: a confirmation after the write (P/03.2 Н3 «take_epoch(id)»; added by the
+//	    the worker does not start such an epoch: a confirmation after the write (P/03.2 N3 «take_epoch(id)»; added by the
 //	    Quint pilot, F1)
 //	  box: recover — a refusal, code 2 («this build has no raft»): a box has no group, there is nothing to recover it
 //	    with, a copy — import (reconciliation of python and go М10/6–11, B15)
@@ -80,8 +80,8 @@ import "normgen/p01-1/flags"
 //	    admin.sock of the leader, `admin_ops` above): the floor as the first write, then the rows
 //	  box: restore coincides with import (there are no neighbours)
 //	spec/01.3-store.norms.md «Н2 Doors» (the CLI):
-//	  req: P/01.3-R018 — `restore/import` accept an immutable input from which upper is computed by Н1.3, and work by the
-//	    phases of Н3; the result is code 0 only after a full check of the transfer, otherwise non-zero with the phase and
+//	  req: P/01.3-R018 — `restore/import` accept an immutable input from which upper is computed by N1.3, and work by the
+//	    phases of N3; the result is code 0 only after a full check of the transfer, otherwise non-zero with the phase and
 //	    the path.
 //	the flags — forms/daemon-flags.tsv (commands ∋ import; f.<Field> of package flags):
 //	  -dir path, required: true

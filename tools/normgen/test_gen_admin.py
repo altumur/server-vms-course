@@ -11,6 +11,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -29,6 +30,27 @@ def judge(kit):
     with contextlib.redirect_stdout(buf):
         code = admin_judge.judge(kit)
     return code, buf.getvalue()
+
+
+class DirectiveLabels(unittest.TestCase):
+    def render_with(self, label):
+        with tempfile.TemporaryDirectory(prefix="admin-labels-") as tmp:
+            root = Path(tmp)
+            common = root / "Platform/common/acceptance/README.md"
+            common.parent.mkdir(parents=True)
+            common.write_text(f"| `@spoil row <{label}>` / `@spoil row-index <{label}>` | stopped store | command `spoil-row` |\n")
+            with patch.object(gen_admin, "ROOT", root), patch.object(gen_admin, "COMMON", common):
+                return gen_admin.render()[0]
+
+    def test_old_and_new_labels_keep_dispatch_and_stub(self):
+        old, new = self.render_with("ключ"), self.render_with("key")
+        self.assertEqual(old, new)
+        self.assertIn('"spoil-row": SpoilRow,', new["admin/own.go"])
+        self.assertIn('return NotInStage("spoil-row", env)', new["admin/own.go"])
+
+    def test_unknown_label_is_not_a_directive(self):
+        with self.assertRaisesRegex(gen_admin.GenError, "no directive row"):
+            self.render_with("invented")
 
 
 class Admin(unittest.TestCase):

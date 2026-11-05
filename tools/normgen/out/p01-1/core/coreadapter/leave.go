@@ -9,14 +9,14 @@ import "normgen/p01-1/apidoor"
 // stage needs it; then replace the body (the signature stays: Store is a coreadapter.Core). Identity first —
 // Context (core.go). By the norms:
 //
-//	spec/01.3-store.norms.md «Н2 Doors»:
+//	spec/01.3-store.norms.md «N2 Doors»:
 //	  req: P/01.3-R013 — The doors of the chapter are at the store daemon (chapter 1.1: `/v1/get`, `/v1/list`,
 //	    `/v1/write`) and its service doors:
-//	spec/01.3-store.norms.md «Н2 Doors»:
+//	spec/01.3-store.norms.md «N2 Doors»:
 //	  req: P/01.3-R016 — POST `/v1/leave`: `{id}` (an empty string — oneself), success 200 `{}`; a role socket — 403, as
-//	    for join (B1); a change of another's membership — only through admin.sock (`leave [id]` of admin_ops Н1.3); for a
-//	    box without raft the leaving of the last voter — 409 `{kind: refused, error}` «the last voter» (Н1.3 `box`)
-//	spec/01.3-store.norms.md «Н2 Doors»:
+//	    for join (B1); a change of another's membership — only through admin.sock (`leave [id]` of admin_ops N1.3); for a
+//	    box without raft the leaving of the last voter — 409 `{kind: refused, error}` «the last voter» (N1.3 `box`)
+//	spec/01.3-store.norms.md «N2 Doors»:
 //	  req: P/01.3-R017 — The order of checks: the frame (framing, the body limit 1 MiB — 413) → route and method (404,
 //	    405) → identity (403) → body and membership (400, 409)
 //	spec/01.3-store.norms.md «recover the store (no majority)»:

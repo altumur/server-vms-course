@@ -12,7 +12,7 @@ import "normgen/p01-1/flags"
 //
 //	spec/01.3-store.norms.md «Н1.3 Store» (req: P/01.3-R006):
 //	  admin_ops: rights [-groups]
-//	the door it calls on admin.sock — spec/01.2-store.norms.md «Н2 Doors»:
+//	the door it calls on admin.sock — spec/01.2-store.norms.md «N2 Doors»:
 //	  req: P/01.2-R014 — `GET /v1/rights` returns the loaded object `RightsFile` whole, without an envelope; if it has a
 //	    comment, the field is returned too. While no file is loaded, the route answers `404 badrequest`; an empty object
 //	    `roles` does not stand in for the absence of the file. Access is checked by the identity admin, before the file

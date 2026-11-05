@@ -72,7 +72,7 @@ REFUSAL_ROWS = {
     "rights": ("rights_not_loaded",),
 }
 # Свои команды профиля стенда: имя → (функция, строка таблицы директив общего README, которая её зовёт).
-OWN = {"spoil-row": ("SpoilRow", "| `@spoil row <ключ>` / `@spoil row-index <ключ>` |")}
+OWN = {"spoil-row": ("SpoilRow", "| `@spoil row <key>` / `@spoil row-index <key>` |")}
 LINE = gen_core.LINE
 
 
@@ -334,7 +334,8 @@ def render():
     common = COMMON.read_text(encoding="utf-8")
     entries, funcs = [], []
     for cmd, (fn, row) in OWN.items():
-        line = next((ln for ln in common.split("\n") if ln.startswith(row)), None)
+        labels = (row, row.replace("<key>", "<ключ>"))
+        line = next((ln for ln in common.split("\n") if ln.startswith(labels)), None)
         if line is None:
             raise GenError(f"{COMMON.relative_to(ROOT)}: no directive row {row!r} (gen_admin OWN {cmd})")
         what = gen_core.plain(line.split(" | ", 2)[1])

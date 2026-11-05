@@ -16,10 +16,10 @@ import "normgen/p01-1/flags"
 //	  repeat: join of an id with another Raft address and leave of an unknown id — 409 refused, without changes (guess of
 //	    stage C CL-03, the Architect's decision of 2026-10-23)
 //	  box: leave — 409 refused («the last voter»)
-//	the door it calls on admin.sock — spec/01.3-store.norms.md «Н2 Doors»:
+//	the door it calls on admin.sock — spec/01.3-store.norms.md «N2 Doors»:
 //	  req: P/01.3-R016 — POST `/v1/leave`: `{id}` (an empty string — oneself), success 200 `{}`; a role socket — 403, as
-//	    for join (B1); a change of another's membership — only through admin.sock (`leave [id]` of admin_ops Н1.3); for a
-//	    box without raft the leaving of the last voter — 409 `{kind: refused, error}` «the last voter» (Н1.3 `box`)
+//	    for join (B1); a change of another's membership — only through admin.sock (`leave [id]` of admin_ops N1.3); for a
+//	    box without raft the leaving of the last voter — 409 `{kind: refused, error}` «the last voter» (N1.3 `box`)
 //	the flags — forms/daemon-flags.tsv (commands ∋ leave; f.<Field> of package flags):
 //	  -sockets dir
 //	the refusals — forms/refusals.tsv:

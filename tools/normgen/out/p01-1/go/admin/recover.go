@@ -12,13 +12,13 @@ import "normgen/p01-1/flags"
 //
 //	spec/01.3-store.norms.md «Н1.3 Store» (req: P/01.3-R006):
 //	  admin_ops: recover -id -dir -peers … -isolated [-upper N] [-force]
-//	  admin_ops: recover — locally on a stopped daemon (there is no leader, no majority — Н3 «recover»), not through a
+//	  admin_ops: recover — locally on a stopped daemon (there is no leader, no majority — N3 «recover»), not through a
 //	    socket
 //	  box: recover — a refusal, code 2 («this build has no raft»): a box has no group, there is nothing to recover it
 //	    with, a copy — import (reconciliation of python and go М10/6–11, B15)
 //	spec/01.3-store.norms.md «Н2 Doors» (the CLI):
 //	  req: P/01.3-R018 — `recover` is a local procedure of a stopped daemon, not HTTP: the required `-isolated` and the
-//	    optional `-upper N` (Н1.3 «Daemon flags», Н3 step 0).
+//	    optional `-upper N` (N1.3 «Daemon flags», N3 step 0).
 //	spec/01.3-store.norms.md «Н3 Procedures» «recover the store (no majority)»:
 //	  req: P/01.3-R020 — One operator isolates all former daemons and writers (including disconnected nodes, against a
 //	    later return); saves the original directories/copy, checks upper and the whole input. The confirmation of
@@ -34,7 +34,7 @@ import "normgen/p01-1/flags"
 //	    beyond the declared size).
 //	  req: P/01.3-R023 — Those gone forever — `leave` at the leader; those who return after `leave` — `admit`.
 //	  req: P/01.3-R024 — Processes that read another revision of the manifest are restarted (P/02.3); workers read the
-//	    floor at the lease step (P/03.2 Н3 «lease_step()»): a unit with an epoch below the floor loses its lease and is
+//	    floor at the lease step (P/03.2 N3 «lease_step()»): a unit with an epoch below the floor loses its lease and is
 //	    started anew above the floor (P/03.2) — a restart of processes is not needed for this.
 //	  req: P/01.3-R025 — Races: admittance and recovery transitions. A manual action by itself does not exclude two
 //	    operators. In the lesson only one attempt per installation is allowed, with a confirmed cut-off of the former
@@ -45,13 +45,13 @@ import "normgen/p01-1/flags"
 //	    `recover` of its own dump: for all rows — the row envelope, the key by the catalogue, the version, the size;
 //	    schemas — only of the families of the store itself (P/01) and upper; the content of other families is not
 //	    interpreted and is kept as is — schemas are the business of their owners (guess of stage C S04, the Architect's
-//	    decision of 2026-10-23); the copy `copy` knows no manifests (Н1.3 `import`) | Neither the floor nor the rows are
+//	    decision of 2026-10-23); the copy `copy` knows no manifests (N1.3 `import`) | Neither the floor nor the rows are
 //	    changed | | New floor | Raise floor above upper durably, once; op: floor has its own replay id | On an unknown
 //	    answer repeat with the same id, do not compute a new generation | | Transfer | Keep the first new floor F1; write
 //	    all other copy rows with their copy versions, excluding the old platform/epoch_floor; durable progress for
 //	    continuation | A partial transfer is possible; ordinary writers are forbidden | | Done | Check every non-floor
 //	    input row and the saved new F1 row; allow the updated membership/writers | The former group stays cut off; only
-//	    epochs not below floor are started — one issued with the old floor is lost (P/03.2 Н3 «take_epoch(id)») |
+//	    epochs not below floor are started — one issued with the old floor is lost (P/03.2 N3 «take_epoch(id)») |
 //	  req: P/01.3-R027 — An overflow of the generation/uint64 is a refusal before changes. `-force` cancels none of these
 //	    checks. If a reliable upper of the lost tail cannot be obtained, the guarantee of non-repetition of epochs is
 //	    unprovable and recovery by this profile is not performed.
