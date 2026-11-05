@@ -2921,7 +2921,7 @@ components:
             properties:
               rev: {type: integer, minimum: 1}
               term: {type: integer, minimum: 1}
-              index: {type: integer, minimum: 0}
+              index: {type: string, minLength: 1, description: 'Exact store Row.index of the read row; opaque string, never converted to a number.'}
         count:
           type: object
           required: [servers, cameras]

@@ -177,13 +177,18 @@ paths:
         '503':
           $ref: '#/components/responses/ReadUnavailable'
       parameters: &id005
+      - name: cursor
+        in: query
+        required: false
+        schema: {type: string}
+        description: 'Continuation only without cluster and part. With either selector it is not read, including invalid opaque contents; there is one page and no X-Cursor. Common HTTP/URL syntax rules still apply.'
       - name: cluster
         in: query
         required: false
         schema:
           type: string
           minLength: 1
-        description: Only the units of this member; repeated or empty — 400 (P/06.5 Н2).
+        description: The entire row of this member in its one part, one page; cursor is ignored even if invalid and X-Cursor is absent. Repeated or empty cluster — 400 (P/06.5 Н2).
       - name: part
         in: query
         required: false
