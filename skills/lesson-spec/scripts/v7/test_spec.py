@@ -352,7 +352,7 @@ class TestTree(unittest.TestCase):
         from v7 import vectors
         ch = vectors.Chapter(TREE, strict=True).run()
         self.assertEqual(ch.errors, [])
-        self.assertEqual(ch.stats["canonical_vectors"], 219)      # на 2026-11-04
+        self.assertEqual(ch.stats["canonical_vectors"], 220)      # на 2026-11-06 (+ a111_calls_requests_own_ok, ревью P/02 С5)
         self.assertEqual(ch.stats["canonical_mutants_killed"], ch.stats["canonical_mutants"])
         self.assertEqual(ch.stats["canonical_mutants"], 67)              # и default у корня определения (Б-1); на 2026-11-04
         root = self.copy()
