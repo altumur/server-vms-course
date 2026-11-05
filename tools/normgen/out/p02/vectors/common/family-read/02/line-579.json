@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "02.tsv",
+ "case": "02-k0014",
+ "variant": "",
+ "cells": {
+  "family": "platform/space",
+  "key": "platform/spacex",
+  "kind": "row",
+  "mode": "reader",
+  "who": "[\"resource\"]",
+  "text": "{}"
+ },
+ "files": {}
+}

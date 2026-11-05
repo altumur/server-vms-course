@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "02.tsv",
+ "case": "02-0547",
+ "variant": "",
+ "cells": {
+  "family": "platform/manifest/<sub>",
+  "key": "platform/manifest/testsub",
+  "kind": "row",
+  "mode": "writer",
+  "who": "[\"admin\"]",
+  "text": "{\"yaml\":\"a\",\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"rev\":\"1\",\"files\":\"{\\\"a.js\\\":{\\\"sha256\\\":\\\"x\\\",\\\"size\\\":1}}\"}"
+ },
+ "files": {}
+}

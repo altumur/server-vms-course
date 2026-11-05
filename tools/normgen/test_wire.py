@@ -5,8 +5,8 @@
 или ветки spec103/vectors-wire), иначе тесты пропускаются.
 
 1. Форма разбирается; урок 02 раскрывается в запуски без ошибок; journal — layout, excluded.
-2. Сверка с объявлениями: каждый запуск формы P/02 совпадает с gen_vectors.WIRE (вход, фикстуры, код, значение или
-   байты, сравнение, case), общие пакеты P/01/P/02 — с common_vectors (ожидание, вход, фикстуры; family-read —
+2. Каждый сгенерированный кадр P/02 следует раскрытой форме (вход, фикстуры, case, variant);
+   общие пакеты P/01/P/02 сверяются с независимым чтением common_vectors (ожидание, вход, фикстуры; family-read —
    verdict подмножеством, paths множеством, outcome писателя значением и читателя множествами).
 3. Мутанты формы (повторный ключ JSON, чужой конструктор, неизвестное сравнение, два входа одного варианта на строку,
    decode json у строкового домена, якорь нормы без заголовка, фикстура у stand, no-leak без целого min_bytes ≥ 1, whole вне no-leak или не булево, owner вне
@@ -63,53 +63,22 @@ class Form(unittest.TestCase):
         ids = [r.identity for r in runs]
         self.assertEqual(len(ids), len(set(ids)))
 
-    def test_same_as_gen_vectors(self):
-        import gen_vectors as G
-        if G.L.key != "02-installer":
-            self.skipTest("gen_vectors loaded for another lesson")
+    def test_generated_runs_follow_the_form(self):
+        import test_gen_vectors
+        g = test_gen_vectors.gv()
+        files, _ = g.build(self.root)
         runs, _ = wire.expand(self.root, "02-installer", self.cel)
-        by = {}
         for r in runs:
-            by.setdefault((r.binding.package, r.binding.table, r.binding.surface), []).append(r)
-        cmp = {"layer1": "subset", "sets": "object-sets", "value": "value", "raw": "raw"}
-        for d in G.WIRE["02-installer"]:
-            k = (d["package"], d["table"], d["surface"])
-            self.assertIn(k, by, f"no form row {k}")
-            rs = by[k]
-            pdir, _, rows = G.read_table(self.root, d)
-            if d["compare"] == "sets":
-                lists = {}
-                for _, r in rows:
-                    lists.setdefault(r["list"], []).append(r["word"])
-                if d.get("per_list"):
-                    self.assertEqual({r.case: r.value for r in rs}, lists, k)
-                    self.assertEqual({r.compare for r in rs}, {"set"}, k)
-                else:
-                    self.assertEqual([r.value for r in rs], [lists], k)
-                    self.assertEqual(rs[0].compare, "object-sets", k)
+            if r.binding.surface != "vectors":
                 continue
-            at = {r.lines[0]: r for r in rs}
-            self.assertEqual(sorted(at), [no for no, _ in rows], k)
-            for no, row in rows:
-                w, where = at[no], f"{k} line {no}"
-                code, value, raw = d["expect"](row, pdir)
-                self.assertEqual(w.code, code, where)
-                if raw is not None:
-                    self.assertEqual(w.value, raw, where)
-                elif not w.ignore_stdout:
-                    self.assertEqual(w.value, value, where)
-                self.assertEqual(w.compare, cmp[d["compare"]], where)
-                if d["surface"] == "vectors":
-                    cells = {c: row[c] for c in d["inputs"]}
-                    cells.update(d.get("extra_cells", lambda _: {})(row))
-                    self.assertEqual(w.cells, cells, where)
-                    self.assertEqual(w.files, {n: (pdir / v.format(**row)).read_bytes()
-                                               for n, v in d.get("files", {}).items()}, where)
-                    self.assertEqual(w.case, row.get(d.get("case", "case"), f"line-{no}"), where)
-                elif d["args"] == "source":
-                    self.assertEqual(w.arg, (self.root / row[d["input"]]).read_bytes(), where)
-                else:
-                    self.assertEqual(w.arg, row[d["input"]].encode("utf-8"), where)
+            stem = f"line-{r.lines[0]}" + (f"-{r.variant}" if r.variant else "")
+            path = f"vectors/{r.binding.package}/{r.binding.table[:-4]}/{stem}.json"
+            frame = json.loads(files[path])
+            self.assertEqual((frame["package"], frame["table"], frame["case"], frame["variant"]),
+                             (r.binding.package, r.binding.table, r.case, r.variant))
+            self.assertEqual(frame["cells"], r.cells)
+            import base64
+            self.assertEqual({k: base64.b64decode(v) for k, v in frame["files"].items()}, r.files)
 
     def test_same_as_common_vectors(self):
         import common_vectors as C
@@ -246,7 +215,15 @@ class Mutants(unittest.TestCase):
         self.jedit("common/log-mask", "cases.tsv", "vectors", "expect", lambda v: add(v, 4))
         runs, _ = wire.expand(self.tmp, "02-installer", self.cel)
         r = next(r for r in runs if r.binding.package == "common/log-mask")
-        self.assertEqual(r.asserts[0][1:], ("no-leak", None, [r.cells["raw"]], 4, False))
+        self.assertEqual(r.asserts[0][1:], ("no-leak", None, [r.cells["raw"]], 4, False, None))
+
+    def test_json_decode_is_preserved_in_assertion(self):
+        self.jedit("common/sealing", "reseal.tsv", "vectors", "expect",
+                   lambda v: v[0].__setitem__("assert", [{"pointer": "/row", "decode": "json", "compare": "value",
+                                                        "value": {"literal": {"n": 1}}}]))
+        runs, _ = wire.expand(self.tmp, "02-installer", self.cel)
+        assertion = next(r for r in runs if r.binding.key == ("common/sealing", "reseal.tsv", "vectors")).asserts[0]
+        self.assertEqual((assertion.pointer, assertion.decode, assertion.value), ("/row", "json", {"n": 1}))
 
     def test_whole_only_with_no_leak(self):
         def add(v, extra):

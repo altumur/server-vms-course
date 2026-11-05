@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "02-installer/platform-lists",
+ "table": "cases.tsv",
+ "case": "heartbeat_strings",
+ "variant": "",
+ "cells": {
+  "list": "heartbeat_strings"
+ },
+ "files": {}
+}

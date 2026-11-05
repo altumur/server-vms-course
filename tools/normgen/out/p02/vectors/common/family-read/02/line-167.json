@@ -1,0 +1,16 @@
+{
+ "format": 1,
+ "package": "common/family-read",
+ "table": "02.tsv",
+ "case": "02-0166",
+ "variant": "",
+ "cells": {
+  "family": "platform/manifest/<sub>/rev",
+  "key": "platform/manifest/testsub/rev",
+  "kind": "row",
+  "mode": "reader",
+  "who": "[\"<s>controller\", \"admin\", \"console\", \"resource\", \"<s>worker\", \"<s>domain\", \"domain\", \"domainconsole\"]",
+  "text": "{\"rev\":1e400,\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\"}"
+ },
+ "files": {}
+}

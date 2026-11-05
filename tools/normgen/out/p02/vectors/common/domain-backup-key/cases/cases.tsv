@@ -1,5 +1,3 @@
-# Inputs of the vector command for common/domain-backup-key cases.tsv (gen_vectors.py); compare value.
-# source Platform/common/vectors/domain-backup-key/cases.tsv sha256 918c799de2e334f77697504ffc2bb62425ecc587897c8e4e5f39e34e103b968a
 case	input	exit	stdout
 line-4	line-4.json	0	"76edc97e47d8b4b164a1a3cdae93fc42930bb1bfac581ee123804296b50dc699"
 line-5	line-5.json	0	"7ea9ba27e647f328706d932cf12b5546dbab559f6ac3f74f9b8b8e8400014cff"

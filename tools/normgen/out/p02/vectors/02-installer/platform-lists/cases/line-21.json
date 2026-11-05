@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "02-installer/platform-lists",
+ "table": "cases.tsv",
+ "case": "secret_roles",
+ "variant": "",
+ "cells": {
+  "list": "secret_roles"
+ },
+ "files": {}
+}

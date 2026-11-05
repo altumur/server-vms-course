@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/revoked",
+ "table": "cases.tsv",
+ "case": "both-revoked-bad",
+ "variant": "",
+ "cells": {
+  "file": "{\"revoked\":\"zz\\n\",\"crl\":[\"cd\"]}"
+ },
+ "files": {}
+}

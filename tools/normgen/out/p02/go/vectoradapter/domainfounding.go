@@ -5,8 +5,8 @@ package vectoradapter
 
 // DomainFounding — common/domain-founding book-seal.tsv (vectors), common/domain-founding recovery.tsv (vectors):
 //
-//	book-seal.tsv: the hex of book_seal of seed_secret; recovery.tsv: {domain, root_pub, fingerprint} or
-//	"@refuse" (the table name tells which)
+//	Native input and output: Platform/common/vectors/domain-founding/README.md#vector-wire; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.
 func DomainFounding(table string, cells map[string]string, files map[string][]byte) Answer {

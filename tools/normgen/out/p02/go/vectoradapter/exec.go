@@ -5,8 +5,8 @@ package vectoradapter
 
 // Exec — 02-installer/exec cases.tsv (stand:exec):
 //
-//	the parsing of worker.exec (the bytes of a JSON string): {"result":"ok","argv":[…]} or {"result":"refused"};
-//	stdout — one object and one LF
+//	Native input and output: Platform/02-installer/vectors/exec/README.md#vector-wire; transport:
+//	Platform/common/vectors/wire.tsv.
 //
 // input — the bytes of the {input} file of the stand command (the cell as written).
 func Exec(input []byte) Answer {
