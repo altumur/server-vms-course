@@ -1188,6 +1188,63 @@ def generate(root=ROOT, out=DEFAULT_OUT):
     return out, inventory
 
 
+KIT_DIRS = ("stagetests",)                     # заменяется целиком; lessonadapter — свой у реализации (кроме lessonadapter.go)
+JUDGE = HERE / "test_gen_cmdtests.py"
+
+
+def kit_files(module, out=DEFAULT_OUT):
+    """→ [(каталог в internal, имя, байты, происхождение, источник, своё у реализации)]; GenError — out устарел."""
+    files, _ = build(ROOT)
+    res = []
+    for rel, text in sorted(files.items()):
+        kept = Path(out) / rel
+        if not kept.is_file() or kept.read_text(encoding="utf-8") != text:
+            raise GenError(f"{kept} is stale: run tools/normgen/gen_cmdtests.py --lesson {L.key}")
+        data = kept.read_bytes().replace(f'"{GO_MODULE}/'.encode(), f'"{module}/internal/'.encode())
+        sub, name = rel[3:].rsplit("/", 1)
+        own = sub == "lessonadapter" and name != "lessonadapter.go"
+        res.append((sub, name, data, "generated", str(kept.relative_to(ROOT)), own))
+    return res
+
+
+def provenance():
+    import hashlib
+
+    def entry(path):
+        return {"path": str(Path(path).relative_to(ROOT)), "sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest()}
+    forms = [L.form("stages.tsv"), L.form("README.md")]
+    forms += sorted((L.path("acceptance")).glob("*/seams.tsv")) + sorted((L.path("acceptance")).glob("*/verdicts.tsv"))
+    return {"form": [entry(f) for f in forms if Path(f).is_file()], "generator": entry(Path(__file__).resolve()),
+            "handwritten": [], "judge": entry(JUDGE)}
+
+
+KIT_MD = """
+## Part `stagetests`: the stage tests of the lesson (generated; the adapter is **yours**)
+
+| Package | Import path | Origin |
+|---|---|---|
+| `stagetests` | `{module}/internal/stagetests` | generated from `forms/stages.tsv`, `acceptance/K/seams.tsv`, `verdicts.tsv`; closed |
+| `lessonadapter` | `{module}/internal/lessonadapter` | `lessonadapter.go` — the kit's types (closed); `command.go`, `load.go`, `catalogue.go`, `poll.go` — **yours** |
+
+```go
+func Command(r Roots, process string, argv []string, stdin []byte) Result // your command, in process (no OS process)
+func Load(source string, text []byte) Loaded                            // your regular loader, one manifest alone
+func LoadCatalogue(manifests []Source) Catalogue                       // load_catalogue of a complete set
+func RolloutPoll(input json.RawMessage, events []Event) Poll           // your poll on virtual time (poll.go)
+type Roots struct { Data, Run, Manifest string }  // the $data/ $run/ $manifest/ of a scenario
+type Result struct { Exit int; Stdout, Stderr []byte }
+type Loaded struct { OK bool; Name, Class, Message string }       // Class text|form|relations; Message names the file
+type Catalogue struct { OK bool; Names []string; Class, Message string }
+type Poll struct { State string; Result *PollResult }; type PollResult struct { Code int; Word string }
+```
+
+Each function is in its own file — edit one, never delete one. The stubs answer «not implemented» (a negative exit
+code is not an exit code), so every test is red until you connect your code. `Test<Stage>_<Scenario>` — a seam,
+`Test<Stage>_Verdicts` — the loader corpus (a subtest per case, `testdata/verdicts.jsonl`). The installations of
+`puts.tsv` are not here: they need the store of P/01 — the runner judges them (`inventory.tsv` names them).
+"""
+
+
 def main(argv):
     out = Path(argv[1]) if len(argv) > 1 else DEFAULT_OUT
     try:
