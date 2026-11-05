@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "implementation": {
+    "repo": "probe1",
+    "commit": "ec3ea7a2ec155995c3990f4bd37e23ead8005af2"
+  },
+  "include_dirs": ["01-store", "02-installer", "03-worker", "04-controller", "05-resource", "06-console"],
+  "exclude_dir_names": ["vendor"],
+  "exclude_paths": [],
+  "suffixes": [".go"],
+  "test_suffixes": ["_test.go"],
+  "packages": [
+    {
+      "id": "p01-en-cfcef1d0",
+      "repo": "probe1",
+      "commit": "66afb11a674fca604f36be57045d492c48827acd",
+      "manifest": "kit.manifest.json",
+      "source_root": ".",
+      "target_root": "."
+    },
+    {
+      "id": "p02-en-c9eaf7f0",
+      "repo": "probe1",
+      "commit": "9bc53b3ee8135d4d584fe744fa195fcd87f6bfc5",
+      "manifest": "kit-p02.manifest.json",
+      "source_root": ".",
+      "target_root": "."
+    },
+    {
+      "id": "p03-en-c9eaf7f0",
+      "repo": "probe1",
+      "commit": "fab6ddfb7cc8b024b51082842301fc4d377b525b",
+      "manifest": "kit-p03.manifest.json",
+      "source_root": ".",
+      "target_root": "."
+    }
+  ]
+}
