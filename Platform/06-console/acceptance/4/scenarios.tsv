@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/06.4: стенд testsub с ресурсом srv-a; сценарии 03, 04, 06 перенесены из М10/08 (стадия B). Формат — README.
+# Acceptance P/06.4: testsub stand with resource srv-a; scenarios 03, 04, 06 moved from М10/08 (stage B). Format: README.
 03-operator-mark	1	console POST /counters {"name": "c3", "start": 1}	201
 03-operator-mark	2	console POST /marks {"unit": "testsub/c3", "note": "checked"}	2xx
 03-operator-mark	3	@until 15 console GET /events?unit=testsub/c3&kind=mark	200 {"events": [{"kind": "mark", "of": "testsub/c3", "epoch_is": "current", "subsystem": "console"}]}
@@ -59,7 +59,7 @@ scenario	step	request	expect
 07-request-gone	9	@until 60 store GET /v1/get?key=objects/testsub2/commands/$r1	200 {"items": {"outcome": "gone", "ended_by": "reaper", "unit": "t1"}}
 07-request-gone	10	@until 90 store GET /v1/get?key=testsub2/requests/$r1	200 {"items": null}
 07-request-gone	11	@until 90 console POST /testsub2/requests {"unit": "t2", "from": 0, "to": 1}	202
-# 08-request-exists-ledger (аудит покрытия P/06, второй проход Gemini, G05; testsub2 — rid по requests.key, per_person 3): тот же rid с иным digest — 409 exists, строка прежняя, rid в учёте; DELETE учёта — 200 {cleared: true}, строки нет, повтор — 404; учёт не по форме — 429, строки просьбы нет, учёт прежний
+# 08-request-exists-ledger (P/06 coverage audit, second Gemini pass, G05; testsub2 uses requests.key rid, per_person 3): same rid with another digest gives 409 exists, row unchanged, rid in accounting; accounting DELETE gives 200 {cleared: true}, no row, retry gives 404; malformed accounting gives 429, no request row, accounting unchanged.
 08-request-exists-ledger	1	console2 POST /tallies {"name": "t1", "of": "c1"}	201
 08-request-exists-ledger	2	console POST /testsub2/requests {"unit": "t1", "from": 0, "to": 1}	202 {"queued": "t1-0-1"}
 08-request-exists-ledger	3	console POST /testsub2/requests {"unit": "t1", "from": 0, "to": 1, "action": "recount"}	409 {"error": "exists"}
@@ -72,7 +72,7 @@ scenario	step	request	expect
 08-request-exists-ledger	10	console POST /testsub2/requests {"unit": "t1", "from": 1, "to": 2}	429 {"error": "refused"}
 08-request-exists-ledger	11	store GET /v1/get?key=testsub2/requests/t1-1-2	200 {"items": null}
 08-request-exists-ledger	12	store GET /v1/get?key=testsub2/asked/06e55b633481f7bb	200 {"items": {"rids": "t1-0-1", "at": "x"}}
-# 09-request-mark-first (аудит покрытия P/06, второй проход Gemini, G05; testsub — rid r-<sha16(Idempotency-Key)>, ключ задан заголовком): метка rid уже стоит — иной unit — 409 spent; метка не по форме — 409 spent, метка прежняя; тот же unit и digest с исходом — 200 answered; строки просьбы ни в одном случае нет
+# 09-request-mark-first (P/06 coverage audit, second Gemini pass, G05; testsub uses rid r-<sha16(Idempotency-Key)>, key supplied by header): an existing rid mark and another unit gives 409 spent; malformed mark gives 409 spent, mark unchanged; same unit and digest with outcome gives 200 answered; no request row in any case.
 09-request-mark-first	1	console POST /counters {"name": "c4", "start": 1}	201
 09-request-mark-first	2	@as testsubworker store POST /v1/write {"id":"d2","op":"put","key":"objects/testsub/commands/r-7f0cd6bacd621c87","items":{"unit":"c9","digest":"e83c1a0bfffbff5eb0a0de9119b1ab36a9591b374b4a655621da34e02f85a969","outcome":"expired","ended_by":"reaper","ended_at":"1000"},"cas":""}	200
 09-request-mark-first	3	console @header Idempotency-Key: acc-spent-other POST /testsub/requests {"unit": "c4", "add": 1}	409 {"error": "spent"}
@@ -84,7 +84,7 @@ scenario	step	request	expect
 09-request-mark-first	9	store POST /v1/write {"id":"d9","op":"put","key":"objects/testsub/commands/r-bebf2f46796986bd","items":{"unit":"c4","digest":"e83c1a0bfffbff5eb0a0de9119b1ab36a9591b374b4a655621da34e02f85a969","outcome":"expired","ended_by":"reaper","ended_at":"1000"},"cas":""}	200
 09-request-mark-first	10	console @header Idempotency-Key: acc-answered POST /testsub/requests {"unit": "c4", "add": 1}	200 {"answered": {"unit": "c4", "outcome": "expired", "ended_by": "reaper"}}
 09-request-mark-first	11	store GET /v1/get?key=testsub/requests/r-bebf2f46796986bd	200 {"items": null}
-# 10-events-query-lexemes (аудит покрытия P/06, второй проход Gemini, G06; C06-EVENTS-QUERY-LEXEME-162-01): числовые параметры GET /events — после URL-декодирования грамматика читателя; limit — целый знак, затем 1…10000; from/to — время; иначе 400 с detail — имя параметра
+# 10-events-query-lexemes (P/06 coverage audit, second Gemini pass, G06; C06-EVENTS-QUERY-LEXEME-162-01): numeric GET /events parameters use the reader's grammar after URL decoding; limit has integer spelling, then range 1…10000; from/to are times; otherwise 400 with the parameter name in detail.
 10-events-query-lexemes	1	console GET /events?limit=01	400 {"detail": "limit"}
 10-events-query-lexemes	2	console GET /events?limit=+1	400 {"detail": "limit"}
 10-events-query-lexemes	3	console GET /events?limit=%2B1	400 {"detail": "limit"}

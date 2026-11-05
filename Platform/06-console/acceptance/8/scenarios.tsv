@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/06.8: папки кластера на стенде консоли (`testsub`, без домена). Формат — README.
+# Acceptance P/06.8: cluster folders on the console stand (`testsub`, no domain). Format: README.
 01-folder-basics	1	POST /folders {"name": "Подъезд"}	201 {"id": "$f", "name": "Подъезд", "parent": "", "members": [], "index": "$i"}
 01-folder-basics	2	GET /folders/$f	200 {"id": "$f", "name": "Подъезд", "parent": "", "members": [], "index": "$i"}
 01-folder-basics	3	store GET /v1/get?key=platform/folders/$f	200 {"items": {"name": "Подъезд", "parent": "", "members": ""}, "index": "$i"}

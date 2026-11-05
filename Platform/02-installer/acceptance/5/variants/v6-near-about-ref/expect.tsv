@@ -1,7 +1,7 @@
-# Ожидаемые эффективные права варианта (README приёмки главы 2.5, «Варианты манифестов»): роль, действие, ключ, allow | deny.
-# Контроллер читает строки подсистемы, на которую ссылается его манифест — near.sub (vb), about.sub (vc), ref (vd), — по
-# каталогу данных: placement, workers, policy, decommissioned, placement_turn, placement_intent, строки единиц, slots, holds,
-# таблицы; эпоху, idem, просьбы — нет; пишет только своё (P/02.5 Н1.4 строка <s>controller; решение «Архитектора» 2026-10-27).
+# Expected effective variant rights (chapter 2.5 acceptance README, «Варианты манифестов»): role, action, key, allow | deny.
+# The controller reads rows of the subsystem referenced by its manifest — near.sub (vb), about.sub (vc), ref (vd) — according to
+# the data catalogue: placement, workers, policy, decommissioned, placement_turn, placement_intent, unit rows, slots, holds,
+# tables; not epoch, idem or requests; it writes only its own rows (P/02.5 Н1.4 row <s>controller; the Architect's decision, 2026-10-27).
 role	action	key	expect
 vbcontroller	read	va/items/u1	allow
 vbcontroller	read	va/placement/u1	allow

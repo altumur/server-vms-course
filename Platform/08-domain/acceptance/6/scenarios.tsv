@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/08.6: стенд нескольких кластеров hold, m1, m2 — назначение, хранимые правки и исходы у держателя; сценарии 01, 02, 03, 05, 09 перенесены из М11/06 (стадия B). Формат — README.
+# Acceptance P/08.6: multi-cluster stand hold, m1, m2 — placement, kept edits and outcomes at the holder; scenarios 01, 02, 03, 05, 09 moved from М11/06 (stage B). Format: README.
 01-placement	1	@domain	ok
 01-placement	2	@until 30 holder GET /domain/placement	200 {"rev": 1, "records": {}}
 01-placement	3	holder PUT /domain/placement/nosuch/c1 {"cluster": "m1"}	404

@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/08.1: стенд нескольких кластеров hold, m1, m2 — вид и теневой отчёт держателя с настоящими отчётами членов. Формат — README.
+# Acceptance P/08.1: multi-cluster stand hold, m1, m2 — holder view and shadow report with real member reports. Format: README.
 04-cut-and-mend	1	@domain	ok
 04-cut-and-mend	2	@cut m1	ok
 04-cut-and-mend	3	@until 70 holder GET /domain	200 {"complete": false, "members": [{"name": "hold", "state": "ok"}, {"name": "m1", "state": "silent"}, {"name": "m2", "state": "ok"}]}

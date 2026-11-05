@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Приёмка P/06.1: дверь единиц консоли testsub (counters, id: name) — сц. 01–14 из М10/03; тела и таблицы консоли testsub и testsub2 — сц. 15–19 из М10/10 (04, 05, 06, 07, 11) (стадия B). Формат — README.
+# Acceptance P/06.1: unit door of console testsub (counters, id: name) — sc. 01–14 from М10/03; bodies and tables of consoles testsub and testsub2 — sc. 15–19 from М10/10 (04, 05, 06, 07, 11) (stage B). Format: README.
 01-create	1	POST /counters {"name": "c1", "start": 5}	201 {"id": "c1", "name": "c1", "start": 5, "labels": [], "revision": 1, "worker": null}
 01-create	2	@key(1) POST /counters {"name": "c1", "start": 5}	201 {"id": "c1", "revision": 1}
 01-create	3	@key(1) POST /counters {"name": "c1", "start": 6}	422 {"error": "key reused"}
@@ -156,7 +156,7 @@ scenario	step	request	expect
 19-table-feed	11	@as console store POST /v1/write {"id":"e1","op":"put","key":"testsub2/shelves/shx","items":{"name":"shx","zone":"z1","size":"many"},"cas":""}	200
 19-table-feed	12	console2 GET /shelves/shx	200 {"name": "shx", "garbled": true}
 19-table-feed	13	console2 POST /shelves {"name": "sh10", "zone": "z1", "over": "shx"}	409 {"fault": "garbled"}
-# 20-made (ADR-0091 пп. 1, 3): префикс заказчика testsub — отказ двери; строка заказа (подготовлена мимо писателя) — поля key неизменяемы, made и born сохраняет правка, made клиент не задаёт; состояние действует по born и revision; born у строки двери; удаление ставит made.gone
+# 20-made (ADR-0091 items 1, 3): testsub's requester prefix is refused by the door; an order row (prepared without its writer) has immutable key fields, edits preserve made and born, clients do not supply made; state applies by born and revision; born belongs to the door row; deletion sets made.gone.
 20-made	1	@start resource	ok
 20-made	2	console2 POST /tallies {"name": "testsub-c1", "of": "c1"}	400 {"error": "bad_id", "field": "/name", "detail": "~are made by testsub"}
 20-made	3	store GET /v1/get?key=testsub2/tallies/testsub-c1	200 {"items": null}
@@ -179,7 +179,7 @@ scenario	step	request	expect
 21-worker-table-delete	4	console2 DELETE /gauges/g1	200 {"deleted": "g1"}
 21-worker-table-delete	5	store GET /v1/get?key=testsub2/gauges/g1	200 {"items": null}
 21-worker-table-delete	6	console2 DELETE /gauges/g1	404
-# 22-unit-refs (аудит покрытия P/06, G01): прямые ссылки единицы (договор проверки строки П5) — must_match с иным значением и с отсутствующим элементом цели — 409 must_match, строки нет; цели нет — не отказ (ADR-0057); unique canonical — 409 unique; цель не читается — 409 garbled
+# 22-unit-refs (P/06 coverage audit, G01): direct unit references (row-check contract P5) — must_match with a different value or an absent target item gives 409 must_match and no row; an absent target is not refusal (ADR-0057); unique canonical gives 409 unique; an unreadable target gives 409 garbled.
 22-unit-refs	1	console2 POST /shelves {"name": "sh1", "zone": "z1"}	201 {"row": {"name": "sh1", "zone": "z1"}}
 22-unit-refs	2	console2 POST /tallies {"name": "t1", "of": "c1", "shelf": "sh1", "zone": "z2"}	409 {"error": "conflict", "fault": "must_match", "field": "/shelf"}
 22-unit-refs	3	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": null}
@@ -192,7 +192,7 @@ scenario	step	request	expect
 22-unit-refs	10	console2 POST /tallies {"name": "t6", "of": "c1", "feed": "https://H.EXAMPLE/a"}	409 {"error": "conflict", "fault": "unique"}
 22-unit-refs	11	@as console store POST /v1/write {"id":"e11","op":"put","key":"testsub2/shelves/shx","items":{"name":"shx","zone":"z1","size":"many"},"cas":""}	200
 22-unit-refs	12	console2 POST /tallies {"name": "t7", "of": "c1", "shelf": "shx", "zone": "z1"}	409 {"error": "conflict", "fault": "garbled"}
-# 23-fixed (аудит покрытия P/06, G02): возврат имени над надгробием — иной fixed (`of`) — 400 «is fixed», надгробие прежнее; тот же — 201, revision надгробия + 1; правка fixed у живой строки — 400, строка и revision прежние
+# 23-fixed (P/06 coverage audit, G02): re-creation over a tombstone with another fixed (`of`) gives 400 «is fixed», tombstone unchanged; same fixed gives 201 and tombstone revision + 1; editing fixed on a live row gives 400, row and revision unchanged.
 23-fixed	1	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1}
 23-fixed	2	console2 DELETE /tallies/t1	200 {"deleted": "t1"}
 23-fixed	3	console2 POST /tallies {"name": "t1", "of": "c2"}	400 {"error": "fixed", "field": "/of", "detail": "~is fixed", "fault": "@absent"}
@@ -201,7 +201,7 @@ scenario	step	request	expect
 23-fixed	6	console2 POST /tallies {"name": "t2", "of": "c1"}	201 {"revision": 1}
 23-fixed	7	console2 PUT /tallies/t2 {"of": "c2"}	400 {"error": "fixed", "field": "/of", "detail": "~is fixed", "fault": "@absent"}
 23-fixed	8	store GET /v1/get?key=testsub2/tallies/t2	200 {"items": {"of": "c1", "revision": "1"}}
-# 24-born-anew (аудит покрытия P/06, G03; ADR-0091 п. 3): удаление сохраняет born, создание над надгробием даёт новое
+# 24-born-anew (P/06 coverage audit, G03; ADR-0091 item 3): deletion preserves born; creation over the tombstone gives a new born.
 24-born-anew	1	console POST /counters {"name": "b1"}	201 {"revision": 1}
 24-born-anew	2	store GET /v1/get?key=testsub/counters/b1	200 {"items": {"born": "$b1", "revision": "1"}}
 24-born-anew	3	console DELETE /counters/b1	200 {"deleted": "b1"}
@@ -209,7 +209,7 @@ scenario	step	request	expect
 24-born-anew	5	console POST /counters {"name": "b1"}	201 {"revision": 2}
 24-born-anew	6	store GET /v1/get?key=testsub/counters/b1	200 {"items": {"born": "$b2", "revision": "2", "deleted": "@absent"}}
 24-born-anew	7	ASSERT $b1 != $b2	
-# 25-list-forms-restart (аудит покрытия P/06, G04; контрпример прогона 24): [] и [""] у marks — разные элементы строки, правка другого поля их не сливает, после перезапуска консоли — те же списки
+# 25-list-forms-restart (P/06 coverage audit, G04; run 24 counterexample): [] and [""] in marks are different row elements; editing another field does not merge them; lists stay the same after console restart.
 25-list-forms-restart	1	@start resource	ok
 25-list-forms-restart	2	console POST /counters {"name": "m1", "marks": []}	201 {"marks": []}
 25-list-forms-restart	3	console POST /counters {"name": "m2", "marks": [""]}	201 {"marks": [""]}
@@ -221,7 +221,7 @@ scenario	step	request	expect
 25-list-forms-restart	9	@until 30 console GET /counters	200 {"configured": [{"id": "m1", "marks": [], "start": 1}, {"id": "m2", "marks": [""], "start": 1}]}
 25-list-forms-restart	10	store GET /v1/get?key=testsub/counters/m1	200 {"items": {"marks": "", "revision": "2"}}
 25-list-forms-restart	11	store GET /v1/get?key=testsub/counters/m2	200 {"items": {"marks": "[\"\"]", "revision": "2"}}
-# 26-state-unreadable (аудит покрытия P/06, G07; ADR-0091 п. 3): строка состояния с born и revision живой строки, value не по схеме unit.state.result — не действует, state нет; то же с value по схеме — действует
+# 26-state-unreadable (P/06 coverage audit, G07; ADR-0091 item 3): state row with the live row's born and revision but value outside unit.state.result schema does not apply and gives no state; schema-valid value applies.
 26-state-unreadable	1	@start resource	ok
 26-state-unreadable	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1}
 26-state-unreadable	3	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"born": "$b", "revision": "1"}}
@@ -229,11 +229,11 @@ scenario	step	request	expect
 26-state-unreadable	5	console2 GET /tallies	200 {"configured": [{"id": "t1", "state": "@absent"}]}
 26-state-unreadable	6	@as testsub2worker store POST /v1/write {"id":"e6","op":"put","key":"testsub2/state/result/t1","items":{"born":"$b","revision":"1","epoch":"1","value":"{\"state\":\"open\"}"},"cas":"$s"}	200
 26-state-unreadable	7	console2 GET /tallies	200 {"configured": [{"id": "t1", "state": {"result": {"state": "open"}}}]}
-# 27-put-row-too-large (аудит покрытия P/06, G08; контрпример прогона 24): правка, после которой строка тяжелее потолка 524288 байт, при теле меньше предела тела — 413 row too large без fault, строка и revision прежние
+# 27-put-row-too-large (P/06 coverage audit, G08; run 24 counterexample): an edit exceeding the 524288-byte row ceiling with a body below the body limit gives 413 row too large without fault; row and revision unchanged.
 27-put-row-too-large	1	console POST /counters {"name": "w1", "start": 1}	201 {"revision": 1}
 27-put-row-too-large	2	console PUT /counters/w1 {"marks": ["@big(524288)"]}	413 {"error": "row too large", "fault": "@absent"}
 27-put-row-too-large	3	store GET /v1/get?key=testsub/counters/w1	200 {"items": {"revision": "1", "start": "1", "marks": "@absent"}}
-# 28-state-cursor-born (аудит покрытия P/06, второй проход Gemini, G01; ADR-0091 п. 3): курсор действует по born без revision — правка строки (revision 2) снимает result прежней revision, курсор остаётся; курсор с иным born не действует, state нет
+# 28-state-cursor-born (P/06 coverage audit, second Gemini pass, G01; ADR-0091 item 3): a cursor applies by born without revision; editing a row (revision 2) removes the former revision's result, keeps cursor; different born does not apply and gives no state.
 28-state-cursor-born	1	@start resource	ok
 28-state-cursor-born	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1}
 28-state-cursor-born	3	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"born": "$b", "revision": "1"}}
@@ -244,14 +244,14 @@ scenario	step	request	expect
 28-state-cursor-born	8	console2 GET /tallies	200 {"configured": [{"id": "t1", "revision": 2, "state": {"result": "@absent", "cursor": {"through": 7}}}]}
 28-state-cursor-born	9	@as testsub2worker store POST /v1/write {"id":"e9","op":"put","key":"testsub2/state/cursor/t1","items":{"born":"00000000000000000000000000000001","revision":"2","epoch":"1","value":"{\"through\":9}"},"cas":"$c"}	200
 28-state-cursor-born	10	console2 GET /tallies	200 {"configured": [{"id": "t1", "state": "@absent"}]}
-# 29-blob-clear (аудит покрытия P/06, второй проход Gemini, G02): правка полей снимает дайджест blob пустой строкой — 200, revision + 1, в строке ""; прежний дайджест после снятия — 400 (не прежний дайджест строки)
+# 29-blob-clear (P/06 coverage audit, second Gemini pass, G02): editing fields clears blob digest with an empty string — 200, revision + 1, "" in the row; the former digest after clearing gives 400 (no longer the row's former digest).
 29-blob-clear	1	@start resource	ok
 29-blob-clear	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"mask": "", "revision": 1}
 29-blob-clear	3	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "$d", "revision": 2}
 29-blob-clear	4	console2 PUT /tallies/t1 {"mask": ""}	200 {"mask": "", "revision": 3}
 29-blob-clear	5	console2 PUT /tallies/t1 {"mask": "$d"}	400
 29-blob-clear	6	store GET /v1/get?key=testsub2/tallies/t1	200 {"items": {"mask": "", "revision": "3"}}
-# 30-sweep-unmark (аудит покрытия P/06, второй проход Gemini, G02): дверь байтов снимает дайджест своих байтов со списка testsub2/sweep, прочие отметки остаются; список целиком нечитаем — дверь его не переписывает и не падает
+# 30-sweep-unmark (P/06 coverage audit, second Gemini pass, G02): the bytes door removes its bytes digest from testsub2/sweep, keeps other marks; a wholly unreadable list is neither overwritten nor a crash.
 30-sweep-unmark	1	@start resource	ok
 30-sweep-unmark	2	console2 POST /tallies {"name": "t1", "of": "c1"}	201 {"revision": 1}
 30-sweep-unmark	3	@as console store GET /v1/get?key=testsub2/sweep	200 {"index": "$v0"}
@@ -261,13 +261,13 @@ scenario	step	request	expect
 30-sweep-unmark	7	store POST /v1/write {"id":"77","op":"put","key":"testsub2/sweep","items":{"at":"1000","digests":"bogus"},"cas":"$v1"}	200 {"index": "$v2"}
 30-sweep-unmark	8	console2 PUT /tallies/t1/mask @raw hello-blob	200 {"mask": "sha256-57a256c65db5af18f8a04c7a42df26c3009dd01381fbaaaec7b432fc30d4c8d0", "revision": 3}
 30-sweep-unmark	9	store GET /v1/get?key=testsub2/sweep	200 {"items": {"digests": "bogus"}, "index": "$v2"}
-# 31-table-stamps (аудит покрытия P/06, второй проход Gemini, G03): штамп by/at/made_at в теле записи строки таблицы — 400 unknown field до записи (made_at — и вне stamp таблицы); запись без штампов — by и at консоли, made_at вне stamp нет
+# 31-table-stamps (P/06 coverage audit, second Gemini pass, G03): by/at/made_at stamp in a table-row body gives 400 unknown field before write (made_at also outside stamp); without stamps — console by and at, no made_at outside stamp.
 31-table-stamps	1	console2 POST /shelves {"name": "sh1", "zone": "z1", "by": "spoof"}	400 {"error": "unknown field", "field": "/by"}
 31-table-stamps	2	console2 POST /shelves {"name": "sh1", "zone": "z1", "at": 100}	400 {"error": "unknown field", "field": "/at"}
 31-table-stamps	3	console2 POST /shelves {"name": "sh1", "zone": "z1", "made_at": 100}	400 {"error": "unknown field", "field": "/made_at"}
 31-table-stamps	4	store GET /v1/get?key=testsub2/shelves/sh1	200 {"items": null}
 31-table-stamps	5	console2 POST /shelves {"name": "sh1", "zone": "z1"}	201 {"row": {"name": "sh1", "by": "operator", "at": "@time", "made_at": "@absent"}}
-# 32-hold-unreadable (аудит покрытия P/06, второй проход Gemini, G03; C06-TABLE-HELD-BY-33-01): строка удержания места нечитаема — held_by null в GET списка и строки (не 503), /where места — 503, ряд shelves_open место свободным не считает
+# 32-hold-unreadable (P/06 coverage audit, second Gemini pass, G03; C06-TABLE-HELD-BY-33-01): unreadable slot hold gives held_by null in list and row GET (not 503), slot /where gives 503; shelves_open does not count that slot as free.
 32-hold-unreadable	1	@start resource	ok
 32-hold-unreadable	2	console2 POST /shelves {"name": "sh1", "zone": "z1", "server": "srv-a"}	201 {"row": {"name": "sh1", "held_by": null}}
 32-hold-unreadable	3	@until 10 console2 GET /metrics	200 ~testsub2_shelves_open 1

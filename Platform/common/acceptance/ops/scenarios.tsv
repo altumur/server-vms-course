@@ -1,5 +1,5 @@
 scenario	step	request	expect
-# Стенд групповых операций (ADR-0095, P/06.9): сц. 03 — приём и память вызывающего; `probe-op`, воркер — подставной воркер раннера; без `@tls-setup`.
+# Group operations stand (ADR-0095, P/06.9): sc. 03 — caller admission/repeat memory; `probe-op`, runner's substitute worker; no `@tls-setup`.
 03-accept-repeat	1	@domain m1	ok
 03-accept-repeat	2	@pass-worker m1 probe-op op-1	ok
 03-accept-repeat	3	member m1 console POST /probe-op/things {"name": "n1"}	201 {"id": "n1", "revision": 1, "index": "$v1"}
@@ -43,7 +43,7 @@ scenario	step	request	expect
 03-accept-repeat	41	@pass-step-none op-1 10	ok
 03-accept-repeat	42	member m1 store GET /v1/get?key=probe-op/things/n1	200 {"items": {"revision": "2", "note": "a"}}
 03-accept-repeat	43	member m1 store GET /v1/get?key=probe-op/things/n2	200 {"items": {"revision": "2", "note": "b"}}
-# Сц. 07: ведущий убит, итог лёг: шаг не исполнен снова. Ведущий — копия 1: кроме неё консолей нет; копия 2 стартует посреди вызова и забирает сокет роли (README, «Две консоли»).
+# Sc. 07: leader killed, outcome committed — step is not re-executed. Leader is replica 1, the only console; replica 2 starts during the call and takes the role socket (README, «Две консоли»).
 07-restart-with-outcome	1	@domain m1	ok
 07-restart-with-outcome	2	@pass-worker m1 probe-op op-1	ok
 07-restart-with-outcome	3	member m1 console POST /probe-op/things {"name": "n1"}	201 {"id": "n1", "revision": 1, "index": "$v1"}
@@ -61,7 +61,7 @@ scenario	step	request	expect
 07-restart-with-outcome	15	@until 15 member m1 console#2 GET /probe-op/operations/11ff961a85067361e448e9841e2ebf5d	200 {"id": "11ff961a85067361e448e9841e2ebf5d", "by": "root", "state": "done", "finished_at": "@time", "total": 2, "done": 2, "ok": 2, "failed": 0, "cancelled": 0, "items": [{"state": "ok", "version": "2"}, {"state": "ok", "version": "2"}]}
 07-restart-with-outcome	16	@pass-seen op-1	ok {"requests": 2}
 07-restart-with-outcome	17	member m1 store GET /v1/get?key=probe-op/things/n1	200 {"items": {"revision": "2", "note": "a"}}
-# Сц. 07: ведущий остановлен, итога нет: новый ведущий зовёт тот же шаг, пакет идёт тем же ключом.
+# Sc. 07: leader paused, no outcome — new leader calls the same step, batch uses the same key.
 07-restart-no-outcome	1	@domain m1	ok
 07-restart-no-outcome	2	@pass-worker m1 probe-op op-1	ok
 07-restart-no-outcome	3	member m1 console POST /probe-op/things {"name": "n1"}	201 {"id": "n1", "revision": 1, "index": "$v1"}
@@ -78,7 +78,7 @@ scenario	step	request	expect
 07-restart-no-outcome	14	@pass-step-answer b 200 application/json {}	ok
 07-restart-no-outcome	15	@until 15 member m1 console#2 GET /probe-op/operations/d2f467b1fce58ef0a92945ae22bc41b7	200 {"id": "d2f467b1fce58ef0a92945ae22bc41b7", "by": "root", "state": "done", "finished_at": "@time", "total": 1, "done": 1, "ok": 1, "failed": 0, "cancelled": 0, "items": [{"state": "ok", "version": "2"}]}
 07-restart-no-outcome	16	@pass-seen op-1	ok {"requests": 2}
-# Сц. 07: ответ на пакет шага потерян, воркер повторяет его тем же ключом: сохранённый ответ, не 412.
+# Sc. 07: step-batch answer lost — worker retries with the same key: stored answer, not 412.
 07-lost-batch-answer	1	@domain m1	ok
 07-lost-batch-answer	2	@pass-worker m1 probe-op op-1	ok
 07-lost-batch-answer	3	member m1 console POST /probe-op/things {"name": "n1"}	201 {"id": "n1", "revision": 1, "index": "$v1"}
@@ -91,7 +91,7 @@ scenario	step	request	expect
 07-lost-batch-answer	10	@pass-step-answer a 200 application/json {}	ok
 07-lost-batch-answer	11	@until 15 member m1 console GET /probe-op/operations/397ea0c089bf374de2d338d7f85907a5	200 {"id": "397ea0c089bf374de2d338d7f85907a5", "by": "root", "state": "done", "finished_at": "@time", "total": 1, "done": 1, "ok": 1, "failed": 0, "cancelled": 0, "items": [{"state": "ok", "version": "2"}]}
 07-lost-batch-answer	12	@pass-seen op-1	ok {"requests": 1}
-# Сц. 07: ведущий на паузе процесса, очередь у другого, отмена: поздний пакет отказан стражем поколения. Ведущий — копия 2: копия 1 заморожена до приёма; очередь отдаёт стенд (README, «Сроки»).
+# Sc. 07: process-paused leader, another holds the turn, cancellation — late batch refused by generation guard. Leader is replica 2; replica 1 frozen before admission; stand supplies the turn (README, «Сроки»).
 07-late-batch	1	@domain m1	ok
 07-late-batch	2	@pass-worker m1 probe-op op-1	ok
 07-late-batch	3	member m1 console POST /probe-op/things {"name": "n1"}	201 {"id": "n1", "revision": 1, "index": "$v1"}

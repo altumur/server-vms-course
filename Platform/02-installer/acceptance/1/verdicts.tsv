@@ -1,9 +1,9 @@
-# Приёмка главы P/02.1 «Манифест подсистемы и строгий загрузчик» (ADR-0080; перенесена из М10/2): вердикты загрузчика.
-# Строка: case<TAB>verdict. case — файл cases/<case>.subsystem.yaml, загруженный один, как манифест подсистемы;
-# verdict — ok (грузится) или refused (отказ, называющий файл); диагностика — diagnostics.tsv и чтением по Н5. Правила — Н1, Н4;
-# здесь только таблица. Происхождение: таблица spec_verdicts.tsv (ревью 14 и 15, вердикты «Архитектора», 2026-10-06),
-# перенесена сюда 2026-10-14 с восемью новыми случаями (имя, обязательный ключ, пустой документ, snapshot, default+inherit).
-# Загрузчик, отвечающий иначе, — красный тест, не находка ревью.
+# Acceptance of P/02.1 «Манифест подсистемы и строгий загрузчик» (ADR-0080; moved from М10/2): loader verdicts.
+# Row: case<TAB>verdict. case is cases/<case>.subsystem.yaml loaded alone as a subsystem manifest;
+# verdict is ok (loads) or refused (refusal naming the file); diagnostics are diagnostics.tsv and reading under Н5. Rules: Н1, Н4;
+# this file is only the table. Origin: spec_verdicts.tsv (reviews 14 and 15, the Architect's verdicts, 2026-10-06),
+# moved here on 2026-10-14 with eight new cases (name, required key, empty document, snapshot, default+inherit).
+# A loader answering differently fails the test; this is not a new review finding.
 about_field_not_fixed_nowitness	refused
 anchor_alias_display_keys	refused
 anchor_merge_key	refused
@@ -422,7 +422,7 @@ m61_shared_ok	ok
 m61_shared_secret	refused
 m61_shared_twice	refused
 m61_witness_member_field_not_fixed	refused
-# c4_* — сверка cammeta-python и cammeta-go P/02.1 (2026-10-18): структура YAML, ключи-строки, значения (решение decisions/inbox/2026-10-18-сверка-python-go-м10-1-2.md п. 12–18)
+# c4_* — P/02.1 cammeta-python/cammeta-go reconciliation (2026-10-18): YAML structure, string keys, values (decision `decisions/inbox/2026-10-18-сверка-python-go-м10-1-2.md`, items 12–18).
 c4_block_less_indented	refused
 c4_block_more_indented_first	refused
 c4_block_tab_content_ok	refused
@@ -452,7 +452,7 @@ c4_display_fields_quoted_numeric_key	refused
 c4_default_without_value	refused
 c4_inherit_outside_enum	refused
 c4_door_pass_rows	refused
-# c5_* — пилот JSON Schema 2026-10-19 (находки Н1–Н5, Н11, Н12 к Н1.1, Н1.2а)
+# c5_* — JSON Schema pilot, 2026-10-19 (findings Н1–Н5, Н11, Н12 for Н1.1, Н1.2а).
 c5_int_field_default_1dot0	ok
 c5_int_field_default_1e0	ok
 c5_int_field_f1_default_1dot0	ok
@@ -569,11 +569,11 @@ c9_xclass_number_overflow	refused
 c9_is_not_null	refused
 c9_one_of_rule_order	refused
 c9_flow_lone_dash_spaced	refused
-# Сегменты door.routes — по грамматике name (решение «Архитектора» 2026-10-20, векторы door-token)
+# door.routes segments follow the name grammar (the Architect's decision, 2026-10-20; door-token vectors).
 door_routes_segment_slash	refused
 door_routes_segment_upper	refused
 door_routes_names	ok
-# ADR-0091 (Т-правка без защиты повтора): состояние единицы, срок ends, worker.creates, worker.uses, shares, parts, имя state, поля born и made
+# ADR-0091 (T-edit without repeat protection): unit state, ends term, worker.creates, worker.uses, shares, parts, state name, born and made fields.
 a91_unit_state_ok	ok
 a91_snapshot_state_unknown	refused
 a91_retire_when_state_field_unknown	refused
@@ -651,7 +651,7 @@ c2_metrics_histogram_no_buckets	refused
 c2_metrics_values_not_label	refused
 c2_metrics_values_with_count	refused
 c2_metrics_name_underscore	refused
-# Набор Б ADR-0092 (пакет перехода на В7): случаи t*, f*, r* — набор Б навыка lesson-spec
+# Set B of ADR-0092 (V7 transition package): t*, f*, r* cases — set B of the lesson-spec skill.
 t01_flow_multiline	refused
 t02_quoted_multiline	refused
 t03_indent_indicator	refused
@@ -701,7 +701,7 @@ worker_writes_declared_ok	ok
 worker_writes_declared_list_ok	ok
 worker_writes_unit_rows	refused
 worker_writes_undeclared	refused
-# ADR-0094 B7: console.shell, console.files — грамматика (положительные случаи с файлами — puts.tsv главы 2.3: установка читает файлы)
+# ADR-0094 B7: console.shell and console.files grammar (positive file cases are puts.tsv of chapter 2.3: installation reads the files).
 a94_console_empty_ok	ok
 a94_files_dotdot	refused
 a94_files_dotdot_inner	refused

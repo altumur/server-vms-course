@@ -10,9 +10,9 @@
 # THE RULES
 #   scalars in a request row
 #     true / false      the JSON text: true, false (not Python's True)
-#     null              at the top level of a `json` field: the field is ABSENT from the row (М10/3 Н1.2: «значение null —
-#                       элемента нет»); at the top level of a request field: the JSON text null (М10/8 Н1.5 «иное значение —
-#                       канонический JSON»); an empty string is the empty string; inside a JSON value a null stays null
+#     null              at the top level of a `json` field: the field is ABSENT from the row (М10/3 Н1.2: «null value —
+#                       absent»); at the top level of a request field: the JSON text null (М10/8 Н1.5 «another value —
+#                       canonical JSON»); an empty string is the empty string; inside a JSON value a null stays null
 #     a number          JCS (RFC 8785, ADR-0072; М10/8 Н1.5 «иное значение — канонический JSON»): ES6
 #                       Number.prototype.toString of the IEEE-754 double — a whole value in integer digits below 1e21
 #                       (5, not 5.0; -0 is 0), otherwise the shortest form that reads back as the same double, with an
