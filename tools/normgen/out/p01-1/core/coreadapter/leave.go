@@ -5,7 +5,27 @@ package coreadapter
 
 import "normgen/p01-1/apidoor"
 
-// Leave — chapter 1.3 (P/01.3): not in the store core stage; replace when your stage needs it.
+// Leave — chapter 1.3 (P/01.3), not in the store core stage: 503 «not in this stage» until your
+// stage needs it; then replace the body (the signature stays: Store is a coreadapter.Core). Identity first —
+// Context (core.go). By the norms:
+//
+//	spec/01.3-store.norms.md «Н2 Doors»:
+//	  req: P/01.3-R013 — The doors of the chapter are at the store daemon (chapter 1.1: `/v1/get`, `/v1/list`,
+//	    `/v1/write`) and its service doors:
+//	spec/01.3-store.norms.md «Н2 Doors»:
+//	  req: P/01.3-R016 — POST `/v1/leave`: `{id}` (an empty string — oneself), success 200 `{}`; a role socket — 403, as
+//	    for join (B1); a change of another's membership — only through admin.sock (`leave [id]` of admin_ops Н1.3); for a
+//	    box without raft the leaving of the last voter — 409 `{kind: refused, error}` «the last voter» (Н1.3 `box`)
+//	spec/01.3-store.norms.md «Н2 Doors»:
+//	  req: P/01.3-R017 — The order of checks: the frame (framing, the body limit 1 MiB — 413) → route and method (404,
+//	    405) → identity (403) → body and membership (400, 409)
+//	spec/01.3-store.norms.md «recover the store (no majority)»:
+//	  req: P/01.3-R023 — Those gone forever — `leave` at the leader; those who return after `leave` — `admit`.
+//	the refusals — forms/refusals.tsv:
+//	  1.3 row 1 service_body_form — 400 badrequest (P/01.3 Н2; P/01.1 Н2); with part refusals: refusals.ServiceBodyForm
+//	  1.3 row 2 service_body_limit — 413 toolarge (P/01.3 Н2); with part refusals: refusals.ServiceBodyLimit
+//	  1.3 row 12 join_role_socket — 403 forbidden (P/01.3 Н2); with part refusals: refusals.JoinRoleSocket
+//	  1.3 row 9 box_last_voter — 409 refused (P/01.3 Н1.3 box); with part refusals: refusals.BoxLastVoter
 func (s *Store) Leave(c Ctx, body []byte) apidoor.Answer {
 	return notInStage(apidoor.OpLeave)
 }

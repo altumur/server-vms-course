@@ -26,6 +26,9 @@ Platform/01-store/spec/01-store.api.openapi.yaml (tools/normgen/out/p01-1/go/api
 archive из cammeta-specs), код генераторов и ручной пакет — tools/normgen чистого HEAD курса (git archive; правки в
 tools/normgen — отказ); во временном каталоге генераторы перегоняют out на входах выгрузки, сборка — там же; дерево
 курса не меняется. В манифесте commit (курс) и export (выгрузка), без -dirty; <dst>/SOURCE.txt — оба sha и команда.
+--seed <дерево посева> (Архитектор 2026-11-05, 28-я — код 27-й): цикл копирует каталог пакета поверх посева целиком,
+поэтому своё реализации (editable) в пакет идёт, только если в посеве файла нет или он байт в байт тот, что положил
+прежний пакет (kit.manifest.json посева); код модели в пакет не идёт — манифест seed: kept, refreshed.
 Каталоги checks, jsonstrict, writecheck в <dst>/01-store/internal заменяются целиком; прочее в <dst> не трогается.
 """
 import argparse
@@ -227,7 +230,36 @@ def own_taken(target, data):
     return False
 
 
-def build(dst, module, parts=(), judged=None):
+def seed_rule(dst, seed):
+    """Посев (Архитектор 2026-11-05, 28-я — код 27-й): своё реализации (editable) пакет кладёт, только если файла в посеве
+    нет или он байт в байт тот, что положил прежний пакет (sha по kit.manifest.json посева: модель его не трогала);
+    иначе — код модели, файл в пакет не идёт. Без посева — own_taken по dst. → (taken(target, data), kept, refreshed)."""
+    kept, refreshed = [], []
+    if seed is None:
+        return (lambda target, data: own_taken(target, data)), kept, refreshed
+    seed = Path(seed)
+    try:
+        prior = json.loads((seed / "kit.manifest.json").read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        prior = {"files": []}
+    put = {f["path"]: f["sha256"] for f in prior.get("files", []) if f.get("editable")}
+
+    def taken(target, data):
+        rel = str(Path(target).relative_to(dst))
+        mine = seed / rel
+        if mine.is_file() and put.get(rel) == sha256(mine.read_bytes()):
+            others = [f for f in mine.parent.glob("*.go") if f != mine and not f.name.endswith("_test.go")]
+            if not any(declarations(data) & declarations(f.read_bytes()) for f in others):
+                refreshed.append(rel)
+                return False
+        if own_taken(mine, data):
+            kept.append(rel)
+            return True
+        return own_taken(target, data)
+    return taken, kept, refreshed
+
+
+def build(dst, module, parts=(), judged=None, seed=None):
     dst = Path(dst)
     if set(judged or {}) - set(("writecheck",) + PARTS):
         raise KitError(f"--judged: unknown parts {sorted(set(judged) - set(('writecheck',) + PARTS))}")
@@ -264,6 +296,7 @@ def build(dst, module, parts=(), judged=None):
         fresh_check(gen_door, OPENAPI, "go/apidoor", [n for n, _, _ in DOOR_FILES])
     internal = dst / "01-store/internal"
     files = []
+    taken, kept, refreshed = seed_rule(dst, seed)
 
     def put(rel_dir, name, data, origin, component, source):
         target = Path(os.path.normpath(internal / rel_dir / name))      # ../cmd/vectors — рядом с internal
@@ -291,7 +324,7 @@ def build(dst, module, parts=(), judged=None):
     for (sub, name, data, origin, source, own), component in tests:
         if core_files and (sub, name) == ("coreadapter", "open.go"):
             continue                    # open.go — у части core: Open уже возвращает её ядро
-        if own and own_taken(Path(os.path.normpath(internal / sub / name)), data):
+        if own and taken(Path(os.path.normpath(internal / sub / name)), data):
             continue                    # адаптер реализации не трогается
         put(sub, name, data, origin, component, source)
         if own:
@@ -306,13 +339,13 @@ def build(dst, module, parts=(), judged=None):
     for sub, name, data, origin, source in family_files:
         put(sub, name, data, origin, "families", source)
     for sub, name, data, origin, source, own in launch_files:
-        if own and own_taken(Path(os.path.normpath(internal / sub / name)), data):
+        if own and taken(Path(os.path.normpath(internal / sub / name)), data):
             continue                    # main.go и рамка реализации не трогаются
         put(sub, name, data, origin, "launch", source)
         if own:
             files[-1]["editable"] = True
     for sub, name, data, origin, source, own in core_files:
-        if own_taken(internal / sub / name, data):
+        if taken(internal / sub / name, data):
             continue                    # ядро реализации не трогается
         put(sub, name, data, origin, "core", source)
         files[-1]["editable"] = True
@@ -344,6 +377,8 @@ def build(dst, module, parts=(), judged=None):
     }
     if openapi_sha:
         manifest["openapi"] = {"path": str(OPENAPI.relative_to(ROOT)), "sha256": openapi_sha}
+    if seed is not None:
+        manifest["seed"] = {"kept": sorted(set(kept)), "refreshed": sorted(set(refreshed))}
     (dst / "kit.manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
                                            encoding="utf-8")
     return manifest
@@ -518,9 +553,10 @@ def unpack(repo, rev, path, into):
         raise KitError(f"tar: {done.stderr.decode(errors='replace').strip()}")
 
 
-def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT):
-    """Пакет из чистого HEAD курса на входах выгрузки export. → манифест."""
+def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT, seed=None):
+    """Пакет из чистого HEAD курса на входах выгрузки export (seed — посев, см. seed_rule). → манифест."""
     dst = Path(dst).resolve()
+    seed = Path(seed).resolve() if seed is not None else None
     if git("status", "--porcelain", "--", "tools/normgen", cwd=root).strip():
         raise KitError("tools/normgen has uncommitted changes: a kit is built only from a clean commit of the course")
     course = git("rev-parse", "HEAD", cwd=root).decode().strip()
@@ -539,17 +575,22 @@ def build_from_export(dst, module, parts, judged, export, specs=SPECS, root=ROOT
                 raise KitError(f"{g} on the export {sha[:9]}: {(done.stderr or done.stdout).strip()[-2000:]}")
         cmd = [sys.executable, str(gens / "kit/build_kit.py"), str(dst), "--module", module]
         cmd += sum((["--part", p] for p in parts), []) + sum((["--judged", f"{k}={v}"] for k, v in judged.items()), [])
+        cmd += ["--seed", str(seed)] if seed is not None else []
         env = dict(os.environ, **{COURSE_ENV: course, EXPORT_ENV: sha})
         done = subprocess.run(cmd, cwd=stage, capture_output=True, text=True, env=env)
         if done.returncode:
             raise KitError((done.stderr or done.stdout).strip())
     manifest = json.loads((dst / "kit.manifest.json").read_text(encoding="utf-8"))
     built = " ".join(["python3 tools/normgen/kit/build_kit.py <kit> --module", module]
-                     + [f"--part {p}" for p in parts] + [f"--export {sha}"])
+                     + [f"--part {p}" for p in parts] + [f"--export {sha}"] + (["--seed <seed>"] if seed else []))
+    sd = manifest.get("seed")
+    seeded = (f"seed {seed}: the files of the model kept, not in the kit ({len(sd['kept'])}): {' '.join(sd['kept'])}; "
+              f"the untouched stubs of the former kit refreshed ({len(sd['refreshed'])}): {' '.join(sd['refreshed'])}\n"
+              if sd else "")
     (dst / "SOURCE.txt").write_text(
         f"export {sha} (cammeta-specs): the inputs — Platform/ of the export, byte for byte (git archive)\n"
         f"course {course} (clean): tools/normgen — the generators, the hand-written kit code; out regenerated on the "
-        f"export inputs\nmodule {module}\nparts: {' '.join(manifest['parts'])}\nbuilt: {built}\n", encoding="utf-8")
+        f"export inputs\nmodule {module}\nparts: {' '.join(manifest['parts'])}\n{seeded}built: {built}\n", encoding="utf-8")
     return manifest
 
 
@@ -563,6 +604,8 @@ def main(argv=None):
     ap.add_argument("--export", metavar="SHA", help="the inputs from this commit of cammeta-specs (Platform/), the code "
                     "from the clean HEAD of the course")
     ap.add_argument("--specs", default=str(SPECS), help="the git repository of the exports (default ~/cammeta-specs)")
+    ap.add_argument("--seed", help="the seed tree (the code of a former attempt with its kit.manifest.json): editable "
+                    "files of the model stay out of the kit, untouched stubs of the former kit are refreshed")
     args = ap.parse_args(argv)
     judged = {}
     for j in args.judged:
@@ -572,8 +615,9 @@ def main(argv=None):
             return 1
         judged[part] = ref
     try:
-        manifest = (build_from_export(args.dst, args.module, args.part, judged, args.export, Path(args.specs))
-                    if args.export else build(args.dst, args.module, args.part, judged))
+        manifest = (build_from_export(args.dst, args.module, args.part, judged, args.export, Path(args.specs),
+                                      seed=args.seed)
+                    if args.export else build(args.dst, args.module, args.part, judged, args.seed))
     except KitError as exc:
         print(f"build_kit: {exc}", file=sys.stderr)
         return 1

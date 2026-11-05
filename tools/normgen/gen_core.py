@@ -10,7 +10,8 @@
   операции не затирает другую — Qwen 18q, 23q на целом файле адаптера) по интерфейсу Handler выхода gen_door
   (сигнатуры оттуда, не по памяти); над методом главы 1.1 — путь Н3 и якоря требований (req: P/01.1-RNNN, первая строка текста нормы) из
   spec/01.1-store.norms.md; тела — 503 «not implemented» (Get — пустое хранилище: every key absent, как launch.Empty,
-  чтобы этап launch оставался закрытым пакетом); методы глав 1.2/1.3 — notInStage (NotInStage пакета);
+  чтобы этап launch оставался закрытым пакетом); методы глав 1.2/1.3 — notInStage (NotInStage пакета), над ними места норм (STUBS: пункты Н2 и строка таблицы
+  дверей P/01.3-R016) и строки refusals.tsv двери (STUB_REFUSALS) — привязка мест, не код решения;
 - open.go — Open(Config) возвращает это ядро (вместо заглушки ErrNotImplemented части stagetests).
 Ядро лежит в пакете coreadapter: Ctx = *coreadapter.Request читает и каркас launch, отдельный пакет ядра дал бы цикл
 импорта (coreadapter.Open → core → coreadapter.Ctx).
@@ -50,6 +51,9 @@ OPS = {
 }
 LINE = 116      # ширина строки комментария якоря
 
+# Методы глав 1.2/1.3 → места норм над заглушкой: (файл норм, якорь, отбор) — None: пункт целиком; "door:<дверь>":
+# строка таблицы дверей P/01.3-R016; иначе выражение (группа 1). Объявление генератора, как OPS: OpenAPI мест не говорит.
+
 # Личность вызова над Context (core.go): места норм, не код решения (Архитектор 2026-11-05: 26 — R38-06).
 # (файл норм, якорь, выражение отбора текста пункта или None — первая строка пункта).
 NORMS_12 = ROOT / "Platform/01-store/spec/01.2-store.norms.md"
@@ -67,6 +71,27 @@ IDENTITY = [
 ORDER = (NORMS_13, r"\*\*(P/01\.3-07)\*\*[^«]*the order «([^»]+)»")
 ROLE_HEADER = (ACCEPT_2, r"the name (X-[A-Za-z-]+) is a designation of the header of trusted role forwarding")
 IDENTITY_REFUSALS = ("role_header", "identity", "forwarding_untrusted")
+ORDER_13 = r"(The order of checks: .*?→ body and membership \(400, 409\))"
+STUBS = {
+    "Rights": [(NORMS_12, "P/01.2-R012", None), (NORMS_12, "P/01.2-R014", None), (NORMS_12, "P/01.2-R015", None),
+               (NORMS_13, "P/01.3-R016", "door:GET `/v1/rights`")],
+    "Status": [(NORMS_13, "P/01.3-R013", None), (NORMS_13, "P/01.3-R015", None),
+               (NORMS_13, "P/01.3-R016", "door:GET `/v1/status`"), (NORMS_13, "P/01.3-R017", ORDER_13)],
+    "Join": [(NORMS_13, "P/01.3-R013", None), (NORMS_13, "P/01.3-R016", "door:POST `/v1/join`"),
+             (NORMS_13, "P/01.3-R017", ORDER_13)],
+    "Leave": [(NORMS_13, "P/01.3-R013", None), (NORMS_13, "P/01.3-R016", "door:POST `/v1/leave`"),
+              (NORMS_13, "P/01.3-R017", ORDER_13), (NORMS_13, "P/01.3-R023", None)],
+    "Metrics": [(NORMS_13, "P/01.3-R015", None), (NORMS_13, "P/01.3-R016", "door:GET `/metrics`")],
+}
+# Строки forms/refusals.tsv (по имени) над заглушкой — отказы, которые называют эту дверь.
+STUB_REFUSALS = {
+    "Rights": ("rights_no_route", "rights_store_unavailable", "rights_not_admin", "rights_not_loaded",
+               "forwarding_untrusted"),
+    "Status": ("service_method",),
+    "Join": ("service_body_form", "service_body_limit", "join_role_socket", "join_parity", "join_left"),
+    "Leave": ("service_body_form", "service_body_limit", "join_role_socket", "box_last_voter"),
+    "Metrics": ("service_method",),
+}
 
 
 class GenError(Exception):
@@ -297,20 +322,63 @@ def identity_comment():
     if not m:
         raise GenError(f"{path.name}: no name of the role forwarding header")
     lines.append(f"//   the role forwarding header: {m[1]} (acceptance/2/README.md), in c.Header")
+    lines.append("//   the refusal — forms/refusals.tsv:")
+    lines += refusal_lines(IDENTITY_REFUSALS)
+    lines.append("//     apidoor.Refuse(op, 403, \"forbidden\", msg, nil)")
+    return "\n".join(lines)
+
+
+def stub_comment(name, chapter):
+    """Комментарий над методом главы 1.2/1.3 (Архитектор 2026-11-05, 28-я — посев 27-й): места норм по STUBS, текст
+    пункта целиком (или отобранный выражением, или строка таблицы дверей); тело — notInStage, не код решения."""
+    lines = [f"// {name} — chapter {chapter} (P/0{chapter}), not in the store core stage: 503 «not in this stage» until your",
+             "// stage needs it; then replace the body (the signature stays: Store is a coreadapter.Core). Identity first —",
+             "// Context (core.go). By the norms:"]
+    count, cache = 0, {}
+    for path, anchor, sel in STUBS[name]:
+        if path not in cache:
+            text = path.read_text(encoding="utf-8")
+            cache[path] = ({a: (h, t) for h, _, items in sections(text) for a, t in items}, text)
+        items, text = cache[path]
+        if anchor not in items:
+            raise GenError(f"{path.name}: no req anchor {anchor} (gen_core STUBS {name})")
+        head, item = items[anchor]
+        if sel is None:
+            item = plain(item)
+        elif sel.startswith("door:"):
+            door = sel[5:]
+            rows = re.findall(r"\| " + re.escape(door) + r" \| (.*?) \|(?= \||$)", item)
+            if len(rows) != 1:
+                raise GenError(f"{path.name}: {anchor} — {len(rows)} rows of the door {door}, want 1")
+            item = f"{door}: {plain(rows[0])}"
+        else:
+            m = re.search(sel, item, re.S)
+            if not m:
+                raise GenError(f"{path.name}: {anchor} — no text by {sel!r}")
+            item = plain(m[1])
+        lines.append(f"//   spec/{path.name} «{head}»:")
+        lines += wrap(f"req: {anchor} — {item}", "//     ", "//       ")
+        count += 1
+    lines.append("//   the refusals — forms/refusals.tsv:")
+    lines += refusal_lines(STUB_REFUSALS[name])
+    return lines, count
+
+
+def refusal_lines(names):
+    """Строки refusals.tsv по именам: «глава row N имя — код вид (норма); with part refusals: refusals.Имя»."""
     rows = {}
     for line in REFUSALS.read_text(encoding="utf-8").split("\n"):
         cols = line.split("\t")
-        if len(cols) == 10 and cols[2] in IDENTITY_REFUSALS:
+        if len(cols) == 10 and cols[2] in names:
             rows[cols[2]] = cols
-    if set(rows) != set(IDENTITY_REFUSALS):
-        raise GenError(f"{REFUSALS.name}: rows {sorted(set(IDENTITY_REFUSALS) - set(rows))} not found")
-    lines.append("//   the refusal — forms/refusals.tsv:")
-    for name in IDENTITY_REFUSALS:
+    if set(rows) != set(names):
+        raise GenError(f"{REFUSALS.name}: rows {sorted(set(names) - set(rows))} not found")
+    out = []
+    for name in names:
         ch, row, _, _, code, kind, _, _, _, norm = rows[name]
         var = "".join(w[:1].upper() + w[1:] for w in name.split("_"))
-        lines.append(f"//     {ch} row {row} {name} — {code} {kind} ({norm}); with part refusals: refusals.{var}")
-    lines.append("//     apidoor.Refuse(op, 403, \"forbidden\", msg, nil)")
-    return "\n".join(lines)
+        out.append(f"//     {ch} row {row} {name} — {code} {kind} ({norm}); with part refusals: refusals.{var}")
+    return out
 
 
 def render():
@@ -329,9 +397,9 @@ def render():
         sig = f"func (s *Store) {name}(" + ", ".join(f"{v} {t}" for v, t in args) + f") {result}"
         op = "op" if name == "QueryRefused" else f"apidoor.{OP_CONST[name]}"
         if chapter != "1.1":
-            body.append((name, f"// {name} — chapter {chapter} (P/0{chapter}): not in the store core stage; replace when "
-                        f"your stage needs it.\n{sig} {{\n\treturn notInStage({op})\n}}\n"))
-            report.append((name, chapter, 0))
+            lines, count = stub_comment(name, chapter)
+            body.append((name, "\n".join(lines) + f"\n{sig} {{\n\treturn notInStage({op})\n}}\n"))
+            report.append((name, chapter, count))
             continue
         lines, count = [f"// {name} — P/01.1:"], 0
         for sec_name, how in refs:

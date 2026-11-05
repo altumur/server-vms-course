@@ -5,7 +5,17 @@ package coreadapter
 
 import "normgen/p01-1/apidoor"
 
-// Metrics — chapter 1.3 (P/01.3): not in the store core stage; replace when your stage needs it.
+// Metrics — chapter 1.3 (P/01.3), not in the store core stage: 503 «not in this stage» until your
+// stage needs it; then replace the body (the signature stays: Store is a coreadapter.Core). Identity first —
+// Context (core.go). By the norms:
+//
+//	spec/01.3-store.norms.md «Н2 Doors»:
+//	  req: P/01.3-R015 — All own JSON answers have full schemas, metrics are text/plain, without a fictitious empty JSON
+//	    instead of text.
+//	spec/01.3-store.norms.md «Н2 Doors»:
+//	  req: P/01.3-R016 — GET `/metrics`: The list of text series of Н1.3; correct escaping of labels
+//	the refusals — forms/refusals.tsv:
+//	  1.3 row 4 service_method — 405 badrequest (P/01.3 Н2); with part refusals: refusals.ServiceMethod
 func (s *Store) Metrics(c Ctx) apidoor.Answer {
 	return notInStage(apidoor.OpMetrics)
 }
