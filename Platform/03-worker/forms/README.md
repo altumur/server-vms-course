@@ -32,7 +32,7 @@ worker HTTP Fault schema. No unspecified stdout/stderr format is imposed by a di
 
 [`slot-capture.tsv`](slot-capture.tsv) is the machine of 3.2 Н3 capture. Its header declares closed states and actions, typed CEL inputs and
 TORN_STILL. Only the first matching row for the current state is taken. An action `-` means YOURS at `norm`, and must run before the next event
-is accepted; it never means no effect. The table generates admission and transition choice; candidate enumeration, deriving reader outcomes,
+is accepted; it never means no effect. The kit part `slot-capture` generates admission and transition choice and is called by `core`; candidate enumeration, deriving reader outcomes,
 full-key validation, store-item encoding, logical write ids, and guarded cleanup are the procedures at their anchors. A store non-answer is not
 absence. All operations within one logical retry retain their id and first-send time. The first-start-right input describes the right available
 for this candidate's confirmed read; spending it must not erase the very exception being tested. Rejoin never restores it.
