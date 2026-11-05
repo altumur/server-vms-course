@@ -3,7 +3,7 @@
  "type": "object",
  "properties": {
   "doc": {
-   "description": "JCS text of the complete HTTP 200 body {doc, via} of GET /api/topology/<member>, copied as received after checking SHA-256 of that complete body; not a merge of the fields of doc and via (P/08.3 N1.2 carry; P/09.1 N1.4)",
+   "description": "JCS text of the complete HTTP 200 body {doc, via} of `GET /api/topology/<member>`, copied as received after checking SHA-256 of that complete body; not a merge of the fields of doc and via (P/08.3 N1.2 carry; P/09.1 N1.4)",
    "type": "object",
    "properties": {
     "doc": {
