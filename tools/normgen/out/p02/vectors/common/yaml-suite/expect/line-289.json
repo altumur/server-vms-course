@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "MXS3",
+ "variant": "",
+ "cells": {
+  "id": "MXS3"
+ },
+ "files": {
+  "in.yaml": "LSB7YTogYn0K"
+ }
+}

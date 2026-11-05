@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "CTN5",
+ "variant": "",
+ "cells": {
+  "id": "CTN5"
+ },
+ "files": {
+  "in.yaml": "LS0tClsgYSwgYiwgYywgLCBdCg=="
+ }
+}

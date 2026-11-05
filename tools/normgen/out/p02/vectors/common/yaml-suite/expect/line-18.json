@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "35KP",
+ "variant": "",
+ "cells": {
+  "id": "35KP"
+ },
+ "files": {
+  "in.yaml": "LS0tICEhbWFwCj8gYQo6IGIKLS0tICEhc2VxCi0gISFzdHIgYwotLS0gISFzdHIKZAplCg=="
+ }
+}

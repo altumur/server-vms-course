@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "SKE5",
+ "variant": "",
+ "cells": {
+  "id": "SKE5"
+ },
+ "files": {
+  "in.yaml": "LS0tCnNlcToKICZhbmNob3IKLSBhCi0gYgo="
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "5GBF",
+ "variant": "",
+ "cells": {
+  "id": "5GBF"
+ },
+ "files": {
+  "in.yaml": "Rm9sZGluZzoKICAiRW1wdHkgbGluZQogICAJCiAgYXMgYSBsaW5lIGZlZWQiCkNob21waW5nOiB8CiAgQ2xpcHBlZCBlbXB0eSBsaW5lcwogCgo="
+ }
+}

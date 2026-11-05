@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "J9HZ",
+ "variant": "",
+ "cells": {
+  "id": "J9HZ"
+ },
+ "files": {
+  "in.yaml": "LS0tCmhyOiAjIDE5OTggaHIgcmFua2luZwogIC0gTWFyayBNY0d3aXJlCiAgLSBTYW1teSBTb3NhCnJiaToKICAjIDE5OTggcmJpIHJhbmtpbmcKICAtIFNhbW15IFNvc2EKICAtIEtlbiBHcmlmZmV5Cg=="
+ }
+}

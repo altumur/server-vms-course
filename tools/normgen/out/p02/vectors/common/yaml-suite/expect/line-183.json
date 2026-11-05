@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "DFF7",
+ "variant": "",
+ "cells": {
+  "id": "DFF7"
+ },
+ "files": {
+  "in.yaml": "ewo/IGV4cGxpY2l0OiBlbnRyeSwKaW1wbGljaXQ6IGVudHJ5LAo/Cn0K"
+ }
+}

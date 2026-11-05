@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "UT92",
+ "variant": "",
+ "cells": {
+  "id": "UT92"
+ },
+ "files": {
+  "in.yaml": "LS0tCnsgbWF0Y2hlcwolIDogMjAgfQouLi4KLS0tCiMgRW1wdHkKLi4uCg=="
+ }
+}

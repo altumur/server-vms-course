@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "UKK6/02",
+ "variant": "",
+ "cells": {
+  "id": "UKK6/02"
+ },
+ "files": {
+  "in.yaml": "IQo="
+ }
+}

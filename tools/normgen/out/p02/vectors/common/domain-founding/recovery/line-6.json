@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/domain-founding",
+ "table": "recovery.tsv",
+ "case": "recovery-upper-hex",
+ "variant": "",
+ "cells": {
+  "input": "{\"file\":{\"domain\":\"d1\",\"root_key\":\"02F31D3DECCE719BC5E39F6F6BD5686207A6A72C1613F973A4A6EFB1A0135A45\",\"root_pub\":\"24f0d13f1a4c0f0c79dc1ce27599744f68bb35b381082c76ea566b3aee92b9ac\"},\"mode\":\"0600\"}"
+ },
+ "files": {}
+}

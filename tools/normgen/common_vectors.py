@@ -101,8 +101,9 @@ def strict(text, where):
         raise CommonError(f"{where}: not JSON: {exc}") from None
 
 
-def composition(lesson_key, root=None):
-    """[(пакет, таблица)] урока по consumers.tsv; пакет без объявления адаптера — CommonError с его именем."""
+def composition(lesson_key, root=None, known_only=False):
+    """[(пакет, таблица)] урока по consumers.tsv; пакет без объявления адаптера — CommonError с его именем (known_only —
+    только пакеты DECLS: прочие объявляет генератор урока, gen_vectors.py)."""
     root = Path(root) if root else Path(__file__).resolve().parent.parent.parent
     path = root / CONSUMERS
     if not path.is_file():
@@ -122,6 +123,8 @@ def composition(lesson_key, root=None):
             raise CommonError(f"{CONSUMERS}: row {no}: package {package!r} — common/<name>")
         name = package[len("common/"):]
         if name not in DECLS:
+            if known_only:
+                continue
             raise CommonError(f"{CONSUMERS}: {package} {table} → {lesson_key}: no declaration of its adapter in "
                               f"tools/normgen/common_vectors.py DECLS")
         out.append((name, table))
@@ -192,13 +195,14 @@ import "errors"
 '''
 
 
-def adapters(lesson_key):
+def adapters(lesson_key, known_only=False):
     """{имя файла vectoradapter: текст Go} заготовок общих пакетов урока (без family-read — его исполняет пакет)."""
-    return {DECLS[n]["adapter"]: ADAPTER_HEAD + DECLS[n]["doc"] for n, _ in composition(lesson_key) if DECLS[n]["adapter"]}
+    return {DECLS[n]["adapter"]: ADAPTER_HEAD + DECLS[n]["doc"] for n, _ in composition(lesson_key, known_only=known_only)
+            if DECLS[n]["adapter"]}
 
 
 def uses_families(lesson_key):
-    return any(n == "family-read" for n, _ in composition(lesson_key))
+    return any(n == "family-read" for n, _ in composition(lesson_key, known_only=True))
 
 
 # Ветви единой команды (vectorcmd.run): value — нативное значение JSON.
@@ -346,9 +350,9 @@ TEST_CALL = {
 }
 
 
-def go_tests(lesson_key, root, go_str, head, module):
+def go_tests(lesson_key, root, go_str, head, module, known_only=False):
     """{имя файла vectortests: текст Go} — по тесту на строку общих пакетов урока; head(rel) — шапка с sha источника."""
-    comp = composition(lesson_key, root)
+    comp = composition(lesson_key, root, known_only)
     if not comp:
         return {}
     files = {"common_test.go": head(None) + "\npackage vectortests\n" + TESTS_HELPERS % {"module": module}}
@@ -381,10 +385,10 @@ def go_tests(lesson_key, root, go_str, head, module):
     return files
 
 
-def wire_rows(lesson_key, root):
+def wire_rows(lesson_key, root, known_only=False):
     """[(пакет, таблица, rel, текст, [(строка, cells, files, ожидание JSON одной строкой)])] — входы команды векторов."""
     out = []
-    for name, table in composition(lesson_key, root):
+    for name, table in composition(lesson_key, root, known_only):
         rel, text, rows = read(root, name, table)
         fx = fixtures(root, name)
         items = []

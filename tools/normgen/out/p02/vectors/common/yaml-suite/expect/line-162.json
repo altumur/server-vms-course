@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "CML9",
+ "variant": "",
+ "cells": {
+  "id": "CML9"
+ },
+ "files": {
+  "in.yaml": "a2V5OiBbIHdvcmQxCiMgIHh4eAogIHdvcmQyIF0K"
+ }
+}

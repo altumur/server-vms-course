@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "XV9V",
+ "variant": "",
+ "cells": {
+  "id": "XV9V"
+ },
+ "files": {
+  "in.yaml": "Rm9sZGluZzoKICAiRW1wdHkgbGluZQoKICBhcyBhIGxpbmUgZmVlZCIKQ2hvbXBpbmc6IHwKICBDbGlwcGVkIGVtcHR5IGxpbmVzCiAKCg=="
+ }
+}

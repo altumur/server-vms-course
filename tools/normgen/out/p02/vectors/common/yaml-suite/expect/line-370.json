@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "W4TN",
+ "variant": "",
+ "cells": {
+  "id": "W4TN"
+ },
+ "files": {
+  "in.yaml": "JVlBTUwgMS4yCi0tLSB8CiUhUFMtQWRvYmUtMi4wCi4uLgolWUFNTCAxLjIKLS0tCiMgRW1wdHkKLi4uCg=="
+ }
+}

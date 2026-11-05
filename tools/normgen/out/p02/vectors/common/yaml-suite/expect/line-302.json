@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "P76L",
+ "variant": "",
+ "cells": {
+  "id": "P76L"
+ },
+ "files": {
+  "in.yaml": "JVRBRyAhISB0YWc6ZXhhbXBsZS5jb20sMjAwMDphcHAvCi0tLQohIWludCAxIC0gMyAjIEludGVydmFsLCBub3QgaW50ZWdlcgo="
+ }
+}

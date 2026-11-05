@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "2LFX",
+ "variant": "",
+ "cells": {
+  "id": "2LFX"
+ },
+ "files": {
+  "in.yaml": "JUZPTyAgYmFyIGJheiAjIFNob3VsZCBiZSBpZ25vcmVkCiAgICAgICAgICAgICAgIyB3aXRoIGEgd2FybmluZy4KLS0tCiJmb28iCg=="
+ }
+}

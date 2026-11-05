@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/loopback",
+ "table": "cases.tsv",
+ "case": "no-url",
+ "variant": "",
+ "cells": {
+  "input": "{}"
+ },
+ "files": {}
+}

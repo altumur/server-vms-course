@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "T833",
+ "variant": "",
+ "cells": {
+  "id": "T833"
+ },
+ "files": {
+  "in.yaml": "LS0tCnsKIGZvbzogMQogYmFyOiAyIH0K"
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "JHB9",
+ "variant": "",
+ "cells": {
+  "id": "JHB9"
+ },
+ "files": {
+  "in.yaml": "IyBSYW5raW5nIG9mIDE5OTggaG9tZSBydW5zCi0tLQotIE1hcmsgTWNHd2lyZQotIFNhbW15IFNvc2EKLSBLZW4gR3JpZmZleQoKIyBUZWFtIHJhbmtpbmcKLS0tCi0gQ2hpY2FnbyBDdWJzCi0gU3QgTG91aXMgQ2FyZGluYWxzCg=="
+ }
+}

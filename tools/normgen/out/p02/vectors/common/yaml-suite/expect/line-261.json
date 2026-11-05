@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "KSS4",
+ "variant": "",
+ "cells": {
+  "id": "KSS4"
+ },
+ "files": {
+  "in.yaml": "LS0tICJxdW90ZWQKc3RyaW5nIgotLS0gJm5vZGUgZm9vCg=="
+ }
+}

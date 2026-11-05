@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "X8DW",
+ "variant": "",
+ "cells": {
+  "id": "X8DW"
+ },
+ "files": {
+  "in.yaml": "LS0tCj8ga2V5CiMgY29tbWVudAo6IHZhbHVlCg=="
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "PRH3",
+ "variant": "",
+ "cells": {
+  "id": "PRH3"
+ },
+ "files": {
+  "in.yaml": "JyAxc3Qgbm9uLWVtcHR5CgogMm5kIG5vbi1lbXB0eSAKCTNyZCBub24tZW1wdHkgJwo="
+ }
+}

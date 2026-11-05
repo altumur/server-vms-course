@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "WZ62",
+ "variant": "",
+ "cells": {
+  "id": "WZ62"
+ },
+ "files": {
+  "in.yaml": "ewogIGZvbyA6ICEhc3RyLAogICEhc3RyIDogYmFyLAp9Cg=="
+ }
+}

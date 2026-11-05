@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "DC7X",
+ "variant": "",
+ "cells": {
+  "id": "DC7X"
+ },
+ "files": {
+  "in.yaml": "YTogYgkKc2VxOgkKIC0gYQkKYzogZAkjWAo="
+ }
+}

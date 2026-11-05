@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "JS2J",
+ "variant": "",
+ "cells": {
+  "id": "JS2J"
+ },
+ "files": {
+  "in.yaml": "Rmlyc3Qgb2NjdXJyZW5jZTogJmFuY2hvciBWYWx1ZQpTZWNvbmQgb2NjdXJyZW5jZTogKmFuY2hvcgo="
+ }
+}

@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/sealing",
+ "table": "ring.tsv",
+ "case": "only_comment",
+ "variant": "",
+ "cells": {
+  "file": "\"# nothing\\n\""
+ },
+ "files": {}
+}

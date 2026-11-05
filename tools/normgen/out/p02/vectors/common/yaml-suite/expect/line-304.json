@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "PBJ2",
+ "variant": "",
+ "cells": {
+  "id": "PBJ2"
+ },
+ "files": {
+  "in.yaml": "YW1lcmljYW46CiAgLSBCb3N0b24gUmVkIFNveAogIC0gRGV0cm9pdCBUaWdlcnMKICAtIE5ldyBZb3JrIFlhbmtlZXMKbmF0aW9uYWw6CiAgLSBOZXcgWW9yayBNZXRzCiAgLSBDaGljYWdvIEN1YnMKICAtIEF0bGFudGEgQnJhdmVzCg=="
+ }
+}

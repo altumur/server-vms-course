@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "JR7V",
+ "variant": "",
+ "cells": {
+  "id": "JR7V"
+ },
+ "files": {
+  "in.yaml": "LSBhP3N0cmluZwotIGFub3RoZXIgPyBzdHJpbmcKLSBrZXk6IHZhbHVlPwotIFthP3N0cmluZ10KLSBbYW5vdGhlciA/IHN0cmluZ10KLSB7a2V5OiB2YWx1ZT8gfQotIHtrZXk6IHZhbHVlP30KLSB7a2V5PzogdmFsdWUgfQo="
+ }
+}

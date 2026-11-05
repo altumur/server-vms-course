@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "MUS6/02",
+ "variant": "",
+ "cells": {
+  "id": "MUS6/02"
+ },
+ "files": {
+  "in.yaml": "JVlBTUwgIDEuMQotLS0K"
+ }
+}

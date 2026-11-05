@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "M7A3",
+ "variant": "",
+ "cells": {
+  "id": "M7A3"
+ },
+ "files": {
+  "in.yaml": "QmFyZQpkb2N1bWVudAouLi4KIyBObyBkb2N1bWVudAouLi4KfAolIVBTLUFkb2JlLTIuMCAjIE5vdCB0aGUgZmlyc3QgbGluZQo="
+ }
+}

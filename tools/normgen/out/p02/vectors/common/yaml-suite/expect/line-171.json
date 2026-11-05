@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "D49Q",
+ "variant": "",
+ "cells": {
+  "id": "D49Q"
+ },
+ "files": {
+  "in.yaml": "J2FcbmInOiAxCidjCiBkJzogMQo="
+ }
+}

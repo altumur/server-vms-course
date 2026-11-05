@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "TS54",
+ "variant": "",
+ "cells": {
+  "id": "TS54"
+ },
+ "files": {
+  "in.yaml": "PgogYWIKIGNkCiAKIGVmCgoKIGdoCg=="
+ }
+}

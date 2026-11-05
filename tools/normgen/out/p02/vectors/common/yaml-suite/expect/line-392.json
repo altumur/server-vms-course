@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "YD5X",
+ "variant": "",
+ "cells": {
+  "id": "YD5X"
+ },
+ "files": {
+  "in.yaml": "LSBbbmFtZSAgICAgICAgLCBociwgYXZnICBdCi0gW01hcmsgTWNHd2lyZSwgNjUsIDAuMjc4XQotIFtTYW1teSBTb3NhICAsIDYzLCAwLjI4OF0K"
+ }
+}

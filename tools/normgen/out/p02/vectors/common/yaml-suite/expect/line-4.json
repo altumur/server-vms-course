@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "26DV",
+ "variant": "",
+ "cells": {
+  "id": "26DV"
+ },
+ "files": {
+  "in.yaml": "InRvcDEiIDogCiAgImtleTEiIDogJmFsaWFzMSBzY2FsYXIxCid0b3AyJyA6IAogICdrZXkyJyA6ICZhbGlhczIgc2NhbGFyMgp0b3AzOiAmbm9kZTMgCiAgKmFsaWFzMSA6IHNjYWxhcjMKdG9wNDogCiAgKmFsaWFzMiA6IHNjYWxhcjQKdG9wNSAgIDogICAgCiAgc2NhbGFyNQp0b3A2OiAKICAmYW5jaG9yNiAna2V5NicgOiBzY2FsYXI2Cg=="
+ }
+}

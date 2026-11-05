@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "R4YG",
+ "variant": "",
+ "cells": {
+  "id": "R4YG"
+ },
+ "files": {
+  "in.yaml": "LSB8CiBkZXRlY3RlZAotID4KIAogIAogICMgZGV0ZWN0ZWQKLSB8MQogIGV4cGxpY2l0Ci0gPgogCQogZGV0ZWN0ZWQK"
+ }
+}

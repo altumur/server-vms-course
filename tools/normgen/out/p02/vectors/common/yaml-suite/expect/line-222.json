@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "GT5M",
+ "variant": "",
+ "cells": {
+  "id": "GT5M"
+ },
+ "files": {
+  "in.yaml": "LSBpdGVtMQombm9kZQotIGl0ZW0yCg=="
+ }
+}

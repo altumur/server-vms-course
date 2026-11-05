@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "XW4D",
+ "variant": "",
+ "cells": {
+  "id": "XW4D"
+ },
+ "files": {
+  "in.yaml": "YTogImRvdWJsZQogIHF1b3RlcyIgIyBsYWxhCmI6IHBsYWluCiB2YWx1ZSAgIyBsYWxhCmMgIDogI2xhbGEKICBkCj8gIyBsYWxhCiAtIHNlcTEKOiAjIGxhbGEKIC0gI2xhbGEKICBzZXEyCmU6CiAmbm9kZSAjIGxhbGEKIC0geDogeQpibG9jazogPiAjIGxhbGEKICBhYmNkZQo="
+ }
+}

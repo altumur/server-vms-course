@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "8UDB",
+ "variant": "",
+ "cells": {
+  "id": "8UDB"
+ },
+ "files": {
+  "in.yaml": "WwoiZG91YmxlCiBxdW90ZWQiLCAnc2luZ2xlCiAgICAgICAgICAgcXVvdGVkJywKcGxhaW4KIHRleHQsIFsgbmVzdGVkIF0sCnNpbmdsZTogcGFpciwKXQo="
+ }
+}

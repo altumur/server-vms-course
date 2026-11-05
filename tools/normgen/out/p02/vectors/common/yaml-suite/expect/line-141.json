@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "9WXW",
+ "variant": "",
+ "cells": {
+  "id": "9WXW"
+ },
+ "files": {
+  "in.yaml": "IyBQcml2YXRlCiFmb28gImJhciIKLi4uCiMgR2xvYmFsCiVUQUcgISB0YWc6ZXhhbXBsZS5jb20sMjAwMDphcHAvCi0tLQohZm9vICJiYXIiCg=="
+ }
+}

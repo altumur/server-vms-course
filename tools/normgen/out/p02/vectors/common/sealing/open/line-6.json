@@ -1,0 +1,14 @@
+{
+ "format": 1,
+ "package": "common/sealing",
+ "table": "open.tsv",
+ "case": "other_key",
+ "variant": "",
+ "cells": {
+  "key_hex": "32ac1451572332b2684494f6276f6082c0ce7feb7e74a5efbfcdf6e14c43d2a7",
+  "envelope": "enc:v2:k1:ikNeujSOpkp66hql:fk441dK8AoBEOw-1P8ktkqbnUjsQkZE",
+  "row_key": "testsub2/tallies/t1",
+  "pointer": "/feed_secret"
+ },
+ "files": {}
+}

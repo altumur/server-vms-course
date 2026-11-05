@@ -1,0 +1,13 @@
+{
+ "format": 1,
+ "package": "common/yaml-suite",
+ "table": "expect.tsv",
+ "case": "FBC9",
+ "variant": "",
+ "cells": {
+  "id": "FBC9"
+ },
+ "files": {
+  "in.yaml": "c2FmZTogYSEiIyQlJicoKSorLC0uLzA5Ojs8PT4/QEFaW1xdXl9gYXp7fH1+CiAgICAgISIjJCUmJygpKissLS4vMDk6Ozw9Pj9AQVpbXF1eX2Bhent8fX4Kc2FmZSBxdWVzdGlvbiBtYXJrOiA/Zm9vCnNhZmUgY29sb246IDpmb28Kc2FmZSBkYXNoOiAtZm9vCg=="
+ }
+}
