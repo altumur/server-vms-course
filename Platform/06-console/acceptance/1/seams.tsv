@@ -1,0 +1,7 @@
+# P/06 kit seams; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
+# scenario	step	request	expect
+s01-key-reused	1	CALL console-repeat {"first":"successful_create","retry":"same_key_different_body"}	{"status":422,"extra_target_writes":0}
+s02-in-flight	1	CALL console-repeat {"first":"another_live_pending","retry":"same_key_same_body"}	{"status":409,"extra_target_writes":0}
+s03-counter-history-unknown	1	CALL console-next-id {"counter":"unreadable","row_listing":"unconfirmed","tombstones":"confirmed","live_claims":"confirmed"}	{"status":503,"number_issued":false,"counter_writes":0}
+s04-window-ack-required	1	CALL console-body-window {"writers_stopped":false,"all_other_preconditions":"valid"}	{"exit_code":2,"deleted_bodies":0}
+s05-body-list-cas-race	1	CALL console-body-window {"writers_stopped":true,"grace_observed_s":300,"list_cas":"conflict_before_first_delete"}	{"exit_code":2,"deleted_bodies":0}

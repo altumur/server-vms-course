@@ -1,0 +1,6 @@
+# P/06 kit seams; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
+# scenario	step	request	expect
+s01-forward-one-hop	1	CALL console-forward {"target":"another_cluster","via":"already_forwarded","request":"valid"}	{"status":400,"forward_calls":0}
+s02-clusters-unreadable	1	CALL console-forward {"target":"another_cluster","via":"absent","clusters":"malformed","membership":"section_absent"}	{"status":503,"forward_calls":0}
+s03-clusters-missing-name	1	CALL console-forward {"target":"another_cluster","via":"absent","clusters":"empty","membership":"section_absent"}	{"status":404,"forward_calls":0}
+s04-book-callback-exact-tail	1	CALL console-callback {"ticket":"valid_person_ticket","calls":["GET domain/testsub/books/book"],"method":"GET","path":"/domain/testsub/books/book/x"}	{"status":401,"handler_calls":0,"forward_calls":0}

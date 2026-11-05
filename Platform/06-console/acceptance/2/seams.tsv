@@ -1,0 +1,5 @@
+# P/06 kit seams; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
+# scenario	step	request	expect
+s01-secret-mask-not-password	1	CALL console-secret-edit {"operation":"put","password_secret":"***","stored_secret":"valid_envelope"}	{"status":400,"target_writes":0}
+s02-secret-url-redaction	1	CALL console-secret-edit {"operation":"put","address":"rtsp://person:fixture-password@camera/live","password_secret":"absent"}	{"status":400,"fault":"bad_url","target_writes":0,"refusal_contains_fixture_password":false}
+s03-ring-unreadable-not-done	1	CALL console-secret-edit {"operation":"post","ring":"configured_unreadable","password_secret":"fixture-password"}	{"status":503,"target_writes":0,"done_claim_writes":0}

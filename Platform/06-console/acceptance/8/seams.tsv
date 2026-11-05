@@ -1,0 +1,6 @@
+# P/06 kit seams; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
+# scenario	step	request	expect
+s01-folder-name-255-bytes	1	CALL console-folder-create {"name":"яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяa"}	{"status":201,"folder_writes":1}
+s02-folder-name-256-bytes	1	CALL console-folder-create {"name":"яяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяяя"}	{"status":400,"folder_writes":0}
+s03-parent-guard-race	1	CALL console-folder-batch {"operation":"add_member","initial_tree":"valid","ancestor_guard":"changes_after_read"}	{"status":412,"folder_writes":0,"membership_writes":0}
+s04-membership-key-too-long	1	CALL console-folder-batch {"operation":"add_member","initial_tree":"valid","member_key":"one_byte_over_store_declared_limit"}	{"status":400,"folder_writes":0,"membership_writes":0}

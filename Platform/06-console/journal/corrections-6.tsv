@@ -46,3 +46,4 @@ date	sample	fix	languages
 2026-10-31	03-policy/8–12, 04-drain/15–22, 05-server-labels/7–13, 08-schema/7–9, 13-decommission-flow/17–20	ADR-0094 B3: память повторов дверей записи: повтор — сохранённый ответ, запись не повторена, иное тело или вход query — 409 key reused	all
 2026-10-31	03-policy, 04-drain, 05-server-labels, 08-schema, 13-decommission-flow	ADR-0094 доп. (14): `key reused` на дверях памяти — 422, не 409.	all
 2026-10-31	17-settings-versions	ADR-0094 B4: новый сценарий: revision, ETag, If-Match и 412 снимков настроек	all
+2026-11-05	forms P/06; acceptance/6/seams.tsv; req anchors	ADR-0125доп5: форма входов/отказов/констант,11этапов,36CALLшвовв9главах. Исходные203Н4строки+14gate сохранены278проекциями,3ячейки6.7/4прочих; единственнаяAPIправка — точноеименованиесуществующейRevisionMovedschema. Всеобычныесценарии/семьи/векторыпрежние,kitwholeнеобъявлен,SUT0	all
