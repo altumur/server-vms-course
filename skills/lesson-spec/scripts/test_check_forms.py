@@ -562,3 +562,30 @@ class WireP06(unittest.TestCase):                  # расширения про
         self.assertTrue(self.mutate('json(row[\\"input\\"])', 'json(row[\\"input\\"], \\"x\\")', ph))   # арность
         self.assertTrue(self.mutate('json(row[\\"input\\"])', 'json(1)', ph))
         self.assertTrue(any("non-JSON" in e for e in self.mutate('json(row[\\"input\\"])', 'json(row[\\"case\\"])', ph)))
+
+    def test_at(self):                               # at: {"at":{"value":column|literal,"pointer":"/…"},"decode":"json"?}
+        pool = self.row("common/pool", "cases.tsv", "vectors")
+        col = '{"column":"expect","decode":"json"}'
+        at = '{"at":{"value":' + col + ',"pointer":"/pool"}}'
+        self.assertEqual(self.mutate(col, at, pool), [])                                     # проходящий случай
+        self.assertEqual(self.mutate(col, '{"at":{"value":{"literal":{"a":"[1]"}},"pointer":"/a"},"decode":"json"}', pool), [])
+        for bad in (at.replace(col, '{"at":{"value":' + col + ',"pointer":"/pool"}}'),     # вложенный at
+                    at.replace(col, '{"object":{"x":' + col + '}}'),                          # не column и не literal
+                    at.replace('"/pool"', '""'), at.replace('"/pool"', '"pool"'), at.replace('"/pool"', '"/a~2"'),
+                    at[:-1] + ',"decode":"text"}',                                            # внешний decode ≠ json
+                    at[:-1] + ',"decode":"json"}',                                            # выбрано не строка
+                    at.replace('"/pool"', '"/nope"'),                                          # указателя нет в строках
+                    '{"at":{"value":{"literal":{"a":1}},"pointer":"/b"}}',
+                    '{"at":{"value":' + col + ',"pointer":"/pool","extra":1}}'):
+            self.assertTrue(self.mutate(col, bad, pool), bad)
+        rid = self.row("06-console/rid", "rid.tsv", "stand:rid")                              # at во входе — отказ
+        self.assertTrue(self.mutate('{"column":"rid","decode":"raw-json"}',
+                                    '{"at":{"value":{"literal":{"a":"x"}},"pointer":"/a"}}', rid))
+        crl = self.row("common/crl", "cases.tsv", "vectors")
+        self.assertTrue(self.mutate('"cells":{"input":{"column":"input"}}',
+                                    '"cells":{"input":{"at":{"value":{"column":"input","decode":"json"},"pointer":"/ca"}}}', crl))
+
+    def test_arg_file_json_closed(self):             # wire.md: в arg_file json — column text|json|raw-json, literal, object, array
+        rid = self.row("06-console/rid", "rid.tsv", "stand:rid")
+        self.assertTrue(self.mutate('{"column":"rid","decode":"raw-json"}', '{"column":"rid","decode":"cell"}', rid))
+        self.assertTrue(self.mutate('"rid":{"column":"rid","decode":"raw-json"}', '"rid":{"omit":true}', rid))

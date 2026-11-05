@@ -699,8 +699,34 @@ DECODES = {"column": ("cell", "json", "text"), "group": ("text", "json", "cell")
            "suffix": ("text", "json", "cell"), "file": ("bytes", "text", "json")}
 VALUE_KEYS = {"column": {"column", "decode"}, "literal": {"literal"}, "object": {"object"}, "array": {"array"},
               "file": {"file", "decode"}, "group": {"group"}, "groups": {"groups"}, "suffix": {"suffix", "decode"},
-              "omit": {"omit"}, "map": {"map"}}
-ARG_JSON_KINDS = ("column", "literal", "object", "array", "omit")     # внутри arg_file json (wire.md «P/06 transport»)
+              "omit": {"omit"}, "map": {"map"}, "at": {"at", "decode"}}       # decode у at — необязательный, только json
+ARG_JSON_KINDS = ("column", "literal", "object", "array")     # внутри arg_file json (wire.md «P/06 transport»: omit, at — нет)
+ARG_JSON_DECODES = ("text", "json", "raw-json")
+POINTER = re.compile(r"(/([^~/]|~[01])*)+")                   # непустой JSON Pointer RFC 6901 (не root "")
+
+
+def pointer_get(doc, pointer):
+    """Значение по JSON Pointer RFC 6901 → (найдено, значение); индекс массива — 0 или без ведущих нулей."""
+    for tok in _pointer_tokens(pointer):
+        if isinstance(doc, dict) and tok in doc:
+            doc = doc[tok]
+        elif isinstance(doc, list) and re.fullmatch(r"0|[1-9][0-9]*", tok) and int(tok) < len(doc):
+            doc = doc[int(tok)]
+        else:
+            return False, None
+    return True, doc
+
+
+def decode_cell(text, decode):
+    """Ячейка по decode column: text — строка, json — строгий JSON (ValueError), cell — JSON или исходная строка."""
+    if decode == "text":
+        return text
+    if decode == "cell":
+        try:
+            return wire_json(text)
+        except ValueError:
+            return text
+    return wire_json(text)
 
 
 def wire_forms(root):
@@ -844,7 +870,7 @@ def _value_shape(expr, cols, err, what, field=False, suffix=False, argfile=False
         err.add(f"{what}: a ValueExpr is not an object")
         return False
     kinds = [k for k in expr if k in VALUE_KEYS]
-    if len(kinds) != 1 or set(expr) != VALUE_KEYS[kinds[0]]:
+    if len(kinds) != 1 or not (set(expr) == VALUE_KEYS[kinds[0]] or (kinds[0] == "at" and set(expr) == {"at"})):
         err.add(f"{what}: not exactly one ValueExpr constructor of the closed list with its keys: {sorted(expr)}")
         return False
     kind, grouped = kinds[0], False
@@ -854,9 +880,33 @@ def _value_shape(expr, cols, err, what, field=False, suffix=False, argfile=False
     if in_map and kind in ("group", "groups", "map"):
         err.add(f"{what}: {kind} inside a map value, which is evaluated on one row")
         return False
-    if kind == "column" and expr["decode"] == "raw-json":
+    if argfile and kind == "column" and expr["decode"] not in ARG_JSON_DECODES:
+        err.add(f"{what}: decode {expr['decode']!r} of a column in arg_file json is not one of {list(ARG_JSON_DECODES)}")
+    elif kind == "column" and expr["decode"] == "raw-json":
         if not argfile:
             err.add(f"{what}: decode raw-json is allowed only inside arg_file json")
+    elif kind == "at":
+        if expr.get("decode", "json") != "json":
+            err.add(f"{what}: the outer decode of at is only json")
+        if _keys(expr["at"], {"value", "pointer"}, {"value", "pointer"}, f"{what}.at", err):
+            v, p = expr["at"]["value"], expr["at"]["pointer"]
+            if not (isinstance(p, str) and POINTER.fullmatch(p)):
+                err.add(f"{what}.at: pointer {p!r} is not a nonempty RFC 6901 JSON Pointer starting with /")
+            elif not (isinstance(v, dict) and [k for k in v if k in VALUE_KEYS] in (["column"], ["literal"])):
+                err.add(f"{what}.at: value is only a column or literal ValueExpr (nested at and others are forbidden)")
+            else:
+                _value_shape(v, cols, err, f"{what}.at.value")
+                if "literal" in v:
+                    found, sel = pointer_get(v["literal"], p)
+                    if not found:
+                        err.add(f"{what}.at: pointer {p} is missing in the literal")
+                    elif "decode" in expr:
+                        try:
+                            if not isinstance(sel, str):
+                                raise ValueError("not a string")
+                            wire_json(sel)
+                        except ValueError as exc:
+                            err.add(f"{what}.at: the selected value is not a strict JSON string ({str(exc)[:60]})")
     elif kind in DECODES and kind not in ("group", "groups") and expr["decode"] not in DECODES[kind]:
         err.add(f"{what}: decode {expr['decode']!r} of {kind} is not one of {list(DECODES[kind])}")
     if kind == "column" and expr["column"] not in cols:
@@ -1344,6 +1394,19 @@ def _check_rows(r, rows, cols, decls, filedecl, exps, marks, nats, compares, whe
                 _decoded(row[g["column"]], g["decode"], err, what, no)
         elif "suffix" in expr and suffix is not None:
             _decoded(suffix, expr["decode"], err, what, line)
+        elif "at" in expr and "column" in expr["at"]["value"]:     # указатель — по фактическим строкам таблицы
+            src = expr["at"]["value"]
+            cell = constant([row[src["column"]] for _, row in group], f"{what} at column {src['column']}", line)
+            try:
+                found, sel = pointer_get(decode_cell(cell, src["decode"]), expr["at"]["pointer"])
+                if not found:
+                    err.add(f"{what}: at pointer {expr['at']['pointer']} is missing in column {src['column']}", line)
+                elif "decode" in expr:
+                    if not isinstance(sel, str):
+                        raise ValueError("the selected value is not a string")
+                    wire_json(sel)
+            except ValueError as exc:
+                err.add(f"{what}: at over column {src['column']}: {str(exc)[:80]}", line)
         elif "map" in expr:                                # ключ — сырая ячейка строки, повтор — ошибка данных
             keys = [row[expr["map"]["key"]] for _, row in group]
             dup = sorted({k for k in keys if keys.count(k) > 1})
