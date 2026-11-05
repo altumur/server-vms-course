@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "in-unset",
+ "variant": "write",
+ "cells": {
+  "type": "int:inherit",
+  "json": "@unset"
+ },
+ "files": {}
+}

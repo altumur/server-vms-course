@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/slot-name",
+ "table": "cases.tsv",
+ "case": "order-big",
+ "variant": "",
+ "cells": {
+  "op": "order",
+  "input": "{\"prefix\":\"w\",\"names\":[\"w-18446744073709551616\",\"w-18446744073709551615\",\"w-9\",\"w-a\"]}"
+ },
+ "files": {}
+}

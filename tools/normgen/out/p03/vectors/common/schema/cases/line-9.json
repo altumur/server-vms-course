@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/schema",
+ "table": "cases.tsv",
+ "case": "row-absent",
+ "variant": "",
+ "cells": {
+  "input": "{\"SCHEMA\":3,\"row\":null}"
+ },
+ "files": {}
+}

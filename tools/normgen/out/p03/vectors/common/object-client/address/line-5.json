@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/object-client",
+ "table": "address.tsv",
+ "case": "file-relative",
+ "variant": "",
+ "cells": {
+  "input": "{\"OBJECTS\":\"file://objects\",\"PLATFORM_DIR\":\"/data/platform\"}"
+ },
+ "files": {}
+}

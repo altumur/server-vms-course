@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/turn",
+ "table": "cases.tsv",
+ "case": "placement-manifest-behind",
+ "variant": "",
+ "cells": {
+  "input": "{\"kind\":\"placement\",\"turn\":\"testsub/controller/placement_turn\",\"me\":{\"manifest_rev\":\"9\"},\"steps\":[{\"read\":{\"holder\":\"c-old\",\"manifest_rev\":\"10\"},\"seen\":45,\"version\":3}]}"
+ },
+ "files": {}
+}

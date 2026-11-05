@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "lb-bang",
+ "variant": "write",
+ "cells": {
+  "type": "list:labels",
+  "json": "[\"gpu!\"]"
+ },
+ "files": {}
+}

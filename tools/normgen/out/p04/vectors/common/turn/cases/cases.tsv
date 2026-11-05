@@ -1,0 +1,23 @@
+# Inputs of the vector command for common/turn cases.tsv (gen_vectors.py); compare turn.
+# source Platform/common/vectors/turn/cases.tsv sha256 3b01fa9210443cc0dd3d21566e1eae79f22ba625128d4849450ba49d3b96a4be
+case	input	exit	stdout
+line-3	line-3.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":""},"held"]
+line-4	line-4.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":3},"held"]
+line-5	line-5.json	0	["busy"]
+line-6	line-6.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":3},"held"]
+line-7	line-7.json	0	["busy"]
+line-8	line-8.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":3},"held"]
+line-9	line-9.json	0	["manifest_behind"]
+line-10	line-10.json	0	["refused"]
+line-11	line-11.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":""},"not_held"]
+line-12	line-12.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":""},"held",{"write":{"holder":"@same","manifest_rev":"7"},"cas":1},"held",{"write":{"holder":"@same","manifest_rev":"7"},"cas":2},"stop"]
+line-13	line-13.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":""},"held",{"guard":{"key":"testsub/controller/placement_turn","index":1}},"wait"]
+line-14	line-14.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":""},"held",{"guard":{"key":"testsub/controller/placement_turn","index":1}},"stop"]
+line-15	line-15.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":""},"held",{"guard":{"key":"testsub/controller/placement_turn","index":1}},{"write":{"holder":"@same","manifest_rev":"7"},"cas":1},"reread",{"guard":{"key":"testsub/controller/placement_turn","index":2}}]
+line-16	line-16.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":""},"held",{"guard":{"key":"testsub/controller/placement_turn","index":1}},{"write":{"holder":"@same","manifest_rev":"7"},"cas":1},"stop"]
+line-17	line-17.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":""},"held",{"guard":{"key":"testsub/controller/placement_turn","index":1}},{"write":{"holder":"@same","manifest_rev":"7"},"cas":1},"stop"]
+line-18	line-18.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":""},"held",{"write":{"holder":"","manifest_rev":"7"},"cas":1},"done"]
+line-31	line-31.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":""},"reread",{"write":{"holder":"@same","manifest_rev":"7"},"cas":1},"held"]
+line-32	line-32.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":""},"reread","not_held"]
+line-33	line-33.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":""},"reread","not_held"]
+line-34	line-34.json	0	[{"write":{"holder":"@new","manifest_rev":"7"},"cas":""},"held",{"write":{"holder":"@same","manifest_rev":"7"},"cas":1},"reread",{"write":{"holder":"@same","manifest_rev":"7"},"cas":2},"held"]

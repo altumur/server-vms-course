@@ -154,6 +154,12 @@ WIRE = {
 }
 
 
+# Черновик провода P/03, P/04 — временная проекция до формы wire.tsv (wire_p03p04.py, источники — там).
+from wire_p03p04 import WIRE as _WIRE_DRAFT, SKIP_LESSON  # noqa: E402
+
+WIRE.update(_WIRE_DRAFT)
+
+
 def package_dir(root, pkg):
     owner, name = pkg.split("/", 1)
     return Path(root) / "Platform" / owner / "vectors" / name
@@ -180,7 +186,7 @@ def read_table(root, decl):
             raise GenError(f"{path.relative_to(root)}:{no}: {len(cells)} cells, header {head}")
         rows.append((no, dict(zip(head, cells))))
     if header is not None:
-        need = set(decl.get("inputs", [])) | ({decl["input"]} if "input" in decl else set())
+        need = set(decl.get("inputs", [])) | ({decl["input"]} if isinstance(decl.get("input"), str) else set())
         if head is None or need - set(head):
             raise GenError(f"{path.relative_to(root)}: columns {sorted(need - set(head or []))} not in the header")
     return d, path, rows
@@ -204,7 +210,8 @@ def plan(root=ROOT):
         if line.startswith("#") or len(cells) != 4 or cells[2] != L.key:
             continue
         pkg, table = cells[0], cells[1]
-        if (pkg, table) in SKIP or (pkg, table) in declared or (pkg[7:], table) in known:
+        if (pkg, table) in SKIP or (pkg, table) in SKIP_LESSON.get(L.key, {}) or (pkg, table) in declared \
+                or (pkg[7:], table) in known:
             continue
         raise GenError(f"consumers.tsv: {pkg} {table} → {L.key}: no declaration of its wire")
     return decls, known
@@ -247,6 +254,9 @@ def stub(decls_of_fn):
     if d["args"] == "cells":
         sig = f"func {fn}(table string, cells map[string]string, files map[string][]byte) Answer"
         lines.append("// cells — the input columns of the row as written (the raw TSV cell strings); files — the fixtures.")
+    elif d["args"] == "cells+variant":
+        sig = f"func {fn}(table, variant string, cells map[string]string, files map[string][]byte) Answer"
+        lines.append("// variant — the half of the row (write | read); cells — the input columns of that half as written.")
     elif d["args"] == "source":
         sig = f"func {fn}(source string, text []byte) Answer"
         lines.append("// source — the file name, text — its bytes; return Raw (the bytes of stdout).")
@@ -504,15 +514,20 @@ def go_vectorcmd(decls, known):
     fam = any(n == "family-read" for n, _ in known)
     if fam:
         imports.insert(0, f'\t"{GO_MODULE}/families"')
-    want, cases, stand = [], [], []
+    want, cases, stand, variants = [], [], [], []
     for d in decls:
         if d["surface"] == "vectors":
             key = go_str(f"{d['package']} {d['table']}")
             cells = sorted(set(d["inputs"]))
-            if "extra_cells" in d:
+            if "extra_cells" in d or "frames" in d:
                 cells = ["*"]
             want.append(f"\t\t{key}: {{{go_str(','.join(cells))}, {go_str(','.join(sorted(d.get('files', {}))))}}},\n")
-            cases.append((PER_LIST_CASE if d.get("per_list") else UNIFIED_CASE) % {"key": key, "fn": d["fn"]})
+            if d["args"] == "cells+variant":
+                variants.append(key)
+                cases.append(UNIFIED_CASE.replace("(*in.Table, cellmap", "(*in.Table, *in.Variant, cellmap")
+                             % {"key": key, "fn": d["fn"]})
+            else:
+                cases.append((PER_LIST_CASE if d.get("per_list") else UNIFIED_CASE) % {"key": key, "fn": d["fn"]})
         else:
             k = d["surface"].split(":", 1)[1]
             if d["args"] == "source":
@@ -521,7 +536,9 @@ def go_vectorcmd(decls, known):
                 call = f"vectoradapter.{d['fn']}()"
             else:
                 call = f"vectoradapter.{d['fn']}(data)"
-            stand.append(f"\t\tcase {go_str(k)}:\n\t\t\ta = {call}\n")
+            branch = f"\t\tcase {go_str(k)}:\n\t\t\ta = {call}\n"
+            if branch not in stand:                    # таблицы одного ключа стенда (door-token verify, place)
+                stand.append(branch)
     for name, table in known:
         cd = common_vectors.DECLS[name]
         key = go_str(f"common/{name} {table}")
@@ -530,6 +547,15 @@ def go_vectorcmd(decls, known):
         cases.append(branch)
     body = VECTORCMD % {"imports": "\n".join(imports) + "\n", "want": "".join(want), "cases": "".join(cases),
                         "stand": "".join(stand), "extra": common_vectors.FAMILY_READ_GO if fam else ""}
+    if variants:                                       # пакеты с половинами строки (values-by-type: write | read)
+        old = '\tif *in.Variant != "" {\n\t\treturn 0, nil, nil, fmt.Errorf("variant %q, want \\"\\"", *in.Variant)\n\t}\n'
+        if old not in body:
+            raise GenError("vectorcmd template: the variant check moved")
+        allowed = "".join(f"\t\t{k}: true,\n" for k in variants)
+        body = body.replace(old, "\thalves := map[string]bool{\n" + allowed + "\t}\n"
+                            '\tif halves[pkg] != (*in.Variant == "write" || *in.Variant == "read") || '
+                            '(!halves[pkg] && *in.Variant != "") {\n'
+                            '\t\treturn 0, nil, nil, fmt.Errorf("variant %q is not a variant of %s", *in.Variant, pkg)\n\t}\n')
     return gofmt(body)
 
 
@@ -741,11 +767,440 @@ func safe(f func() (any, error)) (v any, err error) {
 '''
 
 
+COMPARE_GO = r"""// Code generated by tools/normgen/gen_vectors.py; DO NOT EDIT.
+
+// The compare rules of the package READMEs beyond value/raw/sets (the draft wire of P/03, P/04; replaced by the form
+// Platform/common/vectors/wire.tsv when it is published).
+package vectortests
+
+import (
+	"encoding/json"
+	"reflect"
+	"sort"
+	"strings"
+	"testing"
+
+	"normgen/vectoradapter"
+)
+
+// checkBy — the answer against the expectation by the named rule: subset, fields:<a,b>, setarrays, events, row,
+// secret, turn, vbt-write.
+func checkBy(t *testing.T, where string, f func() vectoradapter.Answer, code int, want string, raw []byte, compare string) {
+	t.Helper()
+	a, err := call(f)
+	if err != nil {
+		t.Fatalf("%s: %v", where, err)
+	}
+	if a.Code < 0 {
+		t.Fatalf("%s: %v", where, a.Value)
+	}
+	if a.Code != code {
+		t.Fatalf("%s: code %d, want %d (%v)", where, a.Code, code, a.Value)
+	}
+	if code != 0 {
+		return
+	}
+	got, w := norm(a.Value), decoded(want)
+	var errs []string
+	switch {
+	case compare == "subset":
+		subset(w, got, "$", &errs)
+	case strings.HasPrefix(compare, "fields:"):
+		g, _ := got.(map[string]any)
+		wm, _ := w.(map[string]any)
+		if g == nil {
+			errs = append(errs, "$: want an object")
+		}
+		for _, k := range strings.Split(compare[len("fields:"):], ",") {
+			if g != nil && !reflect.DeepEqual(g[k], wm[k]) {
+				errs = append(errs, "$."+k+": "+show(g[k])+", want "+show(wm[k]))
+			}
+		}
+	case compare == "setarrays":
+		if !sameSetDeep(got, w) {
+			errs = append(errs, "$: "+show(got)+", want (arrays as sets) "+show(w))
+		}
+	case compare == "events":
+		events(w, got, &errs)
+	case compare == "row":
+		rowRule(w, got, &errs)
+	case compare == "secret":
+		secret(w, got, &errs)
+	case compare == "turn":
+		turn(w, got, &errs)
+	case compare == "vbt-write":
+		vbtWrite(w, got, &errs)
+	default:
+		errs = append(errs, "unknown compare rule "+compare)
+	}
+	if len(errs) > 0 {
+		t.Fatalf("%s:\n  %s\n got %s", where, strings.Join(errs, "\n  "), show(got))
+	}
+}
+
+func show(v any) string { b, _ := json.Marshal(v); return string(b) }
+
+// subset — the common acceptance subset: an object by the listed keys ({} — exactly empty, "@absent" — no key), a list
+// element by element, the rest by value.
+func subset(exp, act any, path string, errs *[]string) {
+	switch e := exp.(type) {
+	case map[string]any:
+		a, ok := act.(map[string]any)
+		if !ok {
+			*errs = append(*errs, path+": want an object, got "+show(act))
+			return
+		}
+		if len(e) == 0 && len(a) != 0 {
+			*errs = append(*errs, path+": want {} exactly, got "+show(act))
+			return
+		}
+		for k, v := range e {
+			av, has := a[k]
+			if v == "@absent" {
+				if has {
+					*errs = append(*errs, path+"."+k+": want absent")
+				}
+				continue
+			}
+			if !has {
+				*errs = append(*errs, path+"."+k+": missing")
+				continue
+			}
+			subset(v, av, path+"."+k, errs)
+		}
+	case []any:
+		a, ok := act.([]any)
+		if !ok || len(a) != len(e) {
+			*errs = append(*errs, path+": want "+show(exp)+", got "+show(act))
+			return
+		}
+		for i := range e {
+			subset(e[i], a[i], path+"["+strconvI(i)+"]", errs)
+		}
+	default:
+		if !reflect.DeepEqual(exp, act) {
+			*errs = append(*errs, path+": want "+show(exp)+", got "+show(act))
+		}
+	}
+}
+
+func strconvI(i int) string { b, _ := json.Marshal(i); return string(b) }
+
+// sameSetDeep — by value, every array as a set of distinct elements.
+func sameSetDeep(a, b any) bool {
+	switch bv := b.(type) {
+	case []any:
+		av, ok := a.([]any)
+		if !ok || len(av) != len(bv) {
+			return false
+		}
+		x, y := keysSorted(av), keysSorted(bv)
+		for i := range x {
+			if x[i] != y[i] || (i > 0 && x[i] == x[i-1]) {
+				return false
+			}
+		}
+		return true
+	case map[string]any:
+		am, ok := a.(map[string]any)
+		if !ok || len(am) != len(bv) {
+			return false
+		}
+		for k, v := range bv {
+			if !sameSetDeep(am[k], v) {
+				return false
+			}
+		}
+		return true
+	}
+	return reflect.DeepEqual(a, b)
+}
+
+func keysSorted(xs []any) []string {
+	out := make([]string, len(xs))
+	for i, x := range xs {
+		out[i] = show(x)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// events — events-merge: the top keys but events by the subset of the object (each by its full value); events — the
+// same length and order, each element by its listed fields.
+func events(exp, act any, errs *[]string) {
+	e, _ := exp.(map[string]any)
+	a, ok := act.(map[string]any)
+	if !ok {
+		*errs = append(*errs, "$: want an object")
+		return
+	}
+	for k, v := range e {
+		av, has := a[k]
+		switch {
+		case v == "@absent":
+			if has {
+				*errs = append(*errs, "$."+k+": want absent")
+			}
+		case !has:
+			*errs = append(*errs, "$."+k+": missing")
+		case k == "events":
+			we, _ := v.([]any)
+			ae, ok := av.([]any)
+			if !ok || len(ae) != len(we) {
+				*errs = append(*errs, "$.events: want "+show(v)+", got "+show(av))
+				continue
+			}
+			for i := range we {
+				wo, _ := we[i].(map[string]any)
+				ao, _ := ae[i].(map[string]any)
+				for f, fv := range wo {
+					if fv == "@absent" {
+						if _, has := ao[f]; has {
+							*errs = append(*errs, "$.events["+strconvI(i)+"]."+f+": want absent")
+						}
+					} else if !reflect.DeepEqual(ao[f], fv) {
+						*errs = append(*errs, "$.events["+strconvI(i)+"]."+f+": "+show(ao[f])+", want "+show(fv))
+					}
+				}
+			}
+		default:
+			if !reflect.DeepEqual(av, v) {
+				*errs = append(*errs, "$."+k+": "+show(av)+", want "+show(v))
+			}
+		}
+	}
+}
+
+// rowRule — row-check cases.tsv: result, word, field ("@absent" — no key); for ok the elements named by the column row
+// ("@absent" — no key; {} — row empty; a text "[…" also by JSON value); no column row — the row is not compared.
+func rowRule(exp, act any, errs *[]string) {
+	e, _ := exp.(map[string]any)
+	a, ok := act.(map[string]any)
+	if !ok {
+		*errs = append(*errs, "$: want an object")
+		return
+	}
+	for _, k := range []string{"result", "word", "field"} {
+		v, want := e[k]
+		if !want {
+			continue
+		}
+		av, has := a[k]
+		if v == "@absent" {
+			if has {
+				*errs = append(*errs, "$."+k+": want absent")
+			}
+		} else if !reflect.DeepEqual(av, v) {
+			*errs = append(*errs, "$."+k+": "+show(av)+", want "+show(v))
+		}
+	}
+	wr, has := e["row"]
+	if !has {
+		return
+	}
+	ar, ok := a["row"].(map[string]any)
+	if !ok {
+		*errs = append(*errs, "$.row: want an object of texts, got "+show(a["row"]))
+		return
+	}
+	wm, _ := wr.(map[string]any)
+	if len(wm) == 0 && len(ar) != 0 {
+		*errs = append(*errs, "$.row: want {} exactly")
+	}
+	for k, v := range wm {
+		av, has := ar[k]
+		if v == "@absent" {
+			if has {
+				*errs = append(*errs, "$.row."+k+": want absent")
+			}
+			continue
+		}
+		ws, _ := v.(string)
+		as, isText := av.(string)
+		if !has || !isText {
+			*errs = append(*errs, "$.row."+k+": want the text "+show(v)+", got "+show(av))
+			continue
+		}
+		if as == ws {
+			continue
+		}
+		if strings.HasPrefix(ws, "[") {
+			var x, y any
+			if json.Unmarshal([]byte(ws), &x) == nil && json.Unmarshal([]byte(as), &y) == nil && reflect.DeepEqual(x, y) {
+				continue
+			}
+		}
+		*errs = append(*errs, "$.row."+k+": "+show(av)+", want "+show(v))
+	}
+}
+
+// secret — secret-in, the refusal items: keys only fault and text; fault equals; at a non-empty fault text is present
+// and carries none of the hidden password substrings (hidden), otherwise no text.
+func secret(exp, act any, errs *[]string) {
+	e, _ := exp.(map[string]any)
+	a, ok := act.(map[string]any)
+	if !ok {
+		*errs = append(*errs, "$: want an object")
+		return
+	}
+	for k := range a {
+		if k != "fault" && k != "text" {
+			*errs = append(*errs, "$."+k+": an extra key")
+		}
+	}
+	if !reflect.DeepEqual(a["fault"], e["fault"]) {
+		*errs = append(*errs, "$.fault: "+show(a["fault"])+", want "+show(e["fault"]))
+	}
+	text, has := a["text"].(string)
+	if e["fault"] == "" {
+		if _, present := a["text"]; present {
+			*errs = append(*errs, "$.text: want absent at an empty fault")
+		}
+		return
+	}
+	if !has {
+		*errs = append(*errs, "$.text: missing at a refusal")
+		return
+	}
+	hidden, _ := e["hidden"].([]any)
+	for _, h := range hidden {
+		if hs, _ := h.(string); hs != "" && strings.Contains(text, hs) {
+			*errs = append(*errs, "$.text repeats a hidden value of the row")
+		}
+	}
+}
+
+// turn — turn cases.tsv: actions one per event; write.holder "@new" — a new non-empty mark never seen before, "@same" —
+// the current mark; then by value.
+func turn(exp, act any, errs *[]string) {
+	we, _ := exp.([]any)
+	ae, ok := act.([]any)
+	if !ok || len(ae) != len(we) {
+		*errs = append(*errs, "$: want "+show(exp)+", got "+show(act))
+		return
+	}
+	seen, current := map[string]bool{}, ""
+	for i := range we {
+		w := we[i]
+		if wo, ok := w.(map[string]any); ok {
+			if ww, ok := wo["write"].(map[string]any); ok {
+				ao, _ := ae[i].(map[string]any)
+				aw, _ := ao["write"].(map[string]any)
+				got, _ := aw["holder"].(string)
+				switch ww["holder"] {
+				case "@new":
+					if got == "" || seen[got] {
+						*errs = append(*errs, "$["+strconvI(i)+"].write.holder: want a new mark, got "+show(aw["holder"]))
+						return
+					}
+					seen[got], current = true, got
+				case "@same":
+					if current == "" && got != "" {
+						seen[got], current = true, got
+					}
+					if got != current {
+						*errs = append(*errs, "$["+strconvI(i)+"].write.holder: want the current mark "+show(current))
+						return
+					}
+				}
+				cp := map[string]any{}
+				for k, v := range wo {
+					cp[k] = v
+				}
+				cw := map[string]any{}
+				for k, v := range ww {
+					cw[k] = v
+				}
+				if ww["holder"] == "@new" || ww["holder"] == "@same" {
+					cw["holder"] = got
+				}
+				cp["write"] = cw
+				w = cp
+			}
+		}
+		if !reflect.DeepEqual(ae[i], w) {
+			*errs = append(*errs, "$["+strconvI(i)+"]: "+show(ae[i])+", want "+show(w))
+		}
+	}
+}
+
+// vbtWrite — values-by-type, the write half: ok with row — exactly {status, row}, the text byte for byte; ok with
+// rowjson — row begins with [ and equals it by value; absent — exactly {status: absent}; refused — fault only if named.
+func vbtWrite(exp, act any, errs *[]string) {
+	e, _ := exp.(map[string]any)
+	a, ok := act.(map[string]any)
+	if !ok {
+		*errs = append(*errs, "$: want an object")
+		return
+	}
+	switch {
+	case e["status"] == "ok" && e["rowjson"] != nil:
+		r, _ := a["row"].(string)
+		var v any
+		if a["status"] != "ok" || len(a) != 2 || !strings.HasPrefix(r, "[") || json.Unmarshal([]byte(r), &v) != nil ||
+			!reflect.DeepEqual(v, e["rowjson"]) {
+			*errs = append(*errs, "$: want {status: ok, row: [the JSON "+show(e["rowjson"])+"]}")
+		}
+	case e["status"] == "refused":
+		if a["status"] != "refused" {
+			*errs = append(*errs, "$.status: want refused")
+		}
+		for k := range a {
+			if k != "status" && k != "fault" {
+				*errs = append(*errs, "$."+k+": an extra key")
+			}
+		}
+		if f, named := e["fault"]; named && !reflect.DeepEqual(a["fault"], f) {
+			*errs = append(*errs, "$.fault: "+show(a["fault"])+", want "+show(f))
+		}
+	default:
+		if !reflect.DeepEqual(act, exp) {
+			*errs = append(*errs, "$: want "+show(exp))
+		}
+	}
+}
+"""
+
+
+BASE_COMPARES = ("raw", "layer1", "sets", "value")
+
+
+def frames_of(d, rows, pdir):
+    """[(строка, cells, variant, cells кадра | None, (код, значение, сырые байты))]; frames — половины строки."""
+    out = []
+    if d["compare"] == "sets":
+        return out
+    for no, r in rows:
+        if "frames" in d:
+            for variant, cells, exp, compare in d["frames"](r):
+                out.append((no, r, variant, cells, exp, compare))
+        else:
+            out.append((no, r, "", None, d["expect"](r, pdir), None))
+    return out
+
+
+def fixture(root, pdir, spec, r):
+    """Фикстура: путь от каталога пакета или «@root/<путь от корня курса>»."""
+    if spec.startswith("@root/"):
+        return (Path(root) / spec[len("@root/"):]).read_bytes()
+    return (pdir / spec.format(**r)).read_bytes()
+
+
+def lesson_consumers(root):
+    out = set()
+    for line in (Path(root) / common_vectors.CONSUMERS).read_text(encoding="utf-8").split("\n")[1:]:
+        cells = line.split("\t")
+        if not line.startswith("#") and len(cells) == 4 and cells[2] == L.key:
+            out.add((cells[0], cells[1]))
+    return out
+
+
 def build(root=ROOT):
     """→ ({путь от out: байты}, опись [(пакет таблица строка, статус)])."""
     import hashlib
     decls, known = plan(root)
     files, inv = {}, []
+    uses_extra = False
     by_fn = {}
     for d in decls:
         by_fn.setdefault(d["fn"], []).append(d)
@@ -762,6 +1217,15 @@ def build(root=ROOT):
             inv.append((f"{d['package']} {d['table']} (vectors, per list)", "translated"))
             continue                                  # функция та же — её судит тест множеств stand-объявления
         pdir, path, rows = read_table(root, d)
+        if "select" in d:                             # выбор строк потребителя (README «Who performs it»)
+            kept_rows = []
+            for no, r in rows:
+                why = d["select"](r)
+                if why is True:
+                    kept_rows.append((no, r))
+                else:
+                    inv.append((f"{d['package']} {d['table']} {no}", "excluded: " + why))
+            rows = kept_rows
         rel = str(path.relative_to(root))
         sha = hashlib.sha256(path.read_bytes()).hexdigest()
         name = camel(d["package"].split("/", 1)[1]) + "_" + camel(d["table"].rsplit(".", 1)[0])
@@ -776,40 +1240,51 @@ def build(root=ROOT):
                        f"\tcheck(t, {go_str(rel)}, func() vectoradapter.Answer {{ return vectoradapter.{d['fn']}() }}, 0, "
                        f"{go_str(want)}, nil, \"sets\")\n}}\n")
             inv.append((f"{d['package']} {d['table']} *", "translated"))
-        for no, r in ([] if d["compare"] == "sets" else rows):
-            code, value, raw = d["expect"](r, pdir)
+        for no, r, variant, frame_cells, (code, value, raw), frame_compare in frames_of(d, rows, pdir):
+            compare = frame_compare or d["compare"]
+            suffix = camel(variant) if variant else ""
             want = json.dumps(value, ensure_ascii=False) if value is not None else "null"
             if d["surface"] == "vectors":
-                cells = {c: r[c] for c in d["inputs"]}
+                cells = frame_cells if frame_cells is not None else {c: r[c] for c in d["inputs"]}
                 cells.update(d.get("extra_cells", lambda _: {})(r))
-                fx = {k: (pdir / v.format(**r)).read_bytes() for k, v in d.get("files", {}).items()}
+                fx = {k: fixture(root, pdir, v, r) for k, v in d.get("files", {}).items()}
                 go_cells = "map[string]string{" + ", ".join(f"{go_str(k)}: {gstr(v)}" for k, v in cells.items()) + "}"
                 go_files = "map[string][]byte{" + ", ".join(f"{go_str(k)}: []byte({go_bytes(v)})"
                                                              for k, v in fx.items()) + "}"
-                f = f"func() vectoradapter.Answer {{ return vectoradapter.{d['fn']}({go_str(d['table'])}, {go_cells}, {go_files}) }}"
+                if d["args"] == "cells+variant":
+                    f = (f"func() vectoradapter.Answer {{ return vectoradapter.{d['fn']}({go_str(d['table'])}, "
+                         f"{go_str(variant)}, {go_cells}, {go_files}) }}")
+                else:
+                    f = f"func() vectoradapter.Answer {{ return vectoradapter.{d['fn']}({go_str(d['table'])}, {go_cells}, {go_files}) }}"
                 case = r.get(d.get("case", "case"), f"line-{no}")
-                wire_rows.append((no, case, cells, fx, code, value))
+                wire_rows.append((no, case, cells, fx, code, value, variant))
             elif d["args"] == "source":
                 src = Path(root) / r[d["input"]]
                 f = (f"func() vectoradapter.Answer {{ return vectoradapter.{d['fn']}({go_str(src.name)}, "
                      f"[]byte({go_bytes(src.read_bytes())})) }}")
             else:
-                f = f"func() vectoradapter.Answer {{ return vectoradapter.{d['fn']}([]byte({gstr(r[d['input']])})) }}"
+                data = d["input"](r) if callable(d["input"]) else r[d["input"]].encode("utf-8")
+                f = f"func() vectoradapter.Answer {{ return vectoradapter.{d['fn']}([]byte({go_bytes(data)})) }}"
             go_raw = "nil" if raw is None else f"[]byte({go_bytes(raw)})"
-            out.append(f"\n// {rel}:{no} {r.get('case', r.get('id', ''))}\nfunc Test{name}_Line{no}(t *testing.T) {{\n"
-                       f"\tcheck(t, {go_str(f'{rel}:{no}')}, {f}, {code}, {gstr(want)}, {go_raw}, {go_str(d['compare'])})\n}}\n")
-            inv.append((f"{d['package']} {d['table']} {no}", "translated"))
+            fn_check = "check" if compare in BASE_COMPARES else "checkBy"
+            uses_extra = uses_extra or fn_check == "checkBy"
+            out.append(f"\n// {rel}:{no} {r.get('case', r.get('id', ''))}{(' ' + variant) if variant else ''}\n"
+                       f"func Test{name}_Line{no}{suffix}(t *testing.T) {{\n"
+                       f"\t{fn_check}(t, {go_str(f'{rel}:{no}' + ((' ' + variant) if variant else ''))}, {f}, {code}, "
+                       f"{gstr(want)}, {go_raw}, {go_str(compare)})\n}}\n")
+            inv.append((f"{d['package']} {d['table']} {no}{(' ' + variant) if variant else ''}", "translated"))
         files[f"go/vectortests/{name.lower()}_test.go"] = gofmt("".join(out)).encode("utf-8")
-        for no, case, cells, fx, code, value in wire_rows:
-            doc = {"format": 1, "package": d["package"], "table": d["table"], "case": case, "variant": "",
+        for no, case, cells, fx, code, value, variant in wire_rows:
+            doc = {"format": 1, "package": d["package"], "table": d["table"], "case": case, "variant": variant,
                    "cells": cells, "files": {k: base64.b64encode(v).decode("ascii") for k, v in fx.items()}}
-            files[f"vectors/{d['package']}/{d['table'][:-4]}/line-{no}.json"] = (
+            files[f"vectors/{d['package']}/{d['table'][:-4]}/line-{no}{('-' + variant) if variant else ''}.json"] = (
                 json.dumps(doc, ensure_ascii=False, indent=1) + "\n").encode("utf-8")
         if wire_rows:
             lines = [f"# Inputs of the vector command for {d['package']} {d['table']} (gen_vectors.py); compare {d['compare']}.",
                      f"# source {rel} sha256 {sha}", "case\tinput\texit\tstdout"]
-            for no, case, cells, fx, code, value in wire_rows:
-                lines.append(f"line-{no}\tline-{no}.json\t{code}\t"
+            for no, case, cells, fx, code, value, variant in wire_rows:
+                v = ("-" + variant) if variant else ""
+                lines.append(f"line-{no}{v}\tline-{no}{v}.json\t{code}\t"
                              + (json.dumps(value, ensure_ascii=False, separators=(",", ":")) if code == 0 else ""))
             files[f"vectors/{d['package']}/{d['table'][:-4]}/cases.tsv"] = ("\n".join(lines) + "\n").encode("utf-8")
 
@@ -821,8 +1296,14 @@ def build(root=ROOT):
             continue                                   # помощники — в helpers_test.go
         files[f"go/vectortests/{fname}"] = gofmt(text).encode("utf-8")
         inv.append((fname, "translated"))
+    if uses_extra:
+        files["go/vectortests/compare_test.go"] = gofmt(COMPARE_GO.replace('"normgen/vectoradapter"',
+                                                                            f'"{GO_MODULE}/vectoradapter"')).encode("utf-8")
     for pkg, table in SKIP:
-        inv.append((f"{pkg} {table}", "excluded: " + SKIP[pkg, table]))
+        if (pkg, table) in lesson_consumers(root):
+            inv.append((f"{pkg} {table}", "excluded: " + SKIP[pkg, table]))
+    for (pkg, table), why in SKIP_LESSON.get(L.key, {}).items():
+        inv.append((f"{pkg} {table}", "excluded: " + why))
     files["go/vectortests/inventory.tsv"] = ("\n".join(["# The vector tables of the lesson (gen_vectors.py).",
                                                         "table\tstatus"] + ["\t".join(x) for x in inv]) + "\n").encode()
     return files, inv
@@ -894,6 +1375,31 @@ env-line). Each package's function returns `Answer{Code, Value, Raw}`: `Code` 0 
 JSON value of stdout, `Raw` — the raw stdout bytes (canonical). The stubs answer code -1 «not implemented».
 `common/family-read` needs none of your code (the kit's `families`). `journal/modes.tsv` is a layout test — not here.
 """
+
+
+KIT_MD_P02 = KIT_MD
+
+
+def lesson_kit_md():
+    """Справка части урока: у P/02 — прежний текст; у прочих — пакеты единой команды и ключи стенда из объявлений."""
+    if L.key == "02-installer" or L.key not in WIRE:
+        return KIT_MD_P02
+    decls, known = plan(ROOT)
+    unified = sorted({d["package"] for d in decls if d["surface"] == "vectors"} | {f"common/{n}" for n, _ in known})
+    stands = sorted({d["surface"].split(":", 1)[1] for d in decls if d["surface"] != "vectors"})
+    head = KIT_MD_P02.split("Build `go build")[0]
+    return head + (
+        "Build `go build -o bin/vectors ./cmd/vectors`. The profile maps each package of the lesson:\n"
+        "`vectors: <package>: 'bin/vectors {input}'` (the unified command: " + ", ".join(unified) + ") and the stand keys\n"
+        "`stand: <key>: 'bin/vectors stand <key> {input}'` (" + ", ".join(stands) + "). Each package's function returns\n"
+        "`Answer{Code, Value, Raw}`: `Code` 0 (or the published 2), `Value` — the JSON value of stdout, `Raw` — raw stdout\n"
+        "bytes (creates-key, near-of). The stubs answer code -1 «not implemented». `common/family-read` needs none of your\n"
+        "code (the kit's `families`). The rows a consumer does not perform (README «Who performs it») and the tables the\n"
+        "lesson does not run are in `vectortests/inventory.tsv` as excluded, with the reason. The wire of this lesson is a\n"
+        "draft (tools/normgen/wire_p03p04.py) until the form Platform/common/vectors/wire.tsv is published.\n")
+
+
+KIT_MD = lesson_kit_md()
 
 
 def main(argv):

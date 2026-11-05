@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/turn",
+ "table": "cases.tsv",
+ "case": "placement-barrier-no-reply",
+ "variant": "",
+ "cells": {
+  "input": "{\"kind\":\"placement\",\"turn\":\"testsub/controller/placement_turn\",\"me\":{\"manifest_rev\":\"7\"},\"steps\":[{\"read\":null,\"seen\":0},{\"reply\":\"ok\",\"version\":1},{\"target\":true,\"age\":1},{\"target_reply\":\"none\"},{\"reply\":\"none\"}]}"
+ },
+ "files": {}
+}

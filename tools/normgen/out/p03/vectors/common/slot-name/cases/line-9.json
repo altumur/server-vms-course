@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/slot-name",
+ "table": "cases.tsv",
+ "case": "next-leading-zero",
+ "variant": "",
+ "cells": {
+  "op": "next",
+  "input": "{\"prefix\":\"w\",\"names\":[\"w-007\"]}"
+ },
+ "files": {}
+}

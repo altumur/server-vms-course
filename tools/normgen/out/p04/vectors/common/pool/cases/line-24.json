@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/pool",
+ "table": "cases.tsv",
+ "case": "capacity-fraction",
+ "variant": "",
+ "cells": {
+  "input": "{\"manifest\":{\"prefix\":\"t\",\"servers\":\"shared\",\"requires\":\"none\",\"capacity\":{\"from\":\"capacity\",\"default\":4}},\"heartbeats\":{\"t-1\":{\"server\":\"srv-a\",\"capacity\":2.5}},\"live\":[\"t-1\"],\"slots\":{\"t-1\":{\"released\":\"false\",\"holder\":\"i-t-1\"}}}"
+ },
+ "files": {}
+}

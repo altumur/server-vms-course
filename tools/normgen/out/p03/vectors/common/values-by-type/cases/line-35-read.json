@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "f-stamp",
+ "variant": "read",
+ "cells": {
+  "type": "float",
+  "row": "\"1760700000.5\""
+ },
+ "files": {}
+}

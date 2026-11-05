@@ -1,0 +1,14 @@
+# Inputs of the vector command for common/sealing open.tsv (gen_vectors.py); compare value.
+# source Platform/common/vectors/sealing/open.tsv sha256 aba6af240cef752e3a1c37637463eca5e3a653135ca4d74236813c1ea8eabbde
+case	input	exit	stdout
+line-3	line-3.json	0	"sealed"
+line-4	line-4.json	0	"sealed"
+line-5	line-5.json	0	"sealed"
+line-6	line-6.json	0	"sealed"
+line-7	line-7.json	0	"hunter2"
+line-8	line-8.json	0	"sealed"
+line-9	line-9.json	0	"sealed"
+line-10	line-10.json	0	"sealed"
+line-11	line-11.json	0	"sealed"
+line-12	line-12.json	0	"sealed"
+line-13	line-13.json	0	"sealed"

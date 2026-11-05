@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "u-plain",
+ "variant": "write",
+ "cells": {
+  "type": "url",
+  "json": "\"https://h.example/a\""
+ },
+ "files": {}
+}

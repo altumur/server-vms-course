@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/labels",
+ "table": "cases.tsv",
+ "case": "env_bad",
+ "variant": "",
+ "cells": {
+  "op": "env_labels",
+  "input": "\"a,b@c\""
+ },
+ "files": {}
+}

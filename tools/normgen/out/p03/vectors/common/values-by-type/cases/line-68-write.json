@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "j-number",
+ "variant": "write",
+ "cells": {
+  "type": "json",
+  "json": "1.0"
+ },
+ "files": {}
+}

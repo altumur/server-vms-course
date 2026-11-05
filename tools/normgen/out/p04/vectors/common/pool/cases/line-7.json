@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/pool",
+ "table": "cases.tsv",
+ "case": "requires-resource",
+ "variant": "",
+ "cells": {
+  "input": "{\"manifest\":{\"prefix\":\"t\",\"servers\":\"shared\",\"requires\":\"resource\"},\"heartbeats\":{\"t-1\":{\"server\":\"srv-a\"},\"t-2\":{\"server\":\"srv-b\"},\"t-3\":{\"server\":\"srv-c\"}},\"live\":[\"t-1\",\"t-2\",\"t-3\"],\"slots\":{\"t-1\":{\"released\":\"false\",\"holder\":\"i-t-1\"},\"t-2\":{\"released\":\"false\",\"holder\":\"i-t-2\"},\"t-3\":{\"released\":\"false\",\"holder\":\"i-t-3\"}},\"resources\":{\"srv-a\":\"silent\",\"srv-b\":\"unknown\",\"srv-c\":\"live\"}}"
+ },
+ "files": {}
+}

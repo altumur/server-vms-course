@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/object-client",
+ "table": "address.tsv",
+ "case": "resource-empty",
+ "variant": "",
+ "cells": {
+  "input": "{\"OBJECTS\":\"cluster://?resource=\",\"PLATFORM_DIR\":\"/data/platform\"}"
+ },
+ "files": {}
+}

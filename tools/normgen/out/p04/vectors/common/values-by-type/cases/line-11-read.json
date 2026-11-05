@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "common/values-by-type",
+ "table": "cases.tsv",
+ "case": "u-plain",
+ "variant": "read",
+ "cells": {
+  "type": "url",
+  "row": "\"https://h.example/a\""
+ },
+ "files": {}
+}

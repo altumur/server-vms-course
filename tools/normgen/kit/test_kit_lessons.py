@@ -1,5 +1,5 @@
 """Сборка пакетов P/03 и P/04 (build_kit --lesson 03-worker / 04-controller; ADR-0125 доп. (5)): части flags, refusals,
-stagetests, машины; пакет компилируется под модулем урока, go vet чист; закрытые тесты машин зелёные, тесты этапов —
+stagetests, машины, families, vectors; пакет компилируется под модулем урока, go vet чист; закрытые тесты машин зелёные, тесты этапов —
 красные на заглушках (без паники); editable — ровно адаптер портов и действия машин; KIT.md — справка каждой части;
 чужая машина — отказ; P/01, P/02 не задеты (их тесты — test_kit, test_kit_p02)."""
 import json
@@ -14,8 +14,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 NORMGEN = HERE.parent
 GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOLCHAIN="local")
-KITS = {"03-worker": ["flags", "refusals", "stagetests", "slot-capture"],
-        "04-controller": ["flags", "refusals", "stagetests", "slot-fate", "slot-release"]}
+KITS = {"03-worker": ["flags", "refusals", "stagetests", "slot-capture", "families", "vectors"],
+        "04-controller": ["flags", "refusals", "stagetests", "slot-fate", "slot-release", "families", "vectors"]}
 
 
 class KitLessons(unittest.TestCase):
@@ -40,11 +40,12 @@ class KitLessons(unittest.TestCase):
                 self.assertEqual(sorted(man["parts"]), sorted(parts))
                 self.assertEqual(sorted(man["provenance"]), sorted(parts))
                 for f in man["files"]:
-                    own = "impl/" in f["path"] or ("/lessonadapter/" in f["path"] and not f["path"].endswith("lessonadapter.go"))
+                    own = "impl/" in f["path"] or ("/lessonadapter/" in f["path"] and not f["path"].endswith("lessonadapter.go")) \
+                        or ("/vectoradapter/" in f["path"] and not f["path"].endswith("vectoradapter.go"))
                     self.assertEqual(bool(f.get("editable")), own, f["path"])
                 kit_md = (dst / "KIT.md").read_text()
                 for title in ("Part `flags`: the process inputs", "Part `stagetests`: the stage tests of the lesson over CALL ports",
-                              "Part `refusals`"):
+                              "Part `refusals`", "Part `vectors`", "draft (tools/normgen/wire_p03p04.py)"):
                     self.assertIn(title, kit_md)
                 mod = dst / lesson
                 (mod / "go.mod").write_text(f"module {man['module']}\n\ngo 1.22\n")

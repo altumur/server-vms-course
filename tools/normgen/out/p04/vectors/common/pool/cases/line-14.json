@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/pool",
+ "table": "cases.tsv",
+ "case": "distinct-tie",
+ "variant": "",
+ "cells": {
+  "input": "{\"manifest\":{\"prefix\":\"t\",\"servers\":\"distinct\",\"place_by\":\"server\",\"requires\":\"none\"},\"heartbeats\":{\"t-10\":{\"server\":\"srv-a\"},\"t-2\":{\"server\":\"srv-a\"}},\"live\":[\"t-10\",\"t-2\"],\"slots\":{\"t-10\":{\"released\":\"false\",\"holder\":\"i-t-10\"},\"t-2\":{\"released\":\"false\",\"holder\":\"i-t-2\"}},\"assignments\":{\"t-10\":[\"c1\"],\"t-2\":[\"c2\"]},\"units\":{\"c1\":{\"name\":\"c1\"},\"c2\":{\"name\":\"c2\"}}}"
+ },
+ "files": {}
+}

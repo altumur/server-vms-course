@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "common/turn",
+ "table": "cases.tsv",
+ "case": "placement-take-released",
+ "variant": "",
+ "cells": {
+  "input": "{\"kind\":\"placement\",\"turn\":\"testsub/controller/placement_turn\",\"me\":{\"manifest_rev\":\"7\"},\"steps\":[{\"read\":{\"holder\":\"\",\"manifest_rev\":\"7\"},\"seen\":0,\"version\":3},{\"reply\":\"ok\",\"version\":4}]}"
+ },
+ "files": {}
+}
