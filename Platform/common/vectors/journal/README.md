@@ -61,7 +61,7 @@ the objects client contract: `03-worker`, `04-controller`, `06-console`, `08-dom
 `05-resource`, `08-domain`, `09-agent`, `10-domain-console`); `modes.tsv` — the creator of the path of the row: the roots
 (`events-root`, `resource-root`) — the installer (`02-installer`, P/02.4 Н1.2), `.workers`, the lock and the tree `testsub`
 (`workers-dir`, `workers-sub`, `lock-file`, `tree-dir`, `unit-dir`, `bucket-one-writer`) — the worker (`03-worker`),
-`audit-bucket` — the console (`06-console`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-26).
+`audit-bucket` — the console (`06-console`); `audit-resource-bucket` — the resource (`05-resource`) (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-26).
 
 ## Native outcome
 
