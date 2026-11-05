@@ -2155,6 +2155,11 @@ class Check:
             for message in errors:
                 self.error(path, message)
             self.stats.update(stats)
+        for path in check_forms.row_write_binding_forms(self.root):  # конструкторы записи строки (P03-GEN-01, ADR-0127 доп. (1) п. 3)
+            errors, stats = check_forms.check_row_write_bindings(path)
+            for message in errors:
+                self.error(path, message)
+            self.stats["row_write_bindings"] = self.stats.get("row_write_bindings", 0) + stats["row_write_bindings"]
         for path in check_forms.route_lessons(self.root):
             errors, stats = check_forms.check_openapi_routing(path)
             for message in errors:

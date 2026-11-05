@@ -1,0 +1,15 @@
+# P/03.6 state write bindings. One immutable start snapshot contract for this file.
+# start is captured at the accepted start of the unit; input is one state-write invocation, never a re-read unit row.
+#start /sub string
+#start /unit string
+#start /born string
+#start /revision integer
+#start /epoch integer
+#start /epoch_index string
+#input /name string
+#input /value dyn
+write	key	field	source	value	guard_key	guard_version	norm
+state	{start:/sub}/state/{input:/name}/{start:/unit}	/born	start	/born	{start:/sub}/epoch/{start:/unit}	start:/epoch_index	P/03.6-R018,P/03.6-R029
+state	{start:/sub}/state/{input:/name}/{start:/unit}	/revision	start	/revision	{start:/sub}/epoch/{start:/unit}	start:/epoch_index	P/03.6-R018,P/03.6-R029
+state	{start:/sub}/state/{input:/name}/{start:/unit}	/epoch	start	/epoch	{start:/sub}/epoch/{start:/unit}	start:/epoch_index	P/03.6-R018,P/03.6-R029
+state	{start:/sub}/state/{input:/name}/{start:/unit}	/value	input	/value	{start:/sub}/epoch/{start:/unit}	start:/epoch_index	P/03.6-R018,P/03.6-R029
