@@ -8,8 +8,8 @@ chapters; the stage C guess R05-G06, the Architect's decision of 2026-10-23). Th
 are read by the resource in the term pass ([P/05](../../05-resource/spec/05-resource.norms.md) Н3 «resource pass» `retain`; the rights —
 [P/02.5](../../02-installer/spec/02.5-installer.norms.md) Н1.4, the row `resource`: «the table `holds`, the rows of manifests with
 `about`»). The form of the section in the manifest and the reference checks by the loader are [P/02.1](../../02-installer/spec/02.1-installer.norms.md)
-Н1.2 `holds`, references 50–54. Decisions: [ADR-0057](../../../decisions/0057-консоль-из-каталога-спек-хуки-консоли-уходят.md)
-(the addendum of 2026-10-10 — `released`), [ADR-0091](../../../decisions/0091-механизмы-платформы-по-запросам-vms.md) item 8 (the hold «about»).
+Н1.2 `holds`, references 50–54. Decisions (for the human): ADR-0057
+(the addendum of 2026-10-10 — `released`), ADR-0091 item 8 (the hold «about»).
 
 Moved from P/06.4 Н1.5 `holds` and `about` without a change of behaviour; added are the rules of reading the window and the addressee with an incomplete
 declaration and unreadable rows — in them the rule «an unknown read is not equal to absence» applies (P/05 Н1.3 `retention`

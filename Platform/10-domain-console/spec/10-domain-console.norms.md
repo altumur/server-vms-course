@@ -347,7 +347,7 @@ witness:       domain.witness {report, member_field} (P/02.1 Н1.2б): the objec
                (the load refusal — P/02.1 Н1.2б); alive_at = ts − units[member], alive_via = "<cluster>/<name>"; there are several witnesses —
                the largest alive_at among those later than last_report; on a tie — the smaller alive_via in UTF-8 bytes
                (added by the reconciliation of М11, A17)
-clock:         the domain clock of the alarm rows — [the alarm history contract](../../../common/contracts/alarm-history.md) «Domain clock» (moved there
+clock:         the domain clock of the alarm rows — [the alarm history contract](../../common/contracts/alarm-history.md) «Domain clock» (moved there
                without a change; the layout audit, the Architect's decision of 2026-10-25, А-13)
 events_order:  by t descending, then member, id; the rows of the history — from_history: true
 ```
