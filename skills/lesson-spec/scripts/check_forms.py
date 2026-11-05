@@ -883,7 +883,7 @@ def _assert_shape(items, cols, err, what, suffix=False):
         return False
     for i, a in enumerate(items):
         w = f"{what}.assert[{i}]"
-        if not _keys(a, {"pointer", "test", "value", "decode", "compare", "min_bytes"}, {"pointer"}, w, err):
+        if not _keys(a, {"pointer", "test", "value", "decode", "compare", "min_bytes", "whole"}, {"pointer"}, w, err):
             continue
         if not isinstance(a["pointer"], str) or not re.fullmatch(r"(/([^~/]|~[01])*)*", a["pointer"]):
             err.add(f"{w}: pointer {a['pointer']!r} is not a JSON Pointer")
@@ -891,8 +891,10 @@ def _assert_shape(items, cols, err, what, suffix=False):
         if test is not None and test not in ASSERT_TESTS:
             err.add(f"{w}: test {test!r} is not {'|'.join(ASSERT_TESTS)}")
         if test == "no-leak":                              # только грамматика: утечку исполняет судья, не форма
-            if set(a) != {"pointer", "test", "value", "min_bytes"}:
-                err.add(f"{w}: no-leak takes exactly pointer, value and min_bytes")
+            if set(a) - {"whole"} != {"pointer", "test", "value", "min_bytes"}:
+                err.add(f"{w}: no-leak takes exactly pointer, value, min_bytes and optional whole")
+            if "whole" in a and not isinstance(a["whole"], bool):
+                err.add(f"{w}: whole is not boolean")
             if "min_bytes" in a and (type(a["min_bytes"]) is not int or a["min_bytes"] < 1):
                 err.add(f"{w}: min_bytes is not an integer ≥ 1")
             v = a.get("value") if isinstance(a.get("value"), dict) else {}
@@ -901,8 +903,8 @@ def _assert_shape(items, cols, err, what, suffix=False):
             if not all(isinstance(x, str) or ("literal" in v and isinstance(x, list) and all(isinstance(y, str) for y in x))
                        for x in lits):
                 err.add(f"{w}: no-leak value is not a string or an array of strings")
-        elif "min_bytes" in a:
-            err.add(f"{w}: min_bytes is only of no-leak")
+        elif "min_bytes" in a or "whole" in a:
+            err.add(f"{w}: min_bytes and whole are only of no-leak")
         if test == "absent" and set(a) != {"pointer", "test"}:
             err.add(f"{w}: absent takes only pointer")
         if test == "prefix" and ("value" not in a or "compare" in a):

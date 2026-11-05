@@ -386,6 +386,10 @@ class Wire(unittest.TestCase):                     # провод векторо
                                                        '{"array":[{"literal":"fixture-password"}]}') + old, row), [])
         self.assertTrue(self.mutate(old, leak.replace('{"column":"key","decode":"text"}', '{"array":[{"literal":7}]}') + old, row))
         self.assertTrue(self.mutate(old, '{"pointer":"/text","test":"absent","min_bytes":4},' + old, row))
+        for whole in ("true", "false"):                                                             # whole — только no-leak
+            self.assertEqual(self.mutate(old, leak.replace('"min_bytes":4', f'"min_bytes":4,"whole":{whole}') + old, row), [])
+        self.assertTrue(self.mutate(old, leak.replace('"min_bytes":4', '"min_bytes":4,"whole":"yes"') + old, row))
+        self.assertTrue(self.mutate(old, '{"pointer":"/text","test":"prefix","value":{"literal":"x"},"whole":true},' + old, row))
 
     def test_layout_any_table(self):              # layout допустим для любой таблицы, правило пустых ячеек прежнее
         crl = self.row("common/crl", "cases.tsv", "vectors")
