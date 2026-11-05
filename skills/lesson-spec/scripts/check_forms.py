@@ -17,10 +17,12 @@ import yaml
 
 FLAG_COLUMNS = ["flag", "type", "default", "default_text", "required", "commands", "bad", "norm"]
 REF_COLUMNS = ["chapter", "row", "name", "surface", "code", "kind", "fields", "headers", "log", "norm"]
-TYPE = re.compile(r"(path|dir|file|addr|id|bool|duration|bytes:>0|int:[0-9]+\.\.[0-9]*|enum:[^|\s]+(?:\|[^|\s]+)+"
+REF_EXTRA = ["word", "cause", "outcome", "diagnostic", "caller"]   # ячейки Н4, когда форма — сама норма (ADR-0125 доп. (5))
+SURFACES = ("http", "start", "cli", "call", "process", "peer")
+TYPE = re.compile(r"(path|dir|file|addr|id|bool|string|number|duration|bytes:>0|int:[0-9]+\.\.[0-9]*|enum:[^|\s]+(?:\|[^|\s]+)+"
                   r"|list:id@addr(?:/addr)?)")
 PROSE_TYPE = {"path": "path", "dir": "directory path", "file": "file path", "addr": "host:port", "id": "member id",
-              "bool": "no value", "duration": "duration", "bytes": "bytes", "int": "integer", "list": "comma-separated list"}
+              "bool": "no value", "string": "string", "number": "number", "duration": "duration", "bytes": "bytes", "int": "integer", "list": "comma-separated list"}
 COMMAND = re.compile(r"[a-z][a-z-]*")   # подкоманда урока; сверка — с прозой (ячейка смысла), ADR-0125 доп. (5)
 UNITS = {"KiB": 1024, "MiB": 1024 ** 2, "GiB": 1024 ** 3}
 FAULT_KIND = {"BadRequestFault": "badrequest", "BodyTooLargeFault": "toolarge", "ForbiddenFault": "forbidden"}
@@ -36,11 +38,15 @@ def refusal_forms(root):
     return sorted(Path(root).glob("Platform/*/forms/refusals.tsv"))
 
 
-def read(path, columns):
+def read(path, columns, extra=()):
+    """Колонки — `columns`, затем по порядку подмножество `extra` (колонки нормы в форме)."""
     lines = [line for line in Path(path).read_text(encoding="utf-8").splitlines() if not line.startswith("#")]
     errors, rows = [], []
-    if not lines or lines[0].split("\t") != columns:
-        return [f"{path.name}: columns must be {columns}"], []
+    head = lines[0].split("\t") if lines else []
+    rest = head[len(columns):]
+    if head[:len(columns)] != columns or rest != [c for c in extra if c in rest]:
+        return [f"{path.name}: columns must be {columns}" + (f" then some of {list(extra)} in this order" if extra else "")], []
+    columns = head
     for no, line in enumerate(lines[1:], 2):
         cells = line.split("\t")
         if len(cells) != len(columns):
@@ -95,7 +101,7 @@ def check_flags(path):
     seen = set()
     for r in rows:
         where = f"{path.name}: {r['flag']}"
-        if not (re.fullmatch(r"-[a-z][a-z-]*", r["flag"]) or r["flag"] in TWO_HYPHENS) or r["flag"] in seen:
+        if not (re.fullmatch(r"--?[a-z][a-z0-9-]*", r["flag"]) or r["flag"] in TWO_HYPHENS) or r["flag"] in seen:
             errors.append(f"{where}: the flag is not -name or repeats")
         seen.add(r["flag"])
         if not TYPE.fullmatch(r["type"]):
@@ -112,13 +118,16 @@ def check_flags(path):
             errors.append(f"{where}: default {r['default']} and default_text {r['default_text']} differ")
     norms = [p for p in english_norms(path.parent.parent) if "**Daemon flags**" in p.read_text(encoding="utf-8")]
     if not norms:
-        return errors + [f"{path.name}: no norms of the lesson hold the table «Daemon flags»"], stats
+        # форма — сама норма (ADR-0125 доп. (1) п. 5, доп. (5)): проза ссылается на неё, сверять не с чем
+        if any(f"forms/{path.name}" in p.read_text(encoding="utf-8") for p in english_norms(path.parent.parent)):
+            return errors, stats
+        return errors + [f"{path.name}: no norms of the lesson hold the table «Daemon flags» or refer to forms/{path.name}"], stats
     text = norms[0].read_text(encoding="utf-8")
     start = next(i for i, line in enumerate(text.split("\n")) if line.startswith("**Daemon flags**"))
     prose = {}
     order = []
     for c in prose_table(text, start):
-        for flag in re.findall(r"`(--from|-[a-z][a-z-]*)`", c[0]):
+        for flag in re.findall(r"`(--?[a-z][a-z0-9-]*)`", c[0]):
             prose[flag] = c
             order.append(flag)
     if order != [r["flag"] for r in rows]:
@@ -170,7 +179,7 @@ def fault_kinds(lesson):
 def check_refusals(path):
     path = Path(path)
     lesson = path.parent.parent
-    errors, rows = read(path, REF_COLUMNS)
+    errors, rows = read(path, REF_COLUMNS, REF_EXTRA)
     stats = {"refusal_rows": len(rows)}
     names = set()
     for r in rows:
@@ -178,9 +187,9 @@ def check_refusals(path):
         if not re.fullmatch(r"[a-z][a-z0-9_]*", r["name"]) or r["name"] in names:
             errors.append(f"{where}: the name is not snake_case or repeats")
         names.add(r["name"])
-        if r["surface"] not in ("http", "start", "cli"):
+        if r["surface"] not in SURFACES:
             errors.append(f"{where}: surface {r['surface']!r}")
-        if not re.fullmatch(r"[1-5][0-9]{2}|exit 2|exit !0|-", r["code"]):
+        if not re.fullmatch(r"[1-5][0-9]{2}|exit [0-9]+|exit !0|-", r["code"]):
             errors.append(f"{where}: code {r['code']!r}")
         if r["surface"] == "http" and not re.fullmatch(r"[a-z]+", r["kind"]):
             errors.append(f"{where}: an http refusal needs a kind")
@@ -201,6 +210,16 @@ def check_refusals(path):
             continue
         prose = prose_table(text, start)
         mine = [r for r in rows if r["chapter"] == chapter]
+        own = not prose                                  # форма — сама норма: код выхода и kind — её ячейки, не слова прозы
+        if not prose:
+            # Н4 — ссылка на форму (ADR-0125 доп. (1) п. 5, доп. (5)): ячейки нормы — колонки формы
+            section = "\n".join(lines[start:next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))])
+            if f"forms/{path.name}" not in section or "outcome" not in (rows[0] if rows else {}):
+                errors.append(f"{path.name}: chapter {chapter}: Н4 of {norms[0].name} has no table and no reference to "
+                              f"forms/{path.name} with the columns {REF_EXTRA}")
+                continue
+            prose = [["", r["outcome"], " ".join(r.get(k, "") for k in ("word", "cause", "diagnostic", "caller"))]
+                     for r in sorted(mine, key=lambda x: int(x["row"]) if x["row"].isdigit() else 0)]
         numbers = sorted({int(r["row"]) for r in mine})
         if numbers != list(range(1, len(prose) + 1)):
             errors.append(f"{path.name}: chapter {chapter}: rows {numbers[:3]}…{numbers[-3:]} do not cover the {len(prose)} "
@@ -212,10 +231,15 @@ def check_refusals(path):
             c = prose[n - 1] + ["", "", ""]
             where = f"{path.name}: {chapter} row {n} {r['name']}"
             outcome, words = c[1], c[2]
+            if own:
+                continue
             if re.fullmatch(r"[0-9]{3}", r["code"]) and r["code"] not in outcome:
                 errors.append(f"{where}: code {r['code']} not in the prose cell «{outcome}»")
             if r["code"] == "exit 2" and "code 2" not in outcome and "does not start" not in outcome:
                 errors.append(f"{where}: exit 2, the prose cell «{outcome}» says no code 2")
+            m_exit = re.fullmatch(r"exit ([0-9]+)", r["code"])
+            if m_exit and m_exit[1] != "2" and m_exit[1] not in outcome:
+                errors.append(f"{where}: {r['code']}, the prose cell «{outcome}» does not name {m_exit[1]}")
             if r["code"] == "exit !0" and "≠ 0" not in outcome and "refusal" not in outcome:
                 errors.append(f"{where}: exit !0, the prose cell «{outcome}» says no refusal")
             if r["kind"] != "-":
