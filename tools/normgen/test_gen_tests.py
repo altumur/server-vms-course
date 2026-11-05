@@ -53,11 +53,12 @@ def own(res):
 
 
 def copy_root(dst):
-    """Минимальный корень курса для генератора: векторы P/01 и форма этапов."""
+    """Минимальный корень курса для генератора: векторы P/01, форма этапов, общие пакеты урока и их состав."""
     for rel in ("Platform/01-store/vectors", "Platform/01-store/forms", "Platform/01-store/acceptance/1",
                 *(f"Platform/common/vectors/{n}" for n in ("crl", "revoked", "log-mask", "store-client", "family-read",
                                                          "secret-in"))):
         shutil.copytree(ROOT / rel, Path(dst) / rel)
+    shutil.copy2(ROOT / "Platform/common/vectors/consumers.tsv", Path(dst) / "Platform/common/vectors/consumers.tsv")
     return Path(dst)
 
 

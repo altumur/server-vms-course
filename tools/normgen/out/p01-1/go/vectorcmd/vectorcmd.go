@@ -19,10 +19,10 @@
 //   - 01-store/rights-evaluator expect.tsv: cells {role, action, key}, files {rights.json}; code 0, "allow" | "deny".
 //   - 01-store/write-checks write-checks.probes.tsv: cells {sock, body, lim, allow}, files {}; code 0, {"n": 0} | {"n", "code", "kind"} of the first violated row.
 //   - common/crl cases.tsv: cells {input}, files {}; code 0, one JSON value: the object {ca, ca_next, …} by the form of expect or the string "@bad".
-//   - common/revoked cases.tsv: cells {file}, files {}; code 0, one JSON value: the array of serials or the string "@bad".
-//   - common/log-mask cases.tsv: cells {raw}, files {fields.yaml}; code 0, the JSON string of the masked text, compared byte for byte.
-//   - common/store-client cases.tsv: cells {input}, files {}; code 0, one JSON string: the outcome of the store client contract.
 //   - common/family-read 01.tsv: cells {family, key, kind, mode, who, text}, files {}; code 0, the object {"verdict", "paths", "outcome"} (paths and each outcome sorted).
+//   - common/log-mask cases.tsv: cells {raw}, files {fields.yaml}; code 0, the JSON string of the masked text, compared byte for byte.
+//   - common/revoked cases.tsv: cells {file}, files {}; code 0, one JSON value: the array of serials or the string "@bad".
+//   - common/store-client cases.tsv: cells {input}, files {}; code 0, one JSON string: the outcome of the store client contract.
 package vectorcmd
 
 import (
@@ -141,10 +141,10 @@ func run(in *input) (code int, stdout, stderr []byte, err error) {
 		"01-store/rights-evaluator expect.tsv":          {"action,key,role", "rights.json"},
 		"01-store/write-checks write-checks.probes.tsv": {"allow,body,lim,sock", ""},
 		"common/crl cases.tsv":                          {"input", ""},
-		"common/revoked cases.tsv":                      {"file", ""},
-		"common/log-mask cases.tsv":                     {"raw", "fields.yaml"},
-		"common/store-client cases.tsv":                 {"input", ""},
 		"common/family-read 01.tsv":                     {"family,key,kind,mode,text,who", ""},
+		"common/log-mask cases.tsv":                     {"raw", "fields.yaml"},
+		"common/revoked cases.tsv":                      {"file", ""},
+		"common/store-client cases.tsv":                 {"input", ""},
 	}
 	shape, ok := want[pkg]
 	if !ok {
@@ -233,10 +233,10 @@ func run(in *input) (code int, stdout, stderr []byte, err error) {
 			return 1, nil, []byte("CRL: " + err.Error() + "\n"), nil
 		}
 		value = v
-	case "common/revoked cases.tsv":
-		v, err := vectoradapter.Revoked([]byte(cell("file")))
+	case "common/family-read 01.tsv":
+		v, err := familyRead(cell("family"), cell("key"), cell("kind"), cell("mode"), cell("who"), cell("text"))
 		if err != nil {
-			return 1, nil, []byte("Revoked: " + err.Error() + "\n"), nil
+			return 1, nil, []byte("family-read: " + err.Error() + "\n"), nil
 		}
 		value = v
 	case "common/log-mask cases.tsv":
@@ -245,18 +245,18 @@ func run(in *input) (code int, stdout, stderr []byte, err error) {
 			return 1, nil, []byte("LogMask: " + err.Error() + "\n"), nil
 		}
 		value = m
+	case "common/revoked cases.tsv":
+		v, err := vectoradapter.Revoked([]byte(cell("file")))
+		if err != nil {
+			return 1, nil, []byte("Revoked: " + err.Error() + "\n"), nil
+		}
+		value = v
 	case "common/store-client cases.tsv":
 		o, err := vectoradapter.StoreClient([]byte(cell("input")))
 		if err != nil {
 			return 1, nil, []byte("StoreClient: " + err.Error() + "\n"), nil
 		}
 		value = o
-	case "common/family-read 01.tsv":
-		v, err := familyRead(cell("family"), cell("key"), cell("kind"), cell("mode"), cell("who"), cell("text"))
-		if err != nil {
-			return 1, nil, []byte("family-read: " + err.Error() + "\n"), nil
-		}
-		value = v
 	}
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
