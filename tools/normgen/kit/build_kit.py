@@ -60,6 +60,8 @@ import gen_core  # noqa: E402 — часть core
 import gen_families  # noqa: E402 — часть families
 sys.path.insert(0, str(HERE.parent / "contracts"))
 import kitside  # noqa: E402 — стороны урока у адаптеров части contracts
+sys.path.insert(0, str(HERE.parent / "contracts/gen"))
+import gen_heartbeat  # noqa: E402 — две чужие семьи читателя heartbeat
 import gen_admin  # noqa: E402 — часть admin
 import gen_box  # noqa: E402 — часть box
 import gen_manifest  # noqa: E402 — часть loader (P/02)
@@ -216,7 +218,9 @@ def provenance(parts, files, judged):
     out = {}
     for part in parts:
         if part == "contracts":
-            out[part] = {"form": [], "generator": entry(CONTRACTS / "gen/gen_nfkc.py"),
+            out[part] = {"form": [entry(f) for f in gen_heartbeat.sources()],
+                         "generator": entry(CONTRACTS / "gen/gen_nfkc.py"),
+                         "generators": [entry(CONTRACTS / "gen/gen_nfkc.py"), entry(CONTRACTS / "gen/gen_heartbeat.py")],
                          "judge": entry(NORMGEN / "test_contracts.py"),
                          "handwritten": [entry(f) for f in sorted(CONTRACTS.rglob("*.go"))
                                          if not f.read_bytes().startswith(b"// Code generated")],
@@ -393,10 +397,14 @@ def build(dst, module, parts=(), judged=None, seed=None):
 
     contract_adapters = {}
     if "contracts" in parts:                           # общий пакет договоров: пакет и адаптеры векторов над ним
-        for f in sorted((CONTRACTS / "go").glob("*.go")):
+        for name, text in gen_heartbeat.render().items():
+            path = CONTRACTS / "go/heartbeat" / name
+            if not path.is_file() or path.read_text(encoding="utf-8") != text:
+                raise KitError("contracts heartbeat is stale: run contracts/gen/gen_heartbeat.py")
+        for f in sorted((CONTRACTS / "go").rglob("*.go")):
             data = f.read_bytes()       # nfkc_tables.go — выход contracts/gen/gen_nfkc.py (таблицы Unicode 15.0.0)
             origin = "generated" if data.startswith(b"// Code generated") else "handwritten"
-            put("contracts", f.name, data, origin, "contracts", str(f.relative_to(ROOT)))
+            put("contracts", str(f.relative_to(CONTRACTS / "go")), data, origin, "contracts", str(f.relative_to(ROOT)))
         for f in sorted((CONTRACTS / "adapters").glob("*.go")):
             fn = re.search(r"^func ([A-Z]\w*)\((?:table|input|file|raw)\b", f.read_text(), re.M)[1]
             contract_adapters[f"{fn.lower()}.go"] = f
@@ -598,6 +606,7 @@ KIT_CONTRACTS_MD = """
 | Package | Import path | Origin |
 |---|---|---|
 | `contracts` | `{module}/internal/contracts` | the kit's implementation of `Platform/common/contracts/*.md` — closed; use it in your code |
+| `heartbeat` | `{module}/internal/contracts/heartbeat` | `ReadResource(key, text)` and `ReadWorker(key, text)` over the generated P/03 and P/05 families |
 
 The functions are the pure computations of their contracts (the instance and the box, the slot names, the labels, the
 event journal: names, buckets, lines…; the outcome of a store answer for its client; the revocation files revoked and
@@ -605,7 +614,9 @@ crl.pem by the centers; the login and the password in a url value — the displa
 free text, the mask at the input; the url field rules from their declarations; NFKC of Unicode 15.0.0; the loopback
 threshold and the IP literal of peer; the schema check at start; the object address and the read outcome; freshness by LOST_AFTER; the fault words of
 the doors; the envelope enc:v2, the AAD path, the ring file and resealing a value; the values by type of a row; peer — the
-client about the server of another cluster; the domain token check);
+client about the server of another cluster; the domain token check; agent signatures and signed batch knocks;
+the turn state machine; domain keys and revocation merging; may and scope coverage; heartbeat reading by the foreign
+families, including whole-object, field and status-element outcomes);
 reading files, the environment and the clock is yours. With the part
 `vectors`, the adapters of the tables they cover (`vectoradapter/<package>.go`) call this package — yours to change
 like any adapter. `tools/normgen/test_contracts.py` runs the common vectors of every lesson against them.
@@ -684,13 +695,14 @@ REGEN = ("gen_checks.py", "gen_door.py", "gen_flags.py", "gen_refusals.py", "gen
 PART_GENS = {"flags": ("gen_flags.py",), "refusals": ("gen_refusals.py",), "stagetests": ("gen_cmdtests.py",),
              "rollout-poll": ("gen_rollout.py",), "families": ("gen_families.py",),
              "vectors": ("gen_families.py", "gen_vectors.py"), "loader": ("gen_manifest.py",),
+             "contracts": ("contracts/gen/gen_heartbeat.py",),
              **{m: ("gen_machine.py",) for m in MACHINES}, "door": ("gen_door_lesson.py",)}
 
 
 def regen(parts):
     """Генераторы перегона: у P/01 — все (REGEN, порядок прежний), у прочих уроков — части parts по PART_GENS."""
     if L.key == lesson.DEFAULT:
-        return REGEN
+        return REGEN + (PART_GENS["contracts"] if "contracts" in parts else ())
     gens = []
     for p in parts:
         if p not in PART_GENS:
