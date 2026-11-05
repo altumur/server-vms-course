@@ -1060,7 +1060,7 @@ func rowRule(exp, act any, errs *[]string) {
 }
 
 // secret — secret-in, the refusal items (and masked at the console): keys only fault, text (masked); fault equals; at a
-// non-empty fault text is present and leaks no 4 bytes of any hidden password part (no-leak), otherwise no text.
+// non-empty fault text is present and repeats no whole hidden password part of ≥ 4 bytes (no-leak whole), else no text.
 func secret(exp, act any, errs *[]string) {
 	e, _ := exp.(map[string]any)
 	a, ok := act.(map[string]any)
@@ -1091,16 +1091,12 @@ func secret(exp, act any, errs *[]string) {
 		*errs = append(*errs, "$.text: missing at a refusal")
 		return
 	}
-	// no-leak (решение «Архитектора», ADR-0125 доп. (1) п. 5): в UTF-8 текста нет ни одной подстроки любого секрета
-	// длиной ≥ min_bytes = 4 байт — достаточно проверить каждое окно секрета ровно в 4 байта.
+	// no-leak whole:true (решение «Архитектора»; secret-in README, Run п. 3): в тексте нет ни одного целого скрытого
+	// фрагмента raw длиной ≥ 4 байт UTF-8 (короче — не судится; отбор по длине — у генератора, secret_hidden).
 	hidden, _ := e["hidden"].([]any)
 	for _, h := range hidden {
-		hs, _ := h.(string)
-		for i := 0; i+4 <= len(hs); i++ {
-			if strings.Contains(text, hs[i:i+4]) {
-				*errs = append(*errs, "$.text carries 4 bytes of a hidden value of the row (no-leak)")
-				break
-			}
+		if hs, _ := h.(string); len(hs) >= 4 && strings.Contains(text, hs) {
+			*errs = append(*errs, "$.text repeats a hidden value of the row (no-leak whole)")
 		}
 	}
 }

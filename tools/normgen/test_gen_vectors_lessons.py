@@ -270,7 +270,7 @@ class VectorsLessons(unittest.TestCase):
             if not r["fault"] or not hidden:
                 return ans
             leak.done = True
-            return dict(ans, value={"fault": r["fault"], "text": "bad " + hidden[0][:4]})   # 4 байта — уже утечка
+            return dict(ans, value={"fault": r["fault"], "text": "bad " + hidden[0]})       # целый секрет — утечка
         leak.done = False
         cases[("03-worker", "secret-leak")] = leak
 
