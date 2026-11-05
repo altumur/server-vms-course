@@ -21,7 +21,7 @@ TYPES = {"object", "array", "string", "number", "boolean", "null", "value", "byt
 FRAMES = {"json", "json-lf", "raw"}
 DECODES_CELL = {"cell", "json", "text"}
 DECODES_FILE = {"bytes", "text", "json"}
-TESTS = {"prefix", "absent"}
+TESTS = {"prefix", "absent", "no-leak"}
 
 
 class WireError(Exception):
@@ -156,12 +156,16 @@ def check_asserts(a, where, group, prefix=False):
         raise WireError(f"{where}: assert {a!r}")
     for i, x in enumerate(a):
         w = f"{where}.assert[{i}]"
-        keys_of(x, w, ("pointer",), ("test", "value", "decode", "compare"))
+        keys_of(x, w, ("pointer",), ("test", "value", "decode", "compare", "min_bytes"))
         if not isinstance(x["pointer"], str) or not (x["pointer"] == "" or x["pointer"].startswith("/")):
             raise WireError(f"{w}: pointer {x['pointer']!r}")
         if "test" in x:
             if x["test"] not in TESTS or (x["test"] == "absent") == ("value" in x) or "compare" in x:
                 raise WireError(f"{w}: {x!r}")
+            leak = x["test"] == "no-leak"
+            mb = x.get("min_bytes")
+            if leak != ("min_bytes" in x) or (leak and (not isinstance(mb, int) or isinstance(mb, bool) or mb < 1)):
+                raise WireError(f"{w}: min_bytes (an integer >= 1) goes with no-leak only: {x!r}")
         elif "value" not in x:
             raise WireError(f"{w}: no value")
         if x.get("decode", "json") != "json":
@@ -327,7 +331,7 @@ class Run:
     ignore_stdout: bool = False
     value: object = None            # ожидаемое значение JSON (или bytes при native bytes)
     compare: str = "value"
-    asserts: list = field(default_factory=list)    # [(pointer, test|None, compare|None, value)]
+    asserts: list = field(default_factory=list)    # [(pointer, test|None, compare|None, value, min_bytes|None)]
     native: dict = None
 
     @property
@@ -486,8 +490,16 @@ class Expander:
         raise WireError(f"{where}: {v!r}")
 
     def asserts(self, a, rows, pdir, where, suffix=None):
-        return [(x["pointer"], x.get("test"), x.get("compare"),
-                 self.value(x["value"], rows, pdir, where, suffix) if "value" in x else None) for x in a]
+        """→ [(pointer, test | None, compare | None, значение | None, min_bytes | None)]; no-leak — массив секретов."""
+        out = []
+        for x in a:
+            v = self.value(x["value"], rows, pdir, where, suffix) if "value" in x else None
+            if x.get("test") == "no-leak":
+                v = [v] if isinstance(v, str) else v
+                if not isinstance(v, list) or not all(isinstance(s, str) for s in v):
+                    raise WireError(f"{where}: no-leak value is a string or an array of strings, got {v!r:.80}")
+            out.append((x["pointer"], x.get("test"), x.get("compare"), v, x.get("min_bytes")))
+        return out
 
     def run(self, b, owner):
         """→ ([Run], [Excluded]) привязки b для урока owner (каталог урока)."""

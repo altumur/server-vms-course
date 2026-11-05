@@ -9,7 +9,7 @@
    байты, сравнение, case), общие пакеты P/01/P/02 — с common_vectors (ожидание, вход, фикстуры; family-read —
    verdict подмножеством, paths множеством, outcome писателя значением и читателя множествами).
 3. Мутанты формы (повторный ключ JSON, чужой конструктор, неизвестное сравнение, два входа одного варианта на строку,
-   decode json у строкового домена, якорь нормы без заголовка, фикстура у stand, owner вне
+   decode json у строкового домена, якорь нормы без заголовка, фикстура у stand, no-leak без целого min_bytes ≥ 1, owner вне
    consumers.tsv, when, различный в группе, повтор запуска) отвергаются WireError.
 """
 import json
@@ -132,7 +132,7 @@ class Form(unittest.TestCase):
                     if name != "family-read":
                         self.assertEqual(w.value, want, where)
                         continue
-                    a = {p: (c, v) for p, _, c, v in w.asserts}
+                    a = {p: (c, v) for p, _, c, v, _ in w.asserts}
                     self.assertEqual((w.compare, w.value), ("subset", {"verdict": want["verdict"]}), where)
                     self.assertEqual((a["/paths"][0], sorted(a["/paths"][1])), ("set", want["paths"]), where)
                     c, v = a["/outcome"]
@@ -233,6 +233,20 @@ class Mutants(unittest.TestCase):
         self.jedit("common/yaml-suite", "expect.tsv", "vectors", "inputs",
                    lambda v: v[0].__setitem__("case", "suite"))
         self.refused()
+
+    def test_no_leak_needs_min_bytes(self):
+        def add(v, mb):
+            v[0]["assert"] = [dict({"pointer": "", "test": "no-leak", "value": {"column": "raw", "decode": "text"}},
+                                   **({} if mb is None else {"min_bytes": mb}))]
+        for mb in (None, 0, True, "4"):
+            with self.subTest(min_bytes=mb):
+                self.jedit("common/log-mask", "cases.tsv", "vectors", "expect", lambda v: add(v, mb))
+                self.refused()
+                self.tearDown()
+        self.jedit("common/log-mask", "cases.tsv", "vectors", "expect", lambda v: add(v, 4))
+        runs, _ = wire.expand(self.tmp, "02-installer", self.cel)
+        r = next(r for r in runs if r.binding.package == "common/log-mask")
+        self.assertEqual(r.asserts[0][1:], ("no-leak", None, [r.cells["raw"]], 4))
 
     def test_escape_the_export(self):
         self.jedit("common/log-mask", "cases.tsv", "vectors", "files",
