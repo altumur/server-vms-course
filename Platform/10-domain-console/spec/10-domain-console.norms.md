@@ -181,7 +181,7 @@ pass:      every door /domain/* of the domain console, except GET and HEAD and e
            method, GET too (review analysis of stage A 8–10, № 2) —
            to the process domain (SIGNER_URL of its own box; to https:// — the client of its own cluster, the role certificate contract
            own_client, role domain): the method, the path with query, the body, Authorization, Idempotency-Key, If-Match
-           as they came; X-W2C-Client — the address of the client's TCP peer: the domain console sets it; when, whom the process trusts and what
+           as they came, except the first cookie transition under the forwarding contract «First cookie transition to the domain»; X-W2C-Client — the address of the client's TCP peer: the domain console sets it; when, whom the process trusts and what
            is stripped outside — the forwarding contract Platform/common/contracts/forwarding.md «Client address» (review analysis
            of stage A 8–10, № 23; the history is there too: reconciliation of М11, cammeta-python М11-09 № 22, P16); the deadline is «Ожидание» of the row
            of the forwarding contract Platform/common/contracts/forwarding.md «Domain doors»; the answer is as it came, without parsing
