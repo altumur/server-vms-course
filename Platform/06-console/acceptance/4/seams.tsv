@@ -1,0 +1,6 @@
+# P/06 kit seams; CALL invokes ordinary functions/HTTP/command with the controlled fixture in forms/README.md.
+# scenario	step	request	expect
+s01-accounting-unknown	1	CALL console-request {"accounting_read":"unconfirmed","request":"valid_ordinary"}	{"status":503,"request_writes":0,"mark_writes":0}
+s02-append-before-expired	1	CALL console-request-reaper {"profile":"append","unit_read":"confirmed_present","fetched":false,"mark":"absent","ttl":30,"row_age_s":89.999}	{"mark_writes":0,"row_deleted":false}
+s03-append-at-expired	1	CALL console-request-reaper {"profile":"append","unit_read":"confirmed_present","fetched":false,"mark":"absent","ttl":30,"row_age_s":90,"settle_elapsed":false}	{"mark_outcome":"expired","mark_ended_by":"reaper","row_deleted":false}
+s04-reaper-unknown-unit	1	CALL console-request-reaper {"profile":"append","unit_read":"unconfirmed","fetched":false,"mark":"absent","ttl":30,"row_age_s":1000}	{"mark_writes":0,"row_deleted":false}

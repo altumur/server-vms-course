@@ -6441,6 +6441,29 @@ components:
         type: string
         pattern: "^(?:[a-z][a-z0-9_-]{0,31})$"
   schemas:
+    RevisionMoved:
+      type: object
+      required:
+      - detail
+      - error
+      - field
+      - revision
+      additionalProperties: false
+      properties:
+        detail:
+          type: string
+        error:
+          const: revision moved
+        field:
+          const: /revision
+        revision:
+          type: integer
+          minimum: 0
+          description: The current revision; 0 — there is no row or the field does not read.
+        row:
+          type: object
+          additionalProperties: true
+          description: The current row in the read form of the door, secrets masked; only with the right to read this row, no row or a tombstone — no field.
     VerifyInput:
       type: object
       description: Chapter 6.7 Н1.15 (ADR-0119).
@@ -9751,28 +9774,8 @@ components:
       content:
         application/json:
           schema:
-            type: object
-            required:
-            - detail
-            - error
-            - field
-            - revision
-            additionalProperties: false
-            properties:
-              detail:
-                type: string
-              error:
-                const: revision moved
-              field:
-                const: /revision
-              revision:
-                type: integer
-                minimum: 0
-                description: The current revision; 0 — there is no row or the field does not read.
-              row:
-                type: object
-                additionalProperties: true
-                description: The current row in the read form of the door, secrets masked; only with the right to read this row, no row or a tombstone — no field.
+            $ref: '#/components/schemas/RevisionMoved'
+
     BadRead:
       description: The common refusal of transport or path, including badkey of the full store key; detail and error, without fault.
       content:
