@@ -1201,6 +1201,7 @@ def build(root=ROOT):
     decls, known = plan(root)
     files, inv = {}, []
     uses_extra = False
+    runs = set()
     by_fn = {}
     for d in decls:
         by_fn.setdefault(d["fn"], []).append(d)
@@ -1257,6 +1258,10 @@ def build(root=ROOT):
                 else:
                     f = f"func() vectoradapter.Answer {{ return vectoradapter.{d['fn']}({go_str(d['table'])}, {go_cells}, {go_files}) }}"
                 case = r.get(d.get("case", "case"), f"line-{no}")
+                run = (d["package"], d["table"], d["surface"], variant, case)
+                if run in runs:                            # запуск уникален (wire grammar spec103): дубль — ошибка
+                    raise GenError(f"{d['package']} {d['table']}: the run {variant or '-'} {case} repeats (line {no})")
+                runs.add(run)
                 wire_rows.append((no, case, cells, fx, code, value, variant))
             elif d["args"] == "source":
                 src = Path(root) / r[d["input"]]
