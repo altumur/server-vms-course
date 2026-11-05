@@ -330,12 +330,20 @@ paths:
       parameters:
       - name: from
         in: query
+        x-query-lexeme:
+          pattern: '^(?:-?(?:[0-9](?:_?[0-9])*(?:\.(?:[0-9](?:_?[0-9])*)?)?|\.(?:[0-9](?:_?[0-9])*))(?:[eE][+-]?[0-9](?:_?[0-9])*)?)$'
+          parse: number
+          strip: '_'
         required: false
         schema:
           type: number
           default: 0
       - name: to
         in: query
+        x-query-lexeme:
+          pattern: '^(?:-?(?:[0-9](?:_?[0-9])*(?:\.(?:[0-9](?:_?[0-9])*)?)?|\.(?:[0-9](?:_?[0-9])*))(?:[eE][+-]?[0-9](?:_?[0-9])*)?)$'
+          parse: number
+          strip: '_'
         required: false
         description: The bound is not included, the window from ≤ t < to (the event log merge contract query).
         schema:
@@ -358,6 +366,9 @@ paths:
           $ref: '#/components/schemas/UnitRef'
       - name: limit
         in: query
+        x-query-lexeme:
+          pattern: '^(?:[0-9]+)$'
+          parse: integer
         required: false
         schema:
           type: integer
@@ -389,6 +400,9 @@ paths:
           default: t
       - name: late
         in: query
+        x-query-lexeme:
+          pattern: '^(?:[0-9]+)$'
+          parse: integer
         required: false
         description: Only with by=occurred; by how many seconds the write could lag behind occurred (the event log merge contract by).
         schema:
@@ -438,6 +452,9 @@ paths:
           $ref: '#/components/schemas/Want'
       - name: timeout
         in: query
+        x-query-lexeme:
+          pattern: '^(?:(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+))$'
+          parse: number
         required: false
         schema:
           type: number
@@ -446,6 +463,9 @@ paths:
           default: 30
       - name: since
         in: query
+        x-query-lexeme:
+          pattern: '^(?:0|[1-9][0-9]*)$'
+          parse: uint64
         required: false
         schema:
           type: string
