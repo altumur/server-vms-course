@@ -473,3 +473,25 @@ class QueryLexeme(unittest.TestCase):                   # P/05 x-query-lexeme
         for st, lex in bad:
             self.assertTrue(self.errs(st, lex), (st, lex))
         self.assertTrue(self.errs("number", num, where="path"))
+
+
+class RuntimeConstants(unittest.TestCase):              # P/06 runtime-constants.tsv
+    def test_rules(self):
+        tmp = Path(tempfile.mkdtemp())
+        try:
+            lesson = tmp / "Platform/06-console"
+            (lesson / "spec").mkdir(parents=True)
+            (lesson / "forms").mkdir()
+            (lesson / "spec/06.1-console.norms.md").write_text("<!-- req: P/06.1-R030 -->\nx\n", encoding="utf-8")
+            f = lesson / "forms/runtime-constants.tsv"
+            head = "name\tvalue\tunit\tnorm\tmeaning\n"
+            good = "CHANGES_TICK\t1\ts\tP/06.1-R030\tthe listing tick\n"
+            f.write_text(head + good, encoding="utf-8")
+            self.assertEqual(check_forms.check_runtime_constants(f)[0], [])
+            for bad in (good + good, good.replace("CHANGES_TICK", "changes_tick"), good.replace("\t1\t", "\t0\t"),
+                        good.replace("\t1\t", "\t01\t"), good.replace("\ts\t", "\tms\t"), good.replace("P/06.1-R030", "P/06.1-R999"),
+                        good.replace("P/06.1-R030", "P/05.1-R030"), good.replace("the listing tick", " ")):
+                f.write_text(head + bad, encoding="utf-8")
+                self.assertTrue(check_forms.check_runtime_constants(f)[0], bad)
+        finally:
+            shutil.rmtree(tmp)

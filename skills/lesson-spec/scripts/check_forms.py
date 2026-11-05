@@ -1489,3 +1489,41 @@ def check_openapi_routing(api):
                 if rs != "-" and rs not in schemas:
                     errors.append(f"{ew}: response_schema {rs!r} is not a component schema of the file")
     return errors, {"route_priorities": len(seen), "path_param_routes": n}
+
+
+CONST_COLUMNS = ["name", "value", "unit", "norm", "meaning"]
+CONST_UNITS = {"count", "s", "bytes"}
+
+
+def runtime_constant_forms(root):
+    return sorted(Path(root).glob("Platform/*/forms/runtime-constants.tsv"))
+
+
+def check_runtime_constants(path):
+    """ADR-0125 доп. (5), P/06: числовые константы урока — форма-норма. name уникален [A-Z][A-Z0-9_]*; value — положительное
+    целое без ведущих нулей; unit count|s|bytes; norm — якорь требования этого урока, существующий в его нормах; meaning не пуст."""
+    path = Path(path)
+    lesson = path.parent.parent
+    errors, rows = read(path, CONST_COLUMNS)
+    anchors = set()
+    for norms in (lesson / "spec").glob("*.norms.md"):
+        anchors |= set(ANCHOR.findall(norms.read_text(encoding="utf-8")))
+    number = lesson.name[:2]
+    seen = set()
+    for r in rows:
+        where = f"{path.name}: {r['name']}"
+        if not re.fullmatch(r"[A-Z][A-Z0-9_]*", r["name"]) or r["name"] in seen:
+            errors.append(f"{where}: name is not [A-Z][A-Z0-9_]* or repeats")
+        seen.add(r["name"])
+        if not re.fullmatch(r"[1-9][0-9]*", r["value"]):
+            errors.append(f"{where}: value {r['value']!r} is not a positive integer")
+        if r["unit"] not in CONST_UNITS:
+            errors.append(f"{where}: unit {r['unit']!r} not in {sorted(CONST_UNITS)}")
+        g = REQ.fullmatch(r["norm"])
+        if not g or g[1] != number:
+            errors.append(f"{where}: norm {r['norm']!r} is not a requirement anchor of this lesson")
+        elif r["norm"] not in anchors:
+            errors.append(f"{where}: norm {r['norm']} has no anchor in the norms of the lesson")
+        if not r["meaning"].strip():
+            errors.append(f"{where}: no meaning")
+    return errors, {"runtime_constants": len(rows)}
