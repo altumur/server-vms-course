@@ -4,9 +4,15 @@ This English text is the source; `ru/forms/README.md` is its Russian translation
 
 ## Inputs and constants
 
-[daemon-flags.tsv](daemon-flags.tsv) declares 20 environment inputs with the common header. `$NAME` stays environment; commands=domain is the process role. The complete launcher, aliases, catalogue, instance, ring, TLS and address contracts still apply. Operation-time unknown inputs keep their own outcomes. A missing signer row makes the process wait; this form does not turn waiting into a start failure.
+[daemon-flags.tsv](daemon-flags.tsv) declares 20 environment inputs and the existing first-admin positional name with the common header. `$NAME` stays environment; commands=domain is the process role. The complete launcher, aliases, catalogue, instance, ring, TLS and address contracts still apply. Operation-time unknown inputs keep their own outcomes. A missing signer row makes the process wait; this form does not turn waiting into a start failure. The logical first-admin invocation denotes the implementation-chosen operator command, with its required person name; it fixes no executable spelling. Its password still comes from stdin under P/08.4 Н1.9 (whole UTF-8, remove at most one final LF/CRLF), never from a new flag or environment value.
 
 [runtime-constants.tsv](runtime-constants.tsv) declares 26 positive integer literals, with the common header `name value unit norm meaning`. Units are count, s and bytes. Count means Unicode code points where the meaning says characters. KiB/MiB are converted to exact bytes. Conditional camera formulas, the agent report period and dependent bounds stay in their owning sections; MARK_REFRESH = LOST_AFTER/2 remains a derived fractional duration, without rounding. These constants are not environment settings.
+
+## Refusal catalogue
+
+[refusals.tsv](refusals.tsv) preserves all 154 original Н4 rows, plus two explicit first-admin operator failures from Н1.9, as 178 projections. Four-cell source rows retain cause/outcome/diagnostic/caller exactly; the third cell of 8.1 was Body. Three-cell tables in 8.4, 8.7, 8.8 and 8.9 retain word/outcome/cause, with diagnostic/caller `-`. Word is the original normative cell: its indexed tokens are not an arbitrary choice of error or reason. A projection applies under the original condition and operation.
+
+HTTP schemas name existing lesson components. Fields list directly declared required properties; inherited/composed and conditional requirements remain the full OpenAPI and original source cells. Native form refusals and operator exits keep their original exit rules. A per-member relay refusal or a later kept-edit outcome is not a new HTTP error. The older-road success has the direct Carry and relay RelayAnswer envelopes selected by the actual operation. Dynamic Retry-After and conditional detail/reason/field remain their complete owning norms, not invented fixed header values. The existing closed error vocabulary remains data/refusal-words.tsv.
 
 ## Versioned doors
 
