@@ -59,3 +59,7 @@ code 0 — computed, 2 — an input not of the form; stdout is compared with the
 A side implements SaidID and the reading of `fetched` by its own function (the worker — the write, the console — the reading) and checks each row: `said.tsv` — SaidID(`rid`) equals `said` byte for byte; `read.tsv` — the outcome of the reading
 equals `reported`. The vectors are derived from the norm; on a divergence the norm is right, the vector is corrected by «Спецификация».
 Who performs is by the table: `said.tsv` — the worker (`03-worker`, writes SaidID into `fetched`, P/03.4 Н1.1, P/03.6 Н3) and the console (`06-console`, the reaper computes SaidID(rid) when reading, P/06.4 Н3 «reaper» `clear`); `read.tsv` — the console (`06-console`); the worker does not read `fetched` (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+
+## Vector wire
+
+The wire of `read.tsv`, `said.tsv` is set by the `common/said-id` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

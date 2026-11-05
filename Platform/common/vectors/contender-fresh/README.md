@@ -35,3 +35,7 @@ Who performs it — the console (`06-console`: the freshness of marks for `Worke
 
 Code 0 and the value of the column `fresh` — `true` or `false` (one expectation column — the common rule «Vectors» of [the common acceptance
 README](../../acceptance/README.md); as at [`fresh-age`](../fresh-age/README.md)); the input is the cell `age`; the Architect's decision 2026-10-27.
+
+## Vector wire
+
+The wire of `fresh.tsv` is set by the `common/contender-fresh` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

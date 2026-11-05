@@ -24,3 +24,7 @@ of the process at start; the function of the package in the single command `vect
 Without a stand: a side gives the input to its schema check function (the reading of the row is replaced by the input). A read error (wait for
 availability) and the check by the worker after the renewal of the slot — by reading and by the acceptance scenarios of the participants.
 Who performs it — every process whose norm checks the schema at start: the worker (`03-worker`, P/03.2 Н3 «schema check by the worker»), the controller (`04-controller`, P/04 Н3 «controller start — schema check»), the resource (`05-resource`, P/05 Н3 «resource start — schema check»), the console (`06-console`, P/06.6 Н3 «console start — schema check»), the process `domain` (`08-domain`) and the agent (`09-agent`) — by P/02.4 Н1.12, the domain console (`10-domain-console`, P/10 Н1.1). The console module (`07-console-module`) takes `/schema` ready-made (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision 2026-10-27).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/schema` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

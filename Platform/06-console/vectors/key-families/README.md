@@ -31,3 +31,7 @@ of [the common acceptance README](../../../common/acceptance/README.md)); the in
 Who executes it is the cluster console (`06-console`, P/06.7 Н1.11 `families`). The console module (`07-console-module`) takes
 `families` ready-made: the subsystem page selects its own keys by prefix (ACC-VECTORS-CONNECT-03: a row is executed by the role whose
 norm calls its function; the Architect's decision of 2026-10-27).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `06-console/key-families` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

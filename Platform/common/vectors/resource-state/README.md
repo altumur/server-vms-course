@@ -38,3 +38,7 @@ Who performs are the observers of `resource_state`: the controller (`04-controll
 
 Code 0 and the value of the column `state` as a JSON string — `"live"`, `"unreachable"`, `"unknown"` or `"silent"` (one expectation
 column — the general rule «Vectors» of [the common acceptance README](../../acceptance/README.md)); the input is the cells `history`, `at`; the Architect's decision of 2026-10-27.
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/resource-state` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

@@ -41,3 +41,7 @@ the place `""`, a worker that is not live.
 Without a stand: a side gives the input to its pool computation and compares the output. The requirements of a unit beyond the pool (`constraint`,
 `spread_by`, `affinity`, the order) are P/04, not this package; the capacity of a worker (`capacity`) is here, the comparison of the capacity with the load at the choice is P/04.
 Who performs is the controller (`04-controller`, P/04 Н3 «choose»: a live worker, the pool, the place keeper) — all fields; the cluster console (`06-console`, P/06.5 Н2: `WorkerRow.load`, `capacity`, `idle_by_policy`, `ServerRow.placeable`, `why` — the same computation by its own reads) — all fields except `fates` (a field of the controller's pass report). Only reads the result: the console module (`07-console-module`, the output of `/servers`); the worker (`03-worker`) takes `CAPACITY` only for the memory budget at start (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `common/pool` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

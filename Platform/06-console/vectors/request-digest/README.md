@@ -63,3 +63,7 @@ The side reads each row and checks two steps:
 1. from `input`, by its kind, it obtains `canonical`, byte for byte;
 2. SHA-256 of `canonical` equals `sha256`.
 Who executes it is by `sender`: `client` — the console requests door (`06-console`, P/06.4 Н3 «file a request» step 1); `worker` — the same door at a target with `requests.key` (same place, the third rule) and the filing worker (`03-worker`, P/03.6 Н1.5 `worker.requests`). The holder and the reaper only read the ready result: they copy `digest` of the row into the mark (the contract of the request and its mark, `begun`, `no_begun`) (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+
+## Vector wire
+
+The wire of `digest.tsv` is set by the `06-console/request-digest` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

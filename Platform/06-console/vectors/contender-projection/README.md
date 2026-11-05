@@ -28,3 +28,7 @@ the key segment (an unreadable fresh mark — a conflict with the flag), a name 
 
 Without a stand: the side gives the input to its own computation of `name_conflict` and `name_conflicts` (the reads of the marks and the clock are replaced by the input).
 Who executes it is the console (`06-console`: `WorkerRow.name_conflict` and the series `<sub>_name_conflicts`, P/06.5 Н3 «/servers» «Соперники»). The controller (`04-controller`) does not execute it: it does not read the contender marks, the field `name_conflicts` of its pass report is its own count and does not enter the console series (P/06.5 Н3 «/metrics — text»); the marks are written by the worker (`03-worker`, P/03.2 Н1.4а) (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `06-console/contender-projection` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

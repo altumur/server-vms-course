@@ -1,5 +1,7 @@
-# The consumers of the platform common vector tables (ADR-0125 addendum (5); ACC-VECTORS-CONNECT-02/03/04).
-# One row per unique (package, table, lesson). package is common/<name>; table is its file name; lesson is the directory of Platform/lessons.tsv.
+# The consumers of shared platform vector tables (ADR-0125 addendum (5); ACC-VECTORS-CONNECT-02/03/04).
+# One row per unique (package, table, lesson). package is the full (common|NN-name)/name path without vectors/; table is its file name; lesson is the directory of Platform/lessons.tsv.
+# The consumers are these explicit rows plus the owner lesson of a lesson-local package; common has no implicit lesson.
+# Duplicate (package, table, lesson), unknown lesson, package or table is a form error.
 # A row assigns a TABLE, not every input/output of it: row/operation/direction/field selections remain those of the package README named by norm.
 # No row turns an existing byte carrier, signer, writer-only role or ready-result reader into a caller of a different function.
 # family-read assigns NN.tsv only to its owner lesson NN. No common vectors are assigned to the published byte module 07-console-module.
@@ -251,3 +253,12 @@ common/values-by-type	cases.tsv	06-console	common/vectors/values-by-type/README.
 common/values-by-type	cases.tsv	08-domain	common/vectors/values-by-type/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/values-by-type	cases.tsv	09-agent	common/vectors/values-by-type/README.md: Who performs; ACC-VECTORS-CONNECT-03
 common/yaml-suite	expect.tsv	02-installer	P/02.1 Н1.1; common/LAYERS.md; common/vectors/yaml-suite/README.md
+01-store/jcs	canonical_json.tsv	02-installer	01-store/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
+01-store/jcs	canonical_json.tsv	03-worker	01-store/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
+01-store/jcs	canonical_json.tsv	06-console	01-store/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
+01-store/jcs	canonical_json.tsv	08-domain	01-store/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
+01-store/jcs	canonical_json.tsv	09-agent	01-store/vectors/jcs/README.md: Who executes; ACC-VECTORS-CONNECT-03
+06-console/rid	rid.tsv	03-worker	06-console/vectors/rid/README.md: Run; ACC-VECTORS-CONNECT-03
+06-console/rid	template.tsv	03-worker	06-console/vectors/rid/README.md: Run; ACC-VECTORS-CONNECT-03
+06-console/request-digest	digest.tsv	03-worker	06-console/vectors/request-digest/README.md: Run; ACC-VECTORS-CONNECT-03
+06-console/requests-body	requests_body.tsv	03-worker	06-console/vectors/requests-body/README.md: Run; ACC-VECTORS-CONNECT-03

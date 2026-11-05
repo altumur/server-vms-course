@@ -34,3 +34,7 @@ UTF-8, LF, fields separated by TAB; the first row is the header `case<TAB>input<
 ## Run
 
 The side checks both tables with its own function: the command is the entry `vectors/06-console/op-step` of the profile (the section «Layout by processes» of [the common acceptance README](../../../common/acceptance/README.md)). The native outcome is code 0 and the value `expect`; an input not in form — code 2. The form of the command is the same as for the neighbouring packages.
+
+## Vector wire
+
+The wire of `expected.tsv`, `key.tsv` is set by the `06-console/op-step` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.
