@@ -601,7 +601,7 @@ match:    <путь> matches the beginning of the request path by whole segments
 rule:     as for the first kind (the method, the path without the prefix, query as it came, the body ≤ 1 MiB, a live worker with a door), except the lines below
 to_worker: exactly the headers: Content-Type, Idempotency-Key, If-Match, Last-Event-ID — as they came; X-W2C-Pass-Ticket — the ticket;
           X-W2C-Supervision — by the roles of the person of the ticket (section «Supervision»);
-          X-W2C-Pass-Console — the callback listener of the issuing instance, https://<SERVER_NAME>:<CONSOLE_CALL_PORT>, only with a kit (without it the worker calls the role socket);
+          X-W2C-Pass-Console — at the cluster console, the callback listener of the issuing instance, https://<SERVER_NAME>:<CONSOLE_CALL_PORT>, only with a kit (without it the worker calls the role socket); at the domain console — the exception of P/10 Н1.6;
           X-W2C-Loopback: 1 — only if the address of the TCP connection of the client with the console is 127.0.0.1 or ::1 (address headers are not read).
           Authorization, cookies, X-Operator, X-User and the others do not go; X-W2C-Loopback, X-W2C-Pass-Console and X-W2C-Supervision that came from outside the console always removes
 to_client: from the worker — the status, the body and exactly the headers Content-Type, ETag, Cache-Control (ADR-0112 addendum (3) item 5, addendum (4) item 5); the console adds X-Content-Type-Options: nosniff and
