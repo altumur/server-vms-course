@@ -1,0 +1,966 @@
+{
+ "source_commit": "8af61893a7458054d8c79701f78b3b284e8573a8",
+ "tables": [
+  {
+   "package": "01-store/jcs",
+   "table": "canonical_json.tsv",
+   "lessons": [
+    "01-store"
+   ]
+  },
+  {
+   "package": "01-store/rights-evaluator",
+   "table": "expect.tsv",
+   "lessons": [
+    "01-store"
+   ]
+  },
+  {
+   "package": "02-installer/canonical",
+   "table": "cases.tsv",
+   "lessons": [
+    "02-installer"
+   ]
+  },
+  {
+   "package": "02-installer/exec",
+   "table": "cases.tsv",
+   "lessons": [
+    "02-installer"
+   ]
+  },
+  {
+   "package": "02-installer/install-order",
+   "table": "cases.tsv",
+   "lessons": [
+    "02-installer"
+   ]
+  },
+  {
+   "package": "02-installer/platform-lists",
+   "table": "cases.tsv",
+   "lessons": [
+    "02-installer"
+   ]
+  },
+  {
+   "package": "02-installer/workers-script",
+   "table": "cases.tsv",
+   "lessons": [
+    "02-installer"
+   ]
+  },
+  {
+   "package": "03-worker/creates-key",
+   "table": "cases.tsv",
+   "lessons": [
+    "03-worker"
+   ]
+  },
+  {
+   "package": "04-controller/near-of",
+   "table": "cases.tsv",
+   "lessons": [
+    "04-controller"
+   ]
+  },
+  {
+   "package": "04-controller/order",
+   "table": "cases.tsv",
+   "lessons": [
+    "04-controller"
+   ]
+  },
+  {
+   "package": "04-controller/shrink-allowed",
+   "table": "cases.tsv",
+   "lessons": [
+    "04-controller"
+   ]
+  },
+  {
+   "package": "04-controller/shrink-victim",
+   "table": "cases.tsv",
+   "lessons": [
+    "04-controller"
+   ]
+  },
+  {
+   "package": "05-resource/relieve",
+   "table": "cases.tsv",
+   "lessons": [
+    "05-resource"
+   ]
+  },
+  {
+   "package": "05-resource/relieve",
+   "table": "short.tsv",
+   "lessons": [
+    "05-resource"
+   ]
+  },
+  {
+   "package": "06-console/contender-projection",
+   "table": "cases.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "06-console/key-families",
+   "table": "cases.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "06-console/metrics",
+   "table": "cases.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "06-console/op-step",
+   "table": "expected.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "06-console/op-step",
+   "table": "key.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "06-console/reap",
+   "table": "cases.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "06-console/request-digest",
+   "table": "digest.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "06-console/requests-body",
+   "table": "requests_body.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "06-console/resolve",
+   "table": "cases.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "06-console/rid",
+   "table": "rid.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "06-console/rid",
+   "table": "template.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "08-domain/assemble",
+   "table": "cases.tsv",
+   "lessons": [
+    "08-domain"
+   ]
+  },
+  {
+   "package": "08-domain/issue",
+   "table": "cases.tsv",
+   "lessons": [
+    "08-domain"
+   ]
+  },
+  {
+   "package": "08-domain/view",
+   "table": "cases.tsv",
+   "lessons": [
+    "08-domain"
+   ]
+  },
+  {
+   "package": "09-agent/follow",
+   "table": "cases.tsv",
+   "lessons": [
+    "09-agent"
+   ]
+  },
+  {
+   "package": "10-domain-console/alarms",
+   "table": "cases.tsv",
+   "lessons": [
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/accept",
+   "table": "cases.tsv",
+   "lessons": [
+    "08-domain",
+    "09-agent"
+   ]
+  },
+  {
+   "package": "common/agent-sig",
+   "table": "batch-knock.tsv",
+   "lessons": [
+    "08-domain"
+   ]
+  },
+  {
+   "package": "common/agent-sig",
+   "table": "cases.tsv",
+   "lessons": [
+    "06-console",
+    "08-domain",
+    "09-agent"
+   ]
+  },
+  {
+   "package": "common/alarm-history",
+   "table": "cases.tsv",
+   "lessons": [
+    "08-domain",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/ask-sig",
+   "table": "cases.tsv",
+   "lessons": [
+    "06-console",
+    "08-domain"
+   ]
+  },
+  {
+   "package": "common/contender-fresh",
+   "table": "fresh.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/crl",
+   "table": "cases.tsv",
+   "lessons": [
+    "01-store",
+    "02-installer",
+    "03-worker",
+    "04-controller",
+    "05-resource",
+    "06-console",
+    "08-domain",
+    "09-agent",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/deadline",
+   "table": "cases.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/domain-backup-key",
+   "table": "cases.tsv",
+   "lessons": [
+    "02-installer",
+    "08-domain"
+   ]
+  },
+  {
+   "package": "common/domain-envelopes",
+   "table": "m1-open.tsv",
+   "lessons": [
+    "09-agent"
+   ]
+  },
+  {
+   "package": "common/domain-envelopes",
+   "table": "m1-round.tsv",
+   "lessons": [
+    "08-domain"
+   ]
+  },
+  {
+   "package": "common/domain-envelopes",
+   "table": "x25519-open.tsv",
+   "lessons": [
+    "08-domain"
+   ]
+  },
+  {
+   "package": "common/domain-envelopes",
+   "table": "x25519-round.tsv",
+   "lessons": [
+    "08-domain",
+    "09-agent"
+   ]
+  },
+  {
+   "package": "common/domain-founding",
+   "table": "book-seal.tsv",
+   "lessons": [
+    "02-installer"
+   ]
+  },
+  {
+   "package": "common/domain-founding",
+   "table": "claim.tsv",
+   "lessons": [
+    "08-domain"
+   ]
+  },
+  {
+   "package": "common/domain-founding",
+   "table": "recovery.tsv",
+   "lessons": [
+    "02-installer"
+   ]
+  },
+  {
+   "package": "common/domain-token",
+   "table": "cases.tsv",
+   "lessons": [
+    "03-worker",
+    "06-console",
+    "08-domain",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/door-token",
+   "table": "issue.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/door-token",
+   "table": "place.tsv",
+   "lessons": [
+    "03-worker"
+   ]
+  },
+  {
+   "package": "common/door-token",
+   "table": "verify.tsv",
+   "lessons": [
+    "03-worker"
+   ]
+  },
+  {
+   "package": "common/env-file",
+   "table": "cases.tsv",
+   "lessons": [
+    "02-installer"
+   ]
+  },
+  {
+   "package": "common/env-file",
+   "table": "files.tsv",
+   "lessons": [
+    "02-installer"
+   ]
+  },
+  {
+   "package": "common/events-merge",
+   "table": "cases.tsv",
+   "lessons": [
+    "03-worker",
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/events-merge",
+   "table": "resource.tsv",
+   "lessons": [
+    "05-resource"
+   ]
+  },
+  {
+   "package": "common/family-read",
+   "table": "01.tsv",
+   "lessons": [
+    "01-store"
+   ]
+  },
+  {
+   "package": "common/family-read",
+   "table": "02.tsv",
+   "lessons": [
+    "02-installer"
+   ]
+  },
+  {
+   "package": "common/family-read",
+   "table": "03.tsv",
+   "lessons": [
+    "03-worker"
+   ]
+  },
+  {
+   "package": "common/family-read",
+   "table": "04.tsv",
+   "lessons": [
+    "04-controller"
+   ]
+  },
+  {
+   "package": "common/family-read",
+   "table": "05.tsv",
+   "lessons": [
+    "05-resource"
+   ]
+  },
+  {
+   "package": "common/family-read",
+   "table": "06.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/family-read",
+   "table": "08.tsv",
+   "lessons": [
+    "08-domain"
+   ]
+  },
+  {
+   "package": "common/family-read",
+   "table": "09.tsv",
+   "lessons": [
+    "09-agent"
+   ]
+  },
+  {
+   "package": "common/fault",
+   "table": "fault.tsv",
+   "lessons": [
+    "03-worker",
+    "06-console",
+    "08-domain",
+    "09-agent",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/fresh-age",
+   "table": "fresh.tsv",
+   "lessons": [
+    "04-controller",
+    "05-resource",
+    "06-console",
+    "09-agent",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/group-of",
+   "table": "cases.tsv",
+   "lessons": [
+    "03-worker",
+    "04-controller",
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/heartbeat-read",
+   "table": "cases.tsv",
+   "lessons": [
+    "04-controller",
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/heartbeat-read",
+   "table": "worker.tsv",
+   "lessons": [
+    "04-controller",
+    "06-console",
+    "08-domain"
+   ]
+  },
+  {
+   "package": "common/hold-state",
+   "table": "cases.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/holds",
+   "table": "cases.tsv",
+   "lessons": [
+    "05-resource"
+   ]
+  },
+  {
+   "package": "common/instance",
+   "table": "box.tsv",
+   "lessons": [
+    "03-worker",
+    "04-controller",
+    "05-resource",
+    "06-console",
+    "08-domain",
+    "09-agent",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/instance",
+   "table": "cases.tsv",
+   "lessons": [
+    "03-worker",
+    "04-controller",
+    "05-resource",
+    "06-console",
+    "08-domain",
+    "09-agent",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/journal",
+   "table": "append.tsv",
+   "lessons": [
+    "03-worker",
+    "04-controller",
+    "05-resource",
+    "06-console",
+    "08-domain",
+    "09-agent",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/journal",
+   "table": "bucket.tsv",
+   "lessons": [
+    "05-resource"
+   ]
+  },
+  {
+   "package": "common/journal",
+   "table": "modes.tsv",
+   "lessons": [
+    "02-installer",
+    "03-worker",
+    "05-resource",
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/journal",
+   "table": "names.tsv",
+   "lessons": [
+    "03-worker",
+    "04-controller",
+    "05-resource",
+    "06-console",
+    "08-domain",
+    "09-agent",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/journal",
+   "table": "years.tsv",
+   "lessons": [
+    "03-worker",
+    "04-controller",
+    "05-resource",
+    "06-console",
+    "08-domain",
+    "09-agent",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/keys",
+   "table": "cases.tsv",
+   "lessons": [
+    "06-console",
+    "08-domain",
+    "09-agent"
+   ]
+  },
+  {
+   "package": "common/keys",
+   "table": "revoked.tsv",
+   "lessons": [
+    "09-agent"
+   ]
+  },
+  {
+   "package": "common/labels",
+   "table": "cases.tsv",
+   "lessons": [
+    "03-worker",
+    "04-controller",
+    "06-console",
+    "08-domain"
+   ]
+  },
+  {
+   "package": "common/log-mask",
+   "table": "cases.tsv",
+   "lessons": [
+    "01-store",
+    "02-installer",
+    "03-worker",
+    "04-controller",
+    "05-resource",
+    "06-console",
+    "08-domain",
+    "09-agent",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/log-mask",
+   "table": "mask_in.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/loopback",
+   "table": "cases.tsv",
+   "lessons": [
+    "02-installer",
+    "03-worker",
+    "04-controller",
+    "05-resource",
+    "06-console",
+    "08-domain",
+    "09-agent",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/may",
+   "table": "cases.tsv",
+   "lessons": [
+    "06-console",
+    "08-domain",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/may",
+   "table": "covers.tsv",
+   "lessons": [
+    "06-console",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/object-client",
+   "table": "address.tsv",
+   "lessons": [
+    "03-worker",
+    "04-controller",
+    "05-resource",
+    "06-console",
+    "08-domain",
+    "09-agent",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/object-client",
+   "table": "read.tsv",
+   "lessons": [
+    "03-worker",
+    "04-controller",
+    "05-resource",
+    "06-console",
+    "08-domain",
+    "09-agent",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/password-hash",
+   "table": "cases.tsv",
+   "lessons": [
+    "06-console",
+    "08-domain"
+   ]
+  },
+  {
+   "package": "common/peer",
+   "table": "cases.tsv",
+   "lessons": [
+    "06-console",
+    "08-domain",
+    "09-agent",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/pool",
+   "table": "cases.tsv",
+   "lessons": [
+    "04-controller",
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/presence-room",
+   "table": "cases.tsv",
+   "lessons": [
+    "05-resource"
+   ]
+  },
+  {
+   "package": "common/record",
+   "table": "cases.tsv",
+   "lessons": [
+    "08-domain",
+    "09-agent"
+   ]
+  },
+  {
+   "package": "common/record",
+   "table": "shared.tsv",
+   "lessons": [
+    "06-console",
+    "09-agent"
+   ]
+  },
+  {
+   "package": "common/record",
+   "table": "take.tsv",
+   "lessons": [
+    "09-agent"
+   ]
+  },
+  {
+   "package": "common/resource-state",
+   "table": "cases.tsv",
+   "lessons": [
+    "04-controller",
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/revoked",
+   "table": "cases.tsv",
+   "lessons": [
+    "01-store",
+    "02-installer",
+    "03-worker",
+    "04-controller",
+    "05-resource",
+    "06-console",
+    "08-domain",
+    "09-agent",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/row-check",
+   "table": "cases.tsv",
+   "lessons": [
+    "03-worker",
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/row-check",
+   "table": "state.tsv",
+   "lessons": [
+    "03-worker",
+    "04-controller",
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/said-id",
+   "table": "read.tsv",
+   "lessons": [
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/said-id",
+   "table": "said.tsv",
+   "lessons": [
+    "03-worker",
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/schema",
+   "table": "cases.tsv",
+   "lessons": [
+    "03-worker",
+    "04-controller",
+    "05-resource",
+    "06-console",
+    "08-domain",
+    "09-agent",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/sealing",
+   "table": "aad.tsv",
+   "lessons": [
+    "02-installer",
+    "03-worker",
+    "06-console",
+    "08-domain",
+    "09-agent"
+   ]
+  },
+  {
+   "package": "common/sealing",
+   "table": "envelope.tsv",
+   "lessons": [
+    "02-installer",
+    "06-console",
+    "08-domain",
+    "09-agent"
+   ]
+  },
+  {
+   "package": "common/sealing",
+   "table": "open.tsv",
+   "lessons": [
+    "02-installer",
+    "03-worker",
+    "06-console",
+    "08-domain",
+    "09-agent"
+   ]
+  },
+  {
+   "package": "common/sealing",
+   "table": "reseal.tsv",
+   "lessons": [
+    "02-installer",
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/sealing",
+   "table": "ring.tsv",
+   "lessons": [
+    "02-installer",
+    "03-worker",
+    "06-console",
+    "08-domain",
+    "09-agent"
+   ]
+  },
+  {
+   "package": "common/secret-in",
+   "table": "cases.tsv",
+   "lessons": [
+    "03-worker",
+    "04-controller",
+    "06-console",
+    "08-domain"
+   ]
+  },
+  {
+   "package": "common/slot",
+   "table": "cases.tsv",
+   "lessons": [
+    "03-worker",
+    "04-controller"
+   ]
+  },
+  {
+   "package": "common/slot-name",
+   "table": "cases.tsv",
+   "lessons": [
+    "03-worker",
+    "04-controller",
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/store-client",
+   "table": "cases.tsv",
+   "lessons": [
+    "01-store",
+    "02-installer",
+    "03-worker",
+    "04-controller",
+    "05-resource",
+    "06-console",
+    "08-domain",
+    "09-agent",
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/tombstone",
+   "table": "cases.tsv",
+   "lessons": [
+    "05-resource",
+    "06-console"
+   ]
+  },
+  {
+   "package": "common/trust-set",
+   "table": "cases.tsv",
+   "lessons": [
+    "10-domain-console"
+   ]
+  },
+  {
+   "package": "common/turn",
+   "table": "cases.tsv",
+   "lessons": [
+    "04-controller",
+    "08-domain",
+    "09-agent"
+   ]
+  },
+  {
+   "package": "common/values-by-type",
+   "table": "cases.tsv",
+   "lessons": [
+    "03-worker",
+    "04-controller",
+    "06-console",
+    "08-domain",
+    "09-agent"
+   ]
+  },
+  {
+   "package": "common/yaml-suite",
+   "table": "expect.tsv",
+   "lessons": [
+    "02-installer"
+   ]
+  }
+ ]
+}

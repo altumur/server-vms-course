@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "01-store/jcs",
+ "table": "canonical_json.tsv",
+ "case": "line-16",
+ "variant": "",
+ "cells": {
+  "raw": "{\"half\":1.5,\"third\":0.3333333333333333,\"big\":9007199254740991,\"e\":1E3,\"f\":1.50}"
+ },
+ "files": {}
+}

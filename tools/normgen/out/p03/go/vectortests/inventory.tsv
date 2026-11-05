@@ -1222,3 +1222,159 @@ common_revoked_test.go	translated
 common_store_client_test.go	translated
 common/journal modes.tsv	excluded: a layout test, not a function (journal README; runner EXCLUDED_EXECUTION_TABLES)
 common/fault fault.tsv	excluded: layout (Architect, ADR-0125 add. (1) item 5): bad_url of the customer library is judged by the norm and the lesson acceptance through the real group-of and row-check; 03 has no native fault command
+01-store/jcs canonical_json.tsv 10 vectors	translated
+01-store/jcs canonical_json.tsv 11 vectors	translated
+01-store/jcs canonical_json.tsv 12 vectors	translated
+01-store/jcs canonical_json.tsv 13 vectors	translated
+01-store/jcs canonical_json.tsv 14 vectors	translated
+01-store/jcs canonical_json.tsv 15 vectors	translated
+01-store/jcs canonical_json.tsv 16 vectors	translated
+01-store/jcs canonical_json.tsv 17 vectors	translated
+01-store/jcs canonical_json.tsv 18 vectors	translated
+01-store/jcs canonical_json.tsv 19 vectors	translated
+01-store/jcs canonical_json.tsv 20 vectors	translated
+01-store/jcs canonical_json.tsv 21 vectors	translated
+01-store/jcs canonical_json.tsv 22 vectors	translated
+01-store/jcs canonical_json.tsv 23 vectors	translated
+01-store/jcs canonical_json.tsv 24 vectors	translated
+01-store/jcs canonical_json.tsv 25 vectors	translated
+01-store/jcs canonical_json.tsv 26 vectors	translated
+06-console/request-digest digest.tsv 25 vectors	translated
+06-console/request-digest digest.tsv 26 vectors	translated
+06-console/request-digest digest.tsv 27 vectors	translated
+06-console/request-digest digest.tsv 28 vectors	translated
+06-console/requests-body requests_body.tsv 49 vectors	translated
+06-console/requests-body requests_body.tsv 50 vectors	translated
+06-console/requests-body requests_body.tsv 51 vectors	translated
+06-console/requests-body requests_body.tsv 52 vectors	translated
+06-console/requests-body requests_body.tsv 53 vectors	translated
+06-console/requests-body requests_body.tsv 54 vectors	translated
+06-console/requests-body requests_body.tsv 55 vectors	translated
+06-console/requests-body requests_body.tsv 56 vectors	translated
+06-console/requests-body requests_body.tsv 57 vectors	translated
+06-console/requests-body requests_body.tsv 58 vectors	translated
+06-console/requests-body requests_body.tsv 59 vectors	translated
+06-console/requests-body requests_body.tsv 60 vectors	translated
+06-console/requests-body requests_body.tsv 61 vectors	translated
+06-console/requests-body requests_body.tsv 62 vectors	translated
+06-console/requests-body requests_body.tsv 63 vectors	translated
+06-console/requests-body requests_body.tsv 64 vectors	translated
+06-console/requests-body requests_body.tsv 65 vectors	translated
+06-console/requests-body requests_body.tsv 66 vectors	translated
+06-console/requests-body requests_body.tsv 67 vectors	translated
+06-console/requests-body requests_body.tsv 68 vectors	translated
+06-console/requests-body requests_body.tsv 84 vectors	translated
+06-console/requests-body requests_body.tsv 85 vectors	translated
+06-console/requests-body requests_body.tsv 86 vectors	translated
+06-console/requests-body requests_body.tsv 87 vectors	translated
+06-console/requests-body requests_body.tsv 88 vectors	translated
+06-console/requests-body requests_body.tsv 89 vectors	translated
+06-console/requests-body requests_body.tsv 90 vectors	translated
+06-console/requests-body requests_body.tsv 91 vectors	translated
+06-console/requests-body requests_body.tsv 92 vectors	translated
+06-console/requests-body requests_body.tsv 93 vectors	translated
+06-console/requests-body requests_body.tsv 94 vectors	translated
+06-console/requests-body requests_body.tsv 95 vectors	translated
+06-console/requests-body requests_body.tsv 96 vectors	translated
+06-console/requests-body requests_body.tsv 97 vectors	translated
+06-console/requests-body requests_body.tsv 98 vectors	translated
+06-console/requests-body requests_body.tsv 99 vectors	translated
+06-console/requests-body requests_body.tsv 100 vectors	translated
+06-console/requests-body requests_body.tsv 101 vectors	translated
+06-console/requests-body requests_body.tsv 102 vectors	translated
+06-console/requests-body requests_body.tsv 103 vectors	translated
+06-console/requests-body requests_body.tsv 104 vectors	translated
+06-console/requests-body requests_body.tsv 105 vectors	translated
+06-console/requests-body requests_body.tsv 106 vectors	translated
+06-console/requests-body requests_body.tsv 107 vectors	translated
+06-console/requests-body requests_body.tsv 108 vectors	translated
+06-console/requests-body requests_body.tsv 109 vectors	translated
+06-console/requests-body requests_body.tsv 110 vectors	translated
+06-console/requests-body requests_body.tsv 111 vectors	translated
+06-console/requests-body requests_body.tsv 113 vectors	translated
+06-console/requests-body requests_body.tsv 115 vectors	translated
+06-console/requests-body requests_body.tsv 120 vectors	translated
+06-console/requests-body requests_body.tsv 125 vectors	translated
+06-console/rid rid.tsv 14 vectors	translated
+06-console/rid rid.tsv 15 vectors	translated
+06-console/rid rid.tsv 16 vectors	translated
+06-console/rid rid.tsv 17 vectors	translated
+06-console/rid rid.tsv 18 vectors	translated
+06-console/rid rid.tsv 19 vectors	translated
+06-console/rid rid.tsv 20 vectors	translated
+06-console/rid rid.tsv 21 vectors	translated
+06-console/rid rid.tsv 22 vectors	translated
+06-console/rid rid.tsv 23 vectors	translated
+06-console/rid rid.tsv 24 vectors	translated
+06-console/rid rid.tsv 25 vectors	translated
+06-console/rid rid.tsv 26 vectors	translated
+06-console/rid rid.tsv 27 vectors	translated
+06-console/rid rid.tsv 28 vectors	translated
+06-console/rid rid.tsv 29 vectors	translated
+06-console/rid rid.tsv 30 vectors	translated
+06-console/rid rid.tsv 31 vectors	translated
+06-console/rid rid.tsv 32 vectors	translated
+06-console/rid rid.tsv 33 vectors	translated
+06-console/rid rid.tsv 34 vectors	translated
+06-console/rid rid.tsv 35 vectors	translated
+06-console/rid rid.tsv 36 vectors	translated
+06-console/rid rid.tsv 37 vectors	translated
+06-console/rid rid.tsv 38 vectors	translated
+06-console/rid rid.tsv 39 vectors	translated
+06-console/rid rid.tsv 40 vectors	translated
+06-console/rid rid.tsv 41 vectors	translated
+06-console/rid rid.tsv 42 vectors	translated
+06-console/rid rid.tsv 43 vectors	translated
+06-console/rid template.tsv 4 vectors	translated
+06-console/rid template.tsv 5 vectors	translated
+06-console/rid template.tsv 6 vectors	translated
+06-console/rid template.tsv 7 vectors	translated
+06-console/rid template.tsv 8 vectors	translated
+06-console/rid template.tsv 9 vectors	translated
+06-console/rid template.tsv 10 vectors	translated
+06-console/rid template.tsv 11 vectors	translated
+06-console/rid template.tsv 12 vectors	translated
+06-console/rid template.tsv 13 vectors	translated
+06-console/rid template.tsv 14 vectors	translated
+06-console/rid template.tsv 15 vectors	translated
+06-console/rid template.tsv 16 vectors	translated
+06-console/rid template.tsv 17 vectors	translated
+06-console/rid template.tsv 18 vectors	translated
+06-console/rid template.tsv 19 vectors	translated
+06-console/rid template.tsv 20 vectors	translated
+06-console/rid template.tsv 21 vectors	translated
+06-console/rid template.tsv 22 vectors	translated
+06-console/rid template.tsv 23 vectors	translated
+06-console/request-digest digest.tsv 17	excluded: no input declaration selects the line
+06-console/request-digest digest.tsv 18	excluded: no input declaration selects the line
+06-console/request-digest digest.tsv 19	excluded: no input declaration selects the line
+06-console/request-digest digest.tsv 20	excluded: no input declaration selects the line
+06-console/request-digest digest.tsv 21	excluded: no input declaration selects the line
+06-console/request-digest digest.tsv 22	excluded: no input declaration selects the line
+06-console/request-digest digest.tsv 23	excluded: no input declaration selects the line
+06-console/request-digest digest.tsv 24	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 69	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 70	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 71	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 72	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 73	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 74	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 75	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 76	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 77	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 78	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 79	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 80	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 81	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 82	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 83	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 112	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 114	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 116	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 117	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 118	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 119	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 121	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 122	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 123	excluded: no input declaration selects the line
+06-console/requests-body requests_body.tsv 124	excluded: no input declaration selects the line

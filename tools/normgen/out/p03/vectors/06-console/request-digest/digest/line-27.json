@@ -1,0 +1,12 @@
+{
+ "format": 1,
+ "package": "06-console/request-digest",
+ "table": "digest.tsv",
+ "case": "line-27",
+ "variant": "",
+ "cells": {
+  "sender": "worker",
+  "input": "{\"unit\":\"c1\",\"n\":\"5\",\"f\":\"1.5\"}"
+ },
+ "files": {}
+}

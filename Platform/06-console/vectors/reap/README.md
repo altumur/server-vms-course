@@ -41,3 +41,7 @@ the boundary 3660 (`ttl` 3600 + `REAP_AFTER` 60) — 19 rows `expired-*` and `go
 Without a stand: the side gives the input to its own reaper decision and compares the output. The CAS races, the repeated write of the mark on `conflict` and
 the release of the record are by reading the contract; scenario 07 of the acceptance of chapter 6.4 is `gone` on the stand, scenario 11 is `expired` on the stand.
 Who executes it is the console reaper (`06-console`, both profiles: P/06.4 Н3 «reaper» and the removal of a resource row without a live owner by `ttl`; the contract of the request and its mark, the rows «жнец …»). The input is written by other roles, and they do not execute the reaper decisions: `fetched` of the heartbeat — the holder worker (`03-worker`, P/03.6 Н3 «The append»), the row `free-*` — the resource (`05-resource`, P/05 Н1.4 `free_ask`; its removal under the flag is `relieve`, not the reaper) (ACC-VECTORS-CONNECT-03: a row is executed by the role whose norm calls its function; the Architect's decision of 2026-10-27).
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `06-console/reap` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

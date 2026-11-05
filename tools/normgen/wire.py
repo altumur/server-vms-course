@@ -95,8 +95,53 @@ class Binding:
         return self.package, self.table, self.surface
 
 
+def pointer_tokens(pointer, where, root=False):
+    if root and pointer == "":
+        return []
+    if not isinstance(pointer, str) or not pointer.startswith("/") or re.search(r"~(?![01])", pointer):
+        raise WireError(f"{where}: invalid JSON Pointer {pointer!r}")
+    return [x.replace("~1", "/").replace("~0", "~") for x in pointer[1:].split("/")]
+
+
+def at_pointer(value, pointer, where):
+    for part in pointer_tokens(pointer, where):
+        if isinstance(value, dict) and part in value:
+            value = value[part]
+        elif isinstance(value, list) and re.fullmatch(r"0|[1-9][0-9]*", part) and int(part) < len(value):
+            value = value[int(part)]
+        else:
+            raise WireError(f"{where}: missing selected path {pointer!r}")
+    return value
+
+
+def check_arg_json(v, where):
+    """Closed input-only ValueExpr vocabulary; raw-json is legal only here."""
+    if not isinstance(v, dict) or not v:
+        raise WireError(f"{where}: argument ValueExpr {v!r}")
+    if "column" in v:
+        keys_of(v, where, ("column", "decode"))
+        if not isinstance(v["column"], str) or v["decode"] not in {"text", "json", "raw-json"}:
+            raise WireError(f"{where}: argument column/decode {v!r}")
+    elif "literal" in v:
+        keys_of(v, where, ("literal",))
+    elif "object" in v:
+        keys_of(v, where, ("object",))
+        if not isinstance(v["object"], dict):
+            raise WireError(f"{where}: argument object")
+        for key, value in v["object"].items():
+            check_arg_json(value, f"{where}.{key}")
+    elif "array" in v:
+        keys_of(v, where, ("array",))
+        if not isinstance(v["array"], list):
+            raise WireError(f"{where}: argument array")
+        for i, value in enumerate(v["array"]):
+            check_arg_json(value, f"{where}[{i}]")
+    else:
+        raise WireError(f"{where}: forbidden argument constructor {sorted(v)}")
+
+
 def check_value(v, where, *, group=False, prefix=False, in_object=False):
-    """ValueExpr: ровно один конструктор закрытого списка."""
+    """Exactly one constructor; no evaluation of an implementation algorithm."""
     if not isinstance(v, dict) or not v:
         raise WireError(f"{where}: ValueExpr {v!r}")
     if "column" in v:
@@ -108,19 +153,36 @@ def check_value(v, where, *, group=False, prefix=False, in_object=False):
     elif "object" in v:
         keys_of(v, where, ("object",))
         if not isinstance(v["object"], dict):
-            raise WireError(f"{where}: object {v['object']!r}")
+            raise WireError(f"{where}: object {v!r}")
         for k, x in v["object"].items():
             check_value(x, f"{where}.{k}", group=group, prefix=prefix, in_object=True)
     elif "array" in v:
         keys_of(v, where, ("array",))
         if not isinstance(v["array"], list):
-            raise WireError(f"{where}: array {v['array']!r}")
+            raise WireError(f"{where}: array {v!r}")
         for i, x in enumerate(v["array"]):
             check_value(x, f"{where}[{i}]", group=group, prefix=prefix)
+    elif "at" in v:
+        keys_of(v, where, ("at",), ("decode",))
+        a = v["at"]
+        keys_of(a, where+".at", ("value", "pointer"))
+        source = a["value"]
+        if not isinstance(source, dict) or not ("column" in source or "literal" in source):
+            raise WireError(f"{where}: at source must be column or literal")
+        check_value(source, where+".at.value")
+        pointer_tokens(a["pointer"], where+".at.pointer")
+        if "decode" in v and v["decode"] != "json":
+            raise WireError(f"{where}: at decode is json only")
+    elif "map" in v:
+        keys_of(v, where, ("map",))
+        keys_of(v["map"], where+".map", ("key", "value"))
+        if not group or not isinstance(v["map"]["key"], str):
+            raise WireError(f"{where}: map requires group_by and a key column")
+        check_value(v["map"]["value"], where+".map.value", group=group, prefix=prefix)
     elif "file" in v:
         keys_of(v, where, ("file", "decode"))
         f = v["file"]
-        keys_of(f, where + ".file", ("base",), ("path", "path_column"))
+        keys_of(f, where+".file", ("base",), ("path", "path_column"))
         if f["base"] not in ("package", "root") or ("path" in f) == ("path_column" in f):
             raise WireError(f"{where}: file {f!r}")
         if v["decode"] not in DECODES_FILE:
@@ -129,14 +191,12 @@ def check_value(v, where, *, group=False, prefix=False, in_object=False):
         k = "group" if "group" in v else "groups"
         keys_of(v, where, (k,))
         keys_of(v[k], f"{where}.{k}", ("column", "decode") + (("by",) if k == "groups" else ()))
-        if v[k]["decode"] not in DECODES_CELL:
-            raise WireError(f"{where}: decode {v[k]['decode']!r}")
-        if not group:
-            raise WireError(f"{where}: {k} without group_by")
+        if v[k]["decode"] not in DECODES_CELL or not group:
+            raise WireError(f"{where}: {k} requires group_by and cell decode")
     elif "suffix" in v:
         keys_of(v, where, ("suffix", "decode"))
         if v["suffix"] is not True or v["decode"] not in DECODES_CELL or not prefix:
-            raise WireError(f"{where}: suffix only in a prefix marker: {v!r}")
+            raise WireError(f"{where}: suffix only in a prefix marker")
     elif "omit" in v:
         keys_of(v, where, ("omit",))
         if v["omit"] is not True or not in_object:
@@ -159,9 +219,12 @@ def check_asserts(a, where, group, prefix=False):
         raise WireError(f"{where}: assert {a!r}")
     for i, x in enumerate(a):
         w = f"{where}.assert[{i}]"
-        keys_of(x, w, ("pointer",), ("test", "value", "decode", "compare", "min_bytes", "whole"))
-        if not isinstance(x["pointer"], str) or not (x["pointer"] == "" or x["pointer"].startswith("/")):
-            raise WireError(f"{w}: pointer {x['pointer']!r}")
+        keys_of(x, w, ("pointer",), ("test", "value", "decode", "compare", "min_bytes", "whole", "ignore"))
+        pointer_tokens(x["pointer"], w, root=True)
+        if "ignore" in x:
+            if "test" in x:
+                raise WireError(f"{w}: ignore is forbidden with test")
+            check_ignore(x["ignore"], w)
         if "test" in x:
             if x["test"] not in TESTS or (x["test"] == "absent") == ("value" in x) or "compare" in x:
                 raise WireError(f"{w}: {x!r}")
@@ -186,9 +249,7 @@ def check_ignore(paths, where):
         raise WireError(f"{where}: ignore must be a nonempty pointer array")
     seen = []
     for p in paths:
-        if not isinstance(p, str) or not p.startswith("/") or re.search(r"~(?![01])", p):
-            raise WireError(f"{where}: invalid ignore pointer {p!r}")
-        parts = tuple(x.replace("~1", "/").replace("~0", "~") for x in p[1:].split("/"))
+        parts = tuple(pointer_tokens(p, where))
         if any(parts[:len(q)] == q or q[:len(parts)] == parts for q in seen):
             raise WireError(f"{where}: duplicate/overlapping ignore pointer {p!r}")
         seen.append(parts)
@@ -277,12 +338,15 @@ def check_binding(root, b, w):
                 raise WireError(f"{wi}: group_by {gb!r}")
             if stand:
                 a = d["arg_file"]
-                ok = (isinstance(a, dict) and (set(a) == {"column"} or set(a) == {"literal"}
-                                               or (set(a) == {"path_column", "base"} and a["base"] == "root")))
-                if not ok or not all(isinstance(x, str) for x in a.values()):
-                    raise WireError(f"{wi}: arg_file {a!r}")
+                if isinstance(a, dict) and set(a) == {"json"}:
+                    check_arg_json(a["json"], wi+".arg_file.json")
+                else:
+                    ok = (isinstance(a, dict) and (set(a) == {"column"} or set(a) == {"literal"}
+                                                   or (set(a) == {"path_column", "base"} and a["base"] == "root")))
+                    if not ok or not all(isinstance(x, str) for x in a.values()):
+                        raise WireError(f"{wi}: arg_file {a!r}")
             else:
-                if not isinstance(d["cells"], dict) or not d["cells"]:
+                if not isinstance(d["cells"], dict):
                     raise WireError(f"{wi}: cells {d['cells']!r}")
                 for k, x in d["cells"].items():
                     if not (isinstance(x, dict) and len(x) == 1 and set(x) <= {"column", "literal"}
@@ -304,9 +368,9 @@ def check_binding(root, b, w):
                 raise WireError(f"{we}: variant {e['variant']!r} has no input")
             if not isinstance(e["code"], int) or isinstance(e["code"], bool) or not 0 <= e["code"] <= 255:
                 raise WireError(f"{we}: code {e['code']!r}")
+            check_value(e["value"], we + ".value", group=group)
             if e["value"].get("omit"):
                 raise WireError(f"{we}: omit at the root")
-            check_value(e["value"], we + ".value", group=group)
             check_asserts(e.get("assert", []), we, group)
             if "ignore" in e:
                 check_ignore(e["ignore"], we)
@@ -316,8 +380,11 @@ def check_binding(root, b, w):
                     ("prefix", "code", "ignore_stdout", "value", "compare", "assert"))
             if m["variant"] not in variants or not isinstance(m["match"], str) or not m["match"]:
                 raise WireError(f"{wm}: {m!r}")
-            if "code" in m and (not isinstance(m["code"], int) or not 0 <= m["code"] <= 255):
+            if "code" in m and (not isinstance(m["code"], int) or isinstance(m["code"], bool) or not 0 <= m["code"] <= 255):
                 raise WireError(f"{wm}: code {m['code']!r}")
+            for flag in ("prefix", "ignore_stdout"):
+                if flag in m and not isinstance(m[flag], bool):
+                    raise WireError(f"{wm}: {flag} must be boolean")
             if m.get("ignore_stdout") and ("value" in m or "compare" in m or "assert" in m):
                 raise WireError(f"{wm}: ignore_stdout with a value")
             if "value" in m:
@@ -347,6 +414,7 @@ class Assert(NamedTuple):
     min_bytes: Optional[int]        # только no-leak
     whole: Optional[bool]           # только no-leak (по умолчанию false)
     decode: Optional[str] = None    # json внутри строкового поля ответа
+    ignore: Optional[list] = None   # comparison-only pointers, never with test
 
 
 def leaks(text, secrets, min_bytes, whole=False):
@@ -493,6 +561,25 @@ def constant(rows, column, where):
     return vals.pop()
 
 
+@dataclass
+class RawJSON:
+    text: str
+
+
+def argument_json(value, where):
+    if isinstance(value, RawJSON):
+        return value.text
+    if isinstance(value, dict):
+        return "{" + ",".join(json.dumps(k, ensure_ascii=False) + ":" + argument_json(v, where)
+                               for k, v in value.items()) + "}"
+    if isinstance(value, list):
+        return "[" + ",".join(argument_json(v, where) for v in value) + "]"
+    try:
+        return json.dumps(value, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+    except (TypeError, ValueError) as exc:
+        raise WireError(f"{where}: argument JSON: {exc}") from None
+
+
 class Expander:
     def __init__(self, root, cel=None):
         self.root = Path(root)
@@ -519,6 +606,22 @@ class Expander:
             return out
         if "array" in v:
             return [self.value(x, rows, pdir, f"{where}[{i}]", suffix) for i, x in enumerate(v["array"])]
+        if "at" in v:
+            a = v["at"]
+            value = at_pointer(self.value(a["value"], rows, pdir, where, suffix), a["pointer"], where)
+            if "decode" in v:
+                if not isinstance(value, str):
+                    raise WireError(f"{where}: at decode json requires a string")
+                return strict_json(value, where)
+            return value
+        if "map" in v:
+            m, out = v["map"], {}
+            for row in rows:
+                key = constant([row], m["key"], where)
+                if key in out:
+                    raise WireError(f"{where}: duplicate map key {key!r}")
+                out[key] = self.value(m["value"], [row], pdir, where, suffix)
+            return out
         if "file" in v:
             f = v["file"]
             base = pdir if f["base"] == "package" else self.root
@@ -543,6 +646,21 @@ class Expander:
             return decode(suffix, v["decode"], where)
         raise WireError(f"{where}: {v!r}")
 
+    def argument(self, v, rows, where):
+        if "column" in v:
+            text = constant(rows, v["column"], where)
+            if v["decode"] == "raw-json":
+                strict_json(text, where)
+                return RawJSON(text)
+            return decode(text, v["decode"], where)
+        if "literal" in v:
+            return v["literal"]
+        if "object" in v:
+            return {k: self.argument(x, rows, where) for k, x in v["object"].items()}
+        if "array" in v:
+            return [self.argument(x, rows, where) for x in v["array"]]
+        raise WireError(f"{where}: forbidden argument expression")
+
     def asserts(self, a, rows, pdir, where, suffix=None):
         """→ [Assert]; у no-leak value — массив секретов, whole — false по умолчанию."""
         out = []
@@ -553,7 +671,7 @@ class Expander:
                 if not isinstance(v, list) or not all(isinstance(s, str) for s in v):
                     raise WireError(f"{where}: no-leak value is a string or an array of strings, got {v!r:.80}")
             out.append(Assert(x["pointer"], x.get("test"), x.get("compare"), v, x.get("min_bytes"),
-                              bool(x.get("whole", False)) if x.get("test") == "no-leak" else None, x.get("decode")))
+                              bool(x.get("whole", False)) if x.get("test") == "no-leak" else None, x.get("decode"), x.get("ignore")))
         return out
 
     def run(self, b, owner):
@@ -608,7 +726,9 @@ class Expander:
                          for k, x in d["cells"].items()}
         else:
             a = d["arg_file"]
-            if "literal" in a:
+            if "json" in a:
+                run.arg = argument_json(self.argument(a["json"], part, w), w).encode("utf-8")
+            elif "literal" in a:
                 run.arg = a["literal"].encode("utf-8")
             elif "column" in a:
                 run.arg = constant(part, a["column"], w).encode("utf-8")
@@ -651,7 +771,10 @@ class Expander:
         else:
             run.code = marker.get("code", e["code"])
             run.ignore_stdout = bool(marker.get("ignore_stdout"))
-            run.compare = marker.get("compare", cmp)
+            override = marker.get("compare", cmp)
+            run.compare = override if isinstance(override, str) else override.get(d["variant"])
+            if run.compare is None:
+                raise WireError(f"{w}: marker has no comparison for variant {d['variant']!r}")
             if run.ignore_stdout:
                 run.value = None
             else:

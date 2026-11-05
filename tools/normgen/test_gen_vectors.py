@@ -48,7 +48,8 @@ def fake_go(mut=None):
         for dd in ds:
             selected = [r for r in runs if r.binding.key == tuple(dd[k] for k in ("package", "table", "surface"))]
             for r in selected:
-                code, value, raw = r.code, r.value, None
+                import wire_fakes
+                code, value, raw = r.code, wire_fakes.native_value(r), None
                 if isinstance(value, bytes):
                     value, raw = None, value
                 if dd["surface"] == "vectors":

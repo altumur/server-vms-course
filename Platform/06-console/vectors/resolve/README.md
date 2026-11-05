@@ -46,3 +46,7 @@ The rows of `corrections.tsv` of the acceptance М11/11 about sc. 03 (the paths 
 |---|---|---|
 | 2026-10-19 | 03-resolve 11, 04-alarms 15 | the expectation @exit 2 (the dictionary М10/01, the Architect's decision on the reconciliation М11, H14): the form of a trusted input — code 2, for both implementations by the norm |
 | 2026-10-20 | the move | sc. 03 (11 steps) from М11/11 — the rows of this table (stage B; the plan of the move of lesson 8, § 3, appendix) |
+
+## Vector wire
+
+The wire of `cases.tsv` is set by the `06-console/resolve` rows of [the single form](../../../common/vectors/wire.tsv); [grammar](../../../common/vectors/wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

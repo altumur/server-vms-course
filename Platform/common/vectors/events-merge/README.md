@@ -53,3 +53,7 @@ This separate table is performed only by `05-resource` (P/05-R050 steps 4 and 6;
 The resource invokes its own filter and cut: kind/subsystem/unit (including of), class and the half-open time window; by=occurred falls back to t; deduplicate by id, alarm before observation, time in keep direction, equal time id by UTF-8 bytes, then limit. The complete expected value is ResourceEvents: full original selected rows, state live, truncated after filtering and deduplication. There is no epoch marking, caller visibility, complete or incomplete. No malformed/torn/unreadable bucket is simulated by this pure input; file selection by to+late, I/O and partial/lines_garbled remain the real HTTP/file acceptance and reading.
 
 The ordinary unified `bin/vectors` command uses the `common/events-merge`, `resource.tsv` binding from [wire.tsv](../wire.tsv), [grammar](../wire.md), cells input as its exact JSON text, native object with frame json, comparison by value. It is the existing vectors transport, not a new stand key or a claim that the installed runner already publishes a target. All 22 rows belong to 05-resource.
+
+## Vector wire
+
+The wire of `cases.tsv`, `resource.tsv` is set by the `common/events-merge` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

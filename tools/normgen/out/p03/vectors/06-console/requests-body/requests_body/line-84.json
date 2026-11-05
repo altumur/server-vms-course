@@ -1,0 +1,11 @@
+{
+ "format": 1,
+ "package": "06-console/requests-body",
+ "table": "requests_body.tsv",
+ "case": "line-84",
+ "variant": "",
+ "cells": {
+  "body": "1000.0"
+ },
+ "files": {}
+}

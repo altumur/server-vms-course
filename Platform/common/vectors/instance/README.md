@@ -34,3 +34,7 @@ Who performs it — every process whose norm writes its own instance — both ta
 The package has no separate command contract — the common rule «Vectors» of [the common acceptance README](../../acceptance/README.md)
 (ACC-VECTORS-CONNECT-04, the Architect's decision 2026-10-26): the function answers with code 0 and one JSON value. The output object of the table or the JSON string `"@refuse"`; «отказ старта, код 2» is an outcome of the process, at the function of the package — `"@refuse"`
 with code 0.
+
+## Vector wire
+
+The wire of `box.tsv`, `cases.tsv` is set by the `common/instance` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.

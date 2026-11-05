@@ -73,4 +73,4 @@ a function: the rule does not apply to it.
 
 ## Vector wire
 
-The wire of `modes.tsv` is set by the `common/journal` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native outcome and comparison. Algorithm meaning and consumer obligations remain here.
+The wire of `append.tsv`, `modes.tsv`, `names.tsv`, `years.tsv` is set by the `common/journal` rows of [the single form](../wire.tsv); [grammar](../wire.md). The form is the source of the header, selected inputs, fixtures, native framing and comparison. The input and output meanings, consumer duties, native form validation and checks outside the function remain here. Layout is an excluded function declaration, never proof that its separate acceptance ran.
