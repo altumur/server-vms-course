@@ -349,7 +349,21 @@ def provenance():
             "judge": entry(JUDGE)}
 
 
-KIT_MD = """
+def kit_md():
+    """Справка части: что решает Catalog и какие группы шаблонов одной формы он различает (по таблицам урока)."""
+    ops, templates, checks, by_pm, methods_of, all405, docs = build(ROOT)
+    groups = {}
+    for path, segs, pre in templates:
+        shape = tuple("{}" if prm else lit for lit, prm in segs)
+        groups.setdefault(shape, []).append(("/{sub}" if pre else "") + path)
+    lines = []
+    for shape, paths in groups.items():
+        if len(paths) > 1:
+            lines.append("- `/" + "/".join(shape) + "`: " + ", ".join(f"`{p}`" for p in paths))
+    return KIT_MD_HEAD + "\n".join(lines) + "\n" + KIT_MD_TAIL
+
+
+KIT_MD_HEAD = """
 ## Part `door` (3a): the routes of the lesson's OpenAPI (generated; the catalog is **yours**)
 
 | Package | Import path | Origin |
@@ -362,10 +376,23 @@ type Catalog interface { Sub(name string) bool; Rows(sub, name string) bool; Tab
 var Ops map[Op]OpInfo // method, path, Prefixed (/{sub}), params, declared responses (code, media, headers), request media
 ```
 
-`Catalog` is yours: the names your loaded manifests give (`sub` "" — the short path). The router takes the most
-concrete template: a literal, then a catalog name, then a free parameter; a path parameter must pass its schema.
-`RouteError.Code` 0 — two templates of equal rank matched: your catalog answers a name for two kinds. The bodies
-(decode, check, encode) and the refusal bodies are the next part (3b); until then they are yours.
+**What `Catalog` decides.** The router enumerates every template whose literals match the path and whose path
+parameters pass their schemas (a template of a path with the server `{origin}/{sub}` also with the prefix `/{sub}`).
+For each such candidate it asks your `Catalog` about every parameter named `sub`, `rows`, `table` or `pass`:
+`Sub(name)` — is it a loaded subsystem; `Rows(sub, name)` — a unit family of that subsystem; `Table(sub, name)` —
+a table; `Pass(sub, name)` — a pass door. `sub` is the value of the prefix or of the parameter `sub`, `""` — the short
+path (no prefix). A candidate any answer refuses is dropped. Of the rest the most concrete wins: at the first position
+where they differ a literal beats a catalog name, a catalog name beats a free parameter. `Catalog` never gets the
+candidate list and never picks an operation — it only answers names from your loaded manifests (the rules of
+`x-mounting` are prose: you implement them in these answers). Two candidates of equal rank left — `RouteError.Code`
+0: your catalog answered one name for two kinds. A method missing at the chosen path — 405 if every operation of the
+path declares 405, otherwise 404.
+
+The templates of one shape that only the catalog tells apart:
+"""
+
+KIT_MD_TAIL = """
+The bodies (decode, check, encode) and the refusal bodies are the next part (3b); until then they are yours.
 """
 
 

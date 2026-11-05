@@ -415,7 +415,7 @@ def build(dst, module, parts=(), judged=None, seed=None):
     doc = ((KIT_MD if has_wc else KIT_MD_LESSON.replace("{lesson}", L.code).replace("{dir}", L.kit_dir))
            + ((gen_tests.kit_md() if L.key == lesson.DEFAULT else gen_vectors.KIT_MD) if "vectors" in parts else "")
            + stagetests_md + (gen_rollout.KIT_MD if rollout_files else "") + (KIT_DOOR_MD if openapi_sha else "")
-           + (gen_door_lesson.KIT_MD if door_lesson else "")
+           + (gen_door_lesson.kit_md() if door_lesson else "")
            + (gen_flags.kit_md() if flag_files else "") + (gen_refusals.kit_md() if refusal_files else "")
            + (gen_families.kit_md() if family_files else "") + (gen_admin.kit_md() if admin_files else "")
            + (gen_launch.KIT_MD if launch_files else "") + (gen_core.KIT_MD if core_files else "")
