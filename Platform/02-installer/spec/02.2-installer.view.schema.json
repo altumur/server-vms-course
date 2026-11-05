@@ -2001,7 +2001,7 @@
        "type": "string"
       },
       "cut_at": {
-       "description": "only for a url field: for a field of another type — `refused:reference` (the type is a property of the target `group_by.field`, as for `unit.id`)",
+       "description": "only for a url field: for a field of another type — `refused:relations` (the type is a property of the target `group_by.field`, as for `unit.id`)",
        "enum": [
         "host"
        ]
@@ -2151,7 +2151,7 @@
      "type": "object",
      "properties": {
       "delete_after": {
-       "description": "only with named id, without fixed fields except id, `about` — only by id (ADR-0067)",
+       "description": "only with a named id (`numeric` — a refusal); `fixed` fields and `about` by any field are allowed since ADR-0091 item 1: for a table with `fixed` fields the controller physically deletes only the rows with `made`, the manual ones it takes off without deleting (P/04 Н1.3)",
        "type": "integer",
        "minimum": 1
       }

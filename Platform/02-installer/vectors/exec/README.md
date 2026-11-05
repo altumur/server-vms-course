@@ -10,7 +10,7 @@ addendum (4)–(6)). The participants are the loader (a refusal of the manifest 
 
 UTF-8, LF, fields separated by TAB; rows with `#` and empty ones are skipped, the first non-skipped one is the header `case<TAB>exec<TAB>expect<TAB>note`.
 `exec` — the value of the key as a JSON string; `expect` — argv as a JSON array (splitting by the space U+0020, the only one) or
-`@refuse` — a string not by the grammar: the loader refuses `refused:value` with the key path, the runner does not execute it.
+`@refuse` — a string not by the grammar: the loader refuses `refused:form` with the key path, the runner does not execute it.
 
 The command’s native form and rule-refusal mapping are in the wire form below. An input outside the form exits with code 2 and empty stdout; a rule refusal on a well-formed input is a computed outcome, not a transport error. This does not change the installation or loader refusal named above.
 
