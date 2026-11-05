@@ -112,6 +112,7 @@ sealed:         an envelope m1 with a JSON object of what is secret to the membe
                 (added by the reconciliation of М11, D8)
   grants?:      {doc} — the row domain/grants/<member> (P/08.4 Н1.3 carry)
   anywhere?:    {as_of, sha256} — the summary of P/08.4 Н1.3 anywhere; the body by the door on a change; does not depend on grants
+                sha256 names the complete {doc, as_of} value of the 200 body, by P/08.4 Н1.3 carry (G09-ANYWHERE-HASH-01); as_of is part of the digest
   held?:        [<field name>…] of "grants", "roles", "anywhere", "break_glass" — not sent in this pass, do not touch the copies (P/08.4 Н1.3, Н1.6 carry): the row is unreadable, the assembly did not converge, the table is over the limit;
                 the absence of a field without its name in held means «no row»
   roles?:       {doc_sha256, groups, assigned, admin_at} — the role table of this member (P/08.4 Н1.3б); always goes together with grants, only with it;
