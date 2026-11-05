@@ -15,9 +15,11 @@ type Spec struct {
 	AnyNonZero bool     // «exit !0»: any nonzero exit code (2 included) — the code is yours, never 0
 	Status     int      // peer: the HTTP status of the peer's door (its owner is another lesson); 0 — none
 	Word       string   // a fixed refusal/diagnostic token; "" — none
-	Log        []string // the subjects the diagnostic must name; it fixes no stdout/stderr format
+	Log        []string // the log cell: the subjects or the diagnostic index of the row; no log line format
 	Words      []string // the fixed fragments «…» the diagnostic must carry
 	Norm       string
+	Named      []string // the named outcomes the word cell lists (two or more `…`): a catalogue index — which applies is the norm's, not «any of»
+	WordCell   string   // the word cell of the norm as it is ("-" — none); Word and Named only index it
 }
 
 // ByName — the row by its name; nil — none.
@@ -36,55 +38,55 @@ func (s *Spec) ExitCode() (code int, ok bool) {
 }
 
 // IntentUnreadable — 4 row 1: peer 503; P/04-R068; P/04 Н4
-var IntentUnreadable = &Spec{Chapter: "4", Row: 1, Name: "intent_unreadable", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 503, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var IntentUnreadable = &Spec{Chapter: "4", Row: 1, Name: "intent_unreadable", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 503, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // NoRoom — 4 row 2: call -; P/04-R068; P/04 Н4
-var NoRoom = &Spec{Chapter: "4", Row: 2, Name: "no_room", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var NoRoom = &Spec{Chapter: "4", Row: 2, Name: "no_room", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // PlacementKeyLong — 4 row 3: call -; P/04-R068; P/04 Н4
-var PlacementKeyLong = &Spec{Chapter: "4", Row: 3, Name: "placement_key_long", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var PlacementKeyLong = &Spec{Chapter: "4", Row: 3, Name: "placement_key_long", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // PlacementMoved — 4 row 4: call -; P/04-R068; P/04 Н4
-var PlacementMoved = &Spec{Chapter: "4", Row: 4, Name: "placement_moved", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var PlacementMoved = &Spec{Chapter: "4", Row: 4, Name: "placement_moved", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // ManifestBehind — 4 row 5: call -; P/04-R068; P/04 Н4
-var ManifestBehind = &Spec{Chapter: "4", Row: 5, Name: "manifest_behind", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var ManifestBehind = &Spec{Chapter: "4", Row: 5, Name: "manifest_behind", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // TurnBusy — 4 row 6: call -; P/04-R068; P/04 Н4
-var TurnBusy = &Spec{Chapter: "4", Row: 6, Name: "turn_busy", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var TurnBusy = &Spec{Chapter: "4", Row: 6, Name: "turn_busy", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // TurnOrIntentRefused — 4 row 7: call -; P/04-R068; P/04 Н4
-var TurnOrIntentRefused = &Spec{Chapter: "4", Row: 7, Name: "turn_or_intent_refused", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var TurnOrIntentRefused = &Spec{Chapter: "4", Row: 7, Name: "turn_or_intent_refused", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // TurnGuardOrUnknown — 4 row 8: call -; P/04-R068; P/04 Н4
-var TurnGuardOrUnknown = &Spec{Chapter: "4", Row: 8, Name: "turn_guard_or_unknown", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var TurnGuardOrUnknown = &Spec{Chapter: "4", Row: 8, Name: "turn_guard_or_unknown", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // GrowthNoEstimate — 4 row 9: call -; P/04-R068; P/04 Н4
-var GrowthNoEstimate = &Spec{Chapter: "4", Row: 9, Name: "growth_no_estimate", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var GrowthNoEstimate = &Spec{Chapter: "4", Row: 9, Name: "growth_no_estimate", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // GrowthNoServer — 4 row 10: call -; P/04-R068; P/04 Н4
-var GrowthNoServer = &Spec{Chapter: "4", Row: 10, Name: "growth_no_server", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var GrowthNoServer = &Spec{Chapter: "4", Row: 10, Name: "growth_no_server", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // GrowthProbeLimit — 4 row 11: call -; P/04-R068; P/04 Н4
-var GrowthProbeLimit = &Spec{Chapter: "4", Row: 11, Name: "growth_probe_limit", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var GrowthProbeLimit = &Spec{Chapter: "4", Row: 11, Name: "growth_probe_limit", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // GrowthRaiseTimeout — 4 row 12: call -; P/04-R068; P/04 Н4
-var GrowthRaiseTimeout = &Spec{Chapter: "4", Row: 12, Name: "growth_raise_timeout", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var GrowthRaiseTimeout = &Spec{Chapter: "4", Row: 12, Name: "growth_raise_timeout", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // WriteConflicts — 4 row 13: call -; P/04-R068; P/04 Н4
-var WriteConflicts = &Spec{Chapter: "4", Row: 13, Name: "write_conflicts", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var WriteConflicts = &Spec{Chapter: "4", Row: 13, Name: "write_conflicts", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // WorkerUnreadable — 4 row 14: call -; P/04-R068; P/04 Н4
-var WorkerUnreadable = &Spec{Chapter: "4", Row: 14, Name: "worker_unreadable", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var WorkerUnreadable = &Spec{Chapter: "4", Row: 14, Name: "worker_unreadable", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // SchemaStart — 4 row 15: start exit 2; P/04-R068; P/04 Н4
-var SchemaStart = &Spec{Chapter: "4", Row: 15, Name: "schema_start", Surface: "start", Exit: 2, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var SchemaStart = &Spec{Chapter: "4", Row: 15, Name: "schema_start", Surface: "start", Exit: 2, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // ServerAbsent — 4 row 16: call -; P/04-R068; P/04 Н4
-var ServerAbsent = &Spec{Chapter: "4", Row: 16, Name: "server_absent", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var ServerAbsent = &Spec{Chapter: "4", Row: 16, Name: "server_absent", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // SnapshotLarge — 4 row 17: call -; P/04-R068; P/04 Н4
-var SnapshotLarge = &Spec{Chapter: "4", Row: 17, Name: "snapshot_large", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4"}
+var SnapshotLarge = &Spec{Chapter: "4", Row: 17, Name: "snapshot_large", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/04-R068; P/04 Н4", Named: nil, WordCell: "-"}
 
 // All — the rows of the catalogue in the order of the table.
 var All = []*Spec{IntentUnreadable, NoRoom, PlacementKeyLong, PlacementMoved, ManifestBehind, TurnBusy, TurnOrIntentRefused, TurnGuardOrUnknown, GrowthNoEstimate, GrowthNoServer, GrowthProbeLimit, GrowthRaiseTimeout, WriteConflicts, WorkerUnreadable, SchemaStart, ServerAbsent, SnapshotLarge}

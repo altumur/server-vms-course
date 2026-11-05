@@ -15,12 +15,13 @@ type Spec struct {
 	AnyNonZero bool     // «exit !0»: any nonzero exit code (2 included) — the code is yours, never 0
 	Status     int      // peer: the HTTP status of the peer's door (its owner is another lesson); 0 — none
 	Word       string   // a fixed refusal/diagnostic token; "" — none
-	Log        []string // the subjects the diagnostic must name; it fixes no stdout/stderr format
+	Log        []string // the log cell: the subjects or the diagnostic index of the row; no log line format
 	Words      []string // the fixed fragments «…» the diagnostic must carry
 	Norm       string
-	Fields     []string    // peer: the body fields of the peer's answer fixed by the form; nil — none
-	Headers    [][2]string // peer: the headers of the peer's answer fixed by the form; nil — none
-	WordAny    []string    // one of these tokens (the cell lists several); nil — none
+	Fields     []string    // peer: the HTTP body fields of the imported door's answer fixed by the form; nil — none
+	Headers    [][2]string // peer: the headers of the imported door's answer fixed by the form; nil — none
+	Named      []string    // the named outcomes the word cell lists (two or more `…`): a catalogue index — which applies is the norm's, not «any of»
+	WordCell   string      // the word cell of the norm as it is ("-" — none); Word and Named only index it
 }
 
 // ByName — the row by its name; nil — none.
@@ -39,169 +40,169 @@ func (s *Spec) ExitCode() (code int, ok bool) {
 }
 
 // SlotForeignBox — 3.2 row 1: call - NameOnAnotherBox; P/03.2-R057; P/03.2 Н4
-var SlotForeignBox = &Spec{Chapter: "3.2", Row: 1, Name: "slot_foreign_box", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "NameOnAnotherBox", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var SlotForeignBox = &Spec{Chapter: "3.2", Row: 1, Name: "slot_foreign_box", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "NameOnAnotherBox", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "`NameOnAnotherBox`"}
 
 // SlotBadGivenName — 3.2 row 2: start exit 2; P/03.2-R057; P/03.2 Н4
-var SlotBadGivenName = &Spec{Chapter: "3.2", Row: 2, Name: "slot_bad_given_name", Surface: "start", Exit: 2, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var SlotBadGivenName = &Spec{Chapter: "3.2", Row: 2, Name: "slot_bad_given_name", Surface: "start", Exit: 2, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // SlotEpochBadkey — 3.2 row 3: call -; P/03.2-R057; P/03.2 Н4
-var SlotEpochBadkey = &Spec{Chapter: "3.2", Row: 3, Name: "slot_epoch_badkey", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var SlotEpochBadkey = &Spec{Chapter: "3.2", Row: 3, Name: "slot_epoch_badkey", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // SlotForeignRenewal — 3.2 row 4: call -; P/03.2-R057; P/03.2 Н4
-var SlotForeignRenewal = &Spec{Chapter: "3.2", Row: 4, Name: "slot_foreign_renewal", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var SlotForeignRenewal = &Spec{Chapter: "3.2", Row: 4, Name: "slot_foreign_renewal", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // SlotGuard — 3.2 row 5: call -; P/03.2-R057; P/03.2 Н4
-var SlotGuard = &Spec{Chapter: "3.2", Row: 5, Name: "slot_guard", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var SlotGuard = &Spec{Chapter: "3.2", Row: 5, Name: "slot_guard", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // SlotGenUnreadable — 3.2 row 6: call -; P/03.2-R057; P/03.2 Н4
-var SlotGenUnreadable = &Spec{Chapter: "3.2", Row: 6, Name: "slot_gen_unreadable", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var SlotGenUnreadable = &Spec{Chapter: "3.2", Row: 6, Name: "slot_gen_unreadable", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // EpochUnreadable — 3.2 row 7: call - EpochUnreadable; P/03.2-R057; P/03.2 Н4
-var EpochUnreadable = &Spec{Chapter: "3.2", Row: 7, Name: "epoch_unreadable", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "EpochUnreadable", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var EpochUnreadable = &Spec{Chapter: "3.2", Row: 7, Name: "epoch_unreadable", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "EpochUnreadable", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "`EpochUnreadable`"}
 
 // EpochSaturated — 3.2 row 8: call -; P/03.2-R057; P/03.2 Н4
-var EpochSaturated = &Spec{Chapter: "3.2", Row: 8, Name: "epoch_saturated", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var EpochSaturated = &Spec{Chapter: "3.2", Row: 8, Name: "epoch_saturated", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // EpochLateIssue — 3.2 row 9: call -; P/03.2-R057; P/03.2 Н4
-var EpochLateIssue = &Spec{Chapter: "3.2", Row: 9, Name: "epoch_late_issue", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var EpochLateIssue = &Spec{Chapter: "3.2", Row: 9, Name: "epoch_late_issue", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // LeaseForeignOrUnreadable — 3.2 row 10: call - fenced; P/03.2-R057; P/03.2 Н4
-var LeaseForeignOrUnreadable = &Spec{Chapter: "3.2", Row: 10, Name: "lease_foreign_or_unreadable", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "fenced", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var LeaseForeignOrUnreadable = &Spec{Chapter: "3.2", Row: 10, Name: "lease_foreign_or_unreadable", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "fenced", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "`fenced`"}
 
 // LeaseCeiling — 3.2 row 11: call -; P/03.2-R057; P/03.2 Н4
-var LeaseCeiling = &Spec{Chapter: "3.2", Row: 11, Name: "lease_ceiling", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var LeaseCeiling = &Spec{Chapter: "3.2", Row: 11, Name: "lease_ceiling", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // StartBadName — 3.2 row 12: start exit 2; P/03.2-R057; P/03.2 Н4
-var StartBadName = &Spec{Chapter: "3.2", Row: 12, Name: "start_bad_name", Surface: "start", Exit: 2, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var StartBadName = &Spec{Chapter: "3.2", Row: 12, Name: "start_bad_name", Surface: "start", Exit: 2, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // StartBadInstance — 3.2 row 13: start exit 2; P/03.2-R057; P/03.2 Н4
-var StartBadInstance = &Spec{Chapter: "3.2", Row: 13, Name: "start_bad_instance", Surface: "start", Exit: 2, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var StartBadInstance = &Spec{Chapter: "3.2", Row: 13, Name: "start_bad_instance", Surface: "start", Exit: 2, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // StartForeignServer — 3.2 row 14: start exit 2; P/03.2-R057; P/03.2 Н4
-var StartForeignServer = &Spec{Chapter: "3.2", Row: 14, Name: "start_foreign_server", Surface: "start", Exit: 2, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var StartForeignServer = &Spec{Chapter: "3.2", Row: 14, Name: "start_foreign_server", Surface: "start", Exit: 2, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // SchemaAfterRenewal — 3.2 row 15: process exit 2; P/03.2-R057; P/03.2 Н4
-var SchemaAfterRenewal = &Spec{Chapter: "3.2", Row: 15, Name: "schema_after_renewal", Surface: "process", Exit: 2, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var SchemaAfterRenewal = &Spec{Chapter: "3.2", Row: 15, Name: "schema_after_renewal", Surface: "process", Exit: 2, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // NameForeignBox — 3.2 row 16: call -; P/03.2-R057; P/03.2 Н4
-var NameForeignBox = &Spec{Chapter: "3.2", Row: 16, Name: "name_foreign_box", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var NameForeignBox = &Spec{Chapter: "3.2", Row: 16, Name: "name_foreign_box", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // NameTaken — 3.2 row 17: call -; P/03.2-R057; P/03.2 Н4
-var NameTaken = &Spec{Chapter: "3.2", Row: 17, Name: "name_taken", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var NameTaken = &Spec{Chapter: "3.2", Row: 17, Name: "name_taken", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // CandidateUnavailable — 3.2 row 18: call -; P/03.2-R057; P/03.2 Н4
-var CandidateUnavailable = &Spec{Chapter: "3.2", Row: 18, Name: "candidate_unavailable", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var CandidateUnavailable = &Spec{Chapter: "3.2", Row: 18, Name: "candidate_unavailable", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // RenewalForeignOwner — 3.2 row 19: call -; P/03.2-R057; P/03.2 Н4
-var RenewalForeignOwner = &Spec{Chapter: "3.2", Row: 19, Name: "renewal_foreign_owner", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var RenewalForeignOwner = &Spec{Chapter: "3.2", Row: 19, Name: "renewal_foreign_owner", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // RenewalNoAnswer — 3.2 row 20: call -; P/03.2-R057; P/03.2 Н4
-var RenewalNoAnswer = &Spec{Chapter: "3.2", Row: 20, Name: "renewal_no_answer", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var RenewalNoAnswer = &Spec{Chapter: "3.2", Row: 20, Name: "renewal_no_answer", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // LeaseForeignEpoch — 3.2 row 21: call -; P/03.2-R057; P/03.2 Н4
-var LeaseForeignEpoch = &Spec{Chapter: "3.2", Row: 21, Name: "lease_foreign_epoch", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var LeaseForeignEpoch = &Spec{Chapter: "3.2", Row: 21, Name: "lease_foreign_epoch", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // LeaseSilenceCeiling — 3.2 row 22: call -; P/03.2-R057; P/03.2 Н4
-var LeaseSilenceCeiling = &Spec{Chapter: "3.2", Row: 22, Name: "lease_silence_ceiling", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var LeaseSilenceCeiling = &Spec{Chapter: "3.2", Row: 22, Name: "lease_silence_ceiling", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // LeaseOverslept — 3.2 row 23: call -; P/03.2-R057; P/03.2 Н4
-var LeaseOverslept = &Spec{Chapter: "3.2", Row: 23, Name: "lease_overslept", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var LeaseOverslept = &Spec{Chapter: "3.2", Row: 23, Name: "lease_overslept", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // LeaseBelowFloor — 3.2 row 24: call -; P/03.2-R057; P/03.2 Н4
-var LeaseBelowFloor = &Spec{Chapter: "3.2", Row: 24, Name: "lease_below_floor", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var LeaseBelowFloor = &Spec{Chapter: "3.2", Row: 24, Name: "lease_below_floor", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // EpochGate — 3.2 row 25: call -; P/03.2-R057; P/03.2 Н4
-var EpochGate = &Spec{Chapter: "3.2", Row: 25, Name: "epoch_gate", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var EpochGate = &Spec{Chapter: "3.2", Row: 25, Name: "epoch_gate", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // LaunchLate — 3.2 row 26: call -; P/03.2-R057; P/03.2 Н4
-var LaunchLate = &Spec{Chapter: "3.2", Row: 26, Name: "launch_late", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var LaunchLate = &Spec{Chapter: "3.2", Row: 26, Name: "launch_late", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // PlaceLost — 3.2 row 27: call -; P/03.2-R057; P/03.2 Н4
-var PlaceLost = &Spec{Chapter: "3.2", Row: 27, Name: "place_lost", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var PlaceLost = &Spec{Chapter: "3.2", Row: 27, Name: "place_lost", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // PlaceTorn — 3.2 row 28: call -; P/03.2-R057; P/03.2 Н4
-var PlaceTorn = &Spec{Chapter: "3.2", Row: 28, Name: "place_torn", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var PlaceTorn = &Spec{Chapter: "3.2", Row: 28, Name: "place_torn", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // ContenderUnreadable — 3.2 row 29: call -; P/03.2-R057; P/03.2 Н4
-var ContenderUnreadable = &Spec{Chapter: "3.2", Row: 29, Name: "contender_unreadable", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var ContenderUnreadable = &Spec{Chapter: "3.2", Row: 29, Name: "contender_unreadable", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // ServerUnsaid — 3.2 row 30: call -; P/03.2-R057; P/03.2 Н4
-var ServerUnsaid = &Spec{Chapter: "3.2", Row: 30, Name: "server_unsaid", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var ServerUnsaid = &Spec{Chapter: "3.2", Row: 30, Name: "server_unsaid", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.2-R057; P/03.2 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // ManifestAbsent — 3.4 row 1: start exit 2; P/03.4-R027; P/03.4 Н4
-var ManifestAbsent = &Spec{Chapter: "3.4", Row: 1, Name: "manifest_absent", Surface: "start", Exit: 2, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var ManifestAbsent = &Spec{Chapter: "3.4", Row: 1, Name: "manifest_absent", Surface: "start", Exit: 2, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // MemoryBudget — 3.4 row 2: start exit !0; P/03.4-R027; P/03.4 Н4
-var MemoryBudget = &Spec{Chapter: "3.4", Row: 2, Name: "memory_budget", Surface: "start", Exit: -1, AnyNonZero: true, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var MemoryBudget = &Spec{Chapter: "3.4", Row: 2, Name: "memory_budget", Surface: "start", Exit: -1, AnyNonZero: true, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // WriteSlotGuard — 3.4 row 3: call -; P/03.4-R027; P/03.4 Н4
-var WriteSlotGuard = &Spec{Chapter: "3.4", Row: 3, Name: "write_slot_guard", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var WriteSlotGuard = &Spec{Chapter: "3.4", Row: 3, Name: "write_slot_guard", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // StandInExhausted — 3.4 row 4: call -; P/03.4-R027; P/03.4 Н4
-var StandInExhausted = &Spec{Chapter: "3.4", Row: 4, Name: "stand_in_exhausted", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var StandInExhausted = &Spec{Chapter: "3.4", Row: 4, Name: "stand_in_exhausted", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // ProcessBusy — 3.4 row 5: peer 503; P/03.4-R027; P/03.4 Н4
-var ProcessBusy = &Spec{Chapter: "3.4", Row: 5, Name: "process_busy", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 503, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: [][2]string{{"Retry-After", "1"}}, WordAny: nil}
+var ProcessBusy = &Spec{Chapter: "3.4", Row: 5, Name: "process_busy", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 503, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: [][2]string{{"Retry-After", "1"}}, Named: nil, WordCell: "-"}
 
 // ProcessSlow — 3.4 row 6: peer -; P/03.4-R027; P/03.4 Н4
-var ProcessSlow = &Spec{Chapter: "3.4", Row: 6, Name: "process_slow", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var ProcessSlow = &Spec{Chapter: "3.4", Row: 6, Name: "process_slow", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // ProcessBodyLarge — 3.4 row 7: peer 413; P/03.4-R027; P/03.4 Н4
-var ProcessBodyLarge = &Spec{Chapter: "3.4", Row: 7, Name: "process_body_large", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 413, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var ProcessBodyLarge = &Spec{Chapter: "3.4", Row: 7, Name: "process_body_large", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 413, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // ProcessDomainToken — 3.4 row 8: peer -; P/03.4-R027; P/03.4 Н4
-var ProcessDomainToken = &Spec{Chapter: "3.4", Row: 8, Name: "process_domain_token", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var ProcessDomainToken = &Spec{Chapter: "3.4", Row: 8, Name: "process_domain_token", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // ProcessDomainScope — 3.4 row 9: peer 403; P/03.4-R027; P/03.4 Н4
-var ProcessDomainScope = &Spec{Chapter: "3.4", Row: 9, Name: "process_domain_scope", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 403, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var ProcessDomainScope = &Spec{Chapter: "3.4", Row: 9, Name: "process_domain_scope", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 403, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // ProcessRole — 3.4 row 10: peer -; P/03.4-R027; P/03.4 Н4
-var ProcessRole = &Spec{Chapter: "3.4", Row: 10, Name: "process_role", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var ProcessRole = &Spec{Chapter: "3.4", Row: 10, Name: "process_role", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // ProcessNoHandler — 3.4 row 11: peer 503; P/03.4-R027; P/03.4 Н4
-var ProcessNoHandler = &Spec{Chapter: "3.4", Row: 11, Name: "process_no_handler", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 503, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var ProcessNoHandler = &Spec{Chapter: "3.4", Row: 11, Name: "process_no_handler", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 503, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // ProcessUnavailable — 3.4 row 12: peer 503; P/03.4-R027; P/03.4 Н4
-var ProcessUnavailable = &Spec{Chapter: "3.4", Row: 12, Name: "process_unavailable", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 503, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var ProcessUnavailable = &Spec{Chapter: "3.4", Row: 12, Name: "process_unavailable", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 503, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // ProcessBadChain — 3.4 row 13: peer 403; P/03.4-R027; P/03.4 Н4
-var ProcessBadChain = &Spec{Chapter: "3.4", Row: 13, Name: "process_bad_chain", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 403, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var ProcessBadChain = &Spec{Chapter: "3.4", Row: 13, Name: "process_bad_chain", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 403, Word: "", Log: nil, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // DoorTokenForbidden — 3.4 row 14: peer 403; P/03.4-R027; P/03.4 Н4
-var DoorTokenForbidden = &Spec{Chapter: "3.4", Row: 14, Name: "door_token_forbidden", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 403, Word: "", Log: []string{"forbidden"}, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: []string{"error"}, Headers: nil, WordAny: nil}
+var DoorTokenForbidden = &Spec{Chapter: "3.4", Row: 14, Name: "door_token_forbidden", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 403, Word: "", Log: []string{"forbidden"}, Words: nil, Norm: "P/03.4-R027; P/03.4 Н4", Fields: []string{"error"}, Headers: nil, Named: nil, WordCell: "-"}
 
 // UnitSealed — 3.5 row 1: call -; P/03.5-R012; P/03.5 Н4
-var UnitSealed = &Spec{Chapter: "3.5", Row: 1, Name: "unit_sealed", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.5-R012; P/03.5 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var UnitSealed = &Spec{Chapter: "3.5", Row: 1, Name: "unit_sealed", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.5-R012; P/03.5 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // HolderExistingMark — 3.6 row 1: call -; P/03.6-R033; P/03.6 Н4
-var HolderExistingMark = &Spec{Chapter: "3.6", Row: 1, Name: "holder_existing_mark", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.6-R033; P/03.6 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var HolderExistingMark = &Spec{Chapter: "3.6", Row: 1, Name: "holder_existing_mark", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.6-R033; P/03.6 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // HolderUnreadable — 3.6 row 2: call -; P/03.6-R033; P/03.6 Н4
-var HolderUnreadable = &Spec{Chapter: "3.6", Row: 2, Name: "holder_unreadable", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.6-R033; P/03.6 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var HolderUnreadable = &Spec{Chapter: "3.6", Row: 2, Name: "holder_unreadable", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.6-R033; P/03.6 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // OrderRefused — 3.6 row 3: call -; P/03.6-R033; P/03.6 Н4
-var OrderRefused = &Spec{Chapter: "3.6", Row: 3, Name: "order_refused", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.6-R033; P/03.6 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var OrderRefused = &Spec{Chapter: "3.6", Row: 3, Name: "order_refused", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.6-R033; P/03.6 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // OrderExpiredTakenGone — 3.6 row 4: call -; P/03.6-R033; P/03.6 Н4
-var OrderExpiredTakenGone = &Spec{Chapter: "3.6", Row: 4, Name: "order_expired_taken_gone", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.6-R033; P/03.6 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var OrderExpiredTakenGone = &Spec{Chapter: "3.6", Row: 4, Name: "order_expired_taken_gone", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.6-R033; P/03.6 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // FilingSchema — 3.6 row 5: call -; P/03.6-R033; P/03.6 Н4
-var FilingSchema = &Spec{Chapter: "3.6", Row: 5, Name: "filing_schema", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.6-R033; P/03.6 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var FilingSchema = &Spec{Chapter: "3.6", Row: 5, Name: "filing_schema", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.6-R033; P/03.6 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // ActionUnknown — 3.6 row 6: call -; P/03.6-R033; P/03.6 Н4
-var ActionUnknown = &Spec{Chapter: "3.6", Row: 6, Name: "action_unknown", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.6-R033; P/03.6 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var ActionUnknown = &Spec{Chapter: "3.6", Row: 6, Name: "action_unknown", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.6-R033; P/03.6 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "-"}
 
 // DomainScope — 3.7 row 1: peer 403; P/03.7-R019; P/03.7 Н4
-var DomainScope = &Spec{Chapter: "3.7", Row: 1, Name: "domain_scope", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 403, Word: "", Log: nil, Words: nil, Norm: "P/03.7-R019; P/03.7 Н4", Fields: nil, Headers: nil, WordAny: []string{"wrong_kind", "wrong_audience"}}
+var DomainScope = &Spec{Chapter: "3.7", Row: 1, Name: "domain_scope", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 403, Word: "", Log: nil, Words: nil, Norm: "P/03.7-R019; P/03.7 Н4", Fields: nil, Headers: nil, Named: []string{"wrong_kind", "wrong_audience"}, WordCell: "`wrong_kind`, `wrong_audience`"}
 
 // DomainDoorClient — 3.7 row 2: peer 403 forbidden; P/03.7-R019; P/03.7 Н4
-var DomainDoorClient = &Spec{Chapter: "3.7", Row: 2, Name: "domain_door_client", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 403, Word: "forbidden", Log: nil, Words: nil, Norm: "P/03.7-R019; P/03.7 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var DomainDoorClient = &Spec{Chapter: "3.7", Row: 2, Name: "domain_door_client", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 403, Word: "forbidden", Log: nil, Words: nil, Norm: "P/03.7-R019; P/03.7 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "`forbidden`"}
 
 // DomainKeysUnavailable — 3.7 row 3: peer 503 unavailable; P/03.7-R019; P/03.7 Н4
-var DomainKeysUnavailable = &Spec{Chapter: "3.7", Row: 3, Name: "domain_keys_unavailable", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 503, Word: "unavailable", Log: nil, Words: nil, Norm: "P/03.7-R019; P/03.7 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var DomainKeysUnavailable = &Spec{Chapter: "3.7", Row: 3, Name: "domain_keys_unavailable", Surface: "peer", Exit: -1, AnyNonZero: false, Status: 503, Word: "unavailable", Log: nil, Words: nil, Norm: "P/03.7-R019; P/03.7 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "`unavailable`"}
 
 // DomainHolderUnreadable — 3.7 row 4: call -; P/03.7-R019; P/03.7 Н4
-var DomainHolderUnreadable = &Spec{Chapter: "3.7", Row: 4, Name: "domain_holder_unreadable", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.7-R019; P/03.7 Н4", Fields: nil, Headers: nil, WordAny: nil}
+var DomainHolderUnreadable = &Spec{Chapter: "3.7", Row: 4, Name: "domain_holder_unreadable", Surface: "call", Exit: -1, AnyNonZero: false, Status: 0, Word: "", Log: nil, Words: nil, Norm: "P/03.7-R019; P/03.7 Н4", Fields: nil, Headers: nil, Named: nil, WordCell: "— (log)"}
 
 // All — the rows of the catalogue in the order of the table.
 var All = []*Spec{SlotForeignBox, SlotBadGivenName, SlotEpochBadkey, SlotForeignRenewal, SlotGuard, SlotGenUnreadable, EpochUnreadable, EpochSaturated, EpochLateIssue, LeaseForeignOrUnreadable, LeaseCeiling, StartBadName, StartBadInstance, StartForeignServer, SchemaAfterRenewal, NameForeignBox, NameTaken, CandidateUnavailable, RenewalForeignOwner, RenewalNoAnswer, LeaseForeignEpoch, LeaseSilenceCeiling, LeaseOverslept, LeaseBelowFloor, EpochGate, LaunchLate, PlaceLost, PlaceTorn, ContenderUnreadable, ServerUnsaid, ManifestAbsent, MemoryBudget, WriteSlotGuard, StandInExhausted, ProcessBusy, ProcessSlow, ProcessBodyLarge, ProcessDomainToken, ProcessDomainScope, ProcessRole, ProcessNoHandler, ProcessUnavailable, ProcessBadChain, DoorTokenForbidden, UnitSealed, HolderExistingMark, HolderUnreadable, OrderRefused, OrderExpiredTakenGone, FilingSchema, ActionUnknown, DomainScope, DomainDoorClient, DomainKeysUnavailable, DomainHolderUnreadable}

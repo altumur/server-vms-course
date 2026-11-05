@@ -299,10 +299,10 @@ class PlainTable:
                 raise GenError(f"{where}: code {code!r} — exit N, exit !0, NNN (peer) or -")
             if r["surface"] == "peer" and (r["exit"] >= 0 or r["any"]):
                 raise GenError(f"{where}: a peer row has no exit code")
-            r["word_any"] = []
-            if L.key != "02-installer" and r["word"] != "-":    # P/03+: word — ячейка источника (forms README)
+            r["word_any"], r["word_cell"] = [], r["word"]
+            if L.key != "02-installer" and r["word"] != "-":    # P/03+: word — сохранённая нормативная ячейка (spec103)
                 ticks = re.fullmatch(r"`([^`\s]+)`(?:, `[^`\s]+`)*", r["word"])
-                if ticks:                                          # токены в обратных кавычках — закрытая проекция
+                if ticks:                     # токены `…` — производный индекс: один символ | названные исходы
                     toks = re.findall(r"`([^`\s]+)`", r["word"])
                     r["word"], r["word_any"] = (toks[0], []) if len(toks) == 1 else ("-", toks)
                 else:
@@ -322,7 +322,7 @@ class PlainTable:
             r["var"] = camel(r["name"])
             self.rows.append(r)
         self.headers = any(r["header_list"] or r["field_list"] for r in self.rows)
-        self.word_any = any(r["word_any"] for r in self.rows)
+        self.word_any = L.key != "02-installer"             # P/03+: Named и WordCell у каждой строки
         whole = [r["chapter"] for r in self.rows if "." not in r["chapter"]]
         if whole and len(whole) != len(self.rows):
             raise GenError(f"{name}: chapters of a lesson in one chapter and of chapters NN.K together")
@@ -371,7 +371,7 @@ def go_spec_plain(r, headers=False, word_any=False):
             f"Status: {r['status']}, Word: {go_str('' if r['word'] == '-' else r['word'])}, "
             f"Log: {lst(r['log_names'])}, Words: {lst(r['log_words'])}, Norm: {go_str(r['norm'])}"
             + (f", Fields: {lst(r['field_list'])}, Headers: {go_headers(r['header_list'])}" if headers else "")
-            + (f", WordAny: {lst(r['word_any'])}" if word_any else "") + "}")
+            + (f", Named: {lst(r['word_any'])}, WordCell: {go_str(r['word_cell'])}" if word_any else "") + "}")
 
 
 def go_headers(hs):
@@ -387,12 +387,15 @@ def plain_api(table):
                           "// the chapter of the lesson: " + (" … ".join([chapters[0], chapters[-1]])
                                                                if len(chapters) > 1 else chapters[0]))
     if table.headers:
-        api = api.replace("\tNorm    string\n}", "\tNorm    string\n\tFields  []string    // peer: the body fields of the peer's "
-                          "answer fixed by the form; nil — none\n\tHeaders [][2]string // peer: the headers of the peer's "
+        api = api.replace("\tNorm    string\n}", "\tNorm    string\n\tFields  []string    // peer: the HTTP body fields of the imported door's "
+                          "answer fixed by the form; nil — none\n\tHeaders [][2]string // peer: the headers of the imported door's "
                           "answer fixed by the form; nil — none\n}", 1)
     if table.word_any:
-        api = api.replace("\n}", "\n\tWordAny []string // one of these tokens (the cell lists "
-                          "several); nil — none\n}", 1)
+        api = api.replace("\n}", "\n\tNamed   []string // the named outcomes the word cell lists (two or more `…`): a "
+                          "catalogue index — which applies is the norm's, not «any of»\n\tWordCell string  // the "
+                          "word cell of the norm as it is (\"-\" — none); Word and Named only index it\n}", 1)
+        api = api.replace("// the subjects the diagnostic must name; it fixes no stdout/stderr format",
+                          "// the log cell: the subjects or the diagnostic index of the row; no log line format", 1)
     return api
 
 

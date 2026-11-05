@@ -1,6 +1,6 @@
 """Тесты части refusals уроков P/03, P/04 (gen_refusals.py, режим урока без двери; ADR-0125 доп. (5)): out свежий;
-судья refusal_judge.py — PASS; мутанты выхода в новых проекциях (поля и заголовки ответа соседа у peer, word «любой
-из», глава урока одной главой) — FAIL судьи; форма вне грамматики (fields/headers не у peer) — отказ генератора."""
+судья refusal_judge.py — PASS; мутанты выхода в новых проекциях (поля и заголовки ответа импортированной двери у peer, word — названные исходы и ячейка,
+глава урока одной главой) — FAIL судьи; форма вне грамматики (fields/headers не у peer) — отказ генератора."""
 import os
 import shutil
 import subprocess
@@ -52,8 +52,9 @@ class Refusals(unittest.TestCase):
         muts = {
             ("03-worker", "fields"): src.replace('Fields: []string{"error"}', "Fields: nil", 1),
             ("03-worker", "headers"): src.replace('{"Retry-After", "1"}', '{"Retry-After", "2"}', 1),
-            ("03-worker", "word-any"): src.replace('WordAny: []string{"wrong_kind", "wrong_audience"}',
-                                                   'WordAny: []string{"wrong_kind"}', 1),
+            ("03-worker", "named"): src.replace('Named: []string{"wrong_kind", "wrong_audience"}',
+                                                'Named: []string{"wrong_kind"}', 1),
+            ("03-worker", "word-cell"): src.replace('WordCell: "— (log)"', 'WordCell: "-"', 1),
             ("03-worker", "word"): src.replace('Word: "NameOnAnotherBox"', 'Word: ""', 1),
             ("04-controller", "chapter"): p04.replace('Chapter: "4", Row: 3,', 'Chapter: "4.1", Row: 3,', 1),
         }
