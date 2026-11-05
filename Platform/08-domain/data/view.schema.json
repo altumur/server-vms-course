@@ -417,7 +417,7 @@
    "x-opaque": true
   },
   "url": {
-   "description": "DOMAIN_CONSOLE_URL of the domain process (the forwarding address of view.url — the forwarding contract; review analysis of stage B 8–10, № 22: М-16)",
+   "description": "DOMAIN_CONSOLE_URL of the domain process (the forwarding address of view.url — the forwarding contract; review analysis of stage B 8–10, № 22: M-16)",
    "type": "string"
   },
   "term": {

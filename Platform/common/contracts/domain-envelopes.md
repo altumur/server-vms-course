@@ -27,7 +27,7 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-Opening is by `seed_secret` of the row `domain/book-seal`, sealing is to `book_seal` of the set `domain/keys`, the recipient of `m1` is the member key `domain/member-key`: `Platform/08-domain/data/book-seal.schema.json`, `Platform/08-domain/data/book-seal.outcomes.tsv`; `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; the content of `sealed` is the rows `Platform/08-domain/data/grants.schema.json`, `Platform/08-domain/data/grants.outcomes.tsv`; `Platform/08-domain/data/break-glass.schema.json`, `Platform/08-domain/data/break-glass.outcomes.tsv`; `Platform/08-domain/data/book.schema.json`, `Platform/08-domain/data/book.outcomes.tsv`. The field `sealed` of the answer `carry` and `m1` of the token door are `Platform/08-domain/spec/08-domain.api.openapi.yaml` (layout audit, В-10…В-13; the Architect's decision of 2026-10-25).
+Opening is by `seed_secret` of the row `domain/book-seal`, sealing is to `book_seal` of the set `domain/keys`, the recipient of `m1` is the member key `domain/member-key`: `Platform/08-domain/data/book-seal.schema.json`, `Platform/08-domain/data/book-seal.outcomes.tsv`; `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; the content of `sealed` is the rows `Platform/08-domain/data/grants.schema.json`, `Platform/08-domain/data/grants.outcomes.tsv`; `Platform/08-domain/data/break-glass.schema.json`, `Platform/08-domain/data/break-glass.outcomes.tsv`; `Platform/08-domain/data/book.schema.json`, `Platform/08-domain/data/book.outcomes.tsv`. The field `sealed` of the answer `carry` and `m1` of the token door are `Platform/08-domain/spec/08-domain.api.openapi.yaml` (layout audit, V-10…V-13; the Architect's decision of 2026-10-25).
 
 ## Envelope `x25519:v1`
 
@@ -92,7 +92,7 @@ four parts, a part is not base64url without `=`, `eph` is not 32 bytes, `nonce` 
 
 Moved from [P/03.7](../../03-worker/spec/03.7-worker.norms.md) Н1.2 (`source_row` `entry`) without a change of behaviour: the form of
 the input is written by the worker (P/03.7), carried by the agent (P/09.1 Н1.2 `in_report`), checked by the holder's book assembly (P/08.5 Н1.3, Н3 step 4)
-(layout audit А-22, the Architect's decision of 2026-10-25). The contribution row is `<sub>/<строка>` or `<sub>/<строка>/<слот>`, the element is an input of the book: the name of the element is `item`,
+(layout audit A-22, the Architect's decision of 2026-10-25). The contribution row is `<sub>/<строка>` or `<sub>/<строка>/<слот>`, the element is an input of the book: the name of the element is `item`,
 the value is the text of a JSON object (P/03.7 Н1.2 `source_row`).
 
 ```yaml

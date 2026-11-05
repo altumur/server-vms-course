@@ -12,14 +12,14 @@ data/codec.tsv             the codec of the store rows (ADR-0088)
 data/common.schema.json    the common definitions of the family schemas, for reference, not a norm; its layers — data/common.layers.tsv
 contracts/                 common contracts of several processes: sealing (the ring, enc:v2, AAD), the role certificate,
                            the event journal, the presence lock, observation (resource_state, LOST_AFTER), the label alphabet;
-                           a request and its mark, the door token, the domain token (review analysis of stage B 3–5, В1);
+                           a request and its mark, the door token, the domain token (review analysis of stage B 3–5, V1);
                            the local token door of the agent (review analysis of stage A 8–10, decision 1); the domain envelopes
                            x25519:v1 and m1 (№ 12); the agent signature, the domain key set, the domain backup key (I02-BACKUP-HMAC), the domain founding (I02-FOUND), the placement of secret files (S-005, DF-G01), the term record, the signature
                            of a request, the report admission (№ 13); the gate and the pass door.pass (№ 14); forwarding (№ 23); the right
                            by grants may, the client peer (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) items 1, 2); the row check
                            and the url address — login and password (W03-E07); the group by host group-of (W03-GROUP-01); the environment file
                            env-file (C04-ENV-01); the password hash password-hash (GP-G06)
-LAYERS.md                  the layers of В7: the standard JSON Schema 2020-12 and CEL, our own remainder (ADR-0092)
+LAYERS.md                  the layers of V7: the standard JSON Schema 2020-12 and CEL, our own remainder (ADR-0092)
 versions/                  the pinned versions of the standard libraries and the YAML parsers: README, go.mod, go.sum, requirements.txt
 vectors/README.md          the index of all vectors by owner lessons (the vectors themselves are in the directory of the owner)
 vectors/sealing/           the vectors of the sealing contract (common, without an owner lesson)

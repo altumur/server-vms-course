@@ -22,15 +22,15 @@ STEPS = [
     ("tables", "sugar", "P/02.2-02", "`tables` списком имён", "`{<имя>: {}}` на каждое имя, по порядку списка"),
     ("bound_to", "sugar", "P/02.2-02", "`bound_to` одним именем (поля единицы и таблиц)", "список из одного имени"),
     ("in", "sugar", "P/02.2-02", "`in` элемента `secret_in` одним словом", "список из одного слова"),
-    ("П1", "computed", "P/02.2-03", "нет `snapshot`",
+    ("P1", "computed", "P/02.2-03", "нет `snapshot`",
      "имена `unit.fields` в порядке автора без `*_secret`, полей `type: blob` и `server`, затем `state.<имя>` каждого "
      "`unit.state` в порядке автора, кроме `cursor` (ADR-0091 п. 3); явный `[]` остаётся"),
-    ("П2", "computed", "P/02.2-03", "нет `tables.<т>.journal` или одного из его ключей",
+    ("P2", "computed", "P/02.2-03", "нет `tables.<т>.journal` или одного из его ключей",
      "`written` — `\"<т>.written\"`, `deleted` — `\"<т>.deleted\"`; сказанный ключ остаётся"),
-    ("П3", "computed", "P/02.2-03", "нет `display.form`", "`[{\"fields\": [<имена unit.fields в порядке автора>]}]`"),
-    ("П4", "computed", "P/02.2-03", "нет `default` у описателя поля (единицы и таблиц)",
+    ("P3", "computed", "P/02.2-03", "нет `display.form`", "`[{\"fields\": [<имена unit.fields в порядке автора>]}]`"),
+    ("P4", "computed", "P/02.2-03", "нет `default` у описателя поля (единицы и таблиц)",
      "`null` (и у `blob`, и при `inherit`)"),
-    ("П5", "computed", "P/02.2-03", "нет `decoded` у элемента `secret_in` с `regex`", "`true`"),
+    ("P5", "computed", "P/02.2-03", "нет `decoded` у элемента `secret_in` с `regex`", "`true`"),
 ]
 # The same steps in the English block (ADR-0121 addendum (3) item 1): name, phase and norm are values, the same.
 STEPS_EN = [
@@ -38,16 +38,16 @@ STEPS_EN = [
     ("bound_to", "sugar", "P/02.2-02", "`bound_to` as one name (fields of the unit and of the tables)",
      "a list of one name"),
     ("in", "sugar", "P/02.2-02", "`in` of an element of `secret_in` as one word", "a list of one word"),
-    ("П1", "computed", "P/02.2-03", "no `snapshot`",
+    ("P1", "computed", "P/02.2-03", "no `snapshot`",
      "the names of `unit.fields` in the author's order without `*_secret`, fields of `type: blob` and `server`, then "
      "`state.<name>` of each `unit.state` in the author's order, except `cursor` (ADR-0091 item 3); an explicit `[]` "
      "stays"),
-    ("П2", "computed", "P/02.2-03", "no `tables.<t>.journal` or one of its keys",
+    ("P2", "computed", "P/02.2-03", "no `tables.<t>.journal` or one of its keys",
      "`written` — `\"<t>.written\"`, `deleted` — `\"<t>.deleted\"`; a stated key stays"),
-    ("П3", "computed", "P/02.2-03", "no `display.form`", "`[{\"fields\": [<names of unit.fields in the author's order>]}]`"),
-    ("П4", "computed", "P/02.2-03", "no `default` in a field descriptor (of the unit and of the tables)",
+    ("P3", "computed", "P/02.2-03", "no `display.form`", "`[{\"fields\": [<names of unit.fields in the author's order>]}]`"),
+    ("P4", "computed", "P/02.2-03", "no `default` in a field descriptor (of the unit and of the tables)",
      "`null` (for `blob` too, and with `inherit`)"),
-    ("П5", "computed", "P/02.2-03", "no `decoded` in an element of `secret_in` with `regex`", "`true`"),
+    ("P5", "computed", "P/02.2-03", "no `decoded` in an element of `secret_in` with `regex`", "`true`"),
 ]
 PHASE = {s[0]: s[1] for s in STEPS}
 

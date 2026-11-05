@@ -21,7 +21,7 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 
 The reasons of the term pass and the count of unreadable hold rows (`garbled_rows.<table>`, `retention_withheld`) are written by the resource into its
 heartbeat — the family `resource-heartbeat`: `Platform/05-resource/data/resource-heartbeat.schema.json`,
-`Platform/05-resource/data/resource-heartbeat.outcomes.tsv` (layout audit, В-30; the Architect's decision of 2026-10-25).
+`Platform/05-resource/data/resource-heartbeat.outcomes.tsv` (layout audit, V-30; the Architect's decision of 2026-10-25).
 
 ## Declaration
 
@@ -40,7 +40,7 @@ addressee:  A — the subsystem of the addressee: about.sub of the manifest <M> 
 ## Hold row
 
 The row is `<M>/<table>/<id>`; the elements are texts by `values_by_type` ([the row check contract](row-check.md) «Unit row»;
-the vectors [`values-by-type`](../vectors/values-by-type/README.md); Б-23).
+the vectors [`values-by-type`](../vectors/values-by-type/README.md); B-23).
 
 ```yaml
 released:   released is declared and the element of this field in the row exists and is non-empty (a text longer than zero) — the row holds nothing,
@@ -48,7 +48,7 @@ released:   released is declared and the element of this field in the row exists
             a non-empty text
 unit:       the element of the field unit — the id of a unit of the subsystem A as it is, byte for byte; there is no element or it is empty — the addressee is not
             read
-since, until: the elements of the fields since and until read by their type are finite numbers, wall seconds (the codec `Platform/common/data/codec.tsv`, the row `time`; Б-27);
+since, until: the elements of the fields since and until read by their type are finite numbers, wall seconds (the codec `Platform/common/data/codec.tsv`, the row `time`; B-27);
             the notation is also read by the reader `time`: ^(0|[1-9][0-9]*)(\.[0-9]+)?$, the value is finite — «-1», «+5», «1e3» are out of form,
             though the type int or float would read them (the Architect's decision of 2026-10-27, as OBS154-RAW-TIME-EXACT-01);
             there is no element, it does not read by its type or by the reader `time`, the field is not of a numeric type or the number is not finite — the window is not read

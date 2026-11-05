@@ -21,7 +21,7 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-`pub` is the member key `domain/member-key` (backup), the key `current` of the set `domain/keys` (prepare) or `root_pub` of the row `domain/root` (move): `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`. The doors where `X-W2C-*` is checked are `Platform/06-console/spec/06-console.api.openapi.yaml` (`/api/backup`, `/domain/move`) and `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`/api/prepare`) (layout audit, В-07, В-08; the Architect's decision of 2026-10-25).
+`pub` is the member key `domain/member-key` (backup), the key `current` of the set `domain/keys` (prepare) or `root_pub` of the row `domain/root` (move): `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`. The doors where `X-W2C-*` is checked are `Platform/06-console/spec/06-console.api.openapi.yaml` (`/api/backup`, `/domain/move`) and `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`/api/prepare`) (layout audit, V-07, V-08; the Architect's decision of 2026-10-25).
 
 ## Signature and check
 
@@ -44,7 +44,7 @@ of the ask `prepare` is the member to which the domain is handed over (P/08.8 Н
 The form of the function is the input of the command `ask-sig` of [P/08.8](../../08-domain/spec/08.8-domain.norms.md) Н5:
 `{ask: backup | prepare | move, cluster, pub, header: {member?, time?, signature?}, now, body_sha256?}` → `{result: ok}` |
 `{result: refused, reason}`. The fields of the input (the reading of М11/10 Н5 and of the acceptance README of М11/10 «Входы»; analysis of the review of stage B
-8–10, № 4, Claude С-7):
+8–10, № 4, Claude S-7):
 
 ```yaml
 cluster:   <cluster> of the messages backup and move and <target> of the message prepare — the cluster of the checker: the console at which the copy is asked for,
@@ -57,7 +57,7 @@ member:    there is no field member at the top level of the input: the member of
            an extra field, the input is out of form, code 2 (P/08.8 Н5 exit; the Architect's decision of 2026-10-20 on the open questions of the analysis of the review of stage B 8–10, question 2; formerly the field was admitted and not read)
 now:       the wall seconds of the checker
 exit:      0 — computed; 2 — the input is out of form; the exit codes follow the principle of the vocabulary of the «Стенда домена» («Коды выхода команд-векторов»: 2 — the form
-           of a trusted input, 0 with a word — a document of another cluster; the Architect's decision on the reconciliation of М11, H14) (a copy of P/08.8 Н5 exit; layout audit, the Architect's decision of 2026-10-25, Б-14):
+           of a trusted input, 0 with a word — a document of another cluster; the Architect's decision on the reconciliation of М11, H14) (a copy of P/08.8 Н5 exit; layout audit, the Architect's decision of 2026-10-25, B-14):
            at ask-sig pub is not hex of 32 bytes, cluster is not a cluster name, ask is not backup | prepare | move, body_sha256 is out of form, it is absent at move or present at another ask, now is not a number or absent, there is no header,
            header is not an object, header.time is not a string, an extra field in header or in the input — 2
 ```

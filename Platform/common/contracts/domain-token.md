@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/contracts/domain-token.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5) and addendum (11): a common contract can appear before the move of the
-owner lesson if an already moved lesson relies on it; analysis of review of stage B 3–5, В1). The owner is lesson P/08,
+owner lesson if an already moved lesson relies on it; analysis of review of stage B 3–5, V1). The owner is lesson P/08,
 chapter 8.2 ([norms](../../08-domain/spec/08.2-domain.norms.md)):
 the process `domain` issues tokens and keeps the set `domain/keys` and the revocations `domain/revoked` (P/08.2 Н1.2, Н1.3, Н1.6), the meaning
 and the issue stay with the owner. Readers: the gate of the cluster console — the identity by the token
@@ -15,7 +15,7 @@ review of stage A 8–10, № 16). Moved from М11/2 Н1.6 (the row `token` with
 `payload`, `sig`, the constant `TOKEN_SKEW`, the paragraph about who checks), Н3 «`token(keys, revoked, now, token)`» (the steps with
 `expect` and the paragraph about the boundary) and the rows of Н4 about the token without a change of behaviour. What is common to the forms of chapter 8.2 (hex, canonical
 base64url, JCS — RFC 8785, ADR-0072, «wall-clock seconds», Ed25519 — RFC 8032, completeness of JSON forms, a repeated key) —
-the [domain founding contract](domain-founding.md) «Common rules of forms» (layout audit, Б-03); the set `domain/keys`
+the [domain founding contract](domain-founding.md) «Common rules of forms» (layout audit, B-03); the set `domain/keys`
 (`keys`, `until`), the form of the row `domain/revoked`, its writers and `prune` — the [domain key set contract](keys.md) (analysis of
 review of stage A 8–10, № 13); the offline revocation window — P/08.2 Н1.7. The kind of a worker token
 and `audience_claim` — the kind declaration of [P/02.1](../../02-installer/spec/02.1-installer.norms.md) Н1.2б (the late layer),
@@ -27,7 +27,7 @@ Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The function `token` reads `domain/keys` and `domain/revoked`: `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/08-domain/data/revoked.schema.json`, `Platform/08-domain/data/revoked.outcomes.tsv`; the kind declaration and `audience_claim` — `Platform/02-installer/spec/02.1-installer.schema.json` (layout audit, В-14, Б-32; the Architect's decision of 2026-10-25).
+The function `token` reads `domain/keys` and `domain/revoked`: `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/08-domain/data/revoked.schema.json`, `Platform/08-domain/data/revoked.outcomes.tsv`; the kind declaration and `audience_claim` — `Platform/02-installer/spec/02.1-installer.schema.json` (layout audit, V-14, B-32; the Architect's decision of 2026-10-25).
 
 ## The token
 
@@ -46,7 +46,7 @@ TOKEN_SKEW:    60          # s, the clock tolerance in both directions; the cloc
 person:        a person token: the issuer (the process domain at login, P/08.4 Н1.2) writes exactly {iss: <the domain>, sub: <the name
                of the person>, kind: "person", iat, exp, jti}, without aud; exp = iat + TOKEN_LIFETIME; the checker skips other fields
                (item payload), it checks sub by the form of a person name — [the person name contract](../person-name.md) `name` (1–64 characters without
-               whitespace, control characters and : | ( ) " /, not break-glass; layout audit А-20) — otherwise 401 at the gate
+               whitespace, control characters and : | ( ) " /, not break-glass; layout audit A-20) — otherwise 401 at the gate
                (guess of stage C GP-L01, the Architect's decision of 2026-10-23)
 ```
 
@@ -82,7 +82,7 @@ checker:
 3. kid ∉ keys.keys                                                               → refused unknown_key
 4. the signature does not verify with keys.keys[kid] over ASCII «<header>.<payload>» → refused bad_signature
 5. iat or exp is not a finite number, jti is not a string by the grammar of Н1.6, kind is not a non-empty string → refused bad_claims
-5а. kid ∈ until, now > until[kid] and not (kind ∈ expect.keep and now ≤ keep_until[kid]) → refused unknown_key   # after the signature: kind is signed, it cannot be judged earlier; a foreign signature on an expired key — bad_signature (ADR-0110 addendum (10) item 3)
+5a. kid ∈ until, now > until[kid] and not (kind ∈ expect.keep and now ≤ keep_until[kid]) → refused unknown_key   # after the signature: kind is signed, it cannot be judged earlier; a foreign signature on an expired key — bad_signature (ADR-0110 addendum (10) item 3)
 6. now > exp + TOKEN_SKEW                                                         → refused expired
 7. now < iat − TOKEN_SKEW                                                         → refused future
 8. jti in revoked                                                                 → refused revoked
@@ -138,7 +138,7 @@ of lesson P/01 (`canonical_json.tsv`: input → the form RFC 8785 → sha256; AD
 
 ## Correspondence to former lessons
 
-From М11/2 (analysis of review of stage B 3–5, В1): Н1.6 — the row `token` (`header`, `payload`, `sig`), `TOKEN_SKEW` and the paragraph
+From М11/2 (analysis of review of stage B 3–5, V1): Н1.6 — the row `token` (`header`, `payload`, `sig`), `TOKEN_SKEW` and the paragraph
 «The check of a token is the function `token`…» (here «The token»; `domain/revoked` — now [the domain key set contract](keys.md) «Отзывы», `OLD_KEYS` — P/08.2 Н1.6); Н3
 «`token(keys, revoked, now, token)`» — steps 1–11 with the comment `expect` and the paragraph about the boundary (here «The check»); Н4 — the rows
 about the token (here «Refusal words»). A part of the norm М11/2-05 (the order of the check) and М11/2-06 (an unreadable row of revocations —

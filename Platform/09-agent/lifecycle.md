@@ -26,7 +26,7 @@ This English text is the source; the Russian translation `ru/lifecycle.md` (for 
 ## Environment
 
 The setting channel is only the environment of [P/02.4 Н1.2](../02-installer/spec/02.4-installer.norms.md) and the layout of `PLATFORM_DIR`
-(the second pilot, Н-4).
+(the second pilot, N-4).
 
 | Variable | Meaning | Default | Norm |
 |---|---|---|---|
@@ -34,7 +34,7 @@ The setting channel is only the environment of [P/02.4 Н1.2](../02-installer/sp
 | `PLATFORM_DIR`, `PLATFORM_STORE`, `OBJECTS`, `RESOURCE_ROOT` / `EVENTS` | the state, the store door, the roots of objects and events | P/02.4 Н1.2 | P/02.4 Н1.2 «The setting channel and the layout» |
 | `SECRETS_KEY` | the ring (credential): the member key, the books and the emergency rows — envelopes of the ring | — | P/02.4 Н1.12; [P/09.1](spec/09.1-agent.norms.md) Н1 «Данные» (what the agent seals with the ring: `seed_secret` of the member key — Н1.1, the member books and the copy of the emergency row — Н1.4); the bytes of the envelope — [the sealing contract](../common/contracts/sealing.md) |
 | `CLUSTER` | the name of its own member | `local` | P/02.4 Н1.2; [P/09.1 Н1.1](spec/09.1-agent.norms.md) |
-| `CLUSTERS` | the consoles of the member clusters `<имя>=<url>[,…]`: «follow» — `GET /api/held` of each | none or empty — an empty list | the form `<имя>=<url>[,…]` — here, the row of the environment contract — [P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.2 (the reference to the norm P/06.7 is removed: review analysis of stage B 8–10, № 22, Claude М-16, Kimi SB810-08); [P/09.1 Н3](spec/09.1-agent.norms.md) «follow» step 1 (review analysis of stage A 8–10, № 32) |
+| `CLUSTERS` | the consoles of the member clusters `<имя>=<url>[,…]`: «follow» — `GET /api/held` of each | none or empty — an empty list | the form `<имя>=<url>[,…]` — here, the row of the environment contract — [P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.2 (the reference to the norm P/06.7 is removed: review analysis of stage B 8–10, № 22, Claude M-16, Kimi SB810-08); [P/09.1 Н3](spec/09.1-agent.norms.md) «follow» step 1 (review analysis of stage A 8–10, № 32) |
 | `REACHES` | the networks of the member — words of `domain/reaches` separated by commas; empty — as if not set | not set — the networks of the interfaces | [P/09.1 Н1.7](spec/09.1-agent.norms.md) `networks` (review analysis of stage A 8–10, № 32) |
 | `DOMAIN_URL` | the door of the holder process `domain` — the road of the report | — | [P/09.1](spec/09.1-agent.norms.md) Н3 «the agent pass», Н1.7; [P/08.3 Н1.3а](../08-domain/spec/08.3-domain.norms.md) |
 | `RELAY_URL` | the relay door — the road instead of `DOMAIN_URL` at a member behind a relay; a list of the addresses of the servers of the relay cluster separated by commas, in order: a connection refusal or `503 standby` — the next one (DOM-AGENT-TURN-01, the owner's consent 2026-10-26) | — | [P/09.2 Н1.1](spec/09.2-agent.norms.md) `door`; the member side — [P/09.1](spec/09.1-agent.norms.md) Н1.7, Н3 «the member's agent behind a relay» |
@@ -84,7 +84,7 @@ None: the setting channel is the environment only (P/02.4 Н1.2).
 |---|---|---|
 | 2 | a start refusal by the manifest, the rights, the schema — without a restart | P/02.4 Н1.1 `common` |
 | 2 | `RELAY` is not empty and not `1` — the agent does not start: a setting refusal (the Architect's decision, review analysis of stage B 8–10, № 17, ADR-0083 addendum (15)) | [P/09.2](spec/09.2-agent.norms.md) Н1.1 `door`; [P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.2 (the row `RELAY`) |
-| 2 | `RELAY_URL` on `https://` without `RELAY_MEMBER` — the agent does not start: a setting refusal ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `common`; the Architect's decision on the move plans 8–10, ADR-0083 addendum (14) item 10; plan 9 В8) | [the `peer` contract](../common/contracts/peer.md) `first`; [P/09.1 Н1.7](spec/09.1-agent.norms.md) |
+| 2 | `RELAY_URL` on `https://` without `RELAY_MEMBER` — the agent does not start: a setting refusal ([P/02.4](../02-installer/spec/02.4-installer.norms.md) Н1.1 `common`; the Architect's decision on the move plans 8–10, ADR-0083 addendum (14) item 10; plan 9 V8) | [the `peer` contract](../common/contracts/peer.md) `first`; [P/09.1 Н1.7](spec/09.1-agent.norms.md) |
 | 2 | neither `DOMAIN_URL` nor `RELAY_URL` (not set or empty) — there is no road, the agent does not start: a setting refusal, nothing is written before the queue and the birth of the key (C09-NO-ROAD-01) | [P/09.1](spec/09.1-agent.norms.md) Н1.7 |
 
 ## Signals and readiness

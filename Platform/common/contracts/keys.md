@@ -21,7 +21,7 @@ of `from_carry` of P/09.1 Н1.4 about `revoked` without a change of behaviour. T
 the `rev` of the writer, the emergency `rev` and the premise of clocks (P/08.2 Н1.2 `rev`, `emergency`, `clocks`), the holder keys and `OLD_KEYS`
 (P/08.2 Н1.3, Н1.6), the changes of the set (P/08.2 Н3; installation — [P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н3),
 the offline revocation window (P/08.2 Н1.7). What is common to the forms — the [domain founding contract](domain-founding.md)
-«Common rules of forms» (layout audit, Б-03: hex, canonical base64url, JCS — RFC 8785, Ed25519 — RFC 8032, X25519 — RFC 7748, completeness
+«Common rules of forms» (layout audit, B-03: hex, canonical base64url, JCS — RFC 8785, Ed25519 — RFC 8032, X25519 — RFC 7748, completeness
 of JSON forms, a repeated key, «integer»). References in the moved text: «Н1.x», «Н3» — the chapters of P/08.2 (formerly of lesson М11/2; the numbers of the
 subsections are the former ones); «lesson N» — lesson М11/N, their addresses now: «lesson 3» (the agent, the admission and the signature of a member) — P/09.1 and P/08.3,
 «lesson 3 Н1.6 from_carry» — P/09.1 Н1.4 `from_carry`, «lesson 7» (the kind token) — P/08.7, «lesson 9» (the revocation of a person) — P/08.4,
@@ -31,7 +31,7 @@ Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The rows of the contract: the set `domain/keys` and the revocations `domain/revoked` — `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/08-domain/data/revoked.schema.json`, `Platform/08-domain/data/revoked.outcomes.tsv`; the pinned root `domain/root` (`pinned`) — `Platform/08-domain/data/root.schema.json`, `Platform/08-domain/data/root.outcomes.tsv`. The set comes in the holder's answers — `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`/api/carry`) and `Platform/06-console/spec/06-console.api.openapi.yaml` (`/api/held`) (layout audit, В-31, В-32, Б-15; the Architect's decision of 2026-10-25).
+The rows of the contract: the set `domain/keys` and the revocations `domain/revoked` — `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/08-domain/data/revoked.schema.json`, `Platform/08-domain/data/revoked.outcomes.tsv`; the pinned root `domain/root` (`pinned`) — `Platform/08-domain/data/root.schema.json`, `Platform/08-domain/data/root.outcomes.tsv`. The set comes in the holder's answers — `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`/api/carry`) and `Platform/06-console/spec/06-console.api.openapi.yaml` (`/api/held`) (layout audit, V-31, V-32, B-15; the Architect's decision of 2026-10-25).
 
 ## The set `domain/keys`
 
@@ -53,7 +53,7 @@ doc:                                                       # a closed set of fie
   current:         kid of the token key with which the holder signs now; ∈ keys; ∉ until
   keys:            {<kid>: <hex of the public token key>}, not empty; kid — a non-empty string
   until?:          {<kid>: <wall-clock seconds>} — the key is still accepted up to this moment inclusive; kid ∈ keys
-  keep_until?:     {<kid>: <wall-clock seconds>} — the key is still accepted for the kinds keep (the token contract step 5а; ADR-0110 addendum (10)); kid ∈ keys and kid ∈ until: a key with keep_until keeps an expired until too, otherwise step 5а would be silent and the key would be accepted for all kinds; without this — not_a_set (ADR-0110 addendum (12) item 1); an expired until is removed only together with keep_until; at most 8 live ones, the oldest is removed, the journal domain.keys.keep_dropped
+  keep_until?:     {<kid>: <wall-clock seconds>} — the key is still accepted for the kinds keep (the token contract step 5a; ADR-0110 addendum (10)); kid ∈ keys and kid ∈ until: a key with keep_until keeps an expired until too, otherwise step 5a would be silent and the key would be accepted for all kinds; without this — not_a_set (ADR-0110 addendum (12) item 1); an expired until is removed only together with keep_until; at most 8 live ones, the oldest is removed, the journal domain.keys.keep_dropped
   issuing:         [<serial>…] — the keys of the issuing holder (lesson 10); serial — a non-empty string
   revoked_issuing: [<serial>…] — the revoked keys of the issuer; always an array, can be empty
   revoked_members?: [<hex of a member key>…] — the revoked keys of members (lesson 3: the admission and the signature of a member are checked against it)
@@ -74,7 +74,7 @@ The `rev` of a new set at the writer (an ordinary, a planned and an emergency ch
 ## The key fingerprint
 
 From P/08.2 Н1.1 `fingerprint` without a change of behaviour (the owner of the text is P/08.2 Н1.1; here — for lesson P/09, which
-prints the fingerprint of the member key, P/09.1 Н1.1 `born`; analysis of review of stage B 8–10, № 4, Claude `С-1`):
+prints the fingerprint of the member key, P/09.1 Н1.1 `born`; analysis of review of stage B 8–10, № 4, Claude `S-1`):
 
 ```yaml
 fingerprint:   hex(sha256(<32 bytes of the public key>)[:8]) — 16 characters; this is how people and journals name the root and the keys:
@@ -105,14 +105,14 @@ order; the first rule that fires gives the result.
 8. otherwise                                                               → took (rev doc); the row domain/keys := offered
 ```
 
-A refusal does not change the row `domain/keys`; the member keeps trusting the former set and writes the reason into the journal (М13).
+A refusal does not change the row `domain/keys`; the member keeps trusting the former set and writes the reason into the journal (M13).
 
 `held = null` — at an agent without a trusted set in memory and with its own row unreadable (after start): step 7 does not judge, the set is accepted from the pinned root; the rollback limit — [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н1.4 `from_carry` (ADR-0110 addendum (28)).
 
 «Н1.2» in steps 2 and 6 is the section «The set `domain/keys`» above; `pinned` is `{pub, domain}` of the row `domain/root` ([the domain founding contract](domain-founding.md) «Root pinning»; the form — «Form» above).
 The form of the function is the input of the command `keys` ([P/08.2](../../08-domain/spec/08.2-domain.norms.md) Н5).
 
-A copy from P/08.2 Н5 (layout audit, the Architect's decision of 2026-10-25, Б-14):
+A copy from P/08.2 Н5 (layout audit, the Architect's decision of 2026-10-25, B-14):
 
 ```yaml
 # Inputs are closed objects: all fields are required except those marked «?» (null — where named), an extra field or a field of another type — code 2.
@@ -159,13 +159,13 @@ merge:          revoked → a union with its own row domain/revoked: the entries
                 its own domain/keys does not read — it does not touch the row until the holder's answer, then merges (ADR-0110 addendum (25) item 2, addendum (26)).
                 Any merge larger than ceiling (413) — is replaced by the row of the answer, the journal domain.revoked.replaced; it happens mostly
                 after a cleanup by theft, then the holder's row has lost nothing (addendum (27) item 1; the limit — P/09.1 Н1.4 from_carry).
-                The holder has cleaned the row (P/08.2 Н3 step 3б): its revocations are for the tokens of former keys,
+                The holder has cleaned the row (P/08.2 Н3 step 3b): its revocations are for the tokens of former keys,
                 the signature step no longer lets them through; revocations after the change come by an ordinary merge. Otherwise the full row would be held
                 for years, new revocations would take it beyond ceiling, the agent's write — 413, and a token revoked after the change would pass at the member;
                 a member usually takes the emergency set by following before the report, the answer is then holding, therefore the rule is by the write of the set,
                 not by the answer (ADR-0110 addendum (22), addendum (24) — replaces «replaces by the answer» of addendum (22));
                 its own row does not read — the agent, the only writer at a member, overwrites it by CAS on the read
-                version with the entries of the answer, the reason into the journal without a value (В7 item 3, the Architect's decision of 2026-10-28, П2; row 44 of the list)
+                version with the entries of the answer, the reason into the journal without a value (V7 item 3, the Architect's decision of 2026-10-28, P2; row 44 of the list)
 ```
 
 `TOKEN_SKEW` and «Н3 token step 6» are the [domain token contract](domain-token.md) «Токен», «Проверка»; «prune of lesson 2 Н1.6» is
@@ -174,8 +174,8 @@ answer) — P/09.1 Н1.4 `from_carry`.
 
 ## The follow set
 
-Moved from [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н3 «follow» step 1а without a change of behaviour (layout audit, the Architect's decision of 2026-10-25,
-А-08). The follow set is the memory of the member's agent; it checks the term records of steps 2–4 of «follow» (P/09.1) and the records
+Moved from [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н3 «follow» step 1a without a change of behaviour (layout audit, the Architect's decision of 2026-10-25,
+A-08). The follow set is the memory of the member's agent; it checks the term records of steps 2–4 of «follow» (P/09.1) and the records
 of a move (the move set — by the same rule, P/08.8 Н1.8 step 5, the start of the pass for it is the start of step 5; the difference of the move set: its own domain/keys which is not
 confirmed by its own domain/holder that passed record with this set (its own record is spoiled, unreadable or absent; a break of the move does not leave such a row, P/08.8 Н1.8 step 8): the move set starts not
 from it but from null (the pinned root), and it serves only if no neighbour gave a set; its rev enters the greatest
@@ -188,9 +188,9 @@ keys of the answers of /api/held — by the function keys (the domain key set co
 start — the row domain/keys of its own store (a move without stolen changes the issuer: the new set comes this way, before
 the answer of the new holder); the set of an answer is taken only if the term record of the same answer passes record with this set and
 its term is not less than its own record (SET_GUARD; the term of its own record — of its own domain/holder that passed record by the follow set of the start of the
-pass; it is computed once per pass: a set taken in the pass does not recheck it and does not remove the bound, otherwise a second candidate with a greater rev takes the term back, and the outcome depends on the order of CLUSTERS (Quint М12 Н2; C09-SET-GUARD-OWN-02); there is no checked own record at the start of the pass — nothing to compare with; C09-SET-GUARD-OWN-01,
-the decision of «Спецификация домена»; its own record whose issuer is in revoked_issuing of the answer's set, while thefts of this set is greater than that of the follow set of the start of the pass, is revoked by a theft and does not serve as a bound: otherwise the thief's record of a huge term would forever block the set of the change after theft; revoked_issuing grows at every move, only thefts tells a theft apart (P/08.2 change after theft step 3): otherwise a cut-off member would take back an honest chain of handovers of the same issuer, C08-GUARD-STOLEN-RECORD-01; revoked_members does not fit for this: at a second theft on the same holder the new key is not in it, Quint М12 Н8, C08-GUARD-THEFTS-01); the same condition at `from_carry` (P/09.1 Н1.4) with the term record of this answer, the bound is the greatest of the bound of the pass and of the term written by step 4 of «follow» of this pass: otherwise a lone holder of a smaller term takes the term back (C08-GUARD-FROM-CARRY-01); the agent writes the row domain/keys from the follow set when the condition of the switch
-point (the term record contract «Точка смены `switch`») is false by this set (at the holder's cluster — from the switch point; added by the Quint model of М11, G1, G7); a set by which its own term record does not pass record it writes only in one batch op: batch with a term record that passes by this set: the best one of step 4 of «follow» or the record of the answer `from_carry`; each row has its own cas, the guard domain/agent-turn (otherwise a break between them deprives its own record of the check and the bound SET_GUARD of the next pass is lost; the Architect's decision of 2026-10-31, Quint М12 Н2, C08-KEYS-CLAIM-BATCH-01); the batch refused — the set stays in memory (C09-HELD-MEMORY-01), together with it the bound of this pass stays in memory, the next pass writes the batch again; the bound lives in memory only while its own record has not changed: at the start of the pass, before the follow set and the bound, its own record that passed record by its own row domain/keys with a term above the bound of memory (no bound — any) removes the set and the bound of memory, otherwise a record of a new term does not pass the set of memory, the condition of the switch point is false and the next pass writes a smaller term over it; the set is not lost: it will come from a neighbour and meet the new bound, SET_GUARD will refuse, step 2а will raise an alarm (the Architect's decision of 2026-11-01, Quint М13 Н15, C09-HELD-MEMORY-02); a row with a `rev` greater than its own set it does not rewrite: at the target of a move it is put by the batch claim before the agent has heard the new set (C08-TARGET-KEYS-RACE-01)
+pass; it is computed once per pass: a set taken in the pass does not recheck it and does not remove the bound, otherwise a second candidate with a greater rev takes the term back, and the outcome depends on the order of CLUSTERS (Quint M12 Н2; C09-SET-GUARD-OWN-02); there is no checked own record at the start of the pass — nothing to compare with; C09-SET-GUARD-OWN-01,
+the decision of «Спецификация домена»; its own record whose issuer is in revoked_issuing of the answer's set, while thefts of this set is greater than that of the follow set of the start of the pass, is revoked by a theft and does not serve as a bound: otherwise the thief's record of a huge term would forever block the set of the change after theft; revoked_issuing grows at every move, only thefts tells a theft apart (P/08.2 change after theft step 3): otherwise a cut-off member would take back an honest chain of handovers of the same issuer, C08-GUARD-STOLEN-RECORD-01; revoked_members does not fit for this: at a second theft on the same holder the new key is not in it, Quint M12 Н8, C08-GUARD-THEFTS-01); the same condition at `from_carry` (P/09.1 Н1.4) with the term record of this answer, the bound is the greatest of the bound of the pass and of the term written by step 4 of «follow» of this pass: otherwise a lone holder of a smaller term takes the term back (C08-GUARD-FROM-CARRY-01); the agent writes the row domain/keys from the follow set when the condition of the switch
+point (the term record contract «Точка смены `switch`») is false by this set (at the holder's cluster — from the switch point; added by the Quint model of М11, G1, G7); a set by which its own term record does not pass record it writes only in one batch op: batch with a term record that passes by this set: the best one of step 4 of «follow» or the record of the answer `from_carry`; each row has its own cas, the guard domain/agent-turn (otherwise a break between them deprives its own record of the check and the bound SET_GUARD of the next pass is lost; the Architect's decision of 2026-10-31, Quint M12 Н2, C08-KEYS-CLAIM-BATCH-01); the batch refused — the set stays in memory (C09-HELD-MEMORY-01), together with it the bound of this pass stays in memory, the next pass writes the batch again; the bound lives in memory only while its own record has not changed: at the start of the pass, before the follow set and the bound, its own record that passed record by its own row domain/keys with a term above the bound of memory (no bound — any) removes the set and the bound of memory, otherwise a record of a new term does not pass the set of memory, the condition of the switch point is false and the next pass writes a smaller term over it; the set is not lost: it will come from a neighbour and meet the new bound, SET_GUARD will refuse, step 2a will raise an alarm (the Architect's decision of 2026-11-01, Quint M13 Н15, C09-HELD-MEMORY-02); a row with a `rev` greater than its own set it does not rewrite: at the target of a move it is put by the batch claim before the agent has heard the new set (C08-TARGET-KEYS-RACE-01)
 ```
 
 ## Vectors

@@ -19,7 +19,7 @@ P/01.1 — ссылкой сюда.
 ([OpenAPI](../../../01-store/spec/01-store.api.openapi.yaml); входит в чтение `common` по ADR-0083 доп. (33) п. 1): маршруты
 `GET /v1/get?key=`, `GET /v1/list?prefix=`, `POST /v1/write` (`Cmd`: `put` | `delete`; `BatchCmd`: `batch`), схемы `Key`, `Row`, `Listing`,
 `Cmd`, `BatchCmd`, `Written`, `Fault`. Строка, условие `cas`, страж `guard`, условия времени `not_after`/`not_before` и `id` записи —
-схемы `Row` и `Cmd` того же OpenAPI (P/01.1 Н1; клиент пишет по ним; аудит раскладки, Б-05).
+схемы `Row` и `Cmd` того же OpenAPI (P/01.1 Н1; клиент пишет по ним; аудит раскладки, B-05).
 
 ## Адрес
 

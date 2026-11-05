@@ -8,7 +8,7 @@ in chapters; guess of stage C C04-ENV-01, the Architect's decision of 2026-10-23
 all whose norm itself parses environment files: the runner `w2c-run.sh` and the workers script (`roles/<роль>.env`, P/02.4 Н1.5
 step 4); the role processes get their environment from the runner (lifecycle of lessons P/02–P/10: «by parsing, not `source`» — the runner's
 parsing; ACC-VECTORS-CONNECT-04). Moved from P/02.4 Н1.2 together with the edges B19 without a change of behaviour; files and reading order, variables, `CLUSTERS` and
-the unit constants are the sections below (layout audit, the Architect's decision of 2026-10-25, А-07, А-09, А-16, А-17, Б-26).
+the unit constants are the sections below (layout audit, the Architect's decision of 2026-10-25, A-07, A-09, A-16, A-17, B-26).
 
 Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
@@ -38,7 +38,7 @@ a skip, not an error (like `W2C_SUB_ENV` [P/02.4](../../02-installer/spec/02.4-i
 
 ## Files and reading order
 
-Moved from [P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н1.2 without change (layout audit, the Architect's decision of 2026-10-25, Б-26).
+Moved from [P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н1.2 without change (layout audit, the Architect's decision of 2026-10-25, B-26).
 
 The runner's reading order: the unit values → the role file `roles/<W2C_ROLE>.env` → `w2c.env` → the subsystem file; what is read earlier wins. A part unit (`w2c-run.sh part`, P/02.4 Н1.9) reads only the unit values and the subsystem file `W2C_SUB_ENV` (ADR-0091 addendum (3) item 2). The directory `roles/` lies next to `w2c.env` (the directory of the file `W2C_ENV`, by default `/etc/w2c/roles/`); there is no other place. A `W2C_ROLE` of the unit that does not match the role of the runner command (`w2c-run.sh <команда>`, P/02.4 Н1.9) is a start refusal with code 2 (reconciliation of python and go М10/6–11, B20); for `w2c-run.sh worker <sub>` the role of the command is `<sub>worker`, for `domainworker <sub>` it is `<sub>domain`: one program in both roles sees the environment by one rule (ADR-0091 addendum (4), (5); the Architect's decisions on the repeated review of 2026-10-23).
 
@@ -50,7 +50,7 @@ required and not read, the role file and `w2c.env` are not read; the unit values
 
 ## Environment variables
 
-The table is moved from P/02.4 Н1.2 without change (layout audit, the Architect's decision of 2026-10-25, А-07, А-09): the form and the default are here; what a process does
+The table is moved from P/02.4 Н1.2 without change (layout audit, the Architect's decision of 2026-10-25, A-07, A-09): the form and the default are here; what a process does
 with the value is the norms of its lesson. `CLUSTERS` is the section below.
 
 | Variable | Meaning | Default | Set by |
@@ -61,7 +61,7 @@ with the value is the norms of its lesson. `CLUSTERS` is the section below.
 | `LABELS` | the node labels separated by commas — [the label list](labels.md); a word outside the label alphabet is a worker start refusal, code 2, like other wrong environment values (P/03.2 Н3 «start()» step 2; the VMS request «пульс и битая строка», the Architect's decision of 2026-10-23) | — | `w2c.env` |
 | `INSTANCE_ID` | a unique instance instead of `<box>:<pid>:<6hex>`; an empty value is as if not set (INSTANCE130-SOURCES-01); both sources are by the grammar of [the instance contract](instance.md), on disk — the name encoding of [the event journal contract](event-journal.md); otherwise a refusal before the start (P/03.2 Н3 «start()» step 2, Н4; analysis of the review of stage B 3–5, № 7); a new process does not reuse a former value | — | — |
 | `PLATFORM_DIR` | the state root | `/data/platform` | `w2c.env` |
-| `PLATFORM_STORE` | the store: `configstore:///run/configstore/<роль>.sock` — the door of P/01.1, the only link of a process with the store of another implementation (ADR-0083 item 2); `file://` — the profile «the whole box is one implementation»: the processes of the box and the store are of one implementation, the format on disk is not normed and is not a contract; `memory://` — in the process, without durability (the store pilot, А9) | `file://<PLATFORM_DIR>/config` | the unit |
+| `PLATFORM_STORE` | the store: `configstore:///run/configstore/<роль>.sock` — the door of P/01.1, the only link of a process with the store of another implementation (ADR-0083 item 2); `file://` — the profile «the whole box is one implementation»: the processes of the box and the store are of one implementation, the format on disk is not normed and is not a contract; `memory://` — in the process, without durability (the store pilot, A9) | `file://<PLATFORM_DIR>/config` | the unit |
 | `OBJECTS` / `PLATFORM_OBJECTS` | objects: `file://` \| `cluster://[<имя>][?resource=<url>]` (without `resource` — the resource of its own server by the door row, P03-OBJECTS-DEFAULT-1FD); parsing of the address — [the object store client contract](object-client.md) `parse` (C10-OBJECT-ADDRESS-32) | `file://`; `cluster://` with configstore | `w2c.env` |
 | `RESOURCE_ROOT` / `EVENTS` | the root of the event trees | `<PLATFORM_DIR>/events` | `w2c.env` |
 | `MANIFEST_DIR` | the directory of the installer's manifests (chapter 2.3) | `/opt/w2c/manifests` | the runner |
@@ -76,7 +76,7 @@ with the value is the norms of its lesson. `CLUSTERS` is the section below.
 | `CONSOLE_ROOT` | the console | — | the unit (an input of the installer environment, P/02.4 Н1.7 `w2c_env`) |
 | `CONSOLE_HOST`, `CONSOLE_PORT` | the address of the cluster console; one per box: read by the console (binding) and by the clients of their own console — the URL by `own_url` of [the role certificate contract](role-certificate.md) «The client of a door of its own cluster»; TLS — by the role kit, on the loopback too (P/02.4 Н1.6 `console`; ::1 — only by an explicit entry) | 127.0.0.1, 8080 | `w2c.env` (written by the installer, P/02.4 Н1.7 `w2c_env`; the unit does not set it; ADR-0075 addendum 2026-10-26 (5) item 2) |
 | `CONSOLE_CALL_PORT` | the port of the callback listener of the cluster console: a mandatory leaf of the role, only requests with a ticket ([the role certificate contract](role-certificate.md) «The callback leaf»; ADR-0094 addendum (16)); the address — the addresses of `SERVER_NAME`, not `CONSOLE_HOST`; without a kit or without a manifest with `door.pass.calls` the listener is not opened, the value is not read | 8081 | `w2c.env` (written by the installer, P/02.4 Н1.7 `w2c_env`; no line — the default) |
-| `RESOURCE_HOST`, `RESOURCE_PORT`, `RESOURCE_URL`, `RESOURCE_TLS` | the resource; `RESOURCE_HOST`, `RESOURCE_PORT` are not written by the unit — the process default; off the loopback — only with a kit (P/02.4 Н1.6 `process`; ADR-0075 addendum 2026-10-26 (6) item 2; review of the norms of ADR-0075, Claude fd85ea8cc, С-3) | 127.0.0.1, 8090 | `w2c.env` |
+| `RESOURCE_HOST`, `RESOURCE_PORT`, `RESOURCE_URL`, `RESOURCE_TLS` | the resource; `RESOURCE_HOST`, `RESOURCE_PORT` are not written by the unit — the process default; off the loopback — only with a kit (P/02.4 Н1.6 `process`; ADR-0075 addendum 2026-10-26 (6) item 2; review of the norms of ADR-0075, Claude fd85ea8cc, S-3) | 127.0.0.1, 8090 | `w2c.env` |
 | `CAPACITY`, `WORKER_MEMORY_MB`, `HOST_MEMORY_MB` | the capacity of the role and the memory budget (ADR-0070) | — | `roles/<роль>.env` |
 | `HUNG_MOVE_AFTER`, `REACH_BUDGET` | the controller ([P/04 Н1.4](../../04-controller/spec/04-controller.norms.md)) | 900, 10 | `w2c.env` |
 | `W2C_SHRINK_AFTER` | stand only: the shrink period of the controller `SHRINK_AFTER`, s ([P/04 Н1.4](../../04-controller/spec/04-controller.norms.md); when set — a loud journal line at start) (analysis of the review of stage B 3–5, № 18) | not set (300) | the stand runner; not set outside the stand |
@@ -104,7 +104,7 @@ other wrong environment values (a silent choice would hide a layout error); neit
 
 ### `CLUSTERS`
 
-From [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.4 without change (layout audit, the Architect's decision of 2026-10-25, А-09); read by the cluster console, the process `domain`
+From [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.4 without change (layout audit, the Architect's decision of 2026-10-25, A-09); read by the cluster console, the process `domain`
 ([P/08.8](../../08-domain/spec/08.8-domain.norms.md) Н1.6–Н1.8) and the agent ([P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н3 «follow»). An environment line for the holder and the first contact: the address of any other member is `Entry.url` of its section row; for tens of thousands, no environment can be written (P/06.7 Н1.6; ADR-0113 addendum (1) item 4).
 
 ```yaml
@@ -115,7 +115,7 @@ CLUSTERS:     <name>=<url>[,<name>=<url>…]; name — a member name (P/08.3 Н1
 
 ## Constants and units
 
-One place of the values that the installer's unit and the processes read (layout audit, the Architect's decision of 2026-10-25, А-16, А-17); the role of each is in its lesson.
+One place of the values that the installer's unit and the processes read (layout audit, the Architect's decision of 2026-10-25, A-16, A-17); the role of each is in its lesson.
 
 ```yaml
 FOR:              300   # s; a worker substitution longer than this does not substitute: the units leave (role — P/03.4 Н1.2)

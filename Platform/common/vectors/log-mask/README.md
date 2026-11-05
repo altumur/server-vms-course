@@ -5,7 +5,7 @@ This English text is the source; the Russian translation `ru/vectors/log-mask/RE
 The owner is [the log mask contract](../../contracts/log-mask.md) (chapter [P/06.2](../../../06-console/spec/06.2-console.norms.md) Н1.4 `never.log`; the pairs and the addresses — [the address contract](../../contracts/url-credentials.md)). The package was moved from `Platform/06-console/vectors/log-mask/` byte for byte (C06-LOG-MASK-33-01); eight rows at the end (the end of the Basic/Bearer credentials, the White_Space whitespace — the answer of «Архитектора» 2026-10-25) are only here: the common table `Source/tests/testdata/log_mask.tsv` is the former one.
 The participants are all processes of the platform that write a log (id-map: М10/7-08 → P/06.2-05, «все процессы»). The bytes are written by
 «Спецификация»; the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16, ADR-0083). Moved from
-`Source/tests/testdata/log_mask.tsv` byte for byte (stage B, the move of lesson 6, the Architect's decision on В8 of the plan of lesson 6);
+`Source/tests/testdata/log_mask.tsv` byte for byte (stage B, the move of lesson 6, the Architect's decision on V8 of the plan of lesson 6);
 the head of the file is English, as it was: `М10/7 Н1.4` in it is the former address of chapter P/06.2 Н1.4.
 
 ## `cases.tsv`
@@ -34,7 +34,7 @@ write to the log file. The store daemon and the CLI (`01-store`) do not load man
 `rule`) (C01-C02-LOG-MASK-ROLES-01, the Architect's decision 2026-10-27).
 
 The value of a field `type: url` — the vectors [`../secret-in/`](../secret-in/README.md): in a free text an address ends at a space,
-a quote, `\`, `<` or `>` (the address contract А2), in the value of a field — it does not.
+a quote, `\`, `<` or `>` (the address contract A2), in the value of a field — it does not.
 
 ## `mask_in.tsv`
 

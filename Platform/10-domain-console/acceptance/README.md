@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/acceptance/README.m
 
 The stand, the dictionary of directives and doors — [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors) and its
 section [«Domain stand»](../../common/acceptance/README.md#domain-stand) (the door `holder` — the domain console on `hold`, the doors
-`member`, the directives `@domain`, `@person`, `@stop agent`, `@start agent`; the plan of lesson 10 В10). The norm of the lesson is
+`member`, the directives `@domain`, `@person`, `@stop agent`, `@start agent`; the plan of lesson 10 V10). The norm of the lesson is
 [`10-domain-console.norms.md`](../spec/10-domain-console.norms.md) Н5. The scenarios were moved from the acceptances of М11/08 (sc. 05) and
 М11/11 (sc. 02) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers of the scenarios and the steps are the former ones; sc. 06–09 —
 the coverage audit of P/10 (audit-kimi 290ae7697), the numbers — after the largest number of the sources (М11/08 sc. 05); sc. 10–16 —
@@ -56,7 +56,7 @@ The neighbours on the stand: the edit of the shared document (sc. 02 step 03) is
 the execution — [chapter 8.9](../../08-domain/spec/08.9-domain.norms.md) Н1.3); the content of `delivery` (steps 04, 09) —
 `view.shared` of chapter 8.9 (Н1.6), the door `GET /domain/shared` — this lesson (P/10-14); the document is taken by the agent of the member
 ([chapter 9.1](../../09-agent/spec/09.1-agent.norms.md)); step 11 — the agent signature at `/events` of the cluster console of the member
-([the agent signature contract](../../common/contracts/agent-signature.md), the gate P/06.3; the plan of lesson 10 В6: the step is not split).
+([the agent signature contract](../../common/contracts/agent-signature.md), the gate P/06.3; the plan of lesson 10 V6: the step is not split).
 
 The stand does not call the alarm page (the front once a second, the urgent report, `truncated`): the stand has no training subsystem that
 raises alarms. This is checked by the vector `alarms` and by reading.

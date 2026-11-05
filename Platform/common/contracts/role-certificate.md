@@ -60,7 +60,7 @@ rotation:     ca.next.pem next to it — the next center, already trusted
 
 ## Form
 
-`Entry.ca` is a field of the member record `domain/member-rows/<раздел>`: `Platform/08-domain/data/members.schema.json`, `Platform/08-domain/data/members.outcomes.tsv`; the fields `tls_ca`, `tls_ca_certs` of the publication `POST /api/member` — `Platform/08-domain/spec/08-domain.api.openapi.yaml`, `Platform/09-agent/spec/09-agent.api.openapi.yaml` (layout audit, `В-55`, `В-56`; the Architect's decision of 2026-10-25). The class `role`: the row `domain/members/<член>/ca-certs` — `Platform/08-domain/data/member-ca-certs.schema.json`, `Platform/08-domain/data/member-ca-certs.outcomes.tsv`; the refusal of the role door — the schema `RoleRefusal` `Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml` (C10-SDK-ROLE83, the Architect's decision of 2026-10-25).
+`Entry.ca` is a field of the member record `domain/member-rows/<раздел>`: `Platform/08-domain/data/members.schema.json`, `Platform/08-domain/data/members.outcomes.tsv`; the fields `tls_ca`, `tls_ca_certs` of the publication `POST /api/member` — `Platform/08-domain/spec/08-domain.api.openapi.yaml`, `Platform/09-agent/spec/09-agent.api.openapi.yaml` (layout audit, `V-55`, `V-56`; the Architect's decision of 2026-10-25). The class `role`: the row `domain/members/<член>/ca-certs` — `Platform/08-domain/data/member-ca-certs.schema.json`, `Platform/08-domain/data/member-ca-certs.outcomes.tsv`; the refusal of the role door — the schema `RoleRefusal` `Platform/10-domain-console/spec/10-domain-console.api.openapi.yaml` (C10-SDK-ROLE83, the Architect's decision of 2026-10-25).
 
 ## The cluster kit, the domain roles, the center between clusters
 
@@ -103,7 +103,7 @@ verifies the server with the same function `peer` as a client of another cluster
 the arguments change — its own centers and `host` by the loopback threshold — and revocation comes after `peer`.
 
 ```yaml
-own_client:   any client of a door of its own cluster over https:// (review of the norms of ADR-0075, Claude fd85ea8cc, С-1: the list is examples, not a closed list);
+own_client:   any client of a door of its own cluster over https:// (review of the norms of ADR-0075, Claude fd85ea8cc, S-1: the list is examples, not a closed list);
               among them — the agent to its own console (P/09.1 Н1.5, Н1.10), the workers script to /metrics of the console (P/02.4 Н1.5),
               the cluster console to the domain console of its own box — transition 2 by view.url (P/06.7 Н1.4) and in forwarding
               to the signer by SIGNER_URL (P/06.7 Н1.8), the domain console to SIGNER_URL of its own box (P/10 Н1.3 pass, role
@@ -127,16 +127,16 @@ own_client:   any client of a door of its own cluster over https:// (review of t
 loopback:     the loopback threshold — a pure function {url} → loopback | name | ip over the host notation of the URL, before DNS (addendum (3) item 1, addendum
               (4) item 1); the host notation is the substring of the URL after «//» and an optional userinfo@ up to «:port», «/» or the end, as
               written, without normalisation by a URL parser (127.0.0.01, 0x7f.0.0.1, LOCALHOST, a dot at the end — are not
-              rewritten; review of the norms of ADR-0075, Claude fd85ea8cc, М-2): loopback — v4 of four decimal parts 0–255 without leading zeros with the first 127, or v6 (in
+              rewritten; review of the norms of ADR-0075, Claude fd85ea8cc, M-2): loopback — v4 of four decimal parts 0–255 without leading zeros with the first 127, or v6 (in
               the brackets of the URL) with the value ::1 in any notation without a zone; ip — another IP literal of step 1 of peer (including v6 with
               a zone, ::ffff:127.0.0.1, 0.0.0.0, ::); name — otherwise (localhost, 127.1, 127.0.0.01); vectors —
               common/vectors/loopback
   bad_url:    a URL out of form (no scheme and «//», an empty host): from the environment (SIGNER_URL, RESOURCE_URL, own_url over
               CONSOLE_HOST) — a start refusal of the client process, code 2; from a store row (view.url, url of the door row) — as
-              no field, by the outcomes of its row (review of the norms of ADR-0075, Claude fd85ea8cc, М-3)
+              no field, by the outcomes of its row (review of the norms of ADR-0075, Claude fd85ea8cc, M-3)
 own_url:      the URL of a client of its own console (the agent, the workers script, the worker and the gateway) — from CONSOLE_HOST and CONSOLE_PORT of w2c.env
               (the environment file contract «Environment variables»); the loopback threshold — over https://<CONSOLE_HOST> (v6 — in brackets;
-              in w2c.env CONSOLE_HOST is written without brackets, with brackets — a URL out of form, bad_url) (review of the norms of ADR-0075, Claude fd85ea8cc, М-4):
+              in w2c.env CONSOLE_HOST is written without brackets, with brackets — a URL out of form, bad_url) (review of the norms of ADR-0075, Claude fd85ea8cc, M-4):
               a loopback literal — https://<literal>:<port> ([::1] for v6); 0.0.0.0 — https://127.0.0.1:<port>; :: —
               https://[::1]:<port>; another (an IP off the loopback or a name, localhost included) — https://<SERVER_NAME>:<port>;
               the domain console is not in the table — transition 2 takes view.url (addendum (4) item 3, addendum (5) item 3)
@@ -158,7 +158,7 @@ server:       the server side of the doors between clusters — two classes (log
               analysis of review of stage A 8–10, № 35) and the center that issued this leaf: the handshake chain is the leaf, then
               its center from ca.pem or ca.next.pem of its own cluster (kit: server.pem is the leaf, the server adds the center itself);
               the same for every door of a process with a role kit that own_client goes to (the classes signed, role, mixed,
-              the resource door P/05 at mtls, the cluster console, its callback listener and the domain console for clients of its own cluster) (review of the norms of ADR-0075, Claude fd85ea8cc, С-2);
+              the resource door P/05 at mtls, the cluster console, its callback listener and the domain console for clients of its own cluster) (review of the norms of ADR-0075, Claude fd85ea8cc, S-2);
               without the center in chain[1:] the client will not find the anchor (the contract peer step 3 — foreign_ca) (a clarification on the question
               «cammeta-acceptance» of 2026-10-20; it matches cammeta-go):
   signed:     the doors between clusters where the identity is by the norm of the route (a signature, a token, a password), not by the certificate
@@ -288,7 +288,7 @@ mixed:        as signed in full: TLS of the server of the process role (cert, se
   kit_absent: «no kit» — no directory W2C_TLS_DIR or no ca.pem in it; ca.pem exists, but the leaf or the key of the role
               (<роль>/server.pem, server.key) are absent or invalid — a partial kit: not a switch to HTTP, a start
               refusal, code 2 — there is no silent downgrade (guess of stage C RC-NOKIT, the Architect's decision of 2026-10-23)
-# from P/03.4 Н1.7 door_admission domain, role_domain and cors — without a change (layout audit Б-20, the Architect's decision of 2026-10-25; read by the process door and domain)
+# from P/03.4 Н1.7 door_admission domain, role_domain and cors — without a change (layout audit B-20, the Architect's decision of 2026-10-25; read by the process door and domain)
   domain:     a route {name, domain: [<вид>…]} — the domain token in Authorization: Bearer; one call of the function token of the domain
               token contract with expect {kind: [<the kinds of the route>], cluster: <its own cluster>, audience_claim: {<вид>: <the audience
               field from the declaration of the kind, P/02.1 Н1.2б>}}; steps 1–8 — as before, an expired one or one with a foreign signature — 401 before
@@ -323,7 +323,7 @@ mixed:        as signed in full: TLS of the server of the process role (cert, se
 ## Vectors
 
 The packages [`crl`](../vectors/crl/README.md) (CRL: the signature, the terms, revocation) and [`revoked`](../vectors/revoked/README.md) (the file `revoked`). (ADR-0083 addendum (32) item 2)
-A participant: the package [`peer`](../vectors/peer/README.md) — the package of the common contract peer, executed by common; this contract is a participant there: the closed list `sig` is checked by its step 4 (layout audit, `В-57`; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25).
+A participant: the package [`peer`](../vectors/peer/README.md) — the package of the common contract peer, executed by common; this contract is a participant there: the closed list `sig` is checked by its step 4 (layout audit, `V-57`; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25).
 The package [`trust-set`](../vectors/trust-set/README.md) — the trust set of the role door and the check of the leaf (the class `role` `trust_set`, `unreadable`; C10-SDK-ROLE83).
 The package [`loopback`](../vectors/loopback/README.md) — the loopback threshold of the client of its own cluster (`loopback`, 31 rows; ADR-0075 addendum of 2026-10-26 (4) item 1). The substitution
 `host = SERVER_NAME` before step 1 of `peer` is not expressed by the package `peer` (the function does not change) — the acceptance of the client lessons checks it.

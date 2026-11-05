@@ -36,13 +36,13 @@ The batch `op: batch` on the stand store (P/01.1 Н3 «write batch», ADR-0094 B
 
 ## A foreign directory (sc. 10)
 
-The store format mark (chapter 1.3 Н1.3 `format`; the store pilot, А1): a second store instance on a non-empty directory without
+The store format mark (chapter 1.3 Н1.3 `format`; the store pilot, A1): a second store instance on a non-empty directory without
 `FORMAT` and on a directory with a foreign mark does not start (code 2) and changes nothing in the directory. The scenario does not
 touch the stand store. The first write of the mark into an empty directory and a start on one's own directory — every start of the stand and `@restart store` of sc. 08.
 
 ## The copy (sc. 11, 12)
 
-The store copy (chapter 1.3 Н1.3 `copy`; the store pilot, А2). The inputs are `inputs/*.jsonl`, JSON Lines: `copy-ok.jsonl` — a header
+The store copy (chapter 1.3 Н1.3 `copy`; the store pilot, A2). The inputs are `inputs/*.jsonl`, JSON Lines: `copy-ok.jsonl` — a header
 with `index` `"7"` and the rows `platform/epoch_floor` `{floor: "4294967296", generation_at: "1760745600.5"}` (the time form —
 P/03.2 Н1.5), `testsub/counters/1` `{n: "1"}`, `testsub/next_id` `{n: "2"}` in ascending order of the key;
 there are no manifest rows (`platform/manifest/*`) in the input: the copy does not know manifests, `import` carries a row of any family (chapter 1.3 Н1.3
@@ -100,7 +100,7 @@ The group stand is the section «Store group stand» of the common README: the m
 (the stand rights file). These scenarios do not need the stand store of the chapter. Formerly sc. 07 was a `@manual` drill on a real
 cluster; by ПРАВИЛА-РАБОТЫ.md § 4 it and the drills of the checklist items of the chapter (the door, size and membership, the floor of epochs, the metrics row of doors) became scenarios (the plan
 `decisions/inbox/2026-10-30-план-сценарии-группы-автоматом.md`, accepted by the Architect on 2026-10-30; steps for the defect classes
-of the pilot comparison — `decisions/inbox/ревью/РЕВЬЮ-СРАВНЕНИЕ-P01-Claude.md`, `П-1`…`П-6`, where they are visible from outside). The norms do not
+of the pilot comparison — `decisions/inbox/ревью/РЕВЬЮ-СРАВНЕНИЕ-P01-Claude.md`, `P-1`…`P-6`, where they are visible from outside). The norms do not
 change. The leader after `-bootstrap` and the joins is `s1` (step 5 of each scenario checks this as well). The assembly 1→2→3: the second member joins with `-force` (a group of two is a transitional parity, P/01.3 Н1.3 `join`), the third without it (C01-GROUP-BOOTSTRAP-EVEN-01). The box store build
 (`keys.store_build: box`, P/01.3 Н1.3 `box`) has no group: sc. 07, 17, 18, 25–29, 31 are not_applicable for it, not red; without
 the marker they are not executed (common README, «Store group stand»).
@@ -113,30 +113,30 @@ the marker they are not executed (common README, «Store group stand»).
   through it — by the same rights file (forwarding to the leader, visible at the follower `s2`), the row `platform/configstore-doors/d1` with
   `seen_at` not later than 40 s (every 30 s), the metrics row `configstore_doors 1` at the leader. The door `d2` with the leaf `d1` — a start refusal
   (`-id` is not the server of its leaf, C01-DOOR-ID-CN-01). The probes `door-row-*` (`inputs/`): the leaf of the door `d1` writes at the leader a foreign
-  row `platform/configstore-doors/d2` — 403, its own — 200 (`П-4`; Н1.3 `door` «own»); the role forwarding header in the probe is
+  row `platform/configstore-doors/d2` — 403, its own — 200 (`P-4`; Н1.3 `door` «own»); the role forwarding header in the probe is
   a designation, the name is from the implementation description, as in the acceptance of chapter 1.2 sc. 08.
 - **Sc. 17 — membership, restart, leader change, quorum.** Size 2 and 4 — a start refusal; `leave` of the stopped `s3`, its
   `join` before `admit` — 403, `admit` is repeatable (code 0), after it `join` with the same address — 200, with another Raft address — 409,
   `leave` of an unknown member — 409 (Н1.3 `leave`, `repeat`); `s3` restarts and is a follower again.
-  `П-1`: three writes without `cas` through different members, a restart of a follower, then of the whole group — each has the same version `$r3`,
-  and a write with `cas` `$r3` through a follower passes (the log is not applied again; the versions are the same at all members). `П-2`: a write, `@sigkill` of the leader — a read at both
-  remaining members right after the election sees its version `$w`, the returned `s1` too (the read is linearizable, P/01.1 Н3). `П-3`: the door `d1` and one voter `s1` without the two others — a write through the door and
+  `P-1`: three writes without `cas` through different members, a restart of a follower, then of the whole group — each has the same version `$r3`,
+  and a write with `cas` `$r3` through a follower passes (the log is not applied again; the versions are the same at all members). `P-2`: a write, `@sigkill` of the leader — a read at both
+  remaining members right after the election sees its version `$w`, the returned `s1` too (the read is linearizable, P/01.1 Н3). `P-3`: the door `d1` and one voter `s1` without the two others — a write through the door and
   through `s1` — 503 `unavailable` after `leader_wait` 5 s (`@sleep 6` — the deadline of the norm): the door is not part of the quorum.
 - **Sc. 18 — `import` into a group and `recover`.** `import` of the copy `copy-ok.jsonl` (`index` 7) with `-index-base 7` into a fresh
-  group at the leader; a repeat of a completed one — a refusal (Н1.3 `admin_ops`, B12). `П-5`: the transferred rows keep the versions of the copy — `testsub/next_id` `3`, `testsub/counters/1` `5`, and `cas` by them passes (P/01.3 Н1.3 `import`, Н3 «the copy is replayed into exactly those rows and versions»; C01-IMPORT-VERSIONS-01): an implementation that rewrites the transfer by ordinary `put` with new small versions fails here. That the new versions after the transfer are above `-index-base`, the scenario does not judge by numbers (the strings are compared only by `==`/`!=`) — by reading. The epoch row
+  group at the leader; a repeat of a completed one — a refusal (Н1.3 `admin_ops`, B12). `P-5`: the transferred rows keep the versions of the copy — `testsub/next_id` `3`, `testsub/counters/1` `5`, and `cas` by them passes (P/01.3 Н1.3 `import`, Н3 «the copy is replayed into exactly those rows and versions»; C01-IMPORT-VERSIONS-01): an implementation that rewrites the transfer by ordinary `put` with new small versions fails here. That the new versions after the transfer are above `-index-base`, the scenario does not judge by numbers (the strings are compared only by `==`/`!=`) — by reading. The epoch row
   `testsub/epoch/u1` `429496729600005` (100000 << 32 | 5); the majority is lost (`s2`, `s3` killed, `s1` stopped);
   `recover` without `-isolated` and with `-upper` below the computed one — a refusal before any changes; with `-isolated` — the floor
   `100001 << 32 = 429501024567296` (the generation is the upper of the epoch row; the hours since 2026-01-01 are fewer than 100001), the rows and the epoch
-  are kept (`П-6`: upper is from all epoch rows). The former `s2`, `s3` with old directories do not return (Н3 step 0);
+  are kept (`P-6`: upper is from all epoch rows). The former `s2`, `s3` with old directories do not return (Н3 step 0);
   the new `s4` (`-force` — transitional parity) and `s5` join from empty directories; the floor is visible at the new follower.
-- **`П-3`, a door leaf on `-raft`** (C01-RAFT-DOOR-LEAF-01, the Architect's decision of 2026-10-30): sc. 07, the last step —
+- **`P-3`, a door leaf on `-raft`** (C01-RAFT-DOOR-LEAF-01, the Architect's decision of 2026-10-30): sc. 07, the last step —
   the probe `inputs/door-on-raft.json`: the leaf of the door `d1` on the raft port of `s1` — `handshake: alert` (P/01.3 Н1.6 `raft`).
 - **Coverage audit of P/01** (audit-kimi 2026-10-30, commit 399e4783b): sc. 07 — the probe `inputs/forwarded-admin.json`: the leaf
   of the voter `s2` with the role forwarding header `admin` at the leader with a loaded rights file — 403 (P/01.2 Н3, A08); sc. 17
   steps 6–7 — the `/metrics` rows of the leader and of a follower (the names of Н1.3 `metrics`, the state in lowercase per ADR-0070, the number of votes 3;
   the substring «3» admits the notation «3.0»; A10); sc. 17 — `@cut store@s3` (a proxy on the raft port of the member cuts incoming
   connections; the outgoing connections of the member go directly): after a write through `s1` a read at `s3` — the new version or 503, not the earlier one
-  (`П-2`), after `@mend` — the new one (NEW-DIRECTIVES § 3; the steps do not assume who the leader is).
+  (`P-2`), after `@mend` — the new one (NEW-DIRECTIVES § 3; the steps do not assume who the leader is).
 - **Coverage audit of P/01, second pass** (Gemini 2026-10-30, commit 6a5817f88, G06; the group assembly — steps 1–5, as in
   sc. 07): sc. 25 — `/v1/status` of the door `d1` whole by Н2: `Door`, `role` `door`, `term`, `commit`, `applied` — 0;
   sc. 26 — probes of the leaf `d1` at the leader: its own row with `cas: ""` (`inputs/door-row-with-cas.json`), with an extra element
@@ -150,7 +150,7 @@ the marker they are not executed (common README, «Store group stand»).
   nothing is transferred, with `-force` — transferred, the floor is raised (Н1.3 `floor` `when`, «Daemon flags» `-force`).
 - **Remaining by reading**: a full cut of a member in both directions (the outgoing connections of a member on one machine are not cut);
   the branch `ambiguous` (the write went to the leader without an answer); writers during `import` (the window between the floor and «Done»); the door leaf
-  on `-raft` is now not by reading: sc. 07, the last step (above, `П-3`); an unreadable door row outside `configstore_doors` (Н1.3
+  on `-raft` is now not by reading: sc. 07, the last step (above, `P-3`); an unreadable door row outside `configstore_doors` (Н1.3
   `door`) — a TSV request does not carry the current time for a fresh `seen_at`, and a row with an old `seen_at` the implementation is entitled
   not to count as a visible door by the deadline (the door writes it every 30 s): the step would not tell an unreadable row from a stale one; `recover` with the clock earlier than
   the `generation_at` of the floor — the stand does not put a floor with a future `generation_at` into the group (`op: floor` writes the clock of the leader).
@@ -159,7 +159,7 @@ the marker they are not executed (common README, «Store group stand»).
 
 - Sc. 12 steps 23–26 (A07): `import` of an input with the epoch row `testsub/epoch/u1` `{"epoch": "abc"}` (`inputs/bad-epoch.jsonl`) and
   with the floor row `{"floor": "12.5"}` (`inputs/bad-floor.jsonl`) — upper is not reliable, a refusal of the whole input, nothing is
-  transferred (Н1.3 `import`, В7 item 3).
+  transferred (Н1.3 `import`, V7 item 3).
 - Sc. 19 (A01): the version after a restart of the daemon on the same directory — the earlier row with the earlier version, the new versions
   differ from it (P/01.1 Н1 `index`); a non-durable training store does not run sc. 19, as with sc. 08.
 - Sc. 20 (A05): `@spoil row` / `@spoil row-index` (common README) — spoiling bypassing the door by the profile command `spoil-row`

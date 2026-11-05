@@ -31,9 +31,9 @@ readable:   a host is RFC 1123 labels (a label of 1–63 characters, a name ≤ 
             and hexadecimal 0x…: cam.0x50 — the stage C guess GROUP-NUMERIC-01, the Architect's decision of 2026-10-23), a non-numeric port
             after the host — the host does not read
 alone:      there is no value, it is empty, the host does not read or there is no place of the host — the unit is not in a group and is placed alone;
-            there is no common «group without a value»; no value or empty — without a group and without a refusal, whether the field is required is П4
+            there is no common «group without a value»; no value or empty — without a group and without a refusal, whether the field is required is P4
             of [the row check](../row-check.md) (the stage C guess GO-EMPTY-01, the Architect's decision of 2026-10-23)
-refusal:    the refusal of the source is the url step of the row check (bad_url: the address contract А15 and «Schemes»): with cut_at: host an unreadable
+refusal:    the refusal of the source is the url step of the row check (bad_url: the address contract A15 and «Schemes»): with cut_at: host an unreadable
             host is a refusal, not «accepted without a group»; a refusal by the url rule does not cancel the group of a readable host — the old row
             stays with its neighbours (the vector names both the group and the refusal)
 ```

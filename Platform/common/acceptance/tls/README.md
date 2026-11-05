@@ -6,7 +6,7 @@ The debts of the stand of lessons 8–10 per ADR-0083 addendum (9) (the owner's 
 (the server side, session resumption, the handshake by `ca-certs`) and the fourth cluster. The form
 of the directives was agreed by the Architect with «cammeta-acceptance» (2026-10-20); here are the data of «Спецификация»: the kit description,
 the logical doors and clients, the closed outcome of a probe and the expectations. The directives are the section [«Стенд домена»](../README.md#domain-stand) of the common acceptance README (the forms were introduced by lesson М11/8 — the column
-«Урок» of the dictionary; review analysis of stage B 8–10, № 22: М-1). The implementation profile declares `keys.tls_stand: 1`; without it the checks of this stand are not executed
+«Урок» of the dictionary; review analysis of stage B 8–10, № 22: M-1). The implementation profile declares `keys.tls_stand: 1`; without it the checks of this stand are not executed
 (not GREEN). Norms: the server side of the class `signed` — the role certificate contract «The server side: the class `signed`»
 ([P/08.0 Н1.6](../../../08-domain/spec/08.0-domain.norms.md), P/08.0-02), the listener `SIGNER_URL` — the row `signer` of the same contract and
 [P/02.4 Н1.6](../../../02-installer/spec/02.4-installer.norms.md) `client_cert` (ADR-0083 addendum (20), addendum (21)); the CA fingerprints of a member, `on_accept`, `admin` —

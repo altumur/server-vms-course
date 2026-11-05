@@ -7,10 +7,10 @@ of its own: the module is a library in the browser, it has no door of its own (�
 6](../../06-console/spec/06-console.api.openapi.yaml), in the late layer (Н1.6) also the contracts of lessons
 [8](../../08-domain/spec/08-domain.api.openapi.yaml) and [10](../../10-domain-console/spec/10-domain-console.api.openapi.yaml). The lesson has no acceptance catalogue (Н5); it has no life cycle: a library has no process,
 environment or exit codes; the publication of the module is [chapter 6.5](../../06-console/spec/06.5-console.norms.md)
-(the move plan of lesson 7, В4). The lesson is moved from М10/9 (stage B,
+(the move plan of lesson 7, V4). The lesson is moved from М10/9 (stage B,
 ADR-0083 addendum (1): without a change of behaviour): Н1.4 and Н1.5 (the numbers of the subsections are the former numbers of М10/9), the row of Н5 «модуль — по контракту»,
 the checklist items М10/9-06, -07. The late layer — the domain section, `sections: [domain]` of the call `mount`, the
-holder mode — is Н1.6, without ids of its own (plan, В5); its text was moved by the move of lessons 8–10 (stage B, commit 10; the move plan
+holder mode — is Н1.6, without ids of its own (plan, V5); its text was moved by the move of lessons 8–10 (stage B, commit 10; the move plan
 of lesson 8, § 5, row P/07 Н1.6) from М11/8 Н1.8 `module`, М11/11 Н1.6 `declared` and the module description § 7, § 10a. The canon of the module is the norms Н1.5 (review analysis of stage A 6–7, № 6): the published
 bytes of `console.js`, `console.html` and the description [`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`](../../../КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md) were brought
 to it by a change of behaviour after the commit of the lesson («Implementation decides» item 1, closed; the Architect's decision of 2026-10-21). The three parts of the console, the mounting
@@ -118,7 +118,7 @@ may:       console.may(cap, ref, sub?) → bool by the grants of the session and
            no sub — null: a row of any sub fits; the elements of grants with role are role groups, counted by the tiers of the right contract
            («The level of a role group»), without role — a direct group; the folder chains of the unit and of its about the module gathers by a reverse walk
            of the member lists from GET /folders; not gathered — the input is unknown, as at the server, not empty: a group with such an input gives no level, a row
-           folder: of a direct group does not cover it (ADR-0097 §4, ADR-0099 §6); admin: true of the session (step 4а) — true, the module hides nothing
+           folder: of a direct group does not cover it (ADR-0097 §4, ADR-0099 §6); admin: true of the session (step 4a) — true, the module hides nothing
            by it (ADR-0100 §1); via: break-glass (grants []) — true, as the server for an emergency session (the right contract common/contracts/may.md step 1,
            glass → allow); true without grants only with open: true; in a closed or unknown (/session did not answer) session the absence of grants — false; the server always checks (review analysis of stage B 6–7, № 28)
 events:    on("select", (ref, obj)) | on("refresh", {units, servers, domain}) | on("logout") | on("card.closed", {ref}) | on("session", {user}) — on every read of /session with a known user: on mounting, including without a login through the module window, and after a login, ordinary and emergency; a subscription after the read gets the last value at once; user unknown — no event; another user — the page resets its own: the secrets of the former one do not go into the write of the new one (C07-SESSION-EVENT-01, the Architect's decision of 2026-11-01, the analysis of the VMS pass)
@@ -163,7 +163,7 @@ The session, the grants and the login by which `may` judges — [P/06.3](../../0
 
 ### Н1.6 The domain section — the late layer: introduced by lessons 8 and 10 (without ids of its own)
 
-The parts of Н1.4 and Н1.5 that the domain introduces are parts of P/07-01 and P/07-02 without ids of their own (the move plan of lesson 7, В5; as P/02.1
+The parts of Н1.4 and Н1.5 that the domain introduces are parts of P/07-01 and P/07-02 without ids of their own (the move plan of lesson 7, V5; as P/02.1
 Н1.2б). The text was moved by the move of lessons 8–10 (stage B, commit 10; the move plan of lesson 8, § 5, row P/07 Н1.6): the parts
 about the module from М11/8 Н1.8 `module`, М11/11 Н1.6 `declared` and the module description
 [`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`](../../../КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md) § 7 (the sections `domain`, `access`, `GET /api/held`) and
@@ -227,7 +227,7 @@ page, not the platform calling a subsystem: they are not hooks in the sense of t
 takes from the holder by `door` from `where()`, past the console (ADR-0015, for the human).
 
 The description of the public surface of the module (the dictionary `W`, the card markup, the calls of the shell, the look) —
-[`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`](../../../КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md) (not a norm; the move plan of lesson 7, В1). Where the description or
+[`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md`](../../../КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md) (not a norm; the move plan of lesson 7, V1). Where the description or
 the published bytes differ from Н1.4, Н1.5, the lesson is right (review analysis of stage A 6–7, № 6); the discrepancies «Implementation decides»
 items 1 and 2 are removed by changes of behaviour (the Architect's decision of 2026-10-21).
 
@@ -251,7 +251,7 @@ window; a replay — only by the rules of the owner of the repeat memory; an unk
 
 ## Н5 Acceptance
 
-The lesson has no acceptance catalogue (the exception `P/07 no-acceptance`; the move plan of lesson 7, В2): the module is a library in the browser,
+The lesson has no acceptance catalogue (the exception `P/07 no-acceptance`; the move plan of lesson 7, V2): the module is a library in the browser,
 the HTTP-TSV stand does not run it. The publication of the module byte for byte with the published files and the version `?v=1` (`?v=2` — 404) —
 sc. 01 of the [acceptance of chapter 6.5](../../06-console/acceptance/5/README.md) (P/06.5 Н1.1). The subjects of Н1.4 and Н1.5 are checked
 by the jsdom tests of the owner of the specification `Source/tests/console` (review analysis of stage A 6–7,
@@ -326,7 +326,7 @@ findings and window records refer to (ADR-0080 addendum 6). The implementation h
 
 The lesson is moved from М10/9 (stage B): Н1.4, Н1.5 (the numbers are the former ones), the row of Н5 «Проверяются чтением и структурно: модуль — по контракту `КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md` (закрытый список вызовов, словарь, `may`, `api` с ключом, дерево, форма, серверы, домен)»
 (here Н5 with the table of subjects), the checklist items М10/9-06, -07 (here P/07-01, -02). The late layer Н1.6 — without ids of its own
-(plan, В5); moved by the move of lessons 8–10 (stage B, commit 10): М11/8 Н1.8 `module` (here Н1.6 `holder` and the last
+(plan, V5); moved by the move of lessons 8–10 (stage B, commit 10): М11/8 Н1.8 `module` (here Н1.6 `holder` and the last
 paragraph; the item М11/8-11 — P/10-04, the `note` of id-map «аргумент sections — P/07 Н1.6»), М11/11 Н1.6 `declared` in the part `schema`
 (here Н1.6 `schema`; the door `GET /domain/shared` — P/10-14), the module description § 7 (the sections `domain`, `access`, the paragraph
 `GET /api/held`) and § 10a in the parts about the module (here Н1.6 `domain`, `access`, `held`, `holder`, `schema`; the doors of the holder page
@@ -336,7 +336,7 @@ The rest of М10/9 is lesson 6 (chapters 6.3, 6.5). From the
 «Соответствие» of М10/9: the module contract (sections 1–10) was normed as Н1.1, Н1.4, Н1.5 — the parts Н1.4, Н1.5 here, Н1.1 —
 P/06.5; section 10a — the late layer (Н1.6); the discrepancies of the contract with the code are removed in favour of the lesson (the name of the shell
 `<sub>.shell.html`, the list of calls of the module supplemented with `/schema`, `/unplaceable`, `/policy`, `/servers/<s>/labels`). The contract
-`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md` remains the description of the public surface (plan, В1): the row «Нормативно» — P/07, the dead
+`КОНСОЛЬ-МОДУЛЬ-ПЛАТФОРМЫ.md` remains the description of the public surface (plan, V1): the row «Нормативно» — P/07, the dead
 `/servers/<s>/writes`, `display.actions` and the row `server_unsaid` are removed, § 2 — by a reference to Н1.4 (analysis, № 26, № 30). М10/9
 normed what `М10A_Platform/16-HTML.md` told (the module, the words, the overlay, the form, `api`, the calls of the shell, CSP):
 the parts about the module and the shell — here, the page and CSP — P/06.5.

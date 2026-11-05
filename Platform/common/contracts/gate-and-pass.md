@@ -29,7 +29,7 @@ Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The files the contract works by (layout audit, `В-23`–`В-29`; the Architect's decision of 2026-10-25):
+The files the contract works by (layout audit, `V-23`–`V-29`; the Architect's decision of 2026-10-25):
 
 - the forms of the answers of the contract (`Denied` — `{detail, error: denied}`, the answers of `/session`) — `Platform/common/contracts/gate-and-pass.api.openapi.yaml`;
 - the doors: the cluster console — `Platform/06-console/spec/06-console.api.openapi.yaml`; the domain console (`/session`, `/domain/*`) —
@@ -72,8 +72,8 @@ gate:
        (ADR-0094 B1; P/06.3 Н1.9)
     1. the break-glass cookie w2c_glass (a session in memory, 15 min); a cookie without a live emergency session is as without it,
        the check goes on to the next step (the cookie stays in the browser after 15 min too; GP-G03)
-    2. X-Agent-Signature — the agent of the domain: only the doors of units, of tables domain.edit_tables, POST /console/batch and GET /events?class=alarm; with X-Agent-For (the form is <имя> <iat>, out of form — 401; without a proven signature the header is removed) the identity of the door is this person, iat is from the header, then the usual need and may by the copy of grants: a refusal is 403, the agent's outcome is refused (ADR-0111 item 16; Д-2) (the front and the alarm page — P/09.1 Н1.10; the form and the window UNIT_WINDOW 60 s — the agent signature contract common/contracts/agent-signature.md; analysis of review of stage A 8–10, № 13)
-    3. Authorization: Bearer <токен> | the cookie w2c_token → the domain: {user, until, grants} (the token — the domain token contract «Проверка» with expect {kind: person, cluster: null} (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10), the owner is P/08.2 — analysis of review of stage B 3–5, В1; the grants — P/06.7 Н1.9 (the cluster console), P/10 Н1.5 (the domain console); may — the right contract may.md)
+    2. X-Agent-Signature — the agent of the domain: only the doors of units, of tables domain.edit_tables, POST /console/batch and GET /events?class=alarm; with X-Agent-For (the form is <имя> <iat>, out of form — 401; without a proven signature the header is removed) the identity of the door is this person, iat is from the header, then the usual need and may by the copy of grants: a refusal is 403, the agent's outcome is refused (ADR-0111 item 16; D-2) (the front and the alarm page — P/09.1 Н1.10; the form and the window UNIT_WINDOW 60 s — the agent signature contract common/contracts/agent-signature.md; analysis of review of stage A 8–10, № 13)
+    3. Authorization: Bearer <токен> | the cookie w2c_token → the domain: {user, until, grants} (the token — the domain token contract «Проверка» with expect {kind: person, cluster: null} (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10), the owner is P/08.2 — analysis of review of stage B 3–5, V1; the grants — P/06.7 Н1.9 (the cluster console), P/10 Н1.5 (the domain console); may — the right contract may.md)
        the name is sub of the token, until is exp (the fields — the domain token contract «Токен» person); sub out of the form of a person name — 401
        (guess of stage C GP-L01, the Architect's decision of 2026-10-23); Authorization before the cookie w2c_token: with both, the header is read (guess of stage C GP-L02, the Architect's decision of 2026-10-23)
        a presented and wrong X-Agent-Signature (item 2) or token (item 3: by the header or by the cookie w2c_token) — 401, to item 4
@@ -102,7 +102,7 @@ gate:
     GET /manifest/<sub>/source       → admin on * or a ticket with the entry GET manifest/<s>/source in calls (P/06.5 Н2; ADR-0116 addendum (7))
     GET /drain                       → view on * (not «any grant»): the drain is the state of the whole cluster, there is no partial visibility;
                                        a narrower grant (unit:…, labels:…) — 403 by refusal, without an answer (C06-DRAIN-VISIBILITY-33-01)
-    POST /domain/move                → step 1 or step 4а of the right contract by the role table of this cluster: an emergency session or
+    POST /domain/move                → step 1 or step 4a of the right contract by the role table of this cluster: an emergency session or
                                        a domain administrator; a row admin of the cluster is not enough, the user manager also
                                        issues it (ADR-0100 §1; the emergency move of the domain here, P/08.8 Н1.8); only at this door, only from loopback:
                                        the address of the TCP connection 127.0.0.1 or ::1, address headers are not read (`identity` item 4), a request with the header Forwarded, X-Forwarded-*, X-Real-IP or Via is as not from loopback;
@@ -111,7 +111,7 @@ gate:
                                        a ticket of a subsystem from the list (ticket below); to the others — 403 writes via, need is not judged
     unit rows: POST → admin on * | by rights.routes view/edit on the unit about | cluster_rows → *
                    PUT/DELETE        → admin on the unit | cluster_rows → *; rights.routes does not lower them — for unit rows
-                                       only creation is lowered (the table «Rights by the body» below; finding М-2)
+                                       only creation is lowered (the table «Rights by the body» below; finding M-2)
     GET /<rows>?deleted=1&about=<z>  → view on the unit <about.sub>/<z> (P/06.1 Н2 «Tombstones by `about`»; ADR-0094 addendum (5) item 1)
     GET /changes                     → view without a unit — any grant; what is seen is decided by the filter of the door (P/06.1 Н2 «Change feed»; ADR-0094 B2)
     GET /{sub}/<маршрут>/<id>[/…]    → view on the unit <sub>/<id> (P/06.3 Н1.9 «Door route»; P/06.7 Н1.6 route)
@@ -125,7 +125,7 @@ gate:
                                        of rows <s>; a refusal of one — 403 of the whole batch, nothing is written (P/06.1 Н2 «Batch door»;
                                        ADR-0094 B9); a guard without view — not 403 but the refusal of an absent row (addendum (12) item 12)
     door.pass of the second kind      → a proven identity and any grant, including one in another cluster of the domain: the input anywhere of the right contract, the row
-                                       domain/anywhere (ADR-0110 Д-8); the capability is not asked and rights.routes is not read: a route
+                                       domain/anywhere (ADR-0110 D-8); the capability is not asked and rights.routes is not read: a route
                                        is not a right, what a person may do is decided by a fresh may on every callback (section «Pass of the second kind»)
     GET/HEAD /folders, /folders/<id> → view without a unit: any effective grant row (P/06.8 Н3 «folder rights»)
     POST /folders, PUT and DELETE /folders/<id> → before the body — any grant; the decision — the procedure of the door, the input of may — the folder and its ancestors
@@ -187,7 +187,7 @@ session:
   grants:    one element per (cap, sub, scope, source): a direct row — without role, through a role — role: <имя>; the order — by (cap, sub,
              scope), no sub — the empty string, then the direct one, then roles by name in UTF-8 bytes; rows none are included; the assignment admin
              gives no element (ADR-0097 §4, ADR-0098 §4, ADR-0099 §6)
-  admin:     true when step 4а of the right contract holds for this identity; a field of the answer, not a row; otherwise there is no field (ADR-0100 §1)
+  admin:     true when step 4a of the right contract holds for this identity; a field of the answer, not a row; otherwise there is no field (ADR-0100 §1)
   via:       the step of identity by which the identity of this session is proven: break-glass — the break-glass cookie (item 1; grants — [],
              the right — by the emergency session, P/06.7 Н1.9 session); token — the domain token by the header Authorization or by the cookie
              w2c_token (item 3); debug — the debug identity (item 4, together with debug: true); the agent signature (item 2) gives no
@@ -252,7 +252,7 @@ and `unit:` did not cover earlier. For a person without `folder:` the cost is ze
 ## Request parsing and the order of checks
 
 From P/06.5 Н2 «Console request parsing» (moved without a change), P/06.5 Н3 «request → answer (console)» steps 1–8 and P/01.1
-Н2.1 «Early refusal» (a copy; the owner of the rule for all HTTP doors is P/01.1) (layout audit `Б-09`, `Б-11`, the Architect's decision of 2026-10-25). «Chapter 6.K» is a chapter of lesson P/06;
+Н2.1 «Early refusal» (a copy; the owner of the rule for all HTTP doors is P/01.1) (layout audit `B-09`, `B-11`, the Architect's decision of 2026-10-25). «Chapter 6.K» is a chapter of lesson P/06;
 «chapter 6.3 Н1.3» in the steps is the section «The gate» above. The domain console parses a request the same way (P/10 Н2); the order of its own
 checks is P/10 Н3 (the role door before the gate, then the gate).
 
@@ -305,7 +305,7 @@ A body refusal at the doors of the console: chunked — 400, larger than the lim
 
 ## The gate with grants
 
-From P/06.7 Н1.9 `cluster` (the side of the cluster console; moved without a change; layout audit `Б-09`, `Б-11`, the Architect's decision of 2026-10-25): in the state `on` a person is admitted
+From P/06.7 Н1.9 `cluster` (the side of the cluster console; moved without a change; layout audit `B-09`, `B-11`, the Architect's decision of 2026-10-25): in the state `on` a person is admitted
 only by the entry and the grants. The side of the process `domain` is [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.5; the domain
 console is P/10 Н1.5 (the grants `domain/grants/domain`).
 
@@ -330,7 +330,7 @@ roles_in:  the role table: the copy of domain/roles of this cluster (P/09.1 Н1.
 
 ## Refusals of the gate
 
-From P/06.3 Н4 (moved without a change; layout audit `Б-09`, `Б-11`, the Architect's decision of 2026-10-25).
+From P/06.3 Н4 (moved without a change; layout audit `B-09`, `B-11`, the Architect's decision of 2026-10-25).
 
 **Unreadable row** (the owner's decision of 2026-10-28). A row of the domain that the access check reads for this session
 (the identity, the signature, the grant, the input of `may`) exists but does not read (an outcome of its family) — 503 `{error: "unavailable", detail?}` (the form
@@ -382,7 +382,7 @@ by the function `keys` ([domain key set contract](keys.md); analysis of review o
 `domain/grants/*`, `domain/break-glass/*`, or this console process has already seen keys: then without keys — `shut` (503), not `open`.
 
 In the state `on` the identity goes by the order of Н1.3 `identity`: the agent signature — [agent signature contract](agent-signature.md); the token — the function `token` of the
-[domain token contract](domain-token.md) «Проверка» (owner P/08.2; analysis of review of stage B 3–5, В1) by the set of this cluster with `expect {kind: person, cluster: null}` (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10); the grants of a person and the entry — P/08.4. Without an identity — 401, not 503: 503 is only `shut`. In `on`
+[domain token contract](domain-token.md) «Проверка» (owner P/08.2; analysis of review of stage B 3–5, V1) by the set of this cluster with `expect {kind: person, cluster: null}` (the Architect's decision of 2026-10-20, ADR-0083 addendum (14) item 7; analysis of review of stage A 8–10); the grants of a person and the entry — P/08.4. Without an identity — 401, not 503: 503 is only `shut`. In `on`
 a person is admitted only by the entry and the grants (section «The gate with grants»); «loopback — operator» is only `open`; the agent of its own cluster passes by
 the signature ([agent signature contract](agent-signature.md); analysis of review of stage A 8–10, № 13).
 
@@ -435,7 +435,7 @@ session:   GET /session of a proven identity (section «The gate» session) — 
            (step 5 of may) at this console, the order — section «The gate» session grants; for the emergency session — [] (its may — allow by glass)
 domain:    the domain console and the process domain: may with grants = domain/grants/domain, as_of null, roles — the rows of roles and groups of the holder (P/08.4 Н1.3б roles_at_holder), iat — of the token, sub — null; view — GET /domain*, /manifest,
            /mounts and the doors of the lesson with GET; admin — the other doors /domain/* (the table of the [forwarding contract](../forwarding.md)
-           «Domain doors»; layout audit, Б-10); unit = "*" at admin; except POST /domain/revoke — without an identity and a grant: the credential is the token in the body
+           «Domain doors»; layout audit, B-10); unit = "*" at admin; except POST /domain/revoke — without an identity and a grant: the credential is the token in the body
            (P/08.4 Н1.2 revoke); the doors of the view GET /domain, GET /domain/<sub>/<rows>, GET /domain/<sub>/tables/<таблица>, all doors
            of the kept edit P/08.6 Н1.3, Н1.3б, GET /domain/users, /groups, /roles, GET /domain/grants, PUT /domain/grants/<кластер> with a cluster ≠ domain,
            POST /domain/batch by row (P/08.4 Н2), GET and PUT /domain/memberof — «Judgement by target» of the right contract, not this line (ADR-0110); the domain console judges them by the same norm as the process
@@ -460,7 +460,7 @@ door:          POST /session/break-glass {who, why, password} at the cluster con
                   no row domain/break-glass/<this cluster> — 403 {error: denied, detail: "no emergency account: …"};
                   does not open — 503 {error: "unavailable", detail: "the emergency account does not open"}
                5. the password did not match — 401 {error: denied, detail: "break-glass: wrong password"} (counts toward the limit)
-               5а. there are already GLASS_SESSIONS_MAX open sessions — 429 the form RateLimited of the contract of P/06 (`Platform/06-console/spec/06-console.api.openapi.yaml`), detail «too many
+               5a. there are already GLASS_SESSIONS_MAX open sessions — 429 the form RateLimited of the contract of P/06 (`Platform/06-console/spec/06-console.api.openapi.yaml`), detail «too many
                   emergency sessions», Retry-After — the seconds until the end of the earliest session; the refusal does not count toward «Attempt limit»
                   (added by the reconciliation of М11, P20)
                6. 200 {user: "break-glass(<who>)", until} + the cookie w2c_glass; the session is in the memory of the console process,
@@ -475,7 +475,7 @@ The check of the password hash — the [password hash contract](password-hash.md
 
 ### Attempt limit
 
-«Н1.2» is [P/08.4](../../08-domain/spec/08.4-domain.norms.md); «chapter 8.0 Н1.8» is P/08.0 (layout audit, `Б-08`: the circle through P/08.4 Н1.10 is removed — the rule is here).
+«Н1.2» is [P/08.4](../../08-domain/spec/08.4-domain.norms.md); «chapter 8.0 Н1.8» is P/08.0 (layout audit, `B-08`: the circle through P/08.4 Н1.10 is removed — the rule is here).
 
 ```yaml
 scope:     at the process domain — POST /api/login and POST /api/verify (P/08.4 Н1.2а); at the cluster console — POST /session/break-glass; each door has its own count
@@ -625,7 +625,7 @@ ticket:   a callback is a request with the header X-W2C-Pass-Ticket. In order, t
           2. the transport (below);
           3. the session kind person: break-glass, debug, open give no ticket for a callback;
           4. the door and the method are in the list calls of the manifest of the addressee (P/06.3 Н1.9); a stream ticket — also only GET, HEAD and a door route of the subsystem;
-          5. the record of the ticket passes the steps of the domain token contract that do not need the bytes of the token: kid in the set (step 3), the key term (step 5а, keep does not serve a ticket), exp with TOKEN_SKEW (step 6), jti not in revoked (step 8);
+          5. the record of the ticket passes the steps of the domain token contract that do not need the bytes of the token: kid in the set (step 3), the key term (step 5a, keep does not serve a ticket), exp with TOKEN_SKEW (step 6), jti not in revoked (step 8);
              the person is not in domain/disabled, the read condition — the right contract, the input `disabled`: a member has no row, the step passes, and the disabling is seen by a fresh may further along the order of the door, `/session` — grants: [] (C06-PASS-DISABLED-MEMBER-01). An unreadable row — the rule «Unreadable row», 503, not 401.
           Further — the usual order of the door: the identity is user of the record, Origin is not judged (there is no cookie), need and may are fresh, iat is that of the ticket record, a refusal is 403; the body, the repeat memory,
           If-Match — as for a person. The answer to the worker is the form of the door, the refusals of the manifest do not apply to it

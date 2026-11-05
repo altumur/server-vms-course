@@ -13,7 +13,7 @@ rights from the manifest catalogue (chapter 2.5). Pass the Н5 acceptance of the
 - **2.1.** Implement strict loading of a manifest and of a manifest catalogue per Н1–Н4 of [chapter 2.1](02.1-installer.norms.md). Pass
   the Н5 acceptance by the regular loading path and close the whole [readiness checklist](02.1-installer.norms.md#readiness-checklist).
   The main input of the chapter is the procedure `загрузить(байты, источник)`, not an HTTP door.
-- **2.2.** The canonical view of a manifest per [chapter 2.2](02.2-installer.norms.md): the projection of Н1.1 (sugar, defaults, the steps П1–П5,
+- **2.2.** The canonical view of a manifest per [chapter 2.2](02.2-installer.norms.md): the projection of Н1.1 (sugar, defaults, the steps P1–P5,
   `ordered`, JCS), the view row of Н1.2 and the write of `manifest put` per Н3 — the view before the write, above the ceiling — a refusal as a whole, the order
   row — view — mark. Pass the vectors [`canonical`](../vectors/canonical/README.md) byte for byte and the acceptance of the chapter
   [`acceptance/2/`](../acceptance/2/README.md) (window 2.2, item 8: vectors and acceptance).
@@ -34,7 +34,7 @@ The lesson has no HTTP contract of its own: the door `GET /manifest` and the for
 | File | Role | Priority |
 |---|---|---|
 | [02.1-installer.norms.md](02.1-installer.norms.md) | the canon of chapter 2.1: text, document, fields, references, loading passes, refusals and the corpus | 1 |
-| [02.1-installer.schema.json](02.1-installer.schema.json), [`.relations.json`](02.1-installer.relations.json), [`.layers.tsv`](02.1-installer.layers.tsv), [`.scalars.tsv`](02.1-installer.scalars.tsv); [the В7 layers](../../common/LAYERS.md) | the form source of chapter 2.1 (ADR-0092): standard files — JSON Schema 2020-12 and CEL, executed by libraries of pinned versions and by own layers; the section «Form» of the chapter norms is built from them | 1 |
+| [02.1-installer.schema.json](02.1-installer.schema.json), [`.relations.json`](02.1-installer.relations.json), [`.layers.tsv`](02.1-installer.layers.tsv), [`.scalars.tsv`](02.1-installer.scalars.tsv); [the V7 layers](../../common/LAYERS.md) | the form source of chapter 2.1 (ADR-0092): standard files — JSON Schema 2020-12 and CEL, executed by libraries of pinned versions and by own layers; the section «Form» of the chapter norms is built from them | 1 |
 | [02.3-installer.norms.md](02.3-installer.norms.md) | the canon of chapter 2.3: the manifest row and the mark, the start and the change, `manifest put` | 1 |
 | [02.4-installer.norms.md](02.4-installer.norms.md) | the canon of chapter 2.4: units, environment, workers on order, certificates, installation, operator commands; the late layer — the ports and units of the domain, the installation of the domain (lesson 8) | 1 |
 | [02.5-installer.norms.md](02.5-installer.norms.md) | the canon of chapter 2.5: roles and the derivation of rights, the readers of secret rows, generation and `--check` | 1 |
@@ -103,7 +103,7 @@ The implementation stages are [`forms/stages.tsv`](../forms/stages.tsv) (ADR-012
 1. *(2.1)* Write out the boundaries of the closed, named and opaque levels from Н1.2,
    their owner lessons and the choices of the implementation. Check the mandatory unit/rows/id: the loader does not invent a family or a kind of id; the absence of unit.fields means an empty mapping.
 2. *(2.1)* Set up the reading of bytes and the parsing of the text per Н1.1: a YAML 1.2 parser of a pinned version and the fine check of layer 1
-   ([the В7 layers](../../common/LAYERS.md) § 4, workarounds D13, D16). Run the checks that need the original text or the list of keys before
+   ([the V7 layers](../../common/LAYERS.md) § 4, workarounds D13, D16). Run the checks that need the original text or the list of keys before
    the conversion into a mapping before the library loses this information; one document — by bytes.
 3. *(2.1)* Carry out the loading pass of Н3 by layers: text → form (the JSON Schema 2020-12 schema and the words `x-*`, the integer place —
    layer 2) → relations (CEL, only with a clean form). Filling the defaults does not hide an erroneous input.

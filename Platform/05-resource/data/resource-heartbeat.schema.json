@@ -25,7 +25,7 @@
    "x-whole": true
   },
   "build": {
-   "description": "the build word (BUILD); not a string — the field is unknown: null in the console's answers (В7 item 3, the Architect's decision of 2026-10-28, П1; row 14 of the list)",
+   "description": "the build word (BUILD); not a string — the field is unknown: null in the console's answers (V7 item 3, the Architect's decision of 2026-10-28, P1; row 14 of the list)",
    "type": "string"
   },
   "usage": {
@@ -214,7 +214,7 @@
    }
   },
   "settings_unread": {
-   "description": "the settings rows of the resource pass that were not read in this pass: mirror — platform/mirror (the mirror step and the body copies are not executed), space — platform/space (the relieve step is not executed); in ascending byte order; none such — the field is absent (P/05 Н1.4 mirror, space, Н3; В7 item 3, the Architect's decision of 2026-10-28, П1; rows 20, 21 of the list)",
+   "description": "the settings rows of the resource pass that were not read in this pass: mirror — platform/mirror (the mirror step and the body copies are not executed), space — platform/space (the relieve step is not executed); in ascending byte order; none such — the field is absent (P/05 Н1.4 mirror, space, Н3; V7 item 3, the Architect's decision of 2026-10-28, P1; rows 20, 21 of the list)",
    "type": "array",
    "items": {
     "enum": [

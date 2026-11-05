@@ -80,9 +80,9 @@ the former kid — by reading: the stand has one ring.
 - Sc. 02 steps 5–6: a mask with a Unicode whitespace character at the edge (`\t***`, `\u00a0***`) — 400 (Н1.1 `mask_in`, S12).
 - Sc. 04 steps 9–14:
   - unparsable urls (`https'://`, a space before `://`, `https:%3A//`) — 400 `bad_url` (S3);
-  - `'` in the host name does not cut the address: `token` after it is a password (А2, S4);
+  - `'` in the host name does not cut the address: `token` after it is a password (A2, S4);
   - a password in the nested address `via` and in the pair `who`, hidden by escaping, — a refusal without the login field `feed_user`
-    (А8 «Вид», А7, А15; S16).
+    (A8 «Вид», A7, A15; S16).
 - Sc. 07: the json field `rule` of the manifest `testsub2` with nested `pw_secret`.
   - A permutation of the elements `cams` without passwords: in the answer and in the store row there are no secrets, the password of A does not go to B
     (Н3 step 3, S1).

@@ -82,7 +82,7 @@ The text forms of values by type are the vectors [`values-by-type`](../vectors/v
 
 Moved from [P/03.6](../../03-worker/spec/03.6-worker.norms.md) Н1.6 (`made`, `ORDER_HORIZON`, `not_after`, `tombstone`,
 `deletes`) without a change of behaviour: the rule is read by the customer's library (P/03.6), the controller (P/04 Н3 step 8)
-and the units door of the console (P/06.1 Н3 «delete») (layout audit А-11, the Architect's decision of 2026-10-25).
+and the units door of the console (P/06.1 Н3 «delete») (layout audit A-11, the Architect's decision of 2026-10-25).
 
 ```yaml
 made:        {by: C, at, keep} («Unit row» made above): at — the time of the event, at a renewal — max(former at, t_E); keep does not decrease:
@@ -106,7 +106,7 @@ delete:      a row with made is deleted (by the worker of the addressee by worke
 
 Moved from [P/03.6](../../03-worker/spec/03.6-worker.norms.md) Н1.7 (`acts`, `unreadable`) without a change of behaviour:
 the rule «the state is in effect» is read by the holder of the unit (P/03.6), the controller (P/04 Н1.3 `retire_when`, Н1.3а `state`) and the console
-(P/06.1 Н2 «State in the answer») (layout audit А-05, the Architect's decision of 2026-10-25). The form of the state row is `Platform/03-worker/data/state.schema.json`, the outcomes are `Platform/03-worker/data/state.outcomes.tsv`
+(P/06.1 Н2 «State in the answer») (layout audit A-05, the Architect's decision of 2026-10-25). The form of the state row is `Platform/03-worker/data/state.schema.json`, the outcomes are `Platform/03-worker/data/state.outcomes.tsv`
 (P/03.6 Н1.7; C149-STATE-SUPPORT-01, the Architect's decision of 2026-10-26).
 
 ```yaml
@@ -142,7 +142,7 @@ At creation the composition of client fields is determined for each field of the
 
 The checks of type and constraints apply to the obtained values in the order of the section «Order of checks»; a default
 does not bypass `fixed`, `enum`, references and the other constraints. A required field that was not given still gives the
-refusal П4: preparing the empty form or the default does not count as the client giving it.
+refusal P4: preparing the empty form or the default does not count as the client giving it.
 After the check `json: null` is not stored. A secret is stored by the ring boundary (below) and given out as the mask `"***"` (chapter 6.2 Н1.1), and a blob at creation
 is empty: default/inherit for blob are forbidden by P/02.1. At an edit the fields not given are kept from the row,
 defaults are not applied again. A creation over a tombstone applies the same rules of preparation;
@@ -165,14 +165,14 @@ the console, `made_at` of a row with the same name — the former one (P/06.1 Н
 |---|---|
 | `SECRETS_KEY` not set (development mode, P/06.2 `no_key.unset`) | an edit (`PUT`) with a non-empty `*_secret` — the value is written in the clear, as is; a creation (`POST`) of a unit with a non-empty `*_secret` at any depth — 400 before the claim (ibid.). A table row — the same rule (one for the units and tables doors, P/06.2 Н3 «create/edit» step 3): there is no row with this name — `POST` of the table is a creation, a non-empty `*_secret` at any depth — 400 before the write; the row exists — `POST` over it is an edit, a non-empty secret is written in the clear; an empty, `null` or not given top-level secret — the former value (the stage C guess C06-ROWCHECK-TABLE-RING-33-01, the Architect's decision of 2026-10-23) |
 | set and opens | the envelope `enc:v2` by the [sealing contract](sealing.md) |
-| set, but does not read or does not open (including `SECRETS_KEY=""`, P/06.2 `no_key.unreadable`) | 503 `unavailable` before the row check (before П1), nothing is written |
+| set, but does not read or does not open (including `SECRETS_KEY=""`, P/06.2 `no_key.unreadable`) | 503 `unavailable` before the row check (before P1), nothing is written |
 
 A list has only string elements; another JSON element is a refusal of the field type (section «Refusals»).
 An `int` value at the input of the door is a JSON number without a fraction part and an exponent within ±(2^53 − 1): `1.0`, `1e2` and
 `9007199254740992` for `int` are `not_number` (such a number is read by a JSON client of any language). The number `-0` is stored as `0`
 (JCS, ADR-0072).
 The value of a json field is any JSON value; its `schema` is JSON Schema 2020-12 by the definition `jsonSchemaLite` of
-`Platform/02-installer/spec/02.1-installer.schema.json` ([manifest form](../../02-installer/spec/02.1-installer.schema.json); the list of keywords and the depth are there; layout audit, Б-06; review of stage A 6–7,
+`Platform/02-installer/spec/02.1-installer.schema.json` ([manifest form](../../02-installer/spec/02.1-installer.schema.json); the list of keywords and the depth are there; layout audit, B-06; review of stage A 6–7,
 № 11); a schema with another keyword is a load refusal `refused:value` (P/02.1), so all implementations check the same thing.
 An empty element is admissible in an ordinary list, but not in placement labels by the [label alphabet](labels.md).
 
@@ -228,21 +228,21 @@ check the fields go in the order of declaration of `unit.fields`; the first refu
 
 ```
 creation (the prepared fields of the row; at the library — the fields F of the order, the id and born/made it sets itself, P/03.6 Н1.6):
-П1. body fields: a platform field → an unknown field. Platform fields are platform_fields for a unit row, table_platform_fields
+P1. body fields: a platform field → an unknown field. Platform fields are platform_fields for a unit row, table_platform_fields
     for a table row; of the platform fields the refusal names the first in the order of its own list;
     unknown fields — all their names in ascending order of UTF-8 bytes in one «unknown field(s) …» (RC-10)
-П2. preparation (section «Preparation of fields»), keeping the information on what the client gave; then the checks of values:
+P2. preparation (section «Preparation of fields»), keeping the information on what the client gave; then the checks of values:
     blob (not a digest; at creation not "") → json (not_json, too_long 4000 bytes of the canonical text — there is no other
     limit, nesting included: RC-13; schema) → enum →
     value types (not_number) → schema of a field of any type except json — over the parsed value (C06-SCHEMA-ANY-TYPE-01) → weight: a present value of the field placement.weight.field ≥ 1 (P/04 Н1.3; after
     the default is filled) → url (section «The url value») → group → labels ([label alphabet](../labels.md))
     group: there is no refusal — there is no value, it is empty or the host does not read — the unit is not in a group; bad_url of the source — the
     url step with the name of the field; the row check does not compute the group (explanation — P/04 Н1.3 group_by; RC-12)
-П3. named: the source field of the id is given or obtained non-empty from the default → by the section «Identifier and field constraints»; an empty or
-    not given id П3 skips: the refusal comes from П4 («needs a <поле>»), and for a field that is not required — bad id «is empty» after П4;
+P3. named: the source field of the id is given or obtained non-empty from the default → by the section «Identifier and field constraints»; an empty or
+    not given id P3 skips: the refusal comes from P4 («needs a <поле>»), and for a field that is not required — bad id «is empty» after P4;
     a creation over a tombstone: other fixed → «<поле> is fixed» (tombstone)
-П4. required: each required field is given by the client and is not ""
-П5. references in order: direct ref / must_match of the row itself → reverse must_match (the rows that refer to it) →
+P4. required: each required field is given by the client and is not ""
+P5. references in order: direct ref / must_match of the row itself → reverse must_match (the rows that refer to it) →
     unique over live rows; within each — the order of unit.fields (RC-11). Reverse must_match, the first refusal: the referring
     subsystems in ascending order of name bytes; within a subsystem — unit rows, then tables in ascending order of name bytes;
     within them — the order of the manifest fields; rows — in ascending order of key bytes (RC-15). The target of ref/must_match is the key
@@ -250,19 +250,19 @@ creation (the prepared fields of the row; at the library — the fields F of the
     (a consistent edit of the pair passes, an inconsistent one — must_match); the same at creation (RC-16)
 
 edit (only the given fields, without filling defaults):
-Р1. П1 and the checks of values of П2 over the given fields, except the blob subcase «not the former digest of the row» — it is in Р2
-Р2. by the row read: a fixed field changes or the given source field of a named id is not equal to the id → «<поле> is
+R1. P1 and the checks of values of P2 over the given fields, except the blob subcase «not the former digest of the row» — it is in R2
+R2. by the row read: a fixed field changes or the given source field of a named id is not equal to the id → «<поле> is
     fixed»; a blob field: the value is not the former digest of the row and not ""
-Р3. references by the new values, in the order of П5
+R3. references by the new values, in the order of P5
 ```
 
-The order of refusals of П1, П2 «group», П5 and Р3 — the stage C guesses RC-10–RC-12, RC-15, RC-16, the Architect's decision of 2026-10-23.
+The order of refusals of P1, P2 «group», P5 and R3 — the stage C guesses RC-10–RC-12, RC-15, RC-16, the Architect's decision of 2026-10-23.
 
 **Batch** ([P/06.1](../../06-console/spec/06.1-console.norms.md) Н3 «batch»; ADR-0094 B9, refinement (b)). The row check of the batch door reads references by the state after
 the batch: a target and a referring row written by the same batch are in the new prepared state; a row removed by it is as absent, a tombstone is as a tombstone; a row outside
-the batch is as usual. `unique` of П5 is counted the same way: two rows of the batch with one value — a refusal. The order and the words of refusals are the same; the first refused row is by the order of `writes`. The library has no batch.
+the batch is as usual. `unique` of P5 is counted the same way: two rows of the batch with one value — a refusal. The order and the words of refusals are the same; the first refused row is by the order of `writes`. The library has no batch.
 
-The value of a list field in `fixed` (П3 tombstone, Р2) and in the comparisons of references is compared by the JSON value — a list of strings,
+The value of a list field in `fixed` (P3 tombstone, R2) and in the comparisons of references is compared by the JSON value — a list of strings,
 order and repeats kept — not by the text of the row element: `["a", ""]` and `'["a",""]'` are one value; `unique` on a
 list is forbidden by the loader (P/02.1, corpus `c3_unique_list`) (the stage C guess RC-14, the Architect's decision of 2026-10-23).
 
@@ -286,20 +286,20 @@ library — the outcome of the order `refused` and the count `creates.refused` o
 
 | Reason | Step | Word | Door |
 |---|---|---|---|
-| a platform field is set | П1, Р1 | `error: platform_field` (for a table row `unknown field`), `detail` «a client may not set …» | 400 |
-| an unknown field | П1, Р1 | `error: unknown field`, `detail` «unknown field(s) …» | 400 |
-| `blob` is not a digest; at creation not `""`; at an edit not the former digest and not `""` | П2, Р2 | `error: blob` | 400 |
-| a json field is larger than 4000 bytes of the canonical text / not by the schema | П2 | `error: too_long`, `fault: too_long` / `error: type` | 400 |
-| `enum` is not from the list | П2 | `error: enum` | 400 |
-| the value of a field that is not `json` is not by the `schema` of the field | П2 | `error: type`, `detail` with the name of the field | 400 |
-| the value is not by the type of the field: not a number for `int`/`float`, not a boolean, not a list of strings, not a string | П2 | for numbers `error: not_number`, `fault: not_number`; otherwise `error: type`; `detail` with the name of the field | 400 |
-| an integer value of the field placement.weight.field < 1 | П2 | `{detail, error: type}`, without fault; `detail` «<поле> must be at least 1» | 400 |
-| `url` does not read, with credentials, with `#`, a scheme not from `schemes` | П2 | `error: bad_url`, `fault: bad_url`; `detail` without the value, with the names of the fields `credentials` ([address contract](url-credentials.md) А15) | 400 |
-| the labels are not by the label alphabet | П2 | `error: labels` | 400 |
-| the id is not by the section «Identifier and field constraints» | П3 | `error: bad_id`, `detail` with the name and the reason | 400 |
-| a `fixed` field changes (an edit or a return over a tombstone); the source field of the id changes | П3, Р2 | `error: fixed`, `detail` «<поле> is fixed …» | 400 |
-| a `required` field is not set or is `""` | П4 | `error: required`, `detail` `a <sub> unit needs a <поле>` | 400 |
-| `unique`/`ref`/`must_match` are violated; a referenced row does not read | П5, Р3 | `error: conflict`, `fault: unique \| must_match \| garbled` | 409 |
+| a platform field is set | P1, R1 | `error: platform_field` (for a table row `unknown field`), `detail` «a client may not set …» | 400 |
+| an unknown field | P1, R1 | `error: unknown field`, `detail` «unknown field(s) …» | 400 |
+| `blob` is not a digest; at creation not `""`; at an edit not the former digest and not `""` | P2, R2 | `error: blob` | 400 |
+| a json field is larger than 4000 bytes of the canonical text / not by the schema | P2 | `error: too_long`, `fault: too_long` / `error: type` | 400 |
+| `enum` is not from the list | P2 | `error: enum` | 400 |
+| the value of a field that is not `json` is not by the `schema` of the field | P2 | `error: type`, `detail` with the name of the field | 400 |
+| the value is not by the type of the field: not a number for `int`/`float`, not a boolean, not a list of strings, not a string | P2 | for numbers `error: not_number`, `fault: not_number`; otherwise `error: type`; `detail` with the name of the field | 400 |
+| an integer value of the field placement.weight.field < 1 | P2 | `{detail, error: type}`, without fault; `detail` «<поле> must be at least 1» | 400 |
+| `url` does not read, with credentials, with `#`, a scheme not from `schemes` | P2 | `error: bad_url`, `fault: bad_url`; `detail` without the value, with the names of the fields `credentials` ([address contract](url-credentials.md) A15) | 400 |
+| the labels are not by the label alphabet | P2 | `error: labels` | 400 |
+| the id is not by the section «Identifier and field constraints» | P3 | `error: bad_id`, `detail` with the name and the reason | 400 |
+| a `fixed` field changes (an edit or a return over a tombstone); the source field of the id changes | P3, R2 | `error: fixed`, `detail` «<поле> is fixed …» | 400 |
+| a `required` field is not set or is `""` | P4 | `error: required`, `detail` `a <sub> unit needs a <поле>` | 400 |
+| `unique`/`ref`/`must_match` are violated; a referenced row does not read | P5, R3 | `error: conflict`, `fault: unique \| must_match \| garbled` | 409 |
 
 ## Vectors
 

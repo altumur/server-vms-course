@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/vectors/workers-script/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121).
 
 The owner is chapter [P/02.4](../../spec/02.4-installer.norms.md) of the installer (Н1.5 «Workers on demand», `rules` 2–4;
-ADR-0084 addendum (1) Р1, Р4; moved from М10/11, stage B). The participant is `w2c-workers.sh` of the server. The bytes are written by the Specification (ADR-0083, stage A, A6; review of stage A 2).
+ADR-0084 addendum (1) R1, R4; moved from М10/11, stage B). The participant is `w2c-workers.sh` of the server. The bytes are written by the Specification (ADR-0083, stage A, A6; review of stage A 2).
 
 ## `cases.tsv`
 
@@ -22,7 +22,7 @@ byte. Fields: `case`, `input` and `expect` — JSON text, `note`.
   there is no file; no field — the memory ceiling does not limit.
 
 **Output** — `{start: [<n>…], stop: [<n>…]}` in ascending order: the target is exactly the numbers `{2…want}`: start the missing ones
-(the smallest first), stop the running ones with a number greater than `want` (the largest first); a number — as an integer (ADR-0084 addendum (4) Р26:
+(the smallest first), stop the running ones with a number greater than `want` (the largest first); a number — as an integer (ADR-0084 addendum (4) R26:
 numbers, not a count). The memory ceiling
 `floor(HOST_MEMORY_MB / WORKER_MEMORY_MB)` is the number of processes of the role on the server together with the base `-1`: no more than
 `потолок − 1 − работающие n ≥ 2` are started. Start nothing and stop nothing (`{start: [], stop: []}`) if: there is no series,

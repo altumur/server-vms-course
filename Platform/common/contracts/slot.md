@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/contracts/slot.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): the state of a slot row is judged by the worker, the controller, the console and
-the agent — a contract, not copies in chapters; layout audit А-04, the Architect's decision of 2026-10-25). The owner is chapter
+the agent — a contract, not copies in chapters; layout audit A-04, the Architect's decision of 2026-10-25). The owner is chapter
 [P/03.2](../../03-worker/spec/03.2-worker.norms.md) Н1.4 (the row `<sub>/slots/<имя>`). Participants: the worker — capture and
 renewal (P/03.2 Н3); the controller — the slot judge, the leaving of units, the order ([P/04](../../04-controller/spec/04-controller.norms.md)
 Н1.4, Н3); the console — `WorkerRow.released`, `slot_taking`, `slot_until`, `slot_garbled` ([P/06.5](../../06-console/spec/06.5-console.norms.md)
@@ -56,4 +56,4 @@ P/04 and reading.
 ## Correspondence to former lessons
 
 From P/03.2 Н1.4 (`states`, `constants` — `SLOT_TERM`, `TORN_STILL`); the lease step `RENEW_EVERY` stays with the worker (P/03.2
-Н1.4, Н1.2). The readers P/04, P/06.5, P/09.1 refer here (layout audit А-04).
+Н1.4, Н1.2). The readers P/04, P/06.5, P/09.1 refer here (layout audit A-04).

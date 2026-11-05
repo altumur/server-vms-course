@@ -8,7 +8,7 @@ the negations of the secret readers; review analysis of stage A 6–7, № 5). T
 `display.form[].fields[]` — a field of the unit or a name from `platform_shown`; `objects.rows[]` names no families of the platform) and
 the rights generator P/02.5 Н2. The bytes are written by the Specification; the conformance of the product — by its acceptance against this table (ADR-0080
 addendum 16, ADR-0083). Moved from `Source/tests/testdata/platform_lists.tsv` byte for byte (stage B, the move of lesson 6,
-the Architect's decision on В8 of the plan of lesson 6 with correction № 5).
+the Architect's decision on V8 of the plan of lesson 6 with correction № 5).
 
 ## `cases.tsv`
 

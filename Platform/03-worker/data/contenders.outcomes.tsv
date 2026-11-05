@@ -1,5 +1,5 @@
-# Outcomes of an unreadable mark <sub>/contenders/<имя>/<коробка> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable mark <sub>/contenders/<имя>/<коробка> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole object); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
 	<s>worker	the contender mark is unreadable — as a mark older than CONTENDER_FRESH: the reader does not count it, as if there were no mark; the writer rewrites its own at the next CONTEND_EVERY (analysis of review of stage B 3–5, № 5)	1	строка	P/03.2 Н1.4а
-	console	the mark is unreadable (including name ≠ the key segment) but fresh by version — a contender for the name of the key segment: it enters WorkerRow.name_conflict and the series `<sub>_name_conflicts`, WorkerRow.name_conflict_unreadable — true (the conflict is not hidden; П1; В7 item 3, row 22)	1	строка	P/06.5 Н3 «/servers» «Соперники»
+	console	the mark is unreadable (including name ≠ the key segment) but fresh by version — a contender for the name of the key segment: it enters WorkerRow.name_conflict and the series `<sub>_name_conflicts`, WorkerRow.name_conflict_unreadable — true (the conflict is not hidden; P1; V7 item 3, row 22)	1	строка	P/06.5 Н3 «/servers» «Соперники»

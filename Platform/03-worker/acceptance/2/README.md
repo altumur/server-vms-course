@@ -11,9 +11,9 @@ The scenarios run on a stand of the `testsub` processes of the implementation: t
 `testsub` (the training worker of counters), which the runner controls. The catalogue of the stand is two manifests, `testsub` and `testsub2`, in the order of
 the section «Стенд» of the common acceptance README (reconciliation of python and go М10/3–5, item 24): the worker of one manifest does not touch the rows
 of the other on capture and cleanup. The training worker `testsub` reports the started counter by the element `status` with `phase: running` (chapter 3.4 Н1.1
-`phase`) and one word of the subsystem `n` — the value of the counter (chapter 3.4 Н1.1 `status`; the second pilot, `Н-7`). Observation — rows
+`phase`) and one word of the subsystem `n` — the value of the counter (chapter 3.4 Н1.1 `status`; the second pilot, `N-7`). Observation — rows
 through the store door P/01.1 and units through the console door P/06.1; the heartbeat (an object) is not read here. The controller of the stand is
-a neighbour by contract (the data catalogue, the life cycle of P/04), not the norms of the chapter (the plan of the move of lesson 3, В2).
+a neighbour by contract (the data catalogue, the life cycle of P/04), not the norms of the chapter (the plan of the move of lesson 3, V2).
 
 ## scenarios.tsv
 
@@ -47,7 +47,7 @@ In total 28 scenarios / 263 steps: 01-start (8), 04-two-copies (12), 05-sigkill 
   the code (by reading); observable — neither a slot under this name nor the slot `w-1` (the name is not replaced by a search);
 - sc. 10 — sc. 04 with the resource P/05 (`@start resource` as the first step): the platform journal `audit/<роль>` (the event journal
   contract `journal`) is read by the events door of the console; exactly one row `worker.name_taken` — at the displaced copy; the second
-  `GET` after 12 s — the same one. The resource of the stand is on the server of the controller (`srv-a`; ADR-0084 addendum (2) Р17).
+  `GET` after 12 s — the same one. The resource of the stand is on the server of the controller (`srv-a`; ADR-0084 addendum (2) R17).
 - sc. 04, 08, 10 — with the resource P/05 (`@start resource` as the first step): the controller and the console read the heartbeats of the workers through the objects door
   of the resource of their server; without the resource the reading is «not known» ([the object store client contract](../../../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision of 2026-10-27). Sc. 01, 05, 09, 11 do not wait for placement.
 

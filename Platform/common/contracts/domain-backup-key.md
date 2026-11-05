@@ -27,7 +27,7 @@ the reading of a copy are P/08.8 Н1.5.
 
 ## Form
 
-The installer writes the key into `domain/signer.backup_key_secret`: `Platform/08-domain/data/signer.schema.json`, `Platform/08-domain/data/signer.outcomes.tsv` (layout audit, В-09; the Architect's decision of 2026-10-25).
+The installer writes the key into `domain/signer.backup_key_secret`: `Platform/08-domain/data/signer.schema.json`, `Platform/08-domain/data/signer.outcomes.tsv` (layout audit, V-09; the Architect's decision of 2026-10-25).
 
 ## Vectors
 

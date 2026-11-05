@@ -8,7 +8,7 @@
 М11/10 (стадия B, ADR-0083 доп. (1): без
 изменения поведения); номера сценариев и шаги — прежние. Сценарии 05 (`record`) и 07 (`ask-sig`) сняты — те же случаи в
 пакетах [`common/vectors/record`](../../../../common/ru/vectors/record/README.md) и
-[`common/vectors/ask-sig`](../../../../common/ru/vectors/ask-sig/README.md) (план переноса урока 8, В1); сценарий 06 (`follow`) снят — пакет
+[`common/vectors/ask-sig`](../../../../common/ru/vectors/ask-sig/README.md) (план переноса урока 8, V1); сценарий 06 (`follow`) снят — пакет
 [`follow`](../../../../09-agent/ru/vectors/follow/README.md), 11 — [приёмка главы 9.1](../../../../09-agent/ru/acceptance/1/README.md); 01 —
 [приёмка главы 6.7](../../../../06-console/ru/acceptance/7/README.md) сц. 15.
 
@@ -67,7 +67,7 @@
 Сц. 15–17 (аудит покрытия P/08, второй проход Gemini, черновик G09 `e32df6f8b`, переписан):
 - сц. 15 — `POST /domain/stranded/apply` (Н1.6 `apply`): у действующего держателя — 409; после передачи на `m1` (`stranded`
   пуст) у смещённого `hold` элемента нет — 404; строка `domain/stranded` испорчена мимо двери (`doc` не JSON) — 503
-  `unavailable`, ничего не применено (исходы `domain/stranded`, Г-40). Повтор правки у нового держателя и 400 «redo it on
+  `unavailable`, ничего не применено (исходы `domain/stranded`, G-40). Повтор правки у нового держателя и 400 «redo it on
   the new holder» для элемента не-правки — чтением: брошенного стенд не создаёт.
 - сц. 16 — `POST /api/take` (Н1.7 `take`, порядок): у держателя домена — 409 раньше формы тела; у подписанта без ключей
   на `m1` (`@start domain on m1`; C08-TURN-WITHOUT-SIGNER-01 — дверь отвечает по существу) тело `{}` — 400. «Ничего не

@@ -20,7 +20,7 @@ Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The holder's door to which the agent passes the request (`/api/tokens/{member}/{sub}/{kind}`; the code and the body of the holder — as received) — `Platform/08-domain/spec/08-domain.api.openapi.yaml`; the local door — `Platform/09-agent/spec/09-agent.api.openapi.yaml`, the tag `local-door` (layout audit, В-35; the Architect's decision of 2026-10-25).
+The holder's door to which the agent passes the request (`/api/tokens/{member}/{sub}/{kind}`; the code and the body of the holder — as received) — `Platform/08-domain/spec/08-domain.api.openapi.yaml`; the local door — `Platform/09-agent/spec/09-agent.api.openapi.yaml`, the tag `local-door` (layout audit, V-35; the Architect's decision of 2026-10-25).
 
 ## The role socket
 
@@ -58,7 +58,7 @@ in_process:  the agent in the platform process of a cluster of one — a call, n
 
 **An open question — a worker on another server of the cluster.** The local door over TCP with a role certificate (ADR-0075) for a worker
 whose cluster's agent is on another server is not normed until the stand; the place is [P/09.1 Н5](../../09-agent/spec/09.1-agent.norms.md#open)
-«Open» (the move plan of lesson 9, В1). While the question is open, such a door does not take the domain ports 8444–8447 ([P/02.4 Н1.12](../../02-installer/spec/02.4-installer.norms.md)).
+«Open» (the move plan of lesson 9, V1). While the question is open, such a door does not take the domain ports 8444–8447 ([P/02.4 Н1.12](../../02-installer/spec/02.4-installer.norms.md)).
 
 ## The door
 
@@ -75,9 +75,9 @@ TOKEN_BODY: 4 KiB          # the limit of the client's body at the local door of
 TOKEN_HOLDER_BODY: 4608    # the limit of the body at the holder's door POST /api/tokens/<член>/<sub>/<вид> (P/08.7 Н1.3): = TOKEN_BODY + 512
                            # for what the agent adds (role and the JSON wrapping): a body of exactly TOKEN_BODY at the local door does not get
                            # 413 at the holder; the bytes of the body as received are measured (journal of cammeta-go, М11-07 № 4; moved from P/08.7
-                           # Н1.3 without a change; layout audit, the Architect's decision of 2026-10-25, А-19)
+                           # Н1.3 without a change; layout audit, the Architect's decision of 2026-10-25, A-19)
 refusal_413: 413 {error: "refused", detail} — a body larger than TOKEN_BODY at the local door of the agent, larger than TOKEN_HOLDER_BODY at
-            the holder's door — before the signature and the parse; detail — the words of the implementation (from P/08.7 Н4 without a change; Б-31)
+            the holder's door — before the signature and the parse; detail — the words of the implementation (from P/08.7 Н4 without a change; B-31)
 framing:    exactly one Host and one Content-Length; Transfer-Encoding (chunked included) — 400; an ambiguous or incomplete
             message — 400; the request line and the headers ≤ 16 KiB, otherwise 400; the input of the whole request ≤ 10 s, otherwise 400; one exchange
             per connection, the answer with Connection: close; TOKEN_WAIT is counted after the body is received and includes the opening of the holder's
@@ -106,9 +106,9 @@ The code and `error` are normative; `detail` is the words of the implementation,
 | `bad request` | 400 | at the agent: the body is not in the form of Н1.2, the header `Transfer-Encoding`, framing («The door» `framing`), the input deadline expired |
 | `refused` | 413 | at the agent: the body is larger than `TOKEN_BODY`; `detail` — for example «body exceeds TOKEN_BODY» (the form — `refusal_413` above) |
 | `invalid token reply` | 502 | at the agent: `m1` did not open, a wrong `request_id`, `exp ≤ now` |
-| `unavailable` | 503 | at the agent: upstream did not answer within TOKEN_WAIT — the holder or the relay; 502 `did not answer` of the relay — also 503 (`no_queue`; the Architect's decision of 2026-10-20 on the question of commit 9); 503 `frozen` of the holder (P/08.7 Н3 «issue» step 6а) — also 503 `unavailable`: the worker has no word for freezing, the request is repeated, the former token is kept (ADR-0110 addendum (12) item 3) |
+| `unavailable` | 503 | at the agent: upstream did not answer within TOKEN_WAIT — the holder or the relay; 502 `did not answer` of the relay — also 503 (`no_queue`; the Architect's decision of 2026-10-20 on the question of commit 9); 503 `frozen` of the holder (P/08.7 Н3 «issue» step 6a) — also 503 `unavailable`: the worker has no word for freezing, the request is repeated, the former token is kept (ADR-0110 addendum (12) item 3) |
 
-413 of the local door and of the holder's door — `refusal_413` above (Б-31); the code and the body of the holder passed on «as received» — [P/08.7](../../08-domain/spec/08.7-domain.norms.md) Н4. The holder's answer is opened by the agent ([P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н1.6 `agent`; `m1` — [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.5 and the [domain envelopes contract](domain-envelopes.md)).
+413 of the local door and of the holder's door — `refusal_413` above (B-31); the code and the body of the holder passed on «as received» — [P/08.7](../../08-domain/spec/08.7-domain.norms.md) Н4. The holder's answer is opened by the agent ([P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н1.6 `agent`; `m1` — [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.5 and the [domain envelopes contract](domain-envelopes.md)).
 
 ## The call in the process
 

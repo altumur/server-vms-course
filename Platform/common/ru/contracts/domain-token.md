@@ -3,7 +3,7 @@
 Текст производный от `contracts/domain-token.md`, руками не правится: источник — английский [`contracts/domain-token.md`](../../contracts/domain-token.md), правка идёт в него, русский пересобирается переводом (ADR-0121; ADR-0124 доп. (1) п. 4).
 
 Общий договор модуля «Платформа» (ADR-0083 доп. (5) и доп. (11): общий договор может появиться раньше переноса
-урока-владельца, если на него опирается уже перенесённый урок; разбор ревью стадии B 3–5, В1). Владелец — урок P/08,
+урока-владельца, если на него опирается уже перенесённый урок; разбор ревью стадии B 3–5, V1). Владелец — урок P/08,
 глава 8.2 ([нормы](../../../08-domain/ru/spec/08.2-domain.norms.md)):
 процесс `domain` выпускает токены и ведёт набор `domain/keys` и отзывы `domain/revoked` (P/08.2 Н1.2, Н1.3, Н1.6), смысл
 и выдача остаются у владельца. Читают: сторожевая консоли кластера — личность по токену
@@ -15,7 +15,7 @@
 `payload`, `sig`, константа `TOKEN_SKEW`, абзац о том, кто проверяет), Н3 «`token(keys, revoked, now, token)`» (шаги с
 `expect` и абзац о границе) и строк Н4 о токене без изменения поведения. Общее для форм главы 8.2 (hex, канонический
 base64url, JCS — RFC 8785, ADR-0072, «стенные секунды», Ed25519 — RFC 8032, полнота форм JSON, повтор ключа) —
-[договор основания домена](domain-founding.md) «Общие правила форм» (аудит раскладки, Б-03); набор `domain/keys`
+[договор основания домена](domain-founding.md) «Общие правила форм» (аудит раскладки, B-03); набор `domain/keys`
 (`keys`, `until`), форма строки `domain/revoked`, её писатели и `prune` — [договор набора ключей домена](keys.md) (разбор
 ревью стадии A 8–10, № 13); окно отзыва без связи — P/08.2 Н1.7. Вид токена воркера
 и `audience_claim` — объявление вида [P/02.1](../../../02-installer/ru/spec/02.1-installer.norms.md) Н1.2б (поздний слой),
@@ -27,7 +27,7 @@ P/08.4 (разбор ревью стадии B 8–10, № 22); «Н1.x» в ш�
 
 ## Форма
 
-Функция `token` читает `domain/keys` и `domain/revoked`: `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/08-domain/data/revoked.schema.json`, `Platform/08-domain/data/revoked.outcomes.tsv`; объявление вида и `audience_claim` — `Platform/02-installer/spec/02.1-installer.schema.json` (аудит раскладки, В-14, Б-32; решение «Архитектора» 2026-10-25).
+Функция `token` читает `domain/keys` и `domain/revoked`: `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/08-domain/data/revoked.schema.json`, `Platform/08-domain/data/revoked.outcomes.tsv`; объявление вида и `audience_claim` — `Platform/02-installer/spec/02.1-installer.schema.json` (аудит раскладки, V-14, B-32; решение «Архитектора» 2026-10-25).
 
 ## Токен
 
@@ -46,7 +46,7 @@ TOKEN_SKEW:    60          # с, допуск часов в обе сторон�
 person:        токен человека: выпускающий (процесс domain при входе, P/08.4 Н1.2) пишет ровно {iss: <домен>, sub: <имя
                человека>, kind: "person", iat, exp, jti}, без aud; exp = iat + TOKEN_LIFETIME; проверяющий прочие поля
                пропускает (п. payload), sub проверяет по форме имени — [договор имени человека](person-name.md) `name` (1–64 знака без
-               пробельных, управляющих и : | ( ) " /, не break-glass; аудит раскладки А-20) — иначе 401 у сторожевой
+               пробельных, управляющих и : | ( ) " /, не break-glass; аудит раскладки A-20) — иначе 401 у сторожевой
                (догадка стадии C GP-L01, решение «Архитектора» 2026-10-23)
 ```
 
@@ -82,7 +82,7 @@ person:        токен человека: выпускающий (процес
 3. kid ∉ keys.keys                                                               → refused unknown_key
 4. подпись не проверяется keys.keys[kid] над ASCII «<header>.<payload>»           → refused bad_signature
 5. iat или exp не конечное число, jti не строка по грамматике Н1.6, kind не непустая строка → refused bad_claims
-5а. kid ∈ until, now > until[kid] и не (kind ∈ expect.keep и now ≤ keep_until[kid]) → refused unknown_key   # после подписи: kind подписан, судить его раньше нельзя; чужая подпись на истёкшем ключе — bad_signature (ADR-0110 доп. (10) п. 3)
+5a. kid ∈ until, now > until[kid] и не (kind ∈ expect.keep и now ≤ keep_until[kid]) → refused unknown_key   # после подписи: kind подписан, судить его раньше нельзя; чужая подпись на истёкшем ключе — bad_signature (ADR-0110 доп. (10) п. 3)
 6. now > exp + TOKEN_SKEW                                                         → refused expired
 7. now < iat − TOKEN_SKEW                                                         → refused future
 8. jti в revoked                                                                  → refused revoked
@@ -138,7 +138,7 @@ person:        токен человека: выпускающий (процес
 
 ## Соответствие прежним урокам
 
-Из М11/2 (разбор ревью стадии B 3–5, В1): Н1.6 — строка `token` (`header`, `payload`, `sig`), `TOKEN_SKEW` и абзац
+Из М11/2 (разбор ревью стадии B 3–5, V1): Н1.6 — строка `token` (`header`, `payload`, `sig`), `TOKEN_SKEW` и абзац
 «Проверка токена — функция `token`…» (здесь «Токен»; `domain/revoked` — теперь [договор набора ключей домена](keys.md) «Отзывы», `OLD_KEYS` — P/08.2 Н1.6); Н3
 «`token(keys, revoked, now, token)`» — шаги 1–11 с комментарием `expect` и абзац о границе (здесь «Проверка»); Н4 — строки
 о токене (здесь «Слова отказа»). Часть нормы М11/2-05 (порядок проверки) и М11/2-06 (нечитаемая строка отзывов —

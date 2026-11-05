@@ -82,7 +82,7 @@ None: the setting channel is the environment only ([P/02.4] Н1.2 «The setting 
 | Code | When | Norm |
 |---|---|---|
 | 0 | a manifest change — stop, the supervisor starts it again | [P/02.3] Н3 «Manifest change» |
-| 2 | the manifest mark is out of form at a running process — a stop, a restart refuses until the operator fixes the mark (review analysis of stage A 6–7, Б2) | [P/02.3] Н3 «Manifest change», Н4 |
+| 2 | the manifest mark is out of form at a running process — a stop, a restart refuses until the operator fixes the mark (review analysis of stage A 6–7, B2) | [P/02.3] Н3 «Manifest change», Н4 |
 | 2 | the store schema is above its own or not a number | [P/06.6] Н3 «console start — schema check» |
 | 2 | the manifest is not read or is refused | [P/02.3] Н3 «Process start» |
 | 2 | `CONSOLE_ROOT` is empty or not from the catalogue | [P/06.5] Н1.1 `root`, Н4 |

@@ -176,7 +176,7 @@ This is a proposed order, not an obligatory structure of the code. The chapters 
    map of the key, SHA-512 of the seed, HKDF, AAD.
 3. «Принять» ([the report acceptance contract](../../common/contracts/accept.md), `accept`): the order of the steps, 409 of three kinds,
    `heard` and `MARK_REFRESH`, the order of the writes of the object, `.delta` and the marks.
-4. «Принять» with a road (`accept` with `via`, `heard_ago`): steps 2, 2а, 3 of the report acceptance contract.
+4. «Принять» with a road (`accept` with `via`, `heard_ago`): steps 2, 2a, 3 of the report acceptance contract.
 5. The acceptance of a member of Н3 and the holder in the list; the topology of Н1.2: the form, the refusals, CAS by `base_rev` and `If-Match`, the JCS of the text `doc`.
 6. The holder on a package of Н3: the topology, `refused`, the answer with `rev` for this road.
 7. `tls_ca` → `Entry.ca`, `tls_ca_certs` → `ca-certs` and the administrator door.
@@ -188,7 +188,7 @@ This is a proposed order, not an obligatory structure of the code. The chapters 
 1. The freshness of Н1.3: a change of the mark and of the heartbeat — on the holder's monotonic clock; the first look at the mark is not a change (the member
    `unseen`), at the heartbeat — a change; `LOST_AFTER` 45 s.
 2. The view of Н1.4: the units from the heartbeats, then from the shards of the snapshot without repeats of id (a row without the value `domain.ref` is not a unit);
-   the placements — by one read per pass (Н3 step 3а); `contested` except the ref of the executors; the order (cluster, id);
+   the placements — by one read per pass (Н3 step 3a); `contested` except the ref of the executors; the order (cluster, id);
    `contested` before `complete`.
 3. The shadow report of Н1.6: the claims from `status[]` with ref by the shard of its own member; the memory of the time of a change of `observed_revision` per
    pair; `clean_streak` is reset by any finding and by `unknown`.

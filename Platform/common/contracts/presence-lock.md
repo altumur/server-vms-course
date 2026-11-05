@@ -6,7 +6,7 @@ A common contract of the module «Платформа» (ADR-0083 addendum (5); a
 [P/05](../../05-resource/spec/05-resource.norms.md): it reads the locks of its box, derives from them the presence of the worker
 processes (P/05 Н1.4 `workers`, `running`, `unknown`, `presence`) and the count `room.<sub>` of the door row (P/05 Н1.4
 `door_row`). The lock is held by the worker — the worker's side: chapter [P/03.2](../../03-worker/spec/03.2-worker.norms.md) Н3
-«start()», step 2б; the number `room.<sub>` is read by the controller ([P/04](../../04-controller/spec/04-controller.norms.md) Н3
+«start()», step 2b; the number `room.<sub>` is read by the controller ([P/04](../../04-controller/spec/04-controller.norms.md) Н3
 «shortage(), order(), withdraw the order, shrink() — with grows: true»); the layout of the events root — [P/02.4 Н1.2](../../02-installer/spec/02.4-installer.norms.md) «The setting channel
 and the layout of `PLATFORM_DIR`». Moved from М10/8 Н1.4 (`presence_lock`, `room`) and М10/11 Н1.4 (`presence`) without a change of
 behaviour; the derivation of the presence words from the fields of the resource heartbeat — P/05 Н1.4 `presence`.
@@ -18,13 +18,13 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 The content of the lock is the family `presence-lock`: `Platform/05-resource/data/presence-lock.schema.json`,
 `Platform/05-resource/data/presence-lock.outcomes.tsv`; the elements `room.<sub>`, `live.<sub>` are written into the door row
 `platform/doors/<сервер>` — `Platform/05-resource/data/doors.schema.json`, `Platform/05-resource/data/doors.outcomes.tsv`
-(layout audit, В-45; the Architect's decision of 2026-10-25).
+(layout audit, V-45; the Architect's decision of 2026-10-25).
 
 ## Lock
 
 ```yaml
 presence_lock:  <events root>/.workers/<sub>/<instance>.lock   # the components — by the name encoding of the event journal contract
-             # («File names in shared trees», event-journal.md); the Architect's decision, the second pilot, Н-1
+             # («File names in shared trees», event-journal.md); the Architect's decision, the second pilot, N-1
              content: JSON {instance, sub, worker, server, pid} — the instance, the subsystem, the slot name, the server, the pid of the process;
              the form — the family presence-lock of P/05 (the schema ../../05-resource/data/presence-lock.schema.json, the outcomes
              presence-lock.outcomes.tsv next to it): worker — the slot name, or "" before the capture of a name and while the worker searches without a name,
@@ -63,13 +63,13 @@ presence_lock:  <events root>/.workers/<sub>/<instance>.lock   # the components 
              a gone file the resource MAY delete, holding its flock and after a matching comparison; there is no other source of presence (pid files, kill(pid, 0))
 presence:   the resource tells about the processes of its box by the heartbeat fields of P/05 Н1.4 (`workers`, `running`, `unknown`; the words and their
             derivation — there too, the fate — P/04); how it learns — the presence lock above
-            (<events root>/.workers/<sub>/<instance>.lock, flock; the second pilot, Н-1); unreadable → unknown (a word
+            (<events root>/.workers/<sub>/<instance>.lock, flock; the second pilot, N-1); unreadable → unknown (a word
             of the closed list of P/04: the controller waits for it), never «left»
 ```
 
 The form of the content is the family `presence-lock` of P/05: [the schema](../../05-resource/data/presence-lock.schema.json),
 [the outcomes](../../05-resource/data/presence-lock.outcomes.tsv); the instance is `{key, file}`, the text of the file with `x-encoding: json` at the root
-([layers В7](../LAYERS.md) § 6); the column `schema` of the catalogue row names the family, the section of families is in the norms of P/05 (analysis of the review of stage B 6–7, № 44).
+([layers V7](../LAYERS.md) § 6); the column `schema` of the catalogue row names the family, the section of families is in the norms of P/05 (analysis of the review of stage B 6–7, № 44).
 
 The race «the worker between open and flock, the resource deletes the file»: the worker opened the file, the resource takes flock without waiting, the comparison
 matched — gone, the resource deletes the file and releases the lock; the blocking flock of the worker gets the lock on the deleted file,
@@ -83,12 +83,12 @@ room:      the element room.<sub> of every subsystem of the catalogue whose role
            the box is written at every door mark — how many more role processes this server will raise (ADR-0084 item 2):
            decimal min(floor(HOST_MEMORY_MB / WORKER_MEMORY_MB) − live, 98 − live with a number n ≥ 2), not less than 0;
            live — the presence lock files of <sub> (presence_lock above) with a busy flock, by the instance files, not by
-           the aggregate running, with empty or out-of-form content included (analysis of the review of stage B 3–5, № 23); the number — n of the name <prefix>-<server>-<n> from the content of the lock (the slot name contract «Role process name and its number»; n 2…99 — the ordered ones; Б-25);
+           the aggregate running, with empty or out-of-form content included (analysis of the review of stage B 3–5, № 23); the number — n of the name <prefix>-<server>-<n> from the content of the lock (the slot name contract «Role process name and its number»; n 2…99 — the ordered ones; B-25);
            there is no role file — there is no element; the role file does not parse, a role lock is unknown (the file does not read, analysis of the review of stage B 3–5, № 23) or the listing of the directory of the role locks is not obtained (C05-PRESENCE-SCAN-UNKNOWN-01) — "unknown"; the controller
            does not choose a server without a number in room.<sub> and itself subtracts the reserves of its orders
            (free(s); P/04 Н3 «shortage(), order(), withdraw the order, shrink() — with grows: true»);
            a limit of the scheme: room of every role is counted from the whole memory of the server, a common ceiling is not divided among the roles
-           (ADR-0084 addendum (1) Р12)
+           (ADR-0084 addendum (1) R12)
 number:    n of the name <prefix>-<server>-<n> — the canonical decimal ASCII notation without leading zeros; the range — as for the instances
            of the worker unit of P/02.4 Н1.1: 1 — the base one, 2…99 — by order; n > 99 (and a non-canonical notation) — not a slot of this
            installation: the lock as without a number — it enters live, it does not enter «live with a number» and live, a log line (the vectors
@@ -96,7 +96,7 @@ number:    n of the name <prefix>-<server>-<n> — the canonical decimal ASCII n
 live:      next to every room.<sub> — the element live.<sub>: the numbers n ≥ 2 of the live role locks by which room.<sub> is counted,
            decimal, separated by commas, ascending, without repetitions, from the same snapshot of the locks; a lock without a number (the name is not
            <prefix>-<server>-<n>, worker = "", the content is empty or out of form — analysis of the review of stage B 3–5, № 23) enters room, not the list; an empty list — ""; room.<sub> "unknown" — there is no live.<sub>;
-           the controller does not choose a server without live.<sub> (free(s), P/04 Н3 «shortage(), order(), withdraw the order, shrink() — with grows: true»; ADR-0084 addendum (3) Р14′; analysis of the review
+           the controller does not choose a server without live.<sub> (free(s), P/04 Н3 «shortage(), order(), withdraw the order, shrink() — with grows: true»; ADR-0084 addendum (3) R14′; analysis of the review
            of stage A 3–5, № 3, 19)
 ```
 
@@ -108,4 +108,4 @@ The package [`presence-room`](../vectors/presence-room/README.md) (the count `ro
 
 From М10/8 Н1.4 (stage B, analysis of the review of stage A 3–5, № 9): `presence_lock` whole and `room` (at P/05 Н1.4 `room` is
 a reference here); from М10/11 Н1.4 — `presence`. Part of the norm М10/8-10 (the lock and the count `room`; P/05-07) — by `note` of
-[id-map](../id-map.tsv); the worker's side (step 2б «старт()» of М10/5) — chapter P/03.2, a part of М10/5 by the id-map of lesson 3.
+[id-map](../id-map.tsv); the worker's side (step 2b «старт()» of М10/5) — chapter P/03.2, a part of М10/5 by the id-map of lesson 3.

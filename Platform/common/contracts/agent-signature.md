@@ -16,7 +16,7 @@ not copies in chapters; analysis of the review of stage A 8–10, № 13 / decis
 Moved from М11/3 Н1.4 (the block `header`, `window`, `replay` and the paragraph on the check and the refusal words) without a change of behaviour.
 The member key, its birth and its pinning in the member record are P/09.1 Н1.1 `pub`, `born` (P/09.1-01); what a door does after
 the check (the knock, 403 of the key, 401) is the norms of the checking doors. References in the moved text: «Н1.1 pub», «Н2», «Н3» are of lesson
-М11/3; «lesson N» is lesson М11/N. Their addresses now (analysis of the review of stage B 8–10, № 22; Claude М-1, С-7): «Н1.1 pub» — P/09.1
+М11/3; «lesson N» is lesson М11/N. Their addresses now (analysis of the review of stage B 8–10, № 22; Claude M-1, S-7): «Н1.1 pub» — P/09.1
 Н1.1 `pub`, the small order and «not a point of the curve» are defined right here («Check and refusal words»); «Н2» — P/08.3 Н2; «Н3» at
 `agent-sig` — the function of this contract, at `replay` (idempotency of the report) — [the report acceptance contract](accept.md) step 2;
 «lesson 4» — P/09.2; «lesson 6» — P/09.1 Н1.5; «lesson 10» — [the ask signature contract](ask-sig.md) (P/08.8).
@@ -25,7 +25,7 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The signature key of a member is `domain/member-key`: `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`. The doors where the header is checked are the OpenAPI `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`POST /api/member`, `GET /api/carry`, `POST /api/tokens`), `Platform/09-agent/spec/09-agent.api.openapi.yaml` (the relay doors), `Platform/06-console/spec/06-console.api.openapi.yaml` (the doors of units, `GET /events?class=alarm`) (layout audit, В-05, В-06; the Architect's decision of 2026-10-25).
+The signature key of a member is `domain/member-key`: `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`. The doors where the header is checked are the OpenAPI `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`POST /api/member`, `GET /api/carry`, `POST /api/tokens`), `Platform/09-agent/spec/09-agent.api.openapi.yaml` (the relay doors), `Platform/06-console/spec/06-console.api.openapi.yaml` (the doors of units, `GET /events?class=alarm`) (layout audit, V-05, V-06; the Architect's decision of 2026-10-25).
 
 ## Signature
 

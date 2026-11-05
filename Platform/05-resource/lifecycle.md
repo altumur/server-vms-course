@@ -35,7 +35,7 @@ the subsystem file, what is read earlier wins; the files — by parsing, not by 
 | `PLATFORM_DIR` | the state root | `/data/platform` | [P/02.4] Н1.2 |
 | `RESOURCE_ROOT` / `EVENTS` | the root of the event trees; the presence locks `.workers/` are in it too | `<PLATFORM_DIR>/events` | [P/02.4] Н1.2 «The setting channel», [event journal], [presence lock] |
 | `OBJECTS` / `PLATFORM_OBJECTS` | the root of the objects of the objects door and of the body copies | `<PLATFORM_DIR>/objects` | [P/02.4] Н1.2, [P/05] Н1.1 |
-| `RESOURCE_HOST`, `RESOURCE_PORT` | the address of the resource door; the unit does not write it — the process default; set in `w2c.env` — the bind address (off the loopback — only with a kit, ADR-0075 addendum of 2026-10-26 (6) item 2); with `mtls` the chain — the leaf, then its center ([the role certificate contract](../common/contracts/role-certificate.md) `server`; review of the norms of ADR-0075, Claude fd85ea8cc, С-2, С-3) | `127.0.0.1`, `8090` | [P/02.4] Н1.1, Н1.2, Н1.6 |
+| `RESOURCE_HOST`, `RESOURCE_PORT` | the address of the resource door; the unit does not write it — the process default; set in `w2c.env` — the bind address (off the loopback — only with a kit, ADR-0075 addendum of 2026-10-26 (6) item 2); with `mtls` the chain — the leaf, then its center ([the role certificate contract](../common/contracts/role-certificate.md) `server`; review of the norms of ADR-0075, Claude fd85ea8cc, S-2, S-3) | `127.0.0.1`, `8090` | [P/02.4] Н1.1, Н1.2, Н1.6 |
 | `RESOURCE_URL` | the door address that the resource writes into the door row; an IP literal off the loopback (the loopback threshold of [the role certificate contract](../common/contracts/role-certificate.md) `loopback`: `ip`) — the resource writes a journal line at start; with `https://` the clients refuse `ip_address`, with `http://` — a configuration error visible as a connection refusal (ADR-0075 addendum of 2026-10-26 (4) item 6) | — | [P/02.4] Н1.2, [P/05] Н1.4 `door_row` |
 | `RESOURCE_TLS` | the door over TLS | — | [P/02.4] Н1.2, Н1.6 |
 | `SERVER_NAME` | its own server: the key of the heartbeat and of the door row; not by the grammar — code 2 | the short hostname | [P/02.4] Н1.2 |
@@ -70,7 +70,7 @@ None: the setting channel is the environment only ([P/02.4] Н1.2 «The setting 
 | Code | When | Norm |
 |---|---|---|
 | 0 | a manifest change — stop, the supervisor starts it again | [P/02.3] Н3 «Manifest change» |
-| 2 | the manifest mark is out of form at a running process — a stop, a restart refuses until the operator fixes the mark (review of stage A 6–7, Б2) | [P/02.3] Н3 «Manifest change», Н4 |
+| 2 | the manifest mark is out of form at a running process — a stop, a restart refuses until the operator fixes the mark (review of stage A 6–7, B2) | [P/02.3] Н3 «Manifest change», Н4 |
 | 2 | the store schema is above its own or not a number | [P/05] Н3 «resource start — schema check» |
 | 2 | the manifest row is not readable or is refused | [P/02.3] Н3 «Process start» |
 | 2 | the environment file is not by the grammar; `SERVER_NAME` is not by the grammar; `W2C_ROLE` is not the role of the command | [P/02.4] Н1.2, Н4 |

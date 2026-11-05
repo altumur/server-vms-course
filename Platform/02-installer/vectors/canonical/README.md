@@ -6,7 +6,7 @@ The owner is chapter [P/02.2](../../spec/02.2-installer.norms.md) of the install
 the loader [P/02.1](../../spec/02.1-installer.norms.md) (the view is built only from an accepted manifest, verdict `ok`) and the installer
 `manifest put` [P/02.3](../../spec/02.3-installer.norms.md) Н3 (writes the view next to the row). A vector is the bytes of a manifest → the bytes of the field
 `manifest` of the view row `platform/manifest/<sub>/canonical/1`; the wrapper `{form, rev, sha256, manifest}` and `rev` are not vectors but
-[the acceptance of chapter 2.2](../../acceptance/2/README.md) (ADR-0089 addendum (1) Р13). Both implementations — byte for byte. The window of chapter 2.2 is
+[the acceptance of chapter 2.2](../../acceptance/2/README.md) (ADR-0089 addendum (1) R13). Both implementations — byte for byte. The window of chapter 2.2 is
 `decisions/inbox/2026-10-20-окно-главы-2.2-канонический-вид.md` (section 5, the Architect's decision — item 8).
 
 ## Composition
@@ -21,7 +21,7 @@ Inputs of the rows:
 - `corpus-<случай>` — each accepted case of the corpus of chapter 2.1 (`acceptance/1/verdicts.tsv`, verdict `ok`);
 - `course-<имя>` — each manifest of the course `Source/tests/testdata/*.subsystem.yaml`;
 - `example-<правило>` — one row per rule of Н1.1 (the defaults note `decisions/inbox/2026-10-19-умолчания-канонического-вида.md`,
-  section 5): a section without a default and with a default, a nested key, sugar ×3, П1 (and a stated `snapshot: []`), П2–П5,
+  section 5): a section without a default and with a default, a nested key, sugar ×3, P1 (and a stated `snapshot: []`), P2–P5,
   `ordered`. The input of an example row is a small manifest that changes one rule against the minimal one; what it shows is
   the field `note`.
 

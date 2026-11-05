@@ -30,7 +30,7 @@ there is no field); the other keys — by JSON value (`"@absent"` — there is n
 23 rows: 13 of the console (5 — the visibility filter: a grant by labels and an unreadable unit — the row is hidden, `withheld` with it; a grant on
 a unit and on `*` — visible, no `withheld`; labels by `of`; labels `[]` — hidden without `withheld`; C06-EVENTS-LABEL-SOURCE-138-07), 4
 of the worker, 3 common ones (`limit`/`keep`, an equal time, `partial`/`lines_garbled`) at the console and 3 of their twins at the worker (`*-worker`:
-the merge of the worker — steps 1–6 of the contract without the filter 5а; ACC-VECTORS-CONNECT-03).
+the merge of the worker — steps 1–6 of the contract without the filter 5a; ACC-VECTORS-CONNECT-03).
 
 ## Run
 
@@ -42,7 +42,7 @@ Who performs a row is by the field `participant` of the input: `"console"` — t
 
 ## What the vector does not cover
 
-The visibility filter of the console (the contract, step 5а) — the rows with `grant` above; without `grant` the caller is with `view` on `*`. The cut by `limit`
+The visibility filter of the console (the contract, step 5a) — the rows with `grant` above; without `grant` the caller is with `view` on `*`. The cut by `limit`
 after the filter with the limit 10000 to the resources and the reading of the unit rows themselves — the acceptance and reading (C06-EVENTS-VIEW-33-01). The freshness of the door row (the package [`fresh-age`](../fresh-age/README.md)), `from mirror`, the lanes and the timeout, a late answer, the reconciliation
 of the evidence row with a fresh read of the epoch — by reading the contract; the rights of the worker to `<sub>/epoch/` — P/02.5 and the scenarios.
 

@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/vectors/group-of/RE
 
 The owner is lesson P/04 through [the group by host contract](../../contracts/group-of.md) ([the norms](../../../04-controller/spec/04-controller.norms.md) Н1.3 `group_by`, `cut_at: host`; ADR-0053; the parsing of the address is
 `schemes` of P/02.1 Н1.2а). The participants are `<s>controller` (the group of a unit at placement) and `<s>worker` (the stamp `group` of a request and the call per group, P/03.6); moved from `04-controller/vectors/group-of` byte for byte (W03-GROUP-01). The bytes are written by «Спецификация»; moved
-from `Source/tests/testdata/group_of.tsv` (stage B, the move of lesson 6, the Architect's decision on В8 of the plan of lesson 6). The header
+from `Source/tests/testdata/group_of.tsv` (stage B, the move of lesson 6, the Architect's decision on V8 of the plan of lesson 6). The header
 of `cases.tsv` was moved byte for byte and names the former addresses: М10/3 Н4 — now P/06.1 Н4, М10/7 Н1.1а — P/06.2 Н1.1а,
 `fault.tsv` — the package [`fault`](../fault/README.md).
 

@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/contracts/request-mark.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5) and addendum (11): a contract that several processes read
-and write lies in `Platform/common/`; review of stage B 3–5, В1). The owner is chapter [P/06.4](../../06-console/spec/06.4-console.norms.md)
+and write lies in `Platform/common/`; review of stage B 3–5, V1). The owner is chapter [P/06.4](../../06-console/spec/06.4-console.norms.md)
 (the console): it creates the request row by the door and removes it by the reaper, keeps the accounting `asked` itself, and in
 the mark it is a participant (the reaper writes `no_begun` `expired` and `unknown` by the index; P/06.4 Н3 «file a request»,
 «reaper»). Read and written by: the holder worker — the mark `begun` and the outcome, the cleanup of the mark after `kept`, the
@@ -23,7 +23,7 @@ Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The files the contract works by (layout audit, В-50–В-54, Б-17; the Architect's decision of 2026-10-25):
+The files the contract works by (layout audit, V-50–V-54, B-17; the Architect's decision of 2026-10-25):
 
 - the request row `<sub>/requests/<rid>` — the family `requests`: `Platform/06-console/data/requests.schema.json`,
   `Platform/06-console/data/requests.outcomes.tsv`; the mark `objects/<sub>/commands/<rid>` — the family `commands`:
@@ -229,7 +229,7 @@ The rows «holder …», «another holder …», «the holder that began …» a
 
 Moved from [P/03.4](../../03-worker/spec/03.4-worker.norms.md) Н1.1 `said_id` and P/03.6 «Implementation decides» item 1 (the limits)
 without a change of behaviour: the name of a request in `fetched` of the heartbeat is written by the holder worker (P/03.6 Н3 «holder's look»), read by the reaper
-of the console (P/06.4 Н3 «reaper» `clear`) (layout audit А-24, Б-02, the Architect's decision of 2026-10-25). The field `fetched` of the heartbeat has the form of P/03.4 Н1.1
+of the console (P/06.4 Н3 «reaper» `clear`) (layout audit A-24, B-02, the Architect's decision of 2026-10-25). The field `fetched` of the heartbeat has the form of P/03.4 Н1.1
 (`Platform/03-worker/data/heartbeats.schema.json`, the outcomes `Platform/03-worker/data/heartbeats.outcomes.tsv`).
 
 ```yaml
@@ -263,7 +263,7 @@ of lesson P/01 (`canonical_json.tsv`: input → the RFC 8785 form → sha256; AD
 
 ## Correspondence to former lessons
 
-From P/06.4 (review of stage B 3–5, В1; formerly М10/8): Н1.5 — the blocks `<sub>/requests/<rid>`, `action`, `rid`, `manifest`,
+From P/06.4 (review of stage B 3–5, V1; formerly М10/8): Н1.5 — the blocks `<sub>/requests/<rid>`, `action`, `rid`, `manifest`,
 `mark` (with `kept`) and the paragraph on the vectors; Н1.6 — the paragraph on the forms of the mark (here «Three forms of the mark»; the door `answered` stays in
 P/06.4 Н1.6 with a reference here); Н3 «States of an executed request and its mark» whole; «Races» of the procedure «reaper». The references inside
 the moved text («Н1.5», «chapter 3.6», «chapter 6.3», «Н2», «by Н3») are written with the full address (P/06.4 …, P/03.6 …,

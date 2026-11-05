@@ -21,8 +21,8 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; 
 | Field | Meaning |
 |---|---|
 | `case` | the name of the case, unique |
-| `unit` | `<подсистема>/<rows>` — the units table of a manifest, or `<подсистема>/<таблица>` — a table of a manifest (a table row: `П1` by `table_platform_fields`, the preparation — «Table row» of the contract) |
-| `op` | `create` — creation (`П1`–`П5` of the contract), `edit` — an edit (`Р1`–`Р3`) |
+| `unit` | `<подсистема>/<rows>` — the units table of a manifest, or `<подсистема>/<таблица>` — a table of a manifest (a table row: `P1` by `table_platform_fields`, the preparation — «Table row» of the contract) |
+| `op` | `create` — creation (`P1`–`P5` of the contract), `edit` — an edit (`R1`–`R3`) |
 | `body` | the passed fields — a JSON object; numbers are lexemes as written (`1e2`, `-0`) |
 | `stored` | for `edit` — the read row; for `create` — the tombstone over which one creates; empty — there is no row. A JSON object in the form of a unit row (the elements are strings) |
 | `rows` | the other rows of the store that the check reads: a JSON object `{ключ: строка}`; `"@garbled"` instead of a row — the row is not read by its form |
@@ -33,11 +33,11 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; 
 | `row` | for `ok` — the part of the prepared row that is compared: a JSON object `{элемент: текст}`, `"@absent"` — there is no element; empty — not compared. The text of a list in the form of a JSON array is compared by JSON value (as `@json` of the vectors [`values-by-type`](../values-by-type/README.md)) |
 | `note` | a rule of the contract or a step of the acceptance of P/06.1 |
 
-81 cases: 30 `ok`, 51 `refused` (`labels_repeat` — a repeat of a label in the labels field of a unit, the value as it is, C51-LABEL-LIST-01; `unique_required_*` — required + unique with an empty value, the refusal `П4` before unique; a non-required unique with empty ones — `unique_*_not_counted`, RC-17; C51-UNIQUE-EMPTY-01).
+81 cases: 30 `ok`, 51 `refused` (`labels_repeat` — a repeat of a label in the labels field of a unit, the value as it is, C51-LABEL-LIST-01; `unique_required_*` — required + unique with an empty value, the refusal `P4` before unique; a non-required unique with empty ones — `unique_*_not_counted`, RC-17; C51-UNIQUE-EMPTY-01).
 
 ## Run
 
-A side performs its common row check: the preparation of the fields and the checks `П1`–`П5` (`create`) or `Р1`–`Р3` (`edit`) over
+A side performs its common row check: the preparation of the fields and the checks `P1`–`P5` (`create`) or `R1`–`R3` (`edit`) over
 `body`, `stored` and `rows`. Compared are the outcome, the class or `fault`, the field and, for `ok`, the elements of `row`. At the door the class is read
 from the refusal: the word `error` by P/06.1 Н2 «Refusal: `error` and `field`» (the class `unknown_field` — the word `unknown field`; at a table row
 `platform_field` — also `unknown field`), the field — `field` without the leading `/` (for `unknown_field` — the first name); the text of `detail` is not compared; at the library — the outcome `refused`

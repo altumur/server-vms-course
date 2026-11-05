@@ -57,7 +57,7 @@ argument of the runner command is the subsystem name `<sub>`.
   `<sub>/snapshot/<воркер>`, `<sub>/snapshot/unplaced` ([P/04] Н1.3а). File names — one encoding ([the event journal contract](../common/contracts/event-journal.md) «File names in shared trees»).
 - **Cluster objects** (the heartbeats of workers and resources, the reports) the controller reads through the resource of its own server (the
   objects door [P/05](../05-resource/spec/05-resource.norms.md), `scope`); without a resource on its own server with `cluster://` — «unknown», not «no» ([the object store client contract](../common/contracts/object-client.md) `door`; P03-OBJECTS-DEFAULT-1FD; the Architect's decision 2026-10-27); a stand that needs the worker heartbeats
-  puts a resource on the server of the controller ([P/04] Н3 «pass()» step 0; ADR-0084 addendum (2) Р17; review of stage A
+  puts a resource on the server of the controller ([P/04] Н3 «pass()» step 0; ADR-0084 addendum (2) R17; review of stage A
   3–5, № 22).
 - **Reads**: the worker heartbeats `<sub>/heartbeats/<имя>`, the resource heartbeat `platform/resources/<server>/heartbeat`,
   `platform/manifest/<sub>` and the mark `/rev`, `platform/schema`, `platform/servers/*`, `platform/doors/*`,
@@ -72,7 +72,7 @@ argument of the runner command is the subsystem name `<sub>`.
 | Code | When | Norm |
 |---|---|---|
 | 0 | a manifest change: the mark `platform/manifest/<sub>/rev` is above the remembered one or has disappeared — stop, the supervisor starts it again | [P/02.3] Н3 «Manifest change» |
-| 2 | the manifest mark is out of form at a running process — a stop, a restart refuses until the operator fixes the mark (review of stage A 6–7, Б2) | [P/02.3] Н3 «Manifest change», Н4 |
+| 2 | the manifest mark is out of form at a running process — a stop, a restart refuses until the operator fixes the mark (review of stage A 6–7, B2) | [P/02.3] Н3 «Manifest change», Н4 |
 | 2 | the store schema is above its own or not a number | [P/04] Н3 «controller start — schema check» |
 | 2 | there is no manifest row or mark, the read is not confirmed, `sha256` is not the right one, the manifest or the catalogue is refused | [P/02.3] Н3 «Process start» |
 | 2 | the environment file is not by the grammar; `SERVER_NAME` is not by the grammar; `W2C_ROLE` is not the role of the command | [P/02.4] Н1.2, Н4 |

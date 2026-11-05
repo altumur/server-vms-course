@@ -64,7 +64,7 @@ files: A — `d72f9e5e…68a6`, B — `6fefd57b…e217`. Step 4 — the row `dom
 a change of the centres at the member is rewritten by its next report. Steps 14–16 — two agent passes (`REPORT_EVERY` 5 s) without
 `tls_ca`: the fingerprints are not removed. How the runner passes the environment and restarts the console and the agent of the cluster with the variable
 (`@env`) — the dictionary of the «Domain stand» of [the common acceptance README](../../../common/acceptance/README.md), `@env` and
-«Forwarding environment» (the review analysis of stage B 8–10, № 22: `М-16`).
+«Forwarding environment» (the review analysis of stage B 8–10, № 22: `M-16`).
 
 **Scenario 19** — a neighbour on the stand: the door `GET /domain/members` of the domain console ([lesson P/10](../../../10-domain-console/spec/10-domain-console.norms.md)
 Н1.2б, P/10-07; C10-MEMBERS-SOURCE-01, C10-MEMBERS-KNOCKING-ABSENT-01). The process `domain` is stopped (step 2), so that the pass of

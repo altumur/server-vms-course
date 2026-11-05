@@ -28,7 +28,7 @@ Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The files the contract works by (layout audit, `В-20`–`В-22`; the Architect's decision of 2026-10-25):
+The files the contract works by (layout audit, `V-20`–`V-22`; the Architect's decision of 2026-10-25):
 
 - the domain view `domain/view` (`holds`, `view.url` of transition 2; 503 `domain console not known`) — the family `view`:
   `Platform/08-domain/data/view.schema.json`, `Platform/08-domain/data/view.outcomes.tsv`;
@@ -87,7 +87,7 @@ answer:       the status, Content-Type, ETag, X-Unreachable and the body as they
 FORWARD_MAX:  1 MiB
 FORWARD_WAIT: the column «Wait» of the row of the table of the section «Domain doors» (the default 5 s); the doors of the move have their own terms: forwarding to the signer of its own
               box — 10 s at /api/prepare, 90 s at /api/take and /domain/move (P/06.7 Н1.8 order step 5; P/08.8 Н1.7, Н1.8);
-              the door route /domain/at — 20 s (P/06.7 Н1.6 route); /domain/handover — 100 s (the table below), more than the 90 s of the answer of the process domain (P/08.8 Н1.7 door) (layout audit Б-19, the Architect's decision of 2026-10-25)
+              the door route /domain/at — 20 s (P/06.7 Н1.6 route); /domain/handover — 100 s (the table below), more than the 90 s of the answer of the process domain (P/08.8 Н1.7 door) (layout audit B-19, the Architect's decision of 2026-10-25)
 gate:         the gate of the forwarding console asks only who calls (any grant of this cluster or the row domain/anywhere, the right contract step 6; lesson 9 Н1.5; loopback
               operator — the gate-and-pass contract «Сторожевая» `open`), and does not ask at the open rows of the table (Identity «—»); what may be done is decided by the gate
               of the domain console or of the member
@@ -183,7 +183,7 @@ without an identity and a grant (the credential is in the body); the gate of the
 | GET, POST | `/domain/groups` | P/08.4 Н2 (ADR-0098) | 5 | yes |
 | PUT, DELETE | `/domain/groups/<имя>` | P/08.4 Н2 (ADR-0098) | 5 | yes |
 | GET, POST | `/domain/roles` | P/08.4 Н2 (ADR-0098) | 5 | yes |
-| PUT | `/domain/roles/<имя>/lines` | P/08.4 Н2 (ADR-0110 Д-3) | 5 | yes |
+| PUT | `/domain/roles/<имя>/lines` | P/08.4 Н2 (ADR-0110 D-3) | 5 | yes |
 | PUT, DELETE | `/domain/roles/<имя>` | P/08.4 Н2 (ADR-0098) | 5 | yes |
 | POST | `/domain/batch` | P/08.4 Н2 (ADR-0098 §6) | 5 | yes |
 | GET | `/domain/grants` | 9 Н2 (added by М11/9) | 5 | yes |
@@ -210,7 +210,7 @@ A path with a segment `.` or `..`, including one in the percent form (`%2e`, `%2
 route` before the gate, before forwarding and before the pass to the worker on the domain (Н1.7); the segments are not normalized (added by the reconciliation of
 М11, D4: the path `/domain/<sub>/<сегмент>/../members` would otherwise bypass the table).
 
-Matching goes in order: `books` (its own: the book door `GET /domain/<sub>/books/<книга>` by exactly this path, the tail `/*/<раздел>` is a row of the table, [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.1; layout audit `Б-19`, the Architect's decision of 2026-10-25), `at` (its own), the rows of the table from top to bottom; `<sub>` is a subsystem of the directory
+Matching goes in order: `books` (its own: the book door `GET /domain/<sub>/books/<книга>` by exactly this path, the tail `/*/<раздел>` is a row of the table, [P/06.7](../../06-console/spec/06.7-console.norms.md) Н1.1; layout audit `B-19`, the Architect's decision of 2026-10-25), `at` (its own), the rows of the table from top to bottom; `<sub>` is a subsystem of the directory
 of this console; a segment `door.pass` that coincides with `books`, `kept`, `tables`, `placement`, `members`, `topology`, `shadow`, `at` is not
 passed on the domain.
 

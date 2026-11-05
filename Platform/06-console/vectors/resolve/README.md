@@ -11,7 +11,7 @@ the conformance of the product is by its acceptance against this table (ADR-0080
 
 The rows were transferred from the inputs of the command `resolve` of the acceptance М11/11 (`inputs/resolve-*.json`, sc. 03) without a change of bytes: only
 the spaces and line feeds outside JSON strings were removed; `case` is the name of the input file; the expectation `ok <JSON>` is the cell `expect` (the plan of
-the move of lesson 8, § 3, В1; the Architect's decision on the plans 8–10, ADR-0083 addendum (14) item 17). Scenario 03 of the acceptance М11/11 and
+the move of lesson 8, § 3, V1; the Architect's decision on the plans 8–10, ADR-0083 addendum (14) item 17). Scenario 03 of the acceptance М11/11 and
 its inputs were removed by the move of lesson 10: the table is the only source of these cases.
 
 ## Run
@@ -21,7 +21,7 @@ Without a stand: the function of the implementation receives the input (the colu
 `field.type` or `merge`, with `merge: union` any of the three values not a list of strings, the value `group_by` not a list, no `domain`
 or `domain` without `value`, `unit` or `domain.value` `null` with `union`, an extra field, a field without `inherit`, not `document` and
 not `group_by` (C06-RESOLVE-ABSENT-INHERIT-91-01) — the full list is there; review analysis of
-stage B 8–10, № 22: М-18). There are four rows `@exit 2` in the table
+stage B 8–10, № 22: M-18). There are four rows `@exit 2` in the table
 (`resolve-11-term-zero`, `resolve-12-no-inherit`, `resolve-13-union-not-string`, `resolve-14-rev-over`; C06-RESOLVE-UNION-FORM-01); the other cases of code 2 are by reading (Н5). The exit codes follow the principle of the «Стенда домена» of the common acceptance
 README («Коды выхода команд-векторов М11»: `field` and `domain` are the trusted input of the caller, code 2).
 

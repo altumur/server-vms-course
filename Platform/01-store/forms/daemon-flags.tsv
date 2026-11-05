@@ -16,9 +16,9 @@
 #var cmd string — the command: daemon or a subcommand of admin_ops
 #fn loopback(string) -> bool — the host of the address is on the loopback: 127.0.0.0/8, ::1 or localhost (normgen prims)
 flag	type	default	default_text	required	commands	bad	norm
--dir	path	-	-	true	daemon,recover,restore,import		P/01.3 Н1.3 format; А1; ADR-0125 addendum (2) item 1
+-dir	path	-	-	true	daemon,recover,restore,import		P/01.3 Н1.3 format; A1; ADR-0125 addendum (2) item 1
 -id	id	$SERVER_NAME	SERVER_NAME	"-join" in f || "-door" in f || ("-group-size" in f && f["-group-size"] in [3, 5])	daemon,recover		P/01.3 Н1.3; P/01.3 Н2
--sockets	dir	/run/configstore	/run/configstore	false	daemon,status,join,leave,admit,backup,restore,import,rights		P/01.3 Н1.3 sockets; А3; ADR-0125 addendum (2) item 1
+-sockets	dir	/run/configstore	/run/configstore	false	daemon,status,join,leave,admit,backup,restore,import,rights		P/01.3 Н1.3 sockets; A3; ADR-0125 addendum (2) item 1
 -rights	file	-	-	false	daemon		P/01.2 Н1.2; without it — only admin.sock, not a refusal (P/01.2 Н4; ADR-0125 addendum (2) item 7)
 -tls	dir	-	-	"-join" in f || ("-api" in f && !loopback(f["-api"])) || ("-raft" in f && !loopback(f["-raft"]))	daemon		P/01.3 Н1.6
 -raft	addr	-	-	false	daemon	!("-tls" in f) && !loopback(f["-raft"])	P/01.3 Н1.3 group; ADR-0125 addendum (2) item 4

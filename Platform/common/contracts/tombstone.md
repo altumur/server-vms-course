@@ -33,7 +33,7 @@ Files: the tombstone — `Platform/05-resource/data/gone.schema.json`, `Platform
 and of decommission requests (the section «Neighbours») — `Platform/05-resource/data/doors.schema.json`, `Platform/05-resource/data/doors.outcomes.tsv`,
 `Platform/06-console/data/decommission.schema.json`, `Platform/06-console/data/decommission.outcomes.tsv`; the object door —
 GET of a copy (404 — an acknowledgement), the listing `prefix=.gone/`, 409 «deleted later» — the contract
-`Platform/05-resource/spec/05-resource.api.openapi.yaml` (layout audit, В-60; the Architect's decision of 2026-10-25).
+`Platform/05-resource/spec/05-resource.api.openapi.yaml` (layout audit, V-60; the Architect's decision of 2026-10-25).
 
 ## Neighbours (`peers`)
 

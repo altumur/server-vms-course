@@ -9,7 +9,7 @@ the input is the holder's passes in order, the output is the domain view and the
 addendum 16).
 
 The rows were transferred from the steps of the acceptance of М11/01
-(sc. 01–16, 28 steps; the command `view` on `inputs/*.json`) at the move of lesson 8 (the plan of the move of lesson 8, § 3 and В1; the decision
+(sc. 01–16, 28 steps; the command `view` on `inputs/*.json`) at the move of lesson 8 (the plan of the move of lesson 8, § 3 and V1; the decision
 of «Архитектор» 2026-10-20, ADR-0083 addendum (14)). `case` is the name of the input file, `note` is the scenario and the step of the acceptance of М11/01. The input is
 the JSON of the file in one line: only insignificant whitespace outside strings is removed; the order of keys, the lexemes of numbers (`1.0`, `100.25`) and
 the values are as in the file. The expectation is a subset of the acceptance step as it is (after `ok `). The scenarios of М11/01 and their inputs were removed
@@ -30,7 +30,7 @@ The form of the input is `ViewInput`, of the output `ViewOutput` ([the contract 
 `{mark, stale?, objects}` (`mark` is the `rev` of the mark `reported` or `null`, `stale` is the field `stale` of the mark, `objects` are the pulses
 `<sub>/heartbeats/<воркер>` and the shards `<sub>/snapshot/<шард>` of the copy), `placements` are the placements
 `{<sub>: {<ref>: <член> | {cluster, copies?, origin?}}}` or `null` — the placements of this pass were not read (P/08.1 Н3
-step 3а; ADR-0091 addendum (13) item 1). The `shadow` of the output is the report of the last pass that built it (P/08.1 Н1.6 `unread`). The holder sees a change of the mark and of the pulse between the passes of the input; the first pass
+step 3a; ADR-0091 addendum (13) item 1). The `shadow` of the output is the report of the last pass that built it (P/08.1 Н1.6 `unread`). The holder sees a change of the mark and of the pulse between the passes of the input; the first pass
 is the first look.
 
 The input is the pulses after the read by the family `heartbeats` (P/03.4): the form of the input is this one, not the family; a pulse without `instance` or with
@@ -102,7 +102,7 @@ The rows of `corrections.tsv` of the acceptance of М11/01 before the move (the 
 | 2026-10-18 | 01/scenarios.tsv; inputs | run 41, mutations №3–5: sc. 11 — unknown (a placement not to a member), conflict of two workers of one member, never with age null |
 | 2026-10-18 | 11-findings-without-step 4 | run 41 of Kimi (minor, lesson 1): the branch no_ref of Н1.4 — a pulse element without a shard row does not enter units |
 | 2026-10-19 | 12–16; inputs 12–16 | the М11 check 01–04 (V1–V6): a lost mark — silent with the former copy, never only «ни разу», leaving forgets the memory, rounding from the decimal notation, a duplicate id — the larger revision, a change of the pulse — a change of JCS |
-| 2026-10-20 | the move | sc. 01–16 (28 steps) from М11/01 — the rows of this table (stage B; the plan of the move of lesson 8, В1); the inputs in one line, the expectations as before, checked by the oracle |
+| 2026-10-20 | the move | sc. 01–16 (28 steps) from М11/01 — the rows of this table (stage B; the plan of the move of lesson 8, V1); the inputs in one line, the expectations as before, checked by the oracle |
 | 2026-10-23 | 10-copies, 10-not-executor; +10-origin-is-cluster, 10-origin-outside-copies, 10-third-silent, 10-no-ref-row, 10-placements-unread | ADR-0091 addenda (12)–(19) (addendum (15) item 7): the executors of placement are not a dispute (10-copies — `complete: true`, both units in `units`), `origin` does not change the set, a row without `domain.ref` is not a unit, the placements were not read — there is no exception, the report is not built; the input is `placements: null`, `origin` |
 | 2026-10-26 | 01-two-members | ACC-EMPTY-OBJECT-02 (the decision of «Архитектор» 2026-10-26): `{}` in `expect` is exactly an empty object; `contested` is a key at each manifest with `domain.ref` (Н1.2, at `testsub2` — `ref: name`): the expectation `{}` → `{"testsub": {}, "testsub2": {}}` |
 | 2026-10-30 | +17-exit-empty-holder, 17-exit-no-passes, 17-exit-mark-2pow53, 17-exit-placement-empty-cluster, 18-duplicate-equal-revision, 19-sealed-unreadable-no-claim, 20-stall-after-progress-at-60, -at-61, 21-orphan-retarget-at-60, -at-61 | the coverage audit of P/08, the second pass (Gemini G01, e32df6f8b): an input not of the form — `@exit 2`; a duplicate id with an equal revision; sealed and unreadable without a claim; the SHADOW_STALL count after progress; orphaned_from at a change of the target and a return (V10); the expectations are the output of the witnesses `cammeta-python` and `cammeta-go` (`-at-60` of row 21 — only `cammeta-go`: `cammeta-python` does not hold V10) |

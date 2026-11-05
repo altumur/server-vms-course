@@ -25,7 +25,7 @@
   },
   "iat": {
    "$ref": "#/$defs/common.time",
-   "description": "iat of the same token: an input of step 4а of the right contract (P/06.9 Н1.2; ADR-0100 §3)",
+   "description": "iat of the same token: an input of step 4a of the right contract (P/06.9 Н1.2; ADR-0100 §3)",
    "x-codec": [
     "time"
    ]

@@ -145,10 +145,15 @@ LINK = re.compile(r"\]\(([^()\s]+)\)")
 CHECK_ID = re.compile(r"^- \[[ xX]\] \*\*(P/[0-9.]+-[0-9]+)\*\*", re.M)
 TABLE_ROW = re.compile(r"^\|.*\|[ \t]*$", re.M)
 CYR = re.compile(r"[А-Яа-яЁё]")
+# Суффиксы шагов и метки ревью — латиницей и в источнике, и в переводе (ADR-0121 доп. (3) п. 3): 4a, 2b, A1, G-29, V7, P1;
+# кириллица там — нарушение правила «Кириллица в английском» ниже (разрешены только номера норм Н… и прежние уроки М10–М12).
+# Модуль, ещё не переведённый на латиницу меток, — прежнее разрешение (VMS — «Спецификация VMS»); список только сокращается.
+LABELS_PENDING = {"VMS"}
+LEGACY_LABELS = [re.compile(r"(?<![\w])М[0-9]+[A-Z]?(?:_[A-Za-z]+)?(?:/[0-9]+)?"),
+                 re.compile(r"(?<![\w-])[А-ЯЁ]-?[0-9]+[а-я]?(?![\w])|(?<![\w])[0-9]+[а-я](?![\w])")]
 ALLOWED_CYR = [SPAN, re.compile(r"«[^»\n]*»"), NORM_NO, LINK,
                re.compile(r"[\wА-Яа-яЁё.-]*[А-Яа-яЁё][\wА-Яа-яЁё.-]*\.(?:md|tsv|yaml|json)\b"),   # имена файлов
-               re.compile(r"(?<![\w])М[0-9]+[A-Z]?(?:_[A-Za-z]+)?(?:/[0-9]+)?"),
-               re.compile(r"(?<![\w-])[А-ЯЁ]-?[0-9]+[а-я]?(?![\w])|(?<![\w])[0-9]+[а-я](?![\w])"),   # id ревью А1, С-1; шаги 3б, 4а
+               re.compile(r"(?<![\w])М1[0-2][A-Z]?(?:_[A-Za-z]+)?(?:/[0-9]+)?"),   # прежние уроки М10, М11, М12A
                re.compile(r"<[а-яё][а-яё_-]*>")]               # заполнители кода — те же, что в русском: <роль>, <форма>, <т>   # id находок ревью по-русски: А1, А10
 
 
@@ -480,11 +485,16 @@ def compare(ru_text, en_text, ru_path, en_path, root):
                                   f"only en {sorted(ef[key] - rf[key])}")
                 else:
                     errors.append(f"{where}: {key} differ: ru {rf[key]}, en {ef[key]}")
+    try:
+        legacy = Path(en_path).resolve().relative_to(root).parts[0] in LABELS_PENDING
+    except ValueError:
+        legacy = False
+    allowed = ALLOWED_CYR + (LEGACY_LABELS if legacy else [])
     rest = FENCE.sub(" ", en_text)
-    for pattern in ALLOWED_CYR:
+    for pattern in allowed:
         rest = pattern.sub(" ", rest)
     for fence in FENCE.findall(en_text):                     # блоки кода — тоже по-английски, кроме «…» и Н…
-        rest += "\n" + re.sub("|".join([r"«[^»\n]*»", NORM_NO.pattern] + [x.pattern for x in ALLOWED_CYR[4:]]), " ", fence)
+        rest += "\n" + re.sub("|".join([r"«[^»\n]*»", NORM_NO.pattern] + [x.pattern for x in allowed[4:]]), " ", fence)
     if not marked:
         errors.append(f"the Russian text has no mark «{want}» in its head")
     for line in rest.splitlines():

@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/README.md` (for peo
 
 The module of specification lessons of the platform, sliced by micromodules: one lesson — one process or library (ADR-0083).
 The catalogue of a lesson is `NN-<процесс>`; the lesson number is the address of the owner (`P/NN`), the map — [`lessons.tsv`](lessons.tsv).
-Common to all — [`common/`](common/README.md); the layers of В7 — [`common/LAYERS.md`](common/LAYERS.md), the pinned versions of the libraries — [`common/versions/`](common/versions/README.md). The design note — `Platform/module-design.md` (for people, not in the export).
+Common to all — [`common/`](common/README.md); the layers of V7 — [`common/LAYERS.md`](common/LAYERS.md), the pinned versions of the libraries — [`common/versions/`](common/versions/README.md). The design note — `Platform/module-design.md` (for people, not in the export).
 
 | P | Catalogue | Micromodule |
 |---|---|---|

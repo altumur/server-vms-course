@@ -47,7 +47,7 @@
       "minimum": 0
      },
      "why": {
-      "description": "the platform's reason when the unit does not run (sealed — chapter 3.5 Н3 «open»), like fates.why of P/04, not error (the second pilot, Н-7)",
+      "description": "the platform's reason when the unit does not run (sealed — chapter 3.5 Н3 «open»), like fates.why of P/04, not error (the second pilot, N-7)",
       "type": "string"
      },
      "stalled": {
@@ -91,7 +91,7 @@
      ]
     },
     "additionalProperties": {
-     "description": "words of the subsystem; the training handler testsub — one word n, the current value of the counter (the second pilot, Н-7)"
+     "description": "words of the subsystem; the training handler testsub — one word n, the current value of the counter (the second pilot, N-7)"
     },
     "required": [
      "id",
@@ -427,7 +427,7 @@
    "additionalProperties": false
   },
   "creates": {
-   "description": "outcomes of the order of rows of another subsystem (chapter 3.6 Н1.6; ADR-0091 item 1, Г-7)",
+   "description": "outcomes of the order of rows of another subsystem (chapter 3.6 Н1.6; ADR-0091 item 1, G-7)",
    "type": "object",
    "properties": {
     "created": {

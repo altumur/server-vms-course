@@ -1,4 +1,4 @@
-# Outcomes of an unreadable row domain/folders/<id> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row domain/folders/<id> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole object); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
 	domain	the whole row is unreadable: an edit of this folder and of the folders under it — 503 unavailable, nothing is written; the chain is unknown; the reaper does not touch it	1	строка	P/08.5 Н1.8

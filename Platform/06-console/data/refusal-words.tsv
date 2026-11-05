@@ -8,18 +8,18 @@ door	code	error	field	norm
 units	400	Idempotency-Key required	-	6.1 Н4
 units	400	badkey	-	6.1 Н3, Н4
 units	400	not_json	-	6.1 Н4
-units	400	platform_field	/<поле>	договор проверки строки П1, Р1
-units	400	unknown field	/<поле>	договор проверки строки П1, Р1
-units	400	not_number	/<поле>	договор проверки строки П2
-units	400	type	/<поле>	договор проверки строки П2; 6.2 Н4
-units	400	too_long	/<поле>	договор проверки строки П2
-units	400	enum	/<поле>	договор проверки строки П2
-units	400	bad_url	/<поле>	договор проверки строки П2; 6.2 Н4
-units	400	blob	/<поле>	договор проверки строки П2, Р2
-units	400	labels	/<поле>	договор проверки строки П2
-units	400	required	/<поле>	договор проверки строки П4
-units	400	bad_id	/<поле>	договор проверки строки П3; 6.1 Н3 «create» шаг 5
-units	400	fixed	/<поле>	договор проверки строки П3, Р2
+units	400	platform_field	/<поле>	договор проверки строки P1, R1
+units	400	unknown field	/<поле>	договор проверки строки P1, R1
+units	400	not_number	/<поле>	договор проверки строки P2
+units	400	type	/<поле>	договор проверки строки P2; 6.2 Н4
+units	400	too_long	/<поле>	договор проверки строки P2
+units	400	enum	/<поле>	договор проверки строки P2
+units	400	bad_url	/<поле>	договор проверки строки P2; 6.2 Н4
+units	400	blob	/<поле>	договор проверки строки P2, R2
+units	400	labels	/<поле>	договор проверки строки P2
+units	400	required	/<поле>	договор проверки строки P4
+units	400	bad_id	/<поле>	договор проверки строки P3; 6.1 Н3 «create» шаг 5
+units	400	fixed	/<поле>	договор проверки строки P3, R2
 units	400	If-Match is a unit revision	-	6.1 Н2 «Версии»
 units	400	a sealed value is not taken from outside — give the password itself	/<поле>	6.2 Н4
 units	400	sealing key required	-	6.2 Н4
@@ -28,7 +28,7 @@ units	403	writes via	-	6.1 Н1.1а
 units	404	no such unit	-	6.1 Н4
 units	404	no such path	-	6.5 Н2
 units	409	exists	/<поле>	6.1 Н4
-units	409	conflict	/<поле>	договор проверки строки П5, Р3
+units	409	conflict	/<поле>	договор проверки строки P5, R3
 units	409	in flight	-	6.1 Н4
 units	412	revision moved	/revision	6.1 Н2 «Версии»
 units	413	row too large	-	6.1 Н4
@@ -44,15 +44,15 @@ tables	400	Idempotency-Key required	-	6.1 Н3 «память повторов»
 tables	400	If-Match is a unit revision	-	6.1 Н2 «Версии»
 tables	400	sealing key required	-	6.2 Н4
 tables	400	not_json	-	6.1 Н4
-tables	400	unknown field	/<поле>	договор проверки строки П1; 6.1 Н4
-tables	400	not_number	/<поле>	договор проверки строки П2
-tables	400	type	/<поле>	договор проверки строки П2; 6.2 Н4
-tables	400	too_long	/<поле>	договор проверки строки П2
-tables	400	enum	/<поле>	договор проверки строки П2
-tables	400	bad_url	/<поле>	договор проверки строки П2; 6.2 Н4
-tables	400	blob	/<поле>	договор проверки строки П2
-tables	400	labels	/<поле>	договор проверки строки П2
-tables	400	required	/<поле>	договор проверки строки П4
+tables	400	unknown field	/<поле>	договор проверки строки P1; 6.1 Н4
+tables	400	not_number	/<поле>	договор проверки строки P2
+tables	400	type	/<поле>	договор проверки строки P2; 6.2 Н4
+tables	400	too_long	/<поле>	договор проверки строки P2
+tables	400	enum	/<поле>	договор проверки строки P2
+tables	400	bad_url	/<поле>	договор проверки строки P2; 6.2 Н4
+tables	400	blob	/<поле>	договор проверки строки P2
+tables	400	labels	/<поле>	договор проверки строки P2
+tables	400	required	/<поле>	договор проверки строки P4
 tables	400	bad_id	/<поле>	6.1 Н4
 tables	400	a sealed value is not taken from outside — give the password itself	/<поле>	6.2 Н4
 tables	400	refused	/<поле>	6.2 Н4
@@ -61,7 +61,7 @@ tables	403	writes via	-	6.1 Н1.1а
 tables	404	no such row	-	6.1 Н4
 tables	404	no such path	-	6.5 Н2
 tables	405	method	-	6.1 Н2
-tables	409	conflict	/<поле>	договор проверки строки П5; 6.1 Н4
+tables	409	conflict	/<поле>	договор проверки строки P5; 6.1 Н4
 tables	409	refused	-	6.1 Н4
 tables	409	in flight	-	6.1 Н3 «память повторов»
 tables	412	revision moved	/revision	6.1 Н2 «Версии»
@@ -93,7 +93,7 @@ batch	403	denied	-	6.1 Н4 «Batch door»
 batch	403	writes via	-	6.1 Н1.1а
 batch	404	no such unit	-	6.1 Н4 «Batch door»
 batch	404	no such row	-	6.1 Н4 «Batch door»
-batch	409	conflict	/writes/<номер>/fields/<поле>	договор проверки строки П5, Р3; 6.1 Н4 «Batch door»
+batch	409	conflict	/writes/<номер>/fields/<поле>	договор проверки строки P5, R3; 6.1 Н4 «Batch door»
 batch	409	in flight	-	6.1 Н3 «batch»
 batch	412	row moved	/writes/<номер>/cas	6.1 Н2 «Batch door»; у стража — /guards/<номер>/index
 batch	413	batch too large	-	6.1 Н1.4, Н4 «Batch door»

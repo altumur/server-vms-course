@@ -69,23 +69,23 @@ def sugar(t, skip=()):
 
 def computed(t, skip=()):
     """P/02.2-03, П1–П5."""
-    if "П1" not in skip and "snapshot" not in t:                  # П1 (ADR-0091 п. 3: и состояния, кроме cursor)
+    if "P1" not in skip and "snapshot" not in t:                  # П1 (ADR-0091 п. 3: и состояния, кроме cursor)
         t["snapshot"] = [k for k, f in unit_fields(t).items()
                          if not k.endswith("_secret") and k != "server"
                          and not (isinstance(f, dict) and f.get("type") == "blob")] + \
             ["state." + k for k in unit_states(t)]
-    if "П2" not in skip and isinstance(t.get("tables"), dict):    # П2
+    if "P2" not in skip and isinstance(t.get("tables"), dict):    # П2
         for k, tbl in t["tables"].items():
             if isinstance(tbl, dict):
                 j = tbl.setdefault("journal", {})
                 j.setdefault("written", k + ".written")
                 j.setdefault("deleted", k + ".deleted")
     d = t.get("display")                                          # П3
-    if "П3" not in skip and isinstance(d, dict) and "form" not in d:
+    if "P3" not in skip and isinstance(d, dict) and "form" not in d:
         d["form"] = [{"fields": list(unit_fields(t))}]
-    for f in fields(t) if "П4" not in skip else ():               # П4
+    for f in fields(t) if "P4" not in skip else ():               # П4
         f.setdefault("default", None)
-    for e in secret_items(t) if "П5" not in skip else ():         # П5
+    for e in secret_items(t) if "P5" not in skip else ():         # П5
         if "regex" in e:
             e.setdefault("decoded", True)
 

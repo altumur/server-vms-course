@@ -111,7 +111,7 @@ a fresh Idempotency-Key, kept only for repeats of the same step; `PUT` and `DELE
 Scenarios 22–27 (the coverage audit of P/06, `audit-kimi` 9007ca60f) — likewise, each on its own empty store, without `c1` (the field `of`
 of `tallies` is a string, it does not require the counter to exist; likewise sc. 20), without workers, the controller and the domain; the resource
 `srv-a` — as the first step of sc. 25 and 26 (`GET /{rows}`).
-- Sc. 22 — direct references of the unit `tallies` (the row check contract П5, «Identifier» `ref_and_must_match`, `unique`):
+- Sc. 22 — direct references of the unit `tallies` (the row check contract P5, «Identifier» `ref_and_must_match`, `unique`):
   the `zone` of the unit ≠ the `zone` of the live target — 409 `conflict`/`must_match`, there is no row (steps 1–3; a successful pair — step 4); the target
   has no element `zone` (a table field without a default is not passed), the unit has `""` — 409 `must_match` (steps 5–7); no target is not
   a refusal, ADR-0057 (step 8); `feed` — `unique: canonical`: a host in another case is the same value, 409 `unique` (steps 9–10);
@@ -119,7 +119,7 @@ of `tallies` is a string, it does not require the counter to exist; likewise sc.
   (steps 11–12). There is no row — the read of the store door `{"items": null}`: one refusal code of a write does not prove it.
 - Sc. 23 — `of` of `tallies` is `fixed`: a creation over a tombstone with another `of` — 400 «… is fixed», the tombstone is the former one; with the same one —
   201, the `revision` of the tombstone + 1 (Н3 «create» steps 5, 8); an edit of `of` of a live row — 400, the row and the `revision` are the former ones
-  (the row check contract Р2).
+  (the row check contract R2).
 - Sc. 24 — `born` of the counter row: a deletion keeps it (steps 2–4), a creation over a tombstone sets a new random one
   (steps 5–7, `ASSERT`; Н3 «create» step 8, «delete» step 2; ADR-0091 item 3).
 - Sc. 25 — the counterexample of run 24 (below): `marks` `[]` and `[""]` — the row elements `""` and `'[""]'` (the row check contract
@@ -142,7 +142,7 @@ past the writer — through the store door, as sc. 20, 26: the state and the hol
   2) removes the `result` of the former `revision`, the cursor stays (step 8); a cursor with another `born` does not act — there is no `state` (step 10).
 - Sc. 29 — an edit of the fields removes the blob digest by an empty string (the row check contract `values_by_type` blob:
   «лишь прежний дайджест строки или "" (снять)»): 200, `revision` + 1, `""` in the row; the former digest after the removal is no longer the former
-  digest of the row, 400 (Р2; Н3 «edit», «Races»).
+  digest of the row, 400 (R2; Н3 «edit», «Races»).
 - Sc. 30 — the bytes door removes the digest of its bytes from the list `testsub2/sweep` (Н3 «put_body» step 2), the second
   mark stays; the list is unreadable as a whole (`digests` not by the form, the outcome of the row `console` of the family `sweep`) — the door does not
   rewrite it (the version is the former one) and answers 200. Step 3 reads the version of the list, step 4 writes a non-empty batch by it: a background

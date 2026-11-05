@@ -23,7 +23,7 @@ secret:   in a store row the field *_secret is sealed by the holder's ring (the 
 
 ## Form
 
-`pwhash_secret` is a field of the person rows and of the break-glass account: `Platform/08-domain/data/users.schema.json`, `Platform/08-domain/data/users.outcomes.tsv`; `Platform/08-domain/data/break-glass.schema.json`, `Platform/08-domain/data/break-glass.outcomes.tsv` (layout audit, В-41; the Architect's decision of 2026-10-25).
+`pwhash_secret` is a field of the person rows and of the break-glass account: `Platform/08-domain/data/users.schema.json`, `Platform/08-domain/data/users.outcomes.tsv`; `Platform/08-domain/data/break-glass.schema.json`, `Platform/08-domain/data/break-glass.outcomes.tsv` (layout audit, V-41; the Architect's decision of 2026-10-25).
 
 ## Vectors
 

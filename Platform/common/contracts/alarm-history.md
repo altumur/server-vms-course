@@ -23,7 +23,7 @@ the outcomes `Platform/08-domain/data/alarm-history.outcomes.tsv` ([form](../../
 
 ## Domain clock
 
-Moved from [P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.8 `clock` without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, А-13):
+Moved from [P/10](../../10-domain-console/spec/10-domain-console.norms.md) Н1.8 `clock` without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, A-13):
 the clock of a line is read by the holder pass (it writes the history, `events[].t`) and by the alarm list of the domain console.
 
 ```yaml

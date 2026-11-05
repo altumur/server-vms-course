@@ -14,7 +14,7 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The files the contract works by (layout audit, В-33, В-34; the Architect's decision of 2026-10-25): the server label
+The files the contract works by (layout audit, V-33, V-34; the Architect's decision of 2026-10-25): the server label
 row `platform/servers/<s>` is the family `server-labels`: `Platform/06-console/data/server-labels.schema.json`,
 `Platform/06-console/data/server-labels.outcomes.tsv`; the label doors of a server (`PUT /servers/{server}/labels`, the probe `labels`,
 the refusal 400) are `Platform/06-console/spec/06-console.api.openapi.yaml`.

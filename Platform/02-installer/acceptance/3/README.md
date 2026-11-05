@@ -9,7 +9,7 @@ The table and the files were moved from the acceptance of М10/2 (stage B) witho
 ## puts.tsv
 
 The manifest installation `manifest put` of the implementation (Н3 «Manifest change», the command name and argv — [`operator-commands.tsv`](../../forms/operator-commands.tsv)); the runner calls it
-by the command `manifest-put {socket} {file}` of the section «Stand» of the common acceptance README (the store pilot, А6).
+by the command `manifest-put {socket} {file}` of the section «Stand» of the common acceptance README (the store pilot, A6).
 
 **The form of the file.** UTF-8, lines separated by LF, fields by TAB. Lines starting with `#` and empty lines are skipped. The first
 line not skipped is the header `case<TAB>puts<TAB>expect`, then one line per case; exactly three fields.

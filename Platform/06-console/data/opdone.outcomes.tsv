@@ -1,4 +1,4 @@
-# Outcomes of an unreadable row <sub>/opdone/<id>/<i> (ADR-0088 addendum (1) Р7, addendum (2) С11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
+# Outcomes of an unreadable row <sub>/opdone/<id>/<i> (ADR-0088 addendum (1) R7, addendum (2) S11). A row: path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm.
 # path — the refusal path (JSON Pointer; "" — the whole row); priority — smaller is earlier; unit — the unit of unreadability.
 path	reader	outcome	priority	unit	norm
 	console	the whole row is unreadable: the outcome of the step is unknown, the step is not called again; the read door gives out the step with the state `fail` with the code `not_run`; the leader writes `cancel: true` into the record: the next steps over the root cannot be led by an unknown version, the cause goes to the log	0	строка	P/06.9 Н3 «step»

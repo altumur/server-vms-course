@@ -12,7 +12,7 @@
 Перенесено из М11/3 Н3 «`принять(mark, stored, body, via, heard_ago)`» (абзац о `via` и `heard_ago`, шаги 0–7, абзац о
 `sent_at`, ответе и сбое) без изменения поведения. Формы, на которые функция опирается, повторены здесь, чтобы держатель,
 ретранслятор и агент исполняли договор без норм 8.x (разбор ревью стадии B 8–10, № 4, № 6; ADR-0083 доп. (15); Claude
-С-3, С-4, С-6, П-2; Kimi SB810-01): поколение, метка, `MARK_REFRESH`, `BODY_LIMIT` — раздел «Поколение, метка, пределы»
+S-3, S-4, S-6, P-2; Kimi SB810-01): поколение, метка, `MARK_REFRESH`, `BODY_LIMIT` — раздел «Поколение, метка, пределы»
 (из [P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md) Н1.3, Н1.3а); публикация, `member_objects`, поля вне дельты,
 `ready` — раздел «Публикация члена» (из [P/09.1](../../../09-agent/ru/spec/09.1-agent.norms.md) Н1.2 и P/08.3 Н1.6 `form`);
 поле `every` ответа — раздел «Ответ `carry`: `every`» (из P/08.3 Н1.5); форма функции, вывод и код выхода 2 — раздел
@@ -26,7 +26,7 @@
 
 ## Форма
 
-Строки и объекты, которые функция пишет и читает, — семьи по [каталогу](../../data/catalog.tsv): отчёт, дельта и метка члена — `Platform/08-domain/data/member-report.schema.json`, `Platform/08-domain/data/member-report.outcomes.tsv`; `Platform/08-domain/data/member-report-delta.schema.json`, `Platform/08-domain/data/member-report-delta.outcomes.tsv`; `Platform/08-domain/data/member-reported.schema.json`, `Platform/08-domain/data/member-reported.outcomes.tsv`; ключ члена `domain/member-key` — `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; семьи `member_objects` — `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; `Platform/04-controller/data/snapshot.schema.json`, `Platform/04-controller/data/snapshot.outcomes.tsv`; `Platform/09-agent/data/reaches.schema.json`, `Platform/09-agent/data/reaches.outcomes.tsv`; `Platform/09-agent/data/shared-refused.schema.json`, `Platform/09-agent/data/shared-refused.outcomes.tsv`; `Platform/09-agent/data/backup-taken.schema.json`, `Platform/09-agent/data/backup-taken.outcomes.tsv`; `Platform/09-agent/data/alarms.schema.json`, `Platform/09-agent/data/alarms.outcomes.tsv`; `Platform/09-agent/data/outcomes.schema.json`, `Platform/09-agent/data/outcomes.outcomes.tsv`; `Platform/08-domain/data/shared.schema.json`, `Platform/08-domain/data/shared.outcomes.tsv`. Двери — OpenAPI `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`POST /api/member/<член>`, `POST /api/relay/<ретранслятор>`, ответ `carry`) и `Platform/09-agent/spec/09-agent.api.openapi.yaml` (дверь ретранслятора); ключи манифеста `domain.*` — `Platform/02-installer/spec/02.1-installer.schema.json` (аудит раскладки, В-01…В-04, Б-13; решение «Архитектора» 2026-10-25).
+Строки и объекты, которые функция пишет и читает, — семьи по [каталогу](../../data/catalog.tsv): отчёт, дельта и метка члена — `Platform/08-domain/data/member-report.schema.json`, `Platform/08-domain/data/member-report.outcomes.tsv`; `Platform/08-domain/data/member-report-delta.schema.json`, `Platform/08-domain/data/member-report-delta.outcomes.tsv`; `Platform/08-domain/data/member-reported.schema.json`, `Platform/08-domain/data/member-reported.outcomes.tsv`; ключ члена `domain/member-key` — `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; семьи `member_objects` — `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; `Platform/04-controller/data/snapshot.schema.json`, `Platform/04-controller/data/snapshot.outcomes.tsv`; `Platform/09-agent/data/reaches.schema.json`, `Platform/09-agent/data/reaches.outcomes.tsv`; `Platform/09-agent/data/shared-refused.schema.json`, `Platform/09-agent/data/shared-refused.outcomes.tsv`; `Platform/09-agent/data/backup-taken.schema.json`, `Platform/09-agent/data/backup-taken.outcomes.tsv`; `Platform/09-agent/data/alarms.schema.json`, `Platform/09-agent/data/alarms.outcomes.tsv`; `Platform/09-agent/data/outcomes.schema.json`, `Platform/09-agent/data/outcomes.outcomes.tsv`; `Platform/08-domain/data/shared.schema.json`, `Platform/08-domain/data/shared.outcomes.tsv`. Двери — OpenAPI `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`POST /api/member/<член>`, `POST /api/relay/<ретранслятор>`, ответ `carry`) и `Platform/09-agent/spec/09-agent.api.openapi.yaml` (дверь ретранслятора); ключи манифеста `domain.*` — `Platform/02-installer/spec/02.1-installer.schema.json` (аудит раскладки, V-01…V-04, B-13; решение «Архитектора» 2026-10-25).
 
 ## Поколение, метка, пределы
 
@@ -63,7 +63,7 @@ keep:           два последних поколения и их delta; ст
 REPORT_EVERY:   5           # с — проход агента; ответ держателя может назначить every (Н1.5), 1 … 3600
 MARK_REFRESH:   22.5        # с = LOST_AFTER/2 (глава 8.1 Н1.3) по монотонным часам держателя
 BODY_LIMIT:     16 MiB      # предел тела двери держателя и ретранслятора: больше — 413, тело не читается дальше; он же —
-                            # предел JCS целого шага 4а договора приёма отчёта и целого, которое агент не шлёт (P/09.1 Н1.2 body)
+                            # предел JCS целого шага 4a договора приёма отчёта и целого, которое агент не шлёт (P/09.1 Н1.2 body)
 ROAD_QUIET:    15         # с, монотонные часы держателя: три прохода агента (REPORT_EVERY 5); дольше — прежняя дорога молчит;
                            # у class camera — road_quiet = max(15, 3 × mark.every) (P/08.3 Н1.1а)
 ```
@@ -76,7 +76,7 @@ P/08.8).
 ## Публикация члена
 
 Из P/09.1 Н1.2 (`publication`, `out_of_delta`, `member_objects`, `ready`) и P/08.3 Н1.6 `form` без изменения поведения
-(разбор ревью стадии B 8–10, № 4; Claude С-6): тело `POST /api/member/<член>`, которое агент шлёт (P/09.1), а держатель и
+(разбор ревью стадии B 8–10, № 4; Claude S-6): тело `POST /api/member/<член>`, которое агент шлёт (P/09.1), а держатель и
 ретранслятор принимают функцией «принять». Как агент собирает объекты (`change`, `fresh`, вклады в книги, предел тела
 агента) — P/09.1 Н1.2; формы `tls_ca`, `tls_ca_certs` у члена — [договор сертификата роли](role-certificate.md); их
 приём держателем (`on_accept`) — P/08.3 Н1.6; `members_rev` — раздел «Список членов отставшему»; `sign_failures` — P/09.1 Н1.12.
@@ -153,7 +153,7 @@ ready:          агент не шлёт публикацию, пока у не�
 ## Проверка члена и ключа
 
 Перенесено из [P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md) Н2, строка `POST /api/member/<член>`, без изменения поведения
-(аудит раскладки, решение «Архитектора» 2026-10-25, Б-12); подпись — [договор подписи агента](agent-signature.md). Дверь ретранслятора принимает члена тем же
+(аудит раскладки, решение «Архитектора» 2026-10-25, B-12); подпись — [договор подписи агента](agent-signature.md). Дверь ретранслятора принимает члена тем же
 порядком над своей памятью (P/09.2 Н2); пакет ретранслятора у держателя — P/08.3 Н2 `POST /api/relay` (C08-G06).
 
 ```yaml
@@ -164,13 +164,13 @@ order:          по порядку: 503 `standby` до чтения тела (P
                 иначе 401; запись без key с `revoked_keys` (P/08.3 Н3 «принять члена» шаг 1) — как не член: стук; прочий член — 403 ключа нет в записи или он не тот, 403 отозван (`revoked_keys`,
                 `revoked_members` набора); 401 подпись ключом записи (P/08.3 Н1.4; договор подписи агента); 409
                 `deposed` (P/08.8 Н1.6) или 503 `standby` потерянной очереди; 429 `busy` (раздел «Занято»), записи нет; затем шаги «принять» ниже в их порядке: 409 `same_sent_at`
-                (шаг 2), 409 `rebase` (3), 413 `whole too large` (4а; P/08.10 Н1.5), 409 `not_ready` (5), 503 `rev_exhausted` (7)
+                (шаг 2), 409 `rebase` (3), 413 `whole too large` (4a; P/08.10 Н1.5), 409 `not_ready` (5), 503 `rev_exhausted` (7)
                 (C08-ACCEPT-ORDER-01)
 ```
 
 ## Ответ `carry`
 
-Перенесено из [P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md) Н1.5 без изменения поведения (аудит раскладки, решение «Архитектора» 2026-10-25, Б-12); граница `every` —
+Перенесено из [P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md) Н1.5 без изменения поведения (аудит раскладки, решение «Архитектора» 2026-10-25, B-12); граница `every` —
 раздел ниже.
 
 ```yaml
@@ -179,7 +179,7 @@ carry:          ответ 200 на POST /api/member/<член> и GET /api/carr
   rev:          rev метки этого члена после приёма (0 — поколения нет); агент шлёт следующее изменение против него
   every?:       с — проход агента, 1 … 3600; вне — агент берёт ближайшую границу; значение и случай без поля — раздел «Ответ `carry`: `every`»
   # в М11/3 есть: cluster, rev, every, keys, revoked, members — каждая строка как есть, когда она есть у держателя;
-  # sealed М11/3 не было (секретного члену до М11/5 и М11/9 не было); в P/08 — sealed? ниже (разбор ревью стадии B 8–10, № 22: М-9)
+  # sealed М11/3 не было (секретного члену до М11/5 и М11/9 не было); в P/08 — sealed? ниже (разбор ревью стадии B 8–10, № 22: M-9)
   keys?:        строка domain/keys держателя {doc} (договор набора ключей домена «Набор domain/keys»)
   revoked?:     строка domain/revoked держателя {jtis} (договор набора ключей домена «Отзывы domain/revoked»)
   folders?:     общие папки (P/08.5 Н1.8) — только когда rev копии отстал
@@ -198,7 +198,7 @@ carry:          ответ 200 на POST /api/member/<член> и GET /api/carr
 
 ## Список членов отставшему
 
-Перенесено из [P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md) Н1.4а без изменения поведения (аудит раскладки, решение «Архитектора» 2026-10-25, Б-12).
+Перенесено из [P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md) Н1.4а без изменения поведения (аудит раскладки, решение «Архитектора» 2026-10-25, B-12).
 
 ```yaml
 publication.members_rev?:  {term, rev} копии своего раздела domain/member-list/<раздел>, которую член держит (P/09.1 Н1.1); нет строки — поля
@@ -226,7 +226,7 @@ packet:      в ответе пакета ретранслятора refused[<ч
 
 ## Стук
 
-Перенесено из [P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md) Н1.1 `knock` без изменения поведения (аудит раскладки, решение «Архитектора» 2026-10-25, Б-12): память
+Перенесено из [P/08.3](../../../08-domain/ru/spec/08.3-domain.norms.md) Н1.1 `knock` без изменения поведения (аудит раскладки, решение «Архитектора» 2026-10-25, B-12): память
 процесса `domain` о стучащихся; стуки из пакета ретранслятора — раздел «Пакет ретранслятора: пределы».
 
 ```yaml
@@ -254,7 +254,7 @@ publication.batch: {name, sig}    # не по форме — поле не вз�
 order:         по порядку:
   1:           строки domain/batches/<batch.name> нет, не читается или подпись не сходится → обычный стук (память KNOCKS), поля batch нет
   2:           партия годна: сбор «из ничего» закрыт или не идёт (P/08.8 Н1.8а), pinned тела = this, now < until, revoked нет, used < n, отпечаток key не в refused; ключ не малого порядка и не в revoked_members набора; имя свободно (записи нет или она без key с revoked_keys);
-               строка раздела не полна; предел приёма P/08.3 Н3 «принять члена» шаги 5а, 5б; via партии есть в domain/member-rows и строка domain/relay-members/<via> не полна
+               строка раздела не полна; предел приёма P/08.3 Н3 «принять члена» шаги 5a, 5b; via партии есть в domain/member-rows и строка domain/relay-members/<via> не полна
                всё да → шаг 3; иначе → шаг 4
   3:           приём партии: одним пакетом — Entry {how: "admitted", since, class: camera, by: <партия.by>, key, via?, batch} в строке раздела (подпись, rev + 1), used + 1 в строке партии, domain/member-count или счёт раздела (P/08.8 Н1.8а счёт),
                domain/relay-members/<via> при via; CAS — до 3 раз, затем шаг 4; журнал domain.member.admitted.batch {batch, name, fingerprint}; стук этого имени убирается из domain/knocks; ответ — тот же 404 стука: член узнаёт
@@ -264,7 +264,7 @@ order:         по порядку:
 
 ## Ответ `carry`: `every`
 
-Из P/08.3 Н1.3 `REPORT_EVERY` и Н1.5 `carry.every` без изменения поведения (разбор ревью стадии B 8–10, № 4; Claude С-3):
+Из P/08.3 Н1.3 `REPORT_EVERY` и Н1.5 `carry.every` без изменения поведения (разбор ревью стадии B 8–10, № 4; Claude S-3):
 
 ```yaml
 REPORT_EVERY:   5           # с — проход агента; ответ держателя может назначить every, 1 … 3600
@@ -291,11 +291,11 @@ every:          поле ответа carry (P/08.3 Н1.5): с — проход 
 2. mark есть и body.sent_at = mark.sent_at (одни часы члена на всех дорогах, урок 4 Н1.3): sha256(body) ≠
    mark.request_sha256 → 409 same_sent_at; mark.via = via → same (ничего не писать, метку не освежать); иначе → heard
    (повтор другой дорогой: поколения нет, метка — по правилу освежения шага 6; добавлено М11/4)
-2а. mark есть, mark.via ≠ via, body.sent_at < mark.sent_at и heard_ago < road_quiet (урок 4 Н1.3; у class server это ROAD_QUIET) → ignored
+2a. mark есть, mark.via ≠ via, body.sent_at < mark.sent_at и heard_ago < road_quiet (урок 4 Н1.3; у class server это ROAD_QUIET) → ignored
    (ничего не писать: прежняя дорога жива, а это тело старше по часам члена)
 3. base > 0 и (mark нет, или mark.via ≠ via, или base ≠ mark.rev, или stored не читается или не с mark.sha256) → 409 rebase
 4. objects' = (base > 0 ? объекты stored : {}) ∪ body.objects − body.deleted; объекты вне member_objects отбросить
-4а. JCS(whole') больше BODY_LIMIT → 413 {error: "whole too large", detail}; ничего не писать (P/08.10 Н1.5; добавлено М11/12)
+4a. JCS(whole') больше BODY_LIMIT → 413 {error: "whole too large", detail}; ничего не писать (P/08.10 Н1.5; добавлено М11/12)
 5. нет шарда снимка какого-то манифеста каталога с domain.ref                           → 409 not_ready
 6. mark есть, stored читается и с mark.sha256, и whole' без sent_at = whole stored без sent_at (JCS) → heard
    (stored не читается или не с mark.sha256 — шаг 7: испорченное поколение заменяется новым; добавлено сверкой М11, A1):
@@ -311,14 +311,14 @@ every:          поле ответа carry (P/08.3 Н1.5): с — проход 
 ```
 
 `sent_at` ниже `mark.sent_at` на той же дороге принимается: порядок на одной дороге задаёт дорога, часы члена, шагнувшие
-назад, берутся сразу; между двумя дорогами — шаг 2а (урок 4). Ответ на шаги 2 (same, heard), 2а, 6, 7 — carry (Н1.5); его `rev` —
+назад, берутся сразу; между двумя дорогами — шаг 2a (урок 4). Ответ на шаги 2 (same, heard), 2a, 6, 7 — carry (Н1.5); его `rev` —
 `rev` метки, если `mark.via` = дорога ответа, иначе 0 (другая дорога шлёт целое). Сбой между шагами 7: объект выше метки ничей (Н1.3), следующий приём пишет поверх.
 
 ## Форма функции
 
 Из М11/3 Н5 `accept`, `exit` и М11/4 Н5 (поля `via`, `heard_ago`) без изменения поведения: вход и вывод строк пакета
-[`accept`](../vectors/accept/README.md) (сценарии сняты переносом урока 8; разбор ревью стадии B 8–10, № 6, Claude П-2;
-№ 4, Claude С-4):
+[`accept`](../vectors/accept/README.md) (сценарии сняты переносом урока 8; разбор ревью стадии B 8–10, № 6, Claude P-2;
+№ 4, Claude S-4):
 
 ```yaml
 input:          {catalog: [<sub>…], mark: <метка> | null, stored: <whole> | null, body: <текст>, refreshed_ago: <с> | null,
@@ -330,7 +330,7 @@ input:          {catalog: [<sub>…], mark: <метка> | null, stored: <whole>
   refreshed_ago: монотонные с с тех пор, как этот процесс писал метку; null — не писал
   via:          дорога запроса: null — прямо, иначе имя ретранслятора
   heard_ago:    монотонные с с последнего приёма этого члена по любой дороге; null — не слышал
-  class:        Entry.class члена: шаг 2а, road_quiet
+  class:        Entry.class члена: шаг 2a, road_quiet
   every:        период, который этот ответ скажет члену; null — поля в ответе нет; ретранслятор над своей памятью не передаёт ни class, ни every
 output:         {result: generation, rev, base, whole, sign_failures?} | {result: heard, refresh, sign_failures?} | {result: same}
                 | {result: ignored}
@@ -342,7 +342,7 @@ output:         {result: generation, rev, base, whole, sign_failures?} | {result
                 не взято (нет в публикации или не по форме, out_of_delta); у heard с refresh: false поля нет (догадки
                 стадии C ACC-FORM-31-01, ACC-G01-COUNTER-31-01, решение «Архитектора» 2026-10-23: форма вывода расширена)
   status:       код ответа двери: 400 not_a_publication (шаг 1); 409 same_sent_at (шаг 2), rebase (шаг 3), not_ready
-                (шаг 5); 413 whole_too_large (шаг 4а; у двери — {error: "whole too large", detail}); 503 rev_exhausted (шаг 7)
+                (шаг 5); 413 whole_too_large (шаг 4a; у двери — {error: "whole too large", detail}); 503 rev_exhausted (шаг 7)
 exit:           0 — вычислено (в том числе отказ словом); 2 — вход не по форме (метка — строго «Поколение, метка, пределы»:
                 stale есть всегда; signature необязательна и у метки без via); лишнее поле входа, метки или stored — 2;
                 имена полей сравниваются точно (догадка стадии C ACC-FORM-31-01, решение «Архитектора» 2026-10-23)
@@ -375,7 +375,7 @@ answer:        ответ держателя клиенту агента и ре
 приёмки М11/3 (сц. 13, 26 строк) и М11/4 (сц. 06, 9 строк — дороги) без изменения байтов, 3 строки ADR-0113 (`road_quiet`, смена `every`) (сценарии и входы сняты переносом
 урока 8 — таблица единственный источник этих случаев), 2 строки двери ретранслятора и 25 строк стадии C: прочие семьи
 `member_objects`, лишние поля и `@exit 2`, форма `sign_failures`, форма метки — `sign_failures` {} и время `received_at` (ACC-FORM172, ACC-TIME172; README пакета), 1 строка — метка без `stale` (аудит покрытия P/08, второй проход Gemini). Реализация держателя и
-ретранслятора проходит их своей функцией, без стенда. Строки на шаг 4а (`whole_too_large`) нет — кандидат пакета
+ретранслятора проходит их своей функцией, без стенда. Строки на шаг 4a (`whole_too_large`) нет — кандидат пакета
 (README пакета, «Кандидаты»; разбор ревью стадии B 8–10, № 6). Пределы пакета ретранслятора (граница 64 MiB, 33-й стук,
 стук больше 256 KiB) функция «принять» не выражает — чтением (C08-G05).
 

@@ -5,8 +5,8 @@ This English text is the source; the Russian translation `ru/acceptance/README.m
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors).
 The norm of the lesson is [`05-resource.norms.md`](../spec/05-resource.norms.md) Н5. The scenarios were moved from the acceptance of
 М10/08 (01, 02, 08) and
-М10/11 (01 → 09, 16 — the Architect's decision on В2 of the plan of the move of lesson 6: a scenario belongs to the lesson whose norm it checks) and
-М10/10 (10; the Specification's decision on В2 of the move)
+М10/11 (01 → 09, 16 — the Architect's decision on V2 of the plan of the move of lesson 6: a scenario belongs to the lesson whose norm it checks) and
+М10/10 (10; the Specification's decision on V2 of the move)
 (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers, the names of the scenarios and the steps are the former ones, except `09-resource-door`
 (in М10/11 — `01-resource-door`; the number 01 is taken by `01-objects-door` from М10/08). Sc. 17–23 are the coverage audit of P/05 (2026-10-30,
 the drafts F01–F03, F05–F07 of the audit session; the section «Coverage audit» below); sc. 24–28 — F04 (the section «Edges of `free_ask`»); sc. 29–45 —
@@ -70,14 +70,14 @@ Steps of the reconciliation of python and go М10/6–11 (2026-10-18):
 E19 — sc. 08 steps 12–14: `@append event` writes `{bad` into a bucket bypassing the writer, the resource and the console answer 200 with
 `lines_garbled: 1`. Steps 15–16 — the bucket name and `e<эпоха>` are the form of the norm, they are not encoded; an alarm in the tree `audit/console`
 (not `.alarms`) is `class: alarm` by the field ([the event journal contract](../../common/contracts/event-journal.md); the second pilot,
-Н-2, Н-3). Without a step, by reading: E3, E11, E18, E22–E24, E34, E35, E37, E38, E42, E43, E46 — a stand with one resource does not write
+N-2, N-3). Without a step, by reading: E3, E11, E18, E22–E24, E34, E35, E37, E38, E42, E43, E46 — a stand with one resource does not write
 temporary files and does not fill the disk; the dictionary does not express `X-Sum` with a trailing space. The second pass of the audit (Gemini) took as steps
 E32 (an alarm of a subsystem — sc. 34), E44 and E45 (the band between the marks and the disabled marks — sc. 41, 40), an open bucket at
 `PUT /mirror` — by the name of a window in the future (`20990101T000000Z`, sc. 32).
 
 ## The presence lock (sc. 16-presence-lock)
 
-From the acceptance of М10/11 (the second pilot, Н-1; catches Б1): the resource and the worker `w-1` — in the heartbeat of the resource `running: [testsub/w-1]`;
+From the acceptance of М10/11 (the second pilot, N-1; catches B1): the resource and the worker `w-1` — in the heartbeat of the resource `running: [testsub/w-1]`;
 `@sigkill w-1` — the lock is free, `running: []`; a new start of the same name — `running` again. The norm is
 [the presence lock contract](../../common/contracts/presence-lock.md) (the owner is lesson P/05) and Н1.4 `presence`; the heartbeat
 of the resource is read through the objects door (`resource GET /v1/objects/platform/resources/srv-a/heartbeat?scope=local`). Step 1

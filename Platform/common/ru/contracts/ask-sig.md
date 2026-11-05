@@ -21,7 +21,7 @@
 
 ## Форма
 
-`pub` — ключ члена `domain/member-key` (backup), ключ `current` набора `domain/keys` (prepare) или `root_pub` строки `domain/root` (move): `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`. Двери, где проверяют `X-W2C-*`, — `Platform/06-console/spec/06-console.api.openapi.yaml` (`/api/backup`, `/domain/move`) и `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`/api/prepare`) (аудит раскладки, В-07, В-08; решение «Архитектора» 2026-10-25).
+`pub` — ключ члена `domain/member-key` (backup), ключ `current` набора `domain/keys` (prepare) или `root_pub` строки `domain/root` (move): `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`. Двери, где проверяют `X-W2C-*`, — `Platform/06-console/spec/06-console.api.openapi.yaml` (`/api/backup`, `/domain/move`) и `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`/api/prepare`) (аудит раскладки, V-07, V-08; решение «Архитектора» 2026-10-25).
 
 ## Подпись и проверка
 
@@ -44,7 +44,7 @@ check:    по порядку: заголовка нет или он пуст �
 Форма функции — вход команды `ask-sig` [P/08.8](../../../08-domain/ru/spec/08.8-domain.norms.md) Н5:
 `{ask: backup | prepare | move, cluster, pub, header: {member?, time?, signature?}, now, body_sha256?}` → `{result: ok}` |
 `{result: refused, reason}`. Поля входа (прочтение М11/10 Н5 и README приёмки М11/10 «Входы»; разбор ревью стадии B
-8–10, № 4, Claude С-7):
+8–10, № 4, Claude S-7):
 
 ```yaml
 cluster:   <кластер> сообщений backup и move и <цель> сообщения prepare — кластер проверяющего: консоль, у которой просят копию,
@@ -57,7 +57,7 @@ member:    поля member на верхнем уровне входа нет: �
            лишнее поле, вход не по форме, код 2 (P/08.8 Н5 exit; решение «Архитектора» 2026-10-20 по открытым вопросам разбора ревью стадии B 8–10, вопрос 2; прежде поле допускалось и не читалось)
 now:       стенные секунды проверяющего
 exit:      0 — вычислено; 2 — вход не по форме; коды выхода — по принципу словаря «Стенда домена» («Коды выхода команд-векторов»: 2 — форма
-           доверенного входа, 0 со словом — документ другого кластера; решение «Архитектора» по сверке М11, H14) (копия P/08.8 Н5 exit; аудит раскладки, решение «Архитектора» 2026-10-25, Б-14):
+           доверенного входа, 0 со словом — документ другого кластера; решение «Архитектора» по сверке М11, H14) (копия P/08.8 Н5 exit; аудит раскладки, решение «Архитектора» 2026-10-25, B-14):
            у ask-sig pub не hex 32 байт, cluster не имя кластера, ask не backup | prepare | move, body_sha256 не по форме, нет его у move или есть у другого ask, now не число или нет, нет header,
            header не объект, header.time не строка, лишнее поле в header или во входе — 2
 ```

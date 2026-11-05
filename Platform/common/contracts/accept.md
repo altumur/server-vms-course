@@ -12,7 +12,7 @@ memory; the holder accepts a relay batch with it too, with `via` = the relay ([P
 Moved from М11/3 Н3 «`принять(mark, stored, body, via, heard_ago)`» (the paragraph on `via` and `heard_ago`, steps 0–7, the paragraph on
 `sent_at`, the answer and a failure) without a change of behaviour. The forms that the function relies on are repeated here so that the holder,
 the relay and the agent execute the contract without the norms 8.x (analysis of review of stage B 8–10, № 4, № 6; ADR-0083 addendum (15); Claude
-`С-3`, `С-4`, `С-6`, `П-2`; Kimi SB810-01): the generation, the mark, `MARK_REFRESH`, `BODY_LIMIT` — the section «Generation, mark, limits»
+`S-3`, `S-4`, `S-6`, `P-2`; Kimi SB810-01): the generation, the mark, `MARK_REFRESH`, `BODY_LIMIT` — the section «Generation, mark, limits»
 (from [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.3, Н1.3а); the publication, `member_objects`, the fields outside the delta,
 `ready` — the section «The member's publication» (from [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н1.2 and P/08.3 Н1.6 `form`);
 the field `every` of the answer — the section «The answer `carry`: `every`» (from P/08.3 Н1.5); the form of the function, the output and the exit code 2 — the section
@@ -26,7 +26,7 @@ Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-The rows and objects that the function writes and reads are families by the [catalogue](../data/catalog.tsv): the report, the delta and the mark of a member — `Platform/08-domain/data/member-report.schema.json`, `Platform/08-domain/data/member-report.outcomes.tsv`; `Platform/08-domain/data/member-report-delta.schema.json`, `Platform/08-domain/data/member-report-delta.outcomes.tsv`; `Platform/08-domain/data/member-reported.schema.json`, `Platform/08-domain/data/member-reported.outcomes.tsv`; the member key `domain/member-key` — `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; the families of `member_objects` — `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; `Platform/04-controller/data/snapshot.schema.json`, `Platform/04-controller/data/snapshot.outcomes.tsv`; `Platform/09-agent/data/reaches.schema.json`, `Platform/09-agent/data/reaches.outcomes.tsv`; `Platform/09-agent/data/shared-refused.schema.json`, `Platform/09-agent/data/shared-refused.outcomes.tsv`; `Platform/09-agent/data/backup-taken.schema.json`, `Platform/09-agent/data/backup-taken.outcomes.tsv`; `Platform/09-agent/data/alarms.schema.json`, `Platform/09-agent/data/alarms.outcomes.tsv`; `Platform/09-agent/data/outcomes.schema.json`, `Platform/09-agent/data/outcomes.outcomes.tsv`; `Platform/08-domain/data/shared.schema.json`, `Platform/08-domain/data/shared.outcomes.tsv`. The doors — OpenAPI `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`POST /api/member/<член>`, `POST /api/relay/<ретранслятор>`, the answer `carry`) and `Platform/09-agent/spec/09-agent.api.openapi.yaml` (the relay door); the manifest keys `domain.*` — `Platform/02-installer/spec/02.1-installer.schema.json` (layout audit, `В-01`…`В-04`, `Б-13`; the Architect's decision of 2026-10-25).
+The rows and objects that the function writes and reads are families by the [catalogue](../data/catalog.tsv): the report, the delta and the mark of a member — `Platform/08-domain/data/member-report.schema.json`, `Platform/08-domain/data/member-report.outcomes.tsv`; `Platform/08-domain/data/member-report-delta.schema.json`, `Platform/08-domain/data/member-report-delta.outcomes.tsv`; `Platform/08-domain/data/member-reported.schema.json`, `Platform/08-domain/data/member-reported.outcomes.tsv`; the member key `domain/member-key` — `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; the families of `member_objects` — `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; `Platform/04-controller/data/snapshot.schema.json`, `Platform/04-controller/data/snapshot.outcomes.tsv`; `Platform/09-agent/data/reaches.schema.json`, `Platform/09-agent/data/reaches.outcomes.tsv`; `Platform/09-agent/data/shared-refused.schema.json`, `Platform/09-agent/data/shared-refused.outcomes.tsv`; `Platform/09-agent/data/backup-taken.schema.json`, `Platform/09-agent/data/backup-taken.outcomes.tsv`; `Platform/09-agent/data/alarms.schema.json`, `Platform/09-agent/data/alarms.outcomes.tsv`; `Platform/09-agent/data/outcomes.schema.json`, `Platform/09-agent/data/outcomes.outcomes.tsv`; `Platform/08-domain/data/shared.schema.json`, `Platform/08-domain/data/shared.outcomes.tsv`. The doors — OpenAPI `Platform/08-domain/spec/08-domain.api.openapi.yaml` (`POST /api/member/<член>`, `POST /api/relay/<ретранслятор>`, the answer `carry`) and `Platform/09-agent/spec/09-agent.api.openapi.yaml` (the relay door); the manifest keys `domain.*` — `Platform/02-installer/spec/02.1-installer.schema.json` (layout audit, `V-01`…`V-04`, `B-13`; the Architect's decision of 2026-10-25).
 
 ## Generation, mark, limits
 
@@ -63,7 +63,7 @@ keep:           the two last generations and their delta; older ones and those a
 REPORT_EVERY:   5           # s — the agent pass; the holder's answer can assign every (Н1.5), 1 … 3600
 MARK_REFRESH:   22.5        # s = LOST_AFTER/2 (chapter 8.1 Н1.3) by the holder's monotonic clock
 BODY_LIMIT:     16 MiB      # the body limit of the door of the holder and of the relay: larger — 413, the body is not read further; it is also
-                            # the limit of the JCS of the whole of step 4а of the report reception contract and of the whole that the agent does not send (P/09.1 Н1.2 body)
+                            # the limit of the JCS of the whole of step 4a of the report reception contract and of the whole that the agent does not send (P/09.1 Н1.2 body)
 ROAD_QUIET:    15         # s, the holder's monotonic clock: three passes of the agent (REPORT_EVERY 5); longer — the former road is silent;
                            # for class camera — road_quiet = max(15, 3 × mark.every) (P/08.3 Н1.1а)
 ```
@@ -76,7 +76,7 @@ P/08.8).
 ## The member's publication
 
 From P/09.1 Н1.2 (`publication`, `out_of_delta`, `member_objects`, `ready`) and P/08.3 Н1.6 `form` without a change of behaviour
-(analysis of review of stage B 8–10, № 4; Claude `С-6`): the body of `POST /api/member/<член>` that the agent sends (P/09.1), and the holder and
+(analysis of review of stage B 8–10, № 4; Claude `S-6`): the body of `POST /api/member/<член>` that the agent sends (P/09.1), and the holder and
 the relay accept with the function «accept». How the agent assembles the objects (`change`, `fresh`, contributions to books, the body limit of the
 agent) — P/09.1 Н1.2; the forms `tls_ca`, `tls_ca_certs` at the member — [the role certificate contract](role-certificate.md); their
 acceptance by the holder (`on_accept`) — P/08.3 Н1.6; `members_rev` — the section «The list of members to the one lagging behind»; `sign_failures` — P/09.1 Н1.12.
@@ -153,7 +153,7 @@ name (step 4).
 ## The check of the member and the key
 
 Moved from [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н2, the row `POST /api/member/<член>`, without a change of behaviour
-(layout audit, the Architect's decision of 2026-10-25, `Б-12`); the signature — [the agent signature contract](agent-signature.md). The relay door accepts a member in the same
+(layout audit, the Architect's decision of 2026-10-25, `B-12`); the signature — [the agent signature contract](agent-signature.md). The relay door accepts a member in the same
 order over its own memory (P/09.2 Н2); the relay batch at the holder — P/08.3 Н2 `POST /api/relay` (C08-G06).
 
 ```yaml
@@ -164,13 +164,13 @@ order:          in order: 503 `standby` before reading the body (P/08.10 Н1.7);
                 otherwise 401; a record without key with `revoked_keys` (P/08.3 Н3 «admit a member» step 1) — as not a member: a knock; any other member — 403 the key is not in the record or is not that one, 403 revoked (`revoked_keys`,
                 `revoked_members` of the set); 401 the signature by the key of the record (P/08.3 Н1.4; the agent signature contract); 409
                 `deposed` (P/08.8 Н1.6) or 503 `standby` of a lost turn; 429 `busy` (the section «Busy»), no write; then the steps of «accept» below in their order: 409 `same_sent_at`
-                (step 2), 409 `rebase` (3), 413 `whole too large` (4а; P/08.10 Н1.5), 409 `not_ready` (5), 503 `rev_exhausted` (7)
+                (step 2), 409 `rebase` (3), 413 `whole too large` (4a; P/08.10 Н1.5), 409 `not_ready` (5), 503 `rev_exhausted` (7)
                 (C08-ACCEPT-ORDER-01)
 ```
 
 ## The answer `carry`
 
-Moved from [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.5 without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, `Б-12`); the bound of `every` is
+Moved from [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.5 without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, `B-12`); the bound of `every` is
 the section below.
 
 ```yaml
@@ -179,7 +179,7 @@ carry:          the answer 200 to POST /api/member/<член> and GET /api/carry
   rev:          the rev of the mark of this member after the acceptance (0 — no generation); the agent sends the next change against it
   every?:       s — the agent pass, 1 … 3600; outside — the agent takes the nearest bound; the value and the case without the field — the section «The answer `carry`: `every`»
   # in М11/3 there are: cluster, rev, every, keys, revoked, members — each row as it is, when the holder has it;
-  # М11/3 had no sealed (there was nothing secret for a member before М11/5 and М11/9); in P/08 — sealed? below (analysis of review of stage B 8–10, № 22: М-9)
+  # М11/3 had no sealed (there was nothing secret for a member before М11/5 and М11/9); in P/08 — sealed? below (analysis of review of stage B 8–10, № 22: M-9)
   keys?:        the row domain/keys of the holder {doc} (the domain key set contract «Набор domain/keys»)
   revoked?:     the row domain/revoked of the holder {jtis} (the domain key set contract «Отзывы domain/revoked»)
   folders?:     the shared folders (P/08.5 Н1.8) — only when the rev of the copy lags behind
@@ -198,7 +198,7 @@ carry:          the answer 200 to POST /api/member/<член> and GET /api/carry
 
 ## The list of members to the one lagging behind
 
-Moved from [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.4а without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, `Б-12`).
+Moved from [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.4а without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, `B-12`).
 
 ```yaml
 publication.members_rev?:  {term, rev} of the copy of its own section domain/member-list/<раздел> that the member holds (P/09.1 Н1.1); no row — no
@@ -226,7 +226,7 @@ packet:      in the answer to a relay batch refused[<член>] = {reason: "busy
 
 ## The knock
 
-Moved from [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.1 `knock` without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, `Б-12`): the memory
+Moved from [P/08.3](../../08-domain/spec/08.3-domain.norms.md) Н1.1 `knock` without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, `B-12`): the memory
 of the process `domain` about the knocking ones; the knocks from a relay batch — the section «The relay batch: limits».
 
 ```yaml
@@ -254,7 +254,7 @@ publication.batch: {name, sig}    # out of form — the field is not taken, an o
 order:         in order:
   1:           the row domain/batches/<batch.name> is absent, unreadable or the signature does not match → an ordinary knock (the memory KNOCKS), no field batch
   2:           the batch is fit: the gathering «from nothing» is closed or not going on (P/08.8 Н1.8а), pinned of the body = this, now < until, no revoked, used < n, the fingerprint of key not in refused; the key is not of small order and not in revoked_members of the set; the name is free (no record or it is without key with revoked_keys);
-               the section row is not full; the admission limit P/08.3 Н3 «admit a member» steps 5а, 5б; the via of the batch is in domain/member-rows and the row domain/relay-members/<via> is not full
+               the section row is not full; the admission limit P/08.3 Н3 «admit a member» steps 5a, 5b; the via of the batch is in domain/member-rows and the row domain/relay-members/<via> is not full
                all yes → step 3; otherwise → step 4
   3:           the batch admission: in one store batch — Entry {how: "admitted", since, class: camera, by: <batch.by>, key, via?, batch} in the section row (signature, rev + 1), used + 1 in the batch row, domain/member-count or the section count (P/08.8 Н1.8а count),
                domain/relay-members/<via> at via; CAS — up to 3 times, then step 4; the log domain.member.admitted.batch {batch, name, fingerprint}; the knock of this name is removed from domain/knocks; the answer is the same 404 of the knock: the member learns of
@@ -264,7 +264,7 @@ order:         in order:
 
 ## The answer `carry`: `every`
 
-From P/08.3 Н1.3 `REPORT_EVERY` and Н1.5 `carry.every` without a change of behaviour (analysis of review of stage B 8–10, № 4; Claude `С-3`):
+From P/08.3 Н1.3 `REPORT_EVERY` and Н1.5 `carry.every` without a change of behaviour (analysis of review of stage B 8–10, № 4; Claude `S-3`):
 
 ```yaml
 REPORT_EVERY:   5           # s — the agent pass; the holder's answer can assign every, 1 … 3600
@@ -291,11 +291,11 @@ acceptance of this member by any road (none — not heard); acceptance is the ou
 2. mark exists and body.sent_at = mark.sent_at (one clock of the member on all roads, lesson 4 Н1.3): sha256(body) ≠
    mark.request_sha256 → 409 same_sent_at; mark.via = via → same (write nothing, do not refresh the mark); otherwise → heard
    (a repeat by another road: no generation, the mark — by the refresh rule of step 6; added in М11/4)
-2а. mark exists, mark.via ≠ via, body.sent_at < mark.sent_at and heard_ago < road_quiet (lesson 4 Н1.3; for class server it is ROAD_QUIET) → ignored
+2a. mark exists, mark.via ≠ via, body.sent_at < mark.sent_at and heard_ago < road_quiet (lesson 4 Н1.3; for class server it is ROAD_QUIET) → ignored
    (write nothing: the former road is alive, and this body is older by the member's clock)
 3. base > 0 and (no mark, or mark.via ≠ via, or base ≠ mark.rev, or stored is unreadable or not with mark.sha256) → 409 rebase
 4. objects' = (base > 0 ? the objects of stored : {}) ∪ body.objects − body.deleted; drop the objects outside member_objects
-4а. JCS(whole') larger than BODY_LIMIT → 413 {error: "whole too large", detail}; write nothing (P/08.10 Н1.5; added in М11/12)
+4a. JCS(whole') larger than BODY_LIMIT → 413 {error: "whole too large", detail}; write nothing (P/08.10 Н1.5; added in М11/12)
 5. no snapshot shard of some manifest of the catalogue with domain.ref                → 409 not_ready
 6. mark exists, stored is readable and with mark.sha256, and whole' without sent_at = whole of stored without sent_at (JCS) → heard
    (stored unreadable or not with mark.sha256 — step 7: a spoiled generation is replaced by a new one; added by the reconciliation of М11, A1):
@@ -311,14 +311,14 @@ acceptance of this member by any road (none — not heard); acceptance is the ou
 ```
 
 `sent_at` below `mark.sent_at` on the same road is accepted: the order on one road is set by the road, a member's clock that stepped
-back is taken at once; between two roads — step 2а (lesson 4). The answer to steps 2 (same, heard), 2а, 6, 7 is carry (Н1.5); its `rev` is
+back is taken at once; between two roads — step 2a (lesson 4). The answer to steps 2 (same, heard), 2a, 6, 7 is carry (Н1.5); its `rev` is
 the `rev` of the mark if `mark.via` = the road of the answer, otherwise 0 (the other road sends a whole). A failure between the steps of 7: an object above the mark belongs to nobody (Н1.3), the next acceptance writes over it.
 
 ## The form of the function
 
 From М11/3 Н5 `accept`, `exit` and М11/4 Н5 (the fields `via`, `heard_ago`) without a change of behaviour: the input and the output of the rows of the package
-[`accept`](../vectors/accept/README.md) (the scenarios were removed by the move of lesson 8; analysis of review of stage B 8–10, № 6, Claude `П-2`;
-№ 4, Claude `С-4`):
+[`accept`](../vectors/accept/README.md) (the scenarios were removed by the move of lesson 8; analysis of review of stage B 8–10, № 6, Claude `P-2`;
+№ 4, Claude `S-4`):
 
 ```yaml
 input:          {catalog: [<sub>…], mark: <метка> | null, stored: <whole> | null, body: <текст>, refreshed_ago: <с> | null,
@@ -330,7 +330,7 @@ input:          {catalog: [<sub>…], mark: <метка> | null, stored: <whole>
   refreshed_ago: monotonic s since this process wrote the mark; null — it did not write it
   via:          the road of the request: null — directly, otherwise the name of the relay
   heard_ago:    monotonic s since the last acceptance of this member by any road; null — not heard
-  class:        Entry.class of the member: step 2а, road_quiet
+  class:        Entry.class of the member: step 2a, road_quiet
   every:        the period this answer will tell the member; null — no field in the answer; the relay over its own memory passes neither class nor every
 output:         {result: generation, rev, base, whole, sign_failures?} | {result: heard, refresh, sign_failures?} | {result: same}
                 | {result: ignored}
@@ -342,7 +342,7 @@ output:         {result: generation, rev, base, whole, sign_failures?} | {result
                 into the mark (not in the publication or out of form, out_of_delta); at heard with refresh: false there is no field (guesses
                 of stage C ACC-FORM-31-01, ACC-G01-COUNTER-31-01, the Architect's decision of 2026-10-23: the output form is extended)
   status:       the answer code of the door: 400 not_a_publication (step 1); 409 same_sent_at (step 2), rebase (step 3), not_ready
-                (step 5); 413 whole_too_large (step 4а; at the door — {error: "whole too large", detail}); 503 rev_exhausted (step 7)
+                (step 5); 413 whole_too_large (step 4a; at the door — {error: "whole too large", detail}); 503 rev_exhausted (step 7)
 exit:           0 — computed (a refusal by a word included); 2 — the input is out of form (the mark — strictly «Generation, mark, limits»:
                 stale is always there; signature is optional also at a mark without via); an extra field of the input, the mark or stored — 2;
                 the field names are compared exactly (guess of stage C ACC-FORM-31-01, the Architect's decision of 2026-10-23)
@@ -375,7 +375,7 @@ The package [`accept`](../vectors/accept/README.md) (analysis of review of stage
 of the acceptance of М11/3 (sc. 13, 26 rows) and М11/4 (sc. 06, 9 rows — roads) without a change of bytes, 3 rows of ADR-0113 (`road_quiet`, a change of `every`) (the scenarios and inputs were removed by the move
 of lesson 8 — the table is the only source of these cases), 2 rows of the relay door and 25 rows of stage C: the other families
 of `member_objects`, extra fields and `@exit 2`, the form of `sign_failures`, the form of the mark — `sign_failures` {} and the time `received_at` (ACC-FORM172, ACC-TIME172; the README of the package), 1 row — a mark without `stale` (coverage audit of P/08, the second pass of Gemini). The implementation of the holder and
-the relay passes them with its function, without a stand. There is no row for step 4а (`whole_too_large`) — a candidate of the package
+the relay passes them with its function, without a stand. There is no row for step 4a (`whole_too_large`) — a candidate of the package
 (the README of the package, «Candidates»; analysis of review of stage B 8–10, № 6). The limits of the relay batch (the bound 64 MiB, knock 33,
 a knock larger than 256 KiB) are not expressed by the function «accept» — by reading (C08-G05).
 

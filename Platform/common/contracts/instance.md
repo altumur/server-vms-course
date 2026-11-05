@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/contracts/instance.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): several processes write the process instance into the rows of the slot, the turn, the presence
-lock and into event ids — a contract, not copies in chapters; layout audit А-06, the Architect's decision of
+lock and into event ids — a contract, not copies in chapters; layout audit A-06, the Architect's decision of
 2026-10-25). The owner is chapter [P/03.2](../../03-worker/spec/03.2-worker.norms.md) (Н1.4 `holder`, Н3 «start()» step 2).
 Participants: the worker (the slot, the contender mark, the heartbeat — P/03.2, P/03.4), the resource — the field `instance` of the presence lock
 ([P/05](../../05-resource/spec/05-resource.norms.md) Н1.4; [the presence lock contract](presence-lock.md)), the process `domain` —
@@ -56,4 +56,4 @@ acceptance).
 ## Correspondence to former lessons
 
 From P/03.2 Н1.4 (the comment of the field `holder`) and Н3 «start()» step 2 (the first phrase — the computation); they, P/05, P/08.10 and
-P/02.4 refer here (layout audit А-06).
+P/02.4 refer here (layout audit A-06).

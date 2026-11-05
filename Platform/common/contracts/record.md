@@ -21,13 +21,13 @@ document» ([P/08.9](../../08-domain/spec/08.9-domain.norms.md) Н1.2 `document`
 P/09.1 Н3 «follow», «check the backup copy»); «lesson N» — lesson М11/N, their addresses now: «lesson 3» (the agent carries
 reports) — P/09.1 Н3 and P/08.3 Н2, «lesson 11» (the shared document) — P/08.9 Н1.2 (analysis of review of stage B 8–10, № 22; Kimi
 SB810-07); `keys` — the accepted set ([the domain key set contract](keys.md)). What is common to the forms — the [domain founding contract](domain-founding.md)
-«Common rules of forms» (layout audit, Б-03).
+«Common rules of forms» (layout audit, B-03).
 
 Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-СЛОВА.md).
 
 ## Form
 
-The kinds of the document: the closed set of the backup copy — `Platform/08-domain/data/backups.schema.json`, `Platform/08-domain/data/backups.outcomes.tsv`; `Platform/09-agent/data/backup.schema.json`, `Platform/09-agent/data/backup.outcomes.tsv`; the shared document — `Platform/08-domain/data/shared-docs.schema.json`, `Platform/08-domain/data/shared-docs.outcomes.tsv`; `Platform/09-agent/data/shared-copy.schema.json`, `Platform/09-agent/data/shared-copy.outcomes.tsv`; the trusted set `keys` — `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`. Times — `Platform/common/data/codec.tsv`, the row `time` (layout audit, В-46…В-48, Б-27; the Architect's decision of 2026-10-25).
+The kinds of the document: the closed set of the backup copy — `Platform/08-domain/data/backups.schema.json`, `Platform/08-domain/data/backups.outcomes.tsv`; `Platform/09-agent/data/backup.schema.json`, `Platform/09-agent/data/backup.outcomes.tsv`; the shared document — `Platform/08-domain/data/shared-docs.schema.json`, `Platform/08-domain/data/shared-docs.outcomes.tsv`; `Platform/09-agent/data/shared-copy.schema.json`, `Platform/09-agent/data/shared-copy.outcomes.tsv`; the trusted set `keys` — `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`. Times — `Platform/common/data/codec.tsv`, the row `time` (layout audit, V-46…V-48, B-27; the Architect's decision of 2026-10-25).
 
 ## The term record `domain/holder`
 
@@ -56,7 +56,7 @@ The backup document (Н1.5), the grant (Н1.7) and the members row `domain/membe
 
 ## The switch point `switch`
 
-Moved from [P/08.8](../../08-domain/spec/08.8-domain.norms.md) Н1.6 `switch` without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, Б-04):
+Moved from [P/08.8](../../08-domain/spec/08.8-domain.norms.md) Н1.6 `switch` without a change of behaviour (layout audit, the Architect's decision of 2026-10-25, B-04):
 the condition is read by the process `domain` of the holder and by the agent of its cluster (the key set contract: the rows `domain/keys` and
 `domain/revoked` the agent of the holder's cluster does not write while the cluster holds the term).
 
@@ -67,7 +67,7 @@ switch:      at the holder's cluster the rows domain/keys, domain/revoked, domai
              G1) and names this cluster as the holder (P/09.1 Н1.4 holder_cluster). The condition of the agent is
              only by the record: «domain/signer not forgotten» is a condition of the process domain, domain/signer is not open to the agent; forget
              comes only after a record of a foreign greater term (P/08.8 Н1.6 yields), therefore the record «the holder is this cluster» and forgotten
-             keys never go together, except at a theft: the thief signs a greater term with the name of the acting holder, the process yields by it, there is no harm beyond the theft (Quint М12 Н11). The switch point is one — a record domain/holder of a greater term that passed record (a change after theft can also be of a smaller one, P/08.8 Н1.6 yields): at a planned
+             keys never go together, except at a theft: the thief signs a greater term with the name of the acting holder, the process yields by it, there is no harm beyond the theft (Quint M12 Н11). The switch point is one — a record domain/holder of a greater term that passed record (a change after theft can also be of a smaller one, P/08.8 Н1.6 yields): at a planned
              handover it is written by the process of the former holder (P/08.8 Н1.7 step 6), at a move — by the agent by «following» (its
              only write into these rows before the point). From it the process yields and writes these rows no more, the agent writes
              them as at any member. The process sees the point at its first check after it (the check is on every pass and
@@ -80,7 +80,7 @@ switch:      at the holder's cluster the rows domain/keys, domain/revoked, domai
 
 From P/08.8 Н1.5 `document`, Н1.7 step 5 `grant` and P/08.1 Н1.1 `member` without a change of behaviour — the checker with the function
 `record` (step 1) needs the closed sets of all three kinds and the grammar of a member name (analysis of review of stage B 8–10, № 4; Claude
-`С-7`). The owners of the text are P/08.8 Н1.5, Н1.7 and P/08.1 Н1.1; the meaning of the fields (`state`, `objects`, secrets, the backup key)
+`S-7`). The owners of the text are P/08.8 Н1.5, Н1.7 and P/08.1 Н1.1; the meaning of the fields (`state`, `objects`, secrets, the backup key)
 — there too.
 
 ```yaml
@@ -102,7 +102,7 @@ chapter 8.9 — with the one kind «shared document» (P/08.9 Н1.2 document; Н
 
 The JSON nesting limit is 64, one number for the platform (the JSON depth of the body of a console door, P/06.1 Н1.4): the string `row` and
 the text `doc` are parsed each with its own limit; a level is an object or an array (a scalar — 0, an empty object or array — 1,
-as `depth` of links, [the В7 layers](../LAYERS.md) § 5); deeper than 64 — `not_a_record` (step 1), at the trusted `keys` — the input is out of form, exit 2 (guess of stage C REC-G02, the Architect's decision of 2026-10-23).
+as `depth` of links, [the V7 layers](../LAYERS.md) § 5); deeper than 64 — `not_a_record` (step 1), at the trusted `keys` — the input is out of form, exit 2 (guess of stage C REC-G02, the Architect's decision of 2026-10-23).
 
 ```
 1. row is not {doc: <text>}, doc is not a JSON object of the closed set of one of the kinds of the third argument; the kinds of this lesson are the term record
@@ -159,7 +159,7 @@ document» (REC-G01); `cases.tsv` — 46 lines: 10 of the kind «members row» (
 of the acceptance of М11/10 (sc. 05) without a change of bytes: three kinds of document, a foreign domain, a revoked and an unknown issuer,
 `kid` ≠ `issuer`, a substitution, forms and types; one line is an input out of form (`@exit 2`; analysis of review of stage B 8–10, № 22); the scenario and the inputs were removed by the move
 of lesson 8 — the table is the only source of these cases. The form of the function and the exit codes of the command are a copy of
-[P/08.8](../../08-domain/spec/08.8-domain.norms.md) Н5 `record`, `exit` (layout audit, the Architect's decision of 2026-10-25, Б-14):
+[P/08.8](../../08-domain/spec/08.8-domain.norms.md) Н5 `record`, `exit` (layout audit, the Architect's decision of 2026-10-25, B-14):
 
 ```yaml
 record:    input {keys: <the set document>, row: {doc}}; output {result: ok, term, holder} | {result: refused, reason}
@@ -172,7 +172,7 @@ exit:      0 — computed; 2 — the input is out of form; exit codes follow the
 ```
  Participant: the package
 [`follow`](../../09-agent/vectors/follow/README.md) — a package of the owner lesson P/09 (chapter 9.1), it executes it; the term record contract
-there is a consumer: following calls `record` (layout audit, В-49; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25). The package `resolve` of lesson P/06 does not call `record`
+there is a consumer: following calls `record` (layout audit, V-49; CM-RECORD-VECTORS-128, the Architect's decision of 2026-10-25). The package `resolve` of lesson P/06 does not call `record`
 (the input is a domain value `{term, rev, value}`) — it is not counted in «Vectors».
 
 The canonical JSON (RFC 8785, ADR-0072) on which the contract relies is the package [`jcs`](../../01-store/vectors/jcs/README.md)

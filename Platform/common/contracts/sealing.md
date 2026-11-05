@@ -18,7 +18,7 @@ Normative keywords follow [the course canon](../../../НОРМАТИВНЫЕ-С�
 envelope:  enc:v2:<kid>:<nonce>:<ct>
   kid:     a non-empty string without `:`, without blanks and without U+FEFF, does not begin with `#`; blanks are exactly U+0020, U+0009,
            U+000D, U+000A (not `\s` of a library; NBSP U+00A0 and the other Unicode spaces are ordinary characters of kid); new → k1;
-           rotate → k<max+1> (analysis of the review of stage A 6–7, Б7); U+FEFF is nowhere in a kid — the kid of the first entry is not to be confused with
+           rotate → k<max+1> (analysis of the review of stage A 6–7, B7); U+FEFF is nowhere in a kid — the kid of the first entry is not to be confused with
            a BOM at re-reading (guess of stage C S-006, the Architect's decision of 2026-10-23)
   nonce:   12 random bytes, base64url without =
   ct:      AES-256-GCM(key, nonce, plaintext, aad) with the tag (16 bytes), base64url without =
@@ -34,7 +34,7 @@ envelope:  enc:v2:<kid>:<nonce>:<ct>
            the Architect's decision of 2026-10-23)
   strict:  at opening, an envelope not by the grammar — not enc:v2, not five parts separated by `:`, a kid not by the grammar, a nonce not
            12 bytes or a ct not base64url without `=` (with `=` included), a ct shorter than the tag — Sealed without the cryptographic
-           operation; there is no default that weakens the cut-off (the Architect's decision, analysis of the review of stage A 6–7, Б6)
+           operation; there is no default that weakens the cut-off (the Architect's decision, analysis of the review of stage A 6–7, B6)
 ```
 
 ## AAD path
@@ -58,7 +58,7 @@ ring_file:                                   # SECRETS_KEY=<path>; the default i
            S-005, the Architect's decision of 2026-10-23)
 ```
 
-Three states of the ring at a holder (from P/06.2 Н1.2 `no_key` without change; layout audit, the Architect's decision of 2026-10-25, Б-22); what the door
+Three states of the ring at a holder (from P/06.2 Н1.2 `no_key` without change; layout audit, the Architect's decision of 2026-10-25, B-22); what the door
 of the holder does with each is the norm of its lesson (the console — P/06.2 Н1.2, Н4; the common row check — [the row check contract](row-check.md) «Ring boundary»;
 the worker — P/03.5 Н1.2 `open_without`):
 
@@ -76,7 +76,7 @@ it is skipped (guess of stage C S-003, the Architect's decision of 2026-10-23); 
 the ring is wrong (S-006).
 The blank characters of the file are exactly the space U+0020 and the tab U+0009; lines are separated by LF, a CR before LF is part of the end
 of the line (CRLF is allowed); NBSP U+00A0 and the other Unicode spaces are ordinary characters of kid; hex digits are `0-9`, `a-f`, `A-F`
-(analysis of the review of stage A 6–7, Б7). A line whose first non-blank character is `#` is a comment as a whole. A kid does not begin
+(analysis of the review of stage A 6–7, B7). A line whose first non-blank character is `#` is a comment as a whole. A kid does not begin
 with `#`; a `#` inside a kid is allowed. An entry contains exactly two fields separated by a space
 or a tab; the second is exactly 64 hex digits. Inline comments after a key entry
 are not allowed. Spaces/tabs at the edges of a line are ignored.
@@ -93,7 +93,7 @@ Moved from [P/06.2](../../06-console/spec/06.2-console.norms.md) Н3 «reseal at
 without new behaviour; which rows are walked, `cas` by the read version, races and the order of the ring holders — there and in
 [P/02.5](../../02-installer/spec/02.5-installer.norms.md) Н1.3, by reference (guess of stage C C06-RESEAL-33-01, the Architect's decision of 2026-10-25). The walk at
 the console (its own rows at start, P/06.2 Н3) and at the installer (`w2cctl secrets seal` by prefixes, [P/02.4](../../02-installer/spec/02.4-installer.norms.md) Н1.9) differs —
-there is no common rule of the walk, it stays with each; what is common is what is done with one value, below (layout audit Б-22).
+there is no common rule of the walk, it stays with each; what is common is what is done with one value, below (layout audit B-22).
 
 ```yaml
 walk:      the fields of a row whose name is *_secret by the sealing rule: at the top level and nested in the text of a json field value

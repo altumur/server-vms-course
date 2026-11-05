@@ -1192,7 +1192,7 @@
    "path": "holds.table",
    "relation": "when . in keys(tables) : absent tables.{.}.delete_after",
    "class": "value",
-   "norm": "ADR-0094 шаг 3б; решение «Архитектора» 2026-10-31",
+   "norm": "ADR-0094 шаг 3b; решение «Архитектора» 2026-10-31",
    "cel": "((type(doc) == map && \"holds\" in doc) ? ((type(doc[\"holds\"]) == map && \"table\" in doc[\"holds\"]) ? ((doc[\"holds\"][\"table\"] != null && type(doc[\"holds\"][\"table\"]) == string && (type(doc) == map && \"tables\" in doc && type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(k1, k1 == doc[\"holds\"][\"table\"]) && type(doc[\"tables\"][doc[\"holds\"][\"table\"]]) == map && \"delete_after\" in doc[\"tables\"][doc[\"holds\"][\"table\"]])) ? [{\"p\": [\"holds\", \"table\"]}] : []) : []) : [])",
    "own": []
   },
@@ -1201,7 +1201,7 @@
    "path": "placement.places.table",
    "relation": "when . in keys(tables) : absent tables.{.}.delete_after",
    "class": "value",
-   "norm": "ADR-0094 шаг 3б; решение «Архитектора» 2026-10-31",
+   "norm": "ADR-0094 шаг 3b; решение «Архитектора» 2026-10-31",
    "cel": "((type(doc) == map && \"placement\" in doc) ? ((type(doc[\"placement\"]) == map && \"places\" in doc[\"placement\"]) ? ((type(doc[\"placement\"][\"places\"]) == map && \"table\" in doc[\"placement\"][\"places\"]) ? ((doc[\"placement\"][\"places\"][\"table\"] != null && type(doc[\"placement\"][\"places\"][\"table\"]) == string && (type(doc) == map && \"tables\" in doc && type(doc[\"tables\"]) == map && dyn(doc[\"tables\"]).exists(k1, k1 == doc[\"placement\"][\"places\"][\"table\"]) && type(doc[\"tables\"][doc[\"placement\"][\"places\"][\"table\"]]) == map && \"delete_after\" in doc[\"tables\"][doc[\"placement\"][\"places\"][\"table\"]])) ? [{\"p\": [\"placement\", \"places\", \"table\"]}] : []) : []) : []) : [])",
    "own": []
   },

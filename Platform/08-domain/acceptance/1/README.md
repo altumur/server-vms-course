@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/acceptance/1/README
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
 the section [«Стенд домена»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly — the М11 dictionary of the acceptance README of
-М11/01; the plan of the move of lesson 8, В5). The norm of the chapter is
+М11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
 [`08.1-domain.norms.md`](../../spec/08.1-domain.norms.md) Н5. The scenarios were moved from the acceptance of М11/03 (04, 06–09) and
 М11/06 (06 → 15) (stage B, ADR-0083 addendum (1): without a change of behaviour); the numbers and the steps are the former ones, except the scenario of М11/06:
 the number 06 is taken by a scenario of М11/03, it got the number 15 — the next one after the largest number of the sources of the chapter (М11/03 sc. 14;

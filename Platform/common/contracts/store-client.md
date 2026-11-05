@@ -19,7 +19,7 @@ The wire is the contract of the store door `Platform/01-store/spec/01-store.api.
 ([OpenAPI](../../01-store/spec/01-store.api.openapi.yaml); it is part of the reading of `common` by ADR-0083 addendum (33) item 1): the routes
 `GET /v1/get?key=`, `GET /v1/list?prefix=`, `POST /v1/write` (`Cmd`: `put` | `delete`; `BatchCmd`: `batch`), the schemas `Key`, `Row`, `Listing`,
 `Cmd`, `BatchCmd`, `Written`, `Fault`. The row, the condition `cas`, the guard `guard`, the time conditions `not_after`/`not_before` and the `id` of a write are
-the schemas `Row` and `Cmd` of the same OpenAPI (P/01.1 Н1; the client writes by them; layout audit, Б-05).
+the schemas `Row` and `Cmd` of the same OpenAPI (P/01.1 Н1; the client writes by them; layout audit, B-05).
 
 ## Address
 

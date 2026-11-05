@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/acceptance/1/README
 
 The stand, the dictionary of directives and doors — [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
 the section [«Стенд домена»](../../../common/acceptance/README.md#domain-stand) (the stand of several clusters; formerly — the М11 dictionary of the acceptance README
-of М11/01; the plan of the move of lesson 8, В5). The norm of the chapter is [`09.1-agent.norms.md`](../../spec/09.1-agent.norms.md) Н5;
+of М11/01; the plan of the move of lesson 8, V5). The norm of the chapter is [`09.1-agent.norms.md`](../../spec/09.1-agent.norms.md) Н5;
 [the contract](../../spec/09-agent.api.openapi.yaml), the lecture (`ru/09-agent.md`, for people, not in the export). The scenarios were moved (stage B, ADR-0083
 addendum (1): without a change of behaviour) from the acceptances of М11/05 (04 → 13), М11/06 (04, 07, 08), М11/10 (11), М11/11 (05, 06 → 14) and
 М11/12 (01, 03, 06); the numbers, names and steps are the former ones, except `13-slot-liveness` (in М11/05 — `04-slot-liveness`) and
@@ -142,22 +142,22 @@ bypassing the writer are put by the store door of the member through `admin.sock
   Н1.3 step 5). The holder signs the document rev 2, the member takes it, and the taken document removes the refusal with the pair (1, 1),
   which is not newer than its own. Then the runner puts a refusal with the pair (1, 2), not newer than its own `domain/shared`: it is removed by the next
   pass without a new document (the follow-through; step 1 of «take the document» — «nothing»). An unreadable refusal (`doc` not JSON) is removed
-  by the same follow-through: a comparison with the unreadable gives «differs» (П2). Its own `domain/shared` does not roll back.
+  by the same follow-through: a comparison with the unreadable gives «differs» (P2). Its own `domain/shared` does not roll back.
 - **23** (G04). Unreadable home copies (Н1.4 `home_write`, `member_copy`; Н1.5 `member`; the outcomes of the families
-  `domain/member-list/<раздел>` — `Г-53`, `domain/member-topology` — `Г-54`, `domain/grants` — `Г-51`, `domain/placed` — `Г-58`). The agent is
+  `domain/member-list/<раздел>` — `G-53`, `domain/member-topology` — `G-54`, `domain/grants` — `G-51`, `domain/placed` — `G-58`). The agent is
   the only writer: an answer against an unreadable row is «differs» for it, and it rewrites the row by CAS with the value of the
   answer. The runner spoils four rows of `m1` (`doc` not JSON, `as_of` not a time, `rev` not an integer), and each returns to the
   value bound before the spoiling (`$ml`, `$mt`, `$gd`). At `domain/placed` it is `rev` 2: 1 after `@domain`, 2 after the write of
   the placement, as in sc. 01 of [the acceptance of chapter 8.6](../../../08-domain/acceptance/6/README.md). The holder sends `members`
   because the agent without a readable copy does not send `members_rev` ([the report acceptance
   contract](../../../common/contracts/accept.md) «The list of members to the one lagging behind»).
-- **24** (G04). An unreadable outcomes row `domain/outcomes` (Н1.5 `apply`; the outcome of the family, `Г-56` — an exception to the rule
+- **24** (G04). An unreadable outcomes row `domain/outcomes` (Н1.5 `apply`; the outcome of the family, `G-56` — an exception to the rule
   of the only writer): the element `e-000000000001` is not an outcome object. The edit of the holder is stored (202), but the agent does not
   perform it: it has nothing to check «an outcome with `kept_at = at` is already written» by. For three passes the unit is the former one, the holder has one
   pending edit, the outcomes row is the former one — the agent does not rewrite it. The runner (the operator) fixes the row: `items: {}`, it cannot be deleted (`never` P/01.2 Н1.3, `delete` under `domain/` is forbidden to `admin` too) — the edit is performed,
   the outcome `performed` 200, the pending 0.
 - **25** (G04). An unreadable row of the agent queue `domain/agent-turn` (Н1.13 `standby`, Н3 «the agent turn» step 1; the outcome
-  of the family, `Г-44`): while the agent of `m2` is stopped the row is `{bad: "1"}` (no `holder`, an extra field). The started agent
+  of the family, `G-44`): while the agent of `m2` is stopped the row is `{bad: "1"}` (no `holder`, an extra field). The started agent
   stays waiting. It sends no reports: the member is `silent` within `LOST_AFTER`, while an agent that took the queue would report in 5 s.
   There is no CAS over an unreadable row: the row and the index are the former ones. The local token door works — the request of `m2` goes to
   the holder and gets 200 (DOM-AGENT-TURN-02; the placement `c1` — as in sc. 17). After the row is fixed (`holder: ""` — the queue is given up; `delete` is forbidden, as in sc. 24) the agent takes the queue
@@ -206,9 +206,9 @@ the member is `ok`.
 | 20 | `join-same-and-another` | 9 | a repeated `join` of the same root — `ok`, `domain/root` and the index are the former ones; another one is pinned — `refused`, the row is the former one (audit of P/09, the second pass, G03) |
 | 21 | `member-key-pair` | 11 | `pub` of the member key is not from `seed_secret` — the row is unreadable: `sign_failures_domain`, the local token door 503 `unavailable`, the member is `silent`, the row is not born anew (C09-MEMBER-KEY-PAIR-01; G03) |
 | 22 | `shared-refused-cleanup` | 12 | the taken document removes the refusal with a pair not newer than its own; a refusal not newer than its own `domain/shared` and an unreadable refusal are removed by the follow-through (C09-SHARED-REFUSED-CLEANUP-01, -02; G04) |
-| 23 | `unreadable-copies-heal` | 16 | the unreadable `domain/member-list/<раздел>`, `domain/member-topology`, `domain/grants`, `domain/placed` are rewritten by the holder's answer (Г-51, Г-53, Г-54, Г-58; G04) |
-| 24 | `unreadable-outcomes` | 12 | an unreadable `domain/outcomes` — the edit is not performed, the row is not rewritten; fixed — the outcome `performed` (Г-56; G04) |
-| 25 | `unreadable-agent-turn` | 12 | an unreadable `domain/agent-turn` — the agent is waiting, the member is `silent`, the row is not rewritten, the local token door 200; fixed — the queue is taken, the member is `ok` (Г-44; G04) |
+| 23 | `unreadable-copies-heal` | 16 | the unreadable `domain/member-list/<раздел>`, `domain/member-topology`, `domain/grants`, `domain/placed` are rewritten by the holder's answer (G-51, G-53, G-54, G-58; G04) |
+| 24 | `unreadable-outcomes` | 12 | an unreadable `domain/outcomes` — the edit is not performed, the row is not rewritten; fixed — the outcome `performed` (G-56; G04) |
+| 25 | `unreadable-agent-turn` | 12 | an unreadable `domain/agent-turn` — the agent is waiting, the member is `silent`, the row is not rewritten, the local token door 200; fixed — the queue is taken, the member is `ok` (G-44; G04) |
 | 27 | `roles-copy` | 21 | the copy of `domain/roles` at `m1` by the holder grants: the disabled `bob` drops out of `assigned`, the session of `ann` — `view` through the role `ops`; the holder grants row is unreadable — the copies `domain/grants` and `domain/roles` are not erased, the indices are the former ones (ADR-0098 §4) |
 
 ## Sleeps (`@sleep`, ADR-0080 addendum (17) item 4)

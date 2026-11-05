@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/acceptance/6/README
 
 The stand and the dictionary of directives and doors are in [the common acceptance README](../../../common/acceptance/README.md#dictionary-of-directives-and-doors),
 the section [«Стенд домена»](../../../common/acceptance/README.md#domain-stand) (a stand of several clusters; formerly the dictionary of the М11 README of the acceptance
-М11/01; the plan of the move of lesson 8, В5). The norm of the chapter is
+М11/01; the plan of the move of lesson 8, V5). The norm of the chapter is
 [`08.6-domain.norms.md`](../../spec/08.6-domain.norms.md) Н5; [the contract](../../spec/08-domain.api.openapi.yaml),
 the lecture (`ru/08-domain.md`, for people, not in the export). Scenarios 01, 02, 03, 05, 09 were moved from the acceptance of М11/06 (stage B, ADR-0083 addendum (1): without
 a change of behaviour); the numbers and the steps are the former ones, except sc. 03: step 14 (the holder's copy with `start` 7 before `DELETE`) is inserted, the former 14–16 are now 15–17 (the decision of «Архитектор» 2026-10-21 on a data finding of cammeta-python ac3509b). The other scenarios of М11/06: 04, 07, 08 — [the acceptance of chapter 9.1](../../../09-agent/acceptance/1/README.md), 06 — [the acceptance of chapter 8.1](../1/README.md) (sc. 15). Sc. 10 is added by ADR-0091 addenda (12)–(19) (the executors of placement). Sc. 11 — the coverage audit of P/08 (audit-kimi 1e9929d51), sc. 12–15 — its second pass (Gemini). In total 12 scenarios / 261 steps.
@@ -59,14 +59,14 @@ Sc. 12–15 (the coverage audit of P/08, the second pass of Gemini, the draft G0
 in advance (Н1.4 id): `g08-post` — `e-a56508c8a4e8`, `g08-garbled` — `e-2a8bdc8848eb`, `g08-fresh` — `e-747d2dcc4cc4`
 (`sha256("m1" ‖ 0x00 ‖ <ключ>)`, the first 12 hex). Sc. 12 — a kept creation `POST` (Н1.3 `kept`, Н1.4 `what`, `asked`):
 `asked.path` is `/domain/testsub/counters` without a query (step 4), the outcome is the status of the units door (201). Sc. 13 — a waiting `DELETE`
-(Н3 «принять правку» step 4). Sc. 14 — the outcomes of `domain/placement/<sub>/<ref>` and `domain/placement` (Г-35, Г-36): a record
+(Н3 «принять правку» step 4). Sc. 14 — the outcomes of `domain/placement/<sub>/<ref>` and `domain/placement` (G-35, G-36): a record
 without the fields `origin`, `copies`, `reason`, `at`, `rev` is not of the form (without `copies` — unreadable, the М11 check, T2),
 «то же содержимое» with it is false — `rev` 3; the counter `{rev: "x"}` is unreadable — 503, `c3` is not written. `rev` after the start is 1 (the section
 «Placement counter after the start»): the write 2, the overwrite 3, the deletion 4, `c2` — 5. Sc. 15 — the outcomes of `domain/pending/<член>`
-(Г-32, Г-34): the element `e-2a8bdc8848eb` is not JSON — a replay of its key 422 (the key is not reused), an edit with a fresh key
+(G-32, G-34): the element `e-2a8bdc8848eb` is not JSON — a replay of its key 422 (the key is not reused), an edit with a fresh key
 — 202, the element is not touched; `seq` `"x"` — 503, nothing is written. `m1` is cut (`@cut`) — the edits wait.
 
-Not taken from the draft G06: an unreadable row `domain/outcomes/m1` at the acceptance of an edit (expectation 503) — the norm (Г-31) does not
+Not taken from the draft G06: an unreadable row `domain/outcomes/m1` at the acceptance of an edit (expectation 503) — the norm (G-31) does not
 stop the acceptance: settle is not performed in this pass, the view `outcomes` is without the field; `view.pending.<член>: null` with
 an unreadable `seq` — the norm gives `null` to a row unreadable as a whole, and the outcomes table does not distinguish the refusal path of a row without `seq` (`""` or `/seq`)
 (by reading).

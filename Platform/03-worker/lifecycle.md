@@ -61,7 +61,7 @@ None: the setting channel is only the environment and the name argument (P/02.4 
 
 | Path | What | Norm |
 |---|---|---|
-| `<корень событий>/.workers/<sub>/<экземпляр>.lock` | the presence lock: the content anew at start, an exclusive `flock` for the whole lifetime | [catalogue](../common/data/catalog.tsv), the presence lock contract, P/03.2 Н3 «start()» step 2б |
+| `<корень событий>/.workers/<sub>/<экземпляр>.lock` | the presence lock: the content anew at start, an exclusive `flock` for the whole lifetime | [catalogue](../common/data/catalog.tsv), the presence lock contract, P/03.2 Н3 «start()» step 2b |
 | `<корень событий>/<sub>/<unit>/e<эпоха>/…`, `<sub>.alarms/…`, `audit/<sub>worker/e1/…` | event buckets, the `append` participant | [catalogue](../common/data/catalog.tsv), the event journal contract, P/03.6 Н1.2 |
 | the objects `<sub>/heartbeats/<имя>`, `<sub>/contenders/<имя>/<коробка>` | the heartbeat and the contender mark | [catalogue](../common/data/catalog.tsv), P/03.4 Н1.1, P/03.2 Н1.4а |
 | `/etc/w2c/secrets/platform.key` (`SECRETS_KEY`) | the ring — read only | [catalogue](../common/data/catalog.tsv), [sealing contract](../common/contracts/sealing.md) |
@@ -72,8 +72,8 @@ None: the setting channel is only the environment and the name argument (P/02.4 
 | Code | When | Norm |
 |---|---|---|
 | 0 | the manifest mark changed — stop, the supervisor starts it again; an orderly stop by SIGTERM | P/02.3 Н3 «Manifest change», P/03.4 Н3 «stop by SIGTERM» |
-| 2 | the manifest mark is not by the form at a running worker — a stop, the restart refuses until the operator fixes the mark (P/02.3 Н3 «Manifest change»; analysis of the review of stage A 6–7, Б2) | P/02.3 Н3, Н4 |
-| 2 | a start refusal: the schema is above the build or not a number; no manifest row or mark, a wrong sha256, the manifest is refused; the name is not by the grammar or not with `prefix`; the presence lock: an error of open, flock or of writing the content (a blocking flock waits, it does not refuse — analysis of the review of stage B 6–7, № 45); an environment file line not by the grammar; a server in `%i` ≠ `SERVER_NAME` | P/03.2 Н3 «schema check by the worker», P/02.3 Н3, P/03.2 Н3 «start()» steps 2а, 2б, P/02.4 Н1.2, Н1.5 |
+| 2 | the manifest mark is not by the form at a running worker — a stop, the restart refuses until the operator fixes the mark (P/02.3 Н3 «Manifest change»; analysis of the review of stage A 6–7, B2) | P/02.3 Н3, Н4 |
+| 2 | a start refusal: the schema is above the build or not a number; no manifest row or mark, a wrong sha256, the manifest is refused; the name is not by the grammar or not with `prefix`; the presence lock: an error of open, flock or of writing the content (a blocking flock waits, it does not refuse — analysis of the review of stage B 6–7, № 45); an environment file line not by the grammar; a server in `%i` ≠ `SERVER_NAME` | P/03.2 Н3 «schema check by the worker», P/02.3 Н3, P/03.2 Н3 «start()» steps 2a, 2b, P/02.4 Н1.2, Н1.5 |
 | ≠ 0 | the memory budget is exceeded — do not start (`MemoryBudgetRefused`); the norm does not set its own code | P/03.4 Н3 «start() — the budget step», Н4; P/02.4 Н4 |
 | 2 | after renewal the schema is above the build — fence, give the name back, exit; the slot is not released | P/03.2 Н3 «schema check by the worker», Н4 |
 

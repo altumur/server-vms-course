@@ -89,7 +89,7 @@ Reconciliation of python and go М10/6–11 (sc. 08–12 and the added steps):
   `inputs/hb-w-1-no-status.json`, then `@spoil object`; the worker of the server — by the slot.
 - Sc. 12 — the number forms of the heartbeat of the worker `w-1` without a live worker: the slot row and the heartbeats `@put object` from `inputs/`
   (`hb-w-1-pending-0.json` — the reference: `safe: true`; `-pending-missing`, `-pending-fraction` (`1000.0`), `-pending-minus-zero`,
-  `-pending-2p63` — `pending_unsaid`; `-schema-fraction` (`1.0`) — `schema: null`; `-build-number` (`5`) — `build: null`, not known, П1; В7 item 3 row 14).
+  `-pending-2p63` — `pending_unsaid`; `-schema-fraction` (`1.0`) — `schema: null`; `-build-number` (`5`) — `build: null`, not known, P1; V7 item 3 row 14).
   Each `@put object` changes the version of the heartbeat — the console sees it alive (Н1.2: a stale heartbeat would also give
   `pending_unsaid`, so steps 4 and 21 are the reference of freshness; freshness — [the observation contract](../../../common/contracts/observation.md))
   (reconciliation of python and go М10/6–11, T1, T3, T4, T27). Before each input not by the form, except the first one, — again

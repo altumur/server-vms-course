@@ -62,7 +62,7 @@ Without workers there is no placement; the counter c4 is created only in 04. The
 - **The weight field (sc. 23; the coverage audit of P/06).** `probe-x` has the field `cost: {type: int, default: 1}` and `placement.weight:
   {field: cost, default: 1}` (the form — «Дополнительные проверки прогона 25» of the acceptance README of chapter 6.1): POST without `cost` — 1;
   `cost` 0 and −1 for POST and PUT — 400 `error: type`, `field: /cost`, `detail` «cost must be at least 1» without `fault`; `"1"` and `true` — 400 `not_number` by the ordinary
-  type check (earlier than the weight, the row check contract П2); a refused PUT — the row and `revision` are the earlier ones. The numbers burnt
+  type check (earlier than the weight, the row check contract P2); a refused PUT — the row and `revision` are the earlier ones. The numbers burnt
   by refused POSTs the TSV does not compare.
 - **Static files and the shell of `testsub2` (sc. 26–28; ADR-0094 B7).** The bytes lie in `inputs/testsub2/`: the files of the list
   `console.files` of the manifest and `testsub2.shell.html`. The stand puts them next to the manifest before `manifest-put` (common README, «Манифесты»).

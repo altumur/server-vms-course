@@ -1,11 +1,11 @@
-# The layers of В7: the standard and our own remainder
+# The layers of V7: the standard and our own remainder
 
 This English text is the source; the Russian translation `ru/LAYERS.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 The form of the manifest (P/02.1), the canonical view (P/02.2) and the forms of the data families (the catalogue `Platform/common/data/`) the course
 writes in standard files: JSON Schema 2020-12 — the form, CEL — the relations of the manifest. What the standard does not express is held by
 seven layers of our own; each implementation executes them, the places are the layer tables next to the schemas (ADR-0092 «Свой остаток»). This
-file replaces `DIALECT.md` (ADR-0087; removed by the transition to В7, behind the tag `dialect-reference-dc94d0fd1`). A new word `x-*`
+file replaces `DIALECT.md` (ADR-0087; removed by the transition to V7, behind the tag `dialect-reference-dc94d0fd1`). A new word `x-*`
 and a new rule of a layer are decided by the Architect (ADR-0087 addendum (5), ADR-0092 «Что заменяется»); the description is written by «Спецификация».
 
 ## 1. Files
@@ -34,7 +34,7 @@ are built from these files and stand in the norms byte for byte (ADR-0087 item 3
 | 3 | the codec of the family rows: `items`, time, `max_bytes`, names beyond the limit, the whole sign of the writer and the reader by the exact decimal value of the notation | `codec.tsv`, § 6 |
 | 4 | the place of a refusal where the library does not give it — by the full table of § 6 «Place of refusal» (`required`, `additionalProperties: false` — the path of the key, not of the parent; `propertyNames` — the place of the parent object and the name; `uniqueItems` — the place of each element equal to an earlier one: `[a, a, a]` → `/1`, `/2`); the path of the families is normative (PY-JS-02) | § 6 |
 | 5 | the full match of `pattern` and `patternProperties` (§ 3 «Expression») | § 3 |
-| 6 | the projection of the canonical view — the full algorithm of P/02.2 Н1.1: sugar, defaults (static — the annotation `default`, computed — the rules of P/02.2), П1–П5, `x-ordered`, scalars by the node type | P/02.2 Н1.1 |
+| 6 | the projection of the canonical view — the full algorithm of P/02.2 Н1.1: sugar, defaults (static — the annotation `default`, computed — the rules of P/02.2), P1–P5, `x-ordered`, scalars by the node type | P/02.2 Н1.1 |
 | 7 | relations: three CEL functions — `depth`, `template`, `text`; the other rows are pure CEL | § 5 |
 
 ## 3. Schema words
@@ -94,7 +94,7 @@ yaml-test-suite `data-2022-01-17` (the inputs are in the package, acceptance wit
 ## 5. Relations (CEL)
 
 A row of `relations.json` is a CEL expression over the tree of the loader: an absent value and `has` take the static
-default `default` of the form; the computed defaults, П1–П5 and `x-ordered` are not applied to the relation tree (ADR-0092 layer 6).
+default `default` of the form; the computed defaults, P1–P5 and `x-ordered` are not applied to the relation tree (ADR-0092 layer 6).
 The relations are checked only with a clean form; the refusal is `refused:relations` (P/02.1 Н3, Н4). A row is one expression over
 the variable `doc` (the tree of the loader), the result is a list of violations `{p: путь}`, nested by the number of iterated
 segments of the path of the row. The CEL extensions are the standard `strings` and `two-var-comprehensions`; our own functions are
@@ -121,7 +121,7 @@ of this family: a refusal on the empty path `""` (the instance whole), the value
 of the empty path of `<семья>.outcomes.tsv` (V7-FAMILY-KEY-PLACEHOLDER-01). The path `/key` does not fit for this: it is the path of the field
 `key` of the value (P/08 `member-report`, `member-report-delta`, `member-reported`; for an open root — any name).
 
-**Place of refusal** is normative and does not depend on the library; the rule is set by the stack of В7 — the set «А» and the vectors
+**Place of refusal** is normative and does not depend on the library; the rule is set by the stack of V7 — the set «А» and the vectors
 `family-read` stand on it (V7-APPLICATOR-PATH-01):
 
 | Word or layer | Place of refusal |
@@ -152,7 +152,7 @@ A row: `path<TAB>reader<TAB>outcome<TAB>priority<TAB>unit<TAB>norm`.
 - `unit` — the unit of unreadability (`строка`, `поле`, `элемент`): a refusal below it does not make the containing node unreadable;
 - `norm` — the address of the norm.
 
-**Choice of the outcome** of a reader R by the set of refusal paths (V7-OUTCOME-SELECT-01; a rule of the stack of В7):
+**Choice of the outcome** of a reader R by the set of refusal paths (V7-OUTCOME-SELECT-01; a rule of the stack of V7):
 1. the rows of R — with `reader` = R or `*`;
 2. for each refusal path q — the covering rows: their `path` is a prefix of q (the empty one covers everything; the segment `*` — any name
    outside the keys of `properties` of that place or any element);

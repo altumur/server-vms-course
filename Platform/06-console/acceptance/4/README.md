@@ -91,7 +91,7 @@ the vectors [`reap`](../../vectors/reap/README.md): there is no holder on the st
 
 ## Deadline of table rows (sc. 12)
 
-ADR-0094 step 3б. The table `scraps` of the manifest `testsub2`: `delete_after` 35, the fields `name`, `note`; `shelves` has no deadline key. The deadline is not
+ADR-0094 step 3b. The table `scraps` of the manifest `testsub2`: `delete_after` 35, the fields `name`, `note`; `shelves` has no deadline key. The deadline is not
 waited for shorter and is not forged: the age judges the observed version, not the stamp (P/06.4 Н3 `tables`), so the technique with the old
 `at` of sc. 11 is not here. The tick of the reaper is 30 s, the first pass after the write (the moment `t1`) comes not later than 30 s.
 - Step 4 — `@sleep 31`: the first pass has surely happened. A reaper that removes the row at the first look gives 404 at step 5.

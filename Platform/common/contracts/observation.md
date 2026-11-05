@@ -28,7 +28,7 @@ the door row `platform/doors/<s>` — by the change of its version, its form is 
 an outcome row of the field (`build`, `schema`, `retention_garbled`, `retention_withheld`) its outcome applies, the heartbeat stays
 readable; only the outcome «the whole object» makes the heartbeat unreadable (a field outside the closed form included).
 
-The other forms by which observers read (layout audit, В-38–В-40, Б-16; the Architect's decision of 2026-10-25): the place hold row `<sub>/holds/<place>` —
+The other forms by which observers read (layout audit, V-38–V-40, B-16; the Architect's decision of 2026-10-25): the place hold row `<sub>/holds/<place>` —
 `Platform/03-worker/data/holds.schema.json`, `Platform/03-worker/data/holds.outcomes.tsv`; the worker heartbeat `<sub>/heartbeats/<имя>`
 — `Platform/03-worker/data/heartbeats.schema.json`, `Platform/03-worker/data/heartbeats.outcomes.tsv`; the contender mark
 `<sub>/contenders/<имя>/<коробка>` — `Platform/03-worker/data/contenders.schema.json`,
@@ -73,7 +73,7 @@ lapse:     no answer of the store or a confirmed absence of a row (object) that 
 
 ```yaml
 LOST_AFTER:  45             # s; one freshness bound for all observers; the literal is here, the lessons refer to it (P/04 Н1.4 —
-                            # also the margin after SLOT_TERM at the judge; review of stage B 6–7, № 46; layout audit, the Architect's decision of 2026-10-25, А-01, Б-01)
+                            # also the margin after SLOT_TERM at the judge; review of stage B 6–7, № 46; layout audit, the Architect's decision of 2026-10-25, A-01, B-01)
 fresh:       a source is fresh (heard) — its version changed within the last LOST_AFTER: the age of the observed version ≤ LOST_AFTER;
              age > LOST_AFTER — not fresh (silent, stale). One relation for all observers and outputs
              (review of stage A 6–7, № 1)
@@ -102,7 +102,7 @@ active:    an effective hold of a place — the row <sub>/holds/<place> by the f
            observation — age 0 (section «Observation of a version» first); otherwise the hold is not effective
 unknown:   the hold row exists but does not read (an outcome of the family holds), or the heartbeat of the worker by does not read — the hold is not known:
            it is counted neither effective nor released; the console — /where/<table>/<place> 503 unavailable, held_by null, the series unheld
-           does not count the place free (В7 item 3, the decision of the Architect of 2026-10-28, П1; row 27; the class of row 23 of the list);
+           does not count the place free (V7 item 3, the decision of the Architect of 2026-10-28, P1; row 27; the class of row 23 of the list);
            the heartbeat decides only when the row itself is effective: the row is readable and already not active by itself (released, holder empty,
            age ≥ 50 s) — the hold is not effective, the heartbeat is not read and its unreadability does not make the hold unknown
            (C06-UNHELD-PULSE-UNREAD-01)
@@ -127,7 +127,7 @@ resource_state:
                 as seen (reconciliation of python and go М10/6–11, C13); what was read before and disappeared is seen (lapse)
   silent:       otherwise; only silent excludes and moves
 ALIVE_EVERY:    15           # s; the resource rewrites at of its door row platform/doors/<s> (P/05 Н1.4 door_row) — so
-                             # the door row changes even with a silent heartbeat (moved from P/04 Н1.4; layout audit, the Architect's decision of 2026-10-25, А-10)
+                             # the door row changes even with a silent heartbeat (moved from P/04 Н1.4; layout audit, the Architect's decision of 2026-10-25, A-10)
 ```
 
 An unreadable heartbeat is judged by the form of its writer (section «Form» above; [P/05 Н1.4](../../05-resource/spec/05-resource.norms.md)); the door row
@@ -139,7 +139,7 @@ chapter 6.5; for a refusal of server decommissioning — chapter 6.6. The state 
 ## Server decommissioned
 
 Moved from [P/03.2](../../03-worker/spec/03.2-worker.norms.md) Н3 «start()» step 3 and P/04 Н3 «decommission_server» «Races»
-(layout audit, the Architect's decision of 2026-10-25, А-18); the rows of the request and of the mark — [P/06.6](../../06-console/spec/06.6-console.norms.md) Н1.1 and P/04 Н3 «decommission_server».
+(layout audit, the Architect's decision of 2026-10-25, A-18); the rows of the request and of the mark — [P/06.6](../../06-console/spec/06.6-console.norms.md) Н1.1 and P/04 Н3 «decommission_server».
 
 ```yaml
 decommissioned: the server <s> is decommissioned — there is the request row platform/decommission/<s> (written by the console; the form —
@@ -154,7 +154,7 @@ narrower:      readers whose norm takes only the request row judge by it: the re
 
 ## Freshness of a domain member
 
-Moved from [P/08.1](../../08-domain/spec/08.1-domain.norms.md) Н1.3 `member_state` without a change (layout audit, the Architect's decision of 2026-10-25, А-15); readers —
+Moved from [P/08.1](../../08-domain/spec/08.1-domain.norms.md) Н1.3 `member_state` without a change (layout audit, the Architect's decision of 2026-10-25, A-15); readers —
 the process `domain` (the view, P/08.1) and the domain console (P/10 Н3 `alarms`: `silent` by the last report and `silent_after`).
 
 ```yaml
@@ -212,7 +212,7 @@ contender: a contender mark <sub>/contenders/<имя>/<коробка> (contende
            CONTENDER_FRESH — do not count it, as if there were no mark; an unreadable one (not by the form contenders.schema.json) —
            the freshness is the same, by the age of its observed version, whether it reads or not (for contender marks — unlike heartbeats,
            `lapse` above: unreadability does not hide a conflict); a fresh unreadable one — a conflict with a flag at the console reader; the worker does not count an unreadable one — the outcomes by reader in contenders.outcomes.tsv (C03-CONTENDER-UNREADABLE-01) (P/06.5 Н3
-           «Contenders», `name_conflict_unreadable`; В7 item 3, the decision of the Architect of 2026-10-28; C06-CONTENDER-UNREADABLE-01)
+           «Contenders», `name_conflict_unreadable`; V7 item 3, the decision of the Architect of 2026-10-28; C06-CONTENDER-UNREADABLE-01)
 ```
 
 ## Vectors
@@ -222,7 +222,7 @@ The packages [`fresh-age`](../vectors/fresh-age/README.md) (the freshness bound:
 ## Correspondence to former lessons
 
 From P/04 Н1.4 (the move of lesson 6, review of stage A 6–7, № 2): the block `resource_state` (here «Resource state») and
-the meaning of the freshness `LOST_AFTER` (here «Freshness»; the value of the constant is here since layout audit А-01, its role in the terms of the judge — P/04 Н1.4); from P/04 Н1.4 — ALIVE_EVERY (А-10); from P/03.2 Н3 and P/04 Н3 — «Server decommissioned» (А-18); from P/08.1 Н1.3 — `member_state` (А-15); from P/04 Н1.5 — the rule
+the meaning of the freshness `LOST_AFTER` (here «Freshness»; the value of the constant is here since layout audit A-01, its role in the terms of the judge — P/04 Н1.4); from P/04 Н1.4 — ALIVE_EVERY (A-10); from P/03.2 Н3 and P/04 Н3 — «Server decommissioned» (A-18); from P/08.1 Н1.3 — `member_state` (A-15); from P/04 Н1.5 — the rule
 of the reader of the decision (the paragraphs «An active intent is an accepted common decision…», «An unreadable turn/intent row…» in the part of the readers);
 from М10/9 Н3 «`/where/<id>`» — the choice of target/reason at an active intent
 (chapter 6.5); from P/03.2 Н1.4 — the definition of the age of the observed version (by reference); from P/03.2 Н1.2, Н1.4а — `CONTENDER_FRESH` and the freshness

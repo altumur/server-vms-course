@@ -4,7 +4,7 @@
 
 Модуль уроков-спецификаций платформы, нарезанный по микромодулям: один урок — один процесс или библиотека (ADR-0083).
 Каталог урока — `NN-<процесс>`; номер урока — адрес владельца (`P/NN`), карта — [`lessons.tsv`](../lessons.tsv).
-Общее для всех — [`common/`](../common/ru/README.md); слои В7 — [`common/LAYERS.md`](../common/ru/LAYERS.md), закреплённые версии библиотек — [`common/versions/`](../common/ru/versions/README.md). Проектная записка — `Platform/module-design.md` (для человека, в выгрузку не входит).
+Общее для всех — [`common/`](../common/ru/README.md); слои V7 — [`common/LAYERS.md`](../common/ru/LAYERS.md), закреплённые версии библиотек — [`common/versions/`](../common/ru/versions/README.md). Проектная записка — `Platform/module-design.md` (для человека, в выгрузку не входит).
 
 | P | Каталог | Микромодуль |
 |---|---|---|

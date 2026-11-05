@@ -27,7 +27,7 @@
 
 ## Форма
 
-Открытие — по `seed_secret` строки `domain/book-seal`, запечатывание — к `book_seal` набора `domain/keys`, получатель `m1` — ключ члена `domain/member-key`: `Platform/08-domain/data/book-seal.schema.json`, `Platform/08-domain/data/book-seal.outcomes.tsv`; `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; содержимое `sealed` — строки `Platform/08-domain/data/grants.schema.json`, `Platform/08-domain/data/grants.outcomes.tsv`; `Platform/08-domain/data/break-glass.schema.json`, `Platform/08-domain/data/break-glass.outcomes.tsv`; `Platform/08-domain/data/book.schema.json`, `Platform/08-domain/data/book.outcomes.tsv`. Поле `sealed` ответа `carry` и `m1` двери токенов — `Platform/08-domain/spec/08-domain.api.openapi.yaml` (аудит раскладки, В-10…В-13; решение «Архитектора» 2026-10-25).
+Открытие — по `seed_secret` строки `domain/book-seal`, запечатывание — к `book_seal` набора `domain/keys`, получатель `m1` — ключ члена `domain/member-key`: `Platform/08-domain/data/book-seal.schema.json`, `Platform/08-domain/data/book-seal.outcomes.tsv`; `Platform/08-domain/data/keys.schema.json`, `Platform/08-domain/data/keys.outcomes.tsv`; `Platform/09-agent/data/member-key.schema.json`, `Platform/09-agent/data/member-key.outcomes.tsv`; содержимое `sealed` — строки `Platform/08-domain/data/grants.schema.json`, `Platform/08-domain/data/grants.outcomes.tsv`; `Platform/08-domain/data/break-glass.schema.json`, `Platform/08-domain/data/break-glass.outcomes.tsv`; `Platform/08-domain/data/book.schema.json`, `Platform/08-domain/data/book.outcomes.tsv`. Поле `sealed` ответа `carry` и `m1` двери токенов — `Platform/08-domain/spec/08-domain.api.openapi.yaml` (аудит раскладки, V-10…V-13; решение «Архитектора» 2026-10-25).
 
 ## Конверт `x25519:v1`
 
@@ -92,7 +92,7 @@ envelope_m1:    m1:<eph>:<nonce>:<ct>             # как x25519:v1 урока 
 
 Перенесено из [P/03.7](../../../03-worker/ru/spec/03.7-worker.norms.md) Н1.2 (`source_row` `entry`) без изменения поведения: форму
 входа пишет воркер (P/03.7), несёт агент (P/09.1 Н1.2 `in_report`), проверяет сборка книги держателя (P/08.5 Н1.3, Н3 шаг 4)
-(аудит раскладки А-22, решение «Архитектора» 2026-10-25). Строка вклада — `<sub>/<строка>` или `<sub>/<строка>/<слот>`, элемент — вход книги: имя элемента — `item`,
+(аудит раскладки A-22, решение «Архитектора» 2026-10-25). Строка вклада — `<sub>/<строка>` или `<sub>/<строка>/<слот>`, элемент — вход книги: имя элемента — `item`,
 значение — текст JSON-объекта (P/03.7 Н1.2 `source_row`).
 
 ```yaml

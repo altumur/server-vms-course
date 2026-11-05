@@ -3,7 +3,7 @@
 This English text is the source; the Russian translation `ru/vectors/said-id/README.md` (for people, not in the export) is derived from it by translation and is not edited by hand (ADR-0121; ADR-0124 addendum (1) item 4).
 
 The owner is [the request mark contract](../../contracts/request-mark.md) «fetched» `said_id` (moved from chapter
-[P/03.4](../../../03-worker/spec/03.4-worker.norms.md) Н1.1; the layout audit `А-24`, `Б-02`); the field `fetched` of the heartbeat is P/03.4 Н1.1: the worker
+[P/03.4](../../../03-worker/spec/03.4-worker.norms.md) Н1.1; the layout audit `A-24`, `B-02`); the field `fetched` of the heartbeat is P/03.4 Н1.1: the worker
 writes into the heartbeat the SaidIDs of the requests whose outcome it reported ([chapter 3.6](../../../03-worker/spec/03.6-worker.norms.md) Н3
 «holder's look»). The participant is [chapter 6.4](../../../06-console/spec/06.4-console.norms.md): the reaper of the console reads
 `fetched` and removes the append row when its rid is reported (Н3 «reaper» `clear`;

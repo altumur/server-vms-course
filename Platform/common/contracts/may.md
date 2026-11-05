@@ -19,7 +19,7 @@ Step 5 (effective lines) is also read by the delivery of a book by grant ([P/08.
 the role table do not take part (ADR-0097 §4, ADR-0098 §4); the console module computes a hint by the same groups and tiers
 ([P/07](../../07-console-module/spec/07-console-module.norms.md) Н1.5 `may`), the server always checks.
 
-Steps 1–8 are moved from М11/9 Н1.4 (input, output) and Н4 (the words of `may`); the step numbers are the former ones, steps 4а, 7а–7в were added by ADR-0098–ADR-0100. The
+Steps 1–8 are moved from М11/9 Н1.4 (input, output) and Н4 (the words of `may`); the step numbers are the former ones, steps 4a, 7a–7c were added by ADR-0098–ADR-0100. The
 owner keeps: the grant line ([P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.3: `lines`, `line`, the ranks of `cap` — `none < view < edit < admin`, `sub`, `scope`,
 `until`, `GRANT_LIFETIME`, `unreadable` — the value and the input rule are repeated below, «The function `may`»; the member's copy — [P/09.1](../../09-agent/spec/09.1-agent.norms.md) Н1.4), the check at the process
 `domain` and what the door answers on `deny` (P/08.4 Н1.5: 403 `denied`, `detail` at `stale`), the break-glass account at the holder
@@ -31,7 +31,7 @@ Normative keywords follow the [course canon](../../../НОРМАТИВНЫЕ-С�
 
 ## Form
 
-Inputs of the function: `grants` — the copy of `domain/grants` of a member, and `domain/grants/domain` at the domain console and the process `domain` — `Platform/09-agent/data/grants.schema.json`, `Platform/09-agent/data/grants.outcomes.tsv`; `Platform/08-domain/data/grants.schema.json`, `Platform/08-domain/data/grants.outcomes.tsv`; `disabled` — the row `domain/disabled`: `Platform/08-domain/data/disabled.schema.json`, `Platform/08-domain/data/disabled.outcomes.tsv` (layout audit, В-36, В-37; the Architect's decision of 2026-10-25); `roles` at the cluster console — the member's copy of `domain/roles`: `Platform/09-agent/data/roles.schema.json`, `Platform/09-agent/data/roles.outcomes.tsv`; at the domain console and the process `domain` — the rows `domain/roles/<имя>` and `domain/groups/<имя>`: `Platform/08-domain/data/roles.schema.json`, `Platform/08-domain/data/groups.schema.json` with their outcome tables.
+Inputs of the function: `grants` — the copy of `domain/grants` of a member, and `domain/grants/domain` at the domain console and the process `domain` — `Platform/09-agent/data/grants.schema.json`, `Platform/09-agent/data/grants.outcomes.tsv`; `Platform/08-domain/data/grants.schema.json`, `Platform/08-domain/data/grants.outcomes.tsv`; `disabled` — the row `domain/disabled`: `Platform/08-domain/data/disabled.schema.json`, `Platform/08-domain/data/disabled.outcomes.tsv` (layout audit, V-36, V-37; the Architect's decision of 2026-10-25); `roles` at the cluster console — the member's copy of `domain/roles`: `Platform/09-agent/data/roles.schema.json`, `Platform/09-agent/data/roles.outcomes.tsv`; at the domain console and the process `domain` — the rows `domain/roles/<имя>` and `domain/groups/<имя>`: `Platform/08-domain/data/roles.schema.json`, `Platform/08-domain/data/groups.schema.json` with their outcome tables.
 
 ## The function `may`
 
@@ -71,8 +71,8 @@ input:     {grants: <doc {lines}> | null, as_of: <число> | null, disabled: 
   anywhere: {<человек>: <until>} — who has a grant in any cluster of the domain (P/08.4 Н1.3 anywhere); only for step 6 and only at the door
            door.pass of the second kind and at the view doors of the domain; no field — {}
   as_role: a role name: a check of an action as a role, there is no person (ADR-0105 item 4; the section «Action as a role»); no field — a person
-  iat:     iat of the request token; on the path of a ticket and of an operation step — iat of the ticket record, the token is the same (the gate-and-pass contract «Pass of the second kind»); null — only sessions without a token: glass, the debug identity; no field — null; needed only by step 4а:
-           a token issued before at of the admin assignment does not serve step 4а (ADR-0100 §3); the comparison is by whole seconds: at carries up to
+  iat:     iat of the request token; on the path of a ticket and of an operation step — iat of the ticket record, the token is the same (the gate-and-pass contract «Pass of the second kind»); null — only sessions without a token: glass, the debug identity; no field — null; needed only by step 4a:
+           a token issued before at of the admin assignment does not serve step 4a (ADR-0100 §3); the comparison is by whole seconds: at carries up to
            three digits of fraction, iat of a token — any finite number
 output:    {result: allow} | {result: deny, reason: disabled | stale | no_grant} | {result: unavailable}
            unavailable — the door answers 503 unavailable, not 403 (the rule «Unreadable row» of the gate-and-pass contract)
@@ -83,22 +83,22 @@ output:    {result: allow} | {result: deny, reason: disabled | stale | no_grant}
 2. user ∈ disabled                                                      → deny disabled
 3. grants = null and (unit ≠ null or user is not in anywhere)           → deny no_grant
 4. as_of ≠ null and now − as_of > GRANT_LIFETIME                        → deny stale
-4а. roles[user] has {role: admin, until: t, at}, t = 0 or now < t, and iat = null or ⌊iat⌋ ≥ ⌊at⌋ → allow
+4a. roles[user] has {role: admin, until: t, at}, t = 0 or now < t, and iat = null or ⌊iat⌋ ≥ ⌊at⌋ → allow
 5. selection: a line is effective if until = 0 or now < until, and the line has no sub, or it equals sub of the input, or sub of the input = null.
    the direct group — effective lines with subject = user;
    role groups — one for each {role: R, until: t} of roles[user], R ≠ admin, t = 0 or now < t: effective lines with
    subject = role:R; lines of a role not in roles[user] do not apply (ADR-0097 §2, ADR-0098 §4, ADR-0099 §2)
 6. unit = null and cap = view: at least one line of the direct group or of a role group whose cap ≠ none,
    or anywhere[user] = 0, or now < anywhere[user]                       → allow
-6а. unit = "any": at least one line of the direct group or of a role group with rank(cap of the line) ≥ rank(cap) → allow; otherwise step 7б, then step 8
+6a. unit = "any": at least one line of the direct group or of a role group with rank(cap of the line) ≥ rank(cap) → allow; otherwise step 7b, then step 8
 7. the direct group: a line with rank(cap of the line) ≥ rank(cap) whose scope covers unit → allow
    * — any (and "*"); unit:<s>/<i> — a unit with (sub, id) = (s, i) or its about with (s, i); labels:L — all labels L at about, if
    there is about, otherwise at the unit itself; folder:<id> — id is in a chain of chains at the unit or at about;
    null and "*" are covered by no scope except *; a folder object (unit.sub = platform) is covered neither by unit: nor by labels:;
    about "unknown" and chains "unknown" — a line that needs them does not cover, the next one is checked (not 503)
-7а. a role group gives a level ≥ rank(cap) (the level of a group — below) → allow
-7б. roles = "unreadable"                                                → unavailable
-7в. there is an «unreadable» role group that could allow (below)        → unavailable
+7a. a role group gives a level ≥ rank(cap) (the level of a group — below) → allow
+7b. roles = "unreadable"                                                → unavailable
+7c. there is an «unreadable» role group that could allow (below)        → unavailable
 8.                                                                      → deny no_grant
 ```
 
@@ -122,19 +122,19 @@ is «unreadable» from tier `k`:
 - `k = 2` — tier 1 is empty, `about` = `"unknown"`, the group has a `unit:` line;
 - `k = 3` — tiers 1–2 are empty, the group has a `folder:` line, and `unit.chains` are unknown, or `about.chains` are unknown, or `about` = `"unknown"`.
 
-Such a group gives no level. It could allow (step 7в) — there is a line of it from the selection of step 5 with a rank ≥ `cap` in the tiers from `k` and
+Such a group gives no level. It could allow (step 7c) — there is a line of it from the selection of step 5 with a rank ≥ `cap` in the tiers from `k` and
 below: for `k = 1` — any; for `k = 2` — `unit:`, `folder:`, `*`; for `k = 3` — `folder:`, `*`.
 
 **Cut-off** (ADR-0099 §2): tier `k = 3` is not «unreadable» if the result does not depend on the membership. All `folder:` lines of the group
-in the selection have a rank ≥ `cap`, and tier 4 gives a level ≥ `cap` — step 7а allows; all are below `cap`, and tier 4 does not allow — the group does not
-allow and is not counted in step 7в. The caller then does not read the membership.
+in the selection have a rank ≥ `cap`, and tier 4 gives a level ≥ `cap` — step 7a allows; all are below `cap`, and tier 4 does not allow — the group does not
+allow and is not counted in step 7c. The caller then does not read the membership.
 
 The direct group only adds up lines, it has no exceptions. `none` occurs only in role lines. The role `admin` has no lines
-(step 4а) and forms no groups: exceptions of other roles do not act on it (ADR-0100 §1). Step 7б also applies when there are no matching
+(step 4a) and forms no groups: exceptions of other roles do not act on it (ADR-0100 §1). Step 7b also applies when there are no matching
 `role:` lines: an unreadable table could carry an `admin` assignment (ADR-0100 §1). Lists give `withheld` instead of `unavailable` (P/06.4).
 
 The constant and the input of lines (from P/08.4 Н1.3 `GRANT_LIFETIME`, `unreadable` and Н5 `exit` without a change of behaviour; the owner of the
-text is P/08.4; analysis of review of stage B 8–10, № 4, Claude `С-7`):
+text is P/08.4; analysis of review of stage B 8–10, № 4, Claude `S-7`):
 
 ```yaml
 GRANT_LIFETIME: 86400   # s — step 4: a member's copy older than as_of + GRANT_LIFETIME gives no rights
@@ -146,7 +146,7 @@ lines_in:       the function gets only lines of lines in the form of P/08.4 Н1.
                 is at the caller, code 2 is at the function
 ```
 
-Which input is out of form (the `grants` lines are a trusted input) — the README of the vectors [`may`](../vectors/may/README.md) «Form of the input of the command `may`» (MAY-G01/G02); the exit codes of the command `may` are a copy of [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н5 `exit` (layout audit, the Architect's decision of 2026-10-25, Б-14):
+Which input is out of form (the `grants` lines are a trusted input) — the README of the vectors [`may`](../vectors/may/README.md) «Form of the input of the command `may`» (MAY-G01/G02); the exit codes of the command `may` are a copy of [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н5 `exit` (layout audit, the Architect's decision of 2026-10-25, B-14):
 
 ```yaml
 exit:      0 — computed; 2 — the input is out of form; exit codes follow the principle of the vocabulary of «Domain stand» («Коды выхода команд-векторов»: 2 — the form
@@ -156,7 +156,7 @@ exit:      0 — computed; 2 — the input is out of form; exit codes follow the
 
 ## Judgement by target
 
-The domain door judges a record of a cluster by the grant of this cluster, not by `domain/grants/domain` (ADR-0110 addendum (4) item 4, addendum (5) items 1, 5; Д-1, Д-2, Д-8 of the analysis). Otherwise a person with a grant only on a cluster would get an empty domain.
+The domain door judges a record of a cluster by the grant of this cluster, not by `domain/grants/domain` (ADR-0110 addendum (4) item 4, addendum (5) items 1, 5; D-1, D-2, D-8 of the analysis). Otherwise a person with a grant only on a cluster would get an empty domain.
 
 ```yaml
 wide:      may(grants = domain/grants/domain, cap = view, unit = "*", sub = null) = allow — a viewer of the domain: no filter, the answer is whole;
@@ -188,8 +188,8 @@ The evaluator `auto` executes a rule as the role `runAsRoleId` (ADR-0105 item 4)
 
 ```yaml
 input:     as_role: R; user — "", glass — false, disabled — [], iat — null; roles is not read
-steps:     steps 1, 2, 4а do not apply; steps 3, 4 — as they are; step 5: there is no direct group, one role group R with until 0; then tiers, steps 6, 7а, 7в, 8; step 7б does not apply
-admin:     R = admin → deny no_grant: the built-in role has no lines, step 4а is only for a person (ADR-0100 §1)
+steps:     steps 1, 2, 4a do not apply; steps 3, 4 — as they are; step 5: there is no direct group, one role group R with until 0; then tiers, steps 6, 7a, 7c, 8; step 7b does not apply
+admin:     R = admin → deny no_grant: the built-in role has no lines, step 4a is only for a person (ADR-0100 §1)
 who:       the worker in its own process, grants — the copy of domain/grants of the cluster, as_of — its own; no row or older than GRANT_LIFETIME — a refusal, as for a person: the action is not executed, a journal line
 reads:     worker.reads: [domain/grants, platform/folders/, platform/memberof/] (P/02.5 Н3 step 3); chains and about are assembled by the worker, as by the gate
 ```
@@ -200,7 +200,7 @@ From М11/9 Н4: the words of `may`: `disabled`, `stale`, `no_grant`. The outcom
 
 ## Vectors
 
-The package [`may`](../vectors/may/README.md): 126 lines (`may-role-*` — the input `as_role`, ADR-0105 item 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, roles, tiers, step 4а); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); of the first 26: 24 are inputs of the command `may` of the acceptance of М11/9 (sc. 07) without a change of values, except `labels: []` at the unit of
+The package [`may`](../vectors/may/README.md): 126 lines (`may-role-*` — the input `as_role`, ADR-0105 item 4): may-27…may-106 — ADR-0097–ADR-0100 (`sub`, `folder:`, roles, tiers, step 4a); may-107…may-115 — ADR-0110 (`unit: "any"`, `anywhere`); of the first 26: 24 are inputs of the command `may` of the acceptance of М11/9 (sc. 07) without a change of values, except `labels: []` at the unit of
 `may-24` (the Architect's decision of 2026-10-20; the README of the package);
 one of them, `may-24`, is an input out of form (`@exit 2`; analysis of review of stage B 8–10, № 22); `may-25` — `subject` "" (`@exit 2`, MAY-G03); `may-26` — `until` does not fit in binary64 (`@exit 2`, MAY-UNTIL-D8-01). The scenario and the inputs were removed by the move of lesson 8 — the table is the only
 source of these cases. There is also `covers.tsv` — 19 lines of the function `covers(scope, ref, row)` of the gate ([the gate

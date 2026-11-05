@@ -10,7 +10,7 @@ chapter 8.7; the function is performed by the process `domain` at the door `POST
 (ADR-0083); the conformance of the product is by its acceptance against this table (ADR-0080 addendum 16).
 
 The rows were transferred from the steps of the acceptance of М11/07
-(sc. 03, 30 steps; the command `issue` on `inputs/issue-*.json`) at the move of lesson 8 (the plan of the move of lesson 8, § 3 and В1;
+(sc. 03, 30 steps; the command `issue` on `inputs/issue-*.json`) at the move of lesson 8 (the plan of the move of lesson 8, § 3 and V1;
 the decision of «Архитектор» 2026-10-20, ADR-0083 addendum (14)). `case` is the name of the input file, `note` is the scenario and the step of the acceptance of М11/07.
 The input is the JSON of the file in one line: only insignificant whitespace outside strings is removed; the order of keys, the lexemes of numbers and the values are as
 in the file. The expectation is a subset of the acceptance step as it is (after `ok `). The scenario М11/07 sc. 03 and its inputs were removed by the move

@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/contracts/person-na
 
 A common contract of the module «Платформа» (ADR-0083 addendum (5), addendum (13): the form of a person's name is checked by the process `domain`, the gates
 of the consoles, the token recipient, the function `may`, and the set of white-space characters is also read by the log mask and the secret mask — a contract,
-not copies in chapters; layout audit А-20, the Architect's decision of 2026-10-25). The owner is chapter
+not copies in chapters; layout audit A-20, the Architect's decision of 2026-10-25). The owner is chapter
 [P/08.4](../../08-domain/spec/08.4-domain.norms.md) Н1.1 (`name` of a person row). Participants: the process `domain` (P/08.4 Н1.1–Н1.2:
 the editing of people, the login), the checker of a person token — the gates of the cluster console and the domain console ([the domain token
 contract](domain-token.md) `person`), the right function ([the right contract](may.md), `subject`), the log mask ([the log mask
@@ -47,4 +47,4 @@ a participant there (`subject` by this form; CM-RECORD-VECTORS-128, the Architec
 ## Correspondence to former lessons
 
 From P/08.4 Н1.1 `name` (the norm P/08.4 — by `note` of [id-map](../id-map.tsv)); P/08.4, the domain token contract `person`, the right
-contract `subject`, the log mask contract `space` and `mask_in` refer here (layout audit А-20).
+contract `subject`, the log mask contract `space` and `mask_in` refer here (layout audit A-20).

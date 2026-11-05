@@ -33,7 +33,7 @@ the book acceptance key is X25519 (RFC 7748), 32 bytes.
 Completeness of forms. Every JSON form of the chapter is closed: a field outside the list — the form is not that one (what follows from this is said at the form);
 a mandatory field is marked without `?`, an optional one with `?`, the absence of an optional one is its default. The order of the keys
 of an object means nothing; the order of arrays is at the form, otherwise (P/01.1 Н0 «Order of output arrays», a copy; layout audit, the Architect's decision of
-2026-10-25, Б-28): an array of names — of members, clusters, keys, `kid`, `ref`, fingerprints, words — in ascending order of UTF-8 bytes,
+2026-10-25, B-28): an array of names — of members, clusters, keys, `kid`, `ref`, fingerprints, words — in ascending order of UTF-8 bytes,
 unless the form explicitly names another key; an array of objects — by the key that is named at the form; the order of selection is not the order
 of output. A repeated key in a JSON object — the form is not that one. A number is
 a JSON number (not a string, not `true`/`false`); «whole» is a number without a fractional part by value (`2` and `2.0` are one integer; the output

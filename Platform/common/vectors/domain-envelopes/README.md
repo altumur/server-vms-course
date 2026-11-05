@@ -26,7 +26,7 @@ the sealer: `x25519-round.tsv` — the agent of a member (`09-agent`) and the pr
 The commands and the output forms are the same as at the former acceptance of М11: `seal`, `seal-round` — [P/08.2](../../../08-domain/spec/08.2-domain.norms.md)
 Н5 (formerly М11/2 Н5); `seal-member`, `seal-member-round` — the table below (formerly М11/3 Н5, removed by the move of lesson 8; the input
 of `seal-member` — `{seed, sealed}`, of `seal-member-round` — `{key, seed, plain}`; review analysis of stage B 8–10, № 22, Claude
-М-1); the comparison — a subset of fields, the cell `expect` sets `result` (and the value or the refusal word) (the reading of the commits
+M-1); the comparison — a subset of fields, the cell `expect` sets `result` (and the value or the refusal word) (the reading of the commits
 of «cammeta-acceptance» 2026-10-20):
 
 | Table | Command | Output |

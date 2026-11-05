@@ -187,6 +187,15 @@ class Layouts(unittest.TestCase):
                          ["numbered steps: 2, ru 1 — rebuild the translation by the source"])
         self.assertEqual(en_mirror.strict("1. а\n", "1. a\n2. b\n", count_steps=False), [])
 
+    def test_latin_step_and_review_labels(self):        # ADR-0121 доп. (3) п. 3: в источнике — латиница, кириллица — отказ
+        en, ru = EN3.read_text(encoding="utf-8"), RU3.read_text(encoding="utf-8")
+        self.assertEqual(self.compare3(), [])
+        tail = "\nSee step 4а and the audit Г-29.\n"
+        errors = self.compare3(en=en + tail, ru=ru + "\nСм. шаг 4a и аудит G-29.\n")
+        self.assertTrue(any(e.startswith("Cyrillic outside code") and "4а" in e for e in errors), errors)
+        self.assertEqual(self.compare3(en=en + "\nSee step 4a and the audit G-29 (М10/2).\n",
+                                       ru=ru + "\nСм. шаг 4a и аудит G-29 (М10/2).\n"), [])
+
     def test_labels_by_dictionary(self):                # метка пары — по словарю Platform/common/placeholders.tsv
         self.assertEqual(en_mirror.as_english_labels("domain/users/<имя> ⟨вариант 2⟩", ROOT), "domain/users/<name> ⟨variant 2⟩")
         self.assertEqual(en_mirror.as_english_labels(".<имя> (имя)", ROOT), ".<name> (name)")

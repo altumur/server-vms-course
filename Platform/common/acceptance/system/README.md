@@ -4,7 +4,7 @@ This English text is the source; the Russian translation `ru/acceptance/system/R
 
 End-to-end scenarios that check the norms of several micromodules at once and require a stand of all processes of the platform
 (the module note `Platform/module-design.md`, for people, not in the export: «сквозные сценарии … со стендом из всех микромодулей»). Moved from the acceptance of М10/11
-(sc. 05, 06; stage B, ADR-0083 addendum (1): without a change of behaviour) by the Architect's decision on В2 of the move plan of lesson 6:
+(sc. 05, 06; stage B, ADR-0083 addendum (1): without a change of behaviour) by the Architect's decision on V2 of the move plan of lesson 6:
 a scenario belongs to the lesson whose norm it checks (the presence lock, sc. 16 of М10/11, — the acceptance of
 [P/05](../../../05-resource/acceptance/README.md)), the drills of many processes — here. The numbers and steps are the former ones.
 Four scenarios / 75 steps: sc. 05 — 61 automatic steps on the three-server cluster stand (the section «Sc. 05»; not executable yet — the section «Executability»), sc. 07 and 08 — 7 steps `@manual`, sc. 09 — 7 steps `@manual`; sc. 06 `recover` is moved by scenario 18 of the [acceptance of P/01.3](../../../01-store/acceptance/3/README.md) to the store group stand (ПРАВИЛА-РАБОТЫ.md § 4, 2026-10-30); sc. 07 — a cold start of a part and a worker (ADR-0091 addendum (2), (3)), sc. 08 — the worker program from the manifest row (ADR-0091 addendum (4)–(6)).

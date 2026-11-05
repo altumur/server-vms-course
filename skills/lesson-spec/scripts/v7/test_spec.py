@@ -1126,7 +1126,7 @@ class TestStack(unittest.TestCase):
 
     def test_skipping_a_step_changes_the_view(self):
         for name, *_ in view.STEPS:
-            if name in ("in", "П5"):
+            if name in ("in", "P5"):
                 continue
             self.assertNotEqual(self.view(tail="tables: [a]\n"), self.view(tail="tables: [a]\n", skip=(name,)), name)
 
