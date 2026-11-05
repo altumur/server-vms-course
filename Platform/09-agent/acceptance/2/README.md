@@ -63,3 +63,7 @@ result; this directory does not run them itself.
 | Sc./step | Sleep | Reason |
 |---|---|---|
 | 02/17 + 02/19 | 70 + 15 s | absence: under `@cut relay` `domain/reached` does not grow; a new value would be written no later than `FRESH_EVERY` 60 s (chapter 9.1, `fresh`) after an answer by another road, and another road would open after `ROAD_QUIET` 15 s ([P/08.3](../../../08-domain/spec/08.3-domain.norms.md) Н1.3а) and the agent pass 5 s — no less than 80 s in all |
+
+## Kit assistance seams
+
+[seams.tsv](seams.tsv) provides 8 CALL steps over ordinary implementation paths. The fixture/port contract is [forms/README.md](../../forms/README.md); [stages.tsv](../../forms/stages.tsv) selects them. They assist the kit and do not replace the ordinary process scenarios or their required neighbours.
