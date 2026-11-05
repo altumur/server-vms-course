@@ -70,10 +70,11 @@ package	table	surface	header	inputs	files	expect	compare	markers	native	norm
 ```text
 {"pointer":"/row","test":"prefix","value":{"literal":"enc:v2:"}}
 {"pointer":"/plaintext","test":"absent"}
+{"pointer":"/text","test":"no-leak","value":{"array":[{"literal":"fixture-password"}]},"min_bytes":4}
 {"pointer":"/row","decode":"json","compare":"value","value":<ValueExpr>}
 ```
 
-`assert` — массив над нативным ответом. Pointer — JSON Pointer. Закрытый список `test` — `prefix|absent`. Prefix требует строку с точным префиксом; absent — отсутствия указателя. Без test значение по указателю сравнивается по указанному compare, по умолчанию — сравнению объявления без lines. Необязательный decode json разбирает JSON внутри строкового поля, не кадр провода. Нет указателя — провал, кроме absent. Утверждения не попадают во вход SUT.
+`assert` — массив над нативным ответом. Pointer — JSON Pointer. Закрытый список `test` — `prefix|absent|no-leak`. Prefix требует строку с точным префиксом; absent — отсутствия указателя. Без test значение по указателю сравнивается по указанному compare, по умолчанию — сравнению объявления без lines. Необязательный decode json разбирает JSON внутри строкового поля, не кадр провода. Нет указателя — провал, кроме absent. Утверждения не попадают во вход SUT. Утверждение no-leak по решению Архитектора имеет `pointer`, `test` со значением no-leak, `value` (строка либо массив секретных строк) и `min_bytes` (целое не меньше 1). В UTF-8 текста по pointer нет ни одной подстроки любого секрета длиной не меньше min_bytes байт. Назначение — проверка текста отказа secret-in; это утверждение над ответом, не секретный вход реализации.
 
 ## Маркеры и нативный кадр
 

@@ -70,10 +70,11 @@ The closed `compare` list is `value|subset|raw|set|object-sets|lines-value|lines
 ```text
 {"pointer":"/row","test":"prefix","value":{"literal":"enc:v2:"}}
 {"pointer":"/plaintext","test":"absent"}
+{"pointer":"/text","test":"no-leak","value":{"array":[{"literal":"fixture-password"}]},"min_bytes":4}
 {"pointer":"/row","decode":"json","compare":"value","value":<ValueExpr>}
 ```
 
-`assert` is an array over the native response. Pointer is JSON Pointer. The closed `test` list is `prefix|absent`. Prefix requires a string with the exact prefix; absent requires the pointer not to exist. Without test, compare the pointer value by the given compare, defaulting to the binding comparison without lines modes. Optional decode json parses JSON inside a string field, not the wire frame. A missing pointer fails except for absent. Assertions do not enter the SUT input.
+`assert` is an array over the native response. Pointer is JSON Pointer. The closed `test` list is `prefix|absent|no-leak`. Prefix requires a string with the exact prefix; absent requires the pointer not to exist. Without test, compare the pointer value by the given compare, defaulting to the binding comparison without lines modes. Optional decode json parses JSON inside a string field, not the wire frame. A missing pointer fails except for absent. Assertions do not enter the SUT input. The Architect’s no-leak assertion has `pointer`, `test` set to no-leak, `value` (a string or array of secret strings) and `min_bytes` (an integer at least 1). The UTF-8 text at the pointer must contain no substring of any secret whose length is at least min_bytes bytes. Its purpose is the refusal-text check of secret-in; it is an output assertion, never a secret input to the implementation.
 
 ## Markers and native framing
 
