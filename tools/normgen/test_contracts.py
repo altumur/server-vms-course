@@ -24,7 +24,8 @@ GOENV = dict(os.environ, GOFLAGS="-mod=mod", GOPROXY="off", GOWORK="off", GOTOOL
 
 
 def adapter_fns():
-    return {re.search(r"^func (\w+)\(", p.read_text(), re.M)[1]: p for p in sorted(ADAPTERS.glob("*.go"))}
+    return {re.search(r"^func ([A-Z]\w*)\((?:table string|input \[\]byte)", p.read_text(), re.M)[1]: p
+            for p in sorted(ADAPTERS.glob("*.go"))}
 
 
 def lesson_mods():
