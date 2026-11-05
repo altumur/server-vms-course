@@ -495,3 +495,59 @@ class RuntimeConstants(unittest.TestCase):              # P/06 runtime-constants
                 self.assertTrue(check_forms.check_runtime_constants(f)[0], bad)
         finally:
             shutil.rmtree(tmp)
+
+
+class WireP06(unittest.TestCase):                  # расширения провода P/06 (wire.md «P/06 transport constructors»)
+    setUp, tearDown, errors, row, mutate = Wire.setUp, Wire.tearDown, Wire.errors, Wire.row, Wire.mutate
+
+    def test_real_form_clean(self):
+        self.assertEqual(self.errors(), [])
+
+    def test_arg_file_json(self):
+        rid = self.row("06-console/rid", "rid.tsv", "stand:rid")
+        self.assertTrue(self.mutate('"decode":"raw-json"', '"decode":"yaml"', rid))
+        self.assertEqual(self.mutate('"decode":"raw-json"', '"decode":"text"', rid), [])
+        self.assertTrue(any("expectation columns" in e for e in self.mutate('"column":"rid"', '"column":"verdict"', rid)))
+        self.assertTrue(self.mutate('{"column":"rid","decode":"raw-json"}',
+                                    '{"file":{"base":"package","path":"rid.tsv"},"decode":"text"}', rid))
+        crl = self.row("common/crl", "cases.tsv", "vectors")                       # json — только у stand
+        self.assertTrue(self.mutate('"cells":{"input":{"column":"input"}}', '"arg_file":{"json":{"literal":1}}', crl))
+
+    def test_raw_json_only_in_arg_file(self):
+        crl = self.row("common/crl", "cases.tsv", "vectors")
+        self.assertTrue(any("raw-json" in e for e in self.mutate('"decode":"cell"', '"decode":"raw-json"', crl)))
+        digest = self.row("06-console/request-digest", "digest.tsv", "stand:request-digest")
+        self.assertTrue(any("raw-json" in e for e in self.mutate('{"column":"sha256","decode":"text"}',
+                                                                 '{"column":"sha256","decode":"raw-json"}', digest)))
+
+    def test_map(self):
+        fault = self.row("common/fault", "fault.tsv", "vectors")
+        self.assertTrue(any("requires group_by" in e for e in self.mutate('"group_by":[],', '', fault)))
+        self.assertTrue(any("map key" in e for e in self.mutate('"map":{"key":"word"', '"map":{"key":"status"', fault)))
+        self.assertTrue(self.mutate('"map":{"key":"word"', '"map":{"key":"nope"', fault))
+        self.assertTrue(self.mutate('"value":{"column":"status","decode":"json"}}', '"value":{"group":{"column":"status","decode":"json"}}}', fault))
+        crl = self.row("common/crl", "cases.tsv", "vectors")
+        self.assertTrue(self.mutate('{"column":"expect","decode":"cell"}',
+                                    '{"map":{"key":"case","value":{"column":"expect","decode":"cell"}}}', crl))
+
+    def test_cells_empty(self):                      # cells {} — один вызов на таблицу: group_by []
+        fault = self.row("common/fault", "fault.tsv", "vectors")
+        self.assertTrue(any("group_by must be []" in e for e in self.mutate('"group_by":[]', '"group_by":["word"]', fault)))
+
+    def test_ignore(self):
+        pool = self.row("common/pool", "cases.tsv", "vectors")
+        self.assertEqual(self.errors(), [])
+        for bad in ('[""]', '[]', '["/fates","/fates"]', '["/fates","/fates/0"]', '["fates"]', '"/fates"'):
+            self.assertTrue(self.mutate('"ignore":["/fates"]', f'"ignore":{bad}', pool), bad)
+        self.assertTrue(any("console pool" in e for e in self.mutate('"ignore":["/fates"]', '"ignore":["/other"]', pool)))
+        fr = self.row("common/family-read", "01.tsv", "vectors")
+        old = '{"pointer":"/paths","compare":"set","value":{"column":"paths","decode":"json"}},{"pointer":"/outcome","compare":"value"'
+        self.assertEqual(self.mutate(old, '{"pointer":"/a","value":{"literal":{}},"ignore":["/x","/xy"]},' + old, fr), [])
+        self.assertTrue(self.mutate(old, '{"pointer":"/a","test":"absent","ignore":["/x"]},' + old, fr))
+        self.assertTrue(self.mutate(old, '{"pointer":"/a","value":{"literal":{}},"ignore":["/x/~1","/x/~1/y"]},' + old, fr))
+
+    def test_cel_json(self):
+        ph = self.row("common/password-hash", "cases.tsv", "stand:password-hash")
+        self.assertTrue(self.mutate('json(row[\\"input\\"])', 'json(row[\\"input\\"], \\"x\\")', ph))   # арность
+        self.assertTrue(self.mutate('json(row[\\"input\\"])', 'json(1)', ph))
+        self.assertTrue(any("non-JSON" in e for e in self.mutate('json(row[\\"input\\"])', 'json(row[\\"case\\"])', ph)))
