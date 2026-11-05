@@ -32,6 +32,15 @@ L = lesson.CURRENT
 DEFAULT_OUT = L.out
 METHODS = ("get", "put", "post", "delete", "patch", "head", "options", "trace")
 RUNTIME = HERE / "doorrt2/go/routes.go"
+SCHEMA_RT = HERE / "doorrt2/go/schema.go"
+SCHEMA_WORDS = {"$ref", "type", "enum", "const", "allOf", "anyOf", "oneOf", "not", "if", "then", "else", "properties",
+                "patternProperties", "additionalProperties", "unevaluatedProperties", "propertyNames", "required",
+                "dependentRequired", "minProperties", "maxProperties", "items", "minItems", "maxItems", "uniqueItems",
+                "minLength", "maxLength", "pattern", "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum",
+                "description", "format", "default", "readOnly", "contentMediaType", "title", "examples", "$comment"}
+SUBSCHEMA_MAPS = ("properties", "patternProperties", "dependentRequired")
+SUBSCHEMA_ONE = ("not", "if", "then", "else", "additionalProperties", "unevaluatedProperties", "propertyNames", "items")
+SUBSCHEMA_LIST = ("allOf", "anyOf", "oneOf")
 PARAM_KEYS = {"type", "minLength", "maxLength", "pattern", "enum", "const", "$ref", "description", "title", "examples",
               "not"}
 CLASSES = ("sub", "rows", "table", "pass")
@@ -85,6 +94,65 @@ class Docs:
         return node, base
 
 
+class Bundle:
+    """Схемы тел в одну сборку {"$defs": …}: компоненты урока — по имени, внешние — «NN.<имя>», встроенные — по месту."""
+
+    def __init__(self, docs):
+        self.docs, self.defs, self.names = docs, {}, {}
+
+    def prefix(self, file):
+        if Path(file) == self.docs.main:
+            return ""
+        m = re.match(r"(\d\d)-", Path(file).name)
+        return (m[1] if m else Path(file).stem) + "."
+
+    def ref(self, ref, base):
+        file, _, pointer = ref.partition("#")
+        path = (Path(base).parent / file).resolve() if file else Path(base).resolve()
+        key = (str(path), pointer)
+        if key not in self.names:
+            last = pointer.rstrip("/").split("/")[-1] if pointer else path.stem
+            name = self.prefix(path) + (last if pointer.startswith("/components/schemas/") else
+                                        pointer.strip("/").replace("/", "."))
+            if name in self.defs:
+                raise GenError(f"schema bundle: two schemas named {name}")
+            self.names[key] = name
+            self.defs[name] = None
+            node, nbase = self.docs.resolve(ref, base)
+            self.defs[name] = self.rewrite(node, nbase, name)
+        return "#/$defs/" + self.names[key]
+
+    def inline(self, name, node, base):
+        if name in self.defs:
+            raise GenError(f"schema bundle: {name} repeats")
+        self.defs[name] = self.rewrite(node, base, name)
+        return name
+
+    def rewrite(self, node, base, where):
+        if isinstance(node, bool):
+            return node
+        if not isinstance(node, dict):
+            raise GenError(f"{where}: a schema is not an object")
+        extra = set(k for k in node if not k.startswith("x-")) - SCHEMA_WORDS
+        if extra:
+            raise GenError(f"{where}: schema words {sorted(extra)} are out of the body subset")
+        out = {}
+        for k, v in node.items():
+            if k.startswith("x-"):
+                continue
+            if k == "$ref":
+                out[k] = self.ref(v, base)
+            elif k in SUBSCHEMA_ONE:
+                out[k] = self.rewrite(v, base, f"{where}/{k}")
+            elif k in SUBSCHEMA_LIST:
+                out[k] = [self.rewrite(x, base, f"{where}/{k}/{i}") for i, x in enumerate(v)]
+            elif k in ("properties", "patternProperties"):
+                out[k] = {n: self.rewrite(x, base, f"{where}/{k}/{n}") for n, x in v.items()}
+            else:
+                out[k] = v
+        return out
+
+
 def param_check(docs, schema, base, where):
     """Схема параметра пути → {minLen, maxLen, pattern, enum}; вне подмножества — GenError."""
     out = {"min": 0, "max": -1, "pattern": None, "enum": None, "not_enum": [], "not_pattern": []}
@@ -125,6 +193,8 @@ def param_check(docs, schema, base, where):
 
 
 def ident(method, path):
+    if path == "/":
+        return "Op" + method.capitalize() + "Root"
     words = [method.capitalize()]
     for seg in path.strip("/").split("/"):
         if not seg:
@@ -133,8 +203,6 @@ def ident(method, path):
         m = re.fullmatch(r"\{(.+)\}", seg)
         name = m[1] if m else seg
         words.append(("By" if m else "") + "".join(w[:1].upper() + w[1:] for w in re.split(r"[^A-Za-z0-9]+", name) if w))
-    if path == "/":
-        words.append("Root")
     return "Op" + "".join(words)
 
 
@@ -160,12 +228,16 @@ def prefixed(item):
     return "{origin}/{sub}" in urls
 
 
+bodies = []          # (req|resp, Op, код, media, схема, файл) — собирает build для bodies.go
+
+
 def build(root=ROOT):
     spec = Path(root) / L.rel / "spec" / f"{L.key}.api.openapi.yaml"
     docs = Docs(spec)
     doc = docs.doc
     ops, templates, checks, by_pm, methods_of, all405 = [], [], {}, {}, {}, {}
     names = set()
+    bodies.clear()
     for path, item in doc.get("paths", {}).items():
         segs = segments(path)
         pre = prefixed(item)
@@ -203,7 +275,14 @@ def build(root=ROOT):
             if not responses:
                 raise GenError(f"{path} {m}: no responses")
             rb = op.get("requestBody")
-            req_media = list(((docs.deref(rb, spec)[0] or {}).get("content") or {}).keys()) if rb else []
+            req_content = ((docs.deref(rb, spec)[0] or {}).get("content") or {}) if rb else {}
+            req_media = list(req_content.keys())
+            for r_code, r_raw in op.get("responses", {}).items():
+                r_node, r_base = docs.deref(r_raw, spec)
+                for media, mo in (r_node.get("content") or {}).items():
+                    bodies.append(("resp", name, str(r_code), media, mo.get("schema"), r_base))
+            for media, mo in req_content.items():
+                bodies.append(("req", name, "", media, mo.get("schema"), docs.deref(rb, spec)[1]))
             ops.append({"name": name, "method": m.upper(), "path": path, "prefixed": pre, "params": params,
                         "responses": responses, "req": req_media, "req_required": bool(rb and rb.get("required"))})
             by_pm[f"{path} {m.upper()}"] = name
@@ -286,6 +365,39 @@ def go_source(ops, templates, checks, by_pm, methods_of, all405, rel, sha):
     return "\n".join(out)
 
 
+def bodies_source(docs, rel, sha):
+    b = Bundle(docs)
+    req, resp = {}, {}
+    for kind, op, code, media, schema, base in bodies:
+        if schema is None:
+            name = ""
+        elif isinstance(schema, dict) and set(schema) == {"$ref"}:
+            name = b.ref(schema["$ref"], base)[len("#/$defs/"):]
+        else:
+            safe = media.replace("*", "any").replace("/", "_")     # имя сборки — без «/» (JSON Pointer $ref)
+            name = b.inline(f"{op}.{kind}.{code or 'body'}.{safe}", schema, base)
+        if kind == "req":
+            req.setdefault(op, {})[media] = name
+        else:
+            resp.setdefault(op, {}).setdefault(code, {})[media] = name
+    bundle = json.dumps({"$defs": b.defs}, ensure_ascii=True, sort_keys=True, separators=(",", ":"))  # BOM в Go — нельзя
+    out = [f"// Code generated by tools/normgen/gen_door_lesson.py from {rel} (sha256 {sha[:16]}); DO NOT EDIT.", "",
+           "package apidoor", "",
+           f"// bundle — the schemas of the bodies of the OpenAPI ({len(b.defs)}; external $ref inlined): data of schema_rt.go.",
+           f"const bundle = {go_str(bundle)}", "",
+           "// requestSchemas — the schema of the request body by media type (\"\" — no schema).",
+           "var requestSchemas = map[Op]map[string]string{"]
+    for op, ms in req.items():
+        out.append(f"\t{op}: {{" + ", ".join(f"{go_str(m)}: {go_str(n)}" for m, n in ms.items()) + "},")
+    out += ["}", "", "// responseSchemas — the schema of a response body by code (or \"default\") and media type.",
+            "var responseSchemas = map[Op]map[string]map[string]string{"]
+    for op, codes in resp.items():
+        out.append(f"\t{op}: {{" + ", ".join(f"{go_str(c)}: {{" + ", ".join(f"{go_str(m)}: {go_str(n)}" for m, n in ms.items())
+                                              + "}" for c, ms in codes.items()) + "},")
+    out += ["}", ""]
+    return "\n".join(out), len(b.defs)
+
+
 def gofmt(src):
     exe = shutil.which("gofmt")
     if not exe:
@@ -308,9 +420,13 @@ def render(root=ROOT):
     spec = Path(root) / L.rel / "spec" / f"{L.key}.api.openapi.yaml"
     sha = hashlib.sha256(spec.read_bytes()).hexdigest()
     rel = f"{L.rel}/spec/{spec.name}"
-    head = "// Code generated by tools/normgen/gen_door_lesson.py: copy of tools/normgen/doorrt2/go/routes.go; DO NOT EDIT.\n\n"
+    head = "// Code generated by tools/normgen/gen_door_lesson.py: copy of tools/normgen/doorrt2/go/{}; DO NOT EDIT.\n\n"
+    bodies_go, _ = bodies_source(docs, rel, sha)
+    # операции без ответов с телом и без тела запроса — пустые записи (таблицы полны по Op)
     return {"routes.go": gofmt(go_source(ops, templates, checks, by_pm, methods_of, all405, rel, sha)),
-            "routes_rt.go": gofmt(head + RUNTIME.read_text(encoding="utf-8"))}, len(ops), len(templates)
+            "routes_rt.go": gofmt(head.format("routes.go") + RUNTIME.read_text(encoding="utf-8")),
+            "bodies.go": gofmt(bodies_go),
+            "schema_rt.go": gofmt(head.format("schema.go") + SCHEMA_RT.read_text(encoding="utf-8"))}, len(ops), len(templates)
 
 
 def generate(root=ROOT, out=DEFAULT_OUT):
@@ -336,7 +452,8 @@ def kit_files(out=DEFAULT_OUT):
         kept = Path(out) / "go/apidoor" / name
         if not kept.is_file() or kept.read_text(encoding="utf-8") != text:
             raise GenError(f"{kept} is stale: run tools/normgen/gen_door_lesson.py --lesson {L.key}")
-        origin, src = ("generated", kept) if name == "routes.go" else ("handwritten", RUNTIME)
+        origin, src = {"routes.go": ("generated", kept), "bodies.go": ("generated", kept),
+                       "routes_rt.go": ("handwritten", RUNTIME), "schema_rt.go": ("handwritten", SCHEMA_RT)}[name]
         res.append(("apidoor", name, kept.read_bytes(), origin, str(Path(src).relative_to(ROOT))))
     return res
 
@@ -345,7 +462,8 @@ def provenance():
     def entry(path):
         return {"path": str(Path(path).relative_to(ROOT)), "sha256": hashlib.sha256(Path(path).read_bytes()).hexdigest()}
     spec = Path(ROOT) / L.rel / "spec" / f"{L.key}.api.openapi.yaml"
-    return {"form": [entry(spec)], "generator": entry(Path(__file__).resolve()), "handwritten": [entry(RUNTIME)],
+    return {"form": [entry(spec)], "generator": entry(Path(__file__).resolve()),
+            "handwritten": [entry(RUNTIME), entry(SCHEMA_RT)],
             "judge": entry(JUDGE)}
 
 
@@ -392,7 +510,21 @@ The templates of one shape that only the catalog tells apart:
 """
 
 KIT_MD_TAIL = """
-The bodies (decode, check, encode) and the refusal bodies are the next part (3b); until then they are yours.
+**The bodies (3b).** `bodies.go` bundles every schema of a request or response body (the lesson's components, the
+external `$ref` of other lessons as `NN.<name>`, the inline ones as `<Op>.<req|resp>.<code>.<media>`); `schema_rt.go`
+checks a JSON value by it (JSON Schema 2020-12, the words the OpenAPI uses; `integer` — a mathematical integer,
+lengths in characters, annotations such as `format`, `readOnly`, `contentMediaType` not judged).
+
+```go
+func DecodeRequest(op Op, media string, body []byte) (any, *Violation)  // declared media; JSON strictly (one value, no repeated names); the schema
+func CheckResponse(op Op, code int, media string, v any) *Violation     // the code (or default) and media are declared, v is of the schema
+func EncodeResponse(op Op, code int, media string, v any) ([]byte, *Violation) // CheckResponse and the bytes (JSON without HTML escaping)
+func Validate(name string, v any) *Violation                            // a value by a schema of the bundle
+```
+
+Yours stay: the order of the checks of a request (frame, limits, identity, route, body — the norms; `x-validation-order`
+of two operations names steps of the norm), the byte limits (`x-byte-limits` is prose of the norm), which refusal and
+code a violation becomes (the norms and `forms/refusals.tsv`), the headers of the answers.
 """
 
 
