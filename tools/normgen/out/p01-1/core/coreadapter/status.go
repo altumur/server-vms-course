@@ -23,7 +23,9 @@ import "normgen/p01-1/apidoor"
 //	    is never empty — `minLength: 1` of OpenAPI; C01-STATUS-MEMBERS-NOAPI, the Architect's decision of 2026-10-26);
 //	    `leader` — the `-api` address of the leader (empty if the leader is unknown or was started without `-api`),
 //	    `leader_id` — the id of the leader (empty if the leader is unknown) (the store pilot, А7). Door requires
-//	    role=door and term/commit/applied=0. This is a local observation, not a confirmation by the majority
+//	    role=door and term/commit/applied=0. `max_value` is this instance’s effective row-weight ceiling in bytes, the
+//	    value of `-max-value` (Н1.3; the row weight of chapter 1.1), separately from `-max-body`; on the acceptance stand
+//	    it is 524288. This is a local observation, not a confirmation by the majority
 //	spec/01.3-store.norms.md «Н2 Doors»:
 //	  req: P/01.3-R017 — The order of checks: the frame (framing, the body limit 1 MiB — 413) → route and method (404,
 //	    405) → identity (403) → body and membership (400, 409)
