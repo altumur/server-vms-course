@@ -42,7 +42,7 @@ KIT.md — справка подключения (ADR-0083 доп. (95) п. 2): 
 
 - Python с `cel_expr_python` (оракул CEL для `test_gen_checks.py` и `flag_judge.py`) — `/opt/check-env/lesson-spec/bin/python`.
 - Набор: `test_gen_checks.py`, `test_gen_tests.py`, `test_gen_door.py`, `test_gen_flags.py`, `test_gen_refusals.py`,
-  `test_gen_stagetests.py`, `test_gate.py`, `test_judges.py`, `test_gen_launch.py`, `test_gen_core.py`, `test_gen_families.py`, `test_gen_admin.py`, `test_lesson.py`, `test_gen_flags_cmd.py`, `test_gen_refusals_plain.py`, `test_gen_cmdtests.py`, `test_gen_rollout.py`, `kit/test_kit.py`, `kit/test_export.py`; затем `skills/lesson-spec/scripts/check_spec.py`.
+  `test_gen_stagetests.py`, `test_gate.py`, `test_judges.py`, `test_gen_launch.py`, `test_gen_core.py`, `test_gen_families.py`, `test_gen_admin.py`, `test_lesson.py`, `test_gen_flags_cmd.py`, `test_gen_refusals_plain.py`, `test_gen_cmdtests.py`, `test_gen_rollout.py`, `kit/test_kit.py`, `kit/test_kit_p02.py`, `kit/test_export.py`; затем `skills/lesson-spec/scripts/check_spec.py`.
 - Урок (ADR-0125 доп. (5) п. 2): `lesson.py` — `--lesson NN-<имя>` у каждого генератора, судьи и `build_kit` (или
   `NORMGEN_LESSON`; по умолчанию `01-store`): пути урока, out (`out/p01-1` у P/01, `out/pNN` у прочих), модуль Go,
   каталог и модуль пакета (`--module` по умолчанию из урока), нормы по главам. Объявления мест, сделанные для P/01
@@ -51,6 +51,9 @@ KIT.md — справка подключения (ADR-0083 доп. (95) п. 2): 
 - Пакет попытки — только `build_kit.py <kit> --module … --part … --export <sha выгрузки>`: входы — `Platform/` выгрузки из git
   `cammeta-specs` (`--specs`), код — чистый HEAD курса (правки в `tools/normgen` — отказ); `out` перегоняется во
   временном каталоге, дерево курса не меняется; в `kit.manifest.json` — `commit` и `export`, `SOURCE.txt` пишется сам.
+- Пакет урока без двери (P/02): `build_kit.py <kit> --lesson 02-installer --part flags --part refusals --part stagetests
+  --part rollout-poll --export <sha>` — без writecheck (её форма — только P/01), stagetests — `gen_cmdtests.py`, перегон
+  `--export` — генераторы частей урока; модуль и каталог — из урока (`p02installer/02-installer`).
 - Посев (код прошлой попытки) — ещё `--seed <work посева>`: цикл копирует пакет поверх посева целиком, поэтому своё
   реализации (editable) идёт в пакет, только если в посеве файла нет или он байт в байт тот, что положил прежний пакет
   (`kit.manifest.json` посева); код модели в пакет не идёт — манифест `seed`: `kept`, `refreshed`.
