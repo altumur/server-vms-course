@@ -12,7 +12,7 @@ instructions do not add to them. The platform is the export `cammeta-specs` `7a8
   (B1) and of static files (B7) are comments until the platform norms.
 - The canon of the shell: [`backend.shell.html`](../backend.shell.html): the bytes as they are; the implementation does not generate it.
 - The door contract: [`consolem.openapi.json`](../consolem.openapi.json) (the pinned commit, SHA-256 next to it); it is not edited.
-- The mapping of kinds: the data [`data/mapping.tsv`](../data/mapping.tsv).
+- The mapping of kinds: the data [`data/mapping.tsv`](../data/mapping.tsv); the kind descriptions — [`data/kinds.json`](../data/kinds.json) (V/11.14 Н1.1): the bytes as they are.
 - The assistant harness: the data [`harness/`](../harness/), the catalogue [`data/rule-catalog.json`](../data/rule-catalog.json): the bytes as they are.
 - Acceptance: the consolem API tests at the pinned commit in the capability profile (chapter 6) and the own suite [`acceptance/`](../acceptance/).
 - The lecture (`ru/11-backend.md`, for people, not in the export) explains the reasons; the platform — the norms of the export of the VMS pin at the addresses `P/…`.
@@ -26,7 +26,7 @@ absent norm. The structure of the code is left to the implementation within the 
 |---|---|---|
 | V/11.1 | the manifest loads with the strict loader without edits; the holder of the row `backend/instances/<name>` by labels next to `live`, the callback — TLS with the role `backend`; the answers of the pass — only JSON or SSE; the implementation does not serve the WebUI (the console does — with the shell `backend.shell.html` and the static files of the subsystem, B7); the API — `/backend/api/` | by reading; API tests |
 | V/11.2 | 116 contract operations are translated, 7 — `404 NO_ROUTE` without calls to the console (including `/test/events`), `/test/reset`, `/test/clock` — only the stand and the console loopback mark, otherwise `404 TEST_SUPPORT_OFF`; `GET /reference` carries `capabilities` — the «translated» list, the kinds — `GET /kinds`; a refusal — `Problem` of the contract | API tests in the profile |
-| V/11.3 | translation by the table `mapping.tsv`: read from the data, not hard-coded | API tests; by reading |
+| V/11.3 | translation by the table `mapping.tsv` and the kind descriptions `kinds.json`: read from the data, not hard-coded | API tests; by reading |
 | V/11.4 | device search and the question about the model through the doors of the `cam` tables; folders and group operations, a step by the route `opstep`; assembling and disassembling records by parts, the version — a concatenation of the store indexes of the parts and tombstones (B4), the device record in one B9 package, the repeat memory of group writes, a console refusal → a contract code, id — UUID v5 of the cluster and of the row's place | API tests (after B3–B5) |
 | V/11.5 | a callback only with the ticket of its own request and only by the list; `/stream` from `/changes` by the message table | API tests; the platform acceptance B1, B2 |
 | V/11.6 | the profile of the product tests, the key `TEST_SUPPORT` of the subsystem file and the console loopback mark for `/test/reset`, `/test/clock` | the stand after the platform increment |
@@ -71,7 +71,7 @@ First the platform with the norms B, then `backend`: the pass of the second kind
 | V/11.4 Н1.10 | storing `Rule` next to the scenario or expanding the targets in `backend` | one row `auto/scenarios`, `RULE_INVALID` at the write, the evaluator expands the scopes |
 | V/11.4 Н1.11 | computing the schedule action in `backend` | the evaluator computes the moment: the heartbeat word `object_mode` |
 | V/11.4 Н1.12 | checking a revert by the row version; reverting volumes and removals | a check by the values `after`, the words `refuse` |
-| V/11.3 Н1.1 | hard-coding the mapping | read `data/mapping.tsv` |
+| V/11.3 Н1.1 | hard-coding the mapping or the kinds | read `data/mapping.tsv`, `data/kinds.json` |
 | V/11.4 Н1.1 | counting the camera version as a sum of the part revisions or as a number | an opaque string: a concatenation of the part indexes `c…r…d…`, string equality (ADR-0094 addendum (4) item 1) |
 | V/11.4 Н1.2 | writing the device parts one at a time or reverting them by hand | one B9 package: the written ones with `cas`, the others by guards; a refusal — nothing is written |
 | V/11.5 Н1.3 | faking the stream by polling before the feed | without `/changes` there is no stream |
