@@ -118,6 +118,23 @@ class Contracts(unittest.TestCase):
 
 
 class ContractsKit(unittest.TestCase):
+    def test_record_events_kit(self):
+        if not shutil.which("go"):
+            self.skipTest("go is not in PATH")
+        import json
+        with tempfile.TemporaryDirectory(prefix="record-events-kit-") as tmp:
+            dst = Path(tmp) / "kit"
+            done = subprocess.run([sys.executable, str(HERE / "kit/build_kit.py"), str(dst), "--lesson", "06-console",
+                                   "--part", "families", "--part", "vectors", "--part", "contracts"],
+                                  capture_output=True, text=True)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            man = json.loads((dst / "kit.manifest.json").read_text())
+            mod = dst / "06-console"
+            (mod / "go.mod").write_text(f"module {man['module']}\n\ngo 1.22\n")
+            done = subprocess.run(["go", "test", "-count=1", "-run", "^Test(Record|EventsMerge)_",
+                                   "./internal/vectortests/"], cwd=mod, capture_output=True, text=True, env=GOENV)
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+
     def test_heartbeat_kit(self):
         """A foreign-family reader in a controller kit: nested files, import rewriting, and actual vector calls."""
         if not shutil.which("go"):
@@ -242,6 +259,126 @@ func TestMixed(t *testing.T) {
             self.assertNotEqual(done.returncode, 0)
             self.assertIn("--- FAIL: TestHeartbeatRead_", done.stdout, done.stdout + done.stderr)
             self.assertNotIn("panic:", done.stdout)
+
+
+class RecordEvents(unittest.TestCase):
+    def test_mutants(self):
+        if not shutil.which("go"):
+            self.skipTest("go is not in PATH")
+        mutations = [("Record", "p08", "record.go", "!ed25519.Verify(", "false && !ed25519.Verify("),
+                     ("EventsMerge", "p06", "eventsmerge.go", "if former.Cmp(epoch) < 0 {", "if former.Cmp(epoch) > 0 {"),
+                     ("EventsMerge", "p05", "eventsmerge.go", "t >= q.To", "t > q.To")]
+        with tempfile.TemporaryDirectory(prefix="record-events-mutants-") as tmp:
+            for fn, lesson, name, old, new in mutations:
+                with self.subTest(fn=fn, lesson=lesson):
+                    mod = OUT / lesson / "go"
+                    dst = build(mod, fn, ADAPTERS / f"{fn.lower()}.go", CONTRACTS, Path(tmp))
+                    path = dst / "contracts" / name
+                    text = path.read_text()
+                    self.assertIn(old, text)
+                    path.write_text(text.replace(old, new, 1))
+                    done = run(dst, tests_calling(mod, fn))
+                    self.assertNotEqual(done.returncode, 0)
+                    self.assertIn(f"--- FAIL: Test{fn}_", done.stdout, done.stdout + done.stderr)
+                    self.assertNotIn("panic:", done.stdout)
+
+    def test_canonical_golden(self):
+        """The actual contracts signer uses every RFC 8785 golden row, including 1e21 and UTF-16 ordering."""
+        if not shutil.which("go"):
+            self.skipTest("go is not in PATH")
+        import hashlib
+        source = HERE.parents[1] / "Platform/01-store/vectors/jcs/canonical_json.tsv"
+        vectors = [line.split("\t") for line in source.read_text().split("\n") if line and not line.startswith("#")]
+        main = r'''package main
+import ("bufio"; "encoding/json"; "fmt"; "os"; "strings"; "canonicaljudge/contracts")
+func main() {
+    sc := bufio.NewScanner(os.Stdin)
+    sc.Buffer(make([]byte, 1<<20), 1<<20)
+    for sc.Scan() {
+        dec := json.NewDecoder(strings.NewReader(sc.Text())); dec.UseNumber()
+        var v any
+        if dec.Decode(&v) != nil { os.Exit(2) }
+        fmt.Println(contracts.CanonicalJSON(v))
+    }
+    if sc.Err() != nil { os.Exit(2) }
+}
+'''
+        with tempfile.TemporaryDirectory(prefix="contracts-jcs-") as tmp:
+            dst = Path(tmp)
+            (dst / "go.mod").write_text("module canonicaljudge\n\ngo 1.22\n")
+            shutil.copytree(CONTRACTS, dst / "contracts")
+            (dst / "main.go").write_text(main)
+            done = subprocess.run(["go", "run", "."], input="\n".join(v[0] for v in vectors) + "\n", cwd=dst,
+                                  capture_output=True, text=True, env=GOENV)
+            self.assertEqual(done.returncode, 0, done.stderr)
+            got = done.stdout.split("\n")[:-1]
+            self.assertEqual(got, [v[1] for v in vectors])
+            self.assertEqual([hashlib.sha256(v.encode()).hexdigest() for v in got], [v[2] for v in vectors])
+
+    def test_boundaries(self):
+        if not shutil.which("go"):
+            self.skipTest("go is not in PATH")
+        src = r'''package contracts
+import ("bytes"; "crypto/ed25519"; "encoding/base64"; "encoding/hex"; "encoding/json"; "fmt"; "testing")
+func TestSignedJCS(t *testing.T) {
+    key := ed25519.NewKeyFromSeed(bytes.Repeat([]byte{1},32))
+    pub := hex.EncodeToString(key.Public().(ed25519.PublicKey)); kid := pub[:16]
+    keys := map[string]any{"domain":"acme","issuing":[]any{kid},"revoked_issuing":[]any{}}
+    doc := map[string]any{"domain":"acme","term":json.Number("1"),"holder":"m1","url":"http://x","at":json.Number("1e21"),"issuer":pub}
+    // Expected signing bytes are independent of the contracts encoder.
+    signed := fmt.Sprintf(`{"at":1e+21,"domain":"acme","holder":"m1","issuer":"%s","term":1,"url":"http://x"}`,pub)
+    doc["kid"],doc["sig"] = kid,base64.RawURLEncoding.EncodeToString(ed25519.Sign(key,[]byte(signed)))
+    text,_ := json.Marshal(doc); row := map[string]any{"doc":string(text)}
+    if got:=Record(keys,row,TermRecord); got.Result!="ok" { t.Fatalf("signed JCS: %#v",got) }
+    if got:=Record(keys,row,BackupRecord); got.Reason!="not_a_record" { t.Fatalf("foreign kind: %#v",got) }
+    for _,bad := range []string{string(text)+"?",`{"x":1,"x":2}`,`{"x":"\ud800"}`,`{"x":"`+string([]byte{0xff})+`"}`} {
+        if got:=Record(keys,map[string]any{"doc":bad},TermRecord); got.Reason!="not_a_record" { t.Fatalf("malformed text: %#v",got) }
+    }
+    for _,valid := range []string{`{"x":"\\ud800"}`,`{"x":"\ud83d\ude00"}`} {
+        if _,ok:=strictJSONObject([]byte(valid)); !ok { t.Fatalf("valid Unicode rejected: %s",valid) }
+    }
+    doc["at"]=json.Number("1e309"); text,_=json.Marshal(doc)
+    if got:=Record(keys,map[string]any{"doc":string(text)},TermRecord); got.Reason!="not_a_record" { t.Fatalf("overflow: %#v",got) }
+}
+func TestTakeOrder(t *testing.T) {
+    makeRow := func(seed byte, term string) (map[string]any,string) {
+        key:=ed25519.NewKeyFromSeed(bytes.Repeat([]byte{seed},32)); pub:=hex.EncodeToString(key.Public().(ed25519.PublicKey))
+        doc:=map[string]any{"domain":"acme","term":json.Number(term),"rev":json.Number("3"),"part":"3232","members":map[string]any{},"issuer":pub}
+        sig:=ed25519.Sign(key,[]byte(CanonicalJSON(doc))); doc["kid"],doc["sig"]=pub[:16],base64.RawURLEncoding.EncodeToString(sig)
+        text,_:=json.Marshal(doc); return map[string]any{"doc":string(text)},pub[:16]
+    }
+    row,kid:=makeRow(1,"2"); have,old:=makeRow(2,"2")
+    keys:=map[string]any{"domain":"acme","issuing":[]any{kid},"revoked_issuing":[]any{old}}
+    if got:=TakeMemberRecord(keys,row,"3232",have); got.Result!="same" { t.Fatalf("equality precedes revoked bound: %#v",got) }
+    row,_=makeRow(1,"1")
+    if got:=TakeMemberRecord(keys,row,"3232",have); got.Result!="take" { t.Fatalf("revoked greater bound: %#v",got) }
+}
+func TestEventsEdges(t *testing.T) {
+    row:=`{"id":"a","subsystem":"testsub","unit":"testsub/c9","of":"testsub/c1","epoch":1,"t":10,"occurred":1,"kind":"tick","server":"srv-b","bucket":"testsub/c9/e1/x","class":"observation"}`
+    input:=`{"participant":"console","grant":["unit:testsub/c9"],"units":{"testsub/c1":"@unreadable"},"epochs":{"testsub":{"c9":1}},"resources":{"srv-a":{"events":[`+row+`,{"id":"broken"}],"state":"live","truncated":0,"partial":true,"lines_garbled":2},"srv-b":"silent"}}`
+    out,err:=MergeEvents([]byte(input))
+    if err!=nil || len(out["events"].([]map[string]any))!=1 || out["withheld"]!=nil || out["partial"]!=true || out["lines_garbled"]!=json.Number("3") || out["state"]!="live; srv-b unreachable; srv-b from mirror" { t.Fatalf("merge edges: %#v %v",out,err) }
+    resource:=`{"events":[`+row+`],"query":{"by":"occurred","from":1,"to":5,"late":5}}`
+    cut,err:=FilterResourceEvents([]byte(resource))
+    if err!=nil || len(cut["events"].([]map[string]any))!=1 { t.Fatalf("late equality: %#v %v",cut,err) }
+    fractionalLate:=`{"events":[],"query":{"by":"occurred","late":100.00000000000000001}}`
+    if _,err:=FilterResourceEvents([]byte(fractionalLate)); err==nil { t.Fatal("fractional late rounded into an integer") }
+    hidden:=`{"participant":"console","grant":[],"epochs":{"testsub":"did not answer"},"resources":{"srv-a":{"events":[`+row+`],"state":"live","truncated":0}}}`
+    out,err=MergeEvents([]byte(hidden))
+    if err!=nil || out["complete"]!=false || len(out["events"].([]map[string]any))!=0 || out["incomplete"].(map[string]string)["testsub/epoch"]!="did not answer" { t.Fatalf("hidden failed epoch: %#v %v",out,err) }
+    large:=`{"participant":"console","resources":{"srv-a":{"events":[],"state":"live","truncated":9007199254740992},"srv-b":{"events":[],"state":"live","truncated":1}}}`
+    out,err=MergeEvents([]byte(large))
+    if err!=nil || out["truncated"]!=json.Number("9007199254740993") { t.Fatalf("exact counter: %#v %v",out,err) }
+}
+'''
+        with tempfile.TemporaryDirectory(prefix="record-events-boundaries-") as tmp:
+            dst = Path(tmp)
+            (dst / "go.mod").write_text("module boundaries\n\ngo 1.22\n")
+            shutil.copytree(CONTRACTS, dst / "contracts")
+            (dst / "contracts/boundaries_test.go").write_text(src)
+            done = subprocess.run(["go", "test", "-count=1", "./contracts/"], cwd=dst,
+                                  capture_output=True, text=True, env=GOENV)
+            self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
 
 
 class NFKC(unittest.TestCase):
