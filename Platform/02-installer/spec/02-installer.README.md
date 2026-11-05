@@ -48,6 +48,8 @@ The lesson has no HTTP contract of its own: the door `GET /manifest` and the for
 | The grammars of the owner lessons listed in Н1.2 of chapter 2.1 | the admissible keys inside the sections of a manifest | by the references of the canon; a consolidated list is not derived from the code of an implementation |
 | The lecture (`ru/02-installer.md`, for people, not in the export), [the life cycle](../lifecycle.md) | motivation and examples for a person; a pointer to the flags and units | not a norm |
 
+Read the norms of every chapter in full; this is an input rule, not a separate implementation stage.
+
 The full closed set of keys needs the section grammars named in Н1.2 of chapter 2.1. The opaque places
 and the levels with author names are set there too; they do not turn the whole document into an arbitrary mapping.
 On a gap or a contradiction in the norms, write a question with a reference to the section, pass it to the author of the norms and
@@ -94,11 +96,11 @@ For all chapters:
 
 ## Order of work
 
-This is a possible order, not an additional norm about the structure of the code.
+The implementation stages are [`forms/stages.tsv`](../forms/stages.tsv) (ADR-0126): goals, gates, weights, kit parts and dependencies. This is a possible plan, not an additional behavior norm. The advice below complements the table; the readiness checklists keep the obligations that need reading, OS installation or a multi-process stand.
 
 ### Chapters 2.1 and 2.3 — the manifest
 
-1. *(2.1)* Read the norms in full. Write out the boundaries of the closed, named and opaque levels from Н1.2,
+1. *(2.1)* Write out the boundaries of the closed, named and opaque levels from Н1.2,
    their owner lessons and the choices of the implementation. Check the mandatory unit/rows/id: the loader does not invent a family or a kind of id; the absence of unit.fields means an empty mapping.
 2. *(2.1)* Set up the reading of bytes and the parsing of the text per Н1.1: a YAML 1.2 parser of a pinned version and the fine check of layer 1
    ([the В7 layers](../../common/LAYERS.md) § 4, workarounds D13, D16). Run the checks that need the original text or the list of keys before

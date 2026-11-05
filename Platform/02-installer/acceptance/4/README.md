@@ -1,0 +1,16 @@
+# P/02.4 — supplementary command and poll seams for the kit
+
+This English text is the source; the Russian translation `ru/acceptance/4/README.md` is derived from it by translation and is not edited by hand (ADR-0121).
+
+This directory supplies [`seams.tsv`](seams.tsv) to generated stagetests (ADR-0125 addendum (4) item 7 and addendum (5)). It adds no HTTP stand or public runner target for P/02.4. Its 19 steps in 11 scenarios use the exact grammar and CALL normalization of [`forms/README.md`](../../forms/README.md).
+
+| Scenarios | Subject | Norm |
+|---|---|---|
+| `s1-put-invalid-source` | an invalid candidate is refused by manifest put with code 2 and the source name; the source file stays intact | P/02.3 Н3 step 1, Н4 |
+| `s2-new-existing`, `s3-rotate-invalid` | a refused creation or ring check leaves the existing file byte-for-byte intact | P/02.4 Н1.9 secrets; P/02.4-14 |
+| `s4-new-exclusive` | concurrent O_EXCL creation at one path succeeds once | P/02.4 Н1.9 secrets new |
+| `s5-poll-healthy`–`s11-poll-read-equality` | the pure poll: catch-up under writes, a break, last at a follower, membership, two voters, equality at tick/read deadline | P/02.4 Н1.9 poll; P/02.4-22 |
+
+Every scenario has fresh temporary roots; ring-file inputs are owned strings with no real key material. RUN calls the command function; CALL `command` observes zero versus nonzero without prescribing an unspecified native exit code or output shape. A crash is not a refusal. The source [machine](../../forms/rollout-poll.machine.yaml) and [traces](../../forms/rollout-poll.traces.tsv) remain canonical: poll seam inputs contain only the input and timed external events, never the expected trace assertions. The adapter observes the implementation’s poll; running the course interpreter alone does not prove the implementation.
+
+The source traces exercise the complete machine; these seven sampled poll scenarios are a smaller implementation regression. They do not prove the real rollout, get/install, store and console barriers, OS/service-manager effects, TLS, revocation, operator windows or remote-client behavior. Those retain the named checks of the norms and readiness checklist. The 946 loader cases, existing puts tables and rights acceptance remain separate. No implementation was run when preparing these seams.

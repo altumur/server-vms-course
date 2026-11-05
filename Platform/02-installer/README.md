@@ -15,12 +15,18 @@ spec/02.1-installer.schema.json      the form source of chapter 2.1 (with .relat
 spec/02.2-installer.view.schema.json the schema of the canonical view of chapter 2.2
 spec/02-installer.README.md          implementation instructions
 lifecycle.md                         flags, environment, exit codes, units
+forms/README.md                      form columns and non-HTTP seam grammar
+forms/daemon-flags.tsv                command option names, types and conditions
+forms/operator-commands.tsv           command ids, argv prefixes and positional arity
+forms/refusals.tsv                    the canonical refusal catalogue of chapters 2.1–2.5
+forms/stages.tsv                      the implementation plan (ADR-0126)
 forms/rollout-poll.machine.yaml      forms of ADR-0120 (the machine of the rollout poll with its traces rollout-poll.traces.tsv)
 data/<family>.schema.json            data families the lesson owns (JSON Schema 2020-12, ADR-0092; ADR-0088)
 vectors/<algorithm>/                 vectors of the algorithms the lesson introduces
 acceptance/1/                        acceptance of chapter 2.1 (README.md, verdicts.tsv, classes.tsv, diagnostics.tsv, cases/)
 acceptance/2/, acceptance/3/         acceptance of chapters 2.2, 2.3 (README.md, puts.tsv, puts/)
 acceptance/5/                        acceptance of chapter 2.5 (README.md, scenarios.tsv, variants/)
+acceptance/1/seams.tsv, acceptance/4/seams.tsv  supplementary core/command/poll seams for kit stagetests
 journal/corrections-<K>.tsv          the log of AI corrections of chapter K — history, not an input; not in the export
 ru/                                  for people, not in the export — the lecture ru/02-installer.md, translations of the English text by the same path
 ```

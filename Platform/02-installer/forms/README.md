@@ -25,7 +25,7 @@ chapter row name surface code kind fields headers log norm word cause outcome di
 The separator is a literal TAB. Lines starting with `#` are comments; the first other line is the header. Every row has fifteen cells.
 `name` is unique snake_case; `chapter` is `2.K`; `row` is the original 1-based row of that chapter’s Н4 catalogue, not a new normative id.
 `surface` is one of `call` (a pure procedure), `cli`, `start`, `process` (a running process), `peer` (a check whose owner is another lesson).
-`code` is `exit N` with a decimal integer N >= 0, `exit !0` (any nonzero code, including 2), or `-` (no numeric code prescribed here).
+`code` is a three-digit HTTP status for a `peer` outcome, `exit N` with a decimal integer N >= 0, `exit !0` (any nonzero code, including 2), or `-` (no numeric code prescribed here).
 `kind`, `fields`, `headers` are `-`: P/02 has no HTTP response body schema. In particular, a `peer` row does not invent a P/02 HTTP door.
 `word` is a fixed refusal/diagnostic token, or `-`. `log` is a comma-separated list of required diagnostic subjects or fixed fragments in
 `«…»`; `-` means no requirement here. Neither `word` nor `log` defines an otherwise unspecified stdout/stderr representation.
@@ -49,37 +49,36 @@ units, TLS, external clients and operator windows by their named methods. It doe
 
 ## Non-HTTP seams: exact request and expectation grammar
 
-The file is `acceptance/K/seams.tsv`. Its non-comment header is `scenario<TAB>step<TAB>request<TAB>expect`; each scenario has consecutive
-steps starting at 1 and a fresh adapter instance and temporary root. The runner does not read seams. They are input to kit stagetests.
-A word is a nonempty sequence without ASCII whitespace. Paths are relative to the scenario root, without `..`; `inputs/…` names a fixture
-relative to this chapter’s acceptance directory. There is no shell evaluation, interpolation or execution of a command string.
+The file is `acceptance/K/seams.tsv`. Its last comment header is `# scenario<TAB>step<TAB>request<TAB>expect`; each scenario has consecutive
+steps starting at 1 and a fresh adapter and temporary roots. The runner does not read seams; kit stagetests does. A stand path starts with
+`$data/`, `$run/` or `$manifest/` and is below that scenario’s data, run or manifest root, without `..`. `inputs/…` is a fixture path relative
+to the acceptance directory. No shell is evaluated. These lexical rules match the course checker on `f6cffb3ea`.
 
-* `RUN <process> <word>… [<<inputs/<file> | <<$<name>]` calls the command function in process with this argv. An optional final stdin
-  suffix supplies exactly the fixture bytes or the string previously bound to `$<name>`. The suffix is not part of argv. RUN does not
-  spawn an OS process in generated tests. Examples: `RUN w2cctl secrets new keys/ring.json`; `RUN w2cctl rights -deployment dep`.
-* Its expectation is `exit <N|!0>` followed optionally by ` stdout <JSON>` and then optionally by ` stderr ~<fragment>` in this order.
-  `N` is decimal without a sign; `!0` means nonzero. Only a stated stream is checked. `stdout` is parsed as one JSON value and compared by
-  the common acceptance rules (objects by subset; `{}` exactly empty; markers and bindings as below). `stderr ~` means substring.
-  If `stdout` is present, its JSON value ends by the JSON decoder, not by splitting on spaces; a trailing `stderr ~` is then recognized.
-  Example: `exit 2 stderr ~ring.json`. A nonzero code does not by itself make a crash a valid refusal: the command must return normally.
-* `CALL <name> <JSON>` invokes a lesson adapter function; the JSON value consumes the rest of the request. Its expectation is one JSON
-  value, compared by the same subset/empty-object rules. It is a normalization for tests, not a required public implementation API.
-  Supported names and shapes in this lesson are listed below. Examples: `CALL load {"source":"a.yaml","text":"name: a\n"}`;
-  `CALL rollout-poll {"input":{"last":false,"self":"a","voters":["a","b"],"members":{"a":"h-a","b":"h-b"}},"events":[]}`.
-* `@file <path> inputs/<file>` writes those fixture bytes below the scenario root; expectation `ok`. Directories are created there.
-* `@read <path>` returns the UTF-8 file bytes as a JSON string, even for a file whose contents are JSON. Expectation is a JSON string,
-  a string binding `"$name"`, or the unquoted marker `@absent` for no file. Missing/unreadable is not an arbitrary empty string.
-  Reusing `"$name"` compares the exact bytes captured by its first occurrence. Non-UTF-8 file tests need a separate explicit codec.
-* `@parallel K` (K >= 2) applies only to the next RUN or CALL. The directive expects `ok`; the following expectation is
-  `each <expect>` or `one <expect>; rest <expect>`. All K calls share that scenario’s adapter/root; calls finish before the next step.
-  Variables are bound only by the single `one` result; `each` and `rest` may refer to existing bindings. Prefix projection stops at an
-  unsupported request; it never skips a step and resumes. The inventory names exclusions, and an empty selected projection is an error.
+* `RUN <process> <word>… [<<inputs/<file> | <<$<name>]`: words are separated by one ASCII space. A word is either an unquoted word without
+  whitespace or a double quote, or a JSON string decoded to one argv element. A final stdin suffix supplies exactly those fixture bytes or
+  the previously bound string and is removed from argv. Kit tests call the command function in process, without spawning an OS process.
+  Example: `RUN w2cctl manifest put $manifest/bad.subsystem.yaml`.
+* Its expectation is `exit N`, optionally followed by `; stdout <JSON>`, `; stdout-text <JSON string>`, `; stderr ~<JSON string>` in that order.
+  N is a decimal nonnegative integer. Only named streams are checked: stdout JSON by the common subset/empty-object rules, stdout-text
+  by exact decoded UTF-8 bytes, stderr by substring. Example: `exit 2; stderr ~"bad.subsystem.yaml"`. A command must return normally;
+  a crash is not a valid refusal. Where the norm fixes only nonzero, CALL `command` below observes success without inventing an exact code.
+* `CALL <name> <JSON>`: the name is `[a-z][a-z0-9-]*`; the JSON consumes the rest. Its expectation is JSON by the common acceptance rules
+  (objects by subset, `{}` exactly empty, string bindings and markers), or a published `@absent` / `@exit 2`. This is test normalization,
+  not a mandatory implementation API. A function with no published marker does not acquire one from this grammar.
+* `@file <stand path> inputs/<file>` or `@file <stand path> <JSON string>` writes those exact fixture/decoded UTF-8 bytes; expect `ok`.
+* `@read <stand path>`: expect JSON for a parsed JSON file, `text <JSON string>` for exact UTF-8 bytes, or `@absent` for a missing file.
+  An unreadable file fails. `text "$name"` binds the bytes first, then compares that same value on reuse. JSON strings in JSON mode are
+  parsed JSON values; text mode never parses the file contents as JSON. There is no implicit empty value for absence or an IO error.
+* `@parallel K` (K >= 2) applies to the next RUN or CALL; expect `ok`. That next expectation is `each <expect>` or
+  `one <expect>; rest <expect>`. All K calls share the scenario’s adapter and roots and finish before the following step. Only the single
+  `one` result may bind new variables; `each` and `rest` may refer to existing ones. Each nested expectation uses the underlying RUN/CALL
+  grammar. Prefix projection stops at an unsupported step; the inventory names all exclusions, and an empty selected projection is an error.
 
-A marker such as `@absent` is outside JSON; a JSON string with those characters is a file value. Fixtures are owned synthetic test data.
-A native command’s implementation-specific output is not constrained when its norm leaves that output open.
+Fixtures are owned synthetic data. A native command’s implementation-specific output is not constrained when its norm leaves it open.
 
 ### CALL normalization
 
+* `command`: input `{argv:[<process>,<argument>,…]}`. Invoke that command function with the scenario roots, resolving stand paths in argv. Return `{success:<exit code == 0>}` and optionally `exit_code`. The function must return normally; do not convert a panic, exception or signal into a refusal. This is used only for outcomes whose norm sets zero versus nonzero without an exact refusal code.
 * `load`: input `{source: string, text: string}`. Call the regular loader on exactly these bytes. Success returns
   `{verdict:"ok", name:<loaded name>}`; refusal returns `{verdict:"refused", class:<text|form|relations>}`. No partial manifest is returned.
 * `load-catalogue`: input `{manifests:[{source:string,text:string},…]}`. Load those manifests by the same loader and check their complete

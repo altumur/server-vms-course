@@ -44,8 +44,7 @@ The installer is not a service but operator commands; a repeated installation is
 
 ## Flags
 
-None: operator commands take their own arguments (above), platform processes — only the environment (P/02.4 Н1.2 «The setting
-channel»).
+No daemon flags: P/02 is operator commands. Their option form is [`forms/daemon-flags.tsv`](forms/daemon-flags.tsv), the command grammar is [`forms/operator-commands.tsv`](forms/operator-commands.tsv); platform processes use the environment (P/02.4 Н1.2).
 
 ## Directories and files
 

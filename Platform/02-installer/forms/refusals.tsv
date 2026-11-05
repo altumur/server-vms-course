@@ -1,7 +1,7 @@
 # Refusal catalogue of P/02. This is the single source of the former Н4 tables (ADR-0125 addendum (1) item 5).
 # The first ten columns are the P/01 catalogue columns; word is a fixed diagnostic/refusal token, - if none is prescribed.
 # surface: call (a pure procedure), cli (an operator command), start (process start), process (running process), peer (another owner’s TLS/HTTP check).
-# code: exit N is an exact native exit code; exit !0 is any nonzero code (including 2); - means no numeric code is prescribed here.
+# code: a three-digit code is a peer HTTP outcome; exit N is exact; exit !0 is any nonzero code (including 2); - means no numeric code here.
 # kind/fields/headers are -: P/02 owns no HTTP response schema. log names required diagnostic subjects or a quoted fixed fragment.
 # cause, outcome, diagnostic, caller are explanatory source cells, retained whole; generators MUST NOT infer conditions or extra validation from them.
 # word and log constrain only the named outcome. A process control outcome exit 0 (manifest changed) is not a failed installation.
@@ -45,6 +45,7 @@ chapter	row	name	surface	code	kind	fields	headers	log	norm	word	cause	outcome	di
 2.4	16	secrets_status_unknown	cli	exit 1	-	-	-	counts	P/02.4 Н4 row 16	-	`secrets status`: `?` > 0 (a foreign kid, the envelope does not open, a non-string value of `*_secret`)	code 1, the walk to the end	counts without values	examine `?`, if needed `seal` (guess of stage C I02-G02, the Architect's decision 2026-10-23)
 2.4	17	address_without_tls	start	-	-	-	-	cause	P/02.4 Н4 row 17	-	an address off the loopback without TLS (the daemon; a process door, except signer and relay on an explicit address by Н1.6 `process`; the resource — without an exception, ADR-0075 addendum 2026-10-26 (6) item 2)	a start refusal	log	turn on TLS or the loopback
 2.4	18	certificate_role	peer	-	-	-	-	role,route	P/02.4 Н4 row 18	-	the role of the certificate ≠ the role of the process	a handshake refusal / 403	role and route	the right kit
+2.4	18	certificate_role_http	peer	403	-	-	-	role,route	P/02.4 Н4 row 18	-	the role of the certificate ≠ the role of the process	a handshake refusal / 403	role and route	the right kit
 2.4	19	install_cycle	cli	exit 2	-	-	-	names	P/02.4 Н4 row 19	-	installation: a cycle of `worker.requests` / of the kind `domain.tokens` → `door.routes[].domain` among the manifests not yet standing in the store; `placement.near.sub` gives no cycle (Н1.7 `order`; I02-INSTALL-ORDER, C02-KIND-ORDER-33, ADR-0091 addendum (26))	a refusal, code 2, before changes	the names of the cycle	break the cycle or install one of the subsystems earlier
 2.4	20	domain_install	cli	exit !0	-	-	-	cause	P/02.4 Н4 row 20	-	domain installation (Н3): the store or the ring is unavailable, `domain/keys` or `domain/root` exists, the recovery file already exists or the path is in `PLATFORM_DIR` (from М11/2 Н4; the move of lesson 8, stage B)	a refusal, code ≠ 0	operator, words	fix the cause
 2.4	21	domain_window_busy	cli	exit 2	-	-	-	cause	P/02.4 Н4 row 21	busy	domain installation and changes by the recovery file: a second command on the same installation while the first is running	a refusal, code 2, `busy`, before changes	the word `busy`	wait for the first; one operator window per domain (guess of stage C I02-DOMAIN-WINDOW, the Architect's decision 2026-10-23)
